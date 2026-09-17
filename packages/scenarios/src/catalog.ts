@@ -1987,6 +1987,10 @@ const physics3DMetadata: ScenarioMetadata = {
     "crcPhysicsWorld3D",
     "applyImpulse3D",
     "teleportBody3D",
+    "disableBody3D",
+    "enableBody3D",
+    "sleepBody3D",
+    "wakeBody3D",
     "raycast3D",
     "WebGLLayer",
     "Group3D",
@@ -2016,9 +2020,9 @@ const physics3DMetadata: ScenarioMetadata = {
         "Cubes, spheres, ellipsoid, capsule, cylinder, cone, convex hull, and one compound body fall onto the box floor, blue triangle mesh, and green heightfield.",
     },
     {
-      action: "Choose Drop, then Impulse.",
+      action: "Choose Grab, Drag, then Throw.",
       expected:
-        "The blue cube returns above the scene, falls under shared-scheduler gravity, and gains visible translation and rotation from the off-center impulse.",
+        "The blue cube leaves simulation authority, follows an authored pose, then re-enters at that pose with a bounded deterministic throw velocity.",
     },
     {
       action: "Choose Query.",
@@ -2030,9 +2034,15 @@ const physics3DMetadata: ScenarioMetadata = {
       expected:
         "The complete fixed-camera scene remounts at its authored poses with fresh body generations and cleared diagnostics.",
     },
+    {
+      action:
+        "Try Disable, Authored move, Re-enable, Sleep, Wake, Remove, and Remount.",
+      expected:
+        "The selected cube follows each public lifecycle transition while the one shared scheduler continues presenting the rest of the world.",
+    },
   ],
   knownLimitations: [
-    "This visible-first slice uses bounded convex sampling and concave proxy narrow phase; exhaustive analytic, BVH, degeneracy, lifecycle, and performance hardening remains deferred.",
+    "Pointer-to-world camera ray construction is not public, so grab and drag use deterministic selected-body controls rather than private pick data.",
     "The scene uses one fixed WebGL2 camera and one fixed logical viewport; it does not expose a public manual clock or a second animation loop.",
   ],
   learningOrder: 210,
@@ -2047,9 +2057,21 @@ export const physics3DScenarioEntry: ScenarioCatalogEntry<Physics3DState> = {
   canvas: { width: 480, height: 300 },
   actions: [
     { id: "reset", label: "Reset" },
+    { id: "settle", label: "Observe settling" },
     { id: "drop", label: "Drop cube" },
-    { id: "impulse", label: "Impulse cube" },
     { id: "query", label: "Ray query" },
+    { id: "grab", label: "Grab cube" },
+    { id: "drag", label: "Drag cube" },
+    { id: "throw", label: "Throw cube" },
+    { id: "impulse", label: "Impulse cube" },
+    { id: "teleport", label: "Teleport cube" },
+    { id: "disable", label: "Disable cube" },
+    { id: "authored-move", label: "Move authored cube" },
+    { id: "re-enable", label: "Re-enable cube" },
+    { id: "sleep", label: "Sleep cube" },
+    { id: "wake", label: "Wake cube" },
+    { id: "remove", label: "Remove cube" },
+    { id: "remount", label: "Remount cube" },
   ],
   source: {
     id: "first-class-physics-3d-example",

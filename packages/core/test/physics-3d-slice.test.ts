@@ -42,7 +42,7 @@ function flushAfter(milliseconds = 1000 / 60): void {
 }
 
 describe("public first-class 3D physics browser slice", () => {
-  it("registers one public-only Studio source with reset, drop, impulse, and query actions", () => {
+  it("registers one public-only Studio source with the complete laboratory action tape", () => {
     expect(getScenarioRoute(physics3DScenarioEntry)).toBe(
       "#/testing/physics-3d",
     );
@@ -60,9 +60,21 @@ describe("public first-class 3D physics browser slice", () => {
     });
     expect(PHYSICS_3D_ACTION_IDS).toEqual([
       "reset",
+      "settle",
       "drop",
-      "impulse",
       "query",
+      "grab",
+      "drag",
+      "throw",
+      "impulse",
+      "teleport",
+      "disable",
+      "authored-move",
+      "re-enable",
+      "sleep",
+      "wake",
+      "remove",
+      "remount",
     ]);
     expect(physics3DScenarioEntry.actions.map((action) => action.id)).toEqual(
       PHYSICS_3D_ACTION_IDS,
@@ -110,23 +122,30 @@ describe("public first-class 3D physics browser slice", () => {
     expect(firstPixels.maximumRgbChannel).toBeGreaterThan(96);
     const initial = controller.getState();
     expect(Object.keys(initial.bodies)).toEqual([...PHYSICS_3D_BODY_IDS]);
-    expect(Object.values(initial.bodies).every((body) =>
-      body.enabled && body.generation === 1
-    )).toBe(true);
+    expect(
+      Object.values(initial.bodies).every(
+        (body) => body.enabled && body.generation === 1,
+      ),
+    ).toBe(true);
     expect(initial.bodies["drop-cube"].position).toEqual([-4.2, 6, 0]);
     expect(initial.bodies.ellipsoid.position).toEqual([-5.2, 3.7, -2.2]);
     expect(initial.bodies["convex-hull"].position).toEqual([4.8, 6.5, -2.4]);
     expect(initial.compoundAligned).toBe(true);
 
     expect(layer.committedGeneration).toBeGreaterThan(0);
-    const initialCommitted = (layer as unknown as {
-      committed?: { pickLedger: { entries: readonly unknown[] } };
-    }).committed;
-    expect(initialCommitted?.pickLedger.entries.length).toBeGreaterThanOrEqual(10);
+    const initialCommitted = (
+      layer as unknown as {
+        committed?: { pickLedger: { entries: readonly unknown[] } };
+      }
+    ).committed;
+    expect(initialCommitted?.pickLedger.entries.length).toBeGreaterThanOrEqual(
+      10,
+    );
 
     let sawBounce = false;
     let sawContact = false;
-    let previousBounceVelocity = initial.bodies["bounce-sphere"].linearVelocity[1];
+    let previousBounceVelocity =
+      initial.bodies["bounce-sphere"].linearVelocity[1];
     let simulatedTicks = 0;
     while (simulatedTicks < 120) {
       const batchTicks = Math.min(8, 120 - simulatedTicks);
@@ -151,51 +170,61 @@ describe("public first-class 3D physics browser slice", () => {
     );
     expect(sawContact).toBe(true);
     expect(sawBounce).toBe(true);
-    expect(Math.abs(settled.bodies["slider-cube"].linearVelocity[0])).toBeLessThan(3);
+    expect(
+      Math.abs(settled.bodies["slider-cube"].linearVelocity[0]),
+    ).toBeLessThan(3);
     expect(settled.compoundAligned).toBe(true);
 
-    const committed = (layer as unknown as {
-      committed?: {
-        pickLedger: {
-          entries: readonly {
-            componentName: string;
-            model: Readonly<Float32Array>;
-            keyboardNavigationPoints?: readonly Readonly<{
-              x: number;
-              y: number;
-            }>[];
-            target: {
+    const committed = (
+      layer as unknown as {
+        committed?: {
+          pickLedger: {
+            entries: readonly {
+              componentName: string;
+              model: Readonly<Float32Array>;
               keyboardNavigationPoints?: readonly Readonly<{
                 x: number;
                 y: number;
               }>[];
-            };
-          }[];
+              target: {
+                keyboardNavigationPoints?: readonly Readonly<{
+                  x: number;
+                  y: number;
+                }>[];
+              };
+            }[];
+          };
         };
-      };
-    }).committed;
+      }
+    ).committed;
     const dropPose = settled.bodies["drop-cube"].position;
-    const dropEntry = committed?.pickLedger.entries.find((entry) =>
-      entry.componentName === "Cube" &&
-      Math.abs(entry.model[12]! - dropPose[0]) < 1e-4 &&
-      Math.abs(entry.model[13]! - dropPose[1]) < 1e-4 &&
-      Math.abs(entry.model[14]! - dropPose[2]) < 1e-4
+    const dropEntry = committed?.pickLedger.entries.find(
+      (entry) =>
+        entry.componentName === "Cube" &&
+        Math.abs(entry.model[12]! - dropPose[0]) < 1e-4 &&
+        Math.abs(entry.model[13]! - dropPose[1]) < 1e-4 &&
+        Math.abs(entry.model[14]! - dropPose[2]) < 1e-4,
     );
     expect(dropEntry).toBeDefined();
     expect(dropEntry?.keyboardNavigationPoints?.length).toBeGreaterThan(0);
     expect(dropEntry?.target.keyboardNavigationPoints).toBe(
       dropEntry?.keyboardNavigationPoints,
     );
-    expect(uniformMatrix.mock.calls.some((call) =>
-      sameMatrix(call[2] as Float32List, dropEntry!.model)
-    )).toBe(true);
+    expect(
+      uniformMatrix.mock.calls.some((call) =>
+        sameMatrix(call[2] as Float32List, dropEntry!.model),
+      ),
+    ).toBe(true);
 
     await controller.perform("impulse");
     flushAfter();
     flushAfter();
-    expect(Math.hypot(
-      ...controller.getState().bodies["drop-cube"].angularVelocityDegreesPerSecond,
-    )).toBeGreaterThan(0);
+    expect(
+      Math.hypot(
+        ...controller.getState().bodies["drop-cube"]
+          .angularVelocityDegreesPerSecond,
+      ),
+    ).toBeGreaterThan(0);
 
     await controller.perform("query");
     expect(controller.getState()).toMatchObject({
@@ -205,13 +234,19 @@ describe("public first-class 3D physics browser slice", () => {
     });
 
     const beforeLossY = controller.getState().bodies["drop-cube"].position[1];
-    layer.canvas.dispatchEvent(new Event("webglcontextlost", { cancelable: true }));
+    layer.canvas.dispatchEvent(
+      new Event("webglcontextlost", { cancelable: true }),
+    );
     expect(layer.committedGeneration).toBeUndefined();
     await controller.perform("drop");
     flushAfter();
     for (let frame = 0; frame < 12; frame += 1) flushAfter();
-    expect(controller.getState().bodies["drop-cube"].position[1]).toBeLessThan(6);
-    expect(controller.getState().bodies["drop-cube"].position[1]).not.toBe(beforeLossY);
+    expect(controller.getState().bodies["drop-cube"].position[1]).toBeLessThan(
+      6,
+    );
+    expect(controller.getState().bodies["drop-cube"].position[1]).not.toBe(
+      beforeLossY,
+    );
 
     layer.canvas.dispatchEvent(new Event("webglcontextrestored"));
     flushAfter();

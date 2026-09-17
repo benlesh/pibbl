@@ -1,9 +1,5 @@
 /** @jsxImportSource @crc/core */
-import {
-  Rectangle,
-  signal,
-  type WritableSignal,
-} from "@crc/core";
+import { Rectangle, signal, type WritableSignal } from "@crc/core";
 import {
   Cube,
   Group3D,
@@ -36,6 +32,7 @@ import {
   type CRCPhysicsBodyHandle3D,
   type CRCPhysicsColliderConfiguration3D,
   type CRCPhysicsCollisionEvent3D,
+  type CRCPhysicsOverlapEvent3D,
   type CRCPhysicsQuaternion,
   type CRCPhysicsVector3,
   type CRCPhysicsWorldHandle3D,
@@ -60,7 +57,23 @@ export const PHYSICS_3D_BODY_IDS = [
 ] as const;
 
 export type Physics3DBodyId = (typeof PHYSICS_3D_BODY_IDS)[number];
-export type Physics3DAction = "reset" | "drop" | "impulse" | "query";
+export type Physics3DAction =
+  | "reset"
+  | "settle"
+  | "drop"
+  | "query"
+  | "grab"
+  | "drag"
+  | "throw"
+  | "impulse"
+  | "teleport"
+  | "disable"
+  | "authored-move"
+  | "re-enable"
+  | "sleep"
+  | "wake"
+  | "remove"
+  | "remount";
 
 export interface Physics3DBodySnapshot {
   readonly position: CRCPhysicsVector3;
@@ -79,6 +92,10 @@ export interface Physics3DState {
   readonly compoundAligned: boolean;
   readonly queryTag: string | null;
   readonly queryPoint: CRCPhysicsVector3 | null;
+  readonly grabbed: boolean;
+  readonly dropMounted: boolean;
+  readonly sensorOverlaps: readonly string[];
+  readonly eventLog: readonly string[];
   readonly lastAction: "mount" | Physics3DAction;
 }
 
@@ -89,6 +106,14 @@ export interface Physics3DModel {
     Record<string, CRCPhysicsColliderConfiguration3D>
   >;
   readonly queryMarker: WritableSignal<CRCPhysicsVector3 | null>;
+  readonly dropAuthoredPosition: WritableSignal<CRCPhysicsVector3>;
+  readonly dropEnabled: WritableSignal<boolean>;
+  readonly dropMounted: WritableSignal<boolean>;
+  readonly sensorActive: WritableSignal<boolean>;
+  readonly sensorOverlaps: Set<string>;
+  readonly eventLog: string[];
+  readonly grabSamples: CRCPhysicsVector3[];
+  grabbed: boolean;
   world: CRCPhysicsWorldHandle3D | undefined;
   queryTag: string | null;
   publish: (() => void) | undefined;
@@ -131,7 +156,11 @@ const HULL_POINTS = Object.freeze([
   [0, 0.8, 0],
 ] as const satisfies readonly CRCPhysicsVector3[]);
 const ELLIPSOID_SHAPE = ellipsoidShape3D({ radii: [0.72, 0.42, 0.5] });
-const CAPSULE_SHAPE = capsuleShape3D({ start: [0, -0.55, 0], end: [0, 0.55, 0], radius: 0.34 });
+const CAPSULE_SHAPE = capsuleShape3D({
+  start: [0, -0.55, 0],
+  end: [0, 0.55, 0],
+  radius: 0.34,
+});
 const CYLINDER_SHAPE = cylinderShape3D({ radius: 0.48, halfHeight: 0.58 });
 const CONE_SHAPE = coneShape3D({ radius: 0.58, halfHeight: 0.7 });
 const HULL_SHAPE = convexHullShape3D({ points: HULL_POINTS });
@@ -140,9 +169,7 @@ const MESH_SHAPE = triangleMeshShape3D({
   indices: [0, 2, 1, 0, 3, 2],
 });
 const HEIGHTFIELD_HEIGHTS = Object.freeze([
-  0, 0.15, 0.3, 0.15,
-  0.1, 0.35, 0.7, 0.25,
-  0, 0.2, 0.45, 0.1,
+  0, 0.15, 0.3, 0.15, 0.1, 0.35, 0.7, 0.25, 0, 0.2, 0.45, 0.1,
 ] as const);
 const HEIGHTFIELD_SHAPE = heightfieldShape3D({
   rows: 3,
@@ -159,36 +186,68 @@ export function createPhysics3DModel(): Physics3DModel {
     tag: string,
     friction: number,
     restitution: number,
-  ): CRCPhysicsColliderConfiguration3D => Object.freeze({
-    tag,
-    friction,
-    restitution,
-    onCollisionStart: (event: CRCPhysicsCollisionEvent3D) => {
-      model.contacts.push(
-        `${String(event.selfTag)}>${String(event.otherTag)}:start`,
-      );
-      model.publish?.();
+  ): CRCPhysicsColliderConfiguration3D =>
+    Object.freeze({
+      tag,
+      friction,
+      restitution,
+      onCollisionStart: (event: CRCPhysicsCollisionEvent3D) => {
+        const entry = `${String(event.selfTag)}>${String(event.otherTag)}:start`;
+        model.contacts.push(entry);
+        model.eventLog.push(entry);
+        model.publish?.();
+      },
+    });
+  const colliderConfigurations = Object.freeze({
+    floor: configuration("floor", 0.95, 0.05),
+    obstacle: configuration("obstacle", 0.7, 0.15),
+    "drop-cube": configuration("drop-cube", 0.35, 0.2),
+    "slider-cube": configuration("slider-cube", 1.1, 0),
+    "bounce-sphere": configuration("bounce-sphere", 0.15, 0.86),
+    "cube-c": configuration("cube-c", 0.65, 0.1),
+    "sphere-b": configuration("sphere-b", 0.4, 0.45),
+    "sphere-c": configuration("sphere-c", 0.8, 0.25),
+    "compound-left": configuration("compound-left", 0.5, 0.2),
+    "compound-right": configuration("compound-right", 0.2, 0.55),
+    "compound-sensor": {
+      tag: "compound-sensor",
+      sensor: true,
+      contributesToMass: false,
+      onOverlapStart: (event: CRCPhysicsOverlapEvent3D) => {
+        const tag = String(event.otherTag);
+        model.sensorOverlaps.add(tag);
+        model.sensorActive.set(true);
+        model.eventLog.push(`sensor>${tag}:start`);
+        model.publish?.();
+      },
+      onOverlapEnd: (event: CRCPhysicsOverlapEvent3D) => {
+        const tag = String(event.otherTag);
+        model.sensorOverlaps.delete(tag);
+        model.sensorActive.set(model.sensorOverlaps.size > 0);
+        model.eventLog.push(`sensor>${tag}:end`);
+        model.publish?.();
+      },
+    },
+    ellipsoid: {
+      ...configuration("ellipsoid", 0.45, 0.35),
+      shape: ELLIPSOID_SHAPE,
+    },
+    capsule: { ...configuration("capsule", 0.55, 0.2), shape: CAPSULE_SHAPE },
+    cylinder: {
+      ...configuration("cylinder", 0.7, 0.12),
+      shape: CYLINDER_SHAPE,
+    },
+    cone: { ...configuration("cone", 0.6, 0.18), shape: CONE_SHAPE },
+    "convex-hull": {
+      ...configuration("convex-hull", 0.5, 0.28),
+      shape: HULL_SHAPE,
+    },
+    mesh: { ...configuration("triangle-mesh", 0.9, 0.04), shape: MESH_SHAPE },
+    heightfield: {
+      ...configuration("heightfield", 0.85, 0.08),
+      shape: HEIGHTFIELD_SHAPE,
     },
   });
-  const colliderConfigurations = Object.freeze({
-      floor: configuration("floor", 0.95, 0.05),
-      obstacle: configuration("obstacle", 0.7, 0.15),
-      "drop-cube": configuration("drop-cube", 0.35, 0.2),
-      "slider-cube": configuration("slider-cube", 1.1, 0),
-      "bounce-sphere": configuration("bounce-sphere", 0.15, 0.86),
-      "cube-c": configuration("cube-c", 0.65, 0.1),
-      "sphere-b": configuration("sphere-b", 0.4, 0.45),
-      "sphere-c": configuration("sphere-c", 0.8, 0.25),
-      "compound-left": configuration("compound-left", 0.5, 0.2),
-      "compound-right": configuration("compound-right", 0.2, 0.55),
-      ellipsoid: { ...configuration("ellipsoid", 0.45, 0.35), shape: ELLIPSOID_SHAPE },
-      capsule: { ...configuration("capsule", 0.55, 0.2), shape: CAPSULE_SHAPE },
-      cylinder: { ...configuration("cylinder", 0.7, 0.12), shape: CYLINDER_SHAPE },
-      cone: { ...configuration("cone", 0.6, 0.18), shape: CONE_SHAPE },
-      "convex-hull": { ...configuration("convex-hull", 0.5, 0.28), shape: HULL_SHAPE },
-      mesh: { ...configuration("triangle-mesh", 0.9, 0.04), shape: MESH_SHAPE },
-      heightfield: { ...configuration("heightfield", 0.85, 0.08), shape: HEIGHTFIELD_SHAPE },
-    });
   model = {
     handles: {},
     contacts: [],
@@ -196,6 +255,16 @@ export function createPhysics3DModel(): Physics3DModel {
     queryMarker: signal<CRCPhysicsVector3 | null>(null, {
       debugName: "physics 3D ray marker",
     }),
+    dropAuthoredPosition: signal(PHYSICS_3D_INITIAL_POSITIONS["drop-cube"], {
+      debugName: "physics 3D authored drop position",
+    }),
+    dropEnabled: signal(true, { debugName: "physics 3D drop enabled" }),
+    dropMounted: signal(true, { debugName: "physics 3D drop mounted" }),
+    sensorActive: signal(false, { debugName: "physics 3D sensor active" }),
+    sensorOverlaps: new Set(),
+    eventLog: [],
+    grabSamples: [],
+    grabbed: false,
     world: undefined,
     queryTag: null,
     publish: undefined,
@@ -205,7 +274,12 @@ export function createPhysics3DModel(): Physics3DModel {
 }
 
 function ShowcaseBodies({ model }: { readonly model: Physics3DModel }) {
-  const body = (id: Extract<Physics3DBodyId, "ellipsoid" | "capsule" | "cylinder" | "cone" | "convex-hull">) => {
+  const body = (
+    id: Extract<
+      Physics3DBodyId,
+      "ellipsoid" | "capsule" | "cylinder" | "cone" | "convex-hull"
+    >,
+  ) => {
     const handle = crcPhysicsBody3D();
     model.handles[id] = handle;
     return dynamicBody3D({
@@ -216,20 +290,45 @@ function ShowcaseBodies({ model }: { readonly model: Physics3DModel }) {
       collider: model.colliderConfigurations[id],
     });
   };
-  const style = (id: Physics3DBodyId, color: string) => ({
-    color,
-    lit: false,
-    translateX: PHYSICS_3D_INITIAL_POSITIONS[id][0],
-    translateY: PHYSICS_3D_INITIAL_POSITIONS[id][1],
-    translateZ: PHYSICS_3D_INITIAL_POSITIONS[id][2],
-  } as const);
+  const style = (id: Physics3DBodyId, color: string) =>
+    ({
+      color,
+      lit: false,
+      translateX: PHYSICS_3D_INITIAL_POSITIONS[id][0],
+      translateY: PHYSICS_3D_INITIAL_POSITIONS[id][1],
+      translateZ: PHYSICS_3D_INITIAL_POSITIONS[id][2],
+    }) as const;
   return (
     <>
-      <Ellipsoid3D radii={[0.72, 0.42, 0.5]} physics={body("ellipsoid")} style={style("ellipsoid", "#60a5fa")} />
-      <Capsule3D start={[0, -0.55, 0]} end={[0, 0.55, 0]} radius={0.34} physics={body("capsule")} style={style("capsule", "#c084fc")} />
-      <Cylinder3D radius={0.48} halfHeight={0.58} physics={body("cylinder")} style={style("cylinder", "#facc15")} />
-      <Cone3D radius={0.58} halfHeight={0.7} physics={body("cone")} style={style("cone", "#fb7185")} />
-      <ConvexHull3D points={HULL_POINTS} physics={body("convex-hull")} style={style("convex-hull", "#34d399")} />
+      <Ellipsoid3D
+        radii={[0.72, 0.42, 0.5]}
+        physics={body("ellipsoid")}
+        style={style("ellipsoid", "#60a5fa")}
+      />
+      <Capsule3D
+        start={[0, -0.55, 0]}
+        end={[0, 0.55, 0]}
+        radius={0.34}
+        physics={body("capsule")}
+        style={style("capsule", "#c084fc")}
+      />
+      <Cylinder3D
+        radius={0.48}
+        halfHeight={0.58}
+        physics={body("cylinder")}
+        style={style("cylinder", "#facc15")}
+      />
+      <Cone3D
+        radius={0.58}
+        halfHeight={0.7}
+        physics={body("cone")}
+        style={style("cone", "#fb7185")}
+      />
+      <ConvexHull3D
+        points={HULL_POINTS}
+        physics={body("convex-hull")}
+        style={style("convex-hull", "#34d399")}
+      />
     </>
   );
 }
@@ -255,11 +354,16 @@ function DynamicCubeBody({
 }>) {
   const body = crcPhysicsBody3D();
   model.handles[id] = body;
-  const position = PHYSICS_3D_INITIAL_POSITIONS[id];
+  const isDrop = id === "drop-cube";
+  const position = isDrop
+    ? model.dropAuthoredPosition.get()
+    : PHYSICS_3D_INITIAL_POSITIONS[id];
   return (
     <Cube
       physics={dynamicBody3D({
         handle: body,
+        enabled: isDrop ? model.dropEnabled.get() : true,
+        reenableVelocity: "zero",
         mass: "auto",
         linearVelocity: initialVelocity,
         linearDamping: 0.04,
@@ -350,6 +454,15 @@ function CompoundBody({ model }: { readonly model: Physics3DModel }) {
           translateX: 0.65,
         }}
       />
+      <Sphere
+        physics={collider3D(model.colliderConfigurations["compound-sensor"])}
+        style={{
+          radius: 0.3,
+          color: model.sensorActive.get() ? "#fef08aff" : "#fde68a55",
+          lit: false,
+          translateY: -0.72,
+        }}
+      />
     </Group3D>
   );
 }
@@ -401,7 +514,9 @@ export function Physics3DRoot({ model }: { readonly model: Physics3DModel }) {
           />
           <PhysicsShape3D
             shape={MESH_SHAPE}
-            physics={staticBody3D({ collider: model.colliderConfigurations.mesh })}
+            physics={staticBody3D({
+              collider: model.colliderConfigurations.mesh,
+            })}
             style={{
               color: "#1e40af",
               lit: false,
@@ -418,7 +533,9 @@ export function Physics3DRoot({ model }: { readonly model: Physics3DModel }) {
             cellSizeX={1.1}
             cellSizeZ={1.1}
             origin={[-1.65, 0, -1.1]}
-            physics={staticBody3D({ collider: model.colliderConfigurations.heightfield })}
+            physics={staticBody3D({
+              collider: model.colliderConfigurations.heightfield,
+            })}
             style={{
               color: "#166534",
               lit: false,
@@ -443,12 +560,16 @@ export function Physics3DRoot({ model }: { readonly model: Physics3DModel }) {
               scaleZ: 2.2,
             }}
           />
+          {model.dropMounted.get() ? (
+            <DynamicCubeBody
+              key="drop-cube"
+              id="drop-cube"
+              model={model}
+              color="#38bdf8"
+            />
+          ) : undefined}
           <DynamicCubeBody
-            id="drop-cube"
-            model={model}
-            color="#38bdf8"
-          />
-          <DynamicCubeBody
+            key="slider-cube"
             id="slider-cube"
             model={model}
             color="#a78bfa"
@@ -462,6 +583,7 @@ export function Physics3DRoot({ model }: { readonly model: Physics3DModel }) {
             radius={0.55}
           />
           <DynamicCubeBody
+            key="cube-c"
             id="cube-c"
             model={model}
             color="#eab308"
@@ -492,7 +614,10 @@ export function physics3DBodySnapshot(
   model: Physics3DModel,
   id: Physics3DBodyId,
 ): Physics3DBodySnapshot {
-  const body = model.handles[id];
+  const body =
+    id === "drop-cube" && !model.dropMounted.get()
+      ? undefined
+      : model.handles[id];
   const position = PHYSICS_3D_INITIAL_POSITIONS[id];
   if (body === undefined) {
     return {
@@ -521,19 +646,32 @@ export function physics3DBodySnapshot(
 export function physics3DCompoundAligned(model: Physics3DModel): boolean {
   const body = model.handles.compound;
   const world = model.world;
-  if (body === undefined || world === undefined || body.generation.get() === 0) {
+  if (
+    body === undefined ||
+    world === undefined ||
+    body.generation.get() === 0
+  ) {
     return false;
   }
   const position = body.position.get();
   const orientation = body.orientation.get();
   const left = add(position, rotate([-0.65, 0, 0], orientation));
   const right = add(position, rotate([0.65, 0, 0], orientation));
-  const leftTags = queryPoint3D(world, left, { mode: "all" })
-    .map((match) => String(match.tag));
-  const rightTags = queryPoint3D(world, right, { mode: "all" })
-    .map((match) => String(match.tag));
-  return leftTags.includes("compound-left") &&
-    rightTags.includes("compound-right");
+  const sensor = add(position, rotate([0, -0.72, 0], orientation));
+  const leftTags = queryPoint3D(world, left, { mode: "all" }).map((match) =>
+    String(match.tag),
+  );
+  const rightTags = queryPoint3D(world, right, { mode: "all" }).map((match) =>
+    String(match.tag),
+  );
+  const sensorTags = queryPoint3D(world, sensor, { mode: "all" }).map((match) =>
+    String(match.tag),
+  );
+  return (
+    leftTags.includes("compound-left") &&
+    rightTags.includes("compound-right") &&
+    sensorTags.includes("compound-sensor")
+  );
 }
 
 function rotate(
