@@ -1,8 +1,8 @@
 # Professional WebGL assets and printable-model interoperability design
 
-> **Status: PROPOSED DESIGN FOR REVIEW.** This document defines the staged
-> direction and the complete first feature boundary. Current shipped behavior
-> remains governed by `docs/design/` until an approved implementation lands.
+> **Status: APPROVED DESIGN.** The design and staged delivery boundaries were
+> approved on 2026-09-17. Current shipped behavior remains governed by
+> `docs/design/` until the corresponding implementation lands.
 
 Date: 2026-09-17
 
