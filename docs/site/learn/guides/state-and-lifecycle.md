@@ -32,15 +32,15 @@ Complete in order.
 ## Hooks
 
 ```tsx
-import { Path, crcMemo, crcRef, crcState, crcWhenChanged } from "@crc/core";
+import { Path, useMemo, useRef, useState, useWhenChanged } from "@crc/core";
 
 function Counter() {
-  const [count, setCount] = crcState(0);
-  const path = crcMemo(() => new Path2D("M0 0h120v60h-120z"), []);
-  const renders = crcRef(0);
+  const [count, setCount] = useState(0);
+  const path = useMemo(() => new Path2D("M0 0h120v60h-120z"), []);
+  const renders = useRef(0);
   renders.current = (renders.current ?? 0) + 1;
 
-  crcWhenChanged(() => {
+  useWhenChanged(() => {
     const reset = (event: KeyboardEvent) => {
       if (event.key === "Escape") setCount(0);
     };
@@ -61,47 +61,47 @@ Keep every hook call in the same order and count on every successful render.
 
 The main lifecycle APIs are:
 
-- `crcState` returns a stable setter and schedules the owning Canvas. A stale
+- `useState` returns a stable setter and schedules the owning Canvas. A stale
   setter becomes inert after its exact component or mount is removed.
-- `crcSignal` returns one writable signal for the hook slot. Its initial value
+- `useSignal` returns one writable signal for the hook slot. Its initial value
   and options are mount-only; explicit reads subscribe the current component.
-- `crcMemo` compares dependency length and each value with strict `!==`.
-- `crcRef` returns one stable mutable `{ current }` object and does not schedule
+- `useMemo` compares dependency length and each value with strict `!==`.
+- `useRef` returns one stable mutable `{ current }` object and does not schedule
   on mutation.
-- `crcWhenChanged` runs synchronously during rendering, not after paint. It
+- `useWhenChanged` runs synchronously during rendering, not after paint. It
   cleans the previous generation before the next setup and cleans once more on
   removal.
-- `crcRectPath`, `crcLinePath`, and `crcSvgPath` are memoized path hooks.
+- `useRectPath`, `useLinePath`, and `useSvgPath` are memoized path hooks.
 - Event, cursor, and target hooks own registrations in their exact component
   slot.
-- `crcLayoutBox` and `crcCanvasContext` are render-context accessors; the latter
+- `useLayoutBox` and `useCanvasContext` are render-context accessors; the latter
   deliberately does not allocate a hook slot.
 
 Hooks may run only while CRC is rendering a component. Conditional, reordered,
 added, or omitted hook slots are deterministic errors.
 
-## `crcState` and signals
+## `useState` and signals
 
-Use `crcState` when state belongs to one component slot and render-time value
+Use `useState` when state belongs to one component slot and render-time value
 access is most convenient. Its setter treats a function as an updater:
 
 ```tsx
-const [count, setCount] = crcState(0);
+const [count, setCount] = useState(0);
 setCount((current) => current + 1);
 ```
 
 Use `signal()` for an independently retained writable value, `computed()` for
-a lazy readonly derivation, and `crcSignal()` when the signal cell itself
+a lazy readonly derivation, and `useSignal()` when the signal cell itself
 should have hook-slot identity. Signal reads are always explicit:
 
 ```tsx
-import { Text, computed, crcSignal, signal, untracked } from "@crc/core";
+import { Text, computed, useSignal, signal, untracked } from "@crc/core";
 
 const greeting = signal("hello");
 const loudGreeting = computed(() => greeting.get().toUpperCase());
 
 function Greeting() {
-  const visits = crcSignal(0);
+  const visits = useSignal(0);
   const debugSnapshot = untracked(() => visits.get());
   void debugSnapshot;
   return <Text>{`${loudGreeting.get()} ${visits.get()}`}</Text>;
@@ -109,7 +109,7 @@ function Greeting() {
 ```
 
 `Signal<T>` exposes only `get()`. `WritableSignal<T>` also exposes
-`set(value)`, `update(updater)`, and `asReadonly()`. Unlike `crcState`, a signal
+`set(value)`, `update(updater)`, and `asReadonly()`. Unlike `useState`, a signal
 `set()` treats a function as data; use `update()` for a functional update.
 Signals do not unwrap in JSX or styles. Writes are rejected during component,
 primitive-render, and computed evaluation—even when equality would make the
@@ -145,8 +145,8 @@ starts clean. Pixels painted before the throw are not rolled back.
 | Output        | Immediate Canvas 2D paint and CRC node traversal                     | Host-renderer reconciliation         |
 | Scheduling    | Realm-wide six-phase animation-frame scheduler and full traversal    | React scheduler/reconciler           |
 | Components    | Synchronous functions returning `CRCNode` or `void`                  | React component contract             |
-| State APIs    | `signal`, `computed`, `crcSignal`, `crcState`, memo/ref/change hooks | Different runtime-owned primitives   |
-| Effects       | `crcWhenChanged` is synchronous during render                        | React effects are not CRC lifecycle  |
+| State APIs    | `signal`, `computed`, `useSignal`, `useState`, memo/ref/change hooks | Different runtime-owned primitives   |
+| Effects       | `useWhenChanged` is synchronous during render                        | React effects are not CRC lifecycle  |
 | Element brand | `Symbol.for("@crc/core.element")`                                    | Foreign React brands are rejected    |
 | Host nodes    | One author-owned Canvas                                              | Typically a renderer-owned host tree |
 | Accessibility | Application supplies semantic DOM                                    | Depends on the React host renderer   |

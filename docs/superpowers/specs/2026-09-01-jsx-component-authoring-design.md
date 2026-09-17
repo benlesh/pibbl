@@ -65,14 +65,14 @@ JSX is the preferred syntax. Built-ins use descriptive imported values, and
 user components are ordinary functions:
 
 ```tsx
-import { crc, crcState, Group, Rectangle, Text, type CRCNode } from "@crc/core";
+import { crc, useState, Group, Rectangle, Text, type CRCNode } from "@crc/core";
 
 interface PosterProps {
   initialMessage: string;
 }
 
 function Poster({ initialMessage }: PosterProps): CRCNode {
-  const [message, setMessage] = crcState(initialMessage);
+  const [message, setMessage] = useState(initialMessage);
 
   return (
     <Group>
@@ -108,7 +108,7 @@ No wrapper, base class, registration call, or JSX-specific component type is
 required. The component function is its runtime identity. Components declare a
 `children` prop when they accept children.
 
-CRC retains the `crcState`, `crcMemo`, `crcRef`, and other `crc*` lifecycle
+CRC retains the `useState`, `useMemo`, `useRef`, and other `crc*` lifecycle
 names. They distinguish CRC's lifecycle from React's and reduce accidental
 cross-runtime imports.
 
@@ -133,7 +133,7 @@ are removed rather than retained as aliases. `defineComp`,
 
 ```ts
 function Poster({ initialMessage }: PosterProps): CRCNode {
-  const [message, setMessage] = crcState(initialMessage);
+  const [message, setMessage] = useState(initialMessage);
 
   return createElement(Group, null, [
     createElement(Rectangle, {
@@ -204,7 +204,7 @@ The shared internal constructor also accepts the separate key argument used by
 key found in the incoming props object.
 
 `key` accepts strings and numbers and is not delivered in component props. CRC
-does not add React-style element `ref`; `crcRef` keeps its current hook
+does not add React-style element `ref`; `useRef` keeps its current hook
 semantics.
 
 `crc(canvas, root, config?)` accepts a complete `CRCNode`, so a fragment,
@@ -222,7 +222,7 @@ Plain components receive their author props unchanged apart from special key
 removal and compiler-supplied children. A declared `style` remains specified
 style. A layout parent may inspect that style to allocate the component, but
 does not replace the value seen in plain component props. The component reads
-its finite local allocation through `crcLayoutBox()`.
+its finite local allocation through `useLayoutBox()`.
 
 Composition components should not blindly forward their layout-participation
 style to an inner drawing element; that would apply placement twice. They use
@@ -329,7 +329,7 @@ interface CardProps {
 }
 
 function Card({ title, style: _specifiedStyle }: CardProps) {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
 
   return (
     <Group>
@@ -351,7 +351,7 @@ geometry.
 
 ### Direct drawing from a plain function
 
-`crcCanvasContext()` is a render-only accessor for the current isolated Canvas
+`useCanvasContext()` is a render-only accessor for the current isolated Canvas
 2D context. It does not allocate a hook slot and does not schedule work. It
 throws a targeted error outside live CRC rendering and remains unavailable
 during pure measurement.
@@ -363,8 +363,8 @@ interface SparklineProps {
 }
 
 function Sparkline({ points, style }: SparklineProps) {
-  const context = crcCanvasContext();
-  const box = crcLayoutBox();
+  const context = useCanvasContext();
+  const box = useLayoutBox();
   // Paint immediately using points, style, and the finite local box.
 }
 ```
@@ -408,7 +408,7 @@ requirements, closed style typing, and measurement isolation follow the
 current implemented contracts.
 
 Ordinary application code should contain no `definePrimitive` calls. Simple
-custom painters use `crcCanvasContext`; ordinary composites use plain
+custom painters use `useCanvasContext`; ordinary composites use plain
 functions. CRC's built-in drawing and layout components use
 `definePrimitive` because they form the platform layer.
 
@@ -660,7 +660,7 @@ models are documented end to end. Documentation will include:
    allocation.
 8. Groups, transforms, clips, and layers.
 9. CRC state and lifecycle, with a precise React comparison.
-10. Ordinary custom components and `crcCanvasContext` drawing.
+10. Ordinary custom components and `useCanvasContext` drawing.
 11. Advanced `definePrimitive` style resolution and pure measurement.
 12. A complete non-JSX guide using `createElement`.
 13. React and CRC in one codebase, including the same-file limitation.
@@ -721,7 +721,7 @@ before completion.
 
 - Plain function hooks mount, update, reorder, remove, fail, and recover under
   the current hook contract.
-- `crcCanvasContext` is isolated, render-only, and unavailable during pure
+- `useCanvasContext` is isolated, render-only, and unavailable during pure
   measurement.
 - `definePrimitive` preserves custom normalization, resolution, measurement,
   and allocation diagnostics.

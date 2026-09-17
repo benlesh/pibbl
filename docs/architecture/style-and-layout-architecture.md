@@ -91,7 +91,7 @@ The runtime stores private metadata keyed by component function:
   invoking the policy as an ordinary component.
 
 Ordinary application components are plain functions. Simple custom painters
-use `crcCanvasContext()` during live rendering. `definePrimitive` is reserved
+use `useCanvasContext()` during live rendering. `definePrimitive` is reserved
 for platform extension requiring style stages or pure measurement:
 
 ```ts
@@ -131,7 +131,7 @@ untyped JavaScript.
 
 Plain components continue to receive their exact specified style. A parent may
 inspect it for allocation, but the finite child-local allocation is exposed
-separately through `crcLayoutBox()`.
+separately through `useLayoutBox()`.
 
 #### Type-level schema enforcement
 
@@ -330,7 +330,7 @@ order, and identity are implemented and documented together.
 Measurement receives program props, normalized style, constraints, an explicit
 Canvas text service, and a recursive `measureElement`. It returns measured
 content size or an unsupported reason. It cannot paint, invoke hooks,
-`crcCanvasContext`, `crcLayoutBox`, create targets or layers, schedule work, or
+`useCanvasContext`, `useLayoutBox`, create targets or layers, schedule work, or
 acquire runtime resources. Pure measurement cannot create image generations.
 Temporary globals are cleared/restored in `finally`, and cycles are diagnosed.
 Pure measurement isolates itself from active render hooks and layout context.
@@ -343,7 +343,7 @@ components do not claim measurement. A supported result is a finite preferred
 size before min/max clamping by the owning algorithm; an unsupported result
 becomes an actionable diagnostic when that size is required.
 
-`crcLayoutBox()` exposes `{ x: 0, y: 0, width, height }` in the allocated
+`useLayoutBox()` exposes `{ x: 0, y: 0, width, height }` in the allocated
 child-local coordinate system. It is observational and does not claim root or
 DOM coordinates. Measurement caching is not required; if introduced after
 structural evidence, a cache key must include component type, relevant props,

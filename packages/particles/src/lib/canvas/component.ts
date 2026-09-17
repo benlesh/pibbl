@@ -1,6 +1,6 @@
 import {
   createElement,
-  crcLayoutBox,
+  useLayoutBox,
   layoutDiagnostic,
   type CRCNode,
 } from "@crc/core";
@@ -164,7 +164,7 @@ export function Particles2D<
   Parameters extends CRCParticleParameterValues,
 >(props: Particles2DProps<EmitterName, Parameters>): CRCNode {
   const owner = crcInternalCurrentRenderOwner();
-  const allocation = crcLayoutBox();
+  const allocation = useLayoutBox();
   validateAllocation(allocation);
 
   const looseProps = props as Particles2DProps & {

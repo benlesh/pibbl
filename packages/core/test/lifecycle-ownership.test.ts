@@ -8,7 +8,7 @@ import {
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import lifecycleLabSource from '../../scenarios/src/lifecycle-lab.example.tsx?raw';
-import { Absolute, crc, crcEventTarget, Layer, Rectangle, type CRCElement, type CRCController } from '../src/index';
+import { Absolute, crc, useEventTarget, Layer, Rectangle, type CRCElement, type CRCController } from '../src/index';
 import {
   directionalPolicy,
   focusManaged,
@@ -202,10 +202,10 @@ describe('shared event lifecycle laboratory', () => {
     const SlotTargets = (_props: {}) => {
       const first = new Path2D();
       first.rect(0, 0, 50, 50);
-      crcEventTarget({ onClick: () => undefined }, { fill: true, path: first });
+      useEventTarget({ onClick: () => undefined }, { fill: true, path: first });
       const second = new Path2D();
       second.rect(60, 0, 50, 50);
-      crcEventTarget({ onClick: () => undefined }, { fill: true, path: second });
+      useEventTarget({ onClick: () => undefined }, { fill: true, path: second });
     };
     const controller = mountCRC(
       canvas,

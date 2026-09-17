@@ -1,6 +1,6 @@
-import { crc, crcState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
 function ContextMenuStudy() {
-  const [opened, setOpened] = crcState(false);
+  const [opened, setOpened] = useState(false);
   return [
     <Rectangle
       style={{

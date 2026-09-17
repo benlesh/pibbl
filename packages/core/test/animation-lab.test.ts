@@ -106,9 +106,9 @@ describe('first-class animation public scenarios', () => {
       slug: 'signals-and-animation',
       section: 'composition',
       api: [
-        'crcSignal',
-        'crcTransition',
-        'crcPlayback',
+        'useSignal',
+        'useTransition',
+        'usePlayback',
         'parallel',
         'sequence',
         'marker',

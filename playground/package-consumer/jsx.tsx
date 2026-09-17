@@ -32,9 +32,9 @@ import {
   computed,
   createElement,
   crc,
-  crcPlayback,
-  crcSignal,
-  crcTransition,
+  usePlayback,
+  useSignal,
+  useTransition,
   definePrimitive,
   isSignal,
   marker,
@@ -57,7 +57,7 @@ import {
   SpotLight,
   WebGLBackground,
   WebGLLayer,
-  crcOrbitCamera,
+  useOrbitCamera,
   createWebGLGeometry,
   type CRCOrbitCameraHandlers,
   type CRCOrbitCameraOptions,
@@ -94,7 +94,7 @@ const jsxCallback = signal<() => string>(() => 'ready');
 jsxCallback.set(() => 'updated');
 
 function SignalLabel(): CRCNode {
-  const suffix = crcSignal('signals');
+  const suffix = useSignal('signals');
   const count = untracked(() => jsxDoubled.get());
   return (
     <Text>
@@ -107,14 +107,14 @@ export const signalElement: CRCElement = <SignalLabel />;
 void isSignal(jsxCallback.asReadonly());
 
 function AnimatedLabel(): CRCNode {
-  const x = crcSignal(0);
+  const x = useSignal(0);
   const program: CRCAnimationProgram = sequence(
     track(x, tween({ to: 40, duration: 120 })),
     marker('arrived'),
     track(x, spring({ to: 0 })),
   );
-  const player = crcPlayback(program);
-  const transitioned = crcTransition(x.get(), {
+  const player = usePlayback(program);
+  const transitioned = useTransition(x.get(), {
     type: 'tween',
     duration: 80,
   });
@@ -326,7 +326,7 @@ function AutomaticWebGLScene(): CRCNode {
     rotateSpeed: 0.8,
     zoomSpeed: 1.2,
   };
-  const orbit: CRCOrbitCameraResult = crcOrbitCamera(orbitOptions);
+  const orbit: CRCOrbitCameraResult = useOrbitCamera(orbitOptions);
   const handlers: CRCOrbitCameraHandlers = orbit.handlers;
   const camera: CRCWebGLPerspectiveCamera = {
     type: 'perspective',

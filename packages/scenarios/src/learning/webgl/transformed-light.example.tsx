@@ -3,8 +3,8 @@ import {
   Rectangle,
   Group,
   crc,
-  crcPlayback,
-  crcSignal,
+  usePlayback,
+  useSignal,
   repeat,
   sequence,
   track,
@@ -23,7 +23,7 @@ import {
   WebGLBackground,
   WebGLLayer,
   createWebGLGeometry,
-  crcOrbitCamera,
+  useOrbitCamera,
   type CRCWebGLShadowQuality,
 } from '@crc/webgl';
 
@@ -39,8 +39,8 @@ function ConceptDelta({
 }) {
   if (position === 'after') return null;
 
-  const orbit = crcSignal(-35, { debugName: 'transformed light orbit' });
-  crcPlayback(
+  const orbit = useSignal(-35, { debugName: 'transformed light orbit' });
+  usePlayback(
     repeat(
       sequence(
         track(
@@ -109,7 +109,7 @@ const groundGeometry = createWebGLGeometry({
 });
 
 function LightingLesson() {
-  const orbit = crcOrbitCamera({
+  const orbit = useOrbitCamera({
     orbitPoint: [0, -0.25, 0],
     initialPosition: [5.8, 4.2, 7.8],
     minDistance: 3,

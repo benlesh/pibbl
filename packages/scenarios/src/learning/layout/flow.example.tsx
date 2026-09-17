@@ -1,6 +1,6 @@
 import {
   crc,
-  crcState,
+  useState,
   Flow,
   Rectangle,
   Text,
@@ -8,7 +8,7 @@ import {
 } from "@crc/core";
 const colors = ["#1f4bd8", "#ff6b57", "#74d3ae", "#f7c948"] as const;
 function FlowStudy() {
-  const [selected, setSelected] = crcState(0);
+  const [selected, setSelected] = useState(0);
   return [
     <Rectangle
       style={{

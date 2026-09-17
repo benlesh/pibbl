@@ -71,7 +71,7 @@
 ### System ownership and Canvas execution
 
 - Create packages/particles/src/lib/system/controller.ts: command queue, logical run, binding lease, parameter epochs, status/execution signals, milestones, and exact disposal.
-- Create packages/particles/src/lib/system/hook.ts: public crcParticleSystem hook and implicit-system slot.
+- Create packages/particles/src/lib/system/hook.ts: public useParticleSystem hook and implicit-system slot.
 - Create packages/particles/src/lib/system/binding.ts: backend-neutral binding/executor transaction contract.
 - Create packages/particles/src/lib/system/ownership.ts: deterministic counters for controllers, registrations, bindings, queues, ledgers, and caches.
 - Create packages/particles/src/lib/system/{controller,hook,binding}.test.tsx: command, adoption, completion, failure, and hook identity tests.
@@ -99,7 +99,7 @@
 - Create packages/scenarios/src/learning/composition/particle-effects.example.tsx: concise component-vs-style, implicit-vs-explicit, and acceleration-vs-general-animation lesson.
 - Create packages/core/test/{particle-celebration-lab,webgl-particle-ambient-lab,particle-ownership,particle-performance}.test.ts: public API, lifecycle, and structural evidence.
 - Modify package.json, pnpm-lock.yaml, playground/package-consumer/{index.ts,jsx.tsx,runtime.mjs}, tooling/verify-packed-consumer.mjs, playground/src/crc-editor-types.txt, and tooling/verify-studio-types.mjs: workspace, packed, Bundler, NodeNext, runtime, and editor declarations.
-- Create docs/site/api/components/{particles-2d,particles-3d}.md, docs/site/api/functions/{define-particle-effect-2d,define-particle-effect-3d,particle}.md, docs/site/api/hooks/crc-particle-system.md, docs/site/api/types/particles.md, and docs/site/learn/guides/particle-effects.md: public API and learning surface.
+- Create docs/site/api/components/{particles-2d,particles-3d}.md, docs/site/api/functions/{define-particle-effect-2d,define-particle-effect-3d,particle}.md, docs/site/api/hooks/use-particle-system.md, docs/site/api/types/particles.md, and docs/site/learn/guides/particle-effects.md: public API and learning surface.
 - Modify docs/design/{animation-contract,signals-and-scheduling-contract,canvas-surface-contract,runtime-hooks-contract,drawing-components-contract,style-system-contract,layout-system-contract,user-events-contract,focus-and-keyboard-navigation-contract,mouse-interaction-contract,event-resource-ownership,runtime-resource-ownership}.md.
 - Modify README.md, packages/core/README.md, packages/webgl/README.md, docs/library-status.md, AGENTS.md, docs/scenario-index.md, tooling/verify-docs.mjs, tooling/docs-contract-preservation-baseline.json, tooling/studio-docs/api-exports.ts, tooling/studio-docs/api-exports.check.ts, and a new tooling/studio-docs/fixtures/api/particles.ts.
 
@@ -108,7 +108,7 @@
 The root entry exports four runtime values:
 
 ```ts
-export { defineParticleEffect2D, particle, crcParticleSystem, Particles2D };
+export { defineParticleEffect2D, particle, useParticleSystem, Particles2D };
 ```
 
 The WebGL entry exports two runtime values:
@@ -246,14 +246,14 @@ export interface CRCParticleSystem<
   stop(options?: Readonly<{ mode?: "drain" | "clear" }>): void;
 }
 
-export function crcParticleSystem<
+export function useParticleSystem<
   EmitterName extends string,
   Parameters extends CRCParticleParameterValues,
 >(
   effect: CRCParticleEffect2D<EmitterName, Parameters>,
   options?: CRCParticleSystemOptions,
 ): CRCParticleSystem<EmitterName, Parameters, 2>;
-export function crcParticleSystem<
+export function useParticleSystem<
   EmitterName extends string,
   Parameters extends CRCParticleParameterValues,
 >(
@@ -746,7 +746,7 @@ const effect = defineParticleEffect2D({
   },
   emitters: [impactEmitter, smokeEmitter],
 });
-const system = crcParticleSystem(effect);
+const system = useParticleSystem(effect);
 system.emit("impact");
 // @ts-expect-error emitter names come from the frozen definition
 system.emit("unknown");
@@ -1006,7 +1006,7 @@ corepack pnpm@11.21.0 vitest run packages/particles/src/lib/system/binding.test.
 - [ ] Add a compact effect-level parameter epoch ledger. Spawn values bind to the epoch active at birth, simulation values affect current analytic sampling, and render values affect the next successful draw. Prune epochs once no accepted live birth references them.
 - [ ] Acquire a binding lease only after candidate validation and successful render finish. Reject a second concurrent backend before allocating its ledger/executor. Release and balance binding ownership on removal, key replacement, failure, and disposal.
 - [ ] Define events as immutable start, burst-accepted, burst-rejected, drain-start, finish, and error records containing frameId/logicalTime plus effect/emitter diagnostics. Invoke the system-option observer before the current bound component observer for each event/error, isolate failures from both observers, and do not add per-particle events or activeCount to the base handle.
-- [ ] Implement crcParticleSystem with useInternalHookSlot, successful-render candidate adoption, current-callback forwarding, and idempotent controller disposal. Export it from index.ts.
+- [ ] Implement useParticleSystem with useInternalHookSlot, successful-render candidate adoption, current-callback forwarding, and idempotent controller disposal. Export it from index.ts.
 - [ ] Re-run focused tests and verify exact ownership counters return to baseline.
 
 ```sh
@@ -1115,7 +1115,7 @@ const ParticleCanvasPrimitive = definePrimitive<
 corepack pnpm@11.21.0 vitest run packages/particles/src/lib/canvas/raster-cache.test.ts packages/particles/src/lib/canvas/executor.test.ts packages/particles/src/lib/canvas/component.test.tsx --browser.headless --browser.ui=false
 ```
 
-- [ ] Resolve the current finite allocation through crcLayoutBox. Forward BoxStyle/LayoutItemStyle/filter to the private primitive, multiply style.opacity into sampled alpha once, and return unsupported measurement from the primitive so particles never claim intrinsic size.
+- [ ] Resolve the current finite allocation through useLayoutBox. Forward BoxStyle/LayoutItemStyle/filter to the private primitive, multiply style.opacity into sampled alpha once, and return unsupported measurement from the primitive so particles never claim intrinsic size.
 - [ ] Always reserve the same hook order. In the private primitive, register one memoized resolved-border-box target with crcInternalPaintTarget; pass empty handlers and pointerEvents none for decorative mode, and pass current handlers plus cursor/focus options for auto mode. Draw particles inside the resolved content box and never derive target geometry from current particle pixels.
 - [ ] Give each binding one reusable Float64Array sampler register file. Iterate only occupied or conservatively potentially-live slots and draw without per-particle arrays/objects.
 - [ ] Implement circle and rectangle with direct path commands. Draw immutable Path2D directly for low reuse and use the bounded raster cache for repeated complex paths/sprites at quantized useful sizes.
@@ -1523,7 +1523,7 @@ git commit -m "test(particles): verify package consumers"
 - Create: docs/site/api/functions/define-particle-effect-2d.md
 - Create: docs/site/api/functions/define-particle-effect-3d.md
 - Create: docs/site/api/functions/particle-descriptors.md
-- Create: docs/site/api/hooks/crc-particle-system.md
+- Create: docs/site/api/hooks/use-particle-system.md
 - Create: docs/site/api/types/particles.md
 - Create: docs/site/learn/guides/particle-effects.md
 - Modify: docs/site/api/index.md
@@ -1578,7 +1578,7 @@ corepack pnpm@11.21.0 lint:format
 - [ ] Commit only Task 15 files plus exact generated documentation inventory changes.
 
 ```sh
-git add docs/site/api/components/particles-2d.md docs/site/api/components/particles-3d.md docs/site/api/functions/define-particle-effect-2d.md docs/site/api/functions/define-particle-effect-3d.md docs/site/api/functions/particle-descriptors.md docs/site/api/hooks/crc-particle-system.md docs/site/api/types/particles.md docs/site/learn/guides/particle-effects.md docs/site/api/index.md docs/design/animation-contract.md docs/design/signals-and-scheduling-contract.md docs/design/canvas-surface-contract.md docs/design/runtime-hooks-contract.md docs/design/drawing-components-contract.md docs/design/style-system-contract.md docs/design/layout-system-contract.md docs/design/user-events-contract.md docs/design/focus-and-keyboard-navigation-contract.md docs/design/mouse-interaction-contract.md docs/design/event-resource-ownership.md docs/design/runtime-resource-ownership.md README.md packages/core/README.md packages/webgl/README.md docs/library-status.md AGENTS.md tooling/verify-docs.mjs tooling/docs-contract-preservation-baseline.json tooling/studio-docs/api-exports.ts tooling/studio-docs/api-exports.check.ts tooling/studio-docs/fixtures/api/particles.ts
+git add docs/site/api/components/particles-2d.md docs/site/api/components/particles-3d.md docs/site/api/functions/define-particle-effect-2d.md docs/site/api/functions/define-particle-effect-3d.md docs/site/api/functions/particle-descriptors.md docs/site/api/hooks/use-particle-system.md docs/site/api/types/particles.md docs/site/learn/guides/particle-effects.md docs/site/api/index.md docs/design/animation-contract.md docs/design/signals-and-scheduling-contract.md docs/design/canvas-surface-contract.md docs/design/runtime-hooks-contract.md docs/design/drawing-components-contract.md docs/design/style-system-contract.md docs/design/layout-system-contract.md docs/design/user-events-contract.md docs/design/focus-and-keyboard-navigation-contract.md docs/design/mouse-interaction-contract.md docs/design/event-resource-ownership.md docs/design/runtime-resource-ownership.md README.md packages/core/README.md packages/webgl/README.md docs/library-status.md AGENTS.md tooling/verify-docs.mjs tooling/docs-contract-preservation-baseline.json tooling/studio-docs/api-exports.ts tooling/studio-docs/api-exports.check.ts tooling/studio-docs/fixtures/api/particles.ts
 git commit -m "docs(particles): publish first-class particle effects"
 ```
 

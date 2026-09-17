@@ -1,7 +1,7 @@
 # @crc/particles
 
 Optional particle-effect package for CRC. The root entry provides the
-`Particles2D` component, `crcParticleSystem`, effect definitions, and direct
+`Particles2D` component, `useParticleSystem`, effect definitions, and direct
 tree-shakable descriptor factories such as `particleRange`, `particleChoice`,
 and `particleCurve`. These factories create deterministic particle-definition
 descriptors; they do not return random values or general CRC utilities.

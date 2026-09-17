@@ -6,7 +6,7 @@
 
 **Goal:** Replace CRC's eager mouse-only interaction path with one lazy, DOM-aligned user-event dispatcher supporting explicit targets, propagation, pointer capture, and the pertinent browser user-event families.
 
-**Architecture:** Keep CRC immediate-mode: render-time hooks update sparse event target/listener registrations, coordinate events resolve one target through the existing global paint ledger, and dispatch derives a temporary component-ancestry path. Small native-family adapters feed one facade and propagation engine; the root HTML Canvas owns lazy listeners, while legacy `crcEvent` behavior remains compatible.
+**Architecture:** Keep CRC immediate-mode: render-time hooks update sparse event target/listener registrations, coordinate events resolve one target through the existing global paint ledger, and dispatch derives a temporary component-ancestry path. Small native-family adapters feed one facade and propagation engine; the root HTML Canvas owns lazy listeners, while legacy `useEvent` behavior remains compatible.
 
 **Tech Stack:** TypeScript 5, Canvas 2D, DOM Pointer/Mouse/Touch/UI/Input/Clipboard/Drag APIs, Vitest Browser Mode with Playwright Chromium, pnpm 11.21.0, esbuild package verification.
 
@@ -20,7 +20,7 @@
 - Do not create a retained DOM, scene graph, accessibility tree, or widget library.
 - Every event resource has one explicit owner and idempotent release path.
 - Native event collection requires an `HTMLCanvasElement`; root `OffscreenCanvas` mounts remain without a DOM event source.
-- Keep the existing singular `crcEvent` public behavior compatible.
+- Keep the existing singular `useEvent` public behavior compatible.
 - Export all supported runtime functions and types from `@crc/core`; do not add deep-import requirements.
 - Add a failing observable contract test before each production change.
 - Do not update visual baselines unless inspected semantic evidence proves an intentional pixel change.
@@ -40,16 +40,16 @@ New event units:
 - `packages/core/src/lib/events/pointer-capture.ts` — native Canvas capture plus logical pointer-owner mapping.
 - `packages/core/src/lib/events/dispatch.ts` — shared native-to-logical orchestration and activation history.
 - `packages/core/src/lib/events/adapters/*.ts` — small pointer, mouse, touch, wheel, keyboard/focus, editing/composition, clipboard, and drag adapters.
-- `packages/core/src/lib/hooks/crc-event-target.ts` — grouped explicit geometric target hook.
-- `packages/core/src/lib/hooks/crc-event-listener.ts` — explicit non-geometric propagation listener hook.
+- `packages/core/src/lib/hooks/use-event-target.ts` — grouped explicit geometric target hook.
+- `packages/core/src/lib/hooks/use-event-listener.ts` — explicit non-geometric propagation listener hook.
 
 Existing integration points:
 
 - `packages/core/src/lib/types.ts` keeps general runtime types and imports/re-exports event types.
 - `packages/core/src/lib/mount-crc.ts` creates the event root and no longer eagerly installs eight mouse listeners.
 - `packages/core/src/lib/global-state.ts` clears the new root-owned event resources.
-- `packages/core/src/lib/hooks/crc-region.ts` becomes the built-in compatibility adapter over grouped targets.
-- `packages/core/src/lib/hooks/crc-event.ts` preserves singular observer/path behavior through the new event root.
+- `packages/core/src/lib/hooks/use-region.ts` becomes the built-in compatibility adapter over grouped targets.
+- `packages/core/src/lib/hooks/use-event.ts` preserves singular observer/path behavior through the new event root.
 - `packages/core/src/lib/util/wire-common-events.ts` becomes the built-in DOM-style prop-to-target bridge.
 - `packages/core/src/lib/components/layer.ts` records the parent-component bridge needed for cross-layer propagation.
 - `packages/core/src/index.ts` exports the public event APIs and types.
@@ -362,18 +362,18 @@ git commit -m "refactor(events): install native listeners lazily"
 **Files:**
 
 - Create: `packages/core/src/lib/events/registrations.ts`
-- Create: `packages/core/src/lib/hooks/crc-event-target.ts`
-- Create: `packages/core/src/lib/hooks/crc-event-listener.ts`
-- Create: `packages/core/src/lib/hooks/crc-event-target.test.ts`
-- Modify: `packages/core/src/lib/hooks/crc-region.ts`
+- Create: `packages/core/src/lib/hooks/use-event-target.ts`
+- Create: `packages/core/src/lib/hooks/use-event-listener.ts`
+- Create: `packages/core/src/lib/hooks/use-event-target.test.ts`
+- Modify: `packages/core/src/lib/hooks/use-region.ts`
 - Modify: `packages/core/src/lib/hooks/hook-contract.test.ts`
 - Modify: `packages/core/src/lib/types.ts`
 
 **Interfaces:**
 
 - Consumes: Task 1 handler/target types and Task 2 listener hub.
-- Produces: `crcEventTarget(handlers, options): CRCEventTargetSnapshot`.
-- Produces: `crcEventListener(handlers): void`.
+- Produces: `useEventTarget(handlers, options): CRCEventTargetSnapshot`.
+- Produces: `useEventListener(handlers): void`.
 - Produces internal `createTarget`, `updateTarget`, `releaseTarget`, `createListener`, `updateListener`, and `releaseListener` functions.
 
 - [ ] **Step 1: Write failing ownership tests**
@@ -385,7 +385,7 @@ geometry inference:
 ```ts
 const Composite = defineComp<{ onClick: CRCEventHandlers["onClick"] }>(
   ({ onClick }) => {
-    crcEventListener({ onClick });
+    useEventListener({ onClick });
     return rect({ style: { width: 40, height: 40, fill: "#000" } });
   },
 );
@@ -401,7 +401,7 @@ one component teardown.
 - [ ] **Step 2: Run the test and verify failure**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/crc-event-target.test.ts packages/core/src/lib/hooks/hook-contract.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/use-event-target.test.ts packages/core/src/lib/hooks/hook-contract.test.ts --browser.headless --browser.ui=false
 ```
 
 Expected: FAIL because the hooks and grouped registration do not exist.
@@ -443,9 +443,9 @@ paint ledger, and acquire native types only for their live handlers. Capture and
 non-capture callbacks for the same event remain in one registration so one hook
 slot has one teardown.
 
-- [ ] **Step 5: Adapt `crcRegion` to grouped target ownership**
+- [ ] **Step 5: Adapt `useRegion` to grouped target ownership**
 
-Keep `crcRegion` internal and preserve its current call sites. It should update
+Keep `useRegion` internal and preserve its current call sites. It should update
 one `CRCEventTargetRegistration` and retain cursor-only regions. Keep temporary
 type aliases where needed so existing mouse tests compile before the dispatcher
 migration.
@@ -453,7 +453,7 @@ migration.
 - [ ] **Step 6: Run hook and lifecycle checks**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/crc-event-target.test.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/lib/hooks/crc-cursor.test.ts packages/core/test/lifecycle-ownership.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/use-event-target.test.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/lib/hooks/use-cursor.test.ts packages/core/test/lifecycle-ownership.test.ts --browser.headless --browser.ui=false
 ```
 
 Expected: PASS.
@@ -461,7 +461,7 @@ Expected: PASS.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add packages/core/src/lib/events/registrations.ts packages/core/src/lib/hooks/crc-event-target.ts packages/core/src/lib/hooks/crc-event-listener.ts packages/core/src/lib/hooks/crc-event-target.test.ts packages/core/src/lib/hooks/crc-region.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/lib/types.ts
+git add packages/core/src/lib/events/registrations.ts packages/core/src/lib/hooks/use-event-target.ts packages/core/src/lib/hooks/use-event-listener.ts packages/core/src/lib/hooks/use-event-target.test.ts packages/core/src/lib/hooks/use-region.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/lib/types.ts
 git commit -m "feat(events): add explicit target and listener hooks"
 ```
 
@@ -566,7 +566,7 @@ git commit -m "feat(events): dispatch capture target and bubble phases"
 - Create: `packages/core/src/lib/events/mouse-dispatch.test.ts`
 - Modify: `packages/core/src/lib/interaction-dispatch.ts`
 - Modify: `packages/core/src/lib/mount-crc.ts`
-- Modify: `packages/core/src/lib/hooks/crc-region.ts`
+- Modify: `packages/core/src/lib/hooks/use-region.ts`
 - Modify: `packages/core/test/interaction-dispatch.test.ts`
 - Modify: `packages/core/test/mouse-contract.test.ts`
 
@@ -629,7 +629,7 @@ re-exports for cursor and region-removal call sites until Task 8.
 - [ ] **Step 7: Run mouse, geometry, layer, and cursor suites**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/events/mouse-dispatch.test.ts packages/core/test/interaction-dispatch.test.ts packages/core/test/mouse-contract.test.ts packages/core/test/geometry-composition.test.ts packages/core/src/lib/components/layer.test.ts packages/core/src/lib/hooks/crc-cursor.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/events/mouse-dispatch.test.ts packages/core/test/interaction-dispatch.test.ts packages/core/test/mouse-contract.test.ts packages/core/test/geometry-composition.test.ts packages/core/src/lib/components/layer.test.ts packages/core/src/lib/hooks/use-cursor.test.ts --browser.headless --browser.ui=false
 ```
 
 Expected: PASS.
@@ -637,7 +637,7 @@ Expected: PASS.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add packages/core/src/lib/events packages/core/src/lib/interaction-dispatch.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/hooks/crc-region.ts packages/core/test/interaction-dispatch.test.ts packages/core/test/mouse-contract.test.ts
+git add packages/core/src/lib/events packages/core/src/lib/interaction-dispatch.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/hooks/use-region.ts packages/core/test/interaction-dispatch.test.ts packages/core/test/mouse-contract.test.ts
 git commit -m "feat(events): route mouse input through logical propagation"
 ```
 
@@ -768,7 +768,7 @@ for facade `x`/`y` while preserving all native lists.
 
 Without an installed focus policy, native keyboard/focus events have no
 geometric descendant target and therefore remain targetless. The public
-pathless `crcEvent` observer is mouse-only; only internal focused tests may
+pathless `useEvent` observer is mouse-only; only internal focused tests may
 supply an explicit target to `dispatchToLogicalTarget` until focus/input
 integration provides a supported route. Keep this transport neutral so the
 next implementation plan can provide logical focus.
@@ -818,7 +818,7 @@ git commit -m "feat(events): support touch keyboard editing and drag families"
 - Modify: `packages/core/src/lib/components/vertical-line.ts`
 - Modify: `packages/core/src/lib/components/svg-path.ts`
 - Modify: `packages/core/src/lib/components/layer.ts`
-- Modify: `packages/core/src/lib/hooks/crc-event.ts`
+- Modify: `packages/core/src/lib/hooks/use-event.ts`
 - Modify: `packages/core/src/lib/interaction-dispatch.ts`
 - Modify: `packages/core/src/index.ts`
 - Modify: `packages/core/src/types.ts`
@@ -828,7 +828,7 @@ git commit -m "feat(events): support touch keyboard editing and drag families"
 **Interfaces:**
 
 - Consumes: all event APIs from Tasks 1-7.
-- Produces: root exports `crcEventTarget`, `crcEventListener`, all public event types, and full DOM-style built-in props.
+- Produces: root exports `useEventTarget`, `useEventListener`, all public event types, and full DOM-style built-in props.
 - Produces: cross-layer component ancestry bridges.
 
 - [ ] **Step 1: Write failing public-API and built-in tests**
@@ -854,7 +854,7 @@ Built-in drawing prop interfaces extend `CRCEventHandlers`. The shared wiring
 function normalizes `onX`/`onXCapture` once and calls one grouped region/target
 registration with the primitive's explicit path. Keep cursor-only targets.
 
-- [ ] **Step 4: Preserve singular `crcEvent` compatibility**
+- [ ] **Step 4: Preserve singular `useEvent` compatibility**
 
 Path-bound calls register one legacy target slot with the requested event.
 No-path calls remain mouse-only Canvas-wide observers that run after target
@@ -933,8 +933,8 @@ exercise the new contracts.
 - [ ] **Step 3: Implement readable public-API fixtures**
 
 Keep learning code separate from exhaustive test-only matrices. Use direct
-built-in props for ordinary targets, one `crcEventTarget` custom-path example,
-and one `crcEventListener` propagation example. Do not add a public widget
+built-in props for ordinary targets, one `useEventTarget` custom-path example,
+and one `useEventListener` propagation example. Do not add a public widget
 component or implicit composite geometry.
 
 - [ ] **Step 4: Update the implemented contracts**
@@ -1000,7 +1000,7 @@ the old region shape.
 
 - [ ] **Step 3: Update packed-consumer coverage**
 
-Import `crcEventTarget`, `crcEventListener`, and representative event types from
+Import `useEventTarget`, `useEventListener`, and representative event types from
 `@crc/core` in the strict Bundler/NodeNext consumer. Extend the packed verifier
 to confirm no `src/` files, no deep imports, valid runtime loading, and public
 declarations for every event family.

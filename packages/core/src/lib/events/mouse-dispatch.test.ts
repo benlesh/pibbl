@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { crcEvent } from '../hooks/crc-event';
-import { crcEventListener } from '../hooks/crc-event-listener';
-import { crcEventTarget } from '../hooks/crc-event-target';
+import { useEvent } from '../hooks/use-event';
+import { useEventListener } from '../hooks/use-event-listener';
+import { useEventTarget } from '../hooks/use-event-target';
 import type {
   CRCEventHandlers,
   CRCEventTarget,
@@ -116,7 +116,7 @@ describe('DOM-aligned mouse dispatch', () => {
       defaultPrevented: boolean;
     }> = [];
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onMouseEnter: event => {
           event.preventDefault();
           observed.push({
@@ -169,7 +169,7 @@ describe('DOM-aligned mouse dispatch', () => {
       label: string;
       x: number;
     }) => {
-      crcEventTarget({
+      useEventTarget({
         onClick: () => trace.push(`${label}-click`),
       }, {
         path: rectanglePath(x, 0, 50, 50),
@@ -177,7 +177,7 @@ describe('DOM-aligned mouse dispatch', () => {
       });
     };
     const Parent = (_props: {}) => {
-      crcEventListener({
+      useEventListener({
         onClickCapture: event => trace.push(`parent-capture:${event.eventPhase}`),
         onClick: event => {
           activationTarget = event.target;
@@ -187,7 +187,7 @@ describe('DOM-aligned mouse dispatch', () => {
       return [createElement(Target, { label: 'a', x: 0 }), createElement(Target, { label: 'b', x: 50 })];
     };
     const Root = (_props: {}) => {
-      crcEventListener({
+      useEventListener({
         onClickCapture: event => trace.push(`root-capture:${event.eventPhase}`),
         onClick: event => {
           expect(event.target).toBe(activationTarget);
@@ -220,7 +220,7 @@ describe('DOM-aligned mouse dispatch', () => {
         label: string;
         x: number;
       }) => {
-        crcEventTarget({
+        useEventTarget({
           onClick: () => trace.push(`${label}-click`),
           onAuxClick: () => trace.push(`${label}-auxclick`),
         }, {
@@ -249,7 +249,7 @@ describe('DOM-aligned mouse dispatch', () => {
     async ({ button, type }) => {
       const trace: string[] = [];
       const Target = ({ x }: { x: number }) => {
-        crcEventTarget({
+        useEventTarget({
           onClick: () => trace.push('target-click'),
           onAuxClick: () => trace.push('target-auxclick'),
         }, {
@@ -258,7 +258,7 @@ describe('DOM-aligned mouse dispatch', () => {
         });
       };
       const Parent = (_props: {}) => {
-        crcEventListener({
+        useEventListener({
           onClick: () => trace.push('parent-click'),
           onAuxClick: () => trace.push('parent-auxclick'),
         });
@@ -284,7 +284,7 @@ describe('DOM-aligned mouse dispatch', () => {
         targetLabel: string;
         x: number;
       }) => {
-        crcEventTarget({
+        useEventTarget({
           onClick: () => trace.push(`${targetLabel}-click`),
           onAuxClick: () => trace.push(`${targetLabel}-auxclick`),
           onMouseMove: () => undefined,
@@ -318,7 +318,7 @@ describe('DOM-aligned mouse dispatch', () => {
       label: string;
       x: number;
     }) => {
-      crcEventTarget({
+      useEventTarget({
         onClick: () => trace.push(`${label}-click`),
         onAuxClick: () => trace.push(`${label}-auxclick`),
       }, {
@@ -350,7 +350,7 @@ describe('DOM-aligned mouse dispatch', () => {
     );
     const trace: string[] = [];
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onMouseMove: () => trace.push('target'),
       }, {
         path: rectanglePath(0, 0, 100, 100),
@@ -358,11 +358,11 @@ describe('DOM-aligned mouse dispatch', () => {
       });
     };
     const Root = (_props: {}) => {
-      crcEvent('mousemove', () => {
+      useEvent('mousemove', () => {
         trace.push('throws');
         throw new Error('expected observer failure');
       });
-      crcEvent('mousemove', () => trace.push('safe'));
+      useEvent('mousemove', () => trace.push('safe'));
       return createElement(Target, {});
     };
     const canvas = createCanvas();
@@ -377,7 +377,7 @@ describe('DOM-aligned mouse dispatch', () => {
 
   it('owns movement and root-exit listeners for a boundary-only target', async () => {
     const Target = (_props: {}) => {
-      crcEventTarget({ onMouseEnter: () => undefined }, {
+      useEventTarget({ onMouseEnter: () => undefined }, {
         path: rectanglePath(0, 0, 50, 50),
         fill: true,
       });
@@ -412,7 +412,7 @@ describe('DOM-aligned mouse dispatch', () => {
     'owns down/up and native activation prerequisites for $label targets',
     async ({ handlers, expected }) => {
       const Target = (_props: {}) => {
-        crcEventTarget(handlers, {
+        useEventTarget(handlers, {
           path: rectanglePath(0, 0, 50, 50),
           fill: true,
         });
@@ -458,7 +458,7 @@ function boundaryScene(
     label: 'a' | 'b';
     x: number;
   }) => {
-    crcEventTarget({
+    useEventTarget({
       ...listenerHandlers(label),
       onMouseOver: event => {
         hooks.onOver?.(event);
@@ -487,13 +487,13 @@ function boundaryScene(
     });
   };
   const Parent = (_props: {}) => {
-    crcEventListener(listenerHandlers('parent'));
+    useEventListener(listenerHandlers('parent'));
     return includeB ?
         [createElement(Target, { label: 'a', x: 0 }), createElement(Target, { label: 'b', x: 50 })] :
         createElement(Target, { label: 'a', x: 0 });
   };
   const Root = (_props: {}) => {
-    crcEventListener(listenerHandlers('root'));
+    useEventListener(listenerHandlers('root'));
     return createElement(Parent, {});
   };
   return createElement(Root, {});

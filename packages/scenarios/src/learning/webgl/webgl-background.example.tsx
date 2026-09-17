@@ -8,7 +8,7 @@ import {
   WebGLBackground,
   WebGLLayer,
   createWebGLGeometry,
-  crcOrbitCamera,
+  useOrbitCamera,
   type CRCWebGLShadowQuality,
 } from '@crc/webgl';
 
@@ -40,7 +40,7 @@ const groundGeometry = createWebGLGeometry({
 });
 
 function LightingLesson() {
-  const orbit = crcOrbitCamera({
+  const orbit = useOrbitCamera({
     orbitPoint: [0, -0.25, 0],
     initialPosition: [5.8, 4.2, 7.8],
     minDistance: 3,

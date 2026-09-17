@@ -75,7 +75,7 @@ Add `pointerEvents="none"` only where click-through is intended. Do not add it
 to an ancestor merely to make one leaf transparent: on `WebGLLayer` it disables
 the entire island picker, while drawing-leaf opt-out skips only that object.
 
-Custom Canvas targets created by `crcEventTarget` remain explicit. Custom
+Custom Canvas targets created by `useEventTarget` remain explicit. Custom
 WebGL primitives must declare geometry/custom hit behavior or the decorative
 `none` capability; decorative definitions permit only
 `pointerEvents="none"`.

@@ -118,7 +118,7 @@ auto-placement and advanced intrinsic sizing are not supported.
 ## LayoutBox
 
 `LayoutBox` is the stable readonly child-local allocation available during
-render through `crcLayoutBox`.
+render through `useLayoutBox`.
 
 ## LayoutDiagnosticContext
 

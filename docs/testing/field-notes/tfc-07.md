@@ -6,7 +6,7 @@ Date: 2026-08-11
 
 ## Scenario and risk
 
-The cataloged `runtime-cleanup-stress` laboratory exercises pending frames, current/superseded/broken images, single and nested layers, synchronous `crcWhenChanged` cleanup, component keys, root identities, abort/dispose/remount, repeated cleanup, and 1,000 fully rendered mount/dispose cycles. The gallery and the headless suite load the same public-API scene, controller, action IDs, and source marker.
+The cataloged `runtime-cleanup-stress` laboratory exercises pending frames, current/superseded/broken images, single and nested layers, synchronous `useWhenChanged` cleanup, component keys, root identities, abort/dispose/remount, repeated cleanup, and 1,000 fully rendered mount/dispose cycles. The gallery and the headless suite load the same public-API scene, controller, action IDs, and source marker.
 
 The highest risks were resources with more than one apparent owner and asynchronous work retaining authority after its component died. In the starting implementation, change-hook cleanups belonged to both component and main teardown Sets; stale state setters knew only their Canvas; and `img` load handlers had no error, generation, or removal cleanup.
 
@@ -69,7 +69,7 @@ The controlled image scheduler and exact structure ledger were useful here, but 
 ## Decisions and follow-ups
 
 - A state setter is scoped to the exact instance and component-ref identity that created it and becomes inert as soon as either teardown begins.
-- `crcWhenChanged` has one current cleanup owner: its component teardown collection. Dependency change removes and runs that generation before the next setup.
+- `useWhenChanged` has one current cleanup owner: its component teardown collection. Dependency change removes and runs that generation before the next setup.
 - `img` owns its current source generation, detaches load/error handlers on every terminal boundary, and only draws state tagged with the current source.
 - Existing frame/controller and recursive layer ownership passed the broader stress proof without another production change.
 - TFC-08 owns the remaining full runtime/hook identity matrix, including component type/key and hook-order error contracts.

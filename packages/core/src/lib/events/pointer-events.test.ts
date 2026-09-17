@@ -6,8 +6,8 @@ import { Rectangle } from '../components/rect';
 import type { CRCFocusManager } from '../focus/focus-manager';
 import { focusManaged } from '../focus/policy-test-support';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { crcEventListener } from '../hooks/crc-event-listener';
-import { crcEventTarget } from '../hooks/crc-event-target';
+import { useEventListener } from '../hooks/use-event-listener';
+import { useEventTarget } from '../hooks/use-event-target';
 import { getPointerCaptureStateCounts } from './pointer-capture';
 import type {
   CRCEventHandlers,
@@ -66,7 +66,7 @@ describe('DOM-aligned pointer dispatch', () => {
     async pointer => {
       let received: CRCPointerEvent | undefined;
       const Target = (_props: {}) => {
-        crcEventTarget({ onPointerDown: event => received = event }, {
+        useEventTarget({ onPointerDown: event => received = event }, {
           path: rectanglePath(0, 0, 100, 100),
           fill: true,
         });
@@ -162,7 +162,7 @@ describe('DOM-aligned pointer dispatch', () => {
       defaultPrevented: boolean;
     }> = [];
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerEnter: event => {
           event.preventDefault();
           observed.push({
@@ -209,7 +209,7 @@ describe('DOM-aligned pointer dispatch', () => {
     const trace: string[] = [];
     let capturedTarget: CRCEventTarget | undefined;
     const Target = ({ label, x }: { label: string; x: number }) => {
-        crcEventTarget({
+        useEventTarget({
           onPointerOver: event => trace.push(`${label}-over:${event.pointerId}`),
           onPointerEnter: event => trace.push(`${label}-enter:${event.pointerId}`),
           onPointerMove: event => trace.push(`${label}-move:${event.pointerId}`),
@@ -263,7 +263,7 @@ describe('DOM-aligned pointer dispatch', () => {
     const moves: string[] = [];
     const publicTargets = new Map<string, CRCEventTarget>();
     const Target = ({ label, x }: { label: string; x: number }) => {
-        crcEventTarget({
+        useEventTarget({
           onPointerDown: event => {
             publicTargets.set(label, event.currentTarget);
             event.currentTarget.setPointerCapture(event.pointerId);
@@ -302,7 +302,7 @@ describe('DOM-aligned pointer dispatch', () => {
   it('routes pointerup outside geometry to the captured owner', async () => {
     const trace: string[] = [];
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           event.currentTarget.setPointerCapture(event.pointerId);
         },
@@ -329,13 +329,13 @@ describe('DOM-aligned pointer dispatch', () => {
     const trace: string[] = [];
     let listenerTarget: CRCEventTarget | undefined;
     const Target = (_props: {}) => {
-      crcEventTarget({ onPointerDown: () => trace.push('target-down') }, {
+      useEventTarget({ onPointerDown: () => trace.push('target-down') }, {
         path: rectanglePath(0, 0, 50, 50),
         fill: true,
       });
     };
     const Root = (_props: {}) => {
-      crcEventListener({
+      useEventListener({
         onPointerDownCapture: event => {
           listenerTarget = event.currentTarget;
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -362,7 +362,7 @@ describe('DOM-aligned pointer dispatch', () => {
     let caught: unknown;
     let hasCapture: boolean | undefined;
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           try {
             event.currentTarget.setPointerCapture(event.pointerId);
@@ -394,7 +394,7 @@ describe('DOM-aligned pointer dispatch', () => {
   it('routes native capture notifications to the logical owner and clears before loss callbacks', async () => {
     const trace: string[] = [];
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           event.currentTarget.setPointerCapture(event.pointerId);
         },
@@ -426,7 +426,7 @@ describe('DOM-aligned pointer dispatch', () => {
   it('routes native got notification delivered during the capture call', async () => {
     const trace: string[] = [];
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           event.currentTarget.setPointerCapture(event.pointerId);
         },
@@ -455,7 +455,7 @@ describe('DOM-aligned pointer dispatch', () => {
     const trace: string[] = [];
     let target: CRCEventTarget | undefined;
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           target = event.currentTarget;
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -484,7 +484,7 @@ describe('DOM-aligned pointer dispatch', () => {
     const trace: string[] = [];
     let target: CRCEventTarget | undefined;
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           target = event.currentTarget;
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -516,7 +516,7 @@ describe('DOM-aligned pointer dispatch', () => {
     const trace: string[] = [];
     let target: CRCEventTarget | undefined;
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           target = event.currentTarget;
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -549,7 +549,7 @@ describe('DOM-aligned pointer dispatch', () => {
     let target: CRCEventTarget | undefined;
     let caught: unknown;
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           target = event.currentTarget;
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -607,7 +607,7 @@ describe('DOM-aligned pointer dispatch', () => {
     let nativeHasCapture: boolean | undefined;
     let trustedPointerDown = false;
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           pointerId = event.pointerId;
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -668,7 +668,7 @@ describe('DOM-aligned pointer dispatch', () => {
   it('clears capture on pointercancel without disturbing another pointer', async () => {
     const trace: string[] = [];
     const Target = ({ label, x }: { label: string; x: number }) => {
-        crcEventTarget({
+        useEventTarget({
           onPointerDown: event => event.currentTarget.setPointerCapture(
             event.pointerId,
           ),
@@ -705,7 +705,7 @@ describe('DOM-aligned pointer dispatch', () => {
   it('dispatches pointerrawupdate only when the browser supplies it', async () => {
     const trace: string[] = [];
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerMove: event => trace.push(`move:${event.pointerId}`),
         onPointerRawUpdate: event => trace.push(`raw:${event.pointerId}`),
       }, {
@@ -726,7 +726,7 @@ describe('DOM-aligned pointer dispatch', () => {
   it('forwards native pointer and compatibility mouse sequences independently', async () => {
     const trace: string[] = [];
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: () => trace.push('pointerdown'),
         onMouseDown: () => trace.push('mousedown'),
       }, {
@@ -746,7 +746,7 @@ describe('DOM-aligned pointer dispatch', () => {
 
   it('owns movement and root-exit prerequisites for a boundary-only target', async () => {
     const Target = (_props: {}) => {
-      crcEventTarget({ onPointerEnter: () => undefined }, {
+      useEventTarget({ onPointerEnter: () => undefined }, {
         path: rectanglePath(0, 0, 50, 50),
         fill: true,
       });
@@ -838,7 +838,7 @@ describe('pointer capture ownership', () => {
       `a=${targets.get('a')?.hasPointerCapture(pointerId)},` +
       `b=${targets.get('b')?.hasPointerCapture(pointerId)}`;
     const Target = ({ label, x }: { label: string; x: number }) => {
-        crcEventTarget({
+        useEventTarget({
           onPointerDown: event => {
             targets.set(label, event.currentTarget);
             if (label === 'a' && event.pointerId === 51) {
@@ -937,7 +937,7 @@ describe('pointer capture ownership', () => {
       `a=${targets.get('a')?.hasPointerCapture(pointerId)},` +
       `b=${targets.get('b')?.hasPointerCapture(pointerId)}`;
     const Target = ({ label, x }: { label: string; x: number }) => {
-        crcEventTarget({
+        useEventTarget({
           onPointerDown: event => targets.set(label, event.currentTarget),
           onGotPointerCapture: event => trace.push(
             `${label}-got:${captureState(event.pointerId)}`,
@@ -1018,7 +1018,7 @@ describe('pointer capture ownership', () => {
       `a=${targets.get('a')?.hasPointerCapture(pointerId)},` +
       `b=${targets.get('b')?.hasPointerCapture(pointerId)}`;
     const Target = ({ label, x }: { label: string; x: number }) => {
-        crcEventTarget({
+        useEventTarget({
           onPointerDown: event => targets.set(label, event.currentTarget),
           onGotPointerCapture: event => trace.push(
             `${label}-got:${captureState(event.pointerId)}`,
@@ -1095,7 +1095,7 @@ describe('pointer capture ownership', () => {
     const trace: string[] = [];
     const targets = new Map<string, CRCEventTarget>();
     const Target = ({ label, x }: { label: string; x: number }) => {
-        crcEventTarget({
+        useEventTarget({
           onPointerDown: event => targets.set(label, event.currentTarget),
           onGotPointerCapture: () => trace.push(`${label}-got`),
           onLostPointerCapture: () => trace.push(`${label}-lost`),
@@ -1140,7 +1140,7 @@ describe('pointer capture ownership', () => {
     const trace: string[] = [];
     const targets = new Map<string, CRCEventTarget>();
     const Target = ({ label, x }: { label: string; x: number }) => {
-        crcEventTarget({
+        useEventTarget({
           onPointerDown: event => targets.set(label, event.currentTarget),
           onGotPointerCapture: () => trace.push(`${label}-got`),
           onLostPointerCapture: () => trace.push(`${label}-lost`),
@@ -1191,7 +1191,7 @@ describe('pointer capture ownership', () => {
     const trace: string[] = [];
     const targets = new Map<string, CRCEventTarget>();
     const Target = ({ label, x }: { label: string; x: number }) => {
-        crcEventTarget({
+        useEventTarget({
           onPointerDown: event => targets.set(label, event.currentTarget),
           onGotPointerCapture: () => trace.push(`${label}-got`),
           onLostPointerCapture: () => trace.push(`${label}-lost`),
@@ -1263,7 +1263,7 @@ describe('pointer capture ownership', () => {
 
   it('owns cancel and native loss while capture is active without subscribers', async () => {
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           event.currentTarget.setPointerCapture(event.pointerId);
         },
@@ -1297,13 +1297,13 @@ describe('pointer capture ownership', () => {
     const trace: string[] = [];
     let listenerTarget: CRCEventTarget | undefined;
     const Target = (_props: {}) => {
-      crcEventTarget({ onPointerDown: () => undefined }, {
+      useEventTarget({ onPointerDown: () => undefined }, {
         path: rectanglePath(0, 0, 50, 50),
         fill: true,
       });
     };
     const ListenerOwner = (_props: {}) => {
-      crcEventListener({
+      useEventListener({
         onPointerDownCapture: event => {
           listenerTarget = event.currentTarget;
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -1337,7 +1337,7 @@ describe('pointer capture ownership', () => {
   it('clears native and logical capture when a live registration is removed', async () => {
     const trace: string[] = [];
     const Target = ({ enabled }: { enabled: boolean }) => {
-      crcEventTarget(enabled ? {
+      useEventTarget(enabled ? {
         onPointerDown: event => {
           event.currentTarget.setPointerCapture(event.pointerId);
         },
@@ -1368,7 +1368,7 @@ describe('pointer capture ownership', () => {
   it('uses the root Canvas for a layer target and clears capture on layer teardown', async () => {
     const trace: string[] = [];
     const LayerTarget = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           event.currentTarget.setPointerCapture(event.pointerId);
         },
@@ -1405,7 +1405,7 @@ describe('pointer capture ownership', () => {
   it('clears capture and native ownership on root disposal', async () => {
     const trace: string[] = [];
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onPointerDown: event => {
           event.currentTarget.setPointerCapture(event.pointerId);
         },
@@ -1435,7 +1435,7 @@ describe('pointer capture ownership', () => {
   it('does not claim capture for an OffscreenCanvas root without a native source', async () => {
     const offscreen = new OffscreenCanvas(50, 50);
     const Target = (_props: {}) => {
-      crcEventTarget({ onPointerDown: () => undefined }, {
+      useEventTarget({ onPointerDown: () => undefined }, {
         path: rectanglePath(0, 0, 50, 50),
         fill: true,
       });
@@ -1458,7 +1458,7 @@ describe('DOM-aligned wheel dispatch', () => {
     const trace: string[] = [];
     let received: CRCWheelEvent | undefined;
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onWheel: event => {
           received = event;
           trace.push(`target:${event.eventPhase}`);
@@ -1470,7 +1470,7 @@ describe('DOM-aligned wheel dispatch', () => {
       });
     };
     const Root = (_props: {}) => {
-      crcEventListener({
+      useEventListener({
         onWheelCapture: event => trace.push(`root-capture:${event.eventPhase}`),
         onWheel: event => trace.push(`root-bubble:${event.eventPhase}`),
       });
@@ -1520,7 +1520,7 @@ function pointerBoundaryScene(trace: string[]) {
     ),
   });
   const Target = ({ label, x }: { label: string; x: number }) => {
-    crcEventTarget({
+    useEventTarget({
       ...handlers(label),
       onPointerMove: event => trace.push(
         `${label}-move:${event.pointerId}:${event.eventPhase}`,
@@ -1531,11 +1531,11 @@ function pointerBoundaryScene(trace: string[]) {
     });
   };
   const Parent = (_props: {}) => {
-    crcEventListener(handlers('parent'));
+    useEventListener(handlers('parent'));
     return [createElement(Target, { label: 'a', x: 0 }), createElement(Target, { label: 'b', x: 50 })];
   };
   const Root = (_props: {}) => {
-    crcEventListener(handlers('root'));
+    useEventListener(handlers('root'));
     return createElement(Parent, {});
   };
   return createElement(Root, {});

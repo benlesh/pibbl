@@ -3,9 +3,9 @@ import { crc } from '../crc';
 import { Image } from '../components/img';
 import { Text } from '../components/text';
 import { resolveTextLayout } from '../components/text-layout';
-import { crcLayoutBox } from '../hooks/crc-layout-box';
-import { crcRef } from '../hooks/crc-ref';
-import { crcState } from '../hooks/crc-state';
+import { useLayoutBox } from '../hooks/use-layout-box';
+import { useRef } from '../hooks/use-ref';
+import { useState } from '../hooks/use-state';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCElement, MeasureResult, SystemStyle } from '../types';
@@ -180,9 +180,9 @@ describe('pure element measurement', () => {
   it('isolates measurement from active render hooks and layout context', async () => {
     const errors: string[] = [];
     const probes = [
-      () => crcState(1),
-      () => crcRef(),
-      () => crcLayoutBox(),
+      () => useState(1),
+      () => useRef(),
+      () => useLayoutBox(),
     ];
     const Probe = definePrimitive<{}>(() => undefined, {
       measure: () => {
@@ -191,7 +191,7 @@ describe('pure element measurement', () => {
       },
     });
     const Host = ({ revision }: { revision: number }) => {
-      crcState(revision);
+      useState(revision);
       for (let index = 0; index < 3; index++) {
         try {
           measureElement(createElement(Probe, {}), constraints, service);
@@ -199,7 +199,7 @@ describe('pure element measurement', () => {
           errors.push(String(error));
         }
       }
-      crcRef(revision);
+      useRef(revision);
     };
     const canvas = await componentTest(createElement(Host, { revision: 1 }));
 

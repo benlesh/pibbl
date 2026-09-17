@@ -20,14 +20,14 @@ The public model has three layers:
 
 1. immutable 2D or 3D effect definitions describe emitters, ranges, curves,
    motion, appearance, and renderers;
-2. an optional component-owned `crcParticleSystem` handle owns one live run,
+2. an optional component-owned `useParticleSystem` handle owns one live run,
    commands, status, parameters, and scheduler participation; and
 3. `Particles2D` or `Particles3D` binds that run to one visual location and one
    backend.
 
 Simple effects use `<Particles2D effect={effect} />` or
 `<Particles3D effect={effect} />`; the component owns an implicit system.
-Interactive or observed effects create an explicit `crcParticleSystem(effect)`
+Interactive or observed effects create an explicit `useParticleSystem(effect)`
 and pass it through the mutually exclusive `system` prop.
 
 Canvas2D executes an allocation-free CPU paint path and may use an explicit CRC
@@ -166,7 +166,7 @@ Runtime values:
 - `particleChoice`;
 - `particleParameter`;
 - `particleCurve` and `particleGradient`;
-- `crcParticleSystem`; and
+- `useParticleSystem`; and
 - `Particles2D`.
 
 Public types include the named 2D effect, emitter, emission, shape, value,
@@ -184,7 +184,7 @@ Runtime values:
 - `defineParticleEffect3D`; and
 - `Particles3D`.
 
-It reuses the named particle descriptor factories and `crcParticleSystem` from
+It reuses the named particle descriptor factories and `useParticleSystem` from
 the root entry and exports the named 3D effect, emitter, shape, motion,
 appearance, renderer, bounds, component-prop, and execution-capability types.
 
@@ -545,7 +545,7 @@ outside the component.
 ### Explicit system mode
 
 ```tsx
-const system = crcParticleSystem(impactSparks, {
+const system = useParticleSystem(impactSparks, {
   autoplay: false,
   seed: 42,
 });
@@ -568,7 +568,7 @@ return (
 
 `effect` and `system` are statically and dynamically mutually exclusive.
 `autoplay`, seed, and controller-level lifecycle options belong to the implicit
-mode or the `crcParticleSystem` options, never both.
+mode or the `useParticleSystem` options, never both.
 
 One live system may bind to only one backend component. A second concurrent
 binding rejects before acquiring storage or renderer resources. This avoids
@@ -1102,7 +1102,7 @@ const snowfall = defineParticleEffect2D({
 
 ```tsx
 function ImpactSurface() {
-  const sparks = crcParticleSystem(impactSparks, {
+  const sparks = useParticleSystem(impactSparks, {
     autoplay: false,
     seed: 42,
   });
@@ -1178,8 +1178,8 @@ const campfire2D = defineParticleEffect2D({
 
 ```tsx
 function PointerTrail() {
-  const pointer = crcSignal<[number, number]>([0, 0]);
-  const trail = crcParticleSystem(pointerTrailEffect, { autoplay: true });
+  const pointer = useSignal<[number, number]>([0, 0]);
+  const trail = useParticleSystem(pointerTrailEffect, { autoplay: true });
 
   return (
     <Particles2D
@@ -1338,13 +1338,13 @@ GPU plan is approved.
 
 ```tsx
 function Fireworks() {
-  const system = crcParticleSystem(fireworks3D, {
+  const system = useParticleSystem(fireworks3D, {
     autoplay: false,
     seed: 7,
   });
   const nextCue = cue.get();
 
-  crcWhenChanged(() => {
+  useWhenChanged(() => {
     if (nextCue) {
       system.emit("shell", {
         position: nextCue.position,
@@ -1519,7 +1519,7 @@ affected. At minimum:
   participation;
 - `docs/design/canvas-surface-contract.md` for Canvas/WebGL composition and
   transaction behavior;
-- `docs/design/runtime-hooks-contract.md` for `crcParticleSystem` ownership;
+- `docs/design/runtime-hooks-contract.md` for `useParticleSystem` ownership;
 - `docs/design/drawing-components-contract.md` for `Particles2D` and
   `Particles3D`;
 - `docs/design/style-system-contract.md` for supported component style and

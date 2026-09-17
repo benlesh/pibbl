@@ -18,13 +18,13 @@ Review the completed 960 by 600 workflow editor: selected cards glow, dragging a
 
 ## How it works
 
-The final source puts pure model and coordinate helpers before the components that consume them. `updateNodePosition`, `rootToWorkspace`, and `zoomAroundPoint` make the mutable-looking gestures ordinary immutable model updates. [crcMemo](#/api/hooks/crc-memo) owns the expensive static grid path for the mounted `GridLayer`; each `NodeCard` owns its drag ref and cursor state, while `Workspace` separately owns its pan ref and cursor state.
+The final source puts pure model and coordinate helpers before the components that consume them. `updateNodePosition`, `rootToWorkspace`, and `zoomAroundPoint` make the mutable-looking gestures ordinary immutable model updates. [useMemo](#/api/hooks/use-memo) owns the expensive static grid path for the mounted `GridLayer`; each `NodeCard` owns its drag ref and cursor state, while `Workspace` separately owns its pan ref and cursor state.
 
 ## Build the change
 
-Each local terminator clears a gesture only when that exact pointer owns it. Pointer up, cancellation, and capture loss all pass through the corresponding terminator. Removing a card unmounts the component that owns its drag session and cursor, so application ownership disappears naturally before any later pointer-up; it does not need a synthetic loss callback. There is deliberately no [crcWhenChanged](#/api/hooks/crc-when-changed): this editor owns no external resource requiring dependency-driven synchronization. The refs are appropriate because they represent in-flight pointer sessions, not visual state.
+Each local terminator clears a gesture only when that exact pointer owns it. Pointer up, cancellation, and capture loss all pass through the corresponding terminator. Removing a card unmounts the component that owns its drag session and cursor, so application ownership disappears naturally before any later pointer-up; it does not need a synthetic loss callback. There is deliberately no [useWhenChanged](#/api/hooks/use-when-changed): this editor owns no external resource requiring dependency-driven synchronization. The refs are appropriate because they represent in-flight pointer sessions, not visual state.
 
-Stable card and edge keys preserve identity among their same parent siblings. Reparenting or changing a key remounts a component, which is why the source keeps the component tree deliberate. [crcRef](#/api/hooks/crc-ref) and [state and lifecycle](#/learn/guides/state-and-lifecycle) explain those ownership boundaries.
+Stable card and edge keys preserve identity among their same parent siblings. Reparenting or changing a key remounts a component, which is why the source keeps the component tree deliberate. [useRef](#/api/hooks/use-ref) and [state and lifecycle](#/learn/guides/state-and-lifecycle) explain those ownership boundaries.
 
 ## Predict and try
 

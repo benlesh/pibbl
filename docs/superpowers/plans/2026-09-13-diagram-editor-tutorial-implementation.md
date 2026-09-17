@@ -1147,7 +1147,7 @@ Expected: FAIL because Chapter 5-6 sources and selection behavior are missing.
 
 - [ ] **Step 3: Author the Chapter 5 layout source**
 
-Use `Absolute`, `crcLayoutBox`, `BoxStyle`, and `LayoutItemStyle`. Define one
+Use `Absolute`, `useLayoutBox`, `BoxStyle`, and `LayoutItemStyle`. Define one
 shared receiver prop and three focused components:
 
 ```ts
@@ -1156,7 +1156,7 @@ interface RegionProps {
 }
 
 function Toolbar({ style: _specifiedStyle }: RegionProps) {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   return <Rectangle style={{ width: box.width, height: box.height, fill: "#fffdf6" }} />;
 }
 ```
@@ -1179,7 +1179,7 @@ style object into a child drawing primitive.
 
 - [ ] **Step 4: Author the Chapter 6 selection source**
 
-Add `crcState<NodeId | null>("sketch")` in `DiagramEditor`. Pass selection and
+Add `useState<NodeId | null>("sketch")` in `DiagramEditor`. Pass selection and
 handler props through `Workspace`:
 
 ```ts
@@ -1202,14 +1202,14 @@ Append entries 5 and 6, regenerate the index, and author the six-section pages.
 
 Chapter 5 summary is `Allocate toolbar, workspace, and status regions without mixing layout placement into drawing geometry.`
 Its exercise changes region heights while preserving total height 600. Explain
-specified style, `crcLayoutBox()`, direct-child allocation, and double-placement
-mistakes. Link `#/api/components/absolute`, `#/api/hooks/crc-layout-box`,
+specified style, `useLayoutBox()`, direct-child allocation, and double-placement
+mistakes. Link `#/api/components/absolute`, `#/api/hooks/use-layout-box`,
 `#/learn/guides/compose-and-layout`, and `#/api/types/layout`.
 
 Chapter 6 summary is `Select a node through its painted body and render model state on the next scheduled frame.`
 Its exercise toggles the selected node off when clicked again. Explain explicit
-application IDs, `crcState`, future coalesced paint, and decorative target
-occlusion. Link `#/api/hooks/crc-state`, `#/api/types/events`, and
+application IDs, `useState`, future coalesced paint, and decorative target
+occlusion. Link `#/api/hooks/use-state`, `#/api/types/events`, and
 `#/learn/guides/style-and-draw`.
 
 - [ ] **Step 6: Run focused source, layout, and documentation checks**
@@ -1307,7 +1307,7 @@ Expected: FAIL because Chapter 7 and its pointer handlers do not exist.
 
 - [ ] **Step 4: Author the Chapter 7 source with synchronous gesture ownership**
 
-Add `crcRef` and `CRCPointerEvent`. Define:
+Add `useRef` and `CRCPointerEvent`. Define:
 
 ```ts
 interface NodeDragSession {
@@ -1319,8 +1319,8 @@ interface NodeDragSession {
 }
 ```
 
-`DiagramEditor` owns `nodes` through `crcState<readonly DiagramNode[]>(INITIAL_NODES)`
-and `dragSession` through `crcRef<NodeDragSession | null>(null)`. Pass one
+`DiagramEditor` owns `nodes` through `useState<readonly DiagramNode[]>(INITIAL_NODES)`
+and `dragSession` through `useRef<NodeDragSession | null>(null)`. Pass one
 handler object to each `NodeCard`. On pointer down:
 
 ```ts
@@ -1435,7 +1435,7 @@ Teach pointer capture per pointer ID, root-logical coordinates, synchronous refs
 versus frame-coalesced render state, immutable functional updates, and every
 terminal cleanup path. The exercise clamps node position to x `-40..1232` and
 y `-40..816`, leaving enough overscan for later panning. Link
-`#/api/hooks/crc-ref`, `#/api/types/events`, and
+`#/api/hooks/use-ref`, `#/api/types/events`, and
 `#/learn/guides/state-and-lifecycle`.
 
 Chapter 8 summary is `Pan empty workspace and zoom around the pointer without moving domain data.`
@@ -1695,15 +1695,15 @@ Expected: FAIL because Chapter 11-12 and logical focus targets are absent.
 
 - [ ] **Step 3: Author the Chapter 11 source with one conceptual target per control**
 
-Add `FocusManagement`, `KeyboardNavigation`, `crcEventTarget`, and
-`crcRectPath`. In `NodeCard`, create the local rounded target and register all
+Add `FocusManagement`, `KeyboardNavigation`, `useEventTarget`, and
+`useRectPath`. In `NodeCard`, create the local rounded target and register all
 click, pointer, and focus handlers together:
 
 ```ts
-const targetPath = crcRectPath(0, 0, NODE_WIDTH, NODE_HEIGHT, {
+const targetPath = useRectPath(0, 0, NODE_WIDTH, NODE_HEIGHT, {
   cornerRadius: 16,
 });
-const focus = crcEventTarget(
+const focus = useEventTarget(
   {
     onClick: onSelect,
     onPointerDown,
@@ -1793,7 +1793,7 @@ changes:
   ```
 
 - keep `rootToWorkspace()` and `zoomAroundPoint()` as pure named helpers;
-- use `crcMemo(() => createGridPath(), [])` inside `GridLayer` so expensive grid
+- use `useMemo(() => createGridPath(), [])` inside `GridLayer` so expensive grid
   geometry is instance-owned and stable;
 - keep gesture refs for synchronous browser ownership, not presentation state;
 - let each `NodeCard` own its node-drag ref and cursor state so unmounting the
@@ -1804,7 +1804,7 @@ changes:
 - set final toolbar hint to `DRAG NODES · DRAG SPACE · WHEEL TO ZOOM`;
 - set final initial selection to Sketch so the landing capture visibly
   demonstrates the filter;
-- do not add `crcWhenChanged` because the snapshot owns no external resource
+- do not add `useWhenChanged` because the snapshot owns no external resource
   that needs synchronization.
 
 Keep the source readable enough to teach: helpers precede components, model
@@ -1829,18 +1829,18 @@ activation, focus-visible modality, natural exit, and the semantic-accessibility
 boundary. Include the concrete recommendation of a synchronized semantic
 node/relationship list with equivalent actions. Link
 `#/api/components/focus-management`,
-`#/api/components/keyboard-navigation`, `#/api/hooks/crc-event-target`,
-`#/api/hooks/crc-rect-path`, `#/api/types/events`, and
+`#/api/components/keyboard-navigation`, `#/api/hooks/use-event-target`,
+`#/api/hooks/use-rect-path`, `#/api/types/events`, and
 `#/learn/guides/focus-and-keyboard`.
 
 Chapter 12 summary is `Review the complete editor, harden ownership and identity, and separate tutorial completeness from production readiness.`
-Teach the final helper organization, purposeful `crcMemo`, gesture teardown,
+Teach the final helper organization, purposeful `useMemo`, gesture teardown,
 component/key identity, render-failure resource cleanup, already-painted-pixel
 behavior, browser authority, capability requirements, and the production
-checklist. Explicitly explain why `crcWhenChanged` is absent. Its exercise
+checklist. Explicitly explain why `useWhenChanged` is absent. Its exercise
 changes `INITIAL_NODES` while preserving all derived interactions. Link
-`#/api/hooks/crc-memo`, `#/api/hooks/crc-when-changed`,
-`#/api/hooks/crc-ref`, `#/learn/guides/state-and-lifecycle`,
+`#/api/hooks/use-memo`, `#/api/hooks/use-when-changed`,
+`#/api/hooks/use-ref`, `#/learn/guides/state-and-lifecycle`,
 `#/learn/guides/focus-and-keyboard`, and `#/learn/guides/style-and-draw`. Do not
 claim that the final Canvas alone is screen-reader-accessible.
 

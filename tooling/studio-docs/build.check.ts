@@ -657,8 +657,8 @@ assert.equal(
   "#/api/functions/create-circle-path",
 );
 assert.equal(
-  runtimeCoverage.values.crcWhenChanged?.route,
-  "#/api/hooks/crc-when-changed",
+  runtimeCoverage.values.useWhenChanged?.route,
+  "#/api/hooks/use-when-changed",
 );
 assert.deepEqual(runtimeCoverage.duplicateValues, []);
 assert.deepEqual(runtimeCoverage.missingValues, []);

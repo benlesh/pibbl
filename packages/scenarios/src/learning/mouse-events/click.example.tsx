@@ -1,6 +1,6 @@
-import { crc, crcState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
 function ClickStudy() {
-  const [picks, setPicks] = crcState(0);
+  const [picks, setPicks] = useState(0);
   const sleeve = (x: number, color: string, value: number) => (
     <Rectangle
       style={{

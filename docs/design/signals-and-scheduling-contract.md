@@ -42,7 +42,7 @@ declare function computed<T>(
 ): Signal<T>;
 declare function untracked<T>(read: () => T): T;
 declare function isSignal(value: unknown): value is Signal<unknown>;
-declare function crcSignal<T>(
+declare function useSignal<T>(
   initialValue: T,
   options?: SignalOptions<T>,
 ): WritableSignal<T>;
@@ -105,7 +105,7 @@ renderer traversals; a changed result dirties the exact consumers and may render
 them in that same frame. Reading the computed explicitly also validates it
 immediately.
 
-## Component consumers and `crcSignal`
+## Component consumers and `useSignal`
 
 During component evaluation, CRC collects that component's explicit signal
 reads. Primitive style resolution and render callbacks belong to the primitive
@@ -114,7 +114,7 @@ dependencies. A successful evaluation replaces the old dependency set.
 Removal, failed-render cleanup, and root disposal detach all consumer edges.
 
 When a dependency changes, each clean component consumer becomes dirty once
-and requests its owning instance. Multiple changes coalesce. `crcSignal()` is
+and requests its owning instance. Multiple changes coalesce. `useSignal()` is
 an ordered hook slot that creates its writable signal on mount; its initial
 value and options are mount-only. Removing its owner detaches render
 dependencies. A retained hook signal remains a usable signal cell, but is inert
@@ -209,7 +209,7 @@ paths as a substitute.
 | Resource                    | Sole owner                                             | Release or completion rule                                                                               |
 | --------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
 | Signal-to-component edge    | Exact component consumer                               | Replaced after successful evaluation; detached on removal, failure cleanup, or disposal.                 |
-| `crcSignal` hook cell       | Exact hook slot                                        | Owner removal detaches scheduling edges; a retained cell remains independently usable.                   |
+| `useSignal` hook cell       | Exact hook slot                                        | Owner removal detaches scheduling edges; a retained cell remains independently usable.                   |
 | Computed-to-source edge     | Exact computed node while it has at least one observer | Acquired recursively on first observation; replaced with dependencies or released after final observer.  |
 | Computed validation         | Exact computed node                                    | Cleared by successful validation or removed when no longer observed.                                     |
 | Root scheduler registration | Exact live root                                        | Removed by abort, disposal, or failed-mount cleanup without affecting other roots.                       |

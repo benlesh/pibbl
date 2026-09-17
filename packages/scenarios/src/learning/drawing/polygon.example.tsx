@@ -1,7 +1,7 @@
-import { crc, crcState, Polygon, Rectangle, type CRCController } from "@crc/core";
+import { crc, useState, Polygon, Rectangle, type CRCController } from "@crc/core";
 
 function PolygonStudy() {
-  const [active, setActive] = crcState(false);
+  const [active, setActive] = useState(false);
 
   return [
     <Rectangle

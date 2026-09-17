@@ -244,7 +244,7 @@ function finiteDuration(duration: ProgramDuration): number | undefined {
 
 /**
  * Creates one scheduler-owned playback slot. Component lifetime is added by
- * crcPlayback in the following implementation task.
+ * usePlayback in the following implementation task.
  */
 export function createAnimationPlaybackController(
   initialProgram: CRCAnimationProgram,

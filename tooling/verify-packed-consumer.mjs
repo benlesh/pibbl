@@ -456,8 +456,8 @@ try {
       SpotLight,
       WebGLBackground,
       WebGLLayer,
-      crcAnimationFrame,
-      crcOrbitCamera,
+      useAnimationFrame,
+      useOrbitCamera,
       createWebGLGeometry,
     } from '@crc/webgl';
     const geometry = createWebGLGeometry({
@@ -489,7 +489,7 @@ try {
       }],
     });
     function Scene() {
-      const orbit = crcOrbitCamera({
+      const orbit = useOrbitCamera({
         orbitPoint: [0, 0, 0],
         initialPosition: [0, 2, 5],
       });
@@ -502,7 +502,7 @@ try {
         near: 0.1,
         far: 100,
       };
-      const timestamp = crcAnimationFrame();
+      const timestamp = useAnimationFrame();
       return (
         <Group {...orbit.handlers}>
           <Rectangle style={{ width: 1, height: 1, fill: 'transparent' }} />
@@ -552,7 +552,7 @@ try {
       );
     }
     const scene = <Scene />;
-    console.log(Fragment, crc, createElement, crcAnimationFrame, scene);
+    console.log(Fragment, crc, createElement, useAnimationFrame, scene);
   `);
   assertSinglePackedRuntime(sharedRuntimeBundle.metafile);
   assertIdentityMarkerOnce(

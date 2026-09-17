@@ -1,9 +1,9 @@
 import {
   crc,
-  crcPlayback,
-  crcSignal,
-  crcState,
-  crcTransition,
+  usePlayback,
+  useSignal,
+  useState,
+  useTransition,
   FocusManagement,
   Group,
   marker,
@@ -18,16 +18,16 @@ import {
 } from "@crc/core";
 
 function AnimatedCard() {
-  const x = crcSignal(110, { debugName: "learning animation x" });
-  const opacity = crcSignal(0.2, {
+  const x = useSignal(110, { debugName: "learning animation x" });
+  const opacity = useSignal(0.2, {
     debugName: "learning animation opacity",
   });
-  const pulseScale = crcSignal(1, {
+  const pulseScale = useSignal(1, {
     debugName: "learning animation pulse scale",
   });
-  const [targetScale, setTargetScale] = crcState(1);
-  const [message, setMessage] = crcState("CLICK OR PRESS ENTER");
-  const presentedScale = crcTransition(targetScale, {
+  const [targetScale, setTargetScale] = useState(1);
+  const [message, setMessage] = useState("CLICK OR PRESS ENTER");
+  const presentedScale = useTransition(targetScale, {
     type: "spring",
     stiffness: 240,
     damping: 22,
@@ -77,7 +77,7 @@ function AnimatedCard() {
       }),
     ),
   );
-  const playback = crcPlayback(entrance, {
+  const playback = usePlayback(entrance, {
     debugName: "learning entrance playback",
     onEvent: (event) => {
       if (event.type === "marker" && event.marker === "arrived") {

@@ -1,6 +1,6 @@
 import {
   crc,
-  crcState,
+  useState,
   Group,
   Layer,
   Rectangle,
@@ -8,7 +8,7 @@ import {
   type CRCController,
 } from "@crc/core";
 function LayerStudy() {
-  const [active, setActive] = crcState(false);
+  const [active, setActive] = useState(false);
   return [
     <Rectangle
       style={{

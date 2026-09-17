@@ -1,6 +1,6 @@
 import {
   crc,
-  crcState,
+  useState,
   Rectangle,
   Text,
   type CRCController,
@@ -11,8 +11,8 @@ function dragLine(type: string, event: CRCDragEvent): string {
   return `${type}  @ ${Math.round(event.x)},${Math.round(event.y)}  data=${payload}`;
 }
 function DragAndDropStudy() {
-  const [trace, setTrace] = crcState<readonly string[]>([]);
-  const [dropped, setDropped] = crcState("nothing dropped");
+  const [trace, setTrace] = useState<readonly string[]>([]);
+  const [dropped, setDropped] = useState("nothing dropped");
   const record = (type: string, event: CRCDragEvent) => {
     setTrace((current) => [...current.slice(-4), dragLine(type, event)]);
   };

@@ -5,8 +5,8 @@ import type {
 } from '../events/types';
 import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { crcEventListener } from '../hooks/crc-event-listener';
-import { crcEventTarget } from '../hooks/crc-event-target';
+import { useEventListener } from '../hooks/use-event-listener';
+import { useEventTarget } from '../hooks/use-event-target';
 import { mountCRC } from '../mount-crc';
 import type { CRCElement, CRCController } from '../types';
 import type { CRCFocusManager } from './focus-manager';
@@ -34,7 +34,7 @@ describe('Enter keyboard activation', () => {
     let clickEvent: CRCLogicalMouseEvent | undefined;
     const Target = targetComponent();
     const Root = (_props: {}) => {
-      crcEventListener({
+      useEventListener({
         onKeyDown: () => trace.push('ancestor-keydown'),
         onClick: () => trace.push('ancestor-click'),
       });
@@ -80,7 +80,7 @@ describe('Enter keyboard activation', () => {
       const click = vi.fn();
       const Target = targetComponent();
       const Root = (_props: {}) => {
-        crcEventListener({
+        useEventListener({
           onKeyDown: event => {
             if (preventionSite === 'ancestor') event.preventDefault();
           },
@@ -181,7 +181,7 @@ describe('Space keyboard activation', () => {
       const click = vi.fn();
       const Target = targetComponent();
       const Root = (_props: {}) => {
-        crcEventListener({
+        useEventListener({
           onKeyUp: event => {
             if (prevent && preventionSite === 'ancestor') event.preventDefault();
           },
@@ -306,7 +306,7 @@ interface TargetProps {
 
 function targetComponent() {
   return ({ handlers }: TargetProps) => {
-    crcEventTarget(handlers, {
+    useEventTarget(handlers, {
       path: rectanglePath(0, 0, 40, 40),
       fill: true,
       keyboardFocusable: true,

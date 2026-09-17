@@ -161,7 +161,7 @@ The public values retained by `@crc/webgl` are:
 - `Cube`;
 - `Sphere`;
 - `createWebGLGeometry`; and
-- `crcAnimationFrame`.
+- `useAnimationFrame`.
 
 The public types retained are:
 
@@ -449,7 +449,7 @@ errors name the violated WebGL scene invariant.
 ## Scheduling and caching
 
 The realm scheduler and private backend mount remain unchanged. Static scenes
-request no continuing frames. `crcAnimationFrame()` still requests the shared
+request no continuing frames. `useAnimationFrame()` still requests the shared
 realm frame and exposes the current logical timestamp to its owning component.
 
 An invalidated WebGL child executes once and produces one settled scene and at

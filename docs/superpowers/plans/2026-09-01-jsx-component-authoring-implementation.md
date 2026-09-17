@@ -42,7 +42,7 @@ New element/runtime units:
 - `packages/core/src/lib/element/children.ts` — recursive synchronous node and text-content materialization with contextual diagnostics.
 - `packages/core/src/lib/element/fragment.ts` — the compiler-visible `Fragment` value and keyed-fragment boundary behavior.
 - `packages/core/src/lib/define-primitive.ts` — advanced platform component definition and private dispatch metadata.
-- `packages/core/src/lib/hooks/crc-canvas-context.ts` — render-only access to the isolated Canvas context.
+- `packages/core/src/lib/hooks/use-canvas-context.ts` — render-only access to the isolated Canvas context.
 - `packages/core/src/jsx-runtime.ts` — production automatic-runtime entry point.
 - `packages/core/src/jsx-dev-runtime.ts` — development automatic-runtime entry point with source metadata.
 
@@ -462,8 +462,8 @@ git commit -m "feat(core): render recursive CRC nodes"
 
 - Create: `packages/core/src/lib/define-primitive.ts`
 - Create: `packages/core/src/lib/define-primitive.test.tsx`
-- Create: `packages/core/src/lib/hooks/crc-canvas-context.ts`
-- Create: `packages/core/src/lib/hooks/crc-canvas-context.test.tsx`
+- Create: `packages/core/src/lib/hooks/use-canvas-context.ts`
+- Create: `packages/core/src/lib/hooks/use-canvas-context.test.tsx`
 - Create: `packages/core/src/lib/component-dispatch.test.tsx`
 - Modify: `packages/core/src/lib/element/types.ts`
 - Modify: `packages/core/src/lib/element/metadata.ts`
@@ -477,7 +477,7 @@ git commit -m "feat(core): render recursive CRC nodes"
 
 **Interfaces:**
 
-- Produces public `definePrimitive(render, capabilities?)`, `CRCPrimitiveComponent`, primitive capability/input types, and `crcCanvasContext()`.
+- Produces public `definePrimitive(render, capabilities?)`, `CRCPrimitiveComponent`, primitive capability/input types, and `useCanvasContext()`.
 - Plain functions receive the frozen author-prop copy, including specified `style` and compiler-supplied `children`, with only `key` removed.
 - Primitive render callbacks receive program props without `style`, resolved style, and the isolated Canvas context.
 - Layout and measurement obtain primitive metadata through private accessors rather than properties attached to ordinary functions.
@@ -486,13 +486,13 @@ git commit -m "feat(core): render recursive CRC nodes"
 
 Prove a normal named function can use every existing hook, return nested nodes,
 receive specified percentage style unchanged, read finite allocation through
-`crcLayoutBox`, preserve function identity through keyed reorder, and fail with
+`useLayoutBox`, preserve function identity through keyed reorder, and fail with
 the existing teardown behavior.
 
 ```tsx
 function Card(props: { style: BoxStyle; title: string }): CRCNode {
-  const box = crcLayoutBox();
-  const [count] = crcState(0);
+  const box = useLayoutBox();
+  const [count] = useState(0);
   observed.push({ style: props.style, box, count });
   return <Group />;
 }
@@ -502,14 +502,14 @@ function Card(props: { style: BoxStyle; title: string }): CRCNode {
 
 Cover optional and required style typing, normalization, percentage resolution,
 pure measurement, nested measurement, cyclic measurement diagnostics, direct
-primitive invocation, no hook-slot allocation for `crcCanvasContext`, Canvas
+primitive invocation, no hook-slot allocation for `useCanvasContext`, Canvas
 save/restore isolation, and targeted errors outside render and during
 measurement.
 
 - [ ] **Step 3: Run the focused tests and verify failure**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/component-dispatch.test.tsx packages/core/src/lib/define-primitive.test.tsx packages/core/src/lib/hooks/crc-canvas-context.test.tsx packages/core/src/lib/layout/measure.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/component-dispatch.test.tsx packages/core/src/lib/define-primitive.test.tsx packages/core/src/lib/hooks/use-canvas-context.test.tsx packages/core/src/lib/layout/measure.test.ts --browser.headless --browser.ui=false
 ```
 
 Expected: FAIL because every current renderable is a capability-bearing
@@ -557,11 +557,11 @@ metadata report unsupported intrinsic measurement. Replace the mutable
 `identityHint` assignment in `placeChild` with private WeakMap metadata so
 frozen elements remain immutable.
 
-- [ ] **Step 7: Implement `crcCanvasContext`**
+- [ ] **Step 7: Implement `useCanvasContext`**
 
 Return `GLOBAL_STATE.renderContext` only when a live component is executing.
 Do not increment `componentHookIndex`. When measurement isolates global state,
-the accessor must throw: `crcCanvasContext() is available only during CRC
+the accessor must throw: `useCanvasContext() is available only during CRC
 rendering and cannot be used during pure measurement.`
 
 - [ ] **Step 8: Run plain-component, primitive, layout, hook, and failure tests**
@@ -611,7 +611,7 @@ state, Canvas calls, source order, event wiring, and disposal:
 
 ```tsx
 function Poster(): CRCNode {
-  const [message, setMessage] = crcState("HELLO");
+  const [message, setMessage] = useState("HELLO");
   return (
     <Group>
       <Rectangle
@@ -807,7 +807,7 @@ git commit -m "feat(core): convert drawing primitives to JSX components"
 
 - Produces `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid` primitive values.
 - Layout containers accept recursive `CRCNode` children but prepare a finite direct-element sequence once per render/measurement.
-- Direct-child style comes from specified `element.props.style`; the plain child still receives that same specified object and reads its finite allocation with `crcLayoutBox()`.
+- Direct-child style comes from specified `element.props.style`; the plain child still receives that same specified object and reads its finite allocation with `useLayoutBox()`.
 
 - [ ] **Step 1: Write failing JSX layout tests**
 
@@ -818,7 +818,7 @@ materialization feeds inspection, measurement, placement, and paint.
 
 ```tsx
 function Card(props: { style: BoxStyle; name: string }): CRCNode {
-  allocations.set(props.name, crcLayoutBox());
+  allocations.set(props.name, useLayoutBox());
   specifiedStyles.set(props.name, props.style);
   return <Rectangle style={{ width: 20, height: 20, fill: "black" }} />;
 }
@@ -1117,7 +1117,7 @@ hooks, focus behavior, and Canvas sizes. Use `FocusManagement` and
 Replace old names with the approved uppercase vocabulary. Getting started must
 teach plain functions before hooks; drawing lessons teach explicit style;
 composition teaches children; layout teaches specified style versus
-`crcLayoutBox`; focus lessons explicitly state the single-Canvas accessibility
+`useLayoutBox`; focus lessons explicitly state the single-Canvas accessibility
 boundary.
 
 - [ ] **Step 6: Regenerate and inspect the scenario index**
@@ -1256,7 +1256,7 @@ git commit -m "refactor(core): migrate feature evidence to JSX"
 
 **Interfaces:**
 
-- Final root exports contain `createElement`, `Fragment`, `definePrimitive`, `crcCanvasContext`, descriptive component values, hooks, styles, layout/measurement APIs, event APIs, and surface/focus types.
+- Final root exports contain `createElement`, `Fragment`, `definePrimitive`, `useCanvasContext`, descriptive component values, hooks, styles, layout/measurement APIs, event APIs, and surface/focus types.
 - Final declarations contain no `CompEl`, `CompFn`, `ComponentInput`, `ComponentCapabilities`, `FalsyNodes`, lowercase factory, `defineComp`, or `with*` authoring symbol.
 - Catalog discovery accepts only `.example.tsx` for example source files.
 
@@ -1490,7 +1490,7 @@ children including zero, layout allocations, `Group`, `Clip`, and multi-child
 Contrast CRC with React precisely: full synchronous Canvas traversal,
 requestAnimationFrame coalescing, CRC hook names, component identity,
 save/restore isolation, no DOM reconciliation, and exact teardown. Show an
-ordinary composite, a `crcCanvasContext` painter, and a complete
+ordinary composite, a `useCanvasContext` painter, and a complete
 `definePrimitive` with normalize/resolve/measure.
 
 - [ ] **Step 5: Write the complete non-JSX and React interop guides**

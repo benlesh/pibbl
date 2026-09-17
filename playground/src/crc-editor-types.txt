@@ -405,24 +405,24 @@
   export function normalizeEdges(value: EdgeValues | undefined, property: string, context?: Readonly<LayoutDiagnosticContext>): Edges;
   export function resolveBox(style: Readonly<BoxStyle>, constraints: Readonly<Constraints>, context?: Readonly<LayoutDiagnosticContext>): ResolvedBoxStyle;
   export function layoutDiagnostic(input: LayoutDiagnosticInput): LayoutDiagnostic;
-  export function crcLayoutBox(): Readonly<LayoutBox>;
-  export function crcCanvasContext(): RenderingContext2D;
-  export function crcState<T>(initial?: T): readonly [T, StateUpdater<T>];
-  export function crcMemo<T>(create: () => T, dependencies: any[]): T;
-  export function crcRef<T>(initial?: T): CRCRef<T>;
-  export function crcSignal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
-  export function crcPlayback(program: CRCAnimationProgram, options?: CRCPlaybackOptions): CRCPlayback;
-  export function crcTransition(target: number, options: CRCSpringTransitionOptions): Signal<number>;
-  export function crcTransition<T>(target: T, options: CRCTweenTransitionOptions<T>): Signal<T>;
-  export function crcWhenChanged(effect: () => void | (() => void), dependencies?: any[]): void;
-  export function crcCursor(options: { style?: string; path?: Path2D; fill?: boolean; lineInteractionWidth?: number }): void;
-  export function crcEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
-  export function crcEvent<K extends 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>(eventName: K, listener?: CRCMouseEventListener, path?: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
-  export function crcEventListener(handlers: CRCEventHandlers): void;
-  export function crcEventTarget(handlers: CRCEventHandlers, options: CRCEventTargetOptions): CRCEventTargetSnapshot;
-  export function crcLinePath(coords: [number, number][], config?: { closePath?: boolean }): Path2D;
-  export function crcRectPath(x: number, y: number, width: number, height: number, config?: { alignToPixelGrid?: PixelGridAlignment; lineWidth?: number; cornerRadius?: number; cornerRadii?: readonly (number | null | undefined)[] }): Path2D;
-  export function crcSvgPath(data: string): Path2D;
+  export function useLayoutBox(): Readonly<LayoutBox>;
+  export function useCanvasContext(): RenderingContext2D;
+  export function useState<T>(initial?: T): readonly [T, StateUpdater<T>];
+  export function useMemo<T>(create: () => T, dependencies: any[]): T;
+  export function useRef<T>(initial?: T): CRCRef<T>;
+  export function useSignal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
+  export function usePlayback(program: CRCAnimationProgram, options?: CRCPlaybackOptions): CRCPlayback;
+  export function useTransition(target: number, options: CRCSpringTransitionOptions): Signal<number>;
+  export function useTransition<T>(target: T, options: CRCTweenTransitionOptions<T>): Signal<T>;
+  export function useWhenChanged(effect: () => void | (() => void), dependencies?: any[]): void;
+  export function useCursor(options: { style?: string; path?: Path2D; fill?: boolean; lineInteractionWidth?: number }): void;
+  export function useEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
+  export function useEvent<K extends 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>(eventName: K, listener?: CRCMouseEventListener, path?: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
+  export function useEventListener(handlers: CRCEventHandlers): void;
+  export function useEventTarget(handlers: CRCEventHandlers, options: CRCEventTargetOptions): CRCEventTargetSnapshot;
+  export function useLinePath(coords: [number, number][], config?: { closePath?: boolean }): Path2D;
+  export function useRectPath(x: number, y: number, width: number, height: number, config?: { alignToPixelGrid?: PixelGridAlignment; lineWidth?: number; cornerRadius?: number; cornerRadii?: readonly (number | null | undefined)[] }): Path2D;
+  export function useSvgPath(data: string): Path2D;
 
 /* @crc-studio-module @crc/core/jsx-runtime */
   import type { CRCElement, CRCElementType, CRCKey, CRCPrimitiveComponent, PrimitiveInputOf } from '@crc/core';
@@ -659,7 +659,7 @@
   export declare function particleParameter<const Name extends string>(name: Name): CRCParticleParameterReference<Name>;
   export declare function particleCurve<const T extends CRCParticleCurveValue>(keys: readonly (readonly [time: number, value: T])[], options?: CRCParticleCurveOptions): CRCParticleCurve<T>;
   export declare function particleGradient(keys: readonly (readonly [time: number, color: string])[], options?: CRCParticleCurveOptions): CRCParticleGradient;
-  export declare function crcParticleSystem<
+  export declare function useParticleSystem<
     EmitterName extends string,
     Parameters extends CRCParticleParameterValues,
   >(
@@ -950,8 +950,8 @@
     input: CRCWebGLGeometryInput,
   ): CRCWebGLGeometry;
 
-  export function crcAnimationFrame(): number;
-  export function crcOrbitCamera(
+  export function useAnimationFrame(): number;
+  export function useOrbitCamera(
     options: CRCOrbitCameraOptions,
   ): CRCOrbitCameraResult;
 

@@ -1,7 +1,7 @@
 import {
   computed,
   crc,
-  crcSignal,
+  useSignal,
   Rectangle,
   Text,
   signal,
@@ -12,7 +12,7 @@ const x = signal(144, { debugName: "learning x" });
 const doubledX = computed(() => x.get() * 2, { debugName: "learning doubled x" });
 
 function SignalCard() {
-  const color = crcSignal("#2563eb", { debugName: "learning color" });
+  const color = useSignal("#2563eb", { debugName: "learning color" });
   const derivedX = doubledX.get();
   const currentX = derivedX / 2;
   const currentColor = color.get();

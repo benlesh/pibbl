@@ -133,7 +133,7 @@ the commit is reviewed.
 
 Done when callbacks receive finite resolved style, root/nested/layer contexts
 restore on success/failure, placement preserves keyed and unkeyed identity,
-pixels/hit testing share transform/clip geometry, `crcLayoutBox` is local and
+pixels/hit testing share transform/clip geometry, `useLayoutBox` is local and
 stable, lifecycle checks pass, and the commit is reviewed.
 
 ### P003-09 [DONE] — Absolute and overlay
@@ -336,7 +336,7 @@ is clean, and this plan has no active marker.
   learner routes for absolute/overlay, Flow, Flex, and Grid; expanded the
   cataloged layout laboratory to prove nested Flex→Grid→Overlay reflow,
   clipping, topmost targeting, keyed state, pure text measurement, explicit
-  image sizing, and exact `crcLayoutBox` observations; synchronized Studio and
+  image sizing, and exact `useLayoutBox` observations; synchronized Studio and
   strict packed-consumer declarations with the current public API. The generated
   index now covers 28 lessons and 14 test labs. Source and built Studio builds,
   workspace typecheck, packed Bundler/NodeNext/runtime/no-source consumers, and
@@ -375,7 +375,7 @@ is clean, and this plan has no active marker.
 | Absolute, Overlay, and CRC-native Flow matrices             | Pure algorithm and public component suites, nested layout laboratory, four learner routes, layout contract                                                       |
 | CSS-compatible bounded Flex subset                          | Hand-derived literals, independent Chromium DOM oracle, public scenario and package declarations, exact support/rejection matrix                                 |
 | CSS-compatible explicit Grid subset                         | Hand-derived literals, independent Chromium DOM oracle, public scenario and package declarations, exact track/placement/rejection matrix                         |
-| Pure opt-in measurement and local observation               | Measurement isolation/cycle/recursive suites, text/custom/explicit-image cases, `crcLayoutBox` identity tests, runtime/hooks and layout contracts                |
+| Pure opt-in measurement and local observation               | Measurement isolation/cycle/recursive suites, text/custom/explicit-image cases, `useLayoutBox` identity tests, runtime/hooks and layout contracts                |
 | Identity, paint/target order, transforms, clips, and layers | Foundation, geometry-composition, interaction-dispatch, Flex/Grid overlap, and Task 14 fractional composition evidence; mouse/layout contracts                   |
 | Failure and resource ownership remain exact                 | Duplicate-key/render-failure ledgers, 1,000 reflows, lifecycle suites, resource-ownership and runtime/hooks contracts                                            |
 | Public package, Studio, examples, and documentation agree   | Strict Bundler/NodeNext/packed consumers, Studio declaration verifier, 28/14 catalog check, source/built builds, five inspected visuals, README/status/contracts |

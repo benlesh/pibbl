@@ -63,4 +63,4 @@ Candidate tools:
 - Test diagnostics remain outside production source and package artifacts.
 - Current leaks and races stay visible in green characterization assertions until their owning steps intentionally change the baseline.
 - The representative performance baseline and full resource tables live in [the TFC-01 baseline report](../../design/tfc-01-characterization-baseline.md).
-- The historical untracked `crc-event.test.ts` named by the plan was absent; no user-owned file was overwritten.
+- The historical untracked `use-event.test.ts` named by the plan was absent; no user-owned file was overwritten.

@@ -615,7 +615,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 - Modify: `packages/webgl/src/lib/components/webgl-layer.test.tsx`
 - Modify: `packages/webgl/src/lib/context-lifecycle.test.tsx`
 - Modify: `packages/webgl/src/lib/events-integration.test.tsx`
-- Modify: `packages/webgl/src/lib/hooks/crc-animation-frame.test.tsx`
+- Modify: `packages/webgl/src/lib/hooks/use-animation-frame.test.tsx`
 - Modify: `packages/webgl/src/lib/layer-controller.test.ts`
 - Modify: `packages/webgl/src/lib/webgl-performance.test.tsx`
 
@@ -623,14 +623,14 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 
 - Removes public values: `defineWebGLPrimitive`, `crcWebGLContext`.
 - Removes public types: `CRCWebGLCameraSnapshot`, `CRCWebGLContext`, `CRCWebGLHitCapability`, `CRCWebGLPrimitiveCapabilities`, `CRCWebGLPrimitiveHitInput`, `CRCWebGLPrimitiveInput`, `CRCWebGLPrimitiveRender`, `CRCWebGLProgramProps`.
-- Retains public values: `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`, `createWebGLGeometry`, `crcAnimationFrame`.
+- Retains public values: `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`, `createWebGLGeometry`, `useAnimationFrame`.
 - Retains public declarative types: vectors, perspective camera, geometry input/descriptor, transforms, and all component prop/style types.
 
 - [ ] **Step 1: Write/convert tests to the post-raw-API contract**
 
   Replace test-only raw primitives with one of three supported patterns:
 
-  1. an ordinary component that increments/throws/calls `crcAnimationFrame()` and returns a public `Mesh`, `Cube`, or `Sphere`;
+  1. an ordinary component that increments/throws/calls `useAnimationFrame()` and returns a public `Mesh`, `Cube`, or `Sphere`;
   2. a direct composer/renderer unit test for internal failures and counters; or
   3. an injected fake GL/OffscreenCanvas failure in controller/context tests.
 
@@ -656,7 +656,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 
 - [ ] **Step 5: Prove cache and animation behavior without raw context access**
 
-  Use an ordinary component that calls `crcAnimationFrame()` and returns `Cube` to retain timestamp/one-loop tests. Use wrapper execution counters plus GL/transfer spies for clean-cache evidence. Assert a clean parent recomposition performs one Canvas `drawImage` and zero child execution, settlement, GL state/resource/draw work, transfer, or ledger rebuild.
+  Use an ordinary component that calls `useAnimationFrame()` and returns `Cube` to retain timestamp/one-loop tests. Use wrapper execution counters plus GL/transfer spies for clean-cache evidence. Assert a clean parent recomposition performs one Canvas `drawImage` and zero child execution, settlement, GL state/resource/draw work, transfer, or ledger rebuild.
 
 - [ ] **Step 6: Run every WebGL unit/browser suite and package build**
 
@@ -703,7 +703,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 
 **Interfaces:**
 
-- The package consumer composes custom geometry only as `<Mesh geometry={...}>` and exercises `crcAnimationFrame()` from an ordinary component.
+- The package consumer composes custom geometry only as `<Mesh geometry={...}>` and exercises `useAnimationFrame()` from an ordinary component.
 - Studio/runtime inventories expect these sorted runtime exports:
 
 ```ts
@@ -713,7 +713,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
   "Mesh",
   "Sphere",
   "WebGLLayer",
-  "crcAnimationFrame",
+  "useAnimationFrame",
   "createWebGLGeometry",
 ];
 ```

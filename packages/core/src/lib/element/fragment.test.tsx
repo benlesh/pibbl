@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Fragment } from '../../index.js';
 import { crc } from '../crc.js';
 import { clearSharedState, getCRCInstance } from '../global-state.js';
-import { crcRef } from '../hooks/crc-ref.js';
+import { useRef } from '../hooks/use-ref.js';
 import { createElement } from './create-element';
 
 interface IdentityProbeProps {
@@ -16,7 +16,7 @@ const IdentityProbe = ({
   label,
   observations,
 }: IdentityProbeProps) => {
-  const identity = crcRef<number>();
+  const identity = useRef<number>();
   identity.current ??= ++nextIdentity;
   observations.set(label, identity.current);
 };

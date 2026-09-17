@@ -41,7 +41,7 @@ assert.throws(
         },
       },
     ]),
-  /Undocumented public exports: CRCOrbitCameraHandlers, CRCOrbitCameraOptions, CRCOrbitCameraResult, CRCWebGLPerspectiveCamera, CRCWebGLVector3, WebGLLayer, crcOrbitCamera/u,
+  /Undocumented public exports: CRCOrbitCameraHandlers, CRCOrbitCameraOptions, CRCOrbitCameraResult, CRCWebGLPerspectiveCamera, CRCWebGLVector3, WebGLLayer, useOrbitCamera/u,
 );
 
 const multiPackageCoverage = validateApiCoverage(multiPackageInventory, [
@@ -60,11 +60,11 @@ const multiPackageCoverage = validateApiCoverage(multiPackageInventory, [
     },
   },
   {
-    route: "#/api/hooks/crc-orbit-camera",
+    route: "#/api/hooks/use-orbit-camera",
     frontmatter: {
-      id: "api-hook-crc-orbit-camera",
+      id: "api-hook-use-orbit-camera",
       symbols: [
-        "crcOrbitCamera",
+        "useOrbitCamera",
         "CRCOrbitCameraOptions",
         "CRCOrbitCameraHandlers",
         "CRCOrbitCameraResult",
@@ -80,12 +80,12 @@ const multiPackageCoverage = validateApiCoverage(multiPackageInventory, [
   },
 ]);
 assert.equal(
-  multiPackageCoverage.values.get("crcOrbitCamera")?.route,
-  "#/api/hooks/crc-orbit-camera",
+  multiPackageCoverage.values.get("useOrbitCamera")?.route,
+  "#/api/hooks/use-orbit-camera",
 );
 assert.equal(
   multiPackageCoverage.types.get("CRCOrbitCameraOptions")?.route,
-  "#/api/hooks/crc-orbit-camera",
+  "#/api/hooks/use-orbit-camera",
 );
 assert.equal(
   multiPackageCoverage.types.get("CRCWebGLVector3")?.route,

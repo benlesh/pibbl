@@ -47,7 +47,7 @@ keywords: [webgl, camera, geometry, mesh, scene]
 Import these public contracts with `type` from `@crc/webgl`. CRC element,
 event, node, style-base, and JSX types continue to come from `@crc/core`.
 Orbit-camera options, handlers, and results are documented with
-[`crcOrbitCamera`](#/api/hooks/crc-orbit-camera).
+[`useOrbitCamera`](#/api/hooks/use-orbit-camera).
 
 ## AmbientLightProps
 

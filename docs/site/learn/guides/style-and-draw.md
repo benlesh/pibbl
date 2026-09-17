@@ -195,12 +195,12 @@ vertex bounds when an application needs a different focus region.
 A layout parent reads a direct child's specified `style` to calculate its
 allocation. A plain component still receives the exact author-supplied style;
 the parent does not replace it with resolved numbers. Read the finite local
-allocation through `crcLayoutBox()`:
+allocation through `useLayoutBox()`:
 
 ```tsx
 import {
   Rectangle,
-  crcLayoutBox,
+  useLayoutBox,
   type BoxStyle,
   type FlexItemStyle,
 } from "@crc/core";
@@ -211,7 +211,7 @@ interface TileProps {
 }
 
 function Tile({ color, style: _specifiedStyle }: TileProps) {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   return (
     <Rectangle style={{ width: box.width, height: box.height, fill: color }} />
   );

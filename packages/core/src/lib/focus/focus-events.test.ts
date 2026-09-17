@@ -3,9 +3,9 @@ import type { CRCEventTargetRegistration } from '../events/registrations';
 import type { CRCEvent, CRCEventHandlers, CRCEventTarget } from '../events/types';
 import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { crcEventListener } from '../hooks/crc-event-listener';
-import { crcEventTarget } from '../hooks/crc-event-target';
-import { crcState, type StateUpdater } from '../hooks/crc-state';
+import { useEventListener } from '../hooks/use-event-listener';
+import { useEventTarget } from '../hooks/use-event-target';
+import { useState, type StateUpdater } from '../hooks/use-state';
 import { mountCRC } from '../mount-crc';
 import type { CRCElement, CRCController } from '../types';
 import type { CRCFocusManager } from './focus-manager';
@@ -39,7 +39,7 @@ describe('logical focus transitions', () => {
       );
     };
     const Root = (_props: {}) => {
-      crcEventListener({
+      useEventListener({
         onFocusInCapture: event => record('root-capture', event),
         onFocusIn: event => record('root-bubble', event),
         onFocusCapture: event => record('root-capture', event),
@@ -315,7 +315,7 @@ describe('logical focus transitions', () => {
     let canvas!: HTMLCanvasElement;
     const Root = (_props: {}) => {
       const current = generation;
-      crcEventListener({
+      useEventListener({
         onFocusOut: () => {
           trace.push('ancestor-focusout');
           generation = 1;
@@ -383,7 +383,7 @@ describe('logical focus transitions', () => {
     let setValue!: StateUpdater<number>;
     const Root = (_props: {}) => {
       renders++;
-      const [, setState] = crcState(0);
+      const [, setState] = useState(0);
       setValue = setState;
       return [
         createElement(Target, {
@@ -413,7 +413,7 @@ interface TargetProps {
 }
 
 const Target = ({ handlers, x }: TargetProps) => {
-  crcEventTarget(handlers, {
+  useEventTarget(handlers, {
     path: rectanglePath(x, 0, 40, 40),
     keyboardFocusable: true,
   });
@@ -427,7 +427,7 @@ function focusScene({
   readonly targetHandlers?: CRCEventHandlers;
 }): CRCElement<any> {
   const Root = (_props: {}) => {
-    crcEventListener(listenerHandlers);
+    useEventListener(listenerHandlers);
     return [
       createElement(Target, { key: 'A', label: 'A', x: 0, handlers: targetHandlers }),
       createElement(Target, { key: 'B', label: 'B', x: 50, handlers: targetHandlers }),

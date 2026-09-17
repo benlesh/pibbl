@@ -9,7 +9,7 @@
 
 **Goal:** Resume the original composition-first WebGL goal and fold its approved lighting, materials, backgrounds, orbit-camera, and genuine-shadow work into one implementation stream that becomes browser-visible early.
 
-**Architecture:** `WebGLLayer` continues to compose one CPU-only scene, settle the completed declarations, render required light-space depth maps, render the main opaque/transparent queues, transfer one bitmap, and transactionally publish bitmap/pick/focus generations. `crcOrbitCamera()` returns plain pose values plus stable ordinary CRC event handlers; it does not create a camera instance or add controls to `WebGLLayer`.
+**Architecture:** `WebGLLayer` continues to compose one CPU-only scene, settle the completed declarations, render required light-space depth maps, render the main opaque/transparent queues, transfer one bitmap, and transactionally publish bitmap/pick/focus generations. `useOrbitCamera()` returns plain pose values plus stable ordinary CRC event handlers; it does not create a camera instance or add controls to `WebGLLayer`.
 
 **Binding specs:**
 
@@ -28,7 +28,7 @@
 - Task 4 makes all twelve lessons and the deterministic lighting laboratory browser-visible, then stops for the user's visual inspection. Do not begin Task 5 until the user explicitly approves the visible demonstrations.
 - Tasks 5-6 are the post-approval documentation, compatibility, visual-baseline, broad-review, and aggregate-verification tail.
 - `WebGLLayer.camera` remains a plain `CRCWebGLPerspectiveCamera`. Do not add a camera class, a `controls` prop, a WebGL input subsystem, or an independent animation loop.
-- `crcOrbitCamera()` returns exactly `{ position, lookAt, handlers }`. Its handler object/functions are stable for the hook-slot lifetime; unchanged vectors reuse their snapshots; input changes schedule work only when state changes.
+- `useOrbitCamera()` returns exactly `{ position, lookAt, handlers }`. Its handler object/functions are stable for the hook-slot lifetime; unchanged vectors reuse their snapshots; input changes schedule work only when state changes.
 - `WebGLLayer.style.shadows` is `false | "low" | "medium" | "high"`, defaults to `"medium"`, requests 0/512/1024/2048 pixels per view, and uses 0/1/4/9 depth comparisons.
 - Directional, point, and spot lights cast by default. Ambient and hemisphere lights cannot cast. CRC never silently chooses one primary shadow light.
 - Opaque meshes cast and receive by default. Partial-alpha meshes receive when lit but do not cast by default. Final-alpha-zero meshes never color-raster or shadow-raster, even under explicit `true`, while existing pick/focus eligibility remains unchanged.
@@ -45,8 +45,8 @@
 
 **Files:**
 
-- Create: `packages/webgl/src/lib/hooks/crc-orbit-camera.ts`
-- Create: `packages/webgl/src/lib/hooks/crc-orbit-camera.test.tsx`
+- Create: `packages/webgl/src/lib/hooks/use-orbit-camera.ts`
+- Create: `packages/webgl/src/lib/hooks/use-orbit-camera.test.tsx`
 - Modify: `packages/core/src/internal.ts`
 - Modify: `packages/webgl/src/index.ts`
 - Modify: `packages/webgl/src/lib/types.ts`
@@ -73,12 +73,12 @@ Add public hook tests for validation, initial pose, live transactional options, 
 - [ ] **Step 2: Run only the focused RED set.**
 
 ```sh
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/hooks/crc-orbit-camera.test.tsx packages/webgl/src/lib/components/webgl-layer.test.tsx packages/webgl/src/lib/components/lights.test.tsx packages/webgl/src/lib/components/mesh.test.tsx packages/webgl/src/lib/scene/settle.test.ts packages/webgl/src/lib/scene/shadows.test.ts packages/webgl/src/lib/gpu/program.test.ts packages/webgl/src/lib/gpu/shadow-resources.test.ts packages/webgl/src/lib/scene/renderer.test.ts packages/webgl/src/lib/lighting-rendering.test.tsx --browser.headless --browser.ui=false
+fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/hooks/use-orbit-camera.test.tsx packages/webgl/src/lib/components/webgl-layer.test.tsx packages/webgl/src/lib/components/lights.test.tsx packages/webgl/src/lib/components/mesh.test.tsx packages/webgl/src/lib/scene/settle.test.ts packages/webgl/src/lib/scene/shadows.test.ts packages/webgl/src/lib/gpu/program.test.ts packages/webgl/src/lib/gpu/shadow-resources.test.ts packages/webgl/src/lib/scene/renderer.test.ts packages/webgl/src/lib/lighting-rendering.test.tsx --browser.headless --browser.ui=false
 ```
 
-- [ ] **Step 3: Implement `crcOrbitCamera()`.**
+- [ ] **Step 3: Implement `useOrbitCamera()`.**
 
-Expose `CRCOrbitCameraOptions`, `CRCOrbitCameraHandlers`, `CRCOrbitCameraResult`, and `crcOrbitCamera` from `@crc/webgl`. Add only `getCurrentLogicalViewport()` and `onCurrentRenderFinish(callback)` to `@crc/core/internal`. Required options are `orbitPoint` and `initialPosition`; defaults are min `0.1`, max `Infinity`, and speeds `1`. Vectors must be finite and initial position must differ from the orbit point. Bounds are finite positive values and max cannot be below min; speeds are finite nonnegative values.
+Expose `CRCOrbitCameraOptions`, `CRCOrbitCameraHandlers`, `CRCOrbitCameraResult`, and `useOrbitCamera` from `@crc/webgl`. Add only `getCurrentLogicalViewport()` and `onCurrentRenderFinish(callback)` to `@crc/core/internal`. Required options are `orbitPoint` and `initialPosition`; defaults are min `0.1`, max `Infinity`, and speeds `1`. Vectors must be finite and initial position must differ from the orbit point. Bounds are finite positive values and max cannot be below min; speeds are finite nonnegative values.
 
 Store azimuth, polar angle, distance, one active pointer, latest committed live options, cached immutable pose vectors, one reactive revision, and one frozen handler bundle in the mounted hook slot. Validate before acquiring the slot. Candidate options affect that render's pose but become handler-visible only after successful render. Primary drag uses `0.01 * rotateSpeed` radians per root-logical pixel and clamps polar to `0.001..PI-0.001`. Wheel uses multipliers pixel=1, line=16, page=root logical height and distance multiplier `exp(deltaY * 0.001 * zoomSpeed)`.
 
@@ -100,7 +100,7 @@ Render dirty directional depth views before clearing the default framebuffer. De
 
 - [ ] **Step 7: Make the two lessons visible immediately.**
 
-In both lessons call `crcOrbitCamera({ orbitPoint: [0, -0.25, 0], initialPosition: [5.8, 4.2, 7.8], minDistance: 3, maxDistance: 18 })`. Wrap the viewport in `<Group {...orbit.handlers}>`, place a transparent 720×420 Rectangle beneath the island as empty-space hit geometry, and pass `orbit.position`/`orbit.lookAt` into the otherwise plain perspective camera. Preserve the existing scene geometry/material/background. In `multiple-lights`, temporarily set point and spot `castShadow: false` so only the completed directional path participates. Synchronize only the declarations required for the Studio editor to accept the new public symbols.
+In both lessons call `useOrbitCamera({ orbitPoint: [0, -0.25, 0], initialPosition: [5.8, 4.2, 7.8], minDistance: 3, maxDistance: 18 })`. Wrap the viewport in `<Group {...orbit.handlers}>`, place a transparent 720×420 Rectangle beneath the island as empty-space hit geometry, and pass `orbit.position`/`orbit.lookAt` into the otherwise plain perspective camera. Preserve the existing scene geometry/material/background. In `multiple-lights`, temporarily set point and spot `castShadow: false` so only the completed directional path participates. Synchronize only the declarations required for the Studio editor to accept the new public symbols.
 
 - [ ] **Step 8: Run only the focused GREEN set and narrow package build.**
 
@@ -254,7 +254,7 @@ Using the already-running Studio, inspect `#/examples/webgl/multiple-lights`, ea
 - Modify: relevant contracts under `docs/design/`, including drawing, style, surface, hooks, user/mouse/focus events, event ownership, and runtime resource ownership
 - Create: `docs/site/learn/guides/webgl-lighting.md`
 - Modify: `docs/site/learn/README.md`, `docs/site/learn/guides/webgl-islands.md`
-- Create: `docs/site/api/hooks/crc-orbit-camera.md`
+- Create: `docs/site/api/hooks/use-orbit-camera.md`
 - Modify: `docs/site/api/README.md`
 - Modify: WebGL component/type/function API pages, including WebGLLayer, Group3D, Mesh/Cube/Sphere, direct lights, WebGL types, and custom geometry
 - Modify: `tooling/studio-docs/fixtures/api/webgl.ts`

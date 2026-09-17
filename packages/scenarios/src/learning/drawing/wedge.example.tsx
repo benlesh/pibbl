@@ -1,7 +1,7 @@
-import { crc, crcState, Rectangle, Wedge, type CRCController } from "@crc/core";
+import { crc, useState, Rectangle, Wedge, type CRCController } from "@crc/core";
 
 function WedgeStudy() {
-  const [active, setActive] = crcState(false);
+  const [active, setActive] = useState(false);
 
   return [
     <Rectangle

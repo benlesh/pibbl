@@ -1,7 +1,7 @@
 import {
   Absolute,
   crc,
-  crcLayoutBox,
+  useLayoutBox,
   Fragment,
   Group,
   Path,
@@ -196,7 +196,7 @@ function Connection({ edge }: Readonly<{ edge: DiagramEdge }>): CRCNode {
 }
 
 function Toolbar({ style: _specifiedStyle }: RegionProps): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   return [
     <Rectangle
       style={{ width: box.width, height: box.height, fill: "#fffdf6" }}
@@ -243,7 +243,7 @@ function Toolbar({ style: _specifiedStyle }: RegionProps): CRCNode {
 }
 
 function Workspace({ style: _specifiedStyle }: RegionProps): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   return [
     <Rectangle
       style={{ width: box.width, height: box.height, fill: "#eef2e8" }}
@@ -260,7 +260,7 @@ function Workspace({ style: _specifiedStyle }: RegionProps): CRCNode {
 }
 
 function StatusBar({ style: _specifiedStyle }: RegionProps): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   return [
     <Rectangle
       style={{ width: box.width, height: box.height, fill: "#17211d" }}

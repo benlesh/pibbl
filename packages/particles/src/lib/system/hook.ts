@@ -23,14 +23,14 @@ interface ParticleSystemHookSlot {
   revision: number;
 }
 
-export function crcParticleSystem<
+export function useParticleSystem<
   EmitterName extends string,
   Parameters extends CRCParticleParameterValues,
 >(
   effect: CRCParticleEffect2D<EmitterName, Parameters>,
   options?: CRCParticleSystemOptions,
 ): CRCParticleSystem<EmitterName, Parameters, 2>;
-export function crcParticleSystem<
+export function useParticleSystem<
   EmitterName extends string,
   Parameters extends CRCParticleParameterValues,
 >(
@@ -38,7 +38,7 @@ export function crcParticleSystem<
   options?: CRCParticleSystemOptions,
 ): CRCParticleSystem<EmitterName, Parameters, 3>;
 /** Creates one stable particle-system handle owned by the current hook slot. */
-export function crcParticleSystem(
+export function useParticleSystem(
   effect: CRCParticleEffect2D | CRCParticleEffect3D,
   options: CRCParticleSystemOptions = {},
 ): CRCParticleSystem {

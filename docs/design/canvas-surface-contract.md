@@ -105,7 +105,7 @@ naturally clipped by the platform.
 ## Responsive viewport behavior
 
 For `viewport: 'responsive'`, one logical unit equals one CSS content-box pixel.
-A CSS resize updates the root `crcLayoutBox()` allocation and schedules one
+A CSS resize updates the root `useLayoutBox()` allocation and schedules one
 coalesced frame without remounting component identity. Backing dimensions still
 follow the requested pixel ratio, so responsive layout and high-density paint
 remain independent concerns.
@@ -158,7 +158,7 @@ Runtime-created Layer and filter surfaces are upright local targets. CRC keeps
 the current paint transform, which maps local drawing into the active target,
 separate from the world transform used by event paths, focus bounds, clipping
 entries, and Layer bridges. Inside a filtered boundary,
-`crcCanvasContext().canvas` is truthfully the local `OffscreenCanvas`, and its
+`useCanvasContext().canvas` is truthfully the local `OffscreenCanvas`, and its
 `getTransform()` describes that local capture. The filtered bitmap receives the
 boundary's parent-facing placement or Group transform exactly once when it is
 composited. Interaction geometry continues to use root-logical world transforms

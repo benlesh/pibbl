@@ -7,7 +7,7 @@ import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
 import { getCRCInstance } from '../global-state';
 import { crc } from '../crc';
-import { crcState } from '../hooks/crc-state';
+import { useState } from '../hooks/use-state';
 import { Group } from './g';
 
 const defaultStyle = {
@@ -84,7 +84,7 @@ describe('rect', () => {
   it('updates rounded rectangle geometry', async () => {
     let setRadius!: (radius: number) => void;
     function Probe() {
-      const [radius, set] = crcState(10);
+      const [radius, set] = useState(10);
       setRadius = set;
       return createElement(Rectangle, {
         style: { x: 0, y: 0, width: 40, height: 40, cornerRadius: radius, fill: 'red' },

@@ -3,7 +3,7 @@ import {
   Rectangle,
   Text,
   crc,
-  crcState,
+  useState,
   type CRCController,
 } from '@crc/core';
 import {
@@ -11,14 +11,14 @@ import {
   Group3D,
   Sphere,
   WebGLLayer,
-  crcAnimationFrame,
+  useAnimationFrame,
 } from '@crc/webgl';
 
 function WebGLIslandLesson() {
-  const [selection, setSelection] = crcState<'cube' | 'sphere' | 'none'>(
+  const [selection, setSelection] = useState<'cube' | 'sphere' | 'none'>(
     'none',
   );
-  const timestamp = crcAnimationFrame();
+  const timestamp = useAnimationFrame();
   const rotation = (timestamp / 30) % 360;
 
   return (

@@ -19,7 +19,7 @@ import {
   useParticleSystemBinding,
 } from "./binding.js";
 import { getParticleSystemController } from "./controller.js";
-import { crcParticleSystem } from "./hook.js";
+import { useParticleSystem } from "./hook.js";
 import { particleSystemOwnershipSnapshot } from "./ownership.js";
 
 let driver: ManualSchedulerDriver;
@@ -115,7 +115,7 @@ describe("particle system binding transactions", () => {
     let first!: TestCandidate;
     let second!: TestCandidate;
     const SystemOwner = (): CRCNode => {
-      system = crcParticleSystem(effect);
+      system = useParticleSystem(effect);
       return null;
     };
     const FirstBinding = (_props: {}): CRCNode => {
@@ -181,8 +181,8 @@ describe("particle system binding transactions", () => {
     let first!: TestCandidate;
     let replacementError: unknown;
     const Systems = (): CRCNode => {
-      firstSystem = crcParticleSystem(definition);
-      secondSystem = crcParticleSystem(definition);
+      firstSystem = useParticleSystem(definition);
+      secondSystem = useParticleSystem(definition);
       return null;
     };
     const Binding = (): CRCNode => {
@@ -240,7 +240,7 @@ describe("particle system binding transactions", () => {
     let failed!: TestCandidate;
     let owner!: CRCInternalRenderOwner;
     const SystemOwner = (): CRCNode => {
-      system = crcParticleSystem(effect);
+      system = useParticleSystem(effect);
       return null;
     };
     const Binding = (): CRCNode => {
@@ -312,7 +312,7 @@ describe("particle system binding transactions", () => {
     let system!: CRCParticleSystem;
     let current!: TestCandidate;
     const Root = (): CRCNode => {
-      system = crcParticleSystem(effect);
+      system = useParticleSystem(effect);
       const next = values.get();
       useParticleSystemBinding({
         system,
@@ -383,7 +383,7 @@ describe("particle system binding transactions", () => {
     let current!: TestCandidate;
     const Root = (): CRCNode => {
       const value = values.get();
-      system = crcParticleSystem(definition, {
+      system = useParticleSystem(definition, {
         onError(error) {
           observed.push(`system:${(error as { message: string }).message}`);
         },

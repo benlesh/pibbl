@@ -5,18 +5,18 @@ import { definePrimitive } from './define-primitive.js';
 import { materializeContainerChildren } from './element/children.js';
 import { executeRender } from './execute-render.js';
 import { clearSharedState, getCRCInstance } from './global-state.js';
-import { crcCursor } from './hooks/crc-cursor.js';
-import { crcEventListener } from './hooks/crc-event-listener.js';
-import { crcEventTarget } from './hooks/crc-event-target.js';
-import { crcEvent } from './hooks/crc-event.js';
-import { crcLayoutBox } from './hooks/crc-layout-box.js';
-import { crcLinePath } from './hooks/crc-line-path.js';
-import { crcMemo } from './hooks/crc-memo.js';
-import { crcRectPath } from './hooks/crc-rect-path.js';
-import { crcRef } from './hooks/crc-ref.js';
-import { crcState, type StateUpdater } from './hooks/crc-state.js';
-import { crcSvgPath } from './hooks/crc-svg-path.js';
-import { crcWhenChanged } from './hooks/crc-when-changed.js';
+import { useCursor } from './hooks/use-cursor.js';
+import { useEventListener } from './hooks/use-event-listener.js';
+import { useEventTarget } from './hooks/use-event-target.js';
+import { useEvent } from './hooks/use-event.js';
+import { useLayoutBox } from './hooks/use-layout-box.js';
+import { useLinePath } from './hooks/use-line-path.js';
+import { useMemo } from './hooks/use-memo.js';
+import { useRectPath } from './hooks/use-rect-path.js';
+import { useRef } from './hooks/use-ref.js';
+import { useState, type StateUpdater } from './hooks/use-state.js';
+import { useSvgPath } from './hooks/use-svg-path.js';
+import { useWhenChanged } from './hooks/use-when-changed.js';
 import {
   placeAbsoluteChild,
   placeDirectChildren,
@@ -35,7 +35,7 @@ function IdentityProbe({
   label,
   observations,
 }: IdentityProbeProps): void {
-  const identity = crcRef<number>();
+  const identity = useRef<number>();
   identity.current ??= ++nextIdentity;
   observations.set(label, identity.current);
 }
@@ -49,7 +49,7 @@ const LeafProbe = definePrimitive<{
 const PlacementProbe = definePrimitive<{
   children: CRCNode;
 }>(function renderPlacementProbe({ children }) {
-  const container = crcLayoutBox();
+  const container = useLayoutBox();
   return placeDirectChildren(
     materializeContainerChildren(children, 'PlacementProbe', {
       validateKeys: false,
@@ -86,24 +86,24 @@ describe('plain function component dispatch', () => {
       expect(Object.isFrozen(props)).toBe(import.meta.env.DEV);
       expect(Object.prototype.hasOwnProperty.call(props, 'key')).toBe(false);
       expect((props.children as { type?: unknown }).type).toBe(LeafProbe);
-      const [state, setState] = crcState(0);
+      const [state, setState] = useState(0);
       updateState = setState;
       states.push(state);
-      memoValues.push(crcMemo(() => ({}), [props.revision]));
-      refs.push(crcRef({}).current!);
-      crcWhenChanged(() => cleanups, [props.revision]);
-      const rectPath = crcRectPath(0, 0, 10, 10);
-      const linePath = crcLinePath([[0, 0], [10, 10]]);
-      const svgPath = crcSvgPath('M0 0h10v10z');
+      memoValues.push(useMemo(() => ({}), [props.revision]));
+      refs.push(useRef({}).current!);
+      useWhenChanged(() => cleanups, [props.revision]);
+      const rectPath = useRectPath(0, 0, 10, 10);
+      const linePath = useLinePath([[0, 0], [10, 10]]);
+      const svgPath = useSvgPath('M0 0h10v10z');
       paths.push([rectPath, linePath, svgPath]);
-      crcEvent('mousemove', () => undefined);
-      crcEventTarget({ onClick: () => undefined }, {
+      useEvent('mousemove', () => undefined);
+      useEventTarget({ onClick: () => undefined }, {
         path: rectPath,
         fill: true,
       });
-      crcEventListener({ onClick: () => undefined });
-      crcCursor({ style: 'pointer' });
-      expect(crcLayoutBox()).toEqual({ x: 0, y: 0, width: 200, height: 80 });
+      useEventListener({ onClick: () => undefined });
+      useCursor({ style: 'pointer' });
+      expect(useLayoutBox()).toEqual({ x: 0, y: 0, width: 200, height: 80 });
       return <>{[[props.children]]}</>;
     }
 
@@ -151,11 +151,11 @@ describe('plain function component dispatch', () => {
     const specified = { width: '50%', height: 20 } as const;
     const observations: Array<{
       style: BoxStyle;
-      box: ReturnType<typeof crcLayoutBox>;
+      box: ReturnType<typeof useLayoutBox>;
     }> = [];
 
     function Card(props: { style: BoxStyle; title: string }): void {
-      observations.push({ style: props.style, box: crcLayoutBox() });
+      observations.push({ style: props.style, box: useLayoutBox() });
     }
 
     const canvas = createCanvas(240, 120);
@@ -178,7 +178,7 @@ describe('plain function component dispatch', () => {
   it('fails closed and remounts a plain function after an explicit recovery render', async () => {
     const cleanups = vi.fn();
     function Failing({ fail }: { fail: boolean }): void {
-      crcWhenChanged(() => cleanups, []);
+      useWhenChanged(() => cleanups, []);
       if (fail) throw new Error('plain failure');
     }
 
@@ -327,10 +327,10 @@ describe('plain function component identity', () => {
   it('uses function identity for distinct plain components with the same name', async () => {
     const values: string[] = [];
     const First = function SameName(): void {
-      values.push(crcRef('first').current!);
+      values.push(useRef('first').current!);
     };
     const Second = function SameName(): void {
-      values.push(crcRef('second').current!);
+      values.push(useRef('second').current!);
     };
     const canvas = createCanvas();
     const controller = crc(canvas, <First />);

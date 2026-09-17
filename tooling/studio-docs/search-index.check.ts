@@ -19,36 +19,36 @@ import {
 const input = {
   pages: [
     {
-      route: "#/api/hooks/crc-when-changed",
+      route: "#/api/hooks/use-when-changed",
       plainText:
-        "crcWhenChanged\nRuns deterministic cleanup after dependency changes.",
-      headings: [{ id: "crcwhenchanged", level: 1, text: "crcWhenChanged" }],
+        "useWhenChanged\nRuns deterministic cleanup after dependency changes.",
+      headings: [{ id: "crcwhenchanged", level: 1, text: "useWhenChanged" }],
       sections: [
         {
-          heading: { id: "crcwhenchanged", level: 1, text: "crcWhenChanged" },
+          heading: { id: "crcwhenchanged", level: 1, text: "useWhenChanged" },
           plainText: "Runs deterministic cleanup after dependency changes.",
         },
       ],
       frontmatter: {
-        id: "api-hook-crc-when-changed",
-        title: "crcWhenChanged",
+        id: "api-hook-use-when-changed",
+        title: "useWhenChanged",
         summary: "Runs deterministic cleanup after dependency changes.",
         kind: "api",
-        slug: "crc-when-changed",
+        slug: "use-when-changed",
         apiCategory: "hook",
-        symbols: ["crcWhenChanged"],
+        symbols: ["useWhenChanged"],
       },
     },
     {
       route: "#/learn/guides/lifecycle",
       plainText:
-        "Lifecycle\ncrcWhenChanged crcWhenChanged crcWhenChanged repeats in prose.",
+        "Lifecycle\ncrcWhenChanged useWhenChanged useWhenChanged repeats in prose.",
       headings: [{ id: "lifecycle", level: 1, text: "Lifecycle" }],
       sections: [
         {
           heading: { id: "lifecycle", level: 1, text: "Lifecycle" },
           plainText:
-            "crcWhenChanged crcWhenChanged crcWhenChanged repeats in prose.",
+            "useWhenChanged useWhenChanged useWhenChanged repeats in prose.",
         },
       ],
       frontmatter: {
@@ -127,7 +127,7 @@ const input = {
 const first = buildSearchBundle(input);
 const second = buildSearchBundle(input);
 
-assert.deepEqual(tokenizeSearchText("crcWhenChanged"), [
+assert.deepEqual(tokenizeSearchText("useWhenChanged"), [
   "crcwhenchanged",
   "crc",
   "when",
@@ -153,8 +153,8 @@ assert.equal(
   false,
 );
 assert.equal(
-  searchSearchBundle(first, "crcWhenChanged")[0]?.url,
-  "#/api/hooks/crc-when-changed",
+  searchSearchBundle(first, "useWhenChanged")[0]?.url,
+  "#/api/hooks/use-when-changed",
 );
 assert.equal(
   searchSearchBundle(first, "filter", { kinds: ["example"] })[0]?.url,
@@ -162,7 +162,7 @@ assert.equal(
 );
 assert.equal(
   searchSearchBundle(first, "crcWhenChangd")[0]?.url,
-  "#/api/hooks/crc-when-changed",
+  "#/api/hooks/use-when-changed",
 );
 assert.equal(
   searchSearchBundle(first, "CRCFilter")[0]?.url,
@@ -188,7 +188,7 @@ const restoredBrowserIndex = MiniSearch.loadJSON(
   searchIndexOptions(),
 );
 for (const [query, options] of [
-  ["crcWhenChanged", undefined],
+  ["useWhenChanged", undefined],
   ["crcWhen", undefined],
   ["crcWhenChangd", undefined],
   ["filter", { kinds: ["example"] }],
@@ -245,7 +245,7 @@ for (const [symbol, destination] of Object.entries(
 assert.equal(
   searchSearchBundle(realBundle, "CRCRef")[0]?.url,
   "#/api/types/canvas-runtime#crcref",
-  "The public CRCRef type must beat the lower-case crcRef hook.",
+  "The public CRCRef type must beat the lower-case useRef hook.",
 );
 assert.equal(
   searchSearchBundle(realBundle, "CRCPointerEvent")[0]?.url,

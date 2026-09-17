@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
 import { crc } from '../crc';
-import { crcLayoutBox } from '../hooks/crc-layout-box';
+import { useLayoutBox } from '../hooks/use-layout-box';
 import { componentTest } from '../test-utils/component-test';
 import type { SystemStyle } from '../types';
 import { Overlay, placeOverlayChild } from './overlay';
@@ -58,7 +58,7 @@ describe('overlay layout', () => {
     const onClick = vi.fn();
     let observed: Readonly<{ x: number; y: number; width: number; height: number }>;
     const Probe = definePrimitive<{ onClick: () => void }, ProbeStyle>((props, style) => {
-      observed = crcLayoutBox();
+      observed = useLayoutBox();
       return createElement(Rectangle, {
         style: {
           x: 0,

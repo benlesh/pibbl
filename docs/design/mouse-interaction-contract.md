@@ -63,12 +63,12 @@ is still a fill hit area, and zero opacity does not disable interaction. A
 Canvas path with neither a fill hit area nor a positive stroke interaction
 width remains a miss.
 
-The public `crcEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation.
+The public `useEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation.
 
-Likewise, `crcCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty.
+Likewise, `useCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty.
 
 DOM ancestors learn about child input only through explicit
-`crcEventListener` registrations. The current facade exposes logical `target`,
+`useEventListener` registrations. The current facade exposes logical `target`,
 `currentTarget`, `relatedTarget`, phases, cancellation, and pointer capture as
 defined by the user-event contract; CRC still never invokes every overlapping
 geometric hit or infers an ancestor from paint.
@@ -152,7 +152,7 @@ A trusted native click invokes a CRC region's `onClick` only when:
 - the corresponding primary up resolved to the same still-live region; and
 - the click event still resolves to that region.
 
-The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `crcEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted.
+The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `useEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted.
 
 If the down target is removed, up targets whatever is now topmost and no click
 is delivered to the removed region. Keyboard-generated logical clicks do not
@@ -209,7 +209,7 @@ event coordinates; layer-local/NDC/ray values remain private resolver inputs. Se
 the [Canvas surface contract](./canvas-surface-contract.md) for the complete
 projection model.
 
-`crcOrbitCamera()` consumes those root-logical pointer coordinates through its
+`useOrbitCamera()` consumes those root-logical pointer coordinates through its
 ordinary handler bundle. At default speed each captured primary-pointer pixel
 changes the matching spherical angle by `0.01` radians; its polar clamp prevents
 camera flips. Authors may attach the bundle to a geometry target or a listener
@@ -246,7 +246,7 @@ The explorer visual target, native trace when analogous, CRC trace, gesture, and
 - A sibling down/up sequence reaches a common ancestor only when that ancestor
   explicitly registered a matching listener.
 - Boundary-removal timing is normalized to stable postconditions rather than browser layout-task timing.
-- No-path `crcEvent` handlers are Canvas-wide observers and run after target-bound callbacks rather than introducing a synthetic propagation phase.
+- No-path `useEvent` handlers are Canvas-wide observers and run after target-bound callbacks rather than introducing a synthetic propagation phase.
 
 ## Mouse-specific non-goals and follow-ups
 

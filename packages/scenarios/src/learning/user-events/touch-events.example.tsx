@@ -1,6 +1,6 @@
 import {
   crc,
-  crcState,
+  useState,
   Rectangle,
   Text,
   type CRCController,
@@ -12,8 +12,8 @@ function touchSummary(event: CRCTouchEvent): string {
   return `${event.type} changed=#${identifier} at ${Math.round(event.x)},${Math.round(event.y)}  all=${event.touches.length} target=${event.targetTouches.length} changed=${event.changedTouches.length}`;
 }
 function TouchEventsStudy() {
-  const [trace, setTrace] = crcState<readonly string[]>([]);
-  const [activeContacts, setActiveContacts] = crcState(0);
+  const [trace, setTrace] = useState<readonly string[]>([]);
+  const [activeContacts, setActiveContacts] = useState(0);
   const record = (event: CRCTouchEvent) => {
     setTrace((current) => [...current.slice(-3), touchSummary(event)]);
     setActiveContacts(event.targetTouches.length);

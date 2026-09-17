@@ -62,7 +62,7 @@
 **Coverage:**
 
 - Direct props and `Capture` props, capture/target/bubble phase ordering, `target`, `currentTarget`, `relatedTarget`, `eventPhase`, `composedPath()`, `preventDefault()`, `stopPropagation()`, and `stopImmediatePropagation()`.
-- `crcEventListener` as a pathless logical ancestor and `crcEventTarget` as one explicit custom `Path2D` target with fill/stroke hit options and cursor ownership.
+- `useEventListener` as a pathless logical ancestor and `useEventTarget` as one explicit custom `Path2D` target with fill/stroke hit options and cursor ownership.
 - `onDragStart`, `onDrag`, `onDragEnd`, `onDragEnter`, `onDragLeave`, `onDragOver`, and `onDrop`, including `dataTransfer`, logical coordinates, and required drag-over cancellation.
 
 - [x] Create all three public-API lesson modules with visible routing or drag state.

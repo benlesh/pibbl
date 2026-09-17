@@ -25,7 +25,7 @@ CSS content box exactly. Fixed viewports also support the familiar `cover`,
 After mount, `canvas.width` and `canvas.height` are physical backing-store
 dimensions owned by CRC. They are no longer the public source of logical scene
 dimensions. Components obtain logical allocations through normal layout and
-`crcLayoutBox()`.
+`useLayoutBox()`.
 
 ## Goals
 

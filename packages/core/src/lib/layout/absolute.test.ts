@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
 import { crc } from '../crc';
-import { crcState } from '../hooks/crc-state';
-import { crcLayoutBox } from '../hooks/crc-layout-box';
+import { useState } from '../hooks/use-state';
+import { useLayoutBox } from '../hooks/use-layout-box';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCNode, SystemStyle } from '../types';
 import { Overlay, placeOverlayChild } from './overlay';
@@ -71,7 +71,7 @@ describe('absolute layout', () => {
     let nextIdentity = 0;
     const observations = new Map<string, number>();
     const A = ({ label }: { label: string } & { style: Readonly<ItemStyle> }) => {
-      const [identity] = crcState(++nextIdentity);
+      const [identity] = useState(++nextIdentity);
       observations.set(label, identity);
     };
     const Host = ({ keyed }: { keyed: boolean }) => {
@@ -176,7 +176,7 @@ describe('absolute layout', () => {
         height: 10,
       }));
       const render = vi.fn(() => {
-        expect(crcLayoutBox()).toEqual({ x: 0, y: 0, width: 20, height: 10 });
+        expect(useLayoutBox()).toEqual({ x: 0, y: 0, width: 20, height: 10 });
       });
       const Child = definePrimitive<
         {},

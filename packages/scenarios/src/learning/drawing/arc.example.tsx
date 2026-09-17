@@ -1,7 +1,7 @@
-import { Arc, crc, crcState, Rectangle, type CRCController } from "@crc/core";
+import { Arc, crc, useState, Rectangle, type CRCController } from "@crc/core";
 
 function ArcStudy() {
-  const [active, setActive] = crcState(false);
+  const [active, setActive] = useState(false);
 
   return [
     <Rectangle

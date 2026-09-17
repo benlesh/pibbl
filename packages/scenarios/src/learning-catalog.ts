@@ -39,7 +39,7 @@ export const learningSections = [
     id: "layout",
     label: "Layout",
     description:
-      "Arrange declared boxes and distinguish specified style from crcLayoutBox allocation.",
+      "Arrange declared boxes and distinguish specified style from useLayoutBox allocation.",
     order: 4,
   },
   {
@@ -161,8 +161,8 @@ const drafts = [
       "Text",
       "FocusManagement",
       "KeyboardNavigation",
-      "crcState",
-      "crcWhenChanged",
+      "useState",
+      "useWhenChanged",
     ],
     objectives: [
       "Use createElement(type, props, ...children) for fragments, keyed dynamic lists, components, and textual zero/state interpolation.",
@@ -189,7 +189,7 @@ const drafts = [
     order: 17,
     summary:
       "Read writable and computed values explicitly, then update a shared signal without turning styles into bindings.",
-    api: ["signal", "computed", "crcSignal"],
+    api: ["signal", "computed", "useSignal"],
     objectives: [
       "Use .get() during a component render to declare the values that should refresh it.",
       "Update writable signals from an event and derive a normal resolved value with computed().",
@@ -625,7 +625,7 @@ const drafts = [
       code: "Change the hexagon's inradius or sides, then compare the clipped region.",
     },
     apiNotes: [
-      "`crcMemo` keeps the created hexagon path stable while its dependencies are unchanged.",
+      "`useMemo` keeps the created hexagon path stable while its dependencies are unchanged.",
       "`createRegularPolygonPath` uses sides, center coordinates, and exactly one size mode such as inradius.",
       "Nested clips intersect, matching Canvas clipping behavior.",
       "Clip receives children directly, and both paint and targeting are constrained by its active path.",
@@ -667,7 +667,7 @@ const drafts = [
     order: 117,
     summary:
       "Compose an animated WebGL2 cube and sphere between ordinary Canvas 2D paint.",
-    api: ["WebGLLayer", "Group3D", "Cube", "Sphere", "crcAnimationFrame"],
+    api: ["WebGLLayer", "Group3D", "Cube", "Sphere", "useAnimationFrame"],
     objectives: [
       "Place one transparent WebGL island between Canvas background and overlay content.",
       "Animate a Group3D with CRC frame time and select Cube or Sphere through ordinary event handlers.",
@@ -693,9 +693,9 @@ const drafts = [
     summary:
       "Compose immutable animation definitions into one component-owned program whose committed signal values enter ordinary styles explicitly.",
     api: [
-      "crcSignal",
-      "crcTransition",
-      "crcPlayback",
+      "useSignal",
+      "useTransition",
+      "usePlayback",
       "parallel",
       "sequence",
       "marker",
@@ -711,7 +711,7 @@ const drafts = [
       code: "Change the entrance duration, marker name, or spring stiffness without changing how style reads resolved values.",
     },
     apiNotes: [
-      "Definitions and programs are immutable descriptions; crcPlayback supplies the stateful component owner and snapshots an accepted run.",
+      "Definitions and programs are immutable descriptions; usePlayback supplies the stateful component owner and snapshots an accepted run.",
       "All playbacks advance in shared scheduler phases and publish one central Commit before affected CRC roots render.",
       "Signals declare dependencies through explicit .get() calls, so style receives ordinary numbers rather than signal or animation objects.",
     ],
@@ -732,7 +732,7 @@ const drafts = [
       "particleRange",
       "particleChoice",
       "particleCurve",
-      "crcParticleSystem",
+      "useParticleSystem",
       "Particles2D",
     ],
     objectives: [
@@ -748,7 +748,7 @@ const drafts = [
       "A Particles2D component owns one fixed-capacity executor; particles are data inside it rather than individual CRC components.",
       "Particle value descriptors are direct named exports, so unused descriptor factories remain tree-shakable.",
       "Particle acceleration changes each mark over its lifetime. Moving Particles2D itself still uses ordinary CRC transforms, signals, or animation.",
-      "Implicit autoplay suits ambient effects, while crcParticleSystem supplies explicit repeated commands and observable status.",
+      "Implicit autoplay suits ambient effects, while useParticleSystem supplies explicit repeated commands and observable status.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["signals-and-animation", "layer", "pointer-events"],
@@ -837,10 +837,10 @@ const drafts = [
     order: 123,
     summary:
       "Distribute positive and negative free space with CRC's CSS-compatible Flex subset.",
-    api: ["Flex", "crcLayoutBox"],
+    api: ["Flex", "useLayoutBox"],
     objectives: [
       "Distribute main-axis space with flex basis, grow, and shrink.",
-      "Let a plain child expose specified style to Flex, then read its finite local allocation with crcLayoutBox.",
+      "Let a plain child expose specified style to Flex, then read its finite local allocation with useLayoutBox.",
     ],
     prompts: {
       gesture: "Click either card to swap its emphasis.",
@@ -848,7 +848,7 @@ const drafts = [
     },
     apiNotes: [
       "The parent consumes each child's specified style; the plain child still receives that author value unchanged.",
-      "`crcLayoutBox()` reports the allocated local box for drawing, while reverse order, baseline, auto margins, and percentage gaps remain deferred.",
+      "`useLayoutBox()` reports the allocated local box for drawing, while reverse order, baseline, auto margins, and percentage gaps remain deferred.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["flow", "grid", "absolute-and-overlay"],
@@ -1240,7 +1240,7 @@ const drafts = [
     summary:
       "Trace CRC capture, target, and bubble phases and choose where logical and native defaults stop.",
     api: [
-      "crcEventListener",
+      "useEventListener",
       "onClickCapture",
       "composedPath",
       "preventDefault",
@@ -1257,7 +1257,7 @@ const drafts = [
       code: "Move a stop call from the target to an ancestor capture handler.",
     },
     apiNotes: [
-      "`crcEventListener` observes events on component ancestry without creating hit geometry or a focus candidate.",
+      "`useEventListener` observes events on component ancestry without creating hit geometry or a focus candidate.",
       "The logical path is snapshotted for one dispatch; event targets are opaque CRC values, not DOM nodes.",
     ],
     canvas: { width: 720, height: 420 },
@@ -1273,7 +1273,7 @@ const drafts = [
     order: 270,
     summary:
       "Give one conceptual custom component an explicit Path2D target without hoisting child geometry.",
-    api: ["crcEventTarget", "CRCEventTargetOptions", "Path2D"],
+    api: ["useEventTarget", "CRCEventTargetOptions", "Path2D"],
     objectives: [
       "Register grouped handlers and an explicit fill or stroke interaction path.",
       "Keep custom target ownership separate from the visual children it returns.",
@@ -1861,8 +1861,8 @@ const drafts = [
       "Group3D",
       "PointLight",
       "SpotLight",
-      "crcSignal",
-      "crcPlayback",
+      "useSignal",
+      "usePlayback",
       "repeat",
       "track",
       "tween",

@@ -1,5 +1,5 @@
 import {
-  crcMemo,
+  useMemo,
   definePrimitive,
   resolveBox,
   type CRCEventHandlers,
@@ -33,7 +33,7 @@ function renderParticleCanvas(
   context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
 ): CRCNode | void {
   const { borderBox, contentBox } = style;
-  const targetPath = crcMemo(() => {
+  const targetPath = useMemo(() => {
     const path = new Path2D();
     path.rect(borderBox.x, borderBox.y, borderBox.width, borderBox.height);
     return path;

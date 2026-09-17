@@ -24,10 +24,10 @@ import {
   getComponentRefs,
   getCRCInstance,
 } from './global-state';
-import { crcLayoutBox } from './hooks/crc-layout-box';
-import { crcEventListener } from './hooks/crc-event-listener';
-import { crcEventTarget } from './hooks/crc-event-target';
-import { crcState, type StateUpdater } from './hooks/crc-state';
+import { useLayoutBox } from './hooks/use-layout-box';
+import { useEventListener } from './hooks/use-event-listener';
+import { useEventTarget } from './hooks/use-event-target';
+import { useState, type StateUpdater } from './hooks/use-state';
 import { measureElement } from './layout/measure';
 import { mountCRC } from './mount-crc';
 import {
@@ -104,17 +104,17 @@ describe('identity-transparent element enhancers', () => {
     }
     const Child = definePrimitive<{}, ChildStyle>((_props, style, context) => {
       const refs = getComponentRefs();
-      const [state, updateState] = crcState(0);
+      const [state, updateState] = useState(0);
       setState = updateState;
       observations.push({
-        box: crcLayoutBox(),
+        box: useLayoutBox(),
         id: refs.id,
         parentId: refs.parent?.id,
         state,
       });
       const eventPath = new Path2D();
       eventPath.rect(0, 0, style.width, style.height);
-      crcEventTarget({
+      useEventTarget({
         onClick: event => eventPaths.push(event.composedPath()),
       }, { path: eventPath, fill: true });
       lifecycle.push('paint:child');
@@ -142,7 +142,7 @@ describe('identity-transparent element enhancers', () => {
       lifecycle,
     );
     const Host = ({ enhanced }: { enhanced: boolean }) => {
-      crcEventListener({ onClick: () => undefined });
+      useEventListener({ onClick: () => undefined });
       const child = createElement(Child, { key: 'stable', style: { width: 30, height: 20 } });
       return createElement(Absolute, {
         style: { width: 80, height: 60 },
@@ -771,7 +771,7 @@ describe('built-in transparent policies', () => {
       rendered.push({ id: refs.id, element: refs.element as CRCElement<any> });
       const path = new Path2D();
       path.rect(0, 0, 30, 20);
-      crcEventTarget({ onClick: () => undefined }, {
+      useEventTarget({ onClick: () => undefined }, {
         path,
         keyboardNavigationBounds: { x: 0, y: 0, width: 30, height: 20 },
       });

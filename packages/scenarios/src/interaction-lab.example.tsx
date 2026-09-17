@@ -15,9 +15,9 @@ import type {
   TraceEventType,
 } from './event-trace';
 import {
-  crcEvent,
-  crcEventListener,
-  crcEventTarget,
+  useEvent,
+  useEventListener,
+  useEventTarget,
   Group,
   Line,
   Path,
@@ -361,7 +361,7 @@ const NestedChild = ({ record }: NestedAncestorProps) =>
   );
 const NestedInteractiveAncestor = ({ record }: NestedAncestorProps) => {
   const parentPath = rectanglePath(70, 52, 300, 148);
-  crcEvent(
+  useEvent(
     'mousemove',
     (event) => recordEvent(record, 'mousemove', 'ancestor', event),
     parentPath,
@@ -424,7 +424,7 @@ const PropagationTarget = ({ record }: NestedAncestorProps) => (
   />
 );
 const PropagationFixture = ({ record }: NestedAncestorProps) => {
-  crcEventListener({
+  useEventListener({
     onPointerDownCapture: (event) =>
       recordLogicalEvent(
         record,
@@ -483,7 +483,7 @@ const CustomPointerCapture = ({ record }: NestedAncestorProps) => {
         captureFields(event),
       );
     };
-  crcEventTarget(
+  useEventTarget(
     {
       onGotPointerCapture: trace('gotpointercapture'),
       onLostPointerCapture: trace('lostpointercapture'),
@@ -932,7 +932,7 @@ function caseVisual(
   }
 }
 const InteractionLabScene = ({ state, record }: InteractionLabSceneProps) => {
-  crcEvent(
+  useEvent(
     'mousemove',
     state.fixture === 'observer'
       ? (event) => {
@@ -950,7 +950,7 @@ const InteractionLabScene = ({ state, record }: InteractionLabSceneProps) => {
             }
           : undefined,
   );
-  crcEvent(
+  useEvent(
     'mousemove',
     state.fixture === 'observer-replace'
       ? (event) => {

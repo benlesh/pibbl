@@ -1,7 +1,7 @@
 import {
   crc,
-  crcLayoutBox,
-  crcState,
+  useLayoutBox,
+  useState,
   Flex,
   Rectangle,
   Text,
@@ -17,7 +17,7 @@ interface FlexCardProps {
 }
 
 function FlexCard({ onSelect, side, style: _specifiedStyle }: FlexCardProps) {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
 
   return (
     <Rectangle
@@ -35,7 +35,7 @@ function FlexCard({ onSelect, side, style: _specifiedStyle }: FlexCardProps) {
 }
 
 function FlexStudy() {
-  const [active, setActive] = crcState<"left" | "right">("left");
+  const [active, setActive] = useState<"left" | "right">("left");
   return [
     <Rectangle
       style={{

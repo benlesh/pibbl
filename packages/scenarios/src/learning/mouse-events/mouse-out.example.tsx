@@ -1,7 +1,7 @@
-import { crc, crcState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
 function MouseOutStudy() {
-  const [departures, setDepartures] = crcState(0);
-  const [inside, setInside] = crcState(false);
+  const [departures, setDepartures] = useState(0);
+  const [inside, setInside] = useState(false);
   return [
     <Rectangle
       style={{

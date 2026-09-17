@@ -467,7 +467,7 @@ dimensions resize lazily to the exact current snapped window when that size
 differs; the newly transparent bitmap is not redundantly cleared, but it still
 receives complete state reinitialization. A same-size reuse clears exactly the
 active bitmap before resetting state. Exact current dimensions keep
-`crcCanvasContext().canvas` deterministic and prevent one large historical
+`useCanvasContext().canvas` deterministic and prevent one large historical
 capture from becoming retained high-water memory. A returned slot retains only
 its reusable canvas/context and no component, element, image, event, hook, or
 callback references. The owning instance's main teardown clears the pool and

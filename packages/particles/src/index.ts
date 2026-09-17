@@ -7,7 +7,7 @@ export {
   particleParameter,
   particleRange,
 } from "./lib/particle.js";
-export { crcParticleSystem } from "./lib/system/hook.js";
+export { useParticleSystem } from "./lib/system/hook.js";
 export { Particles2D } from "./lib/canvas/component.js";
 
 export type {

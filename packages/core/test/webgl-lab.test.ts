@@ -23,7 +23,7 @@ import {
   Cube,
   Group3D,
   WebGLLayer,
-  crcAnimationFrame,
+  useAnimationFrame,
 } from '@crc/webgl';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import learningWebGLSource from '../../scenarios/src/learning/composition/webgl-islands.example.tsx?raw';
@@ -134,7 +134,7 @@ describe('public WebGL island scenarios', () => {
         'Group3D',
         'Cube',
         'Sphere',
-        'crcAnimationFrame',
+        'useAnimationFrame',
       ],
       source: {
         path: 'packages/scenarios/src/learning/composition/webgl-islands.example.tsx',
@@ -441,7 +441,7 @@ describe('public WebGL island scenarios', () => {
     const timestamps: number[] = [];
     let lastTarget: 'background' | 'cube' | null = null;
     function AnimatedCube(_props: {}) {
-      const timestamp = crcAnimationFrame();
+      const timestamp = useAnimationFrame();
       timestamps.push(timestamp);
       return createElement(Group3D, {
         style: { rotationYDegrees: timestamp / 10 },

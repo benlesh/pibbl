@@ -1,13 +1,13 @@
 import {
   crc,
-  crcState,
+  useState,
   Group,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function GroupStudy() {
-  const [selected, setSelected] = crcState(false);
+  const [selected, setSelected] = useState(false);
   const ticket = (
     <Group
       style={{

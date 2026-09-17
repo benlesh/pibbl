@@ -60,7 +60,7 @@ the main-thread fallback.
 - Accepting signals, animation definitions, or symbol-branded animation objects
   directly as ordinary `style` values.
 - Automatically animating arbitrary prop or style changes without an explicit
-  `crcTransition` or playback.
+  `useTransition` or playback.
 - Turning CRC into a retained scene graph or retaining arbitrary Canvas drawing
   commands.
 - Automatically rendering stable components to offscreen canvases or silently
@@ -173,7 +173,7 @@ application code, passed through props, shared between components, observed by
 multiple canvases, and retained after a mount is disposed. A signal owns its
 current value and graph relationships only.
 
-`crcSignal` is a component hook that creates one stable signal for a mounted
+`useSignal` is a component hook that creates one stable signal for a mounted
 hook slot. Component removal detaches every CRC consumer from that signal, but
 the signal remains an ordinary usable value if application code retained it.
 Writing that detached value schedules no CRC work.
@@ -201,7 +201,7 @@ change a running or future playback.
 
 ### Playback ownership
 
-`crcPlayback` creates one stable component-owned playback handle. Its hook slot
+`usePlayback` creates one stable component-owned playback handle. Its hook slot
 owns scheduler registration, output leases, status values, queued milestones,
 and custom stepper state. Removing the component cancels the playback exactly
 once and makes stale control methods inert.
@@ -272,13 +272,13 @@ export function untracked<T>(read: () => T): T;
 
 export function isSignal(value: unknown): value is Signal<unknown>;
 
-export function crcSignal<T>(
+export function useSignal<T>(
   initialValue: T,
   options?: SignalOptions<T>,
 ): WritableSignal<T>;
 ```
 
-`signal` and `computed` work outside CRC. `crcSignal` follows CRC hook order and
+`signal` and `computed` work outside CRC. `useSignal` follows CRC hook order and
 must run synchronously during component rendering. Its initial value is a value,
 not a lazy initializer; a function-valued signal is therefore unambiguous.
 
@@ -316,7 +316,7 @@ not a lazy initializer; a function-valued signal is therefore unambiguous.
 There is no public `subscribe`, watcher, effect, or `batch` initially. CRC's
 renderer consumers are internal watchers. Scheduler animation commits use an
 internal batch, and ordinary application writes already coalesce renderer work
-through the frame scheduler. `crcWhenChanged` retains its existing explicit
+through the frame scheduler. `useWhenChanged` retains its existing explicit
 lifecycle contract rather than silently becoming a signal effect.
 
 ### Explicit style reads
@@ -325,7 +325,7 @@ Style fields continue to accept resolved style-language values only:
 
 ```tsx
 function MovingRectangle() {
-  const x = crcSignal(0, { debugName: "rectangle x" });
+  const x = useSignal(0, { debugName: "rectangle x" });
 
   return (
     <Rectangle
@@ -622,9 +622,9 @@ Example:
 
 ```tsx
 function Card() {
-  const x = crcSignal(-40, { debugName: "card x" });
-  const opacity = crcSignal(0, { debugName: "card opacity" });
-  const scale = crcSignal(0.9, { debugName: "card scale" });
+  const x = useSignal(-40, { debugName: "card x" });
+  const opacity = useSignal(0, { debugName: "card opacity" });
+  const scale = useSignal(0.9, { debugName: "card scale" });
 
   const entrance = sequence(
     parallel(
@@ -635,7 +635,7 @@ function Card() {
     track(scale, spring({ to: 1 })),
   );
 
-  crcPlayback(entrance, { autoplay: true });
+  usePlayback(entrance, { autoplay: true });
 
   return (
     <Group
@@ -706,7 +706,7 @@ export interface CRCPlaybackOptions {
   onError?(error: unknown): void;
 }
 
-export function crcPlayback(
+export function usePlayback(
   program: CRCAnimationProgram,
   options?: CRCPlaybackOptions,
 ): CRCPlayback;
@@ -767,7 +767,7 @@ milestone still queued for that removed owner is discarded.
 
 ## Update-driven transitions
 
-`crcTransition` is the explicit convenience for “when this target changes,
+`useTransition` is the explicit convenience for “when this target changes,
 animate the presented value from where it is now.” It is implemented as a
 component-owned playback producer and uses the same scheduler phases.
 
@@ -796,12 +796,12 @@ export interface CRCSpringTransitionOptions {
   debugName?: string;
 }
 
-export function crcTransition(
+export function useTransition(
   target: number,
   options: CRCSpringTransitionOptions,
 ): Signal<number>;
 
-export function crcTransition<T>(
+export function useTransition<T>(
   target: T,
   options: CRCTweenTransitionOptions<T>,
 ): Signal<T>;
@@ -822,7 +822,7 @@ The returned readonly signal is read explicitly:
 
 ```tsx
 function Indicator({ targetX }: { targetX: number }) {
-  const x = crcTransition(targetX, {
+  const x = useTransition(targetX, {
     type: "spring",
     stiffness: 210,
     damping: 28,
@@ -1105,7 +1105,7 @@ The runtime ownership ledger gains explicit rows for:
 | Resource                      | Created by                     | Owner                             | Released by                                                  |
 | ----------------------------- | ------------------------------ | --------------------------------- | ------------------------------------------------------------ |
 | CRC render-consumer edge      | Successful tracked read        | Exact component/resource consumer | Next successful dependency replacement or owner teardown     |
-| Component signal hook slot    | `crcSignal` mount              | Exact component refs              | Component teardown; retained signal merely becomes detached  |
+| Component signal hook slot    | `useSignal` mount              | Exact component refs              | Component teardown; retained signal merely becomes detached  |
 | Computed source edges         | Successful computed evaluation | Computed node while observed      | Dependency replacement or loss of final observer             |
 | Playback registration         | Accepted `play`/autoplay       | Exact playback hook slot          | Finish, cancel, error, or component teardown                 |
 | Output writer lease           | Accepted run before sampling   | Exact active playback run         | Finish, cancel, error, replacement, or teardown              |
@@ -1209,16 +1209,16 @@ animation frame differs.
 ## Compatibility and migration
 
 This is additive public API, but centralized scheduling changes an internal
-contract. Existing `crcState`, root replacement, resize, density, image, focus,
+contract. Existing `useState`, root replacement, resize, density, image, focus,
 event, and Layer updates continue to coalesce on the next animation frame. The
 observable improvement is that every root and animation shares one realm
 callback and one phase order.
 
-`crcState` remains supported and does not become an alias for `crcSignal`:
+`useState` remains supported and does not become an alias for `useSignal`:
 
-- `crcState` is hook-local snapshot state whose setter schedules its exact
+- `useState` is hook-local snapshot state whose setter schedules its exact
   mounted instance under the existing stale-setter rules.
-- `crcSignal` returns a shareable reactive object with explicit reads and
+- `useSignal` returns a shareable reactive object with explicit reads and
   renderer dependency tracking.
 
 The implementation may reuse graph machinery internally only if current public

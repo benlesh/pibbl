@@ -1,7 +1,7 @@
 import {
   crc,
-  crcEventTarget,
-  crcState,
+  useEventTarget,
+  useState,
   FocusManagement,
   KeyboardNavigation,
   Rectangle,
@@ -22,7 +22,7 @@ interface SquareProps {
 function DirectionalSquare({ label, record, x, y }: SquareProps) {
   const width = 74;
   const height = 54;
-  const snapshot = crcEventTarget(
+  const snapshot = useEventTarget(
     {
       onClick: () => record(`${label}: click`),
       onFocus: () => record(`${label}: focused`),
@@ -77,7 +77,7 @@ function DirectionalSquare({ label, record, x, y }: SquareProps) {
   ];
 }
 function PlainButton({ label, record, x, y }: SquareProps) {
-  const snapshot = crcEventTarget(
+  const snapshot = useEventTarget(
     {
       onClick: () => record(`${label}: click`),
     },
@@ -129,7 +129,7 @@ function DirectionalGrid({
   ));
 }
 function DirectionalNavigationLesson() {
-  const [events, setEvents] = crcState<readonly string[]>([]);
+  const [events, setEvents] = useState<readonly string[]>([]);
   const record = (message: string) =>
     setEvents((current) => [...current.slice(-2), message]);
   return [

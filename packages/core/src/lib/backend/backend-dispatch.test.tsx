@@ -25,7 +25,7 @@ import {
   getCRCInstance,
   GLOBAL_STATE,
 } from '../global-state.js';
-import { crcWhenChanged } from '../hooks/crc-when-changed.js';
+import { useWhenChanged } from '../hooks/use-when-changed.js';
 import { mountCRC } from '../mount-crc.js';
 import type { FilterWindows } from '../filter/filter-region.js';
 import type { CRCNode } from '../types.js';
@@ -399,7 +399,7 @@ describe('backend-neutral component traversal', () => {
       },
     );
     function FailingScene(): CRCNode {
-      crcWhenChanged(() => cleanup, []);
+      useWhenChanged(() => cleanup, []);
       setCurrentComponentAfterRender(afterRender);
       return <Throwing />;
     }
@@ -672,7 +672,7 @@ describe('backend-neutral component traversal', () => {
     };
     const cleanup = vi.fn();
     function OwnedScene(): void {
-      crcWhenChanged(() => cleanup, []);
+      useWhenChanged(() => cleanup, []);
       useBackendEventTarget({ onClick() {} });
     }
     const parentCanvas = createCanvas();

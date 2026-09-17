@@ -2,11 +2,11 @@ import {
   Absolute,
   Clip,
   crc,
-  crcEventTarget,
-  crcLayoutBox,
-  crcRectPath,
-  crcRef,
-  crcState,
+  useEventTarget,
+  useLayoutBox,
+  useRectPath,
+  useRef,
+  useState,
   FocusManagement,
   Fragment,
   Group,
@@ -171,8 +171,8 @@ function NodeCard({
   onMove: (id: NodeId, x: number, y: number) => void;
   view: ViewTransform;
 }>): CRCNode {
-  const dragSession = crcRef<NodeDragSession | null>(null);
-  const [dragActive, setDragActive] = crcState(false);
+  const dragSession = useRef<NodeDragSession | null>(null);
+  const [dragActive, setDragActive] = useState(false);
   const finishDrag = (event: CRCPointerEvent): void => {
     if (dragSession.current?.pointerId !== event.pointerId) return;
     dragSession.current = null;
@@ -350,10 +350,10 @@ function NodeTarget({
   onPointerCancel: (event: CRCPointerEvent) => void;
   onLostPointerCapture: (event: CRCPointerEvent) => void;
 }>): CRCNode {
-  const targetPath = crcRectPath(0, 0, NODE_WIDTH, NODE_HEIGHT, {
+  const targetPath = useRectPath(0, 0, NODE_WIDTH, NODE_HEIGHT, {
     cornerRadius: 16,
   });
-  const focus = crcEventTarget(
+  const focus = useEventTarget(
     {
       onClick,
       onPointerDown,
@@ -433,10 +433,10 @@ function ResetPaint(): CRCNode {
   );
 }
 function ResetTarget({ reset }: Readonly<{ reset: () => void }>): CRCNode {
-  const target = crcEventTarget(
+  const target = useEventTarget(
     { onClick: reset },
     {
-      path: crcRectPath(0, 0, 116, 32, { cornerRadius: 8 }),
+      path: useRectPath(0, 0, 116, 32, { cornerRadius: 8 }),
       fill: true,
       cursor: "pointer",
       keyboardNavigationBounds: { x: 0, y: 0, width: 116, height: 32 },
@@ -485,7 +485,7 @@ function Toolbar({
   style: _style,
   reset,
 }: RegionProps & Readonly<{ reset: () => void }>): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   return (
     <Fragment>
       <Rectangle
@@ -527,9 +527,9 @@ function Workspace({
     onViewChange: (view: ViewTransform) => void;
     onWheel: (event: CRCWheelEvent) => void;
   }>): CRCNode {
-  const box = crcLayoutBox();
-  const panSession = crcRef<PanSession | null>(null);
-  const [panning, setPanning] = crcState(false);
+  const box = useLayoutBox();
+  const panSession = useRef<PanSession | null>(null);
+  const [panning, setPanning] = useState(false);
   const finishPan = (event: CRCPointerEvent): void => {
     if (panSession.current?.pointerId !== event.pointerId) return;
     panSession.current = null;
@@ -625,7 +625,7 @@ function StatusBar({
     selected: DiagramNode | undefined;
     view: ViewTransform;
   }>): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   const message = selected ? `SELECTED · ${selected.title}` : "NO SELECTION";
   return (
     <Fragment>
@@ -655,9 +655,9 @@ function StatusBar({
   );
 }
 function DiagramEditor(): CRCNode {
-  const [nodes, setNodes] = crcState<readonly DiagramNode[]>(INITIAL_NODES);
-  const [selected, setSelected] = crcState<NodeId | null>("sketch");
-  const [view, setView] = crcState<ViewTransform>(INITIAL_VIEW);
+  const [nodes, setNodes] = useState<readonly DiagramNode[]>(INITIAL_NODES);
+  const [selected, setSelected] = useState<NodeId | null>("sketch");
+  const [view, setView] = useState<ViewTransform>(INITIAL_VIEW);
   const moveNode = (id: NodeId, x: number, y: number): void => {
     setNodes((current) =>
       current.map((node) => (node.id === id ? { ...node, x, y } : node)),

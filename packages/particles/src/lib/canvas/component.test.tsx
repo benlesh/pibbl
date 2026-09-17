@@ -20,7 +20,7 @@ import {
 } from "../../../../core/src/lib/scheduler/testing.js";
 import {
   Particles2D,
-  crcParticleSystem,
+  useParticleSystem,
   defineParticleEffect2D,
   type CRCParticleSystem,
 } from "../../index.js";
@@ -165,7 +165,7 @@ describe("Particles2D component", () => {
     const manual = effect();
     let system!: CRCParticleSystem<"marks", Record<never, never>, 2>;
     const Explicit = () => {
-      system = crcParticleSystem(manual);
+      system = useParticleSystem(manual);
       return <Particles2D system={system} style={{ width: 40, height: 40 }} />;
     };
     const explicit = mount(<Explicit />, 40, 40);
@@ -286,7 +286,7 @@ describe("Particles2D component", () => {
       "drawImage",
     );
     const Host = () => {
-      system = crcParticleSystem(definition);
+      system = useParticleSystem(definition);
       return (
         <Layer style={{ width: 40, height: 40 }}>
           <Particles2D

@@ -45,14 +45,14 @@
 - Create: `packages/core/src/lib/geometry/svg-path.test.ts`
 - Modify: `packages/core/src/lib/components/line.ts`
 - Modify: `packages/core/src/lib/components/svg-path.ts`
-- Modify: `packages/core/src/lib/hooks/crc-line-path.ts`
-- Modify: `packages/core/src/lib/hooks/crc-svg-path.ts`
+- Modify: `packages/core/src/lib/hooks/use-line-path.ts`
+- Modify: `packages/core/src/lib/hooks/use-svg-path.ts`
 - Modify: `packages/core/src/lib/hooks/crc-path-hooks.test.ts`
 - Delete: `packages/core/src/lib/util/create-line-path.ts`
 
 **Interfaces:**
 
-- Consumes: browser `Path2D`; existing `Line`/`SvgPath` style resolution; `crcMemoSlot`.
+- Consumes: browser `Path2D`; existing `Line`/`SvgPath` style resolution; `useMemoSlot`.
 - Produces:
   - `GeometryErrorFactory = (property: string, value: unknown, reason: string) => Error`
   - `pathRangeError(property, value, reason): RangeError`
@@ -137,10 +137,10 @@ Implement `pathRangeError` as `new RangeError(`${property} ${reason}; received $
 
 - [ ] **Step 4: Migrate current consumers without changing their public signatures**
 
-Change `Line`, `HorizontalLine`, `VerticalLine`, and `crcLinePath` to call `createLinePath({ coords, closePath })`. Before delegation, make `Line` style resolution call `validateCoordinates` with a `GeometryErrorFactory` that builds `layoutDiagnostic`, and add component tests proving indexed non-finite coordinates report contextual diagnostics and recover on a later valid render. Change `SvgPath` and `crcSvgPath` to call `createSvgPath({ d })`. Keep hook dependency arrays unchanged in meaning, then delete `lib/util/create-line-path.ts` after `rg "util/create-line-path|createLinePath\(" packages/core/src` proves all imports use the geometry module.
+Change `Line`, `HorizontalLine`, `VerticalLine`, and `useLinePath` to call `createLinePath({ coords, closePath })`. Before delegation, make `Line` style resolution call `validateCoordinates` with a `GeometryErrorFactory` that builds `layoutDiagnostic`, and add component tests proving indexed non-finite coordinates report contextual diagnostics and recover on a later valid render. Change `SvgPath` and `useSvgPath` to call `createSvgPath({ d })`. Keep hook dependency arrays unchanged in meaning, then delete `lib/util/create-line-path.ts` after `rg "util/create-line-path|createLinePath\(" packages/core/src` proves all imports use the geometry module.
 
 ```ts
-return crcMemoSlot(
+return useMemoSlot(
   "linePath",
   () => createLinePath({ coords, closePath: config?.closePath }),
   [...coords.flat(), config?.closePath],
@@ -161,7 +161,7 @@ Expected: all focused suites and typecheck PASS; existing hook memo identity rem
 - [ ] **Step 6: Commit the extraction**
 
 ```bash
-git add packages/core/src/lib/geometry packages/core/src/lib/components/line.ts packages/core/src/lib/components/svg-path.ts packages/core/src/lib/hooks/crc-line-path.ts packages/core/src/lib/hooks/crc-svg-path.ts packages/core/src/lib/hooks/crc-path-hooks.test.ts packages/core/src/lib/util/create-line-path.ts
+git add packages/core/src/lib/geometry packages/core/src/lib/components/line.ts packages/core/src/lib/components/svg-path.ts packages/core/src/lib/hooks/use-line-path.ts packages/core/src/lib/hooks/use-svg-path.ts packages/core/src/lib/hooks/crc-path-hooks.test.ts packages/core/src/lib/util/create-line-path.ts
 git commit -m "feat(core): expose canonical line and SVG geometry"
 ```
 
@@ -495,13 +495,13 @@ git commit -m "feat(core): add rounded polygon geometry"
 - Modify: `packages/core/src/lib/components/rect.ts`
 - Modify: `packages/core/src/lib/components/rect.test.ts`
 - Modify: `packages/core/src/lib/style/types.ts`
-- Modify: `packages/core/src/lib/hooks/crc-rect-path.ts`
+- Modify: `packages/core/src/lib/hooks/use-rect-path.ts`
 - Modify: `packages/core/src/lib/hooks/crc-path-hooks.test.ts`
 
 **Interfaces:**
 
 - Consumes: Task 4 `RoundedCornerPathOptions`, `resolveNumericCornerRadii`, `RoundedCornerStyle`, and `resolveRoundedCornerStyle`; current rectangle pixel-grid adjustment.
-- Produces: `RectanglePathOptions`, `createRectanglePath(options): Path2D`; `RectStyle` and `ResolvedRectStyle` corner fields; numeric `cornerRadius`/`cornerRadii` additions to the existing optional `crcRectPath` config.
+- Produces: `RectanglePathOptions`, `createRectanglePath(options): Path2D`; `RectStyle` and `ResolvedRectStyle` corner fields; numeric `cornerRadius`/`cornerRadii` additions to the existing optional `useRectPath` config.
 
 - [ ] **Step 1: Write failing rectangle creator tests**
 
@@ -576,7 +576,7 @@ config?: {
 }
 ```
 
-Resolve the hook's effective four radii before `crcMemoSlot`, include all four in its dependencies, and allocate through `createRectanglePath({ x, y, width, height, cornerRadii: radii })`. Equivalent fallback spellings therefore share memo identity.
+Resolve the hook's effective four radii before `useMemoSlot`, include all four in its dependencies, and allocate through `createRectanglePath({ x, y, width, height, cornerRadii: radii })`. Equivalent fallback spellings therefore share memo identity.
 
 - [ ] **Step 6: Run rectangle, hook, and allocation evidence**
 
@@ -592,7 +592,7 @@ Expected: all suites and typecheck PASS; all existing sharp rectangle assertions
 - [ ] **Step 7: Commit rounded rectangles**
 
 ```bash
-git add packages/core/src/lib/geometry/rectangle.ts packages/core/src/lib/geometry/rectangle.test.ts packages/core/src/lib/components/rect.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/style/types.ts packages/core/src/lib/hooks/crc-rect-path.ts packages/core/src/lib/hooks/crc-path-hooks.test.ts
+git add packages/core/src/lib/geometry/rectangle.ts packages/core/src/lib/geometry/rectangle.test.ts packages/core/src/lib/components/rect.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/style/types.ts packages/core/src/lib/hooks/use-rect-path.ts packages/core/src/lib/hooks/crc-path-hooks.test.ts
 git commit -m "feat(core): add rounded rectangle geometry"
 ```
 
@@ -992,7 +992,7 @@ expect(exampleFor("composition/clip").source).toContain(
 Add a rounded variant to the Rectangle and Polygon lessons. Add concise RegularPolygon examples showing the three mutually exclusive size modes and rotation; add Star examples showing `points`, outer/inner radii, and selective tip/valley rounding. Replace the clip lesson's manual shape formula with a memoized public creator call:
 
 ```tsx
-const hexagon = crcMemo(
+const hexagon = useMemo(
   () => createRegularPolygonPath({ sides: 6, cx: 100, cy: 100, inradius: 72 }),
   [],
 );
@@ -1103,7 +1103,7 @@ const hexagon = createRegularPolygonPath({
 </Clip>;
 ```
 
-State that callers use `crcMemo` when stable creator identity is desired; do not advertise new per-shape hooks.
+State that callers use `useMemo` when stable creator identity is desired; do not advertise new per-shape hooks.
 
 - [ ] **Step 2: Run documentation preservation and capture the intentional mismatch**
 

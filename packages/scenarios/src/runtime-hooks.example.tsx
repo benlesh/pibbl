@@ -1,14 +1,14 @@
 import type { CRCRef, StateUpdater } from '@crc/core';
 import {
-  crcCursor,
-  crcEvent,
-  crcLinePath,
-  crcMemo,
-  crcRectPath,
-  crcRef,
-  crcState,
-  crcSvgPath,
-  crcWhenChanged,
+  useCursor,
+  useEvent,
+  useLinePath,
+  useMemo,
+  useRectPath,
+  useRef,
+  useState,
+  useSvgPath,
+  useWhenChanged,
   Path,
   Rectangle,
 } from '@crc/core';
@@ -115,16 +115,16 @@ function objectIdentity(metrics: RuntimeHooksMetrics, value: object): number {
 const HookProbe = ({ metrics, model }: HookProbeProps) => {
   const order: string[] = [];
   order.push('state');
-  const [stateValue, setState] = crcState(0);
+  const [stateValue, setState] = useState(0);
   order.push('memo');
-  const memoValue = crcMemo(() => {
+  const memoValue = useMemo(() => {
     metrics.memoCreates++;
     return {
       identity: `dependency-${model.dependency}-memo-${metrics.memoCreates}`,
     };
   }, [model.dependency]);
   order.push('ref');
-  const stableRef = crcRef<{
+  const stableRef = useRef<{
     identity: number;
     value: number;
   }>();
@@ -135,22 +135,22 @@ const HookProbe = ({ metrics, model }: HookProbeProps) => {
     };
   }
   order.push('whenChanged');
-  crcWhenChanged(() => {
+  useWhenChanged(() => {
     metrics.hookAcquisitions++;
     return () => {
       metrics.hookCleanups++;
     };
   }, [model.dependency]);
   order.push('rectPath');
-  const rectanglePath = crcRectPath(20, 25, 125 + model.dependency * 2, 70);
+  const rectanglePath = useRectPath(20, 25, 125 + model.dependency * 2, 70);
   order.push('linePath');
-  const linePath = crcLinePath([
+  const linePath = useLinePath([
     [20, 112],
     [85, 98 + model.dependency],
     [150, 112],
   ]);
   order.push('svgPath');
-  const svgPath = crcSvgPath(
+  const svgPath = useSvgPath(
     model.dependency % 2 === 0
       ? 'M 70 145 L 100 105 L 130 145 Z'
       : 'M 70 145 L 100 100 L 130 145 Z',
@@ -193,7 +193,7 @@ const HookProbe = ({ metrics, model }: HookProbeProps) => {
   ];
 };
 const Sibling = ({ color, metrics, siblingKey, slot }: SiblingProps) => {
-  const identity = crcRef<number>();
+  const identity = useRef<number>();
   if (identity.current === undefined) {
     identity.current = metrics.nextObjectIdentity++;
   }
@@ -283,20 +283,20 @@ export function getRuntimeHooksSiblingOrder(
 export function probeRuntimeHookMisuse(): readonly RuntimeHooksMisuseError[] {
   const errors: RuntimeHooksMisuseError[] = [];
   const probes = [
-    () => crcState(0),
-    () => crcMemo(() => 1, []),
-    () => crcRef(0),
-    () => crcWhenChanged(() => undefined, []),
-    () => crcRectPath(0, 0, 1, 1),
+    () => useState(0),
+    () => useMemo(() => 1, []),
+    () => useRef(0),
+    () => useWhenChanged(() => undefined, []),
+    () => useRectPath(0, 0, 1, 1),
     () =>
-      crcLinePath([
+      useLinePath([
         [0, 0],
         [1, 1],
       ]),
-    () => crcSvgPath('M 0 0 L 1 1'),
-    () => crcEvent('click', () => undefined),
+    () => useSvgPath('M 0 0 L 1 1'),
+    () => useEvent('click', () => undefined),
     () =>
-      crcCursor({
+      useCursor({
         style: 'pointer',
       }),
   ];

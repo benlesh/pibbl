@@ -1988,7 +1988,7 @@ export function getParticleSystemController(
   const controller = controllers.get(system);
   if (controller === undefined) {
     throw new TypeError(
-      "Expected a CRC particle system created by crcParticleSystem().",
+      "Expected a CRC particle system created by useParticleSystem().",
     );
   }
   return controller;

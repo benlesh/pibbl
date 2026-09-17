@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
 import { Text } from '../components/text';
 import { crc } from '../crc';
-import { crcState } from '../hooks/crc-state';
-import { crcLayoutBox } from '../hooks/crc-layout-box';
+import { useState } from '../hooks/use-state';
+import { useLayoutBox } from '../hooks/use-layout-box';
 import type { Length } from '../style/types';
 import type { RectStyle } from '../style/types';
 import { componentTest } from '../test-utils/component-test';
@@ -77,7 +77,7 @@ describe('CRC-native flow geometry', () => {
     const onClick = vi.fn();
     let observed: Readonly<{ x: number; y: number; width: number; height: number }>;
     const Probe = definePrimitive<{ onClick: () => void }, ProbeStyle>((props, style) => {
-      observed = crcLayoutBox();
+      observed = useLayoutBox();
       return createElement(Rectangle, {
         style: {
           width: style.width,
@@ -378,7 +378,7 @@ describe('CRC-native flow geometry', () => {
     let nextIdentity = 0;
     const observations = new Map<string, number>();
     const Item = ({ label }: { label: string } & { style: Readonly<SystemStyle & { width: number; height: number }> }) => {
-      const [identity] = crcState(++nextIdentity);
+      const [identity] = useState(++nextIdentity);
       observations.set(label, identity);
     };
     const Host = ({ keyed }: { keyed: boolean }) => createElement(Flow, {

@@ -377,7 +377,7 @@ a coherent editor frame.
 The chapter uses CRC layout components for the outer regions while retaining
 explicit drawing geometry inside custom region components. It explains
 specified style versus the finite allocation available through
-`crcLayoutBox()`, and it avoids blindly forwarding parent placement into inner
+`useLayoutBox()`, and it avoids blindly forwarding parent placement into inner
 drawing primitives.
 
 The Reset view control is visually present but inert until the view transform
@@ -390,7 +390,7 @@ layout changes region boxes without changing node workspace coordinates.
 **Outcome:** clicking a node selects it, updates its outline, and changes the
 status strip.
 
-The root owns `selectedNodeId` through `crcState`; stable node IDs remain the
+The root owns `selectedNodeId` through `useState`; stable node IDs remain the
 domain identity. `NodeCard` receives `selected` and `onSelect` props. The
 chapter explains default drawing participation, why the body is the intended
 target, why decorations pass through, and how state changes request a future
@@ -476,7 +476,7 @@ styling, and activate selection or view reset.
 
 The scene opts into `FocusManagement` and a directional
 `KeyboardNavigation` boundary. `NodeCard` uses one grouped
-`crcEventTarget()` with explicit rounded-card geometry and finite navigation
+`useEventTarget()` with explicit rounded-card geometry and finite navigation
 bounds; its decorative drawing primitives use `pointerEvents="none"` to avoid
 creating competing targets. The returned focus snapshot drives the visible
 focus ring. Enter/Space activation uses the same selection/reset actions as
@@ -499,9 +499,9 @@ actions and must avoid duplicate keyboard paths.
 gesture hints, stable cleanup, and a production-readiness checklist.
 
 The chapter consolidates named domain-update and coordinate-conversion helpers,
-uses `crcMemo` only for immutable `Path2D` geometry that otherwise has a real
+uses `useMemo` only for immutable `Path2D` geometry that otherwise has a real
 reconstruction cost, and retains refs only for synchronous gesture ownership.
-It explains why `crcWhenChanged` is not added without an external resource to
+It explains why `useWhenChanged` is not added without an external resource to
 synchronize. Stable keys, reparenting/remount implications, render-failure
 teardown, already-painted-pixel behavior, Canvas/Path2D browser authority,
 filter/layer capabilities, and idempotent controller disposal are reviewed

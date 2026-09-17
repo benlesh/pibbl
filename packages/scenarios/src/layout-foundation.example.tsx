@@ -1,8 +1,8 @@
 import {
   Absolute,
   crc,
-  crcLayoutBox,
-  crcState,
+  useLayoutBox,
+  useState,
   Flex,
   Flow,
   Grid,
@@ -43,8 +43,8 @@ interface ProbeStyle extends BoxStyle {
   fill: string;
 }
 function KeyedProbe({ state, style }: ProbeProps): CRCNode {
-  const [clicks, setClicks] = crcState(0);
-  const box = crcLayoutBox();
+  const [clicks, setClicks] = useState(0);
+  const box = useLayoutBox();
   state.keyedClicks = clicks;
   state.observedBox = {
     ...box,

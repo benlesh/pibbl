@@ -37,9 +37,9 @@ describe("Studio routes", () => {
       kind: "document",
       route: "#/api/functions/crc",
     });
-    expect(parseStudioRoute("#/api/hooks/crc-state")).toEqual({
+    expect(parseStudioRoute("#/api/hooks/use-state")).toEqual({
       kind: "document",
-      route: "#/api/hooks/crc-state",
+      route: "#/api/hooks/use-state",
     });
     expect(parseStudioRoute("#/api/types/events#crcpointerevent")).toEqual({
       kind: "document",

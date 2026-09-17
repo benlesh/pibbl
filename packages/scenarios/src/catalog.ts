@@ -650,7 +650,7 @@ const focusNavigationMetadata: ScenarioMetadata = {
     "Cross one Canvas focus host, traverse explicit logical controls, and use contained directional navigation.",
   category: "Keyboard interaction",
   apiTags: [
-    "crcEventTarget",
+    "useEventTarget",
     "FocusManagement",
     "KeyboardNavigation",
     "keyboard events",
@@ -733,9 +733,9 @@ const interactionLabMetadata: ScenarioMetadata = {
   category: "Interaction contracts",
   apiTags: [
     "crc",
-    "crcEvent",
-    "crcEventListener",
-    "crcEventTarget",
+    "useEvent",
+    "useEventListener",
+    "useEventTarget",
     "Path",
     "Line",
     "Rectangle",
@@ -1195,7 +1195,7 @@ const cleanupStressMetadata: ScenarioMetadata = {
   summary:
     "Exercise pending frames, image races, nested layers, synchronous hook cleanup, component/root identity, runtime disposal, and repeated mount cycles.",
   category: "Diagnostics",
-  apiTags: ["crc", "crcWhenChanged", "Image", "Layer", "Rectangle"],
+  apiTags: ["crc", "useWhenChanged", "Image", "Layer", "Rectangle"],
   conceptTags: [
     "resource ownership",
     "async cleanup",
@@ -1289,14 +1289,14 @@ const runtimeHooksMetadata: ScenarioMetadata = {
   category: "Diagnostics",
   apiTags: [
     "crc",
-    "crcState",
-    "crcMemo",
-    "crcRef",
-    "crcWhenChanged",
-    "crcRectPath",
-    "crcLinePath",
-    "crcSvgPath",
-    "crcCursor",
+    "useState",
+    "useMemo",
+    "useRef",
+    "useWhenChanged",
+    "useRectPath",
+    "useLinePath",
+    "useSvgPath",
+    "useCursor",
   ],
   conceptTags: [
     "hook identity",
@@ -1334,7 +1334,7 @@ const runtimeHooksMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    "crcEvent is exercised by the ordering and overlap laboratory; this scenario covers crcCursor slot identity while the interaction laboratories own its geometry and lifecycle matrix.",
+    "useEvent is exercised by the ordering and overlap laboratory; this scenario covers useCursor slot identity while the interaction laboratories own its geometry and lifecycle matrix.",
     "A conditional hook-count mismatch is intentionally not exposed as a gallery action because it can corrupt the diagnostic scene; focused runtime tests own that explicit misuse contract.",
     "Displayed identity numbers are deterministic laboratory labels, not public runtime identifiers.",
   ],
@@ -1384,7 +1384,7 @@ const layoutFoundationMetadata: ScenarioMetadata = {
     "Flex",
     "Grid",
     "Overlay",
-    "crcLayoutBox",
+    "useLayoutBox",
     "Text",
     "Image",
   ],
@@ -1438,7 +1438,7 @@ const canvasSurfaceMetadata: ScenarioMetadata = {
   summary:
     "Verify fixed fitting, responsive logical reflow, high-density backing stores, and logical mouse coordinates.",
   category: "Rendering",
-  apiTags: ["crc", "crcLayoutBox", "Rectangle", "Text", "mouse events"],
+  apiTags: ["crc", "useLayoutBox", "Rectangle", "Text", "mouse events"],
   conceptTags: [
     "device pixel ratio",
     "responsive Canvas",
@@ -1631,7 +1631,7 @@ const webglLightingLabMetadata: ScenarioMetadata = {
   category: "Rendering",
   apiTags: [
     "WebGLLayer",
-    "crcOrbitCamera",
+    "useOrbitCamera",
     "AmbientLight",
     "HemisphereLight",
     "DirectionalLight",
@@ -1727,7 +1727,7 @@ const signalsLabMetadata: ScenarioMetadata = {
   summary:
     "Prove writable, computed, dynamic, shared-root, Layer-local, and removed-consumer signal behavior through public CRC APIs.",
   category: "Rendering",
-  apiTags: ["crc", "signal", "computed", "crcSignal", "Layer"],
+  apiTags: ["crc", "signal", "computed", "useSignal", "Layer"],
   conceptTags: [
     "explicit dependency",
     "equal write",
@@ -1799,8 +1799,8 @@ const animationLabMetadata: ScenarioMetadata = {
     "Drive deterministic playback, transitions, composition, simulation, Layer reuse, shared roots, and owner teardown through public CRC APIs.",
   category: "Rendering",
   apiTags: [
-    "crcPlayback",
-    "crcTransition",
+    "usePlayback",
+    "useTransition",
     "tween",
     "spring",
     "stepper",
@@ -1894,7 +1894,7 @@ const particleCelebrationLabMetadata: ScenarioMetadata = {
     "particleRange",
     "particleChoice",
     "particleCurve",
-    "crcParticleSystem",
+    "useParticleSystem",
     "Particles2D",
     "Clip",
     "Layer",

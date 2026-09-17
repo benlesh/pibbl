@@ -788,19 +788,19 @@ git commit -m "docs: publish Learn guides and diagram tutorial outline"
 - Create: `docs/site/api/functions/normalize-edges.md`
 - Create: `docs/site/api/functions/resolve-box.md`
 - Create: `docs/site/api/functions/resolve-length.md`
-- Create: `docs/site/api/hooks/crc-canvas-context.md`
-- Create: `docs/site/api/hooks/crc-cursor.md`
-- Create: `docs/site/api/hooks/crc-event.md`
-- Create: `docs/site/api/hooks/crc-event-listener.md`
-- Create: `docs/site/api/hooks/crc-event-target.md`
-- Create: `docs/site/api/hooks/crc-layout-box.md`
-- Create: `docs/site/api/hooks/crc-line-path.md`
-- Create: `docs/site/api/hooks/crc-memo.md`
-- Create: `docs/site/api/hooks/crc-rect-path.md`
-- Create: `docs/site/api/hooks/crc-ref.md`
-- Create: `docs/site/api/hooks/crc-state.md`
-- Create: `docs/site/api/hooks/crc-svg-path.md`
-- Create: `docs/site/api/hooks/crc-when-changed.md`
+- Create: `docs/site/api/hooks/use-canvas-context.md`
+- Create: `docs/site/api/hooks/use-cursor.md`
+- Create: `docs/site/api/hooks/use-event.md`
+- Create: `docs/site/api/hooks/use-event-listener.md`
+- Create: `docs/site/api/hooks/use-event-target.md`
+- Create: `docs/site/api/hooks/use-layout-box.md`
+- Create: `docs/site/api/hooks/use-line-path.md`
+- Create: `docs/site/api/hooks/use-memo.md`
+- Create: `docs/site/api/hooks/use-rect-path.md`
+- Create: `docs/site/api/hooks/use-ref.md`
+- Create: `docs/site/api/hooks/use-state.md`
+- Create: `docs/site/api/hooks/use-svg-path.md`
+- Create: `docs/site/api/hooks/use-when-changed.md`
 - Modify: `tooling/studio-docs/build.check.ts`
 
 **Interfaces:**
@@ -821,8 +821,8 @@ assert.equal(
   "#/api/functions/create-circle-path",
 );
 assert.equal(
-  coverage.values.get("crcWhenChanged")?.route,
-  "#/api/hooks/crc-when-changed",
+  coverage.values.get("useWhenChanged")?.route,
+  "#/api/hooks/use-when-changed",
 );
 assert.deepEqual(runtimeCoverage.duplicateValues, []);
 assert.deepEqual(runtimeCoverage.missingValues, []);
@@ -979,7 +979,7 @@ assert.equal(
   records.some(({ id }) => id.startsWith("internal:")),
   false,
 );
-assert.deepEqual(tokenizeSearchText("crcWhenChanged"), [
+assert.deepEqual(tokenizeSearchText("useWhenChanged"), [
   "crcwhenchanged",
   "crc",
   "when",
@@ -990,8 +990,8 @@ assert.equal(
   JSON.stringify(buildSearchBundle(input)),
 );
 assert.equal(
-  searchFixture("crcWhenChanged")[0].url,
-  "#/api/hooks/crc-when-changed",
+  searchFixture("useWhenChanged")[0].url,
+  "#/api/hooks/use-when-changed",
 );
 assert.equal(
   searchFixture("filter", { kinds: ["example"] })[0].url,
@@ -1087,8 +1087,8 @@ and recovery after the first loader call rejects.
 expect(loadCalls).toBe(0);
 await engine.preload();
 expect(loadCalls).toBe(1);
-expect((await engine.search("crcState")).results[0].url).toBe(
-  "#/api/hooks/crc-state",
+expect((await engine.search("useState")).results[0].url).toBe(
+  "#/api/hooks/use-state",
 );
 await expect(brokenEngine.search("state")).rejects.toThrow("index unavailable");
 await brokenEngine.retry();

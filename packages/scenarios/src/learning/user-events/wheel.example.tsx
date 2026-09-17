@@ -1,6 +1,6 @@
 import {
   crc,
-  crcState,
+  useState,
   Rectangle,
   Text,
   type CRCController,
@@ -10,9 +10,9 @@ function wheelSummary(event: CRCWheelEvent): string {
   return `Δ ${event.deltaX.toFixed(1)}, ${event.deltaY.toFixed(1)}, ${event.deltaZ.toFixed(1)} mode=${event.deltaMode} at ${Math.round(event.x)},${Math.round(event.y)} buttons=${event.buttons} ${event.ctrlKey ? "ctrl" : ""}${event.shiftKey ? "shift" : ""}`;
 }
 function WheelStudy() {
-  const [trace, setTrace] = crcState<readonly string[]>([]);
-  const [count, setCount] = crcState(0);
-  const [cancelled, setCancelled] = crcState(false);
+  const [trace, setTrace] = useState<readonly string[]>([]);
+  const [count, setCount] = useState(0);
+  const [cancelled, setCancelled] = useState(false);
   return [
     <Rectangle
       style={{

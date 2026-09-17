@@ -6,7 +6,7 @@ import {
   Layer,
   Rectangle,
   crc,
-  crcPlayback,
+  usePlayback,
   createElement,
   keyframes,
   sequence,
@@ -64,7 +64,7 @@ describe('animation structural performance', () => {
       traversals += 1;
       handles.length = 0;
       for (const [index, output] of outputs.entries()) {
-        handles.push(crcPlayback(track(output, tween({
+        handles.push(usePlayback(track(output, tween({
           from: 0,
           to: index + 1,
           duration: 100,
@@ -136,7 +136,7 @@ describe('animation structural performance', () => {
     );
     let playback!: CRCPlayback;
     function Root(): CRCNode {
-      playback = crcPlayback(sequence(...tracks));
+      playback = usePlayback(sequence(...tracks));
       output.get();
       return undefined;
     }
@@ -225,7 +225,7 @@ describe('animation structural performance', () => {
     let steps = 0;
     let playback!: CRCPlayback;
     function Root(): CRCNode {
-      playback = crcPlayback(track(output, stepper({
+      playback = usePlayback(track(output, stepper({
         stepMilliseconds: 10,
         maxElapsedMilliseconds: 40,
         initial: current => current,
@@ -290,7 +290,7 @@ describe('animation structural performance', () => {
     const output = signal(0);
     let playback!: CRCPlayback;
     function Root(): CRCNode {
-      playback = crcPlayback(track(output, tween({
+      playback = usePlayback(track(output, tween({
         from: 0,
         to: 10,
         duration: 100,
@@ -333,7 +333,7 @@ describe('animation structural performance', () => {
     }
     function Root(): CRCNode {
       rootTraversals += 1;
-      playback = crcPlayback(track(offset, tween({
+      playback = usePlayback(track(offset, tween({
         from: 0,
         to: 4,
         duration: 100,

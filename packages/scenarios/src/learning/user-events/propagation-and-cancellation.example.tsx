@@ -1,7 +1,7 @@
 import {
   crc,
-  crcEventListener,
-  crcState,
+  useEventListener,
+  useState,
   Rectangle,
   Text,
   type CRCController,
@@ -48,7 +48,7 @@ function PropagationLeaf({ mode, record }: PropagationProps) {
   );
 }
 function PropagationAncestor(props: PropagationProps) {
-  crcEventListener({
+  useEventListener({
     onPointerDownCapture: (event) => {
       props.record(
         eventLine("PARENT listener capture", event, "leaf", "parent"),
@@ -63,8 +63,8 @@ function PropagationAncestor(props: PropagationProps) {
   return <PropagationLeaf mode={props.mode} record={props.record} />;
 }
 function PropagationAndCancellationStudy() {
-  const [mode, setMode] = crcState<CancellationMode>("none");
-  const [trace, setTrace] = crcState<readonly string[]>([]);
+  const [mode, setMode] = useState<CancellationMode>("none");
+  const [trace, setTrace] = useState<readonly string[]>([]);
   const record = (line: string) => {
     setTrace((current) => [...current.slice(-6), line]);
   };
@@ -72,7 +72,7 @@ function PropagationAndCancellationStudy() {
     setMode(next);
     setTrace([]);
   };
-  crcEventListener({
+  useEventListener({
     onPointerDownCapture: (event) => {
       record(eventLine("ROOT listener capture", event, "leaf", "root"));
     },
@@ -83,7 +83,7 @@ function PropagationAndCancellationStudy() {
       );
     },
   });
-  crcEventListener({
+  useEventListener({
     onPointerDown: (event) => {
       record(eventLine("ROOT listener bubble 2", event, "leaf", "root"));
     },
@@ -194,7 +194,7 @@ function PropagationAndCancellationStudy() {
       }}
     >
       {
-        "Capture props run on the leaf before its target prop; crcEventListener supplies the ancestor route."
+        "Capture props run on the leaf before its target prop; useEventListener supplies the ancestor route."
       }
     </Text>,
   ];

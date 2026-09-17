@@ -10,7 +10,7 @@ import {
   assertSignalCommandAllowed,
 } from '../signals/graph.js';
 import type { WritableSignal } from '../signals/types.js';
-import { crcPaintTarget } from '../hooks/crc-paint-target.js';
+import { usePaintTarget } from '../hooks/use-paint-target.js';
 import type {
   CRCEventHandlers,
   CRCEventTargetOptions,
@@ -275,7 +275,7 @@ export function crcInternalPaintTarget(
   options: CRCEventTargetOptions,
   pointerEvents: CRCPointerEvents = 'auto',
 ): CRCEventTargetSnapshot {
-  return crcPaintTarget(handlers, options, pointerEvents);
+  return usePaintTarget(handlers, options, pointerEvents);
 }
 
 export function crcInternalCurrentFrame(): CRCInternalFrame {

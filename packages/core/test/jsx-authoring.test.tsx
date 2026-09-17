@@ -4,7 +4,7 @@ import {
   Clip,
   createElement,
   crc,
-  crcState,
+  useState,
   Ellipse,
   Group,
   HorizontalLine,
@@ -547,7 +547,7 @@ function driveInteractiveScene(authoring: AuthoringMode) {
 
 function interactiveScene(authoring: AuthoringMode): CRCNode {
   function Poster(_props: { readonly children?: never }): CRCNode {
-    const [message, setMessage] = crcState('HELLO');
+    const [message, setMessage] = useState('HELLO');
     const rectangleProps = {
       style: { width: 240, height: 120, fill: '#1f4bd8' } as const,
       onClick: () => setMessage('CRC'),

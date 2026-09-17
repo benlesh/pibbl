@@ -40,8 +40,8 @@ after the first cleanup request.
 | Root instance-map entry          | Mount/controller identity                                               | First `crc()` for a Canvas                                     | Matching signal/controller disposal                                                                       | The entry is absent; a newer identity is untouched.                                                                   |
 | Abort subscription               | Root instance main teardown                                             | Mount with a signal                                            | Any disposal path                                                                                         | The abort listener is detached and later abort is harmless.                                                           |
 | Per-type native Canvas listener  | Root event hub                                                          | First live requester for that type                             | Last requester release or root disposal                                                                   | At most one native listener exists for the type; removal uses the matching capture option.                            |
-| Grouped event target             | Built-in paint-target slot or `crcEventTarget` hook                     | Default-participating drawing, or explicit target registration | `pointerEvents="none"`, last explicit property removed, component removal, or disposal                    | Target, paint entry, native requests, captures, contacts, drag hover, focus, and cursor references are absent.        |
-| Propagation listener             | One `crcEventListener` hook slot                                        | Render with at least one handler                               | Last handler removed, component removal, or disposal                                                      | The exact component bucket member and native requests are absent.                                                     |
+| Grouped event target             | Built-in paint-target slot or `useEventTarget` hook                     | Default-participating drawing, or explicit target registration | `pointerEvents="none"`, last explicit property removed, component removal, or disposal                    | Target, paint entry, native requests, captures, contacts, drag hover, focus, and cursor references are absent.        |
+| Propagation listener             | One `useEventListener` hook slot                                        | Render with at least one handler                               | Last handler removed, component removal, or disposal                                                      | The exact component bucket member and native requests are absent.                                                     |
 | Logical pointer capture          | Capturing live event node and root capture state                        | Successful native `setPointerCapture` request                  | Transfer, release, cancel, native loss, node removal, or disposal                                         | Per-pointer active/provisional/pending-transfer/pending-loss records and prerequisite native requests settle to zero. |
 | Retained touch contact           | Root dispatcher, keyed by identifier                                    | Hit-resolved `touchstart`                                      | `touchend`, `touchcancel`, target removal, or disposal                                                    | No identifier refers to a dead logical target.                                                                        |
 | Drag hover target                | Root dispatcher                                                         | Drag boundary reconciliation                                   | Root leave, drop, drag end, target removal, or disposal                                                   | No drag boundary state refers to a dead logical target.                                                               |
@@ -56,7 +56,7 @@ after the first cleanup request.
 | WebGL backend target/pick record | One Mesh/Cube/Sphere target slot and candidate settled-scene generation | Default-participating geometry submission                      | `pointerEvents="none"`, failed/uncommitted generation, context loss, component/layer removal, or disposal | No committed picker, focus index, or root dispatcher state refers to that target generation.                          |
 | WebGL nested-resolver entry      | Owning `WebGLLayer` component                                           | Successful Canvas composite and generation commit              | Opt-out, generation replacement/loss, layer removal, or root disposal                                     | The global paint ledger cannot invoke a stale island picker or mismatched focus generation.                           |
 | WebGL event-parent bridge        | Owning `WebGLLayer` child instance                                      | Private backend mount                                          | Child generation replacement, layer removal, failure, or root disposal                                    | Temporary paths cannot retain the removed WebGL subtree or its Canvas parent.                                         |
-| Orbit-camera hook slot           | Mounted component calling `crcOrbitCamera()`                            | First call in that hook position                               | Component/hook/root teardown                                                                              | Spherical state, active-pointer record, and revision ownership cannot schedule work; retained handlers are inert.     |
+| Orbit-camera hook slot           | Mounted component calling `useOrbitCamera()`                            | First call in that hook position                               | Component/hook/root teardown                                                                              | Spherical state, active-pointer record, and revision ownership cannot schedule work; retained handlers are inert.     |
 | Component refs                   | CRC instance                                                            | Render                                                         | Component removal or instance disposal                                                                    | Removed refs run teardown and become unreachable.                                                                     |
 
 ## Central disposal sequence
@@ -80,11 +80,11 @@ The identity check makes stale controllers harmless. Frame callbacks also check 
 
 ## Replacement, removal, and errors
 
-Every default-participating Canvas/WebGL drawing or `crcEventTarget` path owns
+Every default-participating Canvas/WebGL drawing or `useEventTarget` path owns
 one persistent grouped target slot containing current event handlers and
 optional cursor/focus metadata. Rerender updates that target in place and
 refreshes its local paint/pick position without changing logical identity.
-`crcEventListener` similarly owns
+`useEventListener` similarly owns
 one stable non-geometric registration. If the last active property disappears,
 teardown removes the exact registration and clears native requests, pointer
 capture, retained touch contacts, drag hover, mouse hover/activation, and cursor
@@ -92,7 +92,7 @@ state that still references it. A built-in remains a passive target without
 those properties until `pointerEvents="none"` or component teardown releases
 it.
 
-`crcOrbitCamera()` owns stable handler functions but no native listener,
+`useOrbitCamera()` owns stable handler functions but no native listener,
 logical target, focus candidate, or pointer-capture resource merely by being
 called. Spreading its handlers onto a geometry participant or structural
 ancestor acquires the ordinary target/listener resources owned by that
@@ -172,6 +172,6 @@ frames.
 
 ## Deliberate boundary
 
-TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading and the existing `crcWhenChanged` cleanup contract.
+TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading and the existing `useWhenChanged` cleanup contract.
 
 TFC-07 completed that broader proof in the [runtime resource ownership contract](./runtime-resource-ownership.md), including state-setter capability checks, single-owner change cleanups, image generations, fully rendered mount/dispose stress, and temporary render-global restoration.

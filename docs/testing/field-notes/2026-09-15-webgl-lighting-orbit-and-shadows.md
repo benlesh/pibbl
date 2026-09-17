@@ -33,7 +33,7 @@ The public surface now includes:
   point shadows with six cube-map depth views;
 - `false | "low" | "medium" | "high"` layer shadow quality, with the documented
   medium default and independent mesh/light participation controls; and
-- `crcOrbitCamera()`, which returns plain `position`, `lookAt`, and stable event
+- `useOrbitCamera()`, which returns plain `position`, `lookAt`, and stable event
   handlers that can be attached to ordinary CRC event participants while the
   layer continues to receive a plain perspective-camera object.
 

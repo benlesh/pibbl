@@ -1,15 +1,15 @@
 import {
   crc,
-  crcState,
+  useState,
   Rectangle,
   Text,
   type CRCController,
   type CRCPointerEvent,
 } from "@crc/core";
 function PointerCaptureStudy() {
-  const [capturedId, setCapturedId] = crcState<number | null>(null);
-  const [trace, setTrace] = crcState<readonly string[]>([]);
-  const [position, setPosition] = crcState({
+  const [capturedId, setCapturedId] = useState<number | null>(null);
+  const [trace, setTrace] = useState<readonly string[]>([]);
+  const [position, setPosition] = useState({
     x: 220,
     y: 196,
   });

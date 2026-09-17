@@ -4,8 +4,8 @@ import {
   KeyboardNavigation,
   crc,
   createElement,
-  crcState,
-  crcWhenChanged,
+  useState,
+  useWhenChanged,
   Group,
   Rectangle,
   Text,
@@ -15,10 +15,10 @@ import {
 let liveLifecycleGenerations = 0;
 
 function CreateElementPoster(_props: Record<never, never>) {
-  const [count, setCount] = crcState(0);
-  const [selection, setSelection] = crcState("NONE");
+  const [count, setCount] = useState(0);
+  const [selection, setSelection] = useState("NONE");
 
-  crcWhenChanged(() => {
+  useWhenChanged(() => {
     liveLifecycleGenerations += 1;
     return () => {
       liveLifecycleGenerations -= 1;

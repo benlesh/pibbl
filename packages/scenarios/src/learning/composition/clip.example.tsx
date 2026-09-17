@@ -1,16 +1,16 @@
 import {
   Clip,
   crc,
-  crcMemo,
-  crcState,
+  useMemo,
+  useState,
   createRegularPolygonPath,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function ClipStudy() {
-  const [inside, setInside] = crcState(false);
-  const hexagon = crcMemo(
+  const [inside, setInside] = useState(false);
+  const hexagon = useMemo(
     () => createRegularPolygonPath({ sides: 6, cx: 360, cy: 210, inradius: 142 }),
     [],
   );

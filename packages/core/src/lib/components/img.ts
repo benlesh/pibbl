@@ -4,9 +4,9 @@ import type {
   CRCEventHandlers,
   CRCEventParticipationOptions,
 } from '../events/types.js';
-import { crcRectPath } from '../hooks/crc-rect-path.js';
-import { crcState } from '../hooks/crc-state.js';
-import { crcWhenChanged } from '../hooks/crc-when-changed.js';
+import { useRectPath } from '../hooks/use-rect-path.js';
+import { useState } from '../hooks/use-state.js';
+import { useWhenChanged } from '../hooks/use-when-changed.js';
 import type {
   MeasureInput,
   MeasureResult,
@@ -53,11 +53,11 @@ function renderImage(
     ctx.globalAlpha = ctx.globalAlpha * opacity;
   }
 
-  const [loadedImage, setLoadedImage] = crcState<LoadedImage | null>(null);
+  const [loadedImage, setLoadedImage] = useState<LoadedImage | null>(null);
   const image =
     loadedImage && loadedImage.src === src ? loadedImage.element : null;
 
-  crcWhenChanged(() => {
+  useWhenChanged(() => {
     let active = true;
     const BrowserImage = globalThis.Image;
     const element = new BrowserImage();
@@ -101,7 +101,7 @@ function renderImage(
     ));
   }
 
-  const imagePath = crcRectPath(x, y, width, height);
+  const imagePath = useRectPath(x, y, width, height);
 
   if (image) {
     ctx.drawImage(image, x, y, width, height);

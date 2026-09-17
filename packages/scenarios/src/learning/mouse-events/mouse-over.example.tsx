@@ -1,6 +1,6 @@
-import { crc, crcState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
 function MouseOverStudy() {
-  const [active, setActive] = crcState("none");
+  const [active, setActive] = useState("none");
   const card = (x: number, color: string, label: string) => [
     <Rectangle
       style={{

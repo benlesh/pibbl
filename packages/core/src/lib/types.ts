@@ -319,7 +319,7 @@ export interface CRCInstance {
 
 export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
 
-/** Shipped payload for the singular `crcEvent` Canvas observer hook. */
+/** Shipped payload for the singular `useEvent` Canvas observer hook. */
 export interface CRCMouseEvent {
   x: number;
   y: number;

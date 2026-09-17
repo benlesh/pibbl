@@ -49,7 +49,7 @@
 
 - `packages/core/src/lib/events/paint-entry.ts`: numeric paint-entry kinds, fixed hit request/result, and nested resolver records.
 - `packages/core/src/lib/events/{registrations.ts,hit-test.ts,event-path.ts}`: geometry-independent target identity, central reverse dispatch, and cross-instance ancestry.
-- `packages/core/src/lib/hooks/crc-paint-target.ts`: built-in drawing-target hook with default participation and explicit opt-out.
+- `packages/core/src/lib/hooks/use-paint-target.ts`: built-in drawing-target hook with default participation and explicit opt-out.
 - `packages/core/src/lib/util/wire-common-events.ts`: common Canvas path registration using the drawing-target hook.
 - `packages/core/src/lib/components/structural-events.ts`: one stable listener hook for child-bearing built-ins.
 - Canvas drawing components, `Group`, `Clip`, `Layer`, and the five layout components: public participation/listener props and unchanged paint/layout geometry.
@@ -66,7 +66,7 @@
 - `packages/webgl/src/lib/gpu/{state.ts,program.ts,resources.ts}`: explicit GL baseline, shader program, and context-generation ownership.
 - `packages/webgl/src/lib/components/{webgl-layer.ts,group-3d.ts,mesh.ts,cube.ts,sphere.ts}`: public primitives and the Canvas/WebGL composition boundary.
 - `packages/webgl/src/lib/{pick-ledger.ts,scene-picker.ts}`: transient draw-matched pick records and nearest synchronous CPU resolution.
-- `packages/webgl/src/lib/hooks/{crc-webgl-context.ts,crc-animation-frame.ts}`: raw render context and coalesced continuing-frame hook.
+- `packages/webgl/src/lib/hooks/{crc-webgl-context.ts,use-animation-frame.ts}`: raw render context and coalesced continuing-frame hook.
 
 ### Public evidence and documentation
 
@@ -209,7 +209,7 @@ git commit -m "refactor(core): unify coordinate hit resolution"
 
 **Files:**
 
-- Create: `packages/core/src/lib/hooks/crc-paint-target.ts`
+- Create: `packages/core/src/lib/hooks/use-paint-target.ts`
 - Modify: `packages/core/src/lib/events/types.ts`
 - Modify: `packages/core/src/lib/events/registrations.ts`
 - Modify: `packages/core/src/lib/util/wire-common-events.ts`
@@ -223,7 +223,7 @@ git commit -m "refactor(core): unify coordinate hit resolution"
 
 - Produces public `CRCPointerEvents = "auto" | "none"` and `CRCEventParticipationOptions { pointerEvents?: CRCPointerEvents }`.
 - Every Canvas drawing prop interface extends `CRCEventParticipationOptions`.
-- `crcEventTarget()` retains its explicit custom-hook behavior; `crcPaintTarget()` is internal and keeps a geometry-bearing built-in live when `pointerEvents !== "none"`.
+- `useEventTarget()` retains its explicit custom-hook behavior; `usePaintTarget()` is internal and keeps a geometry-bearing built-in live when `pointerEvents !== "none"`.
 
 - [ ] **Step 1: Write failing passive-occlusion tests**
 
@@ -249,7 +249,7 @@ Expected: FAIL because the passive front primitive is removed from `paintEntries
 Implement one stable hook slot:
 
 ```ts
-export function crcPaintTarget(
+export function usePaintTarget(
   handlers: CRCEventHandlers,
   options: CRCEventTargetOptions,
   pointerEvents: CRCPointerEvents = "auto",
@@ -286,7 +286,7 @@ Expected: all selected suites and typecheck PASS.
 - [ ] **Step 7: Commit default drawing participation**
 
 ```bash
-git add packages/core/src/lib/hooks/crc-paint-target.ts packages/core/src/lib/events/types.ts packages/core/src/lib/events/registrations.ts packages/core/src/lib/util/wire-common-events.ts packages/core/src/lib/components/arc.ts packages/core/src/lib/components/circle.ts packages/core/src/lib/components/ellipse.ts packages/core/src/lib/components/horizontal-line.ts packages/core/src/lib/components/img.ts packages/core/src/lib/components/line.ts packages/core/src/lib/components/path.ts packages/core/src/lib/components/polygon.ts packages/core/src/lib/components/rect.ts packages/core/src/lib/components/regular-polygon.ts packages/core/src/lib/components/star.ts packages/core/src/lib/components/svg-path.ts packages/core/src/lib/components/text.ts packages/core/src/lib/components/vertical-line.ts packages/core/src/lib/components/wedge.ts packages/core/src/lib/components/event-integration.test.ts packages/core/src/lib/events/pointer-events.test.ts packages/core/src/index.ts packages/core/type-tests/final-public-vocabulary.tsx
+git add packages/core/src/lib/hooks/use-paint-target.ts packages/core/src/lib/events/types.ts packages/core/src/lib/events/registrations.ts packages/core/src/lib/util/wire-common-events.ts packages/core/src/lib/components/arc.ts packages/core/src/lib/components/circle.ts packages/core/src/lib/components/ellipse.ts packages/core/src/lib/components/horizontal-line.ts packages/core/src/lib/components/img.ts packages/core/src/lib/components/line.ts packages/core/src/lib/components/path.ts packages/core/src/lib/components/polygon.ts packages/core/src/lib/components/rect.ts packages/core/src/lib/components/regular-polygon.ts packages/core/src/lib/components/star.ts packages/core/src/lib/components/svg-path.ts packages/core/src/lib/components/text.ts packages/core/src/lib/components/vertical-line.ts packages/core/src/lib/components/wedge.ts packages/core/src/lib/components/event-integration.test.ts packages/core/src/lib/events/pointer-events.test.ts packages/core/src/index.ts packages/core/type-tests/final-public-vocabulary.tsx
 git commit -m "feat(core): make painted primitives occlude by default"
 ```
 
@@ -304,7 +304,7 @@ git commit -m "feat(core): make painted primitives occlude by default"
 **Interfaces:**
 
 - `CRCStructuralEventProps extends CRCEventHandlers` is shared by all child-bearing built-ins.
-- `wireStructuralEvents(handlers): void` always calls exactly one `crcEventListener` hook, even when the current handler map is empty.
+- `wireStructuralEvents(handlers): void` always calls exactly one `useEventListener` hook, even when the current handler map is empty.
 
 - [ ] **Step 1: Write failing ancestor and empty-space tests**
 
@@ -355,7 +355,7 @@ git commit -m "feat(core): propagate events through structural components"
 - Create: `packages/core/src/lib/backend/backend-dispatch.test.tsx`
 - Modify: `packages/core/src/lib/{define-primitive,render,execute-render,mount-crc,global-state,types}.ts`
 - Modify: `packages/core/src/lib/element/metadata.ts`
-- Modify: `packages/core/src/lib/hooks/{hook-slot,crc-canvas-context}.ts`
+- Modify: `packages/core/src/lib/hooks/{hook-slot,use-canvas-context}.ts`
 - Modify: `packages/core/src/lib/components/layer-node-equality.ts`
 - Modify: `packages/core/package.json`
 - Modify: `packages/core/tsconfig.build.json`
@@ -472,7 +472,7 @@ Expected: all selected suites, typecheck, and source-package consumer PASS.
 - [ ] **Step 7: Commit the backend friend seam**
 
 ```bash
-git add packages/core/src/internal.ts packages/core/src/lib/backend/types.ts packages/core/src/lib/backend/canvas-2d-backend.ts packages/core/src/lib/backend/backend-dispatch.test.tsx packages/core/src/lib/define-primitive.ts packages/core/src/lib/render.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/global-state.ts packages/core/src/lib/types.ts packages/core/src/lib/element/metadata.ts packages/core/src/lib/hooks/hook-slot.ts packages/core/src/lib/hooks/crc-canvas-context.ts packages/core/src/lib/components/layer-node-equality.ts packages/core/package.json packages/core/tsconfig.build.json tsconfig.json vitest.config.ts tooling/assert-built-core.ts playground/package-consumer/index.ts playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json
+git add packages/core/src/internal.ts packages/core/src/lib/backend/types.ts packages/core/src/lib/backend/canvas-2d-backend.ts packages/core/src/lib/backend/backend-dispatch.test.tsx packages/core/src/lib/define-primitive.ts packages/core/src/lib/render.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/global-state.ts packages/core/src/lib/types.ts packages/core/src/lib/element/metadata.ts packages/core/src/lib/hooks/hook-slot.ts packages/core/src/lib/hooks/use-canvas-context.ts packages/core/src/lib/components/layer-node-equality.ts packages/core/package.json packages/core/tsconfig.build.json tsconfig.json vitest.config.ts tooling/assert-built-core.ts playground/package-consumer/index.ts playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json
 git commit -m "feat(core): expose official renderer friend seam"
 ```
 
@@ -718,7 +718,7 @@ Create one token at module initialization. `beginFrame` clears transparent color
 
 - [ ] **Step 5: Implement model-stack and Group3D listener behavior**
 
-`Group3D` validates style, calls public `crcEventListener`, pushes the composed model matrix, registers the pop through `setCurrentComponentAfterRender`, returns children, and pops exactly once. It creates no draw or pick record and has no conceptual bounds.
+`Group3D` validates style, calls public `useEventListener`, pushes the composed model matrix, registers the pop through `setCurrentComponentAfterRender`, returns children, and pops exactly once. It creates no draw or pick record and has no conceptual bounds.
 
 - [ ] **Step 6: Run protocol, state, context, Group3D, and core dispatch suites**
 
@@ -999,8 +999,8 @@ git commit -m "feat(webgl): integrate propagation focus and input events"
 
 **Files:**
 
-- Create: `packages/webgl/src/lib/hooks/crc-animation-frame.ts`
-- Create: `packages/webgl/src/lib/hooks/crc-animation-frame.test.tsx`
+- Create: `packages/webgl/src/lib/hooks/use-animation-frame.ts`
+- Create: `packages/webgl/src/lib/hooks/use-animation-frame.test.tsx`
 - Create: `packages/webgl/src/lib/webgl-performance.test.tsx`
 - Modify: `packages/webgl/src/lib/components/webgl-layer.ts`
 - Modify: `packages/webgl/src/lib/layer-controller.ts`
@@ -1010,7 +1010,7 @@ git commit -m "feat(webgl): integrate propagation focus and input events"
 
 **Interfaces:**
 
-- `crcAnimationFrame(): number` returns the active CRC frame timestamp and requests exactly one next frame for the owning private instance with parent recomposition.
+- `useAnimationFrame(): number` returns the active CRC frame timestamp and requests exactly one next frame for the owning private instance with parent recomposition.
 - WebGLLayer cache identity includes retained child root/props/styles/enhancers, camera scalars, logical dimensions, X/Y density, focus revision, context generation, and owned resource generation.
 - Layer controller tracks `renderedGeneration`, `candidateGeneration`, and `committedGeneration`; an already-rendered child candidate is composited by the parent without a second child traversal.
 
@@ -1025,7 +1025,7 @@ Assert an unchanged parent render performs one Canvas composite and zero child e
 - [ ] **Step 3: Run animation/performance tests and confirm missing hook/cache failures**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/hooks/crc-animation-frame.test.tsx packages/webgl/src/lib/webgl-performance.test.tsx --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/hooks/use-animation-frame.test.tsx packages/webgl/src/lib/webgl-performance.test.tsx --browser.headless --browser.ui=false
 ```
 
 Expected: FAIL because continuing-frame ownership and WebGL cache generations are absent.
@@ -1041,7 +1041,7 @@ Use the friend-exported retained-tree snapshot without consuming opaque iterable
 - [ ] **Step 6: Run animation, cache, Layer, hook, and performance suites**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/hooks/crc-animation-frame.test.tsx packages/webgl/src/lib/webgl-performance.test.tsx packages/webgl/src/lib/components/webgl-layer.test.tsx packages/core/src/lib/hooks/crc-state.test.ts packages/core/src/lib/components/layer.test.ts packages/core/test/event-performance.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/hooks/use-animation-frame.test.tsx packages/webgl/src/lib/webgl-performance.test.tsx packages/webgl/src/lib/components/webgl-layer.test.tsx packages/core/src/lib/hooks/use-state.test.ts packages/core/src/lib/components/layer.test.ts packages/core/test/event-performance.test.ts --browser.headless --browser.ui=false
 ```
 
 Expected: all selected suites PASS with exact traversal and transfer counters.
@@ -1049,7 +1049,7 @@ Expected: all selected suites PASS with exact traversal and transfer counters.
 - [ ] **Step 7: Commit animation and retained islands**
 
 ```bash
-git add packages/webgl/src/lib/hooks/crc-animation-frame.ts packages/webgl/src/lib/hooks/crc-animation-frame.test.tsx packages/webgl/src/lib/webgl-performance.test.tsx packages/webgl/src/lib/components/webgl-layer.ts packages/webgl/src/lib/layer-controller.ts packages/webgl/src/lib/backend.ts packages/webgl/src/index.ts packages/core/src/lib/components/layer-node-equality.ts
+git add packages/webgl/src/lib/hooks/use-animation-frame.ts packages/webgl/src/lib/hooks/use-animation-frame.test.tsx packages/webgl/src/lib/webgl-performance.test.tsx packages/webgl/src/lib/components/webgl-layer.ts packages/webgl/src/lib/layer-controller.ts packages/webgl/src/lib/backend.ts packages/webgl/src/index.ts packages/core/src/lib/components/layer-node-equality.ts
 git commit -m "feat(webgl): animate and retain WebGL islands"
 ```
 
@@ -1210,7 +1210,7 @@ git commit -m "test(webgl): prove public WebGL island behavior"
 
 **Interfaces:**
 
-- `@crc/webgl` exports exactly `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`, `createWebGLGeometry`, `defineWebGLPrimitive`, `crcWebGLContext`, `crcAnimationFrame`, and the public types used by those values.
+- `@crc/webgl` exports exactly `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`, `createWebGLGeometry`, `defineWebGLPrimitive`, `crcWebGLContext`, `useAnimationFrame`, and the public types used by those values.
 - `@crc/core/internal` remains absent from the public API reference except for a warning in package-boundary documentation; applications receive no compatibility promise.
 - Bundler and NodeNext consumers import both packages while JSX still compiles against `@crc/core/jsx-runtime`.
 

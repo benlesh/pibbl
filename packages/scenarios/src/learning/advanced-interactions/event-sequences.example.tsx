@@ -1,6 +1,6 @@
-import { crc, crcState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
 function EventSequenceStudy() {
-  const [events, setEvents] = crcState<readonly string[]>([]);
+  const [events, setEvents] = useState<readonly string[]>([]);
   const record = (value: string) =>
     setEvents((current) => [...current.slice(-5), value]);
   const target = (x: number, color: string, name: string) => (

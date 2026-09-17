@@ -44,22 +44,22 @@ const expected = [
   'Wedge',
   'computed',
   'crc',
-  'crcCanvasContext',
-  'crcCursor',
-  'crcEvent',
-  'crcEventListener',
-  'crcEventTarget',
-  'crcLayoutBox',
-  'crcLinePath',
-  'crcMemo',
-  'crcPlayback',
-  'crcRectPath',
-  'crcRef',
-  'crcSignal',
-  'crcState',
-  'crcSvgPath',
-  'crcTransition',
-  'crcWhenChanged',
+  'useCanvasContext',
+  'useCursor',
+  'useEvent',
+  'useEventListener',
+  'useEventTarget',
+  'useLayoutBox',
+  'useLinePath',
+  'useMemo',
+  'usePlayback',
+  'useRectPath',
+  'useRef',
+  'useSignal',
+  'useState',
+  'useSvgPath',
+  'useTransition',
+  'useWhenChanged',
   'createArcPath',
   'createCirclePath',
   'createElement',
@@ -195,8 +195,8 @@ const expectedWebGL = [
   'SpotLight',
   'WebGLBackground',
   'WebGLLayer',
-  'crcAnimationFrame',
-  'crcOrbitCamera',
+  'useAnimationFrame',
+  'useOrbitCamera',
   'createWebGLGeometry',
 ];
 const actualWebGL = Object.keys(webgl).sort();
@@ -230,7 +230,7 @@ if ('submitWebGLInstanced' in webgl) {
 
 const expectedParticles = [
   'Particles2D',
-  'crcParticleSystem',
+  'useParticleSystem',
   'defineParticleEffect2D',
   'particleChoice',
   'particleCurve',
@@ -364,7 +364,7 @@ const runtimeGeometry = webgl.createWebGLGeometry({
   normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
 });
 function RuntimeAnimatedMesh() {
-  const timestamp = webgl.crcAnimationFrame();
+  const timestamp = webgl.useAnimationFrame();
   return core.createElement(webgl.Mesh, {
     geometry: runtimeGeometry,
     pointerEvents: 'none',
@@ -381,7 +381,7 @@ const runtimeWebGLElement = core.createElement(webgl.WebGLLayer, {
 });
 const runtimeShadowQualities = [false, 'low', 'medium', 'high'];
 function RuntimeOrbitScene() {
-  const orbit = webgl.crcOrbitCamera({
+  const orbit = webgl.useOrbitCamera({
     orbitPoint: [0, 0, 0],
     initialPosition: [0, 2, 5],
     minDistance: 2,

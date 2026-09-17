@@ -9,10 +9,10 @@ import {
 } from "@crc/scenarios";
 import {
   crc,
-  crcEventTarget,
-  crcRectPath,
-  crcRef,
-  crcState,
+  useEventTarget,
+  useRectPath,
+  useRef,
+  useState,
   createElement,
   Rectangle,
 } from "@crc/core";
@@ -511,7 +511,7 @@ it("rejects cumulative vocabulary and target-ownership mutations", async () => {
   expect(() =>
     validateDiagramEditorTutorialSourceText(
       keyboardSource.replace(
-        "const dragSession = crcRef<NodeDragSession | null>(null);",
+        "const dragSession = useRef<NodeDragSession | null>(null);",
         "const dragSession = { current: null as NodeDragSession | null };",
       ),
       { chapter: keyboard.chapter, label: "mutated Chapter 11" },
@@ -708,13 +708,13 @@ it("removes an active target-local drag before pointer-up without a ghost loss o
   let losses = 0;
 
   function RemovableTarget() {
-    const pointerId = crcRef<number>();
-    const [dragging, setDragging] = crcState(false);
+    const pointerId = useRef<number>();
+    const [dragging, setDragging] = useState(false);
     const finish = (): void => {
       pointerId.current = undefined;
       setDragging(false);
     };
-    crcEventTarget(
+    useEventTarget(
       {
         onPointerDown(event) {
           pointerId.current = event.pointerId;
@@ -732,7 +732,7 @@ it("removes an active target-local drag before pointer-up without a ghost loss o
         },
       },
       {
-        path: crcRectPath(40, 40, 120, 80),
+        path: useRectPath(40, 40, 120, 80),
         fill: true,
         cursor: dragging ? "grabbing" : "grab",
       },
@@ -744,7 +744,7 @@ it("removes an active target-local drag before pointer-up without a ghost loss o
   }
 
   function RemovalHarness() {
-    const [visible, setVisible] = crcState(true);
+    const [visible, setVisible] = useState(true);
     removeTarget = () => setVisible(false);
     return visible ? createElement(RemovableTarget, {}) : null;
   }

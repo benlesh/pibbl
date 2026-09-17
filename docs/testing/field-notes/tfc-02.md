@@ -16,7 +16,7 @@ Headlessly, the explorer loads through its catalog entry, drives every action, v
 
 ## Visual strategy and stabilization
 
-The explorer uses a fixed 480×240 Canvas and public `g`, `clip`, `layer`, `line`, `rect`, and pathless `crcEvent` APIs to draw case-specific diagrams. Red probe markers stay away from text and geometry boundaries. The manual pass observed `top`, `child`, transformed `a`, `layer`, stroked `a`, widened-line `a`, and `canvas-wide-observer` at their documented probes. The state panel labels logical related targets as diagnostic routes and labels context ordering as browser-dependent. The existing browser environment fixes viewport, DPR, locale, time zone, color scheme, color profile, and reduced motion.
+The explorer uses a fixed 480×240 Canvas and public `g`, `clip`, `layer`, `line`, `rect`, and pathless `useEvent` APIs to draw case-specific diagrams. Red probe markers stay away from text and geometry boundaries. The manual pass observed `top`, `child`, transformed `a`, `layer`, stroked `a`, widened-line `a`, and `canvas-wide-observer` at their documented probes. The state panel labels logical related targets as diagnostic routes and labels context ordering as browser-dependent. The existing browser environment fixes viewport, DPR, locale, time zone, color scheme, color profile, and reduced motion.
 
 ## Surprising findings and browser differences
 
@@ -40,7 +40,7 @@ Manual actions await their scenario frame, and headless target pixels avoid glyp
 - Rejected release-only click targeting; down/up identity and the browser-generated click target determine region activation.
 - Rejected promising one cross-browser context-menu order.
 - Rejected presenting the logical related target as public event data; it is diagnostic route metadata until the public event type changes.
-- Rejected treating public no-path `crcEvent` hooks as geometric regions; they remain Canvas-wide observers after target-bound callbacks.
+- Rejected treating public no-path `useEvent` hooks as geometric regions; they remain Canvas-wide observers after target-bound callbacks.
 - Rejected changing runtime behavior in the design step; the current mismatch remains visible until TFC-04.
 
 ## Helper and tooling friction
@@ -61,4 +61,4 @@ Candidate tools:
 - `MOUSE_CONTRACT_CASES` is the executable trace source for explorer and tests, backed by independent structural and representative-trace assertions.
 - Topmost reverse-paint-order target selection, transition-before-move, same-target click identity, mutation postconditions, cursor parity, and root-coordinate conversion are approved.
 - TFC-03 implements safe ownership/mutation behavior; TFC-04 implements event order/targeting; TFC-05 completes geometry conformance.
-- The absent historical `crc-event.test.ts` is replaced by fill, stroke, and interaction-width entry cases that cover the one transition-order defect reported across its four failing geometry variants.
+- The absent historical `use-event.test.ts` is replaced by fill, stroke, and interaction-width entry cases that cover the one transition-order defect reported across its four failing geometry variants.

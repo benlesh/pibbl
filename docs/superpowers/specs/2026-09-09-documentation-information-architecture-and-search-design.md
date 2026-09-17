@@ -329,7 +329,7 @@ The approved chapter sequence is:
    fragments, and stable keys.
 5. **Build the editor chrome** — add toolbar and status regions with CRC layout
    components and distinguish allocation from drawing geometry.
-6. **Select nodes with state** — use `crcState`, click targets, visible
+6. **Select nodes with state** — use `useState`, click targets, visible
    selection, and frame-coalesced updates.
 7. **Drag nodes safely** — use pointer events, pointer capture, event
    coordinates, and immutable diagram state.
@@ -402,7 +402,7 @@ matches.
 ### Tokenization and ranking
 
 Tokenization preserves exact API spellings and also splits camel-case names so
-`crcWhenChanged` can match both its complete symbol and meaningful word parts.
+`useWhenChanged` can match both its complete symbol and meaningful word parts.
 It supports ordinary word matching and prefixes. Conservative fuzzy matching is
 enabled only when the query length is sufficient to avoid noisy short-query
 results.

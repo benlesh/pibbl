@@ -223,7 +223,7 @@ The recommended custom-target hook groups all handlers belonging to one
 conceptual target:
 
 ```ts
-const state = crcEventTarget(
+const state = useEventTarget(
   {
     onClick,
     onPointerDown,
@@ -245,7 +245,7 @@ identity plus the hook slot. `keyboardFocusable` and
 `keyboardNavigationBounds` are inert metadata unless the optional focus package
 is reachable in the application. They are described by the focus design.
 
-`crcEventTarget` returns a read-only render snapshot containing `isFocused` and
+`useEventTarget` returns a read-only render snapshot containing `isFocused` and
 `isFocusVisible`. It exposes no imperative `focus()` method. When focus
 management is absent, both values are `false`. This lets a custom target render
 focus visuals without a ref or a retained component object.
@@ -254,20 +254,20 @@ An ancestor that wants to participate in propagation without becoming a hit or
 focus target registers explicitly:
 
 ```ts
-crcEventListener({
+useEventListener({
   onPointerDownCapture,
   onClick,
 });
 ```
 
-`crcEventListener` attaches handlers to the current mounted component for
+`useEventListener` attaches handlers to the current mounted component for
 capture and bubble traversal. It has no geometry and cannot become a focus
 candidate.
 
-The existing singular `crcEvent` hook remains supported with its shipped
-mouse-only Canvas-observer and path-bound behavior. A pathless `crcEvent` is not
+The existing singular `useEvent` hook remains supported with its shipped
+mouse-only Canvas-observer and path-bound behavior. A pathless `useEvent` is not
 a public injection or observer surface for non-coordinate families. New
-components with several handlers should prefer one grouped `crcEventTarget`,
+components with several handlers should prefer one grouped `useEventTarget`,
 preventing several event hooks from accidentally representing several
 conceptual targets. Migration may implement the old hook through the same
 dispatcher, but must retain its documented public behavior.
@@ -312,7 +312,7 @@ Touch contacts retain the target chosen at `touchstart`, matching the DOM Touch
 Events target model. Keyboard, composition, editing, clipboard, and logical
 focus events use the current logical focus target when the focus manager is
 installed. Without focus/input integration they are targetless: the only
-explicit-target transport is internal, and the public pathless `crcEvent`
+explicit-target transport is internal, and the public pathless `useEvent`
 observer remains mouse-only.
 
 Drag/drop uses current coordinate hit testing and path-difference boundaries.
@@ -492,7 +492,7 @@ phase, rather than once for an entire native-event sequence.
 Until this design is implemented, the current mouse contracts remain
 authoritative. The new dispatcher preserves topmost targeting, transformed and
 clipped geometry, layer-wide paint order, root-logical coordinates, exact
-resource cleanup, and mouse-only Canvas-wide `crcEvent` observers.
+resource cleanup, and mouse-only Canvas-wide `useEvent` observers.
 
 DOM alignment intentionally corrects two limitations of the shipped
 mouse-only model:

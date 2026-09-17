@@ -146,7 +146,7 @@ milestone delivery, and isolated error handling.
 
 ## CRCRef
 
-`CRCRef<T>` is the stable mutable `{ current }` object returned by `crcRef`.
+`CRCRef<T>` is the stable mutable `{ current }` object returned by `useRef`.
 Writing `current` does not schedule rendering and its lifetime is one component
 identity.
 
@@ -184,7 +184,7 @@ duration, equality, optional initial value, easing, and interpolation.
 ## RenderingContext2D
 
 `RenderingContext2D` is the 2D-context union for the supported Canvas hosts.
-`crcCanvasContext()` exposes it only while a CRC component is rendering.
+`useCanvasContext()` exposes it only while a CRC component is rendering.
 
 ## Signal
 
@@ -201,7 +201,7 @@ duration, equality, optional initial value, easing, and interpolation.
 
 ## StateUpdater
 
-`StateUpdater<T>` is the setter returned by `crcState`: it accepts a next value
+`StateUpdater<T>` is the setter returned by `useState`: it accepts a next value
 or updater function. A valid update schedules CRC's coalesced animation-frame
 render; stale setters safely do nothing after teardown.
 

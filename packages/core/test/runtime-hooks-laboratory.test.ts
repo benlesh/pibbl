@@ -66,10 +66,10 @@ describe('shared runtime and hooks laboratory', () => {
       'packages/scenarios/src/runtime-hooks.example.tsx',
     );
     expect(runtimeHooksScenarioEntry.metadata.knownLimitations.join(' ')).toContain(
-      'crcEvent',
+      'useEvent',
     );
     expect(runtimeHooksScenarioEntry.metadata.knownLimitations.join(' ')).toContain(
-      'crcCursor',
+      'useCursor',
     );
 
     const { canvas, controller, definition } = await mountLab();

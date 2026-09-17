@@ -51,10 +51,10 @@ the original brand, component type, props, key, compiler source metadata,
 policy metadata, and identity hint while translating the child's allocation.
 Keyed children survive reflow; unkeyed same-type children retain
 occurrence-order identity, and keyed siblings do not consume unkeyed occurrence
-slots. A placed child's `crcLayoutBox()` is the stable, readonly local box
+slots. A placed child's `useLayoutBox()` is the stable, readonly local box
 `{ x: 0, y: 0, width, height }`; reading it never schedules an update. Plain
 component props retain their exact specified style; the finite used allocation
-is exposed separately through `crcLayoutBox()`.
+is exposed separately through `useLayoutBox()`.
 
 Percentages resolve once against the containing content allocation, not again
 against the child's final local allocation. The mounted logical viewport from

@@ -1,6 +1,6 @@
-import { crc, crcState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
 function RectangleStudy() {
-  const [hovered, setHovered] = crcState(false);
+  const [hovered, setHovered] = useState(false);
   return [
     <Rectangle
       style={{

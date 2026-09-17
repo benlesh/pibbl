@@ -250,22 +250,22 @@ export type {
   Size,
 } from './lib/layout/types.js';
 // hooks
-export { crcCursor } from './lib/hooks/crc-cursor.js';
-export { crcCanvasContext } from './lib/hooks/crc-canvas-context.js';
-export { crcEvent } from './lib/hooks/crc-event.js';
-export { crcEventListener } from './lib/hooks/crc-event-listener.js';
-export { crcEventTarget } from './lib/hooks/crc-event-target.js';
-export { crcLinePath } from './lib/hooks/crc-line-path.js';
-export { crcLayoutBox } from './lib/hooks/crc-layout-box.js';
-export { crcMemo } from './lib/hooks/crc-memo.js';
-export { crcRectPath } from './lib/hooks/crc-rect-path.js';
-export { crcRef, type CRCRef } from './lib/hooks/crc-ref.js';
-export { crcPlayback } from './lib/hooks/crc-playback.js';
-export { crcTransition } from './lib/hooks/crc-transition.js';
-export { crcSignal } from './lib/hooks/crc-signal.js';
-export { crcState, type StateUpdater } from './lib/hooks/crc-state.js';
-export { crcSvgPath } from './lib/hooks/crc-svg-path.js';
-export { crcWhenChanged } from './lib/hooks/crc-when-changed.js';
+export { useCursor } from './lib/hooks/use-cursor.js';
+export { useCanvasContext } from './lib/hooks/use-canvas-context.js';
+export { useEvent } from './lib/hooks/use-event.js';
+export { useEventListener } from './lib/hooks/use-event-listener.js';
+export { useEventTarget } from './lib/hooks/use-event-target.js';
+export { useLinePath } from './lib/hooks/use-line-path.js';
+export { useLayoutBox } from './lib/hooks/use-layout-box.js';
+export { useMemo } from './lib/hooks/use-memo.js';
+export { useRectPath } from './lib/hooks/use-rect-path.js';
+export { useRef, type CRCRef } from './lib/hooks/use-ref.js';
+export { usePlayback } from './lib/hooks/use-playback.js';
+export { useTransition } from './lib/hooks/use-transition.js';
+export { useSignal } from './lib/hooks/use-signal.js';
+export { useState, type StateUpdater } from './lib/hooks/use-state.js';
+export { useSvgPath } from './lib/hooks/use-svg-path.js';
+export { useWhenChanged } from './lib/hooks/use-when-changed.js';
 export type {
   Canvas,
   CanvasMeasurementService,

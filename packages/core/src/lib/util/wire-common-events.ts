@@ -3,7 +3,7 @@ import type {
   CRCEventHandlers,
   CRCEventParticipationOptions,
 } from '../events/types.js';
-import { crcPaintTarget } from '../hooks/crc-paint-target.js';
+import { usePaintTarget } from '../hooks/use-paint-target.js';
 
 export function wireCommonEvents(
   props: CRCEventHandlers & CRCEventFocusOptions & CRCEventParticipationOptions,
@@ -13,7 +13,7 @@ export function wireCommonEvents(
   cursor: string | undefined,
   keyboardNavigationBounds?: CRCEventFocusOptions['keyboardNavigationBounds'],
 ): void {
-  crcPaintTarget(props, {
+  usePaintTarget(props, {
     path: path ?? new Path2D(),
     cursor,
     fill,

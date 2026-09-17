@@ -41,11 +41,11 @@ JSX runtime, state hook, or event system.
 ## Render a cube and sphere
 
 ```tsx
-import { Rectangle, Text, crc, crcState } from "@crc/core";
+import { Rectangle, Text, crc, useState } from "@crc/core";
 import { Cube, Group3D, Sphere, WebGLLayer } from "@crc/webgl";
 
 function Scene() {
-  const [selected, setSelected] = crcState("none");
+  const [selected, setSelected] = useState("none");
 
   return (
     <>
@@ -261,14 +261,14 @@ when upgrading a scene that expected passive paint to click through.
 
 ## Animate through the shared scheduler
 
-[`crcAnimationFrame`](#/api/hooks/crc-animation-frame) returns the current CRC
+[`useAnimationFrame`](#/api/hooks/use-animation-frame) returns the current CRC
 frame timestamp and keeps its component rendering while mounted:
 
 ```tsx
-import { Cube, Group3D, crcAnimationFrame } from "@crc/webgl";
+import { Cube, Group3D, useAnimationFrame } from "@crc/webgl";
 
 function Spinner() {
-  const timestamp = crcAnimationFrame();
+  const timestamp = useAnimationFrame();
   return (
     <Group3D style={{ rotationYDegrees: (timestamp / 30) % 360 }}>
       <Cube style={{ color: "#a78bfa", lit: false }} />

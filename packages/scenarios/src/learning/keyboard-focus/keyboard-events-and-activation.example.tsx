@@ -1,7 +1,7 @@
 import {
   crc,
-  crcEventTarget,
-  crcState,
+  useEventTarget,
+  useState,
   FocusManagement,
   Rectangle,
   Text,
@@ -16,11 +16,11 @@ function boxPath(x: number, y: number, width: number, height: number): Path2D {
   return path;
 }
 function KeyboardActivationLesson() {
-  const [events, setEvents] = crcState<readonly string[]>([]);
-  const [activation, setActivation] = crcState("No activation yet");
+  const [events, setEvents] = useState<readonly string[]>([]);
+  const [activation, setActivation] = useState("No activation yet");
   const record = (message: string) =>
     setEvents((current) => [...current.slice(-5), message]);
-  const snapshot: CRCEventTargetSnapshot = crcEventTarget(
+  const snapshot: CRCEventTargetSnapshot = useEventTarget(
     {
       onClick: (event: CRCLogicalMouseEvent) => {
         const source = event.sourceEvent

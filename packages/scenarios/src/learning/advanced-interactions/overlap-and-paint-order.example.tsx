@@ -1,6 +1,6 @@
-import { crc, crcState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
 function PaintOrderStudy() {
-  const [winner, setWinner] = crcState("none");
+  const [winner, setWinner] = useState("none");
   return [
     <Rectangle
       style={{

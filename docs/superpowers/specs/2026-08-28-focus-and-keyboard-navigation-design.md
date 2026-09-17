@@ -311,8 +311,8 @@ Focus visuals are deliberately separate from focus movement.
 The first delivery provides two familiar mechanisms:
 
 - logical `onFocus`, `onBlur`, `onFocusIn`, and `onFocusOut` handlers can update
-  ordinary `crcState`;
-- `crcEventTarget` returns `isFocused` and `isFocusVisible` render snapshots for
+  ordinary `useState`;
+- `useEventTarget` returns `isFocused` and `isFocusVisible` render snapshots for
   a custom target.
 
 The manager schedules a render on every logical focus transition. Pointer focus

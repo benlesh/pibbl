@@ -1,14 +1,14 @@
 import {
   Absolute,
   crc,
-  crcState,
+  useState,
   Overlay,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function AbsoluteOverlayStudy() {
-  const [active, setActive] = crcState(false);
+  const [active, setActive] = useState(false);
   return (
     <Absolute
       style={{

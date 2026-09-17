@@ -1,13 +1,13 @@
 import {
   crc,
-  crcState,
+  useState,
   Line,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function HitAreaStudy() {
-  const [hits, setHits] = crcState(0);
+  const [hits, setHits] = useState(0);
   const route: [number, number][] = [
     [80, 290],
     [200, 118],

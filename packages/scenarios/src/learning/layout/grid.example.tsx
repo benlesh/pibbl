@@ -1,13 +1,13 @@
 import {
   crc,
-  crcState,
+  useState,
   Grid,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function GridStudy() {
-  const [active, setActive] = crcState(false);
+  const [active, setActive] = useState(false);
   return [
     <Rectangle
       style={{

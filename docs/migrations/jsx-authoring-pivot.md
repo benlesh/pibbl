@@ -150,8 +150,8 @@ function Card({ active, style }: CardProps) {
 
 Ordinary composites receive one props object. If a layout parent allocates the
 component, keep its specified style in props and read the finite local result
-with `crcLayoutBox()`. For custom immediate painting, use
-`crcCanvasContext()`. Reserve `definePrimitive()` for platform-level
+with `useLayoutBox()`. For custom immediate painting, use
+`useCanvasContext()`. Reserve `definePrimitive()` for platform-level
 normalization, resolution, and pure measurement.
 
 ## Text and children

@@ -457,7 +457,7 @@ future migration tooling should keep formatting scoped the same way.
 ### Adversarial review round 1 — text-local clip interaction
 
 Review found one Important paint/interaction mismatch. `fit: 'clip'` applied a
-raw Canvas clip, but `crcRegion` captured only CRC's shared clipping stack, so
+raw Canvas clip, but `useRegion` captured only CRC's shared clipping stack, so
 the measured glyph rectangles outside the visible text clip still received
 handlers and cursor ownership.
 
@@ -655,7 +655,7 @@ this milestone. P003-05 and P003-06 are done; P003-07 is the sole next step.
   contextual overflow-safe diagnostics. The final Task 7 review was clean.
 - P003-08 added specified/normalized/resolved style capabilities, intrinsic-root
   and nested containing contexts, stable placement identity hints,
-  `crcLayoutBox`, and finite dispatch before Canvas callbacks. Review fixes
+  `useLayoutBox`, and finite dispatch before Canvas callbacks. Review fixes
   covered percentage basis, line endpoint vocabulary, and conservative resolved
   schema/runtime validation; the final review was clean.
 - P003-09 added public absolute and overlay contexts with normalized direct-child
@@ -760,7 +760,7 @@ P003-12 are done; P003-13 is the sole next step.
   proves clipped paint and hit geometry plus topmost selection, preserves keyed
   hook state across reflow, composes measured text and an explicitly sized
   image, and reports exact local boxes of 432 × 420 and 288 × 360 through
-  `crcLayoutBox`.
+  `useLayoutBox`.
 - Replaced the Studio's obsolete visual-prop declarations with the current
   style, length, box, layout-item, layout-component, measurement, and
   observation surface. The strict consumer now covers positive and negative

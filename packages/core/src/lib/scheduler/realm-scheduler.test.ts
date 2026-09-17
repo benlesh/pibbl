@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  crcPlayback,
+  usePlayback,
   defineAnimation,
   marker,
   sequence,
@@ -19,8 +19,8 @@ import {
   GLOBAL_STATE,
 } from '../global-state';
 import { mountCRC } from '../mount-crc';
-import { crcRef } from '../hooks/crc-ref';
-import { crcState, type StateUpdater } from '../hooks/crc-state';
+import { useRef } from '../hooks/use-ref';
+import { useState, type StateUpdater } from '../hooks/use-state';
 import {
   collectSignalReads,
   createSignalRenderConsumer,
@@ -560,7 +560,7 @@ describe('realm scheduler', () => {
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
     let independentRenders = 0;
     const Child = (_props: {}) => {
-      const ref = crcRef<string>();
+      const ref = useRef<string>();
       ref.current ??= 'acquired';
       if (shouldFail.get()) throw failure;
       return createElement(Rectangle, {
@@ -753,7 +753,7 @@ describe('realm scheduler', () => {
     getSignalNode(output).observers.add(observer);
     let playback!: CRCPlayback;
     const Root = (_props: {}) => {
-      playback = crcPlayback(sequence(
+      playback = usePlayback(sequence(
         track(output, defineAnimation({
           duration: 50,
           sample: ({ localTime }) => {
@@ -858,7 +858,7 @@ describe('realm scheduler', () => {
     const replacementRenders: string[] = [];
     let setState: StateUpdater<number> = () => {};
     const Stateful = (_props: {}) => {
-      const [value, updateState] = crcState(0);
+      const [value, updateState] = useState(0);
       setState = updateState;
       stateValues.push(value);
     };
@@ -1006,7 +1006,7 @@ describe('realm scheduler', () => {
     const values: number[] = [];
     let setState: StateUpdater<number> = () => {};
     const controller = crc(createCanvas(), createElement(() => {
-      const [value, updateState] = crcState(0);
+      const [value, updateState] = useState(0);
       setState = updateState;
       values.push(value);
     }, {}));

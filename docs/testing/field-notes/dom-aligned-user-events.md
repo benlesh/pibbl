@@ -69,7 +69,7 @@ Initial Task 10 GREEN results represented by commit `3d38c70`:
 
 ## Public package and Studio boundary
 
-The strict consumer now exercises `crcEventTarget`, `crcEventListener`, and
+The strict consumer now exercises `useEventTarget`, `useEventListener`, and
 pointer, mouse, touch, wheel, keyboard, focus, input/editing, composition,
 clipboard, and drag declarations from both `@crc/core` and
 `@crc/core/types`. The same source is compiled under Bundler and NodeNext

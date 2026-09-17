@@ -29,7 +29,7 @@ children and preserve source paint order.
 import {
   Flex,
   Rectangle,
-  crcLayoutBox,
+  useLayoutBox,
   type BoxStyle,
   type FlexItemStyle,
 } from "@crc/core";
@@ -40,7 +40,7 @@ interface TileProps {
 }
 
 function Tile({ color, style: _specifiedStyle }: TileProps) {
-  const allocation = crcLayoutBox();
+  const allocation = useLayoutBox();
   return (
     <Rectangle
       style={{
@@ -69,7 +69,7 @@ const row = (
 ```
 
 The `style` received by `Tile` is its specified author value. The finite local
-box calculated by the parent comes from `crcLayoutBox()`. Parent placement uses
+box calculated by the parent comes from `useLayoutBox()`. Parent placement uses
 `left`/`top`; drawing-local geometry uses `x`/`y`. `width` and `height` describe
 content boxes, padding is numeric, and `overflow: "clip"` clips both paint and
 target geometry without creating scrolling.
@@ -132,7 +132,7 @@ const clipped = (
 ```
 
 The captured clip geometry applies to hit testing as well as paint. Creators
-return fresh paths; call `crcMemo` in a component when the same creator path
+return fresh paths; call `useMemo` in a component when the same creator path
 needs stable identity across renders. CRC does not add a dedicated memo hook
 per shape.
 

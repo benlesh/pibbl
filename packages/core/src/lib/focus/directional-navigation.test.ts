@@ -3,7 +3,7 @@ import type { CRCEventTargetRegistration } from '../events/registrations';
 import type { CRCEventHandlers } from '../events/types';
 import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { crcEventTarget } from '../hooks/crc-event-target';
+import { useEventTarget } from '../hooks/use-event-target';
 import type { LayoutBox } from '../layout/types';
 import { mountCRC } from '../mount-crc';
 import type { CRCElement, CRCController } from '../types';
@@ -279,7 +279,7 @@ const Target = definePrimitive<TargetDefinition>(({
   handlers = { onClick: noop },
 }, _style, context) => {
   context.translate(x, y);
-  crcEventTarget(handlers, {
+  useEventTarget(handlers, {
     path: rectanglePath(0, 0, 10, 10),
     keyboardFocusable: true,
     keyboardNavigationBounds: bounds ?? undefined,

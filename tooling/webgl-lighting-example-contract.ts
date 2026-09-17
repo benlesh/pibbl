@@ -33,7 +33,7 @@ const requiredBaseFragments = [
   'normals: [',
   'indices: [',
   "type: 'perspective'",
-  'const orbit = crcOrbitCamera({',
+  'const orbit = useOrbitCamera({',
   'orbitPoint: [0, -0.25, 0]',
   'initialPosition: [5.8, 4.2, 7.8]',
   '<Group {...orbit.handlers}>',
@@ -81,7 +81,7 @@ export function validateWebGLLightingExampleSources(
     requireCount(normalizedSource, sharedBaseEnd, 1, label);
     requireCount(normalizedSource, "from '@crc/core'", 1, label);
     requireCount(normalizedSource, "from '@crc/webgl'", 1, label);
-    requireCount(normalizedSource, 'crcOrbitCamera({', 1, label);
+    requireCount(normalizedSource, 'useOrbitCamera({', 1, label);
     requireCount(normalizedSource, '<Group {...orbit.handlers}>', 1, label);
     requireCount(
       normalizedSource,

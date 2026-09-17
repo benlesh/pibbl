@@ -280,7 +280,7 @@ const CONTRACT_CASES = [
   {
     id: 'root-event-no-path',
     title: 'Canvas-wide observer without a path',
-    gesture: 'Move over Canvas background while a pathless crcEvent observer is registered.',
+    gesture: 'Move over Canvas background while a pathless useEvent observer is registered.',
     nativeTrace: null,
     crcTrace: [event('mousemove', 'canvas-wide-observer')],
     ordering: FIXED_ORDERING,

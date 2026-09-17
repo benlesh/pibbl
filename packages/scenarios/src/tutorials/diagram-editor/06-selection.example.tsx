@@ -1,8 +1,8 @@
 import {
   Absolute,
   crc,
-  crcLayoutBox,
-  crcState,
+  useLayoutBox,
+  useState,
   Fragment,
   Group,
   Path,
@@ -211,7 +211,7 @@ function Connection({ edge }: Readonly<{ edge: DiagramEdge }>): CRCNode {
 }
 
 function Toolbar({ style: _specifiedStyle }: RegionProps): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   return [
     <Rectangle
       style={{ width: box.width, height: box.height, fill: "#fffdf6" }}
@@ -263,7 +263,7 @@ function Workspace({
   onSelect,
   onClearSelection,
 }: WorkspaceProps): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   return [
     <Rectangle
       onClick={onClearSelection}
@@ -289,7 +289,7 @@ function StatusBar({
   style: _specifiedStyle,
   selectedNode,
 }: RegionProps & Readonly<{ selectedNode: DiagramNode | undefined }>): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   const status = selectedNode
     ? `SELECTED · ${selectedNode.title}`
     : "NO SELECTION";
@@ -319,7 +319,7 @@ function StatusBar({
 }
 
 function DiagramEditor(): CRCNode {
-  const [selectedNodeId, setSelectedNodeId] = crcState<NodeId | null>("sketch");
+  const [selectedNodeId, setSelectedNodeId] = useState<NodeId | null>("sketch");
   const selectedNode = INITIAL_NODES.find((node) => node.id === selectedNodeId);
   return (
     <Absolute style={{ width: 960, height: 600 }}>

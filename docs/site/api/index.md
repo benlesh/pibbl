@@ -38,7 +38,7 @@ fragments are transparent; a keyed fragment creates an identity scope.
   focus policy. They are alphabetized in the sidebar.
 - [Functions](#/api/functions/crc) mount scenes, build paths, measure, and
   resolve the public style/layout helpers.
-- [Hooks](#/api/hooks/crc-canvas-context) are render-only APIs for state,
+- [Hooks](#/api/hooks/use-canvas-context) are render-only APIs for state,
   lifecycle, paths, interaction, and allocated layout.
 
 Type contracts are grouped by domain in the API sidebar. They describe the
@@ -58,8 +58,8 @@ by these runtime values.
 [`WebGLBackground`](#/api/components/webgl-background).
 [`createWebGLGeometry`](#/api/functions/create-webgl-geometry) builds immutable
 triangle descriptors for `Mesh`, the custom-shape extension path;
-[`crcAnimationFrame`](#/api/hooks/crc-animation-frame) uses the shared
-scheduler, and [`crcOrbitCamera`](#/api/hooks/crc-orbit-camera) supplies stable
+[`useAnimationFrame`](#/api/hooks/use-animation-frame) uses the shared
+scheduler, and [`useOrbitCamera`](#/api/hooks/use-orbit-camera) supplies stable
 drag-orbit and wheel-zoom handlers. A layer's children declare one frame-local
 scene that composes and settles before shadow-depth passes and color queues run;
 one transferred bitmap plus matched pick/focus metadata commits only after the
@@ -69,7 +69,7 @@ types](#/api/types/webgl).
 ## Particle effects
 
 `@crc/particles` adds [`Particles2D`](#/api/components/particles-2d),
-[`crcParticleSystem`](#/api/hooks/crc-particle-system),
+[`useParticleSystem`](#/api/hooks/use-particle-system),
 [`defineParticleEffect2D`](#/api/functions/define-particle-effect-2d), and the
 direct [particle descriptor functions](#/api/functions/particle-descriptors).
 `@crc/particles/webgl` adds

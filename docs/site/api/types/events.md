@@ -108,7 +108,7 @@ focus behavior, and optional navigation bounds for a logical target.
 ## CRCEventTargetSnapshot
 
 `CRCEventTargetSnapshot` exposes the current logical focus state returned by
-`crcEventTarget` during render.
+`useEventTarget` during render.
 
 ## CRCEventType
 

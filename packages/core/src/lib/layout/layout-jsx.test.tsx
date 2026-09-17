@@ -9,9 +9,9 @@ import {
   Rectangle,
   Text,
   crc,
-  crcCanvasContext,
-  crcLayoutBox,
-  crcMemo,
+  useCanvasContext,
+  useLayoutBox,
+  useMemo,
   definePrimitive,
   measureElement,
   type BoxStyle,
@@ -46,9 +46,9 @@ interface CardProps {
 }
 
 function Card(props: CardProps): CRCNode {
-  const box = crcLayoutBox();
-  const mount = crcMemo(() => ++props.capture.mounts, []);
-  const transform = crcCanvasContext().getTransform();
+  const box = useLayoutBox();
+  const mount = useMemo(() => ++props.capture.mounts, []);
+  const transform = useCanvasContext().getTransform();
   props.capture.observations.set(props.name, {
     box,
     mount,
@@ -422,7 +422,7 @@ function renderMeasuredProbe(
   props: Readonly<MeasuredProbeProps>,
 ): CRCNode {
   props.capture.renders++;
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   props.capture.box = box;
   return <Rectangle style={{ width: box.width, height: box.height, fill: '#2563eb' }} />;
 }

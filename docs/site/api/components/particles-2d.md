@@ -20,7 +20,7 @@ import { Particles2D } from "@crc/particles";
 `Particles2D` binds a 2D effect or an explicitly owned particle system to the
 Canvas renderer. Exactly one of `effect` or `system` is required. Effect mode
 can use `autoplay` and `seed`; system mode takes its lifecycle from
-[`crcParticleSystem`](#/api/hooks/crc-particle-system).
+[`useParticleSystem`](#/api/hooks/use-particle-system).
 
 ```tsx
 declare const sparks: import("@crc/particles").CRCParticleEffect2D;

@@ -193,7 +193,7 @@ event, pointer-participation, and focus props. Geometry-backed focus bounds are
 projected from the committed model/camera state unless a layer-local 2D override
 is supplied.
 
-`crcOrbitCamera()` is a component-owned pose hook, not another camera type. It
+`useOrbitCamera()` is a component-owned pose hook, not another camera type. It
 returns current `position` and `lookAt` snapshots plus a stable bundle of
 ordinary pointer/wheel handlers. The author passes those snapshots into the
 plain perspective descriptor and attaches the handlers to a mesh, a structural

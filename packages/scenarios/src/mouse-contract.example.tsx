@@ -2,7 +2,7 @@ import type { CRCLogicalMouseEvent } from '@crc/core';
 import type { MouseContractCase } from './mouse-contract';
 import {
   Clip,
-  crcEvent,
+  useEvent,
   Group,
   Layer,
   Line,
@@ -499,7 +499,7 @@ const MouseContractScene = ({
   recordTarget,
 }: MouseContractSceneProps) => {
   const record = recordTarget ?? (() => undefined);
-  crcEvent(
+  useEvent(
     'mousemove',
     contractCase.targeting.candidatePolicy === 'canvas-wide-observer'
       ? () => record('canvas-wide-observer')

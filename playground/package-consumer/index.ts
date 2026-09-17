@@ -127,7 +127,7 @@ import * as ParticleWebGLRuntime from '@crc/particles/webgl';
 import type * as ParticleWebGLTypes from '@crc/particles/webgl';
 import {
   Particles2D,
-  crcParticleSystem,
+  useParticleSystem,
   defineParticleEffect2D,
   particleChoice,
   particleCurve,
@@ -204,21 +204,21 @@ import {
 } from '@crc/core/internal';
 import {
   crc,
-  crcCursor,
-  crcEvent,
-  crcEventListener,
-  crcEventTarget,
-  crcLayoutBox,
-  crcLinePath,
-  crcMemo,
-  crcPlayback,
-  crcRectPath,
-  crcRef,
-  crcSignal,
-  crcState,
-  crcSvgPath,
-  crcTransition,
-  crcWhenChanged,
+  useCursor,
+  useEvent,
+  useEventListener,
+  useEventTarget,
+  useLayoutBox,
+  useLinePath,
+  useMemo,
+  usePlayback,
+  useRectPath,
+  useRef,
+  useSignal,
+  useState,
+  useSvgPath,
+  useTransition,
+  useWhenChanged,
   createElement,
   defineAnimation,
   definePrimitive,
@@ -264,7 +264,7 @@ import {
   parallel,
   repeat,
   sequence,
-  crcCanvasContext,
+  useCanvasContext,
   computed,
   isSignal,
   signal,
@@ -277,8 +277,8 @@ import {
 } from '@crc/core';
 import {
   AmbientLight,
-  crcAnimationFrame,
-  crcOrbitCamera,
+  useAnimationFrame,
+  useOrbitCamera,
   createWebGLGeometry,
   Cube,
   DirectionalLight,
@@ -391,7 +391,7 @@ const packedParticleEffect3D = defineParticleEffect3D({
 });
 
 function PackedParticleScene() {
-  const system = crcParticleSystem(packedParticleEffect2D, {
+  const system = useParticleSystem(packedParticleEffect2D, {
     autoplay: false,
     seed: 42,
   });
@@ -673,11 +673,11 @@ function PublicEventProbe(): CRCNode {
     keyboardFocusable: true,
     keyboardNavigationBounds: { x: 0, y: 0, width: 20, height: 20 },
   } satisfies CRCEventTargetOptions;
-  const snapshot: CRCEventTargetSnapshot = crcEventTarget(
+  const snapshot: CRCEventTargetSnapshot = useEventTarget(
     eventHandlers,
     options,
   );
-  crcEventListener({ onPointerDownCapture: pointerHandler });
+  useEventListener({ onPointerDownCapture: pointerHandler });
   const focused: boolean = snapshot.isFocused;
   void focused;
   return undefined;
@@ -1129,7 +1129,7 @@ createElement(Grid, {
   children: [],
 });
 
-const observedBox: Readonly<LayoutBox> = crcLayoutBox();
+const observedBox: Readonly<LayoutBox> = useLayoutBox();
 void observedBox;
 measureElement(createElement(Text, null, 'measure me'), {
   minWidth: 0, maxWidth: 200, minHeight: 0, maxHeight: 100,
@@ -1141,8 +1141,8 @@ createElement(Flex, { style: { ...flexStyle, flexDirection: 'row-reverse' } }, [
 createElement(Grid, { style: { ...gridStyle, gridTemplateColumns: ['auto'] } }, []);
 // @ts-expect-error lengths use finite numbers, decimal percentages, or auto
 const invalidLength: Length = 'wide';
-// @ts-expect-error crcLayoutBox accepts no arguments
-crcLayoutBox('parent');
+// @ts-expect-error useLayoutBox accepts no arguments
+useLayoutBox('parent');
 
 const subpathGroupStyle: CoreTypes.GStyle = groupStyle;
 const subpathCircleStyle: CoreTypes.CircleStyle = circleStyle;
@@ -1232,8 +1232,8 @@ export function disposeMount(controller: ReturnType<typeof crc>): void {
 declare const canvas: HTMLCanvasElement;
 
 function RuntimeProbe({ count }: { count: number; label?: string }): CRCNode {
-  const publicContext: RenderingContext2D = crcCanvasContext();
-  const reactiveCount = crcSignal(count);
+  const publicContext: RenderingContext2D = useCanvasContext();
+  const reactiveCount = useSignal(count);
   publicContext.fillRect(0, 0, reactiveCount.get(), reactiveCount.get());
   return [
     createElement(Rectangle, { style: { x: count, y: 0, width: 1, height: 1 } }),
@@ -1368,7 +1368,7 @@ crc(canvas, runtimeElement, { viewport: { width: '720', height: 420 } });
 // @ts-expect-error pixelRatio accepts only device or a number
 crc(canvas, runtimeElement, { pixelRatio: 'retina' });
 
-const [state, setState] = crcState({ count: 0 });
+const [state, setState] = useState({ count: 0 });
 const stateCount: number = state.count;
 const typedSetter: StateUpdater<{ count: number }> = setState;
 typedSetter({ count: stateCount + 1 });
@@ -1477,9 +1477,9 @@ const tweenTransitionOptions: CRCTweenTransitionOptions<{ x: number }> = {
 const springTransitionOptions: CRCSpringTransitionOptions = { type: 'spring' };
 
 function AnimationProbe(): CRCNode {
-  const player: CRCPlayback = crcPlayback(animationProgram, playbackOptions);
-  const tweened = crcTransition({ x: 10 }, tweenTransitionOptions);
-  const sprung = crcTransition(10, springTransitionOptions);
+  const player: CRCPlayback = usePlayback(animationProgram, playbackOptions);
+  const tweened = useTransition({ x: 10 }, tweenTransitionOptions);
+  const sprung = useTransition(10, springTransitionOptions);
   return createElement(
     Text,
     null,
@@ -1518,46 +1518,46 @@ void playbackStatus;
 void playbackEvent;
 void (null as unknown as FreePlay);
 
-const memoValue: Readonly<{ value: number }> = crcMemo(
+const memoValue: Readonly<{ value: number }> = useMemo(
   () => ({ value: 1 }),
   [stateCount],
 );
 memoValue.value;
 // @ts-expect-error memo dependencies are required by the public contract
-crcMemo(() => 1);
+useMemo(() => 1);
 
-const initializedRef: CRCRef<number> = crcRef(1);
-const emptyRef: CRCRef<string> = crcRef<string>();
+const initializedRef: CRCRef<number> = useRef(1);
+const emptyRef: CRCRef<string> = useRef<string>();
 initializedRef.current = 2;
 emptyRef.current = 'ready';
 // @ts-expect-error refs preserve their generic current-value type
 initializedRef.current = 'two';
 
-crcWhenChanged(() => {
+useWhenChanged(() => {
   return () => undefined;
 }, [stateCount]);
-crcWhenChanged(() => undefined);
+useWhenChanged(() => undefined);
 // @ts-expect-error change callbacks are synchronous and cannot return a Promise
-crcWhenChanged(async () => undefined, []);
+useWhenChanged(async () => undefined, []);
 
-const rectanglePath: Path2D = crcRectPath(0, 0, 10, 20, {
+const rectanglePath: Path2D = useRectPath(0, 0, 10, 20, {
   alignToPixelGrid: 'round',
   lineWidth: 1,
 });
-const linePath: Path2D = crcLinePath([[0, 0], [10, 10]], {
+const linePath: Path2D = useLinePath([[0, 0], [10, 10]], {
   closePath: true,
 });
-const parsedPath: Path2D = crcSvgPath('M 0 0 L 10 10');
+const parsedPath: Path2D = useSvgPath('M 0 0 L 10 10');
 rectanglePath.addPath(linePath);
 parsedPath.addPath(rectanglePath);
 // @ts-expect-error rectangle path geometry is numeric
-crcRectPath('0', 0, 10, 20);
+useRectPath('0', 0, 10, 20);
 // @ts-expect-error line coordinates are numeric tuples
-crcLinePath([['0', 0]]);
+useLinePath([['0', 0]]);
 // @ts-expect-error SVG path input is a string
-crcSvgPath(123);
+useSvgPath(123);
 
-crcEvent('click', (event: CRCLogicalMouseEvent) => {
+useEvent('click', (event: CRCLogicalMouseEvent) => {
   const x: number = event.x;
   const original: MouseEvent = event.originalEvent;
   void x;
@@ -1569,30 +1569,30 @@ const observer = (event: CRCMouseEvent) => {
   void x;
   void original;
 };
-crcEvent('mousemove', observer);
-crcEvent('mousemove', undefined);
-crcEvent('mousemove', event => {
+useEvent('mousemove', observer);
+useEvent('mousemove', undefined);
+useEvent('mousemove', event => {
   const x: number = event.x;
   void x;
-  // @ts-expect-error pathless crcEvent observers retain the legacy payload
+  // @ts-expect-error pathless useEvent observers retain the legacy payload
   event.preventDefault();
 });
 // @ts-expect-error event names are limited to the public CRC event registry
-crcEvent('pointerdown', () => undefined);
+useEvent('pointerdown', () => undefined);
 // @ts-expect-error CRC handlers receive a logical mouse facade, not PointerEvent
-crcEvent('click', (_event: PointerEvent) => undefined);
+useEvent('click', (_event: PointerEvent) => undefined);
 
-crcCursor({ style: 'crosshair' });
-crcCursor({
+useCursor({ style: 'crosshair' });
+useCursor({
   path: linePath,
   style: 'pointer',
   fill: false,
   lineInteractionWidth: 8,
 });
 // @ts-expect-error cursor path must be a Path2D
-crcCursor({ path: 'line', style: 'pointer' });
+useCursor({ path: 'line', style: 'pointer' });
 // @ts-expect-error cursor configuration has no unrelated fields
-crcCursor({ style: 'pointer', capture: true });
+useCursor({ style: 'pointer', capture: true });
 
 const consumerWebGLGeometryInput = {
   positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -1616,7 +1616,7 @@ const consumerLambertMaterial: CRCWebGLMaterial = {
 } satisfies CRCWebGLLambertMaterial;
 
 function AnimatedGeometryConsumer(): CRCNode {
-  const timestamp: number = crcAnimationFrame();
+  const timestamp: number = useAnimationFrame();
   return createElement(Mesh, {
     geometry: consumerWebGLGeometry,
     pointerEvents: 'none',
@@ -1636,7 +1636,7 @@ function OrbitingWebGLConsumer(): CRCNode {
     rotateSpeed: 0.8,
     zoomSpeed: 1.2,
   };
-  const orbit: CRCOrbitCameraResult = crcOrbitCamera(orbitOptions);
+  const orbit: CRCOrbitCameraResult = useOrbitCamera(orbitOptions);
   const handlers: CRCOrbitCameraHandlers = orbit.handlers;
   const camera: CRCWebGLPerspectiveCamera = {
     type: 'perspective',

@@ -21,7 +21,7 @@ import {
   FocusManagement,
   KeyboardNavigation,
   Rectangle,
-  crcEventTarget,
+  useEventTarget,
   type CRCNode,
 } from "@crc/core";
 
@@ -32,7 +32,7 @@ interface ButtonProps {
 function Button({ onActivate }: ButtonProps): CRCNode {
   const path = new Path2D();
   path.rect(20, 20, 140, 48);
-  const focus = crcEventTarget(
+  const focus = useEventTarget(
     {
       onClick: onActivate,
       onKeyDown: (event) => console.log(event.key),
@@ -84,7 +84,7 @@ geometry-backed WebGL components create a logical target by default, even when
 passive; `pointerEvents="none"` removes that drawing from hit and focus
 participation. Propagation-only structural listeners never become candidates.
 
-When `crcEventTarget()` supplies custom geometry and a later drawing primitive
+When `useEventTarget()` supplies custom geometry and a later drawing primitive
 only visualizes it, mark that drawing `pointerEvents="none"` as in the example.
 Otherwise the default-participating drawing would be the topmost logical target.
 
@@ -95,7 +95,7 @@ either end; it does not wrap. `KeyboardNavigation mode="directional"` ranks
 finite `keyboardNavigationBounds` for non-wrapping arrow movement. Nested
 directional boundaries contain their own edges.
 
-`crcEventTarget()` returns `{ isFocused, isFocusVisible }` for rendering. The
+`useEventTarget()` returns `{ isFocused, isFocusVisible }` for rendering. The
 snapshot is inert and false without active focus management. Logical focus
 state may invalidate a retained `Layer` containing the changed target.
 

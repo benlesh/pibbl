@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
 import { getCRCInstance } from '../global-state';
-import { crcLayoutBox } from '../hooks/crc-layout-box';
-import { crcRef } from '../hooks/crc-ref';
-import { crcState } from '../hooks/crc-state';
-import { crcWhenChanged } from '../hooks/crc-when-changed';
+import { useLayoutBox } from '../hooks/use-layout-box';
+import { useRef } from '../hooks/use-ref';
+import { useState } from '../hooks/use-state';
+import { useWhenChanged } from '../hooks/use-when-changed';
 import { componentTest } from '../test-utils/component-test';
 import type { Length } from '../style/types';
 import { Rectangle } from '../components/rect';
@@ -27,7 +27,7 @@ describe('layout placement', () => {
     const transforms: DOMMatrix[] = [];
     const onClick = vi.fn();
     const Probe = definePrimitive<{}>((_props: {}, _style, context) => {
-      boxes.push(crcLayoutBox());
+      boxes.push(useLayoutBox());
       transforms.push(context.getTransform());
       return createElement(Rectangle, {
         style: { width: 80, height: 20, fill: 'red' },
@@ -75,7 +75,7 @@ describe('layout placement', () => {
   it('preserves keyed state across reflow', async () => {
     const values: number[] = [];
     const Stateful = (_props: {}) => {
-      const [value, setValue] = crcState(0);
+      const [value, setValue] = useState(0);
       values.push(value);
       return createElement(Rectangle, {
         style: { width: 40, height: 20, fill: 'blue' },
@@ -103,7 +103,7 @@ describe('layout placement', () => {
     const observations = new Map<string, number>();
     let nextIdentity = 0;
     const A = ({ label }: { label: string }) => {
-      const identity = crcRef<number>();
+      const identity = useRef<number>();
       identity.current ??= ++nextIdentity;
       observations.set(label, identity.current);
     };
@@ -146,8 +146,8 @@ describe('layout placement', () => {
   it('cleans removed observation ownership and interaction exactly once', async () => {
     const cleanup = vi.fn();
     const Child = (_props: {}) => {
-      crcLayoutBox();
-      crcWhenChanged(() => cleanup, []);
+      useLayoutBox();
+      useWhenChanged(() => cleanup, []);
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: 'red' },
         onClick: () => undefined,
@@ -177,7 +177,7 @@ describe('resolved built-in styles', () => {
   it('resolves percentages once against the containing allocation after placement', async () => {
     const observedBoxes: Readonly<{ x: number; y: number; width: number; height: number }>[] = [];
     const Observe = ({ element }: { element: CRCElement<any> }) => {
-      observedBoxes.push(crcLayoutBox());
+      observedBoxes.push(useLayoutBox());
       return element;
     };
     const observedRect = createElement(Observe, {

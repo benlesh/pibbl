@@ -1,13 +1,13 @@
 import {
   crc,
-  crcState,
+  useState,
   Path,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function PathStudy() {
-  const [inside, setInside] = crcState(false);
+  const [inside, setInside] = useState(false);
   const star = new Path2D();
   const points = [
     [360, 66],

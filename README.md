@@ -35,14 +35,14 @@ Create a Canvas and a CRC scene:
 <!-- docs:complete-snippet:start readme-poster -->
 
 ```tsx
-import { Group, Rectangle, Text, crc, crcState, type CRCNode } from "@crc/core";
+import { Group, Rectangle, Text, crc, useState, type CRCNode } from "@crc/core";
 
 interface PosterProps {
   initialMessage: string;
 }
 
 function Poster({ initialMessage }: PosterProps): CRCNode {
-  const [message, setMessage] = crcState(initialMessage);
+  const [message, setMessage] = useState(initialMessage);
 
   return (
     <Group>
@@ -147,17 +147,17 @@ corepack pnpm@11.21.0 playground:built
 - Composition and layout: `Group`, `Clip`, `Layer`, `Absolute`, `Overlay`,
   `Flow`, `Flex`, `Grid`, and `measureElement`
 - Focus policies: `FocusManagement` and `KeyboardNavigation`
-- Hooks: `crcState`, `crcMemo`, `crcRef`, `crcWhenChanged`, `crcCanvasContext`,
-  `crcRectPath`, `crcLinePath`, `crcSvgPath`, `crcEvent`, `crcEventTarget`,
-  `crcEventListener`, `crcCursor`, and `crcLayoutBox`
+- Hooks: `useState`, `useMemo`, `useRef`, `useWhenChanged`, `useCanvasContext`,
+  `useRectPath`, `useLinePath`, `useSvgPath`, `useEvent`, `useEventTarget`,
+  `useEventListener`, `useCursor`, and `useLayoutBox`
 - Platform extension: `definePrimitive` plus style-resolution and pure
   measurement types
 - Optional WebGL2 islands from `@crc/webgl`: `WebGLLayer`, `Group3D`, `Mesh`,
   `Cube`, `Sphere`, five analytic lights, `WebGLBackground`,
-  `createWebGLGeometry`, `crcAnimationFrame`, `crcOrbitCamera`, and their public
+  `createWebGLGeometry`, `useAnimationFrame`, `useOrbitCamera`, and their public
   camera, orbit, geometry, material, shadow, transform, and component types
 - Optional particle effects from `@crc/particles`: `Particles2D`,
-  `crcParticleSystem`, immutable 2D definitions, and direct descriptor
+  `useParticleSystem`, immutable 2D definitions, and direct descriptor
   factories; `@crc/particles/webgl` adds `Particles3D` and immutable 3D
   definitions without making WebGL a dependency of root-only consumers
 - Compiler-only entries: `@crc/core/jsx-runtime` and

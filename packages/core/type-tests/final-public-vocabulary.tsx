@@ -4,22 +4,22 @@ import {
   computed,
   createElement,
   crc,
-  crcCanvasContext,
-  crcCursor,
-  crcEvent,
-  crcEventListener,
-  crcEventTarget,
-  crcLayoutBox,
-  crcLinePath,
-  crcMemo,
-  crcPlayback,
-  crcRectPath,
-  crcRef,
-  crcSignal,
-  crcState,
-  crcSvgPath,
-  crcTransition,
-  crcWhenChanged,
+  useCanvasContext,
+  useCursor,
+  useEvent,
+  useEventListener,
+  useEventTarget,
+  useLayoutBox,
+  useLinePath,
+  useMemo,
+  usePlayback,
+  useRectPath,
+  useRef,
+  useSignal,
+  useState,
+  useSvgPath,
+  useTransition,
+  useWhenChanged,
   definePrimitive,
   defineAnimation,
   easing,
@@ -90,22 +90,22 @@ const importedFinalVocabulary = {
   computed,
   createElement,
   crc,
-  crcCanvasContext,
-  crcCursor,
-  crcEvent,
-  crcEventListener,
-  crcEventTarget,
-  crcLayoutBox,
-  crcLinePath,
-  crcMemo,
-  crcPlayback,
-  crcRectPath,
-  crcRef,
-  crcSignal,
-  crcState,
-  crcSvgPath,
-  crcTransition,
-  crcWhenChanged,
+  useCanvasContext,
+  useCursor,
+  useEvent,
+  useEventListener,
+  useEventTarget,
+  useLayoutBox,
+  useLinePath,
+  useMemo,
+  usePlayback,
+  useRectPath,
+  useRef,
+  useSignal,
+  useState,
+  useSvgPath,
+  useTransition,
+  useWhenChanged,
   definePrimitive,
   defineAnimation,
   easing,
@@ -302,9 +302,9 @@ const tweenTransitionOptions: CRCTweenTransitionOptions<{ x: number }> = {
 const springTransitionOptions: CRCSpringTransitionOptions = { type: 'spring' };
 
 function AnimationHookScene(): CRCNode {
-  const player: CRCPlayback = crcPlayback(animationProgram, playbackOptions);
-  const tweened = crcTransition({ x: 10 }, tweenTransitionOptions);
-  const sprung = crcTransition(10, springTransitionOptions);
+  const player: CRCPlayback = usePlayback(animationProgram, playbackOptions);
+  const tweened = useTransition({ x: 10 }, tweenTransitionOptions);
+  const sprung = useTransition(10, springTransitionOptions);
   return <Text>{`${player.status.get()}:${tweened.get().x}:${sprung.get()}`}</Text>;
 }
 
@@ -331,7 +331,7 @@ if (isSignal(maybeSignal)) {
 }
 
 function SignalHookScene(): CRCNode {
-  const label = crcSignal('hook value');
+  const label = useSignal('hook value');
   return <Text>{label.get()}</Text>;
 }
 const signalHookComponent: CRCComponent<Record<string, never>> = SignalHookScene;

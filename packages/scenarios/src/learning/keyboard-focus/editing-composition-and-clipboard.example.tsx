@@ -1,7 +1,7 @@
 import {
   crc,
-  crcEventTarget,
-  crcState,
+  useEventTarget,
+  useState,
   FocusManagement,
   Rectangle,
   Text,
@@ -20,7 +20,7 @@ function EditingCompositionClipboardLesson({
 }: {
   readonly canvas: HTMLCanvasElement;
 }) {
-  const [events, setEvents] = crcState<readonly string[]>([]);
+  const [events, setEvents] = useState<readonly string[]>([]);
   const record = (message: string) =>
     setEvents((current) => [...current.slice(-7), message]);
   const dispatchSyntheticEditingSample = () => {
@@ -69,7 +69,7 @@ function EditingCompositionClipboardLesson({
     );
     canvas.dispatchEvent(new Event("selectionchange"));
   };
-  const snapshot = crcEventTarget(
+  const snapshot = useEventTarget(
     {
       onBeforeInput: (event: CRCInputEvent) =>
         record(`beforeinput ${event.inputType}: ${event.data ?? "null"}`),

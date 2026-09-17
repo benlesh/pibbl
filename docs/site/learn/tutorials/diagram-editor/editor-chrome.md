@@ -6,7 +6,7 @@ kind: tutorial
 slug: editor-chrome
 tutorial: diagram-editor
 order: 5
-keywords: [diagram editor, tutorial, absolute, layout, allocation, crcLayoutBox]
+keywords: [diagram editor, tutorial, absolute, layout, allocation, useLayoutBox]
 exampleSlug: diagram-editor-editor-chrome
 ---
 
@@ -25,7 +25,7 @@ As an exercise, change the three region heights while keeping their total at
 [`Absolute`](#/api/components/absolute) reads the specified style of each
 direct child and gives that child a finite allocation. `left` and `top` place
 the region; `width` and `height` define its local available box. The region
-component calls [`crcLayoutBox()`](#/api/hooks/crc-layout-box) during render to
+component calls [`useLayoutBox()`](#/api/hooks/use-layout-box) during render to
 read that resulting local allocation.
 
 ## Build the change
@@ -56,7 +56,7 @@ show the separate allocation and drawing vocabulary.
 ## What you learned
 
 Specified style communicates with a direct layout parent, while
-`crcLayoutBox()` reports the finite local drawing allocation. Keeping those
+`useLayoutBox()` reports the finite local drawing allocation. Keeping those
 roles separate makes each region reusable and avoids double-placement mistakes.
 The Reset view control is only paint in this chapter, so it cannot imply
 behavior before the editor owns a view transform.

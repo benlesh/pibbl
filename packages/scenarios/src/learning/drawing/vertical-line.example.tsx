@@ -1,13 +1,13 @@
 import {
   crc,
-  crcState,
+  useState,
   Rectangle,
   Text,
   VerticalLine,
   type CRCController,
 } from "@crc/core";
 function VerticalStudy() {
-  const [stripe, setStripe] = crcState(0);
+  const [stripe, setStripe] = useState(0);
   const colors = ["#1f4bd8", "#ff6b57", "#f7c948", "#74d3ae"];
   return [
     <Rectangle

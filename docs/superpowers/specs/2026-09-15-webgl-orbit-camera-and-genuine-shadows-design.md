@@ -10,10 +10,10 @@ Status: design and written specification approved on 2026-09-15.
 
 ## Summary
 
-CRC will add an explicit `crcOrbitCamera()` hook and genuine geometry-based
+CRC will add an explicit `useOrbitCamera()` hook and genuine geometry-based
 shadow maps to `@crc/webgl`.
 
-`crcOrbitCamera()` does not create a camera object or change the
+`useOrbitCamera()` does not create a camera object or change the
 `WebGLLayer.camera` contract. The hook owns spherical interaction state and
 returns current `position` and `lookAt` values plus a stable bundle of ordinary
 CRC event handlers. Authors attach those handlers to whichever CRC event
@@ -89,11 +89,11 @@ PBR, custom shaders, or a retained application scene graph.
 
 ### Selected: pose-producing orbit hook
 
-`crcOrbitCamera()` returns data required by the existing camera descriptor and
+`useOrbitCamera()` returns data required by the existing camera descriptor and
 the event handlers that update that data:
 
 ```tsx
-const orbit = crcOrbitCamera({
+const orbit = useOrbitCamera({
   orbitPoint: [0, 0.75, 0],
   initialPosition: [6, 4, 8],
   minDistance: 3,
@@ -199,7 +199,7 @@ export interface CRCOrbitCameraResult {
   readonly handlers: CRCOrbitCameraHandlers;
 }
 
-export function crcOrbitCamera(
+export function useOrbitCamera(
   options: CRCOrbitCameraOptions,
 ): CRCOrbitCameraResult;
 ```
@@ -471,7 +471,7 @@ adaptation because it preserves the selected algorithm.
 
 Every public lighting demonstration keeps the same camera framing, cube,
 sphere, custom-normal ground plane, base materials, and background. The shared
-example scene uses one `crcOrbitCamera()` call and one common viewport event
+example scene uses one `useOrbitCamera()` call and one common viewport event
 region so primary drag rotates and wheel input zooms in every example.
 
 Every direct-light and combined-light example visibly casts onto the ground
@@ -484,7 +484,7 @@ browser-visible vertical slice.
 Learn and API documentation will explicitly cover:
 
 - why the camera remains a plain descriptor;
-- why calling `crcOrbitCamera()` every component render is stable and cheap;
+- why calling `useOrbitCamera()` every component render is stable and cheap;
 - how to attach handlers to a mesh, a structural ancestor, or a viewport-sized
   target;
 - why a structural component alone does not create hit geometry;
@@ -532,7 +532,7 @@ verification budget.
 
 - `WebGLLayer` receives no controls property.
 - The perspective camera remains a plain data descriptor.
-- `crcOrbitCamera()` returns `{ position, lookAt, handlers }`.
+- `useOrbitCamera()` returns `{ position, lookAt, handlers }`.
 - Orbit handlers are ordinary, stable CRC event handlers attachable wherever
   the author chooses.
 - Shadows use `false | "low" | "medium" | "high"`; omission is `"medium"`.

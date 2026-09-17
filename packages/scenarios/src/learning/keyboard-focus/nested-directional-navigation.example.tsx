@@ -1,7 +1,7 @@
 import {
   crc,
-  crcEventTarget,
-  crcState,
+  useEventTarget,
+  useState,
   FocusManagement,
   KeyboardNavigation,
   Rectangle,
@@ -37,7 +37,7 @@ function NavigationTarget({
   x,
   y,
 }: NavigationTargetProps) {
-  const snapshot = crcEventTarget(
+  const snapshot = useEventTarget(
     {
       onClick: () => onInput("pointer"),
       onFocus: () => onFocusTarget(label, boundary),
@@ -217,7 +217,7 @@ interface LessonStatus {
   readonly input: string;
 }
 function NestedDirectionalNavigationLesson() {
-  const [status, setStatus] = crcState<LessonStatus>({
+  const [status, setStatus] = useState<LessonStatus>({
     boundary: "NONE",
     focused: "NONE",
     input: "Click or Tab",

@@ -13,7 +13,7 @@ keywords: [components, primitives, definePrimitive, canvas, measurement]
 Choose the smallest extension mechanism that fits the job:
 
 1. an ordinary function for composition;
-2. `crcCanvasContext()` for a simple custom painter;
+2. `useCanvasContext()` for a simple custom painter;
 3. `definePrimitive()` only for a platform component that needs style
    normalization, allocation-aware resolution, pure measurement, or custom
    layout capabilities.
@@ -48,14 +48,14 @@ establish render context.
 
 ## Direct Canvas painting
 
-`crcCanvasContext()` returns the current isolated Canvas 2D context during a
+`useCanvasContext()` returns the current isolated Canvas 2D context during a
 live render. It does not allocate a hook slot and does not schedule work. It is
 unavailable outside rendering and during pure measurement.
 
 ```tsx
 import {
-  crcCanvasContext,
-  crcLayoutBox,
+  useCanvasContext,
+  useLayoutBox,
   type BoxStyle,
   type StrokeStyle,
 } from "@crc/core";
@@ -66,8 +66,8 @@ interface SparklineProps {
 }
 
 function Sparkline({ points, style }: SparklineProps): void {
-  const context = crcCanvasContext();
-  const box = crcLayoutBox();
+  const context = useCanvasContext();
+  const box = useLayoutBox();
   if (points.length === 0) return;
 
   context.beginPath();

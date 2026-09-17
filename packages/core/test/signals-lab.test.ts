@@ -105,7 +105,7 @@ describe('first-class signal public scenarios', () => {
     expect(learning).toMatchObject({
       slug: 'signals',
       section: 'start',
-      api: ['signal', 'computed', 'crcSignal'],
+      api: ['signal', 'computed', 'useSignal'],
       source: { path: 'packages/scenarios/src/learning/start/signals.example.tsx' },
     });
     expect(learning && getLearningExampleRoute(learning)).toBe('#/examples/start/signals');

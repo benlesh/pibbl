@@ -1,7 +1,7 @@
-import { crc, crcState, Ellipse, Rectangle, type CRCController } from "@crc/core";
+import { crc, useState, Ellipse, Rectangle, type CRCController } from "@crc/core";
 
 function EllipseStudy() {
-  const [active, setActive] = crcState(false);
+  const [active, setActive] = useState(false);
 
   return [
     <Rectangle

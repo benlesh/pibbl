@@ -9,10 +9,10 @@ import { createSearchEngine } from "../src/search/search-engine";
 const bundle = buildSearchBundle({
   pages: [
     page("learn-state", "#/learn/guides/state", "Learn state", "learn", {
-      body: "Use crcState to keep local state in one component.",
+      body: "Use useState to keep local state in one component.",
     }),
-    page("api-state", "#/api/hooks/crc-state", "crcState", "api", {
-      symbols: ["crcState"],
+    page("api-state", "#/api/hooks/use-state", "useState", "api", {
+      symbols: ["useState"],
       body: "Creates state that survives scheduled renders.",
     }),
   ],
@@ -22,8 +22,8 @@ const bundle = buildSearchBundle({
       title: "Stateful rectangle",
       shortTitle: "Stateful rectangle",
       browseGroup: "drawing",
-      summary: "Change a Rectangle with crcState.",
-      api: ["Rectangle", "crcState"],
+      summary: "Change a Rectangle with useState.",
+      api: ["Rectangle", "useState"],
       objectives: ["Use local state"],
       apiNotes: ["State belongs to the owning component."],
     },
@@ -55,11 +55,11 @@ describe("browser documentation search engine", () => {
   it("uses the shared exact ranking and exposes kind counts before filtering", async () => {
     const engine = createSearchEngine(async () => bundle);
 
-    const all = await engine.search("crcState");
-    expect(all.results[0]?.url).toBe("#/api/hooks/crc-state");
+    const all = await engine.search("useState");
+    expect(all.results[0]?.url).toBe("#/api/hooks/use-state");
     expect(all.counts).toEqual({ learn: 1, api: 1, example: 1 });
 
-    const examples = await engine.search("crcState", ["example"]);
+    const examples = await engine.search("useState", ["example"]);
     expect(examples.results.map(({ kind }) => kind)).toEqual(["example"]);
     expect(examples.counts).toEqual({ learn: 1, api: 1, example: 1 });
   });

@@ -119,7 +119,7 @@ describe('first-class Canvas particle public scenarios', () => {
         'particleRange',
         'particleChoice',
         'particleCurve',
-        'crcParticleSystem',
+        'useParticleSystem',
         'Particles2D',
       ],
       source: {

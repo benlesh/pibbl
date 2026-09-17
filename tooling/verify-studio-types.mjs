@@ -577,18 +577,18 @@ import {
   Clip,
   computed,
   crc,
-  crcCanvasContext,
-  crcCursor,
-  crcEvent,
-  crcEventListener,
-  crcEventTarget,
-  crcLinePath,
-  crcMemo,
-  crcPlayback,
-  crcRectPath,
-  crcSignal,
-  crcTransition,
-  crcWhenChanged,
+  useCanvasContext,
+  useCursor,
+  useEvent,
+  useEventListener,
+  useEventTarget,
+  useLinePath,
+  useMemo,
+  usePlayback,
+  useRectPath,
+  useSignal,
+  useTransition,
+  useWhenChanged,
   createElement,
   defineAnimation,
   definePrimitive,
@@ -684,8 +684,8 @@ import { jsx, jsxs } from '@crc/core/jsx-runtime';
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import {
   AmbientLight,
-  crcAnimationFrame,
-  crcOrbitCamera,
+  useAnimationFrame,
+  useOrbitCamera,
   createWebGLGeometry,
   Cube,
   DirectionalLight,
@@ -746,7 +746,7 @@ type StudioSignatureParity = [
   >,
   Assert<Equal<PolygonStyle['cornerRadius'], Exclude<Length, 'auto'> | undefined>>,
   Assert<Equal<PolygonStyle['cornerRadii'], readonly (Exclude<Length, 'auto'> | null | undefined)[] | undefined>>,
-  Assert<Equal<typeof crcMemo, <T>(create: () => T, deps: any[]) => T>>,
+  Assert<Equal<typeof useMemo, <T>(create: () => T, deps: any[]) => T>>,
   Assert<Equal<
     typeof signal,
     <T>(initialValue: T, options?: SignalOptions<T>) => WritableSignal<T>
@@ -758,15 +758,15 @@ type StudioSignatureParity = [
   Assert<Equal<typeof untracked, <T>(callback: () => T) => T>>,
   Assert<Equal<typeof isSignal, (value: unknown) => value is Signal<unknown>>>,
   Assert<Equal<
-    typeof crcSignal,
+    typeof useSignal,
     <T>(initialValue: T, options?: SignalOptions<T>) => WritableSignal<T>
   >>,
   Assert<Equal<
-    typeof crcWhenChanged,
+    typeof useWhenChanged,
     (callback: () => (() => void) | void, deps?: any[]) => void
   >>,
   Assert<Equal<
-    typeof crcCursor,
+    typeof useCursor,
     (options: {
       path?: Path2D;
       style?: string;
@@ -775,14 +775,14 @@ type StudioSignatureParity = [
     }) => void
   >>,
   Assert<Equal<
-    typeof crcLinePath,
+    typeof useLinePath,
     (
       coords: [number, number][],
       config?: { closePath?: boolean },
     ) => Path2D
   >>,
   Assert<Equal<
-    typeof crcRectPath,
+    typeof useRectPath,
     (
       x: number,
       y: number,
@@ -839,7 +839,7 @@ function StudioWebGLScene(): CRCNode {
     rotateSpeed: 0.8,
     zoomSpeed: 1.2,
   };
-  const orbit: CRCOrbitCameraResult = crcOrbitCamera(orbitOptions);
+  const orbit: CRCOrbitCameraResult = useOrbitCamera(orbitOptions);
   const handlers: CRCOrbitCameraHandlers = orbit.handlers;
   const camera: CRCWebGLPerspectiveCamera = {
     type: 'perspective',
@@ -960,9 +960,9 @@ const filteredAmbientLight = <AmbientLight style={{ filter: { type: 'blur', radi
 // @ts-expect-error filters belong on WebGLLayer, never background declarations
 const filteredWebGLBackground = <WebGLBackground style={{ color: '#08111f', filter: { type: 'blur', radius: 2 } }} />;
 void [filteredCube, filteredAmbientLight, filteredWebGLBackground];
-void CRC_WEBGL_ROOT.crcAnimationFrame;
-void CRC_WEBGL_ROOT.crcOrbitCamera;
-void crcAnimationFrame;
+void CRC_WEBGL_ROOT.useAnimationFrame;
+void CRC_WEBGL_ROOT.useOrbitCamera;
+void useAnimationFrame;
 type StudioWebGLTypes = [
   AmbientLightProps,
   AmbientLightStyle,
@@ -1018,18 +1018,18 @@ studioComputed.update(value => value + 1);
 void studioUntracked;
 
 function StudioSignalHook(): CRCNode {
-  const value = crcSignal('hook value');
+  const value = useSignal('hook value');
   return <Text>{value.get()}</Text>;
 }
 void <StudioSignalHook />;
 
 function StudioAnimationHook(): CRCNode {
-  const x = crcSignal(0);
-  const alpha = crcTransition(1, {
+  const x = useSignal(0);
+  const alpha = useTransition(1, {
     type: 'tween',
     duration: 120,
   });
-  const sprung = crcTransition(20, { type: 'spring' });
+  const sprung = useTransition(20, { type: 'spring' });
   const tweened: CRCAnimationDefinition<number> = tween({
     to: 40,
     duration: 160,
@@ -1051,11 +1051,11 @@ function StudioAnimationHook(): CRCNode {
       read: state => state.value,
     })),
   );
-  const playback: CRCPlayback = crcPlayback(program);
+  const playback: CRCPlayback = usePlayback(program);
   const interpolatePoint: CRCInterpolator<{ x: number }> = (from, to, progress) => ({
     x: from.x + (to.x - from.x) * progress,
   });
-  void crcTransition({ x: 1 }, {
+  void useTransition({ x: 1 }, {
     type: 'tween',
     duration: 100,
     interpolate: interpolatePoint,
@@ -1166,13 +1166,13 @@ const structuralEventProps = (
 void structuralEventProps;
 
 function EventProbe(): CRCNode {
-  const snapshot: CRCEventTargetSnapshot = crcEventTarget(eventHandlers, {
+  const snapshot: CRCEventTargetSnapshot = useEventTarget(eventHandlers, {
     path: new Path2D(),
     fill: true,
   });
-  crcEventListener({ onPointerDownCapture: eventHandlers.onPointerDown });
+  useEventListener({ onPointerDownCapture: eventHandlers.onPointerDown });
   void snapshot.isFocused;
-  const context: RenderingContext2D = crcCanvasContext();
+  const context: RenderingContext2D = useCanvasContext();
   void context;
   return <Rectangle
     {...eventHandlers}
@@ -1218,17 +1218,17 @@ const readonlyLineCoordinates = [[0, 0], [40, 20]] as const;
 const readonlyLineStyle: LineStyle = { coords: readonlyLineCoordinates };
 void readonlyLineStyle;
 
-crcWhenChanged(() => undefined);
-crcCursor({});
-crcLinePath(mutableLineCoordinates, { closePath: true });
+useWhenChanged(() => undefined);
+useCursor({});
+useLinePath(mutableLineCoordinates, { closePath: true });
 // @ts-expect-error line-path configuration is an object, not a boolean flag
-crcLinePath(mutableLineCoordinates, true);
-crcRectPath(0, 0, 40, 20, {
+useLinePath(mutableLineCoordinates, true);
+useRectPath(0, 0, 40, 20, {
   alignToPixelGrid: 'round',
   lineWidth: 2,
 });
 // @ts-expect-error rectangle alignment and line width belong to the config object
-crcRectPath(0, 0, 40, 20, 'round', 2);
+useRectPath(0, 0, 40, 20, 'round', 2);
 
 function ValidDirectComponent(props: { label: string }): CRCNode {
   return <Text>{props.label}</Text>;
@@ -1340,10 +1340,10 @@ void invalidFocusPolicy;
 const logicalMouseHandler = (event: CRCLogicalMouseEvent) => {
   event.preventDefault();
 };
-crcEvent('click', logicalMouseHandler, new Path2D());
+useEvent('click', logicalMouseHandler, new Path2D());
 const canvasObserver = (event: CRCMouseEvent) => void event.x;
-crcEvent('mousemove', canvasObserver);
-crcEvent('mousemove', event => {
+useEvent('mousemove', canvasObserver);
+useEvent('mousemove', event => {
   // @ts-expect-error Canvas observers retain the shipped legacy payload
   event.preventDefault();
 });
@@ -1739,26 +1739,26 @@ try {
     'Wedge',
     'WebGLBackground',
     'WebGLLayer',
-    'crcAnimationFrame',
-    'crcOrbitCamera',
+    'useAnimationFrame',
+    'useOrbitCamera',
     'computed',
     'crc',
-    'crcCanvasContext',
-    'crcCursor',
-    'crcEvent',
-    'crcEventListener',
-    'crcEventTarget',
-    'crcLayoutBox',
-    'crcLinePath',
-    'crcMemo',
-    'crcPlayback',
-    'crcRectPath',
-    'crcRef',
-    'crcSignal',
-    'crcState',
-    'crcSvgPath',
-    'crcTransition',
-    'crcWhenChanged',
+    'useCanvasContext',
+    'useCursor',
+    'useEvent',
+    'useEventListener',
+    'useEventTarget',
+    'useLayoutBox',
+    'useLinePath',
+    'useMemo',
+    'usePlayback',
+    'useRectPath',
+    'useRef',
+    'useSignal',
+    'useState',
+    'useSvgPath',
+    'useTransition',
+    'useWhenChanged',
     'createArcPath',
     'createCirclePath',
     'createElement',
@@ -1786,7 +1786,7 @@ try {
     'parallel',
     'Particles2D',
     'Particles3D',
-    'crcParticleSystem',
+    'useParticleSystem',
     'defineParticleEffect2D',
     'defineParticleEffect3D',
     'particleChoice',

@@ -3,8 +3,8 @@ import { createElement } from '../element/create-element';
 import { Fragment } from '../element/fragment';
 import type { CRCEventHandlers } from '../events/types';
 import { getCRCInstance } from '../global-state';
-import { crcEventListener } from '../hooks/crc-event-listener';
-import { crcEventTarget } from '../hooks/crc-event-target';
+import { useEventListener } from '../hooks/use-event-listener';
+import { useEventTarget } from '../hooks/use-event-target';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCElement } from '../types';
 import { HorizontalLine } from './horizontal-line';
@@ -21,7 +21,7 @@ import type { RenderingContext2D } from '../types';
 import { Group } from './g';
 import { Clip } from './clip';
 import { Star } from './star';
-import { crcState } from '../hooks/crc-state';
+import { useState } from '../hooks/use-state';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -160,7 +160,7 @@ describe('built-in DOM-aligned event integration', () => {
       fill: 'blue',
     };
     const Scene = () => {
-      const [disabled, setDisabled] = crcState(false);
+      const [disabled, setDisabled] = useState(false);
       disableFront = () => setDisabled(true);
       return createElement(
         Fragment,
@@ -256,7 +256,7 @@ describe('built-in DOM-aligned event integration', () => {
         style: { width: 20, height: 20, fill: 'red' },
       });
       const ExplicitTarget = (props: CRCEventHandlers) => {
-        crcEventTarget(props, {
+        useEventTarget(props, {
           path: rectanglePath(0, 0, 20, 20),
           fill: true,
         });
@@ -288,7 +288,7 @@ describe('filtered Group event integration', () => {
         canvas: context.canvas,
         transform: context.getTransform(),
       });
-      crcEventTarget({ onClick }, { path, fill: true });
+      useEventTarget({ onClick }, { path, fill: true });
       context.fillStyle = 'red';
       context.fill(path);
     });
@@ -336,7 +336,7 @@ describe('layer event ancestry', () => {
   it('captures above a layer, targets inside it, and bubbles back out', async () => {
     const trace: string[] = [];
     const Parent = (_props: {}) => {
-      crcEventListener({
+      useEventListener({
         onClickCapture: () => trace.push('parent-capture'),
         onClick: () => trace.push('parent-bubble'),
       });

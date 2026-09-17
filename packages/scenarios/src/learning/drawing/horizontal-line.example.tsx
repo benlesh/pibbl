@@ -1,13 +1,13 @@
 import {
   crc,
-  crcState,
+  useState,
   HorizontalLine,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function HorizontalStudy() {
-  const [band, setBand] = crcState("none");
+  const [band, setBand] = useState("none");
   const rule = (y: number, color: string, name: string) => (
     <HorizontalLine
       style={{

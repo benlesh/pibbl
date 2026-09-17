@@ -69,8 +69,8 @@ The root package exports:
 - scene declarations: `AmbientLight`, `HemisphereLight`, `DirectionalLight`,
   `PointLight`, `SpotLight`, and `WebGLBackground`;
 - geometry and custom shapes: `createWebGLGeometry` with `Mesh`;
-- camera interaction and animation: `crcOrbitCamera` and
-  `crcAnimationFrame`;
+- camera interaction and animation: `useOrbitCamera` and
+  `useAnimationFrame`;
 - the public orbit-camera, perspective-camera, vector, geometry, Lambert
   material, shadow-quality, transform, and component prop/style types used by
   those values.
@@ -93,7 +93,7 @@ work. Ambient and hemisphere contributions are never shadowed. Directional
 and spot shadows render one depth view when invalidated; point shadows render
 six, and camera-only movement reuses valid shadow maps.
 
-`crcOrbitCamera` owns one mounted spherical camera pose and returns
+`useOrbitCamera` owns one mounted spherical camera pose and returns
 `position`, `lookAt`, and ordinary CRC pointer/wheel handlers. Attach those
 handlers to whichever CRC target should control the camera, then pass the two
 vectors into the layer's perspective-camera descriptor. `WebGLBackground`

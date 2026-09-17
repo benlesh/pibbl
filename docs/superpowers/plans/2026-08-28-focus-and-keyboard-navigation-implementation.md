@@ -180,7 +180,7 @@ for hover/move/wheel/cursor/drag-over/focus/capture-only handlers; explicit
 `keyboardFocusable: true/false`; source order; keyed reorder; ordinary rerender;
 reparenting; removal; failed-render rollback; and one-manager-per-root errors.
 
-Assert `crcEventTarget` snapshots are `{ isFocused: false,
+Assert `useEventTarget` snapshots are `{ isFocused: false,
 isFocusVisible: false }` without a manager and reflect manager state after a
 transition without exposing `focus()`.
 
@@ -402,7 +402,7 @@ compatibility mouse/touch focus transitions.
 - [ ] **Step 6: Run event, focus, cursor, and lifecycle tests**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/focus packages/core/src/lib/events packages/core/src/lib/hooks/crc-cursor.test.ts packages/core/test/lifecycle-ownership.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/focus packages/core/src/lib/events packages/core/src/lib/hooks/use-cursor.test.ts packages/core/test/lifecycle-ownership.test.ts --browser.headless --browser.ui=false
 ```
 
 Expected: PASS.
@@ -754,7 +754,7 @@ Expected: FAIL because the shared scenario is absent.
 - [ ] **Step 4: Implement the readable public example**
 
 Keep control-like helpers private to the example. They explicitly register
-their own rectangular path with `crcEventTarget`, use the returned `isFocused`
+their own rectangular path with `useEventTarget`, use the returned `isFocused`
 and `isFocusVisible` snapshots for high-contrast non-color-only visuals, and
 paint their own rect/text children. Do not export a button component or hoist
 child geometry.

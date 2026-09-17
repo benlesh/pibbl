@@ -157,7 +157,7 @@ renderer groups opaque objects, renders light-space shadow depth, and sorts
 transparent objects. Lighting, normals, material, emission, background, and
 shadow participation do not change projected bounds or directional ranking.
 
-`crcOrbitCamera()` is independent of focus and picking. Its handlers may sit on
+`useOrbitCamera()` is independent of focus and picking. Its handlers may sit on
 a focusable mesh or any ordinary listener ancestor, but the hook creates no
 candidate and camera motion does not move focus ownership. An explicit
 viewport-sized target is still required when empty viewport space should begin
@@ -182,7 +182,7 @@ single global source-order list across every boundary.
 
 ## Render snapshots and modality
 
-`crcEventTarget` returns `{ isFocused, isFocusVisible }` for the current render.
+`useEventTarget` returns `{ isFocused, isFocusVisible }` for the current render.
 Without a manager both values are false. Pointer focus normally sets only
 `isFocused`; Tab and successful arrow navigation set both. Enter or Space does
 not retroactively turn a pointer-established focus into focus-visible focus.
@@ -227,7 +227,7 @@ becomes eligible only with a successfully committed bitmap/pick generation.
 The shared `focus-and-keyboard-navigation` scenario demonstrates native DOM
 controls before and after the Canvas, two explicit top targets, twelve keyed
 row-major directional squares, and two explicit bottom targets. Its private
-controls each own their rectangular `crcEventTarget` registration and their
+controls each own their rectangular `useEventTarget` registration and their
 own visual children. They are example composition, not exported CRC widgets.
 
 The Studio's **Keyboard and focus** section separates that contract into five

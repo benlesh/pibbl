@@ -23,7 +23,7 @@
 
 **Next plan:** `docs/superpowers/plans/2026-09-09-first-class-animation-engine-implementation.md` depends on this plan's signal graph, staged commit transaction, centralized frame phases, and lifecycle seams.
 
-**Cross-plan order:** Complete this foundation before executing Task 4 or Task 11 of `docs/superpowers/plans/2026-09-09-webgl-islands-implementation.md`. Those WebGL tasks must extend this plan's existing friend entry and route `crcAnimationFrame` through the realm scheduler; they must not restore per-instance host-frame ownership.
+**Cross-plan order:** Complete this foundation before executing Task 4 or Task 11 of `docs/superpowers/plans/2026-09-09-webgl-islands-implementation.md`. Those WebGL tasks must extend this plan's existing friend entry and route `useAnimationFrame` through the realm scheduler; they must not restore per-instance host-frame ownership.
 
 ## Global Constraints
 
@@ -33,7 +33,7 @@
 - Keep signal reads explicit as `value.get()`. Do not make signals callable and do not interpret signal objects placed directly in `style`.
 - Keep signals mount-independent. A disposed consumer detaches its graph edges; disposal does not destroy a signal retained by application code.
 - Export no public `subscribe`, `effect`, watcher, resource, store/proxy, or `batch` API.
-- Reject signal writes while evaluating a computed callback or rendering a CRC component/primitive. Do not change the separate `crcState` setter contract.
+- Reject signal writes while evaluating a computed callback or rendering a CRC component/primitive. Do not change the separate `useState` setter contract.
 - Preserve lazy, memoized computed evaluation, dynamic dependencies, cached errors, and `Object.is` equality by default.
 - One JavaScript realm owns at most one pending CRC host animation frame. Top-level roots are render participants; Layer child instances never own a host frame.
 - Preserve latest-root coalescing, state scheduling, resize/density/image/focus/event requests, source paint order, root-logical events, identity, hook order, fail-closed render teardown, and current Canvas pixel behavior.
@@ -54,7 +54,7 @@
 - `packages/core/src/lib/scheduler/testing.ts`: source-only controlled driver, trace snapshots, and structural counters.
 - `packages/core/src/lib/scheduler/realm-scheduler.test.ts`: controlled multi-root and phase-order contract.
 - `packages/core/src/lib/signals/render-consumer.ts`: component/resource consumer ownership and revisioned invalidation adapters.
-- `packages/core/src/lib/hooks/crc-signal.ts`: one stable writable signal per mounted hook slot.
+- `packages/core/src/lib/hooks/use-signal.ts`: one stable writable signal per mounted hook slot.
 - `packages/core/src/lib/{mount-crc.ts,update.ts,execute-render.ts,render.ts,global-state.ts,types.ts}`: scheduler registration, render jobs, dependency collection, write guard, and teardown.
 - `packages/core/src/lib/components/layer.ts`: retained-child dirty-revision checks before cache reuse.
 - `packages/core/src/internal.ts`: version-coupled official-package friend entry for the scheduler/consumer slice only.
@@ -92,7 +92,7 @@ Every frame follows `Begin -> Advance -> Commit -> Plan -> Render -> Complete`, 
 
 - Produces public `SignalEquals<T>`, `SignalOptions<T>`, `Signal<T>`, `WritableSignal<T>`, `signal`, `untracked`, and `isSignal`.
 - Produces private `getSignalNode(value)` and a synchronous tracking/write-policy stack used by later tasks.
-- Does not yet produce `computed` or `crcSignal`.
+- Does not yet produce `computed` or `useSignal`.
 
 - [ ] **Step 1: Write failing public writable-signal tests**
 
@@ -426,7 +426,7 @@ git commit -m "feat(core): add signal consumers and commit batches"
 - Modify: `packages/core/src/lib/execute-render.ts`
 - Modify: `packages/core/src/lib/global-state.ts`
 - Modify: `packages/core/src/lib/types.ts`
-- Modify: `packages/core/src/lib/hooks/crc-state.test.ts`
+- Modify: `packages/core/src/lib/hooks/use-state.test.ts`
 - Modify: `packages/core/src/lib/components/img-async.test.ts`
 - Modify: `packages/core/src/lib/runtime-contract.test.ts`
 - Modify: `packages/core/test/event-performance.test.ts`
@@ -447,7 +447,7 @@ Run the focused current suites and record that they pass before production
 changes:
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/hooks/crc-state.test.ts packages/core/src/lib/components/img-async.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/hooks/use-state.test.ts packages/core/src/lib/components/img-async.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
 ```
 
 - [ ] **Step 2: Write failing one-realm-frame and stable-order tests**
@@ -547,7 +547,7 @@ Keep all existing pixel, lifecycle, event, image, and state assertions intact.
 - [ ] **Step 8: Run scheduler and regression suites**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/scheduler/realm-scheduler.test.ts packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/hooks/crc-state.test.ts packages/core/src/lib/components/img-async.test.ts packages/core/src/lib/components/layer.test.ts packages/core/test/event-performance.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/scheduler/realm-scheduler.test.ts packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/hooks/use-state.test.ts packages/core/src/lib/components/img-async.test.ts packages/core/src/lib/components/layer.test.ts packages/core/test/event-performance.test.ts --browser.headless --browser.ui=false
 ```
 
 Expected: one-frame structural tests and all existing selected contracts PASS.
@@ -555,16 +555,16 @@ Expected: one-frame structural tests and all existing selected contracts PASS.
 - [ ] **Step 9: Commit centralized scheduling**
 
 ```bash
-git add packages/core/src/lib/scheduler packages/core/src/lib/update.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/global-state.ts packages/core/src/lib/types.ts packages/core/src/lib/hooks/crc-state.test.ts packages/core/src/lib/components/img-async.test.ts packages/core/test/event-performance.test.ts
+git add packages/core/src/lib/scheduler packages/core/src/lib/update.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/global-state.ts packages/core/src/lib/types.ts packages/core/src/lib/hooks/use-state.test.ts packages/core/src/lib/components/img-async.test.ts packages/core/test/event-performance.test.ts
 git commit -m "refactor(core): centralize frame scheduling"
 ```
 
-### Task 5: Track component reads and add `crcSignal`
+### Task 5: Track component reads and add `useSignal`
 
 **Files:**
 
-- Create: `packages/core/src/lib/hooks/crc-signal.ts`
-- Create: `packages/core/src/lib/hooks/crc-signal.test.tsx`
+- Create: `packages/core/src/lib/hooks/use-signal.ts`
+- Create: `packages/core/src/lib/hooks/use-signal.test.tsx`
 - Modify: `packages/core/src/lib/render.ts`
 - Modify: `packages/core/src/lib/execute-render.ts`
 - Modify: `packages/core/src/lib/types.ts`
@@ -574,7 +574,7 @@ git commit -m "refactor(core): centralize frame scheduling"
 **Interfaces:**
 
 - Consumes: Task 3 renderer consumers and Task 4 `requestInstanceRender`.
-- Produces public `crcSignal(initialValue, options): WritableSignal<T>`.
+- Produces public `useSignal(initialValue, options): WritableSignal<T>`.
 - Gives every non-fragment `CRCComponentRefs` one exact signal consumer.
 
 - [ ] **Step 1: Write failing public render-invalidation tests**
@@ -608,20 +608,20 @@ and a stale detached signal write schedules nothing. Assert signal `set` and
 `update` throw from ordinary components, primitive style resolution, primitive
 render callbacks, and computed callbacks without changing values.
 
-- [ ] **Step 3: Write failing `crcSignal` hook tests**
+- [ ] **Step 3: Write failing `useSignal` hook tests**
 
 Assert one stable writable identity per hook slot, mount-only capture of initial
 value/options, normal hook-order diagnostics, usability after external
-retention, and no render work after owner removal. Add `crcSignal` to the shared
+retention, and no render work after owner removal. Add `useSignal` to the shared
 hook-misuse probe and require the standard hook-context error.
 
 - [ ] **Step 4: Run focused tests and confirm failures**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/crc-signal.test.tsx packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/lib/signals/render-consumer.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/use-signal.test.tsx packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/lib/signals/render-consumer.test.ts --browser.headless --browser.ui=false
 ```
 
-Expected: FAIL because components do not collect signals and `crcSignal` is
+Expected: FAIL because components do not collect signals and `useSignal` is
 missing.
 
 - [ ] **Step 5: Install one component consumer around the read phase**
@@ -640,11 +640,11 @@ consumers.
 - [ ] **Step 6: Guard the complete root render against signal writes**
 
 Invoke the existing root traversal as
-`withSignalWriteForbidden("CRC render", renderRoot)`. Keep `crcState` behavior
+`withSignalWriteForbidden("CRC render", renderRoot)`. Keep `useState` behavior
 unchanged. Ensure cleanup, error recovery, nested Layer rendering, and
 render-transaction `finally` paths restore the guard stack.
 
-- [ ] **Step 7: Implement `crcSignal` with normal hook ownership**
+- [ ] **Step 7: Implement `useSignal` with normal hook ownership**
 
 Use `useHookSlot("signal", () => signal(initialValue, options))`. Later renders
 return the slot value without reconfiguring equality or debug name. Component
@@ -654,7 +654,7 @@ it does not invalidate the retained signal object.
 - [ ] **Step 8: Run focused and broad render tests**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/crc-signal.test.tsx packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/component-dispatch.test.tsx packages/core/src/lib/filter/filter-integration.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/use-signal.test.tsx packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/component-dispatch.test.tsx packages/core/src/lib/filter/filter-integration.test.ts --browser.headless --browser.ui=false
 ```
 
 Expected: all selected suites PASS, including filter and component traversal
@@ -663,7 +663,7 @@ semantics.
 - [ ] **Step 9: Commit renderer signal tracking**
 
 ```bash
-git add packages/core/src/lib/hooks/crc-signal.ts packages/core/src/lib/hooks/crc-signal.test.tsx packages/core/src/lib/render.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/types.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/index.ts
+git add packages/core/src/lib/hooks/use-signal.ts packages/core/src/lib/hooks/use-signal.test.tsx packages/core/src/lib/render.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/types.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/index.ts
 git commit -m "feat(core): track component signal reads"
 ```
 
@@ -939,7 +939,7 @@ Expected: FAIL because the signal sources and catalog records do not exist.
 
 - [ ] **Step 3: Build the learning example around visible `.get()` reads**
 
-Create a module-level writable `x` and one component-local `crcSignal` for
+Create a module-level writable `x` and one component-local `useSignal` for
 color. The component reads both explicitly into supported Rectangle styles;
 clicking the rectangle uses `update` to move and recolor it. Include a computed
 label or position to demonstrate derivation without presenting effects or
@@ -1031,7 +1031,7 @@ computed(() => x.get() * 2).update((value) => value + 1);
 ```
 
 Update the runtime export inventory for `signal`, `computed`, `untracked`,
-`isSignal`, and `crcSignal`; verify `@crc/core/internal` independently rather
+`isSignal`, and `useSignal`; verify `@crc/core/internal` independently rather
 than adding its values to the root inventory.
 
 - [ ] **Step 2: Run package and Studio checks and confirm stale surfaces**
@@ -1059,7 +1059,7 @@ Document the complete signal API and semantics, explicit read examples,
 computed graph behavior, render write guard, one realm scheduler, six phases,
 root/Layer invalidation rules, scheduler error isolation, friend-entry boundary,
 and exact ownership rows. Update the API reference and lifecycle guide with
-`crcState` versus `crcSignal`; update Canvas surface scheduling language from
+`useState` versus `useSignal`; update Canvas surface scheduling language from
 per-root to realm-wide; update status/evidence in library status and `AGENTS.md`.
 
 Do not mark animation shipped. The design record remains approved, and the

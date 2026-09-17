@@ -35,7 +35,7 @@ import {
   getParticleSystemController,
   particleSystemControllerSnapshot,
 } from "./controller.js";
-import { crcParticleSystem } from "./hook.js";
+import { useParticleSystem } from "./hook.js";
 import { particleSystemOwnershipSnapshot } from "./ownership.js";
 
 let driver: ManualSchedulerDriver;
@@ -124,7 +124,7 @@ function mountSystem(
   let system!: CRCParticleSystem;
   let candidate: TestCandidate | undefined;
   const Root = (): CRCNode => {
-    system = crcParticleSystem(effect, options);
+    system = useParticleSystem(effect, options);
     useParticleSystemBinding({
       system,
       backend: "canvas",
@@ -160,7 +160,7 @@ function mountLedgerSystem(
   let system!: CRCParticleSystem;
   let candidate!: LedgerCandidate;
   const Root = (): CRCNode => {
-    system = crcParticleSystem(effect, options);
+    system = useParticleSystem(effect, options);
     const controller = getParticleSystemController(system);
     useParticleSystemBinding({
       system,
@@ -479,7 +479,7 @@ describe("scheduled particle system controller", () => {
     let failedCandidate!: TestCandidate;
     let replacementCandidate!: TestCandidate;
     const SystemOwner = (): CRCNode => {
-      system = crcParticleSystem(definition, {
+      system = useParticleSystem(definition, {
         onEvent: (event) => events.push(event as (typeof events)[number]),
       });
       return null;
@@ -554,7 +554,7 @@ describe("scheduled particle system controller", () => {
     let bound!: TestCandidate;
     let failRender = false;
     const SystemOwner = (): CRCNode => {
-      system = crcParticleSystem(definition, {
+      system = useParticleSystem(definition, {
         onEvent: (event) => events.push(event),
       });
       return null;
@@ -603,7 +603,7 @@ describe("scheduled particle system controller", () => {
     let renderCount = 0;
     const Root = (): CRCNode => {
       renderCount += 1;
-      system = crcParticleSystem(definition, {
+      system = useParticleSystem(definition, {
         onEvent(event) {
           order.push(`${event.type}@${renderCount}`);
         },
@@ -915,7 +915,7 @@ describe("scheduled particle system controller", () => {
     let candidate!: LedgerCandidate;
     let renderedParameters = compiled.parameterLayout.defaults;
     const Root = (): CRCNode => {
-      system = crcParticleSystem(effect, { autoplay: true });
+      system = useParticleSystem(effect, { autoplay: true });
       const controller = getParticleSystemController(system);
       renderedParameters = new Float64Array([launch.get()]);
       useParticleSystemBinding({

@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc.js';
 import { clearSharedState } from '../global-state.js';
-import { crcLayoutBox } from '../hooks/crc-layout-box.js';
-import { crcRef } from '../hooks/crc-ref.js';
+import { useLayoutBox } from '../hooks/use-layout-box.js';
+import { useRef } from '../hooks/use-ref.js';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
 
@@ -18,12 +18,12 @@ describe('root Canvas surface', () => {
   it('uses the initial Canvas dimensions as a fixed viewport rendered at the configured density', async () => {
     const canvas = createCanvas(200, 100, 300, 300);
     const observations: Array<{
-      box: ReturnType<typeof crcLayoutBox>;
+      box: ReturnType<typeof useLayoutBox>;
       transform: DOMMatrix;
     }> = [];
     const Probe = definePrimitive<{}>((_props: {}, _style, ctx) => {
       observations.push({
-        box: crcLayoutBox(),
+        box: useLayoutBox(),
         transform: ctx.getTransform(),
       });
     });
@@ -49,13 +49,13 @@ describe('root Canvas surface', () => {
   it('reflows a responsive viewport without remounting component state', async () => {
     const canvas = createCanvas(200, 100, 300, 150);
     const observations: Array<{
-      box: ReturnType<typeof crcLayoutBox>;
+      box: ReturnType<typeof useLayoutBox>;
       identity: object;
     }> = [];
     const Probe = (_props: {}) => {
       observations.push({
-        box: crcLayoutBox(),
-        identity: crcRef({}).current!,
+        box: useLayoutBox(),
+        identity: useRef({}).current!,
       });
     };
 

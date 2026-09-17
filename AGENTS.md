@@ -34,12 +34,12 @@ drawing primitives without React or generated DOM.
   renders shadow-depth passes followed by opaque and transparent color queues,
   and transactionally commits one Canvas bitmap. Its renderer owns WebGL
   contexts, resident GPU and shadow resources, bitmap generations, and
-  animation requests. `crcOrbitCamera` supplies an attach-anywhere public event
+  animation requests. `useOrbitCamera` supplies an attach-anywhere public event
   handler bundle while cameras remain plain perspective descriptors.
 - `@crc/particles` is implemented as immutable 2D/3D effect definitions,
   direct deterministic descriptor factories, component-owned systems, one
   fixed-capacity Canvas primitive, and stateless instanced WebGL submissions.
-- First-class `signal`, `computed`, `untracked`, `isSignal`, and `crcSignal`
+- First-class `signal`, `computed`, `untracked`, `isSignal`, and `useSignal`
   are implemented with explicit reads, dynamic synchronous dependency graphs,
   render/Advance write guards, observation-aware computed source-edge leases,
   and exact consumer ownership. Observed pending computed validation is live
@@ -134,8 +134,8 @@ either as the current result unless a fresh run reproduces it.
   primitive-render, and computed evaluation, including equality no-ops. Advance
   participants may mutate signals only through their scheduler staging batch.
 - Animation definitions and programs are nominal immutable values without a
-  clock. `track` binds definitions to writable signals; `crcPlayback` and
-  `crcTransition` create component-owned running state. Commands enter Begin,
+  clock. `track` binds definitions to writable signals; `usePlayback` and
+  `useTransition` create component-owned running state. Commands enter Begin,
   playback samples in Advance, outputs/status/time publish together in Commit,
   milestones deliver in Complete, and teardown releases all writer leases and
   state. There is no free `play(program)` API or independent animation loop.
@@ -168,7 +168,7 @@ either as the current result unless a fresh run reproduces it.
   default `"medium"` quality; directional and spot lights use one 2D depth
   view, while point lights use six cube faces. Camera-only changes reuse valid
   light-space depth generations.
-- `crcOrbitCamera` owns spherical pose state in one component hook slot and
+- `useOrbitCamera` owns spherical pose state in one component hook slot and
   returns stable ordinary pointer/wheel handlers. Authors attach those handlers
   to a mesh, structural ancestor, or explicit viewport-sized target; structural
   listeners never invent hit geometry.
@@ -195,7 +195,7 @@ either as the current result unless a fresh run reproduces it.
 ## Public surface and deliberate boundaries
 
 Public runtime/authoring: `crc`, `createElement`, `Fragment`,
-`definePrimitive`, `crcCanvasContext`, `signal`, `computed`, `untracked`, and
+`definePrimitive`, `useCanvasContext`, `signal`, `computed`, `untracked`, and
 `isSignal`; animation definitions/programs `easing`, `tween`, `keyframes`,
 `spring`, `defineAnimation`, `stepper`, `track`, `sequence`, `parallel`,
 `wait`, `marker`, and `repeat`; drawing and composition components
@@ -218,22 +218,22 @@ Filter configuration is public through `CRCFilter` and the ten named
 `CRCInvertFilter`, `CRCOpacityFilter`, `CRCSaturateFilter`, and
 `CRCSepiaFilter` descriptor types.
 
-Public hooks: `crcState`, `crcSignal`, `crcPlayback`, `crcTransition`, `crcMemo`,
-`crcRef`, `crcWhenChanged`, `crcRectPath`,
-`crcLinePath`, `crcSvgPath`, `crcEvent`, `crcEventTarget`,
-`crcEventListener`, `crcCursor`, and `crcLayoutBox`.
+Public hooks: `useState`, `useSignal`, `usePlayback`, `useTransition`, `useMemo`,
+`useRef`, `useWhenChanged`, `useRectPath`,
+`useLinePath`, `useSvgPath`, `useEvent`, `useEventTarget`,
+`useEventListener`, `useCursor`, and `useLayoutBox`.
 
 Public `@crc/webgl` surface: `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`,
 `AmbientLight`, `HemisphereLight`, `DirectionalLight`, `PointLight`,
-`SpotLight`, `WebGLBackground`, `createWebGLGeometry`, `crcAnimationFrame`, and
-`crcOrbitCamera`, plus their public camera, orbit, geometry, material, shadow,
+`SpotLight`, `WebGLBackground`, `createWebGLGeometry`, `useAnimationFrame`, and
+`useOrbitCamera`, plus their public camera, orbit, geometry, material, shadow,
 transform, and component prop/style types. `Mesh` plus immutable
 `createWebGLGeometry` descriptors is the application custom-shape path. The
 package has no second JSX runtime, element constructor, fragment, core
 hook/event vocabulary, public GL context, shader/draw callback, or analytic hit
 callback.
 
-Public `@crc/particles` surface: `Particles2D`, `crcParticleSystem`,
+Public `@crc/particles` surface: `Particles2D`, `useParticleSystem`,
 `defineParticleEffect2D`, `particleRange`, `particleInteger`,
 `particleChoice`, `particleParameter`, `particleCurve`, and
 `particleGradient`; `@crc/particles/webgl` adds `Particles3D` and
@@ -357,7 +357,7 @@ automatic JSX and equivalent `createElement` construction. It added the
 branded `CRCElement`/recursive `CRCNode` protocol, transparent and keyed
 fragments, arbitrary finite synchronous child structures, textual `Text`
 children, descriptive built-ins, transparent focus policy components,
-`crcCanvasContext`, and `definePrimitive`. It also added compiler subpaths,
+`useCanvasContext`, and `definePrimitive`. It also added compiler subpaths,
 mixed-runtime boundaries, actionable foreign-runtime diagnostics, TSX Studio
 execution, and a complete JSX/non-JSX learning catalog.
 
@@ -396,7 +396,7 @@ The implemented 2026-09-09 design added the optional `@crc/webgl` package.
 backend instance, transactional committed bitmap/pick pair, and context-owned
 GPU generations. `Group3D`, `Mesh`, `Cube`, and `Sphere` compose one depth-aware
 3D island; `createWebGLGeometry` and `Mesh` provide custom triangle geometry,
-and `crcAnimationFrame` uses the shared scheduler.
+and `useAnimationFrame` uses the shared scheduler.
 
 The implemented 2026-09-13 settled-scene design supersedes the 2026-09-09
 record's immediate child drawing, public context/custom-extension,
@@ -434,7 +434,7 @@ keeps the base color and emission without receiving lights. Light and emissive
 color alpha scale RGB contribution but never mesh output alpha.
 
 The implemented 2026-09-15 orbit/shadow design adds the component-owned
-`crcOrbitCamera` hook and renderer-owned genuine depth maps. Omitted
+`useOrbitCamera` hook and renderer-owned genuine depth maps. Omitted
 `WebGLLayer.style.shadows` means `"medium"`; direct lights and opaque meshes
 cast by default, and lit nonzero-alpha meshes receive by default. Directional
 and spot lights use one 2D shadow view; point lights use six cube faces. Each
@@ -455,7 +455,7 @@ Historical island intent lives in:
 
 The implemented 2026-09-10 signal work added writable and readonly signals,
 lazy computed values, untracked reads, nominal recognition, and the
-mount-owned `crcSignal` hook. Reads are explicit; component consumers replace
+mount-owned `useSignal` hook. Reads are explicit; component consumers replace
 their dependency edges after successful evaluation and detach them on
 removal, failure cleanup, or disposal. Computed graphs are synchronous,
 dynamic, cached, dependency-first, equality-aware, and cycle checked. Their
@@ -484,8 +484,8 @@ The implemented 2026-09-11 animation work adds numeric tweening, keyframes,
 analytic springs, custom seekable definitions, and fixed-step stateful
 steppers. Immutable programs compose `track`, `sequence`, `parallel`, `wait`,
 `marker`, and `repeat`; whole-run writer leases reject ambiguous writers unless
-replacement is explicit. `crcPlayback` owns stable controls/status/current time
-for one mounted hook slot, while `crcTransition` provides explicit target-driven
+replacement is explicit. `usePlayback` owns stable controls/status/current time
+for one mounted hook slot, while `useTransition` provides explicit target-driven
 spring and tween values. Ordinary styles still receive numbers through visible
 `.get()` calls.
 

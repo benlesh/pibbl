@@ -6,20 +6,20 @@ import {
   GLOBAL_STATE,
 } from '../global-state';
 import type { CRCMouseEventListener, RenderingContext2D } from '../types';
-import { crcCursor } from './crc-cursor';
-import { crcEvent } from './crc-event';
-import { crcEventListener } from './crc-event-listener';
-import { crcEventTarget } from './crc-event-target';
-import { crcLinePath } from './crc-line-path';
-import { crcMemo } from './crc-memo';
-import { crcPlayback } from './crc-playback';
-import { crcTransition } from './crc-transition';
-import { crcRectPath } from './crc-rect-path';
-import { crcRef } from './crc-ref';
-import { crcSignal } from './crc-signal';
-import { crcState, type StateUpdater } from './crc-state';
-import { crcSvgPath } from './crc-svg-path';
-import { crcWhenChanged } from './crc-when-changed';
+import { useCursor } from './use-cursor';
+import { useEvent } from './use-event';
+import { useEventListener } from './use-event-listener';
+import { useEventTarget } from './use-event-target';
+import { useLinePath } from './use-line-path';
+import { useMemo } from './use-memo';
+import { usePlayback } from './use-playback';
+import { useTransition } from './use-transition';
+import { useRectPath } from './use-rect-path';
+import { useRef } from './use-ref';
+import { useSignal } from './use-signal';
+import { useState, type StateUpdater } from './use-state';
+import { useSvgPath } from './use-svg-path';
+import { useWhenChanged } from './use-when-changed';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
 import { track } from '../animation/program';
@@ -35,7 +35,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('crcState', () => {
+describe('useState', () => {
   it('keeps one setter, batches functional updates, and resets on key replacement', async () => {
     const canvas = createCanvas();
     const renders: Array<{ key: string; setter: StateUpdater<number>; value: number }> = [];
@@ -43,7 +43,7 @@ describe('crcState', () => {
       label: string;
     }
     const StateProbe = (props: StateProbeProps) => {
-      const [value, setter] = crcState(0);
+      const [value, setter] = useState(0);
       renders.push({ key: props.label, setter, value });
     };
     const controller = crc(canvas, createElement(StateProbe, { key: 'first', label: 'first' }));
@@ -65,13 +65,13 @@ describe('crcState', () => {
   });
 });
 
-describe('crcMemo', () => {
+describe('useMemo', () => {
   it('reuses empty dependencies and recomputes for value or length changes', async () => {
     const canvas = createCanvas();
     const factory = vi.fn(() => ({ call: factory.mock.calls.length }));
     const values: object[] = [];
     const Probe = ({ deps }: { deps: unknown[] }) => {
-      values.push(crcMemo(factory, deps));
+      values.push(useMemo(factory, deps));
     };
     const controller = crc(canvas, createElement(Probe, { deps: [] }));
     await nextFrame();
@@ -92,7 +92,7 @@ describe('crcMemo', () => {
     const canvas = createCanvas();
     const factory = vi.fn(() => factory.mock.calls.length);
     const Probe = ({ dependency }: { dependency: number }) => {
-      crcMemo(factory, [dependency]);
+      useMemo(factory, [dependency]);
     };
     const controller = crc(canvas, createElement(Probe, { dependency: Number.NaN }));
     await nextFrame();
@@ -108,7 +108,7 @@ describe('crcMemo', () => {
   });
 });
 
-describe('crcRef', () => {
+describe('useRef', () => {
   it('uses the initializer only on mount and resets object identity with the key', async () => {
     const canvas = createCanvas();
     const refs: object[] = [];
@@ -117,7 +117,7 @@ describe('crcRef', () => {
       initial: number;
     }
     const RefProbe = ({ initial }: RefProbeProps) => {
-      const ref = crcRef(initial);
+      const ref = useRef(initial);
       refs.push(ref);
       values.push(ref.current!);
     };
@@ -135,12 +135,12 @@ describe('crcRef', () => {
   });
 });
 
-describe('crcWhenChanged', () => {
+describe('useWhenChanged', () => {
   it('runs without dependencies on every render and cleans up first', async () => {
     const canvas = createCanvas();
     const events: string[] = [];
     const Probe = ({ render }: { render: number }) => {
-      crcWhenChanged(() => {
+      useWhenChanged(() => {
         events.push(`setup:${render}`);
         return () => events.push(`cleanup:${render}`);
       });
@@ -166,7 +166,7 @@ describe('crcWhenChanged', () => {
     const cleanup = vi.fn();
     const error = new Error('setup failed');
     const Probe = ({ fail }: { fail: boolean }) => {
-      crcWhenChanged(() => {
+      useWhenChanged(() => {
         if (fail) throw error;
         return cleanup;
       }, [fail]);
@@ -192,8 +192,8 @@ describe('hook ordering and render errors', () => {
     const canvas = createCanvas();
     const cleanup = vi.fn();
     const Probe = ({ include }: { include: boolean }) => {
-      crcState(0);
-      if (include) crcWhenChanged(() => cleanup, []);
+      useState(0);
+      if (include) useWhenChanged(() => cleanup, []);
     };
     const controller = crc(canvas, createElement(Probe, { include: true }));
     frames.flush();
@@ -212,8 +212,8 @@ describe('hook ordering and render errors', () => {
     const frames = new ManualFrames();
     const canvas = createCanvas();
     const MoreProbe = ({ more }: { more: boolean }) => {
-      crcState(0);
-      if (more) crcRef(0);
+      useState(0);
+      if (more) useRef(0);
     };
     const controller = crc(canvas, createElement(MoreProbe, { more: false }));
     frames.flush();
@@ -224,11 +224,11 @@ describe('hook ordering and render errors', () => {
 
     const OrderProbe = ({ swapped }: { swapped: boolean }) => {
       if (swapped) {
-        crcRef(0);
-        crcState(0);
+        useRef(0);
+        useState(0);
       } else {
-        crcState(0);
-        crcRef(0);
+        useState(0);
+        useRef(0);
       }
     };
     crc(canvas, createElement(OrderProbe, { swapped: false }));
@@ -247,13 +247,13 @@ describe('hook ordering and render errors', () => {
     const renderError = new Error('render failed');
     const Broken = definePrimitive<{}>((_props: {}, _style, ctx: RenderingContext2D) => {
       ctx.translate(20, 30);
-      crcState(1);
+      useState(1);
       throw renderError;
     });
     const transforms: DOMMatrix[] = [];
     const Healthy = definePrimitive<{}>((_props: {}, _style, ctx: RenderingContext2D) => {
       transforms.push(ctx.getTransform());
-      crcState(2);
+      useState(2);
     });
     const controller = crc(canvas, createElement(Broken, {}));
     expect(() => frames.flush()).toThrow(renderError);
@@ -266,7 +266,7 @@ describe('hook ordering and render errors', () => {
 
     const memoError = new Error('memo failed');
     const MemoProbe = ({ fail }: { fail: boolean }) => {
-      crcMemo(() => {
+      useMemo(() => {
         if (fail) throw memoError;
         return 'ok';
       }, [fail]);
@@ -281,23 +281,23 @@ describe('hook ordering and render errors', () => {
 
   it('uses one intentional diagnostic for every public hook outside render', () => {
     const calls = [
-      () => crcState(0),
-      () => crcMemo(() => 1, []),
-      () => crcRef(0),
-      () => crcSignal(0),
-      () => crcPlayback(track(signal(0), tween({ to: 1, duration: 1 }))),
-      () => crcTransition(1, { type: 'tween', duration: 1 }),
-      () => crcWhenChanged(() => {}, []),
-      () => crcRectPath(0, 0, 1, 1),
-      () => crcLinePath([[0, 0], [1, 1]]),
-      () => crcSvgPath('M0 0'),
-      () => crcEvent('click', () => {}),
-      () => crcEventListener({ onClick: () => {} }),
-      () => crcEventTarget(
+      () => useState(0),
+      () => useMemo(() => 1, []),
+      () => useRef(0),
+      () => useSignal(0),
+      () => usePlayback(track(signal(0), tween({ to: 1, duration: 1 }))),
+      () => useTransition(1, { type: 'tween', duration: 1 }),
+      () => useWhenChanged(() => {}, []),
+      () => useRectPath(0, 0, 1, 1),
+      () => useLinePath([[0, 0], [1, 1]]),
+      () => useSvgPath('M0 0'),
+      () => useEvent('click', () => {}),
+      () => useEventListener({ onClick: () => {} }),
+      () => useEventTarget(
         { onClick: () => {} },
         { path: new Path2D() },
       ),
-      () => crcCursor({ style: 'pointer' }),
+      () => useCursor({ style: 'pointer' }),
     ];
 
     for (const call of calls) {
@@ -314,11 +314,11 @@ describe('hook ordering and render errors', () => {
     path.rect(0, 0, 20, 20);
     const Probe = ({ swapped }: { swapped: boolean }) => {
       if (swapped) {
-        crcEventListener({ onClick: () => undefined });
-        crcEventTarget({ onClick: () => undefined }, { path });
+        useEventListener({ onClick: () => undefined });
+        useEventTarget({ onClick: () => undefined }, { path });
       } else {
-        crcEventTarget({ onClick: () => undefined }, { path });
-        crcEventListener({ onClick: () => undefined });
+        useEventTarget({ onClick: () => undefined }, { path });
+        useEventListener({ onClick: () => undefined });
       }
     };
     const controller = crc(canvas, createElement(Probe, { swapped: false }));
@@ -340,8 +340,8 @@ describe('hook ordering and render errors', () => {
     const path = new Path2D();
     path.rect(0, 0, 20, 20);
     const Probe = ({ local }: { local: boolean }) => {
-      crcEvent('click', () => {}, local ? path : undefined, true);
-      crcCursor({ path: local ? path : undefined, style: 'pointer', fill: true });
+      useEvent('click', () => {}, local ? path : undefined, true);
+      useCursor({ path: local ? path : undefined, style: 'pointer', fill: true });
     };
     const controller = crc(canvas, createElement(Probe, { local: false }));
     await nextFrame();
@@ -364,7 +364,7 @@ describe('hook ordering and render errors', () => {
     controller.dispose();
   });
 
-  it('keeps one legacy target slot while replacing and removing a path-bound crcEvent handler', async () => {
+  it('keeps one legacy target slot while replacing and removing a path-bound useEvent handler', async () => {
     const canvas = createCanvas();
     const path = new Path2D();
     path.rect(0, 0, 20, 20);
@@ -374,7 +374,7 @@ describe('hook ordering and render errors', () => {
     }: {
       handler: CRCMouseEventListener | undefined;
     }) => {
-      crcEvent('mousemove', handler, path, true);
+      useEvent('mousemove', handler, path, true);
     };
     const firstHandler = () => trace.push('first');
     const controller = crc(canvas, createElement(Probe, { handler: firstHandler }));
@@ -401,7 +401,7 @@ describe('hook ordering and render errors', () => {
     controller.dispose();
   });
 
-  it('orders no-path crcEvent observers after targets and isolates replacement, removal, and throws', async () => {
+  it('orders no-path useEvent observers after targets and isolates replacement, removal, and throws', async () => {
     const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(
       () => undefined,
     );
@@ -416,16 +416,16 @@ describe('hook ordering and render errors', () => {
       first: boolean;
       generation: string;
     }) => {
-      crcEventTarget({
+      useEventTarget({
         onMouseMove: () => trace.push('target'),
       }, { path, fill: true });
-      crcEvent('mousemove', first ? () => {
+      useEvent('mousemove', first ? () => {
         trace.push(`first-${generation}`);
         if (generation === 'throw') {
           throw new Error('expected observer failure');
         }
       } : undefined);
-      crcEvent('mousemove', () => trace.push('second'));
+      useEvent('mousemove', () => trace.push('second'));
     };
     const controller = crc(canvas, createElement(Probe, { first: true, generation: 'throw' }));
     await nextFrame();

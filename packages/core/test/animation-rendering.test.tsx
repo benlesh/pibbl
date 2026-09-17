@@ -3,8 +3,8 @@ import {
   Group,
   Rectangle,
   crc,
-  crcPlayback,
-  crcTransition,
+  usePlayback,
+  useTransition,
   parallel,
   signal,
   track,
@@ -57,7 +57,7 @@ describe('animation rendering integration', () => {
     let secondPlayback!: CRCPlayback;
 
     function FirstRoot(): CRCNode {
-      firstPlayback = crcPlayback(parallel(
+      firstPlayback = usePlayback(parallel(
         track(x, tween({ from: 0, to: 20, duration: 100 })),
         track(opacity, tween({ from: 1, to: 0, duration: 100 })),
       ));
@@ -87,7 +87,7 @@ describe('animation rendering integration', () => {
     }
 
     function SecondRoot(): CRCNode {
-      secondPlayback = crcPlayback(
+      secondPlayback = usePlayback(
         track(y, tween({ from: 0, to: 10, duration: 100 })),
       );
       const currentX = x.get();
@@ -138,7 +138,7 @@ describe('animation rendering integration', () => {
     const workKey = {};
 
     function TransitionChild({ initial, target }: { initial: number; target: number }) {
-      output = crcTransition(target, {
+      output = useTransition(target, {
         type: 'tween',
         duration: 100,
         initial,
@@ -220,7 +220,7 @@ describe('animation rendering integration', () => {
     let playback!: CRCPlayback;
 
     function Scene(): CRCNode {
-      playback = crcPlayback(parallel(
+      playback = usePlayback(parallel(
         track(translateX, tween({ from: 0, to: 10, duration: 100 })),
         track(rectangleX, tween({ from: 0, to: 10, duration: 100 })),
         track(layoutLeft, tween({ from: 40, to: 60, duration: 100 })),

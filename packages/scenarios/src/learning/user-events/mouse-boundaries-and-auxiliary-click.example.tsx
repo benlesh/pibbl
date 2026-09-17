@@ -1,6 +1,6 @@
 import {
   crc,
-  crcState,
+  useState,
   Rectangle,
   Text,
   type CRCController,
@@ -10,9 +10,9 @@ function mouseSummary(event: CRCLogicalMouseEvent): string {
   return `${event.type} at ${Math.round(event.x)},${Math.round(event.y)} button=${event.button} buttons=${event.buttons} detail=${event.detail}`;
 }
 function MouseBoundariesAndAuxiliaryClickStudy() {
-  const [inside, setInside] = crcState(false);
-  const [auxiliaryCount, setAuxiliaryCount] = crcState(0);
-  const [trace, setTrace] = crcState<readonly string[]>([]);
+  const [inside, setInside] = useState(false);
+  const [auxiliaryCount, setAuxiliaryCount] = useState(0);
+  const [trace, setTrace] = useState<readonly string[]>([]);
   const record = (event: CRCLogicalMouseEvent) =>
     setTrace((current) => [...current.slice(-3), mouseSummary(event)]);
   return [

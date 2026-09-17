@@ -20,7 +20,7 @@ const fixtureDocument: LoadedPublicDoc = {
     <h1 id="manage-state-and-lifecycle">Manage state and lifecycle</h1>
     <p>Keep state local and clean up what you own.</p>
     <h2 id="component-identity">Component identity</h2>
-    <p><code>crcState</code> follows the component path.</p>
+    <p><code>useState</code> follows the component path.</p>
     <table><thead><tr><th>Concern</th><th>Rule</th></tr></thead><tbody><tr><td>Cleanup</td><td>Dispose owned resources</td></tr></tbody></table>
     <script>window.__untrusted = true</script>
   `,
@@ -49,7 +49,7 @@ const fixtureDocument: LoadedPublicDoc = {
         text: "Component identity",
       },
       plainText:
-        "crcState follows the component path.\nConcern\nRule\nCleanup\nDispose owned resources",
+        "useState follows the component path.\nConcern\nRule\nCleanup\nDispose owned resources",
     },
   ],
   internalLinks: [],
@@ -184,7 +184,7 @@ describe("Markdown documentation pages", () => {
       fixtureDocument.frontmatter.summary,
     );
     expect(container.querySelector("#component-identity")).not.toBeNull();
-    expect(container.querySelector("code")?.textContent).toBe("crcState");
+    expect(container.querySelector("code")?.textContent).toBe("useState");
     expect(container.querySelector("table tbody td")?.textContent).toBe(
       "Cleanup",
     );

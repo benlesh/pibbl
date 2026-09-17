@@ -137,7 +137,7 @@ import {
   Rectangle,
   Text,
   crc,
-  crcState,
+  useState,
   type CRCController,
   type CRCNode,
 } from "@crc/core";
@@ -147,7 +147,7 @@ interface PosterProps {
 }
 
 function Poster({ initialMessage }: PosterProps): CRCNode {
-  const [message, setMessage] = crcState(initialMessage);
+  const [message, setMessage] = useState(initialMessage);
 
   return (
     <Group>

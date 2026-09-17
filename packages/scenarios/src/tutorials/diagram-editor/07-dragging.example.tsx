@@ -1,9 +1,9 @@
 import {
   Absolute,
   crc,
-  crcLayoutBox,
-  crcRef,
-  crcState,
+  useLayoutBox,
+  useRef,
+  useState,
   Fragment,
   Group,
   Path,
@@ -247,7 +247,7 @@ function Connection({
 }
 
 function Toolbar({ style: _specifiedStyle }: RegionProps): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   return [
     <Rectangle
       style={{ width: box.width, height: box.height, fill: "#fffdf6" }}
@@ -300,7 +300,7 @@ function Workspace({
   onClearSelection,
   pointerHandlers,
 }: WorkspaceProps): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   return [
     <Rectangle
       onClick={onClearSelection}
@@ -326,7 +326,7 @@ function StatusBar({
   style: _specifiedStyle,
   selectedNode,
 }: RegionProps & Readonly<{ selectedNode: DiagramNode | undefined }>): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   const status = selectedNode
     ? `SELECTED · ${selectedNode.title}`
     : "NO SELECTION";
@@ -356,9 +356,9 @@ function StatusBar({
 }
 
 function DiagramEditor(): CRCNode {
-  const [nodes, setNodes] = crcState<readonly DiagramNode[]>(INITIAL_NODES);
-  const [selectedNodeId, setSelectedNodeId] = crcState<NodeId | null>("sketch");
-  const dragSession = crcRef<NodeDragSession | null>(null);
+  const [nodes, setNodes] = useState<readonly DiagramNode[]>(INITIAL_NODES);
+  const [selectedNodeId, setSelectedNodeId] = useState<NodeId | null>("sketch");
+  const dragSession = useRef<NodeDragSession | null>(null);
   const clearSession = (event: CRCPointerEvent): void => {
     if (dragSession.current?.pointerId === event.pointerId)
       dragSession.current = null;

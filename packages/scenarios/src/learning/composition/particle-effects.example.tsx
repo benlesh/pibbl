@@ -1,7 +1,7 @@
 import { Group, Rectangle, Text, crc, type CRCController } from '@crc/core';
 import {
   Particles2D,
-  crcParticleSystem,
+  useParticleSystem,
   defineParticleEffect2D,
   particleChoice,
   particleCurve,
@@ -80,7 +80,7 @@ const clickBurst = defineParticleEffect2D({
 });
 
 function ParticleEffectsStudy() {
-  const impact = crcParticleSystem(clickBurst, {
+  const impact = useParticleSystem(clickBurst, {
     autoplay: false,
     seed: 42,
     debugName: 'learning click particle system',

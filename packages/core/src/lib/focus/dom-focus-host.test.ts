@@ -4,7 +4,7 @@ import { Layer } from '../components/layer';
 import type { CRCEventHandlers } from '../events/types';
 import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { crcEventTarget } from '../hooks/crc-event-target';
+import { useEventTarget } from '../hooks/use-event-target';
 import { mountCRC } from '../mount-crc';
 import type { CRCElement, CRCController, CRCFocusPolicyBridge } from '../types';
 import type { CRCFocusManager } from './focus-manager';
@@ -651,7 +651,7 @@ interface TargetProps {
 }
 
 const Target = ({ handlers }: TargetProps) => {
-  crcEventTarget(handlers, {
+  useEventTarget(handlers, {
     path: rectanglePath(0, 0, 10, 10),
   });
 };

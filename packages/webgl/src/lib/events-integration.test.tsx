@@ -6,7 +6,7 @@ import {
   Layer,
   Rectangle,
   crc,
-  crcState,
+  useState,
   type CRCController,
   type CRCEventTarget,
   type CRCNode,
@@ -598,7 +598,7 @@ describe('WebGL focus geometry', () => {
       </Group>
     );
     const Root = (): CRCNode => {
-      const [version, setVersion] = crcState(0);
+      const [version, setVersion] = useState(0);
       updateRoot = () => setVersion(version + 1);
       return [
         <Rectangle

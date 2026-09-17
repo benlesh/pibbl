@@ -1,7 +1,7 @@
 import {
   FocusManagement,
   KeyboardNavigation,
-  crcEventTarget,
+  useEventTarget,
   Rectangle,
   Text,
   type CRCEventTargetSnapshot,
@@ -86,7 +86,7 @@ const CanvasControl = function CanvasControl({
   y,
 }: ControlProps) {
   const geometry = rectanglePath(x, y, width, height);
-  const snapshot = crcEventTarget(
+  const snapshot = useEventTarget(
     {
       onBlur: () => onFocusChange('none'),
       onClick: (event) => onActivation(target, event),

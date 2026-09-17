@@ -3,7 +3,7 @@ import {
   KeyboardNavigation,
   createElement,
   crc,
-  crcState,
+  useState,
   type CRCController,
   type CRCNode,
 } from '@crc/core';
@@ -189,7 +189,7 @@ describe('WebGL retained structural performance', () => {
       return <Cube pointerEvents="none" />;
     }
     function Stateful(): CRCNode {
-      const [revision, setState] = crcState(0);
+      const [revision, setState] = useState(0);
       setRevision = setState;
       return <Draw revision={revision} />;
     }
@@ -230,7 +230,7 @@ describe('WebGL retained structural performance', () => {
       return <Cube pointerEvents="none" />;
     }
     function Stateful(): CRCNode {
-      const [revision, setState] = crcState(0);
+      const [revision, setState] = useState(0);
       setRevision = setState;
       return <Draw revision={revision} />;
     }

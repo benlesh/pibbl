@@ -98,7 +98,7 @@ output windows.
 - Canvas dimensions remain a deterministic function of the current snapped
   window, not prior pool use. A slot resizes only when its required snapped
   dimensions change; otherwise it is cleared and reset in place. This avoids
-  history-dependent `crcCanvasContext().canvas` dimensions and unbounded
+  history-dependent `useCanvasContext().canvas` dimensions and unbounded
   high-water memory retention.
 - Filter strings are rebuilt once per active boundary because density is
   boundary-specific. No unbounded descriptor/string cache is introduced for an

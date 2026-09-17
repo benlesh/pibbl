@@ -1,6 +1,6 @@
 import {
   crc,
-  crcState,
+  useState,
   Group,
   Rectangle,
   SvgPath,
@@ -8,7 +8,7 @@ import {
   type CRCController,
 } from "@crc/core";
 function SvgPathStudy() {
-  const [active, setActive] = crcState(false);
+  const [active, setActive] = useState(false);
   return [
     <Rectangle
       style={{

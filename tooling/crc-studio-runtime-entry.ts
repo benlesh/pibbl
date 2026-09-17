@@ -2,10 +2,10 @@ export * from "@crc/core";
 export * from "@crc/particles";
 export * from "@crc/particles/webgl";
 export * from "@crc/webgl";
-export { computed, crcSignal, isSignal, signal, untracked } from "@crc/core";
+export { computed, useSignal, isSignal, signal, untracked } from "@crc/core";
 export {
-  crcPlayback,
-  crcTransition,
+  usePlayback,
+  useTransition,
   defineAnimation,
   easing,
   keyframes,

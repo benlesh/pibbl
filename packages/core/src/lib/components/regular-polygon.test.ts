@@ -3,7 +3,7 @@ import { createElement } from '../element/create-element';
 import { jsx } from '../element/jsx-runtime';
 import { getPrimitiveDefinition } from '../element/metadata';
 import { getCRCInstance } from '../global-state';
-import { crcState } from '../hooks/crc-state';
+import { useState } from '../hooks/use-state';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
@@ -224,7 +224,7 @@ describe('RegularPolygon', () => {
     let advance!: () => void;
     const onClick = vi.fn();
     function Probe() {
-      const [phase, setPhase] = crcState(0);
+      const [phase, setPhase] = useState(0);
       advance = () => setPhase(value => value + 1);
       if (phase === 0) {
         return createElement(RegularPolygon, {

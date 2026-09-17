@@ -260,7 +260,7 @@ The start, burst acceptance/rejection, drain, and finish event union.
 
 ## `CRCParticleSystemOptions`
 
-Autoplay, seed, debug name, event, and error options for `crcParticleSystem`.
+Autoplay, seed, debug name, event, and error options for `useParticleSystem`.
 
 ## `CRCParticleSystemStatus`
 

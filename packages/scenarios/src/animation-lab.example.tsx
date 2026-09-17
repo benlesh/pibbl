@@ -1,6 +1,6 @@
 import {
-  crcPlayback,
-  crcTransition,
+  usePlayback,
+  useTransition,
   Group,
   Layer,
   marker,
@@ -197,7 +197,7 @@ function normalizedEvent(model: AnimationLabModel, event: CRCPlaybackEvent): str
 }
 
 function AnimationOwner({ model }: { readonly model: AnimationLabModel }) {
-  const playback = crcPlayback(programFor(model), {
+  const playback = usePlayback(programFor(model), {
     debugName: 'animation laboratory playback',
     onEvent: (event) => {
       model.metrics.milestones.push(normalizedEvent(model, event));
@@ -207,7 +207,7 @@ function AnimationOwner({ model }: { readonly model: AnimationLabModel }) {
       model.publish?.();
     },
   });
-  const presentedScale = crcTransition(model.transitionTarget.get(), {
+  const presentedScale = useTransition(model.transitionTarget.get(), {
     type: 'tween',
     duration: 120,
     initial: 1,

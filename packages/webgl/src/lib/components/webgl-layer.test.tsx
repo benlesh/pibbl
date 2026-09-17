@@ -43,8 +43,8 @@ describe('WebGLLayer public surface', () => {
       'SpotLight',
       'WebGLBackground',
       'WebGLLayer',
-      'crcAnimationFrame',
-      'crcOrbitCamera',
+      'useAnimationFrame',
+      'useOrbitCamera',
       'createWebGLGeometry',
     ]);
   });

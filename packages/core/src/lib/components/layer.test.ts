@@ -2,7 +2,7 @@ import type { RectangleProps } from './rect';
 import type { RectStyle } from '../style/types';
 import type { SystemStyle } from '../types';
 import {
-  crcPlayback,
+  usePlayback,
   parallel,
   track,
   tween,
@@ -15,12 +15,12 @@ import { createElement } from '../element/create-element';
 import { Fragment } from '../element/fragment';
 import { executeRender } from '../execute-render';
 import { getCRCInstance, GLOBAL_STATE } from '../global-state';
-import { crcCursor } from '../hooks/crc-cursor';
-import { crcEvent } from '../hooks/crc-event';
-import { crcEventTarget } from '../hooks/crc-event-target';
-import { crcRef } from '../hooks/crc-ref';
-import { crcState } from '../hooks/crc-state';
-import { crcWhenChanged } from '../hooks/crc-when-changed';
+import { useCursor } from '../hooks/use-cursor';
+import { useEvent } from '../hooks/use-event';
+import { useEventTarget } from '../hooks/use-event-target';
+import { useRef } from '../hooks/use-ref';
+import { useState } from '../hooks/use-state';
+import { useWhenChanged } from '../hooks/use-when-changed';
 import { computed, signal } from '../signals/graph';
 import {
   installSchedulerDriverForTest,
@@ -351,10 +351,10 @@ describe('Layer children and retained subtree contract', () => {
     };
     const Root = (_props: {}): CRCNode => {
       renders.root++;
-      childPlayback = crcPlayback(
+      childPlayback = usePlayback(
         track(childX, tween({ from: 0, to: 20, duration: 100 })),
       );
-      presentationPlayback = crcPlayback(parallel(
+      presentationPlayback = usePlayback(parallel(
         track(parentOffset, tween({ from: 0, to: 10, duration: 100 })),
         track(parentOpacity, tween({ from: 1, to: 0.5, duration: 100 })),
       ));
@@ -625,7 +625,7 @@ describe('Layer children and retained subtree contract', () => {
     let mounts = 0;
     const trace: string[] = [];
     function Stateful({ label }: { label: string }): CRCNode {
-      const identity = crcRef<number>();
+      const identity = useRef<number>();
       identity.current ??= ++mounts;
       trace.push(`${label}:${identity.current}`);
       return createElement(Rectangle, {
@@ -867,7 +867,7 @@ describe('Layer children and retained subtree contract', () => {
     let renders = 0;
     const FocusTarget = ({ label }: { label: string }) => {
       renders++;
-      crcEventTarget(
+      useEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 30, 30), fill: true },
       );
@@ -956,7 +956,7 @@ describe('Layer children and retained subtree contract', () => {
   it('fails closed and releases the child controller when a Layer child throws', () => {
     let cleanups = 0;
     function Child({ fail }: { fail: boolean }): CRCNode {
-      crcWhenChanged(() => () => cleanups++, []);
+      useWhenChanged(() => () => cleanups++, []);
       if (fail) throw new Error('layer child failed');
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: '#ef4444' },
@@ -984,7 +984,7 @@ describe('Layer children and retained subtree contract', () => {
   it('disposes one child controller and its resources exactly once', () => {
     let cleanups = 0;
     function Child(): CRCNode {
-      crcWhenChanged(() => () => cleanups++, []);
+      useWhenChanged(() => () => cleanups++, []);
       return createElement(Rectangle, {
         style: { width: 20, height: 20 },
         onClick: () => undefined,
@@ -1021,7 +1021,7 @@ describe('layer', () => {
   }
 
   const MyComponent = ({ onRender, x = 0, y = 0, width = 100, height = 100, fillStyle = 'blue' }: MyComponentProps) => {
-    const [counter, setCounter] = crcState(0);
+    const [counter, setCounter] = useState(0);
     onRender();
     return createElement(Rectangle, {
       style: {
@@ -1202,8 +1202,8 @@ describe('layer', () => {
       });
 
       const wrapperComponent = (_props: {}) => {
-        const [fillStyle, setFillStyle] = crcState('blue');
-        const [layerWidth, setLayerWidth] = crcState(200);
+        const [fillStyle, setFillStyle] = useState('blue');
+        const [layerWidth, setLayerWidth] = useState(200);
 
         return createElement(Group, {
           children: [
@@ -1266,7 +1266,7 @@ describe('layer', () => {
         });
       };
       const wrapperComponent = (_props: {}) => {
-        const [styleVersion, setStyleVersion] = crcState(1);
+        const [styleVersion, setStyleVersion] = useState(1);
         return createElement(Group, {
           children: [
             createElement(Rectangle, {
@@ -1315,7 +1315,7 @@ describe('layer', () => {
         });
       };
       const wrapperComponent = (_props: {}) => {
-        const [version, setVersion] = crcState(1);
+        const [version, setVersion] = useState(1);
         return createElement(Group, {
           children: [
             createElement(Rectangle, {
@@ -1350,7 +1350,7 @@ describe('layer', () => {
       let renderCount = 0;
       const onRender = () => renderCount++;
       const wrapperComponent = (_props: {}) => {
-        const [size, setSize] = crcState(100);
+        const [size, setSize] = useState(100);
         return createElement(Group, { children: [
           createElement(Rectangle, {
             style: {
@@ -1706,7 +1706,7 @@ describe('layer', () => {
     it('shares transitions, cursor targeting, and observer order with the root', async () => {
       const calls: string[] = [];
       const LayerTarget = (_props: {}) => {
-        crcEvent('mousemove', () => calls.push('observer'));
+        useEvent('mousemove', () => calls.push('observer'));
         return createElement(Rectangle, {
           style: {
             x: 50,
@@ -1758,7 +1758,7 @@ describe('layer', () => {
 
     it('roots a pathless layer cursor as the Canvas fallback', async () => {
       const LayerDefaultCursor = (_props: {}) => {
-        crcCursor({ style: 'wait' });
+        useCursor({ style: 'wait' });
         return createElement(Rectangle, {
           style: {
             x: 0,

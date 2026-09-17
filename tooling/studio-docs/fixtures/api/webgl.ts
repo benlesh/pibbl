@@ -18,7 +18,7 @@ export interface CRCOrbitCameraResult {
   readonly lookAt: CRCWebGLVector3;
   readonly handlers: CRCOrbitCameraHandlers;
 }
-export function crcOrbitCamera(
+export function useOrbitCamera(
   _options: CRCOrbitCameraOptions,
 ): CRCOrbitCameraResult {
   throw new Error('Studio API inventory fixture only.');

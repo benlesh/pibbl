@@ -1,4 +1,4 @@
-import { crcWhenChanged, Image, Layer, Rectangle } from '@crc/core';
+import { useWhenChanged, Image, Layer, Rectangle } from '@crc/core';
 export const CLEANUP_STRESS_SOURCE_ID = 'runtime-cleanup-stress-example';
 export const CLEANUP_IMAGE_SOURCES = {
   broken: 'data:image/png;base64,not-a-valid-image',
@@ -70,7 +70,7 @@ export interface CleanupStressSceneProps {
   state: Readonly<CleanupStressState>;
 }
 const HookProbe = ({ metrics, state }: CleanupStressSceneProps) => {
-  crcWhenChanged(() => {
+  useWhenChanged(() => {
     metrics.hookAcquisitions++;
     return () => {
       metrics.hookCleanups++;

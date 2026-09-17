@@ -18,9 +18,9 @@ import type {
 } from '../events/types';
 import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { crcEventListener } from '../hooks/crc-event-listener';
-import { crcEventTarget } from '../hooks/crc-event-target';
-import { crcRef } from '../hooks/crc-ref';
+import { useEventListener } from '../hooks/use-event-listener';
+import { useEventTarget } from '../hooks/use-event-target';
+import { useRef } from '../hooks/use-ref';
 import type { LayoutBox } from '../layout/types';
 import { mountCRC } from '../mount-crc';
 import type { CRCElement, CRCController, CRCFocusPolicyBridge } from '../types';
@@ -95,7 +95,7 @@ describe('focus candidate enrollment', () => {
       },
     ];
     const Listener = (_props: {}) => {
-      crcEventListener({ onClick: clickHandler, onKeyDown: clickHandler });
+      useEventListener({ onClick: clickHandler, onKeyDown: clickHandler });
     };
     const Root = (_props: {}) => [
       ...definitions.map(definition => createElement(Target, {
@@ -120,7 +120,7 @@ describe('focus candidate enrollment', () => {
   it('keeps no focus manager, candidates, DOM mutation, or imperative snapshot API without the enhancer', () => {
     const snapshots: CRCEventTargetSnapshot[] = [];
     const Root = (_props: {}) => {
-      snapshots.push(crcEventTarget(
+      snapshots.push(useEventTarget(
         { onClick: clickHandler },
         { path: rectanglePath(0, 0, 10, 10) },
       ));
@@ -136,7 +136,7 @@ describe('focus candidate enrollment', () => {
   it('installs the complete structural bridge and reports manager-backed render snapshots', () => {
     const snapshots: CRCEventTargetSnapshot[] = [];
     const Root = (_props: {}) => {
-      snapshots.push(crcEventTarget(
+      snapshots.push(useEventTarget(
         { onClick: clickHandler },
         { path: rectanglePath(0, 0, 10, 10) },
       ));
@@ -167,7 +167,7 @@ describe('focus candidate enrollment', () => {
 
   it('keeps the Canvas as the only native focus host without semantic DOM', () => {
     const Root = (_props: {}) => {
-      crcEventTarget(
+      useEventTarget(
         { onClick: clickHandler },
         { path: rectanglePath(0, 0, 10, 10) },
       );
@@ -509,7 +509,7 @@ describe('candidate identity and atomic render collection', () => {
   it('reports an ineligible focused target as unfocused during that render', () => {
     const snapshots: CRCEventTargetSnapshot[] = [];
     const Root = ({ eligible }: { eligible: boolean }) => {
-      snapshots.push(crcEventTarget(
+      snapshots.push(useEventTarget(
         eligible ? { onClick: clickHandler } : {},
         {
           path: rectanglePath(0, 0, 10, 10),
@@ -570,7 +570,7 @@ describe('directional boundaries and root-logical bounds', () => {
   it('transforms all four local bounds corners into one root-logical AABB', () => {
     const BoundsTarget = definePrimitive<{}>((_props: {}, _style, ctx) => {
       ctx.transform(0, 2, -3, 0, 100, 50);
-      crcEventTarget(
+      useEventTarget(
         { onClick: clickHandler },
         {
           path: rectanglePath(1, 2, 4, 5),
@@ -590,7 +590,7 @@ describe('directional boundaries and root-logical bounds', () => {
 
   it('composes offscreen layer bridges into root-logical bounds', () => {
     const Inner = (_props: {}) => {
-      crcEventTarget(
+      useEventTarget(
         { onClick: clickHandler },
         {
           path: rectanglePath(2, 3, 4, 5),
@@ -620,7 +620,7 @@ describe('directional boundaries and root-logical bounds', () => {
     const hookValues: object[] = [];
     const Inner = (_props: {}) => {
       renders++;
-      hookValues.push(crcRef({}).current!);
+      hookValues.push(useRef({}).current!);
       return createElement(Target, {
         label: 'inside-layer',
         handlers: { onClick: clickHandler },
@@ -852,7 +852,7 @@ const Target = ({
   handlers,
   options,
 }: TargetDefinition) => {
-  crcEventTarget(handlers, {
+  useEventTarget(handlers, {
     path: rectanglePath(0, 0, 10, 10),
     ...options,
   });

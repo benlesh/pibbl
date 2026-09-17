@@ -2,9 +2,9 @@ import {
   Absolute,
   Clip,
   crc,
-  crcLayoutBox,
-  crcRef,
-  crcState,
+  useLayoutBox,
+  useRef,
+  useState,
   Fragment,
   Group,
   Layer,
@@ -291,7 +291,7 @@ function Toolbar({
   style: _style,
   onReset,
 }: RegionProps & Readonly<{ onReset: () => void }>): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   return [
     <Rectangle
       style={{ width: box.width, height: box.height, fill: "#fffdf6" }}
@@ -351,7 +351,7 @@ function Workspace({
   onWorkspacePointerCancel,
   onWorkspaceLostPointerCapture,
 }: WorkspaceProps): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   const connections = EDGES.map((edge) => (
     <Connection key={edge.id} edge={edge} nodes={nodes} />
   ));
@@ -411,7 +411,7 @@ function StatusBar({
     selectedNode: DiagramNode | undefined;
     view: ViewTransform;
   }>): CRCNode {
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   const status = selectedNode
     ? `SELECTED · ${selectedNode.title}`
     : "NO SELECTION";
@@ -440,10 +440,10 @@ function StatusBar({
   ];
 }
 function DiagramEditor(): CRCNode {
-  const [nodes, setNodes] = crcState<readonly DiagramNode[]>(INITIAL_NODES);
-  const [selectedNodeId, setSelectedNodeId] = crcState<NodeId | null>("sketch");
-  const [view, setView] = crcState<ViewTransform>(INITIAL_VIEW);
-  const gestureSession = crcRef<GestureSession | null>(null);
+  const [nodes, setNodes] = useState<readonly DiagramNode[]>(INITIAL_NODES);
+  const [selectedNodeId, setSelectedNodeId] = useState<NodeId | null>("sketch");
+  const [view, setView] = useState<ViewTransform>(INITIAL_VIEW);
+  const gestureSession = useRef<GestureSession | null>(null);
   const clearSession = (event: CRCPointerEvent): void => {
     if (gestureSession.current?.pointerId === event.pointerId)
       gestureSession.current = null;

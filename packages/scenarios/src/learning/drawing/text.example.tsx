@@ -1,6 +1,6 @@
-import { crc, crcState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
 function TypeStudy() {
-  const [accent, setAccent] = crcState("#1f4bd8");
+  const [accent, setAccent] = useState("#1f4bd8");
   return [
     <Rectangle
       style={{

@@ -1,5 +1,5 @@
 import {
-  crcEventListener,
+  useEventListener,
   type CRCEventHandlers,
   type CRCNode,
 } from '@crc/core';
@@ -32,7 +32,7 @@ function renderGroup3D(
   // Validate before acquiring listener or model-stack ownership.
   const localModel = new Float32Array(16);
   composeModelMatrix4(localModel, style);
-  crcEventListener(props);
+  useEventListener(props);
   const popModel = pushWebGLModelMatrix(composer, localModel);
   try {
     setCurrentComponentAfterRender(popModel);

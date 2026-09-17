@@ -197,7 +197,7 @@ git commit -m "feat(surface): own canvas density and resize lifecycle"
 - Modify: `packages/core/src/lib/util/get-mouse-coordinates.ts`
 - Modify: `packages/core/src/lib/interaction-dispatch.ts`
 - Modify: `packages/core/src/lib/util/is-hit.ts`
-- Modify: `packages/core/src/lib/hooks/crc-region.ts`
+- Modify: `packages/core/src/lib/hooks/use-region.ts`
 - Modify: `packages/core/src/lib/util/push-clipping-path.ts`
 - Test: `packages/core/test/mouse-contract.test.ts`
 - Test: `packages/core/test/geometry-composition.test.ts`
@@ -238,7 +238,7 @@ Set the supplied logical transform unconditionally, including identity, for cand
 
 ```bash
 corepack pnpm@11.21.0 vitest run packages/core/test/mouse-contract.test.ts packages/core/test/interaction-dispatch.test.ts packages/core/test/geometry-composition.test.ts --browser.headless --browser.ui=false
-git add packages/core/src/lib/surface/transform.ts packages/core/src/lib/surface/transform.test.ts packages/core/src/lib/util/get-mouse-coordinates.ts packages/core/src/lib/interaction-dispatch.ts packages/core/src/lib/util/is-hit.ts packages/core/src/lib/hooks/crc-region.ts packages/core/src/lib/util/push-clipping-path.ts packages/core/test/mouse-contract.test.ts packages/core/test/geometry-composition.test.ts
+git add packages/core/src/lib/surface/transform.ts packages/core/src/lib/surface/transform.test.ts packages/core/src/lib/util/get-mouse-coordinates.ts packages/core/src/lib/interaction-dispatch.ts packages/core/src/lib/util/is-hit.ts packages/core/src/lib/hooks/use-region.ts packages/core/src/lib/util/push-clipping-path.ts packages/core/test/mouse-contract.test.ts packages/core/test/geometry-composition.test.ts
 git commit -m "feat(surface): keep interaction in logical coordinates"
 ```
 

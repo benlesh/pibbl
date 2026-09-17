@@ -31,7 +31,7 @@ instanced submission, with no per-particle CPU update or dynamic upload.
 ```tsx
 import {
   Particles2D,
-  crcParticleSystem,
+  useParticleSystem,
   defineParticleEffect2D,
   particleChoice,
   particleCurve,
@@ -71,7 +71,7 @@ const celebration = defineParticleEffect2D({
 });
 
 function Celebration() {
-  const system = crcParticleSystem(celebration, { autoplay: false, seed: 42 });
+  const system = useParticleSystem(celebration, { autoplay: false, seed: 42 });
   return (
     <Particles2D
       system={system}

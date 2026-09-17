@@ -1,6 +1,6 @@
 import type { CRCEventHandlers } from '../src/lib/events/types';
 import type { CRCController } from '../src/lib/types';
-import { crc, crcCursor, crcEvent, Layer, Rectangle } from '@crc/core';
+import { crc, useCursor, useEvent, Layer, Rectangle } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   clearSharedState,
@@ -180,11 +180,11 @@ const CursorOwnershipScene = (_props: {}) => [
 ];
 
 const ObserverScene = ({ calls }: { calls: string[] }) => {
-  crcEvent('click', () => {
+  useEvent('click', () => {
     calls.push('throws');
     throw new Error('expected lifecycle handler error');
   });
-  crcEvent('click', () => calls.push('safe'));
+  useEvent('click', () => calls.push('safe'));
   return createElement(Rectangle, {
     style: {
       x: 0,
@@ -197,8 +197,8 @@ const ObserverScene = ({ calls }: { calls: string[] }) => {
 };
 
 const LayerGlobalResources = ({ calls }: { calls: string[] }) => {
-  crcEvent('mousemove', () => calls.push('observer'));
-  crcCursor({ style: 'wait' });
+  useEvent('mousemove', () => calls.push('observer'));
+  useCursor({ style: 'wait' });
   return createElement(Rectangle, {
     style: {
       x: 20,

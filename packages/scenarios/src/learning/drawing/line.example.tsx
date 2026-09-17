@@ -1,13 +1,13 @@
 import {
   crc,
-  crcState,
+  useState,
   Line,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function LineStudy() {
-  const [tracking, setTracking] = crcState(false);
+  const [tracking, setTracking] = useState(false);
   return [
     <Rectangle
       style={{

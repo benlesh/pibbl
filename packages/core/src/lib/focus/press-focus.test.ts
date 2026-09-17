@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CRCEventHandlers } from '../events/types';
 import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { crcEventTarget } from '../hooks/crc-event-target';
+import { useEventTarget } from '../hooks/use-event-target';
 import { mountCRC } from '../mount-crc';
 import type { CRCController } from '../types';
 import type { CRCFocusManager } from './focus-manager';
@@ -350,7 +350,7 @@ const Target = ({
   keyboardFocusable,
   handlers,
 }: TargetProps) => {
-  crcEventTarget(handlers, {
+  useEventTarget(handlers, {
     path: rectanglePath(x, 0, 40, 40),
     fill: true,
     keyboardFocusable,

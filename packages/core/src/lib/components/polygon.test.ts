@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
 import { getCRCInstance } from '../global-state';
-import { crcState } from '../hooks/crc-state';
+import { useState } from '../hooks/use-state';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
@@ -87,7 +87,7 @@ describe('Polygon', () => {
   it('updates polygon geometry', async () => {
     let move!: () => void;
     function Probe() {
-      const [offset, setOffset] = crcState(0);
+      const [offset, setOffset] = useState(0);
       move = () => setOffset(40);
       return createElement(Polygon, {
         style: {
@@ -112,7 +112,7 @@ describe('Polygon', () => {
   it('updates, replaces, and removes rounded-corner style', async () => {
     let advance!: () => void;
     function Probe() {
-      const [phase, setPhase] = crcState(0);
+      const [phase, setPhase] = useState(0);
       advance = () => setPhase(value => value + 1);
       const corners = phase === 0 ? { cornerRadius: 12 } :
         phase === 1 ? { cornerRadius: 12, cornerRadii: [0] } :

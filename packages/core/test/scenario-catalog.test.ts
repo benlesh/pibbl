@@ -770,7 +770,7 @@ describe('scenario catalog trust gate', () => {
       .toBe('focus-and-keyboard-navigation');
     expect(focusNavigationScenarioEntry.metadata.apiTags).toEqual(
       expect.arrayContaining([
-        'crcEventTarget',
+        'useEventTarget',
         'FocusManagement',
         'KeyboardNavigation',
       ]),
@@ -793,8 +793,8 @@ describe('scenario catalog trust gate', () => {
     );
     expect(interactionLabScenarioEntry.metadata.apiTags).toEqual(
       expect.arrayContaining([
-        'crcEventListener',
-        'crcEventTarget',
+        'useEventListener',
+        'useEventTarget',
         'pointer events',
         'touch events',
         'wheel events',
@@ -879,7 +879,7 @@ describe('scenario catalog trust gate', () => {
     );
     expect(scenarioCatalogIndex.learningPath).toHaveLength(scenarioCatalog.length);
     expect(
-      scenarioCatalogIndex.byApi.find(group => group.key === 'crcCursor')
+      scenarioCatalogIndex.byApi.find(group => group.key === 'useCursor')
         ?.scenarios.map(entry => entry.metadata.id),
     ).toEqual(['runtime-hooks-laboratory']);
     expect(

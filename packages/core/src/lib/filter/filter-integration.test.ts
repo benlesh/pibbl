@@ -3,7 +3,7 @@ import {
   Group,
   Rectangle,
   crc,
-  crcPlayback,
+  usePlayback,
   createElement,
   definePrimitive,
   signal,
@@ -21,7 +21,7 @@ import {
   getCRCInstance,
   GLOBAL_STATE,
 } from '../global-state.js';
-import { crcEventTarget } from '../hooks/crc-event-target.js';
+import { useEventTarget } from '../hooks/use-event-target.js';
 import { focusManaged } from '../focus/policy-test-support.js';
 import { executeRender } from '../execute-render.js';
 import { mountCRC } from '../mount-crc.js';
@@ -469,7 +469,7 @@ describe('filter integration', () => {
       });
       const path = new Path2D();
       path.rect(0, 0, 10, 10);
-      crcEventTarget({ onClick }, { path, fill: true });
+      useEventTarget({ onClick }, { path, fill: true });
       context.fillRect(0, 0, 10, 10);
     });
     const parentDraw = vi.spyOn(
@@ -946,7 +946,7 @@ describe('filter integration', () => {
     const onClick = vi.fn();
     let playback!: CRCPlayback;
     const AnimatedFilter = (_props: {}): CRCNode => {
-      playback = crcPlayback(
+      playback = usePlayback(
         track(radius, tween({ from: 2, to: 10, duration: 100 })),
       );
       return focusManaged(createElement(Rectangle, {
@@ -1059,7 +1059,7 @@ describe('filter integration', () => {
       sourceTransforms.push(context.getTransform());
       const path = new Path2D();
       path.rect(4, 5, 10, 11);
-      crcEventTarget({ onClick: () => undefined }, { path, fill: true });
+      useEventTarget({ onClick: () => undefined }, { path, fill: true });
       context.fill(path);
     });
     const controller = mountCRC(root, createElement(Probe, {

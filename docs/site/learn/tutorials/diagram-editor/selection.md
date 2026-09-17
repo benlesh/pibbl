@@ -23,7 +23,7 @@ the already selected card clear the selection.
 
 The diagram owns ordinary application IDs such as `"idea"` and `"sketch"`;
 they are stable model data rather than Canvas target objects. `DiagramEditor`
-stores the selected ID with [`crcState`](#/api/hooks/crc-state), finds the
+stores the selected ID with [`useState`](#/api/hooks/use-state), finds the
 matching node record, and passes a boolean plus one selection callback down to
 each `NodeCard`.
 

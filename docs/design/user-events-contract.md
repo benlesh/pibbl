@@ -6,7 +6,7 @@ Focus integration is governed by the implemented
 [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 
 This document defines the public event behavior shared by built-in drawing
-components, `crcEventTarget`, `crcEventListener`, and the legacy `crcEvent`
+components, `useEventTarget`, `useEventListener`, and the legacy `useEvent`
 hook. The executable public integration oracle is the
 `interaction-trace-lab` scenario; focused event suites retain exhaustive
 family, geometry, mutation, and ownership matrices.
@@ -34,13 +34,13 @@ its complete nested resolver with `pointerEvents="none"`. Analytic light and
 `WebGLBackground` declarations never add targets, pick geometry, cursor regions,
 or focus candidates. An opaque background remains a nested-resolver miss.
 
-`crcEventTarget(handlers, options)` creates one grouped custom target. Its
+`useEventTarget(handlers, options)` creates one grouped custom target. Its
 required `Path2D`, fill/stroke hit options, captured render transform, clips,
 and paint-ledger position are explicit; CRC never infers a custom component's
 geometry from its returned descendants. Rerender replaces handlers and
 geometry in the same hook slot without replacing target identity.
 
-`crcEventListener(handlers)` creates one propagation participant on the
+`useEventListener(handlers)` creates one propagation participant on the
 current component. It owns no geometry, never wins hit testing, and never
 becomes a focus candidate merely by listening. A listener can nevertheless be
 the logical target of common-ancestor activation or pointer capture, matching
@@ -54,12 +54,12 @@ custom-component props, hoist descendant handlers, create a widget
 abstraction, or retain drawing commands.
 
 The child-bearing `Group`, `Clip`, `Layer`, `Absolute`, `Overlay`, `Flow`,
-`Flex`, and `Grid` built-ins accept handler props with `crcEventListener`
+`Flex`, and `Grid` built-ins accept handler props with `useEventListener`
 semantics. `WebGLLayer` and `Group3D` do the same. These structural values add
 listener ancestry only: they have no independent rectangle or conceptual-bounds
 target, and empty space does not select them.
 
-`crcOrbitCamera()` returns ordinary stable CRC handlers rather than installing
+`useOrbitCamera()` returns ordinary stable CRC handlers rather than installing
 a hidden listener or target. Authors may spread them onto geometry or a
 structural listener ancestor. To make a whole viewport draggable, that ancestor
 must contain an explicit viewport-sized target; the structural component alone
@@ -201,7 +201,7 @@ modifier/mouse fields. Calling logical `preventDefault()` makes the native
 cancelable wheel event default-prevented. Wheel and cancellable touch native
 listeners are installed with non-passive options.
 
-The `crcOrbitCamera()` handler bundle uses these same rules. A primary
+The `useOrbitCamera()` handler bundle uses these same rules. A primary
 `pointerdown` captures one pointer on `currentTarget`; matching root-logical
 pointer moves rotate, and up/cancel/lost-capture ends the gesture. Other
 pointers cannot steal it. Wheel zoom normalizes pixel deltas directly, line
@@ -233,7 +233,7 @@ adapter or hidden editable DOM.
 Registering handlers alone does not install `tabindex`, focus policy, or
 keyboard activation. The `keyboardFocusable` and `keyboardNavigationBounds`
 target options remain inert without the optional focus policy, and
-`crcEventTarget` snapshots then report `isFocused: false` and
+`useEventTarget` snapshots then report `isFocused: false` and
 `isFocusVisible: false`. Exact focus ownership, traversal, defaults, snapshots,
 layer invalidation, and teardown defer to the focus contract.
 
@@ -294,8 +294,8 @@ therefore no native-listener hub. CRC does not pretend that such a root can
 receive browser UI input and exposes no public event-injection API in this
 delivery.
 
-The singular path-bound `crcEvent` remains a stable legacy geometric target.
-A pathless `crcEvent` remains a narrow mouse-only Canvas observer with the
+The singular path-bound `useEvent` remains a stable legacy geometric target.
+A pathless `useEvent` remains a narrow mouse-only Canvas observer with the
 shipped `{ x, y, originalEvent }` payload. Observers run after logical target
 propagation, once per matching native event, in registration order. Removal is
 effective before a pending observer turn, additions wait until the next native
@@ -319,7 +319,7 @@ drag/drop. Together with the existing mouse lessons, every declared coordinate
 event name is present in readable example source and documentation metadata.
 
 The shared `interaction-trace-lab` laboratory teaches one direct built-in
-propagation target, one `crcEventListener` ancestor, one `crcEventTarget` custom
+propagation target, one `useEventListener` ancestor, one `useEventTarget` custom
 path, touch retention, wheel cancellation, and drag/drop. Its keyboard,
 composition, and clipboard scenes are headless contract fixtures driven by
 internal test transport; they do not claim a public adapter or manually

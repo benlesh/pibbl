@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { crcEventListener } from '../hooks/crc-event-listener';
-import { crcEventTarget } from '../hooks/crc-event-target';
+import { useEventListener } from '../hooks/use-event-listener';
+import { useEventTarget } from '../hooks/use-event-target';
 import {
   classifyNativeEventType,
   dispatchToLogicalTarget,
@@ -163,7 +163,7 @@ describe('touch event dispatch', () => {
           `${label}:${event.type}:${touchIdentifiers(event.changedTouches).join(',')}:${event.x},${event.y}`,
         );
       };
-      crcEventTarget({
+      useEventTarget({
         onTouchStart: record,
         onTouchMove: record,
         onTouchEnd: record,
@@ -219,7 +219,7 @@ describe('touch event dispatch', () => {
         targetTouches: event.targetTouches,
         touches: event.touches,
       });
-      crcEventTarget({
+      useEventTarget({
         onTouchStart: record,
         onTouchMove: record,
       }, {
@@ -318,7 +318,7 @@ describe('non-coordinate logical transport', () => {
   it('preserves a logical related target for explicit focus dispatch', async () => {
     let received: CRCFocusEvent | undefined;
     const Target = ({ label }: { label: string }) => {
-      crcEventTarget({
+      useEventTarget({
         onFocusOut: label === 'a' ? event => received = event : () => undefined,
       }, {
         path: rectanglePath(label === 'a' ? 0 : 50, 0, 50, 50),
@@ -453,7 +453,7 @@ describe('non-coordinate logical transport', () => {
   it('routes native keyboard, focus, editing, and clipboard input only to Canvas observers without focus policy', async () => {
     const logical: string[] = [];
     const Target = (_props: {}) => {
-      crcEventTarget({
+      useEventTarget({
         onKeyDown: event => logical.push(event.type),
         onFocus: event => logical.push(event.type),
         onBeforeInput: event => logical.push(event.type),
@@ -632,7 +632,7 @@ describe('drag event dispatch', () => {
   it('projects coordinate, modifier, and data-transfer fields unchanged', async () => {
     let received: CRCDragEvent | undefined;
     const Target = (_props: {}) => {
-      crcEventTarget({ onDragStart: event => received = event }, {
+      useEventTarget({ onDragStart: event => received = event }, {
         path: rectanglePath(0, 0, 100, 100),
         fill: true,
       });
@@ -670,7 +670,7 @@ describe('drag event dispatch', () => {
       event.relatedTarget === targetA ? 'a' :
         event.relatedTarget === targetB ? 'b' : 'none';
     const Target = ({ label, x }: { label: string; x: number }) => {
-      crcEventTarget({
+      useEventTarget({
         onDragEnter: event => trace.push(
           `${label}-enter:${event.eventPhase}:${relatedLabel(event)}`,
         ),
@@ -686,7 +686,7 @@ describe('drag event dispatch', () => {
       });
     };
     const Parent = (_props: {}) => {
-      crcEventListener({
+      useEventListener({
         onDragEnter: event => trace.push(
           `parent-enter:${event.eventPhase}:${relatedLabel(event)}`,
         ),
@@ -771,10 +771,10 @@ describe('native event route exhaustiveness', () => {
 });
 
 async function mountExplicitTarget(
-  handlers: Parameters<typeof crcEventTarget>[0],
+  handlers: Parameters<typeof useEventTarget>[0],
 ): Promise<{ canvas: HTMLCanvasElement; target: CRCEventNode }> {
   const Target = (_props: {}) => {
-    crcEventTarget(handlers, {
+    useEventTarget(handlers, {
       path: rectanglePath(0, 0, 100, 100),
       fill: true,
     });
@@ -796,7 +796,7 @@ async function mountIsolatedTouchTarget(
   nativeListeners: NativeListenerHub;
 }> {
   const Target = (_props: {}) => {
-    crcEventTarget(handlers, {
+    useEventTarget(handlers, {
       path: rectanglePath(0, 0, 50, 50),
       fill: true,
     });
@@ -819,7 +819,7 @@ async function mountIsolatedDragTarget(
   nativeListeners: NativeListenerHub;
 }> {
   const Target = (_props: {}) => {
-    crcEventTarget(handlers, {
+    useEventTarget(handlers, {
       path: rectanglePath(0, 0, 50, 50),
       fill: true,
     });

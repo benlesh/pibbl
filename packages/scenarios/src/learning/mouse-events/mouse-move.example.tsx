@@ -1,6 +1,6 @@
-import { crc, crcState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
 function MouseMoveStudy() {
-  const [trail, setTrail] = crcState<readonly [number, number][]>([]);
+  const [trail, setTrail] = useState<readonly [number, number][]>([]);
   return [
     <Rectangle
       style={{

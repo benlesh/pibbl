@@ -16,7 +16,7 @@ exampleSlug: multiple-lights
 ambient, hemisphere, directional, point, and spot declarations contribute to
 the whole settled scene; a solid background controls the island clear; and
 direct lights can cast genuine depth-map shadows. The optional
-[`crcOrbitCamera`](#/api/hooks/crc-orbit-camera) hook turns ordinary CRC pointer
+[`useOrbitCamera`](#/api/hooks/use-orbit-camera) hook turns ordinary CRC pointer
 and wheel events into a perspective-camera pose.
 
 ## Build an orbitable lit scene
@@ -33,7 +33,7 @@ import {
   Sphere,
   WebGLBackground,
   WebGLLayer,
-  crcOrbitCamera,
+  useOrbitCamera,
   createWebGLGeometry,
 } from "@crc/webgl";
 
@@ -44,7 +44,7 @@ const floor = createWebGLGeometry({
 });
 
 function Scene() {
-  const orbit = crcOrbitCamera({
+  const orbit = useOrbitCamera({
     orbitPoint: [0, 0.5, 0],
     initialPosition: [4.5, 3.2, 6.5],
     minDistance: 3,
@@ -135,7 +135,7 @@ geometry of its own.
 
 ## Understand the orbit contract
 
-`crcOrbitCamera` stores one spherical pose around `orbitPoint`.
+`useOrbitCamera` stores one spherical pose around `orbitPoint`.
 `initialPosition` is mount-only; `orbitPoint`, distance bounds, and speed
 options are live and are adopted only after a successful render. Its returned
 handler bundle is stable, and unchanged `position`, `lookAt`, and result objects

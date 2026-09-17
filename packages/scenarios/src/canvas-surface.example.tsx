@@ -1,6 +1,6 @@
 import {
-  crcLayoutBox,
-  crcRef,
+  useLayoutBox,
+  useRef,
   Rectangle,
   Text,
   type LayoutBox,
@@ -39,9 +39,9 @@ const CanvasSurfaceScene = ({
   onMouseMove,
   onRender,
 }: CanvasSurfaceSceneProps) => {
-  const identity = crcRef<number>();
+  const identity = useRef<number>();
   identity.current ??= ++nextIdentity;
-  const box = crcLayoutBox();
+  const box = useLayoutBox();
   onRender(box, identity.current);
   return [
     <Rectangle

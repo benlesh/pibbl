@@ -11,15 +11,15 @@ const bundle = buildSearchBundle({
     {
       frontmatter: {
         id: "api-state",
-        title: "crcState",
+        title: "useState",
         summary: "State for a component.",
         kind: "api",
-        slug: "crc-state",
+        slug: "use-state",
         apiCategory: "hook",
-        symbols: ["crcState"],
+        symbols: ["useState"],
       },
-      route: "#/api/hooks/crc-state",
-      plainText: "Use crcState for state.",
+      route: "#/api/hooks/use-state",
+      plainText: "Use useState for state.",
       headings: [],
       sections: [],
     },
@@ -44,7 +44,7 @@ const bundle = buildSearchBundle({
       shortTitle: "Stateful rectangle",
       browseGroup: "drawing",
       summary: "An interactive example.",
-      api: ["crcState"],
+      api: ["useState"],
       objectives: ["Update state"],
       apiNotes: [],
     },
@@ -120,7 +120,7 @@ describe("documentation search dialog", () => {
     dialog.open(trigger);
     const input = document.querySelector<HTMLInputElement>("[data-search-input]")!;
     expect(document.activeElement).toBe(input);
-    input.value = "crcState";
+    input.value = "useState";
     input.dispatchEvent(new Event("input", { bubbles: true }));
     await settle();
 
@@ -132,11 +132,11 @@ describe("documentation search dialog", () => {
     );
     expect(document.querySelector("[role='option']")).toHaveAttribute(
       "data-search-url",
-      "#/api/hooks/crc-state",
+      "#/api/hooks/use-state",
     );
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
-    expect(navigate).toHaveBeenCalledWith("#/api/hooks/crc-state");
+    expect(navigate).toHaveBeenCalledWith("#/api/hooks/use-state");
     expect(document.querySelector<HTMLDialogElement>("dialog")?.open).toBe(false);
 
     dialog.dispose();
@@ -175,7 +175,7 @@ describe("documentation search dialog", () => {
     expect(document.activeElement).toBe(input);
 
     document.getElementById(options[0]!.id)?.click();
-    expect(navigate).toHaveBeenCalledWith("#/api/hooks/crc-state");
+    expect(navigate).toHaveBeenCalledWith("#/api/hooks/use-state");
     dialog.dispose();
   });
 

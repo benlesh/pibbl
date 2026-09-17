@@ -1,6 +1,6 @@
 import {
   crc,
-  crcState,
+  useState,
   Image,
   Rectangle,
   Text,
@@ -15,7 +15,7 @@ const postcard = `data:image/svg+xml,${encodeURIComponent(`
   </svg>
 `)}`;
 function ImageStudy() {
-  const [clicks, setClicks] = crcState(0);
+  const [clicks, setClicks] = useState(0);
   return [
     <Rectangle
       style={{

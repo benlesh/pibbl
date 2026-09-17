@@ -73,8 +73,8 @@ Component-specific style interfaces remain beside their components. Shared pure 
 - Modify: `packages/core/src/lib/render.ts`
 - Modify: `packages/core/src/lib/components/layer.ts`
 - Modify: `packages/core/src/lib/hooks/hook-contract.test.ts`
-- Modify: `packages/core/src/lib/hooks/crc-state.test.ts`
-- Modify: `packages/core/src/lib/hooks/crc-when-changed.test.ts`
+- Modify: `packages/core/src/lib/hooks/use-state.test.ts`
+- Modify: `packages/core/src/lib/hooks/use-when-changed.test.ts`
 - Modify: `packages/scenarios/src/runtime-hooks.example.ts`
 - Modify: `packages/scenarios/src/cleanup-stress.example.ts`
 - Modify: every existing two-argument component render callback that reads the Canvas context
@@ -691,7 +691,7 @@ git commit -m "feat(layout): resolve lengths and boxes"
 - Create: `packages/core/src/lib/layout/context.ts`
 - Create: `packages/core/src/lib/layout/place-child.ts`
 - Create: `packages/core/src/lib/layout/place-child.test.ts`
-- Create: `packages/core/src/lib/hooks/crc-layout-box.ts`
+- Create: `packages/core/src/lib/hooks/use-layout-box.ts`
 - Modify: `packages/core/src/lib/global-state.ts`
 - Modify: `packages/core/src/lib/execute-render.ts`
 - Modify: `packages/core/src/lib/render.ts`
@@ -705,7 +705,7 @@ git commit -m "feat(layout): resolve lengths and boxes"
 **Interfaces:**
 
 - Produces: private `PlacedChild` component with `{ element, box, clipInChildSpace, identityHint }` props.
-- Produces: `crcLayoutBox(): Readonly<LayoutBox>` returning the current allocation in child-local coordinates.
+- Produces: `useLayoutBox(): Readonly<LayoutBox>` returning the current allocation in child-local coordinates.
 - Produces: root layout context from intrinsic Canvas dimensions.
 
 - [ ] **Step 1: Write failing placement, identity, and observation tests**
@@ -719,7 +719,7 @@ expect(ctx.getTransform().f).toBe(30);
 expect(rootPaintWidth).toBe(150);
 ```
 
-Drive a click at root coordinates `(50, 35)` and assert the child handler fires. Reflow the same keyed child to x `60` and assert its `crcState` value remains. Add an unkeyed `A/B/A` fixture and prove inserting/removing `B` does not shift the two `A` identities. Remove a child and assert observation cleanup and interaction-region release exactly once.
+Drive a click at root coordinates `(50, 35)` and assert the child handler fires. Reflow the same keyed child to x `60` and assert its `useState` value remains. Add an unkeyed `A/B/A` fixture and prove inserting/removing `B` does not shift the two `A` identities. Remove a child and assert observation cleanup and interaction-region release exactly once.
 
 - [ ] **Step 2: Observe focused RED**
 
@@ -735,7 +735,7 @@ Add a stack to global temporary render state and restore it across nested/layer 
 
 `PlacedChild` is one module-level component type, applies `ctx.translate(box.x, box.y)`, pushes a local `{ x: 0, y: 0, width, height }` allocation, applies a CRC-managed rectangular clip in child space when supplied, renders the original child, and restores in `finally`. Its private identity hint is derived from the original child type, canonical key, and same-type occurrence so the wrapper does not alter existing identity rules.
 
-`crcLayoutBox` reads the current local allocation and returns a stable readonly value for unchanged geometry. It does not schedule rendering by itself.
+`useLayoutBox` reads the current local allocation and returns a stable readonly value for unchanged geometry. It does not schedule rendering by itself.
 
 - [ ] **Step 4: Run focused tests and lifecycle checks**
 
@@ -1136,7 +1136,7 @@ git commit -m "feat(layout): add CSS-compatible grid"
 
 - [ ] **Step 1: Add failing catalog and strict-consumer expectations**
 
-Require exactly one learner route for each layout family grouping, type-clean source imports from `@crc/core`, mount/dispose behavior, and strict public types for styles, percentage lengths, flex/grid configuration, and `crcLayoutBox`.
+Require exactly one learner route for each layout family grouping, type-clean source imports from `@crc/core`, mount/dispose behavior, and strict public types for styles, percentage lengths, flex/grid configuration, and `useLayoutBox`.
 
 The exhaustive nested scenario must include:
 

@@ -1,8 +1,8 @@
 import {
   crc,
-  crcEventTarget,
-  crcMemo,
-  crcState,
+  useEventTarget,
+  useMemo,
+  useState,
   Path,
   Rectangle,
   Text,
@@ -19,11 +19,11 @@ function badgeGeometry(): Path2D {
   return geometry;
 }
 function CustomBadge() {
-  const [clicks, setClicks] = crcState(0);
-  const [hovered, setHovered] = crcState(false);
-  const [coordinates, setCoordinates] = crcState("move across the badge");
-  const geometry = crcMemo(badgeGeometry, []);
-  crcEventTarget(
+  const [clicks, setClicks] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const [coordinates, setCoordinates] = useState("move across the badge");
+  const geometry = useMemo(badgeGeometry, []);
+  useEventTarget(
     {
       onClick: () => setClicks((total) => total + 1),
       onPointerEnter: () => setHovered(true),

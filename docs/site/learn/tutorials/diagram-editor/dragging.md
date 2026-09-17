@@ -18,14 +18,14 @@ Drag a card beyond its painted body and keep its connection attached until the p
 
 ## How it works
 
-The card captures one pointer ID on pointer down. [`crcRef`](#/api/hooks/crc-ref) stores that gesture synchronously between native events, while rendered state remains frame-coalesced.
+The card captures one pointer ID on pointer down. [`useRef`](#/api/hooks/use-ref) stores that gesture synchronously between native events, while rendered state remains frame-coalesced.
 
 ## Build the change
 
 Record root-logical pointer and workspace node origins. Each move uses an immutable functional update. [Event types](#/api/types/events) expose capture, cancel, and loss notifications.
 
 ```tsx
-const dragSession = crcRef<NodeDragSession | null>(null);
+const dragSession = useRef<NodeDragSession | null>(null);
 
 const onPointerDown = (node: DiagramNode, event: CRCPointerEvent) => {
   const pointerStart = rootToWorkspace(event);

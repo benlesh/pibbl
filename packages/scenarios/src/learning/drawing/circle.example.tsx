@@ -1,7 +1,7 @@
-import { Circle, crc, crcState, Rectangle, type CRCController } from "@crc/core";
+import { Circle, crc, useState, Rectangle, type CRCController } from "@crc/core";
 
 function CircleStudy() {
-  const [active, setActive] = crcState(false);
+  const [active, setActive] = useState(false);
 
   return [
     <Rectangle

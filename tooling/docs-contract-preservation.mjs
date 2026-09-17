@@ -93,7 +93,7 @@ const POST_BASELINE_CONTRACT_PROFILES = new Map([
       approvalRecordId: SIGNALS_SCHEDULER_APPROVAL_RECORD,
       allowedSections: SIGNALS_SCHEDULER_APPROVED_SECTIONS,
       forbiddenPattern:
-        /declare function (?:animate|tween|keyframes|spring|crcPlayback)/u,
+        /declare function (?:animate|tween|keyframes|spring|usePlayback)/u,
       forbiddenMessage: "must not duplicate the animation declaration surface",
     },
   ],

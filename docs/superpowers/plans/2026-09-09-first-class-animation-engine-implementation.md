@@ -18,7 +18,7 @@
 
 - Preserve unrelated working-tree changes and untracked files; stage only files named by the active task.
 - Add a failing test before each production behavior change.
-- Do not introduce a free-standing `play(program)` function. Running state is owned by `crcPlayback` or the internal transition hook slot.
+- Do not introduce a free-standing `play(program)` function. Running state is owned by `usePlayback` or the internal transition hook slot.
 - Do not introduce another `requestAnimationFrame`, timer loop, renderer clock, or per-playback scheduler. Every animation advances in the existing realm scheduler's Advance phase.
 - Definitions and programs are immutable normalized snapshots. Caller mutation after construction cannot affect current or future runs.
 - Keep public definition/program types nominal and opaque. Only `defineAnimation` and `stepper` expose custom callbacks.
@@ -43,8 +43,8 @@
 - `packages/core/src/lib/animation/evaluate.ts`: activation snapshots, recursive sampling, transaction-local output reads, boundary crossings, markers, repeats, and stepper state.
 - `packages/core/src/lib/animation/writer-leases.ts`: atomic whole-run output reservation, conflict replacement, write authorization, and ownership counters.
 - `packages/core/src/lib/animation/playback.ts`: queued command processing, active-run timing, scheduler registration, staged metadata, terminal handling, and isolated errors.
-- `packages/core/src/lib/hooks/crc-playback.ts`: stable component-owned public handle, successful-render option adoption, autoplay, callbacks, and disposal.
-- `packages/core/src/lib/hooks/crc-transition.ts`: focused target-change producer over one private output signal and playback run.
+- `packages/core/src/lib/hooks/use-playback.ts`: stable component-owned public handle, successful-render option adoption, autoplay, callbacks, and disposal.
+- `packages/core/src/lib/hooks/use-transition.ts`: focused target-change producer over one private output signal and playback run.
 - `packages/scenarios/src/animation-lab.example.tsx` and `packages/scenarios/src/animation-lab.ts`: deterministic public playback laboratory.
 - `packages/scenarios/src/learning/composition/signals-and-animation.example.tsx`: approachable transition and event-triggered sequence lesson.
 - Root exports, type tests, package consumers, Studio declarations, current contracts, guide, trust scripts, and field notes: complete public and verification surfaces.
@@ -709,19 +709,19 @@ git add packages/core/src/lib/animation/playback.ts packages/core/src/lib/animat
 git commit -m "feat(core): run playback in scheduler phases"
 ```
 
-### Task 8: Component-owned `crcPlayback`, milestones, and error isolation
+### Task 8: Component-owned `usePlayback`, milestones, and error isolation
 
 **Files:**
 
-- Create: `packages/core/src/lib/hooks/crc-playback.ts`
-- Create: `packages/core/src/lib/hooks/crc-playback.test.tsx`
+- Create: `packages/core/src/lib/hooks/use-playback.ts`
+- Create: `packages/core/src/lib/hooks/use-playback.test.tsx`
 - Modify: `packages/core/src/lib/animation/types.ts`
 - Modify: `packages/core/src/lib/hooks/hook-contract.test.ts`
 - Modify: `packages/core/src/index.ts`
 
 **Interfaces:**
 
-- Produces public `CRCPlaybackStatus`, `CRCPlaybackEvent`, `CRCPlayback`, `CRCPlaybackOptions`, and `crcPlayback`.
+- Produces public `CRCPlaybackStatus`, `CRCPlaybackEvent`, `CRCPlayback`, `CRCPlaybackOptions`, and `usePlayback`.
 - Consumes the latest successfully rendered program/options for future runs while active runs retain their snapshot.
 
 - [ ] **Step 1: Write failing stable-handle and render-adoption tests**
@@ -738,7 +738,7 @@ Autoplay queues once only after the mounting root render transaction succeeds.
 It does not restart on later program identity changes. Remove the component
 while scheduled, running, paused, and with a queued milestone. Assert one
 disposal, no stale callback delivery, released leases/registrations/state, and
-inert saved methods. Add `crcPlayback` to the standard hook-misuse test.
+inert saved methods. Add `usePlayback` to the standard hook-misuse test.
 
 - [ ] **Step 3: Write failing milestone-order tests**
 
@@ -781,10 +781,10 @@ the scheduler's post-Complete host reporting path.
 - [ ] **Step 5: Run focused tests and confirm the hook is absent**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/crc-playback.test.tsx packages/core/src/lib/hooks/hook-contract.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/use-playback.test.tsx packages/core/src/lib/hooks/hook-contract.test.ts --browser.headless --browser.ui=false
 ```
 
-Expected: FAIL because `crcPlayback` is missing.
+Expected: FAIL because `usePlayback` is missing.
 
 - [ ] **Step 6: Implement one hook slot and successful-render adoption**
 
@@ -801,7 +801,7 @@ and whose `status`/`currentTime` are readonly signals.
 - [ ] **Step 7: Run hook, playback, failure, and lifecycle suites**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/crc-playback.test.tsx packages/core/src/lib/animation/playback.test.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/lib/runtime-contract.test.ts packages/core/test/lifecycle-ownership.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/use-playback.test.tsx packages/core/src/lib/animation/playback.test.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/lib/runtime-contract.test.ts packages/core/test/lifecycle-ownership.test.ts --browser.headless --browser.ui=false
 ```
 
 Expected: all selected suites PASS.
@@ -809,16 +809,16 @@ Expected: all selected suites PASS.
 - [ ] **Step 8: Commit public playback ownership**
 
 ```bash
-git add packages/core/src/lib/hooks/crc-playback.ts packages/core/src/lib/hooks/crc-playback.test.tsx packages/core/src/lib/animation/types.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/index.ts
+git add packages/core/src/lib/hooks/use-playback.ts packages/core/src/lib/hooks/use-playback.test.tsx packages/core/src/lib/animation/types.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/index.ts
 git commit -m "feat(core): add component-owned playback"
 ```
 
-### Task 9: Update-driven `crcTransition`
+### Task 9: Update-driven `useTransition`
 
 **Files:**
 
-- Create: `packages/core/src/lib/hooks/crc-transition.ts`
-- Create: `packages/core/src/lib/hooks/crc-transition.test.tsx`
+- Create: `packages/core/src/lib/hooks/use-transition.ts`
+- Create: `packages/core/src/lib/hooks/use-transition.test.tsx`
 - Modify: `packages/core/src/lib/animation/types.ts`
 - Modify: `packages/core/src/lib/animation/playback.ts`
 - Modify: `packages/core/src/lib/hooks/hook-contract.test.ts`
@@ -826,7 +826,7 @@ git commit -m "feat(core): add component-owned playback"
 
 **Interfaces:**
 
-- Produces public `CRCTweenTransitionOptions<T>`, `CRCSpringTransitionOptions`, and both `crcTransition` overloads.
+- Produces public `CRCTweenTransitionOptions<T>`, `CRCSpringTransitionOptions`, and both `useTransition` overloads.
 - Uses one component-owned internal transition slot and the same scheduler/playback engine.
 
 - [ ] **Step 1: Write failing mount and retarget tests**
@@ -858,10 +858,10 @@ consumer, and signal-edge release. Add the hook to the standard misuse probe.
 - [ ] **Step 4: Run focused tests and confirm missing transition behavior**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/crc-transition.test.tsx packages/core/src/lib/hooks/hook-contract.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/use-transition.test.tsx packages/core/src/lib/hooks/hook-contract.test.ts --browser.headless --browser.ui=false
 ```
 
-Expected: FAIL because `crcTransition` is absent.
+Expected: FAIL because `useTransition` is absent.
 
 - [ ] **Step 5: Implement the focused transition slot**
 
@@ -878,7 +878,7 @@ committed analytic position/velocity snapshot and pass both into the new spring.
 - [ ] **Step 6: Run transition, playback, and render tests**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/crc-transition.test.tsx packages/core/src/lib/hooks/crc-playback.test.tsx packages/core/src/lib/animation/playback.test.ts packages/core/src/lib/runtime-contract.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/hooks/use-transition.test.tsx packages/core/src/lib/hooks/use-playback.test.tsx packages/core/src/lib/animation/playback.test.ts packages/core/src/lib/runtime-contract.test.ts --browser.headless --browser.ui=false
 ```
 
 Expected: all selected suites PASS.
@@ -886,7 +886,7 @@ Expected: all selected suites PASS.
 - [ ] **Step 7: Commit update-driven transitions**
 
 ```bash
-git add packages/core/src/lib/hooks/crc-transition.ts packages/core/src/lib/hooks/crc-transition.test.tsx packages/core/src/lib/animation/types.ts packages/core/src/lib/animation/playback.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/index.ts
+git add packages/core/src/lib/hooks/use-transition.ts packages/core/src/lib/hooks/use-transition.test.tsx packages/core/src/lib/animation/types.ts packages/core/src/lib/animation/playback.ts packages/core/src/lib/hooks/hook-contract.test.ts packages/core/src/index.ts
 git commit -m "feat(core): add signal-driven transitions"
 ```
 
@@ -990,8 +990,8 @@ Expected: FAIL because the animation sources and catalog records do not exist.
 
 - [ ] **Step 3: Build one readable learning example**
 
-Use `crcSignal` for position/opacity, `crcTransition` for a target scale, and an
-event-triggered `crcPlayback` program containing a parallel entrance followed
+Use `useSignal` for position/opacity, `useTransition` for a target scale, and an
+event-triggered `usePlayback` program containing a parallel entrance followed
 by `marker("arrived")` and a spring scale track. Explicit `.get()` calls appear
 where values enter style. Keep supported current style fields only. Metadata
 explains definitions, programs, playback ownership, central scheduling, and why
@@ -1088,8 +1088,8 @@ Because the public generic definition permits runtime-captured `from`, the type
 system does not attempt to prove interpolation availability. Add an object tween
 positive fixture with a complete interpolator and a runtime test that reports a
 missing interpolator before play retains a lease. Update the runtime inventory
-for `easing`, all definition/program constructors, `crcPlayback`, and
-`crcTransition`.
+for `easing`, all definition/program constructors, `usePlayback`, and
+`useTransition`.
 
 - [ ] **Step 2: Run package and Studio checks and confirm stale surfaces**
 
@@ -1107,7 +1107,7 @@ the new public names.
 Regenerate/copy the built declarations into the marked Studio modules. Add all
 public animation type names and runtime values to the exact manifests and
 runtime entry. Add an editor fixture containing explicit `.get()` reads,
-`crcTransition`, and an event-triggered `crcPlayback` program.
+`useTransition`, and an event-triggered `usePlayback` program.
 
 - [ ] **Step 4: Write current contracts and the user guide**
 

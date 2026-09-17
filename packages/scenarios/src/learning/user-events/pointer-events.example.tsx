@@ -1,6 +1,6 @@
 import {
   crc,
-  crcState,
+  useState,
   Rectangle,
   Text,
   type CRCController,
@@ -10,8 +10,8 @@ function pointerSummary(event: CRCPointerEvent): string {
   return `${event.type} #${event.pointerId} ${event.pointerType} ${Math.round(event.x)},${Math.round(event.y)} p=${event.pressure.toFixed(2)} ${event.width}×${event.height} tilt=${event.tiltX}/${event.tiltY} twist=${event.twist} b=${event.button}/${event.buttons} ${event.isPrimary ? "primary" : "secondary"}`;
 }
 function PointerEventsStudy() {
-  const [trace, setTrace] = crcState<readonly string[]>([]);
-  const [inside, setInside] = crcState(false);
+  const [trace, setTrace] = useState<readonly string[]>([]);
+  const [inside, setInside] = useState(false);
   const record = (event: CRCPointerEvent) => {
     setTrace((current) => [...current.slice(-3), pointerSummary(event)]);
   };

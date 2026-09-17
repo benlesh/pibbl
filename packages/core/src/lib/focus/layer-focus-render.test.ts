@@ -2,8 +2,8 @@ import { userEvent } from "vitest/browser";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { crc } from "../crc";
 import { getCRCInstance } from "../global-state";
-import { crcEventTarget } from "../hooks/crc-event-target";
-import { crcState } from "../hooks/crc-state";
+import { useEventTarget } from "../hooks/use-event-target";
+import { useState } from "../hooks/use-state";
 import { Layer } from "../components/layer";
 import { Rectangle } from "../components/rect";
 import { Group } from "../components/g";
@@ -30,7 +30,7 @@ afterEach(() => {
 describe("focus snapshots in cached layers", () => {
   it("replays mixed retained targets once in root registration order and excludes dead siblings", async () => {
     const Target = (_props: { label: string }) => {
-      crcEventTarget(
+      useEventTarget(
         { onClick: () => undefined },
         {
           path: rectanglePath(0, 0, 10, 10),
@@ -118,7 +118,7 @@ describe("focus snapshots in cached layers", () => {
 
   it("replays geometry-independent backend targets with their retained directional boundary", async () => {
     const BackendTarget = (_props: {}) => {
-      crcEventTarget(
+      useEventTarget(
         { onClick: () => undefined },
         {
           path: rectanglePath(0, 0, 20, 10),
@@ -164,7 +164,7 @@ describe("focus snapshots in cached layers", () => {
     let updateUnrelated!: () => void;
     const FocusTarget = (_props: {}) => {
       layerRenders++;
-      const snapshot = crcEventTarget(
+      const snapshot = useEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
@@ -188,7 +188,7 @@ describe("focus snapshots in cached layers", () => {
       });
     };
     const Root = (_props: {}) => {
-      const [version, setVersion] = crcState(0);
+      const [version, setVersion] = useState(0);
       updateUnrelated = () => setVersion(version + 1);
       return [
         createElement(Layer, {
@@ -246,7 +246,7 @@ describe("focus snapshots in cached layers", () => {
     let updateUnrelated!: () => void;
     const InertTarget = (_props: {}) => {
       layerRenders++;
-      const snapshot = crcEventTarget(
+      const snapshot = useEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
@@ -260,7 +260,7 @@ describe("focus snapshots in cached layers", () => {
       });
     };
     const Root = (_props: {}) => {
-      const [version, setVersion] = crcState(0);
+      const [version, setVersion] = useState(0);
       updateUnrelated = () => setVersion(version + 1);
       return createElement(Layer, {
         style: { width: 100, height: 100 },
@@ -285,7 +285,7 @@ describe("focus snapshots in cached layers", () => {
     let replaceTarget!: () => void;
     const FocusTarget = (_props: {}) => {
       layerRenders++;
-      const snapshot = crcEventTarget(
+      const snapshot = useEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
@@ -299,7 +299,7 @@ describe("focus snapshots in cached layers", () => {
       });
     };
     const Root = (_props: {}) => {
-      const [version, setVersion] = crcState(0);
+      const [version, setVersion] = useState(0);
       replaceTarget = () => setVersion(version + 1);
       return createElement(Layer, {
         style: { width: 80, height: 80 },
@@ -339,7 +339,7 @@ describe("focus snapshots during manager removal", () => {
       readonly isFocusVisible: boolean;
     }> = [];
     const FocusTarget = (_props: {}) => {
-      const snapshot = crcEventTarget(
+      const snapshot = useEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
@@ -354,7 +354,7 @@ describe("focus snapshots during manager removal", () => {
       });
     };
     const Root = (_props: {}) => {
-      const [managed, setManaged] = crcState(true);
+      const [managed, setManaged] = useState(true);
       removeManager = () => setManaged(false);
       const target = createElement(FocusTarget, {});
       return managed ? focusManaged(target) : target;
@@ -391,7 +391,7 @@ describe("focus snapshots during manager removal", () => {
     }> = [];
     const FocusTarget = (_props: {}) => {
       layerRenders++;
-      const snapshot = crcEventTarget(
+      const snapshot = useEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
@@ -409,7 +409,7 @@ describe("focus snapshots during manager removal", () => {
       children: createElement(FocusTarget, {}),
     });
     const Root = (_props: {}) => {
-      const [managed, setManaged] = crcState(true);
+      const [managed, setManaged] = useState(true);
       removeManager = () => setManaged(false);
       const host = createElement(LayerHost, {});
       return managed ? focusManaged(host) : host;

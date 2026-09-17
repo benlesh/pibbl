@@ -1,7 +1,7 @@
 import {
   Clip,
   crc,
-  crcState,
+  useState,
   Group,
   Layer,
   Path,
@@ -47,7 +47,7 @@ function Moon(props: MoonProps) {
   ];
 }
 function ComposedTargetStudy() {
-  const [active, setActive] = crcState(false);
+  const [active, setActive] = useState(false);
   const crop = new Path2D();
   crop.roundRect(0, 0, 300, 260, 58);
   return [

@@ -743,7 +743,7 @@
           "id": "b0113",
           "kind": "prose",
           "section": "Measurement architecture",
-          "text": "`crcLayoutBox()` exposes the current allocation in child-local coordinates as `{ x: 0, y: 0, width, height }`. It is observational, does not schedule a render, and deliberately does not claim to provide DOM/root coordinates; callers needing those must combine it with their own transform observation."
+          "text": "`useLayoutBox()` exposes the current allocation in child-local coordinates as `{ x: 0, y: 0, width, height }`. It is observational, does not schedule a render, and deliberately does not claim to provide DOM/root coordinates; callers needing those must combine it with their own transform observation."
         },
         {
           "id": "b0114",
@@ -1159,7 +1159,7 @@
           "id": "c0024",
           "kind": "prose",
           "section": "Component type capabilities",
-          "text": "Ordinary application components are plain functions. Simple custom painters use `crcCanvasContext()` during live rendering. `definePrimitive` is reserved for platform extension requiring style stages or pure measurement:"
+          "text": "Ordinary application components are plain functions. Simple custom painters use `useCanvasContext()` during live rendering. `definePrimitive` is reserved for platform extension requiring style stages or pure measurement:"
         },
         {
           "id": "c0025",
@@ -1213,7 +1213,7 @@
           "id": "c0033",
           "kind": "prose",
           "section": "Style schemas",
-          "text": "Plain components continue to receive their exact specified style. A parent may inspect it for allocation, but the finite child-local allocation is exposed separately through `crcLayoutBox()`."
+          "text": "Plain components continue to receive their exact specified style. A parent may inspect it for allocation, but the finite child-local allocation is exposed separately through `useLayoutBox()`."
         },
         {
           "id": "c0034",
@@ -1495,7 +1495,7 @@
           "id": "c0080",
           "kind": "prose",
           "section": "Measurement architecture",
-          "text": "Measurement receives program props, normalized style, constraints, an explicit Canvas text service, and a recursive `measureElement`. It returns measured content size or an unsupported reason. It cannot paint, invoke hooks, `crcCanvasContext`, `crcLayoutBox`, create targets or layers, schedule work, or acquire runtime resources. Pure measurement cannot create image generations. Temporary globals are cleared/restored in `finally`, and cycles are diagnosed. Pure measurement isolates itself from active render hooks and layout context."
+          "text": "Measurement receives program props, normalized style, constraints, an explicit Canvas text service, and a recursive `measureElement`. It returns measured content size or an unsupported reason. It cannot paint, invoke hooks, `useCanvasContext`, `useLayoutBox`, create targets or layers, schedule work, or acquire runtime resources. Pure measurement cannot create image generations. Temporary globals are cleared/restored in `finally`, and cycles are diagnosed. Pure measurement isolates itself from active render hooks and layout context."
         },
         {
           "id": "c0081",
@@ -1507,7 +1507,7 @@
           "id": "c0082",
           "kind": "prose",
           "section": "Measurement architecture",
-          "text": "`crcLayoutBox()` exposes `{ x: 0, y: 0, width, height }` in the allocated child-local coordinate system. It is observational and does not claim root or DOM coordinates. Measurement caching is not required; if introduced after structural evidence, a cache key must include component type, relevant props, normalized style, constraints, and environment inputs such as font metrics."
+          "text": "`useLayoutBox()` exposes `{ x: 0, y: 0, width, height }` in the allocated child-local coordinate system. It is observational and does not claim root or DOM coordinates. Measurement caching is not required; if introduced after structural evidence, a cache key must include component type, relevant props, normalized style, constraints, and environment inputs such as font metrics."
         },
         {
           "id": "c0083",
@@ -2223,7 +2223,7 @@
           "id": "b0029",
           "kind": "prose",
           "section": "Responsive viewport behavior",
-          "text": "For `viewport: 'responsive'`, one logical unit equals one CSS content-box pixel. A CSS resize updates the root `crcLayoutBox()` allocation and schedules one coalesced frame without remounting component identity. Backing dimensions still follow the requested pixel ratio, so responsive layout and high-density paint remain independent concerns."
+          "text": "For `viewport: 'responsive'`, one logical unit equals one CSS content-box pixel. A CSS resize updates the root `useLayoutBox()` allocation and schedules one coalesced frame without remounting component identity. Backing dimensions still follow the requested pixel ratio, so responsive layout and high-density paint remain independent concerns."
         },
         {
           "id": "b0030",
@@ -2447,7 +2447,7 @@
           "id": "c0029",
           "kind": "prose",
           "section": "Responsive viewport behavior",
-          "text": "For `viewport: 'responsive'`, one logical unit equals one CSS content-box pixel. A CSS resize updates the root `crcLayoutBox()` allocation and schedules one coalesced frame without remounting component identity. Backing dimensions still follow the requested pixel ratio, so responsive layout and high-density paint remain independent concerns."
+          "text": "For `viewport: 'responsive'`, one logical unit equals one CSS content-box pixel. A CSS resize updates the root `useLayoutBox()` allocation and schedules one coalesced frame without remounting component identity. Backing dimensions still follow the requested pixel ratio, so responsive layout and high-density paint remain independent concerns."
         },
         {
           "id": "c0030",
@@ -2489,7 +2489,7 @@
           "id": "c0036",
           "kind": "prose",
           "section": "Interaction and composition",
-          "text": "Runtime-created Layer and filter surfaces are upright local targets. CRC keeps the current paint transform, which maps local drawing into the active target, separate from the world transform used by event paths, focus bounds, clipping entries, and Layer bridges. Inside a filtered boundary, `crcCanvasContext().canvas` is truthfully the local `OffscreenCanvas`, and its `getTransform()` describes that local capture. The filtered bitmap receives the boundary's parent-facing placement or Group transform exactly once when it is composited. Interaction geometry continues to use root-logical world transforms and therefore does not double-apply surface density, fitting, or presentation."
+          "text": "Runtime-created Layer and filter surfaces are upright local targets. CRC keeps the current paint transform, which maps local drawing into the active target, separate from the world transform used by event paths, focus bounds, clipping entries, and Layer bridges. Inside a filtered boundary, `useCanvasContext().canvas` is truthfully the local `OffscreenCanvas`, and its `getTransform()` describes that local capture. The filtered bitmap receives the boundary's parent-facing placement or Group transform exactly once when it is composited. Interaction geometry continues to use root-logical world transforms and therefore does not double-apply surface density, fitting, or presentation."
         },
         {
           "id": "c0037",
@@ -3121,7 +3121,7 @@
           "id": "c0058",
           "kind": "prose",
           "section": "WebGL island values",
-          "text": "`crcOrbitCamera()` is a component-owned pose hook, not another camera type. It returns current `position` and `lookAt` snapshots plus a stable bundle of ordinary pointer/wheel handlers. The author passes those snapshots into the plain perspective descriptor and attaches the handlers to a mesh, a structural listener ancestor, or an explicit viewport-sized Canvas target. A structural component alone never creates draggable hit geometry. Primary-pointer capture, root-logical drag deltas, wheel cancellation, scheduling, and teardown use the ordinary CRC event and hook contracts; the hook owns no animation loop or GL resource."
+          "text": "`useOrbitCamera()` is a component-owned pose hook, not another camera type. It returns current `position` and `lookAt` snapshots plus a stable bundle of ordinary pointer/wheel handlers. The author passes those snapshots into the plain perspective descriptor and attaches the handlers to a mesh, a structural listener ancestor, or an explicit viewport-sized Canvas target. A structural component alone never creates draggable hit geometry. Primary-pointer capture, root-logical drag deltas, wheel cancellation, scheduling, and teardown use the ordinary CRC event and hook contracts; the hook owns no animation loop or GL resource."
         },
         {
           "id": "c0059",
@@ -3445,13 +3445,13 @@
           "id": "b0017",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| Grouped event target | Built-in slot or `crcEventTarget` hook | Render with handlers/cursor/focus metadata | Last active property removed, component removal, or disposal | Target, paint entry, native requests, captures, contacts, drag hover, and cursor references are absent. |"
+          "text": "| Grouped event target | Built-in slot or `useEventTarget` hook | Render with handlers/cursor/focus metadata | Last active property removed, component removal, or disposal | Target, paint entry, native requests, captures, contacts, drag hover, and cursor references are absent. |"
         },
         {
           "id": "b0018",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| Propagation listener | One `crcEventListener` hook slot | Render with at least one handler | Last handler removed, component removal, or disposal | The exact component bucket member and native requests are absent. |"
+          "text": "| Propagation listener | One `useEventListener` hook slot | Render with at least one handler | Last handler removed, component removal, or disposal | The exact component bucket member and native requests are absent. |"
         },
         {
           "id": "b0019",
@@ -3571,7 +3571,7 @@
           "id": "b0038",
           "kind": "prose",
           "section": "Replacement, removal, and errors",
-          "text": "Every rendered built-in or `crcEventTarget` path owns one persistent grouped target slot containing all current event handlers and its optional cursor/focus metadata. Rerender updates that target in place and refreshes its local paint position without changing logical identity. `crcEventListener` similarly owns one stable non-geometric registration. If the last active property disappears, teardown removes the exact registration and clears native requests, pointer capture, retained touch contacts, drag hover, mouse hover/activation, and cursor state that still references it."
+          "text": "Every rendered built-in or `useEventTarget` path owns one persistent grouped target slot containing all current event handlers and its optional cursor/focus metadata. Rerender updates that target in place and refreshes its local paint position without changing logical identity. `useEventListener` similarly owns one stable non-geometric registration. If the last active property disappears, teardown removes the exact registration and clears native requests, pointer capture, retained touch contacts, drag hover, mouse hover/activation, and cursor state that still references it."
         },
         {
           "id": "b0039",
@@ -3679,7 +3679,7 @@
           "id": "b0056",
           "kind": "prose",
           "section": "Deliberate boundary",
-          "text": "TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading and the existing `crcWhenChanged` cleanup contract."
+          "text": "TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading and the existing `useWhenChanged` cleanup contract."
         },
         {
           "id": "b0057",
@@ -3789,13 +3789,13 @@
           "id": "c0017",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| Grouped event target | Built-in paint-target slot or `crcEventTarget` hook | Default-participating drawing, or explicit target registration | `pointerEvents=\"none\"`, last explicit property removed, component removal, or disposal | Target, paint entry, native requests, captures, contacts, drag hover, focus, and cursor references are absent. |"
+          "text": "| Grouped event target | Built-in paint-target slot or `useEventTarget` hook | Default-participating drawing, or explicit target registration | `pointerEvents=\"none\"`, last explicit property removed, component removal, or disposal | Target, paint entry, native requests, captures, contacts, drag hover, focus, and cursor references are absent. |"
         },
         {
           "id": "c0018",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| Propagation listener | One `crcEventListener` hook slot | Render with at least one handler | Last handler removed, component removal, or disposal | The exact component bucket member and native requests are absent. |"
+          "text": "| Propagation listener | One `useEventListener` hook slot | Render with at least one handler | Last handler removed, component removal, or disposal | The exact component bucket member and native requests are absent. |"
         },
         {
           "id": "c0019",
@@ -3885,7 +3885,7 @@
           "id": "c0033",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| Orbit-camera hook slot | Mounted component calling `crcOrbitCamera()` | First call in that hook position | Component/hook/root teardown | Spherical state, active-pointer record, and revision ownership cannot schedule work; retained handlers are inert. |"
+          "text": "| Orbit-camera hook slot | Mounted component calling `useOrbitCamera()` | First call in that hook position | Component/hook/root teardown | Spherical state, active-pointer record, and revision ownership cannot schedule work; retained handlers are inert. |"
         },
         {
           "id": "c0034",
@@ -3939,13 +3939,13 @@
           "id": "c0042",
           "kind": "prose",
           "section": "Replacement, removal, and errors",
-          "text": "Every default-participating Canvas/WebGL drawing or `crcEventTarget` path owns one persistent grouped target slot containing current event handlers and optional cursor/focus metadata. Rerender updates that target in place and refreshes its local paint/pick position without changing logical identity. `crcEventListener` similarly owns one stable non-geometric registration. If the last active property disappears, teardown removes the exact registration and clears native requests, pointer capture, retained touch contacts, drag hover, mouse hover/activation, and cursor state that still references it. A built-in remains a passive target without those properties until `pointerEvents=\"none\"` or component teardown releases it."
+          "text": "Every default-participating Canvas/WebGL drawing or `useEventTarget` path owns one persistent grouped target slot containing current event handlers and optional cursor/focus metadata. Rerender updates that target in place and refreshes its local paint/pick position without changing logical identity. `useEventListener` similarly owns one stable non-geometric registration. If the last active property disappears, teardown removes the exact registration and clears native requests, pointer capture, retained touch contacts, drag hover, mouse hover/activation, and cursor state that still references it. A built-in remains a passive target without those properties until `pointerEvents=\"none\"` or component teardown releases it."
         },
         {
           "id": "c0043",
           "kind": "prose",
           "section": "Replacement, removal, and errors",
-          "text": "`crcOrbitCamera()` owns stable handler functions but no native listener, logical target, focus candidate, or pointer-capture resource merely by being called. Spreading its handlers onto a geometry participant or structural ancestor acquires the ordinary target/listener resources owned by that receiving component. During a gesture, capture remains owned by the receiving live event node and root dispatcher; hook teardown clears its local active pointer and makes the retained handler bundle inert. Lights, materials, backgrounds, and shadow maps likewise acquire no event resource."
+          "text": "`useOrbitCamera()` owns stable handler functions but no native listener, logical target, focus candidate, or pointer-capture resource merely by being called. Spreading its handlers onto a geometry participant or structural ancestor acquires the ordinary target/listener resources owned by that receiving component. During a gesture, capture remains owned by the receiving live event node and root dispatcher; hook teardown clears its local active pointer and makes the retained handler bundle inert. Lights, materials, backgrounds, and shadow maps likewise acquire no event resource."
         },
         {
           "id": "c0044",
@@ -4065,7 +4065,7 @@
           "id": "c0063",
           "kind": "prose",
           "section": "Deliberate boundary",
-          "text": "TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading and the existing `crcWhenChanged` cleanup contract."
+          "text": "TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading and the existing `useWhenChanged` cleanup contract."
         },
         {
           "id": "c0064",
@@ -4287,7 +4287,7 @@
           "id": "b0035",
           "kind": "prose",
           "section": "Render snapshots and modality",
-          "text": "`crcEventTarget` returns `{ isFocused, isFocusVisible }` for the current render. Without a manager both values are false. Pointer focus normally sets only `isFocused`; Tab and successful arrow navigation set both. Enter or Space does not retroactively turn a pointer-established focus into focus-visible focus."
+          "text": "`useEventTarget` returns `{ isFocused, isFocusVisible }` for the current render. Without a manager both values are false. Pointer focus normally sets only `isFocused`; Tab and successful arrow navigation set both. Enter or Space does not retroactively turn a pointer-established focus into focus-visible focus."
         },
         {
           "id": "b0036",
@@ -4317,7 +4317,7 @@
           "id": "b0040",
           "kind": "prose",
           "section": "Optionality, lifecycle, and failures",
-          "text": "The shared `focus-and-keyboard-navigation` scenario demonstrates native DOM controls before and after the Canvas, two explicit top targets, twelve keyed row-major directional squares, and two explicit bottom targets. Its private controls each own their rectangular `crcEventTarget` registration and their own visual children. They are example composition, not exported CRC widgets."
+          "text": "The shared `focus-and-keyboard-navigation` scenario demonstrates native DOM controls before and after the Canvas, two explicit top targets, twelve keyed row-major directional squares, and two explicit bottom targets. Its private controls each own their rectangular `useEventTarget` registration and their own visual children. They are example composition, not exported CRC widgets."
         },
         {
           "id": "b0041",
@@ -4523,7 +4523,7 @@
           "id": "c0032",
           "kind": "prose",
           "section": "Directional boundaries",
-          "text": "`crcOrbitCamera()` is independent of focus and picking. Its handlers may sit on a focusable mesh or any ordinary listener ancestor, but the hook creates no candidate and camera motion does not move focus ownership. An explicit viewport-sized target is still required when empty viewport space should begin an orbit gesture."
+          "text": "`useOrbitCamera()` is independent of focus and picking. Its handlers may sit on a focusable mesh or any ordinary listener ancestor, but the hook creates no candidate and camera motion does not move focus ownership. An explicit viewport-sized target is still required when empty viewport space should begin an orbit gesture."
         },
         {
           "id": "c0033",
@@ -4571,7 +4571,7 @@
           "id": "c0040",
           "kind": "prose",
           "section": "Render snapshots and modality",
-          "text": "`crcEventTarget` returns `{ isFocused, isFocusVisible }` for the current render. Without a manager both values are false. Pointer focus normally sets only `isFocused`; Tab and successful arrow navigation set both. Enter or Space does not retroactively turn a pointer-established focus into focus-visible focus."
+          "text": "`useEventTarget` returns `{ isFocused, isFocusVisible }` for the current render. Without a manager both values are false. Pointer focus normally sets only `isFocused`; Tab and successful arrow navigation set both. Enter or Space does not retroactively turn a pointer-established focus into focus-visible focus."
         },
         {
           "id": "c0041",
@@ -4613,7 +4613,7 @@
           "id": "c0047",
           "kind": "prose",
           "section": "Optionality, lifecycle, and failures",
-          "text": "The shared `focus-and-keyboard-navigation` scenario demonstrates native DOM controls before and after the Canvas, two explicit top targets, twelve keyed row-major directional squares, and two explicit bottom targets. Its private controls each own their rectangular `crcEventTarget` registration and their own visual children. They are example composition, not exported CRC widgets."
+          "text": "The shared `focus-and-keyboard-navigation` scenario demonstrates native DOM controls before and after the Canvas, two explicit top targets, twelve keyed row-major directional squares, and two explicit bottom targets. Its private controls each own their rectangular `useEventTarget` registration and their own visual children. They are example composition, not exported CRC widgets."
         },
         {
           "id": "c0048",
@@ -4703,7 +4703,7 @@
           "id": "b0010",
           "kind": "prose",
           "section": "Shared box, placement, and overflow rules",
-          "text": "The runtime places one private wrapper per direct child. The wrapper translates the child's allocation but preserves the original component type, key, and identity hint. Keyed children survive reflow; unkeyed same-type children retain occurrence-order identity, and keyed siblings do not consume unkeyed occurrence slots. A placed child's `crcLayoutBox` is the stable, readonly local box `{ x: 0, y: 0, width, height }`; reading it never schedules an update."
+          "text": "The runtime places one private wrapper per direct child. The wrapper translates the child's allocation but preserves the original component type, key, and identity hint. Keyed children survive reflow; unkeyed same-type children retain occurrence-order identity, and keyed siblings do not consume unkeyed occurrence slots. A placed child's `useLayoutBox` is the stable, readonly local box `{ x: 0, y: 0, width, height }`; reading it never schedules an update."
         },
         {
           "id": "b0011",
@@ -5107,7 +5107,7 @@
           "id": "c0012",
           "kind": "prose",
           "section": "Shared box, placement, and overflow rules",
-          "text": "The runtime places one private wrapper per direct child. The wrapper preserves the original brand, component type, props, key, compiler source metadata, policy metadata, and identity hint while translating the child's allocation. Keyed children survive reflow; unkeyed same-type children retain occurrence-order identity, and keyed siblings do not consume unkeyed occurrence slots. A placed child's `crcLayoutBox()` is the stable, readonly local box `{ x: 0, y: 0, width, height }`; reading it never schedules an update. Plain component props retain their exact specified style; the finite used allocation is exposed separately through `crcLayoutBox()`."
+          "text": "The runtime places one private wrapper per direct child. The wrapper preserves the original brand, component type, props, key, compiler source metadata, policy metadata, and identity hint while translating the child's allocation. Keyed children survive reflow; unkeyed same-type children retain occurrence-order identity, and keyed siblings do not consume unkeyed occurrence slots. A placed child's `useLayoutBox()` is the stable, readonly local box `{ x: 0, y: 0, width, height }`; reading it never schedules an update. Plain component props retain their exact specified style; the finite used allocation is exposed separately through `useLayoutBox()`."
         },
         {
           "id": "c0013",
@@ -5599,19 +5599,19 @@
           "id": "b0024",
           "kind": "prose",
           "section": "Target selection",
-          "text": "The public `crcEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation."
+          "text": "The public `useEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation."
         },
         {
           "id": "b0025",
           "kind": "prose",
           "section": "Target selection",
-          "text": "Likewise, `crcCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty."
+          "text": "Likewise, `useCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty."
         },
         {
           "id": "b0026",
           "kind": "prose",
           "section": "Target selection",
-          "text": "DOM ancestors learn about child input only through explicit `crcEventListener` registrations. The current facade exposes logical `target`, `currentTarget`, `relatedTarget`, phases, cancellation, and pointer capture as defined by the user-event contract; CRC still never invokes every overlapping geometric hit or infers an ancestor from paint."
+          "text": "DOM ancestors learn about child input only through explicit `useEventListener` registrations. The current facade exposes logical `target`, `currentTarget`, `relatedTarget`, phases, cancellation, and pointer capture as defined by the user-event contract; CRC still never invokes every overlapping geometric hit or infers an ancestor from paint."
         },
         {
           "id": "b0027",
@@ -5743,7 +5743,7 @@
           "id": "b0048",
           "kind": "prose",
           "section": "Primary click",
-          "text": "The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `crcEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted."
+          "text": "The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `useEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted."
         },
         {
           "id": "b0049",
@@ -5923,7 +5923,7 @@
           "id": "b0078",
           "kind": "list",
           "section": "Retained differences from DOM",
-          "text": "- No-path `crcEvent` handlers are Canvas-wide observers and run after target-bound callbacks rather than introducing a synthetic propagation phase."
+          "text": "- No-path `useEvent` handlers are Canvas-wide observers and run after target-bound callbacks rather than introducing a synthetic propagation phase."
         },
         {
           "id": "b0079",
@@ -6153,19 +6153,19 @@
           "id": "c0025",
           "kind": "prose",
           "section": "Target selection",
-          "text": "The public `crcEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation."
+          "text": "The public `useEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation."
         },
         {
           "id": "c0026",
           "kind": "prose",
           "section": "Target selection",
-          "text": "Likewise, `crcCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty."
+          "text": "Likewise, `useCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty."
         },
         {
           "id": "c0027",
           "kind": "prose",
           "section": "Target selection",
-          "text": "DOM ancestors learn about child input only through explicit `crcEventListener` registrations. The current facade exposes logical `target`, `currentTarget`, `relatedTarget`, phases, cancellation, and pointer capture as defined by the user-event contract; CRC still never invokes every overlapping geometric hit or infers an ancestor from paint."
+          "text": "DOM ancestors learn about child input only through explicit `useEventListener` registrations. The current facade exposes logical `target`, `currentTarget`, `relatedTarget`, phases, cancellation, and pointer capture as defined by the user-event contract; CRC still never invokes every overlapping geometric hit or infers an ancestor from paint."
         },
         {
           "id": "c0028",
@@ -6303,7 +6303,7 @@
           "id": "c0050",
           "kind": "prose",
           "section": "Primary click",
-          "text": "The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `crcEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted."
+          "text": "The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `useEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted."
         },
         {
           "id": "c0051",
@@ -6399,7 +6399,7 @@
           "id": "c0066",
           "kind": "prose",
           "section": "Coordinates and geometry",
-          "text": "`crcOrbitCamera()` consumes those root-logical pointer coordinates through its ordinary handler bundle. At default speed each captured primary-pointer pixel changes the matching spherical angle by `0.01` radians; its polar clamp prevents camera flips. Authors may attach the bundle to a geometry target or a listener ancestor, but an ancestor needs an explicit backing target to receive empty- viewport drags. Orbit camera movement changes presentation only: committed mesh geometry remains the source of target/focus resolution, and valid light-space shadow depth can be reused."
+          "text": "`useOrbitCamera()` consumes those root-logical pointer coordinates through its ordinary handler bundle. At default speed each captured primary-pointer pixel changes the matching spherical angle by `0.01` radians; its polar clamp prevents camera flips. Authors may attach the bundle to a geometry target or a listener ancestor, but an ancestor needs an explicit backing target to receive empty- viewport drags. Orbit camera movement changes presentation only: committed mesh geometry remains the source of target/focus resolution, and valid light-space shadow depth can be reused."
         },
         {
           "id": "c0067",
@@ -6489,7 +6489,7 @@
           "id": "c0081",
           "kind": "list",
           "section": "Retained differences from DOM",
-          "text": "- No-path `crcEvent` handlers are Canvas-wide observers and run after target-bound callbacks rather than introducing a synthetic propagation phase."
+          "text": "- No-path `useEvent` handlers are Canvas-wide observers and run after target-bound callbacks rather than introducing a synthetic propagation phase."
         },
         {
           "id": "c0082",
@@ -6669,61 +6669,61 @@
           "id": "b0016",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcState(init)` | Returns the current value and one stable setter for the mounted slot. Direct values and functional updates apply in call order and coalesce into a frame. Identity persists across ordinary renders and resets at key/type/root removal. A setter becomes an inert capability after its exact component or mount starts teardown. Function-valued state is not separately distinguished from functional updates. | `hook-contract.test.ts`, `crc-state.test.ts`, shared laboratory |"
+          "text": "| `useState(init)` | Returns the current value and one stable setter for the mounted slot. Direct values and functional updates apply in call order and coalesce into a frame. Identity persists across ordinary renders and resets at key/type/root removal. A setter becomes an inert capability after its exact component or mount starts teardown. Function-valued state is not separately distinguished from functional updates. | `hook-contract.test.ts`, `use-state.test.ts`, shared laboratory |"
         },
         {
           "id": "b0017",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcMemo(create, deps)` | Runs on mount and again when dependency length changes or any position compares different with strict `!==`. Equal dependencies preserve object identity. Consequently `NaN` recomputes and `+0`/`-0` compare equal. Factory errors enter fail-closed render recovery. | `hook-contract.test.ts`, shared laboratory |"
+          "text": "| `useMemo(create, deps)` | Runs on mount and again when dependency length changes or any position compares different with strict `!==`. Equal dependencies preserve object identity. Consequently `NaN` recomputes and `+0`/`-0` compare equal. Factory errors enter fail-closed render recovery. | `hook-contract.test.ts`, shared laboratory |"
         },
         {
           "id": "b0018",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcRef(init?)` | Creates one stable mutable `{ current }` object for the slot. Mutating it does not schedule a render. The initializer is used only on mount; key/type/root removal creates a fresh ref. | `crc-ref.test.ts`, `hook-contract.test.ts`, shared laboratory |"
+          "text": "| `useRef(init?)` | Creates one stable mutable `{ current }` object for the slot. Mutating it does not schedule a render. The initializer is used only on mount; key/type/root removal creates a fresh ref. | `use-ref.test.ts`, `hook-contract.test.ts`, shared laboratory |"
         },
         {
           "id": "b0019",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcWhenChanged(callback, deps?)` | Runs synchronously on mount and when shallow strict dependencies change. The previous cleanup runs exactly once before the next setup. With no dependencies it cleans and runs on every render. Component removal owns the final cleanup; a void or throwing replacement cannot replay an older cleanup. | `crc-when-changed.test.ts`, `hook-contract.test.ts`, cleanup laboratory |"
+          "text": "| `useWhenChanged(callback, deps?)` | Runs synchronously on mount and when shallow strict dependencies change. The previous cleanup runs exactly once before the next setup. With no dependencies it cleans and runs on every render. Component removal owns the final cleanup; a void or throwing replacement cannot replay an older cleanup. | `use-when-changed.test.ts`, `hook-contract.test.ts`, cleanup laboratory |"
         },
         {
           "id": "b0020",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcRectPath(...)` | Memoizes a `Path2D` over all rectangle geometry and pixel-grid inputs. Equal effective inputs preserve identity; changed geometry creates a new path. | `crc-path-hooks.test.ts`, shared laboratory |"
+          "text": "| `useRectPath(...)` | Memoizes a `Path2D` over all rectangle geometry and pixel-grid inputs. Equal effective inputs preserve identity; changed geometry creates a new path. | `crc-path-hooks.test.ts`, shared laboratory |"
         },
         {
           "id": "b0021",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcLinePath(...)` | Memoizes over every coordinate and `closePath`; changing either creates a new `Path2D`. | `crc-path-hooks.test.ts`, shared laboratory |"
+          "text": "| `useLinePath(...)` | Memoizes over every coordinate and `closePath`; changing either creates a new `Path2D`. | `crc-path-hooks.test.ts`, shared laboratory |"
         },
         {
           "id": "b0022",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcSvgPath(data)` | Memoizes exact SVG path data. Parsing is delegated to the platform `Path2D`; malformed data propagates the platform error and participates in normal render recovery. | `crc-path-hooks.test.ts`, shared laboratory |"
+          "text": "| `useSvgPath(data)` | Memoizes exact SVG path data. Parsing is delegated to the platform `Path2D`; malformed data propagates the platform error and participates in normal render recovery. | `crc-path-hooks.test.ts`, shared laboratory |"
         },
         {
           "id": "b0023",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcEvent(...)` | Owns a typed event hook slot and follows the target/observer and lifecycle rules in the mouse and ownership contracts. Switching path/global modes keeps hook order valid. | `hook-contract.test.ts`, TFC-04/TFC-05 laboratories |"
+          "text": "| `useEvent(...)` | Owns a typed event hook slot and follows the target/observer and lifecycle rules in the mouse and ownership contracts. Switching path/global modes keeps hook order valid. | `hook-contract.test.ts`, TFC-04/TFC-05 laboratories |"
         },
         {
           "id": "b0024",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcCursor(...)` | Owns a typed cursor hook slot and follows the target/fallback ownership rules in the mouse and event ownership contracts. Switching path/global modes keeps hook order valid. | `hook-contract.test.ts`, TFC-04/TFC-05 laboratories |"
+          "text": "| `useCursor(...)` | Owns a typed cursor hook slot and follows the target/fallback ownership rules in the mouse and event ownership contracts. Switching path/global modes keeps hook order valid. | `hook-contract.test.ts`, TFC-04/TFC-05 laboratories |"
         },
         {
           "id": "b0025",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcLayoutBox()` | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared outside-render hook diagnostic. | Layout foundation and measurement-isolation suites |"
+          "text": "| `useLayoutBox()` | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared outside-render hook diagnostic. | Layout foundation and measurement-isolation suites |"
         },
         {
           "id": "b0026",
@@ -6735,7 +6735,7 @@
           "id": "b0027",
           "kind": "prose",
           "section": "Pure measurement boundary",
-          "text": "`measureElement` and a component's optional `measure` capability are not render passes. Measurement normalizes style and may recursively measure children, but cannot invoke render callbacks, hooks, `crcLayoutBox`, interaction registration, paint, image loading, or other runtime ownership. CRC snapshots, clears, and restores temporary render globals in `finally`, so attempted hook use during an active render cannot consume the parent's hook slots. Direct and indirect measurement cycles throw a contextual cyclic-measurement diagnostic; later valid measurement remains usable."
+          "text": "`measureElement` and a component's optional `measure` capability are not render passes. Measurement normalizes style and may recursively measure children, but cannot invoke render callbacks, hooks, `useLayoutBox`, interaction registration, paint, image loading, or other runtime ownership. CRC snapshots, clears, and restores temporary render globals in `finally`, so attempted hook use during an active render cannot consume the parent's hook slots. Direct and indirect measurement cycles throw a contextual cyclic-measurement diagnostic; later valid measurement remains usable."
         },
         {
           "id": "b0028",
@@ -6777,7 +6777,7 @@
           "id": "b0034",
           "kind": "list",
           "section": "Deliberate boundaries",
-          "text": "- `crcState` does not define lazy initializer or function-as-data semantics; a function passed to the setter is an updater."
+          "text": "- `useState` does not define lazy initializer or function-as-data semantics; a function passed to the setter is an updater."
         },
         {
           "id": "b0035",
@@ -6797,7 +6797,7 @@
           "id": "c0001",
           "kind": "prose",
           "section": "CRC runtime and hook contract",
-          "text": "Status: current implemented contract, updated for settled WebGL scenes, first-class signals, the realm scheduler, and `crcOrbitCamera` on 2026-09-15."
+          "text": "Status: current implemented contract, updated for settled WebGL scenes, first-class signals, the realm scheduler, and `useOrbitCamera` on 2026-09-15."
         },
         {
           "id": "c0002",
@@ -6989,7 +6989,7 @@
           "id": "c0033",
           "kind": "prose",
           "section": "Scheduling",
-          "text": "A required `WebGLLayer` child update synchronously traverses that invalidated private instance once, settles and renders the successful scene, and requests the necessary parent composition without a second child traversal. `crcAnimationFrame()` returns the current transaction's timestamp and requests one continuing coalesced frame while its component is mounted. Canvas and WebGL work in that transaction observes the same timestamp; multiple animation callers do not create independent scheduler loops. Static WebGL content requests no continuing frame."
+          "text": "A required `WebGLLayer` child update synchronously traverses that invalidated private instance once, settles and renders the successful scene, and requests the necessary parent composition without a second child traversal. `useAnimationFrame()` returns the current transaction's timestamp and requests one continuing coalesced frame while its component is mounted. Canvas and WebGL work in that transaction observes the same timestamp; multiple animation callers do not create independent scheduler loops. Static WebGL content requests no continuing frame."
         },
         {
           "id": "c0034",
@@ -7019,91 +7019,91 @@
           "id": "c0038",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcState(init?)` | Returns the current value and one stable setter for the mounted slot. Direct values and functional updates apply in call order and coalesce into a frame. Identity persists across ordinary renders and resets at key/type/root removal. A setter becomes inert after its exact component or mount starts teardown. Function-valued state is not distinguished from functional updates. | `hook-contract.test.ts`, `crc-state.test.ts`, shared laboratory |"
+          "text": "| `useState(init?)` | Returns the current value and one stable setter for the mounted slot. Direct values and functional updates apply in call order and coalesce into a frame. Identity persists across ordinary renders and resets at key/type/root removal. A setter becomes inert after its exact component or mount starts teardown. Function-valued state is not distinguished from functional updates. | `hook-contract.test.ts`, `use-state.test.ts`, shared laboratory |"
         },
         {
           "id": "c0039",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcMemo(create, deps)` | Runs on mount and again when dependency length changes or any position compares different with strict `!==`. Equal dependencies preserve object identity. Consequently `NaN` recomputes and `+0`/`-0` compare equal. Factory errors enter fail-closed render recovery. | `hook-contract.test.ts`, shared laboratory |"
+          "text": "| `useMemo(create, deps)` | Runs on mount and again when dependency length changes or any position compares different with strict `!==`. Equal dependencies preserve object identity. Consequently `NaN` recomputes and `+0`/`-0` compare equal. Factory errors enter fail-closed render recovery. | `hook-contract.test.ts`, shared laboratory |"
         },
         {
           "id": "c0040",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcRef(init?)` | Creates one stable mutable `{ current }` object for the slot. Mutating it does not schedule a render. The initializer is used only on mount; key/type/root removal creates a fresh ref. | `crc-ref.test.ts`, `hook-contract.test.ts`, shared laboratory |"
+          "text": "| `useRef(init?)` | Creates one stable mutable `{ current }` object for the slot. Mutating it does not schedule a render. The initializer is used only on mount; key/type/root removal creates a fresh ref. | `use-ref.test.ts`, `hook-contract.test.ts`, shared laboratory |"
         },
         {
           "id": "c0041",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcWhenChanged(callback, deps?)` | Runs synchronously on mount and when shallow strict dependencies change. The previous cleanup runs exactly once before the next setup. With no dependencies it cleans and runs on every render. Component removal owns the final cleanup; a void or throwing replacement cannot replay an older cleanup. | `crc-when-changed.test.ts`, `hook-contract.test.ts`, cleanup laboratory |"
+          "text": "| `useWhenChanged(callback, deps?)` | Runs synchronously on mount and when shallow strict dependencies change. The previous cleanup runs exactly once before the next setup. With no dependencies it cleans and runs on every render. Component removal owns the final cleanup; a void or throwing replacement cannot replay an older cleanup. | `use-when-changed.test.ts`, `hook-contract.test.ts`, cleanup laboratory |"
         },
         {
           "id": "c0042",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcRectPath(...)` | Memoizes a `Path2D` over all rectangle geometry and pixel-grid inputs. Equal effective inputs preserve identity; changed geometry creates a new path. | `crc-path-hooks.test.ts`, shared laboratory |"
+          "text": "| `useRectPath(...)` | Memoizes a `Path2D` over all rectangle geometry and pixel-grid inputs. Equal effective inputs preserve identity; changed geometry creates a new path. | `crc-path-hooks.test.ts`, shared laboratory |"
         },
         {
           "id": "c0043",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcLinePath(...)` | Memoizes over every coordinate and `closePath`; changing either creates a new `Path2D`. | `crc-path-hooks.test.ts`, shared laboratory |"
+          "text": "| `useLinePath(...)` | Memoizes over every coordinate and `closePath`; changing either creates a new `Path2D`. | `crc-path-hooks.test.ts`, shared laboratory |"
         },
         {
           "id": "c0044",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcSvgPath(data)` | Memoizes exact SVG path data. Parsing is delegated to platform `Path2D`; malformed data propagates the platform error and participates in normal render recovery. | `crc-path-hooks.test.ts`, shared laboratory |"
+          "text": "| `useSvgPath(data)` | Memoizes exact SVG path data. Parsing is delegated to platform `Path2D`; malformed data propagates the platform error and participates in normal render recovery. | `crc-path-hooks.test.ts`, shared laboratory |"
         },
         {
           "id": "c0045",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcEvent(...)` | Owns a typed event hook slot and follows geometric-target/pathless-observer and lifecycle rules in the event and ownership contracts. Switching modes keeps hook order valid. | `hook-contract.test.ts`, user-event laboratories |"
+          "text": "| `useEvent(...)` | Owns a typed event hook slot and follows geometric-target/pathless-observer and lifecycle rules in the event and ownership contracts. Switching modes keeps hook order valid. | `hook-contract.test.ts`, user-event laboratories |"
         },
         {
           "id": "c0046",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcEventTarget(...)` | Groups one explicit geometric target and its focus snapshot with exact per-render ownership. | event-target and focus suites |"
+          "text": "| `useEventTarget(...)` | Groups one explicit geometric target and its focus snapshot with exact per-render ownership. | event-target and focus suites |"
         },
         {
           "id": "c0047",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcEventListener(...)` | Adds one non-geometric capture/bubble listener participant with no implicit target. | propagation and ownership suites |"
+          "text": "| `useEventListener(...)` | Adds one non-geometric capture/bubble listener participant with no implicit target. | propagation and ownership suites |"
         },
         {
           "id": "c0048",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcCursor(...)` | Owns a typed cursor hook slot and follows target/fallback ownership rules. Switching path/global modes keeps hook order valid. | `hook-contract.test.ts`, cleanup laboratory |"
+          "text": "| `useCursor(...)` | Owns a typed cursor hook slot and follows target/fallback ownership rules. Switching path/global modes keeps hook order valid. | `hook-contract.test.ts`, cleanup laboratory |"
         },
         {
           "id": "c0049",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcLayoutBox()` | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared hook diagnostic. | layout foundation and measurement-isolation suites |"
+          "text": "| `useLayoutBox()` | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared hook diagnostic. | layout foundation and measurement-isolation suites |"
         },
         {
           "id": "c0050",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcCanvasContext()` | Returns the current isolated Canvas 2D context without allocating a hook slot. It is unavailable outside render and during pure measurement. | plain-component and measurement-isolation suites |"
+          "text": "| `useCanvasContext()` | Returns the current isolated Canvas 2D context without allocating a hook slot. It is unavailable outside render and during pure measurement. | plain-component and measurement-isolation suites |"
         },
         {
           "id": "c0051",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcAnimationFrame()` | From `@crc/webgl`, owns a typed hook slot, returns the shared current timestamp, and retains one continuing-frame request while mounted. Removal/disposal makes stale callbacks inert. | WebGL animation and structural-performance suites |"
+          "text": "| `useAnimationFrame()` | From `@crc/webgl`, owns a typed hook slot, returns the shared current timestamp, and retains one continuing-frame request while mounted. Removal/disposal makes stale callbacks inert. | WebGL animation and structural-performance suites |"
         },
         {
           "id": "c0052",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcOrbitCamera(options)` | From `@crc/webgl`, owns spherical azimuth/polar/distance plus one revision signal in a typed component slot. It returns immutable current `position`/`lookAt` snapshots and a hook-lifetime-stable bundle of ordinary CRC pointer/wheel handlers. `initialPosition` is mount-only; orbit point, bounds, and speeds are live candidates adopted only after successful render. Input changes request scheduled renders and no idle animation frames. | Orbit-camera hook and WebGL lighting laboratory suites |"
+          "text": "| `useOrbitCamera(options)` | From `@crc/webgl`, owns spherical azimuth/polar/distance plus one revision signal in a typed component slot. It returns immutable current `position`/`lookAt` snapshots and a hook-lifetime-stable bundle of ordinary CRC pointer/wheel handlers. `initialPosition` is mount-only; orbit point, bounds, and speeds are live candidates adopted only after successful render. Input changes request scheduled renders and no idle animation frames. | Orbit-camera hook and WebGL lighting laboratory suites |"
         },
         {
           "id": "c0053",
@@ -7115,7 +7115,7 @@
           "id": "c0054",
           "kind": "prose",
           "section": "Pure measurement boundary",
-          "text": "`measureElement` and a `definePrimitive` `measure` capability are not render passes. They normalize style and may recursively measure elements, but cannot invoke render callbacks, hooks, `crcLayoutBox`, `crcCanvasContext`, or `crcAnimationFrame`, `crcOrbitCamera`, compose a WebGL scene, paint, register interaction, load images, or acquire resources. CRC clears and restores temporary render state in `finally`. When measurement is nested during an active render, that isolation prevents attempted measurement hooks from consuming or reordering the parent component's hook slots. Direct or indirect cycles report a contextual `LayoutDiagnostic`; a later valid measurement remains usable."
+          "text": "`measureElement` and a `definePrimitive` `measure` capability are not render passes. They normalize style and may recursively measure elements, but cannot invoke render callbacks, hooks, `useLayoutBox`, `useCanvasContext`, or `useAnimationFrame`, `useOrbitCamera`, compose a WebGL scene, paint, register interaction, load images, or acquire resources. CRC clears and restores temporary render state in `finally`. When measurement is nested during an active render, that isolation prevents attempted measurement hooks from consuming or reordering the parent component's hook slots. Direct or indirect cycles report a contextual `LayoutDiagnostic`; a later valid measurement remains usable."
         },
         {
           "id": "c0055",
@@ -7139,13 +7139,13 @@
           "id": "c0058",
           "kind": "prose",
           "section": "Public package boundary",
-          "text": "`@crc/webgl` consumes that one installed core instance as a matching peer. Its `crcAnimationFrame` and `crcOrbitCamera` hooks use core-owned hook/scheduling and event facilities; the package exports no second JSX runtime, element constructor, fragment, or competing core hook/event vocabulary. The explicit `@crc/core/internal` friend entry supports matching official CRC packages only. It is version-coupled, absent from the application API reference, and carries no independent semantic-versioning or compatibility promise. Applications must not import it."
+          "text": "`@crc/webgl` consumes that one installed core instance as a matching peer. Its `useAnimationFrame` and `useOrbitCamera` hooks use core-owned hook/scheduling and event facilities; the package exports no second JSX runtime, element constructor, fragment, or competing core hook/event vocabulary. The explicit `@crc/core/internal` friend entry supports matching official CRC packages only. It is version-coupled, absent from the application API reference, and carries no independent semantic-versioning or compatibility promise. Applications must not import it."
         },
         {
           "id": "c0059",
           "kind": "prose",
           "section": "Public package boundary",
-          "text": "The root `@crc/core` entry also exports `Signal`, `WritableSignal`, `SignalOptions`, `SignalEquals`, `signal`, `computed`, `untracked`, `isSignal`, and `crcSignal`."
+          "text": "The root `@crc/core` entry also exports `Signal`, `WritableSignal`, `SignalOptions`, `SignalEquals`, `signal`, `computed`, `untracked`, `isSignal`, and `useSignal`."
         },
         {
           "id": "c0060",
@@ -7187,7 +7187,7 @@
           "id": "c0066",
           "kind": "list",
           "section": "Deliberate boundaries",
-          "text": "- `crcState` defines no separate lazy-initializer or function-as-data semantics; a function passed to its setter is an updater."
+          "text": "- `useState` defines no separate lazy-initializer or function-as-data semantics; a function passed to its setter is an updater."
         },
         {
           "id": "c0067",
@@ -7211,7 +7211,7 @@
           "id": "c0070",
           "kind": "prose",
           "section": "First-class signal integration",
-          "text": "`crcSignal(initialValue, options?)` returns one writable signal created for the mounted hook slot. The initial value, equality function, and debug name are mount-only. Explicit `get()` reads subscribe the evaluating component. Removal detaches that owner; a retained signal remains readable and writable but cannot schedule the removed owner. Focused `crc-signal`, signal graph, component-consumer, scheduler, Layer, and error-isolation suites cover these rules. `crcPlayback(program, options?)` and `crcTransition(target, options)` are ordered render-only hook slots. The first returns a stable component-owned handle; the second returns a stable readonly signal backed by private playback. Only successful renders adopt candidates or queue autoplay, entrance, and retarget work. Teardown releases registrations, writer leases, evaluator and stepper state, queued commands and milestones, and live callbacks exactly once; stale controls and retained transition results cannot schedule a replacement identity. All commands enter the shared realm scheduler, outputs/status/time publish in one Commit, and specialized behavior lives in the [animation contract](./animation-contract.md)."
+          "text": "`useSignal(initialValue, options?)` returns one writable signal created for the mounted hook slot. The initial value, equality function, and debug name are mount-only. Explicit `get()` reads subscribe the evaluating component. Removal detaches that owner; a retained signal remains readable and writable but cannot schedule the removed owner. Focused `use-signal`, signal graph, component-consumer, scheduler, Layer, and error-isolation suites cover these rules. `usePlayback(program, options?)` and `useTransition(target, options)` are ordered render-only hook slots. The first returns a stable component-owned handle; the second returns a stable readonly signal backed by private playback. Only successful renders adopt candidates or queue autoplay, entrance, and retarget work. Teardown releases registrations, writer leases, evaluator and stepper state, queued commands and milestones, and live callbacks exactly once; stale controls and retained transition results cannot schedule a replacement identity. All commands enter the shared realm scheduler, outputs/status/time publish in one Commit, and specialized behavior lives in the [animation contract](./animation-contract.md)."
         },
         {
           "id": "c0071",
@@ -7277,13 +7277,13 @@
           "id": "b0008",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| `crcWhenChanged` cleanup | Current dependency-generation callback return | That hook slot in the component collection | Dependency change or component teardown | The previous generation cleans before the next setup and can never clean twice. |"
+          "text": "| `useWhenChanged` cleanup | Current dependency-generation callback return | That hook slot in the component collection | Dependency change or component teardown | The previous generation cleans before the next setup and can never clean twice. |"
         },
         {
           "id": "b0009",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| `crcState` setter | Hook mount | Exact CRC instance plus exact component refs | Component/main teardown closure or either identity changing | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount. |"
+          "text": "| `useState` setter | Hook mount | Exact CRC instance plus exact component refs | Component/main teardown closure or either identity changing | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount. |"
         },
         {
           "id": "b0010",
@@ -7471,13 +7471,13 @@
           "id": "c0008",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| `crcWhenChanged` cleanup | Current dependency-generation callback return | That hook slot in the component collection | Dependency change or component teardown | The previous generation cleans before the next setup and can never clean twice. |"
+          "text": "| `useWhenChanged` cleanup | Current dependency-generation callback return | That hook slot in the component collection | Dependency change or component teardown | The previous generation cleans before the next setup and can never clean twice. |"
         },
         {
           "id": "c0009",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| `crcState` setter | Hook mount | Exact CRC instance plus exact component refs | Component/main teardown closure or either identity changing | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount. |"
+          "text": "| `useState` setter | Hook mount | Exact CRC instance plus exact component refs | Component/main teardown closure or either identity changing | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount. |"
         },
         {
           "id": "c0010",
@@ -7543,13 +7543,13 @@
           "id": "c0020",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| WebGL orbit-camera hook | `crcOrbitCamera()` mount | Exact component hook slot | Component removal, layer/root teardown, or disposal | Retained handlers and returned camera snapshots become inert runtime capabilities; no native listener, pointer capture, or independent frame request remains owned by the hook. |"
+          "text": "| WebGL orbit-camera hook | `useOrbitCamera()` mount | Exact component hook slot | Component removal, layer/root teardown, or disposal | Retained handlers and returned camera snapshots become inert runtime capabilities; no native listener, pointer capture, or independent frame request remains owned by the hook. |"
         },
         {
           "id": "c0021",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| WebGL continuing-frame hook | `crcAnimationFrame()` render | That component hook slot | Component removal, hook teardown, child/layer disposal, or root disposal | Its request is released once; stale callbacks cannot schedule a replacement mount. |"
+          "text": "| WebGL continuing-frame hook | `useAnimationFrame()` render | That component hook slot | Component removal, hook teardown, child/layer disposal, or root disposal | Its request is released once; stale callbacks cannot schedule a replacement mount. |"
         },
         {
           "id": "c0022",
@@ -7771,7 +7771,7 @@
           "id": "c0058",
           "kind": "table",
           "section": "Signal and scheduler ownership",
-          "text": "| `crcSignal` hook identity | Hook mount | Exact component hook slot | Hook/component/root teardown | Render-consumer edges detach; a retained signal cell remains independently readable and writable. |"
+          "text": "| `useSignal` hook identity | Hook mount | Exact component hook slot | Hook/component/root teardown | Render-consumer edges detach; a retained signal cell remains independently readable and writable. |"
         },
         {
           "id": "c0059",
@@ -8121,7 +8121,7 @@
           "id": "c0010",
           "kind": "prose",
           "section": "Public style model",
-          "text": "Plain functions receive their specified `style` in props. A layout parent may inspect a direct child's style but never substitutes its finite allocation into those props; the component reads that through `crcLayoutBox()`."
+          "text": "Plain functions receive their specified `style` in props. A layout parent may inspect a direct child's style but never substitutes its finite allocation into those props; the component reads that through `useLayoutBox()`."
         },
         {
           "id": "c0011",
@@ -8559,7 +8559,7 @@
           "id": "b0002",
           "kind": "prose",
           "section": "CRC user-event contract",
-          "text": "This document defines the public event behavior shared by built-in drawing components, `crcEventTarget`, `crcEventListener`, and the legacy `crcEvent` hook. The executable public integration oracle is the `interaction-trace-lab` scenario; focused event suites retain exhaustive family, geometry, mutation, and ownership matrices."
+          "text": "This document defines the public event behavior shared by built-in drawing components, `useEventTarget`, `useEventListener`, and the legacy `useEvent` hook. The executable public integration oracle is the `interaction-trace-lab` scenario; focused event suites retain exhaustive family, geometry, mutation, and ownership matrices."
         },
         {
           "id": "b0003",
@@ -8577,13 +8577,13 @@
           "id": "b0005",
           "kind": "prose",
           "section": "Public registration model",
-          "text": "`crcEventTarget(handlers, options)` creates one grouped custom target. Its required `Path2D`, fill/stroke hit options, captured render transform, clips, and paint-ledger position are explicit; CRC never infers a custom component's geometry from its returned descendants. Rerender replaces handlers and geometry in the same hook slot without replacing target identity."
+          "text": "`useEventTarget(handlers, options)` creates one grouped custom target. Its required `Path2D`, fill/stroke hit options, captured render transform, clips, and paint-ledger position are explicit; CRC never infers a custom component's geometry from its returned descendants. Rerender replaces handlers and geometry in the same hook slot without replacing target identity."
         },
         {
           "id": "b0006",
           "kind": "prose",
           "section": "Public registration model",
-          "text": "`crcEventListener(handlers)` creates one propagation participant on the current component. It owns no geometry, never wins hit testing, and never becomes a focus candidate merely by listening. A listener can nevertheless be the logical target of common-ancestor activation or pointer capture, matching its role on a derived event path."
+          "text": "`useEventListener(handlers)` creates one propagation participant on the current component. It owns no geometry, never wins hit testing, and never becomes a focus candidate merely by listening. A listener can nevertheless be the logical target of common-ancestor activation or pointer capture, matching its role on a derived event path."
         },
         {
           "id": "b0007",
@@ -8745,7 +8745,7 @@
           "id": "b0033",
           "kind": "prose",
           "section": "Non-coordinate transport",
-          "text": "Registering handlers alone does not install `tabindex`, focus policy, or keyboard activation. The `keyboardFocusable` and `keyboardNavigationBounds` target options remain inert without the optional focus enhancer, and `crcEventTarget` snapshots then report `isFocused: false` and `isFocusVisible: false`. Exact focus ownership, traversal, defaults, snapshots, layer invalidation, and teardown defer to the focus contract."
+          "text": "Registering handlers alone does not install `tabindex`, focus policy, or keyboard activation. The `keyboardFocusable` and `keyboardNavigationBounds` target options remain inert without the optional focus enhancer, and `useEventTarget` snapshots then report `isFocused: false` and `isFocusVisible: false`. Exact focus ownership, traversal, defaults, snapshots, layer invalidation, and teardown defer to the focus contract."
         },
         {
           "id": "b0034",
@@ -8817,7 +8817,7 @@
           "id": "b0045",
           "kind": "prose",
           "section": "Native listeners, layers, legacy observers, and disposal",
-          "text": "The singular path-bound `crcEvent` remains a stable legacy geometric target. A pathless `crcEvent` remains a narrow mouse-only Canvas observer with the shipped `{ x, y, originalEvent }` payload. Observers run after logical target propagation, once per matching native event, in registration order. Removal is effective before a pending observer turn, additions wait until the next native event, and thrown observers are reported without suppressing safe peers. Pathless observers do not affect target selection, propagation, cursor, or activation."
+          "text": "The singular path-bound `useEvent` remains a stable legacy geometric target. A pathless `useEvent` remains a narrow mouse-only Canvas observer with the shipped `{ x, y, originalEvent }` payload. Observers run after logical target propagation, once per matching native event, in registration order. Removal is effective before a pending observer turn, additions wait until the next native event, and thrown observers are reported without suppressing safe peers. Pathless observers do not affect target selection, propagation, cursor, or activation."
         },
         {
           "id": "b0046",
@@ -8835,7 +8835,7 @@
           "id": "b0048",
           "kind": "prose",
           "section": "Evidence boundary",
-          "text": "The shared `interaction-trace-lab` laboratory teaches one direct built-in propagation target, one `crcEventListener` ancestor, one `crcEventTarget` custom path, touch retention, wheel cancellation, and drag/drop. Its keyboard, composition, and clipboard scenes are headless contract fixtures driven by internal test transport; they do not claim a public adapter or manually reachable target on a plain Canvas. The separate public focus scenario demonstrates the opt-in keyboard path described by the focus contract. Exhaustive event vocabulary, multi-pointer/contact, mutation, failure, geometry, layer, and ownership matrices remain in focused tests so the learning fixture stays readable."
+          "text": "The shared `interaction-trace-lab` laboratory teaches one direct built-in propagation target, one `useEventListener` ancestor, one `useEventTarget` custom path, touch retention, wheel cancellation, and drag/drop. Its keyboard, composition, and clipboard scenes are headless contract fixtures driven by internal test transport; they do not claim a public adapter or manually reachable target on a plain Canvas. The separate public focus scenario demonstrates the opt-in keyboard path described by the focus contract. Exhaustive event vocabulary, multi-pointer/contact, mutation, failure, geometry, layer, and ownership matrices remain in focused tests so the learning fixture stays readable."
         },
         {
           "id": "b0049",
@@ -8855,7 +8855,7 @@
           "id": "c0002",
           "kind": "prose",
           "section": "CRC user-event contract",
-          "text": "This document defines the public event behavior shared by built-in drawing components, `crcEventTarget`, `crcEventListener`, and the legacy `crcEvent` hook. The executable public integration oracle is the `interaction-trace-lab` scenario; focused event suites retain exhaustive family, geometry, mutation, and ownership matrices."
+          "text": "This document defines the public event behavior shared by built-in drawing components, `useEventTarget`, `useEventListener`, and the legacy `useEvent` hook. The executable public integration oracle is the `interaction-trace-lab` scenario; focused event suites retain exhaustive family, geometry, mutation, and ownership matrices."
         },
         {
           "id": "c0003",
@@ -8879,13 +8879,13 @@
           "id": "c0006",
           "kind": "prose",
           "section": "Public registration model",
-          "text": "`crcEventTarget(handlers, options)` creates one grouped custom target. Its required `Path2D`, fill/stroke hit options, captured render transform, clips, and paint-ledger position are explicit; CRC never infers a custom component's geometry from its returned descendants. Rerender replaces handlers and geometry in the same hook slot without replacing target identity."
+          "text": "`useEventTarget(handlers, options)` creates one grouped custom target. Its required `Path2D`, fill/stroke hit options, captured render transform, clips, and paint-ledger position are explicit; CRC never infers a custom component's geometry from its returned descendants. Rerender replaces handlers and geometry in the same hook slot without replacing target identity."
         },
         {
           "id": "c0007",
           "kind": "prose",
           "section": "Public registration model",
-          "text": "`crcEventListener(handlers)` creates one propagation participant on the current component. It owns no geometry, never wins hit testing, and never becomes a focus candidate merely by listening. A listener can nevertheless be the logical target of common-ancestor activation or pointer capture, matching its role on a derived event path."
+          "text": "`useEventListener(handlers)` creates one propagation participant on the current component. It owns no geometry, never wins hit testing, and never becomes a focus candidate merely by listening. A listener can nevertheless be the logical target of common-ancestor activation or pointer capture, matching its role on a derived event path."
         },
         {
           "id": "c0008",
@@ -8897,13 +8897,13 @@
           "id": "c0009",
           "kind": "prose",
           "section": "Public registration model",
-          "text": "The child-bearing `Group`, `Clip`, `Layer`, `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid` built-ins accept handler props with `crcEventListener` semantics. `WebGLLayer` and `Group3D` do the same. These structural values add listener ancestry only: they have no independent rectangle or conceptual-bounds target, and empty space does not select them."
+          "text": "The child-bearing `Group`, `Clip`, `Layer`, `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid` built-ins accept handler props with `useEventListener` semantics. `WebGLLayer` and `Group3D` do the same. These structural values add listener ancestry only: they have no independent rectangle or conceptual-bounds target, and empty space does not select them."
         },
         {
           "id": "c0010",
           "kind": "prose",
           "section": "Public registration model",
-          "text": "`crcOrbitCamera()` returns ordinary stable CRC handlers rather than installing a hidden listener or target. Authors may spread them onto geometry or a structural listener ancestor. To make a whole viewport draggable, that ancestor must contain an explicit viewport-sized target; the structural component alone does not make empty space hit. JSX spread order does not merge the orbit bundle with another callback, so applications compose both behaviors explicitly."
+          "text": "`useOrbitCamera()` returns ordinary stable CRC handlers rather than installing a hidden listener or target. Authors may spread them onto geometry or a structural listener ancestor. To make a whole viewport draggable, that ancestor must contain an explicit viewport-sized target; the structural component alone does not make empty space hit. JSX spread order does not merge the orbit bundle with another callback, so applications compose both behaviors explicitly."
         },
         {
           "id": "c0011",
@@ -9059,7 +9059,7 @@
           "id": "c0036",
           "kind": "prose",
           "section": "Pointer capture, touch, wheel, and drag ownership",
-          "text": "The `crcOrbitCamera()` handler bundle uses these same rules. A primary `pointerdown` captures one pointer on `currentTarget`; matching root-logical pointer moves rotate, and up/cancel/lost-capture ends the gesture. Other pointers cannot steal it. Wheel zoom normalizes pixel deltas directly, line deltas at 16 pixels per line, and page deltas by the root logical viewport height. It calls `preventDefault()` only when the clamped distance actually changes. Each applied change schedules ordinary CRC work; no handler starts an independent or idle frame loop."
+          "text": "The `useOrbitCamera()` handler bundle uses these same rules. A primary `pointerdown` captures one pointer on `currentTarget`; matching root-logical pointer moves rotate, and up/cancel/lost-capture ends the gesture. Other pointers cannot steal it. Wheel zoom normalizes pixel deltas directly, line deltas at 16 pixels per line, and page deltas by the root logical viewport height. It calls `preventDefault()` only when the clamped distance actually changes. Each applied change schedules ordinary CRC work; no handler starts an independent or idle frame loop."
         },
         {
           "id": "c0037",
@@ -9077,7 +9077,7 @@
           "id": "c0039",
           "kind": "prose",
           "section": "Non-coordinate transport",
-          "text": "Registering handlers alone does not install `tabindex`, focus policy, or keyboard activation. The `keyboardFocusable` and `keyboardNavigationBounds` target options remain inert without the optional focus policy, and `crcEventTarget` snapshots then report `isFocused: false` and `isFocusVisible: false`. Exact focus ownership, traversal, defaults, snapshots, layer invalidation, and teardown defer to the focus contract."
+          "text": "Registering handlers alone does not install `tabindex`, focus policy, or keyboard activation. The `keyboardFocusable` and `keyboardNavigationBounds` target options remain inert without the optional focus policy, and `useEventTarget` snapshots then report `isFocused: false` and `isFocusVisible: false`. Exact focus ownership, traversal, defaults, snapshots, layer invalidation, and teardown defer to the focus contract."
         },
         {
           "id": "c0040",
@@ -9149,7 +9149,7 @@
           "id": "c0051",
           "kind": "prose",
           "section": "Native listeners, layers, legacy observers, and disposal",
-          "text": "The singular path-bound `crcEvent` remains a stable legacy geometric target. A pathless `crcEvent` remains a narrow mouse-only Canvas observer with the shipped `{ x, y, originalEvent }` payload. Observers run after logical target propagation, once per matching native event, in registration order. Removal is effective before a pending observer turn, additions wait until the next native event, and thrown observers are reported without suppressing safe peers. Pathless observers do not affect target selection, propagation, cursor, or activation."
+          "text": "The singular path-bound `useEvent` remains a stable legacy geometric target. A pathless `useEvent` remains a narrow mouse-only Canvas observer with the shipped `{ x, y, originalEvent }` payload. Observers run after logical target propagation, once per matching native event, in registration order. Removal is effective before a pending observer turn, additions wait until the next native event, and thrown observers are reported without suppressing safe peers. Pathless observers do not affect target selection, propagation, cursor, or activation."
         },
         {
           "id": "c0052",
@@ -9167,7 +9167,7 @@
           "id": "c0054",
           "kind": "prose",
           "section": "Evidence boundary",
-          "text": "The shared `interaction-trace-lab` laboratory teaches one direct built-in propagation target, one `crcEventListener` ancestor, one `crcEventTarget` custom path, touch retention, wheel cancellation, and drag/drop. Its keyboard, composition, and clipboard scenes are headless contract fixtures driven by internal test transport; they do not claim a public adapter or manually reachable target on a plain Canvas. The separate public focus scenario demonstrates the opt-in keyboard path described by the focus contract. Exhaustive event vocabulary, multi-pointer/contact, mutation, failure, geometry, layer, and ownership matrices remain in focused tests so the learning fixture stays readable."
+          "text": "The shared `interaction-trace-lab` laboratory teaches one direct built-in propagation target, one `useEventListener` ancestor, one `useEventTarget` custom path, touch retention, wheel cancellation, and drag/drop. Its keyboard, composition, and clipboard scenes are headless contract fixtures driven by internal test transport; they do not claim a public adapter or manually reachable target on a plain Canvas. The separate public focus scenario demonstrates the opt-in keyboard path described by the focus contract. Exhaustive event vocabulary, multi-pointer/contact, mutation, failure, geometry, layer, and ownership matrices remain in focused tests so the learning fixture stays readable."
         },
         {
           "id": "c0055",
@@ -9596,7 +9596,7 @@
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0115", "b0116", "b0117"],
       "currentIds": ["c0094", "c0095", "c0096"],
-      "reason": "This mapping moves custom component examples from wrappers to plain functions and `crcLayoutBox()`; b0115, b0116, b0117 → c0094, c0095, c0096 is the exact unit boundary, and `comfortable`, `metriccard`, `immutable` remain shared semantic anchors. Approved-design unit a0057 authorizes that bounded JSX-era change.",
+      "reason": "This mapping moves custom component examples from wrappers to plain functions and `useLayoutBox()`; b0115, b0116, b0117 → c0094, c0095, c0096 is the exact unit boundary, and `comfortable`, `metriccard`, `immutable` remain shared semantic anchors. Approved-design unit a0057 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0057",
         "kind": "prose",
@@ -9872,7 +9872,7 @@
       "sharedAnchors": ["transparent-region", "geometry-first", "naturalheight"]
     },
     {
-      "id": "design-event-resource-ownership-md-crc-event-resource-ownership",
+      "id": "design-event-resource-ownership-md-use-event-resource-ownership",
       "path": "docs/design/event-resource-ownership.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001"],
@@ -10214,7 +10214,7 @@
       "approval": {
         "id": "a0029",
         "kind": "prose",
-        "text": "CRC retains the `crcState`, `crcMemo`, `crcRef`, and other `crc*` lifecycle names."
+        "text": "CRC retains the `useState`, `useMemo`, `useRef`, and other `crc*` lifecycle names."
       },
       "sharedAnchors": [
         "measurement-isolation",
@@ -11869,7 +11869,7 @@
       "id": "design-runtime-hooks-contract-signal-hook-addition",
       "path": "docs/design/runtime-hooks-contract.md",
       "currentIds": ["c0070"],
-      "reason": "first-class-signals-and-scheduler units g0050 g0055 g0056 g0063 g0120 g0121 g0122 g0126 g0128 g0138 g0213 authorize c0068 as the mounted crcSignal, crcPlayback, and crcTransition component-hook contract with successful adoption, shared Commit, live callbacks, and exact teardown. Reviewed Task 5 remapping retains current units c0070.",
+      "reason": "first-class-signals-and-scheduler units g0050 g0055 g0056 g0063 g0120 g0121 g0122 g0126 g0128 g0138 g0213 authorize c0068 as the mounted useSignal, usePlayback, and useTransition component-hook contract with successful adoption, shared Commit, live callbacks, and exact teardown. Reviewed Task 5 remapping retains current units c0070.",
       "approval": {
         "recordId": "first-class-signals-and-scheduler",
         "unitIds": [
@@ -11886,7 +11886,7 @@
           "g0213"
         ]
       },
-      "sharedAnchors": ["crcSignal", "component", "signal"]
+      "sharedAnchors": ["useSignal", "component", "signal"]
     },
     {
       "id": "design-runtime-hooks-contract-explicit-signal-read-addition",
@@ -12437,7 +12437,7 @@
       },
       "source": {
         "path": "packages/core/src/lib/components/img.ts",
-        "marker": "const imagePath = crcRectPath(x, y, width, height);"
+        "marker": "const imagePath = useRectPath(x, y, width, height);"
       },
       "test": {
         "path": "packages/core/src/lib/components/img-async.test.ts",
@@ -12813,7 +12813,7 @@
       "contract": "docs/design/mouse-interaction-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "Down on A/up on sibling B can activate their deepest shared still-live `crcEventListener` when it also lies on the browser click's current coordinate path."
+        "text": "Down on A/up on sibling B can activate their deepest shared still-live `useEventListener` when it also lies on the browser click's current coordinate path."
       },
       "source": {
         "path": "packages/core/src/lib/events/dispatch.ts",
@@ -12949,11 +12949,11 @@
         "text": "A state setter is a capability belonging to the exact instance and exact component-ref object that created it."
       },
       "source": {
-        "path": "packages/core/src/lib/hooks/crc-state.ts",
+        "path": "packages/core/src/lib/hooks/use-state.ts",
         "marker": "function setter(newValueOrFactory"
       },
       "test": {
-        "path": "packages/core/src/lib/hooks/crc-state.test.ts",
+        "path": "packages/core/src/lib/hooks/use-state.test.ts",
         "marker": "cannot let an exact-instance disposed mount setter update a replacement mount"
       },
       "relevance": {
@@ -13006,7 +13006,7 @@
         "text": "A passive painted object can therefore occlude a target underneath. `pointerEvents=\"none\"` removes it from coordinate resolution while leaving paint unchanged."
       },
       "source": {
-        "path": "packages/core/src/lib/hooks/crc-paint-target.ts",
+        "path": "packages/core/src/lib/hooks/use-paint-target.ts",
         "marker": "if (pointerEvents === 'none') {"
       },
       "test": {
@@ -13117,7 +13117,7 @@
       "contract": "docs/design/canvas-surface-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "A CSS resize updates the root `crcLayoutBox()` allocation and schedules one coalesced frame without remounting component identity."
+        "text": "A CSS resize updates the root `useLayoutBox()` allocation and schedules one coalesced frame without remounting component identity."
       },
       "source": {
         "path": "packages/core/src/lib/surface/root-surface.ts",
@@ -13155,7 +13155,7 @@
       "contract": "docs/design/canvas-surface-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "Inside a filtered boundary, `crcCanvasContext().canvas` is truthfully the local `OffscreenCanvas`, and its `getTransform()` describes that local capture."
+        "text": "Inside a filtered boundary, `useCanvasContext().canvas` is truthfully the local `OffscreenCanvas`, and its `getTransform()` describes that local capture."
       },
       "source": {
         "path": "packages/core/src/lib/filter/render-filter-boundary.ts",
@@ -13619,12 +13619,12 @@
         {
           "id": "public-signal-api",
           "currentIds": ["s0003"],
-          "reason": "first-class-signals-and-scheduler unit g0062 authorizes s0003 as the exact branded SignalOptions, computed, and crcSignal declaration surface.",
+          "reason": "first-class-signals-and-scheduler unit g0062 authorizes s0003 as the exact branded SignalOptions, computed, and useSignal declaration surface.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": ["g0062"]
           },
-          "sharedAnchors": ["SignalOptions", "computed", "crcSignal"]
+          "sharedAnchors": ["SignalOptions", "computed", "useSignal"]
         },
         {
           "id": "explicit-signal-reads",
@@ -13672,7 +13672,7 @@
         {
           "id": "component-consumers",
           "currentIds": ["s0013", "s0014", "s0015"],
-          "reason": "first-class-signals-and-scheduler units g0050 g0051 g0064 g0076 g0138 g0140 g0142 g0153 g0192 g0220 authorize s0013 s0014 s0015 as the component consumer, crcSignal, cleanup, render write-guard, and staged-only Advance contract.",
+          "reason": "first-class-signals-and-scheduler units g0050 g0051 g0064 g0076 g0138 g0140 g0142 g0153 g0192 g0220 authorize s0013 s0014 s0015 as the component consumer, useSignal, cleanup, render write-guard, and staged-only Advance contract.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [

@@ -14,10 +14,10 @@ DOM.
 ```
 
 ```tsx
-import { Rectangle, Text, crc, crcState } from "@crc/core";
+import { Rectangle, Text, crc, useState } from "@crc/core";
 
 function Scene() {
-  const [count, setCount] = crcState(0);
+  const [count, setCount] = useState(0);
   return [
     <Rectangle
       style={{ width: 240, height: 120, fill: "#2563eb", cursor: "pointer" }}

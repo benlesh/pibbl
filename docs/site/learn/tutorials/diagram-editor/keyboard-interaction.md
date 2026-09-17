@@ -22,7 +22,7 @@ Make every workflow card and the Reset view control available to a keyboard user
 
 ## Build the change
 
-Each `NodeCard` registers one custom target with [crcEventTarget](#/api/hooks/crc-event-target). Its rounded hit path comes from [crcRectPath](#/api/hooks/crc-rect-path), and the same registration owns click, pointer capture, focus, and navigation geometry. Every rectangle, label, and port is decorative `pointerEvents="none"`, so the card has one conceptual target instead of competing paint leaves.
+Each `NodeCard` registers one custom target with [useEventTarget](#/api/hooks/use-event-target). Its rounded hit path comes from [useRectPath](#/api/hooks/use-rect-path), and the same registration owns click, pointer capture, focus, and navigation geometry. Every rectangle, label, and port is decorative `pointerEvents="none"`, so the card has one conceptual target instead of competing paint leaves.
 
 The target snapshot supplies `isFocused` and `isFocusVisible`. Paint a high-contrast paper ring plus an ink inner stroke only when focus arrived by keyboard. [Event types](#/api/types/events) describe the common pointer and keyboard event facades.
 

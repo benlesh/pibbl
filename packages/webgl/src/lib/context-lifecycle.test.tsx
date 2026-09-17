@@ -1,6 +1,6 @@
 import {
   crc,
-  crcState,
+  useState,
   type CRCController,
   type CRCNode,
 } from '@crc/core';
@@ -15,7 +15,7 @@ import { createWebGLGeometry } from './geometry/geometry.js';
 import { createBuiltInProgram } from './gpu/program.js';
 import { WebGLRendererResourceCache } from './gpu/renderer-resources.js';
 import { installWebGLStateBaseline } from './gpu/state.js';
-import { crcAnimationFrame } from './hooks/crc-animation-frame.js';
+import { useAnimationFrame } from './hooks/use-animation-frame.js';
 import {
   WebGLLayerController,
   resolveWebGLLayerSurface,
@@ -375,7 +375,7 @@ describe('WebGLLayer context lifecycle', () => {
     let executions = 0;
     function Animated(): CRCNode {
       executions += 1;
-      crcAnimationFrame();
+      useAnimationFrame();
       return <Cube pointerEvents="none" />;
     }
     const root = <Animated />;
@@ -421,7 +421,7 @@ describe('WebGLLayer context lifecycle', () => {
     let executions = 0;
     function Stateful(): CRCNode {
       executions += 1;
-      const [value, setter] = crcState(0);
+      const [value, setter] = useState(0);
       setValue = setter;
       return <Cube pointerEvents="none" style={{ translateX: value }} />;
     }

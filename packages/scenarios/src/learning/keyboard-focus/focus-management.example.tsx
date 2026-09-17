@@ -1,8 +1,8 @@
 import {
   crc,
-  crcEventListener,
-  crcEventTarget,
-  crcState,
+  useEventListener,
+  useEventTarget,
+  useState,
   FocusManagement,
   Rectangle,
   Text,
@@ -34,7 +34,7 @@ function FocusTarget({
 }: FocusTargetProps) {
   const width = 142;
   const height = 104;
-  const snapshot = crcEventTarget(
+  const snapshot = useEventTarget(
     {
       onBlur: (event) =>
         record(
@@ -112,7 +112,7 @@ function FocusTarget({
   ];
 }
 function FocusManagementLesson() {
-  const [events, setEvents] = crcState<readonly string[]>([]);
+  const [events, setEvents] = useState<readonly string[]>([]);
   const record = (message: string) =>
     setEvents((current) => [...current.slice(-4), message]);
   const recordBoundary = (name: string) => (event: CRCEvent) => {
@@ -120,7 +120,7 @@ function FocusManagementLesson() {
       `boundary ${name} phase ${event.eventPhase} → ${event.relatedTarget ? "related target" : "none"}`,
     );
   };
-  crcEventListener({
+  useEventListener({
     onFocusIn: recordBoundary("focusin bubble"),
     onFocusInCapture: recordBoundary("focusin capture"),
     onFocusOut: recordBoundary("focusout bubble"),

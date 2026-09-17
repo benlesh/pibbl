@@ -841,16 +841,16 @@ describe("learning example catalog", () => {
       `
         import {
           crc,
-          crcMemo,
-          crcState,
+          useMemo,
+          useState,
           measureElement,
           resolveLength,
           Text,
           type CRCController,
         } from "@crc/core";
         function RuntimeFunctionStudy() {
-          const [count] = crcState(1);
-          const doubled = crcMemo(() => count * 2, [count]);
+          const [count] = useState(1);
+          const doubled = useMemo(() => count * 2, [count]);
           const length = resolveLength("50%", 200, "width") ?? 0;
           const measurement = measureElement(
             {} as never,
@@ -1297,7 +1297,7 @@ describe("learning example catalog", () => {
 
     const signals = startExamples.find((entry) => entry.slug === "signals");
     expect(signals).toMatchObject({
-      api: ["signal", "computed", "crcSignal"],
+      api: ["signal", "computed", "useSignal"],
       source: {
         path: "packages/scenarios/src/learning/start/signals.example.tsx",
       },
@@ -1349,7 +1349,7 @@ describe("learning example catalog", () => {
       "Use an inradius-defined hexagon to clip children and their interaction geometry.",
     ]);
     expect(await loadLearningSource(clip!)).toContain("createRegularPolygonPath");
-    expect(await loadLearningSource(clip!)).toContain("crcMemo");
+    expect(await loadLearningSource(clip!)).toContain("useMemo");
 
     const regularPolygon = learningExampleCatalog.find(
       (entry) => entry.slug === "regular-polygon",
@@ -1686,11 +1686,11 @@ describe("learning example catalog", () => {
         "Group3D",
         "Cube",
         "Sphere",
-        "crcAnimationFrame",
-        "crcParticleSystem",
-        "crcSignal",
-        "crcTransition",
-        "crcPlayback",
+        "useAnimationFrame",
+        "useParticleSystem",
+        "useSignal",
+        "useTransition",
+        "usePlayback",
         "parallel",
         "sequence",
         "marker",

@@ -21,7 +21,7 @@ import {
   getParticleSystemController,
   particleSystemControllerSnapshot,
 } from "./controller.js";
-import { crcParticleSystem } from "./hook.js";
+import { useParticleSystem } from "./hook.js";
 import { particleSystemOwnershipSnapshot } from "./ownership.js";
 
 let driver: ManualSchedulerDriver;
@@ -78,7 +78,7 @@ function candidate(
   };
 }
 
-describe("crcParticleSystem hook ownership", () => {
+describe("useParticleSystem hook ownership", () => {
   it("catches handle recreation and stale effect/callback adoption", () => {
     const first = effect("first");
     const second = effect("second");
@@ -91,7 +91,7 @@ describe("crcParticleSystem hook ownership", () => {
     const Root = (): CRCNode => {
       const current = selected.get();
       const label = observerVersion.get();
-      system = crcParticleSystem(current, {
+      system = useParticleSystem(current, {
         onEvent: (event) => calls.push(`${label}:${event.type}`),
       });
       original ??= system;
@@ -155,7 +155,7 @@ describe("crcParticleSystem hook ownership", () => {
     let system!: CRCParticleSystem;
     let bound: ParticleBindingCandidate | undefined;
     const Root = (): CRCNode => {
-      system = crcParticleSystem(definition, {
+      system = useParticleSystem(definition, {
         onEvent(event) {
           order.push(`system:${event.type}`);
           if (event.type === "start") throw new Error("system observer failed");
@@ -202,7 +202,7 @@ describe("crcParticleSystem hook ownership", () => {
     let system!: CRCParticleSystem;
     let bound: ParticleBindingCandidate | undefined;
     const Root = (): CRCNode => {
-      system = crcParticleSystem(definition);
+      system = useParticleSystem(definition);
       useParticleSystemBinding({
         system,
         backend: "canvas",
@@ -250,7 +250,7 @@ describe("crcParticleSystem hook ownership", () => {
     const definition = effect("guarded autoplay");
     let failedSystem!: CRCParticleSystem;
     const Failed = (): CRCNode => {
-      failedSystem = crcParticleSystem(definition, { autoplay: true });
+      failedSystem = useParticleSystem(definition, { autoplay: true });
       throw new Error("mount failed");
     };
     const failedRoot = mount(createElement(Failed, {}));
@@ -263,7 +263,7 @@ describe("crcParticleSystem hook ownership", () => {
     let guardError: unknown;
     let guardedSystem!: CRCParticleSystem;
     const Guarded = (): CRCNode => {
-      guardedSystem = crcParticleSystem(definition);
+      guardedSystem = useParticleSystem(definition);
       try {
         guardedSystem.play();
       } catch (error) {

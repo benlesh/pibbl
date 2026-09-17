@@ -11,7 +11,7 @@ keywords: [signals, computed, animation, transitions, playback, scheduler]
 # Signals and animation
 
 CRC animation writes ordinary signals. Definitions describe values, programs
-bind those definitions to writable signals, and `crcPlayback` owns a running
+bind those definitions to writable signals, and `usePlayback` owns a running
 program for one mounted component. Everything advances through the same realm
 scheduler used by state, roots, and Layers.
 
@@ -21,7 +21,7 @@ Use `.get()` where a value enters drawing or style:
 
 ```tsx
 function Card({ targetX }: { targetX: number }) {
-  const x = crcTransition(targetX, {
+  const x = useTransition(targetX, {
     type: "spring",
     initial: 0,
   });
@@ -92,9 +92,9 @@ Create playback while rendering, then call its stable controls from events:
 
 ```tsx
 function AnimatedCard() {
-  const x = crcSignal(0);
-  const opacity = crcSignal(0);
-  const player = crcPlayback(entrance(x, opacity), {
+  const x = useSignal(0);
+  const opacity = useSignal(0);
+  const player = usePlayback(entrance(x, opacity), {
     onEvent: (event) => {
       if (event.type === "marker" && event.marker === "arrived") {
         console.log("the arrived frame has rendered");

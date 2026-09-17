@@ -1,7 +1,7 @@
 import {
   Fragment,
   createElement,
-  crcEventListener,
+  useEventListener,
   definePrimitive,
   resolveLength,
   type BoxStyle,
@@ -59,7 +59,7 @@ function renderWebGLLayer(
   style: Readonly<ResolvedWebGLLayerStyle>,
   context: RenderingContext2D,
 ): void {
-  crcEventListener(props);
+  useEventListener(props);
   const childrenSlot = useInternalHookSlot<WebGLLayerChildrenSlot>(
     'webglLayerChildren',
     () => ({

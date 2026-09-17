@@ -12,7 +12,7 @@ import {
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
 import performanceLabSource from '../../scenarios/src/performance-lab.example.tsx?raw';
-import { Absolute, crc, crcEventListener, Flow, Rectangle, Text, type CRCController } from '../src/index';
+import { Absolute, crc, useEventListener, Flow, Rectangle, Text, type CRCController } from '../src/index';
 import { GLOBAL_STATE } from '../src/lib/global-state';
 import { snapshotRealmScheduler } from '../src/lib/scheduler/testing';
 import {
@@ -106,7 +106,7 @@ const StructuralEventScene = ({ count, recordAncestor, recordTarget }: {
   recordAncestor: () => void;
   recordTarget: (index: number) => void;
 }) => {
-  crcEventListener({ onPointerDownCapture: recordAncestor });
+  useEventListener({ onPointerDownCapture: recordAncestor });
   return Array.from({ length: count }, (_, index) => createElement(Rectangle, {
     key: `structural-target-${index}`,
     style: {

@@ -6,7 +6,7 @@ import type {
 } from '../events/types';
 import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { crcEventTarget } from '../hooks/crc-event-target';
+import { useEventTarget } from '../hooks/use-event-target';
 import { mountCRC } from '../mount-crc';
 import type { CRCElement, CRCController } from '../types';
 import type { CRCFocusManager } from './focus-manager';
@@ -324,7 +324,7 @@ interface TargetProps {
 }
 
 const Target = ({ handlers }: TargetProps) => {
-  crcEventTarget(handlers, {
+  useEventTarget(handlers, {
     path: rectanglePath(0, 0, 10, 10),
     keyboardFocusable: true,
   });
@@ -336,7 +336,7 @@ const BoundedTarget = definePrimitive<{
   readonly y: number;
 }>(({ x, y }, _style, context) => {
   context.translate(x, y);
-  crcEventTarget({ onClick: noop }, {
+  useEventTarget({ onClick: noop }, {
     path: rectanglePath(0, 0, 10, 10),
     keyboardNavigationBounds: { x: 0, y: 0, width: 10, height: 10 },
   });

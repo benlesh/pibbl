@@ -1,11 +1,11 @@
 export { createWebGLGeometry } from './lib/geometry/geometry.js';
-export { crcAnimationFrame } from './lib/hooks/crc-animation-frame.js';
+export { useAnimationFrame } from './lib/hooks/use-animation-frame.js';
 export {
-  crcOrbitCamera,
+  useOrbitCamera,
   type CRCOrbitCameraHandlers,
   type CRCOrbitCameraOptions,
   type CRCOrbitCameraResult,
-} from './lib/hooks/crc-orbit-camera.js';
+} from './lib/hooks/use-orbit-camera.js';
 export {
   WebGLLayer,
   type WebGLLayerProps,

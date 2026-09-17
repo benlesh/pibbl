@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CRCEventHandlers } from '../events/types';
 import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { crcEventTarget } from '../hooks/crc-event-target';
+import { useEventTarget } from '../hooks/use-event-target';
 import { mountCRC } from '../mount-crc';
 import type { CRCElement, CRCController } from '../types';
 import type { CRCDirection } from './directional-navigation';
@@ -238,7 +238,7 @@ const Target = definePrimitive<TargetProps>(({
   handlers = { onClick: noop },
 }, _style, context) => {
   context.translate(x, y);
-  crcEventTarget(handlers, {
+  useEventTarget(handlers, {
     path: rectanglePath(0, 0, 10, 10),
     keyboardFocusable: true,
     keyboardNavigationBounds: { x: 0, y: 0, width: 10, height: 10 },

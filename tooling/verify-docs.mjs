@@ -153,25 +153,25 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/tween.md",
   "docs/site/api/functions/untracked.md",
   "docs/site/api/functions/wait.md",
-  "docs/site/api/hooks/crc-animation-frame.md",
-  "docs/site/api/hooks/crc-canvas-context.md",
-  "docs/site/api/hooks/crc-cursor.md",
-  "docs/site/api/hooks/crc-event.md",
-  "docs/site/api/hooks/crc-event-listener.md",
-  "docs/site/api/hooks/crc-event-target.md",
-  "docs/site/api/hooks/crc-layout-box.md",
-  "docs/site/api/hooks/crc-line-path.md",
-  "docs/site/api/hooks/crc-memo.md",
-  "docs/site/api/hooks/crc-orbit-camera.md",
-  "docs/site/api/hooks/crc-particle-system.md",
-  "docs/site/api/hooks/crc-playback.md",
-  "docs/site/api/hooks/crc-rect-path.md",
-  "docs/site/api/hooks/crc-ref.md",
-  "docs/site/api/hooks/crc-signal.md",
-  "docs/site/api/hooks/crc-state.md",
-  "docs/site/api/hooks/crc-svg-path.md",
-  "docs/site/api/hooks/crc-transition.md",
-  "docs/site/api/hooks/crc-when-changed.md",
+  "docs/site/api/hooks/use-animation-frame.md",
+  "docs/site/api/hooks/use-canvas-context.md",
+  "docs/site/api/hooks/use-cursor.md",
+  "docs/site/api/hooks/use-event.md",
+  "docs/site/api/hooks/use-event-listener.md",
+  "docs/site/api/hooks/use-event-target.md",
+  "docs/site/api/hooks/use-layout-box.md",
+  "docs/site/api/hooks/use-line-path.md",
+  "docs/site/api/hooks/use-memo.md",
+  "docs/site/api/hooks/use-orbit-camera.md",
+  "docs/site/api/hooks/use-particle-system.md",
+  "docs/site/api/hooks/use-playback.md",
+  "docs/site/api/hooks/use-rect-path.md",
+  "docs/site/api/hooks/use-ref.md",
+  "docs/site/api/hooks/use-signal.md",
+  "docs/site/api/hooks/use-state.md",
+  "docs/site/api/hooks/use-svg-path.md",
+  "docs/site/api/hooks/use-transition.md",
+  "docs/site/api/hooks/use-when-changed.md",
   "docs/site/api/types/canvas-runtime.md",
   "docs/site/api/types/elements-components.md",
   "docs/site/api/types/events.md",
@@ -859,7 +859,7 @@ export function assertNonJsxCoverage(source) {
     ],
     ["focus management policy", /createElement\(\s*FocusManagement,/u],
     ["keyboard navigation policy", /createElement\(\s*KeyboardNavigation,/u],
-    ["hook lifecycle", /crcState\(/u],
+    ["hook lifecycle", /useState\(/u],
     ["root mounting", /\bcrc\(canvas,/u],
     ["mount disposal", /controller\.dispose\(\)/u],
   ]);
@@ -908,7 +908,7 @@ function stateBindings(program) {
     if (
       node.type !== "VariableDeclarator" ||
       node.id?.type !== "ArrayPattern" ||
-      callName(node.init) !== "crcState"
+      callName(node.init) !== "useState"
     ) {
       return;
     }
@@ -1031,7 +1031,7 @@ function assertNonJsxEvidence(source) {
   walkSyntax(program, (node) => {
     if (node.type === "JSXElement" || node.type === "JSXFragment")
       hasJsx = true;
-    if (callName(node) === "crcWhenChanged") hasLifecycle = true;
+    if (callName(node) === "useWhenChanged") hasLifecycle = true;
     if (callName(node) === "crc") hasMount = true;
     if (
       node.type === "CallExpression" &&
@@ -1892,10 +1892,10 @@ const requiredGuideMarkers = new Map([
     ["ordinary synchronous"],
   ],
   ["docs/site/learn/guides/style-and-draw.md", ["## Local, closed style"]],
-  ["docs/site/learn/guides/compose-and-layout.md", ["crcLayoutBox()"]],
+  ["docs/site/learn/guides/compose-and-layout.md", ["useLayoutBox()"]],
   [
     "docs/site/learn/guides/custom-components-and-primitives.md",
-    ["crcCanvasContext()", "normalizeStyle", "resolveStyle", "measure"],
+    ["useCanvasContext()", "normalizeStyle", "resolveStyle", "measure"],
   ],
   [
     "docs/site/learn/guides/focus-and-keyboard.md",
@@ -1924,7 +1924,7 @@ const requiredGuideMarkers = new Map([
   ],
   [
     "docs/site/learn/guides/state-and-lifecycle.md",
-    ["immediate Canvas runtime", "crcWhenChanged", "## Disposal"],
+    ["immediate Canvas runtime", "useWhenChanged", "## Disposal"],
   ],
   [
     "docs/site/learn/guides/author-without-jsx.md",
@@ -2635,7 +2635,7 @@ const matrixRequirements = [
     evidence: [
       "graph.test.ts",
       "render-consumer.test.ts",
-      "crc-signal.test.tsx",
+      "use-signal.test.tsx",
       "realm-scheduler.test.ts",
     ],
   },
@@ -2654,7 +2654,7 @@ const matrixRequirements = [
   {
     topic: /Ordinary composite/u,
     guides: ["site/learn/guides/custom-components-and-primitives.md"],
-    evidence: ["crc-canvas-context.test.tsx"],
+    evidence: ["use-canvas-context.test.tsx"],
   },
   {
     topic: /Full `definePrimitive`/u,
@@ -2753,11 +2753,11 @@ const matrixRequirements = [
     topic: /Orbit handlers, genuine shadows/u,
     guides: [
       "site/learn/guides/webgl-lighting.md",
-      "site/api/hooks/crc-orbit-camera.md",
+      "site/api/hooks/use-orbit-camera.md",
       "design/runtime-resource-ownership.md",
     ],
     evidence: [
-      "crc-orbit-camera.test.tsx",
+      "use-orbit-camera.test.tsx",
       "shadows.test.ts",
       "shadow-resources.test.ts",
       "webgl-lighting-lab.test.ts",
@@ -3003,7 +3003,7 @@ export async function verifyMutationProbes() {
       ),
     "Images, inline links, reference links, definitions, and code must remain valid",
   );
-  const crcMemoApiPath = "docs/site/api/hooks/crc-memo.md";
+  const crcMemoApiPath = "docs/site/api/hooks/use-memo.md";
   const brokenCrcMemoSources = new Map(currentSources);
   const crcMemoSource = currentSources.get(crcMemoApiPath);
   const brokenCrcMemoSource = crcMemoSource.replace(
@@ -3013,7 +3013,7 @@ export async function verifyMutationProbes() {
   assert.notEqual(
     brokenCrcMemoSource,
     crcMemoSource,
-    "crcMemo component-return mutation fixture did not change",
+    "useMemo component-return mutation fixture did not change",
   );
   brokenCrcMemoSources.set(crcMemoApiPath, brokenCrcMemoSource);
   await rejects(
@@ -3823,7 +3823,7 @@ export async function verifyMutationProbes() {
   );
   const memoRow = hooksContract.currentUnits.find(
     ({ kind, text }) =>
-      kind === "table" && text.includes("crcMemo(create, deps)"),
+      kind === "table" && text.includes("useMemo(create, deps)"),
   );
   assert.ok(memoRow, "Hook-specific table mutation unit is missing");
   {
@@ -4007,7 +4007,7 @@ export async function verifyMutationProbes() {
         "createElement(\n      Group,",
       ),
     ],
-    ["lifecycle", nonJsx.replace("crcState(", "missingState(")],
+    ["lifecycle", nonJsx.replace("useState(", "missingState(")],
     [
       "mount",
       nonJsx.replace("return crc(canvas,", "return missingMount(canvas,"),

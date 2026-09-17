@@ -5,8 +5,8 @@ import {
   Rectangle,
   LayoutDiagnostic,
   Polygon,
-  crcPlayback,
-  crcWhenChanged,
+  usePlayback,
+  useWhenChanged,
   defineAnimation,
   parallel,
   signal,
@@ -18,8 +18,8 @@ import { crc } from './crc';
 import { definePrimitive } from './define-primitive';
 import { createElement, isCRCElement } from './element/create-element';
 import { clearSharedState, getCRCInstance } from './global-state';
-import { crcRef } from './hooks/crc-ref';
-import { crcState, type StateUpdater } from './hooks/crc-state';
+import { useRef } from './hooks/use-ref';
+import { useState, type StateUpdater } from './hooks/use-state';
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
@@ -40,7 +40,7 @@ const IdentityProbe = ({
   label,
   onRender,
 }: IdentityProbeProps) => {
-  const identity = crcRef<number>();
+  const identity = useRef<number>();
   identity.current ??= ++nextIdentity;
   onRender(label, identity.current);
 };
@@ -264,7 +264,7 @@ describe('crc root updates', () => {
     let cleanups = 0;
     const setup = vi.fn(() => () => cleanups++);
     const ResourceBearingSibling = (_props: {}) => {
-      crcWhenChanged(setup, []);
+      useWhenChanged(setup, []);
       return createElement(Rectangle, {
         style: { x: 2, y: 2, width: 8, height: 8, fill: 'blue' },
         onClick: () => undefined,
@@ -345,7 +345,7 @@ describe('crc root updates', () => {
       | { clickListeners: number; targets: number }
       | undefined;
     const ResourceBearingSibling = (_props: {}) => {
-      crcWhenChanged(setup, []);
+      useWhenChanged(setup, []);
       return createElement(Circle, {
         style: { radius: 4, fill: '#2563eb' },
         onClick: () => undefined,
@@ -429,7 +429,7 @@ describe('crc root updates', () => {
     const cleanup = vi.fn();
     const setup = vi.fn(() => cleanup);
     const ResourceBearingSibling = (_props: {}) => {
-      crcWhenChanged(setup, []);
+      useWhenChanged(setup, []);
       return createElement(Circle, {
         style: { cx: 8, cy: 8, radius: 4, fill: '#2563eb' },
         onClick: () => undefined,
@@ -493,7 +493,7 @@ describe('crc root updates', () => {
     const cleanup = vi.fn();
     const setup = vi.fn(() => cleanup);
     const ResourceBearingSibling = (_props: {}) => {
-      crcWhenChanged(setup, []);
+      useWhenChanged(setup, []);
       return createElement(Circle, {
         style: { cx: 8, cy: 8, radius: 4, fill: '#2563eb' },
         onClick: () => undefined,
@@ -568,7 +568,7 @@ describe('crc root updates', () => {
     const renders: string[] = [];
     let setValue: StateUpdater<number> | undefined;
     const StatefulRoot = (_props: {}) => {
-      const [value, setter] = crcState(0);
+      const [value, setter] = useState(0);
       setValue = setter;
       renders.push(`stateful:${value}`);
     };
@@ -629,7 +629,7 @@ describe('crc root updates', () => {
     const failingCanvas = createCanvas();
     const healthyCanvas = createCanvas();
     const FailingRoot = (_props: {}) => {
-      failedPlayback = crcPlayback(
+      failedPlayback = usePlayback(
         track(failedOutput, tween({ from: 0, to: 10, duration: 100 })),
       );
       const value = failedOutput.get();
@@ -640,7 +640,7 @@ describe('crc root updates', () => {
       });
     };
     const HealthyRoot = (_props: {}) => {
-      healthyPlayback = crcPlayback(
+      healthyPlayback = usePlayback(
         track(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
       );
       const value = healthyOutput.get();
@@ -725,7 +725,7 @@ describe('crc root updates', () => {
     let failedPlayback!: CRCPlayback;
     let healthyPlayback!: CRCPlayback;
     const FailingRoot = (_props: {}) => {
-      failedPlayback = crcPlayback(parallel(
+      failedPlayback = usePlayback(parallel(
         track(firstFailedOutput, defineAnimation({
           duration: 100,
           sample: ({ localTime }) => localTime + 1,
@@ -759,7 +759,7 @@ describe('crc root updates', () => {
       ];
     };
     const HealthyRoot = (_props: {}) => {
-      healthyPlayback = crcPlayback(
+      healthyPlayback = usePlayback(
         track(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
       );
       const value = healthyOutput.get();
@@ -810,7 +810,7 @@ describe('crc root updates', () => {
     const renders: string[] = [];
     let setValue: StateUpdater<number> | undefined;
     const StatefulRoot = (_props: {}) => {
-      const [value, setter] = crcState(0);
+      const [value, setter] = useState(0);
       setValue = setter;
       renders.push(`stateful:${value}`);
     };
@@ -927,10 +927,10 @@ describe('component tree identity', () => {
     const canvas = createCanvas();
     const values: string[] = [];
     const First = (_props: {}) => {
-      values.push(crcRef('first').current!);
+      values.push(useRef('first').current!);
     };
     const Second = (_props: {}) => {
-      values.push(crcRef('second').current!);
+      values.push(useRef('second').current!);
     };
     const Host = ({ second }: { second: boolean }) =>
       second ? createElement(Second, { key: 'shared' }) : createElement(First, { key: 'shared' });
@@ -948,10 +948,10 @@ describe('component tree identity', () => {
     const canvas = createCanvas();
     const values: string[] = [];
     const First = function SameName(_props: {}) {
-      values.push(crcRef('first').current!);
+      values.push(useRef('first').current!);
     };
     const Second = function SameName(_props: {}) {
-      values.push(crcRef('second').current!);
+      values.push(useRef('second').current!);
     };
     const controller = crc(canvas, createElement(First, {}));
     await nextFrame();

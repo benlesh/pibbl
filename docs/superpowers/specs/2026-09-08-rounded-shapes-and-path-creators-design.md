@@ -57,7 +57,7 @@ layout, interaction, or lifecycle contracts.
   retained geometry graph, path cache, or display list.
 - Intrinsic measurement inferred from drawing geometry.
 - New memoized hooks for every creator. Callers can combine a pure creator with
-  `crcMemo`; the existing path hooks remain supported.
+  `useMemo`; the existing path hooks remain supported.
 
 ## Public surface
 
@@ -249,7 +249,7 @@ Canvas; it does not reimplement the browser's rounded-rectangle algorithm.
 
 `Rectangle` retains its existing pixel-grid behavior. It first adjusts its
 numeric `x`, `y`, `width`, and `height`, then passes that effective box and its
-resolved radii to `createRectanglePath`. `crcRectPath` performs the same
+resolved radii to `createRectanglePath`. `useRectPath` performs the same
 existing pixel adjustment and then calls the creator. Its existing positional
 arguments remain source compatible, while its optional config object gains
 numeric `cornerRadius` and `cornerRadii` fields using the same fallback rules.
@@ -442,14 +442,14 @@ components:
   the existing circular-sweep normalization, and retain zero-span,
   full-circle, and seam behavior.
 - `createLinePath` preserves ordered coordinates and optionally closes them,
-  retaining `crcLinePath`'s existing `closePath` capability.
+  retaining `useLinePath`'s existing `closePath` capability.
 - `createSvgPath` calls the `Path2D` string constructor. Browser parsing and
   syntax failures remain authoritative.
 
 Current internal functions with these responsibilities are moved, promoted,
 or adapted rather than copied. `Circle`, `Ellipse`, `Arc`, `Wedge`, `Line`,
 `Polygon`, `Rectangle`, and `SvgPath` obtain their path from the corresponding
-canonical creator. Existing `crcRectPath`, `crcLinePath`, and `crcSvgPath`
+canonical creator. Existing `useRectPath`, `useLinePath`, and `useSvgPath`
 retain their public signatures and memoization identities but delegate path
 allocation to the same creators.
 
@@ -496,7 +496,7 @@ The creators themselves have no rendering or runtime side effects beyond
 allocating and populating a fresh `Path2D`. They register no events, own no
 resources, and do not depend on CRC render state. Callers can safely construct
 a path outside a component and supply it to `Clip`, `Path`,
-`crcEventTarget`, or a custom primitive.
+`useEventTarget`, or a custom primitive.
 
 Explicit `keyboardNavigationBounds` always wins. Otherwise:
 

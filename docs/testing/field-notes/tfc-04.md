@@ -47,7 +47,7 @@ CRC-specific decisions are:
 - one event-type-independent logical region wins in reverse paint order;
 - one component/path slot keeps identity across handler replacement;
 - CRC does not imitate DOM propagation by firing every geometric hit;
-- a no-path `crcEvent` is a post-target Canvas observer and a no-path `crcCursor` is a fallback, never a target;
+- a no-path `useEvent` is a post-target Canvas observer and a no-path `useCursor` is a fallback, never a target;
 - public rerenders requested during handlers settle on the next frame, while direct synchronous registry mutations obey the live-snapshot contract;
 - global paint order and coordinate conversion across layers remain TFC-05 work.
 

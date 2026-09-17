@@ -1671,8 +1671,8 @@ export function validateDiagramEditorTutorialSourceText(
   }
 
   if (
-    source.includes("crcEventListener") ||
-    source.includes("crcWhenChanged")
+    source.includes("useEventListener") ||
+    source.includes("useWhenChanged")
   ) {
     throw invalid(
       label,
@@ -1697,11 +1697,11 @@ export function validateDiagramEditorTutorialSourceText(
     const workspace = topLevelFunction(sourceFile, "Workspace");
     const editor = topLevelFunction(sourceFile, "DiagramEditor");
     if (
-      !callsIdentifier(nodeCard, "crcRef") ||
-      !callsIdentifier(nodeCard, "crcState") ||
-      !callsIdentifier(workspace, "crcRef") ||
-      !callsIdentifier(workspace, "crcState") ||
-      callsIdentifier(editor, "crcRef")
+      !callsIdentifier(nodeCard, "useRef") ||
+      !callsIdentifier(nodeCard, "useState") ||
+      !callsIdentifier(workspace, "useRef") ||
+      !callsIdentifier(workspace, "useState") ||
+      callsIdentifier(editor, "useRef")
     ) {
       throw invalid(
         label,

@@ -19,7 +19,7 @@ import {
   WebGLBackground,
   WebGLLayer,
   createWebGLGeometry,
-  crcOrbitCamera,
+  useOrbitCamera,
   type CRCWebGLShadowQuality,
 } from '@crc/webgl';
 
@@ -182,7 +182,7 @@ export function WebGLLightingLabScene(
   props: WebGLLightingLabSceneProps,
 ): CRCNode {
   const configuration = props.configuration.get();
-  const orbit = crcOrbitCamera({
+  const orbit = useOrbitCamera({
     orbitPoint: [0, -0.25, 0],
     initialPosition: [5.8, 4.2, 7.8],
     minDistance: 3,

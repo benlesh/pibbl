@@ -9,7 +9,7 @@ import {
 } from '@crc/core';
 import {
   Particles2D,
-  crcParticleSystem,
+  useParticleSystem,
   defineParticleEffect2D,
   particleChoice,
   particleCurve,
@@ -181,7 +181,7 @@ function ParticleCelebrationOwner({
 }: {
   readonly model: ParticleCelebrationLabModel;
 }) {
-  const system = crcParticleSystem(particleCelebrationEffect, {
+  const system = useParticleSystem(particleCelebrationEffect, {
     autoplay: false,
     seed: CELEBRATION_SEED,
     debugName: 'Canvas celebration system',

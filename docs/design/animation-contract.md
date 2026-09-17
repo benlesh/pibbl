@@ -21,12 +21,12 @@ component-owned playback advances a program through the realm scheduler
 
 Definitions and programs are nominal, opaque, immutable values. They contain no
 component identity or independent clock. A program becomes stateful only when
-`crcPlayback` or `crcTransition` creates a run owned by a mounted hook slot.
+`usePlayback` or `useTransition` creates a run owned by a mounted hook slot.
 There is no free `play(program)` function.
 
 The root `@crc/core` entry exports the runtime values `easing`, `tween`,
 `keyframes`, `spring`, `defineAnimation`, `stepper`, `track`, `sequence`,
-`parallel`, `wait`, `marker`, `repeat`, `crcPlayback`, and `crcTransition`, plus
+`parallel`, `wait`, `marker`, `repeat`, `usePlayback`, and `useTransition`, plus
 their named public types. Private definition samplers, activation records,
 program records, playback controllers, scheduler drivers, and trace collectors
 are not public APIs.
@@ -175,7 +175,7 @@ restored atomically. A disposed displaced owner is never resurrected.
 
 ## Component-owned playback
 
-`crcPlayback(program, options?)` returns one stable `CRCPlayback` for its mounted
+`usePlayback(program, options?)` returns one stable `CRCPlayback` for its mounted
 hook slot. Options are `autoplay`, `conflict`, `debugName`, `onEvent`, and
 `onError`; autoplay defaults false and conflict defaults to `"error"`.
 Candidate program/options validation occurs synchronously during Render. Only a
@@ -231,7 +231,7 @@ shared-Commit rejection and are delivered exactly once.
 
 ## Update-driven transitions
 
-`crcTransition(target, options)` returns one stable readonly signal. Spring
+`useTransition(target, options)` returns one stable readonly signal. Spring
 options are number-only; tween options are generic and use the same explicit
 interpolator rule. Both accept `initial`, `equals`, and `debugName`; equality
 defaults to `Object.is`.
@@ -290,7 +290,7 @@ explicitly, including numeric style values:
 
 ```tsx
 function MovingCard() {
-  const x = crcTransition(120, { type: "spring", initial: 0 });
+  const x = useTransition(120, { type: "spring", initial: 0 });
   return <Rectangle style={{ x: x.get(), width: 48, height: 32 }} />;
 }
 ```

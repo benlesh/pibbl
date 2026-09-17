@@ -55,7 +55,7 @@ inherit it. It is not an escape hatch for arbitrary top-level keys.
 
 Plain functions receive their specified `style` in props. A layout parent may
 inspect a direct child's style but never substitutes its finite allocation into
-those props; the component reads that through `crcLayoutBox()`.
+those props; the component reads that through `useLayoutBox()`.
 
 Platform components defined with `definePrimitive` have three immutable stages:
 

@@ -1,7 +1,7 @@
-import { crc, crcState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
 function MouseDownStudy() {
-  const [presses, setPresses] = crcState(0);
-  const [button, setButton] = crcState("none");
+  const [presses, setPresses] = useState(0);
+  const [button, setButton] = useState("none");
   return [
     <Rectangle
       style={{

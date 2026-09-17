@@ -101,7 +101,7 @@ report that the same policy cannot be applied more than once to one element.
 
 ```text
 CRC hooks can only be called while rendering a component.
-crcCanvasContext() is available only during CRC rendering and cannot be used during pure measurement.
+useCanvasContext() is available only during CRC rendering and cannot be used during pure measurement.
 No CRC layout context is available
 ```
 

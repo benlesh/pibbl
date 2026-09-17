@@ -33,7 +33,7 @@ import {
   Text,
   crc,
   createElement,
-  crcState,
+  useState,
   type CRCController,
   type CRCNode,
 } from "@crc/core";
@@ -43,7 +43,7 @@ interface PosterProps {
 }
 
 function Poster({ initialMessage }: PosterProps): CRCNode {
-  const [message, setMessage] = crcState(initialMessage);
+  const [message, setMessage] = useState(initialMessage);
 
   const cards = ["A", "B"].map((label, index) =>
     createElement(

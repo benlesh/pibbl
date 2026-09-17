@@ -21,7 +21,7 @@ WebGL authoring uses the same branded `CRCElement` protocol, automatic JSX
 runtime, synchronous component functions, hooks, keys, and component identity
 as `@crc/core`. The initial WebGL vocabulary is `WebGLLayer`, `Group3D`,
 `Mesh`, `Cube`, and `Sphere`, plus `defineWebGLPrimitive`,
-`crcWebGLContext`, and `crcAnimationFrame`. `WebGLLayer` accepts one optional
+`crcWebGLContext`, and `useAnimationFrame`. `WebGLLayer` accepts one optional
 camera descriptor and supplies a documented perspective camera when it is
 omitted.
 
@@ -199,7 +199,7 @@ The `@crc/webgl` root exports:
 - `Cube` and `Sphere` and their prop and style types;
 - `defineWebGLPrimitive` and its public capability types;
 - `crcWebGLContext` and its returned context type;
-- `crcAnimationFrame`;
+- `useAnimationFrame`;
 - the public vector, matrix, camera, geometry, and WebGL primitive
   types used by those values.
 
@@ -393,7 +393,7 @@ primitive from the paired hit-capability rule.
 
 ### Animation
 
-`crcAnimationFrame()` is an `@crc/webgl` hook that returns the current CRC frame
+`useAnimationFrame()` is an `@crc/webgl` hook that returns the current CRC frame
 timestamp and requests the next frame while its component remains mounted.
 Multiple callers share core's existing coalescing scheduler. Canvas 2D and
 WebGL components in one root therefore observe the same render timestamp.
@@ -560,7 +560,7 @@ conceptual group extent does not select the group. A spatially overlapping
 target from another branch may therefore win, and the unrelated group's
 listener is not on that event path.
 
-`crcEventListener` remains the custom-component mechanism. Structural handler
+`useEventListener` remains the custom-component mechanism. Structural handler
 props have its listener semantics rather than creating implicit rectangular
 targets.
 
