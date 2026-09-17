@@ -1281,6 +1281,35 @@ export function ownershipCountersPhysicsWorld3DControllerForTest(
   ).kernel.counters;
 }
 
+/** Package-private lifecycle evidence that remains readable after disposal. */
+export function snapshotPhysicsWorld3DControllerOwnershipForTest(
+  controller: PhysicsWorld3DController,
+): Readonly<{
+  readonly active: boolean;
+  readonly advanceRegistered: boolean;
+  readonly beginCommandQueued: boolean;
+  readonly liveCandidate: boolean;
+  readonly materializedBodyHandles: number;
+  readonly materializedColliderHandles: number;
+}> {
+  const state = controller as unknown as {
+    readonly active: boolean;
+    readonly releaseAdvance: (() => void) | undefined;
+    readonly queuedBegin: Readonly<{ cancel(): void }> | undefined;
+    readonly liveCandidate: PhysicsWorld3DCandidate | undefined;
+    readonly materializedBodyHandles: ReadonlyMap<string, unknown>;
+    readonly materializedColliderHandles: ReadonlyMap<string, unknown>;
+  };
+  return Object.freeze({
+    active: state.active,
+    advanceRegistered: state.releaseAdvance !== undefined,
+    beginCommandQueued: state.queuedBegin !== undefined,
+    liveCandidate: state.liveCandidate !== undefined,
+    materializedBodyHandles: state.materializedBodyHandles.size,
+    materializedColliderHandles: state.materializedColliderHandles.size,
+  });
+}
+
 function normalizeWorldConfiguration(
   props: CRCPhysicsWorld3DProps,
 ): NormalizedPhysicsWorld3DConfiguration {

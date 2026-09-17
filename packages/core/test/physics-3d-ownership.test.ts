@@ -24,6 +24,7 @@ import {
   ownershipCountersPhysicsWorld3DControllerForTest,
   requirePhysicsWorld3DController,
   snapshotPhysicsWorld3DControllerForTest,
+  snapshotPhysicsWorld3DControllerOwnershipForTest,
 } from "../../physics/src/lib/3d/runtime/controller.js";
 import {
   resetPhysicsEventMaterializationsForTest,
@@ -152,6 +153,23 @@ describe("3D physics public ownership", () => {
     const counters =
       ownershipCountersPhysicsWorld3DControllerForTest(controller);
     const mounted = snapshotPhysicsWorld3DControllerForTest(controller);
+    expect(counters).toMatchObject({
+      bodyStoreAllocations: 1,
+      bodyStoreReleases: 0,
+      liveBodyStores: 1,
+      colliderStoreAllocations: 1,
+      colliderStoreReleases: 0,
+      liveColliderStores: 1,
+      broadPhaseAllocations: 1,
+      broadPhaseReleases: 0,
+      liveBroadPhases: 1,
+      contactCacheAllocations: 1,
+      contactCacheReleases: 0,
+      liveContactCaches: 1,
+      solverAllocations: 2,
+      solverReleases: 0,
+      liveSolvers: 2,
+    });
     expect(mounted.kernel).toMatchObject({
       bodyCount: 1,
       colliderCount: 2,
@@ -223,15 +241,35 @@ describe("3D physics public ownership", () => {
       queuedFrameCompletions: 0,
     });
     expect(counters).toMatchObject({
+      bodyStoreAllocations: 1,
+      bodyStoreReleases: 1,
       liveBodyStores: 0,
+      colliderStoreAllocations: 1,
+      colliderStoreReleases: 1,
       liveColliderStores: 0,
+      broadPhaseAllocations: 1,
+      broadPhaseReleases: 1,
       liveBroadPhases: 0,
+      contactCacheAllocations: 1,
+      contactCacheReleases: 1,
       liveContactCaches: 0,
+      solverAllocations: 2,
+      solverReleases: 2,
       liveSolvers: 0,
       liveBodies: 0,
       liveColliders: 0,
       liveProxies: 0,
       liveContacts: 0,
+    });
+    expect(
+      snapshotPhysicsWorld3DControllerOwnershipForTest(controller),
+    ).toEqual({
+      active: false,
+      advanceRegistered: false,
+      beginCommandQueued: false,
+      liveCandidate: false,
+      materializedBodyHandles: 0,
+      materializedColliderHandles: 0,
     });
   });
 
@@ -347,7 +385,16 @@ describe("3D physics public ownership", () => {
 
   it("materializes one observed public event and releases its Complete queue", () => {
     const received: unknown[] = [];
-    const onOverlapStart = (event: unknown) => received.push(event);
+    let eventBody!: CRCPhysicsBodyHandle3D;
+    let completionCallbacksDuringDelivery = 0;
+    const onOverlapStart = (
+      event: Readonly<{ readonly selfBody: CRCPhysicsBodyHandle3D }>,
+    ) => {
+      completionCallbacksDuringDelivery =
+        snapshotRealmScheduler().completionCallbacks;
+      eventBody = event.selfBody;
+      received.push(event);
+    };
     let world!: CRCPhysicsWorldHandle3D;
     const Scene = () =>
       createElement(PhysicsWorld3D, {
@@ -383,11 +430,13 @@ describe("3D physics public ownership", () => {
         ],
       });
 
-    mount(createElement(Scene, {}));
+    const runtime = mount(createElement(Scene, {}));
     flush(0);
     flush(0);
     flush(10);
     const observedController = requirePhysicsWorld3DController(world);
+    const counters =
+      ownershipCountersPhysicsWorld3DControllerForTest(observedController);
     expect(
       snapshotPhysicsWorld3DControllerForTest(observedController).kernel,
     ).toMatchObject({
@@ -403,7 +452,75 @@ describe("3D physics public ownership", () => {
       materializedBodyHandles: 2,
       materializedColliderHandles: 2,
     });
+    expect(counters).toMatchObject({
+      bodyStoreAllocations: 1,
+      liveBodyStores: 1,
+      colliderStoreAllocations: 1,
+      liveColliderStores: 1,
+      broadPhaseAllocations: 1,
+      liveBroadPhases: 1,
+      contactCacheAllocations: 1,
+      liveContactCaches: 1,
+      contactAllocations: 1,
+      contactReleases: 0,
+      liveContacts: 1,
+      solverAllocations: 2,
+      liveSolvers: 2,
+    });
     expect(snapshotPhysicsEventMaterializationsForTest()).toBe(1);
+    expect(completionCallbacksDuringDelivery).toBeGreaterThan(0);
+    expect(snapshotRealmScheduler().completionCallbacks).toBe(0);
     expect(snapshotRealmScheduler().queuedFrameCompletions).toBe(0);
+
+    const schedulerBeforeCommand = snapshotRealmScheduler();
+    applyImpulse3D(eventBody, [1, 0, 0]);
+    expect(snapshotRealmScheduler()).toMatchObject({
+      createdBeginCommands: schedulerBeforeCommand.createdBeginCommands + 1,
+      releasedBeginCommands: schedulerBeforeCommand.releasedBeginCommands,
+      queuedBeginCommands: schedulerBeforeCommand.queuedBeginCommands + 1,
+    });
+
+    runtime.dispose();
+    mounts.delete(runtime);
+    expect(snapshotRealmScheduler()).toMatchObject({
+      createdBeginCommands: schedulerBeforeCommand.createdBeginCommands + 1,
+      releasedBeginCommands: schedulerBeforeCommand.createdBeginCommands + 1,
+      queuedBeginCommands: 0,
+      queuedFrameCompletions: 0,
+      completionCallbacks: 0,
+    });
+    expect(counters).toMatchObject({
+      bodyStoreAllocations: 1,
+      bodyStoreReleases: 1,
+      liveBodyStores: 0,
+      colliderStoreAllocations: 1,
+      colliderStoreReleases: 1,
+      liveColliderStores: 0,
+      broadPhaseAllocations: 1,
+      broadPhaseReleases: 1,
+      liveBroadPhases: 0,
+      contactCacheAllocations: 1,
+      contactCacheReleases: 1,
+      liveContactCaches: 0,
+      contactAllocations: 1,
+      contactReleases: 1,
+      liveContacts: 0,
+      solverAllocations: 2,
+      solverReleases: 2,
+      liveSolvers: 0,
+      liveBodies: 0,
+      liveColliders: 0,
+      liveProxies: 0,
+    });
+    expect(
+      snapshotPhysicsWorld3DControllerOwnershipForTest(observedController),
+    ).toEqual({
+      active: false,
+      advanceRegistered: false,
+      beginCommandQueued: false,
+      liveCandidate: false,
+      materializedBodyHandles: 0,
+      materializedColliderHandles: 0,
+    });
   });
 });
