@@ -161,9 +161,12 @@ corepack pnpm@11.21.0 playground:built
 - Compiler-only entries: `@crc/core/jsx-runtime` and
   `@crc/core/jsx-dev-runtime`
 
-All official packages use the same `@crc/core` JSX runtime, element brand, scheduler,
-and event system. The exported `@crc/core/internal` friend seam is reserved for
-matching official CRC packages and is not an application compatibility promise.
+The connected `@crc/core`, `@crc/webgl`, `@crc/physics/2d`, and
+`@crc/physics/3d` runtime surfaces share the `@crc/core` JSX runtime, element
+brand, scheduler, and event system. This does not describe `@crc/types` or the
+renderer-independent physics `/geometry` entries. The exported
+`@crc/core/internal` friend seam is reserved for matching official CRC packages
+and is not an application compatibility promise.
 
 See the [API overview](docs/site/api/index.md) and [grouped type reference](docs/site/api/types/canvas-runtime.md)
 for every value and type export, and [CRC library status](docs/library-status.md)

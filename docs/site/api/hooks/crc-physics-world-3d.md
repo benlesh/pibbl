@@ -12,8 +12,8 @@ relatedTypes: [CRCPhysicsWorldHandle3D]
 # crcPhysicsWorld3D
 
 ```ts
-import { Text } from "@crc/core";
 import { crcPhysicsWorld3D, raycast3D } from "@crc/physics/3d";
+import { Sphere } from "@crc/webgl";
 ```
 
 `crcPhysicsWorld3D()` returns the nearest enclosing
@@ -24,12 +24,25 @@ functions.
 ```tsx
 function QueryProbe() {
   const world = crcPhysicsWorld3D();
+  world.revision.get();
   const hit = raycast3D(world, {
     origin: [0, 5, 5],
     direction: [0, -0.7, -0.7],
     maxDistance: 20,
   });
-  return hit ? <Text>{String(hit.tag)}</Text> : undefined;
+  return hit ? (
+    <Sphere
+      pointerEvents="none"
+      style={{
+        radius: 0.1,
+        translateX: hit.point[0],
+        translateY: hit.point[1],
+        translateZ: hit.point[2],
+        color: "#f97316",
+        lit: false,
+      }}
+    />
+  ) : undefined;
 }
 ```
 

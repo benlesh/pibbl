@@ -209,7 +209,8 @@ or one nullable result for `"closest"`.
 ## CRCPhysicsCollisionEvent3D
 
 Ordered collision facts for one receiving collider, including contact points,
-normal impulse, tags, handles, generations, and simulation tick.
+normal impulse, tags, generation-bound body/collider handles, and simulation
+tick.
 
 ## CRCPhysicsOverlapEvent3D
 
