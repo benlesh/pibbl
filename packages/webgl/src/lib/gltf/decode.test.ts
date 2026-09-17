@@ -5,8 +5,20 @@ import {
 } from '../assets/asset.js';
 import { getWebGLGeometryData } from '../geometry/geometry.js';
 import { getInternalWebGLTextureData } from '../texture/texture.js';
+import { resolveCamera } from '../math/camera.js';
+import {
+  createWebGLSceneComposer,
+  submitWebGLMesh,
+} from '../scene/composer.js';
+import { settleWebGLScene } from '../scene/settle.js';
 import { decodeGLBAsset, type CRCGLTFDecodePlatform } from './decode.js';
-import { makeGLB, staticTriangleFixture } from './test-fixtures.js';
+import {
+  concatBytes,
+  float32Bytes,
+  makeGLB,
+  staticTriangleFixture,
+  uint16Bytes,
+} from './test-fixtures.js';
 
 describe('static GLB asset decoder', () => {
   it('compiles selected nodes in preorder with instancing, materials, and bounds', async () => {
@@ -68,7 +80,11 @@ describe('static GLB asset decoder', () => {
       magFilter: 'nearest',
     });
     expect(decodedInputs).toEqual([{
-      bytes: [0x89, 0x50, 0x4e, 0x47],
+      bytes: [
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+        0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+        0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03,
+      ],
       mimeType: 'image/png',
     }]);
     expect(close).not.toHaveBeenCalled();
@@ -143,6 +159,108 @@ describe('static GLB asset decoder', () => {
     releaseInternalWebGLAsset(asset);
   });
 
+  it('generates flat normals by expanding indexed vertex streams and settles lit PBR', async () => {
+    const fixture = indexedNormalFreeFixture();
+    const asset = await decodeGLBAsset(
+      makeGLB(fixture.document, fixture.binary),
+      platform(),
+    );
+    const primitive = getInternalWebGLAssetData(asset).primitives[0]!;
+    const geometry = getWebGLGeometryData(primitive.geometry);
+
+    expect(Array.from(geometry.positions)).toEqual([
+      0, 0, 0, 1, 0, 0, 0, 1, 0,
+      0, 0, 0, 0, 1, 0, 0, 1, 1,
+    ]);
+    expect(Array.from(geometry.normals!)).toEqual([
+      0, 0, 1, 0, 0, 1, 0, 0, 1,
+      1, 0, 0, 1, 0, 0, 1, 0, 0,
+    ]);
+    expect(Array.from(geometry.textureCoordinates0!)).toEqual([
+      0, 0, 1, 0, 0, 1,
+      0, 0, 0, 1, 1, 1,
+    ]);
+    expect(Array.from(geometry.tangents!)).toEqual([
+      1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1,
+      1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1,
+    ]);
+    expect(geometry.indices).toBeUndefined();
+
+    const camera = resolveCamera(undefined, 100, 100);
+    const composer = createWebGLSceneComposer({
+      frame: {
+        canvas: {} as HTMLCanvasElement,
+        logicalWidth: 100,
+        logicalHeight: 100,
+        backingWidth: 100,
+        backingHeight: 100,
+        renderTimestamp: 1,
+      },
+      camera,
+      contextGeneration: 1,
+    });
+    submitWebGLMesh(composer, {
+      componentName: 'DecodedModel',
+      geometry: primitive.geometry,
+      localModel: new Float32Array(primitive.modelMatrix),
+      color: [1, 1, 1, 1],
+      lit: true,
+      material: primitive.material,
+    });
+    expect(() => settleWebGLScene(composer)).not.toThrow();
+    releaseInternalWebGLAsset(asset);
+  });
+
+  it.each([
+    [
+      'non-affine matrix',
+      [1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      /\$\.nodes\[0\]\.matrix.*affine/,
+    ],
+    [
+      'non-affine matrix that would round to affine Float32',
+      [1, 0, 0, Number.MIN_VALUE, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      /\$\.nodes\[0\]\.matrix.*affine/,
+    ],
+    [
+      'sheared matrix',
+      [1, 0, 0, 0, 0.5, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      /\$\.nodes\[0\]\.matrix.*decompose.*without shear/,
+    ],
+    [
+      'singular matrix',
+      [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      /\$\.nodes\[0\]\.matrix.*invertible normal matrix/,
+    ],
+    [
+      'Float32 overflow matrix',
+      [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, Number.MAX_VALUE, 0, 0, 1],
+      /\$\.nodes\[0\]\.matrix\[12\].*finite Float32/,
+    ],
+  ])('rejects an authored %s', async (_name, matrix, message) => {
+    const fixture = indexedNormalFreeFixture();
+    const document = structuredClone(fixture.document) as any;
+    document.nodes[0].matrix = matrix;
+    await expect(decodeGLBAsset(
+      makeGLB(document, fixture.binary),
+      platform(),
+    )).rejects.toThrow(message);
+  });
+
+  it('rejects a composed transform that overflows Float32 at the child path', async () => {
+    const fixture = indexedNormalFreeFixture();
+    const document = structuredClone(fixture.document) as any;
+    document.nodes = [
+      { scale: [3e38, 1, 1], children: [1] },
+      { mesh: 0, scale: [2, 1, 1] },
+    ];
+    document.scenes = [{ nodes: [0] }];
+    await expect(decodeGLBAsset(
+      makeGLB(document, fixture.binary),
+      platform(),
+    )).rejects.toThrow(/\$\.nodes\[1\].*composed.*finite Float32/);
+  });
+
   it.each([
     ['missing scenes', (document: any) => { delete document.scenes; }, /\$\.scenes.*selected scene/],
     ['empty scene', (document: any) => { document.scenes = [{ nodes: [] }]; }, /\$\.scenes\[0\].*renderable/],
@@ -157,9 +275,8 @@ describe('static GLB asset decoder', () => {
     ['morph targets', (document: any) => { document.meshes[0].primitives[0].targets = [{}]; }, /\$\.meshes\[0\]\.primitives\[0\]\.targets.*unsupported/],
     ['non-triangles', (document: any) => { document.meshes[0].primitives[0].mode = 5; }, /\$\.meshes\[0\]\.primitives\[0\]\.mode.*TRIANGLES/],
     ['missing POSITION', (document: any) => { delete document.meshes[0].primitives[0].attributes.POSITION; }, /\$\.meshes\[0\]\.primitives\[0\]\.attributes\.POSITION.*required/],
-    ['required extension', (document: any) => { document.extensionsRequired = ['KHR_draco_mesh_compression']; }, /\$\.extensionsRequired\[0\].*unsupported.*KHR_draco_mesh_compression/],
+    ['required extension', (document: any) => { document.extensionsRequired = ['KHR_draco_mesh_compression']; }, /\$\.extensionsRequired.*unsupported.*KHR_draco_mesh_compression/],
     ['animation', (document: any) => { document.animations = [{}]; }, /\$\.animations.*unsupported/],
-    ['camera definitions', (document: any) => { document.cameras = [{ type: 'perspective' }]; }, /\$\.cameras.*unsupported/],
   ])('rejects %s', async (_name, mutate, message) => {
     const fixture = staticTriangleFixture();
     const document = structuredClone(fixture.document) as any;
@@ -168,6 +285,57 @@ describe('static GLB asset decoder', () => {
       makeGLB(document, fixture.binary),
       platform(),
     )).rejects.toThrow(message);
+  });
+
+  it('permits unused camera definitions while still rejecting selected camera nodes', async () => {
+    const fixture = staticTriangleFixture();
+    const document = structuredClone(fixture.document) as any;
+    document.cameras = [{ type: 'perspective' }];
+    const asset = await decodeGLBAsset(
+      makeGLB(document, fixture.binary),
+      platform(),
+    );
+    expect(getInternalWebGLAssetData(asset).primitives).toHaveLength(4);
+    releaseInternalWebGLAsset(asset);
+  });
+
+  it('permits extensions and extras metadata inside pbrMetallicRoughness', async () => {
+    const fixture = staticTriangleFixture();
+    const document = structuredClone(fixture.document) as any;
+    Object.assign(document.materials[0].pbrMetallicRoughness, {
+      extensions: { VENDOR_metadata: { label: 'paint' } },
+      extras: { author: 'fixture' },
+    });
+    const asset = await decodeGLBAsset(
+      makeGLB(document, fixture.binary),
+      platform(),
+    );
+    expect(getInternalWebGLAssetData(asset).primitives[0]!.material)
+      .toMatchObject({ metallicFactor: 0.2, roughnessFactor: 0.8 });
+    releaseInternalWebGLAsset(asset);
+
+    const malformed = staticTriangleFixture();
+    const malformedDocument = structuredClone(malformed.document) as any;
+    malformedDocument.materials[0].pbrMetallicRoughness.extensions = 1;
+    await expect(decodeGLBAsset(
+      makeGLB(malformedDocument, malformed.binary),
+      platform(),
+    )).rejects.toThrow(/pbrMetallicRoughness\.extensions.*object/);
+  });
+
+  it('aggregates every unsupported required extension in one diagnostic', async () => {
+    const fixture = staticTriangleFixture();
+    const document = structuredClone(fixture.document) as any;
+    document.extensionsRequired = [
+      'KHR_draco_mesh_compression',
+      'EXT_meshopt_compression',
+    ];
+    await expect(decodeGLBAsset(
+      makeGLB(document, fixture.binary),
+      platform(),
+    )).rejects.toThrow(
+      /\$\.extensionsRequired.*KHR_draco_mesh_compression.*EXT_meshopt_compression/,
+    );
   });
 
   it.each([
@@ -229,9 +397,8 @@ describe('static GLB asset decoder', () => {
   });
 
   it('passes buffer-view JPEG bytes to the injected decoder', async () => {
-    const fixture = staticTriangleFixture();
+    const fixture = staticTriangleFixture('jpeg');
     const document = structuredClone(fixture.document) as any;
-    document.images[0].mimeType = 'image/jpeg';
     const calls: Array<{ bytes: number[]; mimeType: string }> = [];
     const asset = await decodeGLBAsset(
       makeGLB(document, fixture.binary),
@@ -239,15 +406,18 @@ describe('static GLB asset decoder', () => {
         decodeImage: async (bytes, mimeType) => {
           calls.push({ bytes: Array.from(bytes), mimeType });
           return {
-            width: 1,
-            height: 1,
+            width: 2,
+            height: 3,
             close: vi.fn(),
           } as unknown as ImageBitmap;
         },
       },
     );
     expect(calls).toEqual([{
-      bytes: [0x89, 0x50, 0x4e, 0x47],
+      bytes: [
+        0xff, 0xd8,
+        0xff, 0xc0, 0x00, 0x08, 0x08, 0x00, 0x03, 0x00, 0x02, 0x00,
+      ],
       mimeType: 'image/jpeg',
     }]);
     releaseInternalWebGLAsset(asset);
@@ -277,8 +447,8 @@ describe('static GLB asset decoder', () => {
         decodeImage: async () => {
           decodeCount += 1;
           return {
-            width: 1,
-            height: 1,
+            width: 2,
+            height: 3,
             close,
           } as unknown as ImageBitmap;
         },
@@ -298,6 +468,22 @@ describe('static GLB asset decoder', () => {
     expect(close).toHaveBeenCalledOnce();
   });
 
+  it('shares identical geometry combinations across distinct meshes', async () => {
+    const fixture = staticTriangleFixture();
+    const document = structuredClone(fixture.document) as any;
+    document.meshes.push(structuredClone(document.meshes[0]));
+    document.nodes[2].mesh = 1;
+    const asset = await decodeGLBAsset(
+      makeGLB(document, fixture.binary),
+      platform(),
+    );
+    const primitives = getInternalWebGLAssetData(asset).primitives;
+
+    expect(primitives[0]!.geometry).toBe(primitives[2]!.geometry);
+    expect(primitives[1]!.geometry).toBe(primitives[3]!.geometry);
+    releaseInternalWebGLAsset(asset);
+  });
+
   it('rejects a textured primitive without UV0 and closes its decoded bitmap', async () => {
     const fixture = staticTriangleFixture();
     const document = structuredClone(fixture.document) as any;
@@ -308,8 +494,8 @@ describe('static GLB asset decoder', () => {
       makeGLB(document, fixture.binary),
       {
         decodeImage: async () => ({
-          width: 1,
-          height: 1,
+          width: 2,
+          height: 3,
           close,
         } as unknown as ImageBitmap),
       },
@@ -329,8 +515,8 @@ describe('static GLB asset decoder', () => {
     const decodeImage: CRCGLTFDecodePlatform['decodeImage'] = async () => {
       decodeCount += 1;
       return {
-        width: 1,
-        height: 1,
+        width: 2,
+        height: 3,
         close,
       } as unknown as ImageBitmap;
     };
@@ -342,14 +528,152 @@ describe('static GLB asset decoder', () => {
     expect(decodeCount).toBe(1);
     expect(close).toHaveBeenCalledOnce();
   });
+
+  it('wraps image decoder rejection with the image path and cause', async () => {
+    const fixture = staticTriangleFixture();
+    const failure = new Error('codec rejected bytes');
+    let received: unknown;
+    try {
+      await decodeGLBAsset(
+        makeGLB(fixture.document, fixture.binary),
+        { decodeImage: async () => { throw failure; } },
+      );
+    } catch (error) {
+      received = error;
+    }
+    expect(received).toBeInstanceOf(Error);
+    expect((received as Error).message)
+      .toMatch(/\$\.images\[0\].*codec rejected bytes/);
+    expect((received as Error).cause).toBe(failure);
+  });
+
+  it('preflights encoded dimensions before decode and closes invalid decoded dimensions', async () => {
+    const fixture = staticTriangleFixture();
+    const oversized = fixture.binary.slice();
+    new DataView(oversized.buffer).setUint32(168, 16385, false);
+    let decodeCount = 0;
+    await expect(decodeGLBAsset(
+      makeGLB(fixture.document, oversized),
+      {
+        decodeImage: async () => {
+          decodeCount += 1;
+          return { width: 2, height: 3, close: vi.fn() } as unknown as ImageBitmap;
+        },
+      },
+    )).rejects.toThrow(/\$\.images\[0\].*encoded width 16385.*limit 16384/);
+    expect(decodeCount).toBe(0);
+
+    const close = vi.fn();
+    await expect(decodeGLBAsset(
+      makeGLB(fixture.document, fixture.binary),
+      {
+        decodeImage: async () => ({
+          width: 2,
+          height: 4,
+          close,
+        } as unknown as ImageBitmap),
+      },
+    )).rejects.toThrow(/\$\.images\[0\].*decoded dimensions 2x4.*encoded 2x3/);
+    expect(close).toHaveBeenCalledOnce();
+  });
+
+  it('passes image bytes as a view into the original GLB without copying', async () => {
+    const fixture = staticTriangleFixture();
+    const input = makeGLB(fixture.document, fixture.binary);
+    let sharesInput = false;
+    const asset = await decodeGLBAsset(input, {
+      decodeImage: async bytes => {
+        sharesInput = bytes.buffer === input;
+        return {
+          width: 2,
+          height: 3,
+          close: vi.fn(),
+        } as unknown as ImageBitmap;
+      },
+    });
+    expect(sharesInput).toBe(true);
+    releaseInternalWebGLAsset(asset);
+  });
+
+  it('rejects image bufferViews with target or byteStride', async () => {
+    const fixture = staticTriangleFixture();
+    const targetDocument = structuredClone(fixture.document) as any;
+    targetDocument.bufferViews[5].target = 34962;
+    await expect(decodeGLBAsset(
+      makeGLB(targetDocument, fixture.binary),
+      platform(),
+    )).rejects.toThrow(/\$\.bufferViews\[5\]\.target.*image data/);
+
+    const strideDocument = structuredClone(fixture.document) as any;
+    strideDocument.bufferViews[5].byteStride = 4;
+    await expect(decodeGLBAsset(
+      makeGLB(strideDocument, fixture.binary),
+      platform(),
+    )).rejects.toThrow(/\$\.bufferViews\[5\]\.byteStride.*image data/);
+  });
 });
 
 function platform(): CRCGLTFDecodePlatform {
   return {
     decodeImage: async () => ({
-      width: 1,
-      height: 1,
+      width: 2,
+      height: 3,
       close: vi.fn(),
     } as unknown as ImageBitmap),
+  };
+}
+
+function indexedNormalFreeFixture(): {
+  readonly document: Record<string, unknown>;
+  readonly binary: Uint8Array;
+} {
+  const positions = float32Bytes([
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    0, 1, 1,
+  ]);
+  const tangents = float32Bytes([
+    1, 0, 0, 1,
+    1, 0, 0, 1,
+    1, 0, 0, 1,
+    1, 0, 0, 1,
+  ]);
+  const textureCoordinates = float32Bytes([
+    0, 0,
+    1, 0,
+    0, 1,
+    1, 1,
+  ]);
+  const indices = uint16Bytes([0, 1, 2, 0, 2, 3]);
+  return {
+    binary: concatBytes(positions, tangents, textureCoordinates, indices),
+    document: {
+      asset: { version: '2.0' },
+      buffers: [{ byteLength: 156 }],
+      bufferViews: [
+        { buffer: 0, byteOffset: 0, byteLength: 48 },
+        { buffer: 0, byteOffset: 48, byteLength: 64 },
+        { buffer: 0, byteOffset: 112, byteLength: 32 },
+        { buffer: 0, byteOffset: 144, byteLength: 12 },
+      ],
+      accessors: [
+        { bufferView: 0, componentType: 5126, count: 4, type: 'VEC3' },
+        { bufferView: 1, componentType: 5126, count: 4, type: 'VEC4' },
+        { bufferView: 2, componentType: 5126, count: 4, type: 'VEC2' },
+        { bufferView: 3, componentType: 5123, count: 6, type: 'SCALAR' },
+      ],
+      meshes: [{ primitives: [{
+        attributes: { POSITION: 0, TANGENT: 1, TEXCOORD_0: 2 },
+        indices: 3,
+      }] }],
+      nodes: [{ mesh: 0, matrix: [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+      ] }],
+      scenes: [{ nodes: [0] }],
+    },
   };
 }

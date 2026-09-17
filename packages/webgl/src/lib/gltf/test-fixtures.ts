@@ -86,7 +86,7 @@ export function uint16Bytes(values: readonly number[]): Uint8Array {
   return bytes;
 }
 
-export function staticTriangleFixture(): {
+export function staticTriangleFixture(imageKind: 'png' | 'jpeg' = 'png'): {
   readonly document: Record<string, unknown>;
   readonly binary: Uint8Array;
 } {
@@ -96,7 +96,14 @@ export function staticTriangleFixture(): {
   const textureCoordinates = float32Bytes([0, 0, 1, 0, 0, 1]);
   const indices = uint16Bytes([0, 1, 2]);
   const indexPadding = new Uint8Array(2);
-  const image = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+  const image = imageKind === 'png' ? new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+    0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03,
+  ]) : new Uint8Array([
+    0xff, 0xd8,
+    0xff, 0xc0, 0x00, 0x08, 0x08, 0x00, 0x03, 0x00, 0x02, 0x00,
+  ]);
   const binary = concatBytes(
     positions,
     normals,
@@ -110,14 +117,14 @@ export function staticTriangleFixture(): {
     binary,
     document: {
       asset: { version: '2.0' },
-      buffers: [{ byteLength: 156 }],
+      buffers: [{ byteLength: 152 + image.byteLength }],
       bufferViews: [
         { buffer: 0, byteOffset: 0, byteLength: 36 },
         { buffer: 0, byteOffset: 36, byteLength: 36 },
         { buffer: 0, byteOffset: 72, byteLength: 48 },
         { buffer: 0, byteOffset: 120, byteLength: 24 },
         { buffer: 0, byteOffset: 144, byteLength: 6 },
-        { buffer: 0, byteOffset: 152, byteLength: 4 },
+        { buffer: 0, byteOffset: 152, byteLength: image.byteLength },
       ],
       accessors: [
         { bufferView: 0, componentType: 5126, count: 3, type: 'VEC3' },
@@ -126,7 +133,10 @@ export function staticTriangleFixture(): {
         { bufferView: 3, componentType: 5126, count: 3, type: 'VEC2' },
         { bufferView: 4, componentType: 5123, count: 3, type: 'SCALAR' },
       ],
-      images: [{ bufferView: 5, mimeType: 'image/png' }],
+      images: [{
+        bufferView: 5,
+        mimeType: imageKind === 'png' ? 'image/png' : 'image/jpeg',
+      }],
       samplers: [{ wrapS: 33071, wrapT: 33648, minFilter: 9987, magFilter: 9728 }],
       textures: [{ source: 0, sampler: 0 }],
       materials: [{

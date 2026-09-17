@@ -9,6 +9,7 @@ import {
   requireObject,
   validateBinaryChunkPadding,
 } from './schema.js';
+import type { GLTFDecodeBudget } from './budget.js';
 
 export type CRCGLTFAccessorUsage =
   | 'POSITION'
@@ -16,6 +17,11 @@ export type CRCGLTFAccessorUsage =
   | 'TANGENT'
   | 'TEXCOORD_0'
   | 'indices';
+
+export interface CRCGLTFAccessorDecodeContext {
+  readonly budget: GLTFDecodeBudget;
+  readonly cache: Map<string, Float32Array | Uint32Array>;
+}
 
 interface ComponentInfo {
   readonly bytes: number;
@@ -81,7 +87,9 @@ export function decodeGLTFAccessor(
   binaryChunk: Uint8Array | undefined,
   accessorIndex: number,
   usage: CRCGLTFAccessorUsage,
+  context?: CRCGLTFAccessorDecodeContext,
 ): Float32Array | Uint32Array {
+  const cacheKey = `${accessorIndex}`;
   const accessors = requireArray(document.accessors, '$.accessors');
   const accessorPath = `$.accessors[${accessorIndex}]`;
   if (!Number.isSafeInteger(accessorIndex) || accessorIndex < 0 ||
@@ -198,6 +206,12 @@ export function decodeGLTFAccessor(
   );
   const stride = bufferView.byteStride === undefined ? elementSize :
     requireNonnegativeInteger(bufferView.byteStride, `${viewPath}.byteStride`);
+  if (usage !== 'indices' && absoluteOffset % 4 !== 0) {
+    throw new RangeError(
+      `GLB JSON ${accessorPath} vertex start byte ${absoluteOffset} must be ` +
+      '4-byte aligned.',
+    );
+  }
   if (bufferView.byteStride !== undefined) {
     if (usage === 'indices') {
       throw new TypeError(`${viewPath}.byteStride is unsupported for indices.`);
@@ -219,6 +233,11 @@ export function decodeGLTFAccessor(
       );
     }
   }
+  if (usage !== 'indices' && stride % 4 !== 0) {
+    throw new RangeError(
+      `GLB JSON ${accessorPath} effective stride ${stride} must be 4-byte aligned.`,
+    );
+  }
   const occupiedLength = count === 0 ? 0 : checkedAdd(
     checkedMultiply(count - 1, stride, `${accessorPath}.count and byteStride`),
     elementSize,
@@ -236,7 +255,13 @@ export function decodeGLTFAccessor(
     );
   }
 
+  const cached = context?.cache.get(cacheKey);
+  if (cached !== undefined) return cached;
   const outputLength = checkedMultiply(count, arity, `${accessorPath}.count`);
+  context?.budget.reserveNumericAttributeBytes(
+    checkedMultiply(outputLength, Float32Array.BYTES_PER_ELEMENT, `${accessorPath} output bytes`),
+    accessorPath,
+  );
   const output = usage === 'indices' ?
     new Uint32Array(outputLength) : new Float32Array(outputLength);
   const data = new DataView(
@@ -269,6 +294,7 @@ export function decodeGLTFAccessor(
       outputIndex += 1;
     }
   }
+  context?.cache.set(cacheKey, output);
   return output;
 }
 

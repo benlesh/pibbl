@@ -19,15 +19,28 @@ import {
   transformBoundsMatrix4,
 } from '../math/matrix4.js';
 import {
+  createSettledNormalMatrix,
+  validateSettledNormalPair,
+} from '../scene/normals.js';
+import {
   createInternalWebGLTexture,
   type InternalWebGLTextureProducer,
 } from '../texture/texture.js';
-import { decodeGLTFAccessor } from './accessor.js';
+import {
+  decodeGLTFAccessor,
+  type CRCGLTFAccessorDecodeContext,
+} from './accessor.js';
+import {
+  GLTFDecodeBudget,
+  assertEncodedImageByteLength,
+  assertImageDimensions,
+} from './budget.js';
 import { readGLB } from './glb.js';
 import {
   type CRCGLTFDocument,
   type CRCGLTFObject,
   checkedAdd,
+  checkedMultiply,
   optionalArray,
   optionalNonnegativeInteger,
   own,
@@ -50,7 +63,7 @@ export interface CRCGLTFDecodePlatform {
 interface SelectedNode {
   readonly nodeIndex: number;
   readonly node: CRCGLTFObject;
-  readonly modelMatrix: Float64Array;
+  readonly modelMatrix: Float32Array;
 }
 
 interface SelectedPrimitive {
@@ -97,6 +110,8 @@ const MATERIAL_KEYS = new Set([
 const PBR_KEYS = new Set([
   'baseColorFactor',
   'baseColorTexture',
+  'extensions',
+  'extras',
   'metallicFactor',
   'roughnessFactor',
 ]);
@@ -116,9 +131,14 @@ export async function decodeGLBAsset(
     throw new TypeError('GLB decode platform.decodeImage must be a function.');
   }
   const { json, binaryChunk } = readGLB(bytes);
+  const budget = new GLTFDecodeBudget();
+  const accessorContext: CRCGLTFAccessorDecodeContext = {
+    budget,
+    cache: new Map(),
+  };
   validateTopLevelFeatures(json);
   const selectedNodes = selectNodes(json);
-  const selectedPrimitives = collectSelectedPrimitives(json, selectedNodes);
+  const selectedPrimitives = collectSelectedPrimitives(json, selectedNodes, budget);
   if (selectedPrimitives.length === 0) {
     const sceneIndex = json.scene === undefined ? 0 : requireIndex(json.scene, '$.scene');
     throw new TypeError(
@@ -135,12 +155,15 @@ export async function decodeGLBAsset(
       selectedPrimitives,
       platform,
       textureProducers,
+      budget,
     );
     const compiled = compilePrimitiveTemplates(
       json,
       binaryChunk,
       selectedPrimitives,
       materials,
+      accessorContext,
+      budget,
     );
     const records = [];
     let sourceOrder = 0;
@@ -166,6 +189,20 @@ export async function decodeGLBAsset(
       );
       for (let primitiveIndex = 0; primitiveIndex < primitives.length; primitiveIndex += 1) {
         const template = compiled.get(`${meshIndex}:${primitiveIndex}`)!;
+        const primitivePath =
+          `$.meshes[${meshIndex}].primitives[${primitiveIndex}]`;
+        const geometryData = getWebGLGeometryData(template.geometry);
+        try {
+          const normalMatrix = createSettledNormalMatrix(selectedNode.modelMatrix);
+          validateSettledNormalPair(geometryData.normals!, normalMatrix);
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
+          throw new TypeError(
+            `GLB JSON $.nodes[${selectedNode.nodeIndex}] transform cannot render ` +
+            `${primitivePath}: ${detail}`,
+            { cause: error },
+          );
+        }
         records.push({
           geometry: template.geometry,
           material: template.material,
@@ -175,7 +212,7 @@ export async function decodeGLBAsset(
         sourceOrder += 1;
         const worldBounds = transformBoundsMatrix4(
           selectedNode.modelMatrix,
-          getWebGLGeometryData(template.geometry).bounds,
+          geometryData.bounds,
         );
         minimumX = Math.min(minimumX, worldBounds.minimumX);
         minimumY = Math.min(minimumY, worldBounds.minimumY);
@@ -210,19 +247,23 @@ export async function decodeGLBAsset(
 function validateTopLevelFeatures(document: CRCGLTFDocument): void {
   const required = optionalArray(document, 'extensionsRequired', '$');
   if (required !== undefined) {
+    const unsupported: string[] = [];
     required.forEach((extension, index) => {
       if (typeof extension !== 'string') {
         throw new TypeError(
           `GLB JSON $.extensionsRequired[${index}] must be a string.`,
         );
       }
-      throw new TypeError(
-        `GLB JSON $.extensionsRequired[${index}] unsupported required ` +
-        `extension ${extension}.`,
-      );
+      unsupported.push(`[${index}] ${extension}`);
     });
+    if (unsupported.length > 0) {
+      throw new TypeError(
+        'GLB JSON $.extensionsRequired contains unsupported required ' +
+        `extensions: ${unsupported.join(', ')}.`,
+      );
+    }
   }
-  for (const field of ['animations', 'skins', 'cameras'] as const) {
+  for (const field of ['animations', 'skins'] as const) {
     if (document[field] !== undefined) {
       throw new TypeError(`GLB JSON $.${field} is unsupported in static GLB assets.`);
     }
@@ -289,11 +330,16 @@ function selectNodes(document: CRCGLTFDocument): readonly SelectedNode[] {
     const node = requireObject(nodes[nodeIndex], nodePath);
     validateNodeFeatures(node, nodePath);
     const localMatrix = nodeMatrix(node, nodePath);
-    const worldMatrix = multiplyMatrix4(
+    const composedMatrix = multiplyMatrix4(
       new Float64Array(16),
       frame.parentMatrix,
       localMatrix,
     );
+    const worldMatrix = canonicalizeMatrix4(
+      composedMatrix,
+      `${nodePath} composed modelMatrix`,
+    );
+    validateNormalMatrix(worldMatrix, `${nodePath} composed modelMatrix`);
     selected.push({ nodeIndex, node, modelMatrix: worldMatrix });
     const children = node.children === undefined ? [] :
       requireArray(node.children, `${nodePath}.children`);
@@ -326,13 +372,17 @@ function validateNodeFeatures(node: CRCGLTFObject, path: string): void {
   }
 }
 
-function nodeMatrix(node: CRCGLTFObject, path: string): Float64Array {
+function nodeMatrix(node: CRCGLTFObject, path: string): Float32Array {
   const hasTRS = own(node, 'translation') || own(node, 'rotation') || own(node, 'scale');
   if (node.matrix !== undefined) {
     if (hasTRS) {
       throw new TypeError(`GLB JSON ${path}.matrix is mutually exclusive with TRS fields.`);
     }
-    return Float64Array.from(requireFiniteTuple(node.matrix, 16, `${path}.matrix`));
+    const authoredMatrix = requireFiniteTuple(node.matrix, 16, `${path}.matrix`);
+    validateAuthoredTRSMatrix(authoredMatrix, `${path}.matrix`);
+    const matrix = canonicalizeMatrix4(authoredMatrix, `${path}.matrix`);
+    validateNormalMatrix(matrix, `${path}.matrix`);
+    return matrix;
   }
   const translation = node.translation === undefined ? [0, 0, 0] :
     requireFiniteTuple(node.translation, 3, `${path}.translation`);
@@ -360,7 +410,7 @@ function nodeMatrix(node: CRCGLTFObject, path: string): Float64Array {
   const wx = w * x2;
   const wy = w * y2;
   const wz = w * z2;
-  return new Float64Array([
+  const matrix = canonicalizeMatrix4([
     (1 - (yy + zz)) * scale[0]!,
     (xy + wz) * scale[0]!,
     (xz - wy) * scale[0]!,
@@ -374,12 +424,73 @@ function nodeMatrix(node: CRCGLTFObject, path: string): Float64Array {
     (1 - (xx + yy)) * scale[2]!,
     0,
     translation[0]!, translation[1]!, translation[2]!, 1,
-  ]);
+  ], `${path} local TRS matrix`);
+  validateNormalMatrix(matrix, `${path} local TRS matrix`);
+  return matrix;
+}
+
+function canonicalizeMatrix4(
+  values: ArrayLike<number>,
+  path: string,
+): Float32Array {
+  const matrix = new Float32Array(16);
+  for (let index = 0; index < 16; index += 1) {
+    const value = Math.fround(values[index]!);
+    if (!Number.isFinite(value)) {
+      throw new RangeError(
+        `GLB JSON ${path}[${index}] must be representable as finite Float32.`,
+      );
+    }
+    matrix[index] = value === 0 ? 0 : value;
+  }
+  return matrix;
+}
+
+function validateAuthoredTRSMatrix(matrix: ArrayLike<number>, path: string): void {
+  if (matrix[3] !== 0 || matrix[7] !== 0 || matrix[11] !== 0 || matrix[15] !== 1) {
+    throw new TypeError(`GLB JSON ${path} must be affine.`);
+  }
+  const columns = [
+    [matrix[0]!, matrix[1]!, matrix[2]!],
+    [matrix[4]!, matrix[5]!, matrix[6]!],
+    [matrix[8]!, matrix[9]!, matrix[10]!],
+  ] as const;
+  const lengths = columns.map(column => Math.hypot(...column));
+  if (lengths.some(length => !Number.isFinite(length) || length === 0)) {
+    throw new TypeError(`GLB JSON ${path} must have an invertible normal matrix.`);
+  }
+  for (let left = 0; left < columns.length; left += 1) {
+    for (let right = left + 1; right < columns.length; right += 1) {
+      const dot = columns[left]![0] * columns[right]![0] +
+        columns[left]![1] * columns[right]![1] +
+        columns[left]![2] * columns[right]![2];
+      const tolerance = lengths[left]! * lengths[right]! * 1e-5;
+      if (!Number.isFinite(dot) || Math.abs(dot) > tolerance) {
+        throw new TypeError(
+          `GLB JSON ${path} must decompose to TRS without shear.`,
+        );
+      }
+    }
+  }
+  validateNormalMatrix(matrix, path);
+}
+
+function validateNormalMatrix(matrix: ArrayLike<number>, path: string): void {
+  try {
+    createSettledNormalMatrix(matrix);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new TypeError(
+      `GLB JSON ${path} must have an invertible finite normal matrix: ${detail}`,
+      { cause: error },
+    );
+  }
 }
 
 function collectSelectedPrimitives(
   document: CRCGLTFDocument,
   nodes: readonly SelectedNode[],
+  budget: GLTFDecodeBudget,
 ): readonly SelectedPrimitive[] {
   const meshes = document.meshes === undefined ? [] :
     requireArray(document.meshes, '$.meshes');
@@ -397,6 +508,7 @@ function collectSelectedPrimitives(
       throw new TypeError(`${meshPath}.weights is unsupported in static GLB assets.`);
     }
     const primitives = requireArray(mesh.primitives, `${meshPath}.primitives`);
+    budget.reserveSelectedPrimitiveInstances(primitives.length, nodePath);
     primitives.forEach((primitiveValue, primitiveIndex) => {
       const primitivePath = `${meshPath}.primitives[${primitiveIndex}]`;
       const primitive = requireObject(primitiveValue, primitivePath);
@@ -437,6 +549,7 @@ async function compileReferencedMaterials(
   primitives: readonly SelectedPrimitive[],
   platform: CRCGLTFDecodePlatform,
   producers: InternalWebGLTextureProducer[],
+  budget: GLTFDecodeBudget,
 ): Promise<ReadonlyMap<number, CRCWebGLPBRMetallicRoughnessMaterial>> {
   const materialIndices = new Set<number>();
   for (const selected of primitives) {
@@ -466,6 +579,9 @@ async function compileReferencedMaterials(
     const pbr = material.pbrMetallicRoughness === undefined ? {} :
       requireObject(material.pbrMetallicRoughness, `${path}.pbrMetallicRoughness`);
     rejectUnknownKeys(pbr, PBR_KEYS, `${path}.pbrMetallicRoughness`);
+    if (pbr.extensions !== undefined) {
+      requireObject(pbr.extensions, `${path}.pbrMetallicRoughness.extensions`);
+    }
     let textureIndex: number | undefined;
     if (pbr.baseColorTexture !== undefined) {
       const textureInfo = requireObject(
@@ -501,6 +617,7 @@ async function compileReferencedMaterials(
     textureIndices,
     platform,
     producers,
+    budget,
   );
   const result = new Map<number, CRCWebGLPBRMetallicRoughnessMaterial>();
   for (const [materialIndex, input] of materialInputs) {
@@ -536,6 +653,7 @@ async function decodeTextures(
   textureIndices: ReadonlySet<number>,
   platform: CRCGLTFDecodePlatform,
   producers: InternalWebGLTextureProducer[],
+  budget: GLTFDecodeBudget,
 ): Promise<ReadonlyMap<number, CRCWebGLTexture>> {
   const textures = document.textures === undefined ? [] :
     requireArray(document.textures, '$.textures');
@@ -560,8 +678,48 @@ async function decodeTextures(
       continue;
     }
     if (decoded === undefined) {
+      const imagePath = `$.images[${imageIndex}]`;
       const { bytes, mimeType } = imageBytes(document, binaryChunk, imageIndex);
-      const bitmap = await platform.decodeImage(bytes, mimeType);
+      assertEncodedImageByteLength(bytes.byteLength, imagePath);
+      const encodedDimensions = readEncodedImageDimensions(bytes, mimeType, imagePath);
+      assertImageDimensions(
+        encodedDimensions.width,
+        encodedDimensions.height,
+        imagePath,
+        'encoded',
+      );
+      budget.reserveDecodedImagePixels(
+        encodedDimensions.width,
+        encodedDimensions.height,
+        imagePath,
+      );
+      let bitmap: ImageBitmap;
+      try {
+        bitmap = await platform.decodeImage(bytes, mimeType);
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `GLB JSON $.images[${imageIndex}] image decode failed: ${detail}`,
+          { cause: error },
+        );
+      }
+      try {
+        assertImageDimensions(bitmap.width, bitmap.height, imagePath, 'decoded');
+        if (bitmap.width !== encodedDimensions.width ||
+          bitmap.height !== encodedDimensions.height) {
+          throw new RangeError(
+            `${imagePath} decoded dimensions ${bitmap.width}x${bitmap.height} ` +
+            `do not match encoded ${encodedDimensions.width}x${encodedDimensions.height}.`,
+          );
+        }
+      } catch (error) {
+        try {
+          bitmap.close();
+        } catch {
+          // Preserve the dimension validation failure.
+        }
+        throw error;
+      }
       decoded = {
         bitmap,
         textures: new Map(),
@@ -640,6 +798,9 @@ function sliceBufferView(
   if (view.byteStride !== undefined) {
     throw new TypeError(`${viewPath}.byteStride is invalid for image data.`);
   }
+  if (view.target !== undefined) {
+    throw new TypeError(`${viewPath}.target is invalid for image data.`);
+  }
   const buffers = requireArray(document.buffers, '$.buffers');
   const buffer = requireObject(buffers[0], '$.buffers[0]');
   if (buffer.uri !== undefined) {
@@ -665,7 +826,95 @@ function sliceBufferView(
       `GLB JSON ${viewPath} byte range ${offset}..${end} exceeds buffer length ${bufferLength}.`,
     );
   }
-  return binaryChunk.slice(offset, end);
+  return binaryChunk.subarray(offset, end);
+}
+
+function readEncodedImageDimensions(
+  bytes: Uint8Array,
+  mimeType: 'image/png' | 'image/jpeg',
+  path: string,
+): { readonly width: number; readonly height: number } {
+  return mimeType === 'image/png' ?
+    readPNGDimensions(bytes, path) : readJPEGDimensions(bytes, path);
+}
+
+function readPNGDimensions(
+  bytes: Uint8Array,
+  path: string,
+): { readonly width: number; readonly height: number } {
+  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  if (bytes.byteLength < 24 ||
+    signature.some((byte, index) => bytes[index] !== byte)) {
+    throw new TypeError(`${path} encoded image/png header is truncated or invalid.`);
+  }
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (view.getUint32(8, false) !== 13 ||
+    bytes[12] !== 0x49 || bytes[13] !== 0x48 ||
+    bytes[14] !== 0x44 || bytes[15] !== 0x52) {
+    throw new TypeError(`${path} encoded image/png must begin with a 13-byte IHDR chunk.`);
+  }
+  return {
+    width: view.getUint32(16, false),
+    height: view.getUint32(20, false),
+  };
+}
+
+function readJPEGDimensions(
+  bytes: Uint8Array,
+  path: string,
+): { readonly width: number; readonly height: number } {
+  if (bytes.byteLength < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) {
+    throw new TypeError(`${path} encoded image/jpeg SOI header is truncated or invalid.`);
+  }
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let offset = 2;
+  while (offset < bytes.byteLength) {
+    if (bytes[offset] !== 0xff) {
+      throw new TypeError(`${path} encoded image/jpeg marker at byte ${offset} is invalid.`);
+    }
+    while (offset < bytes.byteLength && bytes[offset] === 0xff) offset += 1;
+    if (offset >= bytes.byteLength) break;
+    const marker = bytes[offset]!;
+    offset += 1;
+    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+      continue;
+    }
+    if (marker === 0xd9 || marker === 0xda) break;
+    const lengthEnd = checkedAdd(offset, 2, `${path} JPEG marker 0x${marker.toString(16)}`);
+    if (lengthEnd > bytes.byteLength) {
+      throw new RangeError(`${path} encoded image/jpeg marker length is truncated.`);
+    }
+    const segmentLength = view.getUint16(offset, false);
+    if (segmentLength < 2) {
+      throw new RangeError(`${path} encoded image/jpeg marker length must be at least 2.`);
+    }
+    const segmentEnd = checkedAdd(
+      offset,
+      segmentLength,
+      `${path} JPEG marker 0x${marker.toString(16)}`,
+    );
+    if (segmentEnd > bytes.byteLength) {
+      throw new RangeError(`${path} encoded image/jpeg marker exceeds encoded bytes.`);
+    }
+    if (isJPEGStartOfFrame(marker)) {
+      if (segmentLength < 7) {
+        throw new RangeError(`${path} encoded image/jpeg SOF marker is truncated.`);
+      }
+      return {
+        height: view.getUint16(offset + 3, false),
+        width: view.getUint16(offset + 5, false),
+      };
+    }
+    offset = segmentEnd;
+  }
+  throw new TypeError(`${path} encoded image/jpeg has no supported SOF dimensions.`);
+}
+
+function isJPEGStartOfFrame(marker: number): boolean {
+  return (marker >= 0xc0 && marker <= 0xc3) ||
+    (marker >= 0xc5 && marker <= 0xc7) ||
+    (marker >= 0xc9 && marker <= 0xcb) ||
+    (marker >= 0xcd && marker <= 0xcf);
 }
 
 function decodeSampler(
@@ -738,8 +987,11 @@ function compilePrimitiveTemplates(
   binaryChunk: Uint8Array | undefined,
   primitives: readonly SelectedPrimitive[],
   materials: ReadonlyMap<number, CRCWebGLPBRMetallicRoughnessMaterial>,
+  accessorContext: CRCGLTFAccessorDecodeContext,
+  budget: GLTFDecodeBudget,
 ): ReadonlyMap<string, CompiledPrimitive> {
   const result = new Map<string, CompiledPrimitive>();
+  const geometryCache = new Map<string, CRCWebGLGeometry>();
   const defaultMaterial = resolveWebGLPBRMetallicRoughnessMaterial(
     'GLB default',
     {
@@ -756,55 +1008,86 @@ function compilePrimitiveTemplates(
       attributes.POSITION,
       `${path}.attributes.POSITION`,
     );
-    const positions = decodeGLTFAccessor(
-      document,
-      binaryChunk,
-      positionAccessor,
-      'POSITION',
-    );
-    const normals = optionalAttribute(
-      document,
-      binaryChunk,
-      attributes,
-      'NORMAL',
-      path,
-    );
-    const tangents = optionalAttribute(
-      document,
-      binaryChunk,
-      attributes,
-      'TANGENT',
-      path,
-    );
-    const textureCoordinates0 = optionalAttribute(
-      document,
-      binaryChunk,
+    const normalAccessor = optionalAttributeIndex(attributes, 'NORMAL', path);
+    const tangentAccessor = optionalAttributeIndex(attributes, 'TANGENT', path);
+    const textureCoordinateAccessor = optionalAttributeIndex(
       attributes,
       'TEXCOORD_0',
       path,
     );
-    const indices = selected.primitive.indices === undefined ? undefined :
-      decodeGLTFAccessor(
-        document,
-        binaryChunk,
-        requireIndex(selected.primitive.indices, `${path}.indices`),
-        'indices',
-      );
+    const indicesAccessor = selected.primitive.indices === undefined ? undefined :
+      requireIndex(selected.primitive.indices, `${path}.indices`);
     const material = selected.primitive.material === undefined ? defaultMaterial :
       materials.get(requireIndex(selected.primitive.material, `${path}.material`))!;
-    if (material.baseColorTexture !== undefined && textureCoordinates0 === undefined) {
+    if (material.baseColorTexture !== undefined && textureCoordinateAccessor === undefined) {
       throw new TypeError(
         `GLB JSON ${path}.attributes.TEXCOORD_0 is required by baseColorTexture.`,
       );
     }
+    const geometryKey = [
+      positionAccessor,
+      normalAccessor ?? '-',
+      tangentAccessor ?? '-',
+      textureCoordinateAccessor ?? '-',
+      indicesAccessor ?? '-',
+    ].join(':');
     try {
-      const geometry = createWebGLGeometry({
-        positions,
-        ...(normals === undefined ? {} : { normals }),
-        ...(tangents === undefined ? {} : { tangents }),
-        ...(textureCoordinates0 === undefined ? {} : { textureCoordinates0 }),
-        ...(indices === undefined ? {} : { indices }),
-      });
+      let geometry = geometryCache.get(geometryKey);
+      if (geometry === undefined) {
+        const positions = decodeGLTFAccessor(
+          document,
+          binaryChunk,
+          positionAccessor,
+          'POSITION',
+          accessorContext,
+        ) as Float32Array;
+        const normals = decodeOptionalAttribute(
+          document,
+          binaryChunk,
+          normalAccessor,
+          'NORMAL',
+          accessorContext,
+        );
+        const tangents = decodeOptionalAttribute(
+          document,
+          binaryChunk,
+          tangentAccessor,
+          'TANGENT',
+          accessorContext,
+        );
+        const textureCoordinates0 = decodeOptionalAttribute(
+          document,
+          binaryChunk,
+          textureCoordinateAccessor,
+          'TEXCOORD_0',
+          accessorContext,
+        );
+        const indices = indicesAccessor === undefined ? undefined :
+          decodeGLTFAccessor(
+            document,
+            binaryChunk,
+            indicesAccessor,
+            'indices',
+            accessorContext,
+          ) as Uint32Array;
+        let streams;
+        if (normals === undefined) {
+          streams = generateFlatNormalStreams({
+            positions,
+            tangents,
+            textureCoordinates0,
+            indices,
+            path,
+            budget,
+          });
+        } else {
+          streams = { positions, normals, tangents, textureCoordinates0, indices };
+          budget.reserveUniqueDecodedVertices(positions.length / 3, path);
+          reserveGeometryCopyBytes(streams, path, budget);
+        }
+        geometry = createWebGLGeometry(streams);
+        geometryCache.set(geometryKey, geometry);
+      }
       result.set(`${selected.meshIndex}:${selected.primitiveIndex}`, {
         geometry,
         material,
@@ -817,19 +1100,235 @@ function compilePrimitiveTemplates(
   return result;
 }
 
-function optionalAttribute(
-  document: CRCGLTFDocument,
-  binaryChunk: Uint8Array | undefined,
+function generateFlatNormalStreams(input: Readonly<{
+  positions: ArrayLike<number>;
+  tangents: Float32Array | undefined;
+  textureCoordinates0: Float32Array | undefined;
+  indices: ArrayLike<number> | undefined;
+  path: string;
+  budget: GLTFDecodeBudget;
+}>): {
+  readonly positions: Float32Array;
+  readonly normals: Float32Array;
+  readonly tangents?: Float32Array;
+  readonly textureCoordinates0?: Float32Array;
+} {
+  const sourcePositions = input.positions as Float32Array;
+  const sourceVertexCount = sourcePositions.length / 3;
+  if (!Number.isInteger(sourceVertexCount)) {
+    throw new TypeError(`${input.path}.attributes.POSITION must contain VEC3 data.`);
+  }
+  if (input.tangents !== undefined &&
+    input.tangents.length !== sourceVertexCount * 4) {
+    throw new TypeError(
+      `${input.path}.attributes.TANGENT count must match POSITION count.`,
+    );
+  }
+  if (input.textureCoordinates0 !== undefined &&
+    input.textureCoordinates0.length !== sourceVertexCount * 2) {
+    throw new TypeError(
+      `${input.path}.attributes.TEXCOORD_0 count must match POSITION count.`,
+    );
+  }
+  const vertexIndices = input.indices as Uint32Array | undefined;
+  const outputVertexCount = vertexIndices?.length ?? sourceVertexCount;
+  if (outputVertexCount % 3 !== 0) {
+    throw new TypeError(`${input.path} TRIANGLES vertex count must be divisible by 3.`);
+  }
+  if (vertexIndices !== undefined) {
+    for (let index = 0; index < vertexIndices.length; index += 1) {
+      if (vertexIndices[index]! >= sourceVertexCount) {
+        throw new RangeError(
+          `${input.path}.indices[${index}] must be less than POSITION count ` +
+          `${sourceVertexCount}.`,
+        );
+      }
+    }
+  }
+  input.budget.reserveUniqueDecodedVertices(outputVertexCount, input.path);
+  let generatedBytes = checkedMultiply(
+    checkedMultiply(outputVertexCount, 3, `${input.path} flat normal values`),
+    Float32Array.BYTES_PER_ELEMENT,
+    `${input.path} flat normal bytes`,
+  );
+  if (vertexIndices !== undefined) {
+    generatedBytes = checkedAdd(
+      generatedBytes,
+      checkedMultiply(
+        checkedMultiply(outputVertexCount, 3, `${input.path} expanded POSITION values`),
+        Float32Array.BYTES_PER_ELEMENT,
+        `${input.path} expanded POSITION bytes`,
+      ),
+      `${input.path} generated numeric bytes`,
+    );
+    if (input.tangents !== undefined) {
+      generatedBytes = checkedAdd(
+        generatedBytes,
+        checkedMultiply(
+          checkedMultiply(outputVertexCount, 4, `${input.path} expanded TANGENT values`),
+          Float32Array.BYTES_PER_ELEMENT,
+          `${input.path} expanded TANGENT bytes`,
+        ),
+        `${input.path} generated numeric bytes`,
+      );
+    }
+    if (input.textureCoordinates0 !== undefined) {
+      generatedBytes = checkedAdd(
+        generatedBytes,
+        checkedMultiply(
+          checkedMultiply(outputVertexCount, 2, `${input.path} expanded TEXCOORD_0 values`),
+          Float32Array.BYTES_PER_ELEMENT,
+          `${input.path} expanded TEXCOORD_0 bytes`,
+        ),
+        `${input.path} generated numeric bytes`,
+      );
+    }
+  }
+  input.budget.reserveNumericAttributeBytes(generatedBytes, input.path);
+  let geometryValues = checkedMultiply(
+    outputVertexCount,
+    6,
+    `${input.path} flat geometry POSITION and NORMAL values`,
+  );
+  if (input.tangents !== undefined) {
+    geometryValues = checkedAdd(
+      geometryValues,
+      checkedMultiply(outputVertexCount, 4, `${input.path} flat geometry TANGENT values`),
+      `${input.path} flat geometry attribute values`,
+    );
+  }
+  if (input.textureCoordinates0 !== undefined) {
+    geometryValues = checkedAdd(
+      geometryValues,
+      checkedMultiply(
+        outputVertexCount,
+        2,
+        `${input.path} flat geometry TEXCOORD_0 values`,
+      ),
+      `${input.path} flat geometry attribute values`,
+    );
+  }
+  input.budget.reserveNumericAttributeBytes(
+    checkedMultiply(
+      geometryValues,
+      Float32Array.BYTES_PER_ELEMENT,
+      `${input.path} flat geometry copy bytes`,
+    ),
+    input.path,
+  );
+  const positions = vertexIndices === undefined ? sourcePositions :
+    expandVertexStream(sourcePositions, 3, vertexIndices);
+  const tangents = input.tangents === undefined ? undefined :
+    vertexIndices === undefined ? input.tangents :
+      expandVertexStream(input.tangents, 4, vertexIndices);
+  const textureCoordinates0 = input.textureCoordinates0 === undefined ? undefined :
+    vertexIndices === undefined ? input.textureCoordinates0 :
+      expandVertexStream(input.textureCoordinates0, 2, vertexIndices);
+  const normals = new Float32Array(outputVertexCount * 3);
+  for (let offset = 0; offset < positions.length; offset += 9) {
+    const edge1X = positions[offset + 3]! - positions[offset]!;
+    const edge1Y = positions[offset + 4]! - positions[offset + 1]!;
+    const edge1Z = positions[offset + 5]! - positions[offset + 2]!;
+    const edge2X = positions[offset + 6]! - positions[offset]!;
+    const edge2Y = positions[offset + 7]! - positions[offset + 1]!;
+    const edge2Z = positions[offset + 8]! - positions[offset + 2]!;
+    const crossX = edge1Y * edge2Z - edge1Z * edge2Y;
+    const crossY = edge1Z * edge2X - edge1X * edge2Z;
+    const crossZ = edge1X * edge2Y - edge1Y * edge2X;
+    const maximum = Math.max(Math.abs(crossX), Math.abs(crossY), Math.abs(crossZ));
+    if (!Number.isFinite(maximum) || maximum === 0) {
+      throw new TypeError(
+        `${input.path} triangle ${offset / 9} cannot produce a finite nonzero flat normal.`,
+      );
+    }
+    const scaledX = crossX / maximum;
+    const scaledY = crossY / maximum;
+    const scaledZ = crossZ / maximum;
+    const length = Math.hypot(scaledX, scaledY, scaledZ);
+    const normalX = Math.fround(scaledX / length);
+    const normalY = Math.fround(scaledY / length);
+    const normalZ = Math.fround(scaledZ / length);
+    for (let vertex = 0; vertex < 3; vertex += 1) {
+      const normalOffset = offset + vertex * 3;
+      normals[normalOffset] = normalX === 0 ? 0 : normalX;
+      normals[normalOffset + 1] = normalY === 0 ? 0 : normalY;
+      normals[normalOffset + 2] = normalZ === 0 ? 0 : normalZ;
+    }
+  }
+  return {
+    positions,
+    normals,
+    ...(tangents === undefined ? {} : { tangents }),
+    ...(textureCoordinates0 === undefined ? {} : { textureCoordinates0 }),
+  };
+}
+
+function expandVertexStream(
+  source: Float32Array,
+  arity: number,
+  indices: Uint32Array,
+): Float32Array {
+  const expanded = new Float32Array(indices.length * arity);
+  for (let outputIndex = 0; outputIndex < indices.length; outputIndex += 1) {
+    const sourceOffset = indices[outputIndex]! * arity;
+    const outputOffset = outputIndex * arity;
+    for (let component = 0; component < arity; component += 1) {
+      expanded[outputOffset + component] = source[sourceOffset + component]!;
+    }
+  }
+  return expanded;
+}
+
+function reserveGeometryCopyBytes(
+  streams: Readonly<{
+    positions: ArrayLike<number>;
+    normals: ArrayLike<number>;
+    tangents?: ArrayLike<number>;
+    textureCoordinates0?: ArrayLike<number>;
+    indices?: ArrayLike<number>;
+  }>,
+  path: string,
+  budget: GLTFDecodeBudget,
+): void {
+  let values = checkedAdd(
+    streams.positions.length,
+    streams.normals.length,
+    `${path} geometry attribute values`,
+  );
+  for (const stream of [streams.tangents, streams.textureCoordinates0, streams.indices]) {
+    if (stream !== undefined) {
+      values = checkedAdd(values, stream.length, `${path} geometry attribute values`);
+    }
+  }
+  budget.reserveNumericAttributeBytes(
+    checkedMultiply(values, Float32Array.BYTES_PER_ELEMENT, `${path} geometry copy bytes`),
+    path,
+  );
+}
+
+function optionalAttributeIndex(
   attributes: CRCGLTFObject,
   usage: 'NORMAL' | 'TANGENT' | 'TEXCOORD_0',
   primitivePath: string,
+): number | undefined {
+  return attributes[usage] === undefined ? undefined :
+    requireIndex(attributes[usage], `${primitivePath}.attributes.${usage}`);
+}
+
+function decodeOptionalAttribute(
+  document: CRCGLTFDocument,
+  binaryChunk: Uint8Array | undefined,
+  accessorIndex: number | undefined,
+  usage: 'NORMAL' | 'TANGENT' | 'TEXCOORD_0',
+  context: CRCGLTFAccessorDecodeContext,
 ): Float32Array | undefined {
-  if (attributes[usage] === undefined) return undefined;
+  if (accessorIndex === undefined) return undefined;
   return decodeGLTFAccessor(
     document,
     binaryChunk,
-    requireIndex(attributes[usage], `${primitivePath}.attributes.${usage}`),
+    accessorIndex,
     usage,
+    context,
   ) as Float32Array;
 }
 

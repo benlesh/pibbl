@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { decodeGLTFAccessor } from './accessor.js';
+import { GLTFDecodeBudget } from './budget.js';
 import { readGLB } from './glb.js';
 import {
   concatBytes,
@@ -34,17 +35,45 @@ describe('bounded glTF accessor decoding', () => {
     expect(first).not.toBe(second);
   });
 
+  it('reuses one cached logical accessor and charges its bytes once in a decode', () => {
+    const glb = readGLB(makeGLB({
+      asset: { version: '2.0' },
+      buffers: [{ byteLength: 36 }],
+      bufferViews: [{ buffer: 0, byteLength: 36 }],
+      accessors: [{ bufferView: 0, componentType: 5126, count: 3, type: 'VEC3' }],
+    }, float32Bytes([0, 0, 0, 1, 0, 0, 0, 1, 0])));
+    const budget = new GLTFDecodeBudget();
+    const context = { budget, cache: new Map() };
+    const first = decodeGLTFAccessor(
+      glb.json,
+      glb.binaryChunk,
+      0,
+      'POSITION',
+      context,
+    );
+    const second = decodeGLTFAccessor(
+      glb.json,
+      glb.binaryChunk,
+      0,
+      'NORMAL',
+      context,
+    );
+
+    expect(second).toBe(first);
+    expect(budget.numericAttributeBytes).toBe(36);
+  });
+
   it('normalizes signed NORMAL and unsigned TEXCOORD_0 integers exactly', () => {
     const binary = concatBytes(
-      new Uint8Array([0x80, 0, 0x7f, 0xc0, 0x40, 0]),
-      new Uint8Array([0, 255, 128, 64]),
+      new Uint8Array([0x80, 0, 0x7f, 0, 0xc0, 0x40, 0, 0]),
+      new Uint8Array([0, 255, 0, 0, 128, 64, 0, 0]),
     );
     const glb = readGLB(makeGLB({
       asset: { version: '2.0' },
-      buffers: [{ byteLength: 10 }],
+      buffers: [{ byteLength: 16 }],
       bufferViews: [
-        { buffer: 0, byteOffset: 0, byteLength: 6 },
-        { buffer: 0, byteOffset: 6, byteLength: 4 },
+        { buffer: 0, byteOffset: 0, byteLength: 8, byteStride: 4 },
+        { buffer: 0, byteOffset: 8, byteLength: 8, byteStride: 4 },
       ],
       accessors: [
         { bufferView: 0, componentType: 5120, normalized: true, count: 2, type: 'VEC3' },
@@ -88,7 +117,7 @@ describe('bounded glTF accessor decoding', () => {
   it.each([
     [
       'normalized SHORT normals',
-      new Uint8Array([0x00, 0x80, 0xff, 0x7f, 0x00, 0x00]),
+      new Uint8Array([0x00, 0x80, 0xff, 0x7f, 0x00, 0x00, 0x00, 0x00]),
       { componentType: 5122, normalized: true, count: 1, type: 'VEC3' },
       'NORMAL',
       [-1, 1, 0],
@@ -122,10 +151,15 @@ describe('bounded glTF accessor decoding', () => {
       [1, 0, 0, -1],
     ],
   ])('decodes %s', (_name, source, accessor, usage, expected) => {
+    const byteStride = _name === 'normalized SHORT normals' ? 8 : undefined;
     const glb = readGLB(makeGLB({
       asset: { version: '2.0' },
       buffers: [{ byteLength: source.byteLength }],
-      bufferViews: [{ buffer: 0, byteLength: source.byteLength }],
+      bufferViews: [{
+        buffer: 0,
+        byteLength: source.byteLength,
+        ...(byteStride === undefined ? {} : { byteStride }),
+      }],
       accessors: [{ bufferView: 0, ...accessor }],
     }, source));
     expect(Array.from(decodeGLTFAccessor(
@@ -318,6 +352,75 @@ describe('bounded glTF accessor decoding', () => {
     }, new Uint8Array(12)));
     expect(() => decodeGLTFAccessor(glb.json, glb.binaryChunk, 0, 'TEXCOORD_0'))
       .toThrow(/\$\.bufferViews\[0\]\.byteStride.*multiple of 4/);
+  });
+
+  it('requires each vertex accessor start and tight stride to be four-byte aligned', () => {
+    const misalignedStart = readGLB(makeGLB({
+      asset: { version: '2.0' },
+      buffers: [{ byteLength: 8 }],
+      bufferViews: [{ buffer: 0, byteOffset: 2, byteLength: 4 }],
+      accessors: [{
+        bufferView: 0,
+        componentType: 5121,
+        normalized: true,
+        count: 2,
+        type: 'VEC2',
+      }],
+    }, new Uint8Array(8)));
+    expect(() => decodeGLTFAccessor(
+      misalignedStart.json,
+      misalignedStart.binaryChunk,
+      0,
+      'TEXCOORD_0',
+    )).toThrow(/\$\.accessors\[0\].*vertex start.*4-byte aligned/);
+
+    const tightThreeBytes = readGLB(makeGLB({
+      asset: { version: '2.0' },
+      buffers: [{ byteLength: 8 }],
+      bufferViews: [{ buffer: 0, byteLength: 6 }],
+      accessors: [{
+        bufferView: 0,
+        componentType: 5120,
+        normalized: true,
+        count: 2,
+        type: 'VEC3',
+      }],
+    }, new Uint8Array(8)));
+    expect(() => decodeGLTFAccessor(
+      tightThreeBytes.json,
+      tightThreeBytes.binaryChunk,
+      0,
+      'NORMAL',
+    )).toThrow(/\$\.accessors\[0\].*effective stride 3.*4-byte aligned/);
+  });
+
+  it('permits disjoint tight accessor ranges to share one bufferView', () => {
+    const binary = concatBytes(
+      float32Bytes([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+      float32Bytes([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+    );
+    const glb = readGLB(makeGLB({
+      asset: { version: '2.0' },
+      buffers: [{ byteLength: 72 }],
+      bufferViews: [{ buffer: 0, byteLength: 72 }],
+      accessors: [
+        { bufferView: 0, byteOffset: 0, componentType: 5126, count: 3, type: 'VEC3' },
+        { bufferView: 0, byteOffset: 36, componentType: 5126, count: 3, type: 'VEC3' },
+      ],
+    }, binary));
+
+    expect(Array.from(decodeGLTFAccessor(
+      glb.json,
+      glb.binaryChunk,
+      0,
+      'POSITION',
+    ))).toEqual([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+    expect(Array.from(decodeGLTFAccessor(
+      glb.json,
+      glb.binaryChunk,
+      1,
+      'NORMAL',
+    ))).toEqual([0, 0, 1, 0, 0, 1, 0, 0, 1]);
   });
 
   it('rejects zero accessor counts and nonzero BIN padding', () => {

@@ -9,13 +9,15 @@ import {
 
 describe('GLB 2 container reader', () => {
   it('reads one bounded JSON chunk and one zero-padded BIN chunk', () => {
-    const result = readGLB(makeGLB(
+    const input = makeGLB(
       { asset: { version: '2.0' }, scene: 0 },
       new Uint8Array([1, 2, 3]),
-    ));
+    );
+    const result = readGLB(input);
 
     expect(result.json).toEqual({ asset: { version: '2.0' }, scene: 0 });
     expect(Array.from(result.binaryChunk!)).toEqual([1, 2, 3, 0]);
+    expect(result.binaryChunk!.buffer).toBe(input);
   });
 
   it('skips an aligned unknown chunk without treating it as JSON or BIN', () => {

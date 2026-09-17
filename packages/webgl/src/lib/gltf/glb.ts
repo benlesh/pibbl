@@ -3,6 +3,7 @@ import {
   checkedAdd,
   validateGLTFDocument,
 } from './schema.js';
+import { assertGLBByteLength } from './budget.js';
 
 export interface CRCDecodedGLB {
   readonly json: CRCGLTFDocument;
@@ -19,6 +20,7 @@ export function readGLB(bytes: ArrayBuffer): CRCDecodedGLB {
   if (!(bytes instanceof ArrayBuffer)) {
     throw new TypeError('GLB input must be an ArrayBuffer.');
   }
+  assertGLBByteLength(bytes.byteLength);
   if (bytes.byteLength < HEADER_LENGTH) {
     throw new RangeError(
       `GLB header requires 12 bytes; received ${bytes.byteLength}.`,
@@ -80,12 +82,12 @@ export function readGLB(bytes: ArrayBuffer): CRCDecodedGLB {
       if (jsonBytes !== undefined) {
         throw new TypeError(`GLB chunk ${chunkIndex} byte ${offset}: duplicate JSON chunk.`);
       }
-      jsonBytes = chunk.slice();
+      jsonBytes = chunk;
     } else if (chunkType === BIN_CHUNK_TYPE) {
       if (binaryChunk !== undefined) {
         throw new TypeError(`GLB chunk ${chunkIndex} byte ${offset}: duplicate BIN chunk.`);
       }
-      binaryChunk = chunk.slice();
+      binaryChunk = chunk;
     }
     offset = chunkEnd;
     chunkIndex += 1;
