@@ -1,10 +1,13 @@
 import { signal } from "@crc/core";
+import type { CRCWebGLPhysicsPrimitiveFacts } from "@crc/webgl/internal";
 import { sphereShape3D } from "../../../3d-geometry.js";
+import { requireShapeRecord3D } from "../shape-records.js";
 import { describe, expect, it, vi } from "vitest";
 import {
   collider3D,
   dynamicBody3D,
   kinematicBody3D,
+  MountedPhysicsAttachment3D,
   requirePhysicsAttachment3DDescriptor,
   staticBody3D,
 } from "./descriptors.js";
@@ -118,4 +121,88 @@ describe("3D physics attachment descriptors", () => {
       requirePhysicsAttachment3DDescriptor({ kind: "body" } as never),
     ).toThrow(/registered CRC physics 3D attachment/i);
   });
+
+  it("reuses 10,000 unchanged inferred shapes and invalidates geometry or body mode exactly once", () => {
+    const mounted = new MountedPhysicsAttachment3D(staticBody3D());
+    const resolve = (
+      mounted as unknown as {
+        resolveBakedShape(
+          facts: CRCWebGLPhysicsPrimitiveFacts,
+          source: "self",
+          transform: Readonly<ArrayLike<number>>,
+          componentName: string,
+          bodyMode: "static" | "moving",
+        ): Parameters<typeof requireShapeRecord3D>[0];
+      }
+    ).resolveBakedShape.bind(mounted);
+    const firstFacts = meshFactsForCache(1);
+    const first = resolve(
+      firstFacts,
+      "self",
+      firstFacts.localTransform.matrix,
+      "Mesh",
+      "static",
+    );
+    for (let render = 0; render < 10_000; render += 1) {
+      expect(
+        resolve(
+          firstFacts,
+          "self",
+          firstFacts.localTransform.matrix,
+          "Mesh",
+          "static",
+        ),
+      ).toBe(first);
+    }
+
+    const changedFacts = meshFactsForCache(2);
+    const changed = resolve(
+      changedFacts,
+      "self",
+      changedFacts.localTransform.matrix,
+      "Mesh",
+      "static",
+    );
+    expect(changed).not.toBe(first);
+    expect(requireShapeRecord3D(changed)).toMatchObject({
+      kind: "triangleMesh",
+    });
+    const moving = resolve(
+      changedFacts,
+      "self",
+      changedFacts.localTransform.matrix,
+      "Mesh",
+      "moving",
+    );
+    expect(requireShapeRecord3D(moving)).toMatchObject({ kind: "convexHull" });
+  });
 });
+
+function meshFactsForCache(x: number): CRCWebGLPhysicsPrimitiveFacts {
+  const matrix = Object.freeze([
+    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+  ]);
+  return Object.freeze({
+    kind: "mesh",
+    geometry: Object.freeze({}) as never,
+    geometrySnapshot: Object.freeze({
+      positions: Object.freeze([0, 0, 0, x, 0, 0, 0, 1, 0, 0, 0, 1]),
+      indices: Object.freeze([0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3]),
+      bounds: Object.freeze({
+        minimumX: 0,
+        minimumY: 0,
+        minimumZ: 0,
+        maximumX: x,
+        maximumY: 1,
+        maximumZ: 1,
+      }),
+    }),
+    authoredParentLineage: Object.freeze([]),
+    localTransform: Object.freeze({
+      translation: Object.freeze([0, 0, 0] as const),
+      orientation: Object.freeze([0, 0, 0, 1] as const),
+      scale: Object.freeze([1, 1, 1] as const),
+      matrix,
+    }),
+  });
+}

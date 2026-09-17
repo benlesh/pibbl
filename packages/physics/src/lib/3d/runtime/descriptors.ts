@@ -53,6 +53,7 @@ import {
   captureWebGLBodyPresentation3D,
   resolveWebGLBodyFrame3D,
   resolveWebGLColliderForwardMatrix3D,
+  resolveWebGLColliderShapeMatrix3D,
   resolveWebGLDynamicPresentationMatrix3D,
   type WebGLBodyFrame3D,
   type WebGLBodyPresentationCapture3D,
@@ -365,8 +366,8 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
   private cachedShapeOffset: CRCPhysicsVector3 | undefined;
   private cachedShapeOrientation: CRCPhysicsQuaternion | undefined;
   private cachedShape: ShapeRecord3D | undefined;
-  private cachedBakedSource:
-    CRCPhysicsShape3D | CRCWebGLPhysicsPrimitiveFacts["kind"] | undefined;
+  private cachedBakedSource: object | string | undefined;
+  private cachedBakedBodyMode: "static" | "moving" | undefined;
   private cachedBakedTransform: readonly number[] | undefined;
   private cachedBakedShape: CRCPhysicsShape3D | undefined;
   private bodyPresentation: WebGLBodyPresentationCapture3D | undefined;
@@ -409,6 +410,7 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
       const reenabled = !this.wasEnabled && enabled;
       const presentation =
         this.bodyPresentation === undefined ||
+        !enabled ||
         reenabled ||
         descriptor.bodyType !== "dynamic"
           ? captureWebGLBodyPresentation3D(facts, input.componentName)
@@ -418,6 +420,7 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
         facts,
         input.componentName,
         descriptor.bodyType === "dynamic" && enabled && !reenabled,
+        descriptor.bodyType === "static" ? "static" : "moving",
       );
       this.publishBodyFrame(world, bodyId, frame);
 
@@ -441,13 +444,18 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
         collider === false ||
         (collider.shape === "self" && facts.kind === "group")
           ? false
-          : withColliderShape(
+          : withBakedColliderShape(
               collider,
               this.resolveBakedShape(
                 facts,
                 collider.shape,
-                frame.geometryMatrix,
+                resolveWebGLColliderShapeMatrix3D(
+                  frame.geometryMatrix,
+                  collider.offset,
+                  collider.orientation,
+                ),
                 input.componentName,
+                frame.bodyMode,
               ),
             );
       const effectiveDescriptor =
@@ -485,13 +493,18 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
         facts,
         input.componentName,
       );
-      const options = withColliderShape(
+      const options = withBakedColliderShape(
         this.descriptor.options,
         this.resolveBakedShape(
           facts,
           this.descriptor.options.shape,
-          matrix,
+          resolveWebGLColliderShapeMatrix3D(
+            matrix,
+            this.descriptor.options.offset,
+            this.descriptor.options.orientation,
+          ),
           input.componentName,
+          bodyFrame.bodyMode,
         ),
       );
       world.collectCollider(this, bodyId, options);
@@ -573,11 +586,18 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
     source: "self" | CRCPhysicsShape3D,
     transform: Readonly<ArrayLike<number>>,
     componentName: string,
+    bodyMode: "static" | "moving",
   ): CRCPhysicsShape3D {
-    const sourceKey = source === "self" ? facts.kind : source;
+    const sourceKey =
+      source === "self"
+        ? facts.kind === "mesh"
+          ? facts.geometry
+          : facts.kind
+        : source;
     const values = Object.freeze(Array.from(transform));
     if (
       this.cachedBakedSource === sourceKey &&
+      this.cachedBakedBodyMode === bodyMode &&
       this.cachedBakedTransform?.every(
         (value, index) => value === values[index],
       )
@@ -586,9 +606,10 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
     }
     const shape =
       source === "self"
-        ? inferWebGLColliderShape3D(facts, values)
+        ? inferWebGLColliderShape3D(facts, values, bodyMode)
         : bakeWebGLShapeTransform3D(source, values, componentName);
     this.cachedBakedSource = sourceKey;
+    this.cachedBakedBodyMode = bodyMode;
     this.cachedBakedTransform = values;
     this.cachedBakedShape = shape;
     return shape;
@@ -634,6 +655,18 @@ function withColliderShape(
   shape: CRCPhysicsShape3D,
 ): NormalizedPhysicsColliderConfiguration3D {
   return Object.freeze({ ...options, shape });
+}
+
+function withBakedColliderShape(
+  options: NormalizedPhysicsColliderConfiguration3D,
+  shape: CRCPhysicsShape3D,
+): NormalizedPhysicsColliderConfiguration3D {
+  return Object.freeze({
+    ...options,
+    shape,
+    offset: Object.freeze([0, 0, 0] as const),
+    orientation: Object.freeze([0, 0, 0, 1] as const),
+  });
 }
 
 function sameVector3(

@@ -12,6 +12,7 @@ export interface WebGLBodyPresentationCapture3D {
 }
 
 export interface WebGLBodyFrame3D {
+  readonly bodyMode: "static" | "moving";
   readonly authoredPose: CRCPhysicsPose3D;
   readonly authoredLineage: readonly CRCWebGLAuthoredTransform[];
   readonly parentMatrix: Readonly<Float64Array>;
@@ -34,15 +35,16 @@ export function resolveWebGLBodyFrame3D(
   facts: CRCWebGLPhysicsPrimitiveFacts,
   componentName: string,
   enforceDynamicPose: boolean,
+  bodyMode: "static" | "moving" = "static",
 ): WebGLBodyFrame3D {
-  const frame = rawBodyFrame(facts, componentName);
+  const frame = rawBodyFrame(facts, componentName, bodyMode);
   if (
     enforceDynamicPose &&
     !samePoseRepresentation(frame.authoredPose, capture.initialPose)
   ) {
     throw new Error(
       `${componentName} authored pose changed while an enabled dynamic body owns pose. ` +
-      "Use teleportBody3D(), a kinematic body, or disable physics before authored motion.",
+        "Use teleportBody3D(), a kinematic body, or disable physics before authored motion.",
     );
   }
   return frame;
@@ -108,6 +110,18 @@ export function resolveWebGLColliderForwardMatrix3D(
   return multiplyMatrix4(relative, collider.localTransform.matrix);
 }
 
+/** Appends the public collider-local rigid offset to authored forward geometry. */
+export function resolveWebGLColliderShapeMatrix3D(
+  authoredForwardMatrix: Readonly<ArrayLike<number>>,
+  offset: CRCPhysicsPose3D["position"],
+  orientation: CRCPhysicsPose3D["orientation"],
+): Readonly<Float64Array> {
+  return multiplyMatrix4(
+    authoredForwardMatrix,
+    matrixFromPose3D({ position: offset, orientation }),
+  );
+}
+
 export function matrixFromPose3D(
   pose: CRCPhysicsPose3D,
 ): Readonly<Float64Array> {
@@ -126,16 +140,29 @@ export function matrixFromPose3D(
   const wy = w * y2;
   const wz = w * z2;
   return new Float64Array([
-    1 - (yy + zz), xy + wz, xz - wy, 0,
-    xy - wz, 1 - (xx + zz), yz + wx, 0,
-    xz + wy, yz - wx, 1 - (xx + yy), 0,
-    pose.position[0], pose.position[1], pose.position[2], 1,
+    1 - (yy + zz),
+    xy + wz,
+    xz - wy,
+    0,
+    xy - wz,
+    1 - (xx + zz),
+    yz + wx,
+    0,
+    xz + wy,
+    yz - wx,
+    1 - (xx + yy),
+    0,
+    pose.position[0],
+    pose.position[1],
+    pose.position[2],
+    1,
   ]);
 }
 
 function rawBodyFrame(
   facts: CRCWebGLPhysicsPrimitiveFacts,
   componentName: string,
+  bodyMode: "static" | "moving" = "static",
 ): WebGLBodyFrame3D {
   const parentMatrix = composeLineageMatrix3D(facts.authoredParentLineage);
   const localMatrix = copyFiniteMatrix(
@@ -157,6 +184,7 @@ function rawBodyFrame(
     throw new Error(`${componentName} authored rigid pose is noninvertible.`);
   }
   return Object.freeze({
+    bodyMode,
     authoredPose,
     authoredLineage,
     parentMatrix,
@@ -203,14 +231,26 @@ function multiplyQuaternions(
   left: ArrayLike<number>,
   right: ArrayLike<number>,
 ): CRCPhysicsQuaternion {
-  let x = left[3]! * right[0]! + left[0]! * right[3]! +
-    left[1]! * right[2]! - left[2]! * right[1]!;
-  let y = left[3]! * right[1]! - left[0]! * right[2]! +
-    left[1]! * right[3]! + left[2]! * right[0]!;
-  let z = left[3]! * right[2]! + left[0]! * right[1]! -
-    left[1]! * right[0]! + left[2]! * right[3]!;
-  let w = left[3]! * right[3]! - left[0]! * right[0]! -
-    left[1]! * right[1]! - left[2]! * right[2]!;
+  let x =
+    left[3]! * right[0]! +
+    left[0]! * right[3]! +
+    left[1]! * right[2]! -
+    left[2]! * right[1]!;
+  let y =
+    left[3]! * right[1]! -
+    left[0]! * right[2]! +
+    left[1]! * right[3]! +
+    left[2]! * right[0]!;
+  let z =
+    left[3]! * right[2]! +
+    left[0]! * right[1]! -
+    left[1]! * right[0]! +
+    left[2]! * right[3]!;
+  let w =
+    left[3]! * right[3]! -
+    left[0]! * right[0]! -
+    left[1]! * right[1]! -
+    left[2]! * right[2]!;
   const length = Math.hypot(x, y, z, w);
   x /= length;
   y /= length;
@@ -314,7 +354,8 @@ function copyFiniteMatrix(
   matrix: Readonly<ArrayLike<number>>,
   label: string,
 ): Float64Array {
-  if (matrix.length !== 16) throw new TypeError(`${label} must contain 16 values.`);
+  if (matrix.length !== 16)
+    throw new TypeError(`${label} must contain 16 values.`);
   const copy = new Float64Array(16);
   for (let index = 0; index < 16; index += 1) {
     const value = matrix[index];
@@ -327,12 +368,7 @@ function copyFiniteMatrix(
 }
 
 function identityMatrix4(): Float64Array {
-  return new Float64Array([
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1,
-  ]);
+  return new Float64Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 }
 
 function validatePose(pose: CRCPhysicsPose3D, label: string): void {
@@ -355,8 +391,11 @@ function samePoseRepresentation(
   const direct = left.orientation.every(
     (value, index) => value === right.orientation[index],
   );
-  return direct || left.orientation.every(
-    (value, index) => value === -right.orientation[index]!,
+  return (
+    direct ||
+    left.orientation.every(
+      (value, index) => value === -right.orientation[index]!,
+    )
   );
 }
 

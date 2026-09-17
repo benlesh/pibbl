@@ -3,7 +3,14 @@ import type {
   CRCWebGLPhysicsPrimitiveFacts,
 } from "@crc/webgl/internal";
 import { crc, signal, type CRCController } from "@crc/core";
-import { Cube, Group3D, Sphere, WebGLLayer } from "@crc/webgl";
+import {
+  Cube,
+  Group3D,
+  Mesh,
+  Sphere,
+  WebGLLayer,
+  createWebGLGeometry,
+} from "@crc/webgl";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { executeRender } from "../../../../../core/src/lib/execute-render.js";
 import {
@@ -46,10 +53,13 @@ import {
 
 describe("WebGL 3D physics presentation", () => {
   it("captures body pose without scale and preserves the initial model", () => {
-    const body = facts("cube", transform({
-      translation: [3, 4, 5],
-      scale: [2, 3, 4],
-    }));
+    const body = facts(
+      "cube",
+      transform({
+        translation: [3, 4, 5],
+        scale: [2, 3, 4],
+      }),
+    );
     const capture = captureWebGLBodyPresentation3D(body, "Cube");
     const frame = resolveWebGLBodyFrame3D(capture, body, "Cube", true);
 
@@ -57,24 +67,24 @@ describe("WebGL 3D physics presentation", () => {
       position: [3, 4, 5],
       orientation: [0, 0, 0, 1],
     });
-    expect([...resolveWebGLDynamicPresentationMatrix3D(
-      capture,
-      capture.initialPose,
-      frame,
-      "Cube",
-    )]).toEqual([
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1,
-    ]);
+    expect([
+      ...resolveWebGLDynamicPresentationMatrix3D(
+        capture,
+        capture.initialPose,
+        frame,
+        "Cube",
+      ),
+    ]).toEqual([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
   });
 
   it("uses authoritative body pose while retaining baked visual scale", () => {
-    const body = facts("cube", transform({
-      translation: [3, 4, 5],
-      scale: [2, 3, 4],
-    }));
+    const body = facts(
+      "cube",
+      transform({
+        translation: [3, 4, 5],
+        scale: [2, 3, 4],
+      }),
+    );
     const capture = captureWebGLBodyPresentation3D(body, "Cube");
     const frame = resolveWebGLBodyFrame3D(capture, body, "Cube", true);
     const presented: CRCPhysicsPose3D = {
@@ -89,10 +99,7 @@ describe("WebGL 3D physics presentation", () => {
       "Cube",
     );
     expect([...presentation]).toEqual([
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      8, 8, 8, 1,
+      1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 8, 8, 8, 1,
     ]);
   });
 
@@ -109,11 +116,7 @@ describe("WebGL 3D physics presentation", () => {
       transform({ translation: [3, 0, 0], scale: [1, 2, 3] }),
       [bodyTransform],
     );
-    const matrix = resolveWebGLColliderForwardMatrix3D(
-      frame,
-      collider,
-      "Cube",
-    );
+    const matrix = resolveWebGLColliderForwardMatrix3D(frame, collider, "Cube");
     const record = requireShapeRecord3D(
       inferWebGLColliderShape3D(collider, matrix),
     );
@@ -137,31 +140,44 @@ describe("WebGL 3D physics presentation", () => {
   });
 
   it("diagnoses a later authored pose writer while permitting scale churn", () => {
-    const initial = facts("cube", transform({
-      translation: [1, 2, 3],
-      scale: [2, 2, 2],
-    }));
+    const initial = facts(
+      "cube",
+      transform({
+        translation: [1, 2, 3],
+        scale: [2, 2, 2],
+      }),
+    );
     const capture = captureWebGLBodyPresentation3D(initial, "Cube");
 
-    expect(() => resolveWebGLBodyFrame3D(
-      capture,
-      facts("cube", transform({
-        translation: [1, 2, 3],
-        scale: [4, 5, 6],
-      })),
-      "Cube",
-      true,
-    )).not.toThrow();
+    expect(() =>
+      resolveWebGLBodyFrame3D(
+        capture,
+        facts(
+          "cube",
+          transform({
+            translation: [1, 2, 3],
+            scale: [4, 5, 6],
+          }),
+        ),
+        "Cube",
+        true,
+      ),
+    ).not.toThrow();
 
-    expect(() => resolveWebGLBodyFrame3D(
-      capture,
-      facts("cube", transform({
-        translation: [2, 2, 3],
-        scale: [2, 2, 2],
-      })),
-      "Cube",
-      true,
-    )).toThrow(/authored pose changed.*dynamic body owns pose.*teleportBody3D/i);
+    expect(() =>
+      resolveWebGLBodyFrame3D(
+        capture,
+        facts(
+          "cube",
+          transform({
+            translation: [2, 2, 3],
+            scale: [2, 2, 2],
+          }),
+        ),
+        "Cube",
+        true,
+      ),
+    ).toThrow(/authored pose changed.*dynamic body owns pose.*teleportBody3D/i);
   });
 
   it("diagnoses a represented large-coordinate translation while accepting q-negation", () => {
@@ -175,21 +191,20 @@ describe("WebGL 3D physics presentation", () => {
       orientation: Object.freeze([0, 0, 0, -1] as const),
     });
 
-    expect(() => resolveWebGLBodyFrame3D(
-      capture,
-      facts("cube", negatedOrientation),
-      "Cube",
-      true,
-    )).not.toThrow();
+    expect(() =>
+      resolveWebGLBodyFrame3D(
+        capture,
+        facts("cube", negatedOrientation),
+        "Cube",
+        true,
+      ),
+    ).not.toThrow();
 
     const moved = transform({ translation: [1e9 + 50, 0, 0] });
     expect(moved.matrix[12]).toBe(1_000_000_064);
-    expect(() => resolveWebGLBodyFrame3D(
-      capture,
-      facts("cube", moved),
-      "Cube",
-      true,
-    )).toThrow(/authored pose changed.*dynamic body owns pose.*teleportBody3D/i);
+    expect(() =>
+      resolveWebGLBodyFrame3D(capture, facts("cube", moved), "Cube", true),
+    ).toThrow(/authored pose changed.*dynamic body owns pose.*teleportBody3D/i);
   });
 });
 
@@ -218,71 +233,78 @@ describe("mounted WebGL 3D physics integration", () => {
     canvas.width = 200;
     canvas.height = 120;
     document.body.appendChild(canvas);
-    mounts.push(crc(canvas, (
-      <WebGLLayer style={{ width: 200, height: 120 }}>
-        <PhysicsWorld3D
-          gravity={[0, 0, 0]}
-          fixedStepMilliseconds={10}
-          sleeping={false}
-        >
-          <Capture />
-          <Ellipsoid3D
-            radii={[0.7, 0.5, 0.4]}
-            physics={dynamicBody3D({ mass: 1, linearVelocity: [1, 0, 0] })}
-            style={{ lit: false, translateX: -5 }}
-          />
-          <Capsule3D
-            start={[0, -0.5, 0]}
-            end={[0, 0.5, 0]}
-            radius={0.35}
-            physics={staticBody3D()}
-            style={{ lit: false, translateX: -3 }}
-          />
-          <Cylinder3D
-            radius={0.5}
-            halfHeight={0.6}
-            physics={staticBody3D()}
-            style={{ lit: false, translateX: -1 }}
-          />
-          <Cone3D
-            radius={0.5}
-            halfHeight={0.6}
-            physics={staticBody3D()}
-            style={{ lit: false, translateX: 1 }}
-          />
-          <ConvexHull3D
-            points={[
-              [-0.5, -0.5, -0.5],
-              [0.5, -0.5, -0.5],
-              [0, 0.5, -0.5],
-              [0, 0, 0.5],
-            ]}
-            physics={staticBody3D()}
-            style={{ lit: false, translateX: 3 }}
-          />
-          <Heightfield3D
-            rows={2}
-            columns={2}
-            heights={[0, 0.25, 0, 0]}
-            physics={staticBody3D()}
-            style={{ lit: false, translateX: 5 }}
-          />
-        </PhysicsWorld3D>
-      </WebGLLayer>
-    )));
+    mounts.push(
+      crc(
+        canvas,
+        <WebGLLayer style={{ width: 200, height: 120 }}>
+          <PhysicsWorld3D
+            gravity={[0, 0, 0]}
+            fixedStepMilliseconds={10}
+            sleeping={false}
+          >
+            <Capture />
+            <Ellipsoid3D
+              radii={[0.7, 0.5, 0.4]}
+              physics={dynamicBody3D({ mass: 1, linearVelocity: [1, 0, 0] })}
+              style={{ lit: false, translateX: -5 }}
+            />
+            <Capsule3D
+              start={[0, -0.5, 0]}
+              end={[0, 0.5, 0]}
+              radius={0.35}
+              physics={staticBody3D()}
+              style={{ lit: false, translateX: -3 }}
+            />
+            <Cylinder3D
+              radius={0.5}
+              halfHeight={0.6}
+              physics={staticBody3D()}
+              style={{ lit: false, translateX: -1 }}
+            />
+            <Cone3D
+              radius={0.5}
+              halfHeight={0.6}
+              physics={staticBody3D()}
+              style={{ lit: false, translateX: 1 }}
+            />
+            <ConvexHull3D
+              points={[
+                [-0.5, -0.5, -0.5],
+                [0.5, -0.5, -0.5],
+                [0, 0.5, -0.5],
+                [0, 0, 0.5],
+              ]}
+              physics={staticBody3D()}
+              style={{ lit: false, translateX: 3 }}
+            />
+            <Heightfield3D
+              rows={2}
+              columns={2}
+              heights={[0, 0.25, 0, 0]}
+              physics={staticBody3D()}
+              style={{ lit: false, translateX: 5 }}
+            />
+          </PhysicsWorld3D>
+        </WebGLLayer>,
+      ),
+    );
 
     frames.flush(0);
     frames.flush(10);
 
     const controller = requirePhysicsWorld3DController(world);
-    expect(snapshotPhysicsWorld3DControllerForTest(controller).kernel).toMatchObject({
+    expect(
+      snapshotPhysicsWorld3DControllerForTest(controller).kernel,
+    ).toMatchObject({
       bodyCount: 6,
       colliderCount: 6,
     });
     const layer = render.mock.instances[0] as WebGLLayerController;
-    const committed = (layer as unknown as {
-      committed?: { pickLedger: { entries: readonly unknown[] } };
-    }).committed;
+    const committed = (
+      layer as unknown as {
+        committed?: { pickLedger: { entries: readonly unknown[] } };
+      }
+    ).committed;
     expect(committed?.pickLedger.entries).toHaveLength(6);
     expect(render).toHaveBeenCalledTimes(2);
   });
@@ -346,6 +368,76 @@ describe("mounted WebGL 3D physics integration", () => {
     });
   });
 
+  it("composes explicit collider offsets after the exact forward authored suffix", () => {
+    const frames = new ManualFrames();
+    frames.install();
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+    document.body.appendChild(canvas);
+    mounts.push(
+      crc(
+        canvas,
+        <WebGLLayer style={{ width: 100, height: 100 }}>
+          <PhysicsWorld3D gravity={[0, 0, 0]}>
+            <Capture />
+            <Group3D
+              physics={dynamicBody3D({ collider: false })}
+              style={{ scaleX: 2, scaleY: 2, scaleZ: 2 }}
+            >
+              <Cube
+                physics={collider3D({ offset: [1, 0, 0] })}
+                style={{ translateX: 3 }}
+              />
+            </Group3D>
+          </PhysicsWorld3D>
+        </WebGLLayer>,
+      ),
+    );
+
+    frames.flush(0);
+    frames.flush(0);
+    const body = snapshotPhysicsWorld3DControllerForTest(
+      requirePhysicsWorld3DController(world),
+    ).kernel.bodies[0]!;
+    expect(body.localCenterX).toBe(8);
+  });
+
+  it("infers a canonical convex hull for a moving Mesh self collider", () => {
+    const frames = new ManualFrames();
+    frames.install();
+    const geometry = createWebGLGeometry({
+      positions: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+      indices: [0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3],
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+    document.body.appendChild(canvas);
+    mounts.push(
+      crc(
+        canvas,
+        <WebGLLayer style={{ width: 100, height: 100 }}>
+          <PhysicsWorld3D gravity={[0, 0, 0]}>
+            <Mesh
+              geometry={geometry}
+              physics={dynamicBody3D()}
+              style={{ lit: false }}
+            />
+          </PhysicsWorld3D>
+        </WebGLLayer>,
+      ),
+    );
+
+    expect(() => frames.flush(0)).not.toThrow();
+    expect(() => frames.flush(0)).not.toThrow();
+  });
+
   it("keeps one render, pick, and focus model for a moving Cube scaled to 1e-5", () => {
     const render = vi.spyOn(
       WebGLLayerController.prototype,
@@ -362,29 +454,32 @@ describe("mounted WebGL 3D physics integration", () => {
     canvas.width = 100;
     canvas.height = 100;
     document.body.appendChild(canvas);
-    mounts.push(crc(canvas, (
-      <WebGLLayer style={{ width: 100, height: 100 }}>
-        <PhysicsWorld3D
-          gravity={[0, 0, 0]}
-          fixedStepMilliseconds={10}
-          sleeping={false}
-        >
-          <Capture />
-          <Cube
-            keyboardFocusable
-            physics={dynamicBody3D({
-              mass: 1,
-              linearVelocity: [1, 0, 0],
-            })}
-            style={{
-              scaleX: 1e-5,
-              scaleY: 1e-5,
-              scaleZ: 1e-5,
-            }}
-          />
-        </PhysicsWorld3D>
-      </WebGLLayer>
-    )));
+    mounts.push(
+      crc(
+        canvas,
+        <WebGLLayer style={{ width: 100, height: 100 }}>
+          <PhysicsWorld3D
+            gravity={[0, 0, 0]}
+            fixedStepMilliseconds={10}
+            sleeping={false}
+          >
+            <Capture />
+            <Cube
+              keyboardFocusable
+              physics={dynamicBody3D({
+                mass: 1,
+                linearVelocity: [1, 0, 0],
+              })}
+              style={{
+                scaleX: 1e-5,
+                scaleY: 1e-5,
+                scaleZ: 1e-5,
+              }}
+            />
+          </PhysicsWorld3D>
+        </WebGLLayer>,
+      ),
+    );
 
     frames.flush(0);
     const layer = render.mock.instances[0] as WebGLLayerController;
@@ -397,26 +492,28 @@ describe("mounted WebGL 3D physics integration", () => {
     const snapshot = snapshotPhysicsWorld3DControllerForTest(controller);
     const pose = controller.presentationPose(snapshot.bodyIds[0]!);
     expect(pose?.position[0]).toBeGreaterThan(0);
-    const committed = (layer as unknown as {
-      committed?: {
-        pickLedger: {
-          entries: readonly {
-            componentName: string;
-            model: Readonly<Float32Array>;
-            keyboardNavigationPoints?: readonly Readonly<{
-              x: number;
-              y: number;
-            }>[];
-            target: {
+    const committed = (
+      layer as unknown as {
+        committed?: {
+          pickLedger: {
+            entries: readonly {
+              componentName: string;
+              model: Readonly<Float32Array>;
               keyboardNavigationPoints?: readonly Readonly<{
                 x: number;
                 y: number;
               }>[];
-            };
-          }[];
+              target: {
+                keyboardNavigationPoints?: readonly Readonly<{
+                  x: number;
+                  y: number;
+                }>[];
+              };
+            }[];
+          };
         };
-      };
-    }).committed;
+      }
+    ).committed;
     const entry = committed?.pickLedger.entries.find(
       (candidate) => candidate.componentName === "Cube",
     );
@@ -426,15 +523,77 @@ describe("mounted WebGL 3D physics integration", () => {
     expect(entry?.model[10]).toBeCloseTo(1e-5, 10);
     expect(entry?.model[12]).toBeCloseTo(pose!.position[0], 7);
     expect(entry?.keyboardNavigationPoints?.length).toBeGreaterThan(0);
-    expect(entry?.keyboardNavigationPoints?.every((point) =>
-      Number.isFinite(point.x) && Number.isFinite(point.y)
-    )).toBe(true);
+    expect(
+      entry?.keyboardNavigationPoints?.every(
+        (point) => Number.isFinite(point.x) && Number.isFinite(point.y),
+      ),
+    ).toBe(true);
     expect(entry?.target.keyboardNavigationPoints).toBe(
       entry?.keyboardNavigationPoints,
     );
-    expect(uniformMatrix.mock.calls.some((call) =>
-      sameMatrix(call[2] as Float32List, entry!.model)
-    )).toBe(true);
+    expect(
+      uniformMatrix.mock.calls.some((call) =>
+        sameMatrix(call[2] as Float32List, entry!.model),
+      ),
+    ).toBe(true);
+  });
+
+  it("rebuilds scaled dynamic geometry and automatic mass without changing body pose or generations", () => {
+    const frames = new ManualFrames();
+    frames.install();
+    const scale = signal(1);
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const Body = () => (
+      <Cube
+        physics={dynamicBody3D()}
+        style={{
+          translateX: 5,
+          scaleX: scale.get(),
+          scaleY: scale.get(),
+          scaleZ: scale.get(),
+        }}
+      />
+    );
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+    document.body.appendChild(canvas);
+    mounts.push(
+      crc(
+        canvas,
+        <WebGLLayer style={{ width: 100, height: 100 }}>
+          <PhysicsWorld3D gravity={[0, 0, 0]} sleeping={false}>
+            <Capture />
+            <Body />
+          </PhysicsWorld3D>
+        </WebGLLayer>,
+      ),
+    );
+
+    frames.flush(0);
+    frames.flush(0);
+    const controller = requirePhysicsWorld3DController(world);
+    const before = snapshotPhysicsWorld3DControllerForTest(controller);
+    scale.set(2);
+    frames.flush(1);
+    frames.flush(1);
+    const after = snapshotPhysicsWorld3DControllerForTest(controller);
+    expect(after.kernel.bodies[0]).toMatchObject({
+      positionX: 5,
+      generation: before.kernel.bodies[0]!.generation,
+      inverseMass: 1 / 8,
+    });
+    expect(after.kernel.bodies[0]!.localInverseInertiaXX).not.toBe(
+      before.kernel.bodies[0]!.localInverseInertiaXX,
+    );
+    expect(after.colliderIds).toEqual(before.colliderIds);
+    expect(after.kernel.counters.liveColliderSlots).toBe(
+      before.kernel.counters.liveColliderSlots,
+    );
   });
 
   it("keeps authoritative physics unchanged across a camera-only render", () => {
@@ -536,12 +695,7 @@ describe("mounted WebGL 3D physics integration", () => {
     document.body.appendChild(canvas);
     mounts.push(crc(canvas, undefined));
     const surface = resolveWebGLLayerSurface(100, 100, { x: 1, y: 1 });
-    const layer = new WebGLLayerController(
-      canvas,
-      first,
-      undefined,
-      surface,
-    );
+    const layer = new WebGLLayerController(canvas, first, undefined, surface);
     const RenderPair = () => {
       layer.renderUpdatedChild(first, undefined, surface, 1);
       layer.renderUpdatedChild(latest, undefined, surface, 1);
@@ -559,9 +713,11 @@ describe("mounted WebGL 3D physics integration", () => {
     try {
       expect(() => executeRender(canvas, 1, <RenderPair />)).not.toThrow();
       expect(finishRender).toHaveBeenCalledOnce();
-      expect(snapshotPhysicsWorld3DControllerForTest(
-        requirePhysicsWorld3DController(world),
-      ).bodyIds).toHaveLength(1);
+      expect(
+        snapshotPhysicsWorld3DControllerForTest(
+          requirePhysicsWorld3DController(world),
+        ).bodyIds,
+      ).toHaveLength(1);
 
       expect(() => executeRender(canvas, 2, <RenderLatest />)).not.toThrow();
       expect(finishRender).toHaveBeenCalledTimes(2);
@@ -601,12 +757,7 @@ describe("mounted WebGL 3D physics integration", () => {
     document.body.appendChild(canvas);
     mounts.push(crc(canvas, undefined));
     const surface = resolveWebGLLayerSurface(100, 100, { x: 1, y: 1 });
-    const layer = new WebGLLayerController(
-      canvas,
-      first,
-      undefined,
-      surface,
-    );
+    const layer = new WebGLLayerController(canvas, first, undefined, surface);
     const FailAfterPair = () => {
       layer.renderUpdatedChild(first, undefined, surface, 1);
       layer.renderUpdatedChild(superseding, undefined, surface, 1);
@@ -632,11 +783,13 @@ describe("mounted WebGL 3D physics integration", () => {
   it("clears committed body presentation state when the body is removed and disposed", () => {
     const originalDispose = MountedPhysicsAttachment3D.prototype.dispose;
     let removed: MountedPhysicsAttachment3D | undefined;
-    vi.spyOn(MountedPhysicsAttachment3D.prototype, "dispose")
-      .mockImplementation(function disposeAndCapture() {
-        removed = this;
-        originalDispose.call(this);
-      });
+    vi.spyOn(
+      MountedPhysicsAttachment3D.prototype,
+      "dispose",
+    ).mockImplementation(function disposeAndCapture() {
+      removed = this;
+      originalDispose.call(this);
+    });
     const frames = new ManualFrames();
     frames.install();
     let world!: CRCPhysicsWorldHandle3D;
@@ -682,14 +835,18 @@ describe("mounted WebGL 3D physics integration", () => {
     try {
       executeRender(canvas, 1, <RenderPopulated />);
       executeRender(canvas, 2, <RenderEmpty />);
-      expect(snapshotPhysicsWorld3DControllerForTest(
-        requirePhysicsWorld3DController(world),
-      ).bodyIds).toEqual([]);
+      expect(
+        snapshotPhysicsWorld3DControllerForTest(
+          requirePhysicsWorld3DController(world),
+        ).bodyIds,
+      ).toEqual([]);
       expect(removed).toBeDefined();
-      expect(removed as unknown as {
-        bodyPresentation?: unknown;
-        wasEnabled: boolean;
-      }).toMatchObject({
+      expect(
+        removed as unknown as {
+          bodyPresentation?: unknown;
+          wasEnabled: boolean;
+        },
+      ).toMatchObject({
         bodyPresentation: undefined,
         wasEnabled: false,
       });
@@ -713,23 +870,25 @@ describe("mounted WebGL 3D physics integration", () => {
       if (fail.get()) throw failure;
       return undefined;
     };
-    const MaybeBody = () => visible.get() ? (
-      <Group3D physics={dynamicBody3D({ mass: 1, collider: false })}>
-        <Throw />
-      </Group3D>
-    ) : undefined;
+    const MaybeBody = () =>
+      visible.get() ? (
+        <Group3D physics={dynamicBody3D({ mass: 1, collider: false })}>
+          <Throw />
+        </Group3D>
+      ) : undefined;
     const canvas = document.createElement("canvas");
     canvas.width = 100;
     canvas.height = 100;
     document.body.appendChild(canvas);
-    const mount = crc(canvas, (
+    const mount = crc(
+      canvas,
       <WebGLLayer style={{ width: 100, height: 100 }}>
         <PhysicsWorld3D gravity={[0, 0, 0]}>
           <Capture />
           <MaybeBody />
         </PhysicsWorld3D>
-      </WebGLLayer>
-    ));
+      </WebGLLayer>,
+    );
     mounts.push(mount);
     frames.flush(0);
     const controller = requirePhysicsWorld3DController(world);
@@ -768,13 +927,16 @@ describe("mounted WebGL 3D physics integration", () => {
     canvas.width = 100;
     canvas.height = 100;
     document.body.appendChild(canvas);
-    mounts.push(crc(canvas, (
-      <WebGLLayer style={{ width: 100, height: 100 }}>
-        <PhysicsWorld3D gravity={[0, 0, 0]}>
-          <Body />
-        </PhysicsWorld3D>
-      </WebGLLayer>
-    )));
+    mounts.push(
+      crc(
+        canvas,
+        <WebGLLayer style={{ width: 100, height: 100 }}>
+          <PhysicsWorld3D gravity={[0, 0, 0]}>
+            <Body />
+          </PhysicsWorld3D>
+        </WebGLLayer>,
+      ),
+    );
     frames.flush(0);
     frames.flush(0);
 
@@ -782,6 +944,58 @@ describe("mounted WebGL 3D physics integration", () => {
     expect(() => frames.flush(1)).toThrow(
       /authored pose changed.*dynamic body owns pose.*teleportBody3D/i,
     );
+  });
+
+  it("accepts authored disabled motion and seeds re-enabled dynamics without pose drift", () => {
+    const frames = new ManualFrames();
+    frames.install();
+    const enabled = signal(false);
+    const authoredX = signal(1);
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const Body = () => (
+      <Cube
+        physics={dynamicBody3D({
+          enabled: enabled.get(),
+          mass: 1,
+          linearVelocity: [9, 0, 0],
+          reenableVelocity: "zero",
+        })}
+        style={{ translateX: authoredX.get() }}
+      />
+    );
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+    document.body.appendChild(canvas);
+    mounts.push(
+      crc(
+        canvas,
+        <WebGLLayer style={{ width: 100, height: 100 }}>
+          <PhysicsWorld3D gravity={[0, 0, 0]}>
+            <Capture />
+            <Body />
+          </PhysicsWorld3D>
+        </WebGLLayer>,
+      ),
+    );
+
+    frames.flush(0);
+    frames.flush(0);
+    authoredX.set(5);
+    frames.flush(1);
+
+    enabled.set(true);
+    frames.flush(2);
+    frames.flush(2);
+    const body = snapshotPhysicsWorld3DControllerForTest(
+      requirePhysicsWorld3DController(world),
+    ).kernel.bodies[0]!;
+    expect(body.positionX).toBe(5);
+    expect(body.linearVelocityX).toBe(0);
   });
 });
 
@@ -818,12 +1032,28 @@ function transform(
     translation: Object.freeze([...translation]) as never,
     orientation: Object.freeze([0, 0, 0, 1] as const),
     scale: Object.freeze([...scale]) as never,
-    matrix: Object.freeze(Array.from(new Float32Array([
-      scale[0], 0, 0, 0,
-      0, scale[1], 0, 0,
-      0, 0, scale[2], 0,
-      translation[0], translation[1], translation[2], 1,
-    ]))),
+    matrix: Object.freeze(
+      Array.from(
+        new Float32Array([
+          scale[0],
+          0,
+          0,
+          0,
+          0,
+          scale[1],
+          0,
+          0,
+          0,
+          0,
+          scale[2],
+          0,
+          translation[0],
+          translation[1],
+          translation[2],
+          1,
+        ]),
+      ),
+    ),
   });
 }
 
@@ -846,8 +1076,7 @@ class ManualFrames {
 
   flush(time: number): void {
     const entry = this.callbacks.entries().next().value as
-      | readonly [number, FrameRequestCallback]
-      | undefined;
+      readonly [number, FrameRequestCallback] | undefined;
     if (!entry) throw new Error("No CRC host frame is pending.");
     this.callbacks.delete(entry[0]);
     entry[1](time);
