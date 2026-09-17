@@ -12,7 +12,15 @@ import {
 import { resolveWebGLMaterial } from './material.js';
 import { parseConcreteColor } from './style-values.js';
 import { submitWebGLMesh } from '../scene/composer.js';
-import type { WebGLSceneComposer, WebGLRGBA } from '../scene/types.js';
+import type {
+  ResolvedWebGLMaterial,
+} from './material.js';
+import type {
+  WebGLSceneComposer,
+  WebGLRGBA,
+  WebGLSceneIdentity,
+} from '../scene/types.js';
+import type { CRCEventTargetRegistration } from '@crc/core/internal';
 import type {
   CRCWebGLGeometry,
   CRCWebGLTargetProps,
@@ -87,7 +95,7 @@ export function submitBuiltInMesh(
     color.blue,
     color.alpha * opacity,
   ]) as WebGLRGBA;
-  submitWebGLMesh(composer, {
+  submitResolvedWebGLMesh(composer, {
     componentName,
     source: getCurrentElementSource(),
     geometry,
@@ -103,7 +111,31 @@ export function submitBuiltInMesh(
   });
 }
 
-function resolveShadowBoolean(
+export interface ResolvedWebGLMeshInput {
+  readonly componentName: string;
+  readonly source: ReturnType<typeof getCurrentElementSource>;
+  readonly geometry: CRCWebGLGeometry;
+  readonly identity: WebGLSceneIdentity;
+  readonly localModel: Readonly<Float32Array>;
+  readonly color: WebGLRGBA;
+  readonly lit: boolean;
+  readonly material: ResolvedWebGLMaterial;
+  readonly castShadow: boolean | undefined;
+  readonly receiveShadow: boolean | undefined;
+  readonly target: CRCEventTargetRegistration | undefined;
+  readonly keyboardNavigationBounds:
+    CRCEventTargetRegistration['keyboardNavigationBounds'];
+}
+
+/** Shared fixed-hook submission seam for Mesh and multi-primitive Model. */
+export function submitResolvedWebGLMesh(
+  composer: WebGLSceneComposer,
+  input: ResolvedWebGLMeshInput,
+): void {
+  submitWebGLMesh(composer, input);
+}
+
+export function resolveShadowBoolean(
   componentName: string,
   field: 'castShadow' | 'receiveShadow',
   value: boolean | undefined,
@@ -149,7 +181,7 @@ function scaledStyle(
   };
 }
 
-function resolveOpacity(componentName: string, value: number | undefined) {
+export function resolveOpacity(componentName: string, value: number | undefined) {
   const opacity = value ?? 1;
   if (!Number.isFinite(opacity)) {
     throw new TypeError(`${componentName} style.opacity must be finite.`);

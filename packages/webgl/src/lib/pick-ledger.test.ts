@@ -12,6 +12,7 @@ import { Mesh } from './components/mesh.js';
 import { createWebGLGeometry } from './geometry/geometry.js';
 import { resolveCamera } from './math/camera.js';
 import {
+  applyWebGLFocusMetadata,
   commitWebGLPickLedger,
   createWebGLPickLedger,
   recordGeometryWebGLPick,
@@ -28,6 +29,36 @@ afterEach(() => {
 });
 
 describe('WebGL pick ledger', () => {
+  it('publishes the projected union for repeated records sharing one target', () => {
+    const ledger = createWebGLPickLedger(100, 100);
+    const target = liveFakeTarget();
+    for (const [sourceOrder, translateX] of [[0, -1], [1, 1]] as const) {
+      recordGeometryWebGLPick(ledger, {
+        camera: resolveCamera(undefined, 100, 100),
+        componentName: 'Model',
+        depthMode: 'less-equal',
+        geometry: geometryBox(-0.5, -0.5, 0, 0.5, 0.5, 0),
+        model: new Float32Array([
+          1, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, 1, 0,
+          translateX, 0, 0, 1,
+        ]),
+        sourceOrder,
+        target,
+      });
+    }
+    const committed = commitWebGLPickLedger(ledger);
+    const expected = committed.entries.flatMap(
+      entry => entry.keyboardNavigationPoints ?? [],
+    );
+
+    expect(applyWebGLFocusMetadata(committed)).toBe(target);
+    expect(target.keyboardNavigationPoints).toEqual(expected);
+    expect(target.keyboardNavigationPoints!.length)
+      .toBeGreaterThan(committed.entries[0]!.keyboardNavigationPoints!.length);
+  });
+
   it('commits stable geometry identity with a copied model and LEQUAL source order', () => {
     const ledger = createWebGLPickLedger(80, 40);
     const geometry = createWebGLGeometry({
@@ -257,6 +288,21 @@ function fakeTarget(): CRCEventTargetRegistration {
   return { kind: 'target', live: true } as CRCEventTargetRegistration;
 }
 
+function liveFakeTarget(): CRCEventTargetRegistration {
+  const targets = new Set<CRCEventTargetRegistration>();
+  const owner = {
+    mainTeardowns: { closed: false },
+    eventRoot: { targets },
+  };
+  const target = {
+    kind: 'target',
+    live: true,
+    owner,
+  } as unknown as CRCEventTargetRegistration;
+  targets.add(target);
+  return target;
+}
+
 function projectedGeometryEntry(
   geometry: ReturnType<typeof createWebGLGeometry>,
 ): CRCWebGLPickRecord {
@@ -347,9 +393,10 @@ function createNoopGL(): WebGL2RenderingContext {
                 property === 'getUniformLocation' ?
                   (_program: object, name: string) => ({ name }) :
                   property === 'createShader' ||
-                    property === 'createProgram' ||
-                    property === 'createVertexArray' ||
-                    property === 'createBuffer' ?
+                  property === 'createProgram' ||
+                  property === 'createVertexArray' ||
+                  property === 'createBuffer' ||
+                  property === 'createTexture' ?
                     () => ({ kind: property, id: ++handle }) :
                     property === 'isContextLost' ? () => false :
                       () => undefined;

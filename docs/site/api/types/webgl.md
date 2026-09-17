@@ -12,6 +12,7 @@ symbols:
     AmbientLightStyle,
     CRCWebGLGeometry,
     CRCWebGLGeometryInput,
+    CRCWebGLAsset,
     CRCWebGLLambertMaterial,
     CRCWebGLMaterial,
     CRCWebGLPerspectiveCamera,
@@ -28,6 +29,8 @@ symbols:
     HemisphereLightStyle,
     MeshProps,
     MeshStyle,
+    ModelProps,
+    ModelStyle,
     PointLightProps,
     PointLightStyle,
     SphereProps,
@@ -68,6 +71,13 @@ Orbit-camera options, handlers, and results are documented with
 `CRCWebGLGeometryInput` contains `positions`, optional triangle `indices`, and
 optional per-vertex `normals`. [`createWebGLGeometry`](#/api/functions/create-webgl-geometry)
 validates and copies every supplied array.
+
+## CRCWebGLAsset
+
+`CRCWebGLAsset` is an opaque immutable imported-scene descriptor. Its only
+public inspection surface is readonly local `bounds` with `min` and `max`
+[`CRCWebGLVector3`](#crcwebglvector3) values. Primitive records, nodes,
+materials, textures, and constructors remain internal.
 
 ## CRCWebGLLambertMaterial
 
@@ -151,6 +161,18 @@ Meshes are lit by default; set `lit: false` for the unlit path. Color/opacity
 default to white/`1`. Fully opaque meshes cast by default, partially transparent
 meshes do not, and zero-alpha meshes never cast. Nonzero-alpha lit meshes
 receive by default; unlit meshes never receive.
+
+## ModelProps
+
+`ModelProps` requires one `CRCWebGLAsset` and accepts the shared event and focus
+participation fields.
+
+## ModelStyle
+
+`ModelStyle` combines the shared WebGL transform fields with optional concrete
+`color`, `opacity`, `castShadow`, `receiveShadow`, and `cursor`. Color and
+opacity are instance-wide multipliers; omitted shadow flags preserve imported
+primitive defaults.
 
 ## PointLightProps
 

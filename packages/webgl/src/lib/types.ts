@@ -6,6 +6,17 @@ import type {
 
 export type CRCWebGLVector3 = readonly [x: number, y: number, z: number];
 
+declare const crcWebGLAssetBrand: unique symbol;
+
+/** Opaque immutable scene asset produced by official import adapters. */
+export interface CRCWebGLAsset {
+  readonly [crcWebGLAssetBrand]: true;
+  readonly bounds: Readonly<{
+    readonly min: CRCWebGLVector3;
+    readonly max: CRCWebGLVector3;
+  }>;
+}
+
 export type CRCWebGLShadowQuality = false | 'low' | 'medium' | 'high';
 
 export interface CRCWebGLPerspectiveCamera {
