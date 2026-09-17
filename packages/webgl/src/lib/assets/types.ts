@@ -4,7 +4,7 @@ import type {
   CRCWebGLVector3,
 } from '../types.js';
 
-export type CRCWebGLMatrix4 = Readonly<Float32Array>;
+export type CRCWebGLMatrix4 = Readonly<ArrayLike<number>>;
 
 export interface CRCWebGLBounds3 {
   readonly min: CRCWebGLVector3;

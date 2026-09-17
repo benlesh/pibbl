@@ -116,7 +116,7 @@ function snapshotPrimitive(
   if (primitive.modelMatrix.length !== 16) {
     throw new TypeError('WebGL asset primitive modelMatrix must contain 16 values.');
   }
-  const modelMatrix = new Float32Array(16);
+  const copiedModelMatrix = new Float32Array(16);
   for (let index = 0; index < 16; index += 1) {
     const value = primitive.modelMatrix[index];
     if (!Number.isFinite(value)) {
@@ -124,7 +124,7 @@ function snapshotPrimitive(
         `WebGL asset primitive modelMatrix[${index}] must be finite.`,
       );
     }
-    modelMatrix[index] = value!;
+    copiedModelMatrix[index] = value!;
   }
   if (!Number.isSafeInteger(primitive.sourceOrder) || primitive.sourceOrder < 0) {
     throw new TypeError(
@@ -134,7 +134,7 @@ function snapshotPrimitive(
   return Object.freeze({
     geometry: primitive.geometry,
     material: snapshotMaterial(primitive.material),
-    modelMatrix,
+    modelMatrix: Object.freeze(Array.from(copiedModelMatrix)),
     sourceOrder: primitive.sourceOrder,
   });
 }
