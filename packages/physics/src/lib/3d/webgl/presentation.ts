@@ -54,7 +54,7 @@ export function resolveWebGLBodyFrame3D(
  * Produces the presentation-only matrix inserted between the authored parent
  * and body-local matrices. Render, pick, and focus therefore consume one model.
  */
-export function resolveWebGLDynamicPresentationMatrix3D(
+export function resolveWebGLBodyPresentationMatrix3D(
   _capture: WebGLBodyPresentationCapture3D,
   presentedPose: CRCPhysicsPose3D,
   frame: WebGLBodyFrame3D,

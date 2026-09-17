@@ -13,6 +13,7 @@ import {
 import { Group3D, WebGLLayer } from "@crc/webgl";
 import {
   PhysicsWorld3D,
+  collider3D,
   crcPhysicsBody3D,
   crcPhysicsWorld3D,
   dynamicBody3D,
@@ -21,12 +22,9 @@ import {
   staticBody3D,
   type CRCPhysicsWorldHandle3D,
 } from "../../../3d.js";
-import { sphereShape3D } from "../../../3d-geometry.js";
+import { boxShape3D, sphereShape3D } from "../../../3d-geometry.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  BODY_ENABLED_3D,
-  BODY_TYPE_KINEMATIC_3D,
-} from "../world/storage.js";
+import { BODY_ENABLED_3D, BODY_TYPE_KINEMATIC_3D } from "../world/storage.js";
 import {
   installPhysicsWorld3DFailureInjectorForTest,
   PhysicsWorld3DKernel,
@@ -85,28 +83,31 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
       firstHandle = crcPhysicsBody3D();
       latestHandle = crcPhysicsBody3D();
       const controller = requirePhysicsWorld3DController(world);
-      const slot = useInternalHookSlot("superseded3DRenderDraft", (teardowns) => {
-        const firstValue = dynamicBody3D({
-          handle: firstHandle,
-          mass: 1,
-          collider: false,
-        });
-        const latestValue = dynamicBody3D({
-          handle: latestHandle,
-          mass: 1,
-          collider: false,
-        });
-        const firstAttachment = new MountedPhysicsAttachment3D(firstValue);
-        const latestAttachment = new MountedPhysicsAttachment3D(latestValue);
-        teardowns.add(() => firstAttachment.dispose());
-        teardowns.add(() => latestAttachment.dispose());
-        return {
-          firstAttachment,
-          firstDescriptor: requirePhysicsAttachment3DDescriptor(firstValue),
-          latestAttachment,
-          latestDescriptor: requirePhysicsAttachment3DDescriptor(latestValue),
-        };
-      }).value;
+      const slot = useInternalHookSlot(
+        "superseded3DRenderDraft",
+        (teardowns) => {
+          const firstValue = dynamicBody3D({
+            handle: firstHandle,
+            mass: 1,
+            collider: false,
+          });
+          const latestValue = dynamicBody3D({
+            handle: latestHandle,
+            mass: 1,
+            collider: false,
+          });
+          const firstAttachment = new MountedPhysicsAttachment3D(firstValue);
+          const latestAttachment = new MountedPhysicsAttachment3D(latestValue);
+          teardowns.add(() => firstAttachment.dispose());
+          teardowns.add(() => latestAttachment.dispose());
+          return {
+            firstAttachment,
+            firstDescriptor: requirePhysicsAttachment3DDescriptor(firstValue),
+            latestAttachment,
+            latestDescriptor: requirePhysicsAttachment3DDescriptor(latestValue),
+          };
+        },
+      ).value;
 
       if (renders++ === 0) {
         controller.collectBody(
@@ -333,17 +334,30 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
 
   it("composes sparse position and orientation targets from committed pose", () => {
     const position = signal<readonly [number, number, number]>([0, 0, 0]);
-    const orientation = signal<readonly [number, number, number, number]>([0, 0, 0, 1]);
+    const orientation = signal<readonly [number, number, number, number]>([
+      0, 0, 0, 1,
+    ]);
     let world!: CRCPhysicsWorldHandle3D;
     const Capture = () => {
       world = crcPhysicsWorld3D();
       return undefined;
     };
     mountWebGL(
-      <PhysicsWorld3D gravity={[0, 0, 0]} fixedStepMilliseconds={10} sleeping={false}>
+      <PhysicsWorld3D
+        gravity={[0, 0, 0]}
+        fixedStepMilliseconds={10}
+        sleeping={false}
+      >
         <Capture />
-        <Group3D physics={kinematicBody3D({ target: { position }, collider: false })} />
-        <Group3D physics={kinematicBody3D({ target: { orientation }, collider: false })} />
+        <Group3D
+          physics={kinematicBody3D({ target: { position }, collider: false })}
+        />
+        <Group3D
+          physics={kinematicBody3D({
+            target: { orientation },
+            collider: false,
+          })}
+        />
         <Group3D physics={dynamicBody3D({ mass: 1, collider: false })} />
       </PhysicsWorld3D>,
     );
@@ -393,16 +407,22 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
       world = crcPhysicsWorld3D();
       const sleeping = allowSleep.get();
       return [
-        <Group3D key="position" physics={kinematicBody3D({
-          allowSleep: sleeping,
-          target: { position },
-          collider: false,
-        })} />,
-        <Group3D key="orientation" physics={kinematicBody3D({
-          allowSleep: sleeping,
-          target: { orientation },
-          collider: false,
-        })} />,
+        <Group3D
+          key="position"
+          physics={kinematicBody3D({
+            allowSleep: sleeping,
+            target: { position },
+            collider: false,
+          })}
+        />,
+        <Group3D
+          key="orientation"
+          physics={kinematicBody3D({
+            allowSleep: sleeping,
+            target: { orientation },
+            collider: false,
+          })}
+        />,
       ];
     };
     mountWebGL(
@@ -460,15 +480,23 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
     const Scene = () => {
       version.get();
       world = crcPhysicsWorld3D();
-      return <Group3D physics={staticBody3D({
-        collider: {
-          shape,
-          offset: [2, 0, 0],
-          orientation: [0, 0, Math.SQRT1_2, Math.SQRT1_2],
-        },
-      })} />;
+      return (
+        <Group3D
+          physics={staticBody3D({
+            collider: {
+              shape,
+              offset: [2, 0, 0],
+              orientation: [0, 0, Math.SQRT1_2, Math.SQRT1_2],
+            },
+          })}
+        />
+      );
     };
-    mountWebGL(<PhysicsWorld3D gravity={[0, 0, 0]}><Scene /></PhysicsWorld3D>);
+    mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]}>
+        <Scene />
+      </PhysicsWorld3D>,
+    );
     frames.flush(0);
     frames.flush(0);
     const first = queryPoint3D(world, [2, 0, 0]);
@@ -492,6 +520,138 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
     expect(pendingAfterRender).toBe(0);
   });
 
+  it("keeps mounted compound topology, mass, contacts, and ownership stable across 10,000 unchanged renders", () => {
+    // Production breaks caught: private shape-cache calls miss descriptor,
+    // topology, aggregate-mass, contact-cache, and ownership churn; rebuilding
+    // every compound leaf also loses stable sibling order on one-child edits.
+    const version = signal(0);
+    const leftX = signal(-1);
+    const sphere = sphereShape3D({ radius: 1 });
+    const floor = boxShape3D({ width: 10, height: 2, depth: 10 });
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const Compound = () => {
+      version.get();
+      return (
+        <Group3D
+          physics={dynamicBody3D({
+            mass: "auto",
+            lockTranslation: { x: true, y: true, z: true },
+            lockRotation: { x: true, y: true, z: true },
+            collider: false,
+          })}
+          style={{ translateY: 1 }}
+        >
+          <Group3D
+            key="left"
+            physics={collider3D({ shape: sphere, tag: "left" })}
+            style={{ translateX: leftX.get() }}
+          />
+          <Group3D
+            key="right"
+            physics={collider3D({ shape: sphere, tag: "right" })}
+            style={{ translateX: 1 }}
+          />
+        </Group3D>
+      );
+    };
+    mountWebGL(
+      <PhysicsWorld3D
+        gravity={[0, 0, 0]}
+        fixedStepMilliseconds={10}
+        sleeping={false}
+      >
+        <Capture />
+        <Group3D
+          physics={staticBody3D({ collider: { shape: floor, tag: "floor" } })}
+          style={{ translateY: -1 }}
+        />
+        <Compound />
+      </PhysicsWorld3D>,
+    );
+    frames.flush(0);
+    frames.flush(10);
+    frames.flush(20);
+
+    const initial = snapshot(world);
+    const instrumentation = initial as typeof initial & {
+      readonly shapeBakeCount: number;
+      readonly massPropertyDerivations: number;
+    };
+    expect(instrumentation.shapeBakeCount).toBe(3);
+    expect(instrumentation.massPropertyDerivations).toBe(1);
+    expect(initial.kernel.contactCount).toBe(2);
+    const counters = initial.kernel.counters;
+    const body = initial.kernel.bodies[1]!;
+    const left = queryPoint3D(world, [-1, 1, 0]);
+    const right = queryPoint3D(world, [1, 1, 0]);
+    expect(left?.tag).toBe("left");
+    expect(right?.tag).toBe("right");
+
+    for (let render = 1; render <= 10_000; render += 1) {
+      version.set(render);
+      frames.flush(20 + render / 1_000);
+    }
+    const unchanged = snapshot(world);
+    expect(unchanged.shapeBakeCount).toBe(instrumentation.shapeBakeCount);
+    expect(unchanged.massPropertyDerivations).toBe(
+      instrumentation.massPropertyDerivations,
+    );
+    expect(unchanged.kernel.bodies[1]).toMatchObject({
+      generation: body.generation,
+      inverseMass: body.inverseMass,
+      localInverseInertiaXX: body.localInverseInertiaXX,
+      localInverseInertiaYY: body.localInverseInertiaYY,
+      localInverseInertiaZZ: body.localInverseInertiaZZ,
+    });
+    expect(unchanged.kernel.contactCount).toBe(2);
+    for (const name of [
+      "bodyAllocations",
+      "bodyReleases",
+      "colliderAllocations",
+      "colliderReleases",
+      "proxyAllocations",
+      "proxyReleases",
+      "contactAllocations",
+      "contactReleases",
+      "liveBodies",
+      "liveColliders",
+      "liveProxies",
+      "liveContacts",
+      "bodyCapacityGrowths",
+      "colliderCapacityGrowths",
+      "proxyCapacityGrowths",
+      "contactCapacityGrowths",
+    ] as const) {
+      expect(unchanged.kernel.counters[name], name).toBe(counters[name]);
+    }
+    expect(queryPoint3D(world, [-1, 1, 0])?.collider).toBe(left?.collider);
+    const changedRight = queryPoint3D(world, [1, 1, 0]);
+    expect(changedRight?.tag).toBe("right");
+    expect(changedRight?.colliderGeneration).toBe(right?.colliderGeneration);
+    expect(changedRight?.collider).toBe(right?.collider);
+
+    leftX.set(-2);
+    frames.flush(31);
+    frames.flush(41);
+    const changed = snapshot(world);
+    expect(changed.shapeBakeCount).toBe(unchanged.shapeBakeCount + 1);
+    expect(changed.massPropertyDerivations).toBe(
+      unchanged.massPropertyDerivations + 1,
+    );
+    const rebuiltRight = queryPoint3D(world, [1, 1, 0]);
+    expect(rebuiltRight?.tag).toBe("right");
+    expect(rebuiltRight?.colliderGeneration).toBe(right?.colliderGeneration);
+    expect(rebuiltRight?.collider).toBe(right?.collider);
+    expect(changed.kernel.bodies[1]!.inverseMass).toBe(body.inverseMass);
+    expect(changed.kernel.bodies[1]!.localInverseInertiaYY).not.toBe(
+      body.localInverseInertiaYY,
+    );
+  });
+
   it("keeps one registration while a kinematic target binding can produce a later sample", () => {
     // Production break caught: releasing the participant when the current
     // target is reached leaves a later write to the same unobserved binding
@@ -500,10 +660,14 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
     let world!: CRCPhysicsWorldHandle3D;
     const Body = () => {
       world = crcPhysicsWorld3D();
-      return <Group3D physics={kinematicBody3D({
-        target: { position },
-        collider: false,
-      })} />;
+      return (
+        <Group3D
+          physics={kinematicBody3D({
+            target: { position },
+            collider: false,
+          })}
+        />
+      );
     };
     mountWebGL(
       <PhysicsWorld3D gravity={[0, 0, 0]} fixedStepMilliseconds={10}>
@@ -560,10 +724,12 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
       <PhysicsWorld3D gravity={[0, 0, 0]} fixedStepMilliseconds={100}>
         <Animate />
         <Capture />
-        <Group3D physics={kinematicBody3D({
-          collider: false,
-          target: { position: target },
-        })} />
+        <Group3D
+          physics={kinematicBody3D({
+            collider: false,
+            target: { position: target },
+          })}
+        />
       </PhysicsWorld3D>,
     );
     frames.flush(0);
@@ -583,16 +749,20 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
     });
   });
 
-  it("removing a target retains pose and clears target-derived velocity", () => {
+  it("removing a target restores authored pose authority and clears target-derived velocity", () => {
     const position = signal<readonly [number, number, number]>([1, 0, 0]);
     const bound = signal(true);
     let world!: CRCPhysicsWorldHandle3D;
     const Body = () => {
       world = crcPhysicsWorld3D();
-      return <Group3D physics={kinematicBody3D({
-        target: bound.get() ? { position } : {},
-        collider: false,
-      })} />;
+      return (
+        <Group3D
+          physics={kinematicBody3D({
+            target: bound.get() ? { position } : {},
+            collider: false,
+          })}
+        />
+      );
     };
     mountWebGL(
       <PhysicsWorld3D gravity={[0, 0, 0]} fixedStepMilliseconds={10}>
@@ -606,16 +776,16 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
     bound.set(false);
     frames.flush(30);
     frames.flush(40);
-    const retained = snapshot(world).kernel.bodies[0]!;
-    expect(retained.positionX).toBe(1);
-    expect(retained.linearVelocityX).toBe(0);
-    expect(retained.linearVelocityY).toBe(0);
-    expect(retained.linearVelocityZ).toBe(0);
+    const authored = snapshot(world).kernel.bodies[0]!;
+    expect(authored.positionX).toBe(0);
+    expect(authored.linearVelocityX).toBe(0);
+    expect(authored.linearVelocityY).toBe(0);
+    expect(authored.linearVelocityZ).toBe(0);
     expect(snapshot(world).advanceRegistered).toBe(false);
     position.set([8, 0, 0]);
     frames.flush(50);
     expect(frames.pending).toBe(0);
-    expect(snapshot(world).kernel.bodies[0]!.positionX).toBe(1);
+    expect(snapshot(world).kernel.bodies[0]!.positionX).toBe(0);
 
     bound.set(true);
     frames.flush(60);
@@ -631,9 +801,16 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
       world = crcPhysicsWorld3D();
       return undefined;
     };
-    mountWebGL(<PhysicsWorld3D><Capture /></PhysicsWorld3D>);
+    mountWebGL(
+      <PhysicsWorld3D>
+        <Capture />
+      </PhysicsWorld3D>,
+    );
     frames.flush(0);
-    const guard = vi.spyOn(PhysicsWorld3DKernel.prototype, "assertCommittedReadable");
+    const guard = vi.spyOn(
+      PhysicsWorld3DKernel.prototype,
+      "assertCommittedReadable",
+    );
     expect(queryPoint3D(world, [0, 0, 0])).toBeNull();
     expect(guard).toHaveBeenCalledOnce();
   });
@@ -646,14 +823,18 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
     let world!: CRCPhysicsWorldHandle3D;
     const Scene = () => {
       world = crcPhysicsWorld3D();
-      return shown.get()
-        ? <Group3D physics={staticBody3D({
+      return shown.get() ? (
+        <Group3D
+          physics={staticBody3D({
             collider: { shape, sensor: true },
-          })} />
-        : undefined;
+          })}
+        />
+      ) : undefined;
     };
     const mount = mountWebGL(
-      <PhysicsWorld3D gravity={[0, 0, 0]}><Scene /></PhysicsWorld3D>,
+      <PhysicsWorld3D gravity={[0, 0, 0]}>
+        <Scene />
+      </PhysicsWorld3D>,
     );
     frames.flush(0);
     frames.flush(0);
@@ -676,10 +857,12 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
     shown.set(true);
     frames.flush(2);
     frames.flush(2);
-    expect(queryPoint3D(world, [0, 0, 0], {
-      sensors: "only",
-      excludeCollider: first!.collider,
-    })).toBeNull();
+    expect(
+      queryPoint3D(world, [0, 0, 0], {
+        sensors: "only",
+        excludeCollider: first!.collider,
+      }),
+    ).toBeNull();
     const replacement = queryPoint3D(world, [0, 0, 0], {
       sensors: "only",
     });
@@ -704,10 +887,12 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
     mountWebGL(
       <PhysicsWorld3D gravity={[0, 0, 0]}>
         <Capture />
-        <Group3D physics={dynamicBody3D({
-          mass: 2,
-          collider: { shape: sphereShape3D({ radius: 1 }) },
-        })} />
+        <Group3D
+          physics={dynamicBody3D({
+            mass: 2,
+            collider: { shape: sphereShape3D({ radius: 1 }) },
+          })}
+        />
       </PhysicsWorld3D>,
     );
     frames.flush(0);
@@ -737,7 +922,11 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
       return undefined;
     };
     mountWebGL(
-      <PhysicsWorld3D gravity={[0, 0, 0]} sleeping={false} onError={(error) => errors.push(error)}>
+      <PhysicsWorld3D
+        gravity={[0, 0, 0]}
+        sleeping={false}
+        onError={(error) => errors.push(error)}
+      >
         <FailedCapture />
         <Group3D physics={dynamicBody3D({ mass: 1, collider: false })} />
       </PhysicsWorld3D>,
@@ -845,11 +1034,13 @@ class ManualFrames {
   }
 
   install(): void {
-    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((callback) => {
-      const id = ++this.nextId;
-      this.callbacks.set(id, callback);
-      return id;
-    });
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(
+      (callback) => {
+        const id = ++this.nextId;
+        this.callbacks.set(id, callback);
+        return id;
+      },
+    );
     vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
       this.callbacks.delete(id);
     });
@@ -857,8 +1048,7 @@ class ManualFrames {
 
   flush(time: number): void {
     const entry = this.callbacks.entries().next().value as
-      | readonly [number, FrameRequestCallback]
-      | undefined;
+      readonly [number, FrameRequestCallback] | undefined;
     if (!entry) throw new Error("No CRC host frame is pending.");
     this.callbacks.delete(entry[0]);
     entry[1](time);

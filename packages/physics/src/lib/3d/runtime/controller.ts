@@ -158,7 +158,15 @@ export interface PhysicsWorld3DControllerSnapshot {
   readonly advanceRegistered: boolean;
   readonly bodyIds: readonly number[];
   readonly colliderIds: readonly number[];
+  readonly shapeBakeCount: number;
+  readonly massPropertyDerivations: number;
   readonly kernel: ReturnType<PhysicsWorld3DKernel["snapshot"]>;
+}
+
+interface CompoundMassCache3D {
+  readonly mode: "dynamic" | "static";
+  readonly colliders: readonly ReturnType<typeof compoundMassInput>[];
+  readonly properties: ReturnType<typeof deriveCompoundMassProperties3D>;
 }
 
 export class PhysicsWorld3DController {
@@ -177,6 +185,8 @@ export class PhysicsWorld3DController {
   private acceptedConfiguration: NormalizedPhysicsWorld3DConfiguration;
   private acceptedProps: CRCPhysicsWorld3DProps = Object.freeze({});
   private readonly suspendedVelocities = new Map<number, BodyVelocity3D>();
+  private readonly compoundMassCache = new Map<number, CompoundMassCache3D>();
+  private massPropertyDerivations = 0;
   private readonly materializedBodyHandles = new Map<
     string,
     CRCPhysicsBodyHandle3D
@@ -456,9 +466,15 @@ export class PhysicsWorld3DController {
     this.acceptedProps = Object.freeze({});
     this.draft = undefined;
     this.suspendedVelocities.clear();
+    this.compoundMassCache.clear();
   }
 
   snapshot(): PhysicsWorld3DControllerSnapshot {
+    const attachments = new Set<MountedPhysicsAttachment3D>();
+    for (const body of this.acceptedBodies) attachments.add(body.attachment);
+    for (const collider of this.acceptedColliders) {
+      attachments.add(collider.attachment);
+    }
     return Object.freeze({
       revision: this.committedRevision,
       revisionMaterialized: this.revision !== undefined,
@@ -481,6 +497,11 @@ export class PhysicsWorld3DController {
           )
           .map((record) => record.id),
       ),
+      shapeBakeCount: [...attachments].reduce(
+        (total, attachment) => total + attachment.shapeBakeCountForTest(),
+        0,
+      ),
+      massPropertyDerivations: this.massPropertyDerivations,
       kernel: this.kernel.snapshot(),
     });
   }
@@ -490,7 +511,7 @@ export class PhysicsWorld3DController {
     this.draft = undefined;
     if (!success || draft === undefined || !this.active) return;
     validateMovingConcave(draft);
-    validateAutomaticMass(draft);
+    const massProperties = this.resolveCompoundMassProperties(draft);
     const reenableVelocities = this.resolveReenableVelocities(draft);
     const previousBodyDefinitions = new Map(
       this.acceptedTopology
@@ -504,14 +525,25 @@ export class PhysicsWorld3DController {
       this.kernel.snapshot().bodies.map((body) => body.id),
     );
     const committedKinematicPoses = new Map<number, CRCPhysicsPose3D>();
-    for (const body of this.acceptedBodies) {
+    for (const body of draft.bodies.values()) {
       if (
         body.descriptor.bodyType === "kinematic" &&
         committedBodyIds.has(body.id)
       ) {
+        const committed = this.kernel.authoritativePose(body.id);
+        const target = body.descriptor.options.target;
         committedKinematicPoses.set(
           body.id,
-          this.kernel.authoritativePose(body.id),
+          Object.freeze({
+            position:
+              target.position === undefined
+                ? body.initialPose.position
+                : committed.position,
+            orientation:
+              target.orientation === undefined
+                ? body.initialPose.orientation
+                : committed.orientation,
+          }),
         );
       }
     }
@@ -520,6 +552,7 @@ export class PhysicsWorld3DController {
       reenableVelocities,
       previousBodyDefinitions,
       committedKinematicPoses,
+      massProperties,
     );
     const topologyChanged = !sameTopology(this.acceptedTopology, topology);
     const configurationChanged = !sameConfiguration(
@@ -597,6 +630,57 @@ export class PhysicsWorld3DController {
     });
     this.ensureAdvance();
     this.adoptBodyPresentationStates(nextBodies);
+  }
+
+  private resolveCompoundMassProperties(
+    draft: RenderDraft3D,
+  ): ReadonlyMap<number, ReturnType<typeof deriveCompoundMassProperties3D>> {
+    const resolved = new Map<
+      number,
+      ReturnType<typeof deriveCompoundMassProperties3D>
+    >();
+    const retained = new Set<number>();
+    for (const body of draft.bodies.values()) {
+      if (
+        body.descriptor.bodyType !== "dynamic" ||
+        !body.descriptor.options.enabled
+      ) {
+        continue;
+      }
+      retained.add(body.id);
+      const colliders = [...draft.colliders.values()]
+        .filter((collider) => collider.bodyId === body.id)
+        .sort((left, right) => left.id - right.id)
+        .map(compoundMassInput);
+      const mode =
+        body.descriptor.options.mass === "auto" ||
+        colliders.some((collider) => collider.contributesToMass)
+          ? "dynamic"
+          : "static";
+      const cached = this.compoundMassCache.get(body.id);
+      const properties =
+        cached !== undefined &&
+        cached.mode === mode &&
+        sameMassInputs(cached.colliders, colliders)
+          ? cached.properties
+          : deriveCompoundMassProperties3D(colliders, mode);
+      if (properties !== cached?.properties) {
+        this.massPropertyDerivations += 1;
+        this.compoundMassCache.set(
+          body.id,
+          Object.freeze({
+            mode,
+            colliders: Object.freeze(colliders),
+            properties,
+          }),
+        );
+      }
+      resolved.set(body.id, properties);
+    }
+    for (const bodyId of this.compoundMassCache.keys()) {
+      if (!retained.has(bodyId)) this.compoundMassCache.delete(bodyId);
+    }
+    return resolved;
   }
 
   private adoptBodyPresentationStates(bodies: readonly BodyDraft3D[]): void {
@@ -745,18 +829,13 @@ export class PhysicsWorld3DController {
       if (target.position === undefined && target.orientation === undefined) {
         continue;
       }
-      const acceptedPose = this.kernel
-        .snapshot()
-        .bodies.some((candidate) => candidate.id === body.id)
-        ? this.kernel.authoritativePose(body.id)
-        : body.initialPose;
       const position =
         target.position === undefined
-          ? acceptedPose.position
+          ? body.initialPose.position
           : batch.read(target.position as WritableSignal<CRCPhysicsVector3>);
       const orientation =
         target.orientation === undefined
-          ? acceptedPose.orientation
+          ? body.initialPose.orientation
           : batch.read(
               target.orientation as WritableSignal<
                 readonly [number, number, number, number]
@@ -1202,6 +1281,10 @@ function materializeTopology(
   reenableVelocities: ReadonlyMap<number, BodyVelocity3D>,
   previousBodyDefinitions: ReadonlyMap<number, BodyDefinition3D>,
   committedKinematicPoses: ReadonlyMap<number, CRCPhysicsPose3D>,
+  massProperties: ReadonlyMap<
+    number,
+    ReturnType<typeof deriveCompoundMassProperties3D>
+  >,
 ): readonly PhysicsTopologyRecord3D[] {
   const collidersByBody = new Map<number, ColliderDraft3D[]>();
   for (const collider of draft.colliders.values()) {
@@ -1221,6 +1304,7 @@ function materializeTopology(
           reenableVelocities.get(body.id),
           previousBodyDefinitions.get(body.id),
           committedKinematicPoses.get(body.id),
+          massProperties.get(body.id),
         ),
       }),
     );
@@ -1261,30 +1345,13 @@ function materializeTopology(
   return Object.freeze([...bodies, ...colliders]);
 }
 
-function validateAutomaticMass(draft: RenderDraft3D): void {
-  for (const body of draft.bodies.values()) {
-    if (
-      body.descriptor.bodyType !== "dynamic" ||
-      !body.descriptor.options.enabled ||
-      body.descriptor.options.mass !== "auto"
-    ) {
-      continue;
-    }
-    deriveCompoundMassProperties3D(
-      [...draft.colliders.values()]
-        .filter((collider) => collider.bodyId === body.id)
-        .map(compoundMassInput),
-      "dynamic",
-    );
-  }
-}
-
 function bodyDefinition(
   body: BodyDraft3D,
   colliders: readonly ColliderDraft3D[],
   reenableVelocity?: BodyVelocity3D,
   previous?: BodyDefinition3D,
   committedKinematicPose?: CRCPhysicsPose3D,
+  resolvedMassProperties?: ReturnType<typeof deriveCompoundMassProperties3D>,
 ): BodyDefinition3D {
   const descriptor = body.descriptor;
   const enabled = descriptor.options.enabled;
@@ -1333,10 +1400,12 @@ function bodyDefinition(
     const contributingColliders = colliders.filter(
       (collider) => collider.options.contributesToMass,
     );
-    const derived = deriveCompoundMassProperties3D(
-      colliders.map(compoundMassInput),
-      contributingColliders.length > 0 ? "dynamic" : "static",
-    );
+    const derived =
+      resolvedMassProperties ??
+      deriveCompoundMassProperties3D(
+        colliders.map(compoundMassInput),
+        contributingColliders.length > 0 ? "dynamic" : "static",
+      );
     const mass =
       descriptor.options.mass === "auto"
         ? derived.mass
@@ -1464,6 +1533,24 @@ function compoundMassInput(collider: ColliderDraft3D) {
     density: collider.options.density,
     contributesToMass: collider.options.contributesToMass,
   });
+}
+
+function sameMassInputs(
+  left: readonly ReturnType<typeof compoundMassInput>[],
+  right: readonly ReturnType<typeof compoundMassInput>[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((entry, index) => {
+      const candidate = right[index];
+      return (
+        candidate !== undefined &&
+        entry.shape === candidate.shape &&
+        entry.density === candidate.density &&
+        entry.contributesToMass === candidate.contributesToMass
+      );
+    })
+  );
 }
 
 function sameConfiguration(

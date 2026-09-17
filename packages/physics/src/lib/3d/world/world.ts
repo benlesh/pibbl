@@ -2510,7 +2510,29 @@ function sameColliderRecord(
   const secondDefinition = second.definition as Record<PropertyKey, unknown>;
   const keys = Reflect.ownKeys(secondDefinition);
   if (keys.length !== Reflect.ownKeys(firstDefinition).length) return false;
-  return keys.every((key) => firstDefinition[key] === secondDefinition[key]);
+  return keys.every((key) => {
+    const firstValue = firstDefinition[key];
+    const secondValue = secondDefinition[key];
+    if (firstValue === secondValue) return true;
+    if (key !== "handlers") return false;
+    if (
+      typeof firstValue !== "object" ||
+      firstValue === null ||
+      typeof secondValue !== "object" ||
+      secondValue === null
+    ) {
+      return false;
+    }
+    const firstHandlers = firstValue as Readonly<Record<string, unknown>>;
+    const secondHandlers = secondValue as Readonly<Record<string, unknown>>;
+    const handlerKeys = Object.keys(firstHandlers);
+    return (
+      handlerKeys.length === Object.keys(secondHandlers).length &&
+      handlerKeys.every((handler) =>
+        Object.is(firstHandlers[handler], secondHandlers[handler]),
+      )
+    );
+  });
 }
 
 function zeroBodyMotion(bodies: BodyStore3D, index: number): void {

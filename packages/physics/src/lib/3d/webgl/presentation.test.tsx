@@ -30,6 +30,7 @@ import {
   crcPhysicsBody3D,
   crcPhysicsWorld3D,
   dynamicBody3D,
+  kinematicBody3D,
   staticBody3D,
   type CRCPhysicsWorldHandle3D,
 } from "../../../3d.js";
@@ -48,7 +49,7 @@ import {
   captureWebGLBodyPresentation3D,
   resolveWebGLBodyFrame3D,
   resolveWebGLColliderForwardMatrix3D,
-  resolveWebGLDynamicPresentationMatrix3D,
+  resolveWebGLBodyPresentationMatrix3D,
 } from "./presentation.js";
 
 describe("WebGL 3D physics presentation", () => {
@@ -68,7 +69,7 @@ describe("WebGL 3D physics presentation", () => {
       orientation: [0, 0, 0, 1],
     });
     expect([
-      ...resolveWebGLDynamicPresentationMatrix3D(
+      ...resolveWebGLBodyPresentationMatrix3D(
         capture,
         capture.initialPose,
         frame,
@@ -92,7 +93,7 @@ describe("WebGL 3D physics presentation", () => {
       orientation: [0, 0, 0, 1],
     };
 
-    const presentation = resolveWebGLDynamicPresentationMatrix3D(
+    const presentation = resolveWebGLBodyPresentationMatrix3D(
       capture,
       presented,
       frame,
@@ -996,6 +997,110 @@ describe("mounted WebGL 3D physics integration", () => {
     ).kernel.bodies[0]!;
     expect(body.positionX).toBe(5);
     expect(body.linearVelocityX).toBe(0);
+  });
+
+  it("merges bound kinematic targets with unbound authored fields for solver and presentation", () => {
+    // Production break caught: presenting only dynamic bodies leaves bound
+    // kinematic targets visually stale, while preserving the full committed
+    // kinematic pose leaves authored unbound fields collision-stale.
+    const frames = new ManualFrames();
+    frames.install();
+    const positionTarget = signal<readonly [number, number, number]>([1, 0, 0]);
+    const orientationTarget = signal<readonly [number, number, number, number]>(
+      [0, 0, 0, 1],
+    );
+    const authoredRotation = signal(0);
+    const authoredX = signal(10);
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const Bodies = () => (
+      <>
+        <Cube
+          physics={kinematicBody3D({ target: { position: positionTarget } })}
+          style={{
+            lit: false,
+            translateX: 1,
+            rotationZDegrees: authoredRotation.get(),
+          }}
+        />
+        <Cube
+          physics={kinematicBody3D({
+            target: { orientation: orientationTarget },
+          })}
+          style={{ lit: false, translateX: authoredX.get() }}
+        />
+      </>
+    );
+    const render = vi.spyOn(
+      WebGLLayerController.prototype,
+      "renderRetainedChild",
+    );
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+    document.body.appendChild(canvas);
+    mounts.push(
+      crc(
+        canvas,
+        <WebGLLayer style={{ width: 100, height: 100 }}>
+          <PhysicsWorld3D
+            gravity={[0, 0, 0]}
+            fixedStepMilliseconds={10}
+            sleeping={false}
+          >
+            <Capture />
+            <Bodies />
+          </PhysicsWorld3D>
+        </WebGLLayer>,
+      ),
+    );
+    frames.flush(0);
+    frames.flush(0);
+
+    positionTarget.set([4, 2, 0]);
+    authoredRotation.set(90);
+    orientationTarget.set([0, 0, Math.SQRT1_2, Math.SQRT1_2]);
+    authoredX.set(12);
+    frames.flush(10);
+    frames.flush(20);
+
+    const bodies = snapshotPhysicsWorld3DControllerForTest(
+      requirePhysicsWorld3DController(world),
+    ).kernel.bodies;
+    expect(bodies[0]).toMatchObject({
+      positionX: 4,
+      positionY: 2,
+      orientationZ: expect.closeTo(Math.SQRT1_2, 14),
+      orientationW: expect.closeTo(Math.SQRT1_2, 14),
+    });
+    expect(bodies[1]).toMatchObject({
+      positionX: 12,
+      positionY: 0,
+      orientationZ: expect.closeTo(Math.SQRT1_2, 14),
+      orientationW: expect.closeTo(Math.SQRT1_2, 14),
+    });
+
+    const layer = render.mock.instances[0] as WebGLLayerController;
+    const entries = (
+      layer as unknown as {
+        committed?: {
+          pickLedger: {
+            entries: readonly { componentName: string; model: Float32Array }[];
+          };
+        };
+      }
+    ).committed?.pickLedger.entries.filter(
+      (entry) => entry.componentName === "Cube",
+    );
+    expect(entries).toHaveLength(2);
+    expect(entries?.map((entry) => entry.model[12])).toEqual([4, 12]);
+    expect(entries?.map((entry) => [entry.model[0], entry.model[1]])).toEqual([
+      [expect.closeTo(0, 6), expect.closeTo(1, 6)],
+      [expect.closeTo(0, 6), expect.closeTo(1, 6)],
+    ]);
   });
 });
 

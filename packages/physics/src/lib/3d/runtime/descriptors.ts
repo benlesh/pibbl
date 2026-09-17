@@ -54,7 +54,7 @@ import {
   resolveWebGLBodyFrame3D,
   resolveWebGLColliderForwardMatrix3D,
   resolveWebGLColliderShapeMatrix3D,
-  resolveWebGLDynamicPresentationMatrix3D,
+  resolveWebGLBodyPresentationMatrix3D,
   type WebGLBodyFrame3D,
   type WebGLBodyPresentationCapture3D,
 } from "../webgl/presentation.js";
@@ -370,6 +370,7 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
   private cachedBakedBodyMode: "static" | "moving" | undefined;
   private cachedBakedTransform: readonly number[] | undefined;
   private cachedBakedShape: CRCPhysicsShape3D | undefined;
+  private shapeBakeCount = 0;
   private bodyPresentation: WebGLBodyPresentationCapture3D | undefined;
   private wasEnabled = false;
 
@@ -424,13 +425,26 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
       );
       this.publishBodyFrame(world, bodyId, frame);
 
-      if (descriptor.bodyType === "dynamic" && enabled) {
+      if (descriptor.bodyType !== "static" && enabled) {
         world.handle.revision.get();
-        const presentedPose = reenabled
+        const authoritativePose = reenabled
           ? presentation.initialPose
           : (world.presentationPose(bodyId) ?? presentation.initialPose);
+        const presentedPose =
+          descriptor.bodyType === "kinematic"
+            ? Object.freeze({
+                position:
+                  descriptor.options.target.position === undefined
+                    ? frame.authoredPose.position
+                    : authoritativePose.position,
+                orientation:
+                  descriptor.options.target.orientation === undefined
+                    ? frame.authoredPose.orientation
+                    : authoritativePose.orientation,
+              })
+            : authoritativePose;
         this.releasePresentationScope = pushPhysicsPresentation(
-          resolveWebGLDynamicPresentationMatrix3D(
+          resolveWebGLBodyPresentationMatrix3D(
             presentation,
             presentedPose,
             frame,
@@ -544,6 +558,10 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
     this.wasEnabled = state.enabled;
   }
 
+  shapeBakeCountForTest(): number {
+    return this.shapeBakeCount;
+  }
+
   resolveShape(
     options: NormalizedPhysicsColliderConfiguration3D,
   ): ShapeRecord3D {
@@ -612,6 +630,7 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
     this.cachedBakedBodyMode = bodyMode;
     this.cachedBakedTransform = values;
     this.cachedBakedShape = shape;
+    this.shapeBakeCount += 1;
     return shape;
   }
 
