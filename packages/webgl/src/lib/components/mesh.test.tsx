@@ -429,6 +429,7 @@ function createDrawGL() {
   const createProgram = vi.fn(() => handle('program'));
   const createVertexArray = vi.fn(() => handle('vertex-array'));
   const createBuffer = vi.fn(() => handle('buffer'));
+  const createTexture = vi.fn(() => handle('texture'));
   const recordDraw = (kind: DrawRecord['kind'], count: number) => {
     draws.push({
       kind,
@@ -453,6 +454,7 @@ function createDrawGL() {
     getUniformLocation: (_program: object, name: string) => ({ name }),
     createVertexArray,
     createBuffer,
+    createTexture,
     enable(capability: number) {
       enabled.add(capability);
     },
