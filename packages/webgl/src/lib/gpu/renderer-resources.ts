@@ -7,6 +7,8 @@ import type {
 import {
   createBuiltInProgram,
   deleteBuiltInProgram,
+  WEBGL_TANGENT_ATTRIBUTE,
+  WEBGL_TEXTURE_COORDINATES_0_ATTRIBUTE,
   type WebGLBuiltInProgram,
   type WebGLProgramKey,
 } from './program.js';
@@ -15,6 +17,8 @@ export interface WebGLGeometryResource {
   readonly vertexArray: WebGLVertexArrayObject;
   readonly positionBuffer: WebGLBuffer;
   readonly normalBuffer: WebGLBuffer | undefined;
+  readonly textureCoordinates0Buffer: WebGLBuffer | undefined;
+  readonly tangentBuffer: WebGLBuffer | undefined;
   readonly indexBuffer: WebGLBuffer | undefined;
   readonly vertexCount: number;
   readonly indexCount: number | undefined;
@@ -650,6 +654,8 @@ function uploadGeometry(
   let vertexArray: WebGLVertexArrayObject | undefined;
   let positionBuffer: WebGLBuffer | undefined;
   let normalBuffer: WebGLBuffer | undefined;
+  let textureCoordinates0Buffer: WebGLBuffer | undefined;
+  let tangentBuffer: WebGLBuffer | undefined;
   let indexBuffer: WebGLBuffer | undefined;
   let published = false;
   let abandonFailedHandles = false;
@@ -676,6 +682,20 @@ function uploadGeometry(
         );
       }
     }
+    if (data.textureCoordinates0 !== undefined) {
+      textureCoordinates0Buffer = gl.createBuffer() ?? undefined;
+      if (!textureCoordinates0Buffer) {
+        throw new Error(
+          `${componentName} geometry textureCoordinates0 buffer creation failed.`,
+        );
+      }
+    }
+    if (data.tangents !== undefined) {
+      tangentBuffer = gl.createBuffer() ?? undefined;
+      if (!tangentBuffer) {
+        throw new Error(`${componentName} geometry tangent buffer creation failed.`);
+      }
+    }
     if (data.indices !== undefined) {
       indexBuffer = gl.createBuffer() ?? undefined;
       if (!indexBuffer) {
@@ -695,6 +715,38 @@ function uploadGeometry(
       gl.bufferData(gl.ARRAY_BUFFER, data.normals, gl.STATIC_DRAW);
       gl.enableVertexAttribArray(1);
       gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+    }
+    if (data.textureCoordinates0 !== undefined) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordinates0Buffer!);
+      gl.bufferData(gl.ARRAY_BUFFER, data.textureCoordinates0, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(WEBGL_TEXTURE_COORDINATES_0_ATTRIBUTE);
+      gl.vertexAttribPointer(
+        WEBGL_TEXTURE_COORDINATES_0_ATTRIBUTE,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0,
+      );
+    } else {
+      gl.disableVertexAttribArray(WEBGL_TEXTURE_COORDINATES_0_ATTRIBUTE);
+      gl.vertexAttrib2f(WEBGL_TEXTURE_COORDINATES_0_ATTRIBUTE, 0, 0);
+    }
+    if (data.tangents !== undefined) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, tangentBuffer!);
+      gl.bufferData(gl.ARRAY_BUFFER, data.tangents, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(WEBGL_TANGENT_ATTRIBUTE);
+      gl.vertexAttribPointer(
+        WEBGL_TANGENT_ATTRIBUTE,
+        4,
+        gl.FLOAT,
+        false,
+        0,
+        0,
+      );
+    } else {
+      gl.disableVertexAttribArray(WEBGL_TANGENT_ATTRIBUTE);
+      gl.vertexAttrib4f(WEBGL_TANGENT_ATTRIBUTE, 1, 0, 0, 1);
     }
     if (data.indices !== undefined) {
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer!);
@@ -720,6 +772,8 @@ function uploadGeometry(
       vertexArray,
       positionBuffer,
       normalBuffer,
+      textureCoordinates0Buffer,
+      tangentBuffer,
       indexBuffer,
       vertexCount: geometry.vertexCount,
       indexCount: data.indices?.length,
@@ -740,6 +794,12 @@ function uploadGeometry(
     if (!published && !abandonFailedHandles) {
       if (indexBuffer) {
         runResourceCleanup(() => gl.deleteBuffer(indexBuffer!));
+      }
+      if (tangentBuffer) {
+        runResourceCleanup(() => gl.deleteBuffer(tangentBuffer!));
+      }
+      if (textureCoordinates0Buffer) {
+        runResourceCleanup(() => gl.deleteBuffer(textureCoordinates0Buffer!));
       }
       if (normalBuffer) {
         runResourceCleanup(() => gl.deleteBuffer(normalBuffer!));
@@ -787,6 +847,12 @@ function deleteGeometry(
 ): void {
   if (geometry.indexBuffer) {
     runResourceCleanup(() => gl.deleteBuffer(geometry.indexBuffer!));
+  }
+  if (geometry.tangentBuffer) {
+    runResourceCleanup(() => gl.deleteBuffer(geometry.tangentBuffer!));
+  }
+  if (geometry.textureCoordinates0Buffer) {
+    runResourceCleanup(() => gl.deleteBuffer(geometry.textureCoordinates0Buffer!));
   }
   if (geometry.normalBuffer) {
     runResourceCleanup(() => gl.deleteBuffer(geometry.normalBuffer!));

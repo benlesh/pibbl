@@ -51,6 +51,8 @@ export interface CRCWebGLTargetProps
 export interface CRCWebGLGeometryInput {
   readonly positions: ArrayLike<number>;
   readonly normals?: ArrayLike<number>;
+  readonly tangents?: ArrayLike<number>;
+  readonly textureCoordinates0?: ArrayLike<number>;
   readonly indices?: ArrayLike<number>;
 }
 

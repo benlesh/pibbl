@@ -47,6 +47,65 @@ describe('WebGLRendererResourceCache', () => {
     expect(recording.deleteVertexArray).not.toHaveBeenCalled();
   });
 
+  it('uploads supplied UV0 and tangent buffers and releases every resident handle once', () => {
+    const recording = createResourceGL('geometry-streams');
+    const cache = new WebGLRendererResourceCache(recording.gl, 8);
+    const transaction = cache.beginRender();
+
+    const resource = transaction.useGeometry(
+      indexedTriangleWithAllStreams(),
+      'Mesh',
+    );
+    transaction.commit();
+
+    expect(recording.uploads).toEqual([
+      { target: recording.gl.ARRAY_BUFFER, length: 9, usage: recording.gl.STATIC_DRAW },
+      { target: recording.gl.ARRAY_BUFFER, length: 9, usage: recording.gl.STATIC_DRAW },
+      { target: recording.gl.ARRAY_BUFFER, length: 6, usage: recording.gl.STATIC_DRAW },
+      { target: recording.gl.ARRAY_BUFFER, length: 12, usage: recording.gl.STATIC_DRAW },
+      { target: recording.gl.ELEMENT_ARRAY_BUFFER, length: 3, usage: recording.gl.STATIC_DRAW },
+    ]);
+    expect(recording.enableVertexAttribArray.mock.calls).toEqual([
+      [0], [1], [2], [3],
+    ]);
+    expect(recording.vertexAttribPointer.mock.calls).toEqual([
+      [0, 3, recording.gl.FLOAT, false, 0, 0],
+      [1, 3, recording.gl.FLOAT, false, 0, 0],
+      [2, 2, recording.gl.FLOAT, false, 0, 0],
+      [3, 4, recording.gl.FLOAT, false, 0, 0],
+    ]);
+    expect(resource.textureCoordinates0Buffer).toBe(recording.buffers[2]);
+    expect(resource.tangentBuffer).toBe(recording.buffers[3]);
+
+    cache.beginRender().commit();
+
+    expect(recording.deleteBuffer.mock.calls.map(([value]) => value)).toEqual([
+      resource.indexBuffer,
+      resource.tangentBuffer,
+      resource.textureCoordinates0Buffer,
+      resource.normalBuffer,
+      resource.positionBuffer,
+    ]);
+    expect(recording.deleteVertexArray).toHaveBeenCalledExactlyOnceWith(
+      resource.vertexArray,
+    );
+  });
+
+  it('installs deterministic constant UV0 and tangent attributes when streams are omitted', () => {
+    const recording = createResourceGL('default-geometry-streams');
+    const cache = new WebGLRendererResourceCache(recording.gl, 9);
+    const transaction = cache.beginRender();
+
+    const resource = transaction.useGeometry(triangle(), 'Mesh');
+    transaction.commit();
+
+    expect(resource.textureCoordinates0Buffer).toBeUndefined();
+    expect(resource.tangentBuffer).toBeUndefined();
+    expect(recording.disableVertexAttribArray.mock.calls).toEqual([[2], [3]]);
+    expect(recording.vertexAttrib2f.mock.calls).toEqual([[2, 0, 0]]);
+    expect(recording.vertexAttrib4f.mock.calls).toEqual([[3, 1, 0, 0, 1]]);
+  });
+
   it('sweeps omitted program and geometry keys before clearing the remaining residents', () => {
     const recording = createResourceGL('sweep');
     const cache = new WebGLRendererResourceCache(recording.gl, 1);
@@ -247,6 +306,36 @@ describe('WebGLRendererResourceCache', () => {
       expect(recording.deleteProgram).toHaveBeenCalledTimes(deletedPrograms);
     },
   );
+
+  it('deletes every candidate buffer when the third stream upload fails', () => {
+    const operationalError = new Error('tangent upload failed');
+    const recording = createResourceGL('third-stream-upload', {
+      throwBufferDataAt: 3,
+      bufferDataError: operationalError,
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 10);
+    const transaction = cache.beginRender();
+
+    let caught: unknown;
+    try {
+      transaction.useGeometry(geometryWithUvsAndTangents(), 'BrokenMesh');
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).cause).toBe(operationalError);
+    expect(recording.deleteBuffer.mock.calls.map(([value]) => value)).toEqual(
+      recording.buffers.slice().reverse(),
+    );
+    expect(recording.deleteVertexArray.mock.calls.map(([value]) => value)).toEqual(
+      recording.vertexArrays,
+    );
+    transaction.rollback();
+    cache.dispose(false);
+    expect(recording.deleteBuffer).toHaveBeenCalledTimes(3);
+    expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
+  });
 
   it.each([
     {
@@ -702,7 +791,10 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
   });
   const bindBuffer = vi.fn();
   const enableVertexAttribArray = vi.fn();
+  const disableVertexAttribArray = vi.fn();
   const vertexAttribPointer = vi.fn();
+  const vertexAttrib2f = vi.fn();
+  const vertexAttrib4f = vi.fn();
   const uploads: Array<{
     readonly target: number;
     readonly length: number;
@@ -731,7 +823,10 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
     deleteBuffer,
     bindBuffer,
     enableVertexAttribArray,
+    disableVertexAttribArray,
     vertexAttribPointer,
+    vertexAttrib2f,
+    vertexAttrib4f,
     bufferData: vi.fn(
       (target: number, data: ArrayLike<number>, usage: number) => {
         uploadAttempt += 1;
@@ -785,7 +880,10 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
     deleteBuffer,
     bindBuffer,
     enableVertexAttribArray,
+    disableVertexAttribArray,
     vertexAttribPointer,
+    vertexAttrib2f,
+    vertexAttrib4f,
   };
 }
 
@@ -799,6 +897,24 @@ function indexedTriangleWithNormals(offset = 0) {
   return createWebGLGeometry({
     positions: [offset, 0, 0, offset + 1, 0, 0, offset, 1, 0],
     normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+    indices: [0, 1, 2],
+  });
+}
+
+function geometryWithUvsAndTangents(offset = 0) {
+  return createWebGLGeometry({
+    positions: [offset, 0, 0, offset + 1, 0, 0, offset, 1, 0],
+    textureCoordinates0: [0, 0, 1, 0, 0, 1],
+    tangents: [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
+  });
+}
+
+function indexedTriangleWithAllStreams(offset = 0) {
+  return createWebGLGeometry({
+    positions: [offset, 0, 0, offset + 1, 0, 0, offset, 1, 0],
+    normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+    textureCoordinates0: [0, 0, 1, 0, 0, 1],
+    tangents: [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
     indices: [0, 1, 2],
   });
 }

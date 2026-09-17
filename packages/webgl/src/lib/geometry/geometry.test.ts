@@ -28,6 +28,8 @@ describe('createWebGLGeometry', () => {
     expect(getWebGLGeometryData(geometry)).toEqual({
       positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
       normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+      tangents: undefined,
+      textureCoordinates0: undefined,
       indices: new Uint32Array([0, 1, 2]),
       bounds: {
         minimumX: 0,
@@ -53,6 +55,34 @@ describe('createWebGLGeometry', () => {
     ]);
   });
 
+  test('snapshots supplied UV0 pairs and tangent quartets into opaque Float32 data', () => {
+    const textureCoordinates0 = [0, 0, 1, 0, 0, 1];
+    const tangents = [
+      1, 0, 0, 1,
+      0, 1, 0, -1,
+      0, 0, 1, 1,
+    ];
+    const geometry = createWebGLGeometry({
+      positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      textureCoordinates0,
+      tangents,
+    });
+    textureCoordinates0[2] = 0.25;
+    tangents[3] = -1;
+
+    const data = getWebGLGeometryData(geometry);
+    expect(data.textureCoordinates0).toEqual(
+      new Float32Array([0, 0, 1, 0, 0, 1]),
+    );
+    expect(data.tangents).toEqual(
+      new Float32Array([
+        1, 0, 0, 1,
+        0, 1, 0, -1,
+        0, 0, 1, 1,
+      ]),
+    );
+  });
+
   test('accepts non-indexed triangles and derives their counts', () => {
     const geometry = createWebGLGeometry({
       positions: new Float64Array([
@@ -68,6 +98,8 @@ describe('createWebGLGeometry', () => {
     expect(geometry.vertexCount).toBe(6);
     expect(geometry.triangleCount).toBe(2);
     expect(getWebGLGeometryData(geometry).normals).toBeUndefined();
+    expect(getWebGLGeometryData(geometry).textureCoordinates0).toBeUndefined();
+    expect(getWebGLGeometryData(geometry).tangents).toBeUndefined();
     expect(getWebGLGeometryData(geometry).indices).toBeUndefined();
   });
 
@@ -173,6 +205,38 @@ describe('createWebGLGeometry', () => {
         normals: [0, 0, 0, 0, 1, 0, 0, 1, 0],
       },
       /createWebGLGeometry normals\[0\.\.2\] must be nonzero/,
+    ],
+    [
+      {
+        positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+        textureCoordinates0: [0, 0, 1, 0],
+      },
+      /createWebGLGeometry textureCoordinates0 length must equal vertexCount 3 \* 2/,
+    ],
+    [
+      {
+        positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+        textureCoordinates0: [0, 0, Number.NaN, 0, 0, 1],
+      },
+      /createWebGLGeometry textureCoordinates0\[2\] must be finite/,
+    ],
+    [
+      {
+        positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+        tangents: [1, 0, 0, 1, 1, 0, 0, 1],
+      },
+      /createWebGLGeometry tangents length must equal vertexCount 3 \* 4/,
+    ],
+    [
+      {
+        positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+        tangents: [
+          1, 0, 0, 1,
+          1, 0, Number.POSITIVE_INFINITY, 1,
+          1, 0, 0, 1,
+        ],
+      },
+      /createWebGLGeometry tangents\[6\] must be finite/,
     ],
   ])('rejects malformed triangle input %#', (input, message) => {
     expect(() => createWebGLGeometry(input)).toThrow(message);

@@ -2,6 +2,9 @@ import { WEBGL_BUILT_IN_PROGRAM_SOURCES } from './program-sources.js';
 
 export type WebGLProgramKey = 'unlit' | 'lambert' | 'shadow-depth';
 
+export const WEBGL_TEXTURE_COORDINATES_0_ATTRIBUTE = 2;
+export const WEBGL_TANGENT_ATTRIBUTE = 3;
+
 interface WebGLProgramBase {
   readonly key: WebGLProgramKey;
   readonly program: WebGLProgram;
