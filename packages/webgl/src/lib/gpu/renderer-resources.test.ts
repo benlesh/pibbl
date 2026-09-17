@@ -58,12 +58,23 @@ describe('WebGLRendererResourceCache', () => {
     );
     transaction.commit();
 
-    expect(recording.uploads).toEqual([
+    expect(recording.uploads.map(({ target, length, usage }) => ({
+      target,
+      length,
+      usage,
+    }))).toEqual([
       { target: recording.gl.ARRAY_BUFFER, length: 9, usage: recording.gl.STATIC_DRAW },
       { target: recording.gl.ARRAY_BUFFER, length: 9, usage: recording.gl.STATIC_DRAW },
       { target: recording.gl.ARRAY_BUFFER, length: 6, usage: recording.gl.STATIC_DRAW },
       { target: recording.gl.ARRAY_BUFFER, length: 12, usage: recording.gl.STATIC_DRAW },
       { target: recording.gl.ELEMENT_ARRAY_BUFFER, length: 3, usage: recording.gl.STATIC_DRAW },
+    ]);
+    expect(recording.uploads.map(upload => upload.values)).toEqual([
+      [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      [0, 0, 1, 0, 0, 1, 0, 0, 1],
+      [0, 0, 1, 0, 0, 1],
+      [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
+      [0, 1, 2],
     ]);
     expect(recording.enableVertexAttribArray.mock.calls).toEqual([
       [0], [1], [2], [3],
@@ -101,6 +112,7 @@ describe('WebGLRendererResourceCache', () => {
 
     expect(resource.textureCoordinates0Buffer).toBeUndefined();
     expect(resource.tangentBuffer).toBeUndefined();
+    expect(recording.createBuffer).toHaveBeenCalledOnce();
     expect(recording.disableVertexAttribArray.mock.calls).toEqual([[2], [3]]);
     expect(recording.vertexAttrib2f.mock.calls).toEqual([[2, 0, 0]]);
     expect(recording.vertexAttrib4f.mock.calls).toEqual([[3, 1, 0, 0, 1]]);
@@ -487,7 +499,11 @@ describe('WebGLRendererResourceCache', () => {
       /LostSphere.*geometry.*context.*lost/i,
     );
     expect(returned).toBeUndefined();
-    expect(recording.uploads).toEqual([
+    expect(recording.uploads.map(({ target, length, usage }) => ({
+      target,
+      length,
+      usage,
+    }))).toEqual([
       {
         target: recording.gl.ARRAY_BUFFER,
         length: 9,
@@ -799,6 +815,7 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
     readonly target: number;
     readonly length: number;
     readonly usage: number;
+    readonly values: readonly number[];
   }> = [];
   const methods: Record<string, unknown> = {
     createShader,
@@ -838,7 +855,12 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
             new Error('injected buffer upload failure')
           );
         }
-        uploads.push({ target, length: data.length, usage });
+        uploads.push({
+          target,
+          length: data.length,
+          usage,
+          values: Array.from(data),
+        });
         if (uploadAttempt === controls.loseContextAfterBufferDataAt) {
           contextLost = true;
         }
