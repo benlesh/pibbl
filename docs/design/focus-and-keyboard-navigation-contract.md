@@ -249,3 +249,7 @@ not enroll, and orbit input leaves logical focus ownership independent.
 
 See [Canvas accessibility guidance](./canvas-accessibility-guidance.md) for the
 separate semantic responsibility.
+
+## 3D physics presentation
+
+An interactive physics-backed WebGL mesh remains the same logical focus target. Its committed physics presentation contributes to the one settled model shared by rasterization, depth picking, and projected focus bounds; authoritative physics queries and collision events do not create focus candidates or change keyboard order. Disabled or removed geometry follows the ordinary committed WebGL target and focus-removal rules.

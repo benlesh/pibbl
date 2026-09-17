@@ -347,3 +347,7 @@ scene graph, hidden editable DOM, pointer/touch gesture recognition, or
 cross-browser normalization beyond the stated logical contracts. Optional
 logical focus does not create screen-reader semantics or generated DOM
 descendants.
+
+## 3D physics interaction boundary
+
+WebGL coordinate events target the top committed rendered mesh through camera-aware depth picking. `@crc/physics/3d` ray, shape, overlap, AABB, and point queries instead read authoritative committed collider state in world coordinates and never schedule or advance simulation. CRC provides no automatic pointer-to-physics bridge: applications that grab or inspect a body explicitly derive a world ray, run a physics query, and issue generation-bound commands while normal event propagation and pointer capture remain unchanged.

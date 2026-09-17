@@ -10,7 +10,15 @@ import {
 } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import {
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from "node:path";
 import { transformAsync as babelTransform } from "@babel/core";
 import { parse } from "@babel/parser";
 import transformReactJsx from "@babel/plugin-transform-react-jsx";
@@ -67,6 +75,7 @@ const publicGuidePaths = [
   "docs/site/learn/guides/custom-components-and-primitives.md",
   "docs/site/learn/guides/focus-and-keyboard.md",
   "docs/site/learn/guides/jsx-troubleshooting.md",
+  "docs/site/learn/guides/physics-3d.md",
   "docs/site/learn/guides/react-integration.md",
   "docs/site/learn/guides/signals-and-animation.md",
   "docs/site/learn/guides/state-and-lifecycle.md",
@@ -99,6 +108,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/mesh.md",
   "docs/site/api/components/overlay.md",
   "docs/site/api/components/path.md",
+  "docs/site/api/components/physics-shape-3d.md",
+  "docs/site/api/components/physics-world-3d.md",
   "docs/site/api/components/point-light.md",
   "docs/site/api/components/polygon.md",
   "docs/site/api/components/rectangle.md",
@@ -136,6 +147,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/measure-element.md",
   "docs/site/api/functions/normalize-edges.md",
   "docs/site/api/functions/parallel.md",
+  "docs/site/api/functions/physics-3d.md",
   "docs/site/api/functions/repeat.md",
   "docs/site/api/functions/resolve-box.md",
   "docs/site/api/functions/resolve-length.md",
@@ -157,6 +169,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/crc-line-path.md",
   "docs/site/api/hooks/crc-memo.md",
   "docs/site/api/hooks/crc-orbit-camera.md",
+  "docs/site/api/hooks/crc-physics-body-3d.md",
+  "docs/site/api/hooks/crc-physics-world-3d.md",
   "docs/site/api/hooks/crc-playback.md",
   "docs/site/api/hooks/crc-rect-path.md",
   "docs/site/api/hooks/crc-ref.md",
@@ -170,6 +184,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/events.md",
   "docs/site/api/types/filters.md",
   "docs/site/api/types/layout.md",
+  "docs/site/api/types/physics-3d.md",
   "docs/site/api/types/styles.md",
   "docs/site/api/types/webgl.md",
   "docs/site/learn/index.md",
@@ -781,6 +796,12 @@ async function typecheckCompleteSnippets(snippets) {
               "@crc/webgl": [
                 join(repositoryRoot, "packages/webgl/src/index.ts"),
               ],
+              "@crc/physics/3d": [
+                join(repositoryRoot, "packages/physics/src/3d.ts"),
+              ],
+              "@crc/physics/3d/geometry": [
+                join(repositoryRoot, "packages/physics/src/3d-geometry.ts"),
+              ],
             },
             skipLibCheck: true,
             strict: true,
@@ -1298,7 +1319,7 @@ await assert.doesNotReject(
     assertLocalLinks(
       "docs/site/learn/tutorials/diagram-editor/index.md",
       "[finished editor](/tutorials/diagram-editor/finished-editor.png)",
-  ),
+    ),
   "Studio-served root-relative public assets must resolve from playground/public.",
 );
 await assert.rejects(
@@ -2383,7 +2404,14 @@ const fieldMigrationResult = assertFieldMigrationCompleteness(
   fieldMigrationArguments,
 );
 const trackedContractEvidencePaths = new Set(
-  trackedRepositoryFiles(["packages/core/src", "packages/core/test"]),
+  trackedRepositoryFiles([
+    "packages/core/src",
+    "packages/core/test",
+    "packages/physics/src",
+    "packages/physics/test",
+    "packages/webgl/src",
+    "packages/webgl/test",
+  ]),
 );
 const requestedContractEvidencePaths = new Set(
   contractPreservationBaseline.evidenceMappings.flatMap(({ source, test }) => [
@@ -2691,6 +2719,21 @@ const matrixRequirements = [
       "shadows.test.ts",
       "shadow-resources.test.ts",
       "webgl-lighting-lab.test.ts",
+    ],
+  },
+  {
+    topic: /CRC-owned 3D worlds, geometry, inference/u,
+    guides: [
+      "site/learn/guides/physics-3d.md",
+      "site/api/components/physics-world-3d.md",
+      "design/signals-and-scheduling-contract.md",
+      "design/runtime-resource-ownership.md",
+    ],
+    evidence: [
+      "world.test.ts",
+      "controller.test.tsx",
+      "presentation.test.tsx",
+      "physics-3d-slice.test.ts",
     ],
   },
   {
@@ -3882,10 +3925,15 @@ export async function verifyMutationProbes() {
   );
 
   const repeatedEvidence = structuredClone(contractPreservationBaseline);
-  repeatedEvidence.evidenceMappings[26].source =
-    repeatedEvidence.evidenceMappings[25].source;
-  repeatedEvidence.evidenceMappings[26].test =
-    repeatedEvidence.evidenceMappings[25].test;
+  const firstGapEvidence = repeatedEvidence.evidenceMappings.find(
+    ({ id }) => id === "flex-gap-default",
+  );
+  const secondGapEvidence = repeatedEvidence.evidenceMappings.find(
+    ({ id }) => id === "flex-axis-gap-precedence",
+  );
+  assert.ok(firstGapEvidence && secondGapEvidence);
+  secondGapEvidence.source = firstGapEvidence.source;
+  secondGapEvidence.test = firstGapEvidence.test;
   throws(
     () => assertPreservation({ manifest: repeatedEvidence }),
     /reuses identical generic/u,

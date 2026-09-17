@@ -68,6 +68,11 @@ public shapes. Moving triangle meshes and heightfields are rejected with a
 runtime diagnostic; use a convex hull or another convex shape for moving
 bodies.
 
+Runtime queries read authoritative committed collider state. They are distinct
+from WebGL renderer picking, which uses the committed camera, presented model,
+and depth-aware pick ledger. CRC does not automatically convert pointer
+coordinates into a physics ray.
+
 ## CRC 2D worlds and components
 
 Install the matching `@crc/core` version and import the world-facing entry:
@@ -96,3 +101,8 @@ physics, and both publish through the existing frame transaction.
 
 The package does not include joints, debug drawing, record/replay, workers, or
 a second scheduler.
+
+Read [Add first-class 3D physics](../../docs/site/learn/guides/physics-3d.md),
+the [`PhysicsWorld3D` API](../../docs/site/api/components/physics-world-3d.md),
+and the grouped [3D physics functions](../../docs/site/api/functions/physics-3d.md)
+and [types](../../docs/site/api/types/physics-3d.md).

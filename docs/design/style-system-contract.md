@@ -269,3 +269,7 @@ Their centers and size/radius fields describe local drawing geometry, while
 `BoxStyle` and `LayoutItemStyle` still describe allocation and placement. The
 numeric creator option types deliberately do not accept `Length`, paint,
 cursor, event, or layout fields.
+
+## 3D physics transform authority
+
+A 3D rigid-body pose contains translation and quaternion orientation, never scale. CRC forward-composes exact authored transform lineage below a compound body; scale and mirroring are baked into immutable collider geometry and automatic mass/inertia. Enabled dynamics reject competing authored root-pose changes, kinematic targets are application-owned moving poses, statics follow authored placement as topology, and disabled bodies stop physics presentation and accept authored motion. Shape/BVH and shape-to-render-geometry identity caches use weak descriptor keys rather than reference-counted runtime ownership.

@@ -47,6 +47,12 @@ drawing primitives without React or generated DOM.
   whole-run writer leases; component-owned playback; update-driven
   transitions; and ordered post-render milestones. All animation advances in
   the existing realm scheduler and writes ordinary signals atomically.
+- First-class CRC-owned physics is implemented through the optional
+  `@crc/physics` package. Dimension-specific `/2d` and `/3d` runtimes share the
+  realm scheduler without a second loop; `/2d/geometry` and `/3d/geometry` are
+  renderer-independent pure entries. The 3D runtime integrates with settled
+  WebGL presentation, inference, compound colliders, deterministic queries,
+  commands, events, sleeping, CCD, and generation-bound handles.
 - The local `_bmad-output/` directory remains discovery input, not normative
   behavior. Plan 003's implemented design, architecture, contracts, and
   implementation record supersede its earlier layout proposals where they
@@ -83,6 +89,9 @@ either as the current result unless a fresh run reproduces it.
 - `packages/webgl`: the optional public `@crc/webgl` WebGL2-island components,
   immutable geometry, hooks, render/pick backend, and deterministic ownership
   evidence.
+- `packages/physics`: optional CRC-owned 2D and 3D geometry, worlds, solvers,
+  WebGL augmentation, public handles/queries, and deterministic ownership
+  evidence. It deliberately has no root runtime barrel.
 - `packages/scenarios`: private learning examples and deterministic test-lab
   scenarios. Keep their catalogs and presentation metadata separate.
 - `packages/types`: deliberately minimal compatibility package; shared public
@@ -226,6 +235,16 @@ transform, and component prop/style types. `Mesh` plus immutable
 package has no second JSX runtime, element constructor, fragment, core
 hook/event vocabulary, public GL context, shader/draw callback, or analytic hit
 callback.
+
+Public 3D physics surface comes from `@crc/physics/3d`: `PhysicsWorld3D`, the
+eight physics-shape render components, body/collider descriptor factories,
+world/body hooks, commands, authoritative queries, and their public option,
+handle, event, and result types. Immutable shapes and pure bounds, mass,
+containment, distance, overlap, contact, ray-cast, shape-cast, and transform
+operations are also available from `@crc/physics/3d/geometry` without loading
+core, WebGL, DOM, Canvas, or a scheduler. There is no root `@crc/physics`
+barrel, manual world step, debug renderer, public replay/history, joints,
+worker loop, or 2.5D bridge.
 
 Current interaction supports DOM-aligned pointer, mouse, touch, wheel,
 keyboard/focus, editing/composition, clipboard, and drag/drop event facades,

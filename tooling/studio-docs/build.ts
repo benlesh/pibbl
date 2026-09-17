@@ -3,7 +3,7 @@ import { relative, resolve } from "node:path";
 
 import {
   collectPublicExports,
-  crcPublicEntryPaths,
+  crcStudioPublicEntryPaths,
   validateApiCoverage,
   type ApiCoverage,
   type ApiCoverageDestination,
@@ -155,7 +155,7 @@ export async function buildStudioDocumentation(
 
   const inventory =
     options.apiInventory ??
-    (await collectPublicExports(crcPublicEntryPaths, {}));
+    (await collectPublicExports(crcStudioPublicEntryPaths, {}));
   const apiCoverage = validateApiCoverage(
     inventory,
     pages

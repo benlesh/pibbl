@@ -275,3 +275,7 @@ JSX or `createElement` over branded `CRCElement` descriptors.
 - [W3C CSSOM View — topmost-first hit-test order](https://www.w3.org/TR/cssom-view/#dom-document-elementsfrompoint)
 - [W3C CSSOM View — MouseEvent coordinate extensions](https://www.w3.org/TR/cssom-view/#extensions-to-the-mouseevent-interface)
 - [WHATWG HTML — Canvas paths, clipping, hit testing, and drawing images](https://html.spec.whatwg.org/multipage/canvas.html)
+
+## 3D physics queries
+
+Mouse and pointer events report root-logical Canvas coordinates and WebGL renderer targets; they are not physics query results. A physics interaction explicitly projects the pointer through the committed camera to a world-space ray, calls the authoritative `@crc/physics/3d` query surface, and sends commands through a generation-bound body handle. Queries neither synthesize DOM events nor start a private simulation/render loop.

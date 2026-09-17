@@ -4,6 +4,7 @@ import { ModuleKind } from "typescript/unstable/sync";
 import {
   crcPublicEntryPaths,
   crcPhysicsEntryPaths,
+  crcStudioPublicEntryPaths,
   collectPublicExports,
   validateApiCoverage,
 } from "./api-exports";
@@ -158,6 +159,10 @@ assert.deepEqual(coverage.missingTypes, []);
 
 const crcInventory = await collectPublicExports(crcPublicEntryPaths, {});
 const physicsInventory = await collectPublicExports(crcPhysicsEntryPaths, {});
+const studioInventory = await collectPublicExports(
+  crcStudioPublicEntryPaths,
+  {},
+);
 assert.ok(crcInventory.root.values.length > 0);
 assert.ok(crcInventory.root.types.length > 0);
 assert.equal(crcInventory.webgl.values.length, 14);
@@ -170,6 +175,11 @@ assert.equal(physicsInventory.physics3d.values.length, 48);
 assert.equal(physicsInventory.physics3d.types.length, 48);
 assert.equal(physicsInventory.physics3dGeometry.values.length, 18);
 assert.equal(physicsInventory.physics3dGeometry.types.length, 13);
+assert.deepEqual(studioInventory.physics3d, physicsInventory.physics3d);
+assert.deepEqual(
+  studioInventory.physics3dGeometry,
+  physicsInventory.physics3dGeometry,
+);
 
 process.stdout.write(
   `Validated public API coverage: ${crcInventory.root.values.length} core values, ` +

@@ -103,6 +103,7 @@ starts from installation and mounting and does not require the JSX guides.
 - [Manage state and lifecycle](docs/site/learn/guides/state-and-lifecycle.md)
 - [Add WebGL islands](docs/site/learn/guides/webgl-islands.md)
 - [Light WebGL scenes](docs/site/learn/guides/webgl-lighting.md)
+- [Add first-class 3D physics](docs/site/learn/guides/physics-3d.md)
 - [Add focus and keyboard navigation](docs/site/learn/guides/focus-and-keyboard.md)
 - [Create custom components and primitives](docs/site/learn/guides/custom-components-and-primitives.md)
 - [Integrate with React](docs/site/learn/guides/react-integration.md)
@@ -125,9 +126,9 @@ corepack pnpm@11.21.0 playground
 ```
 
 Open <http://localhost:5173/#/examples>. The CRC Interactive Examples Studio
-contains 53 focused lessons: 52 use JSX and one demonstrates the complete
+contains 66 focused lessons: 65 use JSX and one demonstrates the complete
 non-JSX API. Every lesson pairs a live Canvas with editable, type-aware source.
-The separate `#/testing` area contains 20 deterministic laboratories used by
+The separate `#/testing` area contains 23 deterministic laboratories used by
 browser verification. Old `#/scenarios` URLs redirect there.
 
 To exercise built package output instead of source aliases:
@@ -154,10 +155,13 @@ corepack pnpm@11.21.0 playground:built
   `Cube`, `Sphere`, five analytic lights, `WebGLBackground`,
   `createWebGLGeometry`, `crcAnimationFrame`, `crcOrbitCamera`, and their public
   camera, orbit, geometry, material, shadow, transform, and component types
+- Optional CRC-owned physics from dimension-specific `@crc/physics/2d` and
+  `@crc/physics/3d` entries, with renderer-independent `/geometry` subpaths;
+  there is deliberately no root `@crc/physics` barrel
 - Compiler-only entries: `@crc/core/jsx-runtime` and
   `@crc/core/jsx-dev-runtime`
 
-Both packages use the same `@crc/core` JSX runtime, element brand, scheduler,
+All official packages use the same `@crc/core` JSX runtime, element brand, scheduler,
 and event system. The exported `@crc/core/internal` friend seam is reserved for
 matching official CRC packages and is not an application compatibility promise.
 
@@ -198,6 +202,12 @@ declare a settled scene; source order governs identity and ties while the
 renderer plans genuine shadow-depth passes followed by opaque and transparent
 color queues. Canvas/`Path2D`, font, decoded-image, `OffscreenCanvas`, and
 WebGL2 behavior remain browser-owned.
+
+Physics adds no manual step API or second clock. Renderer pointer picking and
+authoritative physics queries are distinct; applications explicitly construct
+world-space physics rays when an interaction needs both. CRC physics does not
+include joints, vehicles, character controllers, debug rendering, public
+replay/history, workers, or 2.5D collision.
 
 ## License
 
