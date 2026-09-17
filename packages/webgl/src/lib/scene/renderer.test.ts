@@ -778,6 +778,52 @@ describe('WebGLSceneRenderer', () => {
     expect(recording.deleteVertexArray).not.toHaveBeenCalled();
   });
 
+  it('abandons a partially allocated shadow array after context loss', () => {
+    const failure = new Error('context-losing shadow allocation failed');
+    const recording = createRendererGL({
+      loseContextAt: { operation: 'texStorage3D', at: 1 },
+      throws: [{ operation: 'texStorage3D', at: 1, error: failure }],
+    });
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+
+    expect(() => renderer.render(scene({
+      meshes: [drawable],
+      lights: [directionalLight()],
+      opaque: [drawable],
+      shadowPlans: [directionalPlan(drawable)],
+    }))).toThrow(failure);
+
+    expect(recording.deleteTexture).not.toHaveBeenCalled();
+    expect(recording.deleteFramebuffer).not.toHaveBeenCalled();
+  });
+
+  it('abandons a shadow array after a context-losing depth draw', () => {
+    const failure = new Error('context-losing shadow draw failed');
+    const recording = createRendererGL({
+      loseContextAt: { operation: 'drawArrays', at: 1 },
+      throws: [{ operation: 'drawArrays', at: 1, error: failure }],
+    });
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+
+    expect(() => renderer.render(scene({
+      meshes: [drawable],
+      lights: [directionalLight()],
+      opaque: [drawable],
+      shadowPlans: [directionalPlan(drawable)],
+    }))).toThrow(failure);
+
+    expect(recording.deleteTexture).not.toHaveBeenCalled();
+    expect(recording.deleteFramebuffer).not.toHaveBeenCalled();
+  });
+
   it('delegates context invalidation and ordinary disposal exactly once', () => {
     const lost = createRendererGL();
     const lostRenderer = new WebGLSceneRenderer(lost.gl, 7);
@@ -1185,6 +1231,7 @@ interface RendererGLRecording {
   readonly drawElements: ReturnType<typeof vi.fn>;
   readonly readPixels: ReturnType<typeof vi.fn>;
   readonly createFramebuffer: ReturnType<typeof vi.fn>;
+  readonly deleteFramebuffer: ReturnType<typeof vi.fn>;
   readonly framebufferTexture2D: ReturnType<typeof vi.fn>;
   readonly framebufferTextureLayer: ReturnType<typeof vi.fn>;
   readonly createTexture: ReturnType<typeof vi.fn>;

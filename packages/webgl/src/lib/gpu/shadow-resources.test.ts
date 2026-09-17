@@ -177,6 +177,43 @@ describe('WebGLShadowResourceCache', () => {
     expect(incomplete.deleteFramebuffer).toHaveBeenCalledOnce();
   });
 
+  it('abandons partially allocated handles when array allocation loses the context', () => {
+    const failure = new Error('context-losing allocation failed');
+    const recording = createShadowGL({
+      texStorage3DErrorAt: 1,
+      texStorage3DError: failure,
+      loseContextOnTexStorageError: true,
+    });
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    const transaction = cache.beginRender();
+    transaction.useDirectional(plan(), () => undefined);
+
+    expect(() => transaction.getBindings()).toThrow(failure);
+    expect(recording.gl.isContextLost()).toBe(true);
+    transaction.rollback(true);
+
+    expect(recording.deleteTexture).not.toHaveBeenCalled();
+    expect(recording.deleteFramebuffer).not.toHaveBeenCalled();
+  });
+
+  it('abandons a depth candidate when its draw callback loses the context', () => {
+    const failure = new Error('context-losing depth draw failed');
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    const transaction = cache.beginRender();
+    transaction.useDirectional(plan(), () => {
+      recording.loseContext();
+      throw failure;
+    });
+
+    expect(() => transaction.getBindings()).toThrow(failure);
+    expect(recording.gl.isContextLost()).toBe(true);
+    transaction.rollback(true);
+
+    expect(recording.deleteTexture).not.toHaveBeenCalled();
+    expect(recording.deleteFramebuffer).not.toHaveBeenCalled();
+  });
+
   it('uses one layer for a spot and abandons all handles after context loss', () => {
     const recording = createShadowGL({ maxTextureSize: 640 });
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
@@ -456,11 +493,13 @@ function createShadowGL(options: {
   readonly framebufferIncompleteAt?: number;
   readonly texStorage3DErrorAt?: number;
   readonly texStorage3DError?: Error;
+  readonly loseContextOnTexStorageError?: boolean;
   readonly deleteTextureError?: Error;
 } = {}) {
   const textures: object[] = [];
   let framebufferStatusCount = 0;
   let texStorage3DCount = 0;
+  let contextLost = false;
   const gl = {
     MAX_TEXTURE_SIZE: 1,
     FRAMEBUFFER: 3,
@@ -479,6 +518,7 @@ function createShadowGL(options: {
     CLAMP_TO_EDGE: 29,
     NONE: 30,
     getParameter: vi.fn(() => options.maxTextureSize ?? 4096),
+    isContextLost: vi.fn(() => contextLost),
     createFramebuffer: vi.fn(() => ({ kind: 'framebuffer' })),
     deleteFramebuffer: vi.fn(),
     bindFramebuffer: vi.fn(),
@@ -504,6 +544,7 @@ function createShadowGL(options: {
     texStorage3D: vi.fn(() => {
       texStorage3DCount += 1;
       if (texStorage3DCount === options.texStorage3DErrorAt) {
+        if (options.loseContextOnTexStorageError) contextLost = true;
         throw options.texStorage3DError;
       }
     }),
@@ -518,5 +559,8 @@ function createShadowGL(options: {
     createTexture: vi.mocked(gl.createTexture),
     deleteTexture: vi.mocked(gl.deleteTexture),
     texStorage3D: vi.mocked(gl.texStorage3D),
+    loseContext() {
+      contextLost = true;
+    },
   };
 }

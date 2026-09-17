@@ -236,34 +236,25 @@ export class WebGLShadowResourceCache {
     this.requireCandidate(candidate);
     if (candidate.finalized) return;
     candidate.finalized = true;
-    try {
-      assignStableSlots(candidate.requests, this.resident?.records);
-      const needsCandidate = this.needsCandidate(candidate.requests);
-      if (candidate.requests.size === 0) {
-        candidate.bindings = Object.freeze({
-          texture: this.requireFallback(candidate),
-        });
-        return;
-      }
-      if (!needsCandidate) {
-        candidate.bindings = Object.freeze({
-          texture: this.resident!.array.texture,
-        });
-        return;
-      }
-      const resolution = requireCommonResolution(candidate.requests);
-      const array = createShadowArray(this.gl, resolution);
-      candidate.array = array;
-      candidate.bindings = Object.freeze({ texture: array.texture });
-      this.renderCandidate(array, candidate.requests);
-    } catch (error) {
-      if (candidate.array) {
-        const array = candidate.array;
-        candidate.array = undefined;
-        deleteShadowArray(this.gl, array);
-      }
-      throw error;
+    assignStableSlots(candidate.requests, this.resident?.records);
+    const needsCandidate = this.needsCandidate(candidate.requests);
+    if (candidate.requests.size === 0) {
+      candidate.bindings = Object.freeze({
+        texture: this.requireFallback(candidate),
+      });
+      return;
     }
+    if (!needsCandidate) {
+      candidate.bindings = Object.freeze({
+        texture: this.resident!.array.texture,
+      });
+      return;
+    }
+    const resolution = requireCommonResolution(candidate.requests);
+    const array = createShadowArray(this.gl, resolution);
+    candidate.array = array;
+    candidate.bindings = Object.freeze({ texture: array.texture });
+    this.renderCandidate(array, candidate.requests);
   }
 
   private needsCandidate(
@@ -563,7 +554,7 @@ function createShadowArray(
       capacity: WEBGL_MAX_SHADOW_VIEWS,
     });
   } finally {
-    if (!published) {
+    if (!published && !contextLossPreventsShadowCleanup(gl)) {
       if (texture) runShadowCleanup(() => gl.deleteTexture(texture!));
       runShadowCleanup(() => gl.deleteFramebuffer(framebuffer));
     }
@@ -592,7 +583,9 @@ function createDepthTextureArray(
     published = true;
     return texture;
   } finally {
-    if (!published) runShadowCleanup(() => gl.deleteTexture(texture));
+    if (!published && !contextLossPreventsShadowCleanup(gl)) {
+      runShadowCleanup(() => gl.deleteTexture(texture));
+    }
   }
 }
 
@@ -614,6 +607,21 @@ function deleteShadowArray(
 
 function shadowKindName(kind: SettledWebGLShadowPlan['kind']): string {
   return kind[0]!.toUpperCase() + kind.slice(1);
+}
+
+function contextLossPreventsShadowCleanup(
+  gl: WebGL2RenderingContext,
+): boolean {
+  try {
+    return gl.isContextLost();
+  } catch (error) {
+    try {
+      globalThis.reportError(error);
+    } catch {
+      // Unknown validity remains a reason to abandon generation handles.
+    }
+    return true;
+  }
 }
 
 function runShadowCleanup(cleanup: () => void): void {
