@@ -5,7 +5,7 @@ import {
   type CRCBackendDriver,
   type CRCBackendPrimitiveProgram,
 } from '@crc/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   Cube,
   Mesh,
@@ -21,7 +21,11 @@ import {
   discardWebGLSceneComposer,
 } from '../scene/composer.js';
 import type { WebGLSceneComposer } from '../scene/types.js';
-import { resolveWebGLMaterial } from './material.js';
+import { createInternalWebGLTexture } from '../texture/texture.js';
+import {
+  resolveWebGLMaterial,
+  resolveWebGLPBRMetallicRoughnessMaterial,
+} from './material.js';
 
 describe('Lambert mesh materials', () => {
   it('submits default lit Lambert data without issuing GL work', () => {
@@ -66,10 +70,14 @@ describe('Lambert mesh materials', () => {
         emissiveIntensity: 2,
       },
     });
-    expect(Object.isFrozen(scene.meshes[0]!.material)).toBe(true);
-    expect(Object.isFrozen(scene.meshes[0]!.material.emissiveColor)).toBe(true);
+    const submittedMaterial = scene.meshes[0]!.material;
+    if (submittedMaterial.type !== 'lambert') {
+      throw new Error('Expected Mesh to submit a Lambert material.');
+    }
+    expect(Object.isFrozen(submittedMaterial)).toBe(true);
+    expect(Object.isFrozen(submittedMaterial.emissiveColor)).toBe(true);
     descriptor.emissiveIntensity = 9;
-    expect(scene.meshes[0]!.material.emissiveIntensity).toBe(2);
+    expect(submittedMaterial.emissiveIntensity).toBe(2);
   });
 
   it('allows built-ins to opt out of lighting and reports field-specific validation', () => {
@@ -118,6 +126,61 @@ describe('Lambert mesh materials', () => {
       type: 'lambert',
       emissiveIntensity: null as unknown as number,
     })).toThrow('Mesh style.material.emissiveIntensity must be finite');
+  });
+});
+
+describe('imported metallic-roughness materials', () => {
+  it('applies the glTF factor defaults to one immutable closed descriptor', () => {
+    const material = resolveWebGLPBRMetallicRoughnessMaterial(
+      'Model',
+      { type: 'pbr-metallic-roughness' },
+    );
+
+    expect(material).toEqual({
+      type: 'pbr-metallic-roughness',
+      baseColorFactor: [1, 1, 1, 1],
+      metallicFactor: 1,
+      roughnessFactor: 1,
+    });
+    expect(Object.isFrozen(material)).toBe(true);
+    expect(Object.isFrozen(material.baseColorFactor)).toBe(true);
+  });
+
+  it.each([
+    [{ metallicFactor: -0.01 }, 'metallicFactor'],
+    [{ roughnessFactor: 1.01 }, 'roughnessFactor'],
+    [{ baseColorFactor: [1, 1, Number.NaN, 1] }, 'baseColorFactor'],
+  ])('rejects out-of-range glTF factors %#', (fields, expectedField) => {
+    expect(() => resolveWebGLPBRMetallicRoughnessMaterial('Model', {
+      type: 'pbr-metallic-roughness',
+      ...fields,
+    })).toThrow(`Model material.${expectedField} must contain only finite values between 0 and 1`);
+  });
+
+  it('snapshots one immutable UV0 base-color texture binding', () => {
+    const producer = createInternalWebGLTexture({
+      width: 2,
+      height: 2,
+      close: vi.fn(),
+    } as unknown as ImageBitmap);
+    const binding = { texture: producer.texture, textureCoordinate: 0 as const };
+
+    const material = resolveWebGLPBRMetallicRoughnessMaterial('Model', {
+      type: 'pbr-metallic-roughness',
+      baseColorTexture: binding,
+    });
+
+    expect(material.baseColorTexture).toEqual(binding);
+    expect(material.baseColorTexture).not.toBe(binding);
+    expect(Object.isFrozen(material.baseColorTexture)).toBe(true);
+    producer.release();
+  });
+
+  it('rejects material fields outside the imported milestone subset', () => {
+    expect(() => resolveWebGLPBRMetallicRoughnessMaterial('Model', {
+      type: 'pbr-metallic-roughness',
+      normalTexture: {},
+    })).toThrow('Model material.normalTexture is not supported.');
   });
 });
 

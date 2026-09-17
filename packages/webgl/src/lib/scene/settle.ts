@@ -112,8 +112,9 @@ export function settleWebGLScene(composer: WebGLSceneComposer): SettledWebGLScen
   );
 
   for (const mesh of meshes) {
-    if (mesh.color[3] === 1) opaque.push(mesh);
-    else if (mesh.color[3]! > 0 && mesh.color[3]! < 1) transparent.push(mesh);
+    const alpha = settledMeshAlpha(mesh);
+    if (alpha === 1) opaque.push(mesh);
+    else if (alpha > 0 && alpha < 1) transparent.push(mesh);
     if (mesh.target) {
       recordGeometryWebGLPick(ledger, {
         componentName: mesh.componentName,
@@ -260,6 +261,7 @@ function settleMesh(
       mesh.source,
     ));
   }
+  const alpha = settledShadingAlpha(shading);
   return Object.freeze({
     ...mesh,
     model: new Float32Array(mesh.model),
@@ -267,10 +269,21 @@ function settleMesh(
     shading,
     viewDepth,
     worldBounds: transformBoundsMatrix4(mesh.model, bounds),
-    castShadow: mesh.color[3] > 0 && (mesh.castShadow ?? mesh.color[3] === 1),
-    receiveShadow: mesh.color[3] > 0 && mesh.lit &&
+    castShadow: alpha > 0 && (mesh.castShadow ?? alpha === 1),
+    receiveShadow: alpha > 0 && mesh.lit &&
       (mesh.receiveShadow ?? true),
   });
+}
+
+function settledMeshAlpha(mesh: SettledWebGLMesh): number {
+  return settledShadingAlpha(mesh.shading);
+}
+
+function settledShadingAlpha(shading: SettledWebGLShading): number {
+  return shading.kind === 'pbr-metallic-roughness' ?
+    shading.linearBaseColorFactor[3] :
+    shading.kind === 'lambert' ? shading.linearBaseColor[3] :
+      shading.displayBaseColor[3];
 }
 
 function settleShading(
@@ -278,6 +291,34 @@ function settleShading(
   normals: Float32Array | undefined,
   validatedNormalPairs: Map<CRCWebGLGeometry, Readonly<Float32Array>[]>,
 ): SettledWebGLShading {
+  if (mesh.material.type === 'pbr-metallic-roughness') {
+    if (!mesh.lit) {
+      throw new TypeError(withSource(
+        `${mesh.componentName} imported metallic-roughness material must be lit.`,
+        mesh.source,
+      ));
+    }
+    const normalMatrix = settleMeshNormalMatrix(
+      mesh,
+      normals,
+      validatedNormalPairs,
+    );
+    return Object.freeze({
+      kind: 'pbr-metallic-roughness',
+      linearBaseColorFactor: Object.freeze([
+        decodeSRGB(mesh.color[0]) * mesh.material.baseColorFactor[0],
+        decodeSRGB(mesh.color[1]) * mesh.material.baseColorFactor[1],
+        decodeSRGB(mesh.color[2]) * mesh.material.baseColorFactor[2],
+        mesh.color[3] * mesh.material.baseColorFactor[3],
+      ]) as WebGLRGBA,
+      ...(mesh.material.baseColorTexture === undefined ? {} : {
+        baseColorTexture: mesh.material.baseColorTexture,
+      }),
+      metallicFactor: mesh.material.metallicFactor,
+      roughnessFactor: mesh.material.roughnessFactor,
+      normalMatrix,
+    });
+  }
   const linearEmissive = linearContribution(
     mesh,
     'style.material.emissiveColor',
@@ -291,6 +332,29 @@ function settleShading(
       linearEmissive,
     });
   }
+  const normalMatrix = settleMeshNormalMatrix(
+    mesh,
+    normals,
+    validatedNormalPairs,
+  );
+  return Object.freeze({
+    kind: 'lambert',
+    linearBaseColor: Object.freeze([
+      decodeSRGB(mesh.color[0]),
+      decodeSRGB(mesh.color[1]),
+      decodeSRGB(mesh.color[2]),
+      mesh.color[3],
+    ]) as WebGLRGBA,
+    linearEmissive,
+    normalMatrix,
+  });
+}
+
+function settleMeshNormalMatrix(
+  mesh: WebGLMeshSubmission,
+  normals: Float32Array | undefined,
+  validatedNormalPairs: Map<CRCWebGLGeometry, Readonly<Float32Array>[]>,
+): Float32Array {
   if (normals === undefined) {
     throw new TypeError(withSource(
       `${mesh.componentName} lit geometry requires normals.`,
@@ -313,17 +377,7 @@ function settleShading(
   } catch (error) {
     throw withMeshNormalDiagnostic(mesh, error);
   }
-  return Object.freeze({
-    kind: 'lambert',
-    linearBaseColor: Object.freeze([
-      decodeSRGB(mesh.color[0]),
-      decodeSRGB(mesh.color[1]),
-      decodeSRGB(mesh.color[2]),
-      mesh.color[3],
-    ]) as WebGLRGBA,
-    linearEmissive,
-    normalMatrix,
-  });
+  return normalMatrix;
 }
 
 function settleLight(light: WebGLLightSubmission): SettledWebGLLight {
@@ -607,26 +661,43 @@ function validateMeshSubmission(mesh: WebGLMeshSubmission): void {
       mesh.source,
     ));
   }
-  if (mesh.material.type !== 'lambert') {
-    throw new TypeError(withSource(
-      `${mesh.componentName} style.material.type must be "lambert".`,
-      mesh.source,
-    ));
+  if (mesh.material.type === 'lambert') {
+    settleNonnegativeFloat32(
+      mesh,
+      'style.material.emissiveIntensity',
+      mesh.material.emissiveIntensity,
+    );
+    validateRGBA(
+      mesh,
+      'style.material.emissiveColor',
+      mesh.material.emissiveColor,
+    );
+  } else {
+    validateRGBA(
+      mesh,
+      'material.baseColorFactor',
+      mesh.material.baseColorFactor,
+    );
+    validateUnitMaterialFactor(mesh, 'metallicFactor', mesh.material.metallicFactor);
+    validateUnitMaterialFactor(mesh, 'roughnessFactor', mesh.material.roughnessFactor);
   }
-  settleNonnegativeFloat32(
-    mesh,
-    'style.material.emissiveIntensity',
-    mesh.material.emissiveIntensity,
-  );
   validateRGBA(mesh, 'style.color', mesh.color);
-  validateRGBA(
-    mesh,
-    'style.material.emissiveColor',
-    mesh.material.emissiveColor,
-  );
   if (!mesh.model.every(Number.isFinite)) {
     throw new RangeError(withSource(
       `${mesh.componentName} model matrix must contain only finite Float32 values.`,
+      mesh.source,
+    ));
+  }
+}
+
+function validateUnitMaterialFactor(
+  mesh: WebGLMeshSubmission,
+  field: 'metallicFactor' | 'roughnessFactor',
+  value: number,
+): void {
+  if (!Number.isFinite(value) || value < 0 || value > 1) {
+    throw new RangeError(withSource(
+      `${mesh.componentName} material.${field} must be finite and between 0 and 1.`,
       mesh.source,
     ));
   }

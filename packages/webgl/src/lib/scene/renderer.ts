@@ -17,6 +17,7 @@ import {
 import type {
   WebGLBuiltInProgram,
   WebGLLambertProgram,
+  WebGLPBRMetallicRoughnessProgram,
   WebGLShadowDepthProgram,
   WebGLUnlitProgram,
 } from '../gpu/program.js';
@@ -160,9 +161,9 @@ export class WebGLSceneRenderer {
       );
       this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
       transaction ??= this.resources.beginRender();
-      const needsLambert = scene.opaque.some(isLambertMesh) ||
-        scene.transparent.some(isLambertMesh);
-      const packedShadows = needsLambert ? packWebGLShadows(
+      const needsLitMaterial = scene.opaque.some(isLitMaterialMesh) ||
+        scene.transparent.some(isLitMaterialMesh);
+      const packedShadows = needsLitMaterial ? packWebGLShadows(
         scene.shadowPlans,
         shadowResources,
         shadowBindings ?? shadowTransaction.getBindings(),
@@ -402,6 +403,25 @@ function drawMesh(
       0,
     );
     bindLambertMesh(gl, program, mesh);
+  } else if (program.key === 'pbr-metallic-roughness' &&
+    mesh.shading.kind === 'pbr-metallic-roughness') {
+    const normalBuffer = geometry.normalBuffer;
+    if (!normalBuffer) {
+      throw new Error(
+        `${mesh.componentName} PBR geometry has no resident normal buffer.`,
+      );
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+    gl.enableVertexAttribArray(program.normalAttribute);
+    gl.vertexAttribPointer(
+      program.normalAttribute,
+      3,
+      gl.FLOAT,
+      false,
+      0,
+      0,
+    );
+    bindPBRMesh(gl, transaction, program, geometry, mesh);
   } else {
     throw new Error(
       `${mesh.componentName} renderer program did not match settled shading.`,
@@ -416,7 +436,10 @@ function drawMesh(
 
 function bindFrameProgram(
   gl: WebGL2RenderingContext,
-  program: WebGLUnlitProgram | WebGLLambertProgram,
+  program:
+    | WebGLUnlitProgram
+    | WebGLLambertProgram
+    | WebGLPBRMetallicRoughnessProgram,
   scene: SettledWebGLScene,
   lights: PackedWebGLLights,
   shadows: PackedWebGLShadows | undefined,
@@ -433,12 +456,19 @@ function bindFrameProgram(
     false,
     scene.camera.projectionMatrix as Float32Array,
   );
-  if (program.key === 'lambert') {
+  if (program.key === 'lambert' ||
+    program.key === 'pbr-metallic-roughness') {
     bindLights(gl, program, lights);
     if (!shadows) {
-      throw new Error('Lambert renderer is missing its shadow bindings.');
+      throw new Error('Lit renderer is missing its shadow bindings.');
     }
     bindShadows(gl, program, shadows);
+    if (program.key === 'pbr-metallic-roughness') {
+      gl.uniform3f(
+        program.cameraPosition,
+        ...scene.camera.descriptor.position,
+      );
+    }
   }
   frameBoundPrograms.add(program);
 }
@@ -475,6 +505,55 @@ function bindLambertMesh(
   gl.uniform3f(program.linearEmissive, ...shading.linearEmissive);
   gl.uniform1f(program.alpha, shading.linearBaseColor[3]);
   gl.uniform1i(program.receiveShadow, mesh.receiveShadow ? 1 : 0);
+}
+
+function bindPBRMesh(
+  gl: WebGL2RenderingContext,
+  transaction: WebGLRendererResourceTransaction,
+  program: WebGLPBRMetallicRoughnessProgram,
+  geometry: WebGLGeometryResource,
+  mesh: SettledWebGLMesh,
+): void {
+  const shading = mesh.shading;
+  if (shading.kind !== 'pbr-metallic-roughness') {
+    throw new Error('PBR mesh binding received non-PBR shading.');
+  }
+  gl.uniformMatrix3fv(
+    program.normalMatrix,
+    false,
+    shading.normalMatrix as Float32Array,
+  );
+  gl.uniform4f(program.linearBaseColorFactor, ...shading.linearBaseColorFactor);
+  gl.uniform1f(program.metallicFactor, shading.metallicFactor);
+  gl.uniform1f(program.roughnessFactor, shading.roughnessFactor);
+  gl.uniform1i(program.receiveShadow, mesh.receiveShadow ? 1 : 0);
+  const binding = shading.baseColorTexture;
+  if (binding === undefined) {
+    gl.uniform1i(program.baseColorTexture, 1);
+    gl.uniform1i(program.hasBaseColorTexture, 0);
+    return;
+  }
+  const textureCoordinates = geometry.textureCoordinates0Buffer;
+  if (!textureCoordinates) {
+    throw new Error(
+      `${mesh.componentName} textured PBR geometry has no resident UV0 buffer.`,
+    );
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordinates);
+  gl.enableVertexAttribArray(program.textureCoordinates0Attribute);
+  gl.vertexAttribPointer(
+    program.textureCoordinates0Attribute,
+    2,
+    gl.FLOAT,
+    false,
+    0,
+    0,
+  );
+  const resource = transaction.useTexture(binding.texture, mesh.componentName);
+  gl.activeTexture(gl.TEXTURE0 + 1);
+  gl.bindTexture(gl.TEXTURE_2D, resource.texture);
+  gl.uniform1i(program.baseColorTexture, 1);
+  gl.uniform1i(program.hasBaseColorTexture, 1);
 }
 
 function drawDirectionalShadowPlan(
@@ -574,7 +653,7 @@ function bindDepthGeometry(
 
 function bindLights(
   gl: WebGL2RenderingContext,
-  program: WebGLLambertProgram,
+  program: WebGLLambertProgram | WebGLPBRMetallicRoughnessProgram,
   lights: PackedWebGLLights,
 ): void {
   gl.uniform1i(program.lightCount, lights.count);
@@ -590,7 +669,7 @@ function bindLights(
 
 function bindShadows(
   gl: WebGL2RenderingContext,
-  program: WebGLLambertProgram,
+  program: WebGLLambertProgram | WebGLPBRMetallicRoughnessProgram,
   shadows: PackedWebGLShadows,
 ): void {
   gl.uniform1iv(program.shadowEnabled, shadows.enabled);
@@ -636,10 +715,10 @@ function packWebGLShadows(
   return { enabled, matrices, parameters, layers, bindings };
 }
 
-function isLambertMesh(
+function isLitMaterialMesh(
   entry: SettledWebGLSceneEntry,
 ): entry is SettledWebGLMesh {
-  return entry.kind === 'mesh' && entry.shading.kind === 'lambert';
+  return entry.kind === 'mesh' && entry.shading.kind !== 'unlit';
 }
 
 function packWebGLLights(

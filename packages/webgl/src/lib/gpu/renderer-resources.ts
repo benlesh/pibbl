@@ -1,5 +1,13 @@
 import { getWebGLGeometryData } from '../geometry/geometry.js';
-import type { CRCWebGLGeometry } from '../types.js';
+import {
+  getInternalWebGLTextureData,
+  type InternalWebGLTextureData,
+} from '../texture/texture.js';
+import type {
+  CRCWebGLGeometry,
+  CRCWebGLTexture,
+  CRCWebGLTextureSampler,
+} from '../types.js';
 import type {
   CRCWebGLInstancedRecipe,
   CRCWebGLLookupTableRecipe,
@@ -40,6 +48,10 @@ export interface WebGLInstancedResources {
   readonly spriteSampler: WebGLUniformLocation | null;
 }
 
+export interface WebGLTextureResource {
+  readonly texture: WebGLTexture;
+}
+
 export interface WebGLRendererResourceTransaction {
   useProgram(
     key: WebGLProgramKey,
@@ -49,6 +61,10 @@ export interface WebGLRendererResourceTransaction {
     geometry: CRCWebGLGeometry,
     componentName: string,
   ): WebGLGeometryResource;
+  useTexture(
+    texture: CRCWebGLTexture,
+    componentName: string,
+  ): WebGLTextureResource;
   useInstanced(
     recipe: CRCWebGLInstancedRecipe,
     componentName: string,
@@ -61,9 +77,11 @@ interface ResourceCandidate {
   active: boolean;
   readonly usedProgramKeys: Set<WebGLProgramKey>;
   readonly usedGeometries: Set<CRCWebGLGeometry>;
+  readonly usedTextures: Set<CRCWebGLTexture>;
   readonly usedInstancedKeys: Set<object>;
   readonly createdPrograms: Map<WebGLProgramKey, WebGLBuiltInProgram>;
   readonly createdGeometries: Map<CRCWebGLGeometry, WebGLGeometryResource>;
+  readonly createdTextures: Map<CRCWebGLTexture, WebGLTextureResource>;
   readonly createdInstanced: Map<object, WebGLInstancedResources>;
 }
 
@@ -76,6 +94,8 @@ export class WebGLRendererResourceCache {
   private readonly programs = new Map<WebGLProgramKey, WebGLBuiltInProgram>();
   private readonly residentProgramKeys = new Set<WebGLProgramKey>();
   private readonly residentGeometries = new Set<CRCWebGLGeometry>();
+  private readonly textures = new Map<CRCWebGLTexture, WebGLTextureResource>();
+  private readonly residentTextures = new Set<CRCWebGLTexture>();
   private readonly instanced = new Map<object, WebGLInstancedResources>();
   private readonly residentInstancedKeys = new Set<object>();
   private activeCandidate: ResourceCandidate | undefined;
@@ -99,9 +119,11 @@ export class WebGLRendererResourceCache {
       active: true,
       usedProgramKeys: new Set(),
       usedGeometries: new Set(),
+      usedTextures: new Set(),
       usedInstancedKeys: new Set(),
       createdPrograms: new Map(),
       createdGeometries: new Map(),
+      createdTextures: new Map(),
       createdInstanced: new Map(),
     };
     this.activeCandidate = candidate;
@@ -115,6 +137,11 @@ export class WebGLRendererResourceCache {
         componentName: string,
       ): WebGLGeometryResource =>
         this.useGeometry(candidate, geometry, componentName),
+      useTexture: (
+        texture: CRCWebGLTexture,
+        componentName: string,
+      ): WebGLTextureResource =>
+        this.useTexture(candidate, texture, componentName),
       useInstanced: (
         recipe: CRCWebGLInstancedRecipe,
         componentName: string,
@@ -134,6 +161,8 @@ export class WebGLRendererResourceCache {
     this.residentProgramKeys.clear();
     this.geometries.clear();
     this.residentGeometries.clear();
+    this.textures.clear();
+    this.residentTextures.clear();
     this.instanced.clear();
     this.residentInstancedKeys.clear();
   }
@@ -144,11 +173,14 @@ export class WebGLRendererResourceCache {
     this.closeActiveCandidate();
     const programs = Array.from(this.programs.values());
     const geometries = Array.from(this.geometries.values());
+    const textures = Array.from(this.textures.values());
     const instanced = Array.from(this.instanced.values());
     this.programs.clear();
     this.residentProgramKeys.clear();
     this.geometries.clear();
     this.residentGeometries.clear();
+    this.textures.clear();
+    this.residentTextures.clear();
     this.instanced.clear();
     this.residentInstancedKeys.clear();
     if (contextLost || this.invalidated) return;
@@ -157,6 +189,9 @@ export class WebGLRendererResourceCache {
     }
     for (const geometry of geometries) {
       deleteGeometry(this.gl, geometry);
+    }
+    for (const texture of textures) {
+      runResourceCleanup(() => this.gl.deleteTexture(texture.texture));
     }
     for (const resource of instanced) {
       deleteInstancedResources(this.gl, resource);
@@ -193,6 +228,21 @@ export class WebGLRendererResourceCache {
     return created;
   }
 
+  private useTexture(
+    candidate: ResourceCandidate,
+    texture: CRCWebGLTexture,
+    componentName: string,
+  ): WebGLTextureResource {
+    this.requireCandidate(candidate);
+    candidate.usedTextures.add(texture);
+    const existing = this.textures.get(texture);
+    if (existing) return existing;
+    const created = uploadDecodedTexture(this.gl, texture, componentName);
+    this.textures.set(texture, created);
+    candidate.createdTextures.set(texture, created);
+    return created;
+  }
+
   private useInstanced(
     candidate: ResourceCandidate,
     recipe: CRCWebGLInstancedRecipe,
@@ -226,6 +276,14 @@ export class WebGLRendererResourceCache {
         this.geometries.delete(geometry);
         if (omitted) deleteGeometry(this.gl, omitted);
       }
+      for (const texture of this.residentTextures) {
+        if (candidate.usedTextures.has(texture)) continue;
+        const omitted = this.textures.get(texture);
+        this.textures.delete(texture);
+        if (omitted) {
+          runResourceCleanup(() => this.gl.deleteTexture(omitted.texture));
+        }
+      }
       for (const key of this.residentInstancedKeys) {
         if (candidate.usedInstancedKeys.has(key)) continue;
         const omitted = this.instanced.get(key);
@@ -241,6 +299,10 @@ export class WebGLRendererResourceCache {
         if (this.geometries.has(geometry)) {
           this.residentGeometries.add(geometry);
         }
+      }
+      this.residentTextures.clear();
+      for (const texture of candidate.usedTextures) {
+        if (this.textures.has(texture)) this.residentTextures.add(texture);
       }
       this.residentInstancedKeys.clear();
       for (const key of candidate.usedInstancedKeys) {
@@ -270,6 +332,12 @@ export class WebGLRendererResourceCache {
           this.geometries.delete(geometry);
         }
         deleteGeometry(this.gl, created);
+      }
+      for (const [texture, created] of candidate.createdTextures) {
+        if (this.textures.get(texture) === created) {
+          this.textures.delete(texture);
+        }
+        runResourceCleanup(() => this.gl.deleteTexture(created.texture));
       }
       for (const [key, created] of candidate.createdInstanced) {
         if (this.instanced.get(key) === created) this.instanced.delete(key);
@@ -310,12 +378,178 @@ export class WebGLRendererResourceCache {
     candidate.active = false;
     candidate.usedProgramKeys.clear();
     candidate.usedGeometries.clear();
+    candidate.usedTextures.clear();
     candidate.usedInstancedKeys.clear();
     candidate.createdPrograms.clear();
     candidate.createdGeometries.clear();
+    candidate.createdTextures.clear();
     candidate.createdInstanced.clear();
     if (this.activeCandidate === candidate) this.activeCandidate = undefined;
   }
+}
+
+const decodedTexturePixelStoreParameters = [
+  'UNPACK_FLIP_Y_WEBGL',
+  'UNPACK_PREMULTIPLY_ALPHA_WEBGL',
+  'UNPACK_COLORSPACE_CONVERSION_WEBGL',
+  'UNPACK_ALIGNMENT',
+  'UNPACK_ROW_LENGTH',
+  'UNPACK_IMAGE_HEIGHT',
+  'UNPACK_SKIP_PIXELS',
+  'UNPACK_SKIP_ROWS',
+  'UNPACK_SKIP_IMAGES',
+] as const;
+
+function uploadDecodedTexture(
+  gl: WebGL2RenderingContext,
+  identity: CRCWebGLTexture,
+  componentName: string,
+): WebGLTextureResource {
+  let texture: WebGLTexture | undefined;
+  let published = false;
+  let abandonFailedHandle = false;
+  try {
+    const data = getInternalWebGLTextureData(identity);
+    const previousPixelStore = decodedTexturePixelStoreParameters.map(name =>
+      [gl[name], gl.getParameter(gl[name])] as const,
+    );
+    texture = gl.createTexture() ?? undefined;
+    if (!texture) {
+      throw new Error(`${componentName} texture creation failed.`);
+    }
+    let uploadError: unknown;
+    try {
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texParameteri(
+        gl.TEXTURE_2D,
+        gl.TEXTURE_WRAP_S,
+        textureWrap(gl, data.sampler.wrapS),
+      );
+      gl.texParameteri(
+        gl.TEXTURE_2D,
+        gl.TEXTURE_WRAP_T,
+        textureWrap(gl, data.sampler.wrapT),
+      );
+      gl.texParameteri(
+        gl.TEXTURE_2D,
+        gl.TEXTURE_MIN_FILTER,
+        textureMinFilter(gl, data.sampler.minFilter),
+      );
+      gl.texParameteri(
+        gl.TEXTURE_2D,
+        gl.TEXTURE_MAG_FILTER,
+        textureMagFilter(gl, data.sampler.magFilter),
+      );
+      installDecodedTexturePixelStore(gl);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        data.bitmap,
+      );
+      if (requiresMipmaps(data)) gl.generateMipmap(gl.TEXTURE_2D);
+    } catch (error) {
+      uploadError = error;
+    }
+    const restoreErrors: unknown[] = [];
+    for (const [parameter, value] of previousPixelStore) {
+      try {
+        gl.pixelStorei(parameter, value);
+      } catch (error) {
+        restoreErrors.push(error);
+      }
+    }
+    if (uploadError !== undefined) {
+      for (const error of restoreErrors) reportSecondaryResourceError(error);
+      throw uploadError;
+    }
+    if (restoreErrors.length > 0) {
+      for (const error of restoreErrors.slice(1)) {
+        reportSecondaryResourceError(error);
+      }
+      throw restoreErrors[0];
+    }
+    const contextValidity = readResourceContextValidity(gl);
+    if (contextValidity.status === 'lost') {
+      abandonFailedHandle = true;
+      throw new Error(
+        `${componentName} texture upload failed because the WebGL context was lost.`,
+      );
+    }
+    if (contextValidity.status === 'unknown') {
+      abandonFailedHandle = true;
+      throw new Error(
+        `${componentName} texture upload context validation failed.`,
+        { cause: contextValidity.error },
+      );
+    }
+    const resource = Object.freeze({ texture });
+    published = true;
+    return resource;
+  } catch (error) {
+    if (!abandonFailedHandle) {
+      abandonFailedHandle = contextLossPreventsResourceCleanup(gl);
+    }
+    if (error instanceof Error && error.message.startsWith(componentName)) {
+      throw error;
+    }
+    throw new Error(`${componentName} texture upload failed.`, { cause: error });
+  } finally {
+    if (!published && texture && !abandonFailedHandle) {
+      runResourceCleanup(() => gl.deleteTexture(texture!));
+    }
+  }
+}
+
+function installDecodedTexturePixelStore(gl: WebGL2RenderingContext): void {
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+  gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
+  gl.pixelStorei(gl.UNPACK_IMAGE_HEIGHT, 0);
+  gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
+  gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
+  gl.pixelStorei(gl.UNPACK_SKIP_IMAGES, 0);
+}
+
+function textureWrap(
+  gl: WebGL2RenderingContext,
+  value: CRCWebGLTextureSampler['wrapS'],
+): number {
+  switch (value) {
+    case 'repeat': return gl.REPEAT;
+    case 'clamp-to-edge': return gl.CLAMP_TO_EDGE;
+    case 'mirrored-repeat': return gl.MIRRORED_REPEAT;
+  }
+}
+
+function textureMinFilter(
+  gl: WebGL2RenderingContext,
+  value: CRCWebGLTextureSampler['minFilter'],
+): number {
+  switch (value) {
+    case 'nearest': return gl.NEAREST;
+    case 'linear': return gl.LINEAR;
+    case 'nearest-mipmap-nearest': return gl.NEAREST_MIPMAP_NEAREST;
+    case 'linear-mipmap-nearest': return gl.LINEAR_MIPMAP_NEAREST;
+    case 'nearest-mipmap-linear': return gl.NEAREST_MIPMAP_LINEAR;
+    case 'linear-mipmap-linear': return gl.LINEAR_MIPMAP_LINEAR;
+  }
+}
+
+function textureMagFilter(
+  gl: WebGL2RenderingContext,
+  value: CRCWebGLTextureSampler['magFilter'],
+): number {
+  return value === 'nearest' ? gl.NEAREST : gl.LINEAR;
+}
+
+function requiresMipmaps(data: InternalWebGLTextureData): boolean {
+  return data.sampler.minFilter !== 'nearest' &&
+    data.sampler.minFilter !== 'linear';
 }
 
 function createInstancedResources(

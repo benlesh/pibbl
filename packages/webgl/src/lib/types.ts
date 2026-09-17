@@ -40,6 +40,40 @@ export interface CRCWebGLLambertMaterial {
 
 export type CRCWebGLMaterial = CRCWebGLLambertMaterial;
 
+export interface CRCWebGLTextureSampler {
+  readonly wrapS: 'repeat' | 'clamp-to-edge' | 'mirrored-repeat';
+  readonly wrapT: 'repeat' | 'clamp-to-edge' | 'mirrored-repeat';
+  readonly minFilter:
+    | 'nearest'
+    | 'linear'
+    | 'nearest-mipmap-nearest'
+    | 'linear-mipmap-nearest'
+    | 'nearest-mipmap-linear'
+    | 'linear-mipmap-linear';
+  readonly magFilter: 'nearest' | 'linear';
+}
+
+declare const crcWebGLTextureBrand: unique symbol;
+
+/** Opaque decoded texture identity used by official import adapters. */
+export interface CRCWebGLTexture {
+  readonly [crcWebGLTextureBrand]: true;
+}
+
+export interface CRCWebGLTextureBinding {
+  readonly texture: CRCWebGLTexture;
+  readonly textureCoordinate: 0;
+}
+
+/** Closed imported-material subset. It is not part of the root package API. */
+export interface CRCWebGLPBRMetallicRoughnessMaterial {
+  readonly type: 'pbr-metallic-roughness';
+  readonly baseColorFactor: readonly [number, number, number, number];
+  readonly baseColorTexture?: CRCWebGLTextureBinding;
+  readonly metallicFactor: number;
+  readonly roughnessFactor: number;
+}
+
 /** Shared logical-target props for geometry-backed WebGL built-ins. */
 export interface CRCWebGLTargetProps
   extends CRCEventHandlers, CRCEventParticipationOptions {

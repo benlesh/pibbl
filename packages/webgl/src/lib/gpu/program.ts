@@ -1,6 +1,10 @@
 import { WEBGL_BUILT_IN_PROGRAM_SOURCES } from './program-sources.js';
 
-export type WebGLProgramKey = 'unlit' | 'lambert' | 'shadow-depth';
+export type WebGLProgramKey =
+  | 'unlit'
+  | 'lambert'
+  | 'pbr-metallic-roughness'
+  | 'shadow-depth';
 
 export const WEBGL_TEXTURE_COORDINATES_0_ATTRIBUTE = 2;
 export const WEBGL_TANGENT_ATTRIBUTE = 3;
@@ -44,6 +48,32 @@ export interface WebGLLambertProgram extends WebGLMaterialProgramBase {
   readonly normalAttribute: 1;
 }
 
+export interface WebGLPBRMetallicRoughnessProgram
+  extends WebGLMaterialProgramBase {
+  readonly key: 'pbr-metallic-roughness';
+  readonly normalMatrix: WebGLUniformLocation;
+  readonly linearBaseColorFactor: WebGLUniformLocation;
+  readonly metallicFactor: WebGLUniformLocation;
+  readonly roughnessFactor: WebGLUniformLocation;
+  readonly hasBaseColorTexture: WebGLUniformLocation;
+  readonly baseColorTexture: WebGLUniformLocation;
+  readonly cameraPosition: WebGLUniformLocation;
+  readonly lightCount: WebGLUniformLocation;
+  readonly lightKinds: WebGLUniformLocation;
+  readonly lightColorIntensities: WebGLUniformLocation;
+  readonly lightPositionRanges: WebGLUniformLocation;
+  readonly lightDirectionInnerCosines: WebGLUniformLocation;
+  readonly lightGroundOuterCosines: WebGLUniformLocation;
+  readonly shadowEnabled: WebGLUniformLocation;
+  readonly shadowMatrices: WebGLUniformLocation;
+  readonly shadowParameters: WebGLUniformLocation;
+  readonly shadowLayers: WebGLUniformLocation;
+  readonly receiveShadow: WebGLUniformLocation;
+  readonly shadowMap: WebGLUniformLocation;
+  readonly normalAttribute: 1;
+  readonly textureCoordinates0Attribute: 2;
+}
+
 export interface WebGLShadowDepthProgram extends WebGLProgramBase {
   readonly key: 'shadow-depth';
   readonly shadowProjectionView: WebGLUniformLocation;
@@ -53,6 +83,7 @@ export interface WebGLShadowDepthProgram extends WebGLProgramBase {
 export type WebGLBuiltInProgram =
   | WebGLUnlitProgram
   | WebGLLambertProgram
+  | WebGLPBRMetallicRoughnessProgram
   | WebGLShadowDepthProgram;
 
 /** Compiles and links one closed built-in material program. */
@@ -233,6 +264,85 @@ export function createBuiltInProgram(
           'u_shadow_map',
         ),
         normalAttribute: 1 as const,
+      }) : key === 'pbr-metallic-roughness' ? Object.freeze({
+        ...materialCommon!,
+        key,
+        normalMatrix: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_normal_matrix',
+        ),
+        linearBaseColorFactor: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_linear_base_color_factor',
+        ),
+        metallicFactor: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_metallic_factor',
+        ),
+        roughnessFactor: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_roughness_factor',
+        ),
+        hasBaseColorTexture: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_has_base_color_texture',
+        ),
+        baseColorTexture: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_base_color_texture',
+        ),
+        cameraPosition: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_camera_position',
+        ),
+        lightCount: requireUniform(gl, program, componentName, 'u_light_count'),
+        lightKinds: requireUniform(
+          gl, program, componentName, 'u_light_kind[0]',
+        ),
+        lightColorIntensities: requireUniform(
+          gl, program, componentName, 'u_light_color_intensity[0]',
+        ),
+        lightPositionRanges: requireUniform(
+          gl, program, componentName, 'u_light_position_range[0]',
+        ),
+        lightDirectionInnerCosines: requireUniform(
+          gl, program, componentName, 'u_light_direction_inner_cosine[0]',
+        ),
+        lightGroundOuterCosines: requireUniform(
+          gl, program, componentName, 'u_light_ground_outer_cosine[0]',
+        ),
+        shadowEnabled: requireUniform(
+          gl, program, componentName, 'u_shadow_enabled[0]',
+        ),
+        shadowMatrices: requireUniform(
+          gl, program, componentName, 'u_shadow_matrix[0]',
+        ),
+        shadowParameters: requireUniform(
+          gl, program, componentName, 'u_shadow_parameters[0]',
+        ),
+        shadowLayers: requireUniform(
+          gl, program, componentName, 'u_shadow_layer[0]',
+        ),
+        receiveShadow: requireUniform(
+          gl, program, componentName, 'u_receive_shadow',
+        ),
+        shadowMap: requireUniform(gl, program, componentName, 'u_shadow_map'),
+        normalAttribute: 1 as const,
+        textureCoordinates0Attribute: 2 as const,
       }) : Object.freeze({
         ...common,
         key,

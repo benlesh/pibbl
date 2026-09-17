@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createWebGLGeometry } from '../geometry/geometry.js';
+import { createInternalWebGLTexture } from '../texture/texture.js';
 import {
   WebGLRendererResourceCache,
   type WebGLRendererResourceTransaction,
@@ -181,6 +182,241 @@ describe('WebGLSceneRenderer', () => {
     expect(recording.framebufferTexture2D).not.toHaveBeenCalled();
     expect(recording.clear).toHaveBeenCalledOnce();
     expect(recording.readPixels).not.toHaveBeenCalled();
+  });
+
+  it('binds one imported base-color texture through the PBR program', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const producer = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close: vi.fn(),
+    } as unknown as ImageBitmap);
+    const drawable = pbrMesh(0, producer.texture);
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [directionalLight()],
+      opaque: [drawable],
+    }));
+
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'pbr-metallic-roughness',
+    ]);
+    expect(recording.draws[0]?.attributeLocations).toEqual([0, 1, 2]);
+    expect(recording.draws[0]?.uniforms).toMatchObject({
+      u_linear_base_color_factor: [0.5, 0.25, 0.75, 1],
+      u_metallic_factor: [0.2],
+      u_roughness_factor: [0.6],
+      u_has_base_color_texture: [1],
+      u_base_color_texture: [1],
+    });
+    expect(recording.createTexture).toHaveBeenCalledTimes(2);
+
+    renderer.dispose(false);
+    producer.release();
+  });
+
+  it('rolls back PBR program, texture, and fallback-shadow candidates after draw failure', () => {
+    const failure = new Error('PBR draw failed');
+    const recording = createRendererGL({
+      throws: [{ operation: 'drawArrays', at: 1, error: failure }],
+    });
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const producer = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close: vi.fn(),
+    } as unknown as ImageBitmap);
+    const drawable = pbrMesh(0, producer.texture);
+    const input = scene({
+      meshes: [drawable],
+      lights: [directionalLight()],
+      opaque: [drawable],
+    });
+
+    expect(() => renderer.render(input)).toThrow(failure);
+    expect(recording.deleteTexture).toHaveBeenCalledTimes(2);
+    expect(() => renderer.render(input)).not.toThrow();
+    expect(recording.createTexture).toHaveBeenCalledTimes(4);
+
+    renderer.dispose(false);
+    producer.release();
+  });
+
+  it('decodes base-color texture RGB as sRGB before linear tint while preserving alpha', () => {
+    const canvas = new OffscreenCanvas(8, 8);
+    const gl = canvas.getContext('webgl2');
+    expect(gl).not.toBeNull();
+    const source = new OffscreenCanvas(1, 1);
+    const sourceContext = source.getContext('2d');
+    expect(sourceContext).not.toBeNull();
+    sourceContext!.putImageData(new ImageData(
+      new Uint8ClampedArray([128, 0, 0, 255]),
+      1,
+      1,
+    ), 0, 0);
+    const producer = createInternalWebGLTexture(source.transferToImageBitmap());
+    const original = pbrMesh(0, producer.texture);
+    const drawable = Object.freeze({
+      ...original,
+      geometry: createWebGLGeometry({
+        positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0],
+        normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+        textureCoordinates0: [0, 0, 0, 0, 0, 0],
+      }),
+    });
+    const renderer = new WebGLSceneRenderer(gl!, 7);
+
+    renderer.render(realPBRScene(drawable, [Object.freeze({
+      kind: 'ambient' as const,
+      linearColor: Object.freeze([1, 1, 1] as const),
+      intensity: 1,
+    })]));
+
+    const pixel = new Uint8Array(4);
+    gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+    expect(Array.from(pixel)).toEqual([81, 0, 0, 255]);
+
+    renderer.dispose(false);
+    producer.release();
+  });
+
+  it('keeps sampled base-color alpha linear without changing the opaque queue', () => {
+    const canvas = new OffscreenCanvas(8, 8);
+    const gl = canvas.getContext('webgl2');
+    expect(gl).not.toBeNull();
+    const source = new OffscreenCanvas(1, 1);
+    const sourceContext = source.getContext('2d');
+    expect(sourceContext).not.toBeNull();
+    sourceContext!.putImageData(new ImageData(
+      new Uint8ClampedArray([0, 0, 0, 128]),
+      1,
+      1,
+    ), 0, 0);
+    const producer = createInternalWebGLTexture(source.transferToImageBitmap());
+    const original = pbrMesh(0, producer.texture);
+    const drawable = Object.freeze({
+      ...original,
+      geometry: createWebGLGeometry({
+        positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0],
+        normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+        textureCoordinates0: [0, 0, 0, 0, 0, 0],
+      }),
+    });
+    const renderer = new WebGLSceneRenderer(gl!, 7);
+
+    renderer.render(realPBRScene(drawable, []));
+
+    const pixel = new Uint8Array(4);
+    gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+    expect(Array.from(pixel)).toEqual([0, 0, 0, 128]);
+
+    renderer.dispose(false);
+    producer.release();
+  });
+
+  it('keeps ambient fill diffuse-only and changes the direct GGX lobe with roughness', () => {
+    const canvas = new OffscreenCanvas(8, 8);
+    const gl = canvas.getContext('webgl2');
+    expect(gl).not.toBeNull();
+    const renderer = new WebGLSceneRenderer(gl!, 7);
+    const pixel = new Uint8Array(4);
+    const ambient = Object.freeze({
+      kind: 'ambient' as const,
+      linearColor: Object.freeze([1, 1, 1] as const),
+      intensity: 1,
+    });
+
+    const metal = untexturedPBRMesh({ metallic: 1, roughness: 0.5 });
+    renderer.render(realPBRScene(metal, [ambient]));
+    gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+    expect(Array.from(pixel)).toEqual([0, 0, 0, 255]);
+
+    const dielectric = untexturedPBRMesh({ metallic: 0, roughness: 0.5 });
+    renderer.render(realPBRScene(dielectric, [ambient]));
+    gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+    expect(pixel[0]).toBeGreaterThan(0);
+
+    const angledDirectional = Object.freeze({
+      kind: 'directional' as const,
+      identity: Object.freeze({}),
+      linearColor: Object.freeze([1, 1, 1] as const),
+      direction: Object.freeze([0.5, 0, -0.8660254] as const),
+      intensity: 1,
+      castShadow: false,
+    });
+    const smooth = untexturedPBRMesh({ metallic: 1, roughness: 0.2 });
+    renderer.render(realPBRScene(smooth, [angledDirectional]));
+    gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+    const smoothRed = pixel[0]!;
+    const rough = untexturedPBRMesh({ metallic: 1, roughness: 0.8 });
+    renderer.render(realPBRScene(rough, [angledDirectional]));
+    gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+    expect(pixel[0]).not.toBe(smoothRed);
+
+    renderer.dispose(false);
+  });
+
+  it('attenuates only the direct light owning a PBR shadow plan', () => {
+    const canvas = new OffscreenCanvas(8, 8);
+    const gl = canvas.getContext('webgl2');
+    expect(gl).not.toBeNull();
+    const renderer = new WebGLSceneRenderer(gl!, 7);
+    const caster = untexturedPBRMesh({ metallic: 0, roughness: 0.5 });
+    const receiver = untexturedPBRMesh({
+      metallic: 0,
+      roughness: 0.5,
+      z: 0.5,
+    });
+    const shadowedIdentity = Object.freeze({});
+    const shadowed = Object.freeze({
+      kind: 'directional' as const,
+      identity: shadowedIdentity,
+      linearColor: Object.freeze([1, 0, 0] as const),
+      direction: Object.freeze([0, 0, -1] as const),
+      intensity: 1,
+      castShadow: true,
+    });
+    const unshadowed = Object.freeze({
+      kind: 'directional' as const,
+      identity: Object.freeze({}),
+      linearColor: Object.freeze([0, 1, 0] as const),
+      direction: Object.freeze([0, 0, -1] as const),
+      intensity: 1,
+      castShadow: false,
+    });
+    const withoutShadow = realPBRScene(receiver, [shadowed, unshadowed]);
+    const withShadow = Object.freeze({
+      ...withoutShadow,
+      shadowPlans: Object.freeze([Object.freeze({
+        kind: 'directional' as const,
+        lightIdentity: shadowedIdentity,
+        lightIndex: 0,
+        projectionViewMatrix: matrix(1),
+        bias: 0,
+        casters: Object.freeze([caster]),
+        receivers: Object.freeze([receiver]),
+        requestedResolution: 8,
+        comparisonCount: 1 as const,
+        contextGeneration: 7,
+        shadowProgramGeneration: 1,
+      })]),
+    });
+    const pixel = new Uint8Array(4);
+
+    renderer.render(withShadow);
+    gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+    const shadowedPixel = Array.from(pixel);
+    expect(shadowedPixel[0]).toBe(0);
+    expect(shadowedPixel[1]).toBeGreaterThan(0);
+
+    renderer.render(withoutShadow);
+    gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+    expect(pixel[0]).toBeGreaterThan(0);
+    expect(pixel[1]).toBe(shadowedPixel[1]);
+
+    renderer.dispose(false);
   });
 
   it.each([
@@ -1074,6 +1310,139 @@ function mesh(
   });
 }
 
+function pbrMesh(
+  sourceIndex: number,
+  texture: import('../types.js').CRCWebGLTexture,
+): SettledWebGLMesh {
+  const seed = sourceIndex + 1;
+  const geometry = createWebGLGeometry({
+    positions: [0, 0, 0, seed, 0, 0, 0, seed, 0],
+    normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+    textureCoordinates0: [0, 0, 1, 0, 0, 1],
+  });
+  const binding = Object.freeze({ texture, textureCoordinate: 0 as const });
+  return Object.freeze({
+    kind: 'mesh' as const,
+    componentName: `ImportedMesh${sourceIndex}`,
+    source: undefined,
+    geometry,
+    identity: Object.freeze({}),
+    model: matrix(seed),
+    color: Object.freeze([1, 1, 1, 1] as const),
+    lit: true,
+    material: Object.freeze({
+      type: 'pbr-metallic-roughness' as const,
+      baseColorFactor: Object.freeze([0.5, 0.25, 0.75, 1] as const),
+      baseColorTexture: binding,
+      metallicFactor: 0.2,
+      roughnessFactor: 0.6,
+    }),
+    shading: Object.freeze({
+      kind: 'pbr-metallic-roughness' as const,
+      linearBaseColorFactor: Object.freeze([0.5, 0.25, 0.75, 1] as const),
+      baseColorTexture: binding,
+      metallicFactor: 0.2,
+      roughnessFactor: 0.6,
+      normalMatrix: normalMatrix(seed),
+    }),
+    sourceIndex,
+    target: undefined,
+    keyboardNavigationBounds: undefined,
+    viewDepth: 10,
+    worldBounds: Object.freeze({
+      minimumX: 0,
+      minimumY: 0,
+      minimumZ: 0,
+      maximumX: seed,
+      maximumY: seed,
+      maximumZ: 0,
+    }),
+    castShadow: true,
+    receiveShadow: true,
+  });
+}
+
+function realPBRScene(
+  drawable: SettledWebGLMesh,
+  lights: readonly SettledWebGLLight[],
+): SettledWebGLScene {
+  const identityMatrix = matrix(1);
+  return Object.freeze({
+    ...scene({ meshes: [drawable], lights, opaque: [drawable] }),
+    camera: Object.freeze({
+      descriptor: Object.freeze({
+        type: 'perspective' as const,
+        fieldOfViewDegrees: 60,
+        near: 0.1,
+        far: 100,
+        position: [0, 0, 1] as const,
+        lookAt: [0, 0, 0] as const,
+        up: [0, 1, 0] as const,
+      }),
+      aspect: 1,
+      viewMatrix: new Float32Array(identityMatrix),
+      projectionMatrix: new Float32Array(identityMatrix),
+      projectionViewMatrix: new Float32Array(identityMatrix),
+      inverseProjectionViewMatrix: new Float32Array(identityMatrix),
+      viewport: Object.freeze({ width: 8, height: 8 }),
+      generationValues: Object.freeze([]),
+    }),
+    logicalViewport: Object.freeze({ width: 8, height: 8 }),
+    backingViewport: Object.freeze({ width: 8, height: 8 }),
+    density: Object.freeze({ x: 1, y: 1 }),
+  });
+}
+
+function untexturedPBRMesh(options: Readonly<{
+  metallic: number;
+  roughness: number;
+  z?: number;
+}>): SettledWebGLMesh {
+  const model = matrix(1);
+  model[14] = options.z ?? 0;
+  const factor = Object.freeze([0.5, 0.5, 0.5, 1] as const);
+  return Object.freeze({
+    kind: 'mesh' as const,
+    componentName: 'ImportedSurface',
+    source: undefined,
+    geometry: createWebGLGeometry({
+      positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0],
+      normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+    }),
+    identity: Object.freeze({}),
+    model,
+    color: Object.freeze([1, 1, 1, 1] as const),
+    lit: true,
+    material: Object.freeze({
+      type: 'pbr-metallic-roughness' as const,
+      baseColorFactor: factor,
+      metallicFactor: options.metallic,
+      roughnessFactor: options.roughness,
+    }),
+    shading: Object.freeze({
+      kind: 'pbr-metallic-roughness' as const,
+      linearBaseColorFactor: factor,
+      metallicFactor: options.metallic,
+      roughnessFactor: options.roughness,
+      normalMatrix: normalMatrix(1),
+    }),
+    sourceIndex: 0,
+    target: undefined,
+    keyboardNavigationBounds: undefined,
+    viewDepth: 1,
+    worldBounds: Object.freeze({
+      minimumX: -1,
+      minimumY: -1,
+      minimumZ: options.z ?? 0,
+      maximumX: 3,
+      maximumY: 3,
+      maximumZ: options.z ?? 0,
+    }),
+    castShadow: true,
+    receiveShadow: true,
+  });
+}
+
 function background(
   color: SettledWebGLBackground['color'],
 ): SettledWebGLBackground {
@@ -1415,6 +1784,9 @@ function createRendererGL(
     >('getUniformLocation', (program, name) => {
       if (name === 'u_display_base_color') program.key = 'unlit';
       if (name === 'u_normal_matrix') program.key = 'lambert';
+      if (name === 'u_metallic_factor') {
+        program.key = 'pbr-metallic-roughness' as WebGLProgramKey;
+      }
       if (name === 'u_shadow_projection_view') program.key = 'shadow-depth';
       return { program, name };
     }),
@@ -1426,6 +1798,9 @@ function createRendererGL(
     deleteBuffer: method('deleteBuffer'),
     bufferData: method('bufferData'),
     enableVertexAttribArray: method('enableVertexAttribArray'),
+    disableVertexAttribArray: method('disableVertexAttribArray'),
+    vertexAttrib2f: method('vertexAttrib2f'),
+    vertexAttrib4f: method('vertexAttrib4f'),
     vertexAttribPointer: method<[number, ...unknown[]], void>(
       'vertexAttribPointer',
       location => {
@@ -1507,6 +1882,7 @@ function traceTransactions(recording: RendererGLRecording): void {
       return Object.freeze({
         useProgram: transaction.useProgram,
         useGeometry: transaction.useGeometry,
+        useTexture: transaction.useTexture,
         useInstanced: transaction.useInstanced,
         commit() {
           recording.operations.push(['commit']);
@@ -1548,11 +1924,12 @@ function createConstants(): Record<string, number> {
     'TEXTURE_2D', 'TEXTURE_2D_ARRAY', 'TEXTURE_3D', 'TEXTURE_CUBE_MAP',
     'TEXTURE_CUBE_MAP_POSITIVE_X', 'TEXTURE_MAG_FILTER', 'TEXTURE_MIN_FILTER',
     'TEXTURE_WRAP_R', 'TEXTURE_WRAP_S', 'TEXTURE_WRAP_T', 'CLAMP_TO_EDGE',
+    'LINEAR', 'MIRRORED_REPEAT', 'REPEAT', 'RGBA',
     'TRIANGLES', 'UNPACK_ALIGNMENT', 'UNPACK_COLORSPACE_CONVERSION_WEBGL',
     'UNPACK_FLIP_Y_WEBGL', 'UNPACK_IMAGE_HEIGHT',
     'UNPACK_PREMULTIPLY_ALPHA_WEBGL', 'UNPACK_ROW_LENGTH',
     'UNPACK_SKIP_IMAGES', 'UNPACK_SKIP_PIXELS', 'UNPACK_SKIP_ROWS',
-    'UNSIGNED_INT', 'VERTEX_SHADER', 'ZERO',
+    'UNSIGNED_BYTE', 'UNSIGNED_INT', 'VERTEX_SHADER', 'ZERO',
   ];
   return Object.fromEntries(names.map((name, index) => [name, index + 1]));
 }
