@@ -176,7 +176,7 @@ describe('WebGLSceneRenderer', () => {
     );
     expect(recording.drawArrays).toHaveBeenCalledTimes(5);
     expect(recording.createProgram).toHaveBeenCalledTimes(2);
-    expect(recording.createTexture).toHaveBeenCalledTimes(2);
+    expect(recording.createTexture).toHaveBeenCalledOnce();
     expect(recording.createFramebuffer).not.toHaveBeenCalled();
     expect(recording.framebufferTexture2D).not.toHaveBeenCalled();
     expect(recording.clear).toHaveBeenCalledOnce();
@@ -206,7 +206,7 @@ describe('WebGLSceneRenderer', () => {
       expect(recording.draws.map(draw => draw.programKey)).toEqual([
         'lambert',
       ]);
-      expect(recording.createTexture).toHaveBeenCalledTimes(2);
+      expect(recording.createTexture).toHaveBeenCalledOnce();
       expect(recording.createFramebuffer).not.toHaveBeenCalled();
       expect(recording.framebufferTexture2D).not.toHaveBeenCalled();
       expect(recording.clear).toHaveBeenCalledExactlyOnceWith(
@@ -342,7 +342,7 @@ describe('WebGLSceneRenderer', () => {
     expect(recording.createTexture).toHaveBeenCalledTimes(firstTextureCount);
   });
 
-  it('renders six radial point faces before color, binds the cube, and reuses it for camera-only work', () => {
+  it('renders six radial point layers before color, binds the array, and reuses it for camera-only work', () => {
     const recording = createRendererGL();
     const renderer = new WebGLSceneRenderer(recording.gl, 7);
     const drawable = mesh(0, [1, 1, 1, 1], {
@@ -384,17 +384,11 @@ describe('WebGLSceneRenderer', () => {
       recording.gl.DEPTH_BUFFER_BIT,
       recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT,
     ]);
-    const cubeAttachments = recording.framebufferTexture2D.mock.calls.filter(
-      call => call[2] >= recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X &&
-        call[2] < recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + 6,
-    );
-    expect(cubeAttachments.map(call => call[2])).toEqual(
-      Array.from({ length: 6 }, (_, face) =>
-        recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + face),
-    );
-    const pointTexture = cubeAttachments[0]![3];
+    const layerAttachments = recording.framebufferTextureLayer.mock.calls;
+    expect(layerAttachments.map(call => call[4])).toEqual([0, 1, 2, 3, 4, 5]);
+    const pointTexture = layerAttachments[0]![2];
     expect(recording.bindTexture).toHaveBeenCalledWith(
-      recording.gl.TEXTURE_CUBE_MAP,
+      recording.gl.TEXTURE_2D_ARRAY,
       pointTexture,
     );
     expect(recording.draws[6]?.uniforms).toMatchObject({
@@ -431,6 +425,48 @@ describe('WebGLSceneRenderer', () => {
       'lambert',
     ]);
     expect(recording.createTexture).toHaveBeenCalledTimes(textureCount);
+  });
+
+  it('attaches point faces to array layers and binds one color sampler', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [pointLight()],
+      opaque: [drawable],
+      shadowPlans: [pointPlan(drawable)],
+    }));
+
+    expect(recording.texStorage3D).toHaveBeenCalledExactlyOnceWith(
+      recording.gl.TEXTURE_2D_ARRAY,
+      1,
+      recording.gl.DEPTH_COMPONENT24,
+      1024,
+      1024,
+      48,
+    );
+    const shadowArray = recording.createTexture.mock.results[0]!.value;
+    expect(recording.framebufferTextureLayer.mock.calls).toEqual(
+      Array.from({ length: 6 }, (_, layer) => [
+        recording.gl.FRAMEBUFFER,
+        recording.gl.DEPTH_ATTACHMENT,
+        shadowArray,
+        0,
+        layer,
+      ]),
+    );
+    const lambertDraw = recording.draws.at(-1)!;
+    expect(lambertDraw.uniforms.u_shadow_map).toEqual([0]);
+    expect(valuesFor(recording.uniformWrites, 'u_shadow_map')).toHaveLength(1);
+    expect(recording.bindTexture).toHaveBeenCalledWith(
+      recording.gl.TEXTURE_2D_ARRAY,
+      expect.anything(),
+    );
   });
 
   it('reuses point depth after a non-shadow light changes its slot and binds the current slot', () => {
@@ -1150,8 +1186,10 @@ interface RendererGLRecording {
   readonly readPixels: ReturnType<typeof vi.fn>;
   readonly createFramebuffer: ReturnType<typeof vi.fn>;
   readonly framebufferTexture2D: ReturnType<typeof vi.fn>;
+  readonly framebufferTextureLayer: ReturnType<typeof vi.fn>;
   readonly createTexture: ReturnType<typeof vi.fn>;
   readonly deleteTexture: ReturnType<typeof vi.fn>;
+  readonly texStorage3D: ReturnType<typeof vi.fn>;
 }
 
 function createRendererGL(
@@ -1387,6 +1425,8 @@ function createRendererGL(
     ),
     deleteFramebuffer: method('deleteFramebuffer'),
     framebufferTexture2D: method('framebufferTexture2D'),
+    framebufferTextureLayer: method('framebufferTextureLayer'),
+    blitFramebuffer: method('blitFramebuffer'),
     checkFramebufferStatus: method<[], number>(
       'checkFramebufferStatus',
       () => constants.FRAMEBUFFER_COMPLETE,
@@ -1397,6 +1437,7 @@ function createRendererGL(
     deleteTexture: method('deleteTexture'),
     texParameteri: method('texParameteri'),
     texImage2D: method('texImage2D'),
+    texStorage3D: method('texStorage3D'),
   };
   const gl = { ...constants, ...methods } as unknown as WebGL2RenderingContext;
   return {
@@ -1449,12 +1490,14 @@ function createConstants(): Record<string, number> {
     'BROWSER_DEFAULT_WEBGL', 'CCW', 'COLOR_BUFFER_BIT', 'COMPILE_STATUS',
     'CULL_FACE', 'DEPTH_BUFFER_BIT', 'DEPTH_TEST', 'ELEMENT_ARRAY_BUFFER',
     'DEPTH_ATTACHMENT', 'DEPTH_COMPONENT', 'DEPTH_COMPONENT24',
+    'DRAW_FRAMEBUFFER',
     'FLOAT', 'FRAGMENT_SHADER', 'FRAMEBUFFER', 'FRAMEBUFFER_COMPLETE', 'FRONT', 'FUNC_ADD', 'KEEP',
     'LEQUAL', 'LESS', 'LINK_STATUS', 'MAX_COMBINED_TEXTURE_IMAGE_UNITS',
     'MAX_CUBE_MAP_TEXTURE_SIZE', 'MAX_TEXTURE_SIZE', 'NEAREST', 'NONE',
     'ONE', 'ONE_MINUS_SRC_ALPHA', 'PACK_ALIGNMENT', 'PACK_ROW_LENGTH',
     'PACK_SKIP_PIXELS', 'PACK_SKIP_ROWS', 'POLYGON_OFFSET_FILL',
-    'SCISSOR_TEST', 'SRC_ALPHA', 'STATIC_DRAW', 'STENCIL_TEST', 'TEXTURE0',
+    'READ_FRAMEBUFFER', 'SCISSOR_TEST', 'SRC_ALPHA', 'STATIC_DRAW',
+    'STENCIL_TEST', 'TEXTURE0',
     'TEXTURE_2D', 'TEXTURE_2D_ARRAY', 'TEXTURE_3D', 'TEXTURE_CUBE_MAP',
     'TEXTURE_CUBE_MAP_POSITIVE_X', 'TEXTURE_MAG_FILTER', 'TEXTURE_MIN_FILTER',
     'TEXTURE_WRAP_R', 'TEXTURE_WRAP_S', 'TEXTURE_WRAP_T', 'CLAMP_TO_EDGE',

@@ -35,9 +35,9 @@ export interface WebGLLambertProgram extends WebGLMaterialProgramBase {
   readonly shadowEnabled: WebGLUniformLocation;
   readonly shadowMatrices: WebGLUniformLocation;
   readonly shadowParameters: WebGLUniformLocation;
+  readonly shadowLayers: WebGLUniformLocation;
   readonly receiveShadow: WebGLUniformLocation;
-  readonly shadow2DSamplers: readonly WebGLUniformLocation[];
-  readonly shadowCubeSamplers: readonly WebGLUniformLocation[];
+  readonly shadowMap: WebGLUniformLocation;
   readonly normalAttribute: 1;
 }
 
@@ -211,30 +211,24 @@ export function createBuiltInProgram(
           componentName,
           'u_shadow_parameters[0]',
         ),
+        shadowLayers: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_shadow_layer[0]',
+        ),
         receiveShadow: requireUniform(
           gl,
           program,
           componentName,
           'u_receive_shadow',
         ),
-        shadow2DSamplers: Object.freeze(Array.from(
-          { length: 8 },
-          (_, index) => requireUniform(
-            gl,
-            program!,
-            componentName,
-            `u_shadow_map_2d_${index}`,
-          ),
-        )),
-        shadowCubeSamplers: Object.freeze(Array.from(
-          { length: 8 },
-          (_, index) => requireUniform(
-            gl,
-            program!,
-            componentName,
-            `u_shadow_map_cube_${index}`,
-          ),
-        )),
+        shadowMap: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_shadow_map',
+        ),
         normalAttribute: 1 as const,
       }) : Object.freeze({
         ...common,

@@ -11,7 +11,42 @@ afterEach(() => {
 });
 
 describe('WebGLShadowResourceCache', () => {
-  it('creates complete sampler fallbacks without allocating a shadow render target', () => {
+  it('stores eight point lights in one 48-layer depth texture array', () => {
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    const transaction = cache.beginRender();
+
+    for (let lightIndex = 0; lightIndex < 8; lightIndex += 1) {
+      transaction.usePoint(pointPlan({
+        lightIdentity: Object.freeze({ lightIndex }),
+        lightIndex,
+      }), () => undefined);
+    }
+    const bindings = transaction.getBindings();
+    transaction.commit();
+
+    expect(recording.textures).toEqual([bindings.texture]);
+    expect(recording.createFramebuffer).toHaveBeenCalledOnce();
+    expect(recording.texStorage3D).toHaveBeenCalledExactlyOnceWith(
+      recording.gl.TEXTURE_2D_ARRAY,
+      1,
+      recording.gl.DEPTH_COMPONENT24,
+      1024,
+      1024,
+      48,
+    );
+    expect(recording.framebufferTextureLayer.mock.calls).toEqual(
+      Array.from({ length: 48 }, (_, layer) => [
+        recording.gl.FRAMEBUFFER,
+        recording.gl.DEPTH_ATTACHMENT,
+        bindings.texture,
+        0,
+        layer,
+      ]),
+    );
+  });
+
+  it('creates one complete fallback array without a render target', () => {
     const recording = createShadowGL();
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     const transaction = cache.beginRender();
@@ -19,341 +54,327 @@ describe('WebGLShadowResourceCache', () => {
     const bindings = transaction.getBindings();
     transaction.commit();
 
-    expect(bindings.fallback2D).toBeDefined();
-    expect(bindings.fallbackCube).toBeDefined();
-    expect(recording.textures).toHaveLength(2);
-    expect(recording.texImage2D).toHaveBeenCalledTimes(7);
+    expect(bindings.texture).toBe(recording.textures[0]);
+    expect(recording.texStorage3D).toHaveBeenCalledExactlyOnceWith(
+      recording.gl.TEXTURE_2D_ARRAY,
+      1,
+      recording.gl.DEPTH_COMPONENT24,
+      1,
+      1,
+      1,
+    );
     expect(recording.createFramebuffer).not.toHaveBeenCalled();
-    expect(recording.framebufferTexture2D).not.toHaveBeenCalled();
-    expect(recording.checkFramebufferStatus).not.toHaveBeenCalled();
+    expect(recording.framebufferTextureLayer).not.toHaveBeenCalled();
   });
 
-  it('clamps directional maps to the 2D limit and allocates DEPTH_COMPONENT24 with complete fallbacks', () => {
+  it('clamps one directional view and assigns its stable first layer', () => {
     const recording = createShadowGL({ maxTextureSize: 768 });
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
-    const draws: number[] = [];
     const transaction = cache.beginRender();
-    const resource = transaction.useDirectional(plan(), resolution => {
-      draws.push(resolution);
-    });
+    const draw = vi.fn();
+
+    const resource = transaction.useDirectional(plan(), draw);
     const bindings = transaction.getBindings();
     transaction.commit();
 
-    expect(resource.resolution).toBe(768);
-    expect(draws).toEqual([768]);
-    expect(recording.createFramebuffer).toHaveBeenCalledOnce();
-    expect(recording.checkFramebufferStatus).toHaveBeenCalledOnce();
-    expect(recording.texImage2D.mock.calls.filter(
-      call => call[0] === recording.gl.TEXTURE_2D && call[3] === 768,
-    )).toEqual([
-      [
-        recording.gl.TEXTURE_2D,
-        0,
-        recording.gl.DEPTH_COMPONENT24,
-        768,
-        768,
-        0,
-        recording.gl.DEPTH_COMPONENT,
-        recording.gl.UNSIGNED_INT,
-        null,
-      ],
-    ]);
-    expect(recording.texImage2D.mock.calls.filter(
-      call => call[0] >= recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X &&
-        call[0] < recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + 6,
-    )).toHaveLength(6);
-    expect(bindings.fallback2D).toBeDefined();
-    expect(bindings.fallbackCube).toBeDefined();
-  });
-
-  it('reuses equal resident generations and replaces only depth-affecting changes', () => {
-    const recording = createShadowGL();
-    const cache = new WebGLShadowResourceCache(recording.gl, 7);
-    const firstDraw = vi.fn();
-    let transaction = cache.beginRender();
-    const first = transaction.useDirectional(plan(), firstDraw);
-    transaction.commit();
-
-    const hitDraw = vi.fn();
-    transaction = cache.beginRender();
-    const hit = transaction.useDirectional(plan(), hitDraw);
-    transaction.commit();
-    expect(hit.texture).toBe(first.texture);
-    expect(firstDraw).toHaveBeenCalledOnce();
-    expect(hitDraw).not.toHaveBeenCalled();
-
-    const replacementDraw = vi.fn();
-    transaction = cache.beginRender();
-    const replacement = transaction.useDirectional(
-      plan({ projectionViewMatrix: matrix(2) }),
-      replacementDraw,
+    expect(resource).toMatchObject({
+      kind: 'directional',
+      resolution: 768,
+      views: [{ layer: 0, matrix: plan().projectionViewMatrix }],
+    });
+    expect(draw).toHaveBeenCalledExactlyOnceWith(768);
+    expect(recording.texStorage3D).toHaveBeenCalledWith(
+      recording.gl.TEXTURE_2D_ARRAY,
+      1,
+      recording.gl.DEPTH_COMPONENT24,
+      768,
+      768,
+      48,
     );
-    transaction.commit();
-    expect(replacement.texture).not.toBe(first.texture);
-    expect(replacementDraw).toHaveBeenCalledOnce();
-    expect(recording.deleteTexture).toHaveBeenCalledWith(first.texture);
+    expect(recording.framebufferTextureLayer).toHaveBeenCalledExactlyOnceWith(
+      recording.gl.FRAMEBUFFER,
+      recording.gl.DEPTH_ATTACHMENT,
+      bindings.texture,
+      0,
+      0,
+    );
   });
 
-  it('rolls back a failed candidate while preserving a resident generation', () => {
+  it('reuses an equal generation and keeps identity layers when its light slot moves', () => {
     const recording = createShadowGL();
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     let transaction = cache.beginRender();
-    const resident = transaction.useDirectional(plan(), () => undefined);
+    const first = transaction.usePoint(pointPlan(), vi.fn());
+    const firstBindings = transaction.getBindings();
     transaction.commit();
 
-    const failure = new Error('depth draw failed');
+    const reusedDraw = vi.fn();
     transaction = cache.beginRender();
-    expect(() => transaction.useDirectional(
-      plan({ projectionViewMatrix: matrix(2) }),
-      () => { throw failure; },
-    )).toThrow(failure);
-    transaction.rollback();
+    const reused = transaction.usePoint(pointPlan({ lightIndex: 7 }), reusedDraw);
+    const reusedBindings = transaction.getBindings();
+    transaction.commit();
 
-    const retryDraw = vi.fn();
+    expect(reusedBindings.texture).toBe(firstBindings.texture);
+    expect(reused.views.map(view => view.layer)).toEqual(
+      first.views.map(view => view.layer),
+    );
+    expect(reusedDraw).not.toHaveBeenCalled();
+    expect(recording.createTexture).toHaveBeenCalledOnce();
+  });
+
+  it('rejects a failed replacement exactly once and preserves the resident generation', () => {
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    let transaction = cache.beginRender();
+    transaction.usePoint(pointPlan(), () => undefined);
+    const resident = transaction.getBindings();
+    transaction.commit();
+
+    const failure = new Error('point face failed');
     transaction = cache.beginRender();
-    const reused = transaction.useDirectional(plan(), retryDraw);
+    transaction.usePoint(pointPlan({ farDistance: 12 }), face => {
+      if (face === 3) throw failure;
+    });
+    expect(() => transaction.getBindings()).toThrow(failure);
+    transaction.rollback();
+    const rejected = recording.textures[1]!;
+    expect(recording.deleteTexture.mock.calls.filter(
+      ([texture]) => texture === rejected,
+    )).toHaveLength(1);
+    expect(recording.deleteFramebuffer).toHaveBeenCalledOnce();
+
+    transaction = cache.beginRender();
+    const retryDraw = vi.fn();
+    transaction.usePoint(pointPlan(), retryDraw);
+    const reused = transaction.getBindings();
     transaction.commit();
     expect(reused.texture).toBe(resident.texture);
     expect(retryDraw).not.toHaveBeenCalled();
   });
 
-  it('sweeps omitted lights, abandons context-lost handles, and continues healthy cleanup after deletion errors', () => {
-    const cleanupFailure = new Error('texture cleanup failed');
-    const recording = createShadowGL({
-      deleteTextureErrorAt: 1,
-      deleteTextureError: cleanupFailure,
+  it('cleans allocation and framebuffer failures without publishing candidates', () => {
+    const allocationError = new Error('array allocation failed');
+    const allocation = createShadowGL({
+      texStorage3DErrorAt: 1,
+      texStorage3DError: allocationError,
     });
+    const allocationCache = new WebGLShadowResourceCache(allocation.gl, 7);
+    let transaction = allocationCache.beginRender();
+    transaction.useDirectional(plan(), () => undefined);
+    expect(() => transaction.getBindings()).toThrow(allocationError);
+    transaction.rollback();
+    expect(allocation.deleteTexture).toHaveBeenCalledOnce();
+    expect(allocation.deleteFramebuffer).toHaveBeenCalledOnce();
+
+    const incomplete = createShadowGL({ framebufferIncompleteAt: 4 });
+    const incompleteCache = new WebGLShadowResourceCache(incomplete.gl, 7);
+    transaction = incompleteCache.beginRender();
+    transaction.usePoint(pointPlan(), () => undefined);
+    expect(() => transaction.getBindings())
+      .toThrowError(/point.*layer 3.*framebuffer.*incomplete/i);
+    transaction.rollback();
+    expect(incomplete.deleteTexture).toHaveBeenCalledOnce();
+    expect(incomplete.deleteFramebuffer).toHaveBeenCalledOnce();
+  });
+
+  it('uses one layer for a spot and abandons all handles after context loss', () => {
+    const recording = createShadowGL({ maxTextureSize: 640 });
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    const transaction = cache.beginRender();
+    const draw = vi.fn();
+    const resource = transaction.useSpot(spotPlan(), draw);
+    transaction.getBindings();
+    transaction.commit();
+
+    expect(resource.views.map(view => view.layer)).toEqual([0]);
+    expect(draw).toHaveBeenCalledExactlyOnceWith(640);
+    cache.invalidateContext();
+    cache.dispose(false);
+    expect(recording.deleteTexture).not.toHaveBeenCalled();
+    expect(recording.deleteFramebuffer).not.toHaveBeenCalled();
+  });
+
+  it('commits a changed generation before releasing its prior array', () => {
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    let transaction = cache.beginRender();
+    const firstDraw = vi.fn();
+    transaction.useDirectional(plan(), firstDraw);
+    const first = transaction.getBindings();
+    transaction.commit();
+
+    transaction = cache.beginRender();
+    const replacementDraw = vi.fn();
+    transaction.useDirectional(
+      plan({ projectionViewMatrix: matrix(2) }),
+      replacementDraw,
+    );
+    const replacement = transaction.getBindings();
+    expect(recording.deleteTexture).not.toHaveBeenCalled();
+    transaction.commit();
+
+    expect(replacement.texture).not.toBe(first.texture);
+    expect(firstDraw).toHaveBeenCalledOnce();
+    expect(replacementDraw).toHaveBeenCalledOnce();
+    expect(recording.deleteTexture).toHaveBeenCalledExactlyOnceWith(
+      first.texture,
+    );
+    expect(recording.deleteFramebuffer).toHaveBeenCalledOnce();
+  });
+
+  it('rerenders only invalid light views in a transactional replacement', () => {
+    const secondLight = Object.freeze({});
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    let transaction = cache.beginRender();
+    transaction.useDirectional(plan(), () => undefined);
+    transaction.useDirectional(plan({
+      lightIdentity: secondLight,
+      projectionViewMatrix: matrix(2),
+    }), () => undefined);
+    transaction.commit();
+
+    const validDraw = vi.fn();
+    const invalidDraw = vi.fn();
+    transaction = cache.beginRender();
+    transaction.useDirectional(plan(), validDraw);
+    transaction.useDirectional(plan({
+      lightIdentity: secondLight,
+      projectionViewMatrix: matrix(3),
+    }), invalidDraw);
+    transaction.commit();
+
+    expect(validDraw).not.toHaveBeenCalled();
+    expect(invalidDraw).toHaveBeenCalledOnce();
+    expect(recording.blitFramebuffer).toHaveBeenCalledOnce();
+  });
+
+  it('retains an identity layer while sweeping an omitted light', () => {
+    const secondLight = Object.freeze({});
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    let transaction = cache.beginRender();
+    transaction.useDirectional(plan(), () => undefined);
+    const retained = transaction.useDirectional(plan({
+      lightIdentity: secondLight,
+      projectionViewMatrix: matrix(2),
+    }), () => undefined);
+    transaction.commit();
+    expect(retained.views[0].layer).toBe(6);
+
+    transaction = cache.beginRender();
+    const redraw = vi.fn();
+    const swept = transaction.useDirectional(plan({
+      lightIdentity: secondLight,
+      projectionViewMatrix: matrix(2),
+    }), redraw);
+    transaction.commit();
+
+    expect(swept.views[0].layer).toBe(6);
+    expect(redraw).not.toHaveBeenCalled();
+    expect(recording.blitFramebuffer).toHaveBeenCalledOnce();
+    expect(recording.deleteTexture).toHaveBeenCalledOnce();
+    expect(recording.deleteFramebuffer).toHaveBeenCalledOnce();
+  });
+
+  it('assigns one view to directional and spot lights and six consecutive point views', () => {
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    const transaction = cache.beginRender();
+    const directional = transaction.useDirectional(plan(), () => undefined);
+    const point = transaction.usePoint(pointPlan({
+      lightIdentity: Object.freeze({ kind: 'point' }),
+    }), () => undefined);
+    const spot = transaction.useSpot(spotPlan({
+      lightIdentity: Object.freeze({ kind: 'spot' }),
+    }), () => undefined);
+    transaction.commit();
+
+    expect(directional.views.map(view => view.layer)).toEqual([0]);
+    expect(point.views.map(view => view.layer)).toEqual([6, 7, 8, 9, 10, 11]);
+    expect(spot.views.map(view => view.layer)).toEqual([12]);
+  });
+
+  it('deletes an active candidate exactly once on healthy disposal', () => {
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    const transaction = cache.beginRender();
+    transaction.usePoint(pointPlan(), () => undefined);
+    transaction.getBindings();
+
+    cache.dispose(false);
+    transaction.rollback();
+    cache.dispose(false);
+
+    expect(recording.deleteTexture).toHaveBeenCalledOnce();
+    expect(recording.deleteFramebuffer).toHaveBeenCalledOnce();
+  });
+
+  it('continues owned framebuffer cleanup after texture deletion fails', () => {
+    const cleanupFailure = new Error('texture cleanup failed');
+    const recording = createShadowGL({ deleteTextureError: cleanupFailure });
     const reported: unknown[] = [];
     vi.spyOn(globalThis, 'reportError').mockImplementation(error => {
       reported.push(error);
     });
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
-    let transaction = cache.beginRender();
-    transaction.useDirectional(plan(), () => undefined);
-    transaction.useDirectional(
-      plan({ lightIdentity: SECOND_LIGHT }),
-      () => undefined,
-    );
-    transaction.commit();
-
-    transaction = cache.beginRender();
+    const transaction = cache.beginRender();
     transaction.useDirectional(plan(), () => undefined);
     transaction.commit();
-    expect(reported).toEqual([cleanupFailure]);
-    expect(recording.deleteTexture).toHaveBeenCalledTimes(1);
 
     cache.dispose(false);
-    expect(recording.deleteFramebuffer).toHaveBeenCalledOnce();
-    expect(recording.deleteTexture).toHaveBeenCalledTimes(2);
 
-    const lost = createShadowGL();
-    const lostCache = new WebGLShadowResourceCache(lost.gl, 8);
-    const lostTransaction = lostCache.beginRender();
-    lostTransaction.useDirectional(
-      plan({ contextGeneration: 8 }),
-      () => undefined,
-    );
-    lostTransaction.commit();
-    lostCache.invalidateContext();
-    lostCache.dispose(false);
-    expect(lost.deleteFramebuffer).not.toHaveBeenCalled();
-    expect(lost.deleteTexture).not.toHaveBeenCalled();
+    expect(reported).toEqual([cleanupFailure]);
+    expect(recording.deleteTexture).toHaveBeenCalledOnce();
+    expect(recording.deleteFramebuffer).toHaveBeenCalledOnce();
   });
 
-  it('rejects incomplete directional framebuffers and releases the candidate texture', () => {
-    const recording = createShadowGL({ framebufferComplete: false });
-    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+  it('rejects another context generation before allocating GL handles', () => {
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 8);
     const transaction = cache.beginRender();
 
     expect(() => transaction.useDirectional(plan(), () => undefined))
-      .toThrowError(/directional.*framebuffer.*incomplete/i);
+      .toThrowError(/shadow generation 7.*cache generation 8/i);
     transaction.rollback();
-    expect(recording.deleteTexture).toHaveBeenCalled();
+    expect(recording.createTexture).not.toHaveBeenCalled();
+    expect(recording.createFramebuffer).not.toHaveBeenCalled();
   });
 
-  it('deletes every active candidate handle exactly once on healthy disposal while abandoning context-lost handles', () => {
-    const recording = createShadowGL();
-    const cache = new WebGLShadowResourceCache(recording.gl, 7);
-    const transaction = cache.beginRender();
-    transaction.useDirectional(plan(), () => undefined);
-
-    cache.dispose(false);
-    transaction.rollback();
-    cache.dispose(false);
-
-    const deleted = recording.deleteTexture.mock.calls.map(call => call[0]);
-    expect(deleted).toHaveLength(1);
-    expect(new Set(deleted)).toEqual(new Set(recording.textures));
-    expect(recording.deleteFramebuffer).toHaveBeenCalledOnce();
-
-    const lost = createShadowGL();
-    const lostCache = new WebGLShadowResourceCache(lost.gl, 8);
-    const lostTransaction = lostCache.beginRender();
-    lostTransaction.useDirectional(
-      plan({ contextGeneration: 8 }),
-      () => undefined,
-    );
-
-    lostCache.dispose(true);
-    lostTransaction.rollback();
-    expect(lost.deleteTexture).not.toHaveBeenCalled();
-    expect(lost.deleteFramebuffer).not.toHaveBeenCalled();
-  });
-
-  it('allocates one clamped DEPTH_COMPONENT24 cube and attaches all six canonical faces', () => {
-    const recording = createShadowGL({ maxCubeMapTextureSize: 640 });
-    const cache = new WebGLShadowResourceCache(recording.gl, 7);
-    const renderedFaces: Array<readonly [number, number]> = [];
-    const transaction = cache.beginRender();
-    const resource = transaction.usePoint(
-      pointPlan(),
-      (face: number, resolution: number) => {
-        renderedFaces.push([face, resolution]);
-      },
-    );
-    transaction.commit();
-
-    expect(resource.resolution).toBe(640);
-    expect(renderedFaces).toEqual([
-      [0, 640], [1, 640], [2, 640], [3, 640], [4, 640], [5, 640],
-    ]);
-    expect(recording.texImage2D.mock.calls.filter(call =>
-      call[0] >= recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X &&
-      call[0] < recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + 6 &&
-      call[3] === 640,
-    )).toEqual(Array.from({ length: 6 }, (_, face) => [
-      recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-      0,
-      recording.gl.DEPTH_COMPONENT24,
-      640,
-      640,
-      0,
-      recording.gl.DEPTH_COMPONENT,
-      recording.gl.UNSIGNED_INT,
-      null,
-    ]));
-    expect(recording.framebufferTexture2D.mock.calls.slice(-6)).toEqual(
-      Array.from({ length: 6 }, (_, face) => [
-        recording.gl.FRAMEBUFFER,
-        recording.gl.DEPTH_ATTACHMENT,
-        recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-        resource.texture,
-        0,
-      ]),
-    );
-    expect(recording.checkFramebufferStatus).toHaveBeenCalledTimes(6);
-  });
-
-  it('reuses equal point cubes, replaces one changed light, and preserves resident data on rollback', () => {
-    const recording = createShadowGL();
-    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+  it('copies a valid layer between real WebGL2 array generations', () => {
+    const gl = new OffscreenCanvas(8, 8).getContext('webgl2');
+    expect(gl).not.toBeNull();
+    const cache = new WebGLShadowResourceCache(gl!, 7);
+    const secondLight = Object.freeze({});
+    const clearDepth = () => {
+      gl!.viewport(0, 0, 4, 4);
+      gl!.clearDepth(1);
+      gl!.clear(gl!.DEPTH_BUFFER_BIT);
+    };
     let transaction = cache.beginRender();
-    const initialDraw = vi.fn();
-    const initial = transaction.usePoint(pointPlan(), initialDraw);
+    transaction.useDirectional(plan({ requestedResolution: 4 }), clearDepth);
+    transaction.useDirectional(plan({
+      lightIdentity: secondLight,
+      projectionViewMatrix: matrix(2),
+      requestedResolution: 4,
+    }), clearDepth);
     transaction.commit();
-    expect(initialDraw).toHaveBeenCalledTimes(6);
 
     transaction = cache.beginRender();
-    const hitDraw = vi.fn();
-    const hit = transaction.usePoint(pointPlan(), hitDraw);
-    transaction.commit();
-    expect(hit.texture).toBe(initial.texture);
-    expect(hitDraw).not.toHaveBeenCalled();
-
-    transaction = cache.beginRender();
-    const replacementDraw = vi.fn();
-    const replacement = transaction.usePoint(pointPlan({
-      farDistance: 8,
-    }), replacementDraw);
-    transaction.commit();
-    expect(replacement.texture).not.toBe(initial.texture);
-    expect(replacementDraw).toHaveBeenCalledTimes(6);
-    expect(recording.deleteTexture).toHaveBeenCalledWith(initial.texture);
-
-    transaction = cache.beginRender();
-    const failure = new Error('point face failed');
-    expect(() => transaction.usePoint(pointPlan({
-      farDistance: 12,
-    }), (face: number) => {
-      if (face === 3) throw failure;
-    })).toThrow(failure);
-    transaction.rollback();
-
-    transaction = cache.beginRender();
-    const retryDraw = vi.fn();
-    const reused = transaction.usePoint(pointPlan({
-      farDistance: 8,
-    }), retryDraw);
-    transaction.commit();
-    expect(reused.texture).toBe(replacement.texture);
-    expect(retryDraw).not.toHaveBeenCalled();
-  });
-
-  it('rolls back incomplete and partially allocated point cubes without publishing them', () => {
-    const incomplete = createShadowGL({ framebufferIncompleteAt: 4 });
-    const incompleteCache = new WebGLShadowResourceCache(incomplete.gl, 7);
-    const incompleteTransaction = incompleteCache.beginRender();
-    expect(() => incompleteTransaction.usePoint(
-      pointPlan(),
-      () => undefined,
-    )).toThrowError(/point.*face 3.*framebuffer.*incomplete/i);
-    incompleteTransaction.rollback();
-    expect(incomplete.deleteTexture).toHaveBeenCalled();
-
-    const allocationError = new Error('cube allocation failed');
-    const allocation = createShadowGL({
-      texImage2DErrorAt: 4,
-      texImage2DError: allocationError,
-    });
-    const allocationCache = new WebGLShadowResourceCache(allocation.gl, 7);
-    const allocationTransaction = allocationCache.beginRender();
-    expect(() => allocationTransaction.usePoint(
-      pointPlan(),
-      () => undefined,
-    )).toThrow(allocationError);
-    allocationTransaction.rollback();
-    expect(allocation.deleteTexture).toHaveBeenCalled();
-  });
-
-  it('allocates one 2D spot map and reuses only an equal resident projection', () => {
-    const recording = createShadowGL({ maxTextureSize: 768 });
-    const cache = new WebGLShadowResourceCache(recording.gl, 7);
-    let transaction = cache.beginRender();
-    const firstDraw = vi.fn();
-    const first = transaction.useSpot(spotPlan(), firstDraw);
+    transaction.useDirectional(plan({ requestedResolution: 4 }), clearDepth);
+    transaction.useDirectional(plan({
+      lightIdentity: secondLight,
+      projectionViewMatrix: matrix(3),
+      requestedResolution: 4,
+    }), clearDepth);
     transaction.commit();
 
-    expect(first).toMatchObject({ kind: 'spot', resolution: 768 });
-    expect(firstDraw).toHaveBeenCalledExactlyOnceWith(768);
-    expect(recording.framebufferTexture2D).toHaveBeenLastCalledWith(
-      recording.gl.FRAMEBUFFER,
-      recording.gl.DEPTH_ATTACHMENT,
-      recording.gl.TEXTURE_2D,
-      first.texture,
-      0,
-    );
-
-    transaction = cache.beginRender();
-    const hitDraw = vi.fn();
-    const hit = transaction.useSpot(spotPlan(), hitDraw);
-    transaction.commit();
-    expect(hit.texture).toBe(first.texture);
-    expect(hitDraw).not.toHaveBeenCalled();
-
-    transaction = cache.beginRender();
-    const replacementDraw = vi.fn();
-    const replacement = transaction.useSpot(spotPlan({
-      projectionViewMatrix: matrix(9),
-    }), replacementDraw);
-    transaction.commit();
-    expect(replacement.texture).not.toBe(first.texture);
-    expect(replacementDraw).toHaveBeenCalledExactlyOnceWith(768);
-    expect(recording.deleteTexture).toHaveBeenCalledWith(first.texture);
+    expect(gl!.getError()).toBe(gl!.NO_ERROR);
+    cache.dispose(false);
   });
 });
 
 const FIRST_LIGHT = Object.freeze({});
-const SECOND_LIGHT = Object.freeze({});
 
 function plan(
   overrides: Partial<SettledWebGLDirectionalShadowPlan> = {},
@@ -432,30 +453,23 @@ function matrix(seed: number): Float32Array {
 
 function createShadowGL(options: {
   readonly maxTextureSize?: number;
-  readonly maxCubeMapTextureSize?: number;
-  readonly framebufferComplete?: boolean;
   readonly framebufferIncompleteAt?: number;
-  readonly texImage2DErrorAt?: number;
-  readonly texImage2DError?: Error;
-  readonly deleteTextureErrorAt?: number;
+  readonly texStorage3DErrorAt?: number;
+  readonly texStorage3DError?: Error;
   readonly deleteTextureError?: Error;
 } = {}) {
   const textures: object[] = [];
-  let deleteTextureCount = 0;
   let framebufferStatusCount = 0;
-  let texImage2DCount = 0;
+  let texStorage3DCount = 0;
   const gl = {
     MAX_TEXTURE_SIZE: 1,
-    MAX_CUBE_MAP_TEXTURE_SIZE: 2,
     FRAMEBUFFER: 3,
+    READ_FRAMEBUFFER: 31,
+    DRAW_FRAMEBUFFER: 32,
     FRAMEBUFFER_COMPLETE: 4,
     DEPTH_ATTACHMENT: 5,
-    TEXTURE_2D: 6,
-    TEXTURE_CUBE_MAP: 7,
-    TEXTURE_CUBE_MAP_POSITIVE_X: 10,
+    TEXTURE_2D_ARRAY: 8,
     DEPTH_COMPONENT24: 20,
-    DEPTH_COMPONENT: 21,
-    UNSIGNED_INT: 22,
     TEXTURE_MIN_FILTER: 23,
     TEXTURE_MAG_FILTER: 24,
     TEXTURE_WRAP_S: 25,
@@ -464,18 +478,17 @@ function createShadowGL(options: {
     NEAREST: 28,
     CLAMP_TO_EDGE: 29,
     NONE: 30,
-    getParameter: vi.fn((parameter: number) => parameter === 1 ?
-      (options.maxTextureSize ?? 4096) :
-      (options.maxCubeMapTextureSize ?? 4096)),
+    getParameter: vi.fn(() => options.maxTextureSize ?? 4096),
     createFramebuffer: vi.fn(() => ({ kind: 'framebuffer' })),
     deleteFramebuffer: vi.fn(),
     bindFramebuffer: vi.fn(),
     checkFramebufferStatus: vi.fn(() => {
       framebufferStatusCount += 1;
-      return options.framebufferComplete === false ||
-        framebufferStatusCount === options.framebufferIncompleteAt ? 999 : 4;
+      return framebufferStatusCount === options.framebufferIncompleteAt ?
+        999 : 4;
     }),
-    framebufferTexture2D: vi.fn(),
+    framebufferTextureLayer: vi.fn(),
+    blitFramebuffer: vi.fn(),
     drawBuffers: vi.fn(),
     readBuffer: vi.fn(),
     createTexture: vi.fn(() => {
@@ -484,30 +497,26 @@ function createShadowGL(options: {
       return texture;
     }),
     deleteTexture: vi.fn(() => {
-      deleteTextureCount += 1;
-      if (deleteTextureCount === options.deleteTextureErrorAt) {
-        throw options.deleteTextureError;
-      }
+      if (options.deleteTextureError) throw options.deleteTextureError;
     }),
     bindTexture: vi.fn(),
     texParameteri: vi.fn(),
-    texImage2D: vi.fn(() => {
-      texImage2DCount += 1;
-      if (texImage2DCount === options.texImage2DErrorAt) {
-        throw options.texImage2DError;
+    texStorage3D: vi.fn(() => {
+      texStorage3DCount += 1;
+      if (texStorage3DCount === options.texStorage3DErrorAt) {
+        throw options.texStorage3DError;
       }
     }),
-    isContextLost: vi.fn(() => false),
   } as unknown as WebGL2RenderingContext;
   return {
     gl,
     textures,
-    getParameter: vi.mocked(gl.getParameter),
     createFramebuffer: vi.mocked(gl.createFramebuffer),
     deleteFramebuffer: vi.mocked(gl.deleteFramebuffer),
-    checkFramebufferStatus: vi.mocked(gl.checkFramebufferStatus),
-    framebufferTexture2D: vi.mocked(gl.framebufferTexture2D),
-    texImage2D: vi.mocked(gl.texImage2D),
+    framebufferTextureLayer: vi.mocked(gl.framebufferTextureLayer),
+    blitFramebuffer: vi.mocked(gl.blitFramebuffer),
+    createTexture: vi.mocked(gl.createTexture),
     deleteTexture: vi.mocked(gl.deleteTexture),
+    texStorage3D: vi.mocked(gl.texStorage3D),
   };
 }

@@ -1,5 +1,6 @@
 export const WEBGL_MAX_LIGHTS = 8;
 export const WEBGL_MAX_SHADOWS = 8;
+export const WEBGL_MAX_SHADOW_VIEWS = WEBGL_MAX_LIGHTS * 6;
 
 export const WEBGL_LIGHT_KIND = Object.freeze({
   ambient: 0,
@@ -81,26 +82,6 @@ void main() {
 }
 `;
 
-const SHADOW_2D_SAMPLERS = Array.from(
-  { length: WEBGL_MAX_SHADOWS },
-  (_, index) => `uniform sampler2D u_shadow_map_2d_${index};`,
-).join('\n');
-
-const SHADOW_CUBE_SAMPLERS = Array.from(
-  { length: WEBGL_MAX_SHADOWS },
-  (_, index) => `uniform samplerCube u_shadow_map_cube_${index};`,
-).join('\n');
-
-const SHADOW_2D_BRANCHES = Array.from(
-  { length: WEBGL_MAX_SHADOWS },
-  (_, index) => `  if (index == ${index}) return texture(u_shadow_map_2d_${index}, coordinates).r;`,
-).join('\n');
-
-const SHADOW_CUBE_BRANCHES = Array.from(
-  { length: WEBGL_MAX_SHADOWS },
-  (_, index) => `  if (index == ${index}) return texture(u_shadow_map_cube_${index}, direction).r;`,
-).join('\n');
-
 const LAMBERT_VERTEX_SOURCE = `#version 300 es
 precision highp float;
 layout(location = 0) in vec3 a_position;
@@ -136,6 +117,7 @@ void main() {
 const LAMBERT_FRAGMENT_SOURCE = `#version 300 es
 precision highp float;
 precision highp int;
+precision highp sampler2DArray;
 
 const int MAX_LIGHTS = ${WEBGL_MAX_LIGHTS};
 const int LIGHT_KIND_AMBIENT = ${WEBGL_LIGHT_KIND.ambient};
@@ -156,9 +138,9 @@ uniform vec4 u_light_ground_outer_cosine[MAX_LIGHTS];
 uniform int u_shadow_enabled[MAX_LIGHTS];
 uniform mat4 u_shadow_matrix[MAX_LIGHTS];
 uniform vec4 u_shadow_parameters[MAX_LIGHTS];
+uniform int u_shadow_layer[MAX_LIGHTS];
 uniform bool u_receive_shadow;
-${SHADOW_2D_SAMPLERS}
-${SHADOW_CUBE_SAMPLERS}
+uniform sampler2DArray u_shadow_map;
 
 in vec3 v_world_position;
 in vec3 v_world_normal;
@@ -184,13 +166,57 @@ vec3 linear_to_srgb(vec3 color) {
 }
 
 float sample_shadow_2d(int index, vec2 coordinates) {
-${SHADOW_2D_BRANCHES}
-  return 1.0;
+  return texture(
+    u_shadow_map,
+    vec3(coordinates, float(u_shadow_layer[index]))
+  ).r;
 }
 
-float sample_shadow_cube(int index, vec3 direction) {
-${SHADOW_CUBE_BRANCHES}
-  return 1.0;
+int point_shadow_face(vec3 direction) {
+  vec3 absolute_direction = abs(direction);
+  if (absolute_direction.x >= absolute_direction.y &&
+      absolute_direction.x >= absolute_direction.z) {
+    return direction.x >= 0.0 ? 0 : 1;
+  }
+  if (absolute_direction.y >= absolute_direction.z) {
+    return direction.y >= 0.0 ? 2 : 3;
+  }
+  return direction.z >= 0.0 ? 4 : 5;
+}
+
+vec2 point_shadow_coordinates(vec3 direction, int face) {
+  vec3 absolute_direction = abs(direction);
+  vec2 coordinates;
+  float major;
+  if (face == 0) {
+    coordinates = vec2(-direction.z, -direction.y);
+    major = absolute_direction.x;
+  } else if (face == 1) {
+    coordinates = vec2(direction.z, -direction.y);
+    major = absolute_direction.x;
+  } else if (face == 2) {
+    coordinates = vec2(direction.x, direction.z);
+    major = absolute_direction.y;
+  } else if (face == 3) {
+    coordinates = vec2(direction.x, -direction.z);
+    major = absolute_direction.y;
+  } else if (face == 4) {
+    coordinates = vec2(direction.x, -direction.y);
+    major = absolute_direction.z;
+  } else {
+    coordinates = vec2(-direction.x, -direction.y);
+    major = absolute_direction.z;
+  }
+  return major > 0.0 ? coordinates / major * 0.5 + 0.5 : vec2(0.5);
+}
+
+float sample_shadow_point(int index, vec3 direction) {
+  int face = point_shadow_face(direction);
+  vec2 coordinates = point_shadow_coordinates(direction, face);
+  return texture(
+    u_shadow_map,
+    vec3(coordinates, float(u_shadow_layer[index] + face))
+  ).r;
 }
 
 float compare_directional_shadow(
@@ -280,7 +306,7 @@ float compare_point_shadow(
   vec3 direction,
   float current_depth
 ) {
-  float stored_depth = sample_shadow_cube(index, direction);
+  float stored_depth = sample_shadow_point(index, direction);
   return current_depth <= stored_depth ? 1.0 : 0.0;
 }
 

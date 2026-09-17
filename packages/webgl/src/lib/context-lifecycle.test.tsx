@@ -143,7 +143,7 @@ describe('WebGLLayer context lifecycle', () => {
     expect(glCount(platform, 'deleteVertexArray')).toBe(1);
   });
 
-  it('abandons a lost point cube, rebuilds all six faces, and deletes only the restored generation', () => {
+  it('abandons a lost point shadow array, rebuilds all six layers, and deletes only the restored generation', () => {
     const firstBitmap = bitmap('point-first');
     const restoredBitmap = bitmap('point-restored');
     const platform = installContextPlatform([firstBitmap, restoredBitmap]);
@@ -174,7 +174,7 @@ describe('WebGLLayer context lifecycle', () => {
     controller.renderUpdatedChild(root, undefined, surface, 1);
     controller.composite(parentContext, { x: 0, y: 0, width: 20, height: 10 });
     expect(glCount(platform, 'drawElements')).toBe(7);
-    expect(glCount(platform, 'createTexture')).toBe(3);
+    expect(glCount(platform, 'createTexture')).toBe(1);
     expect(glCount(platform, 'createFramebuffer')).toBe(1);
 
     platform.contextLost = true;
@@ -190,12 +190,12 @@ describe('WebGLLayer context lifecycle', () => {
     controller.renderRetainedChild(root, undefined, surface, 2);
     controller.composite(parentContext, { x: 0, y: 0, width: 20, height: 10 });
     expect(glCount(platform, 'drawElements')).toBe(14);
-    expect(glCount(platform, 'createTexture')).toBe(6);
+    expect(glCount(platform, 'createTexture')).toBe(2);
     expect(glCount(platform, 'createFramebuffer')).toBe(2);
 
     controller.dispose();
     controller.dispose();
-    expect(glCount(platform, 'deleteTexture')).toBe(3);
+    expect(glCount(platform, 'deleteTexture')).toBe(1);
     expect(glCount(platform, 'deleteFramebuffer')).toBe(1);
   });
 

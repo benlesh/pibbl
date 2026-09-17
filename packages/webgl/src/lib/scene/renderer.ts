@@ -56,8 +56,7 @@ interface PackedWebGLShadows {
   readonly enabled: Int32Array;
   readonly matrices: Float32Array;
   readonly parameters: Float32Array;
-  readonly textures2D: readonly WebGLTexture[];
-  readonly texturesCube: readonly WebGLTexture[];
+  readonly layers: Int32Array;
   readonly bindings: WebGLShadowBindings;
 }
 
@@ -99,6 +98,7 @@ export class WebGLSceneRenderer {
       );
       shadowTransaction = this.shadows.beginRender();
       const shadowResources = new Map<number, WebGLShadowResource>();
+      let shadowBindings: WebGLShadowBindings | undefined;
       if (scene.shadowPlans.length > 0) {
         transaction = this.resources.beginRender();
         for (const plan of scene.shadowPlans) {
@@ -143,6 +143,7 @@ export class WebGLSceneRenderer {
             );
           shadowResources.set(plan.lightIndex, resource);
         }
+        shadowBindings = shadowTransaction.getBindings();
         installWebGLStateBaseline(
           this.gl,
           scene.backingViewport.width,
@@ -164,7 +165,7 @@ export class WebGLSceneRenderer {
       const packedShadows = needsLambert ? packWebGLShadows(
         scene.shadowPlans,
         shadowResources,
-        shadowTransaction.getBindings(),
+        shadowBindings ?? shadowTransaction.getBindings(),
       ) : undefined;
       const frameBoundPrograms = new Set<WebGLBuiltInProgram>();
       installOpaqueWebGLPass(this.gl);
@@ -595,21 +596,10 @@ function bindShadows(
   gl.uniform1iv(program.shadowEnabled, shadows.enabled);
   gl.uniformMatrix4fv(program.shadowMatrices, false, shadows.matrices);
   gl.uniform4fv(program.shadowParameters, shadows.parameters);
-  for (let index = 0; index < WEBGL_MAX_SHADOWS; index += 1) {
-    gl.activeTexture(gl.TEXTURE0 + index);
-    gl.bindTexture(
-      gl.TEXTURE_2D,
-      shadows.textures2D[index] ?? shadows.bindings.fallback2D,
-    );
-    gl.uniform1i(program.shadow2DSamplers[index]!, index);
-    const cubeUnit = WEBGL_MAX_SHADOWS + index;
-    gl.activeTexture(gl.TEXTURE0 + cubeUnit);
-    gl.bindTexture(
-      gl.TEXTURE_CUBE_MAP,
-      shadows.texturesCube[index] ?? shadows.bindings.fallbackCube,
-    );
-    gl.uniform1i(program.shadowCubeSamplers[index]!, cubeUnit);
-  }
+  gl.uniform1iv(program.shadowLayers, shadows.layers);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, shadows.bindings.texture);
+  gl.uniform1i(program.shadowMap, 0);
 }
 
 function packWebGLShadows(
@@ -620,10 +610,7 @@ function packWebGLShadows(
   const enabled = new Int32Array(WEBGL_MAX_SHADOWS);
   const matrices = new Float32Array(WEBGL_MAX_SHADOWS * 16);
   const parameters = new Float32Array(WEBGL_MAX_SHADOWS * 4);
-  const textures2D = Array<WebGLTexture>(WEBGL_MAX_SHADOWS)
-    .fill(bindings.fallback2D);
-  const texturesCube = Array<WebGLTexture>(WEBGL_MAX_SHADOWS)
-    .fill(bindings.fallbackCube);
+  const layers = new Int32Array(WEBGL_MAX_SHADOWS);
   for (const plan of plans) {
     const resource = resources.get(plan.lightIndex);
     if (!resource || plan.lightIndex >= WEBGL_MAX_SHADOWS) continue;
@@ -634,19 +621,19 @@ function packWebGLShadows(
     if (plan.kind === 'directional' && resource.kind === 'directional') {
       enabled[plan.lightIndex] = 1;
       matrices.set(plan.projectionViewMatrix, plan.lightIndex * 16);
-      textures2D[plan.lightIndex] = resource.texture;
+      layers[plan.lightIndex] = resource.views[0].layer;
     } else if (plan.kind === 'point' && resource.kind === 'point') {
       enabled[plan.lightIndex] = 2;
       parameters[parameterOffset + 3] = plan.farDistance;
-      texturesCube[plan.lightIndex] = resource.texture;
+      layers[plan.lightIndex] = resource.views[0]!.layer;
     } else if (plan.kind === 'spot' && resource.kind === 'spot') {
       enabled[plan.lightIndex] = 3;
       parameters[parameterOffset + 3] = plan.farDistance;
       matrices.set(plan.projectionViewMatrix, plan.lightIndex * 16);
-      textures2D[plan.lightIndex] = resource.texture;
+      layers[plan.lightIndex] = resource.views[0].layer;
     }
   }
-  return { enabled, matrices, parameters, textures2D, texturesCube, bindings };
+  return { enabled, matrices, parameters, layers, bindings };
 }
 
 function isLambertMesh(
