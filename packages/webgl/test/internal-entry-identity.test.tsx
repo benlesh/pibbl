@@ -100,13 +100,16 @@ describe('built @crc/webgl cross-entry identity', () => {
       children: [
         createElement(Cube, {
           physics: attachment(),
+          style: { lit: false },
         } as unknown as CubeProps),
         createElement(Sphere, {
           physics: attachment(),
+          style: { lit: false },
         } as unknown as SphereProps),
         createElement(Mesh, {
           physics: attachment(),
           geometry,
+          style: { lit: false },
         } as unknown as MeshProps),
       ],
     } as unknown as Group3DProps);
@@ -162,8 +165,9 @@ function renderBuiltScene(children: CRCNode): void {
   canvas.height = 50;
   document.body.appendChild(canvas);
   const layer = createElement(WebGLLayer, {
+    style: { shadows: false },
     children,
-  } satisfies WebGLLayerProps);
+  } as unknown as WebGLLayerProps);
   const controller = crc(canvas, layer, { pixelRatio: 1 });
   controllers.add(controller);
   expect(frame).toBeDefined();
