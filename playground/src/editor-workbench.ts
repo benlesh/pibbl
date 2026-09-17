@@ -94,6 +94,11 @@ const declarationModulePaths = new Map([
     "@crc/physics/2d/geometry",
     "file:///node_modules/@crc/physics/2d/geometry.d.ts",
   ],
+  ["@crc/physics/3d", "file:///node_modules/@crc/physics/3d.d.ts"],
+  [
+    "@crc/physics/3d/geometry",
+    "file:///node_modules/@crc/physics/3d/geometry.d.ts",
+  ],
   ["@crc/webgl", "file:///node_modules/@crc/webgl/index.d.ts"],
 ]);
 

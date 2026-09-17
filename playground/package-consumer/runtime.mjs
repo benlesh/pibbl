@@ -2,6 +2,8 @@ import * as core from '@crc/core';
 import * as internal from '@crc/core/internal';
 import * as webgl from '@crc/webgl';
 import * as webglInternal from '@crc/webgl/internal';
+import * as physics3d from '@crc/physics/3d';
+import * as physics3dGeometry from '@crc/physics/3d/geometry';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { createRequire } from 'node:module';
@@ -226,6 +228,51 @@ const expectedWebGL = [
 const actualWebGL = Object.keys(webgl).sort();
 if (JSON.stringify(actualWebGL) !== JSON.stringify(expectedWebGL)) {
   throw new Error(`Unexpected @crc/webgl exports: ${actualWebGL.join(', ')}`);
+}
+
+const expectedPhysics3D = [
+  'Box3D', 'Capsule3D', 'Cone3D', 'ConvexHull3D', 'Cylinder3D',
+  'Ellipsoid3D', 'Heightfield3D', 'PhysicsShape3D', 'PhysicsWorld3D',
+  'applyForce3D', 'applyImpulse3D', 'applyTorque3D', 'boundsOfShape3D',
+  'boxShape3D', 'capsuleShape3D', 'collider3D', 'coneShape3D',
+  'contactBetweenShapes3D', 'containsPoint3D', 'convexHullShape3D',
+  'crcPhysicsBody3D', 'crcPhysicsWorld3D', 'cylinderShape3D',
+  'disableBody3D', 'distanceBetweenShapes3D', 'dynamicBody3D',
+  'ellipsoidShape3D', 'enableBody3D', 'heightfieldShape3D',
+  'kinematicBody3D', 'massProperties3D', 'overlapShape3D',
+  'overlapShapes3D', 'queryAabb3D', 'queryPoint3D', 'raycast3D',
+  'raycastShape3D', 'setAngularVelocity3D', 'setLinearVelocity3D',
+  'shapeCast3D', 'shapeCastAgainstShape3D', 'sleepBody3D', 'sphereShape3D',
+  'staticBody3D', 'teleportBody3D', 'transformShape3D',
+  'triangleMeshShape3D', 'wakeBody3D',
+].sort();
+const expectedPhysics3DGeometry = [
+  'boundsOfShape3D', 'boxShape3D', 'capsuleShape3D', 'coneShape3D',
+  'contactBetweenShapes3D', 'containsPoint3D', 'convexHullShape3D',
+  'cylinderShape3D', 'distanceBetweenShapes3D', 'ellipsoidShape3D',
+  'heightfieldShape3D', 'massProperties3D', 'overlapShapes3D',
+  'raycastShape3D', 'shapeCastAgainstShape3D', 'sphereShape3D',
+  'transformShape3D', 'triangleMeshShape3D',
+].sort();
+if (JSON.stringify(Object.keys(physics3d).sort()) !== JSON.stringify(expectedPhysics3D)) {
+  throw new Error(`Unexpected @crc/physics/3d exports: ${Object.keys(physics3d).sort().join(', ')}`);
+}
+if (JSON.stringify(Object.keys(physics3dGeometry).sort()) !== JSON.stringify(expectedPhysics3DGeometry)) {
+  throw new Error(`Unexpected @crc/physics/3d/geometry exports: ${Object.keys(physics3dGeometry).sort().join(', ')}`);
+}
+for (const exportName of expectedPhysics3D) {
+  if (typeof physics3d[exportName] !== 'function') {
+    throw new Error(`Expected @crc/physics/3d ${exportName} to be callable.`);
+  }
+}
+const packedPhysicsSphere = physics3dGeometry.sphereShape3D({ radius: 1 });
+const packedPhysicsHit = physics3dGeometry.raycastShape3D(
+  packedPhysicsSphere,
+  { position: [0, 0, 0], orientation: [0, 0, 0, 1] },
+  { origin: [-2, 0, 0], direction: [1, 0, 0], maxDistance: 4 },
+);
+if (packedPhysicsHit?.distance !== 1) {
+  throw new Error('@crc/physics/3d geometry runtime returned an unexpected ray hit.');
 }
 if (actualWebGL.length !== 14) {
   throw new Error(

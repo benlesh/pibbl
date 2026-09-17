@@ -18,9 +18,10 @@ copied into package-owned immutable values.
 
 ## 3D geometry
 
-The matching renderer-independent 3D entry currently provides immutable sphere
-and oriented-box shapes, rigid transforms, bounds, and analytic mass
-properties:
+The matching renderer-independent 3D entry provides immutable sphere, box,
+ellipsoid, capsule, cylinder, cone, convex-hull, triangle-mesh, and heightfield
+shapes together with bounds, mass properties, containment, distance, overlap,
+contact, ray-cast, shape-cast, and rigid-transform operations:
 
 ```ts
 import {
@@ -38,10 +39,34 @@ const boxMass = massProperties3D(
 
 The 3D geometry entry does not load CRC, WebGL, browser APIs, a world, or a
 scheduler. Install the matching optional `@crc/core` and `@crc/webgl` peers
-when using the world-facing `@crc/physics/3d` entry. Runtime world values are
-exported only as their implementations become available; this initial entry
-re-exports geometry and the fixed runtime-facing types without placeholder
-values.
+when using the world-facing `@crc/physics/3d` entry.
+
+## CRC 3D worlds and components
+
+The world-facing entry integrates with one `WebGLLayer` and CRC's shared realm
+scheduler:
+
+```tsx
+import { crc } from "@crc/core";
+import { Cube, WebGLLayer } from "@crc/webgl";
+import { PhysicsWorld3D, dynamicBody3D } from "@crc/physics/3d";
+
+crc(
+  canvas,
+  <WebGLLayer style={{ width: 640, height: 360 }}>
+    <PhysicsWorld3D gravity={[0, -9.81, 0]}>
+      <Cube physics={dynamicBody3D({ mass: 1 })} style={{ lit: false }} />
+    </PhysicsWorld3D>
+  </WebGLLayer>,
+);
+```
+
+`Cube`, `Sphere`, and `Mesh` infer colliders. `Group3D` hosts compound bodies,
+and `Box3D`, `Ellipsoid3D`, `Capsule3D`, `Cylinder3D`, `Cone3D`,
+`ConvexHull3D`, `Heightfield3D`, and `PhysicsShape3D` render the remaining
+public shapes. Moving triangle meshes and heightfields are rejected with a
+runtime diagnostic; use a convex hull or another convex shape for moving
+bodies.
 
 ## CRC 2D worlds and components
 

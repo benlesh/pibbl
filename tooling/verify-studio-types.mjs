@@ -18,6 +18,10 @@ const physicsLessonSource = await readFile(
   join(repositoryRoot, 'packages/scenarios/src/learning/composition/physics-2d.example.tsx'),
   'utf8',
 );
+const physics3DLessonSource = await readFile(
+  join(repositoryRoot, 'packages/scenarios/src/physics-3d.example.tsx'),
+  'utf8',
+);
 const directory = await mkdtemp(join(tmpdir(), 'crc-studio-types-'));
 const require = createRequire(import.meta.url);
 const tsc = join(dirname(require.resolve('typescript')), 'tsc.js');
@@ -28,6 +32,8 @@ const modulePaths = new Map([
   ['@crc/core/jsx-dev-runtime', 'node_modules/@crc/core/jsx-dev-runtime.d.ts'],
   ['@crc/physics/2d', 'node_modules/@crc/physics/2d.d.ts'],
   ['@crc/physics/2d/geometry', 'node_modules/@crc/physics/2d/geometry.d.ts'],
+  ['@crc/physics/3d', 'node_modules/@crc/physics/3d.d.ts'],
+  ['@crc/physics/3d/geometry', 'node_modules/@crc/physics/3d/geometry.d.ts'],
   ['@crc/webgl', 'node_modules/@crc/webgl/index.d.ts'],
 ]);
 
@@ -45,7 +51,7 @@ function readDeclarationModules(bundle) {
     modules.some(({ moduleName }) => !modulePaths.has(moduleName))
   ) {
     throw new Error(
-      'CRC Studio declarations must define the six package entry points exactly once.',
+      'CRC Studio declarations must define the eight package entry points exactly once.',
     );
   }
   return modules;
@@ -297,6 +303,10 @@ const packageDeclarationSources = new Map([
     '@crc/physics/2d/geometry',
     await readFile(join(repositoryRoot, 'packages/physics/src/2d-geometry.ts'), 'utf8'),
   ],
+  [
+    '@crc/physics/3d/geometry',
+    await readFile(join(repositoryRoot, 'packages/physics/src/3d-geometry.ts'), 'utf8'),
+  ],
 ]);
 
 const builtPackageDeclarationSources = new Map([
@@ -314,12 +324,18 @@ const builtPackageDeclarationSources = new Map([
     '@crc/physics/2d/geometry',
     await readFile(join(repositoryRoot, 'packages/physics/dist/2d-geometry.d.ts'), 'utf8'),
   ],
+  [
+    '@crc/physics/3d/geometry',
+    await readFile(join(repositoryRoot, 'packages/physics/dist/3d-geometry.d.ts'), 'utf8'),
+  ],
 ]);
 
 for (const { moduleName, content } of declarationModules) {
-  if (moduleName === '@crc/physics/2d') continue;
+  if (moduleName === '@crc/physics/2d' || moduleName === '@crc/physics/3d') continue;
   const packageSource = packageDeclarationSources.get(moduleName);
-  const sourceIsDeclarationFile = moduleName !== '@crc/physics/2d/geometry';
+  const sourceIsDeclarationFile =
+    moduleName !== '@crc/physics/2d/geometry' &&
+    moduleName !== '@crc/physics/3d/geometry';
   assertExactDeclarationSurface(
     moduleName,
     'source package',
@@ -684,6 +700,93 @@ if (physics2DStudioExports.join('\n') !== expectedPhysics2DStudioExports.join('\
   throw new Error('CRC Studio @crc/physics/2d declaration differs from its fixed public manifest.');
 }
 
+const publicPhysics3DTypeExports = [
+  'Box3DProps',
+  'CRCPhysicsAabb3D',
+  'CRCPhysicsAttachment3D',
+  'CRCPhysicsAxisLocks3D',
+  'CRCPhysicsBodyAttachment3D',
+  'CRCPhysicsBodyHandle3D',
+  'CRCPhysicsBodyStateEvent3D',
+  'CRCPhysicsBodyStateHandler3D',
+  'CRCPhysicsColliderAttachment3D',
+  'CRCPhysicsColliderConfiguration3D',
+  'CRCPhysicsColliderHandle3D',
+  'CRCPhysicsCollisionEvent3D',
+  'CRCPhysicsCollisionFilter',
+  'CRCPhysicsCollisionHandler3D',
+  'CRCPhysicsContactPoint3D',
+  'CRCPhysicsDistance3D',
+  'CRCPhysicsDynamicBody3DOptions',
+  'CRCPhysicsHitHandler3D',
+  'CRCPhysicsKinematicBody3DOptions',
+  'CRCPhysicsKinematicTarget3D',
+  'CRCPhysicsMassProperties3D',
+  'CRCPhysicsMatrix3',
+  'CRCPhysicsOverlapEvent3D',
+  'CRCPhysicsOverlapHandler3D',
+  'CRCPhysicsPose3D',
+  'CRCPhysicsQuaternion',
+  'CRCPhysicsQueryHit3D',
+  'CRCPhysicsQueryMatch3D',
+  'CRCPhysicsQueryMode',
+  'CRCPhysicsQueryOptions3D',
+  'CRCPhysicsQueryResult3D',
+  'CRCPhysicsRay3D',
+  'CRCPhysicsShape3D',
+  'CRCPhysicsShapeContact3D',
+  'CRCPhysicsShapeHit3D',
+  'CRCPhysicsSolverOptions',
+  'CRCPhysicsStaticBody3DOptions',
+  'CRCPhysicsTransform3D',
+  'CRCPhysicsVector3',
+  'CRCPhysicsWorld3DProps',
+  'CRCPhysicsWorldHandle3D',
+  'Capsule3DProps',
+  'Cone3DProps',
+  'ConvexHull3DProps',
+  'Cylinder3DProps',
+  'Ellipsoid3DProps',
+  'Heightfield3DProps',
+  'PhysicsShape3DProps',
+].sort();
+
+const publicPhysics3DValueExports = [
+  'Box3D', 'Capsule3D', 'Cone3D', 'ConvexHull3D', 'Cylinder3D',
+  'Ellipsoid3D', 'Heightfield3D', 'PhysicsShape3D', 'PhysicsWorld3D',
+  'applyForce3D', 'applyImpulse3D', 'applyTorque3D', 'boundsOfShape3D',
+  'boxShape3D', 'capsuleShape3D', 'collider3D', 'coneShape3D',
+  'contactBetweenShapes3D', 'containsPoint3D', 'convexHullShape3D',
+  'crcPhysicsBody3D', 'crcPhysicsWorld3D', 'cylinderShape3D',
+  'disableBody3D', 'distanceBetweenShapes3D', 'dynamicBody3D',
+  'ellipsoidShape3D', 'enableBody3D', 'heightfieldShape3D',
+  'kinematicBody3D', 'massProperties3D', 'overlapShape3D',
+  'overlapShapes3D', 'queryAabb3D', 'queryPoint3D', 'raycast3D',
+  'raycastShape3D', 'setAngularVelocity3D', 'setLinearVelocity3D',
+  'shapeCast3D', 'shapeCastAgainstShape3D', 'sleepBody3D', 'sphereShape3D',
+  'staticBody3D', 'teleportBody3D', 'transformShape3D',
+  'triangleMeshShape3D', 'wakeBody3D',
+].sort();
+
+if (publicPhysics3DTypeExports.length !== 48 || publicPhysics3DValueExports.length !== 48) {
+  throw new Error('CRC Studio must declare exactly 48 physics 3D types and 48 physics 3D values.');
+}
+const physics3DStudioDeclaration = declarationModules.find(
+  ({ moduleName }) => moduleName === '@crc/physics/3d',
+)?.content;
+const physics3DStudioExports = explicitExportNames(
+  physics3DStudioDeclaration,
+  'Studio @crc/physics/3d',
+  new Set(['@crc/core', '@crc/webgl']),
+);
+const expectedPhysics3DStudioExports = [
+  ...publicPhysics3DTypeExports,
+  ...publicPhysics3DValueExports,
+].sort();
+if (physics3DStudioExports.join('\n') !== expectedPhysics3DStudioExports.join('\n')) {
+  throw new Error('CRC Studio @crc/physics/3d declaration differs from its fixed public manifest.');
+}
+
 function explicitTypeExportNames(source) {
   const names = [];
   for (const match of source.matchAll(
@@ -724,6 +827,13 @@ import type {
 import type {
   ${publicPhysics2DTypeExports.join(',\n  ')}
 } from '@crc/physics/2d';
+import type {
+  ${publicPhysics3DTypeExports.map((name) =>
+    ['CRCPhysicsCollisionFilter', 'CRCPhysicsQueryMode', 'CRCPhysicsSolverOptions'].includes(name)
+      ? `${name} as ${name}3D`
+      : name,
+  ).join(',\n  ')}
+} from '@crc/physics/3d';
 `;
 
 const consumer = `
@@ -1742,6 +1852,7 @@ try {
   await writeFile(join(directory, 'consumer.tsx'), consumer);
   await writeFile(join(directory, 'package-consumer.tsx'), packageConsumer);
   await writeFile(join(directory, 'physics-lesson.tsx'), physicsLessonSource);
+  await writeFile(join(directory, 'physics-3d-lesson.tsx'), physics3DLessonSource);
   await writeFile(join(directory, 'public-type-surface.ts'), publicTypeSurfaceConsumer);
   await writeFile(
     join(directory, 'tsconfig.json'),
@@ -1757,7 +1868,7 @@ try {
         strict: true,
         target: 'ESNext',
       },
-      files: ['consumer.tsx', 'physics-lesson.tsx', 'public-type-surface.ts'],
+      files: ['consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
     }),
   );
   const packageEntrySets = [
@@ -1769,6 +1880,8 @@ try {
       jsxDevRuntime: join(repositoryRoot, 'packages/core/src/jsx-dev-runtime.ts'),
       physics2d: join(repositoryRoot, 'packages/physics/src/2d.ts'),
       physicsGeometry: join(repositoryRoot, 'packages/physics/src/2d-geometry.ts'),
+      physics3d: join(repositoryRoot, 'packages/physics/src/3d.ts'),
+      physics3dGeometry: join(repositoryRoot, 'packages/physics/src/3d-geometry.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/src/index.ts'),
     },
     {
@@ -1779,6 +1892,8 @@ try {
       jsxDevRuntime: join(repositoryRoot, 'packages/core/dist/jsx-dev-runtime.d.ts'),
       physics2d: join(repositoryRoot, 'packages/physics/dist/2d.d.ts'),
       physicsGeometry: join(repositoryRoot, 'packages/physics/dist/2d-geometry.d.ts'),
+      physics3d: join(repositoryRoot, 'packages/physics/dist/3d.d.ts'),
+      physics3dGeometry: join(repositoryRoot, 'packages/physics/dist/3d-geometry.d.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/dist/index.d.ts'),
     },
   ];
@@ -1801,13 +1916,15 @@ try {
             '@crc/core/jsx-dev-runtime': [entries.jsxDevRuntime],
             '@crc/physics/2d': [entries.physics2d],
             '@crc/physics/2d/geometry': [entries.physicsGeometry],
+            '@crc/physics/3d': [entries.physics3d],
+            '@crc/physics/3d/geometry': [entries.physics3dGeometry],
             '@crc/webgl': [entries.webgl],
           },
           skipLibCheck: false,
           strict: true,
           target: 'ESNext',
         },
-        files: ['package-consumer.tsx', 'physics-lesson.tsx', 'public-type-surface.ts'],
+        files: ['package-consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
       }),
     );
     const packageResult = spawnSync(process.execPath, [tsc, '-p', packageTsconfigPath], {
@@ -1868,6 +1985,7 @@ try {
   const sourceRuntimeExports = Object.keys(sourceRuntime).sort();
   const builtRuntimeExports = Object.keys(builtRuntime).sort();
   const expectedStudioRuntimeExports = [
+    ...publicPhysics3DValueExports,
     'Absolute',
     'AmbientLight',
     'Arc',
@@ -1964,9 +2082,9 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 140) {
+  if (expectedStudioRuntimeExports.length !== 188) {
     throw new Error(
-      `CRC Studio runtime must expose 77 core values, 46 physics values, 14 WebGL values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
+      `CRC Studio runtime must expose 77 core values, 46 physics 2D values, 48 physics 3D values, 14 WebGL values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
     );
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
@@ -1978,7 +2096,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 255-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 303-type structural ' +
       'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
       'generic, and layout checks against source and built packages.\n',
   );

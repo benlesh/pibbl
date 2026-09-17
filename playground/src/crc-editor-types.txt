@@ -561,6 +561,117 @@
   export function queryAabb2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, bounds: CRCPhysicsAabb2D, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
   export function queryPoint2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, point: CRCPhysicsVector2, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
 
+/* @crc-studio-module @crc/physics/3d/geometry */
+  export type CRCPhysicsVector3 = readonly [x: number, y: number, z: number];
+  export type CRCPhysicsQuaternion = readonly [x: number, y: number, z: number, w: number];
+  export type CRCPhysicsMatrix3 = readonly [number, number, number, number, number, number, number, number, number];
+  export interface CRCPhysicsPose3D { readonly position: CRCPhysicsVector3; readonly orientation: CRCPhysicsQuaternion }
+  export type CRCPhysicsTransform3D = CRCPhysicsPose3D;
+  export interface CRCPhysicsAabb3D { readonly min: CRCPhysicsVector3; readonly max: CRCPhysicsVector3 }
+  export interface CRCPhysicsRay3D { readonly origin: CRCPhysicsVector3; readonly direction: CRCPhysicsVector3; readonly maxDistance: number }
+  declare const physicsShape3DBrand: unique symbol;
+  export interface CRCPhysicsShape3D { readonly [physicsShape3DBrand]: true }
+  export interface CRCPhysicsMassProperties3D { readonly volume: number; readonly centerOfMass: CRCPhysicsVector3; readonly mass: number; readonly inertiaTensor: CRCPhysicsMatrix3 }
+  export interface CRCPhysicsDistance3D { readonly separation: number; readonly pointOnFirst: CRCPhysicsVector3; readonly pointOnSecond: CRCPhysicsVector3; readonly normal: CRCPhysicsVector3 }
+  export interface CRCPhysicsContactPoint3D { readonly pointOnFirst: CRCPhysicsVector3; readonly pointOnSecond: CRCPhysicsVector3; readonly separation: number }
+  export interface CRCPhysicsShapeContact3D { readonly normal: CRCPhysicsVector3; readonly points: readonly CRCPhysicsContactPoint3D[] }
+  export interface CRCPhysicsShapeHit3D { readonly point: CRCPhysicsVector3; readonly normal: CRCPhysicsVector3; readonly distance: number; readonly timeOfImpact: number; readonly triangleIndex?: number; readonly barycentric?: CRCPhysicsVector3 }
+  export function sphereShape3D(input: Readonly<{ radius: number; center?: CRCPhysicsVector3 }>): CRCPhysicsShape3D;
+  export function boxShape3D(input: Readonly<{ width: number; height: number; depth: number; center?: CRCPhysicsVector3; orientation?: CRCPhysicsQuaternion }>): CRCPhysicsShape3D;
+  export function ellipsoidShape3D(input: Readonly<{ radii: CRCPhysicsVector3; center?: CRCPhysicsVector3; orientation?: CRCPhysicsQuaternion }>): CRCPhysicsShape3D;
+  export function capsuleShape3D(input: Readonly<{ start: CRCPhysicsVector3; end: CRCPhysicsVector3; radius: number }>): CRCPhysicsShape3D;
+  export function cylinderShape3D(input: Readonly<{ radius: number; halfHeight: number; center?: CRCPhysicsVector3; orientation?: CRCPhysicsQuaternion }>): CRCPhysicsShape3D;
+  export function coneShape3D(input: Readonly<{ radius: number; halfHeight: number; center?: CRCPhysicsVector3; orientation?: CRCPhysicsQuaternion }>): CRCPhysicsShape3D;
+  export function convexHullShape3D(input: Readonly<{ points: readonly CRCPhysicsVector3[] }>): CRCPhysicsShape3D;
+  export function triangleMeshShape3D(input: Readonly<{ positions: ArrayLike<number>; indices?: ArrayLike<number> }>): CRCPhysicsShape3D;
+  export function heightfieldShape3D(input: Readonly<{ rows: number; columns: number; heights: ArrayLike<number>; cellSizeX?: number; cellSizeZ?: number; heightScale?: number; origin?: CRCPhysicsVector3 }>): CRCPhysicsShape3D;
+  export function boundsOfShape3D(shape: CRCPhysicsShape3D, pose?: CRCPhysicsPose3D): CRCPhysicsAabb3D;
+  export function massProperties3D(shape: CRCPhysicsShape3D, options?: Readonly<{ density?: number }>): CRCPhysicsMassProperties3D;
+  export function transformShape3D(shape: CRCPhysicsShape3D, transform: CRCPhysicsTransform3D): CRCPhysicsShape3D;
+  export function containsPoint3D(shape: CRCPhysicsShape3D, pose: CRCPhysicsPose3D, point: CRCPhysicsVector3): boolean;
+  export function distanceBetweenShapes3D(first: CRCPhysicsShape3D, firstPose: CRCPhysicsPose3D, second: CRCPhysicsShape3D, secondPose: CRCPhysicsPose3D): CRCPhysicsDistance3D;
+  export function overlapShapes3D(first: CRCPhysicsShape3D, firstPose: CRCPhysicsPose3D, second: CRCPhysicsShape3D, secondPose: CRCPhysicsPose3D): boolean;
+  export function contactBetweenShapes3D(first: CRCPhysicsShape3D, firstPose: CRCPhysicsPose3D, second: CRCPhysicsShape3D, secondPose: CRCPhysicsPose3D): CRCPhysicsShapeContact3D | null;
+  export function raycastShape3D(shape: CRCPhysicsShape3D, pose: CRCPhysicsPose3D, ray: CRCPhysicsRay3D, options?: Readonly<{ includeInitialOverlap?: boolean }>): CRCPhysicsShapeHit3D | null;
+  export function shapeCastAgainstShape3D(moving: CRCPhysicsShape3D, from: CRCPhysicsPose3D, translation: CRCPhysicsVector3, target: CRCPhysicsShape3D, targetPose: CRCPhysicsPose3D, options?: Readonly<{ includeInitialOverlap?: boolean }>): CRCPhysicsShapeHit3D | null;
+
+/* @crc-studio-module @crc/physics/3d */
+  import type { CRCNode, Signal } from '@crc/core';
+  import type { MeshProps, MeshStyle } from '@crc/webgl';
+  import type { CRCPhysicsAabb3D, CRCPhysicsContactPoint3D, CRCPhysicsPose3D, CRCPhysicsQuaternion, CRCPhysicsRay3D, CRCPhysicsShape3D, CRCPhysicsShapeHit3D, CRCPhysicsVector3 } from '@crc/physics/3d/geometry';
+  export { boundsOfShape3D, boxShape3D, capsuleShape3D, coneShape3D, contactBetweenShapes3D, containsPoint3D, convexHullShape3D, cylinderShape3D, distanceBetweenShapes3D, ellipsoidShape3D, heightfieldShape3D, massProperties3D, overlapShapes3D, raycastShape3D, shapeCastAgainstShape3D, sphereShape3D, transformShape3D, triangleMeshShape3D } from '@crc/physics/3d/geometry';
+  export type { CRCPhysicsAabb3D, CRCPhysicsContactPoint3D, CRCPhysicsDistance3D, CRCPhysicsMassProperties3D, CRCPhysicsMatrix3, CRCPhysicsPose3D, CRCPhysicsQuaternion, CRCPhysicsRay3D, CRCPhysicsShape3D, CRCPhysicsShapeContact3D, CRCPhysicsShapeHit3D, CRCPhysicsTransform3D, CRCPhysicsVector3 } from '@crc/physics/3d/geometry';
+  export interface CRCPhysicsAxisLocks3D { readonly x?: boolean; readonly y?: boolean; readonly z?: boolean }
+  export interface CRCPhysicsCollisionFilter { readonly category?: number; readonly mask?: number; readonly group?: number }
+  export type CRCPhysicsCollisionHandler3D = (event: CRCPhysicsCollisionEvent3D) => void;
+  export type CRCPhysicsHitHandler3D = (event: CRCPhysicsCollisionEvent3D) => void;
+  export type CRCPhysicsOverlapHandler3D = (event: CRCPhysicsOverlapEvent3D) => void;
+  export type CRCPhysicsBodyStateHandler3D = (event: CRCPhysicsBodyStateEvent3D) => void;
+  export interface CRCPhysicsColliderConfiguration3D { readonly shape?: 'self' | CRCPhysicsShape3D; readonly offset?: CRCPhysicsVector3; readonly orientation?: CRCPhysicsQuaternion; readonly density?: number; readonly friction?: number; readonly restitution?: number; readonly sensor?: boolean; readonly contributesToMass?: boolean; readonly collisionFilter?: CRCPhysicsCollisionFilter; readonly tag?: unknown; readonly onCollisionStart?: CRCPhysicsCollisionHandler3D; readonly onCollisionEnd?: CRCPhysicsCollisionHandler3D; readonly onHit?: CRCPhysicsHitHandler3D; readonly onOverlapStart?: CRCPhysicsOverlapHandler3D; readonly onOverlapEnd?: CRCPhysicsOverlapHandler3D }
+  export interface CRCPhysicsDynamicBody3DOptions { readonly enabled?: boolean; readonly handle?: CRCPhysicsBodyHandle3D; readonly linearVelocity?: CRCPhysicsVector3; readonly angularVelocityDegreesPerSecond?: CRCPhysicsVector3; readonly linearDamping?: number; readonly angularDamping?: number; readonly gravityScale?: number; readonly mass?: 'auto' | number; readonly lockTranslation?: CRCPhysicsAxisLocks3D; readonly lockRotation?: CRCPhysicsAxisLocks3D; readonly allowSleep?: boolean; readonly ccd?: boolean; readonly reenableVelocity?: 'zero' | 'preserve'; readonly collider?: false | CRCPhysicsColliderConfiguration3D | CRCPhysicsShape3D }
+  export interface CRCPhysicsStaticBody3DOptions { readonly enabled?: boolean; readonly handle?: CRCPhysicsBodyHandle3D; readonly collider?: false | CRCPhysicsColliderConfiguration3D | CRCPhysicsShape3D }
+  export interface CRCPhysicsKinematicTarget3D { readonly position?: Signal<CRCPhysicsVector3>; readonly orientation?: Signal<CRCPhysicsQuaternion> }
+  export interface CRCPhysicsKinematicBody3DOptions { readonly enabled?: boolean; readonly handle?: CRCPhysicsBodyHandle3D; readonly target?: CRCPhysicsKinematicTarget3D; readonly allowSleep?: boolean; readonly collider?: false | CRCPhysicsColliderConfiguration3D | CRCPhysicsShape3D }
+  export interface CRCPhysicsSolverOptions { readonly velocityIterations?: number; readonly positionIterations?: number }
+  export interface CRCPhysicsWorld3DProps { readonly gravity?: CRCPhysicsVector3; readonly fixedStepMilliseconds?: number; readonly maxCatchUpSteps?: number; readonly interpolation?: 'linear' | 'none'; readonly sleeping?: boolean; readonly solver?: CRCPhysicsSolverOptions; readonly onSleep?: CRCPhysicsBodyStateHandler3D; readonly onWake?: CRCPhysicsBodyStateHandler3D; readonly onError?: (error: unknown) => void; readonly children?: CRCNode }
+  declare const physicsAttachment3DBrand: unique symbol;
+  export interface CRCPhysicsBodyAttachment3D { readonly [physicsAttachment3DBrand]: 'body' }
+  export interface CRCPhysicsColliderAttachment3D { readonly [physicsAttachment3DBrand]: 'collider' }
+  export type CRCPhysicsAttachment3D = CRCPhysicsBodyAttachment3D | CRCPhysicsColliderAttachment3D;
+  declare module '@crc/webgl' { interface CRCPhysics3DPropExtension { readonly physics?: CRCPhysicsAttachment3D } }
+  declare const bodyHandle3DBrand: unique symbol;
+  export interface CRCPhysicsBodyHandle3D { readonly [bodyHandle3DBrand]: true; readonly position: Signal<CRCPhysicsVector3>; readonly orientation: Signal<CRCPhysicsQuaternion>; readonly linearVelocity: Signal<CRCPhysicsVector3>; readonly angularVelocityDegreesPerSecond: Signal<CRCPhysicsVector3>; readonly sleeping: Signal<boolean>; readonly enabled: Signal<boolean>; readonly generation: Signal<number> }
+  declare const colliderHandle3DBrand: unique symbol;
+  export interface CRCPhysicsColliderHandle3D { readonly [colliderHandle3DBrand]: true }
+  declare const worldHandle3DBrand: unique symbol;
+  export interface CRCPhysicsWorldHandle3D { readonly [worldHandle3DBrand]: true; readonly revision: Signal<number> }
+  export type CRCPhysicsQueryMode = 'closest' | 'any' | 'all';
+  export interface CRCPhysicsQueryOptions3D<Mode extends CRCPhysicsQueryMode = 'closest'> { readonly mode?: Mode; readonly sensors?: 'include' | 'exclude' | 'only'; readonly collisionFilter?: CRCPhysicsCollisionFilter; readonly excludeBody?: CRCPhysicsBodyHandle3D; readonly excludeCollider?: CRCPhysicsColliderHandle3D }
+  export interface CRCPhysicsQueryHit3D extends CRCPhysicsShapeHit3D { readonly body: CRCPhysicsBodyHandle3D; readonly collider: CRCPhysicsColliderHandle3D; readonly bodyGeneration: number; readonly colliderGeneration: number; readonly tag: unknown }
+  export interface CRCPhysicsQueryMatch3D { readonly body: CRCPhysicsBodyHandle3D; readonly collider: CRCPhysicsColliderHandle3D; readonly bodyGeneration: number; readonly colliderGeneration: number; readonly tag: unknown }
+  export type CRCPhysicsQueryResult3D<Mode extends CRCPhysicsQueryMode, Result> = Mode extends 'any' ? boolean : Mode extends 'all' ? readonly Result[] : Result | null;
+  export interface CRCPhysicsCollisionEvent3D { readonly selfBody: CRCPhysicsBodyHandle3D; readonly selfCollider: CRCPhysicsColliderHandle3D; readonly otherBody: CRCPhysicsBodyHandle3D; readonly otherCollider: CRCPhysicsColliderHandle3D; readonly normal: CRCPhysicsVector3; readonly points: readonly CRCPhysicsContactPoint3D[]; readonly totalNormalImpulse: number; readonly tick: number; readonly selfTag: unknown; readonly otherTag: unknown }
+  export interface CRCPhysicsOverlapEvent3D { readonly selfBody: CRCPhysicsBodyHandle3D; readonly selfCollider: CRCPhysicsColliderHandle3D; readonly otherBody: CRCPhysicsBodyHandle3D; readonly otherCollider: CRCPhysicsColliderHandle3D; readonly tick: number; readonly selfTag: unknown; readonly otherTag: unknown }
+  export interface CRCPhysicsBodyStateEvent3D { readonly body: CRCPhysicsBodyHandle3D; readonly sleeping: boolean; readonly tick: number }
+  export interface PhysicsShape3DProps extends Omit<MeshProps, 'geometry'> { readonly shape: CRCPhysicsShape3D; readonly style?: MeshStyle }
+  export interface Box3DProps extends Omit<PhysicsShape3DProps, 'shape'> { readonly width: number; readonly height: number; readonly depth: number; readonly center?: CRCPhysicsVector3; readonly orientation?: CRCPhysicsQuaternion }
+  export interface Ellipsoid3DProps extends Omit<PhysicsShape3DProps, 'shape'> { readonly radii: CRCPhysicsVector3; readonly center?: CRCPhysicsVector3; readonly orientation?: CRCPhysicsQuaternion }
+  export interface Capsule3DProps extends Omit<PhysicsShape3DProps, 'shape'> { readonly start: CRCPhysicsVector3; readonly end: CRCPhysicsVector3; readonly radius: number }
+  export interface Cylinder3DProps extends Omit<PhysicsShape3DProps, 'shape'> { readonly radius: number; readonly halfHeight: number; readonly center?: CRCPhysicsVector3; readonly orientation?: CRCPhysicsQuaternion }
+  export interface Cone3DProps extends Cylinder3DProps {}
+  export interface ConvexHull3DProps extends Omit<PhysicsShape3DProps, 'shape'> { readonly points: readonly CRCPhysicsVector3[] }
+  export interface Heightfield3DProps extends Omit<PhysicsShape3DProps, 'shape'> { readonly rows: number; readonly columns: number; readonly heights: ArrayLike<number>; readonly cellSizeX?: number; readonly cellSizeZ?: number; readonly heightScale?: number; readonly origin?: CRCPhysicsVector3 }
+  export const PhysicsWorld3D: (props: CRCPhysicsWorld3DProps) => CRCNode;
+  export const PhysicsShape3D: (props: Readonly<PhysicsShape3DProps>) => CRCNode;
+  export const Box3D: (props: Readonly<Box3DProps>) => CRCNode;
+  export const Ellipsoid3D: (props: Readonly<Ellipsoid3DProps>) => CRCNode;
+  export const Capsule3D: (props: Readonly<Capsule3DProps>) => CRCNode;
+  export const Cylinder3D: (props: Readonly<Cylinder3DProps>) => CRCNode;
+  export const Cone3D: (props: Readonly<Cone3DProps>) => CRCNode;
+  export const ConvexHull3D: (props: Readonly<ConvexHull3DProps>) => CRCNode;
+  export const Heightfield3D: (props: Readonly<Heightfield3DProps>) => CRCNode;
+  export function dynamicBody3D(options?: CRCPhysicsDynamicBody3DOptions): CRCPhysicsBodyAttachment3D;
+  export function staticBody3D(options?: CRCPhysicsStaticBody3DOptions): CRCPhysicsBodyAttachment3D;
+  export function kinematicBody3D(options?: CRCPhysicsKinematicBody3DOptions): CRCPhysicsBodyAttachment3D;
+  export function collider3D(options?: CRCPhysicsColliderConfiguration3D): CRCPhysicsColliderAttachment3D;
+  export function crcPhysicsBody3D(): CRCPhysicsBodyHandle3D;
+  export function crcPhysicsWorld3D(): CRCPhysicsWorldHandle3D;
+  export function applyForce3D(body: CRCPhysicsBodyHandle3D, force: CRCPhysicsVector3, options?: Readonly<{ at?: CRCPhysicsVector3; wake?: boolean }>): void;
+  export function applyImpulse3D(body: CRCPhysicsBodyHandle3D, impulse: CRCPhysicsVector3, options?: Readonly<{ at?: CRCPhysicsVector3; wake?: boolean }>): void;
+  export function applyTorque3D(body: CRCPhysicsBodyHandle3D, torque: CRCPhysicsVector3): void;
+  export function disableBody3D(body: CRCPhysicsBodyHandle3D): void;
+  export function enableBody3D(body: CRCPhysicsBodyHandle3D, options?: Readonly<{ velocity?: 'zero' | 'preserve' }>): void;
+  export function setAngularVelocity3D(body: CRCPhysicsBodyHandle3D, degreesPerSecond: CRCPhysicsVector3): void;
+  export function setLinearVelocity3D(body: CRCPhysicsBodyHandle3D, velocity: CRCPhysicsVector3): void;
+  export function sleepBody3D(body: CRCPhysicsBodyHandle3D): void;
+  export function teleportBody3D(body: CRCPhysicsBodyHandle3D, pose: CRCPhysicsPose3D): void;
+  export function wakeBody3D(body: CRCPhysicsBodyHandle3D): void;
+  export function raycast3D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle3D, ray: CRCPhysicsRay3D, options?: CRCPhysicsQueryOptions3D<Mode>): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryHit3D>;
+  export function shapeCast3D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle3D, shape: CRCPhysicsShape3D, from: CRCPhysicsPose3D, translation: CRCPhysicsVector3, options?: CRCPhysicsQueryOptions3D<Mode>): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryHit3D>;
+  export function overlapShape3D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle3D, shape: CRCPhysicsShape3D, pose: CRCPhysicsPose3D, options?: CRCPhysicsQueryOptions3D<Mode>): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D>;
+  export function queryAabb3D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle3D, bounds: CRCPhysicsAabb3D, options?: CRCPhysicsQueryOptions3D<Mode>): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D>;
+  export function queryPoint3D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle3D, point: CRCPhysicsVector3, options?: CRCPhysicsQueryOptions3D<Mode>): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D>;
+
 /* @crc-studio-module @crc/webgl */
   import type {
     BoxStyle,
@@ -657,7 +768,7 @@
     readonly shadows?: CRCWebGLShadowQuality;
   }
 
-  export interface Group3DProps extends CRCEventHandlers {
+  export interface Group3DProps extends CRCEventHandlers, CRCPhysics3DPropExtension {
     readonly children: CRCNode;
   }
   export interface Group3DStyle extends CRCWebGLTransformStyle {}

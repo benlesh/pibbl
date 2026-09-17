@@ -6,6 +6,8 @@ const SUPPORTED_CRC_MODULES = new Set([
   "@crc/core/jsx-dev-runtime",
   "@crc/physics/2d",
   "@crc/physics/2d/geometry",
+  "@crc/physics/3d",
+  "@crc/physics/3d/geometry",
   "@crc/webgl",
 ]);
 
@@ -19,7 +21,8 @@ function invalidModuleShape(): Error {
   return new Error(
     "Lessons may contain named imports only from @crc/core, " +
       "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, @crc/physics/2d, " +
-      "@crc/physics/2d/geometry, and @crc/webgl, plus exactly " +
+      "@crc/physics/2d/geometry, @crc/physics/3d, " +
+      "@crc/physics/3d/geometry, and @crc/webgl, plus exactly " +
       "one default mount(canvas) export.",
   );
 }

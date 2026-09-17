@@ -73,6 +73,22 @@ export const crcPublicEntryPaths = {
   ),
 } as const;
 
+/** Physics inventory is verified before Task 14 adds its public API pages. */
+export const crcPhysicsEntryPaths = {
+  root: fileURLToPath(
+    new URL("../../packages/physics/src/2d.ts", import.meta.url),
+  ),
+  physics2dGeometry: fileURLToPath(
+    new URL("../../packages/physics/src/2d-geometry.ts", import.meta.url),
+  ),
+  physics3d: fileURLToPath(
+    new URL("../../packages/physics/src/3d.ts", import.meta.url),
+  ),
+  physics3dGeometry: fileURLToPath(
+    new URL("../../packages/physics/src/3d-geometry.ts", import.meta.url),
+  ),
+} as const;
+
 const compilerOverviewSymbols = new Set(["jsx", "jsxs", "jsxDEV", "JSX"]);
 
 /**

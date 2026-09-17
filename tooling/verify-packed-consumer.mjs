@@ -142,14 +142,14 @@ function assertSinglePackedRuntime(metafile) {
     input.replaceAll('\\', '/'),
   );
   const leakedSources = normalizedInputs.filter(input =>
-    /\/packages\/(?:core|webgl)\/src\//u.test(input),
+    /\/packages\/(?:core|physics|webgl)\/src\//u.test(input),
   );
   if (leakedSources.length > 0) {
     throw new Error(
       `Packed consumer resolved workspace sources: ${leakedSources.join(', ')}`,
     );
   }
-  for (const packageName of ['core', 'webgl']) {
+  for (const packageName of ['core', 'physics', 'webgl']) {
     const marker = `/node_modules/@crc/${packageName}/`;
     const packageRoots = new Set(
       normalizedInputs
@@ -265,6 +265,12 @@ try {
   const requireFromGeometryConsumer = createRequire(
     join(geometryConsumerDirectory, 'runtime.mjs'),
   );
+  try {
+    requireFromGeometryConsumer.resolve('@crc/physics');
+    throw new Error('Packed @crc/physics unexpectedly exposed a root entry.');
+  } catch (error) {
+    if (error?.code !== 'ERR_PACKAGE_PATH_NOT_EXPORTED') throw error;
+  }
   const installedPhysicsGeometryEntry = realpathSync(
     requireFromGeometryConsumer.resolve('@crc/physics/2d/geometry'),
   );
@@ -284,12 +290,24 @@ try {
   if (existsSync(join(geometryConsumerDirectory, 'node_modules/@crc/core'))) {
     throw new Error('Packed physics geometry consumer unexpectedly installed @crc/core.');
   }
+  if (existsSync(join(geometryConsumerDirectory, 'node_modules/@crc/webgl'))) {
+    throw new Error('Packed physics geometry consumer unexpectedly installed @crc/webgl.');
+  }
   run(process.execPath, ['runtime.mjs'], { cwd: geometryConsumerDirectory });
   const geometryBundle = await bundleConsumerEntry(
     geometrySource,
     geometryConsumerDirectory,
   );
   assertGeometryOnlyPhysicsBundle(geometryBundle.metafile, geometryBundle.code);
+  const sphereOnlyBundle = await bundleConsumerEntry(
+    `import { sphereShape3D } from '@crc/physics/3d/geometry'; console.log(sphereShape3D({ radius: 1 }));`,
+    geometryConsumerDirectory,
+  );
+  assertGeometryOnlyPhysicsBundle(sphereOnlyBundle.metafile, sphereOnlyBundle.code);
+  const sphereOnlyInputs = Object.keys(sphereOnlyBundle.metafile.inputs).join('\n');
+  if (/\/lib\/2d\//u.test(sphereOnlyInputs) || /\/lib\/3d\/(?:runtime|webgl|world)\//u.test(sphereOnlyInputs)) {
+    throw new Error('sphereShape3D geometry-only bundle retained another dimension or runtime layer.');
+  }
 
   if (!physicsGeometryOnly) {
     mkdirSync(consumerDirectory, { recursive: true });
@@ -328,6 +346,7 @@ try {
     type: 'module',
     dependencies: {
       '@crc/core': `file:${coreTarball}`,
+      '@crc/physics': `file:${physicsTarball}`,
       '@crc/types': `file:${typesTarball}`,
       '@crc/webgl': `file:${webglTarball}`,
     },
@@ -362,6 +381,8 @@ try {
     '@crc/core',
     '@crc/core/internal',
     '@crc/types',
+    '@crc/physics/3d',
+    '@crc/physics/3d/geometry',
     '@crc/webgl',
     '@crc/webgl/internal',
   ]) {
@@ -382,6 +403,30 @@ try {
   }
 
   const installedCoreEntry = realpathSync(requireFromConsumer.resolve('@crc/core'));
+  const installedPhysicsRoot = installedPackageRoots.get('@crc/physics/3d');
+  if (installedPackageRoots.get('@crc/physics/3d/geometry') !== installedPhysicsRoot) {
+    throw new Error('@crc/physics/3d entries did not resolve inside one installed package.');
+  }
+  const physicsManifest = JSON.parse(
+    readFileSync(join(installedPhysicsRoot, 'package.json'), 'utf8'),
+  );
+  if (
+    physicsManifest.sideEffects !== false ||
+    Object.keys(physicsManifest.exports ?? {}).join(',') !== './2d,./2d/geometry,./3d,./3d/geometry' ||
+    JSON.stringify(physicsManifest.peerDependencies) !==
+      JSON.stringify({ '@crc/core': '0.0.1', '@crc/webgl': '0.0.1' }) ||
+    physicsManifest.peerDependenciesMeta?.['@crc/core']?.optional !== true ||
+    physicsManifest.peerDependenciesMeta?.['@crc/webgl']?.optional !== true
+  ) {
+    throw new Error('@crc/physics packed manifest does not preserve exact subpaths, optional peers, and side-effect metadata.');
+  }
+  const installedPhysicsEntry = realpathSync(requireFromConsumer.resolve('@crc/physics/3d'));
+  const installedPhysicsBundle = readFileSync(installedPhysicsEntry, 'utf8');
+  for (const marker of ['@crc/core.element', 'CRC backend names must be nonempty.']) {
+    if (installedPhysicsBundle.includes(marker)) {
+      throw new Error(`Packed @crc/physics embedded renderer implementation marker ${marker}.`);
+    }
+  }
   const installedWebGLRoot = installedPackageRoots.get('@crc/webgl');
   if (installedPackageRoots.get('@crc/webgl/internal') !== installedWebGLRoot) {
     throw new Error(
@@ -490,6 +535,7 @@ try {
       crcOrbitCamera,
       createWebGLGeometry,
     } from '@crc/webgl';
+    import { PhysicsWorld3D, dynamicBody3D } from '@crc/physics/3d';
     const geometry = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
       normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
@@ -513,6 +559,7 @@ try {
       return (
         <Group {...orbit.handlers}>
           <Rectangle style={{ width: 1, height: 1, fill: 'transparent' }} />
+          <PhysicsWorld3D gravity={[0, -9.81, 0]}>
           {qualities.map(shadows => (
             <WebGLLayer camera={camera} style={{ width: 1, height: 1, shadows }}>
               <WebGLBackground style={{ color: '#08111f' }} />
@@ -532,6 +579,7 @@ try {
               />
               <Group3D style={{ rotationYDegrees: timestamp / 10 }}>
                 <Cube
+                  physics={dynamicBody3D({ mass: 1 })}
                   style={{
                     size: geometry.vertexCount,
                     material: {
@@ -548,6 +596,7 @@ try {
               </Group3D>
             </WebGLLayer>
           ))}
+          </PhysicsWorld3D>
         </Group>
       );
     }
@@ -559,6 +608,37 @@ try {
     sharedRuntimeBundle.code,
     '@crc/core.element',
     'element brand',
+  );
+
+  const dynamicBodyBundle = await bundleConsumerEntry(`
+    import { dynamicBody3D } from '@crc/physics/3d';
+    console.log(dynamicBody3D({ mass: 1 }));
+  `);
+  const dynamicInputs = Object.keys(dynamicBodyBundle.metafile.inputs).join('\n');
+  for (const forbidden of ['/lib/2d/', 'joint', 'debug', 'replay']) {
+    if (dynamicInputs.includes(forbidden)) {
+      throw new Error(`dynamicBody3D bundle retained forbidden surface ${forbidden}.`);
+    }
+  }
+
+  const physicsSceneBundle = await bundleConsumerEntry(`
+    import { createElement } from '@crc/core';
+    import { Cube, WebGLLayer } from '@crc/webgl';
+    import { PhysicsWorld3D, dynamicBody3D } from '@crc/physics/3d';
+    console.log(createElement(WebGLLayer, { style: { width: 1, height: 1 } },
+      createElement(PhysicsWorld3D, { gravity: [0, -9.81, 0] },
+        createElement(Cube, { physics: dynamicBody3D({ mass: 1 }), style: { lit: false } }))));
+  `);
+  assertSinglePackedRuntime(physicsSceneBundle.metafile);
+  for (const forbidden of ['WebAssembly', '.wasm', 'new Worker', 'setInterval(', 'setTimeout(']) {
+    if (physicsSceneBundle.code.includes(forbidden)) {
+      throw new Error(`Packed physics scene retained forbidden engine/loop marker ${forbidden}.`);
+    }
+  }
+  assertIdentityMarkerOnce(
+    physicsSceneBundle.code,
+    'requestAnimationFrame',
+    'shared scheduler implementation in the physics scene',
   );
   assertIdentityMarkerOnce(
     sharedRuntimeBundle.code,
@@ -572,7 +652,7 @@ try {
   );
 
   process.stdout.write(
-    `Packed @crc/core and @crc/webgl consumer passed Bundler, NodeNext, declarations, ` +
+    `Packed @crc/core, @crc/webgl, and @crc/physics consumer passed Bundler, NodeNext, declarations, ` +
     `runtime exports, blocked deep imports, no-src checks, one shared core identity, and ` +
     `optimized focus elimination (marker absent without focus; present with focus; ` +
     `${noFocusBytes} no-focus bytes vs ${withFocusBytes} with-focus bytes).\n`,

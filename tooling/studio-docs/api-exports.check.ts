@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { ModuleKind } from "typescript/unstable/sync";
 import {
   crcPublicEntryPaths,
+  crcPhysicsEntryPaths,
   collectPublicExports,
   validateApiCoverage,
 } from "./api-exports";
@@ -156,13 +157,24 @@ assert.deepEqual(coverage.missingValues, []);
 assert.deepEqual(coverage.missingTypes, []);
 
 const crcInventory = await collectPublicExports(crcPublicEntryPaths, {});
+const physicsInventory = await collectPublicExports(crcPhysicsEntryPaths, {});
 assert.ok(crcInventory.root.values.length > 0);
 assert.ok(crcInventory.root.types.length > 0);
 assert.equal(crcInventory.webgl.values.length, 14);
-assert.equal(crcInventory.webgl.types.length, 33);
+assert.equal(crcInventory.webgl.types.length, 34);
+assert.equal(physicsInventory.root.values.length, 46);
+assert.equal(physicsInventory.root.types.length, 46);
+assert.equal(physicsInventory.physics2dGeometry.values.length, 19);
+assert.equal(physicsInventory.physics2dGeometry.types.length, 11);
+assert.equal(physicsInventory.physics3d.values.length, 48);
+assert.equal(physicsInventory.physics3d.types.length, 48);
+assert.equal(physicsInventory.physics3dGeometry.values.length, 18);
+assert.equal(physicsInventory.physics3dGeometry.types.length, 13);
 
 process.stdout.write(
   `Validated public API coverage: ${crcInventory.root.values.length} core values, ` +
     `${crcInventory.root.types.length} core types, ${crcInventory.webgl.values.length} ` +
-    `WebGL values, and ${crcInventory.webgl.types.length} WebGL types.\n`,
+    `WebGL values, ${crcInventory.webgl.types.length} WebGL types, ` +
+    `${physicsInventory.root.values.length} physics 2D values, and ` +
+    `${physicsInventory.physics3d.values.length} physics 3D values.\n`,
 );
