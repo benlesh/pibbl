@@ -95,6 +95,24 @@ export class BoundedCcd3D {
     this.candidateVelocityX.set(bodies.linearVelocityX);
     this.candidateVelocityY.set(bodies.linearVelocityY);
     this.candidateVelocityZ.set(bodies.linearVelocityZ);
+    let minimumTargetDeltaX = 0;
+    let minimumTargetDeltaY = 0;
+    let minimumTargetDeltaZ = 0;
+    let maximumTargetDeltaX = 0;
+    let maximumTargetDeltaY = 0;
+    let maximumTargetDeltaZ = 0;
+    for (let offset = 0; offset < bodyCount; offset += 1) {
+      const body = bodyIndices[offset]!;
+      const deltaX = this.candidatePositionX[body]! - previousPositionX[body]!;
+      const deltaY = this.candidatePositionY[body]! - previousPositionY[body]!;
+      const deltaZ = this.candidatePositionZ[body]! - previousPositionZ[body]!;
+      minimumTargetDeltaX = Math.min(minimumTargetDeltaX, deltaX);
+      minimumTargetDeltaY = Math.min(minimumTargetDeltaY, deltaY);
+      minimumTargetDeltaZ = Math.min(minimumTargetDeltaZ, deltaZ);
+      maximumTargetDeltaX = Math.max(maximumTargetDeltaX, deltaX);
+      maximumTargetDeltaY = Math.max(maximumTargetDeltaY, deltaY);
+      maximumTargetDeltaZ = Math.max(maximumTargetDeltaZ, deltaZ);
+    }
     for (let offset = 0; offset < bodyCount; offset += 1) {
       const body = bodyIndices[offset]!;
       if (!this.isEligibleBody(bodies, body)) continue;
@@ -123,6 +141,12 @@ export class BoundedCcd3D {
         previousOrientationY,
         previousOrientationZ,
         previousOrientationW,
+        minimumTargetDeltaX,
+        minimumTargetDeltaY,
+        minimumTargetDeltaZ,
+        maximumTargetDeltaX,
+        maximumTargetDeltaY,
+        maximumTargetDeltaZ,
       );
     }
   }
@@ -147,6 +171,12 @@ export class BoundedCcd3D {
     previousOrientationY: Float64Array,
     previousOrientationZ: Float64Array,
     previousOrientationW: Float64Array,
+    minimumTargetDeltaX: number,
+    minimumTargetDeltaY: number,
+    minimumTargetDeltaZ: number,
+    maximumTargetDeltaX: number,
+    maximumTargetDeltaY: number,
+    maximumTargetDeltaZ: number,
   ): void {
     let currentX = fromX;
     let currentY = fromY;
@@ -186,6 +216,12 @@ export class BoundedCcd3D {
         previousOrientationY,
         previousOrientationZ,
         previousOrientationW,
+        minimumTargetDeltaX,
+        minimumTargetDeltaY,
+        minimumTargetDeltaZ,
+        maximumTargetDeltaX,
+        maximumTargetDeltaY,
+        maximumTargetDeltaZ,
       );
       if (selected === null) {
         currentX += remainingX;
@@ -307,6 +343,12 @@ export class BoundedCcd3D {
     previousOrientationY: Float64Array,
     previousOrientationZ: Float64Array,
     previousOrientationW: Float64Array,
+    minimumTargetDeltaX: number,
+    minimumTargetDeltaY: number,
+    minimumTargetDeltaZ: number,
+    maximumTargetDeltaX: number,
+    maximumTargetDeltaY: number,
+    maximumTargetDeltaZ: number,
   ): SelectedImpact3D | null {
     let selected: SelectedImpact3D | null = null;
     for (
@@ -350,12 +392,12 @@ export class BoundedCcd3D {
       const fromBounds = boundsOfShape3D(movingShape, fromPose);
       const toBounds = boundsOfShape3D(movingShape, toPose);
       const targetCount = broadPhase.queryAabbInto(
-        Math.min(fromBounds.min[0], toBounds.min[0]),
-        Math.min(fromBounds.min[1], toBounds.min[1]),
-        Math.min(fromBounds.min[2], toBounds.min[2]),
-        Math.max(fromBounds.max[0], toBounds.max[0]),
-        Math.max(fromBounds.max[1], toBounds.max[1]),
-        Math.max(fromBounds.max[2], toBounds.max[2]),
+        Math.min(fromBounds.min[0], toBounds.min[0]) + minimumTargetDeltaX,
+        Math.min(fromBounds.min[1], toBounds.min[1]) + minimumTargetDeltaY,
+        Math.min(fromBounds.min[2], toBounds.min[2]) + minimumTargetDeltaZ,
+        Math.max(fromBounds.max[0], toBounds.max[0]) + maximumTargetDeltaX,
+        Math.max(fromBounds.max[1], toBounds.max[1]) + maximumTargetDeltaY,
+        Math.max(fromBounds.max[2], toBounds.max[2]) + maximumTargetDeltaZ,
         this.broadPhaseTargets,
         0,
         this.broadPhaseTargets.length,

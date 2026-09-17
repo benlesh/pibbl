@@ -1,4 +1,5 @@
 import type { CRCPhysicsVector3 } from "../../3d-geometry.js";
+import { GEOMETRY_EPSILON_3D } from "./numeric-policy.js";
 
 export interface CanonicalHull3D {
   readonly vertices: Float64Array;
@@ -32,16 +33,30 @@ export function buildCanonicalHull3D(
     outwardFace(seed[0], seed[2], seed[3], points, interior),
     outwardFace(seed[1], seed[3], seed[2], points, interior),
   ];
-  const seeded = new Set(seed);
-  for (let point = 0; point < points.length; point += 1) {
-    if (seeded.has(point)) continue;
+  while (true) {
+    faces.sort(compareFaceRecord);
+    let point = -1;
+    for (const face of faces) {
+      let farthest = tolerance;
+      for (let candidate = 0; candidate < points.length; candidate += 1) {
+        const distance = signedFaceDistance(face, points, points[candidate]!);
+        if (
+          distance > farthest ||
+          (distance === farthest && point >= 0 && candidate < point)
+        ) {
+          farthest = distance;
+          point = candidate;
+        }
+      }
+      if (point >= 0) break;
+    }
+    if (point < 0) break;
     const visible = faces
       .map((face, index) => ({ face, index }))
       .filter(
         ({ face }) =>
           signedFaceDistance(face, points, points[point]!) > tolerance,
       );
-    if (visible.length === 0) continue;
     const visibleIds = new Set(visible.map(({ index }) => index));
     const edges = new Map<string, readonly [number, number]>();
     for (const { face } of visible) {
@@ -105,9 +120,12 @@ function canonicalPoints(input: readonly CRCPhysicsVector3[]): Float64Array[] {
       return result;
     })
     .sort(comparePoint);
-  const unique = points.filter(
-    (point, index) => index === 0 || !samePoint(point, points[index - 1]!),
-  );
+  const unique: Float64Array[] = [];
+  for (const point of points) {
+    if (!unique.some((candidate) => samePoint(candidate, point))) {
+      unique.push(point);
+    }
+  }
   if (unique.length < 4)
     throw new RangeError("convex hull requires at least four distinct points.");
   return unique;
@@ -186,6 +204,13 @@ function compareFace(
   return left[0]! - right[0]! || left[1]! - right[1]! || left[2]! - right[2]!;
 }
 
+function compareFaceRecord(left: Face3D, right: Face3D): number {
+  return compareFace(
+    canonicalFace(left.a, left.b, left.c),
+    canonicalFace(right.a, right.b, right.c),
+  );
+}
+
 function comparePoint(
   left: ArrayLike<number>,
   right: ArrayLike<number>,
@@ -194,7 +219,11 @@ function comparePoint(
 }
 
 function samePoint(left: ArrayLike<number>, right: ArrayLike<number>): boolean {
-  return left[0] === right[0] && left[1] === right[1] && left[2] === right[2];
+  return (
+    Math.abs(left[0]! - right[0]!) <= GEOMETRY_EPSILON_3D &&
+    Math.abs(left[1]! - right[1]!) <= GEOMETRY_EPSILON_3D &&
+    Math.abs(left[2]! - right[2]!) <= GEOMETRY_EPSILON_3D
+  );
 }
 
 function hullVolumeTolerance(points: readonly Float64Array[]): number {

@@ -53,6 +53,12 @@ describe("standalone 3D sphere and box pairs", () => {
         contactBetweenShapes3D(shape, identity, shape, identity),
       ).not.toBeNull();
     }
+
+    const wideCone = coneShape3D({ radius: 10, halfHeight: 1 });
+    expect(
+      distanceBetweenShapes3D(wideCone, identity, wideCone, identity)
+        .separation,
+    ).toBeCloseTo(-2, 8);
   });
 
   it("preserves small-scale ellipsoid separation", () => {
@@ -83,6 +89,62 @@ describe("standalone 3D sphere and box pairs", () => {
     expect(overlapShapes3D(inner, pose([0.5, 0.5, 0.5]), outer, identity)).toBe(
       true,
     );
+  });
+
+  it("classifies a point and convex shape inside a triangulated closed cube", () => {
+    const cube = triangleMeshShape3D({
+      positions: [
+        -1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, 1, 1, -1, 1, 1, 1,
+        1, -1, 1, 1,
+      ],
+      indices: [
+        0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 3, 7, 6, 3, 6, 2,
+        0, 4, 7, 0, 7, 3, 1, 2, 6, 1, 6, 5,
+      ],
+    });
+    const enclosed = sphereShape3D({ radius: 0.01 });
+
+    expect(containsPoint3D(cube, identity, [0, 0, 0])).toBe(true);
+    expect(overlapShapes3D(enclosed, identity, cube, identity)).toBe(true);
+    expect(
+      contactBetweenShapes3D(enclosed, identity, cube, identity),
+    ).not.toBeNull();
+
+    const rayY = 0.3713906763541037;
+    const rayZ = 0.17320508075688773;
+    const sharedVertexCube = triangleMeshShape3D({
+      positions: [
+        -1,
+        -rayY,
+        -rayZ,
+        1,
+        -rayY,
+        -rayZ,
+        1,
+        rayY,
+        -rayZ,
+        -1,
+        rayY,
+        -rayZ,
+        -1,
+        -rayY,
+        rayZ,
+        1,
+        -rayY,
+        rayZ,
+        1,
+        rayY,
+        rayZ,
+        -1,
+        rayY,
+        rayZ,
+      ],
+      indices: [
+        0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 3, 7, 6, 3, 6, 2,
+        0, 4, 7, 0, 7, 3, 1, 2, 6, 1, 6, 5,
+      ],
+    });
+    expect(containsPoint3D(sharedVertexCube, identity, [0, 0, 0])).toBe(true);
   });
 
   it("reports exact separated, touching, penetrating, and coincident spheres", () => {

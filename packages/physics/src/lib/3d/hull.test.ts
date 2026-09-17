@@ -42,4 +42,21 @@ describe("canonical convex hull construction", () => {
     expect(first.vertices).toHaveLength(24);
     expect(first.faces).toHaveLength(36);
   });
+
+  it("deduplicates epsilon-close input before deterministic expansion", () => {
+    const hull = buildCanonicalHull3D([
+      [-1, -1, -1],
+      [1, -1, -1],
+      [-1, 1, -1],
+      [1, 1, -1],
+      [-1, -1, 1],
+      [1, -1, 1],
+      [-1, 1, 1],
+      [1, 1, 1],
+      [1 + 1e-12, 1, 1],
+    ]);
+
+    expect(hull.vertices).toHaveLength(24);
+    expect(hull.faces).toHaveLength(36);
+  });
 });

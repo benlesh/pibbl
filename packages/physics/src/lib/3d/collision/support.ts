@@ -469,7 +469,7 @@ function prepareHull(
 function axesForPose(pose: InternalPose3D): Float64Array {
   const rotation = new Float64Array(9);
   rotationMatrixInto(rotation, pose.orientation);
-  return new Float64Array([
+  const axes = new Float64Array([
     rotation[0]!,
     rotation[3]!,
     rotation[6]!,
@@ -480,6 +480,18 @@ function axesForPose(pose: InternalPose3D): Float64Array {
     rotation[5]!,
     rotation[8]!,
   ]);
+  for (let axis = 0; axis < 3; axis += 1) {
+    const offset = axis * 3;
+    const length = Math.hypot(
+      axes[offset]!,
+      axes[offset + 1]!,
+      axes[offset + 2]!,
+    );
+    axes[offset] /= length;
+    axes[offset + 1] /= length;
+    axes[offset + 2] /= length;
+  }
+  return axes;
 }
 
 function dotAxis(

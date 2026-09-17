@@ -198,6 +198,75 @@ describe("standalone 3D rays and translational casts", () => {
     ).toBeNull();
   });
 
+  it("raycasts a micrometer hull with the same dimensional result as a box", () => {
+    const hull = convexHullShape3D({
+      points: [
+        [-1e-6, -1e-6, -1e-6],
+        [1e-6, -1e-6, -1e-6],
+        [-1e-6, 1e-6, -1e-6],
+        [1e-6, 1e-6, -1e-6],
+        [-1e-6, -1e-6, 1e-6],
+        [1e-6, -1e-6, 1e-6],
+        [-1e-6, 1e-6, 1e-6],
+        [1e-6, 1e-6, 1e-6],
+      ],
+    });
+    const ray = {
+      origin: [-3e-6, 0, 0],
+      direction: [1, 0, 0],
+      maxDistance: 1e-5,
+    } as const;
+    const hullHit = raycastShape3D(hull, identity, ray);
+    const boxHit = raycastShape3D(
+      boxShape3D({ width: 2e-6, height: 2e-6, depth: 2e-6 }),
+      identity,
+      ray,
+    );
+
+    expect(hullHit).not.toBeNull();
+    expect(hullHit!.distance).toBe(boxHit!.distance);
+    expect(hullHit!.point).toEqual(boxHit!.point);
+    expect(hullHit!.normal).toEqual(boxHit!.normal);
+  });
+
+  it("materializes a large-offset rotated ellipsoid tangent without cancellation", () => {
+    const hit = raycastShape3D(
+      ellipsoidShape3D({
+        radii: [2, 1, 1],
+        orientation: [0, 0, Math.SQRT1_2, Math.SQRT1_2],
+      }),
+      pose([1e20, 2, 0]),
+      { origin: [0, 0, 0], direction: [1, 0, 0], maxDistance: 2e20 },
+    );
+
+    expect(hit).not.toBeNull();
+    expect(hit!.distance).toBe(1e20);
+    expect(hit!.point).toEqual([1e20, 0, 0]);
+  });
+
+  it("honors initial-overlap policy from the center of a triangulated closed cube", () => {
+    const cube = triangleMeshShape3D({
+      positions: [
+        -1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, 1, 1, -1, 1, 1, 1,
+        1, -1, 1, 1,
+      ],
+      indices: [
+        0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 3, 7, 6, 3, 6, 2,
+        0, 4, 7, 0, 7, 3, 1, 2, 6, 1, 6, 5,
+      ],
+    });
+    const ray = {
+      origin: [0, 0, 0],
+      direction: [1, 0, 0],
+      maxDistance: 10,
+    } as const;
+
+    expect(raycastShape3D(cube, identity, ray)).toBeNull();
+    expect(
+      raycastShape3D(cube, identity, ray, { includeInitialOverlap: true }),
+    ).toMatchObject({ distance: 0, timeOfImpact: 0 });
+  });
+
   it("rejects large-offset radial misses for every analytic convex ray", () => {
     const shapes = [
       ellipsoidShape3D({ radii: [1, 1, 1] }),

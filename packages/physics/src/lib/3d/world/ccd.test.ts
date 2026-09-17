@@ -35,6 +35,7 @@ function createFixture() {
     shape: CRCPhysicsShape3D,
     options: Readonly<{
       x: number;
+      y?: number;
       dynamic: boolean;
       kinematic?: boolean;
       ccd: boolean;
@@ -47,9 +48,10 @@ function createFixture() {
     }>,
   ) => {
     const localCenterX = options.localCenterX ?? 0;
+    const y = options.y ?? 0;
     const body = bodies.allocate({
       positionX: options.x + localCenterX,
-      positionY: 0,
+      positionY: y,
       positionZ: 0,
       orientationX: 0,
       orientationY: 0,
@@ -116,7 +118,7 @@ function createFixture() {
       flags: COLLIDER_ENABLED_3D | (options.sensor ? COLLIDER_SENSOR_3D : 0),
     });
     const bounds = boundsOfShape3D(shape, {
-      position: [options.x, 0, 0],
+      position: [options.x, y, 0],
       orientation: [0, 0, 0, 1],
     });
     const proxy = broadPhase.createProxy(
@@ -138,7 +140,11 @@ function createFixture() {
     return { body, collider };
   };
   const resolveBodies = (
-    entries: readonly Readonly<{ body: number; fromX: number }>[],
+    entries: readonly Readonly<{
+      body: number;
+      fromX: number;
+      fromY?: number;
+    }>[],
   ) => {
     const previousX = new Float64Array(bodies.capacity);
     const previousY = new Float64Array(bodies.capacity);
@@ -156,7 +162,10 @@ function createFixture() {
       previousOrientationZ[body] = bodies.orientationZ[body]!;
       previousOrientationW[body] = bodies.orientationW[body]!;
     }
-    for (const entry of entries) previousX[entry.body] = entry.fromX;
+    for (const entry of entries) {
+      previousX[entry.body] = entry.fromX;
+      if (entry.fromY !== undefined) previousY[entry.body] = entry.fromY;
+    }
     previousOrientationW.fill(1);
     ccd.resolveCandidateBodies(
       bodies,
@@ -298,6 +307,39 @@ describe("bounded opted-in 3D CCD", () => {
     );
     expect(scene.bodies.linearVelocityX[first.body]).toBeLessThanOrEqual(0);
     expect(scene.bodies.linearVelocityX[second.body]).toBeGreaterThanOrEqual(0);
+  });
+
+  it("finds orthogonally crossing moving targets through both swept bounds", () => {
+    const scene = createFixture();
+    const horizontal = scene.add(bulletSphere, {
+      x: 1,
+      dynamic: true,
+      ccd: true,
+      sensor: false,
+      restitution: 0,
+    });
+    const vertical = scene.add(bulletSphere, {
+      x: 0,
+      y: 1,
+      dynamic: true,
+      ccd: true,
+      sensor: false,
+      restitution: 0,
+    });
+    scene.bodies.linearVelocityX[horizontal.body] = 2;
+    scene.bodies.linearVelocityY[vertical.body] = 2;
+
+    scene.resolveBodies([
+      { body: horizontal.body, fromX: -1 },
+      { body: vertical.body, fromX: 0, fromY: -1 },
+    ]);
+
+    expect(scene.ccd.impactCount).toBe(2);
+    expect(
+      Array.from(
+        scene.ccd.impactColliderIndices.subarray(0, scene.ccd.impactCount),
+      ),
+    ).toEqual([vertical.collider, horizontal.collider]);
   });
 
   it("casts a dynamic mover against a crossing kinematic target using relative motion", () => {

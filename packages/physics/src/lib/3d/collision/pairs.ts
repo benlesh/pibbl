@@ -21,6 +21,7 @@ import {
 } from "../shape-records.js";
 import {
   distanceSphereToBox3D,
+  distanceSphereToCylinder3D,
   distanceSphereToSphere3D,
   type AnalyticDistance3D,
 } from "./analytic.js";
@@ -118,7 +119,7 @@ export function containsPoint3D(
         prepared.convex.vertices,
         prepared.convex.faces[index + 2]!,
       );
-      if (signedTrianglePlane(a, b, c, copied) > GEOMETRY_EPSILON_3D)
+      if (signedTriangleDistance(a, b, c, copied) > GEOMETRY_EPSILON_3D)
         return false;
     }
     return true;
@@ -390,6 +391,36 @@ function collideCanonical(
           first.convex.center,
           first.convex.axes,
           first.convex.halfExtents,
+        ),
+      ),
+    );
+  } else if (
+    first.convex.kind === "sphere" &&
+    second.convex.kind === "cylinder"
+  ) {
+    distance = analyticToPrivate(
+      distanceSphereToCylinder3D(
+        first.convex.center,
+        first.convex.radius,
+        second.convex.center,
+        second.convex.axes,
+        second.convex.radius,
+        second.convex.halfHeight,
+      ),
+    );
+  } else if (
+    first.convex.kind === "cylinder" &&
+    second.convex.kind === "sphere"
+  ) {
+    distance = invertDistance(
+      analyticToPrivate(
+        distanceSphereToCylinder3D(
+          second.convex.center,
+          second.convex.radius,
+          first.convex.center,
+          first.convex.axes,
+          first.convex.radius,
+          first.convex.halfHeight,
         ),
       ),
     );
@@ -868,6 +899,22 @@ export function collideConvexShapes3D(
 ): ConvexCollisionResult3D {
   const normalized = normalizeConvexPair(first, second);
   if (normalized === null) return { status: "failed", reason: "gjk" };
+  if (iterationLimits.gjk === undefined && iterationLimits.epa === undefined) {
+    const coincident = coincidentAnalyticPenetration(
+      normalized.first,
+      normalized.second,
+    );
+    if (coincident !== null) {
+      const rescaled = rescaleDistance(
+        coincident,
+        normalized.origin,
+        normalized.scale,
+      );
+      return rescaled === null
+        ? { status: "failed", reason: "epa" }
+        : { status: "success", distance: rescaled };
+    }
+  }
   const gjk = gjkConvexShapes3D(
     normalized.first,
     normalized.second,
@@ -886,13 +933,7 @@ export function collideConvexShapes3D(
       iterationLimits.epa,
     );
     if (epa.status === "failed") {
-      if (iterationLimits.epa !== undefined)
-        return { status: "failed", reason: "epa" };
-      distance = directionalPenetration(
-        normalized.first,
-        normalized.second,
-        fallback,
-      );
+      return { status: "failed", reason: "epa" };
     } else distance = { ...epa };
   } else {
     const normalLength = Math.hypot(gjk.normalX, gjk.normalY, gjk.normalZ);
@@ -921,16 +962,69 @@ export function collideConvexShapes3D(
     : { status: "success", distance: rescaled };
 }
 
-function directionalPenetration(
+function coincidentAnalyticPenetration(
   first: PreparedConvexShape3D,
   second: PreparedConvexShape3D,
-  direction: ArrayLike<number>,
-): PrivatePairDistance3D {
-  const length = Math.hypot(direction[0]!, direction[1]!, direction[2]!);
-  const normal =
-    length > 0
-      ? [direction[0]! / length, direction[1]! / length, direction[2]! / length]
-      : [1, 0, 0];
+): PrivatePairDistance3D | null {
+  if (first.kind !== second.kind || !sameArray(first.center, second.center)) {
+    return null;
+  }
+  let normal: readonly [number, number, number] | null = null;
+  if (first.kind === "ellipsoid" && second.kind === "ellipsoid") {
+    if (
+      !sameArray(first.axes, second.axes) ||
+      !sameArray(first.radii, second.radii)
+    ) {
+      return null;
+    }
+    let axis = 0;
+    for (let candidate = 1; candidate < 3; candidate += 1) {
+      if (first.radii[candidate]! < first.radii[axis]!) axis = candidate;
+    }
+    normal = axisDirection(first.axes, axis);
+  } else if (first.kind === "capsule" && second.kind === "capsule") {
+    if (
+      first.radius !== second.radius ||
+      !sameArray(first.start, second.start) ||
+      !sameArray(first.end, second.end)
+    ) {
+      return null;
+    }
+    normal = stableSegmentPerpendicular(first.start, first.end);
+  } else if (first.kind === "cylinder" && second.kind === "cylinder") {
+    if (
+      first.radius !== second.radius ||
+      first.halfHeight !== second.halfHeight ||
+      !sameArray(first.axes, second.axes)
+    ) {
+      return null;
+    }
+    normal = axisDirection(
+      first.axes,
+      first.halfHeight <= first.radius ? 1 : 0,
+    );
+  } else if (first.kind === "cone" && second.kind === "cone") {
+    if (
+      first.radius !== second.radius ||
+      first.halfHeight !== second.halfHeight ||
+      !sameArray(first.axes, second.axes)
+    ) {
+      return null;
+    }
+    const denominator = Math.hypot(2 * first.halfHeight, first.radius);
+    const slopedWidth = (4 * first.radius * first.halfHeight) / denominator;
+    if (2 * first.halfHeight <= slopedWidth) {
+      normal = axisDirection(first.axes, 1);
+    } else {
+      normal = orientedDirection(
+        first.axes,
+        (2 * first.halfHeight) / denominator,
+        first.radius / denominator,
+        0,
+      );
+    }
+  }
+  if (normal === null) return null;
   const firstPoint = new Float64Array(3);
   const secondPoint = new Float64Array(3);
   const firstFeature = supportShape3D(
@@ -964,6 +1058,63 @@ function directionalPenetration(
     firstFeature,
     secondFeature,
   };
+}
+
+function sameArray(
+  first: ArrayLike<number>,
+  second: ArrayLike<number>,
+): boolean {
+  if (first.length !== second.length) return false;
+  for (let index = 0; index < first.length; index += 1) {
+    if (first[index] !== second[index]) return false;
+  }
+  return true;
+}
+
+function axisDirection(
+  axes: ArrayLike<number>,
+  axis: number,
+): readonly [number, number, number] {
+  const offset = axis * 3;
+  return [axes[offset]!, axes[offset + 1]!, axes[offset + 2]!];
+}
+
+function orientedDirection(
+  axes: ArrayLike<number>,
+  x: number,
+  y: number,
+  z: number,
+): readonly [number, number, number] {
+  return [
+    axes[0]! * x + axes[3]! * y + axes[6]! * z,
+    axes[1]! * x + axes[4]! * y + axes[7]! * z,
+    axes[2]! * x + axes[5]! * y + axes[8]! * z,
+  ];
+}
+
+function stableSegmentPerpendicular(
+  start: ArrayLike<number>,
+  end: ArrayLike<number>,
+): readonly [number, number, number] {
+  const x = end[0]! - start[0]!;
+  const y = end[1]! - start[1]!;
+  const z = end[2]! - start[2]!;
+  const length = Math.hypot(x, y, z);
+  const axis = [x / length, y / length, z / length] as const;
+  const reference =
+    Math.abs(axis[0]) <= Math.abs(axis[1]) &&
+    Math.abs(axis[0]) <= Math.abs(axis[2])
+      ? ([1, 0, 0] as const)
+      : Math.abs(axis[1]) <= Math.abs(axis[2])
+        ? ([0, 1, 0] as const)
+        : ([0, 0, 1] as const);
+  const perpendicular = cross3(axis, reference);
+  const perpendicularLength = Math.hypot(...perpendicular);
+  return [
+    perpendicular[0] / perpendicularLength,
+    perpendicular[1] / perpendicularLength,
+    perpendicular[2] / perpendicularLength,
+  ];
 }
 
 function normalizeConvexPair(
@@ -1272,14 +1423,39 @@ function containsConcavePoint(
   }
   if (shape.record.kind !== "triangleMesh" || !shape.record.closedManifold)
     return false;
-  let crossings = 0;
   const direction = [1, 0.3713906763541037, 0.17320508075688773] as const;
+  const hits: Array<
+    Readonly<{ time: number; orientation: number; id: number }>
+  > = [];
   for (const triangleIndex of rayCandidateTriangles(shape, point, direction)) {
     const triangle = preparedTriangle(shape, triangleIndex);
     const a = triangle.shape.vertices.subarray(0, 3);
     const b = triangle.shape.vertices.subarray(3, 6);
     const c = triangle.shape.vertices.subarray(6, 9);
-    if (rayTriangleTime(point, direction, a, b, c) !== null) crossings += 1;
+    const hit = rayTriangleCrossing(point, direction, a, b, c);
+    if (hit !== null) {
+      hits.push({
+        ...hit,
+        id: shape.record.sourceTriangleIds[triangleIndex]!,
+      });
+    }
+  }
+  hits.sort((left, right) => left.time - right.time || left.id - right.id);
+  let crossings = 0;
+  for (let start = 0; start < hits.length;) {
+    let end = start + 1;
+    let hasPositive = hits[start]!.orientation > 0;
+    let hasNegative = hits[start]!.orientation < 0;
+    while (
+      end < hits.length &&
+      sameRayTime(hits[start]!.time, hits[end]!.time)
+    ) {
+      hasPositive ||= hits[end]!.orientation > 0;
+      hasNegative ||= hits[end]!.orientation < 0;
+      end += 1;
+    }
+    if (hasPositive !== hasNegative) crossings += 1;
+    start = end;
   }
   return crossings % 2 === 1;
 }
@@ -1377,27 +1553,34 @@ function pointInTriangle(
   );
 }
 
-function rayTriangleTime(
+function rayTriangleCrossing(
   origin: ArrayLike<number>,
   direction: ArrayLike<number>,
   a: ArrayLike<number>,
   b: ArrayLike<number>,
   c: ArrayLike<number>,
-): number | null {
+): Readonly<{ time: number; orientation: number }> | null {
   const edge1 = subtract3(b, a),
     edge2 = subtract3(c, a);
   const p = cross3(direction, edge2);
   const determinant = dot3(edge1, p);
-  if (Math.abs(determinant) <= GEOMETRY_EPSILON_3D) return null;
+  if (determinant === 0) return null;
   const inverse = 1 / determinant;
   const tvec = subtract3(origin, a);
   const u = dot3(tvec, p) * inverse;
   const q = cross3(tvec, edge1);
   const v = dot3(direction, q) * inverse;
   const time = dot3(edge2, q) * inverse;
-  return u >= 0 && v >= 0 && u + v <= 1 && time > GEOMETRY_EPSILON_3D
-    ? time
+  return u >= 0 && v >= 0 && u + v <= 1 && time > 0
+    ? { time, orientation: -Math.sign(determinant) }
     : null;
+}
+
+function sameRayTime(first: number, second: number): boolean {
+  return (
+    Math.abs(first - second) <=
+    Number.EPSILON * 64 * Math.max(1, Math.abs(first), Math.abs(second))
+  );
 }
 
 function subtract3(
@@ -1519,6 +1702,17 @@ function signedTrianglePlane(
     (abz * acx - abx * acz) * (point[1]! - a[1]!) +
     (abx * acy - aby * acx) * (point[2]! - a[2]!)
   );
+}
+
+function signedTriangleDistance(
+  a: ArrayLike<number>,
+  b: ArrayLike<number>,
+  c: ArrayLike<number>,
+  point: ArrayLike<number>,
+): number {
+  const normal = cross3(subtract3(b, a), subtract3(c, a));
+  const length = Math.hypot(normal[0], normal[1], normal[2]);
+  return length === 0 ? 0 : signedTrianglePlane(a, b, c, point) / length;
 }
 
 function compareArrays(

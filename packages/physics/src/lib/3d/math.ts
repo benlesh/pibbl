@@ -180,15 +180,16 @@ export function rotationMatrixInto(
   const wx = w * x;
   const wy = w * y;
   const wz = w * z;
-  output[0] = cleanZero(1 - 2 * (yy + zz));
+  const ww = w * w;
+  output[0] = cleanZero(ww + xx - yy - zz);
   output[1] = cleanZero(2 * (xy - wz));
   output[2] = cleanZero(2 * (xz + wy));
   output[3] = cleanZero(2 * (xy + wz));
-  output[4] = cleanZero(1 - 2 * (xx + zz));
+  output[4] = cleanZero(ww - xx + yy - zz);
   output[5] = cleanZero(2 * (yz - wx));
   output[6] = cleanZero(2 * (xz - wy));
   output[7] = cleanZero(2 * (yz + wx));
-  output[8] = cleanZero(1 - 2 * (xx + yy));
+  output[8] = cleanZero(ww - xx - yy + zz);
 }
 
 export function rotateDiagonalTensor(

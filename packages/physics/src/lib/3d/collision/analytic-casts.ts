@@ -1,4 +1,8 @@
-import type { PreparedBox3D, PreparedSphere3D } from "./support.js";
+import type {
+  PreparedBox3D,
+  PreparedEllipsoid3D,
+  PreparedSphere3D,
+} from "./support.js";
 import {
   affineSignAtExactTime,
   compareExactTimes,
@@ -115,7 +119,8 @@ export function raycastSphereAnalytically(
     !isFiniteVector(rawDirection) ||
     !Number.isFinite(sphere.radius) ||
     !Number.isFinite(maxDistance)
-  ) return null;
+  )
+    return null;
   const offset = exactVector3Difference(origin, sphere.center);
   const motion = exactVector3FromNumbers(rawDirection);
   const motionSquared = dyadicDot3(motion, motion);
@@ -152,11 +157,9 @@ export function raycastSphereAnalytically(
       motionSquared,
       exactMaxDistance,
     ) > 0
-  ) return null;
-  const distance = projectNonnegativeScaledExactTime(
-    event.time,
-    motionSquared,
-  );
+  )
+    return null;
+  const distance = projectNonnegativeScaledExactTime(event.time, motionSquared);
   const normalizedTime = projectNonnegativeScaledExactTimeRatio(
     event.time,
     motionSquared,
@@ -178,7 +181,8 @@ export function raycastSphereAnalytically(
     normalizedTime === null ||
     point === null ||
     normal === null
-  ) return null;
+  )
+    return null;
   return finiteCandidate({
     pointX: point[0],
     pointY: point[1],
@@ -188,6 +192,105 @@ export function raycastSphereAnalytically(
     normalZ: normal[2],
     distance,
     timeOfImpact: normalizedTime,
+  });
+}
+
+export function raycastEllipsoidAnalytically(
+  ellipsoid: PreparedEllipsoid3D,
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  maxDistance: number,
+): AnalyticCastCandidate3D | null {
+  if (
+    !isFiniteVector(origin) ||
+    !isFiniteVector(direction) ||
+    !Number.isFinite(maxDistance)
+  )
+    return null;
+
+  const worldOffset = exactVector3Difference(origin, ellipsoid.center);
+  const worldMotion = exactVector3FromNumbers(direction);
+  const localOffset = exactLocalVector(ellipsoid.axes, worldOffset);
+  const localMotion = exactLocalVector(ellipsoid.axes, worldMotion);
+  const radiusSquared = [
+    dyadicSquare(dyadicFromNumber(ellipsoid.radii[0]!)),
+    dyadicSquare(dyadicFromNumber(ellipsoid.radii[1]!)),
+    dyadicSquare(dyadicFromNumber(ellipsoid.radii[2]!)),
+  ] as const;
+  const weights = [
+    dyadicMultiply(radiusSquared[1], radiusSquared[2]),
+    dyadicMultiply(radiusSquared[0], radiusSquared[2]),
+    dyadicMultiply(radiusSquared[0], radiusSquared[1]),
+  ] as const;
+  let a = ZERO_DYADIC;
+  let b = ZERO_DYADIC;
+  let c = dyadicNegate(
+    dyadicMultiply(
+      radiusSquared[0],
+      dyadicMultiply(radiusSquared[1], radiusSquared[2]),
+    ),
+  );
+  for (let axis = 0; axis < 3; axis += 1) {
+    a = dyadicAdd(
+      a,
+      dyadicMultiply(dyadicSquare(localMotion[axis]), weights[axis]),
+    );
+    b = dyadicAdd(
+      b,
+      dyadicMultiply(
+        TWO_DYADIC,
+        dyadicMultiply(
+          dyadicMultiply(localOffset[axis], localMotion[axis]),
+          weights[axis],
+        ),
+      ),
+    );
+    c = dyadicAdd(
+      c,
+      dyadicMultiply(dyadicSquare(localOffset[axis]), weights[axis]),
+    );
+  }
+  const exactTime = quadraticRoot(exactQuadratic(a, b, c), "lower");
+  if (exactTime === null || compareExactTimes(exactTime, ZERO_TIME) < 0)
+    return null;
+  const distance = projectExactTime(exactTime);
+  if (distance === null || distance < 0 || distance > maxDistance) return null;
+
+  const point = materializeAffineVector3(
+    exactVector3FromNumbers(origin),
+    worldMotion,
+    exactTime,
+  );
+  const localHit = [0, 1, 2].map((axis) =>
+    projectAffineAtExactTime(localOffset[axis]!, localMotion[axis]!, exactTime),
+  );
+  if (point === null || localHit.some((value) => value === null)) return null;
+  const localNormal = [
+    localHit[0]! / ellipsoid.radii[0]! ** 2,
+    localHit[1]! / ellipsoid.radii[1]! ** 2,
+    localHit[2]! / ellipsoid.radii[2]! ** 2,
+  ] as const;
+  const normal = normalizeScaleSafe(
+    ellipsoid.axes[0]! * localNormal[0] +
+      ellipsoid.axes[3]! * localNormal[1] +
+      ellipsoid.axes[6]! * localNormal[2],
+    ellipsoid.axes[1]! * localNormal[0] +
+      ellipsoid.axes[4]! * localNormal[1] +
+      ellipsoid.axes[7]! * localNormal[2],
+    ellipsoid.axes[2]! * localNormal[0] +
+      ellipsoid.axes[5]! * localNormal[1] +
+      ellipsoid.axes[8]! * localNormal[2],
+  );
+  if (normal === null) return null;
+  return finiteCandidate({
+    pointX: point[0],
+    pointY: point[1],
+    pointZ: point[2],
+    normalX: normal[0],
+    normalY: normal[1],
+    normalZ: normal[2],
+    distance,
+    timeOfImpact: distance / maxDistance,
   });
 }
 
@@ -203,7 +306,8 @@ export function castSphereAgainstSphereAnalytically(
     !isFiniteVector(translation) ||
     !Number.isFinite(moving.radius) ||
     !Number.isFinite(target.radius)
-  ) return null;
+  )
+    return null;
   const offset = exactVector3Difference(moving.center, target.center);
   const motion = exactVector3FromNumbers(translation);
   const translationSquared = dyadicDot3(motion, motion);
@@ -255,7 +359,8 @@ export function castSphereAgainstBoxAnalytically(
     !Array.from(target.axes).every(Number.isFinite) ||
     !isFiniteVector(target.halfExtents) ||
     !Number.isFinite(moving.radius)
-  ) return null;
+  )
+    return null;
   const geometry = exactSphereBoxGeometry(moving, translation, target);
   const initialCell = classifyBoxCell(geometry, ZERO_TIME);
   const initialQuadratic = boxCellQuadratic(geometry, initialCell);
@@ -287,12 +392,7 @@ export function castSphereAgainstBoxAnalytically(
     const leftRelation = quadraticSignAtRational(quadratic, left);
     if (leftRelation <= 0 && compareRationals(left, ZERO_RATIONAL) > 0) {
       const time = rationalTime(left);
-      return materializeSphereBoxEvent(
-        geometry,
-        target,
-        translation,
-        time,
-      );
+      return materializeSphereBoxEvent(geometry, target, translation, time);
     }
     const event = proveQuadraticEvent(quadratic, left, right);
     if (event !== null && event.kind !== "initial") {
@@ -320,10 +420,7 @@ function proveSphereSweepFromZero(
   const discriminantSign = quadraticDiscriminantSign(quadratic);
   if (discriminantSign < 0) return null;
   const time = quadraticRoot(quadratic, "lower");
-  if (
-    time === null ||
-    compareExactTimes(time, ZERO_TIME) < 0
-  ) return null;
+  if (time === null || compareExactTimes(time, ZERO_TIME) < 0) return null;
   return {
     kind: discriminantSign === 0 ? "tangent" : "crossing",
     time,
@@ -346,7 +443,8 @@ function proveQuadraticEvent(
     time === null ||
     compareExactTimes(time, rationalTime(minimum)) < 0 ||
     compareExactTimes(time, rationalTime(maximum)) > 0
-  ) return null;
+  )
+    return null;
   return {
     kind: discriminantSign === 0 ? "tangent" : "crossing",
     time,
@@ -373,14 +471,16 @@ function exactSphereBoxGeometry(
   const worldOffset = exactVector3Difference(moving.center, target.center);
   const worldMotion = exactVector3FromNumbers(translation);
   const localOrigin = [0, 1, 2].map((axis) =>
-    dyadicDot3(worldOffset, exactVector3FromNumbers(
-      target.axes.subarray(axis * 3, axis * 3 + 3),
-    ))
+    dyadicDot3(
+      worldOffset,
+      exactVector3FromNumbers(target.axes.subarray(axis * 3, axis * 3 + 3)),
+    ),
   ) as unknown as ExactVector3;
   const localMotion = [0, 1, 2].map((axis) =>
-    dyadicDot3(worldMotion, exactVector3FromNumbers(
-      target.axes.subarray(axis * 3, axis * 3 + 3),
-    ))
+    dyadicDot3(
+      worldMotion,
+      exactVector3FromNumbers(target.axes.subarray(axis * 3, axis * 3 + 3)),
+    ),
   ) as unknown as ExactVector3;
   return {
     origin: localOrigin,
@@ -397,9 +497,10 @@ function sphereBoxBreakpoints(
   const breakpoints = [ZERO_RATIONAL, ONE_RATIONAL];
   for (let axis = 0; axis < 3; axis += 1) {
     for (const sign of [-1, 1] as const) {
-      const bound = sign < 0
-        ? dyadicNegate(geometry.halfExtents[axis])
-        : geometry.halfExtents[axis];
+      const bound =
+        sign < 0
+          ? dyadicNegate(geometry.halfExtents[axis])
+          : geometry.halfExtents[axis];
       const time = exactSlabTime(
         geometry.origin[axis],
         geometry.motion[axis],
@@ -409,7 +510,8 @@ function sphereBoxBreakpoints(
         time !== null &&
         compareRationals(time, ZERO_RATIONAL) > 0 &&
         compareRationals(time, ONE_RATIONAL) < 0
-      ) insertExactSlabBreakpoint(breakpoints, time);
+      )
+        insertExactSlabBreakpoint(breakpoints, time);
     }
   }
   return breakpoints;
@@ -446,16 +548,14 @@ function boxCellQuadratic(
   for (let axis = 0; axis < 3; axis += 1) {
     const sign = cell[axis];
     if (sign === 0) continue;
-    const bound = sign < 0
-      ? dyadicNegate(geometry.halfExtents[axis])
-      : geometry.halfExtents[axis];
+    const bound =
+      sign < 0
+        ? dyadicNegate(geometry.halfExtents[axis])
+        : geometry.halfExtents[axis];
     const offset = dyadicSubtract(geometry.origin[axis], bound);
     const slope = geometry.motion[axis];
     a = dyadicAdd(a, dyadicSquare(slope));
-    b = dyadicAdd(
-      b,
-      dyadicMultiply(TWO_DYADIC, dyadicMultiply(offset, slope)),
-    );
+    b = dyadicAdd(b, dyadicMultiply(TWO_DYADIC, dyadicMultiply(offset, slope)));
     c = dyadicAdd(c, dyadicSquare(offset));
   }
   return exactQuadratic(a, b, c);
@@ -508,22 +608,23 @@ function materializeSphereBoxCandidate(
       };
     }
     return {
-      offset: sign < 0
-        ? dyadicNegate(geometry.halfExtents[axis])
-        : geometry.halfExtents[axis],
+      offset:
+        sign < 0
+          ? dyadicNegate(geometry.halfExtents[axis])
+          : geometry.halfExtents[axis],
       slope: ZERO_DYADIC,
     };
   }) as [ExactAffineCoordinate, ExactAffineCoordinate, ExactAffineCoordinate];
   const localRadialOffset = [0, 1, 2].map((axis) =>
     cell[axis] === 0
       ? ZERO_DYADIC
-      : dyadicSubtract(geometry.origin[axis], localPoint[axis]!.offset)
+      : dyadicSubtract(geometry.origin[axis], localPoint[axis]!.offset),
   ) as unknown as ExactVector3;
   const localRadialSlope = [0, 1, 2].map((axis) =>
-    cell[axis] === 0 ? ZERO_DYADIC : geometry.motion[axis]
+    cell[axis] === 0 ? ZERO_DYADIC : geometry.motion[axis],
   ) as unknown as ExactVector3;
   const localNormal = inside
-    ? [cell[0], cell[1], cell[2]] as const
+    ? ([cell[0], cell[1], cell[2]] as const)
     : exactContact
       ? materializeUnitAffineVector3(
           localRadialOffset,
@@ -597,10 +698,7 @@ function nearestInsideFaceCell(
           slope: dyadicNegate(geometry.motion[axis]),
         }
       : {
-          offset: dyadicAdd(
-            geometry.origin[axis],
-            geometry.halfExtents[axis],
-          ),
+          offset: dyadicAdd(geometry.origin[axis], geometry.halfExtents[axis]),
           slope: geometry.motion[axis],
         };
     if (compareAffinesAtTime(depth, selectedDepth, time) < 0) {
@@ -682,11 +780,7 @@ function normalizeExactVectorAgainstMotion(
 ): readonly [number, number, number] | null {
   const normalized = materializeNormalizedExactVector3(vector);
   if (normalized !== null) return orientAgainstMotion(normalized, motion);
-  const fallback = normalizeScaleSafe(
-    -motion[0]!,
-    -motion[1]!,
-    -motion[2]!,
-  );
+  const fallback = normalizeScaleSafe(-motion[0]!, -motion[1]!, -motion[2]!);
   return fallback ?? [1, 0, 0];
 }
 
@@ -708,12 +802,8 @@ function orientAgainstMotion(
   motion: ArrayLike<number>,
 ): readonly [number, number, number] {
   const projection =
-    normal[0] * motion[0]! +
-    normal[1] * motion[1]! +
-    normal[2] * motion[2]!;
-  return projection > 0
-    ? [-normal[0], -normal[1], -normal[2]]
-    : normal;
+    normal[0] * motion[0]! + normal[1] * motion[1]! + normal[2] * motion[2]!;
+  return projection > 0 ? [-normal[0], -normal[1], -normal[2]] : normal;
 }
 
 function normalizeProjectedNormal(
@@ -723,11 +813,7 @@ function normalizeProjectedNormal(
 ): readonly [number, number, number] | null {
   const length = Math.hypot(x, y, z);
   if (!Number.isFinite(length) || length === 0) return null;
-  return [
-    cleanZero(x / length),
-    cleanZero(y / length),
-    cleanZero(z / length),
-  ];
+  return [cleanZero(x / length), cleanZero(y / length), cleanZero(z / length)];
 }
 
 function normalizeScaleSafe(
@@ -749,6 +835,17 @@ function normalizeScaleSafe(
   ];
 }
 
+function exactLocalVector(
+  axes: ArrayLike<number>,
+  vector: ExactVector3,
+): ExactVector3 {
+  return [
+    dyadicDot3(exactVector3FromNumbers([axes[0]!, axes[1]!, axes[2]!]), vector),
+    dyadicDot3(exactVector3FromNumbers([axes[3]!, axes[4]!, axes[5]!]), vector),
+    dyadicDot3(exactVector3FromNumbers([axes[6]!, axes[7]!, axes[8]!]), vector),
+  ];
+}
+
 function finiteCandidate(
   candidate: AnalyticCastCandidate3D,
 ): AnalyticCastCandidate3D | null {
@@ -767,9 +864,11 @@ function finiteCandidate(
 }
 
 function isFiniteVector(value: ArrayLike<number>): boolean {
-  return Number.isFinite(value[0]!) &&
+  return (
+    Number.isFinite(value[0]!) &&
     Number.isFinite(value[1]!) &&
-    Number.isFinite(value[2]!);
+    Number.isFinite(value[2]!)
+  );
 }
 
 function cleanZero(value: number): number {

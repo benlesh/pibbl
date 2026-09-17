@@ -25,6 +25,7 @@ import {
 import {
   castSphereAgainstBoxAnalytically,
   castSphereAgainstSphereAnalytically,
+  raycastEllipsoidAnalytically,
   raycastSphereAnalytically,
   type AnalyticCastCandidate3D,
 } from "./analytic-casts.js";
@@ -53,49 +54,8 @@ function raycastPreparedConvex(
 ): CastCandidate3D | null {
   if (shape.kind === "box")
     return raycastBox(shape, origin, direction, maxDistance);
-  if (shape.kind === "ellipsoid") {
-    const localOrigin = localPoint(shape.center, shape.axes, origin);
-    const localDirection = localVector(shape.axes, direction);
-    if (
-      !rayIntersectsLocalBounds(
-        localOrigin,
-        localDirection,
-        shape.radii,
-        maxDistance,
-      )
-    )
-      return null;
-    const ox = localOrigin[0] / shape.radii[0]!;
-    const oy = localOrigin[1] / shape.radii[1]!;
-    const oz = localOrigin[2] / shape.radii[2]!;
-    const dx = localDirection[0] / shape.radii[0]!;
-    const dy = localDirection[1] / shape.radii[1]!;
-    const dz = localDirection[2] / shape.radii[2]!;
-    const t = smallestQuadraticRoot(
-      dx * dx + dy * dy + dz * dz,
-      2 * (ox * dx + oy * dy + oz * dz),
-      ox * ox + oy * oy + oz * oz - 1,
-      maxDistance,
-    );
-    if (t === null) return null;
-    const localHit = [
-      localOrigin[0] + localDirection[0] * t,
-      localOrigin[1] + localDirection[1] * t,
-      localOrigin[2] + localDirection[2] * t,
-    ] as const;
-    return candidateAt(
-      shape,
-      origin,
-      direction,
-      t,
-      [
-        localHit[0] / shape.radii[0]! ** 2,
-        localHit[1] / shape.radii[1]! ** 2,
-        localHit[2] / shape.radii[2]! ** 2,
-      ],
-      maxDistance,
-    );
-  }
+  if (shape.kind === "ellipsoid")
+    return raycastEllipsoidAnalytically(shape, origin, direction, maxDistance);
   if (shape.kind === "capsule")
     return raycastCapsule(shape, origin, direction, maxDistance);
   if (shape.kind === "hull")
@@ -289,10 +249,21 @@ function raycastHull(
     const a = vertex(shape.vertices, shape.faces[index]!);
     const b = vertex(shape.vertices, shape.faces[index + 1]!);
     const c = vertex(shape.vertices, shape.faces[index + 2]!);
-    const n = cross(subtract(b, a), subtract(c, a));
+    const sourceNormal = cross(subtract(b, a), subtract(c, a));
+    const normalLength = Math.hypot(
+      sourceNormal[0],
+      sourceNormal[1],
+      sourceNormal[2],
+    );
+    if (normalLength === 0) continue;
+    const n = [
+      sourceNormal[0] / normalLength,
+      sourceNormal[1] / normalLength,
+      sourceNormal[2] / normalLength,
+    ] as const;
     const denominator = dot(n, direction);
     const signedOrigin = dot(n, subtract(origin, a));
-    if (Math.abs(denominator) <= GEOMETRY_EPSILON_3D) {
+    if (denominator === 0) {
       if (signedOrigin > 0) return null;
       continue;
     }
@@ -338,18 +309,11 @@ function containsPreparedPoint(
     return shape.faces.every(
       (_, index) =>
         index % 3 !== 0 ||
-        dot(
-          cross(
-            subtract(
-              vertex(shape.vertices, shape.faces[index + 1]!),
-              vertex(shape.vertices, shape.faces[index]!),
-            ),
-            subtract(
-              vertex(shape.vertices, shape.faces[index + 2]!),
-              vertex(shape.vertices, shape.faces[index]!),
-            ),
-          ),
-          subtract(point, vertex(shape.vertices, shape.faces[index]!)),
+        signedTriangleDistance(
+          vertex(shape.vertices, shape.faces[index]!),
+          vertex(shape.vertices, shape.faces[index + 1]!),
+          vertex(shape.vertices, shape.faces[index + 2]!),
+          point,
         ) <= GEOMETRY_EPSILON_3D,
     );
   const local = localPoint(shape.center, shape.axes, point);
@@ -1011,6 +975,17 @@ function cross(
     left[2]! * right[0]! - left[0]! * right[2]!,
     left[0]! * right[1]! - left[1]! * right[0]!,
   ];
+}
+
+function signedTriangleDistance(
+  a: ArrayLike<number>,
+  b: ArrayLike<number>,
+  c: ArrayLike<number>,
+  point: ArrayLike<number>,
+): number {
+  const normal = cross(subtract(b, a), subtract(c, a));
+  const length = Math.hypot(normal[0], normal[1], normal[2]);
+  return length === 0 ? 0 : dot(normal, subtract(point, a)) / length;
 }
 
 function conservativelyCast(

@@ -7,6 +7,7 @@ import {
   type MinkowskiVertex3D,
   type PreparedConvexShape3D,
 } from "./support.js";
+import { buildCanonicalHull3D } from "../hull.js";
 
 interface EpaPenetrationResult3D {
   readonly status: "penetrating";
@@ -26,7 +27,8 @@ interface EpaPenetrationResult3D {
 
 interface EpaFailureResult3D {
   readonly status: "failed";
-  readonly reason: "iteration-limit" | "nonfinite" | "no-progress" | "invalid-simplex";
+  readonly reason:
+    "iteration-limit" | "nonfinite" | "no-progress" | "invalid-simplex";
 }
 
 export type EpaResult3D = EpaPenetrationResult3D | EpaFailureResult3D;
@@ -49,16 +51,14 @@ export function epaConvexShapes3D(
   simplex: readonly MinkowskiVertex3D[],
   iterationLimit = MAX_EPA_ITERATIONS_3D,
 ): EpaResult3D {
-  if (simplex.length !== 4) return { status: "failed", reason: "invalid-simplex" };
-  if (iterationLimit <= 0) return { status: "failed", reason: "iteration-limit" };
-  const vertices = [...simplex];
-  let faces = [
-    createFace(vertices, 0, 1, 2),
-    createFace(vertices, 0, 3, 1),
-    createFace(vertices, 0, 2, 3),
-    createFace(vertices, 1, 3, 2),
-  ].filter((face): face is Face3D => face !== null);
-  if (faces.length !== 4) return { status: "failed", reason: "invalid-simplex" };
+  if (simplex.length !== 4)
+    return { status: "failed", reason: "invalid-simplex" };
+  if (iterationLimit <= 0)
+    return { status: "failed", reason: "iteration-limit" };
+  const initial = initialPolytope(first, second, simplex);
+  if (initial === null) return { status: "failed", reason: "invalid-simplex" };
+  const vertices = initial.vertices;
+  let faces = initial.faces;
 
   for (let iteration = 0; iteration < iterationLimit; iteration += 1) {
     faces.sort((left, right) => compareFaces(left, right, vertices));
@@ -74,16 +74,21 @@ export function epaConvexShapes3D(
       face.normalZ,
     );
     const projection =
-      support.x * face.normalX + support.y * face.normalY + support.z * face.normalZ;
-    if (!Number.isFinite(projection)) return { status: "failed", reason: "nonfinite" };
+      support.x * face.normalX +
+      support.y * face.normalY +
+      support.z * face.normalZ;
+    if (!Number.isFinite(projection))
+      return { status: "failed", reason: "nonfinite" };
     const repeated = vertices.some((vertex) => sameVertex(vertex, support));
     if (
       repeated ||
-      projection - face.distance <= SUPPORT_GAP_TOLERANCE * Math.max(1, Math.abs(projection))
+      projection - face.distance <=
+        SUPPORT_GAP_TOLERANCE * Math.max(1, Math.abs(projection))
     ) {
       return faceResult(vertices, face);
     }
-    if (projection <= face.distance) return { status: "failed", reason: "no-progress" };
+    if (projection <= face.distance)
+      return { status: "failed", reason: "no-progress" };
 
     const newIndex = vertices.length;
     vertices.push(support);
@@ -112,11 +117,60 @@ export function epaConvexShapes3D(
       const next = createFace(vertices, a, b, newIndex);
       if (next !== null) faces.push(next);
     }
-    if (faces.length === 0 || faces.length > MAX_EPA_ITERATIONS_3D * 8) {
+    if (faces.length === 0 || faces.length > iterationLimit * 8) {
       return { status: "failed", reason: "no-progress" };
     }
   }
   return { status: "failed", reason: "iteration-limit" };
+}
+
+function initialPolytope(
+  first: PreparedConvexShape3D,
+  second: PreparedConvexShape3D,
+  simplex: readonly MinkowskiVertex3D[],
+): Readonly<{ vertices: MinkowskiVertex3D[]; faces: Face3D[] }> | null {
+  const candidates = [...simplex];
+  for (let x = -1; x <= 1; x += 1) {
+    for (let y = -1; y <= 1; y += 1) {
+      for (let z = -1; z <= 1; z += 1) {
+        if (x === 0 && y === 0 && z === 0) continue;
+        const support = supportMinkowski3D(first, second, x, y, z);
+        if (!candidates.some((candidate) => sameVertex(candidate, support))) {
+          candidates.push(support);
+        }
+      }
+    }
+  }
+  let hull;
+  try {
+    hull = buildCanonicalHull3D(
+      candidates.map((candidate) => [candidate.x, candidate.y, candidate.z]),
+    );
+  } catch {
+    return null;
+  }
+  const vertices: MinkowskiVertex3D[] = [];
+  for (let offset = 0; offset < hull.vertices.length; offset += 3) {
+    const candidate = candidates.find(
+      (value) =>
+        value.x === hull.vertices[offset] &&
+        value.y === hull.vertices[offset + 1] &&
+        value.z === hull.vertices[offset + 2],
+    );
+    if (candidate === undefined) return null;
+    vertices.push(candidate);
+  }
+  const faces: Face3D[] = [];
+  for (let offset = 0; offset < hull.faces.length; offset += 3) {
+    const face = createFace(
+      vertices,
+      hull.faces[offset]!,
+      hull.faces[offset + 1]!,
+      hull.faces[offset + 2]!,
+    );
+    if (face !== null) faces.push(face);
+  }
+  return faces.length >= 4 ? { vertices, faces } : null;
 }
 
 function createFace(
@@ -170,12 +224,30 @@ function faceResult(
   return {
     status: "penetrating",
     separation: -face.distance,
-    firstX: weights[0] * first.firstX + weights[1] * second.firstX + weights[2] * third.firstX,
-    firstY: weights[0] * first.firstY + weights[1] * second.firstY + weights[2] * third.firstY,
-    firstZ: weights[0] * first.firstZ + weights[1] * second.firstZ + weights[2] * third.firstZ,
-    secondX: weights[0] * first.secondX + weights[1] * second.secondX + weights[2] * third.secondX,
-    secondY: weights[0] * first.secondY + weights[1] * second.secondY + weights[2] * third.secondY,
-    secondZ: weights[0] * first.secondZ + weights[1] * second.secondZ + weights[2] * third.secondZ,
+    firstX:
+      weights[0] * first.firstX +
+      weights[1] * second.firstX +
+      weights[2] * third.firstX,
+    firstY:
+      weights[0] * first.firstY +
+      weights[1] * second.firstY +
+      weights[2] * third.firstY,
+    firstZ:
+      weights[0] * first.firstZ +
+      weights[1] * second.firstZ +
+      weights[2] * third.firstZ,
+    secondX:
+      weights[0] * first.secondX +
+      weights[1] * second.secondX +
+      weights[2] * third.secondX,
+    secondY:
+      weights[0] * first.secondY +
+      weights[1] * second.secondY +
+      weights[2] * third.secondY,
+    secondZ:
+      weights[0] * first.secondZ +
+      weights[1] * second.secondZ +
+      weights[2] * third.secondZ,
     normalX: -face.normalX,
     normalY: -face.normalY,
     normalZ: -face.normalZ,
@@ -190,9 +262,17 @@ function barycentric(
   third: MinkowskiVertex3D,
   point: ArrayLike<number>,
 ): readonly [number, number, number] {
-  const v0 = [second.x - first.x, second.y - first.y, second.z - first.z] as const;
+  const v0 = [
+    second.x - first.x,
+    second.y - first.y,
+    second.z - first.z,
+  ] as const;
   const v1 = [third.x - first.x, third.y - first.y, third.z - first.z] as const;
-  const v2 = [point[0]! - first.x, point[1]! - first.y, point[2]! - first.z] as const;
+  const v2 = [
+    point[0]! - first.x,
+    point[1]! - first.y,
+    point[2]! - first.z,
+  ] as const;
   const d00 = dot(v0, v0);
   const d01 = dot(v0, v1);
   const d11 = dot(v1, v1);
@@ -208,7 +288,8 @@ function barycentric(
 function selectedWeightIndex(weights: readonly number[]): number {
   let selected = 0;
   for (let index = 1; index < weights.length; index += 1) {
-    if (weights[index]! > weights[selected]! + GEOMETRY_EPSILON_3D) selected = index;
+    if (weights[index]! > weights[selected]! + GEOMETRY_EPSILON_3D)
+      selected = index;
   }
   return selected;
 }
@@ -243,18 +324,29 @@ function faceFeatureKey(
     .flat();
 }
 
-function addBoundaryEdge(edges: Array<[number, number]>, a: number, b: number): void {
+function addBoundaryEdge(
+  edges: Array<[number, number]>,
+  a: number,
+  b: number,
+): void {
   const reverse = edges.findIndex((edge) => edge[0] === b && edge[1] === a);
   if (reverse >= 0) edges.splice(reverse, 1);
   else edges.push([a, b]);
 }
 
-function sameVertex(first: MinkowskiVertex3D, second: MinkowskiVertex3D): boolean {
-  return Math.abs(first.x - second.x) <= GEOMETRY_EPSILON_3D &&
+function sameVertex(
+  first: MinkowskiVertex3D,
+  second: MinkowskiVertex3D,
+): boolean {
+  return (
+    Math.abs(first.x - second.x) <= GEOMETRY_EPSILON_3D &&
     Math.abs(first.y - second.y) <= GEOMETRY_EPSILON_3D &&
-    Math.abs(first.z - second.z) <= GEOMETRY_EPSILON_3D;
+    Math.abs(first.z - second.z) <= GEOMETRY_EPSILON_3D
+  );
 }
 
 function dot(first: ArrayLike<number>, second: ArrayLike<number>): number {
-  return first[0]! * second[0]! + first[1]! * second[1]! + first[2]! * second[2]!;
+  return (
+    first[0]! * second[0]! + first[1]! * second[1]! + first[2]! * second[2]!
+  );
 }

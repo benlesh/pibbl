@@ -150,7 +150,12 @@ export function distanceSphereToBox3D(
   boxAxes: ArrayLike<number>,
   halfExtents: ArrayLike<number>,
 ): AnalyticDistance3D {
-  const point = distancePointToBox3D(sphereCenter, boxCenter, boxAxes, halfExtents);
+  const point = distancePointToBox3D(
+    sphereCenter,
+    boxCenter,
+    boxAxes,
+    halfExtents,
+  );
   return {
     separation: point.separation - radius,
     first: [
@@ -165,22 +170,116 @@ export function distanceSphereToBox3D(
   };
 }
 
+export function distanceSphereToCylinder3D(
+  sphereCenter: ArrayLike<number>,
+  sphereRadius: number,
+  cylinderCenter: ArrayLike<number>,
+  cylinderAxes: ArrayLike<number>,
+  cylinderRadius: number,
+  cylinderHalfHeight: number,
+): AnalyticDistance3D {
+  const offsetX = sphereCenter[0]! - cylinderCenter[0]!;
+  const offsetY = sphereCenter[1]! - cylinderCenter[1]!;
+  const offsetZ = sphereCenter[2]! - cylinderCenter[2]!;
+  const localX =
+    offsetX * cylinderAxes[0]! +
+    offsetY * cylinderAxes[1]! +
+    offsetZ * cylinderAxes[2]!;
+  const localY =
+    offsetX * cylinderAxes[3]! +
+    offsetY * cylinderAxes[4]! +
+    offsetZ * cylinderAxes[5]!;
+  const localZ =
+    offsetX * cylinderAxes[6]! +
+    offsetY * cylinderAxes[7]! +
+    offsetZ * cylinderAxes[8]!;
+  const radial = Math.hypot(localX, localZ);
+  const radialDistance = radial - cylinderRadius;
+  const axialDistance = Math.abs(localY) - cylinderHalfHeight;
+  const outsideRadial = Math.max(radialDistance, 0);
+  const outsideAxial = Math.max(axialDistance, 0);
+  const outsideDistance = Math.hypot(outsideRadial, outsideAxial);
+  const signedDistance =
+    outsideDistance + Math.min(Math.max(radialDistance, axialDistance), 0);
+  const radialX = radial > 0 ? localX / radial : 1;
+  const radialZ = radial > 0 ? localZ / radial : 0;
+  const axialSign = localY < 0 ? -1 : 1;
+  let normalLocalX = 0;
+  let normalLocalY = 0;
+  let normalLocalZ = 0;
+  let feature = 0;
+  if (outsideDistance > 0) {
+    normalLocalX = (radialX * outsideRadial) / outsideDistance;
+    normalLocalY = (axialSign * outsideAxial) / outsideDistance;
+    normalLocalZ = (radialZ * outsideRadial) / outsideDistance;
+    feature = outsideAxial > outsideRadial ? (axialSign < 0 ? 1 : 2) : 0;
+  } else if (radialDistance >= axialDistance) {
+    normalLocalX = radialX;
+    normalLocalZ = radialZ;
+  } else {
+    normalLocalY = axialSign;
+    feature = axialSign < 0 ? 1 : 2;
+  }
+  const normal = [
+    cylinderAxes[0]! * normalLocalX +
+      cylinderAxes[3]! * normalLocalY +
+      cylinderAxes[6]! * normalLocalZ,
+    cylinderAxes[1]! * normalLocalX +
+      cylinderAxes[4]! * normalLocalY +
+      cylinderAxes[7]! * normalLocalZ,
+    cylinderAxes[2]! * normalLocalX +
+      cylinderAxes[5]! * normalLocalY +
+      cylinderAxes[8]! * normalLocalZ,
+  ] as const;
+  const second = [
+    sphereCenter[0]! - normal[0] * signedDistance,
+    sphereCenter[1]! - normal[1] * signedDistance,
+    sphereCenter[2]! - normal[2] * signedDistance,
+  ] as const;
+  return {
+    separation: signedDistance - sphereRadius,
+    first: [
+      sphereCenter[0]! - normal[0] * sphereRadius,
+      sphereCenter[1]! - normal[1] * sphereRadius,
+      sphereCenter[2]! - normal[2] * sphereRadius,
+    ],
+    second,
+    normal,
+    firstFeature: 0,
+    secondFeature: feature,
+  };
+}
+
 function localToWorld(
   center: ArrayLike<number>,
   axes: ArrayLike<number>,
   local: ArrayLike<number>,
 ): [number, number, number] {
   return [
-    center[0]! + axes[0]! * local[0]! + axes[3]! * local[1]! + axes[6]! * local[2]!,
-    center[1]! + axes[1]! * local[0]! + axes[4]! * local[1]! + axes[7]! * local[2]!,
-    center[2]! + axes[2]! * local[0]! + axes[5]! * local[1]! + axes[8]! * local[2]!,
+    center[0]! +
+      axes[0]! * local[0]! +
+      axes[3]! * local[1]! +
+      axes[6]! * local[2]!,
+    center[1]! +
+      axes[1]! * local[0]! +
+      axes[4]! * local[1]! +
+      axes[7]! * local[2]!,
+    center[2]! +
+      axes[2]! * local[0]! +
+      axes[5]! * local[1]! +
+      axes[8]! * local[2]!,
   ];
 }
 
-function vertexFeature(local: ArrayLike<number>, halfExtents: ArrayLike<number>): number {
-  return (local[0]! >= halfExtents[0]! ? 1 : 0) |
+function vertexFeature(
+  local: ArrayLike<number>,
+  halfExtents: ArrayLike<number>,
+): number {
+  return (
+    (local[0]! >= halfExtents[0]! ? 1 : 0) |
     (local[1]! >= halfExtents[1]! ? 2 : 0) |
-    (local[2]! >= halfExtents[2]! ? 4 : 0);
+    (local[2]! >= halfExtents[2]! ? 4 : 0)
+  );
 }
 
 function unitOrFallback(
@@ -193,7 +292,11 @@ function unitOrFallback(
   if (length > GEOMETRY_EPSILON_3D) return [x / length, y / length, z / length];
   const fallbackLength = Math.hypot(fallback[0]!, fallback[1]!, fallback[2]!);
   return fallbackLength > GEOMETRY_EPSILON_3D
-    ? [fallback[0]! / fallbackLength, fallback[1]! / fallbackLength, fallback[2]! / fallbackLength]
+    ? [
+        fallback[0]! / fallbackLength,
+        fallback[1]! / fallbackLength,
+        fallback[2]! / fallbackLength,
+      ]
     : [1, 0, 0];
 }
 
