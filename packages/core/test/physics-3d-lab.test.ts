@@ -64,18 +64,37 @@ describe("public 3D physics laboratory controls", () => {
       queryPoint: expect.any(Array),
     });
 
+    await controller.perform("teleport");
+    flushPending(1);
+    const presentedBeforeGrab = controller.getState().bodies["drop-cube"];
+    expect(presentedBeforeGrab.orientation).not.toEqual([0, 0, 0, 1]);
+
     await controller.perform("grab");
     flushPending();
-    expect(controller.getState()).toMatchObject({
+    const grabbed = controller.getState();
+    expect(grabbed).toMatchObject({
       grabbed: true,
       bodies: { "drop-cube": { enabled: false } },
     });
+    expectQuaternionEquivalent(
+      grabbed.bodies["drop-cube"].orientation,
+      presentedBeforeGrab.orientation,
+    );
+    expect(
+      vectorDistance(
+        grabbed.bodies["drop-cube"].position,
+        presentedBeforeGrab.position,
+      ),
+    ).toBeLessThanOrEqual(0.2);
 
     await controller.perform("drag");
     flushPending();
-    expect(controller.getState().bodies["drop-cube"].position).toEqual([
-      -2.4, 5.3, 0.8,
-    ]);
+    const dragged = controller.getState().bodies["drop-cube"];
+    expect(dragged.position).toEqual([-2.4, 5.3, 0.8]);
+    expectQuaternionEquivalent(
+      dragged.orientation,
+      presentedBeforeGrab.orientation,
+    );
 
     await controller.perform("throw");
     flushPending();
@@ -85,6 +104,10 @@ describe("public 3D physics laboratory controls", () => {
     expect(
       Math.hypot(...thrown.bodies["drop-cube"].linearVelocity),
     ).toBeLessThanOrEqual(8.01);
+    expectQuaternionEquivalent(
+      thrown.bodies["drop-cube"].orientation,
+      presentedBeforeGrab.orientation,
+    );
 
     await controller.perform("disable");
     flushPending();
@@ -120,3 +143,27 @@ describe("public 3D physics laboratory controls", () => {
     });
   });
 });
+
+function vectorDistance(
+  first: readonly number[],
+  second: readonly number[],
+): number {
+  return Math.hypot(
+    first[0]! - second[0]!,
+    first[1]! - second[1]!,
+    first[2]! - second[2]!,
+  );
+}
+
+function expectQuaternionEquivalent(
+  actual: readonly number[],
+  expected: readonly number[],
+): void {
+  const dot = Math.abs(
+    actual[0]! * expected[0]! +
+      actual[1]! * expected[1]! +
+      actual[2]! * expected[2]! +
+      actual[3]! * expected[3]!,
+  );
+  expect(dot).toBeCloseTo(1, 5);
+}

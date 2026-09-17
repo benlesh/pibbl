@@ -10,6 +10,7 @@ import {
   sleepBody3D,
   wakeBody3D,
   type CRCPhysicsBodyHandle3D,
+  type CRCPhysicsPose3D,
 } from "@crc/physics/3d";
 import {
   PHYSICS_3D_BODY_IDS,
@@ -52,6 +53,9 @@ export const PHYSICS_3D_ACTION_IDS = [
 const TELEPORT_POSITION = Object.freeze([0.2, 7.2, 1.8] as const);
 const AUTHORED_POSITION = Object.freeze([-1.6, 4.8, 1.2] as const);
 const DRAG_POSITION = Object.freeze([-2.4, 5.3, 0.8] as const);
+const TELEPORT_ORIENTATION = Object.freeze([
+  0.12, -0.06, 0.307, 0.943,
+] as const);
 
 function requireBody(
   model: Physics3DModel,
@@ -166,11 +170,11 @@ async function mountPhysics3D(
       }
       case "grab": {
         const body = requireBody(model, "drop-cube");
-        const position = body.position.get();
-        model.dropAuthoredPosition.set(position);
+        const pose = bodyPose(body);
+        authorDropPose(model, pose);
         model.dropEnabled.set(false);
         model.grabbed = true;
-        model.grabSamples.splice(0, model.grabSamples.length, position);
+        model.grabSamples.splice(0, model.grabSamples.length, pose);
         disableBody3D(body);
         model.eventLog.push("grab:disable");
         break;
@@ -178,16 +182,23 @@ async function mountPhysics3D(
       case "drag": {
         if (!model.grabbed) {
           const body = requireBody(model, "drop-cube");
-          const position = body.position.get();
-          model.dropAuthoredPosition.set(position);
+          const pose = bodyPose(body);
+          authorDropPose(model, pose);
           model.dropEnabled.set(false);
           model.grabbed = true;
-          model.grabSamples.splice(0, model.grabSamples.length, position);
+          model.grabSamples.splice(0, model.grabSamples.length, pose);
           disableBody3D(body);
           model.eventLog.push("grab:disable");
         }
-        model.dropAuthoredPosition.set(DRAG_POSITION);
-        model.grabSamples.push(DRAG_POSITION);
+        const orientation =
+          model.grabSamples.at(-1)?.orientation ??
+          model.dropAuthoredOrientation.get();
+        const pose = Object.freeze({
+          position: DRAG_POSITION,
+          orientation,
+        });
+        authorDropPose(model, pose);
+        model.grabSamples.push(pose);
         if (model.grabSamples.length > 4) model.grabSamples.shift();
         model.eventLog.push("drag:authored");
         break;
@@ -196,12 +207,14 @@ async function mountPhysics3D(
         const body = requireBody(model, "drop-cube");
         const samples = model.grabSamples;
         const previous =
-          samples[Math.max(0, samples.length - 2)] ?? body.position.get();
-        const current = samples.at(-1) ?? body.position.get();
-        const velocity = boundedVelocity(previous, current);
+          samples[Math.max(0, samples.length - 2)] ?? bodyPose(body);
+        const current = samples.at(-1) ?? bodyPose(body);
+        const velocity = boundedVelocity(previous.position, current.position);
+        authorDropPose(model, current);
         model.dropEnabled.set(true);
         model.grabbed = false;
         enableBody3D(body, { velocity: "zero" });
+        teleportBody3D(body, current);
         setLinearVelocity3D(body, velocity);
         wakeBody3D(body);
         model.eventLog.push(`throw:${velocity.join(",")}`);
@@ -219,14 +232,14 @@ async function mountPhysics3D(
         const body = requireBody(model, "drop-cube");
         teleportBody3D(body, {
           position: TELEPORT_POSITION,
-          orientation: [0, 0, 0, 1],
+          orientation: TELEPORT_ORIENTATION,
         });
         model.eventLog.push("teleport");
         break;
       }
       case "disable": {
         const body = requireBody(model, "drop-cube");
-        model.dropAuthoredPosition.set(body.position.get());
+        authorDropPose(model, bodyPose(body));
         model.dropEnabled.set(false);
         model.grabbed = false;
         disableBody3D(body);
@@ -236,7 +249,7 @@ async function mountPhysics3D(
       case "authored-move": {
         if (model.dropEnabled.get()) {
           const body = requireBody(model, "drop-cube");
-          model.dropAuthoredPosition.set(body.position.get());
+          authorDropPose(model, bodyPose(body));
           model.dropEnabled.set(false);
           disableBody3D(body);
           model.eventLog.push("disable");
@@ -269,6 +282,7 @@ async function mountPhysics3D(
         model.dropAuthoredPosition.set(
           PHYSICS_3D_INITIAL_POSITIONS["drop-cube"],
         );
+        model.dropAuthoredOrientation.set([0, 0, 0, 1]);
         model.dropEnabled.set(true);
         model.dropMounted.set(true);
         model.eventLog.push("remount");
@@ -368,6 +382,18 @@ function boundedVelocity(
   const magnitude = Math.hypot(...raw);
   const scale = magnitude > 8 ? 8 / magnitude : 1;
   return Object.freeze([raw[0] * scale, raw[1] * scale, raw[2] * scale]);
+}
+
+function bodyPose(body: CRCPhysicsBodyHandle3D): CRCPhysicsPose3D {
+  return Object.freeze({
+    position: Object.freeze([...body.position.get()] as const),
+    orientation: Object.freeze([...body.orientation.get()] as const),
+  });
+}
+
+function authorDropPose(model: Physics3DModel, pose: CRCPhysicsPose3D): void {
+  model.dropAuthoredPosition.set(pose.position);
+  model.dropAuthoredOrientation.set(pose.orientation);
 }
 
 export type {

@@ -33,6 +33,7 @@ import {
   type CRCPhysicsColliderConfiguration3D,
   type CRCPhysicsCollisionEvent3D,
   type CRCPhysicsOverlapEvent3D,
+  type CRCPhysicsPose3D,
   type CRCPhysicsQuaternion,
   type CRCPhysicsVector3,
   type CRCPhysicsWorldHandle3D,
@@ -107,12 +108,13 @@ export interface Physics3DModel {
   >;
   readonly queryMarker: WritableSignal<CRCPhysicsVector3 | null>;
   readonly dropAuthoredPosition: WritableSignal<CRCPhysicsVector3>;
+  readonly dropAuthoredOrientation: WritableSignal<CRCPhysicsQuaternion>;
   readonly dropEnabled: WritableSignal<boolean>;
   readonly dropMounted: WritableSignal<boolean>;
   readonly sensorActive: WritableSignal<boolean>;
   readonly sensorOverlaps: Set<string>;
   readonly eventLog: string[];
-  readonly grabSamples: CRCPhysicsVector3[];
+  readonly grabSamples: CRCPhysicsPose3D[];
   grabbed: boolean;
   world: CRCPhysicsWorldHandle3D | undefined;
   queryTag: string | null;
@@ -258,6 +260,9 @@ export function createPhysics3DModel(): Physics3DModel {
     dropAuthoredPosition: signal(PHYSICS_3D_INITIAL_POSITIONS["drop-cube"], {
       debugName: "physics 3D authored drop position",
     }),
+    dropAuthoredOrientation: signal(IDENTITY_ORIENTATION, {
+      debugName: "physics 3D authored drop orientation",
+    }),
     dropEnabled: signal(true, { debugName: "physics 3D drop enabled" }),
     dropMounted: signal(true, { debugName: "physics 3D drop mounted" }),
     sensorActive: signal(false, { debugName: "physics 3D sensor active" }),
@@ -358,6 +363,9 @@ function DynamicCubeBody({
   const position = isDrop
     ? model.dropAuthoredPosition.get()
     : PHYSICS_3D_INITIAL_POSITIONS[id];
+  const orientation = isDrop
+    ? quaternionToEulerDegrees(model.dropAuthoredOrientation.get())
+    : [0, 0, 0];
   return (
     <Cube
       physics={dynamicBody3D({
@@ -377,6 +385,9 @@ function DynamicCubeBody({
         translateX: position[0],
         translateY: position[1],
         translateZ: position[2],
+        rotationXDegrees: orientation[0],
+        rotationYDegrees: orientation[1],
+        rotationZDegrees: orientation[2],
       }}
     />
   );
@@ -713,4 +724,17 @@ function cleanQuaternion(value: CRCPhysicsQuaternion): CRCPhysicsQuaternion {
 function clean(value: number): number {
   const rounded = Number(value.toFixed(6));
   return Object.is(rounded, -0) ? 0 : rounded;
+}
+
+function quaternionToEulerDegrees(
+  orientation: CRCPhysicsQuaternion,
+): CRCPhysicsVector3 {
+  const [x, y, z, w] = orientation;
+  const radiansToDegrees = 180 / Math.PI;
+  const pitchTerm = Math.max(-1, Math.min(1, 2 * (w * y - z * x)));
+  return Object.freeze([
+    Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y)) * radiansToDegrees,
+    Math.asin(pitchTerm) * radiansToDegrees,
+    Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)) * radiansToDegrees,
+  ]);
 }
