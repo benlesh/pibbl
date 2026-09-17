@@ -315,6 +315,9 @@ export interface PhysicsWorld3DSnapshot {
   readonly eventCount: number;
   readonly rootNode: number;
   readonly pairCount: number;
+  readonly pendingCommandCount: number;
+  readonly pendingTopology: boolean;
+  readonly integrationBodyCount: number;
   readonly counters: Readonly<Record<string, number>>;
   readonly bodies: readonly Readonly<{
     id: number;
@@ -828,6 +831,9 @@ export class PhysicsWorld3DKernel {
       eventCount: this.state.eventCount,
       rootNode: this.broadPhase.rootNode,
       pairCount: this.broadPhase.pairCount,
+      pendingCommandCount: this.pendingCommands.length,
+      pendingTopology: this.pendingTopology !== undefined,
+      integrationBodyCount: this.state.integrationBodyCount,
       counters: Object.freeze({ ...this.counters }),
       bodies: Object.freeze(bodies),
     });

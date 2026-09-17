@@ -246,6 +246,8 @@ export class DynamicAabbBroadPhase3D {
 
   publishPairs(): number {
     this.assertUsable();
+    this.counters.lastMovedProxyCount = this.movedCount;
+    this.counters.lastCandidatePairCount = 0;
     this.pairCount = 0;
     for (let movedIndex = 0; movedIndex < this.movedCount; movedIndex += 1) {
       const proxy = this.movedBuffer[movedIndex]!;
@@ -356,6 +358,7 @@ export class DynamicAabbBroadPhase3D {
       secondGeneration,
     );
     if (order === 0) return;
+    this.counters.lastCandidatePairCount += 1;
     if (order > 0) {
       const index = firstIndex;
       firstIndex = secondIndex;

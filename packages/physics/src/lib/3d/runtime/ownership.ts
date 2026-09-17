@@ -41,8 +41,10 @@ export interface PhysicsOwnershipCounters3D {
   movedBufferCapacity: number;
   movedBufferGrowths: number;
   movedProxies: number;
+  lastMovedProxyCount: number;
   pairBufferCapacity: number;
   pairBufferGrowths: number;
+  lastCandidatePairCount: number;
   publishedPairs: number;
   queryStackCapacity: number;
   queryStackGrowths: number;
@@ -110,8 +112,10 @@ export function createPhysicsOwnershipCounters3D(): PhysicsOwnershipCounters3D {
     movedBufferCapacity: 0,
     movedBufferGrowths: 0,
     movedProxies: 0,
+    lastMovedProxyCount: 0,
     pairBufferCapacity: 0,
     pairBufferGrowths: 0,
+    lastCandidatePairCount: 0,
     publishedPairs: 0,
     queryStackCapacity: 0,
     queryStackGrowths: 0,

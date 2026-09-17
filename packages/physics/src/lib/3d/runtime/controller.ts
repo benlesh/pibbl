@@ -156,6 +156,8 @@ export interface PhysicsWorld3DControllerSnapshot {
   readonly materializedBodyHandles: number;
   readonly materializedColliderHandles: number;
   readonly advanceRegistered: boolean;
+  readonly beginCommandQueued: boolean;
+  readonly liveCandidate: boolean;
   readonly bodyIds: readonly number[];
   readonly colliderIds: readonly number[];
   readonly shapeBakeCount: number;
@@ -487,6 +489,8 @@ export class PhysicsWorld3DController {
       materializedBodyHandles: this.materializedBodyHandles.size,
       materializedColliderHandles: this.materializedColliderHandles.size,
       advanceRegistered: this.releaseAdvance !== undefined,
+      beginCommandQueued: this.queuedBegin !== undefined,
+      liveCandidate: this.liveCandidate !== undefined,
       bodyIds: Object.freeze(
         this.acceptedTopology
           .filter(
@@ -1264,6 +1268,17 @@ export function snapshotPhysicsWorld3DControllerForTest(
   controller: PhysicsWorld3DController,
 ): PhysicsWorld3DControllerSnapshot {
   return controller.snapshot();
+}
+
+/** Package-private ownership evidence retained across controller disposal. */
+export function ownershipCountersPhysicsWorld3DControllerForTest(
+  controller: PhysicsWorld3DController,
+): PhysicsWorld3DKernel["counters"] {
+  return (
+    controller as unknown as {
+      readonly kernel: PhysicsWorld3DKernel;
+    }
+  ).kernel.counters;
 }
 
 function normalizeWorldConfiguration(
