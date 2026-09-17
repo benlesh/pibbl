@@ -1,5 +1,6 @@
 import { getWebGLGeometryData } from '../geometry/geometry.js';
 import {
+  acquireInternalWebGLTexture,
   getInternalWebGLTextureData,
   type InternalWebGLTextureData,
 } from '../texture/texture.js';
@@ -52,6 +53,10 @@ export interface WebGLTextureResource {
   readonly texture: WebGLTexture;
 }
 
+interface OwnedWebGLTextureResource extends WebGLTextureResource {
+  readonly releaseDecodedTexture: () => void;
+}
+
 export interface WebGLRendererResourceTransaction {
   useProgram(
     key: WebGLProgramKey,
@@ -81,7 +86,7 @@ interface ResourceCandidate {
   readonly usedInstancedKeys: Set<object>;
   readonly createdPrograms: Map<WebGLProgramKey, WebGLBuiltInProgram>;
   readonly createdGeometries: Map<CRCWebGLGeometry, WebGLGeometryResource>;
-  readonly createdTextures: Map<CRCWebGLTexture, WebGLTextureResource>;
+  readonly createdTextures: Map<CRCWebGLTexture, OwnedWebGLTextureResource>;
   readonly createdInstanced: Map<object, WebGLInstancedResources>;
 }
 
@@ -94,7 +99,10 @@ export class WebGLRendererResourceCache {
   private readonly programs = new Map<WebGLProgramKey, WebGLBuiltInProgram>();
   private readonly residentProgramKeys = new Set<WebGLProgramKey>();
   private readonly residentGeometries = new Set<CRCWebGLGeometry>();
-  private readonly textures = new Map<CRCWebGLTexture, WebGLTextureResource>();
+  private readonly textures = new Map<
+    CRCWebGLTexture,
+    OwnedWebGLTextureResource
+  >();
   private readonly residentTextures = new Set<CRCWebGLTexture>();
   private readonly instanced = new Map<object, WebGLInstancedResources>();
   private readonly residentInstancedKeys = new Set<object>();
@@ -157,6 +165,7 @@ export class WebGLRendererResourceCache {
     if (this.disposed || this.invalidated) return;
     this.invalidated = true;
     this.closeActiveCandidate();
+    const textures = Array.from(this.textures.values());
     this.programs.clear();
     this.residentProgramKeys.clear();
     this.geometries.clear();
@@ -165,6 +174,9 @@ export class WebGLRendererResourceCache {
     this.residentTextures.clear();
     this.instanced.clear();
     this.residentInstancedKeys.clear();
+    for (const texture of textures) {
+      releaseDecodedTextureResource(this.gl, texture, false);
+    }
   }
 
   dispose(contextLost: boolean): void {
@@ -183,7 +195,12 @@ export class WebGLRendererResourceCache {
     this.residentTextures.clear();
     this.instanced.clear();
     this.residentInstancedKeys.clear();
-    if (contextLost || this.invalidated) return;
+    if (contextLost || this.invalidated) {
+      for (const texture of textures) {
+        releaseDecodedTextureResource(this.gl, texture, false);
+      }
+      return;
+    }
     for (const program of programs) {
       runResourceCleanup(() => deleteBuiltInProgram(this.gl, program));
     }
@@ -191,7 +208,7 @@ export class WebGLRendererResourceCache {
       deleteGeometry(this.gl, geometry);
     }
     for (const texture of textures) {
-      runResourceCleanup(() => this.gl.deleteTexture(texture.texture));
+      releaseDecodedTextureResource(this.gl, texture, true);
     }
     for (const resource of instanced) {
       deleteInstancedResources(this.gl, resource);
@@ -234,6 +251,7 @@ export class WebGLRendererResourceCache {
     componentName: string,
   ): WebGLTextureResource {
     this.requireCandidate(candidate);
+    getInternalWebGLTextureData(texture);
     candidate.usedTextures.add(texture);
     const existing = this.textures.get(texture);
     if (existing) return existing;
@@ -281,7 +299,7 @@ export class WebGLRendererResourceCache {
         const omitted = this.textures.get(texture);
         this.textures.delete(texture);
         if (omitted) {
-          runResourceCleanup(() => this.gl.deleteTexture(omitted.texture));
+          releaseDecodedTextureResource(this.gl, omitted, true);
         }
       }
       for (const key of this.residentInstancedKeys) {
@@ -337,7 +355,7 @@ export class WebGLRendererResourceCache {
         if (this.textures.get(texture) === created) {
           this.textures.delete(texture);
         }
-        runResourceCleanup(() => this.gl.deleteTexture(created.texture));
+        releaseDecodedTextureResource(this.gl, created, true);
       }
       for (const [key, created] of candidate.createdInstanced) {
         if (this.instanced.get(key) === created) this.instanced.delete(key);
@@ -404,12 +422,27 @@ function uploadDecodedTexture(
   gl: WebGL2RenderingContext,
   identity: CRCWebGLTexture,
   componentName: string,
-): WebGLTextureResource {
+): OwnedWebGLTextureResource {
   let texture: WebGLTexture | undefined;
+  let releaseDecodedTexture: (() => void) | undefined;
   let published = false;
   let abandonFailedHandle = false;
   try {
+    releaseDecodedTexture = acquireInternalWebGLTexture(identity);
     const data = getInternalWebGLTextureData(identity);
+    if (data.width < 1 || data.height < 1) {
+      throw new RangeError(
+        `${componentName} texture dimensions must be positive; received ` +
+        `${data.width}x${data.height}.`,
+      );
+    }
+    const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
+    if (data.width > maxTextureSize || data.height > maxTextureSize) {
+      throw new RangeError(
+        `${componentName} texture dimensions ${data.width}x${data.height} ` +
+        `exceed MAX_TEXTURE_SIZE ${maxTextureSize}.`,
+      );
+    }
     const previousPixelStore = decodedTexturePixelStoreParameters.map(name =>
       [gl[name], gl.getParameter(gl[name])] as const,
     );
@@ -419,6 +452,7 @@ function uploadDecodedTexture(
     }
     let uploadError: unknown;
     try {
+      discardPendingGLErrors(gl);
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texParameteri(
         gl.TEXTURE_2D,
@@ -449,7 +483,11 @@ function uploadDecodedTexture(
         gl.UNSIGNED_BYTE,
         data.bitmap,
       );
-      if (requiresMipmaps(data)) gl.generateMipmap(gl.TEXTURE_2D);
+      throwOnGLError(gl, `${componentName} texture upload`);
+      if (requiresMipmaps(data)) {
+        gl.generateMipmap(gl.TEXTURE_2D);
+        throwOnGLError(gl, `${componentName} texture mipmap generation`);
+      }
     } catch (error) {
       uploadError = error;
     }
@@ -485,7 +523,7 @@ function uploadDecodedTexture(
         { cause: contextValidity.error },
       );
     }
-    const resource = Object.freeze({ texture });
+    const resource = Object.freeze({ texture, releaseDecodedTexture });
     published = true;
     return resource;
   } catch (error) {
@@ -500,6 +538,51 @@ function uploadDecodedTexture(
     if (!published && texture && !abandonFailedHandle) {
       runResourceCleanup(() => gl.deleteTexture(texture!));
     }
+    if (!published && releaseDecodedTexture) {
+      runResourceCleanup(releaseDecodedTexture);
+    }
+  }
+}
+
+function releaseDecodedTextureResource(
+  gl: WebGL2RenderingContext,
+  resource: OwnedWebGLTextureResource,
+  deleteGPUTexture: boolean,
+): void {
+  if (deleteGPUTexture) {
+    runResourceCleanup(() => gl.deleteTexture(resource.texture));
+  }
+  runResourceCleanup(resource.releaseDecodedTexture);
+}
+
+function discardPendingGLErrors(gl: WebGL2RenderingContext): void {
+  while (gl.getError() !== gl.NO_ERROR) {
+    // WebGL has no error-state restore. Draining here isolates owned calls.
+  }
+}
+
+function throwOnGLError(
+  gl: WebGL2RenderingContext,
+  operation: string,
+): void {
+  const error = gl.getError();
+  if (error === gl.NO_ERROR) return;
+  while (gl.getError() !== gl.NO_ERROR) {
+    // Drain the remaining owned errors so they cannot leak into later work.
+  }
+  throw new Error(`${operation} reported ${webGLErrorName(gl, error)}.`);
+}
+
+function webGLErrorName(gl: WebGL2RenderingContext, error: number): string {
+  switch (error) {
+    case gl.INVALID_ENUM: return 'INVALID_ENUM';
+    case gl.INVALID_VALUE: return 'INVALID_VALUE';
+    case gl.INVALID_OPERATION: return 'INVALID_OPERATION';
+    case gl.INVALID_FRAMEBUFFER_OPERATION:
+      return 'INVALID_FRAMEBUFFER_OPERATION';
+    case gl.OUT_OF_MEMORY: return 'OUT_OF_MEMORY';
+    case gl.CONTEXT_LOST_WEBGL: return 'CONTEXT_LOST_WEBGL';
+    default: return `WebGL error 0x${error.toString(16)}`;
   }
 }
 

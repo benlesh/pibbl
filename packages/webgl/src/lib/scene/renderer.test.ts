@@ -15,6 +15,7 @@ import type {
   SettledWebGLShadowPlan,
 } from './types.js';
 import { WebGLSceneRenderer } from './renderer.js';
+import { createWebGLShadowPlans } from './shadows.js';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -418,6 +419,101 @@ describe('WebGLSceneRenderer', () => {
 
     renderer.dispose(false);
   });
+
+  it.each(['point', 'spot'] as const)(
+    'renders PBR %s attenuation and applies only that light shadow',
+    kind => {
+      const canvas = new OffscreenCanvas(8, 8);
+      const gl = canvas.getContext('webgl2');
+      expect(gl).not.toBeNull();
+      const renderer = new WebGLSceneRenderer(gl!, 7);
+      const caster = untexturedPBRMesh({
+        metallic: 0,
+        roughness: 0.5,
+        z: 0.5,
+      });
+      const receiver = untexturedPBRMesh({ metallic: 0, roughness: 0.5 });
+      const shadowedIdentity = Object.freeze({});
+      const directFields = {
+        position: Object.freeze([0, 0, 1] as const),
+        range: 10,
+        ...(kind === 'spot' ? {
+          direction: Object.freeze([0, 0, -1] as const),
+          innerConeCosine: 0.9,
+          outerConeCosine: 0.7,
+        } : {}),
+      };
+      const shadowed = Object.freeze({
+        kind,
+        identity: shadowedIdentity,
+        linearColor: Object.freeze([1, 0, 0] as const),
+        intensity: 1,
+        castShadow: true,
+        ...directFields,
+      }) as SettledWebGLLight;
+      const unshadowed = Object.freeze({
+        kind,
+        identity: Object.freeze({}),
+        linearColor: Object.freeze([0, 1, 0] as const),
+        intensity: 1,
+        castShadow: false,
+        ...directFields,
+      }) as SettledWebGLLight;
+      const generatedPlans = createWebGLShadowPlans({
+        meshes: [caster, receiver],
+        lights: [shadowed, unshadowed],
+        quality: 'low',
+        contextGeneration: 7,
+      });
+      expect(generatedPlans).toHaveLength(1);
+      const plan = Object.freeze({
+        ...generatedPlans[0]!,
+        requestedResolution: 8,
+        comparisonCount: 1 as const,
+      }) as SettledWebGLShadowPlan;
+      const withoutShadow = realPBRScene(receiver, [shadowed, unshadowed]);
+      const withShadow = Object.freeze({
+        ...withoutShadow,
+        shadowPlans: Object.freeze([plan]),
+      });
+      const pixel = new Uint8Array(4);
+
+      renderer.render(withShadow);
+      gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+      const shadowedPixel = Array.from(pixel);
+      expect(shadowedPixel[0]).toBe(0);
+      expect(shadowedPixel[1]).toBeGreaterThan(0);
+
+      renderer.render(withoutShadow);
+      gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+      expect(pixel[0]).toBeGreaterThan(0);
+      expect(pixel[1]).toBe(shadowedPixel[1]);
+
+      const outOfRange = Object.freeze({
+        ...shadowed,
+        identity: Object.freeze({}),
+        position: Object.freeze([0, 0, 11] as const),
+        castShadow: false,
+      }) as SettledWebGLLight;
+      renderer.render(realPBRScene(receiver, [outOfRange]));
+      gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+      expect(Array.from(pixel)).toEqual([0, 0, 0, 255]);
+
+      if (kind === 'spot') {
+        const outOfCone = Object.freeze({
+          ...shadowed,
+          identity: Object.freeze({}),
+          direction: Object.freeze([0, 0, 1] as const),
+          castShadow: false,
+        }) as SettledWebGLLight;
+        renderer.render(realPBRScene(receiver, [outOfCone]));
+        gl!.readPixels(4, 4, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
+        expect(Array.from(pixel)).toEqual([0, 0, 0, 255]);
+      }
+
+      renderer.dispose(false);
+    },
+  );
 
   it.each([
     ['point', pointLight()],
@@ -1700,6 +1796,7 @@ function createRendererGL(
   const methods = {
     getParameter: method<[number], number>('getParameter', parameter =>
       parameter === constants.MAX_COMBINED_TEXTURE_IMAGE_UNITS ? 16 : 4096),
+    getError: method<[], number>('getError', () => constants.NO_ERROR),
     isContextLost: method<[], boolean>('isContextLost', () => contextLost),
     bindFramebuffer: method('bindFramebuffer'),
     viewport: method('viewport'),
@@ -1931,7 +2028,10 @@ function createConstants(): Record<string, number> {
     'UNPACK_SKIP_IMAGES', 'UNPACK_SKIP_PIXELS', 'UNPACK_SKIP_ROWS',
     'UNSIGNED_BYTE', 'UNSIGNED_INT', 'VERTEX_SHADER', 'ZERO',
   ];
-  return Object.fromEntries(names.map((name, index) => [name, index + 1]));
+  return {
+    NO_ERROR: 0,
+    ...Object.fromEntries(names.map((name, index) => [name, index + 1])),
+  };
 }
 
 function operationCount(

@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createWebGLGeometry } from '../geometry/geometry.js';
-import { createInternalWebGLTexture } from '../texture/texture.js';
+import {
+  acquireInternalWebGLTexture,
+  createInternalWebGLTexture,
+} from '../texture/texture.js';
 import { WebGLRendererResourceCache } from './renderer-resources.js';
 
 afterEach(() => {
@@ -183,19 +186,122 @@ describe('WebGLRendererResourceCache', () => {
     producer.release();
   });
 
+  it('rejects decoded textures larger than the device limit before allocation', () => {
+    const recording = createResourceGL('oversized-texture', {
+      maxTextureSize: 4,
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 12);
+    const producer = createInternalWebGLTexture({
+      width: 5,
+      height: 4,
+      close: vi.fn(),
+    } as unknown as ImageBitmap);
+    const transaction = cache.beginRender();
+
+    expect(() => transaction.useTexture(producer.texture, 'Oversized'))
+      .toThrow('Oversized texture dimensions 5x4 exceed MAX_TEXTURE_SIZE 4.');
+    expect(recording.createTexture).not.toHaveBeenCalled();
+    expect(recording.pixelStorei).not.toHaveBeenCalled();
+
+    transaction.rollback();
+    cache.dispose(false);
+    producer.release();
+  });
+
+  it('rejects nonpositive decoded texture dimensions before allocation', () => {
+    const recording = createResourceGL('empty-texture');
+    const cache = new WebGLRendererResourceCache(recording.gl, 13);
+    const producer = createInternalWebGLTexture({
+      width: 0,
+      height: 1,
+      close: vi.fn(),
+    } as unknown as ImageBitmap);
+    const transaction = cache.beginRender();
+
+    expect(() => transaction.useTexture(producer.texture, 'Empty'))
+      .toThrow('Empty texture dimensions must be positive; received 0x1.');
+    expect(recording.createTexture).not.toHaveBeenCalled();
+
+    transaction.rollback();
+    cache.dispose(false);
+    producer.release();
+  });
+
+  it('rejects an upload GL error without misattributing stale GL errors', () => {
+    const controls: ResourceGLControls = {
+      staleGLError: 'invalid-enum',
+      texImage2DGLError: 'out-of-memory',
+    };
+    const recording = createResourceGL('texture-gl-error', controls);
+    const cache = new WebGLRendererResourceCache(recording.gl, 14);
+    const producer = createInternalWebGLTexture({
+      width: 2,
+      height: 2,
+      close: vi.fn(),
+    } as unknown as ImageBitmap);
+    const transaction = cache.beginRender();
+
+    expect(() => transaction.useTexture(producer.texture, 'Failed'))
+      .toThrow('Failed texture upload reported OUT_OF_MEMORY.');
+    expect(recording.deleteTexture).toHaveBeenCalledExactlyOnceWith(
+      recording.textures[0],
+    );
+    expect(recording.pixelStorei).toHaveBeenCalledTimes(18);
+
+    delete controls.texImage2DGLError;
+    expect(transaction.useTexture(producer.texture, 'Recovered').texture)
+      .toBe(recording.textures[1]);
+    transaction.commit();
+    cache.dispose(false);
+    expect(recording.deleteTexture.mock.calls.map(([texture]) => texture))
+      .toEqual([recording.textures[0], recording.textures[1]]);
+    producer.release();
+  });
+
+  it('rejects a mipmap GL error without publishing the candidate texture', () => {
+    const recording = createResourceGL('texture-mipmap-error', {
+      generateMipmapGLError: 'invalid-operation',
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 15);
+    const producer = createInternalWebGLTexture({
+      width: 2,
+      height: 2,
+      close: vi.fn(),
+    } as unknown as ImageBitmap, {
+      minFilter: 'linear-mipmap-linear',
+    });
+    const transaction = cache.beginRender();
+
+    expect(() => transaction.useTexture(producer.texture, 'MipmapFailed'))
+      .toThrow(
+        'MipmapFailed texture mipmap generation reported INVALID_OPERATION.',
+      );
+    expect(recording.pixelStorei).toHaveBeenCalledTimes(18);
+    expect(recording.deleteTexture).toHaveBeenCalledExactlyOnceWith(
+      recording.textures[0],
+    );
+
+    transaction.rollback();
+    expect(recording.deleteTexture).toHaveBeenCalledOnce();
+    cache.dispose(false);
+    producer.release();
+  });
+
   it('rolls back a failed texture candidate without disturbing the resident generation', () => {
     const controls: ResourceGLControls = {};
     const recording = createResourceGL('texture-rollback', controls);
     const cache = new WebGLRendererResourceCache(recording.gl, 12);
+    const residentClose = vi.fn();
     const resident = createInternalWebGLTexture({
       width: 1,
       height: 1,
-      close: vi.fn(),
+      close: residentClose,
     } as unknown as ImageBitmap);
+    const failedClose = vi.fn();
     const failed = createInternalWebGLTexture({
       width: 1,
       height: 1,
-      close: vi.fn(),
+      close: failedClose,
     } as unknown as ImageBitmap);
     const initial = cache.beginRender();
     const residentResource = initial.useTexture(resident.texture, 'Resident');
@@ -224,34 +330,120 @@ describe('WebGLRendererResourceCache', () => {
     cache.dispose(false);
     resident.release();
     failed.release();
+    expect(residentClose).toHaveBeenCalledOnce();
+    expect(failedClose).toHaveBeenCalledOnce();
+  });
+
+  it('holds decoded data through resident hits and expires it on omission', () => {
+    const recording = createResourceGL('resident-texture-lease');
+    const cache = new WebGLRendererResourceCache(recording.gl, 16);
+    const close = vi.fn();
+    const producer = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close,
+    } as unknown as ImageBitmap);
+    const initial = cache.beginRender();
+    const resident = initial.useTexture(producer.texture, 'ImportedSurface');
+    initial.commit();
+
+    producer.release();
+    expect(close).not.toHaveBeenCalled();
+    const reuse = cache.beginRender();
+    expect(reuse.useTexture(producer.texture, 'ImportedSurface')).toBe(resident);
+    reuse.commit();
+    expect(recording.createTexture).toHaveBeenCalledOnce();
+
+    cache.beginRender().commit();
+    expect(close).toHaveBeenCalledOnce();
+    expect(recording.deleteTexture).toHaveBeenCalledExactlyOnceWith(
+      resident.texture,
+    );
+    const expired = cache.beginRender();
+    expect(() => expired.useTexture(producer.texture, 'Expired'))
+      .toThrow('WebGL texture descriptor is invalid or released.');
+    expired.rollback();
+    cache.dispose(false);
+  });
+
+  it('releases the decoded-data lease for a rolled-back candidate texture', () => {
+    const recording = createResourceGL('candidate-texture-lease');
+    const cache = new WebGLRendererResourceCache(recording.gl, 17);
+    const close = vi.fn();
+    const producer = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close,
+    } as unknown as ImageBitmap);
+    const candidate = cache.beginRender();
+    const resource = candidate.useTexture(producer.texture, 'Candidate');
+
+    producer.release();
+    expect(close).not.toHaveBeenCalled();
+    candidate.rollback();
+    expect(close).toHaveBeenCalledOnce();
+    expect(recording.deleteTexture).toHaveBeenCalledExactlyOnceWith(
+      resource.texture,
+    );
+    cache.dispose(false);
+  });
+
+  it('abandons a GL-error upload handle after context loss but releases its CPU lease', () => {
+    const recording = createResourceGL('lost-texture-upload', {
+      texImage2DGLError: 'out-of-memory',
+      contextLostAfterTextureGLError: true,
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 18);
+    const close = vi.fn();
+    const producer = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close,
+    } as unknown as ImageBitmap);
+    const candidate = cache.beginRender();
+
+    expect(() => candidate.useTexture(producer.texture, 'Lost'))
+      .toThrow('Lost texture upload reported OUT_OF_MEMORY.');
+    expect(recording.deleteTexture).not.toHaveBeenCalled();
+    producer.release();
+    expect(close).toHaveBeenCalledOnce();
+
+    candidate.rollback(true);
+    cache.dispose(true);
   });
 
   it('abandons lost texture handles and uploads the retained identity in a new generation', () => {
+    const close = vi.fn();
     const recording = createResourceGL('texture-restoration');
     const producer = createInternalWebGLTexture({
       width: 1,
       height: 1,
-      close: vi.fn(),
+      close,
     } as unknown as ImageBitmap);
+    const releaseDependency = acquireInternalWebGLTexture(producer.texture);
     const lost = new WebGLRendererResourceCache(recording.gl, 13);
     const initial = lost.beginRender();
     initial.useTexture(producer.texture, 'ImportedSurface');
     initial.commit();
+    producer.release();
 
     lost.invalidateContext();
     lost.dispose(true);
     expect(recording.deleteTexture).not.toHaveBeenCalled();
+    expect(close).not.toHaveBeenCalled();
 
     const restored = new WebGLRendererResourceCache(recording.gl, 14);
     const next = restored.beginRender();
     next.useTexture(producer.texture, 'ImportedSurface');
     next.commit();
     expect(recording.createTexture).toHaveBeenCalledTimes(2);
+    releaseDependency();
+    expect(close).not.toHaveBeenCalled();
     restored.dispose(false);
     expect(recording.deleteTexture).toHaveBeenCalledExactlyOnceWith(
       recording.textures[1],
     );
-    producer.release();
+    expect(close).toHaveBeenCalledOnce();
   });
 
   it('sweeps omitted program and geometry keys before clearing the remaining residents', () => {
@@ -878,6 +1070,11 @@ interface ResourceGLControls {
   contextLossCheckError?: Error;
   deleteBufferError?: Error;
   throwTexImage2DAt?: number;
+  maxTextureSize?: number;
+  staleGLError?: 'invalid-enum';
+  texImage2DGLError?: 'out-of-memory';
+  generateMipmapGLError?: 'invalid-operation';
+  contextLostAfterTextureGLError?: boolean;
 }
 
 interface OwnedHandle {
@@ -900,6 +1097,7 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
   let uploadAttempt = 0;
   let textureUploadAttempt = 0;
   let contextLost = false;
+  const glErrors: number[] = [];
   const handle = (kind: string, type?: number): OwnedHandle => ({
     context,
     kind,
@@ -962,8 +1160,16 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
     if (textureUploadAttempt === controls.throwTexImage2DAt) {
       throw new Error('injected texture upload failure');
     }
+    if (controls.texImage2DGLError === 'out-of-memory') {
+      glErrors.push(constants.OUT_OF_MEMORY);
+      if (controls.contextLostAfterTextureGLError) contextLost = true;
+    }
   });
-  const generateMipmap = vi.fn();
+  const generateMipmap = vi.fn(() => {
+    if (controls.generateMipmapGLError === 'invalid-operation') {
+      glErrors.push(constants.INVALID_OPERATION);
+    }
+  });
   const pixelStorei = vi.fn();
   const uploads: Array<{
     readonly target: number;
@@ -1029,6 +1235,7 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
     pixelStorei,
     getParameter: vi.fn((parameter: number) => {
       const values = new Map<number, number | boolean>([
+        [constants.MAX_TEXTURE_SIZE, controls.maxTextureSize ?? 8],
         [constants.UNPACK_FLIP_Y_WEBGL, true],
         [constants.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true],
         [constants.UNPACK_COLORSPACE_CONVERSION_WEBGL, constants.BROWSER_DEFAULT_WEBGL],
@@ -1041,6 +1248,7 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
       ]);
       return values.get(parameter);
     }),
+    getError: vi.fn(() => glErrors.shift() ?? constants.NO_ERROR),
     isContextLost: vi.fn(() => {
       if (controls.contextLossCheckError) {
         throw controls.contextLossCheckError;
@@ -1060,6 +1268,9 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
       },
     },
   ) as unknown as WebGL2RenderingContext;
+  if (controls.staleGLError === 'invalid-enum') {
+    glErrors.push(constants.INVALID_ENUM);
+  }
   return {
     gl,
     shaders,
@@ -1131,6 +1342,13 @@ function createConstants(): Record<string, number> {
     'FLOAT',
     'FRAGMENT_SHADER',
     'LINK_STATUS',
+    'MAX_TEXTURE_SIZE',
+    'CONTEXT_LOST_WEBGL',
+    'INVALID_ENUM',
+    'INVALID_FRAMEBUFFER_OPERATION',
+    'INVALID_OPERATION',
+    'INVALID_VALUE',
+    'OUT_OF_MEMORY',
     'STATIC_DRAW',
     'TEXTURE_2D',
     'TEXTURE_WRAP_S',
@@ -1161,5 +1379,8 @@ function createConstants(): Record<string, number> {
     'UNPACK_SKIP_IMAGES',
     'VERTEX_SHADER',
   ];
-  return Object.fromEntries(names.map((name, index) => [name, index + 1]));
+  return {
+    NO_ERROR: 0,
+    ...Object.fromEntries(names.map((name, index) => [name, index + 1])),
+  };
 }
