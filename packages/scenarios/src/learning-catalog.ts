@@ -1934,7 +1934,7 @@ const drafts = [
     },
     apiNotes: [
       "useGLTF is the optional @crc/webgl/gltf adapter; loading and error presentation remains ordinary Canvas content.",
-      "The vendored CC0 derivatives preserve geometry, hierarchy, UV0, base color, and metallic/roughness while removing features outside this static slice.",
+      "The vendored CC0 derivatives preserve geometry, hierarchy, UV0, and base color while baking unsupported metallic/roughness textures into representative scalar factors.",
       "Model preserves selected-scene transforms and imported PBR factors while exposing only opaque bounds and one logical target.",
     ],
     canvas: { width: 720, height: 420 },

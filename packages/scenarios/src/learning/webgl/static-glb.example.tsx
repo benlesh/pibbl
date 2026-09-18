@@ -10,6 +10,7 @@ import {
 } from "@crc/core";
 import {
   DirectionalLight,
+  HemisphereLight,
   Mesh,
   Model,
   WebGLLayer,
@@ -112,6 +113,13 @@ function StaticGLBPresentation({
           }}
           style={{ width: 720, height: 420, shadows: "medium" }}
         >
+          <HemisphereLight
+            style={{
+              skyColor: "#dbeafe",
+              groundColor: "#8b6b52",
+              intensity: 0.75,
+            }}
+          />
           <DirectionalLight
             style={{
               color: "#fff1d6",

@@ -62,7 +62,7 @@ try {
   for (const model of MODELS) {
     const source = await downloadSource(model, workspace);
     const document = await io.read(source.entryPath);
-    makeCRCCompatible(document);
+    await makeCRCCompatible(document);
     await document.transform(
       prune(),
       dedup(),
@@ -149,7 +149,7 @@ async function download(url) {
   return new Uint8Array(await response.arrayBuffer());
 }
 
-function makeCRCCompatible(document) {
+async function makeCRCCompatible(document) {
   const root = document.getRoot();
   for (const node of root.listNodes()) {
     node.setCamera(null).setSkin(null).setWeights([]);
@@ -172,6 +172,7 @@ function makeCRCCompatible(document) {
     }
   }
   for (const material of root.listMaterials()) {
+    await bakeMetallicRoughnessTexture(material);
     material
       .setNormalTexture(null)
       .setOcclusionTexture(null)
@@ -183,6 +184,23 @@ function makeCRCCompatible(document) {
     material.getBaseColorTextureInfo()?.setTexCoord(0);
   }
   for (const extension of [...root.listExtensionsUsed()]) extension.dispose();
+}
+
+async function bakeMetallicRoughnessTexture(material) {
+  const texture = material.getMetallicRoughnessTexture();
+  const image = texture?.getImage();
+  if (!image) return;
+  const { channels } = await sharp(image).stats();
+  const roughnessMean = channels[1]?.mean;
+  const metallicMean = channels[2]?.mean;
+  if (!Number.isFinite(roughnessMean) || !Number.isFinite(metallicMean)) {
+    throw new Error(
+      `${material.getName() || "material"} has an unreadable metallic-roughness texture.`,
+    );
+  }
+  material
+    .setRoughnessFactor(material.getRoughnessFactor() * roughnessMean / 255)
+    .setMetallicFactor(material.getMetallicFactor() * metallicMean / 255);
 }
 
 function normalizeSelectedScene(document) {
@@ -227,8 +245,9 @@ Run \`node tooling/prepare-static-glb-gallery.mjs\`. The pinned pipeline uses
 glTF Transform 4.5.0 and Sharp 0.35.4. It bundles external resources, removes
 animation, skins, cameras, morph targets, unsupported vertex streams,
 normal/occlusion/emissive maps, and extension-only material properties; keeps
-triangle geometry, hierarchy, UV0, base-color textures, and metallic/roughness
-factors; limits base-color textures to 512×512; prunes unused resources; and
+triangle geometry, hierarchy, UV0, and base-color textures; bakes removed
+metallic/roughness textures into average scalar factors; limits base-color
+textures to 512×512; prunes unused resources; and
 normalizes each selected scene to a centered 2.4-unit footprint on y=0.
 
 ## Upstream sources

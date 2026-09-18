@@ -116,4 +116,57 @@ describe("public static GLB gallery", () => {
       "/models/khronos-scifi-helmet.glb",
     ]);
   });
+
+  it("keeps the Avocado's visible surface readable", async () => {
+    const avocadoURL = Object.entries(galleryAssetURLs).find(([path]) =>
+      path.endsWith("/khronos-avocado.glb"),
+    )?.[1];
+    if (!avocadoURL) throw new Error("The Avocado gallery asset is required.");
+    const avocadoBytes = await (await fetch(avocadoURL)).arrayBuffer();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(avocadoBytes.slice(0), { status: 200 }),
+    );
+
+    const context = new OffscreenCanvas(1, 1).getContext("webgl2");
+    if (!context) throw new Error("WebGL2 is required for gallery evidence.");
+    const drawElements = vi.spyOn(
+      Object.getPrototypeOf(context) as WebGL2RenderingContext,
+      "drawElements",
+    );
+    const canvas = document.createElement("canvas");
+    canvas.width = 720;
+    canvas.height = 420;
+    document.body.replaceChildren(canvas);
+    const controller = mountStaticGLBGallery(canvas);
+    controllers.push(controller);
+    await waitForDraws(drawElements, 0);
+    await settleFrames(12);
+
+    const pixels = canvas.getContext("2d")!.getImageData(0, 0, 720, 420).data;
+    const surfaceLuminance: number[] = [];
+    // The upper crop contains only the model and the known scene background.
+    // Broad luminance thresholds protect readable fill without pinning exact pixels.
+    for (let y = 80; y <= 175; y += 1) {
+      for (let x = 300; x <= 420; x += 1) {
+        const offset = (y * 720 + x) * 4;
+        const red = pixels[offset]!;
+        const green = pixels[offset + 1]!;
+        const blue = pixels[offset + 2]!;
+        const backgroundDistance =
+          Math.abs(red - 15) + Math.abs(green - 33) + Math.abs(blue - 51);
+        if (backgroundDistance > 18) {
+          surfaceLuminance.push(0.2126 * red + 0.7152 * green + 0.0722 * blue);
+        }
+      }
+    }
+    surfaceLuminance.sort((left, right) => left - right);
+    const average =
+      surfaceLuminance.reduce((total, value) => total + value, 0) /
+      surfaceLuminance.length;
+    const lowerQuartile =
+      surfaceLuminance[Math.floor(surfaceLuminance.length * 0.25)]!;
+
+    expect(average).toBeGreaterThanOrEqual(85);
+    expect(lowerQuartile).toBeGreaterThanOrEqual(65);
+  });
 });
