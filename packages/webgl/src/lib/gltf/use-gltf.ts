@@ -2,6 +2,7 @@ import { signal, type WritableSignal } from '@crc/core';
 import { onCurrentRenderFinish, useInternalHookSlot } from '@crc/core/internal';
 import { releaseInternalWebGLAsset } from '../assets/asset.js';
 import type { CRCWebGLAsset } from '../types.js';
+import { assertGLBByteLength } from './budget.js';
 import { decodeGLBAsset } from './decode.js';
 
 export type CRCGLTFSource = string | URL | ArrayBuffer;
@@ -83,7 +84,7 @@ async function loadAsset(
         `HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`,
       );
     }
-    bytes = (await response.arrayBuffer()).slice(0);
+    bytes = await readBoundedGLBResponse(response, signal);
   }
   return decodeGLBAsset(bytes, {
     decodeImage: (imageBytes, mimeType) => {
@@ -98,6 +99,62 @@ async function loadAsset(
       );
     },
   });
+}
+
+async function readBoundedGLBResponse(
+  response: Response,
+  signal: AbortSignal | undefined,
+): Promise<ArrayBuffer> {
+  const contentLength = response.headers.get('content-length');
+  if (contentLength !== null && /^\d+$/u.test(contentLength)) {
+    const advertisedLength = Number(contentLength);
+    assertGLBByteLength(advertisedLength);
+  }
+  const body = response.body;
+  if (body === null) {
+    throw new TypeError('GLB response body is missing.');
+  }
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let byteLength = 0;
+  let complete = false;
+  let cancelled = false;
+  const cancel = (): void => {
+    if (cancelled) return;
+    cancelled = true;
+    void reader.cancel(signal?.reason).catch(() => undefined);
+  };
+  signal?.addEventListener('abort', cancel, { once: true });
+  try {
+    while (true) {
+      if (signal?.aborted) {
+        throw signal.reason ?? new DOMException('The operation was aborted.', 'AbortError');
+      }
+      const { done, value } = await reader.read();
+      if (done) {
+        complete = true;
+        break;
+      }
+      if (!(value instanceof Uint8Array)) {
+        throw new TypeError('GLB response body must yield Uint8Array chunks.');
+      }
+      const nextByteLength = byteLength + value.byteLength;
+      assertGLBByteLength(nextByteLength);
+      chunks.push(value);
+      byteLength = nextByteLength;
+    }
+  } finally {
+    signal?.removeEventListener('abort', cancel);
+    if (!complete) cancel();
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(byteLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes.buffer;
 }
 
 function publishAsset(

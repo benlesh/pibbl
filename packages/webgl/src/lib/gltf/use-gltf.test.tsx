@@ -121,6 +121,120 @@ describe('useGLTF', () => {
     expect(fetch).toHaveBeenCalledOnce();
   });
 
+  it('rejects an advertised GLB over the decode ceiling before consuming its body', async () => {
+    const frames = new ManualFrames();
+    const reader = trackedReader([]);
+    vi.stubGlobal('fetch', vi.fn(async () => responseWithReader(reader, {
+      'content-length': String(256 * 1024 * 1024 + 1),
+    })));
+    const results: CRCWebGLAssetLoadResult[] = [];
+    function Probe(): void {
+      results.push(useGLTF('/too-large.glb'));
+    }
+
+    const controller = crc(createCanvas(), <Probe />, { pixelRatio: 1 });
+    controllers.add(controller);
+    frames.flush(1);
+    await waitForFrame(frames);
+    frames.flush(2);
+
+    expect(results[1]?.status).toBe('error');
+    if (results[1]?.status !== 'error') throw new Error('Expected error result.');
+    expect(results[1].error.message).toMatch(/GLB byteLength .* exceeds limit/iu);
+    expect(reader.read).not.toHaveBeenCalled();
+  });
+
+  it('cancels and releases a chunked body when it crosses the decode ceiling', async () => {
+    const frames = new ManualFrames();
+    const reader = trackedReader([
+      oversizedChunk(256 * 1024 * 1024 + 1),
+    ]);
+    vi.stubGlobal('fetch', vi.fn(async () => responseWithReader(reader)));
+    const results: CRCWebGLAssetLoadResult[] = [];
+    function Probe(): void {
+      results.push(useGLTF('/chunked-too-large.glb'));
+    }
+
+    const controller = crc(createCanvas(), <Probe />, { pixelRatio: 1 });
+    controllers.add(controller);
+    frames.flush(1);
+    await waitForFrame(frames);
+    frames.flush(2);
+
+    expect(results[1]?.status).toBe('error');
+    if (results[1]?.status !== 'error') throw new Error('Expected error result.');
+    expect(results[1].error.message).toMatch(/GLB byteLength .* exceeds limit/iu);
+    expect(reader.cancel).toHaveBeenCalledOnce();
+    expect(reader.releaseLock).toHaveBeenCalledOnce();
+  });
+
+  it('allows a content-length exactly at the decode ceiling to proceed to normal GLB validation', async () => {
+    const frames = new ManualFrames();
+    const reader = trackedReader([new Uint8Array(12)]);
+    vi.stubGlobal('fetch', vi.fn(async () => responseWithReader(reader, {
+      'content-length': String(256 * 1024 * 1024),
+    })));
+    const results: CRCWebGLAssetLoadResult[] = [];
+    function Probe(): void {
+      results.push(useGLTF('/ceiling.glb'));
+    }
+
+    const controller = crc(createCanvas(), <Probe />, { pixelRatio: 1 });
+    controllers.add(controller);
+    frames.flush(1);
+    await waitForFrame(frames);
+    frames.flush(2);
+
+    expect(results[1]?.status).toBe('error');
+    if (results[1]?.status !== 'error') throw new Error('Expected error result.');
+    expect(results[1].error.message).toMatch(/GLB header byte 0 has invalid magic/iu);
+    expect(reader.read).toHaveBeenCalled();
+    expect(reader.releaseLock).toHaveBeenCalledOnce();
+  });
+
+  it('cancels and releases an in-flight body reader when its source becomes stale', async () => {
+    const frames = new ManualFrames();
+    const pendingRead = deferred<ReadableStreamReadResult<Uint8Array>>();
+    const reader = {
+      read: vi.fn(() => pendingRead.promise),
+      cancel: vi.fn(async () => {
+        pendingRead.resolve({ done: true, value: undefined });
+      }),
+      releaseLock: vi.fn(),
+    } as unknown as ReadableStreamDefaultReader<Uint8Array> & {
+      readonly read: ReturnType<typeof vi.fn>;
+      readonly cancel: ReturnType<typeof vi.fn>;
+      readonly releaseLock: ReturnType<typeof vi.fn>;
+    };
+    let request = 0;
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      request += 1;
+      return request === 1 ? responseWithReader(reader) : new Response(validGLB());
+    }));
+    vi.stubGlobal('createImageBitmap', vi.fn(async () => fakeBitmap()));
+    let source = '/first.glb';
+    const results: CRCWebGLAssetLoadResult[] = [];
+    function Probe(): void {
+      results.push(useGLTF(source));
+    }
+
+    const canvas = createCanvas();
+    const controller = crc(canvas, <Probe />, { pixelRatio: 1 });
+    controllers.add(controller);
+    frames.flush(1);
+    await waitFor(() => expect(reader.read).toHaveBeenCalledOnce());
+
+    source = '/second.glb';
+    crc(canvas, <Probe />);
+    frames.flush(2);
+    await waitFor(() => expect(reader.releaseLock).toHaveBeenCalledOnce());
+    await waitForFrame(frames);
+    frames.flush(3);
+
+    expect(reader.cancel).toHaveBeenCalledOnce();
+    expect(results.at(-1)?.status).toBe('ready');
+  });
+
   it('copies ArrayBuffer bytes before async decode and compares buffers by identity', async () => {
     const frames = new ManualFrames();
     const first = validGLB();
@@ -298,6 +412,42 @@ function fakeBitmap(): ImageBitmap & { close: ReturnType<typeof vi.fn> } {
     height: 3,
     close: vi.fn(),
   } as unknown as ImageBitmap & { close: ReturnType<typeof vi.fn> };
+}
+
+function trackedReader(chunks: readonly Uint8Array[]): ReadableStreamDefaultReader<Uint8Array> & {
+  readonly read: ReturnType<typeof vi.fn>;
+  readonly cancel: ReturnType<typeof vi.fn>;
+  readonly releaseLock: ReturnType<typeof vi.fn>;
+} {
+  let index = 0;
+  const reader = {
+    read: vi.fn(async () => {
+      const value = chunks[index++];
+      return value === undefined ? { done: true, value: undefined } : { done: false, value };
+    }),
+    cancel: vi.fn(async () => undefined),
+    releaseLock: vi.fn(),
+  };
+  return reader as unknown as ReadableStreamDefaultReader<Uint8Array> & typeof reader;
+}
+
+function responseWithReader(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  headers: Record<string, string> = {},
+): Response {
+  return {
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    headers: new Headers(headers),
+    body: { getReader: () => reader },
+  } as unknown as Response;
+}
+
+function oversizedChunk(byteLength: number): Uint8Array {
+  const chunk = new Uint8Array(1);
+  Object.defineProperty(chunk, 'byteLength', { value: byteLength });
+  return chunk;
 }
 
 function deferred<T>(): {
