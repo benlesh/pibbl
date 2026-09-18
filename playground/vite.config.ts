@@ -8,6 +8,7 @@ const studioDocsAcceptanceOutput = resolve(
   import.meta.dirname,
   ".studio-docs-acceptance-dist",
 );
+const sandboxAssetHeaders = { "Access-Control-Allow-Origin": "*" };
 
 export default defineConfig(({ mode }) => {
   const isStudioDocsAcceptance = mode === "studio-docs-acceptance";
@@ -23,6 +24,8 @@ export default defineConfig(({ mode }) => {
     define: {
       __CRC_STUDIO_DOCS_ACCEPTANCE__: JSON.stringify(isStudioDocsAcceptance),
     },
+    server: { headers: sandboxAssetHeaders },
+    preview: { headers: sandboxAssetHeaders },
     build: isStudioDocsAcceptance
       ? { outDir: studioDocsAcceptanceOutput }
       : undefined,

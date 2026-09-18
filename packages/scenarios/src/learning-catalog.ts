@@ -1909,6 +1909,38 @@ const drafts = [
     load: () => import("./learning/webgl/shadow-quality.example"),
   },
   {
+    slug: "static-glb",
+    title: "Load a static GLB",
+    shortTitle: "Static GLB",
+    section: "webgl",
+    order: 495,
+    summary:
+      "Load one self-contained GLB, render its selected scene as one interactive Model, and orbit it under a directional light.",
+    api: [
+      "useGLTF",
+      "Model",
+      "WebGLLayer",
+      "DirectionalLight",
+      "useOrbitCamera",
+    ],
+    objectives: [
+      "Handle loading, ready, and error results outside the WebGL island while Model expands one opaque asset inside it.",
+      "Treat the complete imported hierarchy as one click and keyboard-focus target while orbiting from explicit viewport geometry.",
+    ],
+    prompts: {
+      gesture:
+        "Drag empty space to orbit, click either textured block, then press Tab to focus the complete model.",
+      code: "Change the camera position or directional-light angles, then compare the rough and metallic blocks.",
+    },
+    apiNotes: [
+      "useGLTF is the optional @crc/webgl/gltf adapter; loading and error presentation remains ordinary Canvas content.",
+      "Model preserves selected-scene transforms and imported PBR factors while exposing only opaque bounds and one logical target.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["shadow-quality", "directional-light", "webgl-islands"],
+    load: () => import("./learning/webgl/static-glb.example"),
+  },
+  {
     slug: "embers",
     title: "GPU embers",
     shortTitle: "Embers",

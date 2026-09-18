@@ -798,6 +798,15 @@
   export type CRCWebGLVector3 = readonly [x: number, y: number, z: number];
   export type CRCWebGLShadowQuality = false | 'low' | 'medium' | 'high';
 
+  declare const crcWebGLAssetBrand: unique symbol;
+  export interface CRCWebGLAsset {
+    readonly [crcWebGLAssetBrand]: true;
+    readonly bounds: Readonly<{
+      readonly min: CRCWebGLVector3;
+      readonly max: CRCWebGLVector3;
+    }>;
+  }
+
   export interface CRCOrbitCameraOptions {
     readonly orbitPoint: CRCWebGLVector3;
     readonly initialPosition: CRCWebGLVector3;
@@ -854,6 +863,8 @@
   export interface CRCWebGLGeometryInput {
     readonly positions: ArrayLike<number>;
     readonly normals?: ArrayLike<number>;
+    readonly tangents?: ArrayLike<number>;
+    readonly textureCoordinates0?: ArrayLike<number>;
     readonly indices?: ArrayLike<number>;
   }
 
@@ -886,6 +897,17 @@
     readonly opacity?: number;
     readonly lit?: boolean;
     readonly material?: CRCWebGLMaterial;
+    readonly castShadow?: boolean;
+    readonly receiveShadow?: boolean;
+    readonly cursor?: string;
+  }
+
+  export interface ModelProps extends CRCWebGLTargetProps {
+    readonly asset: CRCWebGLAsset;
+  }
+  export interface ModelStyle extends CRCWebGLTransformStyle {
+    readonly opacity?: number;
+    readonly color?: string;
     readonly castShadow?: boolean;
     readonly receiveShadow?: boolean;
     readonly cursor?: string;
@@ -967,6 +989,10 @@
     MeshProps,
     PrimitiveInput<MeshProps, MeshStyle>
   >;
+  export const Model: CRCPrimitiveComponent<
+    ModelProps,
+    PrimitiveInput<ModelProps, ModelStyle>
+  >;
   export const Cube: CRCPrimitiveComponent<
     CubeProps,
     PrimitiveInput<CubeProps, CubeStyle>
@@ -999,3 +1025,14 @@
     WebGLBackgroundProps,
     PrimitiveInput<WebGLBackgroundProps, WebGLBackgroundPrimitiveStyle>
   >;
+
+/* @crc-studio-module @crc/webgl/gltf */
+  import type { CRCWebGLAsset } from '@crc/webgl';
+
+  export type CRCGLTFSource = string | URL | ArrayBuffer;
+  export type CRCWebGLAssetLoadResult =
+    | { readonly status: 'loading' }
+    | { readonly status: 'ready'; readonly asset: CRCWebGLAsset }
+    | { readonly status: 'error'; readonly error: Error };
+
+  export function useGLTF(source: CRCGLTFSource): CRCWebGLAssetLoadResult;

@@ -24,10 +24,21 @@ export {
   particleCelebrationLabScenarioEntry,
   runtimeHooksScenarioEntry,
   signalsLabScenarioEntry,
+  staticGLBSliceScenarioEntry,
   validateScenarioCatalog,
   webglLabScenarioEntry,
   webglLightingLabScenarioEntry,
 } from './catalog';
+export {
+  STATIC_GLB_SLICE_ACTION_IDS,
+  STATIC_GLB_SLICE_PROBES,
+} from './static-glb-slice';
+export type {
+  StaticGLBSliceAction,
+  StaticGLBSliceSource,
+  StaticGLBSliceState,
+  StaticGLBSliceStatus,
+} from './static-glb-slice';
 export type {
   AnimationLabAction,
   AnimationLabState,
