@@ -14,6 +14,8 @@ const rawSourceModules = import.meta.glob(
 ) as Readonly<Record<string, string>>;
 
 const SOURCE_PREFIX = '../../';
+const STATIC_GLB_LEARNING_SOURCE_PATH =
+  'packages/scenarios/src/learning/webgl/static-glb.example.tsx';
 const sourceTextByPath = new Map(
   Object.entries(rawSourceModules)
     .filter(([path]) => !path.includes('/learning/'))
@@ -30,7 +32,15 @@ export const scenarioSourcePaths = Object.freeze(
 export async function loadScenarioSource(
   entry: ScenarioCatalogRecord,
 ): Promise<string> {
-  const sourceText = sourceTextByPath.get(entry.source.path);
+  const sourceText =
+    sourceTextByPath.get(entry.source.path) ??
+    (entry.source.path === STATIC_GLB_LEARNING_SOURCE_PATH
+      ? (
+          await import(
+            '../../packages/scenarios/src/learning/webgl/static-glb.example.tsx?raw'
+          )
+        ).default
+      : undefined);
   if (!sourceText) {
     throw new Error(`No source adapter matches scenario source "${entry.source.path}".`);
   }
