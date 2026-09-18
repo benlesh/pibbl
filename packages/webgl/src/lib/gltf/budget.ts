@@ -5,6 +5,7 @@ export const GLTF_DECODE_LIMITS = Object.freeze({
   numericAttributeBytes: 512 * 1024 * 1024,
   selectedPrimitiveInstances: 100_000,
   uniqueDecodedVertices: 20_000_000,
+  normalValidationVertices: 50_000_000,
   encodedImageBytes: 64 * 1024 * 1024,
   imageDimension: 16_384,
   decodedImagePixels: 64 * 1024 * 1024,
@@ -56,7 +57,22 @@ export class GLTFDecodeBudget {
   numericAttributeBytes = 0;
   selectedPrimitiveInstances = 0;
   uniqueDecodedVertices = 0;
+  normalValidationVertices = 0;
   decodedImagePixels = 0;
+  readonly #normalValidationVerticesLimit: number;
+
+  constructor(options: Readonly<{
+    normalValidationVertices?: number;
+  }> = {}) {
+    const limit = options.normalValidationVertices ??
+      GLTF_DECODE_LIMITS.normalValidationVertices;
+    if (!Number.isSafeInteger(limit) || limit < 0) {
+      throw new RangeError(
+        'normal validation vertex limit must be a nonnegative safe integer.',
+      );
+    }
+    this.#normalValidationVerticesLimit = limit;
+  }
 
   reserveNumericAttributeBytes(amount: number, path: string): void {
     this.numericAttributeBytes = reserve(
@@ -85,6 +101,16 @@ export class GLTFDecodeBudget {
       GLTF_DECODE_LIMITS.uniqueDecodedVertices,
       path,
       'unique decoded vertices',
+    );
+  }
+
+  reserveNormalValidationVertices(amount: number, path: string): void {
+    this.normalValidationVertices = reserve(
+      this.normalValidationVertices,
+      amount,
+      this.#normalValidationVerticesLimit,
+      path,
+      'normal validation vertices',
     );
   }
 

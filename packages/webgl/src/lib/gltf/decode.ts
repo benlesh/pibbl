@@ -126,12 +126,12 @@ const ATTRIBUTE_USAGES = new Set([
 export async function decodeGLBAsset(
   bytes: ArrayBuffer,
   platform: CRCGLTFDecodePlatform,
+  budget = new GLTFDecodeBudget(),
 ): Promise<CRCWebGLAsset> {
   if (typeof platform?.decodeImage !== 'function') {
     throw new TypeError('GLB decode platform.decodeImage must be a function.');
   }
   const { json, binaryChunk } = readGLB(bytes);
-  const budget = new GLTFDecodeBudget();
   const accessorContext: CRCGLTFAccessorDecodeContext = {
     budget,
     cache: new Map(),
@@ -173,6 +173,7 @@ export async function decodeGLBAsset(
     let maximumX = -Infinity;
     let maximumY = -Infinity;
     let maximumZ = -Infinity;
+    const validatedNormalPairs = new WeakMap<CRCWebGLGeometry, Set<string>>();
     for (const selectedNode of selectedNodes) {
       if (selectedNode.node.mesh === undefined) continue;
       const meshIndex = requireIndex(
@@ -194,7 +195,20 @@ export async function decodeGLBAsset(
         const geometryData = getWebGLGeometryData(template.geometry);
         try {
           const normalMatrix = createSettledNormalMatrix(selectedNode.modelMatrix);
-          validateSettledNormalPair(geometryData.normals!, normalMatrix);
+          const normalMatrixKey = exactNormalMatrixKey(normalMatrix);
+          let validatedMatrices = validatedNormalPairs.get(template.geometry);
+          if (!validatedMatrices?.has(normalMatrixKey)) {
+            budget.reserveNormalValidationVertices(
+              template.geometry.vertexCount,
+              `$.nodes[${selectedNode.nodeIndex}] rendering ${primitivePath}`,
+            );
+            validateSettledNormalPair(geometryData.normals!, normalMatrix);
+            if (validatedMatrices === undefined) {
+              validatedMatrices = new Set();
+              validatedNormalPairs.set(template.geometry, validatedMatrices);
+            }
+            validatedMatrices.add(normalMatrixKey);
+          }
         } catch (error) {
           const detail = error instanceof Error ? error.message : String(error);
           throw new TypeError(
@@ -242,6 +256,14 @@ export async function decodeGLBAsset(
     releaseTextureProducers(textureProducers);
     throw error;
   }
+}
+
+function exactNormalMatrixKey(matrix: Float32Array): string {
+  return new Uint32Array(
+    matrix.buffer,
+    matrix.byteOffset,
+    matrix.length,
+  ).join(',');
 }
 
 function validateTopLevelFeatures(document: CRCGLTFDocument): void {

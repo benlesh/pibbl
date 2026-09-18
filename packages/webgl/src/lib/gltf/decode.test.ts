@@ -12,6 +12,7 @@ import {
 } from '../scene/composer.js';
 import { settleWebGLScene } from '../scene/settle.js';
 import { decodeGLBAsset, type CRCGLTFDecodePlatform } from './decode.js';
+import { GLTFDecodeBudget } from './budget.js';
 import {
   concatBytes,
   float32Bytes,
@@ -482,6 +483,49 @@ describe('static GLB asset decoder', () => {
     expect(primitives[0]!.geometry).toBe(primitives[2]!.geometry);
     expect(primitives[1]!.geometry).toBe(primitives[3]!.geometry);
     releaseInternalWebGLAsset(asset);
+  });
+
+  it('validates repeated shared geometry and normal-matrix pairs once', async () => {
+    const fixture = indexedNormalFreeFixture();
+    const document = structuredClone(fixture.document) as any;
+    document.nodes = Array.from({ length: 40 }, (_, index) => ({
+      mesh: 0,
+      translation: [index, 0, 0],
+    }));
+    document.scenes = [{ nodes: document.nodes.map((_: unknown, index: number) => index) }];
+    const budget = new GLTFDecodeBudget({ normalValidationVertices: 6 });
+
+    const asset = await decodeGLBAsset(
+      makeGLB(document, fixture.binary),
+      platform(),
+      budget,
+    );
+
+    expect(getInternalWebGLAssetData(asset).primitives).toHaveLength(40);
+    expect(budget.normalValidationVertices).toBe(6);
+    releaseInternalWebGLAsset(asset);
+  });
+
+  it('rejects a distinct geometry/normal-matrix pair before scanning past the budget', async () => {
+    const fixture = indexedNormalFreeFixture();
+    const document = structuredClone(fixture.document) as any;
+    document.nodes = [
+      { mesh: 0 },
+      // This matrix would underflow the generated +Z face normal. The budget
+      // diagnostic therefore also proves reservation occurs before scanning.
+      { mesh: 0, scale: [1e-45, 1e-45, 3e38] },
+    ];
+    document.scenes = [{ nodes: [0, 1] }];
+    const budget = new GLTFDecodeBudget({ normalValidationVertices: 6 });
+
+    await expect(decodeGLBAsset(
+      makeGLB(document, fixture.binary),
+      platform(),
+      budget,
+    )).rejects.toThrow(
+      /\$\.nodes\[1\].*\$\.meshes\[0\]\.primitives\[0\].*normal validation vertices.*limit 6/,
+    );
+    expect(budget.normalValidationVertices).toBe(6);
   });
 
   it('rejects a textured primitive without UV0 and closes its decoded bitmap', async () => {

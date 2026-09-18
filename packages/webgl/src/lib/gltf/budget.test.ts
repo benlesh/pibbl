@@ -42,6 +42,15 @@ describe('static GLB decode budgets', () => {
       '$.meshes[1].primitives[0]',
     )).toThrow(/\$\.meshes\[1\].*unique decoded vertices.*20000000/);
 
+    budget.reserveNormalValidationVertices(
+      GLTF_DECODE_LIMITS.normalValidationVertices,
+      '$.nodes[0] rendering $.meshes[0].primitives[0]',
+    );
+    expect(() => budget.reserveNormalValidationVertices(
+      1,
+      '$.nodes[1] rendering $.meshes[0].primitives[0]',
+    )).toThrow(/\$\.nodes\[1\].*normal validation vertices.*50000000/);
+
     budget.reserveDecodedImagePixels(8192, 8192, '$.images[0]');
     expect(() => budget.reserveDecodedImagePixels(1, 1, '$.images[1]'))
       .toThrow(/\$\.images\[1\].*decoded image pixels.*67108864/);
