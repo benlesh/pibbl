@@ -19,6 +19,21 @@ import {
 import { useGLTF, type CRCWebGLAssetLoadResult } from "@crc/webgl/gltf";
 
 // Static GLB feedback slice
+// CC0 Khronos sample-asset gallery
+
+const galleryModels = [
+  { name: "AVOCADO", source: "/models/khronos-avocado.glb" },
+  { name: "BOOM BOX", source: "/models/khronos-boombox.glb" },
+  { name: "TOY CAR", source: "/models/khronos-toy-car.glb" },
+  { name: "SCI-FI HELMET", source: "/models/khronos-scifi-helmet.glb" },
+] as const;
+
+const selectorBoxes = [
+  { x: 12, width: 148 },
+  { x: 174, width: 148 },
+  { x: 336, width: 148 },
+  { x: 498, width: 210 },
+] as const;
 
 const groundGeometry = createWebGLGeometry({
   positions: [-4, 0, -3, 4, 0, -3, 4, 0, 3, -4, 0, 3],
@@ -62,8 +77,12 @@ function LoadMessage({ loaded }: { readonly loaded: CRCWebGLAssetLoadResult }) {
 
 function StaticGLBPresentation({
   loaded,
+  selectedModel,
+  onSelectModel,
 }: {
   readonly loaded: CRCWebGLAssetLoadResult;
+  readonly selectedModel: number;
+  readonly onSelectModel: (index: number) => void;
 }) {
   const [focused, setFocused] = useState(false);
   const orbit = useOrbitCamera({
@@ -126,6 +145,18 @@ function StaticGLBPresentation({
           />
         </WebGLLayer>
         <LoadMessage loaded={loaded} />
+        <Text
+          pointerEvents="none"
+          style={{
+            x: 696,
+            y: 28,
+            fill: "#bae6fd",
+            font: "700 11px monospace",
+            textAlign: "right",
+          }}
+        >
+          {galleryModels[selectedModel]!.name} · KHRONOS SAMPLE · CC0
+        </Text>
         {focused ? (
           <Text
             pointerEvents="none"
@@ -139,14 +170,54 @@ function StaticGLBPresentation({
             MODEL FOCUSED · ENTER OR SPACE ACTIVATES
           </Text>
         ) : null}
+        {galleryModels.map((model, index) => {
+          const box = selectorBoxes[index]!;
+          const selected = index === selectedModel;
+          return (
+            <Group key={model.source} onClick={() => onSelectModel(index)}>
+              <Rectangle
+                style={{
+                  x: box.x,
+                  y: 366,
+                  width: box.width,
+                  height: 42,
+                  fill: selected ? "#38bdf8" : "rgb(15 23 42 / 92%)",
+                  stroke: selected ? "#e0f2fe" : "#475569",
+                  strokeWidth: 2,
+                  cornerRadius: 10,
+                  cursor: "pointer",
+                }}
+              />
+              <Text
+                pointerEvents="none"
+                style={{
+                  x: box.x + box.width / 2,
+                  y: 392,
+                  fill: selected ? "#082f49" : "#e2e8f0",
+                  font: "700 12px sans-serif",
+                  textAlign: "center",
+                }}
+              >
+                {model.name}
+              </Text>
+            </Group>
+          );
+        })}
       </Group>
     </FocusManagement>
   );
 }
 
 function StaticGLBLesson() {
-  const loaded = useGLTF("/models/crc-static-glb-slice.glb");
-  return <StaticGLBPresentation loaded={loaded} />;
+  const [selectedModel, setSelectedModel] = useState(0);
+  const loaded = useGLTF(galleryModels[selectedModel]!.source);
+  return (
+    <StaticGLBPresentation
+      loaded={loaded}
+      selectedModel={selectedModel}
+      onSelectModel={setSelectedModel}
+    />
+  );
 }
 
 export default function mount(canvas: HTMLCanvasElement): CRCController {

@@ -1910,12 +1910,12 @@ const drafts = [
   },
   {
     slug: "static-glb",
-    title: "Load a static GLB",
-    shortTitle: "Static GLB",
+    title: "Explore a GLB model gallery",
+    shortTitle: "GLB gallery",
     section: "webgl",
     order: 495,
     summary:
-      "Load one self-contained GLB, render its selected scene as one interactive Model, and orbit it under a directional light.",
+      "Switch among four recognizable CC0 Khronos models, render each selected scene as one interactive Model, and orbit it under a directional light.",
     api: [
       "useGLTF",
       "Model",
@@ -1924,16 +1924,17 @@ const drafts = [
       "useOrbitCamera",
     ],
     objectives: [
-      "Handle loading, ready, and error results outside the WebGL island while Model expands one opaque asset inside it.",
-      "Treat the complete imported hierarchy as one click and keyboard-focus target while orbiting from explicit viewport geometry.",
+      "Replace one component-owned GLB source while loading, ready, and error presentation stays outside the WebGL island.",
+      "Treat every complete imported hierarchy as one click and keyboard-focus target while orbiting from explicit viewport geometry.",
     ],
     prompts: {
       gesture:
-        "Drag empty space to orbit, click either textured block, then press Tab to focus the complete model.",
-      code: "Change the camera position or directional-light angles, then compare the rough and metallic blocks.",
+        "Switch among Avocado, Boom Box, Toy Car, and Sci-Fi Helmet; drag empty space to orbit, then click or Tab-focus the complete model.",
+      code: "Adjust the camera or directional light, then compare how the four imported material sets respond.",
     },
     apiNotes: [
       "useGLTF is the optional @crc/webgl/gltf adapter; loading and error presentation remains ordinary Canvas content.",
+      "The vendored CC0 derivatives preserve geometry, hierarchy, UV0, base color, and metallic/roughness while removing features outside this static slice.",
       "Model preserves selected-scene transforms and imported PBR factors while exposing only opaque bounds and one logical target.",
     ],
     canvas: { width: 720, height: 420 },

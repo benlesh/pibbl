@@ -44,9 +44,6 @@ describe("static GLB feedback slice registration", () => {
     expect(staticGLBSource).toMatch(/from ['"]@crc\/core['"]/u);
     expect(staticGLBSource).toMatch(/from ['"]@crc\/webgl['"]/u);
     expect(staticGLBSource).toMatch(/from ['"]@crc\/webgl\/gltf['"]/u);
-    expect(staticGLBSource).toContain(
-      'useGLTF("/models/crc-static-glb-slice.glb")',
-    );
     expect(staticGLBSource).not.toMatch(
       /@crc\/(?:core|webgl)\/(?:internal|src|lib)(?:\/|['"])/u,
     );
