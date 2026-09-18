@@ -896,9 +896,10 @@ The implementation deletes the complete custom renderer surface:
   that package;
 - `@crc/particles/webgl`, `Particles3D`, WebGL particle submissions, and the
   dependency from particles to the old renderer;
-- active WebGL learning examples, scenario catalog entries, API pages, guides,
-  browser tests, visual baselines, package-consumer fixtures, and verification
-  rules that advertise or require the removed surface.
+- every active custom-WebGL learning example rather than translating those
+  examples one-for-one to Three, along with their scenario catalog entries,
+  API pages, guides, browser tests, visual baselines, package-consumer fixtures,
+  and verification rules that advertise or require the removed surface.
 
 The implementation keeps and generalizes only behavior that remains useful to
 the new boundary:
@@ -922,6 +923,69 @@ There is no deprecated façade, translation layer, or compatibility alias. An
 application using `@crc/webgl` must migrate to ordinary Three objects and
 `@crc/three`.
 
+## Replacement proving example
+
+One polished mixed CRC/Three scene replaces the complete old WebGL learning
+gallery as the initial public showcase. It adapts Three.js's official
+[WebGL instancing and raycasting example](https://threejs.org/examples/webgl_instancing_raycast.html)
+and credits its
+[upstream source](https://github.com/mrdoob/three.js/blob/dev/examples/webgl_instancing_raycast.html)
+under the Three.js
+[MIT license](https://github.com/mrdoob/three.js/blob/dev/LICENSE).
+
+The source is a strong integration proof because it is small, visually
+distinctive, procedural, and free of model or texture asset licensing. Its
+recognizable field of lit icosahedron instances exercises
+`THREE.InstancedMesh`, instance colors, lighting, `THREE.Raycaster`,
+`OrbitControls`, animation, resize, and disposal without hiding the lifecycle
+under asset-loading code.
+
+The adaptation keeps the visual idea and ordinary Three APIs while replacing
+the standalone browser shell:
+
+- `defineThreeLayer()` owns the renderer instead of constructing and appending
+  a visible renderer canvas;
+- CRC resize updates the camera projection and adapter-owned renderer instead
+  of installing a window listener;
+- the local input bridge replaces document-level mouse listeners and the root
+  canvas passed directly to `OrbitControls`;
+- CRC's supplied frame and `frame.invalidate()` replace
+  `renderer.setAnimationLoop()`;
+- CRC foreground controls and an on-canvas event readout replace Stats and
+  lil-gui DOM panels;
+- the instance count may be tuned for the Studio viewport, but the scene keeps
+  the procedural lattice, lit icosahedrons, orbit interaction, raycast hover,
+  and per-instance color changes that identify the upstream example.
+
+The scene deliberately contains all three interaction outcomes:
+
+1. A grid of numbered CRC tiles is painted behind the transparent Three layer.
+   Empty gaps between projected instances return miss, so the exposed CRC tile
+   beneath receives hover and click input.
+2. Ordinary unregistered instances return block. They may recolor through the
+   Three input bridge and raycaster, but a click never reaches the obscured CRC
+   tile and produces no CRC logical object target.
+3. One visually distinct Three icosahedron is registered as a CRC target. It
+   receives normal CRC capture/target/bubble events while still blocking the
+   tile beneath it.
+
+A compact CRC toolbar and status readout are painted after the Three layer.
+They remain interactive above every Three object and report the last resolution
+as `CRC tile`, `Three target`, or `Three blocked`. A control switches empty-space
+behavior among pass-through, block, and target-layer so the policy can be
+inspected without changing code.
+
+The `Three blocked` readout is updated by the layer-local Three input bridge
+after its raycaster identifies an unregistered instance. It is not a CRC target
+event: the underlying CRC tile receives nothing, and the blocked Three object
+does not acquire a logical target merely for diagnostics.
+
+This is a learning example, not a bespoke test fixture. A matching deterministic
+scenario drives exact coordinates for all three outcomes and verifies the same
+public API headlessly. Later Three examples are added only when they teach a
+materially different integration category; the removed CRC renderer gallery is
+not recreated feature by feature.
+
 ## Delivery sequence
 
 ### Milestone 1: slice ready for feedback
@@ -930,13 +994,15 @@ The shortest public vertical slice includes:
 
 1. the generic `defineRenderLayer()` lifecycle through its public core export;
 2. `defineThreeLayer()` implemented on that lifecycle;
-3. one mixed Studio scenario with CRC 2D content below and above the Three
-   bitmap;
-4. a rotating sphere and cube driven by CRC frame timing;
-5. one registered Three target, one unregistered blocking object, and empty
-   pixels passing through to a CRC rectangle below;
-6. layer resize, outer clip/filter, invalidation, and exact disposal;
-7. focused semantic and browser checks for that path.
+3. the adapted official instancing/raycasting scene as the one mixed Studio
+   showcase, with CRC tiles below and CRC controls above the Three bitmap;
+4. control damping and per-instance color updates driven by CRC frame timing
+   and local input rather than an independent browser loop;
+5. one registered Three icosahedron, unregistered blocking instances, and empty
+   gaps passing through to CRC tiles below;
+6. the visible event-resolution readout and empty-space policy control;
+7. layer resize, outer clip/filter, invalidation, and exact disposal;
+8. focused semantic and browser checks for that path.
 
 The old package may remain temporarily in the working branch only while this
 slice is evaluated. The exact Studio URL and inspection checklist are provided
@@ -945,8 +1011,9 @@ as soon as the focused slice passes.
 ### Milestone 2: accepted replacement
 
 After hands-on API feedback, the implementation removes the old packages and
-active references in the same landing change, migrates representative examples,
-and makes the workspace build with only the new architecture.
+all old WebGL examples and active references in the same landing change, keeps
+the adapted Three showcase, and makes the workspace build with only the new
+architecture.
 
 ### Milestone 3: feature complete
 
@@ -989,17 +1056,24 @@ delaying experiential feedback with speculative coverage.
 ### Public scenario evidence
 
 The proving scenario must be understandable without an internal test harness.
-It shows a clickable CRC rectangle partially covered by a Three sphere and cube:
+It adapts the official Three instancing/raycasting example inside a field of
+clickable CRC tiles:
 
-- clicking exposed rectangle pixels invokes the CRC rectangle;
-- clicking unregistered 3D geometry invokes nothing and does not leak through;
-- clicking registered 3D geometry invokes its CRC handler and follows normal
-  propagation;
-- clicking transparent empty layer pixels reaches the rectangle under the
-  default pass-through policy;
-- switching miss behavior demonstrates rectangular blocking and layer targeting;
-- a CRC primitive painted afterward remains interactive above the Three layer;
-- resize, animation, clipping, filtering, and disposal are visibly inspectable.
+- hovering or clicking an exposed tile updates the readout to `CRC tile`;
+- hovering an unregistered instance can recolor it through Three's raycaster;
+- clicking that unregistered instance updates the readout to `Three blocked`
+  without invoking the obscured CRC tile;
+- clicking the distinct registered icosahedron updates the readout to
+  `Three target` and follows normal CRC propagation;
+- clicking a transparent gap reaches the CRC tile under the default
+  pass-through policy;
+- switching miss behavior demonstrates empty rectangular blocking and layer
+  targeting;
+- the CRC toolbar painted afterward remains interactive above the instances;
+- orbit input, resize, animation, clipping, filtering, and disposal are visibly
+  inspectable;
+- the example contains its upstream attribution and no separately licensed
+  model, texture, HDR, font, audio, or video asset.
 
 ### Catalog evidence
 
@@ -1009,7 +1083,10 @@ records the capability responsible for that classification. Representative
 public examples exercise materially different integration paths: assets and
 animation, post-processing, custom shaders, multiple views, controls, picking,
 DOM companions, and an explicitly exclusive host. Catalog validation ensures a
-newly inventoried example cannot remain unclassified.
+newly inventoried example cannot remain unclassified. Active catalog and public
+documentation checks also reject old WebGL example IDs, `@crc/webgl` imports,
+and `@crc/particles/webgl` imports while requiring the attributed Three
+instancing/raycasting showcase.
 
 ### Final trust gate
 
