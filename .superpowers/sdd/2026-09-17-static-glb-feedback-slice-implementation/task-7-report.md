@@ -83,6 +83,35 @@ VITE_CONFIG_NATIVE_IGNORE_WARNING=true corepack pnpm@11.21.0 exec vitest run pac
 PASS: 4 files, 20 tests
 ```
 
+Review corrections used two additional RED/GREEN cycles limited to the static
+GLB browser file:
+
+```text
+RED (two-child target): after the original single primitive click, expected
+modelSelections 2 but received 1.
+
+GREEN: added separate literal probes for the tall and compact primitives;
+each click reported lastTarget "model" and advanced modelSelections 0 -> 1 -> 2.
+
+RED (shadow ownership): the initial identity ledger returned no shadow arrays;
+both tests expected one live resource and received zero. Implementing the
+ledger then exposed two legitimate lifetime allocations across loading ->
+ready, one already retired, so the final invariant counts live identities
+rather than assuming one allocation ever.
+
+GREEN: every texStorage3D(TEXTURE_2D_ARRAY) allocation is paired to the
+WebGLTexture actually bound at that invocation; exactly one identity is live,
+no identity is deleted twice, the captured live identity is deleted once at
+teardown, and every allocated shadow-array identity is deleted exactly once
+after final disposal.
+
+VITE_CONFIG_NATIVE_IGNORE_WARNING=true corepack pnpm@11.21.0 exec vitest run packages/core/test/static-glb-slice.test.ts --browser.headless --browser.ui=false
+PASS: 1 file, 2 tests
+
+VITE_CONFIG_NATIVE_IGNORE_WARNING=true corepack pnpm@11.21.0 exec vitest run packages/scenarios/src/static-glb-slice.test.ts packages/core/test/static-glb-slice.test.ts --browser.headless --browser.ui=false
+PASS: 2 files, 8 tests
+```
+
 ## Semantic and ownership evidence
 
 The deterministic browser scenario uses the actual public `useGLTF` and
@@ -96,12 +125,17 @@ asserts:
 - metallic factors `0.15, 0.82`, roughness factors `0.72, 0.28`, one image
   upload, one PBR program, one uploaded light count, and one net live shadow
   array;
-- whole-model click, one Tab-focus candidate, a projected focus union wider
-  than 150 and taller than 80, and empty-viewport drag changing orbit pose;
+- separate clicks inside the tall and compact imported child primitives, each
+  resolving through the one Model handler/semantic target, plus one Tab-focus
+  candidate, a projected focus union wider than 150 and taller than 80, and
+  empty-viewport drag changing orbit pose;
 - in-place source replacement, malformed-source error, removal, remount, and
   exact decoded bitmap close progression `1, 2, 3, 4`;
 - final runtime ownership counters all zero, GPU deletion advancing, and
-  idempotent second disposal leaving the bitmap close count at four.
+  idempotent second disposal leaving the bitmap close count at four; shadow
+  texture-array ownership is tracked by texture identity from allocation
+  binding through exactly-once deletion, never by unrelated framebuffer
+  counts.
 
 The public learning example imports only `@crc/core`, `@crc/webgl`, and
 `@crc/webgl/gltf`. Loading/error UI is ordinary Canvas content outside the

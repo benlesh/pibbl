@@ -57,6 +57,7 @@ function webGLSpies() {
   const prototype = Object.getPrototypeOf(probe) as WebGL2RenderingContext;
   return {
     attachShader: vi.spyOn(prototype, "attachShader"),
+    bindTexture: vi.spyOn(prototype, "bindTexture"),
     createFramebuffer: vi.spyOn(prototype, "createFramebuffer"),
     createProgram: vi.spyOn(prototype, "createProgram"),
     deleteBuffer: vi.spyOn(prototype, "deleteBuffer"),
@@ -160,11 +161,18 @@ describe("public static GLB browser slice", () => {
     expect(
       gl.texImage2D.mock.calls.filter((call) => Array.from(call).length === 6),
     ).toHaveLength(1);
+    const shadowArrays = shadowArrayTextures(gl);
+    expect(shadowArrays.length).toBeGreaterThan(0);
     expect(
-      gl.texStorage3D.mock.calls.filter(
-        ([target]) => target === probeGLConstant("TEXTURE_2D_ARRAY"),
-      ).length - gl.deleteFramebuffer.mock.calls.length,
-    ).toBe(1);
+      shadowArrays.filter(
+        (texture) => shadowTextureDeleteCount(gl, texture) === 0,
+      ),
+    ).toHaveLength(1);
+    expect(
+      shadowArrays.every(
+        (texture) => shadowTextureDeleteCount(gl, texture) <= 1,
+      ),
+    ).toBe(true);
 
     const lightCounts = uniformLocations(
       gl.getUniformLocation,
@@ -185,10 +193,15 @@ describe("public static GLB browser slice", () => {
       [1, 0.75, 0],
     ]);
 
-    await clickLogicalPoint(canvas, STATIC_GLB_SLICE_PROBES.model);
+    await clickLogicalPoint(canvas, STATIC_GLB_SLICE_PROBES.tallPrimitive);
     expect(controller.getState()).toMatchObject({
       lastTarget: "model",
       modelSelections: 1,
+    });
+    await clickLogicalPoint(canvas, STATIC_GLB_SLICE_PROBES.compactPrimitive);
+    expect(controller.getState()).toMatchObject({
+      lastTarget: "model",
+      modelSelections: 2,
     });
 
     const before = document.createElement("button");
@@ -236,6 +249,13 @@ describe("public static GLB browser slice", () => {
       }),
     );
     const { controller, observer } = await mountScenario();
+    const shadowArrays = shadowArrayTextures(gl);
+    const liveShadowArrays = shadowArrays.filter(
+      (texture) => shadowTextureDeleteCount(gl, texture) === 0,
+    );
+    expect(liveShadowArrays).toHaveLength(1);
+    const shadowArray = liveShadowArrays[0]!;
+    expect(shadowTextureDeleteCount(gl, shadowArray)).toBe(0);
 
     await controller.perform("show-replacement");
     expect(controller.getState()).toMatchObject({
@@ -302,8 +322,15 @@ describe("public static GLB browser slice", () => {
       textures: gl.deleteTexture.mock.calls.length,
       vertexArrays: gl.deleteVertexArray.mock.calls.length,
     }).not.toEqual(deletesBefore);
+    expect(shadowTextureDeleteCount(gl, shadowArray)).toBe(1);
     await controller.dispose();
     expect(decodedBitmapCloseCount(bitmapClose, decodedBitmaps)).toBe(4);
+    expect(shadowTextureDeleteCount(gl, shadowArray)).toBe(1);
+    expect(
+      shadowArrayTextures(gl).every(
+        (texture) => shadowTextureDeleteCount(gl, texture) === 1,
+      ),
+    ).toBe(true);
   });
 });
 
@@ -321,6 +348,47 @@ function decodedBitmapCloseCount(
   return close.mock.contexts.filter((bitmap) =>
     identities.has(bitmap as ImageBitmap),
   ).length;
+}
+
+function shadowArrayTextures(
+  gl: ReturnType<typeof webGLSpies>,
+): WebGLTexture[] {
+  const target = probeGLConstant("TEXTURE_2D_ARRAY");
+  return gl.texStorage3D.mock.calls.flatMap(([storageTarget], storageIndex) => {
+    if (storageTarget !== target) return [];
+    const allocationOrder =
+      gl.texStorage3D.mock.invocationCallOrder[storageIndex];
+    if (allocationOrder === undefined) {
+      throw new Error("The shadow array allocation order was not recorded.");
+    }
+    let boundTexture: WebGLTexture | null = null;
+    let boundOrder = -1;
+    gl.bindTexture.mock.calls.forEach(([bindTarget, texture], bindIndex) => {
+      const invocationOrder = gl.bindTexture.mock.invocationCallOrder[bindIndex];
+      if (
+        bindTarget === target &&
+        texture !== null &&
+        invocationOrder !== undefined &&
+        invocationOrder < allocationOrder &&
+        invocationOrder > boundOrder
+      ) {
+        boundTexture = texture;
+        boundOrder = invocationOrder;
+      }
+    });
+    if (!boundTexture) {
+      throw new Error("The shadow array allocation had no bound texture.");
+    }
+    return [boundTexture];
+  });
+}
+
+function shadowTextureDeleteCount(
+  gl: ReturnType<typeof webGLSpies>,
+  texture: WebGLTexture,
+): number {
+  return gl.deleteTexture.mock.calls.filter(([candidate]) => candidate === texture)
+    .length;
 }
 
 function pbrModelMatrices(gl: ReturnType<typeof webGLSpies>): number[][] {

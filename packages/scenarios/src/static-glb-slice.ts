@@ -64,7 +64,8 @@ interface StaticGLBSliceConfiguration {
 }
 
 export const STATIC_GLB_SLICE_PROBES = {
-  model: { x: 335, y: 205 },
+  tallPrimitive: { x: 335, y: 205 },
+  compactPrimitive: { x: 410, y: 210 },
   orbitStart: { x: 668, y: 66 },
   orbitEnd: { x: 590, y: 118 },
 } as const;
