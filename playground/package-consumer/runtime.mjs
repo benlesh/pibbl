@@ -1,6 +1,7 @@
 import * as core from '@crc/core';
 import * as internal from '@crc/core/internal';
 import * as webgl from '@crc/webgl';
+import * as gltf from '@crc/webgl/gltf';
 import * as webglInternal from '@crc/webgl/internal';
 import * as particles from '@crc/particles';
 import * as particlesWebGL from '@crc/particles/webgl';
@@ -92,7 +93,7 @@ const expected = [
   'tween',
   'untracked',
   'wait',
-];
+].sort();
 
 const actual = Object.keys(core).sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) {
@@ -190,6 +191,7 @@ const expectedWebGL = [
   'Group3D',
   'HemisphereLight',
   'Mesh',
+  'Model',
   'PointLight',
   'Sphere',
   'SpotLight',
@@ -198,14 +200,14 @@ const expectedWebGL = [
   'useAnimationFrame',
   'useOrbitCamera',
   'createWebGLGeometry',
-];
+].sort();
 const actualWebGL = Object.keys(webgl).sort();
 if (JSON.stringify(actualWebGL) !== JSON.stringify(expectedWebGL)) {
   throw new Error(`Unexpected @crc/webgl exports: ${actualWebGL.join(', ')}`);
 }
-if (actualWebGL.length !== 14) {
+if (actualWebGL.length !== 15) {
   throw new Error(
-    `Expected 14 @crc/webgl runtime exports, received ${actualWebGL.length}.`,
+    `Expected 15 @crc/webgl runtime exports, received ${actualWebGL.length}.`,
   );
 }
 for (const exportName of expectedWebGL) {
@@ -227,6 +229,12 @@ if (typeof webglInternal.submitWebGLInstanced !== 'function') {
 if ('submitWebGLInstanced' in webgl) {
   throw new Error('The official instanced seam leaked from @crc/webgl.');
 }
+if (JSON.stringify(Object.keys(gltf).sort()) !== JSON.stringify(['useGLTF'])) {
+  throw new Error(`Unexpected @crc/webgl/gltf exports: ${Object.keys(gltf).join(', ')}`);
+}
+if (typeof gltf.useGLTF !== 'function' || 'useGLTF' in webgl) {
+  throw new Error('The optional GLB loader entry did not stay isolated from @crc/webgl.');
+}
 
 const expectedParticles = [
   'Particles2D',
@@ -238,7 +246,7 @@ const expectedParticles = [
   'particleInteger',
   'particleParameter',
   'particleRange',
-];
+].sort();
 const actualParticles = Object.keys(particles).sort();
 if (JSON.stringify(actualParticles) !== JSON.stringify(expectedParticles)) {
   throw new Error(`Unexpected @crc/particles exports: ${actualParticles.join(', ')}`);

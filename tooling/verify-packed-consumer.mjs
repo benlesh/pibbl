@@ -170,6 +170,9 @@ try {
     'package/dist/types.d.ts',
   ]);
   assertRequiredEntries(webglEntries, [
+    'package/dist/gltf.d.ts',
+    'package/dist/gltf.mjs',
+    'package/dist/gltf.mjs.map',
     'package/dist/index.d.ts',
     'package/dist/index.mjs',
     'package/dist/index.mjs.map',
@@ -279,6 +282,7 @@ try {
     '@crc/core/internal',
     '@crc/types',
     '@crc/webgl',
+    '@crc/webgl/gltf',
     '@crc/webgl/internal',
     '@crc/particles',
     '@crc/particles/webgl',
@@ -302,6 +306,9 @@ try {
   const installedCoreEntry = realpathSync(requireFromConsumer.resolve('@crc/core'));
   const installedWebGLRoot = installedPackageRoots.get('@crc/webgl');
   const installedWebGLEntry = realpathSync(requireFromConsumer.resolve('@crc/webgl'));
+  const installedWebGLGLTFEntry = realpathSync(
+    requireFromConsumer.resolve('@crc/webgl/gltf'),
+  );
   const installedParticlesRoot = installedPackageRoots.get('@crc/particles');
   const installedParticlesEntry = realpathSync(
     requireFromConsumer.resolve('@crc/particles'),
@@ -311,7 +318,11 @@ try {
   );
   const requireFromWebGL = createRequire(installedWebGLEntry);
   const webglCoreEntry = realpathSync(requireFromWebGL.resolve('@crc/core'));
-  if (webglCoreEntry !== installedCoreEntry) {
+  const requireFromWebGLGLTF = createRequire(installedWebGLGLTFEntry);
+  if (
+    webglCoreEntry !== installedCoreEntry ||
+    realpathSync(requireFromWebGLGLTF.resolve('@crc/core')) !== installedCoreEntry
+  ) {
     throw new Error(
       `@crc/webgl resolved a second core identity: ${webglCoreEntry}.`,
     );
@@ -372,6 +383,19 @@ try {
     );
   }
   const installedWebGLBundle = readFileSync(installedWebGLEntry, 'utf8');
+  if (
+    installedWebGLBundle.includes('useGLTF') ||
+    installedWebGLBundle.includes('GLB header byte 0 has invalid magic')
+  ) {
+    throw new Error('Packed @crc/webgl root embedded the optional GLB loader or decoder.');
+  }
+  const installedWebGLGLTFBundle = readFileSync(installedWebGLGLTFEntry, 'utf8');
+  if (
+    !installedWebGLGLTFBundle.includes('useGLTF') ||
+    !installedWebGLGLTFBundle.includes('GLB header byte 0 has invalid magic')
+  ) {
+    throw new Error('Packed @crc/webgl/gltf omitted its loader or GLB decoder.');
+  }
   for (const marker of [
     focusImplementationMarker,
     '@crc/core.element',
@@ -555,6 +579,12 @@ try {
     console.log(Fragment, crc, createElement, useAnimationFrame, scene);
   `);
   assertSinglePackedRuntime(sharedRuntimeBundle.metafile);
+  if (
+    sharedRuntimeBundle.code.includes('useGLTF') ||
+    sharedRuntimeBundle.code.includes('GLB header byte 0 has invalid magic')
+  ) {
+    throw new Error('An ordinary packed WebGL consumer bundled the optional GLB loader.');
+  }
   assertIdentityMarkerOnce(
     sharedRuntimeBundle.code,
     '@crc/core.element',

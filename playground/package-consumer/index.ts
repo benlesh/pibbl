@@ -149,6 +149,11 @@ import {
 import * as WebGLRuntime from '@crc/webgl';
 import type * as WebGLTypes from '@crc/webgl';
 import {
+  useGLTF,
+  type CRCGLTFSource,
+  type CRCWebGLAssetLoadResult,
+} from '@crc/webgl/gltf';
+import {
   submitWebGLInstanced,
   type CRCWebGLBounds,
   type CRCWebGLInstancedRecipe,
@@ -471,6 +476,9 @@ void submitWebGLInstanced;
 void packedInstancedSubmission;
 void (undefined as unknown as CRCWebGLLookupTableRecipe);
 void (undefined as unknown as CRCWebGLSpriteRecipe);
+void useGLTF;
+void (undefined as unknown as CRCGLTFSource);
+void (undefined as unknown as CRCWebGLAssetLoadResult);
 
 // @ts-expect-error traversal-time raw GL construction is not public
 void WebGLRuntime.defineWebGLPrimitive;

@@ -4,7 +4,7 @@ import { isAbsolute, resolve, sep } from "node:path";
 const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const CRC_ENTRY_POINT =
-  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles(?:\/webgl)?|webgl(?:\/internal)?)$/;
+  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles(?:\/webgl)?|webgl(?:\/gltf|\/internal)?)$/;
 
 function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
   const directory = mode === "built" ? "dist" : "src";
@@ -57,6 +57,13 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
       resolve(
         import.meta.dirname,
         `../packages/webgl/${directory}/index.${extension}`,
+      ),
+    ],
+    [
+      "@crc/webgl/gltf",
+      resolve(
+        import.meta.dirname,
+        `../packages/webgl/${directory}/gltf.${extension}`,
       ),
     ],
     [

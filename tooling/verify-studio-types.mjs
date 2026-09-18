@@ -24,6 +24,7 @@ const modulePaths = new Map([
   ['@crc/particles', 'node_modules/@crc/particles/index.d.ts'],
   ['@crc/particles/webgl', 'node_modules/@crc/particles/webgl.d.ts'],
   ['@crc/webgl', 'node_modules/@crc/webgl/index.d.ts'],
+  ['@crc/webgl/gltf', 'node_modules/@crc/webgl/gltf.d.ts'],
 ]);
 
 function readDeclarationModules(bundle) {
@@ -40,7 +41,7 @@ function readDeclarationModules(bundle) {
     new Set(modules.map(({ moduleName }) => moduleName)).size !== modulePaths.size ||
     modules.some(({ moduleName }) => !modulePaths.has(moduleName))
   ) {
-    throw new Error('CRC Studio declarations must define the six package entry points exactly once.');
+    throw new Error('CRC Studio declarations must define the seven package entry points exactly once.');
   }
   return modules;
 }
@@ -268,6 +269,7 @@ const packageDeclarationSources = new Map([
   ['@crc/particles', await readFile(join(repositoryRoot, 'packages/particles/src/index.ts'), 'utf8')],
   ['@crc/particles/webgl', await readFile(join(repositoryRoot, 'packages/particles/src/webgl.ts'), 'utf8')],
   ['@crc/webgl', await readFile(join(repositoryRoot, 'packages/webgl/src/index.ts'), 'utf8')],
+  ['@crc/webgl/gltf', await readFile(join(repositoryRoot, 'packages/webgl/src/gltf.ts'), 'utf8')],
 ]);
 
 const builtPackageDeclarationSources = new Map([
@@ -283,6 +285,7 @@ const builtPackageDeclarationSources = new Map([
   ['@crc/particles', await readFile(join(repositoryRoot, 'packages/particles/dist/index.d.ts'), 'utf8')],
   ['@crc/particles/webgl', await readFile(join(repositoryRoot, 'packages/particles/dist/webgl.d.ts'), 'utf8')],
   ['@crc/webgl', await readFile(join(repositoryRoot, 'packages/webgl/dist/index.d.ts'), 'utf8')],
+  ['@crc/webgl/gltf', await readFile(join(repositoryRoot, 'packages/webgl/dist/gltf.d.ts'), 'utf8')],
 ]);
 
 for (const { moduleName, content } of declarationModules) {
@@ -491,6 +494,7 @@ const publicWebGLTypeExports = [
   'CRCOrbitCameraHandlers',
   'CRCOrbitCameraOptions',
   'CRCOrbitCameraResult',
+  'CRCWebGLAsset',
   'CRCWebGLGeometry',
   'CRCWebGLGeometryInput',
   'CRCWebGLLambertMaterial',
@@ -509,6 +513,8 @@ const publicWebGLTypeExports = [
   'HemisphereLightStyle',
   'MeshProps',
   'MeshStyle',
+  'ModelProps',
+  'ModelStyle',
   'PointLightProps',
   'PointLightStyle',
   'SphereProps',
@@ -521,9 +527,14 @@ const publicWebGLTypeExports = [
   'WebGLLayerStyle',
 ].sort();
 
-if (publicWebGLTypeExports.length !== 33) {
-  throw new Error(`CRC Studio must declare exactly 33 WebGL public types, received ${publicWebGLTypeExports.length}.`);
+if (publicWebGLTypeExports.length !== 36) {
+  throw new Error(`CRC Studio must declare exactly 36 WebGL public types, received ${publicWebGLTypeExports.length}.`);
 }
+
+const publicGLTFTypeExports = [
+  'CRCGLTFSource',
+  'CRCWebGLAssetLoadResult',
+].sort();
 
 function explicitTypeExportNames(source) {
   const names = [];
@@ -544,6 +555,7 @@ function explicitTypeExportNames(source) {
 for (const [moduleName, publicTypes] of [
   ['@crc/core', publicTypeExports],
   ['@crc/webgl', publicWebGLTypeExports],
+  ['@crc/webgl/gltf', publicGLTFTypeExports],
 ]) {
   const packageTypeExports = explicitTypeExportNames(
     packageDeclarationSources.get(moduleName),
@@ -564,6 +576,9 @@ import type {
 import type {
   ${publicWebGLTypeExports.join(',\n  ')}
 } from '@crc/webgl';
+import type {
+  ${publicGLTFTypeExports.join(',\n  ')}
+} from '@crc/webgl/gltf';
 `;
 
 const consumer = `
@@ -572,6 +587,7 @@ ${removedAuthoringImports}
 import type { CRCInternalFrame } from '@crc/core/internal';
 import * as CRC_CORE_ROOT from '@crc/core';
 import * as CRC_WEBGL_ROOT from '@crc/webgl';
+import { useGLTF, type CRCGLTFSource, type CRCWebGLAssetLoadResult } from '@crc/webgl/gltf';
 import {
   Absolute,
   Clip,
@@ -692,6 +708,7 @@ import {
   Group3D,
   HemisphereLight,
   Mesh,
+  Model,
   PointLight,
   Sphere,
   SpotLight,
@@ -716,6 +733,8 @@ import {
   type HemisphereLightStyle,
   type MeshProps,
   type MeshStyle,
+  type ModelProps,
+  type ModelStyle,
   type PointLightProps,
   type PointLightStyle,
   type SphereProps,
@@ -962,6 +981,9 @@ const filteredWebGLBackground = <WebGLBackground style={{ color: '#08111f', filt
 void [filteredCube, filteredAmbientLight, filteredWebGLBackground];
 void CRC_WEBGL_ROOT.useAnimationFrame;
 void CRC_WEBGL_ROOT.useOrbitCamera;
+void useGLTF;
+type StudioGLTFTypes = [CRCGLTFSource, CRCWebGLAssetLoadResult];
+void (undefined as unknown as StudioGLTFTypes);
 void useAnimationFrame;
 type StudioWebGLTypes = [
   AmbientLightProps,
@@ -1592,6 +1614,7 @@ try {
       particles: join(repositoryRoot, 'packages/particles/src/index.ts'),
       particlesWebGL: join(repositoryRoot, 'packages/particles/src/webgl.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/src/index.ts'),
+      gltf: join(repositoryRoot, 'packages/webgl/src/gltf.ts'),
     },
     {
       label: 'built',
@@ -1602,6 +1625,7 @@ try {
       particles: join(repositoryRoot, 'packages/particles/dist/index.d.ts'),
       particlesWebGL: join(repositoryRoot, 'packages/particles/dist/webgl.d.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/dist/index.d.ts'),
+      gltf: join(repositoryRoot, 'packages/webgl/dist/gltf.d.ts'),
     },
   ];
   for (const entries of packageEntrySets) {
@@ -1625,6 +1649,7 @@ try {
           '@crc/particles': [entries.particles],
           '@crc/particles/webgl': [entries.particlesWebGL],
           '@crc/webgl': [entries.webgl],
+          '@crc/webgl/gltf': [entries.gltf],
         },
         skipLibCheck: false,
         strict: true,
@@ -1724,6 +1749,7 @@ try {
     'LayoutDiagnostic',
     'Line',
     'Mesh',
+    'Model',
     'Overlay',
     'Path',
     'Polygon',
@@ -1741,6 +1767,7 @@ try {
     'WebGLLayer',
     'useAnimationFrame',
     'useOrbitCamera',
+    'useGLTF',
     'computed',
     'crc',
     'useCanvasContext',
@@ -1807,8 +1834,8 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 105) {
-    throw new Error(`CRC Studio runtime must expose 77 core values, 14 WebGL values, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  if (expectedStudioRuntimeExports.length !== 107) {
+    throw new Error(`CRC Studio runtime must expose 77 core values, 15 WebGL values, 1 GLB loader value, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(
@@ -1819,7 +1846,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 208-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 213-type structural ' +
     'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
     'generic, and layout checks against source and built packages.\n',
   );
