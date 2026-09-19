@@ -53,7 +53,17 @@ import {
 import { planBoundaryTransitions } from './boundary-transitions.js';
 import type { CRCOriginalEvent } from './event-facade.js';
 import { buildEventPath } from './event-path.js';
-import { resolveCoordinateTarget } from './hit-test.js';
+import {
+  resolveCoordinateOutput,
+  resolveCoordinateTarget,
+} from './hit-test.js';
+import { CRCHitDisposition } from "./paint-entry.js";
+import {
+  dispatchCapturedResolverInput,
+  dispatchResolvedInput,
+  getResolverPointerCapture,
+  type CRCResolverInputType,
+} from "./resolver-input.js";
 import { dispatchEventPath } from './propagation.js';
 import {
   activateLogicalPointerCapture,
@@ -454,7 +464,7 @@ function dispatchPointerMove(
 ): void {
   const pointerId = input.originalEvent.pointerId;
   const previous = livePointerHover(root, pointerId);
-  const next = resolvePointerTarget(root, input);
+  const next = resolvePointerTarget(root, input, true);
   if (previous === next) {
     if (next) dispatchPointerNode('pointermove', next, input);
     return;
@@ -517,11 +527,16 @@ function dispatchPointerCoordinateEvent(
   input: CRCAdaptedPointerEvent,
 ): void {
   const policy = root.eventRoot.focusPolicy;
-  const coordinateTarget = resolveCoordinateTarget(root.eventRoot, input);
-  const target = getLogicalPointerCapture(
+  const logicalCapture = getLogicalPointerCapture(
     root.eventRoot,
     input.originalEvent.pointerId,
-  ) ?? coordinateTarget;
+  );
+  const coordinateTarget = logicalCapture ? undefined :
+    input.type === "pointerdown" || input.type === "pointerup" ||
+        input.type === "pointercancel" ?
+      resolvePointerInputTarget(root, input) :
+      resolveCoordinateTarget(root.eventRoot, input);
+  const target = logicalCapture ?? coordinateTarget;
   const event = target ? dispatchPointerNode(input.type, target, input) : undefined;
   if (input.press) {
     dispatchPressDefault(root, policy, {
@@ -573,11 +588,47 @@ function dispatchLostPointerCapture(
 function resolvePointerTarget(
   root: CRCInstance,
   input: CRCAdaptedPointerEvent,
+  deliverInput = false,
 ): CRCEventNode | undefined {
-  return getLogicalPointerCapture(
+  const logicalCapture = getLogicalPointerCapture(
     root.eventRoot,
     input.originalEvent.pointerId,
-  ) ?? resolveCoordinateTarget(root.eventRoot, input);
+  );
+  if (logicalCapture) return logicalCapture;
+  const resolverCapture = getResolverPointerCapture(
+    root.eventRoot,
+    input.originalEvent.pointerId,
+  );
+  if (resolverCapture) {
+    if (deliverInput && input.type === "pointermove") {
+      dispatchCapturedResolverInput(
+        resolverCapture,
+        "pointermove",
+        input,
+        input.originalEvent,
+      );
+    }
+    return undefined;
+  }
+  return deliverInput && input.type === "pointermove" ?
+    resolveCoordinateInputTarget(root, input, "pointermove") :
+    resolveCoordinateTarget(root.eventRoot, input);
+}
+
+function resolvePointerInputTarget(
+  root: CRCInstance,
+  input: CRCAdaptedPointerEvent,
+): CRCEventTargetRegistration | undefined {
+  const type = input.type as "pointerdown" | "pointerup" | "pointercancel";
+  const captured = getResolverPointerCapture(
+    root.eventRoot,
+    input.originalEvent.pointerId,
+  );
+  if (captured && (type === "pointerup" || type === "pointercancel")) {
+    dispatchCapturedResolverInput(captured, type, input, input.originalEvent);
+    return undefined;
+  }
+  return resolveCoordinateInputTarget(root, input, type);
 }
 
 function dispatchPointerNode(
@@ -747,7 +798,7 @@ function dispatchWheelEvent(
   root: CRCInstance,
   input: CRCAdaptedWheelEvent,
 ): void {
-  const target = resolveCoordinateTarget(root.eventRoot, input);
+  const target = resolveCoordinateInputTarget(root, input, "wheel");
   if (!target) return;
   dispatchEventPath({
     type: 'wheel',
@@ -1050,7 +1101,14 @@ function dispatchActivation(
     interaction.auxiliaryUp.delete(button);
   }
 
-  if (!target || !coordinatePathIncludes(root, input, target)) {
+  const coordinateTarget = type === "click" ?
+    resolveCoordinateInputTarget(root, input, "click") :
+    resolveCoordinateTarget(root.eventRoot, input);
+  if (
+    !target ||
+    !coordinateTarget ||
+    !buildEventPath(coordinateTarget).includes(target)
+  ) {
     if (type === 'click') resetClickStreak(root);
     return;
   }
@@ -1100,8 +1158,24 @@ function dispatchCoordinateEvent(
   root: CRCInstance,
   input: CRCAdaptedMouseEvent,
 ): void {
-  const target = resolveCoordinateTarget(root.eventRoot, input);
+  const target = input.type === "contextmenu" ?
+    resolveCoordinateInputTarget(root, input, "contextmenu") :
+    resolveCoordinateTarget(root.eventRoot, input);
   if (target) dispatchMouseNode(input.type, target, input);
+}
+
+function resolveCoordinateInputTarget(
+  root: CRCInstance,
+  point: Readonly<{ x: number; y: number }> & {
+    readonly originalEvent: PointerEvent | WheelEvent | MouseEvent;
+  },
+  type: CRCResolverInputType,
+): CRCEventTargetRegistration | undefined {
+  const output = resolveCoordinateOutput(root.eventRoot, point);
+  dispatchResolvedInput(output, type, point, point.originalEvent);
+  return output.disposition === CRCHitDisposition.Target ?
+    output.target ?? undefined :
+    undefined;
 }
 
 function dispatchMouseNode(

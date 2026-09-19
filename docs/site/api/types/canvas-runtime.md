@@ -27,14 +27,19 @@ symbols:
     CRCPlaybackEvent,
     CRCPlaybackOptions,
     CRCPlaybackStatus,
+    CRCRef,
     CRCRenderLayerComponentProps,
     CRCRenderLayerContext,
     CRCRenderLayerDefinition,
     CRCRenderLayerFrame,
+    CRCRenderLayerHit,
+    CRCRenderLayerInput,
+    CRCRenderLayerInteraction,
+    CRCRenderLayerInteractionSnapshot,
     CRCRenderLayerProps,
     CRCRenderLayerSize,
     CRCRenderLayerStyle,
-    CRCRef,
+    CRCRenderLayerTarget,
     CRCResponsiveViewportConfig,
     CRCSpringOptions,
     CRCSpringTransitionOptions,
@@ -102,41 +107,6 @@ responsive viewport configuration. The first `crc()` mount owns this choice.
 `CRCController` is the stable controller returned by `crc()`. Its `dispose()`
 method is idempotent and releases runtime-owned resources for that mount.
 
-## CRCRenderLayerComponentProps
-
-`CRCRenderLayerComponentProps` supplies the style and normal CRC event, focus,
-and participation fields reserved by a render layer.
-
-## CRCRenderLayerContext
-
-`CRCRenderLayerContext` exposes the layer's owned `OffscreenCanvas`, current
-resolved size, and a coalesced invalidation callback.
-
-## CRCRenderLayerDefinition
-
-`CRCRenderLayerDefinition` describes synchronous create, update, resize,
-render, and optional disposal callbacks for an external raster layer.
-
-## CRCRenderLayerFrame
-
-`CRCRenderLayerFrame` provides CRC logical frame time, delta, and next-frame
-invalidation to one render callback.
-
-## CRCRenderLayerProps
-
-`CRCRenderLayerProps<Props>` combines custom layer props with the reserved CRC
-component fields and rejects reserved custom names.
-
-## CRCRenderLayerSize
-
-`CRCRenderLayerSize` records logical and backing dimensions plus effective
-pixel ratios for one layer frame.
-
-## CRCRenderLayerStyle
-
-`CRCRenderLayerStyle` is the local box, layout, and filter style accepted by a
-render layer.
-
 ## CRCEasing
 
 `CRCEasing` maps normalized progress to interpolation progress.
@@ -191,6 +161,67 @@ milestone delivery, and isolated error handling.
 `CRCRef<T>` is the stable mutable `{ current }` object returned by `useRef`.
 Writing `current` does not schedule rendering and its lifetime is one component
 identity.
+
+## CRCRenderLayerComponentProps
+
+`CRCRenderLayerComponentProps` supplies the style and normal CRC event, focus,
+and participation fields reserved by a render layer.
+
+## CRCRenderLayerContext
+
+`CRCRenderLayerContext` exposes the layer's owned `OffscreenCanvas`, current
+resolved size, and a coalesced invalidation callback.
+
+## CRCRenderLayerDefinition
+
+`CRCRenderLayerDefinition` describes synchronous create, update, resize,
+render, and optional disposal callbacks for an external raster layer.
+
+## CRCRenderLayerFrame
+
+`CRCRenderLayerFrame` provides CRC logical frame time, delta, and next-frame
+invalidation to one render callback.
+
+## CRCRenderLayerHit
+
+`CRCRenderLayerHit<Target>` reports a layer-local miss, an occluding block, or
+a registered application target identity.
+
+## CRCRenderLayerInput
+
+`CRCRenderLayerInput<Target>` delivers coordinate input only after the layer
+wins global reverse-paint arbitration, with layer-local coordinates and
+winner-owned pointer capture controls.
+
+## CRCRenderLayerInteraction
+
+`CRCRenderLayerInteraction<Props, Resources, Target>` settles the interaction
+snapshot that commits transactionally with a candidate bitmap.
+
+## CRCRenderLayerInteractionSnapshot
+
+`CRCRenderLayerInteractionSnapshot<Target>` contains one generation's target
+declarations, hit test, and optional winner input handler.
+
+## CRCRenderLayerProps
+
+`CRCRenderLayerProps<Props>` combines custom layer props with the reserved CRC
+component fields and rejects reserved custom names.
+
+## CRCRenderLayerSize
+
+`CRCRenderLayerSize` records logical and backing dimensions plus effective
+pixel ratios for one layer frame.
+
+## CRCRenderLayerStyle
+
+`CRCRenderLayerStyle` is the local box, layout, and filter style accepted by a
+render layer.
+
+## CRCRenderLayerTarget
+
+`CRCRenderLayerTarget<Target>` associates a stable application identity with
+CRC handlers, cursor participation, and optional focus geometry.
 
 ## CRCResponsiveViewportConfig
 

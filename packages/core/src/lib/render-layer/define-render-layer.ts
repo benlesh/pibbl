@@ -11,6 +11,7 @@ import type {
   RenderingContext2D,
 } from "../types.js";
 import { CRC_EVENT_DEFINITIONS } from '../events/event-definitions.js';
+import { wireStructuralEvents } from "../components/structural-events.js";
 import { RenderLayerController } from "./controller.js";
 import type {
   CRCRenderLayerDefinition,
@@ -38,6 +39,7 @@ export function defineRenderLayer<
       style: Readonly<ResolvedRenderLayerStyle>,
       ctx: RenderingContext2D,
     ) {
+      wireStructuralEvents(props);
       const refs = GLOBAL_STATE.componentRefs!;
       let controller = refs.refs[0] as
         RenderLayerController<Props, Resources, Target> | undefined;
@@ -60,7 +62,12 @@ export function defineRenderLayer<
         pixelRatioX: layerSurface.backingPixelsPerLogicalUnitX,
         pixelRatioY: layerSurface.backingPixelsPerLogicalUnitY,
       });
-      controller.render(customProps(props) as Props, size, ctx);
+      controller.render(
+        customProps(props) as Props,
+        size,
+        ctx,
+        props.missBehavior,
+      );
     },
     { resolveStyle },
   );
@@ -113,5 +120,8 @@ function snapshotDefinition<Props, Resources, Target extends object>(
     resize: definition.resize,
     render: definition.render,
     dispose: definition.dispose,
+    interaction: definition.interaction ? Object.freeze({
+      settle: definition.interaction.settle,
+    }) : undefined,
   });
 }

@@ -44,6 +44,17 @@ export function resolveCoordinateTarget(
   eventRoot: CRCEventRoot,
   point: CRCCoordinatePoint,
 ): CRCEventTargetRegistration | undefined {
+  const output = resolveCoordinateOutput(eventRoot, point);
+  return output.disposition === CRCHitDisposition.Target ?
+    output.target ?? undefined :
+    undefined;
+}
+
+/** Borrows the root scratch result for immediate coordinate dispatch. */
+export function resolveCoordinateOutput(
+  eventRoot: CRCEventRoot,
+  point: CRCCoordinatePoint,
+): CRCHitTestOutput {
   let input = eventRoot.coordinateHitInput;
   let output = eventRoot.coordinateHitOutput;
   if (!input || !output) {
@@ -54,9 +65,7 @@ export function resolveCoordinateTarget(
   input.rootX = point.x;
   input.rootY = point.y;
   resolveCoordinateHit(eventRoot, input, output);
-  return output.disposition === CRCHitDisposition.Target ?
-    output.target ?? undefined :
-    undefined;
+  return output;
 }
 
 function resolveInstanceHit(
@@ -157,6 +166,8 @@ function resolvePathHit(
 function reset(output: CRCHitTestOutput): void {
   output.disposition = CRCHitDisposition.Miss;
   output.target = null;
+  delete output.winner;
+  delete output.winnerState;
 }
 
 function isLiveTarget(

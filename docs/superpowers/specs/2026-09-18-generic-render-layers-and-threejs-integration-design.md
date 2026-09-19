@@ -6,8 +6,7 @@
 
 Date: 2026-09-18
 
-Status: design decisions approved in conversation on 2026-09-18; written
-specification awaiting user review before implementation planning.
+Status: approved for implementation and planned on 2026-09-18.
 
 ## Summary
 
@@ -334,6 +333,23 @@ export interface CRCRenderLayerInteraction<
 export interface CRCRenderLayerInteractionSnapshot<Target extends object> {
   readonly targets: Iterable<CRCRenderLayerTarget<Target>>;
   hitTest(point: Readonly<{ x: number; y: number }>): CRCRenderLayerHit<Target>;
+  onInput?(input: Readonly<CRCRenderLayerInput<Target>>): void;
+}
+
+export interface CRCRenderLayerInput<Target extends object> {
+  readonly type:
+    | "pointerdown"
+    | "pointermove"
+    | "pointerup"
+    | "pointercancel"
+    | "wheel"
+    | "contextmenu"
+    | "click";
+  readonly point: Readonly<{ x: number; y: number }>;
+  readonly hit: CRCRenderLayerHit<Target>;
+  readonly originalEvent: PointerEvent | WheelEvent | MouseEvent;
+  setPointerCapture(pointerId: number): void;
+  releasePointerCapture(pointerId: number): void;
 }
 
 export interface CRCRenderLayerDefinition<
@@ -381,6 +397,13 @@ focus, `pointerEvents`, and `missBehavior` fields. A custom `Props` type cannot
 redeclare those names. Its style is a local closed style containing box/layout
 participation and `filter`; width and height resolve through the same allocation
 rules as `Layer`.
+
+CRC snapshots custom props shallowly and admits `update()`/`render()` only when
+an own prop key/value changes by `Object.is`, the resolved size changes, or the
+layer is explicitly invalidated. Applications that mutate an object-valued prop
+in place must call `context.invalidate()`.
+
+Core calls `onInput` only when this render layer wins arbitration as a registered target, an unregistered block, or a `target-layer` miss. It does not call it for a pass-through miss or when a later CRC paint entry wins. This is a renderer-neutral input seam; `@crc/three` uses it to drive its scoped compatibility element.
 
 `time` and `delta` are CRC scheduler logical milliseconds.
 `deltaSeconds` is exactly `delta / 1000` for Three mixers and controls that use

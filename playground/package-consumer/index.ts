@@ -16,9 +16,14 @@ import type {
   CRCRenderLayerContext,
   CRCRenderLayerDefinition,
   CRCRenderLayerFrame,
+  CRCRenderLayerHit,
+  CRCRenderLayerInput,
+  CRCRenderLayerInteraction,
+  CRCRenderLayerInteractionSnapshot,
   CRCRenderLayerProps,
   CRCRenderLayerSize,
   CRCRenderLayerStyle,
+  CRCRenderLayerTarget,
   CRCEasing,
   CRCElement,
   CRCDragEvent,
@@ -1297,6 +1302,7 @@ const StyledRuntimeProbe = definePrimitive<
 
 type RenderLayerConsumerProps = { color: string };
 type RenderLayerConsumerResources = { context: CRCRenderLayerContext };
+type RenderLayerConsumerTarget = { readonly id: string };
 const renderLayerSize: CRCRenderLayerSize = {
   width: 1,
   height: 1,
@@ -1318,12 +1324,37 @@ const renderLayerProps: CRCRenderLayerProps<RenderLayerConsumerProps> = {
   style: renderLayerStyle,
 };
 const renderLayerComponentProps: CRCRenderLayerComponentProps = {};
+const renderLayerTargetIdentity: RenderLayerConsumerTarget = { id: 'target' };
+const renderLayerHit: CRCRenderLayerHit<RenderLayerConsumerTarget> = {
+  kind: 'target',
+  target: renderLayerTargetIdentity,
+};
+const renderLayerTarget: CRCRenderLayerTarget<RenderLayerConsumerTarget> = {
+  target: renderLayerTargetIdentity,
+  keyboardFocusable: true,
+};
+const renderLayerSnapshot: CRCRenderLayerInteractionSnapshot<RenderLayerConsumerTarget> = {
+  targets: [renderLayerTarget],
+  hitTest() { return renderLayerHit; },
+  onInput(input: Readonly<CRCRenderLayerInput<RenderLayerConsumerTarget>>) {
+    void input.hit;
+  },
+};
+const renderLayerInteraction: CRCRenderLayerInteraction<
+  RenderLayerConsumerProps,
+  RenderLayerConsumerResources,
+  RenderLayerConsumerTarget
+> = {
+  settle() { return renderLayerSnapshot; },
+};
 const renderLayerDefinition: CRCRenderLayerDefinition<
   RenderLayerConsumerProps,
-  RenderLayerConsumerResources
+  RenderLayerConsumerResources,
+  RenderLayerConsumerTarget
 > = {
   create(context) { return { context }; },
   render() {},
+  interaction: renderLayerInteraction,
 };
 const RenderLayerConsumer = defineRenderLayer(renderLayerDefinition);
 createElement(RenderLayerConsumer, renderLayerProps);

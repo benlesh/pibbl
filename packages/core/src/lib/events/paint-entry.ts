@@ -1,5 +1,6 @@
 import type { CRCClippingStackEntry, CRCInstance } from '../types.js';
 import type { CRCEventTargetRegistration } from './registrations.js';
+import type { CRCResolverInputWinner } from './resolver-input.js';
 
 export const enum CRCHitDisposition {
   Miss = 0,
@@ -15,6 +16,10 @@ export interface CRCHitTestInput {
 export interface CRCHitTestOutput {
   disposition: CRCHitDisposition;
   target: CRCEventTargetRegistration | null;
+  /** @internal Resolver identity for winner-only external input delivery. */
+  winner?: CRCResolverInputWinner;
+  /** @internal Resolver-owned immutable state from this exact lookup. */
+  winnerState?: unknown;
 }
 
 export const enum CRCPaintEntryKind {

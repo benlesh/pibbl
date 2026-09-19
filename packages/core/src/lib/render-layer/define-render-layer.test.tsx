@@ -1,11 +1,20 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { defineRenderLayer } from "../../index.js";
+import {
+  FocusManagement,
+  Group,
+  Rectangle,
+  defineRenderLayer,
+  type CRCRenderLayerHit,
+  type CRCRenderLayerInteractionSnapshot,
+  type CRCRenderLayerTarget,
+} from "../../index.js";
 import { crc } from "../crc.js";
 import { clearSharedState, getCRCInstance } from "../global-state.js";
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
 } from "../scheduler/testing.js";
+import { resolveTargetRootBounds } from "../focus/geometry.js";
 
 afterEach(() => {
   clearSharedState();
@@ -357,12 +366,357 @@ describe("defineRenderLayer", () => {
       restore();
     }
   });
+
+  it.each([
+    { missBehavior: undefined, expected: ["lower"] },
+    { missBehavior: "block" as const, expected: [] },
+    { missBehavior: "target-layer" as const, expected: ["layer"] },
+  ])("arbitrates a miss with $missBehavior", ({ missBehavior, expected }) => {
+    const trace: string[] = [];
+    const Layer = interactionLayer({ kind: "miss" });
+    const mounted = mountInteraction(
+      <>
+        <Rectangle
+          style={{ width: 100, height: 60, fill: "#2563eb" }}
+          onClick={() => trace.push("lower")}
+        />
+        <Layer
+          missBehavior={missBehavior}
+          style={{ width: 100, height: 60 }}
+          onClick={() => trace.push("layer")}
+        />
+      </>,
+    );
+    try {
+      click(mounted.canvas, 30, 20);
+      expect(trace).toEqual(expected);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("delivers an unregistered block only to the winning layer input", () => {
+    const trace: string[] = [];
+    const Layer = interactionLayer({ kind: "block" }, {
+      onInput: input => trace.push(`input:${input.hit.kind}`),
+    });
+    const mounted = mountInteraction(
+      <>
+        <Rectangle
+          style={{ width: 100, height: 60, fill: "#2563eb" }}
+          onClick={() => trace.push("lower")}
+        />
+        <Layer
+          style={{ width: 100, height: 60 }}
+          onClick={() => trace.push("layer")}
+        />
+      </>,
+    );
+    try {
+      click(mounted.canvas, 30, 20);
+      expect(trace).toEqual(["input:block"]);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("dispatches a registered target before its layer structural listener", () => {
+    const trace: string[] = [];
+    const applicationTarget = {};
+    const Layer = interactionLayer(
+      { kind: "target", target: applicationTarget },
+      {
+        targets: [{
+          target: applicationTarget,
+          handlers: { onClick: () => trace.push("target") },
+        }],
+        onInput: input => trace.push(`input:${input.hit.kind}`),
+      },
+    );
+    const mounted = mountInteraction(
+      <Layer
+        style={{ width: 100, height: 60 }}
+        onClick={() => trace.push("layer")}
+      />,
+    );
+    try {
+      click(mounted.canvas, 30, 20);
+      expect(trace).toEqual(["input:target", "target", "layer"]);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("does not deliver input when later CRC paint wins", () => {
+    const trace: string[] = [];
+    const Layer = interactionLayer({ kind: "block" }, {
+      onInput: () => trace.push("input"),
+    });
+    const mounted = mountInteraction(
+      <>
+        <Layer style={{ width: 100, height: 60 }} />
+        <Rectangle
+          style={{ width: 100, height: 60, fill: "#f97316" }}
+          onClick={() => trace.push("front")}
+        />
+      </>,
+    );
+    try {
+      click(mounted.canvas, 30, 20);
+      expect(trace).toEqual(["front"]);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("keeps pointer delivery with the winning layer until release", () => {
+    const trace: string[] = [];
+    const Layer = interactionLayer({ kind: "block" }, {
+      onInput: input => {
+        trace.push(`input:${input.type}`);
+        if (input.type === "pointerdown") {
+          input.setPointerCapture((input.originalEvent as PointerEvent).pointerId);
+        }
+      },
+    });
+    const mounted = mountInteraction(
+      <>
+        <Rectangle
+          style={{ width: 100, height: 60, fill: "#2563eb" }}
+          onPointerMove={() => trace.push("lower:pointermove")}
+        />
+        <Layer style={{ width: 40, height: 30 }} />
+      </>,
+    );
+    try {
+      pointer(mounted.canvas, "pointerdown", 20, 20);
+      pointer(mounted.canvas, "pointermove", 80, 50);
+      pointer(mounted.canvas, "pointerup", 80, 50);
+      pointer(mounted.canvas, "pointermove", 80, 50);
+      expect(trace).toEqual([
+        "input:pointerdown",
+        "input:pointermove",
+        "input:pointerup",
+        "lower:pointermove",
+      ]);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("gates retained invalidation but leaves a frame-invalidated commit live", () => {
+    const trace: string[] = [];
+    const applicationTarget = {};
+    let invalidate: (() => void) | undefined;
+    let first = true;
+    const Layer = defineRenderLayer<{}, {}, typeof applicationTarget>({
+      create(context) {
+        context.canvas.getContext("2d");
+        invalidate = context.invalidate;
+        return {};
+      },
+      render(_resources, frame) {
+        if (first) {
+          first = false;
+          frame.invalidate();
+        }
+      },
+      interaction: {
+        settle() {
+          return {
+            targets: [{
+              target: applicationTarget,
+              handlers: { onClick: () => trace.push("target") },
+            }],
+            hitTest: () => ({ kind: "target", target: applicationTarget }),
+            onInput: input => trace.push(`input:${input.hit.kind}`),
+          };
+        },
+      },
+    });
+    const mounted = mountInteraction(
+      <Layer style={{ width: 100, height: 60 }} />,
+    );
+    try {
+      click(mounted.canvas, 20, 20);
+      expect(trace).toEqual(["input:target", "target"]);
+      trace.length = 0;
+      invalidate!();
+      click(mounted.canvas, 20, 20);
+      expect(trace).toEqual(["input:block"]);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("excludes pointer-events-none declarations from the committed target map", () => {
+    const trace: string[] = [];
+    const applicationTarget = {};
+    const Layer = interactionLayer(
+      { kind: "target", target: applicationTarget },
+      {
+        targets: [{
+          target: applicationTarget,
+          pointerEvents: "none",
+          handlers: { onClick: () => trace.push("target") },
+        }],
+        onInput: input => trace.push(`input:${input.hit.kind}`),
+      },
+    );
+    const mounted = mountInteraction(
+      <Layer style={{ width: 100, height: 60 }} />,
+    );
+    try {
+      click(mounted.canvas, 30, 20);
+      expect(trace).toEqual(["input:block"]);
+      expect(() => mounted.driver.flush(20)).toThrowError(
+        "Render layer hitTest() returned a target absent from its committed snapshot.",
+      );
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("rejects duplicate application target identities during settlement", () => {
+    const applicationTarget = {};
+    const declaration = { target: applicationTarget };
+    const Layer = interactionLayer({ kind: "miss" }, {
+      targets: [declaration, declaration],
+    });
+    const mounted = mountInteraction(
+      <Layer style={{ width: 100, height: 60 }} />,
+      false,
+    );
+    try {
+      expect(() => mounted.driver.flush(10)).not.toThrow();
+      expect(() => mounted.driver.flush(20)).toThrowError(
+        "Render layer interaction contains a duplicate target identity.",
+      );
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("transforms explicit focus bounds and activates the committed target", () => {
+    const trace: string[] = [];
+    const applicationTarget = {};
+    const Layer = interactionLayer(
+      { kind: "target", target: applicationTarget },
+      {
+        targets: [{
+          target: applicationTarget,
+          keyboardFocusable: true,
+          keyboardNavigationBounds: { x: 0, y: 0, width: 20, height: 10 },
+          handlers: { onClick: () => trace.push("target") },
+        }],
+      },
+    );
+    const mounted = mountInteraction(
+      <FocusManagement>
+        <Group style={{ translateX: 25, translateY: 15 }}>
+          <Layer style={{ width: 40, height: 30 }} />
+        </Group>
+      </FocusManagement>,
+    );
+    try {
+      const target = Array.from(getCRCInstance(mounted.canvas).eventRoot.targets)
+        .find(candidate => candidate.keyboardFocusable);
+      expect(target && resolveTargetRootBounds(target)).toEqual({
+        x: 25,
+        y: 15,
+        width: 20,
+        height: 10,
+      });
+      click(mounted.canvas, 30, 20);
+      trace.length = 0;
+      mounted.canvas.dispatchEvent(new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        key: "Enter",
+      }));
+      expect(trace).toEqual(["target"]);
+    } finally {
+      mounted.dispose();
+    }
+  });
 });
 
-function createCanvas(): HTMLCanvasElement {
+function interactionLayer<Target extends object>(
+  hit: CRCRenderLayerHit<Target>,
+  options: {
+    readonly targets?: readonly CRCRenderLayerTarget<Target>[];
+    readonly onInput?: CRCRenderLayerInteractionSnapshot<Target>["onInput"];
+  } = {},
+) {
+  return defineRenderLayer<{}, {}, Target>({
+    create(context) {
+      context.canvas.getContext("2d");
+      return {};
+    },
+    render() {},
+    interaction: {
+      settle() {
+        return {
+          targets: options.targets ?? [],
+          hitTest: () => hit,
+          onInput: options.onInput,
+        };
+      },
+    },
+  });
+}
+
+function mountInteraction(
+  root: Parameters<typeof crc>[1],
+  flush = true,
+): {
+  readonly canvas: HTMLCanvasElement;
+  readonly driver: ManualSchedulerDriver;
+  dispose(): void;
+} {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  const canvas = createCanvas(100, 60);
+  const controller = crc(canvas, root);
+  if (flush) driver.flush(10);
+  return {
+    canvas,
+    driver,
+    dispose() {
+      controller.dispose();
+      restore();
+    },
+  };
+}
+
+function click(canvas: HTMLCanvasElement, x: number, y: number): void {
+  const init = { bubbles: true, button: 0, clientX: x, clientY: y };
+  canvas.dispatchEvent(new MouseEvent("mousedown", init));
+  canvas.dispatchEvent(new MouseEvent("mouseup", init));
+  canvas.dispatchEvent(new MouseEvent("click", init));
+}
+
+function pointer(
+  canvas: HTMLCanvasElement,
+  type: "pointerdown" | "pointermove" | "pointerup",
+  x: number,
+  y: number,
+): void {
+  canvas.dispatchEvent(new PointerEvent(type, {
+    bubbles: true,
+    button: 0,
+    clientX: x,
+    clientY: y,
+    isPrimary: true,
+    pointerId: 41,
+    pointerType: "mouse",
+  }));
+}
+
+function createCanvas(width = 20, height = 10): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
-  canvas.width = 20;
-  canvas.height = 10;
+  canvas.width = width;
+  canvas.height = height;
   document.body.appendChild(canvas);
   return canvas;
 }

@@ -206,9 +206,14 @@ export type {
   CRCRenderLayerDefinition,
   CRCRenderLayerFrame,
   CRCRenderLayerContext,
+  CRCRenderLayerHit,
+  CRCRenderLayerInput,
+  CRCRenderLayerInteraction,
+  CRCRenderLayerInteractionSnapshot,
   CRCRenderLayerProps,
   CRCRenderLayerSize,
   CRCRenderLayerStyle,
+  CRCRenderLayerTarget,
 } from './lib/render-layer/types.js';
 export { createElement } from './lib/element/create-element.js';
 export { Fragment } from './lib/element/jsx-runtime.js';
