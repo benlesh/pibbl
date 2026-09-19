@@ -172,6 +172,50 @@ describe("defineRenderLayer", () => {
     }
   });
 
+  it("keeps valid on-prefixed custom props in update snapshots", () => {
+    const driver = new ManualSchedulerDriver();
+    const restore = installSchedulerDriverForTest(driver);
+    const updates: number[] = [];
+    const Layer = defineRenderLayer<{ once: number }, {}>({
+      create(context) { context.canvas.getContext('2d'); return {}; },
+      update(_resources, props) { updates.push(props.once); },
+      render() {},
+    });
+    const canvas = createCanvas();
+    const controller = crc(canvas, <Layer once={1} style={{ width: 20, height: 10 }} />);
+    try {
+      driver.flush(10);
+      crc(canvas, <Layer once={2} style={{ width: 20, height: 10 }} />);
+      driver.flush(20);
+      expect(updates).toEqual([2]);
+    } finally {
+      controller.dispose();
+      restore();
+    }
+  });
+
+  it("snapshots lifecycle callbacks at definition time", () => {
+    const driver = new ManualSchedulerDriver();
+    const restore = installSchedulerDriverForTest(driver);
+    const original = vi.fn();
+    const replacement = vi.fn();
+    const definition = {
+      create(context: any) { context.canvas.getContext('2d'); return {}; },
+      render: original,
+    };
+    const Layer = defineRenderLayer(definition);
+    definition.render = replacement;
+    const controller = crc(createCanvas(), <Layer style={{ width: 20, height: 10 }} />);
+    try {
+      driver.flush(10);
+      expect(original).toHaveBeenCalledOnce();
+      expect(replacement).not.toHaveBeenCalled();
+    } finally {
+      controller.dispose();
+      restore();
+    }
+  });
+
   it.each(["create", "update", "resize", "render"] as const)(
     "rejects thenables returned by %s",
     (callback) => {
@@ -246,10 +290,12 @@ describe("defineRenderLayer", () => {
     }
   });
 
-  it("does not transfer a replacement bitmap when render fails", () => {
+  it("retains the committed bitmap and reports a failed render through the scheduler", () => {
     const driver = new ManualSchedulerDriver();
     const restore = installSchedulerDriverForTest(driver);
     const transfer = vi.spyOn(OffscreenCanvas.prototype, "transferToImageBitmap");
+    const close = vi.spyOn(ImageBitmap.prototype, 'close');
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
     let invalidate: (() => void) | undefined;
     let fail = false;
     const Layer = defineRenderLayer<{}, {}>({
@@ -259,10 +305,26 @@ describe("defineRenderLayer", () => {
     const controller = crc(createCanvas(), <Layer style={{ width: 20, height: 10 }} />);
     try {
       driver.flush(10);
+      const committed = transfer.mock.results[0]!.value as ImageBitmap;
+      drawImage.mockClear();
       fail = true;
       invalidate!();
-      expect(() => driver.flush(20)).toThrow("render failed");
+      expect(() => driver.flush(20)).not.toThrow();
       expect(transfer).toHaveBeenCalledTimes(1);
+      expect(close).not.toHaveBeenCalledWith();
+      expect(close.mock.instances).not.toContain(committed);
+      expect(drawImage).toHaveBeenCalledWith(
+        committed,
+        0,
+        0,
+        20,
+        10,
+        0,
+        0,
+        20,
+        10,
+      );
+      expect(() => driver.flush(30)).toThrow('render failed');
     } finally {
       controller.dispose();
       restore();

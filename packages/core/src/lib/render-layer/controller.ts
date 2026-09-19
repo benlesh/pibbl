@@ -1,5 +1,8 @@
 import { GLOBAL_STATE, getCurrentCRCInstance } from "../global-state.js";
-import { requestInstanceRender } from "../scheduler/realm-scheduler.js";
+import {
+  queueFrameCompletion,
+  requestInstanceRender,
+} from '../scheduler/realm-scheduler.js';
 import type { CRCComponentRefs, RenderingContext2D } from "../types.js";
 import type {
   CRCRenderLayerContext,
@@ -93,10 +96,18 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     if (initial || propsChanged || sizeChanged || this.needsRender) {
       const frame = this.createFrame();
       this.needsRender = false;
-      assertSynchronous(
-        this.definition.render(this.resources!, frame, this.context),
-        "render",
-      );
+      try {
+        assertSynchronous(
+          this.definition.render(this.resources!, frame, this.context),
+          "render",
+        );
+      } catch (error) {
+        if (isSynchronousViolation(error)) throw error;
+        this.inputGated = true;
+        this.drawCommitted(ctx, size);
+        queueFrameCompletion(() => { throw error; });
+        return;
+      }
       const candidate = this.canvas.transferToImageBitmap();
       this.candidate?.close();
       this.candidate = candidate;
@@ -117,6 +128,13 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       );
       return;
     }
+    this.drawCommitted(ctx, size);
+  }
+
+  private drawCommitted(
+    ctx: RenderingContext2D,
+    size: CRCRenderLayerSize,
+  ): void {
     if (this.committed) {
       ctx.drawImage(
         this.committed,
@@ -211,6 +229,12 @@ function sameSize(
     a.backingWidth === b.backingWidth &&
     a.backingHeight === b.backingHeight
   );
+}
+
+function isSynchronousViolation(error: unknown): boolean {
+  return error instanceof TypeError &&
+    error.message.startsWith('defineRenderLayer ') &&
+    error.message.endsWith('() must be synchronous.');
 }
 
 function snapshotProps<Props>(props: Readonly<Props>): Readonly<Props> {
