@@ -3,8 +3,9 @@ import { getCurrentWorldTransform } from "../render-target.js";
 import {
   queueFrameCompletion,
   requestInstanceRender,
-} from '../scheduler/realm-scheduler.js';
+} from "../scheduler/realm-scheduler.js";
 import type { CRCComponentRefs, RenderingContext2D } from "../types.js";
+import type { CRCPointerEvents } from "../events/types.js";
 import {
   CRCHitDisposition,
   CRCPaintEntryKind,
@@ -18,6 +19,7 @@ import {
   type CRCEventTargetRegistration,
 } from "../events/registrations.js";
 import {
+  hasResolverPointerCapture,
   releaseResolverInputWinner,
   releaseResolverPointerCapture,
   setResolverPointerCapture,
@@ -46,6 +48,21 @@ interface StagedInteraction<Target extends object> {
 interface RenderCandidate<Target extends object> {
   readonly bitmap: ImageBitmap;
   readonly interaction: StagedInteraction<Target>;
+  readonly policy: RenderLayerPolicy;
+}
+
+interface RenderLayerPolicy {
+  readonly missBehavior: "pass-through" | "block" | "target-layer";
+  readonly pointerEvents: CRCPointerEvents | undefined;
+  readonly keyboardFocusable: boolean | undefined;
+  readonly keyboardNavigationBounds:
+    | Readonly<{
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+      }>
+    | undefined;
 }
 
 interface WinnerState<Target extends object> {
@@ -67,6 +84,17 @@ const RESOLVER_INPUT_TYPES = Object.freeze([
   "contextmenu",
   "click",
 ] as const);
+
+const RESOLVER_CAPTURE_INPUT_TYPES = Object.freeze([
+  "pointermove",
+  "pointerup",
+  "pointercancel",
+] as const);
+
+// The private target deliberately owns no user callback. This eligibility
+// marker lets the shared keyboard default dispatch its click through the
+// component's one structural listener.
+const STRUCTURAL_CLICK_ELIGIBILITY = () => {};
 
 export function assertSynchronous(value: unknown, callback: string): void {
   if (value && typeof (value as { then?: unknown }).then === "function") {
@@ -92,21 +120,29 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   private candidate: RenderCandidate<Target> | undefined;
   private committed: ImageBitmap | undefined;
   private committedInteraction:
-    | CRCRenderLayerInteractionSnapshot<Target>
-    | undefined;
+    CRCRenderLayerInteractionSnapshot<Target> | undefined;
+  private committedTargetDescriptors: readonly CRCRenderLayerTarget<Target>[] =
+    Object.freeze([]);
   private readonly committedTargets = new Map<
     Target,
     CRCEventTargetRegistration
   >();
   private readonly layerTarget: CRCEventTargetRegistration;
-  private committedMissBehavior: "pass-through" | "block" | "target-layer" =
-    "pass-through";
+  private committedPolicy: RenderLayerPolicy = Object.freeze({
+    missBehavior: "pass-through",
+    pointerEvents: undefined,
+    keyboardFocusable: undefined,
+    keyboardNavigationBounds: undefined,
+  });
   private resolverTransform = new DOMMatrix();
   private resolverInverseTransform = new DOMMatrix();
   private resolverBounds = new Path2D();
   private resolverSize: CRCRenderLayerSize | undefined;
   private resolutionErrorQueued = false;
-  private inputNativeReleases: readonly (() => void)[] = [];
+  private readonly inputNativeReleases = new Map<
+    CRCResolverInputType,
+    () => void
+  >();
   private readonly resolverEntry: CRCNestedPaintEntry;
   private readonly inputWinner: CRCResolverInputWinner;
   private lastTime: number | undefined;
@@ -125,6 +161,10 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       eventRoot: this.instance.eventRoot,
       deliver: (type, point, originalEvent, state) =>
         this.deliverInput(type, point, originalEvent, state),
+      onPointerCaptureChange: () =>
+        this.updateInputNativeOwnership(
+          Boolean(this.committedInteraction?.onInput),
+        ),
     };
     this.resolverEntry = {
       paintKind: CRCPaintEntryKind.Resolver,
@@ -156,12 +196,13 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     props: Readonly<Props>,
     size: CRCRenderLayerSize,
     ctx: RenderingContext2D,
-    missBehavior: "pass-through" | "block" | "target-layer" = "pass-through",
+    policy: RenderLayerPolicy = this.committedPolicy,
   ): void {
     if (this.disposed) return;
     const initial = !this.created;
     const propsChanged = !initial && !sameProps(this.props, props);
     const sizeChanged = !sameSize(this.size, size);
+    const policyChanged = !samePolicy(this.committedPolicy, policy);
     this.size = size;
     this.publishResolver(size);
     if (sizeChanged) {
@@ -232,15 +273,20 @@ export class RenderLayerController<Props, Resources, Target extends object> {
         this.failCandidate(ctx, size, error);
         return;
       }
-      this.stageInteraction(interaction, missBehavior);
+      const stagedPolicy = snapshotPolicy(policy);
       const candidate = this.canvas.transferToImageBitmap();
       this.candidate?.bitmap.close();
-      const stagedCandidate = { bitmap: candidate, interaction };
+      const stagedCandidate = {
+        bitmap: candidate,
+        interaction,
+        policy: stagedPolicy,
+      };
       this.candidate = stagedCandidate;
       const transaction = GLOBAL_STATE.renderTransaction;
       transaction?.onFinish((success) =>
-        this.finishCandidate(stagedCandidate, success, missBehavior),
+        this.finishCandidate(stagedCandidate, success),
       );
+      if (!transaction) this.finishCandidate(stagedCandidate, true);
       ctx.drawImage(
         candidate,
         0,
@@ -255,12 +301,33 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       return;
     }
     const transaction = GLOBAL_STATE.renderTransaction;
-    transaction?.onFinish(success => {
+    transaction?.onFinish((success) => {
       if (success && !this.disposed) {
-        this.committedMissBehavior = missBehavior;
+        if (policyChanged && this.committedInteraction) {
+          this.commitInteraction(
+            {
+              snapshot: this.committedInteraction,
+              targets: this.committedTargetDescriptors,
+              transform: this.resolverTransform,
+              clippingStack: this.resolverEntry.clippingStack,
+            },
+            snapshotPolicy(policy),
+          );
+        }
         this.refreshCommittedTargetGeometry();
       }
     });
+    if (!transaction && policyChanged && this.committedInteraction) {
+      this.commitInteraction(
+        {
+          snapshot: this.committedInteraction,
+          targets: this.committedTargetDescriptors,
+          transform: this.resolverTransform,
+          clippingStack: this.resolverEntry.clippingStack,
+        },
+        snapshotPolicy(policy),
+      );
+    }
     this.drawCommitted(ctx, size);
   }
 
@@ -276,6 +343,9 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     this.resolverInverseTransform = this.resolverTransform.inverse();
     this.resolverEntry.transform = this.resolverTransform;
     this.resolverEntry.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
+    // Sets preserve insertion order, so refresh the retained entry at its
+    // current Canvas paint position on every traversal.
+    this.instance.paintEntries.delete(this.resolverEntry);
     this.instance.paintEntries.add(this.resolverEntry);
   }
 
@@ -325,11 +395,9 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   }
 
   private settleInteraction(props: Readonly<Props>): StagedInteraction<Target> {
-    const snapshot = this.definition.interaction?.settle(
-      this.resources!,
-      props,
-      this.size!,
-    ) ?? MISS_SNAPSHOT as CRCRenderLayerInteractionSnapshot<Target>;
+    const snapshot =
+      this.definition.interaction?.settle(this.resources!, props, this.size!) ??
+      (MISS_SNAPSHOT as CRCRenderLayerInteractionSnapshot<Target>);
     assertSynchronous(snapshot, "interaction.settle");
     const targets: CRCRenderLayerTarget<Target>[] = [];
     const identities = new Set<Target>();
@@ -340,12 +408,17 @@ export class RenderLayerController<Props, Resources, Target extends object> {
         );
       }
       identities.add(target.target);
-      targets.push(Object.freeze({
-        ...target,
-        handlers: target.handlers ? Object.freeze({ ...target.handlers }) : undefined,
-        keyboardNavigationBounds: target.keyboardNavigationBounds ?
-          Object.freeze({ ...target.keyboardNavigationBounds }) : undefined,
-      }));
+      targets.push(
+        Object.freeze({
+          ...target,
+          handlers: target.handlers
+            ? Object.freeze({ ...target.handlers })
+            : undefined,
+          keyboardNavigationBounds: target.keyboardNavigationBounds
+            ? Object.freeze({ ...target.keyboardNavigationBounds })
+            : undefined,
+        }),
+      );
     }
     return {
       snapshot,
@@ -358,7 +431,6 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   private finishCandidate(
     candidate: RenderCandidate<Target>,
     success: boolean,
-    missBehavior: "pass-through" | "block" | "target-layer",
   ): void {
     if (this.candidate !== candidate) return;
     this.candidate = undefined;
@@ -366,20 +438,22 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       candidate.bitmap.close();
       return;
     }
+    this.commitInteraction(candidate.interaction, candidate.policy);
     this.committed?.close();
     this.committed = candidate.bitmap;
-    this.committedInteraction = candidate.interaction.snapshot;
-    this.committedMissBehavior = missBehavior;
     this.resolutionErrorQueued = false;
     this.inputGated = false;
   }
 
-  private stageInteraction(
+  /** Publishes one interaction snapshot only after its bitmap transaction wins. */
+  private commitInteraction(
     interaction: StagedInteraction<Target>,
-    missBehavior: "pass-through" | "block" | "target-layer",
+    policy: RenderLayerPolicy,
   ): void {
     const retained = new Set<Target>();
-    for (const descriptor of interaction.targets) {
+    for (const descriptor of policy.pointerEvents === "none"
+      ? []
+      : interaction.targets) {
       if (descriptor.pointerEvents === "none") continue;
       retained.add(descriptor.target);
       let registration = this.committedTargets.get(descriptor.target);
@@ -391,25 +465,47 @@ export class RenderLayerController<Props, Resources, Target extends object> {
         );
         this.committedTargets.set(descriptor.target, registration);
       }
-      updateTarget(registration, descriptor.handlers ?? {}, {
-        path: new Path2D(),
-        cursor: descriptor.cursor,
-        keyboardFocusable: descriptor.keyboardFocusable,
-        keyboardNavigationBounds: descriptor.keyboardNavigationBounds,
-      }, true);
+      updateTarget(
+        registration,
+        descriptor.handlers ?? {},
+        {
+          path: new Path2D(),
+          cursor: descriptor.cursor,
+          keyboardFocusable: descriptor.keyboardFocusable,
+          keyboardNavigationBounds: descriptor.keyboardNavigationBounds,
+        },
+        true,
+      );
       this.applyResolverGeometry(registration, interaction);
+      this.observeTransactionalFocusTarget(registration);
     }
     for (const [identity, registration] of this.committedTargets) {
       if (retained.has(identity)) continue;
       releaseTarget(registration);
       this.committedTargets.delete(identity);
     }
-    if (missBehavior === "target-layer") {
-      updateTarget(this.layerTarget, {}, { path: new Path2D() }, true);
+    if (
+      policy.pointerEvents !== "none" &&
+      policy.missBehavior === "target-layer"
+    ) {
+      updateTarget(
+        this.layerTarget,
+        { onClick: STRUCTURAL_CLICK_ELIGIBILITY },
+        {
+          path: new Path2D(),
+          keyboardFocusable: policy.keyboardFocusable,
+          keyboardNavigationBounds: policy.keyboardNavigationBounds,
+        },
+        true,
+      );
       this.applyResolverGeometry(this.layerTarget, interaction);
+      this.observeTransactionalFocusTarget(this.layerTarget);
     } else {
       releaseTarget(this.layerTarget);
     }
+    this.committedInteraction = interaction.snapshot;
+    this.committedTargetDescriptors = interaction.targets;
+    this.committedPolicy = policy;
     this.updateInputNativeOwnership(Boolean(interaction.snapshot.onInput));
   }
 
@@ -430,8 +526,20 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     } as StagedInteraction<Target>;
     for (const target of this.committedTargets.values()) {
       this.applyResolverGeometry(target, interaction);
+      this.instance.eventRoot.focusPolicy?.observeTarget(target);
+      this.observeTransactionalFocusTarget(target);
     }
-    if (this.layerTarget.live) this.applyResolverGeometry(this.layerTarget, interaction);
+    if (this.layerTarget.live) {
+      this.applyResolverGeometry(this.layerTarget, interaction);
+      this.instance.eventRoot.focusPolicy?.observeTarget(this.layerTarget);
+      this.observeTransactionalFocusTarget(this.layerTarget);
+    }
+  }
+
+  private observeTransactionalFocusTarget(
+    target: CRCEventTargetRegistration,
+  ): void {
+    this.instance.eventRoot.focusPolicy?.observeTransactionalTarget?.(target);
   }
 
   private resolveLocal(
@@ -439,17 +547,22 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     localY: number,
     output: CRCHitTestOutput,
   ): void {
+    if (this.committedPolicy.pointerEvents === "none") {
+      output.disposition = CRCHitDisposition.Miss;
+      output.target = null;
+      return;
+    }
     const state = this.resolveWinnerState(localX, localY);
     output.winner = this.inputWinner;
     output.winnerState = state;
     switch (state.hit.kind) {
       case "miss":
-        if (this.committedMissBehavior === "pass-through") {
+        if (this.committedPolicy.missBehavior === "pass-through") {
           output.disposition = CRCHitDisposition.Miss;
           output.target = null;
           delete output.winner;
           delete output.winnerState;
-        } else if (this.committedMissBehavior === "block") {
+        } else if (this.committedPolicy.missBehavior === "block") {
           output.disposition = CRCHitDisposition.Block;
           output.target = null;
         } else {
@@ -479,7 +592,10 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     }
   }
 
-  private resolveWinnerState(localX: number, localY: number): WinnerState<Target> {
+  private resolveWinnerState(
+    localX: number,
+    localY: number,
+  ): WinnerState<Target> {
     const point = Object.freeze({ x: localX, y: localY });
     if (this.inputGated || !this.committedInteraction) {
       return { point, hit: Object.freeze({ kind: "block" }) };
@@ -517,24 +633,40 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       );
       state = this.resolveWinnerState(local.x, local.y);
     }
-    snapshot.onInput(Object.freeze({
-      type,
-      point: state.point,
-      hit: state.hit,
-      originalEvent,
-      setPointerCapture: (pointerId: number) =>
-        setResolverPointerCapture(this.inputWinner, pointerId),
-      releasePointerCapture: (pointerId: number) =>
-        releaseResolverPointerCapture(this.inputWinner, pointerId),
-    }));
+    snapshot.onInput(
+      Object.freeze({
+        type,
+        point: state.point,
+        hit: state.hit,
+        originalEvent,
+        setPointerCapture: (pointerId: number) =>
+          setResolverPointerCapture(this.inputWinner, pointerId),
+        releasePointerCapture: (pointerId: number) =>
+          releaseResolverPointerCapture(this.inputWinner, pointerId),
+      }),
+    );
   }
 
   private updateInputNativeOwnership(enabled: boolean): void {
-    for (const release of this.inputNativeReleases) release();
-    this.inputNativeReleases = [];
+    const required = new Set<CRCResolverInputType>(
+      enabled
+        ? RESOLVER_INPUT_TYPES
+        : hasResolverPointerCapture(this.inputWinner)
+          ? RESOLVER_CAPTURE_INPUT_TYPES
+          : [],
+    );
+    for (const [type, release] of this.inputNativeReleases) {
+      if (required.has(type)) continue;
+      release();
+      this.inputNativeReleases.delete(type);
+    }
     const hub = this.instance.eventRoot.nativeListeners;
-    if (!enabled || !hub) return;
-    this.inputNativeReleases = RESOLVER_INPUT_TYPES.map(type => hub.acquire(type));
+    if (!hub) return;
+    for (const type of required) {
+      if (!this.inputNativeReleases.has(type)) {
+        this.inputNativeReleases.set(type, hub.acquire(type));
+      }
+    }
   }
 
   private failCandidate(
@@ -544,7 +676,9 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   ): void {
     this.inputGated = true;
     this.drawCommitted(ctx, size);
-    queueFrameCompletion(() => { throw error; });
+    queueFrameCompletion(() => {
+      throw error;
+    });
   }
 
   private dispose(): void {
@@ -560,7 +694,8 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     } finally {
       this.candidate?.bitmap.close();
       this.committed?.close();
-      for (const target of this.committedTargets.values()) releaseTarget(target);
+      for (const target of this.committedTargets.values())
+        releaseTarget(target);
       this.committedTargets.clear();
       releaseTarget(this.layerTarget);
       releaseResolverInputWinner(this.inputWinner);
@@ -618,5 +753,30 @@ function sameProps<Props>(
         Object.prototype.hasOwnProperty.call(b, key) &&
         Object.is(a[key as keyof Props], b[key as keyof Props]),
     )
+  );
+}
+
+function snapshotPolicy(policy: RenderLayerPolicy): RenderLayerPolicy {
+  return Object.freeze({
+    missBehavior: policy.missBehavior,
+    pointerEvents: policy.pointerEvents,
+    keyboardFocusable: policy.keyboardFocusable,
+    keyboardNavigationBounds: policy.keyboardNavigationBounds
+      ? Object.freeze({
+          ...policy.keyboardNavigationBounds,
+        })
+      : undefined,
+  });
+}
+
+function samePolicy(a: RenderLayerPolicy, b: RenderLayerPolicy): boolean {
+  return (
+    a.missBehavior === b.missBehavior &&
+    a.pointerEvents === b.pointerEvents &&
+    a.keyboardFocusable === b.keyboardFocusable &&
+    a.keyboardNavigationBounds?.x === b.keyboardNavigationBounds?.x &&
+    a.keyboardNavigationBounds?.y === b.keyboardNavigationBounds?.y &&
+    a.keyboardNavigationBounds?.width === b.keyboardNavigationBounds?.width &&
+    a.keyboardNavigationBounds?.height === b.keyboardNavigationBounds?.height
   );
 }

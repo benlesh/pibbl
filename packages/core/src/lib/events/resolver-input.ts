@@ -18,6 +18,8 @@ export interface CRCResolverInputWinner {
     originalEvent: PointerEvent | WheelEvent | MouseEvent,
     state: unknown,
   ): void;
+  /** @internal Keeps native terminal pointer delivery alive while captured. */
+  onPointerCaptureChange?(): void;
 }
 
 const pointerCaptures = new WeakMap<
@@ -39,6 +41,14 @@ export function getResolverPointerCapture(
   pointerId: number,
 ): CRCResolverInputWinner | undefined {
   return pointerCaptures.get(eventRoot)?.get(pointerId);
+}
+
+export function hasResolverPointerCapture(
+  winner: CRCResolverInputWinner,
+): boolean {
+  return Array.from(pointerCaptures.get(winner.eventRoot)?.values() ?? []).some(
+    (owner) => owner === winner,
+  );
 }
 
 export function dispatchCapturedResolverInput(
@@ -66,6 +76,7 @@ export function setResolverPointerCapture(
     pointerCaptures.set(winner.eventRoot, captures);
   }
   captures.set(pointerId, winner);
+  winner.onPointerCaptureChange?.();
   try {
     winner.eventRoot.canvas?.setPointerCapture(pointerId);
   } catch {
@@ -81,6 +92,7 @@ export function releaseResolverPointerCapture(
   if (captures?.get(pointerId) !== winner) return;
   captures.delete(pointerId);
   if (captures.size === 0) pointerCaptures.delete(winner.eventRoot);
+  winner.onPointerCaptureChange?.();
   try {
     winner.eventRoot.canvas?.releasePointerCapture(pointerId);
   } catch {

@@ -1,31 +1,27 @@
-import type { Teardowns } from './teardowns.js';
-import type { CRCSurfaceState } from './surface/types.js';
-import type { Constraints, LayoutBox, Size } from './layout/types.js';
-import type { NativeListenerHub } from './events/native-listener-hub.js';
-import type { CRCEventType as DOMCRCEventType } from './events/types.js';
-import type { CRCEventTargetSnapshot } from './events/types.js';
-import type { CRCEvent } from './events/types.js';
+import type { Teardowns } from "./teardowns.js";
+import type { CRCSurfaceState } from "./surface/types.js";
+import type { Constraints, LayoutBox, Size } from "./layout/types.js";
+import type { NativeListenerHub } from "./events/native-listener-hub.js";
+import type { CRCEventType as DOMCRCEventType } from "./events/types.js";
+import type { CRCEventTargetSnapshot } from "./events/types.js";
+import type { CRCEvent } from "./events/types.js";
 import type {
   CRCEventNode,
   CRCEventListenerRegistration,
   CRCEventTargetRegistration,
-} from './events/registrations.js';
+} from "./events/registrations.js";
 import type {
   CRCHitTestInput,
   CRCHitTestOutput,
   CRCPaintEntry,
   CRCNestedPaintEntry,
-} from './events/paint-entry.js';
-import type {
-  CRCElement,
-  CRCElementType,
-  CRCNode,
-} from './element/types.js';
-import type { PendingRoot } from './global-state.js';
-import type { CRCFilter } from './style/filter-types.js';
-import type { FilterSurfacePool } from './filter/filter-surface-pool.js';
-import type { CRCBackendDriver } from './backend/types.js';
-import type { SignalRenderConsumer } from './signals/render-consumer.js';
+} from "./events/paint-entry.js";
+import type { CRCElement, CRCElementType, CRCNode } from "./element/types.js";
+import type { PendingRoot } from "./global-state.js";
+import type { CRCFilter } from "./style/filter-types.js";
+import type { FilterSurfacePool } from "./filter/filter-surface-pool.js";
+import type { CRCBackendDriver } from "./backend/types.js";
+import type { SignalRenderConsumer } from "./signals/render-consumer.js";
 export type {
   CRCComponent,
   CRCContainerChild,
@@ -38,18 +34,18 @@ export type {
   CRCTextChild,
   CRCRenderResult,
   PrimitiveInputOf,
-} from './element/types.js';
+} from "./element/types.js";
 
 export interface SystemStyle {
   custom?: unknown;
   filter?: CRCFilter | readonly CRCFilter[];
 }
 
-type PrimitiveReservedKey = 'key' | 'style';
+type PrimitiveReservedKey = "key" | "style";
 
 type UnionKeys<T> = T extends unknown ? keyof T : never;
 
-export type PrimitiveProgramProps<P> = 0 extends (1 & P)
+export type PrimitiveProgramProps<P> = 0 extends 1 & P
   ? P
   : Extract<UnionKeys<P>, PrimitiveReservedKey> extends never
     ? P
@@ -57,8 +53,7 @@ export type PrimitiveProgramProps<P> = 0 extends (1 & P)
 
 type RequiredKeys<T> = T extends unknown
   ? {
-      [K in keyof T]-?:
-        Pick<T, K> extends Required<Pick<T, K>> ? K : never
+      [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never;
     }[keyof T]
   : never;
 
@@ -66,13 +61,14 @@ type StyleField<S> = [RequiredKeys<S>] extends [never]
   ? { style?: S }
   : { style: S };
 
-export type PrimitiveInput<P, S extends SystemStyle = SystemStyle> =
-  PrimitiveProgramProps<P> & StyleField<SpecifiedStyle<S>>;
+export type PrimitiveInput<
+  P,
+  S extends SystemStyle = SystemStyle,
+> = PrimitiveProgramProps<P> & StyleField<SpecifiedStyle<S>>;
 
 export type Canvas = HTMLCanvasElement | OffscreenCanvas;
 export type RenderingContext2D =
-  | CanvasRenderingContext2D
-  | OffscreenCanvasRenderingContext2D;
+  CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
 export type SpecifiedStyle<S extends SystemStyle> = Readonly<S>;
 export type NormalizedStyle<N extends SystemStyle> = Readonly<N>;
@@ -83,7 +79,7 @@ export interface StyleResolutionContext {
   percentageBasis: Readonly<LayoutBox>;
   constraints: Readonly<Constraints>;
   component: string;
-  algorithm: 'render-dispatch';
+  algorithm: "render-dispatch";
 }
 
 export interface CanvasMeasurementService {
@@ -91,13 +87,10 @@ export interface CanvasMeasurementService {
 }
 
 export type MeasureResult =
-  | { status: 'measured'; size: Readonly<Size> }
-  | { status: 'unsupported'; reason: string };
+  | { status: "measured"; size: Readonly<Size> }
+  | { status: "unsupported"; reason: string };
 
-export interface MeasureInput<
-  P,
-  S extends SystemStyle = SystemStyle,
-> {
+export interface MeasureInput<P, S extends SystemStyle = SystemStyle> {
   props: Readonly<P>;
   style: NormalizedStyle<S>;
   constraints: Readonly<Constraints>;
@@ -108,10 +101,7 @@ export interface MeasureInput<
   ): MeasureResult;
 }
 
-export type PrimitiveRender<
-  P,
-  R extends SystemStyle = SystemStyle,
-> = (
+export type PrimitiveRender<P, R extends SystemStyle = SystemStyle> = (
   props: Readonly<PrimitiveProgramProps<P>>,
   style: ResolvedStyle<R>,
   context: RenderingContext2D,
@@ -128,9 +118,7 @@ export interface PrimitiveCapabilities<
     style: NormalizedStyle<N>,
     context: Readonly<StyleResolutionContext>,
   ) => ResolvedStyle<R>;
-  measure?: (
-    input: MeasureInput<PrimitiveProgramProps<P>, N>,
-  ) => MeasureResult;
+  measure?: (input: MeasureInput<PrimitiveProgramProps<P>, N>) => MeasureResult;
 }
 
 export interface InternalIdentityHint {
@@ -170,7 +158,9 @@ export interface CRCEventRegistry {
 }
 
 export type CRCEventType = keyof CRCEventRegistry;
-export type CRCRegionHandlers = Partial<Record<CRCEventType, CRCMouseEventListener>>;
+export type CRCRegionHandlers = Partial<
+  Record<CRCEventType, CRCMouseEventListener>
+>;
 
 export interface CRCClippingStackEntry {
   path: Path2D;
@@ -225,8 +215,7 @@ export interface CRCEventRoot {
   readonly observers: Map<DOMCRCEventType, Set<CRCNativeObserver>>;
   readonly pointerCaptures: Map<number, CRCEventNode>;
   onNodeRelease: ((node: CRCEventNode) => void) | undefined;
-  onTargetUpdate:
-    ((target: CRCEventTargetRegistration) => void) | undefined;
+  onTargetUpdate: ((target: CRCEventTargetRegistration) => void) | undefined;
   focusPolicy?: CRCFocusPolicyBridge;
   /** @internal Shared by nested layer renders; consumers register only erased callbacks. */
   renderTransaction?: CRCRenderTransaction;
@@ -240,6 +229,8 @@ export interface CRCRenderTransaction {
 export interface CRCFocusPolicyBridge {
   snapshot(target: CRCEventTargetRegistration): CRCEventTargetSnapshot;
   observeTarget(target: CRCEventTargetRegistration): void;
+  /** @internal Records a target committed during the active render transaction. */
+  observeTransactionalTarget?(target: CRCEventTargetRegistration): void;
   removeTarget(target: CRCEventTargetRegistration): void;
   beforeNativeDispatch?(
     type: DOMCRCEventType,
@@ -256,7 +247,7 @@ export interface CRCFocusPolicyBridge {
 }
 
 export interface CRCFocusPressDefaultInput {
-  readonly source: 'mouse' | 'pointer' | 'touch';
+  readonly source: "mouse" | "pointer" | "touch";
   readonly target: CRCEventTargetRegistration | undefined;
   readonly event: CRCEvent | undefined;
   readonly originalEvent: MouseEvent | PointerEvent | TouchEvent;
@@ -275,7 +266,7 @@ export interface CRCFocusTouchDefaultContact {
 }
 
 export interface CRCFocusTouchDefaultInput {
-  readonly type: 'touchcancel' | 'touchend' | 'touchmove' | 'touchstart';
+  readonly type: "touchcancel" | "touchend" | "touchmove" | "touchstart";
   readonly changedContacts: readonly CRCFocusTouchDefaultContact[];
   readonly activeIdentifiers: readonly number[];
   readonly originalEvent: TouchEvent;
@@ -286,8 +277,8 @@ export interface CRCController {
   dispose(): void;
 }
 
-export type FillStyle = CanvasRenderingContext2D['fillStyle'];
-export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'];
+export type FillStyle = CanvasRenderingContext2D["fillStyle"];
+export type StrokeStyle = CanvasRenderingContext2D["strokeStyle"];
 
 export interface CRCInstance {
   canvas: Canvas;
@@ -317,7 +308,7 @@ export interface CRCInstance {
   backendDriver: CRCBackendDriver<unknown>;
 }
 
-export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
+export type PixelGridAlignment = "none" | "round" | "ceil" | "floor";
 
 /** Shipped payload for the singular `useEvent` Canvas observer hook. */
 export interface CRCMouseEvent {

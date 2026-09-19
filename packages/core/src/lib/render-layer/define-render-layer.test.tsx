@@ -87,23 +87,43 @@ describe("defineRenderLayer", () => {
     const driver = new ManualSchedulerDriver();
     const restore = installSchedulerDriverForTest(driver);
     const priorRatio = window.devicePixelRatio;
-    Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 1 });
+    Object.defineProperty(window, "devicePixelRatio", {
+      configurable: true,
+      value: 1,
+    });
     const sizes: string[] = [];
     const Layer = defineRenderLayer<{}, {}>({
-      create(context) { context.canvas.getContext('2d'); return {}; },
-      resize(_resources, size) { sizes.push(`${size.width}x${size.height}@${size.backingWidth}x${size.backingHeight}`); },
+      create(context) {
+        context.canvas.getContext("2d");
+        return {};
+      },
+      resize(_resources, size) {
+        sizes.push(
+          `${size.width}x${size.height}@${size.backingWidth}x${size.backingHeight}`,
+        );
+      },
       render() {},
     });
-    const controller = crc(createCanvas(), <Layer style={{ width: 20, height: 10 }} />, { pixelRatio: 'device' });
+    const controller = crc(
+      createCanvas(),
+      <Layer style={{ width: 20, height: 10 }} />,
+      { pixelRatio: "device" },
+    );
     try {
       driver.flush(10);
-      Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 2 });
-      window.dispatchEvent(new Event('resize'));
+      Object.defineProperty(window, "devicePixelRatio", {
+        configurable: true,
+        value: 2,
+      });
+      window.dispatchEvent(new Event("resize"));
       driver.flush(20);
-      expect(sizes).toEqual(['20x10@20x10', '20x10@40x20']);
+      expect(sizes).toEqual(["20x10@20x10", "20x10@40x20"]);
     } finally {
       controller.dispose();
-      Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: priorRatio });
+      Object.defineProperty(window, "devicePixelRatio", {
+        configurable: true,
+        value: priorRatio,
+      });
       restore();
     }
   });
@@ -114,10 +134,19 @@ describe("defineRenderLayer", () => {
     let invalidate: (() => void) | undefined;
     let renders = 0;
     const Layer = defineRenderLayer<{}, {}>({
-      create(context) { context.canvas.getContext('2d'); invalidate = context.invalidate; return {}; },
-      render() { renders++; },
+      create(context) {
+        context.canvas.getContext("2d");
+        invalidate = context.invalidate;
+        return {};
+      },
+      render() {
+        renders++;
+      },
     });
-    const controller = crc(createCanvas(), <Layer style={{ width: 20, height: 10 }} />);
+    const controller = crc(
+      createCanvas(),
+      <Layer style={{ width: 20, height: 10 }} />,
+    );
     try {
       driver.flush(10);
       invalidate!();
@@ -138,13 +167,19 @@ describe("defineRenderLayer", () => {
     const restore = installSchedulerDriverForTest(driver);
     const frames: number[] = [];
     const Layer = defineRenderLayer<{}, {}>({
-      create(context) { context.canvas.getContext('2d'); return {}; },
+      create(context) {
+        context.canvas.getContext("2d");
+        return {};
+      },
       render(_resources, frame) {
         frames.push(frame.frameId);
         if (frames.length < 3) frame.invalidate();
       },
     });
-    const controller = crc(createCanvas(), <Layer style={{ width: 20, height: 10 }} />);
+    const controller = crc(
+      createCanvas(),
+      <Layer style={{ width: 20, height: 10 }} />,
+    );
     try {
       driver.flush(10);
       driver.flush(20);
@@ -162,9 +197,15 @@ describe("defineRenderLayer", () => {
   it("reuses the committed bitmap for an unrelated root traversal", () => {
     const driver = new ManualSchedulerDriver();
     const restore = installSchedulerDriverForTest(driver);
-    const transfer = vi.spyOn(OffscreenCanvas.prototype, "transferToImageBitmap");
+    const transfer = vi.spyOn(
+      OffscreenCanvas.prototype,
+      "transferToImageBitmap",
+    );
     const Layer = defineRenderLayer<{}, {}>({
-      create(context) { context.canvas.getContext('2d'); return {}; },
+      create(context) {
+        context.canvas.getContext("2d");
+        return {};
+      },
       render() {},
     });
     const canvas = createCanvas();
@@ -186,12 +227,20 @@ describe("defineRenderLayer", () => {
     const restore = installSchedulerDriverForTest(driver);
     const updates: number[] = [];
     const Layer = defineRenderLayer<{ once: number }, {}>({
-      create(context) { context.canvas.getContext('2d'); return {}; },
-      update(_resources, props) { updates.push(props.once); },
+      create(context) {
+        context.canvas.getContext("2d");
+        return {};
+      },
+      update(_resources, props) {
+        updates.push(props.once);
+      },
       render() {},
     });
     const canvas = createCanvas();
-    const controller = crc(canvas, <Layer once={1} style={{ width: 20, height: 10 }} />);
+    const controller = crc(
+      canvas,
+      <Layer once={1} style={{ width: 20, height: 10 }} />,
+    );
     try {
       driver.flush(10);
       crc(canvas, <Layer once={2} style={{ width: 20, height: 10 }} />);
@@ -209,12 +258,18 @@ describe("defineRenderLayer", () => {
     const original = vi.fn();
     const replacement = vi.fn();
     const definition = {
-      create(context: any) { context.canvas.getContext('2d'); return {}; },
+      create(context: any) {
+        context.canvas.getContext("2d");
+        return {};
+      },
       render: original,
     };
     const Layer = defineRenderLayer(definition);
     definition.render = replacement;
-    const controller = crc(createCanvas(), <Layer style={{ width: 20, height: 10 }} />);
+    const controller = crc(
+      createCanvas(),
+      <Layer style={{ width: 20, height: 10 }} />,
+    );
     try {
       driver.flush(10);
       expect(original).toHaveBeenCalledOnce();
@@ -233,18 +288,21 @@ describe("defineRenderLayer", () => {
       const thenable = { then() {} };
       const definition = {
         create: (context: any) => {
-          context.canvas.getContext('2d');
+          context.canvas.getContext("2d");
           return callback === "create" ? thenable : {};
         },
-        update: () => callback === "update" ? thenable : undefined,
-        resize: () => callback === "resize" ? thenable : undefined,
-        render: () => callback === "render" ? thenable : undefined,
+        update: () => (callback === "update" ? thenable : undefined),
+        resize: () => (callback === "resize" ? thenable : undefined),
+        render: () => (callback === "render" ? thenable : undefined),
       } as any;
       const Layer = defineRenderLayer<{ value: number }, {}>(definition);
       const canvas = createCanvas();
-      const controller = crc(canvas, <Layer value={0} style={{ width: 20, height: 10 }} />);
+      const controller = crc(
+        canvas,
+        <Layer value={0} style={{ width: 20, height: 10 }} />,
+      );
       try {
-        if (callback === 'update') {
+        if (callback === "update") {
           driver.flush(5);
           crc(canvas, <Layer value={1} style={{ width: 20, height: 10 }} />);
         }
@@ -262,18 +320,23 @@ describe("defineRenderLayer", () => {
     const driver = new ManualSchedulerDriver();
     const restore = installSchedulerDriverForTest(driver);
     const Layer = defineRenderLayer<{}, {}>({
-      create(context) { context.canvas.getContext('2d'); return {}; },
+      create(context) {
+        context.canvas.getContext("2d");
+        return {};
+      },
       render() {},
-      dispose() { return { then() {} } as never; },
+      dispose() {
+        return { then() {} } as never;
+      },
     });
     const canvas = createCanvas();
     const controller = crc(canvas, <Layer style={{ width: 20, height: 10 }} />);
     try {
       driver.flush(10);
       const refs = Array.from(getCRCInstance(canvas).refs.values())[0]!;
-      expect(() => (refs.refs[0] as { dispose(): void }).dispose()).toThrowError(
-        'defineRenderLayer dispose() must be synchronous.',
-      );
+      expect(() =>
+        (refs.refs[0] as { dispose(): void }).dispose(),
+      ).toThrowError("defineRenderLayer dispose() must be synchronous.");
     } finally {
       controller.dispose();
       restore();
@@ -285,11 +348,16 @@ describe("defineRenderLayer", () => {
     const restore = installSchedulerDriverForTest(driver);
     const dispose = vi.fn();
     const Layer = defineRenderLayer<{}, {}>({
-      create() { throw new Error("create failed"); },
+      create() {
+        throw new Error("create failed");
+      },
       render() {},
       dispose,
     });
-    const controller = crc(createCanvas(), <Layer style={{ width: 20, height: 10 }} />);
+    const controller = crc(
+      createCanvas(),
+      <Layer style={{ width: 20, height: 10 }} />,
+    );
     try {
       expect(() => driver.flush(10)).toThrow("create failed");
       expect(dispose).not.toHaveBeenCalled();
@@ -302,16 +370,28 @@ describe("defineRenderLayer", () => {
   it("retains the committed bitmap and reports a failed render through the scheduler", () => {
     const driver = new ManualSchedulerDriver();
     const restore = installSchedulerDriverForTest(driver);
-    const transfer = vi.spyOn(OffscreenCanvas.prototype, "transferToImageBitmap");
-    const close = vi.spyOn(ImageBitmap.prototype, 'close');
-    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const transfer = vi.spyOn(
+      OffscreenCanvas.prototype,
+      "transferToImageBitmap",
+    );
+    const close = vi.spyOn(ImageBitmap.prototype, "close");
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
     let invalidate: (() => void) | undefined;
     let fail = false;
     const Layer = defineRenderLayer<{}, {}>({
-      create(context) { context.canvas.getContext('2d'); invalidate = context.invalidate; return {}; },
-      render() { if (fail) throw new Error("render failed"); },
+      create(context) {
+        context.canvas.getContext("2d");
+        invalidate = context.invalidate;
+        return {};
+      },
+      render() {
+        if (fail) throw new Error("render failed");
+      },
     });
-    const controller = crc(createCanvas(), <Layer style={{ width: 20, height: 10 }} />);
+    const controller = crc(
+      createCanvas(),
+      <Layer style={{ width: 20, height: 10 }} />,
+    );
     try {
       driver.flush(10);
       const committed = transfer.mock.results[0]!.value as ImageBitmap;
@@ -333,7 +413,7 @@ describe("defineRenderLayer", () => {
         20,
         10,
       );
-      expect(() => driver.flush(30)).toThrow('render failed');
+      expect(() => driver.flush(30)).toThrow("render failed");
     } finally {
       controller.dispose();
       restore();
@@ -346,15 +426,22 @@ describe("defineRenderLayer", () => {
     let invalidate: (() => void) | undefined;
     let fail = false;
     const applicationError = new TypeError(
-      'defineRenderLayer render() must be synchronous.',
+      "defineRenderLayer render() must be synchronous.",
     );
     const Layer = defineRenderLayer<{}, {}>({
-      create(context) { context.canvas.getContext('2d'); invalidate = context.invalidate; return {}; },
+      create(context) {
+        context.canvas.getContext("2d");
+        invalidate = context.invalidate;
+        return {};
+      },
       render() {
         if (fail) throw applicationError;
       },
     });
-    const controller = crc(createCanvas(), <Layer style={{ width: 20, height: 10 }} />);
+    const controller = crc(
+      createCanvas(),
+      <Layer style={{ width: 20, height: 10 }} />,
+    );
     try {
       driver.flush(10);
       fail = true;
@@ -397,9 +484,12 @@ describe("defineRenderLayer", () => {
 
   it("delivers an unregistered block only to the winning layer input", () => {
     const trace: string[] = [];
-    const Layer = interactionLayer({ kind: "block" }, {
-      onInput: input => trace.push(`input:${input.hit.kind}`),
-    });
+    const Layer = interactionLayer(
+      { kind: "block" },
+      {
+        onInput: (input) => trace.push(`input:${input.hit.kind}`),
+      },
+    );
     const mounted = mountInteraction(
       <>
         <Rectangle
@@ -426,11 +516,13 @@ describe("defineRenderLayer", () => {
     const Layer = interactionLayer(
       { kind: "target", target: applicationTarget },
       {
-        targets: [{
-          target: applicationTarget,
-          handlers: { onClick: () => trace.push("target") },
-        }],
-        onInput: input => trace.push(`input:${input.hit.kind}`),
+        targets: [
+          {
+            target: applicationTarget,
+            handlers: { onClick: () => trace.push("target") },
+          },
+        ],
+        onInput: (input) => trace.push(`input:${input.hit.kind}`),
       },
     );
     const mounted = mountInteraction(
@@ -449,9 +541,12 @@ describe("defineRenderLayer", () => {
 
   it("does not deliver input when later CRC paint wins", () => {
     const trace: string[] = [];
-    const Layer = interactionLayer({ kind: "block" }, {
-      onInput: () => trace.push("input"),
-    });
+    const Layer = interactionLayer(
+      { kind: "block" },
+      {
+        onInput: () => trace.push("input"),
+      },
+    );
     const mounted = mountInteraction(
       <>
         <Layer style={{ width: 100, height: 60 }} />
@@ -471,14 +566,19 @@ describe("defineRenderLayer", () => {
 
   it("keeps pointer delivery with the winning layer until release", () => {
     const trace: string[] = [];
-    const Layer = interactionLayer({ kind: "block" }, {
-      onInput: input => {
-        trace.push(`input:${input.type}`);
-        if (input.type === "pointerdown") {
-          input.setPointerCapture((input.originalEvent as PointerEvent).pointerId);
-        }
+    const Layer = interactionLayer(
+      { kind: "block" },
+      {
+        onInput: (input) => {
+          trace.push(`input:${input.type}`);
+          if (input.type === "pointerdown") {
+            input.setPointerCapture(
+              (input.originalEvent as PointerEvent).pointerId,
+            );
+          }
+        },
       },
-    });
+    );
     const mounted = mountInteraction(
       <>
         <Rectangle
@@ -524,12 +624,14 @@ describe("defineRenderLayer", () => {
       interaction: {
         settle() {
           return {
-            targets: [{
-              target: applicationTarget,
-              handlers: { onClick: () => trace.push("target") },
-            }],
+            targets: [
+              {
+                target: applicationTarget,
+                handlers: { onClick: () => trace.push("target") },
+              },
+            ],
             hitTest: () => ({ kind: "target", target: applicationTarget }),
-            onInput: input => trace.push(`input:${input.hit.kind}`),
+            onInput: (input) => trace.push(`input:${input.hit.kind}`),
           };
         },
       },
@@ -549,18 +651,290 @@ describe("defineRenderLayer", () => {
     }
   });
 
+  it("keeps candidate targets inert until a successful bitmap transaction", () => {
+    const trace: string[] = [];
+    const oldTarget = {};
+    const newTarget = {};
+    const Layer = defineRenderLayer<{ target: object }, {}, object>({
+      create(context) {
+        context.canvas.getContext("2d");
+        return {};
+      },
+      render() {},
+      interaction: {
+        settle(_resources, props) {
+          const label = props.target === oldTarget ? "old" : "new";
+          return {
+            targets: [
+              {
+                target: props.target,
+                handlers: { onClick: () => trace.push(label) },
+              },
+            ],
+            hitTest: () => ({ kind: "target", target: props.target }),
+          };
+        },
+      },
+    });
+    const mounted = mountInteraction(
+      <Layer target={oldTarget} style={{ width: 100, height: 60 }} />,
+    );
+    const oldRegistration = Array.from(
+      getCRCInstance(mounted.canvas).eventRoot.targets,
+    )[0];
+    let observedDuringCandidate = false;
+    function RejectAfterObserving() {
+      const instance = getCRCInstance(mounted.canvas);
+      observedDuringCandidate = instance.eventRoot.targets.has(
+        oldRegistration!,
+      );
+      (
+        instance.eventRoot.renderTransaction as unknown as {
+          finish(success: boolean): void;
+        }
+      ).finish(false);
+      return undefined;
+    }
+    try {
+      crc(
+        mounted.canvas,
+        <>
+          <Layer target={newTarget} style={{ width: 100, height: 60 }} />
+          <RejectAfterObserving />
+        </>,
+      );
+      mounted.driver.flush(20);
+      expect(observedDuringCandidate).toBe(true);
+      click(mounted.canvas, 20, 20);
+      expect(trace).toEqual(["old"]);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("re-observes committed focus targets on a clean unrelated traversal", () => {
+    const trace: string[] = [];
+    const target = {};
+    const Layer = interactionLayer(
+      { kind: "target", target },
+      {
+        targets: [
+          {
+            target,
+            keyboardFocusable: true,
+            keyboardNavigationBounds: { x: 0, y: 0, width: 20, height: 10 },
+            handlers: { onClick: () => trace.push("target") },
+          },
+        ],
+      },
+    );
+    const scene = (color: string) => (
+      <FocusManagement>
+        <Group>
+          <Layer style={{ width: 40, height: 30 }} />
+          <Rectangle style={{ x: 60, width: 10, height: 10, fill: color }} />
+        </Group>
+      </FocusManagement>
+    );
+    const mounted = mountInteraction(scene("#111111"));
+    try {
+      click(mounted.canvas, 10, 5);
+      trace.length = 0;
+      crc(mounted.canvas, scene("#222222"));
+      mounted.driver.flush(20);
+      mounted.canvas.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "Enter",
+        }),
+      );
+      expect(trace).toEqual(["target"]);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("honors layer pointer participation and transformed target-layer focus", () => {
+    const trace: string[] = [];
+    const Layer = interactionLayer({ kind: "miss" });
+    const mounted = mountInteraction(
+      <FocusManagement>
+        <Group>
+          <Rectangle
+            style={{ width: 100, height: 60, fill: "#2563eb" }}
+            onClick={() => trace.push("lower")}
+          />
+          <Group style={{ translateX: 25, translateY: 15 }}>
+            <Layer
+              missBehavior="target-layer"
+              pointerEvents="none"
+              keyboardFocusable
+              keyboardNavigationBounds={{ x: 2, y: 3, width: 20, height: 10 }}
+              style={{ width: 40, height: 30 }}
+              onClick={() => trace.push("layer")}
+            />
+          </Group>
+        </Group>
+      </FocusManagement>,
+    );
+    try {
+      click(mounted.canvas, 30, 20);
+      expect(trace).toEqual(["lower"]);
+      expect(
+        Array.from(getCRCInstance(mounted.canvas).eventRoot.targets).some(
+          (target) => target.keyboardFocusable,
+        ),
+      ).toBe(false);
+
+      crc(
+        mounted.canvas,
+        <FocusManagement>
+          <Group style={{ translateX: 25, translateY: 15 }}>
+            <Layer
+              missBehavior="target-layer"
+              keyboardFocusable
+              keyboardNavigationBounds={{ x: 2, y: 3, width: 20, height: 10 }}
+              style={{ width: 40, height: 30 }}
+              onClick={() => trace.push("layer")}
+            />
+          </Group>
+        </FocusManagement>,
+      );
+      mounted.driver.flush(20);
+      const focusTarget = Array.from(
+        getCRCInstance(mounted.canvas).eventRoot.targets,
+      ).find((target) => target.keyboardFocusable);
+      expect(focusTarget && resolveTargetRootBounds(focusTarget)).toEqual({
+        x: 27,
+        y: 18,
+        width: 20,
+        height: 10,
+      });
+      click(mounted.canvas, 30, 20);
+      trace.length = 0;
+      mounted.canvas.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "Enter",
+        }),
+      );
+      expect(trace).toEqual(["layer"]);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("updates target-layer policy transactionally without application rendering", () => {
+    const trace: string[] = [];
+    let renders = 0;
+    const Layer = defineRenderLayer<{}, {}>({
+      create(context) {
+        context.canvas.getContext("2d");
+        return {};
+      },
+      render() {
+        renders++;
+      },
+    });
+    const scene = (missBehavior: "pass-through" | "block" | "target-layer") => (
+      <>
+        <Rectangle
+          style={{ width: 100, height: 60, fill: "#2563eb" }}
+          onClick={() => trace.push("lower")}
+        />
+        <Layer
+          missBehavior={missBehavior}
+          style={{ width: 100, height: 60 }}
+          onClick={() => trace.push("layer")}
+        />
+      </>
+    );
+    const mounted = mountInteraction(scene("pass-through"));
+    try {
+      click(mounted.canvas, 20, 20);
+      expect(trace).toEqual(["lower"]);
+      trace.length = 0;
+      crc(mounted.canvas, scene("target-layer"));
+      mounted.driver.flush(20);
+      click(mounted.canvas, 20, 20);
+      expect(trace).toEqual(["layer"]);
+      expect(renders).toBe(1);
+      trace.length = 0;
+      crc(mounted.canvas, scene("block"));
+      mounted.driver.flush(30);
+      click(mounted.canvas, 20, 20);
+      expect(trace).toEqual([]);
+      expect(renders).toBe(1);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("releases resolver capture after a generation removes onInput", () => {
+    const trace: string[] = [];
+    const Layer = defineRenderLayer<{ listen: boolean }, {}>({
+      create(context) {
+        context.canvas.getContext("2d");
+        return {};
+      },
+      render() {},
+      interaction: {
+        settle(_resources, props) {
+          return {
+            targets: [],
+            hitTest: () => ({ kind: "block" }),
+            onInput: props.listen
+              ? (input) => {
+                  trace.push(`input:${input.type}`);
+                  if (input.type === "pointerdown") {
+                    input.setPointerCapture(
+                      (input.originalEvent as PointerEvent).pointerId,
+                    );
+                  }
+                }
+              : undefined,
+          };
+        },
+      },
+    });
+    const scene = (listen: boolean) => (
+      <>
+        <Rectangle
+          style={{ width: 100, height: 60, fill: "#2563eb" }}
+          onPointerMove={() => trace.push("lower:pointermove")}
+        />
+        <Layer listen={listen} style={{ width: 40, height: 30 }} />
+      </>
+    );
+    const mounted = mountInteraction(scene(true));
+    try {
+      pointer(mounted.canvas, "pointerdown", 20, 20);
+      crc(mounted.canvas, scene(false));
+      mounted.driver.flush(20);
+      pointer(mounted.canvas, "pointerup", 80, 50);
+      pointer(mounted.canvas, "pointermove", 80, 50);
+      expect(trace).toEqual(["input:pointerdown", "lower:pointermove"]);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
   it("excludes pointer-events-none declarations from the committed target map", () => {
     const trace: string[] = [];
     const applicationTarget = {};
     const Layer = interactionLayer(
       { kind: "target", target: applicationTarget },
       {
-        targets: [{
-          target: applicationTarget,
-          pointerEvents: "none",
-          handlers: { onClick: () => trace.push("target") },
-        }],
-        onInput: input => trace.push(`input:${input.hit.kind}`),
+        targets: [
+          {
+            target: applicationTarget,
+            pointerEvents: "none",
+            handlers: { onClick: () => trace.push("target") },
+          },
+        ],
+        onInput: (input) => trace.push(`input:${input.hit.kind}`),
       },
     );
     const mounted = mountInteraction(
@@ -580,9 +954,12 @@ describe("defineRenderLayer", () => {
   it("rejects duplicate application target identities during settlement", () => {
     const applicationTarget = {};
     const declaration = { target: applicationTarget };
-    const Layer = interactionLayer({ kind: "miss" }, {
-      targets: [declaration, declaration],
-    });
+    const Layer = interactionLayer(
+      { kind: "miss" },
+      {
+        targets: [declaration, declaration],
+      },
+    );
     const mounted = mountInteraction(
       <Layer style={{ width: 100, height: 60 }} />,
       false,
@@ -603,12 +980,14 @@ describe("defineRenderLayer", () => {
     const Layer = interactionLayer(
       { kind: "target", target: applicationTarget },
       {
-        targets: [{
-          target: applicationTarget,
-          keyboardFocusable: true,
-          keyboardNavigationBounds: { x: 0, y: 0, width: 20, height: 10 },
-          handlers: { onClick: () => trace.push("target") },
-        }],
+        targets: [
+          {
+            target: applicationTarget,
+            keyboardFocusable: true,
+            keyboardNavigationBounds: { x: 0, y: 0, width: 20, height: 10 },
+            handlers: { onClick: () => trace.push("target") },
+          },
+        ],
       },
     );
     const mounted = mountInteraction(
@@ -619,8 +998,9 @@ describe("defineRenderLayer", () => {
       </FocusManagement>,
     );
     try {
-      const target = Array.from(getCRCInstance(mounted.canvas).eventRoot.targets)
-        .find(candidate => candidate.keyboardFocusable);
+      const target = Array.from(
+        getCRCInstance(mounted.canvas).eventRoot.targets,
+      ).find((candidate) => candidate.keyboardFocusable);
       expect(target && resolveTargetRootBounds(target)).toEqual({
         x: 25,
         y: 15,
@@ -629,11 +1009,13 @@ describe("defineRenderLayer", () => {
       });
       click(mounted.canvas, 30, 20);
       trace.length = 0;
-      mounted.canvas.dispatchEvent(new KeyboardEvent("keydown", {
-        bubbles: true,
-        cancelable: true,
-        key: "Enter",
-      }));
+      mounted.canvas.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "Enter",
+        }),
+      );
       expect(trace).toEqual(["target"]);
     } finally {
       mounted.dispose();
@@ -702,15 +1084,17 @@ function pointer(
   x: number,
   y: number,
 ): void {
-  canvas.dispatchEvent(new PointerEvent(type, {
-    bubbles: true,
-    button: 0,
-    clientX: x,
-    clientY: y,
-    isPrimary: true,
-    pointerId: 41,
-    pointerType: "mouse",
-  }));
+  canvas.dispatchEvent(
+    new PointerEvent(type, {
+      bubbles: true,
+      button: 0,
+      clientX: x,
+      clientY: y,
+      isPrimary: true,
+      pointerId: 41,
+      pointerType: "mouse",
+    }),
+  );
 }
 
 function createCanvas(width = 20, height = 10): HTMLCanvasElement {

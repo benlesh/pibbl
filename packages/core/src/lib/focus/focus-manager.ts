@@ -1,11 +1,11 @@
-import type { CRCEventTargetRegistration } from '../events/registrations.js';
-import { GLOBAL_STATE } from '../global-state.js';
+import type { CRCEventTargetRegistration } from "../events/registrations.js";
+import { GLOBAL_STATE } from "../global-state.js";
 import type {
   CRCEvent,
   CRCEventType,
   CRCKeyboardEvent,
-} from '../events/types.js';
-import { Teardowns } from '../teardowns.js';
+} from "../events/types.js";
+import { Teardowns } from "../teardowns.js";
 import type {
   CRCEventRoot,
   CRCFocusPressDefaultInput,
@@ -14,22 +14,19 @@ import type {
   CRCFocusPolicyBridge,
   CRCInstance,
   CRCRenderTransaction,
-} from '../types.js';
-import { resolveTargetRootBounds } from './geometry.js';
+} from "../types.js";
+import { resolveTargetRootBounds } from "./geometry.js";
 import {
   mountDOMFocusHost,
   type CRCMountedDOMFocusHost,
-} from './dom-focus-host.js';
+} from "./dom-focus-host.js";
 import {
   applyDirectionalNavigationDefault,
   applyKeyboardActivationDefault,
   applyTabDefault,
-} from './keyboard-defaults.js';
-import { transitionLogicalFocus } from './focus-events.js';
-import type {
-  CRCDirectionalBoundary,
-  CRCFocusCandidate,
-} from './types.js';
+} from "./keyboard-defaults.js";
+import { transitionLogicalFocus } from "./focus-events.js";
+import type { CRCDirectionalBoundary, CRCFocusCandidate } from "./types.js";
 
 const UNFOCUSED_SNAPSHOT = Object.freeze({
   isFocused: false,
@@ -108,7 +105,7 @@ class FocusManagerCoordinator {
 
   add(manager: CRCFocusManager): void {
     if (this.disposed) {
-      throw new Error('CRC focus manager root is disposed.');
+      throw new Error("CRC focus manager root is disposed.");
     }
     this.ensureDOMFocusHost();
     this.managers.add(manager);
@@ -146,12 +143,11 @@ class FocusManagerCoordinator {
     event: Event,
   ): CRCFocusManager | undefined {
     const manager = this.active;
-    const routeLogicalEvent = this.domFocusHost?.beforeNativeDispatch(
-      type,
-      event,
-    ) ?? true;
-    return routeLogicalEvent && manager && !manager.isDestroyed ?
-      manager : undefined;
+    const routeLogicalEvent =
+      this.domFocusHost?.beforeNativeDispatch(type, event) ?? true;
+    return routeLogicalEvent && manager && !manager.isDestroyed
+      ? manager
+      : undefined;
   }
 
   syncDOMFocusHost(manager: CRCFocusManager): void {
@@ -167,12 +163,14 @@ class FocusManagerCoordinator {
   }
 
   claimRetainedManagers(instance: CRCInstance): readonly CRCFocusManager[] {
-    const retained = Array.from(this.managers).filter(manager => {
+    const retained = Array.from(this.managers).filter((manager) => {
       const owner = managerOwners.get(manager);
-      return !manager.isDestroyed &&
+      return (
+        !manager.isDestroyed &&
         !manager.ownerWasReleased &&
         owner !== undefined &&
-        isInstanceWithin(owner, instance);
+        isInstanceWithin(owner, instance)
+      );
     });
     const transaction = this.eventRoot.renderTransaction;
     if (!transaction) {
@@ -215,7 +213,7 @@ class FocusManagerCoordinator {
       restored: undefined,
     };
     this.transactions.set(transaction, state);
-    transaction.onFinish(success => this.finishTransaction(state, success));
+    transaction.onFinish((success) => this.finishTransaction(state, success));
     return state;
   }
 
@@ -244,9 +242,10 @@ class FocusManagerCoordinator {
     const attemptedReplacement =
       (state.claimed && state.claimed !== state.prior) ||
       (state.prepared && state.prepared !== state.prior);
-    const restored = state.prior && attemptedReplacement &&
-        !state.prior.isDestroyed ?
-      state.prior : undefined;
+    const restored =
+      state.prior && attemptedReplacement && !state.prior.isDestroyed
+        ? state.prior
+        : undefined;
     state.restored = restored;
     this.active = restored;
     this.eventRoot.focusPolicy = restored;
@@ -267,16 +266,12 @@ class FocusManagerCoordinator {
     const canvas = this.eventRoot.canvas;
     if (!canvas) {
       throw new Error(
-        'FocusManagement requires an HTMLCanvasElement root; an OffscreenCanvas has no DOM focus host.',
+        "FocusManagement requires an HTMLCanvasElement root; an OffscreenCanvas has no DOM focus host.",
       );
     }
     const teardowns = new Teardowns();
     try {
-      this.domFocusHost = mountDOMFocusHost(
-        canvas,
-        this.eventRoot,
-        teardowns,
-      );
+      this.domFocusHost = mountDOMFocusHost(canvas, this.eventRoot, teardowns);
       this.domFocusHostTeardowns = teardowns;
     } catch (error) {
       teardowns.execute();
@@ -310,6 +305,12 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   private committedCandidates: readonly CRCFocusCandidate[] = Object.freeze([]);
   private committedBoundaries = new Set<DirectionalBoundary>();
   private pending: PendingFrame | undefined;
+  private transactionalPending:
+    | {
+        readonly transaction: CRCRenderTransaction;
+        readonly frame: PendingFrame;
+      }
+    | undefined;
   private directionalStack: DirectionalBoundary[] = [];
   private focusedTarget: CRCEventTargetRegistration | undefined;
   private focusVisible = false;
@@ -320,13 +321,19 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     number,
     RepresentedPointerPress
   >();
-  private readonly representedTouchContacts = new Map<number, RepresentedPress>();
+  private readonly representedTouchContacts = new Map<
+    number,
+    RepresentedPress
+  >();
   private activeTouchIdentifiers = new Set<number>();
   private primaryTouchIdentifier: number | undefined;
   private touchSequenceActive = false;
   private touchMouseCompatibility: RepresentedPress | undefined;
   private focusRenderRevision = 0;
-  private readonly layerFocusRenderRevisions = new WeakMap<CRCInstance, number>();
+  private readonly layerFocusRenderRevisions = new WeakMap<
+    CRCInstance,
+    number
+  >();
   private destroyed = false;
   private ownerReleased = false;
   private readonly coordinator: FocusManagerCoordinator;
@@ -338,7 +345,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     const canvas = eventRoot.canvas;
     if (!canvas) {
       throw new Error(
-        'FocusManagement requires an HTMLCanvasElement root; an OffscreenCanvas has no DOM focus host.',
+        "FocusManagement requires an HTMLCanvasElement root; an OffscreenCanvas has no DOM focus host.",
       );
     }
     managerOwners.set(this, owner);
@@ -365,7 +372,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
 
   get canvas(): HTMLCanvasElement {
     const canvas = this.eventRoot.canvas;
-    if (!canvas) throw new Error('CRC focus manager has no DOM Canvas host.');
+    if (!canvas) throw new Error("CRC focus manager has no DOM Canvas host.");
     return canvas;
   }
 
@@ -380,7 +387,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   beginCollection(): void {
     this.assertLive();
     if (this.pending) {
-      throw new Error('FocusManagement cannot enter twice on one CRC root.');
+      throw new Error("FocusManagement cannot enter twice on one CRC root.");
     }
     this.coordinator.claim(this);
     this.pending = {
@@ -396,14 +403,35 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.pending = undefined;
     if (!pending || !success || this.destroyed) return;
 
-    const candidates = Object.freeze(pending.targets.map((observed, sourceIndex) =>
-      Object.freeze({
-        target: observed.target,
-        sourceIndex,
-        directionalBoundary: observed.directionalBoundary,
-        rootBounds: resolveTargetRootBounds(observed.target),
-      }) satisfies CRCFocusCandidate
-    ));
+    const transaction = this.eventRoot.renderTransaction;
+    if (transaction) {
+      this.transactionalPending = { transaction, frame: pending };
+      transaction.onFinish((transactionSucceeded) => {
+        if (this.transactionalPending?.transaction === transaction) {
+          this.transactionalPending = undefined;
+        }
+        if (transactionSucceeded && !this.destroyed) {
+          this.commitCollection(pending);
+        }
+      });
+      return;
+    }
+
+    this.commitCollection(pending);
+  }
+
+  private commitCollection(pending: PendingFrame): void {
+    const candidates = Object.freeze(
+      pending.targets.map(
+        (observed, sourceIndex) =>
+          Object.freeze({
+            target: observed.target,
+            sourceIndex,
+            directionalBoundary: observed.directionalBoundary,
+            rootBounds: resolveTargetRootBounds(observed.target),
+          }) satisfies CRCFocusCandidate,
+      ),
+    );
     this.commitCandidates(candidates, pending.boundaries);
     for (const candidate of candidates) {
       if (candidate.directionalBoundary) {
@@ -431,13 +459,44 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.recordPendingTarget(target, this.currentDirectionalBoundary());
   }
 
+  observeTransactionalTarget(target: CRCEventTargetRegistration): void {
+    const transactional = this.transactionalPending;
+    if (
+      !transactional ||
+      transactional.transaction !== this.eventRoot.renderTransaction
+    )
+      return;
+    const pending = transactional.frame;
+    if (this.pendingSpaceTarget === target && !target.handlers.click) {
+      this.cancelSpaceActivation();
+    }
+    if (!isKeyboardFocusable(target)) {
+      pending.ineligibleTargets.add(target);
+      const index = pending.targets.findIndex(
+        (candidate) => candidate.target === target,
+      );
+      if (index !== -1) pending.targets.splice(index, 1);
+      pending.observedTargets.delete(target);
+      return;
+    }
+    pending.ineligibleTargets.delete(target);
+    if (pending.observedTargets.has(target)) return;
+    pending.observedTargets.add(target);
+    pending.targets.push({
+      target,
+      directionalBoundary: this.currentDirectionalBoundary(),
+    });
+  }
+
   removeTarget(target: CRCEventTargetRegistration): void {
     if (this.pendingSpaceTarget === target) this.cancelSpaceActivation();
     if (this.pending) {
       this.markPendingIneligible(target);
       return;
     }
-    if (!this.committedCandidates.some(candidate => candidate.target === target)) {
+    if (
+      !this.committedCandidates.some((candidate) => candidate.target === target)
+    ) {
       if (this.focusedTarget === target) this.clearFocusState();
       return;
     }
@@ -461,19 +520,20 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   resolveKeyboardTarget(): CRCEventTargetRegistration | undefined {
     const target = this.focusedTarget;
     if (target && this.pending?.ineligibleTargets.has(target)) return undefined;
-    return target && this.committedCandidates.some(
-      candidate => candidate.target === target,
-    ) ? target : undefined;
+    return target &&
+      this.committedCandidates.some((candidate) => candidate.target === target)
+      ? target
+      : undefined;
   }
 
   afterDispatch(event: CRCEvent): void {
-    if (event.type === 'keydown') {
+    if (event.type === "keydown") {
       applyTabDefault(this, event as CRCKeyboardEvent);
     }
-    if (event.type === 'keydown' || event.type === 'keyup') {
+    if (event.type === "keydown" || event.type === "keyup") {
       applyKeyboardActivationDefault(this, event as CRCKeyboardEvent);
     }
-    if (event.type === 'keydown') {
+    if (event.type === "keydown") {
       applyDirectionalNavigationDefault(this, event as CRCKeyboardEvent);
     }
   }
@@ -482,15 +542,15 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     if (this.destroyed) return;
     this.purgeExpiredPresses(input.originalEvent.timeStamp);
     switch (input.source) {
-      case 'pointer':
+      case "pointer":
         this.recordPointerPress(input);
         if (!pressWasPrevented(input)) this.applyPressFocus(input.target);
         return;
-      case 'mouse':
+      case "mouse":
         if (this.consumeRepresentedMousePress(input)) return;
         if (!pressWasPrevented(input)) this.applyPressFocus(input.target);
         return;
-      case 'touch':
+      case "touch":
         if (this.consumeRepresentedTouchPress(input)) return;
         this.recordTouchFallback(input);
         if (!pressWasPrevented(input)) this.applyPressFocus(input.target);
@@ -502,11 +562,11 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     if (this.destroyed) return;
     this.purgeExpiredPresses(input.originalEvent.timeStamp);
     this.reconcileTouchContacts(input);
-    if (input.type === 'touchstart') {
+    if (input.type === "touchstart") {
       const primary = this.recordTouchStarts(input);
       if (!primary) return;
       this.afterPressDispatch({
-        source: 'touch',
+        source: "touch",
         target: primary.target,
         event: undefined,
         originalEvent: input.originalEvent,
@@ -516,7 +576,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
       });
       return;
     }
-    if (input.type === 'touchend' || input.type === 'touchcancel') {
+    if (input.type === "touchend" || input.type === "touchcancel") {
       this.recordTouchTerminals(input);
     }
   }
@@ -536,20 +596,20 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
       transitionLogicalFocus(
         this,
         this.liveFocusCandidate(pendingPress.target),
-        'pointer',
+        "pointer",
       );
       return;
     }
-    const candidate = backwards ?
-      this.committedCandidates.at(-1) :
-      this.committedCandidates[0];
-    transitionLogicalFocus(this, candidate?.target, 'keyboard');
+    const candidate = backwards
+      ? this.committedCandidates.at(-1)
+      : this.committedCandidates[0];
+    transitionLogicalFocus(this, candidate?.target, "keyboard");
   }
 
   leaveDOMFocus(): void {
     if (this.destroyed) return;
     this.pendingPressFocus = undefined;
-    transitionLogicalFocus(this, undefined, 'keyboard');
+    transitionLogicalFocus(this, undefined, "keyboard");
   }
 
   activateDOMHost(): void {
@@ -558,14 +618,15 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
 
   replayRetainedSubtree(instance: CRCInstance): void {
     const retainedManagers = this.coordinator.claimRetainedManagers(instance);
-    const replayManager = retainedManagers.length === 1 ?
-      retainedManagers[0] : this;
+    const replayManager =
+      retainedManagers.length === 1 ? retainedManagers[0] : this;
     replayManager.replayRetainedTargets(instance);
   }
 
   layerFocusRenderRevision(instance: CRCInstance): number | undefined {
-    return this.ownerReleased ?
-      undefined : this.layerFocusRenderRevisions.get(instance);
+    return this.ownerReleased
+      ? undefined
+      : this.layerFocusRenderRevisions.get(instance);
   }
 
   private replayRetainedTargets(instance: CRCInstance): void {
@@ -578,9 +639,10 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
           continue;
         }
         const retainedBoundary = retainedDirectionalBoundaries.get(target);
-        const directionalBoundary = retainedBoundary &&
-            isInstanceWithin(retainedBoundary.owner, instance) ?
-          retainedBoundary : this.currentDirectionalBoundary();
+        const directionalBoundary =
+          retainedBoundary && isInstanceWithin(retainedBoundary.owner, instance)
+            ? retainedBoundary
+            : this.currentDirectionalBoundary();
         if (directionalBoundary) {
           this.pending.boundaries.add(directionalBoundary);
         }
@@ -590,15 +652,23 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     }
 
     const replayed = new Set(targets);
-    if (!this.committedCandidates.some(candidate => replayed.has(candidate.target))) {
+    if (
+      !this.committedCandidates.some((candidate) =>
+        replayed.has(candidate.target),
+      )
+    ) {
       return;
     }
-    const candidates = Object.freeze(this.committedCandidates.map(candidate =>
-      replayed.has(candidate.target) ? Object.freeze({
-        ...candidate,
-        rootBounds: resolveTargetRootBounds(candidate.target),
-      }) : candidate
-    ));
+    const candidates = Object.freeze(
+      this.committedCandidates.map((candidate) =>
+        replayed.has(candidate.target)
+          ? Object.freeze({
+              ...candidate,
+              rootBounds: resolveTargetRootBounds(candidate.target),
+            })
+          : candidate,
+      ),
+    );
     this.commitCandidates(candidates, this.committedBoundaries);
   }
 
@@ -608,9 +678,11 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   ): void {
     if (
       target &&
-      !this.committedCandidates.some(candidate => candidate.target === target)
+      !this.committedCandidates.some((candidate) => candidate.target === target)
     ) {
-      throw new Error('CRC logical focus target is not a live focus candidate.');
+      throw new Error(
+        "CRC logical focus target is not a live focus candidate.",
+      );
     }
     this.commitLogicalFocus(target, focusVisible);
   }
@@ -618,9 +690,11 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   liveFocusCandidate(
     target: CRCEventTargetRegistration | undefined,
   ): CRCEventTargetRegistration | undefined {
-    return target?.live && target.owner.eventRoot === this.eventRoot &&
-        this.committedCandidates.some(candidate => candidate.target === target) ?
-      target : undefined;
+    return target?.live &&
+      target.owner.eventRoot === this.eventRoot &&
+      this.committedCandidates.some((candidate) => candidate.target === target)
+      ? target
+      : undefined;
   }
 
   commitLogicalFocus(
@@ -652,7 +726,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   exitDirectionalBoundary(boundary: CRCDirectionalBoundary): void {
     const value = asDirectionalBoundary(boundary);
     if (this.directionalStack.at(-1) !== value) {
-      throw new Error('CRC directional boundary scope exited out of order.');
+      throw new Error("CRC directional boundary scope exited out of order.");
     }
     this.directionalStack.pop();
   }
@@ -668,8 +742,9 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     let instance = target?.owner;
     while (instance && instance !== this.eventRoot.rootInstance) {
       this.layerFocusRenderRevisions.set(instance, revision);
-      instance = instance.parent ?
-        GLOBAL_STATE.crcInstances.get(instance.parent) : undefined;
+      instance = instance.parent
+        ? GLOBAL_STATE.crcInstances.get(instance.parent)
+        : undefined;
     }
   }
 
@@ -763,7 +838,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.committedCandidates = candidates;
     if (
       this.focusedTarget &&
-      !candidates.some(candidate => candidate.target === this.focusedTarget)
+      !candidates.some((candidate) => candidate.target === this.focusedTarget)
     ) {
       this.clearFocusState();
     }
@@ -772,11 +847,13 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
 
   private commitRemovedTarget(target: CRCEventTargetRegistration): void {
     const retained = this.committedCandidates.filter(
-      candidate => candidate.target !== target,
+      (candidate) => candidate.target !== target,
     );
-    const candidates = Object.freeze(retained.map((candidate, sourceIndex) =>
-      Object.freeze({ ...candidate, sourceIndex })
-    ));
+    const candidates = Object.freeze(
+      retained.map((candidate, sourceIndex) =>
+        Object.freeze({ ...candidate, sourceIndex }),
+      ),
+    );
     this.commitCandidates(candidates, this.committedBoundaries);
   }
 
@@ -802,9 +879,10 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
         return;
       }
       this.pendingPressFocus = undefined;
-      transitionLogicalFocus(this, this.liveFocusCandidate(target), 'pointer');
+      transitionLogicalFocus(this, this.liveFocusCandidate(target), "pointer");
     } finally {
-      if (this.pendingPressFocus === pending) this.pendingPressFocus = undefined;
+      if (this.pendingPressFocus === pending)
+        this.pendingPressFocus = undefined;
     }
   }
 
@@ -835,7 +913,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
       y: input.y,
       timeStamp: input.originalEvent.timeStamp,
       suppressMouse: true,
-      suppressTouch: input.pointerType === 'touch',
+      suppressTouch: input.pointerType === "touch",
     });
   }
 
@@ -845,7 +923,8 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     for (const [pointerId, press] of this.representedPointerPresses) {
       if (!press.suppressMouse || !samePress(press, input)) continue;
       press.suppressMouse = false;
-      if (!press.suppressTouch) this.representedPointerPresses.delete(pointerId);
+      if (!press.suppressTouch)
+        this.representedPointerPresses.delete(pointerId);
       return true;
     }
     if (
@@ -870,7 +949,8 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     for (const [pointerId, press] of this.representedPointerPresses) {
       if (!press.suppressTouch || !samePress(press, input)) continue;
       press.suppressTouch = false;
-      if (!press.suppressMouse) this.representedPointerPresses.delete(pointerId);
+      if (!press.suppressMouse)
+        this.representedPointerPresses.delete(pointerId);
       return true;
     }
     return false;
@@ -904,9 +984,10 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
       this.representedTouchContacts.delete(identifier);
     }
 
-    const startingIdentifiers = input.type === 'touchstart' ? new Set(
-      input.changedContacts.map(contact => contact.identifier),
-    ) : undefined;
+    const startingIdentifiers =
+      input.type === "touchstart"
+        ? new Set(input.changedContacts.map((contact) => contact.identifier))
+        : undefined;
     for (const identifier of activeIdentifiers) {
       if (!startingIdentifiers?.has(identifier)) {
         this.activeTouchIdentifiers.add(identifier);
@@ -953,9 +1034,8 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   }
 
   private assertLive(): void {
-    if (this.destroyed) throw new Error('CRC focus manager is disposed.');
+    if (this.destroyed) throw new Error("CRC focus manager is disposed.");
   }
-
 }
 
 function pressWasPrevented(input: CRCFocusPressDefaultInput): boolean {
@@ -974,9 +1054,11 @@ function samePress(
   press: RepresentedPress,
   input: CRCFocusPressDefaultInput,
 ): boolean {
-  return recentPress(press, input.originalEvent.timeStamp) &&
+  return (
+    recentPress(press, input.originalEvent.timeStamp) &&
     Math.abs(press.x - input.x) <= 1 &&
-    Math.abs(press.y - input.y) <= 1;
+    Math.abs(press.y - input.y) <= 1
+  );
 }
 
 function recentPress(press: RepresentedPress, timeStamp: number): boolean {
@@ -995,7 +1077,7 @@ export function requireFocusManager(eventRoot: CRCEventRoot): CRCFocusManager {
   const manager = eventRoot.focusPolicy;
   if (!(manager instanceof CRCFocusManager)) {
     throw new Error(
-      'KeyboardNavigation requires an active FocusManagement focus manager.',
+      "KeyboardNavigation requires an active FocusManagement focus manager.",
     );
   }
   return manager;
@@ -1018,7 +1100,7 @@ function getCoordinator(eventRoot: CRCEventRoot): FocusManagerCoordinator {
 
 function duplicateManagerError(): Error {
   return new Error(
-    'FocusManagement allows only one focus manager per CRC root.',
+    "FocusManagement allows only one focus manager per CRC root.",
   );
 }
 
@@ -1026,14 +1108,17 @@ function asDirectionalBoundary(
   boundary: CRCDirectionalBoundary,
 ): DirectionalBoundary {
   if (!(boundary instanceof DirectionalBoundary)) {
-    throw new Error('Unknown CRC directional boundary.');
+    throw new Error("Unknown CRC directional boundary.");
   }
   return boundary;
 }
 
 function isKeyboardFocusable(target: CRCEventTargetRegistration): boolean {
-  return target.keyboardFocusable ?? Boolean(
-    target.handlers.click || target.handlers.keydown || target.handlers.keyup,
+  return (
+    target.keyboardFocusable ??
+    Boolean(
+      target.handlers.click || target.handlers.keydown || target.handlers.keyup,
+    )
   );
 }
 
@@ -1048,7 +1133,8 @@ function collectRetainedTargets(
       target.owner.eventRoot === instance.eventRoot &&
       !target.owner.mainTeardowns.closed &&
       isInstanceWithin(target.owner, instance)
-    ) targets.push(target);
+    )
+      targets.push(target);
   }
 }
 
@@ -1059,7 +1145,9 @@ function isInstanceWithin(
   let current: CRCInstance | undefined = instance;
   while (current) {
     if (current === ancestor) return true;
-    current = current.parent ? GLOBAL_STATE.crcInstances.get(current.parent) : undefined;
+    current = current.parent
+      ? GLOBAL_STATE.crcInstances.get(current.parent)
+      : undefined;
   }
   return false;
 }

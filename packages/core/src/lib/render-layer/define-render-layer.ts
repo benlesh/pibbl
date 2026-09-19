@@ -10,7 +10,7 @@ import type {
   PrimitiveCapabilities,
   RenderingContext2D,
 } from "../types.js";
-import { CRC_EVENT_DEFINITIONS } from '../events/event-definitions.js';
+import { CRC_EVENT_DEFINITIONS } from "../events/event-definitions.js";
 import { wireStructuralEvents } from "../components/structural-events.js";
 import { RenderLayerController } from "./controller.js";
 import type {
@@ -62,12 +62,12 @@ export function defineRenderLayer<
         pixelRatioX: layerSurface.backingPixelsPerLogicalUnitX,
         pixelRatioY: layerSurface.backingPixelsPerLogicalUnitY,
       });
-      controller.render(
-        customProps(props) as Props,
-        size,
-        ctx,
-        props.missBehavior,
-      );
+      controller.render(customProps(props) as Props, size, ctx, {
+        missBehavior: props.missBehavior ?? "pass-through",
+        pointerEvents: props.pointerEvents,
+        keyboardFocusable: props.keyboardFocusable,
+        keyboardNavigationBounds: props.keyboardNavigationBounds,
+      });
     },
     { resolveStyle },
   );
@@ -96,9 +96,11 @@ const resolveStyle: NonNullable<
       "height",
       context,
     ),
-}) as ResolvedRenderLayerStyle;
+  }) as ResolvedRenderLayerStyle;
 
-function customProps<Props>(props: Readonly<CRCRenderLayerProps<Props>>): Props {
+function customProps<Props>(
+  props: Readonly<CRCRenderLayerProps<Props>>,
+): Props {
   const custom = { ...props } as Record<PropertyKey, unknown>;
   delete custom.missBehavior;
   delete custom.pointerEvents;
@@ -120,8 +122,10 @@ function snapshotDefinition<Props, Resources, Target extends object>(
     resize: definition.resize,
     render: definition.render,
     dispose: definition.dispose,
-    interaction: definition.interaction ? Object.freeze({
-      settle: definition.interaction.settle,
-    }) : undefined,
+    interaction: definition.interaction
+      ? Object.freeze({
+          settle: definition.interaction.settle,
+        })
+      : undefined,
   });
 }
