@@ -12,6 +12,13 @@ import type {
   CRCCompositionEvent,
   CRCContrastFilter,
   CRCController,
+  CRCRenderLayerComponentProps,
+  CRCRenderLayerContext,
+  CRCRenderLayerDefinition,
+  CRCRenderLayerFrame,
+  CRCRenderLayerProps,
+  CRCRenderLayerSize,
+  CRCRenderLayerStyle,
   CRCEasing,
   CRCElement,
   CRCDragEvent,
@@ -222,6 +229,7 @@ import {
   createElement,
   defineAnimation,
   definePrimitive,
+  defineRenderLayer,
   easing,
   Absolute,
   Arc,
@@ -1286,6 +1294,42 @@ const StyledRuntimeProbe = definePrimitive<
 >((props, style, context) => {
   context.fillRect(0, 0, props.count * style.width, style.opacity ?? 1);
 });
+
+type RenderLayerConsumerProps = { color: string };
+type RenderLayerConsumerResources = { context: CRCRenderLayerContext };
+const renderLayerSize: CRCRenderLayerSize = {
+  width: 1,
+  height: 1,
+  backingWidth: 1,
+  backingHeight: 1,
+  pixelRatioX: 1,
+  pixelRatioY: 1,
+};
+const renderLayerFrame: CRCRenderLayerFrame = {
+  frameId: 0,
+  time: 0,
+  delta: 0,
+  deltaSeconds: 0,
+  invalidate() {},
+};
+const renderLayerStyle: CRCRenderLayerStyle = { width: 1, height: 1 };
+const renderLayerProps: CRCRenderLayerProps<RenderLayerConsumerProps> = {
+  color: 'red',
+  style: renderLayerStyle,
+};
+const renderLayerComponentProps: CRCRenderLayerComponentProps = {};
+const renderLayerDefinition: CRCRenderLayerDefinition<
+  RenderLayerConsumerProps,
+  RenderLayerConsumerResources
+> = {
+  create(context) { return { context }; },
+  render() {},
+};
+const RenderLayerConsumer = defineRenderLayer(renderLayerDefinition);
+createElement(RenderLayerConsumer, renderLayerProps);
+void renderLayerSize;
+void renderLayerFrame;
+void renderLayerComponentProps;
 
 createElement(StyledRuntimeProbe, { count: 2, style: { width: 3 } });
 createElement(StyledRuntimeProbe, {

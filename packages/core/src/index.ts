@@ -200,6 +200,16 @@ export {
 export type { CRCKeyboardNavigationOptions } from './lib/focus/types.js';
 
 export { definePrimitive } from './lib/define-primitive.js';
+export { defineRenderLayer } from './lib/render-layer/define-render-layer.js';
+export type {
+  CRCRenderLayerComponentProps,
+  CRCRenderLayerDefinition,
+  CRCRenderLayerFrame,
+  CRCRenderLayerContext,
+  CRCRenderLayerProps,
+  CRCRenderLayerSize,
+  CRCRenderLayerStyle,
+} from './lib/render-layer/types.js';
 export { createElement } from './lib/element/create-element.js';
 export { Fragment } from './lib/element/jsx-runtime.js';
 export type {

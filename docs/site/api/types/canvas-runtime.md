@@ -27,6 +27,13 @@ symbols:
     CRCPlaybackEvent,
     CRCPlaybackOptions,
     CRCPlaybackStatus,
+    CRCRenderLayerComponentProps,
+    CRCRenderLayerContext,
+    CRCRenderLayerDefinition,
+    CRCRenderLayerFrame,
+    CRCRenderLayerProps,
+    CRCRenderLayerSize,
+    CRCRenderLayerStyle,
     CRCRef,
     CRCResponsiveViewportConfig,
     CRCSpringOptions,
@@ -94,6 +101,41 @@ responsive viewport configuration. The first `crc()` mount owns this choice.
 
 `CRCController` is the stable controller returned by `crc()`. Its `dispose()`
 method is idempotent and releases runtime-owned resources for that mount.
+
+## CRCRenderLayerComponentProps
+
+`CRCRenderLayerComponentProps` supplies the style and normal CRC event, focus,
+and participation fields reserved by a render layer.
+
+## CRCRenderLayerContext
+
+`CRCRenderLayerContext` exposes the layer's owned `OffscreenCanvas`, current
+resolved size, and a coalesced invalidation callback.
+
+## CRCRenderLayerDefinition
+
+`CRCRenderLayerDefinition` describes synchronous create, update, resize,
+render, and optional disposal callbacks for an external raster layer.
+
+## CRCRenderLayerFrame
+
+`CRCRenderLayerFrame` provides CRC logical frame time, delta, and next-frame
+invalidation to one render callback.
+
+## CRCRenderLayerProps
+
+`CRCRenderLayerProps<Props>` combines custom layer props with the reserved CRC
+component fields and rejects reserved custom names.
+
+## CRCRenderLayerSize
+
+`CRCRenderLayerSize` records logical and backing dimensions plus effective
+pixel ratios for one layer frame.
+
+## CRCRenderLayerStyle
+
+`CRCRenderLayerStyle` is the local box, layout, and filter style accepted by a
+render layer.
 
 ## CRCEasing
 

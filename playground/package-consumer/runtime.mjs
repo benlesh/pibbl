@@ -73,6 +73,7 @@ const expected = [
   'createWedgePath',
   'defineAnimation',
   'definePrimitive',
+  'defineRenderLayer',
   'easing',
   'isSignal',
   'keyframes',
