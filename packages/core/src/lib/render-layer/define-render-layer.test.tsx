@@ -330,6 +330,33 @@ describe("defineRenderLayer", () => {
       restore();
     }
   });
+
+  it("retains a bitmap for an application TypeError that resembles a synchronous violation", () => {
+    const driver = new ManualSchedulerDriver();
+    const restore = installSchedulerDriverForTest(driver);
+    let invalidate: (() => void) | undefined;
+    let fail = false;
+    const applicationError = new TypeError(
+      'defineRenderLayer render() must be synchronous.',
+    );
+    const Layer = defineRenderLayer<{}, {}>({
+      create(context) { context.canvas.getContext('2d'); invalidate = context.invalidate; return {}; },
+      render() {
+        if (fail) throw applicationError;
+      },
+    });
+    const controller = crc(createCanvas(), <Layer style={{ width: 20, height: 10 }} />);
+    try {
+      driver.flush(10);
+      fail = true;
+      invalidate!();
+      expect(() => driver.flush(20)).not.toThrow();
+      expect(() => driver.flush(30)).toThrow(applicationError);
+    } finally {
+      controller.dispose();
+      restore();
+    }
+  });
 });
 
 function createCanvas(): HTMLCanvasElement {

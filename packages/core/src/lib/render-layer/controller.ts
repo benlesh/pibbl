@@ -11,9 +11,13 @@ import type {
   CRCRenderLayerSize,
 } from "./types.js";
 
+class SynchronousLifecycleError extends TypeError {}
+
 export function assertSynchronous(value: unknown, callback: string): void {
   if (value && typeof (value as { then?: unknown }).then === "function") {
-    throw new TypeError(`defineRenderLayer ${callback}() must be synchronous.`);
+    throw new SynchronousLifecycleError(
+      `defineRenderLayer ${callback}() must be synchronous.`,
+    );
   }
 }
 
@@ -232,9 +236,7 @@ function sameSize(
 }
 
 function isSynchronousViolation(error: unknown): boolean {
-  return error instanceof TypeError &&
-    error.message.startsWith('defineRenderLayer ') &&
-    error.message.endsWith('() must be synchronous.');
+  return error instanceof SynchronousLifecycleError;
 }
 
 function snapshotProps<Props>(props: Readonly<Props>): Readonly<Props> {
