@@ -98,7 +98,7 @@ function createFrameSource(options: {
       ${runnable}
       const canvas = document.querySelector('canvas');
       controller = globalThis.__CRC_EXAMPLE_MOUNT__(canvas);
-      requestAnimationFrame(() => requestAnimationFrame(() => send({ kind: 'mounted' })));
+      send({ kind: 'mounted' });
     } catch (error) {
       send({ kind: 'error', message: error instanceof Error ? error.message : printable(error) });
     }
