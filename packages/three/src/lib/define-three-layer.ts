@@ -52,6 +52,7 @@ export function defineThreeLayer<
           threeContext,
           initialProps,
         );
+        assertSynchronous(resources, "create");
         assertThreeResources(resources);
         input.finishCreate();
         return {
@@ -63,34 +64,46 @@ export function defineThreeLayer<
           props: initialProps,
         };
       } catch (error) {
-        input.dispose();
-        renderer.dispose();
+        try {
+          input.dispose();
+        } finally {
+          renderer.dispose();
+        }
         throw error;
       }
     },
     update(adapter, props) {
-      immutableDefinition.update?.(
-        adapter.resources,
-        props,
-        adapter.threeContext,
+      assertSynchronous(
+        immutableDefinition.update?.(
+          adapter.resources,
+          props,
+          adapter.threeContext,
+        ),
+        "update",
       );
       adapter.props = props;
     },
     resize(adapter, size) {
       adapter.renderer.setPixelRatio(1);
       adapter.renderer.setSize(size.backingWidth, size.backingHeight, false);
-      immutableDefinition.resize?.(
-        adapter.resources,
-        size,
-        adapter.threeContext,
+      assertSynchronous(
+        immutableDefinition.resize?.(
+          adapter.resources,
+          size,
+          adapter.threeContext,
+        ),
+        "resize",
       );
     },
     render(adapter, frame) {
       if (immutableDefinition.render) {
-        immutableDefinition.render(
-          adapter.resources,
-          frame,
-          adapter.threeContext,
+        assertSynchronous(
+          immutableDefinition.render(
+            adapter.resources,
+            frame,
+            adapter.threeContext,
+          ),
+          "render",
         );
       } else {
         adapter.renderer.render(
@@ -101,7 +114,13 @@ export function defineThreeLayer<
     },
     dispose(adapter) {
       try {
-        immutableDefinition.dispose?.(adapter.resources, adapter.threeContext);
+        assertSynchronous(
+          immutableDefinition.dispose?.(
+            adapter.resources,
+            adapter.threeContext,
+          ),
+          "dispose",
+        );
       } finally {
         try {
           adapter.input.dispose();
@@ -112,9 +131,10 @@ export function defineThreeLayer<
     },
     interaction: {
       settle(adapter, props, size) {
-        const declarations = Array.from(
-          immutableDefinition.targets?.(adapter.resources, props) ?? [],
-        );
+        const declaredTargets =
+          immutableDefinition.targets?.(adapter.resources, props) ?? [];
+        assertSynchronous(declaredTargets, "targets");
+        const declarations = Array.from(declaredTargets);
         const targetMap = new Map<Object3D, CRCThreeTarget>();
         const disabledRoots = new Set<Object3D>();
         const targets: CRCRenderLayerTarget<Object3D>[] = [];
@@ -142,16 +162,28 @@ export function defineThreeLayer<
             keyboardNavigationBounds: projectedBounds,
           });
         }
-        const hitTest = immutableDefinition.pick
-          ? immutableDefinition.pick(adapter.resources, adapter.threeContext)
-          : createDefaultPicker(
-              adapter.resources.scene,
-              adapter.resources.camera,
-              adapter.raycaster,
-              size,
-              targetMap,
-              disabledRoots,
-            );
+        let hitTest;
+        if (immutableDefinition.pick) {
+          const picker = immutableDefinition.pick(
+            adapter.resources,
+            adapter.threeContext,
+          );
+          assertSynchronous(picker, "pick");
+          hitTest = (point: Readonly<{ x: number; y: number }>) => {
+            const result = picker(point);
+            assertSynchronous(result, "picker");
+            return result;
+          };
+        } else {
+          hitTest = createDefaultPicker(
+            adapter.resources.scene,
+            adapter.resources.camera,
+            adapter.raycaster,
+            size,
+            targetMap,
+            disabledRoots,
+          );
+        }
         return {
           targets,
           hitTest,
@@ -162,6 +194,12 @@ export function defineThreeLayer<
       },
     },
   });
+}
+
+function assertSynchronous(value: unknown, callback: string): void {
+  if (value && typeof (value as { then?: unknown }).then === "function") {
+    throw new TypeError(`defineThreeLayer ${callback}() must be synchronous.`);
+  }
 }
 
 function createThreeContext(

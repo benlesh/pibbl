@@ -24,6 +24,7 @@ import {
 import {
   defineThreeLayer,
   type CRCThreeInputBridge,
+  type CRCThreeLayerDefinition,
   type CRCThreeLayerResources,
   type CRCThreeRendererOptions,
 } from "../index.js";
@@ -156,6 +157,127 @@ describe("defineThreeLayer lifecycle", () => {
   });
 });
 
+describe("defineThreeLayer synchronous application boundaries", () => {
+  const thenable = Object.freeze({ then() {} });
+
+  it("rejects a thenable returned by create and releases adapter resources", () => {
+    let rendererDisposes = 0;
+    const Layer = defineThreeLayer<{}, CRCThreeLayerResources>({
+      create(context) {
+        const dispose = context.renderer.dispose.bind(context.renderer);
+        context.renderer.dispose = () => {
+          rendererDisposes++;
+          dispose();
+        };
+        return thenable as never;
+      },
+    });
+    const pending = mountPending(<Layer style={{ width: 40, height: 20 }} />);
+    try {
+      expect(() => pending.driver.flush(10)).toThrowError(
+        "defineThreeLayer create() must be synchronous.",
+      );
+      expect(rendererDisposes).toBe(1);
+    } finally {
+      pending.dispose();
+    }
+    expect(rendererDisposes).toBe(1);
+  });
+
+  it.each([
+    ["update", "defineThreeLayer update() must be synchronous."],
+    ["resize", "defineThreeLayer resize() must be synchronous."],
+    ["render", "defineThreeLayer render() must be synchronous."],
+    ["targets", "defineThreeLayer targets() must be synchronous."],
+    ["pick", "defineThreeLayer pick() must be synchronous."],
+  ] as const)(
+    "rejects a thenable returned by %s() and releases adapter resources",
+    (callback, expectedError) => {
+      let rendererDisposes = 0;
+      const definition: CRCThreeLayerDefinition<
+        { revision: number },
+        CRCThreeLayerResources
+      > = {
+        create(context) {
+          const dispose = context.renderer.dispose.bind(context.renderer);
+          context.renderer.dispose = () => {
+            rendererDisposes++;
+            dispose();
+          };
+          return createResources();
+        },
+      };
+      const returnThenable = () => thenable as never;
+      definition[callback] = returnThenable;
+      const Layer = defineThreeLayer(definition);
+      const pending = mountPending(
+        <Layer revision={1} style={{ width: 40, height: 20 }} />,
+      );
+      try {
+        if (callback === "update") {
+          pending.driver.flush(10);
+          crc(
+            pending.canvas,
+            <Layer revision={2} style={{ width: 40, height: 20 }} />,
+          );
+          expect(() => pending.driver.flush(20)).not.toThrow();
+          expect(() => pending.driver.flush(30)).toThrowError(expectedError);
+        } else {
+          expect(() => pending.driver.flush(10)).not.toThrow();
+          expect(() => pending.driver.flush(20)).toThrowError(expectedError);
+        }
+      } finally {
+        pending.dispose();
+      }
+      expect(rendererDisposes).toBe(1);
+    },
+  );
+
+  it("rejects a thenable returned by the candidate picker", () => {
+    const Layer = defineThreeLayer<{}, CRCThreeLayerResources>({
+      create: () => createResources(),
+      pick() {
+        return () => thenable as never;
+      },
+    });
+    const mounted = mount(<Layer style={{ width: 40, height: 20 }} />);
+    try {
+      expect(() =>
+        committedHitTest(mounted.canvas)({ x: 5, y: 5 }),
+      ).toThrowError("defineThreeLayer picker() must be synchronous.");
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("rejects a thenable returned by dispose and still releases the renderer", () => {
+    let rendererDisposes = 0;
+    const Layer = defineThreeLayer<{}, CRCThreeLayerResources>({
+      create(context) {
+        const dispose = context.renderer.dispose.bind(context.renderer);
+        context.renderer.dispose = () => {
+          rendererDisposes++;
+          dispose();
+        };
+        return createResources();
+      },
+      dispose() {
+        return thenable as never;
+      },
+    });
+    const mounted = mount(<Layer style={{ width: 40, height: 20 }} />);
+    try {
+      expect(() =>
+        renderLayerController(mounted.canvas).dispose(),
+      ).toThrowError("defineThreeLayer dispose() must be synchronous.");
+      expect(rendererDisposes).toBe(1);
+    } finally {
+      mounted.dispose();
+    }
+    expect(rendererDisposes).toBe(1);
+  });
+});
+
 describe("defineThreeLayer picking", () => {
   it("passes a transparent gap through to lower CRC paint", () => {
     const trace: string[] = [];
@@ -280,6 +402,48 @@ describe("defineThreeLayer picking", () => {
     try {
       click(mounted.canvas, 50, 50);
       expect(trace).toEqual(["behind"]);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("skips an invisible intersected material group on a multi-material mesh", () => {
+    const trace: string[] = [];
+    const Layer = defineThreeLayer<{}, CRCThreeLayerResources & { mesh: Mesh }>(
+      {
+        create() {
+          const { scene, camera } = createResources();
+          const materials = Array.from(
+            { length: 6 },
+            () => new MeshBasicMaterial({ color: 0xffffff }),
+          );
+          materials[4]!.visible = false;
+          const mesh = new Mesh(new BoxGeometry(2, 2, 2), materials);
+          scene.add(mesh);
+          return { scene, camera, mesh };
+        },
+        targets(resources) {
+          return [
+            {
+              object: resources.mesh,
+              handlers: { onClick: () => trace.push("target") },
+            },
+          ];
+        },
+      },
+    );
+    const mounted = mount(
+      <>
+        <Rectangle
+          style={{ width: 100, height: 100, fill: "#2563eb" }}
+          onClick={() => trace.push("lower")}
+        />
+        <Layer style={{ width: 100, height: 100 }} />
+      </>,
+    );
+    try {
+      click(mounted.canvas, 50, 50);
+      expect(trace).toEqual(["lower"]);
     } finally {
       mounted.dispose();
     }
@@ -472,18 +636,63 @@ function mount(
   readonly driver: ManualSchedulerDriver;
   dispose(): void;
 } {
+  const pending = mountPending(root, pixelRatio);
+  try {
+    pending.driver.flush(10);
+  } catch (error) {
+    pending.dispose();
+    throw error;
+  }
+  return pending;
+}
+
+function mountPending(
+  root: Parameters<typeof crc>[1],
+  pixelRatio = 1,
+): {
+  readonly canvas: HTMLCanvasElement;
+  readonly driver: ManualSchedulerDriver;
+  dispose(): void;
+} {
   const driver = new ManualSchedulerDriver();
   const restore = installSchedulerDriverForTest(driver);
   const canvas = createCanvas(100, 100);
   const controller = crc(canvas, root, { pixelRatio });
-  driver.flush(10);
   return {
     canvas,
     driver,
     dispose() {
-      controller.dispose();
-      restore();
+      try {
+        controller.dispose();
+      } finally {
+        restore();
+      }
     },
+  };
+}
+
+function committedHitTest(
+  canvas: HTMLCanvasElement,
+): (point: Readonly<{ x: number; y: number }>) => unknown {
+  const controller = renderLayerController(canvas);
+  if (!controller.committedInteraction) {
+    throw new Error("missing committed Three interaction snapshot");
+  }
+  return controller.committedInteraction.hitTest;
+}
+
+function renderLayerController(canvas: HTMLCanvasElement): {
+  readonly committedInteraction?: {
+    hitTest(point: Readonly<{ x: number; y: number }>): unknown;
+  };
+  dispose(): void;
+} {
+  const refs = Array.from(getCRCInstance(canvas).refs.values())[0];
+  return refs?.refs[0] as unknown as {
+    readonly committedInteraction?: {
+      hitTest(point: Readonly<{ x: number; y: number }>): unknown;
+    };
+    dispose(): void;
   };
 }
 
