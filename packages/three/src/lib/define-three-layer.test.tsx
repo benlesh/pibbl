@@ -531,6 +531,47 @@ describe("defineThreeLayer picking", () => {
 });
 
 describe("defineThreeLayer OrbitControls input", () => {
+  it("preserves a registered CRC click after controls receive the winning press", () => {
+    const crcTrace: string[] = [];
+    const inputTrace: string[] = [];
+    const Layer = defineThreeLayer<
+      {},
+      CRCThreeLayerResources & { controls: OrbitControls; mesh: Mesh }
+    >({
+      create(context) {
+        const { scene, camera, mesh } = createResourcesWithBox();
+        const controls = context.input.connect((element) => {
+          element.addEventListener("pointerdown", () =>
+            inputTrace.push("pointerdown"),
+          );
+          element.addEventListener("click", () => inputTrace.push("click"));
+          return new OrbitControls(camera, element);
+        });
+        return { scene, camera, controls, mesh };
+      },
+      targets(resources) {
+        return [
+          {
+            object: resources.mesh,
+            handlers: { onClick: () => crcTrace.push("target") },
+          },
+        ];
+      },
+      dispose(resources) {
+        resources.controls.dispose();
+      },
+    });
+    const mounted = mount(<Layer style={{ width: 100, height: 100 }} />);
+    try {
+      pointerAndMouseClick(mounted.canvas, 50, 50);
+      expect(inputTrace).toEqual(["pointerdown", "click"]);
+      expect(crcTrace).toEqual(["target"]);
+      expect(mounted.driver.pendingHostFrames).toBe(1);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
   it("connects only during create, routes winner input, invalidates, and cleans up", () => {
     let bridge: CRCThreeInputBridge | undefined;
     let controls: OrbitControls | undefined;
@@ -705,6 +746,25 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
     clientY: y,
   };
   canvas.dispatchEvent(new MouseEvent("mousedown", init));
+  canvas.dispatchEvent(new MouseEvent("mouseup", init));
+  canvas.dispatchEvent(new MouseEvent("click", init));
+}
+
+function pointerAndMouseClick(
+  canvas: HTMLCanvasElement,
+  x: number,
+  y: number,
+): void {
+  pointer(canvas, "pointerdown", x, y);
+  const init = {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+    clientX: x,
+    clientY: y,
+  };
+  canvas.dispatchEvent(new MouseEvent("mousedown", init));
+  pointer(canvas, "pointerup", x, y);
   canvas.dispatchEvent(new MouseEvent("mouseup", init));
   canvas.dispatchEvent(new MouseEvent("click", init));
 }

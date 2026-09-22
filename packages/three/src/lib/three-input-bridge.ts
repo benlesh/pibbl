@@ -160,7 +160,14 @@ export function createThreeInputBridge(
         ) {
           release(pointerId);
         }
-        context.invalidate();
+        if (
+          input.type === "pointermove" ||
+          input.type === "wheel" ||
+          input.type === "contextmenu" ||
+          input.type === "click"
+        ) {
+          context.invalidate();
+        }
       }
     },
     dispose() {
