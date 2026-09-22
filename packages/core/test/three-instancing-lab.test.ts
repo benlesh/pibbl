@@ -98,6 +98,16 @@ function applicationResourceIdentities(
   };
 }
 
+function expectEachIdentityExactlyOnce<T>(
+  actual: readonly T[],
+  expected: readonly T[],
+): void {
+  expect(actual).toHaveLength(expected.length);
+  for (const identity of expected) {
+    expect(actual.filter((candidate) => candidate === identity)).toHaveLength(1);
+  }
+}
+
 describe('public Three instancing proving scenarios', () => {
   it('registers the exact attributed learning and deterministic laboratory surfaces', async () => {
     const learning = getLearningExampleBySlug('three-instancing');
@@ -324,12 +334,30 @@ describe('public Three instancing proving scenarios', () => {
       return originalControlsUpdate.apply(this, args);
     });
     const objectAdd = vi.spyOn(Object3D.prototype, 'add');
-    const controlsDispose = vi.spyOn(OrbitControls.prototype, 'dispose');
-    const geometryDispose = vi.spyOn(
-      IcosahedronGeometry.prototype,
-      'dispose',
-    );
-    const materialDispose = vi.spyOn(MeshPhongMaterial.prototype, 'dispose');
+    const disposedControls: OrbitControls[] = [];
+    const originalControlsDispose = OrbitControls.prototype.dispose;
+    const controlsDispose = vi
+      .spyOn(OrbitControls.prototype, 'dispose')
+      .mockImplementation(function (this: OrbitControls) {
+        disposedControls.push(this);
+        return originalControlsDispose.call(this);
+      });
+    const disposedGeometries: IcosahedronGeometry[] = [];
+    const originalGeometryDispose = IcosahedronGeometry.prototype.dispose;
+    const geometryDispose = vi
+      .spyOn(IcosahedronGeometry.prototype, 'dispose')
+      .mockImplementation(function (this: IcosahedronGeometry) {
+        disposedGeometries.push(this);
+        return originalGeometryDispose.call(this);
+      });
+    const disposedMaterials: MeshPhongMaterial[] = [];
+    const originalMaterialDispose = MeshPhongMaterial.prototype.dispose;
+    const materialDispose = vi
+      .spyOn(MeshPhongMaterial.prototype, 'dispose')
+      .mockImplementation(function (this: MeshPhongMaterial) {
+        disposedMaterials.push(this);
+        return originalMaterialDispose.call(this);
+      });
 
     const { canvas, controller } = await mountThreeInstancingLab();
     const initialResources = applicationResourceIdentities(objectAdd.mock.calls);
@@ -382,14 +410,32 @@ describe('public Three instancing proving scenarios', () => {
     const stateBeforeDispose = controller.getState();
     await controller.dispose();
     activeControllers.delete(controller);
-    expect(controlsDispose).toHaveBeenCalledTimes(1);
-    expect(geometryDispose).toHaveBeenCalledTimes(2);
-    expect(materialDispose).toHaveBeenCalledTimes(2);
+    expectEachIdentityExactlyOnce(disposedControls, initialControls);
+    expectEachIdentityExactlyOnce(
+      disposedGeometries,
+      initialResources.geometries,
+    );
+    expectEachIdentityExactlyOnce(
+      disposedMaterials,
+      initialResources.materials,
+    );
+    const firstDisposedControls = [...disposedControls];
+    const firstDisposedGeometries = [...disposedGeometries];
+    const firstDisposedMaterials = [...disposedMaterials];
 
     await controller.dispose();
-    expect(controlsDispose).toHaveBeenCalledTimes(1);
-    expect(geometryDispose).toHaveBeenCalledTimes(2);
-    expect(materialDispose).toHaveBeenCalledTimes(2);
+    expect(disposedControls).toEqual(firstDisposedControls);
+    expect(disposedGeometries).toEqual(firstDisposedGeometries);
+    expect(disposedMaterials).toEqual(firstDisposedMaterials);
+    expectEachIdentityExactlyOnce(disposedControls, initialControls);
+    expectEachIdentityExactlyOnce(
+      disposedGeometries,
+      initialResources.geometries,
+    );
+    expectEachIdentityExactlyOnce(
+      disposedMaterials,
+      initialResources.materials,
+    );
     expect(controller.getState()).toEqual(stateBeforeDispose);
     await expect(controller.perform('resize-layer')).rejects.toThrow(
       /disposed Three instancing laboratory/u,
