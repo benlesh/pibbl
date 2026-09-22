@@ -1,3 +1,5 @@
+import { crcStudioThreeModules } from "../playground/src/studio-three-runtime";
+
 export * from "@crc/core";
 export * from "@crc/particles";
 export * from "@crc/particles/webgl";
@@ -22,3 +24,5 @@ export {
 } from "@crc/core";
 export { jsx, jsxs } from "@crc/core/jsx-runtime";
 export { jsxDEV } from "@crc/core/jsx-dev-runtime";
+
+export const __crcStudioModules = crcStudioThreeModules;

@@ -254,6 +254,91 @@ export default function mount(canvas) {
     });
   });
 
+  it("executes the public Three lesson imports through their module namespaces", () => {
+    class Scene {}
+    class PerspectiveCamera {}
+    const ThreeValue = class {};
+    class OrbitControls {
+      constructor(
+        readonly camera: PerspectiveCamera,
+        readonly element: unknown,
+      ) {}
+    }
+    const defineThreeLayer = (definition: unknown) => definition;
+
+    const result = executeSandbox(
+      `
+import { crc } from "@crc/core";
+import { defineThreeLayer } from "@crc/three";
+import {
+  Color,
+  HemisphereLight,
+  IcosahedronGeometry,
+  InstancedMesh,
+  Matrix4,
+  Mesh,
+  MeshPhongMaterial,
+  PerspectiveCamera,
+  Raycaster,
+  Scene,
+  Vector2,
+} from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+const Layer = defineThreeLayer({
+  create(context) {
+    const scene = new Scene();
+    const camera = new PerspectiveCamera();
+    const controls = context.input.connect(element => new OrbitControls(camera, element));
+    return { scene, camera, controls };
+  },
+});
+export default function mount(canvas) {
+  return crc(canvas, Layer);
+}
+`,
+      {
+        crc: (_canvas: unknown, node: unknown) => node,
+        __crcStudioModules: {
+          "@crc/three": { defineThreeLayer },
+          three: {
+            Color: ThreeValue,
+            HemisphereLight: ThreeValue,
+            IcosahedronGeometry: ThreeValue,
+            InstancedMesh: ThreeValue,
+            Matrix4: ThreeValue,
+            Mesh: ThreeValue,
+            MeshPhongMaterial: ThreeValue,
+            PerspectiveCamera,
+            Raycaster: ThreeValue,
+            Scene,
+            Vector2: ThreeValue,
+          },
+          "three/addons/controls/OrbitControls.js": { OrbitControls },
+        },
+      },
+      {},
+    );
+
+    expect(result).toEqual({
+      create: expect.any(Function),
+    });
+  });
+
+  it.each([
+    'import { Scene } from "@crc/three";',
+    'import { Scene } from "@crc/three/internal";',
+    'import { WebGPURenderer } from "three";',
+    'import { Scene } from "three/src/scenes/Scene.js";',
+    'import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";',
+    'import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";',
+  ])("rejects unsupported Three legacy or deep paths: %s", (statement) => {
+    expect(() =>
+      toRunnableScript(
+        `${statement}\nexport default function mount(canvas) { return canvas; }`,
+      ),
+    ).toThrow(/default mount\(canvas\)/u);
+  });
+
   it.each([
     'import external from "external";',
     'import * as CRC from "@crc/core";',

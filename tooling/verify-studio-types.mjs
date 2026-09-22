@@ -721,6 +721,7 @@ import {
   type CRCThreeLayerResources,
 } from '@crc/three';
 import { PerspectiveCamera, Scene } from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { jsx, jsxs } from '@crc/core/jsx-runtime';
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import {
@@ -1565,6 +1566,7 @@ const studioThreeLayer = (
   />
 );
 void CRC_THREE_ROOT;
+void OrbitControls;
 void studioThreeLayer;
 
 export default function mount(canvas: HTMLCanvasElement): CRCController {
@@ -1619,6 +1621,52 @@ async function studioRuntime(mode) {
   return runtime;
 }
 
+function assertStudioRuntimeModules(runtime, mode) {
+  const modules = runtime.__crcStudioModules;
+  const expectedModuleNames = [
+    '@crc/three',
+    'three',
+    'three/addons/controls/OrbitControls.js',
+  ];
+  if (
+    !modules ||
+    Object.keys(modules).sort().join('\n') !== expectedModuleNames.join('\n')
+  ) {
+    throw new Error(`CRC Studio ${mode} runtime has unexpected sandbox modules.`);
+  }
+  if (Object.keys(modules['@crc/three']).join('\n') !== 'defineThreeLayer') {
+    throw new Error(`CRC Studio ${mode} @crc/three namespace must expose defineThreeLayer only.`);
+  }
+  const expectedThreeExports = [
+    'Color',
+    'HemisphereLight',
+    'IcosahedronGeometry',
+    'InstancedMesh',
+    'Matrix4',
+    'Mesh',
+    'MeshPhongMaterial',
+    'PerspectiveCamera',
+    'Raycaster',
+    'Scene',
+    'Vector2',
+  ];
+  if (
+    Object.keys(modules.three).sort().join('\n') !==
+    expectedThreeExports.join('\n')
+  ) {
+    throw new Error(`CRC Studio ${mode} runtime has unexpected Three exports.`);
+  }
+  if (
+    Object.keys(modules['three/addons/controls/OrbitControls.js']).join('\n') !==
+    'OrbitControls'
+  ) {
+    throw new Error(`CRC Studio ${mode} runtime has unexpected OrbitControls exports.`);
+  }
+  if (modules['@crc/three'].defineThreeLayer !== runtime.defineThreeLayer) {
+    throw new Error(`CRC Studio ${mode} runtime duplicated defineThreeLayer identity.`);
+  }
+}
+
 try {
   for (const { moduleName, content } of declarationModules) {
     const declarationPath = join(directory, modulePaths.get(moduleName));
@@ -1641,6 +1689,7 @@ try {
       noEmit: true,
       paths: {
         three: [join(repositoryRoot, 'packages/three/node_modules/@types/three/index.d.ts')],
+        'three/addons/controls/OrbitControls.js': [join(repositoryRoot, 'packages/three/node_modules/@types/three/examples/jsm/controls/OrbitControls.d.ts')],
       },
       skipLibCheck: false,
       strict: true,
@@ -1695,6 +1744,7 @@ try {
           '@crc/three': [entries.three],
           '@crc/webgl': [entries.webgl],
           three: [join(repositoryRoot, 'packages/three/node_modules/@types/three/index.d.ts')],
+          'three/addons/controls/OrbitControls.js': [join(repositoryRoot, 'packages/three/node_modules/@types/three/examples/jsm/controls/OrbitControls.d.ts')],
         },
         skipLibCheck: false,
         strict: true,
@@ -1768,9 +1818,12 @@ try {
   }
   const sourceRuntime = await studioRuntime('source');
   const builtRuntime = await studioRuntime('built');
+  assertStudioRuntimeModules(sourceRuntime, 'source');
+  assertStudioRuntimeModules(builtRuntime, 'built');
   const sourceRuntimeExports = Object.keys(sourceRuntime).sort();
   const builtRuntimeExports = Object.keys(builtRuntime).sort();
   const expectedStudioRuntimeExports = [
+    '__crcStudioModules',
     'Absolute',
     'AmbientLight',
     'Arc',
@@ -1879,8 +1932,8 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 107) {
-    throw new Error(`CRC Studio runtime must expose 78 core values, 1 Three value, 14 WebGL values, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  if (expectedStudioRuntimeExports.length !== 108) {
+    throw new Error(`CRC Studio runtime must expose 78 core values, 1 Three adapter value, 1 sandbox module registry, 14 WebGL values, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(

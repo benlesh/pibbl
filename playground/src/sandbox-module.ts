@@ -1,12 +1,39 @@
 import { parse } from "@babel/parser";
 
-const SUPPORTED_CRC_MODULES = new Set([
+const SUPPORTED_MODULES = new Set([
   "@crc/core",
   "@crc/core/jsx-runtime",
   "@crc/core/jsx-dev-runtime",
   "@crc/particles",
   "@crc/particles/webgl",
+  "@crc/three",
   "@crc/webgl",
+  "three",
+  "three/addons/controls/OrbitControls.js",
+]);
+
+const RESTRICTED_MODULE_EXPORTS = new Map<string, ReadonlySet<string>>([
+  ["@crc/three", new Set(["defineThreeLayer"])],
+  [
+    "three",
+    new Set([
+      "Color",
+      "HemisphereLight",
+      "IcosahedronGeometry",
+      "InstancedMesh",
+      "Matrix4",
+      "Mesh",
+      "MeshPhongMaterial",
+      "PerspectiveCamera",
+      "Raycaster",
+      "Scene",
+      "Vector2",
+    ]),
+  ],
+  [
+    "three/addons/controls/OrbitControls.js",
+    new Set(["OrbitControls"]),
+  ],
 ]);
 
 interface SourceEdit {
@@ -18,7 +45,8 @@ interface SourceEdit {
 function invalidModuleShape(): Error {
   return new Error(
     "Lessons may contain named imports only from @crc/core, " +
-      "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, @crc/particles, @crc/particles/webgl, and @crc/webgl, plus exactly " +
+      "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, @crc/particles, @crc/particles/webgl, @crc/three, @crc/webgl, three, and " +
+      "three/addons/controls/OrbitControls.js, plus exactly " +
       "one default mount(canvas) export.",
   );
 }
@@ -84,7 +112,7 @@ export function toRunnableScript(emittedCode: string): string {
   const identifiers = new Set<string>();
   if (inspectSyntax(file.program, identifiers)) throw invalidModuleShape();
 
-  const bindings: string[] = [];
+  const bindings = new Map<string, string[]>();
   const localBindings = new Set<string>();
   const edits: SourceEdit[] = [];
   let mountExports = 0;
@@ -95,28 +123,34 @@ export function toRunnableScript(emittedCode: string): string {
       if (
         statement.importKind === "type" ||
         typeof statement.source.value !== "string" ||
-        !SUPPORTED_CRC_MODULES.has(statement.source.value) ||
+        !SUPPORTED_MODULES.has(statement.source.value) ||
         statement.specifiers.length === 0 ||
         statement.attributes?.length
       ) {
         throw invalidModuleShape();
       }
       for (const specifier of statement.specifiers) {
+        const moduleName = statement.source.value;
         if (
           specifier.type !== "ImportSpecifier" ||
           specifier.importKind === "type" ||
           specifier.imported.type !== "Identifier" ||
           specifier.imported.name === "default" ||
+          RESTRICTED_MODULE_EXPORTS.get(moduleName)?.has(
+            specifier.imported.name,
+          ) === false ||
           localBindings.has(specifier.local.name)
         ) {
           throw invalidModuleShape();
         }
         localBindings.add(specifier.local.name);
-        bindings.push(
+        const moduleBindings = bindings.get(moduleName) ?? [];
+        moduleBindings.push(
           specifier.imported.name === specifier.local.name
             ? specifier.imported.name
             : `${specifier.imported.name}: ${specifier.local.name}`,
         );
+        bindings.set(moduleName, moduleBindings);
       }
       const statementStart = requiredOffset(statement.start);
       const statementEnd = requiredOffset(statement.end);
@@ -199,15 +233,23 @@ export function toRunnableScript(emittedCode: string): string {
     }
   }
 
-  if (bindings.length === 0 || mountExports !== 1) {
+  if (bindings.size === 0 || mountExports !== 1) {
     throw invalidModuleShape();
   }
 
   const runtimeBinding = uniqueRuntimeBinding(identifiers);
   const runnable = applyEdits(emittedCode, edits);
+  const runtimeBindings = [...bindings]
+    .map(([moduleName, moduleBindings]) => {
+      const runtimeSource = RESTRICTED_MODULE_EXPORTS.has(moduleName)
+        ? `${runtimeBinding}.__crcStudioModules[${JSON.stringify(moduleName)}]`
+        : runtimeBinding;
+      return `const { ${moduleBindings.join(", ")} } = ${runtimeSource};`;
+    })
+    .join("\n");
   const wrapped = `globalThis.__CRC_EXAMPLE_MOUNT__ = (function (${runtimeBinding}) {
 "use strict";
-const { ${bindings.join(", ")} } = ${runtimeBinding};
+${runtimeBindings}
 ${runnable}
 return mount;
 })(globalThis["CRC_CORE"]);`;

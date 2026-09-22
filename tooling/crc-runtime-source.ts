@@ -5,6 +5,25 @@ const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const CRC_ENTRY_POINT =
   /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles(?:\/webgl)?|three|webgl(?:\/internal)?)$/;
+const THREE_ENTRY_POINT =
+  /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
+
+const threeEntryPoints = new Map([
+  [
+    "three",
+    resolve(
+      import.meta.dirname,
+      "../packages/three/node_modules/three/build/three.module.js",
+    ),
+  ],
+  [
+    "three/addons/controls/OrbitControls.js",
+    resolve(
+      import.meta.dirname,
+      "../packages/three/node_modules/three/examples/jsm/controls/OrbitControls.js",
+    ),
+  ],
+]);
 
 function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
   const directory = mode === "built" ? "dist" : "src";
@@ -90,8 +109,12 @@ function assertSingleRuntimeMode(
       packageRoot,
       mode === "built" ? "dist" : "src",
     );
+    const packageNodeModules = resolve(packageRoot, "node_modules");
     const packageInputs = inputs.filter(
-      (path) => path === packageRoot || path.startsWith(`${packageRoot}${sep}`),
+      (path) =>
+        (path === packageRoot || path.startsWith(`${packageRoot}${sep}`)) &&
+        path !== packageNodeModules &&
+        !path.startsWith(`${packageNodeModules}${sep}`),
     );
     if (
       packageInputs.length === 0 ||
@@ -138,6 +161,11 @@ export function crcRuntimeSource(mode: string) {
             setup(build) {
               build.onResolve({ filter: CRC_ENTRY_POINT }, (args) => {
                 const path = entryPoints.get(args.path);
+                if (!path) return undefined;
+                return { path };
+              });
+              build.onResolve({ filter: THREE_ENTRY_POINT }, (args) => {
+                const path = threeEntryPoints.get(args.path);
                 if (!path) return undefined;
                 return { path };
               });
