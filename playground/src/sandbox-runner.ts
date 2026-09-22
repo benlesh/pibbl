@@ -97,7 +97,11 @@ function createFrameSource(options: {
     try {
       ${runnable}
       const canvas = document.querySelector('canvas');
-      controller = globalThis.__CRC_EXAMPLE_MOUNT__(canvas);
+      const mountedController = globalThis.__CRC_EXAMPLE_MOUNT__(canvas);
+      if (!mountedController || typeof mountedController.dispose !== 'function') {
+        throw new Error('Preview mount must return a controller with dispose().');
+      }
+      controller = mountedController;
       send({ kind: 'mounted' });
     } catch (error) {
       send({ kind: 'error', message: error instanceof Error ? error.message : printable(error) });
@@ -172,7 +176,7 @@ export class SandboxPreview {
         "*",
       );
     }
-    frame?.remove();
+    window.setTimeout(() => frame?.remove());
   }
 
   #handleMessage = (event: MessageEvent<unknown>): void => {
