@@ -23,6 +23,7 @@ const modulePaths = new Map([
   ['@crc/core/jsx-dev-runtime', 'node_modules/@crc/core/jsx-dev-runtime.d.ts'],
   ['@crc/particles', 'node_modules/@crc/particles/index.d.ts'],
   ['@crc/particles/webgl', 'node_modules/@crc/particles/webgl.d.ts'],
+  ['@crc/three', 'node_modules/@crc/three/index.d.ts'],
   ['@crc/webgl', 'node_modules/@crc/webgl/index.d.ts'],
 ]);
 
@@ -40,7 +41,7 @@ function readDeclarationModules(bundle) {
     new Set(modules.map(({ moduleName }) => moduleName)).size !== modulePaths.size ||
     modules.some(({ moduleName }) => !modulePaths.has(moduleName))
   ) {
-    throw new Error('CRC Studio declarations must define the six package entry points exactly once.');
+    throw new Error('CRC Studio declarations must define the seven package entry points exactly once.');
   }
   return modules;
 }
@@ -267,6 +268,7 @@ const packageDeclarationSources = new Map([
   ],
   ['@crc/particles', await readFile(join(repositoryRoot, 'packages/particles/src/index.ts'), 'utf8')],
   ['@crc/particles/webgl', await readFile(join(repositoryRoot, 'packages/particles/src/webgl.ts'), 'utf8')],
+  ['@crc/three', await readFile(join(repositoryRoot, 'packages/three/src/index.ts'), 'utf8')],
   ['@crc/webgl', await readFile(join(repositoryRoot, 'packages/webgl/src/index.ts'), 'utf8')],
 ]);
 
@@ -282,6 +284,7 @@ const builtPackageDeclarationSources = new Map([
   ],
   ['@crc/particles', await readFile(join(repositoryRoot, 'packages/particles/dist/index.d.ts'), 'utf8')],
   ['@crc/particles/webgl', await readFile(join(repositoryRoot, 'packages/particles/dist/webgl.d.ts'), 'utf8')],
+  ['@crc/three', await readFile(join(repositoryRoot, 'packages/three/dist/index.d.ts'), 'utf8')],
   ['@crc/webgl', await readFile(join(repositoryRoot, 'packages/webgl/dist/index.d.ts'), 'utf8')],
 ]);
 
@@ -384,6 +387,18 @@ const publicTypeExports = [
   'CRCSaturateFilter',
   'CRCSepiaFilter',
   'CRCRef',
+  'CRCRenderLayerComponentProps',
+  'CRCRenderLayerContext',
+  'CRCRenderLayerDefinition',
+  'CRCRenderLayerFrame',
+  'CRCRenderLayerHit',
+  'CRCRenderLayerInput',
+  'CRCRenderLayerInteraction',
+  'CRCRenderLayerInteractionSnapshot',
+  'CRCRenderLayerProps',
+  'CRCRenderLayerSize',
+  'CRCRenderLayerStyle',
+  'CRCRenderLayerTarget',
   'CRCRenderResult',
   'CRCTextChild',
   'CRCTouchEvent',
@@ -481,8 +496,8 @@ const publicTypeExports = [
   'WritableSignal',
 ].sort();
 
-if (publicTypeExports.length !== 175) {
-  throw new Error(`CRC Studio must declare exactly 175 core public types, received ${publicTypeExports.length}.`);
+if (publicTypeExports.length !== 187) {
+  throw new Error(`CRC Studio must declare exactly 187 core public types, received ${publicTypeExports.length}.`);
 }
 
 const publicWebGLTypeExports = [
@@ -525,6 +540,21 @@ if (publicWebGLTypeExports.length !== 33) {
   throw new Error(`CRC Studio must declare exactly 33 WebGL public types, received ${publicWebGLTypeExports.length}.`);
 }
 
+const publicThreeTypeExports = [
+  'CRCThreeInputBridge',
+  'CRCThreeLayerContext',
+  'CRCThreeLayerDefinition',
+  'CRCThreeLayerResources',
+  'CRCThreePicker',
+  'CRCThreePickResult',
+  'CRCThreeRendererOptions',
+  'CRCThreeTarget',
+].sort();
+
+if (publicThreeTypeExports.length !== 8) {
+  throw new Error(`CRC Studio must declare exactly 8 Three public types, received ${publicThreeTypeExports.length}.`);
+}
+
 function explicitTypeExportNames(source) {
   const names = [];
   for (const match of source.matchAll(
@@ -543,6 +573,7 @@ function explicitTypeExportNames(source) {
 
 for (const [moduleName, publicTypes] of [
   ['@crc/core', publicTypeExports],
+  ['@crc/three', publicThreeTypeExports],
   ['@crc/webgl', publicWebGLTypeExports],
 ]) {
   const packageTypeExports = explicitTypeExportNames(
@@ -562,6 +593,9 @@ import type {
   ${publicTypeExports.join(',\n  ')}
 } from '@crc/core';
 import type {
+  ${publicThreeTypeExports.join(',\n  ')}
+} from '@crc/three';
+import type {
   ${publicWebGLTypeExports.join(',\n  ')}
 } from '@crc/webgl';
 `;
@@ -571,6 +605,7 @@ ${removedAuthoringImports}
 // @ts-expect-error ordinary Studio examples cannot import the version-coupled friend entry
 import type { CRCInternalFrame } from '@crc/core/internal';
 import * as CRC_CORE_ROOT from '@crc/core';
+import * as CRC_THREE_ROOT from '@crc/three';
 import * as CRC_WEBGL_ROOT from '@crc/webgl';
 import {
   Absolute,
@@ -592,6 +627,7 @@ import {
   createElement,
   defineAnimation,
   definePrimitive,
+  defineRenderLayer,
   easing,
   Flex,
   Flow,
@@ -680,6 +716,11 @@ import {
   type WritableSignal,
   untracked,
 } from '@crc/core';
+import {
+  defineThreeLayer,
+  type CRCThreeLayerResources,
+} from '@crc/three';
+import { PerspectiveCamera, Scene } from 'three';
 import { jsx, jsxs } from '@crc/core/jsx-runtime';
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import {
@@ -1504,6 +1545,28 @@ crc(canvas, createElement(RadiusProbe, { style: { radius: '50%' } }), {
   fit: 'contain',
 });
 
+const StudioThreeLayer = defineThreeLayer<
+  { exposure: number },
+  CRCThreeLayerResources
+>({
+  create() {
+    return { scene: new Scene(), camera: new PerspectiveCamera() };
+  },
+});
+const studioThreeLayer = (
+  <StudioThreeLayer
+    exposure={1}
+    missBehavior="block"
+    style={{
+      width: 80,
+      height: 60,
+      filter: { type: 'blur', radius: 1 },
+    }}
+  />
+);
+void CRC_THREE_ROOT;
+void studioThreeLayer;
+
 export default function mount(canvas: HTMLCanvasElement): CRCController {
   return crc(canvas, <StudioLesson />);
 }
@@ -1549,7 +1612,7 @@ async function studioRuntime(mode) {
   if (!serializedRuntime) {
     throw new Error(`CRC Studio ${mode} runtime did not expose an IIFE module.`);
   }
-  const context = {};
+  const context = { EventTarget };
   runInNewContext(JSON.parse(serializedRuntime), context);
   const runtime = context.CRC_CORE;
   if (!runtime) throw new Error(`CRC Studio ${mode} runtime did not initialize.`);
@@ -1576,6 +1639,9 @@ try {
       module: 'ESNext',
       moduleResolution: 'Bundler',
       noEmit: true,
+      paths: {
+        three: [join(repositoryRoot, 'packages/three/node_modules/@types/three/index.d.ts')],
+      },
       skipLibCheck: false,
       strict: true,
       target: 'ESNext',
@@ -1591,6 +1657,7 @@ try {
       jsxDevRuntime: join(repositoryRoot, 'packages/core/src/jsx-dev-runtime.ts'),
       particles: join(repositoryRoot, 'packages/particles/src/index.ts'),
       particlesWebGL: join(repositoryRoot, 'packages/particles/src/webgl.ts'),
+      three: join(repositoryRoot, 'packages/three/src/index.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/src/index.ts'),
     },
     {
@@ -1601,6 +1668,7 @@ try {
       jsxDevRuntime: join(repositoryRoot, 'packages/core/dist/jsx-dev-runtime.d.ts'),
       particles: join(repositoryRoot, 'packages/particles/dist/index.d.ts'),
       particlesWebGL: join(repositoryRoot, 'packages/particles/dist/webgl.d.ts'),
+      three: join(repositoryRoot, 'packages/three/dist/index.d.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/dist/index.d.ts'),
     },
   ];
@@ -1624,7 +1692,9 @@ try {
           '@crc/core/jsx-dev-runtime': [entries.jsxDevRuntime],
           '@crc/particles': [entries.particles],
           '@crc/particles/webgl': [entries.particlesWebGL],
+          '@crc/three': [entries.three],
           '@crc/webgl': [entries.webgl],
+          three: [join(repositoryRoot, 'packages/three/node_modules/@types/three/index.d.ts')],
         },
         skipLibCheck: false,
         strict: true,
@@ -1771,8 +1841,10 @@ try {
     'createSvgPath',
     'createWedgePath',
     'createWebGLGeometry',
+    'defineThreeLayer',
     'definePrimitive',
     'defineAnimation',
+    'defineRenderLayer',
     'easing',
     'isSignal',
     'keyframes',
@@ -1807,8 +1879,8 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 105) {
-    throw new Error(`CRC Studio runtime must expose 77 core values, 14 WebGL values, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  if (expectedStudioRuntimeExports.length !== 107) {
+    throw new Error(`CRC Studio runtime must expose 78 core values, 1 Three value, 14 WebGL values, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(
@@ -1819,7 +1891,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 208-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 228-type structural ' +
     'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
     'generic, and layout checks against source and built packages.\n',
   );

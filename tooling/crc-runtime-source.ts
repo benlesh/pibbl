@@ -4,7 +4,7 @@ import { isAbsolute, resolve, sep } from "node:path";
 const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const CRC_ENTRY_POINT =
-  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles(?:\/webgl)?|webgl(?:\/internal)?)$/;
+  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles(?:\/webgl)?|three|webgl(?:\/internal)?)$/;
 
 function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
   const directory = mode === "built" ? "dist" : "src";
@@ -53,6 +53,13 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
       ),
     ],
     [
+      "@crc/three",
+      resolve(
+        import.meta.dirname,
+        `../packages/three/${directory}/index.${extension}`,
+      ),
+    ],
+    [
       "@crc/webgl",
       resolve(
         import.meta.dirname,
@@ -77,7 +84,7 @@ function assertSingleRuntimeMode(
   const inputs = Object.keys(metafile.inputs).map((path) =>
     isAbsolute(path) ? path : resolve(repositoryRoot, path),
   );
-  for (const packageName of ["core", "particles", "webgl"]) {
+  for (const packageName of ["core", "particles", "three", "webgl"]) {
     const packageRoot = resolve(repositoryRoot, `packages/${packageName}`);
     const expectedRoot = resolve(
       packageRoot,

@@ -78,6 +78,11 @@ import {
   defineParticleEffect3D,
 } from '@crc/particles/webgl';
 import {
+  defineThreeLayer,
+  type CRCThreeLayerResources,
+} from '@crc/three';
+import { PerspectiveCamera, Scene } from 'three';
+import {
   Fragment as DevelopmentFragment,
   jsxDEV,
   type JSX as DevelopmentJSX,
@@ -178,6 +183,23 @@ export const jsxFilterElements: readonly CRCElement[] = [
   <FilterPrimitive style={{ width: 12, filter: jsxFilterTypes[9] }} />,
   <FilterPrimitive style={{ width: 12, filter: jsxFilterTypes }} />,
 ];
+
+const AutomaticThreeLayer = defineThreeLayer<
+  { exposure: number },
+  CRCThreeLayerResources
+>({
+  create() {
+    return { scene: new Scene(), camera: new PerspectiveCamera() };
+  },
+});
+
+export const automaticThreeLayerElement: CRCElement = (
+  <AutomaticThreeLayer
+    exposure={1}
+    missBehavior="block"
+    style={{ width: 80, height: 60, filter: jsxFilterTypes[0] }}
+  />
+);
 
 export const automaticElement: CRCElement = (
   <Label key="automatic" value="ready">

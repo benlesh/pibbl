@@ -9,6 +9,9 @@ import { build } from 'esbuild';
 const focusImplementationMarker = 'CRC_FOCUS_MANAGEMENT_V1';
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const workspaceThreeTypesDirectory = realpathSync(
+  join(repositoryRoot, 'packages/three/node_modules/@types/three'),
+);
 const temporaryRoot = mkdtempSync(join(tmpdir(), 'crc-packed-consumer-'));
 const packageDirectory = join(temporaryRoot, 'packages');
 const consumerDirectory = join(temporaryRoot, 'consumer');
@@ -110,15 +113,20 @@ function assertSinglePackedRuntime(metafile) {
     input.replaceAll('\\', '/'),
   );
   const leakedSources = normalizedInputs.filter(input =>
-    /\/packages\/(?:core|webgl)\/src\//u.test(input),
+    /\/packages\/[^/]+\/src\//u.test(input),
   );
   if (leakedSources.length > 0) {
     throw new Error(
       `Packed consumer resolved workspace sources: ${leakedSources.join(', ')}`,
     );
   }
-  for (const packageName of ['core', 'particles', 'webgl']) {
-    const marker = `/node_modules/@crc/${packageName}/`;
+  for (const [packageName, marker] of [
+    ['@crc/core', '/node_modules/@crc/core/'],
+    ['@crc/particles', '/node_modules/@crc/particles/'],
+    ['@crc/three', '/node_modules/@crc/three/'],
+    ['@crc/webgl', '/node_modules/@crc/webgl/'],
+    ['three', '/node_modules/three/'],
+  ]) {
     const packageRoots = new Set(
       normalizedInputs
         .filter(input => input.includes(marker))
@@ -126,7 +134,7 @@ function assertSinglePackedRuntime(metafile) {
     );
     if (packageRoots.size !== 1) {
       throw new Error(
-        `Packed bundle must resolve exactly one @crc/${packageName} package; ` +
+        `Packed bundle must resolve exactly one ${packageName} package; ` +
         `received ${[...packageRoots].join(', ') || 'none'}.`,
       );
     }
@@ -151,10 +159,13 @@ try {
   const coreTarball = pack('packages/core');
   const webglTarball = pack('packages/webgl');
   const particlesTarball = pack('packages/particles');
+  const threeTarball = pack('packages/three');
+  const threeImplementationTarball = pack('packages/three/node_modules/three');
   assertTarballHasNoSources(typesTarball);
   const coreEntries = assertTarballHasNoSources(coreTarball);
   const webglEntries = assertTarballHasNoSources(webglTarball);
   const particleEntries = assertTarballHasNoSources(particlesTarball);
+  const threeEntries = assertTarballHasNoSources(threeTarball);
   assertRequiredEntries(coreEntries, [
     'package/dist/index.d.ts',
     'package/dist/index.mjs',
@@ -181,6 +192,11 @@ try {
     'package/dist/webgl.d.ts',
     'package/dist/webgl.mjs',
     'package/dist/webgl.mjs.map',
+  ]);
+  assertRequiredEntries(threeEntries, [
+    'package/dist/index.d.ts',
+    'package/dist/index.mjs',
+    'package/dist/index.mjs.map',
   ]);
 
   writeFileSync(join(rootOnlyConsumerDirectory, 'package.json'), `${JSON.stringify({
@@ -246,6 +262,11 @@ try {
       '@crc/types': `file:${typesTarball}`,
       '@crc/webgl': `file:${webglTarball}`,
       '@crc/particles': `file:${particlesTarball}`,
+      '@crc/three': `file:${threeTarball}`,
+      three: `file:${threeImplementationTarball}`,
+    },
+    devDependencies: {
+      '@types/three': `link:${workspaceThreeTypesDirectory}`,
     },
   }, null, 2)}\n`);
   writeFileSync(
@@ -282,6 +303,8 @@ try {
     '@crc/webgl/internal',
     '@crc/particles',
     '@crc/particles/webgl',
+    '@crc/three',
+    'three',
   ]) {
     const packageEntry = realpathSync(requireFromConsumer.resolve(packageName));
     if (!packageEntry.startsWith(realpathSync(join(consumerDirectory, 'node_modules')))) {
@@ -289,12 +312,14 @@ try {
     }
     const installedRoot = findPackageRoot(packageEntry);
     installedPackageRoots.set(packageName, installedRoot);
-    try {
-      realpathSync(join(installedRoot, 'src'));
-      throw new Error(`${packageName} unexpectedly installed a src directory.`);
-    } catch (error) {
-      if (error?.code !== 'ENOENT') {
-        throw error;
+    if (packageName.startsWith('@crc/')) {
+      try {
+        realpathSync(join(installedRoot, 'src'));
+        throw new Error(`${packageName} unexpectedly installed a src directory.`);
+      } catch (error) {
+        if (error?.code !== 'ENOENT') {
+          throw error;
+        }
       }
     }
   }
@@ -308,6 +333,11 @@ try {
   );
   const installedParticlesWebGLEntry = realpathSync(
     requireFromConsumer.resolve('@crc/particles/webgl'),
+  );
+  const installedThreeRoot = installedPackageRoots.get('@crc/three');
+  const installedThreeEntry = realpathSync(requireFromConsumer.resolve('@crc/three'));
+  const installedThreeImplementationEntry = realpathSync(
+    requireFromConsumer.resolve('three'),
   );
   const requireFromWebGL = createRequire(installedWebGLEntry);
   const webglCoreEntry = realpathSync(requireFromWebGL.resolve('@crc/core'));
@@ -326,6 +356,64 @@ try {
   ) {
     throw new Error(
       '@crc/particles did not resolve the packed consumer core/WebGL identities.',
+    );
+  }
+  const requireFromThree = createRequire(installedThreeEntry);
+  if (
+    realpathSync(requireFromThree.resolve('@crc/core')) !== installedCoreEntry ||
+    realpathSync(requireFromThree.resolve('three')) !== installedThreeImplementationEntry
+  ) {
+    throw new Error(
+      '@crc/three did not resolve the packed consumer core/Three identities.',
+    );
+  }
+  const threeManifest = JSON.parse(
+    readFileSync(join(installedThreeRoot, 'package.json'), 'utf8'),
+  );
+  const expectedThreePeers = JSON.stringify({
+    "@crc/core": "0.0.1",
+    three: "^0.186.0",
+  });
+  if (JSON.stringify(threeManifest.peerDependencies) !== expectedThreePeers) {
+    throw new Error("@crc/three must keep exact tested core and Three peers.");
+  }
+  if (Object.keys(threeManifest.dependencies ?? {}).length !== 0) {
+    throw new Error('@crc/three must externalize core and Three implementations.');
+  }
+  const installedThreeBundle = readFileSync(installedThreeEntry, 'utf8');
+  if (
+    !installedThreeBundle.includes('from "@crc/core"') ||
+    !installedThreeBundle.includes('from "three"')
+  ) {
+    throw new Error('@crc/three must retain external core and Three imports.');
+  }
+  for (const marker of [
+    focusImplementationMarker,
+    '@crc/core.element',
+    'CRC backend names must be nonempty.',
+    'requestAnimationFrame',
+  ]) {
+    if (installedThreeBundle.includes(marker)) {
+      throw new Error(
+        `Packed @crc/three embedded core implementation marker ${marker}.`,
+      );
+    }
+  }
+  if (
+    installedThreeBundle.includes('THREE.WebGLProgram: Can not resolve #include') ||
+    installedThreeBundle.includes('WebGLRenderer: Shader Error')
+  ) {
+    throw new Error('Packed @crc/three embedded Three renderer source.');
+  }
+  const threeSourceMap = JSON.parse(
+    readFileSync(`${installedThreeEntry}.map`, 'utf8'),
+  );
+  const leakedThreeImplementationSources = threeSourceMap.sources.filter(source =>
+    /(?:packages\/core|node_modules\/(?:@crc\/core|three)|three\/(?:build|src))/u.test(source),
+  );
+  if (leakedThreeImplementationSources.length > 0) {
+    throw new Error(
+      `Packed @crc/three source map embedded external implementations: ${leakedThreeImplementationSources.join(', ')}`,
     );
   }
   const particlesManifest = JSON.parse(
@@ -444,6 +532,11 @@ try {
       particleRange,
     } from '@crc/particles';
     import { Particles3D, defineParticleEffect3D } from '@crc/particles/webgl';
+    import { defineThreeLayer } from '@crc/three';
+    import {
+      PerspectiveCamera as ThreePerspectiveCamera,
+      Scene as ThreeScene,
+    } from 'three';
     import {
       AmbientLight,
       Cube,
@@ -488,6 +581,14 @@ try {
         renderer: { type: 'point', material: 'emissive', blend: 'additive' },
       }],
     });
+    const ThreeLayer = defineThreeLayer({
+      create() {
+        return {
+          scene: new ThreeScene(),
+          camera: new ThreePerspectiveCamera(),
+        };
+      },
+    });
     function Scene() {
       const orbit = useOrbitCamera({
         orbitPoint: [0, 0, 0],
@@ -507,6 +608,10 @@ try {
         <Group {...orbit.handlers}>
           <Rectangle style={{ width: 1, height: 1, fill: 'transparent' }} />
           <Particles2D effect={effect2D} autoplay seed={42} pointerEvents="none" />
+          <ThreeLayer
+            missBehavior="block"
+            style={{ width: 1, height: 1, filter: { type: 'blur', radius: 1 } }}
+          />
           {qualities.map(shadows => (
             <WebGLLayer camera={camera} style={{ width: 1, height: 1, shadows }}>
               <WebGLBackground style={{ color: '#08111f' }} />
@@ -552,7 +657,7 @@ try {
       );
     }
     const scene = <Scene />;
-    console.log(Fragment, crc, createElement, useAnimationFrame, scene);
+    console.log(Fragment, crc, createElement, defineThreeLayer, useAnimationFrame, scene);
   `);
   assertSinglePackedRuntime(sharedRuntimeBundle.metafile);
   assertIdentityMarkerOnce(
@@ -565,14 +670,8 @@ try {
     'CRC backend names must be nonempty.',
     'backend token registry',
   );
-  assertIdentityMarkerOnce(
-    sharedRuntimeBundle.code,
-    'requestAnimationFrame',
-    'scheduler implementation',
-  );
-
   process.stdout.write(
-    `Packed @crc/core, @crc/webgl, and @crc/particles consumer passed Bundler, NodeNext, declarations, ` +
+    `Packed @crc/core, @crc/three, @crc/webgl, @crc/particles, and three consumer passed Bundler, NodeNext, declarations, ` +
     `runtime exports, blocked deep imports, no-src checks, one shared core identity, and ` +
     `optimized focus elimination (marker absent without focus; present with focus; ` +
     `${noFocusBytes} no-focus bytes vs ${withFocusBytes} with-focus bytes).\n`,

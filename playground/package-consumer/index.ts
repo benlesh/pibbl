@@ -137,6 +137,12 @@ import * as ParticleRuntime from '@crc/particles';
 import type * as ParticleTypes from '@crc/particles';
 import * as ParticleWebGLRuntime from '@crc/particles/webgl';
 import type * as ParticleWebGLTypes from '@crc/particles/webgl';
+import * as ThreeRuntime from '@crc/three';
+import {
+  defineThreeLayer,
+  type CRCThreeLayerResources,
+} from '@crc/three';
+import { PerspectiveCamera, Scene } from 'three';
 import {
   Particles2D,
   useParticleSystem,
@@ -1361,6 +1367,48 @@ createElement(RenderLayerConsumer, renderLayerProps);
 void renderLayerSize;
 void renderLayerFrame;
 void renderLayerComponentProps;
+
+type ThreeLayerConsumerProps = { exposure: number };
+type ThreeLayerConsumerResources = CRCThreeLayerResources & {
+  readonly initialExposure: number;
+};
+const ThreeLayerConsumer = defineThreeLayer<
+  ThreeLayerConsumerProps,
+  ThreeLayerConsumerResources
+>({
+  create(_context, props) {
+    return {
+      scene: new Scene(),
+      camera: new PerspectiveCamera(),
+      initialExposure: props.exposure,
+    };
+  },
+});
+createElement(ThreeLayerConsumer, {
+  exposure: 1,
+  missBehavior: 'block',
+  style: { width: 64, height: 64, filter: sepiaFilter },
+});
+
+const ReservedThreeLayerConsumer = defineThreeLayer<
+  { style: string },
+  CRCThreeLayerResources
+>({
+  create() {
+    return { scene: new Scene(), camera: new PerspectiveCamera() };
+  },
+});
+type ReservedThreeLayerConsumerProps = Parameters<
+  typeof ReservedThreeLayerConsumer
+>[0];
+type ReservedThreeLayerPropsAreNever = [ReservedThreeLayerConsumerProps] extends [
+  never,
+]
+  ? true
+  : false;
+const reservedThreeLayerPropsAreNever: ReservedThreeLayerPropsAreNever = true;
+void reservedThreeLayerPropsAreNever;
+void ThreeRuntime;
 
 createElement(StyledRuntimeProbe, { count: 2, style: { width: 3 } });
 createElement(StyledRuntimeProbe, {

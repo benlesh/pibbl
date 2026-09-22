@@ -340,6 +340,70 @@
   export interface CRCPlaybackOptions { readonly autoplay?: boolean; readonly conflict?: 'error' | 'replace'; readonly debugName?: string; readonly onEvent?: (event: CRCPlaybackEvent) => void; readonly onError?: (error: unknown) => void }
   export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
 
+  export interface CRCRenderLayerSize {
+    readonly width: number;
+    readonly height: number;
+    readonly backingWidth: number;
+    readonly backingHeight: number;
+    readonly pixelRatioX: number;
+    readonly pixelRatioY: number;
+  }
+  export interface CRCRenderLayerFrame {
+    readonly frameId: number;
+    readonly time: number;
+    readonly delta: number;
+    readonly deltaSeconds: number;
+    invalidate(): void;
+  }
+  export interface CRCRenderLayerContext {
+    readonly canvas: OffscreenCanvas;
+    readonly size: CRCRenderLayerSize;
+    invalidate(): void;
+  }
+  export interface CRCRenderLayerStyle extends SystemStyle, BoxStyle, LayoutItemStyle {}
+  export type CRCRenderLayerHit<Target extends object> =
+    | { readonly kind: 'miss' }
+    | { readonly kind: 'block' }
+    | { readonly kind: 'target'; readonly target: Target };
+  export interface CRCRenderLayerTarget<Target extends object> {
+    readonly target: Target;
+    readonly handlers?: CRCEventHandlers;
+    readonly pointerEvents?: CRCPointerEvents;
+    readonly cursor?: string;
+    readonly keyboardFocusable?: boolean;
+    readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
+  }
+  export interface CRCRenderLayerInput<Target extends object> {
+    readonly type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel' | 'wheel' | 'contextmenu' | 'click';
+    readonly point: Readonly<{ x: number; y: number }>;
+    readonly hit: CRCRenderLayerHit<Target>;
+    readonly originalEvent: PointerEvent | WheelEvent | MouseEvent;
+    setPointerCapture(pointerId: number): void;
+    releasePointerCapture(pointerId: number): void;
+  }
+  export interface CRCRenderLayerInteractionSnapshot<Target extends object> {
+    readonly targets: Iterable<CRCRenderLayerTarget<Target>>;
+    hitTest(point: Readonly<{ x: number; y: number }>): CRCRenderLayerHit<Target>;
+    onInput?(input: Readonly<CRCRenderLayerInput<Target>>): void;
+  }
+  export interface CRCRenderLayerInteraction<Props, Resources, Target extends object> {
+    settle(resources: Resources, props: Readonly<Props>, size: Readonly<CRCRenderLayerSize>): CRCRenderLayerInteractionSnapshot<Target>;
+  }
+  export interface CRCRenderLayerComponentProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {
+    readonly style?: CRCRenderLayerStyle;
+    readonly missBehavior?: 'pass-through' | 'block' | 'target-layer';
+  }
+  export interface CRCRenderLayerDefinition<Props, Resources, Target extends object = object> {
+    create(context: Readonly<CRCRenderLayerContext>, initialProps: Readonly<Props>): Resources;
+    update?(resources: Resources, props: Readonly<Props>, context: Readonly<CRCRenderLayerContext>): void;
+    resize?(resources: Resources, size: Readonly<CRCRenderLayerSize>, context: Readonly<CRCRenderLayerContext>): void;
+    render(resources: Resources, frame: Readonly<CRCRenderLayerFrame>, context: Readonly<CRCRenderLayerContext>): void;
+    dispose?(resources: Resources, context: Readonly<CRCRenderLayerContext>): void;
+    interaction?: CRCRenderLayerInteraction<Props, Resources, Target>;
+  }
+  type CRCRenderLayerReservedProp = 'key' | 'style' | 'missBehavior' | keyof CRCEventHandlers | keyof CRCEventFocusOptions | keyof CRCEventParticipationOptions;
+  export type CRCRenderLayerProps<Props> = Extract<keyof Props, CRCRenderLayerReservedProp> extends never ? Props & CRCRenderLayerComponentProps : never;
+
   export function crc(canvas: HTMLCanvasElement, element: CRCNode, config?: CRCConfig): CRCController;
   export function signal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
   export function computed<T>(compute: () => T, options?: SignalOptions<T>): Signal<T>;
@@ -365,6 +429,7 @@
   export function createElement<P>(type: CRCElementType<P>, props: ElementInputOrNull<P>, ...children: ChildrenArguments<P>): CRCElement<P>;
   export function Fragment(props: { children?: CRCNode }): CRCNode;
   export function definePrimitive<P = Record<string, never>, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(render: PrimitiveRender<P, R> & (PrimitiveInput<P, S> extends never ? never : unknown), ...capabilityArguments: PrimitiveCapabilityArguments<P, S, N, R>): CRCPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>>;
+  export function defineRenderLayer<Props, Resources, Target extends object = object>(definition: CRCRenderLayerDefinition<Props, Resources, Target>): CRCComponent<CRCRenderLayerProps<Props>>;
   export const Rectangle: CRCPrimitiveComponent<RectangleProps, PrimitiveInput<RectangleProps, RectStyle>>;
   export const Circle: CRCPrimitiveComponent<CircleProps, PrimitiveInput<CircleProps, CircleStyle>>;
   export const Ellipse: CRCPrimitiveComponent<EllipseProps, PrimitiveInput<EllipseProps, EllipseStyle>>;
@@ -782,6 +847,54 @@
     EmitterName extends string,
     Parameters extends CRCParticleParameterValues,
   >(props: Particles3DProps<EmitterName, Parameters>): CRCNode;
+
+/* @crc-studio-module @crc/three */
+  import type * as THREE from 'three';
+  import type {
+    CRCComponent,
+    CRCEventHandlers,
+    CRCPointerEvents,
+    CRCRenderLayerContext,
+    CRCRenderLayerFrame,
+    CRCRenderLayerHit,
+    CRCRenderLayerProps,
+    CRCRenderLayerSize,
+    LayoutBox,
+  } from '@crc/core';
+
+  export interface CRCThreeLayerResources {
+    readonly scene: THREE.Scene;
+    readonly camera: THREE.Camera;
+  }
+  export interface CRCThreeTarget {
+    readonly object: THREE.Object3D;
+    readonly handlers?: CRCEventHandlers;
+    readonly pointerEvents?: CRCPointerEvents;
+    readonly cursor?: string;
+    readonly keyboardFocusable?: boolean;
+    readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
+  }
+  export type CRCThreePickResult = CRCRenderLayerHit<THREE.Object3D>;
+  export type CRCThreeRendererOptions = Omit<THREE.WebGLRendererParameters, 'canvas' | 'alpha'>;
+  export interface CRCThreeInputBridge {
+    connect<Control>(create: (element: HTMLElement) => Control): Control;
+  }
+  export type CRCThreePicker = (point: Readonly<{ x: number; y: number }>) => CRCThreePickResult;
+  export interface CRCThreeLayerContext extends CRCRenderLayerContext {
+    readonly renderer: THREE.WebGLRenderer;
+    readonly input: CRCThreeInputBridge;
+  }
+  export interface CRCThreeLayerDefinition<Props, Resources extends CRCThreeLayerResources> {
+    readonly renderer?: CRCThreeRendererOptions;
+    create(context: CRCThreeLayerContext, initialProps: Readonly<Props>): Resources;
+    update?(resources: Resources, props: Readonly<Props>, context: CRCThreeLayerContext): void;
+    resize?(resources: Resources, size: CRCRenderLayerSize, context: CRCThreeLayerContext): void;
+    render?(resources: Resources, frame: CRCRenderLayerFrame, context: CRCThreeLayerContext): void;
+    targets?(resources: Resources, props: Readonly<Props>): Iterable<CRCThreeTarget>;
+    pick?(resources: Resources, context: CRCThreeLayerContext): CRCThreePicker;
+    dispose?(resources: Resources, context: CRCThreeLayerContext): void;
+  }
+  export function defineThreeLayer<Props, Resources extends CRCThreeLayerResources>(definition: CRCThreeLayerDefinition<Props, Resources>): CRCComponent<CRCRenderLayerProps<Props>>;
 
 /* @crc-studio-module @crc/webgl */
   import type {

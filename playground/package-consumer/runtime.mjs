@@ -4,6 +4,7 @@ import * as webgl from '@crc/webgl';
 import * as webglInternal from '@crc/webgl/internal';
 import * as particles from '@crc/particles';
 import * as particlesWebGL from '@crc/particles/webgl';
+import * as threeAdapter from '@crc/three';
 import {
   Fragment as ProductionFragment,
   jsx,
@@ -44,22 +45,6 @@ const expected = [
   'Wedge',
   'computed',
   'crc',
-  'useCanvasContext',
-  'useCursor',
-  'useEvent',
-  'useEventListener',
-  'useEventTarget',
-  'useLayoutBox',
-  'useLinePath',
-  'useMemo',
-  'usePlayback',
-  'useRectPath',
-  'useRef',
-  'useSignal',
-  'useState',
-  'useSvgPath',
-  'useTransition',
-  'useWhenChanged',
   'createArcPath',
   'createCirclePath',
   'createElement',
@@ -92,6 +77,22 @@ const expected = [
   'track',
   'tween',
   'untracked',
+  'useCanvasContext',
+  'useCursor',
+  'useEvent',
+  'useEventListener',
+  'useEventTarget',
+  'useLayoutBox',
+  'useLinePath',
+  'useMemo',
+  'usePlayback',
+  'useRectPath',
+  'useRef',
+  'useSignal',
+  'useState',
+  'useSvgPath',
+  'useTransition',
+  'useWhenChanged',
   'wait',
 ];
 
@@ -158,8 +159,8 @@ for (const exportName of expected) {
     throw new Error(`@crc/core/internal re-exported public root value ${exportName}.`);
   }
 }
-if (actual.length !== 77) {
-  throw new Error(`Expected 77 @crc/core runtime exports, received ${actual.length}.`);
+if (actual.length !== 78) {
+  throw new Error(`Expected 78 @crc/core runtime exports, received ${actual.length}.`);
 }
 
 const runtimeCount = core.signal(2, { debugName: 'runtime count' });
@@ -196,9 +197,9 @@ const expectedWebGL = [
   'SpotLight',
   'WebGLBackground',
   'WebGLLayer',
+  'createWebGLGeometry',
   'useAnimationFrame',
   'useOrbitCamera',
-  'createWebGLGeometry',
 ];
 const actualWebGL = Object.keys(webgl).sort();
 if (JSON.stringify(actualWebGL) !== JSON.stringify(expectedWebGL)) {
@@ -231,7 +232,6 @@ if ('submitWebGLInstanced' in webgl) {
 
 const expectedParticles = [
   'Particles2D',
-  'useParticleSystem',
   'defineParticleEffect2D',
   'particleChoice',
   'particleCurve',
@@ -239,6 +239,7 @@ const expectedParticles = [
   'particleInteger',
   'particleParameter',
   'particleRange',
+  'useParticleSystem',
 ];
 const actualParticles = Object.keys(particles).sort();
 if (JSON.stringify(actualParticles) !== JSON.stringify(expectedParticles)) {
@@ -262,6 +263,24 @@ if (
 for (const exportName of expectedParticlesWebGL) {
   if (typeof particlesWebGL[exportName] !== 'function') {
     throw new Error(`Expected @crc/particles/webgl ${exportName} to be callable.`);
+  }
+}
+
+const expectedThreeAdapter = ['defineThreeLayer'];
+const actualThreeAdapter = Object.keys(threeAdapter).sort();
+if (
+  JSON.stringify(actualThreeAdapter) !== JSON.stringify(expectedThreeAdapter)
+) {
+  throw new Error(
+    `Unexpected @crc/three exports: ${actualThreeAdapter.join(', ')}`,
+  );
+}
+if (typeof threeAdapter.defineThreeLayer !== 'function') {
+  throw new Error('Expected @crc/three defineThreeLayer to be callable.');
+}
+for (const threeExport of ['Scene', 'Object3D', 'WebGLRenderer']) {
+  if (threeExport in threeAdapter) {
+    throw new Error(`@crc/three re-exported Three value ${threeExport}.`);
   }
 }
 const particleRange = particles.particleRange(1, 2);

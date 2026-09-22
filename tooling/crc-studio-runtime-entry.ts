@@ -1,6 +1,7 @@
 export * from "@crc/core";
 export * from "@crc/particles";
 export * from "@crc/particles/webgl";
+export * from "@crc/three";
 export * from "@crc/webgl";
 export { computed, useSignal, isSignal, signal, untracked } from "@crc/core";
 export {
