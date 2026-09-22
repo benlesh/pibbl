@@ -1,0 +1,59 @@
+{
+  "name": "@crc/three",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Three.js render layers for the CRC Canvas component runtime",
+  "author": "Ben Lesh <ben@benlesh.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/benlesh/crc",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benlesh/crc.git",
+    "directory": "packages/three"
+  },
+  "bugs": "https://github.com/benlesh/crc/issues",
+  "keywords": [
+    "canvas",
+    "three",
+    "three.js",
+    "webgl",
+    "graphics"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/*",
+        "./*"
+      ]
+    }
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@crc/core --external:three",
+    "dev": "pnpm run build",
+    "prepublishOnly": "pnpm run build",
+    "test": "vitest"
+  },
+  "peerDependencies": {
+    "@crc/core": "0.0.1",
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "@crc/core": "workspace:*",
+    "@types/three": "catalog:",
+    "three": "catalog:"
+  }
+}

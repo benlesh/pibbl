@@ -58,6 +58,7 @@
     "@eslint/js": "catalog:",
     "@crc/particles": "workspace:*",
     "@crc/scenarios": "workspace:*",
+    "@crc/three": "workspace:*",
     "@crc/webgl": "workspace:*",
     "@types/node": "catalog:",
     "@vitest/browser-playwright": "catalog:",

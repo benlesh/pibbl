@@ -15,12 +15,15 @@
     "@crc/core": "workspace:*",
     "@crc/particles": "workspace:*",
     "@crc/scenarios": "workspace:*",
+    "@crc/three": "workspace:*",
     "@crc/webgl": "workspace:*",
     "lz-string": "catalog:",
     "minisearch": "catalog:",
-    "monaco-editor": "catalog:"
+    "monaco-editor": "catalog:",
+    "three": "catalog:"
   },
   "devDependencies": {
+    "@types/three": "catalog:",
     "vite": "catalog:"
   }
 }

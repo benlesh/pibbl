@@ -20,6 +20,11 @@
   "dependencies": {
     "@crc/core": "workspace:*",
     "@crc/particles": "workspace:*",
-    "@crc/webgl": "workspace:*"
+    "@crc/three": "workspace:*",
+    "@crc/webgl": "workspace:*",
+    "three": "catalog:"
+  },
+  "devDependencies": {
+    "@types/three": "catalog:"
   }
 }
