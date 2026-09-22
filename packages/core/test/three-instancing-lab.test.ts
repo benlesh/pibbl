@@ -1,0 +1,320 @@
+import {
+  THREE_INSTANCING_LAB_ACTION_IDS,
+  THREE_INSTANCING_LAB_PROBES,
+  getLearningExampleBySlug,
+  getLearningExampleRoute,
+  getScenarioRoute,
+  loadScenario,
+  scenarioCatalog,
+  threeInstancingLabScenarioEntry,
+  type ScenarioController,
+  type ThreeInstancingLabState,
+} from '@crc/scenarios';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { loadLearningSource } from '../../../playground/src/learning-sources';
+import { loadScenarioSource } from '../../../playground/src/scenario-sources';
+import {
+  clickLogicalPoint,
+  dragPointerLogicalPoint,
+  pressKey,
+} from './support/user-input';
+
+const activeControllers = new Set<
+  ScenarioController<ThreeInstancingLabState>
+>();
+
+afterEach(async () => {
+  for (const controller of activeControllers) await controller.dispose();
+  activeControllers.clear();
+  vi.restoreAllMocks();
+  document.body.replaceChildren();
+});
+
+async function mountThreeInstancingLab() {
+  const before = document.createElement('button');
+  before.textContent = 'Before Canvas';
+  const canvas = document.createElement('canvas');
+  canvas.width = threeInstancingLabScenarioEntry.canvas.width;
+  canvas.height = threeInstancingLabScenarioEntry.canvas.height;
+  canvas.style.cssText = `display:block;width:${canvas.width}px;height:${canvas.height}px`;
+  document.body.append(before, canvas);
+  const definition = await loadScenario(threeInstancingLabScenarioEntry);
+  const controller = await definition.mount({ canvas });
+  activeControllers.add(controller);
+  await controller.settled();
+  return { before, canvas, controller, definition };
+}
+
+function pixelAt(
+  canvas: HTMLCanvasElement,
+  point: Readonly<{ x: number; y: number }>,
+): readonly number[] {
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('The Three instancing Canvas has no 2D context.');
+  return [...context.getImageData(point.x, point.y, 1, 1).data];
+}
+
+function pixelSignature(canvas: HTMLCanvasElement): number {
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('The Three instancing Canvas has no 2D context.');
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  let hash = 2166136261;
+  for (const value of pixels) {
+    hash ^= value;
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+describe('public Three instancing proving scenarios', () => {
+  it('registers the exact attributed learning and deterministic laboratory surfaces', async () => {
+    const learning = getLearningExampleBySlug('three-instancing');
+    expect(learning).toMatchObject({
+      slug: 'three-instancing',
+      section: 'composition',
+      order: 116,
+      api: [
+        'defineThreeLayer',
+        'InstancedMesh',
+        'OrbitControls',
+        'missBehavior',
+      ],
+      source: {
+        path: 'packages/scenarios/src/learning/composition/three-instancing.example.tsx',
+      },
+    });
+    expect(learning && getLearningExampleRoute(learning)).toBe(
+      '#/examples/composition/three-instancing',
+    );
+
+    expect(scenarioCatalog).toContain(threeInstancingLabScenarioEntry);
+    expect(getScenarioRoute(threeInstancingLabScenarioEntry)).toBe(
+      '#/testing/three-instancing',
+    );
+    expect(threeInstancingLabScenarioEntry).toMatchObject({
+      metadata: {
+        id: 'three-instancing',
+        slug: 'three-instancing',
+        learningOrder: 177,
+      },
+      canvas: { width: 640, height: 360 },
+      source: {
+        id: 'three-instancing-laboratory-example',
+        marker:
+          "THREE_INSTANCING_LAB_SOURCE_ID = 'three-instancing-laboratory-example'",
+        path: 'packages/scenarios/src/three-instancing-lab.example.tsx',
+      },
+    });
+    expect(THREE_INSTANCING_LAB_ACTION_IDS).toEqual([
+      'cycle-miss-behavior',
+      'resize-layer',
+    ]);
+    expect(
+      threeInstancingLabScenarioEntry.actions.map((action) => action.id),
+    ).toEqual(THREE_INSTANCING_LAB_ACTION_IDS);
+
+    if (!learning) throw new Error('Missing three-instancing learning example.');
+    const [learningSource, labSource] = await Promise.all([
+      loadLearningSource(learning),
+      loadScenarioSource(threeInstancingLabScenarioEntry),
+    ]);
+    for (const source of [learningSource, labSource]) {
+      expect(source).toContain(
+        'https://github.com/mrdoob/three.js/blob/dev/examples/webgl_instancing_raycast.html',
+      );
+      expect(source).toContain(
+        'https://github.com/mrdoob/three.js/blob/dev/LICENSE',
+      );
+      expect(source).toMatch(/from ['"]@crc\/core['"]/u);
+      expect(source).toMatch(/from ['"]@crc\/three['"]/u);
+      expect(source).toMatch(/from ['"]three['"]/u);
+      expect(source).toMatch(
+        /from ['"]three\/addons\/controls\/OrbitControls\.js['"]/u,
+      );
+      expect(source).not.toMatch(
+        /@crc\/core\/(?:internal|lib|src)|@crc\/webgl|requestAnimationFrame|setAnimationLoop/u,
+      );
+    }
+
+    const definition = await loadScenario(threeInstancingLabScenarioEntry);
+    expect(definition).toMatchObject({
+      id: 'three-instancing',
+      sourceId: 'three-instancing-laboratory-example',
+      actionIds: THREE_INSTANCING_LAB_ACTION_IDS,
+    });
+    expect(
+      definition.formatState({
+        missBehavior: 'pass-through',
+        lastResolution: 'Three target',
+        tileClicks: 2,
+        threeTargetClicks: 3,
+        blockedThreeInputs: 4,
+        cameraChanges: 5,
+        targetPropagationTrace: ['capture', 'target', 'bubble'],
+        revision: 6,
+      }),
+    ).toEqual([
+      { label: 'Miss behavior', value: 'pass-through' },
+      { label: 'Last resolution', value: 'Three target' },
+      { label: 'CRC tile clicks', value: '2' },
+      { label: 'Three target clicks', value: '3' },
+      { label: 'Blocked Three inputs', value: '4' },
+      { label: 'Camera changes', value: '5' },
+      { label: 'Target propagation', value: 'capture → target → bubble' },
+      { label: 'Revision', value: '6' },
+    ]);
+  });
+
+  it('arbitrates exposed tiles, unregistered instances, a registered target, gaps, and the foreground toolbar', async () => {
+    const { canvas, controller } = await mountThreeInstancingLab();
+    expect(controller.getState()).toEqual({
+      missBehavior: 'pass-through',
+      lastResolution: 'none',
+      tileClicks: 0,
+      threeTargetClicks: 0,
+      blockedThreeInputs: 0,
+      cameraChanges: 0,
+      targetPropagationTrace: [],
+      revision: 0,
+    });
+    await clickLogicalPoint(canvas, THREE_INSTANCING_LAB_PROBES.exposedTile);
+    await controller.settled();
+    expect(controller.getState()).toMatchObject({
+      lastResolution: 'CRC tile',
+      tileClicks: 1,
+    });
+
+    await clickLogicalPoint(canvas, THREE_INSTANCING_LAB_PROBES.emptyGap);
+    await controller.settled();
+    expect(controller.getState()).toMatchObject({
+      lastResolution: 'CRC tile',
+      tileClicks: 2,
+    });
+
+    await clickLogicalPoint(
+      canvas,
+      THREE_INSTANCING_LAB_PROBES.unregisteredInstance,
+    );
+    await controller.settled();
+    expect(controller.getState()).toMatchObject({
+      lastResolution: 'Three blocked',
+      tileClicks: 2,
+      blockedThreeInputs: 1,
+    });
+
+    await clickLogicalPoint(canvas, THREE_INSTANCING_LAB_PROBES.registeredTarget);
+    await controller.settled();
+    expect(controller.getState()).toMatchObject({
+      lastResolution: 'Three target',
+      threeTargetClicks: 1,
+      targetPropagationTrace: ['capture', 'target', 'bubble'],
+    });
+
+    const blockedBeforeToolbar = controller.getState().blockedThreeInputs;
+    await clickLogicalPoint(
+      canvas,
+      THREE_INSTANCING_LAB_PROBES.foregroundToolbar,
+    );
+    await controller.settled();
+    expect(controller.getState()).toMatchObject({
+      lastResolution: 'Toolbar',
+      blockedThreeInputs: blockedBeforeToolbar,
+    });
+  });
+
+  it('cycles miss policy and orbits through CRC-routed target-layer input without touching lower tiles', async () => {
+    const { canvas, controller } = await mountThreeInstancingLab();
+
+    await controller.perform('cycle-miss-behavior');
+    expect(controller.getState()).toMatchObject({
+      missBehavior: 'block',
+      lastResolution: 'none',
+      revision: 1,
+    });
+    await clickLogicalPoint(canvas, THREE_INSTANCING_LAB_PROBES.emptyGap);
+    await controller.settled();
+    expect(controller.getState()).toMatchObject({
+      lastResolution: 'none',
+      tileClicks: 0,
+    });
+
+    await controller.perform('cycle-miss-behavior');
+    expect(controller.getState()).toMatchObject({
+      missBehavior: 'target-layer',
+      revision: 2,
+    });
+    await dragPointerLogicalPoint(
+      canvas,
+      THREE_INSTANCING_LAB_PROBES.emptyGap,
+      {
+        x: THREE_INSTANCING_LAB_PROBES.emptyGap.x - 38,
+        y: THREE_INSTANCING_LAB_PROBES.emptyGap.y - 22,
+      },
+    );
+    await controller.settled();
+    expect(controller.getState().cameraChanges).toBeGreaterThan(0);
+    expect(controller.getState().tileClicks).toBe(0);
+  });
+
+  it('focuses the registered Three object and gives Enter and Space the same CRC propagation path', async () => {
+    const { before, controller } = await mountThreeInstancingLab();
+    before.focus();
+    await pressKey('Enter');
+    expect(controller.getState().threeTargetClicks).toBe(0);
+
+    // The registered Three object is the scene's only logical focus target.
+    await import('./support/user-input').then(({ tab }) => tab());
+    await pressKey('Enter');
+    await controller.settled();
+    expect(controller.getState()).toMatchObject({
+      lastResolution: 'Three target',
+      threeTargetClicks: 1,
+      targetPropagationTrace: ['capture', 'target', 'bubble'],
+    });
+
+    await pressKey('Space');
+    await controller.settled();
+    expect(controller.getState()).toMatchObject({
+      lastResolution: 'Three target',
+      threeTargetClicks: 2,
+      targetPropagationTrace: ['capture', 'target', 'bubble'],
+    });
+  });
+
+  it('composes the transparent bitmap through the outer clip/filter, resizes it, and disposes application resources once', async () => {
+    const { canvas, controller } = await mountThreeInstancingLab();
+
+    expect(pixelAt(canvas, THREE_INSTANCING_LAB_PROBES.exposedTile)[3]).toBe(255);
+    expect(pixelAt(canvas, THREE_INSTANCING_LAB_PROBES.registeredTarget)).not.toEqual(
+      pixelAt(canvas, THREE_INSTANCING_LAB_PROBES.emptyGap),
+    );
+    expect(
+      Math.max(
+        ...pixelAt(canvas, THREE_INSTANCING_LAB_PROBES.unregisteredInstance).slice(
+          0,
+          3,
+        ),
+      ),
+    ).toBeGreaterThan(20);
+    expect(pixelAt(canvas, THREE_INSTANCING_LAB_PROBES.clippedAway)).toEqual(
+      pixelAt(canvas, THREE_INSTANCING_LAB_PROBES.exposedTile),
+    );
+    expect(pixelAt(canvas, THREE_INSTANCING_LAB_PROBES.filteredShadow)).not.toEqual(
+      pixelAt(canvas, THREE_INSTANCING_LAB_PROBES.exposedTile),
+    );
+
+    const beforeResize = pixelSignature(canvas);
+    await controller.perform('resize-layer');
+    await controller.settled();
+    expect(controller.getState().revision).toBe(1);
+    expect(pixelSignature(canvas)).not.toBe(beforeResize);
+
+    const stateBeforeDispose = controller.getState();
+    await controller.dispose();
+    activeControllers.delete(controller);
+    expect(controller.getState()).toEqual(stateBeforeDispose);
+    await expect(controller.perform('resize-layer')).rejects.toThrow(
+      /disposed Three instancing laboratory/u,
+    );
+  });
+});

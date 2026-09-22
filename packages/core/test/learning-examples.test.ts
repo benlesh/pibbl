@@ -139,6 +139,61 @@ afterEach(() => {
 describe("learning example catalog", () => {
   const webglLessonSourcePath =
     "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
+  const threeLessonSourcePath =
+    "packages/scenarios/src/learning/composition/three-instancing.example.tsx";
+
+  it("allows only the attributed Three lesson to import the public adapter, Three, and OrbitControls", () => {
+    const source = `
+      import { crc, type CRCController } from "@crc/core";
+      import { defineThreeLayer } from "@crc/three";
+      import { PerspectiveCamera, Scene } from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      const Layer = defineThreeLayer({
+        create(context) {
+          const scene = new Scene();
+          const camera = new PerspectiveCamera();
+          const controls = context.input.connect((element) => new OrbitControls(camera, element));
+          return { scene, camera, controls };
+        },
+      });
+      function SceneExample() {
+        return <Layer style={{ width: 320, height: 180 }} />;
+      }
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, <SceneExample />);
+      }
+    `;
+
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "fixture",
+        sourcePath: threeLessonSourcePath,
+      }),
+    ).not.toThrow();
+
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "fixture",
+        sourcePath: webglLessonSourcePath,
+      }),
+    ).toThrow(/@crc\/core and @crc\/webgl/u);
+
+    expect(() =>
+      validateLearningSourceText(
+        source.replace(
+          'three/addons/controls/OrbitControls.js',
+          'three/examples/jsm/controls/OrbitControls.js',
+        ),
+        {
+          authoring: "jsx",
+          label: "fixture",
+          sourcePath: threeLessonSourcePath,
+        },
+      ),
+    ).toThrow(/@crc\/three, three, and three\/addons\/controls\/OrbitControls\.js/u);
+  });
 
   it("requires direct core and WebGL package imports for the WebGL lesson", () => {
     const source = `
@@ -1154,11 +1209,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 68 unique, ordered, source-backed routes including particles, standard shapes, WebGL lighting, signals, and animation", async () => {
+  it("contains 69 unique, ordered, source-backed routes including Three, particles, standard shapes, WebGL lighting, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(68);
+    expect(learningExampleCatalog).toHaveLength(69);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1212,6 +1267,7 @@ describe("learning example catalog", () => {
         "layer",
         "particle-effects",
         "signals-and-animation",
+        "three-instancing",
         "webgl-islands",
       ],
       webgl: [...WEBGL_LIGHTING_EXAMPLE_IDS, "embers", "fireflies"],
@@ -1284,6 +1340,7 @@ describe("learning example catalog", () => {
       "group",
       "clip",
       "filters",
+      "three-instancing",
       "webgl-islands",
       "signals-and-animation",
       "particle-effects",
@@ -1681,6 +1738,10 @@ describe("learning example catalog", () => {
         "Clip",
         "Layer",
         "CRCFilter",
+        "defineThreeLayer",
+        "InstancedMesh",
+        "OrbitControls",
+        "missBehavior",
         "Particles2D",
         "WebGLLayer",
         "Group3D",

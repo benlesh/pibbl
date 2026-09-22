@@ -14,6 +14,7 @@
     "./mouse-contract-scenario": "./src/mouse-contract-scenario.ts",
     "./smoke": "./src/smoke.ts",
     "./surface": "./src/surface.ts",
+    "./three-instancing-lab": "./src/three-instancing-lab.ts",
     "./webgl-lab": "./src/webgl-lab.ts",
     "./webgl-lighting-lab": "./src/webgl-lighting-lab.ts"
   },

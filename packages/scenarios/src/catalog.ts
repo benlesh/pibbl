@@ -23,6 +23,7 @@ import type { WebGLLightingLabState } from "./webgl-lighting-lab.example";
 import type { SignalsLabState } from "./signals-lab.example";
 import type { AnimationLabState } from "./animation-lab.example";
 import type { ParticleCelebrationLabState } from "./particle-celebration-lab.example";
+import type { ThreeInstancingLabState } from "./three-instancing-lab.example";
 import { GEOMETRY_MATRIX_CASES } from "./geometry-matrix.example";
 import { MOUSE_CONTRACT_CASES } from "./mouse-contract";
 import { PERFORMANCE_WORKLOADS } from "./performance-lab.example";
@@ -1720,6 +1721,69 @@ export const webglLightingLabScenarioEntry: ScenarioCatalogEntry<WebGLLightingLa
     (await import("./webgl-lighting-lab")).webglLightingLabScenario,
 };
 
+const threeInstancingLabMetadata: ScenarioMetadata = {
+  id: "three-instancing",
+  slug: "three-instancing",
+  title: "Three.js instancing integration laboratory",
+  summary:
+    "Prove mixed CRC and Three paint order, instanced blocking, registered targets, miss policies, bridged orbit input, focus, clip/filter composition, resize, and cleanup.",
+  category: "Rendering",
+  apiTags: ["defineThreeLayer", "InstancedMesh", "OrbitControls", "missBehavior"],
+  conceptTags: [
+    "flattened Three layer",
+    "interaction arbitration",
+    "registered Three target",
+    "CRC scheduling",
+    "Canvas composition",
+  ],
+  manualSteps: [
+    {
+      action:
+        "Click an exposed tile, an empty projected gap, an ordinary instance, the gold registered icosahedron, and the foreground toolbar.",
+      expected:
+        "The gap reaches the lower tile under pass-through, ordinary instances report Three blocked, the gold target records capture/target/bubble, and the later toolbar wins without bridge input.",
+    },
+    {
+      action:
+        "Cycle pass-through to block and target-layer, then drag across the empty gap.",
+      expected:
+        "Block leaves the lower tile untouched; target-layer routes the empty-space drag to OrbitControls through CRC and reports a camera change.",
+    },
+    {
+      action:
+        "Tab to the registered target and press Enter or Space, then choose Resize layer.",
+      expected:
+        "Keyboard activation follows the same CRC propagation trace and the existing Three resources resize into a newly composed bitmap.",
+    },
+  ],
+  knownLimitations: [
+    "The proving scene requires WebGL2, OffscreenCanvas, and ImageBitmap transfer in the host browser.",
+    "The instanced mesh intentionally remains one blocking Three object rather than registering every instance as a CRC target.",
+  ],
+  learningOrder: 177,
+  visibility: "test-laboratory",
+  visibilityReason:
+    "It exposes deterministic interaction probes and resource cleanup for the public Three adapter while the learning example remains the approachable presentation.",
+  maturity: "contract",
+};
+
+export const threeInstancingLabScenarioEntry: ScenarioCatalogEntry<ThreeInstancingLabState> = {
+  metadata: threeInstancingLabMetadata,
+  canvas: { width: 640, height: 360 },
+  actions: [
+    { id: "cycle-miss-behavior", label: "Cycle miss behavior" },
+    { id: "resize-layer", label: "Resize layer" },
+  ],
+  source: {
+    id: "three-instancing-laboratory-example",
+    language: "tsx",
+    marker: "THREE_INSTANCING_LAB_SOURCE_ID = 'three-instancing-laboratory-example'",
+    path: "packages/scenarios/src/three-instancing-lab.example.tsx",
+  },
+  load: async () =>
+    (await import("./three-instancing-lab")).threeInstancingLabScenario,
+};
+
 const signalsLabMetadata: ScenarioMetadata = {
   id: "first-class-signals",
   slug: "signals",
@@ -1996,6 +2060,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     filterLabScenarioEntry,
     webglLabScenarioEntry,
     webglLightingLabScenarioEntry,
+    threeInstancingLabScenarioEntry,
     signalsLabScenarioEntry,
     animationLabScenarioEntry,
     particleCelebrationLabScenarioEntry,

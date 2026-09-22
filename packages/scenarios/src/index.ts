@@ -24,6 +24,7 @@ export {
   particleCelebrationLabScenarioEntry,
   runtimeHooksScenarioEntry,
   signalsLabScenarioEntry,
+  threeInstancingLabScenarioEntry,
   validateScenarioCatalog,
   webglLabScenarioEntry,
   webglLightingLabScenarioEntry,
@@ -55,6 +56,17 @@ export {
 export {
   FILTER_LAB_ACTION_IDS,
 } from './filter-lab';
+export {
+  THREE_INSTANCING_LAB_ACTION_IDS,
+  THREE_INSTANCING_LAB_PROBES,
+} from './three-instancing-lab';
+export type {
+  ThreeInstancingLabAction,
+  ThreeInstancingLabPoint,
+  ThreeInstancingLabState,
+  ThreeInstancingMissBehavior,
+  ThreeInstancingResolution,
+} from './three-instancing-lab';
 export {
   WEBGL_LAB_ACTION_IDS,
   WEBGL_LAB_PROBES,

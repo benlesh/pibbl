@@ -660,6 +660,39 @@ const drafts = [
     load: () => import("./learning/composition/filters.example"),
   },
   {
+    slug: "three-instancing",
+    title: "Three.js instancing",
+    shortTitle: "Three instancing",
+    section: "composition",
+    order: 116,
+    summary:
+      "Compose a procedural Three.js InstancedMesh between CRC tiles and controls while CRC owns scheduling, arbitration, focus, clipping, and filters.",
+    api: [
+      "defineThreeLayer",
+      "InstancedMesh",
+      "OrbitControls",
+      "missBehavior",
+    ],
+    objectives: [
+      "Adapt an official Three.js instancing idea into one transparent CRC render-layer paint entry without a second animation loop.",
+      "Compare registered targets, unregistered blocking geometry, transparent misses, OrbitControls input, and later CRC paint order.",
+    ],
+    prompts: {
+      gesture:
+        "Hover the instance field, click the gold registered icosahedron, drag an empty gap after selecting target-layer, and click the foreground policy control.",
+      code: "Change the deterministic lattice colors or cycle the miss policy order while preserving the registered target.",
+    },
+    apiNotes: [
+      "defineThreeLayer owns the WebGLRenderer and commits one transparent bitmap through CRC's public render-layer lifecycle.",
+      "Unregistered visible Three geometry blocks lower CRC paint; registered objects participate in ordinary CRC propagation and logical focus.",
+      "OrbitControls receives only CRC-winning input and invalidates the shared scheduler instead of starting requestAnimationFrame or setAnimationLoop.",
+      "The surrounding CRC Clip and drop-shadow filter apply to the flattened Three bitmap, while the later CRC toolbar wins overlapping input.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["group", "clip", "filters"],
+    load: () => import("./learning/composition/three-instancing.example"),
+  },
+  {
     slug: "webgl-islands",
     title: "WebGL islands",
     shortTitle: "WebGL islands",

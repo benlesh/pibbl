@@ -18,6 +18,9 @@ interface SourceInspection {
   readonly hasCommonJsSyntax: boolean;
   readonly hasCoreValueImport: boolean;
   readonly hasParticlesValueImport: boolean;
+  readonly hasOrbitControlsValueImport: boolean;
+  readonly hasThreeAdapterValueImport: boolean;
+  readonly hasThreeValueImport: boolean;
   readonly hasWebGLValueImport: boolean;
   readonly hasCreateElementCall: boolean;
   readonly hasDirectComponentCall: boolean;
@@ -52,17 +55,26 @@ interface SourceInspection {
 const CORE_MODULE = "@crc/core";
 const PARTICLES_MODULE = "@crc/particles";
 const PARTICLES_WEBGL_MODULE = "@crc/particles/webgl";
+const THREE_ADAPTER_MODULE = "@crc/three";
+const THREE_MODULE = "three";
+const THREE_ORBIT_CONTROLS_MODULE =
+  "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = "@crc/webgl";
 const LEARNING_VALUE_MODULES = new Set([
   CORE_MODULE,
   PARTICLES_MODULE,
   PARTICLES_WEBGL_MODULE,
+  THREE_ADAPTER_MODULE,
+  THREE_MODULE,
+  THREE_ORBIT_CONTROLS_MODULE,
   WEBGL_MODULE,
 ]);
 const PARTICLES_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/particle-effects.example.tsx";
 const WEBGL_ISLAND_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
+const THREE_INSTANCING_LEARNING_SOURCE_PATH =
+  "packages/scenarios/src/learning/composition/three-instancing.example.tsx";
 const WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY =
   "packages/scenarios/src/learning/webgl/";
 
@@ -874,6 +886,9 @@ function inspectSource(source: string, label: string): SourceInspection {
   const packageImportModules = new Set<string>();
   let hasCoreValueImport = false;
   let hasParticlesValueImport = false;
+  let hasOrbitControlsValueImport = false;
+  let hasThreeAdapterValueImport = false;
+  let hasThreeValueImport = false;
   let hasWebGLValueImport = false;
   let hasNamedValueCoreImport = false;
   let hasNamedValueParticlesImport = false;
@@ -961,6 +976,11 @@ function inspectSource(source: string, label: string): SourceInspection {
               moduleName === PARTICLES_WEBGL_MODULE
             )
               hasParticlesValueImport = true;
+            if (moduleName === THREE_ADAPTER_MODULE)
+              hasThreeAdapterValueImport = true;
+            if (moduleName === THREE_MODULE) hasThreeValueImport = true;
+            if (moduleName === THREE_ORBIT_CONTROLS_MODULE)
+              hasOrbitControlsValueImport = true;
             if (moduleName === WEBGL_MODULE) hasWebGLValueImport = true;
           }
         }
@@ -993,9 +1013,16 @@ function inspectSource(source: string, label: string): SourceInspection {
       ) {
         hasParticlesValueImport = true;
         hasNamedValueParticlesImport = true;
-      } else {
+      } else if (moduleName === WEBGL_MODULE) {
         hasWebGLValueImport = true;
         hasNamedValueWebGLImport = true;
+      } else {
+        if (moduleName === THREE_ADAPTER_MODULE)
+          hasThreeAdapterValueImport = true;
+        if (moduleName === THREE_MODULE) hasThreeValueImport = true;
+        if (moduleName === THREE_ORBIT_CONTROLS_MODULE)
+          hasOrbitControlsValueImport = true;
+        continue;
       }
       if (valueImports.has(localName)) hasOnlyApprovedImports = false;
       valueImports.set(localName, importedName);
@@ -1262,7 +1289,10 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasCanonicalMount: isCanonicalMount(programBody),
     hasCommonJsSyntax,
     hasCoreValueImport,
+    hasOrbitControlsValueImport,
     hasParticlesValueImport,
+    hasThreeAdapterValueImport,
+    hasThreeValueImport,
     hasWebGLValueImport,
     hasCreateElementCall,
     hasDirectComponentCall,
@@ -1397,9 +1427,22 @@ export function validateLearningSourceText(
     (sourcePath === undefined &&
       (label === "particle-effects" ||
         label === 'Learning example "particle-effects"'));
+  const isThreeLesson =
+    sourcePath === THREE_INSTANCING_LEARNING_SOURCE_PATH ||
+    (sourcePath === undefined &&
+      (label === "three-instancing" ||
+        label === 'Learning example "three-instancing"'));
   const isParticleWebGLLesson =
     inspection.packageImportModules.includes(PARTICLES_WEBGL_MODULE);
-  const hasExactPackageImports = isParticleWebGLLesson
+  const hasExactPackageImports = isThreeLesson
+    ? inspection.hasNamedValueCoreImport &&
+      inspection.hasThreeAdapterValueImport &&
+      inspection.hasThreeValueImport &&
+      inspection.hasOrbitControlsValueImport &&
+      !inspection.hasNamedValueParticlesImport &&
+      !inspection.hasNamedValueWebGLImport &&
+      inspection.packageImportModules.length === 4
+    : isParticleWebGLLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.hasNamedValueParticlesImport &&
       inspection.hasNamedValueWebGLImport &&
@@ -1423,7 +1466,9 @@ export function validateLearningSourceText(
   if (!inspection.hasOnlyApprovedImports || !hasExactPackageImports) {
     throw invalid(
       label,
-      isParticleWebGLLesson
+      isThreeLesson
+        ? "must use direct, unaliased static named value imports from @crc/core, @crc/three, three, and three/addons/controls/OrbitControls.js."
+        : isParticleWebGLLesson
         ? "must use direct, unaliased static named value imports from @crc/core, @crc/particles, @crc/particles/webgl, and @crc/webgl."
         : isWebGLLesson
         ? "must use direct, unaliased static named value imports from both @crc/core and @crc/webgl."
@@ -1451,7 +1496,9 @@ export function validateLearningSourceText(
   if (inspection.hasBindingViolation) {
     throw invalid(
       label,
-      isParticleWebGLLesson
+      isThreeLesson
+        ? "must use direct Three lesson bindings without aliases, reassignment, or shadowing."
+        : isParticleWebGLLesson
         ? "must use direct CRC particle-WebGL lesson bindings without aliases, reassignment, or shadowing."
         : isWebGLLesson
         ? "must use direct @crc/core and @crc/webgl bindings without aliases, reassignment, or shadowing."
