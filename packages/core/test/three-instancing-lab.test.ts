@@ -14,6 +14,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { loadLearningSource } from '../../../playground/src/learning-sources';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
 import {
+  IcosahedronGeometry,
+  MeshPhongMaterial,
+  Object3D,
+  OrbitControls,
+} from '../../scenarios/test-support/three-instancing-resources';
+import {
   clickLogicalPoint,
   dragPointerLogicalPoint,
   pressKey,
@@ -64,6 +70,32 @@ function pixelSignature(canvas: HTMLCanvasElement): number {
     hash = Math.imul(hash, 16777619);
   }
   return hash >>> 0;
+}
+
+function applicationResourceIdentities(
+  calls: readonly (readonly Object3D[])[],
+): Readonly<{
+  geometries: readonly IcosahedronGeometry[];
+  materials: readonly MeshPhongMaterial[];
+}> {
+  const geometries = new Set<IcosahedronGeometry>();
+  const materials = new Set<MeshPhongMaterial>();
+  for (const object of calls.flat()) {
+    const mesh = object as Object3D & {
+      readonly geometry?: unknown;
+      readonly material?: unknown;
+    };
+    if (mesh.geometry instanceof IcosahedronGeometry) {
+      geometries.add(mesh.geometry);
+    }
+    if (mesh.material instanceof MeshPhongMaterial) {
+      materials.add(mesh.material);
+    }
+  }
+  return {
+    geometries: [...geometries],
+    materials: [...materials],
+  };
 }
 
 describe('public Three instancing proving scenarios', () => {
@@ -282,7 +314,32 @@ describe('public Three instancing proving scenarios', () => {
   });
 
   it('composes the transparent bitmap through the outer clip/filter, resizes it, and disposes application resources once', async () => {
+    const controls = new Set<OrbitControls>();
+    const originalControlsUpdate = OrbitControls.prototype.update;
+    vi.spyOn(OrbitControls.prototype, 'update').mockImplementation(function (
+      this: OrbitControls,
+      ...args: Parameters<OrbitControls['update']>
+    ) {
+      controls.add(this);
+      return originalControlsUpdate.apply(this, args);
+    });
+    const objectAdd = vi.spyOn(Object3D.prototype, 'add');
+    const controlsDispose = vi.spyOn(OrbitControls.prototype, 'dispose');
+    const geometryDispose = vi.spyOn(
+      IcosahedronGeometry.prototype,
+      'dispose',
+    );
+    const materialDispose = vi.spyOn(MeshPhongMaterial.prototype, 'dispose');
+
     const { canvas, controller } = await mountThreeInstancingLab();
+    const initialResources = applicationResourceIdentities(objectAdd.mock.calls);
+    const initialControls = [...controls];
+    expect(initialControls).toHaveLength(1);
+    expect(initialResources.geometries).toHaveLength(2);
+    expect(initialResources.materials).toHaveLength(2);
+    expect(controlsDispose).not.toHaveBeenCalled();
+    expect(geometryDispose).not.toHaveBeenCalled();
+    expect(materialDispose).not.toHaveBeenCalled();
 
     expect(pixelAt(canvas, THREE_INSTANCING_LAB_PROBES.exposedTile)[3]).toBe(255);
     expect(pixelAt(canvas, THREE_INSTANCING_LAB_PROBES.registeredTarget)).not.toEqual(
@@ -308,10 +365,31 @@ describe('public Three instancing proving scenarios', () => {
     await controller.settled();
     expect(controller.getState().revision).toBe(1);
     expect(pixelSignature(canvas)).not.toBe(beforeResize);
+    const resizedResources = applicationResourceIdentities(objectAdd.mock.calls);
+    const resizedControls = [...controls];
+    expect(resizedControls).toHaveLength(1);
+    expect(resizedControls[0]).toBe(initialControls[0]);
+    expect(resizedResources.geometries).toHaveLength(2);
+    expect(resizedResources.geometries[0]).toBe(initialResources.geometries[0]);
+    expect(resizedResources.geometries[1]).toBe(initialResources.geometries[1]);
+    expect(resizedResources.materials).toHaveLength(2);
+    expect(resizedResources.materials[0]).toBe(initialResources.materials[0]);
+    expect(resizedResources.materials[1]).toBe(initialResources.materials[1]);
+    expect(controlsDispose).not.toHaveBeenCalled();
+    expect(geometryDispose).not.toHaveBeenCalled();
+    expect(materialDispose).not.toHaveBeenCalled();
 
     const stateBeforeDispose = controller.getState();
     await controller.dispose();
     activeControllers.delete(controller);
+    expect(controlsDispose).toHaveBeenCalledTimes(1);
+    expect(geometryDispose).toHaveBeenCalledTimes(2);
+    expect(materialDispose).toHaveBeenCalledTimes(2);
+
+    await controller.dispose();
+    expect(controlsDispose).toHaveBeenCalledTimes(1);
+    expect(geometryDispose).toHaveBeenCalledTimes(2);
+    expect(materialDispose).toHaveBeenCalledTimes(2);
     expect(controller.getState()).toEqual(stateBeforeDispose);
     await expect(controller.perform('resize-layer')).rejects.toThrow(
       /disposed Three instancing laboratory/u,
