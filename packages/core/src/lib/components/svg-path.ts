@@ -1,13 +1,14 @@
 import { definePrimitive } from '../define-primitive.js';
 import { createSvgPath } from '../geometry/svg-path.js';
 import { RenderingContext2D } from '../types.js';
+import type { CRCPhysics2DPropExtension } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import type { ResolvedSvgPathStyle, SvgPathStyle } from '../style/types.js';
 import { renderPath } from './path.js';
 import type { PathProps } from './path.js';
 
-export interface SvgPathProps extends PathProps {}
+export interface SvgPathProps extends PathProps, CRCPhysics2DPropExtension {}
 
 function renderSvgPath(
   props: SvgPathProps,

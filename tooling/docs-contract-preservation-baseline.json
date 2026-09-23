@@ -10,7 +10,7 @@
     {
       "id": "jsx-component-authoring",
       "path": "docs/superpowers/specs/2026-09-01-jsx-component-authoring-design.md",
-      "sourceSha256": "798440c84133b4f2c6a75c3859ab4c7f2b24055fafb153c5154b7bd9e084b52b",
+      "sourceSha256": "1ae2673b1a7000dae5747d5015829cfe9aa3c5af158e04bed7c8b740a8c24322",
       "unitPrefix": "a"
     },
     {
@@ -22,31 +22,31 @@
     {
       "id": "first-class-filters",
       "path": "docs/superpowers/specs/2026-09-08-first-class-filters-design.md",
-      "sourceSha256": "46777251249e97f0bb9f2792bab69239ba74c25f7ae53e098d13252d5dc57e0c",
+      "sourceSha256": "c71d49a7ee57baed98fb1f1e1b8903dd3303de24f3cecc88385bcbc1b5b9b56c",
       "unitPrefix": "f"
     },
     {
       "id": "rounded-shapes-and-path-creators",
       "path": "docs/superpowers/specs/2026-09-08-rounded-shapes-and-path-creators-design.md",
-      "sourceSha256": "ea99cd9c3bf96b739712a7b2e0bf92000eccb701a80e531dda7bd47e7ec346f4",
+      "sourceSha256": "f13a3b4a077ed9cc4877284dd65c87bf5f1d62fbdf884a7d82d57fe06e102559",
       "unitPrefix": "r"
     },
     {
       "id": "webgl-islands",
       "path": "docs/superpowers/specs/2026-09-09-webgl-islands-design.md",
-      "sourceSha256": "12c032902cb7c0247f41af936511120e9fe00ff4108fde70433672a1e8de738c",
+      "sourceSha256": "16bb5bd64cf468097ae1eafd6887c6f23dd8e5cbc378cf75e37a229c6a1f229e",
       "unitPrefix": "w"
     },
     {
       "id": "first-class-signals-and-scheduler",
       "path": "docs/superpowers/specs/2026-09-09-first-class-signals-and-animation-design.md",
-      "sourceSha256": "35e1d4acdf91062b5852b2452ca127706769198912b59d7c128103b017bde819",
+      "sourceSha256": "0237e63f7e7affebfa1e958d8f00b364ba2d6e36f959275fd30793ef2c7cebd1",
       "unitPrefix": "g"
     },
     {
       "id": "webgl-settled-scene-rendering",
       "path": "docs/superpowers/specs/2026-09-13-webgl-settled-scene-rendering-design.md",
-      "sourceSha256": "ad572e3e4cac56f45dd2091ebbdb1b592f2088d62320485ebafaca9a2e7b417f",
+      "sourceSha256": "254a3b34ca88365e11b6550b1841d91f0eafb1f1bb045c84bf607137b2897284",
       "unitPrefix": "v"
     },
     {
@@ -59,7 +59,19 @@
       "id": "webgl-orbit-camera-and-genuine-shadows",
       "path": "docs/superpowers/specs/2026-09-15-webgl-orbit-camera-and-genuine-shadows-design.md",
       "unitPrefix": "o",
-      "sourceSha256": "6731b001c7f9706f8c16fe733b8401f2b9adc30478775801fc189c5e98b51e83"
+      "sourceSha256": "7c5063ce8ddf69e53973cf7fad478068542ad85210e0d1c745fc6867f7ea6561"
+    },
+    {
+      "id": "first-class-physics",
+      "path": "docs/superpowers/specs/2026-09-14-first-class-physics-design.md",
+      "unitPrefix": "p",
+      "sourceSha256": "dcd0000c00c0d78980ae80bf114be769fce61eeaad4dda6e3542cf5ee88ce07b"
+    },
+    {
+      "id": "event-registration-hot-path",
+      "path": "docs/superpowers/specs/2026-09-23-event-registration-hot-path-design.md",
+      "unitPrefix": "e",
+      "sourceSha256": "7e92412cbb97c453ba4c30b9c6e6a0718b213d6489c83e3565a2ead53101ead4"
     }
   ],
   "contracts": [
@@ -743,7 +755,7 @@
           "id": "b0113",
           "kind": "prose",
           "section": "Measurement architecture",
-          "text": "`useLayoutBox()` exposes the current allocation in child-local coordinates as `{ x: 0, y: 0, width, height }`. It is observational, does not schedule a render, and deliberately does not claim to provide DOM/root coordinates; callers needing those must combine it with their own transform observation."
+          "text": "`crcLayoutBox()` exposes the current allocation in child-local coordinates as `{ x: 0, y: 0, width, height }`. It is observational, does not schedule a render, and deliberately does not claim to provide DOM/root coordinates; callers needing those must combine it with their own transform observation."
         },
         {
           "id": "b0114",
@@ -2223,7 +2235,7 @@
           "id": "b0029",
           "kind": "prose",
           "section": "Responsive viewport behavior",
-          "text": "For `viewport: 'responsive'`, one logical unit equals one CSS content-box pixel. A CSS resize updates the root `useLayoutBox()` allocation and schedules one coalesced frame without remounting component identity. Backing dimensions still follow the requested pixel ratio, so responsive layout and high-density paint remain independent concerns."
+          "text": "For `viewport: 'responsive'`, one logical unit equals one CSS content-box pixel. A CSS resize updates the root `crcLayoutBox()` allocation and schedules one coalesced frame without remounting component identity. Backing dimensions still follow the requested pixel ratio, so responsive layout and high-density paint remain independent concerns."
         },
         {
           "id": "b0030",
@@ -2550,6 +2562,12 @@
           "kind": "prose",
           "section": "Evidence",
           "text": "The public `canvas-surface` laboratory is loaded by both the Studio and headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical reflow, responsive logical reflow without remount, and logical mouse coordinates. Full-page Studio baselines provide the corresponding sharpness and composition evidence."
+        },
+        {
+          "id": "c0047",
+          "kind": "prose",
+          "section": "3D physics coordinates",
+          "text": "`PhysicsWorld3D` simulates in the authored logical coordinate system at its WebGL boundary. Camera, Canvas fit, backing density, outer Canvas transforms, and bitmap composition affect presentation, picking, and projected focus but never authoritative collider geometry, mass, gravity, velocity, or query coordinates. Physics presentation is inserted only into the settled WebGL model; it is excluded from authored lineage so compound geometry cannot acquire feedback drift."
         }
       ]
     },
@@ -3338,6 +3356,12 @@
           "kind": "prose",
           "section": "Rounded shapes and public path creators",
           "text": "Zero geometry is valid: zero circle/arc/wedge radius, either zero ellipse axis, or zero angular span; fewer than three polygon points; zero normalized regular polygon size; and either zero Star radius produce empty paths. Zero corner radii keep otherwise valid geometry sharp. This feature does not add rounded Arc, Wedge, Line, HorizontalLine, or VerticalLine joins; corner behavior for Circle/Ellipse; automatic rounded clipping for arbitrary leaves; elliptical or CSS slash radii; smoothing/splines; compound/crossing stars; a generic shape registry; a retained geometry graph/cache; intrinsic geometry measurement; or per-shape memo hooks."
+        },
+        {
+          "id": "c0095",
+          "kind": "prose",
+          "section": "First-class 3D physics components",
+          "text": "Inside one `WebGLLayer`, `PhysicsWorld3D` establishes a 3D world and the optional physics package augments `Cube`, `Sphere`, `Mesh`, and `Group3D` with typed immutable attachments. Cube infers a box; uniform and nonuniform Sphere scale infer sphere and ellipsoid; static Mesh infers a triangle mesh; dynamic or kinematic Mesh infers a deterministic convex hull; Group3D hosts a compound body without a self collider. `PhysicsShape3D`, `Box3D`, `Ellipsoid3D`, `Capsule3D`, `Cylinder3D`, `Cone3D`, `ConvexHull3D`, and `Heightfield3D` render the remaining immutable shapes. Explicit shapes override inference, descendant `collider3D()` values form compounds, sensors are ordinary colliders, and moving triangle-mesh or heightfield use produces a runtime diagnostic."
         }
       ]
     },
@@ -3445,13 +3469,13 @@
           "id": "b0017",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| Grouped event target | Built-in slot or `useEventTarget` hook | Render with handlers/cursor/focus metadata | Last active property removed, component removal, or disposal | Target, paint entry, native requests, captures, contacts, drag hover, and cursor references are absent. |"
+          "text": "| Grouped event target | Built-in slot or `crcEventTarget` hook | Render with handlers/cursor/focus metadata | Last active property removed, component removal, or disposal | Target, paint entry, native requests, captures, contacts, drag hover, and cursor references are absent. |"
         },
         {
           "id": "b0018",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| Propagation listener | One `useEventListener` hook slot | Render with at least one handler | Last handler removed, component removal, or disposal | The exact component bucket member and native requests are absent. |"
+          "text": "| Propagation listener | One `crcEventListener` hook slot | Render with at least one handler | Last handler removed, component removal, or disposal | The exact component bucket member and native requests are absent. |"
         },
         {
           "id": "b0019",
@@ -3571,7 +3595,7 @@
           "id": "b0038",
           "kind": "prose",
           "section": "Replacement, removal, and errors",
-          "text": "Every rendered built-in or `useEventTarget` path owns one persistent grouped target slot containing all current event handlers and its optional cursor/focus metadata. Rerender updates that target in place and refreshes its local paint position without changing logical identity. `useEventListener` similarly owns one stable non-geometric registration. If the last active property disappears, teardown removes the exact registration and clears native requests, pointer capture, retained touch contacts, drag hover, mouse hover/activation, and cursor state that still references it."
+          "text": "Every rendered built-in or `crcEventTarget` path owns one persistent grouped target slot containing all current event handlers and its optional cursor/focus metadata. Rerender updates that target in place and refreshes its local paint position without changing logical identity. `crcEventListener` similarly owns one stable non-geometric registration. If the last active property disappears, teardown removes the exact registration and clears native requests, pointer capture, retained touch contacts, drag hover, mouse hover/activation, and cursor state that still references it."
         },
         {
           "id": "b0039",
@@ -3679,7 +3703,7 @@
           "id": "b0056",
           "kind": "prose",
           "section": "Deliberate boundary",
-          "text": "TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading and the existing `useWhenChanged` cleanup contract."
+          "text": "TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading and the existing `crcWhenChanged` cleanup contract."
         },
         {
           "id": "b0057",
@@ -3693,7 +3717,7 @@
           "id": "c0001",
           "kind": "prose",
           "section": "CRC event resource ownership",
-          "text": "Status: current implemented contract, updated for WebGL lighting, orbit-camera, and genuine-shadow behavior on 2026-09-15."
+          "text": "Status: current implemented contract, updated for event-registration masks on 2026-09-23."
         },
         {
           "id": "c0002",
@@ -3944,134 +3968,188 @@
         {
           "id": "c0043",
           "kind": "prose",
-          "section": "Replacement, removal, and errors",
-          "text": "`useOrbitCamera()` owns stable handler functions but no native listener, logical target, focus candidate, or pointer-capture resource merely by being called. Spreading its handlers onto a geometry participant or structural ancestor acquires the ordinary target/listener resources owned by that receiving component. During a gesture, capture remains owned by the receiving live event node and root dispatcher; hook teardown clears its local active pointer and makes the retained handler bundle inert. Lights, materials, backgrounds, and shadow maps likewise acquire no event resource."
+          "section": "Registration signatures and native ownership",
+          "text": "Handler normalization and native-listener ownership use private two-word bitmask signatures over the closed `CRC_EVENT_DEFINITIONS` vocabulary. Bits 0-31 occupy the low word and bits 32-63 occupy the high word; module loading fails rather than aliasing definitions if the vocabulary exceeds 64 entries. The signed numeric representation of bit 31 is immaterial because words are treated only as opaque 32-bit sets."
         },
         {
           "id": "c0044",
           "kind": "prose",
-          "section": "Replacement, removal, and errors",
-          "text": "The root dispatcher snapshots one temporary ancestry route, then re-reads each node's liveness and current handler before invocation. Removal during dispatch therefore remains effective, route additions wait for the next event, and one thrown handler cannot prevent later handlers or final cleanup. Layers share the root event state and use one explicit parent-component bridge solely while constructing temporary paths; teardown clears that bridge before recursively disposing the child instance. `WebGLLayer` uses the same ownership direction for its private backend instance, Group3D/listener ancestry, and Canvas parent bridge. Its child traversal composes target-bearing geometry submissions; only a successfully settled, rendered, transferred, and parent-composited candidate commits its bitmap, pick ledger, and focus metadata together. Raster queue sorting cannot reorder target identity, event ancestry, focus order, or source indices."
+          "section": "Registration signatures and native ownership",
+          "text": "Each target/listener retains three distinct forms of state:"
         },
         {
           "id": "c0045",
-          "kind": "prose",
-          "section": "Replacement, removal, and errors",
-          "text": "Native acquisition includes logical prerequisites: boundary handlers own the movement/root-exit inputs that derive their events; click/double-click own down/up history; touch handlers own start and terminal inputs needed to retain and release contacts; drag boundary handlers own establishment, movement, and terminal inputs; active pointer capture owns got/lost notifications. Cancellable touch and wheel listeners are non-passive. Reference counts still collapse all requesters to one actual Canvas listener per type."
+          "kind": "list",
+          "section": "Registration signatures and native ownership",
+          "text": "- a fresh normalized callback object for current bubble/capture dispatch;"
         },
         {
           "id": "c0046",
-          "kind": "prose",
-          "section": "Replacement, removal, and errors",
-          "text": "A root `OffscreenCanvas` has an event root but no native DOM listener hub. Managed offscreen Canvas layers and WebGL islands under an HTML Canvas share that root's listeners and state. Root disposal clears every form without relying on garbage collection. Context loss clears the affected WebGL pick and focus generation before any restoration request can publish replacements and invalidates the lost renderer generation without issuing stale GPU deletions. Composition, settlement, WebGL rendering, bitmap-transfer, and Canvas-composite errors all release their uncommitted target participation through the same idempotent candidate path; no error may publish event state for a bitmap that did not commit."
+          "kind": "list",
+          "section": "Registration signatures and native ownership",
+          "text": "- a logical handler mask pair used for handler-presence/liveness checks; and"
         },
         {
           "id": "c0047",
-          "kind": "prose",
-          "section": "Replacement, removal, and errors",
-          "text": "`Teardowns.execute()` closes before invoking a stable snapshot. Every entry is attempted once; an exception is reported without stopping the remaining releases. Repeated execution and resources added after closure are safe."
+          "kind": "list",
+          "section": "Registration signatures and native ownership",
+          "text": "- required and last-reconciled native mask pairs used for listener ownership."
         },
         {
           "id": "c0048",
+          "kind": "prose",
+          "section": "Registration signatures and native ownership",
+          "text": "Module initialization precomputes each author-facing event prop's normalized key, logical bit, and complete native prerequisite mask. The render path visits only enumerable props supplied by the handler object, ignores unknown props by metadata lookup, copies current callback values, and ORs precomputed words. Bubble and capture callbacks retain separate normalized keys but share the same logical/native bits. Cursor movement/exit requirements use a separate precomputed mask."
+        },
+        {
+          "id": "c0049",
+          "kind": "prose",
+          "section": "Registration signatures and native ownership",
+          "text": "Equal required and reconciled pairs make ownership reconciliation two integer equality checks with no native-hub work. Changed ownership uses `previous & ~next` for removals and `next & ~previous` for additions, then walks only the set bits. Removals release before additions acquire. Explicit release resets the reconciled pair to zero, executes every exact release closure once, and removes the registration's release map so reviving a stable hook slot reacquires its complete current signature."
+        },
+        {
+          "id": "c0050",
+          "kind": "prose",
+          "section": "Registration signatures and native ownership",
+          "text": "Masks never encode callback identity and never replace normalized callback lookups during propagation. Callback objects refresh on every render even when their type signatures are equal, preserving latest-closure behavior. Masks are transient internal values: they are not serialized, exposed publicly, or a cross-version bit-position contract. The complete rationale and maintenance rules live in the [event-registration hot-path design](../superpowers/specs/2026-09-23-event-registration-hot-path-design.md)."
+        },
+        {
+          "id": "c0051",
+          "kind": "prose",
+          "section": "Registration signatures and native ownership",
+          "text": "`useOrbitCamera()` owns stable handler functions but no native listener, logical target, focus candidate, or pointer-capture resource merely by being called. Spreading its handlers onto a geometry participant or structural ancestor acquires the ordinary target/listener resources owned by that receiving component. During a gesture, capture remains owned by the receiving live event node and root dispatcher; hook teardown clears its local active pointer and makes the retained handler bundle inert. Lights, materials, backgrounds, and shadow maps likewise acquire no event resource."
+        },
+        {
+          "id": "c0052",
+          "kind": "prose",
+          "section": "Registration signatures and native ownership",
+          "text": "The root dispatcher snapshots one temporary ancestry route, then re-reads each node's liveness and current handler before invocation. Removal during dispatch therefore remains effective, route additions wait for the next event, and one thrown handler cannot prevent later handlers or final cleanup. Layers share the root event state and use one explicit parent-component bridge solely while constructing temporary paths; teardown clears that bridge before recursively disposing the child instance. `WebGLLayer` uses the same ownership direction for its private backend instance, Group3D/listener ancestry, and Canvas parent bridge. Its child traversal composes target-bearing geometry submissions; only a successfully settled, rendered, transferred, and parent-composited candidate commits its bitmap, pick ledger, and focus metadata together. Raster queue sorting cannot reorder target identity, event ancestry, focus order, or source indices."
+        },
+        {
+          "id": "c0053",
+          "kind": "prose",
+          "section": "Registration signatures and native ownership",
+          "text": "Native acquisition includes logical prerequisites: boundary handlers own the movement/root-exit inputs that derive their events; click/double-click own down/up history; touch handlers own start and terminal inputs needed to retain and release contacts; drag boundary handlers own establishment, movement, and terminal inputs; active pointer capture owns got/lost notifications. Cancellable touch and wheel listeners are non-passive. Reference counts still collapse all requesters to one actual Canvas listener per type."
+        },
+        {
+          "id": "c0054",
+          "kind": "prose",
+          "section": "Registration signatures and native ownership",
+          "text": "A root `OffscreenCanvas` has an event root but no native DOM listener hub. Managed offscreen Canvas layers and WebGL islands under an HTML Canvas share that root's listeners and state. Root disposal clears every form without relying on garbage collection. Context loss clears the affected WebGL pick and focus generation before any restoration request can publish replacements and invalidates the lost renderer generation without issuing stale GPU deletions. Composition, settlement, WebGL rendering, bitmap-transfer, and Canvas-composite errors all release their uncommitted target participation through the same idempotent candidate path; no error may publish event state for a bitmap that did not commit."
+        },
+        {
+          "id": "c0055",
+          "kind": "prose",
+          "section": "Registration signatures and native ownership",
+          "text": "`Teardowns.execute()` closes before invoking a stable snapshot. Every entry is attempted once; an exception is reported without stopping the remaining releases. Repeated execution and resources added after closure are safe."
+        },
+        {
+          "id": "c0056",
           "kind": "prose",
           "section": "Deterministic evidence",
           "text": "Test-only `RuntimeDiagnostics` tracks acquired, released, live, and duplicate-release counts for native listeners and every discovered root/layer event Set. It also tracks requested, canceled, completed, and pending animation frames. The observer remains outside runtime build entries and package exports."
         },
         {
-          "id": "c0049",
+          "id": "c0057",
           "kind": "prose",
           "section": "Deterministic evidence",
           "text": "The TFC-03 suites prove:"
         },
         {
-          "id": "c0050",
+          "id": "c0058",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- a complete settled snapshot is unchanged after 1,000 real rerenders;"
         },
         {
-          "id": "c0051",
+          "id": "c0059",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- handler replacement preserves counts and invokes only the new generation;"
         },
         {
-          "id": "c0052",
+          "id": "c0060",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- removed props and subtrees leave no registry entries or ghost calls;"
         },
         {
-          "id": "c0053",
+          "id": "c0061",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- nested layer removal returns instances and all root-visible resources to the root baseline;"
         },
         {
-          "id": "c0054",
+          "id": "c0062",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- abort and no-signal disposal release everything, including before the first frame;"
         },
         {
-          "id": "c0055",
+          "id": "c0063",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- repeated and stale cleanup cannot disturb a remount;"
         },
         {
-          "id": "c0056",
+          "id": "c0064",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- a thrown handler is reported while later observers and cleanup continue;"
         },
         {
-          "id": "c0057",
+          "id": "c0065",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- acquired minus released always equals live, and final live/duplicate-release counts are zero."
         },
         {
-          "id": "c0058",
+          "id": "c0066",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- an update-time signal cannot dispose the existing mount, while its original mount signal still can."
         },
         {
-          "id": "c0059",
+          "id": "c0067",
           "kind": "prose",
           "section": "Deterministic evidence",
           "text": "TFC-04 and TFC-05 additionally prove that removing a live layer returns parent paint entries, root observers, root cursor defaults, hover/cursor state, and offscreen instances to their exact pre-layer ledgers with no ghost calls."
         },
         {
-          "id": "c0060",
+          "id": "c0068",
           "kind": "prose",
           "section": "Deterministic evidence",
           "text": "The DOM-aligned event suites additionally prove lazy per-type acquisition, grouped target/listener replacement, prerequisite ownership, pointer-capture transactions, retained touch and drag cleanup, cross-layer propagation, pathless legacy observer ordering, and exact zero state after disposal."
         },
         {
-          "id": "c0061",
+          "id": "c0069",
           "kind": "prose",
           "section": "Deterministic evidence",
           "text": "The WebGL ownership and integration suites additionally prove passive geometry-target acquisition, object/layer opt-out, bitmap/pick/focus generation replacement, nested propagation, pointer capture/focus/cursor cleanup, context loss/restoration, candidate rollback, and exact target/resolver/bridge baselines after failure, removal, and disposal."
         },
         {
-          "id": "c0062",
+          "id": "c0070",
           "kind": "prose",
           "section": "Deterministic evidence",
           "text": "The orbit-camera suite additionally proves stable handler identities, ordinary capture acquisition/release, teardown during an active gesture, and inert retained callbacks without leaked native requests or independently scheduled frames."
         },
         {
-          "id": "c0063",
+          "id": "c0071",
           "kind": "prose",
           "section": "Deliberate boundary",
           "text": "TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading and the existing `useWhenChanged` cleanup contract."
         },
         {
-          "id": "c0064",
+          "id": "c0072",
           "kind": "prose",
           "section": "Deliberate boundary",
           "text": "TFC-07 completed that broader proof in the [runtime resource ownership contract](./runtime-resource-ownership.md), including state-setter capability checks, single-owner change cleanups, image generations, fully rendered mount/dispose stress, and temporary render-global restoration."
+        },
+        {
+          "id": "c0073",
+          "kind": "prose",
+          "section": "3D physics event ownership",
+          "text": "Collision, overlap, hit, sleep, and wake facts belong to one candidate simulation generation and materialize public immutable records only for observed handlers. Successful Commit adopts the candidate; Complete delivers facts in stable tick, semantic, pair, and receiver order. Discard, failed Commit, body/collider generation change, removal, and disposal suppress stale delivery and release owner-scoped callbacks; callbacks may only enqueue work for a later Begin."
         }
       ]
     },
@@ -4287,7 +4365,7 @@
           "id": "b0035",
           "kind": "prose",
           "section": "Render snapshots and modality",
-          "text": "`useEventTarget` returns `{ isFocused, isFocusVisible }` for the current render. Without a manager both values are false. Pointer focus normally sets only `isFocused`; Tab and successful arrow navigation set both. Enter or Space does not retroactively turn a pointer-established focus into focus-visible focus."
+          "text": "`crcEventTarget` returns `{ isFocused, isFocusVisible }` for the current render. Without a manager both values are false. Pointer focus normally sets only `isFocused`; Tab and successful arrow navigation set both. Enter or Space does not retroactively turn a pointer-established focus into focus-visible focus."
         },
         {
           "id": "b0036",
@@ -4317,7 +4395,7 @@
           "id": "b0040",
           "kind": "prose",
           "section": "Optionality, lifecycle, and failures",
-          "text": "The shared `focus-and-keyboard-navigation` scenario demonstrates native DOM controls before and after the Canvas, two explicit top targets, twelve keyed row-major directional squares, and two explicit bottom targets. Its private controls each own their rectangular `useEventTarget` registration and their own visual children. They are example composition, not exported CRC widgets."
+          "text": "The shared `focus-and-keyboard-navigation` scenario demonstrates native DOM controls before and after the Canvas, two explicit top targets, twelve keyed row-major directional squares, and two explicit bottom targets. Its private controls each own their rectangular `crcEventTarget` registration and their own visual children. They are example composition, not exported CRC widgets."
         },
         {
           "id": "b0041",
@@ -4638,6 +4716,12 @@
           "kind": "prose",
           "section": "Optionality, lifecycle, and failures",
           "text": "See [Canvas accessibility guidance](./canvas-accessibility-guidance.md) for the separate semantic responsibility."
+        },
+        {
+          "id": "c0052",
+          "kind": "prose",
+          "section": "3D physics presentation",
+          "text": "An interactive physics-backed WebGL mesh remains the same logical focus target. Its committed physics presentation contributes to the one settled model shared by rasterization, depth picking, and projected focus bounds; authoritative physics queries and collision events do not create focus candidates or change keyboard order. Disabled or removed geometry follows the ordinary committed WebGL target and focus-removal rules."
         }
       ]
     },
@@ -4703,7 +4787,7 @@
           "id": "b0010",
           "kind": "prose",
           "section": "Shared box, placement, and overflow rules",
-          "text": "The runtime places one private wrapper per direct child. The wrapper translates the child's allocation but preserves the original component type, key, and identity hint. Keyed children survive reflow; unkeyed same-type children retain occurrence-order identity, and keyed siblings do not consume unkeyed occurrence slots. A placed child's `useLayoutBox` is the stable, readonly local box `{ x: 0, y: 0, width, height }`; reading it never schedules an update."
+          "text": "The runtime places one private wrapper per direct child. The wrapper translates the child's allocation but preserves the original component type, key, and identity hint. Keyed children survive reflow; unkeyed same-type children retain occurrence-order identity, and keyed siblings do not consume unkeyed occurrence slots. A placed child's `crcLayoutBox` is the stable, readonly local box `{ x: 0, y: 0, width, height }`; reading it never schedules an update."
         },
         {
           "id": "b0011",
@@ -5450,6 +5534,12 @@
           "kind": "prose",
           "section": "Deliberate exclusions",
           "text": "Public JSX layout evidence lives in `packages/core/src/lib/layout/layout-jsx.test.tsx`, the five Studio layout lessons, DOM-oracle compatibility suites, and deterministic layout laboratory. See the [style contract](./style-system-contract.md), [user-event contract](./user-events-contract.md), and [runtime resource ownership contract](./runtime-resource-ownership.md)."
+        },
+        {
+          "id": "c0070",
+          "kind": "prose",
+          "section": "3D physics and layout",
+          "text": "Layout treats a `WebGLLayer` as one ordinary allocated Canvas item and does not inspect its inner physics scene. Authored placement at body creation or re-enable seeds world-local pose, but layout is not a continuing constraint on an enabled dynamic body; physics presentation is applied inside the already allocated island and never changes Canvas measurement or allocation."
         }
       ]
     },
@@ -5599,19 +5689,19 @@
           "id": "b0024",
           "kind": "prose",
           "section": "Target selection",
-          "text": "The public `useEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation."
+          "text": "The public `crcEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation."
         },
         {
           "id": "b0025",
           "kind": "prose",
           "section": "Target selection",
-          "text": "Likewise, `useCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty."
+          "text": "Likewise, `crcCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty."
         },
         {
           "id": "b0026",
           "kind": "prose",
           "section": "Target selection",
-          "text": "DOM ancestors learn about child input only through explicit `useEventListener` registrations. The current facade exposes logical `target`, `currentTarget`, `relatedTarget`, phases, cancellation, and pointer capture as defined by the user-event contract; CRC still never invokes every overlapping geometric hit or infers an ancestor from paint."
+          "text": "DOM ancestors learn about child input only through explicit `crcEventListener` registrations. The current facade exposes logical `target`, `currentTarget`, `relatedTarget`, phases, cancellation, and pointer capture as defined by the user-event contract; CRC still never invokes every overlapping geometric hit or infers an ancestor from paint."
         },
         {
           "id": "b0027",
@@ -5743,7 +5833,7 @@
           "id": "b0048",
           "kind": "prose",
           "section": "Primary click",
-          "text": "The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `useEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted."
+          "text": "The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `crcEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted."
         },
         {
           "id": "b0049",
@@ -5923,7 +6013,7 @@
           "id": "b0078",
           "kind": "list",
           "section": "Retained differences from DOM",
-          "text": "- No-path `useEvent` handlers are Canvas-wide observers and run after target-bound callbacks rather than introducing a synthetic propagation phase."
+          "text": "- No-path `crcEvent` handlers are Canvas-wide observers and run after target-bound callbacks rather than introducing a synthetic propagation phase."
         },
         {
           "id": "b0079",
@@ -6568,6 +6658,12 @@
           "kind": "list",
           "section": "Primary sources",
           "text": "- [WHATWG HTML — Canvas paths, clipping, hit testing, and drawing images](https://html.spec.whatwg.org/multipage/canvas.html)"
+        },
+        {
+          "id": "c0095",
+          "kind": "prose",
+          "section": "3D physics queries",
+          "text": "Mouse and pointer events report root-logical Canvas coordinates and WebGL renderer targets; they are not physics query results. A physics interaction explicitly projects the pointer through the committed camera to a world-space ray, calls the authoritative `@crc/physics/3d` query surface, and sends commands through a generation-bound body handle. Queries neither synthesize DOM events nor start a private simulation/render loop."
         }
       ]
     },
@@ -6669,61 +6765,61 @@
           "id": "b0016",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `useState(init)` | Returns the current value and one stable setter for the mounted slot. Direct values and functional updates apply in call order and coalesce into a frame. Identity persists across ordinary renders and resets at key/type/root removal. A setter becomes an inert capability after its exact component or mount starts teardown. Function-valued state is not separately distinguished from functional updates. | `hook-contract.test.ts`, `use-state.test.ts`, shared laboratory |"
+          "text": "| `crcState(init)` | Returns the current value and one stable setter for the mounted slot. Direct values and functional updates apply in call order and coalesce into a frame. Identity persists across ordinary renders and resets at key/type/root removal. A setter becomes an inert capability after its exact component or mount starts teardown. Function-valued state is not separately distinguished from functional updates. | `hook-contract.test.ts`, `crc-state.test.ts`, shared laboratory |"
         },
         {
           "id": "b0017",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `useMemo(create, deps)` | Runs on mount and again when dependency length changes or any position compares different with strict `!==`. Equal dependencies preserve object identity. Consequently `NaN` recomputes and `+0`/`-0` compare equal. Factory errors enter fail-closed render recovery. | `hook-contract.test.ts`, shared laboratory |"
+          "text": "| `crcMemo(create, deps)` | Runs on mount and again when dependency length changes or any position compares different with strict `!==`. Equal dependencies preserve object identity. Consequently `NaN` recomputes and `+0`/`-0` compare equal. Factory errors enter fail-closed render recovery. | `hook-contract.test.ts`, shared laboratory |"
         },
         {
           "id": "b0018",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `useRef(init?)` | Creates one stable mutable `{ current }` object for the slot. Mutating it does not schedule a render. The initializer is used only on mount; key/type/root removal creates a fresh ref. | `use-ref.test.ts`, `hook-contract.test.ts`, shared laboratory |"
+          "text": "| `crcRef(init?)` | Creates one stable mutable `{ current }` object for the slot. Mutating it does not schedule a render. The initializer is used only on mount; key/type/root removal creates a fresh ref. | `crc-ref.test.ts`, `hook-contract.test.ts`, shared laboratory |"
         },
         {
           "id": "b0019",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `useWhenChanged(callback, deps?)` | Runs synchronously on mount and when shallow strict dependencies change. The previous cleanup runs exactly once before the next setup. With no dependencies it cleans and runs on every render. Component removal owns the final cleanup; a void or throwing replacement cannot replay an older cleanup. | `use-when-changed.test.ts`, `hook-contract.test.ts`, cleanup laboratory |"
+          "text": "| `crcWhenChanged(callback, deps?)` | Runs synchronously on mount and when shallow strict dependencies change. The previous cleanup runs exactly once before the next setup. With no dependencies it cleans and runs on every render. Component removal owns the final cleanup; a void or throwing replacement cannot replay an older cleanup. | `crc-when-changed.test.ts`, `hook-contract.test.ts`, cleanup laboratory |"
         },
         {
           "id": "b0020",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `useRectPath(...)` | Memoizes a `Path2D` over all rectangle geometry and pixel-grid inputs. Equal effective inputs preserve identity; changed geometry creates a new path. | `crc-path-hooks.test.ts`, shared laboratory |"
+          "text": "| `crcRectPath(...)` | Memoizes a `Path2D` over all rectangle geometry and pixel-grid inputs. Equal effective inputs preserve identity; changed geometry creates a new path. | `crc-path-hooks.test.ts`, shared laboratory |"
         },
         {
           "id": "b0021",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `useLinePath(...)` | Memoizes over every coordinate and `closePath`; changing either creates a new `Path2D`. | `crc-path-hooks.test.ts`, shared laboratory |"
+          "text": "| `crcLinePath(...)` | Memoizes over every coordinate and `closePath`; changing either creates a new `Path2D`. | `crc-path-hooks.test.ts`, shared laboratory |"
         },
         {
           "id": "b0022",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `useSvgPath(data)` | Memoizes exact SVG path data. Parsing is delegated to the platform `Path2D`; malformed data propagates the platform error and participates in normal render recovery. | `crc-path-hooks.test.ts`, shared laboratory |"
+          "text": "| `crcSvgPath(data)` | Memoizes exact SVG path data. Parsing is delegated to the platform `Path2D`; malformed data propagates the platform error and participates in normal render recovery. | `crc-path-hooks.test.ts`, shared laboratory |"
         },
         {
           "id": "b0023",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `useEvent(...)` | Owns a typed event hook slot and follows the target/observer and lifecycle rules in the mouse and ownership contracts. Switching path/global modes keeps hook order valid. | `hook-contract.test.ts`, TFC-04/TFC-05 laboratories |"
+          "text": "| `crcEvent(...)` | Owns a typed event hook slot and follows the target/observer and lifecycle rules in the mouse and ownership contracts. Switching path/global modes keeps hook order valid. | `hook-contract.test.ts`, TFC-04/TFC-05 laboratories |"
         },
         {
           "id": "b0024",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `useCursor(...)` | Owns a typed cursor hook slot and follows the target/fallback ownership rules in the mouse and event ownership contracts. Switching path/global modes keeps hook order valid. | `hook-contract.test.ts`, TFC-04/TFC-05 laboratories |"
+          "text": "| `crcCursor(...)` | Owns a typed cursor hook slot and follows the target/fallback ownership rules in the mouse and event ownership contracts. Switching path/global modes keeps hook order valid. | `hook-contract.test.ts`, TFC-04/TFC-05 laboratories |"
         },
         {
           "id": "b0025",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `useLayoutBox()` | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared outside-render hook diagnostic. | Layout foundation and measurement-isolation suites |"
+          "text": "| `crcLayoutBox()` | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared outside-render hook diagnostic. | Layout foundation and measurement-isolation suites |"
         },
         {
           "id": "b0026",
@@ -6735,7 +6831,7 @@
           "id": "b0027",
           "kind": "prose",
           "section": "Pure measurement boundary",
-          "text": "`measureElement` and a component's optional `measure` capability are not render passes. Measurement normalizes style and may recursively measure children, but cannot invoke render callbacks, hooks, `useLayoutBox`, interaction registration, paint, image loading, or other runtime ownership. CRC snapshots, clears, and restores temporary render globals in `finally`, so attempted hook use during an active render cannot consume the parent's hook slots. Direct and indirect measurement cycles throw a contextual cyclic-measurement diagnostic; later valid measurement remains usable."
+          "text": "`measureElement` and a component's optional `measure` capability are not render passes. Measurement normalizes style and may recursively measure children, but cannot invoke render callbacks, hooks, `crcLayoutBox`, interaction registration, paint, image loading, or other runtime ownership. CRC snapshots, clears, and restores temporary render globals in `finally`, so attempted hook use during an active render cannot consume the parent's hook slots. Direct and indirect measurement cycles throw a contextual cyclic-measurement diagnostic; later valid measurement remains usable."
         },
         {
           "id": "b0028",
@@ -6777,7 +6873,7 @@
           "id": "b0034",
           "kind": "list",
           "section": "Deliberate boundaries",
-          "text": "- `useState` does not define lazy initializer or function-as-data semantics; a function passed to the setter is an updater."
+          "text": "- `crcState` does not define lazy initializer or function-as-data semantics; a function passed to the setter is an updater."
         },
         {
           "id": "b0035",
@@ -7224,6 +7320,12 @@
           "kind": "prose",
           "section": "First-class signal integration",
           "text": "`@crc/core/internal` is a separate version-coupled friend entry for official lockstep renderer packages. It is neither re-exported at the root nor available to ordinary Studio examples."
+        },
+        {
+          "id": "c0073",
+          "kind": "prose",
+          "section": "3D physics hooks",
+          "text": "`crcPhysicsWorld3D()` resolves the nearest mounted 3D world and `crcPhysicsBody3D()` owns one stable generation-bound body endpoint for its component hook slot. Handles expose lazily materialized readonly committed-state signals; commands are snapshotted into owner-scoped Begin work, stale generations cannot control reused storage, and removal, failed render, or disposal releases bindings and queued delivery. Both hooks obey ordinary unconditional hook ordering and diagnose use outside the required world or duplicate live body binding."
         }
       ]
     },
@@ -7277,13 +7379,13 @@
           "id": "b0008",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| `useWhenChanged` cleanup | Current dependency-generation callback return | That hook slot in the component collection | Dependency change or component teardown | The previous generation cleans before the next setup and can never clean twice. |"
+          "text": "| `crcWhenChanged` cleanup | Current dependency-generation callback return | That hook slot in the component collection | Dependency change or component teardown | The previous generation cleans before the next setup and can never clean twice. |"
         },
         {
           "id": "b0009",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| `useState` setter | Hook mount | Exact CRC instance plus exact component refs | Component/main teardown closure or either identity changing | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount. |"
+          "text": "| `crcState` setter | Hook mount | Exact CRC instance plus exact component refs | Component/main teardown closure or either identity changing | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount. |"
         },
         {
           "id": "b0010",
@@ -7826,6 +7928,12 @@
           "kind": "table",
           "section": "Signal and scheduler ownership",
           "text": "| Evaluator/stepper activation state | Run creation; each Advance forks state before sampling | Exact active playback run and its current-frame evaluation fork | Track/run completion, cancel, error, replacement, teardown, or frame-fork adoption/discard | Applied Commit adopts the fork once; failed Commit discards it and retains the prior activation/stepper state for deterministic retry; stale state cannot schedule or write. |"
+        },
+        {
+          "id": "c0068",
+          "kind": "prose",
+          "section": "First-class 3D physics ownership",
+          "text": "One mounted `PhysicsWorld3D` owns its controller, kernel, single awake-world Advance registration, body/collider stores, broad phase, contact cache, solvers, candidate journals, command/event queues, and presentation scopes. Bodies and colliders own generational slots but no scheduler registrations; handles own component lifetimes and generation bindings, not simulation storage. Failed proposals discard acquired candidate state, successful proposals adopt once, and removal or world disposal releases live slots, proxies, contacts, callbacks, and registration exactly once. Immutable shape records, BVHs, and derived render geometry are descriptor-keyed `WeakMap` caches, not reference-counted runtime resources or observable garbage-collection contracts."
         }
       ]
     },
@@ -8542,6 +8650,12 @@
           "kind": "prose",
           "section": "Rounded drawing style",
           "text": "`RegularPolygonStyle` is a discriminated union: it requires `sides`, optional `cx`, `cy`, and `rotation`, and exactly one of `circumradius`, `inradius`, or `sideLength`. `StarStyle` requires `points`, `outerRadius`, and `innerRadius`. Their centers and size/radius fields describe local drawing geometry, while `BoxStyle` and `LayoutItemStyle` still describe allocation and placement. The numeric creator option types deliberately do not accept `Length`, paint, cursor, event, or layout fields."
+        },
+        {
+          "id": "c0081",
+          "kind": "prose",
+          "section": "3D physics transform authority",
+          "text": "A 3D rigid-body pose contains translation and quaternion orientation, never scale. CRC forward-composes exact authored transform lineage below a compound body; scale and mirroring are baked into immutable collider geometry and automatic mass/inertia. Enabled dynamics reject competing authored root-pose changes, kinematic targets are application-owned moving poses, statics follow authored placement as topology, and disabled bodies stop physics presentation and accept authored motion. Shape/BVH and shape-to-render-geometry identity caches use weak descriptor keys rather than reference-counted runtime ownership."
         }
       ]
     },
@@ -8559,7 +8673,7 @@
           "id": "b0002",
           "kind": "prose",
           "section": "CRC user-event contract",
-          "text": "This document defines the public event behavior shared by built-in drawing components, `useEventTarget`, `useEventListener`, and the legacy `useEvent` hook. The executable public integration oracle is the `interaction-trace-lab` scenario; focused event suites retain exhaustive family, geometry, mutation, and ownership matrices."
+          "text": "This document defines the public event behavior shared by built-in drawing components, `crcEventTarget`, `crcEventListener`, and the legacy `crcEvent` hook. The executable public integration oracle is the `interaction-trace-lab` scenario; focused event suites retain exhaustive family, geometry, mutation, and ownership matrices."
         },
         {
           "id": "b0003",
@@ -8577,13 +8691,13 @@
           "id": "b0005",
           "kind": "prose",
           "section": "Public registration model",
-          "text": "`useEventTarget(handlers, options)` creates one grouped custom target. Its required `Path2D`, fill/stroke hit options, captured render transform, clips, and paint-ledger position are explicit; CRC never infers a custom component's geometry from its returned descendants. Rerender replaces handlers and geometry in the same hook slot without replacing target identity."
+          "text": "`crcEventTarget(handlers, options)` creates one grouped custom target. Its required `Path2D`, fill/stroke hit options, captured render transform, clips, and paint-ledger position are explicit; CRC never infers a custom component's geometry from its returned descendants. Rerender replaces handlers and geometry in the same hook slot without replacing target identity."
         },
         {
           "id": "b0006",
           "kind": "prose",
           "section": "Public registration model",
-          "text": "`useEventListener(handlers)` creates one propagation participant on the current component. It owns no geometry, never wins hit testing, and never becomes a focus candidate merely by listening. A listener can nevertheless be the logical target of common-ancestor activation or pointer capture, matching its role on a derived event path."
+          "text": "`crcEventListener(handlers)` creates one propagation participant on the current component. It owns no geometry, never wins hit testing, and never becomes a focus candidate merely by listening. A listener can nevertheless be the logical target of common-ancestor activation or pointer capture, matching its role on a derived event path."
         },
         {
           "id": "b0007",
@@ -8745,7 +8859,7 @@
           "id": "b0033",
           "kind": "prose",
           "section": "Non-coordinate transport",
-          "text": "Registering handlers alone does not install `tabindex`, focus policy, or keyboard activation. The `keyboardFocusable` and `keyboardNavigationBounds` target options remain inert without the optional focus enhancer, and `useEventTarget` snapshots then report `isFocused: false` and `isFocusVisible: false`. Exact focus ownership, traversal, defaults, snapshots, layer invalidation, and teardown defer to the focus contract."
+          "text": "Registering handlers alone does not install `tabindex`, focus policy, or keyboard activation. The `keyboardFocusable` and `keyboardNavigationBounds` target options remain inert without the optional focus enhancer, and `crcEventTarget` snapshots then report `isFocused: false` and `isFocusVisible: false`. Exact focus ownership, traversal, defaults, snapshots, layer invalidation, and teardown defer to the focus contract."
         },
         {
           "id": "b0034",
@@ -8817,7 +8931,7 @@
           "id": "b0045",
           "kind": "prose",
           "section": "Native listeners, layers, legacy observers, and disposal",
-          "text": "The singular path-bound `useEvent` remains a stable legacy geometric target. A pathless `useEvent` remains a narrow mouse-only Canvas observer with the shipped `{ x, y, originalEvent }` payload. Observers run after logical target propagation, once per matching native event, in registration order. Removal is effective before a pending observer turn, additions wait until the next native event, and thrown observers are reported without suppressing safe peers. Pathless observers do not affect target selection, propagation, cursor, or activation."
+          "text": "The singular path-bound `crcEvent` remains a stable legacy geometric target. A pathless `crcEvent` remains a narrow mouse-only Canvas observer with the shipped `{ x, y, originalEvent }` payload. Observers run after logical target propagation, once per matching native event, in registration order. Removal is effective before a pending observer turn, additions wait until the next native event, and thrown observers are reported without suppressing safe peers. Pathless observers do not affect target selection, propagation, cursor, or activation."
         },
         {
           "id": "b0046",
@@ -8835,7 +8949,7 @@
           "id": "b0048",
           "kind": "prose",
           "section": "Evidence boundary",
-          "text": "The shared `interaction-trace-lab` laboratory teaches one direct built-in propagation target, one `useEventListener` ancestor, one `useEventTarget` custom path, touch retention, wheel cancellation, and drag/drop. Its keyboard, composition, and clipboard scenes are headless contract fixtures driven by internal test transport; they do not claim a public adapter or manually reachable target on a plain Canvas. The separate public focus scenario demonstrates the opt-in keyboard path described by the focus contract. Exhaustive event vocabulary, multi-pointer/contact, mutation, failure, geometry, layer, and ownership matrices remain in focused tests so the learning fixture stays readable."
+          "text": "The shared `interaction-trace-lab` laboratory teaches one direct built-in propagation target, one `crcEventListener` ancestor, one `crcEventTarget` custom path, touch retention, wheel cancellation, and drag/drop. Its keyboard, composition, and clipboard scenes are headless contract fixtures driven by internal test transport; they do not claim a public adapter or manually reachable target on a plain Canvas. The separate public focus scenario demonstrates the opt-in keyboard path described by the focus contract. Exhaustive event vocabulary, multi-pointer/contact, mutation, failure, geometry, layer, and ownership matrices remain in focused tests so the learning fixture stays readable."
         },
         {
           "id": "b0049",
@@ -9186,11 +9300,108 @@
           "kind": "prose",
           "section": "Evidence boundary",
           "text": "CRC still does not provide semantic controls, DOM accessibility, a retained scene graph, hidden editable DOM, pointer/touch gesture recognition, or cross-browser normalization beyond the stated logical contracts. Optional logical focus does not create screen-reader semantics or generated DOM descendants."
+        },
+        {
+          "id": "c0058",
+          "kind": "prose",
+          "section": "3D physics interaction boundary",
+          "text": "WebGL coordinate events target the top committed rendered mesh through camera-aware depth picking. `@crc/physics/3d` ray, shape, overlap, AABB, and point queries instead read authoritative committed collider state in world coordinates and never schedule or advance simulation. CRC provides no automatic pointer-to-physics bridge: applications that grab or inspect a body explicitly derive a world ray, run a physics query, and issue generation-bound commands while normal event propagation and pointer capture remain unchanged."
         }
       ]
     }
   ],
   "translations": [
+    {
+      "id": "standardized-hooks-canvas-surface",
+      "path": "docs/design/canvas-surface-contract.md",
+      "baselineIds": ["b0029"],
+      "currentIds": ["c0029"],
+      "reason": "Approved-design unit a0132 permits the bounded hook-name translation from b0029 to c0029 while the responsive allocation and component identity semantics remain unchanged.",
+      "approval": {
+        "id": "a0132",
+        "kind": "prose",
+        "text": "Component and hook identity, Canvas isolation"
+      },
+      "sharedAnchors": ["responsive", "allocation", "component identity"]
+    },
+    {
+      "id": "standardized-hooks-event-resource-ownership",
+      "path": "docs/design/event-resource-ownership.md",
+      "baselineIds": ["b0018", "b0056"],
+      "currentIds": ["c0018", "c0071"],
+      "reason": "Approved-design unit a0132 permits the bounded hook-name translation from b0018 and b0056 to c0018 and c0071 while hook slot, handler, and cleanup ownership remain unchanged.",
+      "approval": {
+        "id": "a0132",
+        "kind": "prose",
+        "text": "hook identity, Canvas isolation, style resolution"
+      },
+      "sharedAnchors": ["hook slot", "handler", "cleanup"]
+    },
+    {
+      "id": "standardized-hooks-focus-and-keyboard",
+      "path": "docs/design/focus-and-keyboard-navigation-contract.md",
+      "baselineIds": ["b0035", "b0040"],
+      "currentIds": ["c0040", "c0047"],
+      "reason": "Approved-design unit a0132 permits the bounded hook-name translation from b0035 and b0040 to c0040 and c0047 while focus, render, and scenario behavior remain unchanged.",
+      "approval": {
+        "id": "a0132",
+        "kind": "prose",
+        "text": "interaction paint order, pointer capture, focus state"
+      },
+      "sharedAnchors": ["focus", "render", "scenario"]
+    },
+    {
+      "id": "standardized-hooks-mouse-interaction",
+      "path": "docs/design/mouse-interaction-contract.md",
+      "baselineIds": ["b0024", "b0025", "b0026", "b0048", "b0078"],
+      "currentIds": ["c0025", "c0026", "c0027", "c0050", "c0081"],
+      "reason": "Approved-design unit a0132 permits the bounded hook-name translation from b0024, b0025, b0026, b0048, and b0078 to c0025, c0026, c0027, c0050, and c0081 while Canvas, target, and listener behavior remain unchanged.",
+      "approval": {
+        "id": "a0132",
+        "kind": "prose",
+        "text": "paint order, pointer capture, focus state, layer invalidation"
+      },
+      "sharedAnchors": ["Canvas", "target", "listener"]
+    },
+    {
+      "id": "standardized-hooks-runtime-hooks",
+      "path": "docs/design/runtime-hooks-contract.md",
+      "baselineIds": ["b0017", "b0018", "b0019", "b0020", "b0021"],
+      "currentIds": ["c0039", "c0040", "c0041", "c0042", "c0043"],
+      "reason": "Approved-design unit a0132 permits the bounded hook-name translation from b0017, b0018, b0019, b0020, and b0021 to c0039, c0040, c0041, c0042, and c0043 while hook identity, `Memoizes`, and Path2D behavior remain unchanged.",
+      "approval": {
+        "id": "a0132",
+        "kind": "prose",
+        "text": "Component and hook identity"
+      },
+      "sharedAnchors": ["hook", "Memoizes", "Path2D"]
+    },
+    {
+      "id": "standardized-hooks-runtime-resource-ownership",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "baselineIds": ["b0008", "b0009"],
+      "currentIds": ["c0008", "c0009"],
+      "reason": "Approved-design unit a0132 permits the bounded hook-name translation from b0008 and b0009 to c0008 and c0009 while cleanup, hook, and teardown ownership remain unchanged.",
+      "approval": {
+        "id": "a0132",
+        "kind": "prose",
+        "text": "teardown ownership retain their current implemented contracts"
+      },
+      "sharedAnchors": ["cleanup", "hook", "teardown"]
+    },
+    {
+      "id": "standardized-hooks-user-events",
+      "path": "docs/design/user-events-contract.md",
+      "baselineIds": ["b0002", "b0005", "b0006", "b0045", "b0048"],
+      "currentIds": ["c0002", "c0006", "c0007", "c0051", "c0054"],
+      "reason": "Approved-design unit a0132 permits the bounded hook-name translation from b0002, b0005, b0006, b0045, and b0048 to c0002, c0006, c0007, c0051, and c0054 while target, geometry, and listener behavior remain unchanged.",
+      "approval": {
+        "id": "a0132",
+        "kind": "prose",
+        "text": "interaction paint order, pointer capture, focus state, layer invalidation"
+      },
+      "sharedAnchors": ["target", "geometry", "listener"]
+    },
     {
       "id": "architecture-style-and-layout-architecture-md-crc-style-and-layout-architecture",
       "path": "docs/architecture/style-and-layout-architecture.md",
@@ -10479,17 +10690,13 @@
       "path": "docs/design/user-events-contract.md",
       "baselineIds": ["b0032", "b0033"],
       "currentIds": ["c0038", "c0039"],
-      "reason": "This mapping replaces enhancer names with focus-policy components while retaining targetless plain-Canvas input; b0032, b0033 → c0036, c0037 is the exact unit boundary, and `keyboardfocusable`, `event-injection`, `crceventtarget` remain shared semantic anchors. Approved-design unit a0140 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0038, c0039.",
+      "reason": "This mapping replaces enhancer and hook names with focus-policy components while retaining targetless plain-Canvas input; b0032, b0033 → c0036, c0037 is the exact unit boundary, and `keyboardfocusable` plus `event-injection` remain shared semantic anchors. Approved-design unit a0140 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0038, c0039.",
       "approval": {
         "id": "a0140",
         "kind": "prose",
         "text": "Function enhancers become descriptive JSX policy values:"
       },
-      "sharedAnchors": [
-        "keyboardfocusable",
-        "event-injection",
-        "crceventtarget"
-      ]
+      "sharedAnchors": ["keyboardfocusable", "event-injection"]
     },
     {
       "id": "design-drawing-components-contract-md-visual-evidence-and-limitations",
@@ -10531,8 +10738,8 @@
       "id": "webgl-event-resource-existing-owners",
       "path": "docs/design/event-resource-ownership.md",
       "baselineIds": ["b0017", "b0035", "b0038", "b0039", "b0041"],
-      "currentIds": ["c0017", "c0039", "c0042", "c0044", "c0046"],
-      "reason": "Approved-design unit a0132 preserves the existing target, listener, disposal semantics while exact units b0017, b0035, b0038, b0039, b0041, c0017, c0038, c0041, c0042, c0044 incorporate the WebGL-islands backend. Reviewed Task 5 remapping retains current units c0039, c0046.",
+      "currentIds": ["c0017", "c0039", "c0042", "c0052", "c0054"],
+      "reason": "Approved-design unit a0132 preserves the existing target, listener, disposal semantics while exact units b0017, b0035, b0038, b0039, b0041, c0017, c0038, c0041, c0042, c0052 incorporate the WebGL-islands backend. Reviewed Task 5 remapping retains current units c0039, c0054.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -10671,6 +10878,50 @@
     }
   ],
   "additions": [
+    {
+      "id": "event-registration-bitmask-ownership",
+      "path": "docs/design/event-resource-ownership.md",
+      "currentIds": [
+        "c0043",
+        "c0044",
+        "c0045",
+        "c0046",
+        "c0047",
+        "c0048",
+        "c0049",
+        "c0050"
+      ],
+      "reason": "Approval record event-registration-hot-path units e0020, e0023, e0024, e0025, e0026, e0027, e0029, e0033, e0035, e0043, e0044, e0045, e0046, e0047, e0048, e0049, e0050, e0051, e0052, e0053, e0054, e0055, and e0056 authorize exact current units c0043, c0044, c0045, c0046, c0047, c0048, c0049, and c0050 through the shared handler, mask, and native ownership anchors.",
+      "approval": {
+        "recordId": "event-registration-hot-path",
+        "unitIds": [
+          "e0020",
+          "e0023",
+          "e0024",
+          "e0025",
+          "e0026",
+          "e0027",
+          "e0029",
+          "e0033",
+          "e0035",
+          "e0043",
+          "e0044",
+          "e0045",
+          "e0046",
+          "e0047",
+          "e0048",
+          "e0049",
+          "e0050",
+          "e0051",
+          "e0052",
+          "e0053",
+          "e0054",
+          "e0055",
+          "e0056"
+        ]
+      },
+      "sharedAnchors": ["handler", "mask", "native"]
+    },
     {
       "id": "architecture-style-and-layout-architecture-md-public-boundaries-and-evidence-addition",
       "path": "docs/architecture/style-and-layout-architecture.md",
@@ -11508,8 +11759,8 @@
     {
       "id": "webgl-settled-event-resource-additions",
       "path": "docs/design/event-resource-ownership.md",
-      "currentIds": ["c0030", "c0031", "c0032", "c0061"],
-      "reason": "webgl-settled-scene-rendering units v0140 v0141 v0142 v0143 v0146 v0147 v0152 v0153 v0172 v0173 authorize current units c0030 c0031 c0032 c0059 for geometry target ownership, the event-parent bridge, committed resolver generations, candidate rollback, and context-loss cleanup. Reviewed Task 5 remapping retains current units c0061.",
+      "currentIds": ["c0030", "c0031", "c0032", "c0069"],
+      "reason": "webgl-settled-scene-rendering units v0140 v0141 v0142 v0143 v0146 v0147 v0152 v0153 v0172 v0173 authorize current units c0030 c0031 c0032 c0067 for geometry target ownership, the event-parent bridge, committed resolver generations, candidate rollback, and context-loss cleanup. Reviewed Task 5 remapping retains current units c0069.",
       "approval": {
         "recordId": "webgl-settled-scene-rendering",
         "unitIds": [
@@ -12135,8 +12386,8 @@
     {
       "id": "task-5-orbit-handler-ownership",
       "path": "docs/design/event-resource-ownership.md",
-      "currentIds": ["c0033", "c0043", "c0062"],
-      "reason": "Approved design webgl-orbit-camera-and-genuine-shadows units o0011, o0044, o0050, o0053, o0055, o0113 authorize reviewed Task 5 current units c0033, c0043, c0062 through shared orbit, pointer, handler anchors.",
+      "currentIds": ["c0033", "c0051", "c0070"],
+      "reason": "Approved design webgl-orbit-camera-and-genuine-shadows units o0011, o0044, o0050, o0053, o0055, o0113 authorize reviewed Task 5 current units c0033, c0051, c0070 through shared orbit, pointer, handler anchors.",
       "approval": {
         "recordId": "webgl-orbit-camera-and-genuine-shadows",
         "unitIds": ["o0011", "o0044", "o0050", "o0053", "o0055", "o0113"]
@@ -12216,9 +12467,253 @@
         ]
       },
       "sharedAnchors": ["shadow", "light", "transform"]
+    },
+    {
+      "id": "physics-3d-canvas-coordinates",
+      "path": "docs/design/canvas-surface-contract.md",
+      "currentIds": ["c0047"],
+      "reason": "Approved design first-class-physics units p0221, p0263, and p0264 authorize current unit c0047 through shared presentation and physics anchors.",
+      "approval": {
+        "recordId": "first-class-physics",
+        "unitIds": ["p0221", "p0263", "p0264"]
+      },
+      "sharedAnchors": ["presentation", "physics"]
+    },
+    {
+      "id": "physics-3d-drawing-components",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0095"],
+      "reason": "Approved design first-class-physics units p0010, p0162, p0194, p0195, p0196, p0197, p0198, p0200, and p0201 authorize current unit c0095 through shared Mesh, collider, and body anchors.",
+      "approval": {
+        "recordId": "first-class-physics",
+        "unitIds": [
+          "p0010",
+          "p0162",
+          "p0194",
+          "p0195",
+          "p0196",
+          "p0197",
+          "p0198",
+          "p0200",
+          "p0201"
+        ]
+      },
+      "sharedAnchors": ["Mesh", "collider", "body"]
+    },
+    {
+      "id": "physics-3d-event-ownership",
+      "path": "docs/design/event-resource-ownership.md",
+      "currentIds": ["c0073"],
+      "reason": "Approved design first-class-physics units p0304, p0314, p0316, and p0432 authorize current unit c0073 through shared body and tick anchors.",
+      "approval": {
+        "recordId": "first-class-physics",
+        "unitIds": ["p0304", "p0314", "p0316", "p0432"]
+      },
+      "sharedAnchors": ["body", "tick"]
+    },
+    {
+      "id": "physics-3d-focus-presentation",
+      "path": "docs/design/focus-and-keyboard-navigation-contract.md",
+      "currentIds": ["c0052"],
+      "reason": "Approved design first-class-physics unit p0542 authorizes current unit c0052 through shared focus and physics anchors.",
+      "approval": {
+        "recordId": "first-class-physics",
+        "unitIds": ["p0542"]
+      },
+      "sharedAnchors": ["focus", "physics"]
+    },
+    {
+      "id": "physics-3d-layout-boundary",
+      "path": "docs/design/layout-system-contract.md",
+      "currentIds": ["c0070"],
+      "reason": "Approved design first-class-physics units p0220 and p0540 authorize current unit c0070 through shared layout and body anchors.",
+      "approval": {
+        "recordId": "first-class-physics",
+        "unitIds": ["p0220", "p0540"]
+      },
+      "sharedAnchors": ["layout", "body"]
+    },
+    {
+      "id": "physics-3d-mouse-query-boundary",
+      "path": "docs/design/mouse-interaction-contract.md",
+      "currentIds": ["c0095"],
+      "reason": "Approved design first-class-physics units p0317, p0324, p0325, and p0542 authorize current unit c0095 through shared physics and query anchors.",
+      "approval": {
+        "recordId": "first-class-physics",
+        "unitIds": ["p0317", "p0324", "p0325", "p0542"]
+      },
+      "sharedAnchors": ["physics", "query"]
+    },
+    {
+      "id": "physics-3d-runtime-hooks",
+      "path": "docs/design/runtime-hooks-contract.md",
+      "currentIds": ["c0073"],
+      "reason": "Approved design first-class-physics units p0282, p0283, p0287, and p0537 authorize current unit c0073 through shared handle, world, and body anchors.",
+      "approval": {
+        "recordId": "first-class-physics",
+        "unitIds": ["p0282", "p0283", "p0287", "p0537"]
+      },
+      "sharedAnchors": ["handle", "world", "body"]
+    },
+    {
+      "id": "physics-3d-runtime-ownership",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0068"],
+      "reason": "Approved design first-class-physics units p0364, p0365, p0424, p0425, p0426, p0427, p0431, p0432, and p0543 authorize current unit c0068 through shared world, body, and collider anchors.",
+      "approval": {
+        "recordId": "first-class-physics",
+        "unitIds": [
+          "p0364",
+          "p0365",
+          "p0424",
+          "p0425",
+          "p0426",
+          "p0427",
+          "p0431",
+          "p0432",
+          "p0543"
+        ]
+      },
+      "sharedAnchors": ["world", "body", "collider"]
+    },
+    {
+      "id": "physics-3d-style-authority",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0081"],
+      "reason": "Approved design first-class-physics units p0202, p0221, p0244, and p0539 authorize current unit c0081 through shared pose and scale anchors.",
+      "approval": {
+        "recordId": "first-class-physics",
+        "unitIds": ["p0202", "p0221", "p0244", "p0539"]
+      },
+      "sharedAnchors": ["pose", "scale"]
+    },
+    {
+      "id": "physics-3d-user-event-boundary",
+      "path": "docs/design/user-events-contract.md",
+      "currentIds": ["c0058"],
+      "reason": "Approved design first-class-physics units p0317, p0322, p0324, p0325, and p0542 authorize current unit c0058 through shared physics and queries anchors.",
+      "approval": {
+        "recordId": "first-class-physics",
+        "unitIds": ["p0317", "p0322", "p0324", "p0325", "p0542"]
+      },
+      "sharedAnchors": ["physics", "queries"]
     }
   ],
   "evidenceMappings": [
+    {
+      "id": "physics-3d-component-inference",
+      "contract": "docs/design/drawing-components-contract.md",
+      "claim": {
+        "kind": "prose",
+        "text": "Inside one `WebGLLayer`, `PhysicsWorld3D` establishes a 3D world and the optional physics package augments `Cube`, `Sphere`, `Mesh`, and `Group3D` with typed immutable attachments. Cube infers a box; uniform and nonuniform Sphere scale infer sphere and ellipsoid; static Mesh infers a triangle mesh; dynamic or kinematic Mesh infers a deterministic convex hull; Group3D hosts a compound body without a self collider."
+      },
+      "source": {
+        "path": "packages/physics/src/lib/3d/webgl/inference.ts",
+        "marker": "export function inferWebGLColliderShape3D("
+      },
+      "test": {
+        "path": "packages/physics/src/lib/3d/webgl/inference.test.tsx",
+        "marker": "infers exact static Mesh triangles and canonical moving Mesh hulls"
+      },
+      "relevance": {
+        "sharedAnchors": ["Mesh"]
+      }
+    },
+    {
+      "id": "physics-3d-hook-handle",
+      "contract": "docs/design/runtime-hooks-contract.md",
+      "claim": {
+        "kind": "prose",
+        "text": "`crcPhysicsWorld3D()` resolves the nearest mounted 3D world and `crcPhysicsBody3D()` owns one stable generation-bound body endpoint for its component hook slot. Handles expose lazily materialized readonly committed-state signals; commands are snapshotted into owner-scoped Begin work, stale generations cannot control reused storage, and removal, failed render, or disposal releases bindings and queued delivery."
+      },
+      "source": {
+        "path": "packages/physics/src/lib/3d/runtime/body-handle.ts",
+        "marker": "export function crcPhysicsBody3D(): CRCPhysicsBodyHandle3D"
+      },
+      "test": {
+        "path": "packages/physics/src/lib/3d/runtime/body-handle.test.tsx",
+        "marker": "keeps one hook shell stable and materializes readonly signals lazily"
+      },
+      "relevance": {
+        "sharedAnchors": ["hook", "signals"]
+      }
+    },
+    {
+      "id": "physics-3d-presentation-authority",
+      "contract": "docs/design/style-system-contract.md",
+      "claim": {
+        "kind": "prose",
+        "text": "A 3D rigid-body pose contains translation and quaternion orientation, never scale. CRC forward-composes exact authored transform lineage below a compound body; scale and mirroring are baked into immutable collider geometry and automatic mass/inertia."
+      },
+      "source": {
+        "path": "packages/physics/src/lib/3d/webgl/presentation.ts",
+        "marker": "export function resolveWebGLBodyPresentationMatrix3D("
+      },
+      "test": {
+        "path": "packages/physics/src/lib/3d/webgl/presentation.test.tsx",
+        "marker": "derives compound geometry from the exact forward authored suffix"
+      },
+      "relevance": {
+        "sharedAnchors": ["pose", "geometry"]
+      }
+    },
+    {
+      "id": "physics-3d-authoritative-queries",
+      "contract": "docs/design/user-events-contract.md",
+      "claim": {
+        "kind": "prose",
+        "text": "WebGL coordinate events target the top committed rendered mesh through camera-aware depth picking. `@crc/physics/3d` ray, shape, overlap, AABB, and point queries instead read authoritative committed collider state in world coordinates and never schedule or advance simulation."
+      },
+      "source": {
+        "path": "packages/physics/src/3d.ts",
+        "marker": "export function queryPoint3D<Mode extends CRCPhysicsQueryMode = \"closest\">("
+      },
+      "test": {
+        "path": "packages/physics/src/lib/3d/runtime/controller.test.tsx",
+        "marker": "routes public queries through the mandatory committed-read guard"
+      },
+      "relevance": {
+        "sharedAnchors": ["physics"]
+      }
+    },
+    {
+      "id": "physics-3d-complete-events",
+      "contract": "docs/design/event-resource-ownership.md",
+      "claim": {
+        "kind": "prose",
+        "text": "Collision, overlap, hit, sleep, and wake facts belong to one candidate simulation generation and materialize public immutable records only for observed handlers."
+      },
+      "source": {
+        "path": "packages/physics/src/lib/3d/runtime/controller.ts",
+        "marker": "private deliverEvents(events: readonly PhysicsEventDelivery3D[]): void"
+      },
+      "test": {
+        "path": "packages/physics/src/lib/3d/runtime/events.test.tsx",
+        "marker": "delivers immutable events in Complete, isolates failures, and defers callback commands"
+      },
+      "relevance": {
+        "sharedAnchors": ["handler"]
+      }
+    },
+    {
+      "id": "physics-3d-world-disposal",
+      "contract": "docs/design/runtime-resource-ownership.md",
+      "claim": {
+        "kind": "prose",
+        "text": "Failed proposals discard acquired candidate state, successful proposals adopt once, and removal or world disposal releases live slots, proxies, contacts, callbacks, and registration exactly once."
+      },
+      "source": {
+        "path": "packages/physics/src/lib/3d/runtime/controller.ts",
+        "marker": "this.kernel.dispose();"
+      },
+      "test": {
+        "path": "packages/physics/src/lib/3d/world/world.test.ts",
+        "marker": "balances all world-owned resources after discard and disposal"
+      },
+      "relevance": {
+        "sharedAnchors": ["world"]
+      }
+    },
     {
       "id": "plain-function-dispatch",
       "contract": "docs/architecture/style-and-layout-architecture.md",
@@ -13216,7 +13711,7 @@
       },
       "source": {
         "path": "packages/core/src/lib/render.ts",
-        "marker": "componentRefs.signalConsumer = createSignalRenderConsumer({"
+        "marker": "mountedRefs.signalConsumer = createSignalRenderConsumer({"
       },
       "test": {
         "path": "packages/core/src/lib/runtime-contract.test.ts",
@@ -13231,8 +13726,8 @@
     {
       "path": "docs/design/animation-contract.md",
       "unitPrefix": "m",
-      "currentUnitCount": 60,
-      "currentUnitsSha256": "74558e58cbc429589ab9293d834561ede8f9d20c81abb1d1796515fc10f08352",
+      "currentUnitCount": 61,
+      "currentUnitsSha256": "bfd47ded81e2527527a9198dc90d5c386316b98a276d825f72ee45f879753699",
       "approvalRecordId": "first-class-signals-and-scheduler",
       "mappings": [
         {
@@ -13596,14 +14091,30 @@
             ]
           },
           "sharedAnchors": ["public", "worker", "signal"]
+        },
+        {
+          "id": "physics-animation-interoperation",
+          "currentIds": ["m0061"],
+          "reason": "first-class-signals-and-scheduler units g0058, g0136, g0137, and g0138 plus first-class-physics units p0244, p0536, p0556, p0557, and p0558 authorize m0061 through shared animation and pose anchors.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": ["g0058", "g0136", "g0137", "g0138"]
+          },
+          "sharedAnchors": ["animation", "pose"],
+          "supplementalApprovals": [
+            {
+              "recordId": "first-class-physics",
+              "unitIds": ["p0244", "p0536", "p0556", "p0557", "p0558"]
+            }
+          ]
         }
       ]
     },
     {
       "path": "docs/design/signals-and-scheduling-contract.md",
       "unitPrefix": "s",
-      "currentUnitCount": 47,
-      "currentUnitsSha256": "258c7fef0e76015565bcfc02ec81602568f6c4a52e7948907c591b44285db255",
+      "currentUnitCount": 48,
+      "currentUnitsSha256": "0cbaff980a699ed46537909e902b9c395c413535693cce0e36ef02784ba13c61",
       "approvalRecordId": "first-class-signals-and-scheduler",
       "mappings": [
         {
@@ -13858,6 +14369,22 @@
             ]
           },
           "sharedAnchors": ["signal", "scheduler", "style"]
+        },
+        {
+          "id": "physics-world-scheduling",
+          "currentIds": ["s0048"],
+          "reason": "first-class-signals-and-scheduler units g0058, g0136, g0137, g0138, g0139, and g0140 plus first-class-physics units p0245, p0259, p0260, p0261, and p0550 authorize s0048 through shared Advance, scheduler, and world anchors.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": ["g0058", "g0136", "g0137", "g0138", "g0139", "g0140"]
+          },
+          "sharedAnchors": ["Advance", "world", "physics"],
+          "supplementalApprovals": [
+            {
+              "recordId": "first-class-physics",
+              "unitIds": ["p0245", "p0259", "p0260", "p0261", "p0550"]
+            }
+          ]
         }
       ]
     }

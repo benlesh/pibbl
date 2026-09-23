@@ -9,6 +9,7 @@ const BUILT_ENTRY_SUFFIXES = new Map([
   ['@crc/core/internal', '/packages/core/dist/internal.mjs'],
   ['@crc/three', '/packages/three/dist/index.mjs'],
   ['@crc/webgl', '/packages/webgl/dist/index.mjs'],
+  ['@crc/webgl/internal', '/packages/webgl/dist/internal.mjs'],
 ]);
 
 export function assertBuiltCore(): Plugin {

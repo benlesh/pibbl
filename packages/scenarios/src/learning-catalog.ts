@@ -794,11 +794,51 @@ const drafts = [
     load: () => import("./learning/composition/particle-effects.example"),
   },
   {
+    slug: "physics-2d",
+    title: "2D physics",
+    shortTitle: "2D physics",
+    section: "composition",
+    order: 120,
+    summary:
+      "Drag, throw, and roll a dynamic ball through static bumpers and a collider-only sensor in one scheduler-owned 2D physics world.",
+    api: [
+      "PhysicsWorld2D",
+      "dynamicBody2D",
+      "staticBody2D",
+      "collider2D",
+      "crcPhysicsBody2D",
+      "useRef",
+      "useState",
+      "setPointerCapture",
+      "disableBody2D",
+      "teleportBody2D",
+      "enableBody2D",
+      "setLinearVelocity2D",
+    ],
+    objectives: [
+      "Attach static and dynamic bodies to ordinary CRC drawing primitives, then add solid bumpers and a collider-only sensor.",
+      "Capture one pointer, drag a disabled body with explicit teleports, then hand measured release velocity back to physics.",
+    ],
+    prompts: {
+      gesture:
+        "Drag the blue ball above a bumper, then throw it along the ground.",
+      code: "Change gravity, damping, bumper restitution, or the drag bounds while leaving the world on CRC's shared scheduler.",
+    },
+    apiNotes: [
+      "An enabled dynamic root pose is physics-owned; named disable, teleport, enable, and velocity commands make the drag handoff explicit.",
+      "Pointer-release velocity comes from the recent captured pointer trail, is capped, and lets the ball roll under ordinary physics.",
+      "Collider-only descendants share their nearest body and can act as sensors without contributing solid response.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["signals-and-animation", "group", "circle"],
+    load: () => import("./learning/composition/physics-2d.example"),
+  },
+  {
     slug: "layer",
     title: "Layer",
     shortTitle: "Layer",
     section: "composition",
-    order: 120,
+    order: 121,
     summary:
       "Render a subtree on an offscreen Canvas, then compose it into the main scene.",
     api: ["Layer"],
@@ -823,7 +863,7 @@ const drafts = [
     title: "Absolute and overlay",
     shortTitle: "Absolute + overlay",
     section: "layout",
-    order: 121,
+    order: 122,
     summary:
       "Place one panel explicitly, then align reusable children inside its overlay.",
     api: ["Absolute", "Overlay"],
@@ -848,7 +888,7 @@ const drafts = [
     title: "Flow layout",
     shortTitle: "Flow",
     section: "layout",
-    order: 122,
+    order: 123,
     summary:
       "Arrange declared and measured items in a compact wrapping Canvas flow.",
     api: ["Flow", "Text"],
@@ -873,7 +913,7 @@ const drafts = [
     title: "Flex layout",
     shortTitle: "Flex",
     section: "layout",
-    order: 123,
+    order: 124,
     summary:
       "Distribute positive and negative free space with CRC's CSS-compatible Flex subset.",
     api: ["Flex", "useLayoutBox"],
@@ -898,7 +938,7 @@ const drafts = [
     title: "Grid layout",
     shortTitle: "Grid",
     section: "layout",
-    order: 124,
+    order: 125,
     summary:
       "Build an explicit responsive grid from fixed, percentage, and fractional tracks.",
     api: ["Grid"],

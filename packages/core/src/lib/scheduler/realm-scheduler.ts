@@ -13,6 +13,7 @@ import {
 import type { CRCInstance, CRCRenderTransaction } from '../types.js';
 import { runTeardown } from '../teardowns.js';
 import type {
+  CRCAdvanceLane,
   CRCAdvanceParticipant,
   CRCBeginCommand,
   CRCBeginCommandHandle,
@@ -60,6 +61,8 @@ interface RootTransaction extends CRCRenderTransaction {
 
 interface AdvanceRegistration {
   readonly participant: CRCAdvanceParticipant;
+  readonly lane: CRCAdvanceLane;
+  readonly registrationOrder: number;
   active: boolean;
 }
 
@@ -107,6 +110,7 @@ const registeredRoots = new Set<CRCInstance>();
 const currentInstanceWork = new Map<CRCInstance, PendingInstanceWork>();
 const nextInstanceWork = new Map<CRCInstance, PendingInstanceWork>();
 const advanceRegistrations = new Set<AdvanceRegistration>();
+const ADVANCE_LANE_ORDER = { animation: 0, physics: 1 } as const;
 const beginCommands: BeginCommandRegistration[] = [];
 const frameCompletions: CRCFrameCompletion[] = [];
 const currentRendererWorkByOwner = new Map<
@@ -124,6 +128,7 @@ let phase: CRCFramePhase = 'idle';
 let pendingHostFrame: number | undefined;
 let currentFrame: CRCFrameSnapshot | undefined;
 let nextFrameId = 0;
+let nextAdvanceRegistrationOrder = 0;
 let nextWorkRevision = 0;
 let nextRendererWorkOrder = 0;
 let nextRendererCompletionOrder = 0;
@@ -203,8 +208,14 @@ export function hasPendingInstanceRender(instance: CRCInstance): boolean {
 
 export function registerAdvanceParticipant(
   participant: CRCAdvanceParticipant,
+  lane: CRCAdvanceLane = 'animation',
 ): () => void {
-  const registration: AdvanceRegistration = { participant, active: true };
+  const registration: AdvanceRegistration = {
+    participant,
+    lane,
+    registrationOrder: ++nextAdvanceRegistrationOrder,
+    active: true,
+  };
   advanceRegistrations.add(registration);
   requestHostFrameIfNeeded();
   return () => {
@@ -242,20 +253,22 @@ export function queueBeginCommand(command: CRCBeginCommand): CRCBeginCommandHand
 }
 
 /** Queues scheduler-owned work for Complete in the currently advancing frame. */
-export function queueCurrentFrameCompletion(callback: CRCFrameCompletion): void {
+export function queueCurrentFrameCompletion(
+  callback: CRCFrameCompletion,
+): () => void {
   if (currentFramePlaybackCompletions === undefined ||
     (phase !== 'begin' && phase !== 'advance')) {
-    queueFrameCompletion(callback);
-    return;
+    return queueFrameCompletion(callback);
   }
   currentFramePlaybackCompletions.push(callback);
   createdCompletionCallbacks++;
+  return createFrameCompletionCancellation(callback);
 }
 
 /** Registers playback state adoption against this frame's explicit Commit outcome. */
 export function queueCurrentFrameCommitAcknowledgement(
   callback: CRCFrameCommitAcknowledgement,
-): void {
+): () => void {
   if (currentFrameCommitAcknowledgements === undefined ||
     (phase !== 'begin' && phase !== 'advance')) {
     throw new Error(
@@ -264,6 +277,17 @@ export function queueCurrentFrameCommitAcknowledgement(
   }
   currentFrameCommitAcknowledgements.push(callback);
   createdCompletionCallbacks++;
+  let active = true;
+  return () => {
+    if (!active) return;
+    active = false;
+    const acknowledgements = currentFrameCommitAcknowledgements;
+    const index = acknowledgements?.indexOf(callback) ?? -1;
+    if (index < 0) return;
+    acknowledgements!.splice(index, 1);
+    releasedCompletionCallbacks++;
+    cancelIdleHostFrame();
+  };
 }
 
 /** Queues one playback delivery ordered by run identity, then source insertion. */
@@ -283,10 +307,11 @@ export function queueCurrentFrameOrderedPlaybackCompletion(
   createdCompletionCallbacks++;
 }
 
-export function queueFrameCompletion(callback: CRCFrameCompletion): void {
+export function queueFrameCompletion(callback: CRCFrameCompletion): () => void {
   frameCompletions.push(callback);
   createdCompletionCallbacks++;
   requestHostFrameIfNeeded();
+  return createFrameCompletionCancellation(callback);
 }
 
 /** @internal Emits one immutable fact only while a source-only collector is installed. */
@@ -467,7 +492,13 @@ function runFrame(hostTime: number): void {
       releaseBeginCommand(registration);
     }
   }
-  const registrations = Array.from(advanceRegistrations);
+  const registrations = Object.freeze(
+    Array.from(advanceRegistrations).sort(
+      (a, b) =>
+        ADVANCE_LANE_ORDER[a.lane] - ADVANCE_LANE_ORDER[b.lane] ||
+        a.registrationOrder - b.registrationOrder,
+    ),
+  );
 
   phase = 'advance';
   for (const registration of registrations) {
@@ -691,6 +722,27 @@ function releaseBeginCommand(registration: BeginCommandRegistration): void {
   if (!registration.owned) return;
   registration.owned = false;
   releasedBeginCommands++;
+}
+
+function createFrameCompletionCancellation(
+  callback: CRCFrameCompletion,
+): () => void {
+  let active = true;
+  return () => {
+    if (!active) return;
+    active = false;
+    for (const completions of [
+      frameCompletions,
+      currentFramePlaybackCompletions,
+    ]) {
+      const index = completions?.indexOf(callback) ?? -1;
+      if (index < 0) continue;
+      completions!.splice(index, 1);
+      releasedCompletionCallbacks++;
+      cancelIdleHostFrame();
+      return;
+    }
+  };
 }
 
 function captureRootJobs(): RootRenderJob[] {

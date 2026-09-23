@@ -73,6 +73,15 @@ export function getPrimitiveDefinition(
   return primitiveDefinitions.get(type);
 }
 
+/** @internal Copies one primitive definition and presentation onto a new identity. */
+export function derivePrimitiveMetadata(source: Function, derived: Function): void {
+  const definition = primitiveDefinitions.get(source);
+  if (!definition) throw new TypeError('Can only derive a CRC primitive component.');
+  setPrimitiveDefinition(derived, { ...definition });
+  const presentation = primitivePresentationResolvers.get(source);
+  if (presentation) primitivePresentationResolvers.set(derived, presentation);
+}
+
 /** @internal Resolves Canvas presentation behavior from erased backend input. */
 export function getDefinitionPrimitivePresentation<S>(
   definition: PrimitiveDefinition,

@@ -3,7 +3,11 @@ import { WEBGL_BACKEND_TOKEN } from '../backend.js';
 import { getCubeGeometry } from '../geometry/cube.js';
 import type { WebGLSceneComposer } from '../scene/types.js';
 import type { CRCWebGLTargetProps } from '../types.js';
-import { submitBuiltInMesh, type MeshStyle } from './mesh.js';
+import {
+  resolveMeshTransform,
+  submitBuiltInMesh,
+  type MeshStyle,
+} from './mesh.js';
 
 export interface CubeProps extends CRCWebGLTargetProps {}
 
@@ -18,6 +22,12 @@ function renderCube(
   const size = resolvePositive(style.size ?? 1, 'size');
   submitBuiltInMesh('Cube', props, getCubeGeometry(), style, size);
 }
+
+export function resolveCubeTransform(style: Readonly<CubeStyle>) {
+  return resolveMeshTransform(style, resolvePositive(style.size ?? 1, 'size'));
+}
+
+export const getCubePhysicsGeometry = getCubeGeometry;
 
 /** Submits the canonical centered unit cube with size applied as model scale. */
 export const Cube = defineBackendPrimitive<

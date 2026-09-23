@@ -20,12 +20,13 @@ import {
 } from '../types.js';
 import type { Constraints } from '../layout/types.js';
 import type { CRCRenderTransaction, CRCTextChild } from '../types.js';
+import type { CRCPhysics2DPropExtension } from '../types.js';
 import { resolveLength } from '../style/resolve-length.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
 
-export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {
+export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {
   children?: CRCTextChild;
 }
 

@@ -489,3 +489,7 @@ Circle/Ellipse; automatic rounded clipping for arbitrary leaves; elliptical or
 CSS slash radii; smoothing/splines; compound/crossing stars; a generic shape
 registry; a retained geometry graph/cache; intrinsic geometry measurement; or
 per-shape memo hooks.
+
+## First-class 3D physics components
+
+Inside one `WebGLLayer`, `PhysicsWorld3D` establishes a 3D world and the optional physics package augments `Cube`, `Sphere`, `Mesh`, and `Group3D` with typed immutable attachments. Cube infers a box; uniform and nonuniform Sphere scale infer sphere and ellipsoid; static Mesh infers a triangle mesh; dynamic or kinematic Mesh infers a deterministic convex hull; Group3D hosts a compound body without a self collider. `PhysicsShape3D`, `Box3D`, `Ellipsoid3D`, `Capsule3D`, `Cylinder3D`, `Cone3D`, `ConvexHull3D`, and `Heightfield3D` render the remaining immutable shapes. Explicit shapes override inference, descendant `collider3D()` values form compounds, sensors are ordinary colliders, and moving triangle-mesh or heightfield use produces a runtime diagnostic.

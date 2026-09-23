@@ -239,3 +239,7 @@ headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical
 reflow, responsive logical reflow without remount, and logical mouse
 coordinates. Full-page Studio baselines provide the corresponding sharpness
 and composition evidence.
+
+## 3D physics coordinates
+
+`PhysicsWorld3D` simulates in the authored logical coordinate system at its WebGL boundary. Camera, Canvas fit, backing density, outer Canvas transforms, and bitmap composition affect presentation, picking, and projected focus but never authoritative collider geometry, mass, gravity, velocity, or query coordinates. Physics presentation is inserted only into the settled WebGL model; it is excluded from authored lineage so compound geometry cannot acquire feedback drift.

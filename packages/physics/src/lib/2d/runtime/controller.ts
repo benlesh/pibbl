@@ -1,0 +1,1455 @@
+import { signal, type WritableSignal } from "@crc/core";
+import {
+  crcInternalOnSimulationRenderTransactionFinish,
+  crcInternalQueueSimulationBegin,
+  crcInternalQueueSimulationCommitAcknowledgement,
+  crcInternalQueueSimulationComplete,
+  crcInternalRegisterSimulationAdvance,
+  crcInternalRequestSimulationRender,
+  type CRCInternalSignalBatch,
+  type CRCInternalSimulationOwner,
+} from "@crc/core/internal";
+import type {
+  CRCPhysicsAabb2D,
+  CRCPhysicsPose2D,
+  CRCPhysicsRay2D,
+  CRCPhysicsShape2D,
+  CRCPhysicsVector2,
+} from "../../../2d-geometry.js";
+import type { ShapeRecord2D } from "../shape-records.js";
+import type {
+  CRCPhysicsBodyHandle2D,
+  CRCPhysicsColliderHandle2D,
+  CRCPhysicsQueryHit2D,
+  CRCPhysicsQueryMatch2D,
+  CRCPhysicsQueryMode,
+  CRCPhysicsQueryOptions2D,
+  CRCPhysicsQueryResult2D,
+  CRCPhysicsWorld2DProps,
+  CRCPhysicsWorldHandle2D,
+} from "../types.js";
+import { BODY_CCD_2D } from "../world/ccd.js";
+import { COLLIDER_SENSOR_2D } from "../world/contact-cache.js";
+import {
+  BODY_FIXED_ROTATION_2D,
+  BODY_TYPE_DYNAMIC_2D,
+  BODY_TYPE_KINEMATIC_2D,
+} from "../world/integrator.js";
+import { BODY_SLEEP_DISABLED_2D, BODY_SLEEPING_2D } from "../world/solver.js";
+import type { BodyDefinition2D } from "../world/storage.js";
+import {
+  copyFiniteVector2,
+  requireFiniteNumber,
+} from "../../shared/validation.js";
+import {
+  normalizePhysicsWorld2DConfiguration,
+  PhysicsWorld2DKernel,
+  type NormalizedPhysicsWorld2DConfiguration,
+  type PhysicsBodyTopologyRecord2D,
+  type PhysicsBodyCommand2D,
+  type PhysicsColliderTopologyRecord2D,
+  type PhysicsCommand2D,
+  type PhysicsWorld2DConfiguration,
+  type PhysicsTopologyRecord2D,
+  type PhysicsWorld2DCandidate,
+} from "../world/world.js";
+import { CommittedWorldQueries2D } from "../world/queries.js";
+import {
+  bindPhysicsBodyHandle2D,
+  createPhysicsBodyHandle2D,
+  physicsBodyHandleBinding2D,
+  stagePhysicsBodyHandle2D,
+  type PhysicsBodyHandleValues2D,
+  unbindPhysicsBodyHandle2D,
+} from "./body-handle.js";
+import {
+  createPhysicsColliderHandle2D,
+  isPhysicsBodyEventDelivery2D,
+  materializePhysicsBodyEvent2D,
+  materializePhysicsContactEvent2D,
+  physicsColliderHandleIdentity2D,
+  sortPhysicsEventDeliveries2D,
+  type PhysicsBodyEventDelivery2D,
+  type PhysicsContactEventDelivery2D,
+  type PhysicsEventDelivery2D,
+} from "./events.js";
+import {
+  type MountedPhysicsAttachment2D,
+  type NormalizedPhysicsColliderConfiguration2D,
+  type PhysicsBodyAttachment2DDescriptor,
+} from "./descriptors.js";
+
+const worldController2DSymbol = Symbol("PhysicsWorld2DController");
+
+type InternalWorldHandle2D = CRCPhysicsWorldHandle2D &
+  Readonly<{
+    readonly [worldController2DSymbol]: PhysicsWorld2DController;
+  }>;
+
+interface BodyDraft2D {
+  readonly id: number;
+  readonly attachment: MountedPhysicsAttachment2D;
+  readonly descriptor: PhysicsBodyAttachment2DDescriptor;
+  readonly initialPose: CRCPhysicsPose2D;
+}
+
+interface ColliderDraft2D {
+  readonly id: number;
+  readonly bodyId: number;
+  readonly attachment: MountedPhysicsAttachment2D;
+  readonly options: NormalizedPhysicsColliderConfiguration2D;
+  readonly shape: ShapeRecord2D;
+}
+
+interface RenderDraft2D {
+  readonly configuration: NormalizedPhysicsWorld2DConfiguration;
+  readonly props: CRCPhysicsWorld2DProps;
+  readonly bodies: Map<number, BodyDraft2D>;
+  readonly colliders: Map<number, ColliderDraft2D>;
+}
+
+interface AcceptedBody2D {
+  readonly id: number;
+  readonly attachment: MountedPhysicsAttachment2D;
+  readonly descriptor: PhysicsBodyAttachment2DDescriptor;
+  readonly initialPose: CRCPhysicsPose2D;
+  readonly handleBindingGeneration: number | undefined;
+}
+
+interface AcceptedCollider2D {
+  readonly id: number;
+  readonly bodyId: number;
+  readonly attachment: MountedPhysicsAttachment2D;
+  readonly options: NormalizedPhysicsColliderConfiguration2D;
+}
+
+interface AttachmentIds2D {
+  bodyId?: number;
+  colliderId?: number;
+}
+
+interface BodyVelocity2D {
+  readonly linearVelocityX: number;
+  readonly linearVelocityY: number;
+  readonly angularVelocity: number;
+}
+
+export interface PhysicsWorld2DControllerSnapshot {
+  readonly revision: number;
+  readonly revisionMaterialized: boolean;
+  readonly materializedBodyHandles: number;
+  readonly materializedColliderHandles: number;
+  readonly advanceRegistered: boolean;
+  readonly bodyIds: readonly number[];
+  readonly colliderIds: readonly number[];
+  readonly kernel: ReturnType<PhysicsWorld2DKernel["snapshot"]>;
+}
+
+export class PhysicsWorld2DController {
+  readonly handle: CRCPhysicsWorldHandle2D;
+  private revision: WritableSignal<number> | undefined;
+  private committedRevision = 0;
+  private readonly kernel: PhysicsWorld2DKernel;
+  private readonly ids = new WeakMap<object, AttachmentIds2D>();
+  private nextId = 0;
+  private draft: RenderDraft2D | undefined;
+  private acceptedTopology: readonly PhysicsTopologyRecord2D[] = Object.freeze(
+    [],
+  );
+  private acceptedBodies: readonly AcceptedBody2D[] = Object.freeze([]);
+  private acceptedColliders: readonly AcceptedCollider2D[] = Object.freeze([]);
+  private acceptedConfiguration: NormalizedPhysicsWorld2DConfiguration;
+  private acceptedProps: CRCPhysicsWorld2DProps = Object.freeze({});
+  private readonly suspendedVelocities = new Map<number, BodyVelocity2D>();
+  private readonly materializedBodyHandles = new Map<
+    string,
+    CRCPhysicsBodyHandle2D
+  >();
+  private readonly materializedColliderHandles = new Map<
+    string,
+    CRCPhysicsColliderHandle2D
+  >();
+  private readonly queries: CommittedWorldQueries2D;
+  private queuedBegin: Readonly<{ cancel(): void }> | undefined;
+  private releaseAdvance: (() => void) | undefined;
+  private liveCandidate: PhysicsWorld2DCandidate | undefined;
+  private active = true;
+
+  constructor(
+    private readonly owner: CRCInternalSimulationOwner,
+    initialProps: CRCPhysicsWorld2DProps,
+  ) {
+    const configuration = normalizeWorldConfiguration(initialProps);
+    this.kernel = new PhysicsWorld2DKernel(
+      denormalizeWorldConfiguration(configuration),
+    );
+    this.queries = new CommittedWorldQueries2D({
+      generation: 1,
+      bodies: this.kernel.bodies,
+      colliders: this.kernel.colliders,
+      broadPhase: this.kernel.broadPhase,
+      materializeBody: (index, generation) =>
+        this.materializeBodyHandle(index, generation),
+      materializeCollider: (index, generation) =>
+        this.materializeColliderHandle(index, generation),
+      resolveBody: (handle) => this.resolveBodyHandle(handle),
+      resolveCollider: (handle) => this.resolveColliderHandle(handle),
+    });
+    this.acceptedConfiguration = configuration;
+    const target = {
+      [worldController2DSymbol]: this,
+    } as Record<PropertyKey, unknown>;
+    Object.defineProperty(target, "revision", {
+      enumerable: true,
+      get: () => this.materializeRevision().asReadonly(),
+    });
+    this.handle = Object.freeze(target) as unknown as InternalWorldHandle2D;
+  }
+
+  beginRender(props: CRCPhysicsWorld2DProps): void {
+    this.assertActive();
+    if (this.draft !== undefined) {
+      throw new Error(
+        "PhysicsWorld2D began a second render before finishing the first.",
+      );
+    }
+    this.draft = {
+      configuration: normalizeWorldConfiguration(props),
+      props,
+      bodies: new Map(),
+      colliders: new Map(),
+    };
+    crcInternalOnSimulationRenderTransactionFinish(this.owner, (success) =>
+      this.finishRender(success),
+    );
+  }
+
+  bodyIdFor(attachment: MountedPhysicsAttachment2D): number {
+    let ids = this.ids.get(attachment);
+    if (!ids) {
+      ids = {};
+      this.ids.set(attachment, ids);
+    }
+    return (ids.bodyId ??= this.allocateId());
+  }
+
+  colliderIdFor(attachment: MountedPhysicsAttachment2D): number {
+    let ids = this.ids.get(attachment);
+    if (!ids) {
+      ids = {};
+      this.ids.set(attachment, ids);
+    }
+    return (ids.colliderId ??= this.allocateId());
+  }
+
+  collectBody(
+    attachment: MountedPhysicsAttachment2D,
+    bodyId: number,
+    descriptor: PhysicsBodyAttachment2DDescriptor,
+    initialPose: CRCPhysicsPose2D = ZERO_POSE_2D,
+  ): void {
+    const draft = this.requireDraft();
+    draft.bodies.set(bodyId, {
+      id: bodyId,
+      attachment,
+      descriptor,
+      initialPose: copyPhysicsPose2D(initialPose),
+    });
+    const collider = descriptor.options.collider;
+    if (
+      collider !== false &&
+      collider.shape !== "self" &&
+      descriptor.options.enabled
+    ) {
+      const colliderId = this.colliderIdFor(attachment);
+      draft.colliders.set(colliderId, {
+        id: colliderId,
+        bodyId,
+        attachment,
+        options: collider,
+        shape: attachment.resolveShape(collider),
+      });
+    }
+  }
+
+  collectCollider(
+    attachment: MountedPhysicsAttachment2D,
+    bodyId: number,
+    options: NormalizedPhysicsColliderConfiguration2D,
+  ): void {
+    if (options.shape === "self") return;
+    const draft = this.requireDraft();
+    if (draft.bodies.get(bodyId)?.descriptor.options.enabled === false) return;
+    const colliderId = this.colliderIdFor(attachment);
+    draft.colliders.set(colliderId, {
+      id: colliderId,
+      bodyId,
+      attachment,
+      options,
+      shape: attachment.resolveShape(options),
+    });
+  }
+
+  queueCommands(commands: readonly PhysicsCommand2D[]): void {
+    this.assertActive();
+    if (commands.length === 0) return;
+    crcInternalQueueSimulationBegin(this.owner, () => {
+      this.kernel.applyBegin(commands);
+    });
+    this.ensureAdvance();
+  }
+
+  acceptBodyHandleCommand(
+    handle: CRCPhysicsBodyHandle2D,
+    bindingGeneration: number,
+    command: PhysicsBodyCommand2D,
+  ): boolean {
+    if (!this.active) return false;
+    const binding = physicsBodyHandleBinding2D(handle);
+    const accepted = this.acceptedBodies.find(
+      (body) =>
+        body.id === command.bodyId &&
+        body.descriptor.options.handle === handle &&
+        body.handleBindingGeneration === bindingGeneration,
+    );
+    const identity = this.kernel.bodyIdentity(command.bodyId);
+    const materialized =
+      identity === undefined
+        ? undefined
+        : this.materializedBodyHandles.get(
+            `${String(identity.index)}:${String(identity.generation)}`,
+          );
+    if (
+      binding?.controller !== this ||
+      binding.bindingGeneration !== bindingGeneration ||
+      (accepted === undefined && materialized !== handle)
+    ) {
+      return false;
+    }
+    this.kernel.applyBegin([command]);
+    this.ensureAdvance();
+    return true;
+  }
+
+  presentationPose(bodyId: number): CRCPhysicsPose2D | undefined {
+    return this.kernel.snapshot().bodies.some((body) => body.id === bodyId)
+      ? this.kernel.presentationPose(bodyId)
+      : undefined;
+  }
+
+  raycast<Mode extends CRCPhysicsQueryMode = "closest">(
+    ray: CRCPhysicsRay2D,
+    options?: CRCPhysicsQueryOptions2D<Mode>,
+  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D> {
+    this.assertActive();
+    return this.queries.raycast(1, ray, options);
+  }
+
+  shapeCast<Mode extends CRCPhysicsQueryMode = "closest">(
+    shape: CRCPhysicsShape2D,
+    from: CRCPhysicsPose2D,
+    translation: CRCPhysicsVector2,
+    options?: CRCPhysicsQueryOptions2D<Mode>,
+  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D> {
+    this.assertActive();
+    return this.queries.shapeCast(1, shape, from, translation, options);
+  }
+
+  overlapShape<Mode extends CRCPhysicsQueryMode = "closest">(
+    shape: CRCPhysicsShape2D,
+    pose: CRCPhysicsPose2D,
+    options?: CRCPhysicsQueryOptions2D<Mode>,
+  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
+    this.assertActive();
+    return this.queries.overlapShape(1, shape, pose, options);
+  }
+
+  queryAabb<Mode extends CRCPhysicsQueryMode = "closest">(
+    bounds: CRCPhysicsAabb2D,
+    options?: CRCPhysicsQueryOptions2D<Mode>,
+  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
+    this.assertActive();
+    return this.queries.queryAabb(1, bounds, options);
+  }
+
+  queryPoint<Mode extends CRCPhysicsQueryMode = "closest">(
+    point: CRCPhysicsVector2,
+    options?: CRCPhysicsQueryOptions2D<Mode>,
+  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
+    this.assertActive();
+    return this.queries.queryPoint(1, point, options);
+  }
+
+  bodyHandleValues(bodyId: number): PhysicsBodyHandleValues2D | undefined {
+    if (!this.active) return undefined;
+    const state = this.kernel
+      .snapshot()
+      .bodies.find((candidate) => candidate.id === bodyId);
+    if (state === undefined) return undefined;
+    const pose = this.kernel.authoritativePose(bodyId);
+    return Object.freeze({
+      position: pose.position,
+      rotationDegrees: pose.rotationDegrees,
+      linearVelocity: Object.freeze([
+        state.linearVelocityX,
+        state.linearVelocityY,
+      ] as const),
+      angularVelocityDegreesPerSecond: (state.angularVelocity * 180) / Math.PI,
+      sleeping: (state.flags & BODY_SLEEPING_2D) !== 0,
+      enabled: this.kernel.isBodyEnabled(bodyId),
+      generation: state.generation,
+    });
+  }
+
+  dispose(): void {
+    if (!this.active) return;
+    this.active = false;
+    this.queuedBegin?.cancel();
+    this.queuedBegin = undefined;
+    this.releaseAdvance?.();
+    this.releaseAdvance = undefined;
+    if (this.liveCandidate !== undefined) {
+      this.kernel.discard(this.liveCandidate);
+      this.liveCandidate = undefined;
+    }
+    for (const body of this.acceptedBodies) this.unbindBodyHandle(body);
+    for (const handle of this.materializedBodyHandles.values()) {
+      const binding = physicsBodyHandleBinding2D(handle);
+      if (binding?.controller === this) {
+        unbindPhysicsBodyHandle2D(
+          handle,
+          this,
+          binding.bodyId,
+          binding.bindingGeneration,
+        );
+      }
+    }
+    this.kernel.dispose();
+    this.queries.invalidate();
+    this.acceptedBodies = Object.freeze([]);
+    this.acceptedColliders = Object.freeze([]);
+    this.draft = undefined;
+    this.suspendedVelocities.clear();
+  }
+
+  snapshot(): PhysicsWorld2DControllerSnapshot {
+    return Object.freeze({
+      revision: this.committedRevision,
+      revisionMaterialized: this.revision !== undefined,
+      materializedBodyHandles: this.materializedBodyHandles.size,
+      materializedColliderHandles: this.materializedColliderHandles.size,
+      advanceRegistered: this.releaseAdvance !== undefined,
+      bodyIds: Object.freeze(
+        this.acceptedTopology
+          .filter(
+            (record): record is PhysicsBodyTopologyRecord2D =>
+              record.kind === "body",
+          )
+          .map((record) => record.id),
+      ),
+      colliderIds: Object.freeze(
+        this.acceptedTopology
+          .filter(
+            (record): record is PhysicsColliderTopologyRecord2D =>
+              record.kind === "collider",
+          )
+          .map((record) => record.id),
+      ),
+      kernel: this.kernel.snapshot(),
+    });
+  }
+
+  private finishRender(success: boolean): void {
+    const draft = this.draft;
+    this.draft = undefined;
+    if (!success || draft === undefined || !this.active) return;
+    validateAutomaticMass(draft);
+    const reenableVelocities = this.resolveReenableVelocities(draft);
+    const previousBodyDefinitions = new Map(
+      this.acceptedTopology
+        .filter(
+          (record): record is PhysicsBodyTopologyRecord2D =>
+            record.kind === "body",
+        )
+        .map((record) => [record.id, record.definition] as const),
+    );
+    const topology = materializeTopology(
+      draft,
+      reenableVelocities,
+      previousBodyDefinitions,
+    );
+    const topologyChanged = !sameTopology(this.acceptedTopology, topology);
+    const configurationChanged = !sameConfiguration(
+      this.acceptedConfiguration,
+      draft.configuration,
+    );
+    const nextBodies = [...draft.bodies.values()].sort(
+      (left, right) => left.id - right.id,
+    );
+    validateUniqueBodyHandles(nextBodies);
+    for (const body of this.acceptedBodies) {
+      const retained = nextBodies.some(
+        (next) =>
+          next.id === body.id &&
+          next.descriptor.options.handle === body.descriptor.options.handle,
+      );
+      if (!retained) this.unbindBodyHandle(body);
+    }
+    this.acceptedProps = draft.props;
+    this.acceptedBodies = Object.freeze(
+      nextBodies.map(({ id, attachment, descriptor, initialPose }) =>
+        Object.freeze({
+          id,
+          attachment,
+          descriptor,
+          initialPose,
+          handleBindingGeneration:
+            descriptor.options.handle === undefined
+              ? undefined
+              : bindPhysicsBodyHandle2D(descriptor.options.handle, this, id),
+        }),
+      ),
+    );
+    this.acceptedColliders = Object.freeze(
+      [...draft.colliders.values()]
+        .sort((left, right) => left.id - right.id)
+        .map(({ id, bodyId, attachment, options }) =>
+          Object.freeze({ id, bodyId, attachment, options }),
+        ),
+    );
+    if (!topologyChanged && !configurationChanged) return;
+    this.acceptedTopology = topology;
+    this.acceptedConfiguration = draft.configuration;
+    this.queuedBegin?.cancel();
+    this.queuedBegin = crcInternalQueueSimulationBegin(this.owner, () => {
+      this.queuedBegin = undefined;
+      if (topologyChanged) this.kernel.proposeTopology(topology);
+      if (configurationChanged) {
+        this.kernel.applyBegin([
+          {
+            kind: "configure",
+            configuration: denormalizeWorldConfiguration(
+              draft.configuration,
+            ),
+          },
+        ]);
+      }
+    });
+    this.ensureAdvance();
+  }
+
+  private ensureAdvance(): void {
+    if (this.releaseAdvance !== undefined) return;
+    this.releaseAdvance = crcInternalRegisterSimulationAdvance(
+      this.owner,
+      "physics",
+      (frame, batch) => this.advance(frame.frameId, frame.logicalTime, batch),
+    );
+  }
+
+  private resolveReenableVelocities(
+    draft: RenderDraft2D,
+  ): ReadonlyMap<number, BodyVelocity2D> {
+    const previousById = new Map(
+      this.acceptedBodies.map((body) => [body.id, body]),
+    );
+    const kernelById = new Map(
+      this.kernel.snapshot().bodies.map((body) => [body.id, body]),
+    );
+    const overrides = new Map<number, BodyVelocity2D>();
+    for (const body of draft.bodies.values()) {
+      const previous = previousById.get(body.id);
+      const currentDynamic =
+        body.descriptor.bodyType === "dynamic" ? body.descriptor : undefined;
+      const previousDynamic =
+        previous?.descriptor.bodyType === "dynamic"
+          ? previous.descriptor
+          : undefined;
+      if (
+        currentDynamic !== undefined &&
+        !currentDynamic.options.enabled &&
+        previousDynamic?.options.enabled
+      ) {
+        const state = kernelById.get(body.id);
+        if (state !== undefined) {
+          this.suspendedVelocities.set(
+            body.id,
+            Object.freeze({
+              linearVelocityX: state.linearVelocityX,
+              linearVelocityY: state.linearVelocityY,
+              angularVelocity: state.angularVelocity,
+            }),
+          );
+        }
+      }
+      if (
+        currentDynamic?.options.enabled &&
+        previousDynamic !== undefined &&
+        !previousDynamic.options.enabled
+      ) {
+        const preserved = this.suspendedVelocities.get(body.id);
+        overrides.set(
+          body.id,
+          currentDynamic.options.reenableVelocity === "preserve" && preserved
+            ? preserved
+            : ZERO_VELOCITY_2D,
+        );
+      }
+    }
+    const retained = new Set(draft.bodies.keys());
+    for (const id of this.suspendedVelocities.keys()) {
+      if (!retained.has(id)) this.suspendedVelocities.delete(id);
+    }
+    return overrides;
+  }
+
+  private advance(
+    frameId: number,
+    logicalTime: number,
+    batch: CRCInternalSignalBatch,
+  ): void {
+    let candidate: PhysicsWorld2DCandidate | undefined;
+    try {
+      candidate = this.kernel.advance({
+        frameId,
+        logicalTime,
+        stagedKinematicTargets: this.readKinematicTargets(batch),
+      });
+      if (candidate === undefined) return;
+      this.liveCandidate = candidate;
+      const nextRevision = this.committedRevision + 1;
+      this.stagePublicSignals(batch, nextRevision);
+      const events = this.copyEventDeliveries(candidate);
+      let adopted = false;
+      if (events.length > 0) {
+        crcInternalQueueSimulationComplete(this.owner, () => {
+          if (adopted) this.deliverEvents(events);
+        });
+      }
+      crcInternalQueueSimulationCommitAcknowledgement(
+        this.owner,
+        (_frame, outcome) => {
+          if (this.liveCandidate !== candidate) return;
+          this.liveCandidate = undefined;
+          if (!outcome.applied) {
+            this.kernel.discard(candidate!);
+            return;
+          }
+          this.kernel.adopt(candidate!);
+          this.committedRevision = nextRevision;
+          adopted = true;
+          crcInternalRequestSimulationRender(this.owner);
+          if (!this.hasAwakeBodies()) {
+            this.releaseAdvance?.();
+            this.releaseAdvance = undefined;
+          }
+        },
+      );
+    } catch (error) {
+      if (candidate?.lifecycle === "live") this.kernel.discard(candidate);
+      if (this.liveCandidate === candidate) this.liveCandidate = undefined;
+      const onError = this.acceptedProps.onError;
+      if (onError) {
+        crcInternalQueueSimulationComplete(this.owner, () => onError(error));
+      }
+      throw error;
+    }
+  }
+
+  private readKinematicTargets(
+    batch: CRCInternalSignalBatch,
+  ): ReadonlyMap<number, CRCPhysicsPose2D> {
+    const targets = new Map<number, CRCPhysicsPose2D>();
+    for (const body of this.acceptedBodies) {
+      if (
+        body.descriptor.bodyType !== "kinematic" ||
+        !body.descriptor.options.enabled
+      )
+        continue;
+      const target = body.descriptor.options.target;
+      if (
+        target.position === undefined &&
+        target.rotationDegrees === undefined
+      ) {
+        continue;
+      }
+      const position =
+        target.position === undefined
+          ? body.initialPose.position
+          : batch.read(
+              target.position as WritableSignal<readonly [number, number]>,
+            );
+      const rotationDegrees =
+        target.rotationDegrees === undefined
+          ? body.initialPose.rotationDegrees
+          : batch.read(target.rotationDegrees as WritableSignal<number>);
+      targets.set(
+        body.id,
+        Object.freeze({
+          position: Object.freeze([position[0], position[1]] as const),
+          rotationDegrees,
+        }),
+      );
+    }
+    return targets;
+  }
+
+  private stagePublicSignals(
+    batch: CRCInternalSignalBatch,
+    nextRevision: number,
+  ): void {
+    if (this.revision !== undefined) {
+      batch.stage(this.revision, nextRevision, this);
+    }
+    const snapshot = this.kernel.snapshot();
+    const acceptedById = new Map(
+      this.acceptedBodies.map((body) => [body.id, body] as const),
+    );
+    for (const state of snapshot.bodies) {
+      const explicit = acceptedById.get(state.id)?.descriptor.options.handle;
+      const materialized = this.materializedBodyHandles.get(
+        `${String(state.index)}:${String(state.generation)}`,
+      );
+      const pose = this.kernel.authoritativePose(state.id);
+      const values = {
+        position: pose.position,
+        rotationDegrees: pose.rotationDegrees,
+        linearVelocity: Object.freeze([
+          state.linearVelocityX,
+          state.linearVelocityY,
+        ] as const),
+        angularVelocityDegreesPerSecond:
+          (state.angularVelocity * 180) / Math.PI,
+        sleeping: (state.flags & BODY_SLEEPING_2D) !== 0,
+        enabled: this.kernel.isBodyEnabled(state.id),
+        generation: state.generation,
+      } as const;
+      if (explicit !== undefined) {
+        stagePhysicsBodyHandle2D(batch, explicit, values, this);
+      }
+      if (materialized !== undefined && materialized !== explicit) {
+        stagePhysicsBodyHandle2D(batch, materialized, values, this);
+      }
+    }
+  }
+
+  private copyEventDeliveries(
+    candidate: PhysicsWorld2DCandidate,
+  ): readonly PhysicsEventDelivery2D[] {
+    const events: PhysicsEventDelivery2D[] = [];
+    for (let offset = 0; offset < candidate.eventCount; offset += 1) {
+      const eventIndex = candidate.eventOffset + offset;
+      const kind = candidate.eventKinds[eventIndex];
+      if (kind === 5 || kind === 6) {
+        const handler =
+          kind === 6 ? this.acceptedProps.onSleep : this.acceptedProps.onWake;
+        if (handler === undefined) continue;
+        const bodyIndex = candidate.eventFirstColliderIndices[eventIndex]!;
+        const bodyGeneration = this.kernel.bodies.generations[bodyIndex]!;
+        const bodyId = this.kernel.bodyIdForIdentity(bodyIndex, bodyGeneration);
+        if (bodyId === undefined) continue;
+        events.push(
+          Object.freeze({
+            kind,
+            tick: candidate.eventTicks[eventIndex]!,
+            bodyIndex,
+            bodyGeneration,
+            bodyId,
+            handler,
+          }) satisfies PhysicsBodyEventDelivery2D,
+        );
+        continue;
+      }
+      if (kind !== 1 && kind !== 2 && kind !== 3 && kind !== 4 && kind !== 7) {
+        continue;
+      }
+      this.copyContactEventDeliveries(candidate, eventIndex, kind, events);
+    }
+    return sortPhysicsEventDeliveries2D(events);
+  }
+
+  private copyContactEventDeliveries(
+    candidate: PhysicsWorld2DCandidate,
+    eventIndex: number,
+    kind: PhysicsContactEventDelivery2D["kind"],
+    events: PhysicsEventDelivery2D[],
+  ): void {
+    const firstColliderIndex = candidate.eventFirstColliderIndices[eventIndex]!;
+    const firstColliderGeneration =
+      candidate.eventFirstColliderGenerations[eventIndex]!;
+    const secondColliderIndex =
+      candidate.eventSecondColliderIndices[eventIndex]!;
+    const secondColliderGeneration =
+      candidate.eventSecondColliderGenerations[eventIndex]!;
+    const first = this.acceptedColliderForIdentity(
+      firstColliderIndex,
+      firstColliderGeneration,
+    );
+    const second = this.acceptedColliderForIdentity(
+      secondColliderIndex,
+      secondColliderGeneration,
+    );
+    if (first === undefined || second === undefined) return;
+    const handlerName = eventHandlerName(kind);
+    const firstHandler = first.options.handlers[handlerName];
+    const secondHandler = second.options.handlers[handlerName];
+    if (firstHandler === undefined && secondHandler === undefined) return;
+    const firstBodyIdentity = this.kernel.bodyIdentity(first.bodyId);
+    const secondBodyIdentity = this.kernel.bodyIdentity(second.bodyId);
+    if (firstBodyIdentity === undefined || secondBodyIdentity === undefined)
+      return;
+    const points: Array<PhysicsContactEventDelivery2D["points"][number]> = [];
+    const pointBase = eventIndex * 2;
+    for (
+      let point = 0;
+      point < candidate.eventPointCounts[eventIndex]!;
+      point += 1
+    ) {
+      points.push(
+        Object.freeze({
+          firstX: candidate.eventPointFirstX[pointBase + point]!,
+          firstY: candidate.eventPointFirstY[pointBase + point]!,
+          secondX: candidate.eventPointSecondX[pointBase + point]!,
+          secondY: candidate.eventPointSecondY[pointBase + point]!,
+          separation: candidate.eventPointSeparations[pointBase + point]!,
+        }),
+      );
+    }
+    const common = {
+      kind,
+      tick: candidate.eventTicks[eventIndex]!,
+      firstColliderIndex,
+      firstColliderGeneration,
+      secondColliderIndex,
+      secondColliderGeneration,
+      firstBodyIndex: firstBodyIdentity.index,
+      firstBodyGeneration: firstBodyIdentity.generation,
+      secondBodyIndex: secondBodyIdentity.index,
+      secondBodyGeneration: secondBodyIdentity.generation,
+      normalX: candidate.eventNormalX[eventIndex]!,
+      normalY: candidate.eventNormalY[eventIndex]!,
+      points: Object.freeze(points),
+      totalNormalImpulse: candidate.eventTotalNormalImpulses[eventIndex]!,
+    } as const;
+    if (firstHandler !== undefined) {
+      events.push(
+        Object.freeze({
+          ...common,
+          receiver: "first",
+          receiverColliderId: first.id,
+          receiverBodyId: first.bodyId,
+          handler: firstHandler,
+          selfTag: first.options.tag,
+          otherTag: second.options.tag,
+        }) as PhysicsContactEventDelivery2D,
+      );
+    }
+    if (secondHandler !== undefined) {
+      events.push(
+        Object.freeze({
+          ...common,
+          receiver: "second",
+          receiverColliderId: second.id,
+          receiverBodyId: second.bodyId,
+          handler: secondHandler,
+          selfTag: second.options.tag,
+          otherTag: first.options.tag,
+        }) as PhysicsContactEventDelivery2D,
+      );
+    }
+  }
+
+  private deliverEvents(events: readonly PhysicsEventDelivery2D[]): void {
+    if (!this.active) return;
+    const errors: unknown[] = [];
+    for (const fact of events) {
+      try {
+        if (isPhysicsBodyEventDelivery2D(fact)) {
+          if (!this.isBodyEventLive(fact)) continue;
+          fact.handler(
+            materializePhysicsBodyEvent2D(
+              fact,
+              this.materializeBodyHandle(fact.bodyIndex, fact.bodyGeneration),
+            ),
+          );
+          continue;
+        }
+        if (!this.isContactEventLive(fact)) continue;
+        fact.handler(
+          materializePhysicsContactEvent2D(fact, {
+            body: (index, generation) =>
+              this.materializeBodyHandle(index, generation),
+            collider: (index, generation) =>
+              this.materializeColliderHandle(index, generation),
+          }) as never,
+        );
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+    if (errors.length === 1) throw errors[0];
+    if (errors.length > 1) {
+      throw new AggregateError(
+        errors,
+        "Multiple physics 2D event callbacks failed.",
+      );
+    }
+  }
+
+  private isBodyEventLive(fact: PhysicsBodyEventDelivery2D): boolean {
+    const handler =
+      fact.kind === 6 ? this.acceptedProps.onSleep : this.acceptedProps.onWake;
+    const identity = this.kernel.bodyIdentity(fact.bodyId);
+    return (
+      handler === fact.handler &&
+      identity?.index === fact.bodyIndex &&
+      identity.generation === fact.bodyGeneration
+    );
+  }
+
+  private isContactEventLive(fact: PhysicsContactEventDelivery2D): boolean {
+    const receiver = this.acceptedColliders.find(
+      (collider) => collider.id === fact.receiverColliderId,
+    );
+    if (receiver === undefined || receiver.bodyId !== fact.receiverBodyId)
+      return false;
+    const handler = receiver.options.handlers[eventHandlerName(fact.kind)];
+    const colliderIdentity = this.kernel.colliderIdentity(receiver.id);
+    const expectedIndex =
+      fact.receiver === "first"
+        ? fact.firstColliderIndex
+        : fact.secondColliderIndex;
+    const expectedGeneration =
+      fact.receiver === "first"
+        ? fact.firstColliderGeneration
+        : fact.secondColliderGeneration;
+    return (
+      handler === fact.handler &&
+      colliderIdentity?.index === expectedIndex &&
+      colliderIdentity.generation === expectedGeneration
+    );
+  }
+
+  private acceptedColliderForIdentity(
+    index: number,
+    generation: number,
+  ): AcceptedCollider2D | undefined {
+    return this.acceptedColliders.find((collider) => {
+      const identity = this.kernel.colliderIdentity(collider.id);
+      return identity?.index === index && identity.generation === generation;
+    });
+  }
+
+  private hasAwakeBodies(): boolean {
+    for (const body of this.kernel.snapshot().bodies) {
+      if ((body.flags & BODY_TYPE_KINEMATIC_2D) !== 0) return true;
+      if (
+        (body.flags & BODY_TYPE_DYNAMIC_2D) !== 0 &&
+        (body.flags & BODY_SLEEPING_2D) === 0
+      )
+        return true;
+    }
+    return false;
+  }
+
+  private requireDraft(): RenderDraft2D {
+    const draft = this.draft;
+    if (draft === undefined) {
+      throw new Error(
+        "A physics attachment requires an active PhysicsWorld2D render draft.",
+      );
+    }
+    return draft;
+  }
+
+  private allocateId(): number {
+    if (this.nextId === Number.MAX_SAFE_INTEGER) {
+      throw new Error("PhysicsWorld2D exhausted stable attachment identities.");
+    }
+    return this.nextId++;
+  }
+
+  private assertActive(): void {
+    if (!this.active) {
+      throw new TypeError("Expected a live CRC physics 2D world handle.");
+    }
+  }
+
+  private materializeRevision(): WritableSignal<number> {
+    return (this.revision ??= signal(this.committedRevision, {
+      debugName: "PhysicsWorld2D.revision",
+    }));
+  }
+
+  private materializeBodyHandle(
+    index: number,
+    generation: number,
+  ): CRCPhysicsBodyHandle2D {
+    const bodyId = this.kernel.bodyIdForIdentity(index, generation);
+    if (bodyId === undefined) {
+      throw new Error(
+        "Cannot materialize a stale physics 2D body query result.",
+      );
+    }
+    const accepted = this.acceptedBodies.find((body) => body.id === bodyId);
+    const explicit = accepted?.descriptor.options.handle;
+    if (explicit !== undefined) return explicit;
+    const key = `${String(index)}:${String(generation)}`;
+    let handle = this.materializedBodyHandles.get(key);
+    if (handle === undefined) {
+      handle = createPhysicsBodyHandle2D(this.owner);
+      bindPhysicsBodyHandle2D(handle, this, bodyId);
+      this.materializedBodyHandles.set(key, handle);
+    }
+    return handle;
+  }
+
+  private materializeColliderHandle(
+    index: number,
+    generation: number,
+  ): CRCPhysicsColliderHandle2D {
+    if (this.kernel.colliderIdForIdentity(index, generation) === undefined) {
+      throw new Error(
+        "Cannot materialize a stale physics 2D collider query result.",
+      );
+    }
+    const key = `${String(index)}:${String(generation)}`;
+    let handle = this.materializedColliderHandles.get(key);
+    if (handle === undefined) {
+      handle = createPhysicsColliderHandle2D(this, index, generation);
+      this.materializedColliderHandles.set(key, handle);
+    }
+    return handle;
+  }
+
+  private resolveBodyHandle(
+    handle: CRCPhysicsBodyHandle2D,
+  ): Readonly<{ index: number; generation: number }> | null {
+    const binding = physicsBodyHandleBinding2D(handle);
+    if (binding?.controller !== this) return null;
+    return this.kernel.bodyIdentity(binding.bodyId) ?? null;
+  }
+
+  private resolveColliderHandle(
+    handle: CRCPhysicsColliderHandle2D,
+  ): Readonly<{ index: number; generation: number }> | null {
+    const identity = physicsColliderHandleIdentity2D(handle);
+    if (identity?.controller !== this) return null;
+    return this.kernel.colliderIdForIdentity(
+      identity.index,
+      identity.generation,
+    ) === undefined
+      ? null
+      : identity;
+  }
+
+  private unbindBodyHandle(body: AcceptedBody2D): void {
+    const handle = body.descriptor.options.handle;
+    const generation = body.handleBindingGeneration;
+    if (handle !== undefined && generation !== undefined) {
+      unbindPhysicsBodyHandle2D(handle, this, body.id, generation);
+    }
+  }
+}
+
+export function requirePhysicsWorld2DController(
+  handle: CRCPhysicsWorldHandle2D,
+): PhysicsWorld2DController {
+  const controller = (handle as Partial<InternalWorldHandle2D>)[
+    worldController2DSymbol
+  ];
+  if (!(controller instanceof PhysicsWorld2DController)) {
+    throw new TypeError("Expected a live CRC physics 2D world handle.");
+  }
+  return controller;
+}
+
+export function snapshotPhysicsWorld2DControllerForTest(
+  controller: PhysicsWorld2DController,
+): PhysicsWorld2DControllerSnapshot {
+  return controller.snapshot();
+}
+
+function normalizeWorldConfiguration(
+  props: CRCPhysicsWorld2DProps,
+): NormalizedPhysicsWorld2DConfiguration {
+  return normalizePhysicsWorld2DConfiguration({
+    gravity: props.gravity,
+    fixedStepMilliseconds: props.fixedStepMilliseconds,
+    maxCatchUpSteps: props.maxCatchUpSteps,
+    interpolation: props.interpolation,
+    sleeping: props.sleeping,
+    solver: props.solver,
+  });
+}
+
+function denormalizeWorldConfiguration(
+  configuration: NormalizedPhysicsWorld2DConfiguration,
+): PhysicsWorld2DConfiguration {
+  return Object.freeze({
+    gravity: Object.freeze([
+      configuration.gravityX,
+      configuration.gravityY,
+    ] as const),
+    fixedStepMilliseconds: configuration.fixedStepMilliseconds,
+    maxCatchUpSteps: configuration.maxCatchUpSteps,
+    interpolation: configuration.interpolation,
+    sleeping: configuration.sleeping,
+    solver: Object.freeze({
+      velocityIterations: configuration.velocityIterations,
+      positionIterations: configuration.positionIterations,
+    }),
+  });
+}
+
+function materializeTopology(
+  draft: RenderDraft2D,
+  reenableVelocities: ReadonlyMap<number, BodyVelocity2D>,
+  previousBodyDefinitions: ReadonlyMap<number, BodyDefinition2D>,
+): readonly PhysicsTopologyRecord2D[] {
+  const collidersByBody = new Map<number, ColliderDraft2D[]>();
+  for (const collider of draft.colliders.values()) {
+    const entries = collidersByBody.get(collider.bodyId) ?? [];
+    entries.push(collider);
+    collidersByBody.set(collider.bodyId, entries);
+  }
+  const bodies = [...draft.bodies.values()]
+    .sort((left, right) => left.id - right.id)
+    .map((body): PhysicsBodyTopologyRecord2D =>
+      Object.freeze({
+        kind: "body",
+        id: body.id,
+        definition: bodyDefinition(
+          body,
+          collidersByBody.get(body.id) ?? [],
+          reenableVelocities.get(body.id),
+          previousBodyDefinitions.get(body.id),
+        ),
+      }),
+    );
+  const colliders = [...draft.colliders.values()]
+    .sort((left, right) => left.id - right.id)
+    .map((collider): PhysicsColliderTopologyRecord2D =>
+      Object.freeze({
+        kind: "collider",
+        id: collider.id,
+        bodyId: collider.bodyId,
+        definition: Object.freeze({
+          shape: collider.shape,
+          material: Object.freeze({
+            friction: collider.options.friction,
+            restitution: collider.options.restitution,
+          }),
+          filter: collider.options.collisionFilter,
+          tag: collider.options.tag,
+          handlers: collider.options.handlers,
+          owner: collider.attachment,
+          flags: collider.options.sensor ? COLLIDER_SENSOR_2D : 0,
+        }),
+      }),
+    );
+  return Object.freeze([...bodies, ...colliders]);
+}
+
+function validateAutomaticMass(draft: RenderDraft2D): void {
+  const massByBody = new Map<number, number>();
+  for (const collider of draft.colliders.values()) {
+    if (!collider.options.contributesToMass) continue;
+    massByBody.set(
+      collider.bodyId,
+      (massByBody.get(collider.bodyId) ?? 0) +
+        collider.shape.area * collider.options.density,
+    );
+  }
+  for (const body of draft.bodies.values()) {
+    if (
+      body.descriptor.bodyType !== "dynamic" ||
+      !body.descriptor.options.enabled ||
+      body.descriptor.options.mass !== "auto"
+    ) {
+      continue;
+    }
+    if ((massByBody.get(body.id) ?? 0) <= 0) {
+      throw new RangeError(
+        "A dynamic body with automatic mass requires positive derived area from at least one active mass-contributing collider.",
+      );
+    }
+  }
+}
+
+function bodyDefinition(
+  body: BodyDraft2D,
+  colliders: readonly ColliderDraft2D[],
+  reenableVelocity?: BodyVelocity2D,
+  previous?: BodyDefinition2D,
+): BodyDefinition2D {
+  const descriptor = body.descriptor;
+  const enabled = descriptor.options.enabled;
+  const massData = compoundMassData(colliders);
+  let flags = 0;
+  let linearVelocityX = 0;
+  let linearVelocityY = 0;
+  let angularVelocity = 0;
+  let linearDamping = 0;
+  let angularDamping = 0;
+  let gravityScale = 0;
+  let inverseMass = 0;
+  let inverseInertia = 0;
+  let localCenterX = 0;
+  let localCenterY = 0;
+  if (enabled && descriptor.bodyType === "dynamic") {
+    flags |= BODY_TYPE_DYNAMIC_2D;
+    if (descriptor.options.fixedRotation) flags |= BODY_FIXED_ROTATION_2D;
+    if (!descriptor.options.allowSleep) flags |= BODY_SLEEP_DISABLED_2D;
+    if (descriptor.options.ccd) flags |= BODY_CCD_2D;
+    linearVelocityX =
+      reenableVelocity?.linearVelocityX ?? descriptor.options.linearVelocity[0];
+    linearVelocityY =
+      reenableVelocity?.linearVelocityY ?? descriptor.options.linearVelocity[1];
+    angularVelocity =
+      reenableVelocity?.angularVelocity ??
+      (descriptor.options.angularVelocityDegreesPerSecond * Math.PI) / 180;
+    linearDamping = descriptor.options.linearDamping;
+    angularDamping = descriptor.options.angularDamping;
+    gravityScale = descriptor.options.gravityScale;
+    const mass =
+      descriptor.options.mass === "auto"
+        ? massData.mass
+        : descriptor.options.mass;
+    inverseMass = mass > 0 ? 1 / mass : 1;
+    localCenterX = massData.centerX;
+    localCenterY = massData.centerY;
+    const inertia = massData.mass > 0
+      ? massData.inertia * (mass / massData.mass)
+      : 0;
+    inverseInertia = descriptor.options.fixedRotation
+      ? 0
+      : inertia > 0
+        ? 1 / inertia
+        : inverseMass;
+  } else if (enabled && descriptor.bodyType === "kinematic") {
+    flags |= BODY_TYPE_KINEMATIC_2D;
+    if (!descriptor.options.allowSleep) flags |= BODY_SLEEP_DISABLED_2D;
+  }
+  const authoredRotationRadians =
+    (body.initialPose.rotationDegrees * Math.PI) / 180;
+  const previousKinematic =
+    previous !== undefined &&
+    (previous.flags & BODY_TYPE_KINEMATIC_2D) !== 0
+      ? previous
+      : undefined;
+  const preserveTargetBoundKinematicPose =
+    descriptor.bodyType === "kinematic" &&
+    (descriptor.options.target.position !== undefined ||
+      descriptor.options.target.rotationDegrees !== undefined) &&
+    previousKinematic !== undefined;
+  const previousRotationRadians = previousKinematic?.rotationRadians ?? 0;
+  const previousCosine = Math.cos(previousRotationRadians);
+  const previousSine = Math.sin(previousRotationRadians);
+  const previousOriginX = previousKinematic === undefined
+    ? 0
+    : previousKinematic.positionX -
+      previousCosine * (previousKinematic.localCenterX ?? 0) +
+      previousSine * (previousKinematic.localCenterY ?? 0);
+  const previousOriginY = previousKinematic === undefined
+    ? 0
+    : previousKinematic.positionY -
+      previousSine * (previousKinematic.localCenterX ?? 0) -
+      previousCosine * (previousKinematic.localCenterY ?? 0);
+  const positionX = preserveTargetBoundKinematicPose
+    ? previousOriginX
+    : body.initialPose.position[0];
+  const positionY = preserveTargetBoundKinematicPose
+    ? previousOriginY
+    : body.initialPose.position[1];
+  const effectiveRotationRadians = preserveTargetBoundKinematicPose
+    ? previousKinematic!.rotationRadians
+    : authoredRotationRadians;
+  const cosine = Math.cos(effectiveRotationRadians);
+  const sine = Math.sin(effectiveRotationRadians);
+  return Object.freeze({
+    positionX: positionX + cosine * localCenterX - sine * localCenterY,
+    positionY: positionY + sine * localCenterX + cosine * localCenterY,
+    rotationRadians: effectiveRotationRadians,
+    localCenterX,
+    localCenterY,
+    linearVelocityX,
+    linearVelocityY,
+    angularVelocity,
+    forceX: 0,
+    forceY: 0,
+    torque: 0,
+    inverseMass,
+    inverseInertia,
+    linearDamping,
+    angularDamping,
+    gravityScale,
+    sleepTime: 0,
+    flags,
+    owner: body.attachment,
+  });
+}
+
+const ZERO_VELOCITY_2D: BodyVelocity2D = Object.freeze({
+  linearVelocityX: 0,
+  linearVelocityY: 0,
+  angularVelocity: 0,
+});
+
+function compoundMassData(
+  colliders: readonly ColliderDraft2D[],
+): Readonly<{
+  mass: number;
+  centerX: number;
+  centerY: number;
+  inertia: number;
+}> {
+  const entries = colliders
+    .filter((collider) => collider.options.contributesToMass)
+    .map((collider) => {
+      const shape = collider.shape;
+      const cosine = Math.cos(shape.localPose.rotationRadians);
+      const sine = Math.sin(shape.localPose.rotationRadians);
+      const centerX =
+        shape.localPose.x +
+        cosine * shape.centroidX -
+        sine * shape.centroidY;
+      const centerY =
+        shape.localPose.y +
+        sine * shape.centroidX +
+        cosine * shape.centroidY;
+      return {
+        mass: shape.area * collider.options.density,
+        centerX,
+        centerY,
+        centroidInertia: shape.unitInertia * collider.options.density,
+      };
+    });
+  const mass = entries.reduce((sum, entry) => sum + entry.mass, 0);
+  if (mass <= 0) {
+    return { mass: 0, centerX: 0, centerY: 0, inertia: 0 };
+  }
+  const centerX = entries.reduce(
+    (sum, entry) => sum + entry.mass * entry.centerX,
+    0,
+  ) / mass;
+  const centerY = entries.reduce(
+    (sum, entry) => sum + entry.mass * entry.centerY,
+    0,
+  ) / mass;
+  const inertia = entries.reduce((sum, entry) => {
+    const offsetX = entry.centerX - centerX;
+    const offsetY = entry.centerY - centerY;
+    return sum + entry.centroidInertia +
+      entry.mass * (offsetX * offsetX + offsetY * offsetY);
+  }, 0);
+  return { mass, centerX, centerY, inertia };
+}
+
+function sameConfiguration(
+  left: NormalizedPhysicsWorld2DConfiguration,
+  right: NormalizedPhysicsWorld2DConfiguration,
+): boolean {
+  return (
+    left.gravityX === right.gravityX &&
+    left.gravityY === right.gravityY &&
+    left.fixedStepMilliseconds === right.fixedStepMilliseconds &&
+    left.maxCatchUpSteps === right.maxCatchUpSteps &&
+    left.interpolation === right.interpolation &&
+    left.sleeping === right.sleeping &&
+    left.velocityIterations === right.velocityIterations &&
+    left.positionIterations === right.positionIterations
+  );
+}
+
+function copyPhysicsPose2D(pose: CRCPhysicsPose2D): CRCPhysicsPose2D {
+  return Object.freeze({
+    position: copyFiniteVector2(pose.position, "initial physics pose.position"),
+    rotationDegrees: requireFiniteNumber(
+      pose.rotationDegrees,
+      "initial physics pose.rotationDegrees",
+    ),
+  });
+}
+
+function sameTopology(
+  left: readonly PhysicsTopologyRecord2D[],
+  right: readonly PhysicsTopologyRecord2D[],
+): boolean {
+  if (left.length !== right.length) return false;
+  return left.every((first, index) => {
+    const second = right[index];
+    if (!second || first.kind !== second.kind || first.id !== second.id)
+      return false;
+    if (first.kind === "body" && second.kind === "body") {
+      return sameRecord(first.definition, second.definition);
+    }
+    if (first.kind === "collider" && second.kind === "collider") {
+      return (
+        first.bodyId === second.bodyId &&
+        first.definition.shape === second.definition.shape &&
+        first.definition.tag === second.definition.tag &&
+        first.definition.owner === second.definition.owner &&
+        first.definition.flags === second.definition.flags &&
+        sameRecord(first.definition.material, second.definition.material) &&
+        sameRecord(first.definition.filter, second.definition.filter) &&
+        sameRecord(first.definition.handlers, second.definition.handlers)
+      );
+    }
+    return false;
+  });
+}
+
+function sameRecord(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (
+    typeof left !== "object" ||
+    left === null ||
+    typeof right !== "object" ||
+    right === null
+  )
+    return false;
+  const leftEntries = Object.entries(left);
+  const rightRecord = right as Record<string, unknown>;
+  return (
+    leftEntries.length === Object.keys(rightRecord).length &&
+    leftEntries.every(([key, value]) => rightRecord[key] === value)
+  );
+}
+
+function validateUniqueBodyHandles(bodies: readonly BodyDraft2D[]): void {
+  const ids = new Map<CRCPhysicsBodyHandle2D, number>();
+  for (const body of bodies) {
+    const handle = body.descriptor.options.handle;
+    if (handle === undefined) continue;
+    const previous = ids.get(handle);
+    if (previous !== undefined && previous !== body.id) {
+      throw new Error(
+        "A CRC physics 2D body handle may bind to at most one live body.",
+      );
+    }
+    ids.set(handle, body.id);
+  }
+}
+
+function eventHandlerName(
+  kind: PhysicsContactEventDelivery2D["kind"],
+): keyof NormalizedPhysicsColliderConfiguration2D["handlers"] {
+  switch (kind) {
+    case 1:
+      return "onCollisionStart";
+    case 2:
+      return "onCollisionEnd";
+    case 3:
+      return "onOverlapStart";
+    case 4:
+      return "onOverlapEnd";
+    case 7:
+      return "onHit";
+  }
+}
+
+const ZERO_POSE_2D: CRCPhysicsPose2D = Object.freeze({
+  position: Object.freeze([0, 0] as const),
+  rotationDegrees: 0,
+});

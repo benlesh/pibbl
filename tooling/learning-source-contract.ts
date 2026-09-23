@@ -21,6 +21,9 @@ interface SourceInspection {
   readonly hasOrbitControlsValueImport: boolean;
   readonly hasThreeAdapterValueImport: boolean;
   readonly hasThreeValueImport: boolean;
+  readonly hasPhysicsValueImport: boolean;
+  readonly hasPhysics2DValueImport: boolean;
+  readonly hasPhysics3DValueImport: boolean;
   readonly hasWebGLValueImport: boolean;
   readonly hasCreateElementCall: boolean;
   readonly hasDirectComponentCall: boolean;
@@ -38,6 +41,7 @@ interface SourceInspection {
   readonly hasLegacyTypes: boolean;
   readonly hasNamedValueCoreImport: boolean;
   readonly hasNamedValueParticlesImport: boolean;
+  readonly hasNamedValuePhysicsImport: boolean;
   readonly hasNamedValueWebGLImport: boolean;
   readonly hasNamespaceExport: boolean;
   readonly hasOnlyApprovedImports: boolean;
@@ -71,12 +75,23 @@ const LEARNING_VALUE_MODULES = new Set([
 ]);
 const PARTICLES_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/particle-effects.example.tsx";
+const PHYSICS_2D_MODULE = "@crc/physics/2d";
+const PHYSICS_3D_MODULE = "@crc/physics/3d";
+const PHYSICS_MODULES = new Set([
+  PHYSICS_2D_MODULE,
+  PHYSICS_3D_MODULE,
+]);
+for (const physicsModule of PHYSICS_MODULES) {
+  LEARNING_VALUE_MODULES.add(physicsModule);
+}
 const WEBGL_ISLAND_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
 const THREE_INSTANCING_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/three-instancing.example.tsx";
 const WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY =
   "packages/scenarios/src/learning/webgl/";
+const PHYSICS_LEARNING_SOURCE_PATH =
+  "packages/scenarios/src/learning/composition/physics-2d.example.tsx";
 
 const LEGACY_AUTHORING_NAMES = new Set([
   ["define", "Comp"].join(""),
@@ -141,6 +156,8 @@ const DESCRIPTIVE_COMPONENT_EXPORTS = new Set([
   "SpotLight",
   "WebGLBackground",
   "WebGLLayer",
+  "PhysicsWorld2D",
+  "PhysicsWorld3D",
 ]);
 const COMMONJS_BINDING_NAMES = new Set(["exports", "module", "require"]);
 const COMMONJS_GLOBAL_NAMES = new Set([
@@ -892,6 +909,10 @@ function inspectSource(source: string, label: string): SourceInspection {
   let hasWebGLValueImport = false;
   let hasNamedValueCoreImport = false;
   let hasNamedValueParticlesImport = false;
+  let hasPhysicsValueImport = false;
+  let hasPhysics2DValueImport = false;
+  let hasPhysics3DValueImport = false;
+  let hasNamedValuePhysicsImport = false;
   let hasNamedValueWebGLImport = false;
   let hasOnlyApprovedImports = true;
   let hasOnlyScenarioImports = true;
@@ -981,6 +1002,14 @@ function inspectSource(source: string, label: string): SourceInspection {
             if (moduleName === THREE_MODULE) hasThreeValueImport = true;
             if (moduleName === THREE_ORBIT_CONTROLS_MODULE)
               hasOrbitControlsValueImport = true;
+            if (PHYSICS_MODULES.has(moduleName ?? "")) {
+              hasPhysicsValueImport = true;
+              if (moduleName === PHYSICS_2D_MODULE) {
+                hasPhysics2DValueImport = true;
+              } else {
+                hasPhysics3DValueImport = true;
+              }
+            }
             if (moduleName === WEBGL_MODULE) hasWebGLValueImport = true;
           }
         }
@@ -1013,6 +1042,14 @@ function inspectSource(source: string, label: string): SourceInspection {
       ) {
         hasParticlesValueImport = true;
         hasNamedValueParticlesImport = true;
+      } else if (PHYSICS_MODULES.has(moduleName ?? "")) {
+        hasPhysicsValueImport = true;
+        hasNamedValuePhysicsImport = true;
+        if (moduleName === PHYSICS_2D_MODULE) {
+          hasPhysics2DValueImport = true;
+        } else {
+          hasPhysics3DValueImport = true;
+        }
       } else if (moduleName === WEBGL_MODULE) {
         hasWebGLValueImport = true;
         hasNamedValueWebGLImport = true;
@@ -1293,6 +1330,9 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasParticlesValueImport,
     hasThreeAdapterValueImport,
     hasThreeValueImport,
+    hasPhysicsValueImport,
+    hasPhysics2DValueImport,
+    hasPhysics3DValueImport,
     hasWebGLValueImport,
     hasCreateElementCall,
     hasDirectComponentCall,
@@ -1310,6 +1350,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasLegacyTypes,
     hasNamedValueCoreImport,
     hasNamedValueParticlesImport,
+    hasNamedValuePhysicsImport,
     hasNamedValueWebGLImport,
     hasNamespaceExport,
     hasOnlyApprovedImports,
@@ -1372,13 +1413,17 @@ export function validateScenarioSourceText(
   if (inspection.hasScenarioReExport) {
     throw invalid(
       label,
-      "must not re-export local, external, @crc/core, @crc/particles, or @crc/webgl modules.",
+      "must not re-export local, external, or public CRC package modules.",
     );
   }
-  if (!inspection.hasCoreValueImport || !inspection.hasOnlyScenarioImports) {
+  if (
+    !inspection.hasCoreValueImport ||
+    !inspection.hasOnlyScenarioImports ||
+    (inspection.hasPhysics3DValueImport && !inspection.hasWebGLValueImport)
+  ) {
     throw invalid(
       label,
-      "must use supported static imports: named or namespace imports from @crc/core, @crc/particles, and @crc/webgl, relative type-only imports, and at least one public @crc/core value.",
+      "must use supported static imports from @crc/core, @crc/particles, @crc/physics/2d, @crc/physics/3d, and @crc/webgl; 3D physics requires @crc/webgl; relative imports must be type-only; and at least one public @crc/core value is required.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1434,6 +1479,11 @@ export function validateLearningSourceText(
         label === 'Learning example "three-instancing"'));
   const isParticleWebGLLesson =
     inspection.packageImportModules.includes(PARTICLES_WEBGL_MODULE);
+  const isPhysicsLesson =
+    sourcePath === PHYSICS_LEARNING_SOURCE_PATH ||
+    (sourcePath === undefined &&
+      (label === "physics-2d" ||
+        label === 'Learning example "physics-2d"'));
   const hasExactPackageImports = isThreeLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.hasThreeAdapterValueImport &&
@@ -1453,14 +1503,25 @@ export function validateLearningSourceText(
     ? inspection.hasNamedValueCoreImport &&
       inspection.hasNamedValueWebGLImport &&
       !inspection.hasNamedValueParticlesImport &&
+      !inspection.hasNamedValuePhysicsImport &&
       inspection.packageImportModules.length === 2
     : isParticlesLesson
       ? inspection.hasNamedValueCoreImport &&
         inspection.hasNamedValueParticlesImport &&
+        !inspection.hasNamedValuePhysicsImport &&
         !inspection.hasNamedValueWebGLImport &&
         inspection.packageImportModules.length === 2
+      : isPhysicsLesson
+        ? inspection.hasNamedValueCoreImport &&
+          inspection.hasNamedValuePhysicsImport &&
+          inspection.hasPhysics2DValueImport &&
+          !inspection.hasPhysics3DValueImport &&
+          !inspection.hasNamedValueParticlesImport &&
+          !inspection.hasNamedValueWebGLImport &&
+          inspection.packageImportModules.length === 2
       : inspection.hasNamedValueCoreImport &&
         !inspection.hasNamedValueParticlesImport &&
+        !inspection.hasNamedValuePhysicsImport &&
         !inspection.hasNamedValueWebGLImport &&
         inspection.packageImportModules.length === 1;
   if (!inspection.hasOnlyApprovedImports || !hasExactPackageImports) {
@@ -1472,8 +1533,10 @@ export function validateLearningSourceText(
         ? "must use direct, unaliased static named value imports from @crc/core, @crc/particles, @crc/particles/webgl, and @crc/webgl."
         : isWebGLLesson
         ? "must use direct, unaliased static named value imports from both @crc/core and @crc/webgl."
-        : isParticlesLesson
-          ? "must use direct, unaliased static named value imports from both @crc/core and @crc/particles."
+      : isParticlesLesson
+        ? "must use direct, unaliased static named value imports from both @crc/core and @crc/particles."
+        : isPhysicsLesson
+          ? "must use direct, unaliased static named value imports from both @crc/core and @crc/physics/2d."
         : "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
     );
   }
@@ -1502,8 +1565,10 @@ export function validateLearningSourceText(
         ? "must use direct CRC particle-WebGL lesson bindings without aliases, reassignment, or shadowing."
         : isWebGLLesson
         ? "must use direct @crc/core and @crc/webgl bindings without aliases, reassignment, or shadowing."
-        : isParticlesLesson
-          ? "must use direct @crc/core and @crc/particles bindings without aliases, reassignment, or shadowing."
+      : isParticlesLesson
+        ? "must use direct @crc/core and @crc/particles bindings without aliases, reassignment, or shadowing."
+        : isPhysicsLesson
+          ? "must use direct @crc/core and @crc/physics/2d bindings without aliases, reassignment, or shadowing."
         : "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
     );
   }

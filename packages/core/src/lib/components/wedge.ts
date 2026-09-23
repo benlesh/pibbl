@@ -18,6 +18,7 @@ import type {
   ResolvedDrawingStyle,
 } from "../style/types.js";
 import type { RenderingContext2D, SystemStyle } from "../types.js";
+import type { CRCPhysics2DPropExtension } from "../types.js";
 import { wedgeBounds } from "./arc-geometry.js";
 import {
   createWedgePath,
@@ -30,7 +31,7 @@ import {
   resolveNonnegativeShapeLength,
 } from "./shape-style.js";
 
-export interface WedgeProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+export interface WedgeProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 export interface WedgeStyle
   extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {

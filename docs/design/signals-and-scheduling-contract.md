@@ -235,3 +235,7 @@ package-consumer, and Studio declaration suites are the executable evidence.
 - Animation values and hooks use these same explicit reads, staging, frame
   phases, consumer boundaries, and ownership rules. Their specialized behavior
   lives in the [animation contract](./animation-contract.md).
+
+## First-class 3D physics scheduling
+
+One mounted awake `PhysicsWorld3D` owns one physics-lane Advance participant; its bodies, colliders, queries, handles, and presentations own none. Animation Advance stages kinematic inputs before physics runs bounded deterministic fixed ticks, then one shared Commit publishes body signals, one Plan admits dirtiness, one Render settles Canvas/WebGL output, and Complete delivers observed events. The world uses realm logical time and never creates another frame callback, timer, worker loop, public manual step, or independent clock.

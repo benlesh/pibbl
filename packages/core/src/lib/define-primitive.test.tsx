@@ -11,7 +11,14 @@ import type {
   SystemStyle,
 } from './types.js';
 import { crc } from './crc.js';
-import { definePrimitive } from './define-primitive.js';
+import {
+  crcInternalRunPurePrimitiveResolver,
+  definePrimitive,
+  derivePrimitive,
+} from './define-primitive.js';
+import { setPrimitivePresentation } from './primitive-presentation.js';
+import { useState } from './hooks/use-state.js';
+import { signal } from './signals/graph.js';
 
 const constraints = {
   minWidth: 0,
@@ -36,6 +43,79 @@ afterEach(() => {
 });
 
 describe('definePrimitive', () => {
+  it('runs friend primitive resolvers without hook or signal-write authority and restores render hooks', async () => {
+    const value = signal(1);
+    const observed: string[] = [];
+    const Probe = definePrimitive(function renderPureResolverProbe() {
+      const [before] = useState('before');
+      expect(() => crcInternalRunPurePrimitiveResolver(() => useState('no')))
+        .toThrow(/hooks can only be called/i);
+      expect(() => crcInternalRunPurePrimitiveResolver(() => value.set(2)))
+        .toThrow(/pure primitive resolver/i);
+      expect(crcInternalRunPurePrimitiveResolver(() => 42)).toBe(42);
+      const [after] = useState('after');
+      observed.push(before, after);
+    });
+    const controller = crc(createCanvas(10, 10), <Probe />);
+    await nextFrame();
+
+    expect(value.get()).toBe(1);
+    expect(observed).toEqual(['before', 'after']);
+    controller.dispose();
+  });
+
+  it('derives an independent primitive identity with the complete private definition and presentation', async () => {
+    interface DerivedStyle extends SystemStyle {
+      width: Length;
+    }
+    interface ResolvedDerivedStyle extends SystemStyle {
+      width: number;
+    }
+    const paints: number[] = [];
+    const normalizeStyle = vi.fn((style: Readonly<DerivedStyle>) => style);
+    const resolveStyle = vi.fn((style: Readonly<DerivedStyle>) => ({
+      width: typeof style.width === 'number' ? style.width : 20,
+    }));
+    const measure = vi.fn(() => ({
+      status: 'measured' as const,
+      size: { width: 20, height: 4 },
+    }));
+    const Source = definePrimitive<
+      {}, DerivedStyle, DerivedStyle, ResolvedDerivedStyle
+    >(function renderDerivable(_props, style, context) {
+      paints.push(style.width);
+      context.fillRect(0, 0, 1, 1);
+    }, { normalizeStyle, resolveStyle, measure });
+    setPrimitivePresentation<ResolvedDerivedStyle>(Source, () => ({
+      transform: new DOMMatrix().translate(3, 0),
+    }));
+
+    const Derived = derivePrimitive(Source);
+    setPrimitivePresentation<ResolvedDerivedStyle>(Source, () => ({
+      transform: new DOMMatrix().translate(9, 0),
+    }));
+
+    expect(Derived).not.toBe(Source);
+    expect(Derived.name).toBe(Source.name);
+    expect(measureElement(<Derived style={{ width: '50%' }} />, constraints, service)).toEqual({
+      status: 'measured', size: { width: 20, height: 4 },
+    });
+    const canvas = createCanvas(20, 4);
+    const controller = crc(canvas, <>
+      <Derived style={{ width: '50%' }} />
+      <Source style={{ width: '50%' }} />
+    </>);
+    await nextFrame();
+
+    expect(paints).toEqual([20, 20]);
+    expect(Array.from(canvas.getContext('2d')!.getImageData(3, 0, 1, 1).data)).toEqual([0, 0, 0, 255]);
+    expect(Array.from(canvas.getContext('2d')!.getImageData(9, 0, 1, 1).data)).toEqual([0, 0, 0, 255]);
+    expect(normalizeStyle).toHaveBeenCalledTimes(3);
+    expect(resolveStyle).toHaveBeenCalledTimes(2);
+    expect(measure).toHaveBeenCalledOnce();
+    controller.dispose();
+  });
+
   it('types optional and required specified style without exposing reserved program props', () => {
     interface OptionalStyle extends SystemStyle {
       opacity?: number;

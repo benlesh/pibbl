@@ -1,5 +1,7 @@
 # Professional WebGL assets and printable-model interoperability design
 
+> **Historical status: This approved design is a dated implementation record and is not current guidance.**
+
 > **Status: APPROVED DESIGN.** The design and staged delivery boundaries were
 > approved on 2026-09-17. Current shipped behavior remains governed by
 > `docs/design/` until the corresponding implementation lands.

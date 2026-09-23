@@ -309,3 +309,7 @@ unwrapped into styles or nodes.
 `@crc/core/internal` is a separate version-coupled friend entry for official
 lockstep renderer packages. It is neither re-exported at the root nor available
 to ordinary Studio examples.
+
+## 3D physics hooks
+
+`crcPhysicsWorld3D()` resolves the nearest mounted 3D world and `crcPhysicsBody3D()` owns one stable generation-bound body endpoint for its component hook slot. Handles expose lazily materialized readonly committed-state signals; commands are snapshotted into owner-scoped Begin work, stale generations cannot control reused storage, and removal, failed render, or disposal releases bindings and queued delivery. Both hooks obey ordinary unconditional hook ordering and diagnose use outside the required world or duplicate live body binding.

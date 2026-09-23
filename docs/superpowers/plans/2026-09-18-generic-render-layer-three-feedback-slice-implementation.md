@@ -1,5 +1,7 @@
 # Generic Render Layer and Three.js Feedback Slice Implementation Plan
 
+> **Historical status: This implementation plan records completed work and is not current guidance.**
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Deliver the first runnable CRC/Three.js vertical slice: a public generic render-layer lifecycle, a first-class `@crc/three` adapter, and an attributed mixed 2D/3D instancing showcase whose pass-through, block, target, scheduling, resize, filter, and teardown behavior can be evaluated in the Studio.

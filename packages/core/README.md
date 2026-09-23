@@ -46,6 +46,12 @@ The optional `@crc/particles` package also shares this runtime. Its root entry
 adds Canvas particle components and systems; its `./webgl` entry contributes
 instanced particle recipes through the official WebGL scene seam.
 
+The optional matching `@crc/physics` package is also a sibling rather than a
+core export. Its `/2d` and `/3d` runtimes use the version-coupled friend
+scheduler so one awake world is one Advance participant; bodies never create a
+second loop. Applications import dimension-specific entries, not
+`@crc/core/internal` and not a root `@crc/physics` barrel.
+
 Drawing and layout values use closed, local `style` objects. Styles do not
 cascade or inherit. Structural containers accept recursive synchronous
 children; `Text` separately accepts textual children, including numeric zero.
@@ -67,3 +73,6 @@ contracts](../../docs/design/runtime-hooks-contract.md).
 For transparent 3D composition, use the [WebGL islands
 guide](../../docs/site/learn/guides/webgl-islands.md) and install the matching
 `@crc/webgl` release.
+Add rigid bodies with the [first-class 3D physics
+guide](../../docs/site/learn/guides/physics-3d.md) and matching `@crc/physics`
+release.

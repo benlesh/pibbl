@@ -213,3 +213,7 @@ frames.
 TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading and the existing `useWhenChanged` cleanup contract.
 
 TFC-07 completed that broader proof in the [runtime resource ownership contract](./runtime-resource-ownership.md), including state-setter capability checks, single-owner change cleanups, image generations, fully rendered mount/dispose stress, and temporary render-global restoration.
+
+## 3D physics event ownership
+
+Collision, overlap, hit, sleep, and wake facts belong to one candidate simulation generation and materialize public immutable records only for observed handlers. Successful Commit adopts the candidate; Complete delivers facts in stable tick, semantic, pair, and receiver order. Discard, failed Commit, body/collider generation change, removal, and disposal suppress stale delivery and release owner-scoped callbacks; callbacks may only enqueue work for a later Begin.

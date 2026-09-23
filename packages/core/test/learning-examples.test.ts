@@ -17,7 +17,14 @@ import {
   validateLearningSourceText,
 } from "../../../tooling/learning-source-contract";
 import { WEBGL_LIGHTING_EXAMPLE_IDS } from "../../../tooling/webgl-lighting-example-contract";
-import { clickLogicalPoint, pressKey } from "./support/user-input";
+import {
+  clickLogicalPoint,
+  pointerDownLogicalPoint,
+  pointerMoveLogicalPoint,
+  pointerUpLogicalPoint,
+  pressKey,
+} from "./support/user-input";
+import { backingPointForLogical } from "./support/mouse-input";
 
 const mountedControllers: Array<{ dispose: () => void }> = [];
 const removedDefinitionWrapper = ["define", "Comp"].join("");
@@ -125,6 +132,42 @@ function pixelAt(
   return Array.from(canvas.getContext("2d")!.getImageData(x, y, 1, 1).data);
 }
 
+function solidBlueBounds(canvas: HTMLCanvasElement): {
+  readonly centerX: number;
+  readonly centerY: number;
+} {
+  const pixels = canvas
+    .getContext("2d")!
+    .getImageData(0, 0, canvas.width, canvas.height).data;
+  let left = canvas.width;
+  let right = -1;
+  let top = canvas.height;
+  let bottom = -1;
+  for (let y = 0; y < canvas.height; y += 1) {
+    for (let x = 0; x < canvas.width; x += 1) {
+      const offset = (y * canvas.width + x) * 4;
+      if (
+        pixels[offset] === 37 &&
+        pixels[offset + 1] === 99 &&
+        pixels[offset + 2] === 235 &&
+        pixels[offset + 3] === 255
+      ) {
+        left = Math.min(left, x);
+        right = Math.max(right, x);
+        top = Math.min(top, y);
+        bottom = Math.max(bottom, y);
+      }
+    }
+  }
+  if (right < left || bottom < top) {
+    throw new Error("Expected the physics lesson's solid blue ball to paint.");
+  }
+  return {
+    centerX: (left + right) / 2,
+    centerY: (top + bottom) / 2,
+  };
+}
+
 async function nextPaint(): Promise<void> {
   await new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -195,6 +238,9 @@ describe("learning example catalog", () => {
     ).toThrow(/@crc\/three, three, and three\/addons\/controls\/OrbitControls\.js/u);
   });
 
+  const physicsLessonSourcePath =
+    "packages/scenarios/src/learning/composition/physics-2d.example.tsx";
+
   it("requires direct core and WebGL package imports for the WebGL lesson", () => {
     const source = `
       import { crc, type CRCController } from "@crc/core";
@@ -227,10 +273,7 @@ describe("learning example catalog", () => {
 
     expect(() =>
       validateLearningSourceText(
-        source.replace(
-          'import { Cube, WebGLLayer } from "@crc/webgl";',
-          "",
-        ),
+        source.replace('import { Cube, WebGLLayer } from "@crc/webgl";', ""),
         {
           authoring: "jsx",
           label: "fixture",
@@ -268,6 +311,53 @@ describe("learning example catalog", () => {
         sourcePath: webglLessonSourcePath,
       }),
     ).toThrow(/direct, unaliased/u);
+  });
+
+  it("permits only the exact physics lesson to import the public 2D entry", () => {
+    const source = `
+      import { Circle, crc, type CRCController } from "@crc/core";
+      import { PhysicsWorld2D, dynamicBody2D } from "@crc/physics/2d";
+      function Scene() {
+        return (
+          <PhysicsWorld2D>
+            <Circle physics={dynamicBody2D()} style={{ radius: 10 }} />
+          </PhysicsWorld2D>
+        );
+      }
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, <Scene />);
+      }
+    `;
+
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "fixture",
+        sourcePath: physicsLessonSourcePath,
+      }),
+    ).not.toThrow();
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "physics-2d",
+      }),
+    ).not.toThrow();
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "circle",
+      }),
+    ).toThrow(/only from @crc\/core/u);
+    expect(() =>
+      validateLearningSourceText(
+        source.replace("@crc/physics/2d", "@crc/physics/src/2d"),
+        {
+          authoring: "jsx",
+          label: "fixture",
+          sourcePath: physicsLessonSourcePath,
+        },
+      ),
+    ).toThrow(/both @crc\/core and @crc\/physics\/2d/u);
   });
 
   it("rejects even type-only WebGL imports from ordinary lessons", () => {
@@ -1209,11 +1299,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 69 unique, ordered, source-backed routes including Three, particles, standard shapes, WebGL lighting, signals, and animation", async () => {
+  it("contains 70 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(69);
+    expect(learningExampleCatalog).toHaveLength(70);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1228,11 +1318,20 @@ describe("learning example catalog", () => {
     expect(
       learningExampleCatalog
         .filter((entry) =>
-          ["circle", "ellipse", "arc", "wedge", "polygon", "regular-polygon", "star"].includes(
-            entry.slug,
-          ),
+          [
+            "circle",
+            "ellipse",
+            "arc",
+            "wedge",
+            "polygon",
+            "regular-polygon",
+            "star",
+          ].includes(entry.slug),
         )
-        .map((entry) => ({ route: getLearningExampleRoute(entry), api: entry.api })),
+        .map((entry) => ({
+          route: getLearningExampleRoute(entry),
+          api: entry.api,
+        })),
     ).toEqual([
       { route: "#/examples/drawing/circle", api: ["Circle"] },
       { route: "#/examples/drawing/ellipse", api: ["Ellipse"] },
@@ -1266,6 +1365,7 @@ describe("learning example catalog", () => {
         "group",
         "layer",
         "particle-effects",
+        "physics-2d",
         "signals-and-animation",
         "three-instancing",
         "webgl-islands",
@@ -1310,15 +1410,17 @@ describe("learning example catalog", () => {
       signals: "#/examples/start/signals",
     } as const;
 
-    for (const [group, expectedSlugs] of Object.entries(expectedBrowseGroups) as Array<
-      [LearningBrowseGroup, readonly string[]]
-    >) {
+    for (const [group, expectedSlugs] of Object.entries(
+      expectedBrowseGroups,
+    ) as Array<[LearningBrowseGroup, readonly string[]]>) {
       const entries = getLearningExamplesByBrowseGroup(group);
+      expect(entries.map((entry) => entry.slug).sort(), group).toEqual(
+        [...expectedSlugs].sort(),
+      );
       expect(
-        entries.map((entry) => entry.slug).sort(),
+        entries.map(({ shortTitle }) => shortTitle),
         group,
-      ).toEqual([...expectedSlugs].sort());
-      expect(entries.map(({ shortTitle }) => shortTitle), group).toEqual(
+      ).toEqual(
         [...entries.map(({ shortTitle }) => shortTitle)].sort((a, b) =>
           a.localeCompare(b, "en"),
         ),
@@ -1344,6 +1446,7 @@ describe("learning example catalog", () => {
       "webgl-islands",
       "signals-and-animation",
       "particle-effects",
+      "physics-2d",
       "layer",
     ]);
 
@@ -1549,7 +1652,9 @@ describe("learning example catalog", () => {
   ])(
     "mounts, targets, and updates the $slug lesson without private imports",
     async ({ slug, target, interior, exterior, initial, updated }) => {
-      const entry = learningExampleCatalog.find((candidate) => candidate.slug === slug);
+      const entry = learningExampleCatalog.find(
+        (candidate) => candidate.slug === slug,
+      );
       expect(entry).toBeDefined();
       const source = await loadLearningSource(entry!);
       expect(source.match(/from ["'][^"']+["']/g)).toEqual([
@@ -1558,7 +1663,9 @@ describe("learning example catalog", () => {
 
       const { canvas } = await renderLearningExample(slug);
       expect(pixelAt(canvas, interior[0], interior[1])).toEqual(initial);
-      expect(pixelAt(canvas, exterior[0], exterior[1])).toEqual([247, 240, 223, 255]);
+      expect(pixelAt(canvas, exterior[0], exterior[1])).toEqual([
+        247, 240, 223, 255,
+      ]);
 
       await clickLogicalPoint(canvas, { x: target[0], y: target[1] });
       await nextPaint();
@@ -1713,7 +1820,8 @@ describe("learning example catalog", () => {
     const drawingAndComposition = learningExampleCatalog
       .filter(
         (entry) =>
-          entry.browseGroup === "drawing" || entry.browseGroup === "composition",
+          entry.browseGroup === "drawing" ||
+          entry.browseGroup === "composition",
       )
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
@@ -1760,6 +1868,18 @@ describe("learning example catalog", () => {
         "particleChoice",
         "particleCurve",
         "particleRange",
+        "PhysicsWorld2D",
+        "dynamicBody2D",
+        "staticBody2D",
+        "collider2D",
+        "crcPhysicsBody2D",
+        "useRef",
+        "useState",
+        "setPointerCapture",
+        "disableBody2D",
+        "teleportBody2D",
+        "enableBody2D",
+        "setLinearVelocity2D",
       ]),
     );
 
@@ -1794,6 +1914,216 @@ describe("learning example catalog", () => {
     expect(latestPaints).toContain("FOCUSED: INNER 2");
     expect(latestPaints).toContain("ACTIVE BOUNDARY: INNER");
     expect(latestPaints).toContain("LAST INPUT: ArrowRight");
+  });
+
+  it("makes the 2D physics lesson ball follow its captured pointer", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const target = { x: 500, y: 120 };
+
+    await pointerDownLogicalPoint(canvas, {
+      x: before.centerX,
+      y: before.centerY,
+    });
+    try {
+      await pointerMoveLogicalPoint(canvas, target);
+      await nextPaint();
+      const dragged = solidBlueBounds(canvas);
+
+      expect(dragged.centerX).toBeGreaterThanOrEqual(target.x - 1);
+      expect(dragged.centerX).toBeLessThanOrEqual(target.x + 1);
+      expect(dragged.centerY).toBeGreaterThanOrEqual(target.y - 1);
+      expect(dragged.centerY).toBeLessThanOrEqual(target.y + 1);
+    } finally {
+      await pointerUpLogicalPoint(canvas, target);
+    }
+  });
+
+  it("preserves the 2D physics lesson ball's final dragged pose when a release coalesces the disable-teleport-enable handoff", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const target = { x: 500, y: 120 };
+
+    await pointerDownLogicalPoint(canvas, {
+      x: before.centerX,
+      y: before.centerY,
+    });
+    await pointerMoveLogicalPoint(canvas, target);
+    await pointerUpLogicalPoint(canvas, target);
+    await nextPaint();
+    const released = solidBlueBounds(canvas);
+
+    expect(released.centerX).toBeGreaterThanOrEqual(499);
+    expect(released.centerX).toBeLessThanOrEqual(521);
+    expect(released.centerY).toBeGreaterThanOrEqual(119);
+    expect(released.centerY).toBeLessThanOrEqual(145);
+  });
+
+  it("hands a measured rightward release velocity to the physics lesson ball", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const start = { x: before.centerX, y: 120 };
+    const release = { x: 440, y: 120 };
+
+    await pointerDownLogicalPoint(canvas, start);
+    await pointerMoveLogicalPoint(canvas, release);
+    await pointerUpLogicalPoint(canvas, release);
+    await nextPaint();
+    const released = solidBlueBounds(canvas);
+    for (let frame = 0; frame < 8; frame += 1) await nextPaint();
+    const rolling = solidBlueBounds(canvas);
+
+    expect(rolling.centerX).toBeGreaterThan(released.centerX + 8);
+  });
+
+  it("uses captured pointer motion to throw the physics lesson ball while its presentation remains clamped", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const clamped = { x: 560, y: 40 };
+    const continuedPointerMotion = { x: 560, y: 80 };
+
+    await pointerDownLogicalPoint(canvas, {
+      x: before.centerX,
+      y: before.centerY,
+    });
+    await pointerMoveLogicalPoint(canvas, clamped);
+    await new Promise<void>((resolve) => setTimeout(resolve, 140));
+    await pointerMoveLogicalPoint(canvas, clamped);
+    await pointerUpLogicalPoint(canvas, continuedPointerMotion);
+    await nextPaint();
+    for (let frame = 0; frame < 2; frame += 1) await nextPaint();
+    const thrown = solidBlueBounds(canvas);
+
+    expect(thrown.centerY).toBeGreaterThan(130);
+  });
+
+  it("preserves an older useful release sample after more than eight rapid captured pointer samples", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const target = { x: 360, y: 120 };
+
+    await pointerDownLogicalPoint(canvas, {
+      x: before.centerX,
+      y: before.centerY,
+    });
+    for (let sample = 0; sample < 8; sample += 1) {
+      await pointerMoveLogicalPoint(canvas, target);
+    }
+    await pointerUpLogicalPoint(canvas, target);
+    await nextPaint();
+    const released = solidBlueBounds(canvas);
+    for (let frame = 0; frame < 4; frame += 1) await nextPaint();
+    const rolling = solidBlueBounds(canvas);
+
+    expect(rolling.centerX).toBeGreaterThan(released.centerX + 30);
+  });
+
+  it("preserves the off-center grab offset while dragging the physics lesson ball", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const start = { x: before.centerX - 12, y: before.centerY + 8 };
+    const target = { x: 420, y: 160 };
+
+    await pointerDownLogicalPoint(canvas, start);
+    try {
+      await nextPaint();
+      const grabbed = solidBlueBounds(canvas);
+      expect(grabbed.centerX).toBeGreaterThanOrEqual(before.centerX - 1);
+      expect(grabbed.centerX).toBeLessThanOrEqual(before.centerX + 1);
+      expect(grabbed.centerY).toBeGreaterThanOrEqual(before.centerY - 1);
+      expect(grabbed.centerY).toBeLessThanOrEqual(before.centerY + 1);
+
+      await pointerMoveLogicalPoint(canvas, target);
+      await nextPaint();
+      const dragged = solidBlueBounds(canvas);
+
+      expect(dragged.centerX).toBeGreaterThanOrEqual(431);
+      expect(dragged.centerX).toBeLessThanOrEqual(433);
+      expect(dragged.centerY).toBeGreaterThanOrEqual(151);
+      expect(dragged.centerY).toBeLessThanOrEqual(153);
+    } finally {
+      await pointerUpLogicalPoint(canvas, target);
+    }
+  });
+
+  it("preserves a settled ball's off-center grab on a scaled lesson canvas", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    canvas.style.width = "568px";
+    canvas.style.height = "331px";
+    for (let frame = 0; frame < 75; frame += 1) await nextPaint();
+
+    const before = solidBlueBounds(canvas);
+    const beforeLogical = {
+      x: (before.centerX * 720) / canvas.width,
+      y: (before.centerY * 420) / canvas.height,
+    };
+    const start = { x: beforeLogical.x - 12, y: beforeLogical.y + 8 };
+    const target = { x: 420, y: 160 };
+
+    await pointerDownLogicalPoint(canvas, start);
+    try {
+      await nextPaint();
+      const grabbed = solidBlueBounds(canvas);
+      expect(grabbed.centerX).toBeGreaterThanOrEqual(before.centerX - 1);
+      expect(grabbed.centerX).toBeLessThanOrEqual(before.centerX + 1);
+      expect(grabbed.centerY).toBeGreaterThanOrEqual(before.centerY - 1);
+      expect(grabbed.centerY).toBeLessThanOrEqual(before.centerY + 1);
+
+      await pointerMoveLogicalPoint(canvas, target);
+      await nextPaint();
+      const dragged = solidBlueBounds(canvas);
+      const expected = backingPointForLogical(canvas, { x: 432, y: 152 });
+
+      expect(dragged.centerX).toBeGreaterThanOrEqual(expected.x - 1);
+      expect(dragged.centerX).toBeLessThanOrEqual(expected.x + 1);
+      expect(dragged.centerY).toBeGreaterThanOrEqual(expected.y - 1);
+      expect(dragged.centerY).toBeLessThanOrEqual(expected.y + 1);
+    } finally {
+      await pointerUpLogicalPoint(canvas, target);
+    }
+  });
+
+  it("clamps an out-of-range captured drag to the physics lesson ball-center bounds", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const target = { x: 900, y: 40 };
+
+    await pointerDownLogicalPoint(canvas, {
+      x: before.centerX,
+      y: before.centerY,
+    });
+    try {
+      await pointerMoveLogicalPoint(canvas, target);
+      await nextPaint();
+      const dragged = solidBlueBounds(canvas);
+
+      expect(dragged.centerX).toBeGreaterThanOrEqual(637);
+      expect(dragged.centerX).toBeLessThanOrEqual(639);
+      expect(dragged.centerY).toBeGreaterThanOrEqual(107);
+      expect(dragged.centerY).toBeLessThanOrEqual(109);
+    } finally {
+      await pointerUpLogicalPoint(canvas, target);
+    }
+  });
+
+  it("does not teleport the physics lesson ball after its captured pointer releases", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const release = { x: 420, y: 120 };
+    const laterPointer = { x: 610, y: 108 };
+
+    await pointerDownLogicalPoint(canvas, {
+      x: before.centerX,
+      y: before.centerY,
+    });
+    await pointerMoveLogicalPoint(canvas, release);
+    await pointerUpLogicalPoint(canvas, release);
+    await nextPaint();
+    await pointerMoveLogicalPoint(canvas, laterPointer);
+    await nextPaint();
+    const afterLaterPointerMove = solidBlueBounds(canvas);
+
+    expect(afterLaterPointerMove.centerX).toBeLessThan(500);
   });
 
   it.each(learningExampleCatalog)(

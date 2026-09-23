@@ -166,6 +166,10 @@ import {
 } from '@crc/particles/webgl';
 import * as WebGLRuntime from '@crc/webgl';
 import type * as WebGLTypes from '@crc/webgl';
+import * as Physics3DRuntime from '@crc/physics/3d';
+import * as Physics3DGeometry from '@crc/physics/3d/geometry';
+import type * as Physics3DTypes from '@crc/physics/3d';
+import type * as Physics3DGeometryTypes from '@crc/physics/3d/geometry';
 import {
   submitWebGLInstanced,
   type CRCWebGLBounds,
@@ -214,11 +218,20 @@ import {
   crcInternalRequestRender,
   crcInternalRequestRendererWork,
   type CRCInternalCommandHandle,
+  crcInternalCurrentSimulationOwner,
+  crcInternalOnSimulationRenderTransactionFinish,
+  crcInternalQueueSimulationBegin,
+  crcInternalQueueSimulationCommitAcknowledgement,
+  crcInternalQueueSimulationComplete,
+  crcInternalRegisterSimulationAdvance,
+  crcInternalRequestSimulationRender,
+  type CRCInternalAdvanceLane,
   type CRCInternalFrame,
   type CRCInternalRendererWorkKind,
   type CRCInternalRenderOwner,
   type CRCInternalSignalBatch,
   type CRCInternalSignalConsumer,
+  type CRCInternalSimulationOwner,
 } from '@crc/core/internal';
 import {
   crc,
@@ -318,6 +331,7 @@ import {
   type CRCWebGLGeometryInput,
   type CRCWebGLLambertMaterial,
   type CRCWebGLMaterial,
+  type CRCPhysics3DPropExtension,
   type CRCWebGLPerspectiveCamera,
   type CRCWebGLShadowQuality,
   type CRCWebGLTransformStyle,
@@ -591,13 +605,19 @@ declare const internalFrame: CRCInternalFrame;
 declare const internalBatch: CRCInternalSignalBatch;
 declare const internalCommand: CRCInternalCommandHandle;
 declare const internalConsumer: CRCInternalSignalConsumer;
+declare const internalSignalBatch: CRCInternalSignalBatch;
+declare const internalSimulationOwner: CRCInternalSimulationOwner;
 const internalWorkKind = 'draw' satisfies CRCInternalRendererWorkKind;
+const internalAdvanceLane = 'physics' satisfies CRCInternalAdvanceLane;
 void internalOwner;
 void internalFrame;
 void internalBatch;
 void internalCommand;
 void internalConsumer;
+void internalSignalBatch;
+void internalSimulationOwner;
 void internalWorkKind;
+void internalAdvanceLane;
 void crcInternalAssertCommandAllowed;
 void crcInternalCreateSignalConsumer;
 void crcInternalCurrentFrame;
@@ -613,6 +633,13 @@ void crcInternalRequestRender;
 void crcInternalRequestRendererWork;
 void getCurrentLogicalViewport;
 void onCurrentRenderFinish;
+void crcInternalCurrentSimulationOwner;
+void crcInternalOnSimulationRenderTransactionFinish;
+void crcInternalQueueSimulationBegin;
+void crcInternalQueueSimulationCommitAcknowledgement;
+void crcInternalQueueSimulationComplete;
+void crcInternalRegisterSimulationAdvance;
+void crcInternalRequestSimulationRender;
 
 export type PublicEventTypes = {
   base: CRCEvent;
@@ -1878,6 +1905,7 @@ type PublicWebGLTypes = [
   CRCOrbitCameraHandlers,
   CRCOrbitCameraOptions,
   CRCOrbitCameraResult,
+  CRCPhysics3DPropExtension,
   CRCWebGLGeometry,
   CRCWebGLGeometryInput,
   CRCWebGLLambertMaterial,
@@ -1908,3 +1936,140 @@ type PublicWebGLTypes = [
   WebGLLayerStyle,
 ];
 void (undefined as unknown as PublicWebGLTypes);
+
+const consumerPhysicsSphere = Physics3DGeometry.sphereShape3D({ radius: 1 });
+const consumerPhysicsBox = Physics3DGeometry.boxShape3D({
+  width: 2,
+  height: 2,
+  depth: 2,
+});
+const consumerPhysicsPose = {
+  position: [0, 0, 0],
+  orientation: [0, 0, 0, 1],
+} as const satisfies Physics3DGeometryTypes.CRCPhysicsPose3D;
+
+export const physics3DGeometryConsumer = {
+  bounds: Physics3DGeometry.boundsOfShape3D(consumerPhysicsSphere),
+  mass: Physics3DGeometry.massProperties3D(consumerPhysicsBox, { density: 1 }),
+  contains: Physics3DGeometry.containsPoint3D(
+    consumerPhysicsSphere,
+    consumerPhysicsPose,
+    [0, 0, 0],
+  ),
+  distance: Physics3DGeometry.distanceBetweenShapes3D(
+    consumerPhysicsSphere,
+    consumerPhysicsPose,
+    consumerPhysicsBox,
+    consumerPhysicsPose,
+  ),
+  overlap: Physics3DGeometry.overlapShapes3D(
+    consumerPhysicsSphere,
+    consumerPhysicsPose,
+    consumerPhysicsBox,
+    consumerPhysicsPose,
+  ),
+  contact: Physics3DGeometry.contactBetweenShapes3D(
+    consumerPhysicsSphere,
+    consumerPhysicsPose,
+    consumerPhysicsBox,
+    consumerPhysicsPose,
+  ),
+  ray: Physics3DGeometry.raycastShape3D(
+    consumerPhysicsSphere,
+    consumerPhysicsPose,
+    { origin: [-2, 0, 0], direction: [1, 0, 0], maxDistance: 4 },
+  ),
+  cast: Physics3DGeometry.shapeCastAgainstShape3D(
+    consumerPhysicsSphere,
+    consumerPhysicsPose,
+    [2, 0, 0],
+    consumerPhysicsBox,
+    { position: [4, 0, 0], orientation: [0, 0, 0, 1] },
+  ),
+  transformed: Physics3DGeometry.transformShape3D(
+    consumerPhysicsSphere,
+    consumerPhysicsPose,
+  ),
+  shapes: [
+    Physics3DGeometry.ellipsoidShape3D({ radii: [1, 2, 3] }),
+    Physics3DGeometry.capsuleShape3D({ start: [0, -1, 0], end: [0, 1, 0], radius: 0.5 }),
+    Physics3DGeometry.cylinderShape3D({ radius: 1, halfHeight: 1 }),
+    Physics3DGeometry.coneShape3D({ radius: 1, halfHeight: 1 }),
+    Physics3DGeometry.convexHullShape3D({
+      points: [[-1, -1, -1], [1, -1, -1], [0, 1, -1], [0, 0, 1]],
+    }),
+    Physics3DGeometry.triangleMeshShape3D({
+      positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      indices: [0, 1, 2],
+    }),
+    Physics3DGeometry.heightfieldShape3D({
+      rows: 2,
+      columns: 2,
+      heights: [0, 0, 0, 0],
+    }),
+  ],
+};
+
+const physics3DBody = Physics3DRuntime.crcPhysicsBody3D();
+const physics3DWorld = Physics3DRuntime.crcPhysicsWorld3D();
+const physics3DAttachments: readonly Physics3DTypes.CRCPhysicsAttachment3D[] = [
+  Physics3DRuntime.dynamicBody3D({ handle: physics3DBody, mass: 1 }),
+  Physics3DRuntime.staticBody3D(),
+  Physics3DRuntime.kinematicBody3D(),
+  Physics3DRuntime.collider3D({ sensor: true }),
+];
+
+export const createElementPhysics3DScene = createElement(
+  WebGLLayer,
+  { children: undefined, style: { width: 320, height: 180 } },
+  createElement(
+    Physics3DRuntime.PhysicsWorld3D,
+    { gravity: [0, -9.81, 0] },
+    createElement(Group3D, { children: undefined, physics: physics3DAttachments[1] },
+      createElement(Cube, { physics: physics3DAttachments[0], style: { lit: false } }),
+      createElement(Sphere, { physics: physics3DAttachments[2], style: { lit: false } }),
+      createElement(Mesh, {
+        geometry: consumerWebGLGeometry,
+        physics: physics3DAttachments[3],
+        style: { lit: false },
+      }),
+      createElement(Physics3DRuntime.Box3D, { width: 1, height: 1, depth: 1 }),
+      createElement(Physics3DRuntime.Ellipsoid3D, { radii: [1, 2, 1] }),
+      createElement(Physics3DRuntime.Capsule3D, { start: [0, -1, 0], end: [0, 1, 0], radius: 0.5 }),
+      createElement(Physics3DRuntime.Cylinder3D, { radius: 1, halfHeight: 1 }),
+      createElement(Physics3DRuntime.Cone3D, { radius: 1, halfHeight: 1 }),
+      createElement(Physics3DRuntime.ConvexHull3D, {
+        points: [[-1, -1, -1], [1, -1, -1], [0, 1, -1], [0, 0, 1]],
+      }),
+      createElement(Physics3DRuntime.Heightfield3D, {
+        rows: 2,
+        columns: 2,
+        heights: [0, 0, 0, 0],
+      }),
+      createElement(Physics3DRuntime.PhysicsShape3D, { shape: consumerPhysicsSphere }),
+    ),
+  ),
+);
+
+void physics3DWorld;
+void [
+  Physics3DRuntime.applyForce3D,
+  Physics3DRuntime.applyImpulse3D,
+  Physics3DRuntime.applyTorque3D,
+  Physics3DRuntime.disableBody3D,
+  Physics3DRuntime.enableBody3D,
+  Physics3DRuntime.overlapShape3D,
+  Physics3DRuntime.queryAabb3D,
+  Physics3DRuntime.queryPoint3D,
+  Physics3DRuntime.raycast3D,
+  Physics3DRuntime.setAngularVelocity3D,
+  Physics3DRuntime.setLinearVelocity3D,
+  Physics3DRuntime.shapeCast3D,
+  Physics3DRuntime.sleepBody3D,
+  Physics3DRuntime.teleportBody3D,
+  Physics3DRuntime.wakeBody3D,
+];
+
+type PublicPhysics3DTypes = Physics3DTypes.CRCPhysicsWorld3DProps &
+  Physics3DGeometryTypes.CRCPhysicsShape3D;
+void (undefined as unknown as PublicPhysics3DTypes);

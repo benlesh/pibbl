@@ -5,6 +5,7 @@ import {
   getScenarioRoute,
   interactionLabScenarioEntry,
   loadScenario,
+  physics3DScenarioEntry,
   scenarioCatalog,
   scenarioCatalogIndex,
   signalsLabScenarioEntry,
@@ -83,6 +84,61 @@ describe('scenario catalog trust gate', () => {
 
   describe('deterministic source policy', () => {
     const legacyFactory = ['r', 'ect'].join('');
+
+    it('accepts direct public core, WebGL, and 3D physics imports', () => {
+      const source = `
+        import { Rectangle } from '@crc/core';
+        import { Cube, WebGLLayer } from '@crc/webgl';
+        import { PhysicsWorld3D, dynamicBody3D } from '@crc/physics/3d';
+        export const Scene = () => (
+          <>
+            <Rectangle style={{ width: 10, height: 10 }} />
+            <WebGLLayer style={{ width: 10, height: 10 }}>
+              <PhysicsWorld3D>
+                <Cube physics={dynamicBody3D()} />
+              </PhysicsWorld3D>
+            </WebGLLayer>
+          </>
+        );
+      `;
+
+      expect(() =>
+        validateScenarioSourceText(source, 'valid 3D physics source'),
+      ).not.toThrow();
+    });
+
+    it('keeps 3D physics sources inside a declarative public WebGL island', () => {
+      expect(() =>
+        validateScenarioSourceText(
+          `
+            import { Rectangle } from '@crc/core';
+            import { PhysicsWorld3D } from '@crc/physics/3d';
+            export const Scene = () => (
+              <PhysicsWorld3D>
+                <Rectangle style={{ width: 10, height: 10 }} />
+              </PhysicsWorld3D>
+            );
+          `,
+          '3D physics source without WebGL',
+        ),
+      ).toThrow(/supported static imports.*@crc\/webgl/i);
+
+      expect(() =>
+        validateScenarioSourceText(
+          `
+            import { Rectangle } from '@crc/core';
+            import { WebGLLayer } from '@crc/webgl';
+            import { PhysicsWorld3D } from '@crc/physics/3d';
+            export const Scene = () => (
+              <WebGLLayer style={{ width: 10, height: 10 }}>
+                {PhysicsWorld3D({ children: <Rectangle style={{ width: 10, height: 10 }} /> })}
+              </WebGLLayer>
+            );
+          `,
+          'direct 3D physics component call',
+        ),
+      ).toThrow(/not direct calls/i);
+    });
 
     it.each([
       [
@@ -885,7 +941,11 @@ describe('scenario catalog trust gate', () => {
     expect(
       scenarioCatalogIndex.byApi.find(group => group.key === 'WebGLLayer')
         ?.scenarios,
-    ).toEqual([webglLabScenarioEntry, webglLightingLabScenarioEntry]);
+    ).toEqual([
+      webglLabScenarioEntry,
+      webglLightingLabScenarioEntry,
+      physics3DScenarioEntry,
+    ]);
   });
 
   it('rejects duplicate executable source identities and paths', () => {

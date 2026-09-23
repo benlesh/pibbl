@@ -85,6 +85,19 @@ The version-coupled `@crc/core/internal` export exists only for matching
 official CRC packages. It is intentionally absent from this application API
 inventory and carries no compatibility promise.
 
+## 3D physics
+
+`@crc/physics/3d` augments supported WebGL primitives with typed body and
+collider attachments. Start with [`PhysicsWorld3D`](#/api/components/physics-world-3d)
+and the [physics shape components](#/api/components/physics-shape-3d), then use
+the grouped [functions](#/api/functions/physics-3d),
+[`crcPhysicsBody3D`](#/api/hooks/crc-physics-body-3d),
+[`crcPhysicsWorld3D`](#/api/hooks/crc-physics-world-3d), and
+[3D physics types](#/api/types/physics-3d).
+
+Pure geometry is also exported from `@crc/physics/3d/geometry`. There is no root
+`@crc/physics` barrel, physics namespace, manual step API, or independent clock.
+
 ## Compiler entries
 
 `@crc/core/jsx-runtime` exports `Fragment`, `jsx`, and `jsxs`; its local `JSX`

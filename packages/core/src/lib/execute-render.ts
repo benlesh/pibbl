@@ -4,6 +4,7 @@ import {
   NO_PENDING_ROOT,
 } from './global-state.js';
 import { render } from './render.js';
+import { initializeCurrentWorldTransformAnchor } from './render-target.js';
 import {
   Canvas,
   type CRCNode,
@@ -58,6 +59,11 @@ export function executeRender(
   const prevRenderContext = GLOBAL_STATE.renderContext;
   const prevRenderTarget = GLOBAL_STATE.renderTarget;
   const prevWorldBaseTransform = GLOBAL_STATE.worldBaseTransform;
+  const prevWorldExactTransform = GLOBAL_STATE.worldExactTransform;
+  const prevWorldPaintAnchorTransform = GLOBAL_STATE.worldPaintAnchorTransform;
+  const prevPresentationTransformLineage = GLOBAL_STATE.presentationTransformLineage;
+  const prevPresentationTransformLineageTrackingDepth =
+    GLOBAL_STATE.presentationTransformLineageTrackingDepth;
   const prevRenderTransaction = GLOBAL_STATE.renderTransaction;
   const prevFrameSnapshot = GLOBAL_STATE.frameSnapshot;
   const prevPrimitiveReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
@@ -113,6 +119,17 @@ export function executeRender(
     GLOBAL_STATE.renderContext = frame.context2D;
     GLOBAL_STATE.renderTarget = frame.renderTarget;
     GLOBAL_STATE.worldBaseTransform = frame.worldBaseTransform;
+    GLOBAL_STATE.worldExactTransform = undefined;
+    GLOBAL_STATE.worldPaintAnchorTransform = undefined;
+    GLOBAL_STATE.presentationTransformLineage = undefined;
+    GLOBAL_STATE.presentationTransformLineageTrackingDepth = 0;
+    if (
+      frame.context2D !== undefined &&
+      frame.renderTarget !== undefined &&
+      frame.worldBaseTransform !== undefined
+    ) {
+      initializeCurrentWorldTransformAnchor(frame.worldBaseTransform);
+    }
     GLOBAL_STATE.clippingStack = [];
     const surface = crcInstance.surface.snapshot;
     const logicalWidth = surface?.logicalWidth ?? crcInstance.rootLayoutBox.width;
@@ -190,6 +207,11 @@ export function executeRender(
         GLOBAL_STATE.renderContext = prevRenderContext;
         GLOBAL_STATE.renderTarget = prevRenderTarget;
         GLOBAL_STATE.worldBaseTransform = prevWorldBaseTransform;
+        GLOBAL_STATE.worldExactTransform = prevWorldExactTransform;
+        GLOBAL_STATE.worldPaintAnchorTransform = prevWorldPaintAnchorTransform;
+        GLOBAL_STATE.presentationTransformLineage = prevPresentationTransformLineage;
+        GLOBAL_STATE.presentationTransformLineageTrackingDepth =
+          prevPresentationTransformLineageTrackingDepth;
         GLOBAL_STATE.renderTransaction = prevRenderTransaction;
         GLOBAL_STATE.frameSnapshot = prevFrameSnapshot;
         GLOBAL_STATE.primitiveReceiverToken = prevPrimitiveReceiverToken;

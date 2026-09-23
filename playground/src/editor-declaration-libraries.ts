@@ -22,6 +22,16 @@ const declarationModulePaths = new Map([
     "@crc/particles/webgl",
     "file:///node_modules/@crc/particles/webgl.d.ts",
   ],
+  ["@crc/physics/2d", "file:///node_modules/@crc/physics/2d.d.ts"],
+  [
+    "@crc/physics/2d/geometry",
+    "file:///node_modules/@crc/physics/2d/geometry.d.ts",
+  ],
+  ["@crc/physics/3d", "file:///node_modules/@crc/physics/3d.d.ts"],
+  [
+    "@crc/physics/3d/geometry",
+    "file:///node_modules/@crc/physics/3d/geometry.d.ts",
+  ],
   ["@crc/three", "file:///node_modules/@crc/three/index.d.ts"],
   ["@crc/webgl", "file:///node_modules/@crc/webgl/index.d.ts"],
 ]);
@@ -63,7 +73,7 @@ function crcDeclarationLibraries(): EditorDeclarationLibrary[] {
       declarationModulePaths.size
   ) {
     throw new Error(
-      "CRC Studio declarations must define all seven package entry points.",
+      `CRC Studio declarations must define all ${declarationModulePaths.size} package entry points.`,
     );
   }
   return libraries;

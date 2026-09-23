@@ -21,6 +21,7 @@ symbols:
     CRCEmptyNode,
     CRCKey,
     CRCNode,
+    CRCPhysics2DPropExtension,
     CRCPrimitiveComponent,
     CRCRenderResult,
     CRCTextChild,
@@ -127,6 +128,11 @@ and never delivers it through component props.
 
 `CRCNode` is one element, an empty node, a recursive readonly array, or a
 finite synchronous iterable. Infinite iterables are unsupported.
+
+## CRCPhysics2DPropExtension
+
+`CRCPhysics2DPropExtension` is the empty declaration-merging base used by the
+optional official 2D physics package to type supported Canvas component props.
 
 ## CRCPrimitiveComponent
 

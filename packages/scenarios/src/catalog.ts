@@ -24,6 +24,8 @@ import type { SignalsLabState } from "./signals-lab.example";
 import type { AnimationLabState } from "./animation-lab.example";
 import type { ParticleCelebrationLabState } from "./particle-celebration-lab.example";
 import type { ThreeInstancingLabState } from "./three-instancing-lab.example";
+import type { Physics2DLabState } from "./physics-2d-lab.example";
+import type { Physics3DState } from "./physics-3d.example";
 import { GEOMETRY_MATRIX_CASES } from "./geometry-matrix.example";
 import { MOUSE_CONTRACT_CASES } from "./mouse-contract";
 import { PERFORMANCE_WORKLOADS } from "./performance-lab.example";
@@ -2021,6 +2023,204 @@ export const particleCelebrationLabScenarioEntry: ScenarioCatalogEntry<ParticleC
         .particleCelebrationLabScenario,
   };
 
+const physics2DLabMetadata: ScenarioMetadata = {
+  id: "first-class-physics-2d",
+  slug: "physics-2d",
+  title: "First-class 2D physics laboratory",
+  summary:
+    "Drive rigid bodies, sensors, queries, a kinematic animation target, and explicit animation-to-physics pose ownership through public CRC APIs.",
+  category: "Simulation",
+  apiTags: [
+    "PhysicsWorld2D",
+    "dynamicBody2D",
+    "staticBody2D",
+    "kinematicBody2D",
+    "collider2D",
+    "crcPhysicsBody2D",
+    "crcPhysicsWorld2D",
+    "applyImpulse2D",
+    "disableBody2D",
+    "enableBody2D",
+    "queryAabb2D",
+    "tween",
+  ],
+  conceptTags: [
+    "fixed-step physics",
+    "central scheduler",
+    "collision ordering",
+    "sensor overlap",
+    "kinematic target",
+    "pose ownership handoff",
+    "world queries",
+  ],
+  manualSteps: [
+    {
+      action: "Choose Settle, then Impulse circle.",
+      expected:
+        "The circle changes from sleeping to awake and its authoritative velocity reports the impulse.",
+    },
+    {
+      action: "Choose Cross sensor, Move platform, and Query world.",
+      expected:
+        "Sensor receiver records stay ordered while the mover exits, the kinematic platform follows its animated target, and public query tags list matching colliders.",
+    },
+    {
+      action: "Choose Disable handoff, then Transfer animation.",
+      expected:
+        "The orange ball keeps its presented pose, moves under a CRC tween while disabled, and returns to physics with zero velocity after completion.",
+    },
+    {
+      action: "Choose Re-enable handoff, Remove owner, or Reset.",
+      expected:
+        "Named commands restore physics ownership, component removal preserves the last generation snapshot, and Reset creates a fresh scene.",
+    },
+  ],
+  knownLimitations: [
+    "The laboratory presents semantic body, event, and query snapshots; screenshot baselines are maintained by the later visual verification pass.",
+    "The example uses one fixed logical viewport and Chromium Canvas behavior rather than a public manual physics clock.",
+  ],
+  learningOrder: 210,
+  visibility: "test-laboratory",
+  visibilityReason:
+    "It exposes authoritative poses, velocities, generations, event order, and ownership stages for deterministic browser evidence.",
+  maturity: "contract",
+};
+
+export const physics2DLabScenarioEntry: ScenarioCatalogEntry<Physics2DLabState> =
+  {
+    metadata: physics2DLabMetadata,
+    canvas: { width: 480, height: 240 },
+    actions: [
+      { id: "settle", label: "Settle / observe" },
+      { id: "impulse", label: "Impulse circle" },
+      { id: "cross-sensor", label: "Cross sensor" },
+      { id: "move-platform", label: "Move platform" },
+      { id: "query", label: "Query world" },
+      { id: "disable-handoff", label: "Disable handoff" },
+      { id: "transfer-animation", label: "Transfer animation" },
+      { id: "reenable-handoff", label: "Re-enable handoff" },
+      { id: "remove-owner", label: "Remove owner" },
+    ],
+    source: {
+      id: "first-class-physics-2d-laboratory-example",
+      language: "tsx",
+      marker:
+        "PHYSICS_2D_LAB_SOURCE_ID = 'first-class-physics-2d-laboratory-example'",
+      path: "packages/scenarios/src/physics-2d-lab.example.tsx",
+    },
+    load: async () => (await import("./physics-2d-lab")).physics2DLabScenario,
+  };
+
+const physics3DMetadata: ScenarioMetadata = {
+  id: "first-class-physics-3d",
+  slug: "physics-3d",
+  title: "First-class 3D physics browser slice",
+  summary:
+    "Drop the complete convex shape vocabulary onto box, triangle-mesh, and heightfield terrain, alongside inferred primitives, a compound body, contacts, impulses, and a visible public query.",
+  category: "Simulation",
+  apiTags: [
+    "PhysicsWorld3D",
+    "dynamicBody3D",
+    "staticBody3D",
+    "collider3D",
+    "crcPhysicsBody3D",
+    "crcPhysicsWorld3D",
+    "applyImpulse3D",
+    "teleportBody3D",
+    "disableBody3D",
+    "enableBody3D",
+    "sleepBody3D",
+    "wakeBody3D",
+    "raycast3D",
+    "WebGLLayer",
+    "Group3D",
+    "Cube",
+    "Sphere",
+    "PhysicsShape3D",
+    "Ellipsoid3D",
+    "Capsule3D",
+    "Cylinder3D",
+    "Cone3D",
+    "ConvexHull3D",
+    "Heightfield3D",
+  ],
+  conceptTags: [
+    "fixed-step 3D physics",
+    "central scheduler",
+    "WebGL presentation",
+    "inferred collider geometry",
+    "compound body",
+    "world queries",
+    "context loss continuity",
+  ],
+  manualSteps: [
+    {
+      action: "Observe the initial drop.",
+      expected:
+        "Cubes, spheres, ellipsoid, capsule, cylinder, cone, convex hull, and one compound body fall onto the box floor, blue triangle mesh, and green heightfield.",
+    },
+    {
+      action: "Choose Grab, Drag, then Throw.",
+      expected:
+        "The blue cube leaves simulation authority, follows an authored pose, then re-enters at that pose with a bounded deterministic throw velocity.",
+    },
+    {
+      action: "Choose Query.",
+      expected:
+        "The public downward ray reports the heightfield and renders a pink marker at the committed hit point.",
+    },
+    {
+      action: "Choose Reset.",
+      expected:
+        "The complete fixed-camera scene remounts at its authored poses with fresh body generations and cleared diagnostics.",
+    },
+    {
+      action:
+        "Try Disable, Authored move, Re-enable, Sleep, Wake, Remove, and Remount.",
+      expected:
+        "The selected cube follows each public lifecycle transition while the one shared scheduler continues presenting the rest of the world.",
+    },
+  ],
+  knownLimitations: [
+    "Pointer-to-world camera ray construction is not public, so grab and drag use deterministic selected-body controls rather than private pick data.",
+    "The scene uses one fixed WebGL2 camera and one fixed logical viewport; it does not expose a public manual clock or a second animation loop.",
+  ],
+  learningOrder: 220,
+  visibility: "test-laboratory",
+  visibilityReason:
+    "It exposes authoritative body snapshots, contact order, compound alignment, query identity, and context-loss continuity for deterministic browser evidence.",
+  maturity: "contract",
+};
+
+export const physics3DScenarioEntry: ScenarioCatalogEntry<Physics3DState> = {
+  metadata: physics3DMetadata,
+  canvas: { width: 480, height: 300 },
+  actions: [
+    { id: "reset", label: "Reset" },
+    { id: "settle", label: "Observe settling" },
+    { id: "drop", label: "Drop cube" },
+    { id: "query", label: "Ray query" },
+    { id: "grab", label: "Grab cube" },
+    { id: "drag", label: "Drag cube" },
+    { id: "throw", label: "Throw cube" },
+    { id: "impulse", label: "Impulse cube" },
+    { id: "teleport", label: "Teleport cube" },
+    { id: "disable", label: "Disable cube" },
+    { id: "authored-move", label: "Move authored cube" },
+    { id: "re-enable", label: "Re-enable cube" },
+    { id: "sleep", label: "Sleep cube" },
+    { id: "wake", label: "Wake cube" },
+    { id: "remove", label: "Remove cube" },
+    { id: "remount", label: "Remount cube" },
+  ],
+  source: {
+    id: "first-class-physics-3d-example",
+    language: "tsx",
+    marker: "PHYSICS_3D_SOURCE_ID = 'first-class-physics-3d-example'",
+    path: "packages/scenarios/src/physics-3d.example.tsx",
+  },
+  load: async () => (await import("./physics-3d")).physics3DScenario,
+};
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> =
   {
     metadata: canvasSurfaceMetadata,
@@ -2064,6 +2264,8 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     signalsLabScenarioEntry,
     animationLabScenarioEntry,
     particleCelebrationLabScenarioEntry,
+    physics2DLabScenarioEntry,
+    physics3DScenarioEntry,
   ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);

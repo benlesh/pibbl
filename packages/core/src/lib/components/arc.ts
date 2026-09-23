@@ -18,6 +18,7 @@ import type {
   ResolvedDrawingStyle,
 } from "../style/types.js";
 import type { RenderingContext2D, SystemStyle } from "../types.js";
+import type { CRCPhysics2DPropExtension } from "../types.js";
 import { arcBounds } from "./arc-geometry.js";
 import {
   createArcPath,
@@ -30,7 +31,7 @@ import {
   resolveNonnegativeShapeLength,
 } from "./shape-style.js";
 
-export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 export interface ArcStyle
   extends

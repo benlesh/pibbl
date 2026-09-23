@@ -110,6 +110,9 @@ importers:
       '@crc/particles':
         specifier: workspace:*
         version: link:packages/particles
+      '@crc/physics':
+        specifier: workspace:*
+        version: link:packages/physics
       '@crc/scenarios':
         specifier: workspace:*
         version: link:packages/scenarios
@@ -186,6 +189,15 @@ importers:
         specifier: workspace:*
         version: link:../webgl
 
+  packages/physics:
+    devDependencies:
+      '@crc/core':
+        specifier: workspace:*
+        version: link:../core
+      '@crc/webgl':
+        specifier: workspace:*
+        version: link:../webgl
+
   packages/scenarios:
     dependencies:
       '@crc/core':
@@ -194,6 +206,9 @@ importers:
       '@crc/particles':
         specifier: workspace:*
         version: link:../particles
+      '@crc/physics':
+        specifier: workspace:*
+        version: link:../physics
       '@crc/three':
         specifier: workspace:*
         version: link:../three
@@ -239,6 +254,9 @@ importers:
       '@crc/particles':
         specifier: workspace:*
         version: link:../packages/particles
+      '@crc/physics':
+        specifier: workspace:*
+        version: link:../packages/physics
       '@crc/scenarios':
         specifier: workspace:*
         version: link:../packages/scenarios

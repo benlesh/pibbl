@@ -237,3 +237,7 @@ lessons, DOM-oracle compatibility suites, and deterministic layout laboratory.
 See the [style contract](./style-system-contract.md), [user-event
 contract](./user-events-contract.md), and [runtime resource ownership
 contract](./runtime-resource-ownership.md).
+
+## 3D physics and layout
+
+Layout treats a `WebGLLayer` as one ordinary allocated Canvas item and does not inspect its inner physics scene. Authored placement at body creation or re-enable seeds world-local pose, but layout is not a continuing constraint on an enabled dynamic body; physics presentation is applied inside the already allocated island and never changes Canvas measurement or allocation.

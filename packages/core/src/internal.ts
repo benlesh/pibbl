@@ -21,7 +21,11 @@ export type {
   CRCBackendToken,
   CRCNestedResolverInput,
 } from './lib/backend/types.js';
-export { defineBackendPrimitive } from './lib/define-primitive.js';
+export {
+  crcInternalRunPurePrimitiveResolver,
+  defineBackendPrimitive,
+  derivePrimitive,
+} from './lib/define-primitive.js';
 export { executeBackendCRC } from './lib/execute-render.js';
 export { mountBackendCRC } from './lib/mount-crc.js';
 export { useInternalHookSlot } from './lib/hooks/hook-slot.js';
@@ -37,10 +41,28 @@ export type {
   CRCEventTargetRegistration,
 } from './lib/events/registrations.js';
 export type { CRCElementSource } from './lib/element/metadata.js';
+export { crcInternalCreatePropAttachment } from './lib/element-enhancers.js';
+export type {
+  CRCInternalMountedPropAttachment,
+  CRCInternalPrimitiveAttachmentInput,
+} from './lib/element-enhancers.js';
 export type {
   CRCHitTestOutput,
 } from './lib/events/paint-entry.js';
 export { hasCRCEventHandler } from './lib/events/event-definitions.js';
+export {
+  crcInternalCurrentSimulationOwner,
+  crcInternalOnSimulationRenderTransactionFinish,
+  crcInternalQueueSimulationBegin,
+  crcInternalQueueSimulationCommitAcknowledgement,
+  crcInternalQueueSimulationComplete,
+  crcInternalRegisterSimulationAdvance,
+  crcInternalRequestSimulationRender,
+} from './lib/scheduler/simulation-participant.js';
+export type {
+  CRCInternalAdvanceLane,
+  CRCInternalSimulationOwner,
+} from './lib/scheduler/simulation-participant.js';
 
 import type {
   CRCBackendEventTargetOptions,

@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 import { ModuleKind } from "typescript/unstable/sync";
 import {
   crcPublicEntryPaths,
+  crcPhysicsEntryPaths,
+  crcStudioPublicEntryPaths,
   collectPublicExports,
   validateApiCoverage,
 } from "./api-exports";
@@ -156,19 +158,39 @@ assert.deepEqual(coverage.missingValues, []);
 assert.deepEqual(coverage.missingTypes, []);
 
 const crcInventory = await collectPublicExports(crcPublicEntryPaths, {});
+const physicsInventory = await collectPublicExports(crcPhysicsEntryPaths, {});
+const studioInventory = await collectPublicExports(
+  crcStudioPublicEntryPaths,
+  {},
+);
 assert.ok(crcInventory.root.values.length > 0);
 assert.ok(crcInventory.root.types.length > 0);
 assert.equal(crcInventory.webgl.values.length, 14);
-assert.equal(crcInventory.webgl.types.length, 33);
+assert.equal(crcInventory.webgl.types.length, 34);
 assert.equal(crcInventory.particles.values.length, 9);
 assert.equal(crcInventory.particles.types.length, 44);
 assert.equal(crcInventory.particlesWebgl.values.length, 2);
 assert.equal(crcInventory.particlesWebgl.types.length, 13);
+assert.equal(physicsInventory.root.values.length, 46);
+assert.equal(physicsInventory.root.types.length, 46);
+assert.equal(physicsInventory.physics2dGeometry.values.length, 19);
+assert.equal(physicsInventory.physics2dGeometry.types.length, 11);
+assert.equal(physicsInventory.physics3d.values.length, 48);
+assert.equal(physicsInventory.physics3d.types.length, 48);
+assert.equal(physicsInventory.physics3dGeometry.values.length, 18);
+assert.equal(physicsInventory.physics3dGeometry.types.length, 13);
+assert.deepEqual(studioInventory.physics3d, physicsInventory.physics3d);
+assert.deepEqual(
+  studioInventory.physics3dGeometry,
+  physicsInventory.physics3dGeometry,
+);
 
 process.stdout.write(
   `Validated public API coverage: ${crcInventory.root.values.length} core values, ` +
     `${crcInventory.root.types.length} core types, ${crcInventory.webgl.values.length} ` +
     `WebGL values, ${crcInventory.webgl.types.length} WebGL types, ` +
     `${crcInventory.particles.values.length + crcInventory.particlesWebgl.values.length} ` +
-    `particle values, and ${crcInventory.particles.types.length + crcInventory.particlesWebgl.types.length} particle type exports.\n`,
+    `particle values, ${crcInventory.particles.types.length + crcInventory.particlesWebgl.types.length} ` +
+    `particle type exports, ${physicsInventory.root.values.length} physics 2D values, and ` +
+    `${physicsInventory.physics3d.values.length} physics 3D values.\n`,
 );

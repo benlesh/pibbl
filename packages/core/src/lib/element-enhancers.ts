@@ -1,11 +1,40 @@
 import { runTeardown } from './teardowns.js';
 import { cloneCRCElement } from './element/create-element.js';
-import { registerElementCloneMetadataHandler } from './element/metadata.js';
+import {
+  getElementSource,
+  registerElementCloneMetadataHandler,
+  type CRCElementSource,
+} from './element/metadata.js';
 import type {
   CRCComponentRefs,
   CRCElement,
   CRCInstance,
 } from './types.js';
+import type { CRCPresentationTransformLineage } from './global-state.js';
+
+export interface CRCInternalPrimitiveAttachmentInput {
+  readonly componentType: Function;
+  readonly componentName: string;
+  readonly props: Readonly<Record<PropertyKey, unknown>>;
+  readonly style: Readonly<Record<PropertyKey, unknown>>;
+  readonly source: CRCElementSource | undefined;
+  readonly parentWorldTransform: DOMMatrix;
+  /** Exact CRC-owned transform lineage at this primitive's parent. */
+  readonly presentationTransformLineage:
+    CRCPresentationTransformLineage | undefined;
+  /** A direct Canvas transform occurred outside the tracked CRC lineage. */
+  readonly hasUntrackedCanvasTransform: boolean;
+}
+
+export interface CRCInternalMountedPropAttachment {
+  update(value: unknown): void;
+  enter(): void;
+  preparePrimitive(
+    input: CRCInternalPrimitiveAttachmentInput,
+  ): Readonly<{ readonly presentationTransform2D?: DOMMatrix }> | void;
+  exit(success: boolean): void;
+  dispose(): void;
+}
 
 export interface CRCElementEnhancerDescriptor {
   readonly key: symbol;
@@ -18,6 +47,9 @@ export interface CRCElementEnhancerDescriptor {
 export interface CRCMountedElementEnhancer {
   update(next: CRCElementEnhancerDescriptor): void;
   enter(): void;
+  preparePrimitive?(
+    input: CRCInternalPrimitiveAttachmentInput,
+  ): Readonly<{ readonly presentationTransform2D?: DOMMatrix }> | void;
   exit(success: boolean): void;
   dispose(): void;
 }
@@ -27,6 +59,18 @@ interface CRCMountedElementEnhancerEntry {
   readonly mounted: CRCMountedElementEnhancer;
 }
 
+interface AttachmentFactoryRecord {
+  readonly property: 'physics';
+  readonly mount: () => CRCInternalMountedPropAttachment;
+}
+
+interface CRCPropAttachmentDescriptor extends CRCElementEnhancerDescriptor {
+  readonly key: typeof PHYSICS_PROP_ATTACHMENT_KEY;
+  readonly value: object;
+}
+
+const PHYSICS_PROP_ATTACHMENT_KEY = Symbol('physics prop attachment');
+
 const elementEnhancers = new WeakMap<
   CRCElement<any>,
   readonly CRCElementEnhancerDescriptor[]
@@ -35,6 +79,7 @@ const mountedElementEnhancers = new WeakMap<
   CRCComponentRefs<any>,
   CRCMountedElementEnhancerEntry[]
 >();
+const propAttachments = new WeakMap<object, AttachmentFactoryRecord>();
 
 registerElementCloneMetadataHandler((source, clone) => {
   const descriptors = elementEnhancers.get(source);
@@ -58,6 +103,16 @@ export function appendElementEnhancer(
     descriptor,
   ]));
   return enhanced;
+}
+
+/** Registers one closed official-package attachment without mutating its public value. */
+export function crcInternalCreatePropAttachment<T extends object>(
+  property: 'physics',
+  publicValue: T,
+  mount: () => CRCInternalMountedPropAttachment,
+): T {
+  propAttachments.set(publicValue, { property, mount });
+  return publicValue;
 }
 
 /** @internal Layer cache key for otherwise field-identical enhanced elements. */
@@ -94,8 +149,15 @@ export function hasElementEnhancer(
 export function reconcileElementEnhancers(
   component: CRCComponentRefs<any>,
   instance: CRCInstance,
+  reconcilePrimitiveAttachments = false,
 ): void {
-  const descriptors = elementEnhancers.get(component.element) ?? [];
+  const privateDescriptors = elementEnhancers.get(component.element) ?? [];
+  const propAttachment = reconcilePrimitiveAttachments ?
+    getPrimitivePropAttachment(component.element) :
+    undefined;
+  const descriptors = propAttachment ?
+    [...privateDescriptors, propAttachment] :
+    privateDescriptors;
   assertUniqueDescriptorKeys(descriptors);
 
   const hasOwnership = mountedElementEnhancers.has(component);
@@ -131,6 +193,27 @@ export function reconcileElementEnhancers(
     }
   }
   disposeEntries(removed);
+}
+
+/** @internal Reports whether a primitive has mounted official attachments. */
+export function hasElementEnhancers(component: CRCComponentRefs<any>): boolean {
+  return (mountedElementEnhancers.get(component) ?? []).some(
+    entry => entry.mounted.preparePrimitive !== undefined,
+  );
+}
+
+/** @internal Prepares mounted official attachments against resolved geometry. */
+export function prepareElementEnhancers(
+  component: CRCComponentRefs<any>,
+  input: CRCInternalPrimitiveAttachmentInput,
+): Readonly<{ readonly presentationTransform2D?: DOMMatrix }> | void {
+  let presentationTransform2D: DOMMatrix | undefined;
+  for (const entry of mountedElementEnhancers.get(component) ?? []) {
+    const prepared = entry.mounted.preparePrimitive?.(input);
+    presentationTransform2D =
+      prepared?.presentationTransform2D ?? presentationTransform2D;
+  }
+  return presentationTransform2D ? { presentationTransform2D } : undefined;
 }
 
 /** @internal */
@@ -190,6 +273,53 @@ function assertUniqueDescriptorKeys(
     }
     keys.add(descriptor.key);
   }
+}
+
+function getPrimitivePropAttachment(
+  element: CRCElement<any>,
+): CRCPropAttachmentDescriptor | undefined {
+  const value = (element.props as Readonly<Record<PropertyKey, unknown>>).physics;
+  if (value === undefined || value === null) return undefined;
+  const record = isObject(value) ? propAttachments.get(value) : undefined;
+  if (!record || record.property !== 'physics') {
+    throw invalidPropAttachmentError(element, 'physics');
+  }
+  return {
+    key: PHYSICS_PROP_ATTACHMENT_KEY,
+    value,
+    mount() {
+      const mounted = record.mount();
+      return {
+        update(next) {
+          mounted.update((next as CRCPropAttachmentDescriptor).value);
+        },
+        enter: () => mounted.enter(),
+        preparePrimitive: input => mounted.preparePrimitive(input),
+        exit: success => mounted.exit(success),
+        dispose: () => mounted.dispose(),
+      };
+    },
+  };
+}
+
+function invalidPropAttachmentError(
+  element: CRCElement<any>,
+  property: 'physics',
+): Error {
+  const componentName = element.type.name || 'Anonymous';
+  const source = getElementSource(element);
+  return new Error(
+    `${componentName} received an unregistered ${property} prop attachment.` +
+      ' Use the matching official CRC package factory.' +
+      (source ?
+        ` JSX source: ${source.fileName}:${source.lineNumber}:${source.columnNumber}.` :
+        ''),
+  );
+}
+
+function isObject(value: unknown): value is object {
+  return (typeof value === 'object' && value !== null) ||
+    typeof value === 'function';
 }
 
 function disposeEntries(entries: readonly CRCMountedElementEnhancerEntry[]): void {

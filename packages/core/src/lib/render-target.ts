@@ -63,11 +63,43 @@ export function getCurrentPaintTransform(): DOMMatrix {
 }
 
 export function getCurrentWorldTransform(): DOMMatrix {
+  const exactWorld = GLOBAL_STATE.worldExactTransform;
+  const paintAnchor = GLOBAL_STATE.worldPaintAnchorTransform;
+  if (exactWorld && paintAnchor) {
+    const currentPaint = getCurrentPaintTransform();
+    if (sameMatrixExactly(paintAnchor, currentPaint)) return exactWorld;
+    return exactWorld.multiply(paintAnchor.inverse()).multiply(currentPaint);
+  }
   const worldBase = GLOBAL_STATE.worldBaseTransform;
   if (!worldBase) {
     throw new Error('No world transform is available.');
   }
   return worldBase.multiply(getCurrentPaintTransform());
+}
+
+/** Whether direct Canvas calls changed paint since the last CRC-owned anchor. */
+export function hasCurrentWorldTransformCanvasDelta(): boolean {
+  const paintAnchor = GLOBAL_STATE.worldPaintAnchorTransform;
+  return paintAnchor !== undefined &&
+    !sameMatrixExactly(paintAnchor, getCurrentPaintTransform());
+}
+
+function sameMatrixExactly(
+  left: DOMMatrixReadOnly,
+  right: DOMMatrixReadOnly,
+): boolean {
+  return left.a === right.a && left.b === right.b &&
+    left.c === right.c && left.d === right.d &&
+    left.e === right.e && left.f === right.f;
+}
+
+export function setCurrentWorldTransformAnchor(exactWorld: DOMMatrix): void {
+  GLOBAL_STATE.worldExactTransform = exactWorld;
+  GLOBAL_STATE.worldPaintAnchorTransform = getCurrentPaintTransform();
+}
+
+export function initializeCurrentWorldTransformAnchor(worldBase: DOMMatrix): void {
+  setCurrentWorldTransformAnchor(worldBase.multiply(getCurrentPaintTransform()));
 }
 
 export function withRenderTarget<T>(
@@ -79,15 +111,22 @@ export function withRenderTarget<T>(
   const previousContext = GLOBAL_STATE.renderContext;
   const previousTarget = GLOBAL_STATE.renderTarget;
   const previousWorldBase = GLOBAL_STATE.worldBaseTransform;
+  const previousWorldExact = GLOBAL_STATE.worldExactTransform;
+  const previousWorldPaintAnchor = GLOBAL_STATE.worldPaintAnchorTransform;
+  const previousLineage = GLOBAL_STATE.presentationTransformLineage;
   try {
     GLOBAL_STATE.renderContext = context;
     GLOBAL_STATE.renderTarget = target;
     GLOBAL_STATE.worldBaseTransform = worldBase;
+    initializeCurrentWorldTransformAnchor(worldBase);
     return work();
   } finally {
     GLOBAL_STATE.renderContext = previousContext;
     GLOBAL_STATE.renderTarget = previousTarget;
     GLOBAL_STATE.worldBaseTransform = previousWorldBase;
+    GLOBAL_STATE.worldExactTransform = previousWorldExact;
+    GLOBAL_STATE.worldPaintAnchorTransform = previousWorldPaintAnchor;
+    GLOBAL_STATE.presentationTransformLineage = previousLineage;
   }
 }
 

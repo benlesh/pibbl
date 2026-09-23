@@ -61,6 +61,12 @@ const stopDevToolsProfile = defineBrowserCommand(async ({ sessionId }, outputPat
 });
 
 export default defineConfig(({ mode }) => ({
+  oxc: {
+    jsx: {
+      runtime: 'automatic',
+      importSource: '@crc/core',
+    },
+  },
   plugins: [
     crcRuntimeSource(mode),
     crcStudioDocs({
@@ -99,6 +105,22 @@ export default defineConfig(({ mode }) => ({
         replacement: fileURLToPath(new URL('./packages/three/src/index.ts', import.meta.url)),
       },
       {
+        find: /^@crc\/physics\/2d\/geometry$/,
+        replacement: fileURLToPath(new URL('./packages/physics/src/2d-geometry.ts', import.meta.url)),
+      },
+      {
+        find: /^@crc\/physics\/2d$/,
+        replacement: fileURLToPath(new URL('./packages/physics/src/2d.ts', import.meta.url)),
+      },
+      {
+        find: /^@crc\/physics\/3d\/geometry$/,
+        replacement: fileURLToPath(new URL('./packages/physics/src/3d-geometry.ts', import.meta.url)),
+      },
+      {
+        find: /^@crc\/physics\/3d$/,
+        replacement: fileURLToPath(new URL('./packages/physics/src/3d.ts', import.meta.url)),
+      },
+      {
         find: /^@crc\/webgl\/internal$/,
         replacement: fileURLToPath(new URL('./packages/webgl/src/internal.ts', import.meta.url)),
       },
@@ -118,6 +140,11 @@ export default defineConfig(({ mode }) => ({
       '.pnpm-store/**',
       '.superpowers/**',
       '.worktrees/**',
+      'packages/physics/src/lib/2d/public-types.test.ts',
+      'packages/physics/src/lib/3d/public-types.test.ts',
+      ...(mode === 'built' ? [] : [
+        'packages/webgl/test/internal-entry-identity.test.tsx',
+      ]),
     ],
     browser: {
       commands: {

@@ -337,6 +337,54 @@ describe('backend-neutral component traversal', () => {
     parent.dispose();
   });
 
+  it('isolates a no-attachment backend frame from Canvas anchors and restores its caller', () => {
+    const backend = createRecordingBackend('webgl-no-attachment');
+    const observedAnchors: Array<readonly [DOMMatrix | undefined, DOMMatrix | undefined]> = [];
+    const driver: CRCBackendDriver<TestEnvironment> = {
+      ...backend.driver,
+      runPrimitive(frame, input, runProgram) {
+        observedAnchors.push([
+          GLOBAL_STATE.worldExactTransform,
+          GLOBAL_STATE.worldPaintAnchorTransform,
+        ]);
+        const program = input.definition.program as (
+          props: typeof input.props,
+          style: typeof input.style,
+          environment: TestEnvironment,
+        ) => CRCNode | void;
+        runProgram(() => program(input.props, input.style, frame.environment));
+      },
+    };
+    const Primitive = defineBackendPrimitive<{}, {}, {}, {}, TestEnvironment>(
+      driver.token,
+      function renderWebglStylePrimitive() {},
+    );
+    const parentCanvas = createCanvas();
+    const parent = mountCRC(parentCanvas, undefined);
+    const child = mountBackendCRC(
+      new OffscreenCanvas(10, 10),
+      <Primitive />,
+      {
+        parent: parentCanvas,
+        logicalWidth: 10,
+        logicalHeight: 10,
+        driver,
+      },
+    );
+    const callerExact = new DOMMatrix().translate(17, 19);
+    const callerPaint = new DOMMatrix().rotate(23);
+    GLOBAL_STATE.worldExactTransform = callerExact;
+    GLOBAL_STATE.worldPaintAnchorTransform = callerPaint;
+
+    expect(() => child.render(<Primitive />, 1)).not.toThrow();
+    expect(observedAnchors).toEqual([[undefined, undefined]]);
+    expect(GLOBAL_STATE.worldExactTransform).toBe(callerExact);
+    expect(GLOBAL_STATE.worldPaintAnchorTransform).toBe(callerPaint);
+
+    child.dispose();
+    parent.dispose();
+  });
+
   it('runs component after-render work before returning control to the backend', () => {
     const backend = createRecordingBackend('test');
     const Primitive = defineBackendPrimitive<{}, {}, {}, {}, TestEnvironment>(

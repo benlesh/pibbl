@@ -11,6 +11,21 @@ const studioDocsAcceptanceOutput = resolve(
 
 export default defineConfig(({ mode }) => {
   const isStudioDocsAcceptance = mode === "studio-docs-acceptance";
+  const sourceAliases = [
+    ["@crc/core/internal", "../packages/core/src/internal.ts"],
+    ["@crc/core/jsx-dev-runtime", "../packages/core/src/jsx-dev-runtime.ts"],
+    ["@crc/core/jsx-runtime", "../packages/core/src/jsx-runtime.ts"],
+    ["@crc/core", "../packages/core/src/index.ts"],
+    ["@crc/physics/2d/geometry", "../packages/physics/src/2d-geometry.ts"],
+    ["@crc/physics/2d", "../packages/physics/src/2d.ts"],
+    ["@crc/physics/3d/geometry", "../packages/physics/src/3d-geometry.ts"],
+    ["@crc/physics/3d", "../packages/physics/src/3d.ts"],
+    ["@crc/webgl/internal", "../packages/webgl/src/internal.ts"],
+    ["@crc/webgl", "../packages/webgl/src/index.ts"],
+  ].map(([find, path]) => ({
+    find: new RegExp(`^${find.replaceAll("/", "\\/")}$`, "u"),
+    replacement: resolve(import.meta.dirname, path),
+  }));
   return {
     plugins: [
       ...(mode === "built" ? [assertBuiltCore()] : []),
@@ -18,6 +33,7 @@ export default defineConfig(({ mode }) => {
       crcStudioDocs({ repositoryRoot: resolve(import.meta.dirname, "..") }),
     ],
     resolve: {
+      alias: mode === "built" ? [] : sourceAliases,
       tsconfigPaths: mode !== "built",
     },
     define: {

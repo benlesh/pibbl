@@ -43,6 +43,9 @@ export interface SystemStyle {
 
 type PrimitiveReservedKey = "key" | "style";
 
+/** Empty declaration-merging base for the optional official 2D physics package. */
+export interface CRCPhysics2DPropExtension {}
+
 type UnionKeys<T> = T extends unknown ? keyof T : never;
 
 export type PrimitiveProgramProps<P> = 0 extends 1 & P

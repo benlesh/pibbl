@@ -371,3 +371,7 @@ function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
   identical. Custom callbacks and nonserializable values stay on the main thread.
 - Applications select reduced or alternate motion; CRC does not infer
   accessibility preferences or decide which motion is essential.
+
+## 3D physics interoperation
+
+Animation and physics share the realm transaction but never compete for one pose. Enabled dynamic bodies are solver-owned; kinematic position and orientation signal targets are sampled after animation staging and before solving; disabled bodies return root-pose authority to authored style or animation. Re-enabling seeds the current authored pose and an explicit zero-or-preserve velocity policy, while ordinary non-pose appearance remains animatable in every mode.

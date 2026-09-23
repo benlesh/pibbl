@@ -10,6 +10,7 @@ symbols:
   [
     AmbientLightProps,
     AmbientLightStyle,
+    CRCPhysics3DPropExtension,
     CRCWebGLGeometry,
     CRCWebGLGeometryInput,
     CRCWebGLLambertMaterial,
@@ -56,6 +57,11 @@ Orbit-camera options, handlers, and results are documented with
 ## AmbientLightStyle
 
 `AmbientLightStyle` provides optional `color` and `intensity`.
+
+## CRCPhysics3DPropExtension
+
+`CRCPhysics3DPropExtension` is an empty declaration-merging hook reserved for
+the matching official 3D physics package. Applications do not add fields to it.
 
 ## CRCWebGLGeometry
 

@@ -8,6 +8,7 @@ import {
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
+import type { CRCPhysics2DPropExtension } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import type {
@@ -23,7 +24,7 @@ import { validateCoordinates } from '../geometry/validation.js';
 import type { StyleResolutionContext } from '../types.js';
 import { renderPath } from './path.js';
 
-export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 export interface LineStyle
   extends SystemStyle,

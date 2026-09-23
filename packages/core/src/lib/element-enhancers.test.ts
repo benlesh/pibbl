@@ -13,6 +13,7 @@ import { Absolute } from './layout/absolute';
 import { Flow } from './layout/flow';
 import { Flex } from './layout/flex';
 import { Grid } from './layout/grid';
+import { Layer } from './components/layer';
 import { crc } from './crc';
 import {
   appendElementEnhancer,
@@ -39,6 +40,11 @@ import type { BoxStyle, LayoutItemStyle } from './style/types';
 import type { CRCComponentRefs, CRCElement, CRCNode, CRCInstance, MeasureResult, SystemStyle } from './types';
 import type { CRCElement as PublicCRCElement } from '../index';
 import { definePrimitive } from './define-primitive';
+import {
+  crcInternalCreatePropAttachment,
+  type CRCInternalMountedPropAttachment,
+  type CRCInternalPrimitiveAttachmentInput,
+} from '@crc/core/internal';
 
 interface TestMountedEnhancer {
   update(next: TestEnhancerDescriptor): void;
@@ -67,6 +73,26 @@ interface TestDescriptorFailures {
 interface EnhancerLayoutStyle extends BoxStyle, LayoutItemStyle {}
 
 interface ResolvedEnhancerLayoutStyle extends SystemStyle {
+  readonly width: number;
+  readonly height: number;
+}
+
+interface TestAttachmentValue {
+  readonly generation: number;
+  readonly name: string;
+}
+
+interface AttachmentPrimitiveProps {
+  readonly children?: CRCNode;
+  readonly physics?: TestAttachmentValue;
+}
+
+interface AttachmentPrimitiveStyle extends SystemStyle, BoxStyle, LayoutItemStyle {
+  readonly width: number;
+  readonly height: number;
+}
+
+interface ResolvedAttachmentPrimitiveStyle extends SystemStyle {
   readonly width: number;
   readonly height: number;
 }
@@ -580,6 +606,268 @@ describe('identity-transparent element enhancers', () => {
   });
 });
 
+describe('registered primitive prop attachments', () => {
+  it('mounts once, updates recreated values, scopes resolved traversal, and disposes on removal and root teardown', () => {
+    const trace: string[] = [];
+    const Child = (_props: {}) => {
+      trace.push('render:child');
+    };
+    const Primitive = definePrimitive<
+      AttachmentPrimitiveProps,
+      AttachmentPrimitiveStyle,
+      AttachmentPrimitiveStyle,
+      ResolvedAttachmentPrimitiveStyle
+    >((props, style) => {
+      trace.push(`render:primitive:${style.width}x${style.height}`);
+      return props.children;
+    }, {
+      resolveStyle: style => ({
+        width: style.width,
+        height: style.height,
+      }),
+    });
+    const build = (generation: number, attached: boolean) => createElement(
+      Primitive,
+      {
+        key: 'stable',
+        physics: attached ? createAttachment('body', generation, trace) : undefined,
+        style: { width: 30 + generation, height: 20 },
+        children: createElement(Child, {}),
+      },
+    );
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, build(1, true));
+    activeControllers.add(controller);
+
+    executeRender(canvas, 1);
+    expect(trace).toEqual([
+      'mount:body:1',
+      'update:body:1',
+      'enter:body',
+      'prepare:body:31x20',
+      'render:primitive:31x20',
+      'render:child',
+      'exit:body:true',
+    ]);
+
+    trace.length = 0;
+    executeRender(canvas, 2, build(2, true));
+    expect(trace).toEqual([
+      'update:body:2',
+      'enter:body',
+      'prepare:body:32x20',
+      'render:primitive:32x20',
+      'render:child',
+      'exit:body:true',
+    ]);
+
+    trace.length = 0;
+    executeRender(canvas, 3, build(3, false));
+    expect(trace).toEqual([
+      'dispose:body',
+      'render:primitive:33x20',
+      'render:child',
+    ]);
+
+    trace.length = 0;
+    executeRender(canvas, 4, build(4, true));
+    trace.length = 0;
+    controller.dispose();
+    controller.dispose();
+    expect(trace).toEqual(['dispose:body']);
+  });
+
+  it('treats physics as ordinary application data until a custom component forwards it to a primitive', () => {
+    const trace: string[] = [];
+    const Primitive = definePrimitive<AttachmentPrimitiveProps>(() => {
+      trace.push('render:primitive');
+    });
+    const Wrapper = ({
+      forward,
+      physics,
+    }: {
+      readonly forward: boolean;
+      readonly physics: TestAttachmentValue;
+    }) => {
+      trace.push(`render:wrapper:${physics.generation}`);
+      return createElement(Primitive, forward ? { physics } : {});
+    };
+    const attachment = createAttachment('forwarded', 1, trace);
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, createElement(Wrapper, {
+      forward: false,
+      physics: attachment,
+    }));
+    activeControllers.add(controller);
+
+    executeRender(canvas, 1);
+    expect(trace).toEqual([
+      'render:wrapper:1',
+      'render:primitive',
+    ]);
+
+    trace.length = 0;
+    executeRender(canvas, 2, createElement(Wrapper, {
+      forward: true,
+      physics: attachment,
+    }));
+    expect(trace).toEqual([
+      'render:wrapper:1',
+      'mount:forwarded:1',
+      'update:forwarded:1',
+      'enter:forwarded',
+      'prepare:forwarded:undefinedxundefined',
+      'render:primitive',
+      'exit:forwarded:true',
+    ]);
+  });
+
+  it('unwinds a failed attachment preparation in LIFO order and releases the failed host', () => {
+    const trace: string[] = [];
+    let resourceAcquisitions = 0;
+    const Primitive = definePrimitive<AttachmentPrimitiveProps>(() => {
+      trace.push('render:primitive');
+    });
+    const enhanced = appendElementEnhancer(
+      createElement(Primitive, {
+        physics: createAttachment('physics', 1, trace, {
+          prepareError: 'self collider requires a supported primitive resolver',
+          onPrepareAccepted: () => resourceAcquisitions++,
+        }),
+      }),
+      createDescriptor('policy', Symbol('policy'), 1, trace),
+    );
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, enhanced);
+    activeControllers.add(controller);
+
+    expect(() => executeRender(canvas, 1)).toThrowError(
+      'self collider requires a supported primitive resolver',
+    );
+    expect(trace).toEqual([
+      'mount:policy',
+      'update:policy:1',
+      'mount:physics:1',
+      'update:physics:1',
+      'enter:policy',
+      'enter:physics',
+      'prepare:physics:undefinedxundefined',
+      'exit:physics:false',
+      'exit:policy:false',
+      'dispose:physics',
+      'dispose:policy',
+    ]);
+    expect(resourceAcquisitions).toBe(0);
+    expect(getCRCInstance(canvas).refs.size).toBe(0);
+  });
+
+  it('remounts on keyed replacement and preserves attachment identity through policy and layout clones', () => {
+    const trace: string[] = [];
+    const prepared: CRCInternalPrimitiveAttachmentInput[] = [];
+    const attachment = createAttachment('placed', 1, trace, { prepared });
+    const Primitive = definePrimitive<
+      AttachmentPrimitiveProps,
+      AttachmentPrimitiveStyle,
+      AttachmentPrimitiveStyle,
+      ResolvedAttachmentPrimitiveStyle
+    >(() => {
+      trace.push('render:primitive');
+    }, {
+      resolveStyle: style => ({
+        width: style.width,
+        height: style.height,
+      }),
+    });
+    const build = (key: string) => createElement(Absolute, {
+      style: { width: 100, height: 60 },
+      children: focusManaged(createElement(Primitive, {
+        key,
+        physics: attachment,
+        style: { left: 17, top: 13, width: 30, height: 20 },
+      })),
+    });
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, build('first'));
+    activeControllers.add(controller);
+
+    executeRender(canvas, 1);
+    expect(prepared).toHaveLength(1);
+    expect(matrixValues(prepared[0].parentWorldTransform)).toEqual([
+      1, 0, 0, 1, 17, 13,
+    ]);
+
+    trace.length = 0;
+    executeRender(canvas, 2, build('second'));
+    expect(trace).toEqual([
+      'mount:placed:1',
+      'update:placed:1',
+      'enter:placed',
+      'prepare:placed:30x20',
+      'render:primitive',
+      'exit:placed:true',
+      'dispose:placed',
+    ]);
+  });
+
+  it('keeps a stable registered value equal in retained Layer snapshots', () => {
+    const trace: string[] = [];
+    const attachment = createAttachment('layer', 1, trace);
+    const Primitive = definePrimitive<AttachmentPrimitiveProps>(() => {
+      trace.push('render:primitive');
+    });
+    const build = () => createElement(Layer, {
+      style: { width: 40, height: 30 },
+      children: createElement(Primitive, { physics: attachment }),
+    });
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, build());
+    activeControllers.add(controller);
+
+    executeRender(canvas, 1);
+    expect(trace).toContain('render:primitive');
+
+    trace.length = 0;
+    executeRender(canvas, 2, build());
+    expect(trace).toEqual([]);
+  });
+
+  it('lets friend packages reject incompatible metadata before acquiring resources', () => {
+    const trace: string[] = [];
+    let resourceAcquisitions = 0;
+    let primitiveRenders = 0;
+    const publicValue = Object.freeze({ generation: 1, name: '3d-body' });
+    const wrongDimension = crcInternalCreatePropAttachment(
+      'physics',
+      publicValue,
+      () => {
+        trace.push('validate:dimension');
+        if (publicValue.name.startsWith('3d')) {
+          throw new Error(
+            'Rectangle physics attachment has dimension 3d; expected 2d',
+          );
+        }
+        resourceAcquisitions++;
+        return createMountedAttachment('wrong-dimension', trace);
+      },
+    );
+    const Primitive = definePrimitive<AttachmentPrimitiveProps>(() => {
+      primitiveRenders++;
+    });
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, createElement(Primitive, {
+      physics: wrongDimension,
+    }));
+    activeControllers.add(controller);
+
+    expect(() => executeRender(canvas, 1)).toThrowError(
+      'Rectangle physics attachment has dimension 3d; expected 2d',
+    );
+    expect(trace).toEqual(['validate:dimension']);
+    expect(resourceAcquisitions).toBe(0);
+    expect(primitiveRenders).toBe(0);
+  });
+});
+
 describe('built-in transparent policies', () => {
   it('preserves exact element fields while preparing focus and directional descriptors', () => {
     interface ConstructorStyle extends SystemStyle {
@@ -940,6 +1228,68 @@ function createDescriptor(
   };
 }
 
+function createAttachment(
+  name: string,
+  generation: number,
+  trace: string[],
+  options: Readonly<{
+    onPrepareAccepted?: () => void;
+    prepareError?: string;
+    prepared?: CRCInternalPrimitiveAttachmentInput[];
+    presentationTransform2D?: DOMMatrix;
+  }> = {},
+): TestAttachmentValue {
+  const publicValue = Object.freeze({ name, generation });
+  return crcInternalCreatePropAttachment('physics', publicValue, () => {
+    trace.push(`mount:${name}:${generation}`);
+    return createMountedAttachment(name, trace, {
+      onPrepareAccepted: options.onPrepareAccepted,
+      prepareError: options.prepareError,
+      prepared: options.prepared,
+      presentationTransform2D: options.presentationTransform2D,
+    });
+  });
+}
+
+function createMountedAttachment(
+  name: string,
+  trace: string[],
+  options: Readonly<{
+    onPrepareAccepted?: () => void;
+    prepareError?: string;
+    prepared?: CRCInternalPrimitiveAttachmentInput[];
+    presentationTransform2D?: DOMMatrix;
+  }> = {},
+): CRCInternalMountedPropAttachment {
+  return {
+    update(value) {
+      trace.push(
+        `update:${name}:${(value as TestAttachmentValue).generation}`,
+      );
+    },
+    enter() {
+      trace.push(`enter:${name}`);
+    },
+    preparePrimitive(input) {
+      options.prepared?.push(input);
+      trace.push(
+        `prepare:${name}:${String(input.style.width)}x${String(input.style.height)}`,
+      );
+      if (options.prepareError) throw new Error(options.prepareError);
+      options.onPrepareAccepted?.();
+      if (options.presentationTransform2D) {
+        return { presentationTransform2D: options.presentationTransform2D };
+      }
+    },
+    exit(success) {
+      trace.push(`exit:${name}:${success}`);
+    },
+    dispose() {
+      trace.push(`dispose:${name}`);
+    },
+  };
+}
+
 function createCanvas(): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = 100;
@@ -968,6 +1318,10 @@ function teardownCount(teardowns: unknown): number {
 
 function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {
   return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
+}
+
+function matrixValues(matrix: DOMMatrixReadOnly): readonly number[] {
+  return [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f];
 }
 
 function nextFrame(): Promise<void> {

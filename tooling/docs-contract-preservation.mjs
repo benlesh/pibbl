@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "d9c3fa457d216f257671a1b6a8d4e25108702758505ebc3d07a0cf673374b65e";
+  "1c57fb7abf599804e5bbf6b912125b39c978dd2e8e090d8f9db5e7e759b42e1b";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const SIGNALS_SCHEDULER_APPROVED_SECTIONS = new Set([
@@ -1217,7 +1217,7 @@ export function assertContractPreservationBaseline({
       if (role === "source") {
         assert.match(
           evidence.path,
-          /^packages\/core\/src\/.*\.[cm]?[jt]sx?$/u,
+          /^packages\/(?:core|physics|webgl)\/src\/.*\.[cm]?[jt]sx?$/u,
           `${label} implementation evidence must be runtime source`,
         );
         assert.doesNotMatch(
@@ -1228,8 +1228,8 @@ export function assertContractPreservationBaseline({
       } else {
         assert.match(
           evidence.path,
-          /^packages\/core\/(?:src|test)\/.*\.test\.[cm]?[jt]sx?$/u,
-          `${label} executable evidence must be a core test`,
+          /^packages\/(?:core|physics|webgl)\/(?:src|test)\/.*\.test\.[cm]?[jt]sx?$/u,
+          `${label} executable evidence must be an official package test`,
         );
       }
       assert.ok(

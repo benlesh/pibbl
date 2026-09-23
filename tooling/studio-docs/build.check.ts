@@ -8,7 +8,7 @@ import {
   tutorialSnapshotCatalog,
 } from "@crc/scenarios";
 import { buildNavigation } from "../../playground/src/app/navigation";
-import { collectPublicExports, crcPublicEntryPaths } from "./api-exports";
+import { collectPublicExports, crcStudioPublicEntryPaths } from "./api-exports";
 import {
   buildStudioDocumentation,
   toStudioDocumentationSearchInput,
@@ -478,7 +478,7 @@ order: ${String(order)}
 
 const real = await buildStudioDocumentation({
   repositoryRoot: resolve(import.meta.dirname, "../.."),
-  apiInventory: await collectPublicExports(crcPublicEntryPaths, {}),
+  apiInventory: await collectPublicExports(crcStudioPublicEntryPaths, {}),
   examples: learningExampleCatalog,
   workbenchSources: [...learningExampleCatalog, ...tutorialSnapshotCatalog],
 });
@@ -593,6 +593,7 @@ assert.deepEqual(
     "Add WebGL islands",
     "Create particle effects",
     "Light WebGL scenes",
+    "Add first-class 3D physics",
     "Add focus and keyboard navigation",
     "Create custom components and primitives",
     "Integrate with React",

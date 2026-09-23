@@ -1,0 +1,143 @@
+import { describe, expect, it } from "vitest";
+import {
+  boxShape3D,
+  capsuleShape3D,
+  coneShape3D,
+  convexHullShape3D,
+  cylinderShape3D,
+  ellipsoidShape3D,
+  sphereShape3D,
+} from "../../../3d-geometry.js";
+import { IDENTITY_POSE_3D, copyPose3D } from "../math.js";
+import { requireShapeRecord3D } from "../shape-records.js";
+import {
+  prepareConvexShape3D,
+  supportMinkowski3D,
+  supportShape3D,
+} from "./support.js";
+
+describe("convex 3D support maps", () => {
+  it("chooses the lower canonical box vertex on exact support ties", () => {
+    const box = prepareConvexShape3D(
+      requireShapeRecord3D(boxShape3D({ width: 4, height: 2, depth: 6 })),
+      IDENTITY_POSE_3D,
+    );
+    const output = new Float64Array(3);
+
+    expect(supportShape3D(output, box, 1, 0, 0)).toBe(1);
+    expect([...output]).toEqual([2, -1, -3]);
+    expect(supportShape3D(output, box, 0, 1, 0)).toBe(2);
+    expect([...output]).toEqual([-2, 1, -3]);
+    expect(supportShape3D(output, box, 0, 0, 1)).toBe(4);
+    expect([...output]).toEqual([-2, -1, 3]);
+  });
+
+  it("supports rotated boxes and analytic spheres without exposing scratch arrays", () => {
+    const rotated = prepareConvexShape3D(
+      requireShapeRecord3D(boxShape3D({ width: 4, height: 2, depth: 2 })),
+      copyPose3D(
+        {
+          position: [3, 0, 0],
+          orientation: [0, 0, Math.SQRT1_2, Math.SQRT1_2],
+        },
+        "pose",
+      ),
+    );
+    const sphere = prepareConvexShape3D(
+      requireShapeRecord3D(sphereShape3D({ radius: 1 })),
+      IDENTITY_POSE_3D,
+    );
+    const output = new Float64Array(3);
+
+    supportShape3D(output, rotated, 0, 1, 0);
+    expectVectorClose(output, [4, 2, -1]);
+    const minkowski = supportMinkowski3D(rotated, sphere, 1, 0, 0);
+    expect(minkowski.firstFeature).toBe(0);
+    expect(minkowski.secondFeature).toBe(0);
+    expect(minkowski.x).toBeCloseTo(5, 12);
+  });
+
+  it("uses exact analytic support for smooth convex families", () => {
+    const output = new Float64Array(3);
+    const ellipsoid = prepareConvexShape3D(
+      requireShapeRecord3D(ellipsoidShape3D({ radii: [2, 3, 4] })),
+      IDENTITY_POSE_3D,
+    );
+    supportShape3D(output, ellipsoid, 1, 1, 0);
+    const denominator = Math.hypot(2, 3);
+    expectVectorClose(output, [4 / denominator, 9 / denominator, 0]);
+
+    const cylinder = prepareConvexShape3D(
+      requireShapeRecord3D(cylinderShape3D({ radius: 2, halfHeight: 3 })),
+      IDENTITY_POSE_3D,
+    );
+    supportShape3D(output, cylinder, 1, 0, 1);
+    expectVectorClose(output, [Math.SQRT2, -3, Math.SQRT2]);
+
+    const cone = prepareConvexShape3D(
+      requireShapeRecord3D(coneShape3D({ radius: 2, halfHeight: 3 })),
+      IDENTITY_POSE_3D,
+    );
+    supportShape3D(output, cone, 0, 1, 0);
+    expectVectorClose(output, [0, 3, 0]);
+  });
+
+  it("keeps smooth support positively homogeneous below the geometry scale", () => {
+    for (const publicShape of [
+      ellipsoidShape3D({ radii: [2, 1, 0.5] }),
+      capsuleShape3D({ start: [0, -1, 0], end: [0, 1, 0], radius: 0.5 }),
+      cylinderShape3D({ radius: 0.5, halfHeight: 1 }),
+      coneShape3D({ radius: 0.5, halfHeight: 1 }),
+    ]) {
+      const shape = prepareConvexShape3D(
+        requireShapeRecord3D(publicShape),
+        IDENTITY_POSE_3D,
+      );
+      const ordinary = new Float64Array(3);
+      const tiny = new Float64Array(3);
+      const huge = new Float64Array(3);
+      supportShape3D(ordinary, shape, 1, 0.25, -0.5);
+      supportShape3D(tiny, shape, 1e-300, 0.25e-300, -0.5e-300);
+      supportShape3D(huge, shape, 1e300, 0.25e300, -0.5e300);
+      expect([...tiny]).toEqual([...ordinary]);
+      expect([...huge]).toEqual([...ordinary]);
+    }
+  });
+
+  it("locks canonical hull ties independently of direction magnitude", () => {
+    const hull = prepareConvexShape3D(
+      requireShapeRecord3D(
+        convexHullShape3D({
+          points: [
+            [-1, -1, -1],
+            [1, -1, -1],
+            [-1, 1, -1],
+            [1, 1, -1],
+            [-1, -1, 1],
+            [1, -1, 1],
+            [-1, 1, 1],
+            [1, 1, 1],
+          ],
+        }),
+      ),
+      IDENTITY_POSE_3D,
+    );
+    const ordinary = new Float64Array(3);
+    const tiny = new Float64Array(3);
+    const huge = new Float64Array(3);
+    const ordinaryFeature = supportShape3D(ordinary, hull, 0, 1, 0);
+    expect(supportShape3D(tiny, hull, 0, 1e-300, 0)).toBe(ordinaryFeature);
+    expect(supportShape3D(huge, hull, 0, 1e300, 0)).toBe(ordinaryFeature);
+    expect([...tiny]).toEqual([...ordinary]);
+    expect([...huge]).toEqual([...ordinary]);
+  });
+});
+
+function expectVectorClose(
+  actual: ArrayLike<number>,
+  expected: readonly number[],
+): void {
+  expected.forEach((value, index) =>
+    expect(actual[index]).toBeCloseTo(value, 12),
+  );
+}

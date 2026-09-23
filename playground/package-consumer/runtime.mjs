@@ -5,6 +5,11 @@ import * as webglInternal from '@crc/webgl/internal';
 import * as particles from '@crc/particles';
 import * as particlesWebGL from '@crc/particles/webgl';
 import * as threeAdapter from '@crc/three';
+import * as physics3d from '@crc/physics/3d';
+import * as physics3dGeometry from '@crc/physics/3d/geometry';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { createRequire } from 'node:module';
 import {
   Fragment as ProductionFragment,
   jsx,
@@ -104,20 +109,30 @@ if (JSON.stringify(actual) !== JSON.stringify(expected)) {
 const expectedInternal = [
   'cancelBackendMountFrame',
   'crcInternalAssertCommandAllowed',
+  'crcInternalCreatePropAttachment',
   'crcInternalCreateSignalConsumer',
   'crcInternalCurrentFrame',
   'crcInternalCurrentRenderOwner',
+  'crcInternalCurrentSimulationOwner',
   'crcInternalOnRenderFinish',
+  'crcInternalOnSimulationRenderTransactionFinish',
   'crcInternalPaintTarget',
   'crcInternalQueueBegin',
   'crcInternalQueueComplete',
   'crcInternalQueueCurrentCommit',
   'crcInternalQueueCurrentComplete',
+  'crcInternalQueueSimulationBegin',
+  'crcInternalQueueSimulationCommitAcknowledgement',
+  'crcInternalQueueSimulationComplete',
   'crcInternalRegisterAdvance',
+  'crcInternalRegisterSimulationAdvance',
   'crcInternalRequestRender',
   'crcInternalRequestRendererWork',
+  'crcInternalRequestSimulationRender',
+  'crcInternalRunPurePrimitiveResolver',
   'createBackendToken',
   'defineBackendPrimitive',
+  'derivePrimitive',
   'executeBackendCRC',
   'getBackendEnvironment',
   'getCurrentBackendHostCanvas',
@@ -163,6 +178,27 @@ if (actual.length !== 78) {
   throw new Error(`Expected 78 @crc/core runtime exports, received ${actual.length}.`);
 }
 
+const requireFromRuntime = createRequire(import.meta.url);
+const coreEntry = requireFromRuntime.resolve('@crc/core');
+const internalEntry = requireFromRuntime.resolve('@crc/core/internal');
+const coreSource = readFileSync(coreEntry, 'utf8');
+const internalSource = readFileSync(internalEntry, 'utf8');
+const chunkImports = source => new Set(
+  [...source.matchAll(/from "(\.\/chunks\/[^"\n]+)"/gu)]
+    .map(match => match[1]),
+);
+const coreChunks = chunkImports(coreSource);
+const sharedSchedulerChunk = [...chunkImports(internalSource)].find(chunk =>
+  coreChunks.has(chunk) &&
+  readFileSync(resolve(dirname(internalEntry), chunk), 'utf8')
+    .includes('function registerAdvanceParticipant'),
+);
+if (sharedSchedulerChunk === undefined) {
+  throw new Error(
+    '@crc/core/internal did not share the packed core scheduler identity.',
+  );
+}
+
 const runtimeCount = core.signal(2, { debugName: 'runtime count' });
 const runtimeReadonly = runtimeCount.asReadonly();
 const runtimeComputed = core.computed(() => runtimeReadonly.get() * 3);
@@ -205,6 +241,51 @@ const actualWebGL = Object.keys(webgl).sort();
 if (JSON.stringify(actualWebGL) !== JSON.stringify(expectedWebGL)) {
   throw new Error(`Unexpected @crc/webgl exports: ${actualWebGL.join(', ')}`);
 }
+
+const expectedPhysics3D = [
+  'Box3D', 'Capsule3D', 'Cone3D', 'ConvexHull3D', 'Cylinder3D',
+  'Ellipsoid3D', 'Heightfield3D', 'PhysicsShape3D', 'PhysicsWorld3D',
+  'applyForce3D', 'applyImpulse3D', 'applyTorque3D', 'boundsOfShape3D',
+  'boxShape3D', 'capsuleShape3D', 'collider3D', 'coneShape3D',
+  'contactBetweenShapes3D', 'containsPoint3D', 'convexHullShape3D',
+  'crcPhysicsBody3D', 'crcPhysicsWorld3D', 'cylinderShape3D',
+  'disableBody3D', 'distanceBetweenShapes3D', 'dynamicBody3D',
+  'ellipsoidShape3D', 'enableBody3D', 'heightfieldShape3D',
+  'kinematicBody3D', 'massProperties3D', 'overlapShape3D',
+  'overlapShapes3D', 'queryAabb3D', 'queryPoint3D', 'raycast3D',
+  'raycastShape3D', 'setAngularVelocity3D', 'setLinearVelocity3D',
+  'shapeCast3D', 'shapeCastAgainstShape3D', 'sleepBody3D', 'sphereShape3D',
+  'staticBody3D', 'teleportBody3D', 'transformShape3D',
+  'triangleMeshShape3D', 'wakeBody3D',
+].sort();
+const expectedPhysics3DGeometry = [
+  'boundsOfShape3D', 'boxShape3D', 'capsuleShape3D', 'coneShape3D',
+  'contactBetweenShapes3D', 'containsPoint3D', 'convexHullShape3D',
+  'cylinderShape3D', 'distanceBetweenShapes3D', 'ellipsoidShape3D',
+  'heightfieldShape3D', 'massProperties3D', 'overlapShapes3D',
+  'raycastShape3D', 'shapeCastAgainstShape3D', 'sphereShape3D',
+  'transformShape3D', 'triangleMeshShape3D',
+].sort();
+if (JSON.stringify(Object.keys(physics3d).sort()) !== JSON.stringify(expectedPhysics3D)) {
+  throw new Error(`Unexpected @crc/physics/3d exports: ${Object.keys(physics3d).sort().join(', ')}`);
+}
+if (JSON.stringify(Object.keys(physics3dGeometry).sort()) !== JSON.stringify(expectedPhysics3DGeometry)) {
+  throw new Error(`Unexpected @crc/physics/3d/geometry exports: ${Object.keys(physics3dGeometry).sort().join(', ')}`);
+}
+for (const exportName of expectedPhysics3D) {
+  if (typeof physics3d[exportName] !== 'function') {
+    throw new Error(`Expected @crc/physics/3d ${exportName} to be callable.`);
+  }
+}
+const packedPhysicsSphere = physics3dGeometry.sphereShape3D({ radius: 1 });
+const packedPhysicsHit = physics3dGeometry.raycastShape3D(
+  packedPhysicsSphere,
+  { position: [0, 0, 0], orientation: [0, 0, 0, 1] },
+  { origin: [-2, 0, 0], direction: [1, 0, 0], maxDistance: 4 },
+);
+if (packedPhysicsHit?.distance !== 1) {
+  throw new Error('@crc/physics/3d geometry runtime returned an unexpected ray hit.');
+}
 if (actualWebGL.length !== 14) {
   throw new Error(
     `Expected 14 @crc/webgl runtime exports, received ${actualWebGL.length}.`,
@@ -216,18 +297,31 @@ for (const exportName of expectedWebGL) {
   }
 }
 const actualWebGLInternal = Object.keys(webglInternal).sort();
-if (JSON.stringify(actualWebGLInternal) !== JSON.stringify([
+const expectedWebGLInternal = [
+  'getWebGLGeometrySnapshot',
+  'pushPhysicsPresentation',
+  'resolveWebGLPhysicsPrimitive',
   'submitWebGLInstanced',
-])) {
+];
+if (
+  JSON.stringify(actualWebGLInternal) !==
+  JSON.stringify(expectedWebGLInternal)
+) {
   throw new Error(
     `Unexpected @crc/webgl/internal exports: ${actualWebGLInternal.join(', ')}`,
   );
 }
-if (typeof webglInternal.submitWebGLInstanced !== 'function') {
-  throw new Error('Expected @crc/webgl/internal submission to be callable.');
-}
-if ('submitWebGLInstanced' in webgl) {
-  throw new Error('The official instanced seam leaked from @crc/webgl.');
+for (const exportName of expectedWebGLInternal) {
+  if (typeof webglInternal[exportName] !== 'function') {
+    throw new Error(
+      `Expected @crc/webgl/internal ${exportName} to be callable.`,
+    );
+  }
+  if (exportName in webgl) {
+    throw new Error(
+      `Internal WebGL friend function leaked from @crc/webgl: ${exportName}.`,
+    );
+  }
 }
 
 const expectedParticles = [
@@ -383,6 +477,18 @@ const runtimeGeometry = webgl.createWebGLGeometry({
   positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
   normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
 });
+const runtimeGeometrySnapshot = webglInternal.getWebGLGeometrySnapshot(
+  runtimeGeometry,
+);
+if (
+  runtimeGeometrySnapshot.positions.length !== 9 ||
+  runtimeGeometrySnapshot.bounds.maximumX !== 1 ||
+  runtimeGeometrySnapshot.bounds.maximumY !== 1
+) {
+  throw new Error(
+    '@crc/webgl/internal did not snapshot public packed geometry.',
+  );
+}
 function RuntimeAnimatedMesh() {
   const timestamp = webgl.useAnimationFrame();
   return core.createElement(webgl.Mesh, {

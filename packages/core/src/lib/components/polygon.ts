@@ -8,6 +8,7 @@ import {
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
+import type { CRCPhysics2DPropExtension } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import { createPolygonPath } from '../geometry/polygon.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
@@ -24,7 +25,7 @@ import type { StyleResolutionContext } from '../types.js';
 import { renderPath } from './path.js';
 import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 
-export interface PolygonProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+export interface PolygonProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 export interface PolygonStyle
   extends

@@ -14,6 +14,10 @@
       "@crc/particles": ["./packages/particles/src/index.ts"],
       "@crc/particles/webgl": ["./packages/particles/src/webgl.ts"],
       "@crc/three": ["./packages/three/src/index.ts"],
+      "@crc/physics/2d/geometry": ["./packages/physics/src/2d-geometry.ts"],
+      "@crc/physics/2d": ["./packages/physics/src/2d.ts"],
+      "@crc/physics/3d/geometry": ["./packages/physics/src/3d-geometry.ts"],
+      "@crc/physics/3d": ["./packages/physics/src/3d.ts"],
       "@crc/webgl/internal": ["./packages/webgl/src/internal.ts"],
       "@crc/webgl": ["./packages/webgl/src/index.ts"],
       "@crc/types": ["./packages/types/src/index.ts"],
@@ -40,6 +44,7 @@
     "**/vendor/**",
     "**/node_modules/**",
     "**/dist/**",
-    "**/fixtures/**"
+    "**/fixtures/**",
+    "packages/physics/**"
   ]
 }

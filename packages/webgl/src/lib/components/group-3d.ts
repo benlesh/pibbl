@@ -10,13 +10,17 @@ import {
 } from '@crc/core/internal';
 import { WEBGL_BACKEND_TOKEN } from '../backend.js';
 import {
-  pushWebGLModelMatrix,
+  pushWebGLAuthoredTransform,
+  resolveWebGLTransform,
 } from '../scene/composer.js';
 import type { WebGLSceneComposer } from '../scene/types.js';
-import { composeModelMatrix4 } from '../math/matrix4.js';
-import type { CRCWebGLTransformStyle } from '../types.js';
+import type {
+  CRCPhysics3DPropExtension,
+  CRCWebGLTransformStyle,
+} from '../types.js';
 
-export interface Group3DProps extends CRCEventHandlers {
+export interface Group3DProps
+  extends CRCEventHandlers, CRCPhysics3DPropExtension {
   readonly children: CRCNode;
 }
 
@@ -30,10 +34,9 @@ function renderGroup3D(
     WEBGL_BACKEND_TOKEN,
   );
   // Validate before acquiring listener or model-stack ownership.
-  const localModel = new Float32Array(16);
-  composeModelMatrix4(localModel, style);
+  const localTransform = resolveGroup3DTransform(style);
   useEventListener(props);
-  const popModel = pushWebGLModelMatrix(composer, localModel);
+  const popModel = pushWebGLAuthoredTransform(composer, localTransform);
   try {
     setCurrentComponentAfterRender(popModel);
   } catch (error) {
@@ -51,3 +54,5 @@ export const Group3D = defineBackendPrimitive<
   Group3DStyle,
   WebGLSceneComposer
 >(WEBGL_BACKEND_TOKEN, renderGroup3D);
+
+export const resolveGroup3DTransform = resolveWebGLTransform;

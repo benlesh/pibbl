@@ -6,12 +6,12 @@ import {
   useInternalHookSlot,
 } from '@crc/core/internal';
 import { WEBGL_BACKEND_TOKEN } from '../backend.js';
-import {
-  composeModelMatrix4,
-} from '../math/matrix4.js';
 import { resolveWebGLMaterial } from './material.js';
 import { parseConcreteColor } from './style-values.js';
-import { submitWebGLMesh } from '../scene/composer.js';
+import {
+  resolveWebGLTransform,
+  submitWebGLMesh,
+} from '../scene/composer.js';
 import type { WebGLSceneComposer, WebGLRGBA } from '../scene/types.js';
 import type {
   CRCWebGLGeometry,
@@ -66,8 +66,7 @@ export function submitBuiltInMesh(
     'receiveShadow',
     style.receiveShadow,
   );
-  const localModel = new Float32Array(16);
-  composeModelMatrix4(localModel, scaledStyle(style, uniformScale));
+  const localTransform = resolveMeshTransform(style, uniformScale);
   const target = useBackendEventTarget(
     props,
     {
@@ -92,7 +91,7 @@ export function submitBuiltInMesh(
     source: getCurrentElementSource(),
     geometry,
     identity,
-    localModel,
+    localModel: localTransform.matrix,
     color: finalColor,
     lit,
     material,
@@ -132,21 +131,11 @@ export const Mesh = defineBackendPrimitive<
   WebGLSceneComposer
 >(WEBGL_BACKEND_TOKEN, renderMesh);
 
-function scaledStyle(
+export function resolveMeshTransform(
   style: Readonly<MeshStyle>,
   uniformScale: number,
-): CRCWebGLTransformStyle {
-  return {
-    translateX: style.translateX,
-    translateY: style.translateY,
-    translateZ: style.translateZ,
-    rotationXDegrees: style.rotationXDegrees,
-    rotationYDegrees: style.rotationYDegrees,
-    rotationZDegrees: style.rotationZDegrees,
-    scaleX: (style.scaleX ?? 1) * uniformScale,
-    scaleY: (style.scaleY ?? 1) * uniformScale,
-    scaleZ: (style.scaleZ ?? 1) * uniformScale,
-  };
+): ReturnType<typeof resolveWebGLTransform> {
+  return resolveWebGLTransform(style, uniformScale);
 }
 
 function resolveOpacity(componentName: string, value: number | undefined) {

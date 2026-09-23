@@ -54,6 +54,7 @@ export {
   type WebGLBackgroundStyle,
 } from './lib/components/webgl-background.js';
 export type {
+  CRCPhysics3DPropExtension,
   CRCWebGLGeometry,
   CRCWebGLGeometryInput,
   CRCWebGLLambertMaterial,

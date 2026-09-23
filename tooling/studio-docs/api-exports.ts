@@ -79,6 +79,28 @@ export const crcPublicEntryPaths = {
   ),
 } as const;
 
+export const crcPhysicsEntryPaths = {
+  root: fileURLToPath(
+    new URL("../../packages/physics/src/2d.ts", import.meta.url),
+  ),
+  physics2dGeometry: fileURLToPath(
+    new URL("../../packages/physics/src/2d-geometry.ts", import.meta.url),
+  ),
+  physics3d: fileURLToPath(
+    new URL("../../packages/physics/src/3d.ts", import.meta.url),
+  ),
+  physics3dGeometry: fileURLToPath(
+    new URL("../../packages/physics/src/3d-geometry.ts", import.meta.url),
+  ),
+} as const;
+
+/** Exact public entries rendered by the Studio API reference. */
+export const crcStudioPublicEntryPaths = {
+  ...crcPublicEntryPaths,
+  physics3d: crcPhysicsEntryPaths.physics3d,
+  physics3dGeometry: crcPhysicsEntryPaths.physics3dGeometry,
+} as const;
+
 const compilerOverviewSymbols = new Set(["jsx", "jsxs", "jsxDEV", "JSX"]);
 
 /**

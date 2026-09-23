@@ -1,5 +1,7 @@
 # Static GLB Feedback Slice Implementation Plan
 
+> **Historical status: This implementation plan records completed work and is not current guidance.**
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Let an application load one self-contained static GLB through `@crc/webgl/gltf`, render its default scene through a public `Model`, orbit it, light it with one existing analytic light, and interact with the complete model as one CRC target.

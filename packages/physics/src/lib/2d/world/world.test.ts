@@ -1,0 +1,1238 @@
+import { describe, expect, it } from "vitest";
+import { boxShape2D, circleShape2D } from "../../../2d-geometry.js";
+import { requireShapeRecord2D } from "../shape-records.js";
+import { installPhysicsWorld2DTraceCollectorForTest } from "../runtime/trace.js";
+import {
+  installPhysicsWorld2DFailureInjectorForTest,
+  normalizePhysicsWorld2DConfiguration,
+  PhysicsWorld2DKernel,
+  type PhysicsWorld2DFailureStage,
+  type PhysicsTopologyRecord2D,
+  type PhysicsWorld2DCandidate,
+} from "./world.js";
+
+function movingBody(
+  id: number,
+  options: Readonly<{
+    x?: number;
+    velocityX?: number;
+    rotationDegrees?: number;
+    angularVelocityDegrees?: number;
+    localCenterX?: number;
+    localCenterY?: number;
+  }> = {},
+): PhysicsTopologyRecord2D {
+  const rotationRadians = ((options.rotationDegrees ?? 0) * Math.PI) / 180;
+  const localCenterX = options.localCenterX ?? 0;
+  const localCenterY = options.localCenterY ?? 0;
+  const cosine = Math.cos(rotationRadians);
+  const sine = Math.sin(rotationRadians);
+  return {
+    kind: "body",
+    id,
+    definition: {
+      positionX: (options.x ?? 0) + cosine * localCenterX - sine * localCenterY,
+      positionY: sine * localCenterX + cosine * localCenterY,
+      rotationRadians,
+      localCenterX,
+      localCenterY,
+      linearVelocityX: options.velocityX ?? 0,
+      linearVelocityY: 0,
+      angularVelocity: ((options.angularVelocityDegrees ?? 0) * Math.PI) / 180,
+      forceX: 0,
+      forceY: 0,
+      torque: 0,
+      inverseMass: 1,
+      inverseInertia: 1,
+      linearDamping: 0,
+      angularDamping: 0,
+      gravityScale: 0,
+      sleepTime: 0,
+      flags: 1,
+      owner: null,
+    },
+  };
+}
+
+function advance(
+  world: PhysicsWorld2DKernel,
+  frameId: number,
+  logicalTime: number,
+): PhysicsWorld2DCandidate {
+  const candidate = world.advance({
+    frameId,
+    logicalTime,
+    stagedKinematicTargets: new Map(),
+  });
+  expect(candidate).toBeDefined();
+  world.adopt(candidate!);
+  return candidate!;
+}
+
+function collider(
+  id: number,
+  bodyId: number,
+  radius = 1,
+): PhysicsTopologyRecord2D {
+  return {
+    kind: "collider",
+    id,
+    bodyId,
+    definition: {
+      shape: requireShapeRecord2D(circleShape2D({ radius })),
+      material: { friction: 0.5, restitution: 0 },
+      filter: null,
+      tag: null,
+      handlers: null,
+      owner: null,
+      flags: 0,
+    },
+  };
+}
+
+function collidingTopology(): readonly PhysicsTopologyRecord2D[] {
+  return [
+    movingBody(1, { x: 0, velocityX: 0.25 }),
+    movingBody(2, { x: 1.5, velocityX: -0.25 }),
+    collider(10, 1),
+    collider(20, 2),
+  ];
+}
+
+const BALL_RADIUS = 28;
+const FLOOR_TOP = 316;
+const LEFT_WALL_INNER_EDGE = 74;
+const RIGHT_WALL_INNER_EDGE = 646;
+// A 1,000 px/s discrete body can move 16.67 px per fixed tick.
+const MAX_DISCRETE_WALL_PENETRATION = 15;
+// The iterative floor correction may retain a small amount of penetration.
+const MAX_FLOOR_SOLVER_PENETRATION = 5;
+
+function arenaBody(
+  id: number,
+  options: Readonly<{
+    x?: number;
+    y?: number;
+    dynamic?: boolean;
+  }> = {},
+): PhysicsTopologyRecord2D {
+  const dynamic = options.dynamic ?? false;
+  return {
+    kind: "body",
+    id,
+    definition: {
+      positionX: options.x ?? 0,
+      positionY: options.y ?? 0,
+      rotationRadians: 0,
+      localCenterX: 0,
+      localCenterY: 0,
+      linearVelocityX: 0,
+      linearVelocityY: 0,
+      angularVelocity: 0,
+      forceX: 0,
+      forceY: 0,
+      torque: 0,
+      inverseMass: dynamic ? 1 : 0,
+      inverseInertia: dynamic ? 1 / 392 : 0,
+      linearDamping: dynamic ? 0.025 : 0,
+      angularDamping: dynamic ? 0.04 : 0,
+      gravityScale: dynamic ? 1 : 0,
+      sleepTime: 0,
+      flags: dynamic ? 1 : 0,
+      owner: null,
+    },
+  };
+}
+
+function arenaCollider(
+  id: number,
+  bodyId: number,
+  shape: ReturnType<typeof circleShape2D> | ReturnType<typeof boxShape2D>,
+  material: Readonly<{ friction: number; restitution: number }>,
+): PhysicsTopologyRecord2D {
+  return {
+    kind: "collider",
+    id,
+    bodyId,
+    definition: {
+      shape: requireShapeRecord2D(shape),
+      material,
+      filter: null,
+      tag: null,
+      handlers: null,
+      owner: null,
+      flags: 0,
+    },
+  };
+}
+
+function throwableBallArenaTopology(): readonly PhysicsTopologyRecord2D[] {
+  return [
+    arenaBody(1, { x: 210, y: 110, dynamic: true }),
+    arenaBody(2),
+    arenaBody(3),
+    arenaBody(4),
+    arenaBody(5),
+    arenaBody(6),
+    arenaBody(7),
+    arenaCollider(10, 1, circleShape2D({ radius: BALL_RADIUS }), {
+      friction: 0.65,
+      restitution: 0.35,
+    }),
+    arenaCollider(
+      20,
+      2,
+      boxShape2D({ width: 612, height: 34, center: [360, 333] }),
+      { friction: 0.55, restitution: 0 },
+    ),
+    arenaCollider(
+      30,
+      3,
+      boxShape2D({ width: 20, height: 220, center: [64, 206] }),
+      { friction: 0.4, restitution: 0 },
+    ),
+    arenaCollider(
+      40,
+      4,
+      boxShape2D({ width: 20, height: 220, center: [656, 206] }),
+      { friction: 0.4, restitution: 0 },
+    ),
+    arenaCollider(50, 5, circleShape2D({ radius: 20, center: [250, 205] }), {
+      friction: 0.15,
+      restitution: 0.8,
+    }),
+    arenaCollider(60, 6, circleShape2D({ radius: 22, center: [362, 258] }), {
+      friction: 0.15,
+      restitution: 0.8,
+    }),
+    arenaCollider(70, 7, circleShape2D({ radius: 20, center: [478, 198] }), {
+      friction: 0.15,
+      restitution: 0.8,
+    }),
+  ];
+}
+
+function advanceAndReadEvents(
+  world: PhysicsWorld2DKernel,
+  frameId: number,
+  logicalTime: number,
+): readonly (readonly number[])[] {
+  const candidate = world.advance({
+    frameId,
+    logicalTime,
+    stagedKinematicTargets: new Map(),
+  });
+  expect(candidate).toBeDefined();
+  const events: number[][] = [];
+  for (let offset = 0; offset < candidate!.eventCount; offset += 1) {
+    const event = candidate!.eventOffset + offset;
+    events.push([
+      candidate!.eventTicks[event]!,
+      candidate!.eventKinds[event]!,
+      candidate!.eventFirstColliderIndices[event]!,
+      candidate!.eventFirstColliderGenerations[event]!,
+      candidate!.eventSecondColliderIndices[event]!,
+      candidate!.eventSecondColliderGenerations[event]!,
+      candidate!.eventNormalX[event]!,
+      candidate!.eventNormalY[event]!,
+      candidate!.eventPointCounts[event]!,
+      candidate!.eventTotalNormalImpulses[event]!,
+      candidate!.eventPointFirstX[event * 2]!,
+      candidate!.eventPointFirstY[event * 2]!,
+      candidate!.eventPointSecondX[event * 2]!,
+      candidate!.eventPointSecondY[event * 2]!,
+      candidate!.eventPointSeparations[event * 2]!,
+      candidate!.eventPointFirstX[event * 2 + 1]!,
+      candidate!.eventPointFirstY[event * 2 + 1]!,
+      candidate!.eventPointSecondX[event * 2 + 1]!,
+      candidate!.eventPointSecondY[event * 2 + 1]!,
+      candidate!.eventPointSeparations[event * 2 + 1]!,
+    ]);
+  }
+  world.adopt(candidate!);
+  return events;
+}
+
+describe("transactional fixed-tick 2D world cadence", () => {
+  it.each([220, 1000])(
+    "keeps the released local circle finite and between both walls at %i px/s",
+    (releaseSpeed) => {
+      const world = new PhysicsWorld2DKernel({
+        gravity: [0, 560],
+        fixedStepMilliseconds: 1000 / 60,
+        sleeping: false,
+      });
+      const staticBody = (id: number): PhysicsTopologyRecord2D => ({
+        kind: "body",
+        id,
+        definition: {
+          positionX: 0,
+          positionY: 0,
+          rotationRadians: 0,
+          localCenterX: 0,
+          localCenterY: 0,
+          linearVelocityX: 0,
+          linearVelocityY: 0,
+          angularVelocity: 0,
+          forceX: 0,
+          forceY: 0,
+          torque: 0,
+          inverseMass: 0,
+          inverseInertia: 0,
+          linearDamping: 0,
+          angularDamping: 0,
+          gravityScale: 0,
+          sleepTime: 0,
+          flags: 0,
+          owner: null,
+        },
+      });
+      const shapedCollider = (
+        id: number,
+        bodyId: number,
+        shape: ReturnType<typeof circleShape2D> | ReturnType<typeof boxShape2D>,
+      ): PhysicsTopologyRecord2D => ({
+        kind: "collider",
+        id,
+        bodyId,
+        definition: {
+          shape: requireShapeRecord2D(shape),
+          material: { friction: 0.55, restitution: 0.35 },
+          filter: null,
+          tag: null,
+          handlers: null,
+          owner: null,
+          flags: 0,
+        },
+      });
+      const dynamicBall: PhysicsTopologyRecord2D = {
+        kind: "body",
+        id: 1,
+        definition: {
+          positionX: 210,
+          positionY: 110,
+          rotationRadians: 0,
+          localCenterX: 0,
+          localCenterY: 0,
+          linearVelocityX: 0,
+          linearVelocityY: 0,
+          angularVelocity: 0,
+          forceX: 0,
+          forceY: 0,
+          torque: 0,
+          inverseMass: 1,
+          inverseInertia: 1,
+          linearDamping: 0.025,
+          angularDamping: 0.04,
+          gravityScale: 1,
+          sleepTime: 0,
+          flags: 1,
+          owner: null,
+        },
+      };
+      world.proposeTopology([
+        dynamicBall,
+        staticBody(2),
+        staticBody(3),
+        staticBody(4),
+        shapedCollider(10, 1, circleShape2D({ radius: 28 })),
+        shapedCollider(
+          20,
+          2,
+          boxShape2D({ width: 612, height: 34, center: [360, 333] }),
+        ),
+        shapedCollider(
+          30,
+          3,
+          boxShape2D({ width: 20, height: 220, center: [64, 206] }),
+        ),
+        shapedCollider(
+          40,
+          4,
+          boxShape2D({ width: 20, height: 220, center: [656, 206] }),
+        ),
+      ]);
+      advance(world, 1, 0);
+      world.applyBegin([
+        { kind: "disable", bodyId: 1 },
+        {
+          kind: "set-pose",
+          bodyId: 1,
+          pose: { position: [300, 280], rotationDegrees: 0 },
+        },
+        { kind: "enable", bodyId: 1, velocity: "zero" },
+        {
+          kind: "set-linear-velocity",
+          bodyId: 1,
+          linearVelocityX: releaseSpeed,
+          linearVelocityY: 0,
+        },
+      ]);
+
+      let maximumSpeed = 0;
+      for (let tick = 1; tick <= 180; tick += 1) {
+        advance(world, tick + 1, (tick * 1000) / 60);
+        const pose = world.authoritativePose(1);
+        const body = world.snapshot().bodies[0]!;
+        expect(pose.position.every(Number.isFinite)).toBe(true);
+        expect(Number.isFinite(body.linearVelocityX)).toBe(true);
+        expect(Number.isFinite(body.linearVelocityY)).toBe(true);
+        expect(pose.position[0]).toBeGreaterThanOrEqual(53.99);
+        expect(pose.position[0]).toBeLessThanOrEqual(666.01);
+        maximumSpeed = Math.max(
+          maximumSpeed,
+          Math.hypot(body.linearVelocityX, body.linearVelocityY),
+        );
+      }
+      expect(maximumSpeed).toBeLessThanOrEqual(1_005);
+    },
+  );
+
+  it("runs zero, one, and three complete ticks while retaining a presentation remainder", () => {
+    const world = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: false,
+    });
+    world.proposeTopology([movingBody(7, { velocityX: 1 })]);
+
+    expect(advance(world, 1, 1_000)).toMatchObject({
+      stepCount: 0,
+      tick: 0,
+      accumulatorMilliseconds: 0,
+    });
+    expect(advance(world, 2, 1_050)).toMatchObject({
+      stepCount: 0,
+      tick: 0,
+      accumulatorMilliseconds: 50,
+    });
+
+    expect(advance(world, 3, 1_150)).toMatchObject({
+      stepCount: 1,
+      tick: 1,
+      accumulatorMilliseconds: 50,
+    });
+    expect(world.authoritativePose(7).position[0]).toBeCloseTo(0.1, 12);
+    expect(world.presentationPose(7).position[0]).toBeCloseTo(0.05, 12);
+
+    expect(advance(world, 4, 1_450)).toMatchObject({
+      stepCount: 3,
+      tick: 4,
+      accumulatorMilliseconds: 50,
+    });
+    expect(world.authoritativePose(7).position[0]).toBeCloseTo(0.4, 12);
+    expect(world.presentationPose(7).position[0]).toBeCloseTo(0.35, 12);
+  });
+
+  it("produces identical authoritative state for equivalent accepted ticks grouped into different frames", () => {
+    const grouped = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 100,
+      maxCatchUpSteps: 4,
+      sleeping: false,
+    });
+    const split = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 100,
+      maxCatchUpSteps: 4,
+      sleeping: false,
+    });
+    grouped.proposeTopology([movingBody(1, { velocityX: 3 })]);
+    split.proposeTopology([movingBody(1, { velocityX: 3 })]);
+
+    advance(grouped, 1, 0);
+    advance(grouped, 2, 350);
+    advance(split, 1, 0);
+    advance(split, 2, 100);
+    advance(split, 3, 200);
+    advance(split, 4, 300);
+    advance(split, 5, 350);
+
+    expect(grouped.authoritativePose(1)).toEqual(split.authoritativePose(1));
+    expect(grouped.snapshot()).toMatchObject({
+      tick: 3,
+      accumulatorMilliseconds: 50,
+    });
+    expect(split.snapshot()).toMatchObject({
+      tick: 3,
+      accumulatorMilliseconds: 50,
+    });
+  });
+
+  it("runs exactly four ticks for a long stall, traces discarded time once, and retains no backlog", () => {
+    const traces: unknown[] = [];
+    const restore = installPhysicsWorld2DTraceCollectorForTest((record) => {
+      traces.push(record);
+    });
+    try {
+      const world = new PhysicsWorld2DKernel({
+        fixedStepMilliseconds: 100,
+        maxCatchUpSteps: 4,
+        sleeping: false,
+      });
+      world.proposeTopology([movingBody(1, { velocityX: 1 })]);
+      advance(world, 1, 0);
+
+      expect(advance(world, 2, 1_000)).toMatchObject({
+        stepCount: 4,
+        tick: 4,
+        accumulatorMilliseconds: 0,
+      });
+      expect(world.authoritativePose(1).position[0]).toBeCloseTo(0.4, 12);
+      expect(
+        traces.filter(
+          (record) => (record as { kind?: string }).kind === "physics-2d-clamp",
+        ),
+      ).toEqual([
+        {
+          kind: "physics-2d-clamp",
+          frameId: 2,
+          logicalTime: 1_000,
+          acceptedElapsedMilliseconds: 400,
+          discardedElapsedMilliseconds: 600,
+        },
+      ]);
+
+      expect(advance(world, 3, 1_000)).toMatchObject({
+        stepCount: 0,
+        tick: 4,
+        accumulatorMilliseconds: 0,
+      });
+      expect(world.authoritativePose(1).position[0]).toBeCloseTo(0.4, 12);
+    } finally {
+      restore();
+    }
+  });
+
+  it("interpolates the shortest degree path and chooses positive rotation for an exact 180-degree tie", () => {
+    const shortest = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 1_000,
+      sleeping: false,
+    });
+    shortest.proposeTopology([
+      movingBody(1, {
+        rotationDegrees: 170,
+        angularVelocityDegrees: 20,
+      }),
+    ]);
+    advance(shortest, 1, 0);
+    advance(shortest, 2, 1_500);
+    expect(shortest.authoritativePose(1).rotationDegrees).toBeCloseTo(190, 12);
+    expect(shortest.presentationPose(1).rotationDegrees).toBeCloseTo(180, 12);
+
+    const tie = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 1_000,
+      sleeping: false,
+    });
+    tie.proposeTopology([
+      movingBody(1, {
+        angularVelocityDegrees: -180,
+      }),
+    ]);
+    advance(tie, 1, 0);
+    advance(tie, 2, 1_500);
+    expect(tie.authoritativePose(1).rotationDegrees).toBeCloseTo(-180, 12);
+    expect(tie.presentationPose(1).rotationDegrees).toBeCloseTo(90, 12);
+  });
+
+  it("projects interpolation and teleports through an off-origin center of mass", () => {
+    const world = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 1_000,
+      sleeping: false,
+    });
+    world.proposeTopology([
+      movingBody(1, {
+        angularVelocityDegrees: 90,
+        localCenterX: 2,
+      }),
+    ]);
+    advance(world, 1, 0);
+    advance(world, 2, 1_500);
+
+    const authoritative = world.authoritativePose(1);
+    expect(authoritative.position[0]).toBeCloseTo(2, 12);
+    expect(authoritative.position[1]).toBeCloseTo(-2, 12);
+    expect(authoritative.rotationDegrees).toBeCloseTo(90, 12);
+    const interpolated = world.presentationPose(1);
+    expect(interpolated.position[0]).toBeCloseTo(2 - Math.SQRT2, 12);
+    expect(interpolated.position[1]).toBeCloseTo(-Math.SQRT2, 12);
+    expect(interpolated.rotationDegrees).toBeCloseTo(45, 12);
+
+    world.applyBegin([
+      {
+        kind: "set-pose",
+        bodyId: 1,
+        pose: { position: [7, 8], rotationDegrees: 90 },
+      },
+    ]);
+    advance(world, 3, 1_500);
+    const teleported = world.authoritativePose(1);
+    expect(teleported.position[0]).toBeCloseTo(7, 12);
+    expect(teleported.position[1]).toBeCloseTo(8, 12);
+    expect(teleported.rotationDegrees).toBeCloseTo(90, 12);
+  });
+
+  it('returns the current authoritative pose when interpolation is "none"', () => {
+    const world = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 100,
+      interpolation: "none",
+      sleeping: false,
+    });
+    world.proposeTopology([movingBody(1, { velocityX: 1 })]);
+    advance(world, 1, 0);
+    advance(world, 2, 150);
+
+    expect(world.presentationPose(1)).toEqual(world.authoritativePose(1));
+  });
+});
+
+describe("deterministic throwable-ball mechanics", () => {
+  function replayCommandStream() {
+    const world = new PhysicsWorld2DKernel({
+      gravity: [0, 560],
+      fixedStepMilliseconds: 1000 / 60,
+      sleeping: false,
+    });
+    world.proposeTopology(throwableBallArenaTopology());
+    const events: (readonly number[])[] = [];
+    const snapshots: ReturnType<PhysicsWorld2DKernel["snapshot"]>[] = [];
+    events.push(...advanceAndReadEvents(world, 1, 0));
+
+    for (let frame = 2; frame <= 361; frame += 1) {
+      if (frame === 2) {
+        world.applyBegin([
+          { kind: "disable", bodyId: 1 },
+          {
+            kind: "set-pose",
+            bodyId: 1,
+            pose: { position: [300, 140], rotationDegrees: 0 },
+          },
+          { kind: "enable", bodyId: 1, velocity: "zero" },
+          {
+            kind: "set-linear-velocity",
+            bodyId: 1,
+            linearVelocityX: 900,
+            linearVelocityY: 0,
+          },
+        ]);
+      } else if (frame === 72) {
+        world.applyBegin([
+          {
+            kind: "apply-impulse",
+            bodyId: 1,
+            impulseX: -120,
+            impulseY: -180,
+          },
+        ]);
+      } else if (frame === 182) {
+        world.applyBegin([
+          { kind: "disable", bodyId: 1 },
+          {
+            kind: "set-pose",
+            bodyId: 1,
+            pose: { position: [540, 125], rotationDegrees: 18 },
+          },
+          { kind: "enable", bodyId: 1, velocity: "zero" },
+          {
+            kind: "set-velocity",
+            bodyId: 1,
+            linearVelocityX: -760,
+            linearVelocityY: 80,
+            angularVelocityDegrees: -90,
+          },
+        ]);
+      }
+
+      events.push(
+        ...advanceAndReadEvents(world, frame, ((frame - 1) * 1000) / 60),
+      );
+      if (frame % 30 === 1) snapshots.push(world.snapshot());
+    }
+
+    return { events, snapshots };
+  }
+
+  it("replays an identical topology and command stream into exact snapshots and events", () => {
+    const first = replayCommandStream();
+    const second = replayCommandStream();
+
+    expect(first).toEqual(second);
+    expect(first.events.some((event) => event[1] === 1)).toBe(true);
+    expect(first.events.some((event) => event[1] === 2)).toBe(true);
+    expect(first.snapshots.at(-1)).toMatchObject({
+      bodyCount: 7,
+      colliderCount: 7,
+    });
+  });
+
+  it("keeps every pose and velocity finite within wall and floor solver tolerances for 3,600 fixed ticks", () => {
+    const world = new PhysicsWorld2DKernel({
+      gravity: [0, 560],
+      fixedStepMilliseconds: 1000 / 60,
+      sleeping: false,
+    });
+    world.proposeTopology(throwableBallArenaTopology());
+    advance(world, 1, 0);
+    world.applyBegin([
+      { kind: "disable", bodyId: 1 },
+      {
+        kind: "set-pose",
+        bodyId: 1,
+        pose: { position: [300, 140], rotationDegrees: 0 },
+      },
+      { kind: "enable", bodyId: 1, velocity: "zero" },
+      {
+        kind: "set-linear-velocity",
+        bodyId: 1,
+        linearVelocityX: 1_000,
+        linearVelocityY: 0,
+      },
+    ]);
+
+    let allFinite = true;
+    let minimumX = Number.POSITIVE_INFINITY;
+    let maximumX = Number.NEGATIVE_INFINITY;
+    let maximumY = Number.NEGATIVE_INFINITY;
+    let maximumSpeed = 0;
+    let frame = 1;
+    while (world.snapshot().tick < 3_600) {
+      frame += 1;
+      expect(frame).toBeLessThanOrEqual(3_603);
+      advance(world, frame, ((frame - 1) * 1000) / 60);
+      const pose = world.authoritativePose(1);
+      const body = world.snapshot().bodies[0]!;
+      const values = [
+        ...pose.position,
+        pose.rotationDegrees,
+        body.linearVelocityX,
+        body.linearVelocityY,
+        body.angularVelocity,
+      ];
+      allFinite &&= values.every(Number.isFinite);
+      minimumX = Math.min(minimumX, pose.position[0]);
+      maximumX = Math.max(maximumX, pose.position[0]);
+      maximumY = Math.max(maximumY, pose.position[1]);
+      maximumSpeed = Math.max(
+        maximumSpeed,
+        Math.hypot(body.linearVelocityX, body.linearVelocityY),
+      );
+    }
+
+    expect(allFinite).toBe(true);
+    expect(world.snapshot().tick).toBe(3_600);
+    expect(minimumX).toBeGreaterThanOrEqual(
+      LEFT_WALL_INNER_EDGE - MAX_DISCRETE_WALL_PENETRATION + BALL_RADIUS,
+    );
+    expect(maximumX).toBeLessThanOrEqual(
+      RIGHT_WALL_INNER_EDGE + MAX_DISCRETE_WALL_PENETRATION - BALL_RADIUS,
+    );
+    expect(maximumY).toBeLessThanOrEqual(
+      FLOOR_TOP - BALL_RADIUS + MAX_FLOOR_SOLVER_PENETRATION,
+    );
+    expect(maximumSpeed).toBeLessThanOrEqual(1_100);
+  });
+
+  it("survives repeated disable, teleport, enable, and throw handoffs without losing its collider", () => {
+    const world = new PhysicsWorld2DKernel({
+      gravity: [0, 560],
+      fixedStepMilliseconds: 1000 / 60,
+      sleeping: false,
+    });
+    world.proposeTopology(throwableBallArenaTopology());
+    advance(world, 1, 0);
+    let frame = 1;
+
+    for (let cycle = 0; cycle < 12; cycle += 1) {
+      const throwLeft = cycle % 2 === 0;
+      const position = [throwLeft ? 150 : 570, 280] as const;
+      const velocityX = throwLeft ? -900 : 900;
+      const wallColliderId = throwLeft ? 30 : 40;
+      world.applyBegin([{ kind: "disable", bodyId: 1 }]);
+      frame += 1;
+      advance(world, frame, ((frame - 1) * 1000) / 60);
+      expect(world.isBodyEnabled(1)).toBe(false);
+      expect(world.snapshot().colliderCount).toBe(6);
+
+      world.applyBegin([
+        {
+          kind: "set-pose",
+          bodyId: 1,
+          pose: { position, rotationDegrees: cycle * 7 },
+        },
+      ]);
+      frame += 1;
+      advance(world, frame, ((frame - 1) * 1000) / 60);
+      expect(world.isBodyEnabled(1)).toBe(false);
+      expect(world.snapshot().colliderCount).toBe(6);
+      expect(world.authoritativePose(1)).toEqual({
+        position,
+        rotationDegrees: cycle * 7,
+      });
+
+      world.applyBegin([
+        {
+          kind: "set-pose",
+          bodyId: 1,
+          pose: { position, rotationDegrees: cycle * 7 },
+        },
+        { kind: "enable", bodyId: 1, velocity: "zero" },
+        {
+          kind: "set-linear-velocity",
+          bodyId: 1,
+          linearVelocityX: velocityX,
+          linearVelocityY: 0,
+        },
+      ]);
+      frame += 1;
+      advance(world, frame, ((frame - 1) * 1000) / 60);
+
+      expect(world.isBodyEnabled(1)).toBe(true);
+      expect(world.authoritativePose(1)).toEqual({
+        position,
+        rotationDegrees: cycle * 7,
+      });
+      expect(world.snapshot()).toMatchObject({
+        bodyCount: 7,
+        colliderCount: 7,
+        counters: {
+          liveBodies: 7,
+          liveColliders: 7,
+          liveProxies: 7,
+        },
+      });
+      expect(world.snapshot().bodies[0]!.linearVelocityX).toBe(velocityX);
+
+      const ballCollider = world.colliderIdentity(10)!;
+      const wallCollider = world.colliderIdentity(wallColliderId)!;
+      let sawWallContact = false;
+      let sawWallResponse = false;
+      let extremeX = position[0];
+      for (let tick = 0; tick < 20; tick += 1) {
+        frame += 1;
+        const events = advanceAndReadEvents(
+          world,
+          frame,
+          ((frame - 1) * 1000) / 60,
+        );
+        const pose = world.authoritativePose(1);
+        const body = world.snapshot().bodies[0]!;
+        extremeX = throwLeft
+          ? Math.min(extremeX, pose.position[0])
+          : Math.max(extremeX, pose.position[0]);
+        const contactedWall = events.some(
+          (event) =>
+            event[1] === 1 &&
+            ((event[2] === ballCollider.index &&
+              event[3] === ballCollider.generation &&
+              event[4] === wallCollider.index &&
+              event[5] === wallCollider.generation) ||
+              (event[2] === wallCollider.index &&
+                event[3] === wallCollider.generation &&
+                event[4] === ballCollider.index &&
+                event[5] === ballCollider.generation)),
+        );
+        if (contactedWall) {
+          sawWallContact = true;
+          sawWallResponse ||= throwLeft
+            ? body.linearVelocityX >= 0
+            : body.linearVelocityX <= 0;
+        }
+        expect(
+          [
+            ...pose.position,
+            pose.rotationDegrees,
+            body.linearVelocityX,
+            body.linearVelocityY,
+            body.angularVelocity,
+          ].every(Number.isFinite),
+        ).toBe(true);
+        expect(
+          Math.hypot(body.linearVelocityX, body.linearVelocityY),
+        ).toBeLessThanOrEqual(1_005);
+      }
+      expect(sawWallContact).toBe(true);
+      expect(sawWallResponse).toBe(true);
+      if (throwLeft) {
+        expect(extremeX).toBeGreaterThanOrEqual(
+          LEFT_WALL_INNER_EDGE - MAX_DISCRETE_WALL_PENETRATION + BALL_RADIUS,
+        );
+      } else {
+        expect(extremeX).toBeLessThanOrEqual(
+          RIGHT_WALL_INNER_EDGE + MAX_DISCRETE_WALL_PENETRATION - BALL_RADIUS,
+        );
+      }
+    }
+  });
+});
+
+describe("normalized 2D world configuration and topology admission", () => {
+  it("normalizes documented defaults and nested solver options into one frozen record", () => {
+    expect(normalizePhysicsWorld2DConfiguration({})).toEqual({
+      gravityX: 0,
+      gravityY: 0,
+      fixedStepMilliseconds: 1000 / 60,
+      maxCatchUpSteps: 4,
+      interpolation: "linear",
+      sleeping: true,
+      velocityIterations: 8,
+      positionIterations: 3,
+    });
+    const configured = normalizePhysicsWorld2DConfiguration({
+      gravity: [3, 4],
+      solver: { velocityIterations: 12, positionIterations: 6 },
+    });
+    expect(configured).toMatchObject({
+      gravityX: 3,
+      gravityY: 4,
+      velocityIterations: 12,
+      positionIterations: 6,
+    });
+    expect(Object.isFrozen(configured)).toBe(true);
+  });
+
+  it.each([
+    { fixedStepMilliseconds: 0 },
+    { fixedStepMilliseconds: Number.NaN },
+    { maxCatchUpSteps: 0 },
+    { maxCatchUpSteps: 17 },
+    { solver: { velocityIterations: 0 } },
+    { solver: { positionIterations: 33 } },
+  ])("rejects invalid world configuration %#", (configuration) => {
+    expect(() => normalizePhysicsWorld2DConfiguration(configuration)).toThrow(
+      RangeError,
+    );
+  });
+
+  it("admits topology only during advance and retains storage identities for an equivalent proposal", () => {
+    const world = new PhysicsWorld2DKernel({ sleeping: false });
+    const topology = [movingBody(1), collider(10, 1)] as const;
+    world.proposeTopology(topology);
+    expect(world.snapshot().bodyCount).toBe(0);
+    advance(world, 1, 0);
+    const first = world.snapshot();
+
+    world.proposeTopology(topology);
+    advance(world, 2, 0);
+    const second = world.snapshot();
+
+    expect(second.bodies[0]!.generation).toBe(first.bodies[0]!.generation);
+    expect(second.counters.bodyAllocations).toBe(
+      first.counters.bodyAllocations,
+    );
+    expect(second.counters.colliderAllocations).toBe(
+      first.counters.colliderAllocations,
+    );
+    expect(second.counters.proxyAllocations).toBe(
+      first.counters.proxyAllocations,
+    );
+  });
+
+  it("preserves dynamic pose and velocity when automatic mass properties change", () => {
+    const world = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: false,
+    });
+    const body = (localCenterX: number): PhysicsTopologyRecord2D => ({
+      kind: "body",
+      id: 1,
+      definition: {
+        positionX: localCenterX,
+        positionY: 0,
+        rotationRadians: 0,
+        localCenterX,
+        localCenterY: 0,
+        linearVelocityX: 1,
+        linearVelocityY: 0,
+        angularVelocity: 0,
+        forceX: 0,
+        forceY: 0,
+        torque: 0,
+        inverseMass: 1,
+        inverseInertia: 1,
+        linearDamping: 0,
+        angularDamping: 0,
+        gravityScale: 0,
+        sleepTime: 0,
+        flags: 1,
+        owner: null,
+      },
+    });
+
+    world.proposeTopology([body(5)]);
+    advance(world, 1, 0);
+    advance(world, 2, 100);
+    expect(world.authoritativePose(1).position[0]).toBeCloseTo(0.1, 12);
+
+    world.proposeTopology([body(10)]);
+    advance(world, 3, 200);
+
+    expect(world.authoritativePose(1).position[0]).toBeCloseTo(0.2, 12);
+    expect(world.snapshot().bodies[0]!.linearVelocityX).toBe(1);
+  });
+
+  it("retains imperative disablement while mass properties change", () => {
+    const world = new PhysicsWorld2DKernel({ sleeping: false });
+    const initial = movingBody(1, { velocityX: 3 });
+    world.proposeTopology([initial, collider(10, 1, 1)]);
+    advance(world, 1, 0);
+
+    world.applyBegin([{ kind: "disable", bodyId: 1 }]);
+    advance(world, 2, 0);
+    expect(world.isBodyEnabled(1)).toBe(false);
+    expect(world.snapshot().colliderCount).toBe(0);
+
+    const changed = movingBody(1, {
+      velocityX: 99,
+      localCenterX: 2,
+    });
+    world.proposeTopology([changed, collider(10, 1, 2)]);
+    advance(world, 3, 0);
+    expect(world.isBodyEnabled(1)).toBe(false);
+    expect(world.snapshot().colliderCount).toBe(0);
+
+    world.applyBegin([
+      {
+        kind: "set-pose",
+        bodyId: 1,
+        pose: { position: [4, 5], rotationDegrees: 30 },
+      },
+      { kind: "enable", bodyId: 1, velocity: "preserve" },
+    ]);
+    advance(world, 4, 0);
+    expect(world.isBodyEnabled(1)).toBe(true);
+    expect(world.snapshot().colliderCount).toBe(1);
+    const pose = world.authoritativePose(1);
+    expect(pose.position[0]).toBeCloseTo(4, 12);
+    expect(pose.position[1]).toBeCloseTo(5, 12);
+    expect(pose.rotationDegrees).toBeCloseTo(30, 12);
+    expect(world.snapshot().bodies[0]!.linearVelocityX).toBe(3);
+    expect(world.snapshot().bodies[0]!.localCenterX).toBe(2);
+  });
+});
+
+describe("transactional fixed-tick 2D world rollback", () => {
+  const stages: readonly PhysicsWorld2DFailureStage[] = [
+    "topology",
+    "broad-phase",
+    "narrow-phase",
+    "velocity-solve",
+    "position-solve",
+    "ccd",
+    "event-staging",
+  ];
+
+  for (const stage of stages) {
+    it(`restores the exact committed generation after an injected ${stage} failure`, () => {
+      const world = new PhysicsWorld2DKernel({
+        fixedStepMilliseconds: 100,
+        sleeping: false,
+      });
+      const topology = collidingTopology();
+      world.proposeTopology(topology);
+      advance(world, 1, 0);
+      advance(world, 2, 100);
+      expect(world.snapshot().contactCount).toBe(1);
+
+      const before = world.snapshot();
+      const references = {
+        bodyPositionX: world.bodies.positionX,
+        colliderBodies: world.colliders.bodyIndices,
+        proxyNodes: world.broadPhase.proxyNodes,
+        treeParents: world.broadPhase.nodeParents,
+        contactFirst: world.contacts.firstColliderIndices,
+        contactEvents: world.contacts.eventTypes,
+      };
+      world.proposeTopology(topology);
+      world.applyBegin([
+        {
+          kind: "apply-impulse",
+          bodyId: 1,
+          impulseX: 2,
+          impulseY: 0,
+          pointX: 0,
+          pointY: 0,
+        },
+      ]);
+      const restore = installPhysicsWorld2DFailureInjectorForTest((current) => {
+        if (current === stage) throw new Error(`injected ${stage}`);
+      });
+      try {
+        expect(() =>
+          world.advance({
+            frameId: 3,
+            logicalTime: 200,
+            stagedKinematicTargets: new Map(),
+          }),
+        ).toThrow(`injected ${stage}`);
+      } finally {
+        restore();
+      }
+
+      expect(world.snapshot()).toEqual(before);
+      expect(world.bodies.positionX).toBe(references.bodyPositionX);
+      expect(world.colliders.bodyIndices).toBe(references.colliderBodies);
+      expect(world.broadPhase.proxyNodes).toBe(references.proxyNodes);
+      expect(world.broadPhase.nodeParents).toBe(references.treeParents);
+      expect(world.contacts.firstColliderIndices).toBe(references.contactFirst);
+      expect(world.contacts.eventTypes).toBe(references.contactEvents);
+
+      const retry = advance(world, 4, 200);
+      expect(retry.tick).toBe(2);
+      expect(world.snapshot().contactCount).toBe(1);
+    });
+  }
+
+  it("places the velocity failure boundary before positional correction", () => {
+    const world = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: false,
+    });
+    world.proposeTopology(collidingTopology());
+    advance(world, 1, 0);
+    let velocityBoundaryPositions: readonly [number, number] | undefined;
+    const restore = installPhysicsWorld2DFailureInjectorForTest((stage) => {
+      if (stage !== "velocity-solve") return;
+      const snapshot = world.snapshot();
+      velocityBoundaryPositions = [
+        snapshot.bodies[0]!.positionX,
+        snapshot.bodies[1]!.positionX,
+      ];
+      throw new Error("stop after velocity solve");
+    });
+    try {
+      expect(() =>
+        world.advance({
+          frameId: 2,
+          logicalTime: 100,
+          stagedKinematicTargets: new Map(),
+        }),
+      ).toThrow("stop after velocity solve");
+    } finally {
+      restore();
+    }
+
+    expect(velocityBoundaryPositions![0]).toBeCloseTo(0.025, 12);
+    expect(velocityBoundaryPositions![1]).toBeCloseTo(1.475, 12);
+  });
+
+  it("adopts or discards one live candidate exactly once", () => {
+    const world = new PhysicsWorld2DKernel({ sleeping: false });
+    world.proposeTopology([movingBody(1)]);
+    const before = world.snapshot();
+    const discarded = world.advance({
+      frameId: 1,
+      logicalTime: 0,
+      stagedKinematicTargets: new Map(),
+    })!;
+    world.discard(discarded);
+    expect(world.snapshot()).toEqual(before);
+    expect(() => world.discard(discarded)).toThrow(/live candidate/);
+
+    const adopted = world.advance({
+      frameId: 2,
+      logicalTime: 0,
+      stagedKinematicTargets: new Map(),
+    })!;
+    world.adopt(adopted);
+    expect(world.snapshot().bodyCount).toBe(1);
+    expect(() => world.adopt(adopted)).toThrow(/live candidate/);
+    expect(() => world.discard(adopted)).toThrow(/live candidate/);
+  });
+
+  it("preserves later Begin commands without replaying commands already sealed by an older candidate", () => {
+    const world = new PhysicsWorld2DKernel({ sleeping: false });
+    world.proposeTopology([movingBody(1)]);
+    advance(world, 1, 0);
+    world.applyBegin([
+      {
+        kind: "apply-impulse",
+        bodyId: 1,
+        impulseX: 1,
+        impulseY: 0,
+        pointX: 0,
+        pointY: 0,
+      },
+    ]);
+    const first = world.advance({
+      frameId: 2,
+      logicalTime: 0,
+      stagedKinematicTargets: new Map(),
+    })!;
+    world.applyBegin([
+      {
+        kind: "apply-impulse",
+        bodyId: 1,
+        impulseX: 2,
+        impulseY: 0,
+        pointX: 0,
+        pointY: 0,
+      },
+    ]);
+    world.adopt(first);
+    advance(world, 3, 0);
+
+    expect(world.snapshot().bodies[0]!.linearVelocityX).toBe(3);
+  });
+
+  it("carries only the newly staged numeric event range with its candidate", () => {
+    const world = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: false,
+    });
+    world.proposeTopology(collidingTopology());
+    const anchored = advance(world, 1, 0);
+    expect(anchored.eventCount).toBe(0);
+
+    const contacted = advance(world, 2, 100);
+    expect(contacted.eventCount).toBe(1);
+    expect(contacted.eventKinds[contacted.eventOffset]).toBe(1);
+    expect(contacted.eventTicks[contacted.eventOffset]).toBe(1);
+
+    const steady = advance(world, 3, 200);
+    expect(steady.eventCount).toBe(0);
+  });
+
+  it("wakes through Begin admission and reanchors without simulating inactive time", () => {
+    const world = new PhysicsWorld2DKernel({ fixedStepMilliseconds: 100 });
+    world.proposeTopology([movingBody(1)]);
+    advance(world, 1, 0);
+    advance(world, 2, 400);
+    advance(world, 3, 500);
+    expect(world.snapshot().bodies[0]!.flags & (1 << 4)).not.toBe(0);
+
+    world.applyBegin([{ kind: "wake", bodyId: 1 }]);
+    const resumed = advance(world, 4, 1_000);
+
+    expect(resumed.stepCount).toBe(0);
+    expect(resumed.accumulatorMilliseconds).toBe(0);
+    expect(world.snapshot().bodies[0]!.flags & (1 << 4)).toBe(0);
+  });
+});
+
+describe("source-only world tracing", () => {
+  it("self-disables a throwing collector without changing simulation results", () => {
+    const traced = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: false,
+    });
+    const control = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: false,
+    });
+    traced.proposeTopology([movingBody(1, { velocityX: 2 })]);
+    control.proposeTopology([movingBody(1, { velocityX: 2 })]);
+    let calls = 0;
+    const restore = installPhysicsWorld2DTraceCollectorForTest(() => {
+      calls += 1;
+      throw new Error("trace failed");
+    });
+    try {
+      advance(traced, 1, 0);
+      advance(traced, 2, 500);
+      advance(control, 1, 0);
+      advance(control, 2, 500);
+    } finally {
+      restore();
+    }
+
+    expect(calls).toBe(1);
+    expect(traced.snapshot()).toEqual(control.snapshot());
+  });
+});

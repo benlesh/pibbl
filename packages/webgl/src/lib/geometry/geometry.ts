@@ -14,6 +14,12 @@ export interface WebGLGeometryData {
   }>;
 }
 
+export interface WebGLGeometrySnapshot {
+  readonly positions: readonly number[];
+  readonly indices: readonly number[] | undefined;
+  readonly bounds: WebGLGeometryData['bounds'];
+}
+
 const geometryBrand = Symbol('CRCWebGLGeometry');
 const geometryData = new WeakMap<CRCWebGLGeometry, WebGLGeometryData>();
 
@@ -172,4 +178,17 @@ export function getWebGLGeometryData(geometry: CRCWebGLGeometry): WebGLGeometryD
     throw new TypeError('Expected geometry created by createWebGLGeometry.');
   }
   return data;
+}
+
+/** Returns an ownership-isolated immutable CPU snapshot for official friends. */
+export function getWebGLGeometrySnapshot(
+  geometry: CRCWebGLGeometry,
+): WebGLGeometrySnapshot {
+  const data = getWebGLGeometryData(geometry);
+  return Object.freeze({
+    positions: Object.freeze(Array.from(data.positions)),
+    indices: data.indices === undefined ?
+      undefined : Object.freeze(Array.from(data.indices)),
+    bounds: Object.freeze({ ...data.bounds }),
+  });
 }

@@ -83,6 +83,22 @@ import {
 } from '@crc/three';
 import { PerspectiveCamera, Scene } from 'three';
 import {
+  Box3D,
+  Capsule3D,
+  Cone3D,
+  ConvexHull3D,
+  Cylinder3D,
+  Ellipsoid3D,
+  Heightfield3D,
+  PhysicsShape3D,
+  PhysicsWorld3D,
+  collider3D,
+  dynamicBody3D,
+  kinematicBody3D,
+  sphereShape3D,
+  staticBody3D,
+} from '@crc/physics/3d';
+import {
   Fragment as DevelopmentFragment,
   jsxDEV,
   type JSX as DevelopmentJSX,
@@ -514,6 +530,38 @@ export const automaticParticleScene: CRCElement = (
     </WebGLLayer>
   </Group>
 );
+
+const jsxPhysicsShape3D = sphereShape3D({ radius: 0.5 });
+export const automaticPhysics3DScene: CRCElement = (
+  <WebGLLayer style={{ width: 320, height: 180 }}>
+    <PhysicsWorld3D gravity={[0, -9.81, 0]}>
+      <Group3D physics={staticBody3D({ collider: false })}>
+        <Cube physics={collider3D()} style={{ lit: false }} />
+      </Group3D>
+      <Sphere physics={dynamicBody3D({ mass: 1 })} style={{ lit: false }} />
+      <Mesh
+        geometry={automaticWebGLGeometry}
+        physics={kinematicBody3D()}
+        style={{ lit: false }}
+      />
+      <PhysicsShape3D shape={jsxPhysicsShape3D} />
+      <Box3D width={1} height={1} depth={1} />
+      <Ellipsoid3D radii={[1, 2, 1]} />
+      <Capsule3D start={[0, -1, 0]} end={[0, 1, 0]} radius={0.5} />
+      <Cylinder3D radius={1} halfHeight={1} />
+      <Cone3D radius={1} halfHeight={1} />
+      <ConvexHull3D points={[[-1, -1, -1], [1, -1, -1], [0, 1, -1], [0, 0, 1]]} />
+      <Heightfield3D rows={2} columns={2} heights={[0, 0, 0, 0]} />
+    </PhysicsWorld3D>
+  </WebGLLayer>
+);
+
+// @ts-expect-error 2D physics attachments cannot be used by WebGL hosts.
+<Cube physics={{} as import('@crc/physics/2d').CRCPhysicsAttachment2D} />;
+// @ts-expect-error 3D physics attachments cannot be used by Canvas hosts.
+<Rectangle physics={dynamicBody3D()} style={{ width: 1, height: 1 }} />;
+// @ts-expect-error nominal lookalikes are not registered physics attachments.
+<Sphere physics={{ physics: 'dynamic' }} />;
 
 // @ts-expect-error RegularPolygon requires exactly one size property
 const missingRegularPolygonSize = <RegularPolygon style={{ sides: 6 }} />;

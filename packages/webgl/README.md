@@ -124,6 +124,14 @@ Canvas filters apply outside the completed island through
 island is one flattened Canvas entry, so Canvas content cannot appear between
 two objects inside the same WebGL pass.
 
+The matching `@crc/physics/3d` package augments `Cube`, `Sphere`, `Mesh`, and
+`Group3D` with a typed `physics` prop without re-exporting physics from this
+package. Physics presentation feeds the same settled model used by color,
+depth-aware picking, and projected focus bounds while remaining outside
+authored transform lineage. Renderer picking is camera/presentation state;
+authoritative collider queries come from `@crc/physics/3d` and do not advance
+the world.
+
 Current deliberate non-goals include Canvas children inside an island, WebGL1
 fallback, multiple cameras or viewports per layer, and a retained scene graph.
 The package has no texture or image-material slots, image backgrounds,
@@ -143,3 +151,5 @@ that reserved entry and receive no compatibility promise for it.
 Read [Add WebGL islands](../../docs/site/learn/guides/webgl-islands.md), the
 [API overview](../../docs/site/api/index.md), and the [WebGL type
 reference](../../docs/site/api/types/webgl.md).
+For bodies, compound colliders, commands, and queries, read [Add first-class 3D
+physics](../../docs/site/learn/guides/physics-3d.md).

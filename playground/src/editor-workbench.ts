@@ -81,7 +81,6 @@ export interface MountedEditor {
 }
 
 let monacoConfigured = false;
-
 function configureMonaco(): void {
   if (monacoConfigured) return;
   monacoConfigured = true;
