@@ -307,6 +307,44 @@ Read the exact contracts before changing these areas:
   scheduled updates, identity rules, and teardown ownership unless an approved
   plan explicitly changes a contract and supplies migration evidence.
 
+## Delivery sequencing: vertical slices before hardening
+
+User instructions and repository instructions override workflow recommendations
+from skills, including Superpowers. Skills supply techniques; they do not choose
+the delivery sequence.
+
+For feature work, default to this progression:
+
+1. Identify the smallest runnable end-to-end behavior through the supported
+   public API.
+2. Define its observable contract and add one focused failing test before
+   production code.
+3. Implement the complete vertical slice, including a public scenario or
+   browser-visible example where applicable.
+4. As soon as it works, provide the exact Studio URL and what the user should
+   inspect.
+5. Incorporate experiential feedback.
+6. Only then add the broader edge-case matrix, exhaustive ownership evidence,
+   documentation hardening, adversarial review, and aggregate trust gate.
+
+Before the first slice is ready, do not build exhaustive horizontal
+infrastructure for anticipated future cases, repeatedly run broad verification
+that cannot affect the slice, or launch overlapping reviewers. Perform only the
+focused verification needed to demonstrate the slice and protect existing
+behavior. Brainstorm only enough to resolve decisions that block the slice;
+require a full design phase only for difficult-to-reverse public contracts.
+
+Report these as distinct milestones:
+
+- **Slice ready for feedback:** runnable and focused checks pass.
+- **Feature complete:** accepted behavior is hardened, documented, reviewed,
+  and has passed proportional final verification.
+
+Use at most one implementation agent and one review agent per slice unless more
+independent work has a concrete wall-clock benefit. Reuse existing agents rather
+than repeatedly creating new reviewers. Do not explicitly override configured
+subagent model or reasoning defaults without a concrete task-specific reason.
+
 ## Verification contract
 
 The documented environment is Node 24.15 or newer on the Node 24 LTS line,
