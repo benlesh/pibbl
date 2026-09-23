@@ -201,6 +201,43 @@ describe('plain function component dispatch', () => {
 });
 
 describe('plain function component identity', () => {
+  it('reconciles unchanged refs without copying the retained keyset', async () => {
+    const canvas = createCanvas();
+    const observations = new Map<string, number>();
+    const tree = (revision: number) => (
+      <Fragment key="stable-parent">
+        <IdentityProbe
+          key="a"
+          label={`a-${revision}`}
+          observations={observations}
+        />
+        <IdentityProbe
+          key="b"
+          label={`b-${revision}`}
+          observations={observations}
+        />
+      </Fragment>
+    );
+    const controller = crc(canvas, tree(0));
+    await nextFrame();
+
+    const instance = getCRCInstance(canvas);
+    const retainedRefs = Array.from(instance.refs.values());
+    const originalKeys = instance.refs.keys;
+    let retainedKeysetCopies = 0;
+    instance.refs.keys = (() => {
+      retainedKeysetCopies++;
+      return originalKeys.call(instance.refs);
+    }) as typeof instance.refs.keys;
+
+    crc(canvas, tree(1));
+    await nextFrame();
+
+    expect(retainedKeysetCopies).toBe(0);
+    expect(Array.from(instance.refs.values())).toEqual(retainedRefs);
+    controller.dispose();
+  });
+
   it('keeps parentage stable through nested arrays and unkeyed Fragments', async () => {
     const canvas = createCanvas();
     const observations = new Map<string, number>();

@@ -780,7 +780,6 @@ interface RenderGlobalsSnapshot {
   readonly worldBaseTransform: unknown;
   readonly renderTransaction: unknown;
   readonly primitiveReceiverToken: unknown;
-  readonly unseenIds: unknown;
   readonly seenIds: unknown;
   readonly seenKeys: unknown;
   readonly clippingStack: unknown;
@@ -802,7 +801,6 @@ function snapshotRenderGlobals(): RenderGlobalsSnapshot {
     worldBaseTransform: GLOBAL_STATE.worldBaseTransform,
     renderTransaction: GLOBAL_STATE.renderTransaction,
     primitiveReceiverToken: GLOBAL_STATE.primitiveReceiverToken,
-    unseenIds: GLOBAL_STATE.unseenIds,
     seenIds: GLOBAL_STATE.seenIds,
     seenKeys: GLOBAL_STATE.seenKeys,
     clippingStack: GLOBAL_STATE.clippingStack,

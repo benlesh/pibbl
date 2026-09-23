@@ -125,7 +125,6 @@ function withIsolatedRenderState<T>(work: () => T): T {
     componentHookIndex: GLOBAL_STATE.componentHookIndex,
     renderContext: GLOBAL_STATE.renderContext,
     primitiveReceiverToken: GLOBAL_STATE.primitiveReceiverToken,
-    unseenIds: GLOBAL_STATE.unseenIds,
     seenIds: GLOBAL_STATE.seenIds,
     seenKeys: GLOBAL_STATE.seenKeys,
     clippingStack: GLOBAL_STATE.clippingStack,
@@ -138,7 +137,6 @@ function withIsolatedRenderState<T>(work: () => T): T {
   GLOBAL_STATE.componentHookIndex = 0;
   GLOBAL_STATE.renderContext = undefined;
   GLOBAL_STATE.primitiveReceiverToken = undefined;
-  GLOBAL_STATE.unseenIds = undefined;
   GLOBAL_STATE.seenIds = undefined;
   GLOBAL_STATE.seenKeys = undefined;
   GLOBAL_STATE.clippingStack = [];

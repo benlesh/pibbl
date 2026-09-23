@@ -1,9 +1,64 @@
+import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { playwright } from '@vitest/browser-playwright';
+import { defineBrowserCommand, playwright } from '@vitest/browser-playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { assertBuiltCore } from './tooling/assert-built-core.ts';
 import { crcRuntimeSource } from './tooling/crc-runtime-source.ts';
 import { crcStudioDocs } from './tooling/studio-docs/vite-plugin.ts';
+
+interface DevToolsSession {
+  send(method: string, params?: Record<string, unknown>): Promise<any>;
+}
+
+interface DevToolsProvider {
+  getCDPSession(sessionId: string): Promise<DevToolsSession>;
+}
+
+type DevToolsProfileKind = 'allocations' | 'cpu';
+
+const activeDevToolsProfiles = new Map<string, {
+  kind: DevToolsProfileKind;
+  session: DevToolsSession;
+}>();
+
+const startDevToolsProfile = defineBrowserCommand(async ({ provider, sessionId }, kind: DevToolsProfileKind) => {
+  if (activeDevToolsProfiles.has(sessionId)) {
+    throw new Error(`A DevTools profile is already active for session ${sessionId}.`);
+  }
+  const session = await (provider as unknown as DevToolsProvider).getCDPSession(sessionId);
+  if (kind === 'cpu') {
+    await session.send('Profiler.enable');
+    await session.send('Profiler.setSamplingInterval', { interval: 100 });
+    await session.send('Profiler.start');
+  } else {
+    await session.send('HeapProfiler.enable');
+    await session.send('HeapProfiler.startSampling', {
+      includeObjectsCollectedByMajorGC: true,
+      includeObjectsCollectedByMinorGC: true,
+      samplingInterval: 16_384,
+    });
+  }
+  activeDevToolsProfiles.set(sessionId, { kind, session });
+});
+
+const stopDevToolsProfile = defineBrowserCommand(async ({ sessionId }, outputPath: string) => {
+  const active = activeDevToolsProfiles.get(sessionId);
+  if (!active) {
+    throw new Error(`No DevTools profile is active for session ${sessionId}.`);
+  }
+  activeDevToolsProfiles.delete(sessionId);
+  const { kind, session } = active;
+  if (kind === 'cpu') {
+    const result = await session.send('Profiler.stop');
+    await session.send('Profiler.disable');
+    await writeFile(outputPath, JSON.stringify(result.profile));
+  } else {
+    const result = await session.send('HeapProfiler.stopSampling');
+    await session.send('HeapProfiler.disable');
+    await writeFile(outputPath, JSON.stringify(result.profile));
+  }
+  return outputPath;
+});
 
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -58,8 +113,17 @@ export default defineConfig(({ mode }) => ({
     ],
   },
   test: {
-    exclude: [...configDefaults.exclude, '.pnpm-store/**', '.superpowers/**'],
+    exclude: [
+      ...configDefaults.exclude,
+      '.pnpm-store/**',
+      '.superpowers/**',
+      '.worktrees/**',
+    ],
     browser: {
+      commands: {
+        startDevToolsProfile,
+        stopDevToolsProfile,
+      },
       enabled: true,
       headless: true,
       viewport: { width: 800, height: 600 },

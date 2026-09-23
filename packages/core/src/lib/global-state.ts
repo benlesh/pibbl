@@ -36,7 +36,6 @@ export interface GlobalState {
   renderTransaction: CRCRenderTransaction | undefined;
   frameSnapshot: CRCFrameSnapshot | undefined;
   primitiveReceiverToken: object | undefined;
-  unseenIds: Set<string> | undefined;
   seenIds: Set<string> | undefined;
   seenKeys: Set<string> | undefined;
   clippingStack: CRCClippingStackEntry[];
@@ -61,7 +60,6 @@ export const GLOBAL_STATE: GlobalState = {
   renderTransaction: undefined,
   frameSnapshot: undefined,
   primitiveReceiverToken: undefined,
-  unseenIds: undefined,
   seenIds: undefined,
   seenKeys: undefined,
   clippingStack: [],
@@ -196,7 +194,6 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
 }
 
 export function clearTempState() {
-  GLOBAL_STATE.unseenIds = undefined;
   GLOBAL_STATE.seenIds = undefined;
   GLOBAL_STATE.seenKeys = undefined;
   GLOBAL_STATE.canvas = undefined;

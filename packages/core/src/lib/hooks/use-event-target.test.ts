@@ -105,6 +105,7 @@ describe('useEventTarget', () => {
     expect(instance.eventRoot.nativeListeners?.count('click')).toBe(1);
     expect(instance.eventRoot.nativeListeners?.count('keydown')).toBe(1);
     expect(instance.eventRoot.nativeListeners?.count('pointerdown')).toBe(1);
+    const acquire = vi.spyOn(instance.eventRoot.nativeListeners!, 'acquire');
 
     crc(canvas, createElement(Probe, { onClick: secondClick, cursor: 'crosshair' }));
     await nextFrame();
@@ -116,6 +117,7 @@ describe('useEventTarget', () => {
     expect(component.hooks).toHaveLength(1);
     expect(teardownCount(component.teardowns) - 2).toBe(1);
     expect(instance.eventRoot.nativeListeners?.count('click')).toBe(1);
+    expect(acquire).not.toHaveBeenCalled();
     controller.dispose();
   });
 

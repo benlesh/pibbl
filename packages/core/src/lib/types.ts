@@ -131,6 +131,7 @@ export interface CRCComponentRefs<P> {
   id: string;
   parent: CRCComponentRefs<any> | undefined;
   element: CRCElement<P>;
+  renderGeneration: number;
   refs: any[];
   hooks: CRCHookSlot[];
   signalConsumer: SignalRenderConsumer | undefined;
@@ -287,6 +288,9 @@ export interface CRCInstance {
   pendingRoot: PendingRoot;
   pendingUpdateParents: boolean;
   refs: Map<string, CRCComponentRefs<any>>;
+  renderGeneration: number;
+  renderSeenIds: Set<string>;
+  renderSeenKeys: Set<string>;
   requestedRenderRevision: number;
   completedRenderRevision: number;
   renderTimestamp: number;

@@ -10,6 +10,7 @@ import {
   loadScenario,
   performanceLabScenarioEntry,
 } from '@crc/scenarios';
+import { commands } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import performanceLabSource from '../../scenarios/src/performance-lab.example.tsx?raw';
 import { Absolute, crc, useEventListener, Flow, Rectangle, Text, type CRCController } from '../src/index';
@@ -23,6 +24,13 @@ import type { Canvas, CRCInstance } from '../src/lib/types';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
 import { expectVisualMatch } from './visual-compare';
 import { createElement } from '../src/lib/element/create-element';
+
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    startDevToolsProfile(kind: 'allocations' | 'cpu'): Promise<void>;
+    stopDevToolsProfile(outputPath: string): Promise<string>;
+  }
+}
 
 interface PerformanceObservation {
   dispatchesPerSample: number;
@@ -94,12 +102,35 @@ const MEASURED_BATCHES = 101;
 const RUN_TIMING =
   import.meta.env.VITE_CRC_PERF_GUARD === '1' ||
   import.meta.env.VITE_CRC_REPORT_PERF === '1';
+const DEVTOOLS_PROFILE_KIND = import.meta.env.VITE_CRC_DEVTOOLS_PROFILE as
+  'allocations' | 'cpu' | undefined;
+const DEVTOOLS_PROFILE_OUTPUT = import.meta.env.VITE_CRC_DEVTOOLS_PROFILE_OUTPUT;
+const DEVTOOLS_PROFILE_TARGET = import.meta.env.VITE_CRC_DEVTOOLS_PROFILE_TARGET ?? 'lab';
 const activeControllers = new Set<ScenarioController<PerformanceLabState>>();
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
 const activeFrameDiagnostics = new Set<FrameCallbackDiagnostics>();
 const activeRuntimeControllers = new Set<CRCController>();
 
 const EmptyPerformanceScene = (_props: {}) => undefined;
+
+const DirectSparseProfileScene = ({ revision }: { revision: number }) => {
+  const nodes = new Array(1_000);
+  for (let index = 0; index < nodes.length; index++) {
+    const target = `region-${index}`;
+    nodes[index] = createElement(Rectangle, {
+      key: target,
+      style: {
+        x: 20 + (index % 100) * 4,
+        y: 20 + Math.floor(index / 100) * 2,
+        width: 3,
+        height: 2,
+        fill: index === 0 ? '#16a34a' : '#2563eb',
+      },
+      onMouseMove: () => revision,
+    });
+  }
+  return nodes;
+};
 
 const StructuralEventScene = ({ count, recordAncestor, recordTarget }: {
   count: number;
@@ -824,6 +855,67 @@ describe('shared event performance laboratory', () => {
       }));
     }
   }, 60_000);
+
+  it.skipIf(!DEVTOOLS_PROFILE_KIND || DEVTOOLS_PROFILE_TARGET !== 'lab')('profiles sparse-1000 rerenders through Chrome DevTools', async () => {
+    if (!DEVTOOLS_PROFILE_OUTPUT) {
+      throw new Error('VITE_CRC_DEVTOOLS_PROFILE_OUTPUT is required when profiling.');
+    }
+    const { canvas, controller } = await mountLab();
+    await controller.perform('show-sparse-1000');
+    await controller.perform('rerender-25');
+
+    await commands.startDevToolsProfile(DEVTOOLS_PROFILE_KIND!);
+    try {
+      for (let batch = 0; batch < 8; batch++) {
+        await controller.perform('rerender-25');
+      }
+    } finally {
+      await commands.stopDevToolsProfile(DEVTOOLS_PROFILE_OUTPUT);
+    }
+
+    expect(controller.getState()).toMatchObject({
+      completedRenders: 226,
+      renderedRevision: 226,
+      revision: 226,
+    });
+    expect(summarizeInstances(canvas)).toMatchObject({
+      paintEntries: 1_000,
+      regions: 1_000,
+    });
+  }, 120_000);
+
+  it.skipIf(!DEVTOOLS_PROFILE_KIND || DEVTOOLS_PROFILE_TARGET !== 'runtime')('profiles uninstrumented sparse-1000 rerenders through Chrome DevTools', async () => {
+    if (!DEVTOOLS_PROFILE_OUTPUT) {
+      throw new Error('VITE_CRC_DEVTOOLS_PROFILE_OUTPUT is required when profiling.');
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = 480;
+    canvas.height = 240;
+    document.body.replaceChildren(canvas);
+    let revision = 0;
+    const controller = crc(canvas, createElement(DirectSparseProfileScene, { revision }));
+    activeRuntimeControllers.add(controller);
+    const rerender = async () => {
+      revision++;
+      crc(canvas, createElement(DirectSparseProfileScene, { revision }));
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    };
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    for (let index = 0; index < 25; index++) await rerender();
+
+    await commands.startDevToolsProfile(DEVTOOLS_PROFILE_KIND!);
+    try {
+      for (let index = 0; index < 200; index++) await rerender();
+    } finally {
+      await commands.stopDevToolsProfile(DEVTOOLS_PROFILE_OUTPUT);
+    }
+
+    expect(summarizeInstances(canvas)).toMatchObject({
+      componentRefs: 1_001,
+      paintEntries: 1_000,
+      regions: 1_000,
+    });
+  }, 120_000);
 
   it.skipIf(!RUN_TIMING)('records controlled dispatch curves and enforces opt-in reference budgets', async () => {
     const { canvas, controller } = await mountLab();

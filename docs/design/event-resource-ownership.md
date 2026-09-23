@@ -1,7 +1,7 @@
 # CRC event resource ownership
 
-Status: current implemented contract, updated for WebGL lighting, orbit-camera,
-and genuine-shadow behavior on 2026-09-15.
+Status: current implemented contract, updated for event-registration masks on
+2026-09-23.
 
 This contract assigns every event-related resource to one owner and one
 idempotent release path. It supplements the [user-event
@@ -91,6 +91,44 @@ capture, retained touch contacts, drag hover, mouse hover/activation, and cursor
 state that still references it. A built-in remains a passive target without
 those properties until `pointerEvents="none"` or component teardown releases
 it.
+
+### Registration signatures and native ownership
+
+Handler normalization and native-listener ownership use private two-word
+bitmask signatures over the closed `CRC_EVENT_DEFINITIONS` vocabulary. Bits
+0-31 occupy the low word and bits 32-63 occupy the high word; module loading
+fails rather than aliasing definitions if the vocabulary exceeds 64 entries.
+The signed numeric representation of bit 31 is immaterial because words are
+treated only as opaque 32-bit sets.
+
+Each target/listener retains three distinct forms of state:
+
+- a fresh normalized callback object for current bubble/capture dispatch;
+- a logical handler mask pair used for handler-presence/liveness checks; and
+- required and last-reconciled native mask pairs used for listener ownership.
+
+Module initialization precomputes each author-facing event prop's normalized
+key, logical bit, and complete native prerequisite mask. The render path visits
+only enumerable props supplied by the handler object, ignores unknown props by
+metadata lookup, copies current callback values, and ORs precomputed words.
+Bubble and capture callbacks retain separate normalized keys but share the same
+logical/native bits. Cursor movement/exit requirements use a separate
+precomputed mask.
+
+Equal required and reconciled pairs make ownership reconciliation two integer
+equality checks with no native-hub work. Changed ownership uses
+`previous & ~next` for removals and `next & ~previous` for additions, then
+walks only the set bits. Removals release before additions acquire. Explicit
+release resets the reconciled pair to zero, executes every exact release
+closure once, and removes the registration's release map so reviving a stable
+hook slot reacquires its complete current signature.
+
+Masks never encode callback identity and never replace normalized callback
+lookups during propagation. Callback objects refresh on every render even when
+their type signatures are equal, preserving latest-closure behavior. Masks are
+transient internal values: they are not serialized, exposed publicly, or a
+cross-version bit-position contract. The complete rationale and maintenance
+rules live in the [event-registration hot-path design](../superpowers/specs/2026-09-23-event-registration-hot-path-design.md).
 
 `useOrbitCamera()` owns stable handler functions but no native listener,
 logical target, focus candidate, or pointer-capture resource merely by being

@@ -251,19 +251,21 @@ function prepareComponentScope<P>(
   parentId: string,
   parent: CRCComponentRefs<any> | undefined,
 ): CRCComponentRefs<P> {
+  const crcInstance = GLOBAL_STATE.currentCRCInstance!;
   const typeName = getElementTypeName(element, parentId);
   const id = ensureUniqueId(parentId, typeName);
-  GLOBAL_STATE.unseenIds!.delete(id);
   GLOBAL_STATE.seenIds!.add(id);
-  GLOBAL_STATE.componentIsMounting =
-    !GLOBAL_STATE.currentCRCInstance!.refs.has(id);
-  if (GLOBAL_STATE.componentIsMounting) {
+  let componentRefs = crcInstance.refs.get(id) as
+    CRCComponentRefs<P> | undefined;
+  GLOBAL_STATE.componentIsMounting = componentRefs === undefined;
+  if (componentRefs === undefined) {
     const teardowns = new Teardowns();
-    teardowns.follow(GLOBAL_STATE.currentCRCInstance!.mainTeardowns);
-    const componentRefs: CRCComponentRefs<P> = {
+    teardowns.follow(crcInstance.mainTeardowns);
+    const mountedRefs: CRCComponentRefs<P> = {
       id,
       parent,
       element,
+      renderGeneration: crcInstance.renderGeneration,
       refs: [],
       hooks: [],
       signalConsumer: undefined,
@@ -271,15 +273,14 @@ function prepareComponentScope<P>(
       onAfterRender: undefined,
     };
     if (!isFragmentElement(element)) {
-      const crcInstance = GLOBAL_STATE.currentCRCInstance!;
-      componentRefs.signalConsumer = createSignalRenderConsumer({
+      mountedRefs.signalConsumer = createSignalRenderConsumer({
         debugName: `${element.type.name || 'Anonymous'} (${id})`,
         invalidate: () => {
           if (
             GLOBAL_STATE.crcInstances.get(crcInstance.canvas) !== crcInstance ||
             crcInstance.mainTeardowns.closed ||
-            componentRefs.teardowns.closed ||
-            crcInstance.refs.get(componentRefs.id) !== componentRefs
+            mountedRefs.teardowns.closed ||
+            crcInstance.refs.get(mountedRefs.id) !== mountedRefs
           ) {
             return;
           }
@@ -287,15 +288,16 @@ function prepareComponentScope<P>(
         },
       });
       teardowns.add(() => {
-        disposeSignalRenderConsumer(componentRefs.signalConsumer!);
+        disposeSignalRenderConsumer(mountedRefs.signalConsumer!);
       });
     }
-    GLOBAL_STATE.currentCRCInstance!.refs.set(id, componentRefs);
+    crcInstance.refs.set(id, mountedRefs);
+    componentRefs = mountedRefs;
   }
 
-  const componentRefs = GLOBAL_STATE.currentCRCInstance!.refs.get(id)!;
   componentRefs.parent = parent;
   componentRefs.element = element;
+  componentRefs.renderGeneration = crcInstance.renderGeneration;
   return componentRefs;
 }
 

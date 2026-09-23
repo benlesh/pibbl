@@ -63,7 +63,6 @@ export function executeRender(
   const prevPrimitiveReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
   const prevSeenIds = GLOBAL_STATE.seenIds;
   const prevSeenKeys = GLOBAL_STATE.seenKeys;
-  const prevUnseendIds = GLOBAL_STATE.unseenIds;
   const prevComponentRefs = GLOBAL_STATE.componentRefs;
   const prevComponentHookIndex = GLOBAL_STATE.componentHookIndex;
   const prevComponentIsMounting = GLOBAL_STATE.componentIsMounting;
@@ -74,6 +73,8 @@ export function executeRender(
   const prevBackendEnvironment = GLOBAL_STATE.backendEnvironment;
   let frame: CRCBackendFrame<unknown> | undefined;
   let frameSuccess = false;
+  let renderSeenIds: Set<string> | undefined;
+  let renderSeenKeys: Set<string> | undefined;
   try {
     const activeFrameSnapshot = frameSnapshot ?? (
       prevFrameSnapshot?.logicalTime === renderTimestamp ?
@@ -133,23 +134,24 @@ export function executeRender(
       percentageBasis: crcInstance.rootLayoutBox,
     }];
 
-    GLOBAL_STATE.unseenIds = new Set(
-      GLOBAL_STATE.currentCRCInstance.refs.keys(),
-    );
-    GLOBAL_STATE.seenIds = new Set();
-    GLOBAL_STATE.seenKeys = new Set();
+    const renderGeneration = ++crcInstance.renderGeneration;
+    renderSeenIds = crcInstance.renderSeenIds;
+    renderSeenKeys = crcInstance.renderSeenKeys;
+    renderSeenIds.clear();
+    renderSeenKeys.clear();
+    GLOBAL_STATE.seenIds = renderSeenIds;
+    GLOBAL_STATE.seenKeys = renderSeenKeys;
     const id = 'root';
-    GLOBAL_STATE.unseenIds.delete(id);
-    GLOBAL_STATE.seenIds.add(id);
+    renderSeenIds.add(id);
     withSignalWriteForbidden(
       'CRC render',
       () => render(rootNode, id, undefined),
     );
 
-    for (const id of GLOBAL_STATE.unseenIds) {
-      // HACK: I want to be more efficient here, but this is fine for now
-      GLOBAL_STATE.currentCRCInstance.refs.get(id)?.teardowns.execute();
-      GLOBAL_STATE.currentCRCInstance.refs.delete(id);
+    for (const [id, componentRefs] of crcInstance.refs) {
+      if (componentRefs.renderGeneration === renderGeneration) continue;
+      componentRefs.teardowns.execute();
+      crcInstance.refs.delete(id);
     }
     frameSuccess = true;
     driver.finishFrame(frame, true);
@@ -181,6 +183,8 @@ export function executeRender(
           }
         }
       } finally {
+        renderSeenIds?.clear();
+        renderSeenKeys?.clear();
         GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
         GLOBAL_STATE.canvas = prevCanvas;
         GLOBAL_STATE.renderContext = prevRenderContext;
@@ -191,7 +195,6 @@ export function executeRender(
         GLOBAL_STATE.primitiveReceiverToken = prevPrimitiveReceiverToken;
         GLOBAL_STATE.seenIds = prevSeenIds;
         GLOBAL_STATE.seenKeys = prevSeenKeys;
-        GLOBAL_STATE.unseenIds = prevUnseendIds;
         GLOBAL_STATE.componentRefs = prevComponentRefs;
         GLOBAL_STATE.componentHookIndex = prevComponentHookIndex;
         GLOBAL_STATE.componentIsMounting = prevComponentIsMounting;

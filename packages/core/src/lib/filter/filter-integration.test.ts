@@ -1944,7 +1944,6 @@ function temporaryGlobalSnapshot() {
     worldBaseTransform: GLOBAL_STATE.worldBaseTransform,
     renderTransaction: GLOBAL_STATE.renderTransaction,
     primitiveReceiverToken: GLOBAL_STATE.primitiveReceiverToken,
-    unseenIds: GLOBAL_STATE.unseenIds,
     seenIds: GLOBAL_STATE.seenIds,
     seenKeys: GLOBAL_STATE.seenKeys,
     clippingStack: GLOBAL_STATE.clippingStack,

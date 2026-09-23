@@ -43,7 +43,6 @@ function expectTemporaryRenderStateReleased(): void {
     renderContext: undefined,
     seenIds: undefined,
     seenKeys: undefined,
-    unseenIds: undefined,
   });
   expect(GLOBAL_STATE.clippingStack).toEqual([]);
 }

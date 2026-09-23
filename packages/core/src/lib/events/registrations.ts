@@ -1,72 +1,91 @@
-import { CRC_EVENT_DEFINITIONS } from './event-definitions.js';
+import { CRC_EVENT_DEFINITIONS } from "./event-definitions.js";
 import type {
   CRCEventHandler,
   CRCEventHandlers,
   CRCEventTarget,
   CRCEventTargetOptions,
   CRCEventType,
-} from './types.js';
-import { GLOBAL_STATE } from '../global-state.js';
-import type { LayoutBox } from '../layout/types.js';
-import { getCurrentWorldTransform } from '../render-target.js';
+} from "./types.js";
+import { GLOBAL_STATE } from "../global-state.js";
+import type { LayoutBox } from "../layout/types.js";
+import { getCurrentWorldTransform } from "../render-target.js";
 import type {
   CRCComponentRefs,
   CRCInstance,
   CRCRegionHandlers,
-} from '../types.js';
-import {
-  CRCPaintEntryKind,
-  type CRCPathPaintEntry,
-} from './paint-entry.js';
+} from "../types.js";
+import { CRCPaintEntryKind, type CRCPathPaintEntry } from "./paint-entry.js";
 import {
   clearPointerCapturesForTarget,
   hasLogicalPointerCapture,
   releaseLogicalPointerCapture,
   setLogicalPointerCapture,
-} from './pointer-capture.js';
+} from "./pointer-capture.js";
 
 type CRCNormalizedCaptureKey = `${CRCEventType}Capture`;
 
-export type CRCNormalizedHandlers = Partial<{
-  [K in CRCEventType]: CRCEventHandler<K>;
-} & {
-  [K in CRCEventType as `${K}Capture`]: CRCEventHandler<K>;
-}>;
+export type CRCNormalizedHandlers = Partial<
+  {
+    [K in CRCEventType]: CRCEventHandler<K>;
+  } & {
+    [K in CRCEventType as `${K}Capture`]: CRCEventHandler<K>;
+  }
+>;
 
 export interface CRCEventTargetRegistration {
-  readonly kind: 'target';
+  readonly kind: "target";
   readonly owner: CRCInstance;
   readonly component: CRCComponentRefs<any>;
   readonly slot: number;
   readonly publicTarget: CRCEventTarget;
   paintEntry: CRCPathPaintEntry | undefined;
   handlers: CRCNormalizedHandlers;
+  /** Logical event types currently present in `handlers`, split across two 32-bit words. */
+  handlerTypesLow: number;
+  handlerTypesHigh: number;
+  /** Native event dependency signature derived from the current handlers and cursor. */
+  requiredNativeTypesLow: number;
+  requiredNativeTypesHigh: number;
+  /** Last native signature reconciled with `nativeReleases`. */
+  ownedNativeTypesLow: number;
+  ownedNativeTypesHigh: number;
   cursor: string | undefined;
   keyboardFocusable: boolean | undefined;
   keyboardNavigationBounds: Readonly<LayoutBox> | undefined;
   /** @internal Backend-projected points retained until root-space resolution. */
-  keyboardNavigationPoints: readonly Readonly<{ x: number; y: number }>[] | undefined;
+  keyboardNavigationPoints:
+    readonly Readonly<{ x: number; y: number }>[] | undefined;
   live: boolean;
 }
 
 export interface CRCEventListenerRegistration {
-  readonly kind: 'listener';
+  readonly kind: "listener";
   readonly owner: CRCInstance;
   readonly component: CRCComponentRefs<any>;
   readonly slot: number;
   readonly publicTarget: CRCEventTarget;
   handlers: CRCNormalizedHandlers;
+  /** Logical event types currently present in `handlers`, split across two 32-bit words. */
+  handlerTypesLow: number;
+  handlerTypesHigh: number;
+  /** Native event dependency signature derived from the current handlers. */
+  requiredNativeTypesLow: number;
+  requiredNativeTypesHigh: number;
+  /** Last native signature reconciled with `nativeReleases`. */
+  ownedNativeTypesLow: number;
+  ownedNativeTypesHigh: number;
   live: boolean;
 }
 
 export type CRCEventNode =
-  | CRCEventTargetRegistration
-  | CRCEventListenerRegistration;
+  CRCEventTargetRegistration | CRCEventListenerRegistration;
 
 export interface CRCLegacyHitGeometry {
   readonly path: Path2D | undefined;
 }
 
+// Masks make membership/diff checks cheap; this map retains the exact release
+// closure returned by the shared hub for each bit that was actually acquired.
 const nativeReleases = new WeakMap<
   CRCEventTargetRegistration | CRCEventListenerRegistration,
   Map<CRCEventType, () => void>
@@ -84,13 +103,19 @@ export function createTarget(
   const target = {} as CRCEventTargetRegistration;
   const publicTarget = createPublicTarget(() => target);
   Object.assign(target, {
-    kind: 'target' as const,
+    kind: "target" as const,
     owner,
     component,
     slot,
     publicTarget,
     paintEntry: undefined,
     handlers: {},
+    handlerTypesLow: 0,
+    handlerTypesHigh: 0,
+    requiredNativeTypesLow: 0,
+    requiredNativeTypesHigh: 0,
+    ownedNativeTypesLow: 0,
+    ownedNativeTypesHigh: 0,
     cursor: undefined,
     keyboardFocusable: undefined,
     keyboardNavigationBounds: undefined,
@@ -107,14 +132,11 @@ export function updateTarget(
   participatesInPaint = false,
   preserveKeyboardNavigationGeometry = false,
 ): void {
-  const normalizedHandlers = normalizeHandlers(handlers);
-  const types = handledTypes(normalizedHandlers);
   legacyHitGeometry.delete(target);
   updateTargetRegistration(
     target,
-    normalizedHandlers,
+    handlers,
     options,
-    requiredNativeTypes(types, Boolean(options.cursor)),
     participatesInPaint,
     preserveKeyboardNavigationGeometry,
   );
@@ -137,18 +159,19 @@ export function updateLegacyTarget(
     cursor?: string;
   },
 ): void {
-  const normalizedHandlers = normalizeLegacyHandlers(handlers);
   configureLegacyHitGeometry(target, path);
   updateTargetRegistration(
     target,
-    normalizedHandlers,
+    handlers,
     {
       path: path ?? target.paintEntry?.path ?? new Path2D(),
       fill,
       lineInteractionWidth,
       cursor,
     },
-    requiredNativeTypes(handledTypes(normalizedHandlers), Boolean(cursor)),
+    false,
+    false,
+    true,
   );
   if (target.live) target.owner.regions.add(target);
 }
@@ -170,14 +193,12 @@ export function getLegacyHitGeometry(
 
 function updateTargetRegistration(
   target: CRCEventTargetRegistration,
-  normalizedHandlers: CRCNormalizedHandlers,
+  handlers: CRCEventHandlers | CRCRegionHandlers,
   options: CRCEventTargetOptions,
-  nativeTypes: ReadonlySet<CRCEventType>,
   participatesInPaint = false,
   preserveKeyboardNavigationGeometry = false,
+  legacyHandlers = false,
 ): void {
-  const types = handledTypes(normalizedHandlers);
-
   if (target.live) {
     // Remove while the previous handler map is still current so ownership
     // diagnostics and mutation observers attribute the release correctly.
@@ -185,10 +206,24 @@ function updateTargetRegistration(
     target.owner.eventRoot.targets.delete(target);
   }
 
-  target.handlers = normalizedHandlers;
-  const paintEntry = target.paintEntry ?? {
-    paintKind: CRCPaintEntryKind.Path,
-  } as CRCPathPaintEntry;
+  if (legacyHandlers) {
+    refreshLegacyHandlers(
+      target,
+      handlers as CRCRegionHandlers,
+      Boolean(options.cursor),
+    );
+  } else {
+    refreshHandlers(
+      target,
+      handlers as CRCEventHandlers,
+      Boolean(options.cursor),
+    );
+  }
+  const paintEntry =
+    target.paintEntry ??
+    ({
+      paintKind: CRCPaintEntryKind.Path,
+    } as CRCPathPaintEntry);
   paintEntry.target = target;
   paintEntry.path = options.path;
   paintEntry.fill = options.fill ?? false;
@@ -209,7 +244,8 @@ function updateTargetRegistration(
 
   if (
     !participatesInPaint &&
-    types.size === 0 &&
+    target.handlerTypesLow === 0 &&
+    target.handlerTypesHigh === 0 &&
     !target.cursor &&
     target.keyboardFocusable !== true
   ) {
@@ -229,7 +265,7 @@ function updateTargetRegistration(
   target.paintEntry = paintEntry;
   target.owner.paintEntries.add(paintEntry);
   target.owner.eventRoot.targets.add(target);
-  updateNativeOwnership(target, nativeTypes);
+  updateNativeOwnership(target);
   target.owner.eventRoot.focusPolicy?.observeTarget(target);
   target.owner.eventRoot.onTargetUpdate?.(target);
 }
@@ -257,12 +293,18 @@ export function createListener(
   const listener = {} as CRCEventListenerRegistration;
   const publicTarget = createPublicTarget(() => listener);
   Object.assign(listener, {
-    kind: 'listener',
+    kind: "listener",
     owner,
     component,
     slot,
     publicTarget,
     handlers: {},
+    handlerTypesLow: 0,
+    handlerTypesHigh: 0,
+    requiredNativeTypesLow: 0,
+    requiredNativeTypesHigh: 0,
+    ownedNativeTypesLow: 0,
+    ownedNativeTypesHigh: 0,
     live: false,
   });
   return listener;
@@ -272,8 +314,6 @@ export function updateListener(
   listener: CRCEventListenerRegistration,
   handlers: CRCEventHandlers,
 ): void {
-  const normalizedHandlers = normalizeHandlers(handlers);
-  const types = handledTypes(normalizedHandlers);
   let registrations = listener.owner.eventRoot.listenersByComponent.get(
     listener.component.id,
   );
@@ -282,11 +322,13 @@ export function updateListener(
     // position and preserving the previous handler map for release observers.
     registrations?.delete(listener);
   }
-  listener.handlers = normalizedHandlers;
+  refreshHandlers(listener, handlers, false);
 
-  if (types.size === 0) {
+  if (listener.handlerTypesLow === 0 && listener.handlerTypesHigh === 0) {
     if (registrations?.size === 0) {
-      listener.owner.eventRoot.listenersByComponent.delete(listener.component.id);
+      listener.owner.eventRoot.listenersByComponent.delete(
+        listener.component.id,
+      );
     }
     if (listener.live) listener.owner.eventRoot.onNodeRelease?.(listener);
     listener.live = false;
@@ -304,7 +346,7 @@ export function updateListener(
   }
   registrations.add(listener);
   listener.live = true;
-  updateNativeOwnership(listener, requiredNativeTypes(types, false));
+  updateNativeOwnership(listener);
 }
 
 export function releaseListener(listener: CRCEventListenerRegistration): void {
@@ -314,7 +356,9 @@ export function releaseListener(listener: CRCEventListenerRegistration): void {
     );
     registrations?.delete(listener);
     if (registrations?.size === 0) {
-      listener.owner.eventRoot.listenersByComponent.delete(listener.component.id);
+      listener.owner.eventRoot.listenersByComponent.delete(
+        listener.component.id,
+      );
     }
     listener.owner.eventRoot.onNodeRelease?.(listener);
   }
@@ -326,132 +370,290 @@ export function releaseListener(listener: CRCEventListenerRegistration): void {
 export function normalizeHandlers(
   handlers: CRCEventHandlers,
 ): CRCNormalizedHandlers {
-  const normalized: CRCNormalizedHandlers = {};
-  for (const definition of CRC_EVENT_DEFINITIONS) {
-    const bubble = handlers[definition.prop];
-    const capture = handlers[definition.captureProp];
-    if (bubble) {
-      Object.assign(normalized, { [definition.type]: bubble });
-    }
-    if (capture) {
-      Object.assign(normalized, {
-        [`${definition.type}Capture`]: capture,
-      });
-    }
-  }
-  return normalized;
+  const state = createHandlerState();
+  refreshHandlers(state, handlers, false);
+  return state.handlers;
 }
 
-function normalizeLegacyHandlers(
-  handlers: CRCRegionHandlers,
-): CRCNormalizedHandlers {
+interface CRCHandlerState {
+  handlers: CRCNormalizedHandlers;
+  handlerTypesLow: number;
+  handlerTypesHigh: number;
+  requiredNativeTypesLow: number;
+  requiredNativeTypesHigh: number;
+}
+
+interface CRCEventPropMetadata {
+  readonly normalizedKey: CRCEventType | CRCNormalizedCaptureKey;
+  readonly handlerTypesLow: number;
+  readonly handlerTypesHigh: number;
+  readonly requiredNativeTypesLow: number;
+  readonly requiredNativeTypesHigh: number;
+}
+
+/**
+ * Hot-path property lookup built once from the closed event vocabulary.
+ *
+ * Each definition owns one bit position. JavaScript bitwise operators use
+ * signed 32-bit integers, but sign is irrelevant here: the words are opaque
+ * bit sets compared and combined only with bitwise operations.
+ */
+const eventPropMetadata = Object.create(null) as Record<
+  string,
+  CRCEventPropMetadata | undefined
+>;
+const normalizedHandlerMetadata = Object.create(null) as Record<
+  string,
+  CRCEventPropMetadata | undefined
+>;
+const eventIndexByType = Object.create(null) as Record<
+  string,
+  number | undefined
+>;
+
+if (CRC_EVENT_DEFINITIONS.length > 64) {
+  throw new Error("CRC event masks support at most 64 logical event types.");
+}
+
+for (let index = 0; index < CRC_EVENT_DEFINITIONS.length; index++) {
+  eventIndexByType[CRC_EVENT_DEFINITIONS[index]!.type] = index;
+}
+
+for (let index = 0; index < CRC_EVENT_DEFINITIONS.length; index++) {
+  const definition = CRC_EVENT_DEFINITIONS[index]!;
+  const handlerTypesLow = index < 32 ? 1 << index : 0;
+  const handlerTypesHigh = index < 32 ? 0 : 1 << (index - 32);
+  // Expand logical-to-native prerequisites once. The render path only ORs
+  // these precomputed words and never allocates dependency Sets.
+  const nativeTypes = expandNativeTypesForMetadata(
+    new Set([definition.type]),
+    false,
+  );
+  let requiredNativeTypesLow = 0;
+  let requiredNativeTypesHigh = 0;
+  for (const type of nativeTypes) {
+    const nativeIndex = eventIndexByType[type]!;
+    if (nativeIndex < 32) {
+      requiredNativeTypesLow |= 1 << nativeIndex;
+    } else {
+      requiredNativeTypesHigh |= 1 << (nativeIndex - 32);
+    }
+  }
+  const bubble: CRCEventPropMetadata = Object.freeze({
+    normalizedKey: definition.type,
+    handlerTypesLow,
+    handlerTypesHigh,
+    requiredNativeTypesLow,
+    requiredNativeTypesHigh,
+  });
+  const capture: CRCEventPropMetadata = Object.freeze({
+    ...bubble,
+    normalizedKey: `${definition.type}Capture` as CRCNormalizedCaptureKey,
+  });
+  eventPropMetadata[definition.prop] = bubble;
+  eventPropMetadata[definition.captureProp] = capture;
+  normalizedHandlerMetadata[definition.type] = bubble;
+  normalizedHandlerMetadata[`${definition.type}Capture`] = capture;
+}
+
+// Cursor tracking has native movement/exit requirements even without a
+// logical callback, so it receives the same precomputed representation.
+const cursorNativeTypes = expandNativeTypesForMetadata(new Set(), true);
+let cursorNativeTypesLow = 0;
+let cursorNativeTypesHigh = 0;
+for (const type of cursorNativeTypes) {
+  const index = eventIndexByType[type]!;
+  if (index < 32) {
+    cursorNativeTypesLow |= 1 << index;
+  } else {
+    cursorNativeTypesHigh |= 1 << (index - 32);
+  }
+}
+
+function createHandlerState(): CRCHandlerState {
+  return {
+    handlers: {},
+    handlerTypesLow: 0,
+    handlerTypesHigh: 0,
+    requiredNativeTypesLow: 0,
+    requiredNativeTypesHigh: 0,
+  };
+}
+
+function refreshHandlers(
+  state: CRCHandlerState,
+  handlers: CRCEventHandlers,
+  hasCursor: boolean,
+): void {
   const normalized: CRCNormalizedHandlers = {};
-  for (const [type, handler] of Object.entries(handlers)) {
+  let handlerTypesLow = 0;
+  let handlerTypesHigh = 0;
+  let requiredNativeTypesLow = hasCursor ? cursorNativeTypesLow : 0;
+  let requiredNativeTypesHigh = hasCursor ? cursorNativeTypesHigh : 0;
+  // Iterate supplied props rather than probing every supported bubble and
+  // capture name. Keep the normalized object fresh so dispatch always sees
+  // the newest closures even when the type signature is unchanged.
+  for (const prop in handlers) {
+    const metadata = eventPropMetadata[prop];
+    if (!metadata) continue;
+    const handler = handlers[prop as keyof CRCEventHandlers];
     if (handler) {
-      Object.assign(normalized, { [type]: handler });
+      (normalized as Record<string, unknown>)[metadata.normalizedKey] = handler;
+      handlerTypesLow |= metadata.handlerTypesLow;
+      handlerTypesHigh |= metadata.handlerTypesHigh;
+      requiredNativeTypesLow |= metadata.requiredNativeTypesLow;
+      requiredNativeTypesHigh |= metadata.requiredNativeTypesHigh;
     }
   }
-  return normalized;
+  state.handlers = normalized;
+  state.handlerTypesLow = handlerTypesLow;
+  state.handlerTypesHigh = handlerTypesHigh;
+  state.requiredNativeTypesLow = requiredNativeTypesLow;
+  state.requiredNativeTypesHigh = requiredNativeTypesHigh;
 }
 
-function handledTypes(handlers: CRCNormalizedHandlers): Set<CRCEventType> {
-  const types = new Set<CRCEventType>();
-  for (const definition of CRC_EVENT_DEFINITIONS) {
-    if (
-      handlers[definition.type] ||
-      handlers[`${definition.type}Capture` as CRCNormalizedCaptureKey]
-    ) {
-      types.add(definition.type);
+function refreshLegacyHandlers(
+  state: CRCHandlerState,
+  handlers: CRCRegionHandlers,
+  hasCursor: boolean,
+): void {
+  const normalized: CRCNormalizedHandlers = {};
+  let handlerTypesLow = 0;
+  let handlerTypesHigh = 0;
+  let requiredNativeTypesLow = hasCursor ? cursorNativeTypesLow : 0;
+  let requiredNativeTypesHigh = hasCursor ? cursorNativeTypesHigh : 0;
+  for (const type in handlers) {
+    const metadata = normalizedHandlerMetadata[type];
+    if (!metadata) continue;
+    const handler = handlers[type as keyof CRCRegionHandlers];
+    if (handler) {
+      (normalized as Record<string, unknown>)[metadata.normalizedKey] = handler;
+      handlerTypesLow |= metadata.handlerTypesLow;
+      handlerTypesHigh |= metadata.handlerTypesHigh;
+      requiredNativeTypesLow |= metadata.requiredNativeTypesLow;
+      requiredNativeTypesHigh |= metadata.requiredNativeTypesHigh;
     }
   }
-  return types;
+  state.handlers = normalized;
+  state.handlerTypesLow = handlerTypesLow;
+  state.handlerTypesHigh = handlerTypesHigh;
+  state.requiredNativeTypesLow = requiredNativeTypesLow;
+  state.requiredNativeTypesHigh = requiredNativeTypesHigh;
 }
 
-function requiredNativeTypes(
+/**
+ * Cold module-initialization helper. Do not call this from registration or
+ * render code: its Sets deliberately trade startup simplicity for precomputed
+ * allocation-free metadata in the hot path.
+ */
+function expandNativeTypesForMetadata(
   types: ReadonlySet<CRCEventType>,
   hasCursor: boolean,
 ): ReadonlySet<CRCEventType> {
   const nativeTypes = new Set(types);
-  const hasPointerBoundary = types.has('pointerover') ||
-    types.has('pointerenter') ||
-    types.has('pointerout') ||
-    types.has('pointerleave');
-  if (hasPointerBoundary || types.has('pointermove')) {
-    nativeTypes.delete('pointerenter');
-    nativeTypes.delete('pointerleave');
-    nativeTypes.add('pointermove');
-    nativeTypes.add('pointerout');
-    if (hasPointerBoundary) nativeTypes.add('pointerover');
+  const hasPointerBoundary =
+    types.has("pointerover") ||
+    types.has("pointerenter") ||
+    types.has("pointerout") ||
+    types.has("pointerleave");
+  if (hasPointerBoundary || types.has("pointermove")) {
+    nativeTypes.delete("pointerenter");
+    nativeTypes.delete("pointerleave");
+    nativeTypes.add("pointermove");
+    nativeTypes.add("pointerout");
+    if (hasPointerBoundary) nativeTypes.add("pointerover");
   }
   if (
     hasCursor ||
-    types.has('mouseover') ||
-    types.has('mouseenter') ||
-    types.has('mousemove') ||
-    types.has('mouseout') ||
-    types.has('mouseleave')
+    types.has("mouseover") ||
+    types.has("mouseenter") ||
+    types.has("mousemove") ||
+    types.has("mouseout") ||
+    types.has("mouseleave")
   ) {
-    nativeTypes.delete('mouseover');
-    nativeTypes.delete('mouseenter');
-    nativeTypes.delete('mouseleave');
-    nativeTypes.add('mousemove');
-    nativeTypes.add('mouseout');
+    nativeTypes.delete("mouseover");
+    nativeTypes.delete("mouseenter");
+    nativeTypes.delete("mouseleave");
+    nativeTypes.add("mousemove");
+    nativeTypes.add("mouseout");
   }
-  if (types.has('click') || types.has('dblclick') || types.has('auxclick')) {
-    nativeTypes.add('mousedown');
-    nativeTypes.add('mouseup');
+  if (types.has("click") || types.has("dblclick") || types.has("auxclick")) {
+    nativeTypes.add("mousedown");
+    nativeTypes.add("mouseup");
   }
-  if (types.has('dblclick')) nativeTypes.add('click');
+  if (types.has("dblclick")) nativeTypes.add("click");
   if (
-    types.has('touchstart') ||
-    types.has('touchmove') ||
-    types.has('touchend') ||
-    types.has('touchcancel')
+    types.has("touchstart") ||
+    types.has("touchmove") ||
+    types.has("touchend") ||
+    types.has("touchcancel")
   ) {
-    nativeTypes.add('touchstart');
-    nativeTypes.add('touchend');
-    nativeTypes.add('touchcancel');
+    nativeTypes.add("touchstart");
+    nativeTypes.add("touchend");
+    nativeTypes.add("touchcancel");
   }
-  const hasDragBoundary = types.has('dragenter') || types.has('dragleave');
-  if (hasDragBoundary) nativeTypes.add('dragenter');
-  if (hasDragBoundary || types.has('dragover')) {
-    nativeTypes.add('dragover');
-    nativeTypes.add('dragleave');
-    nativeTypes.add('drop');
-    nativeTypes.add('dragend');
+  const hasDragBoundary = types.has("dragenter") || types.has("dragleave");
+  if (hasDragBoundary) nativeTypes.add("dragenter");
+  if (hasDragBoundary || types.has("dragover")) {
+    nativeTypes.add("dragover");
+    nativeTypes.add("dragleave");
+    nativeTypes.add("drop");
+    nativeTypes.add("dragend");
   }
   return nativeTypes;
 }
 
 function updateNativeOwnership(
   registration: CRCEventTargetRegistration | CRCEventListenerRegistration,
-  types: ReadonlySet<CRCEventType>,
 ): void {
+  const previousLow = registration.ownedNativeTypesLow;
+  const previousHigh = registration.ownedNativeTypesHigh;
+  const nextLow = registration.requiredNativeTypesLow;
+  const nextHigh = registration.requiredNativeTypesHigh;
+  // Callback values may change every render while their native requirements
+  // remain identical. Two integer comparisons make that common case a no-op.
+  if (previousLow === nextLow && previousHigh === nextHigh) return;
+
   let releases = nativeReleases.get(registration);
   if (!releases) {
     releases = new Map();
     nativeReleases.set(registration, releases);
   }
 
-  for (const [type, release] of releases) {
-    if (!types.has(type)) {
-      release();
+  // A & ~B is the set difference A − B. Release all removals before
+  // acquiring additions so hub reference counts always describe this target's
+  // current requirement transition.
+  forEachChangedType(
+    previousLow & ~nextLow,
+    previousHigh & ~nextHigh,
+    (type) => {
+      releases.get(type)?.();
       releases.delete(type);
-    }
-  }
+    },
+  );
 
   const hub = registration.owner.eventRoot.nativeListeners;
-  if (!hub) return;
-  for (const type of types) {
-    if (!releases.has(type)) {
-      releases.set(type, hub.acquire(type));
-    }
+  if (hub) {
+    // B & ~A is B − A: only newly required native types are acquired.
+    forEachChangedType(
+      nextLow & ~previousLow,
+      nextHigh & ~previousHigh,
+      (type) => {
+        if (!releases.has(type)) releases.set(type, hub.acquire(type));
+      },
+    );
   }
+  registration.ownedNativeTypesLow = nextLow;
+  registration.ownedNativeTypesHigh = nextHigh;
 }
 
 function releaseNativeOwnership(
   registration: CRCEventTargetRegistration | CRCEventListenerRegistration,
 ): void {
+  // Zero first so a stable hook slot revived after release cannot mistake its
+  // old signature for live ownership and skip reacquisition.
+  registration.ownedNativeTypesLow = 0;
+  registration.ownedNativeTypesHigh = 0;
   const releases = nativeReleases.get(registration);
   if (!releases) return;
   nativeReleases.delete(registration);
@@ -459,6 +661,27 @@ function releaseNativeOwnership(
     release();
   }
   releases.clear();
+}
+
+function forEachChangedType(
+  low: number,
+  high: number,
+  visit: (type: CRCEventType) => void,
+): void {
+  // `word & -word` isolates the least-significant set bit. `word & (word - 1)`
+  // clears it, so this loop is O(number of changed types), not O(52 events).
+  // Math.clz32 converts the isolated bit to its definition index; the high
+  // word starts at definition 32.
+  while (low !== 0) {
+    const bit = low & -low;
+    visit(CRC_EVENT_DEFINITIONS[31 - Math.clz32(bit)]!.type);
+    low &= low - 1;
+  }
+  while (high !== 0) {
+    const bit = high & -high;
+    visit(CRC_EVENT_DEFINITIONS[32 + 31 - Math.clz32(bit)]!.type);
+    high &= high - 1;
+  }
 }
 
 function createPublicTarget(
