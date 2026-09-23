@@ -68,6 +68,10 @@ import {
   type CRCWebGLShadowQuality,
 } from '@crc/webgl';
 import {
+  useGLTF,
+  type CRCWebGLAssetLoadResult,
+} from '@crc/webgl/gltf';
+import {
   Particles2D,
   defineParticleEffect2D,
   particleCurve,
@@ -123,6 +127,13 @@ function SignalLabel(): CRCNode {
     </Text>
   );
 }
+
+function ImportedModelStatus(): CRCNode {
+  const loaded: CRCWebGLAssetLoadResult = useGLTF('/model.glb');
+  return <Text>{loaded.status}</Text>;
+}
+
+void (<ImportedModelStatus />);
 
 export const signalElement: CRCElement = <SignalLabel />;
 void isSignal(jsxCallback.asReadonly());

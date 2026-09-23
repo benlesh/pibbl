@@ -1,5 +1,6 @@
 import { crc, signal, type CRCController, type CRCNode } from "@crc/core";
 import { Group3D, WebGLLayer } from "@crc/webgl";
+/** @jsxImportSource @crc/core */
 import {
   PhysicsWorld3D,
   applyForce3D,

@@ -1,6 +1,7 @@
 import { signal } from "@crc/core";
 import { sphereShape3D } from "../../../3d-geometry.js";
 import { describe, expect, it, vi } from "vitest";
+/** @jsxImportSource @crc/core */
 import {
   collider3D,
   dynamicBody3D,

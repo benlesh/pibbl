@@ -1,8 +1,8 @@
-import { readdir } from 'node:fs/promises';
-import { relative, resolve } from 'node:path';
+import { readdir } from "node:fs/promises";
+import { relative, resolve } from "node:path";
 
 function displayList(values: readonly string[]): string {
-  return values.length ? values.join(', ') : '(none)';
+  return values.length ? values.join(", ") : "(none)";
 }
 
 function assertPathSetMatches(
@@ -12,15 +12,15 @@ function assertPathSetMatches(
 ): void {
   const discovered = [...discoveredPaths].sort();
   const catalog = [...catalogPaths].sort();
-  if (discovered.join('\n') === catalog.join('\n')) return;
+  if (discovered.join("\n") === catalog.join("\n")) return;
 
   const catalogSet = new Set(catalog);
   const discoveredSet = new Set(discovered);
-  const omitted = discovered.filter(path => !catalogSet.has(path));
-  const missing = catalog.filter(path => !discoveredSet.has(path));
+  const omitted = discovered.filter((path) => !catalogSet.has(path));
+  const missing = catalog.filter((path) => !discoveredSet.has(path));
   throw new Error(
     `${label} source discovery disagrees with the catalog. ` +
-    `Omitted: ${displayList(omitted)}. Missing: ${displayList(missing)}.`,
+      `Omitted: ${displayList(omitted)}. Missing: ${displayList(missing)}.`,
   );
 }
 
@@ -29,11 +29,13 @@ export async function discoverExampleSourcePaths(
   workspaceRoot: string,
 ): Promise<string[]> {
   return (await readdir(scenarioDirectory, { recursive: true }))
-    .filter(name => name.endsWith('.example.tsx'))
-    .map(name => relative(
-      workspaceRoot,
-      resolve(scenarioDirectory, name),
-    ).replaceAll('\\', '/'))
+    .filter((name) => name.endsWith(".example.tsx"))
+    .map((name) =>
+      relative(workspaceRoot, resolve(scenarioDirectory, name)).replaceAll(
+        "\\",
+        "/",
+      ),
+    )
     .sort();
 }
 
@@ -43,12 +45,32 @@ export function assertExampleSourceDiscovery(
   learningCatalogPaths: readonly string[],
   tutorialCatalogPaths: readonly string[],
 ): void {
-  const learningPaths = discoveredPaths.filter(path => path.includes('/learning/'));
-  const tutorialPaths = discoveredPaths.filter(path => path.includes('/tutorials/'));
-  const testPaths = discoveredPaths.filter(
-    path => !path.includes('/learning/') && !path.includes('/tutorials/'),
+  const learningPaths = discoveredPaths.filter((path) =>
+    path.includes("/learning/"),
   );
-  assertPathSetMatches('Scenario', testPaths, scenarioCatalogPaths);
-  assertPathSetMatches('Learning', learningPaths, learningCatalogPaths);
-  assertPathSetMatches('Tutorial', tutorialPaths, tutorialCatalogPaths);
+  const tutorialPaths = discoveredPaths.filter((path) =>
+    path.includes("/tutorials/"),
+  );
+  const testPaths = discoveredPaths.filter(
+    (path) => !path.includes("/learning/") && !path.includes("/tutorials/"),
+  );
+  const testCatalogPaths = scenarioCatalogPaths.filter(
+    (path) => !path.includes("/learning/") && !path.includes("/tutorials/"),
+  );
+  const sharedLearningPaths = scenarioCatalogPaths.filter((path) =>
+    path.includes("/learning/"),
+  );
+  const learningCatalogSet = new Set(learningCatalogPaths);
+  const unregisteredSharedPaths = sharedLearningPaths.filter(
+    (path) => !learningCatalogSet.has(path),
+  );
+  if (unregisteredSharedPaths.length > 0) {
+    throw new Error(
+      `Scenario learning sources must also be registered learning examples: ` +
+        `${displayList(unregisteredSharedPaths)}.`,
+    );
+  }
+  assertPathSetMatches("Scenario", testPaths, testCatalogPaths);
+  assertPathSetMatches("Learning", learningPaths, learningCatalogPaths);
+  assertPathSetMatches("Tutorial", tutorialPaths, tutorialCatalogPaths);
 }

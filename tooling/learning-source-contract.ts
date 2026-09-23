@@ -64,6 +64,7 @@ const THREE_MODULE = "three";
 const THREE_ORBIT_CONTROLS_MODULE =
   "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = "@crc/webgl";
+const WEBGL_GLTF_MODULE = "@crc/webgl/gltf";
 const LEARNING_VALUE_MODULES = new Set([
   CORE_MODULE,
   PARTICLES_MODULE,
@@ -72,6 +73,7 @@ const LEARNING_VALUE_MODULES = new Set([
   THREE_MODULE,
   THREE_ORBIT_CONTROLS_MODULE,
   WEBGL_MODULE,
+  WEBGL_GLTF_MODULE,
 ]);
 const PARTICLES_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/particle-effects.example.tsx";
@@ -214,7 +216,9 @@ function nodes(value: unknown): readonly SyntaxNode[] {
 }
 
 function identifierName(value: unknown): string | undefined {
-  return isNode(value) && value.type === "Identifier" && typeof value.name === "string"
+  return isNode(value) &&
+    value.type === "Identifier" &&
+    typeof value.name === "string"
     ? value.name
     : undefined;
 }
@@ -368,8 +372,7 @@ function objectHasProperty(object: unknown, name: string): boolean {
   if (!isNode(object) || object.type !== "ObjectExpression") return false;
   return nodes(object.properties).some(
     (property) =>
-      property.type === "ObjectProperty" &&
-      propertyName(property.key) === name,
+      property.type === "ObjectProperty" && propertyName(property.key) === name,
   );
 }
 
@@ -377,7 +380,8 @@ function objectPropertyValue(object: unknown, name: string): unknown {
   if (!isNode(object) || object.type !== "ObjectExpression") return undefined;
   const property = nodes(object.properties).find(
     (candidate) =>
-      candidate.type === "ObjectProperty" && propertyName(candidate.key) === name,
+      candidate.type === "ObjectProperty" &&
+      propertyName(candidate.key) === name,
   );
   return property?.value;
 }
@@ -407,7 +411,8 @@ function bindingNames(pattern: unknown): readonly string[] {
   }
   if (pattern.type === "ObjectPattern") {
     return nodes(pattern.properties).flatMap((property) => {
-      if (property.type === "RestElement") return bindingNames(property.argument);
+      if (property.type === "RestElement")
+        return bindingNames(property.argument);
       return bindingNames(property.value);
     });
   }
@@ -656,14 +661,16 @@ function jsxAttribute(
 ): SyntaxNode | undefined {
   return nodes(openingElement.attributes).find(
     (attribute) =>
-      attribute.type === "JSXAttribute" && propertyName(attribute.name) === name,
+      attribute.type === "JSXAttribute" &&
+      propertyName(attribute.name) === name,
   );
 }
 
 function jsxAttributeExpression(attribute: SyntaxNode | undefined): unknown {
   if (!attribute) return undefined;
   const value = attribute.value;
-  if (!isNode(value) || value.type !== "JSXExpressionContainer") return undefined;
+  if (!isNode(value) || value.type !== "JSXExpressionContainer")
+    return undefined;
   return value.expression;
 }
 
@@ -724,13 +731,15 @@ function directLexicalBindings(scope: SyntaxNode): readonly string[] {
     scope.type === "TSModuleBlock"
       ? nodes(scope.body)
       : scope.type === "SwitchStatement"
-        ? nodes(scope.cases).flatMap((switchCase) => nodes(switchCase.consequent))
+        ? nodes(scope.cases).flatMap((switchCase) =>
+            nodes(switchCase.consequent),
+          )
         : [];
   return statements.flatMap((rawStatement) => {
     const statement = declarationValue(rawStatement);
     if (statement.type === "VariableDeclaration" && statement.kind !== "var") {
       return nodes(statement.declarations).flatMap((declaration) =>
-        bindingNames(declaration.id)
+        bindingNames(declaration.id),
       );
     }
     if (
@@ -787,8 +796,11 @@ function localScopeBindings(node: SyntaxNode): readonly string[] {
     node.type === "ForInStatement" ||
     node.type === "ForOfStatement"
   ) {
-    const declaration = isNode(node.init) ? node.init :
-      isNode(node.left) ? node.left : undefined;
+    const declaration = isNode(node.init)
+      ? node.init
+      : isNode(node.left)
+        ? node.left
+        : undefined;
     if (
       declaration?.type === "VariableDeclaration" &&
       declaration.kind !== "var"
@@ -814,11 +826,9 @@ function collectBindingShadows(
     const local = [
       ...localScopeBindings(node),
       ...moduleBlockSelfBindings(node, parent),
-    ]
-      .filter((name) => importedNames.has(name));
-    const current = local.length > 0 ?
-      new Set([...inherited, ...local]) :
-      inherited;
+    ].filter((name) => importedNames.has(name));
+    const current =
+      local.length > 0 ? new Set([...inherited, ...local]) : inherited;
     shadows.set(node, current);
     for (const [key, value] of Object.entries(node)) {
       if (SKIPPED_AST_KEYS.has(key)) continue;
@@ -843,12 +853,13 @@ function resolvedCoreValueName(
 ): string | undefined {
   const node = unwrapTransparentExpression(value);
   if (!node) return undefined;
-  const localName = identifierName(node) ??
+  const localName =
+    identifierName(node) ??
     (node.type === "JSXIdentifier" ? propertyName(node) : undefined);
   if (localName) {
-    return bindingShadows.get(node)?.has(localName) ?
-      undefined :
-      valueImports.get(localName);
+    return bindingShadows.get(node)?.has(localName)
+      ? undefined
+      : valueImports.get(localName);
   }
   if (
     node.type === "MemberExpression" ||
@@ -937,7 +948,8 @@ function inspectSource(source: string, label: string): SourceInspection {
     }
     const sourceNode = isNode(statement.source) ? statement.source : undefined;
     const moduleName =
-      sourceNode?.type === "StringLiteral" && typeof sourceNode.value === "string"
+      sourceNode?.type === "StringLiteral" &&
+      typeof sourceNode.value === "string"
         ? sourceNode.value
         : undefined;
     const specifiers = nodes(statement.specifiers);
@@ -946,10 +958,12 @@ function inspectSource(source: string, label: string): SourceInspection {
     }
     const isTypeOnlyDeclaration =
       statement.importKind === "type" ||
-      (specifiers.length > 0 && specifiers.every((specifier) =>
-        specifier.type === "ImportSpecifier" &&
-        specifier.importKind === "type"
-      ));
+      (specifiers.length > 0 &&
+        specifiers.every(
+          (specifier) =>
+            specifier.type === "ImportSpecifier" &&
+            specifier.importKind === "type",
+        ));
     const isLocalTypeOnlyImport =
       isRelativeModuleName(moduleName) && isTypeOnlyDeclaration;
     if (
@@ -967,10 +981,11 @@ function inspectSource(source: string, label: string): SourceInspection {
     ) {
       hasOnlyApprovedImports = false;
     }
-    const hasOnlyAllowedScenarioSpecifiers = specifiers.every((specifier) =>
-      specifier.type === "ImportSpecifier" ||
-      specifier.type === "ImportNamespaceSpecifier" ||
-      (isLocalTypeOnlyImport && specifier.type === "ImportDefaultSpecifier")
+    const hasOnlyAllowedScenarioSpecifiers = specifiers.every(
+      (specifier) =>
+        specifier.type === "ImportSpecifier" ||
+        specifier.type === "ImportNamespaceSpecifier" ||
+        (isLocalTypeOnlyImport && specifier.type === "ImportDefaultSpecifier"),
     );
     if (
       (!LEARNING_VALUE_MODULES.has(moduleName ?? "") &&
@@ -1095,12 +1110,13 @@ function inspectSource(source: string, label: string): SourceInspection {
     file,
     new Set([...importedValueNames, ...namespaceBindings]),
   );
-  const resolveCoreValue = (value: unknown) => resolvedCoreValueName(
-    value,
-    valueImports,
-    valueNamespaceBindings,
-    bindingShadows,
-  );
+  const resolveCoreValue = (value: unknown) =>
+    resolvedCoreValueName(
+      value,
+      valueImports,
+      valueNamespaceBindings,
+      bindingShadows,
+    );
 
   const inspectCreateElementArguments = (argumentsValue: unknown): void => {
     const args = nodes(argumentsValue);
@@ -1159,7 +1175,8 @@ function inspectSource(source: string, label: string): SourceInspection {
       hasNamespaceExport = true;
       hasForbiddenLearningModuleSyntax = true;
     }
-    if (node.type === "JSXElement" || node.type === "JSXFragment") hasJsx = true;
+    if (node.type === "JSXElement" || node.type === "JSXFragment")
+      hasJsx = true;
     const invocationTarget =
       node.type === "TaggedTemplateExpression"
         ? node.tag
@@ -1229,13 +1246,17 @@ function inspectSource(source: string, label: string): SourceInspection {
     }
 
     if (node.type === "JSXElement") {
-      const opening = isNode(node.openingElement) ? node.openingElement : undefined;
+      const opening = isNode(node.openingElement)
+        ? node.openingElement
+        : undefined;
       if (!opening) return;
       const componentName = resolveCoreValue(opening.name);
       const spreadAttributes = nodes(opening.attributes).filter(
         (attribute) => attribute.type === "JSXSpreadAttribute",
       );
-      const orbitHandlerSpreads = spreadAttributes.filter(isOrbitHandlersSpread);
+      const orbitHandlerSpreads = spreadAttributes.filter(
+        isOrbitHandlersSpread,
+      );
       if (
         spreadAttributes.length !== orbitHandlerSpreads.length ||
         (orbitHandlerSpreads.length > 0 && componentName !== "Group")
@@ -1291,7 +1312,9 @@ function inspectSource(source: string, label: string): SourceInspection {
     ) {
       hasTestScaffolding = true;
     }
-    const importedCallee = calleeName ? valueImports.get(calleeName) : undefined;
+    const importedCallee = calleeName
+      ? valueImports.get(calleeName)
+      : undefined;
     if (calleeName && LEGACY_AUTHORING_NAMES.has(importedCallee ?? "")) {
       hasLegacyAuthoring = true;
     }
@@ -1484,6 +1507,8 @@ export function validateLearningSourceText(
     (sourcePath === undefined &&
       (label === "physics-2d" ||
         label === 'Learning example "physics-2d"'));
+  const isGLTFLesson =
+    inspection.packageImportModules.includes(WEBGL_GLTF_MODULE);
   const hasExactPackageImports = isThreeLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.hasThreeAdapterValueImport &&
@@ -1492,6 +1517,14 @@ export function validateLearningSourceText(
       !inspection.hasNamedValueParticlesImport &&
       !inspection.hasNamedValueWebGLImport &&
       inspection.packageImportModules.length === 4
+    : isGLTFLesson
+      ? isWebGLLesson &&
+        inspection.hasNamedValueCoreImport &&
+        inspection.hasNamedValueWebGLImport &&
+        !inspection.hasNamedValueParticlesImport &&
+        !inspection.hasNamedValuePhysicsImport &&
+        inspection.packageImportModules.includes(WEBGL_GLTF_MODULE) &&
+        inspection.packageImportModules.length === 3
     : isParticleWebGLLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.hasNamedValueParticlesImport &&
@@ -1531,13 +1564,15 @@ export function validateLearningSourceText(
         ? "must use direct, unaliased static named value imports from @crc/core, @crc/three, three, and three/addons/controls/OrbitControls.js."
         : isParticleWebGLLesson
         ? "must use direct, unaliased static named value imports from @crc/core, @crc/particles, @crc/particles/webgl, and @crc/webgl."
-        : isWebGLLesson
-        ? "must use direct, unaliased static named value imports from both @crc/core and @crc/webgl."
-      : isParticlesLesson
-        ? "must use direct, unaliased static named value imports from both @crc/core and @crc/particles."
-        : isPhysicsLesson
+        : isGLTFLesson
+          ? "must use direct, unaliased static named value imports from @crc/core, @crc/webgl, and @crc/webgl/gltf."
+          : isWebGLLesson
+            ? "must use direct, unaliased static named value imports from both @crc/core and @crc/webgl."
+            : isParticlesLesson
+              ? "must use direct, unaliased static named value imports from both @crc/core and @crc/particles."
+              : isPhysicsLesson
           ? "must use direct, unaliased static named value imports from both @crc/core and @crc/physics/2d."
-        : "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
+              : "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
     );
   }
   if (
@@ -1563,13 +1598,13 @@ export function validateLearningSourceText(
         ? "must use direct Three lesson bindings without aliases, reassignment, or shadowing."
         : isParticleWebGLLesson
         ? "must use direct CRC particle-WebGL lesson bindings without aliases, reassignment, or shadowing."
-        : isWebGLLesson
-        ? "must use direct @crc/core and @crc/webgl bindings without aliases, reassignment, or shadowing."
-      : isParticlesLesson
-        ? "must use direct @crc/core and @crc/particles bindings without aliases, reassignment, or shadowing."
-        : isPhysicsLesson
+        : isGLTFLesson || isWebGLLesson
+          ? "must use direct @crc/core and @crc/webgl bindings without aliases, reassignment, or shadowing."
+          : isParticlesLesson
+            ? "must use direct @crc/core and @crc/particles bindings without aliases, reassignment, or shadowing."
+            : isPhysicsLesson
           ? "must use direct @crc/core and @crc/physics/2d bindings without aliases, reassignment, or shadowing."
-        : "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
+            : "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
     );
   }
   if (inspection.hasTestScaffolding) {

@@ -3,6 +3,8 @@ import type { CRCWebGLGeometry, CRCWebGLGeometryInput } from '../types.js';
 export interface WebGLGeometryData {
   readonly positions: Float32Array;
   readonly normals: Float32Array | undefined;
+  readonly tangents: Float32Array | undefined;
+  readonly textureCoordinates0: Float32Array | undefined;
   readonly indices: Uint32Array | undefined;
   readonly bounds: Readonly<{
     minimumX: number;
@@ -130,6 +132,59 @@ export function createWebGLGeometry(input: CRCWebGLGeometryInput): CRCWebGLGeome
     }
   }
 
+  let textureCoordinates0: Float32Array | undefined;
+  if (input.textureCoordinates0 !== undefined) {
+    const textureCoordinateLength = getLength(
+      input.textureCoordinates0,
+      'textureCoordinates0',
+    );
+    if (textureCoordinateLength !== vertexCount * 2) {
+      throw new TypeError(
+        `createWebGLGeometry textureCoordinates0 length must equal vertexCount ${vertexCount} * 2.`,
+      );
+    }
+    textureCoordinates0 = new Float32Array(textureCoordinateLength);
+    for (let index = 0; index < textureCoordinateLength; index += 1) {
+      const value = input.textureCoordinates0[index];
+      if (!Number.isFinite(value)) {
+        throw new TypeError(
+          `createWebGLGeometry textureCoordinates0[${index}] must be finite.`,
+        );
+      }
+      const copiedValue = Math.fround(value!);
+      if (!Number.isFinite(copiedValue)) {
+        throw new RangeError(
+          `createWebGLGeometry textureCoordinates0[${index}] must be representable as a finite Float32.`,
+        );
+      }
+      textureCoordinates0[index] = copiedValue;
+    }
+  }
+
+  let tangents: Float32Array | undefined;
+  if (input.tangents !== undefined) {
+    const tangentLength = getLength(input.tangents, 'tangents');
+    if (tangentLength !== vertexCount * 4) {
+      throw new TypeError(
+        `createWebGLGeometry tangents length must equal vertexCount ${vertexCount} * 4.`,
+      );
+    }
+    tangents = new Float32Array(tangentLength);
+    for (let index = 0; index < tangentLength; index += 1) {
+      const value = input.tangents[index];
+      if (!Number.isFinite(value)) {
+        throw new TypeError(`createWebGLGeometry tangents[${index}] must be finite.`);
+      }
+      const copiedValue = Math.fround(value!);
+      if (!Number.isFinite(copiedValue)) {
+        throw new RangeError(
+          `createWebGLGeometry tangents[${index}] must be representable as a finite Float32.`,
+        );
+      }
+      tangents[index] = copiedValue;
+    }
+  }
+
   let indices: Uint32Array | undefined;
   let triangleCount: number;
 
@@ -168,7 +223,14 @@ export function createWebGLGeometry(input: CRCWebGLGeometryInput): CRCWebGLGeome
     vertexCount,
     triangleCount,
   }) as unknown as CRCWebGLGeometry;
-  geometryData.set(geometry, { positions, normals, indices, bounds });
+  geometryData.set(geometry, {
+    positions,
+    normals,
+    tangents,
+    textureCoordinates0,
+    indices,
+    bounds,
+  });
   return geometry;
 }
 

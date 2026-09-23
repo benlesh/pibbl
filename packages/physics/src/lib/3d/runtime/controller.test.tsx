@@ -1,3 +1,4 @@
+/** @jsxImportSource @crc/core */
 import {
   crc,
   signal,

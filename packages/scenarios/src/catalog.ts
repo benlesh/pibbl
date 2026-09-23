@@ -20,6 +20,7 @@ import type { CanvasSurfaceState } from "./canvas-surface.example";
 import type { FilterLabState } from "./filter-lab.example";
 import type { WebGLLabState } from "./webgl-lab.example";
 import type { WebGLLightingLabState } from "./webgl-lighting-lab.example";
+import type { StaticGLBSliceState } from "./static-glb-slice";
 import type { SignalsLabState } from "./signals-lab.example";
 import type { AnimationLabState } from "./animation-lab.example";
 import type { ParticleCelebrationLabState } from "./particle-celebration-lab.example";
@@ -1769,6 +1770,55 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+const staticGLBSliceMetadata: ScenarioMetadata = {
+  id: "static-glb",
+  slug: "static-glb",
+  title: "Static GLB feedback laboratory",
+  summary:
+    "Prove public static GLB loading, textured PBR rendering, model-wide interaction, replacement, removal, and cleanup.",
+  category: "Rendering",
+  apiTags: [
+    "useGLTF",
+    "Model",
+    "WebGLLayer",
+    "DirectionalLight",
+    "useOrbitCamera",
+  ],
+  conceptTags: [
+    "static GLB",
+    "selected scene",
+    "textured metallic roughness",
+    "model target",
+    "asset ownership",
+  ],
+  manualSteps: [
+    {
+      action: "Wait for the two-block calibration model to replace the loading card.",
+      expected:
+        "Both hierarchy-transformed blocks show the four-quadrant embedded texture with distinct rough and metallic responses.",
+    },
+    {
+      action: "Drag empty viewport space, click either block, and press Tab from the preceding control.",
+      expected:
+        "The camera orbits, both primitives select one Model target, and one focus candidate spans their projected union.",
+    },
+    {
+      action: "Run replacement, malformed, removal, and remount actions.",
+      expected:
+        "Each generation reports loading before ready/error, removal clears the target, and remount creates one fresh owned generation.",
+    },
+  ],
+  knownLimitations: [
+    "This feedback slice supports one bounded static self-contained GLB subset and does not claim full glTF conformance.",
+    "Normal, occlusion, emissive, and metallic-roughness textures, environment lighting, HDR, and tone mapping remain deferred.",
+  ],
+  learningOrder: 176,
+  visibility: "test-laboratory",
+  visibilityReason:
+    "It exposes malformed, replacement, removal, remount, ownership, and renderer probes beyond the focused public lesson.",
+  maturity: "characterization",
+};
+
 export const threeInstancingLabScenarioEntry: ScenarioCatalogEntry<ThreeInstancingLabState> = {
   metadata: threeInstancingLabMetadata,
   canvas: { width: 640, height: 360 },
@@ -1784,6 +1834,26 @@ export const threeInstancingLabScenarioEntry: ScenarioCatalogEntry<ThreeInstanci
   },
   load: async () =>
     (await import("./three-instancing-lab")).threeInstancingLabScenario,
+};
+
+export const staticGLBSliceScenarioEntry: ScenarioCatalogEntry<StaticGLBSliceState> = {
+  metadata: staticGLBSliceMetadata,
+  canvas: { width: 720, height: 420 },
+  actions: [
+    { id: "show-primary", label: "Primary asset" },
+    { id: "show-replacement", label: "Replacement asset" },
+    { id: "show-malformed", label: "Malformed asset" },
+    { id: "remove-model", label: "Remove model" },
+    { id: "remount-model", label: "Remount model" },
+    { id: "reset", label: "Reset" },
+  ],
+  source: {
+    id: "static-glb-feedback-example",
+    language: "tsx",
+    marker: "// Static GLB feedback slice",
+    path: "packages/scenarios/src/learning/webgl/static-glb.example.tsx",
+  },
+  load: async () => (await import("./static-glb-slice")).staticGLBSliceScenario,
 };
 
 const signalsLabMetadata: ScenarioMetadata = {
@@ -2261,6 +2331,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     webglLabScenarioEntry,
     webglLightingLabScenarioEntry,
     threeInstancingLabScenarioEntry,
+    staticGLBSliceScenarioEntry,
     signalsLabScenarioEntry,
     animationLabScenarioEntry,
     particleCelebrationLabScenarioEntry,

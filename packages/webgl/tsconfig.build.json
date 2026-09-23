@@ -12,6 +12,6 @@
     "rootDir": "./src",
     "types": []
   },
-  "files": ["src/index.ts", "src/internal.ts"],
+  "files": ["src/index.ts", "src/gltf.ts", "src/internal.ts"],
   "include": []
 }

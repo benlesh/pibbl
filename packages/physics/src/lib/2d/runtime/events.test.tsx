@@ -1,4 +1,5 @@
 import { Fragment, Group, crc, type CRCController } from "@crc/core";
+/** @jsxImportSource @crc/core */
 import {
   PhysicsShape2D,
   PhysicsWorld2D,

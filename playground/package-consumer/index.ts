@@ -171,6 +171,11 @@ import * as Physics3DGeometry from '@crc/physics/3d/geometry';
 import type * as Physics3DTypes from '@crc/physics/3d';
 import type * as Physics3DGeometryTypes from '@crc/physics/3d/geometry';
 import {
+  useGLTF,
+  type CRCGLTFSource,
+  type CRCWebGLAssetLoadResult,
+} from '@crc/webgl/gltf';
+import {
   submitWebGLInstanced,
   type CRCWebGLBounds,
   type CRCWebGLInstancedRecipe,
@@ -504,6 +509,9 @@ void submitWebGLInstanced;
 void packedInstancedSubmission;
 void (undefined as unknown as CRCWebGLLookupTableRecipe);
 void (undefined as unknown as CRCWebGLSpriteRecipe);
+void useGLTF;
+void (undefined as unknown as CRCGLTFSource);
+void (undefined as unknown as CRCWebGLAssetLoadResult);
 
 // @ts-expect-error traversal-time raw GL construction is not public
 void WebGLRuntime.defineWebGLPrimitive;

@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createWebGLGeometry } from '../geometry/geometry.js';
+import {
+  acquireInternalWebGLTexture,
+  createInternalWebGLTexture,
+} from '../texture/texture.js';
 import { WebGLRendererResourceCache } from './renderer-resources.js';
 
 afterEach(() => {
@@ -45,6 +49,401 @@ describe('WebGLRendererResourceCache', () => {
     expect(recording.deleteProgram).not.toHaveBeenCalled();
     expect(recording.deleteBuffer).not.toHaveBeenCalled();
     expect(recording.deleteVertexArray).not.toHaveBeenCalled();
+  });
+
+  it('uploads supplied UV0 and tangent buffers and releases every resident handle once', () => {
+    const recording = createResourceGL('geometry-streams');
+    const cache = new WebGLRendererResourceCache(recording.gl, 8);
+    const transaction = cache.beginRender();
+
+    const resource = transaction.useGeometry(
+      indexedTriangleWithAllStreams(),
+      'Mesh',
+    );
+    transaction.commit();
+
+    expect(recording.uploads.map(({ target, length, usage }) => ({
+      target,
+      length,
+      usage,
+    }))).toEqual([
+      { target: recording.gl.ARRAY_BUFFER, length: 9, usage: recording.gl.STATIC_DRAW },
+      { target: recording.gl.ARRAY_BUFFER, length: 9, usage: recording.gl.STATIC_DRAW },
+      { target: recording.gl.ARRAY_BUFFER, length: 6, usage: recording.gl.STATIC_DRAW },
+      { target: recording.gl.ARRAY_BUFFER, length: 12, usage: recording.gl.STATIC_DRAW },
+      { target: recording.gl.ELEMENT_ARRAY_BUFFER, length: 3, usage: recording.gl.STATIC_DRAW },
+    ]);
+    expect(recording.uploads.map(upload => upload.values)).toEqual([
+      [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      [0, 0, 1, 0, 0, 1, 0, 0, 1],
+      [0, 0, 1, 0, 0, 1],
+      [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
+      [0, 1, 2],
+    ]);
+    expect(recording.enableVertexAttribArray.mock.calls).toEqual([
+      [0], [1], [2], [3],
+    ]);
+    expect(recording.vertexAttribPointer.mock.calls).toEqual([
+      [0, 3, recording.gl.FLOAT, false, 0, 0],
+      [1, 3, recording.gl.FLOAT, false, 0, 0],
+      [2, 2, recording.gl.FLOAT, false, 0, 0],
+      [3, 4, recording.gl.FLOAT, false, 0, 0],
+    ]);
+    expect(resource.textureCoordinates0Buffer).toBe(recording.buffers[2]);
+    expect(resource.tangentBuffer).toBe(recording.buffers[3]);
+
+    cache.beginRender().commit();
+
+    expect(recording.deleteBuffer.mock.calls.map(([value]) => value)).toEqual([
+      resource.indexBuffer,
+      resource.tangentBuffer,
+      resource.textureCoordinates0Buffer,
+      resource.normalBuffer,
+      resource.positionBuffer,
+    ]);
+    expect(recording.deleteVertexArray).toHaveBeenCalledExactlyOnceWith(
+      resource.vertexArray,
+    );
+  });
+
+  it('installs deterministic constant UV0 and tangent attributes when streams are omitted', () => {
+    const recording = createResourceGL('default-geometry-streams');
+    const cache = new WebGLRendererResourceCache(recording.gl, 9);
+    const transaction = cache.beginRender();
+
+    const resource = transaction.useGeometry(triangle(), 'Mesh');
+    transaction.commit();
+
+    expect(resource.textureCoordinates0Buffer).toBeUndefined();
+    expect(resource.tangentBuffer).toBeUndefined();
+    expect(recording.createBuffer).toHaveBeenCalledOnce();
+    expect(recording.disableVertexAttribArray.mock.calls).toEqual([[2], [3]]);
+    expect(recording.vertexAttrib2f.mock.calls).toEqual([[2, 0, 0]]);
+    expect(recording.vertexAttrib4f.mock.calls).toEqual([[3, 1, 0, 0, 1]]);
+  });
+
+  it('uploads each decoded texture once with isolated pixel-store state and required mipmaps', () => {
+    const recording = createResourceGL('decoded-texture');
+    const cache = new WebGLRendererResourceCache(recording.gl, 11);
+    const bitmap = { width: 4, height: 2, close: vi.fn() } as unknown as ImageBitmap;
+    const producer = createInternalWebGLTexture(bitmap, {
+      wrapS: 'mirrored-repeat',
+      wrapT: 'clamp-to-edge',
+      minFilter: 'linear-mipmap-linear',
+      magFilter: 'nearest',
+    });
+    const useTexture = (transaction: ReturnType<typeof cache.beginRender>) =>
+      transaction.useTexture(producer.texture, 'ImportedSurface');
+
+    const first = cache.beginRender();
+    const resource = useTexture(first);
+    expect(useTexture(first)).toBe(resource);
+    first.commit();
+    const second = cache.beginRender();
+    expect(useTexture(second)).toBe(resource);
+    second.commit();
+
+    expect(recording.createTexture).toHaveBeenCalledOnce();
+    expect(recording.texImage2D).toHaveBeenCalledExactlyOnceWith(
+      recording.gl.TEXTURE_2D,
+      0,
+      recording.gl.RGBA,
+      recording.gl.RGBA,
+      recording.gl.UNSIGNED_BYTE,
+      bitmap,
+    );
+    expect(recording.texParameteri.mock.calls).toEqual([
+      [recording.gl.TEXTURE_2D, recording.gl.TEXTURE_WRAP_S, recording.gl.MIRRORED_REPEAT],
+      [recording.gl.TEXTURE_2D, recording.gl.TEXTURE_WRAP_T, recording.gl.CLAMP_TO_EDGE],
+      [recording.gl.TEXTURE_2D, recording.gl.TEXTURE_MIN_FILTER, recording.gl.LINEAR_MIPMAP_LINEAR],
+      [recording.gl.TEXTURE_2D, recording.gl.TEXTURE_MAG_FILTER, recording.gl.NEAREST],
+    ]);
+    expect(recording.generateMipmap).toHaveBeenCalledExactlyOnceWith(
+      recording.gl.TEXTURE_2D,
+    );
+    expect(recording.pixelStorei.mock.calls).toEqual([
+      [recording.gl.UNPACK_FLIP_Y_WEBGL, false],
+      [recording.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false],
+      [recording.gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, recording.gl.NONE],
+      [recording.gl.UNPACK_ALIGNMENT, 4],
+      [recording.gl.UNPACK_ROW_LENGTH, 0],
+      [recording.gl.UNPACK_IMAGE_HEIGHT, 0],
+      [recording.gl.UNPACK_SKIP_PIXELS, 0],
+      [recording.gl.UNPACK_SKIP_ROWS, 0],
+      [recording.gl.UNPACK_SKIP_IMAGES, 0],
+      [recording.gl.UNPACK_FLIP_Y_WEBGL, true],
+      [recording.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true],
+      [recording.gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, recording.gl.BROWSER_DEFAULT_WEBGL],
+      [recording.gl.UNPACK_ALIGNMENT, 8],
+      [recording.gl.UNPACK_ROW_LENGTH, 9],
+      [recording.gl.UNPACK_IMAGE_HEIGHT, 10],
+      [recording.gl.UNPACK_SKIP_PIXELS, 11],
+      [recording.gl.UNPACK_SKIP_ROWS, 12],
+      [recording.gl.UNPACK_SKIP_IMAGES, 13],
+    ]);
+
+    cache.dispose(false);
+    producer.release();
+  });
+
+  it('rejects decoded textures larger than the device limit before allocation', () => {
+    const recording = createResourceGL('oversized-texture', {
+      maxTextureSize: 4,
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 12);
+    const producer = createInternalWebGLTexture({
+      width: 5,
+      height: 4,
+      close: vi.fn(),
+    } as unknown as ImageBitmap);
+    const transaction = cache.beginRender();
+
+    expect(() => transaction.useTexture(producer.texture, 'Oversized'))
+      .toThrow('Oversized texture dimensions 5x4 exceed MAX_TEXTURE_SIZE 4.');
+    expect(recording.createTexture).not.toHaveBeenCalled();
+    expect(recording.pixelStorei).not.toHaveBeenCalled();
+
+    transaction.rollback();
+    cache.dispose(false);
+    producer.release();
+  });
+
+  it('rejects nonpositive decoded texture dimensions before allocation', () => {
+    const recording = createResourceGL('empty-texture');
+    const cache = new WebGLRendererResourceCache(recording.gl, 13);
+    const producer = createInternalWebGLTexture({
+      width: 0,
+      height: 1,
+      close: vi.fn(),
+    } as unknown as ImageBitmap);
+    const transaction = cache.beginRender();
+
+    expect(() => transaction.useTexture(producer.texture, 'Empty'))
+      .toThrow('Empty texture dimensions must be positive; received 0x1.');
+    expect(recording.createTexture).not.toHaveBeenCalled();
+
+    transaction.rollback();
+    cache.dispose(false);
+    producer.release();
+  });
+
+  it('rejects an upload GL error without misattributing stale GL errors', () => {
+    const controls: ResourceGLControls = {
+      staleGLError: 'invalid-enum',
+      texImage2DGLError: 'out-of-memory',
+    };
+    const recording = createResourceGL('texture-gl-error', controls);
+    const cache = new WebGLRendererResourceCache(recording.gl, 14);
+    const producer = createInternalWebGLTexture({
+      width: 2,
+      height: 2,
+      close: vi.fn(),
+    } as unknown as ImageBitmap);
+    const transaction = cache.beginRender();
+
+    expect(() => transaction.useTexture(producer.texture, 'Failed'))
+      .toThrow('Failed texture upload reported OUT_OF_MEMORY.');
+    expect(recording.deleteTexture).toHaveBeenCalledExactlyOnceWith(
+      recording.textures[0],
+    );
+    expect(recording.pixelStorei).toHaveBeenCalledTimes(18);
+
+    delete controls.texImage2DGLError;
+    expect(transaction.useTexture(producer.texture, 'Recovered').texture)
+      .toBe(recording.textures[1]);
+    transaction.commit();
+    cache.dispose(false);
+    expect(recording.deleteTexture.mock.calls.map(([texture]) => texture))
+      .toEqual([recording.textures[0], recording.textures[1]]);
+    producer.release();
+  });
+
+  it('rejects a mipmap GL error without publishing the candidate texture', () => {
+    const recording = createResourceGL('texture-mipmap-error', {
+      generateMipmapGLError: 'invalid-operation',
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 15);
+    const producer = createInternalWebGLTexture({
+      width: 2,
+      height: 2,
+      close: vi.fn(),
+    } as unknown as ImageBitmap, {
+      minFilter: 'linear-mipmap-linear',
+    });
+    const transaction = cache.beginRender();
+
+    expect(() => transaction.useTexture(producer.texture, 'MipmapFailed'))
+      .toThrow(
+        'MipmapFailed texture mipmap generation reported INVALID_OPERATION.',
+      );
+    expect(recording.pixelStorei).toHaveBeenCalledTimes(18);
+    expect(recording.deleteTexture).toHaveBeenCalledExactlyOnceWith(
+      recording.textures[0],
+    );
+
+    transaction.rollback();
+    expect(recording.deleteTexture).toHaveBeenCalledOnce();
+    cache.dispose(false);
+    producer.release();
+  });
+
+  it('rolls back a failed texture candidate without disturbing the resident generation', () => {
+    const controls: ResourceGLControls = {};
+    const recording = createResourceGL('texture-rollback', controls);
+    const cache = new WebGLRendererResourceCache(recording.gl, 12);
+    const residentClose = vi.fn();
+    const resident = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close: residentClose,
+    } as unknown as ImageBitmap);
+    const failedClose = vi.fn();
+    const failed = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close: failedClose,
+    } as unknown as ImageBitmap);
+    const initial = cache.beginRender();
+    const residentResource = initial.useTexture(resident.texture, 'Resident');
+    initial.commit();
+    expect(recording.generateMipmap).not.toHaveBeenCalled();
+
+    controls.throwTexImage2DAt = 2;
+    const candidate = cache.beginRender();
+    expect(candidate.useTexture(resident.texture, 'Resident'))
+      .toBe(residentResource);
+    expect(() => candidate.useTexture(failed.texture, 'Failed'))
+      .toThrow('Failed texture upload failed.');
+    candidate.rollback();
+
+    expect(recording.deleteTexture.mock.calls.map(([texture]) => texture))
+      .toEqual([recording.textures[1]]);
+    const retry = cache.beginRender();
+    expect(retry.useTexture(resident.texture, 'Resident'))
+      .toBe(residentResource);
+    retry.commit();
+    expect(recording.createTexture).toHaveBeenCalledTimes(2);
+
+    cache.beginRender().commit();
+    expect(recording.deleteTexture.mock.calls.map(([texture]) => texture))
+      .toEqual([recording.textures[1], recording.textures[0]]);
+    cache.dispose(false);
+    resident.release();
+    failed.release();
+    expect(residentClose).toHaveBeenCalledOnce();
+    expect(failedClose).toHaveBeenCalledOnce();
+  });
+
+  it('holds decoded data through resident hits and expires it on omission', () => {
+    const recording = createResourceGL('resident-texture-lease');
+    const cache = new WebGLRendererResourceCache(recording.gl, 16);
+    const close = vi.fn();
+    const producer = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close,
+    } as unknown as ImageBitmap);
+    const initial = cache.beginRender();
+    const resident = initial.useTexture(producer.texture, 'ImportedSurface');
+    initial.commit();
+
+    producer.release();
+    expect(close).not.toHaveBeenCalled();
+    const reuse = cache.beginRender();
+    expect(reuse.useTexture(producer.texture, 'ImportedSurface')).toBe(resident);
+    reuse.commit();
+    expect(recording.createTexture).toHaveBeenCalledOnce();
+
+    cache.beginRender().commit();
+    expect(close).toHaveBeenCalledOnce();
+    expect(recording.deleteTexture).toHaveBeenCalledExactlyOnceWith(
+      resident.texture,
+    );
+    const expired = cache.beginRender();
+    expect(() => expired.useTexture(producer.texture, 'Expired'))
+      .toThrow('WebGL texture descriptor is invalid or released.');
+    expired.rollback();
+    cache.dispose(false);
+  });
+
+  it('releases the decoded-data lease for a rolled-back candidate texture', () => {
+    const recording = createResourceGL('candidate-texture-lease');
+    const cache = new WebGLRendererResourceCache(recording.gl, 17);
+    const close = vi.fn();
+    const producer = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close,
+    } as unknown as ImageBitmap);
+    const candidate = cache.beginRender();
+    const resource = candidate.useTexture(producer.texture, 'Candidate');
+
+    producer.release();
+    expect(close).not.toHaveBeenCalled();
+    candidate.rollback();
+    expect(close).toHaveBeenCalledOnce();
+    expect(recording.deleteTexture).toHaveBeenCalledExactlyOnceWith(
+      resource.texture,
+    );
+    cache.dispose(false);
+  });
+
+  it('abandons a GL-error upload handle after context loss but releases its CPU lease', () => {
+    const recording = createResourceGL('lost-texture-upload', {
+      texImage2DGLError: 'out-of-memory',
+      contextLostAfterTextureGLError: true,
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 18);
+    const close = vi.fn();
+    const producer = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close,
+    } as unknown as ImageBitmap);
+    const candidate = cache.beginRender();
+
+    expect(() => candidate.useTexture(producer.texture, 'Lost'))
+      .toThrow('Lost texture upload reported OUT_OF_MEMORY.');
+    expect(recording.deleteTexture).not.toHaveBeenCalled();
+    producer.release();
+    expect(close).toHaveBeenCalledOnce();
+
+    candidate.rollback(true);
+    cache.dispose(true);
+  });
+
+  it('abandons lost texture handles and uploads the retained identity in a new generation', () => {
+    const close = vi.fn();
+    const recording = createResourceGL('texture-restoration');
+    const producer = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close,
+    } as unknown as ImageBitmap);
+    const releaseDependency = acquireInternalWebGLTexture(producer.texture);
+    const lost = new WebGLRendererResourceCache(recording.gl, 13);
+    const initial = lost.beginRender();
+    initial.useTexture(producer.texture, 'ImportedSurface');
+    initial.commit();
+    producer.release();
+
+    lost.invalidateContext();
+    lost.dispose(true);
+    expect(recording.deleteTexture).not.toHaveBeenCalled();
+    expect(close).not.toHaveBeenCalled();
+
+    const restored = new WebGLRendererResourceCache(recording.gl, 14);
+    const next = restored.beginRender();
+    next.useTexture(producer.texture, 'ImportedSurface');
+    next.commit();
+    expect(recording.createTexture).toHaveBeenCalledTimes(2);
+    releaseDependency();
+    expect(close).not.toHaveBeenCalled();
+    restored.dispose(false);
+    expect(recording.deleteTexture).toHaveBeenCalledExactlyOnceWith(
+      recording.textures[1],
+    );
+    expect(close).toHaveBeenCalledOnce();
   });
 
   it('sweeps omitted program and geometry keys before clearing the remaining residents', () => {
@@ -248,6 +647,36 @@ describe('WebGLRendererResourceCache', () => {
     },
   );
 
+  it('deletes every candidate buffer when the third stream upload fails', () => {
+    const operationalError = new Error('tangent upload failed');
+    const recording = createResourceGL('third-stream-upload', {
+      throwBufferDataAt: 3,
+      bufferDataError: operationalError,
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 10);
+    const transaction = cache.beginRender();
+
+    let caught: unknown;
+    try {
+      transaction.useGeometry(geometryWithUvsAndTangents(), 'BrokenMesh');
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).cause).toBe(operationalError);
+    expect(recording.deleteBuffer.mock.calls.map(([value]) => value)).toEqual(
+      recording.buffers.slice().reverse(),
+    );
+    expect(recording.deleteVertexArray.mock.calls.map(([value]) => value)).toEqual(
+      recording.vertexArrays,
+    );
+    transaction.rollback();
+    cache.dispose(false);
+    expect(recording.deleteBuffer).toHaveBeenCalledTimes(3);
+    expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
+  });
+
   it.each([
     {
       name: 'vertex array creation',
@@ -398,7 +827,11 @@ describe('WebGLRendererResourceCache', () => {
       /LostSphere.*geometry.*context.*lost/i,
     );
     expect(returned).toBeUndefined();
-    expect(recording.uploads).toEqual([
+    expect(recording.uploads.map(({ target, length, usage }) => ({
+      target,
+      length,
+      usage,
+    }))).toEqual([
       {
         target: recording.gl.ARRAY_BUFFER,
         length: 9,
@@ -636,6 +1069,12 @@ interface ResourceGLControls {
   loseContextAfterBufferDataAt?: number;
   contextLossCheckError?: Error;
   deleteBufferError?: Error;
+  throwTexImage2DAt?: number;
+  maxTextureSize?: number;
+  staleGLError?: 'invalid-enum';
+  texImage2DGLError?: 'out-of-memory';
+  generateMipmapGLError?: 'invalid-operation';
+  contextLostAfterTextureGLError?: boolean;
 }
 
 interface OwnedHandle {
@@ -651,11 +1090,14 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
   const programs: OwnedHandle[] = [];
   const vertexArrays: OwnedHandle[] = [];
   const buffers: OwnedHandle[] = [];
+  const textures: OwnedHandle[] = [];
   let nextHandle = 0;
   let shaderAttempt = 0;
   let bufferAttempt = 0;
   let uploadAttempt = 0;
+  let textureUploadAttempt = 0;
   let contextLost = false;
+  const glErrors: number[] = [];
   const handle = (kind: string, type?: number): OwnedHandle => ({
     context,
     kind,
@@ -702,11 +1144,38 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
   });
   const bindBuffer = vi.fn();
   const enableVertexAttribArray = vi.fn();
+  const disableVertexAttribArray = vi.fn();
   const vertexAttribPointer = vi.fn();
+  const vertexAttrib2f = vi.fn();
+  const vertexAttrib4f = vi.fn();
+  const createTexture = vi.fn(() => {
+    const texture = handle('texture');
+    textures.push(texture);
+    return texture;
+  });
+  const deleteTexture = vi.fn();
+  const texParameteri = vi.fn();
+  const texImage2D = vi.fn(() => {
+    textureUploadAttempt += 1;
+    if (textureUploadAttempt === controls.throwTexImage2DAt) {
+      throw new Error('injected texture upload failure');
+    }
+    if (controls.texImage2DGLError === 'out-of-memory') {
+      glErrors.push(constants.OUT_OF_MEMORY);
+      if (controls.contextLostAfterTextureGLError) contextLost = true;
+    }
+  });
+  const generateMipmap = vi.fn(() => {
+    if (controls.generateMipmapGLError === 'invalid-operation') {
+      glErrors.push(constants.INVALID_OPERATION);
+    }
+  });
+  const pixelStorei = vi.fn();
   const uploads: Array<{
     readonly target: number;
     readonly length: number;
     readonly usage: number;
+    readonly values: readonly number[];
   }> = [];
   const methods: Record<string, unknown> = {
     createShader,
@@ -731,7 +1200,10 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
     deleteBuffer,
     bindBuffer,
     enableVertexAttribArray,
+    disableVertexAttribArray,
     vertexAttribPointer,
+    vertexAttrib2f,
+    vertexAttrib4f,
     bufferData: vi.fn(
       (target: number, data: ArrayLike<number>, usage: number) => {
         uploadAttempt += 1;
@@ -743,12 +1215,40 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
             new Error('injected buffer upload failure')
           );
         }
-        uploads.push({ target, length: data.length, usage });
+        uploads.push({
+          target,
+          length: data.length,
+          usage,
+          values: Array.from(data),
+        });
         if (uploadAttempt === controls.loseContextAfterBufferDataAt) {
           contextLost = true;
         }
       },
     ),
+    createTexture,
+    deleteTexture,
+    bindTexture: vi.fn(),
+    texParameteri,
+    texImage2D,
+    generateMipmap,
+    pixelStorei,
+    getParameter: vi.fn((parameter: number) => {
+      const values = new Map<number, number | boolean>([
+        [constants.MAX_TEXTURE_SIZE, controls.maxTextureSize ?? 8],
+        [constants.UNPACK_FLIP_Y_WEBGL, true],
+        [constants.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true],
+        [constants.UNPACK_COLORSPACE_CONVERSION_WEBGL, constants.BROWSER_DEFAULT_WEBGL],
+        [constants.UNPACK_ALIGNMENT, 8],
+        [constants.UNPACK_ROW_LENGTH, 9],
+        [constants.UNPACK_IMAGE_HEIGHT, 10],
+        [constants.UNPACK_SKIP_PIXELS, 11],
+        [constants.UNPACK_SKIP_ROWS, 12],
+        [constants.UNPACK_SKIP_IMAGES, 13],
+      ]);
+      return values.get(parameter);
+    }),
+    getError: vi.fn(() => glErrors.shift() ?? constants.NO_ERROR),
     isContextLost: vi.fn(() => {
       if (controls.contextLossCheckError) {
         throw controls.contextLossCheckError;
@@ -768,6 +1268,9 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
       },
     },
   ) as unknown as WebGL2RenderingContext;
+  if (controls.staleGLError === 'invalid-enum') {
+    glErrors.push(constants.INVALID_ENUM);
+  }
   return {
     gl,
     shaders,
@@ -785,7 +1288,17 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
     deleteBuffer,
     bindBuffer,
     enableVertexAttribArray,
+    disableVertexAttribArray,
     vertexAttribPointer,
+    vertexAttrib2f,
+    vertexAttrib4f,
+    textures,
+    createTexture,
+    deleteTexture,
+    texParameteri,
+    texImage2D,
+    generateMipmap,
+    pixelStorei,
   };
 }
 
@@ -803,6 +1316,24 @@ function indexedTriangleWithNormals(offset = 0) {
   });
 }
 
+function geometryWithUvsAndTangents(offset = 0) {
+  return createWebGLGeometry({
+    positions: [offset, 0, 0, offset + 1, 0, 0, offset, 1, 0],
+    textureCoordinates0: [0, 0, 1, 0, 0, 1],
+    tangents: [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
+  });
+}
+
+function indexedTriangleWithAllStreams(offset = 0) {
+  return createWebGLGeometry({
+    positions: [offset, 0, 0, offset + 1, 0, 0, offset, 1, 0],
+    normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+    textureCoordinates0: [0, 0, 1, 0, 0, 1],
+    tangents: [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
+    indices: [0, 1, 2],
+  });
+}
+
 function createConstants(): Record<string, number> {
   const names = [
     'ARRAY_BUFFER',
@@ -811,8 +1342,45 @@ function createConstants(): Record<string, number> {
     'FLOAT',
     'FRAGMENT_SHADER',
     'LINK_STATUS',
+    'MAX_TEXTURE_SIZE',
+    'CONTEXT_LOST_WEBGL',
+    'INVALID_ENUM',
+    'INVALID_FRAMEBUFFER_OPERATION',
+    'INVALID_OPERATION',
+    'INVALID_VALUE',
+    'OUT_OF_MEMORY',
     'STATIC_DRAW',
+    'TEXTURE_2D',
+    'TEXTURE_WRAP_S',
+    'TEXTURE_WRAP_T',
+    'TEXTURE_MIN_FILTER',
+    'TEXTURE_MAG_FILTER',
+    'REPEAT',
+    'CLAMP_TO_EDGE',
+    'MIRRORED_REPEAT',
+    'NEAREST',
+    'LINEAR',
+    'NEAREST_MIPMAP_NEAREST',
+    'LINEAR_MIPMAP_NEAREST',
+    'NEAREST_MIPMAP_LINEAR',
+    'LINEAR_MIPMAP_LINEAR',
+    'RGBA',
+    'UNSIGNED_BYTE',
+    'NONE',
+    'BROWSER_DEFAULT_WEBGL',
+    'UNPACK_FLIP_Y_WEBGL',
+    'UNPACK_PREMULTIPLY_ALPHA_WEBGL',
+    'UNPACK_COLORSPACE_CONVERSION_WEBGL',
+    'UNPACK_ALIGNMENT',
+    'UNPACK_ROW_LENGTH',
+    'UNPACK_IMAGE_HEIGHT',
+    'UNPACK_SKIP_PIXELS',
+    'UNPACK_SKIP_ROWS',
+    'UNPACK_SKIP_IMAGES',
     'VERTEX_SHADER',
   ];
-  return Object.fromEntries(names.map((name, index) => [name, index + 1]));
+  return {
+    NO_ERROR: 0,
+    ...Object.fromEntries(names.map((name, index) => [name, index + 1])),
+  };
 }

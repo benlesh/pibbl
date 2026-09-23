@@ -1,4 +1,5 @@
 import { Circle, Group, crc, type CRCController } from "@crc/core";
+/** @jsxImportSource @crc/core */
 import {
   PhysicsWorld2D,
   collider2D,

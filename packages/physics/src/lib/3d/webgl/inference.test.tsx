@@ -4,6 +4,7 @@ import type {
 } from "@crc/webgl/internal";
 import { describe, expect, it } from "vitest";
 import { requireShapeRecord3D } from "../shape-records.js";
+/** @jsxImportSource @crc/core */
 import {
   bakeWebGLShapeTransform3D,
   inferWebGLColliderShape3D,

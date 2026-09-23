@@ -22,6 +22,11 @@ export {
   type MeshStyle,
 } from './lib/components/mesh.js';
 export {
+  Model,
+  type ModelProps,
+  type ModelStyle,
+} from './lib/components/model.js';
+export {
   Cube,
   type CubeProps,
   type CubeStyle,
@@ -55,6 +60,7 @@ export {
 } from './lib/components/webgl-background.js';
 export type {
   CRCPhysics3DPropExtension,
+  CRCWebGLAsset,
   CRCWebGLGeometry,
   CRCWebGLGeometryInput,
   CRCWebGLLambertMaterial,

@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import type { CRCBackendFrameInput, CRCEventTargetRegistration } from '@crc/core/internal';
 import { createWebGLGeometry } from '../geometry/geometry.js';
+import { resolveWebGLPBRMetallicRoughnessMaterial } from '../components/material.js';
+import { createInternalWebGLTexture } from '../texture/texture.js';
 import { resolveCamera } from '../math/camera.js';
 import {
   createWebGLSceneComposer,
@@ -241,6 +243,73 @@ describe('settled WebGL scene', () => {
     expect(Object.isFrozen(unlitShading)).toBe(true);
     expect(Object.isFrozen(unlitShading.displayBaseColor)).toBe(true);
     expect(Object.isFrozen(unlitShading.linearEmissive)).toBe(true);
+  });
+
+  test('settles PBR factors in linear space and classifies factor alpha', () => {
+    const composer = createComposer();
+    const material = resolveWebGLPBRMetallicRoughnessMaterial(
+      'ImportedSurface',
+      {
+        type: 'pbr-metallic-roughness',
+        baseColorFactor: [0.25, 0.5, 0.75, 0.5],
+        metallicFactor: 0.2,
+        roughnessFactor: 0.6,
+      },
+    );
+    submitWebGLMesh(composer, {
+      componentName: 'ImportedSurface',
+      geometry,
+      localModel: identity(),
+      color: [0.5, 0.25, 1, 0.5] as const,
+      material,
+    });
+
+    const settled = settleWebGLScene(composer);
+
+    expect(settled.meshes[0]!.shading).toMatchObject({
+      kind: 'pbr-metallic-roughness',
+      linearBaseColorFactor: [
+        0.21404114048223255 * 0.25,
+        0.05087608817155679 * 0.5,
+        0.75,
+        0.25,
+      ],
+      metallicFactor: 0.2,
+      roughnessFactor: 0.6,
+    });
+    expect(settled.opaque).toHaveLength(0);
+    expect(settled.transparent).toEqual([settled.meshes[0]]);
+  });
+
+  test('keeps a textured PBR surface opaque when factor and tint alpha are one', () => {
+    const producer = createInternalWebGLTexture({
+      width: 1,
+      height: 1,
+      close() {},
+    } as unknown as ImageBitmap);
+    const material = resolveWebGLPBRMetallicRoughnessMaterial(
+      'ImportedSurface',
+      {
+        type: 'pbr-metallic-roughness',
+        baseColorTexture: {
+          texture: producer.texture,
+          textureCoordinate: 0,
+        },
+      },
+    );
+    const composer = createComposer();
+    submitWebGLMesh(composer, {
+      componentName: 'ImportedSurface',
+      geometry,
+      localModel: identity(),
+      color: [1, 1, 1, 1] as const,
+      material,
+    });
+
+    const settled = settleWebGLScene(composer);
+    expect(settled.opaque).toEqual([settled.meshes[0]]);
+    expect(settled.transparent).toHaveLength(0);
+    producer.release();
   });
 
   test('settles ordered world-space light poses without scaling optical fields', () => {

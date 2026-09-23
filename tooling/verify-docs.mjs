@@ -107,6 +107,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/layer.md",
   "docs/site/api/components/line.md",
   "docs/site/api/components/mesh.md",
+  "docs/site/api/components/model.md",
   "docs/site/api/components/overlay.md",
   "docs/site/api/components/path.md",
   "docs/site/api/components/particles-2d.md",
@@ -262,6 +263,8 @@ const migrationMarkdownPaths = new Set([
 const operationalMarkdownPaths = new Set([
   ".beads/README.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
+  "playground/public/models/crc-static-glb-slice.LICENSE.md",
+  "playground/public/models/khronos-static-glb-gallery.LICENSE.md",
   "tooling/studio-docs/fixtures/invalid-script.md",
   "tooling/studio-docs/fixtures/valid-guide.md",
 ]);
@@ -1685,8 +1688,8 @@ const webglManifest = JSON.parse(
 );
 assert.deepEqual(
   Object.keys(webglManifest.exports),
-  [".", "./internal", "./package.json"],
-  "@crc/webgl must expose only its root, official internal seam, and manifest entries.",
+  [".", "./gltf", "./internal", "./package.json"],
+  "@crc/webgl must expose only its root, GLB loader, official internal seam, and manifest entries.",
 );
 assert.deepEqual(
   webglManifest.peerDependencies,

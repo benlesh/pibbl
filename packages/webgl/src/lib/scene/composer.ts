@@ -20,6 +20,7 @@ import type {
   WebGLSceneComposer,
 } from './types.js';
 import type { ResolvedWebGLCamera } from '../math/camera.js';
+import type { ResolvedWebGLMaterial } from '../components/material.js';
 
 interface MutableComposer extends WebGLSceneComposer {
   readonly modelStack: Float32Array[];
@@ -293,16 +294,32 @@ export function submitWebGLMesh(
     lit: input.lit ?? true,
     castShadow: input.castShadow,
     receiveShadow: input.receiveShadow,
-    material: Object.freeze({
-      type: material.type,
-      emissiveColor: Object.freeze([...material.emissiveColor]) as WebGLMeshSubmission['material']['emissiveColor'],
-      emissiveIntensity: material.emissiveIntensity,
-    }),
+    material: snapshotMaterial(material),
     sourceIndex: value.nextSourceIndex++,
     target: input.target,
     keyboardNavigationBounds: input.keyboardNavigationBounds === undefined ?
       undefined : Object.freeze({ ...input.keyboardNavigationBounds }),
   }));
+}
+
+function snapshotMaterial(
+  material: ResolvedWebGLMaterial,
+): ResolvedWebGLMaterial {
+  return material.type === 'lambert' ? Object.freeze({
+    type: material.type,
+    emissiveColor: Object.freeze([...material.emissiveColor]) as
+      WebGLMeshSubmission['color'],
+    emissiveIntensity: material.emissiveIntensity,
+  }) : Object.freeze({
+    type: material.type,
+    baseColorFactor: Object.freeze([...material.baseColorFactor]) as
+      WebGLMeshSubmission['color'],
+    ...(material.baseColorTexture === undefined ? {} : {
+      baseColorTexture: Object.freeze({ ...material.baseColorTexture }),
+    }),
+    metallicFactor: material.metallicFactor,
+    roughnessFactor: material.roughnessFactor,
+  });
 }
 
 /** Snapshots one official instanced declaration without touching WebGL. */

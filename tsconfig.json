@@ -19,6 +19,7 @@
       "@crc/physics/3d/geometry": ["./packages/physics/src/3d-geometry.ts"],
       "@crc/physics/3d": ["./packages/physics/src/3d.ts"],
       "@crc/webgl/internal": ["./packages/webgl/src/internal.ts"],
+      "@crc/webgl/gltf": ["./packages/webgl/src/gltf.ts"],
       "@crc/webgl": ["./packages/webgl/src/index.ts"],
       "@crc/types": ["./packages/types/src/index.ts"],
       "virtual:crc-studio-docs": ["./playground/src/studio-docs.d.ts"]

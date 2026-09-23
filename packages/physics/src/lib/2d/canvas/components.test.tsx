@@ -1,4 +1,5 @@
 import { crc, type CRCController } from '@crc/core';
+/** @jsxImportSource @crc/core */
 import {
   Capsule2D,
   Chain2D,

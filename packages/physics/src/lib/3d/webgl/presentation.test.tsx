@@ -3,6 +3,7 @@ import type {
   CRCWebGLPhysicsPrimitiveFacts,
 } from "@crc/webgl/internal";
 import { crc, signal, type CRCController } from "@crc/core";
+/** @jsxImportSource @crc/core */
 import {
   Cube,
   Group3D,

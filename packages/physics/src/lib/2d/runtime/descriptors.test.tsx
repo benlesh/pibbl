@@ -1,5 +1,6 @@
 import { signal } from "@crc/core";
 import { circleShape2D } from "../../../2d-geometry.js";
+/** @jsxImportSource @crc/core */
 import {
   collider2D,
   dynamicBody2D,

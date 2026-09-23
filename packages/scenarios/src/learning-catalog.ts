@@ -1988,6 +1988,39 @@ const drafts = [
     load: () => import("./learning/webgl/shadow-quality.example"),
   },
   {
+    slug: "static-glb",
+    title: "Explore a GLB model gallery",
+    shortTitle: "GLB gallery",
+    section: "webgl",
+    order: 495,
+    summary:
+      "Switch among four recognizable CC0 Khronos models, render each selected scene as one interactive Model, and orbit it under a directional light.",
+    api: [
+      "useGLTF",
+      "Model",
+      "WebGLLayer",
+      "DirectionalLight",
+      "useOrbitCamera",
+    ],
+    objectives: [
+      "Replace one component-owned GLB source while loading, ready, and error presentation stays outside the WebGL island.",
+      "Treat every complete imported hierarchy as one click and keyboard-focus target while orbiting from explicit viewport geometry.",
+    ],
+    prompts: {
+      gesture:
+        "Switch among Avocado, Boom Box, Toy Car, and Sci-Fi Helmet; drag empty space to orbit, then click or Tab-focus the complete model.",
+      code: "Adjust the camera or directional light, then compare how the four imported material sets respond.",
+    },
+    apiNotes: [
+      "useGLTF is the optional @crc/webgl/gltf adapter; loading and error presentation remains ordinary Canvas content.",
+      "The vendored CC0 derivatives preserve geometry, hierarchy, UV0, and base color while baking unsupported metallic/roughness textures into representative scalar factors.",
+      "Model preserves selected-scene transforms and imported PBR factors while exposing only opaque bounds and one logical target.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["shadow-quality", "directional-light", "webgl-islands"],
+    load: () => import("./learning/webgl/static-glb.example"),
+  },
+  {
     slug: "embers",
     title: "GPU embers",
     shortTitle: "Embers",

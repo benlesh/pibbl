@@ -34,6 +34,7 @@ const declarationModulePaths = new Map([
   ],
   ["@crc/three", "file:///node_modules/@crc/three/index.d.ts"],
   ["@crc/webgl", "file:///node_modules/@crc/webgl/index.d.ts"],
+  ["@crc/webgl/gltf", "file:///node_modules/@crc/webgl/gltf.d.ts"],
 ]);
 
 const threeRootDeclarations = import.meta.glob(

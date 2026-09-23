@@ -56,6 +56,7 @@ export {
   wakeBody3D,
 } from "@crc/physics/3d";
 export * from "@crc/webgl";
+export * from "@crc/webgl/gltf";
 export { computed, useSignal, isSignal, signal, untracked } from "@crc/core";
 export {
   usePlayback,

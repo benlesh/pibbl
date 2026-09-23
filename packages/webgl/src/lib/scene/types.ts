@@ -7,6 +7,7 @@ import type { ResolvedWebGLCamera } from '../math/camera.js';
 import type {
   CRCWebGLGeometry,
   CRCWebGLShadowQuality,
+  CRCWebGLTextureBinding,
   CRCWebGLVector3,
 } from '../types.js';
 import type { ResolvedWebGLMaterial } from '../components/material.js';
@@ -189,6 +190,14 @@ export type SettledWebGLShading =
       readonly kind: 'lambert';
       readonly linearBaseColor: WebGLRGBA;
       readonly linearEmissive: CRCWebGLVector3;
+      readonly normalMatrix: Readonly<Float32Array>;
+    }
+  | {
+      readonly kind: 'pbr-metallic-roughness';
+      readonly linearBaseColorFactor: WebGLRGBA;
+      readonly baseColorTexture?: CRCWebGLTextureBinding;
+      readonly metallicFactor: number;
+      readonly roughnessFactor: number;
       readonly normalMatrix: Readonly<Float32Array>;
     };
 

@@ -226,15 +226,9 @@ describe('createBuiltInProgram', () => {
       shadowEnabled: { name: 'u_shadow_enabled[0]' },
       shadowMatrices: { name: 'u_shadow_matrix[0]' },
       shadowParameters: { name: 'u_shadow_parameters[0]' },
+      shadowLayers: { name: 'u_shadow_layer[0]' },
       receiveShadow: { name: 'u_receive_shadow' },
-      shadow2DSamplers: Array.from(
-        { length: 8 },
-        (_, index) => ({ name: `u_shadow_map_2d_${index}` }),
-      ),
-      shadowCubeSamplers: Array.from(
-        { length: 8 },
-        (_, index) => ({ name: `u_shadow_map_cube_${index}` }),
-      ),
+      shadowMap: { name: 'u_shadow_map' },
       positionAttribute: 0,
       normalAttribute: 1,
     });
@@ -314,7 +308,7 @@ describe('createBuiltInProgram', () => {
     ]);
   });
 
-  it('links the depth program and fixed Lambert shadow sampler locations', () => {
+  it('links the depth program and one Lambert shadow-array sampler', () => {
     const { gl, shaderSources, uniformNames } = createProgramGL();
     const depth = createBuiltInProgram(gl, 'shadow-depth' as never, 'DirectionalLight') as any;
     const lambert = createBuiltInProgram(gl, 'lambert', 'Cube') as any;
@@ -328,11 +322,12 @@ describe('createBuiltInProgram', () => {
     });
     expect(lambert.shadowEnabled).toEqual({ name: 'u_shadow_enabled[0]' });
     expect(lambert.shadowMatrices).toEqual({ name: 'u_shadow_matrix[0]' });
+    expect(lambert.shadowLayers).toEqual({ name: 'u_shadow_layer[0]' });
     expect(lambert.receiveShadow).toEqual({ name: 'u_receive_shadow' });
-    expect(lambert.shadow2DSamplers).toHaveLength(8);
-    expect(lambert.shadowCubeSamplers).toHaveLength(8);
-    expect(uniformNames).toContain('u_shadow_map_2d_7');
-    expect(uniformNames).toContain('u_shadow_map_cube_7');
+    expect(lambert.shadowMap).toEqual({ name: 'u_shadow_map' });
+    expect(uniformNames).toContain('u_shadow_map');
+    expect(uniformNames).not.toContain('u_shadow_map_2d_7');
+    expect(uniformNames).not.toContain('u_shadow_map_cube_7');
     expect(shaderSources.join('\n')).toMatch(
       /distance\([^;]+u_shadow_light_position_far\.xyz[^;]+\)\s*\/\s*u_shadow_light_position_far\.w/,
     );

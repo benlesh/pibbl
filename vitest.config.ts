@@ -70,9 +70,9 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     crcRuntimeSource(mode),
     crcStudioDocs({
-      repositoryRoot: fileURLToPath(new URL('.', import.meta.url)),
+      repositoryRoot: fileURLToPath(new URL(".", import.meta.url)),
     }),
-    ...(mode === 'built' ? [assertBuiltCore()] : []),
+    ...(mode === "built" ? [assertBuiltCore()] : []),
   ],
   resolve: {
     alias: mode === 'built' ? [] : [
@@ -87,10 +87,6 @@ export default defineConfig(({ mode }) => ({
       {
         find: /^@crc\/core\/jsx-runtime$/,
         replacement: fileURLToPath(new URL('./packages/core/src/jsx-runtime.ts', import.meta.url)),
-      },
-      {
-        find: /^@crc\/core\/internal$/,
-        replacement: fileURLToPath(new URL('./packages/core/src/internal.ts', import.meta.url)),
       },
       {
         find: '@crc/core/types',
@@ -119,6 +115,10 @@ export default defineConfig(({ mode }) => ({
       {
         find: /^@crc\/physics\/3d$/,
         replacement: fileURLToPath(new URL('./packages/physics/src/3d.ts', import.meta.url)),
+      },
+      {
+        find: /^@crc\/webgl\/gltf$/,
+        replacement: fileURLToPath(new URL('./packages/webgl/src/gltf.ts', import.meta.url)),
       },
       {
         find: /^@crc\/webgl\/internal$/,
@@ -154,22 +154,17 @@ export default defineConfig(({ mode }) => ({
       enabled: true,
       headless: true,
       viewport: { width: 800, height: 600 },
-      instances: [
-        { browser: 'chromium' },
-      ],
+      instances: [{ browser: "chromium" }],
       provider: playwright({
         launchOptions: {
-          args: [
-            '--force-color-profile=srgb',
-            '--font-render-hinting=none',
-          ],
+          args: ["--force-color-profile=srgb", "--font-render-hinting=none"],
         },
         contextOptions: {
           deviceScaleFactor: 1,
-          colorScheme: 'light',
-          reducedMotion: 'reduce',
-          locale: 'en-US',
-          timezoneId: 'UTC',
+          colorScheme: "light",
+          reducedMotion: "reduce",
+          locale: "en-US",
+          timezoneId: "UTC",
         },
       }),
     },

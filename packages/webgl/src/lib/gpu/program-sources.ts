@@ -1,5 +1,6 @@
 export const WEBGL_MAX_LIGHTS = 8;
 export const WEBGL_MAX_SHADOWS = 8;
+export const WEBGL_MAX_SHADOW_VIEWS = WEBGL_MAX_LIGHTS * 6;
 
 export const WEBGL_LIGHT_KIND = Object.freeze({
   ambient: 0,
@@ -81,26 +82,6 @@ void main() {
 }
 `;
 
-const SHADOW_2D_SAMPLERS = Array.from(
-  { length: WEBGL_MAX_SHADOWS },
-  (_, index) => `uniform sampler2D u_shadow_map_2d_${index};`,
-).join('\n');
-
-const SHADOW_CUBE_SAMPLERS = Array.from(
-  { length: WEBGL_MAX_SHADOWS },
-  (_, index) => `uniform samplerCube u_shadow_map_cube_${index};`,
-).join('\n');
-
-const SHADOW_2D_BRANCHES = Array.from(
-  { length: WEBGL_MAX_SHADOWS },
-  (_, index) => `  if (index == ${index}) return texture(u_shadow_map_2d_${index}, coordinates).r;`,
-).join('\n');
-
-const SHADOW_CUBE_BRANCHES = Array.from(
-  { length: WEBGL_MAX_SHADOWS },
-  (_, index) => `  if (index == ${index}) return texture(u_shadow_map_cube_${index}, direction).r;`,
-).join('\n');
-
 const LAMBERT_VERTEX_SOURCE = `#version 300 es
 precision highp float;
 layout(location = 0) in vec3 a_position;
@@ -136,6 +117,7 @@ void main() {
 const LAMBERT_FRAGMENT_SOURCE = `#version 300 es
 precision highp float;
 precision highp int;
+precision highp sampler2DArray;
 
 const int MAX_LIGHTS = ${WEBGL_MAX_LIGHTS};
 const int LIGHT_KIND_AMBIENT = ${WEBGL_LIGHT_KIND.ambient};
@@ -156,9 +138,9 @@ uniform vec4 u_light_ground_outer_cosine[MAX_LIGHTS];
 uniform int u_shadow_enabled[MAX_LIGHTS];
 uniform mat4 u_shadow_matrix[MAX_LIGHTS];
 uniform vec4 u_shadow_parameters[MAX_LIGHTS];
+uniform int u_shadow_layer[MAX_LIGHTS];
 uniform bool u_receive_shadow;
-${SHADOW_2D_SAMPLERS}
-${SHADOW_CUBE_SAMPLERS}
+uniform sampler2DArray u_shadow_map;
 
 in vec3 v_world_position;
 in vec3 v_world_normal;
@@ -184,13 +166,57 @@ vec3 linear_to_srgb(vec3 color) {
 }
 
 float sample_shadow_2d(int index, vec2 coordinates) {
-${SHADOW_2D_BRANCHES}
-  return 1.0;
+  return texture(
+    u_shadow_map,
+    vec3(coordinates, float(u_shadow_layer[index]))
+  ).r;
 }
 
-float sample_shadow_cube(int index, vec3 direction) {
-${SHADOW_CUBE_BRANCHES}
-  return 1.0;
+int point_shadow_face(vec3 direction) {
+  vec3 absolute_direction = abs(direction);
+  if (absolute_direction.x >= absolute_direction.y &&
+      absolute_direction.x >= absolute_direction.z) {
+    return direction.x >= 0.0 ? 0 : 1;
+  }
+  if (absolute_direction.y >= absolute_direction.z) {
+    return direction.y >= 0.0 ? 2 : 3;
+  }
+  return direction.z >= 0.0 ? 4 : 5;
+}
+
+vec2 point_shadow_coordinates(vec3 direction, int face) {
+  vec3 absolute_direction = abs(direction);
+  vec2 coordinates;
+  float major;
+  if (face == 0) {
+    coordinates = vec2(-direction.z, -direction.y);
+    major = absolute_direction.x;
+  } else if (face == 1) {
+    coordinates = vec2(direction.z, -direction.y);
+    major = absolute_direction.x;
+  } else if (face == 2) {
+    coordinates = vec2(direction.x, direction.z);
+    major = absolute_direction.y;
+  } else if (face == 3) {
+    coordinates = vec2(direction.x, -direction.z);
+    major = absolute_direction.y;
+  } else if (face == 4) {
+    coordinates = vec2(direction.x, -direction.y);
+    major = absolute_direction.z;
+  } else {
+    coordinates = vec2(-direction.x, -direction.y);
+    major = absolute_direction.z;
+  }
+  return major > 0.0 ? coordinates / major * 0.5 + 0.5 : vec2(0.5);
+}
+
+float sample_shadow_point(int index, vec3 direction) {
+  int face = point_shadow_face(direction);
+  vec2 coordinates = point_shadow_coordinates(direction, face);
+  return texture(
+    u_shadow_map,
+    vec3(coordinates, float(u_shadow_layer[index] + face))
+  ).r;
 }
 
 float compare_directional_shadow(
@@ -280,7 +306,7 @@ float compare_point_shadow(
   vec3 direction,
   float current_depth
 ) {
-  float stored_depth = sample_shadow_cube(index, direction);
+  float stored_depth = sample_shadow_point(index, direction);
   return current_depth <= stored_depth ? 1.0 : 0.0;
 }
 
@@ -460,6 +486,285 @@ void main() {
 }
 `;
 
+const PBR_VERTEX_SOURCE = `#version 300 es
+precision highp float;
+layout(location = 0) in vec3 a_position;
+layout(location = 1) in vec3 a_normal;
+layout(location = 2) in vec2 a_texture_coordinates_0;
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_projection;
+uniform mat3 u_normal_matrix;
+out vec3 v_world_position;
+out vec3 v_world_normal;
+out vec2 v_texture_coordinates_0;
+
+vec3 safe_normalize(vec3 value) {
+  float maximum_component = max(
+    max(abs(value.x), abs(value.y)),
+    abs(value.z)
+  );
+  if (maximum_component == 0.0) return vec3(0.0);
+  vec3 scaled = value / maximum_component;
+  float length_squared = dot(scaled, scaled);
+  if (length_squared == 0.0) return vec3(0.0);
+  return scaled * inversesqrt(length_squared);
+}
+
+void main() {
+  vec4 world_position = u_model * vec4(a_position, 1.0);
+  v_world_position = world_position.xyz;
+  v_world_normal = safe_normalize(
+    u_normal_matrix * safe_normalize(a_normal)
+  );
+  v_texture_coordinates_0 = a_texture_coordinates_0;
+  gl_Position = u_projection * u_view * world_position;
+}
+`;
+
+const PBR_SHADOW_HELPERS = LAMBERT_FRAGMENT_SOURCE.slice(
+  LAMBERT_FRAGMENT_SOURCE.indexOf('vec3 safe_normalize'),
+  LAMBERT_FRAGMENT_SOURCE.indexOf('vec3 local_light_contribution'),
+);
+
+const PBR_FRAGMENT_SOURCE = `#version 300 es
+precision highp float;
+precision highp int;
+precision highp sampler2DArray;
+
+const float PI = 3.141592653589793;
+const int MAX_LIGHTS = ${WEBGL_MAX_LIGHTS};
+const int LIGHT_KIND_AMBIENT = ${WEBGL_LIGHT_KIND.ambient};
+const int LIGHT_KIND_HEMISPHERE = ${WEBGL_LIGHT_KIND.hemisphere};
+const int LIGHT_KIND_DIRECTIONAL = ${WEBGL_LIGHT_KIND.directional};
+const int LIGHT_KIND_POINT = ${WEBGL_LIGHT_KIND.point};
+const int LIGHT_KIND_SPOT = ${WEBGL_LIGHT_KIND.spot};
+
+uniform vec4 u_linear_base_color_factor;
+uniform float u_metallic_factor;
+uniform float u_roughness_factor;
+uniform bool u_has_base_color_texture;
+uniform sampler2D u_base_color_texture;
+uniform vec3 u_camera_position;
+uniform int u_light_count;
+uniform int u_light_kind[MAX_LIGHTS];
+uniform vec4 u_light_color_intensity[MAX_LIGHTS];
+uniform vec4 u_light_position_range[MAX_LIGHTS];
+uniform vec4 u_light_direction_inner_cosine[MAX_LIGHTS];
+uniform vec4 u_light_ground_outer_cosine[MAX_LIGHTS];
+uniform int u_shadow_enabled[MAX_LIGHTS];
+uniform mat4 u_shadow_matrix[MAX_LIGHTS];
+uniform vec4 u_shadow_parameters[MAX_LIGHTS];
+uniform int u_shadow_layer[MAX_LIGHTS];
+uniform bool u_receive_shadow;
+uniform sampler2DArray u_shadow_map;
+
+in vec3 v_world_position;
+in vec3 v_world_normal;
+in vec2 v_texture_coordinates_0;
+out vec4 out_color;
+
+${PBR_SHADOW_HELPERS}
+
+vec3 srgb_to_linear(vec3 color) {
+  bvec3 use_linear_segment = lessThanEqual(color, vec3(0.04045));
+  vec3 linear_segment = color / 12.92;
+  vec3 power_segment = pow((color + 0.055) / 1.055, vec3(2.4));
+  return mix(power_segment, linear_segment, use_linear_segment);
+}
+
+vec3 fresnel_schlick(vec3 f0, float view_half) {
+  float one_minus = 1.0 - clamp(view_half, 0.0, 1.0);
+  float one_minus_squared = one_minus * one_minus;
+  float one_minus_fifth = one_minus_squared * one_minus_squared * one_minus;
+  return f0 + (vec3(1.0) - f0) * one_minus_fifth;
+}
+
+float distribution_ggx(float normal_half, float alpha_squared) {
+  float denominator = normal_half * normal_half *
+    (alpha_squared - 1.0) + 1.0;
+  return alpha_squared / max(PI * denominator * denominator, 0.000001);
+}
+
+float visibility_smith_correlated(
+  float normal_view,
+  float normal_light,
+  float alpha_squared
+) {
+  float ggx_view = normal_light * sqrt(
+    normal_view * normal_view * (1.0 - alpha_squared) + alpha_squared
+  );
+  float ggx_light = normal_view * sqrt(
+    normal_light * normal_light * (1.0 - alpha_squared) + alpha_squared
+  );
+  return 0.5 / max(ggx_view + ggx_light, 0.000001);
+}
+
+vec3 direct_pbr_contribution(
+  vec3 base_color,
+  float metallic,
+  float roughness,
+  vec3 world_normal,
+  vec3 to_view,
+  vec3 to_light,
+  vec3 radiance
+) {
+  float normal_light = max(dot(world_normal, to_light), 0.0);
+  float normal_view = max(dot(world_normal, to_view), 0.0);
+  if (normal_light <= 0.0 || normal_view <= 0.0) return vec3(0.0);
+  vec3 half_vector = safe_normalize(to_view + to_light);
+  float normal_half = max(dot(world_normal, half_vector), 0.0);
+  float view_half = max(dot(to_view, half_vector), 0.0);
+  vec3 f0 = mix(vec3(0.04), base_color, metallic);
+  vec3 fresnel = fresnel_schlick(f0, view_half);
+  float alpha = max(roughness, 0.045);
+  alpha *= alpha;
+  float alpha_squared = alpha * alpha;
+  float distribution = distribution_ggx(normal_half, alpha_squared);
+  float visibility = visibility_smith_correlated(
+    normal_view,
+    normal_light,
+    alpha_squared
+  );
+  vec3 specular = fresnel * distribution * visibility;
+  vec3 diffuse = (vec3(1.0) - fresnel) * (1.0 - metallic) *
+    base_color / PI;
+  return (diffuse + specular) * radiance * normal_light;
+}
+
+float local_light_attenuation(
+  vec4 position_range,
+  vec4 direction_inner_cosine,
+  vec4 ground_outer_cosine,
+  bool is_spot,
+  out vec3 to_light
+) {
+  vec3 to_light_vector = position_range.xyz - v_world_position;
+  if (all(equal(to_light_vector, vec3(0.0)))) {
+    to_light = vec3(0.0);
+    return 0.0;
+  }
+  float distance_squared = dot(to_light_vector, to_light_vector);
+  to_light = safe_normalize(to_light_vector);
+  float distance_attenuation = 1.0 / max(distance_squared, 0.0001);
+  float range_attenuation = 1.0;
+  if (position_range.w > 0.0) {
+    float ratio = sqrt(distance_squared) / position_range.w;
+    float ratio_squared = ratio * ratio;
+    float cutoff = clamp(
+      1.0 - ratio_squared * ratio_squared,
+      0.0,
+      1.0
+    );
+    range_attenuation = cutoff * cutoff;
+  }
+  float cone = 1.0;
+  if (is_spot) {
+    float cosine_theta = dot(-to_light, direction_inner_cosine.xyz);
+    float inner_cosine = direction_inner_cosine.w;
+    float outer_cosine = ground_outer_cosine.w;
+    cone = inner_cosine == outer_cosine ?
+      (cosine_theta >= inner_cosine ? 1.0 : 0.0) :
+      smoothstep(outer_cosine, inner_cosine, cosine_theta);
+  }
+  return distance_attenuation * range_attenuation * cone;
+}
+
+void main() {
+  vec4 base_color = u_linear_base_color_factor;
+  if (u_has_base_color_texture) {
+    vec4 sample_color = texture(
+      u_base_color_texture,
+      v_texture_coordinates_0
+    );
+    base_color.rgb *= srgb_to_linear(sample_color.rgb);
+    base_color.a *= sample_color.a;
+  }
+  vec3 world_normal = safe_normalize(v_world_normal);
+  vec3 to_view = safe_normalize(u_camera_position - v_world_position);
+  float metallic = u_metallic_factor;
+  float roughness = u_roughness_factor;
+  vec3 f0 = mix(vec3(0.04), base_color.rgb, metallic);
+  vec3 diffuse_fill = base_color.rgb * (1.0 - metallic) *
+    (vec3(1.0) - f0);
+  vec3 linear_surface = vec3(0.0);
+
+  for (int index = 0; index < MAX_LIGHTS; index += 1) {
+    if (index >= u_light_count) break;
+    int kind = u_light_kind[index];
+    vec4 color_intensity = u_light_color_intensity[index];
+    vec4 position_range = u_light_position_range[index];
+    vec4 direction_inner_cosine =
+      u_light_direction_inner_cosine[index];
+    vec4 ground_outer_cosine = u_light_ground_outer_cosine[index];
+    vec3 radiance = color_intensity.rgb * color_intensity.w;
+
+    if (kind == LIGHT_KIND_AMBIENT) {
+      linear_surface += diffuse_fill * radiance;
+    } else if (kind == LIGHT_KIND_HEMISPHERE) {
+      float mix_factor = clamp(
+        dot(world_normal, direction_inner_cosine.xyz) * 0.5 + 0.5,
+        0.0,
+        1.0
+      );
+      vec3 hemisphere = mix(
+        ground_outer_cosine.rgb,
+        color_intensity.rgb,
+        mix_factor
+      ) * color_intensity.w;
+      linear_surface += diffuse_fill * hemisphere;
+    } else if (kind == LIGHT_KIND_DIRECTIONAL) {
+      vec3 to_light = -direction_inner_cosine.xyz;
+      float shadow = 1.0;
+      if (u_receive_shadow && u_shadow_enabled[index] == 1) {
+        shadow = directional_shadow_visibility(index);
+      }
+      linear_surface += direct_pbr_contribution(
+        base_color.rgb,
+        metallic,
+        roughness,
+        world_normal,
+        to_view,
+        to_light,
+        radiance * shadow
+      );
+    } else if (kind == LIGHT_KIND_POINT || kind == LIGHT_KIND_SPOT) {
+      vec3 to_light;
+      bool is_spot = kind == LIGHT_KIND_SPOT;
+      float attenuation = local_light_attenuation(
+        position_range,
+        direction_inner_cosine,
+        ground_outer_cosine,
+        is_spot,
+        to_light
+      );
+      float shadow = 1.0;
+      if (u_receive_shadow && kind == LIGHT_KIND_POINT &&
+          u_shadow_enabled[index] == 2) {
+        shadow = point_shadow_visibility(index, position_range.xyz);
+      } else if (u_receive_shadow && is_spot &&
+          u_shadow_enabled[index] == 3) {
+        shadow = spot_shadow_visibility(index, position_range.xyz);
+      }
+      linear_surface += direct_pbr_contribution(
+        base_color.rgb,
+        metallic,
+        roughness,
+        world_normal,
+        to_view,
+        to_light,
+        radiance * attenuation * shadow
+      );
+    }
+  }
+
+  out_color = vec4(
+    linear_to_srgb(clamp(linear_surface, vec3(0.0), vec3(1.0))),
+    base_color.a
+  );
+}
+`;
+
 export const WEBGL_BUILT_IN_PROGRAM_SOURCES = Object.freeze({
   unlit: Object.freeze({
     vertex: UNLIT_VERTEX_SOURCE,
@@ -468,6 +773,10 @@ export const WEBGL_BUILT_IN_PROGRAM_SOURCES = Object.freeze({
   lambert: Object.freeze({
     vertex: LAMBERT_VERTEX_SOURCE,
     fragment: LAMBERT_FRAGMENT_SOURCE,
+  }),
+  'pbr-metallic-roughness': Object.freeze({
+    vertex: PBR_VERTEX_SOURCE,
+    fragment: PBR_FRAGMENT_SOURCE,
   }),
   'shadow-depth': Object.freeze({
     vertex: SHADOW_DEPTH_VERTEX_SOURCE,

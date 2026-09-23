@@ -178,16 +178,56 @@ export function applyWebGLFocusMetadata(
 ): CRCEventTargetRegistration | undefined {
   const eventRoot = ledger.entries[0]?.target.owner.eventRoot;
   let firstApplied: CRCEventTargetRegistration | undefined;
+  const grouped = new Map<CRCEventTargetRegistration, {
+    bounds: Array<NonNullable<CRCEventTargetRegistration['keyboardNavigationBounds']>>;
+    points: Array<Readonly<{ x: number; y: number }>>;
+  }>();
   for (const entry of ledger.entries) {
     if (
       entry.target.owner.eventRoot !== eventRoot ||
       !isBackendEventTargetLive(entry.target)
     ) continue;
-    entry.target.keyboardNavigationBounds = entry.keyboardNavigationBounds;
-    entry.target.keyboardNavigationPoints = entry.keyboardNavigationPoints;
-    firstApplied ??= entry.target;
+    let aggregate = grouped.get(entry.target);
+    if (!aggregate) {
+      aggregate = { bounds: [], points: [] };
+      grouped.set(entry.target, aggregate);
+      firstApplied ??= entry.target;
+    }
+    if (entry.keyboardNavigationBounds) {
+      aggregate.bounds.push(entry.keyboardNavigationBounds);
+    }
+    if (entry.keyboardNavigationPoints) {
+      aggregate.points.push(...entry.keyboardNavigationPoints);
+    }
+  }
+  for (const [target, aggregate] of grouped) {
+    if (aggregate.bounds.length > 0) {
+      target.keyboardNavigationBounds = unionNavigationBounds(aggregate.bounds);
+      target.keyboardNavigationPoints = undefined;
+    } else {
+      target.keyboardNavigationBounds = undefined;
+      target.keyboardNavigationPoints = aggregate.points.length === 0 ?
+        undefined : Object.freeze(aggregate.points.slice());
+    }
   }
   return firstApplied;
+}
+
+function unionNavigationBounds(
+  bounds: readonly NonNullable<
+    CRCEventTargetRegistration['keyboardNavigationBounds']
+  >[],
+): NonNullable<CRCEventTargetRegistration['keyboardNavigationBounds']> {
+  const left = Math.min(...bounds.map(value => value.x));
+  const top = Math.min(...bounds.map(value => value.y));
+  const right = Math.max(...bounds.map(value => value.x + value.width));
+  const bottom = Math.max(...bounds.map(value => value.y + value.height));
+  return Object.freeze({
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  });
 }
 
 /** Releases unique frame-local target participation; safe to repeat. */

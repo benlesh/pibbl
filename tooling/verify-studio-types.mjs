@@ -38,6 +38,7 @@ const modulePaths = new Map([
   ['@crc/physics/3d', 'node_modules/@crc/physics/3d.d.ts'],
   ['@crc/physics/3d/geometry', 'node_modules/@crc/physics/3d/geometry.d.ts'],
   ['@crc/webgl', 'node_modules/@crc/webgl/index.d.ts'],
+  ['@crc/webgl/gltf', 'node_modules/@crc/webgl/gltf.d.ts'],
 ]);
 
 function readDeclarationModules(bundle) {
@@ -313,6 +314,7 @@ const packageDeclarationSources = new Map([
     '@crc/physics/3d/geometry',
     await readFile(join(repositoryRoot, 'packages/physics/src/3d-geometry.ts'), 'utf8'),
   ],
+  ['@crc/webgl/gltf', await readFile(join(repositoryRoot, 'packages/webgl/src/gltf.ts'), 'utf8')],
 ]);
 
 const builtPackageDeclarationSources = new Map([
@@ -337,6 +339,7 @@ const builtPackageDeclarationSources = new Map([
     '@crc/physics/3d/geometry',
     await readFile(join(repositoryRoot, 'packages/physics/dist/3d-geometry.d.ts'), 'utf8'),
   ],
+  ['@crc/webgl/gltf', await readFile(join(repositoryRoot, 'packages/webgl/dist/gltf.d.ts'), 'utf8')],
 ]);
 
 for (const { moduleName, content } of declarationModules) {
@@ -565,6 +568,7 @@ const publicWebGLTypeExports = [
   'CRCOrbitCameraOptions',
   'CRCOrbitCameraResult',
   'CRCPhysics3DPropExtension',
+  'CRCWebGLAsset',
   'CRCWebGLGeometry',
   'CRCWebGLGeometryInput',
   'CRCWebGLLambertMaterial',
@@ -583,6 +587,8 @@ const publicWebGLTypeExports = [
   'HemisphereLightStyle',
   'MeshProps',
   'MeshStyle',
+  'ModelProps',
+  'ModelStyle',
   'PointLightProps',
   'PointLightStyle',
   'SphereProps',
@@ -595,9 +601,9 @@ const publicWebGLTypeExports = [
   'WebGLLayerStyle',
 ].sort();
 
-if (publicWebGLTypeExports.length !== 34) {
+if (publicWebGLTypeExports.length !== 37) {
   throw new Error(
-    `CRC Studio must declare exactly 34 WebGL public types, received ${publicWebGLTypeExports.length}.`,
+    `CRC Studio must declare exactly 37 WebGL public types, received ${publicWebGLTypeExports.length}.`,
   );
 }
 
@@ -821,6 +827,11 @@ if (publicThreeTypeExports.length !== 8) {
   throw new Error(`CRC Studio must declare exactly 8 Three public types, received ${publicThreeTypeExports.length}.`);
 }
 
+const publicGLTFTypeExports = [
+  'CRCGLTFSource',
+  'CRCWebGLAssetLoadResult',
+].sort();
+
 function explicitTypeExportNames(source) {
   const names = [];
   for (const match of source.matchAll(
@@ -841,6 +852,7 @@ for (const [moduleName, publicTypes] of [
   ['@crc/core', publicTypeExports],
   ['@crc/three', publicThreeTypeExports],
   ['@crc/webgl', publicWebGLTypeExports],
+  ['@crc/webgl/gltf', publicGLTFTypeExports],
 ]) {
   const packageTypeExports = explicitTypeExportNames(packageDeclarationSources.get(moduleName));
   if (packageTypeExports.join('\n') !== publicTypes.join('\n')) {
@@ -872,6 +884,9 @@ import type {
       : name,
   ).join(',\n  ')}
 } from '@crc/physics/3d';
+import type {
+  ${publicGLTFTypeExports.join(',\n  ')}
+} from '@crc/webgl/gltf';
 `;
 
 const consumer = `
@@ -881,6 +896,7 @@ import type { CRCInternalFrame } from '@crc/core/internal';
 import * as CRC_CORE_ROOT from '@crc/core';
 import * as CRC_THREE_ROOT from '@crc/three';
 import * as CRC_WEBGL_ROOT from '@crc/webgl';
+import { useGLTF, type CRCGLTFSource, type CRCWebGLAssetLoadResult } from '@crc/webgl/gltf';
 import {
   Absolute,
   Clip,
@@ -1008,6 +1024,7 @@ import {
   Group3D,
   HemisphereLight,
   Mesh,
+  Model,
   PointLight,
   Sphere,
   SpotLight,
@@ -1032,6 +1049,8 @@ import {
   type HemisphereLightStyle,
   type MeshProps,
   type MeshStyle,
+  type ModelProps,
+  type ModelStyle,
   type PointLightProps,
   type PointLightStyle,
   type SphereProps,
@@ -1278,6 +1297,9 @@ const filteredWebGLBackground = <WebGLBackground style={{ color: '#08111f', filt
 void [filteredCube, filteredAmbientLight, filteredWebGLBackground];
 void CRC_WEBGL_ROOT.useAnimationFrame;
 void CRC_WEBGL_ROOT.useOrbitCamera;
+void useGLTF;
+type StudioGLTFTypes = [CRCGLTFSource, CRCWebGLAssetLoadResult];
+void (undefined as unknown as StudioGLTFTypes);
 void useAnimationFrame;
 type StudioWebGLTypes = [
   AmbientLightProps,
@@ -2005,6 +2027,7 @@ try {
       physics3d: join(repositoryRoot, 'packages/physics/src/3d.ts'),
       physics3dGeometry: join(repositoryRoot, 'packages/physics/src/3d-geometry.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/src/index.ts'),
+      gltf: join(repositoryRoot, 'packages/webgl/src/gltf.ts'),
     },
     {
       label: 'built',
@@ -2020,6 +2043,7 @@ try {
       physics3d: join(repositoryRoot, 'packages/physics/dist/3d.d.ts'),
       physics3dGeometry: join(repositoryRoot, 'packages/physics/dist/3d-geometry.d.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/dist/index.d.ts'),
+      gltf: join(repositoryRoot, 'packages/webgl/dist/gltf.d.ts'),
     },
   ];
   for (const entries of packageEntrySets) {
@@ -2050,6 +2074,7 @@ try {
             '@crc/physics/3d/geometry': [entries.physics3dGeometry],
             '@crc/three': [entries.three],
             '@crc/webgl': [entries.webgl],
+            '@crc/webgl/gltf': [entries.gltf],
             three: [join(repositoryRoot, 'packages/three/node_modules/@types/three/index.d.ts')],
             'three/addons/controls/OrbitControls.js': [join(repositoryRoot, 'packages/three/node_modules/@types/three/examples/jsm/controls/OrbitControls.d.ts')],
           },
@@ -2146,6 +2171,7 @@ try {
     'LayoutDiagnostic',
     'Line',
     'Mesh',
+    'Model',
     'Overlay',
     'Path',
     'Polygon',
@@ -2163,6 +2189,7 @@ try {
     'WebGLLayer',
     'useAnimationFrame',
     'useOrbitCamera',
+    'useGLTF',
     'computed',
     'crc',
     'useCanvasContext',
@@ -2231,9 +2258,9 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 202) {
+  if (expectedStudioRuntimeExports.length !== 204) {
     throw new Error(
-      `CRC Studio runtime must expose 78 core values, 46 physics 2D values, 48 physics 3D values, 1 Three adapter value, 1 sandbox module registry, 14 WebGL values, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
+      `CRC Studio runtime must expose 78 core values, 46 physics 2D values, 48 physics 3D values, 1 Three adapter value, 1 sandbox module registry, 15 WebGL values, 1 GLB loader value, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
     );
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
@@ -2245,7 +2272,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 324-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 329-type structural ' +
       'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
       'generic, and layout checks against source and built packages.\n',
   );

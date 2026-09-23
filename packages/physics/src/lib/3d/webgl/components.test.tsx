@@ -1,5 +1,6 @@
 import { getWebGLGeometrySnapshot } from "@crc/webgl/internal";
 import { describe, expect, it } from "vitest";
+/** @jsxImportSource @crc/core */
 import {
   capsuleShape3D,
   convexHullShape3D,

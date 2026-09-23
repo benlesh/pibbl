@@ -1,4 +1,5 @@
 import { definePrimitive, signal, useState, type SystemStyle } from '@crc/core';
+/** @jsxImportSource @crc/core */
 import {
   boxShape2D,
   type CRCPhysicsShape2D,
