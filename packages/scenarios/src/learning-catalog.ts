@@ -759,7 +759,7 @@ const drafts = [
     section: "composition",
     order: 119,
     summary:
-      "Combine an autoplay ambient effect with repeated pointer-positioned bursts from one explicit fixed-capacity system.",
+      "Drag a burning square while world-space flame and smoke particles keep rising from every place they were emitted.",
     api: [
       "defineParticleEffect2D",
       "particleRange",
@@ -767,21 +767,27 @@ const drafts = [
       "particleCurve",
       "useParticleSystem",
       "Particles2D",
+      "useSignal",
+      "usePlayback",
+      "repeat",
+      "sequence",
+      "wait",
+      "marker",
     ],
     objectives: [
-      "Describe particle-domain emission, seeded ranges, motion, appearance, and rendering in an immutable effect definition.",
-      "Own a reusable explicit system in one component and emit a burst at ordinary CRC pointer coordinates.",
+      "Combine separate flame and smoke emitters with seeded ranges, motion, appearance curves, and rendering modes.",
+      "Emit at a draggable square's current root coordinates so living particles remain at their original world-space birth positions.",
     ],
     prompts: {
       gesture:
-        "Click several points in the stage to launch a celebration at each location.",
-      code: "Change the impact acceleration or color choices, then compare them with moving the whole component through a CRC signal.",
+        "Drag the burning square around the stage and watch its older flame and smoke continue rising behind it.",
+      code: "Change the flame cadence, smoke lifetime, or drag bounds while keeping the Particles2D component fixed to the stage.",
     },
     apiNotes: [
       "A Particles2D component owns one fixed-capacity executor; particles are data inside it rather than individual CRC components.",
-      "Particle value descriptors are direct named exports, so unused descriptor factories remain tree-shakable.",
-      "Particle acceleration changes each mark over its lifetime. Moving Particles2D itself still uses ordinary CRC transforms, signals, or animation.",
-      "Implicit autoplay suits ambient effects, while useParticleSystem supplies explicit repeated commands and observable status.",
+      "Manual births snapshot the square's root-space position, so moving the signal-driven Rectangle does not translate particles that are already alive.",
+      "A repeating animation program supplies scheduler-owned emission markers without creating a second timer or animation loop.",
+      "Pointer capture keeps the square attached to the drag even when the pointer moves outside its geometry.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["signals-and-animation", "layer", "pointer-events"],

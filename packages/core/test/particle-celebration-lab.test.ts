@@ -10,7 +10,7 @@ import {
   type ParticleCelebrationLabState,
   type ScenarioController,
 } from '@crc/scenarios';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { loadLearningSource } from '../../../playground/src/learning-sources';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
 import { mountScenarioSurface } from '@crc/scenarios/surface';
@@ -32,6 +32,11 @@ async function nextPaint(count = 2): Promise<void> {
       requestAnimationFrame(() => resolve()),
     );
   }
+}
+
+async function advanceVisibleTime(milliseconds: number): Promise<void> {
+  await new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+  await nextPaint();
 }
 
 function pixels(
@@ -61,6 +66,42 @@ function changedPixelCount(
     }
   }
   return changed;
+}
+
+function nonBackgroundPixelCount(
+  image: Uint8ClampedArray,
+  background: readonly [number, number, number],
+): number {
+  let count = 0;
+  for (let offset = 0; offset < image.length; offset += 4) {
+    if (
+      image[offset] !== background[0] ||
+      image[offset + 1] !== background[1] ||
+      image[offset + 2] !== background[2]
+    ) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+function dispatchPointer(
+  canvas: HTMLCanvasElement,
+  type: 'pointerdown' | 'pointermove' | 'pointerup',
+  x: number,
+  y: number,
+  pointerId = 17,
+): void {
+  const bounds = canvas.getBoundingClientRect();
+  canvas.dispatchEvent(new PointerEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    clientX: bounds.left + x,
+    clientY: bounds.top + y,
+    pointerId,
+    pointerType: 'mouse',
+    buttons: type === 'pointerup' ? 0 : 1,
+  }));
 }
 
 function occupiedParticleCells(
@@ -121,6 +162,12 @@ describe('first-class Canvas particle public scenarios', () => {
         'particleCurve',
         'useParticleSystem',
         'Particles2D',
+        'useSignal',
+        'usePlayback',
+        'repeat',
+        'sequence',
+        'wait',
+        'marker',
       ],
       source: {
         path: 'packages/scenarios/src/learning/composition/particle-effects.example.tsx',
@@ -329,7 +376,7 @@ describe('first-class Canvas particle public scenarios', () => {
     }
   });
 
-  it('mounts the learning ambient effect and accepts an explicit click burst', async () => {
+  it('drags the burning square while leaving living fire and smoke at their birth positions', async () => {
     const entry = getLearningExampleBySlug('particle-effects');
     if (!entry) throw new Error('Missing particle-effects learning example.');
     const canvas = document.createElement('canvas');
@@ -339,27 +386,47 @@ describe('first-class Canvas particle public scenarios', () => {
     document.body.replaceChildren(canvas);
     const module = await loadLearningExample(entry);
     const controller = module.default(canvas);
+    const capturedPointers = new Set<number>();
+    vi.spyOn(canvas, 'setPointerCapture').mockImplementation((pointerId) => {
+      capturedPointers.add(pointerId);
+    });
+    vi.spyOn(canvas, 'hasPointerCapture').mockImplementation((pointerId) =>
+      capturedPointers.has(pointerId));
+    vi.spyOn(canvas, 'releasePointerCapture').mockImplementation((pointerId) => {
+      capturedPointers.delete(pointerId);
+    });
     try {
-      await nextPaint(3);
-      const before = pixels(canvas, {
-        x: 260,
-        y: 120,
-        width: 200,
-        height: 200,
-      });
-      await clickLogicalPoint(canvas, { x: 360, y: 220 });
-      await nextPaint(3);
-      expect(
-        changedPixelCount(
-          before,
-          pixels(canvas, {
-            x: 260,
-            y: 120,
-            width: 200,
-            height: 200,
-          }),
-        ),
-      ).toBeGreaterThan(20);
+      await advanceVisibleTime(240);
+      expect(Array.from(pixels(canvas, {
+        x: 360,
+        y: 300,
+        width: 1,
+        height: 1,
+      }))).toEqual([124, 45, 18, 255]);
+
+      dispatchPointer(canvas, 'pointerdown', 360, 300);
+      dispatchPointer(canvas, 'pointermove', 520, 320);
+      dispatchPointer(canvas, 'pointerup', 520, 320);
+      await advanceVisibleTime(200);
+
+      expect(Array.from(pixels(canvas, {
+        x: 520,
+        y: 320,
+        width: 1,
+        height: 1,
+      }))).toEqual([124, 45, 18, 255]);
+      expect(nonBackgroundPixelCount(pixels(canvas, {
+        x: 320,
+        y: 170,
+        width: 80,
+        height: 80,
+      }), [17, 24, 39])).toBeGreaterThan(10);
+      expect(nonBackgroundPixelCount(pixels(canvas, {
+        x: 480,
+        y: 190,
+        width: 80,
+        height: 80,
+      }), [17, 24, 39])).toBeGreaterThan(5);
     } finally {
       controller.dispose();
     }
