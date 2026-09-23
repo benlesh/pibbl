@@ -1299,11 +1299,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 70 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
+  it("contains 71 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(70);
+    expect(learningExampleCatalog).toHaveLength(71);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1370,7 +1370,12 @@ describe("learning example catalog", () => {
         "three-instancing",
         "webgl-islands",
       ],
-      webgl: [...WEBGL_LIGHTING_EXAMPLE_IDS, "embers", "fireflies"],
+      webgl: [
+        ...WEBGL_LIGHTING_EXAMPLE_IDS,
+        "embers",
+        "fireflies",
+        "static-glb",
+      ],
       layout: ["absolute-and-overlay", "flex", "flow", "grid"],
       "events-and-interaction": [
         "click",
@@ -1861,9 +1866,11 @@ describe("learning example catalog", () => {
         "useTransition",
         "usePlayback",
         "parallel",
+        "repeat",
         "sequence",
         "marker",
         "spring",
+        "wait",
         "defineParticleEffect2D",
         "particleChoice",
         "particleCurve",

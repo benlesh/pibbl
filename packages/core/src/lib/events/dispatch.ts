@@ -531,11 +531,13 @@ function dispatchPointerCoordinateEvent(
     root.eventRoot,
     input.originalEvent.pointerId,
   );
-  const coordinateTarget = logicalCapture ? undefined :
+  // Capture controls event routing, but a primary press still focuses the
+  // target under the pointer. Avoid the extra hit test for captured moves.
+  const coordinateTarget = !logicalCapture || input.press ?
     input.type === "pointerdown" || input.type === "pointerup" ||
         input.type === "pointercancel" ?
       resolvePointerInputTarget(root, input) :
-      resolveCoordinateTarget(root.eventRoot, input);
+      resolveCoordinateTarget(root.eventRoot, input) : undefined;
   const target = logicalCapture ?? coordinateTarget;
   const event = target ? dispatchPointerNode(input.type, target, input) : undefined;
   if (input.press) {

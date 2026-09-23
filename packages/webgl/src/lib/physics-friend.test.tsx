@@ -42,6 +42,7 @@ describe('WebGL physics friend seam', () => {
       'Group3D',
       'HemisphereLight',
       'Mesh',
+      'Model',
       'PointLight',
       'Sphere',
       'SpotLight',

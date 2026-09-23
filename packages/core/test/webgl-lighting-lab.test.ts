@@ -240,7 +240,7 @@ describe('public WebGL lighting laboratory', () => {
     const glPrototype = Object.getPrototypeOf(
       probeContext,
     ) as WebGL2RenderingContext;
-    const attach = vi.spyOn(glPrototype, 'framebufferTexture2D');
+    const attach = vi.spyOn(glPrototype, 'framebufferTextureLayer');
     const { canvas, controller } = await mountLab();
 
     attach.mockClear();
@@ -251,20 +251,11 @@ describe('public WebGL lighting laboratory', () => {
     await controller.perform('show-point');
     attach.mockClear();
     await controller.perform('move-caster');
-    const expectedCubeFaces = [
-      probeContext.TEXTURE_CUBE_MAP_POSITIVE_X,
-      probeContext.TEXTURE_CUBE_MAP_NEGATIVE_X,
-      probeContext.TEXTURE_CUBE_MAP_POSITIVE_Y,
-      probeContext.TEXTURE_CUBE_MAP_NEGATIVE_Y,
-      probeContext.TEXTURE_CUBE_MAP_POSITIVE_Z,
-      probeContext.TEXTURE_CUBE_MAP_NEGATIVE_Z,
-    ] as const;
-    const cubeFaces = new Set<number>(expectedCubeFaces);
     expect(
       attach.mock.calls
-        .filter((call) => cubeFaces.has(call[2]))
-        .map((call) => call[2]),
-    ).toEqual(expectedCubeFaces);
+        .filter((call) => call[0] === probeContext.FRAMEBUFFER)
+        .map((call) => call[4]),
+    ).toEqual([0, 1, 2, 3, 4, 5]);
 
     attach.mockClear();
     const beforeOrbit = pixelSignature(canvas);
@@ -280,9 +271,7 @@ describe('public WebGL lighting laboratory', () => {
     const afterWheel = pixelSignature(canvas);
     expect(afterDrag).not.toBe(beforeOrbit);
     expect(afterWheel).not.toBe(afterDrag);
-    expect(
-      attach.mock.calls.filter((call) => cubeFaces.has(call[2])),
-    ).toHaveLength(0);
+    expect(attach).not.toHaveBeenCalled();
   });
 
   it('renders transparent-default, opaque, and alpha backgrounds without intercepting clicks', async () => {

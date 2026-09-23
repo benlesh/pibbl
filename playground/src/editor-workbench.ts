@@ -33,9 +33,13 @@ import {
 import { setupTypeScript } from "monaco-editor/languages/features/typescript/tsMode";
 import EditorWorker from "monaco-editor/editor/editor.worker?worker";
 import TypeScriptWorker from "monaco-editor/language/typescript/ts.worker?worker";
-import { configureDeclarationLibraries } from "./editor-declaration-libraries";
+import {
+  configureDeclarationLibraries,
+  type EditorDeclarationLibrary,
+} from "./editor-declaration-libraries";
 import { replaceCodeRoute } from "./share-code";
 import { SandboxPreview, type PreviewEvent } from "./sandbox-runner";
+import { sourceImportsThree } from "./source-imports-three";
 
 declare global {
   interface Window {
@@ -81,6 +85,22 @@ export interface MountedEditor {
 }
 
 let monacoConfigured = false;
+let crcDeclarationLibraries: EditorDeclarationLibrary[] = [];
+let threeDeclarationSetup: Promise<void> | undefined;
+
+async function ensureSourceDeclarations(source: string): Promise<void> {
+  if (!sourceImportsThree(source)) return;
+  threeDeclarationSetup ??= import("./three-editor-declaration-libraries").then(
+    ({ threeDeclarationLibraries }) => {
+      typescriptDefaults.setExtraLibs([
+        ...crcDeclarationLibraries,
+        ...threeDeclarationLibraries(),
+      ]);
+    },
+  );
+  await threeDeclarationSetup;
+}
+
 function configureMonaco(): void {
   if (monacoConfigured) return;
   monacoConfigured = true;
@@ -106,7 +126,7 @@ function configureMonaco(): void {
     noSyntaxValidation: false,
     onlyVisible: false,
   });
-  configureDeclarationLibraries(typescriptDefaults);
+  crcDeclarationLibraries = configureDeclarationLibraries(typescriptDefaults);
   typescriptDefaults.setEagerModelSync(true);
   setupTypeScript(typescriptDefaults);
   monaco.editor.defineTheme("crc-studio", {
@@ -341,6 +361,8 @@ export async function mountEditorWorkbench(
   const compileAndRun = async (): Promise<void> => {
     const version = ++compileVersion;
     status.textContent = "Checking TypeScript…";
+    await ensureSourceDeclarations(model.getValue());
+    if (disposed || version !== compileVersion) return;
     const workerFactory = await getReadyTypeScriptWorker();
     if (disposed || version !== compileVersion) return;
     const worker = await workerFactory(model.uri);

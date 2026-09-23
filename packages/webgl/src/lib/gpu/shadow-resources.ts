@@ -348,6 +348,10 @@ export class WebGLShadowResourceCache {
 
   private commit(candidate: ShadowCandidate): void {
     if (!candidate.active) return;
+    if (!candidate.finalized && candidate.requests.size === 0) {
+      this.closeCandidate(candidate);
+      return;
+    }
     this.finalize(candidate);
     const previous = this.resident;
     try {

@@ -38,14 +38,15 @@ describe('WebGLLayer public surface', () => {
       'Group3D',
       'HemisphereLight',
       'Mesh',
+      'Model',
       'PointLight',
       'Sphere',
       'SpotLight',
       'WebGLBackground',
       'WebGLLayer',
+      'createWebGLGeometry',
       'useAnimationFrame',
       'useOrbitCamera',
-      'createWebGLGeometry',
     ]);
   });
 

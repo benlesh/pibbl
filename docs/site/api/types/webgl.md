@@ -11,9 +11,9 @@ symbols:
     AmbientLightProps,
     AmbientLightStyle,
     CRCPhysics3DPropExtension,
+    CRCWebGLAsset,
     CRCWebGLGeometry,
     CRCWebGLGeometryInput,
-    CRCWebGLAsset,
     CRCWebGLLambertMaterial,
     CRCWebGLMaterial,
     CRCWebGLPerspectiveCamera,
@@ -66,6 +66,13 @@ Orbit-camera options, handlers, and results are documented with
 `CRCPhysics3DPropExtension` is an empty declaration-merging hook reserved for
 the matching official 3D physics package. Applications do not add fields to it.
 
+## CRCWebGLAsset
+
+`CRCWebGLAsset` is an opaque immutable imported-scene descriptor. Its only
+public inspection surface is readonly local `bounds` with `min` and `max`
+[`CRCWebGLVector3`](#crcwebglvector3) values. Primitive records, nodes,
+materials, textures, and constructors remain internal.
+
 ## CRCWebGLGeometry
 
 `CRCWebGLGeometry` is an opaque branded immutable descriptor with readonly
@@ -77,13 +84,6 @@ the matching official 3D physics package. Applications do not add fields to it.
 `CRCWebGLGeometryInput` contains `positions`, optional triangle `indices`, and
 optional per-vertex `normals`. [`createWebGLGeometry`](#/api/functions/create-webgl-geometry)
 validates and copies every supplied array.
-
-## CRCWebGLAsset
-
-`CRCWebGLAsset` is an opaque immutable imported-scene descriptor. Its only
-public inspection surface is readonly local `bounds` with `min` and `max`
-[`CRCWebGLVector3`](#crcwebglvector3) values. Primitive records, nodes,
-materials, textures, and constructors remain internal.
 
 ## CRCWebGLLambertMaterial
 

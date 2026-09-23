@@ -180,7 +180,7 @@ export function applyWebGLFocusMetadata(
   let firstApplied: CRCEventTargetRegistration | undefined;
   const grouped = new Map<CRCEventTargetRegistration, {
     bounds: Array<NonNullable<CRCEventTargetRegistration['keyboardNavigationBounds']>>;
-    points: Array<Readonly<{ x: number; y: number }>>;
+    pointSets: Array<NonNullable<CRCEventTargetRegistration['keyboardNavigationPoints']>>;
   }>();
   for (const entry of ledger.entries) {
     if (
@@ -189,7 +189,7 @@ export function applyWebGLFocusMetadata(
     ) continue;
     let aggregate = grouped.get(entry.target);
     if (!aggregate) {
-      aggregate = { bounds: [], points: [] };
+      aggregate = { bounds: [], pointSets: [] };
       grouped.set(entry.target, aggregate);
       firstApplied ??= entry.target;
     }
@@ -197,20 +197,32 @@ export function applyWebGLFocusMetadata(
       aggregate.bounds.push(entry.keyboardNavigationBounds);
     }
     if (entry.keyboardNavigationPoints) {
-      aggregate.points.push(...entry.keyboardNavigationPoints);
+      aggregate.pointSets.push(entry.keyboardNavigationPoints);
     }
   }
   for (const [target, aggregate] of grouped) {
     if (aggregate.bounds.length > 0) {
-      target.keyboardNavigationBounds = unionNavigationBounds(aggregate.bounds);
+      target.keyboardNavigationBounds = aggregate.bounds.length === 1 ?
+        aggregate.bounds[0] : unionNavigationBounds(aggregate.bounds);
       target.keyboardNavigationPoints = undefined;
     } else {
       target.keyboardNavigationBounds = undefined;
-      target.keyboardNavigationPoints = aggregate.points.length === 0 ?
-        undefined : Object.freeze(aggregate.points.slice());
+      target.keyboardNavigationPoints = aggregate.pointSets.length === 0 ?
+        undefined : aggregate.pointSets.length === 1 ?
+          aggregate.pointSets[0] : mergeNavigationPoints(aggregate.pointSets);
     }
   }
   return firstApplied;
+}
+
+function mergeNavigationPoints(
+  pointSets: readonly NonNullable<
+    CRCEventTargetRegistration['keyboardNavigationPoints']
+  >[],
+): NonNullable<CRCEventTargetRegistration['keyboardNavigationPoints']> {
+  const points: Array<Readonly<{ x: number; y: number }>> = [];
+  for (const pointSet of pointSets) points.push(...pointSet);
+  return Object.freeze(points);
 }
 
 function unionNavigationBounds(

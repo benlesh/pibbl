@@ -9,6 +9,7 @@ import {
 } from "@crc/scenarios";
 import { describe, expect, it } from "vitest";
 import staticGLBSource from "./learning/webgl/static-glb.example.tsx?raw";
+import staticGLBLabSource from "./static-glb-slice.example.tsx?raw";
 import staticGLBAssetURL from "../../../playground/public/models/crc-static-glb-slice.glb?url";
 import editorDeclarationLibrariesSource from "../../../playground/src/editor-declaration-libraries.ts?raw";
 import studioViteConfigSource from "../../../playground/vite.config.ts?raw";
@@ -91,9 +92,13 @@ describe("static GLB feedback slice registration", () => {
       },
       canvas: { width: 720, height: 420 },
       source: {
-        path: "packages/scenarios/src/learning/webgl/static-glb.example.tsx",
+        path: "packages/scenarios/src/static-glb-slice.example.tsx",
       },
     });
+    expect(staticGLBLabSource).toContain(
+      'STATIC_GLB_SLICE_SOURCE_ID = "static-glb-feedback-example"',
+    );
+    expect(staticGLBLabSource).not.toBe(staticGLBSource);
     expect(
       staticGLBSliceScenarioEntry.actions.map((action) => action.id),
     ).toEqual(STATIC_GLB_SLICE_ACTION_IDS);

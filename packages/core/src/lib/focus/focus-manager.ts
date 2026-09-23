@@ -153,7 +153,7 @@ class FocusManagerCoordinator {
   syncDOMFocusHost(manager: CRCFocusManager): void {
     if (this.active === manager) {
       this.domFocusHost?.syncCandidateAvailability(
-        manager.candidates.length > 0,
+        manager.hasFocusCandidates,
       );
     }
   }
@@ -360,6 +360,12 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
 
   get candidates(): readonly CRCFocusCandidate[] {
     return this.committedCandidates;
+  }
+
+  /** Includes a successful render's collected candidates before commit callbacks settle. */
+  get hasFocusCandidates(): boolean {
+    return this.committedCandidates.length > 0 ||
+      (this.transactionalPending?.frame.targets.length ?? 0) > 0;
   }
 
   get isDestroyed(): boolean {

@@ -165,8 +165,8 @@ const studioInventory = await collectPublicExports(
 );
 assert.ok(crcInventory.root.values.length > 0);
 assert.ok(crcInventory.root.types.length > 0);
-assert.equal(crcInventory.webgl.values.length, 14);
-assert.equal(crcInventory.webgl.types.length, 34);
+assert.equal(crcInventory.webgl.values.length, 15);
+assert.equal(crcInventory.webgl.types.length, 37);
 assert.equal(crcInventory.particles.values.length, 9);
 assert.equal(crcInventory.particles.types.length, 44);
 assert.equal(crcInventory.particlesWebgl.values.length, 2);

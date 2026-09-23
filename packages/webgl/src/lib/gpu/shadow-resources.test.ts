@@ -378,6 +378,20 @@ describe('WebGLShadowResourceCache', () => {
     expect(recording.createFramebuffer).not.toHaveBeenCalled();
   });
 
+  it('commits an unused transaction without allocating fallback storage', () => {
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    const transaction = cache.beginRender();
+
+    transaction.commit();
+
+    expect(recording.createTexture).not.toHaveBeenCalled();
+    expect(recording.createFramebuffer).not.toHaveBeenCalled();
+    cache.dispose(false);
+    expect(recording.deleteTexture).not.toHaveBeenCalled();
+    expect(recording.deleteFramebuffer).not.toHaveBeenCalled();
+  });
+
   it('copies a valid layer between real WebGL2 array generations', () => {
     const gl = new OffscreenCanvas(8, 8).getContext('webgl2');
     expect(gl).not.toBeNull();

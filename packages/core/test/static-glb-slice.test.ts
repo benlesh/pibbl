@@ -8,7 +8,7 @@ import type { ScenarioController } from "@crc/scenarios";
 import { getCRCInstance } from "../src/lib/global-state";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import staticGLBAssetURL from "../../../playground/public/models/crc-static-glb-slice.glb?url";
-import staticGLBSource from "../../scenarios/src/learning/webgl/static-glb.example.tsx?raw";
+import staticGLBLabSource from "../../scenarios/src/static-glb-slice.example.tsx?raw";
 import { loadScenarioSource } from "../../../playground/src/scenario-sources";
 import {
   clickLogicalPoint,
@@ -123,7 +123,7 @@ describe("public static GLB browser slice", () => {
   it("makes its learning source available to the deterministic laboratory", async () => {
     await expect(
       loadScenarioSource(staticGLBSliceScenarioEntry),
-    ).resolves.toBe(staticGLBSource);
+    ).resolves.toBe(staticGLBLabSource);
   });
 
   it("loads and renders hierarchy, PBR texture factors, one light, shadows, orbit, click, and model-wide focus", async () => {

@@ -538,7 +538,7 @@ function installPerformancePlatform() {
     drawArrays: () => { glDraws += 1; },
     drawElements: () => { glDraws += 1; },
     bufferData: () => { uploads += 1; },
-    framebufferTexture2D: () => { shadowAttachments += 1; },
+    framebufferTextureLayer: () => { shadowAttachments += 1; },
   }, () => { glWork += 1; });
   class PerformanceOffscreenCanvas {
     constructor(

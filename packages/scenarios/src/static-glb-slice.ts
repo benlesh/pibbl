@@ -1,34 +1,23 @@
 import {
-  FocusManagement,
-  Group,
-  Rectangle,
-  Text,
   crc,
   createElement,
   signal,
-  useWhenChanged,
   type CRCController,
-  type Signal,
 } from "@crc/core";
+import type { CRCWebGLVector3 } from "@crc/webgl";
 import {
-  DirectionalLight,
-  Mesh,
-  Model,
-  WebGLLayer,
-  createWebGLGeometry,
-  useOrbitCamera,
-  type CRCWebGLVector3,
-} from "@crc/webgl";
-import {
-  useGLTF,
-  type CRCGLTFSource,
-  type CRCWebGLAssetLoadResult,
-} from "@crc/webgl/gltf";
+  STATIC_GLB_SLICE_SOURCE_ID,
+  StaticGLBSliceHarness,
+  type StaticGLBSliceConfiguration,
+  type StaticGLBSliceSource,
+} from "./static-glb-slice.example";
 import type {
   ScenarioController,
   ScenarioDefinition,
   ScenarioMountContext,
 } from "./types";
+
+export type { StaticGLBSliceSource } from "./static-glb-slice.example";
 
 export const STATIC_GLB_SLICE_ACTION_IDS = [
   "show-primary",
@@ -40,7 +29,6 @@ export const STATIC_GLB_SLICE_ACTION_IDS = [
 ] as const;
 
 export type StaticGLBSliceAction = (typeof STATIC_GLB_SLICE_ACTION_IDS)[number];
-export type StaticGLBSliceSource = "primary" | "replacement" | "malformed";
 export type StaticGLBSliceStatus = "loading" | "ready" | "error" | "removed";
 
 export interface StaticGLBSliceState {
@@ -58,183 +46,12 @@ export interface StaticGLBSliceState {
   readonly errorMessage: string | null;
 }
 
-interface StaticGLBSliceConfiguration {
-  readonly source: StaticGLBSliceSource;
-  readonly visible: boolean;
-}
-
 export const STATIC_GLB_SLICE_PROBES = {
   tallPrimitive: { x: 335, y: 205 },
   compactPrimitive: { x: 410, y: 210 },
   orbitStart: { x: 668, y: 66 },
   orbitEnd: { x: 590, y: 118 },
 } as const;
-
-const SOURCE_BY_MODE: Readonly<Record<StaticGLBSliceSource, CRCGLTFSource>> = {
-  primary: "/models/crc-static-glb-slice.glb",
-  replacement: "/models/crc-static-glb-slice.glb?replacement=1",
-  malformed: "/models/crc-static-glb-malformed.glb",
-};
-
-const groundGeometry = createWebGLGeometry({
-  positions: [-4, 0, -3, 4, 0, -3, 4, 0, 3, -4, 0, 3],
-  normals: [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
-  indices: [0, 2, 1, 0, 3, 2],
-});
-
-function Loader({
-  source,
-  onLoadResult,
-  onModelClick,
-  onModelFocus,
-  onModelBlur,
-  onOrbitPosition,
-}: {
-  readonly source: CRCGLTFSource;
-  readonly onLoadResult: (result: CRCWebGLAssetLoadResult) => void;
-  readonly onModelClick: () => void;
-  readonly onModelFocus: () => void;
-  readonly onModelBlur: () => void;
-  readonly onOrbitPosition: (position: CRCWebGLVector3) => void;
-}) {
-  const loaded = useGLTF(source);
-  const orbit = useOrbitCamera({
-    orbitPoint: [0, 0.5, 0],
-    initialPosition: [4, 3, 6],
-    minDistance: 3,
-    maxDistance: 14,
-  });
-  useWhenChanged(() => onLoadResult(loaded), [loaded]);
-  useWhenChanged(
-    () => onOrbitPosition(orbit.position),
-    [orbit.position[0], orbit.position[1], orbit.position[2]],
-  );
-  const model =
-    loaded.status === "ready"
-      ? createElement(Model, {
-          asset: loaded.asset,
-          keyboardFocusable: true,
-          style: { color: "#ffffff", cursor: "pointer" },
-          onClick: onModelClick,
-          onFocus: onModelFocus,
-          onBlur: onModelBlur,
-        })
-      : null;
-  const webgl = createElement(WebGLLayer, {
-    camera: {
-      type: "perspective",
-      position: orbit.position,
-      lookAt: orbit.lookAt,
-      up: [0, 1, 0],
-      fieldOfViewDegrees: 48,
-      near: 0.1,
-      far: 100,
-    },
-    style: { width: 720, height: 420, shadows: "medium" },
-    children: [
-      createElement(DirectionalLight, {
-        style: {
-          color: "#fff1d6",
-          intensity: 2.1,
-          rotationXDegrees: -42,
-          rotationYDegrees: 35,
-        },
-      }),
-      model,
-      createElement(Mesh, {
-        geometry: groundGeometry,
-        pointerEvents: "none",
-        style: {
-          color: "#64748b",
-          lit: true,
-          material: { type: "lambert" },
-          receiveShadow: true,
-        },
-      }),
-    ],
-  });
-  const status =
-    loaded.status === "ready"
-      ? []
-      : [
-          createElement(Rectangle, {
-            key: "status-background",
-            pointerEvents: "none",
-            style: {
-              x: 176,
-              y: 174,
-              width: 368,
-              height: 72,
-              fill:
-                loaded.status === "error"
-                  ? "rgb(127 29 29 / 92%)"
-                  : "rgb(15 23 42 / 88%)",
-              stroke: loaded.status === "error" ? "#fca5a5" : "#7dd3fc",
-              strokeWidth: 2,
-              cornerRadius: 12,
-            },
-          }),
-          createElement(Text, {
-            key: "status-message",
-            pointerEvents: "none",
-            style: {
-              x: 360,
-              y: 216,
-              fill: "#f8fafc",
-              font: "700 16px sans-serif",
-              textAlign: "center",
-            },
-            children:
-              loaded.status === "error"
-                ? "THE GLB COULD NOT BE LOADED"
-                : "LOADING STATIC GLB…",
-          }),
-        ];
-  const group = createElement(Group, {
-    ...orbit.handlers,
-    children: [
-      createElement(Rectangle, {
-        key: "background",
-        pointerEvents: "none",
-        style: { width: 720, height: 420, fill: "#0f2133" },
-      }),
-      createElement(Rectangle, {
-        key: "orbit-target",
-        style: { width: 720, height: 420, fill: "transparent" },
-      }),
-      webgl,
-      ...status,
-    ],
-  });
-  return createElement(FocusManagement, { children: group });
-}
-
-function StaticGLBSliceHarness({
-  configuration,
-  onLoadResult,
-  onModelClick,
-  onModelFocus,
-  onModelBlur,
-  onOrbitPosition,
-}: {
-  readonly configuration: Signal<StaticGLBSliceConfiguration>;
-  readonly onLoadResult: (result: CRCWebGLAssetLoadResult) => void;
-  readonly onModelClick: () => void;
-  readonly onModelFocus: () => void;
-  readonly onModelBlur: () => void;
-  readonly onOrbitPosition: (position: CRCWebGLVector3) => void;
-}) {
-  const current = configuration.get();
-  if (!current.visible) return null;
-  return createElement(Loader, {
-    source: SOURCE_BY_MODE[current.source],
-    onLoadResult,
-    onModelClick,
-    onModelFocus,
-    onModelBlur,
-    onOrbitPosition,
-  });
-}
 
 function initialState(): StaticGLBSliceState {
   return {
@@ -366,6 +183,14 @@ async function mountStaticGLBSlice(
     }
     await showSource("primary");
   };
+  const remount = async () => {
+    const source = currentConfiguration.source;
+    currentConfiguration = { ...currentConfiguration, visible: false };
+    configuration.set(currentConfiguration);
+    await nextFrame();
+    await nextFrame();
+    await showSource(source);
+  };
 
   return {
     getState: () => ({ ...state }),
@@ -409,7 +234,7 @@ async function mountStaticGLBSlice(
         await nextFrame();
         return;
       }
-      await showSource(currentConfiguration.source);
+      await remount();
     },
     reset,
     settled: () => waitForSettled(() => state),
@@ -423,7 +248,7 @@ async function mountStaticGLBSlice(
 
 export const staticGLBSliceScenario: ScenarioDefinition<StaticGLBSliceState> = {
   id: "static-glb",
-  sourceId: "static-glb-feedback-example",
+  sourceId: STATIC_GLB_SLICE_SOURCE_ID,
   actionIds: STATIC_GLB_SLICE_ACTION_IDS,
   mount: mountStaticGLBSlice,
   formatState: (state) => [

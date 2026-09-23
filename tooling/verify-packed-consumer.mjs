@@ -141,7 +141,16 @@ function assertGeometryOnlyPhysicsBundle(metafile, code) {
   }
 }
 
-function assertSinglePackedRuntime(metafile) {
+const packedPackageMarkers = new Map([
+  ['@crc/core', '/node_modules/@crc/core/'],
+  ['@crc/particles', '/node_modules/@crc/particles/'],
+  ['@crc/physics', '/node_modules/@crc/physics/'],
+  ['@crc/three', '/node_modules/@crc/three/'],
+  ['@crc/webgl', '/node_modules/@crc/webgl/'],
+  ['three', '/node_modules/three/'],
+]);
+
+function assertSinglePackedRuntime(metafile, packageNames) {
   const normalizedInputs = Object.keys(metafile.inputs).map(input =>
     input.replaceAll('\\', '/'),
   );
@@ -153,14 +162,11 @@ function assertSinglePackedRuntime(metafile) {
       `Packed consumer resolved workspace sources: ${leakedSources.join(', ')}`,
     );
   }
-  for (const [packageName, marker] of [
-    ['@crc/core', '/node_modules/@crc/core/'],
-    ['@crc/particles', '/node_modules/@crc/particles/'],
-    ['@crc/physics', '/node_modules/@crc/physics/'],
-    ['@crc/three', '/node_modules/@crc/three/'],
-    ['@crc/webgl', '/node_modules/@crc/webgl/'],
-    ['three', '/node_modules/three/'],
-  ]) {
+  for (const packageName of packageNames) {
+    const marker = packedPackageMarkers.get(packageName);
+    if (marker === undefined) {
+      throw new Error(`Unknown packed package ${packageName}.`);
+    }
     const packageRoots = new Set(
       normalizedInputs
         .filter(input => input.includes(marker))
@@ -899,7 +905,14 @@ try {
     const scene = <Scene />;
     console.log(Fragment, crc, createElement, defineThreeLayer, useAnimationFrame, scene);
   `);
-  assertSinglePackedRuntime(sharedRuntimeBundle.metafile);
+  assertSinglePackedRuntime(sharedRuntimeBundle.metafile, [
+    '@crc/core',
+    '@crc/particles',
+    '@crc/physics',
+    '@crc/three',
+    '@crc/webgl',
+    'three',
+  ]);
   if (
     sharedRuntimeBundle.code.includes('useGLTF') ||
     sharedRuntimeBundle.code.includes('GLB header byte 0 has invalid magic')
@@ -931,7 +944,11 @@ try {
       createElement(PhysicsWorld3D, { gravity: [0, -9.81, 0] },
         createElement(Cube, { physics: dynamicBody3D({ mass: 1 }), style: { lit: false } }))));
   `);
-  assertSinglePackedRuntime(physicsSceneBundle.metafile);
+  assertSinglePackedRuntime(physicsSceneBundle.metafile, [
+    '@crc/core',
+    '@crc/physics',
+    '@crc/webgl',
+  ]);
   for (const forbidden of ['WebAssembly', '.wasm', 'new Worker', 'setInterval(', 'setTimeout(']) {
     if (physicsSceneBundle.code.includes(forbidden)) {
       throw new Error(`Packed physics scene retained forbidden engine/loop marker ${forbidden}.`);

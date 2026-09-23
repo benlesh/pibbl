@@ -138,7 +138,7 @@ export function mountDOMFocusHost(
   const setManager = (nextManager: CRCFocusManager | undefined) => {
     if (disposed) return;
     manager = nextManager;
-    syncCandidateAvailability(Boolean(nextManager?.candidates.length));
+    syncCandidateAvailability(Boolean(nextManager?.hasFocusCandidates));
   };
 
   const clearPendingTabEntry = () => {

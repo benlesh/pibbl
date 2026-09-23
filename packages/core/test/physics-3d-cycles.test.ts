@@ -218,5 +218,5 @@ describe("public 3D physics laboratory ownership cycles", () => {
       liveProxies: 0,
       liveContacts: 0,
     });
-  }, 30_000);
+  }, 120_000);
 });

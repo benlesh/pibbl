@@ -329,6 +329,14 @@ async function existingStudioContract(page) {
   await page.getByRole("button", { name: "Reset" }).waitFor({ timeout: 30_000 });
   await page.getByRole("button", { name: "Share" }).waitFor({ timeout: 30_000 });
 
+  const threeRoute = "#/examples/composition/three-instancing";
+  await open(page, threeRoute);
+  await expectMainHeading(page, threeRoute, "Three.js instancing");
+  await page
+    .locator("#studio-main")
+    .getByText("Live · changes run automatically", { exact: true })
+    .waitFor({ timeout: 30_000 });
+
   await open(page, "#/testing/baseline-smoke");
   await page.locator(".scenario-runner canvas").waitFor({ timeout: 30_000 });
   await page.getByText("View exact fixture source").click();
@@ -399,7 +407,18 @@ async function serializedTutorialRelationships() {
 
 async function tutorialWorkbenchContract(page, route) {
   const frames = page.locator("#studio-main .studio-preview__frame");
-  await frames.first().waitFor({ timeout: 30_000 });
+  try {
+    await frames.first().waitFor({ timeout: 30_000 });
+  } catch {
+    const statuses = await page
+      .locator("#studio-main .studio-run-status")
+      .allTextContents();
+    throw failure(
+      route,
+      "one visible tutorial preview frame",
+      `${String(await frames.count())} frames; status=${JSON.stringify(statuses)}`,
+    );
+  }
   const count = await frames.count();
   const sandbox = await frames.first().getAttribute("sandbox");
   if (count !== 1 || sandbox !== "allow-scripts") {
@@ -409,7 +428,6 @@ async function tutorialWorkbenchContract(page, route) {
       `${count} frames; sandbox=${sandbox}`,
     );
   }
-  await frames.first().scrollIntoViewIfNeeded();
   await page
     .locator("#studio-main")
     .getByText("Live · changes run automatically", { exact: true })

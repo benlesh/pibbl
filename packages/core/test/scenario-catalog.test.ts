@@ -9,11 +9,13 @@ import {
   scenarioCatalog,
   scenarioCatalogIndex,
   signalsLabScenarioEntry,
+  staticGLBSliceScenarioEntry,
   validateScenarioCatalog,
   webglLabScenarioEntry,
   webglLightingLabScenarioEntry,
 } from '@crc/scenarios';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import staticGLBAssetURL from '../../../playground/public/models/crc-static-glb-slice.glb?url';
 import { validateScenarioSourceText } from '../../../tooling/learning-source-contract';
 import {
   loadScenarioSource,
@@ -43,6 +45,7 @@ function scenarioSource(
 
 afterEach(async () => {
   await Promise.all(controllers.splice(0).map(controller => controller.dispose()));
+  vi.restoreAllMocks();
   document.body.replaceChildren();
 });
 
@@ -944,6 +947,7 @@ describe('scenario catalog trust gate', () => {
     ).toEqual([
       webglLabScenarioEntry,
       webglLightingLabScenarioEntry,
+      staticGLBSliceScenarioEntry,
       physics3DScenarioEntry,
     ]);
   });
@@ -976,6 +980,15 @@ describe('scenario catalog trust gate', () => {
   it.each(scenarioCatalog)(
     'loads, mounts, resets, and disposes $metadata.id through its registered contract',
     async entry => {
+      if (entry === staticGLBSliceScenarioEntry) {
+        const response = await fetch(staticGLBAssetURL);
+        const asset = await response.arrayBuffer();
+        vi.spyOn(globalThis, 'fetch').mockImplementation(async input =>
+          String(input).includes('malformed')
+            ? new Response(new Uint8Array([0x67, 0x6c, 0x54, 0x46]))
+            : new Response(asset.slice(0)),
+        );
+      }
       const sourceText = await loadScenarioSource(entry);
       expect(sourceText).toContain(entry.source.marker);
 

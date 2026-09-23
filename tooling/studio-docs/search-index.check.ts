@@ -128,8 +128,8 @@ const first = buildSearchBundle(input);
 const second = buildSearchBundle(input);
 
 assert.deepEqual(tokenizeSearchText("useWhenChanged"), [
-  "crcwhenchanged",
-  "crc",
+  "usewhenchanged",
+  "use",
   "when",
   "changed",
 ]);

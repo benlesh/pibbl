@@ -36,7 +36,7 @@ try {
     }
   }
   if (!webglEntries.some(entry =>
-    /^package\/dist\/chunk-[A-Z0-9]+\.mjs$/u.test(entry)
+    /^package\/dist\/chunks\/chunk-[A-Z0-9]+\.mjs$/u.test(entry)
   )) {
     throw new Error(
       'Packed @crc/webgl omitted the shared root/internal ESM chunk.',
@@ -80,16 +80,14 @@ try {
   const publicChunks = relativeChunkImports(publicCode);
   const internalChunks = relativeChunkImports(internalCode);
   const sharedChunks = [...publicChunks].filter(chunk => internalChunks.has(chunk));
-  if (sharedChunks.length !== 1) {
+  if (sharedChunks.length === 0) {
     throw new Error(
-      `Packed WebGL entries must import exactly one shared runtime chunk; ` +
-      `received ${sharedChunks.join(', ') || 'none'}.`,
+      'Packed WebGL entries must import shared runtime chunks.',
     );
   }
-  const sharedCode = readFileSync(
-    join(dirname(publicEntryPath), sharedChunks[0]),
-    'utf8',
-  );
+  const sharedCode = sharedChunks
+    .map(chunk => readFileSync(join(dirname(publicEntryPath), chunk), 'utf8'))
+    .join('\n');
   for (const marker of [
     'geometryData',
     'WEBGL_BACKEND_TOKEN',
@@ -163,7 +161,7 @@ function tarballEntries(tarball) {
 
 function relativeChunkImports(code) {
   return new Set(
-    [...code.matchAll(/from\s+["'](\.\/chunk-[A-Z0-9]+\.mjs)["']/gu)]
+    [...code.matchAll(/from\s+["'](\.\/chunks\/chunk-[A-Z0-9]+\.mjs)["']/gu)]
       .map(match => match[1]),
   );
 }

@@ -29,6 +29,32 @@ afterEach(() => {
 });
 
 describe('WebGL pick ledger', () => {
+  it('publishes a single record without copying its projected focus points', () => {
+    const ledger = createWebGLPickLedger(100, 100);
+    const target = liveFakeTarget();
+    recordGeometryWebGLPick(ledger, {
+      camera: resolveCamera(undefined, 100, 100),
+      componentName: 'Cube',
+      depthMode: 'less-equal',
+      geometry: geometryBox(-0.5, -0.5, 0, 0.5, 0.5, 0),
+      model: new Float32Array([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+      ]),
+      sourceOrder: 0,
+      target,
+    });
+    const committed = commitWebGLPickLedger(ledger);
+
+    applyWebGLFocusMetadata(committed);
+
+    expect(target.keyboardNavigationPoints).toBe(
+      committed.entries[0]!.keyboardNavigationPoints,
+    );
+  });
+
   it('publishes the projected union for repeated records sharing one target', () => {
     const ledger = createWebGLPickLedger(100, 100);
     const target = liveFakeTarget();

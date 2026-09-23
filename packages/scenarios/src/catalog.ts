@@ -1850,8 +1850,8 @@ export const staticGLBSliceScenarioEntry: ScenarioCatalogEntry<StaticGLBSliceSta
   source: {
     id: "static-glb-feedback-example",
     language: "tsx",
-    marker: "// Static GLB feedback slice",
-    path: "packages/scenarios/src/learning/webgl/static-glb.example.tsx",
+    marker: 'STATIC_GLB_SLICE_SOURCE_ID = "static-glb-feedback-example"',
+    path: "packages/scenarios/src/static-glb-slice.example.tsx",
   },
   load: async () => (await import("./static-glb-slice")).staticGLBSliceScenario,
 };
