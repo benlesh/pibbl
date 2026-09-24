@@ -11,17 +11,34 @@ import type {
 } from '../animation/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import {
+  isSignal,
   provisionSignalValueForRender,
   signal,
   untracked,
 } from '../signals/graph.js';
-import type { Signal, SignalEquals, WritableSignal } from '../signals/types.js';
+import { resolveSignalValue } from '../signals/resolve-signal-value.js';
+import type {
+  Signal,
+  SignalEquals,
+  SignalValue,
+  WritableSignal,
+} from '../signals/types.js';
 import type { CRCComponentRefs, CRCInstance } from '../types.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
 
 type CRCTransitionOptions<T> =
   | CRCTweenTransitionOptions<T>
   | CRCSpringTransitionOptions;
+
+type CRCTransitionOptionsInput<T> =
+  | {
+      readonly [K in keyof CRCTweenTransitionOptions<T>]:
+        SignalValue<CRCTweenTransitionOptions<T>[K]>;
+    }
+  | {
+      readonly [K in keyof CRCSpringTransitionOptions]:
+        SignalValue<CRCSpringTransitionOptions[K]>;
+    };
 
 interface CRCTransitionCandidate<T> {
   readonly options: CRCTransitionOptions<T>;
@@ -132,18 +149,26 @@ function isCurrentSlot<T>(slot: CRCTransitionHookSlot<T>): boolean {
 }
 
 export function useTransition(
-  target: number,
-  options: CRCSpringTransitionOptions,
+  target: SignalValue<number>,
+  options: SignalValue<{
+    readonly [K in keyof CRCSpringTransitionOptions]:
+      SignalValue<CRCSpringTransitionOptions[K]>;
+  }>,
 ): Signal<number>;
 export function useTransition<T>(
-  target: T,
-  options: CRCTweenTransitionOptions<T>,
+  target: SignalValue<T>,
+  options: SignalValue<{
+    readonly [K in keyof CRCTweenTransitionOptions<T>]:
+      SignalValue<CRCTweenTransitionOptions<T>[K]>;
+  }>,
 ): Signal<T>;
 export function useTransition<T>(
-  target: T,
-  options: CRCTransitionOptions<T>,
+  targetInput: SignalValue<T>,
+  optionsInput: SignalValue<CRCTransitionOptionsInput<T>>,
 ): Signal<T> {
   const { componentRefs, crcInstance } = requireHookContext();
+  const target = resolveSignalValue(targetInput);
+  const options = resolveTransitionOptions(optionsInput);
   const candidate = normalizeCandidate(target, options);
   const slot = useHookSlot<CRCTransitionHookSlot<T>>('transition', teardowns => {
     const output = signal(candidate.initial);
@@ -210,4 +235,18 @@ export function useTransition<T>(
     });
   });
   return slot.readonlyOutput;
+}
+
+function resolveTransitionOptions<T>(
+  input: SignalValue<CRCTransitionOptionsInput<T>>,
+): CRCTransitionOptions<T> {
+  const source = resolveSignalValue(input);
+  let resolved: Record<PropertyKey, unknown> | undefined;
+  for (const key in source) {
+    const value = source[key as keyof typeof source];
+    if (!isSignal(value)) continue;
+    resolved ??= { ...source };
+    resolved[key] = resolveSignalValue(value as SignalValue<unknown>);
+  }
+  return (resolved ?? source) as CRCTransitionOptions<T>;
 }

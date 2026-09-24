@@ -1,7 +1,7 @@
 import {
   useEventListener,
   type CRCEventHandlers,
-  type CRCNode,
+  type CRCNodeInput,
 } from '@crc/core';
 import {
   defineBackendPrimitive,
@@ -21,7 +21,7 @@ import type {
 
 export interface Group3DProps
   extends CRCEventHandlers, CRCPhysics3DPropExtension {
-  readonly children: CRCNode;
+  readonly children: CRCNodeInput;
 }
 
 export interface Group3DStyle extends CRCWebGLTransformStyle {}
@@ -29,7 +29,7 @@ export interface Group3DStyle extends CRCWebGLTransformStyle {}
 function renderGroup3D(
   props: Readonly<Group3DProps>,
   style: Readonly<Group3DStyle>,
-): CRCNode {
+): CRCNodeInput {
   const composer = getBackendEnvironment<WebGLSceneComposer>(
     WEBGL_BACKEND_TOKEN,
   );
@@ -53,6 +53,8 @@ export const Group3D = defineBackendPrimitive<
   Group3DStyle,
   Group3DStyle,
   WebGLSceneComposer
->(WEBGL_BACKEND_TOKEN, renderGroup3D);
+>(WEBGL_BACKEND_TOKEN, renderGroup3D, {
+  childInput: 'structural',
+});
 
 export const resolveGroup3DTransform = resolveWebGLTransform;

@@ -4,7 +4,7 @@ import {
 } from '../element-enhancers.js';
 import { materializeContainerChildren } from '../element/children.js';
 import { isCRCElement } from '../element/create-element.js';
-import type { CRCElement, CRCNode } from '../element/types.js';
+import type { CRCElement, CRCNodeInput } from '../element/types.js';
 
 interface LayerElementSnapshot {
   readonly kind: 'element';
@@ -38,7 +38,7 @@ export type LayerNodeSnapshot =
 
 /** Materializes retained Layer children once before a private renderer owns them. */
 export function materializeRetainedLayerChildren(
-  node: CRCNode,
+  node: CRCNodeInput,
   receiver: string,
 ): readonly CRCElement<any>[] {
   return materializeContainerChildren(node, receiver);

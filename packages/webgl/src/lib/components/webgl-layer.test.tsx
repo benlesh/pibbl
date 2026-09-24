@@ -6,6 +6,7 @@ import {
   Star,
   crc,
   createElement,
+  signal,
   type CRCController,
   type CRCNode,
 } from '@crc/core';
@@ -622,6 +623,21 @@ describe('WebGLLayer public surface', () => {
         left: 4,
         filter: { type: 'blur', radius: 2 },
       },
+    });
+    createElement(WebGLLayer, {
+      children: signal<CRCNode>(
+        <Cube style={{ lit: false }} />,
+      ),
+      camera: signal({
+        type: 'perspective' as const,
+        position: [0, 0, 5] as const,
+        lookAt: [0, 0, 0] as const,
+        up: [0, 1, 0] as const,
+        fieldOfViewDegrees: 45,
+        near: 0.1,
+        far: 100,
+      }),
+      style: signal({ width: 40, height: 30, shadows: 'high' as const }),
     });
     // @ts-expect-error WebGLLayer always has an explicit children field.
     createElement(WebGLLayer, {});

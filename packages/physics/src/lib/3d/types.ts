@@ -1,4 +1,4 @@
-import type { CRCNode, Signal } from "@crc/core";
+import type { CRCNodeInput, Signal, SignalValue } from "@crc/core";
 import type {} from "@crc/webgl";
 import type {
   CRCPhysicsContactPoint3D,
@@ -82,7 +82,7 @@ export interface CRCPhysicsSolverOptions {
   readonly positionIterations?: number;
 }
 
-export interface CRCPhysicsWorld3DProps {
+interface CRCPhysicsWorld3DValues {
   readonly gravity?: CRCPhysicsVector3;
   readonly fixedStepMilliseconds?: number;
   readonly maxCatchUpSteps?: number;
@@ -92,8 +92,14 @@ export interface CRCPhysicsWorld3DProps {
   readonly onSleep?: CRCPhysicsBodyStateHandler3D;
   readonly onWake?: CRCPhysicsBodyStateHandler3D;
   readonly onError?: (error: unknown) => void;
-  readonly children?: CRCNode;
+  readonly children?: CRCNodeInput;
 }
+
+export type CRCPhysicsWorld3DProps = {
+  readonly [K in keyof CRCPhysicsWorld3DValues]: K extends "children"
+    ? CRCPhysicsWorld3DValues[K]
+    : SignalValue<CRCPhysicsWorld3DValues[K]>;
+};
 
 declare const physicsAttachment3DBrand: unique symbol;
 export interface CRCPhysicsBodyAttachment3D {

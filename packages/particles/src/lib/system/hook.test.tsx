@@ -79,6 +79,33 @@ function candidate(
 }
 
 describe("useParticleSystem hook ownership", () => {
+  it("resolves signal-valued effects, option objects, and direct option fields", () => {
+    const first = effect("first");
+    const second = effect("second");
+    const selected = signal(first);
+    const seed = signal(3);
+    const options = signal({ autoplay: signal(false), seed });
+    let system!: CRCParticleSystem;
+    const Root = (): CRCNode => {
+      system = useParticleSystem(selected, options);
+      return null;
+    };
+
+    mount(createElement(Root, {}));
+    driver.flush(0);
+    expect(getParticleSystemController(system).compiled)
+      .toBe(compileParticleEffect2D(first));
+    expect(particleSystemControllerSnapshot(system).seed).toBe(3);
+
+    seed.set(9);
+    selected.set(second);
+    driver.flush(1);
+    if (driver.pendingHostFrames > 0) driver.flush(2);
+    expect(getParticleSystemController(system).compiled)
+      .toBe(compileParticleEffect2D(second));
+    expect(particleSystemControllerSnapshot(system).seed).toBe(9);
+  });
+
   it("catches handle recreation and stale effect/callback adoption", () => {
     const first = effect("first");
     const second = effect("second");

@@ -1,8 +1,11 @@
 import {
+  isSignal,
+  resolveSignalValue,
   signal,
   type CRCEventHandlers,
   type CRCPointerEvent,
   type CRCWheelEvent,
+  type SignalValue,
   type WritableSignal,
 } from '@crc/core';
 import * as coreInternal from '@crc/core/internal';
@@ -16,6 +19,11 @@ export interface CRCOrbitCameraOptions {
   readonly rotateSpeed?: number;
   readonly zoomSpeed?: number;
 }
+
+type CRCOrbitCameraOptionsInput = {
+  readonly [K in keyof CRCOrbitCameraOptions]:
+    SignalValue<CRCOrbitCameraOptions[K]>;
+};
 
 export type CRCOrbitCameraHandlers = Required<Pick<
   CRCEventHandlers,
@@ -67,8 +75,9 @@ const MAX_POLAR = Math.PI - MIN_POLAR;
 
 /** Owns one mounted spherical pose and stable ordinary CRC input handlers. */
 export function useOrbitCamera(
-  options: CRCOrbitCameraOptions,
+  optionsInput: SignalValue<CRCOrbitCameraOptionsInput>,
 ): CRCOrbitCameraResult {
+  const options = resolveOrbitCameraOptionsInput(optionsInput);
   const candidate = resolveOptions(options);
   const slot = coreInternal.useInternalHookSlot<OrbitCameraSlot>(
     'webglOrbitCamera',
@@ -120,6 +129,20 @@ export function useOrbitCamera(
     state.result = result;
   });
   return result;
+}
+
+function resolveOrbitCameraOptionsInput(
+  input: SignalValue<CRCOrbitCameraOptionsInput>,
+): CRCOrbitCameraOptions {
+  const source = resolveSignalValue(input);
+  let resolved: Record<PropertyKey, unknown> | undefined;
+  for (const key in source) {
+    const value = source[key as keyof CRCOrbitCameraOptionsInput];
+    if (!isSignal(value)) continue;
+    resolved ??= { ...source };
+    resolved[key] = resolveSignalValue(value as SignalValue<unknown>);
+  }
+  return (resolved ?? source) as CRCOrbitCameraOptions;
 }
 
 function createHandlers(state: OrbitCameraSlot): CRCOrbitCameraHandlers {

@@ -1,4 +1,4 @@
-import { Circle, Group, crc, type CRCController } from "@crc/core";
+import { Circle, Group, crc, signal, type CRCController } from "@crc/core";
 /** @jsxImportSource @crc/core */
 import {
   PhysicsWorld2D,
@@ -47,6 +47,39 @@ afterEach(() => {
 });
 
 describe("2D physics body handles", () => {
+  it("resolves signal-valued world configuration without unwrapping exact body handles", () => {
+    const gravity = signal<readonly [number, number]>([0, 0]);
+    const solver = signal({ velocityIterations: 5, positionIterations: 2 });
+    let body!: CRCPhysicsBodyHandle2D;
+    let world!: CRCPhysicsWorldHandle2D;
+    const Capture = () => {
+      world = crcPhysicsWorld2D();
+      body = crcPhysicsBody2D();
+      return (
+        <Group
+          physics={dynamicBody2D({ handle: body, collider: false, mass: 1 })}
+        />
+      );
+    };
+    const root = (
+      <PhysicsWorld2D gravity={gravity} solver={solver}>
+        <Capture />
+      </PhysicsWorld2D>
+    );
+    const mount = mountCRC(root);
+    frames.flush(0);
+
+    expect(snapshotPhysicsBodyHandle2DForTest(body).bound).toBe(true);
+    const firstRevision = snapshotWorld(world).revision;
+
+    gravity.set([0, 10]);
+    frames.flush(1);
+    expect(snapshotWorld(world).revision).toBeGreaterThan(firstRevision);
+    expect(snapshotPhysicsBodyHandle2DForTest(body).bound).toBe(true);
+
+    mount.dispose();
+  });
+
   it("keeps one hook-slot shell stable and materializes readonly signals lazily", () => {
     const seen: CRCPhysicsBodyHandle2D[] = [];
     const Ball = () => {

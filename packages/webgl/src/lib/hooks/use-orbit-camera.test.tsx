@@ -1,4 +1,4 @@
-import { crc, type CRCController } from "@crc/core";
+import { crc, signal, type CRCController } from "@crc/core";
 import {
   crcInternalCurrentRenderOwner,
   crcInternalRequestRendererWork,
@@ -17,6 +17,35 @@ afterEach(() => {
 });
 
 describe("useOrbitCamera", () => {
+  it("resolves a signal-valued option object and its declared direct fields", () => {
+    const frames = installControlledFrames();
+    const orbitPoint = signal<readonly [number, number, number]>([0, 0, 0]);
+    const options = signal({
+      orbitPoint,
+      initialPosition: [0, 0, 10] as const,
+      maxDistance: signal(8),
+    });
+    const results: any[] = [];
+    function Probe(): void {
+      results.push(orbitCamera()(options));
+    }
+    const canvas = createCanvas(100, 100);
+    controllers.add(crc(canvas, <Probe />, { pixelRatio: 1 }));
+    frames.runNext(1);
+
+    expect(results[0]).toMatchObject({
+      lookAt: [0, 0, 0],
+      position: [0, 0, 8],
+    });
+
+    orbitPoint.set([2, 0, 0]);
+    frames.runNext(2);
+    expect(results[1]).toMatchObject({
+      lookAt: [2, 0, 0],
+      position: [2, 0, 8],
+    });
+  });
+
   it.each([
     [
       "non-finite orbit point",

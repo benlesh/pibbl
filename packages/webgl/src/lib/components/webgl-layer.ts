@@ -7,7 +7,7 @@ import {
   type BoxStyle,
   type CRCElement,
   type CRCEventHandlers,
-  type CRCNode,
+  type CRCNodeInput,
   type LayoutItemStyle,
   type RenderingContext2D,
   type StyleResolutionContext,
@@ -33,7 +33,7 @@ import type {
 } from '../types.js';
 
 export interface WebGLLayerProps extends CRCEventHandlers {
-  children: CRCNode;
+  children: CRCNodeInput;
   camera?: CRCWebGLPerspectiveCamera;
   pointerEvents?: 'auto' | 'none';
 }
@@ -130,6 +130,7 @@ export const WebGLLayer = definePrimitive<
   WebGLLayerStyle,
   ResolvedWebGLLayerStyle
 >(renderWebGLLayer, {
+  childInput: 'structural',
   resolveStyle: resolveWebGLLayerStyle,
 });
 

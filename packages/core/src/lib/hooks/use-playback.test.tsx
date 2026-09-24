@@ -19,6 +19,7 @@ import {
   wait,
   type CRCAnimationProgram,
   type CRCPlayback,
+  type CRCPlaybackEvent,
   type CRCPlaybackOptions,
 } from '../../index.js';
 import { clearSharedState, getCRCInstance } from '../global-state.js';
@@ -57,6 +58,46 @@ function mount(node: Parameters<typeof crc>[1]): ReturnType<typeof crc> {
 }
 
 describe('usePlayback', () => {
+  it('resolves signal-valued programs, option objects, and direct option fields at the hook owner', () => {
+    const output = signal(0);
+    const events: string[] = [];
+    const program = signal<CRCAnimationProgram>(
+      track(output, tween({ to: 10, duration: 100 })),
+    );
+    const onEvent = signal<(event: CRCPlaybackEvent) => void>(
+      event => events.push(`first:${event.type}`),
+    );
+    const options = signal({ onEvent });
+    let handle!: CRCPlayback;
+    function Probe() {
+      handle = usePlayback(program, options);
+    }
+
+    roots.add(mount(<Probe />));
+    driver.flush(-1);
+    handle.play();
+    driver.flush(0);
+    driver.flush(100);
+
+    expect(output.get()).toBe(10);
+    expect(events).toEqual(['first:start', 'first:finish']);
+
+    program.set(track(output, tween({ from: 10, to: 20, duration: 100 })));
+    onEvent.set(event => events.push(`second:${event.type}`));
+    driver.flush(101);
+    handle.play();
+    driver.flush(110);
+    driver.flush(210);
+
+    expect(output.get()).toBe(20);
+    expect(events).toEqual([
+      'first:start',
+      'first:finish',
+      'second:start',
+      'second:finish',
+    ]);
+  });
+
   it('returns one frozen handle for a mounted hook slot across fresh programs', () => {
     const output = signal(0);
     const handles: CRCPlayback[] = [];

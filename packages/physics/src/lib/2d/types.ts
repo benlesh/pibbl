@@ -2,12 +2,13 @@ import type {
   BoxStyle,
   CRCEventHandlers,
   CRCEventParticipationOptions,
-  CRCNode,
+  CRCNodeInput,
   CursorStyle,
   LayoutBox,
   LayoutItemStyle,
   PaintStyle,
   Signal,
+  SignalValue,
   SystemStyle,
 } from '@crc/core';
 import type {
@@ -121,7 +122,7 @@ export interface CRCPhysicsSolverOptions {
   readonly positionIterations?: number;
 }
 
-export interface CRCPhysicsWorld2DProps {
+interface CRCPhysicsWorld2DValues {
   readonly gravity?: CRCPhysicsVector2;
   readonly fixedStepMilliseconds?: number;
   readonly maxCatchUpSteps?: number;
@@ -131,8 +132,14 @@ export interface CRCPhysicsWorld2DProps {
   readonly onSleep?: CRCPhysicsBodyStateHandler2D;
   readonly onWake?: CRCPhysicsBodyStateHandler2D;
   readonly onError?: (error: unknown) => void;
-  readonly children?: CRCNode;
+  readonly children?: CRCNodeInput;
 }
+
+export type CRCPhysicsWorld2DProps = {
+  readonly [K in keyof CRCPhysicsWorld2DValues]: K extends "children"
+    ? CRCPhysicsWorld2DValues[K]
+    : SignalValue<CRCPhysicsWorld2DValues[K]>;
+};
 
 export interface CRCPhysicsPrimitiveProps2D
   extends CRCEventHandlers, CRCEventParticipationOptions {

@@ -25,9 +25,9 @@ import type {
   CRCPhysicsQueryMode,
   CRCPhysicsQueryOptions2D,
   CRCPhysicsQueryResult2D,
-  CRCPhysicsWorld2DProps,
   CRCPhysicsWorldHandle2D,
 } from "../types.js";
+import type { CRCResolvedPhysicsWorld2DProps } from "./world-props.js";
 import { BODY_CCD_2D } from "../world/ccd.js";
 import { COLLIDER_SENSOR_2D } from "../world/contact-cache.js";
 import {
@@ -103,7 +103,7 @@ interface ColliderDraft2D {
 
 interface RenderDraft2D {
   readonly configuration: NormalizedPhysicsWorld2DConfiguration;
-  readonly props: CRCPhysicsWorld2DProps;
+  readonly props: CRCResolvedPhysicsWorld2DProps;
   readonly bodies: Map<number, BodyDraft2D>;
   readonly colliders: Map<number, ColliderDraft2D>;
 }
@@ -159,7 +159,7 @@ export class PhysicsWorld2DController {
   private acceptedBodies: readonly AcceptedBody2D[] = Object.freeze([]);
   private acceptedColliders: readonly AcceptedCollider2D[] = Object.freeze([]);
   private acceptedConfiguration: NormalizedPhysicsWorld2DConfiguration;
-  private acceptedProps: CRCPhysicsWorld2DProps = Object.freeze({});
+  private acceptedProps: CRCResolvedPhysicsWorld2DProps = Object.freeze({});
   private readonly suspendedVelocities = new Map<number, BodyVelocity2D>();
   private readonly materializedBodyHandles = new Map<
     string,
@@ -177,7 +177,7 @@ export class PhysicsWorld2DController {
 
   constructor(
     private readonly owner: CRCInternalSimulationOwner,
-    initialProps: CRCPhysicsWorld2DProps,
+    initialProps: CRCResolvedPhysicsWorld2DProps,
   ) {
     const configuration = normalizeWorldConfiguration(initialProps);
     this.kernel = new PhysicsWorld2DKernel(
@@ -206,7 +206,7 @@ export class PhysicsWorld2DController {
     this.handle = Object.freeze(target) as unknown as InternalWorldHandle2D;
   }
 
-  beginRender(props: CRCPhysicsWorld2DProps): void {
+  beginRender(props: CRCResolvedPhysicsWorld2DProps): void {
     this.assertActive();
     if (this.draft !== undefined) {
       throw new Error(
@@ -1071,7 +1071,7 @@ export function snapshotPhysicsWorld2DControllerForTest(
 }
 
 function normalizeWorldConfiguration(
-  props: CRCPhysicsWorld2DProps,
+  props: CRCResolvedPhysicsWorld2DProps,
 ): NormalizedPhysicsWorld2DConfiguration {
   return normalizePhysicsWorld2DConfiguration({
     gravity: props.gravity,

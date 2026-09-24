@@ -18,6 +18,7 @@ import type {
   CompiledParameterEntry,
 } from "../compiler.js";
 import type {
+  CRCParticleBounds3D,
   CRCParticleEffect3D,
   Particles3DProps,
   Particles3DStyle,
@@ -26,6 +27,8 @@ import type {
   CRCParticleParameterValue,
   CRCParticleParameterValues,
   CRCParticleSystemStatus,
+  CRCParticleCommonProps,
+  CRCParticleSystem,
 } from "../types.js";
 import {
   createParticleSystemController,
@@ -43,6 +46,7 @@ import {
   acquireParticleRecipes3D,
   type CompiledParticleRecipe3D,
 } from "./recipe.js";
+import { resolveDeclaredParticleProps } from "../signal-inputs.js";
 
 interface ImplicitSystemSlot {
   readonly owner: CRCInternalRenderOwner;
@@ -392,10 +396,20 @@ export function Particles3D<
   EmitterName extends string,
   Parameters extends CRCParticleParameterValues,
 >(props: Particles3DProps<EmitterName, Parameters>): CRCNode {
-  const owner = crcInternalCurrentRenderOwner();
-  const looseProps = props as Particles3DProps & {
-    readonly effect?: CRCParticleEffect3D;
+  const looseProps = resolveDeclaredParticleProps(
+    props,
+    PRESERVED_PARTICLE_PROPS,
+    "style",
+  ) as unknown as CRCParticleCommonProps<Parameters> & {
+    readonly effect?: CRCParticleEffect3D<EmitterName, Parameters>;
+    readonly system?: CRCParticleSystem<EmitterName, Parameters, 3>;
+    readonly autoplay?: boolean;
+    readonly seed?: number;
+    readonly style?: Particles3DStyle;
+    readonly execution?: "auto" | "cpu" | "gpu";
+    readonly interactionBounds?: CRCParticleBounds3D;
   };
+  const owner = crcInternalCurrentRenderOwner();
   const hasEffect = looseProps.effect !== undefined;
   const hasSystem = looseProps.system !== undefined;
   if (hasEffect === hasSystem) {
@@ -616,3 +630,5 @@ export function Particles3D<
   }
   return undefined;
 }
+
+const PRESERVED_PARTICLE_PROPS = new Set<PropertyKey>(["system"]);

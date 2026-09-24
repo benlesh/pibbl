@@ -1,5 +1,6 @@
 import {
   crc,
+  signal,
   type CRCNode,
   type PrimitiveInputOf,
 } from '@crc/core';
@@ -17,6 +18,36 @@ import { resolveCamera } from '../math/camera.js';
 import type { CRCWebGLGeometryPickRecord } from '../pick-ledger.js';
 
 describe('Mesh built-in rendering', () => {
+  it('resolves signal-valued geometry and declared style fields', () => {
+    const recording = createDrawGL();
+    const geometry = signal(createWebGLGeometry({
+      positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+    }));
+    const material = signal({
+      type: 'lambert' as const,
+      emissiveIntensity: 0.25,
+    });
+    const root = (
+      <Mesh
+        geometry={geometry}
+        style={{
+          color: signal('#ff0000'),
+          lit: signal(false),
+          material,
+          translateX: signal(4),
+        }}
+      />
+    );
+    const mounted = mountScene(recording.gl, root);
+
+    executeBackendCRC(mounted.mount, root, 1);
+
+    expect(recording.draws).toHaveLength(1);
+    expect(recording.draws[0]!.color).toEqual([1, 0, 0, 1]);
+    expect(recording.draws[0]!.model[12]).toBe(4);
+    mounted.dispose();
+  });
+
   it('settles transformed built-ins once, draws opaque before transparent, and omits zero alpha', () => {
     const recording = createDrawGL();
     const triangle = createWebGLGeometry({

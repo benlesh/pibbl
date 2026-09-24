@@ -9,6 +9,8 @@ import type {
   CRCPhysicsWorld3DProps,
   CRCPhysicsWorldHandle3D,
 } from "../types.js";
+import { resolveSignalFields } from "../../shared/signal-inputs.js";
+import type { CRCResolvedPhysicsWorld3DProps } from "./world-props.js";
 import {
   assertPhysicsWorld3DCanEnter,
   pushPhysicsWorld3D,
@@ -21,14 +23,18 @@ const renderPhysicsWorld3D: CRCComponent<CRCPhysicsWorld3DProps> = (props) => {
   // scope or exposing mutable WebGL state.
   pushPhysicsPresentation(IDENTITY_MATRIX_3D)();
   assertPhysicsWorld3DCanEnter();
+  const resolvedProps = resolveSignalFields<CRCResolvedPhysicsWorld3DProps>(
+    props,
+    WORLD_STRUCTURAL_FIELDS,
+  );
   const owner = crcInternalCurrentSimulationOwner();
   const slot = useInternalHookSlot("physicsWorld3DController", (teardowns) => {
-    const controller = new PhysicsWorld3DController(owner, props);
+    const controller = new PhysicsWorld3DController(owner, resolvedProps);
     teardowns.add(() => controller.dispose());
     return controller;
   });
   const controller = slot.value;
-  controller.beginRender(props);
+  controller.beginRender(resolvedProps);
   const popWorld = pushPhysicsWorld3D(controller);
   try {
     setCurrentComponentAfterRender(popWorld);
@@ -38,6 +44,8 @@ const renderPhysicsWorld3D: CRCComponent<CRCPhysicsWorld3DProps> = (props) => {
   }
   return props.children;
 };
+
+const WORLD_STRUCTURAL_FIELDS = new Set<PropertyKey>(["children"]);
 
 /** Owns one transparent, component-scoped 3D physics world. */
 export const PhysicsWorld3D = renderPhysicsWorld3D;

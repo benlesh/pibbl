@@ -6,6 +6,7 @@ import type {
   LayoutBox,
   LayoutItemStyle,
   Signal,
+  SignalValue,
   SystemStyle,
 } from "@crc/core";
 
@@ -391,6 +392,17 @@ export interface CRCParticleCommonProps<
   readonly onError?: (error: unknown) => void;
 }
 
+export type CRCParticleCommonInputProps<
+  Parameters extends CRCParticleParameterValues,
+> = {
+  readonly [K in keyof CRCParticleCommonProps<Parameters>]:
+    SignalValue<CRCParticleCommonProps<Parameters>[K]>;
+};
+
+type CRCParticleStyleInput<S extends object> = SignalValue<{
+  readonly [K in keyof S]: SignalValue<S[K]>;
+}>;
+
 export interface Particles2DStyle
   extends SystemStyle, BoxStyle, LayoutItemStyle, CursorStyle {
   readonly opacity?: number;
@@ -399,14 +411,16 @@ export interface Particles2DStyle
 export type Particles2DProps<
   EmitterName extends string = string,
   Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
-> = CRCParticleCommonProps<Parameters> & {
-  readonly style?: Particles2DStyle;
+> = CRCParticleCommonInputProps<Parameters> & {
+  readonly style?: CRCParticleStyleInput<Particles2DStyle>;
 } & (
     | {
-        readonly effect: CRCParticleEffect2D<EmitterName, Parameters>;
+        readonly effect: SignalValue<
+          CRCParticleEffect2D<EmitterName, Parameters>
+        >;
         readonly system?: never;
-        readonly autoplay?: boolean;
-        readonly seed?: number;
+        readonly autoplay?: SignalValue<boolean>;
+        readonly seed?: SignalValue<number>;
       }
     | {
         readonly effect?: never;

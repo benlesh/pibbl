@@ -15,6 +15,7 @@ import { parseParticleColor } from "../color.js";
 import type { CompiledEffect2D, CompiledParameterEntry } from "../compiler.js";
 import type {
   CRCParticleEffect2D,
+  CRCParticleCommonProps,
   CRCParticleParameterValue,
   CRCParticleParameterValues,
   Particles2DProps,
@@ -26,6 +27,7 @@ import {
   type ParticleEffectCandidate,
   type ParticleSystemController,
 } from "../system/controller.js";
+import { resolveDeclaredParticleProps } from "../signal-inputs.js";
 import {
   createCanvasParticleExecutor,
   type CanvasParticleExecutor,
@@ -163,13 +165,25 @@ export function Particles2D<
   EmitterName extends string,
   Parameters extends CRCParticleParameterValues,
 >(props: Particles2DProps<EmitterName, Parameters>): CRCNode {
+  const looseProps = resolveDeclaredParticleProps(
+    props,
+    PRESERVED_PARTICLE_PROPS,
+    "style",
+  ) as unknown as CRCParticleCommonProps<Parameters> & {
+    readonly effect?: CRCParticleEffect2D<EmitterName, Parameters>;
+    readonly system?: import("../types.js").CRCParticleSystem<
+      EmitterName,
+      Parameters,
+      2
+    >;
+    readonly autoplay?: boolean;
+    readonly seed?: number;
+    readonly style?: import("../types.js").Particles2DStyle;
+  };
   const owner = crcInternalCurrentRenderOwner();
   const allocation = useLayoutBox();
   validateAllocation(allocation);
 
-  const looseProps = props as Particles2DProps & {
-    readonly effect?: CRCParticleEffect2D;
-  };
   const hasEffect = looseProps.effect !== undefined;
   const hasSystem = looseProps.system !== undefined;
   if (hasEffect === hasSystem) {
@@ -337,3 +351,5 @@ export function Particles2D<
     style: looseProps.style,
   });
 }
+
+const PRESERVED_PARTICLE_PROPS = new Set<PropertyKey>(["system"]);
