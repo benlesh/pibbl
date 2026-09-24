@@ -227,16 +227,16 @@ const searchBundle = buildSearchBundle({
   pages: [
     {
       frontmatter: {
-        id: "hook-state",
-        title: "useState",
-        summary: "State for a component.",
+        id: "hook-signal",
+        title: "useSignal",
+        summary: "A component-owned signal.",
         kind: "api",
-        slug: "use-state",
+        slug: "use-signal",
         apiCategory: "hook",
-        symbols: ["useState"],
+        symbols: ["useSignal"],
       },
-      route: "#/api/hooks/use-state",
-      plainText: "Use useState to hold local state.",
+      route: "#/api/hooks/use-signal",
+      plainText: "Use useSignal to hold local reactive state.",
       headings: [],
       sections: [],
     },

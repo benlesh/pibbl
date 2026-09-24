@@ -23,7 +23,7 @@ the already selected card clear the selection.
 
 The diagram owns ordinary application IDs such as `"idea"` and `"sketch"`;
 they are stable model data rather than Canvas target objects. `DiagramEditor`
-stores the selected ID with [`useState`](#/api/hooks/use-state), finds the
+stores the selected ID with [`useSignal`](#/api/hooks/use-signal), finds the
 matching node record, and passes a boolean plus one selection callback down to
 each `NodeCard`.
 
@@ -37,7 +37,7 @@ describe the DOM-aligned handler surface.
 
 ## Predict and try
 
-Click Idea and predict when the status changes. The handler changes state, but
+Click Idea and predict when the status changes. The handler updates the signal, but
 it does not synchronously repaint pixels: CRC coalesces the request into a
 future scheduled frame. Then change `onSelect` so a matching selected ID
 becomes `null`; clicking the same body again should show `NO SELECTION`.
@@ -52,7 +52,7 @@ and make that child non-targeting.
 
 ## What you learned
 
-Selection is explicit application state: model IDs describe what is selected,
+Selection is explicit application state: a signal holds the selected model ID,
 and the rendered outline and status are consequences of that state. Constraining
 interaction to the painted body keeps target ownership legible, while scheduled
 rendering keeps rapid state writes coalesced into the next frame.

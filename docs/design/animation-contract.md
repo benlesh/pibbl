@@ -285,18 +285,20 @@ than the realm.
 
 ## Rendering, Layers, and WebGL
 
-Animation produces ordinary signal values. Application code must read a value
-explicitly, including numeric style values:
+Animation produces ordinary signal values. CRC-provided components accept them
+directly at declared inputs:
 
 ```tsx
 function MovingCard() {
   const x = useTransition(120, { type: "spring", initial: 0 });
-  return <Rectangle style={{ x: x.get(), width: 48, height: 32 }} />;
+  return <Rectangle style={{ x, width: 48, height: 32 }} />;
 }
 ```
 
-`style={{ x }}` is neither a signal binding nor an animation descriptor. An
-ordinary Canvas 2D dependency invalidates its top-level immediate-mode root,
+`Rectangle` owns that read. `x.get()` remains valid when `MovingCard`
+intentionally needs to own the dependency. A signal is not an animation
+descriptor and arbitrary objects are not deep-unwrapped. An ordinary Canvas 2D
+dependency invalidates its top-level immediate-mode root,
 which clears and traverses normally. Multiple changed values coalesce into one
 root render, and unchanged values/computed results schedule no renderer work.
 
@@ -358,8 +360,8 @@ function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
 
 ## Deliberate boundaries
 
-- CRC does not implement CSS or Web Animations syntax, implicit prop/style
-  transitions, signal-valued ordinary styles, or a retained scene graph.
+- CRC does not implement CSS or Web Animations syntax, implicit transitions,
+  deep signal unwrapping, or a retained scene graph.
 - There is no general physics/collision engine, mutable timeline builder,
   timeline label language, arbitrary program callback node, audio/network clock,
   root-owned playback, or persistent serialized playback session.

@@ -1,7 +1,7 @@
 # CRC signals and scheduling contract
 
-Status: current implemented contract, updated for settled WebGL scenes on
-2026-09-13.
+Status: current implemented contract, updated for Signals-centric authoring on
+2026-09-24.
 
 This document defines CRC's first-class synchronous signals and the one
 realm-wide frame scheduler shared by every mounted root and managed `Layer` in
@@ -32,6 +32,8 @@ interface WritableSignal<T> extends Signal<T> {
   asReadonly(): Signal<T>;
 }
 
+type SignalValue<T> = T | Signal<T>;
+
 declare function signal<T>(
   initialValue: T,
   options?: SignalOptions<T>,
@@ -42,26 +44,31 @@ declare function computed<T>(
 ): Signal<T>;
 declare function untracked<T>(read: () => T): T;
 declare function isSignal(value: unknown): value is Signal<unknown>;
+declare function resolveSignalValue<T>(value: SignalValue<T>): T;
+declare function batch<T>(callback: () => T): T;
 declare function useSignal<T>(
   initialValue: T,
   options?: SignalOptions<T>,
 ): WritableSignal<T>;
 ```
 
-Signals are containers, not implicitly unwrapped values. Every dependency read
-is explicit:
+Signals are containers. Application code reads them explicitly, while
+CRC-provided components resolve them at declared reactive input positions:
 
 ```tsx
 const count = signal(0);
 const doubled = computed(() => count.get() * 2);
 
 function Counter() {
-  return <Text>{doubled.get()}</Text>;
+  return <Text>{doubled}</Text>;
 }
 ```
 
-A signal container is not a resolved style number, text child, or other CRC
-value merely because its contained value would be accepted there.
+Passing `doubled` makes `Text` the consumer. Passing `doubled.get()` remains
+valid and intentionally makes `Counter` the consumer. Resolution is shallow
+and schema-declared, never a recursive JSX-runtime walk through arbitrary
+application objects. An exact API that asks for `Signal<T>` or
+`WritableSignal<T>` receives the signal object without resolving it.
 
 ## Writable signals
 
@@ -75,6 +82,11 @@ revision, and notifies no consumer.
 the updater or equality function throws, the previous value remains current.
 `asReadonly()` returns one cached readonly view over the same cell;
 `isSignal()` recognizes both views without adding a structural false positive.
+`batch(callback)` groups synchronous writes. Values are readable immediately,
+nested batches share the outer batch, and each affected observer is notified at
+most once when the outer callback exits. If the callback throws, completed
+writes remain committed, notification flushes, and the original error is
+rethrown. CRC event dispatch creates the same outer batch automatically.
 
 ## Computed signals and untracked reads
 
@@ -105,13 +117,27 @@ renderer traversals; a changed result dirties the exact consumers and may render
 them in that same frame. Reading the computed explicitly also validates it
 immediately.
 
-## Component consumers and `useSignal`
+## Component consumers, signal inputs, and `useSignal`
 
-During component evaluation, CRC collects that component's explicit signal
-reads. Primitive style resolution and render callbacks belong to the primitive
-consumer that performs those reads; a child's reads do not become parent
-dependencies. A successful evaluation replaces the old dependency set.
+During component evaluation, CRC collects that component's explicit reads and
+declared input resolutions. Primitive prop/style resolution and render
+callbacks belong to the primitive consumer that performs those reads; a
+child's reads do not become parent dependencies. A successful evaluation
+replaces the old dependency set.
 Removal, failed-render cleanup, and root disposal detach all consumer edges.
+`resolveSignalValue(value)` returns a plain value unchanged or reads exactly one
+signal. It does not inspect arrays, objects, functions, or a signal returned by
+another signal. Built-ins apply equivalent resolution only at their declared
+input schema: whole props/style values, opted-in shallow fields, and the
+recursive structural or Text child grammars. Event handlers are selected as
+values and never invoked by resolution.
+Mounted layout and measurement may inspect a child's declared style before
+that child evaluates. Such a signal read creates a transaction-local provision
+keyed by the receiving primitive token. Successful receiver evaluation adopts
+and deduplicates the provision; failure, abort, removal, or an unclaimed
+provision releases it. Pure `measureElement()` resolves untracked and creates no
+persistent consumer. Plain values create no provision, consumer, wrapper
+signal, or resolved-input copy.
 
 When a dependency changes, each clean component consumer becomes dirty once
 and requests its owning instance. Multiple changes coalesce. `useSignal()` is
@@ -225,14 +251,15 @@ package-consumer, and Studio declaration suites are the executable evidence.
 
 ## Deliberate boundaries
 
-- Reads are never implicit and styles do not accept signal containers.
+- CRC resolves signals only at declared component-input positions; arbitrary
+  application data is never deep-unwrapped.
 - Signals are synchronous; async resources and Promise-aware dependency
   tracking are not provided.
 - Observed pending computed validation is Plan work; it requests only the
   coalesced realm frame and does not dirty a renderer before its result changes.
 - The scheduler is not a retained scene graph, DOM reconciler, worker runtime,
   or public manual-clock/input-injection API.
-- Animation values and hooks use these same explicit reads, staging, frame
+- Animation values and hooks use these same reads and declared inputs, staging, frame
   phases, consumer boundaries, and ownership rules. Their specialized behavior
   lives in the [animation contract](./animation-contract.md).
 

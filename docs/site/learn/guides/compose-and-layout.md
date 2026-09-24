@@ -79,6 +79,13 @@ components. Measurement is pure and opt-in. See the [layout
 contract](../../../design/layout-system-contract.md) for every supported Flex, Flow,
 Grid, Overlay, and Absolute value.
 
+Layout fields may be signals. During a mounted layout prepass, CRC attributes
+such a read to the eventual receiving child rather than to the layout parent.
+The receiver adopts that provisional dependency only after successful
+evaluation. Standalone `measureElement()` resolves the same declared inputs
+untracked and creates no persistent subscription. Plain layout values create no
+provision or resolved-style copy.
+
 ## Group
 
 `Group` composes Canvas transforms around any number of children:
@@ -132,9 +139,9 @@ const clipped = (
 ```
 
 The captured clip geometry applies to hit testing as well as paint. Creators
-return fresh paths; call `useMemo` in a component when the same creator path
-needs stable identity across renders. CRC does not add a dedicated memo hook
-per shape.
+return fresh paths; call `useConst` when one path should have mount-lifetime
+identity, or `useComputed` when a path is derived from reactive geometry. CRC
+does not add a dedicated memo hook per shape.
 
 ## Layer
 

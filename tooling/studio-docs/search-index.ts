@@ -89,7 +89,7 @@ export function searchIndexOptions(): Options<SearchRecord> {
 
 /**
  * Preserves an identifier's normalized spelling and adds its camel-case parts.
- * This lets an API search match either `useWhenChanged` or `when changed`.
+ * This lets an API search match either `useReaction` or `reaction`.
  */
 export function tokenizeSearchText(value: string): readonly string[] {
   const tokens: string[] = [];

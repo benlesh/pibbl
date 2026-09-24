@@ -131,10 +131,10 @@ describe('plain function component dispatch', () => {
     const hookProbeRefs = Array.from(getCRCInstance(canvas).refs.values())
       .find(ref => ref.element.type === HookProbe)!;
     expect(hookProbeRefs.hooks.map(hook => hook.kind)).toEqual([
-      'state',
-      'memo',
+      'signal',
+      'computed',
       'ref',
-      'whenChanged',
+      'reaction',
       'rectPath',
       'linePath',
       'svgPath',
@@ -143,7 +143,7 @@ describe('plain function component dispatch', () => {
       'eventListener',
       'cursor',
     ]);
-    expect(hookProbeRefs.signalConsumer).toBeUndefined();
+    expect(hookProbeRefs.signalConsumer).toBeDefined();
 
     controller.dispose();
     expect(cleanups).toHaveBeenCalledOnce();

@@ -1,7 +1,7 @@
 ---
 id: guide-signals-animation
 title: Use signals and animation
-summary: Drive explicit reactive values, transitions, and component-owned animation through CRC's shared scheduler.
+summary: Drive signal-valued inputs, computed barriers, transitions, and component-owned animation through CRC's shared scheduler.
 kind: guide
 slug: signals-and-animation
 order: 62
@@ -15,9 +15,9 @@ bind those definitions to writable signals, and `usePlayback` owns a running
 program for one mounted component. Everything advances through the same realm
 scheduler used by state, roots, and Layers.
 
-## Read signals explicitly
+## Pass signals to their receivers
 
-Use `.get()` where a value enters drawing or style:
+CRC drawing components accept signals directly at declared inputs:
 
 ```tsx
 function Card({ targetX }: { targetX: number }) {
@@ -26,13 +26,14 @@ function Card({ targetX }: { targetX: number }) {
     initial: 0,
   });
 
-  return <Rectangle style={{ x: x.get(), width: 80, height: 48 }} />;
+  return <Rectangle style={{ x, width: 80, height: 48 }} />;
 }
 ```
 
-The signal object is a container. `style={{ x }}` does not bind a signal and is
-a type error. The explicit read also tells CRC which component or Layer content
-depends on the value.
+`Rectangle` performs the read and owns the dependency. Use `x.get()` when the
+enclosing component intentionally needs the value for arithmetic, branching,
+or aggregation. This receiver-owned form is declared and shallow; CRC does not
+search application objects for nested signals.
 
 On mount, a transition with no `initial` presents its target immediately. A
 different explicit `initial` is painted by the mounting render, then movement
@@ -105,10 +106,10 @@ function AnimatedCard() {
   return (
     <Rectangle
       style={{
-        x: x.get(),
+        x,
         width: 120,
         height: 72,
-        opacity: opacity.get(),
+        opacity,
       }}
       onClick={() => player.play({ conflict: "replace" })}
     />
@@ -118,8 +119,9 @@ function AnimatedCard() {
 
 Controls include `play`, `pause`, `resume`, `seek`, `reverse`,
 `setPlaybackRate`, `finish`, and `cancel`. They queue for the next Begin phase
-in invocation order. The readonly `status` and `currentTime` signals can be
-read with `.get()` when UI needs them.
+in invocation order. The readonly `status` and `currentTime` signals can flow
+directly into declared inputs or be read with `.get()` when the enclosing
+component needs a snapshot.
 
 An active run reserves every output it may write for its entire lifetime,
 including waits. Competing playback fails by default. Explicit

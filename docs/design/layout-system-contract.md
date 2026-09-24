@@ -1,7 +1,7 @@
 # CRC layout-system contract
 
-Status: current implemented contract, updated for settled WebGL scenes on
-2026-09-13.
+Status: current implemented contract, updated for Signals-centric inputs on
+2026-09-24.
 
 CRC provides dedicated `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid`
 components. They arrange direct branded `CRCElement` children into declared
@@ -55,6 +55,19 @@ slots. A placed child's `useLayoutBox()` is the stable, readonly local box
 `{ x: 0, y: 0, width, height }`; reading it never schedules an update. Plain
 component props retain their exact specified style; the finite used allocation
 is exposed separately through `useLayoutBox()`.
+
+Layout container and item style fields accept signal-valued replacements.
+Mounted parent inspection may resolve a child's style before the receiving
+child evaluates. CRC records those source nodes in a transaction-local
+provision keyed by the child's stable primitive receiver token. The successful
+child generation adopts and deduplicates that provision; failure, abort,
+removal, disposal, or an unclaimed provision releases it without changing the
+last successful dependency generation.
+
+Pure `measureElement()` performs the same declared shallow resolution inside
+`untracked()`. It creates no renderer consumer, receiver provision, persistent
+edge, wrapper signal, or runtime resource. Plain layout props and style fields
+create no provision or shallow copy.
 
 Percentages resolve once against the containing content allocation, not again
 against the child's final local allocation. The mounted logical viewport from

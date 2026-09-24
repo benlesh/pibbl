@@ -57,6 +57,28 @@ not create a CRC element or establish render context. For the closed local
 style language, drawing geometry, filters, and shape options used by built-ins,
 see [Style and draw](#/learn/guides/style-and-draw).
 
+## Signal-valued props belong to receivers
+
+CRC-provided components accept `T | Signal<T>` at declared reactive input
+positions. Passing the signal object makes the receiving component the
+consumer; passing `signal.get()` makes the enclosing component the consumer.
+
+Custom components opt in explicitly:
+
+```tsx
+import { resolveSignalValue, type SignalValue } from "@crc/core";
+
+function CardTitle({ title }: { title: SignalValue<string> }) {
+  const resolvedTitle = resolveSignalValue(title);
+  return <Text>{resolvedTitle}</Text>;
+}
+```
+
+`resolveSignalValue()` reads at most one signal. It does not inspect arbitrary
+objects or arrays. If an API intentionally needs the signal object itself,
+declare that exact type—for example `valueSignal: WritableSignal<number>`—and
+do not resolve it.
+
 ## Recursive children
 
 CRC accepts recursive, synchronous child structures. Arrays and finite
@@ -78,6 +100,16 @@ concatenates them exactly as JSX supplies them. Numeric zero renders as `"0"`
 inside `Text`, while booleans, `null`, and `undefined` add no text. A CRC
 element, Promise, async iterable, function, symbol, foreign element, or
 unsupported object is invalid textual content.
+
+Text input also accepts signals at positions in that declared grammar:
+
+```tsx
+<Text>{["Value: ", valueSignal, " — ", labelSignal]}</Text>
+```
+
+Traversal resolves those direct entries. A signal whose value is itself an
+array containing signals is resolved once; CRC does not recursively unwrap the
+signals hidden inside the returned application value.
 
 `wrap`, `lineHeight`, optional `width`/`height`, and `fit` (`visible`,
 `squish`, `ellipsis`, or `clip`) control text layout and painting. Measurement

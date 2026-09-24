@@ -893,6 +893,8 @@ describe('scenario catalog trust gate', () => {
       'shared-roots',
       'layer-local-write',
       'remove-consumer',
+      'batched-write',
+      'reaction-only',
       'reset',
     ]);
   });

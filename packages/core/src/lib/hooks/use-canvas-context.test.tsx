@@ -101,7 +101,7 @@ describe('useCanvasContext', () => {
       .find(ref => ref.element.type === Probe)!;
     expect(states).toEqual([0, 1]);
     expect(refs[1]).toBe(refs[0]);
-    expect(probeRefs.hooks.map(hook => hook.kind)).toEqual(['state', 'ref']);
+    expect(probeRefs.hooks.map(hook => hook.kind)).toEqual(['signal', 'ref']);
     controller.dispose();
   });
 

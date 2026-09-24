@@ -8,6 +8,7 @@ export type TypeDomain =
   | "filters"
   | "layout"
   | "particles"
+  | "signal-inputs"
   | "styles"
   | "webgl";
 
@@ -88,6 +89,7 @@ const typeDomains = new Set<TypeDomain>([
   "filters",
   "layout",
   "particles",
+  "signal-inputs",
   "styles",
   "webgl",
 ]);

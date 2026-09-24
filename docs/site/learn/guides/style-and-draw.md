@@ -94,6 +94,31 @@ requires `src`. Components whose complete style schema has defaults may omit
 `style.custom` is available for application-owned metadata and is not read or
 inherited by CRC. Arbitrary top-level style keys are not accepted.
 
+## Signal-valued style
+
+Every declared style field accepts a compatible signal, and the whole style
+object may itself be a signal:
+
+```tsx
+const x = useSignal(10);
+const fill = useSignal("red");
+const style = useComputed(() => ({
+  x: x.get(),
+  width: 80,
+  height: 48,
+  fill: fill.get(),
+}));
+
+<Rectangle style={{ x, width: 80, height: 48, fill }} />;
+<Rectangle style={style} />;
+```
+
+CRC first resolves a whole-style signal once, then shallowly resolves the
+fields declared by that primitive. It allocates a resolved copy only when a
+signal field is actually present; all-plain styles keep the direct path. It
+does not inspect `style.custom` or other arbitrary application objects for
+nested signals.
+
 ## Choose pointer participation
 
 Drawing primitives contribute their declared interaction geometry by default,

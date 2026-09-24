@@ -447,7 +447,9 @@ describe('backend-neutral component traversal', () => {
       },
     );
     function FailingScene(): CRCNode {
-      useReaction(() => cleanup, []);
+      useInternalHookSlot('backend-failure-cleanup', teardowns => {
+        teardowns.add(cleanup);
+      });
       setCurrentComponentAfterRender(afterRender);
       return <Throwing />;
     }

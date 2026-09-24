@@ -28,4 +28,4 @@ function Counter() {
 }
 ```
 
-Use [`useState`](#/api/hooks/use-state) for values that should schedule updates.
+Use [`useSignal`](#/api/hooks/use-signal) for values that should schedule updates.

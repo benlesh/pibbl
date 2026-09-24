@@ -1,7 +1,7 @@
 ---
 id: api-function-signal
 title: signal
-summary: Creates a writable value with explicit reads and updates.
+summary: Creates a writable value for explicit reads or declared signal-valued inputs.
 kind: api
 slug: signal
 apiCategory: function
@@ -17,7 +17,9 @@ Read with `get()`, replace with `set(value)`, update from the current value with
 Equality defaults to `Object.is`; `set()` treats functions as data.
 
 Signal reads performed while a component evaluates become that component's
-dependencies. Signals never unwrap implicitly, including in JSX and styles.
+dependencies. CRC-provided components also resolve signals at declared
+signal-valued props, style fields, and child inputs; the receiving component
+then owns the dependency. CRC never deep-unwraps arbitrary application data.
 
 See [Use signals and animation](#/learn/guides/signals-and-animation).
 

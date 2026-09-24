@@ -1022,6 +1022,7 @@ describe('layer', () => {
 
   const MyComponent = ({ onRender, x = 0, y = 0, width = 100, height = 100, fillStyle = 'blue' }: MyComponentProps) => {
     const counter = useSignal(0);
+    counter.get();
     onRender();
     return createElement(Rectangle, {
       style: {
@@ -1240,10 +1241,10 @@ describe('layer', () => {
       };
 
       const canvas = await componentTest(createElement(wrapperComponent, {}));
-      // Click to trigger state changes
+      // Click to trigger signal changes
       await canvas.click({ position: { x: 100, y: 100 } });
 
-      // Should re-render due to prop changes from state updates
+      // Should re-render due to prop changes from signal updates
       expect(renderCount).toBe(2);
     });
 

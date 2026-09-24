@@ -39,12 +39,13 @@ drawing primitives without React or generated DOM.
 - `@crc/particles` is implemented as immutable 2D/3D effect definitions,
   direct deterministic descriptor factories, component-owned systems, one
   fixed-capacity Canvas primitive, and stateless instanced WebGL submissions.
-- First-class `signal`, `computed`, `untracked`, `isSignal`, and `useSignal`
-  are implemented with explicit reads, dynamic synchronous dependency graphs,
-  render/Advance write guards, observation-aware computed source-edge leases,
-  and exact consumer ownership. Observed pending computed validation is live
-  Plan work. One realm scheduler runs six ordered phases across roots and
-  managed Layers.
+- First-class `signal`, `computed`, `batch`, `untracked`, `isSignal`,
+  `resolveSignalValue`, `useSignal`, `useComputed`, `useConst`, and
+  `useReaction` are implemented with declared receiver-owned inputs, dynamic
+  synchronous dependency graphs, render/Advance write guards,
+  observation-aware computed source-edge leases, and exact consumer ownership.
+  Observed pending computed validation is live Plan work. One realm scheduler
+  runs six ordered phases across roots and managed Layers.
 - First-class animation is implemented through immutable tween, keyframe,
   analytic-spring, custom, and fixed-step definitions; composable programs;
   whole-run writer leases; component-owned playback; update-driven
@@ -136,10 +137,11 @@ either as the current result unless a fresh run reproduces it.
   and optional sibling key. Unkeyed same-type siblings use occurrence order.
   Reparenting or adding a wrapper can remount a subtree; keys do not preserve
   identity across parents.
-- Signal reads are explicit through `get()`. A component subscribes only to
-  reads performed during its own evaluation; child reads do not become parent
-  dependencies. `set()` treats functions as data, while `update()` is the
-  explicit updater operation. Writes are forbidden during component,
+- Application signal reads use `get()`; CRC components also resolve signals at
+  declared prop, style, and child inputs. The receiver owns those reads, while
+  child reads do not become parent dependencies. `set()` treats functions as
+  data, while `update()` is the explicit updater operation. Writes are
+  forbidden during component,
   primitive-render, and computed evaluation, including equality no-ops. Advance
   participants may mutate signals only through their scheduler staging batch.
 - Animation definitions and programs are nominal immutable values without a
@@ -217,7 +219,7 @@ configuration is public through `CRCConfig`,
 `CRCFit`, `CRCPixelRatio`, and the fixed/responsive configuration types.
 Directional configuration is public through `CRCKeyboardNavigationOptions`.
 Signal configuration and values are public through `Signal`,
-`WritableSignal`, `SignalOptions`, and `SignalEquals`.
+`WritableSignal`, `SignalValue`, `SignalOptions`, and `SignalEquals`.
 Animation configuration and values are public through the named
 `CRCAnimationDefinition`, `CRCAnimationProgram`, easing/interpolator,
 definition-option, repeat, playback, event/status, and transition-option types.
@@ -227,8 +229,8 @@ Filter configuration is public through `CRCFilter` and the ten named
 `CRCInvertFilter`, `CRCOpacityFilter`, `CRCSaturateFilter`, and
 `CRCSepiaFilter` descriptor types.
 
-Public hooks: `useState`, `useSignal`, `usePlayback`, `useTransition`, `useMemo`,
-`useRef`, `useWhenChanged`, `useRectPath`,
+Public hooks: `useSignal`, `useComputed`, `useConst`, `useReaction`,
+`usePlayback`, `useTransition`, `useRef`, `useRectPath`,
 `useLinePath`, `useSvgPath`, `useEvent`, `useEventTarget`,
 `useEventListener`, `useCursor`, and `useLayoutBox`.
 
@@ -543,8 +545,9 @@ steppers. Immutable programs compose `track`, `sequence`, `parallel`, `wait`,
 `marker`, and `repeat`; whole-run writer leases reject ambiguous writers unless
 replacement is explicit. `usePlayback` owns stable controls/status/current time
 for one mounted hook slot, while `useTransition` provides explicit target-driven
-spring and tween values. Ordinary styles still receive numbers through visible
-`.get()` calls.
+spring and tween values. Signals may flow directly into declared CRC style and
+component inputs; `.get()` remains the way to make the enclosing component the
+consumer.
 
 Every command enters Begin, every active playback samples in Advance,
 user/status/time writes publish atomically in Commit, computed and renderer work

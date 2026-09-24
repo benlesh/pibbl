@@ -1,4 +1,4 @@
-import { crc, createElement, signal } from '@crc/core';
+import { batch, crc, createElement, signal } from '@crc/core';
 import {
   createSignalsLabModel,
   SIGNALS_LAB_SOURCE_ID,
@@ -23,6 +23,8 @@ export const SIGNALS_LAB_ACTION_IDS = [
   'shared-roots',
   'layer-local-write',
   'remove-consumer',
+  'batched-write',
+  'reaction-only',
   'reset',
 ] as const satisfies readonly SignalsLabAction[];
 
@@ -30,6 +32,19 @@ function createMetrics(): SignalsLabMetrics {
   return {
     computedEvaluations: 0,
     renderedComputed: 0,
+    writes: 0,
+    inputResolutions: 0,
+    receiverIds: 0,
+    provisions: 0,
+    adoptions: 0,
+    shallowCopies: 0,
+    batchFlushes: 0,
+    computedValidations: 0,
+    reactionRuns: 0,
+    reactionCleanups: 0,
+    componentTraversals: 0,
+    layerRepaints: 0,
+    composites: 0,
     rootRenders: { a: 0, b: 0 },
     layerChildRenders: { a: 0, b: 0 },
   };
@@ -56,6 +71,19 @@ function snapshot(
     selectedSource: model.selectLeft.get() ? 'left' : 'right',
     computed: metrics.renderedComputed,
     computedEvaluations: metrics.computedEvaluations,
+    writes: metrics.writes,
+    inputResolutions: metrics.inputResolutions,
+    receiverIds: metrics.receiverIds,
+    provisions: metrics.provisions,
+    adoptions: metrics.adoptions,
+    shallowCopies: metrics.shallowCopies,
+    batchFlushes: metrics.batchFlushes,
+    computedValidations: metrics.computedValidations,
+    reactionRuns: metrics.reactionRuns,
+    reactionCleanups: metrics.reactionCleanups,
+    componentTraversals: metrics.componentTraversals,
+    layerRepaints: metrics.layerRepaints,
+    composites: metrics.composites,
     rootRenders: { ...metrics.rootRenders },
     layerChildRenders: { ...metrics.layerChildRenders },
     consumerCount: 4 + (model.consumerVisible ? 1 : 0),
@@ -131,30 +159,50 @@ async function mountSignalsLab(
       lastAction = action;
       switch (action) {
         case 'direct-write':
+          metrics.writes += 1;
           model.direct.update(value => value + 1);
           break;
         case 'equal-write':
+          metrics.writes += 1;
           model.direct.set(model.direct.get());
           break;
         case 'computed-equal-write':
+          metrics.writes += 1;
           model.derivedSource.update(value => value + 2);
           break;
         case 'dependency-switch':
+          metrics.writes += 1;
           model.selectLeft.set(false);
           await settle();
+          metrics.writes += 1;
           model.left.update(value => value + 1);
           break;
         case 'shared-roots':
+          metrics.writes += 1;
           model.shared.update(value => value + 1);
           break;
         case 'layer-local-write':
+          metrics.writes += 1;
           model.layerA.update(value => value + 1);
           break;
         case 'remove-consumer':
           model.consumerVisible = false;
           renderPrimary();
           await settle();
+          metrics.writes += 1;
           model.retained.update(value => value + 1);
+          break;
+        case 'batched-write':
+          metrics.writes += 2;
+          metrics.batchFlushes += 1;
+          batch(() => {
+            model.direct.update(value => value + 1);
+            model.shared.update(value => value + 1);
+          });
+          break;
+        case 'reaction-only':
+          metrics.writes += 1;
+          model.reactionOnly.update(value => value + 1);
           break;
         case 'reset':
           disposeRoots();
@@ -192,6 +240,15 @@ export const signalsLabScenario: ScenarioDefinition<SignalsLabState> = {
       value: `direct ${state.direct} · derived ${state.derivedSource} · left ${state.left} · right ${state.right} · shared ${state.shared}`,
     },
     { label: 'Computed', value: `${state.computed} · ${state.computedEvaluations} evaluations` },
+    { label: 'Writes / batches', value: `${state.writes} / ${state.batchFlushes}` },
+    { label: 'Input resolutions', value: String(state.inputResolutions) },
+    { label: 'Receiver IDs', value: String(state.receiverIds) },
+    { label: 'Provisions / adoptions', value: `${state.provisions} / ${state.adoptions}` },
+    { label: 'Shallow copies', value: String(state.shallowCopies) },
+    { label: 'Computed validations', value: String(state.computedValidations) },
+    { label: 'Reaction runs / cleanups', value: `${state.reactionRuns} / ${state.reactionCleanups}` },
+    { label: 'Component traversals', value: String(state.componentTraversals) },
+    { label: 'Layer repaints / composites', value: `${state.layerRepaints} / ${state.composites}` },
     { label: 'Layer sources', value: `A ${state.layerA} · B ${state.layerB} · retained ${state.retained}` },
     { label: 'Selected source', value: state.selectedSource },
     { label: 'Root renders', value: `A ${state.rootRenders.a} · B ${state.rootRenders.b}` },

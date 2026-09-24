@@ -10,22 +10,23 @@ import {
 
 const x = signal(144, { debugName: "learning x" });
 const doubledX = computed(() => x.get() * 2, { debugName: "learning doubled x" });
+const signalSummary = computed(
+  () => `x ${x.get()} · computed ${doubledX.get()}`,
+  { debugName: "learning signal summary" },
+);
 
 function SignalCard() {
   const color = useSignal("#2563eb", { debugName: "learning color" });
-  const derivedX = doubledX.get();
-  const currentX = derivedX / 2;
-  const currentColor = color.get();
 
   return [
     <Rectangle style={{ width: 720, height: 420, fill: "#eef2ff" }} />,
     <Rectangle
       style={{
-        x: currentX,
+        x,
         y: 126,
         width: 432,
         height: 174,
-        fill: currentColor,
+        fill: color,
         stroke: "#17211d",
         strokeWidth: 6,
         cursor: "pointer",
@@ -35,6 +36,7 @@ function SignalCard() {
       }}
     />,
     <Text
+      pointerEvents="none"
       style={{
         x: 360,
         y: 180,
@@ -43,9 +45,10 @@ function SignalCard() {
         textAlign: "center",
       }}
     >
-      SIGNALS ARE EXPLICIT
+      SIGNALS FLOW TO RECEIVERS
     </Text>,
     <Text
+      pointerEvents="none"
       style={{
         x: 360,
         y: 222,
@@ -54,9 +57,10 @@ function SignalCard() {
         textAlign: "center",
       }}
     >
-      {`x.get() ${currentX} · computed ${derivedX}`}
+      {signalSummary}
     </Text>,
     <Text
+      pointerEvents="none"
       style={{
         x: 360,
         y: 264,

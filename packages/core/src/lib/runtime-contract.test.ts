@@ -295,8 +295,8 @@ describe('crc root updates', () => {
 
       expect(() => pending?.(0)).toThrowError('filtered final composite failed');
       const failed = getCRCInstance(canvas);
-      expect(setup).toHaveBeenCalledOnce();
-      expect(cleanups).toBe(1);
+      expect(setup).not.toHaveBeenCalled();
+      expect(cleanups).toBe(0);
       expect(failed.refs.size).toBe(0);
       expect(failed.eventRoot.targets.size).toBe(0);
       expect(failed.filterSurfacePool.snapshot()).toMatchObject({
@@ -386,13 +386,13 @@ describe('crc root updates', () => {
         algorithm: 'render-dispatch',
       });
       expect((failure as Error).message).toMatch(/nonnegative/);
-      expect(setup).toHaveBeenCalledOnce();
+      expect(setup).not.toHaveBeenCalled();
       expect(acquiredResources).toEqual({ clickListeners: 1, targets: 1 });
       const clickAcquisition = addEventListener.mock.calls.find(
         ([type]) => type === 'click',
       );
       expect(clickAcquisition).toBeDefined();
-      expect(cleanup).toHaveBeenCalledOnce();
+      expect(cleanup).not.toHaveBeenCalled();
       const failed = getCRCInstance(canvas);
       expect(failed.refs.size).toBe(0);
       expect(failed.eventRoot.targets.size).toBe(0);
@@ -462,8 +462,8 @@ describe('crc root updates', () => {
         algorithm: 'render-dispatch',
       });
       expect((failure as Error).message).toMatch(/exactly one/);
-      expect(setup).toHaveBeenCalledOnce();
-      expect(cleanup).toHaveBeenCalledOnce();
+      expect(setup).not.toHaveBeenCalled();
+      expect(cleanup).not.toHaveBeenCalled();
       expect(getCRCInstance(canvas).refs.size).toBe(0);
       expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(0);
 
@@ -526,8 +526,8 @@ describe('crc root updates', () => {
         algorithm: 'render-dispatch',
       });
       expect((failure as Error).message).toMatch(/outerRadius/);
-      expect(setup).toHaveBeenCalledOnce();
-      expect(cleanup).toHaveBeenCalledOnce();
+      expect(setup).not.toHaveBeenCalled();
+      expect(cleanup).not.toHaveBeenCalled();
       expect(getCRCInstance(canvas).refs.size).toBe(0);
       expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(0);
 
@@ -564,7 +564,7 @@ describe('crc root updates', () => {
     controller.dispose();
   });
 
-  it('does not lose a pending root replacement to a state update', async () => {
+  it('does not lose a pending root replacement to a component-owned signal update', async () => {
     const canvas = createCanvas();
     const renders: string[] = [];
     let valueSignal: WritableSignal<number> | undefined;
@@ -584,7 +584,6 @@ describe('crc root updates', () => {
     const pendingRoot = getCRCInstance(canvas).pendingRoot;
     expect(isCRCElement(pendingRoot) && pendingRoot.type)
       .toBe(createElement(ReplacementRoot, {}).type);
-    expect(getCRCInstance(canvas).pendingUpdateParents).toBe(true);
     await nextFrame();
 
     expect(renders).toEqual(['stateful:0', 'replacement']);
@@ -806,7 +805,7 @@ describe('crc root updates', () => {
     }
   });
 
-  it('lets the latest explicit root win after a state update while preserving parent intent', async () => {
+  it('lets the latest explicit root win after a component-owned signal update', async () => {
     const canvas = createCanvas();
     const renders: string[] = [];
     let valueSignal: WritableSignal<number> | undefined;
@@ -830,7 +829,6 @@ describe('crc root updates', () => {
     const instance = getCRCInstance(canvas);
     expect(isCRCElement(instance.pendingRoot) && instance.pendingRoot.type)
       .toBe(createElement(LatestReplacement, {}).type);
-    expect(instance.pendingUpdateParents).toBe(true);
     await nextFrame();
 
     expect(renders).toEqual(['stateful:0', 'latest-replacement']);

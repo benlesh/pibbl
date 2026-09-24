@@ -20,4 +20,4 @@ dependency. Outside a tracked evaluation it behaves like an ordinary snapshot
 read.
 
 Related types: [`Signal`](#/api/types/canvas-runtime#signal) and
-[`SignalValue`](#/api/types/canvas-runtime#signalvalue).
+[`SignalValue`](#/api/types/signal-inputs#signalvalue).

@@ -210,9 +210,9 @@ frames.
 
 ## Deliberate boundary
 
-TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading and the existing `useWhenChanged` cleanup contract.
+TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading; the current reaction cleanup contract lives in the runtime ownership record.
 
-TFC-07 completed that broader proof in the [runtime resource ownership contract](./runtime-resource-ownership.md), including state-setter capability checks, single-owner change cleanups, image generations, fully rendered mount/dispose stress, and temporary render-global restoration.
+TFC-07 completed that broader proof in the [runtime resource ownership contract](./runtime-resource-ownership.md), including component capability checks, single-owner cleanups, image generations, fully rendered mount/dispose stress, and temporary render-global restoration.
 
 ## 3D physics event ownership
 

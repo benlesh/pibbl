@@ -51,8 +51,6 @@ symbols:
     Signal,
     SignalEquals,
     SignalOptions,
-    SignalValue,
-    StateUpdater,
     WritableSignal,
   ]
 keywords: [canvas, viewport, controller, signals, animation, playback, runtime]
@@ -158,14 +156,14 @@ milestone delivery, and isolated error handling.
 `CRCPlaybackStatus` is `idle`, `scheduled`, `running`, `paused`, `finished`,
 `cancelled`, or `disposed`.
 
-## CRCRef
-
-`CRCRef<T>` is the stable mutable `{ current }` object returned by `useRef`.
-
 ## CRCReactionOptions
 
 `CRCReactionOptions` accepts an optional debug name for a component-owned
 `useReaction` lifecycle.
+
+## CRCRef
+
+`CRCRef<T>` is the stable mutable `{ current }` object returned by `useRef`.
 Writing `current` does not schedule rendering and its lifetime is one component
 identity.
 
@@ -278,17 +276,6 @@ duration, equality, optional initial value, easing, and interpolation.
 ## SignalOptions
 
 `SignalOptions<T>` accepts an optional equality function and debug name.
-
-## SignalValue
-
-`SignalValue<T>` is `T | Signal<T>`. APIs opt in at explicit positions and use
-`resolveSignalValue()` when the receiving component should own the read.
-
-## StateUpdater
-
-`StateUpdater<T>` is the setter returned by `useState`: it accepts a next value
-or updater function. A valid update schedules CRC's coalesced animation-frame
-render; stale setters safely do nothing after teardown.
 
 ## WritableSignal
 

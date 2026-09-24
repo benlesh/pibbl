@@ -35,14 +35,21 @@ Create a Canvas and a CRC scene:
 <!-- docs:complete-snippet:start readme-poster -->
 
 ```tsx
-import { Group, Rectangle, Text, crc, useState, type CRCNode } from "@crc/core";
+import {
+  Group,
+  Rectangle,
+  Text,
+  crc,
+  useSignal,
+  type CRCNode,
+} from "@crc/core";
 
 interface PosterProps {
   initialMessage: string;
 }
 
 function Poster({ initialMessage }: PosterProps): CRCNode {
-  const [message, setMessage] = useState(initialMessage);
+  const message = useSignal(initialMessage);
 
   return (
     <Group>
@@ -53,7 +60,7 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
           fill: "#1f4bd8",
           cursor: "pointer",
         }}
-        onClick={() => setMessage("CRC!")}
+        onClick={() => message.set("CRC!")}
       />
       <Text
         pointerEvents="none"
@@ -82,7 +89,7 @@ window.addEventListener("pagehide", () => controller.dispose(), { once: true });
 
 Uppercase imports such as `Rectangle`, `Text`, and `Group` are Canvas
 components, not HTML elements. `crc()` owns at most one live mount per Canvas.
-State and root updates coalesce onto `requestAnimationFrame`; each frame is a
+Signal and root updates coalesce onto `requestAnimationFrame`; each frame is a
 full synchronous Canvas traversal. `controller.dispose()` is idempotent.
 
 Prefer ordinary `.tsx` files with the project-wide configuration above. A
@@ -113,9 +120,10 @@ starts from installation and mounting and does not require the JSX guides.
 - [Learn the basics: Build a diagram editor](docs/site/learn/tutorials/diagram-editor/index.md)
 - [API overview](docs/site/api/index.md) and [complete type reference](docs/site/api/types/canvas-runtime.md)
 
-The [one-time migration guide](docs/migrations/jsx-authoring-pivot.md) maps the
-removed factory-first API to the current surface. There are no compatibility
-aliases.
+The [JSX migration guide](docs/migrations/jsx-authoring-pivot.md) maps the
+removed factory-first API, and the [Signals-centric migration
+guide](docs/migrations/signals-centric-hooks.md) maps the removed overlapping
+hooks. There are no compatibility aliases.
 
 ## Explore the examples
 
@@ -128,9 +136,9 @@ corepack pnpm@11.21.0 playground
 ```
 
 Open <http://localhost:5173/#/examples>. The CRC Interactive Examples Studio
-contains 66 focused lessons: 65 use JSX and one demonstrates the complete
+contains 72 focused lessons: 71 use JSX and one demonstrates the complete
 non-JSX API. Every lesson pairs a live Canvas with editable, type-aware source.
-The separate `#/testing` area contains 23 deterministic laboratories used by
+The separate `#/testing` area contains 26 deterministic laboratories used by
 browser verification. Old `#/scenarios` URLs redirect there.
 
 To exercise built package output instead of source aliases:
@@ -148,9 +156,11 @@ corepack pnpm@11.21.0 playground:built
 - Composition and layout: `Group`, `Clip`, `Layer`, `Absolute`, `Overlay`,
   `Flow`, `Flex`, `Grid`, and `measureElement`
 - Focus policies: `FocusManagement` and `KeyboardNavigation`
-- Hooks: `useState`, `useMemo`, `useRef`, `useWhenChanged`, `useCanvasContext`,
-  `useRectPath`, `useLinePath`, `useSvgPath`, `useEvent`, `useEventTarget`,
-  `useEventListener`, `useCursor`, and `useLayoutBox`
+- Signals and hooks: `signal`, `computed`, `batch`, `untracked`, `isSignal`,
+  `resolveSignalValue`, `useSignal`, `useComputed`, `useConst`, `useReaction`,
+  `useRef`, `useCanvasContext`, `useRectPath`, `useLinePath`, `useSvgPath`,
+  `useEvent`, `useEventTarget`, `useEventListener`, `useCursor`, and
+  `useLayoutBox`
 - Platform extension: `definePrimitive` plus style-resolution and pure
   measurement types
 - Optional WebGL2 islands from `@crc/webgl`: `WebGLLayer`, `Group3D`, `Mesh`,

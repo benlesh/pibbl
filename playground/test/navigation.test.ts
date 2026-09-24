@@ -38,8 +38,8 @@ const documentation = {
     page("component-absolute", "Absolute", "api", { apiCategory: "component" }),
     page("function-crc", "crc", "api", { apiCategory: "function" }),
     page("function-create-element", "createElement", "api", { apiCategory: "function" }),
-    page("hook-state", "useState", "api", { apiCategory: "hook" }),
-    page("hook-memo", "useMemo", "api", { apiCategory: "hook" }),
+    page("hook-signal", "useSignal", "api", { apiCategory: "hook" }),
+    page("hook-computed", "useComputed", "api", { apiCategory: "hook" }),
     page("types-canvas", "Canvas and runtime", "api", {
       apiCategory: "types",
       typeDomain: "canvas-runtime",
@@ -123,8 +123,8 @@ describe("Studio navigation", () => {
       "createElement",
     ]);
     expect(api.children?.[3]?.children?.map(({ label }) => label)).toEqual([
-      "useMemo",
-      "useState",
+      "useComputed",
+      "useSignal",
     ]);
     expect(api.children?.[4]?.children?.map(({ label }) => label)).toEqual([
       "Canvas and runtime",

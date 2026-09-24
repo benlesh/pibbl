@@ -179,7 +179,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-event-target.md",
   "docs/site/api/hooks/use-layout-box.md",
   "docs/site/api/hooks/use-line-path.md",
-  "docs/site/api/hooks/use-memo.md",
   "docs/site/api/hooks/use-orbit-camera.md",
   "docs/site/api/hooks/use-particle-system.md",
   "docs/site/api/hooks/use-playback.md",
@@ -187,10 +186,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-reaction.md",
   "docs/site/api/hooks/use-ref.md",
   "docs/site/api/hooks/use-signal.md",
-  "docs/site/api/hooks/use-state.md",
   "docs/site/api/hooks/use-svg-path.md",
   "docs/site/api/hooks/use-transition.md",
-  "docs/site/api/hooks/use-when-changed.md",
   "docs/site/api/hooks/crc-physics-body-3d.md",
   "docs/site/api/hooks/crc-physics-world-3d.md",
   "docs/site/api/types/canvas-runtime.md",
@@ -200,6 +197,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/layout.md",
   "docs/site/api/types/particles.md",
   "docs/site/api/types/physics-3d.md",
+  "docs/site/api/types/signal-inputs.md",
   "docs/site/api/types/styles.md",
   "docs/site/api/types/webgl.md",
   "docs/site/learn/index.md",
@@ -244,6 +242,7 @@ const currentMarkdownPaths = [
   "docs/documentation-follow-up.md",
   "docs/follow-ups.md",
   "docs/library-status.md",
+  "docs/migrations/signals-centric-hooks.md",
   "docs/project-plans/README.md",
   "docs/project-plans/WORKFLOW.md",
   "docs/scenario-index.md",
@@ -893,7 +892,7 @@ export function assertNonJsxCoverage(source) {
     ],
     ["focus management policy", /createElement\(\s*FocusManagement,/u],
     ["keyboard navigation policy", /createElement\(\s*KeyboardNavigation,/u],
-    ["hook lifecycle", /useState\(/u],
+    ["hook lifecycle", /useSignal\(/u],
     ["root mounting", /\bcrc\(canvas,/u],
     ["mount disposal", /controller\.dispose\(\)/u],
   ]);
@@ -941,12 +940,12 @@ function stateBindings(program) {
   walkSyntax(program, (node) => {
     if (
       node.type !== "VariableDeclarator" ||
-      node.id?.type !== "ArrayPattern" ||
-      callName(node.init) !== "useState"
+      node.id?.type !== "Identifier" ||
+      callName(node.init) !== "useSignal"
     ) {
       return;
     }
-    const valueName = identifierName(node.id.elements[0]);
+    const valueName = identifierName(node.id);
     if (valueName) bindings.set(valueName, node.init.arguments[0]);
   });
   return bindings;
@@ -1065,7 +1064,7 @@ function assertNonJsxEvidence(source) {
   walkSyntax(program, (node) => {
     if (node.type === "JSXElement" || node.type === "JSXFragment")
       hasJsx = true;
-    if (callName(node) === "useWhenChanged") hasLifecycle = true;
+    if (callName(node) === "useReaction") hasLifecycle = true;
     if (callName(node) === "crc") hasMount = true;
     if (
       node.type === "CallExpression" &&
@@ -1952,7 +1951,7 @@ const requiredGuideMarkers = new Map([
   [
     "docs/site/learn/guides/signals-and-animation.md",
     [
-      "## Read signals explicitly",
+      "## Pass signals to their receivers",
       "## Event-triggered playback",
       "## One frame transaction",
       "CRC never automatically promotes components",
@@ -1960,7 +1959,7 @@ const requiredGuideMarkers = new Map([
   ],
   [
     "docs/site/learn/guides/state-and-lifecycle.md",
-    ["immediate Canvas runtime", "useWhenChanged", "## Disposal"],
+    ["immediate Canvas runtime", "useReaction", "## Identity, failure, and disposal"],
   ],
   [
     "docs/site/learn/guides/author-without-jsx.md",
@@ -1995,7 +1994,7 @@ const contractPrecisionRequirements = new Map([
       "Validate computed dependencies and collect the exact dirty",
       "Repaint planned Layer children before ancestors",
       "Finalize successful transactions, release ended runs/leases",
-      "including numeric style values",
+      "accept them\ndirectly at declared inputs",
       "CRC never automatically promotes\na stable component",
       "The official `@crc/webgl` integration is a lockstep friend",
       "CRC exposes no public scheduler clock, frame-step API,\ntrace history",
@@ -2014,7 +2013,7 @@ const contractPrecisionRequirements = new Map([
   [
     "docs/design/signals-and-scheduling-contract.md",
     [
-      "Every dependency read\nis explicit",
+      "declared reactive input positions",
       "`set(value)` always treats `value` as data, including when `T` is a function",
       "When an observed computed first becomes pending, its Plan work requests and\ncoalesces the realm host frame",
       "Signal writes are forbidden during component traversal",
@@ -3061,21 +3060,21 @@ export async function verifyMutationProbes() {
       ),
     "Images, inline links, reference links, definitions, and code must remain valid",
   );
-  const crcMemoApiPath = "docs/site/api/hooks/use-memo.md";
-  const brokenCrcMemoSources = new Map(currentSources);
-  const crcMemoSource = currentSources.get(crcMemoApiPath);
-  const brokenCrcMemoSource = crcMemoSource.replace(
-    'return <Path style={{ d: path, fill: "#38bdf8" }} />;',
+  const crcPathApiPath = "docs/site/api/hooks/use-rect-path.md";
+  const brokenCrcPathSources = new Map(currentSources);
+  const crcPathSource = currentSources.get(crcPathApiPath);
+  const brokenCrcPathSource = crcPathSource.replace(
+    'return <Path style={{ d: path, fill: "#2563eb" }} />;',
     "return path;",
   );
   assert.notEqual(
-    brokenCrcMemoSource,
-    crcMemoSource,
-    "useMemo component-return mutation fixture did not change",
+    brokenCrcPathSource,
+    crcPathSource,
+    "useRectPath component-return mutation fixture did not change",
   );
-  brokenCrcMemoSources.set(crcMemoApiPath, brokenCrcMemoSource);
+  brokenCrcPathSources.set(crcPathApiPath, brokenCrcPathSource);
   await rejects(
-    () => typecheckCompleteSnippets(extractApiSnippets(brokenCrcMemoSources)),
+    () => typecheckCompleteSnippets(extractApiSnippets(brokenCrcPathSources)),
     /failed typecheck/u,
   );
   const staleTrustGateUnitCount = trustGate.replace(
@@ -3879,11 +3878,11 @@ export async function verifyMutationProbes() {
   const hooksContract = contractPreservationBaseline.contracts.find(
     ({ path }) => path === "docs/design/runtime-hooks-contract.md",
   );
-  const memoRow = hooksContract.currentUnits.find(
+  const refRow = hooksContract.currentUnits.find(
     ({ kind, text }) =>
-      kind === "table" && text.includes("useMemo(create, deps)"),
+      kind === "table" && text.includes("useRef(init?)"),
   );
-  assert.ok(memoRow, "Hook-specific table mutation unit is missing");
+  assert.ok(refRow, "Hook-specific table mutation unit is missing");
   {
     const mutatedSources = new Map(currentSources);
     mutatedSources.set(
@@ -3891,7 +3890,7 @@ export async function verifyMutationProbes() {
       replaceContractUnit(
         currentSources.get(hooksContract.path),
         "c",
-        memoRow.id,
+        refRow.id,
         "",
       ),
     );
@@ -4070,7 +4069,7 @@ export async function verifyMutationProbes() {
         "createElement(\n      Group,",
       ),
     ],
-    ["lifecycle", nonJsx.replace("useState(", "missingState(")],
+    ["lifecycle", nonJsx.replace("useSignal(", "missingSignal(")],
     [
       "mount",
       nonJsx.replace("return crc(canvas,", "return missingMount(canvas,"),

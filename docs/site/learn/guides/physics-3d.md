@@ -44,6 +44,13 @@ service. One awake world joins the existing scheduler after animation and before
 the shared Commit/Render. Do not create another `requestAnimationFrame`, and do
 not look for a manual `world.step()` API.
 
+World and shape component inputs use CRC's shared declared signal-input
+contract. Pass a signal directly for reactive replacement of an opted-in
+gravity, body, collider, or presentation input; the receiving component owns
+the dependency. A physics handle prop that explicitly asks for a signal object
+retains that object instead. CRC does not inspect nested user metadata or shape
+payloads for signals.
+
 ## Bodies, colliders, and inference
 
 Body descriptors establish motion authority. Dynamic bodies are solver-owned

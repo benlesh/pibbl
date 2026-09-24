@@ -19,36 +19,36 @@ import {
 const input = {
   pages: [
     {
-      route: "#/api/hooks/use-when-changed",
+      route: "#/api/hooks/use-reaction",
       plainText:
-        "useWhenChanged\nRuns deterministic cleanup after dependency changes.",
-      headings: [{ id: "crcwhenchanged", level: 1, text: "useWhenChanged" }],
+        "useReaction\nRuns deterministic cleanup after signal changes.",
+      headings: [{ id: "usereaction", level: 1, text: "useReaction" }],
       sections: [
         {
-          heading: { id: "crcwhenchanged", level: 1, text: "useWhenChanged" },
-          plainText: "Runs deterministic cleanup after dependency changes.",
+          heading: { id: "usereaction", level: 1, text: "useReaction" },
+          plainText: "Runs deterministic cleanup after signal changes.",
         },
       ],
       frontmatter: {
-        id: "api-hook-use-when-changed",
-        title: "useWhenChanged",
-        summary: "Runs deterministic cleanup after dependency changes.",
+        id: "api-hook-use-reaction",
+        title: "useReaction",
+        summary: "Runs deterministic cleanup after signal changes.",
         kind: "api",
-        slug: "use-when-changed",
+        slug: "use-reaction",
         apiCategory: "hook",
-        symbols: ["useWhenChanged"],
+        symbols: ["useReaction"],
       },
     },
     {
       route: "#/learn/guides/lifecycle",
       plainText:
-        "Lifecycle\ncrcWhenChanged useWhenChanged useWhenChanged repeats in prose.",
+        "Lifecycle\nreaction useReaction useReaction repeats in prose.",
       headings: [{ id: "lifecycle", level: 1, text: "Lifecycle" }],
       sections: [
         {
           heading: { id: "lifecycle", level: 1, text: "Lifecycle" },
           plainText:
-            "useWhenChanged useWhenChanged useWhenChanged repeats in prose.",
+            "useReaction useReaction useReaction repeats in prose.",
         },
       ],
       frontmatter: {
@@ -127,11 +127,10 @@ const input = {
 const first = buildSearchBundle(input);
 const second = buildSearchBundle(input);
 
-assert.deepEqual(tokenizeSearchText("useWhenChanged"), [
-  "usewhenchanged",
+assert.deepEqual(tokenizeSearchText("useReaction"), [
+  "usereaction",
   "use",
-  "when",
-  "changed",
+  "reaction",
 ]);
 assert.equal(JSON.stringify(first), JSON.stringify(second));
 assert.equal(
@@ -153,16 +152,16 @@ assert.equal(
   false,
 );
 assert.equal(
-  searchSearchBundle(first, "useWhenChanged")[0]?.url,
-  "#/api/hooks/use-when-changed",
+  searchSearchBundle(first, "useReaction")[0]?.url,
+  "#/api/hooks/use-reaction",
 );
 assert.equal(
   searchSearchBundle(first, "filter", { kinds: ["example"] })[0]?.url,
   "#/examples/drawing/filters",
 );
 assert.equal(
-  searchSearchBundle(first, "crcWhenChangd")[0]?.url,
-  "#/api/hooks/use-when-changed",
+  searchSearchBundle(first, "useReacton")[0]?.url,
+  "#/api/hooks/use-reaction",
 );
 assert.equal(
   searchSearchBundle(first, "CRCFilter")[0]?.url,
@@ -188,9 +187,9 @@ const restoredBrowserIndex = MiniSearch.loadJSON(
   searchIndexOptions(),
 );
 for (const [query, options] of [
-  ["useWhenChanged", undefined],
-  ["crcWhen", undefined],
-  ["crcWhenChangd", undefined],
+  ["useReaction", undefined],
+  ["reaction", undefined],
+  ["useReacton", undefined],
   ["filter", { kinds: ["example"] }],
 ] as const) {
   assert.deepEqual(

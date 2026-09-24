@@ -134,6 +134,13 @@ or finite synchronous iterables. Booleans and nullish values add nothing. It
 rejects CRC elements, Promises, async iterables, functions, symbols, foreign
 elements, and unsupported objects. Text content is not a style member.
 
+`CRCTextInput` additionally accepts signals at positions in that declared
+recursive grammar. Each directly encountered signal is read by the receiving
+`Text` component and may replace one complete `CRCTextChild` structure. CRC
+does not perform another signal-unwrapping pass inside the structure returned
+by that signal. Structural `CRCNodeInput` follows the same rule for roots,
+containers, arrays, and finite iterables.
+
 ```tsx
 <Text style={{ x: 40, y: 80, fill: "black" }}>
   Hello {name} — {0} unread
