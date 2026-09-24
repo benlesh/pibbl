@@ -6,6 +6,7 @@ import type {
   MeasureInput,
   MeasureResult,
   NormalizedStyle,
+  PreservedSignalPropKey,
   PrimitiveProgramProps,
   ResolvedStyle,
   SpecifiedStyle,
@@ -58,6 +59,8 @@ export interface CRCBackendPrimitiveDefinition<
   E = any,
 > {
   readonly backend: CRCBackendToken;
+  readonly preserveSignalProps?: readonly PreservedSignalPropKey<P>[];
+  readonly childInput?: 'structural' | 'text';
   readonly program: CRCBackendPrimitiveProgram<P, R, E>;
   /** @internal Legacy metadata name retained for focused primitive tests. */
   readonly render: CRCBackendPrimitiveProgram<P, R, E>;

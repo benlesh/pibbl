@@ -120,10 +120,12 @@ export {
   signal,
   untracked,
 } from './lib/signals/graph.js';
+export { resolveSignalValue } from './lib/signals/resolve-signal-value.js';
 export type {
   Signal,
   SignalEquals,
   SignalOptions,
+  SignalValue,
   WritableSignal,
 } from './lib/signals/types.js';
 export { easing } from './lib/animation/easing.js';

@@ -369,7 +369,10 @@ describe('resolved built-in styles', () => {
       }),
     });
 
-    expect(createElement(Resolved, { style: { radius: '50%' } }).props.style.radius).toBe('50%');
+    expect((
+      createElement(Resolved, { style: { radius: '50%' } }).props.style as
+        { radius: string }
+    ).radius).toBe('50%');
   });
 
   it('preserves explicit opaque built-in style-language strings', async () => {

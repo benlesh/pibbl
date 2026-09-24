@@ -70,7 +70,11 @@ export function resolveElementStyle<
   S extends SystemStyle,
   N extends SystemStyle,
   R extends SystemStyle,
->(element: CRCElement<any>): ResolvedStyle<R> {
+>(
+  element: CRCElement<any>,
+  resolvedSpecifiedStyle?: Readonly<SystemStyle>,
+  hasResolvedSpecifiedStyle = false,
+): ResolvedStyle<R> {
   const allocation = getLayoutBox();
   const percentageBasis = getPercentageBasis();
   const type = element.type;
@@ -95,7 +99,8 @@ export function resolveElementStyle<
     algorithm: 'render-dispatch',
   };
   const preNormalized = takePreNormalizedStyle(element);
-  const specified = (getSpecifiedStyle(element) ?? EMPTY_STYLE) as
+  const specified = ((hasResolvedSpecifiedStyle ?
+    resolvedSpecifiedStyle : getSpecifiedStyle(element)) ?? EMPTY_STYLE) as
     SpecifiedStyle<S>;
   const systemFilter = resolveFilterList(
     extractSystemFilter(preNormalized?.style ?? specified),

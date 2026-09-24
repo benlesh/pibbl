@@ -50,6 +50,7 @@ symbols:
     Signal,
     SignalEquals,
     SignalOptions,
+    SignalValue,
     StateUpdater,
     WritableSignal,
   ]
@@ -271,6 +272,11 @@ duration, equality, optional initial value, easing, and interpolation.
 ## SignalOptions
 
 `SignalOptions<T>` accepts an optional equality function and debug name.
+
+## SignalValue
+
+`SignalValue<T>` is `T | Signal<T>`. APIs opt in at explicit positions and use
+`resolveSignalValue()` when the receiving component should own the read.
 
 ## StateUpdater
 

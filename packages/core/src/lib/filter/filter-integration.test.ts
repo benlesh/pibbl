@@ -12,6 +12,7 @@ import {
   type CRCController,
   type CRCNode,
   type CRCPlayback,
+  type RectStyle,
   type RenderingContext2D,
   type SystemStyle,
 } from '@crc/core';
@@ -1980,7 +1981,7 @@ function expectFailureBaseline(
 }
 
 function filteredRectangle(
-  filter: NonNullable<Parameters<typeof Rectangle>[0]['style']>['filter'],
+  filter: RectStyle['filter'],
 ): CRCNode {
   return createElement(Rectangle, {
     style: {

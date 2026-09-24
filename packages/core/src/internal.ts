@@ -21,6 +21,10 @@ export type {
   CRCBackendToken,
   CRCNestedResolverInput,
 } from './lib/backend/types.js';
+export type {
+  SignalProgramProps,
+  SignalStyle,
+} from './lib/types.js';
 export {
   crcInternalRunPurePrimitiveResolver,
   defineBackendPrimitive,

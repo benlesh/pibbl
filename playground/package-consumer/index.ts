@@ -113,6 +113,7 @@ import type {
   Signal,
   SignalEquals,
   SignalOptions,
+  SignalValue,
   StateUpdater,
   SvgPathStyle,
   SvgPathOptions,
@@ -300,6 +301,7 @@ import {
   marker,
   parallel,
   repeat,
+  resolveSignalValue,
   sequence,
   useCanvasContext,
   batch,
@@ -1549,12 +1551,49 @@ const batchedResult: number = batch(() => 42);
 const callbackSignal = signal<() => string>(() => 'ready');
 const callbackValue: () => string = callbackSignal.get();
 callbackSignal.set(() => 'updated');
+const reactiveRectangleX = signal(10);
+const reactiveRectangleFill = signal('red');
+const reactiveRectangleHandler = signal<CRCEventHandler<'click'>>(() => {});
+const reactiveRectangleStyle = signal<RectStyle>({
+  x: 10,
+  fill: 'red',
+  width: 20,
+  height: 20,
+});
+const signalValuedRectangle = createElement(Rectangle, {
+  onClick: reactiveRectangleHandler,
+  style: {
+    x: reactiveRectangleX,
+    fill: reactiveRectangleFill,
+    width: 20,
+    height: 20,
+  },
+});
+const wholeSignalValuedRectangle = createElement(Rectangle, {
+  style: reactiveRectangleStyle,
+});
+function SignalValueConsumer(props: { value: SignalValue<number> }): CRCNode {
+  return createElement(Text, null, resolveSignalValue(props.value));
+}
+const customSignalValueConsumer = createElement(SignalValueConsumer, {
+  value: reactiveRectangleX,
+});
+const ExactSignalConsumer = definePrimitive<{
+  valueSignal: Signal<number>;
+}>(() => undefined, { preserveSignalProps: ['valueSignal'] });
+const exactSignalConsumer = createElement(ExactSignalConsumer, {
+  valueSignal: reactiveRectangleX,
+});
 const unknownSignal: unknown = readonlyCount;
 if (isSignal(unknownSignal)) {
   const narrowedSignal: Signal<unknown> = unknownSignal;
   void narrowedSignal.get();
 }
 void batchedResult;
+void signalValuedRectangle;
+void wholeSignalValuedRectangle;
+void customSignalValueConsumer;
+void exactSignalConsumer;
 
 const animationOutput = signal(0);
 const objectAnimationOutput = signal({ x: 0 });

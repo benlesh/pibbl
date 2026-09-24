@@ -158,6 +158,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/particle-descriptors.md",
   "docs/site/api/functions/physics-3d.md",
   "docs/site/api/functions/repeat.md",
+  "docs/site/api/functions/resolve-signal-value.md",
   "docs/site/api/functions/resolve-box.md",
   "docs/site/api/functions/resolve-length.md",
   "docs/site/api/functions/sequence.md",

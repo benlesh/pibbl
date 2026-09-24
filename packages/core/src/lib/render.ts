@@ -17,10 +17,10 @@ import {
 import {
   getPlacementIdentityHint,
   getPrimitiveDefinition,
-  getPrimitiveProgramProps,
   getPrimitiveReceiverToken,
   getElementSource,
 } from './element/metadata.js';
+import { resolvePrimitiveInputs } from './element/resolve-primitive-inputs.js';
 import { materializeContainerChildren } from './element/children.js';
 import { isFragmentElement } from './element/fragment.js';
 import type { CRCElement, CRCNode } from './element/types.js';
@@ -207,20 +207,26 @@ function renderComponentElement<P>(
             }
             const receiverToken =
               getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
+            const inputs = resolvePrimitiveInputs(
+              componentRefs.element,
+              definition,
+            );
             const style = (() => {
               const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
               GLOBAL_STATE.primitiveReceiverToken = receiverToken;
               try {
-                return resolveElementStyle(componentRefs.element);
+                return resolveElementStyle(
+                  componentRefs.element,
+                  inputs.style,
+                  true,
+                );
               } finally {
                 GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
               }
             })();
             const componentName = componentRefs.element.type.name || 'Anonymous';
             const source = getElementSource(componentRefs.element);
-            const props = getPrimitiveProgramProps(componentRefs.element) as Readonly<
-              Record<PropertyKey, unknown>
-            >;
+            const props = inputs.props;
             const tracksPresentationLineage = hasElementEnhancers(componentRefs);
             const tracksCanvasWorldTransform =
               GLOBAL_STATE.worldBaseTransform !== undefined &&

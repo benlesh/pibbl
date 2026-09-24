@@ -41,6 +41,7 @@ import {
   parallel,
   Path,
   Rectangle,
+  resolveSignalValue,
   repeat,
   sequence,
   signal,
@@ -63,6 +64,7 @@ import {
   type CRCAnimationSampleInput,
   type CRCComponent,
   type CRCController,
+  type CRCEventHandler,
   type CRCElement,
   type CRCEasing,
   type CRCInterpolator,
@@ -81,6 +83,7 @@ import {
   type Signal,
   type SignalEquals,
   type SignalOptions,
+  type SignalValue,
   type WritableSignal,
 } from '@crc/core';
 
@@ -213,6 +216,69 @@ const untrackedCount: number = untracked(() => doubledCount.get());
 const callbackSignal = signal<() => string>(() => 'ready');
 const callbackValue: () => string = callbackSignal.get();
 callbackSignal.set(() => 'updated');
+
+const reactiveX = signal(10);
+const reactiveFill = signal('red');
+const reactiveHandler = signal<CRCEventHandler<'click'>>(() => {});
+const reactiveStyle = signal<RectStyle>({
+  x: 10,
+  fill: 'red',
+  width: 20,
+  height: 20,
+});
+const signalValuedPrimitiveInputs = (
+  <>
+    <Rectangle
+      style={{
+        x: reactiveX,
+        fill: reactiveFill,
+        width: 20,
+        height: 20,
+      }}
+      onClick={reactiveHandler}
+    />
+    <Rectangle style={reactiveStyle} />
+  </>
+);
+
+function Gauge(props: { value: SignalValue<number> }) {
+  return <Text>{resolveSignalValue(props.value)}</Text>;
+}
+
+const gauge = <Gauge value={reactiveX} />;
+const ExactSignal = definePrimitive<{ valueSignal: Signal<number> }>(
+  function renderExactSignal() {},
+  { preserveSignalProps: ['valueSignal'] },
+);
+// @ts-expect-error exact signal-object props require preservation metadata
+definePrimitive<{ valueSignal: Signal<number> }>(
+  function renderUnpreservedExactSignal() {},
+);
+definePrimitive<{ value: number }>(
+  function renderInvalidPreservedValue() {},
+  {
+    // @ts-expect-error only exact signal-object props may be preserved
+    preserveSignalProps: ['value'],
+  },
+);
+const exactSignal = <ExactSignal valueSignal={reactiveX} />;
+// @ts-expect-error exact signal-object positions do not unwrap outer signals
+const nestedExactSignal = <ExactSignal valueSignal={signal(reactiveX)} />;
+const nestedPaddingSignal = (
+  <Rectangle
+    style={{
+      width: 20,
+      height: 20,
+      // @ts-expect-error nested descriptor fields are not recursively signal-valued
+      padding: { left: reactiveX },
+    }}
+  />
+);
+void signalValuedPrimitiveInputs;
+void gauge;
+void exactSignal;
+void nestedExactSignal;
+void nestedPaddingSignal;
 
 const numericOutput = signal(0);
 const objectOutput = signal({ x: 0 });

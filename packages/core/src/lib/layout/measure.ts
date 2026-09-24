@@ -8,11 +8,10 @@ import {
 import {
   createPrimitiveReceiverToken,
   getPrimitiveDefinition,
-  getPrimitiveProgramProps,
   getPrimitiveReceiverToken,
   getPolicyPreparationSource,
-  getSpecifiedStyle,
 } from '../element/metadata.js';
+import { resolvePrimitiveInputs } from '../element/resolve-primitive-inputs.js';
 import { recordLayoutMeasurement } from './diagnostics.js';
 import type {
   CanvasMeasurementService,
@@ -21,6 +20,7 @@ import type {
 import type { CRCElement } from '../element/types.js';
 import { prepareElementPolicies } from '../element/children.js';
 import type { Constraints } from './types.js';
+import { untracked } from '../signals/graph.js';
 
 export type {
   CanvasMeasurementService,
@@ -82,8 +82,9 @@ function measureElementInternal(
   context.active.add(source);
   context.stack.push(element);
   try {
+    const inputs = untracked(() => resolvePrimitiveInputs(element, definition));
     const specifiedStyle = withoutSystemFilter(
-      preNormalized?.style ?? getSpecifiedStyle(element) ?? EMPTY_STYLE,
+      preNormalized?.style ?? inputs.style ?? EMPTY_STYLE,
     );
     const normalized = preNormalized ?
         specifiedStyle :
@@ -96,7 +97,7 @@ function measureElementInternal(
     let result: MeasureResult;
     try {
       result = definition.measure({
-        props: getPrimitiveProgramProps(element),
+        props: inputs.props,
         style: normalized,
         constraints,
         service,
