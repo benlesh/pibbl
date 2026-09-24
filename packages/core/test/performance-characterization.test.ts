@@ -1,6 +1,7 @@
-import { crc, Rectangle } from '@crc/core';
+import { crc, Rectangle, signal } from '@crc/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clearSharedState, getCRCInstance } from '../src/lib/global-state';
+import { signalGraphSnapshot } from '../src/lib/signals/graph';
 import { createElement } from '@crc/core';
 
 interface PerformanceObservation {
@@ -151,6 +152,65 @@ describe('dispatch performance characterization', () => {
         measuredBatches: MEASURED_BATCHES,
         observations,
       }));
+    }
+  });
+
+  it('batches one handler dispatch without changing exact hit testing', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 8;
+    canvas.height = 8;
+    canvas.style.cssText = 'display:block; width:8px; height:8px';
+    document.body.replaceChildren(canvas);
+    const first = signal(0);
+    const second = signal(0);
+    let traversals = 0;
+    const Root = (_props: {}) => {
+      traversals++;
+      first.get();
+      second.get();
+      return createElement(Rectangle, {
+        style: { width: 8, height: 8, fill: '#2563eb' },
+        onMouseMove: () => {
+          first.set(1);
+          second.set(2);
+        },
+      });
+    };
+    const abortController = new AbortController();
+    crc(canvas, createElement(Root, {}), { signal: abortController.signal });
+    await nextFrame();
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Performance Canvas has no 2D context.');
+    const originalIsPointInPath = context.isPointInPath.bind(context);
+    let hitTests = 0;
+    context.isPointInPath = ((
+      ...args: Parameters<CanvasRenderingContext2D['isPointInPath']>
+    ) => {
+      hitTests++;
+      return originalIsPointInPath(...args);
+    }) as CanvasRenderingContext2D['isPointInPath'];
+    const before = signalGraphSnapshot();
+    try {
+      const bounds = canvas.getBoundingClientRect();
+      canvas.dispatchEvent(
+        new MouseEvent('mousemove', {
+          bubbles: true,
+          clientX: bounds.left + 1,
+          clientY: bounds.top + 1,
+        }),
+      );
+      expect(hitTests).toBe(1);
+      expect([first.get(), second.get()]).toEqual([1, 2]);
+      expect(
+        signalGraphSnapshot().batchedObserverInvalidations -
+          before.batchedObserverInvalidations,
+      ).toBe(1);
+      expect(traversals).toBe(1);
+      await nextFrame();
+      expect(traversals).toBe(2);
+    } finally {
+      context.isPointInPath = originalIsPointInPath;
+      abortController.abort();
     }
   });
 });

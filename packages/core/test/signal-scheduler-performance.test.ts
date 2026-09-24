@@ -1,4 +1,5 @@
 import {
+  Absolute,
   Layer,
   Rectangle,
   Text,
@@ -6,10 +7,13 @@ import {
   computed,
   crc,
   createElement,
+  resolveSignalValue,
   signal,
+  useReaction,
   useSignal,
   type CRCController,
   type CRCNode,
+  type SignalValue,
 } from '@crc/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearSharedState } from '../src/lib/global-state';
@@ -24,6 +28,7 @@ import * as signalGraph from '../src/lib/signals/graph';
 import type { CRCAdvanceParticipant } from '../src/lib/scheduler/types';
 
 interface SignalGraphPerformanceSnapshot {
+  readonly rendererConsumers: number;
   readonly rendererEdges: number;
   readonly createdRendererEdges: number;
   readonly signalCommitNotifications: number;
@@ -269,16 +274,16 @@ describe('signal and scheduler structural performance', () => {
     controller.dispose();
   });
 
-  it('records matched state, explicit signal read, and plain-input baselines', () => {
+  it('records matched local-signal, explicit-read, and plain-input workloads', () => {
     const observations = [
-      observeStateSlotWorkload('state', 1_000),
+      observeStateSlotWorkload('local-signal', 1_000),
       observeStateSlotWorkload('signal-get', 1_000),
       observePrimitiveInputWorkload('plain', 1_000),
       observePrimitiveInputWorkload('explicit-get', 1_000),
     ];
 
     expect(observations.map(observation => observation.workload)).toEqual([
-      'state-1000-slots',
+      'local-signal-1000-slots',
       'signal-get-1000-slots',
       'plain-inputs-1000-rectangles',
       'explicit-get-inputs-1000-rectangles',
@@ -294,7 +299,155 @@ describe('signal and scheduler structural performance', () => {
     expect(
       observations.map(observation => observation.traversalsPerUpdate),
     ).toEqual([1_001, 1_001, 2, 2]);
-    reportObservation('Signals-centric pre-change baselines', observations);
+    reportObservation('Signals-centric matched workloads', observations);
+  });
+
+  it('records direct field, whole-style, text, and custom data receiver workloads', () => {
+    const observations = [
+      observeReceiverInputWorkload('signal-field', 1_000),
+      observeReceiverInputWorkload('whole-style', 1_000),
+      observeReceiverInputWorkload('text-data', 1_000),
+    ];
+
+    expect(observations.map(observation => observation.workload)).toEqual([
+      'signal-field-inputs-1000-rectangles',
+      'whole-style-inputs-1000-rectangles',
+      'text-data-inputs-1000-rectangles',
+    ]);
+    expect(
+      observations.every(
+        observation =>
+          Number.isFinite(observation.medianMs) &&
+          Number.isFinite(observation.p95Ms) &&
+          observation.medianMs <= observation.p95Ms,
+      ),
+    ).toBe(true);
+    expect(
+      observations.map(observation => observation.traversalsPerUpdate),
+    ).toEqual([2, 2, 2]);
+    reportObservation('Signals-centric receiver inputs', observations);
+  });
+
+  it('keeps plain inputs allocation-free and layout provisions transaction-local', () => {
+    const left = signal(0);
+    const getImageData = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'getImageData',
+    );
+    const transferToImageBitmap = vi.spyOn(
+      OffscreenCanvas.prototype,
+      'transferToImageBitmap',
+    );
+    const baseline = snapshotSignalGraph();
+    const plain = track(crc(
+      createCanvas(400, 4),
+      Array.from({ length: 100 }, (_, index) =>
+        createElement(Rectangle, {
+          key: `plain-${index}`,
+          style: { x: index * 4, width: 4, height: 4 },
+        }),
+      ),
+    ));
+    driver.flush(1);
+    const plainMounted = snapshotSignalGraph();
+
+    expect(plainMounted.rendererEdges).toBe(baseline.rendererEdges);
+    expect(plainMounted.rendererConsumers).toBe(baseline.rendererConsumers);
+    expect(plainMounted.lazyRendererConsumers).toBe(
+      baseline.lazyRendererConsumers,
+    );
+    expect(plainMounted.shallowInputCopies).toBe(
+      baseline.shallowInputCopies,
+    );
+    expect(plainMounted.receiverInputProvisions).toBe(
+      baseline.receiverInputProvisions,
+    );
+    plain.dispose();
+
+    const beforeLayout = snapshotSignalGraph();
+    const layout = track(crc(
+      createCanvas(400, 4),
+      createElement(Absolute, {
+        style: { width: 400, height: 4 },
+        children: Array.from({ length: 100 }, (_, index) =>
+          createElement(Rectangle, {
+            key: `placed-${index}`,
+            style: { left, top: 0, width: 4, height: 4, x: index * 4 },
+          }),
+        ),
+      }),
+    ));
+    driver.flush(2);
+    const mountedLayout = snapshotSignalGraph();
+
+    expect(mountedLayout.receiverInputProvisions).toBe(
+      beforeLayout.receiverInputProvisions,
+    );
+    expect(
+      mountedLayout.adoptedReceiverInputProvisions -
+        beforeLayout.adoptedReceiverInputProvisions,
+    ).toBe(100);
+    expect(mountedLayout.rendererEdges - beforeLayout.rendererEdges).toBe(100);
+
+    const requestsBefore = driver.requestCount;
+    left.set(1);
+    expect(driver.requestCount - requestsBefore).toBe(1);
+    driver.flush(3);
+    const updatedLayout = snapshotSignalGraph();
+    expect(updatedLayout.receiverInputProvisions).toBe(
+      beforeLayout.receiverInputProvisions,
+    );
+    expect(
+      updatedLayout.reusedRendererEdges - mountedLayout.reusedRendererEdges,
+    ).toBe(100);
+    expect(getImageData).not.toHaveBeenCalled();
+    expect(transferToImageBitmap).not.toHaveBeenCalled();
+    layout.dispose();
+    expect(snapshotSignalGraph().rendererEdges).toBe(
+      beforeLayout.rendererEdges,
+    );
+  });
+
+  it('runs reaction-only work without traversal or raster-cache operations', () => {
+    const pulse = signal(0);
+    let traversals = 0;
+    let reactions = 0;
+    let cleanups = 0;
+    const getImageData = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'getImageData',
+    );
+    const transferToImageBitmap = vi.spyOn(
+      OffscreenCanvas.prototype,
+      'transferToImageBitmap',
+    );
+    const Root = (_props: {}) => {
+      traversals++;
+      useReaction(() => {
+        pulse.get();
+        reactions++;
+        return () => {
+          cleanups++;
+        };
+      });
+      return createElement(Rectangle, {
+        style: { width: 4, height: 4 },
+      });
+    };
+    const controller = track(crc(createCanvas(), createElement(Root, {})));
+    driver.flush(1);
+    expect({ reactions, cleanups }).toEqual({ reactions: 1, cleanups: 0 });
+    traversals = 0;
+
+    pulse.set(1);
+    driver.flush(2);
+
+    expect(traversals).toBe(0);
+    expect({ reactions, cleanups }).toEqual({ reactions: 2, cleanups: 1 });
+    expect(getImageData).not.toHaveBeenCalled();
+    expect(transferToImageBitmap).not.toHaveBeenCalled();
+    controller.dispose();
+    expect(cleanups).toBe(2);
   });
 
   it.each([1, 10, 100, 1_000])(
@@ -335,14 +488,14 @@ describe('signal and scheduler structural performance', () => {
 });
 
 function observeStateSlotWorkload(
-  kind: 'state' | 'signal-get',
+  kind: 'local-signal' | 'signal-get',
   count: number,
 ): AuthoringBaselineObservation {
   let traversals = 0;
   let updateValue: (value: number) => void = () => {};
   const Cell = ({ index }: { index: number }) => {
     traversals++;
-    if (kind === 'state') {
+    if (kind === 'local-signal') {
       const value = useSignal(0);
       if (index === 0) updateValue = next => value.set(next);
       void value.get();
@@ -397,6 +550,73 @@ function observePrimitiveInputWorkload(
       ),
       createElement(Text, { key: 'label', children: text }),
       createElement(DataSink, { key: 'data', data: rows }),
+    ];
+  };
+  const controller = track(crc(createCanvas(), createElement(Root, {})));
+  driver.flush(1);
+  const samples = sampleManualUpdates(updateValue, () => {
+    traversals = 0;
+  });
+  const traversalsPerUpdate = traversals / samples.length;
+  controller.dispose();
+  return summarize(
+    `${kind}-inputs-${count}-rectangles`,
+    samples,
+    traversalsPerUpdate,
+  );
+}
+
+function observeReceiverInputWorkload(
+  kind: 'signal-field' | 'whole-style' | 'text-data',
+  count: number,
+): AuthoringBaselineObservation {
+  const position = signal(0);
+  const wholeStyle = signal({ x: 0, y: 0, width: 1, height: 1 });
+  const label = signal('Current');
+  const data = signal<readonly number[]>([1, 2, 3]);
+  const domain = signal<readonly [number, number]>([0, 3]);
+  let traversals = 0;
+  let updateValue: (value: number) => void = () => {};
+  const DataSink = (props: {
+    data: SignalValue<readonly number[]>;
+    domain: SignalValue<readonly [number, number]>;
+  }) => {
+    traversals++;
+    resolveSignalValue(props.data);
+    resolveSignalValue(props.domain);
+  };
+  const Root = (_props: {}) => {
+    traversals++;
+    if (kind === 'signal-field') updateValue = next => position.set(next);
+    if (kind === 'whole-style') {
+      updateValue = next => wholeStyle.set({ x: next, y: 0, width: 1, height: 1 });
+    }
+    if (kind === 'text-data') {
+      updateValue = next => batch(() => {
+        position.set(next);
+        label.set(`Current ${next}`);
+        data.set([next, next + 1, next + 2]);
+        domain.set([next, next + 3]);
+      });
+    }
+    return [
+      ...Array.from({ length: count }, (_, index) =>
+        createElement(Rectangle, {
+          key: `receiver-${index}`,
+          style: kind === 'whole-style'
+            ? wholeStyle
+            : { x: position, y: index, width: 1, height: 1 },
+        }),
+      ),
+      createElement(Text, {
+        key: 'label',
+        children: kind === 'text-data' ? label : 'Current',
+      }),
+      createElement(DataSink, {
+        key: 'data',
+        data: kind === 'text-data' ? data : [1, 2, 3],
+        domain: kind === 'text-data' ? domain : [0, 3],
+      }),
     ];
   };
   const controller = track(crc(createCanvas(), createElement(Root, {})));

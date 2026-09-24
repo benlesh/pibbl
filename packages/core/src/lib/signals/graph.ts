@@ -124,7 +124,7 @@ export interface SignalWriterLeasePolicy {
   ): void;
 }
 
-const trackingStack: Array<SignalDependencyCollector | undefined> = [];
+let activeSignalDependencyCollector: SignalDependencyCollector | undefined;
 const writePolicyStack: SignalWritePolicy[] = [];
 const computedStack: ComputedSignalNode<unknown>[] = [];
 const legacyObserverCollections = new WeakMap<
@@ -385,7 +385,7 @@ export function recordReceiverInputProvisionRolledBack(): void {
 
 /** @internal Adds one already-read source to the active dependency collector. */
 export function trackSignalDependency(node: SignalNode<unknown>): void {
-  trackingStack.at(-1)?.addDependency(node);
+  activeSignalDependencyCollector?.addDependency(node);
 }
 
 /** @internal Records one observer invalidation deduplicated by a public batch. */
@@ -605,11 +605,14 @@ export function signal<T>(
 
   let readonlySignal: Signal<T> | undefined;
   const read = (): T => {
-    trackingStack.at(-1)?.addDependency(node as SignalNode<unknown>);
+    activeSignalDependencyCollector?.addDependency(node as SignalNode<unknown>);
     return node.value;
   };
   const assertWriteAllowed = (): void => {
-    writePolicyStack.at(-1)?.(node as SignalNode<unknown>, 'direct');
+    writePolicyStack[writePolicyStack.length - 1]?.(
+      node as SignalNode<unknown>,
+      'direct',
+    );
     signalWriterLeasePolicy?.assertDirectWriteAllowed(node as SignalNode<unknown>);
   };
   const commit = (nextValue: T): void => {
@@ -1025,7 +1028,9 @@ export function computed<T>(
 
   const readonly: Signal<T> = {
     get(): T {
-      trackingStack.at(-1)?.addDependency(node as SignalNode<unknown>);
+      activeSignalDependencyCollector?.addDependency(
+        node as SignalNode<unknown>,
+      );
       validate();
       removePendingValidation();
       if (node.hasError) {
@@ -1076,7 +1081,7 @@ export function readComputedFormulaCandidate<T>(
   candidate: ComputedFormulaCandidate<T>,
 ): T {
   const node = requireComputedSignalNode(target);
-  const reader = trackingStack.at(-1);
+  const reader = activeSignalDependencyCollector;
   reader?.addDependency(node as SignalNode<unknown>);
   if (reader !== undefined) candidate.readers.add(reader);
   if (!candidate.evaluated) {
@@ -1179,11 +1184,12 @@ export function setSignalGraphPlanWorkNotifier(notifier: () => void): void {
 }
 
 export function untracked<T>(callback: () => T): T {
-  trackingStack.push(undefined);
+  const previous = activeSignalDependencyCollector;
+  activeSignalDependencyCollector = undefined;
   try {
     return callback();
   } finally {
-    trackingStack.pop();
+    activeSignalDependencyCollector = previous;
   }
 }
 
@@ -1342,7 +1348,7 @@ function stageSignalCommitBatchCandidate<T>(
 ): void {
   const node = getSignalNode(value) as SignalNode<T>;
   const unknownNode = node as SignalNode<unknown>;
-  writePolicyStack.at(-1)?.(unknownNode, 'staged');
+  writePolicyStack[writePolicyStack.length - 1]?.(unknownNode, 'staged');
   staged.set(unknownNode, {
     node: unknownNode,
     value: nextValue,
@@ -1397,11 +1403,12 @@ export function withSignalTracking<T>(
   collector: SignalDependencyCollector,
   callback: () => T,
 ): T {
-  trackingStack.push(collector);
+  const previous = activeSignalDependencyCollector;
+  activeSignalDependencyCollector = collector;
   try {
     return callback();
   } finally {
-    trackingStack.pop();
+    activeSignalDependencyCollector = previous;
   }
 }
 
@@ -1437,7 +1444,10 @@ export function withDirectSignalWriteForbidden<T>(
 
 /** @internal Checks the active direct-write policy without mutating a signal. */
 export function assertSignalCommandAllowed(): void {
-  writePolicyStack.at(-1)?.(commandAssertionNode, 'direct');
+  writePolicyStack[writePolicyStack.length - 1]?.(
+    commandAssertionNode,
+    'direct',
+  );
 }
 
 /** @internal Installs the singleton policy that validates active writer leases. */

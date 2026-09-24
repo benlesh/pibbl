@@ -67,7 +67,18 @@ export function createSignalRenderConsumer(
     releaseCount: 0,
     renderInvalidation: true,
     addDependency(node): void {
-      if (state.collecting) collectReactiveDependency(state, node);
+      if (!state.collecting) return;
+      const cursor = state.collectionCursor;
+      if (
+        cursor?.source === node &&
+        cursor.collectionGeneration !== state.collectionGeneration
+      ) {
+        cursor.collectionGeneration = state.collectionGeneration;
+        cursor.collectionKind = 'reused';
+        state.collectionCursor = cursor.consumerNext;
+        return;
+      }
+      collectReactiveDependency(state, node);
     },
     notify(): void {
       if (state.disposed || state.dirty) return;
@@ -136,22 +147,27 @@ export function collectComponentSignalReads<T>(
   let committed = false;
   let onMaterialize: (() => void) | undefined;
 
-  if (state !== undefined) beginConsumerCollection(state);
-  const collector: SignalDependencyCollector = {
-    addDependency(node: SignalNode<unknown>): void {
-      if (committed) return;
-      if (state === undefined) {
-        const options = createOptions();
-        onMaterialize = options.onMaterialize;
-        consumer = createSignalRenderConsumer(options);
-        state = getConsumerState(consumer);
-        provisional = true;
-        recordLazyRendererConsumerCreated();
-        beginConsumerCollection(state);
-      }
-      state.addDependency(node);
-    },
-  };
+  let collector: SignalDependencyCollector;
+  if (state === undefined) {
+    collector = {
+      addDependency(node: SignalNode<unknown>): void {
+        if (committed) return;
+        if (state === undefined) {
+          const options = createOptions();
+          onMaterialize = options.onMaterialize;
+          consumer = createSignalRenderConsumer(options);
+          state = getConsumerState(consumer);
+          provisional = true;
+          recordLazyRendererConsumerCreated();
+          beginConsumerCollection(state);
+        }
+        state.addDependency(node);
+      },
+    };
+  } else {
+    beginConsumerCollection(state);
+    collector = state;
+  }
   const commit = (): void => {
     if (committed) return;
     committed = true;
@@ -209,6 +225,20 @@ function beginConsumerCollection(state: ConsumerState): void {
 }
 
 function commitCollectedDependencies(state: ConsumerState): void {
+  const onlyEdge = state.dependencyHead;
+  if (
+    onlyEdge !== undefined &&
+    onlyEdge.consumerNext === undefined &&
+    onlyEdge.collectionGeneration === state.collectionGeneration &&
+    onlyEdge.sourceLinked &&
+    onlyEdge.collectionKind === 'reused'
+  ) {
+    recordRendererEdgeReused();
+    onlyEdge.observedVersion = onlyEdge.source!.version;
+    onlyEdge.collectionKind = undefined;
+    state.collectionCursor = undefined;
+    return;
+  }
   finishReactiveCollection(
     state,
     edge => {

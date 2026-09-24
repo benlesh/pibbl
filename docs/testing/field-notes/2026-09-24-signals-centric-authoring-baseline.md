@@ -51,6 +51,14 @@ enclosing component before passing plain values to receivers. Direct
 signal-valued component inputs are not supported at this commit, so this record
 does not invent a pre-change timing for them.
 
+Task 13 replayed this committed harness from detached commit `2cbe7af` in three
+fresh Node 24.15 processes immediately beside the final implementation. The
+median of the three process-level observations was `1.3 / 1.7 ms` for old
+`useState`, `1.2 / 1.6 ms` for explicit signal reads, `3.9 / 4.9 ms` for plain
+inputs, and `3.7 / 4.6 ms` for explicit-get inputs (median / p95). Those
+contemporaneous values, rather than this note's earlier single process, are the
+comparison basis in the final verification record.
+
 Additional structural observations:
 
 - 1,000 sequential writes scheduled one host request and one root traversal;
