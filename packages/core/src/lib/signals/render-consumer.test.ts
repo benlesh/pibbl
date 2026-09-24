@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { computed, signal } from '../../index';
-import { flushPendingComputedValidations, getSignalNode } from './graph';
+import {
+  flushPendingComputedValidations,
+  getSignalNode,
+  signalGraphSnapshot,
+} from './graph';
 import {
   collectSignalReads,
   createSignalRenderConsumer,
@@ -8,6 +12,73 @@ import {
 } from './render-consumer';
 
 describe('signal render consumers', () => {
+  it('reuses zero, one, and many dependency edges across successful generations', () => {
+    const first = signal(1);
+    const second = signal(2);
+    const third = signal(3);
+    const baseline = signalGraphSnapshot();
+    const consumer = createSignalRenderConsumer({
+      debugName: 'edge reuse consumer',
+      invalidate: () => {},
+    });
+
+    collectSignalReads(consumer, () => undefined);
+    expect(signalGraphSnapshot()).toMatchObject({
+      rendererEdges: baseline.rendererEdges,
+      createdRendererEdges: baseline.createdRendererEdges,
+      reusedRendererEdges: baseline.reusedRendererEdges,
+      releasedRendererEdges: baseline.releasedRendererEdges,
+    });
+
+    collectSignalReads(consumer, () => first.get());
+    expect(signalGraphSnapshot()).toMatchObject({
+      rendererEdges: baseline.rendererEdges + 1,
+      createdRendererEdges: baseline.createdRendererEdges + 1,
+      reusedRendererEdges: baseline.reusedRendererEdges,
+      releasedRendererEdges: baseline.releasedRendererEdges,
+    });
+
+    collectSignalReads(consumer, () => first.get());
+    expect(signalGraphSnapshot()).toMatchObject({
+      rendererEdges: baseline.rendererEdges + 1,
+      createdRendererEdges: baseline.createdRendererEdges + 1,
+      reusedRendererEdges: baseline.reusedRendererEdges + 1,
+      releasedRendererEdges: baseline.releasedRendererEdges,
+    });
+
+    collectSignalReads(consumer, () => first.get() + second.get() + third.get());
+    expect(signalGraphSnapshot()).toMatchObject({
+      rendererEdges: baseline.rendererEdges + 3,
+      createdRendererEdges: baseline.createdRendererEdges + 3,
+      reusedRendererEdges: baseline.reusedRendererEdges + 2,
+      releasedRendererEdges: baseline.releasedRendererEdges,
+    });
+
+    collectSignalReads(consumer, () => first.get() + third.get());
+    expect(signalGraphSnapshot()).toMatchObject({
+      rendererEdges: baseline.rendererEdges + 2,
+      createdRendererEdges: baseline.createdRendererEdges + 3,
+      reusedRendererEdges: baseline.reusedRendererEdges + 4,
+      releasedRendererEdges: baseline.releasedRendererEdges + 1,
+    });
+
+    collectSignalReads(consumer, () => first.get() + second.get() + third.get());
+    expect(signalGraphSnapshot()).toMatchObject({
+      rendererEdges: baseline.rendererEdges + 3,
+      createdRendererEdges: baseline.createdRendererEdges + 3,
+      reusedRendererEdges: baseline.reusedRendererEdges + 7,
+      releasedRendererEdges: baseline.releasedRendererEdges + 1,
+    });
+
+    disposeSignalRenderConsumer(consumer);
+    expect(signalGraphSnapshot()).toMatchObject({
+      rendererEdges: baseline.rendererEdges,
+      createdRendererEdges: baseline.createdRendererEdges + 3,
+      reusedRendererEdges: baseline.reusedRendererEdges + 7,
+      releasedRendererEdges: baseline.releasedRendererEdges + 4,
+    });
+  });
+
   it('replaces dynamic dependencies and releases them on disposal', () => {
     const chooseLeft = signal(true);
     const left = signal(1);

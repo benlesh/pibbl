@@ -25,6 +25,7 @@ import type { CRCAdvanceParticipant } from '../src/lib/scheduler/types';
 
 interface SignalGraphPerformanceSnapshot {
   readonly rendererEdges: number;
+  readonly createdRendererEdges: number;
   readonly signalCommitNotifications: number;
   readonly planComputedValidations: number;
   readonly lazyRendererConsumers: number;
@@ -292,6 +293,13 @@ describe('signal and scheduler structural performance', () => {
       shared.set(1);
       expect(driver.requestCount - requestsBefore).toBe(1);
       driver.flush(2);
+      const updated = snapshotSignalGraph();
+      expect(updated.createdRendererEdges).toBe(
+        mounted.createdRendererEdges,
+      );
+      expect(updated.reusedRendererEdges - mounted.reusedRendererEdges).toBe(
+        fanout,
+      );
       controller.dispose();
       expect(snapshotSignalGraph().rendererEdges).toBe(before.rendererEdges);
     },
