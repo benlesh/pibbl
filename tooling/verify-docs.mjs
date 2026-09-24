@@ -127,6 +127,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/wedge.md",
   "docs/site/api/components/webgl-background.md",
   "docs/site/api/components/webgl-layer.md",
+  "docs/site/api/functions/batch.md",
   "docs/site/api/functions/crc.md",
   "docs/site/api/functions/computed.md",
   "docs/site/api/functions/create-arc-path.md",

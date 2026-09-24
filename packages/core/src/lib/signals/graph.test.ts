@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  batch,
   computed,
   isSignal,
   signal,
@@ -751,6 +752,135 @@ describe('untracked', () => {
     });
 
     expect(dependencies).toEqual([node]);
+  });
+});
+
+describe('batch', () => {
+  it('nests synchronously, exposes writes immediately, and notifies once', () => {
+    const value = signal(0);
+    const observations: number[] = [];
+    getSignalNode(value).observers.add(() => observations.push(value.get()));
+
+    const result = batch(() => {
+      value.set(1);
+      expect(value.get()).toBe(1);
+      const inner = batch(() => {
+        value.set(2);
+        expect(value.get()).toBe(2);
+        expect(observations).toEqual([]);
+        return 41;
+      });
+      expect(inner).toBe(41);
+      expect(observations).toEqual([]);
+      return inner + 1;
+    });
+
+    expect(result).toBe(42);
+    expect(observations).toEqual([2]);
+  });
+
+  it('collapses final values equal to batch entry values', () => {
+    const value = signal(0);
+    let notifications = 0;
+    getSignalNode(value).observers.add(() => notifications++);
+
+    batch(() => {
+      value.set(1);
+      value.set(0);
+    });
+
+    expect(value.get()).toBe(0);
+    expect(notifications).toBe(0);
+  });
+
+  it('deduplicates a shared observer across changed sources', () => {
+    const first = signal(0);
+    const second = signal(0);
+    let notifications = 0;
+    const observer = () => notifications++;
+    getSignalNode(first).observers.add(observer);
+    getSignalNode(second).observers.add(observer);
+    const before = signalGraphSnapshot();
+
+    batch(() => {
+      first.set(1);
+      second.set(1);
+    });
+
+    expect(notifications).toBe(1);
+    expect(
+      signalGraphSnapshot().batchedObserverInvalidations -
+        before.batchedObserverInvalidations,
+    ).toBe(1);
+  });
+
+  it('keeps computed reads coherent and publishes only their final result', () => {
+    const source = signal(0);
+    const doubled = computed(() => source.get() * 2);
+    expect(doubled.get()).toBe(0);
+    const detach = getSignalNode(doubled).observe!();
+    const observations: number[] = [];
+    getSignalNode(doubled).observers.add(() => observations.push(doubled.get()));
+
+    batch(() => {
+      source.set(1);
+      expect(doubled.get()).toBe(2);
+      source.set(2);
+      expect(observations).toEqual([]);
+    });
+
+    expect(doubled.get()).toBe(4);
+    expect(observations).toEqual([4]);
+    detach();
+  });
+
+  it('suppresses computed observers when the final output equals its entry', () => {
+    const source = signal(0);
+    const parity = computed(() => source.get() % 2);
+    expect(parity.get()).toBe(0);
+    const detach = getSignalNode(parity).observe!();
+    let notifications = 0;
+    getSignalNode(parity).observers.add(() => notifications++);
+
+    batch(() => {
+      source.set(1);
+      expect(parity.get()).toBe(1);
+      source.set(2);
+    });
+
+    expect(parity.get()).toBe(0);
+    expect(notifications).toBe(0);
+    detach();
+  });
+
+  it('flushes before combining callback and observer failures', () => {
+    const value = signal(0);
+    const callbackFailure = new Error('batch callback failed');
+    const observerFailure = new Error('batch observer failed');
+    const observations: string[] = [];
+    getSignalNode(value).observers.add(() => {
+      observations.push('failed');
+      throw observerFailure;
+    });
+    getSignalNode(value).observers.add(() => observations.push('later'));
+
+    let failure: unknown;
+    try {
+      batch(() => {
+        value.set(1);
+        throw callbackFailure;
+      });
+    } catch (error) {
+      failure = error;
+    }
+
+    expect(value.get()).toBe(1);
+    expect(observations).toEqual(['failed', 'later']);
+    expect(failure).toBeInstanceOf(AggregateError);
+    expect((failure as AggregateError).errors).toEqual([
+      callbackFailure,
+      observerFailure,
+    ]);
   });
 });
 

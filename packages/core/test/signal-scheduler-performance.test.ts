@@ -2,6 +2,7 @@ import {
   Layer,
   Rectangle,
   Text,
+  batch,
   computed,
   crc,
   createElement,
@@ -104,6 +105,34 @@ describe('signal and scheduler structural performance', () => {
     expect(traversals).toBe(1);
     expect(driver.pendingHostFrames).toBe(0);
     reportTiming('1,000 coalesced writes', writesMs);
+    controller.dispose();
+  });
+
+  it('batches 1,000 writes into one notification and one host request', () => {
+    const value = signal(0);
+    let traversals = 0;
+    const Reader = (_props: {}) => {
+      traversals++;
+      value.get();
+    };
+    const controller = track(crc(createCanvas(), createElement(Reader, {})));
+    driver.flush(1);
+    traversals = 0;
+    const graphBefore = snapshotSignalGraph();
+    const requestsBefore = driver.requestCount;
+
+    batch(() => {
+      for (let next = 1; next <= 1_000; next++) value.set(next);
+    });
+
+    const graphAfter = snapshotSignalGraph();
+    expect(
+      graphAfter.signalCommitNotifications -
+        graphBefore.signalCommitNotifications,
+    ).toBe(1);
+    expect(driver.requestCount - requestsBefore).toBe(1);
+    driver.flush(2);
+    expect(traversals).toBe(1);
     controller.dispose();
   });
 

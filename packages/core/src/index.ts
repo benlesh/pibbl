@@ -113,7 +113,13 @@ export {
 } from './lib/geometry/svg-path.js';
 export type { RoundedCornerPathOptions } from './lib/geometry/rounded-corners.js';
 export { crc } from './lib/crc.js';
-export { computed, isSignal, signal, untracked } from './lib/signals/graph.js';
+export {
+  batch,
+  computed,
+  isSignal,
+  signal,
+  untracked,
+} from './lib/signals/graph.js';
 export type {
   Signal,
   SignalEquals,

@@ -245,6 +245,19 @@ let batchedObserverInvalidations = 0;
 let signalGraphPlanWorkNotifier: (() => void) | undefined;
 let signalWriterLeasePolicy: SignalWriterLeasePolicy | undefined;
 
+interface PublicSignalBatchEntry {
+  readonly value: unknown;
+  readonly computedHasError: boolean | undefined;
+  readonly computedError: unknown;
+}
+
+interface PublicSignalBatchState {
+  readonly entries: Map<SignalNode<unknown>, PublicSignalBatchEntry>;
+  readonly failures: unknown[];
+}
+
+let activePublicSignalBatch: PublicSignalBatchState | undefined;
+
 export interface SignalGraphSnapshot {
   readonly rendererConsumers: number;
   readonly rendererEdges: number;
@@ -366,6 +379,113 @@ export function recordRendererEdgeReleased(): void {
   releasedRendererEdges++;
 }
 
+export function batch<T>(callback: () => T): T {
+  if (activePublicSignalBatch !== undefined) return callback();
+
+  const state: PublicSignalBatchState = {
+    entries: new Map(),
+    failures: [],
+  };
+  activePublicSignalBatch = state;
+  let result!: T;
+  let callbackFailure: unknown;
+  let callbackFailed = false;
+  try {
+    result = callback();
+  } catch (error) {
+    callbackFailed = true;
+    callbackFailure = error;
+  }
+
+  const notificationFailures = flushPublicSignalBatch(state);
+  if (callbackFailed) {
+    if (notificationFailures.length === 0) throw callbackFailure;
+    throw new AggregateError(
+      [callbackFailure, ...notificationFailures],
+      'CRC signal batch callback and observer notifications failed.',
+    );
+  }
+  throwSignalObserverFailures(notificationFailures);
+  return result;
+}
+
+function recordPublicBatchEntry(node: SignalNode<unknown>): void {
+  const state = activePublicSignalBatch;
+  if (state === undefined || state.entries.has(node)) return;
+  const computedNode = isComputedSignalNode(node) ? node : undefined;
+  state.entries.set(node, {
+    value: node.value,
+    computedHasError: computedNode?.hasError,
+    computedError: computedNode?.error,
+  });
+}
+
+function flushPublicSignalBatch(state: PublicSignalBatchState): unknown[] {
+  try {
+    flushPendingComputedValidations();
+  } catch (error) {
+    if (
+      error instanceof AggregateError &&
+      error.message === 'CRC signal observer notifications failed.'
+    ) {
+      state.failures.push(...error.errors);
+    } else {
+      state.failures.push(error);
+    }
+  }
+
+  const seen = new Set<SignalDependencyConsumer>();
+  const consumers: Array<{
+    readonly consumer: SignalDependencyConsumer;
+    readonly source: SignalNode<unknown>;
+  }> = [];
+  for (const [source, entry] of state.entries) {
+    let unchanged = false;
+    try {
+      unchanged = publicBatchEntryEquals(source, entry);
+    } catch (error) {
+      state.failures.push(error);
+    }
+    if (unchanged) continue;
+    signalCommitNotifications++;
+    for (
+      let edge = source.observerHead;
+      edge !== undefined;
+      edge = edge.sourceNext
+    ) {
+      const consumer = edge.consumer;
+      if (consumer.propagateInvalidation === true) continue;
+      if (seen.has(consumer)) {
+        recordBatchedObserverInvalidation();
+        continue;
+      }
+      seen.add(consumer);
+      consumers.push({ consumer, source });
+    }
+  }
+
+  activePublicSignalBatch = undefined;
+  for (const { consumer, source } of consumers) {
+    try {
+      consumer.notify(source);
+    } catch (error) {
+      state.failures.push(error);
+    }
+  }
+  return state.failures;
+}
+
+function publicBatchEntryEquals(
+  node: SignalNode<unknown>,
+  entry: PublicSignalBatchEntry,
+): boolean {
+  if (isComputedSignalNode(node)) {
+    if (node.hasError !== entry.computedHasError) return false;
+    if (node.hasError && node.error !== entry.computedError) return false;
+  }
+  return node.equals(entry.value, node.value);
+}
+
 function computedWriteErrorLabel(node: SignalNode<unknown>): string {
   return node.debugName === undefined ?
     'Cannot write to a signal while evaluating a computed signal.' :
@@ -373,6 +493,11 @@ function computedWriteErrorLabel(node: SignalNode<unknown>): string {
 }
 
 function notifySignalObservers(node: SignalNode<unknown>): unknown[] {
+  const batchState = activePublicSignalBatch;
+  if (batchState !== undefined) {
+    batchState.failures.push(...notifyComputedInvalidationObservers(node));
+    return [];
+  }
   signalCommitNotifications++;
   return notifyReactiveEdges(node);
 }
@@ -419,6 +544,7 @@ export function signal<T>(
       return;
     }
 
+    recordPublicBatchEntry(node as SignalNode<unknown>);
     node.value = nextValue;
     node.version++;
     throwSignalObserverFailures(notifySignalObservers(node as SignalNode<unknown>));
@@ -689,6 +815,7 @@ export function computed<T>(
 
       changed = result.changed;
       if (changed) {
+        recordPublicBatchEntry(node as SignalNode<unknown>);
         node.value = result.nextValue;
         node.version++;
       }
@@ -697,6 +824,7 @@ export function computed<T>(
       node.error = undefined;
     } catch (error) {
       changed = !node.hasError || node.error !== error;
+      if (changed) recordPublicBatchEntry(node as SignalNode<unknown>);
       node.hasError = true;
       node.error = error;
     } finally {
@@ -945,6 +1073,7 @@ export function createSignalCommitBatch(): SignalCommitBatch {
 
       for (const candidate of changed) {
         const node = candidate.node;
+        recordPublicBatchEntry(node);
         node.value = candidate.value;
         node.version++;
       }

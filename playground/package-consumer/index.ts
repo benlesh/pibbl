@@ -302,6 +302,7 @@ import {
   repeat,
   sequence,
   useCanvasContext,
+  batch,
   computed,
   isSignal,
   signal,
@@ -1544,6 +1545,7 @@ const writableCount: WritableSignal<number> = inferredWritable;
 const readonlyCount: Signal<number> = writableCount.asReadonly();
 const computedCount: Signal<number> = computed(() => readonlyCount.get() * 2);
 const untrackedCount: number = untracked(() => computedCount.get());
+const batchedResult: number = batch(() => 42);
 const callbackSignal = signal<() => string>(() => 'ready');
 const callbackValue: () => string = callbackSignal.get();
 callbackSignal.set(() => 'updated');
@@ -1552,6 +1554,7 @@ if (isSignal(unknownSignal)) {
   const narrowedSignal: Signal<unknown> = unknownSignal;
   void narrowedSignal.get();
 }
+void batchedResult;
 
 const animationOutput = signal(0);
 const objectAnimationOutput = signal({ x: 0 });

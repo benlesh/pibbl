@@ -13711,7 +13711,7 @@
       },
       "source": {
         "path": "packages/core/src/lib/render.ts",
-        "marker": "mountedRefs.signalConsumer = createSignalRenderConsumer({"
+        "marker": "collectComponentSignalReads(componentRefs, () => ({"
       },
       "test": {
         "path": "packages/core/src/lib/runtime-contract.test.ts",
