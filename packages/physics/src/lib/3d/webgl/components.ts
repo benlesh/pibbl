@@ -1,7 +1,7 @@
 import {
   createElement,
   resolveSignalValue,
-  useMemo,
+  useComputed,
   type PrimitiveInputOf,
   type SignalValue,
 } from "@crc/core";
@@ -115,7 +115,7 @@ export function Box3D(props: Readonly<Box3DProps>) {
   const orientation = resolveOptionalSignalValue(props.orientation);
   const { width: _width, height: _height, depth: _depth,
     center: _center, orientation: _orientation, ...rest } = props;
-  const shape = useMemo(
+  const shape = useComputed(
     () => boxShape3D({ width, height, depth, center, orientation }),
     [width, height, depth, ...vector(center), ...quaternion(orientation)],
   );
@@ -128,7 +128,7 @@ export function Ellipsoid3D(props: Readonly<Ellipsoid3DProps>) {
   const orientation = resolveOptionalSignalValue(props.orientation);
   const { radii: _radii, center: _center,
     orientation: _orientation, ...rest } = props;
-  const shape = useMemo(
+  const shape = useComputed(
     () => ellipsoidShape3D({ radii, center, orientation }),
     [...radii, ...vector(center), ...quaternion(orientation)],
   );
@@ -140,7 +140,7 @@ export function Capsule3D(props: Readonly<Capsule3DProps>) {
   const end = resolveSignalValue(props.end);
   const radius = resolveSignalValue(props.radius);
   const { start: _start, end: _end, radius: _radius, ...rest } = props;
-  const shape = useMemo(
+  const shape = useComputed(
     () => capsuleShape3D({ start, end, radius }),
     [...start, ...end, radius],
   );
@@ -154,7 +154,7 @@ export function Cylinder3D(props: Readonly<Cylinder3DProps>) {
   const orientation = resolveOptionalSignalValue(props.orientation);
   const { radius: _radius, halfHeight: _halfHeight, center: _center,
     orientation: _orientation, ...rest } = props;
-  const shape = useMemo(
+  const shape = useComputed(
     () => cylinderShape3D({ radius, halfHeight, center, orientation }),
     [radius, halfHeight, ...vector(center), ...quaternion(orientation)],
   );
@@ -168,7 +168,7 @@ export function Cone3D(props: Readonly<Cone3DProps>) {
   const orientation = resolveOptionalSignalValue(props.orientation);
   const { radius: _radius, halfHeight: _halfHeight, center: _center,
     orientation: _orientation, ...rest } = props;
-  const shape = useMemo(
+  const shape = useComputed(
     () => coneShape3D({ radius, halfHeight, center, orientation }),
     [radius, halfHeight, ...vector(center), ...quaternion(orientation)],
   );
@@ -179,7 +179,7 @@ export function ConvexHull3D(props: Readonly<ConvexHull3DProps>) {
   const points = resolveSignalValue(props.points);
   const { points: _points, ...rest } = props;
   const deps = points.flatMap((point) => [...point]);
-  const shape = useMemo(() => convexHullShape3D({ points }), deps);
+  const shape = useComputed(() => convexHullShape3D({ points }), deps);
   return createElement(PhysicsShape3D, { ...rest, shape });
 }
 
@@ -210,7 +210,7 @@ export function Heightfield3D(props: Readonly<Heightfield3DProps>) {
     ...vector(origin),
     ...Array.from(heights),
   ];
-  const shape = useMemo(
+  const shape = useComputed(
     () =>
       heightfieldShape3D({
         rows,

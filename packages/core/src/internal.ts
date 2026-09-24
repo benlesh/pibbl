@@ -34,6 +34,9 @@ export { executeBackendCRC } from './lib/execute-render.js';
 export { mountBackendCRC } from './lib/mount-crc.js';
 export { useInternalHookSlot } from './lib/hooks/hook-slot.js';
 export {
+  useValueMemoSlot as useInternalValueMemoSlot,
+} from './lib/hooks/use-value-memo-slot.js';
+export {
   haveSameLayerNodeTree,
   materializeRetainedLayerChildren,
   snapshotLayerNodeTree,

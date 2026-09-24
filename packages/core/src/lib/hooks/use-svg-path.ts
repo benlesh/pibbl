@@ -1,4 +1,4 @@
-import { useMemoSlot } from './use-memo.js';
+import { useValueMemoSlot } from './use-value-memo-slot.js';
 import { createSvgPath } from '../geometry/svg-path.js';
 
 /**
@@ -6,7 +6,7 @@ import { createSvgPath } from '../geometry/svg-path.js';
  * @returns A memoized Path2D
  */
 export function useSvgPath(svgPathData: string): Path2D {
-  return useMemoSlot(
+  return useValueMemoSlot(
     'svgPath',
     () => createSvgPath({ d: svgPathData }),
     [svgPathData],
