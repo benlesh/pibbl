@@ -112,6 +112,15 @@ let planComputedValidations = 0;
 let computedSourceEdges = 0;
 let createdComputedSourceEdges = 0;
 let releasedComputedSourceEdges = 0;
+let lazyRendererConsumers = 0;
+let reusedRendererEdges = 0;
+let plainInputResolutions = 0;
+let signalInputResolutions = 0;
+let shallowInputCopies = 0;
+let receiverInputProvisions = 0;
+let adoptedReceiverInputProvisions = 0;
+let rolledBackReceiverInputProvisions = 0;
+let batchedObserverInvalidations = 0;
 let signalGraphPlanWorkNotifier: (() => void) | undefined;
 let signalWriterLeasePolicy: SignalWriterLeasePolicy | undefined;
 
@@ -128,6 +137,15 @@ export interface SignalGraphSnapshot {
   readonly planComputedValidations: number;
   readonly createdComputedSourceEdges: number;
   readonly releasedComputedSourceEdges: number;
+  readonly lazyRendererConsumers: number;
+  readonly reusedRendererEdges: number;
+  readonly plainInputResolutions: number;
+  readonly signalInputResolutions: number;
+  readonly shallowInputCopies: number;
+  readonly receiverInputProvisions: number;
+  readonly adoptedReceiverInputProvisions: number;
+  readonly rolledBackReceiverInputProvisions: number;
+  readonly batchedObserverInvalidations: number;
 }
 
 /** @internal Deterministic ownership and structural evidence for tests. */
@@ -145,7 +163,61 @@ export function signalGraphSnapshot(): SignalGraphSnapshot {
     planComputedValidations,
     createdComputedSourceEdges,
     releasedComputedSourceEdges,
+    lazyRendererConsumers,
+    reusedRendererEdges,
+    plainInputResolutions,
+    signalInputResolutions,
+    shallowInputCopies,
+    receiverInputProvisions,
+    adoptedReceiverInputProvisions,
+    rolledBackReceiverInputProvisions,
+    batchedObserverInvalidations,
   });
+}
+
+/** @internal Records one component consumer materialized by its first read. */
+export function recordLazyRendererConsumerCreated(): void {
+  lazyRendererConsumers++;
+}
+
+/** @internal Records one existing render edge reused by recollection. */
+export function recordRendererEdgeReused(): void {
+  reusedRendererEdges++;
+}
+
+/** @internal Records one declared plain input that took the identity path. */
+export function recordPlainInputResolution(): void {
+  plainInputResolutions++;
+}
+
+/** @internal Records one declared signal-valued input read. */
+export function recordSignalInputResolution(): void {
+  signalInputResolutions++;
+}
+
+/** @internal Records one copy-on-signal props or style object. */
+export function recordShallowInputCopy(): void {
+  shallowInputCopies++;
+}
+
+/** @internal Records one pre-evaluation receiver input provision. */
+export function recordReceiverInputProvisionCreated(): void {
+  receiverInputProvisions++;
+}
+
+/** @internal Records one provision adopted by its receiver generation. */
+export function recordReceiverInputProvisionAdopted(): void {
+  adoptedReceiverInputProvisions++;
+}
+
+/** @internal Records one provision discarded without publication. */
+export function recordReceiverInputProvisionRolledBack(): void {
+  rolledBackReceiverInputProvisions++;
+}
+
+/** @internal Records one observer invalidation deduplicated by a public batch. */
+export function recordBatchedObserverInvalidation(): void {
+  batchedObserverInvalidations++;
 }
 
 /** @internal Records one live renderer consumer for test diagnostics. */
