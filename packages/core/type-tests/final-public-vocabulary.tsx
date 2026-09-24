@@ -286,6 +286,29 @@ definePrimitive<{ value: number }>(
 const exactSignal = <ExactSignal valueSignal={reactiveX} />;
 // @ts-expect-error exact signal-object positions do not unwrap outer signals
 const nestedExactSignal = <ExactSignal valueSignal={signal(reactiveX)} />;
+const OptionalExactSignal = definePrimitive<{
+  valueSignal?: Signal<number>;
+  writableSignal?: WritableSignal<number>;
+}>(
+  function renderOptionalExactSignal() {},
+  { preserveSignalProps: ['valueSignal', 'writableSignal'] },
+);
+// @ts-expect-error optional exact signal-object props require preservation metadata
+definePrimitive<{ valueSignal?: Signal<number> }>(
+  function renderUnpreservedOptionalExactSignal() {},
+);
+const optionalExactSignal = (
+  <OptionalExactSignal
+    valueSignal={readonlyCount}
+    writableSignal={writableCount}
+  />
+);
+const nestedOptionalExactSignal = (
+  <OptionalExactSignal
+    // @ts-expect-error optional exact signal-object positions do not unwrap outer signals
+    valueSignal={signal(readonlyCount)}
+  />
+);
 const nestedPaddingSignal = (
   <Rectangle
     style={{
@@ -321,6 +344,8 @@ void signalValuedPrimitiveInputs;
 void gauge;
 void exactSignal;
 void nestedExactSignal;
+void optionalExactSignal;
+void nestedOptionalExactSignal;
 void nestedPaddingSignal;
 void publicNodeInput;
 void signalValuedChildren;

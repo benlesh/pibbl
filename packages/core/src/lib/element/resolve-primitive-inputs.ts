@@ -1,4 +1,8 @@
-import type { PrimitiveDefinition } from './metadata.js';
+import {
+  getPrimitiveProgramProps,
+  getSpecifiedStyle,
+  type PrimitiveDefinition,
+} from './metadata.js';
 import type { CRCElement } from './types.js';
 import {
   isSignal,
@@ -16,13 +20,14 @@ export function resolvePrimitiveInputs(
   element: CRCElement<any>,
   definition: PrimitiveDefinition,
 ): ResolvedPrimitiveInputs {
-  const rawProps = element.props as Readonly<Record<PropertyKey, unknown>>;
+  const rawProps = getPrimitiveProgramProps(element) as Readonly<
+    Record<PropertyKey, unknown>
+  >;
   const preserve = definition.preserveSignalProps as
     readonly PropertyKey[] | undefined;
   let programProps: Record<PropertyKey, unknown> | undefined;
 
   for (const key in rawProps) {
-    if (key === 'style') continue;
     const value = rawProps[key];
     if (key === 'children' || preserve?.includes(key)) {
       if (programProps !== undefined) programProps[key] = value;
@@ -31,7 +36,7 @@ export function resolvePrimitiveInputs(
     if (isSignal(value)) {
       recordSignalInputResolution();
       if (programProps === undefined) {
-        programProps = copyProgramProps(rawProps);
+        programProps = { ...rawProps };
         recordShallowInputCopy();
       }
       programProps[key] = value.get();
@@ -42,8 +47,8 @@ export function resolvePrimitiveInputs(
   }
 
   return {
-    props: programProps ?? copyProgramProps(rawProps),
-    style: resolvePrimitiveStyleInput(rawProps.style),
+    props: programProps ?? rawProps,
+    style: resolvePrimitiveStyleInput(getSpecifiedStyle(element)),
   };
 }
 
@@ -79,14 +84,4 @@ export function resolvePrimitiveStyleInput(
     }
   }
   return resolved ?? source;
-}
-
-function copyProgramProps(
-  props: Readonly<Record<PropertyKey, unknown>>,
-): Record<PropertyKey, unknown> {
-  const programProps: Record<PropertyKey, unknown> = {};
-  for (const key in props) {
-    if (key !== 'style') programProps[key] = props[key];
-  }
-  return programProps;
 }

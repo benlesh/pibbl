@@ -8,6 +8,11 @@ import {
   type SignalValue,
 } from '../../index.js';
 import { clearSharedState, getCRCInstance } from '../global-state.js';
+import {
+  getPrimitiveDefinition,
+  getPrimitiveProgramProps,
+} from './metadata.js';
+import { resolvePrimitiveInputs } from './resolve-primitive-inputs.js';
 import { signalGraphSnapshot } from '../signals/graph.js';
 import type { Signal } from '../signals/types.js';
 import type { SystemStyle } from '../types.js';
@@ -98,6 +103,23 @@ describe('primitive signal-valued inputs', () => {
     plainController.dispose();
   });
 
+  it('reuses the construction-time program props for plain primitive inputs', () => {
+    const Probe = definePrimitive<{ value: number }>(
+      function renderPlainInputProbe() {},
+    );
+    const element = <Probe value={1} style={{ custom: 'opaque' }} />;
+    const definition = getPrimitiveDefinition(Probe);
+    if (!definition) throw new Error('Probe primitive definition is missing.');
+    const programProps = getPrimitiveProgramProps(element);
+
+    const first = resolvePrimitiveInputs(element, definition);
+    const second = resolvePrimitiveInputs(element, definition);
+
+    expect(first.props).toBe(programProps);
+    expect(second.props).toBe(programProps);
+    expect(first.props).toEqual({ value: 1 });
+  });
+
   it('treats a whole optional style signal resolving undefined as no style', async () => {
     const wholeStyle = signal<SystemStyle | undefined>(undefined);
     const observations: unknown[] = [];
@@ -142,6 +164,22 @@ describe('primitive signal-valued inputs', () => {
       valueSignal: exact,
     }]);
     expect(signalGraphSnapshot().rendererEdges - baseline.rendererEdges).toBe(1);
+    controller.dispose();
+  });
+
+  it('preserves optional exact signal props when present', async () => {
+    const exact = signal(4);
+    const observations: unknown[] = [];
+    const Probe = definePrimitive<{ valueSignal?: Signal<number> }>(
+      function renderOptionalExactSignal(props) {
+        observations.push(props.valueSignal);
+      },
+      { preserveSignalProps: ['valueSignal'] },
+    );
+    const controller = crc(createCanvas(), <Probe valueSignal={exact} />);
+    await nextFrame();
+
+    expect(observations).toEqual([exact]);
     controller.dispose();
   });
 

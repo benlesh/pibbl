@@ -15,6 +15,7 @@ export interface CRCElementSource {
 export interface InternalElementMetadata {
   readonly source?: CRCElementSource;
   readonly specifiedStyle?: Readonly<SystemStyle>;
+  readonly primitiveProgramProps?: Readonly<Record<PropertyKey, unknown>>;
   readonly primitiveReceiverToken?: object;
   readonly policyPreparationSource?: CRCElement<any>;
   identityHint?: unknown;
@@ -188,6 +189,8 @@ export function getSpecifiedStyle<S extends SystemStyle>(
 
 /** @internal Returns program props with primitive-owned style removed. */
 export function getPrimitiveProgramProps<P>(element: CRCElement<any>): P {
+  const prepared = elementMetadata.get(element)?.primitiveProgramProps;
+  if (prepared !== undefined) return prepared as P;
   const { style: _style, ...programProps } = element.props as {
     readonly style?: unknown;
     readonly [key: PropertyKey]: unknown;

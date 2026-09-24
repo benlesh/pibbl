@@ -102,7 +102,7 @@ Completed focused and packaging gates:
 | built-package Studio build | passed; 329-type declaration coverage                                                                                 |
 | packed consumers           | Bundler, NodeNext, declarations, runtime, deep-import, shared-identity, geometry-only, and friend-entry checks passed |
 | built browser smoke        | 2 files, 4 tests passed                                                                                               |
-| complete browser suite     | 302 files; 3,718 passed and 4 opt-in checks skipped                                                                   |
+| complete browser suite     | 302 files; 3,720 passed and 4 opt-in checks skipped                                                                   |
 | visual safeguard           | destructive drill rejected, every protected baseline byte preserved, recovery green                                   |
 
 The Studio visual review found two intentional documentation captures. The
@@ -119,9 +119,18 @@ Signals-centric source change. Those two baseline rewrites were discarded; this
 feature does not claim unrelated environment output as an intentional visual
 change.
 
+The final read-only review identified two contract gaps and both were reproduced
+before repair. Plain primitives now prepare their style-free program-props view
+once with the immutable element descriptor and reuse it on every signal-free
+resolution instead of allocating another object during render. Optional exact
+`Signal<T>` and `WritableSignal<T>` props now require preservation metadata and
+remain signal objects. The focused descriptor, primitive-dispatch, public-type,
+and performance suites passed after these changes (5 files, 52 browser tests),
+as did repository typecheck and lint.
+
 The documentation mutation gate currently stops at the intentional reviewed
 contract-preservation safeguard. Updating the manifest requires explicit
 authorization for the new Signals-centric design approval record, the two
 changed semantic inventories, their unit mappings, and the fixed manifest
-digest. The aggregate `trust` gate and whole-branch review follow that approved
-metadata update; their results will replace this paragraph.
+digest. The aggregate `trust` gate follows that approved metadata update; its
+result will replace this paragraph.

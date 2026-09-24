@@ -67,7 +67,13 @@ type StyleField<S> = [RequiredKeys<S>] extends [never]
   ? { style?: SignalValue<S | undefined> }
   : { style: SignalValue<S> };
 
-type SignalProgramValue<T> = [T] extends [Signal<any>] ? T : SignalValue<T>;
+type IsExactSignalValue<T> = [NonNullable<T>] extends [never] ?
+  false :
+  [NonNullable<T>] extends [Signal<any>] ? true : false;
+
+type SignalProgramValue<T> = IsExactSignalValue<T> extends true ?
+  T :
+  SignalValue<T>;
 
 export type SignalProgramProps<P> = [PrimitiveProgramProps<P>] extends [never]
   ? never
@@ -84,7 +90,9 @@ export type SignalStyle<S> = Readonly<{
 export type PreservedSignalPropKey<P> = {
   [K in keyof PrimitiveProgramProps<P>]-?: [PrimitiveProgramProps<P>[K]] extends [never]
     ? never
-    : [PrimitiveProgramProps<P>[K]] extends [Signal<any>]
+    : [NonNullable<PrimitiveProgramProps<P>[K]>] extends [never]
+      ? never
+      : [NonNullable<PrimitiveProgramProps<P>[K]>] extends [Signal<any>]
       ? K
       : never;
 }[keyof PrimitiveProgramProps<P>];
