@@ -16,6 +16,7 @@ import {
   useMemo,
   usePlayback,
   useRectPath,
+  useReaction,
   useRef,
   useSignal,
   useState,
@@ -77,6 +78,7 @@ import {
   type CRCPlaybackEvent,
   type CRCPlaybackOptions,
   type CRCPlaybackStatus,
+  type CRCReactionOptions,
   type RectStyle,
   type CRCSpringOptions,
   type CRCSpringTransitionOptions,
@@ -109,6 +111,7 @@ const importedFinalVocabulary = {
   useMemo,
   usePlayback,
   useRectPath,
+  useReaction,
   useRef,
   useSignal,
   useState,
@@ -445,6 +448,18 @@ function ComputedHookScene({ scale }: { scale: number }): CRCNode {
 const computedHookComponent: CRCComponent<{ scale: number }> =
   ComputedHookScene;
 
+function ReactionHookScene({ label }: { label: string }): CRCNode {
+  const source = useSignal(1);
+  const options: CRCReactionOptions = { debugName: label };
+  useReaction(() => {
+    source.get();
+    return () => undefined;
+  }, [label], options);
+  return <Text>{source}</Text>;
+}
+const reactionHookComponent: CRCComponent<{ label: string }> =
+  ReactionHookScene;
+
 void importedFinalVocabulary;
 void component;
 void element;
@@ -468,3 +483,4 @@ void (null as unknown as FreePlay);
 void badStyle;
 void signalHookComponent;
 void computedHookComponent;
+void reactionHookComponent;

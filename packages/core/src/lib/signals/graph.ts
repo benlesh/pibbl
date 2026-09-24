@@ -258,6 +258,11 @@ let receiverInputProvisions = 0;
 let adoptedReceiverInputProvisions = 0;
 let rolledBackReceiverInputProvisions = 0;
 let batchedObserverInvalidations = 0;
+let reactionConsumers = 0;
+let reactionEdges = 0;
+let reactionRuns = 0;
+let reactionCleanups = 0;
+let reactionFailures = 0;
 let signalGraphPlanWorkNotifier: (() => void) | undefined;
 let signalWriterLeasePolicy: SignalWriterLeasePolicy | undefined;
 
@@ -296,6 +301,11 @@ export interface SignalGraphSnapshot {
   readonly adoptedReceiverInputProvisions: number;
   readonly rolledBackReceiverInputProvisions: number;
   readonly batchedObserverInvalidations: number;
+  readonly reactionConsumers: number;
+  readonly reactionEdges: number;
+  readonly reactionRuns: number;
+  readonly reactionCleanups: number;
+  readonly reactionFailures: number;
 }
 
 /** @internal Deterministic ownership and structural evidence for tests. */
@@ -322,6 +332,11 @@ export function signalGraphSnapshot(): SignalGraphSnapshot {
     adoptedReceiverInputProvisions,
     rolledBackReceiverInputProvisions,
     batchedObserverInvalidations,
+    reactionConsumers,
+    reactionEdges,
+    reactionRuns,
+    reactionCleanups,
+    reactionFailures,
   });
 }
 
@@ -376,6 +391,41 @@ export function trackSignalDependency(node: SignalNode<unknown>): void {
 /** @internal Records one observer invalidation deduplicated by a public batch. */
 export function recordBatchedObserverInvalidation(): void {
   batchedObserverInvalidations++;
+}
+
+/** @internal Records one live component-owned reaction consumer. */
+export function recordReactionConsumerCreated(): void {
+  reactionConsumers++;
+}
+
+/** @internal Records final release of one reaction consumer. */
+export function recordReactionConsumerReleased(): void {
+  reactionConsumers--;
+}
+
+/** @internal Records one live reaction source edge. */
+export function recordReactionEdgeCreated(): void {
+  reactionEdges++;
+}
+
+/** @internal Records release of one reaction source edge. */
+export function recordReactionEdgeReleased(): void {
+  reactionEdges--;
+}
+
+/** @internal Records one reaction setup attempt. */
+export function recordReactionRun(): void {
+  reactionRuns++;
+}
+
+/** @internal Records one exact cleanup generation execution. */
+export function recordReactionCleanup(): void {
+  reactionCleanups++;
+}
+
+/** @internal Records one setup or cleanup failure. */
+export function recordReactionFailure(): void {
+  reactionFailures++;
 }
 
 /** @internal Records one live renderer consumer for test diagnostics. */

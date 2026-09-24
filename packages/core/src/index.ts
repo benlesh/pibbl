@@ -286,6 +286,10 @@ export { useMemo } from './lib/hooks/use-memo.js';
 export { useRectPath } from './lib/hooks/use-rect-path.js';
 export { useRef, type CRCRef } from './lib/hooks/use-ref.js';
 export { usePlayback } from './lib/hooks/use-playback.js';
+export {
+  useReaction,
+  type CRCReactionOptions,
+} from './lib/hooks/use-reaction.js';
 export { useTransition } from './lib/hooks/use-transition.js';
 export { useSignal } from './lib/hooks/use-signal.js';
 export { useState, type StateUpdater } from './lib/hooks/use-state.js';

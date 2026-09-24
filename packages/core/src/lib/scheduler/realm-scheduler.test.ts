@@ -37,6 +37,7 @@ import type { Canvas } from '../types';
 import {
   getCurrentFrameSnapshot,
   queueFrameCompletion,
+  queueReactionCompletion,
   registerAdvanceParticipant,
 } from './realm-scheduler';
 import type { CRCAdvanceParticipant } from './types';
@@ -1053,6 +1054,31 @@ describe('realm scheduler', () => {
       'late-complete',
     ]);
     expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('runs reaction-only Complete work without dirty roots and defers nested work', () => {
+    const calls: string[] = [];
+    queueReactionCompletion(() => {
+      calls.push('first');
+      queueReactionCompletion(() => calls.push('nested'));
+    });
+
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyRoots: 0,
+      queuedReactionCompletions: 1,
+    });
+    driver.flush(10);
+    expect(calls).toEqual(['first']);
+    expect(driver.pendingHostFrames).toBe(1);
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyRoots: 0,
+      queuedReactionCompletions: 1,
+    });
+
+    driver.flush(20);
+    expect(calls).toEqual(['first', 'nested']);
+    expect(driver.pendingHostFrames).toBe(0);
+    expect(snapshotRealmScheduler().queuedReactionCompletions).toBe(0);
   });
 
   it('defers a same-callback Advance re-registration until the next Begin', () => {

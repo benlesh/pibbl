@@ -60,6 +60,7 @@ import type {
   CRCPlaybackEvent,
   CRCPlaybackOptions,
   CRCPlaybackStatus,
+  CRCReactionOptions,
   CRCRef,
   CRCResponsiveViewportConfig,
   CRCSpringOptions,
@@ -252,6 +253,7 @@ import {
   useMemo,
   usePlayback,
   useRectPath,
+  useReaction,
   useRef,
   useSignal,
   useState,
@@ -1739,6 +1741,16 @@ const computedValue: Signal<number> = useComputed(
 computedValue.get();
 // @ts-expect-error computed hook values are readonly
 computedValue.set(1);
+
+const reactionOptions: CRCReactionOptions = {
+  debugName: 'package consumer reaction',
+};
+useReaction(() => {
+  writableCount.get();
+  return () => undefined;
+}, [constValue], reactionOptions);
+// @ts-expect-error reaction setup is synchronous
+useReaction(async () => undefined);
 
 const initializedRef: CRCRef<number> = useRef(1);
 const emptyRef: CRCRef<string> = useRef<string>();

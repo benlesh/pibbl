@@ -122,6 +122,7 @@ export interface RealmSchedulerSnapshot {
   readonly dirtyRoots: number;
   readonly registeredAdvanceParticipants: number;
   readonly queuedFrameCompletions: number;
+  readonly queuedReactionCompletions: number;
   readonly queuedBeginCommands: number;
   readonly currentFrame: CRCFrameSnapshot | undefined;
 }

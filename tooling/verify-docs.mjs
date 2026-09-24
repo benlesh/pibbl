@@ -184,6 +184,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-particle-system.md",
   "docs/site/api/hooks/use-playback.md",
   "docs/site/api/hooks/use-rect-path.md",
+  "docs/site/api/hooks/use-reaction.md",
   "docs/site/api/hooks/use-ref.md",
   "docs/site/api/hooks/use-signal.md",
   "docs/site/api/hooks/use-state.md",

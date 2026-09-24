@@ -18,6 +18,7 @@ import { usePlayback } from './use-playback';
 import { useTransition } from './use-transition';
 import { useRectPath } from './use-rect-path';
 import { useRef } from './use-ref';
+import { useReaction } from './use-reaction';
 import { useSignal } from './use-signal';
 import { useState, type StateUpdater } from './use-state';
 import { useSvgPath } from './use-svg-path';
@@ -288,6 +289,7 @@ describe('hook ordering and render errors', () => {
       () => useComputed(() => 1),
       () => useMemo(() => 1, []),
       () => useRef(0),
+      () => useReaction(() => undefined),
       () => useSignal(0),
       () => usePlayback(track(signal(0), tween({ to: 1, duration: 1 }))),
       () => useTransition(1, { type: 'tween', duration: 1 }),

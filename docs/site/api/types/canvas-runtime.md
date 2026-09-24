@@ -27,6 +27,7 @@ symbols:
     CRCPlaybackEvent,
     CRCPlaybackOptions,
     CRCPlaybackStatus,
+    CRCReactionOptions,
     CRCRef,
     CRCRenderLayerComponentProps,
     CRCRenderLayerContext,
@@ -160,6 +161,11 @@ milestone delivery, and isolated error handling.
 ## CRCRef
 
 `CRCRef<T>` is the stable mutable `{ current }` object returned by `useRef`.
+
+## CRCReactionOptions
+
+`CRCReactionOptions` accepts an optional debug name for a component-owned
+`useReaction` lifecycle.
 Writing `current` does not schedule rendering and its lifetime is one component
 identity.
 
