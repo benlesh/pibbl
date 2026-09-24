@@ -142,6 +142,7 @@ describe('plain function component dispatch', () => {
       'eventListener',
       'cursor',
     ]);
+    expect(hookProbeRefs.signalConsumer).toBeUndefined();
 
     controller.dispose();
     expect(cleanups).toHaveBeenCalledOnce();

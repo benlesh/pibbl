@@ -30,8 +30,7 @@ import {
   type CRCBackendFrame,
 } from './backend/types.js';
 import {
-  collectSignalReads,
-  createSignalRenderConsumer,
+  collectComponentSignalReads,
   disposeSignalRenderConsumer,
 } from './signals/render-consumer.js';
 import { untracked } from './signals/graph.js';
@@ -117,6 +116,7 @@ function renderComponentElement<P>(
 ): void {
   try {
     const componentRefs = prepareComponentScope(element, parentId, parent);
+    const crcInstance = GLOBAL_STATE.currentCRCInstance!;
     const id = componentRefs.id;
     GLOBAL_STATE.componentRefs = componentRefs;
     GLOBAL_STATE.componentHookIndex = 0;
@@ -143,7 +143,31 @@ function renderComponentElement<P>(
         onAfterRender?.();
       };
       try {
-        collectSignalReads(componentRefs.signalConsumer!, commitSignalReads => {
+        collectComponentSignalReads(componentRefs, () => ({
+          debugName: `${componentRefs.element.type.name || 'Anonymous'} (${id})`,
+          invalidate: () => {
+            if (
+              GLOBAL_STATE.crcInstances.get(crcInstance.canvas) !== crcInstance ||
+              crcInstance.mainTeardowns.closed ||
+              componentRefs.teardowns.closed ||
+              crcInstance.refs.get(componentRefs.id) !== componentRefs
+            ) {
+              return;
+            }
+            requestInstanceRender(crcInstance);
+          },
+          onMaterialize: () => {
+            if (componentRefs.signalConsumerTeardownAttached) return;
+            componentRefs.signalConsumerTeardownAttached = true;
+            componentRefs.teardowns.add(() => {
+              const consumer = componentRefs.signalConsumer;
+              componentRefs.signalConsumer = undefined;
+              if (consumer !== undefined) {
+                disposeSignalRenderConsumer(consumer);
+              }
+            });
+          },
+        }), commitSignalReads => {
           const renderProgram = (invoke: () => CRCNode | void) => {
             try {
               const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
@@ -254,7 +278,7 @@ function renderComponentElement<P>(
             );
           }
         });
-        componentRefs.signalConsumer!.markClean();
+        componentRefs.signalConsumer?.markClean();
       } finally {
         try {
           finishAfterRender();
@@ -311,28 +335,10 @@ function prepareComponentScope<P>(
       refs: [],
       hooks: [],
       signalConsumer: undefined,
+      signalConsumerTeardownAttached: false,
       teardowns,
       onAfterRender: undefined,
     };
-    if (!isFragmentElement(element)) {
-      mountedRefs.signalConsumer = createSignalRenderConsumer({
-        debugName: `${element.type.name || 'Anonymous'} (${id})`,
-        invalidate: () => {
-          if (
-            GLOBAL_STATE.crcInstances.get(crcInstance.canvas) !== crcInstance ||
-            crcInstance.mainTeardowns.closed ||
-            mountedRefs.teardowns.closed ||
-            crcInstance.refs.get(mountedRefs.id) !== mountedRefs
-          ) {
-            return;
-          }
-          requestInstanceRender(crcInstance);
-        },
-      });
-      teardowns.add(() => {
-        disposeSignalRenderConsumer(mountedRefs.signalConsumer!);
-      });
-    }
     crcInstance.refs.set(id, mountedRefs);
     componentRefs = mountedRefs;
   }

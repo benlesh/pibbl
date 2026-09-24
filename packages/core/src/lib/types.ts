@@ -138,6 +138,7 @@ export interface CRCComponentRefs<P> {
   refs: any[];
   hooks: CRCHookSlot[];
   signalConsumer: SignalRenderConsumer | undefined;
+  signalConsumerTeardownAttached: boolean;
   teardowns: Teardowns;
   onAfterRender: (() => void) | undefined;
 }

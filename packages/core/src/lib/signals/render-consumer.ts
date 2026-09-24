@@ -4,6 +4,9 @@ import {
   recordRendererEdgeCreated,
   recordRendererEdgeReleased,
   recordRendererEdgeReused,
+  recordLazyRendererConsumerCreated,
+  type SignalDependencyCollector,
+  type SignalNode,
   withSignalTracking,
 } from './graph.js';
 import {
@@ -27,6 +30,14 @@ export interface SignalRenderConsumer {
 export interface SignalRenderConsumerOptions {
   debugName: string;
   invalidate(): void;
+}
+
+export interface ComponentSignalRenderOwner {
+  signalConsumer: SignalRenderConsumer | undefined;
+}
+
+export interface ComponentSignalReadOptions extends SignalRenderConsumerOptions {
+  onMaterialize(): void;
 }
 
 interface ConsumerState extends SignalDependencyConsumer {
@@ -114,6 +125,65 @@ export function collectSignalReads<T>(
   }
 }
 
+export function collectComponentSignalReads<T>(
+  owner: ComponentSignalRenderOwner,
+  createOptions: () => ComponentSignalReadOptions,
+  callback: (commit: () => void) => T,
+): T {
+  let consumer = owner.signalConsumer;
+  let state = consumer === undefined ? undefined : getConsumerState(consumer);
+  let provisional = false;
+  let committed = false;
+  let onMaterialize: (() => void) | undefined;
+
+  if (state !== undefined) beginConsumerCollection(state);
+  const collector: SignalDependencyCollector = {
+    addDependency(node: SignalNode<unknown>): void {
+      if (committed) return;
+      if (state === undefined) {
+        const options = createOptions();
+        onMaterialize = options.onMaterialize;
+        consumer = createSignalRenderConsumer(options);
+        state = getConsumerState(consumer);
+        provisional = true;
+        recordLazyRendererConsumerCreated();
+        beginConsumerCollection(state);
+      }
+      state.addDependency(node);
+    },
+  };
+  const commit = (): void => {
+    if (committed) return;
+    committed = true;
+    if (state === undefined || consumer === undefined) return;
+    state.collecting = false;
+    commitCollectedDependencies(state);
+    if (state.dependencyCount === 0) {
+      if (owner.signalConsumer === consumer) owner.signalConsumer = undefined;
+      disposeSignalRenderConsumer(consumer);
+    } else if (provisional) {
+      owner.signalConsumer = consumer;
+      onMaterialize!();
+    }
+  };
+
+  try {
+    const result = withSignalTracking(collector, () => callback(commit));
+    commit();
+    return result;
+  } catch (error) {
+    if (!committed && state !== undefined) {
+      rollbackReactiveCollection(state);
+      if (provisional && consumer !== undefined) {
+        disposeSignalRenderConsumer(consumer);
+      }
+    }
+    throw error;
+  } finally {
+    if (state !== undefined) state.collecting = false;
+  }
+}
+
 export function disposeSignalRenderConsumer(consumer: SignalRenderConsumer): void {
   const state = getConsumerState(consumer);
   if (state.disposed) return;
@@ -131,6 +201,11 @@ function getConsumerState(consumer: SignalRenderConsumer): ConsumerState {
     throw new TypeError('Expected a signal render consumer created by CRC.');
   }
   return state;
+}
+
+function beginConsumerCollection(state: ConsumerState): void {
+  beginReactiveCollection(state);
+  state.collecting = true;
 }
 
 function commitCollectedDependencies(state: ConsumerState): void {
