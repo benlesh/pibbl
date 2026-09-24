@@ -1,9 +1,12 @@
 # Signals-centric hook and reactive authoring design
 
-> **Status: WRITTEN SPECIFICATION FOR REVIEW.** The architecture, public-model
-> direction, scheduler lifecycle, and explicit-render-boundary strategy were
-> approved in conversation on 2026-09-23. This document is the complete written
-> specification awaiting final review before an implementation plan is written.
+> **Historical status: REOPENED REVISION FOR REVIEW.** This dated design record
+> was approved in conversation on 2026-09-23, then reopened the same day to add
+> CRC-wide signal-valued component inputs. That revision supersedes the earlier
+> explicit-`.get()`-only input contract. The implementation-plan draft based on
+> the superseded contract was discarded. Production work remains blocked until
+> this revised written specification and a later implementation plan are each
+> reviewed and approved.
 
 Date: 2026-09-23
 
@@ -24,6 +27,30 @@ aliases. CRC adds `batch`, `useComputed`, `useConst`, and `useReaction`:
 `useRef` remains the mutable non-reactive cell. Specialized hooks remain because
 they own resources, event registrations, scheduler participants, render
 transactions, or backend state rather than merely storing values.
+
+Signals also become first-class component inputs across CRC. The public
+`SignalValue<T> = T | Signal<T>` type and `resolveSignalValue` helper let an
+input accept either a plain value or a signal. CRC built-ins resolve declared
+signal-valued props, style fields, layout values, text, structural children,
+event handlers, animation hook inputs, and applicable official-package inputs
+while evaluating the receiving component. The dependency therefore belongs to
+the receiver:
+
+```tsx
+const x = useSignal(10);
+const color = useSignal('red');
+const label = useSignal('Current');
+const data = useSignal(initialData);
+
+<Rectangle style={{ x, fill: color, width: 50, height: 50 }} />
+<Text>{label}</Text>
+<LineSeries data={data} xScale="x" yScale="y" />
+```
+
+Passing `x.get()` remains supported and deliberately attributes the read to the
+enclosing component instead. JSX and `createElement` store raw inputs; they do
+not recursively inspect or unwrap application objects. Each receiving component
+or CRC-owned input schema declares the exact positions that resolve signals.
 
 The implementation will optimize the graph before migrating the public surface.
 Stable reactive edges will use reusable intrusive ownership records rather than
@@ -70,6 +97,13 @@ The design succeeds when:
 - components without signal reads pay no live-consumer or dependency-edge cost;
 - one component-owned signal and one reader use the graph's cheapest ownership
   representation and promote safely when sharing appears;
+- signal-valued component inputs attach to the receiving component, while an
+  explicit `.get()` at the call site attaches to the enclosing component;
+- whole-style signals and direct signal-valued style fields work in drawing,
+  layout, measurement, Canvas, WebGL, and official renderer paths without
+  recursively observing arbitrary nested application data;
+- plain component inputs create no signal consumer, graph edge, wrapper signal,
+  resolved-props copy, or other persistent reactive allocation;
 - ordinary non-equal state changes are no materially slower than current
   `useState` on equivalent workloads;
 - existing Layer isolation and official-renderer invalidation become neither
@@ -86,7 +120,10 @@ The design succeeds when:
 - A retained Canvas display list, virtual DOM, scene graph, or reconciled host
   node tree.
 - Arbitrary component-level pixel repaint inside one immediate-mode surface.
-- Implicit signal unwrapping in JSX, styles, props, or text.
+- Blind or unlimited recursive signal unwrapping by JSX, `createElement`, or a
+  generic object walker.
+- Treating signals found inside arbitrary application data, dataset rows,
+  `custom` style payloads, tags, handles, or other opaque values as dependencies.
 - Making ordinary props into signals.
 - Asynchronous signals, Promise tracking, Suspense, server components, or a
   worker-owned graph.
@@ -143,6 +180,35 @@ an observer `Set`, and computed nodes additionally own dependency and observatio
 maps. This is general and correct but allocation-heavy for the overwhelmingly
 common zero-, one-, and few-edge cases.
 
+### Current component-input boundary
+
+Current JSX and `createElement` preserve props without resolving signals. A
+signal works only when application or component code calls `.get()`. Built-in
+style resolution expects ordinary style values, `Text` accepts recursive scalar
+content but not signals, and layout parents inspect child styles before the
+child primitive evaluates. Official package components make their own local
+choices; there is no shared `T | Signal<T>` input vocabulary.
+
+That current boundary means:
+
+```tsx
+<Rectangle style={{ x: x.get(), fill: color.get(), width: 50, height: 50 }} />
+<Text>{label.get()}</Text>
+```
+
+subscribes the enclosing component, not `Rectangle` or `Text`. It also means a
+future visualization package would need either explicit call-site reads or a
+package-specific signal convention for `data` and `domain`. The revised design
+replaces that inconsistency with one core-owned input contract.
+
+The current renderer already evaluates ordinary component callbacks and
+primitive programs inside the exact component's signal collector. That is the
+correct attribution point for most input resolution. Layout and pure
+measurement are the exception: they can inspect a child's style or textual
+content before that child's component scope evaluates. The revised design adds
+a receiver-token provision for those pre-evaluation reads rather than charging
+them to the layout parent.
+
 ### Current computed scheduling
 
 `computed` is already lazy, cached, dynamically dependent, equality-aware, and
@@ -186,7 +252,11 @@ The removed vocabulary appears in:
 - runtime export enumerations and public-vocabulary type tests.
 
 The migration is therefore one repository-wide public pivot, not a local hook
-file deletion.
+file deletion. The input revision additionally reaches primitive input type
+mapping, every core specified-style family, style normalization and measurement,
+text/container child materialization, event prop types, animation hooks,
+official backend definitions, physics/particle configuration, future or active
+`@crc/viz` component seams, JSX declarations, and performance diagnostics.
 
 ### Audit verification
 
@@ -199,8 +269,9 @@ being replaced; it is not evidence for the future implementation.
 
 1. **Signals are the state model.** Writable values use signals; derived values
    use computed signals.
-2. **Reads remain explicit.** A signal container never becomes its value merely
-   because a receiving API accepts the contained type.
+2. **Signal-valued inputs are explicit in the receiving API.** A component may
+   declare `SignalValue<T>` and resolve it while evaluating. No undeclared prop,
+   nested object, or JSX runtime walk acquires a dependency.
 3. **Equality avoids work before scheduling paint.** It is better not to dirty a
    renderer than to discover unchanged output during Render.
 4. **Imperative synchronization is not rendering.** A reaction owns its own
@@ -216,6 +287,9 @@ being replaced; it is not evidence for the future implementation.
    Complete transaction rules.
 9. **Performance claims require workload evidence.** API uniformity alone does
    not justify removing a cheaper primitive.
+10. **Plain inputs stay plain.** Signal input support must add no wrapper signal,
+    recursive walk, or persistent allocation to a component that receives only
+    ordinary values.
 
 ## Final public model
 
@@ -240,6 +314,19 @@ export interface CRCReactionOptions {
   readonly debugName?: string;
 }
 
+export type SignalValue<T> = T | Signal<T>;
+
+export function resolveSignalValue<T>(value: SignalValue<T>): T;
+
+export type CRCNodeInput =
+  SignalValue<CRCNode> | readonly CRCNodeInput[] | Iterable<CRCNodeInput>;
+
+export type CRCTextInput =
+  SignalValue<CRCTextChild> | readonly CRCTextInput[] | Iterable<CRCTextInput>;
+
+export type CRCContainerChild = CRCNodeInput;
+export type CRCRenderResult = CRCNodeInput | void;
+
 export function batch<T>(callback: () => T): T;
 
 export function useConst<T>(create: () => T): T;
@@ -256,6 +343,21 @@ export function useReaction(
   options?: CRCReactionOptions,
 ): void;
 ```
+
+`SignalValue` is a type-level opt-in, not a wrapper object. The helper performs
+one nominal `isSignal` check and at most one `.get()` call. It does not recurse,
+invoke functions, traverse arrays, inspect object properties, or memoize. Called
+during a component evaluation, the read belongs to that component's active
+collector. Called outside a tracked context, it is an ordinary untracked
+snapshot read, exactly like calling `.get()` there.
+
+`CRCNode` and `CRCTextChild` remain the resolved, signal-free structural
+grammars. `CRCNodeInput` and `CRCTextInput` are the authoring grammars accepted
+by component results and declared children props. A signal at one input position
+may yield one complete resolved node/text structure, but that contained
+structure cannot itself contain signals. Arrays and iterables of input positions
+may contain additional signals explicitly. `crc()` continues to require a
+resolved root `CRCNode`; a bare signal is not a root owner.
 
 ### Retained core exports
 
@@ -283,6 +385,351 @@ useCanvasContext;
 
 Specialized package hooks and component-owned endpoints also remain.
 
+## Signal-valued component input contract
+
+### Two intentional ownership forms
+
+Both of these are supported, and they mean different things:
+
+```tsx
+// Rectangle owns the read and dependency.
+<Rectangle style={{ x }} />
+
+// The enclosing component owns the read and dependency.
+<Rectangle style={{ x: x.get() }} />
+```
+
+In the first form the element descriptor retains the signal object unchanged.
+`Rectangle` resolves the declared `style.x` input while its receiver collector
+is active. In the second form JavaScript evaluates `.get()` before constructing
+the element, so the child receives a number and has nothing to resolve.
+
+This distinction is preserved through `computed`: passing a computed signal
+lets the receiving component subscribe to the computed barrier, while passing
+`computedValue.get()` makes the enclosing component the downstream consumer.
+The same source equality, computed validation, batching, scheduler coalescing,
+and teardown rules apply to either ownership location.
+
+### Type vocabulary and custom components
+
+Custom component authors opt in one input at a time:
+
+```tsx
+interface GaugeProps {
+  readonly value: SignalValue<number>;
+  readonly valueSignal: WritableSignal<number>;
+}
+
+function Gauge(props: GaugeProps) {
+  const value = resolveSignalValue(props.value);
+
+  // Exact signal-object props stay objects because the component does not
+  // pass them to resolveSignalValue.
+  const writable = props.valueSignal;
+  return <Text>{value}</Text>;
+}
+```
+
+`resolveSignalValue` resolves exactly one level. If `T` is itself a signal type,
+the helper cannot infer that the caller intended to preserve the outer object;
+an API that wants a signal object must declare `Signal<T>` or
+`WritableSignal<T>` directly and must not call the helper for that position.
+
+Ordinary function components receive raw props. CRC does not transform every
+prop type through a global mapped type and does not pre-resolve their props.
+This keeps custom APIs explicit and prevents an object-valued prop from gaining
+dependencies merely because one nested property happens to be a signal.
+
+### CRC primitives and declared input schemas
+
+CRC primitives are not invoked as ordinary functions; the renderer dispatches
+their registered programs. Their definition metadata therefore declares a
+bounded input-resolution schema. The schema covers:
+
+- the optional or required whole `style` input;
+- direct fields of that style except explicitly opaque fields;
+- direct program props that accept reactive replacement;
+- direct program props that intentionally retain a signal object;
+- textual or structural child grammar where the component supports it; and
+- CRC-owned nested descriptor fields that explicitly opt in.
+
+The corresponding public input type exposes `SignalValue<T>` only at those
+positions. The primitive program, normalizer, style resolver, measure callback,
+event registration, and official backend receive the resolved ordinary value.
+The input descriptor itself remains immutable and unchanged.
+
+The JSX runtime and `createElement` remain construction-only. They strip `key`,
+record source metadata, and store raw props exactly as supplied. They perform no
+signal read, array walk, object walk, or dependency attribution.
+
+`definePrimitive` keeps resolved program types separate from authoring input
+types. Conceptually, a resolved style `S` produces an authoring style whose
+direct non-`custom` fields are `SignalValue<S[K]>`, and the `style` prop itself
+is `SignalValue` of that authoring style. By default, the public primitive-input
+mapping also adds `SignalValue` to each direct program prop whose declared type
+is not already `Signal` or `WritableSignal`. It does not apply that generic
+mapping to `key`, source metadata, or `children`; structural children use their
+separate declared grammar. The renderer shallowly resolves the mapped positions
+before invoking normalization, measurement, or the primitive program.
+
+A primitive with an exact signal-object prop declares that prop in a
+compile-time-checked `preserveSignalProps` capability. The returned
+`PrimitiveInputOf` type leaves that position exact, and the runtime schema skips
+it. Textual and structural child grammar are also declared in primitive metadata
+so layout/measurement can use the same receiver contract. Official
+`defineBackendPrimitive` definitions carry the identical metadata through the
+version-coupled friend seam. Ordinary function components do not receive this
+automatic primitive mapping and use `SignalValue` plus the public helper
+directly.
+
+### Whole-object styles
+
+Every CRC primitive with a style input accepts a signal for the entire specified
+style object:
+
+```tsx
+const style = useSignal<RectStyle>({
+  x: 10,
+  fill: "red",
+  width: 50,
+  height: 50,
+});
+
+<Rectangle style={style} />;
+```
+
+The receiver reads the style signal once, then runs its ordinary normalization,
+layout, validation, and resolution pipeline on the current object. Required
+style fields remain required in the signal's value type. Optional style inputs
+may use a signal whose value type includes `undefined`; required style inputs
+may not.
+
+A whole-style signal may yield an object whose direct declared fields are also
+signals. CRC resolves the whole object and then those direct declared fields.
+This is two explicit schema levels, not recursive unwrapping. The source style
+object is never mutated.
+
+### Signal-valued style fields
+
+Direct style fields accept signals wherever replacing the entire field value is
+meaningful:
+
+```tsx
+<Rectangle
+  style={{
+    x,
+    fill: color,
+    width: 50,
+    height: 50,
+    padding: paddingSignal,
+    filter: filterSignal,
+  }}
+/>
+```
+
+This includes drawing geometry, paint, transforms, layout participation,
+filters as a complete descriptor or list, and renderer-specific WebGL style
+fields such as a complete material or transform value. `style.custom` remains
+opaque. A signal stored in `custom`, a tag, or another application payload is
+not read automatically.
+
+Composite field values are atomic unless their CRC-owned public type explicitly
+marks deeper positions as signal-valued. For example:
+
+- `padding: paddingSignal` is reactive;
+- `padding: { left: leftSignal }` is not a supported signal position;
+- `filter: blurDescriptorSignal` is reactive;
+- a signal hidden inside an arbitrary filter-adjacent application object is not;
+- `cornerRadii: radiiSignal` is reactive; and
+- individual entries inside an ordinary radii array are not inspected.
+
+The initial contract intentionally prefers replacing a small immutable
+descriptor over recursively walking it. A later CRC-owned descriptor may opt in
+specific nested fields only by changing its public type, resolver, tests, and
+performance evidence together.
+
+### Ordinary props, data, and official packages
+
+CRC-provided components accept direct signal-valued props when the prop is a
+render-time value. Representative examples include a WebGL mesh's geometry, a
+background color, a camera descriptor, a particle effect input, and direct
+physics-world configuration such as gravity or enabled state.
+
+Official sibling packages import `SignalValue` and `resolveSignalValue` from
+`@crc/core`; they do not publish package-local `MaybeSignal` conventions or deep
+resolvers. This contract includes `@crc/viz`:
+
+```tsx
+const data = useSignal(initialData);
+const domain = useComputed(() => extent(data.get()));
+
+<LineSeries data={data} xScale="x" yScale="y" />
+<Axis domain={domain} />
+```
+
+`LineSeries` owns one edge to `data`; it does not inspect the rows for signals.
+`Axis` owns one edge to the computed `domain`, so equal computed output prevents
+its downstream invalidation. A plain data array follows the ordinary cheap
+path.
+
+Official package APIs audit their public component inputs individually. Immutable
+geometry factories, animation definitions/programs, particle effect definitions,
+and pure physics geometry functions remain data constructors rather than
+reactive graph entry points. Their results may be placed in a signal and passed
+to a component input, but signals embedded inside those immutable values are
+not discovered automatically.
+
+### Text and structural children
+
+`Text` accepts `CRCTextInput`, which allows signals at explicitly recursive text
+input positions:
+
+```tsx
+const label = useSignal("Current");
+const value = useSignal(12);
+
+<Text>{["Value: ", value, " — ", label]}</Text>;
+```
+
+The input grammar traverses arrays and synchronous iterables because those are
+already declared structural text containers. At any input position, one
+`Signal<CRCTextChild>` may provide a complete resolved, signal-free text
+structure. It does not inspect arbitrary objects. A signal that resolves to
+another signal, a structure containing signals, or a cyclic structure is
+rejected with a receiver-specific diagnostic rather than repeatedly unwrapped.
+
+Container components such as `Group`, `Clip`, `Layer`, layout components,
+WebGL groups/layers, and physics worlds accept `CRCNodeInput` for their declared
+structural child grammar. Arrays, synchronous iterables, Fragments, empty values,
+and elements remain structural. A signal at a declared child position may
+resolve to one complete resolved `CRCNode` structure. That resolved structure
+may not contain another signal. Traversal continues only through the CRC child
+grammar, never through element props or application objects.
+
+An unkeyed Fragment is transparent, so its child-signal reads belong to the
+nearest receiving component whose result is being materialized. A keyed
+Fragment owns its structural child reads as its identity boundary. A bare signal
+cannot be the root passed directly to `crc()` because there is no receiving
+component to own that dependency; place it under a component or read it
+explicitly at root construction.
+
+Component-result materialization moves before that component's signal-read
+generation commits. CRC resolves declared signal child positions while the
+component collector is still active, commits the complete generation, then
+traverses child components untracked as today. Child component reads therefore
+still do not leak into the parent.
+
+### Event handlers, callbacks, and accessors
+
+A direct event-handler or callback prop may be signal-valued when its receiving
+API declares reactive replacement:
+
+```tsx
+const clickHandler = useSignal<CRCEventHandler<"click">>(handlePrimaryClick);
+<Rectangle onClick={clickHandler} style={style} />;
+```
+
+The receiver resolves the callback identity during render and registers the
+result. CRC does not invoke it during resolution and does not inspect its return
+value. Changing the handler signal invalidates the receiver so the registration
+updates transactionally. Event dispatch still batches writes made by the
+eventual callback.
+
+An accessor is likewise an opaque function value unless its API explicitly
+declares that CRC invokes it. Resolving `SignalValue<() => T>` chooses the
+accessor function; it does not call the accessor. If an API declares an accessor
+whose return type is `SignalValue<T>`, that API must document the evaluation
+phase and call `resolveSignalValue` on the return at that phase. A render-time
+accessor read belongs to the receiver. An accessor invoked later in Advance,
+Complete, an event, or an asynchronous callback does not silently create a
+component render dependency; such APIs must own a dedicated signal/reaction
+contract or require an explicit signal object.
+
+### Arrays and nested descriptors
+
+The general rule is shallow, declared resolution:
+
+- a direct `SignalValue<readonly Datum[]>` reads the signal and treats the array
+  and every datum as opaque data;
+- a direct signal-valued style field may replace the entire array or descriptor;
+- an array containing signals is not traversed unless the array belongs to a
+  declared CRC structural grammar such as children or a specifically typed
+  CRC-owned descriptor;
+- nested application objects are never inspected; and
+- one signal never causes “unwrap until not a signal” behavior.
+
+CRC-owned option descriptors may opt in one shallow level when individual
+replacement is useful. The Signals-centric animation surface does so for
+component-owned playback and transition inputs: `usePlayback` may receive a
+signal-valued program and playback-options object, while `useTransition` may
+receive a signal-valued target and transition-options object whose documented
+direct option fields may themselves be signal-valued. The hook resolves those
+positions during its owner component's evaluation and transactionally adopts
+the ordinary candidate. Writer targets passed to `track`, physics kinematic
+target signals, body/world handles, and props explicitly named or typed as
+signals remain signal objects.
+
+### Exact signal-object inputs
+
+An API preserves a signal object by declaring the exact signal type:
+
+```ts
+interface ControlledValueProps<T> {
+  readonly valueSignal: WritableSignal<T>;
+}
+
+interface KinematicTarget {
+  readonly position: Signal<readonly [number, number, number]>;
+}
+```
+
+Neither position uses `SignalValue`. No automatic resolver runs there, including
+inside official primitive prop resolution. This rule protects writer targets,
+physics bindings, handles exposing readonly fields, and custom controlled-value
+components from accidental unwrapping.
+
+### Plain-value fast path
+
+Input resolution never creates wrapper signals. For a plain direct value,
+`resolveSignalValue` performs one primitive/object-kind branch and returns the
+same value. Primitive input resolution uses static schema metadata, not a
+recursive walker. It scans only declared direct positions and uses copy-on-first
+signal semantics: a plain props/style object is forwarded unchanged, while a
+shallow resolved copy is created only after an actual signal field is found.
+
+No signal means no component consumer, receiver provision, edge, resolved-input
+copy, dependency array, or persistent cache entry. Structural child arrays are
+already traversed by CRC and add only a nominal signal check at each declared
+child position. Performance acceptance criteria below protect this path.
+
+## Consequences for existing runtime assumptions
+
+The input contract changes five assumptions from the original version of this
+design:
+
+1. **A component consumer is not limited to body `.get()` calls.** Declared
+   input resolution, style/measurement provisions, and structural child signals
+   can materialize the same lazy receiver consumer. Components with only plain
+   inputs still materialize none.
+2. **Specified style is no longer always an ordinary object.** The whole style
+   and declared direct fields may be signal-valued. Normalizers, layout
+   algorithms, measure callbacks, primitive programs, presentation resolvers,
+   and backends still receive ordinary resolved values.
+3. **Primitive dispatch gains an input-resolution stage.** It runs inside the
+   receiver collection and before normalize/resolve/program callbacks. It is a
+   bounded shallow schema operation, not JSX reconciliation.
+4. **Text and component-result materialization may read signals.** Those reads
+   occur before the receiver generation commits. Evaluation of child component
+   bodies remains untracked by the parent.
+5. **Layout inspection needs receiver attribution.** A parent that reads a
+   child's signal-valued layout style does so through the child receiver token;
+   it does not acquire the child's dependency itself.
+
+The contract does **not** change component identity, hook ordering, the
+full-traversal behavior of an invalidated ordinary Canvas root, explicit Layer
+pixel ownership, paint order, event targeting, or the absence of a retained
+scene graph.
+
 ## Authoring before and after
 
 ### Writable component state
@@ -304,12 +751,13 @@ function Counter() {
   const count = useSignal(0);
 
   return (
-    <Text onClick={() => count.update((value) => value + 1)}>
-      {count.get()}
-    </Text>
+    <Text onClick={() => count.update((value) => value + 1)}>{count}</Text>
   );
 }
 ```
+
+`Text` owns the signal read. Writing `{count.get()}` instead remains valid and
+makes `Counter` the consumer.
 
 `set(value)` always treats a function as data. `update(updater)` is the only
 updater spelling:
@@ -334,10 +782,12 @@ After:
 
 ```tsx
 const doubled = useComputed(() => count.get() * 2);
+return <Text>{doubled}</Text>;
 ```
 
-The component that reads `doubled.get()` subscribes to `doubled`, not directly
-to `count`. Equal computed output blocks downstream invalidation during Plan.
+The receiving `Text` subscribes to `doubled`, not directly to `count`. Equal
+computed output blocks downstream invalidation during Plan. If the owner needs
+the value for its own branching, it may still call `doubled.get()` explicitly.
 
 ### Plain render inputs
 
@@ -347,12 +797,13 @@ to `count`. Equal computed output blocks downstream invalidation during Plan.
 function Shape({ pathData }: { pathData: string }) {
   const path = useComputed(() => new Path2D(pathData), [pathData]);
 
-  return <Path style={{ d: path.get() }} />;
+  return <Path style={{ d: path }} />;
 }
 ```
 
 Signal reads inside the formula remain automatic; the array lists only captured
-non-signal inputs whose changes must invalidate the formula.
+non-signal inputs whose changes must invalidate the formula. `Path` owns the
+downstream computed dependency because its `style.d` slot is signal-valued.
 
 ### Mount-lifetime constants
 
@@ -783,6 +1234,48 @@ A component that previously read signals and later reads none releases its old
 edges after successful evaluation. Failed render cleanup still releases the
 complete instance generation as it does today.
 
+### Receiver-attributed input provisions
+
+Most signal-valued inputs resolve after `prepareComponentScope`, inside the
+receiver's ordinary collector. Child layout style and intrinsic measurement are
+different: `Absolute`, `Overlay`, `Flow`, `Flex`, or `Grid` may inspect a child
+descriptor before the child callback or primitive program runs. Charging those
+reads to the layout parent would violate the receiving-component contract and
+would produce incorrect Layer/renderer diagnostics.
+
+CRC extends the existing primitive receiver token used to connect measurement,
+placement clones, and paint. When layout or mounted measurement encounters the
+first signal for a child receiver, it creates a transaction-local input-read
+provision keyed by that token. The provision records source nodes using the same
+reusable edge-collection machinery, but publishes no observer edge yet. When the
+child scope evaluates, its collector adopts the provision and deduplicates those
+sources with reads from style resolution, measurement reuse, primitive props,
+text materialization, and the component body.
+
+On successful receiver evaluation, the provision merges into the receiver's
+ordinary read collection and that unified generation replaces the receiver's
+old edges. If the receiver fails before commit, the provision is discarded and
+cannot replace the previous successful generation; normal fail-closed root
+cleanup may then release that prior generation with the rest of the failed
+instance. If a later descendant causes root failure, the same cleanup releases
+the already committed receiver and all of its edges. Unclaimed provisions,
+removal, abort, and disposal also release exactly. A first-ever provisional read
+cannot schedule work during the same synchronous render because render-time
+writes are already forbidden.
+
+The provision is allocated only after an actual signal is found. Plain child
+styles and plain measured text create no provision or map entry. A public pure
+`measureElement()` call outside a mounted render has no receiver owner; it reads
+declared signal inputs as a one-shot untracked snapshot and establishes no
+renderer/reaction edge. A computed read may still evaluate its own ordinary
+cache according to the computed contract. This preserves measurement purity and
+avoids a hidden runtime subscription.
+
+Structural child-signal reads normally occur before the receiver generation is
+committed and join its ordinary collector. Keyed Fragments use the same lazy
+consumer rule for their structural children. Unkeyed Fragments remain
+transparent.
+
 ### Safe sharing promotion
 
 No signal is permanently classified as local. A hook signal may be passed to
@@ -804,6 +1297,8 @@ and Plan-validation counters remain. New counters distinguish:
 
 - lazily created component consumers;
 - live and reused edge records;
+- live, adopted, and rolled-back receiver input provisions;
+- plain and signal-valued input resolutions and shallow copy-on-signal events;
 - batched writes and deduplicated observer invalidations;
 - reaction consumers, runs, cleanups, and failures; and
 - provisional `useComputed` formula generations and rollbacks.
@@ -870,10 +1365,14 @@ Managed nested instances render deepest-first. Ordinary roots render in mount
 order. A dirty immediate-mode Canvas instance clears and traverses its complete
 tree.
 
-Each component evaluation collects only its own explicit reads. A nested
-computed replaces the active collector while evaluating, so its source reads do
-not become direct component dependencies. Child traversal remains untracked by
-the parent and establishes each child's collector separately.
+Each component evaluation collects its own explicit `.get()` calls, declared
+signal-valued input resolutions, adopted pre-evaluation input provisions, and
+structural child-signal reads. A nested computed replaces the active collector
+while evaluating, so its source reads do not become direct component
+dependencies. Component-result signal positions are materialized before the
+receiver generation commits; traversal and evaluation of the resulting child
+components remain untracked by the parent and establish each child's collector
+separately.
 
 Successful component evaluation commits its next edge generation and marks the
 consumer clean. Removal and disposal release exact edges. Root failure retains
@@ -896,6 +1395,7 @@ setup and cleanup specifically forbid them.
 | Value or boundary              | Default equality               | Consequence of equality                               |
 | ------------------------------ | ------------------------------ | ----------------------------------------------------- |
 | Writable signal                | `Object.is`                    | No version, notification, or scheduler request        |
+| Signal-valued component input  | Its source signal's equality   | Receiver is not invalidated for an equal source write |
 | Standalone computed            | `Object.is`                    | No downstream invalidation                            |
 | `useComputed` result           | `Object.is`                    | No downstream invalidation                            |
 | `useComputed` dependency slot  | `Object.is`                    | Formula cache remains valid for that non-signal input |
@@ -929,8 +1429,13 @@ When it changes:
 4. the parent traverses and composites the updated bitmap; and
 5. clean sibling Layer bitmaps remain untouched and are reused.
 
-A signal read only in the parent while computing Layer placement or outer
-presentation dirties the parent, not the child bitmap.
+A signal-valued input on the `Layer` element itself—including its placement or
+outer presentation style—belongs to that Layer receiver occurrence in the
+parent instance and dirties the parent composition path, not the child bitmap.
+A signal-valued input resolved by a descendant inside the managed child instance
+belongs to that descendant and dirties the child instance. Layout's
+pre-evaluation receiver provision preserves this distinction without charging a
+child style signal to the layout container component.
 
 ### Filters
 
@@ -1007,6 +1512,11 @@ Specialized implementations may use private constant, memo, signal, computed,
 and reaction primitives. Public API coherence does not require routing a
 non-reactive path cache through a public computed signal.
 
+Specialized hooks may accept `SignalValue` at render-time candidate positions
+without giving up their ownership. In particular, a signal-valued transition
+target still feeds `useTransition`'s transactionally adopted playback; it does
+not replace the playback controller with a generic computed.
+
 ### Hook-order behavior
 
 `useSignal`, `useComputed`, `useConst`, `useRef`, and `useReaction` each have a
@@ -1018,6 +1528,16 @@ fixtures and current examples; it does not weaken the invariant.
 
 - Signal updater or equality failure leaves the previous value current.
 - Component and primitive writes remain forbidden before updater/equality work.
+- A signal-valued input read follows the receiver's normal successful-generation
+  rule. A failed component/root render cannot publish a new input edge set,
+  event handler, style generation, measured value, renderer declaration, or
+  official-package configuration.
+- Input resolution never catches a source signal error separately from the
+  receiving component. A thrown signal/computed read enters normal render
+  failure recovery with source metadata from the receiver.
+- A nested signal at a position that permits only one signal level, a signal
+  cycle in structural children, or a signal resolving to an invalid child/value
+  produces an actionable receiver-and-property diagnostic.
 - `useComputed` dependency and formula candidates commit only with successful
   render transactions.
 - Render failure releases partial consumers, hook resources, event/focus state,
@@ -1033,20 +1553,22 @@ fixtures and current examples; it does not weaken the invariant.
 
 ## Ownership ledger
 
-| Resource                         | Created by                      | Sole owner                              | Release or replacement rule                                                                     |
-| -------------------------------- | ------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Writable hook signal             | `useSignal` mount               | Exact hook slot                         | Slot teardown detaches owner edges; retained signal remains usable                              |
-| Component render consumer        | First successful component read | Exact component refs                    | Last edge removal may collapse storage; component teardown releases all                         |
-| Reactive dependency edge         | Successful tracked read         | Exact consumer-source relationship      | Successful dynamic replacement or consumer teardown                                             |
-| Standalone computed source lease | First observed computed edge    | Computed while observed                 | Dynamic replacement or final observer release                                                   |
-| `useComputed` formula candidate  | Owner render                    | Exact render transaction and hook slot  | Commit on success, rollback on failure                                                          |
-| `useComputed` cached node        | Hook mount                      | Exact hook slot / retained signal value | Hook stops revising after teardown; retained downstream ownership may keep ordinary graph edges |
-| Constant hook value              | `useConst` mount                | Exact hook slot                         | Slot teardown drops runtime reference; no automatic application cleanup                         |
-| Reaction consumer                | `useReaction` successful mount  | Exact hook slot                         | Slot teardown releases graph edges and pending work                                             |
-| Reaction cleanup                 | Successful setup                | Exact reaction generation               | Cleared then run before replacement, removal, failure cleanup, abort, or disposal               |
-| Batch notification queue         | Outermost `batch` entry         | Synchronous batch scope                 | Flushed and released on outermost return or throw                                               |
-| Layer pixel cache                | `Layer` mount                   | Exact Layer hook/component slot         | Resize replaces bitmap; removal/disposal releases instance and surface                          |
-| Filter scratch surface           | First active depth lease        | CRC instance transient pool             | Returned after boundary; pool released with instance                                            |
+| Resource                         | Created by                       | Sole owner                                | Release or replacement rule                                                                     |
+| -------------------------------- | -------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Writable hook signal             | `useSignal` mount                | Exact hook slot                           | Slot teardown detaches owner edges; retained signal remains usable                              |
+| Component render consumer        | First successful component read  | Exact component refs                      | Last edge removal may collapse storage; component teardown releases all                         |
+| Receiver input provision         | First pre-evaluation signal read | Exact render transaction + receiver token | Adopt into receiver generation on success; discard on failure or if unclaimed                   |
+| Reactive dependency edge         | Successful tracked read          | Exact consumer-source relationship        | Successful dynamic replacement or consumer teardown                                             |
+| Shallow resolved input copy      | First actual signal field        | Current synchronous receiver evaluation   | Released after normalize/render/measure callback; never retained as graph state                 |
+| Standalone computed source lease | First observed computed edge     | Computed while observed                   | Dynamic replacement or final observer release                                                   |
+| `useComputed` formula candidate  | Owner render                     | Exact render transaction and hook slot    | Commit on success, rollback on failure                                                          |
+| `useComputed` cached node        | Hook mount                       | Exact hook slot / retained signal value   | Hook stops revising after teardown; retained downstream ownership may keep ordinary graph edges |
+| Constant hook value              | `useConst` mount                 | Exact hook slot                           | Slot teardown drops runtime reference; no automatic application cleanup                         |
+| Reaction consumer                | `useReaction` successful mount   | Exact hook slot                           | Slot teardown releases graph edges and pending work                                             |
+| Reaction cleanup                 | Successful setup                 | Exact reaction generation                 | Cleared then run before replacement, removal, failure cleanup, abort, or disposal               |
+| Batch notification queue         | Outermost `batch` entry          | Synchronous batch scope                   | Flushed and released on outermost return or throw                                               |
+| Layer pixel cache                | `Layer` mount                    | Exact Layer hook/component slot           | Resize replaces bitmap; removal/disposal releases instance and surface                          |
+| Filter scratch surface           | First active depth lease         | CRC instance transient pool               | Returned after boundary; pool released with instance                                            |
 
 ## Migration design
 
@@ -1064,8 +1586,10 @@ becomes:
 const value = useSignal(initial);
 ```
 
-Reads become `value.get()`. Direct writes become `value.set(next)`. Functional
-updates become `value.update(update)`. Captured `StateUpdater<T>` types become
+Branching, arithmetic, and ordinary JavaScript reads become `value.get()`.
+Declared CRC component inputs may receive `value` directly so the receiver owns
+the dependency. Direct writes become `value.set(next)`. Functional updates
+become `value.update(update)`. Captured `StateUpdater<T>` types become
 `WritableSignal<T>` when the value cell itself is passed, or an explicit
 callback type when only one operation is exposed.
 
@@ -1119,6 +1643,41 @@ Canvas traversal when no visual consumer exists.
   existing owner and scheduler contracts unless graph-edge representation
   requires version-coupled private changes.
 
+### Signal-valued input migration
+
+Core specified-style types, primitive input mappings, textual/structural child
+types, event props, component-owned animation inputs, and applicable official
+package component props adopt the shared `SignalValue` vocabulary. Program and
+resolver types remain ordinary resolved values so backend code does not spread
+`T | Signal<T>` unions through paint/math implementations.
+
+Every built-in and official package classifies each public input as one of:
+
+1. shallow signal-valued replacement;
+2. CRC structural child grammar;
+3. an explicitly signal-enabled CRC-owned descriptor field; or
+4. opaque/exact data, including deliberate `Signal`/`WritableSignal` objects.
+
+The classification is covered by public type tests and runtime tests. New
+official packages, including `@crc/viz`, import the core type/helper and follow
+the same classification. They may not introduce a second resolver whose deep
+behavior differs from core.
+
+Migration examples prefer the ownership that performs the work:
+
+```tsx
+// Before: the chart's enclosing component owns the data read.
+<LineSeries data={data.get()} xScale="x" yScale="y" />
+
+// After: LineSeries owns the data read.
+<LineSeries data={data} xScale="x" yScale="y" />
+```
+
+An explicit `.get()` remains in code that branches, computes multiple props once,
+needs one parent dependency, or intentionally coordinates several child inputs
+through a single owner. The migration must not mechanically replace every
+`.get()` with a signal object.
+
 ### Tests and scenarios
 
 All current tests using `useState`, `StateUpdater`, `useMemo`, or
@@ -1128,16 +1687,18 @@ explicit signal or root replacement according to the behavior under test.
 
 Learning examples, tutorial snapshots, deterministic laboratories, scenario
 catalog API tags, and search metadata migrate together. Examples must teach
-`set` versus `update`, explicit reads, computed barriers, reaction-only work,
-and when a Layer is worth its retained surface.
+`set` versus `update`, direct signal-valued inputs versus intentional `.get()`,
+computed barriers, reaction-only work, opaque nested data, and when a Layer is
+worth its retained surface.
 
 ### Documentation and public consumers
 
 Current contracts under `docs/design/` are updated together. Package READMEs
 and public API pages for the removed hooks are rewritten or removed; pages for
-`batch`, `useConst`, `useComputed`, and `useReaction` are added. The
-state/lifecycle and signals/animation guides are rewritten around the single
-model.
+`SignalValue`, `resolveSignalValue`, `CRCNodeInput`, `CRCTextInput`, `batch`,
+`useConst`, `useComputed`, and `useReaction` are added. The state/lifecycle,
+component-input, style/layout, author-without-JSX, signals/animation, WebGL,
+physics, and visualization guides are rewritten around the single model.
 
 A breaking guide is added at:
 
@@ -1158,7 +1719,11 @@ continues to exclude them from current-vocabulary enforcement.
 ### Baselines before production changes
 
 The implementation begins by adding controlled comparison workloads while both
-old and new primitives can still be measured. Baselines record structure,
+old and new state primitives can still be measured. The pre-change run records
+the currently supported state, plain-input, explicit-`.get()`, and explicit-get
+fan-out forms. The later signal-input slice adds its matched receiver-owned
+forms to the same fixed harness; unsupported signal-valued inputs are not
+pretended to have a pre-change timing. Together the runs record structure,
 allocation sampling, and wall-clock observations for:
 
 1. one changed local value in one component;
@@ -1171,7 +1736,15 @@ allocation sampling, and wall-clock observations for:
 8. a prop-derived expensive cache read across unrelated root renders;
 9. one dirty child across 100 stable Layers; and
 10. a representative interaction scenario with state, events, transforms, and
-    drawing.
+    drawing;
+11. plain props and plain style fields on a representative built-in tree;
+12. explicit `.get()` at the enclosing component for geometry, color, text, and
+    data props;
+13. the equivalent signals passed directly as whole props;
+14. a whole-style signal and direct signal-valued style/layout fields, including
+    the receiver-provision measurement path; and
+15. one shared signal fanned out to 1, 10, 100, and 1,000 receiving components
+    across one root and across explicit Layer boundaries.
 
 The baseline command, Node version, Chromium version, viewport, DPR, and
 worktree state are recorded. Historical timing in existing design records is
@@ -1192,6 +1765,17 @@ context, not a substitute for these fresh baselines.
 - A stable `useComputed` dependency array performs zero formula evaluations
   across unrelated renders unless a tracked signal changed.
 - A component with no signal reads owns zero live reactive consumer and edges.
+- A primitive with only plain props/style owns zero input provision and creates
+  zero resolved-input copies.
+- An explicit call-site `.get()` creates an edge only on the enclosing component;
+  a direct signal-valued input creates an edge only on the receiver.
+- Whole-style and layout-prepass signal reads adopt into the receiver's one edge
+  generation, including deduplication when paint reads the same source again.
+- A plain data array or nested descriptor containing signal objects establishes
+  no edge unless its exact public schema declares those positions.
+- Shared signal fan-out creates one edge per actual receiving consumer, reuses
+  those edges after warmup, and requests at most one host frame per affected
+  root/Layer path.
 - Stable component dependency sets allocate no new edge or collection records
   after warmup.
 - One dirty child across 100 Layers repaints only that child, reuses every clean
@@ -1205,6 +1789,14 @@ Across three controlled runs, the equivalent non-equal unlayered local-update
 workload must not regress more than 5% in median or p95 relative to current
 `useState`. The existing sparse-render 5 ms median and 8 ms p95 reference budget
 is not relaxed.
+
+The plain-prop/plain-style workload must not show a repeatable regression above
+5% in median or p95 versus the pre-change runtime and must add zero persistent
+allocation. The receiver-owned signal input form must remain within 5% of the
+equivalent explicit-`.get()` form for active render time once both are warmed.
+Signal fan-out must scale linearly in live edges and must not create per-render
+collections or wrapper signals. These are stop/go gates, not informational
+benchmarks.
 
 At least two representative equality-, batching-, computed-, or reaction-heavy
 workloads must show a repeatable material improvement: at least 20% lower median
@@ -1221,7 +1813,11 @@ returns to design review rather than weakening a budget.
 CPU and allocation profiles run in separate controlled processes. Profiles
 identify remaining hot stacks after graph changes; they do not justify unrelated
 refactors. Allocation sampling describes traffic, not retained heap. Persistent
-ownership remains proven through explicit counters.
+ownership remains proven through explicit counters. Input profiles distinguish
+JSX construction, plain schema checks, signal recognition, shallow
+copy-on-signal, receiver-provision adoption, style normalization, measurement,
+and component evaluation so a regression cannot be hidden inside aggregate
+render time.
 
 ## Verification strategy
 
@@ -1255,6 +1851,42 @@ Tests cover:
   guards, no-render behavior, and teardown; and
 - changed hook-order diagnostics across every new kind.
 
+### Signal-valued input tests
+
+Public type and runtime tests cover:
+
+- `SignalValue<T>` and `resolveSignalValue` for plain, writable, readonly, and
+  computed signals, including one-level-only resolution;
+- ordinary custom components attributing helper reads to the receiver;
+- explicit call-site `.get()` attributing the edge to the enclosing component;
+- whole-style signals and direct style fields across geometry, paint, layout,
+  filters, Canvas transforms, WebGL transforms/materials, and applicable
+  physics/particle configuration;
+- receiver-token adoption through Absolute, Overlay, Flow, Flex, Grid, intrinsic
+  Text measurement, placed clones, and paint, with one deduplicated receiver
+  edge;
+- Text scalar signals, recursive text arrays/iterables, structural child
+  signals, keyed/unkeyed Fragments, invalid resolved children, nested-signal
+  diagnostics, and cycle detection;
+- signal-valued event handlers updating transactionally without calling the
+  handler during resolution;
+- whole array/data signals remaining atomic and signals hidden in rows, nested
+  descriptors, `custom`, tags, and handles remaining unobserved;
+- exact `Signal` and `WritableSignal` props remaining signal objects;
+- signal-valued `usePlayback` and `useTransition` candidates preserving their
+  existing transaction/ownership behavior;
+- shared fan-out across siblings, roots, Layers, WebGL, and an `@crc/viz`
+  consumer contract fixture;
+- pure `measureElement` snapshot reads establishing no subscription; and
+- failed render, failure after layout provision, removal, abort, and disposal
+  leaving no new edge, provision, registration, or resolved candidate behind.
+
+Public primitive-input type tests prove that supported signal positions compile,
+opaque nested positions reject signals, and explicit signal-object positions do
+not accept a signal-of-signal wrapper accidentally. Runtime export tests include
+the shared type/helper through source, built, Bundler, NodeNext, packed, and
+Studio declaration surfaces.
+
 ### Scheduler, Layer, and renderer tests
 
 Tests prove the complete event-to-batch-to-Plan lifecycle, Commit admission,
@@ -1265,12 +1897,15 @@ same slots and scheduler.
 
 ### Public evidence
 
-One learning example demonstrates local signals, a computed equality barrier,
-batched event writes, and a reaction that changes an external test resource
-without repainting. A deterministic laboratory exposes counts for source
-writes, batch flushes, computed validations, reaction runs/cleanups, component
-traversals, Layer repaints, and composites. Headless tests drive the same public
-surface before any optional visual evidence.
+One learning example demonstrates local signals passed directly into geometry,
+paint, Text, a computed input barrier, batched event writes, and a reaction that
+changes an external test resource without repainting. A visualization example
+passes signal-valued `data` and `domain` using the same core contract. A
+deterministic laboratory exposes counts for source writes, input resolutions,
+receiver ownership, provisions/adoptions, shallow copies, batch flushes,
+computed validations, reaction runs/cleanups, component traversals, Layer
+repaints, and composites. Headless tests drive the same public surface before
+any optional visual evidence.
 
 ### Packaging and documentation
 
@@ -1297,33 +1932,61 @@ with their exact environment.
 The implementation plan will turn this architecture into reviewable vertical
 slices. The intended order is:
 
-1. record current `useState`/`useSignal` comparison baselines and add structural
-   counters without changing public behavior;
+1. record current `useState`/`useSignal`, plain-input, and explicit-`.get()` input
+   baselines and add structural counters without changing public behavior;
 2. replace graph collections with lazy reusable edge ownership while preserving
    the current public surface;
-3. add `batch` and automatic complete-dispatch batching with public evidence;
-4. add `useConst` and transactional `useComputed`, then migrate one public
+3. add `SignalValue`, `resolveSignalValue`, primitive input schemas,
+   receiver-attributed provisions, core style/children behavior, and one public
+   direct-input slice for feedback;
+4. add `batch` and automatic complete-dispatch batching with public evidence;
+5. add `useConst` and transactional `useComputed`, then migrate one public
    state/derivation slice for feedback;
-5. add `useReaction` and migrate one resource-owning slice, proving zero-render
+6. add `useReaction` and migrate one resource-owning slice, proving zero-render
    reaction work;
-6. migrate core, official packages, tests, examples, Studio, docs, and package
-   consumers, then remove the old exports in the same public pivot;
-7. run focused ownership and performance hardening, profile remaining hot work,
-   and complete the aggregate trust gate; and
-8. stop for experiential review at each runnable public slice before broad
+7. migrate core, `@crc/viz`, other official packages, tests, examples, Studio,
+   docs, and package consumers, then remove the old exports in the same public
+   pivot;
+8. run focused input, ownership, and performance hardening, profile remaining
+   hot work, and complete the aggregate trust gate; and
+9. stop for experiential review at each runnable public slice before broad
    hardening proceeds.
 
-The detailed implementation plan is written only after this specification is
-reviewed and approved.
+A replacement implementation plan is written only after this revised
+specification is reviewed and approved. Production work begins only after that
+later plan is also reviewed and approved.
 
 ## Alternatives considered
 
-### Selected: optimized unified graph plus explicit surfaces
+### Selected: component-declared signal inputs on the optimized unified graph
 
-This model eliminates avoidable scheduling and graph work while retaining
-Canvas replay only where pixels actually need repainting. It preserves CRC's
-explicit performance boundaries and makes external reactions independent of
-rendering.
+This model resolves signals only at typed component input positions, attributes
+the edge to the receiver, eliminates avoidable scheduling and graph work, and
+retains Canvas pixels only at explicit surfaces. It gives core and official
+packages one authoring vocabulary without turning the JSX runtime into a deep
+object observer.
+
+### Rejected: recursive JSX/runtime unwrapping
+
+A generic walk could make many examples appear to work without component code,
+but it cannot distinguish data from configuration, exact signal-object props
+from signal-valued props, or opaque rows from render inputs. It would add work to
+every element construction, create surprising dependencies, complicate failure
+attribution, and make future nested object shapes observable by accident.
+
+### Rejected: package-specific input conventions
+
+Allowing core, WebGL, physics, particles, and visualization packages to invent
+their own `MaybeSignal` types or deep-resolution behavior would fragment the
+authoring model and make dependency ownership depend on package history. The
+shared core type/helper plus explicit schemas is the smaller contract.
+
+### Rejected: helper-only support with unchanged built-ins
+
+A public helper alone would help custom components but still force authors to
+write `.get()` for every core style, Text child, WebGL value, and chart input.
+That preserves enclosing-component ownership and fails the CRC-wide ergonomic
+requirement.
 
 ### Rejected: public API swap over the current graph
 
@@ -1352,12 +2015,12 @@ an equality propagation barrier; `useConst` covers mount-only direct values.
 Private specialized value caches remain available where graph participation has
 no benefit.
 
-### Rejected: component-wide automatic prop signals
+### Rejected: wrapping ordinary props in generated signals
 
-Wrapping every prop in a signal would allocate and reconcile reactive cells for
-ordinary immutable render inputs, complicate identity, and imply subtree
-skipping CRC cannot provide. Explicit dependency arrays bridge only the values
-that a component-owned computed or reaction needs.
+Wrapping every ordinary prop in a generated signal would allocate and reconcile
+reactive cells for immutable inputs, complicate identity, and imply subtree
+skipping CRC cannot provide. The selected design accepts an existing signal at a
+declared slot and leaves every plain value plain.
 
 ### Rejected: synchronous render-time reactions
 
@@ -1370,7 +2033,17 @@ non-rendering consumer.
 
 - Remove `useState`, `StateUpdater`, `useMemo`, and `useWhenChanged`.
 - Add `batch`, `useComputed`, `useConst`, and `useReaction`.
+- Add shared `SignalValue<T>` and `resolveSignalValue` APIs.
 - Keep `useSignal`, `computed`, `useRef`, and specialized ownership hooks.
+- Let core and official component inputs accept signals at explicitly declared
+  whole-prop, whole-style, direct style, text/children, callback, animation, and
+  configuration positions.
+- Attribute direct signal-valued inputs to the receiving component; preserve
+  call-site `.get()` as an intentional enclosing-component dependency.
+- Keep exact `Signal`/`WritableSignal` props as objects and keep arbitrary nested
+  data opaque.
+- Use receiver-token provisions for layout/measurement reads that occur before
+  child evaluation, adopting them transactionally into the receiver consumer.
 - Use `Object.is` consistently for signal results and hook dependency slots.
 - Optimize graph ownership around lazy consumers and reusable intrusive edges.
 - Batch complete CRC logical event dispatch automatically.
@@ -1380,7 +2053,10 @@ non-rendering consumer.
 - Preserve explicit Layer and renderer boundaries as the only persistent pixel
   isolation mechanism.
 - Reject automatic component image caches and retained scene architecture.
+- Reject recursive JSX/object unwrapping and package-specific signal-input
+  conventions.
 - Make removal conditional on measured non-regression and material improvement.
 - Migrate the complete active repository surface in one breaking public pivot.
-- Write no production implementation until this specification and its later
-  implementation plan are both reviewed and approved.
+- Write no replacement implementation plan until this revised specification is
+  approved, and write no production implementation until that later plan is
+  also reviewed and approved.
