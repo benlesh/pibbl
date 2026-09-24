@@ -8,9 +8,10 @@ import {
 } from './metadata.js';
 import type {
   CRCElement,
-  CRCNode,
-  CRCTextChild,
+  CRCNodeInput,
+  CRCTextInput,
 } from './types.js';
+import { isSignal } from '../signals/graph.js';
 
 type ChildReceiver = string | CRCElement<any>;
 
@@ -21,6 +22,12 @@ const REACT_TRANSITIONAL_ELEMENT_TYPE = Symbol.for(
 
 /** Rejects a directly supplied foreign JSX root before CRC acquires resources. */
 export function assertCompatibleRootNode(node: unknown): void {
+  if (isSignal(node)) {
+    throw new Error(
+      'CRC root received a signal without a component receiver. ' +
+      'Place the signal under a component or read it explicitly.',
+    );
+  }
   if (!node || typeof node !== 'object' || isCRCElement(node)) return;
   if (isReactElement(node)) throw reactElementError('CRC root');
   if (
@@ -39,12 +46,12 @@ export function assertCompatibleRootNode(node: unknown): void {
  * Arrays and unkeyed Fragments are transparent; keyed Fragments remain entries.
  */
 export function materializeContainerChildren(
-  node: CRCNode,
+  node: CRCNodeInput,
   receiver: ChildReceiver,
   options: Readonly<{ validateKeys?: boolean }> = {},
 ): readonly CRCElement<any>[] {
   const elements: CRCElement<any>[] = [];
-  visitContainerNode(node, receiver, elements);
+  visitContainerNode(node, receiver, elements, [], false, true, new Set());
   if (options.validateKeys !== false) assertUniqueKeys(elements, receiver);
   return Object.freeze(elements);
 }
@@ -61,11 +68,11 @@ export function prepareElementPolicies(
 
 /** Materializes Text's recursive scalar content into one reusable string. */
 export function materializeTextChildren(
-  node: CRCTextChild,
+  node: CRCTextInput,
   receiver: ChildReceiver,
 ): string {
   const parts: string[] = [];
-  visitTextNode(node, receiver, parts);
+  visitTextNode(node, receiver, parts, true, new Set());
   return parts.join('');
 }
 
@@ -75,6 +82,8 @@ function visitContainerNode(
   elements: CRCElement<any>[],
   pendingPolicies: readonly CRCElement<any>[] = [],
   preservePolicies = false,
+  allowSignals = true,
+  ancestors: Set<object>,
 ): void {
   if (
     node === false ||
@@ -88,6 +97,26 @@ function visitContainerNode(
     return;
   }
 
+  if (isSignal(node)) {
+    if (receiver === 'CRC root') {
+      throw new Error(
+        'CRC root received a signal without a component receiver. ' +
+        'Place the signal under a component or read it explicitly.',
+      );
+    }
+    if (!allowSignals) throw nestedSignalChild(receiver);
+    visitContainerNode(
+      node.get(),
+      receiver,
+      elements,
+      pendingPolicies,
+      preservePolicies,
+      false,
+      ancestors,
+    );
+    return;
+  }
+
   if (isCRCElement(node)) {
     const policy = getElementPolicyDefinition(node.type);
     if (policy) {
@@ -96,8 +125,10 @@ function visitContainerNode(
         return;
       }
       const policyChildren = materializeUnpreparedPolicyChildren(
-        (node.props as { readonly children?: CRCNode }).children,
+        (node.props as { readonly children?: CRCNodeInput }).children,
         node,
+        allowSignals,
+        ancestors,
       );
       if (policyChildren.length !== 1) {
         throw new Error(
@@ -110,16 +141,21 @@ function visitContainerNode(
         node,
         elements,
         [...pendingPolicies, node],
+        preservePolicies,
+        allowSignals,
+        ancestors,
       );
       return;
     }
     if (isFragmentElement(node) && node.key === undefined) {
       visitContainerNode(
         node.props.children,
-        node,
+        receiver,
         elements,
         pendingPolicies,
         preservePolicies,
+        allowSignals,
+        ancestors,
       );
       return;
     }
@@ -165,27 +201,35 @@ function visitContainerNode(
     throw invalidChild(receiver, 'an async iterable');
   }
   if (Array.isArray(node)) {
-    for (const child of node) {
-      visitContainerNode(
-        child,
-        receiver,
-        elements,
-        pendingPolicies,
-        preservePolicies,
-      );
-    }
+    withAcyclicContainer(node, receiver, ancestors, () => {
+      for (const child of node) {
+        visitContainerNode(
+          child,
+          receiver,
+          elements,
+          pendingPolicies,
+          preservePolicies,
+          allowSignals,
+          ancestors,
+        );
+      }
+    });
     return;
   }
   if (isIterable(node)) {
-    for (const child of node) {
-      visitContainerNode(
-        child,
-        receiver,
-        elements,
-        pendingPolicies,
-        preservePolicies,
-      );
-    }
+    withAcyclicContainer(node, receiver, ancestors, () => {
+      for (const child of node) {
+        visitContainerNode(
+          child,
+          receiver,
+          elements,
+          pendingPolicies,
+          preservePolicies,
+          allowSignals,
+          ancestors,
+        );
+      }
+    });
     return;
   }
   if (isForeignElementLike(node)) {
@@ -196,11 +240,21 @@ function visitContainerNode(
 }
 
 function materializeUnpreparedPolicyChildren(
-  node: CRCNode,
+  node: CRCNodeInput,
   receiver: CRCElement<any>,
+  allowSignals: boolean,
+  ancestors: Set<object>,
 ): readonly CRCElement<any>[] {
   const elements: CRCElement<any>[] = [];
-  visitContainerNode(node, receiver, elements, [], true);
+  visitContainerNode(
+    node,
+    receiver,
+    elements,
+    [],
+    true,
+    allowSignals,
+    ancestors,
+  );
   assertUniqueKeys(elements, receiver);
   return Object.freeze(elements);
 }
@@ -209,6 +263,8 @@ function visitTextNode(
   node: unknown,
   receiver: ChildReceiver,
   parts: string[],
+  allowSignals: boolean,
+  ancestors: Set<object>,
 ): void {
   if (
     node === false ||
@@ -216,6 +272,11 @@ function visitTextNode(
     node === null ||
     node === undefined
   ) {
+    return;
+  }
+  if (isSignal(node)) {
+    if (!allowSignals) throw nestedSignalChild(receiver);
+    visitTextNode(node.get(), receiver, parts, false, ancestors);
     return;
   }
   if (typeof node === 'string' || typeof node === 'number') {
@@ -244,11 +305,19 @@ function visitTextNode(
     throw invalidChild(receiver, 'an async iterable');
   }
   if (Array.isArray(node)) {
-    for (const child of node) visitTextNode(child, receiver, parts);
+    withAcyclicContainer(node, receiver, ancestors, () => {
+      for (const child of node) {
+        visitTextNode(child, receiver, parts, allowSignals, ancestors);
+      }
+    });
     return;
   }
   if (isIterable(node)) {
-    for (const child of node) visitTextNode(child, receiver, parts);
+    withAcyclicContainer(node, receiver, ancestors, () => {
+      for (const child of node) {
+        visitTextNode(child, receiver, parts, allowSignals, ancestors);
+      }
+    });
     return;
   }
   if (isForeignElementLike(node)) {
@@ -276,6 +345,30 @@ function invalidChild(receiver: ChildReceiver, description: string): Error {
   return new Error(
     `${describeReceiver(receiver)} received ${description} as a CRC child.`,
   );
+}
+
+function nestedSignalChild(receiver: ChildReceiver): Error {
+  return invalidChild(
+    receiver,
+    'a signal inside a signal-resolved child structure',
+  );
+}
+
+function withAcyclicContainer<T extends object>(
+  value: T,
+  receiver: ChildReceiver,
+  ancestors: Set<object>,
+  visit: () => void,
+): void {
+  if (ancestors.has(value)) {
+    throw invalidChild(receiver, 'a cyclic child structure');
+  }
+  ancestors.add(value);
+  try {
+    visit();
+  } finally {
+    ancestors.delete(value);
+  }
 }
 
 function reactElementError(receiver: ChildReceiver): Error {

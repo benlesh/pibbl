@@ -31,8 +31,10 @@ export type {
   CRCEmptyNode,
   CRCKey,
   CRCNode,
+  CRCNodeInput,
   CRCPrimitiveComponent,
   CRCTextChild,
+  CRCTextInput,
   CRCRenderResult,
   PrimitiveInputOf,
 } from "./element/types.js";
@@ -131,7 +133,7 @@ export type PrimitiveRender<P, R extends SystemStyle = SystemStyle> = (
   props: Readonly<PrimitiveProgramProps<P>>,
   style: ResolvedStyle<R>,
   context: RenderingContext2D,
-) => CRCNode[] | CRCNode | void;
+) => import('./element/types.js').CRCNodeInput | void;
 
 export interface PrimitiveCapabilities<
   P,

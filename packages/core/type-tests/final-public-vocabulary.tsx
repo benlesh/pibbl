@@ -70,6 +70,7 @@ import {
   type CRCInterpolator,
   type CRCKeyframesOptions,
   type CRCNode,
+  type CRCNodeInput,
   type CRCPlayback,
   type CRCPlaybackEvent,
   type CRCPlaybackOptions,
@@ -84,6 +85,7 @@ import {
   type SignalEquals,
   type SignalOptions,
   type SignalValue,
+  type CRCTextInput,
   type WritableSignal,
 } from '@crc/core';
 
@@ -274,11 +276,35 @@ const nestedPaddingSignal = (
     }}
   />
 );
+const reactiveLabel = signal('Current');
+const reactiveNode = signal<CRCNode>(
+  <Rectangle style={{ width: 10, height: 10 }} />,
+);
+const publicNodeInput: CRCNodeInput = reactiveNode;
+const publicTextInput: CRCTextInput = ['Value: ', reactiveLabel];
+const signalValuedChildren = (
+  <Group>
+    {reactiveNode}
+    <Text>{publicTextInput}</Text>
+  </Group>
+);
+const nestedTextSignal = signal(reactiveLabel);
+const invalidNestedTextSignal = (
+  <Text>
+    {/* @ts-expect-error a signal result must be a resolved signal-free text structure */}
+    {nestedTextSignal}
+  </Text>
+);
+// @ts-expect-error a bare signal has no receiving component at the CRC root
+crc(document.createElement('canvas'), reactiveNode);
 void signalValuedPrimitiveInputs;
 void gauge;
 void exactSignal;
 void nestedExactSignal;
 void nestedPaddingSignal;
+void publicNodeInput;
+void signalValuedChildren;
+void invalidNestedTextSignal;
 
 const numericOutput = signal(0);
 const objectOutput = signal({ x: 0 });

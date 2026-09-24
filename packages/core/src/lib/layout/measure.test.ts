@@ -15,6 +15,7 @@ import {
 } from './measure';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
+import { signal, signalGraphSnapshot } from '../signals/graph';
 
 const constraints = {
   minWidth: 0,
@@ -36,6 +37,25 @@ const service: CanvasMeasurementService = {
 };
 
 describe('pure element measurement', () => {
+  it('snapshots signal inputs without retaining an edge or provision', () => {
+    const label = signal('snapshot');
+    const style = signal({ font: '12px sans-serif' });
+    const baseline = signalGraphSnapshot();
+
+    expect(measureElement(createElement(Text, {
+      children: label,
+      style,
+    }), constraints, service)).toEqual({
+      status: 'measured',
+      size: { width: 80, height: 12 },
+    });
+
+    const after = signalGraphSnapshot();
+    expect(after.rendererEdges).toBe(baseline.rendererEdges);
+    expect(after.rendererConsumers).toBe(baseline.rendererConsumers);
+    expect(after.receiverInputProvisions).toBe(baseline.receiverInputProvisions);
+  });
+
   it('normalizes and measures without invoking render', () => {
     interface ProbeStyle extends SystemStyle {
       label?: string;

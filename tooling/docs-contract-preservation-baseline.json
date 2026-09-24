@@ -13711,7 +13711,7 @@
       },
       "source": {
         "path": "packages/core/src/lib/render.ts",
-        "marker": "collectComponentSignalReads(componentRefs, () => ({"
+        "marker": "function componentSignalReadOptions("
       },
       "test": {
         "path": "packages/core/src/lib/runtime-contract.test.ts",

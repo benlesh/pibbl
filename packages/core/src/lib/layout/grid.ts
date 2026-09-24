@@ -19,7 +19,7 @@ import type {
 } from '../style/types.js';
 import type {
   CanvasMeasurementService,
-  CRCNode,
+  CRCNodeInput,
   MeasureInput,
   MeasureResult,
   RenderingContext2D,
@@ -56,7 +56,7 @@ export interface GridStyle extends BoxStyle, LayoutItemStyle {
 }
 
 export interface GridProps extends CRCStructuralEventProps {
-  children: CRCNode;
+  children: CRCNodeInput;
 }
 
 export interface GridMeasurementInput {
@@ -138,6 +138,7 @@ export const Grid = definePrimitive<
   GridStyle,
   ResolvedGridStyle
 >(renderGrid, {
+  childInput: 'structural',
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Grid', 'grid'),
     overflow: style.overflow ?? 'visible',
@@ -148,7 +149,7 @@ export const Grid = definePrimitive<
 
 export function layoutGrid(
   container: Readonly<LayoutBox>,
-  children: CRCNode,
+  children: CRCNodeInput,
   style: Readonly<GridStyle>,
   measurement: GridMeasurementInput,
 ): LayoutBox[] {
@@ -187,7 +188,7 @@ function resolveGridPlacements(
       GLOBAL_STATE.primitiveReceiverToken,
       placements.length,
     );
-    const normalized = normalizeDirectChildStyle(child) as Readonly<
+    const normalized = normalizeDirectChildStyle(child, receiverToken) as Readonly<
       BoxStyle & GridItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
     rejectUnsupportedItemFields(child, normalized, container);

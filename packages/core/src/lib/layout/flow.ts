@@ -13,7 +13,7 @@ import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type { BoxStyle, LayoutItemStyle, ResolvedBoxStyle } from '../style/types.js';
 import type {
   CanvasMeasurementService,
-  CRCNode,
+  CRCNodeInput,
   MeasureInput,
   MeasureResult,
   RenderingContext2D,
@@ -45,7 +45,7 @@ export interface FlowStyle extends BoxStyle, LayoutItemStyle {
 }
 
 export interface FlowProps extends CRCStructuralEventProps {
-  children: CRCNode;
+  children: CRCNodeInput;
 }
 
 interface ResolvedFlowStyle extends SystemStyle {
@@ -137,6 +137,7 @@ export const Flow = definePrimitive<
   FlowStyle,
   ResolvedFlowStyle
 >(renderFlow, {
+  childInput: 'structural',
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Flow', 'flow'),
     overflow: style.overflow ?? 'visible',
@@ -147,7 +148,7 @@ export const Flow = definePrimitive<
 
 export function layoutFlow(
   container: Readonly<LayoutBox>,
-  children: CRCNode,
+  children: CRCNodeInput,
   style: Readonly<FlowStyle>,
   measurement: FlowMeasurementInput,
 ): LayoutBox[] {
@@ -171,7 +172,7 @@ function resolveFlowPlacements(
       GLOBAL_STATE.primitiveReceiverToken,
       items.length,
     );
-    const normalized = normalizeDirectChildStyle(child) as Readonly<
+    const normalized = normalizeDirectChildStyle(child, receiverToken) as Readonly<
       BoxStyle & LayoutItemStyle
     >;
     const needsWidth = normalized.width === undefined || normalized.width === 'auto';

@@ -1,9 +1,10 @@
+import type { SignalValue } from '../signals/types.js';
+
 declare const crcElementTypeBrand: unique symbol;
 declare const crcPrimitiveComponentBrand: unique symbol;
 
 export type CRCKey = string | number;
 export type CRCEmptyNode = false | true | null | undefined | '' | 0;
-export type CRCContainerChild = CRCNode;
 export type CRCTextChild =
   | string
   | number
@@ -26,7 +27,16 @@ export type CRCNode =
   | readonly CRCNode[]
   | Iterable<CRCNode>;
 
-export type CRCRenderResult = CRCNode | void;
+export type CRCNodeInput =
+  | SignalValue<CRCNode>
+  | readonly CRCNodeInput[]
+  | Iterable<CRCNodeInput>;
+export type CRCTextInput =
+  | SignalValue<CRCTextChild>
+  | readonly CRCTextInput[]
+  | Iterable<CRCTextInput>;
+export type CRCContainerChild = CRCNodeInput;
+export type CRCRenderResult = CRCNodeInput | void;
 export type CRCComponent<P = Record<string, never>> = (
   props: P,
 ) => CRCRenderResult;

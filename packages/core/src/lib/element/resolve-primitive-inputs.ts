@@ -43,11 +43,11 @@ export function resolvePrimitiveInputs(
 
   return {
     props: programProps ?? copyProgramProps(rawProps),
-    style: resolvePrimitiveStyle(rawProps.style),
+    style: resolvePrimitiveStyleInput(rawProps.style),
   };
 }
 
-function resolvePrimitiveStyle(
+export function resolvePrimitiveStyleInput(
   input: unknown,
 ): Readonly<Record<PropertyKey, unknown>> | undefined {
   let style = input;

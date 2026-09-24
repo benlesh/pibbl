@@ -1,5 +1,5 @@
 import { definePrimitive } from '../define-primitive.js';
-import { CRCNode, SystemStyle } from '../types.js';
+import { CRCNodeInput, SystemStyle } from '../types.js';
 import type { CRCPhysics2DPropExtension } from '../types.js';
 import {
   createGroupTransform,
@@ -17,7 +17,7 @@ import type {
 } from '../style/types.js';
 
 export interface GroupProps extends CRCStructuralEventProps, CRCPhysics2DPropExtension {
-  children: CRCNode;
+  children: CRCNodeInput;
 }
 
 export interface GStyle extends SystemStyle, BoxStyle, LayoutItemStyle {
@@ -52,6 +52,7 @@ export const Group = definePrimitive<
   GStyle,
   ResolvedGStyle
 >(renderGroup, {
+  childInput: 'structural',
   resolveStyle: style => stripLayoutParticipation(style) as ResolvedGStyle,
 });
 

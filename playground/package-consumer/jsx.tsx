@@ -11,10 +11,12 @@ import type {
   CRCHueRotateFilter,
   CRCInvertFilter,
   CRCNode,
+  CRCNodeInput,
   CRCOpacityFilter,
   CRCSaturateFilter,
   CRCSepiaFilter,
   CRCTextChild,
+  CRCTextInput,
   Signal,
   SystemStyle,
 } from '@crc/core';
@@ -117,6 +119,18 @@ const jsxCount = signal(2);
 const jsxDoubled: Signal<number> = computed(() => jsxCount.get() * 2);
 const jsxCallback = signal<() => string>(() => 'ready');
 jsxCallback.set(() => 'updated');
+const jsxLabel = signal('Current');
+const jsxSelectedNode = signal<CRCNode>(
+  <Rectangle style={{ width: 10, height: 10 }} />,
+);
+const jsxNodeInput: CRCNodeInput = jsxSelectedNode;
+const jsxTextInput: CRCTextInput = ['Label: ', jsxLabel];
+export const signalChildInputs = (
+  <Group>
+    {jsxNodeInput}
+    <Text>{jsxTextInput}</Text>
+  </Group>
+);
 
 function SignalLabel(): CRCNode {
   const suffix = useSignal('signals');

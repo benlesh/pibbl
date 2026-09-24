@@ -9,6 +9,7 @@ import { takeScreenshot } from '../util/test-utils';
 import { Group } from './g.js';
 import { Rectangle } from './rect.js';
 import { Text } from './text';
+import { signal } from '../signals/graph.js';
 
 const defaultText = 'Hello World';
 const defaultStyle = {
@@ -21,6 +22,31 @@ const defaultStyle = {
 };
 
 describe('text', () => {
+  it('renders and updates a direct signal child', async () => {
+    const label = signal('Current');
+    const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, createElement(Text, {
+      children: label as never,
+      style: { fill: 'black' },
+    }));
+
+    try {
+      await nextFrame();
+      label.set('Updated');
+      await nextFrame();
+
+      expect(fillText.mock.calls.map(([value]) => value)).toEqual([
+        'Current',
+        'Updated',
+      ]);
+    } finally {
+      controller.dispose();
+      fillText.mockRestore();
+    }
+  });
+
   it('rematerializes a mutated recursive container on a later render', async () => {
     const children: Array<string> = ['first'];
     const element = createElement(Text, {

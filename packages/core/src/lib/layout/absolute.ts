@@ -4,8 +4,9 @@ import { materializeContainerChildren } from '../element/children.js';
 import { cloneCRCElement } from '../element/create-element.js';
 import {
   getPrimitiveDefinition,
-  getSpecifiedStyle,
+  getChildPrimitiveReceiverToken,
 } from '../element/metadata.js';
+import { resolvePrimitiveStyleInput } from '../element/resolve-primitive-inputs.js';
 import type { CRCElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { normalizeEdges } from '../style/normalize.js';
@@ -21,7 +22,7 @@ import type {
   ResolvedBoxStyle,
 } from '../style/types.js';
 import type {
-  CRCNode,
+  CRCNodeInput,
   CRCRenderTransaction,
   RenderingContext2D,
   StyleResolutionContext,
@@ -40,11 +41,12 @@ import {
   placeChild,
 } from './place-child.js';
 import type { LayoutBox } from './types.js';
+import { withReceiverInputProvision } from '../signals/input-provision.js';
 
 export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
 
 export interface AbsoluteProps extends CRCStructuralEventProps {
-  children: CRCNode;
+  children: CRCNodeInput;
 }
 
 interface ResolvedAbsoluteStyle extends SystemStyle {
@@ -78,10 +80,19 @@ function renderAbsolute(
   const releaseLayout = pushLayoutBox(localContent);
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
 
+  let occurrence = 0;
   return placeDirectChildren(
     children,
     localContent,
-    child => resolveAbsoluteChildPlacement(localContent, child),
+    child => resolveAbsoluteChildPlacement(
+      localContent,
+      child,
+      getChildPrimitiveReceiverToken(
+        GLOBAL_STATE.renderTransaction,
+        GLOBAL_STATE.primitiveReceiverToken,
+        occurrence++,
+      ),
+    ),
     style.overflow,
   );
 }
@@ -93,6 +104,7 @@ export const Absolute = definePrimitive<
   AbsoluteStyle,
   ResolvedAbsoluteStyle
 >(renderAbsolute, {
+  childInput: 'structural',
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Absolute', 'absolute'),
     overflow: style.overflow ?? 'visible',
@@ -119,8 +131,9 @@ export function placeAbsoluteChild(
 function resolveAbsoluteChildPlacement(
   container: Readonly<LayoutBox>,
   child: CRCElement<any>,
+  receiverToken?: object,
 ): { box: LayoutBox; element: CRCElement<any> } {
-  const style = normalizeDirectChildStyle(child) as Readonly<
+  const style = normalizeDirectChildStyle(child, receiverToken) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
   const resolved = resolveDirectChildBox(container, child, 'absolute', style);
@@ -140,6 +153,7 @@ function resolveAbsoluteChildPlacement(
       style,
       resolved.contentBox.width,
       resolved.contentBox.height,
+      receiverToken,
     ),
   };
 }
@@ -191,9 +205,16 @@ export function resolveDirectChildBox(
 /** @internal Normalizes a descriptor without resolving or invoking its callback. */
 export function normalizeDirectChildStyle(
   child: CRCElement<any>,
+  receiverToken?: object,
 ): Readonly<SystemStyle> {
   const definition = getPrimitiveDefinition(child.type);
-  const style = getSpecifiedStyle(child) ?? EMPTY_STYLE;
+  const style = withReceiverInputProvision(
+    GLOBAL_STATE.renderTransaction,
+    receiverToken,
+    () => resolvePrimitiveStyleInput(
+      (child.props as { readonly style?: unknown }).style,
+    ) ?? EMPTY_STYLE,
+  );
   const filter = extractSystemFilter(style);
   const normalized = definition?.normalizeStyle ?
       definition.normalizeStyle(withoutSystemFilter(style)) :
@@ -240,7 +261,7 @@ export function placeDirectChildren(
 
 /** @internal Prepares one finite direct-child sequence for a layout boundary. */
 export function materializeLayoutChildren(
-  children: CRCNode,
+  children: CRCNodeInput,
   receiver: LayoutReceiver,
 ): readonly CRCElement<any>[] {
   // Placement identity owns layout sibling keys. Deferring its check preserves
@@ -252,7 +273,7 @@ export function materializeLayoutChildren(
 
 /** @internal Shares one direct sequence between an occurrence's measurement and paint. */
 export function prepareLayoutChildren(
-  children: CRCNode,
+  children: CRCNodeInput,
   receiver: LayoutReceiver,
 ): readonly CRCElement<any>[] {
   const transaction = GLOBAL_STATE.renderTransaction;
@@ -268,7 +289,11 @@ export function prepareLayoutChildren(
   }
   const prepared = receivers.get(receiverToken);
   if (prepared) return prepared;
-  const materialized = materializeLayoutChildren(children, receiver);
+  const materialized = withReceiverInputProvision(
+    transaction,
+    receiverToken,
+    () => materializeLayoutChildren(children, receiver),
+  );
   receivers.set(receiverToken, materialized);
   return materialized;
 }

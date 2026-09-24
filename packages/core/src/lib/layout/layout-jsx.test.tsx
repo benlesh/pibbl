@@ -14,6 +14,7 @@ import {
   useMemo,
   definePrimitive,
   measureElement,
+  signal,
   type BoxStyle,
   type CRCController,
   type CRCNode,
@@ -22,6 +23,10 @@ import {
   type SystemStyle,
 } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { getCRCInstance } from '../global-state.js';
+import { executeRender } from '../execute-render.js';
+import { mountCRC } from '../mount-crc.js';
+import { signalGraphSnapshot } from '../signals/graph.js';
 
 interface CardStyle extends BoxStyle, LayoutItemStyle {}
 
@@ -442,6 +447,86 @@ const MeasuredProbe = definePrimitive<
 
 const controllers = new Set<CRCController>();
 
+const signalLayoutCases = [
+  {
+    name: 'Absolute',
+    type: Absolute,
+    build() {
+      const style = signal({ left: 2, top: 3, width: 20, height: 10 });
+      return (
+        <Absolute style={{ width: 100, height: 40 }}>
+          <Rectangle style={style} />
+        </Absolute>
+      );
+    },
+  },
+  {
+    name: 'Overlay',
+    type: Overlay,
+    build() {
+      const style = signal({ width: 20, height: 10 });
+      return (
+        <Overlay style={{ width: 100, height: 40 }}>
+          <Rectangle style={style} />
+        </Overlay>
+      );
+    },
+  },
+  {
+    name: 'Flow',
+    type: Flow,
+    build() {
+      const style = signal({ width: 20, height: 10 });
+      return (
+        <Flow style={{ width: 100, height: 40 }}>
+          <Rectangle style={style} />
+        </Flow>
+      );
+    },
+  },
+  {
+    name: 'Flex',
+    type: Flex,
+    build() {
+      const style = signal({
+        width: 20,
+        height: 10,
+        minWidth: 0,
+        flexShrink: 0,
+      });
+      return (
+        <Flex style={{ width: 100, height: 40 }}>
+          <Rectangle style={style} />
+        </Flex>
+      );
+    },
+  },
+  {
+    name: 'Grid',
+    type: Grid,
+    build() {
+      const style = signal({
+        width: 20,
+        height: 10,
+        gridColumnStart: 1,
+        gridRowStart: 1,
+      });
+      return (
+        <Grid
+          style={{
+            width: 100,
+            height: 40,
+            gridTemplateColumns: [100],
+            gridTemplateRows: [40],
+          }}
+        >
+          <Rectangle style={style} />
+        </Grid>
+      );
+    },
+  },
+] as const;
+
 afterEach(() => {
   for (const controller of controllers) controller.dispose();
   controllers.clear();
@@ -450,6 +535,70 @@ afterEach(() => {
 });
 
 describe('JSX layout boundaries', () => {
+  it.each(signalLayoutCases)(
+    '$name attributes child style signals only to the child receiver',
+    async layoutCase => {
+      const baseline = signalGraphSnapshot();
+      const canvas = createCanvas();
+      controllers.add(crc(canvas, layoutCase.build()));
+      await nextFrame();
+      const refs = Array.from(getCRCInstance(canvas).refs.values());
+
+      expect(refs.find(ref => ref.element.type === layoutCase.type)?.signalConsumer)
+        .toBeUndefined();
+      expect(refs.find(ref => ref.element.type === Rectangle)?.signalConsumer)
+        .toBeDefined();
+      expect(signalGraphSnapshot().rendererEdges)
+        .toBe(baseline.rendererEdges + 1);
+      expect(signalGraphSnapshot().receiverInputProvisions)
+        .toBe(baseline.receiverInputProvisions);
+    },
+  );
+
+  it('attributes intrinsic Text child reads to Text after measurement', async () => {
+    const label = signal('measured label');
+    const baseline = signalGraphSnapshot();
+    const canvas = createCanvas();
+    controllers.add(crc(canvas, (
+      <Flow style={{ width: 200, height: 40 }}>
+        <Text style={{ width: 'auto', height: 'auto', fill: 'black' }}>
+          {label}
+        </Text>
+      </Flow>
+    )));
+    await nextFrame();
+    const refs = Array.from(getCRCInstance(canvas).refs.values());
+
+    expect(refs.find(ref => ref.element.type === Flow)?.signalConsumer)
+      .toBeUndefined();
+    expect(refs.find(ref => ref.element.type === Text)?.signalConsumer)
+      .toBeDefined();
+    expect(signalGraphSnapshot().rendererEdges)
+      .toBe(baseline.rendererEdges + 1);
+    expect(signalGraphSnapshot().receiverInputProvisions)
+      .toBe(baseline.receiverInputProvisions);
+  });
+
+  it('rolls back unclaimed child provisions when layout rendering fails', () => {
+    const baseline = signalGraphSnapshot();
+    const firstStyle = signal({ width: 20, height: 10 });
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, (
+      <Absolute style={{ width: 100, height: 40 }}>
+        <Rectangle style={firstStyle} />
+        <Rectangle style={{ height: 10 } as never} />
+      </Absolute>
+    ));
+    controllers.add(controller);
+
+    expect(() => executeRender(canvas, 0)).toThrowError(/width/iu);
+    const after = signalGraphSnapshot();
+    expect(after.rendererEdges).toBe(baseline.rendererEdges);
+    expect(after.receiverInputProvisions).toBe(baseline.receiverInputProvisions);
+    expect(after.rolledBackReceiverInputProvisions)
+      .toBeGreaterThan(baseline.rolledBackReceiverInputProvisions);
+  });
+
   it.each(renderLayoutCases)(
     '$name materializes recursive children once and preserves exact keyed placement',
     async layoutCase => {

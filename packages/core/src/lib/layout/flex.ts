@@ -19,7 +19,7 @@ import type {
 } from '../style/types.js';
 import type {
   CanvasMeasurementService,
-  CRCNode,
+  CRCNodeInput,
   MeasureInput,
   MeasureResult,
   RenderingContext2D,
@@ -60,7 +60,7 @@ export interface FlexStyle extends BoxStyle, LayoutItemStyle {
 }
 
 export interface FlexProps extends CRCStructuralEventProps {
-  children: CRCNode;
+  children: CRCNodeInput;
 }
 
 export interface FlexMeasurementInput {
@@ -168,6 +168,7 @@ export const Flex = definePrimitive<
   FlexStyle,
   ResolvedFlexStyle
 >(renderFlex, {
+  childInput: 'structural',
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Flex', 'flex'),
     overflow: style.overflow ?? 'visible',
@@ -218,7 +219,12 @@ function measureFlex(
   let intrinsicCross = 0;
   let count = 0;
   for (const child of children) {
-    const style = normalizeDirectChildStyle(child) as Readonly<
+    const receiverToken = getChildPrimitiveReceiverToken(
+      GLOBAL_STATE.renderTransaction,
+      GLOBAL_STATE.primitiveReceiverToken,
+      count,
+    );
+    const style = normalizeDirectChildStyle(child, receiverToken) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
     rejectUnsupportedItemFields(child, style, diagnosticBox);
@@ -382,7 +388,7 @@ function unsupportedIntrinsic(reason: string): MeasureResult {
 
 export function layoutFlex(
   container: Readonly<LayoutBox>,
-  children: CRCNode,
+  children: CRCNodeInput,
   style: Readonly<FlexStyle>,
   measurement: FlexMeasurementInput,
 ): LayoutBox[] {
@@ -412,7 +418,7 @@ function resolveFlexPlacements(
       GLOBAL_STATE.primitiveReceiverToken,
       items.length,
     );
-    const normalized = normalizeDirectChildStyle(child) as Readonly<
+    const normalized = normalizeDirectChildStyle(child, receiverToken) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
     rejectUnsupportedItemFields(child, normalized, container);

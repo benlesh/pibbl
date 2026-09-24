@@ -342,12 +342,19 @@ export function recordReceiverInputProvisionCreated(): void {
 
 /** @internal Records one provision adopted by its receiver generation. */
 export function recordReceiverInputProvisionAdopted(): void {
+  receiverInputProvisions--;
   adoptedReceiverInputProvisions++;
 }
 
 /** @internal Records one provision discarded without publication. */
 export function recordReceiverInputProvisionRolledBack(): void {
+  receiverInputProvisions--;
   rolledBackReceiverInputProvisions++;
+}
+
+/** @internal Adds one already-read source to the active dependency collector. */
+export function trackSignalDependency(node: SignalNode<unknown>): void {
+  trackingStack.at(-1)?.addDependency(node);
 }
 
 /** @internal Records one observer invalidation deduplicated by a public batch. */
