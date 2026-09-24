@@ -49,6 +49,7 @@ const expected = [
   'Text',
   'VerticalLine',
   'Wedge',
+  'batch',
   'computed',
   'crc',
   'createArcPath',
@@ -76,6 +77,7 @@ const expected = [
   'repeat',
   'resolveBox',
   'resolveLength',
+  'resolveSignalValue',
   'sequence',
   'signal',
   'spring',
@@ -84,27 +86,32 @@ const expected = [
   'tween',
   'untracked',
   'useCanvasContext',
+  'useComputed',
+  'useConst',
   'useCursor',
   'useEvent',
   'useEventListener',
   'useEventTarget',
   'useLayoutBox',
   'useLinePath',
-  'useMemo',
   'usePlayback',
+  'useReaction',
   'useRectPath',
   'useRef',
   'useSignal',
-  'useState',
   'useSvgPath',
   'useTransition',
-  'useWhenChanged',
   'wait',
 ].sort();
 
 const actual = Object.keys(core).sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) {
   throw new Error(`Unexpected @crc/core exports: ${actual.join(', ')}`);
+}
+for (const removedName of ['useState', 'useMemo', 'useWhenChanged']) {
+  if (removedName in core) {
+    throw new Error(`Removed @crc/core export is still present: ${removedName}`);
+  }
 }
 
 const expectedInternal = [
@@ -155,6 +162,7 @@ const expectedInternal = [
   'snapshotLayerNodeTree',
   'useBackendEventTarget',
   'useInternalHookSlot',
+  'useInternalValueMemoSlot',
 ];
 const actualInternal = Object.keys(internal).sort();
 if (JSON.stringify(actualInternal) !== JSON.stringify(expectedInternal)) {
@@ -175,8 +183,8 @@ for (const exportName of expected) {
     throw new Error(`@crc/core/internal re-exported public root value ${exportName}.`);
   }
 }
-if (actual.length !== 78) {
-  throw new Error(`Expected 78 @crc/core runtime exports, received ${actual.length}.`);
+if (actual.length !== 80) {
+  throw new Error(`Expected 80 @crc/core runtime exports, received ${actual.length}.`);
 }
 
 const requireFromRuntime = createRequire(import.meta.url);

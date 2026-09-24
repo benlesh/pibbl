@@ -1,13 +1,13 @@
 import {
   crc,
-  useState,
+  useSignal,
   Group,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function GroupStudy() {
-  const [selected, setSelected] = useState(false);
+  const selected = useSignal(false);
   const ticket = (
     <Group
       style={{
@@ -23,12 +23,12 @@ function GroupStudy() {
           y: 0,
           width: 376,
           height: 256,
-          fill: selected ? "#74d3ae" : "#ff6b57",
+          fill: selected.get() ? "#74d3ae" : "#ff6b57",
           stroke: "#17211d",
           strokeWidth: 6,
           cursor: "pointer",
         }}
-        onClick={() => setSelected((value) => !value)}
+        onClick={() => selected.update((value) => !value)}
       />
       <Rectangle
         style={{
@@ -57,7 +57,7 @@ function GroupStudy() {
           textAlign: "center",
         }}
       >
-        {selected ? "GROUPED!" : "ONE GROUP"}
+        {selected.get() ? "GROUPED!" : "ONE GROUP"}
       </Text>
       <Text
         style={{

@@ -1,6 +1,6 @@
 import {
   crc,
-  useState,
+  useSignal,
   Rectangle,
   Text,
   type CRCController,
@@ -10,11 +10,11 @@ function mouseSummary(event: CRCLogicalMouseEvent): string {
   return `${event.type} at ${Math.round(event.x)},${Math.round(event.y)} button=${event.button} buttons=${event.buttons} detail=${event.detail}`;
 }
 function MouseBoundariesAndAuxiliaryClickStudy() {
-  const [inside, setInside] = useState(false);
-  const [auxiliaryCount, setAuxiliaryCount] = useState(0);
-  const [trace, setTrace] = useState<readonly string[]>([]);
+  const inside = useSignal(false);
+  const auxiliaryCount = useSignal(0);
+  const trace = useSignal<readonly string[]>([]);
   const record = (event: CRCLogicalMouseEvent) =>
-    setTrace((current) => [...current.slice(-3), mouseSummary(event)]);
+    trace.update((current) => [...current.slice(-3), mouseSummary(event)]);
   return [
     <Rectangle
       style={{
@@ -42,22 +42,22 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
         y: 92,
         width: 360,
         height: 194,
-        fill: inside ? "#74d3ae" : "#1f4bd8",
+        fill: inside.get() ? "#74d3ae" : "#1f4bd8",
         stroke: "#17211d",
         strokeWidth: 5,
         cursor: "pointer",
       }}
       onMouseEnter={(event) => {
-        setInside(true);
+        inside.set(true);
         record(event);
       }}
       onMouseLeave={(event) => {
-        setInside(false);
+        inside.set(false);
         record(event);
       }}
       onAuxClick={(event) => {
         event.preventDefault();
-        setAuxiliaryCount((value) => value + 1);
+        auxiliaryCount.update((value) => value + 1);
         record(event);
       }}
     />,
@@ -65,18 +65,18 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
       style={{
         x: 248,
         y: 158,
-        fill: inside ? "#17211d" : "#fffdf6",
+        fill: inside.get() ? "#17211d" : "#fffdf6",
         font: "900 33px sans-serif",
         textAlign: "center",
       }}
     >
-      {inside ? "INSIDE" : "ENTER / LEAVE"}
+      {inside.get() ? "INSIDE" : "ENTER / LEAVE"}
     </Text>,
     <Text
       style={{
         x: 248,
         y: 204,
-        fill: inside ? "#17211d" : "#fffdf6",
+        fill: inside.get() ? "#17211d" : "#fffdf6",
         font: "700 14px sans-serif",
         textAlign: "center",
       }}
@@ -112,7 +112,7 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
         textAlign: "center",
       }}
     >
-      {String(auxiliaryCount)}
+      {String(auxiliaryCount.get())}
     </Text>,
     <Text
       style={{
@@ -138,8 +138,8 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
         font: "600 12px monospace",
       }}
     >
-      {trace.length
-        ? trace.join("\n")
+      {trace.get().length
+        ? trace.get().join("\n")
         : "Move into and out of the cobalt card, then middle-click it."}
     </Text>,
   ];

@@ -1,7 +1,7 @@
-import { crc, useState, Rectangle, Wedge, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Wedge, type CRCController } from "@crc/core";
 
 function WedgeStudy() {
-  const [active, setActive] = useState(false);
+  const active = useSignal(false);
 
   return [
     <Rectangle
@@ -14,12 +14,12 @@ function WedgeStudy() {
         radius: 132,
         startAngle: -Math.PI / 2,
         endAngle: Math.PI / 3,
-        fill: active ? "#22c55e" : "#a855f7",
+        fill: active.get() ? "#22c55e" : "#a855f7",
         stroke: "#17211d",
         strokeWidth: 6,
         cursor: "pointer",
       }}
-      onClick={() => setActive((value) => !value)}
+      onClick={() => active.update((value) => !value)}
     />,
   ];
 }

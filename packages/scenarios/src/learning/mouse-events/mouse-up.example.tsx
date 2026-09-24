@@ -1,7 +1,7 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function MouseUpStudy() {
-  const [releases, setReleases] = useState(0);
-  const [position, setPosition] = useState("—");
+  const releases = useSignal(0);
+  const position = useSignal("—");
   return [
     <Rectangle
       style={{
@@ -24,8 +24,8 @@ function MouseUpStudy() {
         cursor: "pointer",
       }}
       onMouseUp={(event) => {
-        setReleases((value) => value + 1);
-        setPosition(`${Math.round(event.x)}, ${Math.round(event.y)}`);
+        releases.update((value) => value + 1);
+        position.set(`${Math.round(event.x)}, ${Math.round(event.y)}`);
       }}
     />,
     <Text
@@ -47,7 +47,7 @@ function MouseUpStudy() {
         font: "700 15px monospace",
         textAlign: "center",
       }}
-    >{`UP / ${releases} / ${position}`}</Text>,
+    >{`UP / ${releases.get()} / ${position.get()}`}</Text>,
   ];
 }
 export default function mount(canvas: HTMLCanvasElement): CRCController {

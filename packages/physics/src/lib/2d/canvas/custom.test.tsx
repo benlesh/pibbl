@@ -1,4 +1,4 @@
-import { definePrimitive, signal, useState, type SystemStyle } from '@crc/core';
+import { definePrimitive, signal, useSignal, type SystemStyle } from '@crc/core';
 /** @jsxImportSource @crc/core */
 import {
   boxShape2D,
@@ -91,7 +91,7 @@ describe('withPhysicsShape2D', () => {
 
     const Hooked = withPhysicsShape2D(Raw, {
       resolveShape() {
-        useState(1);
+        useSignal(1);
         return boxShape2D({ width: 1, height: 1 });
       },
     });

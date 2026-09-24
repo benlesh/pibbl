@@ -4,10 +4,10 @@ import {
   crc,
   useEventTarget,
   useLayoutBox,
-  useMemo,
+  useConst,
   useRectPath,
   useRef,
-  useState,
+  useSignal,
   FocusManagement,
   Fragment,
   Group,
@@ -229,11 +229,11 @@ function NodeCard({
   view: ViewTransform;
 }>): CRCNode {
   const dragSession = useRef<NodeDragSession | null>(null);
-  const [dragActive, setDragActive] = useState(false);
+  const dragActive = useSignal(false);
   const finishDrag = (event: CRCPointerEvent): void => {
     if (dragSession.current?.pointerId !== event.pointerId) return;
     dragSession.current = null;
-    setDragActive(false);
+    dragActive.set(false);
   };
   const onPointerDown = (event: CRCPointerEvent): void => {
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -244,7 +244,7 @@ function NodeCard({
       pointerStart: rootToWorkspace(event, view),
       nodeStart: { x: node.x, y: node.y },
     };
-    setDragActive(true);
+    dragActive.set(true);
     onSelect();
   };
   const onPointerMove = (event: CRCPointerEvent): void => {
@@ -267,7 +267,7 @@ function NodeCard({
     <Group style={{ translateX: node.x, translateY: node.y }}>
       <NodePaint node={node} selected={selected} />
       <NodeTarget
-        dragActive={dragActive}
+        dragActive={dragActive.get()}
         onClick={onSelect}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -423,7 +423,7 @@ function Connection({
   );
 }
 function GridLayer(): CRCNode {
-  const dots = useMemo(() => createGridPath(), []);
+  const dots = useConst(() => createGridPath());
   return (
     <Layer style={{ width: 1400, height: 900 }}>
       <Path pointerEvents="none" style={{ d: dots, fill: "#c8d2c6" }} />
@@ -532,11 +532,11 @@ function Workspace({
   }>): CRCNode {
   const box = useLayoutBox();
   const panSession = useRef<PanSession | null>(null);
-  const [panning, setPanning] = useState(false);
+  const panning = useSignal(false);
   const finishPan = (event: CRCPointerEvent): void => {
     if (panSession.current?.pointerId !== event.pointerId) return;
     panSession.current = null;
-    setPanning(false);
+    panning.set(false);
   };
   const onPointerDown = (event: CRCPointerEvent): void => {
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -546,7 +546,7 @@ function Workspace({
       pointerStart: { x: event.x, y: event.y },
       viewStart: view,
     };
-    setPanning(true);
+    panning.set(true);
   };
   const onPointerMove = (event: CRCPointerEvent): void => {
     const session = panSession.current;
@@ -585,7 +585,7 @@ function Workspace({
           width: box.width,
           height: box.height,
           fill: "#eef2e8",
-          cursor: panning ? "grabbing" : "grab",
+          cursor: panning.get() ? "grabbing" : "grab",
         }}
       />
       <Group
@@ -652,17 +652,17 @@ function StatusBar({
   );
 }
 function DiagramEditor(): CRCNode {
-  const [nodes, setNodes] = useState<readonly DiagramNode[]>(INITIAL_NODES);
-  const [selected, setSelected] = useState<NodeId | null>("sketch");
-  const [view, setView] = useState<ViewTransform>(INITIAL_VIEW);
+  const nodes = useSignal<readonly DiagramNode[]>(INITIAL_NODES);
+  const selected = useSignal<NodeId | null>("sketch");
+  const view = useSignal<ViewTransform>(INITIAL_VIEW);
   const moveNode = (id: NodeId, point: Point): void => {
-    setNodes((current) => updateNodePosition(current, id, point));
+    nodes.update((current) => updateNodePosition(current, id, point));
   };
   return (
     <Absolute style={{ width: 960, height: 600 }}>
       <Toolbar
         style={{ left: 0, top: 0, width: "100%", height: 56 }}
-        reset={() => setView(INITIAL_VIEW)}
+        reset={() => view.set(INITIAL_VIEW)}
       />
       <Workspace
         style={{
@@ -671,21 +671,21 @@ function DiagramEditor(): CRCNode {
           width: "100%",
           height: WORKSPACE_HEIGHT,
         }}
-        nodes={nodes}
-        selectedNodeId={selected}
-        view={view}
-        onSelect={setSelected}
+        nodes={nodes.get()}
+        selectedNodeId={selected.get()}
+        view={view.get()}
+        onSelect={(value) => selected.set(value)}
         onMove={moveNode}
-        onViewChange={setView}
+        onViewChange={(value) => view.set(value)}
         onWheel={(event) => {
           event.preventDefault();
-          setView((current) => zoomAroundPoint(current, event, event.deltaY));
+          view.update((current) => zoomAroundPoint(current, event, event.deltaY));
         }}
       />
       <StatusBar
         style={{ left: 0, top: 568, width: "100%", height: 32 }}
-        selected={nodes.find((node) => node.id === selected)}
-        view={view}
+        selected={nodes.get().find((node) => node.id === selected.get())}
+        view={view.get()}
       />
     </Absolute>
   );

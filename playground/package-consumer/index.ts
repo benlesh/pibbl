@@ -115,7 +115,6 @@ import type {
   SignalEquals,
   SignalOptions,
   SignalValue,
-  StateUpdater,
   SvgPathStyle,
   SvgPathOptions,
   StarPathOptions,
@@ -250,16 +249,13 @@ import {
   useEventTarget,
   useLayoutBox,
   useLinePath,
-  useMemo,
   usePlayback,
   useRectPath,
-  useReaction,
   useRef,
   useSignal,
-  useState,
   useSvgPath,
   useTransition,
-  useWhenChanged,
+  useReaction,
   createElement,
   defineAnimation,
   definePrimitive,
@@ -319,6 +315,24 @@ import {
   untracked,
   wait,
 } from '@crc/core';
+
+// Removed hooks intentionally have no built-package compatibility exports.
+// @ts-expect-error useState was replaced by useSignal
+import { useState as removedUseState } from '@crc/core';
+// @ts-expect-error StateUpdater was removed with useState
+import type { StateUpdater as RemovedStateUpdater } from '@crc/core';
+// @ts-expect-error useMemo was replaced by useConst and useComputed
+import { useMemo as removedUseMemo } from '@crc/core';
+// @ts-expect-error useWhenChanged was replaced by useReaction
+import { useWhenChanged as removedUseWhenChanged } from '@crc/core';
+
+type RemovedHookVocabulary = [
+  typeof removedUseState,
+  RemovedStateUpdater<number>,
+  typeof removedUseMemo,
+  typeof removedUseWhenChanged,
+];
+void (null as unknown as RemovedHookVocabulary);
 import {
   AmbientLight,
   useAnimationFrame,
@@ -1533,13 +1547,13 @@ crc(canvas, runtimeElement, { viewport: { width: '720', height: 420 } });
 // @ts-expect-error pixelRatio accepts only device or a number
 crc(canvas, runtimeElement, { pixelRatio: 'retina' });
 
-const [state, setState] = useState({ count: 0 });
-const stateCount: number = state.count;
-const typedSetter: StateUpdater<{ count: number }> = setState;
-typedSetter({ count: stateCount + 1 });
-typedSetter(previous => ({ count: previous.count + 1 }));
-// @ts-expect-error state setters preserve the initialized value type
-typedSetter({ count: 'one' });
+const state = useSignal({ count: 0 });
+const stateCount: number = state.get().count;
+const typedState: WritableSignal<{ count: number }> = state;
+typedState.set({ count: stateCount + 1 });
+typedState.update(previous => ({ count: previous.count + 1 }));
+// @ts-expect-error writable signals preserve the initialized value type
+typedState.set({ count: 'one' });
 
 const signalEquals: SignalEquals<number> = (previous, next) => previous === next;
 const signalOptions: SignalOptions<number> = {
@@ -1722,14 +1736,6 @@ void playbackStatus;
 void playbackEvent;
 void (null as unknown as FreePlay);
 
-const memoValue: Readonly<{ value: number }> = useMemo(
-  () => ({ value: 1 }),
-  [stateCount],
-);
-memoValue.value;
-// @ts-expect-error memo dependencies are required by the public contract
-useMemo(() => 1);
-
 const constValue: Readonly<{ value: number }> = useConst(
   () => ({ value: stateCount }),
 );
@@ -1758,13 +1764,6 @@ initializedRef.current = 2;
 emptyRef.current = 'ready';
 // @ts-expect-error refs preserve their generic current-value type
 initializedRef.current = 'two';
-
-useWhenChanged(() => {
-  return () => undefined;
-}, [stateCount]);
-useWhenChanged(() => undefined);
-// @ts-expect-error change callbacks are synchronous and cannot return a Promise
-useWhenChanged(async () => undefined, []);
 
 const rectanglePath: Path2D = useRectPath(0, 0, 10, 20, {
   alignToPixelGrid: 'round',

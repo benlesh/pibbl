@@ -69,7 +69,7 @@ function initialMetrics(): RuntimeHooksMetrics {
     refIdentity: 0,
     refObject: undefined,
     renders: 0,
-    setState: undefined,
+    stateSignal: undefined,
     siblingIdentities: { a: null, b: null, c: null },
     stateValue: 0,
   };
@@ -151,11 +151,11 @@ async function mountRuntimeHooks(
       const action = actionId as RuntimeHooksAction;
       switch (action) {
         case 'increment-state':
-          if (!metrics.setState) {
+          if (!metrics.stateSignal) {
             throw new Error('The state probe is not mounted.');
           }
           model.lastAction = action;
-          metrics.setState(value => value + 1);
+          metrics.stateSignal.update(value => value + 1);
           pendingRender = nextFrame();
           await pendingRender;
           publish();

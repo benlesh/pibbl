@@ -161,8 +161,8 @@ const drafts = [
       "Text",
       "FocusManagement",
       "KeyboardNavigation",
-      "useState",
-      "useWhenChanged",
+      "useSignal",
+      "useReaction",
     ],
     objectives: [
       "Use createElement(type, props, ...children) for fragments, keyed dynamic lists, components, and textual zero/state interpolation.",
@@ -625,7 +625,7 @@ const drafts = [
       code: "Change the hexagon's inradius or sides, then compare the clipped region.",
     },
     apiNotes: [
-      "`useMemo` keeps the created hexagon path stable while its dependencies are unchanged.",
+      "`useConst` creates the reusable hexagon path once for the mounted component.",
       "`createRegularPolygonPath` uses sides, center coordinates, and exactly one size mode such as inradius.",
       "Nested clips intersect, matching Canvas clipping behavior.",
       "Clip receives children directly, and both paint and targeting are constrained by its active path.",
@@ -808,7 +808,7 @@ const drafts = [
       "collider2D",
       "crcPhysicsBody2D",
       "useRef",
-      "useState",
+      "useSignal",
       "setPointerCapture",
       "disableBody2D",
       "teleportBody2D",

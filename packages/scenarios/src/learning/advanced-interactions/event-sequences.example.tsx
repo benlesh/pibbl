@@ -1,8 +1,8 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function EventSequenceStudy() {
-  const [events, setEvents] = useState<readonly string[]>([]);
+  const events = useSignal<readonly string[]>([]);
   const record = (value: string) =>
-    setEvents((current) => [...current.slice(-5), value]);
+    events.update((current) => [...current.slice(-5), value]);
   const target = (x: number, color: string, name: string) => (
     <Rectangle
       style={{
@@ -66,7 +66,7 @@ function EventSequenceStudy() {
         textAlign: "center",
       }}
     >
-      {events.length ? events.join("  →  ") : "MOVE A → B, THEN CLICK"}
+      {events.get().length ? events.get().join("  →  ") : "MOVE A → B, THEN CLICK"}
     </Text>,
   ];
 }

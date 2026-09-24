@@ -6,7 +6,7 @@ import {
   LayoutDiagnostic,
   Polygon,
   usePlayback,
-  useWhenChanged,
+  useReaction,
   defineAnimation,
   parallel,
   signal,
@@ -19,7 +19,8 @@ import { definePrimitive } from './define-primitive';
 import { createElement, isCRCElement } from './element/create-element';
 import { clearSharedState, getCRCInstance } from './global-state';
 import { useRef } from './hooks/use-ref';
-import { useState, type StateUpdater } from './hooks/use-state';
+import { useSignal } from './hooks/use-signal';
+import type { WritableSignal } from './signals/types';
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
@@ -264,7 +265,7 @@ describe('crc root updates', () => {
     let cleanups = 0;
     const setup = vi.fn(() => () => cleanups++);
     const ResourceBearingSibling = (_props: {}) => {
-      useWhenChanged(setup, []);
+      useReaction(setup, []);
       return createElement(Rectangle, {
         style: { x: 2, y: 2, width: 8, height: 8, fill: 'blue' },
         onClick: () => undefined,
@@ -345,7 +346,7 @@ describe('crc root updates', () => {
       | { clickListeners: number; targets: number }
       | undefined;
     const ResourceBearingSibling = (_props: {}) => {
-      useWhenChanged(setup, []);
+      useReaction(setup, []);
       return createElement(Circle, {
         style: { radius: 4, fill: '#2563eb' },
         onClick: () => undefined,
@@ -429,7 +430,7 @@ describe('crc root updates', () => {
     const cleanup = vi.fn();
     const setup = vi.fn(() => cleanup);
     const ResourceBearingSibling = (_props: {}) => {
-      useWhenChanged(setup, []);
+      useReaction(setup, []);
       return createElement(Circle, {
         style: { cx: 8, cy: 8, radius: 4, fill: '#2563eb' },
         onClick: () => undefined,
@@ -493,7 +494,7 @@ describe('crc root updates', () => {
     const cleanup = vi.fn();
     const setup = vi.fn(() => cleanup);
     const ResourceBearingSibling = (_props: {}) => {
-      useWhenChanged(setup, []);
+      useReaction(setup, []);
       return createElement(Circle, {
         style: { cx: 8, cy: 8, radius: 4, fill: '#2563eb' },
         onClick: () => undefined,
@@ -566,11 +567,11 @@ describe('crc root updates', () => {
   it('does not lose a pending root replacement to a state update', async () => {
     const canvas = createCanvas();
     const renders: string[] = [];
-    let setValue: StateUpdater<number> | undefined;
+    let valueSignal: WritableSignal<number> | undefined;
     const StatefulRoot = (_props: {}) => {
-      const [value, setter] = useState(0);
-      setValue = setter;
-      renders.push(`stateful:${value}`);
+      const value = useSignal(0);
+      valueSignal = value;
+      renders.push(`stateful:${value.get()}`);
     };
     const ReplacementRoot = (_props: {}) => {
       renders.push('replacement');
@@ -579,7 +580,7 @@ describe('crc root updates', () => {
     await nextFrame();
 
     crc(canvas, createElement(ReplacementRoot, {}));
-    setValue?.(1);
+    valueSignal?.set(1);
     const pendingRoot = getCRCInstance(canvas).pendingRoot;
     expect(isCRCElement(pendingRoot) && pendingRoot.type)
       .toBe(createElement(ReplacementRoot, {}).type);
@@ -808,11 +809,11 @@ describe('crc root updates', () => {
   it('lets the latest explicit root win after a state update while preserving parent intent', async () => {
     const canvas = createCanvas();
     const renders: string[] = [];
-    let setValue: StateUpdater<number> | undefined;
+    let valueSignal: WritableSignal<number> | undefined;
     const StatefulRoot = (_props: {}) => {
-      const [value, setter] = useState(0);
-      setValue = setter;
-      renders.push(`stateful:${value}`);
+      const value = useSignal(0);
+      valueSignal = value;
+      renders.push(`stateful:${value.get()}`);
     };
     const FirstReplacement = (_props: {}) => {
       renders.push('first-replacement');
@@ -823,7 +824,7 @@ describe('crc root updates', () => {
     const controller = crc(canvas, createElement(StatefulRoot, {}));
     await nextFrame();
 
-    setValue?.(1);
+    valueSignal?.set(1);
     crc(canvas, createElement(FirstReplacement, {}));
     crc(canvas, createElement(LatestReplacement, {}));
     const instance = getCRCInstance(canvas);

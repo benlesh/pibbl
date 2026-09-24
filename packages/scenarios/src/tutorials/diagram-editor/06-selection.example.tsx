@@ -2,7 +2,7 @@ import {
   Absolute,
   crc,
   useLayoutBox,
-  useState,
+  useSignal,
   Fragment,
   Group,
   Path,
@@ -319,8 +319,8 @@ function StatusBar({
 }
 
 function DiagramEditor(): CRCNode {
-  const [selectedNodeId, setSelectedNodeId] = useState<NodeId | null>("sketch");
-  const selectedNode = INITIAL_NODES.find((node) => node.id === selectedNodeId);
+  const selectedNodeId = useSignal<NodeId | null>("sketch");
+  const selectedNode = INITIAL_NODES.find((node) => node.id === selectedNodeId.get());
   return (
     <Absolute style={{ width: 960, height: 600 }}>
       <Toolbar style={{ left: 0, top: 0, width: "100%", height: 56 }} />
@@ -331,9 +331,9 @@ function DiagramEditor(): CRCNode {
           width: "100%",
           height: WORKSPACE_HEIGHT,
         }}
-        selectedNodeId={selectedNodeId}
-        onSelect={(id) => setSelectedNodeId(id)}
-        onClearSelection={() => setSelectedNodeId(null)}
+        selectedNodeId={selectedNodeId.get()}
+        onSelect={(id) => selectedNodeId.set(id)}
+        onClearSelection={() => selectedNodeId.set(null)}
       />
       <StatusBar
         style={{ left: 0, top: 568, width: "100%", height: 32 }}

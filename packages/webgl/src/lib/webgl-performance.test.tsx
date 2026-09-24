@@ -3,7 +3,7 @@ import {
   KeyboardNavigation,
   createElement,
   crc,
-  useState,
+  useSignal,
   type CRCController,
   type CRCNode,
 } from '@crc/core';
@@ -189,9 +189,9 @@ describe('WebGL retained structural performance', () => {
       return <Cube pointerEvents="none" />;
     }
     function Stateful(): CRCNode {
-      const [revision, setState] = useState(0);
-      setRevision = setState;
-      return <Draw revision={revision} />;
+      const revision = useSignal(0);
+      setRevision = value => revision.set(value);
+      return <Draw revision={revision.get()} />;
     }
     const scene = (
       <WebGLLayer style={{ width: 30, height: 20 }}>
@@ -230,9 +230,9 @@ describe('WebGL retained structural performance', () => {
       return <Cube pointerEvents="none" />;
     }
     function Stateful(): CRCNode {
-      const [revision, setState] = useState(0);
-      setRevision = setState;
-      return <Draw revision={revision} />;
+      const revision = useSignal(0);
+      setRevision = value => revision.set(value);
+      return <Draw revision={revision.get()} />;
     }
     function Replacement(): CRCNode {
       replacementExecutions += 1;

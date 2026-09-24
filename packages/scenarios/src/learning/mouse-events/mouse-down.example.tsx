@@ -1,7 +1,7 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function MouseDownStudy() {
-  const [presses, setPresses] = useState(0);
-  const [button, setButton] = useState("none");
+  const presses = useSignal(0);
+  const button = useSignal("none");
   return [
     <Rectangle
       style={{
@@ -24,11 +24,9 @@ function MouseDownStudy() {
         cursor: "pointer",
       }}
       onMouseDown={(event) => {
-        setPresses((value) => value + 1);
-        setButton(
-          ["primary", "middle", "secondary"][event.originalEvent.button] ??
-            `button ${event.originalEvent.button}`,
-        );
+        presses.update((value) => value + 1);
+        button.set(["primary", "middle", "secondary"][event.originalEvent.button] ??
+            `button ${event.originalEvent.button}`);
       }}
     />,
     <Text
@@ -50,7 +48,7 @@ function MouseDownStudy() {
         font: "700 15px monospace",
         textAlign: "center",
       }}
-    >{`DOWN / ${presses} / ${button}`}</Text>,
+    >{`DOWN / ${presses.get()} / ${button.get()}`}</Text>,
   ];
 }
 export default function mount(canvas: HTMLCanvasElement): CRCController {

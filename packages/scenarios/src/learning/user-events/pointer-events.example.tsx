@@ -1,6 +1,6 @@
 import {
   crc,
-  useState,
+  useSignal,
   Rectangle,
   Text,
   type CRCController,
@@ -10,10 +10,10 @@ function pointerSummary(event: CRCPointerEvent): string {
   return `${event.type} #${event.pointerId} ${event.pointerType} ${Math.round(event.x)},${Math.round(event.y)} p=${event.pressure.toFixed(2)} ${event.width}×${event.height} tilt=${event.tiltX}/${event.tiltY} twist=${event.twist} b=${event.button}/${event.buttons} ${event.isPrimary ? "primary" : "secondary"}`;
 }
 function PointerEventsStudy() {
-  const [trace, setTrace] = useState<readonly string[]>([]);
-  const [inside, setInside] = useState(false);
+  const trace = useSignal<readonly string[]>([]);
+  const inside = useSignal(false);
   const record = (event: CRCPointerEvent) => {
-    setTrace((current) => [...current.slice(-3), pointerSummary(event)]);
+    trace.update((current) => [...current.slice(-3), pointerSummary(event)]);
   };
   return [
     <Rectangle
@@ -42,14 +42,14 @@ function PointerEventsStudy() {
         y: 82,
         width: 580,
         height: 204,
-        fill: inside ? "#f7c948" : "#74d3ae",
+        fill: inside.get() ? "#f7c948" : "#74d3ae",
         stroke: "#17211d",
         strokeWidth: 5,
         cursor: "crosshair",
       }}
       onPointerOver={(event) => record(event)}
       onPointerEnter={(event) => {
-        setInside(true);
+        inside.set(true);
         record(event);
       }}
       onPointerDown={(event) => record(event)}
@@ -57,12 +57,12 @@ function PointerEventsStudy() {
       onPointerRawUpdate={(event) => record(event)}
       onPointerUp={(event) => record(event)}
       onPointerCancel={(event) => {
-        setInside(false);
+        inside.set(false);
         record(event);
       }}
       onPointerOut={(event) => record(event)}
       onPointerLeave={(event) => {
-        setInside(false);
+        inside.set(false);
         record(event);
       }}
     />,
@@ -75,7 +75,7 @@ function PointerEventsStudy() {
         textAlign: "center",
       }}
     >
-      {inside ? "MOVE • PRESS • LEAVE" : "ENTER THIS FIELD"}
+      {inside.get() ? "MOVE • PRESS • LEAVE" : "ENTER THIS FIELD"}
     </Text>,
     <Text
       style={{
@@ -125,8 +125,8 @@ function PointerEventsStudy() {
         font: "600 12px monospace",
       }}
     >
-      {trace.length
-        ? trace.join("\n")
+      {trace.get().length
+        ? trace.get().join("\n")
         : "Trace waits for a pointer. The latest pointer fields appear here."}
     </Text>,
   ];

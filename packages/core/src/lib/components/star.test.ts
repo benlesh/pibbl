@@ -3,7 +3,7 @@ import { createElement } from '../element/create-element';
 import { jsx } from '../element/jsx-runtime';
 import { getPrimitiveDefinition } from '../element/metadata';
 import { getCRCInstance } from '../global-state';
-import { useState } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
@@ -258,9 +258,9 @@ describe('Star', () => {
     let advance!: () => void;
     const onClick = vi.fn();
     function Probe() {
-      const [phase, setPhase] = useState(0);
-      advance = () => setPhase(value => value + 1);
-      if (phase === 0) {
+      const phase = useSignal(0);
+      advance = () => phase.update(value => value + 1);
+      if (phase.get() === 0) {
         return createElement(Star, {
           style: {
             points: 5,
@@ -273,7 +273,7 @@ describe('Star', () => {
           onClick,
         });
       }
-      if (phase === 1) {
+      if (phase.get() === 1) {
         return createElement(Star, {
           style: {
             points: 6,
@@ -287,7 +287,7 @@ describe('Star', () => {
           onClick,
         });
       }
-      if (phase === 2) {
+      if (phase.get() === 2) {
         return createElement(Circle, {
           style: { cx: 160, cy: 40, radius: 10, fill: 'green' },
           onClick,

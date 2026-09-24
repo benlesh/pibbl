@@ -1,7 +1,7 @@
 import {
   crc,
   useEventTarget,
-  useState,
+  useSignal,
   FocusManagement,
   KeyboardNavigation,
   Rectangle,
@@ -217,19 +217,19 @@ interface LessonStatus {
   readonly input: string;
 }
 function NestedDirectionalNavigationLesson() {
-  const [status, setStatus] = useState<LessonStatus>({
+  const status = useSignal<LessonStatus>({
     boundary: "NONE",
     focused: "NONE",
     input: "Click or Tab",
   });
   const onFocusTarget = (focused: string, boundary: BoundaryName) =>
-    setStatus((current) => ({
+    status.update((current) => ({
       ...current,
       boundary,
       focused,
     }));
   const onInput = (input: string) =>
-    setStatus((current) => ({
+    status.update((current) => ({
       ...current,
       input,
     }));
@@ -291,16 +291,16 @@ function NestedDirectionalNavigationLesson() {
         fill: "#f8fafc",
         font: "800 14px monospace",
       }}
-    >{`FOCUSED: ${status.focused.toUpperCase()}`}</Text>,
+    >{`FOCUSED: ${status.get().focused.toUpperCase()}`}</Text>,
     <Text
       pointerEvents={"none"}
       style={{
         x: 54,
         y: 477,
-        fill: status.boundary === "INNER" ? "#c4b5fd" : "#5eead4",
+        fill: status.get().boundary === "INNER" ? "#c4b5fd" : "#5eead4",
         font: "800 13px monospace",
       }}
-    >{`ACTIVE BOUNDARY: ${status.boundary}`}</Text>,
+    >{`ACTIVE BOUNDARY: ${status.get().boundary}`}</Text>,
     <Text
       pointerEvents={"none"}
       style={{
@@ -310,7 +310,7 @@ function NestedDirectionalNavigationLesson() {
         fill: "#facc15",
         font: "800 13px monospace",
       }}
-    >{`LAST INPUT: ${status.input}`}</Text>,
+    >{`LAST INPUT: ${status.get().input}`}</Text>,
   ];
 }
 export default function mount(canvas: HTMLCanvasElement): CRCController {

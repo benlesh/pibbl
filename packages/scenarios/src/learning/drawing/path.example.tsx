@@ -1,13 +1,13 @@
 import {
   crc,
-  useState,
+  useSignal,
   Path,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function PathStudy() {
-  const [inside, setInside] = useState(false);
+  const inside = useSignal(false);
   const star = new Path2D();
   const points = [
     [360, 66],
@@ -37,13 +37,13 @@ function PathStudy() {
     <Path
       style={{
         d: star,
-        fill: inside ? "#f7c948" : "#74d3ae",
+        fill: inside.get() ? "#f7c948" : "#74d3ae",
         stroke: "#fffdf6",
         strokeWidth: 6,
         cursor: "crosshair",
       }}
-      onMouseOver={() => setInside(true)}
-      onMouseOut={() => setInside(false)}
+      onMouseOver={() => inside.set(true)}
+      onMouseOut={() => inside.set(false)}
     />,
     <Text
       style={{
@@ -54,7 +54,7 @@ function PathStudy() {
         textAlign: "center",
       }}
     >
-      {inside ? "PATH2D!" : "TRACE THE STAR"}
+      {inside.get() ? "PATH2D!" : "TRACE THE STAR"}
     </Text>,
   ];
 }

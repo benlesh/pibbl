@@ -1819,7 +1819,7 @@ export function validateDiagramEditorTutorialSourceText(
 
   if (
     source.includes("useEventListener") ||
-    source.includes("useWhenChanged")
+    source.includes("useReaction")
   ) {
     throw invalid(
       label,
@@ -1845,9 +1845,9 @@ export function validateDiagramEditorTutorialSourceText(
     const editor = topLevelFunction(sourceFile, "DiagramEditor");
     if (
       !callsIdentifier(nodeCard, "useRef") ||
-      !callsIdentifier(nodeCard, "useState") ||
+      !callsIdentifier(nodeCard, "useSignal") ||
       !callsIdentifier(workspace, "useRef") ||
-      !callsIdentifier(workspace, "useState") ||
+      !callsIdentifier(workspace, "useSignal") ||
       callsIdentifier(editor, "useRef")
     ) {
       throw invalid(

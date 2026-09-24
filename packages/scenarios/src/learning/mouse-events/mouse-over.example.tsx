@@ -1,6 +1,6 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function MouseOverStudy() {
-  const [active, setActive] = useState("none");
+  const active = useSignal("none");
   const card = (x: number, color: string, label: string) => [
     <Rectangle
       style={{
@@ -13,7 +13,7 @@ function MouseOverStudy() {
         strokeWidth: 5,
         cursor: "pointer",
       }}
-      onMouseOver={() => setActive(label)}
+      onMouseOver={() => active.set(label)}
     />,
     <Text
       style={{
@@ -49,7 +49,7 @@ function MouseOverStudy() {
         textAlign: "center",
       }}
     >
-      {active === "none" ? "ENTER A CARD" : `${active} / ENTERED`}
+      {active.get() === "none" ? "ENTER A CARD" : `${active.get()} / ENTERED`}
     </Text>,
   ];
 }

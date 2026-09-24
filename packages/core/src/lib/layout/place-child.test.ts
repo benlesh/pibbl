@@ -3,8 +3,8 @@ import { crc } from '../crc';
 import { getCRCInstance } from '../global-state';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import { useRef } from '../hooks/use-ref';
-import { useState } from '../hooks/use-state';
-import { useWhenChanged } from '../hooks/use-when-changed';
+import { useSignal } from '../hooks/use-signal';
+import { useReaction } from '../hooks/use-reaction';
 import { componentTest } from '../test-utils/component-test';
 import type { Length } from '../style/types';
 import { Rectangle } from '../components/rect';
@@ -75,11 +75,11 @@ describe('layout placement', () => {
   it('preserves keyed state across reflow', async () => {
     const values: number[] = [];
     const Stateful = (_props: {}) => {
-      const [value, setValue] = useState(0);
-      values.push(value);
+      const value = useSignal(0);
+      values.push(value.get());
       return createElement(Rectangle, {
         style: { width: 40, height: 20, fill: 'blue' },
-        onClick: () => setValue(old => old + 1),
+        onClick: () => value.update(old => old + 1),
       });
     };
     const renderAt = (x: number) => {
@@ -147,7 +147,7 @@ describe('layout placement', () => {
     const cleanup = vi.fn();
     const Child = (_props: {}) => {
       useLayoutBox();
-      useWhenChanged(() => cleanup, []);
+      useReaction(() => cleanup, []);
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: 'red' },
         onClick: () => undefined,

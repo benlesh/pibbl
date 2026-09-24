@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
 import { clearSharedState } from '../global-state';
 import { useLinePath } from './use-line-path';
-import { useMemo } from './use-memo';
+import { useConst } from './use-const';
 import { useRectPath } from './use-rect-path';
 import { useSvgPath } from './use-svg-path';
 import { createElement } from '../element/create-element';
@@ -214,7 +214,7 @@ describe('memoized path hooks', () => {
     const canvas = createCanvas();
     const Probe = ({ path }: { path: boolean }) => {
       if (path) useRectPath(0, 0, 1, 1);
-      else useMemo(() => new Path2D(), []);
+      else useConst(() => new Path2D());
     };
     const controller = crc(canvas, createElement(Probe, { path: false }));
     frames.flush();

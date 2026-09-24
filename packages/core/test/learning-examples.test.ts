@@ -986,16 +986,16 @@ describe("learning example catalog", () => {
       `
         import {
           crc,
-          useMemo,
-          useState,
+          useComputed,
+          useSignal,
           measureElement,
           resolveLength,
           Text,
           type CRCController,
         } from "@crc/core";
         function RuntimeFunctionStudy() {
-          const [count] = useState(1);
-          const doubled = useMemo(() => count * 2, [count]);
+          const count = useSignal(1);
+          const doubled = useComputed(() => count.get() * 2);
           const length = resolveLength("50%", 200, "width") ?? 0;
           const measurement = measureElement(
             {} as never,
@@ -1514,7 +1514,7 @@ describe("learning example catalog", () => {
       "Use an inradius-defined hexagon to clip children and their interaction geometry.",
     ]);
     expect(await loadLearningSource(clip!)).toContain("createRegularPolygonPath");
-    expect(await loadLearningSource(clip!)).toContain("useMemo");
+    expect(await loadLearningSource(clip!)).toContain("useConst");
 
     const regularPolygon = learningExampleCatalog.find(
       (entry) => entry.slug === "regular-polygon",
@@ -1881,7 +1881,7 @@ describe("learning example catalog", () => {
         "collider2D",
         "crcPhysicsBody2D",
         "useRef",
-        "useState",
+        "useSignal",
         "setPointerCapture",
         "disableBody2D",
         "teleportBody2D",

@@ -1,18 +1,17 @@
 import {
   Clip,
   crc,
-  useMemo,
-  useState,
+  useConst,
+  useSignal,
   createRegularPolygonPath,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function ClipStudy() {
-  const [inside, setInside] = useState(false);
-  const hexagon = useMemo(
+  const inside = useSignal(false);
+  const hexagon = useConst(
     () => createRegularPolygonPath({ sides: 6, cx: 360, cy: 210, inradius: 142 }),
-    [],
   );
   return [
     <Rectangle
@@ -35,11 +34,11 @@ function ClipStudy() {
           y: 54,
           width: 312,
           height: 312,
-          fill: inside ? "#f7c948" : "#1f4bd8",
+          fill: inside.get() ? "#f7c948" : "#1f4bd8",
           cursor: "crosshair",
         }}
-        onMouseOver={() => setInside(true)}
-        onMouseOut={() => setInside(false)}
+        onMouseOver={() => inside.set(true)}
+        onMouseOut={() => inside.set(false)}
       />
       <Rectangle
         style={{
@@ -69,7 +68,7 @@ function ClipStudy() {
         textAlign: "center",
       }}
     >
-      {inside ? "INSIDE THE CLIP" : "HEXAGON WINDOW"}
+      {inside.get() ? "INSIDE THE CLIP" : "HEXAGON WINDOW"}
     </Text>,
   ];
 }

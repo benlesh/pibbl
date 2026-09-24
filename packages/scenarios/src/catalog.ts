@@ -1199,7 +1199,7 @@ const cleanupStressMetadata: ScenarioMetadata = {
   summary:
     "Exercise pending frames, image races, nested layers, synchronous hook cleanup, component/root identity, runtime disposal, and repeated mount cycles.",
   category: "Diagnostics",
-  apiTags: ["crc", "useWhenChanged", "Image", "Layer", "Rectangle"],
+  apiTags: ["crc", "useReaction", "Image", "Layer", "Rectangle"],
   conceptTags: [
     "resource ownership",
     "async cleanup",
@@ -1293,10 +1293,10 @@ const runtimeHooksMetadata: ScenarioMetadata = {
   category: "Diagnostics",
   apiTags: [
     "crc",
-    "useState",
-    "useMemo",
+    "useSignal",
+    "useComputed",
     "useRef",
-    "useWhenChanged",
+    "useReaction",
     "useRectPath",
     "useLinePath",
     "useSvgPath",

@@ -21,7 +21,7 @@ import type { RenderingContext2D } from '../types';
 import { Group } from './g';
 import { Clip } from './clip';
 import { Star } from './star';
-import { useState } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -160,15 +160,15 @@ describe('built-in DOM-aligned event integration', () => {
       fill: 'blue',
     };
     const Scene = () => {
-      const [disabled, setDisabled] = useState(false);
-      disableFront = () => setDisabled(true);
+      const disabled = useSignal(false);
+      disableFront = () => disabled.set(true);
       return createElement(
         Fragment,
         {},
         createElement(Rectangle, { style: rearStyle, onClick: rearClick }),
         createElement(Star, {
           style: frontStyle,
-          pointerEvents: disabled ? 'none' : 'auto',
+          pointerEvents: disabled.get() ? 'none' : 'auto',
         }),
       );
     };

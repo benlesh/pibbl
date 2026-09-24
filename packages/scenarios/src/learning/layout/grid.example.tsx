@@ -1,13 +1,13 @@
 import {
   crc,
-  useState,
+  useSignal,
   Grid,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function GridStudy() {
-  const [active, setActive] = useState(false);
+  const active = useSignal(false);
   return [
     <Rectangle
       style={{
@@ -44,12 +44,12 @@ function GridStudy() {
           gridColumnStart: 2,
           gridColumnSpan: 2,
           gridRowStart: 1,
-          fill: active ? "#74d3ae" : "#ff6b57",
+          fill: active.get() ? "#74d3ae" : "#ff6b57",
           stroke: "#17211d",
           strokeWidth: 3,
           cursor: "pointer",
         }}
-        onClick={() => setActive((value) => !value)}
+        onClick={() => active.update((value) => !value)}
       />
       <Rectangle
         style={{

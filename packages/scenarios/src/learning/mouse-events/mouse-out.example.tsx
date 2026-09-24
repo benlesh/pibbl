@@ -1,7 +1,7 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function MouseOutStudy() {
-  const [departures, setDepartures] = useState(0);
-  const [inside, setInside] = useState(false);
+  const departures = useSignal(0);
+  const inside = useSignal(false);
   return [
     <Rectangle
       style={{
@@ -18,13 +18,13 @@ function MouseOutStudy() {
         y: 68,
         width: 340,
         height: 284,
-        fill: inside ? "#f7c948" : "#74d3ae",
+        fill: inside.get() ? "#f7c948" : "#74d3ae",
         cursor: "crosshair",
       }}
-      onMouseOver={() => setInside(true)}
+      onMouseOver={() => inside.set(true)}
       onMouseOut={() => {
-        setInside(false);
-        setDepartures((value) => value + 1);
+        inside.set(false);
+        departures.update((value) => value + 1);
       }}
     />,
     <Text
@@ -36,7 +36,7 @@ function MouseOutStudy() {
         textAlign: "center",
       }}
     >
-      {inside ? "YOU ARE IN" : "MINT PORTAL"}
+      {inside.get() ? "YOU ARE IN" : "MINT PORTAL"}
     </Text>,
     <Text
       style={{
@@ -46,7 +46,7 @@ function MouseOutStudy() {
         font: "700 15px monospace",
         textAlign: "center",
       }}
-    >{`DEPARTURES / ${departures}`}</Text>,
+    >{`DEPARTURES / ${departures.get()}`}</Text>,
   ];
 }
 export default function mount(canvas: HTMLCanvasElement): CRCController {

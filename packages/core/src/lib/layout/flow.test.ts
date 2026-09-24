@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
 import { Text } from '../components/text';
 import { crc } from '../crc';
-import { useState } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import type { Length } from '../style/types';
 import type { RectStyle } from '../style/types';
@@ -378,8 +378,8 @@ describe('CRC-native flow geometry', () => {
     let nextIdentity = 0;
     const observations = new Map<string, number>();
     const Item = ({ label }: { label: string } & { style: Readonly<SystemStyle & { width: number; height: number }> }) => {
-      const [identity] = useState(++nextIdentity);
-      observations.set(label, identity);
+      const identity = useSignal(++nextIdentity);
+      observations.set(label, identity.get());
     };
     const Host = ({ keyed }: { keyed: boolean }) => createElement(Flow, {
       style: { width: 100, height: 30 },

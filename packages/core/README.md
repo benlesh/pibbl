@@ -14,14 +14,14 @@ DOM.
 ```
 
 ```tsx
-import { Rectangle, Text, crc, useState } from "@crc/core";
+import { Rectangle, Text, crc, useSignal } from "@crc/core";
 
 function Scene() {
-  const [count, setCount] = useState(0);
+  const count = useSignal(0);
   return [
     <Rectangle
       style={{ width: 240, height: 120, fill: "#2563eb", cursor: "pointer" }}
-      onClick={() => setCount((value) => value + 1)}
+      onClick={() => count.update((value) => value + 1)}
     />,
     <Text style={{ x: 20, y: 20, fill: "white" }}>Clicks: {count}</Text>,
   ];

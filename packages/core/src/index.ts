@@ -282,7 +282,6 @@ export { useEventListener } from './lib/hooks/use-event-listener.js';
 export { useEventTarget } from './lib/hooks/use-event-target.js';
 export { useLinePath } from './lib/hooks/use-line-path.js';
 export { useLayoutBox } from './lib/hooks/use-layout-box.js';
-export { useMemo } from './lib/hooks/use-memo.js';
 export { useRectPath } from './lib/hooks/use-rect-path.js';
 export { useRef, type CRCRef } from './lib/hooks/use-ref.js';
 export { usePlayback } from './lib/hooks/use-playback.js';
@@ -292,9 +291,7 @@ export {
 } from './lib/hooks/use-reaction.js';
 export { useTransition } from './lib/hooks/use-transition.js';
 export { useSignal } from './lib/hooks/use-signal.js';
-export { useState, type StateUpdater } from './lib/hooks/use-state.js';
 export { useSvgPath } from './lib/hooks/use-svg-path.js';
-export { useWhenChanged } from './lib/hooks/use-when-changed.js';
 export type {
   Canvas,
   CanvasMeasurementService,

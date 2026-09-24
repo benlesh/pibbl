@@ -1,7 +1,7 @@
-import { crc, useState, Polygon, Rectangle, type CRCController } from "@crc/core";
+import { crc, useSignal, Polygon, Rectangle, type CRCController } from "@crc/core";
 
 function PolygonStudy() {
-  const [active, setActive] = useState(false);
+  const active = useSignal(false);
 
   return [
     <Rectangle
@@ -16,13 +16,13 @@ function PolygonStudy() {
           [274, 338],
           [220, 174],
         ],
-        fill: active ? "#14b8a6" : "#f59e0b",
+        fill: active.get() ? "#14b8a6" : "#f59e0b",
         stroke: "#17211d",
         strokeWidth: 6,
         cornerRadius: 18,
         cursor: "pointer",
       }}
-      onClick={() => setActive((value) => !value)}
+      onClick={() => active.update((value) => !value)}
     />,
   ];
 }

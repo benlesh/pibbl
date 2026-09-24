@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
 import { getCRCInstance } from '../global-state';
-import { useState } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
@@ -68,10 +68,10 @@ describe('Ellipse', () => {
     const onClick = vi.fn();
     let move!: () => void;
     function Probe() {
-      const [cx, setCx] = useState(30);
-      move = () => setCx(90);
+      const cx = useSignal(30);
+      move = () => cx.set(90);
       return createElement(Ellipse, {
-        style: { cx, cy: 30, radiusX: 20, radiusY: 10, fill: 'red' },
+        style: { cx: cx.get(), cy: 30, radiusX: 20, radiusY: 10, fill: 'red' },
         onClick,
       });
     }

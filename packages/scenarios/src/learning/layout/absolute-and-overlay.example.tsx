@@ -1,14 +1,14 @@
 import {
   Absolute,
   crc,
-  useState,
+  useSignal,
   Overlay,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function AbsoluteOverlayStudy() {
-  const [active, setActive] = useState(false);
+  const active = useSignal(false);
   return (
     <Absolute
       style={{
@@ -44,12 +44,12 @@ function AbsoluteOverlayStudy() {
           style={{
             width: 270,
             height: 130,
-            fill: active ? "#74d3ae" : "#ff6b57",
+            fill: active.get() ? "#74d3ae" : "#ff6b57",
             stroke: "#17211d",
             strokeWidth: 5,
             cursor: "pointer",
           }}
-          onClick={() => setActive((value) => !value)}
+          onClick={() => active.update((value) => !value)}
         />
         <Text
           style={{
@@ -65,7 +65,7 @@ function AbsoluteOverlayStudy() {
             justifySelf: "center",
           }}
         >
-          {active ? "OVERLAY ACTIVE" : "CLICK THE OVERLAY"}
+          {active.get() ? "OVERLAY ACTIVE" : "CLICK THE OVERLAY"}
         </Text>
       </Overlay>
     </Absolute>

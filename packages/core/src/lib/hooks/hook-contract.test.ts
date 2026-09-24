@@ -13,16 +13,13 @@ import { useEvent } from './use-event';
 import { useEventListener } from './use-event-listener';
 import { useEventTarget } from './use-event-target';
 import { useLinePath } from './use-line-path';
-import { useMemo } from './use-memo';
 import { usePlayback } from './use-playback';
 import { useTransition } from './use-transition';
 import { useRectPath } from './use-rect-path';
 import { useRef } from './use-ref';
 import { useReaction } from './use-reaction';
 import { useSignal } from './use-signal';
-import { useState, type StateUpdater } from './use-state';
 import { useSvgPath } from './use-svg-path';
-import { useWhenChanged } from './use-when-changed';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
 import { track } from '../animation/program';
@@ -36,79 +33,6 @@ beforeEach(() => {
 afterEach(() => {
   clearSharedState();
   vi.restoreAllMocks();
-});
-
-describe('useState', () => {
-  it('keeps one setter, batches functional updates, and resets on key replacement', async () => {
-    const canvas = createCanvas();
-    const renders: Array<{ key: string; setter: StateUpdater<number>; value: number }> = [];
-    interface StateProbeProps {
-      label: string;
-    }
-    const StateProbe = (props: StateProbeProps) => {
-      const [value, setter] = useState(0);
-      renders.push({ key: props.label, setter, value });
-    };
-    const controller = crc(canvas, createElement(StateProbe, { key: 'first', label: 'first' }));
-    await nextFrame();
-    const setter = renders[0].setter;
-
-    setter(value => value + 1);
-    setter(value => value + 1);
-    setter(value => value + 1);
-    await nextFrame();
-    expect(renders.at(-1)).toMatchObject({ key: 'first', value: 3 });
-    expect(renders.at(-1)?.setter).toBe(setter);
-
-    crc(canvas, createElement(StateProbe, { key: 'second', label: 'second' }));
-    await nextFrame();
-    expect(renders.at(-1)).toMatchObject({ key: 'second', value: 0 });
-    expect(renders.at(-1)?.setter).not.toBe(setter);
-    controller.dispose();
-  });
-});
-
-describe('useMemo', () => {
-  it('reuses empty dependencies and recomputes for value or length changes', async () => {
-    const canvas = createCanvas();
-    const factory = vi.fn(() => ({ call: factory.mock.calls.length }));
-    const values: object[] = [];
-    const Probe = ({ deps }: { deps: unknown[] }) => {
-      values.push(useMemo(factory, deps));
-    };
-    const controller = crc(canvas, createElement(Probe, { deps: [] }));
-    await nextFrame();
-    crc(canvas, createElement(Probe, { deps: [] }));
-    await nextFrame();
-    expect(factory).toHaveBeenCalledOnce();
-    expect(values[1]).toBe(values[0]);
-
-    crc(canvas, createElement(Probe, { deps: [1] }));
-    await nextFrame();
-    crc(canvas, createElement(Probe, { deps: [1, 2] }));
-    await nextFrame();
-    expect(factory).toHaveBeenCalledTimes(3);
-    controller.dispose();
-  });
-
-  it('uses strict-equality dependency semantics', async () => {
-    const canvas = createCanvas();
-    const factory = vi.fn(() => factory.mock.calls.length);
-    const Probe = ({ dependency }: { dependency: number }) => {
-      useMemo(factory, [dependency]);
-    };
-    const controller = crc(canvas, createElement(Probe, { dependency: Number.NaN }));
-    await nextFrame();
-    crc(canvas, createElement(Probe, { dependency: Number.NaN }));
-    await nextFrame();
-    crc(canvas, createElement(Probe, { dependency: 0 }));
-    await nextFrame();
-    crc(canvas, createElement(Probe, { dependency: -0 }));
-    await nextFrame();
-
-    expect(factory).toHaveBeenCalledTimes(3);
-    controller.dispose();
-  });
 });
 
 describe('useRef', () => {
@@ -138,65 +62,14 @@ describe('useRef', () => {
   });
 });
 
-describe('useWhenChanged', () => {
-  it('runs without dependencies on every render and cleans up first', async () => {
-    const canvas = createCanvas();
-    const events: string[] = [];
-    const Probe = ({ render }: { render: number }) => {
-      useWhenChanged(() => {
-        events.push(`setup:${render}`);
-        return () => events.push(`cleanup:${render}`);
-      });
-    };
-    const controller = crc(canvas, createElement(Probe, { render: 1 }));
-    await nextFrame();
-    crc(canvas, createElement(Probe, { render: 2 }));
-    await nextFrame();
-
-    expect(events).toEqual(['setup:1', 'cleanup:1', 'setup:2']);
-    controller.dispose();
-    expect(events).toEqual([
-      'setup:1',
-      'cleanup:1',
-      'setup:2',
-      'cleanup:2',
-    ]);
-  });
-
-  it('does not repeat the previous cleanup when the next callback throws', () => {
-    const frames = new ManualFrames();
-    const canvas = createCanvas();
-    const cleanup = vi.fn();
-    const error = new Error('setup failed');
-    const Probe = ({ fail }: { fail: boolean }) => {
-      useWhenChanged(() => {
-        if (fail) throw error;
-        return cleanup;
-      }, [fail]);
-    };
-    const controller = crc(canvas, createElement(Probe, { fail: false }));
-    frames.flush();
-
-    crc(canvas, createElement(Probe, { fail: true }));
-    expect(() => frames.flush()).toThrow(error);
-    expect(cleanup).toHaveBeenCalledOnce();
-
-    crc(canvas, createElement(Probe, { fail: false }));
-    expect(() => frames.flush()).not.toThrow();
-    controller.dispose();
-    expect(cleanup).toHaveBeenCalledTimes(2);
-    frames.restore();
-  });
-});
-
 describe('hook ordering and render errors', () => {
   it('releases an omitted hook resource, reports fewer hooks, and retries cleanly', () => {
     const frames = new ManualFrames();
     const canvas = createCanvas();
     const cleanup = vi.fn();
     const Probe = ({ include }: { include: boolean }) => {
-      useState(0);
-      if (include) useWhenChanged(() => cleanup, []);
+      useSignal(0);
+      if (include) useReaction(() => cleanup, []);
     };
     const controller = crc(canvas, createElement(Probe, { include: true }));
     frames.flush();
@@ -215,7 +88,7 @@ describe('hook ordering and render errors', () => {
     const frames = new ManualFrames();
     const canvas = createCanvas();
     const MoreProbe = ({ more }: { more: boolean }) => {
-      useState(0);
+      useSignal(0);
       if (more) useRef(0);
     };
     const controller = crc(canvas, createElement(MoreProbe, { more: false }));
@@ -228,9 +101,9 @@ describe('hook ordering and render errors', () => {
     const OrderProbe = ({ swapped }: { swapped: boolean }) => {
       if (swapped) {
         useRef(0);
-        useState(0);
+        useSignal(0);
       } else {
-        useState(0);
+        useSignal(0);
         useRef(0);
       }
     };
@@ -244,19 +117,19 @@ describe('hook ordering and render errors', () => {
     frames.restore();
   });
 
-  it('recovers context, globals, and component state after render and memo factory errors', () => {
+  it('recovers context, globals, and component state after render and const factory errors', () => {
     const frames = new ManualFrames();
     const canvas = createCanvas();
     const renderError = new Error('render failed');
     const Broken = definePrimitive<{}>((_props: {}, _style, ctx: RenderingContext2D) => {
       ctx.translate(20, 30);
-      useState(1);
+      useSignal(1);
       throw renderError;
     });
     const transforms: DOMMatrix[] = [];
     const Healthy = definePrimitive<{}>((_props: {}, _style, ctx: RenderingContext2D) => {
       transforms.push(ctx.getTransform());
-      useState(2);
+      useSignal(2);
     });
     const controller = crc(canvas, createElement(Broken, {}));
     expect(() => frames.flush()).toThrow(renderError);
@@ -267,16 +140,16 @@ describe('hook ordering and render errors', () => {
     expect(() => frames.flush()).not.toThrow();
     expect(transforms[0].isIdentity).toBe(true);
 
-    const memoError = new Error('memo failed');
-    const MemoProbe = ({ fail }: { fail: boolean }) => {
-      useMemo(() => {
-        if (fail) throw memoError;
+    const constError = new Error('const failed');
+    const ConstProbe = ({ fail }: { fail: boolean }) => {
+      useConst(() => {
+        if (fail) throw constError;
         return 'ok';
-      }, [fail]);
+      });
     };
-    crc(canvas, createElement(MemoProbe, { fail: true }));
-    expect(() => frames.flush()).toThrow(memoError);
-    crc(canvas, createElement(MemoProbe, { fail: false }));
+    crc(canvas, createElement(ConstProbe, { fail: true }));
+    expect(() => frames.flush()).toThrow(constError);
+    crc(canvas, createElement(ConstProbe, { fail: false }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -284,16 +157,13 @@ describe('hook ordering and render errors', () => {
 
   it('uses one intentional diagnostic for every public hook outside render', () => {
     const calls = [
-      () => useState(0),
+      () => useSignal(0),
       () => useConst(() => 1),
       () => useComputed(() => 1),
-      () => useMemo(() => 1, []),
       () => useRef(0),
       () => useReaction(() => undefined),
-      () => useSignal(0),
       () => usePlayback(track(signal(0), tween({ to: 1, duration: 1 }))),
       () => useTransition(1, { type: 'tween', duration: 1 }),
-      () => useWhenChanged(() => {}, []),
       () => useRectPath(0, 0, 1, 1),
       () => useLinePath([[0, 0], [1, 1]]),
       () => useSvgPath('M0 0'),

@@ -1,7 +1,7 @@
-import { Circle, crc, useState, Rectangle, type CRCController } from "@crc/core";
+import { Circle, crc, useSignal, Rectangle, type CRCController } from "@crc/core";
 
 function CircleStudy() {
-  const [active, setActive] = useState(false);
+  const active = useSignal(false);
 
   return [
     <Rectangle
@@ -12,12 +12,12 @@ function CircleStudy() {
         cx: 360,
         cy: 210,
         radius: 110,
-        fill: active ? "#74d3ae" : "#ff6b57",
+        fill: active.get() ? "#74d3ae" : "#ff6b57",
         stroke: "#17211d",
         strokeWidth: 6,
         cursor: "pointer",
       }}
-      onClick={() => setActive((value) => !value)}
+      onClick={() => active.update((value) => !value)}
     />,
   ];
 }

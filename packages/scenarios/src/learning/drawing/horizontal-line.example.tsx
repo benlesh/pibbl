@@ -1,13 +1,13 @@
 import {
   crc,
-  useState,
+  useSignal,
   HorizontalLine,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function HorizontalStudy() {
-  const [band, setBand] = useState("none");
+  const band = useSignal("none");
   const rule = (y: number, color: string, name: string) => (
     <HorizontalLine
       style={{
@@ -15,12 +15,12 @@ function HorizontalStudy() {
         x1: 82,
         x2: 638,
         stroke: color,
-        strokeWidth: band === name ? 14 : 5,
+        strokeWidth: band.get() === name ? 14 : 5,
         lineInteractionWidth: 30,
         alignToPixelGrid: "round",
       }}
-      onMouseOver={() => setBand(name)}
-      onMouseOut={() => setBand("none")}
+      onMouseOver={() => band.set(name)}
+      onMouseOut={() => band.set("none")}
     />
   );
   return [
@@ -55,7 +55,7 @@ function HorizontalStudy() {
         textAlign: "right",
       }}
     >
-      {band === "none" ? "SWEEP THE LINES" : band.toUpperCase()}
+      {band.get() === "none" ? "SWEEP THE LINES" : band.get().toUpperCase()}
     </Text>,
   ];
 }

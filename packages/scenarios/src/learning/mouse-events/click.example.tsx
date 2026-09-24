@@ -1,6 +1,6 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function ClickStudy() {
-  const [picks, setPicks] = useState(0);
+  const picks = useSignal(0);
   const sleeve = (x: number, color: string, value: number) => (
     <Rectangle
       style={{
@@ -13,7 +13,7 @@ function ClickStudy() {
         strokeWidth: 5,
         cursor: "pointer",
       }}
-      onClick={() => setPicks((total) => total + value)}
+      onClick={() => picks.update((total) => total + value)}
     />
   );
   return [
@@ -34,7 +34,7 @@ function ClickStudy() {
         font: "900 28px sans-serif",
         textAlign: "center",
       }}
-    >{`RECORD PICKS / ${picks}`}</Text>,
+    >{`RECORD PICKS / ${picks.get()}`}</Text>,
     sleeve(86, "#1f4bd8", 1),
     sleeve(280, "#ff6b57", 1),
     sleeve(474, "#f7c948", 1),

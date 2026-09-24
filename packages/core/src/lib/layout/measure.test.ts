@@ -5,7 +5,7 @@ import { Text } from '../components/text';
 import { resolveTextLayout } from '../components/text-layout';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import { useRef } from '../hooks/use-ref';
-import { useState } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCElement, MeasureResult, SystemStyle } from '../types';
@@ -200,7 +200,7 @@ describe('pure element measurement', () => {
   it('isolates measurement from active render hooks and layout context', async () => {
     const errors: string[] = [];
     const probes = [
-      () => useState(1),
+      () => useSignal(1),
       () => useRef(),
       () => useLayoutBox(),
     ];
@@ -211,7 +211,7 @@ describe('pure element measurement', () => {
       },
     });
     const Host = ({ revision }: { revision: number }) => {
-      useState(revision);
+      useSignal(revision);
       for (let index = 0; index < 3; index++) {
         try {
           measureElement(createElement(Probe, {}), constraints, service);

@@ -8,7 +8,6 @@ import {
   createElement,
   signal,
   useSignal,
-  useState,
   type CRCController,
   type CRCNode,
 } from '@crc/core';
@@ -344,9 +343,9 @@ function observeStateSlotWorkload(
   const Cell = ({ index }: { index: number }) => {
     traversals++;
     if (kind === 'state') {
-      const [value, setValue] = useState(0);
-      if (index === 0) updateValue = setValue;
-      void value;
+      const value = useSignal(0);
+      if (index === 0) updateValue = next => value.set(next);
+      void value.get();
     } else {
       const value = useSignal(0);
       if (index === 0) updateValue = next => value.set(next);

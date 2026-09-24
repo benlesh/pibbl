@@ -1,6 +1,6 @@
 import {
   crc,
-  useState,
+  useSignal,
   Rectangle,
   Text,
   type CRCController,
@@ -11,10 +11,10 @@ function dragLine(type: string, event: CRCDragEvent): string {
   return `${type}  @ ${Math.round(event.x)},${Math.round(event.y)}  data=${payload}`;
 }
 function DragAndDropStudy() {
-  const [trace, setTrace] = useState<readonly string[]>([]);
-  const [dropped, setDropped] = useState("nothing dropped");
+  const trace = useSignal<readonly string[]>([]);
+  const dropped = useSignal("nothing dropped");
   const record = (type: string, event: CRCDragEvent) => {
-    setTrace((current) => [...current.slice(-4), dragLine(type, event)]);
+    trace.update((current) => [...current.slice(-4), dragLine(type, event)]);
   };
   return [
     <Rectangle
@@ -89,9 +89,7 @@ function DragAndDropStudy() {
       }}
       onDrop={(event) => {
         const payload = event.dataTransfer?.getData("text/plain") || "empty";
-        setDropped(
-          `dropped: ${payload} @ ${Math.round(event.x)},${Math.round(event.y)}`,
-        );
+        dropped.set(`dropped: ${payload} @ ${Math.round(event.x)},${Math.round(event.y)}`);
         record("drop", event);
       }}
     />,
@@ -104,7 +102,7 @@ function DragAndDropStudy() {
         textAlign: "center",
       }}
     >
-      {dropped === "nothing dropped" ? "DROP ZONE" : "DELIVERED"}
+      {dropped.get() === "nothing dropped" ? "DROP ZONE" : "DELIVERED"}
     </Text>,
     <Text
       style={{
@@ -116,7 +114,7 @@ function DragAndDropStudy() {
         textAlign: "center",
       }}
     >
-      {dropped}
+      {dropped.get()}
     </Text>,
     <Text
       style={{
@@ -131,8 +129,8 @@ function DragAndDropStudy() {
         textBaseline: "top",
       }}
     >
-      {trace.length
-        ? trace.join("\n")
+      {trace.get().length
+        ? trace.get().join("\n")
         : "Drag the blue cargo into the drop zone."}
     </Text>,
     <Text

@@ -73,7 +73,7 @@ describe("public 2D physics laboratory", () => {
         "collider2D",
         "crcPhysicsBody2D",
         "useRef",
-        "useState",
+        "useSignal",
         "setPointerCapture",
         "disableBody2D",
         "teleportBody2D",

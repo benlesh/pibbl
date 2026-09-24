@@ -19,8 +19,8 @@ import { useCursor } from '../hooks/use-cursor';
 import { useEvent } from '../hooks/use-event';
 import { useEventTarget } from '../hooks/use-event-target';
 import { useRef } from '../hooks/use-ref';
-import { useState } from '../hooks/use-state';
-import { useWhenChanged } from '../hooks/use-when-changed';
+import { useSignal } from '../hooks/use-signal';
+import { useReaction } from '../hooks/use-reaction';
 import { computed, signal } from '../signals/graph';
 import {
   installSchedulerDriverForTest,
@@ -956,7 +956,7 @@ describe('Layer children and retained subtree contract', () => {
   it('fails closed and releases the child controller when a Layer child throws', () => {
     let cleanups = 0;
     function Child({ fail }: { fail: boolean }): CRCNode {
-      useWhenChanged(() => () => cleanups++, []);
+      useReaction(() => () => cleanups++, []);
       if (fail) throw new Error('layer child failed');
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: '#ef4444' },
@@ -984,7 +984,7 @@ describe('Layer children and retained subtree contract', () => {
   it('disposes one child controller and its resources exactly once', () => {
     let cleanups = 0;
     function Child(): CRCNode {
-      useWhenChanged(() => () => cleanups++, []);
+      useReaction(() => () => cleanups++, []);
       return createElement(Rectangle, {
         style: { width: 20, height: 20 },
         onClick: () => undefined,
@@ -1021,7 +1021,7 @@ describe('layer', () => {
   }
 
   const MyComponent = ({ onRender, x = 0, y = 0, width = 100, height = 100, fillStyle = 'blue' }: MyComponentProps) => {
-    const [counter, setCounter] = useState(0);
+    const counter = useSignal(0);
     onRender();
     return createElement(Rectangle, {
       style: {
@@ -1031,7 +1031,7 @@ describe('layer', () => {
         height,
         fill: fillStyle,
       },
-      onClick: () => setCounter(counter + 1),
+      onClick: () => counter.update(value => value + 1),
     });
   };
 
@@ -1202,8 +1202,8 @@ describe('layer', () => {
       });
 
       const wrapperComponent = (_props: {}) => {
-        const [fillStyle, setFillStyle] = useState('blue');
-        const [layerWidth, setLayerWidth] = useState(200);
+        const fillStyle = useSignal('blue');
+        const layerWidth = useSignal(200);
 
         return createElement(Group, {
           children: [
@@ -1216,13 +1216,13 @@ describe('layer', () => {
                 fill: 'green',
               },
               onClick: () => {
-                setFillStyle('red');
-                setLayerWidth(300);
+                fillStyle.set('red');
+                layerWidth.set(300);
               },
             }),
             createElement(Layer, {
               style: {
-                width: layerWidth
+                width: layerWidth.get()
               },
               children: createElement(countedRect, {
                 pointerEvents: 'none',
@@ -1231,7 +1231,7 @@ describe('layer', () => {
                   y: 0,
                   width: 200,
                   height: 200,
-                  fill: fillStyle
+                  fill: fillStyle.get()
                 }
               })
             }),
@@ -1266,7 +1266,7 @@ describe('layer', () => {
         });
       };
       const wrapperComponent = (_props: {}) => {
-        const [styleVersion, setStyleVersion] = useState(1);
+        const styleVersion = useSignal(1);
         return createElement(Group, {
           children: [
             createElement(Rectangle, {
@@ -1277,12 +1277,12 @@ describe('layer', () => {
                 height: 100,
                 fill: 'green',
               },
-              onClick: () => setStyleVersion(2),
+              onClick: () => styleVersion.set(2),
             }),
             createElement(Layer, {
               children: createElement(countedRect, {
                 ...renderProps,
-                style: { version: styleVersion },
+                style: { version: styleVersion.get() },
               }),
             }),
           ],
@@ -1315,7 +1315,7 @@ describe('layer', () => {
         });
       };
       const wrapperComponent = (_props: {}) => {
-        const [version, setVersion] = useState(1);
+        const version = useSignal(1);
         return createElement(Group, {
           children: [
             createElement(Rectangle, {
@@ -1326,11 +1326,11 @@ describe('layer', () => {
                 height: 100,
                 fill: 'green',
               },
-              onClick: () => setVersion(2),
+              onClick: () => version.set(2),
             }),
             createElement(Layer, {
               children: createElement(countedRect, {
-                version,
+                version: version.get(),
                 onRender: () => renderCount++,
               }),
             }),
@@ -1350,7 +1350,7 @@ describe('layer', () => {
       let renderCount = 0;
       const onRender = () => renderCount++;
       const wrapperComponent = (_props: {}) => {
-        const [size, setSize] = useState(100);
+        const size = useSignal(100);
         return createElement(Group, { children: [
           createElement(Rectangle, {
             style: {
@@ -1360,17 +1360,17 @@ describe('layer', () => {
               height: 300,
               fill: 'green',
             },
-            onClick: () => setSize(200),
+            onClick: () => size.set(200),
           }),
           createElement(Layer, {
             style: {
-              width: size,
-              height: size
+              width: size.get(),
+              height: size.get()
             },
             children: createElement(myComponent, {
               onRender,
-              width: size,
-              height: size
+              width: size.get(),
+              height: size.get()
             })
           }),
         ] });

@@ -1,6 +1,6 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function PaintOrderStudy() {
-  const [winner, setWinner] = useState("none");
+  const winner = useSignal("none");
   return [
     <Rectangle
       style={{
@@ -20,7 +20,7 @@ function PaintOrderStudy() {
         fill: "#1f4bd8",
         cursor: "pointer",
       }}
-      onClick={() => setWinner("cobalt")}
+      onClick={() => winner.set("cobalt")}
     />,
     <Rectangle
       style={{
@@ -32,7 +32,7 @@ function PaintOrderStudy() {
         opacity: 0.94,
         cursor: "pointer",
       }}
-      onClick={() => setWinner("coral")}
+      onClick={() => winner.set("coral")}
     />,
     <Text
       style={{
@@ -65,9 +65,9 @@ function PaintOrderStudy() {
         textAlign: "center",
       }}
     >
-      {winner === "none"
+      {winner.get() === "none"
         ? "CLICK THE OVERLAP"
-        : `TARGET / ${winner.toUpperCase()}`}
+        : `TARGET / ${winner.get().toUpperCase()}`}
     </Text>,
   ];
 }

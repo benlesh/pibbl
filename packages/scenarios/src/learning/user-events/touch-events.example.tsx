@@ -1,6 +1,6 @@
 import {
   crc,
-  useState,
+  useSignal,
   Rectangle,
   Text,
   type CRCController,
@@ -12,11 +12,11 @@ function touchSummary(event: CRCTouchEvent): string {
   return `${event.type} changed=#${identifier} at ${Math.round(event.x)},${Math.round(event.y)}  all=${event.touches.length} target=${event.targetTouches.length} changed=${event.changedTouches.length}`;
 }
 function TouchEventsStudy() {
-  const [trace, setTrace] = useState<readonly string[]>([]);
-  const [activeContacts, setActiveContacts] = useState(0);
+  const trace = useSignal<readonly string[]>([]);
+  const activeContacts = useSignal(0);
   const record = (event: CRCTouchEvent) => {
-    setTrace((current) => [...current.slice(-3), touchSummary(event)]);
-    setActiveContacts(event.targetTouches.length);
+    trace.update((current) => [...current.slice(-3), touchSummary(event)]);
+    activeContacts.set(event.targetTouches.length);
   };
   return [
     <Rectangle
@@ -45,7 +45,7 @@ function TouchEventsStudy() {
         y: 92,
         width: 320,
         height: 188,
-        fill: activeContacts ? "#a78bfa" : "#7c3aed",
+        fill: activeContacts.get() ? "#a78bfa" : "#7c3aed",
         stroke: "#3b0764",
         strokeWidth: 5,
         cursor: "pointer",
@@ -110,7 +110,7 @@ function TouchEventsStudy() {
         textAlign: "center",
       }}
     >
-      {String(activeContacts)}
+      {String(activeContacts.get())}
     </Text>,
     <Text
       style={{
@@ -136,8 +136,8 @@ function TouchEventsStudy() {
         font: "600 12px monospace",
       }}
     >
-      {trace.length
-        ? trace.join("\n")
+      {trace.get().length
+        ? trace.get().join("\n")
         : "Use a touch-capable device; touchcancel is registered for interrupted contacts."}
     </Text>,
   ];

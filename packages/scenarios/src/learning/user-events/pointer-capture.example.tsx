@@ -1,20 +1,20 @@
 import {
   crc,
-  useState,
+  useSignal,
   Rectangle,
   Text,
   type CRCController,
   type CRCPointerEvent,
 } from "@crc/core";
 function PointerCaptureStudy() {
-  const [capturedId, setCapturedId] = useState<number | null>(null);
-  const [trace, setTrace] = useState<readonly string[]>([]);
-  const [position, setPosition] = useState({
+  const capturedId = useSignal<number | null>(null);
+  const trace = useSignal<readonly string[]>([]);
+  const position = useSignal({
     x: 220,
     y: 196,
   });
   const record = (value: string) =>
-    setTrace((current) => [...current.slice(-3), value]);
+    trace.update((current) => [...current.slice(-3), value]);
   const label = (event: CRCPointerEvent) =>
     `${event.type} #${event.pointerId} captured=${event.currentTarget.hasPointerCapture(event.pointerId)}`;
   return [
@@ -44,15 +44,15 @@ function PointerCaptureStudy() {
         y: 84,
         width: 292,
         height: 216,
-        fill: capturedId === null ? "#1f4bd8" : "#74d3ae",
+        fill: capturedId.get() === null ? "#1f4bd8" : "#74d3ae",
         stroke: "#fffdf6",
         strokeWidth: 4,
-        cursor: capturedId === null ? "grab" : "grabbing",
+        cursor: capturedId.get() === null ? "grab" : "grabbing",
       }}
       onPointerDown={(event) => {
         event.currentTarget.setPointerCapture(event.pointerId);
-        setCapturedId(event.pointerId);
-        setPosition({
+        capturedId.set(event.pointerId);
+        position.set({
           x: event.x,
           y: event.y,
         });
@@ -62,7 +62,7 @@ function PointerCaptureStudy() {
       }}
       onPointerMove={(event) => {
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-          setPosition({
+          position.set({
             x: event.x,
             y: event.y,
           });
@@ -73,11 +73,11 @@ function PointerCaptureStudy() {
       }}
       onPointerUp={(event) => {
         event.currentTarget.releasePointerCapture(event.pointerId);
-        setCapturedId(null);
+        capturedId.set(null);
         record(`releasePointerCapture(${event.pointerId}) → ${label(event)}`);
       }}
       onPointerCancel={(event) => {
-        setCapturedId(null);
+        capturedId.set(null);
         record(label(event));
       }}
       onGotPointerCapture={(event) => record(label(event))}
@@ -92,7 +92,7 @@ function PointerCaptureStudy() {
         textAlign: "center",
       }}
     >
-      {capturedId === null ? "PRESS AND DRAG" : `CAPTURING #${capturedId}`}
+      {capturedId.get() === null ? "PRESS AND DRAG" : `CAPTURING #${capturedId.get()}`}
     </Text>,
     <Text
       style={{
@@ -134,7 +134,7 @@ function PointerCaptureStudy() {
         textAlign: "center",
       }}
     >
-      {capturedId === null ? "none" : `pointer #${capturedId}`}
+      {capturedId.get() === null ? "none" : `pointer #${capturedId.get()}`}
     </Text>,
     <Text
       style={{
@@ -144,7 +144,7 @@ function PointerCaptureStudy() {
         font: "700 12px monospace",
         textAlign: "center",
       }}
-    >{`latest move: ${Math.round(position.x)}, ${Math.round(position.y)}`}</Text>,
+    >{`latest move: ${Math.round(position.get().x)}, ${Math.round(position.get().y)}`}</Text>,
     <Text
       style={{
         x: 360,
@@ -169,7 +169,7 @@ function PointerCaptureStudy() {
         font: "600 12px monospace",
       }}
     >
-      {trace.length ? trace.join("\n") : "Trace waits for a press."}
+      {trace.get().length ? trace.get().join("\n") : "Trace waits for a press."}
     </Text>,
   ];
 }

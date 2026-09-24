@@ -1,13 +1,13 @@
 import {
   crc,
-  useState,
+  useSignal,
   Line,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function LineStudy() {
-  const [tracking, setTracking] = useState(false);
+  const tracking = useSignal(false);
   return [
     <Rectangle
       style={{
@@ -42,13 +42,13 @@ function LineStudy() {
           [478, 174],
           [650, 58],
         ],
-        stroke: tracking ? "#ff6b57" : "#1f4bd8",
+        stroke: tracking.get() ? "#ff6b57" : "#1f4bd8",
         strokeWidth: 7,
         lineInteractionWidth: 34,
         cursor: "crosshair",
       }}
-      onMouseOver={() => setTracking(true)}
-      onMouseOut={() => setTracking(false)}
+      onMouseOver={() => tracking.set(true)}
+      onMouseOut={() => tracking.set(false)}
     />,
     <Text
       style={{
@@ -58,7 +58,7 @@ function LineStudy() {
         font: "800 18px monospace",
       }}
     >
-      {tracking ? "ON THE ROUTE" : "FOLLOW THE ROUTE"}
+      {tracking.get() ? "ON THE ROUTE" : "FOLLOW THE ROUTE"}
     </Text>,
   ];
 }

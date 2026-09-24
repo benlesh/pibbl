@@ -17,7 +17,7 @@ import {
   derivePrimitive,
 } from './define-primitive.js';
 import { setPrimitivePresentation } from './primitive-presentation.js';
-import { useState } from './hooks/use-state.js';
+import { useSignal } from './hooks/use-signal.js';
 import { signal } from './signals/graph.js';
 
 const constraints = {
@@ -47,14 +47,14 @@ describe('definePrimitive', () => {
     const value = signal(1);
     const observed: string[] = [];
     const Probe = definePrimitive(function renderPureResolverProbe() {
-      const [before] = useState('before');
-      expect(() => crcInternalRunPurePrimitiveResolver(() => useState('no')))
+      const before = useSignal('before');
+      expect(() => crcInternalRunPurePrimitiveResolver(() => useSignal('no')))
         .toThrow(/hooks can only be called/i);
       expect(() => crcInternalRunPurePrimitiveResolver(() => value.set(2)))
         .toThrow(/pure primitive resolver/i);
       expect(crcInternalRunPurePrimitiveResolver(() => 42)).toBe(42);
-      const [after] = useState('after');
-      observed.push(before, after);
+      const after = useSignal('after');
+      observed.push(before.get(), after.get());
     });
     const controller = crc(createCanvas(10, 10), <Probe />);
     await nextFrame();

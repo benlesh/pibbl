@@ -2,7 +2,7 @@ import {
   crc,
   useEventListener,
   useEventTarget,
-  useState,
+  useSignal,
   FocusManagement,
   Rectangle,
   Text,
@@ -112,9 +112,9 @@ function FocusTarget({
   ];
 }
 function FocusManagementLesson() {
-  const [events, setEvents] = useState<readonly string[]>([]);
+  const events = useSignal<readonly string[]>([]);
   const record = (message: string) =>
-    setEvents((current) => [...current.slice(-4), message]);
+    events.update((current) => [...current.slice(-4), message]);
   const recordBoundary = (name: string) => (event: CRCEvent) => {
     record(
       `boundary ${name} phase ${event.eventPhase} → ${event.relatedTarget ? "related target" : "none"}`,
@@ -226,8 +226,8 @@ function FocusManagementLesson() {
     >
       {"FOCUS EVENT TRACE"}
     </Text>,
-    ...(events.length
-      ? events
+    ...(events.get().length
+      ? events.get()
       : ["Focus moves: focusout → blur, then focusin → focus."]
     ).map((entry, index) => (
       <Text

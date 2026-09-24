@@ -1,6 +1,6 @@
 import {
   crc,
-  useState,
+  useSignal,
   Flow,
   Rectangle,
   Text,
@@ -8,7 +8,7 @@ import {
 } from "@crc/core";
 const colors = ["#1f4bd8", "#ff6b57", "#74d3ae", "#f7c948"] as const;
 function FlowStudy() {
-  const [selected, setSelected] = useState(0);
+  const selected = useSignal(0);
   return [
     <Rectangle
       style={{
@@ -31,14 +31,14 @@ function FlowStudy() {
           <Rectangle
             key={String(index)}
             style={{
-              width: index === selected ? 180 : 120,
+              width: index === selected.get() ? 180 : 120,
               height: 84,
               fill,
               stroke: "#17211d",
-              strokeWidth: index === selected ? 5 : 2,
+              strokeWidth: index === selected.get() ? 5 : 2,
               cursor: "pointer",
             }}
-            onClick={() => setSelected(index)}
+            onClick={() => selected.set(index)}
           />
         )),
         <Text

@@ -1,4 +1,4 @@
-import { createElement, useWhenChanged, type CRCController } from '../src/index';
+import { createElement, useReaction, type CRCController } from '../src/index';
 import type { ScenarioController, WebGLLabState } from '@crc/scenarios';
 import { loadScenario, webglLabScenarioEntry } from '@crc/scenarios';
 import { executeRender } from '../src/lib/execute-render';
@@ -134,7 +134,7 @@ describe('backend ownership cleanup', () => {
     });
     const cleanup = vi.fn();
     function OwnedComponent(): void {
-      useWhenChanged(() => cleanup, []);
+      useReaction(() => cleanup, []);
     }
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);

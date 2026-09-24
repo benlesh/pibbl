@@ -3,7 +3,7 @@ import {
   crc,
   useLayoutBox,
   useRef,
-  useState,
+  useSignal,
   Fragment,
   Group,
   Path,
@@ -356,8 +356,8 @@ function StatusBar({
 }
 
 function DiagramEditor(): CRCNode {
-  const [nodes, setNodes] = useState<readonly DiagramNode[]>(INITIAL_NODES);
-  const [selectedNodeId, setSelectedNodeId] = useState<NodeId | null>("sketch");
+  const nodes = useSignal<readonly DiagramNode[]>(INITIAL_NODES);
+  const selectedNodeId = useSignal<NodeId | null>("sketch");
   const dragSession = useRef<NodeDragSession | null>(null);
   const clearSession = (event: CRCPointerEvent): void => {
     if (dragSession.current?.pointerId === event.pointerId)
@@ -374,13 +374,13 @@ function DiagramEditor(): CRCNode {
         pointerStart: point,
         nodeStart: { x: node.x, y: node.y },
       };
-      setSelectedNodeId(node.id);
+      selectedNodeId.set(node.id);
     },
     onPointerMove(event) {
       const session = dragSession.current;
       if (!session || session.pointerId !== event.pointerId) return;
       const point = rootToWorkspace(event);
-      setNodes((current) =>
+      nodes.update((current) =>
         current.map((candidate) =>
           candidate.id === session.nodeId
             ? {
@@ -389,8 +389,7 @@ function DiagramEditor(): CRCNode {
                 y: session.nodeStart.y + point.y - session.pointerStart.y,
               }
             : candidate,
-        ),
-      );
+        ));
     },
     onPointerUp(event) {
       if (dragSession.current?.pointerId !== event.pointerId) return;
@@ -401,7 +400,7 @@ function DiagramEditor(): CRCNode {
     onPointerCancel: clearSession,
     onLostPointerCapture: clearSession,
   };
-  const selectedNode = nodes.find((node) => node.id === selectedNodeId);
+  const selectedNode = nodes.get().find((node) => node.id === selectedNodeId.get());
   return (
     <Absolute style={{ width: 960, height: 600 }}>
       <Toolbar style={{ left: 0, top: 0, width: "100%", height: 56 }} />
@@ -412,9 +411,9 @@ function DiagramEditor(): CRCNode {
           width: "100%",
           height: WORKSPACE_HEIGHT,
         }}
-        nodes={nodes}
-        selectedNodeId={selectedNodeId}
-        onClearSelection={() => setSelectedNodeId(null)}
+        nodes={nodes.get()}
+        selectedNodeId={selectedNodeId.get()}
+        onClearSelection={() => selectedNodeId.set(null)}
         pointerHandlers={pointerHandlers}
       />
       <StatusBar

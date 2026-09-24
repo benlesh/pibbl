@@ -1,4 +1,4 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 
 interface PosterCardProps {
   message: string;
@@ -44,7 +44,7 @@ function PosterCard({ message, onSelect }: PosterCardProps) {
 }
 
 function Poster() {
-  const [message, setMessage] = useState("HELLO");
+  const message = useSignal("HELLO");
 
   return [
     <Rectangle
@@ -66,9 +66,9 @@ function Poster() {
       }}
     />,
     <PosterCard
-      message={message}
+      message={message.get()}
       onSelect={() =>
-        setMessage((value) => (value === "HELLO" ? "CRC!" : "HELLO"))
+        message.update((value) => (value === "HELLO" ? "CRC!" : "HELLO"))
       }
     />,
   ];

@@ -1,14 +1,14 @@
-import type { CRCRef, StateUpdater } from '@crc/core';
+import type { CRCRef, WritableSignal } from '@crc/core';
 import {
   useCursor,
   useEvent,
   useLinePath,
-  useMemo,
+  useComputed,
   useRectPath,
   useRef,
-  useState,
+  useSignal,
   useSvgPath,
-  useWhenChanged,
+  useReaction,
   Path,
   Rectangle,
 } from '@crc/core';
@@ -84,7 +84,7 @@ export interface RuntimeHooksMetrics {
       }>
     | undefined;
   renders: number;
-  setState: StateUpdater<number> | undefined;
+  stateSignal: WritableSignal<number> | undefined;
   siblingIdentities: Record<RuntimeHooksSiblingKey, number | null>;
   stateValue: number;
 }
@@ -115,14 +115,14 @@ function objectIdentity(metrics: RuntimeHooksMetrics, value: object): number {
 const HookProbe = ({ metrics, model }: HookProbeProps) => {
   const order: string[] = [];
   order.push('state');
-  const [stateValue, setState] = useState(0);
+  const stateValue = useSignal(0);
   order.push('memo');
-  const memoValue = useMemo(() => {
+  const memoValue = useComputed(() => {
     metrics.memoCreates++;
     return {
       identity: `dependency-${model.dependency}-memo-${metrics.memoCreates}`,
     };
-  }, [model.dependency]);
+  }, [model.dependency]).get();
   order.push('ref');
   const stableRef = useRef<{
     identity: number;
@@ -135,7 +135,7 @@ const HookProbe = ({ metrics, model }: HookProbeProps) => {
     };
   }
   order.push('whenChanged');
-  useWhenChanged(() => {
+  useReaction(() => {
     metrics.hookAcquisitions++;
     return () => {
       metrics.hookCleanups++;
@@ -165,14 +165,14 @@ const HookProbe = ({ metrics, model }: HookProbeProps) => {
   metrics.refIdentity = stableRef.current.identity;
   metrics.refObject = stableRef;
   metrics.renders++;
-  metrics.setState = setState;
-  metrics.stateValue = stateValue;
+  metrics.stateSignal = stateValue;
+  metrics.stateValue = stateValue.get();
   return [
     <Path
       key="memo-rect-path"
       style={{
         d: rectanglePath,
-        fill: stateValue % 2 === 0 ? '#2563eb' : '#7c3aed',
+        fill: stateValue.get() % 2 === 0 ? '#2563eb' : '#7c3aed',
       }}
     />,
     <Path
@@ -283,10 +283,10 @@ export function getRuntimeHooksSiblingOrder(
 export function probeRuntimeHookMisuse(): readonly RuntimeHooksMisuseError[] {
   const errors: RuntimeHooksMisuseError[] = [];
   const probes = [
-    () => useState(0),
-    () => useMemo(() => 1, []),
+    () => useSignal(0),
+    () => useComputed(() => 1),
     () => useRef(0),
-    () => useWhenChanged(() => undefined, []),
+    () => useReaction(() => undefined, []),
     () => useRectPath(0, 0, 1, 1),
     () =>
       useLinePath([

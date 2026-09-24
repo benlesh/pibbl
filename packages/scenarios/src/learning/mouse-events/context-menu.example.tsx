@@ -1,6 +1,6 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function ContextMenuStudy() {
-  const [opened, setOpened] = useState(false);
+  const opened = useSignal(false);
   return [
     <Rectangle
       style={{
@@ -24,7 +24,7 @@ function ContextMenuStudy() {
       }}
       onContextMenu={(event) => {
         event.originalEvent.preventDefault();
-        setOpened(true);
+        opened.set(true);
       }}
     />,
     <Text
@@ -50,7 +50,7 @@ function ContextMenuStudy() {
         textAlign: "center",
       }}
     >
-      {opened
+      {opened.get()
         ? "Context received\nDefault menu prevented"
         : "A contextual action\ncan stay contextual."}
     </Text>,

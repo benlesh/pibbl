@@ -1,6 +1,6 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function RectangleStudy() {
-  const [hovered, setHovered] = useState(false);
+  const hovered = useSignal(false);
   return [
     <Rectangle
       style={{
@@ -27,14 +27,14 @@ function RectangleStudy() {
         y: 104,
         width: 280,
         height: 190,
-        fill: hovered ? "#74d3ae" : "#ff6b57",
+        fill: hovered.get() ? "#74d3ae" : "#ff6b57",
         stroke: "#17211d",
         strokeWidth: 6,
         cursor: "crosshair",
         cornerRadii: [32, 8, 32, 8],
       }}
-      onMouseOver={() => setHovered(true)}
-      onMouseOut={() => setHovered(false)}
+      onMouseOver={() => hovered.set(true)}
+      onMouseOut={() => hovered.set(false)}
     />,
     <Rectangle
       style={{
@@ -68,7 +68,7 @@ function RectangleStudy() {
         textBaseline: "middle",
       }}
     >
-      {hovered ? "TARGET FOUND" : "RECTANGLE STUDY"}
+      {hovered.get() ? "TARGET FOUND" : "RECTANGLE STUDY"}
     </Text>,
   ];
 }

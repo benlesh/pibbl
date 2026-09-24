@@ -1,6 +1,6 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function TypeStudy() {
-  const [accent, setAccent] = useState("#1f4bd8");
+  const accent = useSignal("#1f4bd8");
   return [
     <Rectangle
       style={{
@@ -26,13 +26,13 @@ function TypeStudy() {
       style={{
         x: 360,
         y: 82,
-        fill: accent,
+        fill: accent.get(),
         font: "900 52px sans-serif",
         textAlign: "center",
         cursor: "pointer",
       }}
       onClick={() =>
-        setAccent((value) => (value === "#1f4bd8" ? "#ff6b57" : "#1f4bd8"))
+        accent.update((value) => (value === "#1f4bd8" ? "#ff6b57" : "#1f4bd8"))
       }
     >
       {"TYPE / CANVAS"}
@@ -66,7 +66,7 @@ function TypeStudy() {
       {"CLICK THE HEADLINE · ZERO "}
       {0}
       {" · "}
-      {accent}
+      {accent.get()}
     </Text>,
   ];
 }

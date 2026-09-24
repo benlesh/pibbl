@@ -3,7 +3,7 @@ import {
   Rectangle,
   Text,
   crc,
-  useState,
+  useSignal,
   type CRCController,
 } from '@crc/core';
 import {
@@ -15,9 +15,7 @@ import {
 } from '@crc/webgl';
 
 function WebGLIslandLesson() {
-  const [selection, setSelection] = useState<'cube' | 'sphere' | 'none'>(
-    'none',
-  );
+  const selection = useSignal<'cube' | 'sphere' | 'none'>('none');
   const timestamp = useAnimationFrame();
   const rotation = (timestamp / 30) % 360;
 
@@ -33,21 +31,21 @@ function WebGLIslandLesson() {
             style={{
               size: 1.35,
               translateX: -0.9,
-              color: selection === 'cube' ? '#fbbf24' : '#8b5cf6',
+              color: selection.get() === 'cube' ? '#fbbf24' : '#8b5cf6',
               cursor: 'pointer',
               lit: false,
             }}
-            onClick={() => setSelection('cube')}
+            onClick={() => selection.set('cube')}
           />
           <Sphere
             style={{
               radius: 0.7,
               translateX: 0.95,
-              color: selection === 'sphere' ? '#fb7185' : '#22c55e',
+              color: selection.get() === 'sphere' ? '#fb7185' : '#22c55e',
               cursor: 'pointer',
               lit: false,
             }}
-            onClick={() => setSelection('sphere')}
+            onClick={() => selection.set('sphere')}
           />
         </Group3D>
       </WebGLLayer>
@@ -82,9 +80,9 @@ function WebGLIslandLesson() {
           font: '600 14px Arial',
         }}
       >
-        {selection === 'none'
+        {selection.get() === 'none'
           ? 'Click the cube or sphere'
-          : `Selected: ${selection}`}
+          : `Selected: ${selection.get()}`}
       </Text>
     </>
   );

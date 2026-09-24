@@ -1,5 +1,6 @@
 import {
   Absolute,
+  batch,
   Clip,
   computed,
   createElement,
@@ -13,16 +14,13 @@ import {
   useEventTarget,
   useLayoutBox,
   useLinePath,
-  useMemo,
   usePlayback,
   useRectPath,
   useReaction,
   useRef,
   useSignal,
-  useState,
   useSvgPath,
   useTransition,
-  useWhenChanged,
   definePrimitive,
   defineAnimation,
   easing,
@@ -93,8 +91,19 @@ import {
   type WritableSignal,
 } from '@crc/core';
 
+// Removed hooks have no compatibility export from the package root.
+// @ts-expect-error useState was replaced by useSignal
+import { useState as removedUseState } from '@crc/core';
+// @ts-expect-error StateUpdater was removed with useState
+import type { StateUpdater as RemovedStateUpdater } from '@crc/core';
+// @ts-expect-error useMemo was replaced by useConst and useComputed
+import { useMemo as removedUseMemo } from '@crc/core';
+// @ts-expect-error useWhenChanged was replaced by useReaction
+import { useWhenChanged as removedUseWhenChanged } from '@crc/core';
+
 const importedFinalVocabulary = {
   Absolute,
+  batch,
   Clip,
   computed,
   createElement,
@@ -108,16 +117,13 @@ const importedFinalVocabulary = {
   useEventTarget,
   useLayoutBox,
   useLinePath,
-  useMemo,
   usePlayback,
   useRectPath,
   useReaction,
   useRef,
   useSignal,
-  useState,
   useSvgPath,
   useTransition,
-  useWhenChanged,
   definePrimitive,
   defineAnimation,
   easing,
@@ -154,6 +160,13 @@ const importedFinalVocabulary = {
   wait,
   marker,
 };
+
+type RemovedHookVocabulary = [
+  typeof removedUseState,
+  RemovedStateUpdater<number>,
+  typeof removedUseMemo,
+  typeof removedUseWhenChanged,
+];
 
 function FinalVocabularyScene(): CRCNode {
   return (
@@ -461,6 +474,7 @@ const reactionHookComponent: CRCComponent<{ label: string }> =
   ReactionHookScene;
 
 void importedFinalVocabulary;
+void (null as unknown as RemovedHookVocabulary);
 void component;
 void element;
 void pointerEventsVocabulary;

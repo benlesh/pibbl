@@ -1,7 +1,7 @@
 import {
   crc,
   useEventTarget,
-  useState,
+  useSignal,
   FocusManagement,
   KeyboardNavigation,
   Rectangle,
@@ -129,9 +129,9 @@ function DirectionalGrid({
   ));
 }
 function DirectionalNavigationLesson() {
-  const [events, setEvents] = useState<readonly string[]>([]);
+  const events = useSignal<readonly string[]>([]);
   const record = (message: string) =>
-    setEvents((current) => [...current.slice(-2), message]);
+    events.update((current) => [...current.slice(-2), message]);
   return [
     <Rectangle
       style={{
@@ -212,8 +212,8 @@ function DirectionalNavigationLesson() {
         font: "12px monospace",
       }}
     >
-      {events.length
-        ? events.join("  ·  ")
+      {events.get().length
+        ? events.get().join("  ·  ")
         : "Click or Tab into a square, then use the arrow keys."}
     </Text>,
   ];

@@ -3,7 +3,7 @@ import {
   crc,
   useLayoutBox,
   useRef,
-  useState,
+  useSignal,
   Fragment,
   Group,
   Path,
@@ -416,9 +416,9 @@ function StatusBar({
 }
 
 function DiagramEditor(): CRCNode {
-  const [nodes, setNodes] = useState<readonly DiagramNode[]>(INITIAL_NODES);
-  const [selectedNodeId, setSelectedNodeId] = useState<NodeId | null>("sketch");
-  const [view, setView] = useState<ViewTransform>(INITIAL_VIEW);
+  const nodes = useSignal<readonly DiagramNode[]>(INITIAL_NODES);
+  const selectedNodeId = useSignal<NodeId | null>("sketch");
+  const view = useSignal<ViewTransform>(INITIAL_VIEW);
   const gestureSession = useRef<GestureSession | null>(null);
   const clearSession = (event: CRCPointerEvent): void => {
     if (gestureSession.current?.pointerId === event.pointerId)
@@ -426,7 +426,7 @@ function DiagramEditor(): CRCNode {
   };
   const nodePointerHandlers: NodePointerHandlers = {
     onPointerDown(node, event) {
-      const point = rootToWorkspace(event, view);
+      const point = rootToWorkspace(event, view.get());
       event.currentTarget.setPointerCapture(event.pointerId);
       gestureSession.current = {
         kind: "node",
@@ -435,7 +435,7 @@ function DiagramEditor(): CRCNode {
         pointerStart: point,
         nodeStart: { x: node.x, y: node.y },
       };
-      setSelectedNodeId(node.id);
+      selectedNodeId.set(node.id);
     },
     onPointerMove(event) {
       const session = gestureSession.current;
@@ -445,8 +445,8 @@ function DiagramEditor(): CRCNode {
         session.pointerId !== event.pointerId
       )
         return;
-      const point = rootToWorkspace(event, view);
-      setNodes((current) =>
+      const point = rootToWorkspace(event, view.get());
+      nodes.update((current) =>
         current.map((candidate) =>
           candidate.id === session.nodeId
             ? {
@@ -455,8 +455,7 @@ function DiagramEditor(): CRCNode {
                 y: session.nodeStart.y + point.y - session.pointerStart.y,
               }
             : candidate,
-        ),
-      );
+        ));
     },
     onPointerUp(event) {
       if (gestureSession.current?.pointerId !== event.pointerId) return;
@@ -473,7 +472,7 @@ function DiagramEditor(): CRCNode {
       kind: "pan",
       pointerId: event.pointerId,
       pointerStart: { x: event.x, y: event.y },
-      viewStart: view,
+      viewStart: view.get(),
     };
   };
   const onWorkspacePointerMove = (event: CRCPointerEvent): void => {
@@ -484,7 +483,7 @@ function DiagramEditor(): CRCNode {
       session.pointerId !== event.pointerId
     )
       return;
-    setView({
+    view.set({
       ...session.viewStart,
       panX: session.viewStart.panX + event.x - session.pointerStart.x,
       panY: session.viewStart.panY + event.y - session.pointerStart.y,
@@ -496,12 +495,12 @@ function DiagramEditor(): CRCNode {
       event.currentTarget.releasePointerCapture(event.pointerId);
     gestureSession.current = null;
   };
-  const selectedNode = nodes.find((node) => node.id === selectedNodeId);
+  const selectedNode = nodes.get().find((node) => node.id === selectedNodeId.get());
   return (
     <Absolute style={{ width: 960, height: 600 }}>
       <Toolbar
         style={{ left: 0, top: 0, width: "100%", height: 56 }}
-        onReset={() => setView(INITIAL_VIEW)}
+        onReset={() => view.set(INITIAL_VIEW)}
       />
       <Workspace
         style={{
@@ -510,13 +509,13 @@ function DiagramEditor(): CRCNode {
           width: "100%",
           height: WORKSPACE_HEIGHT,
         }}
-        nodes={nodes}
-        selectedNodeId={selectedNodeId}
-        view={view}
-        onClearSelection={() => setSelectedNodeId(null)}
+        nodes={nodes.get()}
+        selectedNodeId={selectedNodeId.get()}
+        view={view.get()}
+        onClearSelection={() => selectedNodeId.set(null)}
         onWheel={(event) => {
           event.preventDefault();
-          setView((current) => zoomAroundPoint(current, event, event.deltaY));
+          view.update((current) => zoomAroundPoint(current, event, event.deltaY));
         }}
         nodePointerHandlers={nodePointerHandlers}
         onWorkspacePointerDown={onWorkspacePointerDown}
@@ -528,7 +527,7 @@ function DiagramEditor(): CRCNode {
       <StatusBar
         style={{ left: 0, top: 568, width: "100%", height: 32 }}
         selectedNode={selectedNode}
-        view={view}
+        view={view.get()}
       />
     </Absolute>
   );

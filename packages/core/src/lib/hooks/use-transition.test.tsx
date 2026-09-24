@@ -7,7 +7,7 @@ import {
 import {
   crc,
   computed,
-  useMemo,
+  useConst,
   useTransition,
   signal,
   type Signal,
@@ -430,7 +430,7 @@ describe('useTransition retargeting', () => {
       const output = initial === undefined ?
         useTransition(target, { type: 'tween', duration: 100 }) :
         useTransition(target, { type: 'tween', duration: 100, initial });
-      const doubled = useMemo(() => computed(() => output.get() * 2), []);
+      const doubled = useConst(() => computed(() => output.get() * 2));
       if (observedOutput === undefined) {
         observedOutput = output;
         getSignalNode(output).observers.add(outputObserver);

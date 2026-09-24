@@ -11,7 +11,7 @@ import {
   crc,
   useCanvasContext,
   useLayoutBox,
-  useMemo,
+  useConst,
   definePrimitive,
   measureElement,
   signal,
@@ -52,7 +52,7 @@ interface CardProps {
 
 function Card(props: CardProps): CRCNode {
   const box = useLayoutBox();
-  const mount = useMemo(() => ++props.capture.mounts, []);
+  const mount = useConst(() => ++props.capture.mounts);
   const transform = useCanvasContext().getTransform();
   props.capture.observations.set(props.name, {
     box,

@@ -4,8 +4,8 @@ import {
   KeyboardNavigation,
   crc,
   createElement,
-  useState,
-  useWhenChanged,
+  useSignal,
+  useReaction,
   Group,
   Rectangle,
   Text,
@@ -15,17 +15,17 @@ import {
 let liveLifecycleGenerations = 0;
 
 function CreateElementPoster(_props: Record<never, never>) {
-  const [count, setCount] = useState(0);
-  const [selection, setSelection] = useState("NONE");
+  const count = useSignal(0);
+  const selection = useSignal("NONE");
 
-  useWhenChanged(() => {
+  useReaction(() => {
     liveLifecycleGenerations += 1;
     return () => {
       liveLifecycleGenerations -= 1;
     };
   }, []);
 
-  const choices = (count === 0 ? ["A", "B"] : ["A", "B", "C"]).map(
+  const choices = (count.get() === 0 ? ["A", "B"] : ["A", "B", "C"]).map(
     (label, index) =>
       createElement(
         Fragment,
@@ -36,15 +36,15 @@ function CreateElementPoster(_props: Record<never, never>) {
             y: 208,
             width: 88,
             height: 60,
-            fill: label === selection ? "#74d3ae" : "#f7c948",
+            fill: label === selection.get() ? "#74d3ae" : "#f7c948",
             stroke: "#17211d",
             strokeWidth: 3,
             cursor: "pointer",
           },
           keyboardFocusable: true,
           onClick: () => {
-            setSelection(label);
-            setCount((value) => value + 1);
+            selection.set(label);
+            count.update((value) => value + 1);
           },
         }),
         createElement(
@@ -107,7 +107,7 @@ function CreateElementPoster(_props: Record<never, never>) {
             font: "700 16px monospace",
             textAlign: "center",
           },
-          children: ["SELECTED ", selection, " · COUNT ", count],
+          children: ["SELECTED ", selection.get(), " · COUNT ", count.get()],
         },
       ),
       choices,

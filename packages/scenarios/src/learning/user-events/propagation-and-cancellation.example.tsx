@@ -1,7 +1,7 @@
 import {
   crc,
   useEventListener,
-  useState,
+  useSignal,
   Rectangle,
   Text,
   type CRCController,
@@ -63,23 +63,23 @@ function PropagationAncestor(props: PropagationProps) {
   return <PropagationLeaf mode={props.mode} record={props.record} />;
 }
 function PropagationAndCancellationStudy() {
-  const [mode, setMode] = useState<CancellationMode>("none");
-  const [trace, setTrace] = useState<readonly string[]>([]);
+  const mode = useSignal<CancellationMode>("none");
+  const trace = useSignal<readonly string[]>([]);
   const record = (line: string) => {
-    setTrace((current) => [...current.slice(-6), line]);
+    trace.update((current) => [...current.slice(-6), line]);
   };
   const chooseMode = (next: CancellationMode) => {
-    setMode(next);
-    setTrace([]);
+    mode.set(next);
+    trace.set([]);
   };
   useEventListener({
     onPointerDownCapture: (event) => {
       record(eventLine("ROOT listener capture", event, "leaf", "root"));
     },
     onPointerDown: (event) => {
-      if (mode === "stop-immediate") event.stopImmediatePropagation();
+      if (mode.get() === "stop-immediate") event.stopImmediatePropagation();
       record(
-        `${eventLine("ROOT listener bubble 1", event, "leaf", "root")}${mode === "stop-immediate" ? "  STOP IMMEDIATE" : ""}`,
+        `${eventLine("ROOT listener bubble 1", event, "leaf", "root")}${mode.get() === "stop-immediate" ? "  STOP IMMEDIATE" : ""}`,
       );
     },
   });
@@ -122,9 +122,9 @@ function PropagationAndCancellationStudy() {
           y: 66,
           width: 132,
           height: 42,
-          fill: mode === value ? "#f7c948" : "#314158",
+          fill: mode.get() === value ? "#f7c948" : "#314158",
           stroke: "#fffdf6",
-          strokeWidth: mode === value ? 3 : 1,
+          strokeWidth: mode.get() === value ? 3 : 1,
           cursor: "pointer",
         }}
         onClick={() => chooseMode(value)}
@@ -135,7 +135,7 @@ function PropagationAndCancellationStudy() {
         style={{
           x: 128 + index * 154,
           y: 92,
-          fill: mode === value ? "#17211d" : "#fffdf6",
+          fill: mode.get() === value ? "#17211d" : "#fffdf6",
           font: "800 12px monospace",
           textAlign: "center",
           textBaseline: "middle",
@@ -155,7 +155,7 @@ function PropagationAndCancellationStudy() {
         strokeWidth: 2,
       }}
     />,
-    <PropagationAncestor mode={mode} record={record} />,
+    <PropagationAncestor mode={mode.get()} record={record} />,
     <Text
       style={{
         x: 360,
@@ -180,8 +180,8 @@ function PropagationAndCancellationStudy() {
         textBaseline: "top",
       }}
     >
-      {trace.length
-        ? trace.join("\n")
+      {trace.get().length
+        ? trace.get().join("\n")
         : "Choose a mode, then press the blue leaf."}
     </Text>,
     <Text
