@@ -5,6 +5,8 @@ import {
   createElement,
   crc,
   useCanvasContext,
+  useComputed,
+  useConst,
   useCursor,
   useEvent,
   useEventListener,
@@ -96,6 +98,8 @@ const importedFinalVocabulary = {
   createElement,
   crc,
   useCanvasContext,
+  useComputed,
+  useConst,
   useCursor,
   useEvent,
   useEventListener,
@@ -428,6 +432,19 @@ function SignalHookScene(): CRCNode {
 }
 const signalHookComponent: CRCComponent<Record<string, never>> = SignalHookScene;
 
+function ComputedHookScene({ scale }: { scale: number }): CRCNode {
+  const origin = useConst(() => 10);
+  const source = useSignal(2);
+  const value: Signal<number> = useComputed(
+    () => origin + source.get() * scale,
+    [scale],
+    { debugName: 'public computed hook' },
+  );
+  return <Text>{value}</Text>;
+}
+const computedHookComponent: CRCComponent<{ scale: number }> =
+  ComputedHookScene;
+
 void importedFinalVocabulary;
 void component;
 void element;
@@ -450,3 +467,4 @@ void AnimationHookScene;
 void (null as unknown as FreePlay);
 void badStyle;
 void signalHookComponent;
+void computedHookComponent;

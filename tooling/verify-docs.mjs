@@ -171,6 +171,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/wait.md",
   "docs/site/api/hooks/use-animation-frame.md",
   "docs/site/api/hooks/use-canvas-context.md",
+  "docs/site/api/hooks/use-computed.md",
+  "docs/site/api/hooks/use-const.md",
   "docs/site/api/hooks/use-cursor.md",
   "docs/site/api/hooks/use-event.md",
   "docs/site/api/hooks/use-event-listener.md",

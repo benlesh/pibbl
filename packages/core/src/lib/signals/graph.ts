@@ -37,6 +37,22 @@ interface ComputedSignalNode<T>
   observedCount: number;
   pendingValidation: boolean;
   observe(): () => void;
+  adoptCandidate(
+    candidate: ComputedSignalNode<T>,
+    compute: () => T,
+    changed: boolean,
+    readers: ReadonlySet<SignalDependencyCollector>,
+  ): void;
+  replaceCompute(compute: () => T, invalidate: boolean): void;
+}
+
+/** @internal One isolated formula generation owned by a render transaction. */
+export interface ComputedFormulaCandidate<T> {
+  readonly signal: Signal<T>;
+  readonly readers: Set<SignalDependencyCollector>;
+  changed: boolean;
+  evaluated: boolean;
+  value: T | undefined;
 }
 
 export interface SignalNode<T> {
@@ -707,6 +723,8 @@ export function computed<T>(
     observe: () => () => {},
     invalidate: () => {},
     validate: () => {},
+    adoptCandidate: () => {},
+    replaceCompute: () => {},
     },
   ) as ComputedSignalNode<T>;
 
@@ -885,6 +903,47 @@ export function computed<T>(
   node.invalidate = invalidate;
   node.validate = validate;
 
+  node.replaceCompute = (nextCompute, shouldInvalidate): void => {
+    node.compute = nextCompute;
+    if (shouldInvalidate) invalidate();
+  };
+
+  node.adoptCandidate = (
+    candidate,
+    nextCompute,
+    changed,
+    readers,
+  ): void => {
+    if (!candidate.hasValue || candidate.hasError) {
+      throw new Error('Cannot adopt an unevaluated computed formula candidate.');
+    }
+    node.compute = nextCompute;
+    beginReactiveCollection(node);
+    for (
+      let edge = candidate.dependencyHead;
+      edge !== undefined;
+      edge = edge.consumerNext
+    ) {
+      collectReactiveDependency(node, edge.source!);
+    }
+    finishDependencies();
+    removePendingValidation();
+    node.state = 'clean';
+    node.hasValue = true;
+    node.hasError = false;
+    node.error = undefined;
+    if (!changed) return;
+
+    recordPublicBatchEntry(node as SignalNode<unknown>);
+    node.value = candidate.value;
+    node.version++;
+    signalCommitNotifications++;
+    throwSignalObserverFailures(notifyReactiveEdges(
+      node as SignalNode<unknown>,
+      consumer => !readers.has(consumer),
+    ));
+  };
+
   node.observe = (): (() => void) => {
     node.observedCount++;
     if (node.observedCount === 1) {
@@ -929,6 +988,90 @@ export function computed<T>(
   signalValues.add(readonly);
   signalNodes.set(readonly, node as SignalNode<unknown>);
   return readonly;
+}
+
+/** @internal Creates a nominal alias that retains one computed graph identity. */
+export function createComputedSignalAlias<T>(
+  target: Signal<T>,
+  read: () => T,
+): Signal<T> {
+  const node = requireComputedSignalNode(target);
+  const alias = { get: read } as Signal<T>;
+  signalValues.add(alias);
+  signalNodes.set(alias, node as SignalNode<unknown>);
+  return alias;
+}
+
+/** @internal Creates one unobserved formula generation for transactional render. */
+export function createComputedFormulaCandidate<T>(
+  target: Signal<T>,
+  compute: () => T,
+): ComputedFormulaCandidate<T> {
+  const node = requireComputedSignalNode(target);
+  return {
+    signal: computed(compute, {
+      equals: node.equals,
+      debugName: node.debugName,
+    }),
+    readers: new Set(),
+    changed: false,
+    evaluated: false,
+    value: undefined,
+  };
+}
+
+/** @internal Reads a provisional formula while attributing the stable node. */
+export function readComputedFormulaCandidate<T>(
+  target: Signal<T>,
+  candidate: ComputedFormulaCandidate<T>,
+): T {
+  const node = requireComputedSignalNode(target);
+  const reader = trackingStack.at(-1);
+  reader?.addDependency(node as SignalNode<unknown>);
+  if (reader !== undefined) candidate.readers.add(reader);
+  if (!candidate.evaluated) {
+    const value = untracked(() => candidate.signal.get());
+    candidate.changed = !node.hasValue || node.hasError ||
+      !node.equals(node.value, value);
+    candidate.value = value;
+    candidate.evaluated = true;
+  }
+  return candidate.value as T;
+}
+
+/** @internal Publishes an evaluated formula generation after render success. */
+export function adoptComputedFormulaCandidate<T>(
+  target: Signal<T>,
+  candidate: ComputedFormulaCandidate<T>,
+  compute: () => T,
+): void {
+  const node = requireComputedSignalNode(target);
+  const candidateNode = requireComputedSignalNode(candidate.signal);
+  node.adoptCandidate(
+    candidateNode,
+    compute,
+    candidate.changed,
+    candidate.readers,
+  );
+}
+
+/** @internal Refreshes a committed formula and optionally invalidates its cache. */
+export function replaceComputedFormula<T>(
+  target: Signal<T>,
+  compute: () => T,
+  invalidate: boolean,
+): void {
+  requireComputedSignalNode(target).replaceCompute(compute, invalidate);
+}
+
+function requireComputedSignalNode<T>(
+  value: Signal<T>,
+): ComputedSignalNode<T> {
+  const node = getSignalNode(value);
+  if (!isComputedSignalNode(node as SignalNode<unknown>)) {
+    throw new TypeError('Expected a computed signal.');
+  }
+  return node as ComputedSignalNode<T>;
 }
 
 /** @internal Called during the scheduler Plan phase. */

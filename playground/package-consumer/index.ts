@@ -241,6 +241,8 @@ import {
 } from '@crc/core/internal';
 import {
   crc,
+  useComputed,
+  useConst,
   useCursor,
   useEvent,
   useEventListener,
@@ -1725,6 +1727,18 @@ const memoValue: Readonly<{ value: number }> = useMemo(
 memoValue.value;
 // @ts-expect-error memo dependencies are required by the public contract
 useMemo(() => 1);
+
+const constValue: Readonly<{ value: number }> = useConst(
+  () => ({ value: stateCount }),
+);
+const computedValue: Signal<number> = useComputed(
+  () => writableCount.get() + constValue.value,
+  [constValue],
+  { debugName: 'package consumer computed' },
+);
+computedValue.get();
+// @ts-expect-error computed hook values are readonly
+computedValue.set(1);
 
 const initializedRef: CRCRef<number> = useRef(1);
 const emptyRef: CRCRef<string> = useRef<string>();

@@ -7,6 +7,8 @@ import {
 } from '../global-state';
 import type { CRCMouseEventListener, RenderingContext2D } from '../types';
 import { useCursor } from './use-cursor';
+import { useComputed } from './use-computed';
+import { useConst } from './use-const';
 import { useEvent } from './use-event';
 import { useEventListener } from './use-event-listener';
 import { useEventTarget } from './use-event-target';
@@ -282,6 +284,8 @@ describe('hook ordering and render errors', () => {
   it('uses one intentional diagnostic for every public hook outside render', () => {
     const calls = [
       () => useState(0),
+      () => useConst(() => 1),
+      () => useComputed(() => 1),
       () => useMemo(() => 1, []),
       () => useRef(0),
       () => useSignal(0),
