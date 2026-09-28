@@ -23,6 +23,14 @@ Plain values take the same direct path as before.
 and therefore owns its dependency:
 
 ```tsx
+import {
+  Rectangle,
+  Text,
+  resolveSignalValue,
+  useSignal,
+  type SignalValue,
+} from "@crc/core";
+
 const x = useSignal(10);
 const color = useSignal("red");
 const label = useSignal("Current");
@@ -59,8 +67,17 @@ Use [`resolveSignalValue`](#/api/functions/resolve-signal-value) at the declared
 boundary of an ordinary custom component:
 
 ```tsx
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
 interface SeriesProps {
   data: SignalValue<readonly Point[]>;
+}
+
+function drawSeries(data: readonly Point[]) {
+  return <Text>{data.length}</Text>;
 }
 
 function Series(props: SeriesProps) {

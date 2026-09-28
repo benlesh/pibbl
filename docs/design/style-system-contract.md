@@ -1,7 +1,7 @@
 # CRC style-system contract
 
-Status: current implemented contract, updated for Signals-centric inputs on
-2026-09-24.
+Status: current implemented contract, updated for WebGL lighting, materials,
+background, and genuine shadows on 2026-09-15.
 
 CRC has one typed, local, closed `style` prop. Geometry, paint, cursor,
 transforms, clipping, image source, text layout, and layout participation live

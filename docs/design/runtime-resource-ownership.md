@@ -1,7 +1,8 @@
 # CRC runtime resource ownership
 
-Status: current implemented contract, updated for Signals-centric hooks and
-inputs on 2026-09-24.
+Status: current implemented contract, updated for settled WebGL scenes,
+first-class signals, animation, the realm scheduler, WebGL lighting, orbit
+controls, and genuine shadows on 2026-09-15.
 
 This contract extends the [event resource ownership contract](./event-resource-ownership.md) to every current non-event runtime resource. It defines deterministic ownership and release conditions; garbage collection is supporting evidence only and is never the cleanup oracle.
 

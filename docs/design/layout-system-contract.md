@@ -1,7 +1,7 @@
 # CRC layout-system contract
 
-Status: current implemented contract, updated for Signals-centric inputs on
-2026-09-24.
+Status: current implemented contract, updated for settled WebGL scenes on
+2026-09-13.
 
 CRC provides dedicated `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid`
 components. They arrange direct branded `CRCElement` children into declared

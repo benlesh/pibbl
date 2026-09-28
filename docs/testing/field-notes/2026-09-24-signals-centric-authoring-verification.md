@@ -1,6 +1,6 @@
 # Signals-centric authoring verification
 
-> **Status: IMPLEMENTATION VERIFICATION RECORD.** This field note records
+> **Historical status: IMPLEMENTATION VERIFICATION RECORD.** This field note records
 > dated evidence for the approved Signals-centric authoring design. Public
 > behavior remains defined by the contracts under `docs/design/`.
 
