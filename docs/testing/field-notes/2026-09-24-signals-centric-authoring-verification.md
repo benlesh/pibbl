@@ -128,9 +128,22 @@ remain signal objects. The focused descriptor, primitive-dispatch, public-type,
 and performance suites passed after these changes (5 files, 52 browser tests),
 as did repository typecheck and lint.
 
-The documentation mutation gate currently stops at the intentional reviewed
-contract-preservation safeguard. Updating the manifest requires explicit
-authorization for the new Signals-centric design approval record, the two
-changed semantic inventories, their unit mappings, and the fixed manifest
-digest. The aggregate `trust` gate follows that approved metadata update; its
-result will replace this paragraph.
+The approved contract-preservation update now covers 667 baseline and 866
+current semantic units, retains the exact reviewed approval and evidence
+mappings, and passes all 1,015 documentation RED mutation probes.
+
+The final aggregate `trust` run passed the complete static and packed-package
+stages, then stopped on one timing-sensitive physics learning-example sample:
+the clamped ball did not acquire a nonzero synthetic release interval under
+full browser-suite load. That exact test passed immediately in isolation. A
+complete browser-suite rerun passed the physics test and instead missed one
+time-based particle sample; that exact particle test also passed immediately
+in isolation. No threshold or product code was changed for either load-only
+failure. The aggregate command therefore is not recorded as green.
+
+The browser stages that the early stop had hidden were run separately. Studio
+documentation acceptance and the visual-baseline safeguard passed. Studio
+visual verification again stopped only on the already documented 16,159-pixel
+Filters capture mismatch reproduced on the untouched base. Built-package smoke
+passed 4 tests, lifecycle ownership passed 55 tests, and the structural
+performance gate passed 64 tests with 4 opt-in reference guards skipped.
