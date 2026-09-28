@@ -2,7 +2,9 @@
 
 CRC is a small functional component runtime for the HTML Canvas 2D API, with an
 optional `@crc/webgl` package for WebGL2 islands and `@crc/particles` for
-fixed-capacity Canvas and instanced WebGL effects. JSX is the preferred authoring
+fixed-capacity Canvas and instanced WebGL effects. The optional `@crc/viz` package
+provides [composable data visualization](docs/site/learn/guides/data-visualization.md).
+JSX is the preferred authoring
 syntax, but CRC has its own renderer, hooks, element brand, and lifecycle: it
 does not depend on React and it does not create DOM nodes.
 

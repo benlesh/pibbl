@@ -144,6 +144,17 @@ const drafts = [
     load: () => import("./learning/start/getting-started.example"),
   },
   {
+    slug: "viz-responsive-line", title: "Exploring the Mauna Loa CO₂ record", shortTitle: "CO₂ explorer",
+    section: "composition", order: 199,
+    summary: "Explore 504 real monthly NOAA observations with a decade view, archive navigator, and linked readouts.",
+    api: ["Scale", "Axis", "LineSeries", "ScaleAdjust", "useScale", "Absolute"],
+    objectives: ["Bind scales to local layout allocations.", "Explore a static dataset through ordinary pointer events and signal-valued domains."],
+    prompts: { gesture: "Hover to read a month, click to pin it, then drag the overview selection or its edges to explore a date range.", code: "Change the initial date window or the two line styles." },
+    apiNotes: ["Scales use their local allocation, not a global chart rectangle.", "Source: NOAA GML / Scripps monthly Mauna Loa CO₂, Jan 1980–Dec 2021. April 1984 is interpolated in the source record."],
+    canvas: {width:1100,height:680}, related: ["grid","signals"],
+    load: () => import("./learning/composition/viz-responsive-line.example"),
+  },
+  {
     slug: "create-element-authoring",
     title: "Authoring without JSX",
     shortTitle: "Without JSX",

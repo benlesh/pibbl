@@ -1,4 +1,5 @@
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
+import vizSource from '../../packages/scenarios/src/learning/composition/viz-responsive-line.example.tsx?raw';
 
 const rawSourceModules = import.meta.glob(
   [
@@ -22,6 +23,9 @@ const sourceTextByPath = new Map(
       sourceText,
     ]),
 );
+
+// The visualization lab intentionally drives this exact public lesson.
+sourceTextByPath.set('packages/scenarios/src/learning/composition/viz-responsive-line.example.tsx', vizSource);
 
 export const scenarioSourcePaths = Object.freeze(
   [...sourceTextByPath.keys()].sort(),

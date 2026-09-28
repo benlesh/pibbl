@@ -101,6 +101,9 @@ either as the current result unless a fresh run reproduces it.
   evidence. It deliberately has no root runtime barrel.
 - `packages/scenarios`: private learning examples and deterministic test-lab
   scenarios. Keep their catalogs and presentation metadata separate.
+- `packages/viz`: official allocation-relative linear scales, bottom/left axes,
+  batched line series, and scaled custom composition using core signals/events.
+  The desktop CO₂ example is accepted; mobile presentation remains deferred.
 - `packages/types`: deliberately minimal compatibility package; shared public
   types do not belong here until a concrete need justifies them.
 - `playground`: the interactive examples studio and the separate automated-test

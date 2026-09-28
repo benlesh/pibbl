@@ -78,3 +78,5 @@ export { jsx, jsxs } from "@crc/core/jsx-runtime";
 export { jsxDEV } from "@crc/core/jsx-dev-runtime";
 
 export const __crcStudioModules = crcStudioThreeModules;
+
+export * from "@crc/viz";

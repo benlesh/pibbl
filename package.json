@@ -18,7 +18,7 @@
     "test:smoke": "vitest run packages/core/test/smoke-scenario.test.ts --browser.headless --browser.ui=false",
     "test:smoke:built": "corepack pnpm@11.21.0 build && vitest run packages/core/test/smoke-scenario.test.ts packages/webgl/test/internal-entry-identity.test.tsx --mode built --browser.headless --browser.ui=false",
     "test:package-consumer": "corepack pnpm@11.21.0 build && tsc -p playground/package-consumer/tsconfig.bundler.json && tsc -p playground/package-consumer/tsconfig.nodenext.json && node playground/package-consumer/runtime.mjs",
-    "test:package-consumer:packed": "corepack pnpm@11.21.0 build && node tooling/verify-packed-consumer.mjs && node tooling/verify-packed-webgl-friend.mjs",
+    "test:package-consumer:packed": "corepack pnpm@11.21.0 build && node tooling/verify-packed-consumer.mjs && node tooling/verify-packed-webgl-friend.mjs && node tooling/verify-packed-viz.mjs",
     "test:webgl-friend:packed": "corepack pnpm@11.21.0 -C packages/types run build && corepack pnpm@11.21.0 -C packages/core run build && corepack pnpm@11.21.0 -C packages/webgl run build && node tooling/verify-packed-webgl-friend.mjs",
     "test:visual-safeguard": "node tooling/verify-visual-safeguard.mjs",
     "test:studio-visual": "corepack pnpm@11.21.0 playground:build && node tooling/verify-diagram-editor-teaser.mjs && node tooling/verify-studio-visuals.mjs",
@@ -49,7 +49,8 @@
     "trust:package": "corepack pnpm@11.21.0 test:package-consumer:packed",
     "trust:browser": "corepack pnpm@11.21.0 test:ci && corepack pnpm@11.21.0 test:studio-docs && corepack pnpm@11.21.0 test:visual-safeguard && corepack pnpm@11.21.0 test:studio-visual && corepack pnpm@11.21.0 test:smoke:built",
     "trust:lifecycle": "corepack pnpm@11.21.0 test:lifecycle && corepack pnpm@11.21.0 test:performance",
-    "trust": "corepack pnpm@11.21.0 trust:static && corepack pnpm@11.21.0 trust:package && corepack pnpm@11.21.0 trust:browser && corepack pnpm@11.21.0 trust:lifecycle"
+    "trust": "corepack pnpm@11.21.0 trust:static && corepack pnpm@11.21.0 trust:package && corepack pnpm@11.21.0 trust:browser && corepack pnpm@11.21.0 trust:lifecycle",
+    "test:viz-package": "node tooling/verify-packed-viz.mjs"
   },
   "devDependencies": {
     "@babel/core": "catalog:",
@@ -81,6 +82,7 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
-    "yaml": "catalog:"
+    "yaml": "catalog:",
+    "@crc/viz": "workspace:*"
   }
 }

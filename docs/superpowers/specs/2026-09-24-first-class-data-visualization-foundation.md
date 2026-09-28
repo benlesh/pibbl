@@ -1,13 +1,422 @@
 # First-class data visualization foundation
 
-> **Historical status: PAUSED PARTIAL DESIGN RECORD.** This document records
-> the visualization decisions approved in conversation through 2026-09-24.
-> The design intentionally paused after the initial scale model and selected
-> series contracts. It is not an implementation-ready specification, does not
-> authorize production work, and must be completed and reviewed before an
-> implementation plan is written.
+> **Historical status: Desktop slice accepted and hardened; unrelated visual baseline gap recorded.**
 
-Date: 2026-09-24
+> **Status: FIRST-SLICE SPECIFICATION AND EXECUTION PLAN APPROVED.**
+> The 2026-09-24 approved foundation is preserved below. The 2026-09-28
+> first-slice contract completes the decisions needed for a responsive line
+> example, with an explicit prerequisite on the parallel signals work.
+> Execution is approved. The shared signals prerequisites passed after merge
+> `24c57d7`; the desktop slice and brush revision are accepted. Mobile presentation is
+> explicitly deferred; general responsive style queries are separate exploratory work.
+
+Date: 2026-09-24; first-slice proposal: 2026-09-28
+
+## First slice specification — proposed 2026-09-28
+
+This section is the implementation-ready contract approved in conversation. It
+narrows delivery, not the approved longer-term direction recorded below. Where
+an older section says a first-slice decision is open, this section supplies it;
+other open decisions remain deferred. Approval of this specification permits
+writing an implementation plan, not executing it. Execution needs separate
+approval, as requested.
+
+### Repository audit and prerequisite gate
+
+Read against checkout `4d4f0df` on 2026-09-28; the working tree was clean at
+inspection. This is an inspection record, not a fresh runtime test result.
+Current code, not the parallel thread's plan checkboxes, determines readiness.
+
+- `packages/core/src/index.ts` exports `signal`, `computed`, `useSignal`,
+  `useMemo`, and `useWhenChanged`. It does not export `SignalValue`,
+  `SignalStyle`, `resolveSignalValue`, or `useComputed`.
+- `useLayoutBox()` returns the current readonly allocation snapshot. It is not
+  a signal. Layout reflow supplies a new snapshot through ordinary traversal.
+- Core rejects signal writes during render, including equality no-ops.
+- The existing official-package seam supplies owned hook slots and
+  `setCurrentComponentAfterRender`; the physics world is an existing scoped
+  provider precedent. No application import of private source paths is needed.
+- Packages use ESM declarations/build output, a matching core peer dependency,
+  and the single core JSX runtime. Public consumers, source/built browser
+  aliases, packed output, and Studio declarations must all agree.
+
+**Historical prerequisite at the initial inspection:**
+
+1. The signal-input exports and semantics from Tasks 5–6 of the parallel plan:
+   `SignalValue`, `SignalStyle`, `resolveSignalValue`, declared shallow input
+   resolution, and layout handling of declared signal-valued style positions.
+2. Transactional `useComputed` from Task 7: stable signal identity, dependency
+   array refresh, same-transaction provisional reads, success-only publication,
+   rollback, and equality barriers.
+
+The second requirement matters even if callers use explicit `.get()` props:
+plain props and the non-signal allocation must refresh the same resolved-scale
+signal without a render-time write. Standalone `computed` plus a mutable ref
+would leave its cache stale; replacing the signal on every resize would violate
+stable `useScale` identity. A delayed effect would add a stale frame. None is
+an acceptable substitute.
+
+Reinspect these exports and run their focused executable tests before any viz
+production work. Do not implement these hooks, input resolution, a graph, or a
+transaction mechanism in `@crc/viz`. Do not edit the other thread's work. If
+those capabilities remain absent or differ materially from the approved
+contract, stop at the named dependency and report it. The complete hooks
+migration and its aggregate gate are not prerequisites merely by association.
+
+### Execution audit after signals merge
+
+At `24c57d7`, public `SignalValue`, `resolveSignalValue`, and transactional
+`useComputed` are available. The focused core hook/input suites passed (20 tests).
+`SignalStyle<S>` is the shared official-package type from `@crc/core/internal`,
+not a root export; whole signal-valued styles use `SignalValue<SignalStyle<S>>`.
+The shared resolver unwraps one level. Viz validates its declared resolved
+values rather than introducing recursive resolution or a second signal graph.
+This supersedes the historical blocked status above.
+
+### Delivery boundary
+
+The slice exports `Scale`, `useScale`, `ScaleAdjust`, `Axis`, `LineSeries`, and
+the types below from `@crc/viz`. It implements **linear scales only**, including
+numeric elapsed-time x coordinates. Actual calendar time/UTC scales and domain
+helpers are deferred. This avoids choosing calendar tick/format semantics to
+prove an allocation and signal architecture.
+
+One responsive learning example and its separate deterministic lab prove two
+independently allocated plot panels, nested x/y scales, gaps, source updates,
+ordinary CRC pointer interaction, and custom composition. Both use supported
+package imports. There is no chart container, per-datum component tree,
+visualization runtime dependency, implicit clipping, or new event API.
+
+### Initial scale types
+
+All imported types in the declarations below come from `@crc/core`. These are
+public contract sketches; implementation declarations must preserve the same
+constraints and inference.
+
+```ts
+export type ScaleId = string | symbol;
+export type LinearDomain = readonly [number, number];
+export type ScaleRange = "width" | "height" | readonly [number, number];
+export type ScaleLayoutStyle = Pick<BoxStyle, "width" | "height"> &
+  LayoutItemStyle;
+
+export interface LinearScaleProps {
+  readonly id: ScaleId;
+  readonly type: "linear";
+  readonly domain: SignalValue<LinearDomain>;
+  readonly range: SignalValue<ScaleRange>;
+  readonly reverse?: SignalValue<boolean>;
+  readonly style?: SignalValue<SignalStyle<ScaleLayoutStyle>>;
+  readonly children?: CRCNode;
+}
+export type ScaleProps = LinearScaleProps;
+
+export interface ResolvedLinearScale {
+  readonly type: "linear";
+  readonly domain: LinearDomain;
+  readonly range: readonly [number, number];
+  readonly frame: Readonly<LayoutBox>;
+  map(value: number): number;
+  invert(pixel: number): number;
+  ticks(count?: number): readonly number[];
+}
+export type ResolvedScale = ResolvedLinearScale;
+export declare function useScale(id: ScaleId): Signal<ResolvedScale>;
+```
+
+`ScaleProps` is deliberately a one-member discriminated union today. Future
+families extend it; it does not advertise options for unimplemented families.
+IDs, type discriminants, and structural children are ordinary values, not
+signal input positions in this slice. ID must be a nonempty string or a symbol.
+An ID change affects lookup on that render; signal identity follows the mounted
+provider hook slot. Remounting creates a new signal. A `useScale` caller gets
+the nearest provider's exact readonly signal; selecting a different provider
+may therefore return a different signal.
+
+A domain has exactly two finite, unequal endpoints; descending is valid.
+A numeric range has exactly two finite endpoints; equal endpoints are valid for
+collapsed allocations. `reverse` defaults false and swaps the resolved range
+endpoints once. Mapping and inversion are affine and extrapolate; no clamp,
+nice, unknown-value substitution, implicit domain, or mutation is supplied.
+`map` rejects nonfinite input or output. `invert` rejects nonfinite input/output
+and a zero-span range with an actionable error. Domain/range tuples and the
+resolved object/frame are readonly immutable snapshots, copied from inputs.
+
+`ticks(count = 5)` requires an integer from 2 through 100 and returns exactly
+that many evenly spaced domain values, including both endpoints, in domain
+order. It does not promise “nice” decimal ticks. Nonfinite derived arithmetic
+rejects. There is no formatter method in the initial scale interface; formatting
+belongs to the consuming Axis. No date, bandwidth, percentage endpoint, or
+interpolation methods/options are exposed prematurely.
+
+### Allocation and signal derivation
+
+`Scale` receives the finite local allocation supplied by CRC. It creates no
+box, translation, padding, clip, paint, or hit target. Its optional layout style
+only supplies direct-child placement/sizing information to a layout parent.
+It has no intrinsic measurement. When used directly under a layout that needs
+sizes, declare sizes on the Scale or on a wrapper that contains it. A plain
+nested Scale passes the same allocation to its children.
+
+`range="width"` resolves to `[0, box.width]`; `"height"` to `[0, box.height]`.
+The frame is `{ x: 0, y: 0, width: box.width, height: box.height }` for all range
+forms, including numeric tuples. Zero dimensions are valid; negative or
+nonfinite dimensions reject. The root's logical viewport is a valid allocation,
+but the example must prove smaller independent layout allocations. Density and
+ancestor transforms never enter scale arithmetic.
+
+On each provider evaluation, call `useLayoutBox()` outside any computed
+formula. Supply domain/range/reverse prop identities and the captured numeric
+width/height as explicit dependencies to **core's** `useComputed`. Resolve the
+three declared inputs with **core's** `resolveSignalValue` inside the formula.
+Thus source signals are computed dependencies; allocation and plain prop
+changes refresh the formula transactionally. A formula never calls hooks or
+reads ambient mutable layout state.
+
+Resolved-scale equality compares type, both domain/range endpoints, and frame
+width/height numerically with `Object.is`; it does not compare fresh method
+identities. Equal values cause no downstream invalidation. Readers call `.get()`
+in their own evaluation. Passing the signal alone subscribes no component.
+Resizing renders descendants with the current candidate in that same root
+transaction. Committed changes notify other consumers only under core's
+transaction/scheduler rules; this does not promise zero follow-up work for
+consumers outside that transaction.
+
+### Scope, ownership, and failure
+
+Use a private linked provider stack and the existing after-descendants restore
+hook from `@crc/core/internal`, with immediate restoration if installing cleanup
+fails. Provider lookup uses strict string/symbol identity and nearest-ancestor
+shadowing. No root-wide ID registry or descendant domain registration exists.
+`useScale` uses an owned hook slot to enforce ordinary hook order and render-only
+use. It resolves scope each evaluation rather than capturing the first provider
+forever. Restore scope after success and throw; independent roots and siblings
+must not leak providers into each other.
+
+For this slice a provider and consumer must belong to the **same CRC rendering
+instance**. Capture the instance's owning Canvas identity with the existing
+friend getter, and reject lookup across a managed Layer boundary even on its
+first traversal. Put the complete Scale subtree inside the Layer instead.
+Provider scope across independently scheduled Layers is later expansion, not a
+module-global stack fallback. This restriction preserves the eventual Layer
+composition direction without shipping intermittently missing scopes.
+
+The provider hook owns its computed formula generations; core owns signal
+edges, validation, and teardown. Removing the tree releases its consumers and
+transient scope. A retained scale signal follows core's `useComputed` rule:
+readable with the last committed formula and allocation, still derived from
+retained source signals, unable to schedule the removed owner. It is not a live
+layout subscription after removal. Failed renders publish no candidate scale
+and use core's fail-closed resource cleanup, without promising pixel rollback.
+
+Diagnostics name the receiver and relevant prop/ID: unknown scale, missing
+provider, unsupported type/range/curve, malformed domain, invalid allocation,
+invalid tick count, collapsed inversion, cross-instance scope, or misuse outside
+render. Signal-of-signal errors use the shared resolver. These correctness
+errors throw in all builds, not only development.
+
+### Minimum Axis contract
+
+```ts
+export interface AxisStyle {
+  readonly stroke?: StrokeStyle;
+  readonly strokeWidth?: number;
+  readonly fill?: FillStyle;
+  readonly font?: string;
+  readonly opacity?: number;
+}
+export interface AxisProps {
+  readonly scale: ScaleId;
+  readonly position: "bottom" | "left";
+  readonly tickCount?: SignalValue<number>;
+  readonly tickFormat?: (value: number, index: number) => string;
+  readonly style?: SignalValue<SignalStyle<AxisStyle>>;
+}
+```
+
+Axis reads the provider signal. Bottom draws its baseline from `(r0, H)` to
+`(r1, H)`; left from `(0, r0)` to `(0, r1)`, using that scale's resolved range and
+frame height `H`. Bottom ticks extend 6 pixels down; left ticks 6 pixels left.
+Labels start 4 pixels beyond the tick: bottom center/top aligned, left
+right/middle aligned. Default style is stroke/fill `#64748b`, stroke width 1,
+font `12px sans-serif`, opacity 1. All lengths are logical pixels.
+
+Use `scale.ticks(tickCount ?? 5)`, then `map` each tick. Format with `tickFormat`
+when supplied; otherwise `String(Number(value.toPrecision(6)))`, normalizing
+negative zero to `0`. Callback signal reads are explicit receiver dependencies;
+a callback is never auto-invoked as a reactive thunk. Invalid styles follow
+core paint validation; stroke width must be finite/nonnegative, opacity 0–1.
+
+Axis reserves no space, paints no grid/title, performs no label collision or
+rotation algorithm, and infers no second scale. Authors reserve left/bottom
+gutters using layout outside the plot allocation. All Axis-generated paint is
+`pointerEvents="none"`. Axis accepts no event props in this slice. Reverse
+changes tick locations, never which frame edge is “bottom” or “left”. Nested
+transforms act on Axis paint normally; there is no inverse-transform correction
+back to provider coordinates. Keep axes and series in a common local frame
+unless intentionally transforming their output.
+
+### Initial LineSeries types and geometry
+
+```ts
+export type LineCoordinate = number | null | undefined;
+export type LineAccessor<D> =
+  | { [K in keyof D]-?: D[K] extends LineCoordinate ? K : never }[keyof D]
+  | ((datum: D, index: number, data: readonly D[]) => LineCoordinate);
+export type LineCurve = "linear";
+export interface LineSeriesStyle {
+  readonly stroke?: StrokeStyle;
+  readonly strokeWidth?: number;
+  readonly opacity?: number;
+  readonly cursor?: string;
+  readonly lineInteractionWidth?: number;
+}
+export interface LineSeriesProps<D>
+  extends CRCEventHandlers, CRCEventParticipationOptions {
+  readonly data: SignalValue<readonly D[]>;
+  readonly x: LineAccessor<D>;
+  readonly y: LineAccessor<D>;
+  readonly xScale: ScaleId;
+  readonly yScale: ScaleId;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  readonly curve?: LineCurve;
+  readonly style?: SignalValue<SignalStyle<LineSeriesStyle>>;
+}
+```
+
+Accessors and `defined` are opaque synchronous callbacks; property keys include
+string, number, and symbol keys with compatible value types. Normalize keys
+once per accessor identity. Resolve the outer data signal once during the
+series evaluation. Rows remain opaque: no recursive unwrapping, mutation,
+sorting, coercion of numeric strings, or domain inference. Replace arrays, rows,
+and domain/range tuples when changing their values; in-place mutation is not
+an invalidation mechanism.
+
+Visit source rows in order. If `defined` returns false, end the current run
+without evaluating its coordinates. Otherwise evaluate x and y once; a null,
+undefined, NaN, infinity, or runtime nonnumeric coordinate ends the run. Finite
+coordinates map through their named scales; arithmetic overflow throws rather
+than silently drawing incorrect geometry. Accessor/predicate exceptions follow
+ordinary render failure. Empty data and runs with fewer than two points paint
+nothing. Repeated coordinates remain in source order.
+
+`curve` defaults to `"linear"`. One Path2D contains all runs, with `moveTo` at
+each run start and `lineTo` thereafter. No segment crosses a gap. One core Path
+paints this batch and owns its ordinary stroke hit geometry, using the same
+path for paint and interaction. No components or event records per datum.
+Defaults: stroke `#2563eb`, stroke width 2, opacity 1; interaction width defaults
+to stroke width. Widths must be finite/nonnegative. No fill/area or closed path.
+
+Static style means one style shared across the entire series, including all
+runs. Whole styles and declared direct fields may be signal-valued through
+core's `SignalStyle` contract. Resolve the whole style and each declared direct
+field with core's helper during the receiving viz component evaluation; forward
+resolved paint to core primitives. Apply the same rule to Axis. Do not scan
+nested paint objects or invent a generic deep resolver. No style callback or
+`segmentStyle` is implemented yet.
+Filter/style expansion is deferred; authors may wrap a series in a core Group
+with a filter. Ordinary CRC handlers and pointerEvents forward to the single
+Path target. There is no event enrichment or nearest-datum helper in this slice.
+Core transforms, explicit clips, target order, and teardown remain authoritative.
+
+### Minimal ScaleAdjust extension point
+
+```ts
+type ScaleAdjustX =
+  | { readonly x: SignalValue<number>; readonly xScale: ScaleId }
+  | { readonly x?: never; readonly xScale?: never };
+type ScaleAdjustY =
+  | { readonly y: SignalValue<number>; readonly yScale: ScaleId }
+  | { readonly y?: never; readonly yScale?: never };
+export type ScaleAdjustProps = ScaleAdjustX &
+  ScaleAdjustY & {
+    readonly children?: CRCNode;
+  };
+```
+
+Resolve each supplied coordinate with the shared helper and map through the
+matching scale. Omitted axes translate by zero; both omitted is an identity
+wrapper. Mismatched coordinate/ID pairs and nonfinite values reject. Return an
+ordinary core Group translation, with no allocation or self hit geometry.
+Changing supplied axes must not change hook count: internal lookup slots remain
+unconditional. Children keep ordinary events. The example includes one custom
+mark using this wrapper and a separate readout using `useScale`.
+
+### Runnable evidence and stop point
+
+Scaffold only the official package root and required workspace/build/editor
+integration. Match the current sibling package version and core peer; externalize
+core and its friend entry so signals and hooks use one core instance. No viz
+JSX runtime, `internal` public subpath, extra package, or dependencies beyond
+core are needed. Export the named types above and ordinary component functions.
+
+The public lesson `viz-responsive-line` uses a responsive root and an explicit
+Grid with two unequal fractional columns. Each panel declares its Grid placement
+and contains an allocated plot with left/bottom gutters. Each plot nests x and y
+Scale providers using width/height; y uses reverse. Use small deterministic
+numeric elapsed-time data, one missing point, explicit domains, and straight
+segments. An ordinary CRC control updates the data and domain signals. An
+explicit plot background receives pointer events; line handlers demonstrate
+normal bubbling. Axis decorations cannot steal input. Include a ScaleAdjust
+mark and a custom useScale readout without per-datum components.
+
+The deterministic `viz-foundation-lab` shares public composition/fixtures with
+the lesson, but keeps test counters and controls out of learning metadata. It
+exposes semantic readings through the existing lab harness, not a new viz
+inspection API. Verify through public imports:
+
+1. Mapping, reverse, nested shadowing, stable signal identity, and unchanged
+   resolved-value equality; two local plot widths differ from the root width.
+2. Resize and signal updates produce current scale ranges, mapped endpoints,
+   and axis baselines/ticks; ordinary values and direct signals agree.
+3. Property-key and function accessors agree; a missing row creates an actual
+   gap; the series stays one batched path/target, with ordinary events.
+4. One representative unknown-ID failure, failed candidate rollback, and
+   unmount/dispose restore scopes and release owned consumers.
+5. Shared JSX plus createElement, public declarations, source/built browser
+   loading, and the new package's focused packed Bundler/NodeNext import probe.
+
+The implementation plan chooses concrete existing test harnesses and exact
+commands after the prerequisite reinspection. Observe focused RED before
+production changes, then GREEN for the runnable slice. Do not write exhaustive
+matrices, broad performance benchmarks, or run the aggregate trust gate before
+hands-on feedback. Use semantic geometry first; only add narrow visual evidence
+where it proves a gap or paint behavior that semantic assertions cannot.
+
+Once working, publish the **actual running Studio URL** (never an assumed port),
+explain resizing and data/event controls, list fresh focused check results, and
+label the milestone **slice ready for feedback**. Stop for experiential feedback.
+
+### Deferred scope and self-review
+
+Retain the approved wider scale inventory, percentage and bandwidth ranges,
+bar grouping/bandwidth/style contracts, financial series, curve vocabulary,
+and segment-style direction below. Their presence does not authorize expansion
+of this slice. Also defer time/UTC scales, domain helpers, nice/clamped scales,
+PointSeries, bands/bars/financial marks, areas, pies, force/geography, legends,
+annotations, nearest lookup, rich axes, cross-Layer provider lookup, curve and
+ownership matrices, geometry cache optimization, documentation polish,
+performance characterization, and aggregate verification until feedback or a
+separate approved scope requires them.
+
+Self-review: the first-slice export list matches its type declarations; every
+signal input uses core's vocabulary; captured allocation refresh relies on the
+named unshipped core dependency; scope failure and Layer limits are explicit;
+axis direction is distinct from range reversal; labels reserve no hidden space;
+invalid scale definitions throw while missing series coordinates make gaps;
+series batching and hit geometry agree; future APIs below are not slice exports.
+No production code accompanies this specification. The separate
+[implementation plan](../plans/2026-09-28-first-class-data-visualization-slice.md)
+is approved for inline execution, subject to its prerequisite check.
+
+---
+
+## Approved foundation and longer-term direction
+
+The remainder preserves the decisions and unresolved future surface recorded on
+2026-09-24. “Initial” in these historical sections describes that larger package
+direction, not the narrower first-slice export list above. Their sample snippets
+may use capabilities deferred from this slice.
 
 ## Summary
 
@@ -1000,7 +1409,7 @@ The current record does not approve:
 - a required custom curve callback API in the initial line contract; or
 - geography as an initial delivery priority.
 
-## Resume point
+## Historical resume point (superseded by the first-slice proposal)
 
 When visualization design resumes, begin with the smallest unresolved contract
 that blocks a runnable vertical slice. The strongest candidate is the exact

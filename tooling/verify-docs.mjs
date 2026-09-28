@@ -85,6 +85,12 @@ const publicGuidePaths = [
   "docs/site/learn/guides/webgl-lighting.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/learn/guides/data-visualization.md",
+  "docs/site/api/components/scale.md",
+  "docs/site/api/components/axis.md",
+  "docs/site/api/components/line-series.md",
+  "docs/site/api/components/scale-adjust.md",
+  "docs/site/api/hooks/use-scale.md",
   "docs/site/api/index.md",
   "docs/site/api/components/absolute.md",
   "docs/site/api/components/ambient-light.md",
@@ -220,6 +226,7 @@ const currentMarkdownPaths = [
   "AGENTS.md",
   "README.md",
   "packages/core/README.md",
+  "packages/viz/README.md",
   "packages/particles/README.md",
   "packages/physics/README.md",
   "packages/three/README.md",
@@ -247,6 +254,7 @@ const currentMarkdownPaths = [
   "docs/project-plans/WORKFLOW.md",
   "docs/scenario-index.md",
   "docs/strategy/README.md",
+  "docs/strategy/responsive-style-queries.md",
   "docs/strategy/particle-effects-research.md",
   "docs/testing/dependency-freshness.md",
   "docs/testing/dependency-inventory.md",
@@ -818,6 +826,7 @@ async function typecheckCompleteSnippets(snippets) {
               "@crc/particles/webgl": [
                 join(repositoryRoot, "packages/particles/src/webgl.ts"),
               ],
+              "@crc/viz": [join(repositoryRoot, "packages/viz/src/index.ts")],
               "@crc/webgl": [
                 join(repositoryRoot, "packages/webgl/src/index.ts"),
               ],
@@ -1648,6 +1657,12 @@ assertSameNames(
   ),
   particleWebglExports.types,
   "Documented @crc/particles/webgl types",
+);
+const vizSource = await readFile(join(repositoryRoot, "packages/viz/src/index.ts"), "utf8");
+const vizExports = exportedSpecifiers(vizSource, "packages/viz/src/index.ts");
+for (const kind of ["values", "types"]) assertSameNames(
+  [...documentedApiSymbols].filter(name => vizExports[kind].has(name)),
+  vizExports[kind], `Documented @crc/viz ${kind}`,
 );
 const namespaceMembers = jsxNamespaceMembers(
   runtimeSource,

@@ -49,9 +49,7 @@ export async function loadWorkbenchSource(
     );
   const source = await load();
   if (
-    !source.includes(
-      "export default function mount(canvas: HTMLCanvasElement): CRCController",
-    )
+    !/^export default function mount\(\s*canvas:\s*HTMLCanvasElement(?:,\s*\w+:\s*\w+\s*=\s*\{\})?,?\s*\):\s*CRCController/mu.test(source)
   ) {
     throw new Error(
       `Workbench source "${entry.source.path}" does not expose the canonical mount contract.`,

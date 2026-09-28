@@ -17,6 +17,10 @@ systems, and Canvas components from `@crc/particles`, with 3D definitions and
 components from `@crc/particles/webgl`. Package source and `lib/*` paths are not
 supported.
 
+Import visualization primitives from `@crc/viz`: [Scale](#/api/components/scale),
+[Axis](#/api/components/axis), [LineSeries](#/api/components/line-series),
+[ScaleAdjust](#/api/components/scale-adjust), and [useScale](#/api/hooks/use-scale).
+
 ```ts
 import { Fragment, Rectangle, Text, crc } from "@crc/core";
 import { Particles2D } from "@crc/particles";

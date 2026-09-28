@@ -2,6 +2,7 @@ import { parse } from "@babel/parser";
 
 const SUPPORTED_MODULES = new Set([
   "@crc/core",
+  "@crc/viz",
   "@crc/core/jsx-runtime",
   "@crc/core/jsx-dev-runtime",
   "@crc/particles",
@@ -49,7 +50,7 @@ interface SourceEdit {
 
 function invalidModuleShape(): Error {
   return new Error(
-    "Lessons may contain named imports only from @crc/core, " +
+    "Lessons may contain named imports only from @crc/core, @crc/viz, " +
       "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, @crc/particles, " +
       "@crc/particles/webgl, @crc/physics/2d, @crc/physics/2d/geometry, " +
       "@crc/physics/3d, @crc/physics/3d/geometry, @crc/three, @crc/webgl, " +
@@ -187,7 +188,8 @@ export function toRunnableScript(emittedCode: string): string {
         declaration.async ||
         declaration.generator ||
         declaration.id?.name !== "mount" ||
-        declaration.params.length !== 1 ||
+        declaration.params.length < 1 ||
+        declaration.params.slice(1).some(parameter => parameter.type !== "AssignmentPattern") ||
         declaration.params[0]?.type !== "Identifier" ||
         declaration.params[0].name !== "canvas"
       ) {

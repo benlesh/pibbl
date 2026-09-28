@@ -2319,8 +2319,23 @@ export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState
     load: async () => (await import("./canvas-surface")).canvasSurfaceScenario,
   };
 
+export const vizFoundationScenarioEntry: ScenarioCatalogEntry<import("./viz-foundation-lab.js").VizFoundationState> = {
+  metadata: {
+    id: "viz-foundation-lab", slug: "viz-foundation-lab", title: "Visualization foundation laboratory",
+    summary: "Observe the static NOAA record through linked detail and overview plots.", category: "Visualization",
+    apiTags: ["Scale", "LineSeries", "Axis"], conceptTags: ["local allocation", "signals"],
+    manualSteps: [{action:"Inspect a month, choose a decade in the overview, and resize the Canvas.", expected:"Readouts show source values; the detail range changes while the overview stays fixed."}],
+    knownLimitations: ["Linear scales and curves only; no cross-Layer scope lookup."],
+    learningOrder: 310, visibility: "test-laboratory", visibilityReason: "Exposes deterministic scale readings for headless checks.", maturity: "contract",
+  },
+  canvas: {width:1100,height:680}, actions: [{id:"full",label:"Full record"},{id:"reset",label:"Last 10 years"}],
+  source: {id:"viz-foundation-example",language:"tsx",marker:"VIZ_FOUNDATION_SOURCE_ID = 'viz-foundation-example'",path:"packages/scenarios/src/learning/composition/viz-responsive-line.example.tsx"},
+  load: async () => (await import("./viz-foundation-lab.js")).vizFoundationScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
   validateScenarioCatalog([
+    vizFoundationScenarioEntry,
     smokeScenarioEntry,
     drawingShapesScenarioEntry,
     drawingLinesScenarioEntry,

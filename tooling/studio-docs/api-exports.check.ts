@@ -6,6 +6,7 @@ import {
   crcPhysicsEntryPaths,
   crcStudioPublicEntryPaths,
   collectPublicExports,
+  crcPublicCompilerOptions,
   validateApiCoverage,
 } from "./api-exports";
 
@@ -157,12 +158,14 @@ assert.equal(coverage.values.get("Circle")?.route, "#/api/components/circle");
 assert.deepEqual(coverage.missingValues, []);
 assert.deepEqual(coverage.missingTypes, []);
 
-const crcInventory = await collectPublicExports(crcPublicEntryPaths, {});
+const crcInventory = await collectPublicExports(crcPublicEntryPaths, crcPublicCompilerOptions);
 const physicsInventory = await collectPublicExports(crcPhysicsEntryPaths, {});
 const studioInventory = await collectPublicExports(
   crcStudioPublicEntryPaths,
-  {},
+  crcPublicCompilerOptions,
 );
+assert.equal(crcInventory.viz.values.length, 5);
+assert.equal(crcInventory.viz.types.length, 16);
 assert.ok(crcInventory.root.values.length > 0);
 assert.ok(crcInventory.root.types.length > 0);
 assert.equal(crcInventory.webgl.values.length, 15);

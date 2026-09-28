@@ -1299,11 +1299,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 72 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
+  it("contains 73 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(72);
+    expect(learningExampleCatalog).toHaveLength(73);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1361,6 +1361,7 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+        "viz-responsive-line",
         "clip",
         "group",
         "layer",
@@ -1455,6 +1456,7 @@ describe("learning example catalog", () => {
       "particle-effects",
       "physics-2d",
       "layer",
+      "viz-responsive-line",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1835,6 +1837,7 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "Scale", "Axis", "LineSeries", "ScaleAdjust", "useScale", "Absolute",
         "Rectangle",
         "Circle",
         "Ellipse",
@@ -2146,9 +2149,11 @@ describe("learning example catalog", () => {
     "loads, mounts, paints, and disposes $slug from its canonical source",
     async (entry) => {
       const source = await loadLearningSource(entry);
-      expect(source).toContain(
-        "export default function mount(canvas: HTMLCanvasElement): CRCController",
-      );
+      expect(() => validateLearningSourceText(source, {
+        authoring: entry.authoring,
+        label: entry.slug,
+        sourcePath: entry.source.path,
+      })).not.toThrow();
 
       const { canvas, controller } = await renderLearningExample(entry.slug);
       const pixels = canvas

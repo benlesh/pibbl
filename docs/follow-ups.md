@@ -16,6 +16,11 @@ the strategy document does not override it.
 
 ## Explicit product deferrals
 
+- The CO₂ visualization example has an accepted mobile-presentation gap. Phone
+  layout and casual-touch usability need a separate pass. General responsive
+  styling is explored in [Responsive style queries](./strategy/responsive-style-queries.md);
+  neither is part of the current visualization scope.
+
 - Generated accessibility semantics, editable-input adapters, gestures, and
   semantic-control abstractions. CRC's shipped pointer, touch, wheel,
   drag/drop, pointer-capture, keyboard, and focus facades remain Canvas-local.

@@ -109,7 +109,7 @@ function createFrameSource(options: {
   `;
   return `<!doctype html><html><head><meta charset="utf-8"><style>
     *{box-sizing:border-box}html,body{height:100%;margin:0}body{display:grid;place-items:center;background:#fffdf6;overflow:hidden}
-    canvas{display:block;width:100%;height:auto;max-height:100%;object-fit:contain;touch-action:none}
+    canvas{display:block;width:100%;height:100%;min-width:0;min-height:0;max-height:100%;object-fit:contain;touch-action:none}
   </style></head><body><canvas width="${options.width}" height="${options.height}" aria-label="Live CRC lesson preview"></canvas>
   <script>${escapeScript(runtimeSource)}</script><script>${escapeScript(boot)}</script></body></html>`;
 }

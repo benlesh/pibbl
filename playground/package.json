@@ -21,7 +21,8 @@
     "lz-string": "catalog:",
     "minisearch": "catalog:",
     "monaco-editor": "catalog:",
-    "three": "catalog:"
+    "three": "catalog:",
+    "@crc/viz": "workspace:*"
   },
   "devDependencies": {
     "@types/three": "catalog:",

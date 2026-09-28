@@ -26,7 +26,8 @@
     "@crc/physics": "workspace:*",
     "@crc/three": "workspace:*",
     "@crc/webgl": "workspace:*",
-    "three": "catalog:"
+    "three": "catalog:",
+    "@crc/viz": "workspace:*"
   },
   "devDependencies": {
     "@types/three": "catalog:"

@@ -27,6 +27,7 @@ const require = createRequire(import.meta.url);
 const tsc = join(dirname(require.resolve('typescript')), 'tsc.js');
 
 const modulePaths = new Map([
+  ['@crc/viz', 'node_modules/@crc/viz/index.d.ts'],
   ['@crc/core', 'node_modules/@crc/core/index.d.ts'],
   ['@crc/core/jsx-runtime', 'node_modules/@crc/core/jsx-runtime.d.ts'],
   ['@crc/core/jsx-dev-runtime', 'node_modules/@crc/core/jsx-dev-runtime.d.ts'],
@@ -297,6 +298,7 @@ export namespace JSX {}
 verifyDeclarationSurfaceComparator();
 
 const packageDeclarationSources = new Map([
+  ['@crc/viz', await readFile(join(repositoryRoot, 'packages/viz/src/index.ts'), 'utf8')],
   ['@crc/core', await readFile(join(repositoryRoot, 'packages/core/src/index.ts'), 'utf8')],
   [
     '@crc/core/jsx-runtime',
@@ -322,6 +324,7 @@ const packageDeclarationSources = new Map([
 ]);
 
 const builtPackageDeclarationSources = new Map([
+  ['@crc/viz', await readFile(join(repositoryRoot, 'packages/viz/dist/index.d.ts'), 'utf8')],
   ['@crc/core', await readFile(join(repositoryRoot, 'packages/core/dist/index.d.ts'), 'utf8')],
   [
     '@crc/core/jsx-runtime',
@@ -2007,6 +2010,7 @@ try {
   }
   await writeFile(join(directory, 'consumer.tsx'), consumer);
   await writeFile(join(directory, 'package-consumer.tsx'), packageConsumer);
+  await writeFile(join(directory, 'viz-lesson.tsx'), await readFile(join(repositoryRoot, 'packages/scenarios/src/learning/composition/viz-responsive-line.example.tsx'), 'utf8'));
   await writeFile(join(directory, 'physics-lesson.tsx'), physicsLessonSource);
   await writeFile(join(directory, 'physics-3d-lesson.tsx'), physics3DLessonSource);
   await writeFile(join(directory, 'public-type-surface.ts'), publicTypeSurfaceConsumer);
@@ -2028,12 +2032,13 @@ try {
         strict: true,
         target: 'ESNext',
       },
-      files: ['consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
+      files: ['viz-lesson.tsx', 'consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
     }),
   );
   const packageEntrySets = [
     {
       label: 'source',
+      viz: join(repositoryRoot, 'packages/viz/src/index.ts'),
       root: join(repositoryRoot, 'packages/core/src/index.ts'),
       internal: join(repositoryRoot, 'packages/core/src/internal.ts'),
       jsxRuntime: join(repositoryRoot, 'packages/core/src/jsx-runtime.ts'),
@@ -2050,6 +2055,7 @@ try {
     },
     {
       label: 'built',
+      viz: join(repositoryRoot, 'packages/viz/dist/index.d.ts'),
       root: join(repositoryRoot, 'packages/core/dist/index.d.ts'),
       internal: join(repositoryRoot, 'packages/core/dist/internal.d.ts'),
       jsxRuntime: join(repositoryRoot, 'packages/core/dist/jsx-runtime.d.ts'),
@@ -2082,6 +2088,7 @@ try {
           noEmit: true,
           paths: {
             '@crc/core': [entries.root],
+            '@crc/viz': [entries.viz],
             '@crc/core/internal': [entries.internal],
             '@crc/core/jsx-runtime': [entries.jsxRuntime],
             '@crc/core/jsx-dev-runtime': [entries.jsxDevRuntime],
@@ -2101,7 +2108,7 @@ try {
           strict: true,
           target: 'ESNext',
         },
-        files: ['package-consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
+        files: ['viz-lesson.tsx', 'package-consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
       }),
     );
     const packageResult = spawnSync(process.execPath, [tsc, '-p', packageTsconfigPath], {
@@ -2164,6 +2171,7 @@ try {
   const sourceRuntimeExports = Object.keys(sourceRuntime).sort();
   const builtRuntimeExports = Object.keys(builtRuntime).sort();
   const expectedStudioRuntimeExports = [
+    'Scale', 'Axis', 'LineSeries', 'ScaleAdjust', 'useScale',
     '__crcStudioModules',
     ...publicPhysics2DValueExports,
     ...publicPhysics3DValueExports,
@@ -2279,9 +2287,9 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 206) {
+  if (expectedStudioRuntimeExports.length !== 211) {
     throw new Error(
-      `CRC Studio runtime must expose 80 core values, 46 physics 2D values, 48 physics 3D values, 1 Three adapter value, 1 sandbox module registry, 15 WebGL values, 1 GLB loader value, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
+      `CRC Studio runtime must expose 80 core values, 46 physics 2D values, 48 physics 3D values, 1 Three adapter value, 1 sandbox module registry, 15 WebGL values, 1 GLB loader value, 11 particle values, 5 visualization values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
     );
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {

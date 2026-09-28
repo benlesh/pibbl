@@ -55,10 +55,16 @@ export interface ApiCoverage {
   readonly duplicateTypes: readonly string[];
 }
 
+export const crcPublicCompilerOptions: CompilerOptions = {
+  jsx: 4, // react-jsx; the native TypeScript API does not export JsxEmit.
+  jsxImportSource: "@crc/core",
+};
+
 export const crcPublicEntryPaths = {
   root: fileURLToPath(
     new URL("../../packages/core/src/index.ts", import.meta.url),
   ),
+  viz: fileURLToPath(new URL("../../packages/viz/src/index.ts", import.meta.url)),
   webgl: fileURLToPath(
     new URL("../../packages/webgl/src/index.ts", import.meta.url),
   ),

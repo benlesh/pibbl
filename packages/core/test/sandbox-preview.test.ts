@@ -61,7 +61,8 @@ function runPreview(
 describe("Studio sandbox preview", () => {
   it("starts an offscreen preview when the child suppresses animation frames", async () => {
     const host = document.createElement("div");
-    host.style.cssText = "position:absolute;top:5000px;width:320px;height:180px";
+    host.style.cssText =
+      "position:absolute;top:5000px;width:320px;height:180px";
     document.body.appendChild(host);
     const preview = new SandboxPreview(host);
 
@@ -81,7 +82,9 @@ describe("Studio sandbox preview", () => {
     const preview = new SandboxPreview(host);
 
     try {
-      await expect(runPreview(preview, invalidControllerLesson)).resolves.toEqual([
+      await expect(
+        runPreview(preview, invalidControllerLesson),
+      ).resolves.toEqual([
         {
           kind: "error",
           message: "Preview mount must return a controller with dispose().",
@@ -140,4 +143,36 @@ describe("Studio sandbox preview", () => {
       host.remove();
     }
   });
+});
+
+it("keeps a responsive canvas inside its preview after both dimensions shrink", async () => {
+  const host = document.createElement("div");
+  host.style.cssText = "width:640px;height:395.625px";
+  document.body.append(host);
+  const preview = new SandboxPreview(host);
+  const sizes: string[] = [];
+  try {
+    preview.run({
+      width: 1100,
+      height: 680,
+      code: `
+      import { crc, createElement, useLayoutBox } from "@crc/core";
+      function Scene() { const box = useLayoutBox(); console.log(box.width + "x" + box.height); }
+      export default function mount(canvas) { return crc(canvas, createElement(Scene, {}), { viewport: "responsive" }); }
+    `,
+      onEvent(event) {
+        if (event.kind === "log") sizes.push(event.message!);
+      },
+    });
+    host.querySelector("iframe")!.style.cssText =
+      "width:100%;height:100%;border:0";
+    // Browser iframe viewports round fractional CSS heights to whole pixels.
+    await expect.poll(() => sizes.at(-1)).toBe("640x396");
+    host.style.width = "480px";
+    host.style.height = "296.71875px";
+    await expect.poll(() => sizes.at(-1)).toBe("480x297");
+  } finally {
+    preview.dispose();
+    host.remove();
+  }
 });

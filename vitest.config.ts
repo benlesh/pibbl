@@ -76,6 +76,7 @@ export default defineConfig(({ mode }) => ({
   ],
   resolve: {
     alias: mode === 'built' ? [] : [
+      { find: /^@crc\/viz$/, replacement: fileURLToPath(new URL('./packages/viz/src/index.ts', import.meta.url)) },
       {
         find: /^@crc\/core\/internal$/,
         replacement: fileURLToPath(new URL('./packages/core/src/internal.ts', import.meta.url)),

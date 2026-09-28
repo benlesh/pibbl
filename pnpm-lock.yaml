@@ -119,6 +119,9 @@ importers:
       '@crc/three':
         specifier: workspace:*
         version: link:packages/three
+      '@crc/viz':
+        specifier: workspace:*
+        version: link:packages/viz
       '@crc/webgl':
         specifier: workspace:*
         version: link:packages/webgl
@@ -224,6 +227,9 @@ importers:
       '@crc/three':
         specifier: workspace:*
         version: link:../three
+      '@crc/viz':
+        specifier: workspace:*
+        version: link:../viz
       '@crc/webgl':
         specifier: workspace:*
         version: link:../webgl
@@ -248,6 +254,12 @@ importers:
         version: 0.186.0
 
   packages/types: {}
+
+  packages/viz:
+    devDependencies:
+      '@crc/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/webgl:
     devDependencies:
@@ -275,6 +287,9 @@ importers:
       '@crc/three':
         specifier: workspace:*
         version: link:../packages/three
+      '@crc/viz':
+        specifier: workspace:*
+        version: link:../packages/viz
       '@crc/webgl':
         specifier: workspace:*
         version: link:../packages/webgl

@@ -1,0 +1,46 @@
+{
+  "name": "@crc/viz",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Composable Canvas data visualization for CRC",
+  "author": "Ben Lesh <ben@benlesh.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/benlesh/crc",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benlesh/crc.git",
+    "directory": "packages/viz"
+  },
+  "bugs": "https://github.com/benlesh/crc/issues",
+  "keywords": [
+    "canvas",
+    "visualization",
+    "signals"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@crc/core --external:@crc/core/internal",
+    "dev": "pnpm run build",
+    "prepublishOnly": "pnpm run build",
+    "test": "vitest"
+  },
+  "peerDependencies": {
+    "@crc/core": "0.0.1"
+  },
+  "devDependencies": {
+    "@crc/core": "workspace:*"
+  }
+}

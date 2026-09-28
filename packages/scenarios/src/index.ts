@@ -26,6 +26,7 @@ export {
   physics3DScenarioEntry,
   runtimeHooksScenarioEntry,
   signalsLabScenarioEntry,
+  vizFoundationScenarioEntry,
   threeInstancingLabScenarioEntry,
   staticGLBSliceScenarioEntry,
   validateScenarioCatalog,

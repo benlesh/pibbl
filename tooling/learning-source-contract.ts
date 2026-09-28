@@ -56,6 +56,7 @@ interface SourceInspection {
   readonly packageImportModules: readonly string[];
 }
 
+const VIZ_MODULE = "@crc/viz";
 const CORE_MODULE = "@crc/core";
 const PARTICLES_MODULE = "@crc/particles";
 const PARTICLES_WEBGL_MODULE = "@crc/particles/webgl";
@@ -66,6 +67,7 @@ const THREE_ORBIT_CONTROLS_MODULE =
 const WEBGL_MODULE = "@crc/webgl";
 const WEBGL_GLTF_MODULE = "@crc/webgl/gltf";
 const LEARNING_VALUE_MODULES = new Set([
+  VIZ_MODULE,
   CORE_MODULE,
   PARTICLES_MODULE,
   PARTICLES_WEBGL_MODULE,
@@ -360,7 +362,8 @@ function isCanonicalMount(programBody: readonly SyntaxNode[]): boolean {
   const parameters = nodes(declaration.params);
   const canvas = parameters[0];
   return (
-    parameters.length === 1 &&
+    parameters.length >= 1 &&
+    parameters.slice(1).every(parameter => parameter.type === "AssignmentPattern") &&
     canvas?.type === "Identifier" &&
     canvas.name === "canvas" &&
     typeReferenceName(canvas.typeAnnotation) === "HTMLCanvasElement" &&
@@ -1446,7 +1449,7 @@ export function validateScenarioSourceText(
   ) {
     throw invalid(
       label,
-      "must use supported static imports from @crc/core, @crc/particles, @crc/physics/2d, @crc/physics/3d, and @crc/webgl; 3D physics requires @crc/webgl; relative imports must be type-only; and at least one public @crc/core value is required.",
+      "must use supported static imports from @crc/core, @crc/viz, @crc/particles, @crc/physics/2d, @crc/physics/3d, and @crc/webgl; 3D physics requires @crc/webgl; relative imports must be type-only; and at least one public @crc/core value is required.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1509,7 +1512,10 @@ export function validateLearningSourceText(
         label === 'Learning example "physics-2d"'));
   const isGLTFLesson =
     inspection.packageImportModules.includes(WEBGL_GLTF_MODULE);
-  const hasExactPackageImports = isThreeLesson
+  const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE);
+  const hasExactPackageImports = isVizLesson
+    ? inspection.hasNamedValueCoreImport && inspection.packageImportModules.length === 2
+    : isThreeLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.hasThreeAdapterValueImport &&
       inspection.hasThreeValueImport &&

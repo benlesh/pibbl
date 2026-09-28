@@ -31,6 +31,12 @@ When this document conflicts with shipped behavior or an approved plan, those
 sources win. Update this document when the conflict represents a changed
 assumption rather than rewriting historical plans or field notes.
 
+## Related design inputs
+
+- [Responsive style queries](./responsive-style-queries.md) (2026-09-28):
+  exploratory general styling ideas prompted by the visualization mobile gap;
+  not part of visualization implementation or an approved API.
+
 ## Executive view
 
 The strongest working thesis is:
