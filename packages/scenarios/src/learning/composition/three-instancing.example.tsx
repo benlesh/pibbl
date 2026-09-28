@@ -9,7 +9,7 @@ import {
   Rectangle,
   Text,
   crc,
-  useState,
+  useSignal,
   type CRCController,
   type CRCNode,
 } from '@crc/core';
@@ -263,7 +263,7 @@ function clipPath(): Path2D {
 }
 
 function ThreeInstancingExample() {
-  const [state, setState] = useState({
+  const state = useSignal({
     missBehavior: 'pass-through' as MissBehavior,
     lastResolution: 'none',
     tileClicks: 0,
@@ -273,26 +273,26 @@ function ThreeInstancingExample() {
     trace: [] as string[],
   });
   const recordTile = () =>
-    setState((current) => ({
+    state.update((current) => ({
       ...current,
       lastResolution: 'CRC tile',
       tileClicks: current.tileClicks + 1,
     }));
   const recordBlocked = () =>
-    setState((current) => ({
+    state.update((current) => ({
       ...current,
       lastResolution: 'Three blocked',
       blockedInputs: current.blockedInputs + 1,
     }));
   const recordTarget = () =>
-    setState((current) => ({
+    state.update((current) => ({
       ...current,
       lastResolution: 'Three target',
       threeClicks: current.threeClicks + 1,
       trace: [...current.trace, 'target'],
     }));
   const cyclePolicy = () =>
-    setState((current) => ({
+    state.update((current) => ({
       ...current,
       missBehavior:
         MISS_BEHAVIORS[
@@ -309,10 +309,10 @@ function ThreeInstancingExample() {
         {tiles(recordTile)}
         <Group
           onClickCapture={() =>
-            setState((current) => ({ ...current, trace: ['capture'] }))
+            state.update((current) => ({ ...current, trace: ['capture'] }))
           }
           onClick={() =>
-            setState((current) => ({
+            state.update((current) => ({
               ...current,
               trace: [...current.trace, 'bubble'],
             }))
@@ -330,12 +330,12 @@ function ThreeInstancingExample() {
           <Clip style={{ d: clip }}>
             <Group style={{ translateX: LAYER_X, translateY: LAYER_Y }}>
               <ThreeInstancingLayer
-                missBehavior={state.missBehavior}
+                missBehavior={state.get().missBehavior}
                 style={{ width: LAYER_WIDTH, height: LAYER_HEIGHT }}
                 onBlockedInstance={recordBlocked}
                 onRegisteredTarget={recordTarget}
                 onCameraChanged={() =>
-                  setState((current) => ({
+                  state.update((current) => ({
                     ...current,
                     cameraChanges: current.cameraChanges + 1,
                   }))
@@ -369,7 +369,7 @@ function ThreeInstancingExample() {
             textAlign: 'center',
           }}
         >
-          {`MISS · ${state.missBehavior}`}
+          {`MISS · ${state.get().missBehavior}`}
         </Text>
         <Text
           pointerEvents="none"
@@ -381,7 +381,7 @@ function ThreeInstancingExample() {
             textAlign: 'center',
           }}
         >
-          {`${state.lastResolution} · ${state.trace.join(' → ') || 'no trace'}`}
+          {`${state.get().lastResolution} · ${state.get().trace.join(' → ') || 'no trace'}`}
         </Text>
         <Text
           pointerEvents="none"
@@ -392,7 +392,7 @@ function ThreeInstancingExample() {
             font: '700 11px monospace',
           }}
         >
-          {`CRC ${state.tileClicks} · TARGET ${state.threeClicks} · BLOCK ${state.blockedInputs} · CAMERA ${state.cameraChanges}`}
+          {`CRC ${state.get().tileClicks} · TARGET ${state.get().threeClicks} · BLOCK ${state.get().blockedInputs} · CAMERA ${state.get().cameraChanges}`}
         </Text>
       </Group>
     </FocusManagement>

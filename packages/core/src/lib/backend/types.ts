@@ -1,11 +1,12 @@
 import type { CRCElementSource } from '../element/metadata.js';
-import type { CRCNode } from '../element/types.js';
+import type { CRCNode, CRCNodeInput } from '../element/types.js';
 import type { CRCHitTestOutput } from '../events/paint-entry.js';
 import type { CRCEventFocusOptions, CRCEventHandlers } from '../events/types.js';
 import type {
   MeasureInput,
   MeasureResult,
   NormalizedStyle,
+  PreservedSignalPropKey,
   PrimitiveProgramProps,
   ResolvedStyle,
   SpecifiedStyle,
@@ -48,7 +49,7 @@ export type CRCBackendPrimitiveProgram<
   props: Readonly<PrimitiveProgramProps<P>>,
   style: ResolvedStyle<R>,
   environment: E,
-) => CRCNode[] | CRCNode | void;
+) => CRCNodeInput | void;
 
 export interface CRCBackendPrimitiveDefinition<
   P = any,
@@ -58,6 +59,8 @@ export interface CRCBackendPrimitiveDefinition<
   E = any,
 > {
   readonly backend: CRCBackendToken;
+  readonly preserveSignalProps?: readonly PreservedSignalPropKey<P>[];
+  readonly childInput?: 'structural' | 'text';
   readonly program: CRCBackendPrimitiveProgram<P, R, E>;
   /** @internal Legacy metadata name retained for focused primitive tests. */
   readonly render: CRCBackendPrimitiveProgram<P, R, E>;
@@ -118,7 +121,7 @@ export interface CRCBackendDriver<E> {
   runPrimitive(
     frame: CRCBackendFrame<E>,
     input: CRCBackendPrimitiveInput,
-    runProgram: (invoke: () => CRCNode | void) => void,
+    runProgram: (invoke: () => CRCNodeInput | void) => void,
   ): void;
   finishFrame(frame: CRCBackendFrame<E>, success: boolean): void;
   dispose(): void;

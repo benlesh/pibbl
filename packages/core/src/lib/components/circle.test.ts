@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
 import { getCRCInstance } from '../global-state';
-import { useState } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
@@ -71,9 +71,9 @@ describe('Circle', () => {
   it('updates circle geometry', async () => {
     let move!: () => void;
     function Probe() {
-      const [cx, setCx] = useState(20);
-      move = () => setCx(80);
-      return createElement(Circle, { style: { cx, cy: 20, radius: 10, fill: 'red' } });
+      const cx = useSignal(20);
+      move = () => cx.set(80);
+      return createElement(Circle, { style: { cx: cx.get(), cy: 20, radius: 10, fill: 'red' } });
     }
     const canvas = await componentTest(createElement(Probe, {}));
 

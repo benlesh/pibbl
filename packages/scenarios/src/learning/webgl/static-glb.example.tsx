@@ -5,7 +5,7 @@ import {
   Rectangle,
   Text,
   crc,
-  useState,
+  useSignal,
   type CRCController,
 } from "@crc/core";
 import {
@@ -85,7 +85,7 @@ function StaticGLBPresentation({
   readonly selectedModel: number;
   readonly onSelectModel: (index: number) => void;
 }) {
-  const [focused, setFocused] = useState(false);
+  const focused = useSignal(false);
   const orbit = useOrbitCamera({
     orbitPoint: [0, 0.5, 0],
     initialPosition: [4, 3, 6],
@@ -133,12 +133,12 @@ function StaticGLBPresentation({
               asset={loaded.asset}
               keyboardFocusable
               style={{
-                color: focused ? "#dbeafe" : "#ffffff",
+                color: focused.get() ? "#dbeafe" : "#ffffff",
                 cursor: "pointer",
               }}
-              onClick={() => setFocused(true)}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
+              onClick={() => focused.set(true)}
+              onFocus={() => focused.set(true)}
+              onBlur={() => focused.set(false)}
             />
           ) : null}
           <Mesh
@@ -165,7 +165,7 @@ function StaticGLBPresentation({
         >
           {galleryModels[selectedModel]!.name} · KHRONOS SAMPLE · CC0
         </Text>
-        {focused ? (
+        {focused.get() ? (
           <Text
             pointerEvents="none"
             style={{
@@ -217,13 +217,13 @@ function StaticGLBPresentation({
 }
 
 function StaticGLBLesson() {
-  const [selectedModel, setSelectedModel] = useState(0);
-  const loaded = useGLTF(galleryModels[selectedModel]!.source);
+  const selectedModel = useSignal(0);
+  const loaded = useGLTF(galleryModels[selectedModel.get()]!.source);
   return (
     <StaticGLBPresentation
       loaded={loaded}
-      selectedModel={selectedModel}
-      onSelectModel={setSelectedModel}
+      selectedModel={selectedModel.get()}
+      onSelectModel={(value) => selectedModel.set(value)}
     />
   );
 }

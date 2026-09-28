@@ -127,6 +127,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/wedge.md",
   "docs/site/api/components/webgl-background.md",
   "docs/site/api/components/webgl-layer.md",
+  "docs/site/api/functions/batch.md",
   "docs/site/api/functions/crc.md",
   "docs/site/api/functions/computed.md",
   "docs/site/api/functions/create-arc-path.md",
@@ -157,6 +158,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/particle-descriptors.md",
   "docs/site/api/functions/physics-3d.md",
   "docs/site/api/functions/repeat.md",
+  "docs/site/api/functions/resolve-signal-value.md",
   "docs/site/api/functions/resolve-box.md",
   "docs/site/api/functions/resolve-length.md",
   "docs/site/api/functions/sequence.md",
@@ -169,23 +171,23 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/wait.md",
   "docs/site/api/hooks/use-animation-frame.md",
   "docs/site/api/hooks/use-canvas-context.md",
+  "docs/site/api/hooks/use-computed.md",
+  "docs/site/api/hooks/use-const.md",
   "docs/site/api/hooks/use-cursor.md",
   "docs/site/api/hooks/use-event.md",
   "docs/site/api/hooks/use-event-listener.md",
   "docs/site/api/hooks/use-event-target.md",
   "docs/site/api/hooks/use-layout-box.md",
   "docs/site/api/hooks/use-line-path.md",
-  "docs/site/api/hooks/use-memo.md",
   "docs/site/api/hooks/use-orbit-camera.md",
   "docs/site/api/hooks/use-particle-system.md",
   "docs/site/api/hooks/use-playback.md",
   "docs/site/api/hooks/use-rect-path.md",
+  "docs/site/api/hooks/use-reaction.md",
   "docs/site/api/hooks/use-ref.md",
   "docs/site/api/hooks/use-signal.md",
-  "docs/site/api/hooks/use-state.md",
   "docs/site/api/hooks/use-svg-path.md",
   "docs/site/api/hooks/use-transition.md",
-  "docs/site/api/hooks/use-when-changed.md",
   "docs/site/api/hooks/crc-physics-body-3d.md",
   "docs/site/api/hooks/crc-physics-world-3d.md",
   "docs/site/api/types/canvas-runtime.md",
@@ -195,6 +197,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/layout.md",
   "docs/site/api/types/particles.md",
   "docs/site/api/types/physics-3d.md",
+  "docs/site/api/types/signal-inputs.md",
   "docs/site/api/types/styles.md",
   "docs/site/api/types/webgl.md",
   "docs/site/learn/index.md",
@@ -239,6 +242,7 @@ const currentMarkdownPaths = [
   "docs/documentation-follow-up.md",
   "docs/follow-ups.md",
   "docs/library-status.md",
+  "docs/migrations/signals-centric-hooks.md",
   "docs/project-plans/README.md",
   "docs/project-plans/WORKFLOW.md",
   "docs/scenario-index.md",
@@ -888,7 +892,7 @@ export function assertNonJsxCoverage(source) {
     ],
     ["focus management policy", /createElement\(\s*FocusManagement,/u],
     ["keyboard navigation policy", /createElement\(\s*KeyboardNavigation,/u],
-    ["hook lifecycle", /useState\(/u],
+    ["hook lifecycle", /useSignal\(/u],
     ["root mounting", /\bcrc\(canvas,/u],
     ["mount disposal", /controller\.dispose\(\)/u],
   ]);
@@ -936,12 +940,12 @@ function stateBindings(program) {
   walkSyntax(program, (node) => {
     if (
       node.type !== "VariableDeclarator" ||
-      node.id?.type !== "ArrayPattern" ||
-      callName(node.init) !== "useState"
+      node.id?.type !== "Identifier" ||
+      callName(node.init) !== "useSignal"
     ) {
       return;
     }
-    const valueName = identifierName(node.id.elements[0]);
+    const valueName = identifierName(node.id);
     if (valueName) bindings.set(valueName, node.init.arguments[0]);
   });
   return bindings;
@@ -1060,7 +1064,7 @@ function assertNonJsxEvidence(source) {
   walkSyntax(program, (node) => {
     if (node.type === "JSXElement" || node.type === "JSXFragment")
       hasJsx = true;
-    if (callName(node) === "useWhenChanged") hasLifecycle = true;
+    if (callName(node) === "useReaction") hasLifecycle = true;
     if (callName(node) === "crc") hasMount = true;
     if (
       node.type === "CallExpression" &&
@@ -1947,7 +1951,7 @@ const requiredGuideMarkers = new Map([
   [
     "docs/site/learn/guides/signals-and-animation.md",
     [
-      "## Read signals explicitly",
+      "## Pass signals to their receivers",
       "## Event-triggered playback",
       "## One frame transaction",
       "CRC never automatically promotes components",
@@ -1955,7 +1959,7 @@ const requiredGuideMarkers = new Map([
   ],
   [
     "docs/site/learn/guides/state-and-lifecycle.md",
-    ["immediate Canvas runtime", "useWhenChanged", "## Disposal"],
+    ["immediate Canvas runtime", "useReaction", "## Identity, failure, and disposal"],
   ],
   [
     "docs/site/learn/guides/author-without-jsx.md",
@@ -1990,7 +1994,7 @@ const contractPrecisionRequirements = new Map([
       "Validate computed dependencies and collect the exact dirty",
       "Repaint planned Layer children before ancestors",
       "Finalize successful transactions, release ended runs/leases",
-      "including numeric style values",
+      "accept them\ndirectly at declared inputs",
       "CRC never automatically promotes\na stable component",
       "The official `@crc/webgl` integration is a lockstep friend",
       "CRC exposes no public scheduler clock, frame-step API,\ntrace history",
@@ -2009,7 +2013,7 @@ const contractPrecisionRequirements = new Map([
   [
     "docs/design/signals-and-scheduling-contract.md",
     [
-      "Every dependency read\nis explicit",
+      "declared reactive input positions",
       "`set(value)` always treats `value` as data, including when `T` is a function",
       "When an observed computed first becomes pending, its Plan work requests and\ncoalesces the realm host frame",
       "Signal writes are forbidden during component traversal",
@@ -2225,12 +2229,12 @@ export function assertSettledSceneDrawingApprovals(manifest) {
   assert.deepEqual(
     supplementalAdditionIds,
     ["webgl-settled-drawing-custom-geometry"],
-    "Only drawing unit c0052 may use supplemental baseline-addition approval",
+    "Only the reviewed drawing custom-geometry unit may use supplemental baseline-addition approval",
   );
   assert.deepEqual(
     additionsById.get("webgl-drawing-contract-table-preservation")?.currentIds,
-    ["c0040"],
-    "Drawing export-contract table framing must remain isolated as unit c0040",
+    ["c0041"],
+    "Drawing export-contract table framing must remain isolated as unit c0041",
   );
   assert.deepEqual(
     additionsById.get("webgl-drawing-contract-table-preservation")?.approval,
@@ -2243,8 +2247,8 @@ export function assertSettledSceneDrawingApprovals(manifest) {
   assert.deepEqual(
     additionsById.get("webgl-settled-drawing-public-surface-evidence")
       ?.currentIds,
-    ["c0044"],
-    "Drawing public-surface evidence must remain isolated as unit c0044",
+    ["c0045"],
+    "Drawing public-surface evidence must remain isolated as unit c0045",
   );
   assert.deepEqual(
     additionsById.get("webgl-settled-drawing-public-surface-evidence")
@@ -2273,7 +2277,7 @@ export function assertSettledSceneDrawingApprovals(manifest) {
       recordId: "webgl-settled-scene-rendering",
       unitIds: ["v0075"],
     },
-    "Drawing unit c0052 must retain exact declarative-extension approval",
+    "Drawing custom-geometry unit must retain exact declarative-extension approval",
   );
   assert.deepEqual(
     customGeometry?.supplementalApprovals,
@@ -2283,7 +2287,7 @@ export function assertSettledSceneDrawingApprovals(manifest) {
         unitIds: ["w0075"],
       },
     ],
-    "Drawing unit c0052 must retain exact geometry-validation supplemental approval",
+    "Drawing custom-geometry unit must retain exact geometry-validation supplemental approval",
   );
 }
 
@@ -2311,6 +2315,11 @@ export function assertTask9EvidenceMappings(manifest) {
     "A state request cannot erase it.",
     "State pending-root precedence must retain its own exact claim",
   );
+  assert.equal(
+    statePrecedence?.test.marker,
+    "does not lose a pending root replacement to a component-owned signal update",
+    "State pending-root precedence must retain component-owned signal evidence",
+  );
   const signalPrecedence = byId.get("pending-root-precedence-signal");
   assert.equal(
     signalPrecedence?.test.marker,
@@ -2322,15 +2331,15 @@ export function assertTask9EvidenceMappings(manifest) {
     ["request", "signal"],
     "Signal pending-root precedence must retain signal relevance",
   );
-  const staleStateSetter = byId.get("stale-state-setter");
+  const retainedHookSignal = byId.get("retained-hook-signal");
   assert.equal(
-    staleStateSetter?.test.marker,
-    "cannot let an exact-instance disposed mount setter update a replacement mount",
-    "Stale state-setter evidence must cover replacement mounts",
+    retainedHookSignal?.test.marker,
+    "keeps a retained hook signal usable but inert after owner removal",
+    "Retained hook-signal evidence must cover owner removal",
   );
   assert.ok(
-    staleStateSetter?.relevance.sharedAnchors.includes("instance"),
-    "Stale state-setter evidence must retain exact-instance relevance",
+    retainedHookSignal?.relevance.sharedAnchors.includes("signal"),
+    "Retained hook-signal evidence must retain signal relevance",
   );
 }
 
@@ -2355,7 +2364,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     publicPackage?.currentIds,
-    ["c0057"],
+    ["c0058"],
     "Public-package JSX translation must remain isolated from signal additions",
   );
   assert.deepEqual(
@@ -2369,20 +2378,19 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   assert.deepEqual(
     deterministicEvidence?.approval,
     {
-      id: "a0194",
-      kind: "list",
-      text: "Plain function hooks mount, update, reorder, remove, fail, and recover under the current hook contract.",
+      recordId: "signals-centric-authoring",
+      unitIds: ["c0447", "c0448", "c0503", "c0504", "c0506", "c0522"],
     },
-    "Deterministic-evidence JSX translation must retain approved unit a0194",
+    "Deterministic-evidence translation must retain exact Signals-centric approval",
   );
   assert.deepEqual(
     deterministicEvidence?.currentIds,
-    ["c0060"],
+    ["c0061"],
     "Deterministic-evidence JSX translation must remain isolated from signal additions",
   );
   assert.deepEqual(
     deterministicEvidence?.sharedAnchors,
-    ["runtime-hooks-laboratory", "presentation-neutral", "outside-render"],
+    ["tests"],
     "Deterministic-evidence JSX translation must retain its distinctive relevance anchors",
   );
 
@@ -2392,14 +2400,14 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   assert.deepEqual(
     publicSignalAddition?.approval,
     {
-      recordId: "first-class-signals-and-scheduler",
-      unitIds: ["g0061", "g0062"],
+      recordId: "signals-centric-authoring",
+      unitIds: ["c0092", "c0551", "c0552"],
     },
-    "Public signal package unit must retain bounded signal-design approval",
+    "Public signal package unit must retain bounded Signals-centric approval",
   );
   assert.deepEqual(
     publicSignalAddition?.currentIds,
-    ["c0059"],
+    ["c0060"],
     "Public signal package proof must remain a separate semantic addition",
   );
   const signalEvidenceAddition = additionsById.get(
@@ -2415,7 +2423,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     signalEvidenceAddition?.currentIds,
-    ["c0063"],
+    ["c0064"],
     "Signal evidence proof must remain a separate semantic addition",
   );
 }
@@ -2665,15 +2673,17 @@ const matrixRequirements = [
     evidence: ["runtime-hooks.example.tsx"],
   },
   {
-    topic: /Signals, computed graphs/u,
+    topic: /Signals, direct inputs, computed graphs, reactions/u,
     guides: [
       "design/signals-and-scheduling-contract.md",
       "site/learn/guides/state-and-lifecycle.md",
+      "site/api/types/signal-inputs.md",
     ],
     evidence: [
       "graph.test.ts",
-      "render-consumer.test.ts",
-      "use-signal.test.tsx",
+      "resolve-primitive-inputs.test.tsx",
+      "use-computed.test.tsx",
+      "use-reaction.test.tsx",
       "realm-scheduler.test.ts",
     ],
   },
@@ -3056,21 +3066,21 @@ export async function verifyMutationProbes() {
       ),
     "Images, inline links, reference links, definitions, and code must remain valid",
   );
-  const crcMemoApiPath = "docs/site/api/hooks/use-memo.md";
-  const brokenCrcMemoSources = new Map(currentSources);
-  const crcMemoSource = currentSources.get(crcMemoApiPath);
-  const brokenCrcMemoSource = crcMemoSource.replace(
-    'return <Path style={{ d: path, fill: "#38bdf8" }} />;',
+  const crcPathApiPath = "docs/site/api/hooks/use-rect-path.md";
+  const brokenCrcPathSources = new Map(currentSources);
+  const crcPathSource = currentSources.get(crcPathApiPath);
+  const brokenCrcPathSource = crcPathSource.replace(
+    'return <Path style={{ d: path, fill: "#2563eb" }} />;',
     "return path;",
   );
   assert.notEqual(
-    brokenCrcMemoSource,
-    crcMemoSource,
-    "useMemo component-return mutation fixture did not change",
+    brokenCrcPathSource,
+    crcPathSource,
+    "useRectPath component-return mutation fixture did not change",
   );
-  brokenCrcMemoSources.set(crcMemoApiPath, brokenCrcMemoSource);
+  brokenCrcPathSources.set(crcPathApiPath, brokenCrcPathSource);
   await rejects(
-    () => typecheckCompleteSnippets(extractApiSnippets(brokenCrcMemoSources)),
+    () => typecheckCompleteSnippets(extractApiSnippets(brokenCrcPathSources)),
     /failed typecheck/u,
   );
   const staleTrustGateUnitCount = trustGate.replace(
@@ -3231,7 +3241,7 @@ export async function verifyMutationProbes() {
   ).supplementalApprovals;
   throws(
     () => assertSettledSceneDrawingApprovals(missingDrawingGeometryApproval),
-    /c0052 may use supplemental baseline-addition approval/u,
+    /custom-geometry unit may use supplemental baseline-addition approval/u,
   );
   const incompleteDrawingSurfaceEvidence = structuredClone(
     contractPreservationBaseline,
@@ -3288,16 +3298,16 @@ export async function verifyMutationProbes() {
     () => assertTask9EvidenceMappings(missingSignalPrecedence),
     /Signal pending-root precedence requires signal-specific executable evidence/u,
   );
-  const weakenedStaleSetter = structuredClone(contractPreservationBaseline);
-  const weakenedStaleSetterMapping = weakenedStaleSetter.evidenceMappings.find(
-    ({ id }) => id === "stale-state-setter",
-  );
-  weakenedStaleSetterMapping.test.marker =
-    "ignores a stale setter after its component is removed";
-  weakenedStaleSetterMapping.relevance.sharedAnchors = ["setter", "state"];
+  const weakenedRetainedSignal = structuredClone(contractPreservationBaseline);
+  const weakenedRetainedSignalMapping =
+    weakenedRetainedSignal.evidenceMappings.find(
+      ({ id }) => id === "retained-hook-signal",
+    );
+  weakenedRetainedSignalMapping.test.marker =
+    "detaches every signal edge when a component is removed";
   throws(
-    () => assertTask9EvidenceMappings(weakenedStaleSetter),
-    /replacement mounts/u,
+    () => assertTask9EvidenceMappings(weakenedRetainedSignal),
+    /owner removal/u,
   );
   const missingPublicPackageLegacyApproval = structuredClone(
     contractPreservationBaseline,
@@ -3325,10 +3335,10 @@ export async function verifyMutationProbes() {
     () => assertMixedLegacyTask9Preservation(weakenedPublicPackageAnchors),
     /must retain its distinctive relevance anchors/u,
   );
-  const missingDeterministicLegacyApproval = structuredClone(
+  const missingDeterministicSignalsApproval = structuredClone(
     contractPreservationBaseline,
   );
-  missingDeterministicLegacyApproval.translations.find(
+  missingDeterministicSignalsApproval.translations.find(
     ({ id }) =>
       id === "design-runtime-hooks-contract-md-deterministic-evidence",
   ).approval = {
@@ -3337,8 +3347,8 @@ export async function verifyMutationProbes() {
   };
   throws(
     () =>
-      assertMixedLegacyTask9Preservation(missingDeterministicLegacyApproval),
-    /must retain approved unit a0194/u,
+      assertMixedLegacyTask9Preservation(missingDeterministicSignalsApproval),
+    /must retain exact Signals-centric approval/u,
   );
   const weakenedDeterministicAnchors = structuredClone(
     contractPreservationBaseline,
@@ -3555,7 +3565,7 @@ export async function verifyMutationProbes() {
     [
       "Text state interpolation",
       "packages/scenarios/src/learning/drawing/text.example.tsx",
-      (source) => source.replace("{accent}", '{"static"}'),
+      (source) => source.replace("      {accent.get()}", '      {"static"}'),
       /state interpolation/u,
     ],
     [
@@ -3874,11 +3884,11 @@ export async function verifyMutationProbes() {
   const hooksContract = contractPreservationBaseline.contracts.find(
     ({ path }) => path === "docs/design/runtime-hooks-contract.md",
   );
-  const memoRow = hooksContract.currentUnits.find(
+  const refRow = hooksContract.currentUnits.find(
     ({ kind, text }) =>
-      kind === "table" && text.includes("useMemo(create, deps)"),
+      kind === "table" && text.includes("useRef(init?)"),
   );
-  assert.ok(memoRow, "Hook-specific table mutation unit is missing");
+  assert.ok(refRow, "Hook-specific table mutation unit is missing");
   {
     const mutatedSources = new Map(currentSources);
     mutatedSources.set(
@@ -3886,7 +3896,7 @@ export async function verifyMutationProbes() {
       replaceContractUnit(
         currentSources.get(hooksContract.path),
         "c",
-        memoRow.id,
+        refRow.id,
         "",
       ),
     );
@@ -4065,7 +4075,7 @@ export async function verifyMutationProbes() {
         "createElement(\n      Group,",
       ),
     ],
-    ["lifecycle", nonJsx.replace("useState(", "missingState(")],
+    ["lifecycle", nonJsx.replace("useSignal(", "missingSignal(")],
     [
       "mount",
       nonJsx.replace("return crc(canvas,", "return missingMount(canvas,"),

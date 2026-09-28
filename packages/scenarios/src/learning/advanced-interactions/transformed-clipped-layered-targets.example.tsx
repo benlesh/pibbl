@@ -1,7 +1,7 @@
 import {
   Clip,
   crc,
-  useState,
+  useSignal,
   Group,
   Layer,
   Path,
@@ -47,7 +47,7 @@ function Moon(props: MoonProps) {
   ];
 }
 function ComposedTargetStudy() {
-  const [active, setActive] = useState(false);
+  const active = useSignal(false);
   const crop = new Path2D();
   crop.roundRect(0, 0, 300, 260, 58);
   return [
@@ -79,7 +79,7 @@ function ComposedTargetStudy() {
             height: 260,
           }}
         >
-          <Moon active={active} onSelect={() => setActive((value) => !value)} />
+          <Moon active={active.get()} onSelect={() => active.update((value) => !value)} />
         </Layer>
       </Clip>
     </Group>,
@@ -92,7 +92,7 @@ function ComposedTargetStudy() {
         textAlign: "center",
       }}
     >
-      {active ? "COMPOSED TARGET!" : "CLICK THE VISIBLE MOON"}
+      {active.get() ? "COMPOSED TARGET!" : "CLICK THE VISIBLE MOON"}
     </Text>,
   ];
 }

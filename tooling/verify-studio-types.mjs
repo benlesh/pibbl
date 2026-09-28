@@ -92,6 +92,10 @@ const removedAuthoringImports = [
   [['Img', 'Props'], 'RemovedImageFactoryProps'],
   [['G', 'Props'], 'RemovedGroupFactoryProps'],
   [['Comp', 'Refs'], 'RemovedComponentRefsType'],
+  [['use', 'State'], 'RemovedStateHook'],
+  [['State', 'Updater'], 'RemovedStateUpdater'],
+  [['use', 'Memo'], 'RemovedMemoHook'],
+  [['use', 'When', 'Changed'], 'RemovedWhenChangedHook'],
 ]
   .map(
     ([parts, alias]) =>
@@ -431,6 +435,7 @@ const publicTypeExports = [
   'CRCMouseEvent',
   'CRCMouseEventListener',
   'CRCNode',
+  'CRCNodeInput',
   'CRCOpacityFilter',
   'CRCPixelRatio',
   'CRCPointerEvent',
@@ -441,6 +446,7 @@ const publicTypeExports = [
   'CRCPlaybackOptions',
   'CRCPlaybackStatus',
   'CRCPrimitiveComponent',
+  'CRCReactionOptions',
   'CRCResponsiveViewportConfig',
   'CRCSpringOptions',
   'CRCSpringTransitionOptions',
@@ -462,6 +468,7 @@ const publicTypeExports = [
   'CRCRenderLayerTarget',
   'CRCRenderResult',
   'CRCTextChild',
+  'CRCTextInput',
   'CRCTouchEvent',
   'CRCTweenOptions',
   'CRCTweenTransitionOptions',
@@ -534,9 +541,9 @@ const publicTypeExports = [
   'Signal',
   'SignalEquals',
   'SignalOptions',
+  'SignalValue',
   'Size',
   'SpecifiedStyle',
-  'StateUpdater',
   'StrokeStyle',
   'StarPathOptions',
   'StarProps',
@@ -557,8 +564,8 @@ const publicTypeExports = [
   'WritableSignal',
 ].sort();
 
-if (publicTypeExports.length !== 188) {
-  throw new Error(`CRC Studio must declare exactly 188 core public types, received ${publicTypeExports.length}.`);
+if (publicTypeExports.length !== 191) {
+  throw new Error(`CRC Studio must declare exactly 191 core public types, received ${publicTypeExports.length}.`);
 }
 
 const publicWebGLTypeExports = [
@@ -899,21 +906,23 @@ import * as CRC_WEBGL_ROOT from '@crc/webgl';
 import { useGLTF, type CRCGLTFSource, type CRCWebGLAssetLoadResult } from '@crc/webgl/gltf';
 import {
   Absolute,
+  batch,
   Clip,
   computed,
   crc,
   useCanvasContext,
+  useComputed,
+  useConst,
   useCursor,
   useEvent,
   useEventListener,
   useEventTarget,
   useLinePath,
-  useMemo,
   usePlayback,
+  useReaction,
   useRectPath,
   useSignal,
   useTransition,
-  useWhenChanged,
   createElement,
   defineAnimation,
   definePrimitive,
@@ -943,6 +952,7 @@ import {
   repeat,
   resolveBox,
   resolveLength,
+  resolveSignalValue,
   signal,
   sequence,
   spring,
@@ -972,10 +982,12 @@ import {
   type CRCLogicalMouseEvent,
   type CRCMouseEvent,
   type CRCNode,
+  type CRCNodeInput,
   type CRCPlayback,
   type CRCPixelRatio,
   type CRCPointerEvent,
   type CRCPointerEvents,
+  type CRCReactionOptions,
   type CRCEventParticipationOptions,
   type CRCEventTargetSnapshot,
   type CRCFilter,
@@ -1002,6 +1014,7 @@ import {
   type Signal,
   type SignalEquals,
   type SignalOptions,
+  type SignalValue,
   type SystemStyle,
   type WritableSignal,
   untracked,
@@ -1069,7 +1082,7 @@ type Equal<A, B> =
 type Assert<T extends true> = T;
 
 type StudioSignatureParity = [
-  Assert<Equal<typeof Fragment, (props: { children?: CRCNode }) => CRCNode>>,
+  Assert<Equal<typeof Fragment, (props: { children?: CRCNodeInput }) => CRCNodeInput>>,
   Assert<Equal<typeof FocusManagement, CRCComponent<FocusManagementProps>>>,
   Assert<Equal<typeof KeyboardNavigation, CRCComponent<KeyboardNavigationProps>>>,
   Assert<Equal<LineStyle['coords'], [number, number][]>>,
@@ -1081,7 +1094,7 @@ type StudioSignatureParity = [
   >,
   Assert<Equal<PolygonStyle['cornerRadius'], Exclude<Length, 'auto'> | undefined>>,
   Assert<Equal<PolygonStyle['cornerRadii'], readonly (Exclude<Length, 'auto'> | null | undefined)[] | undefined>>,
-  Assert<Equal<typeof useMemo, <T>(create: () => T, deps: any[]) => T>>,
+  Assert<Equal<typeof batch, <T>(callback: () => T) => T>>,
   Assert<Equal<
     typeof signal,
     <T>(initialValue: T, options?: SignalOptions<T>) => WritableSignal<T>
@@ -1092,13 +1105,19 @@ type StudioSignatureParity = [
   >>,
   Assert<Equal<typeof untracked, <T>(callback: () => T) => T>>,
   Assert<Equal<typeof isSignal, (value: unknown) => value is Signal<unknown>>>,
+  Assert<Equal<typeof resolveSignalValue, <T>(value: SignalValue<T>) => T>>,
+  Assert<Equal<typeof useConst, <T>(create: () => T) => T>>,
+  Assert<Equal<
+    typeof useComputed,
+    <T>(compute: () => T, dependencies?: readonly unknown[], options?: SignalOptions<T>) => Signal<T>
+  >>,
   Assert<Equal<
     typeof useSignal,
     <T>(initialValue: T, options?: SignalOptions<T>) => WritableSignal<T>
   >>,
   Assert<Equal<
-    typeof useWhenChanged,
-    (callback: () => (() => void) | void, deps?: any[]) => void
+    typeof useReaction,
+    (setup: () => (() => void) | void, dependencies?: readonly unknown[], options?: CRCReactionOptions) => void
   >>,
   Assert<Equal<
     typeof useCursor,
@@ -1334,7 +1353,7 @@ type StudioWebGLTypes = [
 ];
 void (null as unknown as StudioWebGLTypes);
 
-const fragmentResult: CRCNode = Fragment({ children: false });
+const fragmentResult: CRCNodeInput = Fragment({ children: false });
 void fragmentResult;
 void (null as unknown as CRCInternalFrame);
 
@@ -1556,7 +1575,7 @@ const readonlyLineCoordinates = [[0, 0], [40, 20]] as const;
 const readonlyLineStyle: LineStyle = { coords: readonlyLineCoordinates };
 void readonlyLineStyle;
 
-useWhenChanged(() => undefined);
+useReaction(() => undefined);
 useCursor({});
 useLinePath(mutableLineCoordinates, { closePath: true });
 // @ts-expect-error line-path configuration is an object, not a boolean flag
@@ -2190,24 +2209,25 @@ try {
     'useAnimationFrame',
     'useOrbitCamera',
     'useGLTF',
+    'batch',
     'computed',
     'crc',
     'useCanvasContext',
+    'useComputed',
+    'useConst',
     'useCursor',
     'useEvent',
     'useEventListener',
     'useEventTarget',
     'useLayoutBox',
     'useLinePath',
-    'useMemo',
     'usePlayback',
+    'useReaction',
     'useRectPath',
     'useRef',
     'useSignal',
-    'useState',
     'useSvgPath',
     'useTransition',
-    'useWhenChanged',
     'createArcPath',
     'createCirclePath',
     'createElement',
@@ -2249,6 +2269,7 @@ try {
     'repeat',
     'resolveBox',
     'resolveLength',
+    'resolveSignalValue',
     'signal',
     'sequence',
     'spring',
@@ -2258,9 +2279,9 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 204) {
+  if (expectedStudioRuntimeExports.length !== 206) {
     throw new Error(
-      `CRC Studio runtime must expose 78 core values, 46 physics 2D values, 48 physics 3D values, 1 Three adapter value, 1 sandbox module registry, 15 WebGL values, 1 GLB loader value, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
+      `CRC Studio runtime must expose 80 core values, 46 physics 2D values, 48 physics 3D values, 1 Three adapter value, 1 sandbox module registry, 15 WebGL values, 1 GLB loader value, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
     );
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {

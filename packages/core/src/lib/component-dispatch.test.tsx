@@ -11,12 +11,13 @@ import { useEventTarget } from './hooks/use-event-target.js';
 import { useEvent } from './hooks/use-event.js';
 import { useLayoutBox } from './hooks/use-layout-box.js';
 import { useLinePath } from './hooks/use-line-path.js';
-import { useMemo } from './hooks/use-memo.js';
+import { useComputed } from './hooks/use-computed.js';
 import { useRectPath } from './hooks/use-rect-path.js';
 import { useRef } from './hooks/use-ref.js';
-import { useState, type StateUpdater } from './hooks/use-state.js';
+import { useSignal } from './hooks/use-signal.js';
+import type { WritableSignal } from './signals/types.js';
 import { useSvgPath } from './hooks/use-svg-path.js';
-import { useWhenChanged } from './hooks/use-when-changed.js';
+import { useReaction } from './hooks/use-reaction.js';
 import {
   placeAbsoluteChild,
   placeDirectChildren,
@@ -79,19 +80,19 @@ describe('plain function component dispatch', () => {
     const memoValues: object[] = [];
     const refs: object[] = [];
     const paths: Path2D[][] = [];
-    let updateState: StateUpdater<number> | undefined;
+    let updateState: WritableSignal<number> | undefined;
 
     function HookProbe(props: { revision: number; children: CRCNode }): CRCNode {
       argumentCounts.push(arguments.length);
       expect(Object.isFrozen(props)).toBe(import.meta.env.DEV);
       expect(Object.prototype.hasOwnProperty.call(props, 'key')).toBe(false);
       expect((props.children as { type?: unknown }).type).toBe(LeafProbe);
-      const [state, setState] = useState(0);
-      updateState = setState;
-      states.push(state);
-      memoValues.push(useMemo(() => ({}), [props.revision]));
+      const state = useSignal(0);
+      updateState = state;
+      states.push(state.get());
+      memoValues.push(useComputed(() => ({}), [props.revision]).get());
       refs.push(useRef({}).current!);
-      useWhenChanged(() => cleanups, [props.revision]);
+      useReaction(() => cleanups, [props.revision]);
       const rectPath = useRectPath(0, 0, 10, 10);
       const linePath = useLinePath([[0, 0], [10, 10]]);
       const svgPath = useSvgPath('M0 0h10v10z');
@@ -115,7 +116,7 @@ describe('plain function component dispatch', () => {
     ));
     await nextFrame();
 
-    updateState?.(1);
+    updateState?.set(1);
     await nextFrame();
 
     expect(argumentCounts).toEqual([1, 1]);
@@ -130,10 +131,10 @@ describe('plain function component dispatch', () => {
     const hookProbeRefs = Array.from(getCRCInstance(canvas).refs.values())
       .find(ref => ref.element.type === HookProbe)!;
     expect(hookProbeRefs.hooks.map(hook => hook.kind)).toEqual([
-      'state',
-      'memo',
+      'signal',
+      'computed',
       'ref',
-      'whenChanged',
+      'reaction',
       'rectPath',
       'linePath',
       'svgPath',
@@ -142,6 +143,7 @@ describe('plain function component dispatch', () => {
       'eventListener',
       'cursor',
     ]);
+    expect(hookProbeRefs.signalConsumer).toBeDefined();
 
     controller.dispose();
     expect(cleanups).toHaveBeenCalledOnce();
@@ -178,7 +180,7 @@ describe('plain function component dispatch', () => {
   it('fails closed and remounts a plain function after an explicit recovery render', async () => {
     const cleanups = vi.fn();
     function Failing({ fail }: { fail: boolean }): void {
-      useWhenChanged(() => cleanups, []);
+      useReaction(() => cleanups, []);
       if (fail) throw new Error('plain failure');
     }
 

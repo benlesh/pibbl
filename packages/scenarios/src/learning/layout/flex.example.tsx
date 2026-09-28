@@ -1,7 +1,7 @@
 import {
   crc,
   useLayoutBox,
-  useState,
+  useSignal,
   Flex,
   Rectangle,
   Text,
@@ -35,7 +35,7 @@ function FlexCard({ onSelect, side, style: _specifiedStyle }: FlexCardProps) {
 }
 
 function FlexStudy() {
-  const [active, setActive] = useState<"left" | "right">("left");
+  const active = useSignal<"left" | "right">("left");
   return [
     <Rectangle
       style={{
@@ -56,14 +56,14 @@ function FlexStudy() {
       {(["left", "right"] as const).map((side) => (
         <FlexCard
           key={side}
-          onSelect={() => setActive(side)}
+          onSelect={() => active.set(side)}
           side={side}
           style={{
             width: 170,
-            height: active === side ? 190 : 140,
+            height: active.get() === side ? 190 : 140,
             minWidth: 90,
             flexBasis: 170,
-            flexGrow: active === side ? 2 : 1,
+            flexGrow: active.get() === side ? 2 : 1,
             flexShrink: 1,
           }}
         />

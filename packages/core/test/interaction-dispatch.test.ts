@@ -22,8 +22,9 @@ import {
   updateLegacyTarget,
 } from '../src/lib/events/registrations';
 import { dispatchToLogicalTarget } from '../src/lib/events/dispatch';
-import { Overlay, Rectangle } from '../src/index';
+import { Group, Overlay, Rectangle, signal } from '../src/index';
 import { createElement } from '../src/lib/element/create-element';
+import { getSignalNode } from '../src/lib/signals/graph';
 
 const activeInstances = new Set<CRCInstance>();
 const activeScenarioControllers = new Set<
@@ -197,6 +198,41 @@ function dispatchDrag(
 }
 
 describe('interaction dispatcher mutation contract', () => {
+  it('batches capture, target, and bubble signal writes as one dispatch', () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 60;
+    document.body.replaceChildren(canvas);
+    const value = signal(0);
+    const observations: number[] = [];
+    const phases: string[] = [];
+    getSignalNode(value).observers.add(() => observations.push(value.get()));
+    const write = (phase: string, next: number) => () => {
+      phases.push(phase);
+      value.set(next);
+      expect(observations).toEqual([]);
+    };
+    mountCRC(canvas, createElement(Group, {
+      onClickCapture: write('capture', 1),
+      onClick: write('bubble', 4),
+      children: createElement(Rectangle, {
+        style: { width: 100, height: 60, fill: '#2563eb' },
+        onClickCapture: write('target-capture', 2),
+        onClick: write('target', 3),
+      }),
+    }));
+    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    activeInstances.add(instance);
+    executeRender(canvas, 1);
+
+    dispatchMouse(canvas, 'mousedown', 20, 20);
+    dispatchMouse(canvas, 'mouseup', 20, 20);
+    dispatchMouse(canvas, 'click', 20, 20);
+
+    expect(phases).toEqual(['capture', 'target-capture', 'target', 'bubble']);
+    expect(observations).toEqual([4]);
+  });
+
   it('lets later default painted content occlude a registered target', () => {
     const canvas = document.createElement('canvas');
     canvas.width = 100;

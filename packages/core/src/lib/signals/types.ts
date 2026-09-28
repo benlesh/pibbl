@@ -12,6 +12,8 @@ export interface Signal<T> {
   get(): T;
 }
 
+export type SignalValue<T> = T | Signal<T>;
+
 export interface WritableSignal<T> extends Signal<T> {
   set(value: T): void;
   update(update: (current: T) => T): void;

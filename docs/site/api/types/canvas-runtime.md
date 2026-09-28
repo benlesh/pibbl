@@ -27,6 +27,7 @@ symbols:
     CRCPlaybackEvent,
     CRCPlaybackOptions,
     CRCPlaybackStatus,
+    CRCReactionOptions,
     CRCRef,
     CRCRenderLayerComponentProps,
     CRCRenderLayerContext,
@@ -50,7 +51,6 @@ symbols:
     Signal,
     SignalEquals,
     SignalOptions,
-    StateUpdater,
     WritableSignal,
   ]
 keywords: [canvas, viewport, controller, signals, animation, playback, runtime]
@@ -155,6 +155,11 @@ milestone delivery, and isolated error handling.
 
 `CRCPlaybackStatus` is `idle`, `scheduled`, `running`, `paused`, `finished`,
 `cancelled`, or `disposed`.
+
+## CRCReactionOptions
+
+`CRCReactionOptions` accepts an optional debug name for a component-owned
+`useReaction` lifecycle.
 
 ## CRCRef
 
@@ -271,12 +276,6 @@ duration, equality, optional initial value, easing, and interpolation.
 ## SignalOptions
 
 `SignalOptions<T>` accepts an optional equality function and debug name.
-
-## StateUpdater
-
-`StateUpdater<T>` is the setter returned by `useState`: it accepts a next value
-or updater function. A valid update schedules CRC's coalesced animation-frame
-render; stale setters safely do nothing after teardown.
 
 ## WritableSignal
 

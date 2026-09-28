@@ -11,11 +11,14 @@ import type {
   CRCHueRotateFilter,
   CRCInvertFilter,
   CRCNode,
+  CRCNodeInput,
   CRCOpacityFilter,
   CRCSaturateFilter,
   CRCSepiaFilter,
   CRCTextChild,
+  CRCTextInput,
   Signal,
+  SignalValue,
   SystemStyle,
 } from '@crc/core';
 import {
@@ -24,6 +27,7 @@ import {
   Flow,
   Grid,
   Group,
+  Path,
   Overlay,
   RegularPolygon,
   Rectangle,
@@ -32,6 +36,8 @@ import {
   computed,
   createElement,
   crc,
+  resolveSignalValue,
+  useComputed,
   usePlayback,
   useSignal,
   useTransition,
@@ -117,6 +123,18 @@ const jsxCount = signal(2);
 const jsxDoubled: Signal<number> = computed(() => jsxCount.get() * 2);
 const jsxCallback = signal<() => string>(() => 'ready');
 jsxCallback.set(() => 'updated');
+const jsxLabel = signal('Current');
+const jsxSelectedNode = signal<CRCNode>(
+  <Rectangle style={{ width: 10, height: 10 }} />,
+);
+const jsxNodeInput: CRCNodeInput = jsxSelectedNode;
+const jsxTextInput: CRCTextInput = ['Label: ', jsxLabel];
+export const signalChildInputs = (
+  <Group>
+    {jsxNodeInput}
+    <Text>{jsxTextInput}</Text>
+  </Group>
+);
 
 function SignalLabel(): CRCNode {
   const suffix = useSignal('signals');
@@ -137,6 +155,65 @@ void (<ImportedModelStatus />);
 
 export const signalElement: CRCElement = <SignalLabel />;
 void isSignal(jsxCallback.asReadonly());
+
+interface Datum {
+  readonly x: number;
+  readonly y: number;
+  readonly metadata?: unknown;
+}
+
+function buildPath(rows: readonly Datum[]): Path2D {
+  const path = new Path2D();
+  rows.forEach((row, index) => {
+    if (index === 0) path.moveTo(row.x, row.y);
+    else path.lineTo(row.x, row.y);
+  });
+  return path;
+}
+
+function LineSeries(props: {
+  readonly data: SignalValue<readonly Datum[]>;
+}): CRCNode {
+  const rows = resolveSignalValue(props.data);
+  return <Path style={{ d: buildPath(rows), stroke: 'black', strokeWidth: 1 }} />;
+}
+
+function Axis(props: {
+  readonly domain: SignalValue<readonly [number, number]>;
+}): CRCNode {
+  const domain = resolveSignalValue(props.domain);
+  return <Text>{`${domain[0]}–${domain[1]}`}</Text>;
+}
+
+const visualizationRows = signal<readonly Datum[]>([
+  { x: 0, y: 2, metadata: { hiddenSignal: signal('opaque') } },
+  { x: 10, y: 8 },
+]);
+
+function VisualizationContract(): CRCNode {
+  const domain = useComputed(
+    () => {
+      const rows = visualizationRows.get();
+      return [
+        Math.min(...rows.map(row => row.x)),
+        Math.max(...rows.map(row => row.x)),
+      ] as const;
+    },
+    undefined,
+    {
+      equals: (previous, next) =>
+        previous[0] === next[0] && previous[1] === next[1],
+    },
+  );
+  return (
+    <Group>
+      <LineSeries data={visualizationRows} />
+      <Axis domain={domain} />
+    </Group>
+  );
+}
+
+export const visualizationSignalInputs: CRCElement = <VisualizationContract />;
 
 function AnimatedLabel(): CRCNode {
   const x = useSignal(0);
@@ -510,13 +587,15 @@ const automaticParticleEffect3D = defineParticleEffect3D({
     bounds: { min: [-2, -1, -2], max: [2, 3, 2] },
   }],
 });
+const automaticParticleEffect2DSignal = signal(automaticParticleEffect2D);
+const automaticParticleEffect3DSignal = signal(automaticParticleEffect3D);
 
 export const automaticParticleScene: CRCElement = (
   <Group>
     <Particles2D
-      effect={automaticParticleEffect2D}
-      autoplay
-      seed={42}
+      effect={automaticParticleEffect2DSignal}
+      autoplay={signal(true)}
+      seed={signal(42)}
       pointerEvents="none"
       style={{ width: 100, height: 100 }}
     />
@@ -533,9 +612,9 @@ export const automaticParticleScene: CRCElement = (
       style={{ width: 100, height: 100 }}
     >
       <Particles3D
-        effect={automaticParticleEffect3D}
-        autoplay
-        seed={42}
+        effect={automaticParticleEffect3DSignal}
+        autoplay={signal(true)}
+        seed={signal(42)}
         pointerEvents="none"
       />
     </WebGLLayer>
@@ -543,9 +622,12 @@ export const automaticParticleScene: CRCElement = (
 );
 
 const jsxPhysicsShape3D = sphereShape3D({ radius: 0.5 });
+const jsxPhysicsGravity3D = signal<readonly [number, number, number]>(
+  [0, -9.81, 0],
+);
 export const automaticPhysics3DScene: CRCElement = (
   <WebGLLayer style={{ width: 320, height: 180 }}>
-    <PhysicsWorld3D gravity={[0, -9.81, 0]}>
+    <PhysicsWorld3D gravity={jsxPhysicsGravity3D} sleeping={signal(true)}>
       <Group3D physics={staticBody3D({ collider: false })}>
         <Cube physics={collider3D()} style={{ lit: false }} />
       </Group3D>
@@ -555,8 +637,8 @@ export const automaticPhysics3DScene: CRCElement = (
         physics={kinematicBody3D()}
         style={{ lit: false }}
       />
-      <PhysicsShape3D shape={jsxPhysicsShape3D} />
-      <Box3D width={1} height={1} depth={1} />
+      <PhysicsShape3D shape={signal(jsxPhysicsShape3D)} />
+      <Box3D width={signal(1)} height={signal(1)} depth={signal(1)} />
       <Ellipsoid3D radii={[1, 2, 1]} />
       <Capsule3D start={[0, -1, 0]} end={[0, 1, 0]} radius={0.5} />
       <Cylinder3D radius={1} halfHeight={1} />

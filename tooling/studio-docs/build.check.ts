@@ -658,8 +658,8 @@ assert.equal(
   "#/api/functions/create-circle-path",
 );
 assert.equal(
-  runtimeCoverage.values.useWhenChanged?.route,
-  "#/api/hooks/use-when-changed",
+  runtimeCoverage.values.useReaction?.route,
+  "#/api/hooks/use-reaction",
 );
 assert.deepEqual(runtimeCoverage.duplicateValues, []);
 assert.deepEqual(runtimeCoverage.missingValues, []);
@@ -681,6 +681,7 @@ const typeDomains = [
   "filters",
   "layout",
   "particles",
+  "signal-inputs",
   "styles",
   "webgl",
 ] as const;

@@ -10,7 +10,7 @@ import {
 } from '../global-state.js';
 import { mountCRC } from '../mount-crc.js';
 import {
-  CRCNode,
+  CRCNodeInput,
   CRCInteractionLayer,
   RenderingContext2D,
   SystemStyle,
@@ -46,7 +46,7 @@ import {
 } from './structural-events.js';
 
 export interface LayerProps extends CRCStructuralEventProps {
-  children: CRCNode;
+  children: CRCNodeInput;
 }
 
 export interface LayerStyle extends SystemStyle, BoxStyle, LayoutItemStyle {}
@@ -199,6 +199,7 @@ export const Layer = definePrimitive<
   LayerStyle,
   ResolvedLayerStyle
 >(renderLayer, {
+  childInput: 'structural',
   resolveStyle: resolveLayerStyle,
 });
 

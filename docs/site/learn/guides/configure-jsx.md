@@ -137,7 +137,7 @@ import {
   Rectangle,
   Text,
   crc,
-  useState,
+  useSignal,
   type CRCController,
   type CRCNode,
 } from "@crc/core";
@@ -147,14 +147,14 @@ interface PosterProps {
 }
 
 function Poster({ initialMessage }: PosterProps): CRCNode {
-  const [message, setMessage] = useState(initialMessage);
+  const message = useSignal(initialMessage);
 
   return (
     <Group>
       <Rectangle
         style={{ width: 400, height: 240, fill: "#1f4bd8", cursor: "pointer" }}
         onClick={() =>
-          setMessage((old) => (old === "Hello" ? "CRC!" : "Hello"))
+          message.update((old) => (old === "Hello" ? "CRC!" : "Hello"))
         }
       />
       <Text

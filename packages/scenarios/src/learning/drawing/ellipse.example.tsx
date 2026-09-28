@@ -1,7 +1,7 @@
-import { crc, useState, Ellipse, Rectangle, type CRCController } from "@crc/core";
+import { crc, useSignal, Ellipse, Rectangle, type CRCController } from "@crc/core";
 
 function EllipseStudy() {
-  const [active, setActive] = useState(false);
+  const active = useSignal(false);
 
   return [
     <Rectangle
@@ -14,12 +14,12 @@ function EllipseStudy() {
         radiusX: 154,
         radiusY: 78,
         rotation: -0.22,
-        fill: active ? "#f7c948" : "#1f4bd8",
+        fill: active.get() ? "#f7c948" : "#1f4bd8",
         stroke: "#17211d",
         strokeWidth: 6,
         cursor: "pointer",
       }}
-      onClick={() => setActive((value) => !value)}
+      onClick={() => active.update((value) => !value)}
     />,
   ];
 }

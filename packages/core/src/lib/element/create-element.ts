@@ -1,6 +1,7 @@
 import {
   copyElementCloneMetadata,
   getElementMetadata,
+  getPrimitiveDefinition,
   setElementMetadata,
   type CRCElementSource,
 } from './metadata.js';
@@ -65,10 +66,24 @@ export function createCRCElement<P>(
     undefined;
   const rawKey = compilerKey === undefined ? defensiveKey : compilerKey;
   const { key: _key, ...props } = rawProps;
+  const primitiveProgramProps = getPrimitiveDefinition(type) === undefined ?
+    undefined :
+    preparePrimitiveProgramProps(props);
   const normalizedKey = rawKey === undefined || rawKey === null ?
     undefined :
     String(rawKey);
-  return finalizeCRCElement(type, props as P, normalizedKey, { source });
+  return finalizeCRCElement(type, props as P, normalizedKey, {
+    source,
+    primitiveProgramProps,
+  });
+}
+
+function preparePrimitiveProgramProps(
+  props: Readonly<ElementProps>,
+): Readonly<ElementProps> {
+  if (!Object.prototype.hasOwnProperty.call(props, 'style')) return props;
+  const { style: _style, ...programProps } = props;
+  return programProps;
 }
 
 function finalizeCRCElement<P>(

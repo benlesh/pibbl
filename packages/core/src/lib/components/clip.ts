@@ -1,5 +1,5 @@
 import { definePrimitive } from '../define-primitive.js';
-import { CRCNode, SystemStyle } from '../types.js';
+import { CRCNodeInput, SystemStyle } from '../types.js';
 import { setPrimitivePresentation } from '../primitive-presentation.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import {
@@ -13,7 +13,7 @@ import type {
 } from '../style/types.js';
 
 export interface ClipProps extends CRCStructuralEventProps {
-  children: CRCNode;
+  children: CRCNodeInput;
 }
 
 export interface ClipStyle extends SystemStyle, BoxStyle, LayoutItemStyle {
@@ -37,6 +37,7 @@ export const Clip = definePrimitive<
   ClipStyle,
   ResolvedClipStyle
 >(renderClip, {
+  childInput: 'structural',
   resolveStyle: style => stripLayoutParticipation(style) as ResolvedClipStyle,
 });
 

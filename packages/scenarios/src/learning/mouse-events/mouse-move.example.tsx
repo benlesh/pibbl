@@ -1,6 +1,6 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function MouseMoveStudy() {
-  const [trail, setTrail] = useState<readonly [number, number][]>([]);
+  const trail = useSignal<readonly [number, number][]>([]);
   return [
     <Rectangle
       style={{
@@ -21,18 +21,18 @@ function MouseMoveStudy() {
         cursor: "crosshair",
       }}
       onMouseMove={(event) =>
-        setTrail((points) => [...points.slice(-17), [event.x, event.y]])
+        trail.update((points) => [...points.slice(-17), [event.x, event.y]])
       }
     />,
-    ...trail.map(([x, y], index) => (
+    ...trail.get().map(([x, y], index) => (
       <Rectangle
         style={{
           x: x - 5,
           y: y - 5,
           width: 10,
           height: 10,
-          fill: index === trail.length - 1 ? "#f7c948" : "#74d3ae",
-          opacity: (index + 3) / (trail.length + 2),
+          fill: index === trail.get().length - 1 ? "#f7c948" : "#74d3ae",
+          opacity: (index + 3) / (trail.get().length + 2),
         }}
       />
     )),
@@ -45,8 +45,8 @@ function MouseMoveStudy() {
         textAlign: "center",
       }}
     >
-      {trail.length
-        ? `${Math.round(trail.at(-1)![0])}, ${Math.round(trail.at(-1)![1])}`
+      {trail.get().length
+        ? `${Math.round(trail.get().at(-1)![0])}, ${Math.round(trail.get().at(-1)![1])}`
         : "MOVE INSIDE THE FIELD"}
     </Text>,
   ];

@@ -57,6 +57,27 @@ Plain functions receive their specified `style` in props. A layout parent may
 inspect a direct child's style but never substitutes its finite allocation into
 those props; the component reads that through `useLayoutBox()`.
 
+## Signal-valued style resolution
+
+Every public primitive input maps its declared program props and style fields
+to `SignalValue<T>`. The entire `style` may also be a signal. Primitive dispatch
+resolves a whole-style signal once, then shallowly resolves its declared direct
+fields. A whole style resolving to `undefined` is omitted. A whole style
+resolving to an object that contains signal fields resolves those fields in the
+same receiving primitive generation.
+
+The receiver owns all resulting signal edges. Passing `.get()` instead makes
+the enclosing component the consumer. Shared sources deduplicate to one edge
+per receiver generation. Plain fields use the direct value, and CRC creates a
+shallow resolved-style copy only after the first actual signal field is found.
+
+Resolution is not recursive. `style.custom` is always opaque, and signals
+inside arbitrary arrays, application objects, callbacks, datasets, or nested
+descriptors are not discovered. A closed CRC descriptor may opt individual
+fields into `SignalValue` explicitly; that schema, rather than generic object
+walking, defines resolution. A signal returned by another signal remains a
+signal value after the one declared read.
+
 Platform components defined with `definePrimitive` have three immutable stages:
 
 1. **Specified:** exact author input in the element props.

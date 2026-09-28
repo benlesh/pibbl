@@ -46,6 +46,28 @@ The function is the component identity. Call it through JSX or
 `createElement`; a direct JavaScript call does not create a CRC element or
 establish render context.
 
+To let the receiving custom component own a reactive input, declare
+`SignalValue<T>` and resolve it at that boundary:
+
+```tsx
+import { resolveSignalValue, type SignalValue } from "@crc/core";
+
+interface SparklineDataProps {
+  data: SignalValue<readonly number[]>;
+}
+
+function SparklineData({ data }: SparklineDataProps): CRCNode {
+  const values = resolveSignalValue(data);
+  return <Sparkline points={values} />;
+}
+```
+
+Resolve only fields your API declares as signal-valued. Do not recursively walk
+datasets, arbitrary descriptors, callbacks, or metadata looking for signals.
+Callbacks are values and are never invoked by resolution. If the API requires a
+signal object for later imperative use, type that prop as `Signal<T>` or
+`WritableSignal<T>` rather than `SignalValue<T>`.
+
 ## Direct Canvas painting
 
 `useCanvasContext()` returns the current isolated Canvas 2D context during a
@@ -179,6 +201,10 @@ export const Gauge = definePrimitive<
 
 The four generic stages are program props, specified style, normalized style,
 and resolved style. Program props cannot declare reserved `key` or `style`.
+The public primitive input type maps declared program and style leaves to
+signal-valued inputs. Render, normalization, and measurement callbacks receive
+resolved values, not signal wrappers. Pure standalone measurement resolves
+untracked and never creates a persistent graph consumer.
 When a specified style admits percentages or `auto`, a resolver is required,
 and the resolved type cannot retain allocation syntax. The render callback
 receives only program props, the finite resolved style, and the isolated Canvas

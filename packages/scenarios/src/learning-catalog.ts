@@ -161,8 +161,8 @@ const drafts = [
       "Text",
       "FocusManagement",
       "KeyboardNavigation",
-      "useState",
-      "useWhenChanged",
+      "useSignal",
+      "useReaction",
     ],
     objectives: [
       "Use createElement(type, props, ...children) for fragments, keyed dynamic lists, components, and textual zero/state interpolation.",
@@ -188,11 +188,11 @@ const drafts = [
     section: "start",
     order: 17,
     summary:
-      "Read writable and computed values explicitly, then update a shared signal without turning styles into bindings.",
+      "Pass writable and computed values directly to CRC inputs so each receiving component owns its dependency.",
     api: ["signal", "computed", "useSignal"],
     objectives: [
-      "Use .get() during a component render to declare the values that should refresh it.",
-      "Update writable signals from an event and derive a normal resolved value with computed().",
+      "Pass signals directly into style fields and textual children without manually unwrapping them.",
+      "Update writable signals from an event and derive an equality-aware value with computed().",
     ],
     prompts: {
       gesture:
@@ -200,8 +200,8 @@ const drafts = [
       code: "Change the x update or derive another label from the shared writable signal.",
     },
     apiNotes: [
-      "Calling .get() is the explicit dependency declaration; a changed write schedules one future CRC frame.",
-      "The style object contains ordinary resolved values, and a module-level signal can be shared independently of any mount.",
+      "A CRC-provided receiver resolves a signal at its declared input boundary and owns the resulting dependency.",
+      "Calling .get() remains valid when the enclosing component intentionally wants to become the consumer.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["getting-started", "layer", "create-element-authoring"],
@@ -625,7 +625,7 @@ const drafts = [
       code: "Change the hexagon's inradius or sides, then compare the clipped region.",
     },
     apiNotes: [
-      "`useMemo` keeps the created hexagon path stable while its dependencies are unchanged.",
+      "`useConst` creates the reusable hexagon path once for the mounted component.",
       "`createRegularPolygonPath` uses sides, center coordinates, and exactly one size mode such as inradius.",
       "Nested clips intersect, matching Canvas clipping behavior.",
       "Clip receives children directly, and both paint and targeting are constrained by its active path.",
@@ -718,11 +718,44 @@ const drafts = [
     load: () => import("./learning/composition/webgl-islands.example"),
   },
   {
+    slug: "signal-inputs",
+    title: "Signal inputs",
+    shortTitle: "Signal inputs",
+    section: "composition",
+    order: 118,
+    summary:
+      "Pass signals directly to geometry, paint, text, and custom data APIs so each receiver owns its dependency.",
+    api: [
+      "SignalValue",
+      "resolveSignalValue",
+      "batch",
+      "useComputed",
+      "useReaction",
+    ],
+    objectives: [
+      "Pass writable signals directly into Rectangle style fields and Text children.",
+      "Resolve data and a computed domain in the custom component that consumes them, batch visual updates, and keep external synchronization reaction-only.",
+    ],
+    prompts: {
+      gesture:
+        "Click the blue card for one batched visual update, then click Reaction-only update.",
+      code: "Pass another SignalValue input into LineSeries and resolve it at that component boundary.",
+    },
+    apiNotes: [
+      "Passing a signal object leaves the read and dependency with the receiving CRC component; passing signal.get() intentionally assigns it to the enclosing component.",
+      "resolveSignalValue performs one declared read only. It never searches arbitrary application data for nested signals.",
+      "The computed domain is an equality barrier, while the reaction reads a separate signal in Complete and mutates only an external resource.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["signals", "signals-and-animation", "rectangle", "text"],
+    load: () => import("./learning/composition/signal-inputs.example"),
+  },
+  {
     slug: "signals-and-animation",
     title: "Signals and animation",
     shortTitle: "Signals + animation",
     section: "composition",
-    order: 118,
+    order: 119,
     summary:
       "Compose immutable animation definitions into one component-owned program whose committed signal values enter ordinary styles explicitly.",
     api: [
@@ -746,7 +779,7 @@ const drafts = [
     apiNotes: [
       "Definitions and programs are immutable descriptions; usePlayback supplies the stateful component owner and snapshots an accepted run.",
       "All playbacks advance in shared scheduler phases and publish one central Commit before affected CRC roots render.",
-      "Signals declare dependencies through explicit .get() calls, so style receives ordinary numbers rather than signal or animation objects.",
+      "Signals can flow directly into declared CRC inputs; the receiving component resolves them and owns the dependency.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["signals", "group", "layer"],
@@ -757,7 +790,7 @@ const drafts = [
     title: "Particle effects",
     shortTitle: "Particle effects",
     section: "composition",
-    order: 119,
+    order: 120,
     summary:
       "Drag a burning square while world-space flame and smoke particles keep rising from every place they were emitted.",
     api: [
@@ -798,7 +831,7 @@ const drafts = [
     title: "2D physics",
     shortTitle: "2D physics",
     section: "composition",
-    order: 120,
+    order: 121,
     summary:
       "Drag, throw, and roll a dynamic ball through static bumpers and a collider-only sensor in one scheduler-owned 2D physics world.",
     api: [
@@ -808,7 +841,7 @@ const drafts = [
       "collider2D",
       "crcPhysicsBody2D",
       "useRef",
-      "useState",
+      "useSignal",
       "setPointerCapture",
       "disableBody2D",
       "teleportBody2D",
@@ -838,7 +871,7 @@ const drafts = [
     title: "Layer",
     shortTitle: "Layer",
     section: "composition",
-    order: 121,
+    order: 122,
     summary:
       "Render a subtree on an offscreen Canvas, then compose it into the main scene.",
     api: ["Layer"],
@@ -863,7 +896,7 @@ const drafts = [
     title: "Absolute and overlay",
     shortTitle: "Absolute + overlay",
     section: "layout",
-    order: 122,
+    order: 123,
     summary:
       "Place one panel explicitly, then align reusable children inside its overlay.",
     api: ["Absolute", "Overlay"],
@@ -888,7 +921,7 @@ const drafts = [
     title: "Flow layout",
     shortTitle: "Flow",
     section: "layout",
-    order: 123,
+    order: 124,
     summary:
       "Arrange declared and measured items in a compact wrapping Canvas flow.",
     api: ["Flow", "Text"],
@@ -913,7 +946,7 @@ const drafts = [
     title: "Flex layout",
     shortTitle: "Flex",
     section: "layout",
-    order: 124,
+    order: 125,
     summary:
       "Distribute positive and negative free space with CRC's CSS-compatible Flex subset.",
     api: ["Flex", "useLayoutBox"],
@@ -938,7 +971,7 @@ const drafts = [
     title: "Grid layout",
     shortTitle: "Grid",
     section: "layout",
-    order: 125,
+    order: 126,
     summary:
       "Build an explicit responsive grid from fixed, percentage, and fractional tracks.",
     api: ["Grid"],

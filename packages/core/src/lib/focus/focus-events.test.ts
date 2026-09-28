@@ -5,7 +5,8 @@ import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
 import { useEventListener } from '../hooks/use-event-listener';
 import { useEventTarget } from '../hooks/use-event-target';
-import { useState, type StateUpdater } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
+import type { WritableSignal } from '../signals/types';
 import { mountCRC } from '../mount-crc';
 import type { CRCElement, CRCController } from '../types';
 import type { CRCFocusManager } from './focus-manager';
@@ -380,15 +381,14 @@ describe('logical focus transitions', () => {
 
   it('coalesces focus-handler state and transition updates into one ordinary render', async () => {
     let renders = 0;
-    let setValue!: StateUpdater<number>;
+    let state!: WritableSignal<number>;
     const Root = (_props: {}) => {
       renders++;
-      const [, setState] = useState(0);
-      setValue = setState;
+      state = useSignal(0);
       return [
         createElement(Target, {
           key: 'A', label: 'A', x: 0,
-          handlers: { onFocusOut: () => setValue(value => value + 1) },
+          handlers: { onFocusOut: () => state.update(value => value + 1) },
         }),
         createElement(Target, { key: 'B', label: 'B', x: 50, handlers: {} }),
       ];

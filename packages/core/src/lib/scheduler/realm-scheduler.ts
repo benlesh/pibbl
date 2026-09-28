@@ -113,6 +113,7 @@ const advanceRegistrations = new Set<AdvanceRegistration>();
 const ADVANCE_LANE_ORDER = { animation: 0, physics: 1 } as const;
 const beginCommands: BeginCommandRegistration[] = [];
 const frameCompletions: CRCFrameCompletion[] = [];
+const reactionCompletions: CRCFrameCompletion[] = [];
 const currentRendererWorkByOwner = new Map<
   RendererParticipantOwner,
   Map<object, RendererParticipantWorkRegistration>
@@ -314,6 +315,16 @@ export function queueFrameCompletion(callback: CRCFrameCompletion): () => void {
   return createFrameCompletionCancellation(callback);
 }
 
+/** Queues signal-driven imperative work for an eligible Complete phase. */
+export function queueReactionCompletion(
+  callback: CRCFrameCompletion,
+): () => void {
+  reactionCompletions.push(callback);
+  createdCompletionCallbacks++;
+  requestHostFrameIfNeeded();
+  return createFrameCompletionCancellation(callback, reactionCompletions);
+}
+
 /** @internal Emits one immutable fact only while a source-only collector is installed. */
 export function recordSchedulerTrace(record: CRCSchedulerTraceRecord): void {
   const collector = schedulerTraceCollector;
@@ -398,6 +409,7 @@ export function snapshotRealmScheduler(): RealmSchedulerSnapshot {
     advanceParticipants: advanceRegistrations.size,
     completionCallbacks:
       frameCompletions.length +
+      reactionCompletions.length +
       (currentFrameCommitAcknowledgements?.length ?? 0) +
       (currentFramePlaybackCompletions?.length ?? 0) +
       (currentFrameOrderedPlaybackCompletions?.length ?? 0) +
@@ -413,6 +425,7 @@ export function snapshotRealmScheduler(): RealmSchedulerSnapshot {
     dirtyRoots: countDirtyRoots(),
     registeredAdvanceParticipants: advanceRegistrations.size,
     queuedFrameCompletions: frameCompletions.length,
+    queuedReactionCompletions: reactionCompletions.length,
     queuedBeginCommands: beginCommands.length,
     currentFrame,
   });
@@ -647,6 +660,7 @@ function runFrame(hostTime: number): void {
   }
 
   phase = 'complete';
+  const reactions = reactionCompletions.splice(0);
   for (const record of transactions) {
     try {
       record.transaction.finish(record.success);
@@ -656,6 +670,15 @@ function runFrame(hostTime: number): void {
       if (record.root.eventRoot.renderTransaction === record.transaction) {
         record.root.eventRoot.renderTransaction = undefined;
       }
+    }
+  }
+  for (const reaction of reactions) {
+    try {
+      reaction(snapshot);
+    } catch (error) {
+      errors.push(error);
+    } finally {
+      releasedCompletionCallbacks++;
     }
   }
   for (const completion of completions) {
@@ -726,15 +749,16 @@ function releaseBeginCommand(registration: BeginCommandRegistration): void {
 
 function createFrameCompletionCancellation(
   callback: CRCFrameCompletion,
+  ownedCompletions?: CRCFrameCompletion[],
 ): () => void {
   let active = true;
   return () => {
     if (!active) return;
     active = false;
-    for (const completions of [
+    for (const completions of ownedCompletions === undefined ? [
       frameCompletions,
       currentFramePlaybackCompletions,
-    ]) {
+    ] : [ownedCompletions]) {
       const index = completions?.indexOf(callback) ?? -1;
       if (index < 0) continue;
       completions!.splice(index, 1);
@@ -919,6 +943,7 @@ function hasFrameWork(): boolean {
     beginCommands.length > 0 ||
     advanceRegistrations.size > 0 ||
     frameCompletions.length > 0 ||
+    reactionCompletions.length > 0 ||
     currentRendererWorkByOwner.size > 0 ||
     nextRendererWorkByOwner.size > 0 ||
     currentRendererParticipantCompletions.length > 0 ||

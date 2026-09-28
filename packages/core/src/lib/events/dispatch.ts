@@ -1,4 +1,5 @@
 import { getInteractionRoot } from '../global-state.js';
+import { batch } from '../signals/graph.js';
 import type {
   CRCCursorDefault,
   CRCEventRoot,
@@ -114,8 +115,10 @@ export function dispatchNativeEvent(
   nativeEvent: Event,
 ): void {
   const root = getInteractionRoot(instance);
-  dispatchClassifiedNativeEvent(root, type, nativeEvent);
-  dispatchObservers(root.eventRoot.observers.get(type), nativeEvent);
+  batch(() => {
+    dispatchClassifiedNativeEvent(root, type, nativeEvent);
+    dispatchObservers(root.eventRoot.observers.get(type), nativeEvent);
+  });
 }
 
 export function dispatchToLogicalTarget<K extends CRCEventType>(
@@ -126,13 +129,15 @@ export function dispatchToLogicalTarget<K extends CRCEventType>(
   sourceEvent?: Event,
 ): CRCEventMap[K] | undefined {
   if (!target.live) return undefined;
-  return dispatchEventPath({
-    type,
-    target,
-    relatedTarget,
-    originalEvent,
-    sourceEvent,
-  });
+  return batch(() =>
+    dispatchEventPath({
+      type,
+      target,
+      relatedTarget,
+      originalEvent,
+      sourceEvent,
+    })
+  );
 }
 
 export function classifyNativeEventType(

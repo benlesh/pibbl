@@ -986,16 +986,16 @@ describe("learning example catalog", () => {
       `
         import {
           crc,
-          useMemo,
-          useState,
+          useComputed,
+          useSignal,
           measureElement,
           resolveLength,
           Text,
           type CRCController,
         } from "@crc/core";
         function RuntimeFunctionStudy() {
-          const [count] = useState(1);
-          const doubled = useMemo(() => count * 2, [count]);
+          const count = useSignal(1);
+          const doubled = useComputed(() => count.get() * 2);
           const length = resolveLength("50%", 200, "width") ?? 0;
           const measurement = measureElement(
             {} as never,
@@ -1299,11 +1299,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 71 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
+  it("contains 72 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(71);
+    expect(learningExampleCatalog).toHaveLength(72);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1366,6 +1366,7 @@ describe("learning example catalog", () => {
         "layer",
         "particle-effects",
         "physics-2d",
+        "signal-inputs",
         "signals-and-animation",
         "three-instancing",
         "webgl-islands",
@@ -1449,6 +1450,7 @@ describe("learning example catalog", () => {
       "filters",
       "three-instancing",
       "webgl-islands",
+      "signal-inputs",
       "signals-and-animation",
       "particle-effects",
       "physics-2d",
@@ -1473,7 +1475,9 @@ describe("learning example catalog", () => {
     const signalsSource = await loadLearningSource(signals!);
     expect(signalsSource).toMatch(/from ["']@crc\/core["']/u);
     expect(signalsSource).not.toMatch(/@crc\/core\/(?:internal|lib|src)\b/u);
-    expect(signalsSource).toContain(".get()");
+    expect(signalsSource).toContain("x,");
+    expect(signalsSource).toContain("fill: color");
+    expect(signalsSource).toContain("{signalSummary}");
     expect(signalsSource).toContain(".update(");
     expect(signalsSource).toContain("computed(");
 
@@ -1514,7 +1518,7 @@ describe("learning example catalog", () => {
       "Use an inradius-defined hexagon to clip children and their interaction geometry.",
     ]);
     expect(await loadLearningSource(clip!)).toContain("createRegularPolygonPath");
-    expect(await loadLearningSource(clip!)).toContain("useMemo");
+    expect(await loadLearningSource(clip!)).toContain("useConst");
 
     const regularPolygon = learningExampleCatalog.find(
       (entry) => entry.slug === "regular-polygon",
@@ -1570,7 +1574,7 @@ describe("learning example catalog", () => {
     expect(textPaints.map((paint) => paint.text)).toEqual(
       expect.arrayContaining([
         "SELECTED NONE · COUNT 0",
-        "LIFECYCLE 1",
+        "LIFECYCLE 0",
         "CHOICE A",
         "CHOICE B",
       ]),
@@ -1856,17 +1860,22 @@ describe("learning example catalog", () => {
         "OrbitControls",
         "missBehavior",
         "Particles2D",
+        "SignalValue",
         "WebGLLayer",
+        "batch",
         "Group3D",
         "Cube",
         "Sphere",
         "useAnimationFrame",
+        "useComputed",
         "useParticleSystem",
         "useSignal",
         "useTransition",
         "usePlayback",
+        "useReaction",
         "parallel",
         "repeat",
+        "resolveSignalValue",
         "sequence",
         "marker",
         "spring",
@@ -1881,7 +1890,7 @@ describe("learning example catalog", () => {
         "collider2D",
         "crcPhysicsBody2D",
         "useRef",
-        "useState",
+        "useSignal",
         "setPointerCapture",
         "disableBody2D",
         "teleportBody2D",

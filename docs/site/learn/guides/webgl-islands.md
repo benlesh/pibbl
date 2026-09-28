@@ -41,17 +41,17 @@ JSX runtime, state hook, or event system.
 ## Render a cube and sphere
 
 ```tsx
-import { Rectangle, Text, crc, useState } from "@crc/core";
+import { Rectangle, Text, crc, useSignal } from "@crc/core";
 import { Cube, Group3D, Sphere, WebGLLayer } from "@crc/webgl";
 
 function Scene() {
-  const [selected, setSelected] = useState("none");
+  const selected = useSignal("none");
 
   return (
     <>
       <Rectangle
         style={{ width: 640, height: 360, fill: "#101827" }}
-        onClick={() => setSelected("background")}
+        onClick={() => selected.set("background")}
       />
       <WebGLLayer
         style={{ width: 640, height: 360 }}
@@ -68,7 +68,7 @@ function Scene() {
               color: "#8b5cf6",
               lit: false,
             }}
-            onClick={() => setSelected("cube")}
+            onClick={() => selected.set("cube")}
           />
           <Sphere
             style={{
@@ -77,7 +77,7 @@ function Scene() {
               color: "#22c55e",
               lit: false,
             }}
-            onClick={() => setSelected("sphere")}
+            onClick={() => selected.set("sphere")}
           />
         </Group3D>
       </WebGLLayer>
@@ -93,6 +93,12 @@ function Scene() {
 
 crc(document.querySelector("canvas")!, <Scene />);
 ```
+
+Core and WebGL share the same signal-input contract. Camera replacement,
+geometry, material, transforms, lighting, background, shadow options, and other
+declared reactive fields accept signals where their public types say
+`SignalValue<T>`. The WebGL receiver owns the read. Signals hidden inside
+arbitrary geometry buffers or application metadata are not discovered.
 
 The omitted camera is exactly:
 

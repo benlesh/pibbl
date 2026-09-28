@@ -22,6 +22,7 @@ import type { CRCFilter } from "./style/filter-types.js";
 import type { FilterSurfacePool } from "./filter/filter-surface-pool.js";
 import type { CRCBackendDriver } from "./backend/types.js";
 import type { SignalRenderConsumer } from "./signals/render-consumer.js";
+import type { Signal, SignalValue } from "./signals/types.js";
 export type {
   CRCComponent,
   CRCContainerChild,
@@ -30,8 +31,10 @@ export type {
   CRCEmptyNode,
   CRCKey,
   CRCNode,
+  CRCNodeInput,
   CRCPrimitiveComponent,
   CRCTextChild,
+  CRCTextInput,
   CRCRenderResult,
   PrimitiveInputOf,
 } from "./element/types.js";
@@ -61,13 +64,43 @@ type RequiredKeys<T> = T extends unknown
   : never;
 
 type StyleField<S> = [RequiredKeys<S>] extends [never]
-  ? { style?: S }
-  : { style: S };
+  ? { style?: SignalValue<S | undefined> }
+  : { style: SignalValue<S> };
+
+type IsExactSignalValue<T> = [NonNullable<T>] extends [never] ?
+  false :
+  [NonNullable<T>] extends [Signal<any>] ? true : false;
+
+type SignalProgramValue<T> = IsExactSignalValue<T> extends true ?
+  T :
+  SignalValue<T>;
+
+export type SignalProgramProps<P> = [PrimitiveProgramProps<P>] extends [never]
+  ? never
+  : Readonly<{
+      [K in keyof PrimitiveProgramProps<P>]: K extends "children"
+        ? PrimitiveProgramProps<P>[K]
+        : SignalProgramValue<PrimitiveProgramProps<P>[K]>;
+    }>;
+
+export type SignalStyle<S> = Readonly<{
+  [K in keyof S]: K extends "custom" ? S[K] : SignalValue<S[K]>;
+}>;
+
+export type PreservedSignalPropKey<P> = {
+  [K in keyof PrimitiveProgramProps<P>]-?: [PrimitiveProgramProps<P>[K]] extends [never]
+    ? never
+    : [NonNullable<PrimitiveProgramProps<P>[K]>] extends [never]
+      ? never
+      : [NonNullable<PrimitiveProgramProps<P>[K]>] extends [Signal<any>]
+      ? K
+      : never;
+}[keyof PrimitiveProgramProps<P>];
 
 export type PrimitiveInput<
   P,
   S extends SystemStyle = SystemStyle,
-> = PrimitiveProgramProps<P> & StyleField<SpecifiedStyle<S>>;
+> = SignalProgramProps<P> & StyleField<SignalStyle<SpecifiedStyle<S>>>;
 
 export type Canvas = HTMLCanvasElement | OffscreenCanvas;
 export type RenderingContext2D =
@@ -108,7 +141,7 @@ export type PrimitiveRender<P, R extends SystemStyle = SystemStyle> = (
   props: Readonly<PrimitiveProgramProps<P>>,
   style: ResolvedStyle<R>,
   context: RenderingContext2D,
-) => CRCNode[] | CRCNode | void;
+) => import('./element/types.js').CRCNodeInput | void;
 
 export interface PrimitiveCapabilities<
   P,
@@ -116,6 +149,8 @@ export interface PrimitiveCapabilities<
   N extends SystemStyle = S,
   R extends SystemStyle = N,
 > {
+  preserveSignalProps?: readonly PreservedSignalPropKey<P>[];
+  childInput?: "structural" | "text";
   normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;
   resolveStyle?: (
     style: NormalizedStyle<N>,
@@ -138,6 +173,7 @@ export interface CRCComponentRefs<P> {
   refs: any[];
   hooks: CRCHookSlot[];
   signalConsumer: SignalRenderConsumer | undefined;
+  signalConsumerTeardownAttached: boolean;
   teardowns: Teardowns;
   onAfterRender: (() => void) | undefined;
 }

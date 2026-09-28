@@ -5,7 +5,7 @@ import {
   Text,
   crc,
   useRef,
-  useState,
+  useSignal,
   type CRCController,
   type CRCPointerEvent,
 } from "@crc/core";
@@ -86,8 +86,8 @@ function releaseVelocity(
 function DraggableBall() {
   const body = crcPhysicsBody2D();
   const dragSession = useRef<BallDragSession | null>(null);
-  const [dragging, setDragging] = useState(false);
-  const [, requestDragPresentation] = useState(0);
+  const dragging = useSignal(false);
+  const requestDragPresentationSignal = useSignal(0);
 
   const dragTo = (event: CRCPointerEvent): readonly [number, number] | null => {
     const session = dragSession.current;
@@ -107,7 +107,7 @@ function DraggableBall() {
       y: event.y,
       timeStamp: event.timeStamp,
     });
-    requestDragPresentation((revision) => revision + 1);
+    requestDragPresentationSignal.update((revision) => revision + 1);
     return pose;
   };
 
@@ -133,7 +133,7 @@ function DraggableBall() {
     enableBody2D(body, { velocity: "zero" });
     setLinearVelocity2D(body, velocity);
     dragSession.current = null;
-    setDragging(false);
+    dragging.set(false);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -148,7 +148,7 @@ function DraggableBall() {
     });
     enableBody2D(body, { velocity: "zero" });
     dragSession.current = null;
-    setDragging(false);
+    dragging.set(false);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -156,9 +156,9 @@ function DraggableBall() {
 
   const draggedPosition = dragSession.current?.position;
   const dragTranslateX =
-    dragging && draggedPosition !== undefined ? draggedPosition[0] - 210 : 0;
+    dragging.get() && draggedPosition !== undefined ? draggedPosition[0] - 210 : 0;
   const dragTranslateY =
-    dragging && draggedPosition !== undefined ? draggedPosition[1] - 110 : 0;
+    dragging.get() && draggedPosition !== undefined ? draggedPosition[1] - 110 : 0;
 
   return (
     <Group
@@ -185,7 +185,7 @@ function DraggableBall() {
             fill: "#2563eb",
             stroke: "#17211d",
             strokeWidth: 5,
-            cursor: dragging ? "grabbing" : "grab",
+            cursor: dragging.get() ? "grabbing" : "grab",
           }}
           onPointerDown={(event) => {
             if (dragSession.current !== null) return;
@@ -205,7 +205,7 @@ function DraggableBall() {
               timeStamp: event.timeStamp,
             });
             disableBody2D(body);
-            setDragging(true);
+            dragging.set(true);
             event.currentTarget.setPointerCapture(event.pointerId);
             event.preventDefault();
           }}

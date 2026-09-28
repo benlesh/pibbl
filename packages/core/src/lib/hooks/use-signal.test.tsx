@@ -11,7 +11,6 @@ import {
 } from '../../index.js';
 import { clearSharedState } from '../global-state.js';
 import { useRef } from './use-ref.js';
-import { useState } from './use-state.js';
 import type { SystemStyle } from '../types.js';
 
 beforeEach(() => {
@@ -356,7 +355,7 @@ describe('useSignal', () => {
     const frames = new ManualFrames();
     const canvas = createCanvas();
     function Fewer({ include }: { include: boolean }) {
-      useState(0);
+      useSignal(0);
       if (include) useSignal(0);
     }
     const controller = crc(canvas, <Fewer include />);
@@ -365,7 +364,7 @@ describe('useSignal', () => {
     expect(() => frames.flush()).toThrowError(/fewer CRC hooks/i);
 
     function More({ include }: { include: boolean }) {
-      useState(0);
+      useSignal(0);
       if (include) useSignal(0);
     }
     crc(canvas, <More include={false} />);

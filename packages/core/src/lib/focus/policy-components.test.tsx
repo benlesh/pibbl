@@ -1,4 +1,4 @@
-import { Fragment, FocusManagement, KeyboardNavigation, LayoutDiagnostic, Rectangle, Text, createElement, useEventTarget, useState, measureElement, type CanvasMeasurementService, type CRCElement, type CRCNode } from '@crc/core';
+import { Fragment, FocusManagement, KeyboardNavigation, LayoutDiagnostic, Rectangle, Text, createElement, useEventTarget, useSignal, measureElement, type CanvasMeasurementService, type CRCElement, type CRCNode } from '@crc/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   appendElementEnhancer,
@@ -145,12 +145,12 @@ describe('transparent focus policy preparation', () => {
     let setState: ((value: number) => void) | undefined;
     function Target(): CRCNode {
       const refs = getComponentRefs();
-      const [state, updateState] = useState(0);
-      setState = updateState;
+      const state = useSignal(0);
+      setState = value => state.set(value);
       observations.push({
         id: refs.id,
         parentId: refs.parent?.id,
-        state,
+        state: state.get(),
       });
       const path = new Path2D();
       path.rect(0, 0, 20, 10);

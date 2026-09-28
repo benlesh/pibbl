@@ -10,29 +10,29 @@ const bundle = buildSearchBundle({
   pages: [
     {
       frontmatter: {
-        id: "api-state",
-        title: "useState",
-        summary: "State for a component.",
+        id: "api-signal",
+        title: "useSignal",
+        summary: "Local reactive state for a component.",
         kind: "api",
-        slug: "use-state",
+        slug: "use-signal",
         apiCategory: "hook",
-        symbols: ["useState"],
+        symbols: ["useSignal"],
       },
-      route: "#/api/hooks/use-state",
-      plainText: "Use useState for state.",
+      route: "#/api/hooks/use-signal",
+      plainText: "Use useSignal for reactive state.",
       headings: [],
       sections: [],
     },
     {
       frontmatter: {
         id: "guide-state",
-        title: "Manage state",
+        title: "Manage signals",
         summary: "A Learn guide.",
         kind: "guide",
         slug: "state",
       },
       route: "#/learn/guides/state",
-      plainText: "Keep local state near its component.",
+      plainText: "Keep local state near its component with useSignal.",
       headings: [],
       sections: [],
     },
@@ -44,7 +44,7 @@ const bundle = buildSearchBundle({
       shortTitle: "Stateful rectangle",
       browseGroup: "drawing",
       summary: "An interactive example.",
-      api: ["useState"],
+      api: ["useSignal"],
       objectives: ["Update state"],
       apiNotes: [],
     },
@@ -120,7 +120,7 @@ describe("documentation search dialog", () => {
     dialog.open(trigger);
     const input = document.querySelector<HTMLInputElement>("[data-search-input]")!;
     expect(document.activeElement).toBe(input);
-    input.value = "useState";
+    input.value = "useSignal";
     input.dispatchEvent(new Event("input", { bubbles: true }));
     await settle();
 
@@ -132,11 +132,11 @@ describe("documentation search dialog", () => {
     );
     expect(document.querySelector("[role='option']")).toHaveAttribute(
       "data-search-url",
-      "#/api/hooks/use-state",
+      "#/api/hooks/use-signal",
     );
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
-    expect(navigate).toHaveBeenCalledWith("#/api/hooks/use-state");
+    expect(navigate).toHaveBeenCalledWith("#/api/hooks/use-signal");
     expect(document.querySelector<HTMLDialogElement>("dialog")?.open).toBe(false);
 
     dialog.dispose();
@@ -174,8 +174,13 @@ describe("documentation search dialog", () => {
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
     expect(document.activeElement).toBe(input);
 
-    document.getElementById(options[0]!.id)?.click();
-    expect(navigate).toHaveBeenCalledWith("#/api/hooks/use-state");
+    options
+      .find(
+        (option) =>
+          option.dataset.searchUrl === "#/api/hooks/use-signal",
+      )
+      ?.click();
+    expect(navigate).toHaveBeenCalledWith("#/api/hooks/use-signal");
     dialog.dispose();
   });
 

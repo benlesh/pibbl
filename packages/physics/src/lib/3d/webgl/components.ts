@@ -1,10 +1,14 @@
-import { createElement, useMemo } from "@crc/core";
+import {
+  createElement,
+  resolveSignalValue,
+  useComputed,
+  type PrimitiveInputOf,
+  type SignalValue,
+} from "@crc/core";
 import {
   Mesh,
   createWebGLGeometry,
   type CRCWebGLGeometry,
-  type MeshProps,
-  type MeshStyle,
 } from "@crc/webgl";
 import type {
   CRCPhysicsQuaternion,
@@ -24,66 +28,69 @@ import { composePose3D, transformPointInto } from "../math.js";
 import { requireShapeRecord3D, type ShapeRecord3D } from "../shape-records.js";
 import { bindPhysicsAttachmentShape3D } from "../runtime/descriptors.js";
 
-export interface PhysicsShape3DProps extends Omit<MeshProps, "geometry"> {
-  readonly shape: CRCPhysicsShape3D;
-  readonly style?: MeshStyle;
+type MeshInput = PrimitiveInputOf<typeof Mesh>;
+
+export interface PhysicsShape3DProps extends Omit<MeshInput, "geometry"> {
+  readonly shape: SignalValue<CRCPhysicsShape3D>;
 }
 
 export interface Box3DProps extends Omit<PhysicsShape3DProps, "shape"> {
-  readonly width: number;
-  readonly height: number;
-  readonly depth: number;
-  readonly center?: CRCPhysicsVector3;
-  readonly orientation?: CRCPhysicsQuaternion;
+  readonly width: SignalValue<number>;
+  readonly height: SignalValue<number>;
+  readonly depth: SignalValue<number>;
+  readonly center?: SignalValue<CRCPhysicsVector3>;
+  readonly orientation?: SignalValue<CRCPhysicsQuaternion>;
 }
 
 export interface Ellipsoid3DProps extends Omit<PhysicsShape3DProps, "shape"> {
-  readonly radii: CRCPhysicsVector3;
-  readonly center?: CRCPhysicsVector3;
-  readonly orientation?: CRCPhysicsQuaternion;
+  readonly radii: SignalValue<CRCPhysicsVector3>;
+  readonly center?: SignalValue<CRCPhysicsVector3>;
+  readonly orientation?: SignalValue<CRCPhysicsQuaternion>;
 }
 
 export interface Capsule3DProps extends Omit<PhysicsShape3DProps, "shape"> {
-  readonly start: CRCPhysicsVector3;
-  readonly end: CRCPhysicsVector3;
-  readonly radius: number;
+  readonly start: SignalValue<CRCPhysicsVector3>;
+  readonly end: SignalValue<CRCPhysicsVector3>;
+  readonly radius: SignalValue<number>;
 }
 
 export interface Cylinder3DProps extends Omit<PhysicsShape3DProps, "shape"> {
-  readonly radius: number;
-  readonly halfHeight: number;
-  readonly center?: CRCPhysicsVector3;
-  readonly orientation?: CRCPhysicsQuaternion;
+  readonly radius: SignalValue<number>;
+  readonly halfHeight: SignalValue<number>;
+  readonly center?: SignalValue<CRCPhysicsVector3>;
+  readonly orientation?: SignalValue<CRCPhysicsQuaternion>;
 }
 
 export interface Cone3DProps extends Cylinder3DProps {}
 
 export interface ConvexHull3DProps extends Omit<PhysicsShape3DProps, "shape"> {
-  readonly points: readonly CRCPhysicsVector3[];
+  readonly points: SignalValue<readonly CRCPhysicsVector3[]>;
 }
 
 export interface Heightfield3DProps extends Omit<PhysicsShape3DProps, "shape"> {
-  readonly rows: number;
-  readonly columns: number;
-  readonly heights: ArrayLike<number>;
-  readonly cellSizeX?: number;
-  readonly cellSizeZ?: number;
-  readonly heightScale?: number;
-  readonly origin?: CRCPhysicsVector3;
+  readonly rows: SignalValue<number>;
+  readonly columns: SignalValue<number>;
+  readonly heights: SignalValue<ArrayLike<number>>;
+  readonly cellSizeX?: SignalValue<number>;
+  readonly cellSizeZ?: SignalValue<number>;
+  readonly heightScale?: SignalValue<number>;
+  readonly origin?: SignalValue<CRCPhysicsVector3>;
 }
 
 const geometries = new WeakMap<object, CRCWebGLGeometry>();
 
 export function PhysicsShape3D(props: Readonly<PhysicsShape3DProps>) {
-  const geometry = physicsGeometryForShape3DForTest(props.shape);
+  const shape = resolveSignalValue(props.shape);
+  const geometry = physicsGeometryForShape3DForTest(shape);
   const { shape: _shape, ...meshProps } = props;
+  const physics = resolveOptionalSignalValue(meshProps.physics);
   return createElement(Mesh, {
     ...meshProps,
     geometry,
-    ...(meshProps.physics === undefined
+    ...(physics === undefined
       ? {}
       : {
-          physics: bindPhysicsAttachmentShape3D(meshProps.physics, props.shape),
+          physics: bindPhysicsAttachmentShape3D(physics, shape),
         }),
   });
 }
@@ -101,8 +108,14 @@ export function physicsGeometryForShape3DForTest(
 }
 
 export function Box3D(props: Readonly<Box3DProps>) {
-  const { width, height, depth, center, orientation, ...rest } = props;
-  const shape = useMemo(
+  const width = resolveSignalValue(props.width);
+  const height = resolveSignalValue(props.height);
+  const depth = resolveSignalValue(props.depth);
+  const center = resolveOptionalSignalValue(props.center);
+  const orientation = resolveOptionalSignalValue(props.orientation);
+  const { width: _width, height: _height, depth: _depth,
+    center: _center, orientation: _orientation, ...rest } = props;
+  const shape = useComputed(
     () => boxShape3D({ width, height, depth, center, orientation }),
     [width, height, depth, ...vector(center), ...quaternion(orientation)],
   );
@@ -110,8 +123,12 @@ export function Box3D(props: Readonly<Box3DProps>) {
 }
 
 export function Ellipsoid3D(props: Readonly<Ellipsoid3DProps>) {
-  const { radii, center, orientation, ...rest } = props;
-  const shape = useMemo(
+  const radii = resolveSignalValue(props.radii);
+  const center = resolveOptionalSignalValue(props.center);
+  const orientation = resolveOptionalSignalValue(props.orientation);
+  const { radii: _radii, center: _center,
+    orientation: _orientation, ...rest } = props;
+  const shape = useComputed(
     () => ellipsoidShape3D({ radii, center, orientation }),
     [...radii, ...vector(center), ...quaternion(orientation)],
   );
@@ -119,8 +136,11 @@ export function Ellipsoid3D(props: Readonly<Ellipsoid3DProps>) {
 }
 
 export function Capsule3D(props: Readonly<Capsule3DProps>) {
-  const { start, end, radius, ...rest } = props;
-  const shape = useMemo(
+  const start = resolveSignalValue(props.start);
+  const end = resolveSignalValue(props.end);
+  const radius = resolveSignalValue(props.radius);
+  const { start: _start, end: _end, radius: _radius, ...rest } = props;
+  const shape = useComputed(
     () => capsuleShape3D({ start, end, radius }),
     [...start, ...end, radius],
   );
@@ -128,8 +148,13 @@ export function Capsule3D(props: Readonly<Capsule3DProps>) {
 }
 
 export function Cylinder3D(props: Readonly<Cylinder3DProps>) {
-  const { radius, halfHeight, center, orientation, ...rest } = props;
-  const shape = useMemo(
+  const radius = resolveSignalValue(props.radius);
+  const halfHeight = resolveSignalValue(props.halfHeight);
+  const center = resolveOptionalSignalValue(props.center);
+  const orientation = resolveOptionalSignalValue(props.orientation);
+  const { radius: _radius, halfHeight: _halfHeight, center: _center,
+    orientation: _orientation, ...rest } = props;
+  const shape = useComputed(
     () => cylinderShape3D({ radius, halfHeight, center, orientation }),
     [radius, halfHeight, ...vector(center), ...quaternion(orientation)],
   );
@@ -137,8 +162,13 @@ export function Cylinder3D(props: Readonly<Cylinder3DProps>) {
 }
 
 export function Cone3D(props: Readonly<Cone3DProps>) {
-  const { radius, halfHeight, center, orientation, ...rest } = props;
-  const shape = useMemo(
+  const radius = resolveSignalValue(props.radius);
+  const halfHeight = resolveSignalValue(props.halfHeight);
+  const center = resolveOptionalSignalValue(props.center);
+  const orientation = resolveOptionalSignalValue(props.orientation);
+  const { radius: _radius, halfHeight: _halfHeight, center: _center,
+    orientation: _orientation, ...rest } = props;
+  const shape = useComputed(
     () => coneShape3D({ radius, halfHeight, center, orientation }),
     [radius, halfHeight, ...vector(center), ...quaternion(orientation)],
   );
@@ -146,21 +176,29 @@ export function Cone3D(props: Readonly<Cone3DProps>) {
 }
 
 export function ConvexHull3D(props: Readonly<ConvexHull3DProps>) {
-  const { points, ...rest } = props;
+  const points = resolveSignalValue(props.points);
+  const { points: _points, ...rest } = props;
   const deps = points.flatMap((point) => [...point]);
-  const shape = useMemo(() => convexHullShape3D({ points }), deps);
+  const shape = useComputed(() => convexHullShape3D({ points }), deps);
   return createElement(PhysicsShape3D, { ...rest, shape });
 }
 
 export function Heightfield3D(props: Readonly<Heightfield3DProps>) {
+  const rows = resolveSignalValue(props.rows);
+  const columns = resolveSignalValue(props.columns);
+  const heights = resolveSignalValue(props.heights);
+  const cellSizeX = resolveOptionalSignalValue(props.cellSizeX);
+  const cellSizeZ = resolveOptionalSignalValue(props.cellSizeZ);
+  const heightScale = resolveOptionalSignalValue(props.heightScale);
+  const origin = resolveOptionalSignalValue(props.origin);
   const {
-    rows,
-    columns,
-    heights,
-    cellSizeX,
-    cellSizeZ,
-    heightScale,
-    origin,
+    rows: _rows,
+    columns: _columns,
+    heights: _heights,
+    cellSizeX: _cellSizeX,
+    cellSizeZ: _cellSizeZ,
+    heightScale: _heightScale,
+    origin: _origin,
     ...rest
   } = props;
   const deps = [
@@ -172,7 +210,7 @@ export function Heightfield3D(props: Readonly<Heightfield3DProps>) {
     ...vector(origin),
     ...Array.from(heights),
   ];
-  const shape = useMemo(
+  const shape = useComputed(
     () =>
       heightfieldShape3D({
         rows,
@@ -186,6 +224,12 @@ export function Heightfield3D(props: Readonly<Heightfield3DProps>) {
     deps,
   );
   return createElement(PhysicsShape3D, { ...rest, shape });
+}
+
+function resolveOptionalSignalValue<T>(
+  value: SignalValue<T> | undefined,
+): T | undefined {
+  return value === undefined ? undefined : resolveSignalValue(value);
 }
 
 function geometryForShape(shape: CRCPhysicsShape3D): CRCWebGLGeometry {

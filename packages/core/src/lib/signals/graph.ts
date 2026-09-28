@@ -5,26 +5,54 @@ import type {
   WritableSignal,
 } from './types.js';
 import type { CRCRenderTransaction } from '../types.js';
+import {
+  beginReactiveCollection,
+  collectReactiveDependency,
+  createDetachedReactiveEdge,
+  finishReactiveCollection,
+  linkReactiveEdgeToSource,
+  notifyReactiveEdges,
+  unlinkReactiveEdgeFromConsumer,
+  unlinkReactiveEdgeFromSource,
+  type ReactiveEdge,
+  type ReactiveNotificationCursor,
+  type SignalDependencyConsumer,
+} from './edge.js';
 
 const signalNodes = new WeakMap<object, SignalNode<unknown>>();
 const signalValues = new WeakSet<object>();
 
 type ComputedState = 'clean' | 'check' | 'evaluating';
 
-interface ComputedSignalNode<T> extends SignalNode<T> {
+interface ComputedSignalNode<T>
+  extends SignalNode<T>, SignalDependencyConsumer {
   readonly kind: 'computed';
   compute(): T;
   state: ComputedState;
   hasValue: boolean;
   hasError: boolean;
   error: unknown;
-  dependencies: Map<SignalNode<unknown>, number>;
-  dependencyObservations: Map<SignalNode<unknown>, () => void>;
   invalidate(): void;
   validate(): void;
   observedCount: number;
   pendingValidation: boolean;
   observe(): () => void;
+  adoptCandidate(
+    candidate: ComputedSignalNode<T>,
+    compute: () => T,
+    changed: boolean,
+    readers: ReadonlySet<SignalDependencyCollector>,
+  ): void;
+  replaceCompute(compute: () => T, invalidate: boolean): void;
+}
+
+/** @internal One isolated formula generation owned by a render transaction. */
+export interface ComputedFormulaCandidate<T> {
+  readonly signal: Signal<T>;
+  readonly readers: Set<SignalDependencyCollector>;
+  changed: boolean;
+  evaluated: boolean;
+  value: T | undefined;
 }
 
 export interface SignalNode<T> {
@@ -32,7 +60,12 @@ export interface SignalNode<T> {
   equals: SignalEquals<T>;
   debugName: string | undefined;
   version: number;
-  observers: Set<SignalObserver>;
+  observerHead: ReactiveEdge | undefined;
+  observerTail: ReactiveEdge | undefined;
+  observerCount: number;
+  activeObserverCursor: ReactiveNotificationCursor | undefined;
+  /** @internal Legacy test-only observer access. */
+  readonly observers: SignalObserverCollection;
   observe?(): () => void;
   validate?(): void;
 }
@@ -41,6 +74,12 @@ export interface SignalObserver {
   (node: SignalNode<unknown>): void;
   propagateInvalidation?: boolean;
   renderInvalidation?: boolean;
+}
+
+export interface SignalObserverCollection {
+  readonly size: number;
+  add(observer: SignalObserver): this;
+  delete(observer: SignalObserver): boolean;
 }
 
 type SignalRenderProvisionStatus = 'pending' | 'success' | 'failure';
@@ -85,16 +124,114 @@ export interface SignalWriterLeasePolicy {
   ): void;
 }
 
-const trackingStack: Array<SignalDependencyCollector | undefined> = [];
+let activeSignalDependencyCollector: SignalDependencyCollector | undefined;
 const writePolicyStack: SignalWritePolicy[] = [];
 const computedStack: ComputedSignalNode<unknown>[] = [];
-const commandAssertionNode: SignalNode<unknown> = {
-  value: undefined,
-  equals: Object.is,
-  debugName: undefined,
-  version: 0,
-  observers: new Set(),
+const legacyObserverCollections = new WeakMap<
+  SignalNode<unknown>,
+  SignalObserverCollection
+>();
+const legacyObserverConsumers = new WeakMap<
+  SignalObserver,
+  SignalDependencyConsumer
+>();
+const signalNodePrototype = {
+  get observers(): SignalObserverCollection {
+    return getLegacyObserverCollection(this as SignalNode<unknown>);
+  },
 };
+
+function createSignalNodeState<T>(
+  value: T,
+  equals: SignalEquals<T>,
+  debugName: string | undefined,
+): SignalNode<T> {
+  return Object.assign(Object.create(signalNodePrototype), {
+    value,
+    equals,
+    debugName,
+    version: 0,
+    observerHead: undefined,
+    observerTail: undefined,
+    observerCount: 0,
+    activeObserverCursor: undefined,
+  }) as SignalNode<T>;
+}
+
+function getLegacyObserverCollection(
+  node: SignalNode<unknown>,
+): SignalObserverCollection {
+  let collection = legacyObserverCollections.get(node);
+  if (collection !== undefined) return collection;
+  collection = {
+    get size(): number {
+      return node.observerCount;
+    },
+    add(observer: SignalObserver): SignalObserverCollection {
+      const consumer = getLegacyObserverConsumer(observer);
+      for (
+        let edge = consumer.dependencyHead;
+        edge !== undefined;
+        edge = edge.consumerNext
+      ) {
+        if (edge.source === node) return collection!;
+      }
+      const edge = createDetachedReactiveEdge(consumer, node);
+      linkReactiveEdgeToSource(edge);
+      return collection!;
+    },
+    delete(observer: SignalObserver): boolean {
+      const consumer = legacyObserverConsumers.get(observer);
+      if (consumer === undefined) return false;
+      for (
+        let edge = consumer.dependencyHead;
+        edge !== undefined;
+        edge = edge.consumerNext
+      ) {
+        if (edge.source !== node) continue;
+        unlinkReactiveEdgeFromSource(edge);
+        unlinkReactiveEdgeFromConsumer(edge);
+        return true;
+      }
+      return false;
+    },
+  };
+  legacyObserverCollections.set(node, collection);
+  return collection;
+}
+
+function getLegacyObserverConsumer(
+  observer: SignalObserver,
+): SignalDependencyConsumer {
+  let consumer = legacyObserverConsumers.get(observer);
+  if (consumer !== undefined) return consumer;
+  consumer = {
+    dependencyHead: undefined,
+    dependencyTail: undefined,
+    dependencyFreeHead: undefined,
+    dependencyFreeCount: 0,
+    dependencyCount: 0,
+    dependencyHighWater: 0,
+    collectionCursor: undefined,
+    collectionGeneration: 0,
+    addDependency: () => {},
+    notify: node => observer(node),
+    get propagateInvalidation(): boolean {
+      return observer.propagateInvalidation === true;
+    },
+    get renderInvalidation(): boolean {
+      return observer.renderInvalidation === true;
+    },
+  };
+  legacyObserverConsumers.set(observer, consumer);
+  return consumer;
+}
+
+const commandAssertionNode = createSignalNodeState<unknown>(
+  undefined,
+  Object.is,
+  undefined,
+);
 const activeSignalRenderProvisions = new WeakMap<
   SignalNode<unknown>,
   SignalRenderProvisionState
@@ -112,8 +249,35 @@ let planComputedValidations = 0;
 let computedSourceEdges = 0;
 let createdComputedSourceEdges = 0;
 let releasedComputedSourceEdges = 0;
+let lazyRendererConsumers = 0;
+let reusedRendererEdges = 0;
+let plainInputResolutions = 0;
+let signalInputResolutions = 0;
+let shallowInputCopies = 0;
+let receiverInputProvisions = 0;
+let adoptedReceiverInputProvisions = 0;
+let rolledBackReceiverInputProvisions = 0;
+let batchedObserverInvalidations = 0;
+let reactionConsumers = 0;
+let reactionEdges = 0;
+let reactionRuns = 0;
+let reactionCleanups = 0;
+let reactionFailures = 0;
 let signalGraphPlanWorkNotifier: (() => void) | undefined;
 let signalWriterLeasePolicy: SignalWriterLeasePolicy | undefined;
+
+interface PublicSignalBatchEntry {
+  readonly value: unknown;
+  readonly computedHasError: boolean | undefined;
+  readonly computedError: unknown;
+}
+
+interface PublicSignalBatchState {
+  readonly entries: Map<SignalNode<unknown>, PublicSignalBatchEntry>;
+  readonly failures: unknown[];
+}
+
+let activePublicSignalBatch: PublicSignalBatchState | undefined;
 
 export interface SignalGraphSnapshot {
   readonly rendererConsumers: number;
@@ -128,6 +292,20 @@ export interface SignalGraphSnapshot {
   readonly planComputedValidations: number;
   readonly createdComputedSourceEdges: number;
   readonly releasedComputedSourceEdges: number;
+  readonly lazyRendererConsumers: number;
+  readonly reusedRendererEdges: number;
+  readonly plainInputResolutions: number;
+  readonly signalInputResolutions: number;
+  readonly shallowInputCopies: number;
+  readonly receiverInputProvisions: number;
+  readonly adoptedReceiverInputProvisions: number;
+  readonly rolledBackReceiverInputProvisions: number;
+  readonly batchedObserverInvalidations: number;
+  readonly reactionConsumers: number;
+  readonly reactionEdges: number;
+  readonly reactionRuns: number;
+  readonly reactionCleanups: number;
+  readonly reactionFailures: number;
 }
 
 /** @internal Deterministic ownership and structural evidence for tests. */
@@ -145,7 +323,109 @@ export function signalGraphSnapshot(): SignalGraphSnapshot {
     planComputedValidations,
     createdComputedSourceEdges,
     releasedComputedSourceEdges,
+    lazyRendererConsumers,
+    reusedRendererEdges,
+    plainInputResolutions,
+    signalInputResolutions,
+    shallowInputCopies,
+    receiverInputProvisions,
+    adoptedReceiverInputProvisions,
+    rolledBackReceiverInputProvisions,
+    batchedObserverInvalidations,
+    reactionConsumers,
+    reactionEdges,
+    reactionRuns,
+    reactionCleanups,
+    reactionFailures,
   });
+}
+
+/** @internal Records one component consumer materialized by its first read. */
+export function recordLazyRendererConsumerCreated(): void {
+  lazyRendererConsumers++;
+}
+
+/** @internal Records one render edge reused by recollection or restoration. */
+export function recordRendererEdgeReused(restored = false): void {
+  if (restored) rendererEdges++;
+  reusedRendererEdges++;
+}
+
+/** @internal Records one declared plain input that took the identity path. */
+export function recordPlainInputResolution(): void {
+  plainInputResolutions++;
+}
+
+/** @internal Records one declared signal-valued input read. */
+export function recordSignalInputResolution(): void {
+  signalInputResolutions++;
+}
+
+/** @internal Records one copy-on-signal props or style object. */
+export function recordShallowInputCopy(): void {
+  shallowInputCopies++;
+}
+
+/** @internal Records one pre-evaluation receiver input provision. */
+export function recordReceiverInputProvisionCreated(): void {
+  receiverInputProvisions++;
+}
+
+/** @internal Records one provision adopted by its receiver generation. */
+export function recordReceiverInputProvisionAdopted(): void {
+  receiverInputProvisions--;
+  adoptedReceiverInputProvisions++;
+}
+
+/** @internal Records one provision discarded without publication. */
+export function recordReceiverInputProvisionRolledBack(): void {
+  receiverInputProvisions--;
+  rolledBackReceiverInputProvisions++;
+}
+
+/** @internal Adds one already-read source to the active dependency collector. */
+export function trackSignalDependency(node: SignalNode<unknown>): void {
+  activeSignalDependencyCollector?.addDependency(node);
+}
+
+/** @internal Records one observer invalidation deduplicated by a public batch. */
+export function recordBatchedObserverInvalidation(): void {
+  batchedObserverInvalidations++;
+}
+
+/** @internal Records one live component-owned reaction consumer. */
+export function recordReactionConsumerCreated(): void {
+  reactionConsumers++;
+}
+
+/** @internal Records final release of one reaction consumer. */
+export function recordReactionConsumerReleased(): void {
+  reactionConsumers--;
+}
+
+/** @internal Records one live reaction source edge. */
+export function recordReactionEdgeCreated(): void {
+  reactionEdges++;
+}
+
+/** @internal Records release of one reaction source edge. */
+export function recordReactionEdgeReleased(): void {
+  reactionEdges--;
+}
+
+/** @internal Records one reaction setup attempt. */
+export function recordReactionRun(): void {
+  reactionRuns++;
+}
+
+/** @internal Records one exact cleanup generation execution. */
+export function recordReactionCleanup(): void {
+  reactionCleanups++;
+}
+
+/** @internal Records one setup or cleanup failure. */
+export function recordReactionFailure(): void {
+  reactionFailures++;
 }
 
 /** @internal Records one live renderer consumer for test diagnostics. */
@@ -172,6 +452,113 @@ export function recordRendererEdgeReleased(): void {
   releasedRendererEdges++;
 }
 
+export function batch<T>(callback: () => T): T {
+  if (activePublicSignalBatch !== undefined) return callback();
+
+  const state: PublicSignalBatchState = {
+    entries: new Map(),
+    failures: [],
+  };
+  activePublicSignalBatch = state;
+  let result!: T;
+  let callbackFailure: unknown;
+  let callbackFailed = false;
+  try {
+    result = callback();
+  } catch (error) {
+    callbackFailed = true;
+    callbackFailure = error;
+  }
+
+  const notificationFailures = flushPublicSignalBatch(state);
+  if (callbackFailed) {
+    if (notificationFailures.length === 0) throw callbackFailure;
+    throw new AggregateError(
+      [callbackFailure, ...notificationFailures],
+      'CRC signal batch callback and observer notifications failed.',
+    );
+  }
+  throwSignalObserverFailures(notificationFailures);
+  return result;
+}
+
+function recordPublicBatchEntry(node: SignalNode<unknown>): void {
+  const state = activePublicSignalBatch;
+  if (state === undefined || state.entries.has(node)) return;
+  const computedNode = isComputedSignalNode(node) ? node : undefined;
+  state.entries.set(node, {
+    value: node.value,
+    computedHasError: computedNode?.hasError,
+    computedError: computedNode?.error,
+  });
+}
+
+function flushPublicSignalBatch(state: PublicSignalBatchState): unknown[] {
+  try {
+    flushPendingComputedValidations();
+  } catch (error) {
+    if (
+      error instanceof AggregateError &&
+      error.message === 'CRC signal observer notifications failed.'
+    ) {
+      state.failures.push(...error.errors);
+    } else {
+      state.failures.push(error);
+    }
+  }
+
+  const seen = new Set<SignalDependencyConsumer>();
+  const consumers: Array<{
+    readonly consumer: SignalDependencyConsumer;
+    readonly source: SignalNode<unknown>;
+  }> = [];
+  for (const [source, entry] of state.entries) {
+    let unchanged = false;
+    try {
+      unchanged = publicBatchEntryEquals(source, entry);
+    } catch (error) {
+      state.failures.push(error);
+    }
+    if (unchanged) continue;
+    signalCommitNotifications++;
+    for (
+      let edge = source.observerHead;
+      edge !== undefined;
+      edge = edge.sourceNext
+    ) {
+      const consumer = edge.consumer;
+      if (consumer.propagateInvalidation === true) continue;
+      if (seen.has(consumer)) {
+        recordBatchedObserverInvalidation();
+        continue;
+      }
+      seen.add(consumer);
+      consumers.push({ consumer, source });
+    }
+  }
+
+  activePublicSignalBatch = undefined;
+  for (const { consumer, source } of consumers) {
+    try {
+      consumer.notify(source);
+    } catch (error) {
+      state.failures.push(error);
+    }
+  }
+  return state.failures;
+}
+
+function publicBatchEntryEquals(
+  node: SignalNode<unknown>,
+  entry: PublicSignalBatchEntry,
+): boolean {
+  if (isComputedSignalNode(node)) {
+    if (node.hasError !== entry.computedHasError) return false;
+    if (node.hasError && node.error !== entry.computedError) return false;
+  }
+  return node.equals(entry.value, node.value);
+}
+
 function computedWriteErrorLabel(node: SignalNode<unknown>): string {
   return node.debugName === undefined ?
     'Cannot write to a signal while evaluating a computed signal.' :
@@ -179,44 +566,27 @@ function computedWriteErrorLabel(node: SignalNode<unknown>): string {
 }
 
 function notifySignalObservers(node: SignalNode<unknown>): unknown[] {
-  signalCommitNotifications++;
-  const failures: unknown[] = [];
-  for (const observer of node.observers) {
-    try {
-      observer(node);
-    } catch (error) {
-      failures.push(error);
-    }
+  const batchState = activePublicSignalBatch;
+  if (batchState !== undefined) {
+    batchState.failures.push(...notifyComputedInvalidationObservers(node));
+    return [];
   }
-  return failures;
+  signalCommitNotifications++;
+  return notifyReactiveEdges(node);
 }
 
 function notifyComputedInvalidationObservers(node: SignalNode<unknown>): unknown[] {
-  const failures: unknown[] = [];
-  for (const observer of node.observers) {
-    if (observer.propagateInvalidation) {
-      try {
-        observer(node);
-      } catch (error) {
-        failures.push(error);
-      }
-    }
-  }
-  return failures;
+  return notifyReactiveEdges(
+    node,
+    consumer => consumer.propagateInvalidation === true,
+  );
 }
 
 function notifyRendererInvalidationObservers(node: SignalNode<unknown>): unknown[] {
-  const failures: unknown[] = [];
-  for (const observer of node.observers) {
-    if (observer.renderInvalidation) {
-      try {
-        observer(node);
-      } catch (error) {
-        failures.push(error);
-      }
-    }
-  }
-  return failures;
+  return notifyReactiveEdges(
+    node,
+    consumer => consumer.renderInvalidation === true,
+  );
 }
 
 function throwSignalObserverFailures(failures: readonly unknown[]): void {
@@ -231,21 +601,18 @@ export function signal<T>(
 ): WritableSignal<T> {
   const equals = options.equals ?? Object.is;
   const debugName = options.debugName;
-  const node: SignalNode<T> = {
-    value: initialValue,
-    equals,
-    debugName,
-    version: 0,
-    observers: new Set(),
-  };
+  const node = createSignalNodeState(initialValue, equals, debugName);
 
   let readonlySignal: Signal<T> | undefined;
   const read = (): T => {
-    trackingStack.at(-1)?.addDependency(node as SignalNode<unknown>);
+    activeSignalDependencyCollector?.addDependency(node as SignalNode<unknown>);
     return node.value;
   };
   const assertWriteAllowed = (): void => {
-    writePolicyStack.at(-1)?.(node as SignalNode<unknown>, 'direct');
+    writePolicyStack[writePolicyStack.length - 1]?.(
+      node as SignalNode<unknown>,
+      'direct',
+    );
     signalWriterLeasePolicy?.assertDirectWriteAllowed(node as SignalNode<unknown>);
   };
   const commit = (nextValue: T): void => {
@@ -253,6 +620,7 @@ export function signal<T>(
       return;
     }
 
+    recordPublicBatchEntry(node as SignalNode<unknown>);
     node.value = nextValue;
     node.version++;
     throwSignalObserverFailures(notifySignalObservers(node as SignalNode<unknown>));
@@ -268,15 +636,17 @@ export function signal<T>(
       commit(updateValue(node.value));
     },
     asReadonly(): Signal<T> {
-      return readonlySignal ??= { get: read } as Signal<T>;
+      if (readonlySignal === undefined) {
+        readonlySignal = { get: read } as Signal<T>;
+        signalValues.add(readonlySignal);
+        signalNodes.set(readonlySignal, node as SignalNode<unknown>);
+      }
+      return readonlySignal;
     },
   } as WritableSignal<T>;
 
   signalValues.add(writable);
   signalNodes.set(writable, node as SignalNode<unknown>);
-  const readonly = writable.asReadonly();
-  signalValues.add(readonly);
-  signalNodes.set(readonly, node as SignalNode<unknown>);
   return writable;
 }
 
@@ -370,26 +740,46 @@ export function computed<T>(
   compute: () => T,
   options: SignalOptions<T> = {},
 ): Signal<T> {
-  const node: ComputedSignalNode<T> = {
+  const node = Object.assign(
+    createSignalNodeState(
+      undefined as T,
+      options.equals ?? Object.is,
+      options.debugName,
+    ),
+    {
     kind: 'computed',
     compute,
-    value: undefined as T,
-    equals: options.equals ?? Object.is,
-    debugName: options.debugName,
-    version: 0,
-    observers: new Set(),
     state: 'check',
     hasValue: false,
     hasError: false,
     error: undefined,
-    dependencies: new Map(),
-    dependencyObservations: new Map(),
+    dependencyHead: undefined,
+    dependencyTail: undefined,
+    dependencyFreeHead: undefined,
+    dependencyFreeCount: 0,
+    dependencyCount: 0,
+    dependencyHighWater: 0,
+    collectionCursor: undefined,
+    collectionGeneration: 0,
     observedCount: 0,
     pendingValidation: false,
+    propagateInvalidation: true,
+    addDependency(dependency: SignalNode<unknown>): void {
+      if (
+        !isComputedSignalNode(dependency) ||
+        dependency.state !== 'evaluating'
+      ) {
+        collectReactiveDependency(node, dependency);
+      }
+    },
+    notify: () => {},
     observe: () => () => {},
     invalidate: () => {},
     validate: () => {},
-  };
+    adoptCandidate: () => {},
+    replaceCompute: () => {},
+    },
+  ) as ComputedSignalNode<T>;
 
   const notifyObservers = (): unknown[] => {
     return notifySignalObservers(node as SignalNode<unknown>);
@@ -412,7 +802,7 @@ export function computed<T>(
     if (pendingComputedValidations.size === 0) signalGraphPlanWorkNotifier?.();
   };
 
-  const invalidate: SignalObserver = (): void => {
+  const invalidate = (): void => {
     if (node.state !== 'clean') {
       return;
     }
@@ -422,50 +812,52 @@ export function computed<T>(
       notifyComputedInvalidationObservers(node as SignalNode<unknown>),
     );
   };
-  invalidate.propagateInvalidation = true;
+  node.notify = invalidate;
 
-  const acquireDependency = (dependency: SignalNode<unknown>): void => {
-    if (node.dependencyObservations.has(dependency)) return;
-    dependency.observers.add(invalidate);
-    const releaseObservation = dependency.observe?.() ?? (() => {});
-    node.dependencyObservations.set(dependency, releaseObservation);
+  const acquireDependency = (edge: ReactiveEdge): void => {
+    if (edge.sourceLinked) return;
+    const dependency = edge.source!;
+    linkReactiveEdgeToSource(edge, dependency.observe?.());
     computedSourceEdges++;
     createdComputedSourceEdges++;
   };
 
-  const releaseDependency = (dependency: SignalNode<unknown>): void => {
-    const releaseObservation = node.dependencyObservations.get(dependency);
-    if (releaseObservation === undefined) return;
-    dependency.observers.delete(invalidate);
-    node.dependencyObservations.delete(dependency);
-    releaseObservation();
+  const releaseDependency = (edge: ReactiveEdge): void => {
+    if (!edge.sourceLinked) return;
+    unlinkReactiveEdgeFromSource(edge);
     computedSourceEdges--;
     releasedComputedSourceEdges++;
   };
 
   const acquireDependencies = (): void => {
-    for (const dependency of node.dependencies.keys()) {
-      acquireDependency(dependency);
+    for (
+      let edge = node.dependencyHead;
+      edge !== undefined;
+      edge = edge.consumerNext
+    ) {
+      acquireDependency(edge);
     }
   };
 
   const releaseDependencies = (): void => {
-    for (const dependency of Array.from(node.dependencyObservations.keys())) {
-      releaseDependency(dependency);
+    for (
+      let edge = node.dependencyHead;
+      edge !== undefined;
+      edge = edge.consumerNext
+    ) {
+      releaseDependency(edge);
     }
   };
 
-  const replaceDependencies = (dependencies: Set<SignalNode<unknown>>): void => {
-    if (node.observedCount > 0) {
-      for (const dependency of node.dependencies.keys()) {
-        if (!dependencies.has(dependency)) releaseDependency(dependency);
-      }
-      for (const dependency of dependencies) {
-        if (!node.dependencies.has(dependency)) acquireDependency(dependency);
-      }
-    }
-    node.dependencies = new Map(
-      [...dependencies].map(dependency => [dependency, dependency.version]),
+  const finishDependencies = (): void => {
+    finishReactiveCollection(
+      node,
+      edge => {
+        if (node.observedCount > 0) acquireDependency(edge);
+        edge.observedVersion = edge.source!.version;
+        edge.collectionKind = undefined;
+      },
+      releaseDependency,
     );
   };
 
@@ -482,7 +874,7 @@ export function computed<T>(
       throw cycleError();
     }
 
-    const dependencies = new Set<SignalNode<unknown>>();
+    beginReactiveCollection(node);
     node.state = 'evaluating';
     computedStack.push(node as ComputedSignalNode<unknown>);
     let changed: boolean;
@@ -490,16 +882,7 @@ export function computed<T>(
       const result = withSignalWriteForbidden(
         computedWriteErrorLabel(node as SignalNode<unknown>),
         () => {
-          const nextValue = withSignalTracking({
-            addDependency: dependency => {
-              if (
-                !isComputedSignalNode(dependency) ||
-                dependency.state !== 'evaluating'
-              ) {
-                dependencies.add(dependency);
-              }
-            },
-          }, node.compute);
+          const nextValue = withSignalTracking(node, node.compute);
           return {
             nextValue,
             changed: !node.hasValue || node.hasError ||
@@ -510,6 +893,7 @@ export function computed<T>(
 
       changed = result.changed;
       if (changed) {
+        recordPublicBatchEntry(node as SignalNode<unknown>);
         node.value = result.nextValue;
         node.version++;
       }
@@ -518,11 +902,12 @@ export function computed<T>(
       node.error = undefined;
     } catch (error) {
       changed = !node.hasError || node.error !== error;
+      if (changed) recordPublicBatchEntry(node as SignalNode<unknown>);
       node.hasError = true;
       node.error = error;
     } finally {
       computedStack.pop();
-      replaceDependencies(dependencies);
+      finishDependencies();
       node.state = 'clean';
     }
     if (changed) {
@@ -538,22 +923,79 @@ export function computed<T>(
 
     let dependencyChanged = false;
     if (node.state === 'clean' && node.observedCount > 0) return;
-    for (const [dependency, version] of node.dependencies) {
+    for (
+      let edge = node.dependencyHead;
+      edge !== undefined;
+      edge = edge.consumerNext
+    ) {
+      const dependency = edge.source!;
       dependency.validate?.();
-      if (dependency.version !== version) {
+      if (dependency.version !== edge.observedVersion) {
         dependencyChanged = true;
       }
     }
     if (node.state === 'clean' && !dependencyChanged) return;
-    if (dependencyChanged || node.dependencies.size === 0 || !node.hasValue) {
+    if (dependencyChanged || node.dependencyCount === 0 || !node.hasValue) {
       evaluate();
     } else {
       node.state = 'clean';
     }
   };
 
-  node.invalidate = () => invalidate(node as SignalNode<unknown>);
+  const hasChangedDependencyVersion = (): boolean => {
+    for (
+      let edge = node.dependencyHead;
+      edge !== undefined;
+      edge = edge.consumerNext
+    ) {
+      if (edge.source!.version !== edge.observedVersion) return true;
+    }
+    return false;
+  };
+
+  node.invalidate = invalidate;
   node.validate = validate;
+
+  node.replaceCompute = (nextCompute, shouldInvalidate): void => {
+    node.compute = nextCompute;
+    if (shouldInvalidate) invalidate();
+  };
+
+  node.adoptCandidate = (
+    candidate,
+    nextCompute,
+    changed,
+    readers,
+  ): void => {
+    if (!candidate.hasValue || candidate.hasError) {
+      throw new Error('Cannot adopt an unevaluated computed formula candidate.');
+    }
+    node.compute = nextCompute;
+    beginReactiveCollection(node);
+    for (
+      let edge = candidate.dependencyHead;
+      edge !== undefined;
+      edge = edge.consumerNext
+    ) {
+      collectReactiveDependency(node, edge.source!);
+    }
+    finishDependencies();
+    removePendingValidation();
+    node.state = 'clean';
+    node.hasValue = true;
+    node.hasError = false;
+    node.error = undefined;
+    if (!changed) return;
+
+    recordPublicBatchEntry(node as SignalNode<unknown>);
+    node.value = candidate.value;
+    node.version++;
+    signalCommitNotifications++;
+    throwSignalObserverFailures(notifyReactiveEdges(
+      node as SignalNode<unknown>,
+      consumer => !readers.has(consumer),
+    ));
+  };
 
   node.observe = (): (() => void) => {
     node.observedCount++;
@@ -561,9 +1003,7 @@ export function computed<T>(
       acquireDependencies();
       if (
         node.state === 'clean' &&
-        Array.from(node.dependencies).some(
-          ([dependency, version]) => dependency.version !== version,
-        )
+        hasChangedDependencyVersion()
       ) {
         node.state = 'check';
       }
@@ -588,7 +1028,9 @@ export function computed<T>(
 
   const readonly: Signal<T> = {
     get(): T {
-      trackingStack.at(-1)?.addDependency(node as SignalNode<unknown>);
+      activeSignalDependencyCollector?.addDependency(
+        node as SignalNode<unknown>,
+      );
       validate();
       removePendingValidation();
       if (node.hasError) {
@@ -601,6 +1043,90 @@ export function computed<T>(
   signalValues.add(readonly);
   signalNodes.set(readonly, node as SignalNode<unknown>);
   return readonly;
+}
+
+/** @internal Creates a nominal alias that retains one computed graph identity. */
+export function createComputedSignalAlias<T>(
+  target: Signal<T>,
+  read: () => T,
+): Signal<T> {
+  const node = requireComputedSignalNode(target);
+  const alias = { get: read } as Signal<T>;
+  signalValues.add(alias);
+  signalNodes.set(alias, node as SignalNode<unknown>);
+  return alias;
+}
+
+/** @internal Creates one unobserved formula generation for transactional render. */
+export function createComputedFormulaCandidate<T>(
+  target: Signal<T>,
+  compute: () => T,
+): ComputedFormulaCandidate<T> {
+  const node = requireComputedSignalNode(target);
+  return {
+    signal: computed(compute, {
+      equals: node.equals,
+      debugName: node.debugName,
+    }),
+    readers: new Set(),
+    changed: false,
+    evaluated: false,
+    value: undefined,
+  };
+}
+
+/** @internal Reads a provisional formula while attributing the stable node. */
+export function readComputedFormulaCandidate<T>(
+  target: Signal<T>,
+  candidate: ComputedFormulaCandidate<T>,
+): T {
+  const node = requireComputedSignalNode(target);
+  const reader = activeSignalDependencyCollector;
+  reader?.addDependency(node as SignalNode<unknown>);
+  if (reader !== undefined) candidate.readers.add(reader);
+  if (!candidate.evaluated) {
+    const value = untracked(() => candidate.signal.get());
+    candidate.changed = !node.hasValue || node.hasError ||
+      !node.equals(node.value, value);
+    candidate.value = value;
+    candidate.evaluated = true;
+  }
+  return candidate.value as T;
+}
+
+/** @internal Publishes an evaluated formula generation after render success. */
+export function adoptComputedFormulaCandidate<T>(
+  target: Signal<T>,
+  candidate: ComputedFormulaCandidate<T>,
+  compute: () => T,
+): void {
+  const node = requireComputedSignalNode(target);
+  const candidateNode = requireComputedSignalNode(candidate.signal);
+  node.adoptCandidate(
+    candidateNode,
+    compute,
+    candidate.changed,
+    candidate.readers,
+  );
+}
+
+/** @internal Refreshes a committed formula and optionally invalidates its cache. */
+export function replaceComputedFormula<T>(
+  target: Signal<T>,
+  compute: () => T,
+  invalidate: boolean,
+): void {
+  requireComputedSignalNode(target).replaceCompute(compute, invalidate);
+}
+
+function requireComputedSignalNode<T>(
+  value: Signal<T>,
+): ComputedSignalNode<T> {
+  const node = getSignalNode(value);
+  if (!isComputedSignalNode(node as SignalNode<unknown>)) {
+    throw new TypeError('Expected a computed signal.');
+  }
+  return node as ComputedSignalNode<T>;
 }
 
 /** @internal Called during the scheduler Plan phase. */
@@ -658,11 +1184,12 @@ export function setSignalGraphPlanWorkNotifier(notifier: () => void): void {
 }
 
 export function untracked<T>(callback: () => T): T {
-  trackingStack.push(undefined);
+  const previous = activeSignalDependencyCollector;
+  activeSignalDependencyCollector = undefined;
   try {
     return callback();
   } finally {
-    trackingStack.pop();
+    activeSignalDependencyCollector = previous;
   }
 }
 
@@ -752,6 +1279,7 @@ export function createSignalCommitBatch(): SignalCommitBatch {
 
       for (const candidate of changed) {
         const node = candidate.node;
+        recordPublicBatchEntry(node);
         node.value = candidate.value;
         node.version++;
       }
@@ -820,7 +1348,7 @@ function stageSignalCommitBatchCandidate<T>(
 ): void {
   const node = getSignalNode(value) as SignalNode<T>;
   const unknownNode = node as SignalNode<unknown>;
-  writePolicyStack.at(-1)?.(unknownNode, 'staged');
+  writePolicyStack[writePolicyStack.length - 1]?.(unknownNode, 'staged');
   staged.set(unknownNode, {
     node: unknownNode,
     value: nextValue,
@@ -875,11 +1403,12 @@ export function withSignalTracking<T>(
   collector: SignalDependencyCollector,
   callback: () => T,
 ): T {
-  trackingStack.push(collector);
+  const previous = activeSignalDependencyCollector;
+  activeSignalDependencyCollector = collector;
   try {
     return callback();
   } finally {
-    trackingStack.pop();
+    activeSignalDependencyCollector = previous;
   }
 }
 
@@ -915,7 +1444,10 @@ export function withDirectSignalWriteForbidden<T>(
 
 /** @internal Checks the active direct-write policy without mutating a signal. */
 export function assertSignalCommandAllowed(): void {
-  writePolicyStack.at(-1)?.(commandAssertionNode, 'direct');
+  writePolicyStack[writePolicyStack.length - 1]?.(
+    commandAssertionNode,
+    'direct',
+  );
 }
 
 /** @internal Installs the singleton policy that validates active writer leases. */

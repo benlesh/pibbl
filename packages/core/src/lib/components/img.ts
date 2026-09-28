@@ -5,8 +5,8 @@ import type {
   CRCEventParticipationOptions,
 } from '../events/types.js';
 import { useRectPath } from '../hooks/use-rect-path.js';
-import { useState } from '../hooks/use-state.js';
-import { useWhenChanged } from '../hooks/use-when-changed.js';
+import { useReaction } from '../hooks/use-reaction.js';
+import { useSignal } from '../hooks/use-signal.js';
 import type {
   CRCPhysics2DPropExtension,
   MeasureInput,
@@ -54,11 +54,13 @@ function renderImage(
     ctx.globalAlpha = ctx.globalAlpha * opacity;
   }
 
-  const [loadedImage, setLoadedImage] = useState<LoadedImage | null>(null);
+  const loadedImage = useSignal<LoadedImage | null>(null);
+  const loadedImageValue = loadedImage.get();
   const image =
-    loadedImage && loadedImage.src === src ? loadedImage.element : null;
+    loadedImageValue && loadedImageValue.src === src ?
+      loadedImageValue.element : null;
 
-  useWhenChanged(() => {
+  useReaction(() => {
     let active = true;
     const BrowserImage = globalThis.Image;
     const element = new BrowserImage();
@@ -71,12 +73,12 @@ function renderImage(
     element.onload = () => {
       if (!active) return;
       settle();
-      setLoadedImage({ src, element });
+      loadedImage.set({ src, element });
     };
     element.onerror = () => {
       if (!active) return;
       settle();
-      setLoadedImage(null);
+      loadedImage.set(null);
     };
     element.src = src;
 

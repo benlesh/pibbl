@@ -1,25 +1,26 @@
 import {
   Absolute,
+  batch,
   Clip,
   computed,
   createElement,
   crc,
   useCanvasContext,
+  useComputed,
+  useConst,
   useCursor,
   useEvent,
   useEventListener,
   useEventTarget,
   useLayoutBox,
   useLinePath,
-  useMemo,
   usePlayback,
   useRectPath,
+  useReaction,
   useRef,
   useSignal,
-  useState,
   useSvgPath,
   useTransition,
-  useWhenChanged,
   definePrimitive,
   defineAnimation,
   easing,
@@ -41,6 +42,7 @@ import {
   parallel,
   Path,
   Rectangle,
+  resolveSignalValue,
   repeat,
   sequence,
   signal,
@@ -63,15 +65,18 @@ import {
   type CRCAnimationSampleInput,
   type CRCComponent,
   type CRCController,
+  type CRCEventHandler,
   type CRCElement,
   type CRCEasing,
   type CRCInterpolator,
   type CRCKeyframesOptions,
   type CRCNode,
+  type CRCNodeInput,
   type CRCPlayback,
   type CRCPlaybackEvent,
   type CRCPlaybackOptions,
   type CRCPlaybackStatus,
+  type CRCReactionOptions,
   type RectStyle,
   type CRCSpringOptions,
   type CRCSpringTransitionOptions,
@@ -81,31 +86,44 @@ import {
   type Signal,
   type SignalEquals,
   type SignalOptions,
+  type SignalValue,
+  type CRCTextInput,
   type WritableSignal,
 } from '@crc/core';
 
+// Removed hooks have no compatibility export from the package root.
+// @ts-expect-error useState was replaced by useSignal
+import { useState as removedUseState } from '@crc/core';
+// @ts-expect-error StateUpdater was removed with useState
+import type { StateUpdater as RemovedStateUpdater } from '@crc/core';
+// @ts-expect-error useMemo was replaced by useConst and useComputed
+import { useMemo as removedUseMemo } from '@crc/core';
+// @ts-expect-error useWhenChanged was replaced by useReaction
+import { useWhenChanged as removedUseWhenChanged } from '@crc/core';
+
 const importedFinalVocabulary = {
   Absolute,
+  batch,
   Clip,
   computed,
   createElement,
   crc,
   useCanvasContext,
+  useComputed,
+  useConst,
   useCursor,
   useEvent,
   useEventListener,
   useEventTarget,
   useLayoutBox,
   useLinePath,
-  useMemo,
   usePlayback,
   useRectPath,
+  useReaction,
   useRef,
   useSignal,
-  useState,
   useSvgPath,
   useTransition,
-  useWhenChanged,
   definePrimitive,
   defineAnimation,
   easing,
@@ -142,6 +160,13 @@ const importedFinalVocabulary = {
   wait,
   marker,
 };
+
+type RemovedHookVocabulary = [
+  typeof removedUseState,
+  RemovedStateUpdater<number>,
+  typeof removedUseMemo,
+  typeof removedUseWhenChanged,
+];
 
 function FinalVocabularyScene(): CRCNode {
   return (
@@ -213,6 +238,118 @@ const untrackedCount: number = untracked(() => doubledCount.get());
 const callbackSignal = signal<() => string>(() => 'ready');
 const callbackValue: () => string = callbackSignal.get();
 callbackSignal.set(() => 'updated');
+
+const reactiveX = signal(10);
+const reactiveFill = signal('red');
+const reactiveHandler = signal<CRCEventHandler<'click'>>(() => {});
+const reactiveStyle = signal<RectStyle>({
+  x: 10,
+  fill: 'red',
+  width: 20,
+  height: 20,
+});
+const signalValuedPrimitiveInputs = (
+  <>
+    <Rectangle
+      style={{
+        x: reactiveX,
+        fill: reactiveFill,
+        width: 20,
+        height: 20,
+      }}
+      onClick={reactiveHandler}
+    />
+    <Rectangle style={reactiveStyle} />
+  </>
+);
+
+function Gauge(props: { value: SignalValue<number> }) {
+  return <Text>{resolveSignalValue(props.value)}</Text>;
+}
+
+const gauge = <Gauge value={reactiveX} />;
+const ExactSignal = definePrimitive<{ valueSignal: Signal<number> }>(
+  function renderExactSignal() {},
+  { preserveSignalProps: ['valueSignal'] },
+);
+// @ts-expect-error exact signal-object props require preservation metadata
+definePrimitive<{ valueSignal: Signal<number> }>(
+  function renderUnpreservedExactSignal() {},
+);
+definePrimitive<{ value: number }>(
+  function renderInvalidPreservedValue() {},
+  {
+    // @ts-expect-error only exact signal-object props may be preserved
+    preserveSignalProps: ['value'],
+  },
+);
+const exactSignal = <ExactSignal valueSignal={reactiveX} />;
+// @ts-expect-error exact signal-object positions do not unwrap outer signals
+const nestedExactSignal = <ExactSignal valueSignal={signal(reactiveX)} />;
+const OptionalExactSignal = definePrimitive<{
+  valueSignal?: Signal<number>;
+  writableSignal?: WritableSignal<number>;
+}>(
+  function renderOptionalExactSignal() {},
+  { preserveSignalProps: ['valueSignal', 'writableSignal'] },
+);
+// @ts-expect-error optional exact signal-object props require preservation metadata
+definePrimitive<{ valueSignal?: Signal<number> }>(
+  function renderUnpreservedOptionalExactSignal() {},
+);
+const optionalExactSignal = (
+  <OptionalExactSignal
+    valueSignal={readonlyCount}
+    writableSignal={writableCount}
+  />
+);
+const nestedOptionalExactSignal = (
+  <OptionalExactSignal
+    // @ts-expect-error optional exact signal-object positions do not unwrap outer signals
+    valueSignal={signal(readonlyCount)}
+  />
+);
+const nestedPaddingSignal = (
+  <Rectangle
+    style={{
+      width: 20,
+      height: 20,
+      // @ts-expect-error nested descriptor fields are not recursively signal-valued
+      padding: { left: reactiveX },
+    }}
+  />
+);
+const reactiveLabel = signal('Current');
+const reactiveNode = signal<CRCNode>(
+  <Rectangle style={{ width: 10, height: 10 }} />,
+);
+const publicNodeInput: CRCNodeInput = reactiveNode;
+const publicTextInput: CRCTextInput = ['Value: ', reactiveLabel];
+const signalValuedChildren = (
+  <Group>
+    {reactiveNode}
+    <Text>{publicTextInput}</Text>
+  </Group>
+);
+const nestedTextSignal = signal(reactiveLabel);
+const invalidNestedTextSignal = (
+  <Text>
+    {/* @ts-expect-error a signal result must be a resolved signal-free text structure */}
+    {nestedTextSignal}
+  </Text>
+);
+// @ts-expect-error a bare signal has no receiving component at the CRC root
+crc(document.createElement('canvas'), reactiveNode);
+void signalValuedPrimitiveInputs;
+void gauge;
+void exactSignal;
+void nestedExactSignal;
+void optionalExactSignal;
+void nestedOptionalExactSignal;
+void nestedPaddingSignal;
+void publicNodeInput;
+void signalValuedChildren;
+void invalidNestedTextSignal;
 
 const numericOutput = signal(0);
 const objectOutput = signal({ x: 0 });
@@ -336,7 +473,33 @@ function SignalHookScene(): CRCNode {
 }
 const signalHookComponent: CRCComponent<Record<string, never>> = SignalHookScene;
 
+function ComputedHookScene({ scale }: { scale: number }): CRCNode {
+  const origin = useConst(() => 10);
+  const source = useSignal(2);
+  const value: Signal<number> = useComputed(
+    () => origin + source.get() * scale,
+    [scale],
+    { debugName: 'public computed hook' },
+  );
+  return <Text>{value}</Text>;
+}
+const computedHookComponent: CRCComponent<{ scale: number }> =
+  ComputedHookScene;
+
+function ReactionHookScene({ label }: { label: string }): CRCNode {
+  const source = useSignal(1);
+  const options: CRCReactionOptions = { debugName: label };
+  useReaction(() => {
+    source.get();
+    return () => undefined;
+  }, [label], options);
+  return <Text>{source}</Text>;
+}
+const reactionHookComponent: CRCComponent<{ label: string }> =
+  ReactionHookScene;
+
 void importedFinalVocabulary;
+void (null as unknown as RemovedHookVocabulary);
 void component;
 void element;
 void pointerEventsVocabulary;
@@ -358,3 +521,5 @@ void AnimationHookScene;
 void (null as unknown as FreePlay);
 void badStyle;
 void signalHookComponent;
+void computedHookComponent;
+void reactionHookComponent;

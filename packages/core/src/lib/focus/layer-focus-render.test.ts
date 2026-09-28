@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { crc } from "../crc";
 import { getCRCInstance } from "../global-state";
 import { useEventTarget } from "../hooks/use-event-target";
-import { useState } from "../hooks/use-state";
+import { useSignal } from "../hooks/use-signal";
 import { Layer } from "../components/layer";
 import { Rectangle } from "../components/rect";
 import { Group } from "../components/g";
@@ -188,8 +188,8 @@ describe("focus snapshots in cached layers", () => {
       });
     };
     const Root = (_props: {}) => {
-      const [version, setVersion] = useState(0);
-      updateUnrelated = () => setVersion(version + 1);
+      const version = useSignal(0);
+      updateUnrelated = () => version.update(value => value + 1);
       return [
         createElement(Layer, {
           style: { width: 80, height: 80 },
@@ -260,8 +260,8 @@ describe("focus snapshots in cached layers", () => {
       });
     };
     const Root = (_props: {}) => {
-      const [version, setVersion] = useState(0);
-      updateUnrelated = () => setVersion(version + 1);
+      const version = useSignal(0);
+      updateUnrelated = () => version.update(value => value + 1);
       return createElement(Layer, {
         style: { width: 100, height: 100 },
         children: createElement(InertTarget, {}),
@@ -299,12 +299,12 @@ describe("focus snapshots in cached layers", () => {
       });
     };
     const Root = (_props: {}) => {
-      const [version, setVersion] = useState(0);
-      replaceTarget = () => setVersion(version + 1);
+      const version = useSignal(0);
+      replaceTarget = () => version.update(value => value + 1);
       return createElement(Layer, {
         style: { width: 80, height: 80 },
         children: focusManaged(createElement(FocusTarget, {
-          key: `target-${version}`,
+          key: `target-${version.get()}`,
         })),
       });
     };
@@ -354,10 +354,10 @@ describe("focus snapshots during manager removal", () => {
       });
     };
     const Root = (_props: {}) => {
-      const [managed, setManaged] = useState(true);
-      removeManager = () => setManaged(false);
+      const managed = useSignal(true);
+      removeManager = () => managed.set(false);
       const target = createElement(FocusTarget, {});
-      return managed ? focusManaged(target) : target;
+      return managed.get() ? focusManaged(target) : target;
     };
     const mounted = mount(createElement(Root, {}));
     await nextFrame();
@@ -409,10 +409,10 @@ describe("focus snapshots during manager removal", () => {
       children: createElement(FocusTarget, {}),
     });
     const Root = (_props: {}) => {
-      const [managed, setManaged] = useState(true);
-      removeManager = () => setManaged(false);
+      const managed = useSignal(true);
+      removeManager = () => managed.set(false);
       const host = createElement(LayerHost, {});
-      return managed ? focusManaged(host) : host;
+      return managed.get() ? focusManaged(host) : host;
     };
     const mounted = mount(createElement(Root, {}));
     await nextFrame();

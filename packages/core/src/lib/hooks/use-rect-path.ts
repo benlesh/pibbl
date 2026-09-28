@@ -2,7 +2,7 @@ import { PixelGridAlignment } from '../types.js';
 import { createRectanglePath } from '../geometry/rectangle.js';
 import { resolveNumericCornerRadii } from '../geometry/rounded-corners.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
-import { useMemoSlot } from './use-memo.js';
+import { useValueMemoSlot } from './use-value-memo-slot.js';
 
 /**
  * Creates a memoized Path2D for a rectangle. Useful when
@@ -35,7 +35,7 @@ export function useRectPath(
     ));
   }
 
-  return useMemoSlot('rectPath', () => {
+  return useValueMemoSlot('rectPath', () => {
     return createRectanglePath({ x, y, width, height, cornerRadii: radii });
   }, [x, y, width, height, ...radii]);
 }

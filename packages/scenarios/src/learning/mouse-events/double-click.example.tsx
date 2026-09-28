@@ -1,6 +1,6 @@
-import { crc, useState, Rectangle, Text, type CRCController } from "@crc/core";
+import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
 function DoubleClickStudy() {
-  const [stamps, setStamps] = useState(0);
+  const stamps = useSignal(0);
   return [
     <Rectangle
       style={{
@@ -22,7 +22,7 @@ function DoubleClickStudy() {
         strokeWidth: 7,
         cursor: "copy",
       }}
-      onDblClick={() => setStamps((value) => value + 1)}
+      onDblClick={() => stamps.update((value) => value + 1)}
     />,
     <Text
       style={{
@@ -33,7 +33,7 @@ function DoubleClickStudy() {
         textAlign: "center",
       }}
     >
-      {stamps ? `STAMPED × ${stamps}` : "DOUBLE CLICK"}
+      {stamps.get() ? `STAMPED × ${stamps.get()}` : "DOUBLE CLICK"}
     </Text>,
     <Text
       style={{

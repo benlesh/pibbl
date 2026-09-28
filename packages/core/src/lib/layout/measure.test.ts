@@ -5,7 +5,7 @@ import { Text } from '../components/text';
 import { resolveTextLayout } from '../components/text-layout';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import { useRef } from '../hooks/use-ref';
-import { useState } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCElement, MeasureResult, SystemStyle } from '../types';
@@ -15,6 +15,7 @@ import {
 } from './measure';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
+import { signal, signalGraphSnapshot } from '../signals/graph';
 
 const constraints = {
   minWidth: 0,
@@ -36,6 +37,25 @@ const service: CanvasMeasurementService = {
 };
 
 describe('pure element measurement', () => {
+  it('snapshots signal inputs without retaining an edge or provision', () => {
+    const label = signal('snapshot');
+    const style = signal({ font: '12px sans-serif' });
+    const baseline = signalGraphSnapshot();
+
+    expect(measureElement(createElement(Text, {
+      children: label,
+      style,
+    }), constraints, service)).toEqual({
+      status: 'measured',
+      size: { width: 80, height: 12 },
+    });
+
+    const after = signalGraphSnapshot();
+    expect(after.rendererEdges).toBe(baseline.rendererEdges);
+    expect(after.rendererConsumers).toBe(baseline.rendererConsumers);
+    expect(after.receiverInputProvisions).toBe(baseline.receiverInputProvisions);
+  });
+
   it('normalizes and measures without invoking render', () => {
     interface ProbeStyle extends SystemStyle {
       label?: string;
@@ -180,7 +200,7 @@ describe('pure element measurement', () => {
   it('isolates measurement from active render hooks and layout context', async () => {
     const errors: string[] = [];
     const probes = [
-      () => useState(1),
+      () => useSignal(1),
       () => useRef(),
       () => useLayoutBox(),
     ];
@@ -191,7 +211,7 @@ describe('pure element measurement', () => {
       },
     });
     const Host = ({ revision }: { revision: number }) => {
-      useState(revision);
+      useSignal(revision);
       for (let index = 0; index < 3; index++) {
         try {
           measureElement(createElement(Probe, {}), constraints, service);

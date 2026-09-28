@@ -38,9 +38,11 @@
     readonly key?: string;
   }
   export type CRCNode = CRCElement<any> | CRCEmptyNode | readonly CRCNode[] | Iterable<CRCNode>;
-  export type CRCContainerChild = CRCNode;
+  export type CRCNodeInput = SignalValue<CRCNode> | readonly CRCNodeInput[] | Iterable<CRCNodeInput>;
+  export type CRCTextInput = SignalValue<CRCTextChild> | readonly CRCTextInput[] | Iterable<CRCTextInput>;
+  export type CRCContainerChild = CRCNodeInput;
   export type CRCTextChild = string | number | boolean | null | undefined | readonly CRCTextChild[] | Iterable<CRCTextChild>;
-  export type CRCRenderResult = CRCNode | void;
+  export type CRCRenderResult = CRCNodeInput | void;
   export type CRCComponent<P = Record<string, never>> = (props: P) => CRCRenderResult;
   export type CRCElementType<P = any> = CRCComponent<P>;
   export type CRCPrimitiveComponent<P = Record<string, never>, I = P> = CRCComponent<I> & {
@@ -189,14 +191,17 @@
   type UnionKeys<T> = T extends unknown ? keyof T : never;
   export type PrimitiveProgramProps<P> = 0 extends (1 & P) ? P : Extract<UnionKeys<P>, PrimitiveReservedKey> extends never ? P : never;
   type RequiredKeys<T> = T extends unknown ? { [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never }[keyof T] : never;
-  type StyleField<S> = [RequiredKeys<S>] extends [never] ? { style?: S } : { style: S };
+  type StyleField<S> = [RequiredKeys<S>] extends [never] ? { style?: SignalValue<S | undefined> } : { style: SignalValue<S> };
   type AllocationValue = `${number}%` | 'auto';
   type DeclaredStyleValue<S> = S extends unknown ? S[Exclude<keyof S, 'custom'>] : never;
   type RequiresResolver<S> = [Extract<DeclaredStyleValue<S>, AllocationValue>] extends [never] ? false : true;
   export type SpecifiedStyle<S extends SystemStyle> = Readonly<S>;
   export type NormalizedStyle<S extends SystemStyle> = Readonly<S>;
   export type ResolvedStyle<S extends SystemStyle> = Readonly<S>;
-  export type PrimitiveInput<P, S extends SystemStyle = SystemStyle> = PrimitiveProgramProps<P> & StyleField<SpecifiedStyle<S>>;
+  type SignalProgramValue<T> = [T] extends [Signal<any>] ? T : SignalValue<T>;
+  type SignalProgramProps<P> = [PrimitiveProgramProps<P>] extends [never] ? never : Readonly<{ [K in keyof PrimitiveProgramProps<P>]: K extends 'children' ? PrimitiveProgramProps<P>[K] : SignalProgramValue<PrimitiveProgramProps<P>[K]> }>;
+  type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends 'custom' ? S[K] : SignalValue<S[K]> }>;
+  export type PrimitiveInput<P, S extends SystemStyle = SystemStyle> = SignalProgramProps<P> & StyleField<SignalStyle<SpecifiedStyle<S>>>;
   export type PrimitiveRender<P, R extends SystemStyle = SystemStyle> = (props: Readonly<PrimitiveProgramProps<P>>, style: ResolvedStyle<R>, context: RenderingContext2D) => CRCNode[] | CRCNode | void;
   export interface PrimitiveCapabilities<P, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N> {
     normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;
@@ -275,11 +280,11 @@
   export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
   export interface HorizontalLineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
   export interface VerticalLineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
-  export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension { children?: CRCTextChild }
+  export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension { children?: CRCTextInput }
   export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
-  export interface GroupProps extends CRCEventHandlers, CRCPhysics2DPropExtension { children: CRCNode }
-  export interface ClipProps extends CRCEventHandlers { children: CRCNode }
-  export interface LayerProps extends CRCEventHandlers { children: CRCNode }
+  export interface GroupProps extends CRCEventHandlers, CRCPhysics2DPropExtension { children: CRCNodeInput }
+  export interface ClipProps extends CRCEventHandlers { children: CRCNodeInput }
+  export interface LayerProps extends CRCEventHandlers { children: CRCNodeInput }
 
   export interface RectanglePathOptions extends RoundedCornerPathOptions { x?: number; y?: number; width: number; height: number }
   export interface CirclePathOptions { cx?: number; cy?: number; radius: number }
@@ -295,16 +300,16 @@
   export interface SvgPathOptions { d: string }
 
   export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
-  export interface AbsoluteProps extends CRCEventHandlers { children: CRCNode }
+  export interface AbsoluteProps extends CRCEventHandlers { children: CRCNodeInput }
   export interface OverlayStyle extends BoxStyle, LayoutItemStyle { justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end' }
-  export interface OverlayProps extends CRCEventHandlers { children: CRCNode }
+  export interface OverlayProps extends CRCEventHandlers { children: CRCNodeInput }
   export interface FlowStyle extends BoxStyle, LayoutItemStyle { direction?: 'horizontal' | 'vertical'; wrap?: boolean; gap?: number; lineGap?: number; alignItems?: 'start' | 'center' | 'end' | 'stretch' }
-  export interface FlowProps extends CRCEventHandlers { children: CRCNode }
+  export interface FlowProps extends CRCEventHandlers { children: CRCNodeInput }
   export interface FlexStyle extends BoxStyle, LayoutItemStyle { flexDirection?: 'row' | 'column'; flexWrap?: 'nowrap' | 'wrap'; justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; alignItems?: 'stretch' | 'flex-start' | 'flex-end' | 'center'; alignContent?: 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; gap?: number; rowGap?: number; columnGap?: number }
-  export interface FlexProps extends CRCEventHandlers { children: CRCNode }
+  export interface FlexProps extends CRCEventHandlers { children: CRCNodeInput }
   export type GridTrack = number | `${number}%` | `${number}fr`;
   export interface GridStyle extends BoxStyle, LayoutItemStyle { gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
-  export interface GridProps extends CRCEventHandlers { children: CRCNode }
+  export interface GridProps extends CRCEventHandlers { children: CRCNodeInput }
 
   export interface CanvasMeasurementService { measureText(text: string, font: string): TextMetrics }
   export type MeasureResult = { status: 'measured'; size: Readonly<Size> } | { status: 'unsupported'; reason: string };
@@ -318,7 +323,9 @@
   declare const signalBrand: unique symbol;
   export interface SignalOptions<T> { equals?: SignalEquals<T>; debugName?: string }
   export interface Signal<T> { readonly [signalBrand]: T; get(): T }
+  export type SignalValue<T> = T | Signal<T>;
   export interface WritableSignal<T> extends Signal<T> { set(value: T): void; update(update: (current: T) => T): void; asReadonly(): Signal<T> }
+  export interface CRCReactionOptions { readonly debugName?: string }
   export type CRCEasing = (progress: number) => number;
   export type CRCInterpolator<T> = (from: T, to: T, progress: number) => T;
   declare const crcAnimationDefinitionBrand: unique symbol;
@@ -339,7 +346,6 @@
   export interface CRCPlaybackEvent { readonly type: 'start' | 'iteration' | 'marker' | 'finish' | 'cancel'; readonly logicalTime: number; readonly frameId: number; readonly programPath: readonly number[]; readonly iteration: number; readonly marker?: string }
   export interface CRCPlayback { readonly status: Signal<CRCPlaybackStatus>; readonly currentTime: Signal<number>; play(options?: { readonly conflict?: 'error' | 'replace' }): void; pause(): void; resume(): void; cancel(): void; finish(): void; seek(milliseconds: number): void; reverse(): void; setPlaybackRate(rate: number): void }
   export interface CRCPlaybackOptions { readonly autoplay?: boolean; readonly conflict?: 'error' | 'replace'; readonly debugName?: string; readonly onEvent?: (event: CRCPlaybackEvent) => void; readonly onError?: (error: unknown) => void }
-  export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
 
   export interface CRCRenderLayerSize {
     readonly width: number;
@@ -408,8 +414,10 @@
   export function crc(canvas: HTMLCanvasElement, element: CRCNode, config?: CRCConfig): CRCController;
   export function signal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
   export function computed<T>(compute: () => T, options?: SignalOptions<T>): Signal<T>;
+  export function batch<T>(callback: () => T): T;
   export function untracked<T>(callback: () => T): T;
   export function isSignal(value: unknown): value is Signal<unknown>;
+  export function resolveSignalValue<T>(value: SignalValue<T>): T;
   export const easing: Readonly<{ readonly linear: CRCEasing; readonly easeIn: CRCEasing; readonly easeOut: CRCEasing; readonly easeInOut: CRCEasing; readonly cubicBezier: (x1: number, y1: number, x2: number, y2: number) => CRCEasing; readonly steps: (count: number, position?: 'start' | 'end') => CRCEasing }>;
   export function tween<T>(options: Readonly<CRCTweenOptions<T>>): CRCAnimationDefinition<T>;
   export function keyframes<T>(options: Readonly<CRCKeyframesOptions<T>>): CRCAnimationDefinition<T>;
@@ -428,7 +436,7 @@
   type MultipleChildren<C> = C extends unknown ? C extends readonly (infer Child)[] ? Child[] extends C ? [Child, Child, ...Child[]] : never : C extends Iterable<infer Child> ? Child[] extends C ? [Child, Child, ...Child[]] : never : never : never;
   type ChildrenArguments<P> = P extends unknown ? 'children' extends keyof P ? [] | [ChildrenForProps<P>] | MultipleChildren<ChildrenForProps<P>> : [] : never;
   export function createElement<P>(type: CRCElementType<P>, props: ElementInputOrNull<P>, ...children: ChildrenArguments<P>): CRCElement<P>;
-  export function Fragment(props: { children?: CRCNode }): CRCNode;
+  export function Fragment(props: { children?: CRCNodeInput }): CRCNodeInput;
   export function definePrimitive<P = Record<string, never>, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(render: PrimitiveRender<P, R> & (PrimitiveInput<P, S> extends never ? never : unknown), ...capabilityArguments: PrimitiveCapabilityArguments<P, S, N, R>): CRCPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>>;
   export function defineRenderLayer<Props, Resources, Target extends object = object>(definition: CRCRenderLayerDefinition<Props, Resources, Target>): CRCComponent<CRCRenderLayerProps<Props>>;
   export const Rectangle: CRCPrimitiveComponent<RectangleProps, PrimitiveInput<RectangleProps, RectStyle>>;
@@ -473,14 +481,14 @@
   export function layoutDiagnostic(input: LayoutDiagnosticInput): LayoutDiagnostic;
   export function useLayoutBox(): Readonly<LayoutBox>;
   export function useCanvasContext(): RenderingContext2D;
-  export function useState<T>(initial?: T): readonly [T, StateUpdater<T>];
-  export function useMemo<T>(create: () => T, dependencies: any[]): T;
+  export function useConst<T>(create: () => T): T;
+  export function useComputed<T>(compute: () => T, dependencies?: readonly unknown[], options?: SignalOptions<T>): Signal<T>;
   export function useRef<T>(initial?: T): CRCRef<T>;
   export function useSignal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
   export function usePlayback(program: CRCAnimationProgram, options?: CRCPlaybackOptions): CRCPlayback;
   export function useTransition(target: number, options: CRCSpringTransitionOptions): Signal<number>;
   export function useTransition<T>(target: T, options: CRCTweenTransitionOptions<T>): Signal<T>;
-  export function useWhenChanged(effect: () => void | (() => void), dependencies?: any[]): void;
+  export function useReaction(setup: () => void | (() => void), dependencies?: readonly unknown[], options?: CRCReactionOptions): void;
   export function useCursor(options: { style?: string; path?: Path2D; fill?: boolean; lineInteractionWidth?: number }): void;
   export function useEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
   export function useEvent<K extends 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>(eventName: K, listener?: CRCMouseEventListener, path?: Path2D, fill?: boolean, lineInteractionWidth?: number): void;

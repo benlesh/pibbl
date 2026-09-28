@@ -21,10 +21,12 @@ symbols:
     CRCEmptyNode,
     CRCKey,
     CRCNode,
+    CRCNodeInput,
     CRCPhysics2DPropExtension,
     CRCPrimitiveComponent,
     CRCRenderResult,
     CRCTextChild,
+    CRCTextInput,
     EllipsePathOptions,
     EllipseProps,
     FocusManagementProps,
@@ -129,6 +131,13 @@ and never delivers it through component props.
 `CRCNode` is one element, an empty node, a recursive readonly array, or a
 finite synchronous iterable. Infinite iterables are unsupported.
 
+## CRCNodeInput
+
+`CRCNodeInput` is the component-owned authoring grammar for structural
+children and component results. It accepts `CRCNode`, direct signals that
+replace one complete resolved node structure, and recursive arrays or finite
+iterables containing those inputs. Signal results are resolved one level only.
+
 ## CRCPhysics2DPropExtension
 
 `CRCPhysics2DPropExtension` is the empty declaration-merging base used by the
@@ -148,6 +157,13 @@ CRC component.
 
 `CRCTextChild` is recursive textual content for `Text`: strings, numbers,
 booleans, nullish values, readonly arrays, and finite synchronous iterables.
+
+## CRCTextInput
+
+`CRCTextInput` is the `Text` authoring grammar. It accepts `CRCTextChild`,
+direct signals that replace one complete resolved text structure, and recursive
+arrays or finite iterables containing those inputs. It does not unwrap signals
+inside a structure returned by another signal.
 
 ## EllipsePathOptions
 

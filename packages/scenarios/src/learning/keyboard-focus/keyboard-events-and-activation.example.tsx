@@ -1,7 +1,7 @@
 import {
   crc,
   useEventTarget,
-  useState,
+  useSignal,
   FocusManagement,
   Rectangle,
   Text,
@@ -16,17 +16,17 @@ function boxPath(x: number, y: number, width: number, height: number): Path2D {
   return path;
 }
 function KeyboardActivationLesson() {
-  const [events, setEvents] = useState<readonly string[]>([]);
-  const [activation, setActivation] = useState("No activation yet");
+  const events = useSignal<readonly string[]>([]);
+  const activation = useSignal("No activation yet");
   const record = (message: string) =>
-    setEvents((current) => [...current.slice(-5), message]);
+    events.update((current) => [...current.slice(-5), message]);
   const snapshot: CRCEventTargetSnapshot = useEventTarget(
     {
       onClick: (event: CRCLogicalMouseEvent) => {
         const source = event.sourceEvent
           ? `keyboard (${event.sourceEvent.type})`
           : "native pointer click";
-        setActivation(`click from ${source}; detail ${event.detail}`);
+        activation.set(`click from ${source}; detail ${event.detail}`);
         record(`click → ${source}`);
       },
       onKeyDown: (event: CRCKeyboardEvent) => {
@@ -134,7 +134,7 @@ function KeyboardActivationLesson() {
         font: "700 13px monospace",
       }}
     >
-      {activation}
+      {activation.get()}
     </Text>,
     <Rectangle
       style={{
@@ -145,7 +145,7 @@ function KeyboardActivationLesson() {
         fill: "#431407",
       }}
     />,
-    ...(events.length ? events : ["Key fields will appear here."]).map(
+    ...(events.get().length ? events.get() : ["Key fields will appear here."]).map(
       (entry, index) => (
         <Text
           style={{

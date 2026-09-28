@@ -1,7 +1,7 @@
-import { Arc, crc, useState, Rectangle, type CRCController } from "@crc/core";
+import { Arc, crc, useSignal, Rectangle, type CRCController } from "@crc/core";
 
 function ArcStudy() {
-  const [active, setActive] = useState(false);
+  const active = useSignal(false);
 
   return [
     <Rectangle
@@ -14,12 +14,12 @@ function ArcStudy() {
         radius: 120,
         startAngle: -Math.PI,
         endAngle: 0,
-        stroke: active ? "#ff6b57" : "#1f4bd8",
+        stroke: active.get() ? "#ff6b57" : "#1f4bd8",
         strokeWidth: 14,
         lineInteractionWidth: 34,
         cursor: "pointer",
       }}
-      onClick={() => setActive((value) => !value)}
+      onClick={() => active.update((value) => !value)}
     />,
   ];
 }

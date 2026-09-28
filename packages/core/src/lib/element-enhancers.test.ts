@@ -28,7 +28,7 @@ import {
 import { useLayoutBox } from './hooks/use-layout-box';
 import { useEventListener } from './hooks/use-event-listener';
 import { useEventTarget } from './hooks/use-event-target';
-import { useState, type StateUpdater } from './hooks/use-state';
+import { useSignal } from './hooks/use-signal';
 import { measureElement } from './layout/measure';
 import { mountCRC } from './mount-crc';
 import {
@@ -121,7 +121,7 @@ describe('identity-transparent element enhancers', () => {
       parentId: string | undefined;
       state: number;
     }> = [];
-    let setState: StateUpdater<number> | undefined;
+    let setState: ((value: number) => void) | undefined;
     let descriptorGeneration = 0;
 
     interface ChildStyle extends SystemStyle {
@@ -130,13 +130,13 @@ describe('identity-transparent element enhancers', () => {
     }
     const Child = definePrimitive<{}, ChildStyle>((_props, style, context) => {
       const refs = getComponentRefs();
-      const [state, updateState] = useState(0);
-      setState = updateState;
+      const state = useSignal(0);
+      setState = value => state.set(value);
       observations.push({
         box: useLayoutBox(),
         id: refs.id,
         parentId: refs.parent?.id,
-        state,
+        state: state.get(),
       });
       const eventPath = new Path2D();
       eventPath.rect(0, 0, style.width, style.height);
@@ -345,13 +345,13 @@ describe('identity-transparent element enhancers', () => {
     const instance = getCRCInstance(canvas);
     const component = Array.from(instance.refs.values())[0];
     expect(instance.refs.size).toBe(1);
-    expect(teardownCount(component.teardowns)).toBe(2);
+    expect(teardownCount(component.teardowns)).toBe(1);
     expect(trace).toEqual(['render:component']);
 
     trace.length = 0;
     executeRender(canvas, 2, enhancedElement(1));
     expect(Array.from(instance.refs.values())[0]).toBe(component);
-    expect(teardownCount(component.teardowns)).toBe(3);
+    expect(teardownCount(component.teardowns)).toBe(2);
     expect(trace).toEqual([
       'mount:lazy-owner',
       'update:lazy-owner:1',
@@ -362,12 +362,12 @@ describe('identity-transparent element enhancers', () => {
 
     trace.length = 0;
     executeRender(canvas, 3, plainElement());
-    expect(teardownCount(component.teardowns)).toBe(3);
+    expect(teardownCount(component.teardowns)).toBe(2);
     expect(trace).toEqual(['dispose:lazy-owner', 'render:component']);
 
     trace.length = 0;
     executeRender(canvas, 4, enhancedElement(2));
-    expect(teardownCount(component.teardowns)).toBe(3);
+    expect(teardownCount(component.teardowns)).toBe(2);
     expect(trace).toEqual([
       'mount:lazy-owner',
       'update:lazy-owner:2',

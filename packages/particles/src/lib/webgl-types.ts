@@ -1,6 +1,8 @@
+import type { SignalValue } from "@crc/core";
 import type { CRCWebGLTransformStyle } from "@crc/webgl";
 import type {
   CRCParticleAppearance,
+  CRCParticleCommonInputProps,
   CRCParticleEmission,
   CRCParticleOverflow,
   CRCParticleParameterDefinitions,
@@ -159,16 +161,20 @@ export interface Particles3DStyle extends CRCWebGLTransformStyle {
 export type Particles3DProps<
   EmitterName extends string = string,
   Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
-> = import("./types.js").CRCParticleCommonProps<Parameters> & {
-  readonly style?: Particles3DStyle;
-  readonly execution?: "auto" | "cpu" | "gpu";
-  readonly interactionBounds?: CRCParticleBounds3D;
+> = CRCParticleCommonInputProps<Parameters> & {
+  readonly style?: SignalValue<{
+    readonly [K in keyof Particles3DStyle]: SignalValue<Particles3DStyle[K]>;
+  }>;
+  readonly execution?: SignalValue<"auto" | "cpu" | "gpu">;
+  readonly interactionBounds?: SignalValue<CRCParticleBounds3D>;
 } & (
     | {
-        readonly effect: CRCParticleEffect3D<EmitterName, Parameters>;
+        readonly effect: SignalValue<
+          CRCParticleEffect3D<EmitterName, Parameters>
+        >;
         readonly system?: never;
-        readonly autoplay?: boolean;
-        readonly seed?: number;
+        readonly autoplay?: SignalValue<boolean>;
+        readonly seed?: SignalValue<number>;
       }
     | {
         readonly effect?: never;

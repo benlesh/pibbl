@@ -1,6 +1,6 @@
 import {
   crc,
-  useState,
+  useSignal,
   Group,
   Layer,
   Rectangle,
@@ -8,7 +8,7 @@ import {
   type CRCController,
 } from "@crc/core";
 function LayerStudy() {
-  const [active, setActive] = useState(false);
+  const active = useSignal(false);
   return [
     <Rectangle
       style={{
@@ -48,12 +48,12 @@ function LayerStudy() {
             y: 0,
             width: 344,
             height: 214,
-            fill: active ? "#f7c948" : "#74d3ae",
+            fill: active.get() ? "#f7c948" : "#74d3ae",
             stroke: "#17211d",
             strokeWidth: 6,
             cursor: "pointer",
           }}
-          onClick={() => setActive((value) => !value)}
+          onClick={() => active.update((value) => !value)}
         />
         <Rectangle
           style={{
@@ -73,7 +73,7 @@ function LayerStudy() {
             textAlign: "center",
           }}
         >
-          {active ? "LAYER!" : "OFFSCREEN"}
+          {active.get() ? "LAYER!" : "OFFSCREEN"}
         </Text>
         <Text
           style={{

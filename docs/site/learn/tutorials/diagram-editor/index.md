@@ -34,13 +34,13 @@ is a separate supported guide; this tutorial uses the automatic CRC JSX runtime.
 3. [Connect two nodes](#/learn/tutorials/diagram-editor/connect-nodes) — add a curved path, explain source paint order, and build a recognizable diagram.
 4. [Extract a reusable node component](#/learn/tutorials/diagram-editor/reusable-node) — introduce props, children, lists, fragments, and stable keys.
 5. [Build the editor chrome](#/learn/tutorials/diagram-editor/editor-chrome) — add toolbar and status regions with CRC layout components and distinguish allocation from drawing geometry.
-6. [Select nodes with state](#/learn/tutorials/diagram-editor/selection) — use `useState`, click targets, visible selection, and frame-coalesced updates.
+6. [Select nodes with state](#/learn/tutorials/diagram-editor/selection) — use `useSignal`, click targets, visible selection, and frame-coalesced updates.
 7. [Drag nodes safely](#/learn/tutorials/diagram-editor/dragging) — use pointer events, pointer capture, event coordinates, and immutable diagram state.
 8. [Pan and zoom the workspace](#/learn/tutorials/diagram-editor/pan-and-zoom) — apply `Group` transforms and wheel/pointer input while keeping paint and targeting aligned.
 9. [Constrain the viewport](#/learn/tutorials/diagram-editor/viewport-and-layer) — introduce `Clip` and `Layer`, explain their different roles, and preserve interaction order.
 10. [Polish selection with filters](#/learn/tutorials/diagram-editor/filters) — add typed shadows or glow, explain filter boundaries and nesting, and handle browser capability requirements.
 11. [Add keyboard interaction](#/learn/tutorials/diagram-editor/keyboard-interaction) — introduce focus management, directional navigation, activation, and CRC's accessibility boundary.
-12. [Finish and harden the editor](#/learn/tutorials/diagram-editor/finished-editor) — cover memoization, refs and change effects, cleanup ownership, component identity, failure behavior, and practical production patterns.
+12. [Finish and harden the editor](#/learn/tutorials/diagram-editor/finished-editor) — cover stable values, refs and reactions, cleanup ownership, component identity, failure behavior, and practical production patterns.
 
 ## How the course works
 

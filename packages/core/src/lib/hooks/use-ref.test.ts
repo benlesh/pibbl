@@ -3,7 +3,7 @@ import { Rectangle } from '../components/rect';
 import { GLOBAL_STATE } from '../global-state';
 import { componentTest } from '../test-utils/component-test';
 import { useRef } from './use-ref';
-import { useState } from './use-state';
+import { useSignal } from './use-signal';
 import { createElement } from '../element/create-element';
 
 describe('useRef', () => {
@@ -27,7 +27,7 @@ describe('useRef', () => {
 
     function TestComponent<T extends object>(props: TestComponentProps<T>) {
       const ref = useRef<T>();
-      const [count, setCount] = useState(0);
+      const count = useSignal(0);
 
       if (ref.current === undefined) {
         // only set the ref with the first render.
@@ -41,7 +41,7 @@ describe('useRef', () => {
         },
         onClick: () => {
           props.onCheckRef?.(ref.current);
-          setCount(count + 1);
+          count.update(value => value + 1);
         },
       });
     }

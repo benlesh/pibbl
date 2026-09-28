@@ -60,6 +60,7 @@ import type {
   CRCPlaybackEvent,
   CRCPlaybackOptions,
   CRCPlaybackStatus,
+  CRCReactionOptions,
   CRCRef,
   CRCResponsiveViewportConfig,
   CRCSpringOptions,
@@ -113,7 +114,7 @@ import type {
   Signal,
   SignalEquals,
   SignalOptions,
-  StateUpdater,
+  SignalValue,
   SvgPathStyle,
   SvgPathOptions,
   StarPathOptions,
@@ -240,21 +241,21 @@ import {
 } from '@crc/core/internal';
 import {
   crc,
+  useComputed,
+  useConst,
   useCursor,
   useEvent,
   useEventListener,
   useEventTarget,
   useLayoutBox,
   useLinePath,
-  useMemo,
   usePlayback,
   useRectPath,
   useRef,
   useSignal,
-  useState,
   useSvgPath,
   useTransition,
-  useWhenChanged,
+  useReaction,
   createElement,
   defineAnimation,
   definePrimitive,
@@ -300,8 +301,10 @@ import {
   marker,
   parallel,
   repeat,
+  resolveSignalValue,
   sequence,
   useCanvasContext,
+  batch,
   computed,
   isSignal,
   signal,
@@ -312,6 +315,24 @@ import {
   untracked,
   wait,
 } from '@crc/core';
+
+// Removed hooks intentionally have no built-package compatibility exports.
+// @ts-expect-error useState was replaced by useSignal
+import { useState as removedUseState } from '@crc/core';
+// @ts-expect-error StateUpdater was removed with useState
+import type { StateUpdater as RemovedStateUpdater } from '@crc/core';
+// @ts-expect-error useMemo was replaced by useConst and useComputed
+import { useMemo as removedUseMemo } from '@crc/core';
+// @ts-expect-error useWhenChanged was replaced by useReaction
+import { useWhenChanged as removedUseWhenChanged } from '@crc/core';
+
+type RemovedHookVocabulary = [
+  typeof removedUseState,
+  RemovedStateUpdater<number>,
+  typeof removedUseMemo,
+  typeof removedUseWhenChanged,
+];
+void (null as unknown as RemovedHookVocabulary);
 import {
   AmbientLight,
   useAnimationFrame,
@@ -1526,13 +1547,13 @@ crc(canvas, runtimeElement, { viewport: { width: '720', height: 420 } });
 // @ts-expect-error pixelRatio accepts only device or a number
 crc(canvas, runtimeElement, { pixelRatio: 'retina' });
 
-const [state, setState] = useState({ count: 0 });
-const stateCount: number = state.count;
-const typedSetter: StateUpdater<{ count: number }> = setState;
-typedSetter({ count: stateCount + 1 });
-typedSetter(previous => ({ count: previous.count + 1 }));
-// @ts-expect-error state setters preserve the initialized value type
-typedSetter({ count: 'one' });
+const state = useSignal({ count: 0 });
+const stateCount: number = state.get().count;
+const typedState: WritableSignal<{ count: number }> = state;
+typedState.set({ count: stateCount + 1 });
+typedState.update(previous => ({ count: previous.count + 1 }));
+// @ts-expect-error writable signals preserve the initialized value type
+typedState.set({ count: 'one' });
 
 const signalEquals: SignalEquals<number> = (previous, next) => previous === next;
 const signalOptions: SignalOptions<number> = {
@@ -1544,14 +1565,53 @@ const writableCount: WritableSignal<number> = inferredWritable;
 const readonlyCount: Signal<number> = writableCount.asReadonly();
 const computedCount: Signal<number> = computed(() => readonlyCount.get() * 2);
 const untrackedCount: number = untracked(() => computedCount.get());
+const batchedResult: number = batch(() => 42);
 const callbackSignal = signal<() => string>(() => 'ready');
 const callbackValue: () => string = callbackSignal.get();
 callbackSignal.set(() => 'updated');
+const reactiveRectangleX = signal(10);
+const reactiveRectangleFill = signal('red');
+const reactiveRectangleHandler = signal<CRCEventHandler<'click'>>(() => {});
+const reactiveRectangleStyle = signal<RectStyle>({
+  x: 10,
+  fill: 'red',
+  width: 20,
+  height: 20,
+});
+const signalValuedRectangle = createElement(Rectangle, {
+  onClick: reactiveRectangleHandler,
+  style: {
+    x: reactiveRectangleX,
+    fill: reactiveRectangleFill,
+    width: 20,
+    height: 20,
+  },
+});
+const wholeSignalValuedRectangle = createElement(Rectangle, {
+  style: reactiveRectangleStyle,
+});
+function SignalValueConsumer(props: { value: SignalValue<number> }): CRCNode {
+  return createElement(Text, null, resolveSignalValue(props.value));
+}
+const customSignalValueConsumer = createElement(SignalValueConsumer, {
+  value: reactiveRectangleX,
+});
+const ExactSignalConsumer = definePrimitive<{
+  valueSignal: Signal<number>;
+}>(() => undefined, { preserveSignalProps: ['valueSignal'] });
+const exactSignalConsumer = createElement(ExactSignalConsumer, {
+  valueSignal: reactiveRectangleX,
+});
 const unknownSignal: unknown = readonlyCount;
 if (isSignal(unknownSignal)) {
   const narrowedSignal: Signal<unknown> = unknownSignal;
   void narrowedSignal.get();
 }
+void batchedResult;
+void signalValuedRectangle;
+void wholeSignalValuedRectangle;
+void customSignalValueConsumer;
+void exactSignalConsumer;
 
 const animationOutput = signal(0);
 const objectAnimationOutput = signal({ x: 0 });
@@ -1676,13 +1736,27 @@ void playbackStatus;
 void playbackEvent;
 void (null as unknown as FreePlay);
 
-const memoValue: Readonly<{ value: number }> = useMemo(
-  () => ({ value: 1 }),
-  [stateCount],
+const constValue: Readonly<{ value: number }> = useConst(
+  () => ({ value: stateCount }),
 );
-memoValue.value;
-// @ts-expect-error memo dependencies are required by the public contract
-useMemo(() => 1);
+const computedValue: Signal<number> = useComputed(
+  () => writableCount.get() + constValue.value,
+  [constValue],
+  { debugName: 'package consumer computed' },
+);
+computedValue.get();
+// @ts-expect-error computed hook values are readonly
+computedValue.set(1);
+
+const reactionOptions: CRCReactionOptions = {
+  debugName: 'package consumer reaction',
+};
+useReaction(() => {
+  writableCount.get();
+  return () => undefined;
+}, [constValue], reactionOptions);
+// @ts-expect-error reaction setup is synchronous
+useReaction(async () => undefined);
 
 const initializedRef: CRCRef<number> = useRef(1);
 const emptyRef: CRCRef<string> = useRef<string>();
@@ -1690,13 +1764,6 @@ initializedRef.current = 2;
 emptyRef.current = 'ready';
 // @ts-expect-error refs preserve their generic current-value type
 initializedRef.current = 'two';
-
-useWhenChanged(() => {
-  return () => undefined;
-}, [stateCount]);
-useWhenChanged(() => undefined);
-// @ts-expect-error change callbacks are synchronous and cannot return a Promise
-useWhenChanged(async () => undefined, []);
 
 const rectanglePath: Path2D = useRectPath(0, 0, 10, 20, {
   alignToPixelGrid: 'round',

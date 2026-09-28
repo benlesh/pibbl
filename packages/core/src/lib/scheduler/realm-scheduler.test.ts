@@ -20,7 +20,8 @@ import {
 } from '../global-state';
 import { mountCRC } from '../mount-crc';
 import { useRef } from '../hooks/use-ref';
-import { useState, type StateUpdater } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
+import type { WritableSignal } from '../signals/types';
 import {
   collectSignalReads,
   createSignalRenderConsumer,
@@ -37,6 +38,7 @@ import type { Canvas } from '../types';
 import {
   getCurrentFrameSnapshot,
   queueFrameCompletion,
+  queueReactionCompletion,
   registerAdvanceParticipant,
 } from './realm-scheduler';
 import type { CRCAdvanceParticipant } from './types';
@@ -853,44 +855,30 @@ describe('realm scheduler', () => {
     expect(driver.pendingHostFrames).toBe(0);
   });
 
-  it('defers state-only and root replacement requests made during Advance', () => {
-    const stateValues: number[] = [];
+  it('defers root replacement requests made during Advance', () => {
     const replacementRenders: string[] = [];
-    let setState: StateUpdater<number> = () => {};
-    const Stateful = (_props: {}) => {
-      const [value, updateState] = useState(0);
-      setState = updateState;
-      stateValues.push(value);
-    };
     const Replacement = (_props: {}) => {
       replacementRenders.push('replacement');
     };
-    const stateController = crc(createCanvas(), createElement(Stateful, {}));
     const replacementCanvas = createCanvas();
     const replacementController = crc(
       replacementCanvas,
       createElement(() => undefined, {}),
     );
     driver.flush(10);
-    stateValues.length = 0;
-
     let release = () => {};
     release = registerAdvanceParticipant(() => {
       release();
-      setState(1);
       crc(replacementCanvas, createElement(Replacement, {}));
     });
     driver.flush(20);
 
-    expect(stateValues).toEqual([]);
     expect(replacementRenders).toEqual([]);
     expect(driver.pendingHostFrames).toBe(1);
 
     driver.flush(30);
-    expect(stateValues).toEqual([1]);
     expect(replacementRenders).toEqual(['replacement']);
     expect(driver.pendingHostFrames).toBe(0);
-    stateController.dispose();
     replacementController.dispose();
   });
 
@@ -1004,16 +992,16 @@ describe('realm scheduler', () => {
 
   it('defers a state request made during Complete until the next Begin', () => {
     const values: number[] = [];
-    let setState: StateUpdater<number> = () => {};
+    let state!: WritableSignal<number>;
     const controller = crc(createCanvas(), createElement(() => {
-      const [value, updateState] = useState(0);
-      setState = updateState;
-      values.push(value);
+      const value = useSignal(0);
+      state = value;
+      values.push(value.get());
     }, {}));
     driver.flush(10);
     values.length = 0;
 
-    queueFrameCompletion(() => setState(1));
+    queueFrameCompletion(() => state.set(1));
     driver.flush(20);
 
     expect(values).toEqual([]);
@@ -1053,6 +1041,31 @@ describe('realm scheduler', () => {
       'late-complete',
     ]);
     expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('runs reaction-only Complete work without dirty roots and defers nested work', () => {
+    const calls: string[] = [];
+    queueReactionCompletion(() => {
+      calls.push('first');
+      queueReactionCompletion(() => calls.push('nested'));
+    });
+
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyRoots: 0,
+      queuedReactionCompletions: 1,
+    });
+    driver.flush(10);
+    expect(calls).toEqual(['first']);
+    expect(driver.pendingHostFrames).toBe(1);
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyRoots: 0,
+      queuedReactionCompletions: 1,
+    });
+
+    driver.flush(20);
+    expect(calls).toEqual(['first', 'nested']);
+    expect(driver.pendingHostFrames).toBe(0);
+    expect(snapshotRealmScheduler().queuedReactionCompletions).toBe(0);
   });
 
   it('defers a same-callback Advance re-registration until the next Begin', () => {

@@ -28,9 +28,9 @@ import type {
   CRCPhysicsQueryMode,
   CRCPhysicsQueryOptions3D,
   CRCPhysicsQueryResult3D,
-  CRCPhysicsWorld3DProps,
   CRCPhysicsWorldHandle3D,
 } from "../types.js";
+import type { CRCResolvedPhysicsWorld3DProps } from "./world-props.js";
 import { BODY_CCD_3D } from "../world/ccd.js";
 import { BODY_SLEEP_DISABLED_3D, BODY_SLEEPING_3D } from "../world/solver.js";
 import {
@@ -111,7 +111,7 @@ interface ColliderDraft3D {
 
 interface RenderDraft3D {
   readonly configuration: NormalizedPhysicsWorld3DConfiguration;
-  readonly props: CRCPhysicsWorld3DProps;
+  readonly props: CRCResolvedPhysicsWorld3DProps;
   readonly bodies: Map<number, BodyDraft3D>;
   readonly colliders: Map<number, ColliderDraft3D>;
 }
@@ -191,7 +191,7 @@ export class PhysicsWorld3DController {
   private acceptedBodies: readonly AcceptedBody3D[] = Object.freeze([]);
   private acceptedColliders: readonly AcceptedCollider3D[] = Object.freeze([]);
   private acceptedConfiguration: NormalizedPhysicsWorld3DConfiguration;
-  private acceptedProps: CRCPhysicsWorld3DProps = Object.freeze({});
+  private acceptedProps: CRCResolvedPhysicsWorld3DProps = Object.freeze({});
   private readonly suspendedVelocities = new Map<number, BodyVelocity3D>();
   private readonly compoundMassCache = new Map<number, CompoundMassCache3D>();
   private massPropertyDerivations = 0;
@@ -211,7 +211,7 @@ export class PhysicsWorld3DController {
 
   constructor(
     private readonly owner: CRCInternalSimulationOwner,
-    initialProps: CRCPhysicsWorld3DProps,
+    initialProps: CRCResolvedPhysicsWorld3DProps,
   ) {
     const configuration = normalizeWorldConfiguration(initialProps);
     this.kernel = new PhysicsWorld3DKernel(
@@ -241,7 +241,7 @@ export class PhysicsWorld3DController {
     this.handle = Object.freeze(target) as unknown as InternalWorldHandle3D;
   }
 
-  beginRender(props: CRCPhysicsWorld3DProps): void {
+  beginRender(props: CRCResolvedPhysicsWorld3DProps): void {
     this.assertActive();
     const hasPendingDraft = this.draft !== undefined;
     this.draft = {
@@ -1311,7 +1311,7 @@ export function snapshotPhysicsWorld3DControllerOwnershipForTest(
 }
 
 function normalizeWorldConfiguration(
-  props: CRCPhysicsWorld3DProps,
+  props: CRCResolvedPhysicsWorld3DProps,
 ): NormalizedPhysicsWorld3DConfiguration {
   return normalizePhysicsWorld3DConfiguration({
     gravity: props.gravity,

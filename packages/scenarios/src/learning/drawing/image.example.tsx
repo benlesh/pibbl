@@ -1,6 +1,6 @@
 import {
   crc,
-  useState,
+  useSignal,
   Image,
   Rectangle,
   Text,
@@ -15,7 +15,7 @@ const postcard = `data:image/svg+xml,${encodeURIComponent(`
   </svg>
 `)}`;
 function ImageStudy() {
-  const [clicks, setClicks] = useState(0);
+  const clicks = useSignal(0);
   return [
     <Rectangle
       style={{
@@ -48,7 +48,7 @@ function ImageStudy() {
         strokeWidth: 3,
         cursor: "pointer",
       }}
-      onClick={() => setClicks((value) => value + 1)}
+      onClick={() => clicks.update((value) => value + 1)}
     />,
     <Text
       style={{
@@ -59,7 +59,7 @@ function ImageStudy() {
         textAlign: "center",
       }}
     >
-      {clicks ? `POSTCARD PICKS / ${clicks}` : "IMAGE / CLICK THE POSTCARD"}
+      {clicks.get() ? `POSTCARD PICKS / ${clicks.get()}` : "IMAGE / CLICK THE POSTCARD"}
     </Text>,
   ];
 }

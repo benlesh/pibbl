@@ -1,6 +1,6 @@
 import {
   crc,
-  useState,
+  useSignal,
   Rectangle,
   Text,
   type CRCController,
@@ -10,9 +10,9 @@ function wheelSummary(event: CRCWheelEvent): string {
   return `Δ ${event.deltaX.toFixed(1)}, ${event.deltaY.toFixed(1)}, ${event.deltaZ.toFixed(1)} mode=${event.deltaMode} at ${Math.round(event.x)},${Math.round(event.y)} buttons=${event.buttons} ${event.ctrlKey ? "ctrl" : ""}${event.shiftKey ? "shift" : ""}`;
 }
 function WheelStudy() {
-  const [trace, setTrace] = useState<readonly string[]>([]);
-  const [count, setCount] = useState(0);
-  const [cancelled, setCancelled] = useState(false);
+  const trace = useSignal<readonly string[]>([]);
+  const count = useSignal(0);
+  const cancelled = useSignal(false);
   return [
     <Rectangle
       style={{
@@ -40,16 +40,16 @@ function WheelStudy() {
         y: 88,
         width: 556,
         height: 184,
-        fill: cancelled ? "#f7c948" : "#ff6b57",
+        fill: cancelled.get() ? "#f7c948" : "#ff6b57",
         stroke: "#fffdf6",
         strokeWidth: 5,
         cursor: "ns-resize",
       }}
       onWheel={(event) => {
         event.preventDefault();
-        setCancelled(event.defaultPrevented);
-        setCount((value) => value + 1);
-        setTrace((current) => [...current.slice(-3), wheelSummary(event)]);
+        cancelled.set(event.defaultPrevented);
+        count.update((value) => value + 1);
+        trace.update((current) => [...current.slice(-3), wheelSummary(event)]);
       }}
     />,
     <Text
@@ -71,7 +71,7 @@ function WheelStudy() {
         font: "800 15px monospace",
         textAlign: "center",
       }}
-    >{`${count} wheel events • default ${cancelled ? "prevented" : "ready to cancel"}`}</Text>,
+    >{`${count.get()} wheel events • default ${cancelled.get() ? "prevented" : "ready to cancel"}`}</Text>,
     <Text
       style={{
         x: 360,
@@ -96,8 +96,8 @@ function WheelStudy() {
         font: "600 12px monospace",
       }}
     >
-      {trace.length
-        ? trace.join("\n")
+      {trace.get().length
+        ? trace.get().join("\n")
         : "Trace reports deltaX, deltaY, deltaZ, deltaMode, logical coordinates, buttons, and modifiers."}
     </Text>,
   ];

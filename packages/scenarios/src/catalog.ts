@@ -1199,7 +1199,7 @@ const cleanupStressMetadata: ScenarioMetadata = {
   summary:
     "Exercise pending frames, image races, nested layers, synchronous hook cleanup, component/root identity, runtime disposal, and repeated mount cycles.",
   category: "Diagnostics",
-  apiTags: ["crc", "useWhenChanged", "Image", "Layer", "Rectangle"],
+  apiTags: ["crc", "useReaction", "Image", "Layer", "Rectangle"],
   conceptTags: [
     "resource ownership",
     "async cleanup",
@@ -1293,10 +1293,10 @@ const runtimeHooksMetadata: ScenarioMetadata = {
   category: "Diagnostics",
   apiTags: [
     "crc",
-    "useState",
-    "useMemo",
+    "useSignal",
+    "useComputed",
     "useRef",
-    "useWhenChanged",
+    "useReaction",
     "useRectPath",
     "useLinePath",
     "useSvgPath",
@@ -1861,7 +1861,7 @@ const signalsLabMetadata: ScenarioMetadata = {
   slug: "signals",
   title: "First-class signals laboratory",
   summary:
-    "Prove writable, computed, dynamic, shared-root, Layer-local, and removed-consumer signal behavior through public CRC APIs.",
+    "Prove receiver-owned inputs, batching, reactions, computed barriers, shared roots, Layer isolation, and consumer cleanup through public CRC APIs.",
   category: "Rendering",
   apiTags: ["crc", "signal", "computed", "useSignal", "Layer"],
   conceptTags: [
@@ -1871,6 +1871,9 @@ const signalsLabMetadata: ScenarioMetadata = {
     "shared scheduler",
     "layer reuse",
     "consumer cleanup",
+    "signal inputs",
+    "batching",
+    "reactions",
   ],
   manualSteps: [
     {
@@ -1889,9 +1892,14 @@ const signalsLabMetadata: ScenarioMetadata = {
         "One logical shared update advances both roots, while a Layer A update refreshes its child before root A presents the new pixels and Layer B remains reused.",
     },
     {
+      action: "Choose Batched write, then Reaction-only.",
+      expected:
+        "Two writes flush once and repaint both roots once; the reaction-only write runs cleanup/setup without repainting either root.",
+    },
+    {
       action: "Choose Remove consumer, then Reset.",
       expected:
-        "The retained consumer disappears before its retained signal is written; reset recreates the original two-root scene and counters.",
+        "The retained consumer disappears before its retained signal is written; reset recreates the original two-root scene and workload counters.",
     },
   ],
   knownLimitations: [
@@ -1916,6 +1924,8 @@ export const signalsLabScenarioEntry: ScenarioCatalogEntry<SignalsLabState> = {
     { id: "shared-roots", label: "Shared roots" },
     { id: "layer-local-write", label: "Layer-local write" },
     { id: "remove-consumer", label: "Remove consumer" },
+    { id: "batched-write", label: "Batched write" },
+    { id: "reaction-only", label: "Reaction-only" },
     { id: "reset", label: "Reset" },
   ],
   source: {

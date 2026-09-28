@@ -7,7 +7,8 @@ import { measureElement } from '../layout/measure.js';
 import type { CanvasMeasurementService } from '../types.js';
 import { useCanvasContext } from './use-canvas-context.js';
 import { useRef } from './use-ref.js';
-import { useState, type StateUpdater } from './use-state.js';
+import { useSignal } from './use-signal.js';
+import type { WritableSignal } from '../signals/types.js';
 
 const CONTEXT_ERROR =
   'useCanvasContext() is available only during CRC rendering and cannot be ' +
@@ -80,12 +81,12 @@ describe('useCanvasContext', () => {
   it('does not allocate a hook slot or disturb surrounding hook identity', async () => {
     const states: number[] = [];
     const refs: object[] = [];
-    let updateState: StateUpdater<number> | undefined;
+    let updateState: WritableSignal<number> | undefined;
 
     function Probe(): void {
-      const [state, setState] = useState(0);
-      updateState = setState;
-      states.push(state);
+      const state = useSignal(0);
+      updateState = state;
+      states.push(state.get());
       useCanvasContext();
       refs.push(useRef({}).current!);
     }
@@ -93,14 +94,14 @@ describe('useCanvasContext', () => {
     const canvas = createCanvas();
     const controller = crc(canvas, <Probe />);
     await nextFrame();
-    updateState?.(1);
+    updateState?.set(1);
     await nextFrame();
 
     const probeRefs = Array.from(getCRCInstance(canvas).refs.values())
       .find(ref => ref.element.type === Probe)!;
     expect(states).toEqual([0, 1]);
     expect(refs[1]).toBe(refs[0]);
-    expect(probeRefs.hooks.map(hook => hook.kind)).toEqual(['state', 'ref']);
+    expect(probeRefs.hooks.map(hook => hook.kind)).toEqual(['signal', 'ref']);
     controller.dispose();
   });
 

@@ -12,6 +12,7 @@ import type {
 } from './backend/types.js';
 import type {
   CRCPrimitiveComponent,
+  PreservedSignalPropKey,
   PrimitiveCapabilities,
   PrimitiveInput,
   PrimitiveProgramProps,
@@ -29,6 +30,19 @@ type DeclaredStyleValue<S> = S extends unknown
 type RequiresResolver<S> = [
   Extract<DeclaredStyleValue<S>, AllocationValue>,
 ] extends [never] ? false : true;
+type PrimitiveCapabilitiesInput<
+  P,
+  S extends SystemStyle,
+  N extends SystemStyle,
+  R extends SystemStyle,
+> = Readonly<PrimitiveCapabilities<P, S, N, R>> & (
+  [PreservedSignalPropKey<P>] extends [never] ? object : {
+    readonly preserveSignalProps: readonly [
+      PreservedSignalPropKey<P>,
+      ...PreservedSignalPropKey<P>[],
+    ];
+  }
+);
 type CapabilityArguments<
   P,
   S extends SystemStyle,
@@ -36,12 +50,14 @@ type CapabilityArguments<
   R extends SystemStyle,
 > = RequiresResolver<R> extends true ? [capabilities: never] :
   RequiresResolver<S> extends true ? [
-    capabilities: Readonly<PrimitiveCapabilities<P, S, N, R>> & {
+    capabilities: PrimitiveCapabilitiesInput<P, S, N, R> & {
       resolveStyle: NonNullable<
         PrimitiveCapabilities<P, S, N, R>['resolveStyle']
       >;
     },
-  ] : [capabilities?: Readonly<PrimitiveCapabilities<P, S, N, R>>];
+  ] : [PreservedSignalPropKey<P>] extends [never] ? [
+    capabilities?: PrimitiveCapabilitiesInput<P, S, N, R>,
+  ] : [capabilities: PrimitiveCapabilitiesInput<P, S, N, R>];
 
 /** Defines a platform component with private style and measurement behavior. */
 export function definePrimitive<
@@ -93,11 +109,15 @@ export function defineBackendPrimitive<
     value: componentName,
   });
 
-  const capabilities = capabilityArguments[0] ?? {};
+  const capabilities = (capabilityArguments[0] ?? {}) as Readonly<
+    PrimitiveCapabilities<P, S, N, R>
+  >;
   setPrimitiveDefinition(component, {
     backend,
     program,
     render: program,
+    preserveSignalProps: capabilities.preserveSignalProps,
+    childInput: capabilities.childInput,
     normalizeStyle: capabilities.normalizeStyle,
     resolveStyle: capabilities.resolveStyle,
     measure: capabilities.measure,

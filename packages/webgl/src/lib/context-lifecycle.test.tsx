@@ -1,6 +1,6 @@
 import {
   crc,
-  useState,
+  useSignal,
   type CRCController,
   type CRCNode,
 } from '@crc/core';
@@ -416,14 +416,13 @@ describe('WebGLLayer context lifecycle', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
     const parentCanvas = mountParent();
     callbacks.shift()?.(0);
-    let setValue: ((value: number | ((old: number) => number)) => void) |
-      undefined;
+    let valueSignal: ReturnType<typeof useSignal<number>> | undefined;
     let executions = 0;
     function Stateful(): CRCNode {
       executions += 1;
-      const [value, setter] = useState(0);
-      setValue = setter;
-      return <Cube pointerEvents="none" style={{ translateX: value }} />;
+      const value = useSignal(0);
+      valueSignal = value;
+      return <Cube pointerEvents="none" style={{ translateX: value.get() }} />;
     }
     const root = <Stateful />;
     const surface = resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 });
@@ -444,7 +443,7 @@ describe('WebGLLayer context lifecycle', () => {
     platform.canvas.dispatchEvent(
       new Event('webglcontextlost', { cancelable: true }),
     );
-    setValue?.(old => old + 1);
+    valueSignal?.update(old => old + 1);
     expect(callbacks).toHaveLength(1);
     callbacks[0]!(2);
 

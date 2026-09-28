@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "1c57fb7abf599804e5bbf6b912125b39c978dd2e8e090d8f9db5e7e759b42e1b";
+  "f578cab49ea22caf0cd307b4050d5b3a79264ece470bb535cd80049f58858fb2";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const SIGNALS_SCHEDULER_APPROVED_SECTIONS = new Set([

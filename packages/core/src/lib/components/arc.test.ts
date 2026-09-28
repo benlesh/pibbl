@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
 import { getCRCInstance } from '../global-state';
-import { useState } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
@@ -219,11 +219,11 @@ describe('Arc', () => {
   it('updates arc geometry', async () => {
     let move!: () => void;
     function Probe() {
-      const [cx, setCx] = useState(50);
-      move = () => setCx(130);
+      const cx = useSignal(50);
+      move = () => cx.set(130);
       return createElement(Arc, {
         style: {
-          cx, cy: 50, radius: 20, startAngle: 0, endAngle: Math.PI * 2,
+          cx: cx.get(), cy: 50, radius: 20, startAngle: 0, endAngle: Math.PI * 2,
           stroke: 'red', strokeWidth: 6,
         },
       });

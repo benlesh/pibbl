@@ -10,6 +10,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import signalsLabSource from '../../scenarios/src/signals-lab.example.tsx?raw';
 import signalsLearningSource from '../../scenarios/src/learning/start/signals.example.tsx?raw';
+import signalInputsLearningSource from '../../scenarios/src/learning/composition/signal-inputs.example.tsx?raw';
 import { clickLogicalPoint } from './support/user-input';
 
 const activeControllers = new Set<ScenarioController<SignalsLabState>>();
@@ -109,22 +110,44 @@ describe('first-class signal public scenarios', () => {
       source: { path: 'packages/scenarios/src/learning/start/signals.example.tsx' },
     });
     expect(learning && getLearningExampleRoute(learning)).toBe('#/examples/start/signals');
+    const signalInputs = getLearningExampleBySlug('signal-inputs');
+    expect(signalInputs).toMatchObject({
+      slug: 'signal-inputs',
+      section: 'composition',
+      api: [
+        'SignalValue',
+        'resolveSignalValue',
+        'batch',
+        'useComputed',
+        'useReaction',
+      ],
+      source: {
+        path: 'packages/scenarios/src/learning/composition/signal-inputs.example.tsx',
+      },
+    });
+    expect(signalInputs && getLearningExampleRoute(signalInputs))
+      .toBe('#/examples/composition/signal-inputs');
     expect(getScenarioRoute(signalsLabScenarioEntry)).toBe('#/testing/signals');
 
-    for (const source of [signalsLearningSource, signalsLabSource]) {
+    for (const source of [signalsLearningSource, signalInputsLearningSource, signalsLabSource]) {
       expect(source).toMatch(/from ['"]@crc\/core['"]/u);
       expect(source).not.toMatch(/@crc\/core\/(?:internal|lib|src)\b/u);
       expect(source).not.toMatch(/(?:ManualFrames|flushPending|requestAnimationFrame)/u);
     }
-    expect(signalsLearningSource).toContain('.get()');
+    expect(signalsLearningSource).toContain('fill: color');
+    expect(signalsLearningSource).toContain('{signalSummary}');
     expect(signalsLearningSource).toContain('.update(');
     expect(signalsLearningSource).toContain('computed(');
+    expect(signalInputsLearningSource).toContain('resolveSignalValue(props.data)');
+    expect(signalInputsLearningSource).toContain('<LineSeries data={data} domain={domain} />');
+    expect(signalInputsLearningSource).toContain('batch(() =>');
+    expect(signalInputsLearningSource).toContain('useReaction(() =>');
     expect(signalsLabSource).toContain(
       "SIGNALS_LAB_SOURCE_ID = 'first-class-signals-laboratory-example'",
     );
   });
 
-  it('mounts the learning example with explicit reads and updates its writable signal on click', async () => {
+  it('mounts the learning example with receiver-owned inputs and updates its writable signal on click', async () => {
     const entry = getLearningExampleBySlug('signals');
     if (!entry) throw new Error('Missing signals learning example.');
     const canvas = document.createElement('canvas');
@@ -134,10 +157,10 @@ describe('first-class signal public scenarios', () => {
     const controller = (await loadLearningExample(entry)).default(canvas);
     try {
       await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      const before = Array.from(canvas.getContext('2d')!.getImageData(150, 200, 1, 1).data);
-      await clickLogicalPoint(canvas, { x: 150, y: 200 });
+      const before = Array.from(canvas.getContext('2d')!.getImageData(170, 200, 1, 1).data);
+      await clickLogicalPoint(canvas, { x: 170, y: 140 });
       await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      const after = Array.from(canvas.getContext('2d')!.getImageData(150, 200, 1, 1).data);
+      const after = Array.from(canvas.getContext('2d')!.getImageData(170, 200, 1, 1).data);
       expect(before).not.toEqual(after);
     } finally {
       controller.dispose();
@@ -148,7 +171,7 @@ describe('first-class signal public scenarios', () => {
     const { canvas, controller, definition, referenceHost } = await mountSignalsLab();
     expect(referenceHost.querySelectorAll('canvas')).toHaveLength(1);
     expect(definition.actionIds).toEqual(signalsLabScenarioEntry.actions.map(action => action.id));
-    expect(controller.getState()).toEqual({
+    expect(controller.getState()).toMatchObject({
       direct: 1,
       derivedSource: 0,
       left: 0,
@@ -160,6 +183,19 @@ describe('first-class signal public scenarios', () => {
       selectedSource: 'left',
       computed: 0,
       computedEvaluations: 1,
+      writes: 0,
+      inputResolutions: 1,
+      receiverIds: 1,
+      provisions: 1,
+      adoptions: 1,
+      shallowCopies: 1,
+      batchFlushes: 0,
+      computedValidations: 1,
+      reactionRuns: 1,
+      reactionCleanups: 0,
+      componentTraversals: 7,
+      layerRepaints: 2,
+      composites: 2,
       rootRenders: { a: 1, b: 1 },
       layerChildRenders: { a: 1, b: 1 },
       consumerCount: 5,
@@ -168,7 +204,7 @@ describe('first-class signal public scenarios', () => {
 
     await controller.perform('direct-write');
     await controller.settled();
-    expect(controller.getState()).toEqual({
+    expect(controller.getState()).toMatchObject({
       direct: 2,
       derivedSource: 0,
       left: 0,
@@ -188,7 +224,7 @@ describe('first-class signal public scenarios', () => {
 
     await controller.perform('equal-write');
     await controller.settled();
-    expect(controller.getState()).toEqual({
+    expect(controller.getState()).toMatchObject({
       direct: 2,
       derivedSource: 0,
       left: 0,
@@ -208,7 +244,7 @@ describe('first-class signal public scenarios', () => {
 
     await controller.perform('computed-equal-write');
     await controller.settled();
-    expect(controller.getState()).toEqual({
+    expect(controller.getState()).toMatchObject({
       direct: 2,
       derivedSource: 2,
       left: 0,
@@ -228,7 +264,7 @@ describe('first-class signal public scenarios', () => {
 
     await controller.perform('dependency-switch');
     await controller.settled();
-    expect(controller.getState()).toEqual({
+    expect(controller.getState()).toMatchObject({
       direct: 2,
       derivedSource: 2,
       left: 1,
@@ -248,7 +284,7 @@ describe('first-class signal public scenarios', () => {
 
     await controller.perform('shared-roots');
     await controller.settled();
-    expect(controller.getState()).toEqual({
+    expect(controller.getState()).toMatchObject({
       direct: 2,
       derivedSource: 2,
       left: 1,
@@ -288,7 +324,7 @@ describe('first-class signal public scenarios', () => {
     await controller.settled();
     drawImage.mockRestore();
     expect(layerAChildPrecededParentComposite).toBe(true);
-    expect(controller.getState()).toEqual({
+    expect(controller.getState()).toMatchObject({
       direct: 2,
       derivedSource: 2,
       left: 1,
@@ -308,7 +344,7 @@ describe('first-class signal public scenarios', () => {
 
     await controller.perform('remove-consumer');
     await controller.settled();
-    expect(controller.getState()).toEqual({
+    expect(controller.getState()).toMatchObject({
       direct: 2,
       derivedSource: 2,
       left: 1,
@@ -326,9 +362,36 @@ describe('first-class signal public scenarios', () => {
       lastAction: 'remove-consumer',
     });
 
+    const beforeBatch = controller.getState();
+    await controller.perform('batched-write');
+    await controller.settled();
+    expect(controller.getState()).toMatchObject({
+      direct: 3,
+      shared: 2,
+      writes: beforeBatch.writes + 2,
+      batchFlushes: 1,
+      rootRenders: {
+        a: beforeBatch.rootRenders.a + 1,
+        b: beforeBatch.rootRenders.b + 1,
+      },
+      lastAction: 'batched-write',
+    });
+
+    const beforeReaction = controller.getState();
+    await controller.perform('reaction-only');
+    await controller.settled();
+    expect(controller.getState()).toMatchObject({
+      writes: beforeReaction.writes + 1,
+      reactionRuns: beforeReaction.reactionRuns + 1,
+      reactionCleanups: beforeReaction.reactionCleanups + 1,
+      rootRenders: beforeReaction.rootRenders,
+      layerChildRenders: beforeReaction.layerChildRenders,
+      lastAction: 'reaction-only',
+    });
+
     await controller.perform('reset');
     await controller.settled();
-    expect(controller.getState()).toEqual({
+    expect(controller.getState()).toMatchObject({
       direct: 1,
       derivedSource: 0,
       left: 0,

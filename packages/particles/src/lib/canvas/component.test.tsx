@@ -8,6 +8,7 @@ import {
   Layer,
   Rectangle,
   crc,
+  signal,
   type CRCNode,
 } from "@crc/core";
 import {
@@ -97,6 +98,39 @@ function pixel(canvas: HTMLCanvasElement, x: number, y: number) {
 }
 
 describe("Particles2D component", () => {
+  it("resolves signal-valued effect and direct component inputs", () => {
+    const selected = signal(effect({ automatic: true, color: "#ff0000" }));
+    const autoplay = signal(true);
+    const baseline = particleSystemOwnershipSnapshot();
+    const { root } = mount(
+      <Particles2D
+        effect={selected}
+        autoplay={autoplay}
+        seed={signal(7)}
+        pointerEvents="none"
+        style={{ width: signal(20), height: signal(20) }}
+      />,
+      20,
+      20,
+    );
+    driver.flush(0);
+    flush(1);
+
+    expect(particleSystemOwnershipSnapshot().activeSystems)
+      .toBe(baseline.activeSystems + 1);
+
+    selected.set(effect({ automatic: true, color: "#0000ff" }));
+    driver.flush(2);
+    flush(3);
+    expect(particleSystemOwnershipSnapshot().activeSystems)
+      .toBe(baseline.activeSystems + 1);
+
+    root.dispose();
+    roots.delete(root);
+    expect(particleSystemOwnershipSnapshot().activeSystems)
+      .toBe(baseline.activeSystems);
+  });
+
   it("balances systems, bindings, scheduler registration, and the fixed ledger on disposal", () => {
     const baseline = particleSystemOwnershipSnapshot();
     const ambient = defineParticleEffect2D({

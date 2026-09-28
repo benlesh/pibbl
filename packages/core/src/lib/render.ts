@@ -17,23 +17,23 @@ import {
 import {
   getPlacementIdentityHint,
   getPrimitiveDefinition,
-  getPrimitiveProgramProps,
   getPrimitiveReceiverToken,
   getElementSource,
 } from './element/metadata.js';
+import { resolvePrimitiveInputs } from './element/resolve-primitive-inputs.js';
 import { materializeContainerChildren } from './element/children.js';
 import { isFragmentElement } from './element/fragment.js';
-import type { CRCElement, CRCNode } from './element/types.js';
+import type { CRCElement, CRCNode, CRCNodeInput } from './element/types.js';
 import {
   backendMismatchError,
   type CRCBackendDriver,
   type CRCBackendFrame,
 } from './backend/types.js';
 import {
-  collectSignalReads,
-  createSignalRenderConsumer,
+  collectComponentSignalReads,
   disposeSignalRenderConsumer,
 } from './signals/render-consumer.js';
+import { adoptReceiverInputProvision } from './signals/input-provision.js';
 import { untracked } from './signals/graph.js';
 import { requestInstanceRender } from './scheduler/realm-scheduler.js';
 import {
@@ -92,11 +92,27 @@ function renderKeyedFragment(
     let releaseComponent: (() => void) | undefined;
     try {
       releaseComponent = enterBackendComponent();
-      const children = materializeContainerChildren(
-        (element.props as { children?: CRCNode }).children,
-        element,
+      collectComponentSignalReads(
+        componentRefs,
+        () => componentSignalReadOptions(componentRefs),
+        commitSignalReads => {
+          const receiverToken =
+            getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
+          adoptReceiverInputProvision(
+            GLOBAL_STATE.renderTransaction,
+            receiverToken,
+          );
+          const children = materializeContainerChildren(
+            element.props.children,
+            element,
+          );
+          commitSignalReads();
+          untracked(() => {
+            renderPreparedChildren(children, componentRefs.id, componentRefs);
+          });
+        },
       );
-      renderPreparedChildren(children, componentRefs.id, componentRefs);
+      componentRefs.signalConsumer?.markClean();
       enhancerSuccess = true;
     } finally {
       try {
@@ -121,6 +137,8 @@ function renderComponentElement<P>(
     GLOBAL_STATE.componentRefs = componentRefs;
     GLOBAL_STATE.componentHookIndex = 0;
     const definition = getPrimitiveDefinition(componentRefs.element.type);
+    const receiverToken =
+      getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
 
     reconcileElementEnhancers(
       componentRefs,
@@ -143,13 +161,18 @@ function renderComponentElement<P>(
         onAfterRender?.();
       };
       try {
-        collectSignalReads(componentRefs.signalConsumer!, commitSignalReads => {
-          const renderProgram = (invoke: () => CRCNode | void) => {
+        collectComponentSignalReads(componentRefs, () => ({
+          ...componentSignalReadOptions(componentRefs),
+        }), commitSignalReads => {
+          adoptReceiverInputProvision(
+            GLOBAL_STATE.renderTransaction,
+            receiverToken,
+          );
+          const renderProgram = (invoke: () => CRCNodeInput | void) => {
             try {
               const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
-              GLOBAL_STATE.primitiveReceiverToken =
-                getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
-              let result: CRCNode | void;
+              GLOBAL_STATE.primitiveReceiverToken = receiverToken;
+              let result: CRCNodeInput | void;
               try {
                 result = invoke();
               } finally {
@@ -159,13 +182,13 @@ function renderComponentElement<P>(
 
               onAfterRender = componentRefs.onAfterRender;
               componentRefs.onAfterRender = undefined;
+              const children = materializeContainerChildren(
+                result as CRCNodeInput,
+                componentRefs.element,
+              );
               commitSignalReads();
 
               untracked(() => {
-                const children = materializeContainerChildren(
-                  result as CRCNode,
-                  componentRefs.element,
-                );
                 renderPreparedChildren(children, id, componentRefs);
               });
             } finally {
@@ -181,22 +204,26 @@ function renderComponentElement<P>(
                 getElementSource(componentRefs.element),
               );
             }
-            const receiverToken =
-              getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
+            const inputs = resolvePrimitiveInputs(
+              componentRefs.element,
+              definition,
+            );
             const style = (() => {
               const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
               GLOBAL_STATE.primitiveReceiverToken = receiverToken;
               try {
-                return resolveElementStyle(componentRefs.element);
+                return resolveElementStyle(
+                  componentRefs.element,
+                  inputs.style,
+                  true,
+                );
               } finally {
                 GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
               }
             })();
             const componentName = componentRefs.element.type.name || 'Anonymous';
             const source = getElementSource(componentRefs.element);
-            const props = getPrimitiveProgramProps(componentRefs.element) as Readonly<
-              Record<PropertyKey, unknown>
-            >;
+            const props = inputs.props;
             const tracksPresentationLineage = hasElementEnhancers(componentRefs);
             const tracksCanvasWorldTransform =
               GLOBAL_STATE.worldBaseTransform !== undefined &&
@@ -254,7 +281,7 @@ function renderComponentElement<P>(
             );
           }
         });
-        componentRefs.signalConsumer!.markClean();
+        componentRefs.signalConsumer?.markClean();
       } finally {
         try {
           finishAfterRender();
@@ -269,6 +296,37 @@ function renderComponentElement<P>(
   } finally {
     clearComponentState();
   }
+}
+
+function componentSignalReadOptions(
+  componentRefs: CRCComponentRefs<any>,
+) {
+  const crcInstance = GLOBAL_STATE.currentCRCInstance!;
+  return {
+    debugName: `${componentRefs.element.type.name || 'Anonymous'} (${componentRefs.id})`,
+    invalidate: () => {
+      if (
+        GLOBAL_STATE.crcInstances.get(crcInstance.canvas) !== crcInstance ||
+        crcInstance.mainTeardowns.closed ||
+        componentRefs.teardowns.closed ||
+        crcInstance.refs.get(componentRefs.id) !== componentRefs
+      ) {
+        return;
+      }
+      requestInstanceRender(crcInstance);
+    },
+    onMaterialize: () => {
+      if (componentRefs.signalConsumerTeardownAttached) return;
+      componentRefs.signalConsumerTeardownAttached = true;
+      componentRefs.teardowns.add(() => {
+        const consumer = componentRefs.signalConsumer;
+        componentRefs.signalConsumer = undefined;
+        if (consumer !== undefined) {
+          disposeSignalRenderConsumer(consumer);
+        }
+      });
+    },
+  };
 }
 
 function requireBackendFrame(): {
@@ -311,28 +369,10 @@ function prepareComponentScope<P>(
       refs: [],
       hooks: [],
       signalConsumer: undefined,
+      signalConsumerTeardownAttached: false,
       teardowns,
       onAfterRender: undefined,
     };
-    if (!isFragmentElement(element)) {
-      mountedRefs.signalConsumer = createSignalRenderConsumer({
-        debugName: `${element.type.name || 'Anonymous'} (${id})`,
-        invalidate: () => {
-          if (
-            GLOBAL_STATE.crcInstances.get(crcInstance.canvas) !== crcInstance ||
-            crcInstance.mainTeardowns.closed ||
-            mountedRefs.teardowns.closed ||
-            crcInstance.refs.get(mountedRefs.id) !== mountedRefs
-          ) {
-            return;
-          }
-          requestInstanceRender(crcInstance);
-        },
-      });
-      teardowns.add(() => {
-        disposeSignalRenderConsumer(mountedRefs.signalConsumer!);
-      });
-    }
     crcInstance.refs.set(id, mountedRefs);
     componentRefs = mountedRefs;
   }

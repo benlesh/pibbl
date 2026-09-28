@@ -1,11 +1,11 @@
-import type { CRCElement, CRCNode } from './types.js';
+import type { CRCElement, CRCNodeInput } from './types.js';
 
 export interface FragmentProps {
-  children?: CRCNode;
+  children?: CRCNodeInput;
 }
 
 /** Compiler-visible fragment value. The renderer handles its descriptor directly. */
-export function Fragment(props: FragmentProps): CRCNode {
+export function Fragment(props: FragmentProps): CRCNodeInput {
   return props.children;
 }
 

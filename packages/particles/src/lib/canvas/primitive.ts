@@ -1,5 +1,4 @@
 import {
-  useMemo,
   definePrimitive,
   resolveBox,
   type CRCEventHandlers,
@@ -7,7 +6,10 @@ import {
   type ResolvedBoxStyle,
   type SystemStyle,
 } from "@crc/core";
-import { crcInternalPaintTarget } from "@crc/core/internal";
+import {
+  crcInternalPaintTarget,
+  useInternalValueMemoSlot,
+} from "@crc/core/internal";
 import type {
   CRCParticleCommonProps,
   CRCParticleParameterValues,
@@ -33,7 +35,7 @@ function renderParticleCanvas(
   context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
 ): CRCNode | void {
   const { borderBox, contentBox } = style;
-  const targetPath = useMemo(() => {
+  const targetPath = useInternalValueMemoSlot("particleTargetPath", () => {
     const path = new Path2D();
     path.rect(borderBox.x, borderBox.y, borderBox.width, borderBox.height);
     return path;

@@ -7,7 +7,7 @@ import {
 import {
   crc,
   computed,
-  useMemo,
+  useConst,
   useTransition,
   signal,
   type Signal,
@@ -55,6 +55,36 @@ function mount(node: Parameters<typeof crc>[1]): {
 }
 
 describe('useTransition mount behavior', () => {
+  it('resolves signal-valued targets, option objects, and direct option fields', () => {
+    const target = signal(10);
+    const duration = signal(100);
+    const initial = signal(0);
+    const options = signal({
+      type: 'tween' as const,
+      duration,
+      initial,
+    });
+    let output!: Signal<number>;
+    function Probe() {
+      output = useTransition(target, options);
+      output.get();
+    }
+
+    mount(<Probe />);
+    driver.flush(0);
+    driver.flush(10);
+    driver.flush(60);
+    expect(output.get()).toBe(5);
+
+    duration.set(200);
+    target.set(20);
+    driver.flush(70);
+    driver.flush(80);
+    driver.flush(180);
+    expect(output.get()).toBe(13);
+
+  });
+
   it('presents an omitted initial target with stable readonly identity and no entrance work', () => {
     const values: number[] = [];
     const outputs: Signal<number>[] = [];
@@ -400,7 +430,7 @@ describe('useTransition retargeting', () => {
       const output = initial === undefined ?
         useTransition(target, { type: 'tween', duration: 100 }) :
         useTransition(target, { type: 'tween', duration: 100, initial });
-      const doubled = useMemo(() => computed(() => output.get() * 2), []);
+      const doubled = useConst(() => computed(() => output.get() * 2));
       if (observedOutput === undefined) {
         observedOutput = output;
         getSignalNode(output).observers.add(outputObserver);

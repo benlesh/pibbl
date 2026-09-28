@@ -4,7 +4,7 @@ import {
   Clip,
   createElement,
   crc,
-  useState,
+  useSignal,
   Ellipse,
   Group,
   HorizontalLine,
@@ -547,10 +547,10 @@ function driveInteractiveScene(authoring: AuthoringMode) {
 
 function interactiveScene(authoring: AuthoringMode): CRCNode {
   function Poster(_props: { readonly children?: never }): CRCNode {
-    const [message, setMessage] = useState('HELLO');
+    const message = useSignal('HELLO');
     const rectangleProps = {
       style: { width: 240, height: 120, fill: '#1f4bd8' } as const,
-      onClick: () => setMessage('CRC'),
+      onClick: () => message.set('CRC'),
     };
     const textStyle = {
       x: 120,
@@ -562,11 +562,11 @@ function interactiveScene(authoring: AuthoringMode): CRCNode {
     return authoring === 'jsx' ? (
       <Group>
         <Rectangle {...rectangleProps} />
-        <Text style={textStyle}>{message} {0}</Text>
+        <Text style={textStyle}>{message.get()} {0}</Text>
       </Group>
     ) : createElement(Group, null, [
       createElement(Rectangle, rectangleProps),
-      createElement(Text, { style: textStyle }, message, ' ', 0),
+      createElement(Text, { style: textStyle }, message.get(), ' ', 0),
     ]);
   }
 

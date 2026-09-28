@@ -113,11 +113,19 @@ export {
 } from './lib/geometry/svg-path.js';
 export type { RoundedCornerPathOptions } from './lib/geometry/rounded-corners.js';
 export { crc } from './lib/crc.js';
-export { computed, isSignal, signal, untracked } from './lib/signals/graph.js';
+export {
+  batch,
+  computed,
+  isSignal,
+  signal,
+  untracked,
+} from './lib/signals/graph.js';
+export { resolveSignalValue } from './lib/signals/resolve-signal-value.js';
 export type {
   Signal,
   SignalEquals,
   SignalOptions,
+  SignalValue,
   WritableSignal,
 } from './lib/signals/types.js';
 export { easing } from './lib/animation/easing.js';
@@ -267,20 +275,23 @@ export type {
 // hooks
 export { useCursor } from './lib/hooks/use-cursor.js';
 export { useCanvasContext } from './lib/hooks/use-canvas-context.js';
+export { useComputed } from './lib/hooks/use-computed.js';
+export { useConst } from './lib/hooks/use-const.js';
 export { useEvent } from './lib/hooks/use-event.js';
 export { useEventListener } from './lib/hooks/use-event-listener.js';
 export { useEventTarget } from './lib/hooks/use-event-target.js';
 export { useLinePath } from './lib/hooks/use-line-path.js';
 export { useLayoutBox } from './lib/hooks/use-layout-box.js';
-export { useMemo } from './lib/hooks/use-memo.js';
 export { useRectPath } from './lib/hooks/use-rect-path.js';
 export { useRef, type CRCRef } from './lib/hooks/use-ref.js';
 export { usePlayback } from './lib/hooks/use-playback.js';
+export {
+  useReaction,
+  type CRCReactionOptions,
+} from './lib/hooks/use-reaction.js';
 export { useTransition } from './lib/hooks/use-transition.js';
 export { useSignal } from './lib/hooks/use-signal.js';
-export { useState, type StateUpdater } from './lib/hooks/use-state.js';
 export { useSvgPath } from './lib/hooks/use-svg-path.js';
-export { useWhenChanged } from './lib/hooks/use-when-changed.js';
 export type {
   Canvas,
   CanvasMeasurementService,
@@ -294,9 +305,11 @@ export type {
   CRCMouseEvent,
   CRCMouseEventListener,
   CRCNode,
+  CRCNodeInput,
   CRCPhysics2DPropExtension,
   CRCPrimitiveComponent,
   CRCTextChild,
+  CRCTextInput,
   CRCRenderResult,
   PrimitiveInputOf,
   PrimitiveCapabilities,

@@ -1,8 +1,8 @@
 import {
   crc,
   useEventTarget,
-  useMemo,
-  useState,
+  useConst,
+  useSignal,
   Path,
   Rectangle,
   Text,
@@ -19,17 +19,17 @@ function badgeGeometry(): Path2D {
   return geometry;
 }
 function CustomBadge() {
-  const [clicks, setClicks] = useState(0);
-  const [hovered, setHovered] = useState(false);
-  const [coordinates, setCoordinates] = useState("move across the badge");
-  const geometry = useMemo(badgeGeometry, []);
+  const clicks = useSignal(0);
+  const hovered = useSignal(false);
+  const coordinates = useSignal("move across the badge");
+  const geometry = useConst(badgeGeometry);
   useEventTarget(
     {
-      onClick: () => setClicks((total) => total + 1),
-      onPointerEnter: () => setHovered(true),
-      onPointerLeave: () => setHovered(false),
+      onClick: () => clicks.update((total) => total + 1),
+      onPointerEnter: () => hovered.set(true),
+      onPointerLeave: () => hovered.set(false),
       onPointerMove: (event) => {
-        setCoordinates(`${Math.round(event.x)}, ${Math.round(event.y)}`);
+        coordinates.set(`${Math.round(event.x)}, ${Math.round(event.y)}`);
       },
     },
     {
@@ -43,7 +43,7 @@ function CustomBadge() {
     <Path
       style={{
         d: geometry,
-        fill: hovered ? "#74d3ae" : "#1f4bd8",
+        fill: hovered.get() ? "#74d3ae" : "#1f4bd8",
         stroke: "#f7c948",
         strokeWidth: 8,
       }}
@@ -68,7 +68,7 @@ function CustomBadge() {
         textAlign: "center",
         textBaseline: "middle",
       }}
-    >{`CUSTOM\nTARGET / ${clicks}`}</Text>,
+    >{`CUSTOM\nTARGET / ${clicks.get()}`}</Text>,
     <Text
       style={{
         x: 360,
@@ -78,7 +78,7 @@ function CustomBadge() {
         textAlign: "center",
       }}
     >
-      {coordinates}
+      {coordinates.get()}
     </Text>,
   ];
 }

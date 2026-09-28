@@ -1,13 +1,13 @@
 import {
   crc,
-  useState,
+  useSignal,
   Line,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function HitAreaStudy() {
-  const [hits, setHits] = useState(0);
+  const hits = useSignal(0);
   const route: [number, number][] = [
     [80, 290],
     [200, 118],
@@ -40,7 +40,7 @@ function HitAreaStudy() {
         lineInteractionWidth: 42,
         cursor: "grab",
       }}
-      onClick={() => setHits((value) => value + 1)}
+      onClick={() => hits.update((value) => value + 1)}
     />,
     <Text
       style={{
@@ -61,7 +61,7 @@ function HitAreaStudy() {
         font: "700 14px monospace",
         textAlign: "center",
       }}
-    >{`CLICKS NEAR THE LINE / ${hits}`}</Text>,
+    >{`CLICKS NEAR THE LINE / ${hits.get()}`}</Text>,
   ];
 }
 export default function mount(canvas: HTMLCanvasElement): CRCController {

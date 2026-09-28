@@ -4,7 +4,7 @@ import {
   Group,
   Rectangle,
   Text,
-  useWhenChanged,
+  useReaction,
   type Signal,
 } from "@crc/core";
 import {
@@ -70,8 +70,8 @@ function Loader({
     minDistance: 3,
     maxDistance: 14,
   });
-  useWhenChanged(() => onLoadResult(loaded), [loaded]);
-  useWhenChanged(
+  useReaction(() => onLoadResult(loaded), [loaded]);
+  useReaction(
     () => onOrbitPosition(orbit.position),
     [orbit.position[0], orbit.position[1], orbit.position[2]],
   );

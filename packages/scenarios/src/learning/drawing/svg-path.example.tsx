@@ -1,6 +1,6 @@
 import {
   crc,
-  useState,
+  useSignal,
   Group,
   Rectangle,
   SvgPath,
@@ -8,7 +8,7 @@ import {
   type CRCController,
 } from "@crc/core";
 function SvgPathStudy() {
-  const [active, setActive] = useState(false);
+  const active = useSignal(false);
   return [
     <Rectangle
       style={{
@@ -41,12 +41,12 @@ function SvgPathStudy() {
       <SvgPath
         style={{
           d: "M50 88 C20 68 4 48 8 28 C12 4 42 0 50 20 C58 0 88 4 92 28 C96 48 80 68 50 88 Z",
-          fill: active ? "#1f4bd8" : "#ff6b57",
+          fill: active.get() ? "#1f4bd8" : "#ff6b57",
           stroke: "#17211d",
           strokeWidth: 2,
           cursor: "pointer",
         }}
-        onClick={() => setActive((value) => !value)}
+        onClick={() => active.update((value) => !value)}
       />
     </Group>,
     <Text
@@ -58,7 +58,7 @@ function SvgPathStudy() {
         textAlign: "center",
       }}
     >
-      {active ? "SVG PATH / ACTIVE" : "SVG PATH / CLICK"}
+      {active.get() ? "SVG PATH / ACTIVE" : "SVG PATH / CLICK"}
     </Text>,
   ];
 }

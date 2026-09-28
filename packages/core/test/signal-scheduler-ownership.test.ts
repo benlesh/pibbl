@@ -23,6 +23,7 @@ interface SignalGraphOwnershipSnapshot {
   readonly pendingComputedValidations: number;
   readonly createdRendererConsumers: number;
   readonly releasedRendererConsumers: number;
+  readonly lazyRendererConsumers: number;
   readonly createdComputedSourceEdges: number;
   readonly releasedComputedSourceEdges: number;
 }
@@ -55,6 +56,62 @@ afterEach(() => {
 });
 
 describe('signal graph and realm scheduler ownership', () => {
+  it('keeps a 1,000-component plain tree consumer-free and materializes only readers', () => {
+    const baseline = snapshotSignalGraph();
+    const value = signal(1);
+    const canvas = createCanvas();
+    const Leaf = ({ read }: { read: boolean }) => {
+      if (read) value.get();
+    };
+    const Tree = ({ read }: { read: boolean }) =>
+      Array.from({ length: 1_000 }, (_, index) =>
+        createElement(Leaf, { key: `leaf-${index}`, read: read && index === 0 })
+      );
+    const controller = track(crc(canvas, createElement(Tree, { read: false })));
+
+    driver.flush(1);
+    expect(snapshotSignalGraph()).toMatchObject({
+      rendererConsumers: baseline.rendererConsumers,
+      rendererEdges: baseline.rendererEdges,
+      lazyRendererConsumers: baseline.lazyRendererConsumers,
+    });
+
+    crc(canvas, createElement(Tree, { read: true }));
+    driver.flush(2);
+    expect(snapshotSignalGraph()).toMatchObject({
+      rendererConsumers: baseline.rendererConsumers + 1,
+      rendererEdges: baseline.rendererEdges + 1,
+      lazyRendererConsumers: baseline.lazyRendererConsumers + 1,
+    });
+
+    crc(canvas, createElement(Tree, { read: false }));
+    driver.flush(3);
+    expect(snapshotSignalGraph()).toMatchObject({
+      rendererConsumers: baseline.rendererConsumers,
+      rendererEdges: baseline.rendererEdges,
+      lazyRendererConsumers: baseline.lazyRendererConsumers + 1,
+    });
+
+    const failure = new Error('lazy consumer render failed');
+    const Broken = (_props: {}) => {
+      value.get();
+      throw failure;
+    };
+    crc(canvas, createElement(Broken, {}));
+    expect(() => driver.flush(4)).toThrow(failure);
+    expect(snapshotSignalGraph()).toMatchObject({
+      rendererConsumers: baseline.rendererConsumers,
+      rendererEdges: baseline.rendererEdges,
+      lazyRendererConsumers: baseline.lazyRendererConsumers + 2,
+    });
+
+    controller.dispose();
+    expect(snapshotSignalGraph()).toMatchObject({
+      rendererConsumers: baseline.rendererConsumers,
+      rendererEdges: baseline.rendererEdges,
+    });
+  });
+
   it('releases exact consumers, edges, roots, and pending work through every lifecycle boundary', () => {
     const graphBaseline = snapshotSignalGraph();
     const schedulerBaseline = schedulerOwnershipSnapshot();
@@ -96,7 +153,7 @@ describe('signal graph and realm scheduler ownership', () => {
     expect(driver.requestCount).toBe(1);
     driver.flush(1);
     expect(snapshotSignalGraph()).toMatchObject({
-      rendererConsumers: 4,
+      rendererConsumers: 3,
       rendererEdges: 3,
       pendingComputedValidations: 0,
     });
@@ -111,11 +168,12 @@ describe('signal graph and realm scheduler ownership', () => {
     expect(driver.pendingHostFrames).toBe(1);
     driver.flush(2);
     expect(snapshotSignalGraph()).toMatchObject({
-      rendererConsumers: 4,
+      rendererConsumers: 3,
       rendererEdges: 3,
     });
 
-    // A branch change removes the Layer primitive and its nested consumer.
+    // A branch change removes the nested reader. The plain Layer primitive
+    // never owns a consumer.
     showLayer.set(false);
     driver.flush(3);
     expect(snapshotSignalGraph()).toMatchObject({
@@ -126,7 +184,7 @@ describe('signal graph and realm scheduler ownership', () => {
     showLayer.set(true);
     driver.flush(4);
     expect(snapshotSignalGraph()).toMatchObject({
-      rendererConsumers: 4,
+      rendererConsumers: 3,
       rendererEdges: 3,
     });
 
@@ -216,8 +274,8 @@ describe('signal graph and realm scheduler ownership', () => {
     expect(shared.get()).toBe(1);
     expect(retainedComputed.get()).toBe(0);
     expect(snapshotSignalGraph()).toMatchObject({
-      createdRendererConsumers: graphBaseline.createdRendererConsumers + 36,
-      releasedRendererConsumers: graphBaseline.releasedRendererConsumers + 36,
+      createdRendererConsumers: graphBaseline.createdRendererConsumers + 34,
+      releasedRendererConsumers: graphBaseline.releasedRendererConsumers + 34,
       createdComputedSourceEdges:
         graphBaseline.createdComputedSourceEdges + 1,
       releasedComputedSourceEdges:

@@ -19,15 +19,16 @@ import {
   RenderingContext2D,
 } from '../types.js';
 import type { Constraints } from '../layout/types.js';
-import type { CRCRenderTransaction, CRCTextChild } from '../types.js';
+import type { CRCRenderTransaction, CRCTextInput } from '../types.js';
 import type { CRCPhysics2DPropExtension } from '../types.js';
 import { resolveLength } from '../style/resolve-length.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
+import { withReceiverInputProvision } from '../signals/input-provision.js';
 
 export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {
-  children?: CRCTextChild;
+  children?: CRCTextInput;
 }
 
 const materializedTextTransactions = new WeakMap<
@@ -126,6 +127,7 @@ export const Text = definePrimitive<
   TextStyle,
   ResolvedTextStyle
 >(renderText, {
+  childInput: 'text',
   resolveStyle: (style, context) => ({
     ...stripLayoutParticipation(style),
     x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
@@ -220,7 +222,11 @@ function materializeTextContent(props: Readonly<TextProps>): string {
   }
   const cached = receivers.get(receiver);
   if (cached !== undefined) return cached;
-  const materialized = materializeTextChildren(props.children, 'Text');
+  const materialized = withReceiverInputProvision(
+    transaction,
+    receiver,
+    () => materializeTextChildren(props.children, 'Text'),
+  );
   receivers.set(receiver, materialized);
   return materialized;
 }

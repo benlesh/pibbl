@@ -1,13 +1,13 @@
 import {
   crc,
-  useState,
+  useSignal,
   Rectangle,
   Text,
   VerticalLine,
   type CRCController,
 } from "@crc/core";
 function VerticalStudy() {
-  const [stripe, setStripe] = useState(0);
+  const stripe = useSignal(0);
   const colors = ["#1f4bd8", "#ff6b57", "#f7c948", "#74d3ae"];
   return [
     <Rectangle
@@ -26,13 +26,13 @@ function VerticalStudy() {
           y1: 74 + index * 18,
           y2: 346 - index * 18,
           stroke: color,
-          strokeWidth: stripe === index + 1 ? 26 : 10,
+          strokeWidth: stripe.get() === index + 1 ? 26 : 10,
           lineInteractionWidth: 40,
           alignToPixelGrid: "round",
           cursor: "col-resize",
         }}
-        onMouseOver={() => setStripe(index + 1)}
-        onMouseOut={() => setStripe(0)}
+        onMouseOver={() => stripe.set(index + 1)}
+        onMouseOut={() => stripe.set(0)}
       />
     )),
     <Text
@@ -44,7 +44,7 @@ function VerticalStudy() {
         textAlign: "center",
       }}
     >
-      {stripe ? `STRIPE ${stripe}` : "VERTICAL FIELD"}
+      {stripe.get() ? `STRIPE ${stripe.get()}` : "VERTICAL FIELD"}
     </Text>,
   ];
 }

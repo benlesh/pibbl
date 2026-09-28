@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
 import { getCRCInstance } from '../global-state';
-import { useState } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
@@ -87,11 +87,11 @@ describe('Polygon', () => {
   it('updates polygon geometry', async () => {
     let move!: () => void;
     function Probe() {
-      const [offset, setOffset] = useState(0);
-      move = () => setOffset(40);
+      const offset = useSignal(0);
+      move = () => offset.set(40);
       return createElement(Polygon, {
         style: {
-          coords: [[40 + offset, 40], [120 + offset, 40], [80 + offset, 120]],
+          coords: [[40 + offset.get(), 40], [120 + offset.get(), 40], [80 + offset.get(), 120]],
           fill: 'red',
         },
       });
@@ -112,10 +112,10 @@ describe('Polygon', () => {
   it('updates, replaces, and removes rounded-corner style', async () => {
     let advance!: () => void;
     function Probe() {
-      const [phase, setPhase] = useState(0);
-      advance = () => setPhase(value => value + 1);
-      const corners = phase === 0 ? { cornerRadius: 12 } :
-        phase === 1 ? { cornerRadius: 12, cornerRadii: [0] } :
+      const phase = useSignal(0);
+      advance = () => phase.update(value => value + 1);
+      const corners = phase.get() === 0 ? { cornerRadius: 12 } :
+        phase.get() === 1 ? { cornerRadius: 12, cornerRadii: [0] } :
         {};
       return createElement(Polygon, {
         style: {

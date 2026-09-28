@@ -10,8 +10,15 @@ import type {
   CRCPlaybackOptions,
 } from '../animation/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
+import { isSignal } from '../signals/graph.js';
+import { resolveSignalValue } from '../signals/resolve-signal-value.js';
+import type { SignalValue } from '../signals/types.js';
 import type { CRCComponentRefs, CRCInstance } from '../types.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
+
+type CRCPlaybackOptionsInput = {
+  readonly [K in keyof CRCPlaybackOptions]: SignalValue<CRCPlaybackOptions[K]>;
+};
 
 interface CRCPlaybackHookSlot {
   readonly controller: AnimationPlaybackController;
@@ -47,10 +54,12 @@ function controllerOptions(
 
 /** Creates one component-owned animation playback handle for a hook slot. */
 export function usePlayback(
-  program: CRCAnimationProgram,
-  options: CRCPlaybackOptions = {},
+  programInput: SignalValue<CRCAnimationProgram>,
+  optionsInput: SignalValue<CRCPlaybackOptionsInput> = {},
 ): CRCPlayback {
   const { componentRefs, crcInstance } = requireHookContext();
+  const program = resolveSignalValue(programInput);
+  const options = resolvePlaybackOptions(optionsInput);
   const candidate = normalizeAnimationPlaybackCandidate(program, options);
   const candidateOptions = candidate.options;
   const slot = useHookSlot<CRCPlaybackHookSlot>('playback', teardowns => {
@@ -100,4 +109,18 @@ export function usePlayback(
     }
   });
   return slot.controller.handle;
+}
+
+function resolvePlaybackOptions(
+  input: SignalValue<CRCPlaybackOptionsInput>,
+): CRCPlaybackOptions {
+  const source = resolveSignalValue(input);
+  let resolved: Record<PropertyKey, unknown> | undefined;
+  for (const key in source) {
+    const value = source[key as keyof CRCPlaybackOptionsInput];
+    if (!isSignal(value)) continue;
+    resolved ??= { ...source };
+    resolved[key] = resolveSignalValue(value as SignalValue<unknown>);
+  }
+  return (resolved ?? source) as CRCPlaybackOptions;
 }

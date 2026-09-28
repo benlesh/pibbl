@@ -7,7 +7,9 @@ import {
 } from '../global-state';
 import { Image } from './img';
 import { createElement } from '../element/create-element';
+import { executeRender } from '../execute-render';
 import { snapshotRealmScheduler } from '../scheduler/testing';
+import { Group } from './g';
 
 class FakeImage {
   static instances: FakeImage[] = [];
@@ -19,6 +21,7 @@ class FakeImage {
   onload: (() => void) | null = null;
   onerror: (() => void) | null = null;
   src = '';
+  removedSources = 0;
 
   constructor() {
     FakeImage.instances.push(this);
@@ -26,6 +29,7 @@ class FakeImage {
 
   removeAttribute(name: string): void {
     if (name === 'src') {
+      this.removedSources += 1;
       this.src = '';
     }
   }
@@ -46,6 +50,68 @@ afterEach(() => {
 });
 
 describe('img async resource ownership', () => {
+  it('installs image listeners only after the owning render succeeds', async () => {
+    const instancesObservedDuringRender: number[] = [];
+    const Observer = () => {
+      instancesObservedDuringRender.push(FakeImage.instances.length);
+    };
+    const canvas = createCanvas();
+    const controller = crc(canvas, createElement(Group, {
+      children: [
+        imageElement('committed.png'),
+        createElement(Observer, {}),
+      ],
+    }));
+
+    await nextFrame();
+
+    expect(instancesObservedDuringRender).toEqual([0]);
+    expect(FakeImage.instances).toHaveLength(1);
+    expect(FakeImage.instances[0].onload).not.toBeNull();
+    expect(FakeImage.instances[0].onerror).not.toBeNull();
+    controller.dispose();
+  });
+
+  it('does not expose a listener from a failed render transaction', async () => {
+    const Failing = () => {
+      throw new Error('expected image sibling failure');
+    };
+    const canvas = createCanvas();
+    const controller = crc(canvas, undefined);
+    await nextFrame();
+
+    expect(() => executeRender(
+      canvas,
+      performance.now(),
+      createElement(Group, {
+        children: [
+          imageElement('never-committed.png'),
+          createElement(Failing, {}),
+        ],
+      }),
+    )).toThrow(/expected image sibling failure/iu);
+    expect(FakeImage.instances).toHaveLength(0);
+    controller.dispose();
+  });
+
+  it('cleans each committed source exactly once across replacement and disposal', async () => {
+    const canvas = createCanvas();
+    const controller = crc(canvas, imageElement('first-cleanup.png'));
+    await nextFrame();
+    const first = FakeImage.instances[0];
+
+    crc(canvas, imageElement('second-cleanup.png'));
+    await nextFrame();
+    const second = FakeImage.instances[1];
+    expect(first.removedSources).toBe(1);
+    expect(second.removedSources).toBe(0);
+
+    controller.dispose();
+    controller.dispose();
+    expect(first.removedSources).toBe(1);
+    expect(second.removedSources).toBe(1);
+  });
+
   it.each([
     ['zero', 0, 40],
     ['negative', -30, -40],

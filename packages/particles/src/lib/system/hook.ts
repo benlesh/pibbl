@@ -12,6 +12,11 @@ import type {
 } from "../types.js";
 import type { CRCParticleEffect3D } from "../webgl-types.js";
 import {
+  resolveSignalFields,
+  type SignalFields,
+} from "../signal-inputs.js";
+import { resolveSignalValue, type SignalValue } from "@crc/core";
+import {
   createParticleSystemController,
   type ParticleSystemController,
 } from "./controller.js";
@@ -27,22 +32,24 @@ export function useParticleSystem<
   EmitterName extends string,
   Parameters extends CRCParticleParameterValues,
 >(
-  effect: CRCParticleEffect2D<EmitterName, Parameters>,
-  options?: CRCParticleSystemOptions,
+  effect: SignalValue<CRCParticleEffect2D<EmitterName, Parameters>>,
+  options?: SignalValue<SignalFields<CRCParticleSystemOptions>>,
 ): CRCParticleSystem<EmitterName, Parameters, 2>;
 export function useParticleSystem<
   EmitterName extends string,
   Parameters extends CRCParticleParameterValues,
 >(
-  effect: CRCParticleEffect3D<EmitterName, Parameters>,
-  options?: CRCParticleSystemOptions,
+  effect: SignalValue<CRCParticleEffect3D<EmitterName, Parameters>>,
+  options?: SignalValue<SignalFields<CRCParticleSystemOptions>>,
 ): CRCParticleSystem<EmitterName, Parameters, 3>;
 /** Creates one stable particle-system handle owned by the current hook slot. */
 export function useParticleSystem(
-  effect: CRCParticleEffect2D | CRCParticleEffect3D,
-  options: CRCParticleSystemOptions = {},
+  effectInput: SignalValue<CRCParticleEffect2D | CRCParticleEffect3D>,
+  optionsInput: SignalValue<SignalFields<CRCParticleSystemOptions>> = {},
 ): CRCParticleSystem {
   const owner = crcInternalCurrentRenderOwner();
+  const effect = resolveSignalValue(effectInput);
+  const options = resolveSignalFields(optionsInput);
   const slot = useInternalHookSlot<ParticleSystemHookSlot>(
     "particle-system",
     (teardowns) => {

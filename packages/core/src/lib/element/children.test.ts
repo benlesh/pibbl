@@ -9,6 +9,7 @@ import {
   materializeTextChildren,
 } from './children.js';
 import { Fragment, jsx, jsxDEV } from './jsx-runtime.js';
+import { signal } from '../signals/graph.js';
 
 interface ProbeProps {
   value: string;
@@ -74,6 +75,38 @@ describe('recursive CRC container children', () => {
     )).toThrowError(/Text.*CRC element/i);
   });
 
+  it('resolves signals at declared text grammar positions', () => {
+    const label = signal('Current');
+    const suffix = signal('!');
+    function* tail() {
+      yield suffix;
+    }
+
+    expect(materializeTextChildren(
+      ['Value: ', label, 0, tail()] as never,
+      'Text',
+    )).toBe('Value: Current0!');
+  });
+
+  it('rejects nested signals returned by one signal and cyclic structures', () => {
+    const nested = signal(['outer', signal('inner')] as const);
+    const cyclic: unknown[] = [];
+    cyclic.push(cyclic);
+
+    expect(() => materializeTextChildren(nested as never, 'Text'))
+      .toThrowError(/Text.*signal.*resolved/iu);
+    expect(() => materializeTextChildren(cyclic as never, 'Text'))
+      .toThrowError(/Text.*cyclic/iu);
+
+    const rendered: string[] = [];
+    const nestedNode = signal([
+      signal<CRCNode>(probe({ value: 'nested', rendered })),
+    ] as const);
+    expect(() => materializeContainerChildren(nestedNode as never, 'Group'))
+      .toThrowError(/Group.*signal.*resolved/iu);
+    expect(rendered).toEqual([]);
+  });
+
   it('flattens root arrays, nested arrays, iterables, and unkeyed fragments in source order once', async () => {
     const canvas = createCanvas();
     const rendered: string[] = [];
@@ -132,6 +165,60 @@ describe('recursive CRC container children', () => {
     expect(getCRCInstance(canvas).root).toBeUndefined();
     expect(getCRCInstance(canvas).refs.size).toBe(0);
     controller.dispose();
+  });
+
+  it('owns component-result signals at the receiving component', async () => {
+    const canvas = createCanvas();
+    const rendered: string[] = [];
+    const selected = signal<CRCNode>(probe({ value: 'A', rendered }));
+    const Receiver = (() => selected) as unknown as CRCComponent<{}>;
+    const controller = crc(canvas, jsx(Receiver, {}));
+    await nextFrame();
+
+    expect(rendered).toEqual(['A']);
+    expect(Array.from(getCRCInstance(canvas).refs.values())
+      .find(ref => ref.element.type === Receiver)?.signalConsumer)
+      .toBeDefined();
+
+    selected.set(probe({ value: 'B', rendered }));
+    await nextFrame();
+    expect(rendered).toEqual(['A', 'B']);
+    controller.dispose();
+  });
+
+  it('makes keyed Fragments own child signals and leaves unkeyed ones transparent', async () => {
+    const rendered: string[] = [];
+    const selected = signal<CRCNode>(probe({ value: 'keyed', rendered }));
+    const keyedCanvas = createCanvas();
+    const keyed = jsx(Fragment, { children: selected as never }, 'owner');
+    const keyedController = crc(keyedCanvas, keyed);
+    await nextFrame();
+    const keyedRefs = Array.from(getCRCInstance(keyedCanvas).refs.values());
+
+    expect(rendered).toEqual(['keyed']);
+    expect(keyedRefs.find(ref => ref.element.type === Fragment)?.signalConsumer)
+      .toBeDefined();
+    keyedController.dispose();
+
+    rendered.length = 0;
+    const unkeyedCanvas = createCanvas();
+    const Receiver = (() => jsx(Fragment, {
+      children: selected as never,
+    })) as CRCComponent<{}>;
+    const unkeyedController = crc(unkeyedCanvas, jsx(Receiver, {}));
+    await nextFrame();
+    const unkeyedRefs = Array.from(getCRCInstance(unkeyedCanvas).refs.values());
+
+    expect(rendered).toEqual(['keyed']);
+    expect(unkeyedRefs.find(ref => ref.element.type === Receiver)?.signalConsumer)
+      .toBeDefined();
+    expect(unkeyedRefs.some(ref => ref.element.type === Fragment)).toBe(false);
+    unkeyedController.dispose();
+  });
+
+  it('rejects a bare signal at the CRC root', () => {
+    expect(() => renderNow(signal<CRCNode>(undefined) as never))
+      .toThrowError(/CRC root.*signal.*component/iu);
   });
 
   it('rejects duplicate keys in one sibling scope after transparent flattening', () => {

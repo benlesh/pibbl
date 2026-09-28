@@ -12,7 +12,7 @@ import {
   useEventTarget,
   useRectPath,
   useRef,
-  useState,
+  useSignal,
   createElement,
   Rectangle,
 } from "@crc/core";
@@ -709,16 +709,16 @@ it("removes an active target-local drag before pointer-up without a ghost loss o
 
   function RemovableTarget() {
     const pointerId = useRef<number>();
-    const [dragging, setDragging] = useState(false);
+    const dragging = useSignal(false);
     const finish = (): void => {
       pointerId.current = undefined;
-      setDragging(false);
+      dragging.set(false);
     };
     useEventTarget(
       {
         onPointerDown(event) {
           pointerId.current = event.pointerId;
-          setDragging(true);
+          dragging.set(true);
           event.currentTarget.setPointerCapture(event.pointerId);
         },
         onPointerMove(event) {
@@ -734,7 +734,7 @@ it("removes an active target-local drag before pointer-up without a ghost loss o
       {
         path: useRectPath(40, 40, 120, 80),
         fill: true,
-        cursor: dragging ? "grabbing" : "grab",
+        cursor: dragging.get() ? "grabbing" : "grab",
       },
     );
     return createElement(Rectangle, {
@@ -744,9 +744,9 @@ it("removes an active target-local drag before pointer-up without a ghost loss o
   }
 
   function RemovalHarness() {
-    const [visible, setVisible] = useState(true);
-    removeTarget = () => setVisible(false);
-    return visible ? createElement(RemovableTarget, {}) : null;
+    const visible = useSignal(true);
+    removeTarget = () => visible.set(false);
+    return visible.get() ? createElement(RemovableTarget, {}) : null;
   }
 
   const controller = crc(canvas, createElement(RemovalHarness, {}));

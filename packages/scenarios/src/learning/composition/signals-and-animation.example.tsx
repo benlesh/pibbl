@@ -2,7 +2,6 @@ import {
   crc,
   usePlayback,
   useSignal,
-  useState,
   useTransition,
   FocusManagement,
   Group,
@@ -25,9 +24,9 @@ function AnimatedCard() {
   const pulseScale = useSignal(1, {
     debugName: "learning animation pulse scale",
   });
-  const [targetScale, setTargetScale] = useState(1);
-  const [message, setMessage] = useState("CLICK OR PRESS ENTER");
-  const presentedScale = useTransition(targetScale, {
+  const targetScale = useSignal(1);
+  const message = useSignal("CLICK OR PRESS ENTER");
+  const presentedScale = useTransition(targetScale.get(), {
     type: "spring",
     stiffness: 240,
     damping: 22,
@@ -81,7 +80,7 @@ function AnimatedCard() {
     debugName: "learning entrance playback",
     onEvent: (event) => {
       if (event.type === "marker" && event.marker === "arrived") {
-        setMessage("ARRIVED · ONE COMMITTED FRAME");
+        message.set("ARRIVED · ONE COMMITTED FRAME");
       }
     },
   });
@@ -133,8 +132,8 @@ function AnimatedCard() {
           cursor: "pointer",
         }}
         onClick={() => {
-          setTargetScale((value) => (value === 1 ? 0.96 : 1));
-          setMessage("PLAYING IMMUTABLE PROGRAM");
+          targetScale.update((value) => (value === 1 ? 0.96 : 1));
+          message.set("PLAYING IMMUTABLE PROGRAM");
           playback.play({ conflict: "replace" });
         }}
       />
@@ -158,7 +157,7 @@ function AnimatedCard() {
           textAlign: "center",
         }}
       >
-        {message}
+        {message.get()}
       </Text>
       <Text
         style={{

@@ -1,6 +1,7 @@
 import {
   crc,
   createElement,
+  signal,
   type CRCNode,
   type PrimitiveInputOf,
 } from '@crc/core';
@@ -40,6 +41,26 @@ const geometry = createWebGLGeometry({
 });
 
 describe('WebGL light declarations', () => {
+  it('resolves signal-valued light and background styles at their declarations', () => {
+    const intensity = signal(0.25);
+    const background = signal({ color: '#08111f' });
+    const scene = compose(
+      <>
+        <AmbientLight style={{ intensity }} />
+        <WebGLBackground style={background} />
+      </>,
+    );
+
+    expect(scene.lights).toMatchObject([{ kind: 'ambient', intensity: 0.25 }]);
+    expect(scene.backgrounds).toHaveLength(1);
+    expect(scene.backgrounds[0]!.color).toEqual([
+      8 / 255,
+      17 / 255,
+      31 / 255,
+      1,
+    ]);
+  });
+
   it('composes ordered target-free declarations without consuming mesh source indices', () => {
     const root = (
       <>

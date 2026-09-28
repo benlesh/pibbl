@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
 import { crc } from '../crc';
-import { useState } from '../hooks/use-state';
+import { useSignal } from '../hooks/use-signal';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCNode, SystemStyle } from '../types';
@@ -71,8 +71,8 @@ describe('absolute layout', () => {
     let nextIdentity = 0;
     const observations = new Map<string, number>();
     const A = ({ label }: { label: string } & { style: Readonly<ItemStyle> }) => {
-      const [identity] = useState(++nextIdentity);
-      observations.set(label, identity);
+      const identity = useSignal(++nextIdentity);
+      observations.set(label, identity.get());
     };
     const Host = ({ keyed }: { keyed: boolean }) => {
       const children: CRCNode[] = [];

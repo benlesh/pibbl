@@ -7,11 +7,12 @@ import {
 } from '../components/structural-events.js';
 import type { BoxStyle, LayoutItemStyle, ResolvedBoxStyle } from '../style/types.js';
 import type {
-  CRCNode,
+  CRCNodeInput,
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
 import type { CRCElement } from '../element/types.js';
+import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import {
   childWithUsedSize,
   prepareLayoutChildren,
@@ -32,7 +33,7 @@ export interface OverlayStyle extends BoxStyle, LayoutItemStyle {
 }
 
 export interface OverlayProps extends CRCStructuralEventProps {
-  children: CRCNode;
+  children: CRCNodeInput;
 }
 
 interface ResolvedOverlayStyle extends SystemStyle {
@@ -61,10 +62,20 @@ function renderOverlay(
   const releaseLayout = pushLayoutBox(localContent);
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
 
+  let occurrence = 0;
   return placeDirectChildren(
     children,
     localContent,
-    child => resolveOverlayChildPlacement(localContent, child, style),
+    child => resolveOverlayChildPlacement(
+      localContent,
+      child,
+      style,
+      getChildPrimitiveReceiverToken(
+        GLOBAL_STATE.renderTransaction,
+        GLOBAL_STATE.primitiveReceiverToken,
+        occurrence++,
+      ),
+    ),
     style.overflow,
   );
 }
@@ -76,6 +87,7 @@ export const Overlay = definePrimitive<
   OverlayStyle,
   ResolvedOverlayStyle
 >(renderOverlay, {
+  childInput: 'structural',
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Overlay', 'overlay'),
     overflow: style.overflow ?? 'visible',
@@ -96,8 +108,9 @@ function resolveOverlayChildPlacement(
   container: Readonly<LayoutBox>,
   child: CRCElement<any>,
   alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>> = {},
+  receiverToken?: object,
 ): { box: LayoutBox; element: CRCElement<any> } {
-  const item = normalizeDirectChildStyle(child) as Readonly<
+  const item = normalizeDirectChildStyle(child, receiverToken) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
   const resolved = resolveDirectChildBox(
@@ -152,6 +165,7 @@ function resolveOverlayChildPlacement(
       item,
       Math.max(0, box.width - horizontalPadding),
       Math.max(0, box.height - verticalPadding),
+      receiverToken,
     ),
   };
 }

@@ -227,12 +227,12 @@ async function searchContract(page) {
   }
   await trigger.click();
   await page.locator(".studio-search-dialog[open]").waitFor({ timeout: 30_000 });
-  await page.locator("[data-search-input]").fill("useState");
+  await page.locator("[data-search-input]").fill("useComputed");
   await dialog.getByRole("status").getByText("results found", { exact: false }).waitFor({ timeout: 30_000 });
   const firstResult = page.locator("[role='option']").first();
   const firstTitle = (await firstResult.locator("strong").textContent())?.trim();
-  if (firstTitle !== "useState") {
-    throw failure(route, "exact useState symbol ranked first", JSON.stringify(firstTitle));
+  if (firstTitle !== "useComputed") {
+    throw failure(route, "exact useComputed symbol ranked first", JSON.stringify(firstTitle));
   }
   await page.locator("[data-search-kind='api']").click();
   const selected = await page.locator("[data-search-kind='api']").getAttribute("aria-pressed");
@@ -258,8 +258,8 @@ async function searchContract(page) {
   await page.locator("[data-search-input]").press("ArrowDown");
   await page.locator("[data-search-input]").press("Enter");
   await page.locator(".studio-search-dialog").waitFor({ state: "hidden" });
-  if (!page.url().endsWith("#/api/hooks/use-state")) {
-    throw failure(route, "keyboard activation to useState API route", page.url());
+  if (!page.url().endsWith("#/api/hooks/use-computed")) {
+    throw failure(route, "keyboard activation to useComputed API route", page.url());
   }
 
   await page.getByRole("button", { name: "Search documentation" }).first().click();
@@ -306,7 +306,7 @@ async function searchRetryContract(browser) {
     const retry = dialog.locator("[data-search-retry]");
     await retry.waitFor({ timeout: 30_000 });
     await retry.click();
-    await page.locator("[data-search-input]").fill("useState");
+    await page.locator("[data-search-input]").fill("useComputed");
     await dialog.getByRole("status").getByText("results found", { exact: false }).waitFor({ timeout: 30_000 });
   } finally {
     await context.close();
