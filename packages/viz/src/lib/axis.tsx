@@ -33,8 +33,8 @@ export function Axis(props: AxisProps) {
           key={index}
           pointerEvents="none"
           style={{
-            x: bottom ? p : -10,
-            y: bottom ? h + 10 : p,
+            left: bottom ? p : -10,
+            top: bottom ? h + 10 : p,
             fill,
             font,
             opacity: alpha,

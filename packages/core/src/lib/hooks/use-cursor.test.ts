@@ -12,8 +12,8 @@ describe('useCursor', () => {
       useCursor({ style: 'wait' });
       return createElement(Rectangle, {
         style: {
-          x: 40,
-          y: 40,
+          left: 40,
+          top: 40,
           width: 80,
           height: 80,
           fill: 'red',
@@ -34,8 +34,8 @@ describe('useCursor', () => {
       useCursor({ style: 'wait' });
       return createElement(Rectangle, {
         style: {
-          x: 40,
-          y: 40,
+          left: 40,
+          top: 40,
           width: 80,
           height: 80,
           fill: 'red',
@@ -106,8 +106,8 @@ describe('useCursor', () => {
       return region ?
           createElement(Rectangle, {
             style: {
-              x: 40,
-              y: 40,
+              left: 40,
+              top: 40,
               width: 80,
               height: 80,
               fill: 'red',
@@ -129,8 +129,8 @@ describe('useCursor', () => {
   it('applies a newly enabled region cursor without another movement', async () => {
     const Scene = ({ enabled }: { enabled: boolean }) => createElement(Rectangle, {
       style: {
-        x: 40,
-        y: 40,
+        left: 40,
+        top: 40,
         width: 80,
         height: 80,
         fill: 'red',

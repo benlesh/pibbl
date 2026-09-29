@@ -134,19 +134,19 @@ function ThreeLayerLesson() {
         </Group>
         <Text
         pointerEvents="none"
-        style={{ x: 28, y: 36, fill: '#f8fafc', font: '700 22px Arial' }}
+        style={{ left: 28, top: 36, fill: '#f8fafc', font: '700 22px Arial' }}
         >
           Three.js inside CRC
         </Text>
         <Text
         pointerEvents="none"
-        style={{ x: 28, y: 62, fill: '#bfdbfe', font: '14px Arial' }}
+        style={{ left: 28, top: 62, fill: '#bfdbfe', font: '14px Arial' }}
         >
           Blue blocks the Canvas · gold is a CRC target · empty pixels pass through
         </Text>
         <Text
         pointerEvents="none"
-        style={{ x: 28, y: 392, fill: '#f8fafc', font: '600 14px Arial' }}
+        style={{ left: 28, top: 392, fill: '#f8fafc', font: '600 14px Arial' }}
         >
           {`Canvas ${current.backgroundClicks} · Three target ${current.targetClicks}`}
         </Text>

@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import type { TextStyle } from '../style/types.js';
 import { resolveTextLayout } from './text-layout.js';
 
 describe('resolveTextLayout', () => {
@@ -15,7 +14,7 @@ describe('resolveTextLayout', () => {
       'thr...': 60,
       'thre...': 70,
       'three...': 80,
-    };
+    } as const;
     const measureText = (value: string) =>
       ({
         width: widths[value] ?? value.length * 10,
@@ -25,7 +24,7 @@ describe('resolveTextLayout', () => {
         actualBoundingBoxRight: widths[value] ?? value.length * 10,
       }) as TextMetrics;
     const text = 'one two three four';
-    const style = {
+    const style: Parameters<typeof resolveTextLayout>[2] = {
       x: 10,
       y: 30,
       width: 75,
@@ -37,7 +36,7 @@ describe('resolveTextLayout', () => {
       textAlign: 'left',
       textBaseline: 'top',
       fill: '#111827',
-    } satisfies TextStyle;
+    };
 
     expect(resolveTextLayout(measureText, text, style)).toEqual({
       lines: [

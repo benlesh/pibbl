@@ -339,3 +339,14 @@ retain an authoritative world. Applications that combine those operations with
 a Three scene explicitly derive their world-space query input and register the
 corresponding Three object as a CRC target; normal event propagation and pointer
 capture remain unchanged.
+
+## Component manipulation events
+
+`ManipulationFrame` hosts one controller. A `DragHandle` begins only when a
+participating descendant's primary pointer press bubbles to it; it adds no
+implicit hit region. Resize and rotation controls provide their own explicit
+targets. Three CSS pixels starts a gesture, native pointer capture retains it
+outside the initiating child, and the controller suppresses only the activated
+click. Focus and Escape bubble from focusable children to the existing
+cancellation path. The [component-manipulation contract](./component-manipulation-contract.md)
+defines constraints, snapping, and terminal behavior.

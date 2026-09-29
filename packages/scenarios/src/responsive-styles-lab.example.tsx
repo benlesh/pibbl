@@ -67,9 +67,9 @@ export const responsiveStylesScenario: ScenarioDefinition<ResponsiveStylesState>
     }
     function Scene() {
       return <Group>
-        <Text style={{ x: 0, y: 10, font: '16px sans-serif' }}>Root allocation</Text>
+        <Text style={{ left: 0, top: 10, font: '16px sans-serif' }}>Root allocation</Text>
         <Group style={{ translateY: 40 }}><Actions region="root" /></Group>
-        <Text style={{ x: 0, y: 210, font: '16px sans-serif' }}>Assigned Grid cell</Text>
+        <Text style={{ left: 0, top: 210, font: '16px sans-serif' }}>Assigned Grid cell</Text>
         <Group style={{ translateY: 240 }}>
           <Grid style={{ gridTemplateColumns: [width.get()], gridTemplateRows: [height.get()] }}>
             <Actions region="cell" style={{ width: '100%', height: '100%', gridColumnStart: 1, gridRowStart: 1 }} />

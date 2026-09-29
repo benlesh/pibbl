@@ -23,7 +23,7 @@ or implicit intrinsic measurement.
 ```tsx
 <Overlay style={{ width: 180, height: 100 }}>
   <Rectangle style={{ width: 180, height: 100, fill: "#1d4ed8" }} />
-  <Text style={{ x: 18, y: 58, fill: "white", font: "20px sans-serif" }}>
+  <Text style={{ left: 18, top: 58, fill: "white", font: "20px sans-serif" }}>
     Overlay
   </Text>
 </Overlay>

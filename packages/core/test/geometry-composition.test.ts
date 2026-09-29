@@ -129,10 +129,8 @@ describe('geometry interaction matrix', () => {
         style: { width: 80, height: 60 },
         children: [createElement(Rectangle, {
           style: {
-            left: -5.25,
-            top: 4.5,
-            x: 0.5,
-            y: -1.25,
+            left: -4.75,
+            top: 3.25,
             width: 20.5,
             height: 10.5,
             fill: '#16a34a',

@@ -52,8 +52,12 @@ Keyed children survive reflow; unkeyed same-type children retain
 occurrence-order identity, and keyed siblings do not consume unkeyed occurrence
 slots. A placed child's `useLayoutBox()` is the stable, readonly local box
 `{ x: 0, y: 0, width, height }`; reading it never schedules an update. Plain
-component props retain their exact specified style; the finite used allocation
-is exposed separately through `useLayoutBox()`.
+component props retain the exact specified public style fields and signal
+identity; the finite used allocation is exposed separately through
+`useLayoutBox()`. For a positioned object style, CRC may pass a readonly shallow
+copy to carry private placement provenance. It never mutates the authored object
+or changes its public keys/values, but object identity is not a contract on that
+placed path.
 
 Layout container and item style fields accept signal-valued replacements.
 Mounted parent inspection may resolve a child's style before the receiving
@@ -270,3 +274,13 @@ repeating signal reads or adding mounted layout passes.
 
 The [responsive styles guide](../site/learn/guides/responsive-styles.md) explains
 the placement/content distinction and its observable refactoring consequence.
+
+## Component manipulation
+
+`ManipulationFrame` presents one writable finite box as a freely positioned
+allocation. A nested `Flex`, `Flow`, or `Grid` consumes that allocation and
+reflows on resize; the frame's handles are chrome rather than layout items.
+The outer direct layout parent still owns its child's placement, so a frame with
+authored `left` or `top` is invalid directly under `Flex`, `Flow`, or `Grid` in
+development/test execution and has no production placement effect. See the
+[component-manipulation contract](./component-manipulation-contract.md).

@@ -81,8 +81,8 @@ const HookProbe = ({ metrics, state }: CleanupStressSceneProps) => {
       key={`hook-fill-${state.hookDependency}`}
       pointerEvents="none"
       style={{
-        x: 20,
-        y: 30,
+        left: 20,
+        top: 30,
         width: 130,
         height: 80,
         fill: state.hookDependency % 2 === 0 ? '#2563eb' : '#7c3aed',
@@ -95,8 +95,8 @@ const SingleLayerScene = () => (
     key="single-layer-fill"
     pointerEvents="none"
     style={{
-      x: 170,
-      y: 30,
+      left: 170,
+      top: 30,
       width: 130,
       height: 80,
       fill: '#f59e0b',
@@ -109,8 +109,8 @@ const NestedLayerScene = () => (
       key="nested-layer-fill"
       pointerEvents="none"
       style={{
-        x: 320,
-        y: 30,
+        left: 320,
+        top: 30,
         width: 130,
         height: 80,
         fill: '#10b981',
@@ -128,8 +128,8 @@ function imageNode(state: Readonly<CleanupStressState>) {
       pointerEvents="none"
       style={{
         src: CLEANUP_IMAGE_SOURCES[state.imageMode],
-        x: 170,
-        y: 130,
+        left: 170,
+        top: 130,
         width: 130,
         height: 80,
       }}
@@ -143,8 +143,8 @@ function sceneNodes({ metrics, state }: CleanupStressSceneProps) {
       key="cleanup-background"
       pointerEvents="none"
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 480,
         height: 240,
         fill: state.rootVariant === 'a' ? '#f8fafc' : '#eef2ff',

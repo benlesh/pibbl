@@ -399,3 +399,13 @@ per-shape memo hooks.
 `@crc/physics/3d/geometry` provides pure immutable shapes and collision
 queries. It does not add drawing components, Three bindings, a world runtime, or
 a scheduler participant.
+
+## Component manipulation
+
+`ManipulationFrame` binds one writable finite box signal to a positioned local
+allocation. `DragHandle` is a structural listener: only participating descendant
+hit geometry can start a move. `ResizeHandle`, `ResizeHandles`, and
+`RotationHandle` retain explicit control geometry. No frame infers bounds from
+content. Resize and rotation controls keep CSS-pixel visual and hit geometry
+while their centers follow the frame. See the
+[component-manipulation contract](./component-manipulation-contract.md).

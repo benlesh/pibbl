@@ -84,8 +84,8 @@ function handlers(
 
 const ProbeScene = ({ calls, enabled, generation, show }: ProbeSceneProps) => show ? createElement(Rectangle, {
   style: {
-    x: 20,
-    y: 20,
+    left: 20,
+    top: 20,
     width: 100,
     height: 100,
     fill: '#2563eb',
@@ -101,8 +101,8 @@ const ToggleNestedLayerScene = ({ calls, enabled, generation, show }: ProbeScene
       children: createElement(Rectangle, {
         key: 'nested-region',
         style: {
-          x: 20,
-          y: 20,
+          left: 20,
+          top: 20,
           width: 100,
           height: 100,
           fill: '#7c3aed',
@@ -117,8 +117,8 @@ const PersistentLayerScene = ({ calls, enabled, generation }: ProbeSceneProps) =
   children: createElement(Rectangle, {
     key: 'persistent-region',
     style: {
-      x: 20,
-      y: 20,
+      left: 20,
+      top: 20,
       width: 100,
       height: 100,
       fill: '#7c3aed',
@@ -129,8 +129,8 @@ const PersistentLayerScene = ({ calls, enabled, generation }: ProbeSceneProps) =
 
 const FirstLayerRoot = ({ calls }: { calls: string[] }) => createElement(Rectangle, {
   style: {
-    x: 20,
-    y: 20,
+    left: 20,
+    top: 20,
     width: 100,
     height: 100,
     fill: '#2563eb',
@@ -140,8 +140,8 @@ const FirstLayerRoot = ({ calls }: { calls: string[] }) => createElement(Rectang
 
 const SecondLayerRoot = ({ calls }: { calls: string[] }) => createElement(Rectangle, {
   style: {
-    x: 20,
-    y: 20,
+    left: 20,
+    top: 20,
     width: 100,
     height: 100,
     fill: '#7c3aed',
@@ -158,8 +158,8 @@ const CursorOwnershipScene = (_props: {}) => [
   createElement(Rectangle, {
     key: 'first-cursor',
     style: {
-      x: 20,
-      y: 20,
+      left: 20,
+      top: 20,
       width: 60,
       height: 60,
       fill: '#2563eb',
@@ -169,8 +169,8 @@ const CursorOwnershipScene = (_props: {}) => [
   createElement(Rectangle, {
     key: 'second-cursor',
     style: {
-      x: 100,
-      y: 20,
+      left: 100,
+      top: 20,
       width: 60,
       height: 60,
       fill: '#7c3aed',
@@ -187,8 +187,8 @@ const ObserverScene = ({ calls }: { calls: string[] }) => {
   useEvent('click', () => calls.push('safe'));
   return createElement(Rectangle, {
     style: {
-      x: 0,
-      y: 0,
+      left: 0,
+      top: 0,
       width: 160,
       height: 120,
       fill: '#f8fafc',
@@ -201,8 +201,8 @@ const LayerGlobalResources = ({ calls }: { calls: string[] }) => {
   useCursor({ style: 'wait' });
   return createElement(Rectangle, {
     style: {
-      x: 20,
-      y: 20,
+      left: 20,
+      top: 20,
       width: 100,
       height: 100,
       fill: '#7c3aed',

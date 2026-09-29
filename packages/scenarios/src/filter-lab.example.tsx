@@ -121,8 +121,8 @@ const ALL_FILTERS: readonly { label: string; filter: CRCFilter }[] = [
 
 function label(text: string, x: number, y: number) {
   return <Text key={`${text}-${x}-${y}`} pointerEvents="none" style={{
-    x,
-    y,
+    left: x,
+    top: y,
     fill: '#0f172a',
     font: '600 9px monospace',
     textAlign: 'center',
@@ -132,9 +132,9 @@ function label(text: string, x: number, y: number) {
 function tile(filter: CRCFilter, x: number, y: number, labelText: string) {
   return [
     <Group key={`tile-${labelText}`} style={{ filter }}>
-      <Rectangle style={{ x, y, width: 48, height: 26, fill: '#2563eb' }} />
+      <Rectangle style={{ left: x, top: y, width: 48, height: 26, fill: '#2563eb' }} />
       <Circle style={{ cx: x + 32, cy: y + 13, radius: 10, fill: '#f7c948' }} />
-      <Image style={{ src: FILTER_LAB_IMAGE_SOURCE, x: x + 4, y: y + 4, width: 18, height: 18 }} />
+      <Image style={{ src: FILTER_LAB_IMAGE_SOURCE, left: x + 4, top: y + 4, width: 18, height: 18 }} />
     </Group>,
     label(labelText, x + 24, y + 40),
   ];
@@ -162,7 +162,7 @@ function orderedScene(order: FilterLabOrder) {
     : [{ type: 'grayscale', amount: 1 }, ORDERED_SHADOW];
   return [
     <Group style={{ filter: filters }}>
-      <Rectangle style={{ x: 90, y: 80, width: 100, height: 58, fill: '#2563eb' }} />
+      <Rectangle style={{ left: 90, top: 80, width: 100, height: 58, fill: '#2563eb' }} />
       <Circle style={{ cx: 118, cy: 108, radius: 18, fill: '#f7c948' }} />
     </Group>,
     label(order === 'shadow-then-grayscale' ? 'shadow → gray' : 'gray → shadow', 140, 166),
@@ -178,7 +178,7 @@ function nestedScene() {
         },
       }}>
         <Group style={{ filter: { type: 'grayscale', amount: 1 } }}>
-          <Rectangle style={{ x: 80, y: 88, width: 80, height: 60, fill: '#2563eb' }} />
+          <Rectangle style={{ left: 80, top: 88, width: 80, height: 60, fill: '#2563eb' }} />
           <Circle style={{ cx: 106, cy: 118, radius: 18, fill: '#f7c948' }} />
         </Group>
       </Group>
@@ -200,7 +200,7 @@ function transformedScene() {
       rotationDegrees: 18,
       rotationOrigin: [30, 20],
     }}>
-      <Rectangle style={{ x: 0, y: 0, width: 60, height: 40, fill: '#2563eb' }} />
+      <Rectangle style={{ left: 0, top: 0, width: 60, height: 40, fill: '#2563eb' }} />
       <Circle style={{ cx: 20, cy: 20, radius: 14, fill: '#f7c948' }} />
     </Group>,
     label('rotated + nonuniform', 140, 178),
@@ -220,16 +220,16 @@ const CLIP_FILTER: CRCFilter = {
 function clippedScene() {
   return [
     <Clip style={{ d: rectangleClip(20, 96, 70, 60), filter: CLIP_FILTER }}>
-      <Rectangle style={{ x: 20, y: 96, width: 70, height: 60, fill: '#2563eb' }} />
+      <Rectangle style={{ left: 20, top: 96, width: 70, height: 60, fill: '#2563eb' }} />
     </Clip>,
     <Clip style={{ d: rectangleClip(180, 96, 70, 60) }}>
       <Group style={{ filter: CLIP_FILTER }}>
-        <Rectangle style={{ x: 180, y: 96, width: 70, height: 60, fill: '#2563eb' }} />
+        <Rectangle style={{ left: 180, top: 96, width: 70, height: 60, fill: '#2563eb' }} />
       </Group>
     </Clip>,
     <Group style={{ filter: CLIP_FILTER }}>
       <Clip style={{ d: rectangleClip(340, 96, 70, 60) }}>
-        <Rectangle style={{ x: 340, y: 96, width: 70, height: 60, fill: '#2563eb' }} />
+        <Rectangle style={{ left: 340, top: 96, width: 70, height: 60, fill: '#2563eb' }} />
       </Clip>
     </Group>,
     label('same clip', 55, 178),
@@ -249,7 +249,7 @@ function layeredScene(recordTarget: FilterLabRecordTarget) {
         },
       }}>
         <Rectangle
-          style={{ x: 0, y: 0, width: 80, height: 50, fill: '#2563eb', cursor: 'pointer' }}
+          style={{ left: 0, top: 0, width: 80, height: 50, fill: '#2563eb', cursor: 'pointer' }}
           onClick={() => recordTarget('layered-source')}
         />
         <Circle pointerEvents="none" style={{ cx: 25, cy: 25, radius: 16, fill: '#f7c948' }} />

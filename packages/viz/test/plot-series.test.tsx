@@ -40,7 +40,7 @@ it("places custom elements, preserves keyed state on reorder, and releases remov
     );
     return (
       <Rectangle
-        style={{ x: -5, y: -5, width: 10, height: 10, fill: "red" }}
+        style={{ left: -5, top: -5, width: 10, height: 10, fill: "red" }}
         onPointerDown={() => {
           own.update((v) => v + 1);
           events.push(id);

@@ -11,8 +11,8 @@ function LineStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7f0df",
@@ -52,8 +52,8 @@ function LineStudy() {
     />,
     <Text
       style={{
-        x: 64,
-        y: 56,
+        left: 64,
+        top: 56,
         fill: "#17211d",
         font: "800 18px monospace",
       }}

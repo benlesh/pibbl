@@ -90,6 +90,18 @@
       "path": "docs/superpowers/specs/2026-09-28-three-full-pivot-design.md",
       "sourceSha256": "6a23dc9dc8d25d1bbc5489efbbd3a7b8e2b27616debe2709e85294ffd2939ace",
       "unitPrefix": "p"
+    },
+    {
+      "id": "component-manipulation",
+      "path": "docs/superpowers/specs/2026-09-28-component-manipulation-design.md",
+      "sourceSha256": "56c97b229f807ef529f152bf9858bd48f26ecca7f340441645d2162492e6a80a",
+      "unitPrefix": "n"
+    },
+    {
+      "id": "child-defined-drag-handles",
+      "path": "docs/superpowers/specs/2026-09-29-child-defined-drag-handles.md",
+      "sourceSha256": "089b9bbb68b2694321e646ca2d2c2edc482e6beb35befe66027d97da80575f95",
+      "unitPrefix": "h"
     }
   ],
   "contracts": [
@@ -3248,6 +3260,12 @@
           "kind": "prose",
           "section": "Renderer-independent 3D geometry",
           "text": "`@crc/physics/3d/geometry` provides pure immutable shapes and collision queries. It does not add drawing components, Three bindings, a world runtime, or a scheduler participant."
+        },
+        {
+          "id": "c0076",
+          "kind": "prose",
+          "section": "Component manipulation",
+          "text": "`ManipulationFrame` binds one writable finite box signal to a positioned local allocation. `DragHandle` is a structural listener: only participating descendant hit geometry can start a move. `ResizeHandle`, `ResizeHandles`, and `RotationHandle` retain explicit control geometry. No frame infers bounds from content. Resize and rotation controls keep CSS-pixel visual and hit geometry while their centers follow the frame. See the [component-manipulation contract](./component-manipulation-contract.md)."
         }
       ]
     },
@@ -5053,7 +5071,7 @@
           "id": "c0012",
           "kind": "prose",
           "section": "Shared box, placement, and overflow rules",
-          "text": "The runtime places one private wrapper per direct child. The wrapper preserves the original brand, component type, props, key, compiler source metadata, policy metadata, and identity hint while translating the child's allocation. Keyed children survive reflow; unkeyed same-type children retain occurrence-order identity, and keyed siblings do not consume unkeyed occurrence slots. A placed child's `useLayoutBox()` is the stable, readonly local box `{ x: 0, y: 0, width, height }`; reading it never schedules an update. Plain component props retain their exact specified style; the finite used allocation is exposed separately through `useLayoutBox()`."
+          "text": "The runtime places one private wrapper per direct child. The wrapper preserves the original brand, component type, props, key, compiler source metadata, policy metadata, and identity hint while translating the child's allocation. Keyed children survive reflow; unkeyed same-type children retain occurrence-order identity, and keyed siblings do not consume unkeyed occurrence slots. A placed child's `useLayoutBox()` is the stable, readonly local box `{ x: 0, y: 0, width, height }`; reading it never schedules an update. Plain component props retain the exact specified public style fields and signal identity; the finite used allocation is exposed separately through `useLayoutBox()`. For a positioned object style, CRC may pass a readonly shallow copy to carry private placement provenance. It never mutates the authored object or changes its public keys/values, but object identity is not a contract on that placed path."
         },
         {
           "id": "c0013",
@@ -5426,6 +5444,12 @@
           "kind": "prose",
           "section": "Responsive style inspection",
           "text": "The [responsive styles guide](../site/learn/guides/responsive-styles.md) explains the placement/content distinction and its observable refactoring consequence."
+        },
+        {
+          "id": "c0075",
+          "kind": "prose",
+          "section": "Component manipulation",
+          "text": "`ManipulationFrame` presents one writable finite box as a freely positioned allocation. A nested `Flex`, `Flow`, or `Grid` consumes that allocation and reflows on resize; the frame's handles are chrome rather than layout items. The outer direct layout parent still owns its child's placement, so a frame with authored `left` or `top` is invalid directly under `Flex`, `Flow`, or `Grid` in development/test execution and has no production placement effect. See the [component-manipulation contract](./component-manipulation-contract.md)."
         }
       ]
     },
@@ -7766,6 +7790,12 @@
           "kind": "prose",
           "section": "Renderer-independent 3D geometry ownership",
           "text": "Values from `@crc/physics/3d/geometry` are immutable application values. The entry owns no scheduler participant, renderer resources, component bindings, or runtime world lifecycle."
+        },
+        {
+          "id": "c0064",
+          "kind": "prose",
+          "section": "Component manipulation ownership",
+          "text": "A manipulation controller owns native pointer capture, bounded source observations, and its temporary session until a terminal event, frame removal, component teardown, or root disposal. Release is idempotent. Teardown restores only a preview still owned by that session and invokes no disposed callback. If a signal write guard prevents immediate restoration, CRC queues one generation-checked Begin cleanup record; a newer external write or later owner generation invalidates it. See the [component-manipulation contract](./component-manipulation-contract.md)."
         }
       ]
     },
@@ -8440,6 +8470,12 @@
           "kind": "prose",
           "section": "Allocation-relative responsive inputs",
           "text": "See the [public guide](../site/learn/guides/responsive-styles.md) for canonical JSX and createElement recipes, the [layout contract](./layout-system-contract.md) for placement."
+        },
+        {
+          "id": "c0074",
+          "kind": "prose",
+          "section": "Component manipulation positioning",
+          "text": "Component placement uses `left` and `top`. `Rectangle`, `Text`, and `Image` do not accept positioning-style `x` or `y`; those names remain geometric data where their individual contracts define them. A freely positioned `ManipulationFrame` publishes its writable finite box through this same local style channel. Direct `Flex`, `Flow`, and `Grid` placement remains parent-owned. See the [component-manipulation contract](./component-manipulation-contract.md)."
         }
       ]
     },
@@ -9078,6 +9114,12 @@
           "kind": "prose",
           "section": "External 3D geometry boundary",
           "text": "Three coordinate events target the nearest committed visible object through the adapter's camera-aware raycasting, or through an application-supplied picker. Pure operations from `@crc/physics/3d/geometry` do not create event targets or retain an authoritative world. Applications that combine those operations with a Three scene explicitly derive their world-space query input and register the corresponding Three object as a CRC target; normal event propagation and pointer capture remain unchanged."
+        },
+        {
+          "id": "c0057",
+          "kind": "prose",
+          "section": "Component manipulation events",
+          "text": "`ManipulationFrame` hosts one controller. A `DragHandle` begins only when a participating descendant's primary pointer press bubbles to it; it adds no implicit hit region. Resize and rotation controls provide their own explicit targets. Three CSS pixels starts a gesture, native pointer capture retains it outside the initiating child, and the controller suppresses only the activated click. Focus and Escape bubble from focusable children to the existing cancellation path. The [component-manipulation contract](./component-manipulation-contract.md) defines constraints, snapping, and terminal behavior."
         }
       ]
     }
@@ -9935,7 +9977,7 @@
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0004", "b0005", "b0010"],
       "currentIds": ["c0005", "c0006", "c0012"],
-      "reason": "This mapping uses JSX direct-child vocabulary while retaining box placement, overflow, and scheduling; b0004, b0005, b0010 → c0005, c0006, c0012 is the exact unit boundary, and `occurrence-order`, `parent-relative`, `schedules` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping uses JSX direct-child vocabulary while retaining box placement, overflow, scheduling, and the bounded positioned-object style rule: b0004, b0005, b0010 → c0005, c0006, c0012. Current c0012 preserves public fields and signal identity, permits only a readonly shallow provenance copy, and keeps the allocation separate. occurrence-order, parent-relative, and schedules remain shared semantic anchors. Approved-design unit a0132 remains the bounded JSX-vocabulary source for this translation. The deliberate identity relaxation is recorded in Task 1, Unified placement through public rendering, of docs/superpowers/plans/2026-09-28-component-manipulation-implementation.md; it does not claim the original JSX approval preserved object identity.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -11864,6 +11906,73 @@
         "unitIds": ["p0006", "p0029", "p0030", "p0031"]
       },
       "sharedAnchors": ["target"]
+    },
+    {
+      "id": "component-manipulation-drawing-contract",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0076"],
+      "reason": "Approved component-manipulation records n0004, n0006, n0007, n0008, n0009, n0039 and child-defined-drag-handles records h0001, h0002, h0004 authorize current clause c0076 for explicit frame and child-defined handle drawing behavior.",
+      "approval": {
+        "recordId": "component-manipulation",
+        "unitIds": ["n0004", "n0006", "n0007", "n0008", "n0009", "n0039"]
+      },
+      "sharedAnchors": ["frame", "handle"],
+      "supplementalApprovals": [
+        {
+          "recordId": "child-defined-drag-handles",
+          "unitIds": ["h0001", "h0002", "h0004"]
+        }
+      ]
+    },
+    {
+      "id": "component-manipulation-resource-ownership",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0064"],
+      "reason": "Approved component-manipulation record n0025 authorizes current clause c0064 for the generation-checked teardown and restoration ownership contract.",
+      "approval": {
+        "recordId": "component-manipulation",
+        "unitIds": ["n0025"]
+      },
+      "sharedAnchors": ["teardown", "generation"]
+    },
+    {
+      "id": "component-manipulation-user-events",
+      "path": "docs/design/user-events-contract.md",
+      "currentIds": ["c0057"],
+      "reason": "Approved component-manipulation records n0018, n0019, n0026, n0027, n0028 and child-defined-drag-handles records h0002, h0003 authorize current clause c0057 for the captured pointer gesture and focused Escape event contract.",
+      "approval": {
+        "recordId": "component-manipulation",
+        "unitIds": ["n0018", "n0019", "n0026", "n0027", "n0028"]
+      },
+      "sharedAnchors": ["pointer", "gesture"],
+      "supplementalApprovals": [
+        {
+          "recordId": "child-defined-drag-handles",
+          "unitIds": ["h0002", "h0003"]
+        }
+      ]
+    },
+    {
+      "id": "component-manipulation-layout-contract",
+      "path": "docs/design/layout-system-contract.md",
+      "currentIds": ["c0075"],
+      "reason": "Approved component-manipulation records n0012, n0042, n0046 authorize current clause c0075 for the frame allocation and layout-owned placement contract.",
+      "approval": {
+        "recordId": "component-manipulation",
+        "unitIds": ["n0012", "n0042", "n0046"]
+      },
+      "sharedAnchors": ["layout", "placement"]
+    },
+    {
+      "id": "component-manipulation-style-contract",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0074"],
+      "reason": "Approved component-manipulation records n0029, n0030, n0031, n0041, n0045 authorize current clause c0074 for the left/top local style positioning contract.",
+      "approval": {
+        "recordId": "component-manipulation",
+        "unitIds": ["n0029", "n0030", "n0031", "n0041", "n0045"]
+      },
+      "sharedAnchors": ["left", "style"]
     }
   ],
   "evidenceMappings": [
@@ -11876,7 +11985,7 @@
       },
       "source": {
         "path": "packages/core/src/lib/render.ts",
-        "marker": "renderProgram(() =>\n              componentRefs.element.type(componentRefs.element.props)"
+        "marker": "return componentRefs.element.type(props);"
       },
       "test": {
         "path": "packages/core/src/lib/component-dispatch.test.tsx",
@@ -13311,6 +13420,195 @@
             {
               "recordId": "signals-centric-authoring",
               "unitIds": ["c0036", "c0545", "c0546", "c0564", "c0565"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/design/component-manipulation-contract.md",
+      "unitPrefix": "n",
+      "currentUnitCount": 16,
+      "currentUnitsSha256": "584a73cdeb6c19310bd645b7c7c3cd7d047342292e8d89a572fc0fb7cac5bc88",
+      "approvalRecordId": "component-manipulation",
+      "mappings": [
+        {
+          "id": "public-surface",
+          "currentIds": ["n0001"],
+          "reason": "Approved component-manipulation records n0002, n0015 authorize current contract clause n0001 as implemented public manipulation documentation.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": ["n0002", "n0015"]
+          },
+          "sharedAnchors": ["implement"]
+        },
+        {
+          "id": "controller-and-frame-ownership",
+          "currentIds": ["n0002", "n0003"],
+          "reason": "Approved component-manipulation record n0004, n0005, n0006, n0008, n0009, n0013, n0017, n0035, n0042, n0045 authorizes current contract clauses n0002, n0003 for the shared frame behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0004",
+              "n0005",
+              "n0006",
+              "n0008",
+              "n0009",
+              "n0013",
+              "n0017",
+              "n0035",
+              "n0042",
+              "n0045"
+            ]
+          },
+          "sharedAnchors": ["frame"]
+        },
+        {
+          "id": "positioning-and-layout",
+          "currentIds": ["n0004"],
+          "reason": "Approved component-manipulation record n0010, n0011, n0012, n0029, n0030, n0031, n0032, n0042, n0046 authorizes current contract clauses n0004 for the shared left behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0010",
+              "n0011",
+              "n0012",
+              "n0029",
+              "n0030",
+              "n0031",
+              "n0032",
+              "n0042",
+              "n0046"
+            ]
+          },
+          "sharedAnchors": ["left"]
+        },
+        {
+          "id": "gesture-arming-and-progress",
+          "currentIds": ["n0005", "n0006"],
+          "reason": "Approved component-manipulation record n0018, n0019, n0020, n0021, n0022, n0067, n0068 authorizes current contract clauses n0005, n0006 for the shared pointer behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0018",
+              "n0019",
+              "n0020",
+              "n0021",
+              "n0022",
+              "n0067",
+              "n0068"
+            ]
+          },
+          "sharedAnchors": ["pointer"]
+        },
+        {
+          "id": "cancellation-external-writes-and-activation",
+          "currentIds": ["n0007"],
+          "reason": "Approved component-manipulation record n0023, n0024, n0025, n0027, n0028 authorizes current contract clauses n0007 for the shared gesture behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": ["n0023", "n0024", "n0025", "n0027", "n0028"]
+          },
+          "sharedAnchors": ["gesture"]
+        },
+        {
+          "id": "pathless-drag-handle",
+          "currentIds": ["n0008", "n0011"],
+          "reason": "Approved component-manipulation records n0017, n0026, n0028 and child-defined-drag-handles records h0001, h0002, h0003, h0004 authorize current contract clauses n0008, n0011 for structural child-defined hit targets and handle precedence.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": ["n0017", "n0026", "n0028"]
+          },
+          "sharedAnchors": ["handle"],
+          "supplementalApprovals": [
+            {
+              "recordId": "child-defined-drag-handles",
+              "unitIds": ["h0001", "h0002", "h0003", "h0004"]
+            }
+          ]
+        },
+        {
+          "id": "control-presentation-and-css-space",
+          "currentIds": ["n0009", "n0010"],
+          "reason": "Approved component-manipulation record n0007, n0036, n0037, n0038, n0039, n0086, n0087 authorizes current contract clauses n0009, n0010 for the shared handle behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0007",
+              "n0036",
+              "n0037",
+              "n0038",
+              "n0039",
+              "n0086",
+              "n0087"
+            ]
+          },
+          "sharedAnchors": ["handle"]
+        },
+        {
+          "id": "snapping-options-and-lattices",
+          "currentIds": ["n0012", "n0013"],
+          "reason": "Approved component-manipulation record n0013, n0049, n0050, n0051, n0052, n0053, n0054, n0055, n0056, n0060 authorizes current contract clauses n0012, n0013 for the shared snap behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0013",
+              "n0049",
+              "n0050",
+              "n0051",
+              "n0052",
+              "n0053",
+              "n0054",
+              "n0055",
+              "n0056",
+              "n0060"
+            ]
+          },
+          "sharedAnchors": ["snap"]
+        },
+        {
+          "id": "resize-constraints",
+          "currentIds": ["n0014"],
+          "reason": "Approved component-manipulation records n0034, n0035, n0057, n0058, n0059 authorize current contract clause n0014 for the shared aspect-ratio constraint behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": ["n0034", "n0035", "n0057", "n0058", "n0059"]
+          },
+          "sharedAnchors": ["aspect"]
+        },
+        {
+          "id": "teardown-cleanup-ownership",
+          "currentIds": ["n0015"],
+          "reason": "Approved component-manipulation record n0025 authorizes current contract clauses n0015 for the shared teardown behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": ["n0025"]
+          },
+          "sharedAnchors": ["teardown"]
+        },
+        {
+          "id": "readout-presentation",
+          "currentIds": ["n0016"],
+          "reason": "Approved component-manipulation records n0093, n0094, n0096, n0097, n0098, n0099, n0100, n0102, n0106 and child-defined-drag-handles records h0003, h0005 authorize current contract clause n0016 for drag readout presentation and child participation.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0093",
+              "n0094",
+              "n0096",
+              "n0097",
+              "n0098",
+              "n0099",
+              "n0100",
+              "n0102",
+              "n0106"
+            ]
+          },
+          "sharedAnchors": ["readout"],
+          "supplementalApprovals": [
+            {
+              "recordId": "child-defined-drag-handles",
+              "unitIds": ["h0003", "h0005"]
             }
           ]
         }

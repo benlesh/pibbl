@@ -26,8 +26,8 @@ const PerformanceScene = ({ onHit, regions }: { onHit: () => void; regions: numb
   return Array.from({ length: regions }, (_, index) => createElement(Rectangle, {
     key: `region-${index}`,
     style: {
-      x: (index % columns) * 8,
-      y: Math.floor(index / columns) * 8,
+      left: (index % columns) * 8,
+      top: Math.floor(index / columns) * 8,
       width: 6,
       height: 6,
       fill: '#2563eb',

@@ -96,8 +96,8 @@ describe('filter integration', () => {
               label: 'inner',
               children: createElement(Rectangle, {
                 style: {
-                  x: 20,
-                  y: 20,
+                  left: 20,
+                  top: 20,
                   width: 30,
                   height: 30,
                   fill: 'red',
@@ -207,8 +207,8 @@ describe('filter integration', () => {
   it('renders a contrast-color drop shadow accepted by the native filter parser', async () => {
     const canvas = await renderScene(createElement(Rectangle, {
       style: {
-        x: 2,
-        y: 2,
+        left: 2,
+        top: 2,
         width: 4,
         height: 4,
         fill: 'red',
@@ -230,8 +230,8 @@ describe('filter integration', () => {
       children: [
         createElement(Rectangle, {
           style: {
-            x: -5,
-            y: 8,
+            left: -5,
+            top: 8,
             width: 3,
             height: 16,
             fill: 'red',
@@ -240,8 +240,8 @@ describe('filter integration', () => {
         }),
         createElement(Rectangle, {
           style: {
-            x: 42,
-            y: 8,
+            left: 42,
+            top: 8,
             width: 4,
             height: 16,
             fill: 'red',
@@ -265,8 +265,8 @@ describe('filter integration', () => {
     const canvas = await renderFixedScene(
       createElement(Rectangle, {
         style: {
-          x: 10,
-          y: 0,
+          left: 10,
+          top: 0,
           width: 10,
           height: 5,
           fill: 'red',
@@ -284,12 +284,12 @@ describe('filter integration', () => {
     expect(checkouts).toHaveBeenCalledOnce();
     expect(checkouts.mock.calls[0]![0]).toMatchObject({
       output: {
-        logicalBounds: { x: 0, y: -10, width: 40, height: 40 },
+        logicalBounds: { x: -10, y: -10, width: 40, height: 40 },
         backingWidth: 40,
         backingHeight: 40,
       },
       source: {
-        logicalBounds: { x: 0, y: -10, width: 40, height: 50 },
+        logicalBounds: { x: -10, y: -10, width: 40, height: 50 },
         backingWidth: 40,
         backingHeight: 50,
       },
@@ -307,10 +307,10 @@ describe('filter integration', () => {
         style: { filter: { type: 'opacity', amount: 1 } },
         children: [
           createElement(Rectangle, {
-            style: { x: -10, y: -10, width: 3, height: 3, fill: 'red' },
+            style: { left: -10, top: -10, width: 3, height: 3, fill: 'red' },
           }),
           createElement(Rectangle, {
-            style: { x: 27, y: 17, width: 3, height: 3, fill: 'blue' },
+            style: { left: 27, top: 17, width: 3, height: 3, fill: 'blue' },
           }),
         ],
       }),
@@ -341,10 +341,10 @@ describe('filter integration', () => {
         style: { filter: { type: 'opacity', amount: 1 } },
         children: [
           createElement(Rectangle, {
-            style: { x: 0, y: -30, width: 4, height: 2, fill: 'red' },
+            style: { left: 0, top: -30, width: 4, height: 2, fill: 'red' },
           }),
           createElement(Rectangle, {
-            style: { x: 0, y: 48, width: 4, height: 2, fill: 'blue' },
+            style: { left: 0, top: 48, width: 4, height: 2, fill: 'blue' },
           }),
         ],
       }),
@@ -375,10 +375,10 @@ describe('filter integration', () => {
         style: { filter: { type: 'opacity', amount: 1 } },
         children: [
           createElement(Rectangle, {
-            style: { x: 10, y: 0, width: 1, height: 20, fill: 'red' },
+            style: { left: 10, top: 0, width: 1, height: 20, fill: 'red' },
           }),
           createElement(Rectangle, {
-            style: { x: 29, y: 0, width: 1, height: 20, fill: 'blue' },
+            style: { left: 29, top: 0, width: 1, height: 20, fill: 'blue' },
           }),
         ],
       }),
@@ -898,8 +898,8 @@ describe('filter integration', () => {
       children: [
         createElement(Rectangle, {
           style: {
-            x: 4,
-            y: 5,
+            left: 4,
+            top: 5,
             width: 10,
             height: 11,
             fill: 'red',
@@ -910,8 +910,8 @@ describe('filter integration', () => {
         }),
         createElement(Rectangle, {
           style: {
-            x: 24,
-            y: 5,
+            left: 24,
+            top: 5,
             width: 10,
             height: 11,
             fill: 'blue',
@@ -952,8 +952,8 @@ describe('filter integration', () => {
       );
       return focusManaged(createElement(Rectangle, {
         style: {
-          x: 20,
-          y: 10,
+          left: 20,
+          top: 10,
           width: 10,
           height: 10,
           fill: 'red',
@@ -1087,10 +1087,10 @@ describe('filter integration', () => {
     const leafOpacity = await renderScene(createElement(Group, {
       children: [
         createElement(Rectangle, {
-          style: { x: 4, y: 4, width: 16, height: 16, fill: 'red', opacity: 0.5 },
+          style: { left: 4, top: 4, width: 16, height: 16, fill: 'red', opacity: 0.5 },
         }),
         createElement(Rectangle, {
-          style: { x: 4, y: 4, width: 16, height: 16, fill: 'red', opacity: 0.5 },
+          style: { left: 4, top: 4, width: 16, height: 16, fill: 'red', opacity: 0.5 },
         }),
       ],
     }), 28, 24);
@@ -1098,10 +1098,10 @@ describe('filter integration', () => {
       style: { filter: { type: 'opacity', amount: 0.5 } },
       children: [
         createElement(Rectangle, {
-          style: { x: 4, y: 4, width: 16, height: 16, fill: 'red' },
+          style: { left: 4, top: 4, width: 16, height: 16, fill: 'red' },
         }),
         createElement(Rectangle, {
-          style: { x: 4, y: 4, width: 16, height: 16, fill: 'red' },
+          style: { left: 4, top: 4, width: 16, height: 16, fill: 'red' },
         }),
       ],
     }), 28, 24);
@@ -1849,8 +1849,8 @@ function clickableRectangle(
 ): CRCNode {
   return createElement(Rectangle, {
     style: {
-      x: 4,
-      y: 4,
+      left: 4,
+      top: 4,
       width: 20,
       height: 20,
       fill: filtered ? 'red' : 'blue',
@@ -1985,8 +1985,8 @@ function filteredRectangle(
 ): CRCNode {
   return createElement(Rectangle, {
     style: {
-      x: 8,
-      y: 8,
+      left: 8,
+      top: 8,
       width: 20,
       height: 24,
       fill: 'red',
