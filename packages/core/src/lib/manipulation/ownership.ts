@@ -67,6 +67,7 @@ interface Rollback {
 }
 /** This finite cleanup record contains signals and values, never a mounted tree. */
 export function restoreReleasedGesture(record: Rollback): void {
+  const priorActive = record.active.get();
   const boxNode = getSignalNode(record.box);
   const rotationNode = record.rotation && getSignalNode(record.rotation);
   const boxVersion = boxNode.version;
@@ -86,7 +87,7 @@ export function restoreReleasedGesture(record: Rollback): void {
         record.box.set(record.before.box);
         record.rotation?.set(record.before.rotation);
       }
-      record.active.set(null);
+      if (record.active.get() === priorActive) record.active.set(null);
     });
   };
   try {
