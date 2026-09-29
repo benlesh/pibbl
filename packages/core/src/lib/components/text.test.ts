@@ -13,8 +13,8 @@ import { signal } from '../signals/graph.js';
 
 const defaultText = 'Hello World';
 const defaultStyle = {
-  x: 50,
-  y: 50,
+  left: 50,
+  top: 50,
   fill: 'black',
   stroke: 'red',
   strokeWidth: 2,
@@ -283,7 +283,7 @@ describe('text', () => {
   });
 
   describe('mouse events', () => {
-    const { x, y } = defaultStyle;
+    const { left: x, top: y } = defaultStyle;
     // We need to measure text to get accurate dimensions for hit testing
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
@@ -421,7 +421,7 @@ describe('text', () => {
         },
       }, 'abcdefghij'));
 
-      expect(fillText).toHaveBeenCalledExactlyOnceWith('ab...', 10, 20, undefined);
+      expect(fillText).toHaveBeenCalledExactlyOnceWith('ab...', 0, 0, undefined);
       measureText.mockRestore();
       fillText.mockRestore();
     });
@@ -444,8 +444,8 @@ describe('text', () => {
       }, 'one two three four'));
 
       expect(fillText.mock.calls).toEqual([
-        ['one two', 10, 30, undefined],
-        ['thre...', 10, 50, undefined],
+        ['one two', 0, 0, undefined],
+        ['thre...', 0, 20, undefined],
       ]);
       measureText.mockRestore();
       fillText.mockRestore();
@@ -464,7 +464,7 @@ describe('text', () => {
         },
       }, 'wide'));
 
-      expect(fillText).toHaveBeenCalledExactlyOnceWith('wide', 7, 9, 42);
+      expect(fillText).toHaveBeenCalledExactlyOnceWith('wide', 0, 0, 42);
       fillText.mockRestore();
     });
 
@@ -485,11 +485,11 @@ describe('text', () => {
         },
       }, 'clip me'));
 
-      expect(rect).toHaveBeenCalledExactlyOnceWith(70, 60, 60, 40);
+      expect(rect).toHaveBeenCalledExactlyOnceWith(-30, -20, 60, 40);
       expect(fillText).toHaveBeenCalledExactlyOnceWith(
         'clip me',
-        100,
-        80,
+        0,
+        0,
         undefined,
       );
       rect.mockRestore();
@@ -522,8 +522,8 @@ describe('text', () => {
       }, 'one two three'));
 
       expect(calls).toEqual([
-        ['one two', 10, 20],
-        ['three', 10, 44],
+        ['one two', 0, 0],
+        ['three', 0, 24],
       ]);
       fillText.mockRestore();
     });
