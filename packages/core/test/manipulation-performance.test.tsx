@@ -53,10 +53,13 @@ it("coalesces pointer samples into one normal content traversal and releases ges
     return (
       <ManipulationFrame {...controller.frameProps}>
         <Content />
-        <DragHandle
-          controller={controller}
-          style={{ width: 160, height: 120 }}
-        />
+        <DragHandle controller={controller}>
+          <Rectangle
+            pointerEvents="auto"
+            keyboardFocusable
+            style={{ width: 160, height: 120, fill: "transparent" }}
+          />
+        </DragHandle>
         <ResizeHandles controller={controller} />
       </ManipulationFrame>
     );

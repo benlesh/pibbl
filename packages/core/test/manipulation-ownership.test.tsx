@@ -39,10 +39,13 @@ async function setup(
     });
     return frameVisible.get() ? (
       <CRC.ManipulationFrame {...controller.frameProps}>
-        <CRC.DragHandle
-          controller={controller}
-          style={{ width: 160, height: 120 }}
-        />
+        <CRC.DragHandle controller={controller}>
+          <CRC.Rectangle
+            pointerEvents="auto"
+            keyboardFocusable
+            style={{ width: 160, height: 120, fill: "transparent" }}
+          />
+        </CRC.DragHandle>
       </CRC.ManipulationFrame>
     ) : null;
   }
@@ -106,10 +109,13 @@ it("rejects a second controller that tries to own active shared geometry", async
     competing = CRC.useManipulation({ box, move: {} });
     return (
       <CRC.ManipulationFrame {...competing.frameProps}>
-        <CRC.DragHandle
-          controller={competing}
-          style={{ width: 160, height: 120 }}
-        />
+        <CRC.DragHandle controller={competing}>
+          <CRC.Rectangle
+            pointerEvents="auto"
+            keyboardFocusable
+            style={{ width: 160, height: 120, fill: "transparent" }}
+          />
+        </CRC.DragHandle>
       </CRC.ManipulationFrame>
     );
   }

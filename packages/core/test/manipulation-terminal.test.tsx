@@ -70,10 +70,13 @@ it("does not arm or preview when native pointer capture fails", async () => {
     });
     return (
       <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle
-          controller={control}
-          style={{ width: 100, height: 80 }}
-        />
+        <CRC.DragHandle controller={control}>
+          <CRC.Rectangle
+            pointerEvents="auto"
+            keyboardFocusable
+            style={{ width: 100, height: 80, fill: "transparent" }}
+          />
+        </CRC.DragHandle>
       </CRC.ManipulationFrame>
     );
   }
@@ -100,8 +103,10 @@ it("lets a nested control decline a drag and lets the deepest resize handle clai
     const control = CRC.useManipulation({ box: declined, move: {} });
     return (
       <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle controller={control} style={{ width: 100, height: 80 }}>
+        <CRC.DragHandle controller={control}>
           <CRC.Rectangle
+            pointerEvents="auto"
+            keyboardFocusable
             style={{ width: 100, height: 80, fill: "#16a34a" }}
             onPointerDown={(event) => event.preventDefault()}
           />
@@ -113,7 +118,12 @@ it("lets a nested control decline a drag and lets the deepest resize handle clai
     const control = CRC.useManipulation({ box: resized, move: {}, resize: {} });
     return (
       <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle controller={control} style={{ width: 100, height: 80 }}>
+        <CRC.DragHandle controller={control}>
+          <CRC.Rectangle
+            pointerEvents="auto"
+            keyboardFocusable
+            style={{ width: 100, height: 80, fill: "transparent" }}
+          />
           <CRC.ResizeHandle controller={control} position="bottom-right" />
         </CRC.DragHandle>
       </CRC.ManipulationFrame>
@@ -219,10 +229,13 @@ it("rejects a manipulation press while an active animation owns its box signal",
     );
     return (
       <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle
-          controller={control}
-          style={{ width: 100, height: 80 }}
-        />
+        <CRC.DragHandle controller={control}>
+          <CRC.Rectangle
+            pointerEvents="auto"
+            keyboardFocusable
+            style={{ width: 100, height: 80, fill: "transparent" }}
+          />
+        </CRC.DragHandle>
       </CRC.ManipulationFrame>
     );
   }
@@ -263,10 +276,13 @@ async function mountActiveDrag() {
     });
     return (
       <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle
-          controller={control}
-          style={{ width: 100, height: 80 }}
-        />
+        <CRC.DragHandle controller={control}>
+          <CRC.Rectangle
+            pointerEvents="auto"
+            keyboardFocusable
+            style={{ width: 100, height: 80, fill: "transparent" }}
+          />
+        </CRC.DragHandle>
       </CRC.ManipulationFrame>
     );
   }

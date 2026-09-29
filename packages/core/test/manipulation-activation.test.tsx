@@ -38,7 +38,13 @@ function Scene({
   const manipulation = useManipulation({ box, move: {} });
   return [
     <ManipulationFrame key="frame" {...manipulation.frameProps}>
-      <DragHandle controller={manipulation} style={{ width: 100, height: 30 }} />
+      <DragHandle controller={manipulation}>
+        <Rectangle
+          pointerEvents="auto"
+          keyboardFocusable
+          style={{ width: 100, height: 30, fill: "transparent" }}
+        />
+      </DragHandle>
     </ManipulationFrame>,
     <Rectangle
       key="ordinary"

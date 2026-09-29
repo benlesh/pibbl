@@ -207,10 +207,13 @@ it("replaces a keyed frame attachment without remounting its controller", async 
         key={replacement.get() ? "replacement" : "initial"}
         {...manipulation.frameProps}
       >
-        <DragHandle
-          controller={manipulation}
-          style={{ width: 100, height: 80 }}
-        />
+        <DragHandle controller={manipulation}>
+          <Rectangle
+            pointerEvents="auto"
+            keyboardFocusable
+            style={{ width: 100, height: 80, fill: "transparent" }}
+          />
+        </DragHandle>
       </ManipulationFrame>
     );
   }
@@ -249,10 +252,13 @@ it("cancels the next captured move when an ancestor or root CSS mapping changes"
     return (
       <Group style={{ translateX: translation.get() }}>
         <ManipulationFrame {...manipulation.frameProps}>
-          <DragHandle
-            controller={manipulation}
-            style={{ width: 100, height: 80 }}
-          />
+          <DragHandle controller={manipulation}>
+            <Rectangle
+              pointerEvents="auto"
+              keyboardFocusable
+              style={{ width: 100, height: 80, fill: "transparent" }}
+            />
+          </DragHandle>
         </ManipulationFrame>
       </Group>
     );
@@ -387,10 +393,13 @@ it("replaces an active controller when one mounted frame receives a different co
           height: box.height,
         }}
       >
-        <DragHandle
-          controller={current}
-          style={{ width: 100, height: 80 }}
-        />
+        <DragHandle controller={current}>
+          <Rectangle
+            pointerEvents="auto"
+            keyboardFocusable
+            style={{ width: 100, height: 80, fill: "transparent" }}
+          />
+        </DragHandle>
       </ManipulationFrame>
     );
   }

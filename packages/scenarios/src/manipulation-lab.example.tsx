@@ -89,8 +89,12 @@ export function ManipulationLabRoot({ model }: { readonly model: ManipulationLab
         pointerEvents="none"
         style={{ width: "100%", height: "100%", fill: "#ffffff", stroke: "#2563eb", strokeWidth: 2, cornerRadius: 10 }}
       />
-      <DragHandle controller={control} style={{ width: "100%", height: 36 }}>
-        <Rectangle pointerEvents="none" style={{ width: "100%", height: 36, fill: "#dbeafe", cornerRadius: 10 }} />
+      <DragHandle controller={control}>
+        <Rectangle
+          pointerEvents="auto"
+          keyboardFocusable
+          style={{ width: "100%", height: 36, fill: "#dbeafe", cornerRadius: 10 }}
+        />
         <Text pointerEvents="none" style={{ left: 14, top: 11, font: "700 14px sans-serif", fill: "#17324d" }}>
           Drag this card
         </Text>
