@@ -27,6 +27,7 @@ import type {
   SystemStyle,
 } from '../types.js';
 import {
+  childWithUsedSize,
   prepareDirectChildStyle,
   materializeLayoutChildren,
   placeDirectChildren,
@@ -337,20 +338,17 @@ function resolveGridPlacements(
       width: border.width,
       height: border.height,
     };
-    const renderedStyle = Object.freeze({
-      ...normalized,
-      width: resolved.contentBox.width,
-      height: resolved.contentBox.height,
+    placements.push({
+      box,
+      element: childWithUsedSize(
+        child,
+        normalized,
+        resolved.contentBox.width,
+        resolved.contentBox.height,
+        receiverToken,
+        preparedStyleQuery(prepared),
+      ),
     });
-    const renderedChild = cloneCRCElement(child);
-    setPreNormalizedStyle(
-      renderedChild,
-      renderedStyle,
-      child,
-      receiverToken,
-      preparedStyleQuery(prepared),
-    );
-    placements.push({ box, element: renderedChild });
   }
   return placements;
 }
