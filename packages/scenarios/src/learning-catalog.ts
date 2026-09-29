@@ -144,6 +144,17 @@ const drafts = [
     load: () => import("./learning/start/getting-started.example"),
   },
   {
+    slug: "viz-band-bars", title: "Comparing state population changes", shortTitle: "Band scales and bars",
+    section: "composition", order: 196,
+    summary: "Compare annual population gains and losses in the six largest U.S. states using Census estimates.",
+    api: ["Scale", "useScale", "BarSeries", "Axis"],
+    objectives: ["Map ordered categories into local bands.", "Inspect signed bars through ordinary CRC events."],
+    prompts: { gesture: "Hover or tap for exact counts; reverse order, change spacing, and resize.", code: "Change the explicit category domain or supply a different baseline." },
+    apiNotes: ["Source: U.S. Census Bureau, Vintage 2023 estimates. July 2022–July 2023 change in the six most populous states. Historical snapshot; later vintages may revise these estimates. https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html", "Unknown or missing categories and missing values skip bars. Grouping and horizontal/range bars are deferred."],
+    canvas: { width: 940, height: 660 }, related: ["viz-responsive-line", "viz-points-and-inspection"],
+    load: () => import("./learning/composition/viz-band-bars.example"),
+  },
+  {
     slug:"viz-hover-comparison",title:"Comparing two lines at a shared time",shortTitle:"Hover comparisons",section:"composition",order:197,
     summary:"Compare recorded and interpolated NOAA CO₂ values with ordinary function queries and protected hover cards.",
     api:["HoverData","AnchoredLayout","closestPoint","closestX","interpolateX","defineSeries","linearInterpolation"],

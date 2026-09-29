@@ -3,6 +3,10 @@ export { useScale } from "./lib/use-scale.js";
 export type {
   ScaleId,
   LinearDomain,
+  BandCategory,
+  BandDomain,
+  BandScaleProps,
+  ResolvedBandScale,
   ScaleRange,
   ScaleLayoutStyle,
   LinearScaleProps,
@@ -77,3 +81,11 @@ export type {
   AnchoredPlacement,
   AnchoredLayoutProps,
 } from "./lib/anchored-layout.js";
+
+export { BarSeries } from "./lib/bar-series.js";
+export type {
+  BarThresholdFill,
+  BarCategoryAccessor,
+  BarSeriesStyle,
+  BarSeriesProps,
+} from "./lib/bar-series.js";

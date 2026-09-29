@@ -59,7 +59,7 @@ void createElement(
 void (<LineSeries data={data} x="name" y="value" xScale="x" yScale="y" />);
 // @ts-expect-error no curve catalog in this slice
 void (<LineSeries {...line} curve="basis" />);
-// @ts-expect-error no band scale in this slice
+// Band domains can also contain finite numeric categories.
 void (<Scale {...props} type="band" />);
 // @ts-expect-error paired coordinate and ID
 void (<ScaleAdjust x={1} />);
@@ -302,3 +302,17 @@ const invalidAnchoredItem: AnchoredItem = {
   height: 20,
 };
 void invalidAnchoredItem;
+
+import { BarSeries, type ResolvedBandScale } from "@crc/viz";
+void (<BarSeries data={[{ category: "A", value: -2 }]} x="category" y="value" xScale="categories" yScale="values" />);
+function BandConsumer() {
+  const band: ResolvedBandScale = useScale("categories", "band").get();
+  const start: number | undefined = band.map("A");
+  void start;
+  // @ts-expect-error bands have no numeric inversion
+  band.invert(1);
+  return null;
+}
+void BandConsumer;
+
+void (<BarSeries data={[{ category: "A", value: 42 }]} x="category" y="value" xScale="categories" yScale="values" style={{ fill: signal({ type: "threshold" as const, thresholds: [0, 30], colors: ["orange", "green", "red"] }) }} />);

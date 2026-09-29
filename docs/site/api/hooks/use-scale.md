@@ -11,9 +11,13 @@ symbols: [useScale]
 # useScale
 
 Import `useScale` from `@crc/viz`. Call `useScale(id)` in a component to obtain
-`Signal<ResolvedScale>`, then call `.get()` where the dependency should be owned.
+`Signal<ResolvedLinearScale>`, then call `.get()` where the dependency should be owned.
 The returned signal has stable identity for that provider mount. Its immutable
 value changes when the resolved domain, range, or local frame changes.
+
+Use `useScale(id, "band")` for `Signal<ResolvedBandScale>`. The default family is
+linear; reading a mismatched family throws an actionable error. Band snapshots
+expose `bandwidth`, `step`, and category mapping instead of numeric inversion.
 
 Lookup requires an enclosing matching [`Scale`](#/api/components/scale).
 Unknown IDs and use outside component evaluation throw. Hooks must keep their

@@ -1,7 +1,7 @@
 ---
 id: api-component-scale
 title: Scale
-summary: Provides a named reactive linear scale in its local allocation.
+summary: Provides a named reactive linear or band scale in its local allocation.
 kind: api
 slug: scale
 apiCategory: component
@@ -10,6 +10,10 @@ symbols:
     Scale,
     ScaleId,
     LinearDomain,
+    BandCategory,
+    BandDomain,
+    BandScaleProps,
+    ResolvedBandScale,
     ScaleRange,
     ScaleLayoutStyle,
     LinearScaleProps,
@@ -24,7 +28,7 @@ keywords: [visualization, scale, domain, range, signals]
 
 Import `Scale` and its types from `@crc/viz`. Use the core JSX runtime.
 
-`ScaleProps` currently aliases `LinearScaleProps`: required `id`, `type: "linear"`,
+`ScaleProps` is `LinearScaleProps | BandScaleProps`. Linear scales require `id`, `type: "linear"`,
 `domain`, and `range`; optional `reverse`, `style`, and `children`. `ScaleId` is a
 nonempty string or a symbol. Nested providers shadow the nearest matching ID;
 siblings and independent roots cannot see each other's providers.
@@ -40,7 +44,7 @@ styles and direct fields may be core signals. Scale does not paint, transform,
 reserve gutters, or create a global chart rectangle. Its children receive the
 same allocation; put gutters and placement in ordinary core layout.
 
-`ResolvedScale` currently aliases `ResolvedLinearScale`, an immutable snapshot:
+`ResolvedScale` is `ResolvedLinearScale | ResolvedBandScale`. The linear snapshot has:
 
 - `type`, `domain`, and `range` describe the mapping.
 - `frame` has local x/y zero and the allocation's width/height.
@@ -57,4 +61,24 @@ equivalent domain/range/frame values suppress downstream invalidation.
 
 A scale provider and consumer must share one rendering instance. Put the complete
 scale subtree inside a `Layer`; lookup across a Layer boundary is unsupported.
-Time, logarithmic, categorical, band, and auto-domain scales are deferred.
+Time, logarithmic, and auto-domain scales are deferred.
+
+## Band scales (feedback slice)
+
+Use `type="band"` with an explicit ordered `BandDomain` of strings or finite
+numbers (`BandCategory`). Identity uses SameValueZero: `1` and `"1"` are distinct;
+`-0` and `0` are the same category. Duplicate entries reject. Input order is
+preserved, and empty domains are valid. Unknown categories map to `undefined`.
+
+`paddingInner` defaults to 0 and is a fraction of the step in [0, 1].
+`paddingOuter` defaults to 0 and is a finite nonnegative number of steps per side.
+For n categories, step = extent / max(1, n - paddingInner + 2 * paddingOuter).
+Bandwidth = step * (1 - paddingInner); remaining space is centered. Empty domains
+have zero step/bandwidth. Collapsed ranges have zero bandwidth. Reverse changes
+category placement, while each `map(category)` remains the lower pixel edge.
+
+Read `useScale(id, "band").get()` for the immutable `ResolvedBandScale`: `domain`,
+`range`, `frame`, `step`, `bandwidth`, and `map(category)`. There is no numeric
+inversion or tick method. Labels can use `map(category) + bandwidth / 2`.
+Domain, padding, reverse, and range accept signals and follow local allocation.
+Nested bandwidth ranges and grouped bars are deferred.
