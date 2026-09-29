@@ -342,24 +342,32 @@ function apply(state: ManipulationState, pointer: PointerSample): void {
       session.angle = angle;
     }
   }
-  const result = solveManipulation({
-    operation: session.operation,
-    handle: session.handle,
-    initial: session.before.box,
-    initialPoint: session.point,
-    currentPoint,
-    initialRotation: session.before.rotation,
-    rotationDelta: session.rotationDelta,
-    modifiers: {
-      shift: pointer.shiftKey,
-      alt: pointer.altKey,
-      ctrl: pointer.ctrlKey,
-      meta: pointer.metaKey,
-    },
-    move,
-    resize,
-    rotate,
-  });
+  let result: ReturnType<typeof solveManipulation>;
+  try {
+    result = solveManipulation({
+      operation: session.operation,
+      handle: session.handle,
+      initial: session.before.box,
+      initialPoint: session.point,
+      currentPoint,
+      initialRotation: session.before.rotation,
+      rotationDelta: session.rotationDelta,
+      modifiers: {
+        shift: pointer.shiftKey,
+        alt: pointer.altKey,
+        ctrl: pointer.ctrlKey,
+        meta: pointer.metaKey,
+      },
+      move,
+      resize,
+      rotate,
+    });
+  } catch {
+    // Options can change after activation; the original preview still belongs
+    // to this gesture and must be restored through the normal terminal path.
+    cancel(state, "constraints-unsatisfiable");
+    return;
+  }
   const next = Object.freeze({
     box: result.applied,
     rotation: result.appliedRotation,

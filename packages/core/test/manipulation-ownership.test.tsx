@@ -167,3 +167,23 @@ it("recomputes modifiers without pointer movement through logical focus and canc
   expect(cancelled.map((event) => event.reason)).toEqual(["escape"]);
   await commands.manipulationPointer([{ type: "up" }]);
 });
+
+it("cancels with constraints-unsatisfiable when live bounds stop containing the initial box", async () => {
+  const bounds = { left: 0, top: 0, width: 400, height: 300 };
+  const errors: unknown[] = [];
+  vi.spyOn(globalThis, "reportError").mockImplementation((error) => {
+    errors.push(error);
+  });
+  const { box, controller, cancelled } = await setup({ move: { bounds } });
+  bounds.width = 100;
+  await commands.manipulationPointer([
+    { type: "move", x: 110, y: 110 },
+    { type: "up" },
+  ]);
+  expect(controller.active.get()).toBe(null);
+  expect(box.get()).toEqual({ left: 40, top: 50, width: 160, height: 120 });
+  expect(cancelled.map((event) => event.reason)).toEqual([
+    "constraints-unsatisfiable",
+  ]);
+  expect(errors).toEqual([]);
+});
