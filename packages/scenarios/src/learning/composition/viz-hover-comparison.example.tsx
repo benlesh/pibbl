@@ -18,7 +18,7 @@ import {
   Scale,
   LineSeries,
   HoverData,
-  HoverCard,
+  AnchoredLayout,
   closestPoint,
   closestX,
   defineSeries,
@@ -291,10 +291,11 @@ function Plot({
         />
       )}
       <HoverData query={query}>
-        {(results) =>
-          results?.map((result, i) => (
-            <Group key={result.series}>
+        {(results) => (
+          <>
+            {results?.map((result) => (
               <Group
+                key={result.series}
                 style={{
                   translateX: result.anchor.x,
                   translateY: result.anchor.y,
@@ -310,39 +311,90 @@ function Plot({
                   }}
                 />
               </Group>
-              <HoverCard
-                anchor={result.anchor}
-                anchorRadius={6}
-                placement={i === 0 ? "above" : "below"}
-                style={{
-                  width: Math.min(164, Math.max(100, xs.frame.width - 20)),
-                  height: 48,
-                }}
-              >
-                <Text
-                  pointerEvents="none"
-                  style={{ font: "bold 11px sans-serif", fill: ink }}
-                >
-                  {result.series === "monthly"
-                    ? "Monthly mean"
-                    : "Deseasonalized"}
-                </Text>
-                <Text
-                  pointerEvents="none"
-                  style={{ y: 17, font: "12px sans-serif", fill: ink }}
-                >{`${result.y.toFixed(2)} ppm · ${result.kind === "interpolated" ? "estimated" : "recorded"}`}</Text>
-                <Text
-                  pointerEvents="none"
-                  style={{ y: 34, font: "10px sans-serif", fill: muted }}
-                >
-                  {fixture.xDomain
-                    ? `x = ${result.x.toFixed(2)}`
-                    : date(result.x)}
-                </Text>
-              </HoverCard>
-            </Group>
-          ))
-        }
+            ))}
+            <AnchoredLayout
+              items={(results ?? []).map((result) => ({
+                key: result.series,
+                anchor: result.anchor,
+                anchorRadius: 6,
+                width: Math.min(184, Math.max(120, xs.frame.width - 20)),
+                height: 68,
+                result,
+              }))}
+              gap={8}
+            >
+              {(item, placement) => {
+                const result = item.result;
+                const anchor = {
+                  x: item.anchor.x - placement.x,
+                  y: item.anchor.y - placement.y,
+                };
+                const edge = {
+                  x: Math.max(0, Math.min(item.width, anchor.x)),
+                  y: Math.max(0, Math.min(item.height, anchor.y)),
+                };
+                const dx = edge.x - anchor.x,
+                  dy = edge.y - anchor.y,
+                  distance = Math.hypot(dx, dy);
+                return (
+                  <>
+                    <Line
+                      pointerEvents="none"
+                      style={{
+                        coords: [
+                          [
+                            anchor.x + (dx * 6) / distance,
+                            anchor.y + (dy * 6) / distance,
+                          ],
+                          [edge.x, edge.y],
+                        ],
+                        stroke: result.series === "monthly" ? blue : orange,
+                        strokeWidth: 1,
+                      }}
+                    />
+                    <Rectangle
+                      pointerEvents="none"
+                      style={{
+                        x: 0.5,
+                        y: 0.5,
+                        width: item.width - 1,
+                        height: item.height - 1,
+                        cornerRadius: 7,
+                        fill: "rgba(255,255,255,0.94)",
+                        stroke: "rgba(98,117,139,0.35)",
+                        strokeWidth: 1,
+                      }}
+                    />
+                    <Group style={{ translateX: 10, translateY: 10 }}>
+                      <Text
+                        pointerEvents="none"
+                        style={{ font: "bold 11px sans-serif", fill: ink }}
+                      >
+                        {result.series === "monthly"
+                          ? "Monthly mean"
+                          : "Deseasonalized"}
+                      </Text>
+                      <Text
+                        pointerEvents="none"
+                        style={{ y: 17, font: "12px sans-serif", fill: ink }}
+                      >
+                        {`${result.y.toFixed(2)} ppm · ${result.kind === "interpolated" ? "estimated" : "recorded"}`}
+                      </Text>
+                      <Text
+                        pointerEvents="none"
+                        style={{ y: 34, font: "10px sans-serif", fill: muted }}
+                      >
+                        {fixture.xDomain
+                          ? `x = ${result.x.toFixed(2)}`
+                          : date(result.x)}
+                      </Text>
+                    </Group>
+                  </>
+                );
+              }}
+            </AnchoredLayout>
+          </>
+        )}
       </HoverData>
     </Group>
   );

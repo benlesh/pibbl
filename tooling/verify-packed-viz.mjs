@@ -76,6 +76,7 @@ try {
     "nearestPoint",
     "HoverData",
     "HoverCard",
+    "AnchoredLayout",
     "defineSeries",
     "closestPoint",
     "closestX",

@@ -95,6 +95,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/nearest-domain-value.md",
   "docs/site/api/components/hover-data.md",
   "docs/site/api/components/hover-card.md",
+  "docs/site/api/components/anchored-layout.md",
   "docs/site/api/functions/define-series.md",
   "docs/site/api/functions/closest-point.md",
   "docs/site/api/functions/closest-x.md",

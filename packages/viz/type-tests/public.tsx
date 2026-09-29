@@ -257,3 +257,48 @@ void (
   />
 );
 void [nearestTime, samples, sampleType];
+
+import {
+  AnchoredLayout,
+  type AnchoredItem,
+  type AnchoredLayoutProps,
+  type AnchoredPlacement,
+} from "@crc/viz";
+const anchoredItems = [
+  { key: "a", anchor: { x: 10, y: 20 }, width: 100, height: 40, label: "A" },
+];
+const anchoredProps: AnchoredLayoutProps<(typeof anchoredItems)[number]> = {
+  items: signal(anchoredItems),
+  gap: signal(8),
+  direction: "horizontal",
+  children: (item, placement) => {
+    const name: string = item.label;
+    const box: AnchoredPlacement = placement;
+    void name;
+    void box;
+    return null;
+  },
+};
+void createElement(
+  AnchoredLayout<(typeof anchoredItems)[number]>,
+  anchoredProps,
+);
+void (
+  <AnchoredLayout items={anchoredItems}>
+    {(item) => {
+      const label: string = item.label;
+      // @ts-expect-error Extra item fields retain their original types.
+      const bad: number = item.label;
+      void label;
+      void bad;
+      return null;
+    }}
+  </AnchoredLayout>
+);
+// @ts-expect-error Declared numeric width is required.
+const invalidAnchoredItem: AnchoredItem = {
+  key: "a",
+  anchor: { x: 0, y: 0 },
+  height: 20,
+};
+void invalidAnchoredItem;

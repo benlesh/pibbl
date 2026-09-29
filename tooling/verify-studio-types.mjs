@@ -2176,7 +2176,7 @@ try {
   const expectedStudioRuntimeExports = [
     'Scale', 'Axis', 'LineSeries', 'ScaleAdjust', 'useScale',
     'PointSeries', 'PlotSeries', 'nearestPoint', 'nearestDomainValue',
-    'HoverData', 'HoverCard', 'defineSeries', 'closestPoint', 'closestX',
+    'HoverData', 'HoverCard', 'AnchoredLayout', 'defineSeries', 'closestPoint', 'closestX',
     'interpolateX', 'linearInterpolation',
     '__crcStudioModules',
     ...publicPhysics2DValueExports,
@@ -2293,9 +2293,9 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 222) {
+  if (expectedStudioRuntimeExports.length !== 223) {
     throw new Error(
-      `CRC Studio runtime must expose 80 core values, 46 physics 2D values, 48 physics 3D values, 1 Three adapter value, 1 sandbox module registry, 15 WebGL values, 1 GLB loader value, 11 particle values, 16 visualization values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
+      `CRC Studio runtime must expose 80 core values, 46 physics 2D values, 48 physics 3D values, 1 Three adapter value, 1 sandbox module registry, 15 WebGL values, 1 GLB loader value, 11 particle values, 17 visualization values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
     );
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {

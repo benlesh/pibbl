@@ -179,3 +179,10 @@ colliding with each other. Preferred sides can help separate two readouts.
 Shared responsive style queries are not supported at this isolated baseline;
 ordinary signal styles and layout-driven reflow remain supported. Returned CRC
 marks use whatever style capabilities their core version supplies.
+
+For multiple readouts, use [AnchoredLayout](#/api/components/anchored-layout)
+instead of positioning each HoverCard independently. Give it keyed items with
+local anchors and declared outer sizes; its child callback renders ordinary CRC
+content at each placed origin. It arranges the boxes together and keeps them
+clear of every supplied anchor. The Hover comparisons lesson demonstrates this
+with connector lines and a shared column that flips at the plot edge.

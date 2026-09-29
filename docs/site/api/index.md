@@ -22,7 +22,7 @@ Import visualization primitives from `@crc/viz`: [Scale](#/api/components/scale)
 [PointSeries](#/api/components/point-series), [PlotSeries](#/api/components/plot-series),
 [ScaleAdjust](#/api/components/scale-adjust), and [useScale](#/api/hooks/use-scale).
 Compose inspection with [HoverData](#/api/components/hover-data),
-[HoverCard](#/api/components/hover-card), [defineSeries](#/api/functions/define-series),
+[HoverCard](#/api/components/hover-card), [AnchoredLayout](#/api/components/anchored-layout), [defineSeries](#/api/functions/define-series),
 [closestPoint](#/api/functions/closest-point), [closestX](#/api/functions/closest-x),
 [interpolateX](#/api/functions/interpolate-x), and
 [linearInterpolation](#/api/functions/linear-interpolation). Plain snapshot helpers

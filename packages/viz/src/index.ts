@@ -70,3 +70,10 @@ export type {
   InterpolateXOptions,
   HoverSample,
 } from "./lib/hover-types.js";
+
+export { AnchoredLayout } from "./lib/anchored-layout.js";
+export type {
+  AnchoredItem,
+  AnchoredPlacement,
+  AnchoredLayoutProps,
+} from "./lib/anchored-layout.js";

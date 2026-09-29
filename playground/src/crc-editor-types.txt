@@ -1598,3 +1598,26 @@ export type HoverSample<D> =
 export declare function closestX<D>(options: ClosestXOptions<D>): HoverQuery<ClosestXHit<D>>;
 export declare function interpolateX<D>(options: InterpolateXOptions<D>): HoverQuery<HoverSample<D>>;
 export declare function linearInterpolation(): HoverInterpolation;
+
+export interface AnchoredItem {
+  readonly key: string | number;
+  readonly anchor: Readonly<{ x: number; y: number }>;
+  readonly anchorRadius?: number;
+  readonly width: number;
+  readonly height: number;
+}
+export interface AnchoredPlacement {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+export interface AnchoredLayoutProps<T extends AnchoredItem> {
+  readonly items: SignalValue<readonly T[]>;
+  readonly direction?: 'vertical' | 'horizontal';
+  readonly gap?: SignalValue<number>;
+  readonly bounds?: SignalValue<AnchoredPlacement>;
+  readonly children: (item: T, placement: AnchoredPlacement) => CRCNode;
+}
+
+export declare function AnchoredLayout<T extends AnchoredItem>(props: AnchoredLayoutProps<T>): CRCNode;

@@ -146,7 +146,7 @@ const drafts = [
   {
     slug:"viz-hover-comparison",title:"Comparing two lines at a shared time",shortTitle:"Hover comparisons",section:"composition",order:197,
     summary:"Compare recorded and interpolated NOAA CO₂ values with ordinary function queries and protected hover cards.",
-    api:["HoverData","HoverCard","closestPoint","closestX","interpolateX","defineSeries","linearInterpolation"],
+    api:["HoverData","AnchoredLayout","closestPoint","closestX","interpolateX","defineSeries","linearInterpolation"],
     objectives:["Compose one or multiple query results.","Distinguish recorded observations from interpolated estimates."],
     prompts:{gesture:"Switch modes, then move or drag the inspection guide.",code:"Replace the composed query with your own synchronous function."},
     apiNotes:["Data: NOAA/GML and Scripps, Mauna Loa monthly mean and deseasonalized CO₂, 2020–2021. https://gml.noaa.gov/ccgg/trends/data.html", "Interpolation estimates in data space; missing values break segments."],
@@ -157,7 +157,7 @@ const drafts = [
     slug: "viz-points-and-inspection", title: "Exploring Palmer penguin measurements", shortTitle: "Penguin measurements",
     section: "composition", order: 198,
     summary: "Explore 344 real Palmer penguin records with batched dots, custom keyed marks, and linked inspection.",
-    api: ["PointSeries", "PlotSeries", "nearestPoint", "Scale", "Axis"],
+    api: ["PointSeries", "PlotSeries", "nearestPoint", "Scale", "Axis", "HoverData", "HoverCard"],
     objectives: ["Compose batched dots and custom CRC subtrees.", "Inspect mapped anchors and preserve custom mark state on reorder."],
     prompts: { gesture: "Hover or tap a point, click custom squares, then reorder and resize.", code: "Replace the custom square with your own CRC elements." },
     apiNotes: ["Custom marks draw around the mapped local origin.", "PointSeries batches circles; PlotSeries preserves normal per-row component state.", "Source: palmerpenguins (Horst, Hill & Gorman), collected by Kristen Gorman / Palmer Station LTER, 2007–2009, CC0. Both plots show flipper length (mm) versus body mass (g); two incomplete records remain missing. https://allisonhorst.github.io/palmerpenguins/"],

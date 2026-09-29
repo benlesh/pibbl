@@ -1842,7 +1842,7 @@ describe("learning example catalog", () => {
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
         "Scale", "Axis", "LineSeries", "ScaleAdjust", "useScale", "Absolute",
-        "PointSeries", "PlotSeries", "nearestPoint", "HoverData", "HoverCard",
+        "PointSeries", "PlotSeries", "nearestPoint", "HoverData", "HoverCard", "AnchoredLayout",
         "closestPoint", "closestX", "interpolateX", "defineSeries", "linearInterpolation",
         "Rectangle",
         "Circle",
