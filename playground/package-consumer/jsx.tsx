@@ -357,17 +357,15 @@ function Poster({ labels, showTitle }: PosterProps): CRCNode {
         />
       ))}
       {showTitle && (
-        <Text
+        <Group
           style={{
-            left: 12,
-            top: 24,
             gridColumnStart: 1,
             gridColumnSpan: 2,
             gridRowStart: 2,
           }}
         >
-          {labels.join(', ')}
-        </Text>
+          <Text style={{ left: 12, top: 24 }}>{labels.join(', ')}</Text>
+        </Group>
       )}
     </Grid>
   );

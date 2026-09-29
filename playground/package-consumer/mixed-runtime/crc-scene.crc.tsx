@@ -24,17 +24,14 @@ export function Poster({ title }: PosterProps): CRCNode {
           gridRowStart: 1,
         }}
       />
-      <Text
+      <Group
         style={{
-          left: 12,
-          top: 24,
-          fill: '#ffffff',
           gridColumnStart: 1,
           gridRowStart: 2,
         }}
       >
-        {title}
-      </Text>
+        <Text style={{ left: 12, top: 24, fill: '#ffffff' }}>{title}</Text>
+      </Group>
     </Grid>
   );
 }
