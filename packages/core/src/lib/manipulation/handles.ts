@@ -1,6 +1,7 @@
 import { createElement } from "../element/create-element.js";
 import { setPrimitivePresentation } from "../primitive-presentation.js";
 import { getCurrentWorldTransform } from "../render-target.js";
+import { GLOBAL_STATE } from "../global-state.js";
 import { definePrimitive } from "../define-primitive.js";
 import { useEventListener } from "../hooks/use-event-listener.js";
 import { useEventTarget } from "../hooks/use-event-target.js";
@@ -164,19 +165,31 @@ const allHandles = [
 ] as const;
 type ResizePosition = (typeof allHandles)[number];
 interface CollectionReadout {
+  readonly controller: CRCManipulationController;
   readonly positions: readonly ResizePosition[];
   readonly owner: ResizePosition;
   readonly style: CRCResizeHandleStyle | undefined;
   readonly formatReadout: CRCResizeHandleProps["formatReadout"];
+  readonly focused: Map<ResizePosition, boolean>;
 }
-const collectionReadouts = new WeakMap<
-  CRCManipulationController,
-  CollectionReadout
->();
-const collectionFocus = new WeakMap<
-  CRCManipulationController,
-  Map<ResizePosition, boolean>
->();
+const collectionStack: CollectionReadout[] = [];
+const ResizeCollection = definePrimitive<{
+  readonly collection: CollectionReadout;
+  readonly children?: CRCNode;
+}>(
+  function ResizeCollection(props) {
+    collectionStack.push(props.collection);
+    GLOBAL_STATE.componentRefs!.onAfterRender = () => {
+      const collection = collectionStack.pop();
+      if (collection !== props.collection)
+        throw new Error(
+          "Manipulation resize collection render context was unbalanced.",
+        );
+    };
+    return props.children;
+  },
+  { childInput: "structural" },
+);
 
 export const ResizeHandle = definePrimitive<
   CRCResizeHandleProps,
@@ -218,11 +231,12 @@ export const ResizeHandle = definePrimitive<
   });
   const active = state.controller.active.get();
   const relevant = active?.operation === "resize" && active.handle === position;
-  const collection = collectionReadouts.get(props.controller);
-  if (collection?.positions.includes(position)) {
-    let focused = collectionFocus.get(props.controller);
-    if (!focused) collectionFocus.set(props.controller, (focused = new Map()));
-    focused.set(position, focus.isFocused);
+  const collection = collectionStack.at(-1);
+  if (
+    collection?.controller === props.controller &&
+    collection.positions.includes(position)
+  ) {
+    collection.focused.set(position, focus.isFocused);
   } else if (readoutEnabled(style.readout, props.formatReadout)) {
     paintReadout(
       ctx,
@@ -249,33 +263,38 @@ export function ResizeHandles(props: CRCResizeHandlesProps): CRCNode {
         ? allHandles
         : props.positions
   ) as readonly ResizePosition[];
+  if (positions.length === 0) return [];
   const owner = positions.includes("bottom-right")
     ? "bottom-right"
     : positions.at(-1)!;
-  const collection = {
+  const collection: CollectionReadout = {
+    controller: props.controller,
     positions,
     owner,
     style: props.style,
     formatReadout: props.formatReadout,
+    focused: new Map(),
   };
-  collectionReadouts.set(props.controller, collection);
-  return [
-    ...positions.map((position) =>
-      createElement(ResizeHandle, {
-        key: position,
+  return createElement(ResizeCollection, {
+    collection,
+    children: [
+      ...positions.map((position) =>
+        createElement(ResizeHandle, {
+          key: position,
+          controller: props.controller,
+          position,
+          hitSize: props.hitSize,
+          style: props.style,
+          formatReadout: props.formatReadout,
+        }),
+      ),
+      createElement(ResizeCollectionReadout, {
+        key: "readout",
         controller: props.controller,
-        position,
-        hitSize: props.hitSize,
-        style: props.style,
-        formatReadout: props.formatReadout,
+        collection,
       }),
-    ),
-    createElement(ResizeCollectionReadout, {
-      key: "readout",
-      controller: props.controller,
-      collection,
-    }),
-  ];
+    ],
+  });
 }
 const ResizeCollectionReadout = definePrimitive<{
   readonly controller: CRCManipulationController;
@@ -290,14 +309,13 @@ const ResizeCollectionReadout = definePrimitive<{
   )
     return;
   const active = state.controller.active.get();
-  const focused = collectionFocus.get(props.controller);
   const position =
     active?.operation === "resize" &&
     active.handle &&
     props.collection.positions.includes(active.handle)
       ? active.handle
       : (props.collection.positions.find((candidate) =>
-          focused?.get(candidate),
+          props.collection.focused.get(candidate),
         ) ?? props.collection.owner);
   const box = getLayoutBox();
   const x = position.includes("left")
@@ -316,7 +334,7 @@ const ResizeCollectionReadout = definePrimitive<{
     cssPoint(state, x, y),
     formatResize(state, props.collection.formatReadout),
     props.collection.style?.readout,
-    focused?.get(position) ?? false,
+    props.collection.focused.get(position) ?? false,
     active?.operation === "resize" && active.handle === position,
   );
 });
