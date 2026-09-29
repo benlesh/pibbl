@@ -9,17 +9,10 @@ import type {
   CRCParticleRenderer2D,
   CRCParticleScalar,
 } from './types.js';
-import type {
-  CRCParticleBounds3D,
-  CRCParticleEffect3D,
-  CRCParticleEmitter3D,
-  CRCParticleRenderer3D,
-} from './webgl-types.js';
 import { getParticleDescriptorRecord } from './particle.js';
 
 export interface ParticleDefinitionCapabilities {
   readonly statelessCanvas: boolean;
-  readonly statelessWebGL: boolean;
   readonly requiresStateful: readonly string[];
 }
 
@@ -27,13 +20,6 @@ export interface ParticleEmitter2DRecord
   extends Omit<CRCParticleEmitter2D, 'bounds'> {
   readonly nameHash: number;
   readonly bounds: CRCParticleBounds2D;
-  readonly boundsSource: 'explicit' | 'derived';
-}
-
-export interface ParticleEmitter3DRecord
-  extends Omit<CRCParticleEmitter3D, 'bounds'> {
-  readonly nameHash: number;
-  readonly bounds: CRCParticleBounds3D;
   readonly boundsSource: 'explicit' | 'derived';
 }
 
@@ -49,13 +35,6 @@ export interface ParticleEffect2DRecord extends BaseParticleEffectRecord {
   readonly emitters: readonly ParticleEmitter2DRecord[];
 }
 
-export interface ParticleEffect3DRecord extends BaseParticleEffectRecord {
-  readonly dimension: 3;
-  readonly emitters: readonly ParticleEmitter3DRecord[];
-}
-
-export type ParticleEffectRecord = ParticleEffect2DRecord | ParticleEffect3DRecord;
-
 export interface ParticleValidationContext {
   readonly debugName?: string;
   readonly emitter?: string;
@@ -70,7 +49,6 @@ export interface ParticleScalarRange {
 }
 
 const effect2DRecords = new WeakMap<CRCParticleEffect2D, ParticleEffect2DRecord>();
-const effect3DRecords = new WeakMap<CRCParticleEffect3D, ParticleEffect3DRecord>();
 
 function effectLabel(debugName: string | undefined): string {
   return debugName === undefined ? 'CRC particle effect' :
@@ -132,7 +110,7 @@ export function assertPositiveNumber(
 
 export function assertFiniteVector(
   value: unknown,
-  dimension: 2 | 3,
+  dimension: 2,
   context: ParticleValidationContext,
 ): asserts value is readonly number[] {
   if (!Array.isArray(value) || value.length !== dimension) {
@@ -196,7 +174,6 @@ export function hashParticleEmitterName(name: string): number {
 export function normalizeParameters(
   parameters: CRCParticleParameterDefinitions | undefined,
   debugName: string | undefined,
-  dimension: 2 | 3,
 ): CRCParticleParameterDefinitions {
   if (parameters === undefined) return Object.freeze({});
   if (parameters === null || typeof parameters !== 'object' || Array.isArray(parameters)) {
@@ -233,18 +210,6 @@ export function normalizeParameters(
         break;
       case 'vector2':
         assertFiniteVector(definition.default, 2, {
-          debugName, module: `parameter "${name}"`, property: 'default',
-        });
-        break;
-      case 'vector3':
-        if (dimension === 2) {
-          particleDefinitionError(
-            { debugName, module: `parameter "${name}"`, property: 'type' },
-            'is dimensionally invalid for a 2D effect',
-            definition.type,
-          );
-        }
-        assertFiniteVector(definition.default, 3, {
           debugName, module: `parameter "${name}"`, property: 'default',
         });
         break;
@@ -343,7 +308,7 @@ export function particleScalarRange(
 
 export function validateScalarVector(
   value: unknown,
-  dimension: 2 | 3,
+  dimension: 2,
   parameters: CRCParticleParameterDefinitions,
   context: ParticleValidationContext,
 ): readonly ParticleScalarRange[] {
@@ -356,8 +321,7 @@ export function validateScalarVector(
     if (definition === undefined) {
       particleDefinitionError(context, 'references an unknown parameter', descriptor.name);
     }
-    const expectedType = dimension === 2 ? 'vector2' : 'vector3';
-    if (definition.type !== expectedType) {
+    if (definition.type !== 'vector2') {
       particleDefinitionError(
         context,
         `parameter "${descriptor.name}" has type ${definition.type}; expected a ${dimension}-dimensional vector parameter`,
@@ -543,28 +507,6 @@ export function normalizeBounds2D(
   return cloneParticleRecord(bounds);
 }
 
-export function normalizeBounds3D(
-  bounds: CRCParticleBounds3D,
-  context: ParticleValidationContext,
-): CRCParticleBounds3D {
-  if (bounds === null || typeof bounds !== 'object') {
-    particleDefinitionError({ ...context, property: 'bounds' }, 'must be a record', bounds);
-  }
-  assertFiniteVector(bounds.min, 3, { ...context, property: 'bounds.min' });
-  assertFiniteVector(bounds.max, 3, { ...context, property: 'bounds.max' });
-  for (let index = 0; index < 3; index += 1) {
-    if (bounds.min[index]! > bounds.max[index]!) {
-      particleDefinitionError(
-        { ...context, property: `bounds.min[${index}]` },
-        `must be at most bounds.max[${index}]`,
-        bounds.min[index],
-        RangeError,
-      );
-    }
-  }
-  return cloneParticleRecord(bounds);
-}
-
 export function normalizeRenderer2D(
   renderer: CRCParticleRenderer2D,
   context: ParticleValidationContext,
@@ -627,73 +569,6 @@ export function normalizeRenderer2D(
   }
 }
 
-export function normalizeRenderer3D(
-  renderer: CRCParticleRenderer3D,
-  context: ParticleValidationContext,
-): CRCParticleRenderer3D {
-  if (renderer === null || typeof renderer !== 'object') {
-    particleDefinitionError(
-      { ...context, property: 'renderer' }, 'must be a record', renderer,
-    );
-  }
-  const module = `renderer ${String((renderer as { type?: unknown }).type)}`;
-  if (renderer.type !== 'point' && renderer.type !== 'billboard') {
-    particleDefinitionError(
-      { ...context, module, property: 'type' },
-      'uses an unsupported WebGL renderer',
-      (renderer as { type?: unknown }).type,
-    );
-  }
-  if (renderer.material !== 'unlit' && renderer.material !== 'emissive') {
-    particleDefinitionError(
-      { ...context, module, property: 'material' }, 'is unsupported', renderer.material,
-    );
-  }
-  if (!['alpha', 'additive', 'cutout'].includes(renderer.blend)) {
-    particleDefinitionError(
-      { ...context, module, property: 'blend' }, 'is unsupported', renderer.blend,
-    );
-  }
-  const sorting = renderer.sorting ?? 'none';
-  if (!['none', 'oldest-first', 'youngest-first', 'distance'].includes(sorting)) {
-    particleDefinitionError(
-      { ...context, module, property: 'sorting' }, 'is unsupported', sorting,
-    );
-  }
-  if (renderer.depthTest !== undefined && typeof renderer.depthTest !== 'boolean') {
-    particleDefinitionError(
-      { ...context, module, property: 'depthTest' },
-      'must be boolean',
-      renderer.depthTest,
-    );
-  }
-  if (renderer.depthWrite !== undefined && typeof renderer.depthWrite !== 'boolean') {
-    particleDefinitionError(
-      { ...context, module, property: 'depthWrite' },
-      'must be boolean',
-      renderer.depthWrite,
-    );
-  }
-  const common = {
-    type: renderer.type,
-    material: renderer.material,
-    blend: renderer.blend,
-    depthTest: renderer.depthTest ?? true,
-    depthWrite: renderer.depthWrite ?? renderer.blend === 'cutout',
-    sorting,
-  };
-  if (renderer.type === 'point') return Object.freeze(common) as CRCParticleRenderer3D;
-  if (renderer.source !== undefined && renderer.source !== null &&
-    typeof renderer.source !== 'object' && typeof renderer.source !== 'function') {
-    particleDefinitionError(
-      { ...context, module, property: 'source' },
-      'must be a CanvasImageSource',
-      renderer.source,
-    );
-  }
-  return Object.freeze({ ...common, source: renderer.source }) as CRCParticleRenderer3D;
-}
-
 export function createParticleEffect2D(
   record: ParticleEffect2DRecord,
 ): CRCParticleEffect2D {
@@ -702,28 +577,11 @@ export function createParticleEffect2D(
   return effect;
 }
 
-export function createParticleEffect3D(
-  record: ParticleEffect3DRecord,
-): CRCParticleEffect3D {
-  const effect = Object.freeze({ dimension: 3 as const }) as CRCParticleEffect3D;
-  effect3DRecords.set(effect, freezeParticleRecord(record));
-  return effect;
-}
-
 /** @internal Returns the immutable normalized record for a package-created 2D effect. */
 export function getParticleEffect2DRecord(effect: CRCParticleEffect2D): ParticleEffect2DRecord {
   const record = effect2DRecords.get(effect);
   if (record === undefined) {
     throw new TypeError('Expected a 2D particle effect created by defineParticleEffect2D().');
-  }
-  return record;
-}
-
-/** @internal Returns the immutable normalized record for a package-created 3D effect. */
-export function getParticleEffect3DRecord(effect: CRCParticleEffect3D): ParticleEffect3DRecord {
-  const record = effect3DRecords.get(effect);
-  if (record === undefined) {
-    throw new TypeError('Expected a 3D particle effect created by defineParticleEffect3D().');
   }
   return record;
 }

@@ -3,9 +3,10 @@
 CRC has two deliberately different catalogs. The public Studio presents focused,
 interactive learning examples alongside Learn and API documentation; the
 automated-test catalog preserves exhaustive deterministic scenarios used by
-browser verification. The Studio presents 52 focused lessons and 19 test labs.
-Both catalogs use supported public `@crc/core` APIs, and their WebGL entries use
-the matching public `@crc/webgl` package.
+browser verification. The Studio presents 61 focused lessons and 26 test labs.
+Both catalogs use supported public APIs. The Three.js lessons mount through the
+official `@crc/three` adapter and otherwise use the same `@crc/core` runtime as
+the Canvas examples.
 
 ## Architecture
 

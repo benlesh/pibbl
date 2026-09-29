@@ -14,7 +14,6 @@ export interface ParticleSystemOwnershipSnapshot {
   readonly schedulerRegistrations: number;
   readonly canvasLedgers: number;
   readonly canvasRasterEntries: number;
-  readonly webglRecipes: number;
 }
 
 let activeSystems = 0;
@@ -32,7 +31,6 @@ let releasedCommands = 0;
 let schedulerRegistrations = 0;
 let canvasLedgers = 0;
 let canvasRasterEntries = 0;
-let webglRecipes = 0;
 
 /** @internal Deterministic controller resource counters for tests and diagnostics. */
 export function particleSystemOwnershipSnapshot(): ParticleSystemOwnershipSnapshot {
@@ -52,7 +50,6 @@ export function particleSystemOwnershipSnapshot(): ParticleSystemOwnershipSnapsh
     schedulerRegistrations,
     canvasLedgers,
     canvasRasterEntries,
-    webglRecipes,
   });
 }
 
@@ -146,17 +143,6 @@ export function recordCanvasParticleRasterEntryCreated(): () => void {
     },
     () => {
       canvasRasterEntries -= 1;
-    },
-  );
-}
-
-export function recordWebGLParticleRecipeAcquired(): () => void {
-  return recordActiveResource(
-    () => {
-      webglRecipes += 1;
-    },
-    () => {
-      webglRecipes -= 1;
     },
   );
 }

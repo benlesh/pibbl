@@ -591,11 +591,9 @@ assert.deepEqual(
     "Responsive local styles",
     "Manage state and lifecycle",
     "Use signals and animation",
-    "Add WebGL islands",
+    "Use Three.js inside CRC",
     "Create particle effects",
-    "Light WebGL scenes",
     "Compose data visualizations",
-    "Add first-class 3D physics",
     "Add focus and keyboard navigation",
     "Create custom components and primitives",
     "Integrate with React",
@@ -685,7 +683,7 @@ const typeDomains = [
   "particles",
   "signal-inputs",
   "styles",
-  "webgl",
+  "three",
 ] as const;
 const typeCollator = new Intl.Collator("en", {
   sensitivity: "base",

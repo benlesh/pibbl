@@ -1,4 +1,3 @@
-import { Cube } from '@crc/webgl';
 import {
   createElement, definePrimitive, Flow, Rectangle, signal,
   type CRCResponsiveStyle, type CRCSizeQuery, type CRCStyleRule,
@@ -55,7 +54,3 @@ type InvalidUnion = SystemStyle | InvalidSpecified;
 definePrimitive<{}, InvalidUnion>(() => undefined);
 // Opaque custom data remains available.
 definePrimitive<{}, SystemStyle & { custom?: { when: string } }>(() => undefined);
-
-<Cube style={{ when: [{ query: { minWidth: 0 }, style: { color: 'red' } }] }} />;
-// @ts-expect-error A conditional patch cannot enable Canvas filters inside WebGL.
-<Cube style={{ when: [{ query: { minWidth: 0 }, style: { filter: [{ type: 'blur', radius: 2 }] } }] }} />;

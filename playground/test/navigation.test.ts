@@ -64,6 +64,10 @@ const documentation = {
       apiCategory: "types",
       typeDomain: "styles",
     }),
+    page("types-three", "Three.js integration types", "api", {
+      apiCategory: "types",
+      typeDomain: "three",
+    }),
   ],
 } satisfies NavigationDocumentation;
 
@@ -71,7 +75,7 @@ const examples = [
   example("filters", "Filters", "drawing"),
   example("rectangle", "Rectangle", "drawing"),
   example("group", "Group", "composition"),
-  example("ambient-light", "Ambient light", "webgl"),
+  example("three-layer", "Three layer", "three"),
   example("flex", "Flex", "layout"),
   example("click", "Click", "events-and-interaction"),
   example("focus-management", "Focus management", "focus-and-keyboard"),
@@ -105,7 +109,7 @@ describe("Studio navigation", () => {
     ]);
   });
 
-  it("groups API pages with alphabetical leaves and six type domains", () => {
+  it("groups API pages with alphabetical leaves and their type domains", () => {
     const api = navigation[1];
     expect(api.children?.map(({ id, label }) => ({ id, label }))).toEqual([
       { id: "api-overview", label: "Overview" },
@@ -134,6 +138,7 @@ describe("Studio navigation", () => {
       "Layout",
       "Particles",
       "Styles",
+      "Three.js",
     ]);
     expect(api.children?.[4]?.children?.map(({ href }) => href)).toEqual([
       "#/api/types/canvas-runtime",
@@ -143,6 +148,7 @@ describe("Studio navigation", () => {
       "#/api/types/layout",
       "#/api/types/particles",
       "#/api/types/styles",
+      "#/api/types/three",
     ]);
   });
 
@@ -152,7 +158,7 @@ describe("Studio navigation", () => {
     expect(examplesArea.children?.map(({ id, label }) => ({ id, label }))).toEqual([
       { id: "examples-drawing", label: "Drawing" },
       { id: "examples-composition", label: "Composition" },
-      { id: "examples-webgl", label: "WebGL" },
+      { id: "examples-three", label: "Three.js" },
       { id: "examples-layout", label: "Layout" },
       { id: "examples-events-and-interaction", label: "Events and interaction" },
       { id: "examples-focus-and-keyboard", label: "Focus and keyboard" },
@@ -162,7 +168,7 @@ describe("Studio navigation", () => {
       "Rectangle",
     ]);
     expect(examplesArea.children?.[2]?.children?.map(({ label }) => label)).toEqual([
-      "Ambient light",
+      "Three layer",
     ]);
     expect(JSON.stringify(navigation)).not.toContain("test");
   });
@@ -260,7 +266,7 @@ function example(
   browseGroup:
     | "drawing"
     | "composition"
-    | "webgl"
+    | "three"
     | "layout"
     | "events-and-interaction"
     | "focus-and-keyboard",

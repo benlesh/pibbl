@@ -1,8 +1,17 @@
-import { Box3, Vector3, type Camera, type Object3D } from "three";
+import {
+  Box3,
+  Frustum,
+  Matrix4,
+  Vector3,
+  type Camera,
+  type Object3D,
+} from "three";
 import type { CRCRenderLayerSize, LayoutBox } from "@crc/core";
 
 const bounds = new Box3();
+const frustum = new Frustum();
 const point = new Vector3();
+const projectionScreenMatrix = new Matrix4();
 
 export function projectObjectBounds(
   object: Object3D,
@@ -11,6 +20,13 @@ export function projectObjectBounds(
 ): Readonly<LayoutBox> | undefined {
   bounds.setFromObject(object);
   if (bounds.isEmpty()) return undefined;
+
+  projectionScreenMatrix.multiplyMatrices(
+    camera.projectionMatrix,
+    camera.matrixWorldInverse,
+  );
+  frustum.setFromProjectionMatrix(projectionScreenMatrix);
+  if (!frustum.intersectsBox(bounds)) return undefined;
 
   let left = Number.POSITIVE_INFINITY;
   let top = Number.POSITIVE_INFINITY;

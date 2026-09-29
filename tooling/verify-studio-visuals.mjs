@@ -49,11 +49,6 @@ const allRoutes = [
     openSearch: true,
   },
   {
-    name: "webgl-lighting",
-    hash: "#/testing/webgl-lighting",
-    ready: ".testing-area .scenario-detail__title",
-  },
-  {
     name: "test-lab",
     hash: "#/testing/baseline-smoke",
     ready: ".testing-area .scenario-detail__title",
@@ -179,7 +174,6 @@ try {
   });
 
   for (const route of routes) {
-    if (route.name === "webgl-lighting") await page.goto("about:blank");
     await page.goto(`${origin}/${route.hash}`);
     await page.locator(route.ready).waitFor({ timeout: 30_000 });
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));

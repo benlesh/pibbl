@@ -23,10 +23,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.mjs"
     },
-    "./webgl": {
-      "types": "./dist/webgl.d.ts",
-      "default": "./dist/webgl.mjs"
-    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.mjs",
@@ -36,22 +32,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts src/webgl.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@crc/core --external:@crc/core/internal --external:@crc/webgl --external:@crc/webgl/internal",
+    "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@crc/core --external:@crc/core/internal",
     "dev": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "test": "vitest"
   },
   "peerDependencies": {
-    "@crc/core": "0.0.1",
-    "@crc/webgl": "0.0.1"
-  },
-  "peerDependenciesMeta": {
-    "@crc/webgl": {
-      "optional": true
-    }
+    "@crc/core": "0.0.1"
   },
   "devDependencies": {
-    "@crc/core": "workspace:*",
-    "@crc/webgl": "workspace:*"
+    "@crc/core": "workspace:*"
   }
 }

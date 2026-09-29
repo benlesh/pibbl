@@ -15,7 +15,7 @@ const collator = new Intl.Collator("en", {
 const exampleGroups = [
   ["drawing", "Drawing"],
   ["composition", "Composition"],
-  ["webgl", "WebGL"],
+  ["three", "Three.js"],
   ["layout", "Layout"],
   ["events-and-interaction", "Events and interaction"],
   ["focus-and-keyboard", "Focus and keyboard"],
@@ -29,6 +29,7 @@ const typeDomains = [
   ["layout", "Layout"],
   ["particles", "Particles"],
   ["styles", "Styles"],
+  ["three", "Three.js"],
 ] as const satisfies readonly [TypeDomain, string][];
 
 export interface NavigationEntry {

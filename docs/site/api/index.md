@@ -1,114 +1,105 @@
 ---
 id: api-overview
 title: API overview
-summary: The supported @crc/core, @crc/webgl, and @crc/particles APIs, arranged by authoring role.
+summary: The supported @crc/core, @crc/three, @crc/particles, @crc/physics, and @crc/viz APIs, arranged by authoring role.
 kind: api
 slug: overview
 apiCategory: overview
 symbols: [Fragment, JSX, jsx, jsxDEV, jsxs]
-keywords: [canvas, webgl, JSX, createElement, API]
+keywords: [canvas, three.js, JSX, createElement, API]
 ---
 
 # API overview
 
-Import Canvas/runtime values and types from `@crc/core`. Import optional WebGL2
-island values and types from `@crc/webgl`. Import particle descriptors,
-systems, and Canvas components from `@crc/particles`, with 3D definitions and
-components from `@crc/particles/webgl`. Package source and `lib/*` paths are not
-supported.
-
-Import visualization primitives from `@crc/viz`: [Scale](#/api/components/scale),
-[Axis](#/api/components/axis), [LineSeries](#/api/components/line-series),
-[PointSeries](#/api/components/point-series), [PlotSeries](#/api/components/plot-series),
-[ScaleAdjust](#/api/components/scale-adjust), and [useScale](#/api/hooks/use-scale).
-Compose inspection with [HoverData](#/api/components/hover-data),
-[HoverCard](#/api/components/hover-card), [AnchoredLayout](#/api/components/anchored-layout), [defineSeries](#/api/functions/define-series),
-[closestPoint](#/api/functions/closest-point), [closestX](#/api/functions/closest-x),
-[interpolateX](#/api/functions/interpolate-x), and
-[linearInterpolation](#/api/functions/linear-interpolation). Plain snapshot helpers
-[nearestPoint](#/api/functions/nearest-point) and
-[nearestDomainValue](#/api/functions/nearest-domain-value) are also available.
+Import Canvas components, signals, animation, events, layout, focus, and the
+generic render-layer lifecycle from `@crc/core`. Optional official packages add
+thin Three.js integration, Canvas particle effects, physics, and visualization:
 
 ```ts
-import { Fragment, Rectangle, Text, crc } from "@crc/core";
+import { Rectangle, Text, crc, defineRenderLayer } from "@crc/core";
+import { defineThreeLayer } from "@crc/three";
 import { Particles2D } from "@crc/particles";
-import { Particles3D } from "@crc/particles/webgl";
-import { Cube, WebGLLayer } from "@crc/webgl";
+import { PhysicsWorld2D } from "@crc/physics/2d";
+import { raycastShape3D } from "@crc/physics/3d/geometry";
+import { Axis, LineSeries, Scale } from "@crc/viz";
 ```
+
+Package source paths and `lib/*` paths are not supported.
 
 ## Authoring
 
 Use automatic JSX with `@crc/core/jsx-runtime`, or use
 [`createElement`](#/api/functions/create-element) for the equivalent explicit
 form. `Fragment` is the explicit fragment value; JSX shorthand is usually more
-readable, while `Fragment` is useful when a fragment needs a key. Unkeyed
-fragments are transparent; a keyed fragment creates an identity scope.
+readable, while `Fragment` is useful when a fragment needs a key.
 
-## Browse the runtime
+- [Components](#/api/components/absolute) draw, compose, lay out, and add focus
+  policy.
+- [Functions](#/api/functions/crc) mount scenes and define paths, animation,
+  measurement, render layers, particles, and geometry.
+- [Hooks](#/api/hooks/use-canvas-context) own component state, lifecycle,
+  interaction, paths, layout, playback, particles, and 2D physics handles.
+- Type pages group the props, events, filters, layout, signals, animation, and
+  package-specific contracts used by those values.
 
-- [Components](#/api/components/absolute) draw, compose, lay out, and add
-  focus policy. They are alphabetized in the sidebar.
-- [Functions](#/api/functions/crc) mount scenes, build paths, measure, and
-  resolve the public style/layout helpers.
-- [Hooks](#/api/hooks/use-canvas-context) are render-only APIs for state,
-  lifecycle, paths, interaction, and allocated layout.
+## External render layers and Three.js
 
-Type contracts are grouped by domain in the API sidebar. They describe the
-props, local styles, event facades, filters, layout, and element protocol used
-by these runtime values.
+[`defineRenderLayer`](#/api/functions/define-render-layer) creates one
+composited external-raster component with explicit create, update, resize,
+render, interaction, and dispose callbacks.
 
-## WebGL islands
-
-`@crc/webgl` adds [`WebGLLayer`](#/api/components/webgl-layer),
-[`Group3D`](#/api/components/group-3d), [`Mesh`](#/api/components/mesh),
-[`Cube`](#/api/components/cube), [`Sphere`](#/api/components/sphere),
-[`AmbientLight`](#/api/components/ambient-light),
-[`HemisphereLight`](#/api/components/hemisphere-light),
-[`DirectionalLight`](#/api/components/directional-light),
-[`PointLight`](#/api/components/point-light),
-[`SpotLight`](#/api/components/spot-light), and
-[`WebGLBackground`](#/api/components/webgl-background).
-[`createWebGLGeometry`](#/api/functions/create-webgl-geometry) builds immutable
-triangle descriptors for `Mesh`, the custom-shape extension path;
-[`useAnimationFrame`](#/api/hooks/use-animation-frame) uses the shared
-scheduler, and [`useOrbitCamera`](#/api/hooks/use-orbit-camera) supplies stable
-drag-orbit and wheel-zoom handlers. A layer's children declare one frame-local
-scene that composes and settles before shadow-depth passes and color queues run;
-one transferred bitmap plus matched pick/focus metadata commits only after the
-parent Canvas composite succeeds. See the grouped [WebGL
-types](#/api/types/webgl).
+`@crc/three` adds only
+[`defineThreeLayer`](#/api/functions/define-three-layer) and its
+[Three integration types](#/api/types/three). Applications use ordinary
+`three` and `three/addons/*` APIs for scenes, cameras, geometry, materials,
+lights, loaders, controls, animation mixers, post-processing, and exporters.
+CRC owns the surrounding Canvas composition, scheduler, hit arbitration, focus,
+and teardown; it does not mirror Three as CRC JSX components.
 
 ## Particle effects
 
-`@crc/particles` adds [`Particles2D`](#/api/components/particles-2d),
+`@crc/particles` adds
+[`Particles2D`](#/api/components/particles-2d),
 [`useParticleSystem`](#/api/hooks/use-particle-system),
 [`defineParticleEffect2D`](#/api/functions/define-particle-effect-2d), and the
 direct [particle descriptor functions](#/api/functions/particle-descriptors).
-`@crc/particles/webgl` adds
-[`Particles3D`](#/api/components/particles-3d) and
-[`defineParticleEffect3D`](#/api/functions/define-particle-effect-3d) without
-making WebGL a requirement for root-only Canvas consumers. See the grouped
-[particle types](#/api/types/particles) and
+See the grouped [particle types](#/api/types/particles) and
 [particle effects guide](#/learn/guides/particle-effects).
 
-Both packages use the one `@crc/core/jsx-runtime` configured for the source
-file. `@crc/webgl` does not publish a second JSX runtime or hook/event system.
-The version-coupled `@crc/core/internal` export exists only for matching
-official CRC packages. It is intentionally absent from this application API
-inventory and carries no compatibility promise.
+## Physics
 
-## 3D physics
+`@crc/physics/2d` provides the CRC-scheduled 2D runtime, components, body
+handles, commands, events, and queries. Pure geometry is available from
+`@crc/physics/2d/geometry`.
 
-`@crc/physics/3d` augments supported WebGL primitives with typed body and
-collider attachments. Start with [`PhysicsWorld3D`](#/api/components/physics-world-3d)
-and the [physics shape components](#/api/components/physics-shape-3d), then use
-the grouped [functions](#/api/functions/physics-3d),
-[`crcPhysicsBody3D`](#/api/hooks/crc-physics-body-3d),
-[`crcPhysicsWorld3D`](#/api/hooks/crc-physics-world-3d), and
-[3D physics types](#/api/types/physics-3d).
+Renderer-independent 3D shapes and pure bounds, mass, containment, distance,
+overlap, contact, ray-cast, shape-cast, and transform operations remain
+available from `@crc/physics/3d/geometry`. CRC does not currently publish a
+Three object binding or 3D runtime component surface.
 
-Pure geometry is also exported from `@crc/physics/3d/geometry`. There is no root
-`@crc/physics` barrel, physics namespace, manual step API, or independent clock.
+There is no root `@crc/physics` barrel and no independent physics clock.
+
+## Visualization
+
+`@crc/viz` provides allocation-relative
+[`Scale`](#/api/components/scale), [`Axis`](#/api/components/axis),
+[`LineSeries`](#/api/components/line-series),
+[`PointSeries`](#/api/components/point-series),
+[`PlotSeries`](#/api/components/plot-series),
+[`ScaleAdjust`](#/api/components/scale-adjust), and
+[`useScale`](#/api/hooks/use-scale).
+
+Compose inspection with [`HoverData`](#/api/components/hover-data),
+[`HoverCard`](#/api/components/hover-card),
+[`AnchoredLayout`](#/api/components/anchored-layout),
+[`defineSeries`](#/api/functions/define-series),
+[`closestPoint`](#/api/functions/closest-point),
+[`closestX`](#/api/functions/closest-x),
+[`interpolateX`](#/api/functions/interpolate-x), and
+[`linearInterpolation`](#/api/functions/linear-interpolation). Plain snapshot
+helpers [`nearestPoint`](#/api/functions/nearest-point) and
+[`nearestDomainValue`](#/api/functions/nearest-domain-value) are also
+available.
 
 ## Compiler entries
 
@@ -149,9 +140,7 @@ function Poster() {
 crc(document.querySelector("canvas")!, <Poster />);
 ```
 
-Start with the [Getting started guide](#/learn/guides/configure-jsx).
-Add 3D content with the [WebGL islands guide](#/learn/guides/webgl-islands).
-Then add materials, lights, orbit controls, backgrounds, and shadows with
-[Light WebGL scenes](#/learn/guides/webgl-lighting).
-Build Canvas celebrations or instanced ambience with
-[Create particle effects](#/learn/guides/particle-effects).
+Start with the [Getting started guide](#/learn/guides/configure-jsx). Add an
+ordinary Three scene with [Use Three.js inside CRC](#/learn/guides/three-js),
+then explore the
+[Three.js instancing example](#/examples/three/three-instancing).

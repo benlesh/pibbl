@@ -1,7 +1,7 @@
 # CRC layout-system contract
 
-Status: current implemented contract, updated for settled WebGL scenes on
-2026-09-13.
+Status: current implemented contract, updated for external render-layer layout
+participation on 2026-09-28.
 
 CRC provides dedicated `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid`
 components. They arrange direct branded `CRCElement` children into declared
@@ -18,12 +18,11 @@ contextual errors.
 
 Every layout component is itself a normal component: it can be nested inside
 another layout, transformed by `Group`, clipped by `Clip`, or rendered through
-a `Layer`. `WebGLLayer` is a layout-participating Canvas composition primitive;
-its WebGL descendants do not become layout items in the parent Canvas
-algorithm. Source order remains Canvas composition order and reverse Canvas
-order remains coordinate-event target order. Within one WebGL scene, child
-source order establishes identity and tie-break indices while settled opaque
-and transparent queues determine raster order.
+a `Layer`. A component returned by `defineRenderLayer` is a
+layout-participating Canvas composition primitive; renderer-internal objects do
+not become layout items in the parent Canvas algorithm. Source order remains
+Canvas composition order and reverse Canvas order remains coordinate-event
+target order.
 
 ## Shared box, placement, and overflow rules
 
@@ -39,11 +38,11 @@ A child's parent-relative placement lives in its own specified style:
 - `flexBasis`, `flexGrow`, and `flexShrink` are consumed only by Flex;
 - Grid consumes one-based starts and positive spans.
 
-`WebGLLayerStyle` accepts the shared box and layout-item fields. Each omitted
-layer dimension uses its current finite logical allocation; an explicit or
-allocated width and height must resolve to positive finite values. A
-`WebGLLayer` has no intrinsic measurement capability, so an automatic sizing
-path must supply a definite size rather than rendering WebGL children to
+`CRCRenderLayerStyle` accepts the shared box and layout-item fields. Each
+omitted layer dimension uses its current finite logical allocation; an explicit
+or allocated width and height must resolve to positive finite values. A render
+layer has no intrinsic measurement capability, so an automatic sizing path
+must supply a definite size rather than rendering external resources to
 discover one.
 
 The runtime places one private wrapper per direct child. The wrapper preserves
@@ -199,8 +198,8 @@ render work. Measurement:
 - cannot call hooks, context accessors, observe a layout box, paint, register
   interaction targets, or acquire runtime resources;
 - cannot create image generations;
-- cannot traverse a WebGL island, request WebGL animation, compose or settle a
-  WebGL scene, or acquire GPU/bitmap resources;
+- cannot traverse an external render layer, invoke its lifecycle, or acquire
+  renderer/bitmap resources;
 - detects direct and indirect cycles and restores all temporary runtime state
   after success or failure.
 
@@ -227,12 +226,12 @@ style. A thrown render or duplicate-key failure releases targets, handlers,
 cursors, image generations, offscreen layers, and component refs exactly once.
 Repeated reflow does not accumulate owners.
 
-Offscreen Canvas layers and WebGL islands share the root interaction ledger, so
-nested layout still participates in one global Canvas composition/target order.
-`Clip` and layout overflow constraints apply identically to pixels and
-coordinate geometry. A complete WebGL island occupies one Canvas paint
-position; layout cannot interleave an external Canvas child between objects in
-that flattened settled scene.
+Offscreen Canvas layers and external render layers share the root interaction
+ledger, so nested layout still participates in one global Canvas
+composition/target order. `Clip` and layout overflow constraints apply
+identically to pixels and coordinate geometry. A complete external render layer
+occupies one Canvas paint position; layout cannot interleave a Canvas child
+between objects inside that flattened bitmap.
 
 ## Deliberate exclusions
 
@@ -240,9 +239,9 @@ CRC layout does not promise a complete CSS formatting engine. Deferred features
 include margin, scrolling, auto-placement Grid, implicit tracks, advanced CSS
 intrinsic sizing, reverse/reordered Flexbox, baseline alignment, percentage
 gaps, auto margins, DOM overlays/accessibility, a retained scene graph, workers,
-multiple WebGL viewports/cameras, and a public virtualization API. Applications can window large datasets
-and pass the visible descriptors to CRC; the library does not own the records or
-scroll model.
+a public virtualization API. Applications can window large datasets and pass
+the visible descriptors to CRC; the library does not own the records or scroll
+model.
 
 Public JSX layout evidence lives in
 `packages/core/src/lib/layout/layout-jsx.test.tsx`, the five Studio layout
@@ -250,10 +249,6 @@ lessons, DOM-oracle compatibility suites, and deterministic layout laboratory.
 See the [style contract](./style-system-contract.md), [user-event
 contract](./user-events-contract.md), and [runtime resource ownership
 contract](./runtime-resource-ownership.md).
-
-## 3D physics and layout
-
-Layout treats a `WebGLLayer` as one ordinary allocated Canvas item and does not inspect its inner physics scene. Authored placement at body creation or re-enable seeds world-local pose, but layout is not a continuing constraint on an enabled dynamic body; physics presentation is applied inside the already allocated island and never changes Canvas measurement or allocation.
 
 ## Responsive style inspection
 

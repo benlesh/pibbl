@@ -1,30 +1,19 @@
 ---
 id: guide-particle-effects
 title: Create particle effects
-summary: Build deterministic Canvas celebrations and high-count WebGL ambience with fixed-capacity particle components.
+summary: Build deterministic Canvas celebrations with fixed-capacity particle components.
 kind: guide
 slug: particle-effects
 order: 66
-keywords: [particles, canvas, webgl, confetti, embers, fireflies]
+keywords: [particles, canvas, confetti, sparks, trails]
 ---
 
 # Create particle effects
 
-Particle effects are components, not style decorations. An immutable effect
-describes a population; `Particles2D` or `Particles3D` binds it into ordinary
-CRC composition, layout, events, lifecycle, and scheduling.
-
-## Choose a renderer
-
-Use Canvas for UI-scale sparks, confetti, click feedback, trails, and effects
-that need manual bursts. It has the broadest execution feature set and composes
-naturally with Canvas filters, clips, and Layers, but its particle sampling and
-paint loop run on the CPU.
-
-Use WebGL for ambient embers, fireflies, dust, snow, rain, smoke sprites, and
-other high-count automatic effects. Project 1 reconstructs every instance from
-seed, ordinal, and logical time in the vertex shader. One emitter is one
-instanced submission, with no per-particle CPU update or dynamic upload.
+`@crc/particles` provides deterministic 2D effects for UI-scale sparks,
+confetti, click feedback, trails, and other Canvas composition. An immutable
+effect describes a population; `Particles2D` binds it into ordinary CRC
+layout, events, filters, lifecycle, and scheduling.
 
 ## Define, then mount
 
@@ -78,9 +67,7 @@ function Celebration() {
       pointerEvents="auto"
       style={{ width: 640, height: 360, cursor: "crosshair" }}
       onPointerDown={(event) =>
-        system.emit("confetti", {
-          position: [event.x, event.y],
-        })
+        system.emit("confetti", { position: [event.x, event.y] })
       }
     />
   );
@@ -89,33 +76,18 @@ function Celebration() {
 
 The direct descriptor functions do not sample immediately. They build frozen,
 particle-specific values that compile into deterministic random channels,
-parameter registers, and 257-sample curve or gradient tables.
+parameter registers, and curve or gradient tables.
 
-## Understand particle motion
+## Motion, capacity, and bounds
 
 `acceleration`, `gravity`, `drag`, and the other motion modules update the
-members of a particle population. They are not standardized WebGL primitives
-and do not replace CRC animation. Animate component transforms, cameras,
-materials, lights, and ordinary values with signals plus `tween`, `keyframes`,
-`spring`, `defineAnimation`, or `stepper`.
+members of a population. They do not replace CRC animation: continue to drive
+component transforms and ordinary application values with signals plus
+`tween`, `keyframes`, `spring`, `defineAnimation`, or `stepper`.
 
-## Plan capacity and bounds
+Capacity is allocated up front in fixed typed arrays. Choose a realistic ceiling
+rather than an unbounded safety number. Bounds should conservatively contain
+shape, velocity, acceleration, and size for the full lifetime so Canvas can
+perform coarse paint culling.
 
-Capacity is allocated up front. Canvas commits fixed typed arrays; WebGL draws
-exactly that many analytic instances and discards unborn or expired slots in
-the shader. Choose a realistic ceiling rather than an unbounded safety number.
-
-Bounds should conservatively contain shape, velocity, acceleration, and size
-for the full lifetime. Canvas uses them for coarse paint culling. WebGL uses
-them for scene culling and, when enabled, one component-level pick/focus volume.
-
-## Use the current WebGL subset
-
-Stateless WebGL supports automatic rate and scheduled burst emission with
-fixed spawn/simulation parameters. Render parameters may change live. Manual
-births, stateful recycling, distance sorting, and world-space state need a
-future stateful executor and produce actionable capability diagnostics today.
-
-Start with [Particle effects](#/examples/composition/particle-effects), then
-compare [GPU embers](#/examples/webgl/embers) and
-[GPU fireflies](#/examples/webgl/fireflies).
+Start with [Particle effects](#/examples/composition/particle-effects).

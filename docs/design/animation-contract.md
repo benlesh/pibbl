@@ -1,7 +1,7 @@
 # CRC animation contract
 
-Status: current implemented contract, updated for settled WebGL scenes on
-2026-09-13.
+Status: current implemented contract, updated for external render-layer frames
+on 2026-09-28.
 
 This document defines CRC's first-class animation definitions, programs,
 component-owned playback, transitions, and their integration with the shared
@@ -258,14 +258,14 @@ playback; a retained readonly result cannot schedule the removed component.
 
 Every playback shares the realm's one frame transaction:
 
-| Phase    | Animation work                                                                                                                                                                                           |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Begin    | Capture one logical time/frame identity and drain accepted commands in invocation order.                                                                                                                 |
-| Advance  | Sample registered playbacks in registration order, stage outputs/status/time, and queue milestones.                                                                                                      |
-| Commit   | Validate and publish every playback's stages with the signal graph as one atomic batch.                                                                                                                  |
-| Plan     | Validate computed dependencies and collect the exact dirty render/resource boundaries.                                                                                                                   |
-| Render   | Repaint planned Layer children before ancestors and render top-level roots/friend work from the committed graph; a dirty WebGL island composes, settles, and renders before ancestor Canvas composition. |
-| Complete | Finalize successful transactions, release ended runs/leases, deliver milestones and isolated errors, and request another frame only if work remains.                                                     |
+| Phase    | Animation work                                                                                                                                                                                                                                |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Begin    | Capture one logical time/frame identity and drain accepted commands in invocation order.                                                                                                                                                      |
+| Advance  | Sample registered playbacks in registration order, stage outputs/status/time, and queue milestones.                                                                                                                                           |
+| Commit   | Validate and publish every playback's stages with the signal graph as one atomic batch.                                                                                                                                                       |
+| Plan     | Validate computed dependencies and collect the exact dirty render/resource boundaries.                                                                                                                                                        |
+| Render   | Repaint planned Layer and render-layer children before ancestors and render top-level roots/friend work from the committed graph; a dirty external render layer updates, renders, and settles interaction before ancestor Canvas composition. |
+| Complete | Finalize successful transactions, release ended runs/leases, deliver milestones and isolated errors, and request another frame only if work remains.                                                                                          |
 
 Time-based definitions use stable logical-time anchors, not accumulated display
 deltas. A dropped display frame jumps directly to the correct tween, keyframe,
@@ -283,7 +283,7 @@ CRC exposes no public scheduler clock, frame-step API,
 trace history, or input-injection surface; `seek` controls one playback rather
 than the realm.
 
-## Rendering, Layers, and WebGL
+## Rendering, Layers, and external renderers
 
 Animation produces ordinary signal values. CRC-provided components accept them
 directly at declared inputs:
@@ -314,18 +314,13 @@ usually remains stable; keep simple or frequently changing content in the root.
 Diagnostics may recommend a boundary, but adding and removing it stays explicit
 and readable in application code.
 
-The official `@crc/webgl` integration is a lockstep friend of this same
-scheduler and signal graph. WebGL frame requests may narrow work, but may not
-create another animation loop. Continuous shared state stays in signals; sparse
-renderer facts such as context loss or selection may queue semantic events for
-Complete. WebGL context loss suspends renderer work by default while playback
-continues, so restoration consumes the latest committed values.
-Animation changes ordinary component declarations before a dirty
-`WebGLLayer`'s child tree composes. The layer then settles the complete
-frame-local scene, renders its opaque and transparent queues, and publishes one
-candidate for ancestor Canvas composition. Animation never mutates a settled
-scene or advances an independent WebGL clock; Canvas and WebGL declarations in
-one transaction observe the same realm logical time.
+External render layers and the official `@crc/three` adapter use this same
+scheduler and signal graph through the public `defineRenderLayer` lifecycle.
+They may request another CRC frame through `invalidate()`, but may not create a
+second ordinary animation loop. Continuous shared state stays in signals;
+sparse renderer facts may queue semantic events for Complete. Animation updates
+props before the layer's `update` and `render` callbacks. Canvas and external
+renderer work in one transaction observe the same realm logical time.
 
 ## Determinism and portability
 
@@ -362,9 +357,10 @@ function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
 
 - CRC does not implement CSS or Web Animations syntax, implicit transitions,
   deep signal unwrapping, or a retained scene graph.
-- There is no general physics/collision engine, mutable timeline builder,
-  timeline label language, arbitrary program callback node, audio/network clock,
-  root-owned playback, or persistent serialized playback session.
+- Animation does not absorb physics/collision semantics, provide a mutable
+  timeline builder, timeline label language, arbitrary program callback node,
+  audio/network clock, root-owned playback, or persistent serialized playback
+  session.
 - There is no automatic caching, worker/WASM execution, cross-thread signal,
   synchronous GPU readback, public manual clock, or public retained trace.
 - Future worker or WASM number crunching may use packed buffers only if Begin
@@ -373,7 +369,3 @@ function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
   identical. Custom callbacks and nonserializable values stay on the main thread.
 - Applications select reduced or alternate motion; CRC does not infer
   accessibility preferences or decide which motion is essential.
-
-## 3D physics interoperation
-
-Animation and physics share the realm transaction but never compete for one pose. Enabled dynamic bodies are solver-owned; kinematic position and orientation signal targets are sampled after animation staging and before solving; disabled bodies return root-pose authority to authored style or animation. Re-enabling seeds the current authored pose and an explicit zero-or-preserve velocity policy, while ordinary non-pose appearance remains animatable in every mode.

@@ -16,7 +16,6 @@ import {
   learningSourceContainsJsx,
   validateLearningSourceText,
 } from "../../../tooling/learning-source-contract";
-import { WEBGL_LIGHTING_EXAMPLE_IDS } from "../../../tooling/webgl-lighting-example-contract";
 import {
   clickLogicalPoint,
   pointerDownLogicalPoint,
@@ -180,23 +179,19 @@ afterEach(() => {
 });
 
 describe("learning example catalog", () => {
-  const webglLessonSourcePath =
-    "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
-  const threeLessonSourcePath =
-    "packages/scenarios/src/learning/composition/three-instancing.example.tsx";
+  const threeLayerSourcePath =
+    "packages/scenarios/src/learning/three/three-layer.example.tsx";
+  const threeInstancingSourcePath =
+    "packages/scenarios/src/learning/three/three-instancing.example.tsx";
 
-  it("allows only the attributed Three lesson to import the public adapter, Three, and OrbitControls", () => {
-    const source = `
+  it("permits Three imports only for the two attributed Three lessons", () => {
+    const baseSource = `
       import { crc, type CRCController } from "@crc/core";
       import { defineThreeLayer } from "@crc/three";
       import { PerspectiveCamera, Scene } from "three";
-      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
       const Layer = defineThreeLayer({
-        create(context) {
-          const scene = new Scene();
-          const camera = new PerspectiveCamera();
-          const controls = context.input.connect((element) => new OrbitControls(camera, element));
-          return { scene, camera, controls };
+        create() {
+          return { scene: new Scene(), camera: new PerspectiveCamera() };
         },
       });
       function SceneExample() {
@@ -208,110 +203,50 @@ describe("learning example catalog", () => {
     `;
 
     expect(() =>
-      validateLearningSourceText(source, {
+      validateLearningSourceText(baseSource, {
         authoring: "jsx",
         label: "fixture",
-        sourcePath: threeLessonSourcePath,
+        sourcePath: threeLayerSourcePath,
       }),
     ).not.toThrow();
 
     expect(() =>
-      validateLearningSourceText(source, {
+      validateLearningSourceText(baseSource, {
         authoring: "jsx",
         label: "fixture",
-        sourcePath: webglLessonSourcePath,
+        sourcePath: threeInstancingSourcePath,
       }),
-    ).toThrow(/@crc\/core and @crc\/webgl/u);
+    ).toThrow(/OrbitControls/u);
 
     expect(() =>
-      validateLearningSourceText(
-        source.replace(
-          'three/addons/controls/OrbitControls.js',
-          'three/examples/jsm/controls/OrbitControls.js',
-        ),
-        {
-          authoring: "jsx",
-          label: "fixture",
-          sourcePath: threeLessonSourcePath,
-        },
-      ),
-    ).toThrow(/@crc\/three, three, and three\/addons\/controls\/OrbitControls\.js/u);
+      validateLearningSourceText(baseSource, {
+        authoring: "jsx",
+        label: "rectangle",
+      }),
+    ).toThrow(/only from @crc\/core/u);
+
+    const controlsSource = baseSource
+      .replace(
+        'import { PerspectiveCamera, Scene } from "three";',
+        'import { PerspectiveCamera, Scene } from "three";\nimport { OrbitControls } from "three/addons/controls/OrbitControls.js";',
+      )
+      .replace(
+        "return { scene: new Scene(), camera: new PerspectiveCamera() };",
+        "const camera = new PerspectiveCamera(); const controls = context.input.connect(element => new OrbitControls(camera, element)); return { scene: new Scene(), camera, controls };",
+      )
+      .replace("create() {", "create(context) {");
+
+    expect(() =>
+      validateLearningSourceText(controlsSource, {
+        authoring: "jsx",
+        label: "fixture",
+        sourcePath: threeInstancingSourcePath,
+      }),
+    ).not.toThrow();
   });
 
   const physicsLessonSourcePath =
     "packages/scenarios/src/learning/composition/physics-2d.example.tsx";
-
-  it("requires direct core and WebGL package imports for the WebGL lesson", () => {
-    const source = `
-      import { crc, type CRCController } from "@crc/core";
-      import { Cube, WebGLLayer } from "@crc/webgl";
-      function Scene() {
-        return (
-          <WebGLLayer style={{ width: 320, height: 180 }}>
-            <Cube style={{ size: 1 }} />
-          </WebGLLayer>
-        );
-      }
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, <Scene />);
-      }
-    `;
-
-    expect(() =>
-      validateLearningSourceText(source, {
-        authoring: "jsx",
-        label: "fixture",
-        sourcePath: webglLessonSourcePath,
-      }),
-    ).not.toThrow();
-    expect(() =>
-      validateLearningSourceText(source, {
-        authoring: "jsx",
-        label: "webgl-islands",
-      }),
-    ).not.toThrow();
-
-    expect(() =>
-      validateLearningSourceText(
-        source.replace('import { Cube, WebGLLayer } from "@crc/webgl";', ""),
-        {
-          authoring: "jsx",
-          label: "fixture",
-          sourcePath: webglLessonSourcePath,
-        },
-      ),
-    ).toThrow(/both @crc\/core and @crc\/webgl/u);
-
-    expect(() =>
-      validateLearningSourceText(source, {
-        authoring: "jsx",
-        label: "fixture",
-        sourcePath:
-          "packages/scenarios/src/learning/composition/layers.example.tsx",
-      }),
-    ).toThrow(/only from @crc\/core/u);
-  });
-
-  it("keeps WebGL lesson imports direct and components declarative", () => {
-    const source = `
-      import { crc, type CRCController } from "@crc/core";
-      import { Cube as Box, WebGLLayer } from "@crc/webgl";
-      function Scene() {
-        return <WebGLLayer style={{ width: 320, height: 180 }}>{Box({})}</WebGLLayer>;
-      }
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, <Scene />);
-      }
-    `;
-
-    expect(() =>
-      validateLearningSourceText(source, {
-        authoring: "jsx",
-        label: "fixture",
-        sourcePath: webglLessonSourcePath,
-      }),
-    ).toThrow(/direct, unaliased/u);
-  });
 
   it("permits only the exact physics lesson to import the public 2D entry", () => {
     const source = `
@@ -358,26 +293,6 @@ describe("learning example catalog", () => {
         },
       ),
     ).toThrow(/both @crc\/core and @crc\/physics\/2d/u);
-  });
-
-  it("rejects even type-only WebGL imports from ordinary lessons", () => {
-    const source = `
-      import { crc, Rectangle, type CRCController } from "@crc/core";
-      import { type CubeProps } from "@crc/webgl";
-      function Scene() {
-        return <Rectangle style={{ width: 20, height: 20 }} />;
-      }
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, <Scene />);
-      }
-    `;
-
-    expect(() =>
-      validateLearningSourceText(source, {
-        authoring: "jsx",
-        label: "rectangle",
-      }),
-    ).toThrow(/only from @crc\/core/u);
   });
 
   it.each([
@@ -1299,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 76 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
+  it("contains 61 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(76);
+    expect(learningExampleCatalog).toHaveLength(61);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1361,9 +1276,6 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
-        "viz-hover-comparison",
-        "viz-points-and-inspection",
-        "viz-responsive-line",
         "clip",
         "group",
         "layer",
@@ -1371,15 +1283,11 @@ describe("learning example catalog", () => {
         "physics-2d",
         "signal-inputs",
         "signals-and-animation",
-        "three-instancing",
-        "webgl-islands",
+        "viz-hover-comparison",
+        "viz-points-and-inspection",
+        "viz-responsive-line",
       ],
-      webgl: [
-        ...WEBGL_LIGHTING_EXAMPLE_IDS,
-        "embers",
-        "fireflies",
-        "static-glb",
-      ],
+      three: ["three-instancing", "three-layer"],
       layout: ["absolute-and-overlay", "flex", "flow", "grid", "responsive-styles"],
       "events-and-interaction": [
         "click",
@@ -1451,8 +1359,6 @@ describe("learning example catalog", () => {
       "group",
       "clip",
       "filters",
-      "three-instancing",
-      "webgl-islands",
       "signal-inputs",
       "signals-and-animation",
       "particle-effects",
@@ -1728,35 +1634,6 @@ describe("learning example catalog", () => {
     }
   });
 
-  it("contains exactly the twelve same-scene WebGL lighting lessons", async () => {
-    const webglLessons = learningExampleCatalog.filter(
-      (entry) =>
-        WEBGL_LIGHTING_EXAMPLE_IDS.includes(
-          entry.slug as (typeof WEBGL_LIGHTING_EXAMPLE_IDS)[number],
-        ),
-    );
-
-    expect(webglLessons.map((entry) => entry.slug)).toEqual(
-      WEBGL_LIGHTING_EXAMPLE_IDS,
-    );
-    expect(webglLessons.map((entry) => entry.order)).toEqual([
-      380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490,
-    ]);
-    expect(webglLessons.map(getLearningExampleRoute)).toEqual(
-      WEBGL_LIGHTING_EXAMPLE_IDS.map(
-        (slug) => `#/examples/webgl/${slug}`,
-      ),
-    );
-    for (const entry of webglLessons) {
-      const source = await loadLearningSource(entry);
-      expect(source.match(/from ["'][^"']+["']/gu)).toEqual([
-        expect.stringMatching(/from ["']@crc\/core["']/u),
-        expect.stringMatching(/from ["']@crc\/webgl["']/u),
-      ]);
-      expect(source).not.toMatch(/@crc\/(?:core|webgl)\/(?:internal|lib|src)\b/u);
-    }
-  });
-
   it("contains exactly the five canonical layout lessons", async () => {
     const layouts = learningExampleCatalog.filter(
       (entry) => entry.section === "layout",
@@ -1833,19 +1710,34 @@ describe("learning example catalog", () => {
     },
   );
 
-  it("covers every drawing/composition export and supported mouse event", () => {
+  it("covers every drawing, composition, and Three export plus each supported mouse event", () => {
     const drawingAndComposition = learningExampleCatalog
       .filter(
         (entry) =>
           entry.browseGroup === "drawing" ||
-          entry.browseGroup === "composition",
+          entry.browseGroup === "composition" ||
+          entry.browseGroup === "three",
       )
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
-        "Scale", "Axis", "LineSeries", "ScaleAdjust", "useScale", "Absolute",
-        "PointSeries", "PlotSeries", "nearestPoint", "HoverData", "HoverCard", "AnchoredLayout",
-        "closestPoint", "closestX", "interpolateX", "defineSeries", "linearInterpolation",
+        "Scale",
+        "Axis",
+        "LineSeries",
+        "PointSeries",
+        "PlotSeries",
+        "ScaleAdjust",
+        "useScale",
+        "HoverData",
+        "HoverCard",
+        "AnchoredLayout",
+        "defineSeries",
+        "closestPoint",
+        "closestX",
+        "interpolateX",
+        "linearInterpolation",
+        "nearestPoint",
+        "Absolute",
         "Rectangle",
         "Circle",
         "Ellipse",
@@ -1868,16 +1760,13 @@ describe("learning example catalog", () => {
         "CRCFilter",
         "defineThreeLayer",
         "InstancedMesh",
+        "Mesh",
         "OrbitControls",
+        "Scene",
         "missBehavior",
         "Particles2D",
         "SignalValue",
-        "WebGLLayer",
         "batch",
-        "Group3D",
-        "Cube",
-        "Sphere",
-        "useAnimationFrame",
         "useComputed",
         "useParticleSystem",
         "useSignal",

@@ -4,7 +4,7 @@ import { isAbsolute, resolve, sep } from "node:path";
 const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const CRC_ENTRY_POINT =
-  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles(?:\/webgl)?|physics\/(?:2d|3d)|viz|three|webgl(?:\/gltf|\/internal)?)$/;
+  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles|physics\/(?:2d(?:\/geometry)?|3d\/geometry)|viz|three)$/;
 const THREE_ENTRY_POINT =
   /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
 
@@ -66,13 +66,6 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
       ),
     ],
     [
-      "@crc/particles/webgl",
-      resolve(
-        import.meta.dirname,
-        `../packages/particles/${directory}/webgl.${extension}`,
-      ),
-    ],
-    [
       "@crc/three",
       resolve(
         import.meta.dirname,
@@ -87,31 +80,17 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
       ),
     ],
     [
-      "@crc/physics/3d",
+      "@crc/physics/2d/geometry",
       resolve(
         import.meta.dirname,
-        `../packages/physics/${directory}/3d.${extension}`,
+        `../packages/physics/${directory}/2d-geometry.${extension}`,
       ),
     ],
     [
-      "@crc/webgl",
+      "@crc/physics/3d/geometry",
       resolve(
         import.meta.dirname,
-        `../packages/webgl/${directory}/index.${extension}`,
-      ),
-    ],
-    [
-      "@crc/webgl/gltf",
-      resolve(
-        import.meta.dirname,
-        `../packages/webgl/${directory}/gltf.${extension}`,
-      ),
-    ],
-    [
-      "@crc/webgl/internal",
-      resolve(
-        import.meta.dirname,
-        `../packages/webgl/${directory}/internal.${extension}`,
+        `../packages/physics/${directory}/3d-geometry.${extension}`,
       ),
     ],
   ]);
@@ -125,7 +104,7 @@ function assertSingleRuntimeMode(
   const inputs = Object.keys(metafile.inputs).map((path) =>
     isAbsolute(path) ? path : resolve(repositoryRoot, path),
   );
-  for (const packageName of ["core", "particles", "physics", "three", "webgl", "viz"]) {
+  for (const packageName of ["core", "particles", "physics", "three", "viz"]) {
     const packageRoot = resolve(repositoryRoot, `packages/${packageName}`);
     const expectedRoot = resolve(
       packageRoot,

@@ -35,29 +35,29 @@ after the first cleanup request.
 
 ## Ownership table
 
-| Resource                         | Sole owner                                                              | Acquisition                                                    | Release trigger                                                                                           | Required postcondition                                                                                                |
-| -------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Root instance-map entry          | Mount/controller identity                                               | First `crc()` for a Canvas                                     | Matching signal/controller disposal                                                                       | The entry is absent; a newer identity is untouched.                                                                   |
-| Abort subscription               | Root instance main teardown                                             | Mount with a signal                                            | Any disposal path                                                                                         | The abort listener is detached and later abort is harmless.                                                           |
-| Per-type native Canvas listener  | Root event hub                                                          | First live requester for that type                             | Last requester release or root disposal                                                                   | At most one native listener exists for the type; removal uses the matching capture option.                            |
-| Grouped event target             | Built-in paint-target slot or `useEventTarget` hook                     | Default-participating drawing, or explicit target registration | `pointerEvents="none"`, last explicit property removed, component removal, or disposal                    | Target, paint entry, native requests, captures, contacts, drag hover, focus, and cursor references are absent.        |
-| Propagation listener             | One `useEventListener` hook slot                                        | Render with at least one handler                               | Last handler removed, component removal, or disposal                                                      | The exact component bucket member and native requests are absent.                                                     |
-| Logical pointer capture          | Capturing live event node and root capture state                        | Successful native `setPointerCapture` request                  | Transfer, release, cancel, native loss, node removal, or disposal                                         | Per-pointer active/provisional/pending-transfer/pending-loss records and prerequisite native requests settle to zero. |
-| Retained touch contact           | Root dispatcher, keyed by identifier                                    | Hit-resolved `touchstart`                                      | `touchend`, `touchcancel`, target removal, or disposal                                                    | No identifier refers to a dead logical target.                                                                        |
-| Drag hover target                | Root dispatcher                                                         | Drag boundary reconciliation                                   | Root leave, drop, drag end, target removal, or disposal                                                   | No drag boundary state refers to a dead logical target.                                                               |
-| Pending animation frame          | CRC instance                                                            | Each update                                                    | Replacement, callback completion, or disposal                                                             | The exact frame identity is canceled/completed; a stale callback is a no-op.                                          |
-| Component/main follower          | Mounted component                                                       | First component render                                         | Component removal or instance disposal                                                                    | Component teardown closes once and detaches from its parent.                                                          |
-| Interaction region               | One persistent component path slot                                      | Render with a handler or cursor                                | Last interactive prop removed, component removal, or disposal                                             | The owner-local region and paint entry are absent; root state no longer references it.                                |
-| Hover/activation state           | Root interaction dispatcher                                             | Native pointer/activation input                                | Target removal, completed activation, root exit, or disposal                                              | Every referenced leaf region remains live, or the state is cleared synchronously.                                     |
-| Canvas cursor style              | Cursor hook slot                                                        | That slot successfully sets the cursor                         | Rerender, pointer exit, component removal, or disposal                                                    | Only the cursor owned by that slot is cleared.                                                                        |
-| Pathless observer/default        | Hook slot, registered on root instance                                  | Render without an interaction path                             | Rerender, component removal, layer removal, or disposal                                                   | The exact root Set member is deleted once, including when declared inside a layer.                                    |
-| Layer composition paint entry    | Owning `Layer` component                                                | Layer draw slot                                                | Layer/ancestor removal or root disposal                                                                   | The parent paint entry is absent and cannot resolve a child target.                                                   |
-| Offscreen layer instance         | Owning `Layer` component                                                | Layer mount                                                    | Layer/ancestor removal or root disposal                                                                   | Child map entry, components, frames, regions, and nested layers are released recursively.                             |
-| WebGL backend target/pick record | One Mesh/Cube/Sphere target slot and candidate settled-scene generation | Default-participating geometry submission                      | `pointerEvents="none"`, failed/uncommitted generation, context loss, component/layer removal, or disposal | No committed picker, focus index, or root dispatcher state refers to that target generation.                          |
-| WebGL nested-resolver entry      | Owning `WebGLLayer` component                                           | Successful Canvas composite and generation commit              | Opt-out, generation replacement/loss, layer removal, or root disposal                                     | The global paint ledger cannot invoke a stale island picker or mismatched focus generation.                           |
-| WebGL event-parent bridge        | Owning `WebGLLayer` child instance                                      | Private backend mount                                          | Child generation replacement, layer removal, failure, or root disposal                                    | Temporary paths cannot retain the removed WebGL subtree or its Canvas parent.                                         |
-| Orbit-camera hook slot           | Mounted component calling `useOrbitCamera()`                            | First call in that hook position                               | Component/hook/root teardown                                                                              | Spherical state, active-pointer record, and revision ownership cannot schedule work; retained handlers are inert.     |
-| Component refs                   | CRC instance                                                            | Render                                                         | Component removal or instance disposal                                                                    | Removed refs run teardown and become unreachable.                                                                     |
+| Resource                         | Sole owner                                                          | Acquisition                                                    | Release trigger                                                                        | Required postcondition                                                                                                |
+| -------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Root instance-map entry          | Mount/controller identity                                           | First `crc()` for a Canvas                                     | Matching signal/controller disposal                                                    | The entry is absent; a newer identity is untouched.                                                                   |
+| Abort subscription               | Root instance main teardown                                         | Mount with a signal                                            | Any disposal path                                                                      | The abort listener is detached and later abort is harmless.                                                           |
+| Per-type native Canvas listener  | Root event hub                                                      | First live requester for that type                             | Last requester release or root disposal                                                | At most one native listener exists for the type; removal uses the matching capture option.                            |
+| Grouped event target             | Built-in paint-target slot or `useEventTarget` hook                 | Default-participating drawing, or explicit target registration | `pointerEvents="none"`, last explicit property removed, component removal, or disposal | Target, paint entry, native requests, captures, contacts, drag hover, focus, and cursor references are absent.        |
+| Propagation listener             | One `useEventListener` hook slot                                    | Render with at least one handler                               | Last handler removed, component removal, or disposal                                   | The exact component bucket member and native requests are absent.                                                     |
+| Logical pointer capture          | Capturing live event node and root capture state                    | Successful native `setPointerCapture` request                  | Transfer, release, cancel, native loss, node removal, or disposal                      | Per-pointer active/provisional/pending-transfer/pending-loss records and prerequisite native requests settle to zero. |
+| Retained touch contact           | Root dispatcher, keyed by identifier                                | Hit-resolved `touchstart`                                      | `touchend`, `touchcancel`, target removal, or disposal                                 | No identifier refers to a dead logical target.                                                                        |
+| Drag hover target                | Root dispatcher                                                     | Drag boundary reconciliation                                   | Root leave, drop, drag end, target removal, or disposal                                | No drag boundary state refers to a dead logical target.                                                               |
+| Pending animation frame          | CRC instance                                                        | Each update                                                    | Replacement, callback completion, or disposal                                          | The exact frame identity is canceled/completed; a stale callback is a no-op.                                          |
+| Component/main follower          | Mounted component                                                   | First component render                                         | Component removal or instance disposal                                                 | Component teardown closes once and detaches from its parent.                                                          |
+| Interaction region               | One persistent component path slot                                  | Render with a handler or cursor                                | Last interactive prop removed, component removal, or disposal                          | The owner-local region and paint entry are absent; root state no longer references it.                                |
+| Hover/activation state           | Root interaction dispatcher                                         | Native pointer/activation input                                | Target removal, completed activation, root exit, or disposal                           | Every referenced leaf region remains live, or the state is cleared synchronously.                                     |
+| Canvas cursor style              | Cursor hook slot                                                    | That slot successfully sets the cursor                         | Rerender, pointer exit, component removal, or disposal                                 | Only the cursor owned by that slot is cleared.                                                                        |
+| Pathless observer/default        | Hook slot, registered on root instance                              | Render without an interaction path                             | Rerender, component removal, layer removal, or disposal                                | The exact root Set member is deleted once, including when declared inside a layer.                                    |
+| Layer composition paint entry    | Owning `Layer` component                                            | Layer draw slot                                                | Layer/ancestor removal or root disposal                                                | The parent paint entry is absent and cannot resolve a child target.                                                   |
+| Offscreen layer instance         | Owning `Layer` component                                            | Layer mount                                                    | Layer/ancestor removal or root disposal                                                | Child map entry, components, frames, regions, and nested layers are released recursively.                             |
+| Render-layer target record       | One committed interaction generation and registered external target | Successful Canvas composite and generation commit              | Opt-out, generation replacement, layer removal, failure, or root disposal              | No committed resolver, focus entry, or dispatcher state refers to a stale target generation.                          |
+| Render-layer nested resolver     | Owning `defineRenderLayer` component                                | Successful Canvas composite and generation commit              | Opt-out, generation replacement, layer removal, failure, or root disposal              | The global paint ledger cannot invoke a stale picker or mismatched focus generation.                                  |
+| Render-layer event-parent bridge | Owning external-renderer mount                                      | Layer mount                                                    | Layer removal, failure, or root disposal                                               | Temporary paths cannot retain the removed external target or its Canvas parent.                                       |
+| Three input bridge               | Owning `defineThreeLayer` adapter                                   | Layer creation                                                 | Layer removal, failure, or root disposal                                               | Control listeners and capture state detach; retained input callbacks cannot dispatch or schedule work.                |
+| Component refs                   | CRC instance                                                        | Render                                                         | Component removal or instance disposal                                                 | Removed refs run teardown and become unreachable.                                                                     |
 
 ## Central disposal sequence
 
@@ -71,7 +71,7 @@ The controller first verifies that the global Canvas entry is the exact instance
    and component followers;
 4. lets those later component followers cascade through grouped targets,
    propagation listeners, legacy observers, pointer captures, nested Canvas
-   layers, and WebGL island targets/bridges; their idempotent native release
+   layers, and external render-layer targets/bridges; their idempotent native release
    closures observe the already-closed hub;
 5. clears pointer, touch, drag, activation, hover, cursor, registry, and
    component references as a final unreachable-state guarantee.
@@ -80,10 +80,11 @@ The identity check makes stale controllers harmless. Frame callbacks also check 
 
 ## Replacement, removal, and errors
 
-Every default-participating Canvas/WebGL drawing or `useEventTarget` path owns
-one persistent grouped target slot containing current event handlers and
-optional cursor/focus metadata. Rerender updates that target in place and
-refreshes its local paint/pick position without changing logical identity.
+Every default-participating Canvas drawing, committed render-layer target, or
+`useEventTarget` path owns one persistent grouped target slot containing current
+event handlers and optional cursor/focus metadata. Rerender updates that target
+in place and refreshes its local paint/pick position without changing logical
+identity.
 `useEventListener` similarly owns
 one stable non-geometric registration. If the last active property disappears,
 teardown removes the exact registration and clears native requests, pointer
@@ -130,14 +131,12 @@ transient internal values: they are not serialized, exposed publicly, or a
 cross-version bit-position contract. The complete rationale and maintenance
 rules live in the [event-registration hot-path design](../superpowers/specs/2026-09-23-event-registration-hot-path-design.md).
 
-`useOrbitCamera()` owns stable handler functions but no native listener,
-logical target, focus candidate, or pointer-capture resource merely by being
-called. Spreading its handlers onto a geometry participant or structural
-ancestor acquires the ordinary target/listener resources owned by that
-receiving component. During a gesture, capture remains owned by the receiving
-live event node and root dispatcher; hook teardown clears its local active
-pointer and makes the retained handler bundle inert. Lights, materials,
-backgrounds, and shadow maps likewise acquire no event resource.
+The Three input bridge owns no logical target or focus candidate merely by
+connecting a control. Registered Three targets acquire ordinary CRC event/focus
+resources only through the committed layer interaction snapshot. During a
+gesture, capture remains owned by the receiving live event node and root
+dispatcher; adapter teardown clears bridge-local state and makes retained
+callbacks inert.
 
 The root dispatcher snapshots one temporary ancestry route, then re-reads each
 node's liveness and current handler before invocation. Removal during dispatch
@@ -145,13 +144,10 @@ therefore remains effective, route additions wait for the next event, and one
 thrown handler cannot prevent later handlers or final cleanup. Layers share the
 root event state and use one explicit parent-component bridge solely while
 constructing temporary paths; teardown clears that bridge before recursively
-disposing the child instance. `WebGLLayer` uses the same ownership direction
-for its private backend instance, Group3D/listener ancestry, and Canvas parent
-bridge. Its child traversal composes target-bearing geometry submissions; only
-a successfully settled, rendered, transferred, and parent-composited candidate
-commits its bitmap, pick ledger, and focus metadata together. Raster queue
-sorting cannot reorder target identity, event ancestry, focus order, or source
-indices.
+disposing the child instance. External render layers use the same ownership
+direction for their nested resolver and Canvas parent bridge. Only a
+successfully rendered, settled, transferred, and parent-composited candidate
+commits its bitmap, target records, and focus metadata together.
 
 Native acquisition includes logical prerequisites: boundary handlers own the
 movement/root-exit inputs that derive their events; click/double-click own
@@ -162,15 +158,14 @@ touch and wheel listeners are non-passive. Reference counts still collapse all
 requesters to one actual Canvas listener per type.
 
 A root `OffscreenCanvas` has an event root but no native DOM listener hub.
-Managed offscreen Canvas layers and WebGL islands under an HTML Canvas share
-that root's listeners and state. Root disposal clears every form without
-relying on garbage collection. Context loss clears the affected WebGL pick and
-focus generation before any restoration request can publish replacements and
-invalidates the lost renderer generation without issuing stale GPU deletions.
-Composition, settlement, WebGL rendering, bitmap-transfer, and Canvas-composite
-errors all release their uncommitted target participation through the same
-idempotent candidate path; no error may publish event state for a bitmap that
-did not commit.
+Managed offscreen Canvas layers and external render layers under an HTML Canvas
+share that root's listeners and state. Root disposal clears every form without
+relying on garbage collection. A render-layer generation is selectable only
+after its bitmap and interaction metadata commit together; replacement or
+removal clears the prior generation. External rendering, settlement,
+bitmap-transfer, and Canvas-composite errors all release their uncommitted
+target participation through the same idempotent candidate path; no error may
+publish event state for a bitmap that did not commit.
 
 `Teardowns.execute()` closes before invoking a stable snapshot. Every entry is attempted once; an exception is reported without stopping the remaining releases. Repeated execution and resources added after closure are safe.
 
@@ -197,23 +192,14 @@ grouped target/listener replacement, prerequisite ownership, pointer-capture
 transactions, retained touch and drag cleanup, cross-layer propagation,
 pathless legacy observer ordering, and exact zero state after disposal.
 
-The WebGL ownership and integration suites additionally prove passive
-geometry-target acquisition, object/layer opt-out, bitmap/pick/focus generation
-replacement, nested propagation, pointer capture/focus/cursor cleanup, context
-loss/restoration, candidate rollback, and exact target/resolver/bridge
-baselines after failure, removal, and disposal.
-
-The orbit-camera suite additionally proves stable handler identities, ordinary
-capture acquisition/release, teardown during an active gesture, and inert
-retained callbacks without leaked native requests or independently scheduled
-frames.
+Render-layer and Three integration suites additionally prove passive blocking,
+registered-target acquisition, layer opt-out, bitmap/interaction generation
+replacement, nested propagation, pointer capture/focus/cursor cleanup, controls
+input teardown, candidate rollback, and exact target/resolver/bridge baselines
+after failure, removal, and disposal.
 
 ## Deliberate boundary
 
 TFC-03 established event-resource and frame ownership. TFC-04 replaced all-hit dispatch with the topmost logical-target model, and TFC-05 replaced layer target bridges with root-owned composed resolution while preserving the same exact-release ledgers. TFC-07 still owns broader runtime stress and asynchronous resources such as image loading; the current reaction cleanup contract lives in the runtime ownership record.
 
 TFC-07 completed that broader proof in the [runtime resource ownership contract](./runtime-resource-ownership.md), including component capability checks, single-owner cleanups, image generations, fully rendered mount/dispose stress, and temporary render-global restoration.
-
-## 3D physics event ownership
-
-Collision, overlap, hit, sleep, and wake facts belong to one candidate simulation generation and materialize public immutable records only for observed handlers. Successful Commit adopts the candidate; Complete delivers facts in stable tick, semantic, pair, and receiver order. Discard, failed Commit, body/collider generation change, removal, and disposal suppress stale delivery and release owner-scoped callbacks; callbacks may only enqueue work for a later Begin.

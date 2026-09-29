@@ -52,14 +52,16 @@ contention observed during earlier upgrade and visual work.
   from its guide, plus the marked JavaScript program transformed independently
   by esbuild and the real Babel automatic-runtime plugin;
 - the fixed preservation manifest records every normalized prose paragraph,
-  list obligation, table row, and fenced-code obligation from all 12 normative
-  contracts at pre-Task-14 commit `0040d65` (667 baseline units with per-file
-  source digests), the complete reviewed current form (874 units), and an
-  explicit JSX-era translation/addition allowlist tied to narrow, exact
-  approved-design unit IDs and excerpts; every translation also has exact
+  list obligation, table row, and fenced-code obligation from the normative
+  contract baseline (667 units), with per-file source digests, plus the complete
+  reviewed current form (815 units across 12 baseline-snapshotted contracts)
+  and explicit approved translation, retirement, and addition mappings tied to
+  narrow design unit IDs and excerpts; every translation has exact
   baseline/current unit IDs, unique rationale,
   shared clause anchors, and minimum content similarity checked before the
-  digest. The 59 direct source/test mappings use claims no broader than their
+  digest. Together with 138 mapped units across the post-baseline signal,
+  animation, and render-layer/Three records, this covers 15 current normative
+  contracts. The 56 direct source/test mappings use claims no broader than their
   cited tests and require the same claim-specific anchors near both markers;
 - the migration guide contains one mechanically checked row for each of the 85
   field/structural inputs derived from the reviewed baseline style table, and

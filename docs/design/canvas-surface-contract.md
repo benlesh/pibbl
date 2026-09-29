@@ -1,13 +1,12 @@
 # CRC canvas surface contract
 
-Status: current implemented contract, updated for settled WebGL scenes,
-first-class signals, the realm scheduler, lighting, and genuine shadows on
-2026-09-15.
+Status: current implemented contract, updated for first-class signals, the realm
+scheduler, and external render-layer surfaces on 2026-09-28.
 
 This document defines how a root CRC mount maps logical drawing units to the
 Canvas CSS content box and physical backing store. The mapping is owned by the
 runtime so drawing, layout, interaction, clipping, Canvas layers, filters, and
-WebGL islands use one coordinate model.
+external render layers use one coordinate model.
 
 ## Public configuration
 
@@ -134,25 +133,12 @@ the new physical size and composites its complete backing source into its
 logical destination. Layer-local layout and interaction remain expressed in
 logical units.
 
-Managed `WebGLLayer` surfaces use the same independently rounded backing
-density. One layer owns one persistent WebGL2 `OffscreenCanvas`; its logical
-width and height determine camera aspect and local picking coordinates, while
-its backing width and height determine raster resolution only. The surface is
-created with alpha, depth, premultiplied alpha, and an unpreserved drawing
-buffer. After the child tree composes successfully, the backend settles one
-frame-local scene, reuses or renders required light-space shadow depth, renders
-its opaque and transparent color queues, and transfers a candidate
-`ImageBitmap`. Parent Canvas composition draws that complete physical source
-into one logical destination before bitmap, pick, and focus metadata commit as
-one matching generation. Shadow-map resolution is independent of presentation
-backing size: the selected 512/1024/2048 request is clamped only to the
-applicable WebGL2 texture or cube-map limit.
-
-Omitting `WebGLBackground` clears the island to transparent black. One
-declaration replaces that clear with its concrete RGB and alpha, remains behind
-all geometry, and participates in the bitmap's eventual Canvas alpha
-composition. It does not add a draw pass or nested hit target: uncovered pixels
-remain a resolver miss even when the clear is fully opaque.
+Managed external render-layer surfaces use the same independently rounded
+backing density. Their logical width and height define layer-local coordinates;
+backing width and height define raster resolution only. The renderer draws a
+candidate into one persistent `OffscreenCanvas`, and parent Canvas composition
+draws that complete physical source into one logical destination before bitmap
+and interaction metadata commit as one matching generation.
 
 Runtime-created Layer and filter surfaces are upright local targets. CRC keeps
 the current paint transform, which maps local drawing into the active target,
@@ -164,13 +150,13 @@ boundary's parent-facing placement or Group transform exactly once when it is
 composited. Interaction geometry continues to use root-logical world transforms
 and therefore does not double-apply surface density, fitting, or presentation.
 
-`WebGLLayer` is also an upright local raster target. Parent layout placement,
-Canvas `Group` transforms, clips, filters, alpha, and compositing apply when its
-committed bitmap is drawn into the parent. Its nested resolver rejects outer
-clips and bounds, maps the root-logical point through the inverse outer world
-transform to layer-local coordinates, then delegates to the committed camera
-and pick ledger. Transparent island background is a miss rather than an
-implicit rectangle target.
+An external render layer is also an upright local raster target. Parent layout
+placement, Canvas `Group` transforms, clips, filters, alpha, and compositing
+apply when its committed bitmap is drawn into the parent. Its nested resolver
+rejects outer clips and bounds, maps the root-logical point through the inverse
+outer world transform to layer-local coordinates, then delegates to the
+committed interaction snapshot. Empty background follows `missBehavior` rather
+than becoming an implicit rectangle target.
 
 A filter boundary uses one uniform local raster density: the largest singular
 scale of its direct local-to-parent-backing transform. That transform already
@@ -207,14 +193,12 @@ does not cancel unrelated work already owned by the realm scheduler. See the
 [signals and scheduling contract](./signals-and-scheduling-contract.md) for
 phase admission and root/Layer revision rules.
 
-Each `WebGLLayer` owns its context loss/restoration listeners. Loss invalidates
-the renderer-owned resident and shadow sets without deleting handles from the
-lost generation, closes the committed bitmap, and removes matching pick/focus
-state; restoration requests one ordinary coalesced CRC frame under a new
-context generation. Publication waits for one complete compose, settle,
-shadow-depth/color render, transfer, parent composite, and transaction commit.
-Layer removal or root disposal detaches those listeners and prevents a stale
-restore notification from scheduling work.
+Each external render layer owns its surface, committed bitmap, interaction
+generation, and lifecycle callbacks. Renderer-specific context loss and
+restoration remain application/adapter concerns; any replacement requests an
+ordinary coalesced CRC frame. Publication waits for one complete render,
+interaction settlement, transfer, parent composite, and transaction commit.
+Layer removal or root disposal makes stale invalidation callbacks inert.
 
 ## Evidence
 
@@ -228,18 +212,13 @@ Filter projection tests additionally cover upright local capture, conservative
 windows, root and Layer density exactly once, unchanged target geometry, and
 nested high-density filter composition.
 
-WebGL surface, interaction, and browser suites cover logical/backing viewport
-snapshots, default and explicit cameras, outer layout/transforms/clips/Layers,
-opaque and settled-transparent composition, delegated geometry picking,
-density changes, bitmap/pick/focus generation transactions, constant-time clean
-cache reuse, and context loss/restoration.
+Render-layer and Three adapter suites cover logical/backing viewport snapshots,
+outer layout/transforms/clips/Layers, transparent bitmap composition, delegated
+object picking, density changes, bitmap/interaction generation transactions,
+constant-time clean cache reuse, and deterministic removal/disposal.
 
 The public `canvas-surface` laboratory is loaded by both the Studio and
 headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical
 reflow, responsive logical reflow without remount, and logical mouse
 coordinates. Full-page Studio baselines provide the corresponding sharpness
 and composition evidence.
-
-## 3D physics coordinates
-
-`PhysicsWorld3D` simulates in the authored logical coordinate system at its WebGL boundary. Camera, Canvas fit, backing density, outer Canvas transforms, and bitmap composition affect presentation, picking, and projected focus but never authoritative collider geometry, mass, gravity, velocity, or query coordinates. Physics presentation is inserted only into the settled WebGL model; it is excluded from authored lineage so compound geometry cannot acquire feedback drift.

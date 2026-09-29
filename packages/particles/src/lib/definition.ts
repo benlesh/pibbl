@@ -615,7 +615,7 @@ export function defineParticleEffect2D<
   if (!Array.isArray(input.emitters) || input.emitters.length === 0) {
     particleDefinitionError({ debugName, property: 'emitters' }, 'must be nonempty', input.emitters);
   }
-  const parameters = normalizeParameters(input.parameters, debugName, 2);
+  const parameters = normalizeParameters(input.parameters, debugName);
   const seenNames = new Set<string>();
   const emitters: ParticleEmitter2DRecord[] = [];
   for (const emitter of input.emitters) {
@@ -642,7 +642,6 @@ export function defineParticleEffect2D<
     emitterNames: Object.freeze(emitters.map(emitter => emitter.name)),
     capabilities: Object.freeze({
       statelessCanvas: true,
-      statelessWebGL: false,
       requiresStateful: Object.freeze([]),
     }),
   });

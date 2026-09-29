@@ -30,7 +30,7 @@ assert.deepEqual(inventory.root.overview, ["JSX"]);
 const multiPackageInventory = await collectPublicExports(
   {
     root: `${fixturesDirectory}root.ts`,
-    webgl: `${fixturesDirectory}webgl.ts`,
+    three: `${fixturesDirectory}three.ts`,
   },
   { strict: true },
 );
@@ -44,7 +44,7 @@ assert.throws(
         },
       },
     ]),
-  /Undocumented public exports: CRCOrbitCameraHandlers, CRCOrbitCameraOptions, CRCOrbitCameraResult, CRCWebGLPerspectiveCamera, CRCWebGLVector3, WebGLLayer, useOrbitCamera/u,
+  /Undocumented public exports: CRCThreeLayerContext, CRCThreeLayerDefinition, defineThreeLayer/u,
 );
 
 const multiPackageCoverage = validateApiCoverage(multiPackageInventory, [
@@ -56,43 +56,31 @@ const multiPackageCoverage = validateApiCoverage(multiPackageInventory, [
     },
   },
   {
-    route: "#/api/components/webgl-layer",
+    route: "#/api/functions/define-three-layer",
     frontmatter: {
-      id: "api-component-webgl-layer",
-      symbols: ["WebGLLayer"],
+      id: "api-function-define-three-layer",
+      symbols: ["defineThreeLayer", "CRCThreeLayerDefinition"],
     },
   },
   {
-    route: "#/api/hooks/use-orbit-camera",
+    route: "#/api/types/three",
     frontmatter: {
-      id: "api-hook-use-orbit-camera",
-      symbols: [
-        "useOrbitCamera",
-        "CRCOrbitCameraOptions",
-        "CRCOrbitCameraHandlers",
-        "CRCOrbitCameraResult",
-      ],
-    },
-  },
-  {
-    route: "#/api/types/webgl",
-    frontmatter: {
-      id: "api-types-webgl",
-      symbols: ["CRCWebGLPerspectiveCamera", "CRCWebGLVector3"],
+      id: "api-types-three",
+      symbols: ["CRCThreeLayerContext"],
     },
   },
 ]);
 assert.equal(
-  multiPackageCoverage.values.get("useOrbitCamera")?.route,
-  "#/api/hooks/use-orbit-camera",
+  multiPackageCoverage.values.get("defineThreeLayer")?.route,
+  "#/api/functions/define-three-layer",
 );
 assert.equal(
-  multiPackageCoverage.types.get("CRCOrbitCameraOptions")?.route,
-  "#/api/hooks/use-orbit-camera",
+  multiPackageCoverage.types.get("CRCThreeLayerDefinition")?.route,
+  "#/api/functions/define-three-layer",
 );
 assert.equal(
-  multiPackageCoverage.types.get("CRCWebGLVector3")?.route,
-  "#/api/types/webgl",
+  multiPackageCoverage.types.get("CRCThreeLayerContext")?.route,
+  "#/api/types/three",
 );
 assert.deepEqual(multiPackageCoverage.missingValues, []);
 assert.deepEqual(multiPackageCoverage.missingTypes, []);
@@ -158,7 +146,10 @@ assert.equal(coverage.values.get("Circle")?.route, "#/api/components/circle");
 assert.deepEqual(coverage.missingValues, []);
 assert.deepEqual(coverage.missingTypes, []);
 
-const crcInventory = await collectPublicExports(crcPublicEntryPaths, crcPublicCompilerOptions);
+const crcInventory = await collectPublicExports(
+  crcPublicEntryPaths,
+  crcPublicCompilerOptions,
+);
 const physicsInventory = await collectPublicExports(crcPhysicsEntryPaths, {});
 const studioInventory = await collectPublicExports(
   crcStudioPublicEntryPaths,
@@ -168,21 +159,16 @@ assert.equal(crcInventory.viz.values.length, 17);
 assert.equal(crcInventory.viz.types.length, 46);
 assert.ok(crcInventory.root.values.length > 0);
 assert.ok(crcInventory.root.types.length > 0);
-assert.equal(crcInventory.webgl.values.length, 15);
-assert.equal(crcInventory.webgl.types.length, 37);
+assert.equal(crcInventory.three.values.length, 1);
+assert.equal(crcInventory.three.types.length, 8);
 assert.equal(crcInventory.particles.values.length, 9);
-assert.equal(crcInventory.particles.types.length, 44);
-assert.equal(crcInventory.particlesWebgl.values.length, 2);
-assert.equal(crcInventory.particlesWebgl.types.length, 13);
+assert.equal(crcInventory.particles.types.length, 43);
 assert.equal(physicsInventory.root.values.length, 46);
 assert.equal(physicsInventory.root.types.length, 46);
 assert.equal(physicsInventory.physics2dGeometry.values.length, 19);
 assert.equal(physicsInventory.physics2dGeometry.types.length, 11);
-assert.equal(physicsInventory.physics3d.values.length, 48);
-assert.equal(physicsInventory.physics3d.types.length, 48);
 assert.equal(physicsInventory.physics3dGeometry.values.length, 18);
 assert.equal(physicsInventory.physics3dGeometry.types.length, 13);
-assert.deepEqual(studioInventory.physics3d, physicsInventory.physics3d);
 assert.deepEqual(
   studioInventory.physics3dGeometry,
   physicsInventory.physics3dGeometry,
@@ -190,10 +176,10 @@ assert.deepEqual(
 
 process.stdout.write(
   `Validated public API coverage: ${crcInventory.root.values.length} core values, ` +
-    `${crcInventory.root.types.length} core types, ${crcInventory.webgl.values.length} ` +
-    `WebGL values, ${crcInventory.webgl.types.length} WebGL types, ` +
-    `${crcInventory.particles.values.length + crcInventory.particlesWebgl.values.length} ` +
-    `particle values, ${crcInventory.particles.types.length + crcInventory.particlesWebgl.types.length} ` +
-    `particle type exports, ${physicsInventory.root.values.length} physics 2D values, and ` +
-    `${physicsInventory.physics3d.values.length} physics 3D values.\n`,
+    `${crcInventory.root.types.length} core types, ${crcInventory.three.values.length} ` +
+    `Three adapter value, ${crcInventory.three.types.length} Three adapter types, ` +
+    `${crcInventory.particles.values.length} particle values, ` +
+    `${crcInventory.particles.types.length} particle type exports, ` +
+    `${physicsInventory.root.values.length} physics 2D values, and ` +
+    `${physicsInventory.physics3dGeometry.values.length} pure physics 3D geometry values.\n`,
 );

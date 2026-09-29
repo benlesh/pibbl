@@ -136,8 +136,6 @@ import type {
 import type * as CoreTypes from '@crc/core/types';
 import * as ParticleRuntime from '@crc/particles';
 import type * as ParticleTypes from '@crc/particles';
-import * as ParticleWebGLRuntime from '@crc/particles/webgl';
-import type * as ParticleWebGLTypes from '@crc/particles/webgl';
 import * as ThreeRuntime from '@crc/three';
 import {
   defineThreeLayer,
@@ -159,32 +157,8 @@ import {
   type CRCParticleSystem,
   type Particles2DProps,
 } from '@crc/particles';
-import {
-  Particles3D,
-  defineParticleEffect3D,
-  type CRCParticleEffect3D,
-  type Particles3DProps,
-} from '@crc/particles/webgl';
-import * as WebGLRuntime from '@crc/webgl';
-import type * as WebGLTypes from '@crc/webgl';
-import * as Physics3DRuntime from '@crc/physics/3d';
 import * as Physics3DGeometry from '@crc/physics/3d/geometry';
-import type * as Physics3DTypes from '@crc/physics/3d';
 import type * as Physics3DGeometryTypes from '@crc/physics/3d/geometry';
-import {
-  useGLTF,
-  type CRCGLTFSource,
-  type CRCWebGLAssetLoadResult,
-} from '@crc/webgl/gltf';
-import {
-  submitWebGLInstanced,
-  type CRCWebGLBounds,
-  type CRCWebGLInstancedRecipe,
-  type CRCWebGLInstancedSubmission,
-  type CRCWebGLLookupTableRecipe,
-  type CRCWebGLSceneMaterialIntent,
-  type CRCWebGLSpriteRecipe,
-} from '@crc/webgl/internal';
 import {
   createBackendToken,
   defineBackendPrimitive,
@@ -333,56 +307,6 @@ type RemovedHookVocabulary = [
   typeof removedUseWhenChanged,
 ];
 void (null as unknown as RemovedHookVocabulary);
-import {
-  AmbientLight,
-  useAnimationFrame,
-  useOrbitCamera,
-  createWebGLGeometry,
-  Cube,
-  DirectionalLight,
-  Group3D,
-  HemisphereLight,
-  Mesh,
-  PointLight,
-  Sphere,
-  SpotLight,
-  WebGLBackground,
-  WebGLLayer,
-  type AmbientLightProps,
-  type AmbientLightStyle,
-  type CRCOrbitCameraHandlers,
-  type CRCOrbitCameraOptions,
-  type CRCOrbitCameraResult,
-  type CRCWebGLGeometry,
-  type CRCWebGLGeometryInput,
-  type CRCWebGLLambertMaterial,
-  type CRCWebGLMaterial,
-  type CRCPhysics3DPropExtension,
-  type CRCWebGLPerspectiveCamera,
-  type CRCWebGLShadowQuality,
-  type CRCWebGLTransformStyle,
-  type CRCWebGLVector3,
-  type CubeProps,
-  type CubeStyle,
-  type DirectionalLightProps,
-  type DirectionalLightStyle,
-  type Group3DProps,
-  type Group3DStyle,
-  type HemisphereLightProps,
-  type HemisphereLightStyle,
-  type MeshProps,
-  type MeshStyle,
-  type PointLightProps,
-  type PointLightStyle,
-  type SphereProps,
-  type SphereStyle,
-  type SpotLightProps,
-  type SpotLightStyle,
-  type WebGLBackgroundProps,
-  type WebGLBackgroundStyle,
-  type WebGLLayerProps,
-  type WebGLLayerStyle,
-} from '@crc/webgl';
 
 const packedParticleSize = particleRange(2, 6);
 const packedParticleCount = particleInteger(4, 8);
@@ -425,161 +349,24 @@ const packedParticleEffect2D = defineParticleEffect2D({
   ],
 });
 
-const packedParticleEffect3D = defineParticleEffect3D({
-  emitters: [
-    {
-      name: 'ember',
-      capacity: 64,
-      emission: [{ type: 'rate', particlesPerSecond: 12 }],
-      shape: { type: 'sphere', radius: 1, sample: 'volume' },
-      initial: {
-        lifetimeMilliseconds: particleRange(800, 1_200),
-        velocity: [0, particleRange(0.5, 1.2), 0],
-        size: packedParticleSize,
-        color: '#f97316',
-      },
-      appearance: { opacity: packedParticleOpacity, color: packedParticleGradient },
-      renderer: {
-        type: 'point',
-        material: 'emissive',
-        blend: 'additive',
-      },
-      bounds: { min: [-2, -1, -2], max: [2, 4, 2] },
-    },
-  ],
-});
-
 function PackedParticleScene() {
   const system = useParticleSystem(packedParticleEffect2D, {
     autoplay: false,
     seed: 42,
   });
-  return createElement(Group, {
-    children: [
-      createElement(Particles2D, {
-        system,
-        parameters: { intensity: 0.8 },
-        style: { width: 100, height: 100 },
-      }),
-      createElement(WebGLLayer, {
-        camera: {
-          type: 'perspective',
-          position: [0, 0, 5],
-          lookAt: [0, 0, 0],
-          up: [0, 1, 0],
-          fieldOfViewDegrees: 45,
-          near: 0.1,
-          far: 100,
-        },
-        style: { width: 100, height: 100 },
-        children: createElement(Particles3D, {
-          effect: packedParticleEffect3D,
-          autoplay: true,
-          seed: 42,
-          pointerEvents: 'none' as const,
-        }),
-      }),
-    ],
+  return createElement(Particles2D, {
+    system,
+    parameters: { intensity: 0.8 },
+    style: { width: 100, height: 100 },
   });
 }
 
 createElement(PackedParticleScene, {});
 void ParticleRuntime;
-void ParticleWebGLRuntime;
 void (undefined as unknown as ParticleTypes.CRCParticleEmitter2D);
-void (undefined as unknown as ParticleWebGLTypes.CRCParticleEmitter3D);
 void (undefined as unknown as CRCParticleEffect2D<'spark'>);
-void (undefined as unknown as CRCParticleEffect3D<'ember'>);
-void (undefined as unknown as CRCParticleSystem<'spark', CRCParticleParameterValues, 2>);
+void (undefined as unknown as CRCParticleSystem<'spark', CRCParticleParameterValues>);
 void (undefined as unknown as Particles2DProps<'spark'>);
-void (undefined as unknown as Particles3DProps<'ember'>);
-
-const packedInstancedRecipe = {
-  key: {},
-  topology: 'points',
-  vertexSource: '#version 300 es\nvoid main(){gl_Position=vec4(0.0);}',
-  fragmentSource: '#version 300 es\nout vec4 c;void main(){c=vec4(1.0);}',
-  verticesPerInstance: 1,
-  capacity: 1,
-  lookupTables: [],
-} satisfies CRCWebGLInstancedRecipe;
-const packedInstancedBounds = {
-  min: [-1, -1, -1],
-  max: [1, 1, 1],
-} satisfies CRCWebGLBounds;
-const packedMaterialIntent = {
-  type: 'unlit',
-  blend: 'alpha',
-} satisfies CRCWebGLSceneMaterialIntent;
-const packedInstancedSubmission = {
-  kind: 'instanced',
-  componentName: 'PackageConsumer',
-  source: undefined,
-  localModel: new Float32Array(16),
-  localBounds: packedInstancedBounds,
-  opacity: 1,
-  material: packedMaterialIntent,
-  depthTest: true,
-  depthWrite: false,
-  sorting: 'none',
-  target: undefined,
-  recipe: packedInstancedRecipe,
-  frameUniforms: new Float32Array(),
-} satisfies CRCWebGLInstancedSubmission;
-void submitWebGLInstanced;
-void packedInstancedSubmission;
-void (undefined as unknown as CRCWebGLLookupTableRecipe);
-void (undefined as unknown as CRCWebGLSpriteRecipe);
-void useGLTF;
-void (undefined as unknown as CRCGLTFSource);
-void (undefined as unknown as CRCWebGLAssetLoadResult);
-
-// @ts-expect-error traversal-time raw GL construction is not public
-void WebGLRuntime.defineWebGLPrimitive;
-// @ts-expect-error traversal-time raw GL context access is not public
-void WebGLRuntime.crcWebGLContext;
-
-// @ts-expect-error resolved camera matrices are package-private
-type RemovedCameraSnapshot = WebGLTypes.CRCWebGLCameraSnapshot;
-// @ts-expect-error traversal-time raw GL context is not public
-type RemovedContext = WebGLTypes.CRCWebGLContext;
-// @ts-expect-error raw primitive hit capability is not public
-type RemovedHitCapability = WebGLTypes.CRCWebGLHitCapability<unknown, unknown>;
-// @ts-expect-error raw primitive capabilities are not public
-type RemovedCapabilities = WebGLTypes.CRCWebGLPrimitiveCapabilities<
-  unknown,
-  never,
-  never,
-  never
->;
-// @ts-expect-error custom analytic hit input is not public
-type RemovedHitInput = WebGLTypes.CRCWebGLPrimitiveHitInput<unknown, unknown>;
-// @ts-expect-error backend primitive input is not public
-type RemovedPrimitiveInput = WebGLTypes.CRCWebGLPrimitiveInput<
-  unknown,
-  never,
-  never
->;
-// @ts-expect-error raw primitive render callback is not public
-type RemovedPrimitiveRender = WebGLTypes.CRCWebGLPrimitiveRender<
-  unknown,
-  unknown
->;
-// @ts-expect-error raw backend program props are not public
-type RemovedProgramProps = WebGLTypes.CRCWebGLProgramProps<unknown, never>;
-
-// @ts-expect-error internal library modules are outside the public export map
-import type { CRCEventRoot } from '@crc/core/lib/types';
-// @ts-expect-error package source modules are outside the public export map
-import type { CRCEventDefinition } from '@crc/core/src/lib/events/event-definitions';
-// @ts-expect-error WebGL library modules are outside the public export map
-import type { WebGLCompletedFrame } from '@crc/webgl/lib/backend';
-// @ts-expect-error WebGL package source modules are outside the public export map
-import type { WebGLRenderEnvironment } from '@crc/webgl/src/lib/render-environment';
-void (undefined as unknown as CRCEventRoot);
-void (undefined as unknown as CRCEventDefinition);
-void (undefined as unknown as WebGLCompletedFrame);
-void (undefined as unknown as WebGLRenderEnvironment);
 
 const packageConsumerBackendToken: CRCBackendToken =
   createBackendToken('package-consumer');
@@ -1819,199 +1606,6 @@ useCursor({ path: 'line', style: 'pointer' });
 // @ts-expect-error cursor configuration has no unrelated fields
 useCursor({ style: 'pointer', capture: true });
 
-const consumerWebGLGeometryInput = {
-  positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-  normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
-  indices: [0, 1, 2],
-} satisfies CRCWebGLGeometryInput;
-const consumerWebGLGeometry: CRCWebGLGeometry = createWebGLGeometry(
-  consumerWebGLGeometryInput,
-);
-const consumerWebGLVector: CRCWebGLVector3 = [0, 0, 5];
-const consumerShadowQualities = [
-  false,
-  'low',
-  'medium',
-  'high',
-] as const satisfies readonly CRCWebGLShadowQuality[];
-const consumerLambertMaterial: CRCWebGLMaterial = {
-  type: 'lambert',
-  emissiveColor: '#102040',
-  emissiveIntensity: 0.25,
-} satisfies CRCWebGLLambertMaterial;
-
-function AnimatedGeometryConsumer(): CRCNode {
-  const timestamp: number = useAnimationFrame();
-  return createElement(Mesh, {
-    geometry: consumerWebGLGeometry,
-    pointerEvents: 'none',
-    style: {
-      color: '#f7c948',
-      rotationYDegrees: timestamp / 10,
-    },
-  });
-}
-
-function OrbitingWebGLConsumer(): CRCNode {
-  const orbitOptions: CRCOrbitCameraOptions = {
-    orbitPoint: [0, 0, 0],
-    initialPosition: consumerWebGLVector,
-    minDistance: 2,
-    maxDistance: 12,
-    rotateSpeed: 0.8,
-    zoomSpeed: 1.2,
-  };
-  const orbit: CRCOrbitCameraResult = useOrbitCamera(orbitOptions);
-  const handlers: CRCOrbitCameraHandlers = orbit.handlers;
-  const camera: CRCWebGLPerspectiveCamera = {
-    type: 'perspective',
-    position: orbit.position,
-    lookAt: orbit.lookAt,
-    up: [0, 1, 0],
-    fieldOfViewDegrees: 45,
-    near: 0.1,
-    far: 100,
-  };
-  return createElement(Group, {
-    ...handlers,
-    children: [
-      createElement(Rectangle, {
-        style: { width: 320, height: 180, fill: 'transparent' },
-      }),
-      consumerShadowQualities.map(shadows =>
-        createElement(WebGLLayer, {
-          camera,
-          children: [
-            createElement(WebGLBackground, {
-              style: { color: '#08111fcc' },
-            }),
-            createElement(AmbientLight, {
-              style: { color: '#ffffff', intensity: 0.1 },
-            }),
-            createElement(HemisphereLight, {
-              style: {
-                skyColor: '#b9dcff',
-                groundColor: '#302418',
-                intensity: 0.3,
-                rotationZDegrees: 5,
-              },
-            }),
-            createElement(DirectionalLight, {
-              style: {
-                color: '#ffffff',
-                intensity: 1.2,
-                rotationXDegrees: -35,
-                rotationYDegrees: 45,
-                castShadow: false,
-              },
-            }),
-            createElement(PointLight, {
-              style: {
-                color: '#ff8a4c',
-                intensity: 4,
-                range: 12,
-                translateX: 3,
-                translateY: 4,
-                translateZ: 2,
-                castShadow: true,
-              },
-            }),
-            createElement(SpotLight, {
-              style: {
-                color: '#80c8ff',
-                intensity: 5,
-                range: 20,
-                innerConeAngleDegrees: 15,
-                outerConeAngleDegrees: 28,
-                translateX: -3,
-                translateY: 5,
-                translateZ: 4,
-                rotationXDegrees: -40,
-                castShadow: true,
-              },
-            }),
-            createElement(Group3D, {
-              children: [
-                createElement(Cube, {
-                  style: {
-                    color: '#74d3ae',
-                    size: 1,
-                    material: consumerLambertMaterial,
-                    castShadow: true,
-                    receiveShadow: false,
-                  },
-                }),
-                createElement(Sphere, {
-                  style: {
-                    radius: 0.5,
-                    translateX: 1,
-                    lit: false,
-                    castShadow: false,
-                    receiveShadow: true,
-                  },
-                }),
-                createElement(Mesh, {
-                  geometry: consumerWebGLGeometry,
-                  style: { color: '#f7c948' },
-                }),
-                createElement(AnimatedGeometryConsumer, {}),
-              ],
-              style: { rotationYDegrees: 15 },
-            }),
-          ],
-          style: { width: 320, height: 180, shadows },
-        }),
-      ),
-    ],
-  });
-}
-
-export const createElementWebGLScene = createElement(
-  OrbitingWebGLConsumer,
-  {},
-);
-
-// @ts-expect-error Canvas filters belong on WebGLLayer, never inner WebGL geometry
-createElement(Cube, { style: { filter: { type: 'blur', radius: 2 } } });
-
-type PublicWebGLTypes = [
-  AmbientLightProps,
-  AmbientLightStyle,
-  CRCOrbitCameraHandlers,
-  CRCOrbitCameraOptions,
-  CRCOrbitCameraResult,
-  CRCPhysics3DPropExtension,
-  CRCWebGLGeometry,
-  CRCWebGLGeometryInput,
-  CRCWebGLLambertMaterial,
-  CRCWebGLMaterial,
-  CRCWebGLPerspectiveCamera,
-  CRCWebGLShadowQuality,
-  CRCWebGLTransformStyle,
-  CRCWebGLVector3,
-  CubeProps,
-  CubeStyle,
-  DirectionalLightProps,
-  DirectionalLightStyle,
-  Group3DProps,
-  Group3DStyle,
-  HemisphereLightProps,
-  HemisphereLightStyle,
-  MeshProps,
-  MeshStyle,
-  PointLightProps,
-  PointLightStyle,
-  SphereProps,
-  SphereStyle,
-  SpotLightProps,
-  SpotLightStyle,
-  WebGLBackgroundProps,
-  WebGLBackgroundStyle,
-  WebGLLayerProps,
-  WebGLLayerStyle,
-];
-void (undefined as unknown as PublicWebGLTypes);
-
 const consumerPhysicsSphere = Physics3DGeometry.sphereShape3D({ radius: 1 });
 const consumerPhysicsBox = Physics3DGeometry.boxShape3D({
   width: 2,
@@ -2085,66 +1679,4 @@ export const physics3DGeometryConsumer = {
   ],
 };
 
-const physics3DBody = Physics3DRuntime.crcPhysicsBody3D();
-const physics3DWorld = Physics3DRuntime.crcPhysicsWorld3D();
-const physics3DAttachments: readonly Physics3DTypes.CRCPhysicsAttachment3D[] = [
-  Physics3DRuntime.dynamicBody3D({ handle: physics3DBody, mass: 1 }),
-  Physics3DRuntime.staticBody3D(),
-  Physics3DRuntime.kinematicBody3D(),
-  Physics3DRuntime.collider3D({ sensor: true }),
-];
-
-export const createElementPhysics3DScene = createElement(
-  WebGLLayer,
-  { children: undefined, style: { width: 320, height: 180 } },
-  createElement(
-    Physics3DRuntime.PhysicsWorld3D,
-    { gravity: [0, -9.81, 0] },
-    createElement(Group3D, { children: undefined, physics: physics3DAttachments[1] },
-      createElement(Cube, { physics: physics3DAttachments[0], style: { lit: false } }),
-      createElement(Sphere, { physics: physics3DAttachments[2], style: { lit: false } }),
-      createElement(Mesh, {
-        geometry: consumerWebGLGeometry,
-        physics: physics3DAttachments[3],
-        style: { lit: false },
-      }),
-      createElement(Physics3DRuntime.Box3D, { width: 1, height: 1, depth: 1 }),
-      createElement(Physics3DRuntime.Ellipsoid3D, { radii: [1, 2, 1] }),
-      createElement(Physics3DRuntime.Capsule3D, { start: [0, -1, 0], end: [0, 1, 0], radius: 0.5 }),
-      createElement(Physics3DRuntime.Cylinder3D, { radius: 1, halfHeight: 1 }),
-      createElement(Physics3DRuntime.Cone3D, { radius: 1, halfHeight: 1 }),
-      createElement(Physics3DRuntime.ConvexHull3D, {
-        points: [[-1, -1, -1], [1, -1, -1], [0, 1, -1], [0, 0, 1]],
-      }),
-      createElement(Physics3DRuntime.Heightfield3D, {
-        rows: 2,
-        columns: 2,
-        heights: [0, 0, 0, 0],
-      }),
-      createElement(Physics3DRuntime.PhysicsShape3D, { shape: consumerPhysicsSphere }),
-    ),
-  ),
-);
-
-void physics3DWorld;
-void [
-  Physics3DRuntime.applyForce3D,
-  Physics3DRuntime.applyImpulse3D,
-  Physics3DRuntime.applyTorque3D,
-  Physics3DRuntime.disableBody3D,
-  Physics3DRuntime.enableBody3D,
-  Physics3DRuntime.overlapShape3D,
-  Physics3DRuntime.queryAabb3D,
-  Physics3DRuntime.queryPoint3D,
-  Physics3DRuntime.raycast3D,
-  Physics3DRuntime.setAngularVelocity3D,
-  Physics3DRuntime.setLinearVelocity3D,
-  Physics3DRuntime.shapeCast3D,
-  Physics3DRuntime.sleepBody3D,
-  Physics3DRuntime.teleportBody3D,
-  Physics3DRuntime.wakeBody3D,
-];
-
-type PublicPhysics3DTypes = Physics3DTypes.CRCPhysicsWorld3DProps &
-  Physics3DGeometryTypes.CRCPhysicsShape3D;
-void (undefined as unknown as PublicPhysics3DTypes);
+void (undefined as unknown as Physics3DGeometryTypes.CRCPhysicsShape3D);

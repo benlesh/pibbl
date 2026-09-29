@@ -20,6 +20,7 @@ export function createDefaultPicker(
   const ndc = new Vector2();
   return (point) => {
     ndc.set((point.x / size.width) * 2 - 1, 1 - (point.y / size.height) * 2);
+    raycaster.layers.mask = camera.layers.mask;
     raycaster.setFromCamera(ndc, camera);
     const intersections = raycaster.intersectObject(scene, true);
     for (const intersection of intersections) {

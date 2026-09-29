@@ -170,7 +170,7 @@ Each frame has six ordered active phases:
 | Advance  | Run captured participants in registration order. Each participant may mutate signals only through its staging batch; a throwing participant loses only its staged writes and does not stop later participants.                 |
 | Commit   | Publish changed staged values, then notify all affected consumers after publication. Dirtiness produced by this sanctioned admission scope may join the current plan.                                                          |
 | Plan     | Drain eligible computed validation dependency-first without fail-fast behavior, capture resulting component dirtiness, and determine eligible root, Layer, and friend-renderer work. Admitted dirtiness may render this frame. |
-| Render   | Render roots in registration order and nested instances deepest-first. For a dirty WebGL island, child scene composition precedes settlement/rendering, which precedes ancestor Canvas composition.                            |
+| Render   | Render roots in registration order and nested instances deepest-first. For a dirty external render layer, its update/resize/render and interaction settlement precede ancestor Canvas composition.                             |
 | Complete | Commit successful root transactions, run captured ordinary and eligible renderer completions, restore idle state, and request any required follow-up frame.                                                                    |
 
 Outside a frame the scheduler phase is `idle`. `logicalTime` is the scheduler's
@@ -262,7 +262,3 @@ package-consumer, and Studio declaration suites are the executable evidence.
 - Animation values and hooks use these same reads and declared inputs, staging, frame
   phases, consumer boundaries, and ownership rules. Their specialized behavior
   lives in the [animation contract](./animation-contract.md).
-
-## First-class 3D physics scheduling
-
-One mounted awake `PhysicsWorld3D` owns one physics-lane Advance participant; its bodies, colliders, queries, handles, and presentations own none. Animation Advance stages kinematic inputs before physics runs bounded deterministic fixed ticks, then one shared Commit publishes body signals, one Plan admits dirtiness, one Render settles Canvas/WebGL output, and Complete delivers observed events. The world uses realm logical time and never creates another frame callback, timer, worker loop, public manual step, or independent clock.

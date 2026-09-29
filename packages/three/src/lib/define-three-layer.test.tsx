@@ -328,6 +328,42 @@ describe("defineThreeLayer picking", () => {
     }
   });
 
+  it("picks only objects rendered by the camera's active layers", () => {
+    const trace: string[] = [];
+    const Layer = defineThreeLayer<
+      {},
+      CRCThreeLayerResources & { visibleTarget: Mesh }
+    >({
+      create() {
+        const { scene, camera } = createResources();
+        camera.layers.set(1);
+
+        const hiddenBlocker = createBox();
+        hiddenBlocker.position.z = 1;
+
+        const visibleTarget = createBox();
+        visibleTarget.layers.set(1);
+        scene.add(hiddenBlocker, visibleTarget);
+        return { scene, camera, visibleTarget };
+      },
+      targets(resources) {
+        return [
+          {
+            object: resources.visibleTarget,
+            handlers: { onClick: () => trace.push("target") },
+          },
+        ];
+      },
+    });
+    const mounted = mount(<Layer style={{ width: 100, height: 100 }} />);
+    try {
+      click(mounted.canvas, 50, 50);
+      expect(trace).toEqual(["target"]);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
   it.each(["object", "ancestor"] as const)(
     "targets the nearest registered %s",
     (registration) => {
@@ -524,6 +560,36 @@ describe("defineThreeLayer picking", () => {
       expect(bounds?.y).toBeCloseTo(37.5, 5);
       expect(bounds?.width).toBeCloseTo(25, 5);
       expect(bounds?.height).toBeCloseTo(25, 5);
+    } finally {
+      mounted.dispose();
+    }
+  });
+
+  it("does not focus an implicitly bounded target behind the camera", () => {
+    const mesh = createBox();
+    mesh.position.z = 10;
+    const Layer = defineThreeLayer<{}, CRCThreeLayerResources>({
+      create() {
+        const { scene, camera } = createResources();
+        scene.add(mesh);
+        return { scene, camera };
+      },
+      targets() {
+        return [{ object: mesh, keyboardFocusable: true }];
+      },
+    });
+    const mounted = mount(
+      <FocusManagement>
+        <Layer style={{ width: 100, height: 100 }} />
+      </FocusManagement>,
+    );
+    try {
+      const targets = Array.from(
+        getCRCInstance(mounted.canvas).eventRoot.targets,
+      );
+      expect(targets.some((candidate) => candidate.keyboardFocusable)).toBe(
+        false,
+      );
     } finally {
       mounted.dispose();
     }

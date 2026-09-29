@@ -9,14 +9,14 @@ export type LearningSectionId =
   | "user-events"
   | "keyboard-focus"
   | "advanced-interactions"
-  | "webgl";
+  | "three";
 
 export type LearningAuthoring = "jsx" | "createElement";
 
 export type LearningBrowseGroup =
   | "drawing"
   | "composition"
-  | "webgl"
+  | "three"
   | "layout"
   | "events-and-interaction"
   | "focus-and-keyboard";

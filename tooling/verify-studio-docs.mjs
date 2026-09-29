@@ -329,7 +329,7 @@ async function existingStudioContract(page) {
   await page.getByRole("button", { name: "Reset" }).waitFor({ timeout: 30_000 });
   await page.getByRole("button", { name: "Share" }).waitFor({ timeout: 30_000 });
 
-  const threeRoute = "#/examples/composition/three-instancing";
+  const threeRoute = "#/examples/three/three-instancing";
   await open(page, threeRoute);
   await expectMainHeading(page, threeRoute, "Three.js instancing");
   await page

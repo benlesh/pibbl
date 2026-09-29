@@ -39,8 +39,8 @@ function publicLocation(entry: (typeof learningExampleCatalog)[number]): string 
       return 'Drawing';
     case 'composition':
       return 'Composition';
-    case 'webgl':
-      return 'WebGL';
+    case 'three':
+      return 'Three.js';
     case 'layout':
       return 'Layout';
     case 'events-and-interaction':

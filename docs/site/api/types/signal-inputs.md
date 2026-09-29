@@ -14,7 +14,8 @@ keywords: [signals, props, style, children, inputs, ownership]
 
 CRC-provided components accept signals wherever reactive replacement is
 meaningful: drawing and layout geometry, style fields, text, animation inputs,
-and applicable official WebGL, particles, physics, and visualization inputs.
+and applicable official render-layer, Three.js, particles, physics, and
+visualization inputs.
 Plain values take the same direct path as before.
 
 ## SignalValue

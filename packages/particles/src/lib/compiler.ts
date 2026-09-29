@@ -7,11 +7,8 @@ import {
 } from "./curve.js";
 import {
   getParticleEffect2DRecord,
-  getParticleEffect3DRecord,
   type ParticleEffect2DRecord,
-  type ParticleEffect3DRecord,
   type ParticleEmitter2DRecord,
-  type ParticleEmitter3DRecord,
 } from "./definition-records.js";
 import {
   compileEmissionSchedule,
@@ -34,15 +31,7 @@ import type {
   CRCParticleScalar,
   CRCParticleShape2D,
   CRCParticleVector2,
-  CRCParticleVector3,
 } from "./types.js";
-import type {
-  CRCParticleConeVelocity3D,
-  CRCParticleEffect3D,
-  CRCParticleInitial3D,
-  CRCParticleMotion3D,
-  CRCParticleShape3D,
-} from "./webgl-types.js";
 
 export const ParameterTimingMask = Object.freeze({
   Spawn: 1,
@@ -58,7 +47,7 @@ export interface CompiledParameterEntry {
   readonly type: CRCParticleParameterDefinition["type"];
   readonly timing: CRCParticleParameterDefinition["timing"];
   readonly offset: number;
-  readonly length: 1 | 2 | 3 | 4;
+  readonly length: 1 | 2 | 4;
 }
 
 export interface CompiledParameterLayout {
@@ -71,7 +60,7 @@ export interface CompiledParameterLayout {
 }
 
 export interface CompiledParameterReference<
-  Length extends 1 | 2 | 3 | 4 = 1 | 2 | 3 | 4,
+  Length extends 1 | 2 | 4 = 1 | 2 | 4,
 > {
   readonly kind: "parameter";
   readonly offset: number;
@@ -93,10 +82,6 @@ export type CompiledScalar =
 
 export type CompiledVector2 =
   readonly [CompiledScalar, CompiledScalar] | CompiledParameterReference<2>;
-
-export type CompiledVector3 =
-  | readonly [CompiledScalar, CompiledScalar, CompiledScalar]
-  | CompiledParameterReference<3>;
 
 export type CompiledColor =
   | Readonly<{ kind: "constant"; color: ParticleColor; channel: number }>
@@ -149,56 +134,6 @@ export type CompiledMotion2D =
     }>
   | Readonly<{ type: "angularVelocity"; degreesPerSecond: CompiledScalar }>;
 
-export interface CompiledInitial3D {
-  readonly lifetime: CompiledScalar;
-  readonly velocity:
-    | Readonly<{
-        type: "vector";
-        value: CompiledVector3;
-      }>
-    | Readonly<{
-        type: "cone";
-        direction: CompiledVector3;
-        speed: CompiledScalar;
-        spreadDegrees: CompiledScalar;
-        polarChannel: number;
-        azimuthChannel: number;
-      }>;
-  readonly size: CompiledVector2;
-  readonly rotation: CompiledScalar;
-  readonly angularVelocity: CompiledScalar;
-  readonly color: CompiledColor;
-  readonly opacity: CompiledScalar;
-}
-
-export type CompiledMotion3D =
-  | Readonly<{
-      type: "acceleration" | "gravity" | "drift";
-      value: CompiledVector3;
-    }>
-  | Readonly<{ type: "drag"; amount: CompiledScalar }>
-  | Readonly<{
-      type: "radialAcceleration";
-      center: readonly [number, number, number];
-      amount: CompiledScalar;
-    }>
-  | Readonly<{
-      type: "orbit";
-      center: readonly [number, number, number];
-      axis: CompiledVector3;
-      degreesPerSecond: CompiledScalar;
-    }>
-  | Readonly<{
-      type: "sway";
-      direction: CompiledVector3;
-      amplitude: CompiledScalar;
-      frequency: CompiledScalar;
-    }>
-  | Readonly<{
-      type: "angularVelocity";
-      degreesPerSecond: CompiledVector3;
-    }>;
-
 export interface CompiledEmitter2D {
   readonly dimension: 2;
   readonly name: string;
@@ -216,23 +151,6 @@ export interface CompiledEmitter2D {
   readonly bounds: ParticleEmitter2DRecord["bounds"];
 }
 
-export interface CompiledEmitter3D {
-  readonly dimension: 3;
-  readonly name: string;
-  readonly emitterHash: number;
-  readonly capacity: number;
-  readonly overflow: "reject-newest" | "recycle-oldest";
-  readonly shape: CRCParticleShape3D;
-  readonly shapeChannels: readonly [number, number, number];
-  readonly initial: CompiledInitial3D;
-  readonly motion: readonly CompiledMotion3D[];
-  readonly appearance: CompiledAppearance;
-  readonly emission: CompiledEmissionSchedule;
-  readonly maximumLifetime: CompiledMaximumLifetime;
-  readonly renderer: ParticleEmitter3DRecord["renderer"];
-  readonly bounds: ParticleEmitter3DRecord["bounds"];
-}
-
 export interface CompiledExecutionCapability {
   readonly supported: boolean;
   readonly reasons: readonly string[];
@@ -240,10 +158,6 @@ export interface CompiledExecutionCapability {
 
 export interface CompiledExecutionCapabilities {
   readonly "stateless-canvas": CompiledExecutionCapability;
-  readonly "stateful-canvas": CompiledExecutionCapability;
-  readonly "stateless-webgl": CompiledExecutionCapability;
-  readonly "stateful-cpu-webgl": CompiledExecutionCapability;
-  readonly "stateful-gpu-webgl": CompiledExecutionCapability;
 }
 
 export interface CompiledEffect2D {
@@ -253,26 +167,16 @@ export interface CompiledEffect2D {
   readonly execution: CompiledExecutionCapabilities;
 }
 
-export interface CompiledEffect3D {
-  readonly dimension: 3;
-  readonly parameterLayout: CompiledParameterLayout;
-  readonly emitters: readonly CompiledEmitter3D[];
-  readonly execution: CompiledExecutionCapabilities;
-}
-
 const compiled2D = new WeakMap<CRCParticleEffect2D, CompiledEffect2D>();
-const compiled3D = new WeakMap<CRCParticleEffect3D, CompiledEffect3D>();
 
 function parameterLength(
   type: CRCParticleParameterDefinition["type"],
-): 1 | 2 | 3 | 4 {
+): 1 | 2 | 4 {
   switch (type) {
     case "number":
       return 1;
     case "vector2":
       return 2;
-    case "vector3":
-      return 3;
     case "color":
       return 4;
   }
@@ -345,7 +249,7 @@ function channelFor(path: string): number {
   return hashEmitterName(path);
 }
 
-export function compileParameterReference<Length extends 1 | 2 | 3 | 4>(
+export function compileParameterReference<Length extends 1 | 2 | 4>(
   reference: CRCParticleParameterReference<string>,
   layout: CompiledParameterLayout,
   expectedDimension: Length,
@@ -447,40 +351,10 @@ function compileScalarVector2(
   ] as const);
 }
 
-function compileScalarVector3(
-  value: CRCParticleVector3,
-  layout: CompiledParameterLayout,
-  path: string,
-): CompiledVector3 {
-  if (!Array.isArray(value)) {
-    return compileParameterReference(
-      value as CRCParticleParameterReference<string>,
-      layout,
-      3,
-      path,
-    );
-  }
-  return Object.freeze([
-    compileScalar(value[0], layout, `${path}[0]`),
-    compileScalar(value[1], layout, `${path}[1]`),
-    compileScalar(value[2], layout, `${path}[2]`),
-  ] as const);
-}
-
 function isScalarVector2(
   value: unknown,
 ): value is readonly [CRCParticleScalar, CRCParticleScalar] {
   return Array.isArray(value);
-}
-
-function isConeVelocity3D(value: unknown): value is CRCParticleConeVelocity3D {
-  return (
-    value !== null &&
-    typeof value === "object" &&
-    !Array.isArray(value) &&
-    "type" in value &&
-    value.type === "cone"
-  );
 }
 
 function compileColor(
@@ -641,68 +515,6 @@ function compileInitial2D(
   });
 }
 
-function compileInitial3D(
-  initial: CRCParticleInitial3D,
-  layout: CompiledParameterLayout,
-): CompiledInitial3D {
-  let velocity: CompiledInitial3D["velocity"];
-  if (isConeVelocity3D(initial.velocity)) {
-    velocity = Object.freeze({
-      type: "cone",
-      direction: compileScalarVector3(
-        initial.velocity.direction,
-        layout,
-        "initial.velocity.direction",
-      ),
-      speed: compileScalar(
-        initial.velocity.speed,
-        layout,
-        "initial.velocity.speed",
-      ),
-      spreadDegrees: compileScalar(
-        initial.velocity.spreadDegrees,
-        layout,
-        "initial.velocity.spreadDegrees",
-      ),
-      polarChannel: channelFor("initial.velocity.conePolar"),
-      azimuthChannel: channelFor("initial.velocity.coneAzimuth"),
-    });
-  } else {
-    velocity = Object.freeze({
-      type: "vector",
-      value:
-        initial.velocity === undefined
-          ? Object.freeze([
-              compileScalar(0, layout, "initial.velocity[0]"),
-              compileScalar(0, layout, "initial.velocity[1]"),
-              compileScalar(0, layout, "initial.velocity[2]"),
-            ] as const)
-          : compileScalarVector3(initial.velocity, layout, "initial.velocity"),
-    });
-  }
-  return Object.freeze({
-    lifetime: compileScalar(
-      initial.lifetimeMilliseconds,
-      layout,
-      "initial.lifetimeMilliseconds",
-    ),
-    velocity,
-    size: compileSize(initial.size, layout),
-    rotation: compileScalar(
-      initial.rotationDegrees ?? 0,
-      layout,
-      "initial.rotationDegrees",
-    ),
-    angularVelocity: compileScalar(
-      initial.angularVelocityDegreesPerSecond ?? 0,
-      layout,
-      "initial.angularVelocityDegreesPerSecond",
-    ),
-    color: compileColor(initial.color, layout, "initial.color"),
-    opacity: compileScalar(initial.opacity ?? 1, layout, "initial.opacity"),
-  });
-}
-
 function compileAppearance(
   appearance: CRCParticleAppearance | undefined,
 ): CompiledAppearance {
@@ -799,84 +611,6 @@ function compileMotion2D(
   );
 }
 
-function compileMotion3D(
-  motion: readonly CRCParticleMotion3D[],
-  layout: CompiledParameterLayout,
-): readonly CompiledMotion3D[] {
-  return Object.freeze(
-    motion.map((module, index): CompiledMotion3D => {
-      const path = `motion[${index}]`;
-      switch (module.type) {
-        case "acceleration":
-        case "gravity":
-          return Object.freeze({
-            type: module.type,
-            value: compileScalarVector3(module.value, layout, `${path}.value`),
-          });
-        case "drift":
-          return Object.freeze({
-            type: module.type,
-            value: compileScalarVector3(
-              module.velocity,
-              layout,
-              `${path}.velocity`,
-            ),
-          });
-        case "drag":
-          return Object.freeze({
-            type: module.type,
-            amount: compileScalar(module.amount, layout, `${path}.amount`),
-          });
-        case "radialAcceleration":
-          return Object.freeze({
-            type: module.type,
-            center: module.center,
-            amount: compileScalar(module.amount, layout, `${path}.amount`),
-          });
-        case "orbit":
-          return Object.freeze({
-            type: module.type,
-            center: module.center,
-            axis: compileScalarVector3(module.axis, layout, `${path}.axis`),
-            degreesPerSecond: compileScalar(
-              module.degreesPerSecond,
-              layout,
-              `${path}.degreesPerSecond`,
-            ),
-          });
-        case "sway":
-          return Object.freeze({
-            type: module.type,
-            direction: compileScalarVector3(
-              module.direction,
-              layout,
-              `${path}.direction`,
-            ),
-            amplitude: compileScalar(
-              module.amplitude,
-              layout,
-              `${path}.amplitude`,
-            ),
-            frequency: compileSwayFrequency(
-              module.frequency,
-              layout,
-              `${path}.frequency`,
-            ),
-          });
-        case "angularVelocity":
-          return Object.freeze({
-            type: module.type,
-            degreesPerSecond: compileScalarVector3(
-              module.degreesPerSecond,
-              layout,
-              `${path}.degreesPerSecond`,
-            ),
-          });
-      }
-    }),
-  );
-}
-
 function executionCapability(
   supported: boolean,
   reasons: readonly string[] = [],
@@ -894,43 +628,6 @@ function execution2D(
         ? []
         : record.capabilities.requiresStateful,
     ),
-    "stateful-canvas": executionCapability(false, [
-      "stateful Canvas execution is unavailable in Project 1",
-    ]),
-    "stateless-webgl": executionCapability(false, [
-      "2D particle effects require Canvas execution",
-    ]),
-    "stateful-cpu-webgl": executionCapability(false, [
-      "2D particle effects require Canvas execution",
-    ]),
-    "stateful-gpu-webgl": executionCapability(false, [
-      "2D particle effects require Canvas execution",
-    ]),
-  });
-}
-
-function execution3D(
-  record: ParticleEffect3DRecord,
-): CompiledExecutionCapabilities {
-  return Object.freeze({
-    "stateless-canvas": executionCapability(false, [
-      "3D particle effects require WebGL execution",
-    ]),
-    "stateful-canvas": executionCapability(false, [
-      "3D particle effects require WebGL execution",
-    ]),
-    "stateless-webgl": executionCapability(
-      record.capabilities.statelessWebGL,
-      record.capabilities.statelessWebGL
-        ? []
-        : record.capabilities.requiresStateful,
-    ),
-    "stateful-cpu-webgl": executionCapability(false, [
-      "stateful CPU WebGL execution is unavailable in Project 1",
-    ]),
-    "stateful-gpu-webgl": executionCapability(false, [
-      "stateful GPU WebGL execution is unavailable in Project 1",
-    ]),
   });
 }
 
@@ -962,34 +659,6 @@ function compileEmitter2D(
   });
 }
 
-function compileEmitter3D(
-  emitter: ParticleEmitter3DRecord,
-  layout: CompiledParameterLayout,
-): CompiledEmitter3D {
-  const initial = compileInitial3D(emitter.initial, layout);
-  const maximumLifetime = compileMaximumLifetime(initial.lifetime);
-  return Object.freeze({
-    dimension: 3,
-    name: emitter.name,
-    emitterHash: emitter.nameHash,
-    capacity: emitter.capacity,
-    overflow: emitter.overflow ?? "reject-newest",
-    shape: emitter.shape,
-    shapeChannels: Object.freeze([
-      channelFor("shape.sample[0]"),
-      channelFor("shape.sample[1]"),
-      channelFor("shape.sample[2]"),
-    ] as const),
-    initial,
-    motion: compileMotion3D(emitter.motion ?? [], layout),
-    appearance: compileAppearance(emitter.appearance),
-    emission: compileEmissionSchedule(emitter.emission, maximumLifetime),
-    maximumLifetime,
-    renderer: emitter.renderer,
-    bounds: emitter.bounds,
-  });
-}
-
 export function compileParticleEffect2D(
   effect: CRCParticleEffect2D,
 ): CompiledEffect2D {
@@ -1008,26 +677,5 @@ export function compileParticleEffect2D(
     execution: execution2D(record),
   });
   compiled2D.set(effect, plan);
-  return plan;
-}
-
-export function compileParticleEffect3D(
-  effect: CRCParticleEffect3D,
-): CompiledEffect3D {
-  const cached = compiled3D.get(effect);
-  if (cached !== undefined) return cached;
-  const record = getParticleEffect3DRecord(effect);
-  const parameterLayout = compileParameterLayout(record.parameters);
-  const plan = Object.freeze({
-    dimension: 3 as const,
-    parameterLayout,
-    emitters: Object.freeze(
-      record.emitters.map((emitter) =>
-        compileEmitter3D(emitter, parameterLayout),
-      ),
-    ),
-    execution: execution3D(record),
-  });
-  compiled3D.set(effect, plan);
   return plan;
 }

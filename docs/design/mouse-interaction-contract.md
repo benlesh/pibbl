@@ -1,7 +1,7 @@
 # CRC mouse interaction contract
 
 Status: current geometry, coordinates, cursor, and observer contract, updated
-for WebGL lighting, orbit-camera, and genuine-shadow behavior on 2026-09-15.
+for external render-layer and Three.js interaction on 2026-09-28.
 The DOM-aligned [user-event contract](./user-events-contract.md)
 superseded this document's mouse-only non-propagation, hidden related-target,
 no-cancellation, no-capture, and sibling no-activation clauses on 2026-08-29.
@@ -27,7 +27,7 @@ The platform evidence is consistent on the important shape: mouse events target 
 
 ## Terms
 
-- **Paint target:** a default-participating Canvas path, geometry-backed WebGL object, or explicit Canvas target registration. Its identity is the owning mounted component plus that target slot, not a particular handler function.
+- **Paint target:** a default-participating Canvas path, committed render-layer target, or explicit Canvas target registration. Its identity is the owning mounted component plus that target slot, not a particular handler function.
 - **Logical target:** the one live paint/custom target selected for a native mouse event.
 - **Paint order:** the order in which CRC composites interactive paths, including layers. Later paint is visually above earlier paint.
 - **Live target:** a region still owned by the current rendered tree with the target generation selected for dispatch.
@@ -55,9 +55,10 @@ without replacing the keyed/tree-slot component preserves identity.
    deepest painted interactive child remains the hit target.
 8. Cursor selection uses this same target. It must not run a separate “first cursor handler to write” policy.
 
-Canvas and WebGL drawing primitives participate by default even without a
-handler or cursor. `pointerEvents="none"` releases one leaf from coordinate and
-focus participation while leaving paint unchanged. Hit eligibility follows
+Canvas drawing primitives and committed render-layer targets participate by
+default even without a handler or cursor. `pointerEvents="none"` releases one
+leaf or layer from coordinate and focus participation while leaving paint
+unchanged. Hit eligibility follows
 declared geometry rather than rendered opacity: a configured transparent fill
 is still a fill hit area, and zero opacity does not disable interaction. A
 Canvas path with neither a fill hit area nor a positive stroke interaction
@@ -87,18 +88,14 @@ Pathless observers remain ordered per-type Sets outside the target registry. A p
 
 One root dispatcher owns interaction state across the root Canvas and every nested layer. Each Canvas instance retains local paint entries; layer entries compose their child entries into the root order at the exact `drawImage` position. Target resolution walks that composition in reverse paint order, applies every accumulated transform, clip, and layer bound, and returns the stable leaf-region identity. Layers therefore do not double-dispatch, create independent hover state, or compete for the cursor.
 
-A `WebGLLayer` adds one nested resolver at its Canvas bitmap position. After
-outer clip/bounds rejection, it maps the root point through the inverse Canvas
-world transform to layer-local coordinates and delegates to its committed scene
-picker. Uncovered background reports miss whether the clear is transparent,
-alpha, or opaque. Analytic lights, materials, normals, and shadow maps add no
-paint candidate or hit geometry. The picker consumes geometry,
-model matrix, camera, and source index from the same settled mesh submissions as
-the renderer, uses one camera ray and nearest supported WebGL depth, and chooses
-the later source index for an equal-depth tie. Opaque/transparent raster queues
-and transparent blend order do not change this target order. Object or
-complete-island `pointerEvents="none"` permits a lower WebGL or Canvas target to
-win. The picker performs no `readPixels` or hidden ID render.
+An external render layer adds one nested resolver at its Canvas bitmap
+position. After outer clip/bounds rejection, it maps the root point through the
+inverse Canvas world transform to layer-local coordinates and delegates to its
+committed interaction snapshot. The result is a registered target, a blocking
+visual hit, or a miss interpreted by the layer's miss policy. Complete-layer
+`pointerEvents="none"` permits a lower Canvas target to win. The Three adapter's
+default picker uses a Three raycaster rather than pixel readback or a hidden ID
+render.
 
 Layout placement is another transform in that same composition. A region inside
 Absolute, Overlay, Flow, Flex, or Grid is hit at ancestor transform × placement
@@ -201,22 +198,12 @@ This mapping excludes borders and padding and remains correct for every fixed
 fit, responsive layout, rounded backing size, and device density.
 `originalEvent.clientX/Y` remain CSS viewport coordinates; the native event is
 not rewritten. Component transforms and layout placements affect hit testing,
-not public root-coordinate values. Nested Canvas layers convert the root point
-through their composition transform before testing layer-local geometry. A
-nested WebGL island then derives normalized-device coordinates and a camera ray
-from its logical layer size. Selected WebGL leaves retain public root-logical
-event coordinates; layer-local/NDC/ray values remain private resolver inputs. See
-the [Canvas surface contract](./canvas-surface-contract.md) for the complete
-projection model.
-
-`useOrbitCamera()` consumes those root-logical pointer coordinates through its
-ordinary handler bundle. At default speed each captured primary-pointer pixel
-changes the matching spherical angle by `0.01` radians; its polar clamp prevents
-camera flips. Authors may attach the bundle to a geometry target or a listener
-ancestor, but an ancestor needs an explicit backing target to receive empty-
-viewport drags. Orbit camera movement changes presentation only: committed
-mesh geometry remains the source of target/focus resolution, and valid
-light-space shadow depth can be reused.
+not public root-coordinate values. Nested Canvas layers and external render
+layers convert the root point through their composition transform before
+testing layer-local geometry. Selected external targets retain public
+root-logical event coordinates; renderer-local coordinates remain private
+resolver inputs. See the [Canvas surface contract](./canvas-surface-contract.md)
+for the complete projection model.
 
 Clips form an intersection: the point must be inside every active clip and the
 target path. `lineInteractionWidth` expands only that candidate's stroke hit
@@ -276,6 +263,10 @@ JSX or `createElement` over branded `CRCElement` descriptors.
 - [W3C CSSOM View — MouseEvent coordinate extensions](https://www.w3.org/TR/cssom-view/#extensions-to-the-mouseevent-interface)
 - [WHATWG HTML — Canvas paths, clipping, hit testing, and drawing images](https://html.spec.whatwg.org/multipage/canvas.html)
 
-## 3D physics queries
+## External 3D geometry
 
-Mouse and pointer events report root-logical Canvas coordinates and WebGL renderer targets; they are not physics query results. A physics interaction explicitly projects the pointer through the committed camera to a world-space ray, calls the authoritative `@crc/physics/3d` query surface, and sends commands through a generation-bound body handle. Queries neither synthesize DOM events nor start a private simulation/render loop.
+Mouse and pointer events report root-logical Canvas coordinates and committed
+render-layer targets; they are not physics query results. A Three integration
+projects through its committed camera and raycasts its scene or invokes the
+application's picker. Pure `@crc/physics/3d/geometry` operations neither
+synthesize DOM events nor start a simulation or render loop.

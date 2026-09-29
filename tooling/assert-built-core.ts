@@ -7,10 +7,11 @@ const BUILT_ENTRY_SUFFIXES = new Map([
   ['@crc/core/internal', '/packages/core/dist/internal.mjs'],
   ['@crc/core/jsx-runtime', '/packages/core/dist/jsx-runtime.mjs'],
   ['@crc/core/jsx-dev-runtime', '/packages/core/dist/jsx-dev-runtime.mjs'],
-  ['@crc/core/internal', '/packages/core/dist/internal.mjs'],
   ['@crc/three', '/packages/three/dist/index.mjs'],
-  ['@crc/webgl', '/packages/webgl/dist/index.mjs'],
-  ['@crc/webgl/internal', '/packages/webgl/dist/internal.mjs'],
+  ['@crc/particles', '/packages/particles/dist/index.mjs'],
+  ['@crc/physics/2d', '/packages/physics/dist/2d.mjs'],
+  ['@crc/physics/2d/geometry', '/packages/physics/dist/2d-geometry.mjs'],
+  ['@crc/physics/3d/geometry', '/packages/physics/dist/3d-geometry.mjs'],
 ]);
 
 export function assertBuiltCore(): Plugin {
@@ -40,7 +41,8 @@ export function assertBuiltCore(): Plugin {
         normalizedId.includes('/packages/viz/src/') ||
         normalizedId.includes('/packages/core/src/') ||
         normalizedId.includes('/packages/three/src/') ||
-        normalizedId.includes('/packages/webgl/src/')
+        normalizedId.includes('/packages/particles/src/') ||
+        normalizedId.includes('/packages/physics/src/')
       ) {
         this.error(`Built mode loaded CRC source instead of package output: ${id}`);
       }

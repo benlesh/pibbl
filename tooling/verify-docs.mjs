@@ -76,14 +76,12 @@ const publicGuidePaths = [
   "docs/site/learn/guides/focus-and-keyboard.md",
   "docs/site/learn/guides/jsx-troubleshooting.md",
   "docs/site/learn/guides/particle-effects.md",
-  "docs/site/learn/guides/physics-3d.md",
   "docs/site/learn/guides/react-integration.md",
   "docs/site/learn/guides/signals-and-animation.md",
   "docs/site/learn/guides/state-and-lifecycle.md",
   "docs/site/learn/guides/style-and-draw.md",
   "docs/site/learn/guides/responsive-styles.md",
-  "docs/site/learn/guides/webgl-islands.md",
-  "docs/site/learn/guides/webgl-lighting.md",
+  "docs/site/learn/guides/three-js.md",
 ];
 const publicSiteMarkdownPaths = [
   "docs/site/learn/guides/data-visualization.md",
@@ -107,46 +105,31 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-scale.md",
   "docs/site/api/index.md",
   "docs/site/api/components/absolute.md",
-  "docs/site/api/components/ambient-light.md",
   "docs/site/api/components/arc.md",
   "docs/site/api/components/circle.md",
   "docs/site/api/components/clip.md",
-  "docs/site/api/components/cube.md",
-  "docs/site/api/components/directional-light.md",
   "docs/site/api/components/ellipse.md",
   "docs/site/api/components/flex.md",
   "docs/site/api/components/flow.md",
   "docs/site/api/components/focus-management.md",
   "docs/site/api/components/grid.md",
-  "docs/site/api/components/group-3d.md",
   "docs/site/api/components/group.md",
-  "docs/site/api/components/hemisphere-light.md",
   "docs/site/api/components/horizontal-line.md",
   "docs/site/api/components/image.md",
   "docs/site/api/components/keyboard-navigation.md",
   "docs/site/api/components/layer.md",
   "docs/site/api/components/line.md",
-  "docs/site/api/components/mesh.md",
-  "docs/site/api/components/model.md",
   "docs/site/api/components/overlay.md",
   "docs/site/api/components/path.md",
   "docs/site/api/components/particles-2d.md",
-  "docs/site/api/components/particles-3d.md",
-  "docs/site/api/components/physics-shape-3d.md",
-  "docs/site/api/components/physics-world-3d.md",
-  "docs/site/api/components/point-light.md",
   "docs/site/api/components/polygon.md",
   "docs/site/api/components/rectangle.md",
   "docs/site/api/components/regular-polygon.md",
   "docs/site/api/components/star.md",
-  "docs/site/api/components/sphere.md",
-  "docs/site/api/components/spot-light.md",
   "docs/site/api/components/svg-path.md",
   "docs/site/api/components/text.md",
   "docs/site/api/components/vertical-line.md",
   "docs/site/api/components/wedge.md",
-  "docs/site/api/components/webgl-background.md",
-  "docs/site/api/components/webgl-layer.md",
   "docs/site/api/functions/batch.md",
   "docs/site/api/functions/crc.md",
   "docs/site/api/functions/computed.md",
@@ -160,10 +143,10 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/create-regular-polygon-path.md",
   "docs/site/api/functions/create-star-path.md",
   "docs/site/api/functions/create-svg-path.md",
-  "docs/site/api/functions/create-webgl-geometry.md",
   "docs/site/api/functions/create-wedge-path.md",
   "docs/site/api/functions/define-animation.md",
   "docs/site/api/functions/define-render-layer.md",
+  "docs/site/api/functions/define-three-layer.md",
   "docs/site/api/functions/define-primitive.md",
   "docs/site/api/functions/easing.md",
   "docs/site/api/functions/is-signal.md",
@@ -174,9 +157,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/normalize-edges.md",
   "docs/site/api/functions/parallel.md",
   "docs/site/api/functions/define-particle-effect-2d.md",
-  "docs/site/api/functions/define-particle-effect-3d.md",
   "docs/site/api/functions/particle-descriptors.md",
-  "docs/site/api/functions/physics-3d.md",
+  "docs/site/api/functions/physics-3d-geometry.md",
   "docs/site/api/functions/repeat.md",
   "docs/site/api/functions/resolve-signal-value.md",
   "docs/site/api/functions/resolve-box.md",
@@ -189,7 +171,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/tween.md",
   "docs/site/api/functions/untracked.md",
   "docs/site/api/functions/wait.md",
-  "docs/site/api/hooks/use-animation-frame.md",
   "docs/site/api/hooks/use-canvas-context.md",
   "docs/site/api/hooks/use-computed.md",
   "docs/site/api/hooks/use-const.md",
@@ -199,7 +180,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-event-target.md",
   "docs/site/api/hooks/use-layout-box.md",
   "docs/site/api/hooks/use-line-path.md",
-  "docs/site/api/hooks/use-orbit-camera.md",
   "docs/site/api/hooks/use-particle-system.md",
   "docs/site/api/hooks/use-playback.md",
   "docs/site/api/hooks/use-rect-path.md",
@@ -208,18 +188,16 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-signal.md",
   "docs/site/api/hooks/use-svg-path.md",
   "docs/site/api/hooks/use-transition.md",
-  "docs/site/api/hooks/crc-physics-body-3d.md",
-  "docs/site/api/hooks/crc-physics-world-3d.md",
   "docs/site/api/types/canvas-runtime.md",
   "docs/site/api/types/elements-components.md",
   "docs/site/api/types/events.md",
   "docs/site/api/types/filters.md",
   "docs/site/api/types/layout.md",
   "docs/site/api/types/particles.md",
-  "docs/site/api/types/physics-3d.md",
+  "docs/site/api/types/physics-3d-geometry.md",
   "docs/site/api/types/signal-inputs.md",
   "docs/site/api/types/styles.md",
-  "docs/site/api/types/webgl.md",
+  "docs/site/api/types/three.md",
   "docs/site/learn/index.md",
   "docs/site/learn/tutorials/diagram-editor/index.md",
   "docs/site/learn/tutorials/diagram-editor/canvas-scene.md",
@@ -245,7 +223,6 @@ const currentMarkdownPaths = [
   "packages/physics/README.md",
   "packages/three/README.md",
   "packages/types/README.md",
-  "packages/webgl/README.md",
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
@@ -256,6 +233,7 @@ const currentMarkdownPaths = [
   "docs/design/layout-system-contract.md",
   "docs/design/mouse-interaction-contract.md",
   "docs/design/runtime-hooks-contract.md",
+  "docs/design/render-layer-and-three-contract.md",
   "docs/design/runtime-resource-ownership.md",
   "docs/design/signals-and-scheduling-contract.md",
   "docs/design/style-system-contract.md",
@@ -289,8 +267,6 @@ const migrationMarkdownPaths = new Set([
 const operationalMarkdownPaths = new Set([
   ".beads/README.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
-  "playground/public/models/crc-static-glb-slice.LICENSE.md",
-  "playground/public/models/khronos-static-glb-gallery.LICENSE.md",
   "tooling/studio-docs/fixtures/invalid-script.md",
   "tooling/studio-docs/fixtures/valid-guide.md",
 ]);
@@ -837,15 +813,15 @@ async function typecheckCompleteSnippets(snippets) {
               "@crc/particles": [
                 join(repositoryRoot, "packages/particles/src/index.ts"),
               ],
-              "@crc/particles/webgl": [
-                join(repositoryRoot, "packages/particles/src/webgl.ts"),
-              ],
               "@crc/viz": [join(repositoryRoot, "packages/viz/src/index.ts")],
-              "@crc/webgl": [
-                join(repositoryRoot, "packages/webgl/src/index.ts"),
+              "@crc/three": [
+                join(repositoryRoot, "packages/three/src/index.ts"),
               ],
-              "@crc/physics/3d": [
-                join(repositoryRoot, "packages/physics/src/3d.ts"),
+              "@crc/physics/2d": [
+                join(repositoryRoot, "packages/physics/src/2d.ts"),
+              ],
+              "@crc/physics/2d/geometry": [
+                join(repositoryRoot, "packages/physics/src/2d-geometry.ts"),
               ],
               "@crc/physics/3d/geometry": [
                 join(repositoryRoot, "packages/physics/src/3d-geometry.ts"),
@@ -1580,16 +1556,16 @@ const devRuntimeSource = await readFile(
   join(repositoryRoot, "packages/core/src/jsx-dev-runtime.ts"),
   "utf8",
 );
-const webglSource = await readFile(
-  join(repositoryRoot, "packages/webgl/src/index.ts"),
+const threeSource = await readFile(
+  join(repositoryRoot, "packages/three/src/index.ts"),
   "utf8",
 );
 const particlesSource = await readFile(
   join(repositoryRoot, "packages/particles/src/index.ts"),
   "utf8",
 );
-const particlesWebglSource = await readFile(
-  join(repositoryRoot, "packages/particles/src/webgl.ts"),
+const physics3dGeometrySource = await readFile(
+  join(repositoryRoot, "packages/physics/src/3d-geometry.ts"),
   "utf8",
 );
 const rootExports = exportedSpecifiers(
@@ -1604,17 +1580,17 @@ const devRuntimeExports = exportedSpecifiers(
   devRuntimeSource,
   "packages/core/src/jsx-dev-runtime.ts",
 );
-const webglExports = exportedSpecifiers(
-  webglSource,
-  "packages/webgl/src/index.ts",
+const threeExports = exportedSpecifiers(
+  threeSource,
+  "packages/three/src/index.ts",
 );
 const particleExports = exportedSpecifiers(
   particlesSource,
   "packages/particles/src/index.ts",
 );
-const particleWebglExports = exportedSpecifiers(
-  particlesWebglSource,
-  "packages/particles/src/webgl.ts",
+const physics3dGeometryExports = exportedSpecifiers(
+  physics3dGeometrySource,
+  "packages/physics/src/3d-geometry.ts",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => rootExports.values.has(name)),
@@ -1639,14 +1615,14 @@ assertSameNames(
   "Documented jsx-dev-runtime values",
 );
 assertSameNames(
-  [...documentedApiSymbols].filter((name) => webglExports.values.has(name)),
-  webglExports.values,
-  "Documented @crc/webgl runtime values",
+  [...documentedApiSymbols].filter((name) => threeExports.values.has(name)),
+  threeExports.values,
+  "Documented @crc/three runtime values",
 );
 assertSameNames(
-  [...documentedApiSymbols].filter((name) => webglExports.types.has(name)),
-  webglExports.types,
-  "Documented @crc/webgl types",
+  [...documentedApiSymbols].filter((name) => threeExports.types.has(name)),
+  threeExports.types,
+  "Documented @crc/three types",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => particleExports.values.has(name)),
@@ -1660,24 +1636,29 @@ assertSameNames(
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) =>
-    particleWebglExports.values.has(name),
+    physics3dGeometryExports.values.has(name),
   ),
-  particleWebglExports.values,
-  "Documented @crc/particles/webgl runtime values",
+  physics3dGeometryExports.values,
+  "Documented @crc/physics/3d/geometry runtime values",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) =>
-    particleWebglExports.types.has(name),
+    physics3dGeometryExports.types.has(name),
   ),
-  particleWebglExports.types,
-  "Documented @crc/particles/webgl types",
+  physics3dGeometryExports.types,
+  "Documented @crc/physics/3d/geometry types",
 );
-const vizSource = await readFile(join(repositoryRoot, "packages/viz/src/index.ts"), "utf8");
+const vizSource = await readFile(
+  join(repositoryRoot, "packages/viz/src/index.ts"),
+  "utf8",
+);
 const vizExports = exportedSpecifiers(vizSource, "packages/viz/src/index.ts");
-for (const kind of ["values", "types"]) assertSameNames(
-  [...documentedApiSymbols].filter(name => vizExports[kind].has(name)),
-  vizExports[kind], `Documented @crc/viz ${kind}`,
-);
+for (const kind of ["values", "types"])
+  assertSameNames(
+    [...documentedApiSymbols].filter((name) => vizExports[kind].has(name)),
+    vizExports[kind],
+    `Documented @crc/viz ${kind}`,
+  );
 const namespaceMembers = jsxNamespaceMembers(
   runtimeSource,
   "packages/core/src/jsx-runtime.ts",
@@ -1716,55 +1697,71 @@ for (const dependencies of [
   assert.ok(!dependencies?.react, "@crc/core must not depend on React.");
 }
 assert.match(coreManifest.description, /JSX.*createElement/u);
-const webglManifest = JSON.parse(
-  await readFile(join(repositoryRoot, "packages/webgl/package.json"), "utf8"),
+const threeManifest = JSON.parse(
+  await readFile(join(repositoryRoot, "packages/three/package.json"), "utf8"),
 );
 assert.deepEqual(
-  Object.keys(webglManifest.exports),
-  [".", "./gltf", "./internal", "./package.json"],
-  "@crc/webgl must expose only its root, GLB loader, official internal seam, and manifest entries.",
+  Object.keys(threeManifest.exports),
+  [".", "./package.json"],
+  "@crc/three must expose only its adapter root and manifest entries.",
 );
 assert.deepEqual(
-  webglManifest.peerDependencies,
-  { "@crc/core": "0.0.1" },
-  "@crc/webgl must use the matching @crc/core release as its only peer.",
+  threeManifest.peerDependencies,
+  { "@crc/core": "0.0.1", three: "^0.186.0" },
+  "@crc/three must peer on the matching @crc/core release and application's Three.js.",
 );
 assert.equal(
-  webglManifest.dependencies,
+  threeManifest.dependencies,
   undefined,
-  "@crc/webgl must not ship a second runtime dependency graph.",
+  "@crc/three must not ship a second renderer dependency graph.",
 );
-assert.equal(webglManifest.sideEffects, false);
+assert.equal(threeManifest.sideEffects, false);
 for (const dependencies of [
-  webglManifest.dependencies,
-  webglManifest.devDependencies,
-  webglManifest.peerDependencies,
+  threeManifest.dependencies,
+  threeManifest.devDependencies,
+  threeManifest.peerDependencies,
 ]) {
-  assert.ok(!dependencies?.react, "@crc/webgl must not depend on React.");
+  assert.ok(!dependencies?.react, "@crc/three must not depend on React.");
   assert.ok(
     !dependencies?.["@crc/types"],
-    "@crc/webgl must not depend on @crc/types.",
+    "@crc/three must not depend on @crc/types.",
   );
 }
 const particlesManifest = JSON.parse(
-  await readFile(join(repositoryRoot, "packages/particles/package.json"), "utf8"),
+  await readFile(
+    join(repositoryRoot, "packages/particles/package.json"),
+    "utf8",
+  ),
 );
 assert.deepEqual(
   Object.keys(particlesManifest.exports),
-  [".", "./webgl", "./package.json"],
-  "@crc/particles must expose its Canvas root and optional WebGL subpath.",
+  [".", "./package.json"],
+  "@crc/particles must expose its Canvas root and manifest only.",
 );
 assert.deepEqual(
   particlesManifest.peerDependencies,
-  { "@crc/core": "0.0.1", "@crc/webgl": "0.0.1" },
-  "@crc/particles must use matching core and WebGL peer releases.",
-);
-assert.equal(
-  particlesManifest.peerDependenciesMeta?.["@crc/webgl"]?.optional,
-  true,
-  "@crc/particles must keep the WebGL peer optional for root-only consumers.",
+  { "@crc/core": "0.0.1" },
+  "@crc/particles must use the matching core peer release only.",
 );
 assert.equal(particlesManifest.sideEffects, false);
+const physicsManifest = JSON.parse(
+  await readFile(join(repositoryRoot, "packages/physics/package.json"), "utf8"),
+);
+assert.deepEqual(
+  Object.keys(physicsManifest.exports),
+  ["./2d", "./2d/geometry", "./3d/geometry"],
+  "@crc/physics must expose only its 2D runtime and pure geometry entries.",
+);
+assert.deepEqual(
+  physicsManifest.peerDependencies,
+  { "@crc/core": "0.0.1" },
+  "@crc/physics must not retain a renderer-coupled peer.",
+);
+assert.equal(
+  physicsManifest.peerDependenciesMeta?.["@crc/core"]?.optional,
+  true,
+);
+assert.equal(physicsManifest.sideEffects, false);
 const typesManifest = JSON.parse(
   await readFile(join(repositoryRoot, "packages/types/package.json"), "utf8"),
 );
@@ -1988,7 +1985,11 @@ const requiredGuideMarkers = new Map([
   ],
   [
     "docs/site/learn/guides/state-and-lifecycle.md",
-    ["immediate Canvas runtime", "useReaction", "## Identity, failure, and disposal"],
+    [
+      "immediate Canvas runtime",
+      "useReaction",
+      "## Identity, failure, and disposal",
+    ],
   ],
   [
     "docs/site/learn/guides/author-without-jsx.md",
@@ -2021,11 +2022,12 @@ const contractPrecisionRequirements = new Map([
       "Sample registered playbacks in registration order",
       "Validate and publish every playback's stages",
       "Validate computed dependencies and collect the exact dirty",
-      "Repaint planned Layer children before ancestors",
+      "Repaint planned Layer and render-layer children before ancestors",
+      "a dirty external render layer updates, renders, and settles interaction before ancestor Canvas composition",
       "Finalize successful transactions, release ended runs/leases",
       "accept them\ndirectly at declared inputs",
       "CRC never automatically promotes\na stable component",
-      "The official `@crc/webgl` integration is a lockstep friend",
+      "External render layers and the official `@crc/three` adapter use this same",
       "CRC exposes no public scheduler clock, frame-step API,\ntrace history",
       "Future worker or WASM number crunching may use packed buffers only if Begin",
     ],
@@ -2141,6 +2143,7 @@ const currentNormativeContractPaths = [
 const postBaselineNormativeContractPaths = new Set([
   "docs/design/animation-contract.md",
   "docs/design/signals-and-scheduling-contract.md",
+  "docs/design/render-layer-and-three-contract.md",
 ]);
 const baselineSnapshotContractPaths = currentNormativeContractPaths.filter(
   (path) => !postBaselineNormativeContractPaths.has(path),
@@ -2198,8 +2201,11 @@ const postBaselineSignalContractRecord = postBaselineContractRecordsByPath.get(
 );
 const postBaselineAnimationContractRecord =
   postBaselineContractRecordsByPath.get("docs/design/animation-contract.md");
+const postBaselineThreeContractRecord = postBaselineContractRecordsByPath.get(
+  "docs/design/render-layer-and-three-contract.md",
+);
 
-export function assertSettledScenePostBaselineApprovals({
+export function assertThreePivotPostBaselineApprovals({
   animationRecord,
   signalRecord,
 }) {
@@ -2212,115 +2218,48 @@ export function assertSettledScenePostBaselineApprovals({
   assert.deepEqual(
     animationMappings.get("scheduler-render-webgl-lifecycle")
       ?.supplementalApprovals,
-    [
-      {
-        recordId: "webgl-settled-scene-rendering",
-        unitIds: ["v0078", "v0079"],
-      },
-    ],
-    "Animation Render lifecycle unit m0042 must retain exact settled-scene supplemental approval",
+    [{ recordId: "three-full-pivot", unitIds: ["p0005", "p0028"] }],
+    "Animation Render lifecycle unit m0042 must retain exact render-layer pivot approval",
   );
   assert.deepEqual(
     animationMappings.get("webgl-animation-scene-lifecycle")
       ?.supplementalApprovals,
-    [
-      {
-        recordId: "webgl-settled-scene-rendering",
-        unitIds: ["v0078", "v0079", "v0115", "v0160"],
-      },
-    ],
-    "Animation WebGL lifecycle unit m0051 must retain exact settled-scene supplemental approval",
+    [{ recordId: "three-full-pivot", unitIds: ["p0005", "p0026", "p0028"] }],
+    "Animation external-layer lifecycle unit m0051 must retain exact pivot approval",
   );
   assert.deepEqual(
     signalMappings.get("realm-render-webgl-lifecycle")?.supplementalApprovals,
-    [
-      {
-        recordId: "webgl-settled-scene-rendering",
-        unitIds: ["v0078", "v0079"],
-      },
-    ],
-    "Scheduler Render lifecycle unit s0023 must retain exact settled-scene supplemental approval",
+    [{ recordId: "three-full-pivot", unitIds: ["p0005", "p0028"] }],
+    "Scheduler Render lifecycle unit s0023 must retain exact render-layer pivot approval",
   );
 }
 
-assertSettledScenePostBaselineApprovals({
+assertThreePivotPostBaselineApprovals({
   animationRecord: postBaselineAnimationContractRecord,
   signalRecord: postBaselineSignalContractRecord,
 });
 
-export function assertSettledSceneDrawingApprovals(manifest) {
+export function assertThreePivotDrawingApprovals(manifest) {
   const additionsById = new Map(
     manifest.additions.map((addition) => [addition.id, addition]),
   );
-  const supplementalAdditionIds = manifest.additions
-    .filter(({ supplementalApprovals }) => supplementalApprovals !== undefined)
-    .map(({ id }) => id);
+  const pivot = additionsById.get("three-pivot-drawing-components-contract");
   assert.deepEqual(
-    supplementalAdditionIds,
-    ["webgl-settled-drawing-custom-geometry"],
-    "Only the reviewed drawing custom-geometry unit may use supplemental baseline-addition approval",
+    pivot?.currentIds,
+    ["c0045", "c0046", "c0047", "c0054", "c0063", "c0066", "c0075"],
+    "Drawing contract must isolate the approved render-layer, Three, and pure-geometry clauses",
   );
   assert.deepEqual(
-    additionsById.get("webgl-drawing-contract-table-preservation")?.currentIds,
-    ["c0041"],
-    "Drawing export-contract table framing must remain isolated as unit c0041",
-  );
-  assert.deepEqual(
-    additionsById.get("webgl-drawing-contract-table-preservation")?.approval,
+    pivot?.approval,
     {
-      recordId: "webgl-islands",
-      unitIds: ["w0172"],
+      recordId: "three-full-pivot",
+      unitIds: ["p0003", "p0005", "p0006", "p0008", "p0024", "p0029", "p0030"],
     },
-    "Drawing export-contract table framing must retain exact historical approval",
-  );
-  assert.deepEqual(
-    additionsById.get("webgl-settled-drawing-public-surface-evidence")
-      ?.currentIds,
-    ["c0045"],
-    "Drawing public-surface evidence must remain isolated as unit c0045",
-  );
-  assert.deepEqual(
-    additionsById.get("webgl-settled-drawing-public-surface-evidence")
-      ?.approval,
-    {
-      recordId: "webgl-settled-scene-rendering",
-      unitIds: [
-        "v0045",
-        "v0046",
-        "v0047",
-        "v0048",
-        "v0049",
-        "v0050",
-        "v0228",
-        "v0229",
-      ],
-    },
-    "Drawing public-surface evidence must retain exact settled-scene inventory and verification approval",
-  );
-  const customGeometry = additionsById.get(
-    "webgl-settled-drawing-custom-geometry",
-  );
-  assert.deepEqual(
-    customGeometry?.approval,
-    {
-      recordId: "webgl-settled-scene-rendering",
-      unitIds: ["v0075"],
-    },
-    "Drawing custom-geometry unit must retain exact declarative-extension approval",
-  );
-  assert.deepEqual(
-    customGeometry?.supplementalApprovals,
-    [
-      {
-        recordId: "webgl-islands",
-        unitIds: ["w0075"],
-      },
-    ],
-    "Drawing custom-geometry unit must retain exact geometry-validation supplemental approval",
+    "Drawing contract must retain exact Three-pivot design approval",
   );
 }
 
-assertSettledSceneDrawingApprovals(contractPreservationBaseline);
+assertThreePivotDrawingApprovals(contractPreservationBaseline);
 const postBaselineContractResults =
   contractPreservationBaseline.postBaselineContracts.map((record) =>
     assertPostBaselineContractPreservation({
@@ -2393,7 +2332,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     publicPackage?.currentIds,
-    ["c0058"],
+    ["c0056"],
     "Public-package JSX translation must remain isolated from signal additions",
   );
   assert.deepEqual(
@@ -2414,7 +2353,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     deterministicEvidence?.currentIds,
-    ["c0061"],
+    ["c0059"],
     "Deterministic-evidence JSX translation must remain isolated from signal additions",
   );
   assert.deepEqual(
@@ -2436,7 +2375,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     publicSignalAddition?.currentIds,
-    ["c0060"],
+    ["c0058"],
     "Public signal package proof must remain a separate semantic addition",
   );
   const signalEvidenceAddition = additionsById.get(
@@ -2452,7 +2391,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     signalEvidenceAddition?.currentIds,
-    ["c0064"],
+    ["c0061"],
     "Signal evidence proof must remain a separate semantic addition",
   );
 }
@@ -2526,8 +2465,8 @@ const trackedContractEvidencePaths = new Set(
     "packages/core/test",
     "packages/physics/src",
     "packages/physics/test",
-    "packages/webgl/src",
-    "packages/webgl/test",
+    "packages/three/src",
+    "packages/three/test",
   ]),
 );
 const requestedContractEvidencePaths = new Set(
@@ -2636,7 +2575,7 @@ const matrixRequirements = [
       "site/learn/guides/configure-jsx.md",
       "site/learn/guides/react-integration.md",
     ],
-    evidence: ["verify-packed-consumer.mjs"],
+    evidence: ["verify-packed-pivot.mjs"],
   },
   {
     topic: /Vite\/esbuild setup/u,
@@ -2789,88 +2728,56 @@ const matrixRequirements = [
     evidence: ["public-api.test.ts"],
   },
   {
-    topic: /One JSX runtime, package setup, cameras/u,
-    guides: [
-      "site/learn/guides/webgl-islands.md",
-      "design/drawing-components-contract.md",
-    ],
-    evidence: ["webgl-islands.example.tsx", "webgl-lab.example.tsx"],
-  },
-  {
-    topic: /Fixed Canvas\/WebGL targeting/u,
-    guides: [
-      "site/learn/guides/webgl-islands.md",
-      "design/user-events-contract.md",
-      "design/focus-and-keyboard-navigation-contract.md",
-    ],
-    evidence: ["events-integration.test.tsx", "webgl-lab.test.ts"],
-  },
-  {
-    topic: /Declarative custom WebGL geometry/u,
-    guides: [
-      "site/learn/guides/custom-components-and-primitives.md",
-      "design/runtime-resource-ownership.md",
-    ],
-    evidence: ["mesh.test.tsx", "webgl-ownership.test.ts"],
-  },
-  {
-    topic: /Analytic lighting, local Lambert/u,
-    guides: [
-      "site/learn/guides/webgl-lighting.md",
-      "design/drawing-components-contract.md",
-      "design/style-system-contract.md",
-    ],
-    evidence: [
-      "multiple-lights.example.tsx",
-      "lighting-rendering.test.tsx",
-      "webgl-lighting-lab.test.ts",
-    ],
-  },
-  {
-    topic: /Orbit handlers, genuine shadows/u,
-    guides: [
-      "site/learn/guides/webgl-lighting.md",
-      "site/api/hooks/use-orbit-camera.md",
-      "design/runtime-resource-ownership.md",
-    ],
-    evidence: [
-      "use-orbit-camera.test.tsx",
-      "shadows.test.ts",
-      "shadow-resources.test.ts",
-      "webgl-lighting-lab.test.ts",
-    ],
-  },
-  {
-    topic: /Deterministic Canvas and instanced WebGL particle effects/u,
+    topic: /Deterministic Canvas particle effects/u,
     guides: [
       "site/learn/guides/particle-effects.md",
       "site/api/types/particles.md",
     ],
+    evidence: ["particle-effects.example.tsx"],
+  },
+  {
+    topic: /Renderer-independent 3D geometry/u,
+    guides: [
+      "site/api/functions/physics-3d-geometry.md",
+      "site/api/types/physics-3d-geometry.md",
+    ],
+    evidence: ["shapes.test.ts", "casts.test.ts"],
+  },
+  {
+    topic: /Generic external-renderer lifecycle/u,
+    guides: [
+      "site/api/functions/define-render-layer.md",
+      "design/render-layer-and-three-contract.md",
+      "design/runtime-resource-ownership.md",
+    ],
+    evidence: ["define-render-layer.test.tsx"],
+  },
+  {
+    topic: /Direct Three.js scenes/u,
+    guides: [
+      "site/learn/guides/three-js.md",
+      "site/api/functions/define-three-layer.md",
+      "site/api/types/three.md",
+    ],
     evidence: [
-      "particle-effects.example.tsx",
-      "embers.example.tsx",
-      "fireflies.example.tsx",
+      "three-layer.example.tsx",
+      "three-instancing.example.tsx",
+      "define-three-layer.test.tsx",
     ],
   },
   {
-    topic: /CRC-owned 3D worlds, geometry, inference/u,
+    topic: /Canvas\/Three paint order/u,
     guides: [
-      "site/learn/guides/physics-3d.md",
-      "site/api/components/physics-world-3d.md",
-      "design/signals-and-scheduling-contract.md",
-      "design/runtime-resource-ownership.md",
+      "site/learn/guides/three-js.md",
+      "design/user-events-contract.md",
+      "design/focus-and-keyboard-navigation-contract.md",
     ],
-    evidence: [
-      "world.test.ts",
-      "controller.test.tsx",
-      "presentation.test.tsx",
-      "physics-3d-slice.test.ts",
-    ],
+    evidence: ["three-layer.example.tsx", "three-instancing.example.tsx"],
   },
   {
     topic: /Default drawing participation migration/u,
     guides: ["migrations/default-pointer-participation.md"],
-    evidence: ["events-integration.test.tsx", "public-pointer-events.test.ts"],
+    evidence: ["public-pointer-events.test.ts"],
   },
 ];
 
@@ -2933,13 +2840,14 @@ export function assertAcceptanceMatrix(matrixSource) {
 }
 
 const libraryStatus = currentSources.get("docs/library-status.md");
+const normalizedLibraryStatus = libraryStatus.replace(/\s+/gu, " ");
 assert.match(
-  libraryStatus,
+  normalizedLibraryStatus,
   new RegExp(`\\b${rootExports.types.size} root type imports\\b`, "u"),
   "Library status public-type count is stale.",
 );
 assert.match(
-  libraryStatus,
+  normalizedLibraryStatus,
   new RegExp(
     `\\b${contractPreservationResult.baselineUnitCount} preserved baseline units and ` +
       `${contractPreservationResult.currentUnitCount} current semantic units across all ` +
@@ -2949,7 +2857,7 @@ assert.match(
   "Library status baseline/current semantic-unit counts are stale.",
 );
 assert.match(
-  libraryStatus,
+  normalizedLibraryStatus,
   new RegExp(
     `\\b${currentNormativeContractPaths.length} current normative contracts\\b`,
     "u",
@@ -2957,7 +2865,7 @@ assert.match(
   "Library status current normative-contract count is stale.",
 );
 assert.match(
-  libraryStatus,
+  normalizedLibraryStatus,
   new RegExp(
     `\\b${postBaselineUnitCount} exhaustively mapped post-baseline units\\b`,
     "u",
@@ -2965,7 +2873,7 @@ assert.match(
   "Library status post-baseline semantic-unit count is stale.",
 );
 assert.match(
-  libraryStatus,
+  normalizedLibraryStatus,
   new RegExp(
     `\\b${contractPreservationResult.evidenceMappingCount} unique direct source/test mappings\\b`,
     "u",
@@ -2974,18 +2882,19 @@ assert.match(
 );
 export function assertTrustGatePreservationCounts(
   source,
-  { currentUnitCount, evidenceMappingCount },
+  { currentUnitCount, snapshotContractCount, evidenceMappingCount },
 ) {
+  const normalizedSource = source.replace(/\s+/gu, " ");
   assert.match(
-    source,
+    normalizedSource,
     new RegExp(
-      `\\bcomplete reviewed current form \\(${currentUnitCount} units\\)`,
+      `\\bcomplete reviewed current form \\(${currentUnitCount} units across ${snapshotContractCount} baseline-snapshotted contracts\\)`,
       "u",
     ),
     "Trust-gate current semantic-unit count is stale.",
   );
   assert.match(
-    source,
+    normalizedSource,
     new RegExp(
       `\\bThe ${evidenceMappingCount} direct source/test mappings\\b`,
       "u",
@@ -2997,6 +2906,7 @@ export function assertTrustGatePreservationCounts(
 const trustGate = currentSources.get("docs/testing/trust-gate.md");
 const trustGatePreservationCounts = {
   currentUnitCount: contractPreservationResult.currentUnitCount,
+  snapshotContractCount: contractPreservationBaseline.contracts.length,
   evidenceMappingCount: contractPreservationResult.evidenceMappingCount,
 };
 assertTrustGatePreservationCounts(trustGate, trustGatePreservationCounts);
@@ -3113,8 +3023,8 @@ export async function verifyMutationProbes() {
     /failed typecheck/u,
   );
   const staleTrustGateUnitCount = trustGate.replace(
-    `(${trustGatePreservationCounts.currentUnitCount} units)`,
-    `(${trustGatePreservationCounts.currentUnitCount - 1} units)`,
+    `${trustGatePreservationCounts.currentUnitCount} units across ${trustGatePreservationCounts.snapshotContractCount} baseline-snapshotted contracts`,
+    `${trustGatePreservationCounts.currentUnitCount - 1} units across ${trustGatePreservationCounts.snapshotContractCount} baseline-snapshotted contracts`,
   );
   assert.notEqual(
     staleTrustGateUnitCount,
@@ -3165,6 +3075,15 @@ export async function verifyMutationProbes() {
       ),
     /Current normative contract inventory/u,
   );
+  throws(
+    () =>
+      assertCurrentNormativeContractInventory(
+        currentNormativeContractPaths.filter(
+          (path) => path !== "docs/design/render-layer-and-three-contract.md",
+        ),
+      ),
+    /Current normative contract inventory/u,
+  );
   const alteredSignalContract = replaceContractUnit(
     currentSources.get("docs/design/signals-and-scheduling-contract.md"),
     "s",
@@ -3194,6 +3113,38 @@ export async function verifyMutationProbes() {
         approvalRecordsById,
       }),
     /reviewed complete semantic inventory/u,
+  );
+  const alteredThreeContract = replaceContractUnit(
+    currentSources.get("docs/design/render-layer-and-three-contract.md"),
+    "t",
+    "t0016",
+    "The adapter silently replaces the application's Three scene on every frame.",
+  );
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: postBaselineThreeContractRecord,
+        currentSource: alteredThreeContract,
+        approvalRecordsById,
+      }),
+    /reviewed complete semantic inventory/u,
+  );
+  const unmappedThreeContract = structuredClone(
+    postBaselineThreeContractRecord,
+  );
+  unmappedThreeContract.mappings
+    .find(({ id }) => id === "three-js-adapter")
+    .currentIds.shift();
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: unmappedThreeContract,
+        currentSource: currentSources.get(
+          "docs/design/render-layer-and-three-contract.md",
+        ),
+        approvalRecordsById,
+      }),
+    /current text is not exhaustively mapped/u,
   );
   const unmappedSignalContract = structuredClone(
     postBaselineSignalContractRecord,
@@ -3232,20 +3183,20 @@ export async function verifyMutationProbes() {
       }),
     /current text is not exhaustively mapped/u,
   );
-  const missingSettledSceneApproval = structuredClone(
+  const missingPivotRenderApproval = structuredClone(
     postBaselineAnimationContractRecord,
   );
-  const renderLifecycleMapping = missingSettledSceneApproval.mappings.find(
+  const renderLifecycleMapping = missingPivotRenderApproval.mappings.find(
     ({ id }) => id === "scheduler-render-webgl-lifecycle",
   );
   delete renderLifecycleMapping.supplementalApprovals;
   throws(
     () =>
-      assertSettledScenePostBaselineApprovals({
-        animationRecord: missingSettledSceneApproval,
+      assertThreePivotPostBaselineApprovals({
+        animationRecord: missingPivotRenderApproval,
         signalRecord: postBaselineSignalContractRecord,
       }),
-    /m0042 must retain exact settled-scene supplemental approval/u,
+    /m0042 must retain exact render-layer pivot approval/u,
   );
   const incompleteAnimationSceneApproval = structuredClone(
     postBaselineAnimationContractRecord,
@@ -3253,34 +3204,34 @@ export async function verifyMutationProbes() {
   const animationSceneMapping = incompleteAnimationSceneApproval.mappings.find(
     ({ id }) => id === "webgl-animation-scene-lifecycle",
   );
-  animationSceneMapping.supplementalApprovals[0].unitIds = ["v0160"];
+  animationSceneMapping.supplementalApprovals[0].unitIds = ["p0026"];
   throws(
     () =>
-      assertSettledScenePostBaselineApprovals({
+      assertThreePivotPostBaselineApprovals({
         animationRecord: incompleteAnimationSceneApproval,
         signalRecord: postBaselineSignalContractRecord,
       }),
-    /m0051 must retain exact settled-scene supplemental approval/u,
+    /m0051 must retain exact pivot approval/u,
   );
-  const missingDrawingGeometryApproval = structuredClone(
+  const incompleteDrawingPivotUnits = structuredClone(
     contractPreservationBaseline,
   );
-  delete missingDrawingGeometryApproval.additions.find(
-    ({ id }) => id === "webgl-settled-drawing-custom-geometry",
-  ).supplementalApprovals;
+  incompleteDrawingPivotUnits.additions
+    .find(({ id }) => id === "three-pivot-drawing-components-contract")
+    .currentIds.pop();
   throws(
-    () => assertSettledSceneDrawingApprovals(missingDrawingGeometryApproval),
-    /custom-geometry unit may use supplemental baseline-addition approval/u,
+    () => assertThreePivotDrawingApprovals(incompleteDrawingPivotUnits),
+    /must isolate the approved render-layer/u,
   );
-  const incompleteDrawingSurfaceEvidence = structuredClone(
+  const incompleteDrawingPivotApproval = structuredClone(
     contractPreservationBaseline,
   );
-  incompleteDrawingSurfaceEvidence.additions
-    .find(({ id }) => id === "webgl-settled-drawing-public-surface-evidence")
+  incompleteDrawingPivotApproval.additions
+    .find(({ id }) => id === "three-pivot-drawing-components-contract")
     .approval.unitIds.pop();
   throws(
-    () => assertSettledSceneDrawingApprovals(incompleteDrawingSurfaceEvidence),
-    /public-surface evidence must retain exact settled-scene inventory/u,
+    () => assertThreePivotDrawingApprovals(incompleteDrawingPivotApproval),
+    /must retain exact Three-pivot design approval/u,
   );
   const animationApprovalMutation = structuredClone(
     postBaselineSignalContractRecord,
@@ -3686,12 +3637,12 @@ export async function verifyMutationProbes() {
   );
   const duplicatePrimaryGeometry =
     duplicatePrimaryDrawingSupplement.additions.find(
-      ({ id }) => id === "webgl-settled-drawing-custom-geometry",
+      ({ id }) => id === "three-pivot-drawing-components-contract",
     );
   duplicatePrimaryGeometry.supplementalApprovals = [
     {
-      recordId: "webgl-settled-scene-rendering",
-      unitIds: ["v0075"],
+      recordId: "three-full-pivot",
+      unitIds: ["p0005"],
     },
   ];
   throws(
@@ -3914,8 +3865,7 @@ export async function verifyMutationProbes() {
     ({ path }) => path === "docs/design/runtime-hooks-contract.md",
   );
   const refRow = hooksContract.currentUnits.find(
-    ({ kind, text }) =>
-      kind === "table" && text.includes("useRef(init?)"),
+    ({ kind, text }) => kind === "table" && text.includes("useRef(init?)"),
   );
   assert.ok(refRow, "Hook-specific table mutation unit is missing");
   {

@@ -161,17 +161,6 @@ export function backendMismatchError(
   const requiredName = getBackendTokenName(required);
   const prefix = `${componentName} requires the ${requiredName} backend and ` +
     `cannot render in the ${active.name} root.`;
-  if (requiredName === 'webgl2' && active.name === 'canvas2d') {
-    return new Error(withJSXSource(`${prefix} Place it under <WebGLLayer>.`, source));
-  }
-  if (requiredName === 'canvas2d' && active.name === 'webgl2') {
-    return new Error(
-      withJSXSource(
-        `${prefix} Canvas 2D children inside a WebGL island are unsupported.`,
-        source,
-      ),
-    );
-  }
   return new Error(withJSXSource(prefix, source));
 }
 
