@@ -65,6 +65,10 @@ try {
   );
   const viz = await import(pathToFileURL(entry).href);
   const names = [
+    "pieSlices",
+    "PieLayout",
+    "PieSlice",
+    "PieLabel",
     "Axis",
     "LineSeries",
     "Scale",

@@ -144,6 +144,17 @@ const drafts = [
     load: () => import("./learning/start/getting-started.example"),
   },
   {
+    slug: "viz-pie-composition", title: "Compose an interactive pie", shortTitle: "Pie composition",
+    section: "composition", order: 196,
+    summary: "Calculate slice angles independently and compose ordinary wedges, labels, legends, and readouts.",
+    api: ["PieLayout", "PieSlice", "PieLabel", "pieSlices", "HoverCard"],
+    objectives: ["Reuse pure slice geometry.", "Inspect category-keyed wedges through ordinary CRC events."],
+    prompts: { gesture: "Hover, click to pin, then reverse the slices.", code: "Change the values or compose your own labels from slice angles." },
+    apiNotes: ["Illustrative data: 100 fictional transport survey responses.", "Angles follow Canvas conventions; stable category keys survive reorder."],
+    canvas: { width: 1000, height: 570 }, related: ["viz-points-and-inspection", "signals"],
+    load: () => import("./learning/composition/viz-pie-composition.example"),
+  },
+  {
     slug:"viz-hover-comparison",title:"Comparing two lines at a shared time",shortTitle:"Hover comparisons",section:"composition",order:197,
     summary:"Compare recorded and interpolated NOAA CO₂ values with ordinary function queries and protected hover cards.",
     api:["HoverData","AnchoredLayout","closestPoint","closestX","interpolateX","defineSeries","linearInterpolation"],
