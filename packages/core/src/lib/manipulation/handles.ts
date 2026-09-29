@@ -5,6 +5,8 @@ import { GLOBAL_STATE } from "../global-state.js";
 import { definePrimitive } from "../define-primitive.js";
 import { useEventListener } from "../hooks/use-event-listener.js";
 import { useEventTarget } from "../hooks/use-event-target.js";
+import { useSignal } from "../hooks/use-signal.js";
+import { Group } from "../components/g.js";
 import { getLayoutBox } from "../layout/context.js";
 import { resolveLength } from "../style/resolve-length.js";
 import type { CRCNode } from "../element/types.js";
@@ -15,13 +17,19 @@ import { manipulationHandlers, type ManipulationState } from "./controller.js";
 import { requireManipulationFrame } from "./frame.js";
 
 export interface CRCDragHandleProps {
+  readonly formatReadout?: (value: {
+    readonly left: number;
+    readonly top: number;
+  }) => string;
   readonly controller: CRCManipulationController;
   readonly children?: CRCNode;
 }
 export interface CRCDragHandleStyle extends BoxStyle, LayoutItemStyle {
+  readonly readout?: false | true | CRCManipulationReadoutStyle;
   cursor?: string;
 }
 interface ResolvedDragStyle extends SystemStyle {
+  readonly readout?: false | true | CRCManipulationReadoutStyle;
   width: number;
   height: number;
   cursor?: string;
@@ -54,23 +62,26 @@ export const DragHandle = definePrimitive<
 >(
   function DragHandle(props, style) {
     requireManipulationFrame(props.controller);
-    const path = new Path2D();
-    path.rect(0, 0, style.width, style.height);
+    const focused = useSignal(false);
     const handlers = manipulationHandlers(props.controller, "move");
-    useEventListener(handlers);
-    useEventTarget(handlers, {
-      path,
-      fill: true,
-      cursor: style.cursor ?? "grab",
-      keyboardFocusable: true,
-      keyboardNavigationBounds: {
-        x: 0,
-        y: 0,
-        width: style.width,
-        height: style.height,
-      },
+    useEventListener({
+      ...handlers,
+      onFocusIn: () => focused.set(true),
+      onFocusOut: () => focused.set(false),
     });
-    return props.children;
+    return createElement(Group, {
+      style,
+      children: [
+        props.children,
+        createElement(DragReadout, {
+          controller: props.controller,
+          formatReadout: props.formatReadout,
+          readout: style.readout,
+          focused: focused.get(),
+          anchorX: style.width / 2,
+        }),
+      ],
+    });
   },
   {
     childInput: "structural",
@@ -90,10 +101,42 @@ export const DragHandle = definePrimitive<
           context,
         )!,
         cursor: style.cursor,
+        readout: style.readout,
       };
     },
   },
 );
+
+const DragReadout = definePrimitive<
+  CRCDragHandleProps & {
+    readonly readout?: false | true | CRCManipulationReadoutStyle;
+    readonly focused: boolean;
+    readonly anchorX: number;
+  }
+>(function DragReadout(props, _style, ctx) {
+  if (!readoutEnabled(props.readout, props.formatReadout)) return;
+  const state = requireManipulationFrame(props.controller);
+  paintReadout(
+    ctx,
+    state,
+    cssPoint(state, props.anchorX, 0),
+    () => {
+      const { left, top } = state.options.box.get();
+      const value = props.formatReadout
+        ? props.formatReadout({ left, top })
+        : `left ${round(left)} · top ${round(top)} px`;
+      if (typeof value !== "string")
+        throw new Error(
+          "Manipulation readout formatReadout must return a string.",
+        );
+      return value;
+    },
+    props.readout,
+    props.focused,
+    state.controller.active.get()?.operation === "move",
+    "top",
+  );
+});
 
 export interface CRCManipulationReadoutStateStyle {
   /** Minimum outward spacing in CSS pixels; defaults to 5. */
@@ -559,8 +602,13 @@ function validateReadoutStyle(
   if (!value || value === true) return;
   for (const style of [value, value.inactive, value.focused, value.active]) {
     if (!style) continue;
-    if (style.gap !== undefined && (!Number.isFinite(style.gap) || style.gap < 0))
-      throw new Error("Manipulation readout gap must be finite non-negative CSS pixels.");
+    if (
+      style.gap !== undefined &&
+      (!Number.isFinite(style.gap) || style.gap < 0)
+    )
+      throw new Error(
+        "Manipulation readout gap must be finite non-negative CSS pixels.",
+      );
     if (
       style.strokeWidth !== undefined &&
       (!Number.isFinite(style.strokeWidth) || style.strokeWidth < 0)
@@ -677,8 +725,15 @@ function paintReadout(
     const descent = Math.max(0, metrics.actualBoundingBoxDescent);
     const height = ascent + descent + 6 + stroke;
     const width = glyphLeft + glyphRight + 8 + stroke;
-    if (width > surface.displayWidth - 8 || height > surface.displayHeight - 8) return;
-    const offset = outwardReadoutOffset(frameMapping, position, width, height, resolved.gap);
+    if (width > surface.displayWidth - 8 || height > surface.displayHeight - 8)
+      return;
+    const offset = outwardReadoutOffset(
+      frameMapping,
+      position,
+      width,
+      height,
+      resolved.gap,
+    );
     let left = anchor.x + offset.x - width / 2;
     let top = anchor.y + offset.y - height / 2;
     left = Math.max(4, Math.min(surface.displayWidth - 4 - width, left));
@@ -688,30 +743,49 @@ function paintReadout(
     if (resolved.stroke) {
       ctx.strokeStyle = resolved.stroke;
       ctx.lineWidth = resolved.strokeWidth;
-      ctx.strokeText(value, left + 4 + glyphLeft + stroke / 2, top + 3 + ascent + stroke / 2);
+      ctx.strokeText(
+        value,
+        left + 4 + glyphLeft + stroke / 2,
+        top + 3 + ascent + stroke / 2,
+      );
     }
-    ctx.fillText(value, left + 4 + glyphLeft + stroke / 2, top + 3 + ascent + stroke / 2);
+    ctx.fillText(
+      value,
+      left + 4 + glyphLeft + stroke / 2,
+      top + 3 + ascent + stroke / 2,
+    );
   });
 }
 /** Separate the upright label from the selected edges in displayed CSS space. */
-function outwardReadoutOffset(frameMapping: DOMMatrix, position: ResizePosition | undefined, width: number, height: number, gap: number): DOMPoint {
+function outwardReadoutOffset(
+  frameMapping: DOMMatrix,
+  position: ResizePosition | undefined,
+  width: number,
+  height: number,
+  gap: number,
+): DOMPoint {
   if (!position) return new DOMPoint(width / 2 + gap, 0);
   const inverse = frameMapping.inverse();
   const normals: DOMPoint[] = [];
   const add = (x: number, y: number, sign: number) => {
     const length = Math.hypot(x, y);
-    normals.push(new DOMPoint(sign * x / length, sign * y / length));
+    normals.push(new DOMPoint((sign * x) / length, (sign * y) / length));
   };
   if (position.includes("left")) add(inverse.a, inverse.c, -1);
   if (position.includes("right")) add(inverse.a, inverse.c, 1);
   if (position.includes("top")) add(inverse.b, inverse.d, -1);
   if (position.includes("bottom")) add(inverse.b, inverse.d, 1);
-  const support = (n: DOMPoint) => Math.abs(n.x) * width / 2 + Math.abs(n.y) * height / 2 + gap;
+  const support = (n: DOMPoint) =>
+    (Math.abs(n.x) * width) / 2 + (Math.abs(n.y) * height) / 2 + gap;
   const [a, b] = normals;
   const da = support(a);
   if (!b) return new DOMPoint(a.x * da, a.y * da);
-  const db = support(b), determinant = a.x * b.y - a.y * b.x;
-  return new DOMPoint((da * b.y - a.y * db) / determinant, (a.x * db - da * b.x) / determinant);
+  const db = support(b),
+    determinant = a.x * b.y - a.y * b.x;
+  return new DOMPoint(
+    (da * b.y - a.y * db) / determinant,
+    (a.x * db - da * b.x) / determinant,
+  );
 }
 function resolveReadout(
   value: false | true | CRCManipulationReadoutStyle | undefined,
@@ -737,11 +811,21 @@ function resolveReadout(
   if (active) (patch({ visible: true }), patch(source.active));
   return base;
 }
-const labelMeasurements = new WeakMap<RenderingContext2D, Map<string, TextMetrics>>();
+const labelMeasurements = new WeakMap<
+  RenderingContext2D,
+  Map<string, TextMetrics>
+>();
 function measureLabel(ctx: RenderingContext2D, text: string): TextMetrics {
   let cache = labelMeasurements.get(ctx);
   if (!cache) labelMeasurements.set(ctx, (cache = new Map()));
-  const key = JSON.stringify([ctx.font, ctx.direction, ctx.fontKerning, ctx.letterSpacing, ctx.wordSpacing, text]);
+  const key = JSON.stringify([
+    ctx.font,
+    ctx.direction,
+    ctx.fontKerning,
+    ctx.letterSpacing,
+    ctx.wordSpacing,
+    text,
+  ]);
   const found = cache.get(key);
   if (found) return found;
   const result = ctx.measureText(text);
@@ -756,14 +840,19 @@ function ellipsis(
 ): string {
   const fits = (value: string) => {
     const m = measureLabel(ctx, value);
-    return Math.max(0, m.actualBoundingBoxLeft) + Math.max(m.width, m.actualBoundingBoxRight) <= width;
+    return (
+      Math.max(0, m.actualBoundingBoxLeft) +
+        Math.max(m.width, m.actualBoundingBoxRight) <=
+      width
+    );
   };
   if (width <= 0) return "";
   if (fits(text)) return text;
   const suffix = "…";
   if (!fits(suffix)) return "";
   const points = Array.from(text);
-  let low = 0, high = points.length;
+  let low = 0,
+    high = points.length;
   while (low < high) {
     const mid = Math.ceil((low + high) / 2);
     if (fits(points.slice(0, mid).join("") + suffix)) low = mid;
