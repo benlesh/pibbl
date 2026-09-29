@@ -38,6 +38,7 @@ export interface CRCManipulationMoveSnap {
 
 export interface CRCManipulationMoveOptions {
   readonly axis?: 'both' | 'x' | 'y';
+  readonly bounds?: CRCManipulationBox;
   readonly snap?: CRCManipulationMoveSnap;
 }
 
@@ -48,23 +49,52 @@ export interface CRCManipulationResizeSizeSnap {
   readonly step: number | Readonly<{ width: number; height: number }>;
 }
 
+export interface CRCManipulationResizeGridSnap {
+  readonly target: 'grid';
+  readonly enabled?: boolean;
+  readonly when?: CRCManipulationWhen;
+  readonly step: number | Readonly<{ x: number; y: number }>;
+  readonly origin?: Readonly<{ x?: number; y?: number }>;
+}
+
+export interface CRCManipulationAspectRatio {
+  readonly value: 'initial' | number;
+  readonly when?: CRCManipulationWhen;
+}
+
 export interface CRCManipulationResizeOptions {
   readonly minWidth?: number;
   readonly minHeight?: number;
   readonly maxWidth?: number;
   readonly maxHeight?: number;
-  readonly snap?: CRCManipulationResizeSizeSnap;
+  readonly bounds?: CRCManipulationBox;
+  readonly aspectRatio?: CRCManipulationAspectRatio;
+  readonly snap?: CRCManipulationResizeSizeSnap | CRCManipulationResizeGridSnap;
+}
+
+export interface CRCManipulationRotateSnap {
+  readonly enabled?: boolean;
+  readonly when?: CRCManipulationWhen;
+  readonly step: number;
+  readonly origin?: number;
+}
+
+export interface CRCManipulationRotateOptions {
+  readonly snap?: CRCManipulationRotateSnap;
 }
 
 export interface ManipulationSolveInput {
   readonly operation: 'move' | 'resize' | 'rotate';
   readonly handle?: CRCResizePosition;
   readonly initial: CRCManipulationBox;
+  readonly initialRotation?: number;
+  readonly rotationDelta?: number;
   readonly initialPoint: CRCManipulationPoint;
   readonly currentPoint: CRCManipulationPoint;
   readonly modifiers: CRCManipulationModifiers;
   readonly move?: CRCManipulationMoveOptions;
   readonly resize?: CRCManipulationResizeOptions;
+  readonly rotate?: CRCManipulationRotateOptions;
 }
 
 export interface ManipulationSolveResult {
@@ -72,4 +102,6 @@ export interface ManipulationSolveResult {
   readonly applied: CRCManipulationBox;
   readonly snapActive: boolean;
   readonly snapSatisfied: boolean;
+  readonly proposedRotation: number;
+  readonly appliedRotation: number;
 }

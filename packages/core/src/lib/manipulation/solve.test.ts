@@ -67,4 +67,37 @@ describe('solveManipulation', () => {
       resize: { minWidth: 32, minHeight: 24, snap: { target: 'size', step: 16 } },
     }).applied).toEqual({ left: 100, top: 72, width: 32, height: 24 });
   });
+
+  it('snaps unwrapped rotation deltas with positive half ties', () => {
+    expect(solveManipulation({
+      operation: 'rotate', initial: box, initialRotation: 0, rotationDelta: 22 * Math.PI / 180,
+      initialPoint: { x: 0, y: 0 }, currentPoint: { x: 0, y: 0 }, modifiers: {},
+      rotate: { snap: { step: 15 * Math.PI / 180 } },
+    }).appliedRotation).toBeCloseTo(15 * Math.PI / 180);
+    expect(solveManipulation({
+      operation: 'rotate', initial: box, initialRotation: 0, rotationDelta: 22.5 * Math.PI / 180,
+      initialPoint: { x: 0, y: 0 }, currentPoint: { x: 0, y: 0 }, modifiers: {},
+      rotate: { snap: { step: 15 * Math.PI / 180 } },
+    }).appliedRotation).toBeCloseTo(30 * Math.PI / 180);
+  });
+
+  it('uses width as the tied dominant axis for ratio-locked corner resizing', () => {
+    expect(solveManipulation({
+      operation: 'resize', handle: 'bottom-right', initial: { left: 0, top: 0, width: 100, height: 50 },
+      initialPoint: { x: 0, y: 0 }, currentPoint: { x: 20, y: 10 }, modifiers: {},
+      resize: { aspectRatio: { value: 'initial' } },
+    }).applied).toEqual({ left: 0, top: 0, width: 120, height: 60 });
+  });
+
+  it('snaps the moving resize edge to its parent grid and clamps move bounds', () => {
+    expect(solveManipulation({
+      operation: 'resize', handle: 'bottom-right', initial: { left: 3, top: 0, width: 32, height: 20 },
+      initialPoint: { x: 0, y: 0 }, currentPoint: { x: 11, y: 0 }, modifiers: {},
+      resize: { snap: { target: 'grid', step: 16 } },
+    }).applied.width).toBe(45);
+    expect(solveManipulation({
+      operation: 'move', initial: box, initialPoint: { x: 0, y: 0 }, currentPoint: { x: 100, y: 100 }, modifiers: {},
+      move: { bounds: { left: 0, top: 0, width: 120, height: 100 } },
+    }).applied).toEqual({ left: 20, top: 20, width: 100, height: 80 });
+  });
 });
