@@ -1451,8 +1451,8 @@ function StudioCard({ label, active }: StudioCardProps): CRCNode {
     <>
       <Rectangle
         style={{
-          x: 16,
-          y: active ? 16 : 48,
+          left: 16,
+          top: active ? 16 : 48,
           width: 180,
           height: 28,
           fill: active ? '#1f4bd8' : '#74d3ae',
