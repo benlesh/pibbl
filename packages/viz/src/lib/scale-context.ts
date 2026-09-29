@@ -36,6 +36,13 @@ export function lookupScale(
   receiver: string,
 ): Signal<ResolvedScale> | undefined {
   useInternalHookSlot("vizScaleLookup", () => undefined);
+  return readScale(id, receiver);
+}
+/** Invocation-scoped lookup for official viz receivers; does not allocate a hook. */
+export function readScale(
+  id: ScaleId | undefined,
+  receiver: string,
+): Signal<ResolvedScale> | undefined {
   if (id === undefined) return undefined;
   const canvas = getCurrentBackendHostCanvas();
   for (let scope = current; scope; scope = scope.parent) {

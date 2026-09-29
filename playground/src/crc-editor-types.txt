@@ -1485,3 +1485,49 @@ export interface NearestPointOptions<D> { readonly x:PointAccessor<D>; readonly 
 export interface NearestPoint<D> {readonly datum:D; readonly index:number; readonly x:number; readonly y:number; readonly distance:number;}
 export declare function nearestDomainValue(values:readonly number[],rangeValue:number,scale:ResolvedLinearScale):number|undefined;
 export declare function nearestPoint<D>(data:readonly D[],point:Readonly<{x:number;y:number}>,options:NearestPointOptions<D>):NearestPoint<D>|undefined;
+
+export interface HoverQueryContext {
+  scale(id: ScaleId): ResolvedLinearScale;
+}
+export type HoverQuery<T> = (context: HoverQueryContext) => T | undefined;
+export interface HoverDataProps<T> {
+  readonly query: HoverQuery<T> &
+    (T extends PromiseLike<unknown> ? never : unknown);
+  readonly children: (result: T | undefined) => CRCNode;
+}
+export interface HoverSeries<D> {
+  readonly data: SignalValue<readonly D[]>;
+  readonly x: PointAccessor<D>;
+  readonly y: PointAccessor<D>;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+}
+export interface HoverPoint {
+  readonly x: number;
+  readonly y: number;
+}
+export interface HoverHit<D> {
+  readonly datum: D;
+  readonly index: number;
+  readonly x: number;
+  readonly y: number;
+  readonly anchor: HoverPoint;
+}
+// The constraint permits independently typed descriptors; the mapped result below
+// restores the exact association between a series key and its original datum.
+export type HoverSeriesMap = Readonly<Record<string, HoverSeries<any>>>;
+export type ClosestPointHit<S extends HoverSeriesMap> = {
+  [K in keyof S & string]: S[K] extends HoverSeries<infer D>
+    ? HoverHit<D> & { readonly series: K; readonly distance: number }
+    : never;
+}[keyof S & string];
+export interface ClosestPointOptions<S extends HoverSeriesMap> {
+  readonly series: S;
+  readonly position: SignalValue<HoverPoint | null>;
+  readonly xScale: ScaleId;
+  readonly yScale: ScaleId;
+  readonly maxDistance?: number;
+}
+
+export declare function HoverData<T>(props: HoverDataProps<T>): CRCNode;
+export declare function defineSeries<D>(options: HoverSeries<D>): HoverSeries<D>;
+export declare function closestPoint<S extends HoverSeriesMap>(options: ClosestPointOptions<S>): HoverQuery<ClosestPointHit<S>>;

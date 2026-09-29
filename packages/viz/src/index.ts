@@ -35,3 +35,17 @@ export { PlotSeries } from "./lib/plot-series.js";
 export type { PlotSeriesProps, PlotKeyAccessor } from "./lib/plot-types.js";
 export { nearestDomainValue, nearestPoint } from "./lib/nearest.js";
 export type { NearestPointOptions, NearestPoint } from "./lib/nearest.js";
+
+export { HoverData } from "./lib/hover-data.js";
+export { defineSeries, closestPoint } from "./lib/hover-queries.js";
+export type {
+  HoverQueryContext,
+  HoverQuery,
+  HoverDataProps,
+  HoverSeries,
+  HoverPoint,
+  HoverHit,
+  HoverSeriesMap,
+  ClosestPointHit,
+  ClosestPointOptions,
+} from "./lib/hover-types.js";

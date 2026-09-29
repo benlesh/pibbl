@@ -143,3 +143,53 @@ void (
 );
 void nearestPoint;
 void nearestDomainValue;
+
+import { HoverData, closestPoint, defineSeries } from "@crc/viz";
+const hoverQuery = closestPoint({
+  series: {
+    a: defineSeries({ data: [{ x: 1, y: 2, label: "a" }], x: "x", y: "y" }),
+    b: defineSeries({ data: [{ x: 2, y: 3, count: 4 }], x: "x", y: "y" }),
+  },
+  position: signal<{ x: number; y: number } | null>(null),
+  xScale: "x",
+  yScale: "y",
+});
+const hoverNode = (
+  <HoverData query={hoverQuery}>
+    {(hit) => {
+      if (!hit) return null;
+      if (hit.series === "a") {
+        const label: string = hit.datum.label;
+        void label;
+      } else {
+        const count: number = hit.datum.count;
+        void count;
+      }
+      return null;
+    }}
+  </HoverData>
+);
+const customHover = (
+  <HoverData query={() => ({ custom: 1 })}>
+    {(value) => {
+      const x: number | undefined = value?.custom;
+      void x;
+      return null;
+    }}
+  </HoverData>
+);
+const explicitHover = createElement(
+  HoverData<Exclude<ReturnType<typeof hoverQuery>, undefined>>,
+  {
+    query: hoverQuery,
+    children: (value) => {
+      void value;
+      return null;
+    },
+  },
+);
+// @ts-expect-error Queries must return synchronous values.
+const asyncHover = (
+  <HoverData query={() => Promise.resolve(1)}>{() => null}</HoverData>
+);
+void [hoverNode, customHover, explicitHover, asyncHover];
