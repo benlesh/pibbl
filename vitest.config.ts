@@ -125,6 +125,7 @@ export default defineConfig(({ mode }) => ({
       '.pnpm-store/**',
       '.superpowers/**',
       '.worktrees/**',
+      'tooling/surviving-package-entries.test.ts',
       'packages/physics/src/lib/2d/public-types.test.ts',
       'packages/physics/src/lib/3d/public-types.test.ts',
     ],

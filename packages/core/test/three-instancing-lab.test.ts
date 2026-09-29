@@ -113,7 +113,7 @@ describe('public Three instancing proving scenarios', () => {
     const learning = getLearningExampleBySlug('three-instancing');
     expect(learning).toMatchObject({
       slug: 'three-instancing',
-      section: 'composition',
+      section: 'three',
       order: 116,
       api: [
         'defineThreeLayer',
@@ -122,11 +122,11 @@ describe('public Three instancing proving scenarios', () => {
         'missBehavior',
       ],
       source: {
-        path: 'packages/scenarios/src/learning/composition/three-instancing.example.tsx',
+        path: 'packages/scenarios/src/learning/three/three-instancing.example.tsx',
       },
     });
     expect(learning && getLearningExampleRoute(learning)).toBe(
-      '#/examples/composition/three-instancing',
+      '#/examples/three/three-instancing',
     );
 
     expect(scenarioCatalog).toContain(threeInstancingLabScenarioEntry);

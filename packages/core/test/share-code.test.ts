@@ -196,10 +196,14 @@ export default function mount(canvas) {
 `,
       {
         crc: (_canvas: unknown, node: unknown) => node,
-        defineThreeLayer: (definition: unknown) => ({
-          kind: "three-layer",
-          definition,
-        }),
+        __crcStudioModules: {
+          "@crc/three": {
+            defineThreeLayer: (definition: unknown) => ({
+              kind: "three-layer",
+              definition,
+            }),
+          },
+        },
       },
       {},
     );
