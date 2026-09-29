@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { defineParticleEffect2D } from '../index.js';
 import { particle } from './particle.js';
 import { compileParticleEffect2D } from './compiler.js';
-import {
-  getParticleEffect2DRecord,
-  getParticleEffect3DRecord,
-} from './definition-records.js';
+import { getParticleEffect2DRecord } from './definition-records.js';
 import type {
   CRCParticleEmitter2D,
   CRCParticleMotion2D,
@@ -419,21 +416,4 @@ describe('defineParticleEffect2D', () => {
     }
   });
 
-  it('rejects a three-dimensional nominal value at the 2D record boundary', async () => {
-    const { defineParticleEffect3D } = await import('../webgl.js');
-    const effect3D = defineParticleEffect3D({
-      emitters: [{
-        name: 'stars',
-        capacity: 1,
-        emission: [{ type: 'burst', atMilliseconds: 0, count: 1 }],
-        shape: { type: 'point' },
-        initial: { lifetimeMilliseconds: 1_000 },
-        renderer: { type: 'point', material: 'unlit', blend: 'additive' },
-      }],
-    });
-
-    expect(() => getParticleEffect2DRecord(effect3D as never))
-      .toThrowError(/2D.*defineParticleEffect2D/i);
-    expect(getParticleEffect3DRecord(effect3D).dimension).toBe(3);
-  });
 });

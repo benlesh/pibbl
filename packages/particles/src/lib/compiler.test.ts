@@ -4,10 +4,8 @@ import { particle } from "./particle.js";
 import {
   ParameterTimingMask,
   compileParticleEffect2D,
-  compileParticleEffect3D,
   compileParameterReference,
 } from "./compiler.js";
-import { defineParticleEffect3D } from "./webgl-definition.js";
 
 describe("particle compiler", () => {
   it("packs parameters into fixed offsets with separate spawn, simulation, and render masks", () => {
@@ -276,42 +274,6 @@ describe("particle compiler", () => {
     expect(emitter.emission.completionMilliseconds).toBeNull();
   });
 
-  it("keeps fixed spawn and simulation parameter references stateless-WebGL capable", () => {
-    const effect = defineParticleEffect3D({
-      parameters: {
-        launch: { type: "number", default: 2, timing: "spawn" },
-        wind: { type: "number", default: 1, timing: "simulation" },
-      },
-      emitters: [
-        {
-          name: "embers",
-          capacity: 10,
-          emission: [{ type: "rate", particlesPerSecond: 2 }],
-          shape: { type: "point" },
-          initial: {
-            lifetimeMilliseconds: 1_000,
-            velocity: [particle.parameter("launch"), 0, 0],
-          },
-          motion: [
-            {
-              type: "drift",
-              velocity: [particle.parameter("wind"), 0, 0],
-            },
-          ],
-          renderer: { type: "point", material: "unlit", blend: "alpha" },
-          bounds: { min: [-10, -10, -10], max: [10, 10, 10] },
-        },
-      ],
-    });
-    const plan = compileParticleEffect3D(effect);
-
-    expect(plan.execution["stateless-webgl"]).toEqual({
-      supported: true,
-      reasons: [],
-    });
-    expect(plan.emitters[0]!.initial.velocity.type).toBe("vector");
-  });
-
   it("compiles a sway frequency tuple as one seeded range", () => {
     const effect = defineParticleEffect2D({
       emitters: [
@@ -334,38 +296,4 @@ describe("particle compiler", () => {
     });
   });
 
-  it("assigns dedicated stable channels to cone polar and azimuth sampling", () => {
-    const effect = defineParticleEffect3D({
-      emitters: [
-        {
-          name: "cone",
-          capacity: 1,
-          emission: [{ type: "burst", atMilliseconds: 0, count: 1 }],
-          shape: { type: "point" },
-          initial: {
-            lifetimeMilliseconds: 1_000,
-            velocity: {
-              type: "cone",
-              direction: [0, 0, 1],
-              speed: particle.between(1, 2),
-              spreadDegrees: particle.between(20, 40),
-            },
-          },
-          renderer: { type: "point", material: "unlit", blend: "alpha" },
-        },
-      ],
-    });
-    const velocity =
-      compileParticleEffect3D(effect).emitters[0]!.initial.velocity;
-
-    expect(velocity).toMatchObject({
-      type: "cone",
-      polarChannel: 1_381_915_683,
-      azimuthChannel: 2_940_305_851,
-    });
-    if (velocity.type === "cone") {
-      expect(velocity.polarChannel).not.toBe(velocity.spreadDegrees.channel);
-      expect(velocity.azimuthChannel).not.toBe(velocity.speed.channel);
-    }
-  });
 });

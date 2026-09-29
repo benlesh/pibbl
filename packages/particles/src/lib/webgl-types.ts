@@ -1,15 +1,11 @@
-import type { SignalValue } from "@crc/core";
-import type { CRCWebGLTransformStyle } from "@crc/webgl";
 import type {
   CRCParticleAppearance,
-  CRCParticleCommonInputProps,
   CRCParticleEmission,
   CRCParticleOverflow,
   CRCParticleParameterDefinitions,
   CRCParticleParameterReference,
   CRCParticleParameterValues,
   CRCParticleScalar,
-  CRCParticleSystem,
   CRCParticleVector2,
   CRCParticleVector3,
 } from "./types.js";
@@ -151,35 +147,3 @@ export type CRCParticleExecutionCapability =
       supported: false;
       reasons: readonly string[];
     }>;
-
-export interface Particles3DStyle extends CRCWebGLTransformStyle {
-  readonly opacity?: number;
-  readonly cursor?: string;
-  readonly filter?: never;
-}
-
-export type Particles3DProps<
-  EmitterName extends string = string,
-  Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
-> = CRCParticleCommonInputProps<Parameters> & {
-  readonly style?: SignalValue<{
-    readonly [K in keyof Particles3DStyle]: SignalValue<Particles3DStyle[K]>;
-  }>;
-  readonly execution?: SignalValue<"auto" | "cpu" | "gpu">;
-  readonly interactionBounds?: SignalValue<CRCParticleBounds3D>;
-} & (
-    | {
-        readonly effect: SignalValue<
-          CRCParticleEffect3D<EmitterName, Parameters>
-        >;
-        readonly system?: never;
-        readonly autoplay?: SignalValue<boolean>;
-        readonly seed?: SignalValue<number>;
-      }
-    | {
-        readonly effect?: never;
-        readonly system: CRCParticleSystem<EmitterName, Parameters, 3>;
-        readonly autoplay?: never;
-        readonly seed?: never;
-      }
-  );

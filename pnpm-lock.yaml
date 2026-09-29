@@ -122,9 +122,6 @@ importers:
       '@crc/viz':
         specifier: workspace:*
         version: link:packages/viz
-      '@crc/webgl':
-        specifier: workspace:*
-        version: link:packages/webgl
       '@eslint/js':
         specifier: 'catalog:'
         version: 10.0.1(eslint@10.8.1(jiti@2.7.0)(supports-color@7.2.0))
@@ -200,18 +197,12 @@ importers:
       '@crc/core':
         specifier: workspace:*
         version: link:../core
-      '@crc/webgl':
-        specifier: workspace:*
-        version: link:../webgl
 
   packages/physics:
     devDependencies:
       '@crc/core':
         specifier: workspace:*
         version: link:../core
-      '@crc/webgl':
-        specifier: workspace:*
-        version: link:../webgl
 
   packages/scenarios:
     dependencies:
@@ -230,9 +221,6 @@ importers:
       '@crc/viz':
         specifier: workspace:*
         version: link:../viz
-      '@crc/webgl':
-        specifier: workspace:*
-        version: link:../webgl
       three:
         specifier: 'catalog:'
         version: 0.186.0
@@ -261,12 +249,6 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  packages/webgl:
-    devDependencies:
-      '@crc/core':
-        specifier: workspace:*
-        version: link:../core
-
   playground:
     dependencies:
       '@babel/parser':
@@ -290,9 +272,6 @@ importers:
       '@crc/viz':
         specifier: workspace:*
         version: link:../packages/viz
-      '@crc/webgl':
-        specifier: workspace:*
-        version: link:../packages/webgl
       '@fontsource-variable/jetbrains-mono':
         specifier: 'catalog:'
         version: 5.3.0

@@ -25,7 +25,6 @@
     "@crc/particles": "workspace:*",
     "@crc/physics": "workspace:*",
     "@crc/three": "workspace:*",
-    "@crc/webgl": "workspace:*",
     "three": "catalog:",
     "@crc/viz": "workspace:*"
   },

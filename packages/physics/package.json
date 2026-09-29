@@ -29,10 +29,6 @@
       "types": "./dist/2d-geometry.d.ts",
       "default": "./dist/2d-geometry.mjs"
     },
-    "./3d": {
-      "types": "./dist/3d.d.ts",
-      "default": "./dist/3d.mjs"
-    },
     "./3d/geometry": {
       "types": "./dist/3d-geometry.d.ts",
       "default": "./dist/3d-geometry.mjs"
@@ -42,27 +38,22 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/2d.ts src/2d-geometry.ts src/3d.ts src/3d-geometry.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@crc/core --external:@crc/core/internal --external:@crc/webgl --external:@crc/webgl/internal",
+    "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/2d.ts src/2d-geometry.ts src/3d-geometry.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@crc/core --external:@crc/core/internal",
     "dev": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "test": "pnpm run test:node && pnpm run test:browser",
-    "test:node": "vitest run src/lib/2d/public-types.test.ts src/lib/2d/shapes.test.ts src/lib/2d/collision src/lib/2d/world src/lib/3d/public-types.test.ts src/lib/3d/shapes.test.ts src/lib/3d/collision src/lib/3d/world --browser.enabled=false --environment node",
+    "test:node": "vitest run src/lib/2d/public-types.test.ts src/lib/2d/shapes.test.ts src/lib/2d/collision src/lib/2d/world src/lib/3d/shapes.test.ts src/lib/3d/collision --browser.enabled=false --environment node",
     "test:browser": "vitest run src/lib/2d/canvas src/lib/2d/runtime --browser.headless --browser.ui=false"
   },
   "peerDependencies": {
-    "@crc/core": "0.0.1",
-    "@crc/webgl": "0.0.1"
+    "@crc/core": "0.0.1"
   },
   "peerDependenciesMeta": {
     "@crc/core": {
       "optional": true
-    },
-    "@crc/webgl": {
-      "optional": true
     }
   },
   "devDependencies": {
-    "@crc/core": "workspace:*",
-    "@crc/webgl": "workspace:*"
+    "@crc/core": "workspace:*"
   }
 }

@@ -61,7 +61,6 @@
     "@crc/physics": "workspace:*",
     "@crc/scenarios": "workspace:*",
     "@crc/three": "workspace:*",
-    "@crc/webgl": "workspace:*",
     "@eslint/js": "catalog:",
     "@gltf-transform/core": "4.5.0",
     "@gltf-transform/extensions": "4.5.0",

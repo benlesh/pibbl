@@ -44,20 +44,6 @@ import type {
   Particles2DProps,
   Particles2DStyle,
 } from "@crc/particles";
-import type {
-  CRCParticleBounds3D,
-  CRCParticleConeVelocity3D,
-  CRCParticleEffect3D,
-  CRCParticleEffect3DInput,
-  CRCParticleEmitter3D,
-  CRCParticleExecutionCapability,
-  CRCParticleInitial3D,
-  CRCParticleMotion3D,
-  CRCParticleRenderer3D,
-  CRCParticleShape3D,
-  Particles3DProps,
-  Particles3DStyle,
-} from "@crc/particles/webgl";
 import { particleParameter } from "@crc/particles";
 import { expectTypeOf, it } from "vitest";
 
@@ -97,7 +83,6 @@ type InferredSystem =
 
 declare const effect2D: InferredEffect;
 declare const system2D: InferredSystem;
-declare const system3D: CRCParticleSystem<"impact", Parameters, 3>;
 
 function assertParticlePublicTypes(): void {
   const vector2Reference: CRCParticleVector2 = particleParameter("wind");
@@ -111,28 +96,16 @@ function assertParticlePublicTypes(): void {
     type: "acceleration",
     value: particleParameter("wind"),
   };
-  const parameterizedInitial3D: CRCParticleInitial3D = {
-    lifetimeMilliseconds: 1_000,
-    velocity: particleParameter("velocity"),
-    color: particleParameter("tint"),
-  };
-  const parameterizedMotion3D: CRCParticleMotion3D = {
-    type: "angularVelocity",
-    degreesPerSecond: particleParameter("spin"),
-  };
   void vector2Reference;
   void vector3Reference;
   void parameterizedInitial2D;
   void parameterizedMotion2D;
-  void parameterizedInitial3D;
-  void parameterizedMotion3D;
 
   system2D.emit("impact");
   // @ts-expect-error emitter names stay narrowed from the inferred effect
   system2D.emit("unknown");
   // @ts-expect-error dimension-2 systems reject three-dimensional bursts
   system2D.emit("impact", { position: [0, 0, 0] });
-  system3D.emit("impact", { position: [0, 0, 0] });
 
   const implicit2D: Particles2DProps<"impact" | "smoke", Parameters> = {
     effect: effect2D,
@@ -148,11 +121,6 @@ function assertParticlePublicTypes(): void {
   };
   void conflicting2D;
 
-  const particle3DStyle: Particles3DStyle = { opacity: 0.5 };
-  void particle3DStyle;
-  // @ts-expect-error Canvas filters belong on the receiving WebGLLayer
-  const filtered3DStyle: Particles3DStyle = { filter: [] };
-  void filtered3DStyle;
 }
 void assertParticlePublicTypes;
 
@@ -205,26 +173,9 @@ type RootPublicTypes =
   | CRCParticleVector3
   | Particles2DStyle;
 
-type WebGLPublicTypes =
-  | CRCParticleBounds3D
-  | CRCParticleConeVelocity3D
-  | CRCParticleEffect3D
-  | CRCParticleEffect3DInput
-  | CRCParticleEmitter3D
-  | CRCParticleExecutionCapability
-  | CRCParticleInitial3D
-  | CRCParticleMotion3D
-  | CRCParticleRenderer3D
-  | CRCParticleShape3D
-  | CRCParticleVector3
-  | Particles3DProps
-  | Particles3DStyle;
-
 declare const rootPublicTypes: RootPublicTypes;
-declare const webglPublicTypes: WebGLPublicTypes;
 
 function assertPublicTypeUnions(): void {
   void rootPublicTypes;
-  void webglPublicTypes;
 }
 void assertPublicTypeUnions;
