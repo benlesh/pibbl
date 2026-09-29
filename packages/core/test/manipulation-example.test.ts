@@ -78,3 +78,41 @@ it("runs the public card with nested Flex reflow and a geometry readout", async 
   expect(labels.at(-2)).toBe("left 112 · top 128 · width 320 · height 224");
   expect(labels.at(-1)).toBe("rotation 0° · idle · completed changes 1");
 });
+
+it("shows temporary styled rotation and size labels during native manipulation", async () => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 800;
+  canvas.height = 560;
+  canvas.dataset.manipulationTest = "";
+  document.body.append(canvas);
+  const ctx = canvas.getContext("2d")!;
+  const labels: Array<{ text: string; fill: unknown }> = [];
+  const draw = ctx.fillText.bind(ctx);
+  vi.spyOn(ctx, "fillText").mockImplementation((text, x, y, maxWidth) => {
+    labels.push({ text, fill: ctx.fillStyle });
+    if (maxWidth === undefined) draw(text, x, y);
+    else draw(text, x, y, maxWidth);
+  });
+  mounted = mountExample(canvas);
+  await settle();
+  expect(labels.some(({ text }) => text === "320 × 224 px")).toBe(false);
+  labels.length = 0;
+  await commands.manipulationPointer([
+    { type: "move", x: 416, y: 344 }, { type: "down" },
+    { type: "move", x: 448, y: 368 },
+  ]);
+  await settle();
+  expect(labels).toContainEqual({ text: "352 × 248 px", fill: "#1d4ed8" });
+  labels.length = 0;
+  await commands.manipulationPointer([{ type: "up" }]);
+  await settle();
+  expect(labels.some(({ text }) => text === "352 × 248 px")).toBe(false);
+  labels.length = 0;
+  await commands.manipulationPointer([
+    { type: "move", x: 272, y: 96 }, { type: "down" },
+    { type: "move", x: 420, y: 244 },
+  ]);
+  await settle();
+  expect(labels).toContainEqual({ text: "90°", fill: "#1d4ed8" });
+  await commands.manipulationPointer([{ type: "up" }]);
+});

@@ -6,7 +6,8 @@ kind: api
 slug: rotation-handle
 apiCategory: component
 symbols: [RotationHandle]
-relatedTypes: [CRCRotationHandleProps]
+relatedTypes:
+  [CRCRotationHandleStyle, CRCManipulationReadoutStyle, CRCRotationHandleProps]
 ---
 
 # RotationHandle
@@ -24,3 +25,9 @@ const manipulation = useManipulation({ box, rotation, rotate: {} });
 ```
 
 Related types: [CRCRotationHandleProps](#/api/types/events#crcrotationhandleprops).
+
+Readout presentation uses `style.readout` with local inactive/focused/active overrides.
+Use `formatReadout` for application-defined units; labels remain inside the visible canvas.
+See [handle guides and readouts](#/learn/guides/manipulation#handle-guides-and-readouts).
+
+Related presentation types: [CRCRotationHandleStyle](#/api/types/events#crcrotationhandlestyle), [CRCManipulationReadoutStyle](#/api/types/events#crcmanipulationreadoutstyle).

@@ -289,8 +289,8 @@
   export interface CRCManipulationMoveInput { readonly enabled?: SignalValue<boolean>; readonly axis?: 'both' | 'x' | 'y'; readonly bounds?: CRCManipulationBox; readonly snap?: Readonly<{ enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number | Readonly<{ x: number; y: number }>; origin?: Readonly<{ x?: number; y?: number }> }> }
   export type CRCManipulationResizeInput = Readonly<{ readonly enabled?: SignalValue<boolean>; readonly minWidth?: number; readonly minHeight?: number; readonly maxWidth?: number; readonly maxHeight?: number; readonly bounds?: CRCManipulationBox; readonly aspectRatio?: Readonly<{ value: 'initial' | number; when?: CRCManipulationWhen }>; readonly snap?: Readonly<{ target?: 'size'; enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number | Readonly<{ width: number; height: number }> }> }> | Readonly<{ readonly enabled?: SignalValue<boolean>; readonly minWidth?: number; readonly minHeight?: number; readonly maxWidth?: number; readonly maxHeight?: number; readonly bounds?: CRCManipulationBox; readonly aspectRatio?: Readonly<{ value: 'initial' | number; when?: CRCManipulationWhen }>; readonly snap?: Readonly<{ target: 'grid'; enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number | Readonly<{ x: number; y: number }>; origin?: Readonly<{ x?: number; y?: number }> }> }>;
   export interface CRCManipulationRotateInput { readonly enabled?: SignalValue<boolean>; readonly snap?: Readonly<{ enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number; origin?: number }> }
-  export interface CRCRotationHandleProps { readonly controller: CRCManipulationController; readonly hitSize?: number; readonly children?: CRCNode }
-  export interface CRCManipulableProps extends Pick<CRCManipulationOptions, 'rotation' | 'onStart' | 'onChange' | 'onCommit' | 'onCancel'> { readonly style: WritableSignal<CRCManipulationBox>; readonly draggable?: boolean | CRCManipulationMoveInput; readonly resizable?: boolean | CRCManipulationResizeInput; readonly rotatable?: boolean | CRCManipulationRotateInput; readonly resizeHandles?: CRCResizeHandlesProps['positions']; readonly children?: CRCNode }
+  export interface CRCRotationHandleProps { readonly controller: CRCManipulationController; readonly hitSize?: number; readonly readoutUnit?: "degrees" | "radians"; readonly formatReadout?: (value: { readonly rotation: number }) => string; readonly children?: CRCNode }
+  export interface CRCManipulableProps extends Pick<CRCManipulationOptions, 'rotation' | 'onStart' | 'onChange' | 'onCommit' | 'onCancel'> { readonly style: WritableSignal<CRCManipulationBox>; readonly draggable?: boolean | CRCManipulationMoveInput; readonly resizable?: boolean | CRCManipulationResizeInput; readonly rotatable?: boolean | CRCManipulationRotateInput; readonly resizeHandles?: CRCResizeHandlesProps['positions'] | Omit<CRCResizeHandlesProps, 'controller'>; readonly rotationHandle?: Omit<CRCRotationHandleProps, 'controller' | 'children'> & { readonly style?: CRCRotationHandleStyle }; readonly children?: CRCNode }
   export interface CRCManipulationGeometry { readonly box: CRCManipulationBox; readonly rotation: number }
   export type CRCManipulationOperation = 'move' | 'resize' | 'rotate';
   export type CRCManipulationCancelReason = 'explicit' | 'escape' | 'pointer-cancel' | 'capture-lost' | 'disabled' | 'external-change' | 'coordinate-space-changed' | 'constraints-unsatisfiable';
@@ -304,8 +304,14 @@
   export interface CRCManipulationController { readonly active: Signal<CRCManipulationActive | null>; readonly snapshot: Signal<CRCManipulationSnapshot | null>; readonly frameProps: CRCManipulationFrameProps; cancel(): void }
   export interface CRCDragHandleProps { readonly controller: CRCManipulationController; readonly children?: CRCNode }
   export interface CRCDragHandleStyle extends BoxStyle, LayoutItemStyle { cursor?: string }
-  export interface CRCResizeHandleProps { readonly controller: CRCManipulationController; readonly position: CRCResizePosition; readonly hitSize?: number; readonly children?: CRCNode }
-  export interface CRCResizeHandlesProps { readonly controller: CRCManipulationController; readonly positions?: 'corners' | 'edges-and-corners' | readonly CRCResizePosition[]; readonly hitSize?: number }
+  export interface CRCManipulationReadoutStateStyle { readonly gap?: number; readonly font?: string; readonly fill?: string; readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number; readonly visible?: boolean; }
+  export interface CRCManipulationReadoutStyle extends CRCManipulationReadoutStateStyle { readonly inactive?: CRCManipulationReadoutStateStyle; readonly focused?: CRCManipulationReadoutStateStyle; readonly active?: CRCManipulationReadoutStateStyle; }
+  export interface CRCResizeHandleStyle extends SystemStyle { readonly readout?: false | true | CRCManipulationReadoutStyle; }
+  export interface CRCRotationConnectorStyle { readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number; }
+  export interface CRCRotationArcStyle { readonly color?: string; readonly sweep?: number; readonly strokeWidth?: number; readonly opacity?: number; }
+  export interface CRCRotationHandleStyle extends SystemStyle { readonly connector?: false | true | CRCRotationConnectorStyle; readonly arc?: false | true | CRCRotationArcStyle; readonly readout?: false | true | CRCManipulationReadoutStyle; }
+  export interface CRCResizeHandleProps { readonly controller: CRCManipulationController; readonly position: CRCResizePosition; readonly hitSize?: number; readonly formatReadout?: (value: { readonly width: number; readonly height: number }) => string; readonly children?: CRCNode }
+  export interface CRCResizeHandlesProps { readonly controller: CRCManipulationController; readonly positions?: 'corners' | 'edges-and-corners' | readonly CRCResizePosition[]; readonly hitSize?: number; readonly style?: CRCResizeHandleStyle; readonly formatReadout?: CRCResizeHandleProps['formatReadout'] }
 
   export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
   export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
@@ -504,9 +510,9 @@
   export const Grid: CRCPrimitiveComponent<GridProps, PrimitiveInput<GridProps, GridStyle>>;
   export const ManipulationFrame: CRCPrimitiveComponent<Pick<CRCManipulationFrameProps, 'controller'>, PrimitiveInput<Pick<CRCManipulationFrameProps, 'controller'>, SystemStyle & CRCManipulationBox>>;
   export const DragHandle: CRCPrimitiveComponent<CRCDragHandleProps, PrimitiveInput<CRCDragHandleProps, CRCDragHandleStyle>>;
-  export const ResizeHandle: CRCPrimitiveComponent<CRCResizeHandleProps>;
+  export const ResizeHandle: CRCPrimitiveComponent<CRCResizeHandleProps, PrimitiveInput<CRCResizeHandleProps, CRCResizeHandleStyle>>;
   export function ResizeHandles(props: CRCResizeHandlesProps): CRCNode;
-  export const RotationHandle: CRCPrimitiveComponent<CRCRotationHandleProps>;
+  export const RotationHandle: CRCPrimitiveComponent<CRCRotationHandleProps, PrimitiveInput<CRCRotationHandleProps, CRCRotationHandleStyle>>;
   export function Manipulable(props: CRCManipulableProps): CRCNode;
   export function degrees(value: number): number;
   export function createArcPath(options: Readonly<ArcPathOptions>): Path2D;

@@ -375,3 +375,140 @@ and covers external-write ownership, click suppression, constraint projection,
 and package exports. Its focused tests establish these technical choices before
 production changes. Deferred controlled bindings and layout-owned resizing do
 not block the agreed freely positioned manipulation feature.
+
+## 2026-09-29 extension: handle presentation and readouts
+
+User-requested scope: handles follow the bounding box orientation; rotation
+controls can show a perpendicular connector and a blue-to-transparent guide
+arc; rotation and size readouts are optional, configurable, state-aware, and
+custom-formatted. This section records the approved extension implemented in the
+feature worktree. It does not resolve the separate ordinary-component placement
+handoff decision.
+
+### Geometry and default presentation
+
+- Handle anchors and square handle visuals follow the box rotation. Preserve
+  constant CSS-pixel visual size, border thickness, and hit size. The existing
+  screen-aligned visual basis must change without changing gesture math.
+- The rotation connector runs outward from the displayed top-edge midpoint,
+  perpendicular to that displayed edge, to the rotation handle. Compute the
+  outward screen-space normal under nonuniform ancestor transforms; merely
+  transforming local negative Y is insufficient. Keep paint and target mapping
+  aligned using the committed frame mapping.
+- Connector and guide arc are separate optional decorations, with configurable
+  color, opacity and stroke width. The arc is a short guide passing through the
+  handle, centered on the displayed rotation pivot, with blue strongest at the
+  handle and fading to transparent at both ends. Arc extent is configurable in
+  radians. It is a guide, not an accumulated-angle or progress indicator.
+- Decorations do not create hit targets, consume layout space, or alter the
+  manipulated box. Existing ancestor clipping still applies.
+- Defaults: connector enabled; arc and readouts opt-in. Enabling the
+  arc without options selects the blue fade. Explicit false disables each.
+
+### Readout behavior
+
+- Rotation readout defaults to degrees; radians are an explicit display-unit
+  option. Geometry and snapping remain radians regardless of display units.
+- Resize readout defaults to logical width and height in px, not device/backing
+  pixels. Show one combined size label for a ResizeHandles collection, anchored
+  beside the relevant handle, rather than one duplicate label per handle.
+- Readout presentation belongs in `style.readout`: base text paint, visibility,
+  opacity and nested `inactive`, `focused`, and `active` overrides. Omitted
+  readout styling/configuration disables the label; enabling it defaults to
+  hidden outside an active gesture. Authors express other visibility policies
+  through the state overrides, rather than a separate visibility enum.
+- Resolve base style, then inactive when no gesture is active, then focused
+  when logically focused, then active when its gesture is active. These are
+  shallow property overrides; active wins conflicts with focused. State
+  branches cannot recursively contain state branches. Active means the
+  threshold-activated manipulation, not CSS pointer-down `:active`.
+- This is a typed local readout-slot convention, not a new global CSS selector
+  or pseudo-class system. Current CRC focus visuals are ordinary drawing from
+  events/signals, and responsive style conditions describe allocation queries,
+  not pointer/focus state. Use the existing `font` vocabulary (for example
+  `12px sans-serif`); `fontSize` would be a separate style-language addition.
+- Labels remain upright and CSS-sized. State style changes are immediate;
+  authors may control opacity, but automatic transitions remain deferred.
+- Canvas containment is required, not deferred custom positioning. Measure the
+  final formatted text with the resolved state font, stroke and padding, choose
+  the preferred nearby handle placement, flip sides when necessary, and clamp
+  the entire painted label to the visible canvas content rectangle with a small
+  inset. Do this in CSS coordinates after applying canvas fit/density and ancestor
+  transforms; a clamped label must not change box geometry or handle hit targets.
+- If the label cannot fit, constrain it to the available width with ellipsis;
+  use a final canvas-interior clip as a safety net for unusual glyph overhangs.
+  If there is no usable height/width, omit it. User formatters cannot bypass
+  containment. No off-canvas DOM labels or automatic font shrinking.
+- Recompute measured placement when formatted content, resolved state style,
+  geometry, or canvas mapping changes. Cache unchanged measurements; only a
+  bounded number of labels are involved. Labels never intercept input and remain
+  subject to ancestor clipping. Arbitrary user positioning, readout-to-readout
+  collision avoidance, and animation are deferred.
+- A synchronous pure formatter returns a string, receiving the applied raw
+  geometry. Rotation formatter inputs always include
+  rotation in radians; size inputs include width/height in logical units.
+  The built-in display-unit option affects only default formatting. Do not
+  feed rounded/formatted strings back into manipulation geometry.
+- Print formatters supply their own document unit conversion. CRC must not
+  silently assume that a logical pixel is a physical printer pixel or that a
+  document uses a particular DPI.
+
+### Authoring surface
+
+Put readout presentation in `style.readout` on RotationHandle, ResizeHandle,
+and ResizeHandles. Keep content decisions in named props:
+`readoutUnit` for rotation's built-in formatter and `formatReadout` for a custom
+pure formatter. `formatReadout` overrides built-in formatting and always
+receives raw geometry. Passing formatting props also enables default readout
+presentation; `style.readout: false` explicitly disables it. Connector and arc
+presentation likewise belongs in typed `style.connector` and `style.arc`
+slots, each accepting false, true, or a closed local style object. Forward these
+through Manipulable without adding another controller.
+
+Authoring example:
+
+```tsx
+<RotationHandle
+  controller={manipulation}
+  readoutUnit="degrees"
+  style={{
+    connector: true,
+    arc: { color: '#2563eb', sweep: degrees(60), strokeWidth: 2 },
+    readout: {
+      font: '12px sans-serif',
+      visible: false,
+      fill: '#64748b',
+      focused: { visible: true },
+      active: { visible: true, fill: '#ff0000' },
+    },
+  }}
+/>
+
+<ResizeHandles
+  controller={manipulation}
+  formatReadout={({ width, height }) =>
+    `${(width / unitsPerInch).toFixed(2)} × ${(height / unitsPerInch).toFixed(2)} in`
+  }
+  style={{ readout: { active: { visible: true } } }}
+/>
+```
+
+### First slice and evidence
+
+Start with rotating handle visuals, the perpendicular connector, and an
+active-only default readout in the live example. Then add formatter/state
+options and the opt-in arc through that same public surface. Verify numeric
+CSS extents and perpendicularity under rotation and nonuniform scale, logical
+focus/active precedence, exactly one resize label, degree/radian formatting,
+custom document-unit formatting, every canvas edge/corner, oversized formatter
+output, state-dependent font changes, hidden-label pass-through, and unchanged
+box/rotation values. Use a narrow visual check for the gradient itself; no new
+scheduler, pixel readback, font-layout engine, or animation subsystem is needed.
+
+### 2026-09-29 feedback: outward resize labels
+
+Resize labels prefer the exterior of the selected displayed edges, with a
+configurable `style.readout.gap` of 5 CSS pixels by default. The upright label
+bounds clear both edges at a corner, including rotated/nonuniformly transformed
+frames. Gap accepts the same state overrides and must be finite and nonnegative.
+Canvas containment takes priority where exterior space is unavailable.

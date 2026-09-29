@@ -6,7 +6,13 @@ kind: api
 slug: resize-handle
 apiCategory: component
 symbols: [ResizeHandle]
-relatedTypes: [CRCResizeHandleProps, CRCResizePosition]
+relatedTypes:
+  [
+    CRCResizeHandleStyle,
+    CRCManipulationReadoutStyle,
+    CRCResizeHandleProps,
+    CRCResizePosition,
+  ]
 ---
 
 # ResizeHandle
@@ -27,3 +33,9 @@ const manipulation = useManipulation({ box, resize: {} });
 ```
 
 Related types: [CRCResizeHandleProps](#/api/types/events#crcresizehandleprops), [CRCResizePosition](#/api/types/events#crcresizeposition).
+
+Readout presentation uses `style.readout` with local inactive/focused/active overrides.
+Use `formatReadout` for application-defined units; labels remain inside the visible canvas.
+See [handle guides and readouts](#/learn/guides/manipulation#handle-guides-and-readouts).
+
+Related presentation types: [CRCResizeHandleStyle](#/api/types/events#crcresizehandlestyle), [CRCManipulationReadoutStyle](#/api/types/events#crcmanipulationreadoutstyle).

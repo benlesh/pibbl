@@ -52,6 +52,12 @@ symbols:
     CRCMouseEventListener,
     CRCPointerEvent,
     CRCPointerEvents,
+    CRCManipulationReadoutStateStyle,
+    CRCRotationConnectorStyle,
+    CRCRotationArcStyle,
+    CRCManipulationReadoutStyle,
+    CRCResizeHandleStyle,
+    CRCRotationHandleStyle,
     CRCResizeHandleProps,
     CRCResizeHandlesProps,
     CRCResizePosition,
@@ -302,3 +308,37 @@ aspect ratio, and size or grid snapping. Their `enabled` values accept signals.
 `CRCResizePosition` names the supported frame edges and corners.
 `CRCDragHandleProps`, `CRCDragHandleStyle`, `CRCResizeHandleProps`, and
 `CRCResizeHandlesProps` configure the public handle components.
+
+## CRCManipulationReadoutStyle
+
+Local readout presentation: font, fill, stroke, stroke width, opacity and visibility,
+with flat inactive, focused and active overrides. Resolve base, inactive when not
+active, focused, then active. Labels stay upright and contained in the visible
+canvas; formatting never changes gesture geometry.
+
+## CRCResizeHandleStyle
+
+The resize control's local style includes an optional `readout` slot. Omitted
+readout configuration disables the label; true enables the default active-only
+label; false explicitly disables it. ResizeHandles shares this style and shows
+one combined size readout.
+
+## CRCRotationHandleStyle
+
+Local rotation presentation includes connector, arc and readout slots. Connector
+is enabled by default; arc and readout are opt-in. Each slot accepts true, false,
+or its typed configuration. Connector orientation follows the displayed edge;
+readout text stays upright and inside the canvas.
+
+## CRCManipulationReadoutStateStyle
+
+A flat readout state patch containing font, fill, stroke, strokeWidth, opacity,
+and visible. It cannot contain nested state branches.
+
+## CRCRotationConnectorStyle
+
+Rotation connector stroke, strokeWidth and opacity in CSS-pixel presentation.
+
+## CRCRotationArcStyle
+
+Rotation guide color, sweep in radians, strokeWidth and opacity.

@@ -160,8 +160,28 @@ function Scene() {
           controller={manipulation}
           style={{ width: "100%", height: 44 }}
         />
-        <ResizeHandles controller={manipulation} positions="corners" />
-        <RotationHandle controller={manipulation} />
+        <ResizeHandles
+          controller={manipulation}
+          positions="corners"
+          style={{ readout: {
+            font: "12px sans-serif",
+            visible: false,
+            active: { visible: true, fill: "#1d4ed8" },
+          } }}
+        />
+        <RotationHandle
+          controller={manipulation}
+          readoutUnit="degrees"
+          style={{
+            connector: true,
+            arc: { color: "#2563eb", sweep: degrees(60), strokeWidth: 2 },
+            readout: {
+              font: "12px sans-serif",
+              visible: false,
+              active: { visible: true, fill: "#1d4ed8" },
+            },
+          }}
+        />
       </ManipulationFrame>
       <Rectangle
         onClick={() => alwaysSnap.update((value) => !value)}

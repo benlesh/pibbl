@@ -106,3 +106,62 @@ priority over snapping, so a legal constrained result can be off-grid.
 
 Rotation values are radians and stay continuous across turns. Use `degrees()`
 for readable option values. Existing `Group.rotationDegrees` remains degrees.
+
+## Handle guides and readouts
+
+Handles rotate with the box while keeping their CSS-pixel size. Rotation controls
+include a perpendicular connector by default; `style.connector: false` removes
+it. Set `style.arc: true` for the default blue-to-transparent guide, or provide
+`color`, `sweep` (radians), `strokeWidth` and `opacity`.
+
+Readout presentation is local to `style.readout`. A readout is opt-in and defaults
+to visible only during an active gesture. For example:
+
+```tsx
+<RotationHandle
+  controller={manipulation}
+  readoutUnit="degrees"
+  style={{
+    arc: { color: "#2563eb", sweep: degrees(60) },
+    readout: {
+      font: "12px sans-serif",
+      visible: false,
+      fill: "#64748b",
+      focused: { visible: true },
+      active: { visible: true, fill: "#ff0000" },
+    },
+  }}
+/>
+```
+
+Resolve base style, inactive when no manipulation is active, focused, then active.
+Later matching overrides win. This is a typed local readout convention, not a
+CSS selector system. State changes are immediate; automatic transitions and
+arbitrary label placement are not included.
+
+`readoutUnit="radians"` changes the default rotation label. `formatReadout`
+replaces default formatting and receives raw radians or logical width/height.
+For document units, supply your application's units-per-inch conversion:
+
+```tsx
+<ResizeHandles
+  controller={manipulation}
+  formatReadout={({ width, height }) =>
+    `${(width / 96).toFixed(2)} × ${(height / 96).toFixed(2)} in`
+  }
+  style={{ readout: { active: { visible: true } } }}
+/>
+```
+
+This example explicitly assumes 96 document units per inch; it does not infer
+printer resolution or convert device pixels. The collection displays one size
+label. `style.readout: false` disables it even when a formatter is supplied.
+
+Resize labels stay upright and sit outside the rotated box, 5 CSS pixels from
+the selected edges by default. Set `style.readout.gap` to change that spacing
+(for example, `{ readout: { gap: 10 } }`). The gap also accepts state overrides.
+Canvas containment takes priority: labels clamp at the canvas edge, where overlap
+may be unavoidable; oversized formatted text is ellipsized and
+clipped as needed. Labels never intercept input or change gesture geometry.
+
+`Manipulable` forwards these options through `resizeHandles={{ style: { readout: true }, formatReadout }}` and `rotationHandle={{ style: { arc: true, readout: true }, readoutUnit: "radians" }}`. The existing resize-position shorthand remains supported.

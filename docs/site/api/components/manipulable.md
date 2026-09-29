@@ -30,3 +30,5 @@ function Card() {
 Use `useManipulation` with explicit handles when only part of the content should initiate dragging.
 
 Related types: [CRCManipulableProps](#/api/types/events#crcmanipulableprops).
+
+Configure handle presentation with `resizeHandles={{ style: { readout: { gap: 5 } }, formatReadout }}` and `rotationHandle={{ style: { arc: true, readout: true }, readoutUnit: "degrees" }}`. `resizeHandles` also accepts the existing positions shorthand.

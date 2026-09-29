@@ -81,3 +81,29 @@ it("keeps wide strokes and italic glyph bounds inside the canvas inset", async (
     expect(bottom).toBeLessThanOrEqual(96);
   }
 });
+
+it.each([[0, 5], [Math.PI / 4, 5], [Math.PI * 0.8, 5], [Math.PI / 4, 16]])("places resize labels outside the rotated corner (%s, gap %s)", async (rotation, gap) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 800; canvas.height = 600; document.body.append(canvas);
+  const ctx = canvas.getContext("2d")!;
+  const bounds: number[][] = [];
+  const original = ctx.fillText.bind(ctx);
+  vi.spyOn(ctx, "fillText").mockImplementation((text, x, y) => {
+    const m = ctx.measureText(text);
+    bounds.push([x - m.actualBoundingBoxLeft, y - m.actualBoundingBoxAscent, x + m.actualBoundingBoxRight, y + m.actualBoundingBoxDescent]);
+    original(text, x, y);
+  });
+  function Scene(): CRCNode {
+    const control = CRC.useManipulation({box: CRC.useSignal({left:300,top:240,width:160,height:100}), rotation:CRC.useSignal(rotation), resize:{}});
+    return <CRC.ManipulationFrame {...control.frameProps}><CRC.ResizeHandle controller={control} position="bottom-right" formatReadout={() => "size"} style={{readout:{visible:true,gap}}}/></CRC.ManipulationFrame>;
+  }
+  mount = CRC.crc(canvas, <Scene />, {pixelRatio:1}); await settle();
+  expect(bounds).toHaveLength(1);
+  const [left,top,right,bottom] = bounds[0];
+  const c = Math.cos(rotation), s = Math.sin(rotation);
+  const anchor = [380 + 80*c - 50*s, 290 + 80*s + 50*c];
+  for (const [x,y] of [[left,top],[right,top],[right,bottom],[left,bottom]]) {
+    expect((x-anchor[0])*c + (y-anchor[1])*s).toBeGreaterThanOrEqual(gap - 0.01);
+    expect(-(x-anchor[0])*s + (y-anchor[1])*c).toBeGreaterThanOrEqual(gap - 0.01);
+  }
+});

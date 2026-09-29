@@ -96,6 +96,8 @@ export const DragHandle = definePrimitive<
 );
 
 export interface CRCManipulationReadoutStateStyle {
+  /** Minimum outward spacing in CSS pixels; defaults to 5. */
+  readonly gap?: number;
   readonly font?: string;
   readonly fill?: string;
   readonly stroke?: string;
@@ -246,6 +248,7 @@ export const ResizeHandle = definePrimitive<
       style.readout,
       focus.isFocused,
       relevant,
+      position,
     );
   }
   if (props.children !== undefined)
@@ -336,6 +339,7 @@ const ResizeCollectionReadout = definePrimitive<{
     props.collection.style?.readout,
     props.collection.focused.get(position) ?? false,
     active?.operation === "resize" && active.handle === position,
+    position,
   );
 });
 
@@ -383,6 +387,7 @@ export const RotationHandle = definePrimitive<
       style.readout,
       focus.isFocused,
       relevant,
+      "top",
     );
   if (props.children !== undefined)
     return createElement(CssHandleContent, {
@@ -554,6 +559,8 @@ function validateReadoutStyle(
   if (!value || value === true) return;
   for (const style of [value, value.inactive, value.focused, value.active]) {
     if (!style) continue;
+    if (style.gap !== undefined && (!Number.isFinite(style.gap) || style.gap < 0))
+      throw new Error("Manipulation readout gap must be finite non-negative CSS pixels.");
     if (
       style.strokeWidth !== undefined &&
       (!Number.isFinite(style.strokeWidth) || style.strokeWidth < 0)
@@ -640,6 +647,7 @@ function paintReadout(
   readout: false | true | CRCManipulationReadoutStyle | undefined,
   focused: boolean,
   active: boolean,
+  position?: ResizePosition,
 ): void {
   validateReadoutStyle(readout);
   const resolved = resolveReadout(
@@ -651,6 +659,7 @@ function paintReadout(
   if (!resolved.visible) return;
   const text = format();
   if (!text) return;
+  const frameMapping = frameToCss(state);
   withCssContext(ctx, state, () => {
     ctx.font = resolved.font;
     ctx.textAlign = "left";
@@ -669,11 +678,9 @@ function paintReadout(
     const height = ascent + descent + 6 + stroke;
     const width = glyphLeft + glyphRight + 8 + stroke;
     if (width > surface.displayWidth - 8 || height > surface.displayHeight - 8) return;
-    let left = anchor.x + 8,
-      top = anchor.y - height / 2;
-    if (left + width > surface.displayWidth - 4) left = anchor.x - width - 8;
-    if (top < 4) top = anchor.y + 8;
-    if (top + height > surface.displayHeight - 4) top = anchor.y - height - 8;
+    const offset = outwardReadoutOffset(frameMapping, position, width, height, resolved.gap);
+    let left = anchor.x + offset.x - width / 2;
+    let top = anchor.y + offset.y - height / 2;
     left = Math.max(4, Math.min(surface.displayWidth - 4 - width, left));
     top = Math.max(4, Math.min(surface.displayHeight - 4 - height, top));
     ctx.globalAlpha *= resolved.opacity;
@@ -686,6 +693,26 @@ function paintReadout(
     ctx.fillText(value, left + 4 + glyphLeft + stroke / 2, top + 3 + ascent + stroke / 2);
   });
 }
+/** Separate the upright label from the selected edges in displayed CSS space. */
+function outwardReadoutOffset(frameMapping: DOMMatrix, position: ResizePosition | undefined, width: number, height: number, gap: number): DOMPoint {
+  if (!position) return new DOMPoint(width / 2 + gap, 0);
+  const inverse = frameMapping.inverse();
+  const normals: DOMPoint[] = [];
+  const add = (x: number, y: number, sign: number) => {
+    const length = Math.hypot(x, y);
+    normals.push(new DOMPoint(sign * x / length, sign * y / length));
+  };
+  if (position.includes("left")) add(inverse.a, inverse.c, -1);
+  if (position.includes("right")) add(inverse.a, inverse.c, 1);
+  if (position.includes("top")) add(inverse.b, inverse.d, -1);
+  if (position.includes("bottom")) add(inverse.b, inverse.d, 1);
+  const support = (n: DOMPoint) => Math.abs(n.x) * width / 2 + Math.abs(n.y) * height / 2 + gap;
+  const [a, b] = normals;
+  const da = support(a);
+  if (!b) return new DOMPoint(a.x * da, a.y * da);
+  const db = support(b), determinant = a.x * b.y - a.y * b.x;
+  return new DOMPoint((da * b.y - a.y * db) / determinant, (a.x * db - da * b.x) / determinant);
+}
 function resolveReadout(
   value: false | true | CRCManipulationReadoutStyle | undefined,
   inactive: boolean,
@@ -694,6 +721,7 @@ function resolveReadout(
 ): Required<CRCManipulationReadoutStateStyle> {
   const source = value && value !== true ? value : {};
   const base: Required<CRCManipulationReadoutStateStyle> = {
+    gap: source.gap ?? 5,
     font: source.font ?? "12px sans-serif",
     fill: source.fill ?? "#1d4ed8",
     stroke: source.stroke ?? "",

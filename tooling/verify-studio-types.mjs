@@ -374,6 +374,7 @@ for (const { moduleName, content } of declarationModules) {
 }
 
 const publicTypeExports = [
+  'CRCManipulationReadoutStateStyle', 'CRCManipulationReadoutStyle', 'CRCResizeHandleStyle', 'CRCRotationArcStyle', 'CRCRotationConnectorStyle', 'CRCRotationHandleStyle',
   'CRCDragHandleProps', 'CRCDragHandleStyle', 'CRCManipulableProps', 'CRCManipulationActive', 'CRCManipulationBox', 'CRCManipulationCancelEvent', 'CRCManipulationCancelReason', 'CRCManipulationCommitEvent', 'CRCManipulationController', 'CRCManipulationEvent', 'CRCManipulationFrameProps', 'CRCManipulationGeometry', 'CRCManipulationMoveInput', 'CRCManipulationOperation', 'CRCManipulationOptions', 'CRCManipulationPoint', 'CRCManipulationResizeInput', 'CRCManipulationRotateInput', 'CRCManipulationSnapshot', 'CRCManipulationWhen', 'CRCResizeHandleProps', 'CRCResizeHandlesProps', 'CRCResizePosition', 'CRCRotationHandleProps',
   'AbsoluteProps',
   'AbsoluteStyle',
@@ -571,8 +572,8 @@ const publicTypeExports = [
   'CRCResponsiveStyle',
 ].sort();
 
-if (publicTypeExports.length !== 218) {
-  throw new Error(`CRC Studio must declare exactly 218 core public types, received ${publicTypeExports.length}.`);
+if (publicTypeExports.length !== 224) {
+  throw new Error(`CRC Studio must declare exactly 224 core public types, received ${publicTypeExports.length}.`);
 }
 
 const publicWebGLTypeExports = [

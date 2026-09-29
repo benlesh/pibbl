@@ -364,7 +364,7 @@ export type { CRCManipulationController, CRCManipulationOptions, CRCManipulation
 export type { CRCManipulationBox, CRCManipulationPoint, CRCManipulationWhen, CRCResizePosition } from './lib/manipulation/types.js';
 export type { CRCDragHandleProps, CRCDragHandleStyle } from './lib/manipulation/handles.js';
 
-export type { CRCResizeHandleProps, CRCResizeHandlesProps, CRCRotationHandleProps } from './lib/manipulation/handles.js';
+export type { CRCResizeHandleProps, CRCResizeHandlesProps, CRCRotationHandleProps, CRCResizeHandleStyle, CRCRotationHandleStyle, CRCManipulationReadoutStyle, CRCManipulationReadoutStateStyle, CRCRotationConnectorStyle, CRCRotationArcStyle } from './lib/manipulation/handles.js';
 
 export { degrees } from './lib/manipulation/degrees.js';
 export { Manipulable } from './lib/manipulation/manipulable.js';
