@@ -11,8 +11,8 @@ import { useSignal } from '../hooks/use-signal';
 import { Group } from './g';
 
 const defaultStyle = {
-  x: 50,
-  y: 50,
+  left: 50,
+  top: 50,
   width: 100,
   height: 100,
   fill: 'red',
@@ -152,7 +152,7 @@ describe('rect', () => {
         },
       }));
 
-      expect(roundRect).toHaveBeenCalledWith(0.5, 1.5, 4, 5, [9, 9, 9, 9]);
+      expect(roundRect).toHaveBeenCalledWith(-0.5, -0.5, 3, 5, [9, 9, 9, 9]);
     } finally {
       roundRect.mockRestore();
     }
@@ -177,7 +177,10 @@ describe('rect', () => {
     expect(Array.from(getCRCInstance(canvas.element).eventRoot.targets)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          keyboardNavigationBounds: { x: 20, y: 30, width: 40, height: 50 },
+          keyboardNavigationBounds: { x: 0, y: 0, width: 40, height: 50 },
+          paintEntry: expect.objectContaining({
+            transform: expect.objectContaining({ e: 20, f: 30 }),
+          }),
         }),
         expect.objectContaining({ keyboardNavigationBounds: override }),
       ]),
@@ -214,7 +217,7 @@ describe('rect', () => {
         },
       }));
 
-      const { x, y, width, height } = defaultStyle;
+      const { left: x, top: y, width, height } = defaultStyle;
       const centerX = x + width / 2;
       const centerY = y + height / 2;
 
@@ -225,14 +228,14 @@ describe('rect', () => {
   });
 
   describe('mouse events', () => {
-    const { x, y, width, height } = defaultStyle;
+    const { left: x, top: y, width, height } = defaultStyle;
 
     const centerX = x + width / 2;
     const centerY = y + height / 2;
     const nearEdgeX = x + width - 1;
     const nearEdgeY = y + height / 2;
     const offRectX = x - 10;
-    const offRectY = defaultStyle.y - 10;
+    const offRectY = defaultStyle.top - 10;
 
     describe.each([
       { event: 'click', handler: 'onClick' },
@@ -273,7 +276,7 @@ describe('rect', () => {
         const onMouseOver = vi.fn();
         const onMouseOut = vi.fn();
 
-        const { x, y, width, height } = defaultStyle;
+        const { left: x, top: y, width, height } = defaultStyle;
 
         const centerX = x + width / 2;
         const centerY = y + height / 2;
@@ -320,7 +323,7 @@ describe('rect', () => {
         const onMouseOver = vi.fn();
         const onMouseOut = vi.fn();
 
-        const { x, y, width, height } = defaultStyle;
+        const { left: x, top: y, width, height } = defaultStyle;
 
         const centerX = x + width / 2;
         const centerY = y + height / 2;
