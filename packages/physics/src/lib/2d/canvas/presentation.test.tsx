@@ -22,6 +22,7 @@ import {
   snapshotPhysicsWorld2DControllerForTest,
 } from "../runtime/controller.js";
 import {
+  bodyLocalTransformFromPrimitive2D,
   captureBodyPresentation2D,
   resolveDynamicPresentationTransform2D,
 } from "./presentation.js";
@@ -33,6 +34,24 @@ describe("Canvas 2D physics pose presentation", () => {
     for (const mount of mounts.splice(0)) mount.dispose();
     vi.restoreAllMocks();
     document.body.replaceChildren();
+  });
+
+  it("includes primitive left/top placement in the body-local presentation transform", () => {
+    expect(
+      matrix(
+        bodyLocalTransformFromPrimitive2D(Rectangle, { left: 12, top: 18 }),
+      ),
+    ).toEqual([1, 0, 0, 1, 12, 18]);
+    expect(
+      matrix(
+        bodyLocalTransformFromPrimitive2D(Group, {
+          left: 12,
+          top: 18,
+          translateX: 4,
+          translateY: 6,
+        }),
+      ),
+    ).toEqual([1, 0, 0, 1, 16, 24]);
   });
 
   it("presents committed dynamic motion through filters and coordinate targeting", () => {
@@ -279,7 +298,13 @@ describe("Canvas 2D physics pose presentation", () => {
         <PhysicsWorld2D gravity={[0, 560]} fixedStepMilliseconds={1000 / 60}>
           <Rectangle
             physics={staticBody2D({ collider: { friction: 0.8 } })}
-            style={{ left: 72, top: 316, width: 576, height: 34, fill: "#334155" }}
+            style={{
+              left: 72,
+              top: 316,
+              width: 576,
+              height: 34,
+              fill: "#334155",
+            }}
           />
           <Group physics={staticBody2D({ collider: false })}>
             <Rectangle
@@ -382,11 +407,23 @@ describe("Canvas 2D physics pose presentation", () => {
           <Capture />
           <Rectangle
             physics={staticBody2D({ collider: { friction: 0.55 } })}
-            style={{ left: 54, top: 316, width: 612, height: 34, fill: "#334155" }}
+            style={{
+              left: 54,
+              top: 316,
+              width: 612,
+              height: 34,
+              fill: "#334155",
+            }}
           />
           <Rectangle
             physics={staticBody2D({ collider: { friction: 0.4 } })}
-            style={{ left: 646, top: 96, width: 20, height: 220, fill: "#475569" }}
+            style={{
+              left: 646,
+              top: 96,
+              width: 20,
+              height: 220,
+              fill: "#475569",
+            }}
           />
           <Ball />
         </PhysicsWorld2D>,
