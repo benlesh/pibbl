@@ -23,8 +23,8 @@ afterEach(async () => {
 async function setup(
   extra: Partial<CRCManipulationOptions> = {},
   expectedLeft = 60,
+  box = CRC.signal({ left: 40, top: 50, width: 160, height: 120 }),
 ) {
-  const box = CRC.signal({ left: 40, top: 50, width: 160, height: 120 });
   const enabled = CRC.signal(true);
   const visible = CRC.signal(true);
   const frameVisible = CRC.signal(true);
@@ -87,6 +87,44 @@ it("ends synchronously on an external write before another pointer event and pre
   await commands.manipulationPointer([{ type: "up" }]);
   expect(box.get().left).toBe(200);
 });
+
+it("lets newer geometry written during onStart cancel the gesture and win", async () => {
+  const box = CRC.signal({ left: 40, top: 50, width: 160, height: 120 });
+  const replacement = { left: 280, top: 190, width: 140, height: 100 };
+  const { controller, cancelled } = await setup(
+    { onStart: () => box.set(replacement) },
+    replacement.left,
+    box,
+  );
+  expect(controller.active.get()).toBe(null);
+  expect(box.get()).toEqual(replacement);
+  expect(cancelled.map((event) => event.reason)).toEqual(["external-change"]);
+  await commands.manipulationPointer([{ type: "up" }]);
+  expect(box.get()).toEqual(replacement);
+});
+
+it("lets newer geometry written during onChange cancel the gesture and win", async () => {
+  const box = CRC.signal({ left: 40, top: 50, width: 160, height: 120 });
+  const replacement = { left: 260, top: 170, width: 140, height: 100 };
+  let changes = 0;
+  const { controller, cancelled } = await setup(
+    {
+      onChange: () => {
+        changes++;
+        box.set(replacement);
+      },
+    },
+    replacement.left,
+    box,
+  );
+  expect(changes).toBe(1);
+  expect(controller.active.get()).toBe(null);
+  expect(box.get()).toEqual(replacement);
+  expect(cancelled.map((event) => event.reason)).toEqual(["external-change"]);
+  await commands.manipulationPointer([{ type: "up" }]);
+  expect(box.get()).toEqual(replacement);
+});
+
 it("does not cancel equal geometry, but disabling an active operation restores the starting box", async () => {
   const { box, enabled, controller, cancelled } = await setup();
   box.set({ ...box.get() });
