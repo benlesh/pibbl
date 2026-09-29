@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
 import * as CRC from "@crc/core";
 import type { CRCController, CRCNode } from "@crc/core";
@@ -78,4 +78,55 @@ it("starts only from a painted DragHandle child and respects its pointer cancell
     { type: "up" },
   ]);
   expect(box.get()).toEqual({ left: 65, top: 70, width: 160, height: 100 });
+});
+
+it("shows a move readout only for the active child-defined grip", async () => {
+  const box = CRC.signal({ left: 40, top: 50, width: 180, height: 100 });
+  const canvas = document.createElement("canvas");
+  canvas.width = 300;
+  canvas.height = 220;
+  canvas.dataset.manipulationTest = "";
+  document.body.append(canvas);
+  function Scene(): CRCNode {
+    const control = CRC.useManipulation({ box, move: {} });
+    return (
+      <CRC.ManipulationFrame {...control.frameProps}>
+        <CRC.DragHandle
+          controller={control}
+          formatReadout={() => "first"}
+          style={{ readout: true }}
+        >
+          <CRC.Circle style={{ cx: 40, cy: 50, radius: 16, fill: "#2563eb" }} />
+        </CRC.DragHandle>
+        <CRC.DragHandle
+          controller={control}
+          formatReadout={() => "second"}
+          style={{ readout: true }}
+        >
+          <CRC.Circle
+            style={{ cx: 120, cy: 50, radius: 16, fill: "#16a34a" }}
+          />
+        </CRC.DragHandle>
+      </CRC.ManipulationFrame>
+    );
+  }
+  mount = CRC.crc(
+    canvas,
+    <CRC.FocusManagement>
+      <Scene />
+    </CRC.FocusManagement>,
+    { pixelRatio: 1 },
+  );
+  await settle();
+  const draw = vi.spyOn(canvas.getContext("2d")!, "fillText");
+  await commands.manipulationPointer([
+    { type: "move", x: 80, y: 100 },
+    { type: "down" },
+    { type: "move", x: 105, y: 120 },
+  ]);
+  await settle();
+  const text = draw.mock.calls.map(([value]) => value);
+  expect(text).toContain("first");
+  expect(text).not.toContain("second");
+  await commands.manipulationPointer([{ type: "up" }]);
 });

@@ -1,19 +1,27 @@
 import { createElement } from "../element/create-element.js";
-import { setPrimitivePresentation } from "../primitive-presentation.js";
+import {
+  createGroupTransform,
+  setPrimitivePresentation,
+} from "../primitive-presentation.js";
 import { getCurrentWorldTransform } from "../render-target.js";
 import { GLOBAL_STATE } from "../global-state.js";
 import { definePrimitive } from "../define-primitive.js";
 import { useEventListener } from "../hooks/use-event-listener.js";
 import { useEventTarget } from "../hooks/use-event-target.js";
 import { useSignal } from "../hooks/use-signal.js";
-import { Group } from "../components/g.js";
+import { useConst } from "../hooks/use-const.js";
+import type { GStyle } from "../components/g.js";
+import { stripLayoutParticipation } from "../style/resolve-built-in.js";
+import type { ResolvedDrawingStyle } from "../style/types.js";
 import { getLayoutBox } from "../layout/context.js";
-import { resolveLength } from "../style/resolve-length.js";
 import type { CRCNode } from "../element/types.js";
-import type { BoxStyle, LayoutItemStyle } from "../style/types.js";
 import type { RenderingContext2D, SystemStyle } from "../types.js";
 import type { CRCManipulationController } from "./controller-types.js";
-import { manipulationHandlers, type ManipulationState } from "./controller.js";
+import {
+  isManipulationSourceActive,
+  manipulationHandlers,
+  type ManipulationState,
+} from "./controller.js";
 import { requireManipulationFrame } from "./frame.js";
 
 export interface CRCDragHandleProps {
@@ -24,16 +32,10 @@ export interface CRCDragHandleProps {
   readonly controller: CRCManipulationController;
   readonly children?: CRCNode;
 }
-export interface CRCDragHandleStyle extends BoxStyle, LayoutItemStyle {
+export interface CRCDragHandleStyle extends GStyle {
   readonly readout?: false | true | CRCManipulationReadoutStyle;
-  cursor?: string;
 }
-interface ResolvedDragStyle extends SystemStyle {
-  readonly readout?: false | true | CRCManipulationReadoutStyle;
-  width: number;
-  height: number;
-  cursor?: string;
-}
+type ResolvedDragStyle = ResolvedDrawingStyle<CRCDragHandleStyle>;
 interface CssHandleContentProps {
   readonly children?: CRCNode;
 }
@@ -63,54 +65,47 @@ export const DragHandle = definePrimitive<
   function DragHandle(props, style) {
     requireManipulationFrame(props.controller);
     const focused = useSignal(false);
-    const handlers = manipulationHandlers(props.controller, "move");
+    const source = useConst(() => ({}));
+    const handlers = manipulationHandlers(
+      props.controller,
+      "move",
+      undefined,
+      source,
+    );
     useEventListener({
       ...handlers,
       onFocusIn: () => focused.set(true),
       onFocusOut: () => focused.set(false),
     });
-    return createElement(Group, {
-      style,
-      children: [
-        props.children,
-        createElement(DragReadout, {
-          controller: props.controller,
-          formatReadout: props.formatReadout,
-          readout: style.readout,
-          focused: focused.get(),
-          anchorX: style.width / 2,
-        }),
-      ],
-    });
+    const box = getLayoutBox();
+    return [
+      props.children,
+      createElement(DragReadout, {
+        controller: props.controller,
+        formatReadout: props.formatReadout,
+        readout: style.readout,
+        focused: focused.get(),
+        source,
+        anchorX: box.width / 2,
+      }),
+    ];
   },
   {
     childInput: "structural",
-    resolveStyle(style, context) {
-      const box = getLayoutBox();
-      return {
-        width: resolveLength(
-          style.width ?? box.width,
-          context.percentageBasis.width,
-          "width",
-          context,
-        )!,
-        height: resolveLength(
-          style.height ?? box.height,
-          context.percentageBasis.height,
-          "height",
-          context,
-        )!,
-        cursor: style.cursor,
-        readout: style.readout,
-      };
-    },
+    resolveStyle: (style) =>
+      stripLayoutParticipation(style) as ResolvedDragStyle,
   },
 );
+
+setPrimitivePresentation<ResolvedDragStyle>(DragHandle, (style) => ({
+  transform: createGroupTransform(style),
+}));
 
 const DragReadout = definePrimitive<
   CRCDragHandleProps & {
     readonly readout?: false | true | CRCManipulationReadoutStyle;
     readonly focused: boolean;
+    readonly source: object;
     readonly anchorX: number;
   }
 >(function DragReadout(props, _style, ctx) {
@@ -133,7 +128,7 @@ const DragReadout = definePrimitive<
     },
     props.readout,
     props.focused,
-    state.controller.active.get()?.operation === "move",
+    isManipulationSourceActive(props.controller, props.source),
     "top",
   );
 });

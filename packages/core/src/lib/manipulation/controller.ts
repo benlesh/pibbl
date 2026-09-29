@@ -68,6 +68,7 @@ interface Session {
   rotationDelta: number;
   snapshot: CRCManipulationSnapshot;
   coordinateMapping: readonly number[];
+  source?: object;
   releaseObservation?: () => void;
   sample?: PointerSample;
 }
@@ -443,10 +444,21 @@ function updateModifiers(
     metaKey: key.metaKey,
   });
 }
+
+/** @internal Identifies one private handle source for readout presentation. */
+export function isManipulationSourceActive(
+  controller: CRCManipulationController,
+  source: object,
+): boolean {
+  const state = manipulationState(controller);
+  return state.session?.started === true && state.session.source === source;
+}
+
 export function manipulationHandlers(
   controller: CRCManipulationController,
   operation: CRCManipulationOperation,
   handle?: CRCResizePosition,
+  source?: object,
 ): CRCEventHandlers {
   const state = manipulationState(controller);
   return {
@@ -528,6 +540,7 @@ export function manipulationHandlers(
         rotationDelta: 0,
         snapshot,
         coordinateMapping: currentRootCoordinateMapping(state.root),
+        source,
       };
       owners.set(state.options.box, state);
       if (state.options.rotation) owners.set(state.options.rotation, state);
