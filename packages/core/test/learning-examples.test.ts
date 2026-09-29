@@ -8,6 +8,7 @@ import {
 } from "@crc/scenarios";
 import type { LearningBrowseGroup } from "@crc/scenarios";
 import { afterEach, describe, expect, it } from "vitest";
+import { cdp } from "vitest/browser";
 import {
   learningSourcePaths,
   loadLearningSource,
@@ -130,6 +131,29 @@ function pixelAt(
   y: number,
 ): readonly number[] {
   return Array.from(canvas.getContext("2d")!.getImageData(x, y, 1, 1).data);
+}
+
+async function dispatchTimestampedPointer(
+  canvas: HTMLCanvasElement,
+  type: "pointermove" | "pointerup",
+  point: Readonly<{ x: number; y: number }>,
+  timeStamp: number,
+): Promise<void> {
+  const bounds = canvas.getBoundingClientRect();
+  const frame = window.frameElement;
+  const frameBounds = frame?.getBoundingClientRect();
+  const scale = frameBounds ? frameBounds.width / window.innerWidth : 1;
+  const offsetX = frameBounds?.left ?? 0;
+  const offsetY = frameBounds?.top ?? 0;
+  await cdp().send("Input.dispatchMouseEvent", {
+    type: type === "pointermove" ? "mouseMoved" : "mouseReleased",
+    x: offsetX + (bounds.left + point.x) * scale,
+    y: offsetY + (bounds.top + point.y) * scale,
+    button: "left",
+    buttons: type === "pointerup" ? 0 : 1,
+    pointerType: "mouse",
+    timestamp: timeStamp,
+  });
 }
 
 function solidBlueBounds(canvas: HTMLCanvasElement): {
@@ -2011,6 +2035,42 @@ describe("learning example catalog", () => {
     await new Promise<void>((resolve) => setTimeout(resolve, 140));
     await pointerMoveLogicalPoint(canvas, clamped);
     await pointerUpLogicalPoint(canvas, continuedPointerMotion);
+    await nextPaint();
+    for (let frame = 0; frame < 2; frame += 1) await nextPaint();
+    const thrown = solidBlueBounds(canvas);
+
+    expect(thrown.centerY).toBeGreaterThan(130);
+  });
+
+  it("uses same-timestamp distinct captured motion to throw the physics lesson ball", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const clamped = { x: 560, y: 40 };
+    const continuedPointerMotion = { x: 560, y: 80 };
+
+    await pointerDownLogicalPoint(canvas, {
+      x: before.centerX,
+      y: before.centerY,
+    });
+    const timeOriginSeconds = performance.timeOrigin / 1000;
+    await dispatchTimestampedPointer(
+      canvas,
+      "pointermove",
+      clamped,
+      timeOriginSeconds + 0.2,
+    );
+    await dispatchTimestampedPointer(
+      canvas,
+      "pointermove",
+      clamped,
+      timeOriginSeconds + 0.4,
+    );
+    await dispatchTimestampedPointer(
+      canvas,
+      "pointerup",
+      continuedPointerMotion,
+      timeOriginSeconds + 0.4,
+    );
     await nextPaint();
     for (let frame = 0; frame < 2; frame += 1) await nextPaint();
     const thrown = solidBlueBounds(canvas);
