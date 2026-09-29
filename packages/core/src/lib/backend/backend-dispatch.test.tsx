@@ -517,7 +517,7 @@ describe('backend-neutral component traversal', () => {
 
     expect(() => executeRender(canvas, 1)).toThrowError(
       'Cube requires the webgl2 backend and cannot render in the canvas2d ' +
-      'root. Place it under <WebGLLayer>. ' +
+      'root. ' +
       'JSX source: /app/webgl-scene.tsx:12:7.',
     );
     canvasRoot.dispose();
@@ -543,7 +543,7 @@ describe('backend-neutral component traversal', () => {
     expect(() => child.render(jsxDEV(Rectangle, {
       style: { width: 10, height: 10 },
     }, undefined, false, canvasSource, undefined), 2)).toThrowError(
-      /Rectangle requires the canvas2d backend and cannot render in the webgl2 root.*Canvas 2D children inside a WebGL island are unsupported.*JSX source: \/app\/canvas-child\.tsx:28:11/i,
+      /Rectangle requires the canvas2d backend and cannot render in the webgl2 root.*JSX source: \/app\/canvas-child\.tsx:28:11/i,
     );
     expect(webgl.calls.at(-1)).toBe('finish:false');
 

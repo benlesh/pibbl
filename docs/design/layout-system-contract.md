@@ -18,12 +18,11 @@ contextual errors.
 
 Every layout component is itself a normal component: it can be nested inside
 another layout, transformed by `Group`, clipped by `Clip`, or rendered through
-a `Layer`. `WebGLLayer` is a layout-participating Canvas composition primitive;
-its WebGL descendants do not become layout items in the parent Canvas
-algorithm. Source order remains Canvas composition order and reverse Canvas
-order remains coordinate-event target order. Within one WebGL scene, child
-source order establishes identity and tie-break indices while settled opaque
-and transparent queues determine raster order.
+a `Layer`. A component returned by `defineRenderLayer` is a
+layout-participating Canvas composition primitive; renderer-internal objects do
+not become layout items in the parent Canvas algorithm. Source order remains
+Canvas composition order and reverse Canvas order remains coordinate-event
+target order.
 
 ## Shared box, placement, and overflow rules
 
@@ -39,11 +38,11 @@ A child's parent-relative placement lives in its own specified style:
 - `flexBasis`, `flexGrow`, and `flexShrink` are consumed only by Flex;
 - Grid consumes one-based starts and positive spans.
 
-`WebGLLayerStyle` accepts the shared box and layout-item fields. Each omitted
-layer dimension uses its current finite logical allocation; an explicit or
-allocated width and height must resolve to positive finite values. A
-`WebGLLayer` has no intrinsic measurement capability, so an automatic sizing
-path must supply a definite size rather than rendering WebGL children to
+`CRCRenderLayerStyle` accepts the shared box and layout-item fields. Each
+omitted layer dimension uses its current finite logical allocation; an explicit
+or allocated width and height must resolve to positive finite values. A render
+layer has no intrinsic measurement capability, so an automatic sizing path
+must supply a definite size rather than rendering external resources to
 discover one.
 
 The runtime places one private wrapper per direct child. The wrapper preserves
@@ -250,10 +249,6 @@ lessons, DOM-oracle compatibility suites, and deterministic layout laboratory.
 See the [style contract](./style-system-contract.md), [user-event
 contract](./user-events-contract.md), and [runtime resource ownership
 contract](./runtime-resource-ownership.md).
-
-## 3D physics and layout
-
-Layout treats a `WebGLLayer` as one ordinary allocated Canvas item and does not inspect its inner physics scene. Authored placement at body creation or re-enable seeds world-local pose, but layout is not a continuing constraint on an enabled dynamic body; physics presentation is applied inside the already allocated island and never changes Canvas measurement or allocation.
 
 ## Responsive style inspection
 

@@ -28,11 +28,11 @@ handler, cursor, or focus option. A passive painted object can therefore
 occlude a target underneath. `pointerEvents="none"` removes it from coordinate
 resolution while leaving paint unchanged.
 
-`Mesh`, `Cube`, and `Sphere` from `@crc/webgl` follow the same default
-participation rule with committed ray-pick geometry. `WebGLLayer` can disable
-its complete nested resolver with `pointerEvents="none"`. Analytic light and
-`WebGLBackground` declarations never add targets, pick geometry, cursor regions,
-or focus candidates. An opaque background remains a nested-resolver miss.
+An external render layer publishes one committed nested resolver.
+`pointerEvents="none"` disables that complete resolver. Its interaction
+snapshot distinguishes a registered logical target, a blocking visual hit, and
+a miss; a renderer-specific object becomes a CRC target only when the snapshot
+registers it.
 
 `useEventTarget(handlers, options)` creates one grouped custom target. Its
 required `Path2D`, fill/stroke hit options, captured render transform, clips,
@@ -55,16 +55,10 @@ abstraction, or retain drawing commands.
 
 The child-bearing `Group`, `Clip`, `Layer`, `Absolute`, `Overlay`, `Flow`,
 `Flex`, and `Grid` built-ins accept handler props with `useEventListener`
-semantics. `WebGLLayer` and `Group3D` do the same. These structural values add
-listener ancestry only: they have no independent rectangle or conceptual-bounds
-target, and empty space does not select them.
-
-`useOrbitCamera()` returns ordinary stable CRC handlers rather than installing
-a hidden listener or target. Authors may spread them onto geometry or a
-structural listener ancestor. To make a whole viewport draggable, that ancestor
-must contain an explicit viewport-sized target; the structural component alone
-does not make empty space hit. JSX spread order does not merge the orbit bundle
-with another callback, so applications compose both behaviors explicitly.
+semantics. These structural values add listener ancestry only: they have no
+independent rectangle or conceptual-bounds target, and empty space does not
+select them. A render layer can explicitly make empty space target its own
+handlers with `missBehavior="target-layer"`.
 
 ## Event vocabulary
 
@@ -108,24 +102,21 @@ point is occluded but cannot identify a finer logical target. Every resolver
 resets both disposition and target before use; borrowed input/output scratch has
 only synchronous resolution lifetime and cannot be retained.
 
-A `WebGLLayer` is one nested resolver at its exact Canvas composite position.
+A render layer is one nested resolver at its exact Canvas composite position.
 It first rejects outer clips and layer bounds, maps through the inverse outer
-world transform to layer-local coordinates and normalized device coordinates,
-then delegates to the bitmap-matched committed scene picker. The picker casts
-one camera ray against geometry from the same settled Mesh/Cube/Sphere
-submissions used by rendering, chooses nearest supported depth, and uses later
-source order for an equal-depth tie. Opaque/transparent raster queues and
-transparent blend order do not alter event identity, ancestry, or picking.
-`pointerEvents="none"` skips an object; transparent island background returns
-miss so lower Canvas content may win. Default picking performs no pixel
-readback, `readPixels`, or hidden GPU ID pass.
+world transform to layer-local coordinates, then delegates to the
+bitmap-matched committed interaction snapshot. A `target` result selects the
+registered target, `block` occludes lower Canvas content without inventing a
+target, and `miss` follows the layer's `pass-through`, `block`, or
+`target-layer` miss policy. The Three adapter's default picker uses ordinary
+Three raycasting and performs no pixel readback or hidden GPU ID pass.
 
 For one logical dispatch, CRC walks the target's mounted-component ancestry,
-including explicit Canvas-layer and WebGL-layer parent bridges, and snapshots
-the live listener nodes already present on that route. A WebGL leaf path can
-therefore cross `Group3D` and `WebGLLayer` listeners into Canvas ancestors.
-Listener registration order within a component is source/hook order. The path
-is temporary and is not retained after dispatch.
+including explicit Canvas and render-layer parent bridges, and snapshots the
+live listener nodes already present on that route. A registered external target
+therefore propagates through the render layer into Canvas ancestors. Listener
+registration order within a component is source/hook order. The path is
+temporary and is not retained after dispatch.
 
 The exact phase order is:
 
@@ -201,14 +192,11 @@ modifier/mouse fields. Calling logical `preventDefault()` makes the native
 cancelable wheel event default-prevented. Wheel and cancellable touch native
 listeners are installed with non-passive options.
 
-The `useOrbitCamera()` handler bundle uses these same rules. A primary
-`pointerdown` captures one pointer on `currentTarget`; matching root-logical
-pointer moves rotate, and up/cancel/lost-capture ends the gesture. Other
-pointers cannot steal it. Wheel zoom normalizes pixel deltas directly, line
-deltas at 16 pixels per line, and page deltas by the root logical viewport
-height. It calls `preventDefault()` only when the clamped distance actually
-changes. Each applied change schedules ordinary CRC work; no handler starts an
-independent or idle frame loop.
+The `@crc/three` input bridge uses these same rules. Controls receive routed
+pointer, wheel, context-menu, and click input only after the committed layer
+resolver participates, and their pointer-capture requests map back to CRC. An
+input change schedules another frame only when the application or control calls
+the layer's invalidation capability; the bridge starts no independent loop.
 
 Drag/drop preserves root-logical coordinates, modifiers, and the native
 `dataTransfer`. Root-local drag hover is cleared by root leave, drop, drag end,
@@ -329,18 +317,11 @@ Exhaustive event vocabulary, multi-pointer/contact, mutation, failure, geometry,
 layer, and ownership matrices remain in focused tests so the learning fixture
 stays readable.
 
-The public `webgl-islands` lesson and deterministic WebGL laboratory add
-transparent pass-through, Canvas/WebGL paint order, passive occlusion,
-object/layer opt-out, depth selection independent of transparent raster order,
-structural propagation, pointer capture, cursor, projected focus bounds,
-keyboard activation, cache replay, and bitmap/pick/focus generation evidence
-through public package imports.
-
-The twelve WebGL lighting lessons and `webgl-lighting` laboratory add the
-attach-anywhere orbit bundle, viewport backing-target geometry, primary pointer
-capture, wheel cancellation, unchanged picking/focus under light/material/
-shadow changes, opaque-background pass-through, and camera-only shadow-cache
-reuse through public imports.
+The public Three.js lessons and adapter suites add empty-pixel pass-through,
+Canvas/Three paint order, passive occlusion, registered targets, layer opt-out,
+depth-aware default raycasting, structural propagation, pointer capture, cursor,
+focus bounds, controls input, cache replay, and bitmap/interaction generation
+evidence through public package imports.
 
 CRC still does not provide semantic controls, DOM accessibility, a retained
 scene graph, hidden editable DOM, pointer/touch gesture recognition, or

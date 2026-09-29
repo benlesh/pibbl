@@ -10,13 +10,11 @@ symbols:
   [
     CRCParticleAppearance,
     CRCParticleBounds2D,
-    CRCParticleBounds3D,
     CRCParticleBurstAcceptedEvent,
     CRCParticleBurstOverrides,
     CRCParticleBurstRejectedEvent,
     CRCParticleChoice,
     CRCParticleCommonProps,
-    CRCParticleConeVelocity3D,
     CRCParticleCurve,
     CRCParticleCurveOptions,
     CRCParticleCurveValue,
@@ -24,20 +22,14 @@ symbols:
     CRCParticleDrainStartEvent,
     CRCParticleEffect2D,
     CRCParticleEffect2DInput,
-    CRCParticleEffect3D,
-    CRCParticleEffect3DInput,
     CRCParticleEmission,
     CRCParticleEmitter2D,
-    CRCParticleEmitter3D,
     CRCParticleExecution,
-    CRCParticleExecutionCapability,
     CRCParticleFinishEvent,
     CRCParticleGradient,
     CRCParticleInitial2D,
-    CRCParticleInitial3D,
     CRCParticleIntegerRange,
     CRCParticleMotion2D,
-    CRCParticleMotion3D,
     CRCParticleOverflow,
     CRCParticleParameterDefinition,
     CRCParticleParameterDefinitions,
@@ -47,10 +39,8 @@ symbols:
     CRCParticleParameterValues,
     CRCParticleRange,
     CRCParticleRenderer2D,
-    CRCParticleRenderer3D,
     CRCParticleScalar,
     CRCParticleShape2D,
-    CRCParticleShape3D,
     CRCParticleStartEvent,
     CRCParticleSystem,
     CRCParticleSystemEvent,
@@ -62,17 +52,13 @@ symbols:
     CRCParticleVector3,
     Particles2DProps,
     Particles2DStyle,
-    Particles3DProps,
-    Particles3DStyle,
   ]
-keywords: [particles, types, emitters, renderers, execution]
+keywords: [particles, types, emitters, canvas, execution]
 ---
 
 # Particle types
 
-Import shared and Canvas types from `@crc/particles`. Import 3D-only effect,
-emitter, renderer, bounds, props, and style types from
-`@crc/particles/webgl`.
+Import these public contracts with `type` from `@crc/particles`.
 
 ## `CRCParticleAppearance`
 
@@ -81,10 +67,6 @@ Optional size, rotation, color, and opacity values sampled over normalized lifet
 ## `CRCParticleBounds2D`
 
 A conservative local two-dimensional minimum and maximum used for coarse culling.
-
-## `CRCParticleBounds3D`
-
-A conservative local three-dimensional minimum and maximum used for scene culling and interaction.
 
 ## `CRCParticleBurstAcceptedEvent`
 
@@ -105,10 +87,6 @@ An immutable weighted-selection descriptor created by `particleChoice`.
 ## `CRCParticleCommonProps`
 
 Shared parameter, event, error, pointer, and keyboard props for particle components.
-
-## `CRCParticleConeVelocity3D`
-
-A three-dimensional cone direction, speed, and spread descriptor.
 
 ## `CRCParticleCurve`
 
@@ -138,14 +116,6 @@ A nominal immutable two-dimensional definition carrying emitter and parameter in
 
 The debug name, parameter definitions, and nonempty 2D emitter input.
 
-## `CRCParticleEffect3D`
-
-A nominal immutable three-dimensional definition carrying emitter and parameter inference.
-
-## `CRCParticleEffect3DInput`
-
-The debug name, parameter definitions, and nonempty 3D emitter input.
-
 ## `CRCParticleEmission`
 
 Rate, scheduled burst, or manual emission configuration.
@@ -154,17 +124,9 @@ Rate, scheduled burst, or manual emission configuration.
 
 A fixed-capacity Canvas emitter with shape, initial state, motion, appearance, renderer, and bounds.
 
-## `CRCParticleEmitter3D`
-
-A fixed-capacity WebGL emitter with shape, initial state, motion, appearance, renderer, and bounds.
-
 ## `CRCParticleExecution`
 
 The readonly selected backend state published by a particle system.
-
-## `CRCParticleExecutionCapability`
-
-A supported stateless mode or an unsupported stateful mode with exact reasons.
 
 ## `CRCParticleFinishEvent`
 
@@ -178,10 +140,6 @@ An immutable color curve created by `particleGradient`.
 
 Lifetime, velocity, size, rotation, color, and opacity sampled at 2D birth.
 
-## `CRCParticleInitial3D`
-
-Lifetime, vector or cone velocity, size, rotation, color, and opacity sampled at 3D birth.
-
 ## `CRCParticleIntegerRange`
 
 An inclusive safe-integer descriptor created by `particleInteger`.
@@ -189,10 +147,6 @@ An inclusive safe-integer descriptor created by `particleInteger`.
 ## `CRCParticleMotion2D`
 
 The closed two-dimensional acceleration, drag, drift, radial, orbit, sway, and angular module union.
-
-## `CRCParticleMotion3D`
-
-The closed three-dimensional acceleration, drag, drift, radial, orbit, sway, and angular module union.
 
 ## `CRCParticleOverflow`
 
@@ -230,10 +184,6 @@ A continuous minimum/maximum descriptor created by `particleRange`.
 
 The circle, rectangle, path, or sprite Canvas renderer union and its blend intent.
 
-## `CRCParticleRenderer3D`
-
-The point or billboard WebGL renderer, material, blend, depth, and sorting intent.
-
 ## `CRCParticleScalar`
 
 A fixed number or compiled range, integer, choice, or parameter descriptor.
@@ -241,10 +191,6 @@ A fixed number or compiled range, integer, choice, or parameter descriptor.
 ## `CRCParticleShape2D`
 
 The point, line, rectangle, circle, or ring birth-shape union.
-
-## `CRCParticleShape3D`
-
-The point, line, box, sphere, ring, or cone birth-shape union.
 
 ## `CRCParticleStartEvent`
 
@@ -289,11 +235,3 @@ Exactly one 2D effect or system plus shared interaction and parameter props.
 ## `Particles2DStyle`
 
 Declared Canvas box, layout-item, cursor, opacity, transform, and filter style.
-
-## `Particles3DProps`
-
-Exactly one 3D effect or system plus execution selection and optional interaction bounds.
-
-## `Particles3DStyle`
-
-WebGL transform, opacity, and cursor style; Canvas filters belong on `WebGLLayer`.

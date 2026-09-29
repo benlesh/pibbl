@@ -173,19 +173,20 @@ the Layer's clean bitmap. CRC never automatically promotes components to
 offscreen surfaces. Diagnostics may recommend a boundary, but code retains the
 decision.
 
-The official `@crc/webgl` package uses the same signals and scheduler in
-lockstep. Continuous values belong in signals; sparse renderer facts can become
-semantic events delivered in Complete. A renderer does not create a second
-animation loop. Worker or WASM numeric execution remains future work and may
-ship only if its results, Commit atomicity, stale-result rejection, lifecycle,
-and main-thread fallback remain observationally identical.
+External render layers, including `@crc/three`, use the same signals and
+scheduler in lockstep. Continuous values belong in signals; sparse renderer
+facts can become semantic events delivered in Complete. An embedded renderer
+does not create a second animation loop. Worker or WASM numeric execution
+remains future work and may ship only if its results, Commit atomicity,
+stale-result rejection, lifecycle, and main-thread fallback remain
+observationally identical.
 
 Particle `acceleration`, `gravity`, `drag`, and related modules from
 `@crc/particles` are closed population-domain descriptors. They tell a particle
-executor how each emitted member moves; they are not WebGL primitives or a new
-general animation system. Continue to drive component transforms, cameras,
-materials, lights, and ordinary application values with signals and the
-animation definitions described above. See [Create particle
+executor how each emitted member moves; they are not a new general animation
+system. Continue to drive component transforms, cameras, materials, lights,
+and ordinary application values with signals and the animation definitions
+described above. See [Create particle
 effects](#/learn/guides/particle-effects).
 
 For exact defaults, validation, repeat/overlap budgets, error isolation, and

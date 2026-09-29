@@ -19,15 +19,11 @@ import type { PerformanceLabState } from "./performance-lab.example";
 import type { RuntimeHooksState } from "./runtime-hooks.example";
 import type { CanvasSurfaceState } from "./canvas-surface.example";
 import type { FilterLabState } from "./filter-lab.example";
-import type { WebGLLabState } from "./webgl-lab.example";
-import type { WebGLLightingLabState } from "./webgl-lighting-lab.example";
-import type { StaticGLBSliceState } from "./static-glb-slice";
 import type { SignalsLabState } from "./signals-lab.example";
 import type { AnimationLabState } from "./animation-lab.example";
 import type { ParticleCelebrationLabState } from "./particle-celebration-lab.example";
 import type { ThreeInstancingLabState } from "./three-instancing-lab.example";
 import type { Physics2DLabState } from "./physics-2d-lab.example";
-import type { Physics3DState } from "./physics-3d.example";
 import { GEOMETRY_MATRIX_CASES } from "./geometry-matrix.example";
 import { MOUSE_CONTRACT_CASES } from "./mouse-contract";
 import { PERFORMANCE_WORKLOADS } from "./performance-lab.example";
@@ -1548,183 +1544,6 @@ export const filterLabScenarioEntry: ScenarioCatalogEntry<FilterLabState> = {
   load: async () => (await import("./filter-lab")).filterLabScenario,
 };
 
-const webglLabMetadata: ScenarioMetadata = {
-  id: "webgl-islands",
-  slug: "webgl-islands",
-  title: "WebGL islands laboratory",
-  summary:
-    "Prove settled transparency, Canvas/WebGL composition, depth picking, transforms, clips, layers, filters, focus, and animation.",
-  category: "Rendering",
-  apiTags: ["WebGLLayer", "Group3D", "Mesh", "Cube", "Sphere"],
-  conceptTags: [
-    "settled transparency",
-    "depth picking",
-    "declarative scene composition",
-    "Canvas paint order",
-  ],
-  manualSteps: [
-    {
-      action:
-        "Compare Mixed order, Depth, Transforms, Clipped, Layered, and Filtered.",
-      expected:
-        "Visible WebGL geometry composes at one Canvas paint position while depth, transforms, clips, layers, and filter overflow preserve source geometry.",
-    },
-    {
-      action:
-        "Choose Transparency and compare the far-only, overlap, and near-only probes.",
-      expected:
-        "Although the near mesh appears first in source, the overlap blends the far green mesh before the near red mesh.",
-    },
-    {
-      action:
-        "Click the lower Canvas, cube, transparent island background, upper star, and sphere probes.",
-      expected:
-        "Transparent pixels pass through, visible geometry targets the selected WebGL primitive, and later Canvas paint wins at overlap.",
-    },
-    {
-      action:
-        "Choose Focus, use Tab and Enter, then choose Animation and advance it.",
-      expected:
-        "Logical focus enters the cube, keyboard activation selects it, and the reported angle advances by one deterministic step.",
-    },
-  ],
-  knownLimitations: [
-    "The renderer is WebGL2-only and requires OffscreenCanvas plus ImageBitmap transfer.",
-    "Picking uses declared CPU triangle geometry; shader discard, texture alpha, blending, and procedural displacement do not alter hit geometry.",
-  ],
-  learningOrder: 170,
-  visibility: "test-laboratory",
-  visibilityReason:
-    "It exposes nine dense conformance modes and exact geometry, interaction, and transparency probes rather than a single beginner lesson.",
-  maturity: "contract",
-};
-
-export const webglLabScenarioEntry: ScenarioCatalogEntry<WebGLLabState> = {
-  metadata: webglLabMetadata,
-  canvas: { width: 480, height: 300 },
-  actions: [
-    { id: "show-mixed-order", label: "Mixed order" },
-    { id: "show-depth", label: "Depth" },
-    { id: "show-transparency", label: "Transparency" },
-    { id: "show-transforms", label: "Transforms" },
-    { id: "show-clipped", label: "Clipped" },
-    { id: "show-layered", label: "Layered" },
-    { id: "show-filtered", label: "Filtered" },
-    { id: "show-focus", label: "Focus" },
-    { id: "show-animation", label: "Animation" },
-    { id: "change-camera", label: "Change camera" },
-    { id: "rotate-scene", label: "Rotate scene" },
-    { id: "toggle-pointer-events", label: "Toggle pointer events" },
-    { id: "swap-source-order", label: "Swap source order" },
-    { id: "advance-animation", label: "Advance animation" },
-  ],
-  source: {
-    id: "webgl-islands-laboratory-example",
-    language: "tsx",
-    marker: "WEBGL_LAB_SOURCE_ID = 'webgl-islands-laboratory-example'",
-    path: "packages/scenarios/src/webgl-lab.example.tsx",
-  },
-  load: async () => (await import("./webgl-lab")).webglLabScenario,
-};
-
-const webglLightingLabMetadata: ScenarioMetadata = {
-  id: "webgl-lighting",
-  slug: "webgl-lighting",
-  title: "WebGL lighting laboratory",
-  summary:
-    "Exercise every analytic light, Lambert material mode, orbit control, and genuine shadow quality in one settled scene.",
-  category: "Rendering",
-  apiTags: [
-    "WebGLLayer",
-    "useOrbitCamera",
-    "AmbientLight",
-    "HemisphereLight",
-    "DirectionalLight",
-    "PointLight",
-    "SpotLight",
-  ],
-  conceptTags: [
-    "settled lighting",
-    "genuine shadows",
-    "shadow cache",
-    "orbit camera",
-    "Lambert material",
-  ],
-  manualSteps: [
-    {
-      action: "Drag across the scene and use the wheel over either geometry or empty space.",
-      expected:
-        "The camera orbits and zooms around the fixed scene while unchanged light-space shadow maps remain reusable.",
-    },
-    {
-      action: "Compare Ambient, Hemisphere, Directional, Point, Spot, and All lights.",
-      expected:
-        "Fill lights shade without cast shadows; every direct light produces a geometry silhouette on the ground.",
-    },
-    {
-      action: "Compare Transparent, Opaque, and Alpha background modes.",
-      expected:
-        "The transparent default reveals the Canvas underlay; solid and alpha backgrounds remain visible but never become WebGL event targets.",
-    },
-    {
-      action: "Compare Off, Low, Medium, and High shadow quality.",
-      expected:
-        "Off removes direct occlusion; the three named tiers retain genuine shadow maps with progressively filtered edges.",
-    },
-    {
-      action: "Change caster alpha, lit and emissive state, then transform or move the light/caster.",
-      expected:
-        "Material appearance, direct-light participation, and transformed light pose update without changing pick or focus geometry.",
-    },
-  ],
-  knownLimitations: [
-    "Point shadows use six depth views whenever their cached light-space generation is invalidated.",
-    "Shadows are depth silhouettes; colored transmission, texture alpha, area-light penumbrae, bloom, and image environments are not included.",
-  ],
-  learningOrder: 175,
-  visibility: "test-laboratory",
-  visibilityReason:
-    "It exposes dense renderer modes, cache behavior, alpha participation, and interaction probes rather than one beginner concept.",
-  maturity: "contract",
-};
-
-export const webglLightingLabScenarioEntry: ScenarioCatalogEntry<WebGLLightingLabState> = {
-  metadata: webglLightingLabMetadata,
-  canvas: { width: 720, height: 420 },
-  actions: [
-    { id: "show-ambient", label: "Ambient" },
-    { id: "show-hemisphere", label: "Hemisphere" },
-    { id: "show-directional", label: "Directional" },
-    { id: "show-point", label: "Point" },
-    { id: "show-spot", label: "Spot" },
-    { id: "show-all", label: "All lights" },
-    { id: "show-background-transparent", label: "Transparent background" },
-    { id: "show-background-opaque", label: "Opaque background" },
-    { id: "show-background-alpha", label: "Alpha background" },
-    { id: "shadows-off", label: "Shadows off" },
-    { id: "shadows-low", label: "Low shadows" },
-    { id: "shadows-medium", label: "Medium shadows" },
-    { id: "shadows-high", label: "High shadows" },
-    { id: "toggle-transformed-light", label: "Transform light" },
-    { id: "caster-opaque", label: "Opaque caster" },
-    { id: "caster-partial", label: "Partial caster" },
-    { id: "caster-zero", label: "Zero-alpha caster" },
-    { id: "toggle-lit", label: "Toggle lit" },
-    { id: "toggle-emissive", label: "Toggle emission" },
-    { id: "move-caster", label: "Move caster" },
-    { id: "reset", label: "Reset" },
-  ],
-  source: {
-    id: "webgl-lighting-laboratory-example",
-    language: "tsx",
-    marker:
-      "WEBGL_LIGHTING_LAB_SOURCE_ID =\n  'webgl-lighting-laboratory-example'",
-    path: "packages/scenarios/src/webgl-lighting-lab.example.tsx",
-  },
-  load: async () =>
-    (await import("./webgl-lighting-lab")).webglLightingLabScenario,
-};
-
 const threeInstancingLabMetadata: ScenarioMetadata = {
   id: "three-instancing",
   slug: "three-instancing",
@@ -1771,55 +1590,6 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
-const staticGLBSliceMetadata: ScenarioMetadata = {
-  id: "static-glb",
-  slug: "static-glb",
-  title: "Static GLB feedback laboratory",
-  summary:
-    "Prove public static GLB loading, textured PBR rendering, model-wide interaction, replacement, removal, and cleanup.",
-  category: "Rendering",
-  apiTags: [
-    "useGLTF",
-    "Model",
-    "WebGLLayer",
-    "DirectionalLight",
-    "useOrbitCamera",
-  ],
-  conceptTags: [
-    "static GLB",
-    "selected scene",
-    "textured metallic roughness",
-    "model target",
-    "asset ownership",
-  ],
-  manualSteps: [
-    {
-      action: "Wait for the two-block calibration model to replace the loading card.",
-      expected:
-        "Both hierarchy-transformed blocks show the four-quadrant embedded texture with distinct rough and metallic responses.",
-    },
-    {
-      action: "Drag empty viewport space, click either block, and press Tab from the preceding control.",
-      expected:
-        "The camera orbits, both primitives select one Model target, and one focus candidate spans their projected union.",
-    },
-    {
-      action: "Run replacement, malformed, removal, and remount actions.",
-      expected:
-        "Each generation reports loading before ready/error, removal clears the target, and remount creates one fresh owned generation.",
-    },
-  ],
-  knownLimitations: [
-    "This feedback slice supports one bounded static self-contained GLB subset and does not claim full glTF conformance.",
-    "Normal, occlusion, emissive, and metallic-roughness textures, environment lighting, HDR, and tone mapping remain deferred.",
-  ],
-  learningOrder: 176,
-  visibility: "test-laboratory",
-  visibilityReason:
-    "It exposes malformed, replacement, removal, remount, ownership, and renderer probes beyond the focused public lesson.",
-  maturity: "characterization",
-};
-
 export const threeInstancingLabScenarioEntry: ScenarioCatalogEntry<ThreeInstancingLabState> = {
   metadata: threeInstancingLabMetadata,
   canvas: { width: 640, height: 360 },
@@ -1835,26 +1605,6 @@ export const threeInstancingLabScenarioEntry: ScenarioCatalogEntry<ThreeInstanci
   },
   load: async () =>
     (await import("./three-instancing-lab")).threeInstancingLabScenario,
-};
-
-export const staticGLBSliceScenarioEntry: ScenarioCatalogEntry<StaticGLBSliceState> = {
-  metadata: staticGLBSliceMetadata,
-  canvas: { width: 720, height: 420 },
-  actions: [
-    { id: "show-primary", label: "Primary asset" },
-    { id: "show-replacement", label: "Replacement asset" },
-    { id: "show-malformed", label: "Malformed asset" },
-    { id: "remove-model", label: "Remove model" },
-    { id: "remount-model", label: "Remount model" },
-    { id: "reset", label: "Reset" },
-  ],
-  source: {
-    id: "static-glb-feedback-example",
-    language: "tsx",
-    marker: 'STATIC_GLB_SLICE_SOURCE_ID = "static-glb-feedback-example"',
-    path: "packages/scenarios/src/static-glb-slice.example.tsx",
-  },
-  load: async () => (await import("./static-glb-slice")).staticGLBSliceScenario,
 };
 
 const signalsLabMetadata: ScenarioMetadata = {
@@ -2192,116 +1942,6 @@ export const physics2DLabScenarioEntry: ScenarioCatalogEntry<Physics2DLabState> 
     load: async () => (await import("./physics-2d-lab")).physics2DLabScenario,
   };
 
-const physics3DMetadata: ScenarioMetadata = {
-  id: "first-class-physics-3d",
-  slug: "physics-3d",
-  title: "First-class 3D physics browser slice",
-  summary:
-    "Drop the complete convex shape vocabulary onto box, triangle-mesh, and heightfield terrain, alongside inferred primitives, a compound body, contacts, impulses, and a visible public query.",
-  category: "Simulation",
-  apiTags: [
-    "PhysicsWorld3D",
-    "dynamicBody3D",
-    "staticBody3D",
-    "collider3D",
-    "crcPhysicsBody3D",
-    "crcPhysicsWorld3D",
-    "applyImpulse3D",
-    "teleportBody3D",
-    "disableBody3D",
-    "enableBody3D",
-    "sleepBody3D",
-    "wakeBody3D",
-    "raycast3D",
-    "WebGLLayer",
-    "Group3D",
-    "Cube",
-    "Sphere",
-    "PhysicsShape3D",
-    "Ellipsoid3D",
-    "Capsule3D",
-    "Cylinder3D",
-    "Cone3D",
-    "ConvexHull3D",
-    "Heightfield3D",
-  ],
-  conceptTags: [
-    "fixed-step 3D physics",
-    "central scheduler",
-    "WebGL presentation",
-    "inferred collider geometry",
-    "compound body",
-    "world queries",
-    "context loss continuity",
-  ],
-  manualSteps: [
-    {
-      action: "Observe the initial drop.",
-      expected:
-        "Cubes, spheres, ellipsoid, capsule, cylinder, cone, convex hull, and one compound body fall onto the box floor, blue triangle mesh, and green heightfield.",
-    },
-    {
-      action: "Choose Grab, Drag, then Throw.",
-      expected:
-        "The blue cube leaves simulation authority, follows an authored pose, then re-enters at that pose with a bounded deterministic throw velocity.",
-    },
-    {
-      action: "Choose Query.",
-      expected:
-        "The public downward ray reports the heightfield and renders a pink marker at the committed hit point.",
-    },
-    {
-      action: "Choose Reset.",
-      expected:
-        "The complete fixed-camera scene remounts at its authored poses with fresh body generations and cleared diagnostics.",
-    },
-    {
-      action:
-        "Try Disable, Authored move, Re-enable, Sleep, Wake, Remove, and Remount.",
-      expected:
-        "The selected cube follows each public lifecycle transition while the one shared scheduler continues presenting the rest of the world.",
-    },
-  ],
-  knownLimitations: [
-    "Pointer-to-world camera ray construction is not public, so grab and drag use deterministic selected-body controls rather than private pick data.",
-    "The scene uses one fixed WebGL2 camera and one fixed logical viewport; it does not expose a public manual clock or a second animation loop.",
-  ],
-  learningOrder: 220,
-  visibility: "test-laboratory",
-  visibilityReason:
-    "It exposes authoritative body snapshots, contact order, compound alignment, query identity, and context-loss continuity for deterministic browser evidence.",
-  maturity: "contract",
-};
-
-export const physics3DScenarioEntry: ScenarioCatalogEntry<Physics3DState> = {
-  metadata: physics3DMetadata,
-  canvas: { width: 480, height: 300 },
-  actions: [
-    { id: "reset", label: "Reset" },
-    { id: "settle", label: "Observe settling" },
-    { id: "drop", label: "Drop cube" },
-    { id: "query", label: "Ray query" },
-    { id: "grab", label: "Grab cube" },
-    { id: "drag", label: "Drag cube" },
-    { id: "throw", label: "Throw cube" },
-    { id: "impulse", label: "Impulse cube" },
-    { id: "teleport", label: "Teleport cube" },
-    { id: "disable", label: "Disable cube" },
-    { id: "authored-move", label: "Move authored cube" },
-    { id: "re-enable", label: "Re-enable cube" },
-    { id: "sleep", label: "Sleep cube" },
-    { id: "wake", label: "Wake cube" },
-    { id: "remove", label: "Remove cube" },
-    { id: "remount", label: "Remount cube" },
-  ],
-  source: {
-    id: "first-class-physics-3d-example",
-    language: "tsx",
-    marker: "PHYSICS_3D_SOURCE_ID = 'first-class-physics-3d-example'",
-    path: "packages/scenarios/src/physics-3d.example.tsx",
-  },
-  load: async () => (await import("./physics-3d")).physics3DScenario,
-};
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> =
   {
     metadata: canvasSurfaceMetadata,
@@ -2371,15 +2011,11 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     layoutFoundationScenarioEntry,
     canvasSurfaceScenarioEntry,
     filterLabScenarioEntry,
-    webglLabScenarioEntry,
-    webglLightingLabScenarioEntry,
     threeInstancingLabScenarioEntry,
-    staticGLBSliceScenarioEntry,
     signalsLabScenarioEntry,
     animationLabScenarioEntry,
     particleCelebrationLabScenarioEntry,
     physics2DLabScenarioEntry,
-    physics3DScenarioEntry,
   ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);

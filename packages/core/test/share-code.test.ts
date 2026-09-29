@@ -184,37 +184,28 @@ export default function mount(canvas) {
     ]);
   });
 
-  it("executes core and WebGL imports through one Studio runtime", () => {
+  it("executes core and Three-adapter imports through one Studio runtime", () => {
     const result = executeSandbox(
       `
 import { crc } from "@crc/core";
-import { jsx as _jsx } from "@crc/core/jsx-runtime";
-import { Cube, WebGLLayer } from "@crc/webgl";
+import { defineThreeLayer } from "@crc/three";
+const ProductScene = defineThreeLayer({ create() {} });
 export default function mount(canvas) {
-  return crc(canvas, _jsx(WebGLLayer, {
-    style: { width: 320, height: 180 },
-    children: _jsx(Cube, { style: { size: 1 } }),
-  }));
+  return crc(canvas, ProductScene);
 }
 `,
       {
         crc: (_canvas: unknown, node: unknown) => node,
-        jsx: (type: unknown, props: unknown) => ({ type, props }),
-        Cube: "cube-component",
-        WebGLLayer: "webgl-layer-component",
+        defineThreeLayer: (definition: unknown) => ({
+          kind: "three-layer",
+          definition,
+        }),
       },
       {},
     );
 
-    expect(result).toEqual({
-      type: "webgl-layer-component",
-      props: {
-        style: { width: 320, height: 180 },
-        children: {
-          type: "cube-component",
-          props: { style: { size: 1 } },
-        },
-      },
+    expect(result).toMatchObject({
+      kind: "three-layer",
     });
   });
 
@@ -383,7 +374,7 @@ export default function mount(canvas) {
     'import * as CRC from "@crc/core";',
     'import CRC from "@crc/core";',
     'import { jsx } from "@crc/core/private-runtime";',
-    'import { jsx } from "@crc/webgl/jsx-runtime";',
+    'import { jsx } from "@crc/three/jsx-runtime";',
     'import "@crc/core";',
     'import type { CRCNode } from "@crc/core";',
   ])("rejects unsupported emitted module syntax: %s", (statement) => {

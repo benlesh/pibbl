@@ -314,18 +314,13 @@ usually remains stable; keep simple or frequently changing content in the root.
 Diagnostics may recommend a boundary, but adding and removing it stays explicit
 and readable in application code.
 
-The official `@crc/webgl` integration is a lockstep friend of this same
-scheduler and signal graph. WebGL frame requests may narrow work, but may not
-create another animation loop. Continuous shared state stays in signals; sparse
-renderer facts such as context loss or selection may queue semantic events for
-Complete. WebGL context loss suspends renderer work by default while playback
-continues, so restoration consumes the latest committed values.
-Animation changes ordinary component declarations before a dirty
-`WebGLLayer`'s child tree composes. The layer then settles the complete
-frame-local scene, renders its opaque and transparent queues, and publishes one
-candidate for ancestor Canvas composition. Animation never mutates a settled
-scene or advances an independent WebGL clock; Canvas and WebGL declarations in
-one transaction observe the same realm logical time.
+External render layers and the official `@crc/three` adapter use this same
+scheduler and signal graph through the public `defineRenderLayer` lifecycle.
+They may request another CRC frame through `invalidate()`, but may not create a
+second ordinary animation loop. Continuous shared state stays in signals;
+sparse renderer facts may queue semantic events for Complete. Animation updates
+props before the layer's `update` and `render` callbacks. Canvas and external
+renderer work in one transaction observe the same realm logical time.
 
 ## Determinism and portability
 

@@ -79,9 +79,9 @@ navigation requires focus management on the same root.
 
 Only logical event targets become candidates. A target enrolls automatically
 with `onClick`, `onKeyDown`, or `onKeyUp`; set `keyboardFocusable: true` to add
-another target or `false` to exclude it. Built-in Canvas drawing and
-geometry-backed WebGL components create a logical target by default, even when
-passive; `pointerEvents="none"` removes that drawing from hit and focus
+another target or `false` to exclude it. Built-in Canvas drawing creates a
+logical target by default, even when passive; `pointerEvents="none"` removes
+that drawing from hit and focus
 participation. Propagation-only structural listeners never become candidates.
 
 When `useEventTarget()` supplies custom geometry and a later drawing primitive
@@ -102,13 +102,12 @@ state may invalidate a retained `Layer` containing the changed target.
 A root `OffscreenCanvas` cannot host DOM focus and rejects focus management.
 Offscreen layers under an HTML Canvas share the root manager.
 
-Geometry-backed WebGL targets derive directional-navigation bounds by
-projecting their clipped 3D geometry bounds into their logical `WebGLLayer`.
-An explicit `keyboardNavigationBounds` on a WebGL target is interpreted as a
-layer-local 2D override. Custom-hit WebGL primitives need that override to
-participate in arrow ranking. Source-order Tab behavior and the one native
-Canvas focus host stay unchanged across the WebGL-to-Canvas bridge. See [Add
-WebGL islands](#/learn/guides/webgl-islands#understand-paint-order-and-targeting).
+Registered `@crc/three` targets derive directional-navigation bounds by
+projecting their Three object bounds into the logical render layer. An explicit
+`keyboardNavigationBounds` on a target is interpreted as a layer-local 2D
+override. Source-order Tab behavior and the one native Canvas focus host stay
+unchanged across the Three-to-Canvas bridge. See [Use Three.js inside
+CRC](#/learn/guides/three-js#share-events-without-wrapping-the-scene-graph).
 
 ## Accessibility responsibility
 

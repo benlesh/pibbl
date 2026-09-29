@@ -24,26 +24,12 @@ export {
   performanceLabScenarioEntry,
   particleCelebrationLabScenarioEntry,
   physics2DLabScenarioEntry,
-  physics3DScenarioEntry,
   runtimeHooksScenarioEntry,
   signalsLabScenarioEntry,
   vizFoundationScenarioEntry,
   threeInstancingLabScenarioEntry,
-  staticGLBSliceScenarioEntry,
   validateScenarioCatalog,
-  webglLabScenarioEntry,
-  webglLightingLabScenarioEntry,
 } from './catalog';
-export {
-  STATIC_GLB_SLICE_ACTION_IDS,
-  STATIC_GLB_SLICE_PROBES,
-} from './static-glb-slice';
-export type {
-  StaticGLBSliceAction,
-  StaticGLBSliceSource,
-  StaticGLBSliceState,
-  StaticGLBSliceStatus,
-} from './static-glb-slice';
 export type {
   AnimationLabAction,
   AnimationLabState,
@@ -61,16 +47,6 @@ export type {
   Physics2DLabState,
 } from './physics-2d-lab.example';
 export { PHYSICS_2D_LAB_ACTION_IDS } from './physics-2d-lab';
-export type {
-  Physics3DAction,
-  Physics3DBodyId,
-  Physics3DBodySnapshot,
-  Physics3DState,
-} from './physics-3d.example';
-export {
-  PHYSICS_3D_ACTION_IDS,
-  PHYSICS_3D_BODY_IDS,
-} from './physics-3d';
 export type {
   SignalsLabAction,
   SignalsLabState,
@@ -99,32 +75,6 @@ export type {
   ThreeInstancingMissBehavior,
   ThreeInstancingResolution,
 } from './three-instancing-lab';
-export {
-  WEBGL_LAB_ACTION_IDS,
-  WEBGL_LAB_PROBES,
-} from './webgl-lab';
-export {
-  WEBGL_LIGHTING_LAB_ACTION_IDS,
-  WEBGL_LIGHTING_LAB_PROBES,
-} from './webgl-lighting-lab';
-export type {
-  WebGLLightingLabAction,
-  WebGLLightingLabBackgroundMode,
-  WebGLLightingLabCasterAlpha,
-  WebGLLightingLabConfiguration,
-  WebGLLightingLabFocusTarget,
-  WebGLLightingLabMode,
-  WebGLLightingLabState,
-  WebGLLightingLabTarget,
-} from './webgl-lighting-lab';
-export type {
-  WebGLLabAction,
-  WebGLLabFocusTarget,
-  WebGLLabMode,
-  WebGLLabPoint,
-  WebGLLabState,
-  WebGLLabTarget,
-} from './webgl-lab';
 export type {
   FocusNavigationAction,
   FocusNavigationActivationSource,

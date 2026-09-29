@@ -5,17 +5,12 @@ import {
   getScenarioRoute,
   interactionLabScenarioEntry,
   loadScenario,
-  physics3DScenarioEntry,
   scenarioCatalog,
   scenarioCatalogIndex,
   signalsLabScenarioEntry,
-  staticGLBSliceScenarioEntry,
   validateScenarioCatalog,
-  webglLabScenarioEntry,
-  webglLightingLabScenarioEntry,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import staticGLBAssetURL from '../../../playground/public/models/crc-static-glb-slice.glb?url';
 import { validateScenarioSourceText } from '../../../tooling/learning-source-contract';
 import {
   loadScenarioSource,
@@ -88,59 +83,27 @@ describe('scenario catalog trust gate', () => {
   describe('deterministic source policy', () => {
     const legacyFactory = ['r', 'ect'].join('');
 
-    it('accepts direct public core, WebGL, and 3D physics imports', () => {
+    it('accepts direct public core and Three integration imports', () => {
       const source = `
         import { Rectangle } from '@crc/core';
-        import { Cube, WebGLLayer } from '@crc/webgl';
-        import { PhysicsWorld3D, dynamicBody3D } from '@crc/physics/3d';
-        export const Scene = () => (
+        import { defineThreeLayer } from '@crc/three';
+        import { PerspectiveCamera, Scene } from 'three';
+        const Layer = defineThreeLayer({
+          create() {
+            return { scene: new Scene(), camera: new PerspectiveCamera() };
+          },
+        });
+        export const SceneExample = () => (
           <>
             <Rectangle style={{ width: 10, height: 10 }} />
-            <WebGLLayer style={{ width: 10, height: 10 }}>
-              <PhysicsWorld3D>
-                <Cube physics={dynamicBody3D()} />
-              </PhysicsWorld3D>
-            </WebGLLayer>
+            <Layer style={{ width: 10, height: 10 }} />
           </>
         );
       `;
 
       expect(() =>
-        validateScenarioSourceText(source, 'valid 3D physics source'),
+        validateScenarioSourceText(source, 'valid Three source'),
       ).not.toThrow();
-    });
-
-    it('keeps 3D physics sources inside a declarative public WebGL island', () => {
-      expect(() =>
-        validateScenarioSourceText(
-          `
-            import { Rectangle } from '@crc/core';
-            import { PhysicsWorld3D } from '@crc/physics/3d';
-            export const Scene = () => (
-              <PhysicsWorld3D>
-                <Rectangle style={{ width: 10, height: 10 }} />
-              </PhysicsWorld3D>
-            );
-          `,
-          '3D physics source without WebGL',
-        ),
-      ).toThrow(/supported static imports.*@crc\/webgl/i);
-
-      expect(() =>
-        validateScenarioSourceText(
-          `
-            import { Rectangle } from '@crc/core';
-            import { WebGLLayer } from '@crc/webgl';
-            import { PhysicsWorld3D } from '@crc/physics/3d';
-            export const Scene = () => (
-              <WebGLLayer style={{ width: 10, height: 10 }}>
-                {PhysicsWorld3D({ children: <Rectangle style={{ width: 10, height: 10 }} /> })}
-              </WebGLLayer>
-            );
-          `,
-          'direct 3D physics component call',
-        ),
-      ).toThrow(/not direct calls/i);
     });
 
     it.each([
@@ -944,14 +907,9 @@ describe('scenario catalog trust gate', () => {
         ?.scenarios.map(entry => entry.metadata.id),
     ).toEqual(['runtime-hooks-laboratory']);
     expect(
-      scenarioCatalogIndex.byApi.find(group => group.key === 'WebGLLayer')
-        ?.scenarios,
-    ).toEqual([
-      webglLabScenarioEntry,
-      webglLightingLabScenarioEntry,
-      staticGLBSliceScenarioEntry,
-      physics3DScenarioEntry,
-    ]);
+      scenarioCatalogIndex.byApi.find(group => group.key === 'defineThreeLayer')
+        ?.scenarios.map(entry => entry.metadata.id),
+    ).toEqual(['three-instancing']);
   });
 
   it('rejects duplicate executable source identities and paths', () => {
@@ -982,15 +940,6 @@ describe('scenario catalog trust gate', () => {
   it.each(scenarioCatalog)(
     'loads, mounts, resets, and disposes $metadata.id through its registered contract',
     async entry => {
-      if (entry === staticGLBSliceScenarioEntry) {
-        const response = await fetch(staticGLBAssetURL);
-        const asset = await response.arrayBuffer();
-        vi.spyOn(globalThis, 'fetch').mockImplementation(async input =>
-          String(input).includes('malformed')
-            ? new Response(new Uint8Array([0x67, 0x6c, 0x54, 0x46]))
-            : new Response(asset.slice(0)),
-        );
-      }
       const sourceText = await loadScenarioSource(entry);
       expect(sourceText).toContain(entry.source.marker);
 

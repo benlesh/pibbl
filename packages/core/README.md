@@ -36,21 +36,20 @@ automatic-runtime entries. Normal application imports come from `@crc/core`.
 Use only documented exports; `@crc/core/lib/*` and source subpaths are private
 and blocked by the package export map.
 
-The optional `@crc/webgl` package uses these same JSX entries and the same
-element, scheduler, and event identities. `@crc/core/internal` is a
-version-coupled friend seam reserved for matching official CRC packages; it is
-not supported for application imports and has no independent compatibility
-promise.
+`defineRenderLayer()` mounts an external renderer as one CRC composition,
+layout, scheduling, event, focus, and teardown boundary. The optional
+`@crc/three` package specializes that public lifecycle for ordinary Three.js
+scenes without introducing another JSX runtime or scene graph.
 
-The optional `@crc/particles` package also shares this runtime. Its root entry
-adds Canvas particle components and systems; its `./webgl` entry contributes
-instanced particle recipes through the official WebGL scene seam.
+The optional `@crc/particles` package also shares this runtime. It adds Canvas
+particle components, systems, and immutable 2D effect definitions.
 
 The optional matching `@crc/physics` package is also a sibling rather than a
-core export. Its `/2d` and `/3d` runtimes use the version-coupled friend
-scheduler so one awake world is one Advance participant; bodies never create a
-second loop. Applications import dimension-specific entries, not
-`@crc/core/internal` and not a root `@crc/physics` barrel.
+core export. Its `/2d` runtime uses the version-coupled friend scheduler so one
+awake world is one Advance participant; bodies never create a second loop.
+Renderer-independent geometry is available from `/2d/geometry` and
+`/3d/geometry`. Applications do not import `@crc/core/internal` or a root
+`@crc/physics` barrel.
 
 Drawing and layout values use closed, local `style` objects. Styles do not
 cascade or inherit. Structural containers accept recursive synchronous
@@ -70,9 +69,7 @@ overview](../../docs/site/api/index.md), [feature
 inventory](../../docs/library-status.md), and normative [design
 contracts](../../docs/design/runtime-hooks-contract.md).
 
-For transparent 3D composition, use the [WebGL islands
-guide](../../docs/site/learn/guides/webgl-islands.md) and install the matching
-`@crc/webgl` release.
-Add rigid bodies with the [first-class 3D physics
-guide](../../docs/site/learn/guides/physics-3d.md) and matching `@crc/physics`
-release.
+For transparent 3D composition, use the [Three.js integration
+guide](../../docs/site/learn/guides/three-js.md) and install `@crc/three` plus
+`three`. Pure 3D collision geometry remains available from
+`@crc/physics/3d/geometry`.

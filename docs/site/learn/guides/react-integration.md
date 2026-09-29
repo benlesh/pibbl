@@ -16,8 +16,9 @@ owns only its mount on that Canvas.
 
 One `.tsx` file has one JSX runtime. Keep the scene and host in separate files.
 The `.crc.tsx` suffix is a convention that makes the boundary obvious.
-Values from `@crc/webgl` belong in the CRC scene file and use the same
-`@crc/core` JSX runtime; they do not introduce a third runtime boundary.
+A component returned by `defineThreeLayer()` belongs in the CRC scene file and
+uses the same `@crc/core` JSX runtime; ordinary Three objects are created with
+the normal Three API and do not introduce another JSX runtime.
 
 ## CRC scene file
 

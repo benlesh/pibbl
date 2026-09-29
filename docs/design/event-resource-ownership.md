@@ -53,10 +53,10 @@ after the first cleanup request.
 | Pathless observer/default        | Hook slot, registered on root instance                                  | Render without an interaction path                             | Rerender, component removal, layer removal, or disposal                                                   | The exact root Set member is deleted once, including when declared inside a layer.                                    |
 | Layer composition paint entry    | Owning `Layer` component                                                | Layer draw slot                                                | Layer/ancestor removal or root disposal                                                                   | The parent paint entry is absent and cannot resolve a child target.                                                   |
 | Offscreen layer instance         | Owning `Layer` component                                                | Layer mount                                                    | Layer/ancestor removal or root disposal                                                                   | Child map entry, components, frames, regions, and nested layers are released recursively.                             |
-| WebGL backend target/pick record | One Mesh/Cube/Sphere target slot and candidate settled-scene generation | Default-participating geometry submission                      | `pointerEvents="none"`, failed/uncommitted generation, context loss, component/layer removal, or disposal | No committed picker, focus index, or root dispatcher state refers to that target generation.                          |
-| WebGL nested-resolver entry      | Owning `WebGLLayer` component                                           | Successful Canvas composite and generation commit              | Opt-out, generation replacement/loss, layer removal, or root disposal                                     | The global paint ledger cannot invoke a stale island picker or mismatched focus generation.                           |
-| WebGL event-parent bridge        | Owning `WebGLLayer` child instance                                      | Private backend mount                                          | Child generation replacement, layer removal, failure, or root disposal                                    | Temporary paths cannot retain the removed WebGL subtree or its Canvas parent.                                         |
-| Orbit-camera hook slot           | Mounted component calling `useOrbitCamera()`                            | First call in that hook position                               | Component/hook/root teardown                                                                              | Spherical state, active-pointer record, and revision ownership cannot schedule work; retained handlers are inert.     |
+| Render-layer target record       | One committed interaction generation and registered external target     | Successful Canvas composite and generation commit              | Opt-out, generation replacement, layer removal, failure, or root disposal                                 | No committed resolver, focus entry, or dispatcher state refers to a stale target generation.                           |
+| Render-layer nested resolver     | Owning `defineRenderLayer` component                                     | Successful Canvas composite and generation commit              | Opt-out, generation replacement, layer removal, failure, or root disposal                                 | The global paint ledger cannot invoke a stale picker or mismatched focus generation.                                   |
+| Render-layer event-parent bridge | Owning render-layer component                                            | Layer mount                                                     | Layer removal, failure, or root disposal                                                                  | Temporary paths cannot retain the removed external target or its Canvas parent.                                        |
+| Three input bridge               | Owning `defineThreeLayer` adapter                                        | Layer creation                                                  | Layer removal, failure, or root disposal                                                                  | Control listeners and capture state detach; retained input callbacks cannot dispatch or schedule work.                 |
 | Component refs                   | CRC instance                                                            | Render                                                         | Component removal or instance disposal                                                                    | Removed refs run teardown and become unreachable.                                                                     |
 
 ## Central disposal sequence
@@ -130,14 +130,12 @@ transient internal values: they are not serialized, exposed publicly, or a
 cross-version bit-position contract. The complete rationale and maintenance
 rules live in the [event-registration hot-path design](../superpowers/specs/2026-09-23-event-registration-hot-path-design.md).
 
-`useOrbitCamera()` owns stable handler functions but no native listener,
-logical target, focus candidate, or pointer-capture resource merely by being
-called. Spreading its handlers onto a geometry participant or structural
-ancestor acquires the ordinary target/listener resources owned by that
-receiving component. During a gesture, capture remains owned by the receiving
-live event node and root dispatcher; hook teardown clears its local active
-pointer and makes the retained handler bundle inert. Lights, materials,
-backgrounds, and shadow maps likewise acquire no event resource.
+The Three input bridge owns no logical target or focus candidate merely by
+connecting a control. Registered Three targets acquire ordinary CRC event/focus
+resources only through the committed layer interaction snapshot. During a
+gesture, capture remains owned by the receiving live event node and root
+dispatcher; adapter teardown clears bridge-local state and makes retained
+callbacks inert.
 
 The root dispatcher snapshots one temporary ancestry route, then re-reads each
 node's liveness and current handler before invocation. Removal during dispatch
@@ -145,13 +143,10 @@ therefore remains effective, route additions wait for the next event, and one
 thrown handler cannot prevent later handlers or final cleanup. Layers share the
 root event state and use one explicit parent-component bridge solely while
 constructing temporary paths; teardown clears that bridge before recursively
-disposing the child instance. `WebGLLayer` uses the same ownership direction
-for its private backend instance, Group3D/listener ancestry, and Canvas parent
-bridge. Its child traversal composes target-bearing geometry submissions; only
-a successfully settled, rendered, transferred, and parent-composited candidate
-commits its bitmap, pick ledger, and focus metadata together. Raster queue
-sorting cannot reorder target identity, event ancestry, focus order, or source
-indices.
+disposing the child instance. External render layers use the same ownership
+direction for their nested resolver and Canvas parent bridge. Only a
+successfully rendered, settled, transferred, and parent-composited candidate
+commits its bitmap, target records, and focus metadata together.
 
 Native acquisition includes logical prerequisites: boundary handlers own the
 movement/root-exit inputs that derive their events; click/double-click own

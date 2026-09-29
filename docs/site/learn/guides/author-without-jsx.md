@@ -11,8 +11,8 @@ exampleSlug: create-element-authoring
 
 # Author without JSX
 
-`createElement(type, props, ...children)` is the complete non-JSX API for both
-`@crc/core` and `@crc/webgl` component values. It uses
+`createElement(type, props, ...children)` is the complete non-JSX API for
+CRC component values. It uses
 the same branded element protocol, component identity, child traversal, style,
 hooks, events, focus policies, scheduling, and disposal as JSX. You do not need
 any JSX compiler configuration to use this guide.
@@ -179,27 +179,19 @@ unchanged.
 The executable Studio lesson is
 [`create-element-authoring.example.tsx`](../../../../packages/scenarios/src/learning/start/create-element-authoring.example.tsx).
 
-## WebGL without JSX
+## Three.js without JSX
 
-Keep using core's constructor and import only the 3D values from `@crc/webgl`:
+`defineThreeLayer()` returns an ordinary CRC component value, so it can be
+passed to `createElement()` just like a built-in. The Three scene itself still
+uses normal Three constructors rather than CRC elements:
 
 ```ts
-import { crc, createElement } from "@crc/core";
-import { Cube, Group3D, WebGLLayer } from "@crc/webgl";
-
-const scene = createElement(
-  WebGLLayer,
-  { style: { width: 320, height: 180 }, children: null },
-  createElement(
-    Group3D,
-    { style: { rotationYDegrees: 25 }, children: null },
-    createElement(Cube, { style: { color: "#8b5cf6" } }),
-  ),
-);
-
-crc(document.querySelector("canvas")!, scene);
+const scene = createElement(ProductScene, {
+  rotation: 0.5,
+  missBehavior: "pass-through",
+  style: { width: 320, height: 180 },
+});
 ```
 
-There is no `createWebGLElement`, WebGL fragment, or alternate hook/event
-vocabulary. The complete composition, camera, picking, animation, and raw
-context rules are in [Add WebGL islands](#/learn/guides/webgl-islands).
+See [Use Three.js inside CRC](#/learn/guides/three-js) for the layer definition,
+picking, scheduling, and resource-ownership contracts.

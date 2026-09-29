@@ -1,7 +1,7 @@
 ---
 id: guide-custom-components-primitives
 title: Create custom components and primitives
-summary: Choose ordinary composites, direct Canvas painting, definePrimitive, or declarative WebGL geometry.
+summary: Choose ordinary composites, direct Canvas painting, definePrimitive, or an external renderer layer.
 kind: guide
 slug: custom-components-and-primitives
 order: 80
@@ -246,27 +246,12 @@ Ordinary application components should rarely need `definePrimitive`. The
 executable contract is
 [`define-primitive.test.tsx`](../../../../packages/core/src/lib/define-primitive.test.tsx).
 
-## Custom WebGL shapes
+## Custom 3D shapes
 
-Build an immutable triangle descriptor with `createWebGLGeometry()`, then wrap
-`Mesh` in an ordinary component. The component may translate application props
-into declarative mesh props and style without taking ownership of WebGL state or
-GPU resources:
+Use ordinary Three geometry, materials, meshes, shaders, loaders, and addons
+inside a component returned by `defineThreeLayer()`. CRC deliberately does not
+wrap those APIs in a second primitive vocabulary. The application owns and
+disposes its Three resources; CRC owns the surrounding render-layer lifecycle,
+composition, event arbitration, and focus.
 
-```tsx
-import { Mesh, createWebGLGeometry } from "@crc/webgl";
-
-const markerGeometry = createWebGLGeometry({
-  positions: [-0.5, -0.5, 0, 0.5, -0.5, 0, 0, 0.5, 0],
-});
-
-function Marker({ x }: { x: number }) {
-  return <Mesh geometry={markerGeometry} style={{ translateX: x }} />;
-}
-```
-
-`Mesh` keeps paint, geometry-backed picking, and projected focus bounds aligned.
-The layer renderer owns programs, buffers, and vertex arrays for its current
-context generation. Inner WebGL object styles reject Canvas filters; put
-`style.filter` on the receiving `WebGLLayer`. See [Add WebGL
-islands](#/learn/guides/webgl-islands#add-a-custom-shape).
+See [Use Three.js inside CRC](#/learn/guides/three-js).

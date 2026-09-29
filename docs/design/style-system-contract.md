@@ -9,8 +9,8 @@ there. Application data, handlers, and structural children are separate props;
 text content belongs in `Text` children; `key` is element metadata.
 
 Filters are framework-owned local style and remain closed to the descriptor
-vocabulary below. `WebGLLayer` accepts that Canvas composition effect; inner
-WebGL primitive styles explicitly exclude it.
+vocabulary below. External render layers accept that Canvas composition effect
+around the complete committed bitmap; renderer-internal objects are unaffected.
 
 ```tsx
 const cardPaint = {
@@ -101,10 +101,10 @@ callbacks therefore cannot discard or reinterpret filters. Pure measurement
 ignores filters: it neither validates browser raster capabilities nor allocates
 offscreen surfaces, and the measured size is unchanged.
 
-`WebGLLayerStyle` combines core `BoxStyle` and `LayoutItemStyle`, so its
+`CRCRenderLayerStyle` combines core `BoxStyle` and `LayoutItemStyle`, so its
 specified filter is normalized by this same framework path around the completed
-island bitmap. `CRCWebGLTransformStyle` declares `filter?: never`; Mesh, Cube,
-Sphere, and Group3D cannot reinterpret a Canvas filter as WebGL state.
+layer bitmap. Three objects remain ordinary application resources and cannot
+reinterpret a Canvas filter as Three renderer state.
 
 ## Filter descriptors
 
@@ -188,59 +188,13 @@ for every removed field and structural form.
 | `Layer`          | `style.width`, `style.height`                                                                                                                                                                                                                 | Each omitted dimension uses the current logical Canvas allocation                                                                                                                                                         | Recursive `children`                            |
 | Layout values    | Container box fields plus the contract-specific algorithm fields                                                                                                                                                                              | See the layout contract's exact defaults                                                                                                                                                                                  | Recursive direct children                       |
 
-The optional `@crc/webgl` package adds this separate closed style vocabulary:
-
-| Component          | WebGL-specific style fields                                                                              | Defaults and validation                                                                                                                                                        |
-| ------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `WebGLLayer`       | Core box/layout-item fields including `width`, `height`, `filter`; local `shadows`                       | Each omitted dimension uses current logical allocation and resolves finite positive; `shadows = "medium"`, accepting `false`, `"low"`, `"medium"`, or `"high"`                 |
-| `Group3D`          | `translateX/Y/Z`, `rotationXDegrees/YDegrees/ZDegrees`, `scaleX/Y/Z`                                     | Translation/rotation `0`, scale `1`; all finite, scale nonzero; negative scale supported                                                                                       |
-| `Mesh`             | Shared transform plus `color`, `opacity`, `lit`, `material`, `castShadow`, `receiveShadow`, and `cursor` | Concrete `color = "#ffffff"`; finite `opacity = 1` in `[0, 1]`; `lit = true`; omitted material is Lambert; shadow defaults depend on final alpha; `geometry` is a program prop |
-| `Cube`             | Mesh style plus `size`                                                                                   | `size = 1`, finite and positive                                                                                                                                                |
-| `Sphere`           | Mesh style plus `radius`                                                                                 | `radius = 0.5`, finite and positive                                                                                                                                            |
-| `AmbientLight`     | `color`, `intensity`                                                                                     | White and `1`; finite nonnegative intensity; no transform or shadow field                                                                                                      |
-| `HemisphereLight`  | Shared transform plus `skyColor`, `groundColor`, `intensity`                                             | Both colors white and intensity `1`; no shadow field                                                                                                                           |
-| `DirectionalLight` | Shared transform plus `color`, `intensity`, `castShadow`                                                 | White, `1`, and `true`                                                                                                                                                         |
-| `PointLight`       | Directional-light style plus `range`                                                                     | Omitted range is unbounded; supplied range is finite and positive                                                                                                              |
-| `SpotLight`        | Point-light style plus `innerConeAngleDegrees`, `outerConeAngleDegrees`                                  | `0` and `45`; finite half-angles satisfy `0 <= inner <= outer <= 90`                                                                                                           |
-| `WebGLBackground`  | Required `color`                                                                                         | One concrete color declaration per scene; transforms are not accepted                                                                                                          |
-
-The fixed 3D transform order is translation multiplied by Z, Y, and X degree
-rotations, then scale. Child-local transforms follow the current Group3D model
-matrix. Color must be a concrete browser-accepted Canvas color; contextual
-references such as `currentColor`, system colors, and `var(...)` reject because
-the WebGL surface has no computed DOM color context. Light and emissive color
-alpha scale their RGB contribution and do not change mesh output alpha. The
-nested `material` value is local and immutable by contract: replacing it is the
-supported update; mutating an already supplied object in place need not
-invalidate a retained layer. The only current descriptor is
-`{ type: "lambert", emissiveColor?, emissiveIntensity? }`, with black emission
-and intensity one by default. Emissive intensity is finite and nonnegative.
-
-Opacity does not remove hit or focus geometry. Final raster alpha is parsed
-base-color alpha multiplied by opacity: one is opaque, values strictly between
-zero and one are transparent, and zero skips color and shadow rasterization
-while retaining geometry participation. Opaque meshes cast by default;
-partially transparent meshes require explicit `castShadow: true`; nonzero lit
-meshes receive by default. `castShadow` remains independent of `lit`.
-
-The fixed 3D transform order also governs transformable light pose. Local `-Z`
-is directional/spot direction, local origin is point/spot position, and local
-`+Y` is hemisphere sky axis. Containing scale can reposition a translated
-origin but never scales intensity, range, cone angles, or shadow quality.
-
-There is no runtime compatibility adapter, alias, or fallback for top-level
-visual fields, content in `TextStyle`, or a render element/descriptor prop for
-layer content.
-JavaScript receives the same strict resolution and child diagnostics as
-TypeScript.
-
-`opacity: 0` suppresses paint without removing separately registered target
-geometry. Image generations remain keyed by `style.src`; source races,
-load/error settlement, source replacement, removal, and disposal retain exact
-resource ownership. Explicit image dimensions establish geometry before load
-and after failure, while each omitted natural dimension remains zero until a
-successful load supplies it. `Group` transforms retain the order documented in
-the drawing contract.
+`CRCRenderLayerStyle` combines the shared system, box, and layout-item
+fields. A layer's logical width and height must resolve to positive finite
+values; omitted dimensions use the current finite allocation. Core filters wrap
+the complete committed bitmap. Renderer-internal values are application-owned
+props or resources rather than CRC style: `@crc/three` does not reinterpret
+Three materials, transforms, lights, cameras, or renderer options as Canvas
+style.
 
 ## Deliberate exclusions
 

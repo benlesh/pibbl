@@ -1,7 +1,7 @@
 # CRC runtime and hook contract
 
-Status: current implemented contract, updated for settled WebGL scenes,
-first-class signals, the realm scheduler, and `useOrbitCamera` on 2026-09-15.
+Status: current implemented contract, updated for first-class signals, the realm
+scheduler, and external render layers on 2026-09-28.
 
 This document defines element construction, traversal, identity, updates,
 hooks, recovery, and disposal. The [resource ownership
@@ -25,9 +25,8 @@ type CRCComponent<P> = (props: P) => CRCNode | void;
 
 No definition wrapper, base class, or registration step is required. The
 function value is runtime identity. Canvas platform components defined by
-`definePrimitive` and the declarative components exported by `@crc/webgl` use
-the same public element protocol while retaining backend-specific private
-capabilities.
+`definePrimitive` and external layer components defined by `defineRenderLayer`
+use the same public element protocol.
 
 `key` accepts a string or number, is removed from delivered props, and does not
 act like a React element ref. Compiler-supplied children live in props.
@@ -66,20 +65,12 @@ On a scheduled frame CRC:
 7. finalizes slots and restores state;
 8. after successful traversal, removes unseen identities and their resources.
 
-The public root backend is Canvas 2D. A `WebGLLayer` owns a private child CRC
-instance whose root backend is WebGL. Core still establishes identity, hooks,
-style, allocation, listener ancestry, after-render work, and teardown; backend
-dispatch selects the private scene composer. Plain synchronous components use
-the same rules under either backend. `Group3D` pushes and pops CPU transform and
-listener scopes; meshes, analytic lights, and `WebGLBackground` append
-frame-local declarations.
-After the complete child tree succeeds, the backend closes and settles that
-draft, reuses or renders the required shadow-depth generations, renders its
-planned color queues, and publishes one candidate for Canvas composite and
-commit. No framebuffer mutation or GPU-resource construction occurs during
-child traversal. A WebGL value outside a `WebGLLayer`, or a Canvas primitive
-inside one, reports the mismatched boundary. Every temporary backend, composer,
-environment, instance, transform, and ownership slot is restored in `finally`.
+The public root backend is Canvas 2D. `defineRenderLayer` creates one Canvas
+composition primitive whose application-owned external resources persist for a
+mounted identity. Core establishes identity, style, allocation, listener
+ancestry, scheduled frames, event/focus arbitration, and teardown; the external
+renderer draws into its private `OffscreenCanvas`. The complete lifecycle is
+defined by the [render-layer and Three.js contract](./render-layer-and-three-contract.md).
 
 Synchronous iterables are materialized once at a receiving render or
 measurement boundary. They must be finite.
@@ -107,11 +98,10 @@ lower-level prepared-identity guard retains
 component, changing its key or type, replacing its root type, or disposing the
 instance releases that identity and every hook resource it owns.
 
-Source traversal is Canvas paint order and the global focus order. Within one
-WebGL child tree it establishes component identity, event ancestry, and stable
-source indices; the settled renderer may regroup opaque and transparent raster
-queues without changing those identities. Coordinate targeting searches the
-shared Canvas paint ledger in reverse. Policy values `FocusManagement` and
+Source traversal is Canvas paint order and the global focus order. One external
+render layer contributes one bitmap and matching nested interaction resolver at
+its exact source position. Coordinate targeting searches the shared Canvas
+paint ledger in reverse. Policy values `FocusManagement` and
 `KeyboardNavigation` are identity-transparent preparation boundaries and do
 not add component or hook scopes.
 
@@ -130,14 +120,11 @@ contract](./signals-and-scheduling-contract.md) defines phase admission,
 revision, computed-validation, Layer, failure-isolation, and friend-renderer
 rules.
 
-A required `WebGLLayer` child update synchronously traverses that invalidated
-private instance once, settles and renders the successful scene, and requests
-the necessary parent composition without a second child traversal.
-`useAnimationFrame()` returns the current transaction's timestamp and requests
-one continuing coalesced frame while its component is mounted. Canvas and WebGL
-work in that transaction observes the same timestamp; multiple animation
-callers do not create independent scheduler loops. Static WebGL content requests
-no continuing frame.
+An invalidated render layer renders at most one candidate generation in the
+current transaction. Its frame receives the shared timestamp and may request a
+continuing coalesced frame through `invalidate()`; external renderers do not
+start another ordinary animation loop. Static layers request no continuing
+frame.
 
 ## Hook sequence invariant
 
@@ -174,8 +161,6 @@ a later explicit render remounts cleanly.
 | `useCursor(...)`                        | Owns a typed cursor hook slot and follows target/fallback ownership rules. Switching path/global modes keeps hook order valid.                                                                                                                                                                                                                                                                                                                     | `hook-contract.test.ts`, cleanup laboratory                   |
 | `useLayoutBox()`                        | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared hook diagnostic.                                                                                       | layout foundation and measurement-isolation suites            |
 | `useCanvasContext()`                    | Returns the current isolated Canvas 2D context without allocating a hook slot. It is unavailable outside render and during pure measurement.                                                                                                                                                                                                                                                                                                       | plain-component and measurement-isolation suites              |
-| `useAnimationFrame()`                   | From `@crc/webgl`, owns a typed hook slot, returns the shared current timestamp, and retains one continuing-frame request while mounted. Removal/disposal makes stale callbacks inert.                                                                                                                                                                                                                                                             | WebGL animation and structural-performance suites             |
-| `useOrbitCamera(options)`               | From `@crc/webgl`, owns spherical azimuth/polar/distance plus one revision signal in a typed component slot. It returns immutable current `position`/`lookAt` snapshots and a hook-lifetime-stable bundle of ordinary CRC pointer/wheel handlers. `initialPosition` is mount-only; orbit point, bounds, and speeds are live candidates adopted only after successful render. Input changes request scheduled renders and no idle animation frames. | Orbit-camera hook and WebGL lighting laboratory suites        |
 
 The three memoized path helpers are distinct slot kinds. Reordering them is a
 hook-order error even though all return `Path2D`.
@@ -184,9 +169,9 @@ hook-order error even though all return `Path2D`.
 
 `measureElement` and a `definePrimitive` `measure` capability are not render
 passes. They normalize style and may recursively measure elements, but cannot
-invoke render callbacks, hooks, `useLayoutBox`, `useCanvasContext`, or
-`useAnimationFrame`, `useOrbitCamera`, compose a WebGL scene, paint, register
-interaction, load images, or acquire resources. CRC clears and
+invoke render callbacks, hooks, `useLayoutBox`, `useCanvasContext`, create or
+render an external layer, paint, register interaction, load images, or acquire
+resources. CRC clears and
 restores temporary render state in `finally`. When measurement is nested during
 an active render, that isolation prevents attempted measurement hooks from
 consuming or reordering the parent component's hook slots. Direct or indirect
@@ -199,12 +184,10 @@ render callback.
 
 ## Canvas isolation, errors, and disposal
 
-CRC saves/restores Canvas state around every Canvas component subtree. The
-private WebGL scene renderer owns an explicit framework state baseline and
-installs it around settled-scene execution without broad state readback.
-Component throws release runtime ownership and refs and restore global/backend
-state; a failed WebGL composition is discarded before settlement or draw, while
-pixels already painted earlier in the wider Canvas frame remain. Signal writes
+CRC saves/restores Canvas state around every Canvas component subtree.
+Component throws release runtime ownership and refs and restore global state; a
+failed external-layer candidate is not committed, while pixels already painted
+earlier in the wider Canvas frame remain. Signal writes
 are forbidden while CRC evaluates components or primitive render callbacks,
 even for equality no-ops, and the guard runs before an updater or equality
 function. The controller's `dispose()` is idempotent, removes that root and its
@@ -221,11 +204,11 @@ boundary, and blocked private subpaths. The `runtime-hooks-laboratory`, JSX
 authoring tests, lifecycle stress suite, and cleanup ledgers cover traversal,
 identity, hook order, recovery, and disposal through public elements.
 
-`@crc/webgl` consumes that one installed core instance as a matching peer. Its
-`useAnimationFrame` and `useOrbitCamera` hooks use core-owned hook/scheduling
-and event facilities; the package exports no second JSX runtime, element
-constructor, fragment, or competing core hook/event vocabulary. The explicit
-`@crc/core/internal` friend entry supports matching official CRC packages only.
+`@crc/three` consumes `defineRenderLayer` from the public core entry and peers on
+the application's `three` installation. It exports no second JSX runtime,
+element constructor, fragment, or competing core hook/event vocabulary. The
+explicit `@crc/core/internal` friend entry supports matching official CRC
+packages only.
 It is version-coupled, absent from the application API reference, and carries
 no independent semantic-versioning or compatibility promise. Applications must
 not import it.
@@ -250,19 +233,10 @@ restoration, stale setters, malformed-path recovery, fragment identity, and
 recursive iterable diagnostics. Public type assertions compile against built
 declarations under both Bundler and NodeNext resolution.
 
-WebGL backend, hook, package-consumer, cache, and structural suites additionally
-prove one shared core identity, one composition traversal per invalidated child
-frame, no GL work before successful composition, one settlement/render,
-coalesced animation requests, constant-time static cache hits, matched timestamp
-propagation, backend mismatch diagnostics, and restoration after success or
-failure.
-
-The orbit-camera suite additionally proves stable handler and unchanged-pose
-identity, primary-pointer capture/termination, unrelated-pointer rejection,
-root-logical rotation, polar and distance clamps, pixel/line/page wheel
-normalization, prevention only for an applied zoom, live successful-render
-option adoption, failed-render rollback, scheduled invalidation, and inert
-teardown callbacks without continuing frames.
+Render-layer and Three package suites additionally prove one resource lifetime,
+coalesced animation requests, matched timestamp propagation, transactional
+bitmap/interaction publication, input arbitration, and restoration after
+success or failure.
 
 Focused suites cover signal `get()` reads, component consumers, realm scheduler
 requests, Layer invalidation, exact ownership, and isolated root render
@@ -313,7 +287,3 @@ arbitrary application data is never recursively unwrapped.
 `@crc/core/internal` is a separate version-coupled friend entry for official
 lockstep renderer packages. It is neither re-exported at the root nor available
 to ordinary Studio examples.
-
-## 3D physics hooks
-
-`crcPhysicsWorld3D()` resolves the nearest mounted 3D world and `crcPhysicsBody3D()` owns one stable generation-bound body endpoint for its component hook slot. Handles expose lazily materialized readonly committed-state signals; commands are snapshotted into owner-scoped Begin work, stale generations cannot control reused storage, and removal, failed render, or disposal releases bindings and queued delivery. Both hooks obey ordinary unconditional hook ordering and diagnose use outside the required world or duplicate live body binding.

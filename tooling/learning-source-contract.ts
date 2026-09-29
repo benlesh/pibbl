@@ -59,41 +59,31 @@ interface SourceInspection {
 const VIZ_MODULE = "@crc/viz";
 const CORE_MODULE = "@crc/core";
 const PARTICLES_MODULE = "@crc/particles";
-const PARTICLES_WEBGL_MODULE = "@crc/particles/webgl";
+const PARTICLES_WEBGL_MODULE = ["@crc/particles", "webgl"].join("/");
 const THREE_ADAPTER_MODULE = "@crc/three";
 const THREE_MODULE = "three";
 const THREE_ORBIT_CONTROLS_MODULE =
   "three/addons/controls/OrbitControls.js";
-const WEBGL_MODULE = "@crc/webgl";
-const WEBGL_GLTF_MODULE = "@crc/webgl/gltf";
+const WEBGL_MODULE = ["@crc", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
   VIZ_MODULE,
   CORE_MODULE,
   PARTICLES_MODULE,
-  PARTICLES_WEBGL_MODULE,
   THREE_ADAPTER_MODULE,
   THREE_MODULE,
   THREE_ORBIT_CONTROLS_MODULE,
-  WEBGL_MODULE,
-  WEBGL_GLTF_MODULE,
 ]);
 const PARTICLES_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/particle-effects.example.tsx";
 const PHYSICS_2D_MODULE = "@crc/physics/2d";
-const PHYSICS_3D_MODULE = "@crc/physics/3d";
-const PHYSICS_MODULES = new Set([
-  PHYSICS_2D_MODULE,
-  PHYSICS_3D_MODULE,
-]);
+const PHYSICS_MODULES = new Set([PHYSICS_2D_MODULE]);
 for (const physicsModule of PHYSICS_MODULES) {
   LEARNING_VALUE_MODULES.add(physicsModule);
 }
-const WEBGL_ISLAND_LEARNING_SOURCE_PATH =
-  "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
+const THREE_LAYER_LEARNING_SOURCE_PATH =
+  "packages/scenarios/src/learning/three/three-layer.example.tsx";
 const THREE_INSTANCING_LEARNING_SOURCE_PATH =
-  "packages/scenarios/src/learning/composition/three-instancing.example.tsx";
-const WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY =
-  "packages/scenarios/src/learning/webgl/";
+  "packages/scenarios/src/learning/three/three-instancing.example.tsx";
 const PHYSICS_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/physics-2d.example.tsx";
 
@@ -1445,11 +1435,12 @@ export function validateScenarioSourceText(
   if (
     !inspection.hasCoreValueImport ||
     !inspection.hasOnlyScenarioImports ||
-    (inspection.hasPhysics3DValueImport && !inspection.hasWebGLValueImport)
+    inspection.hasPhysics3DValueImport ||
+    inspection.hasWebGLValueImport
   ) {
     throw invalid(
       label,
-      "must use supported static imports from @crc/core, @crc/viz, @crc/particles, @crc/physics/2d, @crc/physics/3d, and @crc/webgl; 3D physics requires @crc/webgl; relative imports must be type-only; and at least one public @crc/core value is required.",
+      "must use supported static imports from @crc/core, @crc/viz, @crc/particles, @crc/physics/2d, @crc/three, three, and supported Three addons; relative imports must be type-only; and at least one public @crc/core value is required.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1487,12 +1478,6 @@ export function validateLearningSourceText(
 ): void {
   const { authoring, label, sourcePath } = contract;
   const inspection = inspectSource(source, label);
-  const isWebGLLesson =
-    sourcePath === WEBGL_ISLAND_LEARNING_SOURCE_PATH ||
-    sourcePath?.startsWith(WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY) === true ||
-    (sourcePath === undefined &&
-      (label === "webgl-islands" ||
-        label === 'Learning example "webgl-islands"'));
   const isParticlesLesson =
     sourcePath === PARTICLES_LEARNING_SOURCE_PATH ||
     (sourcePath === undefined &&
@@ -1500,18 +1485,22 @@ export function validateLearningSourceText(
         label === 'Learning example "particle-effects"'));
   const isThreeLesson =
     sourcePath === THREE_INSTANCING_LEARNING_SOURCE_PATH ||
+    sourcePath === THREE_LAYER_LEARNING_SOURCE_PATH ||
+    (sourcePath === undefined &&
+      (label === "three-instancing" ||
+        label === 'Learning example "three-instancing"' ||
+        label === "three-layer" ||
+        label === 'Learning example "three-layer"'));
+  const isThreeControlsLesson =
+    sourcePath === THREE_INSTANCING_LEARNING_SOURCE_PATH ||
     (sourcePath === undefined &&
       (label === "three-instancing" ||
         label === 'Learning example "three-instancing"'));
-  const isParticleWebGLLesson =
-    inspection.packageImportModules.includes(PARTICLES_WEBGL_MODULE);
   const isPhysicsLesson =
     sourcePath === PHYSICS_LEARNING_SOURCE_PATH ||
     (sourcePath === undefined &&
       (label === "physics-2d" ||
         label === 'Learning example "physics-2d"'));
-  const isGLTFLesson =
-    inspection.packageImportModules.includes(WEBGL_GLTF_MODULE);
   const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE);
   const hasExactPackageImports = isVizLesson
     ? inspection.hasNamedValueCoreImport && inspection.packageImportModules.length === 2
@@ -1519,31 +1508,10 @@ export function validateLearningSourceText(
     ? inspection.hasNamedValueCoreImport &&
       inspection.hasThreeAdapterValueImport &&
       inspection.hasThreeValueImport &&
-      inspection.hasOrbitControlsValueImport &&
+      inspection.hasOrbitControlsValueImport === isThreeControlsLesson &&
       !inspection.hasNamedValueParticlesImport &&
       !inspection.hasNamedValueWebGLImport &&
-      inspection.packageImportModules.length === 4
-    : isGLTFLesson
-      ? isWebGLLesson &&
-        inspection.hasNamedValueCoreImport &&
-        inspection.hasNamedValueWebGLImport &&
-        !inspection.hasNamedValueParticlesImport &&
-        !inspection.hasNamedValuePhysicsImport &&
-        inspection.packageImportModules.includes(WEBGL_GLTF_MODULE) &&
-        inspection.packageImportModules.length === 3
-    : isParticleWebGLLesson
-    ? inspection.hasNamedValueCoreImport &&
-      inspection.hasNamedValueParticlesImport &&
-      inspection.hasNamedValueWebGLImport &&
-      inspection.packageImportModules.includes(PARTICLES_MODULE) &&
-      inspection.packageImportModules.includes(PARTICLES_WEBGL_MODULE) &&
-      inspection.packageImportModules.length === 4
-    : isWebGLLesson
-    ? inspection.hasNamedValueCoreImport &&
-      inspection.hasNamedValueWebGLImport &&
-      !inspection.hasNamedValueParticlesImport &&
-      !inspection.hasNamedValuePhysicsImport &&
-      inspection.packageImportModules.length === 2
+      inspection.packageImportModules.length === (isThreeControlsLesson ? 4 : 3)
     : isParticlesLesson
       ? inspection.hasNamedValueCoreImport &&
         inspection.hasNamedValueParticlesImport &&
@@ -1567,13 +1535,9 @@ export function validateLearningSourceText(
     throw invalid(
       label,
       isThreeLesson
-        ? "must use direct, unaliased static named value imports from @crc/core, @crc/three, three, and three/addons/controls/OrbitControls.js."
-        : isParticleWebGLLesson
-        ? "must use direct, unaliased static named value imports from @crc/core, @crc/particles, @crc/particles/webgl, and @crc/webgl."
-        : isGLTFLesson
-          ? "must use direct, unaliased static named value imports from @crc/core, @crc/webgl, and @crc/webgl/gltf."
-          : isWebGLLesson
-            ? "must use direct, unaliased static named value imports from both @crc/core and @crc/webgl."
+        ? isThreeControlsLesson
+          ? "must use direct, unaliased static named value imports from @crc/core, @crc/three, three, and three/addons/controls/OrbitControls.js."
+          : "must use direct, unaliased static named value imports from @crc/core, @crc/three, and three."
             : isParticlesLesson
               ? "must use direct, unaliased static named value imports from both @crc/core and @crc/particles."
               : isPhysicsLesson
@@ -1602,10 +1566,6 @@ export function validateLearningSourceText(
       label,
       isThreeLesson
         ? "must use direct Three lesson bindings without aliases, reassignment, or shadowing."
-        : isParticleWebGLLesson
-        ? "must use direct CRC particle-WebGL lesson bindings without aliases, reassignment, or shadowing."
-        : isGLTFLesson || isWebGLLesson
-          ? "must use direct @crc/core and @crc/webgl bindings without aliases, reassignment, or shadowing."
           : isParticlesLesson
             ? "must use direct @crc/core and @crc/particles bindings without aliases, reassignment, or shadowing."
             : isPhysicsLesson
@@ -1632,9 +1592,7 @@ export function validateLearningSourceText(
     throw invalid(label, "uses the legacy Layer render prop.");
   }
   if (
-    inspection.hasUninspectableProps ||
-    (inspection.hasOrbitHandlersSpread &&
-      sourcePath?.startsWith(WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY) !== true)
+    inspection.hasUninspectableProps || inspection.hasOrbitHandlersSpread
   ) {
     throw invalid(
       label,
