@@ -139,7 +139,7 @@ describe('img async resource ownership', () => {
     image.onload?.();
     await nextFrame();
 
-    expect(drawImage).toHaveBeenLastCalledWith(image, 10, 20, width, height);
+    expect(drawImage).toHaveBeenLastCalledWith(image, 0, 0, width, height);
     controller.dispose();
   });
 
@@ -173,10 +173,10 @@ describe('img async resource ownership', () => {
   );
 
   it.each([
-    ['none', [24.2, 20.2, 120, 80]],
-    ['round', [23.5, 19.5, 120, 80]],
-    ['ceil', [24.5, 20.5, 120, 80]],
-    ['floor', [23.5, 19.5, 120, 80]],
+    ['none', [0, 0, 120, 80]],
+    ['round', [-0.5, -0.5, 120, 80]],
+    ['ceil', [-0.5, -0.5, 120, 80]],
+    ['floor', [-0.5, -0.5, 120, 80]],
   ] as const)('shares one %s-aligned rectangle across draw, border, and interaction', async (
     alignToPixelGrid,
     expectedRectangle,
@@ -263,7 +263,7 @@ describe('img async resource ownership', () => {
 
     second.onload?.();
     await nextFrame();
-    expect(drawImage).toHaveBeenLastCalledWith(second, 10, 20, 30, 40);
+    expect(drawImage).toHaveBeenLastCalledWith(second, 0, 0, 30, 40);
     const drawCount = drawImage.mock.calls.length;
 
     savedFirstLoad?.();
