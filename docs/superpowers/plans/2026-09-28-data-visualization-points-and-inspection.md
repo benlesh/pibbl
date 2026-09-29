@@ -538,3 +538,14 @@ at the same unrelated 110-pixel WebGL label mismatch documented above; the
 aggregate gate is not green. No new visual baseline was changed for this follow-up.
 The accepted AnchoredLayout feature is hardened, documented, reviewed, and
 verified proportionally; no push or merge was performed.
+
+### Shipping integration
+
+Before delivery, main advanced to f36a0a23 with core responsive styles. The
+isolated branch merged that commit, preserving both catalogs and all Studio
+consumer probes. Core conditional styles now work on returned CRC elements;
+a public regression verifies an AnchoredLayout child changes at its own declared
+width threshold. Direct conditional styles on viz-owned marks remain deferred.
+The merged result passed trust:static and the full browser suite: 3,876 passed,
+4 skipped, across 326 passing files. The user explicitly accepted the unrelated
+WebGL visual limitation and requested direct merge to main and push.

@@ -974,6 +974,30 @@ const drafts = [
     load: () => import("./learning/layout/flow.example"),
   },
   {
+    slug: "responsive-styles",
+    title: "Responsive local styles",
+    shortTitle: "Responsive styles",
+    section: "layout",
+    order: 129,
+    summary: "A store revenue card adapts from a full dashboard to a narrow sidebar or phone.",
+    api: ["Flow", "Grid", "useLayoutBox"],
+    objectives: [
+      "Reflow metrics and chart placement with local width rules.",
+      "Distinguish outer placement styles from internal responsive content.",
+    ],
+    prompts: {
+      gesture: "Select 30 days, then try Dashboard, Sidebar, and Phone. The same card retains your selection.",
+      code: "Change the 600-unit width threshold in the card styles to move the stacking breakpoint.",
+    },
+    apiNotes: [
+      "An outer layout-item rule sees its parent's content size; inner rules see the assigned allocation.",
+      "Rules do not imply touch capability or conditional structure.",
+    ],
+    canvas: { width: 1000, height: 800 },
+    related: ["flow", "grid"],
+    load: () => import("./learning/layout/responsive-styles.example"),
+  },
+  {
     slug: "flex",
     title: "Flex layout",
     shortTitle: "Flex",

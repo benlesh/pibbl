@@ -1,3 +1,4 @@
+import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { cloneCRCElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
@@ -26,7 +27,7 @@ import type {
   SystemStyle,
 } from '../types.js';
 import {
-  normalizeDirectChildStyle,
+  prepareDirectChildStyle,
   materializeLayoutChildren,
   placeDirectChildren,
   prepareLayoutChildren,
@@ -100,6 +101,7 @@ interface FlexItem {
   crossAuto: boolean;
   alignSelf: CrossAlignment | 'auto';
   receiverToken: object;
+  query?: PreparedQuery;
 }
 
 interface FlexLine {
@@ -224,7 +226,8 @@ function measureFlex(
       GLOBAL_STATE.primitiveReceiverToken,
       count,
     );
-    const style = normalizeDirectChildStyle(child, receiverToken) as Readonly<
+    const prepared = prepareDirectChildStyle(child, receiverToken, diagnosticBox);
+    const style = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
     rejectUnsupportedItemFields(child, style, diagnosticBox);
@@ -418,7 +421,8 @@ function resolveFlexPlacements(
       GLOBAL_STATE.primitiveReceiverToken,
       items.length,
     );
-    const normalized = normalizeDirectChildStyle(child, receiverToken) as Readonly<
+    const prepared = prepareDirectChildStyle(child, receiverToken, container);
+    const normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
     rejectUnsupportedItemFields(child, normalized, container);
@@ -467,6 +471,7 @@ function resolveFlexPlacements(
         normalized,
         child,
         receiverToken,
+        preparedStyleQuery(prepared),
       );
       const result = measurement.measureElement(measurementChild, constraints);
       if (result.status === 'measured') {
@@ -576,6 +581,7 @@ function resolveFlexPlacements(
       crossAuto,
       alignSelf: alignment,
       receiverToken,
+      query: preparedStyleQuery(prepared),
     });
   }
 
@@ -639,6 +645,7 @@ function resolveFlexPlacements(
         Object.freeze(usedStyle),
         item.child,
         item.receiverToken,
+        item.query,
       );
       placements.push({ box, element: renderedChild });
       mainCursor += outerMain + mainGap + distribution.between;

@@ -1299,11 +1299,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 75 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
+  it("contains 76 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(75);
+    expect(learningExampleCatalog).toHaveLength(76);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1380,7 +1380,7 @@ describe("learning example catalog", () => {
         "fireflies",
         "static-glb",
       ],
-      layout: ["absolute-and-overlay", "flex", "flow", "grid"],
+      layout: ["absolute-and-overlay", "flex", "flow", "grid", "responsive-styles"],
       "events-and-interaction": [
         "click",
         "context-menu",
@@ -1757,7 +1757,7 @@ describe("learning example catalog", () => {
     }
   });
 
-  it("contains exactly the four canonical layout lessons", async () => {
+  it("contains exactly the five canonical layout lessons", async () => {
     const layouts = learningExampleCatalog.filter(
       (entry) => entry.section === "layout",
     );
@@ -1766,12 +1766,14 @@ describe("learning example catalog", () => {
       "flow",
       "flex",
       "grid",
+      "responsive-styles",
     ]);
     expect(layouts.map(getLearningExampleRoute)).toEqual([
       "#/examples/layout/absolute-and-overlay",
       "#/examples/layout/flow",
       "#/examples/layout/flex",
       "#/examples/layout/grid",
+      "#/examples/layout/responsive-styles",
     ]);
     for (const entry of layouts) {
       expect(entry.objectives).toHaveLength(2);

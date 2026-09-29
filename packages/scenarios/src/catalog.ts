@@ -1,3 +1,4 @@
+import { RESPONSIVE_STYLE_ACTIONS, type ResponsiveStylesState } from "./responsive-styles-lab.example";
 import type { SmokeScenarioState } from "./smoke.example";
 import type { CleanupStressState } from "./cleanup-stress.example";
 import type { DrawingCompositionState } from "./drawing-composition.example";
@@ -2347,8 +2348,25 @@ export const vizHoverScenarioEntry: ScenarioCatalogEntry<import("./viz-hover-lab
  load:async()=>(await import("./viz-hover-lab.js")).vizHoverScenario,
 };
 
+export const responsiveStylesScenarioEntry: ScenarioCatalogEntry<ResponsiveStylesState> = {
+  metadata: {
+    id: "responsive-styles", slug: "responsive-styles", title: "Responsive style thresholds",
+    summary: "Deterministic allocated width and height queries with signal updates and stable identity.",
+    category: "Layout", apiTags: ["Flow", "Grid", "signal", "useLayoutBox"],
+    conceptTags: ["responsive styles", "allocation", "ownership"],
+    manualSteps: [{ action: "Cross root and cell width 600 in both directions, then change cell height across 120.", expected: "The second target changes arrangement and gap while its identity remains stable." }],
+    knownLimitations: ["Queries change styles only; this is not a mobile chart or touch-usability test."],
+    learningOrder: 129, visibility: "test-laboratory", maturity: "contract",
+    visibilityReason: "Exact threshold and identity evidence is separate from the learning example.",
+  },
+  canvas: { width: 1000, height: 600 }, actions: RESPONSIVE_STYLE_ACTIONS,
+  source: { id: "responsive-styles-lab-example", language: "tsx", marker: "RESPONSIVE_STYLES_SOURCE_ID = 'responsive-styles-lab-example'", path: "packages/scenarios/src/responsive-styles-lab.example.tsx" },
+  load: async () => (await import("./responsive-styles-lab.example")).responsiveStylesScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
   validateScenarioCatalog([
+    responsiveStylesScenarioEntry,
     vizFoundationScenarioEntry,
     vizPointsScenarioEntry,
     vizHoverScenarioEntry,

@@ -126,3 +126,34 @@ it("preserves keyed content on reorder and gives horizontal rows their own alloc
   rows.set([]);
   expect(runtime.pending).toBe(0);
 });
+
+it("uses each declared box as the query basis for responsive core children", () => {
+  runtime = testRuntime();
+  const items = signal([
+    { key: "a", anchor: { x: 20, y: 30 }, width: 50, height: 20 },
+  ]);
+  const canvas = runtime.mount(
+    <Viz.AnchoredLayout items={items}>
+      {() => (
+        <Rectangle
+          pointerEvents="none"
+          style={{
+            width: "100%",
+            height: "100%",
+            fill: "blue",
+            when: [{ query: { minWidth: 60 }, style: { fill: "red" } }],
+          }}
+        />
+      )}
+    </Viz.AnchoredLayout>,
+  );
+  runtime.flush();
+  expect([...canvas.getContext("2d")!.getImageData(35, 30, 1, 1).data]).toEqual(
+    [0, 0, 255, 255],
+  );
+  items.set([{ ...items.get()[0], width: 70 }]);
+  runtime.flush();
+  expect([...canvas.getContext("2d")!.getImageData(35, 30, 1, 1).data]).toEqual(
+    [255, 0, 0, 255],
+  );
+});

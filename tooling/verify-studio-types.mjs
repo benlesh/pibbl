@@ -565,10 +565,13 @@ const publicTypeExports = [
   'WedgePathOptions',
   'WedgeStyle',
   'WritableSignal',
+  'CRCSizeQuery',
+  'CRCStyleRule',
+  'CRCResponsiveStyle',
 ].sort();
 
-if (publicTypeExports.length !== 191) {
-  throw new Error(`CRC Studio must declare exactly 191 core public types, received ${publicTypeExports.length}.`);
+if (publicTypeExports.length !== 194) {
+  throw new Error(`CRC Studio must declare exactly 194 core public types, received ${publicTypeExports.length}.`);
 }
 
 const publicWebGLTypeExports = [
@@ -2008,6 +2011,7 @@ try {
     await mkdir(dirname(declarationPath), { recursive: true });
     await writeFile(declarationPath, content);
   }
+  await writeFile(join(directory, 'responsive-styles.tsx'), await readFile(join(repositoryRoot, 'playground/package-consumer/responsive-styles.tsx'), 'utf8'));
   await writeFile(join(directory, 'consumer.tsx'), consumer);
   await writeFile(join(directory, 'package-consumer.tsx'), packageConsumer);
   for (const [filename, slug] of [['viz-points.tsx', 'viz-points-and-inspection'], ['viz-hover.tsx', 'viz-hover-comparison']]) {
@@ -2035,7 +2039,7 @@ try {
         strict: true,
         target: 'ESNext',
       },
-      files: ['viz-lesson.tsx', 'viz-points.tsx', 'viz-hover.tsx', 'consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
+      files: ['responsive-styles.tsx', 'viz-lesson.tsx', 'viz-points.tsx', 'viz-hover.tsx', 'consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
     }),
   );
   const packageEntrySets = [

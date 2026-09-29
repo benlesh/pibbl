@@ -35,5 +35,5 @@ column, clear of every supplied anchor. It accepts arbitrary CRC content without
 requiring chart scales or hover state. Use it when independent cards would overlap.
 
 See the public data-visualization guide and Studio's Penguin measurements and
-Hover comparisons examples for full wiring. Responsive `style.when` integration
-is deferred until the matching core implementation is available.
+Hover comparisons examples for full wiring. Core responsive `style.when` rules work on returned CRC elements. Direct
+conditional-style support for viz-owned styles remains a separate follow-up.

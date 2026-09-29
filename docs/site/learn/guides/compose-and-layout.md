@@ -233,3 +233,6 @@ Executable lessons cover [Group](../../../../packages/scenarios/src/learning/com
 and every layout component. The deterministic
 [`first-class-filters` laboratory](../../../../packages/scenarios/src/filter-lab.example.tsx)
 is shared by the Studio and headless browser evidence.
+
+See [responsive local styles](#/learn/guides/responsive-styles) for typed width
+and height conditions, the placement/content distinction, and measurement limits.

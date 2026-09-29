@@ -1,3 +1,4 @@
+import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { cloneCRCElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
@@ -22,7 +23,7 @@ import type {
 import {
   childWithUsedSize,
   materializeLayoutChildren,
-  normalizeDirectChildStyle,
+  prepareDirectChildStyle,
   placeDirectChildren,
   prepareLayoutChildren,
   resolveContainerBox,
@@ -67,6 +68,7 @@ interface FlowItem {
   verticalPadding: number;
   alignment: FlowAlignment;
   receiverToken: object;
+  query?: PreparedQuery;
 }
 
 export interface FlowMeasurementInput {
@@ -172,7 +174,8 @@ function resolveFlowPlacements(
       GLOBAL_STATE.primitiveReceiverToken,
       items.length,
     );
-    const normalized = normalizeDirectChildStyle(child, receiverToken) as Readonly<
+    const prepared = prepareDirectChildStyle(child, receiverToken, container);
+    const normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & LayoutItemStyle
     >;
     const needsWidth = normalized.width === undefined || normalized.width === 'auto';
@@ -192,6 +195,7 @@ function resolveFlowPlacements(
         normalized,
         child,
         receiverToken,
+        preparedStyleQuery(prepared),
       );
       const result = measurement.measureElement(measurementChild, constraints);
       if (result.status === 'unsupported') {
@@ -234,6 +238,7 @@ function resolveFlowPlacements(
         container,
       ),
       receiverToken,
+      query: preparedStyleQuery(prepared),
     });
   }
 
@@ -246,6 +251,7 @@ function resolveFlowPlacements(
       Math.max(0, box.width - items[index].horizontalPadding),
       Math.max(0, box.height - items[index].verticalPadding),
       items[index].receiverToken,
+      items[index].query,
     ),
   }));
 }

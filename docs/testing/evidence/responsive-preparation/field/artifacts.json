@@ -1,0 +1,13 @@
+{
+  "hashes": {
+    "A": "9fcf2fb67c879e58b8a6afc1b59e590afa10aaf73e624ec92f4741ae5f133f73",
+    "B": "9fcf2fb67c879e58b8a6afc1b59e590afa10aaf73e624ec92f4741ae5f133f73",
+    "C": "a7bbdca06104f27ab5b69699c6288dcce9e2f5d6072238abe28b1ec4c7739da4"
+  },
+  "baselineArchive": "cab31508006e2f947400a74db43b273526e8f2d29eaed332e98c0c75bce32eec",
+  "node": "v24.15.0",
+  "workload": "preparation-1000-field",
+  "warmups": 100,
+  "batches": 200,
+  "updatesPerBatch": 20
+}

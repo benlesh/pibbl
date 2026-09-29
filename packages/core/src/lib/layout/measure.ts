@@ -1,3 +1,4 @@
+import { getStyleMeasurementMode, withStyleMeasurement, rejectResponsiveMeasurement, UnsupportedResponsiveMeasurement } from '../style/responsive.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { EMPTY_STYLE } from '../style/empty-style.js';
@@ -37,9 +38,11 @@ export function measureElement(
     active: new Set(),
     stack: [],
   };
-  return withIsolatedRenderState(() =>
+  const mode = getStyleMeasurementMode() ? 'recursive' :
+    GLOBAL_STATE.componentRefs ? 'mounted-intrinsic' : 'standalone-root';
+  return withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
     measureElementInternal(element, constraints, service, context),
-  );
+  ));
 }
 
 interface MeasurementContext {
@@ -82,7 +85,12 @@ function measureElementInternal(
   context.active.add(source);
   context.stack.push(element);
   try {
-    const inputs = untracked(() => resolvePrimitiveInputs(element, definition));
+    if (preNormalized?.query && getStyleMeasurementMode() !== 'standalone-root') {
+      rejectResponsiveMeasurement(element);
+    }
+    const inputs = untracked(() => resolvePrimitiveInputs(element, definition, preNormalized, {
+      width: constraints.maxWidth, height: constraints.maxHeight,
+    }));
     const specifiedStyle = withoutSystemFilter(
       preNormalized?.style ?? inputs.style ?? EMPTY_STYLE,
     );
@@ -96,14 +104,14 @@ function measureElementInternal(
       getPrimitiveReceiverToken(element) ?? createPrimitiveReceiverToken();
     let result: MeasureResult;
     try {
-      result = definition.measure({
+      result = withStyleMeasurement('recursive', () => definition.measure!({
         props: inputs.props,
         style: normalized,
         constraints,
         service,
         measureElement: (child, childConstraints) =>
           measureElementInternal(child, childConstraints, service, context),
-      });
+      }));
     } finally {
       GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
     }
@@ -111,6 +119,11 @@ function measureElementInternal(
     validateMeasuredSize(result.size.width, 'width', component, constraints);
     validateMeasuredSize(result.size.height, 'height', component, constraints);
     return result;
+  } catch (error) {
+    if (error instanceof UnsupportedResponsiveMeasurement) {
+      return { status: 'unsupported', reason: error.message };
+    }
+    throw error;
   } finally {
     context.stack.pop();
     context.active.delete(source);

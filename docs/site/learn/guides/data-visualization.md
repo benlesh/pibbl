@@ -65,8 +65,8 @@ included in its editable source.
 
 **Known gap:** the example currently has a desktop-oriented layout. Phone-sized
 presentation and a fully evaluated casual-touch experience remain deferred.
-General responsive style queries are a separate design exploration, not part
-of `@crc/viz`.
+Core supports responsive style queries on returned CRC elements; conditional
+styles for viz-owned marks remain a separate follow-up.
 
 Linear scales and linear curves are the current scope. Time/UTC, band scales,
 additional curves and series, and automatic legends remain future work.
@@ -176,9 +176,9 @@ bounds use the same local frame. This protects the declared card box, not arbitr
 overflowing or filtered child paint, and does not prevent multiple cards from
 colliding with each other. Preferred sides can help separate two readouts.
 
-Shared responsive style queries are not supported at this isolated baseline;
-ordinary signal styles and layout-driven reflow remain supported. Returned CRC
-marks use whatever style capabilities their core version supplies.
+Viz-owned shared styles support ordinary signals and layout-driven reflow.
+Returned CRC marks support core responsive style queries against their containing
+allocation. Direct conditional-style support for viz-owned styles remains deferred.
 
 For multiple readouts, use [AnchoredLayout](#/api/components/anchored-layout)
 instead of positioning each HoverCard independently. Give it keyed items with
