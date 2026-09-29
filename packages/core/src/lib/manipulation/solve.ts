@@ -272,32 +272,45 @@ function clampResizeToBoundsRotated(initial: CRCManipulationBox, handle: CRCResi
   assertFiniteBox(bounds, 'resize.bounds');
   if (!containsRotated(bounds, initial, rotation)) throw new Error('Resize bounds must contain the initial box.');
   if (containsRotated(bounds, box, rotation)) return box;
-  // The anchored size path is linear in one ratio driver, and interpolation is exact.
-  let low = 0;
-  let high = 1;
-  for (let index = 0; index < 64; index++) {
-    const middle = (low + high) / 2;
-    const width = initial.width + (box.width - initial.width) * middle;
-    const height = ratio === undefined ? initial.height + (box.height - initial.height) * middle : width / ratio;
-    const candidate = resizeFromDimensionsRotated(initial, handle, width, height, rotation);
-    if (containsRotated(bounds, candidate, rotation)) low = middle;
-    else high = middle;
+  // Each rotated corner is affine over this anchored size segment. Intersect
+  // those exact half-plane intervals instead of iterating toward a boundary.
+  let minimum = 0;
+  let maximum = 1;
+  const start = ratio === undefined ? initial : resizeFromDimensionsRotated(initial, handle, initial.width, initial.width / ratio, rotation);
+  for (const coordinate of ['x', 'y'] as const) {
+    const lower = coordinate === 'x' ? bounds.left : bounds.top;
+    const upper = coordinate === 'x' ? bounds.left + bounds.width : bounds.top + bounds.height;
+    const startCorners = rotatedCorners(start, rotation);
+    const endCorners = rotatedCorners(box, rotation);
+    for (let index = 0; index < 4; index++) {
+      const from = startCorners[index][coordinate];
+      const slope = endCorners[index][coordinate] - from;
+      if (slope === 0) {
+        if (from < lower || from > upper) throw new Error('Resize bounds have no feasible anchored size.');
+        continue;
+      }
+      const first = (lower - from) / slope;
+      const second = (upper - from) / slope;
+      minimum = Math.max(minimum, Math.min(first, second));
+      maximum = Math.min(maximum, Math.max(first, second));
+    }
   }
-  const width = initial.width + (box.width - initial.width) * low;
-  const height = ratio === undefined ? initial.height + (box.height - initial.height) * low : width / ratio;
+  if (minimum > maximum) throw new Error('Resize bounds have no feasible anchored size.');
+  const parameter = clamp(1, minimum, maximum);
+  const width = start.width + (box.width - start.width) * parameter;
+  const height = start.height + (box.height - start.height) * parameter;
   return resizeFromDimensionsRotated(initial, handle, width, height, rotation);
 }
 
 function containsRotated(bounds: CRCManipulationBox, box: CRCManipulationBox, radians: number): boolean {
+  return rotatedCorners(box, radians).every(point => point.x >= bounds.left && point.x <= bounds.left + bounds.width && point.y >= bounds.top && point.y <= bounds.top + bounds.height);
+}
+
+function rotatedCorners(box: CRCManipulationBox, radians: number): readonly Readonly<{ x: number; y: number }>[] {
   const center = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
   const cosine = Math.cos(radians);
   const sine = Math.sin(radians);
-  for (const [x, y] of [[-box.width / 2, -box.height / 2], [box.width / 2, -box.height / 2], [box.width / 2, box.height / 2], [-box.width / 2, box.height / 2]]) {
-    const pointX = center.x + x * cosine - y * sine;
-    const pointY = center.y + x * sine + y * cosine;
-    if (pointX < bounds.left || pointX > bounds.left + bounds.width || pointY < bounds.top || pointY > bounds.top + bounds.height) return false;
-  }
-  return true;
+  return [[-box.width / 2, -box.height / 2], [box.width / 2, -box.height / 2], [box.width / 2, box.height / 2], [-box.width / 2, box.height / 2]].map(([x, y]) => ({ x: center.x + x * cosine - y * sine, y: center.y + x * sine + y * cosine }));
 }
 
 function validateConfiguredSnaps(input: ManipulationSolveInput): void {
