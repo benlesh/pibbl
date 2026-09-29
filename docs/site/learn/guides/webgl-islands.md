@@ -83,7 +83,12 @@ function Scene() {
       </WebGLLayer>
       <Text
         pointerEvents="none"
-        style={{ x: 24, y: 24, fill: "white", font: "600 18px sans-serif" }}
+        style={{
+          left: 24,
+          top: 24,
+          fill: "white",
+          font: "600 18px sans-serif",
+        }}
       >
         Selected: {selected}
       </Text>

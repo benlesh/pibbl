@@ -34,7 +34,7 @@ function Badge({ label, active }: BadgeProps): CRCNode {
       <Rectangle
         style={{ width: 180, height: 64, fill: active ? "gold" : "navy" }}
       />
-      <Text style={{ x: 16, y: 18, fill: active ? "black" : "white" }}>
+      <Text style={{ left: 16, top: 18, fill: active ? "black" : "white" }}>
         {label}
       </Text>
     </Group>

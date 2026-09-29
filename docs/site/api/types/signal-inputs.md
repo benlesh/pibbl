@@ -46,7 +46,7 @@ enclosing component the consumer and passes a plain number downstream.
 
 Resolution follows each component's published input schema. CRC can resolve a
 whole-object signal such as `style={styleSignal}` or individual declared fields
-such as `style={{ x: xSignal }}`. Text and structural child grammars resolve
+such as `style={{ left: xSignal }}`. Text and structural child grammars resolve
 signals encountered while walking their own declared arrays and finite
 iterables.
 

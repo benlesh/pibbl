@@ -50,7 +50,7 @@ function Card({ title, selected, onSelect }: CardProps): CRCNode {
         }}
         onClick={onSelect}
       />
-      <Text pointerEvents="none" style={{ x: 16, y: 20, fill: "white" }}>
+      <Text pointerEvents="none" style={{ left: 16, top: 20, fill: "white" }}>
         {title}
       </Text>
     </Group>
@@ -80,7 +80,7 @@ const cardPaint = {
 
 const card = (
   <Rectangle
-    style={{ ...cardPaint, x: 16, y: 16, width: 180, height: 80 }}
+    style={{ ...cardPaint, left: 16, top: 16, width: 180, height: 80 }}
     onClick={() => console.log("selected")}
   />
 );
@@ -154,7 +154,9 @@ const effects = [
 const filteredCard = (
   <Group style={{ filter: effects }}>
     <Rectangle style={{ width: 180, height: 96, fill: "tomato" }} />
-    <Rectangle style={{ x: 24, y: 24, width: 48, height: 48, fill: "gold" }} />
+    <Rectangle
+      style={{ left: 24, top: 24, width: 48, height: 48, fill: "gold" }}
+    />
   </Group>
 );
 ```

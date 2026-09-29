@@ -105,7 +105,7 @@ const transformed = (
     }}
   >
     <Rectangle style={{ width: 200, height: 100, fill: "tomato" }} />
-    <Text style={{ x: 20, y: 20 }}>Transformed together</Text>
+    <Text style={{ left: 20, top: 20 }}>Transformed together</Text>
   </Group>
 );
 ```
@@ -133,7 +133,7 @@ const hexagon = createRegularPolygonPath({
 
 const clipped = (
   <Clip style={{ d: hexagon }}>
-    <Image style={{ src, x: 40, y: 10, width: 160, height: 160 }} />
+    <Image style={{ src, left: 40, top: 10, width: 160, height: 160 }} />
   </Clip>
 );
 ```
@@ -153,7 +153,9 @@ import { Layer, Rectangle, Text, type CRCNode } from "@crc/core";
 
 function Chart(): CRCNode {
   return (
-    <Rectangle style={{ x: 40, y: 60, width: 220, height: 80, fill: "navy" }} />
+    <Rectangle
+      style={{ left: 40, top: 60, width: 220, height: 80, fill: "navy" }}
+    />
   );
 }
 
@@ -161,7 +163,7 @@ const cached = (
   <Layer style={{ width: 300, height: 200 }}>
     <Rectangle style={{ width: 300, height: 200, fill: "#eef2ff" }} />
     <Chart />
-    <Text style={{ x: 12, y: 12 }}>Cached offscreen content</Text>
+    <Text style={{ left: 12, top: 12 }}>Cached offscreen content</Text>
   </Layer>
 );
 ```
