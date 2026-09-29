@@ -31,3 +31,60 @@ If neither side or the complete stack fits, boxes overflow rather than overlap.
 Ancestor clipping still applies. Include borders in declared outer dimensions;
 arbitrary overflowing child paint is outside the guarantee. This layout requires
 no scales, hover state, or DOM elements.
+
+```tsx
+import { Group, Rectangle, Text } from "@crc/core";
+import { AnchoredLayout } from "@crc/viz";
+
+export function Annotations() {
+  const items = [
+    {
+      key: "a",
+      anchor: { x: 100, y: 100 },
+      width: 140,
+      height: 40,
+      label: "First",
+    },
+    {
+      key: "b",
+      anchor: { x: 100, y: 108 },
+      width: 140,
+      height: 40,
+      label: "Second",
+    },
+  ];
+  return (
+    <AnchoredLayout items={items} gap={8}>
+      {(item) => (
+        <>
+          <Rectangle
+            pointerEvents="none"
+            style={{
+              width: "100%",
+              height: "100%",
+              fill: "white",
+              cornerRadius: 6,
+            }}
+          />
+          <Group style={{ translateX: 10, translateY: 10 }}>
+            <Text pointerEvents="none" style={{ fill: "black" }}>
+              {item.label}
+            </Text>
+          </Group>
+        </>
+      )}
+    </AnchoredLayout>
+  );
+}
+```
+
+Keys use core's `String(key)` normalization; numeric `1` and string `"1"` conflict.
+Along the packing axis, items sort by anchor coordinate, with normalized key as
+the deterministic tie-breaker. Source order still controls painting. Width,
+height, radius, gap, and bounds dimensions must be finite and nonnegative; anchor
+and bounds coordinates must be finite. Unrepresentable placement arithmetic
+throws before child rendering. Zero-sized boxes are permitted.
+
+Changing a callback or item object preserves a returned component's state when
+its key, component type, and tree position stay the same. Signal reads made inside
+the callback belong to that item; removing it releases those subscriptions.

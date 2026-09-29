@@ -500,3 +500,41 @@ where the new closestPoint/closestX pages appear; the article was unchanged.
 Implementation, documentation, and proportional verification are complete with
 the separately deferred responsive dependency and aggregate visual limitation
 above. No push or merge is authorized or performed.
+
+## Accepted AnchoredLayout follow-up
+
+The user observed overlapping independently placed cards, approved a generic
+AnchoredLayout API, accepted the runnable comparison slice (`b078af0e`), and
+requested final hardening. The component lives in @crc/viz but has no query or
+scale dependency. Its keyed declared outer boxes pack along one axis; a shared
+column/row sits beyond all supplied protected anchors. It tries the opposite
+side when that fits, otherwise preserves exclusion by allowing overflow.
+Parent-local bounds and returned placements support authored connector lines.
+
+The accepted example uses the layout for both line readouts, and the public API
+page includes an independent annotation example. No automatic background,
+portal, retained scene, global collision registry, or responsive-style evaluator
+was added. Arbitrary overflowing child paint remains outside the box guarantee.
+
+Hardening covers geometry validation and arithmetic overflow before callbacks,
+normalized duplicate keys, frozen inputs/source paint order, callback signal
+branch cleanup, keyed removal/disposal, callback exceptions/illegal hooks/writes/
+async output, and transformed/clipped percentage-sized interactive content.
+The independent reviewer found one core consistency issue: numeric keys had an
+unnecessary finite-value restriction. A failing public NaN/Infinity/-Infinity
+regression established it, the guard was removed, and the reviewer confirmed
+resolution. Core String(key) normalization and duplicate detection are preserved.
+
+Fresh source and built visualization runs each pass 91 tests across 17 files.
+Static and packed package gates pass, including public/Studio type parity and
+Bundler/NodeNext consumers. Lifecycle checks pass 55 tests, structural performance
+passes 64 with 4 skipped, and built smoke passes 4 tests. Full-browser and Studio
+visual results are recorded in the final delivery note below.
+
+Final delivery note: the fresh aggregate run passed 3,818 browser tests with
+4 skipped across 319 passing files, Studio documentation navigation/search,
+and the visual safeguard. The diagram teaser matched exactly. It then stopped
+at the same unrelated 110-pixel WebGL label mismatch documented above; the
+aggregate gate is not green. No new visual baseline was changed for this follow-up.
+The accepted AnchoredLayout feature is hardened, documented, reviewed, and
+verified proportionally; no push or merge was performed.

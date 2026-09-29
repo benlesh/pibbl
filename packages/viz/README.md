@@ -30,6 +30,10 @@ lines. `HoverCard` independently positions a declared padded card without coveri
 its protected anchor. These exports use the existing core JSX runtime and scale
 scope; there is no additional renderer, interaction loop, or Chart registry.
 
+`AnchoredLayout` arranges multiple keyed, declared boxes together in a row or
+column, clear of every supplied anchor. It accepts arbitrary CRC content without
+requiring chart scales or hover state. Use it when independent cards would overlap.
+
 See the public data-visualization guide and Studio's Penguin measurements and
 Hover comparisons examples for full wiring. Responsive `style.when` integration
 is deferred until the matching core implementation is available.

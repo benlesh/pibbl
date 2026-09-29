@@ -56,7 +56,6 @@ function arrange(
   const rows = items.map((item, index) => {
     if (typeof item.key !== "string" && typeof item.key !== "number")
       throw new TypeError("AnchoredLayout keys must be strings or numbers.");
-    if (typeof item.key === "number") finite(item.key, "key");
     const key = String(item.key);
     if (keys.has(key))
       throw new Error(`AnchoredLayout duplicate key "${key}".`);
