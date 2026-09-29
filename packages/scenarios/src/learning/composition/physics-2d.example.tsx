@@ -66,15 +66,20 @@ function releaseVelocity(
 ): readonly [number, number] {
   const final = trail.at(-1);
   if (!final) return [0, 0];
-  const oldest = trail.find(
-    (sample) =>
-      sample.timeStamp < final.timeStamp &&
-      final.timeStamp - sample.timeStamp <= TRAIL_WINDOW_MILLISECONDS,
-  ) ?? [...trail].reverse().find(
-    (sample) =>
-      sample !== final &&
-      (sample.x !== final.x || sample.y !== final.y),
-  );
+  const oldest =
+    trail.find(
+      (sample) =>
+        sample.timeStamp < final.timeStamp &&
+        final.timeStamp - sample.timeStamp <= TRAIL_WINDOW_MILLISECONDS,
+    ) ??
+    [...trail]
+      .reverse()
+      .find(
+        (sample) =>
+          sample !== final &&
+          sample.timeStamp === final.timeStamp &&
+          (sample.x !== final.x || sample.y !== final.y),
+      );
   if (!oldest) return [0, 0];
 
   const seconds = Math.max(1, final.timeStamp - oldest.timeStamp) / 1000;
