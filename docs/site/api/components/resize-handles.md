@@ -22,3 +22,5 @@ values. `hitSize` applies to every generated handle.
 ```tsx
 <ResizeHandles controller={manipulation} positions="edges-and-corners" />
 ```
+
+Related types: [CRCResizeHandlesProps](#/api/types/events#crcresizehandlesprops), [CRCResizePosition](#/api/types/events#crcresizeposition).

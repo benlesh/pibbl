@@ -23,5 +23,7 @@ start interactions; `active` and `snapshot` expose readonly signal state, and
 
 ```tsx
 const box = useSignal({ left: 40, top: 32, width: 180, height: 100 });
-const manipulation = useManipulation({ box });
+const manipulation = useManipulation({ box, move: {}, resize: {} });
 ```
+
+Related types: [CRCManipulationController](#/api/types/events#crcmanipulationcontroller), [CRCManipulationOptions](#/api/types/events#crcmanipulationoptions).

@@ -24,3 +24,5 @@ must be descendants of this frame, and a controller may attach to one frame.
   <Rectangle style={{ width: 180, height: 100, fill: "#2563eb" }} />
 </ManipulationFrame>
 ```
+
+Related types: [CRCManipulationController](#/api/types/events#crcmanipulationcontroller), [CRCManipulationFrameProps](#/api/types/events#crcmanipulationframeprops).

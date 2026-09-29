@@ -1,6 +1,6 @@
 # Component manipulation execution record
 
-Status: active implementation; first public slice is being prepared. Not feature complete.
+Status: first public drag/resize slice ready for feedback. Not feature complete.
 
 ## Workspace and baseline
 
@@ -37,3 +37,12 @@ Status: active implementation; first public slice is being prepared. Not feature
 - Snapshot existing main changes into the isolated baseline to avoid implementing against stale layout code; main stays untouched. Cost if wrong: baseline reconciliation when integrating with later main changes.
 - During migration, use a temporary focused browser config without the documentation collector, while retaining normal config as required final verification. Cost if wrong: normal-config integration failures must be resolved before the slice is claimed ready.
 - Repository thin-slice guidance overrides repeated fresh reviewers and exhaustive pre-slice verification recommended by skills. Reuse workers and one later reviewer.
+
+## First feedback milestone
+
+- Normal Vitest configuration now passes: `corepack pnpm@11.21.0 exec vitest run packages/core/test/manipulation-interaction.test.tsx packages/core/test/manipulation-example.test.ts packages/core/test/component-positioning.test.tsx packages/core/test/layout-positioning-diagnostics.test.tsx packages/core/src/lib/manipulation/solve.test.ts --browser.headless --browser.ui=false`: 5 files, 17 tests passed on Node 24.15.0 and pnpm 11.21.0.
+- Fresh core build plus `node tooling/verify-positioning-environments.mjs` passed source/built × DEV true/false. Production tests compare rendered pixels, paint bounds, and hit targeting with supplied versus omitted offsets; development tests capture the actual layout error for Flex, Flow, and Grid.
+- Environment probe exposed missing consumed-placement metadata in Flex/Grid; integrated fix `697541fb` uses the common used-size handoff.
+- Studio is running at `http://127.0.0.1:5187/#/examples/events-and-interaction/manipulation` in the integration checkout. Visually confirmed the live card, four corner controls, nested Flex layout, geometry readout, and no editor TypeScript errors. Native pointer tests establish interaction behavior.
+- Minimum documentation metadata, per-type headings, and related-type links now satisfy normal Studio startup. Comprehensive documentation migration remains Task 9.
+- User has been invited to evaluate this slice before rotation and broad hardening. Development server is intentionally left running; do not archive its worktree.
