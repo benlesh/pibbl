@@ -39,6 +39,14 @@ A child's parent-relative placement lives in its own specified style:
 - `flexBasis`, `flexGrow`, and `flexShrink` are consumed only by Flex;
 - Grid consumes one-based starts and positive spans.
 
+`Flex`, `Flow`, and `Grid` own direct-child placement. They ignore authored
+`left`/`top` in production and development/test execution reports those
+explicit ignored fields. `Absolute` consumes `left`/`top` as its placement
+input. Outside those layout ownership paths, the normal component presentation
+applies `left`/`top` exactly once. A `ManipulationFrame` is a freely positioned
+finite allocation; layouts nested inside it consume that allocation and reflow
+when its writable box changes.
+
 `WebGLLayerStyle` accepts the shared box and layout-item fields. Each omitted
 layer dimension uses its current finite logical allocation; an explicit or
 allocated width and height must resolve to positive finite values. A
@@ -92,8 +100,9 @@ the current allocation; padding is zero and overflow is visible.
 | `width`, `height` | required definite number or percentage in the current public implementation |
 | source order      | paint order; later overlap is topmost for coordinate targeting              |
 
-Local primitive `x` and `y` remain independent of `left` and `top`. Absolute
-does not implement normal flow, margins, right/bottom anchoring, or automatic
+Geometric point and endpoint `x`/`y` values remain independent of `left` and
+`top`. Rectangle, Text, and Image positioning uses `left`/`top`. Absolute does
+not implement normal flow, margins, right/bottom anchoring, or automatic
 placement.
 
 ## Overlay

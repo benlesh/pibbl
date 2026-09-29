@@ -181,6 +181,14 @@ root disposal. `gotpointercapture` observes active ownership;
 the minimal pending owner needed to route a native loss notification. An
 unmounted target receives no ghost loss callback.
 
+Manipulation handles use that same capture path after a primary press. Their
+session starts only after three CSS pixels of motion, so a shorter press keeps
+ordinary activation behavior. A started manipulation consumes only its matching
+release click activation; unrelated pointers and later ordinary clicks remain
+unchanged. Nested handles claim before enclosing drag surfaces, and a child
+pointer-down handler can call `preventDefault()` to decline an enclosing
+manipulation start.
+
 Changing one pointer's logical capture from A to B on the same Canvas records a
 pending logical transfer without changing the native DOM capture element.
 Immediately before the next non-capture pointer event, A receives exactly one
