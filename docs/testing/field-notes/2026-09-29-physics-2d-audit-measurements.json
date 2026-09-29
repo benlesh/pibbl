@@ -1,0 +1,206 @@
+[
+  {
+    "seconds": 1,
+    "bodies": {
+      "circle": {
+        "position": [63.999274, 218.534679],
+        "linearVelocity": [-0.001664, -2.708804],
+        "sleeping": false
+      },
+      "box": {
+        "position": [119.999378, 220.642112],
+        "linearVelocity": [1e-6, -2.708803],
+        "sleeping": false
+      },
+      "ellipse": {
+        "position": [176.000106, 220.534679],
+        "linearVelocity": [0.000396, -2.708804],
+        "sleeping": false
+      },
+      "capsule": {
+        "position": [233.988944, 258.250111],
+        "linearVelocity": [-7.140599, 180.78793],
+        "sleeping": false
+      },
+      "polygon": {
+        "position": [300.002508, 227.296463],
+        "linearVelocity": [-2e-6, 27.088024],
+        "sleeping": false
+      },
+      "star": {
+        "position": [359.739672, 224.274606],
+        "linearVelocity": [0, 56.663062],
+        "sleeping": false
+      },
+      "platform": {
+        "position": [220, 142],
+        "linearVelocity": [0, 0],
+        "sleeping": false
+      },
+      "sensorMover": {
+        "position": [270, 104],
+        "linearVelocity": [0, 0],
+        "sleeping": true
+      },
+      "handoff": {
+        "position": [420.000349, 215.845],
+        "linearVelocity": [0.000802, -6],
+        "sleeping": false
+      }
+    },
+    "contactEventCount": 17
+  },
+  {
+    "seconds": 5,
+    "bodies": {
+      "circle": {
+        "position": [63.991441, 3441.704555],
+        "linearVelocity": [-0.001484, 1645.194157],
+        "sleeping": false
+      },
+      "box": {
+        "position": [119.99938, 3778.650082],
+        "linearVelocity": [1e-6, 1714.533366],
+        "sleeping": false
+      },
+      "ellipse": {
+        "position": [175.999594, 3693.453295],
+        "linearVelocity": [-0.000116, 1697.392366],
+        "sleeping": false
+      },
+      "capsule": {
+        "position": [212.569133, 4801.67562],
+        "linearVelocity": [-3.927627, 1899.274104],
+        "sleeping": false
+      },
+      "polygon": {
+        "position": [300.002576, 4311.186657],
+        "linearVelocity": [-1e-6, 1814.732747],
+        "sleeping": false
+      },
+      "star": {
+        "position": [360.320904, 3959.517848],
+        "linearVelocity": [-0.005041, 1748.467994],
+        "sleeping": false
+      },
+      "platform": {
+        "position": [220, 142],
+        "linearVelocity": [0, 0],
+        "sleeping": false
+      },
+      "sensorMover": {
+        "position": [270, 104],
+        "linearVelocity": [0, 0],
+        "sleeping": true
+      },
+      "handoff": {
+        "position": [420.006263, 3425.245],
+        "linearVelocity": [0.001556, 1944],
+        "sleeping": false
+      }
+    },
+    "contactEventCount": 28
+  },
+  {
+    "seconds": 10,
+    "bodies": {
+      "circle": {
+        "position": [63.986235, 15179.323976],
+        "linearVelocity": [-0.000703, 2884.551244],
+        "sleeping": false
+      },
+      "box": {
+        "position": [119.999382, 15759.562141],
+        "linearVelocity": [0, 2917.396557],
+        "sleeping": false
+      },
+      "ellipse": {
+        "position": [175.999187, 15614.222194],
+        "linearVelocity": [-5.5e-5, 2909.277031],
+        "sleeping": false
+      },
+      "capsule": {
+        "position": [198.788145, 17430.79326],
+        "linearVelocity": [-1.860479, 3004.906458],
+        "sleeping": false
+      },
+      "polygon": {
+        "position": [300.002573, 16643.671404],
+        "linearVelocity": [0, 2964.860034],
+        "sleeping": false
+      },
+      "star": {
+        "position": [360.303217, 16059.497395],
+        "linearVelocity": [-0.002388, 2933.471062],
+        "sleeping": false
+      },
+      "platform": {
+        "position": [220, 142],
+        "linearVelocity": [0, 0],
+        "sleeping": false
+      },
+      "sensorMover": {
+        "position": [270, 104],
+        "linearVelocity": [0, 0],
+        "sleeping": true
+      },
+      "handoff": {
+        "position": [420.014041, 20720.245],
+        "linearVelocity": [0.001556, 4944],
+        "sleeping": false
+      }
+    },
+    "contactEventCount": 28
+  },
+  {
+    "seconds": 30,
+    "bodies": {
+      "circle": {
+        "position": [63.981785, 88117.399455],
+        "linearVelocity": [-3.5e-5, 3943.839923],
+        "sleeping": false
+      },
+      "box": {
+        "position": [119.999384, 88905.581835],
+        "linearVelocity": [0, 3945.493603],
+        "sleeping": false
+      },
+      "ellipse": {
+        "position": [175.998838, 88708.837036],
+        "linearVelocity": [-3e-6, 3945.084805],
+        "sleeping": false
+      },
+      "capsule": {
+        "position": [187.009422, 91130.839587],
+        "linearVelocity": [-0.093671, 3949.899509],
+        "sleeping": false
+      },
+      "polygon": {
+        "position": [300.002569, 90090.183162],
+        "linearVelocity": [0, 3947.883271],
+        "sleeping": false
+      },
+      "star": {
+        "position": [360.2881, 89307.285048],
+        "linearVelocity": [-0.00012, 3946.302914],
+        "sleeping": false
+      },
+      "platform": {
+        "position": [220, 142],
+        "linearVelocity": [0, 0],
+        "sleeping": false
+      },
+      "sensorMover": {
+        "position": [270, 104],
+        "linearVelocity": [0, 0],
+        "sleeping": true
+      },
+      "handoff": {
+        "position": [420.045154, 239900.245],
+        "linearVelocity": [0.001556, 16944],
+        "sleeping": false
+      }
+    },
+    "contactEventCount": 28
+  }
+]

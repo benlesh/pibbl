@@ -86,6 +86,38 @@ export function integrateCandidateBodies2D(
   }
 }
 
+/** Integrate acceleration separately so resting constraints act before position drift. */
+export function integrateCandidateVelocities2D(
+  bodies: BodyStore2D,
+  bodyIndices: Int32Array,
+  bodyCount: number,
+  gravityX: number,
+  gravityY: number,
+  dt: number,
+): void {
+  for (let offset = 0; offset < bodyCount; offset += 1) {
+    const body = bodyIndices[offset]!;
+    if (isDynamicBody(bodies, body))
+      integrateDynamicVelocity(bodies, body, gravityX, gravityY, dt);
+    bodies.forceX[body] = 0;
+    bodies.forceY[body] = 0;
+    bodies.torque[body] = 0;
+  }
+}
+
+export function integrateCandidatePoses2D(
+  bodies: BodyStore2D,
+  bodyIndices: Int32Array,
+  bodyCount: number,
+  dt: number,
+): void {
+  for (let offset = 0; offset < bodyCount; offset += 1) {
+    const body = bodyIndices[offset]!;
+    if ((bodies.flags[body]! & BODY_TYPE_MASK_2D) !== 0)
+      integratePose(bodies, body, dt);
+  }
+}
+
 function integrateDynamicVelocity(
   bodies: BodyStore2D,
   bodyIndex: number,
@@ -97,11 +129,13 @@ function integrateDynamicVelocity(
   const gravityScale = bodies.gravityScale[bodyIndex]!;
   bodies.linearVelocityX[bodyIndex] =
     (bodies.linearVelocityX[bodyIndex]! +
-      dt * (gravityX * gravityScale + bodies.forceX[bodyIndex]! * inverseMass)) /
+      dt *
+        (gravityX * gravityScale + bodies.forceX[bodyIndex]! * inverseMass)) /
     (1 + bodies.linearDamping[bodyIndex]! * dt);
   bodies.linearVelocityY[bodyIndex] =
     (bodies.linearVelocityY[bodyIndex]! +
-      dt * (gravityY * gravityScale + bodies.forceY[bodyIndex]! * inverseMass)) /
+      dt *
+        (gravityY * gravityScale + bodies.forceY[bodyIndex]! * inverseMass)) /
     (1 + bodies.linearDamping[bodyIndex]! * dt);
 
   if (isFixedRotation(bodies, bodyIndex)) {

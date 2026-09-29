@@ -5,9 +5,7 @@
  * API and intentionally does not re-export the public root module.
  */
 
-export {
-  createBackendToken,
-} from './lib/backend/types.js';
+export { createBackendToken } from "./lib/backend/types.js";
 export type {
   CRCBackendDriver,
   CRCBackendEventTargetOptions,
@@ -20,43 +18,35 @@ export type {
   CRCBackendPrimitiveProgram,
   CRCBackendToken,
   CRCNestedResolverInput,
-} from './lib/backend/types.js';
-export type {
-  SignalProgramProps,
-  SignalStyle,
-} from './lib/types.js';
+} from "./lib/backend/types.js";
+export type { SignalProgramProps, SignalStyle } from "./lib/types.js";
 export {
   crcInternalRunPurePrimitiveResolver,
   defineBackendPrimitive,
   derivePrimitive,
-} from './lib/define-primitive.js';
-export { executeBackendCRC } from './lib/execute-render.js';
-export { mountBackendCRC } from './lib/mount-crc.js';
-export { useInternalHookSlot, withHooksForbidden } from './lib/hooks/hook-slot.js';
+} from "./lib/define-primitive.js";
+export { executeBackendCRC } from "./lib/execute-render.js";
+export { mountBackendCRC } from "./lib/mount-crc.js";
 export {
-  useValueMemoSlot as useInternalValueMemoSlot,
-} from './lib/hooks/use-value-memo-slot.js';
+  useInternalHookSlot,
+  withHooksForbidden,
+} from "./lib/hooks/hook-slot.js";
+export { useValueMemoSlot as useInternalValueMemoSlot } from "./lib/hooks/use-value-memo-slot.js";
 export {
   haveSameLayerNodeTree,
   materializeRetainedLayerChildren,
   snapshotLayerNodeTree,
-} from './lib/components/layer-node-equality.js';
-export type {
-  LayerNodeSnapshot,
-} from './lib/components/layer-node-equality.js';
-export type {
-  CRCEventTargetRegistration,
-} from './lib/events/registrations.js';
-export type { CRCElementSource } from './lib/element/metadata.js';
-export { crcInternalCreatePropAttachment } from './lib/element-enhancers.js';
+} from "./lib/components/layer-node-equality.js";
+export type { LayerNodeSnapshot } from "./lib/components/layer-node-equality.js";
+export type { CRCEventTargetRegistration } from "./lib/events/registrations.js";
+export type { CRCElementSource } from "./lib/element/metadata.js";
+export { crcInternalCreatePropAttachment } from "./lib/element-enhancers.js";
 export type {
   CRCInternalMountedPropAttachment,
   CRCInternalPrimitiveAttachmentInput,
-} from './lib/element-enhancers.js';
-export type {
-  CRCHitTestOutput,
-} from './lib/events/paint-entry.js';
-export { hasCRCEventHandler } from './lib/events/event-definitions.js';
+} from "./lib/element-enhancers.js";
+export type { CRCHitTestOutput } from "./lib/events/paint-entry.js";
+export { hasCRCEventHandler } from "./lib/events/event-definitions.js";
 export {
   crcInternalCurrentSimulationOwner,
   crcInternalOnSimulationRenderTransactionFinish,
@@ -65,53 +55,47 @@ export {
   crcInternalQueueSimulationComplete,
   crcInternalRegisterSimulationAdvance,
   crcInternalRequestSimulationRender,
-} from './lib/scheduler/simulation-participant.js';
+} from "./lib/scheduler/simulation-participant.js";
 export type {
   CRCInternalAdvanceLane,
   CRCInternalSimulationOwner,
-} from './lib/scheduler/simulation-participant.js';
+} from "./lib/scheduler/simulation-participant.js";
 
 import type {
   CRCBackendEventTargetOptions,
   CRCBackendMount,
   CRCBackendToken,
   CRCNestedResolverInput,
-} from './lib/backend/types.js';
+} from "./lib/backend/types.js";
 import {
   createTarget,
   releaseTarget,
   updateTarget,
   type CRCEventTargetRegistration,
-} from './lib/events/registrations.js';
-import { CRCPaintEntryKind } from './lib/events/paint-entry.js';
-import type {
-  CRCEventHandlers,
-  CRCPointerEvents,
-} from './lib/events/types.js';
-import {
-  getCurrentCRCInstance,
-  GLOBAL_STATE,
-} from './lib/global-state.js';
+} from "./lib/events/registrations.js";
+import { CRCPaintEntryKind } from "./lib/events/paint-entry.js";
+import type { CRCEventHandlers, CRCPointerEvents } from "./lib/events/types.js";
+import { getCurrentCRCInstance, GLOBAL_STATE } from "./lib/global-state.js";
 import {
   requireHookContext,
   useInternalHookSlot,
-} from './lib/hooks/hook-slot.js';
-import { getCurrentWorldTransform } from './lib/render-target.js';
+} from "./lib/hooks/hook-slot.js";
+import { getCurrentWorldTransform } from "./lib/render-target.js";
 import {
   getElementSource,
   type CRCElementSource,
-} from './lib/element/metadata.js';
-import { getSurfaceSnapshot } from './lib/surface/transform.js';
+} from "./lib/element/metadata.js";
+import { getSurfaceSnapshot } from "./lib/surface/transform.js";
 import type {
   Canvas,
   CRCComponentRefs,
   CRCInstance,
   CRCNode,
-} from './lib/types.js';
-import type { CRCInteractionLayer } from './lib/types.js';
-import { update } from './lib/update.js';
-import { queueBeginCommand } from './lib/scheduler/realm-scheduler.js';
-import type { CRCBeginCommandHandle } from './lib/scheduler/types.js';
+} from "./lib/types.js";
+import type { CRCInteractionLayer } from "./lib/types.js";
+import { update } from "./lib/update.js";
+import { queueBeginCommand } from "./lib/scheduler/realm-scheduler.js";
+import type { CRCBeginCommandHandle } from "./lib/scheduler/types.js";
 
 interface CurrentInstanceFrameRequestState {
   readonly componentRefs: CRCComponentRefs<any>;
@@ -135,7 +119,7 @@ export function getBackendEnvironment<E>(token: CRCBackendToken): E {
   const driver = GLOBAL_STATE.backendDriver;
   const frame = GLOBAL_STATE.backendFrame;
   if (!driver || !frame || driver.token !== token) {
-    throw new Error('The requested CRC backend environment is not active.');
+    throw new Error("The requested CRC backend environment is not active.");
   }
   return frame.environment as E;
 }
@@ -184,7 +168,7 @@ export function onCurrentRenderFinish(
   requireHookContext();
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) {
-    throw new Error('No CRC render transaction is active.');
+    throw new Error("No CRC render transaction is active.");
   }
   transaction.onFinish(callback);
 }
@@ -208,7 +192,9 @@ export function requestCurrentInstanceFrame(updateParents: boolean): void {
       frameRequestsByInstance.set(crcInstance, instanceRequests);
     }
     instanceRequests.add(state);
-    componentRefs.teardowns.add(() => releaseCurrentInstanceFrameRequest(state!));
+    componentRefs.teardowns.add(() =>
+      releaseCurrentInstanceFrameRequest(state!),
+    );
   }
   state.updateParents ||= updateParents;
   if (state.handle) return;
@@ -229,20 +215,17 @@ export function requestCurrentInstanceFrame(updateParents: boolean): void {
 export function useBackendEventTarget(
   handlers: CRCEventHandlers,
   options: CRCBackendEventTargetOptions = {},
-  pointerEvents: CRCPointerEvents = 'auto',
+  pointerEvents: CRCPointerEvents = "auto",
 ): CRCEventTargetRegistration | undefined {
   const { componentRefs, crcInstance } = requireHookContext();
   const hookIndex = GLOBAL_STATE.componentHookIndex;
-  const slot = useInternalHookSlot(
-    'backendEventTarget',
-    teardowns => {
-      const target = createTarget(crcInstance, componentRefs, hookIndex);
-      teardowns.add(() => releaseTarget(target));
-      return { target, emptyPath: new Path2D() };
-    },
-  );
+  const slot = useInternalHookSlot("backendEventTarget", (teardowns) => {
+    const target = createTarget(crcInstance, componentRefs, hookIndex);
+    teardowns.add(() => releaseTarget(target));
+    return { target, emptyPath: new Path2D() };
+  });
   const { target, emptyPath } = slot.value;
-  if (pointerEvents === 'none') {
+  if (pointerEvents === "none") {
     releaseTarget(target);
     return undefined;
   }
@@ -265,9 +248,11 @@ export function isBackendEventTargetLive(
   target: CRCEventTargetRegistration,
 ): boolean {
   const { owner } = target;
-  return target.live &&
+  return (
+    target.live &&
     !owner.mainTeardowns.closed &&
-    owner.eventRoot.targets.has(target);
+    owner.eventRoot.targets.has(target)
+  );
 }
 
 /** Temporarily releases one backend target; its retained hook may enroll it again. */
@@ -301,13 +286,15 @@ export function retainBackendMountRoot(
 export function setCurrentComponentAfterRender(callback: () => void): void {
   const { componentRefs } = requireHookContext();
   const previous = componentRefs.onAfterRender;
-  componentRefs.onAfterRender = previous ? () => {
-    try {
-      previous();
-    } finally {
-      callback();
-    }
-  } : callback;
+  componentRefs.onAfterRender = previous
+    ? () => {
+        try {
+          previous();
+        } finally {
+          callback();
+        }
+      }
+    : callback;
 }
 
 /** Installs one stable nested backend resolver in the current Canvas paint order. */
@@ -321,13 +308,13 @@ export function registerNestedInteractionResolver(
     childInstance.eventRoot !== crcInstance.eventRoot
   ) {
     throw new Error(
-      'A nested CRC backend mount must belong to the current instance and same event root.',
+      "A nested CRC backend mount must belong to the current instance and same event root.",
     );
   }
   const slot = useInternalHookSlot<{
     entry: CRCInteractionLayer;
     child: CRCBackendMount;
-  }>('nestedInteractionResolver', teardowns => {
+  }>("nestedInteractionResolver", (teardowns) => {
     const entry: CRCInteractionLayer = {
       paintKind: CRCPaintEntryKind.Resolver,
       instance: childInstance,
@@ -356,7 +343,7 @@ export function registerNestedInteractionResolver(
       childInstance.focusParentBridge !== entry)
   ) {
     throw new Error(
-      'A nested CRC backend mount already belongs to another nested resolver.',
+      "A nested CRC backend mount already belongs to another nested resolver.",
     );
   }
   crcInstance.paintEntries.delete(entry);
@@ -376,7 +363,7 @@ export function registerNestedInteractionResolver(
   entry.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
   entry.resolveLocal = input.resolveLocal;
   entry.instance.focusParentBridge = entry;
-  if (input.pointerEvents === 'auto') {
+  if (input.pointerEvents === "auto") {
     crcInstance.paintEntries.add(entry);
   }
 }
@@ -384,7 +371,7 @@ export function registerNestedInteractionResolver(
 function backendMountInstance(mount: CRCBackendMount) {
   const instance = GLOBAL_STATE.crcInstances.get(mount.canvas);
   if (!instance) {
-    throw new Error('Nested CRC backend mount is not active.');
+    throw new Error("Nested CRC backend mount is not active.");
   }
   return instance;
 }
@@ -414,11 +401,13 @@ function releaseCurrentInstanceFrameRequest(
 function isCurrentInstanceFrameRequestActive(
   state: CurrentInstanceFrameRequestState,
 ): boolean {
-  return state.active &&
+  return (
+    state.active &&
     !state.componentRefs.teardowns.closed &&
     !state.instance.mainTeardowns.closed &&
     GLOBAL_STATE.crcInstances.get(state.instance.canvas) === state.instance &&
-    state.instance.refs.get(state.componentRefs.id) === state.componentRefs;
+    state.instance.refs.get(state.componentRefs.id) === state.componentRefs
+  );
 }
 export {
   crcInternalAssertCommandAllowed,
@@ -434,7 +423,7 @@ export {
   crcInternalRegisterAdvance,
   crcInternalRequestRender,
   crcInternalRequestRendererWork,
-} from './lib/scheduler/renderer-participant.js';
+} from "./lib/scheduler/renderer-participant.js";
 export type {
   CRCInternalCommandHandle,
   CRCInternalFrame,
@@ -442,6 +431,14 @@ export type {
   CRCInternalRenderOwner,
   CRCInternalSignalBatch,
   CRCInternalSignalConsumer,
-} from './lib/scheduler/renderer-participant.js';
+} from "./lib/scheduler/renderer-participant.js";
 
-export { pushLayoutBox } from './lib/layout/context.js';
+export { pushLayoutBox } from "./lib/layout/context.js";
+
+export {
+  ManualSchedulerDriver as CRCInternalManualSchedulerDriver,
+  installSchedulerDriverForTest as crcInternalInstallTestSchedulerDriver,
+  snapshotRealmScheduler as crcInternalSnapshotRealmScheduler,
+} from "./lib/scheduler/testing.js";
+
+export { getCurrentWorldTransform as crcInternalCurrentWorldTransform } from "./lib/render-target.js";

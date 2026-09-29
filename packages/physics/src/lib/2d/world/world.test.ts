@@ -871,8 +871,8 @@ describe("normalized 2D world configuration and topology admission", () => {
       maxCatchUpSteps: 4,
       interpolation: "linear",
       sleeping: true,
-      velocityIterations: 8,
-      positionIterations: 3,
+      velocityIterations: 4,
+      positionIterations: 1,
     });
     const configured = normalizePhysicsWorld2DConfiguration({
       gravity: [3, 4],
@@ -1108,8 +1108,10 @@ describe("transactional fixed-tick 2D world rollback", () => {
       restore();
     }
 
-    expect(velocityBoundaryPositions![0]).toBeCloseTo(0.025, 12);
-    expect(velocityBoundaryPositions![1]).toBeCloseTo(1.475, 12);
+    // Existing contacts stop approach before integration; positional correction
+    // has not separated the initially overlapping pair at this boundary.
+    expect(velocityBoundaryPositions![0]).toBeCloseTo(0, 12);
+    expect(velocityBoundaryPositions![1]).toBeCloseTo(1.5, 12);
   });
 
   it("adopts or discards one live candidate exactly once", () => {

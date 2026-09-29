@@ -36,6 +36,7 @@ import {
   snapshotPhysicsWorld2DControllerForTest,
 } from "./controller.js";
 import { installPhysicsWorld2DFailureInjectorForTest } from "../world/world.js";
+import { snapshotPhysicsBodyFrameCountForTest } from "./descriptors.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 let frames: ManualFrames;
@@ -53,6 +54,35 @@ afterEach(() => {
 });
 
 describe("PhysicsWorld2D controller scheduling and topology", () => {
+  it("releases presentation frames when keyed bodies unmount from a live world", () => {
+    const present = signal(true);
+    let world!: CRCPhysicsWorldHandle2D;
+    const Scene = () => {
+      world = crcPhysicsWorld2D();
+      return present.get() ? (
+        <Group
+          key="transient"
+          physics={dynamicBody2D({ collider: false, mass: 1 })}
+        >
+          <Circle physics={collider2D()} style={{ radius: 2 }} />
+        </Group>
+      ) : undefined;
+    };
+    mountCRC(
+      <PhysicsWorld2D gravity={[0, 0]}>
+        <Scene />
+      </PhysicsWorld2D>,
+    );
+    frames.flush(0);
+    frames.flush(1);
+    const controller = requirePhysicsWorld2DController(world);
+    expect(snapshotPhysicsBodyFrameCountForTest(controller)).toBe(1);
+
+    present.set(false);
+    frames.flush(2);
+    expect(snapshotPhysicsBodyFrameCountForTest(controller)).toBe(0);
+  });
+
   it("rejects zero-area automatic mass before admitting topology while preserving explicit and non-dynamic mass authority", () => {
     const circle = circleShape2D({ radius: 2 });
     const segment = segmentShape2D({ start: [0, 0], end: [4, 0] });
@@ -454,7 +484,9 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
     frames.flush(0);
     frames.flush(50);
     sleepBody2D(sleeper);
-    for (const time of [100, 150, 200, 250, 300]) frames.flush(time);
+    for (const time of [100, 150, 200, 250, 300]) {
+      if (frames.pending > 0) frames.flush(time);
+    }
     expect(sleeper.sleeping.get()).toBe(true);
 
     playback.play();
@@ -505,7 +537,9 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
     if (!initialBody) throw new Error("missing rotating body");
 
     setAngularVelocity2D(body, 90);
-    for (const time of [100, 150, 200, 250, 300]) frames.flush(time);
+    for (const time of [100, 150, 200, 250, 300]) {
+      if (frames.pending > 0) frames.flush(time);
+    }
 
     const current = snapshot(world).kernel;
     const currentBody = current.bodies.find((candidate) => candidate.id === 0);
@@ -554,7 +588,10 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
               filter: { type: "opacity", amount: 1 },
             }}
           >
-            <Circle physics={collider2D()} style={{ cx: 4, cy: -3, radius: 12 }} />
+            <Circle
+              physics={collider2D()}
+              style={{ cx: 4, cy: -3, radius: 12 }}
+            />
           </Group>
         </Group>
       );
@@ -573,12 +610,17 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
     if (!initialBody) throw new Error("missing rotating nested body");
 
     setAngularVelocity2D(body, 90);
-    for (const time of [100, 150, 200, 250, 300]) frames.flush(time);
+    for (const time of [100, 150, 200, 250, 300]) {
+      if (frames.pending > 0) frames.flush(time);
+    }
 
     const stable = snapshot(world).kernel;
     const stableBody = stable.bodies.find((candidate) => candidate.id === 0);
     if (!stableBody) throw new Error("missing rotating nested body");
-    expect(stableBody.inverseInertia).toBeCloseTo(initialBody.inverseInertia, 12);
+    expect(stableBody.inverseInertia).toBeCloseTo(
+      initialBody.inverseInertia,
+      12,
+    );
     expect(stable.counters).toMatchObject({
       bodyAllocations: 1,
       bodyReleases: 0,

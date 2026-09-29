@@ -144,35 +144,98 @@ const drafts = [
     load: () => import("./learning/start/getting-started.example"),
   },
   {
-    slug:"viz-hover-comparison",title:"Comparing two lines at a shared time",shortTitle:"Hover comparisons",section:"composition",order:197,
-    summary:"Compare recorded and interpolated NOAA CO₂ values with ordinary function queries and protected hover cards.",
-    api:["HoverData","AnchoredLayout","closestPoint","closestX","interpolateX","defineSeries","linearInterpolation"],
-    objectives:["Compose one or multiple query results.","Distinguish recorded observations from interpolated estimates."],
-    prompts:{gesture:"Switch modes, then move or drag the inspection guide.",code:"Replace the composed query with your own synchronous function."},
-    apiNotes:["Data: NOAA/GML and Scripps, Mauna Loa monthly mean and deseasonalized CO₂, 2020–2021. https://gml.noaa.gov/ccgg/trends/data.html", "Interpolation estimates in data space; missing values break segments."],
-    canvas:{width:1000,height:620},related:["viz-points-and-inspection","viz-responsive-line"],
-    load:()=>import("./learning/composition/viz-hover-comparison.example"),
+    slug: "viz-hover-comparison",
+    title: "Comparing two lines at a shared time",
+    shortTitle: "Hover comparisons",
+    section: "composition",
+    order: 197,
+    summary:
+      "Compare recorded and interpolated NOAA CO₂ values with ordinary function queries and protected hover cards.",
+    api: [
+      "HoverData",
+      "AnchoredLayout",
+      "closestPoint",
+      "closestX",
+      "interpolateX",
+      "defineSeries",
+      "linearInterpolation",
+    ],
+    objectives: [
+      "Compose one or multiple query results.",
+      "Distinguish recorded observations from interpolated estimates.",
+    ],
+    prompts: {
+      gesture: "Switch modes, then move or drag the inspection guide.",
+      code: "Replace the composed query with your own synchronous function.",
+    },
+    apiNotes: [
+      "Data: NOAA/GML and Scripps, Mauna Loa monthly mean and deseasonalized CO₂, 2020–2021. https://gml.noaa.gov/ccgg/trends/data.html",
+      "Interpolation estimates in data space; missing values break segments.",
+    ],
+    canvas: { width: 1000, height: 620 },
+    related: ["viz-points-and-inspection", "viz-responsive-line"],
+    load: () => import("./learning/composition/viz-hover-comparison.example"),
   },
   {
-    slug: "viz-points-and-inspection", title: "Exploring Palmer penguin measurements", shortTitle: "Penguin measurements",
-    section: "composition", order: 198,
-    summary: "Explore 344 real Palmer penguin records with batched dots, custom keyed marks, and linked inspection.",
-    api: ["PointSeries", "PlotSeries", "nearestPoint", "Scale", "Axis", "HoverData", "HoverCard"],
-    objectives: ["Compose batched dots and custom CRC subtrees.", "Inspect mapped anchors and preserve custom mark state on reorder."],
-    prompts: { gesture: "Hover or tap a point, click custom squares, then reorder and resize.", code: "Replace the custom square with your own CRC elements." },
-    apiNotes: ["Custom marks draw around the mapped local origin.", "PointSeries batches circles; PlotSeries preserves normal per-row component state.", "Source: palmerpenguins (Horst, Hill & Gorman), collected by Kristen Gorman / Palmer Station LTER, 2007–2009, CC0. Both plots show flipper length (mm) versus body mass (g); two incomplete records remain missing. https://allisonhorst.github.io/palmerpenguins/"],
-    canvas: {width:1100,height:680}, related: ["viz-responsive-line", "signals"],
-    load: () => import("./learning/composition/viz-points-and-inspection.example"),
+    slug: "viz-points-and-inspection",
+    title: "Exploring Palmer penguin measurements",
+    shortTitle: "Penguin measurements",
+    section: "composition",
+    order: 198,
+    summary:
+      "Explore 344 real Palmer penguin records with batched dots, custom keyed marks, and linked inspection.",
+    api: [
+      "PointSeries",
+      "PlotSeries",
+      "nearestPoint",
+      "Scale",
+      "Axis",
+      "HoverData",
+      "HoverCard",
+    ],
+    objectives: [
+      "Compose batched dots and custom CRC subtrees.",
+      "Inspect mapped anchors and preserve custom mark state on reorder.",
+    ],
+    prompts: {
+      gesture:
+        "Hover or tap a point, click custom squares, then reorder and resize.",
+      code: "Replace the custom square with your own CRC elements.",
+    },
+    apiNotes: [
+      "Custom marks draw around the mapped local origin.",
+      "PointSeries batches circles; PlotSeries preserves normal per-row component state.",
+      "Source: palmerpenguins (Horst, Hill & Gorman), collected by Kristen Gorman / Palmer Station LTER, 2007–2009, CC0. Both plots show flipper length (mm) versus body mass (g); two incomplete records remain missing. https://allisonhorst.github.io/palmerpenguins/",
+    ],
+    canvas: { width: 1100, height: 680 },
+    related: ["viz-responsive-line", "signals"],
+    load: () =>
+      import("./learning/composition/viz-points-and-inspection.example"),
   },
   {
-    slug: "viz-responsive-line", title: "Exploring the Mauna Loa CO₂ record", shortTitle: "CO₂ explorer",
-    section: "composition", order: 199,
-    summary: "Explore 504 real monthly NOAA observations with a decade view, archive navigator, and linked readouts.",
+    slug: "viz-responsive-line",
+    title: "Exploring the Mauna Loa CO₂ record",
+    shortTitle: "CO₂ explorer",
+    section: "composition",
+    order: 199,
+    summary:
+      "Explore 504 real monthly NOAA observations with a decade view, archive navigator, and linked readouts.",
     api: ["Scale", "Axis", "LineSeries", "ScaleAdjust", "useScale", "Absolute"],
-    objectives: ["Bind scales to local layout allocations.", "Explore a static dataset through ordinary pointer events and signal-valued domains."],
-    prompts: { gesture: "Hover to read a month, click to pin it, then drag the overview selection or its edges to explore a date range.", code: "Change the initial date window or the two line styles." },
-    apiNotes: ["Scales use their local allocation, not a global chart rectangle.", "Source: NOAA GML / Scripps monthly Mauna Loa CO₂, Jan 1980–Dec 2021. April 1984 is interpolated in the source record."],
-    canvas: {width:1100,height:680}, related: ["grid","signals"],
+    objectives: [
+      "Bind scales to local layout allocations.",
+      "Explore a static dataset through ordinary pointer events and signal-valued domains.",
+    ],
+    prompts: {
+      gesture:
+        "Hover to read a month, click to pin it, then drag the overview selection or its edges to explore a date range.",
+      code: "Change the initial date window or the two line styles.",
+    },
+    apiNotes: [
+      "Scales use their local allocation, not a global chart rectangle.",
+      "Source: NOAA GML / Scripps monthly Mauna Loa CO₂, Jan 1980–Dec 2021. April 1984 is interpolated in the source record.",
+    ],
+    canvas: { width: 1100, height: 680 },
+    related: ["grid", "signals"],
     load: () => import("./learning/composition/viz-responsive-line.example"),
   },
   {
@@ -714,12 +777,7 @@ const drafts = [
     order: 116,
     summary:
       "Compose a procedural Three.js InstancedMesh between CRC tiles and controls while CRC owns scheduling, arbitration, focus, clipping, and filters.",
-    api: [
-      "defineThreeLayer",
-      "InstancedMesh",
-      "OrbitControls",
-      "missBehavior",
-    ],
+    api: ["defineThreeLayer", "InstancedMesh", "OrbitControls", "missBehavior"],
     objectives: [
       "Adapt an official Three.js instancing idea into one transparent CRC render-layer paint entry without a second animation loop.",
       "Compare registered targets, unregistered blocking geometry, transparent misses, OrbitControls input, and later CRC paint order.",
@@ -755,8 +813,7 @@ const drafts = [
     prompts: {
       gesture:
         "Click the blue shape, the gold shape, and empty space; then Tab to the gold shape and press Enter.",
-      code:
-        "Change the Three materials or switch missBehavior from pass-through to block.",
+      code: "Change the Three materials or switch missBehavior from pass-through to block.",
     },
     apiNotes: [
       "defineThreeLayer is declared once at module scope and owns one WebGLRenderer per mounted CRC identity.",
@@ -875,6 +932,41 @@ const drafts = [
     canvas: { width: 720, height: 420 },
     related: ["signals-and-animation", "layer", "pointer-events"],
     load: () => import("./learning/composition/particle-effects.example"),
+  },
+  {
+    slug: "physics-panels",
+    title: "Reusable physics panels",
+    shortTitle: "Physics panels",
+    section: "composition",
+    order: 127,
+    summary:
+      "Move and resize two independent simulations without resetting their bodies or changing their local physics.",
+    api: [
+      "PhysicsWorld2D",
+      "Group",
+      "dynamicBody2D",
+      "staticBody2D",
+      "collider2D",
+      "crcPhysicsBody2D",
+      "applyImpulse2D",
+      "useSignal",
+    ],
+    objectives: [
+      "Reuse one physics component in two independently owned local worlds.",
+      "Move and resize a viewport while preserving body identity, velocity and local collision geometry.",
+    ],
+    prompts: {
+      gesture: "Click a ball, then resize or move the panels while it bounces.",
+      code: "Add another SimulationPanel or change its outer transform without changing the simulation component.",
+    },
+    apiNotes: [
+      "space=local makes simulation coordinates relative to the PhysicsWorld2D boundary.",
+      "Outer transforms change presentation; named commands change physical motion.",
+      "Use toPhysicsPoint2D to convert root-logical pointer coordinates before local queries or dragging.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["physics-2d", "group"],
+    load: () => import("./learning/composition/physics-panels.example"),
   },
   {
     slug: "physics-2d",
@@ -997,14 +1089,16 @@ const drafts = [
     shortTitle: "Responsive styles",
     section: "layout",
     order: 129,
-    summary: "A store revenue card adapts from a full dashboard to a narrow sidebar or phone.",
+    summary:
+      "A store revenue card adapts from a full dashboard to a narrow sidebar or phone.",
     api: ["Flow", "Grid", "useLayoutBox"],
     objectives: [
       "Reflow metrics and chart placement with local width rules.",
       "Distinguish outer placement styles from internal responsive content.",
     ],
     prompts: {
-      gesture: "Select 30 days, then try Dashboard, Sidebar, and Phone. The same card retains your selection.",
+      gesture:
+        "Select 30 days, then try Dashboard, Sidebar, and Phone. The same card retains your selection.",
       code: "Change the 600-unit width threshold in the card styles to move the stacking breakpoint.",
     },
     apiNotes: [

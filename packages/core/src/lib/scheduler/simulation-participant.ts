@@ -1,31 +1,25 @@
-import { GLOBAL_STATE } from '../global-state.js';
-import {
-  requireHookContext,
-  useInternalHookSlot,
-} from '../hooks/hook-slot.js';
+import { GLOBAL_STATE } from "../global-state.js";
+import { requireHookContext, useInternalHookSlot } from "../hooks/hook-slot.js";
 import {
   discardSignalCommitBatchProvenance,
   discardSignalCommitBatchWriterForProvenance,
   stageSignalCommitBatchWithProvenance,
   type SignalCommitBatch,
-} from '../signals/graph.js';
-import type { WritableSignal } from '../signals/types.js';
-import type { CRCComponentRefs, CRCInstance } from '../types.js';
+} from "../signals/graph.js";
+import type { WritableSignal } from "../signals/types.js";
+import type { CRCComponentRefs, CRCInstance } from "../types.js";
 import {
   queueBeginCommand,
   queueCurrentFrameCommitAcknowledgement,
   queueCurrentFrameCompletion,
   registerAdvanceParticipant,
   requestInstanceRender,
-} from './realm-scheduler.js';
-import type {
-  CRCAdvanceLane,
-  CRCBeginCommandHandle,
-} from './types.js';
+} from "./realm-scheduler.js";
+import type { CRCAdvanceLane, CRCBeginCommandHandle } from "./types.js";
 import type {
   CRCInternalFrame,
   CRCInternalSignalBatch,
-} from './renderer-participant.js';
+} from "./renderer-participant.js";
 
 export type CRCInternalAdvanceLane = CRCAdvanceLane;
 
@@ -51,8 +45,8 @@ let currentSimulationOwner: CRCInternalSimulationOwner | undefined;
 export function crcInternalCurrentSimulationOwner(): CRCInternalSimulationOwner {
   const { componentRefs, crcInstance } = requireHookContext();
   const slot = useInternalHookSlot<CRCInternalSimulationOwner>(
-    'internalSimulationOwner',
-    teardowns => {
+    "internalSimulationOwner",
+    (teardowns) => {
       const owner = {} as CRCInternalSimulationOwner;
       ownerStates.set(owner, {
         component: componentRefs,
@@ -110,6 +104,7 @@ export function crcInternalRegisterSimulationAdvance(
   owner: CRCInternalSimulationOwner,
   lane: CRCInternalAdvanceLane,
   advance: (frame: CRCInternalFrame, batch: CRCInternalSignalBatch) => void,
+  requestsFrames = true,
 ): () => void {
   const state = requireActiveOwner(owner);
   let active = true;
@@ -120,20 +115,24 @@ export function crcInternalRegisterSimulationAdvance(
     state.cancellations.delete(release);
     unregister();
   };
-  unregister = registerAdvanceParticipant((frame, batch) => {
-    if (!active || !isCurrentOwner(state)) return;
-    try {
-      withCurrentSimulationOwner(owner, () => {
-        advance(frame, simulationBatchView(batch));
-      });
-      if (!isCurrentOwner(state)) {
+  unregister = registerAdvanceParticipant(
+    (frame, batch) => {
+      if (!active || !isCurrentOwner(state)) return;
+      try {
+        withCurrentSimulationOwner(owner, () => {
+          advance(frame, simulationBatchView(batch));
+        });
+        if (!isCurrentOwner(state)) {
+          discardSimulationOwnerWriters(batch, owner);
+        }
+      } catch (error) {
         discardSimulationOwnerWriters(batch, owner);
+        throw error;
       }
-    } catch (error) {
-      discardSimulationOwnerWriters(batch, owner);
-      throw error;
-    }
-  }, lane);
+    },
+    lane,
+    requestsFrames,
+  );
   state.cancellations.add(release);
   return release;
 }
@@ -176,7 +175,7 @@ export function crcInternalQueueSimulationComplete(
     state.cancellations.delete(cancel);
     cancelQueued();
   };
-  cancelQueued = queueCurrentFrameCompletion(frame => {
+  cancelQueued = queueCurrentFrameCompletion((frame) => {
     if (!active) return;
     active = false;
     state.cancellations.delete(cancel);
@@ -200,7 +199,7 @@ export function crcInternalOnSimulationRenderTransactionFinish(
   const transaction = state.instance.eventRoot.renderTransaction;
   if (!transaction) {
     throw new Error(
-      'crcInternalOnSimulationRenderTransactionFinish() requires an active CRC render transaction.',
+      "crcInternalOnSimulationRenderTransactionFinish() requires an active CRC render transaction.",
     );
   }
   let active = true;
@@ -210,7 +209,7 @@ export function crcInternalOnSimulationRenderTransactionFinish(
     state.cancellations.delete(cancel);
   };
   state.cancellations.add(cancel);
-  transaction.onFinish(success => {
+  transaction.onFinish((success) => {
     if (!active) return;
     active = false;
     state.cancellations.delete(cancel);
@@ -229,22 +228,16 @@ function simulationBatchView(batch: SignalCommitBatch): CRCInternalSignalBatch {
       const owner = currentSimulationOwner;
       if (owner === undefined) {
         throw new Error(
-          'CRC internal simulation batches may only stage during their owning callback.',
+          "CRC internal simulation batches may only stage during their owning callback.",
         );
       }
-      stageSignalCommitBatchWithProvenance(
-        batch,
-        owner,
-        signal,
-        value,
-        writer,
-      );
+      stageSignalCommitBatchWithProvenance(batch, owner, signal, value, writer);
     },
     discardWriter(writer: object): void {
       const owner = currentSimulationOwner;
       if (owner === undefined) {
         throw new Error(
-          'CRC internal simulation batches may only discard during their owning callback.',
+          "CRC internal simulation batches may only discard during their owning callback.",
         );
       }
       discardSignalCommitBatchWriterForProvenance(batch, owner, writer);
@@ -279,16 +272,18 @@ function requireActiveOwner(
 ): SimulationOwnerState {
   const state = ownerStates.get(owner);
   if (!state || !state.active || !isCurrentOwner(state)) {
-    throw new TypeError('Expected an active CRC internal simulation owner.');
+    throw new TypeError("Expected an active CRC internal simulation owner.");
   }
   return state;
 }
 
 function isCurrentOwner(state: SimulationOwnerState): boolean {
-  return !state.component.teardowns.closed &&
+  return (
+    !state.component.teardowns.closed &&
     !state.instance.mainTeardowns.closed &&
     GLOBAL_STATE.crcInstances.get(state.instance.canvas) === state.instance &&
-    state.instance.refs.get(state.component.id) === state.component;
+    state.instance.refs.get(state.component.id) === state.component
+  );
 }
 
 function disposeSimulationOwner(owner: CRCInternalSimulationOwner): void {

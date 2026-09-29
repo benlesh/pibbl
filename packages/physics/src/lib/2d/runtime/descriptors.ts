@@ -290,6 +290,12 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
   private cachedBakedTransform: readonly number[] | undefined;
   private cachedBakedShape: CRCPhysicsShape2D | undefined;
   private bodyPresentation: CanvasBodyPresentationCapture2D | undefined;
+  // `exit` runs after every traversal, while `dispose` runs only when this
+  // mounted attachment is actually removed. Keep the last ownership key so a
+  // removed keyed body releases its presentation lineage from the long-lived
+  // world's frame map.
+  private bodyFrameWorld: object | undefined;
+  private bodyFrameId: number | undefined;
   private wasEnabled = false;
 
   constructor(value: CRCPhysicsAttachment2D) {
@@ -297,9 +303,13 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
   }
 
   update(value: unknown): void {
-    this.descriptor = requirePhysicsAttachment2DDescriptor(
+    const next = requirePhysicsAttachment2DDescriptor(
       value as CRCPhysicsAttachment2D,
     );
+    if (this.descriptor.kind === "body" && next.kind !== "body") {
+      this.releaseBodyFrame();
+    }
+    this.descriptor = next;
   }
 
   enter(): void {
@@ -307,6 +317,12 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
     this.world = world;
     if (this.descriptor.kind === "body") {
       const bodyId = world.bodyIdFor(this);
+      if (
+        this.bodyFrameWorld !== undefined &&
+        (this.bodyFrameWorld !== world || this.bodyFrameId !== bodyId)
+      ) {
+        this.releaseBodyFrame();
+      }
       this.bodyId = bodyId;
       this.releaseBodyScope = pushPhysicsBody2D({ world, bodyId });
     } else {
@@ -326,6 +342,9 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
     }
     if (this.descriptor.kind === "body") {
       const descriptor = this.descriptor;
+      const simulationParent = world.simulationTransform(
+        input.parentWorldTransform,
+      );
       const enabled = descriptor.options.enabled;
       const reenabled = !this.wasEnabled && enabled;
       const local = bodyLocalTransformFromPrimitive2D(
@@ -338,7 +357,7 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
         descriptor.bodyType !== "dynamic"
       ) {
         this.bodyPresentation = captureBodyPresentation2D(
-          input.parentWorldTransform,
+          simulationParent,
           local,
           input.componentName,
           descriptor.bodyType === "dynamic" && enabled,
@@ -353,7 +372,9 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
       let presentationTransform2D: DOMMatrix | undefined;
       let effectiveBodyFrame: DOMMatrix;
       if (!enabled || descriptor.bodyType !== "dynamic") {
-        effectiveBodyFrame = matrixFromPose(presentation.initialPose);
+        effectiveBodyFrame = world.rootTransform(
+          matrixFromPose(presentation.initialPose),
+        );
       } else {
         world.handle.revision.get();
         const presentedPose = reenabled
@@ -362,7 +383,7 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
         presentationTransform2D = resolveDynamicPresentationTransform2D(
           presentation,
           presentedPose,
-          input.parentWorldTransform,
+          simulationParent,
           local,
           input.componentName,
         );
@@ -381,6 +402,8 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
             (input.hasUntrackedCanvasTransform ? 1 : 0),
         }),
       );
+      this.bodyFrameWorld = world;
+      this.bodyFrameId = bodyId;
       const collider = descriptor.options.collider;
       const effectiveCollider =
         collider === false
@@ -393,10 +416,15 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
                   collider.shape === "self"
                     ? this.resolveSelfShape(input)
                     : collider.shape,
-                  matrixFromPose(presentation.initialPose)
-                    .inverse()
-                    .multiply(input.parentWorldTransform)
-                    .multiply(local),
+                  descriptor.bodyType === "dynamic"
+                    ? matrixFromPose(presentation.initialPose)
+                        .inverse()
+                        .multiply(simulationParent)
+                        .multiply(local)
+                    : relativeColliderTransform2D(
+                        effectiveBodyFrame,
+                        input.parentWorldTransform,
+                      ).multiply(local),
                 ),
               );
       const effectiveDescriptor =
@@ -458,7 +486,23 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
   }
 
   dispose(): void {
-    this.exit(false);
+    try {
+      this.exit(false);
+    } finally {
+      this.releaseBodyFrame();
+    }
+  }
+
+  private releaseBodyFrame(): void {
+    const world = this.bodyFrameWorld;
+    const bodyId = this.bodyFrameId;
+    if (world !== undefined && bodyId !== undefined) {
+      const frames = bodyFramesByWorld2D.get(world);
+      frames?.delete(bodyId);
+      if (frames?.size === 0) bodyFramesByWorld2D.delete(world);
+    }
+    this.bodyFrameWorld = undefined;
+    this.bodyFrameId = undefined;
   }
 
   resolveShape(
@@ -537,6 +581,11 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
     this.cachedBakedShape = baked;
     return baked;
   }
+}
+
+/** @internal Test-only ownership observation. */
+export function snapshotPhysicsBodyFrameCountForTest(world: object): number {
+  return bodyFramesByWorld2D.get(world)?.size ?? 0;
 }
 
 function sameRelativeTransformWithinCanvasRoundoff(

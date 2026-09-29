@@ -1,5 +1,6 @@
 import {
   Circle,
+  definePrimitive,
   Ellipse,
   Group,
   Polygon,
@@ -23,7 +24,6 @@ import {
   dynamicBody2D,
   enableBody2D,
   kinematicBody2D,
-  setLinearVelocity2D,
   staticBody2D,
   teleportBody2D,
   type CRCPhysicsBodyHandle2D,
@@ -189,13 +189,6 @@ export function createPhysics2DLabModel(): Physics2DLabModel {
       Object.freeze({
         onStart: (event: CRCPhysicsOverlapEvent2D) => {
           recordOverlap(model, "start", event);
-          if (id === "sensor") {
-            teleportBody2D(event.otherBody, {
-              position: [360, 104],
-              rotationDegrees: 0,
-            });
-            setLinearVelocity2D(event.otherBody, [0, 0]);
-          }
         },
         onEnd: (event: CRCPhysicsOverlapEvent2D) =>
           recordOverlap(model, "end", event),
@@ -260,6 +253,7 @@ function DynamicBody({
       style={{ translateX: position[0], translateY: position[1] }}
     >
       {children}
+      <PaintPoseProbe model={model} id={id} />
     </Group>
   );
 }
@@ -298,6 +292,7 @@ function Platform({ model }: { readonly model: Physics2DLabModel }) {
       })}
       style={{ translateX: position[0], translateY: position[1] }}
     >
+      <PaintPoseProbe model={model} id="platform" />
       <Rectangle
         physics={collider2D({ tag: "platform", friction: 0.8 })}
         style={{
@@ -331,6 +326,7 @@ function HandoffBall({ model }: { readonly model: Physics2DLabModel }) {
       })}
       style={{ translateX: position[0], translateY: position[1] }}
     >
+      <PaintPoseProbe model={model} id="handoff" />
       <Circle
         physics={collider2D({ tag: "handoff", restitution: 0.25 })}
         style={{
@@ -446,19 +442,20 @@ function AnimationOwners({ model }: { readonly model: Physics2DLabModel }) {
   return undefined;
 }
 
+// Capture the actual Canvas transform at the body's local origin. This is
+// independent of the authoritative signal and includes presentation interpolation.
+const PaintPoseProbe = definePrimitive<{
+  readonly model: Physics2DLabModel;
+  readonly id: Physics2DLabBodyId;
+}>((props, _style, context) => {
+  const matrix = context.getTransform();
+  props.model.presentedPositions[props.id] = Object.freeze([
+    matrix.e,
+    matrix.f,
+  ]);
+});
+
 function PresentationProbe({ model }: { readonly model: Physics2DLabModel }) {
-  for (const id of PHYSICS_2D_LAB_BODY_IDS) {
-    const handle = model.handles[id];
-    if (!handle) continue;
-    const position =
-      id === "handoff" && !model.handoffEnabled.get()
-        ? model.handoffPosition.get()
-        : handle.position.get();
-    model.presentedPositions[id] = Object.freeze([...position] as [
-      number,
-      number,
-    ]);
-  }
   model.publish?.();
   return undefined;
 }
@@ -478,12 +475,7 @@ export function Physics2DLabRoot({
         pointerEvents="none"
         style={{ width: 480, height: 240, fill: "#eff6ff" }}
       />
-      <PhysicsWorld2D
-        gravity={[0, 600]}
-        fixedStepMilliseconds={50}
-        maxCatchUpSteps={3}
-        sleeping
-      >
+      <PhysicsWorld2D gravity={[0, 600]} maxCatchUpSteps={3} sleeping>
         <WorldCapture model={model} />
         <AnimationOwners model={model} />
         <Rectangle
