@@ -46,15 +46,11 @@ import {
   type CanvasBodyPresentationCapture2D,
 } from "../canvas/presentation.js";
 
-const bodyFramesByWorld2D = new WeakMap<
-  object,
-  Map<number, BodyFrame2D>
->();
+const bodyFramesByWorld2D = new WeakMap<object, Map<number, BodyFrame2D>>();
 
 interface BodyFrame2D {
   readonly poseMatrix: DOMMatrix;
-  readonly preBodyLineage:
-    CRCInternalPrimitiveAttachmentInput['presentationTransformLineage'];
+  readonly preBodyLineage: CRCInternalPrimitiveAttachmentInput["presentationTransformLineage"];
   readonly untrackedCanvasTransformCount: number;
 }
 
@@ -374,14 +370,17 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
           presentationTransform2D.multiply(local),
         );
       }
-      bodyFrames.set(bodyId, Object.freeze({
-        poseMatrix: effectiveBodyFrame,
-        preBodyLineage: input.presentationTransformLineage,
-        untrackedCanvasTransformCount:
-          (input.presentationTransformLineage
-            ?.untrackedCanvasTransformCount ?? 0) +
-          (input.hasUntrackedCanvasTransform ? 1 : 0),
-      }));
+      bodyFrames.set(
+        bodyId,
+        Object.freeze({
+          poseMatrix: effectiveBodyFrame,
+          preBodyLineage: input.presentationTransformLineage,
+          untrackedCanvasTransformCount:
+            (input.presentationTransformLineage
+              ?.untrackedCanvasTransformCount ?? 0) +
+            (input.hasUntrackedCanvasTransform ? 1 : 0),
+        }),
+      );
       const collider = descriptor.options.collider;
       const effectiveCollider =
         collider === false
@@ -394,14 +393,10 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
                   collider.shape === "self"
                     ? this.resolveSelfShape(input)
                     : collider.shape,
-                  descriptor.bodyType === "dynamic"
-                    ? matrixFromPose(presentation.initialPose)
-                        .inverse()
-                        .multiply(input.parentWorldTransform)
-                    : relativeColliderTransform2D(
-                        effectiveBodyFrame,
-                        input.parentWorldTransform,
-                      ),
+                  matrixFromPose(presentation.initialPose)
+                    .inverse()
+                    .multiply(input.parentWorldTransform)
+                    .multiply(local),
                 ),
               );
       const effectiveDescriptor =
@@ -436,9 +431,14 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
           this.descriptor.options.shape === "self"
             ? this.resolveSelfShape(input)
             : this.descriptor.options.shape,
-          lineageTransform ?? relativeColliderTransform2D(
-            bodyFrame.poseMatrix,
-            input.parentWorldTransform,
+          (
+            lineageTransform ??
+            relativeColliderTransform2D(
+              bodyFrame.poseMatrix,
+              input.parentWorldTransform,
+            )
+          ).multiply(
+            bodyLocalTransformFromPrimitive2D(input.componentType, input.style),
           ),
           lineageTransform === undefined,
         ),
@@ -513,14 +513,16 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
       transform.e,
       transform.f,
     ];
-    const values = stabilizeFallback && this.cachedBakedSource === shape &&
-        this.cachedBakedTransform !== undefined &&
-        sameRelativeTransformWithinCanvasRoundoff(
-          this.cachedBakedTransform,
-          candidate,
-        )
-      ? this.cachedBakedTransform
-      : candidate;
+    const values =
+      stabilizeFallback &&
+      this.cachedBakedSource === shape &&
+      this.cachedBakedTransform !== undefined &&
+      sameRelativeTransformWithinCanvasRoundoff(
+        this.cachedBakedTransform,
+        candidate,
+      )
+        ? this.cachedBakedTransform
+        : candidate;
     if (
       this.cachedBakedSource === shape &&
       this.cachedBakedTransform?.every(
@@ -543,9 +545,10 @@ function sameRelativeTransformWithinCanvasRoundoff(
 ): boolean {
   return previous.every((value, index) => {
     const next = candidate[index]!;
-    const tolerance = index < 4
-      ? linearTransformRoundoffTolerance(value, next)
-      : translationRoundoffTolerance(value, next);
+    const tolerance =
+      index < 4
+        ? linearTransformRoundoffTolerance(value, next)
+        : translationRoundoffTolerance(value, next);
     return Math.abs(value - next) <= tolerance;
   });
 }
@@ -555,16 +558,20 @@ function linearTransformRoundoffTolerance(
   candidate: number,
 ): number {
   const magnitude = Math.max(1, Math.abs(previous), Math.abs(candidate));
-  return RELATIVE_MATRIX_ROUNDOFF_OPERATIONS *
-    Number.EPSILON * magnitude * magnitude;
+  return (
+    RELATIVE_MATRIX_ROUNDOFF_OPERATIONS * Number.EPSILON * magnitude * magnitude
+  );
 }
 
 function translationRoundoffTolerance(
   previous: number,
   candidate: number,
 ): number {
-  return RELATIVE_MATRIX_ROUNDOFF_OPERATIONS * Number.EPSILON *
-    (1 + Math.max(Math.abs(previous), Math.abs(candidate)));
+  return (
+    RELATIVE_MATRIX_ROUNDOFF_OPERATIONS *
+    Number.EPSILON *
+    (1 + Math.max(Math.abs(previous), Math.abs(candidate)))
+  );
 }
 
 function relativeColliderTransform2D(
@@ -619,10 +626,7 @@ function sameMatrixExactly2D(
   );
 }
 
-function requireBodyFrame(
-  world: object,
-  bodyId: number,
-): BodyFrame2D {
+function requireBodyFrame(world: object, bodyId: number): BodyFrame2D {
   const frame = bodyFramesByWorld2D.get(world)?.get(bodyId);
   if (!frame)
     throw new Error("A collider requires its body geometry to prepare first.");
