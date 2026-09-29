@@ -52,8 +52,8 @@ function WebGLIslandLesson() {
       <Text
         pointerEvents="none"
         style={{
-          x: 32,
-          y: 34,
+          left: 32,
+          top: 34,
           fill: '#f8fafc',
           font: '700 22px Arial',
         }}
@@ -63,8 +63,8 @@ function WebGLIslandLesson() {
       <Text
         pointerEvents="none"
         style={{
-          x: 32,
-          y: 64,
+          left: 32,
+          top: 64,
           fill: '#cbd5e1',
           font: '15px Arial',
         }}
@@ -74,8 +74,8 @@ function WebGLIslandLesson() {
       <Text
         pointerEvents="none"
         style={{
-          x: 32,
-          y: 392,
+          left: 32,
+          top: 392,
           fill: '#f8fafc',
           font: '600 14px Arial',
         }}

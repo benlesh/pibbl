@@ -161,7 +161,7 @@ function ParticleEffectsStudy() {
       <Rectangle style={{ width: 720, height: 420, fill: '#090b10' }} />
       <Rectangle
         pointerEvents="none"
-        style={{ x: 28, y: 88, width: 664, height: 284, fill: '#111827' }}
+        style={{ left: 28, top: 88, width: 664, height: 284, fill: '#111827' }}
       />
       <Particles2D
         system={fire}
@@ -170,8 +170,8 @@ function ParticleEffectsStudy() {
       />
       <Rectangle
         style={{
-          x: current.x - SQUARE_SIZE / 2,
-          y: current.y - SQUARE_SIZE / 2,
+          left: current.x - SQUARE_SIZE / 2,
+          top: current.y - SQUARE_SIZE / 2,
           width: SQUARE_SIZE,
           height: SQUARE_SIZE,
           fill: '#481b12',
@@ -216,8 +216,8 @@ function ParticleEffectsStudy() {
       <Rectangle
         pointerEvents="none"
         style={{
-          x: current.x - 30,
-          y: current.y - 30,
+          left: current.x - 30,
+          top: current.y - 30,
           width: 60,
           height: 60,
           fill: '#7c2d12',
@@ -228,8 +228,8 @@ function ParticleEffectsStudy() {
       <Text
         pointerEvents="none"
         style={{
-          x: current.x,
-          y: current.y + 5,
+          left: current.x,
+          top: current.y + 5,
           fill: '#fed7aa',
           font: '900 12px monospace',
           textAlign: 'center',
@@ -240,8 +240,8 @@ function ParticleEffectsStudy() {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 38,
+          left: 360,
+          top: 38,
           fill: '#f8fafc',
           font: '900 24px sans-serif',
           textAlign: 'center',
@@ -252,8 +252,8 @@ function ParticleEffectsStudy() {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 64,
+          left: 360,
+          top: 64,
           fill: '#fb923c',
           font: '700 12px monospace',
           textAlign: 'center',
@@ -264,8 +264,8 @@ function ParticleEffectsStudy() {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 398,
+          left: 360,
+          top: 398,
           fill: '#cbd5e1',
           font: '600 12px monospace',
           textAlign: 'center',

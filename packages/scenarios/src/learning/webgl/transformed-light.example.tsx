@@ -123,7 +123,7 @@ function LightingLesson() {
       />
       <Rectangle
         pointerEvents="none"
-        style={{ x: 360, width: 360, height: 420, fill: '#44254f' }}
+        style={{ left: 360, width: 360, height: 420, fill: '#44254f' }}
       />
       <Rectangle style={{ width: 720, height: 420, fill: 'transparent' }} />
       <WebGLLayer

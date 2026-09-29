@@ -63,8 +63,8 @@ export const DrawingShapesScene = ({
   <Rectangle
     key="background"
     style={{
-      x: 0,
-      y: 0,
+      left: 0,
+      top: 0,
       width: 480,
       height: 240,
       fill: '#f8fafc',
@@ -73,8 +73,8 @@ export const DrawingShapesScene = ({
   <Rectangle
     key="rectangle"
     style={{
-      x: state.updated ? 28 : 20,
-      y: state.updated ? 26 : 20,
+      left: state.updated ? 28 : 20,
+      top: state.updated ? 26 : 20,
       width: state.updated ? 132 : 120,
       height: state.updated ? 70 : 80,
       cornerRadius: 18,
@@ -175,8 +175,8 @@ export const DrawingShapesScene = ({
   <Rectangle
     key="rounded-cut-underlay"
     style={{
-      x: 20,
-      y: 142,
+      left: 20,
+      top: 142,
       width: 92,
       height: 64,
       fill: '#ef4444',
@@ -186,8 +186,8 @@ export const DrawingShapesScene = ({
   <Rectangle
     key="rounded-rectangle"
     style={{
-      x: 20,
-      y: 142,
+      left: 20,
+      top: 142,
       width: 92,
       height: 64,
       fill: '#2563eb',
@@ -228,8 +228,8 @@ export const DrawingShapesScene = ({
   <Rectangle
     key="clip-underlay"
     style={{
-      x: 345,
-      y: 135,
+      left: 345,
+      top: 135,
       width: 90,
       height: 90,
       fill: '#f8fafc',
@@ -239,8 +239,8 @@ export const DrawingShapesScene = ({
   <Clip key="hexagon-clip" style={{ d: clipHexagon() }}>
     <Rectangle
       style={{
-        x: 345,
-        y: 135,
+        left: 345,
+        top: 135,
         width: 90,
         height: 90,
         fill: state.updated ? '#22c55e' : '#14b8a6',

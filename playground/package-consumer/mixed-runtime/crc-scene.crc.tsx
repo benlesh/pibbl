@@ -26,8 +26,8 @@ export function Poster({ title }: PosterProps): CRCNode {
       />
       <Text
         style={{
-          x: 12,
-          y: 24,
+          left: 12,
+          top: 24,
           fill: '#ffffff',
           gridColumnStart: 1,
           gridRowStart: 2,

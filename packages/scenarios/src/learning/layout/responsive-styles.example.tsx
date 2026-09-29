@@ -15,7 +15,7 @@ function Button({ label, click }: {
 }) {
   return <Group>
     <Rectangle style={{ width: 112, height: 44, fill: '#17324d', cursor: 'pointer', cornerRadius: 6 }} onClick={click} />
-    <Text pointerEvents="none" style={{ x: 56, y: 14, textAlign: 'center', font: '13px sans-serif', fill: 'white' }}>{label}</Text>
+    <Text pointerEvents="none" style={{ left: 56, top: 14, textAlign: 'center', font: '13px sans-serif', fill: 'white' }}>{label}</Text>
   </Group>;
 }
 
@@ -38,8 +38,8 @@ function Scene({ resizeRoot }: { resizeRoot: (narrow: boolean) => void }) {
   const cellHeight = useSignal(160);
   return <Group>
     <Rectangle pointerEvents="none" style={{ width: root.width, height: root.height, fill: '#f6f8fb' }} />
-    <Text style={{ x: 12, y: 12, font: 'bold 20px sans-serif', fill: '#17324d' }}>Responsive local styles</Text>
-    <Text style={{ x: 12, y: 42, font: '12px sans-serif', fill: '#425a70' }}>{`Root ${root.width} × ${root.height} · row at width ≥ 600`}</Text>
+    <Text style={{ left: 12, top: 12, font: 'bold 20px sans-serif', fill: '#17324d' }}>Responsive local styles</Text>
+    <Text style={{ left: 12, top: 42, font: '12px sans-serif', fill: '#425a70' }}>{`Root ${root.width} × ${root.height} · row at width ≥ 600`}</Text>
     <Group style={{ translateX: 12, translateY: 68 }}>
       <Flow style={{ gap: 8 }}>
         <Button style={{ width: 112, height: 44 }} label="Phone root" click={() => resizeRoot(true)} />
@@ -47,14 +47,14 @@ function Scene({ resizeRoot }: { resizeRoot: (narrow: boolean) => void }) {
       </Flow>
     </Group>
     <Group style={{ translateY: 128 }}><ResponsiveActions /></Group>
-    <Text style={{ x: 12, y: 258, font: 'bold 16px sans-serif', fill: '#17324d' }}>The same component in a Grid cell</Text>
+    <Text style={{ left: 12, top: 258, font: 'bold 16px sans-serif', fill: '#17324d' }}>The same component in a Grid cell</Text>
     <Group style={{ translateX: 12, translateY: 290 }}>
       <Flow style={{ gap: 8 }}>
         <Button style={{ width: 112, height: 44 }} label="Cell width" click={() => cellWidth.update(n => n < 600 ? 640 : 320)} />
         <Button style={{ width: 112, height: 44 }} label="Cell height" click={() => cellHeight.update(n => n > 120 ? 112 : 160)} />
       </Flow>
     </Group>
-    <Text style={{ x: 12, y: 348, font: '12px sans-serif', fill: '#425a70' }}>{`Cell ${Math.min(cellWidth.get(), root.width)} × ${cellHeight.get()} · gap 8 at height ≤ 120`}</Text>
+    <Text style={{ left: 12, top: 348, font: '12px sans-serif', fill: '#425a70' }}>{`Cell ${Math.min(cellWidth.get(), root.width)} × ${cellHeight.get()} · gap 8 at height ≤ 120`}</Text>
     <Group style={{ translateY: 378 }}>
       <Grid style={{
         width: root.width, height: 180,
@@ -64,7 +64,7 @@ function Scene({ resizeRoot }: { resizeRoot: (narrow: boolean) => void }) {
         <ResponsiveActions style={{ width: '100%', height: '100%', gridColumnStart: 1, gridRowStart: 1 }} />
       </Grid>
     </Group>
-    <Text style={{ x: 12, y: Math.max(502, root.height - 54), width: Math.max(1, root.width - 24), wrap: true, font: '12px sans-serif', fill: '#425a70' }}>
+    <Text style={{ left: 12, top: Math.max(502, root.height - 54), width: Math.max(1, root.width - 24), wrap: true, font: '12px sans-serif', fill: '#425a70' }}>
       Click counts survive reflow. Width and height describe available space, not touch capability. Changing structure or gestures remains component code.
     </Text>
   </Group>;

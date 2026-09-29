@@ -301,8 +301,8 @@ function Platform({ model }: { readonly model: Physics2DLabModel }) {
       <Rectangle
         physics={collider2D({ tag: "platform", friction: 0.8 })}
         style={{
-          x: -42,
-          y: -7,
+          left: -42,
+          top: -7,
           width: 84,
           height: 14,
           cornerRadius: 5,
@@ -361,8 +361,8 @@ function Sensor({ model }: { readonly model: Physics2DLabModel }) {
           onOverlapEnd: handlers.onEnd,
         })}
         style={{
-          x: -10,
-          y: -22,
+          left: -10,
+          top: -22,
           width: 20,
           height: 44,
           fill: "#38bdf833",
@@ -495,15 +495,15 @@ export function Physics2DLabRoot({
               onCollisionEnd: groundHandlers.onEnd,
             },
           })}
-          style={{ x: 12, y: 216, width: 456, height: 20, fill: "#334155" }}
+          style={{ left: 12, top: 216, width: 456, height: 20, fill: "#334155" }}
         />
         <Rectangle
           physics={staticBody2D({ collider: { tag: "left-wall" } })}
-          style={{ x: 0, y: 0, width: 12, height: 236, fill: "#64748b" }}
+          style={{ left: 0, top: 0, width: 12, height: 236, fill: "#64748b" }}
         />
         <Rectangle
           physics={staticBody2D({ collider: { tag: "right-wall" } })}
-          style={{ x: 468, y: 0, width: 12, height: 236, fill: "#64748b" }}
+          style={{ left: 468, top: 0, width: 12, height: 236, fill: "#64748b" }}
         />
         <DynamicBody id="circle" model={model} position={[64, 202]}>
           <SolidCollider id="circle" model={model}>
@@ -526,8 +526,8 @@ export function Physics2DLabRoot({
               <Rectangle
                 physics={physics}
                 style={{
-                  x: -12,
-                  y: -12,
+                  left: -12,
+                  top: -12,
                   width: 24,
                   height: 24,
                   fill: "#8b5cf6",
@@ -602,13 +602,13 @@ export function Physics2DLabRoot({
       </PhysicsWorld2D>
       <Text
         pointerEvents="none"
-        style={{ x: 18, y: 24, fill: "#0f172a", font: "700 14px Arial" }}
+        style={{ left: 18, top: 24, fill: "#0f172a", font: "700 14px Arial" }}
       >
         2D PHYSICS · SHARED CRC SCHEDULER
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 18, y: 44, fill: "#475569", font: "11px Arial" }}
+        style={{ left: 18, top: 44, fill: "#475569", font: "11px Arial" }}
       >
         solids · sensor · kinematic target · explicit animation handoff
       </Text>
