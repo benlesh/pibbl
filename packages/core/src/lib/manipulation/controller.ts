@@ -423,6 +423,7 @@ function applySafely(state: ManipulationState, pointer: PointerSample): void {
       throw new AggregateError(
         [error, cleanupError],
         "Manipulation callback and cleanup failed.",
+        { cause: cleanupError },
       );
     }
     throw error;

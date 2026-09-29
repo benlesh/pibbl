@@ -12,7 +12,12 @@ relatedTypes: [CRCManipulationController, CRCManipulationFrameProps]
 # ManipulationFrame
 
 ```ts
-import { ManipulationFrame, Rectangle, useManipulation, useSignal } from "@crc/core";
+import {
+  ManipulationFrame,
+  Rectangle,
+  useManipulation,
+  useSignal,
+} from "@crc/core";
 ```
 
 `ManipulationFrame` establishes the local box and coordinate space for one
@@ -25,7 +30,7 @@ const manipulation = useManipulation({ box });
 
 <ManipulationFrame {...manipulation.frameProps}>
   <Rectangle style={{ width: 180, height: 100, fill: "#2563eb" }} />
-</ManipulationFrame>
+</ManipulationFrame>;
 ```
 
 Related types: [CRCManipulationController](#/api/types/events#crcmanipulationcontroller), [CRCManipulationFrameProps](#/api/types/events#crcmanipulationframeprops).

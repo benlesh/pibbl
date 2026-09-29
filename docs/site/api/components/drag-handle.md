@@ -25,7 +25,7 @@ const manipulation = useManipulation({ box, move: {} });
 
 <DragHandle controller={manipulation} style={{ cursor: "grab" }}>
   <Rectangle style={{ width: 180, height: 100, fill: "#2563eb" }} />
-</DragHandle>
+</DragHandle>;
 ```
 
 Related types: [CRCDragHandleProps](#/api/types/events#crcdraghandleprops), [CRCDragHandleStyle](#/api/types/events#crcdraghandlestyle), [CRCManipulationController](#/api/types/events#crcmanipulationcontroller).

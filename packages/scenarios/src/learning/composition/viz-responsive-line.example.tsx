@@ -811,7 +811,7 @@ function Brush({
       <Rectangle
         key="selection"
         style={{
-          left: left,
+          left,
           width: right - left,
           height,
           fill: "transparent",

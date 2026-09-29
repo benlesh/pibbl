@@ -23,7 +23,7 @@ values. `hitSize` applies to every generated handle.
 const box = useSignal({ left: 40, top: 32, width: 180, height: 100 });
 const manipulation = useManipulation({ box, resize: {} });
 
-<ResizeHandles controller={manipulation} positions="edges-and-corners" />
+<ResizeHandles controller={manipulation} positions="edges-and-corners" />;
 ```
 
 Related types: [CRCResizeHandlesProps](#/api/types/events#crcresizehandlesprops), [CRCResizePosition](#/api/types/events#crcresizeposition).

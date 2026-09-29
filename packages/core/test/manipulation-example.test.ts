@@ -68,4 +68,13 @@ it("runs the public card with nested Flex reflow and a geometry readout", async 
   ]);
   await settle();
   expect(labels).toContain("left 112 · top 128 · width 320 · height 224");
+  await commands.manipulationPointer([
+    { type: "move", x: 140, y: 140 }, { type: "down" },
+    { type: "move", x: 188, y: 172 },
+    { type: "keyDown", key: "Escape" }, { type: "keyUp", key: "Escape" },
+    { type: "up" },
+  ]);
+  await settle();
+  expect(labels.at(-2)).toBe("left 112 · top 128 · width 320 · height 224");
+  expect(labels.at(-1)).toBe("rotation 0° · idle · completed changes 1");
 });

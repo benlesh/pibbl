@@ -24,7 +24,7 @@ function Card() {
 
 <Manipulable style={box} draggable resizable>
   <Card />
-</Manipulable>
+</Manipulable>;
 ```
 
 Use `useManipulation` with explicit handles when only part of the content should initiate dragging.

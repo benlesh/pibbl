@@ -63,6 +63,7 @@ keywords: [events, pointer, focus, keyboard, propagation]
 ---
 
 # Event types
+
 ## CRCClipboardEvent
 
 `CRCClipboardEvent` is the logical facade for clipboard events and carries the
@@ -169,6 +170,7 @@ coordinates.
 ## CRCManipulableProps
 
 Binds writable box and optional rotation signals, operation booleans or options, resize-handle selection, lifecycle callbacks, and children for the convenience component.
+
 ## CRCManipulationActive
 
 Reports the active operation, resize handle, and pointer identifier; the controller publishes null while idle.
@@ -300,4 +302,3 @@ aspect ratio, and size or grid snapping. Their `enabled` values accept signals.
 `CRCResizePosition` names the supported frame edges and corners.
 `CRCDragHandleProps`, `CRCDragHandleStyle`, `CRCResizeHandleProps`, and
 `CRCResizeHandlesProps` configure the public handle components.
-

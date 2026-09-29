@@ -23,7 +23,7 @@ defaults to 24 CSS pixels.
 const box = useSignal({ left: 40, top: 32, width: 180, height: 100 });
 const manipulation = useManipulation({ box, resize: {} });
 
-<ResizeHandle controller={manipulation} position="bottom-right" />
+<ResizeHandle controller={manipulation} position="bottom-right" />;
 ```
 
 Related types: [CRCResizeHandleProps](#/api/types/events#crcresizehandleprops), [CRCResizePosition](#/api/types/events#crcresizeposition).

@@ -589,6 +589,7 @@ assert.deepEqual(
     "Style and draw",
     "Compose and lay out scenes",
     "Responsive local styles",
+    "Move, resize, and rotate components",
     "Manage state and lifecycle",
     "Use signals and animation",
     "Add WebGL islands",

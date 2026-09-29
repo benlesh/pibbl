@@ -4,6 +4,7 @@ import {
   degrees,
   DragHandle,
   Flex,
+  FocusManagement,
   ManipulationFrame,
   Rectangle,
   ResizeHandles,
@@ -151,7 +152,7 @@ function Scene() {
         }}
       >
         Drag title · resize corners · rotate top handle · Shift snaps · Alt
-        locks ratio.
+        locks ratio · Escape cancels.
       </Text>
       <ManipulationFrame {...manipulation.frameProps}>
         <CardContent />
@@ -246,5 +247,5 @@ function Scene() {
   );
 }
 export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Scene />);
+  return crc(canvas, <FocusManagement><Scene /></FocusManagement>);
 }

@@ -20,7 +20,7 @@ const box = useSignal({ left: 40, top: 32, width: 180, height: 100 });
 const rotation = useSignal(0);
 const manipulation = useManipulation({ box, rotation, rotate: {} });
 
-<RotationHandle controller={manipulation} />
+<RotationHandle controller={manipulation} />;
 ```
 
 Related types: [CRCRotationHandleProps](#/api/types/events#crcrotationhandleprops).
