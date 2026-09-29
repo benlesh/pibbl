@@ -5,7 +5,17 @@ summary: Lifecycle resources, context, targets, picking, input, and renderer opt
 kind: api
 slug: three
 apiCategory: types
-symbols: [CRCThreeInputBridge, CRCThreeLayerContext, CRCThreeLayerDefinition, CRCThreeLayerResources, CRCThreePicker, CRCThreePickResult, CRCThreeRendererOptions, CRCThreeTarget]
+symbols:
+  [
+    CRCThreeInputBridge,
+    CRCThreeLayerContext,
+    CRCThreeLayerDefinition,
+    CRCThreeLayerResources,
+    CRCThreePicker,
+    CRCThreePickResult,
+    CRCThreeRendererOptions,
+    CRCThreeTarget,
+  ]
 ---
 
 # Three.js integration types

@@ -5,7 +5,27 @@ summary: Creates and queries renderer-independent immutable 3D physics shapes.
 kind: api
 slug: physics-3d-geometry
 apiCategory: function
-symbols: [boundsOfShape3D, boxShape3D, capsuleShape3D, coneShape3D, contactBetweenShapes3D, containsPoint3D, convexHullShape3D, cylinderShape3D, distanceBetweenShapes3D, ellipsoidShape3D, heightfieldShape3D, massProperties3D, overlapShapes3D, raycastShape3D, shapeCastAgainstShape3D, sphereShape3D, transformShape3D, triangleMeshShape3D]
+symbols:
+  [
+    boundsOfShape3D,
+    boxShape3D,
+    capsuleShape3D,
+    coneShape3D,
+    contactBetweenShapes3D,
+    containsPoint3D,
+    convexHullShape3D,
+    cylinderShape3D,
+    distanceBetweenShapes3D,
+    ellipsoidShape3D,
+    heightfieldShape3D,
+    massProperties3D,
+    overlapShapes3D,
+    raycastShape3D,
+    shapeCastAgainstShape3D,
+    sphereShape3D,
+    transformShape3D,
+    triangleMeshShape3D,
+  ]
 relatedTypes: [CRCPhysicsShape3D, CRCPhysicsTransform3D, CRCPhysicsShapeHit3D]
 ---
 

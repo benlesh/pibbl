@@ -169,7 +169,7 @@ The `"spawn"`, `"simulation"`, or `"render"` parameter adoption category.
 
 ## `CRCParticleParameterValue`
 
-The number, color string, or two/three-dimensional vector value union.
+The number, color string, or two-dimensional vector value union.
 
 ## `CRCParticleParameterValues`
 

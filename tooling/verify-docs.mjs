@@ -254,8 +254,6 @@ const migrationMarkdownPaths = new Set([
 const operationalMarkdownPaths = new Set([
   ".beads/README.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
-  "playground/public/models/crc-static-glb-slice.LICENSE.md",
-  "playground/public/models/khronos-static-glb-gallery.LICENSE.md",
   "tooling/studio-docs/fixtures/invalid-script.md",
   "tooling/studio-docs/fixtures/valid-guide.md",
 ]);
@@ -1637,12 +1635,17 @@ assertSameNames(
   physics3dGeometryExports.types,
   "Documented @crc/physics/3d/geometry types",
 );
-const vizSource = await readFile(join(repositoryRoot, "packages/viz/src/index.ts"), "utf8");
-const vizExports = exportedSpecifiers(vizSource, "packages/viz/src/index.ts");
-for (const kind of ["values", "types"]) assertSameNames(
-  [...documentedApiSymbols].filter(name => vizExports[kind].has(name)),
-  vizExports[kind], `Documented @crc/viz ${kind}`,
+const vizSource = await readFile(
+  join(repositoryRoot, "packages/viz/src/index.ts"),
+  "utf8",
 );
+const vizExports = exportedSpecifiers(vizSource, "packages/viz/src/index.ts");
+for (const kind of ["values", "types"])
+  assertSameNames(
+    [...documentedApiSymbols].filter((name) => vizExports[kind].has(name)),
+    vizExports[kind],
+    `Documented @crc/viz ${kind}`,
+  );
 const namespaceMembers = jsxNamespaceMembers(
   runtimeSource,
   "packages/core/src/jsx-runtime.ts",
@@ -1712,7 +1715,10 @@ for (const dependencies of [
   );
 }
 const particlesManifest = JSON.parse(
-  await readFile(join(repositoryRoot, "packages/particles/package.json"), "utf8"),
+  await readFile(
+    join(repositoryRoot, "packages/particles/package.json"),
+    "utf8",
+  ),
 );
 assert.deepEqual(
   Object.keys(particlesManifest.exports),
@@ -1738,7 +1744,10 @@ assert.deepEqual(
   { "@crc/core": "0.0.1" },
   "@crc/physics must not retain a renderer-coupled peer.",
 );
-assert.equal(physicsManifest.peerDependenciesMeta?.["@crc/core"]?.optional, true);
+assert.equal(
+  physicsManifest.peerDependenciesMeta?.["@crc/core"]?.optional,
+  true,
+);
 assert.equal(physicsManifest.sideEffects, false);
 const typesManifest = JSON.parse(
   await readFile(join(repositoryRoot, "packages/types/package.json"), "utf8"),
@@ -1963,7 +1972,11 @@ const requiredGuideMarkers = new Map([
   ],
   [
     "docs/site/learn/guides/state-and-lifecycle.md",
-    ["immediate Canvas runtime", "useReaction", "## Identity, failure, and disposal"],
+    [
+      "immediate Canvas runtime",
+      "useReaction",
+      "## Identity, failure, and disposal",
+    ],
   ],
   [
     "docs/site/learn/guides/author-without-jsx.md",
@@ -3103,10 +3116,12 @@ export async function verifyMutationProbes() {
       }),
     /reviewed complete semantic inventory/u,
   );
-  const unmappedThreeContract = structuredClone(postBaselineThreeContractRecord);
-  unmappedThreeContract.mappings.find(
-    ({ id }) => id === "three-js-adapter",
-  ).currentIds.shift();
+  const unmappedThreeContract = structuredClone(
+    postBaselineThreeContractRecord,
+  );
+  unmappedThreeContract.mappings
+    .find(({ id }) => id === "three-js-adapter")
+    .currentIds.shift();
   throws(
     () =>
       assertPostBaselineContractPreservation({
@@ -3188,9 +3203,9 @@ export async function verifyMutationProbes() {
   const incompleteDrawingPivotUnits = structuredClone(
     contractPreservationBaseline,
   );
-  incompleteDrawingPivotUnits.additions.find(
-    ({ id }) => id === "three-pivot-drawing-components-contract",
-  ).currentIds.pop();
+  incompleteDrawingPivotUnits.additions
+    .find(({ id }) => id === "three-pivot-drawing-components-contract")
+    .currentIds.pop();
   throws(
     () => assertThreePivotDrawingApprovals(incompleteDrawingPivotUnits),
     /must isolate the approved render-layer/u,
@@ -3837,8 +3852,7 @@ export async function verifyMutationProbes() {
     ({ path }) => path === "docs/design/runtime-hooks-contract.md",
   );
   const refRow = hooksContract.currentUnits.find(
-    ({ kind, text }) =>
-      kind === "table" && text.includes("useRef(init?)"),
+    ({ kind, text }) => kind === "table" && text.includes("useRef(init?)"),
   );
   assert.ok(refRow, "Hook-specific table mutation unit is missing");
   {

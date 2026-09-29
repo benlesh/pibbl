@@ -22,7 +22,7 @@ keywords: [particles, hook, pause, restart, emit, drain]
 import { useParticleSystem } from "@crc/particles";
 ```
 
-Creates a stable component-owned system for an immutable 2D or 3D definition.
+Creates a stable component-owned system for an immutable 2D definition.
 Its controls are `play`, `pause`, `resume`, `restart`, `emit`, and `stop`.
 `status` and `execution` are readonly CRC signals.
 
@@ -33,8 +33,7 @@ the scheduler participant, releases the renderer binding and parameter epochs,
 and makes retained controls inert.
 
 Use explicit system mode when event handlers need manual bursts or lifecycle
-controls. Canvas supports manual births. Stateless WebGL currently accepts
-automatic definitions only.
+controls. Canvas supports both automatic emission and manual births.
 
 Types: [`CRCParticleSystem`](#/api/types/particles#crcparticlesystem),
 [`CRCParticleSystemOptions`](#/api/types/particles#crcparticlesystemoptions),

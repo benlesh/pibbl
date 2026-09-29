@@ -84,7 +84,7 @@ types for generic event code.
 ## CRCEventParticipationOptions
 
 `CRCEventParticipationOptions` supplies the shared optional `pointerEvents`
-property used by drawing primitives and WebGL layers.
+property used by drawing primitives and external render layers.
 
 ## CRCEventPhase
 
@@ -155,8 +155,8 @@ and CRC root-logical coordinates.
 ## CRCPointerEvents
 
 `CRCPointerEvents` is exactly `"auto" | "none"`. `"auto"` keeps the receiving
-paint or WebGL geometry in hit resolution; `"none"` opts it and its owned
-interaction bridge out without changing pixels.
+paint or external-layer target in hit resolution; `"none"` opts it and its
+owned interaction bridge out without changing pixels.
 
 ## CRCTouchEvent
 

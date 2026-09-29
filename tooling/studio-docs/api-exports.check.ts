@@ -146,7 +146,10 @@ assert.equal(coverage.values.get("Circle")?.route, "#/api/components/circle");
 assert.deepEqual(coverage.missingValues, []);
 assert.deepEqual(coverage.missingTypes, []);
 
-const crcInventory = await collectPublicExports(crcPublicEntryPaths, crcPublicCompilerOptions);
+const crcInventory = await collectPublicExports(
+  crcPublicEntryPaths,
+  crcPublicCompilerOptions,
+);
 const physicsInventory = await collectPublicExports(crcPhysicsEntryPaths, {});
 const studioInventory = await collectPublicExports(
   crcStudioPublicEntryPaths,
@@ -159,7 +162,7 @@ assert.ok(crcInventory.root.types.length > 0);
 assert.equal(crcInventory.three.values.length, 1);
 assert.equal(crcInventory.three.types.length, 8);
 assert.equal(crcInventory.particles.values.length, 9);
-assert.equal(crcInventory.particles.types.length, 44);
+assert.equal(crcInventory.particles.types.length, 43);
 assert.equal(physicsInventory.root.values.length, 46);
 assert.equal(physicsInventory.root.types.length, 46);
 assert.equal(physicsInventory.physics2dGeometry.values.length, 19);

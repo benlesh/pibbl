@@ -5,7 +5,22 @@ summary: Renderer-independent vectors, poses, shapes, contacts, casts, and mass 
 kind: api
 slug: physics-3d-geometry
 apiCategory: types
-symbols: [CRCPhysicsAabb3D, CRCPhysicsContactPoint3D, CRCPhysicsDistance3D, CRCPhysicsMassProperties3D, CRCPhysicsMatrix3, CRCPhysicsPose3D, CRCPhysicsQuaternion, CRCPhysicsRay3D, CRCPhysicsShape3D, CRCPhysicsShapeContact3D, CRCPhysicsShapeHit3D, CRCPhysicsTransform3D, CRCPhysicsVector3]
+symbols:
+  [
+    CRCPhysicsAabb3D,
+    CRCPhysicsContactPoint3D,
+    CRCPhysicsDistance3D,
+    CRCPhysicsMassProperties3D,
+    CRCPhysicsMatrix3,
+    CRCPhysicsPose3D,
+    CRCPhysicsQuaternion,
+    CRCPhysicsRay3D,
+    CRCPhysicsShape3D,
+    CRCPhysicsShapeContact3D,
+    CRCPhysicsShapeHit3D,
+    CRCPhysicsTransform3D,
+    CRCPhysicsVector3,
+  ]
 ---
 
 # 3D physics geometry types
