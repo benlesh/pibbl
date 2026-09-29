@@ -7,6 +7,7 @@ import { pushLayoutBox } from "../layout/context.js";
 import { getCurrentWorldTransform } from "../render-target.js";
 import { currentRootCoordinateMapping } from "./coordinates.js";
 import type { CRCNode } from "../element/types.js";
+import type { CRCComponentRefs } from "../types.js";
 import type { SystemStyle } from "../types.js";
 import type { CRCManipulationBox } from "./types.js";
 import type { CRCManipulationController } from "./controller-types.js";
@@ -32,6 +33,32 @@ interface FrameProps {
   readonly children?: CRCNode;
 }
 interface FrameStyle extends SystemStyle, CRCManipulationBox {}
+interface FrameAttachment {
+  state: ManipulationState;
+}
+
+function attachManipulationFrame(
+  state: ManipulationState,
+  componentRefs: CRCComponentRefs<any>,
+): void {
+  if (state.frame && state.frame !== componentRefs) {
+    if (GLOBAL_STATE.seenIds?.has(state.frame.id))
+      throw new Error(
+        "A manipulation controller can attach to only one frame.",
+      );
+    detachManipulationFrame(state);
+  }
+  state.frame = componentRefs;
+}
+
+function releaseManipulationFrame(
+  state: ManipulationState,
+  componentRefs: CRCComponentRefs<any>,
+): void {
+  if (state.frame !== componentRefs) return;
+  state.frame = undefined;
+  detachManipulationFrame(state);
+}
 
 export const ManipulationFrame = definePrimitive<FrameProps, FrameStyle>(
   function ManipulationFrame(props, style) {
@@ -41,23 +68,20 @@ export const ManipulationFrame = definePrimitive<FrameProps, FrameStyle>(
       throw new Error(
         "A manipulation controller cannot attach across CRC roots.",
       );
-    if (state.frame && state.frame !== componentRefs) {
-      if (GLOBAL_STATE.seenIds?.has(state.frame.id))
-        throw new Error(
-          "A manipulation controller can attach to only one frame.",
-        );
-      detachManipulationFrame(state);
-    }
-    useHookSlot("manipulationFrame", (teardowns) => {
-      state.frame = componentRefs;
-      teardowns.add(() => {
-        if (state.frame === componentRefs) {
-          state.frame = undefined;
-          detachManipulationFrame(state);
-        }
-      });
-      return state;
+    const slot = useHookSlot<FrameAttachment>("manipulationFrame", (teardowns) => {
+      const attachment: FrameAttachment = { state };
+      attachManipulationFrame(state, componentRefs);
+      teardowns.add(() => releaseManipulationFrame(attachment.state, componentRefs));
+      return attachment;
     });
+    const attachment = slot.value;
+    if (attachment.state !== state) {
+      releaseManipulationFrame(attachment.state, componentRefs);
+      attachManipulationFrame(state, componentRefs);
+      attachment.state = state;
+    } else {
+      attachManipulationFrame(state, componentRefs);
+    }
     const box = state.options.box.get();
     if (
       ![box.left, box.top, style.width, style.height].every(Number.isFinite) ||

@@ -342,3 +342,63 @@ function settle(): Promise<void> {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
   );
 }
+
+it("replaces an active controller when one mounted frame receives a different controller prop", async () => {
+  const firstBox = signal({ left: 40, top: 50, width: 100, height: 80 });
+  const secondBox = signal({ left: 180, top: 50, width: 100, height: 80 });
+  const showSecond = signal(false);
+  let first!: ReturnType<typeof useManipulation>;
+  let second!: ReturnType<typeof useManipulation>;
+  const canvas = document.createElement("canvas");
+  canvas.width = 320;
+  canvas.height = 240;
+  canvas.dataset.manipulationTest = "";
+  document.body.append(canvas);
+  function Scene(): CRCNode {
+    first = useManipulation({ box: firstBox, move: {} });
+    second = useManipulation({ box: secondBox, move: {} });
+    const current = showSecond.get() ? second : first;
+    const box = showSecond.get() ? secondBox.get() : firstBox.get();
+    return (
+      <ManipulationFrame
+        controller={current}
+        style={{
+          left: box.left,
+          top: box.top,
+          width: box.width,
+          height: box.height,
+        }}
+      >
+        <DragHandle
+          controller={current}
+          style={{ width: 100, height: 80 }}
+        />
+      </ManipulationFrame>
+    );
+  }
+  controller = crc(canvas, <Scene />, { pixelRatio: 1 });
+  await settle();
+
+  await commands.manipulationPointer([
+    { type: "move", x: 60, y: 70 },
+    { type: "down" },
+    { type: "move", x: 80, y: 90 },
+  ]);
+  expect(first.active.get()?.operation).toBe("move");
+  expect(firstBox.get()).toEqual({ left: 60, top: 70, width: 100, height: 80 });
+
+  showSecond.set(true);
+  await settle();
+  expect(first.active.get()).toBe(null);
+  expect(firstBox.get()).toEqual({ left: 40, top: 50, width: 100, height: 80 });
+  await commands.manipulationPointer([{ type: "up" }]);
+
+  await commands.manipulationPointer([
+    { type: "move", x: 200, y: 70 },
+    { type: "down" },
+    { type: "move", x: 220, y: 90 },
+    { type: "up" },
+  ]);
+  await settle();
+  expect(secondBox.get()).toEqual({ left: 200, top: 70, width: 100, height: 80 });
+});
