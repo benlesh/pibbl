@@ -63,7 +63,17 @@ export const ManipulationFrame = definePrimitive<FrameProps, FrameStyle>(
       throw new Error(
         "ManipulationFrame requires finite position and positive dimensions.",
       );
-    state.parent = getCurrentWorldTransform().translate(-box.left, -box.top);
+    const parent = getCurrentWorldTransform().translate(-box.left, -box.top);
+    const transaction = crcInstance.eventRoot.renderTransaction;
+    if (!transaction)
+      throw new Error(
+        "ManipulationFrame requires an active render transaction.",
+      );
+    transaction.onFinish((success) => {
+      if (success && state.alive && state.frame === componentRefs) {
+        state.parent = parent;
+      }
+    });
     const releaseLayout = pushLayoutBox(
       Object.freeze({ x: 0, y: 0, width: style.width, height: style.height }),
     );
