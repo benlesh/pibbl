@@ -16,3 +16,20 @@ See the [guide](../../docs/site/learn/guides/data-visualization.md) and the
 [interactive example](http://localhost:5173/#/examples/composition/viz-responsive-line).
 Current scope is linear numeric scales and linear curves. Additional series,
 calendar scales, curve families, and the example's mobile presentation are deferred.
+
+## Points and hover inspection
+
+`PointSeries` batches default circles with one union event target; `PlotSeries`
+places keyed ordinary CRC subtrees through a required render callback. Use
+`nearestPoint` / `nearestDomainValue` for pure resolved-scale scans, or `HoverData`
+for function-based queries whose signal reads belong to the mounted receiver.
+
+`defineSeries`, `closestPoint`, `closestX`, `interpolateX`, and
+`linearInterpolation` compose recorded or estimated results across multiple
+lines. `HoverCard` independently positions a declared padded card without covering
+its protected anchor. These exports use the existing core JSX runtime and scale
+scope; there is no additional renderer, interaction loop, or Chart registry.
+
+See the public data-visualization guide and Studio's Penguin measurements and
+Hover comparisons examples for full wiring. Responsive `style.when` integration
+is deferred until the matching core implementation is available.

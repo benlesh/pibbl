@@ -154,6 +154,7 @@ const expectedInternal = [
   'materializeRetainedLayerChildren',
   'mountBackendCRC',
   'onCurrentRenderFinish',
+  'pushLayoutBox',
   'registerNestedInteractionResolver',
   'releaseBackendEventTarget',
   'requestCurrentInstanceFrame',
@@ -163,6 +164,7 @@ const expectedInternal = [
   'useBackendEventTarget',
   'useInternalHookSlot',
   'useInternalValueMemoSlot',
+  'withHooksForbidden',
 ];
 const actualInternal = Object.keys(internal).sort();
 if (JSON.stringify(actualInternal) !== JSON.stringify(expectedInternal)) {

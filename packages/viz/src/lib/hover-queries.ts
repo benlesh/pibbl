@@ -67,3 +67,162 @@ export function closestPoint<S extends HoverSeriesMap>(
     return best;
   };
 }
+
+import type {
+  ClosestXOptions,
+  ClosestXHit,
+  HoverInterpolation,
+  InterpolateXOptions,
+  HoverSample,
+} from "./hover-types.js";
+/** Selects a recorded observation by domain-x distance, independently of pointer y. */
+export function closestX<D>(
+  options: ClosestXOptions<D>,
+): HoverQuery<ClosestXHit<D>> {
+  return (context) => {
+    limit(options.maxDelta, "closestX maxDelta");
+    const query = resolveSignalValue(options.x);
+    if (query === null) return undefined;
+    finite(query, "closestX x");
+    const xs = context.scale(options.xScale),
+      ys = context.scale(options.yScale);
+    const series = options.series,
+      data = pointData(resolveSignalValue(series.data), "closestX");
+    const x = pointAccessor(series.x),
+      y = pointAccessor(series.y);
+    let best: ClosestXHit<D> | undefined,
+      delta = Infinity;
+    for (let index = 0; index < data.length; index++) {
+      const datum = data[index];
+      if (series.defined && !series.defined(datum, index, data)) continue;
+      const xv = x(datum, index, data),
+        yv = y(datum, index, data);
+      if (!finiteCoordinate(xv) || !finiteCoordinate(yv)) continue;
+      const distance = Math.abs(query - xv);
+      finite(distance, "closestX delta");
+      if (
+        distance < delta &&
+        (options.maxDelta === undefined || distance <= options.maxDelta)
+      ) {
+        delta = distance;
+        best = {
+          datum,
+          index,
+          x: xv,
+          y: yv,
+          anchor: { x: xs.map(xv), y: ys.map(yv) },
+          delta,
+        };
+      }
+    }
+    return best;
+  };
+}
+/** Returns a plain data-space linear interpolation function. */
+export function linearInterpolation(): HoverInterpolation {
+  return (before, after, fraction) => {
+    finite(before, "linearInterpolation before");
+    finite(after, "linearInterpolation after");
+    finite(fraction, "linearInterpolation fraction");
+    const result = before * (1 - fraction) + after * fraction;
+    finite(result, "linearInterpolation result");
+    return result;
+  };
+}
+/** Samples sorted recorded observations without bridging explicit data gaps. */
+export function interpolateX<D>(
+  options: InterpolateXOptions<D>,
+): HoverQuery<HoverSample<D>> {
+  return (context) => {
+    limit(options.maxGap, "interpolateX maxGap");
+    const policy = options.duplicateX ?? "error";
+    if (!["error", "first", "last"].includes(policy))
+      throw new TypeError(
+        "interpolateX duplicateX must be error, first, or last.",
+      );
+    if (typeof options.interpolation !== "function")
+      throw new TypeError("interpolateX requires an interpolation function.");
+    const query = resolveSignalValue(options.x);
+    if (query === null) return undefined;
+    finite(query, "interpolateX x");
+    const xs = context.scale(options.xScale),
+      ys = context.scale(options.yScale);
+    const series = options.series,
+      data = pointData(resolveSignalValue(series.data), "interpolateX");
+    const x = pointAccessor(series.x),
+      y = pointAccessor(series.y);
+    type Row = { datum: D; index: number; x: number; y: number };
+    const segments: Row[][] = [];
+    let segment: Row[] = [],
+      previousX = -Infinity;
+    const breakSegment = () => {
+      if (segment.length) segments.push(segment);
+      segment = [];
+    };
+    // Validate the complete source before answering even an exact query.
+    for (let index = 0; index < data.length; index++) {
+      const datum = data[index];
+      if (series.defined && !series.defined(datum, index, data)) {
+        breakSegment();
+        continue;
+      }
+      const xv = x(datum, index, data),
+        yv = y(datum, index, data);
+      if (finiteCoordinate(xv)) {
+        if (xv < previousX)
+          throw new RangeError(
+            "interpolateX requires nondecreasing source x order.",
+          );
+        previousX = xv;
+      }
+      if (!finiteCoordinate(xv) || !finiteCoordinate(yv)) {
+        breakSegment();
+        continue;
+      }
+      const row = { datum, index, x: xv, y: yv },
+        previous = segment.at(-1);
+      if (previous?.x === xv) {
+        if (policy === "error")
+          throw new RangeError(
+            "interpolateX duplicate x requires an explicit first/last policy.",
+          );
+        if (policy === "last") segment[segment.length - 1] = row;
+      } else segment.push(row);
+    }
+    breakSegment();
+    for (const rows of segments) {
+      for (let i = 0; i < rows.length; i++) {
+        const before = rows[i];
+        if (before.x === query)
+          return {
+            kind: "exact",
+            ...before,
+            anchor: { x: xs.map(query), y: ys.map(before.y) },
+          };
+        const after = rows[i + 1];
+        if (!after || query <= before.x || query >= after.x) continue;
+        const span = after.x - before.x,
+          offset = query - before.x;
+        finite(span, "interpolateX interval");
+        finite(offset, "interpolateX offset");
+        if (options.maxGap !== undefined && span > options.maxGap)
+          return undefined;
+        const fraction = offset / span,
+          value = options.interpolation(before.y, after.y, fraction);
+        finite(value, "interpolateX interpolator result");
+        return {
+          kind: "interpolated",
+          x: query,
+          y: value,
+          before: before.datum,
+          after: after.datum,
+          beforeIndex: before.index,
+          afterIndex: after.index,
+          fraction,
+          anchor: { x: xs.map(query), y: ys.map(value) },
+        };
+      }
+    }
+    return undefined;
+  };
+}

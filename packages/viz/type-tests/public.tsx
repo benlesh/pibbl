@@ -188,8 +188,72 @@ const explicitHover = createElement(
     },
   },
 );
-// @ts-expect-error Queries must return synchronous values.
 const asyncHover = (
+  // @ts-expect-error Queries must return synchronous values.
   <HoverData query={() => Promise.resolve(1)}>{() => null}</HoverData>
 );
 void [hoverNode, customHover, explicitHover, asyncHover];
+
+import {
+  HoverCard,
+  closestX,
+  interpolateX,
+  linearInterpolation,
+  type HoverSample,
+  type HoverCardProps,
+} from "@crc/viz";
+const timeSeries = defineSeries({ data, x: "time", y: "value" });
+const nearestTime = closestX({
+  series: timeSeries,
+  x: signal<number | null>(1),
+  xScale: "x",
+  yScale: "y",
+});
+const estimated = interpolateX({
+  series: timeSeries,
+  x: 1,
+  xScale: "x",
+  yScale: "y",
+  interpolation: linearInterpolation(),
+  maxGap: 2,
+  duplicateX: "last",
+});
+const samples = (
+  <HoverData query={estimated}>
+    {(sample) => {
+      if (!sample) return null;
+      if (sample.kind === "exact") {
+        const name: string = sample.datum.name;
+        void name;
+      } else {
+        const name: string = sample.before.name;
+        const next: string = sample.after.name;
+        void [name, next];
+      }
+      return (
+        <HoverCard anchor={sample.anchor} style={{ width: 100, height: 30 }} />
+      );
+    }}
+  </HoverData>
+);
+const cardProps: HoverCardProps = {
+  anchor: signal({ x: 10, y: 20 }),
+  anchorRadius: signal(5),
+  gap: 8,
+  bounds: signal({ x: 0, y: 0, width: 100, height: 100 }),
+  style: { width: "50%", height: 30, padding: 5, fill: signal("white") },
+};
+void createElement(HoverCard, cardProps);
+const sampleType:
+  | HoverSample<{ time: number; value: number | null; name: string }>
+  | undefined = undefined;
+// @ts-expect-error Custom data callbacks cannot use unsupported data accessors.
+void defineSeries({ data, x: "name", y: "value" });
+void (
+  <HoverCard
+    anchor={{ x: 0, y: 0 }}
+    // @ts-expect-error Placement excludes arbitrary transforms.
+    style={{ width: 100, height: 20, translateX: 1 }}
+  />
+);
+void [nearestTime, samples, sampleType];

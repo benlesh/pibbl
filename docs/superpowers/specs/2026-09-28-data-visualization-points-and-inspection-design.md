@@ -1,8 +1,9 @@
 # Visualization expansion: points, custom plots, and inspection
 
-Status: base design and function-based HoverData/HoverCard extension approved by the user on 2026-09-28. Extension implementation remains planned.
-Execution approved by the user in an isolated worktree; delivery stops at the
-first runnable slice for feedback.
+> **Historical status: Approved design and active implementation evidence; verification is recorded in the plan.**
+
+Status: base design and function-based HoverData/HoverCard extension approved by the user on 2026-09-28. Implemented in the isolated viz-points worktree; see the companion plan for fresh verification and the deferred responsive dependency.
+The user subsequently authorized the full continuation after the runnable slice.
 Date: 2026-09-28. Source inspection: `4717dc9` plus the concurrent responsive
 styles draft. No runtime verification is claimed by this document.
 
@@ -472,11 +473,25 @@ returning an early exact match, so the result does not depend on scan shortcuts.
 
 ```ts
 export type HoverSample<D> =
-  | { kind: "exact"; x: number; y: number; datum: D;
-      index: number; anchor: Readonly<{ x: number; y: number }> }
-  | { kind: "interpolated"; x: number; y: number; before: D; after: D;
-      beforeIndex: number; afterIndex: number; fraction: number;
-      anchor: Readonly<{ x: number; y: number }> };
+  | {
+      kind: "exact";
+      x: number;
+      y: number;
+      datum: D;
+      index: number;
+      anchor: Readonly<{ x: number; y: number }>;
+    }
+  | {
+      kind: "interpolated";
+      x: number;
+      y: number;
+      before: D;
+      after: D;
+      beforeIndex: number;
+      afterIndex: number;
+      fraction: number;
+      anchor: Readonly<{ x: number; y: number }>;
+    };
 ```
 
 For interpolation, fraction is `(x - beforeX) / (afterX - beforeX)`, evaluated

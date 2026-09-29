@@ -1299,11 +1299,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 73 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
+  it("contains 75 unique, ordered, source-backed routes including Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(73);
+    expect(learningExampleCatalog).toHaveLength(75);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1361,6 +1361,8 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+        "viz-hover-comparison",
+        "viz-points-and-inspection",
         "viz-responsive-line",
         "clip",
         "group",
@@ -1456,6 +1458,8 @@ describe("learning example catalog", () => {
       "particle-effects",
       "physics-2d",
       "layer",
+      "viz-hover-comparison",
+      "viz-points-and-inspection",
       "viz-responsive-line",
     ]);
 
@@ -1838,6 +1842,8 @@ describe("learning example catalog", () => {
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
         "Scale", "Axis", "LineSeries", "ScaleAdjust", "useScale", "Absolute",
+        "PointSeries", "PlotSeries", "nearestPoint", "HoverData", "HoverCard",
+        "closestPoint", "closestX", "interpolateX", "defineSeries", "linearInterpolation",
         "Rectangle",
         "Circle",
         "Ellipse",

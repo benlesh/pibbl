@@ -2010,6 +2010,9 @@ try {
   }
   await writeFile(join(directory, 'consumer.tsx'), consumer);
   await writeFile(join(directory, 'package-consumer.tsx'), packageConsumer);
+  for (const [filename, slug] of [['viz-points.tsx', 'viz-points-and-inspection'], ['viz-hover.tsx', 'viz-hover-comparison']]) {
+    await writeFile(join(directory, filename), await readFile(join(repositoryRoot, `packages/scenarios/src/learning/composition/${slug}.example.tsx`), 'utf8'));
+  }
   await writeFile(join(directory, 'viz-lesson.tsx'), await readFile(join(repositoryRoot, 'packages/scenarios/src/learning/composition/viz-responsive-line.example.tsx'), 'utf8'));
   await writeFile(join(directory, 'physics-lesson.tsx'), physicsLessonSource);
   await writeFile(join(directory, 'physics-3d-lesson.tsx'), physics3DLessonSource);
@@ -2032,7 +2035,7 @@ try {
         strict: true,
         target: 'ESNext',
       },
-      files: ['viz-lesson.tsx', 'consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
+      files: ['viz-lesson.tsx', 'viz-points.tsx', 'viz-hover.tsx', 'consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
     }),
   );
   const packageEntrySets = [
@@ -2108,7 +2111,7 @@ try {
           strict: true,
           target: 'ESNext',
         },
-        files: ['viz-lesson.tsx', 'package-consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
+        files: ['viz-lesson.tsx', 'viz-points.tsx', 'viz-hover.tsx', 'package-consumer.tsx', 'physics-lesson.tsx', 'physics-3d-lesson.tsx', 'public-type-surface.ts'],
       }),
     );
     const packageResult = spawnSync(process.execPath, [tsc, '-p', packageTsconfigPath], {
@@ -2172,6 +2175,9 @@ try {
   const builtRuntimeExports = Object.keys(builtRuntime).sort();
   const expectedStudioRuntimeExports = [
     'Scale', 'Axis', 'LineSeries', 'ScaleAdjust', 'useScale',
+    'PointSeries', 'PlotSeries', 'nearestPoint', 'nearestDomainValue',
+    'HoverData', 'HoverCard', 'defineSeries', 'closestPoint', 'closestX',
+    'interpolateX', 'linearInterpolation',
     '__crcStudioModules',
     ...publicPhysics2DValueExports,
     ...publicPhysics3DValueExports,
@@ -2287,9 +2293,9 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 211) {
+  if (expectedStudioRuntimeExports.length !== 222) {
     throw new Error(
-      `CRC Studio runtime must expose 80 core values, 46 physics 2D values, 48 physics 3D values, 1 Three adapter value, 1 sandbox module registry, 15 WebGL values, 1 GLB loader value, 11 particle values, 5 visualization values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
+      `CRC Studio runtime must expose 80 core values, 46 physics 2D values, 48 physics 3D values, 1 Three adapter value, 1 sandbox module registry, 15 WebGL values, 1 GLB loader value, 11 particle values, 16 visualization values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
     );
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {

@@ -64,7 +64,24 @@ try {
     realpathSync(installed.resolve("@crc/core")),
   );
   const viz = await import(pathToFileURL(entry).href);
-  const names = ["Axis", "LineSeries", "Scale", "ScaleAdjust", "useScale"];
+  const names = [
+    "Axis",
+    "LineSeries",
+    "Scale",
+    "ScaleAdjust",
+    "useScale",
+    "PointSeries",
+    "PlotSeries",
+    "nearestDomainValue",
+    "nearestPoint",
+    "HoverData",
+    "HoverCard",
+    "defineSeries",
+    "closestPoint",
+    "closestX",
+    "interpolateX",
+    "linearInterpolation",
+  ].sort();
   assert.deepEqual(Object.keys(viz).sort(), names);
   if (process.argv.includes("--self-test-missing-export"))
     assert.equal(typeof viz.MissingScale, "function");

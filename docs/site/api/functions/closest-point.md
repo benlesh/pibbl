@@ -5,7 +5,8 @@ summary: Creates a function selecting the closest mapped observation across name
 kind: api
 slug: closest-point
 apiCategory: function
-symbols: [closestPoint, ClosestPointHit, ClosestPointOptions, HoverHit, HoverPoint]
+symbols:
+  [closestPoint, ClosestPointHit, ClosestPointOptions, HoverHit, HoverPoint]
 ---
 
 # closestPoint

@@ -49,3 +49,24 @@ export type {
   ClosestPointHit,
   ClosestPointOptions,
 } from "./lib/hover-types.js";
+
+export { HoverCard } from "./lib/hover-card.js";
+export type {
+  HoverCardProps,
+  HoverCardStyle,
+  HoverBounds,
+  HoverPlacement,
+} from "./lib/hover-card.js";
+
+export {
+  closestX,
+  interpolateX,
+  linearInterpolation,
+} from "./lib/hover-queries.js";
+export type {
+  ClosestXOptions,
+  ClosestXHit,
+  HoverInterpolation,
+  InterpolateXOptions,
+  HoverSample,
+} from "./lib/hover-types.js";

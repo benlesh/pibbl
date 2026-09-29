@@ -443,3 +443,5 @@ export type {
   CRCInternalSignalBatch,
   CRCInternalSignalConsumer,
 } from './lib/scheduler/renderer-participant.js';
+
+export { pushLayoutBox } from './lib/layout/context.js';

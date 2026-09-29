@@ -70,3 +70,23 @@ it("loads the custom points lesson as editable canonical source", async () => {
     ),
   ).not.toThrow();
 });
+
+import hoverLesson from "../../scenarios/src/learning/composition/viz-hover-comparison.example.tsx?raw";
+it("loads the complete function-query comparison as canonical editable source", async () => {
+  expect(() =>
+    validateLearningSourceText(hoverLesson, {
+      authoring: "jsx",
+      label: 'Learning example "viz-hover-comparison"',
+      sourcePath:
+        "packages/scenarios/src/learning/composition/viz-hover-comparison.example.tsx",
+    }),
+  ).not.toThrow();
+  await expect(
+    loadLearningSource(getLearningExampleBySlug("viz-hover-comparison")!),
+  ).resolves.toBe(hoverLesson);
+  expect(() =>
+    toRunnableScript(
+      'import { HoverData, HoverCard, defineSeries, closestPoint, closestX, interpolateX, linearInterpolation } from "@crc/viz"; export default function mount(canvas) { return {dispose(){}}; }',
+    ),
+  ).not.toThrow();
+});

@@ -2340,10 +2340,18 @@ export const vizPointsScenarioEntry: ScenarioCatalogEntry<import("./viz-points-l
  load:async()=>(await import("./viz-points-lab.js")).vizPointsScenario,
 };
 
+export const vizHoverScenarioEntry: ScenarioCatalogEntry<import("./viz-hover-lab.js").VizHoverState> = {
+ metadata:{id:"viz-hover-lab",slug:"viz-hover-lab",title:"Hover query comparison laboratory",summary:"Compare nearest and interpolated data queries with a movable inspection guide.",category:"Visualization",apiTags:["HoverData","HoverCard","closestPoint","closestX","interpolateX"],conceptTags:["inspection","interpolation"],manualSteps:[{action:"Switch query mode and move or drag the guide.",expected:"Recorded and estimated results follow the specified query."}],knownLimitations:["Linear scales; no extrapolation."],learningOrder:312,visibility:"test-laboratory",visibilityReason:"Deterministic query and drag evidence.",maturity:"contract"},
+ canvas:{width:1000,height:620},actions:[{id:"closest-point",label:"Closest point"},{id:"nearest-per-line",label:"Nearest per line"},{id:"interpolated-x",label:"Interpolate"},{id:"reset",label:"Reset"}],
+ source:{id:"viz-hover-example",language:"tsx",marker:"VIZ_HOVER_SOURCE_ID = 'viz-hover-example'",path:"packages/scenarios/src/learning/composition/viz-hover-comparison.example.tsx"},
+ load:async()=>(await import("./viz-hover-lab.js")).vizHoverScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
   validateScenarioCatalog([
     vizFoundationScenarioEntry,
     vizPointsScenarioEntry,
+    vizHoverScenarioEntry,
     smokeScenarioEntry,
     drawingShapesScenarioEntry,
     drawingLinesScenarioEntry,

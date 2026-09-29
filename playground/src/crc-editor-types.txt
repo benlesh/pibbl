@@ -1531,3 +1531,70 @@ export interface ClosestPointOptions<S extends HoverSeriesMap> {
 export declare function HoverData<T>(props: HoverDataProps<T>): CRCNode;
 export declare function defineSeries<D>(options: HoverSeries<D>): HoverSeries<D>;
 export declare function closestPoint<S extends HoverSeriesMap>(options: ClosestPointOptions<S>): HoverQuery<ClosestPointHit<S>>;
+
+export interface HoverCardStyle {
+  readonly width: Exclude<BoxStyle["width"], undefined | "auto">;
+  readonly height: Exclude<BoxStyle["height"], undefined | "auto">;
+  readonly padding?: BoxStyle["padding"];
+  readonly fill?: FillStyle;
+  readonly stroke?: StrokeStyle;
+  readonly strokeWidth?: number;
+  readonly cornerRadius?: number;
+  readonly opacity?: number;
+  readonly filter?: never;
+  readonly custom?: never;
+}
+export interface HoverCardProps {
+  readonly anchor: SignalValue<HoverPoint>;
+  readonly anchorRadius?: SignalValue<number>;
+  readonly gap?: SignalValue<number>;
+  readonly bounds?: SignalValue<HoverBounds>;
+  readonly placement?: HoverPlacement;
+  readonly style: SignalValue<SignalStyle<HoverCardStyle>>;
+  readonly children?: CRCNode;
+}
+
+export type HoverPlacement = "auto" | "above" | "below" | "right" | "left";
+export interface HoverBounds { readonly x:number; readonly y:number; readonly width:number; readonly height:number; }
+export declare function HoverCard(props: HoverCardProps): CRCNode;
+
+export interface ClosestXOptions<D> {
+  readonly series: HoverSeries<D>;
+  readonly x: SignalValue<number | null>;
+  readonly xScale: ScaleId;
+  readonly yScale: ScaleId;
+  readonly maxDelta?: number;
+}
+export interface ClosestXHit<D> extends HoverHit<D> {
+  readonly delta: number;
+}
+export type HoverInterpolation = (
+  beforeY: number,
+  afterY: number,
+  fraction: number,
+) => number;
+export interface InterpolateXOptions<D> extends Omit<
+  ClosestXOptions<D>,
+  "maxDelta"
+> {
+  readonly interpolation: HoverInterpolation;
+  readonly maxGap?: number;
+  readonly duplicateX?: "error" | "first" | "last";
+}
+export type HoverSample<D> =
+  | (HoverHit<D> & { readonly kind: "exact" })
+  | {
+      readonly kind: "interpolated";
+      readonly x: number;
+      readonly y: number;
+      readonly before: D;
+      readonly after: D;
+      readonly beforeIndex: number;
+      readonly afterIndex: number;
+      readonly fraction: number;
+      readonly anchor: HoverPoint;
+    };
+
+export declare function closestX<D>(options: ClosestXOptions<D>): HoverQuery<ClosestXHit<D>>;
+export declare function interpolateX<D>(options: InterpolateXOptions<D>): HoverQuery<HoverSample<D>>;
+export declare function linearInterpolation(): HoverInterpolation;

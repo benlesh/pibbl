@@ -16,6 +16,8 @@ import {
 } from "@crc/core";
 import {
   Axis,
+  HoverData,
+  HoverCard,
   PointSeries,
   PlotSeries,
   Scale,
@@ -470,39 +472,17 @@ function Marker({ datum, controls }: { datum: Row; controls: Controls }) {
   );
 }
 function PointLabel({ datum }: { datum: Row }) {
-  const xs = useScale("x").get(),
-    ys = useScale("y").get();
-  const anchorX = xs.map(datum.x!),
-    anchorY = ys.map(datum.y!);
-  const width = Math.min(176, xs.frame.width),
-    height = 52;
-  const left = Math.max(0, Math.min(anchorX + 14, xs.frame.width - width));
-  const top = Math.max(
-    0,
-    Math.min(anchorY - height - 12, ys.frame.height - height),
-  );
   return (
-    <Group style={{ translateX: left - anchorX, translateY: top - anchorY }}>
-      <Rectangle
-        pointerEvents="none"
-        style={{
-          width,
-          height,
-          cornerRadius: 7,
-          fill: "rgba(255,255,255,0.92)",
-          stroke: "rgba(98,117,139,0.35)",
-          strokeWidth: 1,
-        }}
-      />
+    <Group>
       <Text
         pointerEvents="none"
-        style={{ x: 10, y: 9, font: "bold 12px sans-serif", fill: ink }}
+        style={{ x: 0, y: 0, font: "bold 12px sans-serif", fill: ink }}
       >
         {datum.label}
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 10, y: 29, font: "12px sans-serif", fill: ink }}
+        style={{ x: 0, y: 20, font: "12px sans-serif", fill: ink }}
       >{`${datum.x} mm · ${datum.y} g`}</Text>
     </Group>
   );
@@ -622,24 +602,45 @@ function Plot({
           render={(d) => <Marker datum={d} controls={controls} />}
         />
       )}
-      {/* Paint the inspection overlay after every mark in either plot. */}
-      <PlotSeries
-        data={data.filter((d) => d.id === selected)}
-        x="x"
-        y="y"
-        xScale="x"
-        yScale="y"
-        keyBy="id"
-        render={(d) => (
-          <Group>
-            <Circle
-              pointerEvents="none"
-              style={{ radius: 9, stroke: d.color, strokeWidth: 2 }}
-            />
-            <PointLabel datum={d} />
-          </Group>
-        )}
-      />
+      {/* The query owns selection/data reads; the card owns safe placement. */}
+      <HoverData
+        query={(context) => {
+          const datum = controls.rows
+            .get()
+            .find((row) => row.id === controls.selected.get());
+          if (!datum || datum.x === null || datum.y === null) return undefined;
+          return {
+            datum,
+            anchor: {
+              x: context.scale("x").map(datum.x),
+              y: context.scale("y").map(datum.y),
+            },
+          };
+        }}
+      >
+        {(hit) =>
+          hit && (
+            <Group>
+              <Group
+                style={{ translateX: hit.anchor.x, translateY: hit.anchor.y }}
+              >
+                <Circle
+                  pointerEvents="none"
+                  style={{ radius: 9, stroke: hit.datum.color, strokeWidth: 2 }}
+                />
+              </Group>
+              <HoverCard
+                anchor={hit.anchor}
+                anchorRadius={10}
+                gap={8}
+                style={{ width: 156, height: 32 }}
+              >
+                <PointLabel datum={hit.datum} />
+              </HoverCard>
+            </Group>
+          )
+        }
+      </HoverData>
     </Group>
   );
 }

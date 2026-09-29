@@ -42,3 +42,39 @@ export interface ClosestPointOptions<S extends HoverSeriesMap> {
   readonly yScale: ScaleId;
   readonly maxDistance?: number;
 }
+export interface ClosestXOptions<D> {
+  readonly series: HoverSeries<D>;
+  readonly x: SignalValue<number | null>;
+  readonly xScale: ScaleId;
+  readonly yScale: ScaleId;
+  readonly maxDelta?: number;
+}
+export interface ClosestXHit<D> extends HoverHit<D> {
+  readonly delta: number;
+}
+export type HoverInterpolation = (
+  beforeY: number,
+  afterY: number,
+  fraction: number,
+) => number;
+export interface InterpolateXOptions<D> extends Omit<
+  ClosestXOptions<D>,
+  "maxDelta"
+> {
+  readonly interpolation: HoverInterpolation;
+  readonly maxGap?: number;
+  readonly duplicateX?: "error" | "first" | "last";
+}
+export type HoverSample<D> =
+  | (HoverHit<D> & { readonly kind: "exact" })
+  | {
+      readonly kind: "interpolated";
+      readonly x: number;
+      readonly y: number;
+      readonly before: D;
+      readonly after: D;
+      readonly beforeIndex: number;
+      readonly afterIndex: number;
+      readonly fraction: number;
+      readonly anchor: HoverPoint;
+    };

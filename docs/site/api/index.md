@@ -19,7 +19,15 @@ supported.
 
 Import visualization primitives from `@crc/viz`: [Scale](#/api/components/scale),
 [Axis](#/api/components/axis), [LineSeries](#/api/components/line-series),
+[PointSeries](#/api/components/point-series), [PlotSeries](#/api/components/plot-series),
 [ScaleAdjust](#/api/components/scale-adjust), and [useScale](#/api/hooks/use-scale).
+Compose inspection with [HoverData](#/api/components/hover-data),
+[HoverCard](#/api/components/hover-card), [defineSeries](#/api/functions/define-series),
+[closestPoint](#/api/functions/closest-point), [closestX](#/api/functions/closest-x),
+[interpolateX](#/api/functions/interpolate-x), and
+[linearInterpolation](#/api/functions/linear-interpolation). Plain snapshot helpers
+[nearestPoint](#/api/functions/nearest-point) and
+[nearestDomainValue](#/api/functions/nearest-domain-value) are also available.
 
 ```ts
 import { Fragment, Rectangle, Text, crc } from "@crc/core";
