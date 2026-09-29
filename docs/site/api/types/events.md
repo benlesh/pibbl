@@ -11,6 +11,8 @@ symbols:
     CRCClipboardEvent,
     CRCCompositionEvent,
     CRCDragEvent,
+    CRCDragHandleProps,
+    CRCDragHandleStyle,
     CRCEvent,
     CRCEventCapturePropName,
     CRCEventHandler,
@@ -28,14 +30,7 @@ symbols:
     CRCKeyboardEvent,
     CRCKeyboardNavigationOptions,
     CRCLogicalMouseEvent,
-    CRCMouseEvent,
-    CRCMouseEventListener,
-    CRCPointerEvent,
-    CRCPointerEvents,
-    CRCTouchEvent,
-    CRCWheelEvent,
-    CRCDragHandleProps,
-    CRCDragHandleStyle,
+    CRCManipulableProps,
     CRCManipulationActive,
     CRCManipulationBox,
     CRCManipulationCancelEvent,
@@ -51,23 +46,23 @@ symbols:
     CRCManipulationPoint,
     CRCManipulationResizeInput,
     CRCManipulationRotateInput,
-    CRCRotationHandleProps,
-    CRCManipulableProps,
     CRCManipulationSnapshot,
     CRCManipulationWhen,
+    CRCMouseEvent,
+    CRCMouseEventListener,
+    CRCPointerEvent,
+    CRCPointerEvents,
     CRCResizeHandleProps,
     CRCResizeHandlesProps,
     CRCResizePosition,
+    CRCRotationHandleProps,
+    CRCTouchEvent,
+    CRCWheelEvent,
   ]
 keywords: [events, pointer, focus, keyboard, propagation]
 ---
 
 # Event types
-
-CRC provides DOM-aligned logical event facades over Canvas geometry. Paint order,
-transforms, and clips remain the source of coordinate targeting; the Canvas is
-the only native focus host.
-
 ## CRCClipboardEvent
 
 `CRCClipboardEvent` is the logical facade for clipboard events and carries the
@@ -80,6 +75,14 @@ same cancellation and propagation controls as the base CRC event.
 ## CRCDragEvent
 
 `CRCDragEvent` is the logical facade for drag-and-drop events.
+
+## CRCDragHandleProps
+
+Supplies a controller, declared region style, and optional content for a drag surface.
+
+## CRCDragHandleStyle
+
+The declared layout box for a drag region.
 
 ## CRCEvent
 
@@ -163,62 +166,9 @@ management.
 `CRCLogicalMouseEvent` is the geometry-targeted mouse facade with root-logical
 coordinates.
 
-## CRCMouseEvent
+## CRCManipulableProps
 
-`CRCMouseEvent` preserves the narrow pathless Canvas-observer mouse payload.
-
-## CRCMouseEventListener
-
-`CRCMouseEventListener` is the callback contract for that narrow root observer.
-
-## CRCPointerEvent
-
-`CRCPointerEvent` is the logical facade for pointer events, including capture
-and CRC root-logical coordinates.
-
-## CRCPointerEvents
-
-`CRCPointerEvents` is exactly `"auto" | "none"`. `"auto"` keeps the receiving
-paint or WebGL geometry in hit resolution; `"none"` opts it and its owned
-interaction bridge out without changing pixels.
-
-## CRCTouchEvent
-
-`CRCTouchEvent` is the logical facade for touch events.
-
-## CRCWheelEvent
-
-`CRCWheelEvent` is the logical facade for wheel events.
-
-## Manipulation contracts
-
-`CRCManipulationBox` is the writable `left`, `top`, `width`, and `height`
-geometry. `CRCManipulationController` exposes `active`, `snapshot`,
-`frameProps`, and `cancel()`. `CRCManipulationFrameProps` is the value supplied
-by `controller.frameProps` for `ManipulationFrame`.
-
-`CRCManipulationActive`, `CRCManipulationSnapshot`, and
-`CRCManipulationEvent` describe the live operation, starting geometry, proposed
-geometry, and applied geometry. `CRCManipulationCommitEvent` adds `changed`;
-`CRCManipulationCancelEvent` adds its cancellation reason.
-
-`CRCManipulationOptions` accepts the writable box and optional move/resize
-configuration. `CRCManipulationMoveInput` controls movement axis, bounds, and
-grid snapping. `CRCManipulationResizeInput` controls size limits, bounds,
-aspect ratio, and size or grid snapping. Their `enabled` values accept signals.
-
-`CRCResizePosition` names the supported frame edges and corners.
-`CRCDragHandleProps`, `CRCDragHandleStyle`, `CRCResizeHandleProps`, and
-`CRCResizeHandlesProps` configure the public handle components.
-
-## CRCDragHandleProps
-
-Supplies a controller, declared region style, and optional content for a drag surface.
-
-## CRCDragHandleStyle
-
-The declared layout box for a drag region.
-
+Binds writable box and optional rotation signals, operation booleans or options, resize-handle selection, lifecycle callbacks, and children for the convenience component.
 ## CRCManipulationActive
 
 Reports the active operation, resize handle, and pointer identifier; the controller publishes null while idle.
@@ -275,6 +225,10 @@ A geometric coordinate pair used by manipulation calculations.
 
 Configures dimension limits, bounds, aspect ratio, size or grid snapping, and optional signal-valued activation.
 
+## CRCManipulationRotateInput
+
+Configures optional signal-valued rotation activation and angular snapping in radians.
+
 ## CRCManipulationSnapshot
 
 Reports initial, proposed, and applied geometry together with requested and satisfied snapping state.
@@ -282,6 +236,25 @@ Reports initial, proposed, and applied geometry together with requested and sati
 ## CRCManipulationWhen
 
 Selects always, shift, alt, ctrl, or meta activation.
+
+## CRCMouseEvent
+
+`CRCMouseEvent` preserves the narrow pathless Canvas-observer mouse payload.
+
+## CRCMouseEventListener
+
+`CRCMouseEventListener` is the callback contract for that narrow root observer.
+
+## CRCPointerEvent
+
+`CRCPointerEvent` is the logical facade for pointer events, including capture
+and CRC root-logical coordinates.
+
+## CRCPointerEvents
+
+`CRCPointerEvents` is exactly `"auto" | "none"`. `"auto"` keeps the receiving
+paint or WebGL geometry in hit resolution; `"none"` opts it and its owned
+interaction bridge out without changing pixels.
 
 ## CRCResizeHandleProps
 
@@ -295,14 +268,36 @@ Selects corners, edges-and-corners, or an explicit list of resize positions for 
 
 Names top-left, top, top-right, right, bottom-right, bottom, bottom-left, or left.
 
-## CRCManipulationRotateInput
-
-Configures optional signal-valued rotation activation and angular snapping in radians.
-
 ## CRCRotationHandleProps
 
 Binds a controller to an external rotation handle with optional custom visuals and CSS-pixel hit size.
 
-## CRCManipulableProps
+## CRCTouchEvent
 
-Binds writable box and optional rotation signals, operation booleans or options, resize-handle selection, lifecycle callbacks, and children for the convenience component.
+`CRCTouchEvent` is the logical facade for touch events.
+
+## CRCWheelEvent
+
+`CRCWheelEvent` is the logical facade for wheel events.
+
+**Manipulation contracts.**
+
+`CRCManipulationBox` is the writable `left`, `top`, `width`, and `height`
+geometry. `CRCManipulationController` exposes `active`, `snapshot`,
+`frameProps`, and `cancel()`. `CRCManipulationFrameProps` is the value supplied
+by `controller.frameProps` for `ManipulationFrame`.
+
+`CRCManipulationActive`, `CRCManipulationSnapshot`, and
+`CRCManipulationEvent` describe the live operation, starting geometry, proposed
+geometry, and applied geometry. `CRCManipulationCommitEvent` adds `changed`;
+`CRCManipulationCancelEvent` adds its cancellation reason.
+
+`CRCManipulationOptions` accepts the writable box and optional move/resize
+configuration. `CRCManipulationMoveInput` controls movement axis, bounds, and
+grid snapping. `CRCManipulationResizeInput` controls size limits, bounds,
+aspect ratio, and size or grid snapping. Their `enabled` values accept signals.
+
+`CRCResizePosition` names the supported frame edges and corners.
+`CRCDragHandleProps`, `CRCDragHandleStyle`, `CRCResizeHandleProps`, and
+`CRCResizeHandlesProps` configure the public handle components.
+
