@@ -22,3 +22,5 @@ defaults to 24 CSS pixels.
 ```tsx
 <ResizeHandle controller={manipulation} position="bottom-right" />
 ```
+
+Related types: [CRCResizeHandleProps](#/api/types/events#crcresizehandleprops), [CRCResizePosition](#/api/types/events#crcresizeposition).

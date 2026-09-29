@@ -212,7 +212,7 @@ function clampResizeToBounds(initial: CRCManipulationBox, handle: CRCResizePosit
   return resizeFromDimensions(initial, handle, clamp(box.width, 1, maxWidth), clamp(box.height, 1, maxHeight));
 }
 
-function applyAspectRatio(initial: CRCManipulationBox, handle: CRCResizePosition, width: number, height: number, value: 'initial' | number | undefined, when: import('./types.js').CRCManipulationWhen | undefined, modifiers: ManipulationSolveInput['modifiers']): readonly [number, number] {
+function applyAspectRatio(initial: CRCManipulationBox, _handle: CRCResizePosition, width: number, height: number, value: 'initial' | number | undefined, when: import('./types.js').CRCManipulationWhen | undefined, modifiers: ManipulationSolveInput['modifiers']): readonly [number, number] {
   if (value === undefined || !isSnapActive(true, when, modifiers)) return [width, height];
   const ratio = value === 'initial' ? initial.width / initial.height : value;
   if (!Number.isFinite(ratio) || ratio <= 0) throw new Error('Resize aspect ratio must be finite and greater than zero.');

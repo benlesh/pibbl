@@ -10,6 +10,7 @@ import type {
   CRCElementType,
   CRCKey,
 } from './types.js';
+import { isDevelopment } from '../development.js';
 
 const CRC_ELEMENT_TYPE = Symbol.for('@crc/core.element');
 
@@ -106,9 +107,6 @@ function finalizeCRCElement<P>(
     },
   });
 
-  const isDevelopment = (
-    import.meta as ImportMeta & { env?: { readonly DEV?: boolean } }
-  ).env?.DEV ?? false;
   if (isDevelopment) {
     Object.freeze(props);
     Object.freeze(element);

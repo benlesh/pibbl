@@ -1,5 +1,5 @@
 /** @jsxImportSource @crc/core */
-import { Grid, Rectangle, Text, type CRCNode } from '@crc/core';
+import { Grid, Group, Rectangle, Text, type CRCNode } from '@crc/core';
 
 export interface PosterProps {
   readonly title: string;

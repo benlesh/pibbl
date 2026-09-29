@@ -24,3 +24,5 @@ box, or the enclosing frame allocation when no dimensions are supplied.
   <Rectangle style={{ width: 180, height: 100, fill: "#2563eb" }} />
 </DragHandle>
 ```
+
+Related types: [CRCDragHandleProps](#/api/types/events#crcdraghandleprops), [CRCDragHandleStyle](#/api/types/events#crcdraghandlestyle), [CRCManipulationController](#/api/types/events#crcmanipulationcontroller).
