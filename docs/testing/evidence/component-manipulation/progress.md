@@ -87,3 +87,9 @@ This section supersedes the earlier next-action list; the feature remains incomp
 - Fresh `corepack pnpm@11.21.0 build` succeeded, followed by the public manipulation interaction/example/terminal/transforms/rotation/ownership/performance and layout diagnostics suites with `--mode built --browser.headless --browser.ui=false --maxWorkers=4`: eight files / 35 tests passed. This confirms built-package behavior; explicit production environment evidence remains the separate six-mode probe described above.
 
 - Repeat full source `corepack pnpm@11.21.0 test:ci` after the migration fixes: 325 passed / four failed files; 3873 passed / five failed / four skipped tests, no unhandled errors, 94.02 seconds. Four failures are the pending placement handoff (public positioning regression, allocated viz axis, two tutorial reset cases). One physics learning-example release case failed and is under independent timing investigation. The particle replay case passed this audit; it also passed six focused worker runs with no threshold or semantic changes. This remains a failing aggregate browser result, not completion.
+
+## Independent final-gate progress
+
+- `corepack pnpm@11.21.0 trust:static` passed (exit 0) on Node 24.15.0 / pnpm 11.21.0. This includes scenario/docs/Studio checks, production documentation boundary, typecheck, lint, all package builds, and source/built Studio builds. Log: `/tmp/crc-manipulation-static-current.log`.
+- `corepack pnpm@11.21.0 trust:lifecycle` passed (exit 0): ownership 15 files / 64 tests; structural performance ten files / 65 passed / four skipped. Log: `/tmp/crc-manipulation-lifecycle-current.log`. These do not substitute for the still-failing full browser gate.
+- Task 8 audit identified absent direct public evidence for external writes inside lifecycle callbacks. A reused worker is adding `onStart`/`onChange` write-precedence cases, independent of the pending positioning decision.
