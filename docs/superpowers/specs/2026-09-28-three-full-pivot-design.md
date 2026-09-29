@@ -1,6 +1,6 @@
 # Three.js full pivot design
 
-> **Status: APPROVED IMPLEMENTATION DIRECTION.** This record completes the
+> **Historical status: This approved design records the completed Three.js pivot and is not current guidance.** This record completes the
 > replacement approved in the 2026-09-18 generic render-layer and Three.js
 > design. The user's explicit instruction is to finish the pivot, remove the
 > old WebGL product, merge it to `main`, and push it.
@@ -116,4 +116,3 @@ The pivot is complete only when all of the following are true:
 - the complete `corepack pnpm@11.21.0 trust` gate passes on Node 24.15+;
 - the feature branch is committed, merged locally into `main`, and `main` is
   pushed successfully.
-

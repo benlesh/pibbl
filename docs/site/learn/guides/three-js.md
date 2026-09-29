@@ -107,7 +107,7 @@ click through a sphere or cube.
 Return selected objects from `targets()` when they should become logical CRC
 targets:
 
-```ts
+```text
 targets(resources, props) {
   return [{
     object: resources.product,
@@ -136,7 +136,7 @@ but it does not replace browser input arbitration.
 
 Controls that expect a DOM element connect through `context.input`:
 
-```ts
+```text
 create(context) {
   const scene = new Scene();
   const camera = new PerspectiveCamera();

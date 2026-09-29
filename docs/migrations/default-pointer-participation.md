@@ -1,12 +1,13 @@
 # Default drawing pointer participation
 
-Status: migration guidance for the shipped WebGL-islands interaction model,
-effective 2026-09-10.
+Status: migration guidance for default Canvas and committed external-renderer
+interaction, updated for the Three.js pivot on 2026-09-28.
 
 CRC drawing primitives now participate in coordinate hit testing by default,
 even when they have no event handler, cursor, or focus option. This aligns
-Canvas 2D and WebGL drawing: a visible front object owns its declared geometry
-unless the author explicitly makes it transparent to hit testing.
+Canvas 2D drawing and external-renderer targets: visible front content owns its
+declared geometry unless the author explicitly makes it transparent to hit
+testing.
 
 ## What changed
 
@@ -14,11 +15,16 @@ Previously, a Canvas drawing primitive created a logical target only when
 interactive metadata required one. Passive front paint therefore allowed a
 registered target behind it to win.
 
-Now every Canvas drawing primitive and every `Mesh`, `Cube`, or `Sphere` uses
-`pointerEvents="auto"` by default. A hit returns that leaf as the logical
-target and stops search behind it. This is true even when the matching handler
-exists only on a propagation ancestor. Paint opacity and filtered pixels do not
-change the declared hit geometry.
+Now every Canvas drawing primitive uses `pointerEvents="auto"` by default. A hit
+returns that leaf as the logical target and stops search behind it. This is true
+even when the matching handler exists only on a propagation ancestor. Paint
+opacity and filtered pixels do not change the declared hit geometry.
+
+External render layers publish their matching interaction generation at the
+same Canvas paint position. The Three.js adapter's default raycaster reports a
+registered object as a CRC target, visible unregistered geometry as a blocker,
+and empty pixels as a miss. A declared Three target may opt out with
+`pointerEvents="none"`.
 
 `pointerEvents="none"` is the explicit opt-out. It preserves painting while
 removing that primitive from coordinate picking and focus participation:
@@ -55,10 +61,10 @@ accept event-handler props as propagation listeners. They contribute ancestry
 but no hit geometry. Clicking empty space in a group or layout allocation does
 not select that structural component.
 
-The same listener-only rule applies to `WebGLLayer` and `Group3D`. A handler on
-either runs only when a selected WebGL descendant's event propagates through
-it. Empty transparent `WebGLLayer` background is a miss and can pass through to
-lower Canvas content.
+An external render layer is one flattened Canvas composition entry rather than
+a CRC container for its renderer-native objects. Its committed targets provide
+logical leaves, while `missBehavior` explicitly chooses whether empty pixels
+pass through, block lower paint, or target the layer itself.
 
 ## Audit an existing scene
 
@@ -68,17 +74,17 @@ Review paint from front to back, especially:
 2. decorative strokes, guides, masks, highlights, and selection outlines;
 3. opacity-zero primitives that retain declared geometry;
 4. filtered primitives whose blur or shadow does not enlarge hit geometry;
-5. Canvas content painted after a WebGL island;
-6. WebGL objects meant to reveal another object or Canvas target behind them.
+5. Canvas content painted after an external render layer;
+6. Three objects meant to reveal another object or Canvas target behind them.
 
-Add `pointerEvents="none"` only where click-through is intended. Do not add it
-to an ancestor merely to make one leaf transparent: on `WebGLLayer` it disables
-the entire island picker, while drawing-leaf opt-out skips only that object.
+Add `pointerEvents="none"` only where click-through is intended. On a render
+layer component it disables the complete committed resolver, while opt-out on a
+declared Three target skips only that object subtree in default picking.
 
-Custom Canvas targets created by `useEventTarget` remain explicit. Custom
-WebGL primitives must declare geometry/custom hit behavior or the decorative
-`none` capability; decorative definitions permit only
-`pointerEvents="none"`.
+Custom Canvas targets created by `useEventTarget` remain explicit. Generic
+render layers publish targets and a hit test through their interaction snapshot;
+`defineThreeLayer()` derives the default behavior from ordinary Three objects
+and optional target declarations.
 
 ## Event dispatch after selection
 
@@ -89,5 +95,5 @@ leaf participates in selection; it does not turn overlapping siblings into one
 event path or make structural allocations into implicit rectangles.
 
 See the [user-event contract](../design/user-events-contract.md), [mouse
-geometry contract](../design/mouse-interaction-contract.md), and [WebGL islands
-guide](../site/learn/guides/webgl-islands.md).
+geometry contract](../design/mouse-interaction-contract.md), and [Three.js
+integration guide](../site/learn/guides/three-js.md).

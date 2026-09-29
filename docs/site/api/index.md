@@ -20,7 +20,7 @@ import { Rectangle, Text, crc, defineRenderLayer } from "@crc/core";
 import { defineThreeLayer } from "@crc/three";
 import { Particles2D } from "@crc/particles";
 import { PhysicsWorld2D } from "@crc/physics/2d";
-import { raycast3D } from "@crc/physics/3d/geometry";
+import { raycastShape3D } from "@crc/physics/3d/geometry";
 import { Axis, LineSeries, Scale } from "@crc/viz";
 ```
 
@@ -89,11 +89,18 @@ There is no root `@crc/physics` barrel and no independent physics clock.
 
 ## Compiler entries
 
-`@crc/core/jsx-runtime` exports `Fragment`, `jsx`, and `jsxs`; its local
-`JSX` namespace describes CRC elements and synchronous component types.
-`@crc/core/jsx-dev-runtime` exports `Fragment` and `jsxDEV` plus the same
-local namespace. These compiler-facing constructors are not normal application
-APIs: use JSX or `createElement`, never call them directly.
+`@crc/core/jsx-runtime` exports `Fragment`, `jsx`, and `jsxs`; its local `JSX`
+namespace exports `Element`, `ElementType`, `ElementChildrenAttribute`,
+`IntrinsicAttributes`, `IntrinsicElements`, and `LibraryManagedAttributes`.
+`Element` is the branded `CRCElement`; `ElementType` is a synchronous CRC
+component; `ElementChildrenAttribute` names `children`; `IntrinsicAttributes`
+admits a string or numeric `key`; `IntrinsicElements` is empty; and
+`LibraryManagedAttributes` maps primitive values to their specified-style input.
+
+`@crc/core/jsx-dev-runtime` exports `Fragment` and `jsxDEV` plus the same local
+`JSX` namespace. `jsxDEV` carries development-only filename, line, and column
+metadata for diagnostics. These compiler-facing constructors are not normal
+application APIs: use JSX or `createElement`, never call them directly.
 
 `@crc/core/types` preserves the explicit type-only package entry. Most authors
 can import types from `@crc/core` beside the corresponding runtime values.

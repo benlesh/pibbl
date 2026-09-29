@@ -1,5 +1,7 @@
 # Three.js full pivot implementation plan
 
+> **Historical status: This dated implementation plan records the Three.js pivot and is not current guidance.**
+
 > Execute continuously in thin, observable slices. Use one implementation
 > agent and one review agent at most. Preserve unrelated changes in the main
 > checkout until final integration.
@@ -54,4 +56,3 @@
 - Commit the pivot branch, merge it locally into `main` without losing
   unrelated user work, commit any explicitly requested remaining changes, and
   push `main`.
-

@@ -134,7 +134,7 @@ complete CSS.
 
 | Area                | Current confidence                                                                                                                                                                                                                                                                                   | Boundary                                                               |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Public declarations | **Trusted.** Exact source/built/Studio export-name parity covers the surviving core, particles, physics 2D/geometry, visualization, and Three adapter entries; strict TSX, Bundler, NodeNext, and mixed-runtime consumers pass.                                                                      | `@crc/types` remains a deliberately minimal compatibility package.     |
+| Public declarations | **Trusted.** Exact source/built/Studio export-name parity covers the surviving core, particles, physics 2D/geometry, visualization, and Three adapter entries, including 194 root type imports; strict TSX, Bundler, NodeNext, and mixed-runtime consumers pass.                                     | `@crc/types` remains a deliberately minimal compatibility package.     |
 | Package output      | **Trusted.** ESM runtime/declarations/maps, packed no-source consumers, blocked private imports, one external Three identity, and the version-coupled internal seam used only by matching official packages are covered.                                                                             | ESM-only; application code must not import `@crc/core/internal`.       |
 | Studio              | **Trusted.** TSX automatic runtime, source/built execution, exact surviving runtime/editor export parity, 59 lessons, 24 labs, editing diagnostics, and catalog/source identity are covered.                                                                                                         | Internal Studio, not a hosted documentation product.                   |
 | Documentation       | **Checked.** Required guides, link anchors, fail-closed API inventories, exhaustive current-contract preservation, explicit pivot approvals, direct source/test mappings, snippets, compiler transforms, historical banners, adversarial mutations, and active-vocabulary scans run in `docs:check`. | Prose cannot replace browser/runtime evidence.                         |
@@ -154,7 +154,7 @@ pivot, and the evidence inventory maps those obligations to direct source and
 test evidence. It covers 667 preserved baseline units and 815 current semantic
 units across all 12 baseline-snapshotted normative contracts. Together with the
 post-baseline signal, animation, and render-layer/Three records, this covers 15
-current normative contracts. Those three records contain 139 exhaustively
+current normative contracts. Those three records contain 138 exhaustively
 mapped post-baseline units. The evidence inventory contains 56 unique direct
 source/test mappings. It also inspects the cited examples/tests for the
 behaviors claimed in the Text, Layer, focus, and complete non-JSX rows;

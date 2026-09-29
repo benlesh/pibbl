@@ -357,9 +357,10 @@ function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
 
 - CRC does not implement CSS or Web Animations syntax, implicit transitions,
   deep signal unwrapping, or a retained scene graph.
-- There is no general physics/collision engine, mutable timeline builder,
-  timeline label language, arbitrary program callback node, audio/network clock,
-  root-owned playback, or persistent serialized playback session.
+- Animation does not absorb physics/collision semantics, provide a mutable
+  timeline builder, timeline label language, arbitrary program callback node,
+  audio/network clock, root-owned playback, or persistent serialized playback
+  session.
 - There is no automatic caching, worker/WASM execution, cross-thread signal,
   synchronous GPU readback, public manual clock, or public retained trace.
 - Future worker or WASM number crunching may use packed buffers only if Begin
@@ -368,7 +369,3 @@ function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
   identical. Custom callbacks and nonserializable values stay on the main thread.
 - Applications select reduced or alternate motion; CRC does not infer
   accessibility preferences or decide which motion is essential.
-
-## 3D physics interoperation
-
-Animation and physics share the realm transaction but never compete for one pose. Enabled dynamic bodies are solver-owned; kinematic position and orientation signal targets are sampled after animation staging and before solving; disabled bodies return root-pose authority to authored style or animation. Re-enabling seeds the current authored pose and an explicit zero-or-preserve velocity policy, while ordinary non-pose appearance remains animatable in every mode.

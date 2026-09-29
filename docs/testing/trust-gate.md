@@ -59,7 +59,7 @@ contention observed during earlier upgrade and visual work.
   narrow design unit IDs and excerpts; every translation has exact
   baseline/current unit IDs, unique rationale,
   shared clause anchors, and minimum content similarity checked before the
-  digest. Together with 139 mapped units across the post-baseline signal,
+  digest. Together with 138 mapped units across the post-baseline signal,
   animation, and render-layer/Three records, this covers 15 current normative
   contracts. The 56 direct source/test mappings use claims no broader than their
   cited tests and require the same claim-specific anchors near both markers;

@@ -196,6 +196,19 @@ props or resources rather than CRC style: `@crc/three` does not reinterpret
 Three materials, transforms, lights, cameras, or renderer options as Canvas
 style.
 
+There is no runtime compatibility adapter, alias, or fallback for top-level
+visual fields, content in `TextStyle`, or a render element/descriptor prop for
+layer content. JavaScript receives the same strict resolution and child
+diagnostics as TypeScript.
+
+`opacity: 0` suppresses paint without removing separately registered target
+geometry. Image generations remain keyed by `style.src`; source races,
+load/error settlement, source replacement, removal, and disposal retain exact
+resource ownership. Explicit image dimensions establish geometry before load
+and after failure, while each omitted natural dimension remains zero until a
+successful load supplies it. `Group` transforms retain the order documented in
+the drawing contract.
+
 ## Deliberate exclusions
 
 CRC does not implement cascade, inheritance, selectors, specificity,
@@ -243,10 +256,6 @@ Their centers and size/radius fields describe local drawing geometry, while
 `BoxStyle` and `LayoutItemStyle` still describe allocation and placement. The
 numeric creator option types deliberately do not accept `Length`, paint,
 cursor, event, or layout fields.
-
-## 3D physics transform authority
-
-A 3D rigid-body pose contains translation and quaternion orientation, never scale. CRC forward-composes exact authored transform lineage below a compound body; scale and mirroring are baked into immutable collider geometry and automatic mass/inertia. Enabled dynamics reject competing authored root-pose changes, kinematic targets are application-owned moving poses, statics follow authored placement as topology, and disabled bodies stop physics presentation and accept authored motion. Shape/BVH and shape-to-render-geometry identity caches use weak descriptor keys rather than reference-counted runtime ownership.
 
 ## Allocation-relative responsive inputs
 
