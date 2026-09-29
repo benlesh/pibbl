@@ -356,3 +356,12 @@ export type {
   CRCTouchEvent,
   CRCWheelEvent,
 } from './lib/events/types.js';
+
+export { useManipulation } from './lib/manipulation/controller.js';
+export { ManipulationFrame } from './lib/manipulation/frame.js';
+export { DragHandle, ResizeHandle, ResizeHandles } from './lib/manipulation/handles.js';
+export type { CRCManipulationController, CRCManipulationOptions, CRCManipulationSnapshot, CRCManipulationEvent, CRCManipulationCommitEvent, CRCManipulationCancelEvent, CRCManipulationCancelReason, CRCManipulationGeometry, CRCManipulationOperation, CRCManipulationActive, CRCManipulationFrameProps, CRCManipulationMoveInput, CRCManipulationResizeInput } from './lib/manipulation/controller-types.js';
+export type { CRCManipulationBox, CRCManipulationPoint, CRCManipulationWhen, CRCResizePosition } from './lib/manipulation/types.js';
+export type { CRCDragHandleProps, CRCDragHandleStyle } from './lib/manipulation/handles.js';
+
+export type { CRCResizeHandleProps, CRCResizeHandlesProps } from './lib/manipulation/handles.js';

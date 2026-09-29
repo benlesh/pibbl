@@ -101,10 +101,10 @@ describe('filter rendering', () => {
       },
       children: [
         createElement(Rectangle, {
-          style: { x: 10, y: 10, width: 30, height: 30, fill: 'red' },
+          style: { left: 10, top: 10, width: 30, height: 30, fill: 'red' },
         }),
         createElement(Rectangle, {
-          style: { x: 30, y: 10, width: 30, height: 30, fill: 'blue' },
+          style: { left: 30, top: 10, width: 30, height: 30, fill: 'blue' },
         }),
       ],
     }), 80, 60);
@@ -123,10 +123,10 @@ describe('filter rendering', () => {
     };
     const children = [
       createElement(Rectangle, {
-        style: { x: 10, y: 10, width: 30, height: 30, fill: 'red' },
+        style: { left: 10, top: 10, width: 30, height: 30, fill: 'red' },
       }),
       createElement(Rectangle, {
-        style: { x: 30, y: 10, width: 30, height: 30, fill: 'blue' },
+        style: { left: 30, top: 10, width: 30, height: 30, fill: 'blue' },
       }),
     ];
 
@@ -194,8 +194,8 @@ describe('filter rendering', () => {
 
     const canvas = await renderScene(createElement(Rectangle, {
       style: {
-        x: 4,
-        y: 4,
+        left: 4,
+        top: 4,
         width: 12,
         height: 12,
         fill: 'red',
@@ -296,17 +296,17 @@ describe('filter rendering', () => {
       style: { filter: { type: 'grayscale', amount: 1 } },
       children: [
         createElement(Rectangle, {
-          style: { x: 2, y: 2, width: 8, height: 8, fill: 'red' },
+          style: { left: 2, top: 2, width: 8, height: 8, fill: 'red' },
         }),
         createElement(Text, {
-          style: { x: 12, y: 2, fill: 'blue', font: '10px sans-serif' },
+          style: { left: 12, top: 2, fill: 'blue', font: '10px sans-serif' },
           children: 'filter',
         }),
         createElement(Image, {
           style: {
             src: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
-            x: 2,
-            y: 12,
+            left: 2,
+            top: 12,
             width: 8,
             height: 8,
             stroke: 'purple',

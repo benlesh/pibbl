@@ -61,8 +61,8 @@ describe('overlay layout', () => {
       observed = useLayoutBox();
       return createElement(Rectangle, {
         style: {
-          x: 0,
-          y: 0,
+          left: 0,
+          top: 0,
           width: style.width,
           height: style.height,
           fill: 'red',

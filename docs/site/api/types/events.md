@@ -34,6 +34,27 @@ symbols:
     CRCPointerEvents,
     CRCTouchEvent,
     CRCWheelEvent,
+    CRCDragHandleProps,
+    CRCDragHandleStyle,
+    CRCManipulationActive,
+    CRCManipulationBox,
+    CRCManipulationCancelEvent,
+    CRCManipulationCancelReason,
+    CRCManipulationCommitEvent,
+    CRCManipulationController,
+    CRCManipulationEvent,
+    CRCManipulationFrameProps,
+    CRCManipulationGeometry,
+    CRCManipulationMoveInput,
+    CRCManipulationOperation,
+    CRCManipulationOptions,
+    CRCManipulationPoint,
+    CRCManipulationResizeInput,
+    CRCManipulationSnapshot,
+    CRCManipulationWhen,
+    CRCResizeHandleProps,
+    CRCResizeHandlesProps,
+    CRCResizePosition,
   ]
 keywords: [events, pointer, focus, keyboard, propagation]
 ---
@@ -165,3 +186,108 @@ interaction bridge out without changing pixels.
 ## CRCWheelEvent
 
 `CRCWheelEvent` is the logical facade for wheel events.
+
+## Manipulation contracts
+
+`CRCManipulationBox` is the writable `left`, `top`, `width`, and `height`
+geometry. `CRCManipulationController` exposes `active`, `snapshot`,
+`frameProps`, and `cancel()`. `CRCManipulationFrameProps` is the value supplied
+by `controller.frameProps` for `ManipulationFrame`.
+
+`CRCManipulationActive`, `CRCManipulationSnapshot`, and
+`CRCManipulationEvent` describe the live operation, starting geometry, proposed
+geometry, and applied geometry. `CRCManipulationCommitEvent` adds `changed`;
+`CRCManipulationCancelEvent` adds its cancellation reason.
+
+`CRCManipulationOptions` accepts the writable box and optional move/resize
+configuration. `CRCManipulationMoveInput` controls movement axis, bounds, and
+grid snapping. `CRCManipulationResizeInput` controls size limits, bounds,
+aspect ratio, and size or grid snapping. Their `enabled` values accept signals.
+
+`CRCResizePosition` names the supported frame edges and corners.
+`CRCDragHandleProps`, `CRCDragHandleStyle`, `CRCResizeHandleProps`, and
+`CRCResizeHandlesProps` configure the public handle components.
+
+## CRCDragHandleProps
+
+Supplies a controller, declared region style, and optional content for a drag surface.
+
+## CRCDragHandleStyle
+
+The declared layout box for a drag region.
+
+## CRCManipulationActive
+
+Reports the active operation, resize handle, and pointer identifier; the controller publishes null while idle.
+
+## CRCManipulationBox
+
+Readonly left, top, width, and height geometry stored in the writable box signal.
+
+## CRCManipulationCancelEvent
+
+A terminal cancellation snapshot with before/after geometry and a cancellation reason.
+
+## CRCManipulationCancelReason
+
+The closed vocabulary for explicit cancellation, input loss, disabled operations, external changes, coordinate changes, and unsatisfiable constraints.
+
+## CRCManipulationCommitEvent
+
+A terminal committed snapshot whose changed field indicates whether geometry differs from the start.
+
+## CRCManipulationController
+
+Exposes readonly active and snapshot signals, stable frameProps, and cancel().
+
+## CRCManipulationEvent
+
+An immutable operation snapshot with before and after geometry.
+
+## CRCManipulationFrameProps
+
+Binds a controller and its original writable box signal to a frame, with optional children.
+
+## CRCManipulationGeometry
+
+Combines a box with rotation in radians.
+
+## CRCManipulationMoveInput
+
+Configures movement axes, parent-space bounds, grid snapping, and optional signal-valued activation.
+
+## CRCManipulationOperation
+
+Names move, resize, or rotate operations.
+
+## CRCManipulationOptions
+
+Binds writable geometry, move/resize options, and start/change/commit/cancel callbacks.
+
+## CRCManipulationPoint
+
+A geometric coordinate pair used by manipulation calculations.
+
+## CRCManipulationResizeInput
+
+Configures dimension limits, bounds, aspect ratio, size or grid snapping, and optional signal-valued activation.
+
+## CRCManipulationSnapshot
+
+Reports initial, proposed, and applied geometry together with requested and satisfied snapping state.
+
+## CRCManipulationWhen
+
+Selects always, shift, alt, ctrl, or meta activation.
+
+## CRCResizeHandleProps
+
+Binds one named edge or corner to a controller, with optional custom visuals and hit size.
+
+## CRCResizeHandlesProps
+
+Selects corners, edges-and-corners, or an explicit list of resize positions for one controller.
+
+## CRCResizePosition
+
+Names top-left, top, top-right, right, bottom-right, bottom, bottom-left, or left.

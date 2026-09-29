@@ -5,8 +5,8 @@ function MouseOutStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#17211d",
@@ -14,8 +14,8 @@ function MouseOutStudy() {
     />,
     <Rectangle
       style={{
-        x: 190,
-        y: 68,
+        left: 190,
+        top: 68,
         width: 340,
         height: 284,
         fill: inside.get() ? "#f7c948" : "#74d3ae",
@@ -29,8 +29,8 @@ function MouseOutStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 166,
+        left: 360,
+        top: 166,
         fill: "#17211d",
         font: "900 42px sans-serif",
         textAlign: "center",
@@ -40,8 +40,8 @@ function MouseOutStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 244,
+        left: 360,
+        top: 244,
         fill: "#17211d",
         font: "700 15px monospace",
         textAlign: "center",

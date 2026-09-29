@@ -53,8 +53,8 @@ function AbsoluteOverlayStudy() {
         />
         <Text
           style={{
-            x: 130,
-            y: 14,
+            left: 130,
+            top: 14,
             fill: "#17211d",
             font: "800 22px sans-serif",
             textAlign: "center",

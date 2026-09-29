@@ -90,8 +90,8 @@ function FirefliesStudy() {
       <Text
         pointerEvents="none"
         style={{
-          x: 30,
-          y: 42,
+          left: 30,
+          top: 42,
           fill: '#eaffaa',
           font: '900 25px sans-serif',
         }}
@@ -101,8 +101,8 @@ function FirefliesStudy() {
       <Text
         pointerEvents="none"
         style={{
-          x: 30,
-          y: 67,
+          left: 30,
+          top: 67,
           fill: '#86efac',
           font: '700 12px monospace',
         }}

@@ -4,8 +4,8 @@ function MouseOverStudy() {
   const card = (x: number, color: string, label: string) => [
     <Rectangle
       style={{
-        x,
-        y: 108,
+        left: x,
+        top: 108,
         width: 176,
         height: 210,
         fill: color,
@@ -17,8 +17,8 @@ function MouseOverStudy() {
     />,
     <Text
       style={{
-        x: x + 88,
-        y: 196,
+        left: x + 88,
+        top: 196,
         fill: "#17211d",
         font: "900 22px sans-serif",
         textAlign: "center",
@@ -30,8 +30,8 @@ function MouseOverStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7f0df",
@@ -42,8 +42,8 @@ function MouseOverStudy() {
     ...card(480, "#f7c948", "PLAY"),
     <Text
       style={{
-        x: 360,
-        y: 352,
+        left: 360,
+        top: 352,
         fill: "#17211d",
         font: "800 15px monospace",
         textAlign: "center",

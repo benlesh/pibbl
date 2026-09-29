@@ -4,8 +4,8 @@ function TypeStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7f0df",
@@ -13,8 +13,8 @@ function TypeStudy() {
     />,
     <Rectangle
       style={{
-        x: 48,
-        y: 46,
+        left: 48,
+        top: 46,
         width: 624,
         height: 328,
         fill: "#fffdf6",
@@ -24,8 +24,8 @@ function TypeStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 82,
+        left: 360,
+        top: 82,
         fill: accent.get(),
         font: "900 52px sans-serif",
         textAlign: "center",
@@ -39,8 +39,8 @@ function TypeStudy() {
     </Text>,
     <Text
       style={{
-        x: 96,
-        y: 184,
+        left: 96,
+        top: 184,
         width: 528,
         height: 92,
         lineHeight: 30,
@@ -56,8 +56,8 @@ function TypeStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 326,
+        left: 360,
+        top: 326,
         fill: "#5f665f",
         font: "700 13px monospace",
         textAlign: "center",

@@ -1,5 +1,5 @@
 /** @jsxImportSource @crc/core */
-import { Grid, Rectangle, Text, type CRCNode } from '@crc/core';
+import { Grid, Group, Rectangle, Text, type CRCNode } from '@crc/core';
 
 export interface PosterProps {
   readonly title: string;
@@ -24,17 +24,14 @@ export function Poster({ title }: PosterProps): CRCNode {
           gridRowStart: 1,
         }}
       />
-      <Text
+      <Group
         style={{
-          x: 12,
-          y: 24,
-          fill: '#ffffff',
           gridColumnStart: 1,
           gridRowStart: 2,
         }}
       >
-        {title}
-      </Text>
+        <Text style={{ left: 12, top: 24, fill: '#ffffff' }}>{title}</Text>
+      </Group>
     </Grid>
   );
 }

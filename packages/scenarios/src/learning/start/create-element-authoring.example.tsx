@@ -32,8 +32,8 @@ function CreateElementPoster(_props: Record<never, never>) {
         { key: label, children: null },
         createElement(Rectangle, {
           style: {
-            x: 154 + index * 142,
-            y: 208,
+            left: 154 + index * 142,
+            top: 208,
             width: 88,
             height: 60,
             fill: label === selection.get() ? "#74d3ae" : "#f7c948",
@@ -51,8 +51,8 @@ function CreateElementPoster(_props: Record<never, never>) {
           Text,
           {
             style: {
-              x: 198 + index * 142,
-              y: 245,
+              left: 198 + index * 142,
+              top: 245,
               fill: "#17211d",
               font: "800 15px monospace",
               textAlign: "center",
@@ -75,8 +75,8 @@ function CreateElementPoster(_props: Record<never, never>) {
       }),
       createElement(Rectangle, {
         style: {
-          x: 96,
-          y: 58,
+          left: 96,
+          top: 58,
           width: 528,
           height: 304,
           fill: "#312e81",
@@ -88,8 +88,8 @@ function CreateElementPoster(_props: Record<never, never>) {
         Text,
         {
           style: {
-            x: 360,
-            y: 118,
+            left: 360,
+            top: 118,
             fill: "#f7c948",
             font: "900 31px sans-serif",
             textAlign: "center",
@@ -101,8 +101,8 @@ function CreateElementPoster(_props: Record<never, never>) {
         Text,
         {
           style: {
-            x: 360,
-            y: 164,
+            left: 360,
+            top: 164,
             fill: "#ffffff",
             font: "700 16px monospace",
             textAlign: "center",
@@ -115,8 +115,8 @@ function CreateElementPoster(_props: Record<never, never>) {
         Text,
         {
           style: {
-            x: 360,
-            y: 322,
+            left: 360,
+            top: 322,
             fill: "#ffffff",
             font: "700 13px monospace",
             textAlign: "center",

@@ -59,8 +59,8 @@ describe('Canvas 2D collider inference', () => {
     mounts.push(crc(canvas, (
       <PhysicsWorld2D>
         <Capture />
-        <Rectangle physics={body()} style={{ x: 1, y: 1, width: 8, height: 6 }} />
-        <Rectangle physics={body()} style={{ x: 10, y: 1, width: 8, height: 6, cornerRadius: 1 }} />
+        <Rectangle physics={body()} style={{ left: 1, top: 1, width: 8, height: 6 }} />
+        <Rectangle physics={body()} style={{ left: 10, top: 1, width: 8, height: 6, cornerRadius: 1 }} />
         <Circle physics={body()} style={{ cx: 5, cy: 15, radius: 3 }} />
         <Ellipse physics={body()} style={{ cx: 15, cy: 15, radiusX: 4, radiusY: 2 }} />
         <Arc physics={body()} style={{ cx: 25, cy: 15, radius: 4, startAngle: 0, endAngle: Math.PI, strokeWidth: 2 }} />
@@ -73,7 +73,7 @@ describe('Canvas 2D collider inference', () => {
         <HorizontalLine physics={body()} style={{ x1: 14, x2: 24, y: 27, strokeWidth: 2 }} />
         <VerticalLine physics={body()} style={{ x: 28, y1: 23, y2: 31, strokeWidth: 0 }} />
         <SvgPath physics={body()} style={{ d: 'M 34 23 L 42 23 L 42 31 L 34 31 Z', fill: '#000' }} />
-        <Text physics={body()} style={{ x: 46, y: 23, width: 10, height: 8 }}>stable</Text>
+        <Text physics={body()} style={{ left: 46, top: 23, width: 10, height: 8 }}>stable</Text>
         <Capsule2D physics={body()} style={{ start: [60, 27], end: [70, 27], radius: 2 }} />
         <Segment2D physics={body()} style={{ start: [74, 27], end: [82, 27] }} />
         <Chain2D physics={body()} style={{ points: [[86, 23], [94, 23], [94, 31]], radius: 1 }} />

@@ -237,7 +237,7 @@ describe('Layer children and retained subtree contract', () => {
       renders.nested++;
       nestedSignal.get();
       return createElement(Rectangle, {
-        style: { x: 20, width: 20, height: 20, fill: 'blue' },
+        style: { left: 20, width: 20, height: 20, fill: 'blue' },
       });
     };
     const BChild = (_props: {}): CRCNode => {
@@ -336,7 +336,7 @@ describe('Layer children and retained subtree contract', () => {
       renders.a++;
       return createElement(Rectangle, {
         style: {
-          x: childX.get(),
+          left: childX.get(),
           width: 10,
           height: 10,
           fill: 'red',
@@ -474,7 +474,7 @@ describe('Layer children and retained subtree contract', () => {
     const Counted = (_props: {}) => {
       childRenders += 1;
       return createElement(Rectangle, {
-        style: { x: 10, y: 10, width: 30, height: 30, fill: '#ef4444' },
+        style: { left: 10, top: 10, width: 30, height: 30, fill: '#ef4444' },
       });
     };
     const scene = (amount: number) => createElement(Layer, {
@@ -515,8 +515,8 @@ describe('Layer children and retained subtree contract', () => {
           style: { width: 70, height: 50 },
           children: createElement(Rectangle, {
             style: {
-              x: 10,
-              y: 10,
+              left: 10,
+              top: 10,
               width: 30,
               height: 20,
               fill: '#2563eb',
@@ -572,7 +572,7 @@ describe('Layer children and retained subtree contract', () => {
     function CountedChild(): CRCNode {
       childRenders++;
       return createElement(Rectangle, {
-        style: { x: 20, y: 10, width: 40, height: 30, fill: '#ef4444' },
+        style: { left: 20, top: 10, width: 40, height: 30, fill: '#ef4444' },
       });
     }
     const iterable: Iterable<CRCNode> = {
@@ -674,7 +674,7 @@ describe('Layer children and retained subtree contract', () => {
           createElement(Counted, { version, style: { tone } }),
           extraChild ? createElement(Rectangle, {
             key: 'extra',
-            style: { x: 30, width: 10, height: 10 },
+            style: { left: 30, width: 10, height: 10 },
           }) : false,
         ],
       }),
@@ -909,7 +909,7 @@ describe('Layer children and retained subtree contract', () => {
             onClick: bottomClick,
           }),
           createElement(Rectangle, {
-            style: { x: 20, y: 10, width: 30, height: 30, fill: '#ef4444' },
+            style: { left: 20, top: 10, width: 30, height: 30, fill: '#ef4444' },
             onClick: topClick,
           }),
         ],
@@ -1026,8 +1026,8 @@ describe('layer', () => {
     onRender();
     return createElement(Rectangle, {
       style: {
-        x,
-        y,
+        left: x,
+        top: y,
         width,
         height,
         fill: fillStyle,
@@ -1048,7 +1048,7 @@ describe('layer', () => {
       width: 500,
       height: 400,
       render: createElement(Rectangle, {
-        style: { x: 0, y: 0, width: 10, height: 10, fill: 'red' },
+        style: { left: 0, top: 0, width: 10, height: 10, fill: 'red' },
       }),
     } as any;
 
@@ -1133,8 +1133,8 @@ describe('layer', () => {
       },
       children: createElement(Rectangle, {
         style: {
-          x: 0,
-          y: 0,
+          left: 0,
+          top: 0,
           width: 200,
           height: 150,
           fill: 'green'
@@ -1210,8 +1210,8 @@ describe('layer', () => {
           children: [
             createElement(Rectangle, {
               style: {
-                x: 0,
-                y: 0,
+                left: 0,
+                top: 0,
                 width: 200,
                 height: 200,
                 fill: 'green',
@@ -1228,8 +1228,8 @@ describe('layer', () => {
               children: createElement(countedRect, {
                 pointerEvents: 'none',
                 style: {
-                  x: 0,
-                  y: 0,
+                  left: 0,
+                  top: 0,
                   width: 200,
                   height: 200,
                   fill: fillStyle.get()
@@ -1258,8 +1258,8 @@ describe('layer', () => {
         onRender();
         return createElement(Rectangle, {
           style: {
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 100,
             height: 100,
             fill: 'blue',
@@ -1272,8 +1272,8 @@ describe('layer', () => {
           children: [
             createElement(Rectangle, {
               style: {
-                x: 100,
-                y: 0,
+                left: 100,
+                top: 0,
                 width: 100,
                 height: 100,
                 fill: 'green',
@@ -1307,8 +1307,8 @@ describe('layer', () => {
         onRender();
         return createElement(Rectangle, {
           style: {
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 100,
             height: 100,
             fill: 'blue',
@@ -1321,8 +1321,8 @@ describe('layer', () => {
           children: [
             createElement(Rectangle, {
               style: {
-                x: 100,
-                y: 0,
+                left: 100,
+                top: 0,
                 width: 100,
                 height: 100,
                 fill: 'green',
@@ -1355,8 +1355,8 @@ describe('layer', () => {
         return createElement(Group, { children: [
           createElement(Rectangle, {
             style: {
-              x: 0,
-              y: 0,
+              left: 0,
+              top: 0,
               width: 300,
               height: 300,
               fill: 'green',
@@ -1396,16 +1396,16 @@ describe('layer', () => {
           },
           children: [createElement(Rectangle, {
             style: {
-              x: 0,
-              y: 0,
+              left: 0,
+              top: 0,
               width: 50,
               height: 50,
               fill: 'purple'
             }
           }), createElement(Text, {
             style: {
-              x: 10,
-              y: 30,
+              left: 10,
+              top: 30,
               fill: 'white'
             }
           }, 'Layered!')]
@@ -1421,8 +1421,8 @@ describe('layer', () => {
           createElement(Layer, {
             children: createElement(Rectangle, {
               style: {
-                x: 0,
-                y: 0,
+                left: 0,
+                top: 0,
                 width: 300,
                 height: 200,
                 fill: 'lightblue',
@@ -1438,16 +1438,16 @@ describe('layer', () => {
               },
               children: [createElement(Rectangle, {
                 style: {
-                  x: 0,
-                  y: 0,
+                  left: 0,
+                  top: 0,
                   width: 100,
                   height: 100,
                   fill: 'rgba(255, 0, 0, 0.5)'
                 }
               }), createElement(Text, {
                 style: {
-                  x: 20,
-                  y: 50,
+                  left: 20,
+                  top: 50,
                   fill: 'white'
                 }
               }, 'Multiple Layers')]
@@ -1457,8 +1457,8 @@ describe('layer', () => {
           createElement(Layer, {
             children: createElement(Rectangle, {
               style: {
-                x: 100,
-                y: 100,
+                left: 100,
+                top: 100,
                 width: 50,
                 height: 50,
                 fill: 'rgba(0, 255, 0, 0.5)',
@@ -1480,8 +1480,8 @@ describe('layer', () => {
       const canvas = await componentTest(createElement(Layer, {
         children: createElement(Rectangle, {
           style: {
-            x: 50,
-            y: 50,
+            left: 50,
+            top: 50,
             width: 100,
             height: 100,
             fill: 'blue',
@@ -1509,8 +1509,8 @@ describe('layer', () => {
           createElement(Layer, {
             children: createElement(Rectangle, {
               style: {
-                x: 0,
-                y: 0,
+                left: 0,
+                top: 0,
                 width: 200,
                 height: 200,
                 fill: 'blue',
@@ -1522,8 +1522,8 @@ describe('layer', () => {
           createElement(Layer, {
             children: createElement(Rectangle, {
               style: {
-                x: 50,
-                y: 50,
+                left: 50,
+                top: 50,
                 width: 100,
                 height: 100,
                 fill: 'red',
@@ -1551,8 +1551,8 @@ describe('layer', () => {
           createElement(Layer, {
             children: createElement(Rectangle, {
               style: {
-                x: 40,
-                y: 40,
+                left: 40,
+                top: 40,
                 width: 120,
                 height: 120,
                 fill: 'orange',
@@ -1562,8 +1562,8 @@ describe('layer', () => {
           }),
           createElement(Rectangle, {
             style: {
-              x: 70,
-              y: 70,
+              left: 70,
+              top: 70,
               width: 60,
               height: 60,
               fill: 'purple',
@@ -1593,8 +1593,8 @@ describe('layer', () => {
           },
           children: createElement(Rectangle, {
             style: {
-              x: 0,
-              y: 0,
+              left: 0,
+              top: 0,
               width: 60,
               height: 60,
               fill: 'teal'
@@ -1620,8 +1620,8 @@ describe('layer', () => {
         },
         children: createElement(Rectangle, {
           style: {
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 100,
             height: 100,
             fill: 'blue'
@@ -1656,8 +1656,8 @@ describe('layer', () => {
             },
             children: createElement(Rectangle, {
               style: {
-                x: 0,
-                y: 0,
+                left: 0,
+                top: 0,
                 width: 60,
                 height: 60,
                 fill: 'green'
@@ -1686,8 +1686,8 @@ describe('layer', () => {
         children: [createElement(Layer, {
           children: createElement(Rectangle, {
             style: {
-              x: 0,
-              y: 0,
+              left: 0,
+              top: 0,
               width: 180,
               height: 180,
               fill: 'red'
@@ -1710,8 +1710,8 @@ describe('layer', () => {
         useEvent('mousemove', () => calls.push('observer'));
         return createElement(Rectangle, {
           style: {
-            x: 50,
-            y: 50,
+            left: 50,
+            top: 50,
             width: 100,
             height: 100,
             fill: 'orange',
@@ -1726,8 +1726,8 @@ describe('layer', () => {
         children: [
           createElement(Rectangle, {
             style: {
-              x: 0,
-              y: 0,
+              left: 0,
+              top: 0,
               width: 200,
               height: 200,
               fill: 'blue',
@@ -1762,8 +1762,8 @@ describe('layer', () => {
         useCursor({ style: 'wait' });
         return createElement(Rectangle, {
           style: {
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 100,
             height: 100,
             fill: 'gray',

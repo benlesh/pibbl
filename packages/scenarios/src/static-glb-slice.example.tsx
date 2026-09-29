@@ -130,8 +130,8 @@ function Loader({
             <Rectangle
               pointerEvents="none"
               style={{
-                x: 176,
-                y: 174,
+                left: 176,
+                top: 174,
                 width: 368,
                 height: 72,
                 fill: failed
@@ -145,8 +145,8 @@ function Loader({
             <Text
               pointerEvents="none"
               style={{
-                x: 360,
-                y: 216,
+                left: 360,
+                top: 216,
                 fill: "#f8fafc",
                 font: "700 16px sans-serif",
                 textAlign: "center",

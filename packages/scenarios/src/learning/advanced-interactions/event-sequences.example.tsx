@@ -6,8 +6,8 @@ function EventSequenceStudy() {
   const target = (x: number, color: string, name: string) => (
     <Rectangle
       style={{
-        x,
-        y: 86,
+        left: x,
+        top: 86,
         width: 250,
         height: 210,
         fill: color,
@@ -24,8 +24,8 @@ function EventSequenceStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#17211d",
@@ -35,8 +35,8 @@ function EventSequenceStudy() {
     target(400, "#ff6b57", "B"),
     <Text
       style={{
-        x: 195,
-        y: 158,
+        left: 195,
+        top: 158,
         fill: "#fffdf6",
         font: "900 72px sans-serif",
         textAlign: "center",
@@ -46,8 +46,8 @@ function EventSequenceStudy() {
     </Text>,
     <Text
       style={{
-        x: 525,
-        y: 158,
+        left: 525,
+        top: 158,
         fill: "#17211d",
         font: "900 72px sans-serif",
         textAlign: "center",
@@ -57,8 +57,8 @@ function EventSequenceStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 340,
+        left: 360,
+        top: 340,
         width: 620,
         fit: "ellipsis",
         fill: "#74d3ae",

@@ -120,8 +120,8 @@ const DirectSparseProfileScene = ({ revision }: { revision: number }) => {
     nodes[index] = createElement(Rectangle, {
       key: target,
       style: {
-        x: 20 + (index % 100) * 4,
-        y: 20 + Math.floor(index / 100) * 2,
+        left: 20 + (index % 100) * 4,
+        top: 20 + Math.floor(index / 100) * 2,
         width: 3,
         height: 2,
         fill: index === 0 ? '#16a34a' : '#2563eb',
@@ -141,8 +141,8 @@ const StructuralEventScene = ({ count, recordAncestor, recordTarget }: {
   return Array.from({ length: count }, (_, index) => createElement(Rectangle, {
     key: `structural-target-${index}`,
     style: {
-      x: 0,
-      y: 0,
+      left: 0,
+      top: 0,
       width: 20,
       height: 20,
       fill: '#2563eb',
