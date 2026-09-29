@@ -12,6 +12,7 @@ import {
   type FocusNavigationState,
 } from "./focus-navigation.example";
 import type { InteractionLabState } from "./interaction-lab.example";
+import type { AgentTargetingState } from "./agent-targeting-verification";
 import type { LifecycleLabState } from "./lifecycle-lab.example";
 import type { LayoutFoundationState } from "./layout-foundation.example";
 import type { MouseContractScenarioState } from "./mouse-contract.example";
@@ -944,6 +945,66 @@ export const mouseContractScenarioEntry: ScenarioCatalogEntry<MouseContractScena
     load: async () =>
       (await import("./mouse-contract-scenario")).mouseContractScenario,
   };
+
+const agentTargetingVerificationMetadata: ScenarioMetadata = {
+  id: "agent-targeting-verification",
+  slug: "agent-targeting-verification",
+  title: "Agent targeting verification",
+  summary:
+    "Diagnose a decorative Canvas overlay that intercepts an intended item selection, then verify its repair with the same native click.",
+  category: "Diagnostics",
+  apiTags: ["crc", "Rectangle", "signal", "pointerEvents"],
+  conceptTags: ["targeting", "paint order", "native input", "inspection"],
+  manualSteps: [
+    {
+      action: "Choose Inspect, then click the center of the blue Select item A control.",
+      expected:
+        "The probe identifies the upper decoration and the click is delivered there, leaving item A unselected.",
+    },
+    {
+      action: "Choose Repair, Inspect, then click the same point.",
+      expected:
+        "The decoration keeps painting but stops participating in targeting; the same click selects item A.",
+    },
+    {
+      action: "Choose Intentional block and repeat the click.",
+      expected:
+        "The decoration receives the click again, while the scenario labels this as an intentional non-selection rather than a defect.",
+    },
+  ],
+  knownLimitations: [
+    "The bounded inspector reports this committed root and target point only; it does not expose a general component tree, application objects, or visibility proof.",
+    "The fixture uses opaque rectangle geometry. Arbitrary custom drawing, blending, filters, and backend-specific picking require separate evidence.",
+  ],
+  learningOrder: 75,
+  visibility: "test-laboratory",
+  visibilityReason:
+    "It is a deterministic, agent-oriented diagnostic fixture with an independently stated application outcome and one real browser input path.",
+  maturity: "contract",
+};
+
+export const agentTargetingVerificationScenarioEntry: ScenarioCatalogEntry<AgentTargetingState> = {
+  metadata: agentTargetingVerificationMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    { id: "inspect", label: "Inspect target" },
+    { id: "repair", label: "Repair decoration" },
+    { id: "seed", label: "Restore seeded failure" },
+    { id: "intentional-block", label: "Show intentional block" },
+    { id: "inspection-off", label: "Disable inspection" },
+    { id: "inspection-on", label: "Enable inspection" },
+    { id: "reset", label: "Reset" },
+  ],
+  source: {
+    id: "agent-targeting-verification-example",
+    language: "tsx",
+    marker:
+      "AGENT_TARGETING_VERIFICATION_SOURCE_ID = 'agent-targeting-verification-example'",
+    path: "packages/scenarios/src/agent-targeting-verification.example.tsx",
+  },
+  load: async () =>
+    (await import("./agent-targeting-verification")).agentTargetingVerificationScenario,
+};
 
 const lifecycleLabMetadata: ScenarioMetadata = {
   id: "event-lifecycle-lab",
@@ -2018,6 +2079,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     drawingCompositionScenarioEntry,
     focusNavigationScenarioEntry,
     mouseContractScenarioEntry,
+    agentTargetingVerificationScenarioEntry,
     interactionLabScenarioEntry,
     lifecycleLabScenarioEntry,
     geometryMatrixScenarioEntry,
