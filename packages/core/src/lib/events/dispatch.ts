@@ -99,6 +99,47 @@ const touchTargets = new WeakMap<
 >();
 const dragHoverTargets = new WeakMap<CRCEventRoot, CRCEventNode>();
 
+interface ManipulationPointerPress {
+  readonly path: readonly CRCEventNode[] | undefined;
+}
+
+interface PendingManipulationActivation {
+  readonly pointerId: number;
+  readonly pointerPress: ManipulationPointerPress | undefined;
+  readonly mouseDown: CRCInteractionActivation | undefined;
+}
+
+const manipulationPointerPresses = new WeakMap<
+  CRCInstance,
+  Map<number, ManipulationPointerPress>
+>();
+const pendingManipulationActivations = new WeakMap<
+  CRCInstance,
+  Map<number, PendingManipulationActivation>
+>();
+
+/**
+ * Prevents a manipulation gesture from becoming a Canvas activation. This is
+ * deliberately an internal controller seam: applications continue to receive
+ * ordinary pointer and mouse events through the public event surface.
+ */
+export function suppressManipulationActivation(
+  instance: CRCInstance,
+  pointerId: number,
+): void {
+  const root = getInteractionRoot(instance);
+  let pending = pendingManipulationActivations.get(root);
+  if (!pending) {
+    pending = new Map();
+    pendingManipulationActivations.set(root, pending);
+  }
+  pending.set(pointerId, Object.freeze({
+    pointerId,
+    pointerPress: manipulationPointerPresses.get(root)?.get(pointerId),
+    mouseDown: root.interaction.primaryDown,
+  }));
+}
+
 export type CRCNativeEventRoute =
   | 'clipboard'
   | 'drag'
@@ -544,6 +585,9 @@ function dispatchPointerCoordinateEvent(
       resolvePointerInputTarget(root, input) :
       resolveCoordinateTarget(root.eventRoot, input) : undefined;
   const target = logicalCapture ?? coordinateTarget;
+  if (input.type === 'pointerdown') {
+    recordManipulationPointerPress(root, input.originalEvent.pointerId, coordinateTarget);
+  }
   const event = target ? dispatchPointerNode(input.type, target, input) : undefined;
   if (input.press) {
     dispatchPressDefault(root, policy, {
@@ -1112,6 +1156,13 @@ function dispatchActivation(
     resolveCoordinateInputTarget(root, input, "click") :
     resolveCoordinateTarget(root.eventRoot, input);
   if (
+    type === 'click' &&
+    consumeManipulationActivation(root, down, up, coordinateTarget)
+  ) {
+    resetClickStreak(root);
+    return;
+  }
+  if (
     !target ||
     !coordinateTarget ||
     !buildEventPath(coordinateTarget).includes(target)
@@ -1303,6 +1354,58 @@ function updateActivationMap(
 function resetClickStreak(root: CRCInstance): void {
   root.interaction.clickStreakTarget = undefined;
   root.interaction.clickStreak = 0;
+}
+
+function recordManipulationPointerPress(
+  root: CRCInstance,
+  pointerId: number,
+  target: CRCEventNode | undefined,
+): void {
+  pendingManipulationActivations.get(root)?.delete(pointerId);
+  const press = Object.freeze({
+    path: target ? Object.freeze(buildEventPath(target)) : undefined,
+  });
+  let presses = manipulationPointerPresses.get(root);
+  if (!presses) {
+    presses = new Map();
+    manipulationPointerPresses.set(root, presses);
+  }
+  presses.set(pointerId, press);
+}
+
+function consumeManipulationActivation(
+  root: CRCInstance,
+  down: CRCInteractionActivation | undefined,
+  up: CRCInteractionActivation | undefined,
+  coordinateTarget: CRCEventNode | undefined,
+): boolean {
+  const pending = pendingManipulationActivations.get(root);
+  if (!pending) return false;
+  for (const [pointerId, activation] of pending) {
+    if (!matchesManipulationActivation(activation, down, up, coordinateTarget)) {
+      continue;
+    }
+    pending.delete(pointerId);
+    if (pending.size === 0) pendingManipulationActivations.delete(root);
+    return true;
+  }
+  return false;
+}
+
+function matchesManipulationActivation(
+  activation: PendingManipulationActivation,
+  down: CRCInteractionActivation | undefined,
+  up: CRCInteractionActivation | undefined,
+  coordinateTarget: CRCEventNode | undefined,
+): boolean {
+  if (activation.mouseDown && activation.mouseDown === down) return true;
+  const pointerPath = activation.pointerPress?.path;
+  const pressTarget = pointerPath?.at(-1);
+  if (!pressTarget || !coordinateTarget) return false;
+  const coordinatePath = buildEventPath(coordinateTarget);
+  if (!coordinatePath.includes(pressTarget)) return false;
+  return (!down || down.path.includes(pressTarget)) &&
+    (!up || up.path.includes(pressTarget));
 }
 
 function dispatchObservers(
