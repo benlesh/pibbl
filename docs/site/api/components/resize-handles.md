@@ -12,7 +12,7 @@ relatedTypes: [CRCResizeHandlesProps, CRCResizePosition]
 # ResizeHandles
 
 ```ts
-import { ResizeHandles } from "@crc/core";
+import { ResizeHandles, useManipulation, useSignal } from "@crc/core";
 ```
 
 `ResizeHandles` renders corner handles by default. Set `positions` to
@@ -20,6 +20,9 @@ import { ResizeHandles } from "@crc/core";
 values. `hitSize` applies to every generated handle.
 
 ```tsx
+const box = useSignal({ left: 40, top: 32, width: 180, height: 100 });
+const manipulation = useManipulation({ box, resize: {} });
+
 <ResizeHandles controller={manipulation} positions="edges-and-corners" />
 ```
 

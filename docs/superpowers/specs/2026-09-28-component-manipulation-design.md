@@ -1,5 +1,7 @@
 # Component manipulation design
 
+> **Historical status: APPROVED DESIGN RECORD.** This dated record captures product decisions and does not claim shipped behavior.
+
 Status: product design approved, 2026-09-28. The user approved hooks plus
 convenience components, explicit geometry, configurable snapping,
 agent-friendly authoring and verification, unified left/top positioning,

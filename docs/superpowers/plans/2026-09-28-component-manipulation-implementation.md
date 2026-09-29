@@ -1,5 +1,7 @@
 # Component Manipulation Implementation Plan
 
+> **Historical status: IMPLEMENTATION RECORD.** This dated plan preserves the approved execution sequence and its task-level evidence.
+
 > **For agentic workers:** Use superpowers:subagent-driven-development or superpowers:executing-plans task by task. The user selected parallel subagents; preserve that choice. Repository thin-slice and review rules override repeated per-task review ceremonies. Track execution with the checkboxes below.
 
 **Goal:** Ship unified component positioning and agent-verifiable moving, resizing, rotation, handles, and snapping through the public CRC API.

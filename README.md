@@ -67,8 +67,8 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
       <Text
         pointerEvents="none"
         style={{
-          x: 200,
-          y: 100,
+          left: 200,
+          top: 100,
           fill: "#fff",
           font: "800 48px sans-serif",
           textAlign: "center",

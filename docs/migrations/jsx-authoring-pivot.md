@@ -54,8 +54,8 @@ replacement share one row; there is no runtime alias or fallback.
 
 | Former component | Removed field/form     | Final replacement                             | Final behavior/default                                     |
 | ---------------- | ---------------------- | --------------------------------------------- | ---------------------------------------------------------- |
-| `rect`           | `x`                    | Removed                                      | Removed; use `left`                                  |
-| `rect`           | `y`                    | Removed                                      | Removed; use `top`                                  |
+| `rect`           | `x`                    | Removed                                       | Removed; use `left`                                    |
+| `rect`           | `y`                    | Removed                                       | Removed; use `top`                                     |
 | `rect`           | `width`                | `Rectangle` `style.width`                     | Required                                                   |
 | `rect`           | `height`               | `Rectangle` `style.height`                    | Required                                                   |
 | `rect`           | `fillStyle`            | `Rectangle` `style.fill`                      | Same fill value                                            |
@@ -99,8 +99,8 @@ replacement share one row; there is no runtime alias or fallback.
 | `svgPath`        | `alpha`                | `SvgPath` `style.opacity`                     | Multiplies the current Canvas alpha                        |
 | `svgPath`        | `cursor`               | `SvgPath` `style.cursor`                      | Same cursor value                                          |
 | `text`           | `text`                 | `Text` recursive textual `children`           | Numeric zero remains visible; empty values add no content  |
-| `text`           | `x`                    | Removed                                      | Removed; use `left`                                  |
-| `text`           | `y`                    | Removed                                      | Removed; use `top`                                  |
+| `text`           | `x`                    | Removed                                       | Removed; use `left`                                    |
+| `text`           | `y`                    | Removed                                       | Removed; use `top`                                     |
 | `text`           | `maxWidth`             | `Text` `style.width`                          | Optional text box width                                    |
 | `text`           | `maxHeight`            | `Text` `style.height`                         | Optional text box height                                   |
 | `text`           | `lineHeight`           | `Text` `style.lineHeight`                     | Defaults to `13`                                           |
@@ -115,8 +115,8 @@ replacement share one row; there is no runtime alias or fallback.
 | `text`           | `alpha`                | `Text` `style.opacity`                        | Multiplies the current Canvas alpha                        |
 | `text`           | `cursor`               | `Text` `style.cursor`                         | Same cursor value                                          |
 | `img`            | `src`                  | `Image` `style.src`                           | Required                                                   |
-| `img`            | `x`                    | Removed                                      | Removed; use `left`                                  |
-| `img`            | `y`                    | Removed                                      | Removed; use `top`                                  |
+| `img`            | `x`                    | Removed                                       | Removed; use `left`                                    |
+| `img`            | `y`                    | Removed                                       | Removed; use `top`                                     |
 | `img`            | `width`                | `Image` `style.width`                         | Omission uses loaded natural width, otherwise `0`          |
 | `img`            | `height`               | `Image` `style.height`                        | Omission uses loaded natural height, otherwise `0`         |
 | `img`            | `strokeStyle`          | `Image` `style.stroke`                        | Same border stroke value                                   |
@@ -159,7 +159,7 @@ normalization, resolution, and pure measurement.
 Move legacy style-owned content to recursive textual children:
 
 ```tsx
-<Text style={{ x: 20, y: 20 }}>Count: {count}</Text>
+<Text style={{ left: 20, top: 20 }}>Count: {count}</Text>
 ```
 
 `Layer` no longer takes a render element/descriptor prop. All structural

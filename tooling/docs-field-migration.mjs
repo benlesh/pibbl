@@ -430,6 +430,9 @@ function markdownSection(source, heading) {
 }
 
 function expectedReplacement(component, field) {
+  if (removedPositionFields.has(`${component}\0${field}`)) {
+    return undefined;
+  }
   if (
     field === "children" ||
     (component === "text" && field === "text") ||
@@ -560,7 +563,9 @@ export function assertFieldMigrationCompleteness({
     );
     assert.deepEqual(
       row.finalCodes,
-      [requirement.finalComponent, requirement.replacement],
+      requirement.replacement === undefined
+        ? []
+        : [requirement.finalComponent, requirement.replacement],
       `Field-level migration ${requirement.component}.${requirement.field} has the wrong final replacement`,
     );
     assert.equal(
@@ -568,6 +573,8 @@ export function assertFieldMigrationCompleteness({
       expectedBehaviorByIdentity.get(identity),
       `Field-level migration ${requirement.component}.${requirement.field} has the wrong final behavior`,
     );
+
+    if (requirement.replacement === undefined) continue;
 
     const finalRow = finalRows.get(requirement.finalComponent);
     assert.ok(

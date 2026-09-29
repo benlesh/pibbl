@@ -1,5 +1,7 @@
 # Visualization expansion: points, custom plots, and inspection
 
+> **Historical status: APPROVED DESIGN RECORD.** This dated record captures proposed behavior before implementation.
+
 Status: design approved by the user on 2026-09-28; implementation plan requested.
 Execution is not yet approved.
 Date: 2026-09-28. Source inspection: `4717dc9` plus the concurrent responsive
