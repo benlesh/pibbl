@@ -172,7 +172,7 @@ export function crcRuntimeSource(mode: string) {
           resolve(import.meta.dirname, "./crc-studio-runtime-entry.ts"),
         ],
         bundle: true,
-        define: { "import.meta.env.DEV": "false" },
+        define: { "import.meta.env.DEV": mode === "production" || mode === "built" ? "false" : "true" },
         format: "iife",
         globalName: "CRC_CORE",
         metafile: true,
