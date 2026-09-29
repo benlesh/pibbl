@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import mount from "../../scenarios/src/learning/composition/viz-points-and-inspection.example.js";
 
 it("plots the static Palmer Penguins measurements without inventing missing values", async () => {
@@ -8,6 +8,7 @@ it("plots the static Palmer Penguins measurements without inventing missing valu
   const panels: Parameters<
     NonNullable<NonNullable<Parameters<typeof mount>[1]>["onPanel"]>
   >[1][] = [];
+  const text = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText");
   const controller = mount(canvas, {
     onPanel(index, panel) {
       panels[index] = panel;
@@ -18,6 +19,9 @@ it("plots the static Palmer Penguins measurements without inventing missing valu
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => resolve()),
       );
+    expect(
+      text.mock.calls.filter(([value]) => value === "181 mm · 3750 g").length,
+    ).toBeGreaterThanOrEqual(2);
     expect(panels).toHaveLength(2);
     for (const panel of panels) {
       expect(panel.anchors).toHaveLength(342);
@@ -33,6 +37,7 @@ it("plots the static Palmer Penguins measurements without inventing missing valu
       234 + (panels[0].height * 2750) / 4000,
     );
   } finally {
+    text.mockRestore();
     controller.dispose();
     canvas.remove();
   }
