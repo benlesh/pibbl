@@ -288,6 +288,9 @@
   export type CRCResizePosition = 'top-left' | 'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left';
   export interface CRCManipulationMoveInput { readonly enabled?: SignalValue<boolean>; readonly axis?: 'both' | 'x' | 'y'; readonly bounds?: CRCManipulationBox; readonly snap?: Readonly<{ enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number | Readonly<{ x: number; y: number }>; origin?: Readonly<{ x?: number; y?: number }> }> }
   export type CRCManipulationResizeInput = Readonly<{ readonly enabled?: SignalValue<boolean>; readonly minWidth?: number; readonly minHeight?: number; readonly maxWidth?: number; readonly maxHeight?: number; readonly bounds?: CRCManipulationBox; readonly aspectRatio?: Readonly<{ value: 'initial' | number; when?: CRCManipulationWhen }>; readonly snap?: Readonly<{ target?: 'size'; enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number | Readonly<{ width: number; height: number }> }> }> | Readonly<{ readonly enabled?: SignalValue<boolean>; readonly minWidth?: number; readonly minHeight?: number; readonly maxWidth?: number; readonly maxHeight?: number; readonly bounds?: CRCManipulationBox; readonly aspectRatio?: Readonly<{ value: 'initial' | number; when?: CRCManipulationWhen }>; readonly snap?: Readonly<{ target: 'grid'; enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number | Readonly<{ x: number; y: number }>; origin?: Readonly<{ x?: number; y?: number }> }> }>;
+  export interface CRCManipulationRotateInput { readonly enabled?: SignalValue<boolean>; readonly snap?: Readonly<{ enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number; origin?: number }> }
+  export interface CRCRotationHandleProps { readonly controller: CRCManipulationController; readonly hitSize?: number; readonly children?: CRCNode }
+  export interface CRCManipulableProps extends Pick<CRCManipulationOptions, 'rotation' | 'onStart' | 'onChange' | 'onCommit' | 'onCancel'> { readonly style: WritableSignal<CRCManipulationBox>; readonly draggable?: boolean | CRCManipulationMoveInput; readonly resizable?: boolean | CRCManipulationResizeInput; readonly rotatable?: boolean | CRCManipulationRotateInput; readonly resizeHandles?: CRCResizeHandlesProps['positions']; readonly children?: CRCNode }
   export interface CRCManipulationGeometry { readonly box: CRCManipulationBox; readonly rotation: number }
   export type CRCManipulationOperation = 'move' | 'resize' | 'rotate';
   export type CRCManipulationCancelReason = 'explicit' | 'escape' | 'pointer-cancel' | 'capture-lost' | 'disabled' | 'external-change' | 'coordinate-space-changed' | 'constraints-unsatisfiable';
@@ -296,7 +299,7 @@
   export interface CRCManipulationEvent extends CRCManipulationSnapshot { readonly before: CRCManipulationGeometry; readonly after: CRCManipulationGeometry }
   export interface CRCManipulationCommitEvent extends CRCManipulationEvent { readonly changed: boolean }
   export interface CRCManipulationCancelEvent extends CRCManipulationEvent { readonly reason: CRCManipulationCancelReason }
-  export interface CRCManipulationOptions { readonly box: WritableSignal<CRCManipulationBox>; readonly rotation?: WritableSignal<number>; readonly move?: CRCManipulationMoveInput; readonly resize?: CRCManipulationResizeInput; readonly onStart?: (event: CRCManipulationEvent) => void; readonly onChange?: (event: CRCManipulationEvent) => void; readonly onCommit?: (event: CRCManipulationCommitEvent) => void; readonly onCancel?: (event: CRCManipulationCancelEvent) => void }
+  export interface CRCManipulationOptions { readonly box: WritableSignal<CRCManipulationBox>; readonly rotation?: WritableSignal<number>; readonly move?: CRCManipulationMoveInput; readonly resize?: CRCManipulationResizeInput; readonly rotate?: CRCManipulationRotateInput; readonly onStart?: (event: CRCManipulationEvent) => void; readonly onChange?: (event: CRCManipulationEvent) => void; readonly onCommit?: (event: CRCManipulationCommitEvent) => void; readonly onCancel?: (event: CRCManipulationCancelEvent) => void }
   export interface CRCManipulationFrameProps { readonly controller: CRCManipulationController; readonly style: WritableSignal<CRCManipulationBox>; readonly children?: CRCNode }
   export interface CRCManipulationController { readonly active: Signal<CRCManipulationActive | null>; readonly snapshot: Signal<CRCManipulationSnapshot | null>; readonly frameProps: CRCManipulationFrameProps; cancel(): void }
   export interface CRCDragHandleProps { readonly controller: CRCManipulationController; readonly children?: CRCNode }
@@ -503,6 +506,9 @@
   export const DragHandle: CRCPrimitiveComponent<CRCDragHandleProps, PrimitiveInput<CRCDragHandleProps, CRCDragHandleStyle>>;
   export const ResizeHandle: CRCPrimitiveComponent<CRCResizeHandleProps>;
   export function ResizeHandles(props: CRCResizeHandlesProps): CRCNode;
+  export const RotationHandle: CRCPrimitiveComponent<CRCRotationHandleProps>;
+  export function Manipulable(props: CRCManipulableProps): CRCNode;
+  export function degrees(value: number): number;
   export function createArcPath(options: Readonly<ArcPathOptions>): Path2D;
   export function createCirclePath(options: Readonly<CirclePathOptions>): Path2D;
   export function createEllipsePath(options: Readonly<EllipsePathOptions>): Path2D;

@@ -1,4 +1,4 @@
-import { Absolute, Group, Rectangle, crc, type CRCNode, type CRCController } from '@crc/core';
+import { Absolute, Flex, Group, Rectangle, crc, type CRCNode, type CRCController } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
@@ -50,5 +50,22 @@ describe('component positioning', () => {
     const context = canvas.getContext('2d')!;
     expect(Array.from(context.getImageData(30, 40, 1, 1).data)).toEqual([0, 255, 0, 255]);
     expect(Array.from(context.getImageData(60, 80, 1, 1).data)[3]).toBe(0);
+  });
+
+  it('positions a forwarding custom child once through Group and Absolute nested in Flex', () => {
+    const Forward = ({ style }: { style: { left: number; top: number; width: number; height: number } }) =>
+      <Rectangle style={{ ...style, fill: '#2563eb' }} />;
+    const canvas = mount(
+      <Flex style={{ width: 220, height: 160 }}>
+        <Absolute style={{ width: 220, height: 160, minWidth: 0 }}>
+          <Group style={{ translateX: 5, translateY: 7, width: 20, height: 10 }}>
+            <Forward style={{ left: 30, top: 40, width: 20, height: 10 }} />
+          </Group>
+        </Absolute>
+      </Flex>,
+    );
+    const context = canvas.getContext('2d')!;
+    expect(Array.from(context.getImageData(35, 47, 1, 1).data)).toEqual([37, 99, 235, 255]);
+    expect(Array.from(context.getImageData(65, 87, 1, 1).data)[3]).toBe(0);
   });
 });

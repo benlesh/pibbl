@@ -50,6 +50,9 @@ symbols:
     CRCManipulationOptions,
     CRCManipulationPoint,
     CRCManipulationResizeInput,
+    CRCManipulationRotateInput,
+    CRCRotationHandleProps,
+    CRCManipulableProps,
     CRCManipulationSnapshot,
     CRCManipulationWhen,
     CRCResizeHandleProps,
@@ -291,3 +294,15 @@ Selects corners, edges-and-corners, or an explicit list of resize positions for 
 ## CRCResizePosition
 
 Names top-left, top, top-right, right, bottom-right, bottom, bottom-left, or left.
+
+## CRCManipulationRotateInput
+
+Configures optional signal-valued rotation activation and angular snapping in radians.
+
+## CRCRotationHandleProps
+
+Binds a controller to an external rotation handle with optional custom visuals and CSS-pixel hit size.
+
+## CRCManipulableProps
+
+Binds writable box and optional rotation signals, operation booleans or options, resize-handle selection, lifecycle callbacks, and children for the convenience component.
