@@ -172,6 +172,17 @@ interaction bounds remain exact.
 | `Clip`  | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested intersections, transforms, updates, empty clips, and paint/hit geometry agree. |
 | `Layer` | Renders multiple children into one persistent offscreen CRC instance, caches retained content, follows root density, and participates in global paint/target/focus order.  |
 
+## Component manipulation
+
+`ManipulationFrame` binds a writable finite box signal to one positioned local
+allocation. `DragHandle`, `ResizeHandle`, `ResizeHandles`, and `RotationHandle`
+are explicit interaction geometry; a frame does not infer bounds from content.
+Resize and rotation controls use CSS-pixel visual and hit geometry while their
+centers follow the frame. The frame presents its optional radians rotation
+through `Group.rotationDegrees` around its center. See the
+[component-manipulation contract](./component-manipulation-contract.md) for
+gesture, constraint, and teardown semantics.
+
 ## WebGL island values
 
 `@crc/webgl` supplies one Canvas composition boundary and these scene

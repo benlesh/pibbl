@@ -21,7 +21,7 @@ const cardPaint = {
 
 const card = (
   <Rectangle
-    style={{ ...cardPaint, x: 16, y: 16, width: 180, height: 80 }}
+    style={{ ...cardPaint, left: 16, top: 16, width: 180, height: 80 }}
     onClick={() => selectCard()}
   />
 );
@@ -56,6 +56,14 @@ inherit it. It is not an escape hatch for arbitrary top-level keys.
 Plain functions receive their specified `style` in props. A layout parent may
 inspect a direct child's style but never substitutes its finite allocation into
 those props; the component reads that through `useLayoutBox()`.
+
+`left` and `top` are the shared component-placement fields. Standalone
+components use them once through the normal presentation transform. A direct
+`Flex`, `Flow`, or `Grid` child is parent-positioned instead: its authored
+`left`/`top` has no production placement effect and development/test execution
+reports it. `Rectangle`, `Text`, and `Image` do not accept positioning-style
+`x`/`y`; geometric points, line endpoints, and event coordinates retain their
+own `x`/`y` vocabulary.
 
 ## Signal-valued style resolution
 
