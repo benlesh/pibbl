@@ -86,7 +86,7 @@ function solveResize(input: ManipulationSolveInput): ManipulationSolveResult {
     height = clamp(height, constraints.minHeight, constraints.maxHeight);
   }
   let applied = resizeFromDimensionsRotated(input.initial, input.handle, width, height, rotation);
-  applied = clampResizeToBoundsRotated(input.initial, input.handle, applied, rotation, input.resize?.bounds, ratio);
+  applied = clampResizeToBoundsRotated(input.initial, input.handle, applied, rotation, input.resize?.bounds, ratio, constraints);
   const snapSatisfied = !snapActive || boxesEqual(snapped, applied);
   return result(proposed, applied, snapActive, snapSatisfied, input.initialRotation);
 }
@@ -272,11 +272,15 @@ function resizeFromDimensionsRotated(initial: CRCManipulationBox, handle: CRCRes
   return freezeBox({ left: center.x - width / 2, top: center.y - height / 2, width, height });
 }
 
-function clampResizeToBoundsRotated(initial: CRCManipulationBox, handle: CRCResizePosition, box: CRCManipulationBox, rotation: number, bounds: CRCManipulationBox | undefined, ratio: number | undefined): CRCManipulationBox {
+function clampResizeToBoundsRotated(initial: CRCManipulationBox, handle: CRCResizePosition, box: CRCManipulationBox, rotation: number, bounds: CRCManipulationBox | undefined, ratio: number | undefined, constraints: ReturnType<typeof resolvedResizeConstraints>): CRCManipulationBox {
   if (!bounds) return box;
   assertFiniteBox(bounds, 'resize.bounds');
   if (!containsRotated(bounds, initial, rotation)) throw new Error('Resize bounds must contain the initial box.');
   if (containsRotated(bounds, box, rotation)) return box;
+  if (ratio === undefined) {
+    const point = projectSizeToBounds(initial, handle, box, rotation, bounds, constraints);
+    return resizeFromDimensionsRotated(initial, handle, point.width, point.height, rotation);
+  }
   // Each rotated corner is affine over this anchored size segment. Intersect
   // those exact half-plane intervals instead of iterating toward a boundary.
   let minimum = 0;
@@ -305,6 +309,79 @@ function clampResizeToBoundsRotated(initial: CRCManipulationBox, handle: CRCResi
   const width = start.width + (box.width - start.width) * parameter;
   const height = start.height + (box.height - start.height) * parameter;
   return resizeFromDimensionsRotated(initial, handle, width, height, rotation);
+}
+
+type SizePoint = Readonly<{ width: number; height: number }>;
+type HalfPlane = Readonly<{ a: number; b: number; c: number }>;
+
+function projectSizeToBounds(initial: CRCManipulationBox, handle: CRCResizePosition, proposed: CRCManipulationBox, rotation: number, bounds: CRCManipulationBox, constraints: ReturnType<typeof resolvedResizeConstraints>): SizePoint {
+  const maximumWidth = Number.isFinite(constraints.maxWidth) ? constraints.maxWidth : Math.max(initial.width, bounds.width + bounds.height);
+  const maximumHeight = Number.isFinite(constraints.maxHeight) ? constraints.maxHeight : Math.max(initial.height, bounds.width + bounds.height);
+  let polygon: SizePoint[] = [
+    { width: constraints.minWidth, height: constraints.minHeight },
+    { width: maximumWidth, height: constraints.minHeight },
+    { width: maximumWidth, height: maximumHeight },
+    { width: constraints.minWidth, height: maximumHeight },
+  ];
+  const planes = boundsPlanes(initial, handle, rotation, bounds);
+  for (const plane of planes) polygon = clipPolygon(polygon, plane);
+  if (polygon.length === 0) throw new Error('Resize bounds have no feasible size region.');
+  return closestPointInPolygon({ width: proposed.width, height: proposed.height }, polygon);
+}
+
+function boundsPlanes(initial: CRCManipulationBox, handle: CRCResizePosition, rotation: number, bounds: CRCManipulationBox): readonly HalfPlane[] {
+  const zero = resizeFromDimensionsRotated(initial, handle, 0, 0, rotation);
+  const unitWidth = resizeFromDimensionsRotated(initial, handle, 1, 0, rotation);
+  const unitHeight = resizeFromDimensionsRotated(initial, handle, 0, 1, rotation);
+  const planes: HalfPlane[] = [];
+  const zeroCorners = rotatedCorners(zero, rotation);
+  const widthCorners = rotatedCorners(unitWidth, rotation);
+  const heightCorners = rotatedCorners(unitHeight, rotation);
+  for (let index = 0; index < 4; index++) {
+    for (const [coordinate, lower, upper] of [['x', bounds.left, bounds.left + bounds.width], ['y', bounds.top, bounds.top + bounds.height]] as const) {
+      const constant = zeroCorners[index][coordinate];
+      const a = widthCorners[index][coordinate] - constant;
+      const b = heightCorners[index][coordinate] - constant;
+      planes.push({ a, b, c: upper - constant }, { a: -a, b: -b, c: constant - lower });
+    }
+  }
+  return planes;
+}
+
+function clipPolygon(points: readonly SizePoint[], plane: HalfPlane): SizePoint[] {
+  const output: SizePoint[] = [];
+  for (let index = 0; index < points.length; index++) {
+    const from = points[index];
+    const to = points[(index + 1) % points.length];
+    const fromValue = plane.a * from.width + plane.b * from.height - plane.c;
+    const toValue = plane.a * to.width + plane.b * to.height - plane.c;
+    if (fromValue <= 0) output.push(from);
+    if ((fromValue <= 0) !== (toValue <= 0)) {
+      const t = fromValue / (fromValue - toValue);
+      output.push({ width: from.width + (to.width - from.width) * t, height: from.height + (to.height - from.height) * t });
+    }
+  }
+  return output;
+}
+
+function closestPointInPolygon(point: SizePoint, polygon: readonly SizePoint[]): SizePoint {
+  if (polygon.every((candidate, index) => {
+    const next = polygon[(index + 1) % polygon.length];
+    return (next.width - candidate.width) * (point.height - candidate.height) - (next.height - candidate.height) * (point.width - candidate.width) >= -1e-9;
+  })) return point;
+  let best = polygon[0];
+  let distance = Number.POSITIVE_INFINITY;
+  for (let index = 0; index < polygon.length; index++) {
+    const from = polygon[index];
+    const to = polygon[(index + 1) % polygon.length];
+    const dx = to.width - from.width;
+    const dy = to.height - from.height;
+    const scale = clamp(((point.width - from.width) * dx + (point.height - from.height) * dy) / (dx * dx + dy * dy), 0, 1);
+    const candidate = { width: from.width + dx * scale, height: from.height + dy * scale };
+    const nextDistance = (candidate.width - point.width) ** 2 + (candidate.height - point.height) ** 2;
+    if (nextDistance < distance || (nextDistance === distance && (candidate.width > best.width || (candidate.width === best.width && candidate.height > best.height)))) { best = candidate; distance = nextDistance; }
+  }
+  return best;
 }
 
 function containsRotated(bounds: CRCManipulationBox, box: CRCManipulationBox, radians: number): boolean {
