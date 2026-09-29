@@ -100,4 +100,60 @@ describe('solveManipulation', () => {
       move: { bounds: { left: 0, top: 0, width: 120, height: 100 } },
     }).applied).toEqual({ left: 20, top: 20, width: 100, height: 80 });
   });
+
+  it('resizes on rotated local axes while preserving the opposite parent-space anchor', () => {
+    const result = solveManipulation({
+      operation: 'resize', handle: 'bottom-right',
+      initial: { left: 20, top: 30, width: 100, height: 50 },
+      initialRotation: Math.PI / 2,
+      initialPoint: { x: 0, y: 0 }, currentPoint: { x: 0, y: 20 }, modifiers: {},
+    });
+    expect(result.applied).toEqual({ left: 10, top: 40, width: 120, height: 50 });
+  });
+
+  it('keeps ratio-locked edge resizing symmetric on the secondary axis', () => {
+    expect(solveManipulation({
+      operation: 'resize', handle: 'right',
+      initial: { left: 10, top: 20, width: 100, height: 50 },
+      initialPoint: { x: 0, y: 0 }, currentPoint: { x: 40, y: 0 }, modifiers: {},
+      resize: { aspectRatio: { value: 'initial' } },
+    }).applied).toEqual({ left: 10, top: 10, width: 140, height: 70 });
+  });
+
+  it('validates inactive snap steps and rejects rotated grid resize', () => {
+    expect(() => solveManipulation({
+      operation: 'move', initial: box, initialPoint: { x: 0, y: 0 }, currentPoint: { x: 0, y: 0 }, modifiers: {},
+      move: { snap: { step: 0, enabled: false } },
+    })).toThrow('greater than zero');
+    expect(() => solveManipulation({
+      operation: 'resize', handle: 'right', initial: box, initialRotation: 0.1,
+      initialPoint: { x: 0, y: 0 }, currentPoint: { x: 0, y: 0 }, modifiers: {},
+      resize: { snap: { target: 'grid', step: 8 } },
+    })).toThrow('unrotated');
+  });
+
+  it.each(['top-left', 'top', 'top-right', 'right', 'bottom-right', 'bottom', 'bottom-left', 'left'] as const)('preserves a rotated opposite anchor for %s', handle => {
+    const initial = { left: 40, top: 30, width: 80, height: 60 };
+    const result = solveManipulation({ operation: 'resize', handle, initial, initialRotation: Math.PI / 6, initialPoint: { x: 0, y: 0 }, currentPoint: { x: 12, y: 9 }, modifiers: {} });
+    expect(result.applied.width).toBeGreaterThanOrEqual(1);
+    expect(result.applied.height).toBeGreaterThanOrEqual(1);
+  });
+
+  it('projects unlocked sizes into the bounded feasible region and honors limits', () => {
+    const result = solveManipulation({
+      operation: 'resize', handle: 'bottom-right', initial: { left: 10, top: 10, width: 40, height: 30 }, initialRotation: Math.PI / 6,
+      initialPoint: { x: 0, y: 0 }, currentPoint: { x: 200, y: 200 }, modifiers: {},
+      resize: { minWidth: 20, minHeight: 20, maxWidth: 90, maxHeight: 70, bounds: { left: 0, top: 0, width: 120, height: 120 } },
+    });
+    expect(result.applied.width).toBeLessThanOrEqual(90);
+    expect(result.applied.height).toBeLessThanOrEqual(70);
+  });
+
+  it('does not size-snap an untouched dimension', () => {
+    expect(solveManipulation({
+      operation: 'resize', handle: 'right', initial: { left: 0, top: 0, width: 31, height: 13 },
+      initialPoint: { x: 0, y: 0 }, currentPoint: { x: 2, y: 0 }, modifiers: {},
+      resize: { snap: { target: 'size', step: 8 } },
+    }).applied.height).toBe(13);
+  });
 });
