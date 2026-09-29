@@ -374,6 +374,7 @@ for (const { moduleName, content } of declarationModules) {
 }
 
 const publicTypeExports = [
+  'CRCDragHandleProps', 'CRCDragHandleStyle', 'CRCManipulableProps', 'CRCManipulationActive', 'CRCManipulationBox', 'CRCManipulationCancelEvent', 'CRCManipulationCancelReason', 'CRCManipulationCommitEvent', 'CRCManipulationController', 'CRCManipulationEvent', 'CRCManipulationFrameProps', 'CRCManipulationGeometry', 'CRCManipulationMoveInput', 'CRCManipulationOperation', 'CRCManipulationOptions', 'CRCManipulationPoint', 'CRCManipulationResizeInput', 'CRCManipulationRotateInput', 'CRCManipulationSnapshot', 'CRCManipulationWhen', 'CRCResizeHandleProps', 'CRCResizeHandlesProps', 'CRCResizePosition', 'CRCRotationHandleProps',
   'AbsoluteProps',
   'AbsoluteStyle',
   'ArcProps',
@@ -570,8 +571,8 @@ const publicTypeExports = [
   'CRCResponsiveStyle',
 ].sort();
 
-if (publicTypeExports.length !== 194) {
-  throw new Error(`CRC Studio must declare exactly 194 core public types, received ${publicTypeExports.length}.`);
+if (publicTypeExports.length !== 218) {
+  throw new Error(`CRC Studio must declare exactly 218 core public types, received ${publicTypeExports.length}.`);
 }
 
 const publicWebGLTypeExports = [
@@ -1424,7 +1425,7 @@ function StudioAnimationHook(): CRCNode {
     interpolate: interpolatePoint,
   });
   return <Rectangle
-    style={{ x: x.get(), width: sprung.get(), height: 20, opacity: alpha.get() }}
+    style={{ left: x.get(), width: sprung.get(), height: 20, opacity: alpha.get() }}
     onClick={() => playback.play()}
   />;
 }
@@ -1458,7 +1459,7 @@ function StudioCard({ label, active }: StudioCardProps): CRCNode {
         }}
         onClick={() => console.log(label)}
       />
-      <Text style={{ x: 24, y: active ? 22 : 54, fill: '#fff' }}>
+      <Text style={{ left: 24, top: active ? 22 : 54, fill: '#fff' }}>
         {label} — {active ? 'active' : 'waiting'}
       </Text>
     </>
@@ -1473,7 +1474,7 @@ function StudioLesson(): CRCNode {
       {labels.map((label, index) => (
         <StudioCard key={label} label={label} active={index === 0} />
       ))}
-      {showFooter && <Text style={{ x: 16, y: 92 }}>Ready: {labels.length}</Text>}
+      {showFooter && <Text style={{ left: 16, top: 92 }}>Ready: {labels.length}</Text>}
     </>
   );
 }
