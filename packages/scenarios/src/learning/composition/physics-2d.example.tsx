@@ -70,11 +70,14 @@ function releaseVelocity(
     (sample) =>
       sample.timeStamp < final.timeStamp &&
       final.timeStamp - sample.timeStamp <= TRAIL_WINDOW_MILLISECONDS,
+  ) ?? [...trail].reverse().find(
+    (sample) =>
+      sample !== final &&
+      (sample.x !== final.x || sample.y !== final.y),
   );
   if (!oldest) return [0, 0];
 
-  const seconds = (final.timeStamp - oldest.timeStamp) / 1000;
-  if (seconds <= 0) return [0, 0];
+  const seconds = Math.max(1, final.timeStamp - oldest.timeStamp) / 1000;
   const velocityX = (final.x - oldest.x) / seconds;
   const velocityY = (final.y - oldest.y) / seconds;
   const magnitude = Math.hypot(velocityX, velocityY);
