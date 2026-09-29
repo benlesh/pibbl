@@ -131,4 +131,21 @@ describe('solveManipulation', () => {
       resize: { snap: { target: 'grid', step: 8 } },
     })).toThrow('unrotated');
   });
+
+  it.each(['top-left', 'top', 'top-right', 'right', 'bottom-right', 'bottom', 'bottom-left', 'left'] as const)('preserves a rotated opposite anchor for %s', handle => {
+    const initial = { left: 40, top: 30, width: 80, height: 60 };
+    const result = solveManipulation({ operation: 'resize', handle, initial, initialRotation: Math.PI / 6, initialPoint: { x: 0, y: 0 }, currentPoint: { x: 12, y: 9 }, modifiers: {} });
+    expect(result.applied.width).toBeGreaterThanOrEqual(1);
+    expect(result.applied.height).toBeGreaterThanOrEqual(1);
+  });
+
+  it('projects unlocked sizes into the bounded feasible region and honors limits', () => {
+    const result = solveManipulation({
+      operation: 'resize', handle: 'bottom-right', initial: { left: 10, top: 10, width: 40, height: 30 }, initialRotation: Math.PI / 6,
+      initialPoint: { x: 0, y: 0 }, currentPoint: { x: 200, y: 200 }, modifiers: {},
+      resize: { minWidth: 20, minHeight: 20, maxWidth: 90, maxHeight: 70, bounds: { left: 0, top: 0, width: 120, height: 120 } },
+    });
+    expect(result.applied.width).toBeLessThanOrEqual(90);
+    expect(result.applied.height).toBeLessThanOrEqual(70);
+  });
 });
