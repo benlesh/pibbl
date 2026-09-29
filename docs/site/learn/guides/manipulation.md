@@ -175,3 +175,10 @@ clipped as needed. Labels never intercept input or change gesture geometry.
 `Manipulable` forwards these options through `resizeHandles={{ style: { readout: true }, formatReadout }}` and `rotationHandle={{ style: { arc: true, readout: true }, readoutUnit: "radians" }}`. The existing resize-position shorthand remains supported.
 
 `DragHandle` listens to its descendants rather than adding an invisible box. Wrap the actual title bar, grip, or content that should start movement. Child shapes keep their normal hit testing, including gaps and clipping. An empty handle cannot be dragged. Its position readout uses `left`/`top` in parent-local logical units; a custom `formatReadout` receives those raw values. `Manipulable` accepts the same readout options through `dragHandle`.
+
+Drag position labels default to a 40 CSS-pixel gap above the displayed top edge
+to clear the standard rotation control. Adjust it with
+`style={{ readout: { gap: 48 } }}` on `DragHandle`, or through
+`Manipulable`'s `dragHandle.style.readout.gap`. State-specific `gap` overrides
+work the same way as other readout styles. Labels remain clamped inside the
+canvas; the gap is preferred spacing when there is room.

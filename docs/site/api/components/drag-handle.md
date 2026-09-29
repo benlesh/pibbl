@@ -45,3 +45,9 @@ const manipulation = useManipulation({ box, move: {} });
 Related types: [CRCDragHandleProps](#/api/types/events#crcdraghandleprops), [CRCDragHandleStyle](#/api/types/events#crcdraghandlestyle), [CRCManipulationController](#/api/types/events#crcmanipulationcontroller).
 
 Position readouts display the frame’s applied `left` and `top`, default to active-only, and accept the same `style.readout` states, gap, and canvas containment as resize readouts. `formatReadout={({ left, top }) => ...}` can display custom document units. Put `keyboardFocusable` and cursor styling on the actual child target. Child event cancellation can reject a drag before it reaches the handle.
+
+The position readout sits outside the top edge with a default gap of 40 CSS
+pixels, leaving room for the standard rotation handle and guide arc. Set
+`style={{ readout: { gap: 48 } }}` to adjust that distance. The gap follows the
+rotated edge; canvas containment takes priority near the canvas boundary.
+Readouts do not currently support independent horizontal/vertical offsets.

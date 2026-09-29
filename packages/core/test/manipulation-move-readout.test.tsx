@@ -81,3 +81,47 @@ it.each([false, true])(
     expect(painted).toHaveLength(0);
   },
 );
+
+it.each([
+  [0, undefined, 40],
+  [Math.PI / 4, undefined, 40],
+  [0, 12, 12],
+])('places the drag readout outside the rotation control (angle %s, gap %s)', async (angle, gap, expectedGap) => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 700;
+  canvas.height = 500;
+  document.body.append(canvas);
+  const box = CRC.signal({ left: 220, top: 180, width: 160, height: 100 });
+  const rotation = CRC.signal(angle);
+  const ctx = canvas.getContext('2d')!;
+  const corners: { x: number; y: number }[] = [];
+  const original = ctx.fillText.bind(ctx);
+  vi.spyOn(ctx, 'fillText').mockImplementation((text, x, y) => {
+    if (text === 'position') {
+      const metrics = ctx.measureText(text);
+      const left = x - metrics.actualBoundingBoxLeft;
+      const right = x + metrics.actualBoundingBoxRight;
+      const top = y - metrics.actualBoundingBoxAscent;
+      const bottom = y + metrics.actualBoundingBoxDescent;
+      corners.push({ x: left, y: top }, { x: right, y: top }, { x: left, y: bottom }, { x: right, y: bottom });
+    }
+    original(text, x, y);
+  });
+  function Scene(): CRC.CRCNode {
+    const control = CRC.useManipulation({ box, rotation, move: {}, rotate: {} });
+    return <CRC.ManipulationFrame {...control.frameProps}>
+      <CRC.DragHandle controller={control} formatReadout={() => 'position'} style={{ readout: { visible: true, gap } }}>
+        <CRC.Rectangle style={{ width: 160, height: 100, fill: 'white' }} />
+      </CRC.DragHandle>
+      <CRC.RotationHandle controller={control} style={{ arc: true }} />
+    </CRC.ManipulationFrame>;
+  }
+  mount = CRC.crc(canvas, <Scene />, { pixelRatio: 1 });
+  await settle();
+  expect(corners).toHaveLength(4);
+  const normal = { x: Math.sin(angle), y: -Math.cos(angle) };
+  const topCenter = { x: 300 + normal.x * 50, y: 230 + normal.y * 50 };
+  const nearest = Math.min(...corners.map(point => (point.x - topCenter.x) * normal.x + (point.y - topCenter.y) * normal.y));
+  expect(nearest).toBeGreaterThanOrEqual(expectedGap);
+  expect(nearest).toBeLessThan(expectedGap + 8);
+});

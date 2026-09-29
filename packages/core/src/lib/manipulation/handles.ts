@@ -130,11 +130,12 @@ const DragReadout = definePrimitive<
     props.focused,
     isManipulationSourceActive(props.controller, props.source),
     "top",
+    40,
   );
 });
 
 export interface CRCManipulationReadoutStateStyle {
-  /** Minimum outward spacing in CSS pixels; defaults to 5. */
+  /** Minimum outward spacing in CSS pixels; defaults to 40 for drag, 5 otherwise. */
   readonly gap?: number;
   readonly font?: string;
   readonly fill?: string;
@@ -691,6 +692,7 @@ function paintReadout(
   focused: boolean,
   active: boolean,
   position?: ResizePosition,
+  defaultGap = 5,
 ): void {
   validateReadoutStyle(readout);
   const resolved = resolveReadout(
@@ -698,6 +700,7 @@ function paintReadout(
     state.controller.active.get() === null,
     focused,
     active,
+    defaultGap,
   );
   if (!resolved.visible) return;
   const text = format();
@@ -787,10 +790,11 @@ function resolveReadout(
   inactive: boolean,
   focused: boolean,
   active: boolean,
+  defaultGap: number,
 ): Required<CRCManipulationReadoutStateStyle> {
   const source = value && value !== true ? value : {};
   const base: Required<CRCManipulationReadoutStateStyle> = {
-    gap: source.gap ?? 5,
+    gap: source.gap ?? defaultGap,
     font: source.font ?? "12px sans-serif",
     fill: source.fill ?? "#1d4ed8",
     stroke: source.stroke ?? "",
