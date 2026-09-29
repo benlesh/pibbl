@@ -65,14 +65,11 @@ export const crcPublicEntryPaths = {
     new URL("../../packages/core/src/index.ts", import.meta.url),
   ),
   viz: fileURLToPath(new URL("../../packages/viz/src/index.ts", import.meta.url)),
-  webgl: fileURLToPath(
-    new URL("../../packages/webgl/src/index.ts", import.meta.url),
+  three: fileURLToPath(
+    new URL("../../packages/three/src/index.ts", import.meta.url),
   ),
   particles: fileURLToPath(
     new URL("../../packages/particles/src/index.ts", import.meta.url),
-  ),
-  particlesWebgl: fileURLToPath(
-    new URL("../../packages/particles/src/webgl.ts", import.meta.url),
   ),
   types: fileURLToPath(
     new URL("../../packages/core/src/types.ts", import.meta.url),
@@ -92,9 +89,6 @@ export const crcPhysicsEntryPaths = {
   physics2dGeometry: fileURLToPath(
     new URL("../../packages/physics/src/2d-geometry.ts", import.meta.url),
   ),
-  physics3d: fileURLToPath(
-    new URL("../../packages/physics/src/3d.ts", import.meta.url),
-  ),
   physics3dGeometry: fileURLToPath(
     new URL("../../packages/physics/src/3d-geometry.ts", import.meta.url),
   ),
@@ -103,7 +97,6 @@ export const crcPhysicsEntryPaths = {
 /** Exact public entries rendered by the Studio API reference. */
 export const crcStudioPublicEntryPaths = {
   ...crcPublicEntryPaths,
-  physics3d: crcPhysicsEntryPaths.physics3d,
   physics3dGeometry: crcPhysicsEntryPaths.physics3dGeometry,
 } as const;
 

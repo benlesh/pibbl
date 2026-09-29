@@ -52,62 +52,16 @@ import {
   untracked,
 } from '@crc/core';
 import {
-  AmbientLight,
-  Cube,
-  DirectionalLight,
-  Group3D,
-  HemisphereLight,
-  Mesh,
-  PointLight,
-  Sphere,
-  SpotLight,
-  WebGLBackground,
-  WebGLLayer,
-  useOrbitCamera,
-  createWebGLGeometry,
-  type CRCOrbitCameraHandlers,
-  type CRCOrbitCameraOptions,
-  type CRCOrbitCameraResult,
-  type CRCWebGLLambertMaterial,
-  type CRCWebGLMaterial,
-  type CRCWebGLPerspectiveCamera,
-  type CRCWebGLShadowQuality,
-} from '@crc/webgl';
-import {
-  useGLTF,
-  type CRCWebGLAssetLoadResult,
-} from '@crc/webgl/gltf';
-import {
   Particles2D,
   defineParticleEffect2D,
   particleCurve,
   particleRange,
 } from '@crc/particles';
 import {
-  Particles3D,
-  defineParticleEffect3D,
-} from '@crc/particles/webgl';
-import {
   defineThreeLayer,
   type CRCThreeLayerResources,
 } from '@crc/three';
 import { PerspectiveCamera, Scene } from 'three';
-import {
-  Box3D,
-  Capsule3D,
-  Cone3D,
-  ConvexHull3D,
-  Cylinder3D,
-  Ellipsoid3D,
-  Heightfield3D,
-  PhysicsShape3D,
-  PhysicsWorld3D,
-  collider3D,
-  dynamicBody3D,
-  kinematicBody3D,
-  sphereShape3D,
-  staticBody3D,
-} from '@crc/physics/3d';
 import {
   Fragment as DevelopmentFragment,
   jsxDEV,
@@ -145,13 +99,6 @@ function SignalLabel(): CRCNode {
     </Text>
   );
 }
-
-function ImportedModelStatus(): CRCNode {
-  const loaded: CRCWebGLAssetLoadResult = useGLTF('/model.glb');
-  return <Text>{loaded.status}</Text>;
-}
-
-void (<ImportedModelStatus />);
 
 export const signalElement: CRCElement = <SignalLabel />;
 void isSignal(jsxCallback.asReadonly());
@@ -427,130 +374,6 @@ export const roundedShapeElements: readonly CRCElement<any>[] = [
   }),
 ];
 
-const automaticWebGLGeometry = createWebGLGeometry({
-  positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-  normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
-});
-const automaticShadowQualities = [
-  false,
-  'low',
-  'medium',
-  'high',
-] as const satisfies readonly CRCWebGLShadowQuality[];
-const automaticLambertMaterial: CRCWebGLMaterial = {
-  type: 'lambert',
-  emissiveColor: '#102040',
-  emissiveIntensity: 0.25,
-} satisfies CRCWebGLLambertMaterial;
-
-function AutomaticWebGLScene(): CRCNode {
-  const orbitOptions: CRCOrbitCameraOptions = {
-    orbitPoint: [0, 0, 0],
-    initialPosition: [0, 2, 5],
-    minDistance: 2,
-    maxDistance: 12,
-    rotateSpeed: 0.8,
-    zoomSpeed: 1.2,
-  };
-  const orbit: CRCOrbitCameraResult = useOrbitCamera(orbitOptions);
-  const handlers: CRCOrbitCameraHandlers = orbit.handlers;
-  const camera: CRCWebGLPerspectiveCamera = {
-    type: 'perspective',
-    position: orbit.position,
-    lookAt: orbit.lookAt,
-    up: [0, 1, 0],
-    fieldOfViewDegrees: 45,
-    near: 0.1,
-    far: 100,
-  };
-  return (
-    <Group {...handlers}>
-      <Rectangle style={{ width: 320, height: 180, fill: 'transparent' }} />
-      <WebGLLayer
-        camera={camera}
-        style={{
-          width: 320,
-          height: 180,
-          shadows: automaticShadowQualities[3],
-        }}
-      >
-        <WebGLBackground style={{ color: '#08111fcc' }} />
-        <AmbientLight style={{ color: '#ffffff', intensity: 0.1 }} />
-        <HemisphereLight
-          style={{
-            skyColor: '#b9dcff',
-            groundColor: '#302418',
-            intensity: 0.3,
-            rotationZDegrees: 5,
-          }}
-        />
-        <DirectionalLight
-          style={{
-            color: '#ffffff',
-            intensity: 1.2,
-            rotationXDegrees: -35,
-            rotationYDegrees: 45,
-            castShadow: false,
-          }}
-        />
-        <PointLight
-          style={{
-            color: '#ff8a4c',
-            intensity: 4,
-            range: 12,
-            translateX: 3,
-            translateY: 4,
-            translateZ: 2,
-            castShadow: true,
-          }}
-        />
-        <SpotLight
-          style={{
-            color: '#80c8ff',
-            intensity: 5,
-            range: 20,
-            innerConeAngleDegrees: 15,
-            outerConeAngleDegrees: 28,
-            translateX: -3,
-            translateY: 5,
-            translateZ: 4,
-            rotationXDegrees: -40,
-            castShadow: true,
-          }}
-        />
-        <Group3D style={{ rotationYDegrees: 15 }}>
-          <Cube
-            style={{
-              color: '#74d3ae',
-              size: 1,
-              material: automaticLambertMaterial,
-              castShadow: true,
-              receiveShadow: false,
-            }}
-          />
-          <Sphere
-            style={{
-              radius: 0.5,
-              translateX: 1,
-              lit: false,
-              castShadow: false,
-              receiveShadow: true,
-            }}
-          />
-          <Mesh
-            geometry={automaticWebGLGeometry}
-            style={{ color: '#f7c948' }}
-          />
-        </Group3D>
-      </WebGLLayer>
-    </Group>
-  );
-}
-
-export const automaticWebGLScene: CRCElement = (
-  <AutomaticWebGLScene />
-);
-
 const automaticParticleOpacity = particleCurve([
   [0, 1],
   [1, 0],
@@ -571,90 +394,17 @@ const automaticParticleEffect2D = defineParticleEffect2D({
     bounds: { min: [-20, -30], max: [20, 10] },
   }],
 });
-const automaticParticleEffect3D = defineParticleEffect3D({
-  emitters: [{
-    name: 'ember',
-    capacity: 32,
-    emission: [{ type: 'rate', particlesPerSecond: 8 }],
-    shape: { type: 'sphere', radius: 1, sample: 'volume' },
-    initial: {
-      lifetimeMilliseconds: particleRange(600, 900),
-      velocity: [0, particleRange(0.5, 1), 0],
-      size: 4,
-    },
-    appearance: { opacity: automaticParticleOpacity },
-    renderer: { type: 'point', material: 'emissive', blend: 'additive' },
-    bounds: { min: [-2, -1, -2], max: [2, 3, 2] },
-  }],
-});
 const automaticParticleEffect2DSignal = signal(automaticParticleEffect2D);
-const automaticParticleEffect3DSignal = signal(automaticParticleEffect3D);
 
 export const automaticParticleScene: CRCElement = (
-  <Group>
-    <Particles2D
-      effect={automaticParticleEffect2DSignal}
-      autoplay={signal(true)}
-      seed={signal(42)}
-      pointerEvents="none"
-      style={{ width: 100, height: 100 }}
-    />
-    <WebGLLayer
-      camera={{
-        type: 'perspective',
-        position: [0, 0, 5],
-        lookAt: [0, 0, 0],
-        up: [0, 1, 0],
-        fieldOfViewDegrees: 45,
-        near: 0.1,
-        far: 100,
-      }}
-      style={{ width: 100, height: 100 }}
-    >
-      <Particles3D
-        effect={automaticParticleEffect3DSignal}
-        autoplay={signal(true)}
-        seed={signal(42)}
-        pointerEvents="none"
-      />
-    </WebGLLayer>
-  </Group>
+  <Particles2D
+    effect={automaticParticleEffect2DSignal}
+    autoplay={signal(true)}
+    seed={signal(42)}
+    pointerEvents="none"
+    style={{ width: 100, height: 100 }}
+  />
 );
-
-const jsxPhysicsShape3D = sphereShape3D({ radius: 0.5 });
-const jsxPhysicsGravity3D = signal<readonly [number, number, number]>(
-  [0, -9.81, 0],
-);
-export const automaticPhysics3DScene: CRCElement = (
-  <WebGLLayer style={{ width: 320, height: 180 }}>
-    <PhysicsWorld3D gravity={jsxPhysicsGravity3D} sleeping={signal(true)}>
-      <Group3D physics={staticBody3D({ collider: false })}>
-        <Cube physics={collider3D()} style={{ lit: false }} />
-      </Group3D>
-      <Sphere physics={dynamicBody3D({ mass: 1 })} style={{ lit: false }} />
-      <Mesh
-        geometry={automaticWebGLGeometry}
-        physics={kinematicBody3D()}
-        style={{ lit: false }}
-      />
-      <PhysicsShape3D shape={signal(jsxPhysicsShape3D)} />
-      <Box3D width={signal(1)} height={signal(1)} depth={signal(1)} />
-      <Ellipsoid3D radii={[1, 2, 1]} />
-      <Capsule3D start={[0, -1, 0]} end={[0, 1, 0]} radius={0.5} />
-      <Cylinder3D radius={1} halfHeight={1} />
-      <Cone3D radius={1} halfHeight={1} />
-      <ConvexHull3D points={[[-1, -1, -1], [1, -1, -1], [0, 1, -1], [0, 0, 1]]} />
-      <Heightfield3D rows={2} columns={2} heights={[0, 0, 0, 0]} />
-    </PhysicsWorld3D>
-  </WebGLLayer>
-);
-
-// @ts-expect-error 2D physics attachments cannot be used by WebGL hosts.
-<Cube physics={{} as import('@crc/physics/2d').CRCPhysicsAttachment2D} />;
-// @ts-expect-error 3D physics attachments cannot be used by Canvas hosts.
-<Rectangle physics={dynamicBody3D()} style={{ width: 1, height: 1 }} />;
-// @ts-expect-error nominal lookalikes are not registered physics attachments.
-<Sphere physics={{ physics: 'dynamic' }} />;
 
 // @ts-expect-error RegularPolygon requires exactly one size property
 const missingRegularPolygonSize = <RegularPolygon style={{ sides: 6 }} />;

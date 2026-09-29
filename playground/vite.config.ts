@@ -21,9 +21,6 @@ export default defineConfig(({ mode }) => {
     ["@crc/physics/2d/geometry", "../packages/physics/src/2d-geometry.ts"],
     ["@crc/physics/2d", "../packages/physics/src/2d.ts"],
     ["@crc/physics/3d/geometry", "../packages/physics/src/3d-geometry.ts"],
-    ["@crc/physics/3d", "../packages/physics/src/3d.ts"],
-    ["@crc/webgl/internal", "../packages/webgl/src/internal.ts"],
-    ["@crc/webgl", "../packages/webgl/src/index.ts"],
   ].map(([find, path]) => ({
     find: new RegExp(`^${find.replaceAll("/", "\\/")}$`, "u"),
     replacement: resolve(import.meta.dirname, path),

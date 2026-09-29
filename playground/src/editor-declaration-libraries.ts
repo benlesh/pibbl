@@ -18,23 +18,16 @@ const declarationModulePaths = new Map([
     "file:///node_modules/@crc/core/jsx-dev-runtime.d.ts",
   ],
   ["@crc/particles", "file:///node_modules/@crc/particles/index.d.ts"],
-  [
-    "@crc/particles/webgl",
-    "file:///node_modules/@crc/particles/webgl.d.ts",
-  ],
   ["@crc/physics/2d", "file:///node_modules/@crc/physics/2d.d.ts"],
   [
     "@crc/physics/2d/geometry",
     "file:///node_modules/@crc/physics/2d/geometry.d.ts",
   ],
-  ["@crc/physics/3d", "file:///node_modules/@crc/physics/3d.d.ts"],
   [
     "@crc/physics/3d/geometry",
     "file:///node_modules/@crc/physics/3d/geometry.d.ts",
   ],
   ["@crc/three", "file:///node_modules/@crc/three/index.d.ts"],
-  ["@crc/webgl", "file:///node_modules/@crc/webgl/index.d.ts"],
-  ["@crc/webgl/gltf", "file:///node_modules/@crc/webgl/gltf.d.ts"],
 ]);
 
 function crcDeclarationLibraries(): EditorDeclarationLibrary[] {

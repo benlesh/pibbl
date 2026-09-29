@@ -169,16 +169,16 @@ assert.equal(
   validatePublicDocFrontmatter(
     {
       apiCategory: "types",
-      id: "api-types-webgl",
+      id: "api-types-three",
       kind: "api",
-      slug: "webgl",
-      summary: "Public WebGL package types.",
-      title: "WebGL types",
-      typeDomain: "webgl",
+      slug: "three",
+      summary: "Public Three.js integration types.",
+      title: "Three.js integration types",
+      typeDomain: "three",
     },
-    "docs/site/api/types/webgl.md",
+    "docs/site/api/types/three.md",
   ).typeDomain,
-  "webgl",
+  "three",
 );
 
 process.stdout.write(

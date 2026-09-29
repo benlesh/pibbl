@@ -6,14 +6,10 @@ const SUPPORTED_MODULES = new Set([
   "@crc/core/jsx-runtime",
   "@crc/core/jsx-dev-runtime",
   "@crc/particles",
-  "@crc/particles/webgl",
   "@crc/three",
   "@crc/physics/2d",
   "@crc/physics/2d/geometry",
-  "@crc/physics/3d",
   "@crc/physics/3d/geometry",
-  "@crc/webgl",
-  "@crc/webgl/gltf",
   "three",
   "three/addons/controls/OrbitControls.js",
 ]);
@@ -52,9 +48,8 @@ function invalidModuleShape(): Error {
   return new Error(
     "Lessons may contain named imports only from @crc/core, @crc/viz, " +
       "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, @crc/particles, " +
-      "@crc/particles/webgl, @crc/physics/2d, @crc/physics/2d/geometry, " +
-      "@crc/physics/3d, @crc/physics/3d/geometry, @crc/three, @crc/webgl, " +
-      "@crc/webgl/gltf, three, and " +
+      "@crc/physics/2d, @crc/physics/2d/geometry, " +
+      "@crc/physics/3d/geometry, @crc/three, three, and " +
       "three/addons/controls/OrbitControls.js, plus exactly " +
       "one default mount(canvas) export.",
   );

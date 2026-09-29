@@ -10,7 +10,7 @@ export type TypeDomain =
   | "particles"
   | "signal-inputs"
   | "styles"
-  | "webgl";
+  | "three";
 
 export interface PublicDocFrontmatter {
   readonly id: string;
@@ -91,7 +91,7 @@ const typeDomains = new Set<TypeDomain>([
   "particles",
   "signal-inputs",
   "styles",
-  "webgl",
+  "three",
 ]);
 const stableSlug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 
