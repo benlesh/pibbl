@@ -188,7 +188,10 @@ function renderComponentElement<P>(
                 result as CRCNodeInput,
                 componentRefs.element,
               );
-              if (isPlacementConsumed(componentRefs.element)) {
+              if (
+                definition === undefined &&
+                isPlacementConsumed(componentRefs.element)
+              ) {
                 for (const child of children) setPlacementConsumed(child);
               }
               commitSignalReads();
