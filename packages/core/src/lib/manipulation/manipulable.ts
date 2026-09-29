@@ -10,7 +10,11 @@ import type {
 } from "./controller-types.js";
 import { ManipulationFrame } from "./frame.js";
 import { DragHandle, ResizeHandles, RotationHandle } from "./handles.js";
-import type { CRCResizeHandlesProps } from "./handles.js";
+import type {
+  CRCResizeHandlesProps,
+  CRCRotationHandleProps,
+  CRCRotationHandleStyle,
+} from "./handles.js";
 import type { CRCManipulationBox } from "./types.js";
 
 export interface CRCManipulableProps extends Pick<
@@ -21,7 +25,13 @@ export interface CRCManipulableProps extends Pick<
   readonly draggable?: boolean | CRCManipulationMoveInput;
   readonly resizable?: boolean | CRCManipulationResizeInput;
   readonly rotatable?: boolean | CRCManipulationRotateInput;
-  readonly resizeHandles?: CRCResizeHandlesProps["positions"];
+  readonly resizeHandles?:
+    | CRCResizeHandlesProps["positions"]
+    | Omit<CRCResizeHandlesProps, "controller">;
+  readonly rotationHandle?: Omit<
+    CRCRotationHandleProps,
+    "controller" | "children"
+  > & { readonly style?: CRCRotationHandleStyle };
   readonly children?: CRCNode;
 }
 function operation<T>(value: boolean | T | undefined): T | undefined {
@@ -44,6 +54,12 @@ export function Manipulable(props: CRCManipulableProps): CRCNode {
     onCommit: props.onCommit,
     onCancel: props.onCancel,
   });
+  const resizeHandles =
+    Array.isArray(props.resizeHandles) ||
+    props.resizeHandles === "corners" ||
+    props.resizeHandles === "edges-and-corners"
+      ? { positions: props.resizeHandles }
+      : props.resizeHandles;
   return createElement(ManipulationFrame, {
     ...controller.frameProps,
     children: [
@@ -57,10 +73,14 @@ export function Manipulable(props: CRCManipulableProps): CRCNode {
         createElement(ResizeHandles, {
           key: "resize",
           controller,
-          positions: props.resizeHandles,
+          ...resizeHandles,
         }),
       props.rotatable &&
-        createElement(RotationHandle, { key: "rotate", controller }),
+        createElement(RotationHandle, {
+          key: "rotate",
+          controller,
+          ...props.rotationHandle,
+        }),
     ],
   });
 }
