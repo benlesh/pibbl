@@ -36,6 +36,7 @@ import {
 } from './absolute.js';
 import { pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
+import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { measureElement } from './measure.js';
 import type { Constraints, LayoutBox } from './types.js';
 
@@ -193,6 +194,7 @@ function resolveGridPlacements(
     const normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & GridItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    assertSupportedChildPosition('Grid', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
     const columnStart = placementInteger(
       normalized.gridColumnStart,
