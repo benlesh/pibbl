@@ -150,3 +150,28 @@ weakened or bypassed. Log `/tmp/crc-child-drag-docs-final.log`. The earlier full
 feature's positioning/pivot integration and aggregate-gate limitations above
 remain unresolved; these focused results are not a claim of whole-feature
 completion.
+
+## 2026-09-29 continuation: documentation audit and current-baseline integration
+
+- Corrected the remaining old local-target wording in the public manipulation
+  guide and aligned all readout type headings with the existing alphabetical
+  coverage check. `studio-docs:check` now passes public metadata, API coverage,
+  manifest, routes, links and search. Log `/tmp/crc-child-drag-studio-docs.log`.
+- Reused the clean idle `manipulation-math/crc` checkout on new branch
+  `codex/manipulation-current`, starting from current main commit `2288868b`.
+  The live feature preview remains on `component-manipulation/crc`.
+- Prepared a feature-only patch from `3373ca3` through `dd9ef9cb`: 246 paths
+  selected; 33 skipped, including pivot-removed files and the protected
+  integrity baselines. Patch `/tmp/crc-current-port.patch`; exclusions
+  `/tmp/crc-current-port-skipped.txt`.
+- Three-way application left 11 conflicts in documentation, package scripts,
+  scenario catalog, two learning tests, responsive example and Studio docs
+  coverage. No conflict resolutions were made. No changes were applied to the
+  user's main checkout. The isolated worktree preserves the staged patch and
+  conflicts for continuation.
+- Automatic approval review rejected the delegated conflict-resolution step as
+  beyond explicit authorization for the manipulation request. Both workers
+  stopped before mutation. Explicit permission for the current-baseline
+  integration was requested. Do not retry through a different tool or worker
+  without resolving that approval requirement. The separate integrity-baseline
+  approval also remains pending.
