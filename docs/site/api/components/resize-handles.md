@@ -16,7 +16,7 @@ import { ResizeHandles } from "@crc/core";
 ```
 
 `ResizeHandles` renders corner handles by default. Set `positions` to
-`"edges-and-corners"` or provide exact [`CRCResizePosition`](#/api/types/events#crcresizeposition)
+`"edges-and-corners"` or provide exact [`CRCResizePosition`](#/api/types/events)
 values. `hitSize` applies to every generated handle.
 
 ```tsx
