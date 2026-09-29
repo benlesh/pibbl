@@ -372,7 +372,7 @@ describe('signal and scheduler structural performance', () => {
         children: Array.from({ length: 100 }, (_, index) =>
           createElement(Rectangle, {
             key: `placed-${index}`,
-            style: { left: index * 4, top: 0, width: 4, height: 4 },
+            style: { left, top: 0, width: 4, height: 4 },
           }),
         ),
       }),

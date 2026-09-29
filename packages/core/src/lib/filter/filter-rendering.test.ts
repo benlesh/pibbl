@@ -221,7 +221,7 @@ describe('filter rendering', () => {
     expect(parentDraws).toHaveBeenCalledTimes(1);
     expect(parentDraws.mock.calls[0]![0]).toBeInstanceOf(OffscreenCanvas);
     expect(parentDraws.mock.calls[0]!.slice(1)).toEqual([
-      0, 0, 32, 32, 0, 0, 32, 32,
+      0, 0, 32, 32, -4, -4, 32, 32,
     ]);
     expect(pixel(canvas, 8, 8)[3]).toBe(255);
   });

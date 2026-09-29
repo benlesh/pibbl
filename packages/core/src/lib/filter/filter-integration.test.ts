@@ -284,12 +284,12 @@ describe('filter integration', () => {
     expect(checkouts).toHaveBeenCalledOnce();
     expect(checkouts.mock.calls[0]![0]).toMatchObject({
       output: {
-        logicalBounds: { x: 0, y: -10, width: 40, height: 40 },
+        logicalBounds: { x: -10, y: -10, width: 40, height: 40 },
         backingWidth: 40,
         backingHeight: 40,
       },
       source: {
-        logicalBounds: { x: 0, y: -10, width: 40, height: 50 },
+        logicalBounds: { x: -10, y: -10, width: 40, height: 50 },
         backingWidth: 40,
         backingHeight: 50,
       },

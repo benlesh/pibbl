@@ -234,10 +234,14 @@ describe('public JSX component authoring', () => {
       }
     }
     vi.stubGlobal('Image', FakeBrowserImage);
+    const imageOrigins: Array<{ x: number; y: number }> = [];
     const drawImage = vi.spyOn(
       CanvasRenderingContext2D.prototype,
       'drawImage',
-    ).mockImplementation(() => {});
+    ).mockImplementation(function (this: CanvasRenderingContext2D) {
+      const { e: x, f: y } = this.getTransform();
+      imageOrigins.push({ x, y });
+    });
     const frames = useManualAnimationFrames();
     const canvas = createCanvas();
     const controller = crc(canvas, (
@@ -255,7 +259,8 @@ describe('public JSX component authoring', () => {
     frames.flushNext();
 
     expect(drawImage).toHaveBeenCalledOnce();
-    expect(drawImage).toHaveBeenLastCalledWith(second, 4, 6, 30, 20);
+    expect(drawImage).toHaveBeenLastCalledWith(second, 0, 0, 30, 20);
+    expect(imageOrigins).toEqual([{ x: 4, y: 6 }]);
     savedFirstLoad?.();
     expect(frames.pendingCount()).toBe(0);
     expect(drawImage).toHaveBeenCalledOnce();
@@ -496,8 +501,8 @@ function observeCanvasTrace(): CanvasTraceEntry[] {
       trace.push({
         operation: 'fillText',
         value,
-        x,
-        y,
+        x: this.getTransform().transformPoint({ x, y }).x,
+        y: this.getTransform().transformPoint({ x, y }).y,
         fillStyle: this.fillStyle,
         textAlign: this.textAlign,
       });
@@ -553,8 +558,8 @@ function interactiveScene(authoring: AuthoringMode): CRCNode {
       onClick: () => message.set('CRC'),
     };
     const textStyle = {
-      x: 120,
-      y: 48,
+      left: 120,
+      top: 48,
       fill: '#fff',
       textAlign: 'center',
     } as const;

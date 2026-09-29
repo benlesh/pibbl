@@ -18,7 +18,7 @@ import { layoutDiagnostic } from './diagnostics.js';
 import { resolveFilterList } from './filter.js';
 import type { CRCFilter } from './filter-types.js';
 import { isPlacementConsumed } from '../element/metadata.js';
-import { resolveStandalonePosition } from './positioning.js';
+import { resolveStandalonePosition, type PositioningStyle } from './positioning.js';
 import { CANVAS_2D_BACKEND } from '../backend/canvas-2d-backend.js';
 
 const opaqueStyleProperties = new WeakMap<Function, ReadonlySet<string>>();
@@ -123,10 +123,20 @@ export function resolveElementStyle<
   const resolved = definition.resolveStyle ?
       definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;
-  const position = definition.backend !== CANVAS_2D_BACKEND.token ? {} :
-    isPlacementConsumed(element) ? { left: 0, top: 0 } :
+  const positioning = normalized as Readonly<PositioningStyle>;
+  const hasLeft = positioning.left !== undefined;
+  const hasTop = positioning.top !== undefined;
+  let positioned = resolved;
+  if (definition.backend === CANVAS_2D_BACKEND.token && (hasLeft || hasTop)) {
+    const position = isPlacementConsumed(element) ? { left: 0, top: 0 } :
       resolveStandalonePosition(normalized, context);
-  const final = { ...resolved, ...position, ...(systemFilter ? { filter: systemFilter.values } : {}) };
+    positioned = {
+      ...resolved,
+      ...(hasLeft ? { left: position.left } : {}),
+      ...(hasTop ? { top: position.top } : {}),
+    };
+  }
+  const final = systemFilter ? { ...positioned, filter: systemFilter.values } : positioned;
   assertResolvedValue(
     final,
     '',

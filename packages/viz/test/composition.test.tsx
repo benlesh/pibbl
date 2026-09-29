@@ -51,7 +51,7 @@ it("places axes at the local frame edges and changes ScaleAdjust axes without ch
     positions.push([t.e, t.f]);
     return <Circle style={{ radius: 3 }} />;
   }
-  const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText");
+  const fillText = observeTextPositions();
   const both = signal(false);
   function Marker() {
     return both.get() ? (
@@ -75,7 +75,7 @@ it("places axes at the local frame edges and changes ScaleAdjust axes without ch
   );
   runtime.flush();
   expect(
-    fillText.mock.calls.some(
+    fillText.some(
       ([text, x, y]) => text === "5" && x === 100 && y === 410,
     ),
   ).toBe(true);
@@ -198,7 +198,7 @@ it("reads signal data only in the series receiver, without forwarding it into Pa
 it("formats original tick values in an allocated reversed bottom axis", () => {
   runtime = testRuntime();
   const formatted: number[][] = [];
-  const text = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText");
+  const text = observeTextPositions();
   runtime.mount(
     <Absolute>
       <Scale
@@ -227,7 +227,7 @@ it("formats original tick values in an allocated reversed bottom axis", () => {
     [5, 1],
     [10, 2],
   ]);
-  expect(text.mock.calls.map(([label, x, y]) => [label, x, y])).toEqual([
+  expect(text).toEqual([
     ["v0", 240, 130],
     ["v5", 120, 130],
     ["v10", 0, 130],
@@ -251,3 +251,15 @@ it("keeps a large series as one painted batch", () => {
   runtime.flush();
   expect(stroke).toHaveBeenCalledTimes(1);
 });
+
+function observeTextPositions(): Array<[string, number, number]> {
+  const positions: Array<[string, number, number]> = [];
+  const original = CanvasRenderingContext2D.prototype.fillText;
+  vi.spyOn(CanvasRenderingContext2D.prototype, "fillText").mockImplementation(function (this: CanvasRenderingContext2D, label, x, y, maxWidth) {
+    const point = this.getTransform().transformPoint({ x, y });
+    positions.push([label, point.x, point.y]);
+    if (maxWidth === undefined) original.call(this, label, x, y);
+    else original.call(this, label, x, y, maxWidth);
+  });
+  return positions;
+}
