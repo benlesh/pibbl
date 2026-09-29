@@ -142,6 +142,7 @@ Read exact contracts before changing these areas:
 
 - `docs/design/render-layer-and-three-contract.md`
 - `docs/design/animation-contract.md`
+- `docs/design/physics-2d-contract.md`
 - `docs/design/signals-and-scheduling-contract.md`
 - `docs/design/canvas-surface-contract.md`
 - `docs/design/runtime-hooks-contract.md`

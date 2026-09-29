@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 63 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 64 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(63);
+    expect(learningExampleCatalog).toHaveLength(64);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1281,6 +1281,7 @@ describe("learning example catalog", () => {
         "layer",
         "particle-effects",
         "physics-2d",
+        "physics-panels",
         "signal-inputs",
         "signals-and-animation",
         "viz-hover-comparison",
@@ -1289,7 +1290,13 @@ describe("learning example catalog", () => {
         "viz-responsive-line",
       ],
       three: ["three-instancing", "three-layer"],
-      layout: ["absolute-and-overlay", "flex", "flow", "grid", "responsive-styles"],
+      layout: [
+        "absolute-and-overlay",
+        "flex",
+        "flow",
+        "grid",
+        "responsive-styles",
+      ],
       "events-and-interaction": [
         "click",
         "context-menu",
@@ -1366,6 +1373,7 @@ describe("learning example catalog", () => {
       "particle-effects",
       "physics-2d",
       "layer",
+      "physics-panels",
       "viz-pie-composition",
       "viz-hover-comparison",
       "viz-points-and-inspection",
@@ -1432,7 +1440,9 @@ describe("learning example catalog", () => {
       "Memoize a reusable hexagon Path2D with createRegularPolygonPath.",
       "Use an inradius-defined hexagon to clip children and their interaction geometry.",
     ]);
-    expect(await loadLearningSource(clip!)).toContain("createRegularPolygonPath");
+    expect(await loadLearningSource(clip!)).toContain(
+      "createRegularPolygonPath",
+    );
     expect(await loadLearningSource(clip!)).toContain("useConst");
 
     const regularPolygon = learningExampleCatalog.find(
@@ -1792,6 +1802,7 @@ describe("learning example catalog", () => {
         "particleCurve",
         "particleRange",
         "PhysicsWorld2D",
+        "applyImpulse2D",
         "dynamicBody2D",
         "staticBody2D",
         "collider2D",
@@ -1969,7 +1980,7 @@ describe("learning example catalog", () => {
     }
   });
 
-  it("preserves a settled ball's off-center grab on a scaled lesson canvas", async () => {
+  it("uses a settled ball's displayed pose for an off-center grab on a scaled lesson canvas", async () => {
     const { canvas } = await renderLearningExample("physics-2d");
     canvas.style.width = "568px";
     canvas.style.height = "331px";
@@ -2053,11 +2064,13 @@ describe("learning example catalog", () => {
     "loads, mounts, paints, and disposes $slug from its canonical source",
     async (entry) => {
       const source = await loadLearningSource(entry);
-      expect(() => validateLearningSourceText(source, {
-        authoring: entry.authoring,
-        label: entry.slug,
-        sourcePath: entry.source.path,
-      })).not.toThrow();
+      expect(() =>
+        validateLearningSourceText(source, {
+          authoring: entry.authoring,
+          label: entry.slug,
+          sourcePath: entry.source.path,
+        }),
+      ).not.toThrow();
 
       const { canvas, controller } = await renderLearningExample(entry.slug);
       const pixels = canvas

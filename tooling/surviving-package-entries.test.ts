@@ -25,6 +25,7 @@ describe("surviving optional package entries", () => {
     expect(Object.keys(physics.exports)).toEqual([
       "./2d",
       "./2d/geometry",
+      "./2d/testing",
       "./3d/geometry",
     ]);
     expect(physics.peerDependencies).toEqual({ "@crc/core": "0.0.1" });

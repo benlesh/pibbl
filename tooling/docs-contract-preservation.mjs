@@ -9,11 +9,12 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "8d0629c3003b70fc9378a92698fc8ebb61dcbc7d134b12c3ad0af6c206309f07";
+  "501668f3b7e47b56c9f915175f2f4c525afa84852d9a87d0bc26782f8dcf025f";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const THREE_PIVOT_APPROVAL_RECORD = "three-full-pivot";
 const COMPONENT_MANIPULATION_APPROVAL_RECORD = "component-manipulation";
+const PHYSICS_2D_QUALITY_APPROVAL_RECORD = "physics-2d-quality";
 const COMPONENT_MANIPULATION_APPROVED_SECTIONS = new Set([
   "Component manipulation design",
   "Intent",
@@ -105,12 +106,29 @@ const ANIMATION_APPROVED_SECTIONS = new Set([
   "Compatibility and migration",
   "Final boundaries",
 ]);
+const PHYSICS_2D_QUALITY_APPROVED_SECTIONS = new Set([
+  "2D physics quality decision record",
+  "Authorization and scope",
+  "Engine decision",
+  "Units and scheduling",
+  "Collision quality and composition",
+  "Observation and agentic testing",
+  "Performance evidence",
+]);
 const MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS = new Set([
   ...SIGNALS_SCHEDULER_APPROVED_SECTIONS,
   ...ANIMATION_APPROVED_SECTIONS,
 ]);
 
 const POST_BASELINE_CONTRACT_PROFILES = new Map([
+  [
+    "docs/design/physics-2d-contract.md",
+    {
+      unitPrefix: "q",
+      approvalRecordId: PHYSICS_2D_QUALITY_APPROVAL_RECORD,
+      allowedSections: PHYSICS_2D_QUALITY_APPROVED_SECTIONS,
+    },
+  ],
   [
     "docs/design/render-layer-and-three-contract.md",
     {

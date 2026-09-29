@@ -1,0 +1,192 @@
+{
+  "environment": {
+    "node": "v24.15.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M5 Max"
+  },
+  "versions": {
+    "planck": "1.5.0",
+    "rapier": "0.21.0"
+  },
+  "ticks": 600,
+  "warmup": 60,
+  "results": [
+    {
+      "scenario": "settling-pile",
+      "engine": "crc",
+      "bodies": 10,
+      "staticBodies": 1,
+      "p50Milliseconds": 0.03166699999999878,
+      "p95Milliseconds": 0.15091699999999264,
+      "escaped": 0,
+      "maximumCenterY": 9.30005,
+      "sleeping": 10
+    },
+    {
+      "scenario": "settling-pile",
+      "engine": "crc-rapier",
+      "bodies": 10,
+      "staticBodies": 1,
+      "p50Milliseconds": 0.04591699999997445,
+      "p95Milliseconds": 0.28512499999999363,
+      "escaped": 0,
+      "maximumCenterY": 9.30005931854248,
+      "sleeping": 10
+    },
+    {
+      "scenario": "settling-pile",
+      "engine": "planck",
+      "bodies": 10,
+      "staticBodies": 1,
+      "p50Milliseconds": 0.002250000000003638,
+      "p95Milliseconds": 0.004166999999995369,
+      "escaped": 0,
+      "maximumCenterY": 9.285013871849392,
+      "sleeping": 10
+    },
+    {
+      "scenario": "settling-pile",
+      "engine": "rapier",
+      "bodies": 10,
+      "staticBodies": 1,
+      "p50Milliseconds": 0.005041000000005624,
+      "p95Milliseconds": 0.01079200000003766,
+      "escaped": 0,
+      "maximumCenterY": 9.30005931854248,
+      "sleeping": 10
+    },
+    {
+      "scenario": "settling-pile",
+      "engine": "crc",
+      "bodies": 100,
+      "staticBodies": 1,
+      "p50Milliseconds": 0.6603330000000369,
+      "p95Milliseconds": 0.9230000000000018,
+      "escaped": 0,
+      "maximumCenterY": 9.30095398827844,
+      "sleeping": 0
+    },
+    {
+      "scenario": "settling-pile",
+      "engine": "crc-rapier",
+      "bodies": 100,
+      "staticBodies": 1,
+      "p50Milliseconds": 0.11845899999991616,
+      "p95Milliseconds": 0.7091249999999718,
+      "escaped": 0,
+      "maximumCenterY": 9.300272941589355,
+      "sleeping": 100
+    },
+    {
+      "scenario": "settling-pile",
+      "engine": "planck",
+      "bodies": 100,
+      "staticBodies": 1,
+      "p50Milliseconds": 0.008707999999842286,
+      "p95Milliseconds": 0.41429200000015953,
+      "escaped": 0,
+      "maximumCenterY": 9.28903966266231,
+      "sleeping": 100
+    },
+    {
+      "scenario": "settling-pile",
+      "engine": "rapier",
+      "bodies": 100,
+      "staticBodies": 1,
+      "p50Milliseconds": 0.012249999999994543,
+      "p95Milliseconds": 0.01887499999997999,
+      "escaped": 0,
+      "maximumCenterY": 9.300272941589355,
+      "sleeping": 100
+    },
+    {
+      "scenario": "settling-pile",
+      "engine": "crc",
+      "bodies": 1000,
+      "staticBodies": 1,
+      "p50Milliseconds": 14.86724999999933,
+      "p95Milliseconds": 19.563916999999492,
+      "escaped": 0,
+      "maximumCenterY": 9.308488439728198,
+      "sleeping": 16
+    },
+    {
+      "scenario": "settling-pile",
+      "engine": "crc-rapier",
+      "bodies": 1000,
+      "staticBodies": 1,
+      "p50Milliseconds": 2.7939580000002024,
+      "p95Milliseconds": 7.495582999999897,
+      "escaped": 0,
+      "maximumCenterY": 9.302593231201172,
+      "sleeping": 1000
+    },
+    {
+      "scenario": "settling-pile",
+      "engine": "planck",
+      "bodies": 1000,
+      "staticBodies": 1,
+      "p50Milliseconds": 4.630624999999782,
+      "p95Milliseconds": 5.601542000000336,
+      "escaped": 0,
+      "maximumCenterY": 9.28661637651965,
+      "sleeping": 22
+    },
+    {
+      "scenario": "settling-pile",
+      "engine": "rapier",
+      "bodies": 1000,
+      "staticBodies": 1,
+      "p50Milliseconds": 0.08158300000104646,
+      "p95Milliseconds": 1.1738330000007409,
+      "escaped": 0,
+      "maximumCenterY": 9.30260181427002,
+      "sleeping": 1000
+    },
+    {
+      "scenario": "active-static-field",
+      "engine": "crc",
+      "bodies": 100,
+      "staticBodies": 1001,
+      "p50Milliseconds": 0.9237080000002607,
+      "p95Milliseconds": 1.2746250000000146,
+      "escaped": 0,
+      "maximumCenterY": 9.30095398827844,
+      "sleeping": 0
+    },
+    {
+      "scenario": "active-static-field",
+      "engine": "crc-rapier",
+      "bodies": 100,
+      "staticBodies": 1001,
+      "p50Milliseconds": 1.3190419999991718,
+      "p95Milliseconds": 1.478291999999783,
+      "escaped": 0,
+      "maximumCenterY": 9.300270080566406,
+      "sleeping": 0
+    },
+    {
+      "scenario": "active-static-field",
+      "engine": "planck",
+      "bodies": 100,
+      "staticBodies": 1001,
+      "p50Milliseconds": 0.41508299999986775,
+      "p95Milliseconds": 0.4523749999989377,
+      "escaped": 0,
+      "maximumCenterY": 9.285049285715445,
+      "sleeping": 0
+    },
+    {
+      "scenario": "active-static-field",
+      "engine": "rapier",
+      "bodies": 100,
+      "staticBodies": 1001,
+      "p50Milliseconds": 0.17916699999841512,
+      "p95Milliseconds": 0.1878340000002936,
+      "escaped": 0,
+      "maximumCenterY": 9.300270080566406,
+      "sleeping": 0
+    }
+  ]
+}

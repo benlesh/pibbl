@@ -150,7 +150,10 @@ const crcInventory = await collectPublicExports(
   crcPublicEntryPaths,
   crcPublicCompilerOptions,
 );
-const physicsInventory = await collectPublicExports(crcPhysicsEntryPaths, {});
+const physicsInventory = await collectPublicExports(
+  crcPhysicsEntryPaths,
+  crcPublicCompilerOptions,
+);
 const studioInventory = await collectPublicExports(
   crcStudioPublicEntryPaths,
   crcPublicCompilerOptions,
@@ -163,8 +166,8 @@ assert.equal(crcInventory.three.values.length, 1);
 assert.equal(crcInventory.three.types.length, 8);
 assert.equal(crcInventory.particles.values.length, 9);
 assert.equal(crcInventory.particles.types.length, 43);
-assert.equal(physicsInventory.root.values.length, 46);
-assert.equal(physicsInventory.root.types.length, 46);
+assert.equal(physicsInventory.root.values.length, 50);
+assert.equal(physicsInventory.root.types.length, 51);
 assert.equal(physicsInventory.physics2dGeometry.values.length, 19);
 assert.equal(physicsInventory.physics2dGeometry.types.length, 11);
 assert.equal(physicsInventory.physics3dGeometry.values.length, 18);

@@ -62,8 +62,7 @@ const PARTICLES_MODULE = "@crc/particles";
 const PARTICLES_WEBGL_MODULE = ["@crc/particles", "webgl"].join("/");
 const THREE_ADAPTER_MODULE = "@crc/three";
 const THREE_MODULE = "three";
-const THREE_ORBIT_CONTROLS_MODULE =
-  "three/addons/controls/OrbitControls.js";
+const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = ["@crc", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
   VIZ_MODULE,
@@ -353,7 +352,9 @@ function isCanonicalMount(programBody: readonly SyntaxNode[]): boolean {
   const canvas = parameters[0];
   return (
     parameters.length >= 1 &&
-    parameters.slice(1).every(parameter => parameter.type === "AssignmentPattern") &&
+    parameters
+      .slice(1)
+      .every((parameter) => parameter.type === "AssignmentPattern") &&
     canvas?.type === "Identifier" &&
     canvas.name === "canvas" &&
     typeReferenceName(canvas.typeAnnotation) === "HTMLCanvasElement" &&
@@ -1517,39 +1518,45 @@ export function validateLearningSourceText(
         label === 'Learning example "three-instancing"'));
   const isPhysicsLesson =
     sourcePath === PHYSICS_LEARNING_SOURCE_PATH ||
+    sourcePath ===
+      "packages/scenarios/src/learning/composition/physics-panels.example.tsx" ||
     (sourcePath === undefined &&
-      (label === "physics-2d" ||
+      (label === "physics-panels" ||
+        label === 'Learning example "physics-panels"' ||
+        label === "physics-2d" ||
         label === 'Learning example "physics-2d"'));
   const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE);
   const hasExactPackageImports = isVizLesson
-    ? inspection.hasNamedValueCoreImport && inspection.packageImportModules.length === 2
-    : isThreeLesson
     ? inspection.hasNamedValueCoreImport &&
-      inspection.hasThreeAdapterValueImport &&
-      inspection.hasThreeValueImport &&
-      inspection.hasOrbitControlsValueImport === isThreeControlsLesson &&
-      !inspection.hasNamedValueParticlesImport &&
-      !inspection.hasNamedValueWebGLImport &&
-      inspection.packageImportModules.length === (isThreeControlsLesson ? 4 : 3)
-    : isParticlesLesson
+      inspection.packageImportModules.length === 2
+    : isThreeLesson
       ? inspection.hasNamedValueCoreImport &&
-        inspection.hasNamedValueParticlesImport &&
-        !inspection.hasNamedValuePhysicsImport &&
+        inspection.hasThreeAdapterValueImport &&
+        inspection.hasThreeValueImport &&
+        inspection.hasOrbitControlsValueImport === isThreeControlsLesson &&
+        !inspection.hasNamedValueParticlesImport &&
         !inspection.hasNamedValueWebGLImport &&
-        inspection.packageImportModules.length === 2
-      : isPhysicsLesson
+        inspection.packageImportModules.length ===
+          (isThreeControlsLesson ? 4 : 3)
+      : isParticlesLesson
         ? inspection.hasNamedValueCoreImport &&
-          inspection.hasNamedValuePhysicsImport &&
-          inspection.hasPhysics2DValueImport &&
-          !inspection.hasPhysics3DValueImport &&
-          !inspection.hasNamedValueParticlesImport &&
+          inspection.hasNamedValueParticlesImport &&
+          !inspection.hasNamedValuePhysicsImport &&
           !inspection.hasNamedValueWebGLImport &&
           inspection.packageImportModules.length === 2
-      : inspection.hasNamedValueCoreImport &&
-        !inspection.hasNamedValueParticlesImport &&
-        !inspection.hasNamedValuePhysicsImport &&
-        !inspection.hasNamedValueWebGLImport &&
-        inspection.packageImportModules.length === 1;
+        : isPhysicsLesson
+          ? inspection.hasNamedValueCoreImport &&
+            inspection.hasNamedValuePhysicsImport &&
+            inspection.hasPhysics2DValueImport &&
+            !inspection.hasPhysics3DValueImport &&
+            !inspection.hasNamedValueParticlesImport &&
+            !inspection.hasNamedValueWebGLImport &&
+            inspection.packageImportModules.length === 2
+          : inspection.hasNamedValueCoreImport &&
+            !inspection.hasNamedValueParticlesImport &&
+            !inspection.hasNamedValuePhysicsImport &&
+            !inspection.hasNamedValueWebGLImport &&
+            inspection.packageImportModules.length === 1;
   if (!inspection.hasOnlyApprovedImports || !hasExactPackageImports) {
     throw invalid(
       label,
@@ -1557,11 +1564,11 @@ export function validateLearningSourceText(
         ? isThreeControlsLesson
           ? "must use direct, unaliased static named value imports from @crc/core, @crc/three, three, and three/addons/controls/OrbitControls.js."
           : "must use direct, unaliased static named value imports from @crc/core, @crc/three, and three."
-            : isParticlesLesson
-              ? "must use direct, unaliased static named value imports from both @crc/core and @crc/particles."
-              : isPhysicsLesson
-          ? "must use direct, unaliased static named value imports from both @crc/core and @crc/physics/2d."
-              : "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
+        : isParticlesLesson
+          ? "must use direct, unaliased static named value imports from both @crc/core and @crc/particles."
+          : isPhysicsLesson
+            ? "must use direct, unaliased static named value imports from both @crc/core and @crc/physics/2d."
+            : "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
     );
   }
   if (
@@ -1585,10 +1592,10 @@ export function validateLearningSourceText(
       label,
       isThreeLesson
         ? "must use direct Three lesson bindings without aliases, reassignment, or shadowing."
-          : isParticlesLesson
-            ? "must use direct @crc/core and @crc/particles bindings without aliases, reassignment, or shadowing."
-            : isPhysicsLesson
-          ? "must use direct @crc/core and @crc/physics/2d bindings without aliases, reassignment, or shadowing."
+        : isParticlesLesson
+          ? "must use direct @crc/core and @crc/particles bindings without aliases, reassignment, or shadowing."
+          : isPhysicsLesson
+            ? "must use direct @crc/core and @crc/physics/2d bindings without aliases, reassignment, or shadowing."
             : "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
     );
   }
@@ -1610,9 +1617,7 @@ export function validateLearningSourceText(
   if (inspection.hasLegacyLayerRender) {
     throw invalid(label, "uses the legacy Layer render prop.");
   }
-  if (
-    inspection.hasUninspectableProps || inspection.hasOrbitHandlersSpread
-  ) {
+  if (inspection.hasUninspectableProps || inspection.hasOrbitHandlersSpread) {
     throw invalid(
       label,
       "must use inline object props and inline style objects without spreads.",
@@ -1800,10 +1805,7 @@ export function validateDiagramEditorTutorialSourceText(
     );
   }
 
-  if (
-    source.includes("useEventListener") ||
-    source.includes("useReaction")
-  ) {
+  if (source.includes("useEventListener") || source.includes("useReaction")) {
     throw invalid(
       label,
       "must use direct structural event props and component-owned teardown.",

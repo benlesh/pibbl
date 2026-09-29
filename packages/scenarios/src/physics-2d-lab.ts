@@ -5,7 +5,6 @@ import {
   enableBody2D,
   queryAabb2D,
   setLinearVelocity2D,
-  sleepBody2D,
   teleportBody2D,
   type CRCPhysicsBodyHandle2D,
   type CRCPhysicsVector2,
@@ -52,16 +51,6 @@ const INITIAL_POSITIONS: Readonly<
   sensorMover: [270, 104],
   handoff: [420, 202],
 };
-
-const SETTLED_BODY_IDS = [
-  "circle",
-  "box",
-  "ellipse",
-  "capsule",
-  "polygon",
-  "star",
-  "handoff",
-] as const satisfies readonly Physics2DLabBodyId[];
 
 function nextPaint(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
@@ -185,7 +174,7 @@ async function mountPhysics2DLab(
   const execute = (action: Physics2DLabAction): void => {
     switch (action) {
       case "settle":
-        for (const id of SETTLED_BODY_IDS) sleepBody2D(requireBody(model, id));
+        // Observe the simulation; never manufacture a settled state.
         break;
       case "impulse":
         applyImpulse2D(requireBody(model, "circle"), [80, -30]);
@@ -193,10 +182,10 @@ async function mountPhysics2DLab(
       case "cross-sensor":
         model.overlaps.length = 0;
         teleportBody2D(requireBody(model, "sensorMover"), {
-          position: [320, 104],
+          position: [270, 104],
           rotationDegrees: 0,
         });
-        setLinearVelocity2D(requireBody(model, "sensorMover"), [0, 0]);
+        setLinearVelocity2D(requireBody(model, "sensorMover"), [100, 0]);
         break;
       case "move-platform":
         model.platformPlayback?.play({ conflict: "replace" });
