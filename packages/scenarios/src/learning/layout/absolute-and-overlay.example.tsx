@@ -3,6 +3,7 @@ import {
   crc,
   useSignal,
   Overlay,
+  Group,
   Rectangle,
   Text,
   type CRCController,
@@ -51,6 +52,7 @@ function AbsoluteOverlayStudy() {
           }}
           onClick={() => active.update((value) => !value)}
         />
+        <Group style={{ width: 260, height: 28, alignSelf: "center", justifySelf: "center" }}>
         <Text
           style={{
             left: 130,
@@ -59,14 +61,11 @@ function AbsoluteOverlayStudy() {
             font: "800 22px sans-serif",
             textAlign: "center",
             textBaseline: "middle",
-            width: 260,
-            height: 28,
-            alignSelf: "center",
-            justifySelf: "center",
           }}
         >
           {active.get() ? "OVERLAY ACTIVE" : "CLICK THE OVERLAY"}
         </Text>
+        </Group>
       </Overlay>
     </Absolute>
   );

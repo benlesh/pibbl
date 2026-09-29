@@ -19,6 +19,7 @@ import { resolveFilterList } from './filter.js';
 import type { CRCFilter } from './filter-types.js';
 import { isPlacementConsumed } from '../element/metadata.js';
 import { resolveStandalonePosition } from './positioning.js';
+import { CANVAS_2D_BACKEND } from '../backend/canvas-2d-backend.js';
 
 const opaqueStyleProperties = new WeakMap<Function, ReadonlySet<string>>();
 export interface PreparedStyleInput {
@@ -122,8 +123,9 @@ export function resolveElementStyle<
   const resolved = definition.resolveStyle ?
       definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;
-  const position = isPlacementConsumed(element) ? { left: 0, top: 0 } :
-    resolveStandalonePosition(normalized, context);
+  const position = definition.backend !== CANVAS_2D_BACKEND.token ? {} :
+    isPlacementConsumed(element) ? { left: 0, top: 0 } :
+      resolveStandalonePosition(normalized, context);
   const final = { ...resolved, ...position, ...(systemFilter ? { filter: systemFilter.values } : {}) };
   assertResolvedValue(
     final,

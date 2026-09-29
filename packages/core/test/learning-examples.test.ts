@@ -1314,11 +1314,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 74 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
+  it("contains 75 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, WebGL lighting, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(74);
+    expect(learningExampleCatalog).toHaveLength(75);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1395,6 +1395,7 @@ describe("learning example catalog", () => {
       ],
       layout: ["absolute-and-overlay", "flex", "flow", "grid", "responsive-styles"],
       "events-and-interaction": [
+        "manipulation",
         "click",
         "context-menu",
         "custom-event-targets",

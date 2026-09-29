@@ -62,7 +62,7 @@ function Card() {
 Drag the title, resize a corner, or use the top control to rotate. Hold Shift
 to snap movement, size, and rotation. Hold Alt while resizing to preserve the
 initial aspect ratio. The live
-[manipulation example](#/examples/user-events/manipulation) also displays the
+[manipulation example](#/examples/events-and-interaction/manipulation) also displays the
 current geometry, rotation, operation, and completed changes.
 
 ## Placement and layout
