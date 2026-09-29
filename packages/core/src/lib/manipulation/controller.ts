@@ -1,4 +1,11 @@
-import { batch, signal } from "../signals/graph.js";
+import {
+  batch,
+  signal,
+  isSignal,
+  untracked,
+  assertSignalCommandAllowed,
+  assertDirectSignalWriteAllowed,
+} from "../signals/graph.js";
 import { resolveSignalValue } from "../signals/resolve-signal-value.js";
 import { requireHookContext, useHookSlot } from "../hooks/hook-slot.js";
 import { queueBeginCommand } from "../scheduler/realm-scheduler.js";
@@ -6,9 +13,16 @@ import type {
   CRCEventHandlers,
   CRCEventTarget,
   CRCPointerEvent,
+  CRCKeyboardEvent,
 } from "../events/types.js";
 import type { CRCComponentRefs, CRCInstance } from "../types.js";
 import type { WritableSignal } from "../signals/types.js";
+import {
+  observeGestureInputs,
+  claimGeometryGeneration,
+  restoreReleasedGesture,
+} from "./ownership.js";
+import { suppressManipulationActivation } from "../events/dispatch.js";
 import { solveManipulation } from "./solve.js";
 import type { CRCResizePosition } from "./types.js";
 import type {
@@ -22,6 +36,18 @@ import type {
   CRCManipulationSnapshot,
 } from "./controller-types.js";
 
+type PointerSample = Pick<
+  CRCPointerEvent,
+  | "pointerId"
+  | "x"
+  | "y"
+  | "clientX"
+  | "clientY"
+  | "shiftKey"
+  | "altKey"
+  | "ctrlKey"
+  | "metaKey"
+>;
 interface Session {
   operation: CRCManipulationOperation;
   handle?: CRCResizePosition;
@@ -37,6 +63,8 @@ interface Session {
   angle: number;
   rotationDelta: number;
   snapshot: CRCManipulationSnapshot;
+  releaseObservation?: () => void;
+  sample?: PointerSample;
 }
 export interface ManipulationState {
   controller: CRCManipulationController;
@@ -51,6 +79,7 @@ export interface ManipulationState {
 }
 const states = new WeakMap<CRCManipulationController, ManipulationState>();
 const owners = new WeakMap<object, ManipulationState>();
+const claimedPresses = new WeakSet<Event>();
 export function manipulationState(
   controller: CRCManipulationController,
 ): ManipulationState {
@@ -62,10 +91,12 @@ export function manipulationState(
   return state;
 }
 function geometry(state: ManipulationState): CRCManipulationGeometry {
-  return Object.freeze({
-    box: Object.freeze({ ...state.options.box.get() }),
-    rotation: state.options.rotation?.get() ?? 0,
-  });
+  return untracked(() =>
+    Object.freeze({
+      box: Object.freeze({ ...state.options.box.get() }),
+      rotation: state.options.rotation?.get() ?? 0,
+    }),
+  );
 }
 function same(a: CRCManipulationGeometry, b: CRCManipulationGeometry): boolean {
   return (
@@ -87,13 +118,21 @@ function publish(
   state: ManipulationState,
   next: CRCManipulationGeometry,
 ): void {
+  assertDirectSignalWriteAllowed(state.options.box);
+  if (state.options.rotation)
+    assertDirectSignalWriteAllowed(state.options.rotation);
   batch(() => {
     state.options.box.set(next.box);
     if (state.options.rotation) state.options.rotation.set(next.rotation);
   });
 }
 function release(state: ManipulationState, session: Session): void {
+  if (state.session !== session) return;
   state.session = undefined;
+  session.releaseObservation?.();
+  session.releaseObservation = undefined;
+  if (state.options.rotation && owners.get(state.options.rotation) === state)
+    owners.delete(state.options.rotation);
   if (owners.get(state.options.box) === state) owners.delete(state.options.box);
   if (session.target.hasPointerCapture(session.pointerId))
     session.target.releasePointerCapture(session.pointerId);
@@ -116,18 +155,23 @@ function cancel(
       Object.freeze({ ...event(session), after: geometry(state), reason }),
     );
 }
+/** Release capture synchronously; rollback can defer under renderer write guards. */
+export function detachManipulationFrame(state: ManipulationState): void {
+  const session = state.session;
+  if (!session) return;
+  const restore = same(geometry(state), session.last);
+  release(state, session);
+  restoreReleasedGesture({
+    box: state.options.box,
+    rotation: state.options.rotation,
+    before: restore ? session.before : geometry(state),
+    active: state.active,
+  });
+}
 function dispose(state: ManipulationState): void {
   if (!state.alive) return;
   state.alive = false;
-  const session = state.session;
-  if (!session) return;
-  release(state, session);
-  const options = state.options;
-  queueBeginCommand(() => {
-    if (!owners.has(options.box) && same(geometry(state), session.last))
-      publish(state, session.before);
-    state.active.set(null);
-  });
+  detachManipulationFrame(state);
 }
 export function useManipulation(
   options: CRCManipulationOptions,
@@ -149,7 +193,10 @@ export function useManipulation(
         return frameProps;
       },
       cancel() {
-        if (state.alive) cancel(state, "explicit");
+        if (state.alive) {
+          assertSignalCommandAllowed();
+          cancel(state, "explicit");
+        }
       },
     });
     const frameProps = Object.freeze({ controller, style: options.box });
@@ -171,6 +218,12 @@ export function useManipulation(
       "useManipulation geometry signal identity must remain stable.",
     );
   state.options = options;
+  if (state.session && !enabled(state, state.session.operation)) {
+    const session = state.session;
+    queueBeginCommand(() => {
+      if (state.alive && state.session === session) cancel(state, "disabled");
+    });
+  }
   return state.controller;
 }
 function enabled(
@@ -198,7 +251,14 @@ function validateSession(state: ManipulationState): Session | undefined {
   }
   if (
     ["a", "b", "c", "d", "e", "f"].some(
-      (key) => state.parent[key as "a"] !== session.parent[key as "a"],
+      (key) =>
+        Math.abs(state.parent[key as "a"] - session.parent[key as "a"]) >
+        1e-10 *
+          Math.max(
+            1,
+            Math.abs(state.parent[key as "a"]),
+            Math.abs(session.parent[key as "a"]),
+          ),
     )
   ) {
     cancel(state, "coordinate-space-changed");
@@ -206,28 +266,7 @@ function validateSession(state: ManipulationState): Session | undefined {
   }
   return session;
 }
-function apply(state: ManipulationState, pointer: CRCPointerEvent): void {
-  const session = validateSession(state);
-  if (!session || pointer.pointerId !== session.pointerId) return;
-  if (!session.started) {
-    if (
-      Math.hypot(
-        pointer.clientX - session.clientX,
-        pointer.clientY - session.clientY,
-      ) < 3
-    )
-      return;
-    session.started = true;
-    state.active.set(
-      Object.freeze({
-        operation: session.operation,
-        handle: session.handle ?? null,
-        pointerId: session.pointerId,
-      }),
-    );
-    state.options.onStart?.(event(session));
-    if (validateSession(state) !== session) return;
-  }
+function resolvedOptions(state: ManipulationState) {
   const options = state.options;
   const move = options.move && {
     ...options.move,
@@ -243,6 +282,50 @@ function apply(state: ManipulationState, pointer: CRCPointerEvent): void {
       enabled: resolveSignalValue(options.resize.snap.enabled ?? true),
     },
   };
+  const rotate = options.rotate && {
+    ...options.rotate,
+    snap: options.rotate.snap && {
+      ...options.rotate.snap,
+      enabled: resolveSignalValue(options.rotate.snap.enabled ?? true),
+    },
+  };
+  return { move, resize, rotate };
+}
+function apply(state: ManipulationState, pointer: PointerSample): void {
+  const session = validateSession(state);
+  if (!session || pointer.pointerId !== session.pointerId) return;
+  session.sample = {
+    pointerId: pointer.pointerId,
+    x: pointer.x,
+    y: pointer.y,
+    clientX: pointer.clientX,
+    clientY: pointer.clientY,
+    shiftKey: pointer.shiftKey,
+    altKey: pointer.altKey,
+    ctrlKey: pointer.ctrlKey,
+    metaKey: pointer.metaKey,
+  };
+  if (!session.started) {
+    if (
+      Math.hypot(
+        pointer.clientX - session.clientX,
+        pointer.clientY - session.clientY,
+      ) < 3
+    )
+      return;
+    session.started = true;
+    suppressManipulationActivation(state.root, session.pointerId);
+    state.active.set(
+      Object.freeze({
+        operation: session.operation,
+        handle: session.handle ?? null,
+        pointerId: session.pointerId,
+      }),
+    );
+    state.options.onStart?.(event(session));
+    if (validateSession(state) !== session) return;
+  }
+  const { move, resize, rotate } = resolvedOptions(state);
   const currentPoint = session.parent
     .inverse()
     .transformPoint(new DOMPoint(pointer.x, pointer.y));
@@ -259,13 +342,6 @@ function apply(state: ManipulationState, pointer: CRCPointerEvent): void {
       session.angle = angle;
     }
   }
-  const rotate = options.rotate && {
-    ...options.rotate,
-    snap: options.rotate.snap && {
-      ...options.rotate.snap,
-      enabled: resolveSignalValue(options.rotate.snap.enabled ?? true),
-    },
-  };
   const result = solveManipulation({
     operation: session.operation,
     handle: session.handle,
@@ -309,6 +385,35 @@ function apply(state: ManipulationState, pointer: CRCPointerEvent): void {
   if (validateSession(state) !== session) return;
   if (changed) state.options.onChange?.(event(session));
 }
+function applySafely(state: ManipulationState, pointer: PointerSample): void {
+  try {
+    apply(state, pointer);
+  } catch (error) {
+    try {
+      cancel(state, "explicit");
+    } catch (cleanupError) {
+      throw new AggregateError(
+        [error, cleanupError],
+        "Manipulation callback and cleanup failed.",
+      );
+    }
+    throw error;
+  }
+}
+function updateModifiers(
+  state: ManipulationState,
+  key: CRCKeyboardEvent,
+): void {
+  const sample = state.session?.sample;
+  if (!sample || !["Shift", "Alt", "Control", "Meta"].includes(key.key)) return;
+  applySafely(state, {
+    ...sample,
+    shiftKey: key.shiftKey,
+    altKey: key.altKey,
+    ctrlKey: key.ctrlKey,
+    metaKey: key.metaKey,
+  });
+}
 export function manipulationHandlers(
   controller: CRCManipulationController,
   operation: CRCManipulationOperation,
@@ -321,11 +426,15 @@ export function manipulationHandlers(
         !state.alive ||
         state.session ||
         pointer.defaultPrevented ||
+        claimedPresses.has(pointer.originalEvent) ||
         pointer.button !== 0 ||
         !enabled(state, operation)
       )
         return;
-      if (owners.has(state.options.box))
+      if (
+        owners.has(state.options.box) ||
+        (state.options.rotation && owners.has(state.options.rotation))
+      )
         throw new Error(
           "CRC manipulation geometry already has an active owner.",
         );
@@ -337,6 +446,29 @@ export function manipulationHandlers(
         throw new Error(
           "CRC manipulation cannot use a singular parent transform.",
         );
+      assertDirectSignalWriteAllowed(state.options.box);
+      if (state.options.rotation)
+        assertDirectSignalWriteAllowed(state.options.rotation);
+      const resolved = resolvedOptions(state);
+      if (
+        operation === "resize" &&
+        resolved.resize?.snap?.target === "grid" &&
+        (Math.abs(state.parent.b) > 1e-10 || Math.abs(state.parent.c) > 1e-10)
+      ) {
+        throw new Error(
+          "Grid resize snapping requires an aligned parent coordinate mapping.",
+        );
+      }
+      solveManipulation({
+        operation,
+        handle,
+        initial: before.box,
+        initialRotation: before.rotation,
+        initialPoint: point,
+        currentPoint: point,
+        modifiers: {},
+        ...resolved,
+      });
       pointer.currentTarget.setPointerCapture(pointer.pointerId);
       if (!pointer.currentTarget.hasPointerCapture(pointer.pointerId)) return;
       const snapshot = Object.freeze({
@@ -368,14 +500,31 @@ export function manipulationHandlers(
         snapshot,
       };
       owners.set(state.options.box, state);
-      pointer.preventDefault();
+      if (state.options.rotation) owners.set(state.options.rotation, state);
+      claimGeometryGeneration(state.options.box, state.options.rotation);
+      const operationOptions =
+        operation === "move"
+          ? state.options.move
+          : operation === "resize"
+            ? state.options.resize
+            : state.options.rotate;
+      const values: unknown[] = [
+        state.options.box,
+        state.options.rotation,
+        operationOptions?.enabled,
+      ];
+      const inputs = values.filter(isSignal);
+      state.session.releaseObservation = observeGestureInputs(inputs, () => {
+        validateSession(state);
+      });
+      claimedPresses.add(pointer.originalEvent);
     },
     onPointerMove(pointer) {
-      apply(state, pointer);
+      applySafely(state, pointer);
     },
     onPointerUp(pointer) {
       if (state.session?.pointerId !== pointer.pointerId) return;
-      apply(state, pointer);
+      applySafely(state, pointer);
       const session = state.session;
       if (!session) return;
       release(state, session);
@@ -396,8 +545,12 @@ export function manipulationHandlers(
       if (state.session?.pointerId === pointer.pointerId)
         cancel(state, "capture-lost");
     },
+    onKeyUp(key) {
+      updateModifiers(state, key);
+    },
     onKeyDown(key) {
       if (key.key === "Escape") cancel(state, "escape");
+      else updateModifiers(state, key);
     },
   };
 }

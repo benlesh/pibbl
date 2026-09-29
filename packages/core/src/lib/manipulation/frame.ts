@@ -9,7 +9,11 @@ import type { CRCNode } from "../element/types.js";
 import type { SystemStyle } from "../types.js";
 import type { CRCManipulationBox } from "./types.js";
 import type { CRCManipulationController } from "./controller-types.js";
-import { manipulationState, type ManipulationState } from "./controller.js";
+import {
+  manipulationState,
+  detachManipulationFrame,
+  type ManipulationState,
+} from "./controller.js";
 
 const frames: ManipulationState[] = [];
 export function requireManipulationFrame(
@@ -43,7 +47,10 @@ export const ManipulationFrame = definePrimitive<FrameProps, FrameStyle>(
     useHookSlot("manipulationFrame", (teardowns) => {
       state.frame = componentRefs;
       teardowns.add(() => {
-        if (state.frame === componentRefs) state.frame = undefined;
+        if (state.frame === componentRefs) {
+          state.frame = undefined;
+          detachManipulationFrame(state);
+        }
       });
       return state;
     });

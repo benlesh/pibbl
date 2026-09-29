@@ -218,15 +218,6 @@ function clampMoveToBounds(box: CRCManipulationBox, bounds: CRCManipulationBox |
   });
 }
 
-function clampResizeToBounds(initial: CRCManipulationBox, handle: CRCResizePosition, box: CRCManipulationBox, bounds: CRCManipulationBox | undefined): CRCManipulationBox {
-  if (!bounds) return box;
-  assertFiniteBox(bounds, 'resize.bounds');
-  if (initial.left < bounds.left || initial.top < bounds.top || initial.left + initial.width > bounds.left + bounds.width || initial.top + initial.height > bounds.top + bounds.height) throw new Error('Resize bounds must contain the initial box.');
-  const maxWidth = handle.includes('left') ? initial.left + initial.width - bounds.left : bounds.left + bounds.width - initial.left;
-  const maxHeight = handle.includes('top') ? initial.top + initial.height - bounds.top : bounds.top + bounds.height - initial.top;
-  return resizeFromDimensions(initial, handle, clamp(box.width, 1, maxWidth), clamp(box.height, 1, maxHeight));
-}
-
 function applyAspectRatio(initial: CRCManipulationBox, _handle: CRCResizePosition, width: number, height: number, ratio: number): readonly [number, number] {
   const widthChange = Math.abs(width / initial.width - 1);
   const heightChange = Math.abs(height / initial.height - 1);
