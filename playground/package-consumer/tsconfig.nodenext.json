@@ -17,6 +17,7 @@
     "wrong-runtime.ts",
     "mixed-runtime/crc-scene.crc.tsx",
     "mixed-runtime/react-host.tsx",
-    "mixed-runtime/react-stub/jsx-runtime.d.ts"
+    "mixed-runtime/react-stub/jsx-runtime.d.ts",
+    "responsive-styles.tsx"
   ]
 }

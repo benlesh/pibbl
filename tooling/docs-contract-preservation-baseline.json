@@ -78,6 +78,12 @@
       "path": "docs/superpowers/specs/2026-09-23-signals-centric-authoring-design.md",
       "sourceSha256": "825be37958f0c57ad3258d7d35e90943738456a3f10f516ed1f6261352b607a2",
       "unitPrefix": "c"
+    },
+    {
+      "id": "responsive-local-styles",
+      "path": "docs/superpowers/specs/2026-09-28-responsive-style-queries-design.md",
+      "sourceSha256": "94b5819569f63282849e716359412e2edcb261bf908991de8b12090be855e67c",
+      "unitPrefix": "r"
     }
   ],
   "contracts": [
@@ -5564,6 +5570,24 @@
           "kind": "prose",
           "section": "3D physics and layout",
           "text": "Layout treats a `WebGLLayer` as one ordinary allocated Canvas item and does not inspect its inner physics scene. Authored placement at body creation or re-enable seeds world-local pose, but layout is not a continuing constraint on an enabled dynamic body; physics presentation is applied inside the already allocated island and never changes Canvas measurement or allocation."
+        },
+        {
+          "id": "c0073",
+          "kind": "prose",
+          "section": "Responsive style inspection",
+          "text": "`style.when` selects local patches against the parent's established content box before direct-child normalization, measurement eligibility checks, and allocation. The prepared normalized style and query eligibility travel with that occurrence's private clones; rendering does not rematch against the final allocated size. Queries in an inner primitive returned by a placed plain component instead use that component's incoming allocation. Outer placement props remain raw in plain functions. Query-free styles retain the existing allocation path."
+        },
+        {
+          "id": "c0074",
+          "kind": "prose",
+          "section": "Responsive style inspection",
+          "text": "Nonempty queries on an item that needs mounted intrinsic measurement are unsupported, including descendants inspected by a measure callback. Give the item a definite allocation and adapt inside it. Standalone top-level measurement can use finite maxima on every queried axis; indefinite unqueried axes are allowed subject to existing measurement support. The eligibility preflight for indefinite standalone constraints can scan rules before selection, without repeating signal reads or adding mounted layout passes."
+        },
+        {
+          "id": "c0075",
+          "kind": "prose",
+          "section": "Responsive style inspection",
+          "text": "The [responsive styles guide](../site/learn/guides/responsive-styles.md) explains the placement/content distinction and its observable refactoring consequence."
         }
       ]
     },
@@ -8247,7 +8271,7 @@
           "id": "c0005",
           "kind": "prose",
           "section": "CRC style-system contract",
-          "text": "This vocabulary is CSS-familiar, not CSS. Styles do not cascade or inherit. There are no selectors, stylesheets, specificity, ambient parent styles, computed DOM values, class names, variables, or media/container queries. Reuse is ordinary JavaScript object composition."
+          "text": "This vocabulary is CSS-familiar, not CSS. Styles do not cascade or inherit. There are no selectors, stylesheets, specificity, ambient parent styles, computed DOM values, class names, or variables. Reuse is ordinary JavaScript object composition."
         },
         {
           "id": "c0006",
@@ -8722,6 +8746,36 @@
           "kind": "prose",
           "section": "3D physics transform authority",
           "text": "A 3D rigid-body pose contains translation and quaternion orientation, never scale. CRC forward-composes exact authored transform lineage below a compound body; scale and mirroring are baked into immutable collider geometry and automatic mass/inertia. Enabled dynamics reject competing authored root-pose changes, kinematic targets are application-owned moving poses, statics follow authored placement as topology, and disabled bodies stop physics presentation and accept authored motion. Shape/BVH and shape-to-render-geometry identity caches use weak descriptor keys rather than reference-counted runtime ownership."
+        },
+        {
+          "id": "c0085",
+          "kind": "prose",
+          "section": "Allocation-relative responsive inputs",
+          "text": "Primitive inputs accept `CRCResponsiveStyle<S>`: the ordinary shallow signal style plus an optional readonly `when` list of `CRCStyleRule<S>`. Each rule has `query: CRCSizeQuery` and a partial specified-style patch. Queries require at least one inclusive finite nonnegative bound: min/max width or height. Both axes combine with AND. Unknown query keys, conflicting ranges, malformed records, and nested lists reject, including in inactive branches. `when` is reserved in custom primitive specified, normalized, and resolved style declarations."
+        },
+        {
+          "id": "c0086",
+          "kind": "prose",
+          "section": "Allocation-relative responsive inputs",
+          "text": "Selection uses available containing size before normalization and placement. A layout item's outer rules see the parent's content dimensions. A plain component placed in a Grid cell receives raw author props and may return an inner primitive whose rules see the assigned cell. Extracting a directly placed primitive into a function can therefore change the query basis. No cascade, final-size rematching, or iterative layout pass is introduced."
+        },
+        {
+          "id": "c0087",
+          "kind": "prose",
+          "section": "Allocation-relative responsive inputs",
+          "text": "Base fields and all matching patch fields resolve once per preparation, even when later overwritten; inactive patch signals are unread. Last assignment wins, objects/arrays replace, and explicit undefined receives ordinary defaults after merging. Whole-style signals are allowed; rule/query/patch-object signals are not. Custom normalizers and resolvers never receive `when` (including undefined or empty lists). Existing receiver provisions own reads during parent inspection and transfer them to the receiver without rereading its authored style. Query metadata is occurrence-local, never recovered from receiver-token history."
+        },
+        {
+          "id": "c0088",
+          "kind": "prose",
+          "section": "Allocation-relative responsive inputs",
+          "text": "Mounted intrinsic and recursive measurement of query-bearing items is unsupported. Standalone top-level measurement requires finite maxima on queried axes. Query-free descendants remain measurable under allocated responsive containers. Unsupported paths read no unprepared base/patch fields; malformed envelopes still throw. Untracked measurement retains no reactive ownership."
+        },
+        {
+          "id": "c0089",
+          "kind": "prose",
+          "section": "Allocation-relative responsive inputs",
+          "text": "See the [public guide](../site/learn/guides/responsive-styles.md) for canonical JSX and createElement recipes, the [layout contract](./layout-system-contract.md) for placement."
         }
       ]
     },
@@ -12814,6 +12868,105 @@
         ]
       },
       "sharedAnchors": ["signal", "style", "opaque"]
+    },
+    {
+      "id": "responsive-style-c0085",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0085"],
+      "reason": "responsive-local-styles units r0034 r0037 r0075 r0076 r0083 authorize current unit c0085: Allocation-relative responsive inputs, including the documented allocation and authoring boundary.",
+      "approval": {
+        "recordId": "responsive-local-styles",
+        "unitIds": ["r0034", "r0037", "r0075", "r0076", "r0083"]
+      },
+      "sharedAnchors": ["ordinary", "queries", "unknown"]
+    },
+    {
+      "id": "responsive-style-c0086",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0086"],
+      "reason": "responsive-local-styles units r0019 r0020 r0024 r0090 r0093 authorize current unit c0086: Allocation-relative responsive inputs, including the documented allocation and authoring boundary.",
+      "approval": {
+        "recordId": "responsive-local-styles",
+        "unitIds": ["r0019", "r0020", "r0024", "r0090", "r0093"]
+      },
+      "sharedAnchors": ["available", "containing", "placement"]
+    },
+    {
+      "id": "responsive-style-c0087",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0087"],
+      "reason": "responsive-local-styles units r0077 r0078 r0079 r0081 r0082 r0085 r0090 r0097 r0101 r0117 authorize current unit c0087: Allocation-relative responsive inputs, including the documented allocation and authoring boundary.",
+      "approval": {
+        "recordId": "responsive-local-styles",
+        "unitIds": [
+          "r0077",
+          "r0078",
+          "r0079",
+          "r0081",
+          "r0082",
+          "r0085",
+          "r0090",
+          "r0097",
+          "r0101",
+          "r0117"
+        ]
+      },
+      "sharedAnchors": ["fields", "matching", "resolve"]
+    },
+    {
+      "id": "responsive-style-c0088",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0088"],
+      "reason": "responsive-local-styles units r0110 r0113 r0114 authorize current unit c0088: Allocation-relative responsive inputs, including the documented allocation and authoring boundary.",
+      "approval": {
+        "recordId": "responsive-local-styles",
+        "unitIds": ["r0110", "r0113", "r0114"]
+      },
+      "sharedAnchors": ["intrinsic", "recursive", "measurement"]
+    },
+    {
+      "id": "responsive-style-c0089",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0089"],
+      "reason": "responsive-local-styles unit r0052 authorizes current unit c0089: canonical JSX and createElement guidance with the placement/content distinction.",
+      "approval": {
+        "recordId": "responsive-local-styles",
+        "unitIds": ["r0052"]
+      },
+      "sharedAnchors": ["public", "canonical", "createelement"]
+    },
+    {
+      "id": "responsive-layout-c0073",
+      "path": "docs/design/layout-system-contract.md",
+      "currentIds": ["c0073"],
+      "reason": "responsive-local-styles units r0019 r0020 r0052 r0088 r0090 r0123 authorize current unit c0073: Responsive style inspection, including the documented allocation and authoring boundary.",
+      "approval": {
+        "recordId": "responsive-local-styles",
+        "unitIds": ["r0019", "r0020", "r0052", "r0088", "r0090", "r0123"]
+      },
+      "sharedAnchors": ["against", "prepared", "private"]
+    },
+    {
+      "id": "responsive-layout-c0074",
+      "path": "docs/design/layout-system-contract.md",
+      "currentIds": ["c0074"],
+      "reason": "responsive-local-styles units r0110 r0107 r0108 r0109 r0114 authorize current unit c0074: Responsive style inspection, including the documented allocation and authoring boundary.",
+      "approval": {
+        "recordId": "responsive-local-styles",
+        "unitIds": ["r0107", "r0108", "r0109", "r0114", "r0110"]
+      },
+      "sharedAnchors": ["intrinsic", "measurement", "definite"]
+    },
+    {
+      "id": "responsive-layout-c0075",
+      "path": "docs/design/layout-system-contract.md",
+      "currentIds": ["c0075"],
+      "reason": "responsive-local-styles units r0021 r0024 authorize current unit c0075: Responsive style inspection, including the documented allocation and authoring boundary.",
+      "approval": {
+        "recordId": "responsive-local-styles",
+        "unitIds": ["r0021", "r0024"]
+      },
+      "sharedAnchors": ["styles", "distinction"]
     }
   ],
   "evidenceMappings": [
@@ -12947,7 +13100,7 @@
         "marker": "invokes a plain function once with frozen author props and supports every existing hook"
       },
       "relevance": {
-        "sharedAnchors": ["primitive", "function"]
+        "sharedAnchors": ["function", "props"]
       }
     },
     {

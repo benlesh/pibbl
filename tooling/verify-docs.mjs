@@ -81,6 +81,7 @@ const publicGuidePaths = [
   "docs/site/learn/guides/signals-and-animation.md",
   "docs/site/learn/guides/state-and-lifecycle.md",
   "docs/site/learn/guides/style-and-draw.md",
+  "docs/site/learn/guides/responsive-styles.md",
   "docs/site/learn/guides/webgl-islands.md",
   "docs/site/learn/guides/webgl-lighting.md",
 ];

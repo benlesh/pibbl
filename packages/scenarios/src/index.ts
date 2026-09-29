@@ -1,6 +1,7 @@
 export {
   animationLabScenarioEntry,
   canvasSurfaceScenarioEntry,
+  responsiveStylesScenarioEntry,
   cleanupStressScenarioEntry,
   createScenarioCatalogIndex,
   drawingCompositionScenarioEntry,
@@ -299,3 +300,5 @@ export type {
   TutorialSnapshotCatalogEntry,
   TutorialSnapshotMetadata,
 } from './tutorial-types';
+
+export type { ResponsiveStylesState } from './responsive-styles-lab.example';

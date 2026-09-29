@@ -466,6 +466,7 @@ try {
   for (const file of [
     'index.ts',
     'jsx.tsx',
+    'responsive-styles.tsx',
     'runtime.mjs',
     'tsconfig.bundler.json',
     'tsconfig.nodenext.json',

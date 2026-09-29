@@ -1,3 +1,4 @@
+import { resolveResponsiveStyle, preparedStyleValue, type ResponsiveStylePreparation, type QueryBasis } from '../style/responsive.js';
 import {
   getPrimitiveProgramProps,
   getSpecifiedStyle,
@@ -19,6 +20,8 @@ export interface ResolvedPrimitiveInputs {
 export function resolvePrimitiveInputs(
   element: CRCElement<any>,
   definition: PrimitiveDefinition,
+  prepared?: { style: Readonly<Record<PropertyKey, unknown>> },
+  basis?: QueryBasis,
 ): ResolvedPrimitiveInputs {
   const rawProps = getPrimitiveProgramProps(element) as Readonly<
     Record<PropertyKey, unknown>
@@ -48,13 +51,29 @@ export function resolvePrimitiveInputs(
 
   return {
     props: programProps ?? rawProps,
-    style: resolvePrimitiveStyleInput(getSpecifiedStyle(element)),
+    style: prepared ? prepared.style : resolvePrimitiveStyleInput(
+      getSpecifiedStyle(element), element, basis, 'value',
+    ),
   };
 }
 
 export function resolvePrimitiveStyleInput(
   input: unknown,
-): Readonly<Record<PropertyKey, unknown>> | undefined {
+  element: CRCElement<any> | undefined,
+  basis: QueryBasis | undefined,
+  mode: 'value',
+): Readonly<Record<PropertyKey, unknown>> | undefined;
+export function resolvePrimitiveStyleInput(
+  input: unknown,
+  element?: CRCElement<any>,
+  basis?: QueryBasis,
+): Readonly<Record<PropertyKey, unknown>> | ResponsiveStylePreparation | undefined;
+export function resolvePrimitiveStyleInput(
+  input: unknown,
+  element?: CRCElement<any>,
+  basis?: QueryBasis,
+  mode: 'value' | 'preparation' = 'preparation',
+): Readonly<Record<PropertyKey, unknown>> | ResponsiveStylePreparation | undefined {
   let style = input;
   if (isSignal(style)) {
     recordSignalInputResolution();
@@ -68,6 +87,10 @@ export function resolvePrimitiveStyleInput(
   }
 
   const source = style as Readonly<Record<PropertyKey, unknown>>;
+  if (source.when !== undefined) {
+    const prepared = resolveResponsiveStyle(source, element, basis);
+    return mode === 'value' ? preparedStyleValue(prepared) : prepared;
+  }
   let resolved: Record<PropertyKey, unknown> | undefined;
   for (const key in source) {
     if (key === 'custom') continue;

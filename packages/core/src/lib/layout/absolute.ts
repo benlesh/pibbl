@@ -1,3 +1,4 @@
+import { ResponsiveStylePreparation, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { EMPTY_STYLE } from '../style/empty-style.js';
 import { materializeContainerChildren } from '../element/children.js';
@@ -133,7 +134,8 @@ function resolveAbsoluteChildPlacement(
   child: CRCElement<any>,
   receiverToken?: object,
 ): { box: LayoutBox; element: CRCElement<any> } {
-  const style = normalizeDirectChildStyle(child, receiverToken) as Readonly<
+  const prepared = prepareDirectChildStyle(child, receiverToken, container);
+  const style = preparedStyleValue(prepared) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
   const resolved = resolveDirectChildBox(container, child, 'absolute', style);
@@ -154,6 +156,7 @@ function resolveAbsoluteChildPlacement(
       resolved.contentBox.width,
       resolved.contentBox.height,
       receiverToken,
+      preparedStyleQuery(prepared),
     ),
   };
 }
@@ -165,13 +168,14 @@ export function childWithUsedSize(
   width: number,
   height: number,
   receiverToken?: object,
+  query?: PreparedQuery,
 ): CRCElement<any> {
   const renderedChild = cloneCRCElement(child);
   setPreNormalizedStyle(renderedChild, Object.freeze({
     ...style,
     width,
     height,
-  }), child, receiverToken);
+  }), child, receiverToken, query);
   return renderedChild;
 }
 
@@ -180,7 +184,7 @@ export function resolveDirectChildBox(
   container: Readonly<LayoutBox>,
   child: CRCElement<any>,
   algorithm: string,
-  style: Readonly<SystemStyle> = normalizeDirectChildStyle(child),
+  style: Readonly<SystemStyle> = normalizeDirectChildStyle(child, undefined, container),
 ): ResolvedBoxStyle {
   return resolveLayoutBox(
     style as Readonly<BoxStyle>,
@@ -206,20 +210,37 @@ export function resolveDirectChildBox(
 export function normalizeDirectChildStyle(
   child: CRCElement<any>,
   receiverToken?: object,
+  queryBasis?: Readonly<LayoutBox>,
 ): Readonly<SystemStyle> {
+  return preparedStyleValue(prepareDirectChildStyle(child, receiverToken, queryBasis));
+}
+
+/** Carries responsive eligibility with this normalization, never with a token. */
+export function prepareDirectChildStyle(
+  child: CRCElement<any>,
+  receiverToken?: object,
+  queryBasis?: Readonly<LayoutBox>,
+): Readonly<SystemStyle> | ResponsiveStylePreparation<Readonly<SystemStyle>> {
   const definition = getPrimitiveDefinition(child.type);
-  const style = withReceiverInputProvision(
+  const prepared = withReceiverInputProvision(
     GLOBAL_STATE.renderTransaction,
     receiverToken,
     () => resolvePrimitiveStyleInput(
       (child.props as { readonly style?: unknown }).style,
+      child, queryBasis,
     ) ?? EMPTY_STYLE,
   );
+  const style = preparedStyleValue(prepared);
   const filter = extractSystemFilter(style);
   const normalized = definition?.normalizeStyle ?
       definition.normalizeStyle(withoutSystemFilter(style)) :
       withoutSystemFilter(style);
-  return filter === undefined ? normalized : { ...normalized, filter };
+  const final = filter === undefined ? normalized : { ...normalized, filter };
+  if (prepared instanceof ResponsiveStylePreparation) {
+    prepared.style = final;
+    return prepared;
+  }
+  return final;
 }
 
 /** @internal Converts source-order descriptors to stable placed children. */
