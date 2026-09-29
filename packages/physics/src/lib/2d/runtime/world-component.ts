@@ -1,6 +1,7 @@
 import type { CRCComponent } from "@crc/core";
 import {
   crcInternalCurrentSimulationOwner,
+  crcInternalCurrentWorldTransform,
   setCurrentComponentAfterRender,
   useInternalHookSlot,
 } from "@crc/core/internal";
@@ -25,7 +26,7 @@ const renderPhysicsWorld2D: CRCComponent<CRCPhysicsWorld2DProps> = (props) => {
     return controller;
   });
   const controller = slot.value;
-  controller.beginRender(resolvedProps);
+  controller.beginRender(resolvedProps, crcInternalCurrentWorldTransform());
   const popWorld = pushPhysicsWorld2D(controller);
   try {
     setCurrentComponentAfterRender(popWorld);

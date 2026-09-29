@@ -124,7 +124,7 @@ describe("ordered 2D physics events", () => {
         <Body
           type="dynamic"
           x={-4}
-          velocity={[30, 0]}
+          velocity={[28, 0]}
           tag="mover"
           handlers={overlap("second")}
         />

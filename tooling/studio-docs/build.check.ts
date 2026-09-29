@@ -8,7 +8,11 @@ import {
   tutorialSnapshotCatalog,
 } from "@crc/scenarios";
 import { buildNavigation } from "../../playground/src/app/navigation";
-import { collectPublicExports, crcPublicCompilerOptions, crcStudioPublicEntryPaths } from "./api-exports";
+import {
+  collectPublicExports,
+  crcPublicCompilerOptions,
+  crcStudioPublicEntryPaths,
+} from "./api-exports";
 import {
   buildStudioDocumentation,
   toStudioDocumentationSearchInput,
@@ -478,7 +482,10 @@ order: ${String(order)}
 
 const real = await buildStudioDocumentation({
   repositoryRoot: resolve(import.meta.dirname, "../.."),
-  apiInventory: await collectPublicExports(crcStudioPublicEntryPaths, crcPublicCompilerOptions),
+  apiInventory: await collectPublicExports(
+    crcStudioPublicEntryPaths,
+    crcPublicCompilerOptions,
+  ),
   examples: learningExampleCatalog,
   workbenchSources: [...learningExampleCatalog, ...tutorialSnapshotCatalog],
 });
@@ -591,6 +598,7 @@ assert.deepEqual(
     "Responsive local styles",
     "Manage state and lifecycle",
     "Use signals and animation",
+    "Compose and test 2D physics",
     "Use Three.js inside CRC",
     "Create particle effects",
     "Compose data visualizations",

@@ -1,0 +1,97 @@
+{
+  "environment": {
+    "node": "v26.9.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M5 Max"
+  },
+  "versions": {
+    "planck": "1.5.0",
+    "rapier": "0.21.0"
+  },
+  "ticks": 600,
+  "warmup": 60,
+  "results": [
+    {
+      "engine": "crc",
+      "bodies": 10,
+      "p50Milliseconds": 0.03354099999998539,
+      "p95Milliseconds": 0.14750000000000796,
+      "escaped": 0,
+      "maximumCenterY": 9.30005,
+      "sleeping": 10
+    },
+    {
+      "engine": "planck",
+      "bodies": 10,
+      "p50Milliseconds": 0.0031250000000113687,
+      "p95Milliseconds": 0.008292000000011512,
+      "escaped": 0,
+      "maximumCenterY": 9.285013871849392,
+      "sleeping": 10
+    },
+    {
+      "engine": "rapier",
+      "bodies": 10,
+      "p50Milliseconds": 0.0074160000000063064,
+      "p95Milliseconds": 0.02312499999999318,
+      "escaped": 0,
+      "maximumCenterY": 9.30005931854248,
+      "sleeping": 10
+    },
+    {
+      "engine": "crc",
+      "bodies": 100,
+      "p50Milliseconds": 0.7429160000000365,
+      "p95Milliseconds": 1.098333000000025,
+      "escaped": 0,
+      "maximumCenterY": 9.30095398827844,
+      "sleeping": 0
+    },
+    {
+      "engine": "planck",
+      "bodies": 100,
+      "p50Milliseconds": 0.007999999999924512,
+      "p95Milliseconds": 0.407291999999984,
+      "escaped": 0,
+      "maximumCenterY": 9.28903966266231,
+      "sleeping": 100
+    },
+    {
+      "engine": "rapier",
+      "bodies": 100,
+      "p50Milliseconds": 0.014000000000010004,
+      "p95Milliseconds": 0.037542000000030384,
+      "escaped": 0,
+      "maximumCenterY": 9.300272941589355,
+      "sleeping": 100
+    },
+    {
+      "engine": "crc",
+      "bodies": 1000,
+      "p50Milliseconds": 18.629791000000296,
+      "p95Milliseconds": 27.805167000000438,
+      "escaped": 0,
+      "maximumCenterY": 9.308488439728198,
+      "sleeping": 16
+    },
+    {
+      "engine": "planck",
+      "bodies": 1000,
+      "p50Milliseconds": 8.217542000000321,
+      "p95Milliseconds": 11.201208000000406,
+      "escaped": 0,
+      "maximumCenterY": 9.28661637651965,
+      "sleeping": 22
+    },
+    {
+      "engine": "rapier",
+      "bodies": 1000,
+      "p50Milliseconds": 0.08591700000033597,
+      "p95Milliseconds": 1.720208000002458,
+      "escaped": 0,
+      "maximumCenterY": 9.30260181427002,
+      "sleeping": 1000
+    }
+  ]
+}

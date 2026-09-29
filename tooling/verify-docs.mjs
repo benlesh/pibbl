@@ -78,6 +78,7 @@ const publicGuidePaths = [
   "docs/site/learn/guides/particle-effects.md",
   "docs/site/learn/guides/react-integration.md",
   "docs/site/learn/guides/signals-and-animation.md",
+  "docs/site/learn/guides/physics-2d.md",
   "docs/site/learn/guides/state-and-lifecycle.md",
   "docs/site/learn/guides/style-and-draw.md",
   "docs/site/learn/guides/responsive-styles.md",
@@ -158,6 +159,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/parallel.md",
   "docs/site/api/functions/define-particle-effect-2d.md",
   "docs/site/api/functions/particle-descriptors.md",
+  "docs/site/api/functions/physics-2d-testing.md",
+  "docs/site/api/functions/physics-2d.md",
   "docs/site/api/functions/physics-3d-geometry.md",
   "docs/site/api/functions/repeat.md",
   "docs/site/api/functions/resolve-signal-value.md",
@@ -194,6 +197,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/filters.md",
   "docs/site/api/types/layout.md",
   "docs/site/api/types/particles.md",
+  "docs/site/api/types/physics-2d.md",
+  "docs/site/api/types/physics-2d-testing.md",
   "docs/site/api/types/physics-3d-geometry.md",
   "docs/site/api/types/signal-inputs.md",
   "docs/site/api/types/styles.md",
@@ -245,6 +250,8 @@ const currentMarkdownPaths = [
   "docs/project-plans/README.md",
   "docs/project-plans/WORKFLOW.md",
   "docs/scenario-index.md",
+  "docs/design/physics-2d-contract.md",
+  "tooling/physics-comparison/README.md",
   "docs/strategy/README.md",
   "docs/strategy/responsive-style-queries.md",
   "docs/strategy/particle-effects-research.md",
@@ -822,6 +829,9 @@ async function typecheckCompleteSnippets(snippets) {
               ],
               "@crc/physics/2d/geometry": [
                 join(repositoryRoot, "packages/physics/src/2d-geometry.ts"),
+              ],
+              "@crc/physics/2d/testing": [
+                join(repositoryRoot, "packages/physics/src/2d-testing.ts"),
               ],
               "@crc/physics/3d/geometry": [
                 join(repositoryRoot, "packages/physics/src/3d-geometry.ts"),
@@ -1749,8 +1759,8 @@ const physicsManifest = JSON.parse(
 );
 assert.deepEqual(
   Object.keys(physicsManifest.exports),
-  ["./2d", "./2d/geometry", "./3d/geometry"],
-  "@crc/physics must expose only its 2D runtime and pure geometry entries.",
+  ["./2d", "./2d/geometry", "./2d/testing", "./3d/geometry"],
+  "@crc/physics must expose its 2D runtime, testing, and pure geometry entries only.",
 );
 assert.deepEqual(
   physicsManifest.peerDependencies,
@@ -2143,6 +2153,7 @@ const currentNormativeContractPaths = [
 const postBaselineNormativeContractPaths = new Set([
   "docs/design/animation-contract.md",
   "docs/design/signals-and-scheduling-contract.md",
+  "docs/design/physics-2d-contract.md",
   "docs/design/render-layer-and-three-contract.md",
 ]);
 const baselineSnapshotContractPaths = currentNormativeContractPaths.filter(

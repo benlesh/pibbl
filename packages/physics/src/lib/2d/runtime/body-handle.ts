@@ -299,6 +299,16 @@ export function physicsBodyHandleBinding2D(
   );
 }
 
+export function isPhysicsBodyHandle2D(
+  value: unknown,
+): value is CRCPhysicsBodyHandle2D {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (states.has(value) || externalBindings.has(value))
+  );
+}
+
 export function physicsBodyHandleOwner2D(
   handle: CRCPhysicsBodyHandle2D,
 ): CRCInternalSimulationOwner {

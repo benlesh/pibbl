@@ -90,6 +90,12 @@
       "path": "docs/superpowers/specs/2026-09-28-three-full-pivot-design.md",
       "sourceSha256": "6a23dc9dc8d25d1bbc5489efbbd3a7b8e2b27616debe2709e85294ffd2939ace",
       "unitPrefix": "p"
+    },
+    {
+      "id": "physics-2d-quality",
+      "path": "docs/superpowers/specs/2026-09-29-physics-2d-quality-design.md",
+      "sourceSha256": "c77f63950ecf004946146ce1238d14de25be03b639fc53616a9791e103d033fe",
+      "unitPrefix": "h"
     }
   ],
   "contracts": [
@@ -13642,6 +13648,215 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "path": "docs/design/physics-2d-contract.md",
+      "unitPrefix": "q",
+      "currentUnitCount": 20,
+      "currentUnitsSha256": "266a283aff379df1aeba9aeb6906cc8cf6dd5ca82234b13fc465d1a806d0d16c",
+      "approvalRecordId": "physics-2d-quality",
+      "mappings": [
+        {
+          "id": "runtime-engine-ownership",
+          "currentIds": ["q0001"],
+          "reason": "physics-2d-quality unit h0003 authorizes q0001 for the CRC and Rapier runtime ownership boundary.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0003"]
+          },
+          "sharedAnchors": ["Rapier"]
+        },
+        {
+          "id": "embedded-engine-loading",
+          "currentIds": ["q0002"],
+          "reason": "physics-2d-quality unit h0003 authorizes q0002 for the bundled engine loading and lifecycle boundary.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0003"]
+          },
+          "sharedAnchors": ["engine"]
+        },
+        {
+          "id": "public-units",
+          "currentIds": ["q0003"],
+          "reason": "physics-2d-quality unit h0004 authorizes q0003 for the public logical units conversion policy.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0004"]
+          },
+          "sharedAnchors": ["units"]
+        },
+        {
+          "id": "fixed-step-defaults",
+          "currentIds": ["q0004"],
+          "reason": "physics-2d-quality unit h0004 authorizes q0004 for gravity and fixed-step scheduling defaults.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0004"]
+          },
+          "sharedAnchors": ["Gravity"]
+        },
+        {
+          "id": "kinematic-cadence",
+          "currentIds": ["q0005"],
+          "reason": "physics-2d-quality unit h0004 authorizes q0005 for kinematic catch-up cadence behavior.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0004"]
+          },
+          "sharedAnchors": ["kinematic"]
+        },
+        {
+          "id": "solver-budgets",
+          "currentIds": ["q0006"],
+          "reason": "physics-2d-quality unit h0004 authorizes q0006 for solver iteration budget behavior.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0004"]
+          },
+          "sharedAnchors": ["solver"]
+        },
+        {
+          "id": "collider-geometry",
+          "currentIds": ["q0007"],
+          "reason": "physics-2d-quality unit h0005 authorizes q0007 for collider and pure geometry composition.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0005"]
+          },
+          "sharedAnchors": ["geometry"]
+        },
+        {
+          "id": "ccd-substeps",
+          "currentIds": ["q0008"],
+          "reason": "physics-2d-quality unit h0005 authorizes q0008 for opt-in CCD and discrete sensors.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0005"]
+          },
+          "sharedAnchors": ["CCD"]
+        },
+        {
+          "id": "ccd-contact-lifecycle",
+          "currentIds": ["q0009"],
+          "reason": "physics-2d-quality unit h0005 authorizes q0009 for transient CCD callback lifecycle behavior.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0005"]
+          },
+          "sharedAnchors": ["callbacks"]
+        },
+        {
+          "id": "world-ownership",
+          "currentIds": ["q0010"],
+          "reason": "physics-2d-quality unit h0005 authorizes q0010 for dynamic body ownership and composition.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0005"]
+          },
+          "sharedAnchors": ["Dynamic"]
+        },
+        {
+          "id": "local-space-boundary",
+          "currentIds": ["q0011"],
+          "reason": "physics-2d-quality unit h0005 authorizes q0011 for the creation-only local-space boundary.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0005"]
+          },
+          "sharedAnchors": ["local"]
+        },
+        {
+          "id": "coordinate-and-mass-geometry",
+          "currentIds": ["q0012"],
+          "reason": "physics-2d-quality unit h0005 authorizes q0012 for authoritative geometry and composition coordinates.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0005"]
+          },
+          "sharedAnchors": ["geometry"]
+        },
+        {
+          "id": "world-transaction",
+          "currentIds": ["q0013"],
+          "reason": "physics-2d-quality unit h0004 authorizes q0013 for scheduler transaction and rollback semantics.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0004"]
+          },
+          "sharedAnchors": ["scheduler"]
+        },
+        {
+          "id": "latest-inline-callback",
+          "currentIds": ["q0014"],
+          "reason": "physics-2d-quality unit h0006 authorizes q0014 for the latest committed callback handler lifecycle.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0006"]
+          },
+          "sharedAnchors": ["callback"]
+        },
+        {
+          "id": "idle-worlds",
+          "currentIds": ["q0015"],
+          "reason": "physics-2d-quality unit h0007 authorizes q0015 for sleeping worlds and idle scheduling behavior.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0007"]
+          },
+          "sharedAnchors": ["sleeping"]
+        },
+        {
+          "id": "immutable-inspection",
+          "currentIds": ["q0016"],
+          "reason": "physics-2d-quality unit h0006 authorizes q0016 for immutable inspection observations.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0006"]
+          },
+          "sharedAnchors": ["observations"]
+        },
+        {
+          "id": "debug-observation",
+          "currentIds": ["q0017"],
+          "reason": "physics-2d-quality unit h0006 authorizes q0017 for read-only debug observation behavior.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0006"]
+          },
+          "sharedAnchors": ["debug"]
+        },
+        {
+          "id": "isolated-agentic-testing",
+          "currentIds": ["q0018"],
+          "reason": "physics-2d-quality unit h0006 authorizes q0018 for isolated testing harness ownership.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0006"]
+          },
+          "sharedAnchors": ["testing"]
+        },
+        {
+          "id": "reproducible-reports",
+          "currentIds": ["q0019"],
+          "reason": "physics-2d-quality unit h0006 authorizes q0019 for reproducible reports and observations.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0006"]
+          },
+          "sharedAnchors": ["reports"]
+        },
+        {
+          "id": "performance-evidence",
+          "currentIds": ["q0020"],
+          "reason": "physics-2d-quality unit h0007 authorizes q0020 for structural performance evidence.",
+          "approval": {
+            "recordId": "physics-2d-quality",
+            "unitIds": ["h0007"]
+          },
+          "sharedAnchors": ["Structural"]
         }
       ]
     },

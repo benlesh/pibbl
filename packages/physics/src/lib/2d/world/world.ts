@@ -1,3 +1,4 @@
+import type { RapierSimulation2D, RapierCheckpoint2D } from "./rapier.js";
 import type { CRCPhysicsPose2D } from "../../../2d-geometry.js";
 import { manifoldBetweenShapeRecords2D } from "../collision/pairs.js";
 import type { InternalPose2D } from "../math.js";
@@ -26,7 +27,8 @@ import {
   applyForceAtPointToCandidateBody2D,
   applyImpulseAtPointToCandidateBody2D,
   applyTorqueToCandidateBody2D,
-  integrateCandidateBodies2D,
+  integrateCandidateVelocities2D,
+  integrateCandidatePoses2D,
 } from "./integrator.js";
 import { BODY_SLEEPING_2D, SequentialImpulseSolver2D } from "./solver.js";
 import {
@@ -257,6 +259,7 @@ interface ObjectSnapshot {
 
 interface WorldCheckpoint2D {
   readonly snapshots: readonly ObjectSnapshot[];
+  readonly rapier?: RapierCheckpoint2D;
 }
 
 export interface PhysicsWorld2DSnapshot {
@@ -355,7 +358,10 @@ export class PhysicsWorld2DKernel {
   private liveCandidate: PhysicsWorld2DCandidate | undefined;
   private disposed = false;
 
-  constructor(configuration: PhysicsWorld2DConfiguration = {}) {
+  constructor(
+    configuration: PhysicsWorld2DConfiguration = {},
+    private readonly simulation?: RapierSimulation2D,
+  ) {
     this.state = {
       configuration: normalizePhysicsWorld2DConfiguration(configuration),
       accumulatorMilliseconds: 0,
@@ -396,6 +402,32 @@ export class PhysicsWorld2DKernel {
       savedNormalImpulses: new Float64Array(8),
       savedTangentImpulses: new Float64Array(8),
     };
+  }
+
+  /** Refresh listener/tag metadata after a successful render without waking physics. */
+  updateColliderMetadata(records: readonly PhysicsTopologyRecord2D[]): void {
+    this.assertUsable();
+    for (const record of records) {
+      if (record.kind !== "collider") continue;
+      const previous = this.state.colliderRecords.get(record.id);
+      if (!previous || previous.bodyId !== record.bodyId) continue;
+      const { handlers, tag, owner } = record.definition;
+      if (
+        previous.definition.handlers === handlers &&
+        previous.definition.tag === tag &&
+        previous.definition.owner === owner
+      )
+        continue;
+      this.state.colliderRecords.set(record.id, {
+        ...previous,
+        definition: { ...previous.definition, handlers, tag, owner },
+      });
+      const slot = this.state.colliderSlots.get(record.id);
+      if (!slot) continue;
+      this.colliders.handlers[slot.index] = handlers;
+      this.colliders.tags[slot.index] = tag;
+      this.colliders.owners[slot.index] = owner;
+    }
   }
 
   proposeTopology(records: readonly PhysicsTopologyRecord2D[]): void {
@@ -485,8 +517,42 @@ export class PhysicsWorld2DKernel {
             configuration.fixedStepMilliseconds,
         ),
       );
+      // A frame endpoint is reached over its accepted ticks, rather than teleporting
+      // the entire kinematic motion into the first catch-up tick.
+      const starts = new Map<number, PhysicsPose2D>();
+      if (stepCount > 1)
+        for (const [bodyId] of input.stagedKinematicTargets) {
+          if (this.state.bodySlots.has(bodyId))
+            starts.set(bodyId, this.authoritativePose(bodyId));
+        }
       for (let step = 0; step < stepCount; step += 1) {
-        this.simulateFixedTick(input);
+        let tickInput = input;
+        if (stepCount > 1) {
+          const fraction = (step + 1) / stepCount;
+          const targets = new Map<number, PhysicsPose2D>();
+          for (const [bodyId, target] of input.stagedKinematicTargets) {
+            const start = starts.get(bodyId);
+            if (!start) continue;
+            targets.set(bodyId, {
+              position: [
+                start.position[0] +
+                  (target.position[0] - start.position[0]) * fraction,
+                start.position[1] +
+                  (target.position[1] - start.position[1]) * fraction,
+              ],
+              rotationDegrees:
+                start.rotationDegrees +
+                shortestRadians(
+                  start.rotationDegrees / RADIANS_TO_DEGREES,
+                  target.rotationDegrees / RADIANS_TO_DEGREES,
+                ) *
+                  RADIANS_TO_DEGREES *
+                  fraction,
+            });
+          }
+          tickInput = { ...input, stagedKinematicTargets: targets };
+        }
+        this.simulateFixedTick(tickInput);
         this.state.accumulatorMilliseconds -=
           configuration.fixedStepMilliseconds;
         if (this.state.accumulatorMilliseconds < Number.EPSILON) {
@@ -654,7 +720,8 @@ export class PhysicsWorld2DKernel {
         this.bodies.positionY[index]!,
         alpha,
       ),
-      previousRotation + shortestRadians(previousRotation, currentRotation) * alpha,
+      previousRotation +
+        shortestRadians(previousRotation, currentRotation) * alpha,
     );
   }
 
@@ -701,6 +768,7 @@ export class PhysicsWorld2DKernel {
     this.state.eventCount = 0;
     this.pendingTopology = undefined;
     this.pendingCommands = Object.freeze([]);
+    this.simulation?.dispose();
     this.disposed = true;
   }
 
@@ -716,12 +784,112 @@ export class PhysicsWorld2DKernel {
     const dt = this.state.configuration.fixedStepMilliseconds / 1_000;
     this.applyKinematicTargets(input.stagedKinematicTargets, dt);
     this.rebuildIntegrationBodyIndices();
-    integrateCandidateBodies2D(
+    if (this.simulation) {
+      const previousFlags = this.bodies.flags.slice();
+      this.simulation.step(
+        this.bodies,
+        this.colliders,
+        dt,
+        this.state.configuration.gravityX,
+        this.state.configuration.gravityY,
+        this.state.configuration.sleeping,
+        this.state.configuration.velocityIterations,
+        this.state.configuration.positionIterations,
+      );
+      injectFailure("broad-phase");
+      injectFailure("ccd");
+      this.moveBroadPhaseProxies();
+      this.broadPhase.publishPairs();
+      updateSortedContactCache2D(
+        this.contacts,
+        this.simulation.contactPairs(this.broadPhase, this.colliders),
+        this.colliders,
+        (first, second) => {
+          const sensor =
+            (this.colliders.flags[first]! | this.colliders.flags[second]!) & 1;
+          const dynamic =
+            (this.bodies.flags[this.colliders.bodyIndices[first]!]! |
+              this.bodies.flags[this.colliders.bodyIndices[second]!]!) &
+            BODY_TYPE_DYNAMIC_2D;
+          return sensor || !dynamic
+            ? this.manifoldBetweenColliders(first, second)
+            : this.simulation!.manifold(first, second);
+        },
+      );
+      for (let contact = 0; contact < this.contacts.contactCount; contact++) {
+        const impulses = this.simulation.normalImpulses(
+          this.contacts.firstColliderIndices[contact]!,
+          this.contacts.secondColliderIndices[contact]!,
+        );
+        for (let point = 0; point < 2; point++)
+          this.contacts.pointNormalImpulses[contact * 2 + point] =
+            impulses[point] ?? 0;
+      }
+      injectFailure("narrow-phase");
+      injectFailure("velocity-solve");
+      injectFailure("position-solve");
+      this.solver.advanceEligible = false;
+      for (let offset = 0; offset < this.state.bodyCount; offset++) {
+        const body = this.state.bodyIndices[offset]!;
+        if (!(this.bodies.flags[body]! & BODY_TYPE_DYNAMIC_2D)) continue;
+        const sleeping = !!(this.bodies.flags[body]! & BODY_SLEEPING_2D);
+        if (!sleeping) this.solver.advanceEligible = true;
+        if (sleeping !== !!(previousFlags[body]! & BODY_SLEEPING_2D))
+          this.appendEvent(sleeping ? 6 : 5, body, NO_INDEX);
+      }
+      this.stageContactEvents();
+      injectFailure("event-staging");
+      this.state.tick++;
+      recordPhysicsWorld2DTrace({
+        kind: "physics-2d-tick",
+        frameId: input.frameId,
+        logicalTime: input.logicalTime,
+        tick: this.state.tick,
+      });
+      return;
+    }
+    integrateCandidateVelocities2D(
       this.bodies,
       this.state.integrationBodyIndices,
       this.state.integrationBodyCount,
       this.state.configuration.gravityX,
       this.state.configuration.gravityY,
+      dt,
+    );
+    // Solve existing support contacts before advancing positions. Otherwise gravity
+    // adds penetration every tick faster than bounded position correction can remove it.
+    this.moveBroadPhaseProxies();
+    this.broadPhase.publishPairs();
+    updateSortedContactCache2D(
+      this.contacts,
+      this.broadPhase,
+      this.colliders,
+      (first, second) => this.manifoldBetweenColliders(first, second),
+    );
+    const restitutionThreshold = Math.max(
+      1,
+      2 *
+        dt *
+        Math.hypot(
+          this.state.configuration.gravityX,
+          this.state.configuration.gravityY,
+        ),
+    );
+    this.solver.solveCandidate(
+      this.bodies,
+      this.state.bodyIndices,
+      this.state.bodyCount,
+      this.contacts,
+      this.state.configuration.velocityIterations,
+      0,
+      true,
+      restitutionThreshold,
+    );
+    this.stageContactEvents(false);
+    integrateCandidatePoses2D(
+      this.bodies,
+      this.state.integrationBodyIndices,
+      this.state.integrationBodyCount,
       dt,
     );
     this.moveBroadPhaseProxies();
@@ -754,6 +922,8 @@ export class PhysicsWorld2DKernel {
       this.contacts,
       this.state.configuration.velocityIterations,
       0,
+      false,
+      restitutionThreshold,
     );
     injectFailure("velocity-solve");
     this.solvePositions();
@@ -881,6 +1051,11 @@ export class PhysicsWorld2DKernel {
         existing !== undefined &&
         sameColliderRecord(this.state.colliderRecords.get(id), record)
       ) {
+        // Listener/tag ownership is reactive metadata, not collision identity.
+        this.colliders.handlers[existing.index] = record.definition.handlers;
+        this.colliders.tags[existing.index] = record.definition.tag;
+        this.colliders.owners[existing.index] = record.definition.owner;
+        this.state.colliderRecords.set(id, record);
         continue;
       }
       if (existing !== undefined) this.releaseCollider(existing);
@@ -1205,7 +1380,7 @@ export class PhysicsWorld2DKernel {
     }
   }
 
-  private stageContactEvents(): void {
+  private stageContactEvents(includeHits = true): void {
     for (let event = 0; event < this.contacts.eventCount; event += 1) {
       const first = this.contacts.eventFirstColliderIndices[event]!;
       const firstGeneration =
@@ -1235,7 +1410,7 @@ export class PhysicsWorld2DKernel {
       );
     }
     for (let contact = 0; contact < this.contacts.contactCount; contact += 1) {
-      if (this.contacts.sensorFlags[contact] !== 0) continue;
+      if (!includeHits || this.contacts.sensorFlags[contact] !== 0) continue;
       const first = this.contacts.firstColliderIndices[contact]!;
       const second = this.contacts.secondColliderIndices[contact]!;
       if (
@@ -1559,6 +1734,7 @@ export class PhysicsWorld2DKernel {
 
   private captureCheckpoint(): WorldCheckpoint2D {
     return {
+      rapier: this.simulation?.checkpoint(),
       snapshots: [
         captureObject(this.state),
         captureObject(this.counters),
@@ -1574,6 +1750,7 @@ export class PhysicsWorld2DKernel {
   }
 
   private restoreCheckpoint(checkpoint: WorldCheckpoint2D): void {
+    if (checkpoint.rapier) this.simulation!.restore(checkpoint.rapier);
     for (let index = checkpoint.snapshots.length - 1; index >= 0; index -= 1) {
       restoreObject(checkpoint.snapshots[index]!);
     }
@@ -1912,9 +2089,6 @@ function sameColliderRecord(
     first.bodyId === second.bodyId &&
     first.definition.shape === second.definition.shape &&
     first.definition.flags === second.definition.flags &&
-    first.definition.tag === second.definition.tag &&
-    first.definition.handlers === second.definition.handlers &&
-    first.definition.owner === second.definition.owner &&
     shallowRecordEqual(first.definition.material, second.definition.material) &&
     shallowRecordEqual(first.definition.filter, second.definition.filter)
   );
@@ -1969,14 +2143,8 @@ function internalPose(bodies: BodyStore2D, index: number): InternalPose2D {
   const localCenterX = bodies.localCenterX[index]!;
   const localCenterY = bodies.localCenterY[index]!;
   return {
-    x:
-      bodies.positionX[index]! -
-      cosine * localCenterX +
-      sine * localCenterY,
-    y:
-      bodies.positionY[index]! -
-      sine * localCenterX -
-      cosine * localCenterY,
+    x: bodies.positionX[index]! - cosine * localCenterX + sine * localCenterY,
+    y: bodies.positionY[index]! - sine * localCenterX - cosine * localCenterY,
     rotationRadians,
   };
 }

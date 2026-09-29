@@ -16,6 +16,7 @@ import {
   disableBody2D,
   dynamicBody2D,
   enableBody2D,
+  inspectPhysics2D,
   setLinearVelocity2D,
   staticBody2D,
   teleportBody2D,
@@ -189,13 +190,17 @@ function DraggableBall() {
           }}
           onPointerDown={(event) => {
             if (dragSession.current !== null) return;
-            const [x, y] = body.position.get();
+            const displayedBody = inspectPhysics2D(body);
+            const [x, y] =
+              displayedBody?.presentationPose.position ?? body.position.get();
             const position = [x, y] as const;
             dragSession.current = {
               pointerId: event.pointerId,
               offsetX: x - event.x,
               offsetY: y - event.y,
-              rotationDegrees: body.rotationDegrees.get(),
+              rotationDegrees:
+                displayedBody?.presentationPose.rotationDegrees ??
+                body.rotationDegrees.get(),
               position,
               trail: [],
             };

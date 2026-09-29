@@ -133,7 +133,8 @@ describe("Canvas 2D physics pose presentation", () => {
     expect(clickCount).toBe(1);
     frames.flush(100);
 
-    expect(body.position.get()).toEqual([10, 0]);
+    expect(body.position.get()[0]).toBeCloseTo(10, 5);
+    expect(body.position.get()[1]).toBe(0);
     expect(body.linearVelocity.get()).toEqual([100, 0]);
     frames.flush(200);
 
@@ -172,8 +173,10 @@ describe("Canvas 2D physics pose presentation", () => {
     frames.flush(200);
 
     expect(body.position.get()[0]).toBe(0);
-    expect(body.position.get()[1]).toBeCloseTo(0.3);
-    expect(body.linearVelocity.get()).toEqual([0, 2]);
+    // Rapier integrates four internal substeps per accepted tick.
+    expect(body.position.get()[1]).toBeCloseTo(0.225, 5);
+    expect(body.linearVelocity.get()[0]).toBe(0);
+    expect(body.linearVelocity.get()[1]).toBeCloseTo(2, 5);
   });
 
   it("applies world gravity updates to an existing dynamic primitive", () => {
@@ -208,8 +211,9 @@ describe("Canvas 2D physics pose presentation", () => {
     frames.flush(300);
 
     expect(body.position.get()[0]).toBe(0);
-    expect(body.position.get()[1]).toBeCloseTo(0.2, 12);
-    expect(body.linearVelocity.get()).toEqual([0, 2]);
+    expect(body.position.get()[1]).toBeCloseTo(0.125, 5);
+    expect(body.linearVelocity.get()[0]).toBe(0);
+    expect(body.linearVelocity.get()[1]).toBeCloseTo(2, 5);
   });
 
   it("settles an inferred Circle body on an inferred Rectangle body", () => {

@@ -1,6 +1,16 @@
+import { boundsOfShape2D } from "../../../2d-geometry.js";
+import { createShape2D } from "../shape-records.js";
+import type {
+  CRCPhysicsBodyInspection2D,
+  CRCPhysicsInspection2D,
+} from "../inspection-types.js";
+import { RapierSimulation2D } from "../world/rapier.js";
 import { signal, type WritableSignal } from "@crc/core";
 import {
   crcInternalOnSimulationRenderTransactionFinish,
+  crcInternalCreateSignalConsumer,
+  crcInternalCurrentRenderOwner,
+  type CRCInternalSignalConsumer,
   crcInternalQueueSimulationBegin,
   crcInternalQueueSimulationCommitAcknowledgement,
   crcInternalQueueSimulationComplete,
@@ -102,6 +112,7 @@ interface ColliderDraft2D {
 }
 
 interface RenderDraft2D {
+  readonly simulationToRoot: DOMMatrix;
   readonly configuration: NormalizedPhysicsWorld2DConfiguration;
   readonly props: CRCResolvedPhysicsWorld2DProps;
   readonly bodies: Map<number, BodyDraft2D>;
@@ -149,6 +160,8 @@ export class PhysicsWorld2DController {
   readonly handle: CRCPhysicsWorldHandle2D;
   private revision: WritableSignal<number> | undefined;
   private committedRevision = 0;
+  private failedFrames = 0;
+  private lastFailure: string | null = null;
   private readonly kernel: PhysicsWorld2DKernel;
   private readonly ids = new WeakMap<object, AttachmentIds2D>();
   private nextId = 0;
@@ -172,16 +185,55 @@ export class PhysicsWorld2DController {
   private readonly queries: CommittedWorldQueries2D;
   private queuedBegin: Readonly<{ cancel(): void }> | undefined;
   private releaseAdvance: (() => void) | undefined;
+  private readonly releasePassiveAdvance: () => void;
   private liveCandidate: PhysicsWorld2DCandidate | undefined;
   private active = true;
+  private readonly space: "root" | "local";
+  private simulationToRoot = new DOMMatrix();
+  private readonly targetConsumer: CRCInternalSignalConsumer;
 
   constructor(
     private readonly owner: CRCInternalSimulationOwner,
     initialProps: CRCResolvedPhysicsWorld2DProps,
   ) {
+    this.space = initialProps.space ?? "root";
+    if (this.space !== "root" && this.space !== "local")
+      throw new TypeError('PhysicsWorld2D space must be "root" or "local".');
+    this.targetConsumer = crcInternalCreateSignalConsumer({
+      owner: crcInternalCurrentRenderOwner(),
+      debugName: "PhysicsWorld2D kinematic targets",
+      invalidate: () => {
+        if (this.active) this.ensureAdvance();
+      },
+    });
     const configuration = normalizeWorldConfiguration(initialProps);
     this.kernel = new PhysicsWorld2DKernel(
       denormalizeWorldConfiguration(configuration),
+      new RapierSimulation2D(),
+    );
+    // Idle worlds still observe animation's staged target in the same Advance
+    // phase, without keeping the host clock alive themselves.
+    this.releasePassiveAdvance = crcInternalRegisterSimulationAdvance(
+      this.owner,
+      "physics",
+      (frame, batch) => {
+        if (this.releaseAdvance !== undefined) return;
+        const targets = this.readKinematicTargets(batch);
+        for (const [id, target] of targets) {
+          if (this.kernel.bodyIdentity(id) === undefined) continue;
+          const pose = this.kernel.authoritativePose(id);
+          if (
+            target.position[0] !== pose.position[0] ||
+            target.position[1] !== pose.position[1] ||
+            target.rotationDegrees !== pose.rotationDegrees
+          ) {
+            this.ensureAdvance();
+            this.advance(frame.frameId, frame.logicalTime, batch);
+            return;
+          }
+        }
+      },
+      false,
     );
     this.queries = new CommittedWorldQueries2D({
       generation: 1,
@@ -206,7 +258,24 @@ export class PhysicsWorld2DController {
     this.handle = Object.freeze(target) as unknown as InternalWorldHandle2D;
   }
 
-  beginRender(props: CRCResolvedPhysicsWorld2DProps): void {
+  beginRender(
+    props: CRCResolvedPhysicsWorld2DProps,
+    rootTransform = new DOMMatrix(),
+  ): void {
+    if ((props.space ?? "root") !== this.space)
+      throw new Error(
+        "PhysicsWorld2D space is creation-only; remount the world with a new key to change it.",
+      );
+    const simulationToRoot =
+      this.space === "local" ? rootTransform : new DOMMatrix();
+    const { a, b, c, d, e, f } = simulationToRoot;
+    if (
+      ![a, b, c, d, e, f].every(Number.isFinite) ||
+      Math.abs(a * d - b * c) < 1e-10
+    )
+      throw new Error(
+        "PhysicsWorld2D viewport transform must be finite and invertible.",
+      );
     this.assertActive();
     if (this.draft !== undefined) {
       throw new Error(
@@ -214,6 +283,7 @@ export class PhysicsWorld2DController {
       );
     }
     this.draft = {
+      simulationToRoot,
       configuration: normalizeWorldConfiguration(props),
       props,
       bodies: new Map(),
@@ -222,6 +292,30 @@ export class PhysicsWorld2DController {
     crcInternalOnSimulationRenderTransactionFinish(this.owner, (success) =>
       this.finishRender(success),
     );
+  }
+
+  simulationTransform(root: DOMMatrix): DOMMatrix {
+    return (this.draft?.simulationToRoot ?? this.simulationToRoot)
+      .inverse()
+      .multiply(root);
+  }
+
+  rootTransform(local: DOMMatrix): DOMMatrix {
+    return (this.draft?.simulationToRoot ?? this.simulationToRoot).multiply(
+      local,
+    );
+  }
+
+  convertPoint(point: CRCPhysicsVector2, toRoot: boolean): CRCPhysicsVector2 {
+    this.assertActive();
+    const value = copyFiniteVector2(point, "point");
+    const matrix = toRoot
+      ? this.simulationToRoot
+      : this.simulationToRoot.inverse();
+    return Object.freeze([
+      matrix.a * value[0] + matrix.c * value[1] + matrix.e,
+      matrix.b * value[0] + matrix.d * value[1] + matrix.f,
+    ]);
   }
 
   bodyIdFor(attachment: MountedPhysicsAttachment2D): number {
@@ -332,7 +426,7 @@ export class PhysicsWorld2DController {
   }
 
   presentationPose(bodyId: number): CRCPhysicsPose2D | undefined {
-    return this.kernel.snapshot().bodies.some((body) => body.id === bodyId)
+    return this.kernel.bodyIdentity(bodyId) !== undefined
       ? this.kernel.presentationPose(bodyId)
       : undefined;
   }
@@ -382,10 +476,17 @@ export class PhysicsWorld2DController {
 
   bodyHandleValues(bodyId: number): PhysicsBodyHandleValues2D | undefined {
     if (!this.active) return undefined;
-    const state = this.kernel
-      .snapshot()
-      .bodies.find((candidate) => candidate.id === bodyId);
-    if (state === undefined) return undefined;
+    const identity = this.kernel.bodyIdentity(bodyId);
+    if (identity === undefined) return undefined;
+    const index = identity.index;
+    const bodies = this.kernel.bodies;
+    const state = {
+      linearVelocityX: bodies.linearVelocityX[index]!,
+      linearVelocityY: bodies.linearVelocityY[index]!,
+      angularVelocity: bodies.angularVelocity[index]!,
+      flags: bodies.flags[index]!,
+      generation: identity.generation,
+    };
     const pose = this.kernel.authoritativePose(bodyId);
     return Object.freeze({
       position: pose.position,
@@ -401,9 +502,41 @@ export class PhysicsWorld2DController {
     });
   }
 
+  inspectBody(bodyId: number): CRCPhysicsBodyInspection2D | undefined {
+    if (!this.active) return undefined;
+    const identity = this.kernel.bodyIdentity(bodyId);
+    const declared = this.acceptedBodies.find((body) => body.id === bodyId);
+    if (identity === undefined || declared === undefined) return undefined;
+    const index = identity.index;
+    const bodies = this.kernel.bodies;
+    const flags = bodies.flags[index]!;
+    return Object.freeze({
+      id: bodyId,
+      generation: identity.generation,
+      type: declared.descriptor.bodyType,
+      enabled: this.kernel.isBodyEnabled(bodyId),
+      sleeping: !!(flags & BODY_SLEEPING_2D),
+      pose: this.kernel.authoritativePose(bodyId),
+      presentationPose: this.kernel.presentationPose(bodyId),
+      centerOfMass: Object.freeze([
+        bodies.positionX[index]!,
+        bodies.positionY[index]!,
+      ] as const),
+      linearVelocity: Object.freeze([
+        bodies.linearVelocityX[index]!,
+        bodies.linearVelocityY[index]!,
+      ] as const),
+      angularVelocityDegreesPerSecond:
+        (bodies.angularVelocity[index]! * 180) / Math.PI,
+      mass: bodies.inverseMass[index]! > 0 ? 1 / bodies.inverseMass[index]! : null,
+    });
+  }
+
   dispose(): void {
     if (!this.active) return;
     this.active = false;
+    this.targetConsumer.dispose();
+    this.releasePassiveAdvance();
     this.queuedBegin?.cancel();
     this.queuedBegin = undefined;
     this.releaseAdvance?.();
@@ -430,6 +563,123 @@ export class PhysicsWorld2DController {
     this.acceptedColliders = Object.freeze([]);
     this.draft = undefined;
     this.suspendedVelocities.clear();
+  }
+
+  inspect(): CRCPhysicsInspection2D {
+    this.assertActive();
+    const snapshot = this.kernel.snapshot();
+    const vector = (x: number, y: number): CRCPhysicsVector2 =>
+      Object.freeze([x, y]);
+    const contacts = this.kernel.contacts;
+    const declaredTypes = new Map(
+      this.acceptedBodies.map((body) => [body.id, body.descriptor.bodyType]),
+    );
+    return Object.freeze({
+      engine: "rapier-2d@0.21.0",
+      space: this.space,
+      revision: this.committedRevision,
+      tick: snapshot.tick,
+      advancing: this.releaseAdvance !== undefined,
+      failedFrames: this.failedFrames,
+      lastFailure: this.lastFailure,
+      bodies: Object.freeze(
+        snapshot.bodies.map((body) =>
+          Object.freeze({
+            id: body.id,
+            generation: body.generation,
+            type: declaredTypes.get(body.id)!,
+            enabled: this.kernel.isBodyEnabled(body.id),
+            sleeping: !!(body.flags & BODY_SLEEPING_2D),
+            pose: this.kernel.authoritativePose(body.id),
+            presentationPose: this.kernel.presentationPose(body.id),
+            centerOfMass: vector(body.positionX, body.positionY),
+            linearVelocity: vector(body.linearVelocityX, body.linearVelocityY),
+            angularVelocityDegreesPerSecond:
+              (body.angularVelocity * 180) / Math.PI,
+            mass: body.inverseMass > 0 ? 1 / body.inverseMass : null,
+          }),
+        ),
+      ),
+      colliders: Object.freeze(
+        this.acceptedColliders.flatMap((collider) => {
+          const identity = this.kernel.colliderIdentity(collider.id);
+          if (!identity) return [];
+          const shape = this.kernel.colliders.shapes[identity.index]!;
+          return [
+            Object.freeze({
+              id: collider.id,
+              generation: identity.generation,
+              bodyId: collider.bodyId,
+              sensor: !!(
+                this.kernel.colliders.flags[identity.index]! &
+                COLLIDER_SENSOR_2D
+              ),
+              label:
+                typeof collider.options.tag === "string"
+                  ? collider.options.tag
+                  : null,
+              shapeKinds: Object.freeze(shape.leaves.map((leaf) => leaf.kind)),
+              bounds: boundsOfShape2D(
+                createShape2D(shape),
+                this.kernel.authoritativePose(collider.bodyId),
+              ),
+            }),
+          ];
+        }),
+      ),
+      contacts: Object.freeze(
+        Array.from(
+          { length: contacts.contactCount },
+          (_, index) => index,
+        ).flatMap((index) => {
+          const firstColliderId = this.kernel.colliderIdForIdentity(
+            contacts.firstColliderIndices[index]!,
+            contacts.firstColliderGenerations[index]!,
+          );
+          const secondColliderId = this.kernel.colliderIdForIdentity(
+            contacts.secondColliderIndices[index]!,
+            contacts.secondColliderGenerations[index]!,
+          );
+          if (firstColliderId === undefined || secondColliderId === undefined)
+            return [];
+          return [
+            Object.freeze({
+              firstColliderId,
+              secondColliderId,
+              sensor: contacts.sensorFlags[index] !== 0,
+              normal: vector(
+                contacts.normalX[index]!,
+                contacts.normalY[index]!,
+              ),
+              normalImpulse:
+                contacts.pointNormalImpulses[index * 2]! +
+                (contacts.pointCounts[index]! > 1
+                  ? contacts.pointNormalImpulses[index * 2 + 1]!
+                  : 0),
+              points: Object.freeze(
+                Array.from(
+                  { length: contacts.pointCounts[index]! },
+                  (_, point) => {
+                    const offset = index * 2 + point;
+                    return Object.freeze({
+                      pointOnFirst: vector(
+                        contacts.pointFirstX[offset]!,
+                        contacts.pointFirstY[offset]!,
+                      ),
+                      pointOnSecond: vector(
+                        contacts.pointSecondX[offset]!,
+                        contacts.pointSecondY[offset]!,
+                      ),
+                      separation: contacts.pointSeparations[offset]!,
+                    });
+                  },
+                ),
+              ),
+            }),
+          ];
+        }),
+      ),
+    });
   }
 
   snapshot(): PhysicsWorld2DControllerSnapshot {
@@ -487,14 +737,15 @@ export class PhysicsWorld2DController {
       (left, right) => left.id - right.id,
     );
     validateUniqueBodyHandles(nextBodies);
+    const nextBodiesById = new Map(nextBodies.map((body) => [body.id, body]));
     for (const body of this.acceptedBodies) {
-      const retained = nextBodies.some(
-        (next) =>
-          next.id === body.id &&
-          next.descriptor.options.handle === body.descriptor.options.handle,
-      );
+      const next = nextBodiesById.get(body.id);
+      const retained =
+        next !== undefined &&
+        next.descriptor.options.handle === body.descriptor.options.handle;
       if (!retained) this.unbindBodyHandle(body);
     }
+    this.simulationToRoot = draft.simulationToRoot;
     this.acceptedProps = draft.props;
     this.acceptedBodies = Object.freeze(
       nextBodies.map(({ id, attachment, descriptor, initialPose }) =>
@@ -517,20 +768,31 @@ export class PhysicsWorld2DController {
           Object.freeze({ id, bodyId, attachment, options }),
         ),
     );
-    if (!topologyChanged && !configurationChanged) return;
+    this.targetConsumer.collect(() => {
+      for (const body of this.acceptedBodies) {
+        if (
+          body.descriptor.bodyType !== "kinematic" ||
+          !body.descriptor.options.enabled
+        )
+          continue;
+        body.descriptor.options.target.position?.get();
+        body.descriptor.options.target.rotationDegrees?.get();
+      }
+    });
+    this.targetConsumer.markClean();
     this.acceptedTopology = topology;
+    this.kernel.updateColliderMetadata(topology);
+    if (!topologyChanged && !configurationChanged) return;
     this.acceptedConfiguration = draft.configuration;
     this.queuedBegin?.cancel();
     this.queuedBegin = crcInternalQueueSimulationBegin(this.owner, () => {
       this.queuedBegin = undefined;
-      if (topologyChanged) this.kernel.proposeTopology(topology);
+      if (topologyChanged) this.kernel.proposeTopology(this.acceptedTopology);
       if (configurationChanged) {
         this.kernel.applyBegin([
           {
             kind: "configure",
-            configuration: denormalizeWorldConfiguration(
-              draft.configuration,
-            ),
+            configuration: denormalizeWorldConfiguration(draft.configuration),
           },
         ]);
       }
@@ -639,13 +901,21 @@ export class PhysicsWorld2DController {
           this.committedRevision = nextRevision;
           adopted = true;
           crcInternalRequestSimulationRender(this.owner);
-          if (!this.hasAwakeBodies()) {
+          if (
+            !this.hasAwakeBodies() &&
+            (candidate!.stepCount > 0 ||
+              !this.acceptedBodies.some(
+                (body) => body.descriptor.bodyType === "kinematic",
+              ))
+          ) {
             this.releaseAdvance?.();
             this.releaseAdvance = undefined;
           }
         },
       );
     } catch (error) {
+      this.failedFrames++;
+      this.lastFailure = error instanceof Error ? error.message : String(error);
       if (candidate?.lifecycle === "live") this.kernel.discard(candidate);
       if (this.liveCandidate === candidate) this.liveCandidate = undefined;
       const onError = this.acceptedProps.onError;
@@ -865,8 +1135,9 @@ export class PhysicsWorld2DController {
     for (const fact of events) {
       try {
         if (isPhysicsBodyEventDelivery2D(fact)) {
-          if (!this.isBodyEventLive(fact)) continue;
-          fact.handler(
+          const handler = this.bodyEventHandler(fact);
+          if (!handler) continue;
+          handler(
             materializePhysicsBodyEvent2D(
               fact,
               this.materializeBodyHandle(fact.bodyIndex, fact.bodyGeneration),
@@ -874,8 +1145,9 @@ export class PhysicsWorld2DController {
           );
           continue;
         }
-        if (!this.isContactEventLive(fact)) continue;
-        fact.handler(
+        const handler = this.contactEventHandler(fact);
+        if (!handler) continue;
+        handler(
           materializePhysicsContactEvent2D(fact, {
             body: (index, generation) =>
               this.materializeBodyHandle(index, generation),
@@ -896,23 +1168,26 @@ export class PhysicsWorld2DController {
     }
   }
 
-  private isBodyEventLive(fact: PhysicsBodyEventDelivery2D): boolean {
+  private bodyEventHandler(
+    fact: PhysicsBodyEventDelivery2D,
+  ): PhysicsBodyEventDelivery2D["handler"] | undefined {
     const handler =
       fact.kind === 6 ? this.acceptedProps.onSleep : this.acceptedProps.onWake;
     const identity = this.kernel.bodyIdentity(fact.bodyId);
-    return (
-      handler === fact.handler &&
-      identity?.index === fact.bodyIndex &&
+    return identity?.index === fact.bodyIndex &&
       identity.generation === fact.bodyGeneration
-    );
+      ? handler
+      : undefined;
   }
 
-  private isContactEventLive(fact: PhysicsContactEventDelivery2D): boolean {
+  private contactEventHandler(
+    fact: PhysicsContactEventDelivery2D,
+  ): PhysicsContactEventDelivery2D["handler"] | undefined {
     const receiver = this.acceptedColliders.find(
       (collider) => collider.id === fact.receiverColliderId,
     );
     if (receiver === undefined || receiver.bodyId !== fact.receiverBodyId)
-      return false;
+      return undefined;
     const handler = receiver.options.handlers[eventHandlerName(fact.kind)];
     const colliderIdentity = this.kernel.colliderIdentity(receiver.id);
     const expectedIndex =
@@ -923,11 +1198,10 @@ export class PhysicsWorld2DController {
       fact.receiver === "first"
         ? fact.firstColliderGeneration
         : fact.secondColliderGeneration;
-    return (
-      handler === fact.handler &&
-      colliderIdentity?.index === expectedIndex &&
+    return colliderIdentity?.index === expectedIndex &&
       colliderIdentity.generation === expectedGeneration
-    );
+      ? handler
+      : undefined;
   }
 
   private acceptedColliderForIdentity(
@@ -941,8 +1215,34 @@ export class PhysicsWorld2DController {
   }
 
   private hasAwakeBodies(): boolean {
+    for (const body of this.acceptedBodies) {
+      if (
+        body.descriptor.bodyType !== "kinematic" ||
+        !body.descriptor.options.enabled ||
+        this.kernel.bodyIdentity(body.id) === undefined
+      )
+        continue;
+      const pose = this.kernel.authoritativePose(body.id);
+      const target = body.descriptor.options.target;
+      const position = target.position?.get() ?? body.initialPose.position;
+      const rotation =
+        target.rotationDegrees?.get() ?? body.initialPose.rotationDegrees;
+      if (
+        (position &&
+          (position[0] !== pose.position[0] ||
+            position[1] !== pose.position[1])) ||
+        (rotation !== undefined && rotation !== pose.rotationDegrees)
+      )
+        return true;
+    }
     for (const body of this.kernel.snapshot().bodies) {
-      if ((body.flags & BODY_TYPE_KINEMATIC_2D) !== 0) return true;
+      if (
+        (body.flags & BODY_TYPE_KINEMATIC_2D) !== 0 &&
+        (body.linearVelocityX !== 0 ||
+          body.linearVelocityY !== 0 ||
+          body.angularVelocity !== 0)
+      )
+        return true;
       if (
         (body.flags & BODY_TYPE_DYNAMIC_2D) !== 0 &&
         (body.flags & BODY_SLEEPING_2D) === 0
@@ -1219,9 +1519,8 @@ function bodyDefinition(
     inverseMass = mass > 0 ? 1 / mass : 1;
     localCenterX = massData.centerX;
     localCenterY = massData.centerY;
-    const inertia = massData.mass > 0
-      ? massData.inertia * (mass / massData.mass)
-      : 0;
+    const inertia =
+      massData.mass > 0 ? massData.inertia * (mass / massData.mass) : 0;
     inverseInertia = descriptor.options.fixedRotation
       ? 0
       : inertia > 0
@@ -1234,8 +1533,7 @@ function bodyDefinition(
   const authoredRotationRadians =
     (body.initialPose.rotationDegrees * Math.PI) / 180;
   const previousKinematic =
-    previous !== undefined &&
-    (previous.flags & BODY_TYPE_KINEMATIC_2D) !== 0
+    previous !== undefined && (previous.flags & BODY_TYPE_KINEMATIC_2D) !== 0
       ? previous
       : undefined;
   const preserveTargetBoundKinematicPose =
@@ -1246,16 +1544,18 @@ function bodyDefinition(
   const previousRotationRadians = previousKinematic?.rotationRadians ?? 0;
   const previousCosine = Math.cos(previousRotationRadians);
   const previousSine = Math.sin(previousRotationRadians);
-  const previousOriginX = previousKinematic === undefined
-    ? 0
-    : previousKinematic.positionX -
-      previousCosine * (previousKinematic.localCenterX ?? 0) +
-      previousSine * (previousKinematic.localCenterY ?? 0);
-  const previousOriginY = previousKinematic === undefined
-    ? 0
-    : previousKinematic.positionY -
-      previousSine * (previousKinematic.localCenterX ?? 0) -
-      previousCosine * (previousKinematic.localCenterY ?? 0);
+  const previousOriginX =
+    previousKinematic === undefined
+      ? 0
+      : previousKinematic.positionX -
+        previousCosine * (previousKinematic.localCenterX ?? 0) +
+        previousSine * (previousKinematic.localCenterY ?? 0);
+  const previousOriginY =
+    previousKinematic === undefined
+      ? 0
+      : previousKinematic.positionY -
+        previousSine * (previousKinematic.localCenterX ?? 0) -
+        previousCosine * (previousKinematic.localCenterY ?? 0);
   const positionX = preserveTargetBoundKinematicPose
     ? previousOriginX
     : body.initialPose.position[0];
@@ -1296,9 +1596,7 @@ const ZERO_VELOCITY_2D: BodyVelocity2D = Object.freeze({
   angularVelocity: 0,
 });
 
-function compoundMassData(
-  colliders: readonly ColliderDraft2D[],
-): Readonly<{
+function compoundMassData(colliders: readonly ColliderDraft2D[]): Readonly<{
   mass: number;
   centerX: number;
   centerY: number;
@@ -1311,13 +1609,9 @@ function compoundMassData(
       const cosine = Math.cos(shape.localPose.rotationRadians);
       const sine = Math.sin(shape.localPose.rotationRadians);
       const centerX =
-        shape.localPose.x +
-        cosine * shape.centroidX -
-        sine * shape.centroidY;
+        shape.localPose.x + cosine * shape.centroidX - sine * shape.centroidY;
       const centerY =
-        shape.localPose.y +
-        sine * shape.centroidX +
-        cosine * shape.centroidY;
+        shape.localPose.y + sine * shape.centroidX + cosine * shape.centroidY;
       return {
         mass: shape.area * collider.options.density,
         centerX,
@@ -1329,19 +1623,18 @@ function compoundMassData(
   if (mass <= 0) {
     return { mass: 0, centerX: 0, centerY: 0, inertia: 0 };
   }
-  const centerX = entries.reduce(
-    (sum, entry) => sum + entry.mass * entry.centerX,
-    0,
-  ) / mass;
-  const centerY = entries.reduce(
-    (sum, entry) => sum + entry.mass * entry.centerY,
-    0,
-  ) / mass;
+  const centerX =
+    entries.reduce((sum, entry) => sum + entry.mass * entry.centerX, 0) / mass;
+  const centerY =
+    entries.reduce((sum, entry) => sum + entry.mass * entry.centerY, 0) / mass;
   const inertia = entries.reduce((sum, entry) => {
     const offsetX = entry.centerX - centerX;
     const offsetY = entry.centerY - centerY;
-    return sum + entry.centroidInertia +
-      entry.mass * (offsetX * offsetX + offsetY * offsetY);
+    return (
+      sum +
+      entry.centroidInertia +
+      entry.mass * (offsetX * offsetX + offsetY * offsetY)
+    );
   }, 0);
   return { mass, centerX, centerY, inertia };
 }
@@ -1388,12 +1681,9 @@ function sameTopology(
       return (
         first.bodyId === second.bodyId &&
         first.definition.shape === second.definition.shape &&
-        first.definition.tag === second.definition.tag &&
-        first.definition.owner === second.definition.owner &&
         first.definition.flags === second.definition.flags &&
         sameRecord(first.definition.material, second.definition.material) &&
-        sameRecord(first.definition.filter, second.definition.filter) &&
-        sameRecord(first.definition.handlers, second.definition.handlers)
+        sameRecord(first.definition.filter, second.definition.filter)
       );
     }
     return false;

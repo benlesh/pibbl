@@ -1,4 +1,7 @@
-import { RESPONSIVE_STYLE_ACTIONS, type ResponsiveStylesState } from "./responsive-styles-lab.example";
+import {
+  RESPONSIVE_STYLE_ACTIONS,
+  type ResponsiveStylesState,
+} from "./responsive-styles-lab.example";
 import type { SmokeScenarioState } from "./smoke.example";
 import type { CleanupStressState } from "./cleanup-stress.example";
 import type { DrawingCompositionState } from "./drawing-composition.example";
@@ -1551,7 +1554,12 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
   summary:
     "Prove mixed CRC and Three paint order, instanced blocking, registered targets, miss policies, bridged orbit input, focus, clip/filter composition, resize, and cleanup.",
   category: "Rendering",
-  apiTags: ["defineThreeLayer", "InstancedMesh", "OrbitControls", "missBehavior"],
+  apiTags: [
+    "defineThreeLayer",
+    "InstancedMesh",
+    "OrbitControls",
+    "missBehavior",
+  ],
   conceptTags: [
     "flattened Three layer",
     "interaction arbitration",
@@ -1590,22 +1598,24 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
-export const threeInstancingLabScenarioEntry: ScenarioCatalogEntry<ThreeInstancingLabState> = {
-  metadata: threeInstancingLabMetadata,
-  canvas: { width: 640, height: 360 },
-  actions: [
-    { id: "cycle-miss-behavior", label: "Cycle miss behavior" },
-    { id: "resize-layer", label: "Resize layer" },
-  ],
-  source: {
-    id: "three-instancing-laboratory-example",
-    language: "tsx",
-    marker: "THREE_INSTANCING_LAB_SOURCE_ID = 'three-instancing-laboratory-example'",
-    path: "packages/scenarios/src/three-instancing-lab.example.tsx",
-  },
-  load: async () =>
-    (await import("./three-instancing-lab")).threeInstancingLabScenario,
-};
+export const threeInstancingLabScenarioEntry: ScenarioCatalogEntry<ThreeInstancingLabState> =
+  {
+    metadata: threeInstancingLabMetadata,
+    canvas: { width: 640, height: 360 },
+    actions: [
+      { id: "cycle-miss-behavior", label: "Cycle miss behavior" },
+      { id: "resize-layer", label: "Resize layer" },
+    ],
+    source: {
+      id: "three-instancing-laboratory-example",
+      language: "tsx",
+      marker:
+        "THREE_INSTANCING_LAB_SOURCE_ID = 'three-instancing-laboratory-example'",
+      path: "packages/scenarios/src/three-instancing-lab.example.tsx",
+    },
+    load: async () =>
+      (await import("./three-instancing-lab")).threeInstancingLabScenario,
+  };
 
 const signalsLabMetadata: ScenarioMetadata = {
   id: "first-class-signals",
@@ -1886,7 +1896,7 @@ const physics2DLabMetadata: ScenarioMetadata = {
   ],
   manualSteps: [
     {
-      action: "Choose Settle, then Impulse circle.",
+      action: "Observe natural settling, then choose Impulse circle.",
       expected:
         "The circle changes from sleeping to awake and its authoritative velocity reports the impulse.",
     },
@@ -1922,7 +1932,7 @@ export const physics2DLabScenarioEntry: ScenarioCatalogEntry<Physics2DLabState> 
     metadata: physics2DLabMetadata,
     canvas: { width: 480, height: 240 },
     actions: [
-      { id: "settle", label: "Settle / observe" },
+      { id: "settle", label: "Observe settling" },
       { id: "impulse", label: "Impulse circle" },
       { id: "cross-sensor", label: "Cross sensor" },
       { id: "move-platform", label: "Move platform" },
@@ -1960,49 +1970,178 @@ export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState
     load: async () => (await import("./canvas-surface")).canvasSurfaceScenario,
   };
 
-export const vizFoundationScenarioEntry: ScenarioCatalogEntry<import("./viz-foundation-lab.js").VizFoundationState> = {
+export const vizFoundationScenarioEntry: ScenarioCatalogEntry<
+  import("./viz-foundation-lab.js").VizFoundationState
+> = {
   metadata: {
-    id: "viz-foundation-lab", slug: "viz-foundation-lab", title: "Visualization foundation laboratory",
-    summary: "Observe the static NOAA record through linked detail and overview plots.", category: "Visualization",
-    apiTags: ["Scale", "LineSeries", "Axis"], conceptTags: ["local allocation", "signals"],
-    manualSteps: [{action:"Inspect a month, choose a decade in the overview, and resize the Canvas.", expected:"Readouts show source values; the detail range changes while the overview stays fixed."}],
-    knownLimitations: ["Linear scales and curves only; no cross-Layer scope lookup."],
-    learningOrder: 310, visibility: "test-laboratory", visibilityReason: "Exposes deterministic scale readings for headless checks.", maturity: "contract",
+    id: "viz-foundation-lab",
+    slug: "viz-foundation-lab",
+    title: "Visualization foundation laboratory",
+    summary:
+      "Observe the static NOAA record through linked detail and overview plots.",
+    category: "Visualization",
+    apiTags: ["Scale", "LineSeries", "Axis"],
+    conceptTags: ["local allocation", "signals"],
+    manualSteps: [
+      {
+        action:
+          "Inspect a month, choose a decade in the overview, and resize the Canvas.",
+        expected:
+          "Readouts show source values; the detail range changes while the overview stays fixed.",
+      },
+    ],
+    knownLimitations: [
+      "Linear scales and curves only; no cross-Layer scope lookup.",
+    ],
+    learningOrder: 310,
+    visibility: "test-laboratory",
+    visibilityReason:
+      "Exposes deterministic scale readings for headless checks.",
+    maturity: "contract",
   },
-  canvas: {width:1100,height:680}, actions: [{id:"full",label:"Full record"},{id:"reset",label:"Last 10 years"}],
-  source: {id:"viz-foundation-example",language:"tsx",marker:"VIZ_FOUNDATION_SOURCE_ID = 'viz-foundation-example'",path:"packages/scenarios/src/learning/composition/viz-responsive-line.example.tsx"},
-  load: async () => (await import("./viz-foundation-lab.js")).vizFoundationScenario,
+  canvas: { width: 1100, height: 680 },
+  actions: [
+    { id: "full", label: "Full record" },
+    { id: "reset", label: "Last 10 years" },
+  ],
+  source: {
+    id: "viz-foundation-example",
+    language: "tsx",
+    marker: "VIZ_FOUNDATION_SOURCE_ID = 'viz-foundation-example'",
+    path: "packages/scenarios/src/learning/composition/viz-responsive-line.example.tsx",
+  },
+  load: async () =>
+    (await import("./viz-foundation-lab.js")).vizFoundationScenario,
 };
 
-export const vizPointsScenarioEntry: ScenarioCatalogEntry<import("./viz-points-lab.js").VizPointsState> = {
- metadata: { id:"viz-points-lab",slug:"viz-points-lab",title:"Points and custom plots laboratory",summary:"Inspect allocated points and keyed custom marks.",category:"Visualization",apiTags:["PointSeries","PlotSeries","nearestPoint"],conceptTags:["local allocation","identity"],manualSteps:[{action:"Inspect, click custom marks, reorder, and resize.",expected:"Mapped positions update and keyed state survives."}],knownLimitations:["Linear scales; custom marks retain normal component overhead."],learningOrder:311,visibility:"test-laboratory",visibilityReason:"Deterministic public point and custom subtree evidence.",maturity:"contract"},
- canvas:{width:1100,height:680},actions:[{id:"reorder",label:"Reorder"},{id:"remove-selected",label:"Remove selected"},{id:"reset",label:"Reset"},{id:"next",label:"Next"},{id:"previous",label:"Previous"}],
- source:{id:"viz-points-example",language:"tsx",marker:"VIZ_POINTS_SOURCE_ID = 'viz-points-example'",path:"packages/scenarios/src/learning/composition/viz-points-and-inspection.example.tsx"},
- load:async()=>(await import("./viz-points-lab.js")).vizPointsScenario,
-};
-
-export const vizHoverScenarioEntry: ScenarioCatalogEntry<import("./viz-hover-lab.js").VizHoverState> = {
- metadata:{id:"viz-hover-lab",slug:"viz-hover-lab",title:"Hover query comparison laboratory",summary:"Compare nearest and interpolated data queries with a movable inspection guide.",category:"Visualization",apiTags:["HoverData","HoverCard","closestPoint","closestX","interpolateX"],conceptTags:["inspection","interpolation"],manualSteps:[{action:"Switch query mode and move or drag the guide.",expected:"Recorded and estimated results follow the specified query."}],knownLimitations:["Linear scales; no extrapolation."],learningOrder:312,visibility:"test-laboratory",visibilityReason:"Deterministic query and drag evidence.",maturity:"contract"},
- canvas:{width:1000,height:620},actions:[{id:"closest-point",label:"Closest point"},{id:"nearest-per-line",label:"Nearest per line"},{id:"interpolated-x",label:"Interpolate"},{id:"reset",label:"Reset"}],
- source:{id:"viz-hover-example",language:"tsx",marker:"VIZ_HOVER_SOURCE_ID = 'viz-hover-example'",path:"packages/scenarios/src/learning/composition/viz-hover-comparison.example.tsx"},
- load:async()=>(await import("./viz-hover-lab.js")).vizHoverScenario,
-};
-
-export const responsiveStylesScenarioEntry: ScenarioCatalogEntry<ResponsiveStylesState> = {
+export const vizPointsScenarioEntry: ScenarioCatalogEntry<
+  import("./viz-points-lab.js").VizPointsState
+> = {
   metadata: {
-    id: "responsive-styles", slug: "responsive-styles", title: "Responsive style thresholds",
-    summary: "Deterministic allocated width and height queries with signal updates and stable identity.",
-    category: "Layout", apiTags: ["Flow", "Grid", "signal", "useLayoutBox"],
-    conceptTags: ["responsive styles", "allocation", "ownership"],
-    manualSteps: [{ action: "Cross root and cell width 600 in both directions, then change cell height across 120.", expected: "The second target changes arrangement and gap while its identity remains stable." }],
-    knownLimitations: ["Queries change styles only; this is not a mobile chart or touch-usability test."],
-    learningOrder: 129, visibility: "test-laboratory", maturity: "contract",
-    visibilityReason: "Exact threshold and identity evidence is separate from the learning example.",
+    id: "viz-points-lab",
+    slug: "viz-points-lab",
+    title: "Points and custom plots laboratory",
+    summary: "Inspect allocated points and keyed custom marks.",
+    category: "Visualization",
+    apiTags: ["PointSeries", "PlotSeries", "nearestPoint"],
+    conceptTags: ["local allocation", "identity"],
+    manualSteps: [
+      {
+        action: "Inspect, click custom marks, reorder, and resize.",
+        expected: "Mapped positions update and keyed state survives.",
+      },
+    ],
+    knownLimitations: [
+      "Linear scales; custom marks retain normal component overhead.",
+    ],
+    learningOrder: 311,
+    visibility: "test-laboratory",
+    visibilityReason: "Deterministic public point and custom subtree evidence.",
+    maturity: "contract",
   },
-  canvas: { width: 1000, height: 600 }, actions: RESPONSIVE_STYLE_ACTIONS,
-  source: { id: "responsive-styles-lab-example", language: "tsx", marker: "RESPONSIVE_STYLES_SOURCE_ID = 'responsive-styles-lab-example'", path: "packages/scenarios/src/responsive-styles-lab.example.tsx" },
-  load: async () => (await import("./responsive-styles-lab.example")).responsiveStylesScenario,
+  canvas: { width: 1100, height: 680 },
+  actions: [
+    { id: "reorder", label: "Reorder" },
+    { id: "remove-selected", label: "Remove selected" },
+    { id: "reset", label: "Reset" },
+    { id: "next", label: "Next" },
+    { id: "previous", label: "Previous" },
+  ],
+  source: {
+    id: "viz-points-example",
+    language: "tsx",
+    marker: "VIZ_POINTS_SOURCE_ID = 'viz-points-example'",
+    path: "packages/scenarios/src/learning/composition/viz-points-and-inspection.example.tsx",
+  },
+  load: async () => (await import("./viz-points-lab.js")).vizPointsScenario,
 };
+
+export const vizHoverScenarioEntry: ScenarioCatalogEntry<
+  import("./viz-hover-lab.js").VizHoverState
+> = {
+  metadata: {
+    id: "viz-hover-lab",
+    slug: "viz-hover-lab",
+    title: "Hover query comparison laboratory",
+    summary:
+      "Compare nearest and interpolated data queries with a movable inspection guide.",
+    category: "Visualization",
+    apiTags: [
+      "HoverData",
+      "HoverCard",
+      "closestPoint",
+      "closestX",
+      "interpolateX",
+    ],
+    conceptTags: ["inspection", "interpolation"],
+    manualSteps: [
+      {
+        action: "Switch query mode and move or drag the guide.",
+        expected: "Recorded and estimated results follow the specified query.",
+      },
+    ],
+    knownLimitations: ["Linear scales; no extrapolation."],
+    learningOrder: 312,
+    visibility: "test-laboratory",
+    visibilityReason: "Deterministic query and drag evidence.",
+    maturity: "contract",
+  },
+  canvas: { width: 1000, height: 620 },
+  actions: [
+    { id: "closest-point", label: "Closest point" },
+    { id: "nearest-per-line", label: "Nearest per line" },
+    { id: "interpolated-x", label: "Interpolate" },
+    { id: "reset", label: "Reset" },
+  ],
+  source: {
+    id: "viz-hover-example",
+    language: "tsx",
+    marker: "VIZ_HOVER_SOURCE_ID = 'viz-hover-example'",
+    path: "packages/scenarios/src/learning/composition/viz-hover-comparison.example.tsx",
+  },
+  load: async () => (await import("./viz-hover-lab.js")).vizHoverScenario,
+};
+
+export const responsiveStylesScenarioEntry: ScenarioCatalogEntry<ResponsiveStylesState> =
+  {
+    metadata: {
+      id: "responsive-styles",
+      slug: "responsive-styles",
+      title: "Responsive style thresholds",
+      summary:
+        "Deterministic allocated width and height queries with signal updates and stable identity.",
+      category: "Layout",
+      apiTags: ["Flow", "Grid", "signal", "useLayoutBox"],
+      conceptTags: ["responsive styles", "allocation", "ownership"],
+      manualSteps: [
+        {
+          action:
+            "Cross root and cell width 600 in both directions, then change cell height across 120.",
+          expected:
+            "The second target changes arrangement and gap while its identity remains stable.",
+        },
+      ],
+      knownLimitations: [
+        "Queries change styles only; this is not a mobile chart or touch-usability test.",
+      ],
+      learningOrder: 129,
+      visibility: "test-laboratory",
+      maturity: "contract",
+      visibilityReason:
+        "Exact threshold and identity evidence is separate from the learning example.",
+    },
+    canvas: { width: 1000, height: 600 },
+    actions: RESPONSIVE_STYLE_ACTIONS,
+    source: {
+      id: "responsive-styles-lab-example",
+      language: "tsx",
+      marker: "RESPONSIVE_STYLES_SOURCE_ID = 'responsive-styles-lab-example'",
+      path: "packages/scenarios/src/responsive-styles-lab.example.tsx",
+    },
+    load: async () =>
+      (await import("./responsive-styles-lab.example"))
+        .responsiveStylesScenario,
+  };
 
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
   validateScenarioCatalog([

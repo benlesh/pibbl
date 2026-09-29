@@ -215,10 +215,14 @@ describe("2D physics body handles", () => {
     forcePoint[1] = 100;
     frames.flush(100);
 
-    expect(snapshotWorld(world).kernel.bodies[0]).toMatchObject({
-      linearVelocityX: 5,
-      linearVelocityY: 3,
-    });
+    expect(snapshotWorld(world).kernel.bodies[0]!.linearVelocityX).toBeCloseTo(
+      5,
+      5,
+    );
+    expect(snapshotWorld(world).kernel.bodies[0]!.linearVelocityY).toBeCloseTo(
+      3,
+      5,
+    );
   });
 
   it("makes removed generations inert and increments the same handle on re-add", () => {
