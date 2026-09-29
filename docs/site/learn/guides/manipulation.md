@@ -47,8 +47,15 @@ function Card() {
   return (
     <ManipulationFrame {...manipulation.frameProps}>
       <Rectangle style={{ width: 320, height: 224, fill: "#e2e8f0" }} />
-      <DragHandle controller={manipulation} style={{ width: 320, height: 36 }}>
-        <Text style={{ left: 16, top: 10, fill: "#0f172a" }}>
+      <DragHandle controller={manipulation} style={{ readout: true }}>
+        <Rectangle
+          keyboardFocusable
+          style={{ width: 320, height: 36, fill: "#dbeafe", cursor: "grab" }}
+        />
+        <Text
+          pointerEvents="none"
+          style={{ left: 16, top: 10, fill: "#0f172a" }}
+        >
           Drag this title
         </Text>
       </DragHandle>
@@ -165,3 +172,5 @@ may be unavoidable; oversized formatted text is ellipsized and
 clipped as needed. Labels never intercept input or change gesture geometry.
 
 `Manipulable` forwards these options through `resizeHandles={{ style: { readout: true }, formatReadout }}` and `rotationHandle={{ style: { arc: true, readout: true }, readoutUnit: "radians" }}`. The existing resize-position shorthand remains supported.
+
+`DragHandle` listens to its descendants rather than adding an invisible box. Wrap the actual title bar, grip, or content that should start movement. Child shapes keep their normal hit testing, including gaps and clipping. An empty handle cannot be dragged. Its position readout uses `left`/`top` in parent-local logical units; a custom `formatReadout` receives those raw values. `Manipulable` accepts the same readout options through `dragHandle`.

@@ -1334,7 +1334,7 @@ createElement(Manipulable, manipulableProps);
 createElement(ManipulationFrame, {
   ...manipulationController.frameProps,
   children: [
-    createElement(DragHandle, { controller: manipulationController }),
+    createElement(DragHandle, { controller: manipulationController, style: { readout: { gap: 8, active: { visible: true } } }, formatReadout: ({ left, top }) => `${left}, ${top}`, children: createElement(Rectangle, { keyboardFocusable: true, style: { width: 24, height: 24, fill: "blue", cursor: "grab" } }) }),
     createElement(ResizeHandle, {
       controller: manipulationController,
       position: manipulationHandle,

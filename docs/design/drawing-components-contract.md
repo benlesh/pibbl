@@ -504,8 +504,9 @@ Inside one `WebGLLayer`, `PhysicsWorld3D` establishes a 3D world and the optiona
 ## Component manipulation
 
 `ManipulationFrame` binds a writable finite box signal to one positioned local
-allocation. `DragHandle`, `ResizeHandle`, `ResizeHandles`, and `RotationHandle`
-are explicit interaction geometry; a frame does not infer bounds from content.
+allocation. `DragHandle` listens through its descendants’ ordinary hit geometry
+and adds no target. `ResizeHandle`, `ResizeHandles`, and `RotationHandle` provide
+explicit control geometry; a frame does not infer bounds from content.
 Resize and rotation controls use CSS-pixel visual and hit geometry while their
 centers follow the frame. The frame presents its optional radians rotation
 through `Group.rotationDegrees` around its center. See the

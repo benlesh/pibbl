@@ -32,3 +32,5 @@ Use `useManipulation` with explicit handles when only part of the content should
 Related types: [CRCManipulableProps](#/api/types/events#crcmanipulableprops).
 
 Configure handle presentation with `resizeHandles={{ style: { readout: { gap: 5 } }, formatReadout }}` and `rotationHandle={{ style: { arc: true, readout: true }, readoutUnit: "degrees" }}`. `resizeHandles` also accepts the existing positions shorthand.
+
+`dragHandle` forwards move-readout styling and `formatReadout({ left, top })` to the content wrapper. The wrapper uses participating child hit areas; it does not make gaps or an empty component draggable. Use explicit `DragHandle` composition to limit movement to a title bar or grip.

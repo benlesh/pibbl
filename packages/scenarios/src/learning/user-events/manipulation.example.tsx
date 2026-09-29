@@ -14,9 +14,14 @@ import {
   useManipulation,
   useSignal,
   type CRCController,
+  type CRCManipulationController,
 } from "@crc/core";
 
-function CardContent() {
+function CardContent({
+  manipulation,
+}: {
+  manipulation: CRCManipulationController;
+}) {
   const { width, height } = useLayoutBox();
   return (
     <>
@@ -31,22 +36,33 @@ function CardContent() {
           cornerRadius: 12,
         }}
       />
-      <Rectangle
-        pointerEvents="none"
-        style={{ width, height: 44, fill: "#dbeafe", cornerRadius: 12 }}
-      />
-      <Text
-        pointerEvents="none"
-        style={{
-          left: 16,
-          top: 14,
-          font: "600 15px sans-serif",
-          textBaseline: "top",
-          fill: "#17324d",
-        }}
+      <DragHandle
+        controller={manipulation}
+        style={{ readout: { active: { visible: true, fill: "#1d4ed8" } } }}
       >
-        Drag this title bar
-      </Text>
+        <Rectangle
+          keyboardFocusable
+          style={{
+            width,
+            height: 44,
+            cursor: "grab",
+            fill: "#dbeafe",
+            cornerRadius: 12,
+          }}
+        />
+        <Text
+          pointerEvents="none"
+          style={{
+            left: 16,
+            top: 14,
+            font: "600 15px sans-serif",
+            textBaseline: "top",
+            fill: "#17324d",
+          }}
+        >
+          Drag this title bar
+        </Text>
+      </DragHandle>
       <Flex
         style={{
           left: 16,
@@ -155,19 +171,17 @@ function Scene() {
         locks ratio · Escape cancels.
       </Text>
       <ManipulationFrame {...manipulation.frameProps}>
-        <CardContent />
-        <DragHandle
-          controller={manipulation}
-          style={{ width: "100%", height: 44 }}
-        />
+        <CardContent manipulation={manipulation} />
         <ResizeHandles
           controller={manipulation}
           positions="corners"
-          style={{ readout: {
-            font: "12px sans-serif",
-            visible: false,
-            active: { visible: true, fill: "#1d4ed8" },
-          } }}
+          style={{
+            readout: {
+              font: "12px sans-serif",
+              visible: false,
+              active: { visible: true, fill: "#1d4ed8" },
+            },
+          }}
         />
         <RotationHandle
           controller={manipulation}
@@ -267,5 +281,10 @@ function Scene() {
   );
 }
 export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <FocusManagement><Scene /></FocusManagement>);
+  return crc(
+    canvas,
+    <FocusManagement>
+      <Scene />
+    </FocusManagement>,
+  );
 }

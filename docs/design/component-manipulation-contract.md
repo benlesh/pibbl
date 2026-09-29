@@ -57,7 +57,14 @@ does not suppress later ordinary clicks or another pointer.
 
 ## Handles and coordinate space
 
-`DragHandle` contributes its declared local box target. `ResizeHandle` chooses
+`DragHandle` is a pathless listener ancestor. Its descendants supply normal hit
+geometry, including fill/stroke, transforms, clipping, and source paint order.
+It never adds a rectangular target or unions descendant bounds. Empty handles,
+gaps, and descendants with `pointerEvents="none"` cannot initiate movement.
+Focusable child targets supply keyboard focus and bubble Escape to the handle.
+Put cursor and focusability on the painted target.
+
+`ResizeHandle` chooses
 one of the four corners or four edges, and `ResizeHandles` renders corners by
 default or the requested edge/corner set. `RotationHandle` sits beyond the
 frame's top edge. Default visual controls are 8 CSS pixels and default hit
@@ -112,3 +119,13 @@ signal write guard, CRC queues one generation-checked Begin cleanup record;
 it writes only when the sources and owner generation are unchanged. A newer
 external write or a later controller ownership generation invalidates that
 record. Disposed components do not receive lifecycle callbacks.
+
+## Position readouts
+
+A drag handle can enable `style.readout` and supply `formatReadout({ left, top })`.
+Values are the frame’s applied parent-local position, in logical units, and are
+never derived from the grab region or cursor position. Readouts use the shared
+inactive/focused/active style overrides, outward gap, and canvas containment.
+They remain decorative and introduce no input target. `Manipulable.dragHandle`
+forwards the same presentation and formatter options to its content wrapper;
+only participating descendants can initiate its move operation.

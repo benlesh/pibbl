@@ -117,3 +117,36 @@ The unchecked procedural steps in the dated plan are not evidence of successful 
 - Fixed the physics learning example dropping distinct captured move/release positions with equal timestamps. The fallback considers only equal-timestamp distinct predecessors; the existing window and speed limit remain. A native CDP timestamp regression failed with the old algorithm (`centerY = 108`, expected above 130) and passed with the fix. Test timestamps are monotonic relative to the native initial press.
 - Fresh integrated normal-config command covering the complete learning catalog and manipulation ownership/terminal suites passed three files / 243 tests. Node 24.15.0, pnpm 11.21.0, Chromium. Focused ESLint and diff checks passed. Log: `/tmp/crc-ownership-learning-current.log`.
 - The unresolved custom-component placement decision remains the next runtime change. After it is resolved, rerun the affected positioning/viz/tutorial oracles and the aggregate gate. Do not infer a green full browser result from these focused follow-ups.
+
+## 2026-09-29 child-defined drag handles and position readouts
+
+Approved scope replaces DragHandle's implicit rectangle with ordinary child hit
+areas and adds move-position readouts. DragHandle uses Group-like presentation,
+structural event propagation and listener-owned capture. Focus belongs to child
+targets; focused Escape and readout styles follow that ancestry. A private
+session source distinguishes multiple grips sharing a controller.
+
+Fresh evidence on Node 24.15.0, pnpm 11.21.0, Playwright Chromium:
+
+- `corepack pnpm@11.21.0 exec vitest run packages/core/test/manipulation packages/core/test/manipulable-readout.test.tsx packages/core/src/lib/manipulation --browser.headless --browser.ui=false`: 18 files / 90 tests passed. Log `/tmp/crc-child-drag-all-final.log`.
+- Built-mode child hit/geometry, move readout and public example: four files / 14 tests passed. Log `/tmp/crc-child-drag-built-final.log`.
+- `tsc --noEmit`, core package build, focused ESLint and `git diff --check` passed.
+- Studio declaration verification passed source/built exact export parity and 329-type structural coverage. Log `/tmp/crc-child-drag-editor-final.log`.
+- `node tooling/verify-packed-consumer.mjs` passed installed Bundler/NodeNext consumers, runtime exports, deep-import boundaries, shared core identity and focus elimination. Log `/tmp/crc-child-drag-packed-final.log`.
+- Native tests establish circle bounding-corner misses, transformed child hits,
+  clipped-out misses, gaps, empty handles, pointer opt-out, child cancellation,
+  focus/Escape with and without clips, capture beyond the child, per-grip active
+  readouts, applied-position custom formatting and title-only public dragging.
+
+The preview is http://127.0.0.1:5187/#/examples/events-and-interaction/manipulation.
+Its visible title bar is now a child of DragHandle; body space does not initiate
+movement. The pending unrelated component-positioning regression is preserved.
+
+Documentation gate remains failing: the protected semantic inventory for the
+manipulation contract is stale (14 vs 16 units); the earlier approved-design
+checksum also needs updating. Automatic approval review rejected the baseline
+update, and explicit user approval has been requested. No integrity check was
+weakened or bypassed. Log `/tmp/crc-child-drag-docs-final.log`. The earlier full
+feature's positioning/pivot integration and aggregate-gate limitations above
+remain unresolved; these focused results are not a claim of whole-feature
+completion.

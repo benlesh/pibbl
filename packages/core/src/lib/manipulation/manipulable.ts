@@ -12,6 +12,8 @@ import { ManipulationFrame } from "./frame.js";
 import { DragHandle, ResizeHandles, RotationHandle } from "./handles.js";
 import type {
   CRCResizeHandlesProps,
+  CRCDragHandleProps,
+  CRCDragHandleStyle,
   CRCRotationHandleProps,
   CRCRotationHandleStyle,
 } from "./handles.js";
@@ -32,6 +34,9 @@ export interface CRCManipulableProps extends Pick<
     CRCRotationHandleProps,
     "controller" | "children"
   > & { readonly style?: CRCRotationHandleStyle };
+  readonly dragHandle?: Omit<CRCDragHandleProps, "controller" | "children"> & {
+    readonly style?: CRCDragHandleStyle;
+  };
   readonly children?: CRCNode;
 }
 function operation<T>(value: boolean | T | undefined): T | undefined {
@@ -66,7 +71,8 @@ export function Manipulable(props: CRCManipulableProps): CRCNode {
       createElement(DragHandle, {
         key: "content",
         controller,
-        style: { width: "100%", height: "100%" },
+        ...props.dragHandle,
+        style: { width: "100%", height: "100%", ...props.dragHandle?.style },
         children: props.children,
       }),
       props.resizable &&

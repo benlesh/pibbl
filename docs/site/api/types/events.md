@@ -85,11 +85,11 @@ same cancellation and propagation controls as the base CRC event.
 
 ## CRCDragHandleProps
 
-Supplies a controller, declared region style, and optional content for a drag surface.
+Supplies a controller, optional children, and a position formatter receiving applied `left` and `top`. Descendant hit areas determine where dragging can begin.
 
 ## CRCDragHandleStyle
 
-The declared layout box for a drag region.
+Ordinary Group-like presentation and layout participation, plus optional `readout` styling. Width and height do not manufacture an interaction rectangle.
 
 ## CRCEvent
 
