@@ -2193,6 +2193,14 @@ try {
     'FocusManagement',
     'Fragment',
     'Grid',
+    'Manipulable',
+    'ManipulationFrame',
+    'DragHandle',
+    'ResizeHandle',
+    'ResizeHandles',
+    'RotationHandle',
+    'degrees',
+    'useManipulation',
     'Group',
     'Group3D',
     'HemisphereLight',
@@ -2292,7 +2300,7 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 211) {
+  if (expectedStudioRuntimeExports.length !== 219) {
     throw new Error(
       `CRC Studio runtime must expose 80 core values, 46 physics 2D values, 48 physics 3D values, 1 Three adapter value, 1 sandbox module registry, 15 WebGL values, 1 GLB loader value, 11 particle values, 5 visualization values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
     );
