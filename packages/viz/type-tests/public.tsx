@@ -304,7 +304,15 @@ const invalidAnchoredItem: AnchoredItem = {
 void invalidAnchoredItem;
 
 import { BarSeries, type ResolvedBandScale } from "@crc/viz";
-void (<BarSeries data={[{ category: "A", value: -2 }]} x="category" y="value" xScale="categories" yScale="values" />);
+void (
+  <BarSeries
+    data={[{ category: "A", value: -2 }]}
+    x="category"
+    y="value"
+    xScale="categories"
+    yScale="values"
+  />
+);
 function BandConsumer() {
   const band: ResolvedBandScale = useScale("categories", "band").get();
   const start: number | undefined = band.map("A");
@@ -315,4 +323,66 @@ function BandConsumer() {
 }
 void BandConsumer;
 
-void (<BarSeries data={[{ category: "A", value: 42 }]} x="category" y="value" xScale="categories" yScale="values" style={{ fill: signal({ type: "threshold" as const, thresholds: [0, 30], colors: ["orange", "green", "red"] }) }} />);
+void (
+  <BarSeries
+    data={[{ category: "A", value: 42 }]}
+    x="category"
+    y="value"
+    xScale="categories"
+    yScale="values"
+    style={{
+      fill: signal({
+        type: "threshold" as const,
+        thresholds: [0, 30],
+        colors: ["orange", "green", "red"],
+      }),
+    }}
+  />
+);
+
+import type {
+  BandScaleRange,
+  BarStyleResolver,
+  BarSeriesProps,
+} from "@crc/viz";
+const groupedRows = [{ category: "A", group: "East", value: 12 }];
+const nestedRange: BandScaleRange = { bandwidthOf: Symbol("category") };
+const groupStyle: BarStyleResolver<(typeof groupedRows)[number]> = (row) => ({
+  fill: row.group === "East" ? "teal" : "orange",
+});
+void (
+  <Scale id="g" type="band" domain={["East"]} range={signal(nestedRange)} />
+);
+void (
+  <BarSeries
+    data={groupedRows}
+    x="category"
+    y="value"
+    group="group"
+    groupScale="g"
+    xScale="c"
+    yScale="v"
+    style={groupStyle}
+  />
+);
+// @ts-expect-error group requires groupScale
+const incompleteGroup: BarSeriesProps<(typeof groupedRows)[number]> = {
+  data: groupedRows,
+  x: "category",
+  y: "value",
+  group: "group",
+  xScale: "c",
+  yScale: "v",
+};
+void incompleteGroup;
+void (
+  // @ts-expect-error numeric scales cannot use bandwidthOf
+  <Scale id="v" type="linear" domain={[0, 1]} range={{ bandwidthOf: "c" }} />
+);
+const signalGroupStyle: BarStyleResolver<
+  (typeof groupedRows)[number]
+> = () => ({
+  // @ts-expect-error datum style callbacks return plain values
+  opacity: signal(0.5),
+});
+void signalGroupStyle;

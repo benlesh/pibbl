@@ -13,6 +13,7 @@ symbols:
     BandCategory,
     BandDomain,
     BandScaleProps,
+    BandScaleRange,
     ResolvedBandScale,
     ScaleRange,
     ScaleLayoutStyle,
@@ -63,14 +64,14 @@ A scale provider and consumer must share one rendering instance. Put the complet
 scale subtree inside a `Layer`; lookup across a Layer boundary is unsupported.
 Time, logarithmic, and auto-domain scales are deferred.
 
-## Band scales (feedback slice)
+## Band scales
 
 Use `type="band"` with an explicit ordered `BandDomain` of strings or finite
 numbers (`BandCategory`). Identity uses SameValueZero: `1` and `"1"` are distinct;
 `-0` and `0` are the same category. Duplicate entries reject. Input order is
 preserved, and empty domains are valid. Unknown categories map to `undefined`.
 
-`paddingInner` defaults to 0 and is a fraction of the step in [0, 1].
+`paddingInner` defaults to 0 and is a fraction of the step in `[0, 1]`.
 `paddingOuter` defaults to 0 and is a finite nonnegative number of steps per side.
 For n categories, step = extent / max(1, n - paddingInner + 2 * paddingOuter).
 Bandwidth = step * (1 - paddingInner); remaining space is centered. Empty domains
@@ -81,4 +82,12 @@ Read `useScale(id, "band").get()` for the immutable `ResolvedBandScale`: `domain
 `range`, `frame`, `step`, `bandwidth`, and `map(category)`. There is no numeric
 inversion or tick method. Labels can use `map(category) + bandwidth / 2`.
 Domain, padding, reverse, and range accept signals and follow local allocation.
-Nested bandwidth ranges and grouped bars are deferred.
+For nested bands, `BandScaleRange` additionally accepts
+`{ bandwidthOf: ancestorId }`. It resolves to `[0, ancestor.bandwidth]`,
+reacting to ancestor domain, padding, and allocation changes. The reference
+must identify a visible ancestor band scale in the same rendering instance.
+Nearest matching scope wins, as with `useScale`. Missing references and wrong
+scale families reject. Ancestor-only lookup prevents circular references.
+Zero ancestor bandwidth produces a collapsed range. The inner frame remains
+the layout allocation; only its range uses the ancestor bandwidth. Linear
+scales do not accept this range form.

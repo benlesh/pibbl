@@ -9,6 +9,7 @@ import type { SignalStyle } from "@crc/core/internal";
 export type ScaleId = string | symbol;
 export type LinearDomain = readonly [number, number];
 export type ScaleRange = "width" | "height" | readonly [number, number];
+export type BandScaleRange = ScaleRange | { readonly bandwidthOf: ScaleId };
 export type ScaleLayoutStyle = Pick<BoxStyle, "width" | "height"> &
   LayoutItemStyle;
 export interface LinearScaleProps {
@@ -24,10 +25,11 @@ export type BandCategory = string | number;
 export type BandDomain = readonly BandCategory[];
 export interface BandScaleProps extends Omit<
   LinearScaleProps,
-  "type" | "domain"
+  "type" | "domain" | "range"
 > {
   readonly type: "band";
   readonly domain: SignalValue<BandDomain>;
+  readonly range: SignalValue<BandScaleRange>;
   readonly paddingInner?: SignalValue<number>;
   readonly paddingOuter?: SignalValue<number>;
 }

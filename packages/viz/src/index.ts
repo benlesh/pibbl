@@ -6,6 +6,7 @@ export type {
   BandCategory,
   BandDomain,
   BandScaleProps,
+  BandScaleRange,
   ResolvedBandScale,
   ScaleRange,
   ScaleLayoutStyle,
@@ -87,5 +88,6 @@ export type {
   BarThresholdFill,
   BarCategoryAccessor,
   BarSeriesStyle,
+  BarStyleResolver,
   BarSeriesProps,
 } from "./lib/bar-series.js";

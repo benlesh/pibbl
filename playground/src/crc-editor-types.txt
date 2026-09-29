@@ -953,6 +953,7 @@ type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : Sig
 export type ScaleId = string | symbol;
 export type LinearDomain = readonly [number, number];
 export type ScaleRange = 'width' | 'height' | readonly [number, number];
+export type BandScaleRange = ScaleRange | { readonly bandwidthOf: ScaleId };
 export type ScaleLayoutStyle = Pick<BoxStyle, 'width' | 'height'> & LayoutItemStyle;
 export interface LinearScaleProps {
   readonly id: ScaleId;
@@ -965,9 +966,10 @@ export interface LinearScaleProps {
 }
 export type BandCategory = string | number;
 export type BandDomain = readonly BandCategory[];
-export interface BandScaleProps extends Omit<LinearScaleProps, "type" | "domain"> {
+export interface BandScaleProps extends Omit<LinearScaleProps, "type" | "domain" | "range"> {
   readonly type: "band";
   readonly domain: SignalValue<BandDomain>;
+  readonly range: SignalValue<BandScaleRange>;
   readonly paddingInner?: SignalValue<number>;
   readonly paddingOuter?: SignalValue<number>;
 }
@@ -1215,7 +1217,8 @@ export interface BarSeriesStyle {
   readonly opacity?: number;
   readonly cursor?: string;
 }
-export interface BarSeriesProps<D> extends CRCEventHandlers, CRCEventParticipationOptions {
+export type BarStyleResolver<D> = (datum: D, index: number, data: readonly D[]) => BarSeriesStyle;
+interface BarSeriesBaseProps<D> extends CRCEventHandlers, CRCEventParticipationOptions {
   readonly data: SignalValue<readonly D[]>;
   readonly orientation?: "vertical";
   readonly x: BarCategoryAccessor<D>;
@@ -1224,6 +1227,7 @@ export interface BarSeriesProps<D> extends CRCEventHandlers, CRCEventParticipati
   readonly yScale: ScaleId;
   readonly baseline?: SignalValue<number>;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
-  readonly style?: SignalValue<SignalStyle<BarSeriesStyle>>;
+  readonly style?: SignalValue<SignalStyle<BarSeriesStyle> | BarStyleResolver<D>>;
 }
+export type BarSeriesProps<D> = BarSeriesBaseProps<D> & ({ readonly group: BarCategoryAccessor<D>; readonly groupScale: ScaleId } | { readonly group?: never; readonly groupScale?: never });
 export declare function BarSeries<D>(props: BarSeriesProps<D>): CRCNode;

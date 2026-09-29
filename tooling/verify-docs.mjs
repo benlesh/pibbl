@@ -86,6 +86,7 @@ const publicGuidePaths = [
 const publicSiteMarkdownPaths = [
   "docs/site/learn/guides/data-visualization.md",
   "docs/site/api/components/scale.md",
+  "docs/site/api/components/bar-series.md",
   "docs/site/api/components/axis.md",
   "docs/site/api/components/line-series.md",
   "docs/site/api/components/point-series.md",

@@ -90,3 +90,18 @@ it("loads the complete function-query comparison as canonical editable source", 
     ),
   ).not.toThrow();
 });
+
+import groupedLesson from "../../scenarios/src/learning/composition/viz-grouped-bars.example.tsx?raw";
+it("loads grouped bars as the canonical editable public lesson", async () => {
+  expect(() =>
+    validateLearningSourceText(groupedLesson, {
+      authoring: "jsx",
+      label: 'Learning example "viz-grouped-bars"',
+      sourcePath:
+        "packages/scenarios/src/learning/composition/viz-grouped-bars.example.tsx",
+    }),
+  ).not.toThrow();
+  await expect(
+    loadLearningSource(getLearningExampleBySlug("viz-grouped-bars")!),
+  ).resolves.toBe(groupedLesson);
+});

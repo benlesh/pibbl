@@ -1,5 +1,6 @@
 import {
   Group,
+  isSignal,
   Rectangle,
   resolveSignalValue,
   useCanvasContext,
@@ -12,6 +13,8 @@ import type {
   SignalValue,
   StrokeStyle,
 } from "@crc/core";
+import { withHooksForbidden } from "@crc/core/internal";
+import { lookupScale } from "./scale-context.js";
 import type { SignalStyle } from "@crc/core/internal";
 import type { BandCategory, LineAccessor, ScaleId } from "./types.js";
 import { useScale } from "./use-scale.js";
@@ -38,7 +41,12 @@ export interface BarSeriesStyle {
   readonly opacity?: number;
   readonly cursor?: string;
 }
-export interface BarSeriesProps<D>
+export type BarStyleResolver<D> = (
+  datum: D,
+  index: number,
+  data: readonly D[],
+) => BarSeriesStyle;
+interface BarSeriesBaseProps<D>
   extends CRCEventHandlers, CRCEventParticipationOptions {
   readonly data: SignalValue<readonly D[]>;
   readonly orientation?: "vertical";
@@ -48,8 +56,15 @@ export interface BarSeriesProps<D>
   readonly yScale: ScaleId;
   readonly baseline?: SignalValue<number>;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
-  readonly style?: SignalValue<SignalStyle<BarSeriesStyle>>;
+  readonly style?: SignalValue<
+    SignalStyle<BarSeriesStyle> | BarStyleResolver<D>
+  >;
 }
+export type BarSeriesProps<D> = BarSeriesBaseProps<D> &
+  (
+    | { readonly group: BarCategoryAccessor<D>; readonly groupScale: ScaleId }
+    | { readonly group?: never; readonly groupScale?: never }
+  );
 /** Value bars in source order; rectangles supply ordinary paint and event geometry. */
 export function BarSeries<D>({
   data: input,
@@ -59,6 +74,8 @@ export function BarSeries<D>({
   xScale,
   yScale,
   baseline,
+  group,
+  groupScale,
   defined,
   style: styleInput,
   pointerEvents,
@@ -66,6 +83,20 @@ export function BarSeries<D>({
 }: BarSeriesProps<D>) {
   const categories = useScale(xScale, "band").get();
   const values = useScale(yScale).get();
+  const groups = lookupScale(groupScale, "BarSeries groupScale", "band")?.get();
+  if ((group === undefined) !== (groupScale === undefined))
+    throw new TypeError("BarSeries requires group and groupScale together.");
+  if (groups && groups.type !== "band")
+    throw new TypeError("BarSeries groupScale requires a band scale.");
+  const groupValue =
+    typeof group === "function"
+      ? group
+      : (datum: D) =>
+          group === undefined
+            ? undefined
+            : (datum[group] as BandCategory | null | undefined);
+  const slotWidth =
+    groups?.type === "band" ? groups.bandwidth : categories.bandwidth;
   if (orientation !== undefined && orientation !== "vertical")
     throw new TypeError(
       "BarSeries currently supports vertical value bars only.",
@@ -78,24 +109,60 @@ export function BarSeries<D>({
   const value = pointAccessor(y);
   const baselineValue = resolveSignalValue(baseline ?? 0);
   const base = values.map(baselineValue);
-  const style = resolveSignalValue(styleInput) ?? {};
-  const requested = resolveSignalValue(style.bandwidth) ?? "auto";
-  const bandwidth =
-    requested === "auto"
-      ? categories.bandwidth
-      : width(requested, "BarSeries bandwidth");
-  const fill = barFill(
-    useCanvasContext(),
-    resolveSignalValue(style.fill) ?? "#2563eb",
-    (value) => values.map(value),
-  );
-  const stroke = resolveSignalValue(style.stroke);
-  const strokeWidth = width(
-    resolveSignalValue(style.strokeWidth) ?? 1,
-    "BarSeries strokeWidth",
-  );
-  const alpha = opacity(resolveSignalValue(style.opacity) ?? 1, "BarSeries");
-  const cursor = resolveSignalValue(style.cursor);
+  const specified = resolveSignalValue(styleInput);
+  const ctx = useCanvasContext();
+  function normalize(input: unknown, callback: boolean) {
+    if (!input || typeof input !== "object" || Array.isArray(input))
+      throw new TypeError("BarSeries style must be an object.");
+    if (
+      callback &&
+      Object.getPrototypeOf(input) !== Object.prototype &&
+      Object.getPrototypeOf(input) !== null
+    )
+      throw new TypeError(
+        "BarSeries datum style must be a plain synchronous object.",
+      );
+    const style: Record<string, unknown> = {};
+    for (const key of Object.keys(input)) {
+      if (
+        ![
+          "bandwidth",
+          "fill",
+          "stroke",
+          "strokeWidth",
+          "opacity",
+          "cursor",
+        ].includes(key)
+      )
+        throw new TypeError(`BarSeries: unsupported style field ${key}.`);
+      const value = (input as Record<string, unknown>)[key];
+      if (callback && isSignal(value))
+        throw new TypeError(
+          "BarSeries datum styles require plain values; read signals explicitly.",
+        );
+      style[key] = callback ? value : resolveSignalValue(value);
+    }
+    const resolved = style as BarSeriesStyle;
+    if (resolved.cursor !== undefined && typeof resolved.cursor !== "string")
+      throw new TypeError("BarSeries cursor must be a string.");
+    return {
+      bandwidth:
+        resolved.bandwidth === undefined || resolved.bandwidth === "auto"
+          ? slotWidth
+          : width(resolved.bandwidth, "BarSeries bandwidth"),
+      fill: barFill(ctx, resolved.fill ?? "#2563eb", (value) =>
+        values.map(value),
+      ),
+      stroke: resolved.stroke,
+      strokeWidth: width(resolved.strokeWidth ?? 1, "BarSeries strokeWidth"),
+      alpha: opacity(resolved.opacity ?? 1, "BarSeries"),
+      cursor: resolved.cursor,
+    };
+  }
+  const shared =
+    typeof specified === "function"
+      ? undefined
+      : normalize(specified ?? {}, false);
   const nodes: CRCNode[] = [];
   for (let i = 0; i < data.length; i++) {
     const datum = data[i];
@@ -103,8 +170,21 @@ export function BarSeries<D>({
     const c = category(datum, i, data),
       v = value(datum, i, data);
     if (c == null || !finiteCoordinate(v)) continue;
-    const start = categories.map(c);
-    if (start === undefined || bandwidth === 0) continue;
+    const categoryStart = categories.map(c);
+    const g = groups ? groupValue(datum, i, data) : undefined;
+    const offset = groups ? (g == null ? undefined : groups.map(g)) : 0;
+    if (categoryStart === undefined || offset === undefined || slotWidth === 0)
+      continue;
+    const start = categoryStart + offset;
+    const { bandwidth, fill, stroke, strokeWidth, alpha, cursor } =
+      shared ??
+      normalize(
+        withHooksForbidden("BarSeries style callback", () =>
+          (specified as BarStyleResolver<D>)(datum, i, data),
+        ),
+        true,
+      );
+    if (bandwidth === 0) continue;
     const end = values.map(v);
     const height = Math.abs(end - base);
     if (!Number.isFinite(height))
@@ -115,7 +195,7 @@ export function BarSeries<D>({
         key={i}
         pointerEvents={pointerEvents}
         style={{
-          x: start + (categories.bandwidth - bandwidth) / 2,
+          x: start + (slotWidth - bandwidth) / 2,
           y: Math.min(base, end),
           width: bandwidth,
           height,

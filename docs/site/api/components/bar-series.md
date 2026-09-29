@@ -10,6 +10,7 @@ symbols:
     BarSeries,
     BarSeriesProps,
     BarSeriesStyle,
+    BarStyleResolver,
     BarCategoryAccessor,
     BarThresholdFill,
   ]
@@ -17,7 +18,7 @@ symbols:
 
 # BarSeries
 
-Import from `@crc/viz`. This feedback slice supports vertical value bars:
+Import from `@crc/viz`. This component supports vertical value bars:
 `data`, `x` (category key/accessor), `y` (numeric key/accessor), `xScale` (band),
 and `yScale` (linear). `orientation` may be `"vertical"` or omitted.
 `baseline` is a signal-capable finite domain value, defaulting to zero. Linear
@@ -39,22 +40,85 @@ Coordinates remain root-logical. There is no datum-enriched event: inspect via
 `useScale(id, "band")`, data, and ordinary events. Per-row nodes have ordinary
 component cost; this slice makes no large-data batching guarantee.
 
-One future BarSeries will also support horizontal and ranged bars. Grouping will
-compose nested band scales. Those props and nested bandwidth ranges are not yet
-implemented; no separate horizontal/range/grouped series is introduced.
+Horizontal and ranged bars remain future extensions of the same BarSeries.
+
+## Grouped bars
+
+Supply `group` (a category key/accessor) and `groupScale` together. The inner
+band scale defines group order and spacing within each outer category:
+
+```tsx
+import { BarSeries, Scale } from "@crc/viz";
+const rows = [
+  { month: "Jan", team: "East", sales: 72, category: "Jan", value: 320_000 },
+  { month: "Jan", team: "West", sales: 55, category: "Feb", value: -40_000 },
+];
+const grouped = (
+  <Scale id="month" type="band" domain={["Jan", "Feb"]} range="width">
+    <Scale
+      id="team"
+      type="band"
+      domain={["East", "West"]}
+      range={{ bandwidthOf: "month" }}
+      paddingInner={0.15}
+    >
+      <Scale id="sales" type="linear" domain={[0, 100]} range="height" reverse>
+        <BarSeries
+          data={rows}
+          x="month"
+          y="sales"
+          group="team"
+          xScale="month"
+          yScale="sales"
+          groupScale="team"
+          style={(row) => ({ fill: row.team === "East" ? "teal" : "orange" })}
+        />
+      </Scale>
+    </Scale>
+  </Scale>
+);
+void grouped;
+```
+
+Group identity follows band category identity. Missing or unknown groups skip
+their rows; other groups retain their slots. Reordering the inner domain moves
+groups consistently across categories. Empty or collapsed bands paint no bars.
+Offsets add the outer category start to the inner group start. Auto bandwidth
+uses the inner scale; explicit bandwidth centers within that group slot and may
+overlap neighboring slots. Duplicate category/group rows paint in source order.
+
+`BarStyleResolver<D>` receives `(datum, index, data)` for each eligible row.
+Return a plain `BarSeriesStyle`, including threshold fills if desired. Read
+signals explicitly inside the callback; returned field signals are rejected.
+Callbacks are synchronous and cannot call hooks. A callback replaces the shared
+style form rather than merging with it. Each rectangle retains its own cursor,
+paint, and normal event geometry.
+
+Try [Grouped bars](#/examples/composition/viz-grouped-bars) with two or three
+years, group reordering, resizing, and pointer inspection.
 
 ## Fill by value thresholds
 
 A single series can color regions of each bar by value-scale coordinates:
 
 ```tsx
-style={{
-  fill: {
-    type: "threshold",
-    thresholds: [0, 300_000],
-    colors: ["#c36638", "#167b70", "#c43c39"],
-  },
-}}
+const thresholdBars = (
+  <BarSeries
+    data={rows}
+    x="category"
+    y="value"
+    xScale="categories"
+    yScale="values"
+    style={{
+      fill: {
+        type: "threshold",
+        thresholds: [0, 300_000],
+        colors: ["#c36638", "#167b70", "#c43c39"],
+      },
+    }}
+  />
+);
+void thresholdBars;
 ```
 
 `BarThresholdFill` requires finite, strictly increasing thresholds and exactly

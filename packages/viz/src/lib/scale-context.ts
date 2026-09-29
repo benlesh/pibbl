@@ -54,9 +54,25 @@ export function readScale(
   receiver: string,
   type?: "linear" | "band",
 ): Signal<ResolvedScale> | undefined {
-  if (id === undefined) return undefined;
+  return findScale(current, getCurrentBackendHostCanvas(), id, receiver, type);
+}
+/** Captures visible ancestors so reactive formulas can resolve IDs outside traversal. */
+export function captureScaleLookup(receiver: string) {
+  useInternalHookSlot("vizScaleLookup", () => undefined);
+  const parent = current;
   const canvas = getCurrentBackendHostCanvas();
-  for (let scope = current; scope; scope = scope.parent) {
+  return (id: ScaleId | undefined, type?: "linear" | "band") =>
+    findScale(parent, canvas, id, receiver, type);
+}
+function findScale(
+  parent: Scope | undefined,
+  canvas: Canvas,
+  id: ScaleId | undefined,
+  receiver: string,
+  type?: "linear" | "band",
+): Signal<ResolvedScale> | undefined {
+  if (id === undefined) return undefined;
+  for (let scope = parent; scope; scope = scope.parent) {
     if (scope.id !== id) continue;
     if (scope.canvas !== canvas)
       throw new Error(
