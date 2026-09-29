@@ -127,7 +127,9 @@ export const ResizeHandle = definePrimitive<CRCResizeHandleProps>(
         "ResizeHandle hitSize must be positive finite CSS pixels.",
       );
     const hit = cssHandlePath(state, x, y, hitSize);
-    useEventTarget(manipulationHandlers(props.controller, "resize", position), {
+    const handlers = manipulationHandlers(props.controller, "resize", position);
+    useEventListener(handlers);
+    useEventTarget(handlers, {
       path: hit,
       fill: true,
       cursor:
@@ -238,7 +240,9 @@ export const RotationHandle = definePrimitive<CRCRotationHandleProps>(
       throw new Error(
         "RotationHandle hitSize must be positive finite CSS pixels.",
       );
-    useEventTarget(manipulationHandlers(props.controller, "rotate"), {
+    const handlers = manipulationHandlers(props.controller, "rotate");
+    useEventListener(handlers);
+    useEventTarget(handlers, {
       path: cssHandlePath(state, x, y, hitSize),
       fill: true,
       cursor: "grab",
