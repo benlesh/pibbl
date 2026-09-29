@@ -292,7 +292,11 @@ try {
     const requireFromRootOnly = createRequire(
       join(rootOnlyConsumerDirectory, 'runtime.mjs'),
     );
-    requireFromRootOnly.resolve('@crc/core');
+    const installedCoreEntry = requireFromRootOnly.resolve('@crc/core');
+    run(process.execPath, [
+      join(repositoryRoot, 'tooling/verify-positioning-environments.mjs'),
+      '--packed-entry', installedCoreEntry,
+    ]);
     requireFromRootOnly.resolve('@crc/particles');
     try {
       requireFromRootOnly.resolve('@crc/webgl');

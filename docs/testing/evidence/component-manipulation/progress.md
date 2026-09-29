@@ -46,3 +46,19 @@ Status: first public drag/resize slice ready for feedback. Not feature complete.
 - Studio is running at `http://127.0.0.1:5187/#/examples/events-and-interaction/manipulation` in the integration checkout. Visually confirmed the live card, four corner controls, nested Flex layout, geometry readout, and no editor TypeScript errors. Native pointer tests establish interaction behavior.
 - Minimum documentation metadata, per-type headings, and related-type links now satisfy normal Studio startup. Comprehensive documentation migration remains Task 9.
 - User has been invited to evaluate this slice before rotation and broad hardening. Development server is intentionally left running; do not archive its worktree.
+
+## Integrated hardening progress (2026-09-28)
+
+This section supersedes the earlier next-action list; the feature remains incomplete.
+
+- Rotation, aspect-ratio locking, bounded resize/move solving, `Manipulable`, immutable snapshots, synchronous external-write observation, click suppression, and generation-checked teardown rollback are implemented in the integration branch.
+- Strengthened the solver tests to assert actual opposite-anchor coordinates for all eight resize handles. Fixed ratio-driver snapping, rotated snap status, feasible bounds/minimum projection, and untouched edge dimensions.
+- Added public cancellation evidence for live unsatisfiable constraints, reporting `constraints-unsatisfiable` and restoring the original box.
+- Structural performance evidence passes: multiple pointer samples coalesce into one normal content traversal, matching a manually positioned scene, with bounded gesture observers and no pixel readback.
+- Fresh normal-config source run: 13 files / 62 tests passed for manipulation, activation, positioning, and diagnostics. The later example reset/permanent-snap regression also passed. Node 24.15.0, pnpm 11.21.0, Chromium.
+- Fresh integrated `typecheck` and core build passed. Full `test:package-consumer:packed` passed after updating the explicit runtime export manifest to 88 exports. The normal packed gate now also executes the environment probe against source, built output, and installed tarball output, each with DEV true/false; all six modes passed.
+- Custom resize/rotation visuals now use CSS-pixel local dimensions; transform tests cover nonuniform Group transforms, density/contain scaling, Layer/filter composition, clipping, and custom child targeting.
+- Integrated worker evidence for frame replacement and live CSS/ancestor coordinate mapping cancellation: four files / 21 tests passed on the worker branch. Recheck with final integration before completion.
+- Updated the learning example with rotation, Alt ratio lock, reset, and permanent snapping. Visually checked the refreshed Studio preview and no TypeScript issues. Restarting the development server was necessary because its virtual runtime bundle was cached from the earlier API. Current server remains on port 5187.
+- A reused independent worker reviewed controller/ownership/solver and reported no verified remaining defect. This is supplemental evidence, not completion of the requirement audit.
+- Remaining: terminal/capture/animation-lease edge evidence, deterministic private lab, completed contract/docs registration, full migration/catalog checks, built-mode public browser evidence, and the aggregate trust gate. Do not mark the goal complete based on the focused counts above.

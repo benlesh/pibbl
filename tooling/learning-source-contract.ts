@@ -1121,6 +1121,22 @@ function inspectSource(source: string, label: string): SourceInspection {
       bindingShadows,
     );
 
+  const manipulationBindings = new Set<string>();
+  walk(file, (node) => {
+    if (node.type !== "VariableDeclarator") return;
+    const name = identifierName(node.id);
+    const initializer = unwrapTransparentExpression(node.init);
+    if (name && initializer?.type === "CallExpression" && resolveCoreValue(initializer.callee) === "useManipulation") {
+      manipulationBindings.add(name);
+    }
+  });
+  const isManipulationFrameSpread = (attribute: SyntaxNode): boolean => {
+    const argument = unwrapTransparentExpression(attribute.argument);
+    if (!argument || argument.type !== "MemberExpression") return false;
+    const owner = identifierName(argument.object);
+    return owner !== undefined && manipulationBindings.has(owner) && staticMemberName(argument) === "frameProps";
+  };
+
   const inspectCreateElementArguments = (argumentsValue: unknown): void => {
     const args = nodes(argumentsValue);
     const componentName = resolveCoreValue(args[0]);
@@ -1260,8 +1276,11 @@ function inspectSource(source: string, label: string): SourceInspection {
       const orbitHandlerSpreads = spreadAttributes.filter(
         isOrbitHandlersSpread,
       );
+      const manipulationFrameSpreads = componentName === "ManipulationFrame"
+        ? spreadAttributes.filter(isManipulationFrameSpread)
+        : [];
       if (
-        spreadAttributes.length !== orbitHandlerSpreads.length ||
+        spreadAttributes.length !== orbitHandlerSpreads.length + manipulationFrameSpreads.length ||
         (orbitHandlerSpreads.length > 0 && componentName !== "Group")
       ) {
         hasUninspectableProps = true;

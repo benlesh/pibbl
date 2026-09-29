@@ -81,6 +81,21 @@ function expectUninspectableNonJsxSource(source: string): void {
   ).toThrow(/inline object props/u);
 }
 
+it("accepts the canonical manipulation frame binding but rejects arbitrary spreads", () => {
+  const source = `
+    import { crc, ManipulationFrame, useManipulation, useSignal, type CRCController } from '@crc/core';
+    function Scene() {
+      const box = useSignal({ left: 0, top: 0, width: 100, height: 80 });
+      const manipulation = useManipulation({ box, move: {} });
+      return <ManipulationFrame {...manipulation.frameProps} />;
+    }
+    export default function mount(canvas: HTMLCanvasElement): CRCController { return crc(canvas, <Scene />); }
+  `;
+  expectValidLearningSource(source, "jsx");
+  expectInvalidLearningSource(source.replace("manipulation.frameProps", "manipulation.other"), "jsx");
+  expectInvalidLearningSource(source.replace("useManipulation({ box, move: {} })", "{ frameProps: {} }"), "jsx");
+});
+
 interface TextPaint {
   readonly text: string;
   readonly x: number;

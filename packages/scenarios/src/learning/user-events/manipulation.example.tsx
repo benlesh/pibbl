@@ -1,4 +1,5 @@
 import {
+  batch,
   crc,
   degrees,
   DragHandle,
@@ -102,17 +103,19 @@ function Scene() {
   const box = useSignal({ left: 96, top: 120, width: 320, height: 224 });
   const commits = useSignal(0);
   const rotation = useSignal(0);
+  const alwaysSnap = useSignal(false);
+  const when = alwaysSnap.get() ? "always" : "shift";
   const manipulation = useManipulation({
     box,
     rotation,
-    move: { snap: { step: 16, when: "shift" } },
+    move: { snap: { step: 16, when } },
     resize: {
       minWidth: 224,
       minHeight: 176,
-      snap: { step: 8, when: "shift" },
+      snap: { step: 8, when },
       aspectRatio: { value: "initial", when: "alt" },
     },
-    rotate: { snap: { step: degrees(15), when: "shift" } },
+    rotate: { snap: { step: degrees(15), when } },
     onCommit: ({ changed }) => {
       if (changed) commits.update((n) => n + 1);
     },
@@ -135,7 +138,7 @@ function Scene() {
           fill: "#0f172a",
         }}
       >
-        Move and resize a component
+        Move, resize, and rotate a component
       </Text>
       <Text
         pointerEvents="none"
@@ -159,6 +162,59 @@ function Scene() {
         <ResizeHandles controller={manipulation} positions="corners" />
         <RotationHandle controller={manipulation} />
       </ManipulationFrame>
+      <Rectangle
+        onClick={() => alwaysSnap.update((value) => !value)}
+        style={{
+          left: 568,
+          top: 412,
+          width: 208,
+          height: 34,
+          fill: "#dbeafe",
+          cornerRadius: 6,
+        }}
+      />
+      <Text
+        pointerEvents="none"
+        style={{
+          left: 582,
+          top: 422,
+          font: "14px sans-serif",
+          textBaseline: "top",
+          fill: "#17324d",
+        }}
+      >
+        Snap: {alwaysSnap.get() ? "always" : "hold Shift"}
+      </Text>
+      <Rectangle
+        onClick={() => {
+          manipulation.cancel();
+          batch(() => {
+            box.set({ left: 96, top: 120, width: 320, height: 224 });
+            rotation.set(0);
+            commits.set(0);
+          });
+        }}
+        style={{
+          left: 568,
+          top: 452,
+          width: 208,
+          height: 34,
+          fill: "#dbeafe",
+          cornerRadius: 6,
+        }}
+      />
+      <Text
+        pointerEvents="none"
+        style={{
+          left: 582,
+          top: 462,
+          font: "14px sans-serif",
+          textBaseline: "top",
+          fill: "#17324d",
+        }}
+      >
+        Reset geometry
+      </Text>
       <Text
         pointerEvents="none"
         style={{

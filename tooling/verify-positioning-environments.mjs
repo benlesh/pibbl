@@ -5,6 +5,13 @@ import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 
 const root = resolve(import.meta.dirname, "..");
+const packedEntryArgument = process.argv.indexOf("--packed-entry");
+const packedEntry =
+  packedEntryArgument === -1
+    ? undefined
+    : process.argv[packedEntryArgument + 1];
+if (packedEntryArgument !== -1 && !packedEntry)
+  throw new Error("--packed-entry requires an installed public entry path.");
 const directory = await mkdtemp(join(tmpdir(), "crc-positioning-env-"));
 
 const browserProbe = String.raw`
@@ -144,6 +151,7 @@ globalThis.__crcPositioningProbe = async () => {
 `;
 
 function publicCoreEntry(kind) {
+  if (kind === "packed") return resolve(packedEntry);
   return kind === "source"
     ? resolve(root, "packages/core/src/index.ts")
     : resolve(root, "packages/core/dist/index.mjs");
@@ -226,7 +234,7 @@ function assertProductionResult(label, results) {
 let browser;
 try {
   const bundles = await Promise.all(
-    ["source", "built"].flatMap((kind) => [
+    ["source", "built", ...(packedEntry ? ["packed"] : [])].flatMap((kind) => [
       bundleProbe(kind, true).then((path) => ({
         kind,
         development: true,

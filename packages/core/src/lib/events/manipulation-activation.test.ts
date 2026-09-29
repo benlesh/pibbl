@@ -130,5 +130,5 @@ function createCanvas(): HTMLCanvasElement {
 }
 
 function nextFrame(): Promise<void> {
-  return new Promise(resolve => requestAnimationFrame(resolve));
+  return new Promise(resolve => requestAnimationFrame(() => resolve()));
 }

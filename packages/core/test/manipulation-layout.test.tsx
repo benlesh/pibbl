@@ -80,7 +80,7 @@ async function mount(kind: LayoutKind) {
   return { canvas, box, reports };
 }
 
-async function resizeBottomRight(canvas: HTMLCanvasElement): Promise<void> {
+async function resizeBottomRight(_canvas: HTMLCanvasElement): Promise<void> {
   await commands.manipulationPointer([
     { type: 'move', x: 132, y: 120 },
     { type: 'down' },
