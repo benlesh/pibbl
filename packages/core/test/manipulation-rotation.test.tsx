@@ -172,3 +172,12 @@ it("converts native movement through a rotated and nonuniformly scaled Group", a
   expect(box.get().left).toBeCloseTo(60, 0);
   expect(box.get().top).toBeCloseTo(80, 0);
 });
+
+it("converts every finite degree magnitude without intermediate overflow", () => {
+  expect(CRC.degrees(180)).toBe(Math.PI);
+  expect(CRC.degrees(-90)).toBe(-Math.PI / 2);
+  expect(Number.isFinite(CRC.degrees(Number.MAX_VALUE))).toBe(true);
+  expect(CRC.degrees(Number.MAX_VALUE)).toBeCloseTo(Number.MAX_VALUE / 180 * Math.PI, -290);
+  expect(() => CRC.degrees(Infinity)).toThrow(/finite/);
+  expect(() => CRC.degrees(NaN)).toThrow(/finite/);
+});
