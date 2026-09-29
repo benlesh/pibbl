@@ -19,6 +19,7 @@ export interface InternalElementMetadata {
   readonly primitiveReceiverToken?: object;
   readonly policyPreparationSource?: CRCElement<any>;
   identityHint?: unknown;
+  placementConsumed?: boolean;
 }
 
 const elementMetadata = new WeakMap<CRCElement<any>, InternalElementMetadata>();
@@ -253,4 +254,15 @@ export function getPlacementIdentityHint<T>(element: CRCElement<any>): T | undef
 export function setPlacementIdentityHint<T>(element: CRCElement<any>, value: T): void {
   const current = elementMetadata.get(element) ?? {};
   elementMetadata.set(element, { ...current, identityHint: value });
+}
+
+/** @internal Marks authored left/top as consumed by a parent layout wrapper. */
+export function setPlacementConsumed(element: CRCElement<any>): void {
+  const current = elementMetadata.get(element) ?? {};
+  elementMetadata.set(element, { ...current, placementConsumed: true });
+}
+
+/** @internal */
+export function isPlacementConsumed(element: CRCElement<any>): boolean {
+  return elementMetadata.get(element)?.placementConsumed === true;
 }
