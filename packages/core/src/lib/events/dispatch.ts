@@ -104,7 +104,6 @@ interface ManipulationPointerPress {
 }
 
 interface PendingManipulationActivation {
-  readonly pointerId: number;
   readonly pointerPress: ManipulationPointerPress | undefined;
   readonly mouseDown: CRCInteractionActivation | undefined;
 }
@@ -117,6 +116,7 @@ const pendingManipulationActivations = new WeakMap<
   CRCInstance,
   Map<number, PendingManipulationActivation>
 >();
+const manipulationActivationRoots = new WeakSet<CRCInstance>();
 
 /**
  * Prevents a manipulation gesture from becoming a Canvas activation. This is
@@ -128,13 +128,13 @@ export function suppressManipulationActivation(
   pointerId: number,
 ): void {
   const root = getInteractionRoot(instance);
+  retainManipulationActivationState(root);
   let pending = pendingManipulationActivations.get(root);
   if (!pending) {
     pending = new Map();
     pendingManipulationActivations.set(root, pending);
   }
   pending.set(pointerId, Object.freeze({
-    pointerId,
     pointerPress: manipulationPointerPresses.get(root)?.get(pointerId),
     mouseDown: root.interaction.primaryDown,
   }));
@@ -473,12 +473,16 @@ function dispatchPointerEvent(
       dispatchRootPointerOut(root, input);
       return;
     case 'pointerdown':
-    case 'pointerup':
     case 'pointerrawupdate':
       dispatchPointerCoordinateEvent(root, input);
       return;
+    case 'pointerup':
+      dispatchPointerCoordinateEvent(root, input);
+      deleteManipulationPointerPress(root, input.originalEvent.pointerId);
+      return;
     case 'pointercancel':
       dispatchPointerCancel(root, input);
+      deleteManipulationPointerPress(root, input.originalEvent.pointerId);
       return;
     case 'gotpointercapture':
       dispatchGotPointerCapture(root, input);
@@ -1157,7 +1161,7 @@ function dispatchActivation(
     resolveCoordinateTarget(root.eventRoot, input);
   if (
     type === 'click' &&
-    consumeManipulationActivation(root, down, up, coordinateTarget)
+    consumeManipulationActivation(root, down, up, coordinateTarget, input.originalEvent)
   ) {
     resetClickStreak(root);
     return;
@@ -1361,6 +1365,7 @@ function recordManipulationPointerPress(
   pointerId: number,
   target: CRCEventNode | undefined,
 ): void {
+  retainManipulationActivationState(root);
   pendingManipulationActivations.get(root)?.delete(pointerId);
   const press = Object.freeze({
     path: target ? Object.freeze(buildEventPath(target)) : undefined,
@@ -1373,23 +1378,70 @@ function recordManipulationPointerPress(
   presses.set(pointerId, press);
 }
 
+function deleteManipulationPointerPress(
+  root: CRCInstance,
+  pointerId: number,
+): void {
+  const presses = manipulationPointerPresses.get(root);
+  if (!presses) return;
+  presses.delete(pointerId);
+  if (presses.size === 0) manipulationPointerPresses.delete(root);
+}
+
+function retainManipulationActivationState(root: CRCInstance): void {
+  if (manipulationActivationRoots.has(root)) return;
+  manipulationActivationRoots.add(root);
+  root.mainTeardowns.add(() => {
+    manipulationPointerPresses.delete(root);
+    pendingManipulationActivations.delete(root);
+    manipulationActivationRoots.delete(root);
+  });
+}
+
 function consumeManipulationActivation(
   root: CRCInstance,
   down: CRCInteractionActivation | undefined,
   up: CRCInteractionActivation | undefined,
   coordinateTarget: CRCEventNode | undefined,
+  nativeEvent: MouseEvent,
 ): boolean {
   const pending = pendingManipulationActivations.get(root);
   if (!pending) return false;
-  for (const [pointerId, activation] of pending) {
-    if (!matchesManipulationActivation(activation, down, up, coordinateTarget)) {
-      continue;
+  const pointerId = clickPointerId(nativeEvent);
+  if (pointerId !== undefined) {
+    const activation = pending.get(pointerId);
+    if (!activation || !matchesManipulationActivation(activation, down, up, coordinateTarget)) {
+      return false;
     }
-    pending.delete(pointerId);
-    if (pending.size === 0) pendingManipulationActivations.delete(root);
+    deletePendingManipulationActivation(root, pending, pointerId);
     return true;
   }
-  return false;
+
+  let match: number | undefined;
+  for (const [candidatePointerId, activation] of pending) {
+    if (!matchesManipulationActivation(activation, down, up, coordinateTarget)) continue;
+    if (match !== undefined) return false;
+    match = candidatePointerId;
+  }
+  if (match === undefined) return false;
+  deletePendingManipulationActivation(root, pending, match);
+  return true;
+}
+
+function clickPointerId(nativeEvent: MouseEvent): number | undefined {
+  const pointerId = Reflect.get(nativeEvent, 'pointerId');
+  return typeof pointerId === 'number' && Number.isFinite(pointerId) ?
+    pointerId :
+    undefined;
+}
+
+function deletePendingManipulationActivation(
+  root: CRCInstance,
+  pending: Map<number, PendingManipulationActivation>,
+  pointerId: number,
+): void {
+  pending.delete(pointerId);
+  if (pending.size === 0) pendingManipulationActivations.delete(root);
 }
 
 function matchesManipulationActivation(
