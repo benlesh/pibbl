@@ -732,7 +732,7 @@ describe("defineRenderLayer", () => {
       <FocusManagement>
         <Group>
           <Layer style={{ width: 40, height: 30 }} />
-          <Rectangle style={{ x: 60, width: 10, height: 10, fill: color }} />
+          <Rectangle style={{ left: 60, width: 10, height: 10, fill: color }} />
         </Group>
       </FocusManagement>
     );

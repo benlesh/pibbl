@@ -413,8 +413,8 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 10,
-          y: 20,
+          left: 10,
+          top: 20,
           fill: 'black',
           width: 55,
           fit: 'ellipsis',
@@ -432,8 +432,8 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 10,
-          y: 30,
+          left: 10,
+          top: 30,
           fill: 'black',
           width: 75,
           height: 40,
@@ -456,8 +456,8 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 7,
-          y: 9,
+          left: 7,
+          top: 9,
           fill: 'black',
           width: 42,
           fit: 'squish',
@@ -474,8 +474,8 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 100,
-          y: 80,
+          left: 100,
+          top: 80,
           fill: 'black',
           width: 60,
           height: 40,
@@ -511,8 +511,8 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 10,
-          y: 20,
+          left: 10,
+          top: 20,
           fill: 'black',
           font: '20px Arial',
           width: 82,
@@ -534,8 +534,8 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 10,
-          y: 20,
+          left: 10,
+          top: 20,
           fill: 'black',
           width: 60,
           fit: 'clip',
@@ -552,8 +552,8 @@ describe('text', () => {
       const onClick = vi.fn();
       const canvas = await componentTest(createElement(Text, {
         style: {
-          x: 200,
-          y: 100,
+          left: 200,
+          top: 100,
           fill: 'black',
           font: '24px Arial',
           textAlign: 'center',
@@ -573,8 +573,8 @@ describe('text', () => {
       const onClick = vi.fn();
       const canvas = await componentTest(createElement(Text, {
         style: {
-          x: 20,
-          y: 40,
+          left: 20,
+          top: 40,
           fill: 'black',
           font: '24px Arial',
           width: 60,
@@ -595,8 +595,8 @@ describe('text', () => {
       const onClick = vi.fn();
       const canvas = await componentTest(createElement(Text, {
         style: {
-          x: 20,
-          y: 20,
+          left: 20,
+          top: 20,
           width: 40,
           height: 20,
           fit: 'clip',

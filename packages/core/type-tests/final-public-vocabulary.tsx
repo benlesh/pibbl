@@ -243,7 +243,7 @@ const reactiveX = signal(10);
 const reactiveFill = signal('red');
 const reactiveHandler = signal<CRCEventHandler<'click'>>(() => {});
 const reactiveStyle = signal<RectStyle>({
-  x: 10,
+  left: 10,
   fill: 'red',
   width: 20,
   height: 20,
@@ -252,7 +252,7 @@ const signalValuedPrimitiveInputs = (
   <>
     <Rectangle
       style={{
-        x: reactiveX,
+        left: reactiveX,
         fill: reactiveFill,
         width: 20,
         height: 20,
@@ -457,7 +457,7 @@ type FreePlay = CoreExports['play'];
 // @ts-expect-error readonly signals do not expose writes
 readonlyCount.set(2);
 // @ts-expect-error CRC style accepts resolved numbers, not signal containers
-const badStyle: RectStyle = { x: writableCount, width: 10, height: 10 };
+const badStyle: RectStyle = { left: writableCount, width: 10, height: 10 };
 // @ts-expect-error computed values are readonly
 computed(() => writableCount.get() * 2).update(value => value + 1);
 

@@ -286,7 +286,7 @@ describe('resolved built-in styles', () => {
   it('resolves root percentages against intrinsic Canvas allocation', async () => {
     const canvas = await componentTest(createElement(Rectangle, {
       style: {
-        x: '10%',
+        left: '10%',
         width: '50%',
         height: 20,
         fill: 'red',
@@ -405,7 +405,7 @@ describe('resolved built-in styles', () => {
   });
 
   // @ts-expect-error local paint offsets do not accept auto
-  void createElement(Rectangle, { style: { x: 'auto', width: 20, height: 20 } });
+  void createElement(Rectangle, { style: { left: 'auto', width: 20, height: 20 } });
 });
 
 function nextFrame(): Promise<void> {

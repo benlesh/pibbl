@@ -515,8 +515,8 @@ describe('WebGLLayer public surface', () => {
           pointerEvents={canvasPointerEvents}
           onClick={canvasClick}
           style={{
-            x: 35,
-            y: 35,
+            left: 35,
+            top: 35,
             width: 30,
             height: 30,
             fill: '#f59e0b',

@@ -241,14 +241,14 @@ describe('public JSX component authoring', () => {
     const frames = useManualAnimationFrames();
     const canvas = createCanvas();
     const controller = crc(canvas, (
-      <Image style={{ src: 'first.png', x: 4, y: 6 }} />
+      <Image style={{ src: 'first.png', left: 4, top: 6 }} />
     ));
     controllers.add(controller);
     frames.flushNext();
     const first = FakeBrowserImage.instances[0];
     const savedFirstLoad = first.onload;
 
-    crc(canvas, <Image style={{ src: 'second.png', x: 4, y: 6 }} />);
+    crc(canvas, <Image style={{ src: 'second.png', left: 4, top: 6 }} />);
     frames.flushNext();
     const second = FakeBrowserImage.instances[1];
     second.onload?.();
@@ -269,7 +269,7 @@ describe('public JSX component authoring', () => {
       <Clip style={{ d: clippingPath, fillRule: 'evenodd' }}>
         <Rectangle style={{ width: 30, height: 50, fill: '#f97316' }} />
         <Rectangle
-          style={{ x: 30, width: 30, height: 50, fill: '#0ea5e9' }}
+          style={{ left: 30, width: 30, height: 50, fill: '#0ea5e9' }}
         />
       </Clip>
     )));
@@ -289,7 +289,7 @@ describe('public JSX component authoring', () => {
         <Layer style={{ width: 80, height: 60 }}>
           <Rectangle style={{ width: 60, height: 40, fill: '#2563eb' }} />
           <Rectangle
-            style={{ x: 20, y: 10, width: 40, height: 30, fill: '#ef4444' }}
+            style={{ left: 20, top: 10, width: 40, height: 30, fill: '#ef4444' }}
             onClick={onClick}
           />
         </Layer>
