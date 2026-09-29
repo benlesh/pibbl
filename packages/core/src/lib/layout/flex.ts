@@ -27,6 +27,7 @@ import type {
   SystemStyle,
 } from '../types.js';
 import {
+  childWithUsedSize,
   prepareDirectChildStyle,
   materializeLayoutChildren,
   placeDirectChildren,
@@ -641,15 +642,17 @@ function resolveFlexPlacements(
         width: row ? item.targetMain : Math.max(0, outerCross - item.paddingCross),
         height: row ? Math.max(0, outerCross - item.paddingCross) : item.targetMain,
       };
-      const renderedChild = cloneCRCElement(item.child);
-      setPreNormalizedStyle(
-        renderedChild,
-        Object.freeze(usedStyle),
-        item.child,
-        item.receiverToken,
-        item.query,
-      );
-      placements.push({ box, element: renderedChild });
+      placements.push({
+        box,
+        element: childWithUsedSize(
+          item.child,
+          usedStyle,
+          usedStyle.width,
+          usedStyle.height,
+          item.receiverToken,
+          item.query,
+        ),
+      });
       mainCursor += outerMain + mainGap + distribution.between;
     }
   }
