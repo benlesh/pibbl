@@ -127,10 +127,15 @@ function Poster() {
   return (
     <>
       <Rectangle
-        style={{ x: 24, y: 24, width: 240, height: 100, fill: "#164e9b" }}
+        style={{ left: 24, top: 24, width: 240, height: 100, fill: "#164e9b" }}
       />
       <Text
-        style={{ x: 48, y: 78, fill: "white", font: "600 28px sans-serif" }}
+        style={{
+          left: 48,
+          top: 78,
+          fill: "white",
+          font: "600 28px sans-serif",
+        }}
       >
         Hello, CRC
       </Text>

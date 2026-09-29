@@ -33,7 +33,7 @@ export function Poster({ title }: PosterProps): CRCNode {
   return (
     <>
       <Rectangle style={{ width: 400, height: 240, fill: "#2563eb" }} />
-      <Text style={{ x: 24, y: 24, fill: "white" }}>{title}</Text>
+      <Text style={{ left: 24, top: 24, fill: "white" }}>{title}</Text>
     </>
   );
 }
