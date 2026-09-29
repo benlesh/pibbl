@@ -53,8 +53,8 @@ function Button({
     <Group>
       <Rectangle
         style={{
-          x,
-          y,
+          left: x,
+          top: y,
           width,
           height: 34,
           cornerRadius: 4,
@@ -66,8 +66,8 @@ function Button({
       <Text
         pointerEvents="none"
         style={{
-          x: x + width / 2,
-          y: y + 17,
+          left: x + width / 2,
+          top: y + 17,
           textAlign: "center",
           textBaseline: "middle",
           font: "13px sans-serif",
@@ -96,19 +96,19 @@ function Scene() {
     <Group>
       <Rectangle style={{ width: 1000, height: 570, fill: "#fcfbf8" }} />
       <Text
-        style={{ x: 28, y: 38, font: "bold 26px sans-serif", fill: "#182c42" }}
+        style={{ left: 28, top: 38, font: "bold 26px sans-serif", fill: "#182c42" }}
       >
         How we get around
       </Text>
-      <Text style={{ x: 28, y: 67, font: "14px sans-serif", fill: "#62758b" }}>
+      <Text style={{ left: 28, top: 67, font: "14px sans-serif", fill: "#62758b" }}>
         100 fictional responses · Labels share one layout; slices keep ordinary
         CRC events.
       </Text>
       <Rectangle
         pointerEvents="none"
         style={{
-          x: box.x,
-          y: box.y,
+          left: box.x,
+          top: box.y,
           width: box.width,
           height: box.height,
           fill: "#f4f3ed",
@@ -164,8 +164,8 @@ function Scene() {
       <Text
         pointerEvents="none"
         style={{
-          x: 700,
-          y: 108,
+          left: 700,
+          top: 108,
           font: "bold 12px sans-serif",
           fill: "#62758b",
         }}
@@ -191,13 +191,13 @@ function Scene() {
           />
           <Rectangle
             pointerEvents="none"
-            style={{ x: 10, y: 12, width: 12, height: 12, fill: datum.color }}
+            style={{ left: 10, top: 12, width: 12, height: 12, fill: datum.color }}
           />
           <Text
             pointerEvents="none"
             style={{
-              x: 32,
-              y: 18,
+              left: 32,
+              top: 18,
               textBaseline: "middle",
               font: "14px sans-serif",
               fill: "#182c42",
@@ -208,8 +208,8 @@ function Scene() {
           <Text
             pointerEvents="none"
             style={{
-              x: 268,
-              y: 18,
+              left: 268,
+              top: 18,
               textAlign: "right",
               textBaseline: "middle",
               font: "bold 14px sans-serif",
@@ -235,8 +235,8 @@ function Scene() {
         <Text
           pointerEvents="none"
           style={{
-            x: 129,
-            y: 9,
+            left: 129,
+            top: 9,
             textAlign: "center",
             textBaseline: "middle",
             font: "bold 15px sans-serif",
@@ -250,8 +250,8 @@ function Scene() {
         <Text
           pointerEvents="none"
           style={{
-            x: 129,
-            y: 30,
+            left: 129,
+            top: 30,
             textAlign: "center",
             textBaseline: "middle",
             font: "12px sans-serif",
@@ -265,7 +265,7 @@ function Scene() {
       </HoverCard>
       <Text
         pointerEvents="none"
-        style={{ x: 28, y: 453, font: "12px sans-serif", fill: "#62758b" }}
+        style={{ left: 28, top: 453, font: "12px sans-serif", fill: "#62758b" }}
       >
         Labels that cannot fit are omitted. Every category remains available in
         the key.
@@ -317,7 +317,7 @@ function Scene() {
       />
       <Text
         pointerEvents="none"
-        style={{ x: 28, y: 545, font: "12px sans-serif", fill: "#62758b" }}
+        style={{ left: 28, top: 545, font: "12px sans-serif", fill: "#62758b" }}
       >
         Compare inside, outside, and auto. Tiny categories sit on both sides;
         reversing preserves their identities.

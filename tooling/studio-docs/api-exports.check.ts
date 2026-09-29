@@ -155,8 +155,8 @@ const studioInventory = await collectPublicExports(
   crcStudioPublicEntryPaths,
   crcPublicCompilerOptions,
 );
-assert.equal(crcInventory.viz.values.length, 17);
-assert.equal(crcInventory.viz.types.length, 46);
+assert.equal(crcInventory.viz.values.length, 21);
+assert.equal(crcInventory.viz.types.length, 57);
 assert.ok(crcInventory.root.values.length > 0);
 assert.ok(crcInventory.root.types.length > 0);
 assert.equal(crcInventory.three.values.length, 1);

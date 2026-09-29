@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 62 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 63 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(62);
+    expect(learningExampleCatalog).toHaveLength(63);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1284,6 +1284,7 @@ describe("learning example catalog", () => {
         "signal-inputs",
         "signals-and-animation",
         "viz-hover-comparison",
+        "viz-pie-composition",
         "viz-points-and-inspection",
         "viz-responsive-line",
       ],
@@ -1365,6 +1366,7 @@ describe("learning example catalog", () => {
       "particle-effects",
       "physics-2d",
       "layer",
+      "viz-pie-composition",
       "viz-hover-comparison",
       "viz-points-and-inspection",
       "viz-responsive-line",
@@ -1732,6 +1734,10 @@ describe("learning example catalog", () => {
         "HoverData",
         "HoverCard",
         "AnchoredLayout",
+        "PieLayout",
+        "PieSlice",
+        "PieLabel",
+        "pieSlices",
         "defineSeries",
         "closestPoint",
         "closestX",

@@ -202,8 +202,8 @@ export function PieLabel<D>({
       <Rectangle
         pointerEvents={pointerEvents}
         style={{
-          x: label.x,
-          y: label.y,
+          left: label.x,
+          top: label.y,
           width: label.width,
           height: label.height,
           fill: "transparent",

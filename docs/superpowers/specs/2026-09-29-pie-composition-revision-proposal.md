@@ -1,5 +1,7 @@
 # Pie composition revision proposal
 
+> **Historical status: Approved design and implementation evidence.** Current API guidance lives in [PieLayout](../../site/api/components/pie-layout.md) and [pieSlices](../../site/api/functions/pie-slices.md).
+
 Status: original proposal below is superseded by the approved layout-container
 revision. Implementation slice is ready for experiential feedback; broad hardening
 and the aggregate trust gate are not complete.
