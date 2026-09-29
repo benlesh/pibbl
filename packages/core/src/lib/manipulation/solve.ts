@@ -43,7 +43,7 @@ function solveMove(input: ManipulationSolveInput): ManipulationSolveResult {
     snap.when,
     input.modifiers,
   );
-  if (!snapActive) return result(proposed, clampMoveToBounds(proposed, input.move?.bounds), false, true, input.initialRotation);
+  if (!snapActive) return result(proposed, clampMoveToBounds(proposed, input.move?.bounds, input.initialRotation ?? 0), false, true, input.initialRotation);
 
   const [stepX, stepY] = moveSteps(snap!);
   const origin = snap!.origin;
@@ -52,7 +52,7 @@ function solveMove(input: ManipulationSolveInput): ManipulationSolveResult {
     left: axis === 'y' ? proposed.left : snapToLattice(proposed.left, stepX, origin?.x ?? 0),
     top: axis === 'x' ? proposed.top : snapToLattice(proposed.top, stepY, origin?.y ?? 0),
   });
-  const bounded = clampMoveToBounds(applied, input.move?.bounds);
+  const bounded = clampMoveToBounds(applied, input.move?.bounds, input.initialRotation ?? 0);
   return result(proposed, bounded, true, boxesEqual(applied, bounded), input.initialRotation);
 }
 
@@ -203,13 +203,18 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function clampMoveToBounds(box: CRCManipulationBox, bounds: CRCManipulationBox | undefined): CRCManipulationBox {
+function clampMoveToBounds(box: CRCManipulationBox, bounds: CRCManipulationBox | undefined, rotation = 0): CRCManipulationBox {
   if (!bounds) return box;
   assertFiniteBox(bounds, 'move.bounds');
-  if (box.width > bounds.width || box.height > bounds.height) throw new Error('Move bounds cannot contain the initial box.');
+  const corners = rotatedCorners(box, rotation);
+  const minX = Math.min(...corners.map(point => point.x));
+  const maxX = Math.max(...corners.map(point => point.x));
+  const minY = Math.min(...corners.map(point => point.y));
+  const maxY = Math.max(...corners.map(point => point.y));
+  if (maxX - minX > bounds.width || maxY - minY > bounds.height) throw new Error('Move bounds cannot contain the initial box.');
   return freezeBox({ ...box,
-    left: clamp(box.left, bounds.left, bounds.left + bounds.width - box.width),
-    top: clamp(box.top, bounds.top, bounds.top + bounds.height - box.height),
+    left: box.left + clamp(0, bounds.left - minX, bounds.left + bounds.width - maxX),
+    top: box.top + clamp(0, bounds.top - minY, bounds.top + bounds.height - maxY),
   });
 }
 
