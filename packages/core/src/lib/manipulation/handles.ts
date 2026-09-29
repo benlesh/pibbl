@@ -228,7 +228,7 @@ export const ResizeHandle = definePrimitive<
       ctx,
       state,
       cssPoint(state, x, y),
-      formatResize(state, props.formatReadout),
+      () => formatResize(state, props.formatReadout),
       style.readout,
       focus.isFocused,
       relevant,
@@ -314,7 +314,7 @@ const ResizeCollectionReadout = definePrimitive<{
     ctx,
     state,
     cssPoint(state, x, y),
-    formatResize(state, props.collection.formatReadout),
+    () => formatResize(state, props.collection.formatReadout),
     props.collection.style?.readout,
     focused?.get(position) ?? false,
     active?.operation === "resize" && active.handle === position,
@@ -361,7 +361,7 @@ export const RotationHandle = definePrimitive<
       ctx,
       state,
       anchor.css,
-      formatRotation(state, props),
+      () => formatRotation(state, props),
       style.readout,
       focus.isFocused,
       relevant,
@@ -521,7 +521,7 @@ function paintRotationDecorations(
         const alpha = (1 - Math.abs((i + 0.5) / 12 - 1)) * (arc.opacity ?? 1);
         ctx.strokeStyle = arc.color ?? "#2563eb";
         ctx.lineWidth = arc.strokeWidth ?? 1;
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = baseAlpha * alpha;
         ctx.beginPath();
         ctx.arc(anchor.pivot.x, anchor.pivot.y, radius, a0, a1);
         ctx.stroke();
@@ -618,7 +618,7 @@ function paintReadout(
   ctx: RenderingContext2D,
   state: ManipulationState,
   anchor: DOMPoint,
-  text: string,
+  format: () => string,
   readout: false | true | CRCManipulationReadoutStyle | undefined,
   focused: boolean,
   active: boolean,
@@ -630,22 +630,27 @@ function paintReadout(
     focused,
     active,
   );
-  if (!resolved.visible || !text) return;
+  if (!resolved.visible) return;
+  const text = format();
+  if (!text) return;
   withCssContext(ctx, state, () => {
     ctx.font = resolved.font;
-    const metrics = ctx.measureText(text);
-    const ascent = metrics.actualBoundingBoxAscent || 10,
-      descent = metrics.actualBoundingBoxDescent || 3;
-    const height = ascent + descent + 6;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
     const surface = state.root.surface.snapshot;
-    if (!surface || height > surface.displayHeight - 4) return;
-    const available = Math.max(0, surface.displayWidth - 12);
-    const value = ellipsis(ctx, text, available - 8);
-    const width = Math.min(
-      available,
-      ctx.measureText(value).width + 8 + resolved.strokeWidth,
-    );
-    if (width <= 0 || surface.displayHeight <= 4) return;
+    if (!surface) return;
+    const stroke = resolved.stroke ? resolved.strokeWidth : 0;
+    const available = surface.displayWidth - 16 - stroke;
+    const value = ellipsis(ctx, text, available);
+    if (!value) return;
+    const metrics = measureLabel(ctx, value);
+    const glyphLeft = Math.max(0, metrics.actualBoundingBoxLeft);
+    const glyphRight = Math.max(metrics.width, metrics.actualBoundingBoxRight);
+    const ascent = Math.max(0, metrics.actualBoundingBoxAscent);
+    const descent = Math.max(0, metrics.actualBoundingBoxDescent);
+    const height = ascent + descent + 6 + stroke;
+    const width = glyphLeft + glyphRight + 8 + stroke;
+    if (width > surface.displayWidth - 8 || height > surface.displayHeight - 8) return;
     let left = anchor.x + 8,
       top = anchor.y - height / 2;
     if (left + width > surface.displayWidth - 4) left = anchor.x - width - 8;
@@ -658,9 +663,9 @@ function paintReadout(
     if (resolved.stroke) {
       ctx.strokeStyle = resolved.stroke;
       ctx.lineWidth = resolved.strokeWidth;
-      ctx.strokeText(value, left + 4, top + 3 + ascent);
+      ctx.strokeText(value, left + 4 + glyphLeft + stroke / 2, top + 3 + ascent + stroke / 2);
     }
-    ctx.fillText(value, left + 4, top + 3 + ascent, Math.max(0, width - 8));
+    ctx.fillText(value, left + 4 + glyphLeft + stroke / 2, top + 3 + ascent + stroke / 2);
   });
 }
 function resolveReadout(
@@ -686,17 +691,39 @@ function resolveReadout(
   if (active) (patch({ visible: true }), patch(source.active));
   return base;
 }
+const labelMeasurements = new WeakMap<RenderingContext2D, Map<string, TextMetrics>>();
+function measureLabel(ctx: RenderingContext2D, text: string): TextMetrics {
+  let cache = labelMeasurements.get(ctx);
+  if (!cache) labelMeasurements.set(ctx, (cache = new Map()));
+  const key = JSON.stringify([ctx.font, ctx.direction, ctx.fontKerning, ctx.letterSpacing, ctx.wordSpacing, text]);
+  const found = cache.get(key);
+  if (found) return found;
+  const result = ctx.measureText(text);
+  if (cache.size >= 64) cache.delete(cache.keys().next().value!);
+  cache.set(key, result);
+  return result;
+}
 function ellipsis(
   ctx: RenderingContext2D,
   text: string,
   width: number,
 ): string {
-  if (ctx.measureText(text).width <= width) return text;
+  const fits = (value: string) => {
+    const m = measureLabel(ctx, value);
+    return Math.max(0, m.actualBoundingBoxLeft) + Math.max(m.width, m.actualBoundingBoxRight) <= width;
+  };
+  if (width <= 0) return "";
+  if (fits(text)) return text;
   const suffix = "…";
-  let end = text.length;
-  while (end && ctx.measureText(text.slice(0, end) + suffix).width > width)
-    end--;
-  return end ? text.slice(0, end) + suffix : suffix;
+  if (!fits(suffix)) return "";
+  const points = Array.from(text);
+  let low = 0, high = points.length;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    if (fits(points.slice(0, mid).join("") + suffix)) low = mid;
+    else high = mid - 1;
+  }
+  return points.slice(0, low).join("") + suffix;
 }
 function withCssContext(
   ctx: RenderingContext2D,
