@@ -14,6 +14,14 @@ relatedTypes: [CRCManipulableProps]
 Bind `style` to a writable finite box signal. `draggable`, `resizable`, and `rotatable` accept booleans or their operation options; omitted operations are disabled. Rotation also requires a writable radians signal. Nested layouts consume the resized frame allocation.
 
 ```tsx
+import { Manipulable, Rectangle, useSignal } from "@crc/core";
+
+const box = useSignal({ left: 40, top: 32, width: 180, height: 100 });
+
+function Card() {
+  return <Rectangle style={{ width: 180, height: 100, fill: "#2563eb" }} />;
+}
+
 <Manipulable style={box} draggable resizable>
   <Card />
 </Manipulable>

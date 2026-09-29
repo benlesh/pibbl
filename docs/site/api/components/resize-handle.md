@@ -12,7 +12,7 @@ relatedTypes: [CRCResizeHandleProps, CRCResizePosition]
 # ResizeHandle
 
 ```ts
-import { ResizeHandle } from "@crc/core";
+import { ResizeHandle, useManipulation, useSignal } from "@crc/core";
 ```
 
 `ResizeHandle` draws a small frame-corner or frame-edge control and uses a
@@ -20,6 +20,9 @@ CSS-pixel hit target. Its `position` selects the edge or corner; `hitSize`
 defaults to 24 CSS pixels.
 
 ```tsx
+const box = useSignal({ left: 40, top: 32, width: 180, height: 100 });
+const manipulation = useManipulation({ box, resize: {} });
+
 <ResizeHandle controller={manipulation} position="bottom-right" />
 ```
 

@@ -13,13 +13,16 @@ relatedTypes:
 # DragHandle
 
 ```ts
-import { DragHandle } from "@crc/core";
+import { DragHandle, Rectangle, useManipulation, useSignal } from "@crc/core";
 ```
 
 `DragHandle` starts a move interaction for its controller. It uses its local
 box, or the enclosing frame allocation when no dimensions are supplied.
 
 ```tsx
+const box = useSignal({ left: 40, top: 32, width: 180, height: 100 });
+const manipulation = useManipulation({ box, move: {} });
+
 <DragHandle controller={manipulation} style={{ cursor: "grab" }}>
   <Rectangle style={{ width: 180, height: 100, fill: "#2563eb" }} />
 </DragHandle>

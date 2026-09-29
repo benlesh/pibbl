@@ -11,6 +11,9 @@ symbols:
     ArcStyle,
     CircleStyle,
     ClipStyle,
+    CRCResponsiveStyle,
+    CRCSizeQuery,
+    CRCStyleRule,
     CursorStyle,
     EllipseStyle,
     FillStyle,
@@ -39,9 +42,6 @@ symbols:
     StyleResolutionContext,
     SvgPathStyle,
     SystemStyle,
-    CRCSizeQuery,
-    CRCStyleRule,
-    CRCResponsiveStyle,
     TextStyle,
     VerticalLineStyle,
     WedgeStyle,
@@ -70,6 +70,32 @@ events, focus geometry, and applicable declared-box fields.
 
 `ClipStyle` supplies a clipping `Path2D`, fill rule, local composition fields,
 and applicable filter behavior for `Clip`.
+
+## CRCResponsiveStyle
+
+`CRCResponsiveStyle<S>` is the primitive's ordinary signal-capable style plus an
+optional readonly `when` list. Required base fields stay required. Whole-style
+signals and signals in base or patch fields are supported; conditions and lists
+are plain values. Use `satisfies CRCResponsiveStyle<FlowStyle>` for reusable
+styles. Unmatched patch signals are not read. No styles cascade or inherit.
+
+The [responsive local styles guide](#/learn/guides/responsive-styles) explains
+outer placement versus inner content. Custom primitives must leave `when` out
+of their specified, normalized, and resolved styles: CRC supplies that field on
+inputs and removes it before callbacks.
+
+## CRCSizeQuery
+
+`CRCSizeQuery` requires at least one inclusive, finite nonnegative bound:
+`minWidth`, `maxWidth`, `minHeight`, or `maxHeight`. All bounds must match the
+available containing size in logical units. A direct Grid item's rules see the
+Grid content box; rules inside the placed component see its assigned cell.
+
+## CRCStyleRule
+
+`CRCStyleRule<S>` pairs a `query` with a partial local `style` patch. Matching
+patches apply in list order, with the last assignment winning. Patches cannot
+contain another `when`; objects and arrays replace rather than deep-merge.
 
 ## CursorStyle
 
@@ -221,29 +247,3 @@ recursive textual content.
 
 `WedgeStyle` is the local center-closed circular-sector style. Partial sweeps
 include radial edges; full turns omit them for a seam-free circular stroke.
-
-## CRCSizeQuery
-
-`CRCSizeQuery` requires at least one inclusive, finite nonnegative bound:
-`minWidth`, `maxWidth`, `minHeight`, or `maxHeight`. All bounds must match the
-available containing size in logical units. A direct Grid item's rules see the
-Grid content box; rules inside the placed component see its assigned cell.
-
-## CRCStyleRule
-
-`CRCStyleRule<S>` pairs a `query` with a partial local `style` patch. Matching
-patches apply in list order, with the last assignment winning. Patches cannot
-contain another `when`; objects and arrays replace rather than deep-merge.
-
-## CRCResponsiveStyle
-
-`CRCResponsiveStyle<S>` is the primitive's ordinary signal-capable style plus an
-optional readonly `when` list. Required base fields stay required. Whole-style
-signals and signals in base or patch fields are supported; conditions and lists
-are plain values. Use `satisfies CRCResponsiveStyle<FlowStyle>` for reusable
-styles. Unmatched patch signals are not read. No styles cascade or inherit.
-
-The [responsive local styles guide](#/learn/guides/responsive-styles) explains
-outer placement versus inner content. Custom primitives must leave `when` out
-of their specified, normalized, and resolved styles: CRC supplies that field on
-inputs and removes it before callbacks.

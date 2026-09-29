@@ -23,8 +23,8 @@ radius scaling and keeps paint and targeting aligned.
 ```tsx
 <Rectangle
   style={{
-    x: 24,
-    y: 24,
+    left: 24,
+    top: 24,
     width: 180,
     height: 88,
     cornerRadius: 12,

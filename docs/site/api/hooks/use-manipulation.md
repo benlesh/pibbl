@@ -12,7 +12,7 @@ relatedTypes: [CRCManipulationController, CRCManipulationOptions]
 # useManipulation
 
 ```ts
-import { useManipulation } from "@crc/core";
+import { useManipulation, useSignal } from "@crc/core";
 ```
 
 `useManipulation(options)` creates one controller for the mounted component.

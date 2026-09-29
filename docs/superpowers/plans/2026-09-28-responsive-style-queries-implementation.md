@@ -1,5 +1,7 @@
 # Responsive styles execution record
 
+> **Historical status: EXECUTION RECORD.** This dated record preserves the approved delivery sequence and its evidence.
+
 Status: executing. User approved the written specification and explicitly
 requested immediate execution on 2026-09-28, superseding the separate plan gate.
 No worktree. Preserve unrelated checkout changes.

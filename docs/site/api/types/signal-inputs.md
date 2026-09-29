@@ -31,15 +31,15 @@ import {
   type SignalValue,
 } from "@crc/core";
 
-const x = useSignal(10);
+const left = useSignal(10);
 const color = useSignal("red");
 const label = useSignal("Current");
 
-<Rectangle style={{ x, fill: color, width: 50, height: 50 }} />;
+<Rectangle style={{ left, fill: color, width: 50, height: 50 }} />;
 <Text>{label}</Text>;
 ```
 
-Passing `x.get()` remains valid. That explicit read intentionally makes the
+Passing `left.get()` remains valid. That explicit read intentionally makes the
 enclosing component the consumer and passes a plain number downstream.
 
 ### Declared, shallow resolution

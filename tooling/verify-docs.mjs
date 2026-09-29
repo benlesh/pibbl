@@ -285,6 +285,8 @@ const migrationMarkdownPaths = new Set([
 const operationalMarkdownPaths = new Set([
   ".beads/README.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
+  "docs/superpowers/specs/2026-09-28-responsive-style-queries-design.md",
+  "docs/testing/evidence/component-manipulation/progress.md",
   "playground/public/models/crc-static-glb-slice.LICENSE.md",
   "playground/public/models/khronos-static-glb-gallery.LICENSE.md",
   "tooling/studio-docs/fixtures/invalid-script.md",
@@ -318,7 +320,6 @@ const historicalMarkdownPatterns = [
   /^docs\/superpowers\/(?:plans|specs)\//u,
   /^docs\/testing\/dep-\d+-upgrade-notes\.md$/u,
   /^docs\/testing\/field-notes\//u,
-  /^docs\/testing\/evidence\/component-manipulation\//u,
   /^docs\/testing\/pre-upgrade-baseline\.md$/u,
 ];
 
@@ -3431,8 +3432,8 @@ export async function verifyMutationProbes() {
     /field-level migration rect\.fillStyle has the wrong final behavior/iu,
   );
   const wrongFieldRequiredness = migrationSource.replace(
-    "`Rectangle` `style.x`                         | Optional; defaults to `0`",
-    "`Rectangle` `style.x`                         | Required; defaults to `0`",
+    "| `rect`           | `x`                    | Removed",
+    "| `rect`           | `x`                    | `Rectangle` `style.left`",
   );
   assert.notEqual(
     wrongFieldRequiredness,
@@ -3445,7 +3446,7 @@ export async function verifyMutationProbes() {
         ...fieldMigrationArguments,
         migrationSource: wrongFieldRequiredness,
       }),
-    /field-level migration rect\.x has the wrong final behavior/iu,
+    /field-level migration rect\.x has the wrong final replacement/iu,
   );
   throws(
     () =>
