@@ -172,17 +172,6 @@ interaction bounds remain exact.
 | `Clip`  | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested intersections, transforms, updates, empty clips, and paint/hit geometry agree. |
 | `Layer` | Renders multiple children into one persistent offscreen CRC instance, caches retained content, follows root density, and participates in global paint/target/focus order.  |
 
-## Component manipulation
-
-`ManipulationFrame` binds a writable finite box signal to one positioned local
-allocation. `DragHandle`, `ResizeHandle`, `ResizeHandles`, and `RotationHandle`
-are explicit interaction geometry; a frame does not infer bounds from content.
-Resize and rotation controls use CSS-pixel visual and hit geometry while their
-centers follow the frame. The frame presents its optional radians rotation
-through `Group.rotationDegrees` around its center. See the
-[component-manipulation contract](./component-manipulation-contract.md) for
-gesture, constraint, and teardown semantics.
-
 ## WebGL island values
 
 `@crc/webgl` supplies one Canvas composition boundary and these scene
@@ -511,3 +500,14 @@ per-shape memo hooks.
 ## First-class 3D physics components
 
 Inside one `WebGLLayer`, `PhysicsWorld3D` establishes a 3D world and the optional physics package augments `Cube`, `Sphere`, `Mesh`, and `Group3D` with typed immutable attachments. Cube infers a box; uniform and nonuniform Sphere scale infer sphere and ellipsoid; static Mesh infers a triangle mesh; dynamic or kinematic Mesh infers a deterministic convex hull; Group3D hosts a compound body without a self collider. `PhysicsShape3D`, `Box3D`, `Ellipsoid3D`, `Capsule3D`, `Cylinder3D`, `Cone3D`, `ConvexHull3D`, and `Heightfield3D` render the remaining immutable shapes. Explicit shapes override inference, descendant `collider3D()` values form compounds, sensors are ordinary colliders, and moving triangle-mesh or heightfield use produces a runtime diagnostic.
+
+## Component manipulation
+
+`ManipulationFrame` binds a writable finite box signal to one positioned local
+allocation. `DragHandle`, `ResizeHandle`, `ResizeHandles`, and `RotationHandle`
+are explicit interaction geometry; a frame does not infer bounds from content.
+Resize and rotation controls use CSS-pixel visual and hit geometry while their
+centers follow the frame. The frame presents its optional radians rotation
+through `Group.rotationDegrees` around its center. See the
+[component-manipulation contract](./component-manipulation-contract.md) for
+gesture, constraint, and teardown semantics.

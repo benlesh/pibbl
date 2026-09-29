@@ -75,6 +75,7 @@ const publicGuidePaths = [
   "docs/site/learn/guides/custom-components-and-primitives.md",
   "docs/site/learn/guides/focus-and-keyboard.md",
   "docs/site/learn/guides/jsx-troubleshooting.md",
+  "docs/site/learn/guides/manipulation.md",
   "docs/site/learn/guides/particle-effects.md",
   "docs/site/learn/guides/physics-3d.md",
   "docs/site/learn/guides/react-integration.md",
@@ -244,6 +245,7 @@ const currentMarkdownPaths = [
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
+  "docs/design/component-manipulation-contract.md",
   "docs/design/animation-contract.md",
   "docs/design/drawing-components-contract.md",
   "docs/design/event-resource-ownership.md",
@@ -2138,6 +2140,7 @@ const currentNormativeContractPaths = [
 ].sort();
 const postBaselineNormativeContractPaths = new Set([
   "docs/design/animation-contract.md",
+  "docs/design/component-manipulation-contract.md",
   "docs/design/signals-and-scheduling-contract.md",
 ]);
 const baselineSnapshotContractPaths = currentNormativeContractPaths.filter(
@@ -2682,6 +2685,18 @@ const matrixRequirements = [
       "design/layout-system-contract.md",
     ],
     evidence: ["flex.example.tsx"],
+  },
+  {
+    topic: /Signal-owned component move, resize, rotation, handles, snapping, and cancellation/u,
+    guides: [
+      "site/learn/guides/manipulation.md",
+      "design/component-manipulation-contract.md",
+    ],
+    evidence: [
+      "manipulation.example.tsx",
+      "manipulation-interaction.test.tsx",
+      "manipulation-rotation.test.tsx",
+    ],
   },
   {
     topic: /`Group`, `Clip`/u,

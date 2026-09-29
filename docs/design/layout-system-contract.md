@@ -39,14 +39,6 @@ A child's parent-relative placement lives in its own specified style:
 - `flexBasis`, `flexGrow`, and `flexShrink` are consumed only by Flex;
 - Grid consumes one-based starts and positive spans.
 
-`Flex`, `Flow`, and `Grid` own direct-child placement. They ignore authored
-`left`/`top` in production and development/test execution reports those
-explicit ignored fields. `Absolute` consumes `left`/`top` as its placement
-input. Outside those layout ownership paths, the normal component presentation
-applies `left`/`top` exactly once. A `ManipulationFrame` is a freely positioned
-finite allocation; layouts nested inside it consume that allocation and reflow
-when its writable box changes.
-
 `WebGLLayerStyle` accepts the shared box and layout-item fields. Each omitted
 layer dimension uses its current finite logical allocation; an explicit or
 allocated width and height must resolve to positive finite values. A
@@ -100,9 +92,8 @@ the current allocation; padding is zero and overflow is visible.
 | `width`, `height` | required definite number or percentage in the current public implementation |
 | source order      | paint order; later overlap is topmost for coordinate targeting              |
 
-Geometric point and endpoint `x`/`y` values remain independent of `left` and
-`top`. Rectangle, Text, and Image positioning uses `left`/`top`. Absolute does
-not implement normal flow, margins, right/bottom anchoring, or automatic
+Local primitive `x` and `y` remain independent of `left` and `top`. Absolute
+does not implement normal flow, margins, right/bottom anchoring, or automatic
 placement.
 
 ## Overlay
@@ -284,3 +275,13 @@ repeating signal reads or adding mounted layout passes.
 
 The [responsive styles guide](../site/learn/guides/responsive-styles.md) explains
 the placement/content distinction and its observable refactoring consequence.
+
+## Component manipulation
+
+`ManipulationFrame` presents one writable finite box as a freely positioned
+allocation. A nested `Flex`, `Flow`, or `Grid` consumes that allocation and
+reflows on resize; the frame's handles are chrome rather than layout items.
+The outer direct layout parent still owns its child's placement, so a frame with
+authored `left` or `top` is invalid directly under `Flex`, `Flow`, or `Grid` in
+development/test execution and has no production placement effect. See the
+[component-manipulation contract](./component-manipulation-contract.md).

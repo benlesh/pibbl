@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "100b9460bf362ba8952d72673dab8b6c30aea68593266469fd27ff24ffc5d0c9";
+  "4b33ed626d3476e721953141e586239ad2b737e8263f838c39c06c8d5acae438";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const SIGNALS_SCHEDULER_APPROVED_SECTIONS = new Set([
@@ -84,6 +84,18 @@ const MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS = new Set([
   ...SIGNALS_SCHEDULER_APPROVED_SECTIONS,
   ...ANIMATION_APPROVED_SECTIONS,
 ]);
+const COMPONENT_MANIPULATION_APPROVAL_RECORD = "component-manipulation";
+const COMPONENT_MANIPULATION_APPROVED_SECTIONS = new Set([
+  "Intent",
+  "Agreed direction",
+  "Authoring sketch",
+  "Proposed gesture and state rules",
+  "Approved positioning direction",
+  "Layout composition",
+  "Snapping and constraints",
+  "Interaction evidence",
+  "Delivery",
+]);
 
 const POST_BASELINE_CONTRACT_PROFILES = new Map([
   [
@@ -103,6 +115,14 @@ const POST_BASELINE_CONTRACT_PROFILES = new Map([
       unitPrefix: "m",
       approvalRecordId: SIGNALS_SCHEDULER_APPROVAL_RECORD,
       allowedSections: ANIMATION_APPROVED_SECTIONS,
+    },
+  ],
+  [
+    "docs/design/component-manipulation-contract.md",
+    {
+      unitPrefix: "i",
+      approvalRecordId: COMPONENT_MANIPULATION_APPROVAL_RECORD,
+      allowedSections: COMPONENT_MANIPULATION_APPROVED_SECTIONS,
     },
   ],
 ]);

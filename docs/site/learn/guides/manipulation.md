@@ -59,9 +59,11 @@ function Card() {
 }
 ```
 
-Drag the title, resize a corner, or use the top control to rotate. Hold Shift
-to snap movement, size, and rotation. Hold Alt while resizing to preserve the
-initial aspect ratio. The live
+Drag the title, resize a corner, or use the top control to rotate. Its **Snap**
+control switches snapping between holding Shift and always-on. Hold Alt while
+resizing to preserve the initial aspect ratio. **Reset geometry** cancels an
+active gesture and restores the example's original box, rotation, and completed
+change count. The live
 [manipulation example](#/examples/events-and-interaction/manipulation) also displays the
 current geometry, rotation, operation, and completed changes.
 
