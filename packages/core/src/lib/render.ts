@@ -19,6 +19,8 @@ import {
   getPrimitiveDefinition,
   getPrimitiveReceiverToken,
   getElementSource,
+  isPlacementConsumed,
+  setPlacementConsumed,
 } from './element/metadata.js';
 import { resolvePrimitiveInputs } from './element/resolve-primitive-inputs.js';
 import { materializeContainerChildren } from './element/children.js';
@@ -186,6 +188,9 @@ function renderComponentElement<P>(
                 result as CRCNodeInput,
                 componentRefs.element,
               );
+              if (isPlacementConsumed(componentRefs.element)) {
+                for (const child of children) setPlacementConsumed(child);
+              }
               commitSignalReads();
 
               untracked(() => {
