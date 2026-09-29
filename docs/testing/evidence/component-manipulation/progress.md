@@ -96,17 +96,24 @@ This section supersedes the earlier next-action list; the feature remains incomp
 
 ## Completion audit by plan task
 
-| Plan task                    | Current evidence and remaining work                                                                                                                                                       |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 — Unified placement        | Standalone paint/hit and forwarding cases pass. Independent child offsets are a proven failure; public handoff decision is pending. Not complete.                                         |
-| 2 — Runtime diagnostics      | Public Flex/Flow/Grid development diagnostics and explicit source/built/packed production-ignore probes passed. Keep these probes in the final integrated gate.                           |
-| 3 — Pure move/resize         | Solver cases cover snapping, tie-breaking, origins, opposite anchors, dimensions and constraints; full source audit passed this suite.                                                    |
-| 4 — Controller/handles       | Native capture, threshold, commit, cancellation and ownership cases pass. Shared-source concurrency evidence is being strengthened before final acceptance.                               |
-| 5 — Runnable slice           | Live Studio example and private lab exist, use the public API, and have native-browser evidence. Earlier progress records contain the verified URL and inspection.                        |
-| 6 — Rotation/constraints     | Public rotation/transformed resize and pure solver evidence pass, including bounds, aspect ratio and grid distinctions.                                                                   |
-| 7 — Layout/transforms        | Flex/Flow/Grid reflow, keyed state, CSS-sized chrome and transformed/clipped targets pass. Cross-component placement still depends on Task 1.                                             |
-| 8 — Ownership/performance    | Standard lifecycle/performance gate passed. Newly integrated callback-write cases pass 15 tests across ownership/terminal suites; shared-source concurrency evidence remains in progress. |
-| 9 — Migration/docs/consumers | Static gate and earlier packed/environment probes pass. Tutorial/viz migration behavior is blocked by Task 1, and the physics example timestamp regression is being verified.             |
-| 10 — Final verification      | Built manipulation checks, static and lifecycle gates pass. Full browser audit fails on recorded cases; final aggregate trust and visual acceptance are not complete.                     |
+| Plan task                    | Current evidence and remaining work                                                                                                                                                                       |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 — Unified placement        | Standalone paint/hit and forwarding cases pass. Independent child offsets are a proven failure; public handoff decision is pending. Not complete.                                                         |
+| 2 — Runtime diagnostics      | Public Flex/Flow/Grid development diagnostics and explicit source/built/packed production-ignore probes passed. Keep these probes in the final integrated gate.                                           |
+| 3 — Pure move/resize         | Solver cases cover snapping, tie-breaking, origins, opposite anchors, dimensions and constraints; full source audit passed this suite.                                                                    |
+| 4 — Controller/handles       | Native capture, threshold, commit, cancellation and ownership cases pass. Shared-source concurrency now has public Canvas event evidence; see the follow-up below.                                        |
+| 5 — Runnable slice           | Live Studio example and private lab exist, use the public API, and have native-browser evidence. Earlier progress records contain the verified URL and inspection.                                        |
+| 6 — Rotation/constraints     | Public rotation/transformed resize and pure solver evidence pass, including bounds, aspect ratio and grid distinctions.                                                                                   |
+| 7 — Layout/transforms        | Flex/Flow/Grid reflow, keyed state, CSS-sized chrome and transformed/clipped targets pass. Cross-component placement still depends on Task 1.                                                             |
+| 8 — Ownership/performance    | Standard lifecycle/performance gate passed. Newly integrated callback-write cases pass 15 tests across ownership/terminal suites; shared-source concurrency evidence now passes; see the follow-up below. |
+| 9 — Migration/docs/consumers | Static gate and earlier packed/environment probes pass. Tutorial/viz migration behavior is blocked by Task 1, and the physics example timestamp regression is fixed and verified below.                   |
+| 10 — Final verification      | Built manipulation checks, static and lifecycle gates pass. Full browser audit fails on recorded cases; final aggregate trust and visual acceptance are not complete.                                     |
 
 The unchecked procedural steps in the dated plan are not evidence of successful historical red runs. This table records current behavior evidence without inferring unobserved execution history or declaring the feature complete.
+
+## Focused audit follow-ups completed
+
+- Integrated `onStart` and `onChange` external-write precedence tests plus a shared-box concurrency test. The first controller starts/releases through native input; a distinct public Canvas pointer event proves the second controller is rejected before acquiring capture and cannot disturb the first owner. No runtime change was necessary.
+- Fixed the physics learning example dropping distinct captured move/release positions with equal timestamps. The fallback considers only equal-timestamp distinct predecessors; the existing window and speed limit remain. A native CDP timestamp regression failed with the old algorithm (`centerY = 108`, expected above 130) and passed with the fix. Test timestamps are monotonic relative to the native initial press.
+- Fresh integrated normal-config command covering the complete learning catalog and manipulation ownership/terminal suites passed three files / 243 tests. Node 24.15.0, pnpm 11.21.0, Chromium. Focused ESLint and diff checks passed. Log: `/tmp/crc-ownership-learning-current.log`.
+- The unresolved custom-component placement decision remains the next runtime change. After it is resolved, rerun the affected positioning/viz/tutorial oracles and the aggregate gate. Do not infer a green full browser result from these focused follow-ups.

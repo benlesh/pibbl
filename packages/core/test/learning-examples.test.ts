@@ -2068,24 +2068,24 @@ describe("learning example catalog", () => {
       x: before.centerX,
       y: before.centerY,
     });
-    const timeOriginSeconds = performance.timeOrigin / 1000;
+    const sampleOriginSeconds = Date.now() / 1000;
     await dispatchTimestampedPointer(
       canvas,
       "pointermove",
       clamped,
-      timeOriginSeconds + 0.2,
+      sampleOriginSeconds + 0.2,
     );
     await dispatchTimestampedPointer(
       canvas,
       "pointermove",
       clamped,
-      timeOriginSeconds + 0.4,
+      sampleOriginSeconds + 0.4,
     );
     await dispatchTimestampedPointer(
       canvas,
       "pointerup",
       continuedPointerMotion,
-      timeOriginSeconds + 0.4,
+      sampleOriginSeconds + 0.4,
     );
     await nextPaint();
     for (let frame = 0; frame < 2; frame += 1) await nextPaint();
