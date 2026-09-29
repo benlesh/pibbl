@@ -412,7 +412,7 @@ describe('shared event performance laboratory', () => {
     });
   });
 
-  it('shares one native listener, stops at the topmost hit, and tests every live miss candidate without retaining dispatch state', async () => {
+  it('shares one native listener, stops at the topmost hit, and retains one root activation cleanup across dispatches', async () => {
     const canvas = document.createElement('canvas');
     canvas.width = 100;
     canvas.height = 100;
@@ -454,7 +454,11 @@ describe('shared event performance laboratory', () => {
     expect(topmostPathTests).toBe(1);
     expect(targets).toEqual([targetCount - 1]);
     expect(ancestorCalls).toBe(1);
-    expect(diagnostics.snapshot()).toEqual(baseline);
+    const afterFirstPointerPress = diagnostics.snapshot();
+    expect(afterFirstPointerPress).toEqual({
+      ...baseline,
+      mainTeardowns: baseline.mainTeardowns + 1,
+    });
 
     targets.length = 0;
     ancestorCalls = 0;
@@ -464,7 +468,7 @@ describe('shared event performance laboratory', () => {
     expect(missPathTests).toBe(targetCount);
     expect(targets).toEqual([]);
     expect(ancestorCalls).toBe(0);
-    expect(diagnostics.snapshot()).toEqual(baseline);
+    expect(diagnostics.snapshot()).toEqual(afterFirstPointerPress);
   });
 
   it('ignores unrelated bubbling moves and finalizes only the matching Canvas dispatch once', async () => {
