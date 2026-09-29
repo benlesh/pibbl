@@ -760,8 +760,8 @@ function PublicEventProbe(): CRCNode {
 createElement(PublicEventProbe, {});
 
 const rectangleStyle = {
-  x: 10,
-  y: 10,
+  left: 10,
+  top: 10,
   width: 40,
   height: 20,
   fill: '#2563eb',
@@ -1046,8 +1046,8 @@ const verticalLineStyle = {
 createElement(VerticalLine, { style: verticalLineStyle });
 
 const textStyle = {
-  x: 20,
-  y: 24,
+  left: 20,
+  top: 24,
   width: 180,
   height: 60,
   lineHeight: 18,
@@ -1311,7 +1311,7 @@ function RuntimeProbe({ count }: { count: number; label?: string }): CRCNode {
   const reactiveCount = useSignal(count);
   publicContext.fillRect(0, 0, reactiveCount.get(), reactiveCount.get());
   return [
-    createElement(Rectangle, { style: { x: count, y: 0, width: 1, height: 1 } }),
+    createElement(Rectangle, { style: { left: count, top: 0, width: 1, height: 1 } }),
     false,
     null,
     undefined,
@@ -1573,7 +1573,7 @@ const reactiveRectangleX = signal(10);
 const reactiveRectangleFill = signal('red');
 const reactiveRectangleHandler = signal<CRCEventHandler<'click'>>(() => {});
 const reactiveRectangleStyle = signal<RectStyle>({
-  x: 10,
+  left: 10,
   fill: 'red',
   width: 20,
   height: 20,
@@ -1581,7 +1581,7 @@ const reactiveRectangleStyle = signal<RectStyle>({
 const signalValuedRectangle = createElement(Rectangle, {
   onClick: reactiveRectangleHandler,
   style: {
-    x: reactiveRectangleX,
+    left: reactiveRectangleX,
     fill: reactiveRectangleFill,
     width: 20,
     height: 20,
@@ -1718,7 +1718,7 @@ type FreePlay = CoreExports['play'];
 // @ts-expect-error readonly signals do not expose writes
 readonlyCount.set(2);
 // @ts-expect-error CRC style accepts resolved numbers, not signal containers
-const badSignalStyle: RectStyle = { x: writableCount, width: 10, height: 10 };
+const badSignalStyle: RectStyle = { left: writableCount, width: 10, height: 10 };
 // @ts-expect-error computed values are readonly
 computed(() => writableCount.get() * 2).update(value => value + 1);
 void untrackedCount;

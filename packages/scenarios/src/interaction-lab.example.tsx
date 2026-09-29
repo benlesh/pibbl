@@ -372,8 +372,8 @@ const NestedInteractiveAncestor = ({ record }: NestedAncestorProps) => {
       key="ancestor-guide"
       pointerEvents="none"
       style={{
-        x: 70,
-        y: 52,
+        left: 70,
+        top: 52,
         width: 300,
         height: 148,
         fill: '#93c5fd',
@@ -388,8 +388,8 @@ const PropagationTarget = ({ record }: NestedAncestorProps) => (
   <Rectangle
     key="propagation-target"
     style={{
-      x: 120,
-      y: 72,
+      left: 120,
+      top: 72,
       width: 240,
       height: 112,
       fill: '#2563eb',
@@ -524,8 +524,8 @@ function touchRetention(record: InteractionLabRecord) {
     <Rectangle
       key="touch-owner"
       style={{
-        x: 120,
-        y: 72,
+        left: 120,
+        top: 72,
         width: 240,
         height: 112,
         fill: '#7c3aed',
@@ -543,8 +543,8 @@ function wheelCancellation(record: InteractionLabRecord) {
     <Rectangle
       key="wheel-target"
       style={{
-        x: 120,
-        y: 72,
+        left: 120,
+        top: 72,
         width: 240,
         height: 112,
         fill: '#c2410c',
@@ -573,8 +573,8 @@ function keyboardFields(record: InteractionLabRecord) {
     <Rectangle
       key="keyboard-target"
       style={{
-        x: 120,
-        y: 72,
+        left: 120,
+        top: 72,
         width: 240,
         height: 112,
         fill: '#0369a1',
@@ -616,8 +616,8 @@ function composition(record: InteractionLabRecord) {
     <Rectangle
       key="composition-target"
       style={{
-        x: 120,
-        y: 72,
+        left: 120,
+        top: 72,
         width: 240,
         height: 112,
         fill: '#be185d',
@@ -635,8 +635,8 @@ function clipboard(record: InteractionLabRecord) {
     <Rectangle
       key="clipboard-target"
       style={{
-        x: 120,
-        y: 72,
+        left: 120,
+        top: 72,
         width: 240,
         height: 112,
         fill: '#4f46e5',
@@ -725,8 +725,8 @@ function dragDrop(record: InteractionLabRecord) {
       <Rectangle
         key={target}
         style={{
-          x,
-          y: 72,
+          left: x,
+          top: 72,
           width: 180,
           height: 112,
           fill,
@@ -825,8 +825,8 @@ function caseVisual(
           key="transparent-guide"
           pointerEvents="none"
           style={{
-            x: 90,
-            y: 66,
+            left: 90,
+            top: 66,
             width: 220,
             height: 124,
             fill: '#e2e8f0',
@@ -891,8 +891,8 @@ function caseVisual(
           key="no-hit-guide"
           pointerEvents="none"
           style={{
-            x: 90,
-            y: 66,
+            left: 90,
+            top: 66,
             width: 220,
             height: 124,
             stroke: '#94a3b8',
@@ -977,8 +977,8 @@ const InteractionLabScene = ({ state, record }: InteractionLabSceneProps) => {
       key="background"
       pointerEvents="none"
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 480,
         height: 240,
         fill: '#f8fafc',
@@ -987,8 +987,8 @@ const InteractionLabScene = ({ state, record }: InteractionLabSceneProps) => {
     <Text
       pointerEvents="none"
       style={{
-        x: 24,
-        y: 28,
+        left: 24,
+        top: 28,
         font: '700 17px Arial',
         fill: '#0f172a',
       }}
@@ -998,8 +998,8 @@ const InteractionLabScene = ({ state, record }: InteractionLabSceneProps) => {
     <Text
       pointerEvents="none"
       style={{
-        x: 24,
-        y: 226,
+        left: 24,
+        top: 226,
         font: '13px Arial',
         fill: '#334155',
       }}

@@ -18,8 +18,8 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7f0df",
@@ -27,8 +27,8 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 46,
+        left: 360,
+        top: 46,
         fill: "#17211d",
         font: "900 23px sans-serif",
         textAlign: "center",
@@ -38,8 +38,8 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
     </Text>,
     <Rectangle
       style={{
-        x: 68,
-        y: 92,
+        left: 68,
+        top: 92,
         width: 360,
         height: 194,
         fill: inside.get() ? "#74d3ae" : "#1f4bd8",
@@ -63,8 +63,8 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
     />,
     <Text
       style={{
-        x: 248,
-        y: 158,
+        left: 248,
+        top: 158,
         fill: inside.get() ? "#17211d" : "#fffdf6",
         font: "900 33px sans-serif",
         textAlign: "center",
@@ -74,8 +74,8 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
     </Text>,
     <Text
       style={{
-        x: 248,
-        y: 204,
+        left: 248,
+        top: 204,
         fill: inside.get() ? "#17211d" : "#fffdf6",
         font: "700 14px sans-serif",
         textAlign: "center",
@@ -85,8 +85,8 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
     </Text>,
     <Rectangle
       style={{
-        x: 470,
-        y: 92,
+        left: 470,
+        top: 92,
         width: 182,
         height: 194,
         fill: "#17211d",
@@ -94,8 +94,8 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
     />,
     <Text
       style={{
-        x: 561,
-        y: 150,
+        left: 561,
+        top: 150,
         fill: "#f7c948",
         font: "900 15px monospace",
         textAlign: "center",
@@ -105,8 +105,8 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
     </Text>,
     <Text
       style={{
-        x: 561,
-        y: 216,
+        left: 561,
+        top: 216,
         fill: "#74d3ae",
         font: "900 52px sans-serif",
         textAlign: "center",
@@ -116,8 +116,8 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 319,
+        left: 360,
+        top: 319,
         fill: "#17211d",
         font: "600 12px sans-serif",
         textAlign: "center",
@@ -129,8 +129,8 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
     </Text>,
     <Text
       style={{
-        x: 48,
-        y: 347,
+        left: 48,
+        top: 347,
         width: 624,
         lineHeight: 18,
         fit: "ellipsis",

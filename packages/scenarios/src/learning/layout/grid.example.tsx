@@ -73,8 +73,8 @@ function GridStudy() {
     </Grid>,
     <Text
       style={{
-        x: 360,
-        y: 52,
+        left: 360,
+        top: 52,
         fill: "#17211d",
         font: "900 18px sans-serif",
         textAlign: "center",

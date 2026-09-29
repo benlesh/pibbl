@@ -3,7 +3,7 @@ import { crc, Rectangle, Star, type CRCController } from "@crc/core";
 function StarStudy() {
   return [
     <Rectangle
-      style={{ x: 0, y: 0, width: 720, height: 420, fill: "#17211d" }}
+      style={{ left: 0, top: 0, width: 720, height: 420, fill: "#17211d" }}
     />,
     <Star
       style={{

@@ -340,8 +340,8 @@ export function createWebGLLabScene(props: WebGLLabSceneProps): CRCNode {
         <Text
           pointerEvents="none"
           style={{
-            x: 14,
-            y: 18,
+            left: 14,
+            top: 18,
             fill: '#0f172a',
             font: '700 12px monospace',
           }}
@@ -350,7 +350,7 @@ export function createWebGLLabScene(props: WebGLLabSceneProps): CRCNode {
         </Text>
         <Text
           pointerEvents="none"
-          style={{ x: 14, y: 292, fill: '#334155', font: '11px monospace' }}
+          style={{ left: 14, top: 292, fill: '#334155', font: '11px monospace' }}
         >
           {`cube ${props.state.cubeSelections} · sphere ${props.state.sphereSelections} · revision ${props.state.revision}`}
         </Text>

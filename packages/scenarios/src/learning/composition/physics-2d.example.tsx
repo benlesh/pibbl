@@ -257,8 +257,8 @@ function GroundSensor() {
         physics={collider2D({ sensor: true, tag: "ground-check" })}
         pointerEvents="none"
         style={{
-          x: 164,
-          y: 304,
+          left: 164,
+          top: 304,
           width: 92,
           height: 12,
           fill: "#38bdf833",
@@ -279,21 +279,21 @@ function PhysicsLesson() {
           physics={staticBody2D({
             collider: { tag: "ground", friction: 0.55 },
           })}
-          style={{ x: 54, y: 316, width: 612, height: 34, fill: "#334155" }}
+          style={{ left: 54, top: 316, width: 612, height: 34, fill: "#334155" }}
         />
         <Rectangle
           physics={staticBody2D({
             collider: { tag: "left-wall", friction: 0.4 },
           })}
           pointerEvents="none"
-          style={{ x: 54, y: 96, width: 20, height: 220, fill: "#475569" }}
+          style={{ left: 54, top: 96, width: 20, height: 220, fill: "#475569" }}
         />
         <Rectangle
           physics={staticBody2D({
             collider: { tag: "right-wall", friction: 0.4 },
           })}
           pointerEvents="none"
-          style={{ x: 646, y: 96, width: 20, height: 220, fill: "#475569" }}
+          style={{ left: 646, top: 96, width: 20, height: 220, fill: "#475569" }}
         />
         <StaticBumper
           x={250}
@@ -322,8 +322,8 @@ function PhysicsLesson() {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 54,
+          left: 360,
+          top: 54,
           fill: "#17211d",
           font: "900 24px Arial",
           textAlign: "center",
@@ -334,8 +334,8 @@ function PhysicsLesson() {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 82,
+          left: 360,
+          top: 82,
           fill: "#475569",
           font: "600 13px Arial",
           textAlign: "center",
@@ -346,8 +346,8 @@ function PhysicsLesson() {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 390,
+          left: 360,
+          top: 390,
           fill: "#0f172a",
           font: "600 12px monospace",
           textAlign: "center",

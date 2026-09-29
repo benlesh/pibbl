@@ -4,8 +4,8 @@ function RectangleStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7f0df",
@@ -13,8 +13,8 @@ function RectangleStudy() {
     />,
     <Rectangle
       style={{
-        x: 54,
-        y: 52,
+        left: 54,
+        top: 52,
         width: 252,
         height: 316,
         fill: "#1f4bd8",
@@ -23,8 +23,8 @@ function RectangleStudy() {
     />,
     <Rectangle
       style={{
-        x: 268,
-        y: 104,
+        left: 268,
+        top: 104,
         width: 280,
         height: 190,
         fill: hovered.get() ? "#74d3ae" : "#ff6b57",
@@ -38,8 +38,8 @@ function RectangleStudy() {
     />,
     <Rectangle
       style={{
-        x: 534,
-        y: 50,
+        left: 534,
+        top: 50,
         width: 132,
         height: 132,
         fill: "#f7c948",
@@ -50,8 +50,8 @@ function RectangleStudy() {
     />,
     <Rectangle
       style={{
-        x: 406,
-        y: 292,
+        left: 406,
+        top: 292,
         width: 260,
         height: 76,
         stroke: "#17211d",
@@ -60,8 +60,8 @@ function RectangleStudy() {
     />,
     <Text
       style={{
-        x: 536,
-        y: 330,
+        left: 536,
+        top: 330,
         fill: "#17211d",
         font: "800 16px sans-serif",
         textAlign: "center",

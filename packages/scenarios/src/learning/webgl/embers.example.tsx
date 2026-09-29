@@ -95,8 +95,8 @@ function EmbersStudy() {
       <Text
         pointerEvents="none"
         style={{
-          x: 30,
-          y: 42,
+          left: 30,
+          top: 42,
           fill: '#fff3b0',
           font: '900 25px sans-serif',
         }}
@@ -106,8 +106,8 @@ function EmbersStudy() {
       <Text
         pointerEvents="none"
         style={{
-          x: 30,
-          y: 67,
+          left: 30,
+          top: 67,
           fill: '#fb923c',
           font: '700 12px monospace',
         }}

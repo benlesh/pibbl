@@ -214,8 +214,8 @@ function sparseRegions(options: RegionFactoryOptions): PerformanceNode[] {
       <Rectangle
         key={target}
         style={{
-          x: 20 + xOffset + (index % 100) * 4,
-          y: 20 + Math.floor(index / 100) * 2,
+          left: 20 + xOffset + (index % 100) * 4,
+          top: 20 + Math.floor(index / 100) * 2,
           width: 3,
           height: 2,
           fill: index === 0 ? '#16a34a' : '#2563eb',
@@ -235,8 +235,8 @@ function denseRegions(options: RegionFactoryOptions): PerformanceNode[] {
       <Rectangle
         key={target}
         style={{
-          x: 120,
-          y: 60,
+          left: 120,
+          top: 60,
           width: 240,
           height: 120,
           fill: index === options.count - 1 ? '#16a34a' : '#2563eb',
@@ -348,8 +348,8 @@ export const PerformanceScene = (props: PerformanceSceneProps) => {
       key={`background-${props.revision}`}
       pointerEvents="none"
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 480,
         height: 240,
         fill: '#f8fafc',

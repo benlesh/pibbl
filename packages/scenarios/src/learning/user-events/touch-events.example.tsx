@@ -21,8 +21,8 @@ function TouchEventsStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7f0df",
@@ -30,8 +30,8 @@ function TouchEventsStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 47,
+        left: 360,
+        top: 47,
         fill: "#17211d",
         font: "900 25px sans-serif",
         textAlign: "center",
@@ -41,8 +41,8 @@ function TouchEventsStudy() {
     </Text>,
     <Rectangle
       style={{
-        x: 78,
-        y: 92,
+        left: 78,
+        top: 92,
         width: 320,
         height: 188,
         fill: activeContacts.get() ? "#a78bfa" : "#7c3aed",
@@ -57,8 +57,8 @@ function TouchEventsStudy() {
     />,
     <Text
       style={{
-        x: 238,
-        y: 153,
+        left: 238,
+        top: 153,
         fill: "#fffdf6",
         font: "900 33px sans-serif",
         textAlign: "center",
@@ -68,8 +68,8 @@ function TouchEventsStudy() {
     </Text>,
     <Text
       style={{
-        x: 238,
-        y: 190,
+        left: 238,
+        top: 190,
         width: 258,
         lineHeight: 20,
         wrap: true,
@@ -82,8 +82,8 @@ function TouchEventsStudy() {
     </Text>,
     <Rectangle
       style={{
-        x: 442,
-        y: 92,
+        left: 442,
+        top: 92,
         width: 202,
         height: 188,
         fill: "#17211d",
@@ -91,8 +91,8 @@ function TouchEventsStudy() {
     />,
     <Text
       style={{
-        x: 543,
-        y: 145,
+        left: 543,
+        top: 145,
         lineHeight: 24,
         fill: "#f7c948",
         font: "900 16px monospace",
@@ -103,8 +103,8 @@ function TouchEventsStudy() {
     </Text>,
     <Text
       style={{
-        x: 543,
-        y: 220,
+        left: 543,
+        top: 220,
         fill: "#74d3ae",
         font: "900 48px sans-serif",
         textAlign: "center",
@@ -114,8 +114,8 @@ function TouchEventsStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 316,
+        left: 360,
+        top: 316,
         fill: "#17211d",
         font: "600 12px sans-serif",
         textAlign: "center",
@@ -127,8 +127,8 @@ function TouchEventsStudy() {
     </Text>,
     <Text
       style={{
-        x: 46,
-        y: 344,
+        left: 46,
+        top: 344,
         width: 628,
         lineHeight: 17,
         fit: "ellipsis",

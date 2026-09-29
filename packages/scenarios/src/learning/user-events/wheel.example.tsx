@@ -16,8 +16,8 @@ function WheelStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#17211d",
@@ -25,8 +25,8 @@ function WheelStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 48,
+        left: 360,
+        top: 48,
         fill: "#fffdf6",
         font: "900 25px sans-serif",
         textAlign: "center",
@@ -36,8 +36,8 @@ function WheelStudy() {
     </Text>,
     <Rectangle
       style={{
-        x: 82,
-        y: 88,
+        left: 82,
+        top: 88,
         width: 556,
         height: 184,
         fill: cancelled.get() ? "#f7c948" : "#ff6b57",
@@ -54,8 +54,8 @@ function WheelStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 153,
+        left: 360,
+        top: 153,
         fill: "#17211d",
         font: "900 32px sans-serif",
         textAlign: "center",
@@ -65,8 +65,8 @@ function WheelStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 199,
+        left: 360,
+        top: 199,
         fill: "#17211d",
         font: "800 15px monospace",
         textAlign: "center",
@@ -74,8 +74,8 @@ function WheelStudy() {
     >{`${count.get()} wheel events • default ${cancelled.get() ? "prevented" : "ready to cancel"}`}</Text>,
     <Text
       style={{
-        x: 360,
-        y: 306,
+        left: 360,
+        top: 306,
         fill: "#f7c948",
         font: "600 13px sans-serif",
         textAlign: "center",
@@ -87,8 +87,8 @@ function WheelStudy() {
     </Text>,
     <Text
       style={{
-        x: 48,
-        y: 337,
+        left: 48,
+        top: 337,
         width: 624,
         lineHeight: 18,
         fit: "ellipsis",

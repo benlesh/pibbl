@@ -50,8 +50,8 @@ function LoadMessage({ loaded }: { readonly loaded: CRCWebGLAssetLoadResult }) {
       <Rectangle
         pointerEvents="none"
         style={{
-          x: 176,
-          y: 174,
+          left: 176,
+          top: 174,
           width: 368,
           height: 72,
           fill: failed ? "rgb(127 29 29 / 92%)" : "rgb(15 23 42 / 88%)",
@@ -63,8 +63,8 @@ function LoadMessage({ loaded }: { readonly loaded: CRCWebGLAssetLoadResult }) {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 216,
+          left: 360,
+          top: 216,
           fill: "#f8fafc",
           font: "700 16px sans-serif",
           textAlign: "center",
@@ -156,8 +156,8 @@ function StaticGLBPresentation({
         <Text
           pointerEvents="none"
           style={{
-            x: 696,
-            y: 28,
+            left: 696,
+            top: 28,
             fill: "#bae6fd",
             font: "700 11px monospace",
             textAlign: "right",
@@ -169,8 +169,8 @@ function StaticGLBPresentation({
           <Text
             pointerEvents="none"
             style={{
-              x: 24,
-              y: 38,
+              left: 24,
+              top: 38,
               fill: "#bfdbfe",
               font: "700 13px monospace",
             }}
@@ -185,8 +185,8 @@ function StaticGLBPresentation({
             <Group key={model.source} onClick={() => onSelectModel(index)}>
               <Rectangle
                 style={{
-                  x: box.x,
-                  y: 366,
+                  left: box.x,
+                  top: 366,
                   width: box.width,
                   height: 42,
                   fill: selected ? "#38bdf8" : "rgb(15 23 42 / 92%)",
@@ -199,8 +199,8 @@ function StaticGLBPresentation({
               <Text
                 pointerEvents="none"
                 style={{
-                  x: box.x + box.width / 2,
-                  y: 392,
+                  left: box.x + box.width / 2,
+                  top: 392,
                   fill: selected ? "#082f49" : "#e2e8f0",
                   font: "700 12px sans-serif",
                   textAlign: "center",

@@ -25,8 +25,8 @@ function PropagationLeaf({ mode, record }: PropagationProps) {
   return (
     <Rectangle
       style={{
-        x: 236,
-        y: 138,
+        left: 236,
+        top: 138,
         width: 248,
         height: 136,
         fill: "#1f4bd8",
@@ -97,8 +97,8 @@ function PropagationAndCancellationStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#17211d",
@@ -106,8 +106,8 @@ function PropagationAndCancellationStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 42,
+        left: 360,
+        top: 42,
         fill: "#fffdf6",
         font: "900 22px sans-serif",
         textAlign: "center",
@@ -118,8 +118,8 @@ function PropagationAndCancellationStudy() {
     ...modes.map(([value], index) => (
       <Rectangle
         style={{
-          x: 62 + index * 154,
-          y: 66,
+          left: 62 + index * 154,
+          top: 66,
           width: 132,
           height: 42,
           fill: mode.get() === value ? "#f7c948" : "#314158",
@@ -133,8 +133,8 @@ function PropagationAndCancellationStudy() {
     ...modes.map(([value, label], index) => (
       <Text
         style={{
-          x: 128 + index * 154,
-          y: 92,
+          left: 128 + index * 154,
+          top: 92,
           fill: mode.get() === value ? "#17211d" : "#fffdf6",
           font: "800 12px monospace",
           textAlign: "center",
@@ -146,8 +146,8 @@ function PropagationAndCancellationStudy() {
     )),
     <Rectangle
       style={{
-        x: 190,
-        y: 122,
+        left: 190,
+        top: 122,
         width: 340,
         height: 168,
         fill: "#26354a",
@@ -158,8 +158,8 @@ function PropagationAndCancellationStudy() {
     <PropagationAncestor mode={mode.get()} record={record} />,
     <Text
       style={{
-        x: 360,
-        y: 207,
+        left: 360,
+        top: 207,
         fill: "#fffdf6",
         font: "800 20px sans-serif",
         textAlign: "center",
@@ -169,8 +169,8 @@ function PropagationAndCancellationStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 304,
+        left: 360,
+        top: 304,
         width: 680,
         lineHeight: 13,
         wrap: true,
@@ -186,8 +186,8 @@ function PropagationAndCancellationStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 410,
+        left: 360,
+        top: 410,
         fill: "#a9b8c9",
         font: "600 11px sans-serif",
         textAlign: "center",

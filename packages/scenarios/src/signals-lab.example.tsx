@@ -102,7 +102,7 @@ function LayerA({ model, metrics }: RootProps) {
   metrics.layerRepaints += 1;
   metrics.layerChildRenders.a += 1;
   const value = model.layerA.get();
-  return <Rectangle style={{ x: 0, y: 0, width: 80, height: 42, fill: value % 2 ? '#2563eb' : '#7c3aed' }} />;
+  return <Rectangle style={{ left: 0, top: 0, width: 80, height: 42, fill: value % 2 ? '#2563eb' : '#7c3aed' }} />;
 }
 
 function LayerB({ model, metrics }: RootProps) {
@@ -110,13 +110,13 @@ function LayerB({ model, metrics }: RootProps) {
   metrics.layerRepaints += 1;
   metrics.layerChildRenders.b += 1;
   const value = model.layerB.get();
-  return <Rectangle style={{ x: 0, y: 0, width: 80, height: 42, fill: value % 2 ? '#f59e0b' : '#10b981' }} />;
+  return <Rectangle style={{ left: 0, top: 0, width: 80, height: 42, fill: value % 2 ? '#f59e0b' : '#10b981' }} />;
 }
 
 function RetainedConsumer({ model, metrics }: RootProps) {
   metrics.componentTraversals += 1;
   const retained = model.retained.get();
-  return <Text style={{ x: 240, y: 198, fill: '#475569', font: '600 11px monospace' }}>{`retained ${retained}`}</Text>;
+  return <Text style={{ left: 240, top: 198, fill: '#475569', font: '600 11px monospace' }}>{`retained ${retained}`}</Text>;
 }
 
 interface SignalInputProbeProps {
@@ -137,7 +137,7 @@ function SignalInputProbe({ metrics, style }: SignalInputProbeProps) {
   metrics.inputResolutions += 1;
   metrics.adoptions += 1;
   metrics.shallowCopies += 1;
-  return <Rectangle style={{ ...style, x, width: 12, height: 12, fill: '#0ea5e9' }} />;
+  return <Rectangle style={{ ...style, left: x, width: 12, height: 12, fill: '#0ea5e9' }} />;
 }
 
 function ReactionProbe({ model, metrics }: RootProps) {
@@ -163,9 +163,9 @@ export function SignalsLabRootA({ model, metrics }: RootProps) {
   const shared = model.shared.get();
   return <Group>
     <Rectangle style={{ width: 480, height: 240, fill: '#f8fafc' }} />
-    <Rectangle style={{ x: 24 + direct * 8, y: 32, width: 76, height: 54, fill: '#2563eb' }} />
+    <Rectangle style={{ left: 24 + direct * 8, top: 32, width: 76, height: 54, fill: '#2563eb' }} />
     <SignalInputProbe metrics={metrics} style={{ x: model.direct, y: 98 }} />
-    <Text style={{ x: 24, y: 126, fill: '#0f172a', font: '700 13px monospace' }}>{`direct ${direct} · computed ${derived} · shared ${shared}`}</Text>
+    <Text style={{ left: 24, top: 126, fill: '#0f172a', font: '700 13px monospace' }}>{`direct ${direct} · computed ${derived} · shared ${shared}`}</Text>
     <Group style={{ translateX: 24, translateY: 150 }}>
       <Layer style={{ width: 80, height: 42 }}><LayerA model={model} metrics={metrics} /></Layer>
     </Group>
@@ -183,7 +183,7 @@ export function SignalsLabRootB({ model, metrics }: RootProps) {
   const shared = model.shared.get();
   return <Group>
     <Rectangle style={{ width: 480, height: 120, fill: '#eff6ff' }} />
-    <Text style={{ x: 24, y: 54, fill: '#1e3a8a', font: '800 16px monospace' }}>{`second root ${shared}`}</Text>
+    <Text style={{ left: 24, top: 54, fill: '#1e3a8a', font: '800 16px monospace' }}>{`second root ${shared}`}</Text>
   </Group>;
 }
 

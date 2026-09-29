@@ -15,8 +15,8 @@ interface DrawingTextSceneProps {
 const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   <Rectangle
     style={{
-      x: 0,
-      y: 0,
+      left: 0,
+      top: 0,
       width: 480,
       height: 240,
       fill: '#f8fafc',
@@ -24,8 +24,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   />,
   <Text
     style={{
-      x: 24,
-      y: 18,
+      left: 24,
+      top: 18,
       font: '700 24px Arial',
       fill: state.updated ? '#7c3aed' : '#0f172a',
     }}
@@ -35,8 +35,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   </Text>,
   <Text
     style={{
-      x: 374,
-      y: 24,
+      left: 374,
+      top: 24,
       font: '18px Arial',
       textAlign: 'center',
       textBaseline: 'middle',
@@ -50,8 +50,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   </Text>,
   <Rectangle
     style={{
-      x: 24,
-      y: 68,
+      left: 24,
+      top: 68,
       width: 172,
       height: 40,
       fill: '#e2e8f0',
@@ -59,8 +59,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   />,
   <Text
     style={{
-      x: 32,
-      y: 76,
+      left: 32,
+      top: 76,
       width: 154,
       fit: 'ellipsis',
       font: '17px Arial',
@@ -72,8 +72,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   </Text>,
   <Rectangle
     style={{
-      x: 244,
-      y: 68,
+      left: 244,
+      top: 68,
       width: 212,
       height: 40,
       fill: '#e2e8f0',
@@ -81,8 +81,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   />,
   <Text
     style={{
-      x: 252,
-      y: 76,
+      left: 252,
+      top: 76,
       width: 196,
       fit: 'squish',
       font: '17px Arial',
@@ -94,8 +94,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   </Text>,
   <Rectangle
     style={{
-      x: 24,
-      y: 126,
+      left: 24,
+      top: 126,
       width: 206,
       height: 86,
       fill: '#dbeafe',
@@ -103,8 +103,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   />,
   <Text
     style={{
-      x: 34,
-      y: 136,
+      left: 34,
+      top: 136,
       width: 184,
       height: 64,
       lineHeight: 21,
@@ -121,8 +121,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   </Text>,
   <Rectangle
     style={{
-      x: 254,
-      y: 126,
+      left: 254,
+      top: 126,
       width: 202,
       height: 48,
       fill: '#fef3c7',
@@ -130,8 +130,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   />,
   <Text
     style={{
-      x: 264,
-      y: 136,
+      left: 264,
+      top: 136,
       width: 182,
       height: 28,
       fit: 'clip',
@@ -144,8 +144,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   </Text>,
   <Rectangle
     style={{
-      x: 254,
-      y: 190,
+      left: 254,
+      top: 190,
       width: 202,
       height: 24,
       fill: '#ef4444',
@@ -153,8 +153,8 @@ const DrawingTextScene = ({ onCenteredText, state }: DrawingTextSceneProps) => [
   />,
   <Text
     style={{
-      x: 264,
-      y: 193,
+      left: 264,
+      top: 193,
       font: '16px Arial',
       fill: '#ffffff',
       opacity: 0,
