@@ -158,8 +158,8 @@ function snapResize(
   return resizeFromDimensions(
     proposed,
     handle,
-    snapToLattice(proposed.width, stepWidth),
-    snapToLattice(proposed.height, stepHeight),
+    handle.includes('left') || handle.includes('right') ? snapToLattice(proposed.width, stepWidth) : proposed.width,
+    handle.includes('top') || handle.includes('bottom') ? snapToLattice(proposed.height, stepHeight) : proposed.height,
   );
 }
 
