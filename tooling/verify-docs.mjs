@@ -318,6 +318,7 @@ const historicalMarkdownPatterns = [
   /^docs\/superpowers\/(?:plans|specs)\//u,
   /^docs\/testing\/dep-\d+-upgrade-notes\.md$/u,
   /^docs\/testing\/field-notes\//u,
+  /^docs\/testing\/evidence\/component-manipulation\//u,
   /^docs\/testing\/pre-upgrade-baseline\.md$/u,
 ];
 
