@@ -34,6 +34,8 @@ export const vizPointsScenario: ScenarioDefinition<VizPointsState> = {
     };
     let disposed = false;
     const controller = mount(canvas, {
+      xDomain: [0, 100],
+      yDomain: [0, 100],
       rows,
       selected,
       clicks,
