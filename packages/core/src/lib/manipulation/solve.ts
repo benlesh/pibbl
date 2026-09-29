@@ -1,5 +1,5 @@
 import { assertFiniteBox, assertFinitePoint, freezeBox } from './geometry.js';
-import { isSnapActive, snapToLattice } from './snap.js';
+import { assertFiniteOrigin, assertPositiveFiniteStep, isSnapActive, snapToLattice } from './snap.js';
 import type {
   CRCManipulationBox,
   CRCManipulationMoveSnap,
@@ -15,6 +15,7 @@ export function solveManipulation(input: ManipulationSolveInput): ManipulationSo
   assertFiniteBox(input.initial, 'initial');
   assertFinitePoint(input.initialPoint, 'initialPoint');
   assertFinitePoint(input.currentPoint, 'currentPoint');
+  validateConfiguredSnaps(input);
 
   switch (input.operation) {
     case 'move':
@@ -60,10 +61,12 @@ function solveResize(input: ManipulationSolveInput): ManipulationSolveResult {
   if (input.resize?.snap?.target === 'grid' && (input.initialRotation ?? 0) !== 0) {
     throw new Error('Grid resize snapping requires an unrotated box.');
   }
-  const proposed = resizeFromPoint(input.initial, input.handle, {
+  const rotation = input.initialRotation ?? 0;
+  if (!Number.isFinite(rotation)) throw new Error('initialRotation must be finite.');
+  const proposed = resizeFromPoint(input.initial, input.handle, rotateInverse({
     x: input.currentPoint.x - input.initialPoint.x,
     y: input.currentPoint.y - input.initialPoint.y,
-  });
+  }, rotation));
   const constraints = resolvedResizeConstraints(input.resize);
   const snap = input.resize?.snap;
   const snapActive = snap !== undefined && isSnapActive(
@@ -72,11 +75,18 @@ function solveResize(input: ManipulationSolveInput): ManipulationSolveResult {
     input.modifiers,
   );
   const snapped = snapActive ? snapResize(input.initial, proposed, input.handle, snap!) : proposed;
-  let width = clamp(snapped.width, constraints.minWidth, constraints.maxWidth);
-  let height = clamp(snapped.height, constraints.minHeight, constraints.maxHeight);
-  [width, height] = applyAspectRatio(input.initial, input.handle, width, height, input.resize?.aspectRatio?.value, input.resize?.aspectRatio?.when, input.modifiers);
-  let applied = resizeFromDimensions(input.initial, input.handle, width, height);
-  applied = clampResizeToBounds(input.initial, input.handle, applied, input.resize?.bounds);
+  let width = snapped.width;
+  let height = snapped.height;
+  const ratio = activeRatio(input.initial, input.resize, input.modifiers);
+  if (ratio !== undefined) {
+    [width, height] = applyAspectRatio(input.initial, input.handle, width, height, ratio);
+    [width, height] = clampRatioDimensions(width, ratio, constraints);
+  } else {
+    width = clamp(width, constraints.minWidth, constraints.maxWidth);
+    height = clamp(height, constraints.minHeight, constraints.maxHeight);
+  }
+  let applied = resizeFromDimensionsRotated(input.initial, input.handle, width, height, rotation);
+  applied = clampResizeToBoundsRotated(input.initial, input.handle, applied, rotation, input.resize?.bounds, ratio);
   const snapSatisfied = !snapActive || boxesEqual(snapped, applied);
   return result(proposed, applied, snapActive, snapSatisfied, input.initialRotation);
 }
@@ -212,13 +222,92 @@ function clampResizeToBounds(initial: CRCManipulationBox, handle: CRCResizePosit
   return resizeFromDimensions(initial, handle, clamp(box.width, 1, maxWidth), clamp(box.height, 1, maxHeight));
 }
 
-function applyAspectRatio(initial: CRCManipulationBox, _handle: CRCResizePosition, width: number, height: number, value: 'initial' | number | undefined, when: import('./types.js').CRCManipulationWhen | undefined, modifiers: ManipulationSolveInput['modifiers']): readonly [number, number] {
-  if (value === undefined || !isSnapActive(true, when, modifiers)) return [width, height];
-  const ratio = value === 'initial' ? initial.width / initial.height : value;
-  if (!Number.isFinite(ratio) || ratio <= 0) throw new Error('Resize aspect ratio must be finite and greater than zero.');
+function applyAspectRatio(initial: CRCManipulationBox, _handle: CRCResizePosition, width: number, height: number, ratio: number): readonly [number, number] {
   const widthChange = Math.abs(width / initial.width - 1);
   const heightChange = Math.abs(height / initial.height - 1);
   return widthChange >= heightChange ? [width, width / ratio] : [height * ratio, height];
+}
+
+function activeRatio(initial: CRCManipulationBox, options: CRCManipulationResizeOptions | undefined, modifiers: ManipulationSolveInput['modifiers']): number | undefined {
+  const aspect = options?.aspectRatio;
+  if (!aspect || !isSnapActive(true, aspect.when, modifiers)) return undefined;
+  const ratio = aspect.value === 'initial' ? initial.width / initial.height : aspect.value;
+  if (!Number.isFinite(ratio) || ratio <= 0) throw new Error('Resize aspect ratio must be finite and greater than zero.');
+  return ratio;
+}
+
+function clampRatioDimensions(width: number, ratio: number, constraints: ReturnType<typeof resolvedResizeConstraints>): readonly [number, number] {
+  const minWidth = Math.max(constraints.minWidth, constraints.minHeight * ratio);
+  const maxWidth = Math.min(constraints.maxWidth, constraints.maxHeight * ratio);
+  if (minWidth > maxWidth) throw new Error('Resize constraints cannot satisfy the aspect ratio.');
+  const clamped = clamp(width, minWidth, maxWidth);
+  return [clamped, clamped / ratio];
+}
+
+function rotateInverse(point: Readonly<{ x: number; y: number }>, radians: number): Readonly<{ x: number; y: number }> {
+  const cosine = Math.cos(radians);
+  const sine = Math.sin(radians);
+  return { x: point.x * cosine + point.y * sine, y: -point.x * sine + point.y * cosine };
+}
+
+function resizeFromDimensionsRotated(initial: CRCManipulationBox, handle: CRCResizePosition, width: number, height: number, radians: number): CRCManipulationBox {
+  const oldCenter = { x: initial.left + initial.width / 2, y: initial.top + initial.height / 2 };
+  const opposite = {
+    x: handle.includes('left') ? initial.width / 2 : handle.includes('right') ? -initial.width / 2 : 0,
+    y: handle.includes('top') ? initial.height / 2 : handle.includes('bottom') ? -initial.height / 2 : 0,
+  };
+  const cosine = Math.cos(radians);
+  const sine = Math.sin(radians);
+  const anchor = { x: oldCenter.x + opposite.x * cosine - opposite.y * sine, y: oldCenter.y + opposite.x * sine + opposite.y * cosine };
+  const nextOpposite = {
+    x: handle.includes('left') ? width / 2 : handle.includes('right') ? -width / 2 : 0,
+    y: handle.includes('top') ? height / 2 : handle.includes('bottom') ? -height / 2 : 0,
+  };
+  const center = { x: anchor.x - (nextOpposite.x * cosine - nextOpposite.y * sine), y: anchor.y - (nextOpposite.x * sine + nextOpposite.y * cosine) };
+  return freezeBox({ left: center.x - width / 2, top: center.y - height / 2, width, height });
+}
+
+function clampResizeToBoundsRotated(initial: CRCManipulationBox, handle: CRCResizePosition, box: CRCManipulationBox, rotation: number, bounds: CRCManipulationBox | undefined, ratio: number | undefined): CRCManipulationBox {
+  if (!bounds) return box;
+  assertFiniteBox(bounds, 'resize.bounds');
+  if (!containsRotated(bounds, initial, rotation)) throw new Error('Resize bounds must contain the initial box.');
+  if (containsRotated(bounds, box, rotation)) return box;
+  // The anchored size path is linear in one ratio driver, and interpolation is exact.
+  let low = 0;
+  let high = 1;
+  for (let index = 0; index < 64; index++) {
+    const middle = (low + high) / 2;
+    const width = initial.width + (box.width - initial.width) * middle;
+    const height = ratio === undefined ? initial.height + (box.height - initial.height) * middle : width / ratio;
+    const candidate = resizeFromDimensionsRotated(initial, handle, width, height, rotation);
+    if (containsRotated(bounds, candidate, rotation)) low = middle;
+    else high = middle;
+  }
+  const width = initial.width + (box.width - initial.width) * low;
+  const height = ratio === undefined ? initial.height + (box.height - initial.height) * low : width / ratio;
+  return resizeFromDimensionsRotated(initial, handle, width, height, rotation);
+}
+
+function containsRotated(bounds: CRCManipulationBox, box: CRCManipulationBox, radians: number): boolean {
+  const center = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+  const cosine = Math.cos(radians);
+  const sine = Math.sin(radians);
+  for (const [x, y] of [[-box.width / 2, -box.height / 2], [box.width / 2, -box.height / 2], [box.width / 2, box.height / 2], [-box.width / 2, box.height / 2]]) {
+    const pointX = center.x + x * cosine - y * sine;
+    const pointY = center.y + x * sine + y * cosine;
+    if (pointX < bounds.left || pointX > bounds.left + bounds.width || pointY < bounds.top || pointY > bounds.top + bounds.height) return false;
+  }
+  return true;
+}
+
+function validateConfiguredSnaps(input: ManipulationSolveInput): void {
+  const check = (step: number | Readonly<Record<string, number>>, origin: Readonly<Record<string, number | undefined>> | undefined, label: string) => {
+    for (const [name, value] of Object.entries(typeof step === 'number' ? { value: step } : step)) assertPositiveFiniteStep(value, `${label}.${name}`);
+    for (const [name, value] of Object.entries(origin ?? {})) if (value !== undefined) assertFiniteOrigin(value, `${label}.origin.${name}`);
+  };
+  if (input.move?.snap) check(input.move.snap.step, input.move.snap.origin, 'move.snap.step');
+  if (input.resize?.snap) check(input.resize.snap.step, input.resize.snap.target === 'grid' ? input.resize.snap.origin : undefined, 'resize.snap.step');
+  if (input.rotate?.snap) check(input.rotate.snap.step, { value: input.rotate.snap.origin }, 'rotate.snap.step');
 }
 
 function boxesEqual(left: CRCManipulationBox, right: CRCManipulationBox): boolean {
