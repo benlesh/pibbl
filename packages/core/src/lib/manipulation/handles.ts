@@ -486,6 +486,7 @@ function paintRotationDecorations(
   anchor: ReturnType<typeof rotationAnchor>,
   style: CRCRotationHandleStyle,
 ): void {
+  validateRotationStyle(style);
   const connector =
     style.connector === undefined || style.connector === true
       ? {}
@@ -529,6 +530,51 @@ function paintRotationDecorations(
     }
   });
 }
+function validateReadoutStyle(
+  value: false | true | CRCManipulationReadoutStyle | undefined,
+): void {
+  if (!value || value === true) return;
+  for (const style of [value, value.inactive, value.focused, value.active]) {
+    if (!style) continue;
+    if (
+      style.strokeWidth !== undefined &&
+      (!Number.isFinite(style.strokeWidth) || style.strokeWidth < 0)
+    )
+      throw new Error(
+        "Manipulation readout strokeWidth must be finite and non-negative.",
+      );
+    if (
+      style.opacity !== undefined &&
+      (!Number.isFinite(style.opacity) || style.opacity < 0)
+    )
+      throw new Error(
+        "Manipulation readout opacity must be finite and non-negative.",
+      );
+  }
+}
+function validateRotationStyle(style: CRCRotationHandleStyle): void {
+  const connector =
+    style.connector && style.connector !== true ? style.connector : undefined;
+  const arc = style.arc && style.arc !== true ? style.arc : undefined;
+  for (const value of [connector?.strokeWidth, arc?.strokeWidth])
+    if (value !== undefined && (!Number.isFinite(value) || value < 0))
+      throw new Error(
+        "Manipulation guide strokeWidth must be finite and non-negative.",
+      );
+  for (const value of [connector?.opacity, arc?.opacity])
+    if (value !== undefined && (!Number.isFinite(value) || value < 0))
+      throw new Error(
+        "Manipulation guide opacity must be finite and non-negative.",
+      );
+  if (
+    arc?.sweep !== undefined &&
+    (!Number.isFinite(arc.sweep) || arc.sweep <= 0 || arc.sweep > Math.PI * 2)
+  )
+    throw new Error(
+      "Manipulation arc sweep must be finite, positive, and no greater than 2π radians.",
+    );
+}
+
 function readoutEnabled(
   readout: false | true | CRCManipulationReadoutStyle | undefined,
   formatter: unknown,
@@ -542,19 +588,26 @@ function formatResize(
   format: CRCResizeHandleProps["formatReadout"],
 ): string {
   const box = state.options.box.get();
-  return format
+  const value = format
     ? format({ width: box.width, height: box.height })
     : `${round(box.width)} × ${round(box.height)} px`;
+  if (typeof value !== "string")
+    throw new Error("Manipulation readout formatReadout must return a string.");
+  return value;
 }
 function formatRotation(
   state: ManipulationState,
   props: CRCRotationHandleProps,
 ): string {
   const rotation = state.options.rotation?.get() ?? 0;
-  if (props.formatReadout) return props.formatReadout({ rotation });
-  return props.readoutUnit === "radians"
-    ? `${round(rotation)} rad`
-    : `${round((rotation * 180) / Math.PI)}°`;
+  const value = props.formatReadout
+    ? props.formatReadout({ rotation })
+    : props.readoutUnit === "radians"
+      ? `${round(rotation)} rad`
+      : `${round((rotation * 180) / Math.PI)}°`;
+  if (typeof value !== "string")
+    throw new Error("Manipulation readout formatReadout must return a string.");
+  return value;
 }
 function round(value: number): string {
   return Number.isInteger(value)
@@ -570,6 +623,7 @@ function paintReadout(
   focused: boolean,
   active: boolean,
 ): void {
+  validateReadoutStyle(readout);
   const resolved = resolveReadout(
     readout,
     state.controller.active.get() === null,
