@@ -148,4 +148,12 @@ describe('solveManipulation', () => {
     expect(result.applied.width).toBeLessThanOrEqual(90);
     expect(result.applied.height).toBeLessThanOrEqual(70);
   });
+
+  it('does not size-snap an untouched dimension', () => {
+    expect(solveManipulation({
+      operation: 'resize', handle: 'right', initial: { left: 0, top: 0, width: 31, height: 13 },
+      initialPoint: { x: 0, y: 0 }, currentPoint: { x: 2, y: 0 }, modifiers: {},
+      resize: { snap: { target: 'size', step: 8 } },
+    }).applied.height).toBe(13);
+  });
 });
