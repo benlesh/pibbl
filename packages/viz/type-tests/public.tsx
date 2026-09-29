@@ -65,3 +65,81 @@ void (<Scale {...props} type="band" />);
 void (<ScaleAdjust x={1} />);
 // @ts-expect-error thunks are not reactive data
 void (<LineSeries {...line} data={() => data.get()} />);
+
+import {
+  PointSeries,
+  PlotSeries,
+  nearestPoint,
+  nearestDomainValue,
+  type PointSeriesProps,
+} from "@crc/viz";
+const points: PointSeriesProps<{
+  time: number;
+  value: number | null;
+  name: string;
+}> = { ...line, style: { radius: signal(3), fill: "red" } };
+void (<PointSeries {...points} />);
+void createElement(PointSeries, points);
+void (
+  <PlotSeries
+    data={data}
+    x="time"
+    y="value"
+    xScale="x"
+    yScale="y"
+    keyBy="name"
+    render={(d) => <ScaleAdjust x={d.time} xScale="x" />}
+  />
+);
+void createElement(PlotSeries, {
+  data,
+  x: "time",
+  y: "value",
+  xScale: "x",
+  yScale: "y",
+  keyBy: "name",
+  render: () => null,
+} as const);
+// @ts-expect-error coordinates must be numeric
+void (<PointSeries data={data} x="name" y="value" xScale="x" yScale="y" />);
+// @ts-expect-error callback style returns plain values
+void (<PointSeries {...points} style={() => ({ radius: signal(2) })} />);
+// @ts-expect-error render is required
+void (<PlotSeries data={data} x="time" y="value" xScale="x" yScale="y" />);
+void (
+  <PlotSeries
+    data={data}
+    x="time"
+    y="value"
+    xScale="x"
+    yScale="y"
+    render={() => null}
+    // @ts-expect-error no shared style on custom subtrees
+    style={{ fill: "red" }}
+  />
+);
+void (
+  <PlotSeries
+    data={data}
+    x="time"
+    y="value"
+    xScale="x"
+    yScale="y"
+    render={() => null}
+    // @ts-expect-error no recursive pointer-events switch
+    pointerEvents="none"
+  />
+);
+void (
+  <PlotSeries
+    data={data}
+    x="time"
+    y="value"
+    xScale="x"
+    yScale="y"
+    // @ts-expect-error async nodes unsupported
+    render={async () => null}
+  />
+);
+void nearestPoint;
+void nearestDomainValue;

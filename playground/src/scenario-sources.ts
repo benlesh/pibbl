@@ -1,3 +1,4 @@
+import pointsSource from '../../packages/scenarios/src/learning/composition/viz-points-and-inspection.example.tsx?raw';
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
 import vizSource from '../../packages/scenarios/src/learning/composition/viz-responsive-line.example.tsx?raw';
 
@@ -26,6 +27,8 @@ const sourceTextByPath = new Map(
 
 // The visualization lab intentionally drives this exact public lesson.
 sourceTextByPath.set('packages/scenarios/src/learning/composition/viz-responsive-line.example.tsx', vizSource);
+
+sourceTextByPath.set('packages/scenarios/src/learning/composition/viz-points-and-inspection.example.tsx', pointsSource);
 
 export const scenarioSourcePaths = Object.freeze(
   [...sourceTextByPath.keys()].sort(),

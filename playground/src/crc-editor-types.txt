@@ -1444,3 +1444,44 @@ export declare function useScale(id: ScaleId): Signal<ResolvedScale>;
 export declare function Axis(props: AxisProps): CRCNode;
 export declare function LineSeries<D>(props: LineSeriesProps<D>): CRCNode;
 export declare function ScaleAdjust(props: ScaleAdjustProps): CRCNode;
+
+export type PointAccessor<D> = LineAccessor<D>;
+export interface PointMarkStyle {
+  readonly radius?: number;
+  readonly fill?: FillStyle;
+  readonly stroke?: StrokeStyle;
+  readonly strokeWidth?: number;
+  readonly opacity?: number;
+}
+export interface PointSeriesStyle extends PointMarkStyle { readonly cursor?: string; }
+export type PointStyleResolver<D> = (datum: D, index: number, data: readonly D[]) => Readonly<PointMarkStyle>;
+export interface PointSeriesProps<D> extends CRCEventHandlers, CRCEventParticipationOptions {
+  readonly data: SignalValue<readonly D[]>;
+  readonly x: PointAccessor<D>;
+  readonly y: PointAccessor<D>;
+  readonly xScale: ScaleId;
+  readonly yScale: ScaleId;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  readonly style?: SignalValue<SignalStyle<PointSeriesStyle> | PointStyleResolver<D>>;
+}
+
+export type PlotKeyAccessor<D> =
+ | { [K in keyof D]-?: D[K] extends string|number ? K : never }[keyof D]
+ | ((datum:D,index:number,data:readonly D[])=>string|number);
+export interface PlotSeriesProps<D> extends CRCEventHandlers {
+ readonly data: SignalValue<readonly D[]>;
+ readonly x:PointAccessor<D>;
+ readonly y:PointAccessor<D>;
+ readonly xScale:ScaleId;
+ readonly yScale:ScaleId;
+ readonly defined?:(datum:D,index:number,data:readonly D[])=>boolean;
+ readonly keyBy?:PlotKeyAccessor<D>;
+ readonly render:(datum:D,index:number,data:readonly D[])=>CRCNode;
+}
+
+export declare function PointSeries<D>(props:PointSeriesProps<D>):CRCNode;
+export declare function PlotSeries<D>(props:PlotSeriesProps<D>):CRCNode;
+export interface NearestPointOptions<D> { readonly x:PointAccessor<D>; readonly y:PointAccessor<D>; readonly xScale:ResolvedLinearScale; readonly yScale:ResolvedLinearScale; readonly defined?:(datum:D,index:number,data:readonly D[])=>boolean; readonly maxDistance?:number; }
+export interface NearestPoint<D> {readonly datum:D; readonly index:number; readonly x:number; readonly y:number; readonly distance:number;}
+export declare function nearestDomainValue(values:readonly number[],rangeValue:number,scale:ResolvedLinearScale):number|undefined;
+export declare function nearestPoint<D>(data:readonly D[],point:Readonly<{x:number;y:number}>,options:NearestPointOptions<D>):NearestPoint<D>|undefined;

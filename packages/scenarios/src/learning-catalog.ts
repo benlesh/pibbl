@@ -144,6 +144,17 @@ const drafts = [
     load: () => import("./learning/start/getting-started.example"),
   },
   {
+    slug: "viz-points-and-inspection", title: "Dots and custom plotted elements", shortTitle: "Points & custom marks",
+    section: "composition", order: 198,
+    summary: "Compare batched dots with custom keyed components and inspect data in independently allocated plots.",
+    api: ["PointSeries", "PlotSeries", "nearestPoint", "Scale", "Axis"],
+    objectives: ["Compose batched dots and custom CRC subtrees.", "Inspect mapped anchors and preserve custom mark state on reorder."],
+    prompts: { gesture: "Hover or tap a point, click custom squares, then reorder and resize.", code: "Replace the custom square with your own CRC elements." },
+    apiNotes: ["Custom marks draw around the mapped local origin.", "PointSeries batches circles; PlotSeries preserves normal per-row component state."],
+    canvas: {width:1100,height:680}, related: ["viz-responsive-line", "signals"],
+    load: () => import("./learning/composition/viz-points-and-inspection.example"),
+  },
+  {
     slug: "viz-responsive-line", title: "Exploring the Mauna Loa CO₂ record", shortTitle: "CO₂ explorer",
     section: "composition", order: 199,
     summary: "Explore 504 real monthly NOAA observations with a decade view, archive navigator, and linked readouts.",

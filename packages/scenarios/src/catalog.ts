@@ -2333,9 +2333,17 @@ export const vizFoundationScenarioEntry: ScenarioCatalogEntry<import("./viz-foun
   load: async () => (await import("./viz-foundation-lab.js")).vizFoundationScenario,
 };
 
+export const vizPointsScenarioEntry: ScenarioCatalogEntry<import("./viz-points-lab.js").VizPointsState> = {
+ metadata: { id:"viz-points-lab",slug:"viz-points-lab",title:"Points and custom plots laboratory",summary:"Inspect allocated points and keyed custom marks.",category:"Visualization",apiTags:["PointSeries","PlotSeries","nearestPoint"],conceptTags:["local allocation","identity"],manualSteps:[{action:"Inspect, click custom marks, reorder, and resize.",expected:"Mapped positions update and keyed state survives."}],knownLimitations:["Linear scales; custom marks retain normal component overhead."],learningOrder:311,visibility:"test-laboratory",visibilityReason:"Deterministic public point and custom subtree evidence.",maturity:"contract"},
+ canvas:{width:1100,height:680},actions:[{id:"reorder",label:"Reorder"},{id:"remove-selected",label:"Remove selected"},{id:"reset",label:"Reset"},{id:"next",label:"Next"},{id:"previous",label:"Previous"}],
+ source:{id:"viz-points-example",language:"tsx",marker:"VIZ_POINTS_SOURCE_ID = 'viz-points-example'",path:"packages/scenarios/src/learning/composition/viz-points-and-inspection.example.tsx"},
+ load:async()=>(await import("./viz-points-lab.js")).vizPointsScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
   validateScenarioCatalog([
     vizFoundationScenarioEntry,
+    vizPointsScenarioEntry,
     smokeScenarioEntry,
     drawingShapesScenarioEntry,
     drawingLinesScenarioEntry,

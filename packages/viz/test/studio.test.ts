@@ -50,3 +50,23 @@ it("runs a defaulted fixture mount without requiring a second caller argument", 
     toRunnableScript(emitted.replace("fixture = {}", "fixture")),
   ).toThrow();
 });
+
+import pointsLesson from "../../scenarios/src/learning/composition/viz-points-and-inspection.example.tsx?raw";
+it("loads the custom points lesson as editable canonical source", async () => {
+  expect(() =>
+    validateLearningSourceText(pointsLesson, {
+      authoring: "jsx",
+      label: 'Learning example "viz-points-and-inspection"',
+      sourcePath:
+        "packages/scenarios/src/learning/composition/viz-points-and-inspection.example.tsx",
+    }),
+  ).not.toThrow();
+  await expect(
+    loadLearningSource(getLearningExampleBySlug("viz-points-and-inspection")!),
+  ).resolves.toBe(pointsLesson);
+  expect(() =>
+    toRunnableScript(
+      'import { PointSeries, PlotSeries, nearestPoint, nearestDomainValue } from "@crc/viz"; export default function mount(canvas) { return {dispose(){}}; }',
+    ),
+  ).not.toThrow();
+});
