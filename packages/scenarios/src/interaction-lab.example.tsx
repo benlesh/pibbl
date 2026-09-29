@@ -245,7 +245,10 @@ function region(
     <Rectangle
       key={`region-${target}`}
       style={{
-        ...geometry,
+        left: geometry.x,
+        top: geometry.y,
+        width: geometry.width,
+        height: geometry.height,
         fill: options.fillStyle,
         stroke: '#334155',
         strokeWidth: 2,
