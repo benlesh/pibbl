@@ -51,6 +51,12 @@ import type {
   CRCInterpolator,
   CRCKeyframesOptions,
   CRCLogicalMouseEvent,
+  CRCManipulableProps,
+  CRCManipulationBox,
+  CRCManipulationController,
+  CRCManipulationOptions,
+  CRCManipulationResizeInput,
+  CRCResizePosition,
   CRCMouseEvent,
   CRCNode,
   CRCOpacityFilter,
@@ -260,6 +266,7 @@ import {
   defineAnimation,
   definePrimitive,
   defineRenderLayer,
+  DragHandle,
   easing,
   Absolute,
   Arc,
@@ -274,11 +281,16 @@ import {
   Image,
   Layer,
   Line,
+  Manipulable,
+  ManipulationFrame,
   Overlay,
   Path,
   Polygon,
   RegularPolygon,
   Rectangle,
+  ResizeHandle,
+  ResizeHandles,
+  RotationHandle,
   Star,
   SvgPath,
   Text,
@@ -304,8 +316,10 @@ import {
   resolveSignalValue,
   sequence,
   useCanvasContext,
+  useManipulation,
   batch,
   computed,
+  degrees,
   isSignal,
   signal,
   spring,
@@ -1287,6 +1301,82 @@ createElement(Image, {});
 createElement(Image, { style: { src: 'legacy.png', strokeStyle: 'red', lineWidth: 1 } });
 // @ts-expect-error image does not accept visual values as program props
 createElement(Image, { style: { src: 'styled.png' }, alpha: 0.5 });
+
+const manipulationBox = signal<CRCManipulationBox>({
+  left: 20,
+  top: 30,
+  width: 180,
+  height: 100,
+});
+const manipulationRotation = signal(degrees(15));
+const manipulationOptions = {
+  box: manipulationBox,
+  rotation: manipulationRotation,
+  move: { axis: 'both', snap: { step: { x: 8, y: 8 }, origin: { x: 0 } } },
+  resize: {
+    minWidth: 40,
+    minHeight: 20,
+    snap: { target: 'size', step: { width: 8, height: 8 } },
+  },
+  rotate: { snap: { step: degrees(15), origin: 0 } },
+} satisfies CRCManipulationOptions;
+const manipulationController: CRCManipulationController =
+  useManipulation(manipulationOptions);
+const manipulationHandle: CRCResizePosition = 'bottom-right';
+const manipulableProps = {
+  style: manipulationBox,
+  rotation: manipulationRotation,
+  draggable: { axis: 'x', snap: { step: 8 } },
+  resizable: { snap: { target: 'grid', step: { x: 8, y: 8 } } },
+  rotatable: { snap: { step: degrees(15) } },
+} satisfies CRCManipulableProps;
+createElement(Manipulable, manipulableProps);
+createElement(ManipulationFrame, {
+  ...manipulationController.frameProps,
+  children: [
+    createElement(DragHandle, { controller: manipulationController }),
+    createElement(ResizeHandle, {
+      controller: manipulationController,
+      position: manipulationHandle,
+      hitSize: 24,
+    }),
+    createElement(ResizeHandles, {
+      controller: manipulationController,
+      positions: 'edges-and-corners',
+      hitSize: 24,
+    }),
+    createElement(RotationHandle, { controller: manipulationController }),
+  ],
+});
+
+// @ts-expect-error Rectangle positioning uses left/top; RectStyle no longer has x.
+const retiredRectanglePosition: RectStyle = { x: 20, width: 40, height: 20 };
+// @ts-expect-error Text positioning uses left/top; TextStyle no longer has y.
+const retiredTextPosition: TextStyle = { y: 20 };
+// @ts-expect-error Image positioning uses left/top; ImgStyle no longer has x.
+const retiredImagePosition: ImgStyle = { src: 'asset.png', x: 20 };
+const invalidGridResizeSnap: CRCManipulationResizeInput = {
+  snap: {
+    target: 'grid',
+    // @ts-expect-error Grid resize snapping uses parent-space x/y increments.
+    step: { width: 8, height: 8 },
+  },
+};
+const invalidSizeResizeSnap: CRCManipulationResizeInput = {
+  snap: {
+    target: 'size',
+    step: 8,
+    // @ts-expect-error Size resize snapping cannot supply a parent-space origin.
+    origin: { x: 0 },
+  },
+};
+void [
+  retiredRectanglePosition,
+  retiredTextPosition,
+  retiredImagePosition,
+  invalidGridResizeSnap,
+  invalidSizeResizeSnap,
+];
 // @ts-expect-error group translation is style-only
 createElement(Group, { x: 10 }, []);
 // @ts-expect-error CRC-native transform names replace the legacy aliases
