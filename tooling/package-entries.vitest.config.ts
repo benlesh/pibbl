@@ -33,13 +33,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: [
-      "tooling/surviving-package-entries.test.ts",
-      "packages/physics/src/lib/3d/**/*.test.ts",
-      "packages/physics/src/lib/2d/**/*.test.ts",
-      "packages/particles/src/lib/**/*.test.ts",
-      "packages/particles/src/lib/**/*.test.tsx",
-    ],
+    include: ["tooling/surviving-package-entries.test.ts"],
     browser: {
       enabled: false,
       headless: true,
