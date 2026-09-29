@@ -297,7 +297,7 @@ describe("Particles2D component", () => {
           </Clip>
         </Group>
         <Rectangle
-          style={{ x: 35, y: 5, width: 10, height: 10, fill: "green" }}
+          style={{ left: 35, top: 5, width: 10, height: 10, fill: "green" }}
         />
       </Fragment>,
     );

@@ -127,8 +127,8 @@ describe('img async resource ownership', () => {
     const controller = crc(canvas, createElement(Image, {
       style: {
         src: 'boundary.png',
-        x: 10,
-        y: 20,
+        left: 10,
+        top: 20,
         width,
         height,
       },
@@ -191,8 +191,8 @@ describe('img async resource ownership', () => {
     const controller = crc(canvas, createElement(Image, {
       style: {
         src: 'aligned.png',
-        x: 24.2,
-        y: 20.2,
+        left: 24.2,
+        top: 20.2,
         width: 120,
         height: 80,
         stroke: 'blue',
@@ -230,8 +230,8 @@ describe('img async resource ownership', () => {
     const controller = crc(canvas, createElement(Image, {
       style: {
         src: 'transparent.png',
-        x: 10,
-        y: 20,
+        left: 10,
+        top: 20,
         width: 30,
         height: 40,
         opacity: 0,
@@ -406,7 +406,7 @@ describe('img async resource ownership', () => {
 
 function imageElement(src: string) {
   return createElement(Image, {
-    style: { src, x: 10, y: 20, width: 30, height: 40 },
+    style: { src, left: 10, top: 20, width: 30, height: 40 },
   });
 }
 

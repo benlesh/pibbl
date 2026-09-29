@@ -48,8 +48,8 @@ describe('rect', () => {
     const onClick = vi.fn();
     const canvas = await componentTest(createElement(Rectangle, {
       style: {
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 40,
         height: 40,
         cornerRadius: 10,
@@ -68,8 +68,8 @@ describe('rect', () => {
   it('uses browser signed rounded-rectangle geometry for painting', async () => {
     const canvas = await componentTest(createElement(Rectangle, {
       style: {
-        x: 60,
-        y: 20,
+        left: 60,
+        top: 20,
         width: -40,
         height: 30,
         cornerRadius: 10,
@@ -87,7 +87,7 @@ describe('rect', () => {
       const radius = useSignal(10);
       setRadius = value => radius.set(value);
       return createElement(Rectangle, {
-        style: { x: 0, y: 0, width: 40, height: 40, cornerRadius: radius.get(), fill: 'red' },
+        style: { left: 0, top: 0, width: 40, height: 40, cornerRadius: radius.get(), fill: 'red' },
       });
     }
 
@@ -112,7 +112,7 @@ describe('rect', () => {
 
     try {
       controller = crc(canvas, createElement(Rectangle, {
-        style: { x: 0, y: 0, width: 20, height: 20, cornerRadius: -1, fill: 'red' },
+        style: { left: 0, top: 0, width: 20, height: 20, cornerRadius: -1, fill: 'red' },
       }));
       let failure: unknown;
       try {
@@ -125,7 +125,7 @@ describe('rect', () => {
       });
 
       controller = crc(canvas, createElement(Rectangle, {
-        style: { x: 0, y: 0, width: 20, height: 20, cornerRadius: 4, fill: 'red' },
+        style: { left: 0, top: 0, width: 20, height: 20, cornerRadius: 4, fill: 'red' },
       }));
       expect(() => pending?.(0)).not.toThrow();
       expect(alphaAt(canvas, 10, 10)).toBeGreaterThan(0);
@@ -141,8 +141,8 @@ describe('rect', () => {
     try {
       await componentTest(createElement(Rectangle, {
         style: {
-          x: 1.2,
-          y: 2.3,
+          left: 1.2,
+          top: 2.3,
           width: 3.4,
           height: 4.5,
           alignToPixelGrid: 'round',
@@ -163,11 +163,11 @@ describe('rect', () => {
     const canvas = await componentTest(createElement(Group, {
       children: [
         createElement(Rectangle, {
-          style: { x: 20, y: 30, width: 40, height: 50, cornerRadius: 8 },
+          style: { left: 20, top: 30, width: 40, height: 50, cornerRadius: 8 },
           onClick: vi.fn(),
         }),
         createElement(Rectangle, {
-          style: { x: 80, y: 30, width: 40, height: 50, cornerRadius: 8 },
+          style: { left: 80, top: 30, width: 40, height: 50, cornerRadius: 8 },
           onClick: vi.fn(),
           keyboardNavigationBounds: override,
         }),
