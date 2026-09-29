@@ -4,8 +4,8 @@ function PaintOrderStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7f0df",
@@ -13,8 +13,8 @@ function PaintOrderStudy() {
     />,
     <Rectangle
       style={{
-        x: 118,
-        y: 92,
+        left: 118,
+        top: 92,
         width: 320,
         height: 238,
         fill: "#1f4bd8",
@@ -24,8 +24,8 @@ function PaintOrderStudy() {
     />,
     <Rectangle
       style={{
-        x: 282,
-        y: 126,
+        left: 282,
+        top: 126,
         width: 320,
         height: 238,
         fill: "#ff6b57",
@@ -36,8 +36,8 @@ function PaintOrderStudy() {
     />,
     <Text
       style={{
-        x: 206,
-        y: 184,
+        left: 206,
+        top: 184,
         fill: "#fffdf6",
         font: "900 32px sans-serif",
         textAlign: "center",
@@ -47,8 +47,8 @@ function PaintOrderStudy() {
     </Text>,
     <Text
       style={{
-        x: 510,
-        y: 238,
+        left: 510,
+        top: 238,
         fill: "#17211d",
         font: "900 32px sans-serif",
         textAlign: "center",
@@ -58,8 +58,8 @@ function PaintOrderStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 54,
+        left: 360,
+        top: 54,
         fill: "#17211d",
         font: "800 16px monospace",
         textAlign: "center",

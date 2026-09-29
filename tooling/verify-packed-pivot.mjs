@@ -134,6 +134,7 @@ try {
   cpSync(join(root, 'playground/package-consumer/mixed-runtime'), join(consumer, 'mixed-runtime'), { recursive: true });
   for (const mode of ['bundler', 'nodenext']) run(process.execPath, [tsc, '-p', join(consumer, `tsconfig.${mode}.json`)], consumer);
   run(process.execPath, ['runtime.mjs'], consumer);
+  process.stdout.write(run(process.execPath, [join(root, 'tooling/verify-positioning-environments.mjs'), '--packed-entry', installedCore]));
   const shared = await bundle(`
     import { crc, Rectangle, createElement } from '@crc/core';
     import { defineThreeLayer } from '@crc/three';

@@ -19,6 +19,14 @@ import {
 } from '@crc/core/jsx-dev-runtime';
 
 const expected = [
+  'DragHandle',
+  'ResizeHandle',
+  'ResizeHandles',
+  'RotationHandle',
+  'ManipulationFrame',
+  'Manipulable',
+  'useManipulation',
+  'degrees',
   'Absolute',
   'Arc',
   'Circle',
@@ -182,8 +190,8 @@ for (const exportName of expected) {
     throw new Error(`@crc/core/internal re-exported public root value ${exportName}.`);
   }
 }
-if (actual.length !== 80) {
-  throw new Error(`Expected 80 @crc/core runtime exports, received ${actual.length}.`);
+if (actual.length !== 88) {
+  throw new Error(`Expected 88 @crc/core runtime exports, received ${actual.length}.`);
 }
 
 const requireFromRuntime = createRequire(import.meta.url);

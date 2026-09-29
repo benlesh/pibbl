@@ -3,6 +3,7 @@ import {
   crc,
   Group,
   Rectangle,
+  SvgPath,
   Text,
   type CRCController,
   type CRCFilter,
@@ -114,11 +115,9 @@ function GradientArtwork({
 
   return (
     <Group>
-      <Rectangle
+      <SvgPath
         style={{
-          x: 12,
-          width: SAMPLE_WIDTH - 12,
-          height: 78,
+          d: `M 12 0 H ${SAMPLE_WIDTH} V 78 H 12 Z`,
           fill: gradient,
           stroke: "#17211d",
           strokeWidth: 3,
@@ -136,8 +135,8 @@ function GradientArtwork({
       />
       <Text
         style={{
-          x: 108,
-          y: 48,
+          left: 108,
+          top: 48,
           fill: "#ffffff",
           font: "900 20px sans-serif",
           textAlign: "center",
@@ -159,8 +158,8 @@ function TileHeading({ label, detail }: TileHeadingProps) {
     <Group>
       <Text
         style={{
-          x: 90,
-          y: 18,
+          left: 90,
+          top: 18,
           fill: "#17211d",
           font: "800 13px monospace",
           textAlign: "center",
@@ -170,8 +169,8 @@ function TileHeading({ label, detail }: TileHeadingProps) {
       </Text>
       <Text
         style={{
-          x: 90,
-          y: 37,
+          left: 90,
+          top: 37,
           fill: "#64748b",
           font: "600 10px monospace",
           textAlign: "center",
@@ -262,12 +261,12 @@ function FilterGallery({ gradient }: { gradient: CanvasGradient }) {
 
   return [
     <Rectangle
-      style={{ x: 0, y: 0, width: 960, height: 660, fill: "#f7f0df" }}
+      style={{ left: 0, top: 0, width: 960, height: 660, fill: "#f7f0df" }}
     />,
     <Text
       style={{
-        x: 480,
-        y: 42,
+        left: 480,
+        top: 42,
         fill: "#17211d",
         font: "900 28px sans-serif",
         textAlign: "center",
@@ -277,8 +276,8 @@ function FilterGallery({ gradient }: { gradient: CanvasGradient }) {
     </Text>,
     <Text
       style={{
-        x: 480,
-        y: 68,
+        left: 480,
+        top: 68,
         fill: "#64748b",
         font: "600 12px monospace",
         textAlign: "center",
@@ -325,8 +324,8 @@ function FilterGallery({ gradient }: { gradient: CanvasGradient }) {
     />,
     <Text
       style={{
-        x: 480,
-        y: 642,
+        left: 480,
+        top: 642,
         fill: "#475569",
         font: "700 11px monospace",
         textAlign: "center",

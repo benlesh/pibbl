@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 61 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 62 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(61);
+    expect(learningExampleCatalog).toHaveLength(62);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1303,6 +1303,7 @@ describe("learning example catalog", () => {
         "mouse-out",
         "mouse-over",
         "mouse-up",
+        "manipulation",
         "overlap-and-paint-order",
         "pointer-capture",
         "pointer-events",

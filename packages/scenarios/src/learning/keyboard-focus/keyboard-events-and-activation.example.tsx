@@ -60,8 +60,8 @@ function KeyboardActivationLesson() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 35,
+        left: 360,
+        top: 35,
         textAlign: "center",
         fill: "#431407",
         font: "800 21px Arial",
@@ -71,8 +71,8 @@ function KeyboardActivationLesson() {
     </Text>,
     <Rectangle
       style={{
-        x: 174,
-        y: 94,
+        left: 174,
+        top: 94,
         width: 372,
         height: 154,
         fill: "#ea580c",
@@ -83,8 +83,8 @@ function KeyboardActivationLesson() {
     snapshot.isFocusVisible ? (
       <Rectangle
         style={{
-          x: 166,
-          y: 86,
+          left: 166,
+          top: 86,
           width: 388,
           height: 170,
           stroke: "#0f172a",
@@ -94,8 +94,8 @@ function KeyboardActivationLesson() {
     ) : undefined,
     <Text
       style={{
-        x: 360,
-        y: 149,
+        left: 360,
+        top: 149,
         textAlign: "center",
         fill: "#fff7ed",
         font: "900 30px Arial",
@@ -105,8 +105,8 @@ function KeyboardActivationLesson() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 182,
+        left: 360,
+        top: 182,
         textAlign: "center",
         fill: "#fff7ed",
         font: "14px Arial",
@@ -116,8 +116,8 @@ function KeyboardActivationLesson() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 214,
+        left: 360,
+        top: 214,
         textAlign: "center",
         fill: "#ffedd5",
         font: "12px monospace",
@@ -127,8 +127,8 @@ function KeyboardActivationLesson() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 278,
+        left: 360,
+        top: 278,
         textAlign: "center",
         fill: "#7c2d12",
         font: "700 13px monospace",
@@ -138,8 +138,8 @@ function KeyboardActivationLesson() {
     </Text>,
     <Rectangle
       style={{
-        x: 56,
-        y: 300,
+        left: 56,
+        top: 300,
         width: 608,
         height: 90,
         fill: "#431407",
@@ -149,8 +149,8 @@ function KeyboardActivationLesson() {
       (entry, index) => (
         <Text
           style={{
-            x: 72,
-            y: 324 + index * 13,
+            left: 72,
+            top: 324 + index * 13,
             fill: "#ffedd5",
             font: "11px monospace",
           }}
@@ -161,8 +161,8 @@ function KeyboardActivationLesson() {
     ),
     <Text
       style={{
-        x: 360,
-        y: 410,
+        left: 360,
+        top: 410,
         textAlign: "center",
         fill: "#7c2d12",
         font: "11px Arial",

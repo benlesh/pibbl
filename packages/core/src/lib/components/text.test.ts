@@ -13,8 +13,8 @@ import { signal } from '../signals/graph.js';
 
 const defaultText = 'Hello World';
 const defaultStyle = {
-  x: 50,
-  y: 50,
+  left: 50,
+  top: 50,
   fill: 'black',
   stroke: 'red',
   strokeWidth: 2,
@@ -283,7 +283,7 @@ describe('text', () => {
   });
 
   describe('mouse events', () => {
-    const { x, y } = defaultStyle;
+    const { left: x, top: y } = defaultStyle;
     // We need to measure text to get accurate dimensions for hit testing
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
@@ -413,15 +413,15 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 10,
-          y: 20,
+          left: 10,
+          top: 20,
           fill: 'black',
           width: 55,
           fit: 'ellipsis',
         },
       }, 'abcdefghij'));
 
-      expect(fillText).toHaveBeenCalledExactlyOnceWith('ab...', 10, 20, undefined);
+      expect(fillText).toHaveBeenCalledExactlyOnceWith('ab...', 0, 0, undefined);
       measureText.mockRestore();
       fillText.mockRestore();
     });
@@ -432,8 +432,8 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 10,
-          y: 30,
+          left: 10,
+          top: 30,
           fill: 'black',
           width: 75,
           height: 40,
@@ -444,8 +444,8 @@ describe('text', () => {
       }, 'one two three four'));
 
       expect(fillText.mock.calls).toEqual([
-        ['one two', 10, 30, undefined],
-        ['thre...', 10, 50, undefined],
+        ['one two', 0, 0, undefined],
+        ['thre...', 0, 20, undefined],
       ]);
       measureText.mockRestore();
       fillText.mockRestore();
@@ -456,15 +456,15 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 7,
-          y: 9,
+          left: 7,
+          top: 9,
           fill: 'black',
           width: 42,
           fit: 'squish',
         },
       }, 'wide'));
 
-      expect(fillText).toHaveBeenCalledExactlyOnceWith('wide', 7, 9, 42);
+      expect(fillText).toHaveBeenCalledExactlyOnceWith('wide', 0, 0, 42);
       fillText.mockRestore();
     });
 
@@ -474,8 +474,8 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 100,
-          y: 80,
+          left: 100,
+          top: 80,
           fill: 'black',
           width: 60,
           height: 40,
@@ -485,11 +485,11 @@ describe('text', () => {
         },
       }, 'clip me'));
 
-      expect(rect).toHaveBeenCalledExactlyOnceWith(70, 60, 60, 40);
+      expect(rect).toHaveBeenCalledExactlyOnceWith(-30, -20, 60, 40);
       expect(fillText).toHaveBeenCalledExactlyOnceWith(
         'clip me',
-        100,
-        80,
+        0,
+        0,
         undefined,
       );
       rect.mockRestore();
@@ -511,8 +511,8 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 10,
-          y: 20,
+          left: 10,
+          top: 20,
           fill: 'black',
           font: '20px Arial',
           width: 82,
@@ -522,8 +522,8 @@ describe('text', () => {
       }, 'one two three'));
 
       expect(calls).toEqual([
-        ['one two', 10, 20],
-        ['three', 10, 44],
+        ['one two', 0, 0],
+        ['three', 0, 24],
       ]);
       fillText.mockRestore();
     });
@@ -534,8 +534,8 @@ describe('text', () => {
 
       await componentTest(createElement(Text, {
         style: {
-          x: 10,
-          y: 20,
+          left: 10,
+          top: 20,
           fill: 'black',
           width: 60,
           fit: 'clip',
@@ -552,8 +552,8 @@ describe('text', () => {
       const onClick = vi.fn();
       const canvas = await componentTest(createElement(Text, {
         style: {
-          x: 200,
-          y: 100,
+          left: 200,
+          top: 100,
           fill: 'black',
           font: '24px Arial',
           textAlign: 'center',
@@ -573,8 +573,8 @@ describe('text', () => {
       const onClick = vi.fn();
       const canvas = await componentTest(createElement(Text, {
         style: {
-          x: 20,
-          y: 40,
+          left: 20,
+          top: 40,
           fill: 'black',
           font: '24px Arial',
           width: 60,
@@ -595,8 +595,8 @@ describe('text', () => {
       const onClick = vi.fn();
       const canvas = await componentTest(createElement(Text, {
         style: {
-          x: 20,
-          y: 20,
+          left: 20,
+          top: 20,
           width: 40,
           height: 20,
           fit: 'clip',

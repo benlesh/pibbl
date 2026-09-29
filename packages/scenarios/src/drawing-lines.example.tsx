@@ -13,8 +13,8 @@ const DrawingLinesScene = ({ state }: DrawingLinesSceneProps) => [
   <Rectangle
     key="background"
     style={{
-      x: 0,
-      y: 0,
+      left: 0,
+      top: 0,
       width: 480,
       height: 240,
       fill: '#f8fafc',

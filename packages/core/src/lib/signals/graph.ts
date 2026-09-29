@@ -1450,6 +1450,13 @@ export function assertSignalCommandAllowed(): void {
   );
 }
 
+/** @internal Preflight a direct signal writer without changing values or versions. */
+export function assertDirectSignalWriteAllowed(value: Signal<unknown>): void {
+  const node = getSignalNode(value);
+  writePolicyStack[writePolicyStack.length - 1]?.(node, 'direct');
+  signalWriterLeasePolicy?.assertDirectWriteAllowed(node);
+}
+
 /** @internal Installs the singleton policy that validates active writer leases. */
 export function installSignalWriterLeasePolicy(
   policy: SignalWriterLeasePolicy,

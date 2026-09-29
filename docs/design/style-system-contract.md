@@ -292,3 +292,12 @@ envelopes still throw. Untracked measurement retains no reactive ownership.
 See the [public guide](../site/learn/guides/responsive-styles.md) for canonical
 JSX and createElement recipes, the [layout contract](./layout-system-contract.md)
 for placement.
+
+## Component manipulation positioning
+
+Component placement uses `left` and `top`. `Rectangle`, `Text`, and `Image` do
+not accept positioning-style `x` or `y`; those names remain geometric data
+where their individual contracts define them. A freely positioned
+`ManipulationFrame` publishes its writable finite box through this same local
+style channel. Direct `Flex`, `Flow`, and `Grid` placement remains parent-owned.
+See the [component-manipulation contract](./component-manipulation-contract.md).

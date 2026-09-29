@@ -50,8 +50,8 @@ function caseVisual(
     <Rectangle
       key={`region-${target}`}
       style={{
-        x,
-        y,
+        left: x,
+        top: y,
         width,
         height,
         fill: fillStyle,
@@ -69,8 +69,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 214,
-            y: 126,
+            left: 214,
+            top: 126,
             font: '700 14px Arial',
             fill: '#fff',
           }}
@@ -90,8 +90,8 @@ function caseVisual(
           <Rectangle
             pointerEvents="none"
             style={{
-              x: 42,
-              y: 45,
+              left: 42,
+              top: 45,
               width: 190,
               height: 120,
               fill: '#dbeafe',
@@ -101,8 +101,8 @@ function caseVisual(
           <Text
             pointerEvents="none"
             style={{
-              x: 84,
-              y: 100,
+              left: 84,
+              top: 100,
               font: '700 15px Arial',
               fill: '#fff',
             }}
@@ -133,8 +133,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 286,
-            y: 132,
+            left: 286,
+            top: 132,
             font: '700 13px Arial',
             fill: '#b91c1c',
           }}
@@ -159,8 +159,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 96,
-            y: 136,
+            left: 96,
+            top: 136,
             font: '13px Arial',
             fill: '#64748b',
           }}
@@ -188,8 +188,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 218,
-            y: 126,
+            left: 218,
+            top: 126,
             font: '700 14px Arial',
             fill: '#422006',
           }}
@@ -214,8 +214,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 173,
-            y: 122,
+            left: 173,
+            top: 122,
             font: '700 14px Arial',
             fill: '#fff',
           }}
@@ -225,8 +225,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 166,
-            y: 207,
+            left: 166,
+            top: 207,
             font: '13px Arial',
             fill: '#475569',
           }}
@@ -257,8 +257,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 116,
-            y: 136,
+            left: 116,
+            top: 136,
             font: '700 15px Arial',
             fill: '#1e3a8a',
           }}
@@ -285,8 +285,8 @@ function caseVisual(
         <Rectangle
           pointerEvents="none"
           style={{
-            x: 72,
-            y: 72,
+            left: 72,
+            top: 72,
             width: 190,
             height: 112,
             fill: '#e2e8f0',
@@ -317,8 +317,8 @@ function caseVisual(
         <Rectangle
           key="transparent-fill-region-a"
           style={{
-            x: 72,
-            y: 72,
+            left: 72,
+            top: 72,
             width: 190,
             height: 112,
             fill: 'rgba(37, 99, 235, 0)',
@@ -328,8 +328,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 94,
-            y: 136,
+            left: 94,
+            top: 136,
             font: '700 14px Arial',
             fill: '#1e3a8a',
           }}
@@ -378,8 +378,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 126,
-            y: 104,
+            left: 126,
+            top: 104,
             font: '13px Arial',
             fill: '#475569',
           }}
@@ -392,8 +392,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 120,
-            y: 126,
+            left: 120,
+            top: 126,
             font: '700 20px Arial',
             fill: '#334155',
           }}
@@ -403,8 +403,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 94,
-            y: 154,
+            left: 94,
+            top: 154,
             font: '14px Arial',
             fill: '#64748b',
           }}
@@ -418,8 +418,8 @@ function caseVisual(
         <Rectangle
           pointerEvents="none"
           style={{
-            x: 72,
-            y: 72,
+            left: 72,
+            top: 72,
             width: 190,
             height: 112,
             stroke: '#94a3b8',
@@ -451,8 +451,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 102,
-            y: 136,
+            left: 102,
+            top: 136,
             font: '700 15px Arial',
             fill: '#991b1b',
           }}
@@ -471,8 +471,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 94,
-            y: 100,
+            left: 94,
+            top: 100,
             font: '700 18px Arial',
             fill: '#fff',
           }}
@@ -482,8 +482,8 @@ function caseVisual(
         <Text
           pointerEvents="none"
           style={{
-            x: 300,
-            y: 118,
+            left: 300,
+            top: 118,
             font: '700 18px Arial',
             fill: '#fff',
           }}
@@ -511,8 +511,8 @@ const MouseContractScene = ({
       key="background"
       pointerEvents="none"
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 480,
         height: 240,
         fill: '#f8fafc',
@@ -521,8 +521,8 @@ const MouseContractScene = ({
     <Text
       pointerEvents="none"
       style={{
-        x: 24,
-        y: 28,
+        left: 24,
+        top: 28,
         font: '700 17px Arial',
         fill: '#0f172a',
       }}
@@ -558,8 +558,8 @@ const MouseContractScene = ({
     <Text
       pointerEvents="none"
       style={{
-        x: 24,
-        y: 224,
+        left: 24,
+        top: 224,
         font: '13px Arial',
         fill: '#334155',
       }}

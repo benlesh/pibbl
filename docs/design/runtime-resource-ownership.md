@@ -175,3 +175,14 @@ postconditions.
 Values from `@crc/physics/3d/geometry` are immutable application values. The
 entry owns no scheduler participant, renderer resources, component bindings, or
 runtime world lifecycle.
+
+## Component manipulation ownership
+
+A manipulation controller owns native pointer capture, bounded source
+observations, and its temporary session until a terminal event, frame removal,
+component teardown, or root disposal. Release is idempotent. Teardown restores
+only a preview still owned by that session and invokes no disposed callback. If
+a signal write guard prevents immediate restoration, CRC queues one
+generation-checked Begin cleanup record; a newer external write or later owner
+generation invalidates it. See the
+[component-manipulation contract](./component-manipulation-contract.md).

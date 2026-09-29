@@ -240,8 +240,8 @@ function tiles(onTile: () => void): CRCNode {
         key={`tile-${index}`}
         keyboardFocusable={false}
         style={{
-          x: 8 + column * 80,
-          y: 8 + row * 80,
+          left: 8 + column * 80,
+          top: 8 + row * 80,
           width: 70,
           height: 70,
           fill: index % 2 ? '#183b61' : '#224f75',
@@ -347,8 +347,8 @@ function ThreeInstancingExample() {
         <Rectangle
           keyboardFocusable={false}
           style={{
-            x: 258,
-            y: 48,
+            left: 258,
+            top: 48,
             width: 204,
             height: 58,
             fill: '#f8fafc',
@@ -362,8 +362,8 @@ function ThreeInstancingExample() {
         <Text
           pointerEvents="none"
           style={{
-            x: 360,
-            y: 71,
+            left: 360,
+            top: 71,
             fill: '#0f172a',
             font: '700 13px monospace',
             textAlign: 'center',
@@ -374,8 +374,8 @@ function ThreeInstancingExample() {
         <Text
           pointerEvents="none"
           style={{
-            x: 360,
-            y: 94,
+            left: 360,
+            top: 94,
             fill: '#334155',
             font: '10px monospace',
             textAlign: 'center',
@@ -386,8 +386,8 @@ function ThreeInstancingExample() {
         <Text
           pointerEvents="none"
           style={{
-            x: 20,
-            y: 404,
+            left: 20,
+            top: 404,
             fill: '#e2e8f0',
             font: '700 11px monospace',
           }}

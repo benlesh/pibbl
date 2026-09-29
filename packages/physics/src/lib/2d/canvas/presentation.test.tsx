@@ -22,6 +22,7 @@ import {
   snapshotPhysicsWorld2DControllerForTest,
 } from "../runtime/controller.js";
 import {
+  bodyLocalTransformFromPrimitive2D,
   captureBodyPresentation2D,
   resolveDynamicPresentationTransform2D,
 } from "./presentation.js";
@@ -33,6 +34,24 @@ describe("Canvas 2D physics pose presentation", () => {
     for (const mount of mounts.splice(0)) mount.dispose();
     vi.restoreAllMocks();
     document.body.replaceChildren();
+  });
+
+  it("includes primitive left/top placement in the body-local presentation transform", () => {
+    expect(
+      matrix(
+        bodyLocalTransformFromPrimitive2D(Rectangle, { left: 12, top: 18 }),
+      ),
+    ).toEqual([1, 0, 0, 1, 12, 18]);
+    expect(
+      matrix(
+        bodyLocalTransformFromPrimitive2D(Group, {
+          left: 12,
+          top: 18,
+          translateX: 4,
+          translateY: 6,
+        }),
+      ),
+    ).toEqual([1, 0, 0, 1, 16, 24]);
   });
 
   it("presents committed dynamic motion through filters and coordinate targeting", () => {
@@ -53,8 +72,8 @@ describe("Canvas 2D physics pose presentation", () => {
           <Rectangle
             physics={collider2D()}
             style={{
-              x: 5,
-              y: 5,
+              left: 5,
+              top: 5,
               width: 10,
               height: 10,
               fill: "#2563eb",
@@ -235,7 +254,7 @@ describe("Canvas 2D physics pose presentation", () => {
         <PhysicsWorld2D gravity={[0, 10]} fixedStepMilliseconds={100}>
           <Rectangle
             physics={staticBody2D()}
-            style={{ x: 0, y: 30, width: 40, height: 5, fill: "#334155" }}
+            style={{ left: 0, top: 30, width: 40, height: 5, fill: "#334155" }}
           />
           <Ball />
         </PhysicsWorld2D>,
@@ -279,13 +298,19 @@ describe("Canvas 2D physics pose presentation", () => {
         <PhysicsWorld2D gravity={[0, 560]} fixedStepMilliseconds={1000 / 60}>
           <Rectangle
             physics={staticBody2D({ collider: { friction: 0.8 } })}
-            style={{ x: 72, y: 316, width: 576, height: 34, fill: "#334155" }}
+            style={{
+              left: 72,
+              top: 316,
+              width: 576,
+              height: 34,
+              fill: "#334155",
+            }}
           />
           <Group physics={staticBody2D({ collider: false })}>
             <Rectangle
               physics={collider2D({ sensor: true })}
               pointerEvents="none"
-              style={{ x: 164, y: 304, width: 92, height: 12 }}
+              style={{ left: 164, top: 304, width: 92, height: 12 }}
             />
           </Group>
           <Ball />
@@ -382,11 +407,23 @@ describe("Canvas 2D physics pose presentation", () => {
           <Capture />
           <Rectangle
             physics={staticBody2D({ collider: { friction: 0.55 } })}
-            style={{ x: 54, y: 316, width: 612, height: 34, fill: "#334155" }}
+            style={{
+              left: 54,
+              top: 316,
+              width: 612,
+              height: 34,
+              fill: "#334155",
+            }}
           />
           <Rectangle
             physics={staticBody2D({ collider: { friction: 0.4 } })}
-            style={{ x: 646, y: 96, width: 20, height: 220, fill: "#475569" }}
+            style={{
+              left: 646,
+              top: 96,
+              width: 20,
+              height: 220,
+              fill: "#475569",
+            }}
           />
           <Ball />
         </PhysicsWorld2D>,
@@ -429,7 +466,7 @@ describe("Canvas 2D physics pose presentation", () => {
         >
           <Rectangle
             physics={collider2D()}
-            style={{ x: 5, y: 5, width: 10, height: 10, fill: "#2563eb" }}
+            style={{ left: 5, top: 5, width: 10, height: 10, fill: "#2563eb" }}
           />
         </Group>
       </PhysicsWorld2D>
@@ -467,7 +504,7 @@ describe("Canvas 2D physics pose presentation", () => {
         >
           <Rectangle
             physics={collider2D()}
-            style={{ x: 5, y: 5, width: 10, height: 10, fill: "#2563eb" }}
+            style={{ left: 5, top: 5, width: 10, height: 10, fill: "#2563eb" }}
           />
         </Group>
       </PhysicsWorld2D>

@@ -14,15 +14,15 @@ function Button({ label, active, click }: Placement & {
   const box = useLayoutBox();
   return <Group>
     <Rectangle style={{ width: box.width, height: 44, cornerRadius: 8, fill: active ? ink : '#e8eeea', cursor: 'pointer' }} onClick={click} />
-    <Text pointerEvents="none" style={{ x: box.width / 2, y: 14, textAlign: 'center', font: '600 13px sans-serif', fill: active ? '#ffffff' : ink }}>{label}</Text>
+    <Text pointerEvents="none" style={{ left: box.width / 2, top: 14, textAlign: 'center', font: '600 13px sans-serif', fill: active ? '#ffffff' : ink }}>{label}</Text>
   </Group>;
 }
 
 function Metric({ label, value, change }: Placement & { label: string; value: string; change: string }) {
   return <Group>
-    <Text style={{ y: 2, font: '13px sans-serif', fill: muted }}>{label}</Text>
-    <Text style={{ y: 23, font: '600 26px sans-serif', fill: ink, when: [{ query: { minWidth: 180 }, style: { font: '600 30px sans-serif' } }] }}>{value}</Text>
-    <Text style={{ x: 158, y: 30, font: '12px sans-serif', fill: green, when: [{ query: { minWidth: 180 }, style: { x: 0, y: 56 } }] }}>{change}</Text>
+    <Text style={{ top: 2, font: '13px sans-serif', fill: muted }}>{label}</Text>
+    <Text style={{ top: 23, font: '600 26px sans-serif', fill: ink, when: [{ query: { minWidth: 180 }, style: { font: '600 30px sans-serif' } }] }}>{value}</Text>
+    <Text style={{ left: 158, top: 30, font: '12px sans-serif', fill: green, when: [{ query: { minWidth: 180 }, style: { left: 0, top: 56 } }] }}>{change}</Text>
   </Group>;
 }
 
@@ -34,16 +34,16 @@ function SalesTrend({ month }: { month: boolean }) {
   const values = month ? [35, 42, 30, 58, 48, 73, 62, 82, 68, 105, 91, 126] : [38, 62, 49, 88, 72, 108, 126];
   const coords: [number, number][] = values.map((v, i) => [24 + i * plotWidth / (values.length - 1), 166 - v]);
   return <Group>
-    <Text style={{ x: 24, y: 0, font: '600 13px sans-serif', fill: ink }}>Sales over time</Text>
+    <Text style={{ left: 24, top: 0, font: '600 13px sans-serif', fill: ink }}>Sales over time</Text>
     {[42, 84, 126, 168].map(y => <Line key={y} pointerEvents="none" style={{ coords: [[24, y], [width - 24, y]], stroke: '#e8eeea', strokeWidth: 1 }} />)}
     <Line pointerEvents="none" style={{ coords: coords.map(([x, y]) => [x, y + 20]), stroke: '#bfcec7', strokeWidth: 2 }} />
     <Line pointerEvents="none" style={{ coords, stroke: green, strokeWidth: 3 }} />
-    <Text style={{ x: 24, y: 183, font: '11px sans-serif', fill: muted }}>{month ? 'Sep 1' : 'Sep 22'}</Text>
-    <Text style={{ x: width - 24, y: 183, textAlign: 'right', font: '11px sans-serif', fill: muted }}>Sep 28</Text>
-    <Rectangle style={{ x: 24, y: 213, width: 12, height: 3, fill: green }} />
-    <Text style={{ x: 42, y: 207, font: '11px sans-serif', fill: muted }}>Selected period</Text>
-    <Rectangle style={{ x: 153, y: 213, width: 12, height: 3, fill: '#bfcec7' }} />
-    <Text style={{ x: 171, y: 207, font: '11px sans-serif', fill: muted }}>Previous period</Text>
+    <Text style={{ left: 24, top: 183, font: '11px sans-serif', fill: muted }}>{month ? 'Sep 1' : 'Sep 22'}</Text>
+    <Text style={{ left: width - 24, top: 183, textAlign: 'right', font: '11px sans-serif', fill: muted }}>Sep 28</Text>
+    <Rectangle style={{ left: 24, top: 213, width: 12, height: 3, fill: green }} />
+    <Text style={{ left: 42, top: 207, font: '11px sans-serif', fill: muted }}>Selected period</Text>
+    <Rectangle style={{ left: 153, top: 213, width: 12, height: 3, fill: '#bfcec7' }} />
+    <Text style={{ left: 171, top: 207, font: '11px sans-serif', fill: muted }}>Previous period</Text>
   </Group>;
 }
 
@@ -54,8 +54,8 @@ function RevenueCard(_props: Placement) {
   const isMonth = month.get();
   return <Group>
     <Rectangle style={{ width: '100%', height: 620, fill: '#ffffff', cornerRadius: 16, stroke: '#dce5df', strokeWidth: 1, when: [{ query: { minWidth: 600 }, style: { height: 460 } }] }} />
-    <Text style={{ x: 24, y: 24, font: '600 21px sans-serif', fill: ink }}>Revenue overview</Text>
-    <Text style={{ x: 24, y: 54, font: '12px sans-serif', fill: muted }}>Online store · USD</Text>
+    <Text style={{ left: 24, top: 24, font: '600 21px sans-serif', fill: ink }}>Revenue overview</Text>
+    <Text style={{ left: 24, top: 54, font: '12px sans-serif', fill: muted }}>Online store · USD</Text>
     <Group style={{ translateX: 24, translateY: 84, when: [{ query: { minWidth: 600 }, style: { translateY: 78 } }] }}>
       <Flow style={{ width: 208, height: 44, gap: 8 }}>
         <Button style={{ width: 96, height: 44 }} label="7 days" active={!isMonth} click={() => month.set(false)} />
@@ -82,8 +82,8 @@ function Scene({ resizeRoot }: { resizeRoot: (phone: boolean) => void }) {
   const cardWidth = mode.get() === 'Sidebar' ? Math.min(360, available) : available;
   return <Group>
     <Rectangle pointerEvents="none" style={{ width: root.width, height: root.height, fill: '#f0f3ee' }} />
-    <Text style={{ x: 16, y: 20, font: '600 24px sans-serif', fill: ink, when: [{ query: { maxWidth: 420 }, style: { font: '600 20px sans-serif' } }] }}>Juniper / Store analytics</Text>
-    <Text style={{ x: 16, y: 54, font: '12px sans-serif', fill: muted }}>One card. Full dashboard, sidebar, or phone.</Text>
+    <Text style={{ left: 16, top: 20, font: '600 24px sans-serif', fill: ink, when: [{ query: { maxWidth: 420 }, style: { font: '600 20px sans-serif' } }] }}>Juniper / Store analytics</Text>
+    <Text style={{ left: 16, top: 54, font: '12px sans-serif', fill: muted }}>One card. Full dashboard, sidebar, or phone.</Text>
     <Group style={{ translateX: 16, translateY: 84 }}>
       <Flow style={{ width: Math.min(328, available), gap: 8, height: 44 }}>
         {['Dashboard', 'Sidebar', 'Phone'].map(label => <Button key={label} style={{ width: '30%', height: 44 }} label={label} active={mode.get() === label} click={() => { mode.set(label); resizeRoot(label === 'Phone'); }} />)}
@@ -96,8 +96,8 @@ function Scene({ resizeRoot }: { resizeRoot: (phone: boolean) => void }) {
     </Group>
     {mode.get() === 'Sidebar' && root.width >= 700 ? <Group style={{ translateX: 408, translateY: 186 }}>
       <Text style={{ font: '600 22px sans-serif', fill: ink }}>Small space. Same card.</Text>
-      <Text style={{ y: 42, width: Math.max(1, root.width - 448), wrap: true, font: '15px sans-serif', fill: muted }}>The page is still wide. Only this dashboard column is narrow, so the card stacks its metrics and moves the chart down.</Text>
-      <Text style={{ y: 142, width: Math.max(1, root.width - 448), wrap: true, font: '14px sans-serif', fill: muted }}>Choose 30 days, then switch views. Your selection stays with the card.</Text>
+      <Text style={{ top: 42, width: Math.max(1, root.width - 448), wrap: true, font: '15px sans-serif', fill: muted }}>The page is still wide. Only this dashboard column is narrow, so the card stacks its metrics and moves the chart down.</Text>
+      <Text style={{ top: 142, width: Math.max(1, root.width - 448), wrap: true, font: '14px sans-serif', fill: muted }}>Choose 30 days, then switch views. Your selection stays with the card.</Text>
     </Group> : null}
   </Group>;
 }

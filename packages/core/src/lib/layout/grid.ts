@@ -27,6 +27,7 @@ import type {
   SystemStyle,
 } from '../types.js';
 import {
+  childWithUsedSize,
   prepareDirectChildStyle,
   materializeLayoutChildren,
   placeDirectChildren,
@@ -36,6 +37,7 @@ import {
 } from './absolute.js';
 import { pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
+import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { measureElement } from './measure.js';
 import type { Constraints, LayoutBox } from './types.js';
 
@@ -193,6 +195,7 @@ function resolveGridPlacements(
     const normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & GridItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    assertSupportedChildPosition('Grid', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
     const columnStart = placementInteger(
       normalized.gridColumnStart,
@@ -335,20 +338,17 @@ function resolveGridPlacements(
       width: border.width,
       height: border.height,
     };
-    const renderedStyle = Object.freeze({
-      ...normalized,
-      width: resolved.contentBox.width,
-      height: resolved.contentBox.height,
+    placements.push({
+      box,
+      element: childWithUsedSize(
+        child,
+        normalized,
+        resolved.contentBox.width,
+        resolved.contentBox.height,
+        receiverToken,
+        preparedStyleQuery(prepared),
+      ),
     });
-    const renderedChild = cloneCRCElement(child);
-    setPreNormalizedStyle(
-      renderedChild,
-      renderedStyle,
-      child,
-      receiverToken,
-      preparedStyleQuery(prepared),
-    );
-    placements.push({ box, element: renderedChild });
   }
   return placements;
 }

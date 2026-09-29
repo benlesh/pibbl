@@ -778,17 +778,17 @@ describe('directional boundaries and root-logical bounds', () => {
       createElement(Rectangle, {
         key: 'rect',
         onClick: clickHandler,
-        style: { x: 10, y: 20, width: 30, height: 40 },
+        style: { left: 10, top: 20, width: 30, height: 40 },
       }),
       createElement(Image, {
         key: 'img',
         onClick: clickHandler,
-        style: { src: '', x: 2, y: 3, width: 20, height: 10 },
+        style: { src: '', left: 2, top: 3, width: 20, height: 10 },
       }),
       createElement(Text, {
         key: 'text',
         onClick: clickHandler,
-        style: { x: 10, y: 20 },
+        style: { left: 10, top: 20 },
       }, 'abc'),
       createElement(Line, {
         key: 'line',

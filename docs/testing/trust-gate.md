@@ -54,13 +54,13 @@ contention observed during earlier upgrade and visual work.
 - the fixed preservation manifest records every normalized prose paragraph,
   list obligation, table row, and fenced-code obligation from the normative
   contract baseline (667 units), with per-file source digests, plus the complete
-  reviewed current form (815 units across 12 baseline-snapshotted contracts)
+  reviewed current form (820 units across 12 baseline-snapshotted contracts)
   and explicit approved translation, retirement, and addition mappings tied to
   narrow design unit IDs and excerpts; every translation has exact
   baseline/current unit IDs, unique rationale,
   shared clause anchors, and minimum content similarity checked before the
-  digest. Together with 138 mapped units across the post-baseline signal,
-  animation, and render-layer/Three records, this covers 15 current normative
+  digest. Together with 154 mapped units across the post-baseline signal,
+  animation, render-layer/Three, and component-manipulation records, this covers 16 current normative
   contracts. The 56 direct source/test mappings use claims no broader than their
   cited tests and require the same claim-specific anchors near both markers;
 - the migration guide contains one mechanically checked row for each of the 85
@@ -79,6 +79,11 @@ contention observed during earlier upgrade and visual work.
   after recomputing the candidate manifest digest, field-replacement drift,
   repeated generic evidence, and missing evidence markers;
 - TypeScript, ESLint, Prettier, package output, and source/built Studio builds.
+
+Component manipulation adds focused public browser evidence for signal-owned
+move, resize, rotation, snapping, child-defined drag geometry, readouts,
+pointer capture, cancellation, and teardown. That evidence supplements the
+preservation inventory; it does not weaken baseline or source-inspection rules.
 
 `trust:package` builds real tarballs and installs them into strict Bundler and
 NodeNext consumers. It verifies runtime loading, declarations, source maps,
