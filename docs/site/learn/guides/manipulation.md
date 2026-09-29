@@ -90,7 +90,7 @@ component.
 ## Custom handles and cancellation
 
 Use `useManipulation` with `ManipulationFrame` for a custom composition.
-`DragHandle` owns only its local target, `ResizeHandle` accepts a `position`,
+`DragHandle` listens through child hit areas, `ResizeHandle` accepts a `position`,
 and `RotationHandle` is explicit. Resize and rotation controls have a 24 CSS
 pixel hit target by default, including under zoom and device-density changes.
 Custom children of those handles use CSS-pixel local coordinates at the handle
@@ -99,7 +99,8 @@ anchor.
 Pointer capture keeps an active gesture routed to its handle outside its
 original geometry. Movement below three CSS pixels remains an ordinary press.
 Call `manipulation.cancel()` to restore the starting owned geometry. Escape
-cancels when focus management is installed and the handle is focused. A newer
+cancels when focus management is installed and the resize/rotation handle or a
+drag handle’s descendant is focused. A newer
 external write ends the gesture and remains authoritative, so cancellation does
 not overwrite application state.
 
