@@ -88,6 +88,72 @@ it("ends synchronously on an external write before another pointer event and pre
   expect(box.get().left).toBe(200);
 });
 
+it("rejects a second controller that tries to own active shared geometry", async () => {
+  const box = CRC.signal({ left: 40, top: 50, width: 160, height: 120 });
+  const { controller } = await setup({}, 60, box);
+  const errors: unknown[] = [];
+  vi.spyOn(globalThis, "reportError").mockImplementation((error) => {
+    errors.push(error);
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 400;
+  canvas.height = 300;
+  document.body.append(canvas);
+  const capture = vi.spyOn(canvas, "setPointerCapture");
+  let competing!: CRC.CRCManipulationController;
+  function Competing() {
+    competing = CRC.useManipulation({ box, move: {} });
+    return (
+      <CRC.ManipulationFrame {...competing.frameProps}>
+        <CRC.DragHandle
+          controller={competing}
+          style={{ width: 160, height: 120 }}
+        />
+      </CRC.ManipulationFrame>
+    );
+  }
+  const competingMount = CRC.crc(
+    canvas,
+    <CRC.FocusManagement>
+      <Competing />
+    </CRC.FocusManagement>,
+  );
+  try {
+    await settle();
+    const bounds = canvas.getBoundingClientRect();
+    canvas.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 42,
+        pointerType: "touch",
+        isPrimary: true,
+        button: 0,
+        buttons: 1,
+        clientX: bounds.left + 80,
+        clientY: bounds.top + 80,
+      }),
+    );
+
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors.every(
+      (error) =>
+        error instanceof Error &&
+        error.message === "CRC manipulation geometry already has an active owner.",
+    )).toBe(true);
+    expect(capture).not.toHaveBeenCalled();
+    expect(competing.active.get()).toBe(null);
+    expect(controller.active.get()?.operation).toBe("move");
+    expect(box.get()).toEqual({ left: 60, top: 70, width: 160, height: 120 });
+    await commands.manipulationPointer([{ type: "up" }]);
+    expect(controller.active.get()).toBe(null);
+  } finally {
+    competingMount.dispose();
+    canvas.remove();
+  }
+});
+
 it("lets newer geometry written during onStart cancel the gesture and win", async () => {
   const box = CRC.signal({ left: 40, top: 50, width: 160, height: 120 });
   const replacement = { left: 280, top: 190, width: 140, height: 100 };
