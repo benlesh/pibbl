@@ -34,8 +34,18 @@ it('moves the public frame with trusted pointer capture and commits the final ge
   canvas.addEventListener('gotpointercapture', () => { captured = true; });
   function Scene(): CRCNode {
     const manipulation = useManipulation({ box, move: {}, onCommit: (event: unknown) => commits.push(event) });
-    return CRC.createElement(ManipulationFrame, { ...manipulation.frameProps },
-      CRC.createElement(DragHandle, { controller: manipulation, style: { width: 100, height: 30 } }),
+    return CRC.createElement(
+      ManipulationFrame,
+      { ...manipulation.frameProps },
+      CRC.createElement(
+        DragHandle,
+        { controller: manipulation },
+        CRC.createElement(CRC.Rectangle, {
+          pointerEvents: 'auto',
+          keyboardFocusable: true,
+          style: { width: 100, height: 30, fill: 'transparent' },
+        }),
+      ),
     );
   }
   mount = CRC.crc(canvas, CRC.createElement(Scene, {}));
@@ -81,18 +91,31 @@ it('cancels a captured drag without committing and preserves an external replace
   function Scene(): CRCNode {
     const control = Reflect.get(CRC, 'useManipulation')({ box, move: {}, onCommit: (event: unknown) => commits.push(event) });
     manipulation = control;
-    return CRC.createElement(Reflect.get(CRC, 'ManipulationFrame'), { ...control.frameProps },
-      CRC.createElement(Reflect.get(CRC, 'DragHandle'), { controller: control, style: { width: 100, height: 30 } }));
+    return CRC.createElement(
+      Reflect.get(CRC, 'ManipulationFrame'),
+      { ...control.frameProps },
+      CRC.createElement(
+        Reflect.get(CRC, 'DragHandle'),
+        { controller: control },
+        CRC.createElement(CRC.Rectangle, {
+          pointerEvents: 'auto',
+          keyboardFocusable: true,
+          style: { width: 100, height: 30, fill: 'transparent' },
+        }),
+      ),
+    );
   }
   mount = CRC.crc(canvas, CRC.createElement(Scene, {}));
   await settle();
   await commands.manipulationPointer([{ type: 'move', x: 42, y: 50 }, { type: 'down' }, { type: 'move', x: 65, y: 65 }]);
+  expect(box.get()).toEqual({ left: 55, top: 55, width: 100, height: 80 });
   manipulation!.cancel();
   await commands.manipulationPointer([{ type: 'up' }]);
   expect(box.get()).toEqual({ left: 32, top: 40, width: 100, height: 80 });
   expect(commits).toHaveLength(0);
   await settle();
   await commands.manipulationPointer([{ type: 'move', x: 42, y: 50 }, { type: 'down' }, { type: 'move', x: 65, y: 65 }]);
+  expect(box.get()).toEqual({ left: 55, top: 55, width: 100, height: 80 });
   box.set({ left: 200, top: 180, width: 100, height: 80 });
   await commands.manipulationPointer([{ type: 'up' }]);
   expect(box.get().left).toBe(200);
