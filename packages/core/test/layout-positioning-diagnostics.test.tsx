@@ -1,4 +1,4 @@
-import { Flex, Flow, Grid, Rectangle, crc, signal, type CRCController } from '@crc/core';
+import { Flex, Flow, Grid, Rectangle, crc, signal, type CRCNode, type CRCController } from '@crc/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
 
@@ -6,7 +6,7 @@ let controller: CRCController | undefined;
 let restore: (() => void) | undefined;
 afterEach(() => { controller?.dispose(); restore?.(); document.body.replaceChildren(); });
 
-function mount(node: JSX.Element) {
+function mount(node: CRCNode) {
   const driver = new ManualSchedulerDriver(); restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 100; document.body.append(canvas);
   controller = crc(canvas, node, { pixelRatio: 1 }); return () => driver.flush(1);

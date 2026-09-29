@@ -1,6 +1,6 @@
-import { Absolute, Group, Rectangle, crc, type CRCController } from '@crc/core';
+import { Absolute, Group, Rectangle, crc, type CRCNode, type CRCController } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
 
 let controller: CRCController | undefined;
@@ -12,7 +12,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-function mount(node: JSX.Element) {
+function mount(node: CRCNode) {
   const driver = new ManualSchedulerDriver();
   restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement('canvas');
