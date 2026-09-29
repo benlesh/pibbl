@@ -1,5 +1,6 @@
 export {
   animationLabScenarioEntry,
+  manipulationLabScenarioEntry,
   canvasSurfaceScenarioEntry,
   responsiveStylesScenarioEntry,
   cleanupStressScenarioEntry,
@@ -49,6 +50,11 @@ export type {
   AnimationLabState,
 } from './animation-lab.example';
 export { ANIMATION_LAB_ACTION_IDS } from './animation-lab';
+export type {
+  ManipulationLabAction,
+  ManipulationLabState,
+} from './manipulation-lab.example';
+export { MANIPULATION_LAB_ACTION_IDS } from './manipulation-lab';
 export type {
   ParticleCelebrationLabAction,
   ParticleCelebrationLabState,

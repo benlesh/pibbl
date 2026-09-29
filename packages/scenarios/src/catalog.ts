@@ -24,6 +24,8 @@ import type { WebGLLightingLabState } from "./webgl-lighting-lab.example";
 import type { StaticGLBSliceState } from "./static-glb-slice";
 import type { SignalsLabState } from "./signals-lab.example";
 import type { AnimationLabState } from "./animation-lab.example";
+import type { ManipulationLabState } from "./manipulation-lab.example";
+import { MANIPULATION_LAB_ACTION_IDS } from "./manipulation-lab";
 import type { ParticleCelebrationLabState } from "./particle-celebration-lab.example";
 import type { ThreeInstancingLabState } from "./three-instancing-lab.example";
 import type { Physics2DLabState } from "./physics-2d-lab.example";
@@ -2334,6 +2336,44 @@ export const vizFoundationScenarioEntry: ScenarioCatalogEntry<import("./viz-foun
   load: async () => (await import("./viz-foundation-lab.js")).vizFoundationScenario,
 };
 
+export const manipulationLabScenarioEntry: ScenarioCatalogEntry<ManipulationLabState> = {
+  metadata: {
+    id: "component-manipulation",
+    slug: "manipulation",
+    title: "Component manipulation laboratory",
+    summary: "Drive one signal-owned card through real drag, resizing, snapping, cancellation, and external geometry replacement.",
+    category: "Interaction",
+    apiTags: ["useManipulation", "ManipulationFrame", "DragHandle", "ResizeHandles", "signal"],
+    conceptTags: ["pointer capture", "snapping", "cancellation", "signal ownership"],
+    manualSteps: [
+      { action: "Drag the title and resize a corner.", expected: "The numeric box readout follows the signal-owned geometry." },
+      { action: "Toggle snap, then drag again.", expected: "Movement resolves to the 20-pixel lattice." },
+      { action: "Start a drag, then trigger Cancel or external write in the laboratory controls.", expected: "Cancellation restores the preview while an external write wins." },
+    ],
+    knownLimitations: ["This private laboratory is an automated conformance fixture, not a learning example or an input-injection API."],
+    learningOrder: 131,
+    visibility: "test-laboratory",
+    visibilityReason: "It exposes public signal state for deterministic native pointer evidence.",
+    maturity: "contract",
+  },
+  canvas: { width: 480, height: 300 },
+  actions: MANIPULATION_LAB_ACTION_IDS.map(id => ({
+    id,
+    label: ({
+      "toggle-snap": "Toggle snap",
+      cancel: "Cancel gesture",
+      "external-write": "External geometry",
+    })[id],
+  })),
+  source: {
+    id: "component-manipulation-laboratory-example",
+    language: "tsx",
+    marker: "MANIPULATION_LAB_SOURCE_ID = \"component-manipulation-laboratory-example\"",
+    path: "packages/scenarios/src/manipulation-lab.example.tsx",
+  },
+  load: async () => (await import("./manipulation-lab")).manipulationLabScenario,
+};
+
 export const responsiveStylesScenarioEntry: ScenarioCatalogEntry<ResponsiveStylesState> = {
   metadata: {
     id: "responsive-styles", slug: "responsive-styles", title: "Responsive style thresholds",
@@ -2353,6 +2393,7 @@ export const responsiveStylesScenarioEntry: ScenarioCatalogEntry<ResponsiveStyle
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
   validateScenarioCatalog([
     responsiveStylesScenarioEntry,
+    manipulationLabScenarioEntry,
     vizFoundationScenarioEntry,
     smokeScenarioEntry,
     drawingShapesScenarioEntry,
