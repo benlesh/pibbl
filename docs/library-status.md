@@ -151,8 +151,13 @@ manifest and JSX-era translation/evidence allowlist, and
 configuration/vocabulary rules. The manifest covers every current normative
 contract, including explicit retirement/addition mappings for the Three.js
 pivot, and the evidence inventory maps those obligations to direct source and
-test evidence. It also inspects the cited examples/tests for
-the behaviors claimed in the Text, Layer, focus, and complete non-JSX rows;
+test evidence. It covers 667 preserved baseline units and 815 current semantic
+units across all 12 baseline-snapshotted normative contracts. Together with the
+post-baseline signal, animation, and render-layer/Three records, this covers 15
+current normative contracts. Those three records contain 139 exhaustively
+mapped post-baseline units. The evidence inventory contains 56 unique direct
+source/test mappings. It also inspects the cited examples/tests for the
+behaviors claimed in the Text, Layer, focus, and complete non-JSX rows;
 scenario/browser gates execute that code.
 
 | Approved documentation item                                                                   | Current guide or contract                                                                                                                                                                                        | Executable example/evidence                                                                                                                                                                                                                                                                                                                                                                                                                 |
