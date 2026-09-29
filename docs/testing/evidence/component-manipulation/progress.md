@@ -93,3 +93,20 @@ This section supersedes the earlier next-action list; the feature remains incomp
 - `corepack pnpm@11.21.0 trust:static` passed (exit 0) on Node 24.15.0 / pnpm 11.21.0. This includes scenario/docs/Studio checks, production documentation boundary, typecheck, lint, all package builds, and source/built Studio builds. Log: `/tmp/crc-manipulation-static-current.log`.
 - `corepack pnpm@11.21.0 trust:lifecycle` passed (exit 0): ownership 15 files / 64 tests; structural performance ten files / 65 passed / four skipped. Log: `/tmp/crc-manipulation-lifecycle-current.log`. These do not substitute for the still-failing full browser gate.
 - Task 8 audit identified absent direct public evidence for external writes inside lifecycle callbacks. A reused worker is adding `onStart`/`onChange` write-precedence cases, independent of the pending positioning decision.
+
+## Completion audit by plan task
+
+| Plan task                    | Current evidence and remaining work                                                                                                                                                       |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 — Unified placement        | Standalone paint/hit and forwarding cases pass. Independent child offsets are a proven failure; public handoff decision is pending. Not complete.                                         |
+| 2 — Runtime diagnostics      | Public Flex/Flow/Grid development diagnostics and explicit source/built/packed production-ignore probes passed. Keep these probes in the final integrated gate.                           |
+| 3 — Pure move/resize         | Solver cases cover snapping, tie-breaking, origins, opposite anchors, dimensions and constraints; full source audit passed this suite.                                                    |
+| 4 — Controller/handles       | Native capture, threshold, commit, cancellation and ownership cases pass. Shared-source concurrency evidence is being strengthened before final acceptance.                               |
+| 5 — Runnable slice           | Live Studio example and private lab exist, use the public API, and have native-browser evidence. Earlier progress records contain the verified URL and inspection.                        |
+| 6 — Rotation/constraints     | Public rotation/transformed resize and pure solver evidence pass, including bounds, aspect ratio and grid distinctions.                                                                   |
+| 7 — Layout/transforms        | Flex/Flow/Grid reflow, keyed state, CSS-sized chrome and transformed/clipped targets pass. Cross-component placement still depends on Task 1.                                             |
+| 8 — Ownership/performance    | Standard lifecycle/performance gate passed. Newly integrated callback-write cases pass 15 tests across ownership/terminal suites; shared-source concurrency evidence remains in progress. |
+| 9 — Migration/docs/consumers | Static gate and earlier packed/environment probes pass. Tutorial/viz migration behavior is blocked by Task 1, and the physics example timestamp regression is being verified.             |
+| 10 — Final verification      | Built manipulation checks, static and lifecycle gates pass. Full browser audit fails on recorded cases; final aggregate trust and visual acceptance are not complete.                     |
+
+The unchecked procedural steps in the dated plan are not evidence of successful historical red runs. This table records current behavior evidence without inferring unobserved execution history or declaring the feature complete.
