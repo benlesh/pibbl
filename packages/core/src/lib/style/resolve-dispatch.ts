@@ -17,6 +17,8 @@ import type {
 import { layoutDiagnostic } from './diagnostics.js';
 import { resolveFilterList } from './filter.js';
 import type { CRCFilter } from './filter-types.js';
+import { isPlacementConsumed } from '../element/metadata.js';
+import { resolveStandalonePosition } from './positioning.js';
 
 const opaqueStyleProperties = new WeakMap<Function, ReadonlySet<string>>();
 export interface PreparedStyleInput {
@@ -120,7 +122,9 @@ export function resolveElementStyle<
   const resolved = definition.resolveStyle ?
       definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;
-  const final = systemFilter ? { ...resolved, filter: systemFilter.values } : resolved;
+  const position = isPlacementConsumed(element) ? { left: 0, top: 0 } :
+    resolveStandalonePosition(normalized, context);
+  const final = { ...resolved, ...position, ...(systemFilter ? { filter: systemFilter.values } : {}) };
   assertResolvedValue(
     final,
     '',
