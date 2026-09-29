@@ -21,7 +21,7 @@ const cardPaint = {
 
 const card = (
   <Rectangle
-    style={{ ...cardPaint, left: 16, top: 16, width: 180, height: 80 }}
+    style={{ ...cardPaint, x: 16, y: 16, width: 180, height: 80 }}
     onClick={() => selectCard()}
   />
 );
@@ -56,14 +56,6 @@ inherit it. It is not an escape hatch for arbitrary top-level keys.
 Plain functions receive their specified `style` in props. A layout parent may
 inspect a direct child's style but never substitutes its finite allocation into
 those props; the component reads that through `useLayoutBox()`.
-
-`left` and `top` are the shared component-placement fields. Standalone
-components use them once through the normal presentation transform. A direct
-`Flex`, `Flow`, or `Grid` child is parent-positioned instead: its authored
-`left`/`top` has no production placement effect and development/test execution
-reports it. `Rectangle`, `Text`, and `Image` do not accept positioning-style
-`x`/`y`; geometric points, line endpoints, and event coordinates retain their
-own `x`/`y` vocabulary.
 
 ## Signal-valued style resolution
 
@@ -338,3 +330,12 @@ envelopes still throw. Untracked measurement retains no reactive ownership.
 See the [public guide](../site/learn/guides/responsive-styles.md) for canonical
 JSX and createElement recipes, the [layout contract](./layout-system-contract.md)
 for placement.
+
+## Component manipulation positioning
+
+Component placement uses `left` and `top`. `Rectangle`, `Text`, and `Image` do
+not accept positioning-style `x` or `y`; those names remain geometric data
+where their individual contracts define them. A freely positioned
+`ManipulationFrame` publishes its writable finite box through this same local
+style channel. Direct `Flex`, `Flow`, and `Grid` placement remains parent-owned.
+See the [component-manipulation contract](./component-manipulation-contract.md).

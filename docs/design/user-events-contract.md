@@ -181,14 +181,6 @@ root disposal. `gotpointercapture` observes active ownership;
 the minimal pending owner needed to route a native loss notification. An
 unmounted target receives no ghost loss callback.
 
-Manipulation handles use that same capture path after a primary press. Their
-session starts only after three CSS pixels of motion, so a shorter press keeps
-ordinary activation behavior. A started manipulation consumes only its matching
-release click activation; unrelated pointers and later ordinary clicks remain
-unchanged. Nested handles claim before enclosing drag surfaces, and a child
-pointer-down handler can call `preventDefault()` to decline an enclosing
-manipulation start.
-
 Changing one pointer's logical capture from A to B on the same Canvas records a
 pending logical transfer without changing the native DOM capture element.
 Immediately before the next non-capture pointer event, A receives exactly one
@@ -359,3 +351,15 @@ descendants.
 ## 3D physics interaction boundary
 
 WebGL coordinate events target the top committed rendered mesh through camera-aware depth picking. `@crc/physics/3d` ray, shape, overlap, AABB, and point queries instead read authoritative committed collider state in world coordinates and never schedule or advance simulation. CRC provides no automatic pointer-to-physics bridge: applications that grab or inspect a body explicitly derive a world ray, run a physics query, and issue generation-bound commands while normal event propagation and pointer capture remain unchanged.
+
+## Component manipulation events
+
+An enabled handle requests native pointer capture before arming one
+primary-pointer manipulation candidate. Three CSS pixels of movement starts the
+gesture; the terminal pointer-up sample applies before the one commit callback.
+Pointer cancellation, capture loss, focused Escape, and explicit controller
+cancellation restore only session-owned preview geometry. A completed drag
+suppresses only its corresponding click activation. Descendant handles claim
+before enclosing drag surfaces, and a child may reject a press with
+`preventDefault()`. See the
+[component-manipulation contract](./component-manipulation-contract.md).
