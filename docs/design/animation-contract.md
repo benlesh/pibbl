@@ -1,7 +1,7 @@
 # CRC animation contract
 
-Status: current implemented contract, updated for settled WebGL scenes on
-2026-09-13.
+Status: current implemented contract, updated for external render-layer frames
+on 2026-09-28.
 
 This document defines CRC's first-class animation definitions, programs,
 component-owned playback, transitions, and their integration with the shared
@@ -258,14 +258,14 @@ playback; a retained readonly result cannot schedule the removed component.
 
 Every playback shares the realm's one frame transaction:
 
-| Phase    | Animation work                                                                                                                                                                                           |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Begin    | Capture one logical time/frame identity and drain accepted commands in invocation order.                                                                                                                 |
-| Advance  | Sample registered playbacks in registration order, stage outputs/status/time, and queue milestones.                                                                                                      |
-| Commit   | Validate and publish every playback's stages with the signal graph as one atomic batch.                                                                                                                  |
-| Plan     | Validate computed dependencies and collect the exact dirty render/resource boundaries.                                                                                                                   |
-| Render   | Repaint planned Layer children before ancestors and render top-level roots/friend work from the committed graph; a dirty WebGL island composes, settles, and renders before ancestor Canvas composition. |
-| Complete | Finalize successful transactions, release ended runs/leases, deliver milestones and isolated errors, and request another frame only if work remains.                                                     |
+| Phase    | Animation work                                                                                                                                                                                                                                |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Begin    | Capture one logical time/frame identity and drain accepted commands in invocation order.                                                                                                                                                      |
+| Advance  | Sample registered playbacks in registration order, stage outputs/status/time, and queue milestones.                                                                                                                                           |
+| Commit   | Validate and publish every playback's stages with the signal graph as one atomic batch.                                                                                                                                                       |
+| Plan     | Validate computed dependencies and collect the exact dirty render/resource boundaries.                                                                                                                                                        |
+| Render   | Repaint planned Layer and render-layer children before ancestors and render top-level roots/friend work from the committed graph; a dirty external render layer updates, renders, and settles interaction before ancestor Canvas composition. |
+| Complete | Finalize successful transactions, release ended runs/leases, deliver milestones and isolated errors, and request another frame only if work remains.                                                                                          |
 
 Time-based definitions use stable logical-time anchors, not accumulated display
 deltas. A dropped display frame jumps directly to the correct tween, keyframe,
@@ -283,7 +283,7 @@ CRC exposes no public scheduler clock, frame-step API,
 trace history, or input-injection surface; `seek` controls one playback rather
 than the realm.
 
-## Rendering, Layers, and WebGL
+## Rendering, Layers, and external renderers
 
 Animation produces ordinary signal values. CRC-provided components accept them
 directly at declared inputs:

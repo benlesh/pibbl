@@ -1,7 +1,7 @@
 # CRC layout-system contract
 
-Status: current implemented contract, updated for settled WebGL scenes on
-2026-09-13.
+Status: current implemented contract, updated for external render-layer layout
+participation on 2026-09-28.
 
 CRC provides dedicated `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid`
 components. They arrange direct branded `CRCElement` children into declared
@@ -198,8 +198,8 @@ render work. Measurement:
 - cannot call hooks, context accessors, observe a layout box, paint, register
   interaction targets, or acquire runtime resources;
 - cannot create image generations;
-- cannot traverse a WebGL island, request WebGL animation, compose or settle a
-  WebGL scene, or acquire GPU/bitmap resources;
+- cannot traverse an external render layer, invoke its lifecycle, or acquire
+  renderer/bitmap resources;
 - detects direct and indirect cycles and restores all temporary runtime state
   after success or failure.
 
@@ -226,12 +226,12 @@ style. A thrown render or duplicate-key failure releases targets, handlers,
 cursors, image generations, offscreen layers, and component refs exactly once.
 Repeated reflow does not accumulate owners.
 
-Offscreen Canvas layers and WebGL islands share the root interaction ledger, so
-nested layout still participates in one global Canvas composition/target order.
-`Clip` and layout overflow constraints apply identically to pixels and
-coordinate geometry. A complete WebGL island occupies one Canvas paint
-position; layout cannot interleave an external Canvas child between objects in
-that flattened settled scene.
+Offscreen Canvas layers and external render layers share the root interaction
+ledger, so nested layout still participates in one global Canvas
+composition/target order. `Clip` and layout overflow constraints apply
+identically to pixels and coordinate geometry. A complete external render layer
+occupies one Canvas paint position; layout cannot interleave a Canvas child
+between objects inside that flattened bitmap.
 
 ## Deliberate exclusions
 
@@ -239,9 +239,9 @@ CRC layout does not promise a complete CSS formatting engine. Deferred features
 include margin, scrolling, auto-placement Grid, implicit tracks, advanced CSS
 intrinsic sizing, reverse/reordered Flexbox, baseline alignment, percentage
 gaps, auto margins, DOM overlays/accessibility, a retained scene graph, workers,
-multiple WebGL viewports/cameras, and a public virtualization API. Applications can window large datasets
-and pass the visible descriptors to CRC; the library does not own the records or
-scroll model.
+a public virtualization API. Applications can window large datasets and pass
+the visible descriptors to CRC; the library does not own the records or scroll
+model.
 
 Public JSX layout evidence lives in
 `packages/core/src/lib/layout/layout-jsx.test.tsx`, the five Studio layout

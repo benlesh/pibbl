@@ -49,7 +49,6 @@ symbols:
     CRCParticleValueFor,
     CRCParticleValuesOf,
     CRCParticleVector2,
-    CRCParticleVector3,
     Particles2DProps,
     Particles2DStyle,
   ]
@@ -223,10 +222,6 @@ Maps a named parameter-definition record to its inferred value record.
 ## `CRCParticleVector2`
 
 A two-component scalar tuple or compatible named parameter reference.
-
-## `CRCParticleVector3`
-
-A three-component scalar tuple or compatible named parameter reference.
 
 ## `Particles2DProps`
 

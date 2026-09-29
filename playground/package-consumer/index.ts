@@ -365,7 +365,7 @@ createElement(PackedParticleScene, {});
 void ParticleRuntime;
 void (undefined as unknown as ParticleTypes.CRCParticleEmitter2D);
 void (undefined as unknown as CRCParticleEffect2D<'spark'>);
-void (undefined as unknown as CRCParticleSystem<'spark', CRCParticleParameterValues, 2>);
+void (undefined as unknown as CRCParticleSystem<'spark', CRCParticleParameterValues>);
 void (undefined as unknown as Particles2DProps<'spark'>);
 
 const packageConsumerBackendToken: CRCBackendToken =

@@ -15,13 +15,14 @@ boundary defined below.
 ## Shared paint and interaction rules
 
 - Canvas drawing follows Canvas 2D geometry, source paint order, transforms,
-  clips, text measurement, image decoding, and `Path2D` parsing. WebGL child
-  source order establishes scene identity and exact ties; raster order follows
-  the settled opaque and transparent queues below.
+  clips, text measurement, image decoding, and `Path2D` parsing. External
+  renderer internals remain application-owned and are flattened at the layer
+  boundary.
 - `opacity` multiplies current global alpha. Zero paints nothing but does not
   remove otherwise registered interaction geometry.
-- Canvas and WebGL drawing leaves contribute their supported geometry to hit
-  resolution by default, even without handlers, cursor, or focus metadata.
+- Canvas leaves and committed render-layer targets contribute their supported
+  geometry to hit resolution by default, even without handlers, cursor, or
+  focus metadata.
   `pointerEvents="none"` removes that leaf from targeting without changing
   paint. Absent visible paint does not by itself remove declared geometry.
 - Property changes replace the prior frame's pixels and interaction geometry
@@ -315,10 +316,10 @@ See the
 The filter surface does not accept raw CSS strings, `url()`/SVG graphs,
 backdrop sampling, or a box-shadow model.
 
-WebGL islands add no textures, image environments/IBL, PBR, glow/bloom, area
-lights, cascaded/soft/contact/transparent shadows, public shadow cameras or
-map/bias/filter controls, or post-processing API. They remain one-camera,
-flattened Canvas entries rather than retained public scene graphs.
+CRC adds no 3D scene graph, material, lighting, shadow, loader, controls,
+particle, or post-processing vocabulary. An external render layer remains one
+flattened Canvas entry; applications use Three objects and facilities directly
+inside `defineThreeLayer()` when they need them.
 
 ## Rounded shapes and public path creators
 

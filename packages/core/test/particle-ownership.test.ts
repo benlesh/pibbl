@@ -4,7 +4,6 @@ import {
   recordCanvasParticleLedgerCreated,
   recordCanvasParticleRasterEntryCreated,
   recordParticleSchedulerRegistration,
-  recordWebGLParticleRecipeAcquired,
 } from "../../particles/src/lib/system/ownership.js";
 
 describe("particle resource ownership", () => {
@@ -14,14 +13,12 @@ describe("particle resource ownership", () => {
       recordParticleSchedulerRegistration(),
       recordCanvasParticleLedgerCreated(),
       recordCanvasParticleRasterEntryCreated(),
-      recordWebGLParticleRecipeAcquired(),
     ];
 
     expect(particleSystemOwnershipSnapshot()).toMatchObject({
       schedulerRegistrations: baseline.schedulerRegistrations + 1,
       canvasLedgers: baseline.canvasLedgers + 1,
       canvasRasterEntries: baseline.canvasRasterEntries + 1,
-      webglRecipes: baseline.webglRecipes + 1,
     });
 
     for (const release of releases) {
@@ -32,7 +29,6 @@ describe("particle resource ownership", () => {
       schedulerRegistrations: baseline.schedulerRegistrations,
       canvasLedgers: baseline.canvasLedgers,
       canvasRasterEntries: baseline.canvasRasterEntries,
-      webglRecipes: baseline.webglRecipes,
     });
   });
 });

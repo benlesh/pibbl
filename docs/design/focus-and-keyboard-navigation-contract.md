@@ -1,7 +1,7 @@
 # CRC focus and keyboard-navigation contract
 
-Status: current implemented contract, updated for WebGL lighting, orbit-camera,
-and genuine-shadow behavior on 2026-09-15.
+Status: current implemented contract, updated for registered external
+render-layer targets and Three.js integration on 2026-09-28.
 
 CRC provides optional logical focus and keyboard navigation for explicit event
 targets. The HTML Canvas remains the only native DOM focus host. While the
@@ -208,9 +208,9 @@ focusability only while CRC still owns its mutation; an application `tabindex`
 change is preserved. Application handler errors remain isolated by the shared
 event dispatcher.
 
-WebGL context loss removes stale pick/focus metadata and its owned target
-generation. Restoration schedules a normal frame, and new projected geometry
-becomes eligible only with a successfully committed bitmap/pick generation.
+Render-layer replacement or removal clears stale interaction/focus metadata
+with its owned target generation. New projected geometry becomes eligible only
+with a successfully committed bitmap/interaction generation.
 
 The shared `focus-and-keyboard-navigation` scenario demonstrates native DOM
 controls before and after the Canvas, two explicit top targets, twelve keyed
@@ -233,6 +233,11 @@ across the render-layer event-parent bridge.
 See [Canvas accessibility guidance](./canvas-accessibility-guidance.md) for the
 separate semantic responsibility.
 
-## 3D physics presentation
+## External 3D presentation
 
-An interactive physics-backed WebGL mesh remains the same logical focus target. Its committed physics presentation contributes to the one settled model shared by rasterization, depth picking, and projected focus bounds; authoritative physics queries and collision events do not create focus candidates or change keyboard order. Disabled or removed geometry follows the ordinary committed WebGL target and focus-removal rules.
+An interactive Three object remains the same logical focus target while its
+registered target identity survives. Its committed target metadata provides
+the projected focus bounds associated with the visible bitmap/interaction
+generation. Pure geometry queries do not create focus candidates or change
+keyboard order. Disabled or removed objects follow the ordinary committed
+render-layer target and focus-removal rules.

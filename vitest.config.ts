@@ -127,9 +127,6 @@ export default defineConfig(({ mode }) => ({
       '.worktrees/**',
       'packages/physics/src/lib/2d/public-types.test.ts',
       'packages/physics/src/lib/3d/public-types.test.ts',
-      ...(mode === 'built' ? [] : [
-        'packages/webgl/test/internal-entry-identity.test.tsx',
-      ]),
     ],
     browser: {
       commands: {

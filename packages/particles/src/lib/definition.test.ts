@@ -133,7 +133,6 @@ describe('defineParticleEffect2D', () => {
     ]);
     expect(record.capabilities).toEqual({
       statelessCanvas: true,
-      statelessWebGL: false,
       requiresStateful: [],
     });
   });

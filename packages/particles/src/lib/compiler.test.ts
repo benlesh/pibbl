@@ -204,7 +204,7 @@ describe("particle compiler", () => {
     });
   });
 
-  it("retains completion metadata and explicit reasons for unavailable execution tiers", () => {
+  it("retains completion metadata for the Canvas execution tier", () => {
     const effect = defineParticleEffect2D({
       emitters: [
         {
@@ -228,20 +228,6 @@ describe("particle compiler", () => {
       supported: true,
       reasons: [],
     });
-    expect(plan.execution["stateless-webgl"].supported).toBe(false);
-    expect(plan.execution["stateless-webgl"].reasons.length).toBeGreaterThan(0);
-    expect(plan.execution["stateful-canvas"].supported).toBe(false);
-    expect(plan.execution["stateful-canvas"].reasons).toEqual([
-      "stateful Canvas execution is unavailable in Project 1",
-    ]);
-    expect(plan.execution["stateful-cpu-webgl"].supported).toBe(false);
-    expect(plan.execution["stateful-cpu-webgl"].reasons.length).toBeGreaterThan(
-      0,
-    );
-    expect(plan.execution["stateful-gpu-webgl"].supported).toBe(false);
-    expect(plan.execution["stateful-gpu-webgl"].reasons.length).toBeGreaterThan(
-      0,
-    );
   });
 
   it("marks parameterized lifetime metadata as binding-dependent instead of using its default as a maximum", () => {

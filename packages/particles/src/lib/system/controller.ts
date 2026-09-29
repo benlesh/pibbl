@@ -13,15 +13,10 @@ import {
 import { parseParticleColor } from "../color.js";
 import {
   compileParticleEffect2D,
-  compileParticleEffect3D,
   type CompiledEffect2D,
-  type CompiledEffect3D,
   type CompiledParameterEntry,
 } from "../compiler.js";
-import {
-  getParticleEffect2DRecord,
-  getParticleEffect3DRecord,
-} from "../definition-records.js";
+import { getParticleEffect2DRecord } from "../definition-records.js";
 import { sampleBurstCount } from "../emission.js";
 import type {
   CRCParticleBurstOverrides,
@@ -32,7 +27,6 @@ import type {
   CRCParticleSystemOptions,
   CRCParticleSystemStatus,
 } from "../types.js";
-import type { CRCParticleEffect3D } from "../webgl-types.js";
 import type {
   CompiledParticleEffect,
   ParticleBindingCandidate,
@@ -48,7 +42,7 @@ import {
   recordParticleSystemCreated,
 } from "./ownership.js";
 
-type ParticleEffect = CRCParticleEffect2D | CRCParticleEffect3D;
+type ParticleEffect = CRCParticleEffect2D;
 
 export interface ParticleBindingObservers {
   readonly onEvent?: (event: CRCParticleSystemEvent) => void;
@@ -57,7 +51,7 @@ export interface ParticleBindingObservers {
 
 export interface ParticleBindingReservation {
   readonly owner: CRCInternalRenderOwner;
-  readonly backend: "canvas" | "webgl";
+  readonly backend: "canvas";
   readonly token: object;
 }
 
@@ -152,7 +146,7 @@ export interface ParticleSystemControllerSnapshot {
   readonly seed: number;
   readonly effectTimeMilliseconds: number;
   readonly previousEffectTimeMilliseconds: number;
-  readonly binding: "canvas" | "webgl" | "unbound";
+  readonly binding: "canvas" | "unbound";
   readonly parameterEpochs: number;
 }
 
@@ -171,7 +165,7 @@ export interface ParticleSystemController {
   adoptEffect(candidate: ParticleEffectCandidate): void;
   reserveBinding(
     owner: CRCInternalRenderOwner,
-    backend: "canvas" | "webgl",
+    backend: "canvas",
   ): ParticleBindingReservation;
   validateBindingCandidate(
     reservation: ParticleBindingReservation,
@@ -234,27 +228,13 @@ function validateOptions(options: CRCParticleSystemOptions): void {
 }
 
 function compileEffect(effect: ParticleEffect): ParticleEffectCandidate {
-  try {
-    const record = getParticleEffect2DRecord(effect as CRCParticleEffect2D);
-    return {
-      effect,
-      compiled: compileParticleEffect2D(effect as CRCParticleEffect2D),
-      options: {},
-      debugName: record.debugName,
-    };
-  } catch (error2D) {
-    try {
-      const record = getParticleEffect3DRecord(effect as CRCParticleEffect3D);
-      return {
-        effect,
-        compiled: compileParticleEffect3D(effect as CRCParticleEffect3D),
-        options: {},
-        debugName: record.debugName,
-      };
-    } catch {
-      throw error2D;
-    }
-  }
+  const record = getParticleEffect2DRecord(effect);
+  return {
+    effect,
+    compiled: compileParticleEffect2D(effect),
+    options: {},
+    debugName: record.debugName,
+  };
 }
 
 function parameterValuesEqual(
@@ -1298,9 +1278,7 @@ export function createParticleSystemController(
   }
 
   function requestedBurstCount(
-    emitter:
-      | CompiledEffect2D["emitters"][number]
-      | CompiledEffect3D["emitters"][number],
+    emitter: CompiledEffect2D["emitters"][number],
     override: number | undefined,
   ): number {
     if (override !== undefined) return override;
@@ -1367,11 +1345,7 @@ export function createParticleSystemController(
           birthTimeMilliseconds: effectTimeAt(frame.logicalTime),
           seed,
           seedSalt: Math.trunc(overrides.seedSalt ?? 0) >>> 0,
-          origin:
-            overrides.position ??
-            (compiled.dimension === 2
-              ? ([0, 0] as const)
-              : ([0, 0, 0] as const)),
+          origin: overrides.position ?? ([0, 0] as const),
           spawnEpoch: epoch,
         });
       } catch (error) {
@@ -1728,7 +1702,7 @@ export function createParticleSystemController(
     },
     reserveBinding(
       bindingOwner: CRCInternalRenderOwner,
-      backend: "canvas" | "webgl",
+      backend: "canvas",
     ): ParticleBindingReservation {
       if (disposed) {
         throw new TypeError("Cannot bind a disposed CRC particle system.");
@@ -1770,22 +1744,12 @@ export function createParticleSystemController(
           "CRC particle binding definition does not match its system definition.",
         );
       }
-      if (
-        (candidate.backend === "canvas" &&
-          candidate.compiled.dimension !== 2) ||
-        (candidate.backend === "webgl" && candidate.compiled.dimension !== 3)
-      ) {
+      if (candidate.compiled.dimension !== 2) {
         throw new TypeError(
           "CRC particle binding backend does not match effect dimension.",
         );
       }
-      if (
-        candidate.execution === "unbound" ||
-        (candidate.backend === "canvas" &&
-          !candidate.execution.endsWith("canvas")) ||
-        (candidate.backend === "webgl" &&
-          !candidate.execution.includes("webgl"))
-      ) {
+      if (candidate.execution !== "stateless-canvas") {
         throw new TypeError(
           "CRC particle binding execution does not match its backend.",
         );

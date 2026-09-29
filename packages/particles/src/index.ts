@@ -52,7 +52,6 @@ export type {
   CRCParticleValueFor,
   CRCParticleValuesOf,
   CRCParticleVector2,
-  CRCParticleVector3,
   Particles2DProps,
   Particles2DStyle,
 } from "./lib/types.js";

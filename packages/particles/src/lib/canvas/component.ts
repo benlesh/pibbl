@@ -173,8 +173,7 @@ export function Particles2D<
     readonly effect?: CRCParticleEffect2D<EmitterName, Parameters>;
     readonly system?: import("../types.js").CRCParticleSystem<
       EmitterName,
-      Parameters,
-      2
+      Parameters
     >;
     readonly autoplay?: boolean;
     readonly seed?: number;

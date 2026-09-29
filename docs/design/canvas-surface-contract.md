@@ -1,13 +1,12 @@
 # CRC canvas surface contract
 
-Status: current implemented contract, updated for settled WebGL scenes,
-first-class signals, the realm scheduler, lighting, and genuine shadows on
-2026-09-15.
+Status: current implemented contract, updated for first-class signals, the realm
+scheduler, and external render-layer surfaces on 2026-09-28.
 
 This document defines how a root CRC mount maps logical drawing units to the
 Canvas CSS content box and physical backing store. The mapping is owned by the
 runtime so drawing, layout, interaction, clipping, Canvas layers, filters, and
-WebGL islands use one coordinate model.
+external render layers use one coordinate model.
 
 ## Public configuration
 
@@ -213,11 +212,10 @@ Filter projection tests additionally cover upright local capture, conservative
 windows, root and Layer density exactly once, unchanged target geometry, and
 nested high-density filter composition.
 
-WebGL surface, interaction, and browser suites cover logical/backing viewport
-snapshots, default and explicit cameras, outer layout/transforms/clips/Layers,
-opaque and settled-transparent composition, delegated geometry picking,
-density changes, bitmap/pick/focus generation transactions, constant-time clean
-cache reuse, and context loss/restoration.
+Render-layer and Three adapter suites cover logical/backing viewport snapshots,
+outer layout/transforms/clips/Layers, transparent bitmap composition, delegated
+object picking, density changes, bitmap/interaction generation transactions,
+constant-time clean cache reuse, and deterministic removal/disposal.
 
 The public `canvas-surface` laboratory is loaded by both the Studio and
 headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical

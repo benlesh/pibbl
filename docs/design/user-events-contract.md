@@ -1,7 +1,7 @@
 # CRC user-event contract
 
-Status: current implemented contract, updated for WebGL lighting, orbit-camera,
-and genuine-shadow behavior on 2026-09-15.
+Status: current implemented contract, updated for external render-layer and
+Three.js interaction on 2026-09-28.
 Focus integration is governed by the implemented
 [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 
@@ -87,7 +87,7 @@ mouse sequence nor suppresses one supplied by the browser.
 ## Target resolution and temporary path
 
 Coordinate events convert the Canvas content-box position into root-logical
-`x`/`y`, then search the shared Canvas/WebGL paint ledger in reverse order.
+`x`/`y`, then search the shared Canvas paint ledger in reverse order.
 Every candidate writes one reusable fixed-shape result as miss, block, or
 target. Miss continues behind; block stops with no logical leaf; target stops
 with a live logical leaf. Canvas paths, nested Canvas instances, and backend
@@ -274,9 +274,9 @@ registrations also own the native prerequisite and terminal types needed to
 establish and clear their state. Every release closure and root disposal is
 idempotent.
 
-Offscreen Canvas layers and WebGL islands share their root HTML Canvas event
-root, global paint order, paths, captures, contacts, drag hover, listeners, and
-observers. A CRC mount
+Offscreen Canvas layers and external render layers share their root HTML Canvas
+event root, global paint order, paths, captures, contacts, drag hover,
+listeners, and observers. A CRC mount
 whose root is itself an `OffscreenCanvas` has no DOM native-event source and
 therefore no native-listener hub. CRC does not pretend that such a root can
 receive browser UI input and exposes no public event-injection API in this
@@ -294,9 +294,10 @@ activation.
 Root disposal synchronously clears native listeners, logical registrations,
 pointer captures and pending loss, pointer hover, touch contacts, drag hover,
 mouse activation/click streaks, cursor ownership, observers, and layer bridges.
-WebGL context loss removes its stale nested resolver targets and committed pick
-state before restoration can rebuild them. Stale controllers and repeated
-releases cannot affect a newer mount.
+Render-layer removal or generation replacement removes stale nested resolver
+targets and committed interaction state before a replacement can become
+selectable. Stale controllers and repeated releases cannot affect a newer
+mount.
 
 ## Evidence boundary
 
@@ -329,6 +330,12 @@ cross-browser normalization beyond the stated logical contracts. Optional
 logical focus does not create screen-reader semantics or generated DOM
 descendants.
 
-## 3D physics interaction boundary
+## External 3D geometry boundary
 
-WebGL coordinate events target the top committed rendered mesh through camera-aware depth picking. `@crc/physics/3d` ray, shape, overlap, AABB, and point queries instead read authoritative committed collider state in world coordinates and never schedule or advance simulation. CRC provides no automatic pointer-to-physics bridge: applications that grab or inspect a body explicitly derive a world ray, run a physics query, and issue generation-bound commands while normal event propagation and pointer capture remain unchanged.
+Three coordinate events target the nearest committed visible object through the
+adapter's camera-aware raycasting, or through an application-supplied picker.
+Pure operations from `@crc/physics/3d/geometry` do not create event targets or
+retain an authoritative world. Applications that combine those operations with
+a Three scene explicitly derive their world-space query input and register the
+corresponding Three object as a CRC target; normal event propagation and pointer
+capture remain unchanged.

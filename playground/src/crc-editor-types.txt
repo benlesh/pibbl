@@ -700,19 +700,17 @@
   export type CRCParticleParameterDefinition =
     | Readonly<{ type: 'number'; default: number; timing: CRCParticleParameterTiming }>
     | Readonly<{ type: 'vector2'; default: readonly [number, number]; timing: CRCParticleParameterTiming }>
-    | Readonly<{ type: 'vector3'; default: readonly [number, number, number]; timing: CRCParticleParameterTiming }>
     | Readonly<{ type: 'color'; default: string; timing: CRCParticleParameterTiming }>;
   export type CRCParticleParameterDefinitions = Readonly<Record<string, CRCParticleParameterDefinition>>;
   export type CRCParticleValueFor<Definition extends CRCParticleParameterDefinition> =
     Definition['type'] extends 'number' ? number :
     Definition['type'] extends 'vector2' ? readonly [number, number] :
-    Definition['type'] extends 'vector3' ? readonly [number, number, number] :
     Definition['type'] extends 'color' ? string : never;
   export type CRCParticleValuesOf<Definitions extends CRCParticleParameterDefinitions | undefined> =
     Definitions extends CRCParticleParameterDefinitions
       ? Readonly<{ [Name in keyof Definitions]: CRCParticleValueFor<Definitions[Name]> }>
       : Readonly<Record<never, never>>;
-  export type CRCParticleParameterValue = number | string | readonly [number, number] | readonly [number, number, number];
+  export type CRCParticleParameterValue = number | string | readonly [number, number];
   export type CRCParticleParameterValues = Readonly<Record<string, CRCParticleParameterValue>>;
 
   export interface CRCParticleRange { readonly type: 'between'; readonly min: number; readonly max: number }
@@ -724,7 +722,6 @@
   export interface CRCParticleParameterReference<Name extends string> { readonly type: 'parameter'; readonly name: Name }
   export type CRCParticleScalar = number | CRCParticleRange | CRCParticleIntegerRange | CRCParticleChoice<number> | CRCParticleParameterReference<string>;
   export type CRCParticleVector2 = readonly [CRCParticleScalar, CRCParticleScalar] | CRCParticleParameterReference<string>;
-  export type CRCParticleVector3 = readonly [CRCParticleScalar, CRCParticleScalar, CRCParticleScalar] | CRCParticleParameterReference<string>;
   export type CRCParticleCurveValue = number | readonly [number, number];
   export interface CRCParticleCurveOptions { readonly easing?: import('@crc/core').CRCEasing }
   export interface CRCParticleCurve<T extends CRCParticleCurveValue> {
@@ -819,7 +816,7 @@
   }
 
   export type CRCParticleSystemStatus = 'idle' | 'scheduled' | 'running' | 'paused' | 'draining' | 'finished' | 'disposed';
-  export type CRCParticleExecution = 'unbound' | 'stateless-canvas' | 'stateful-canvas' | 'stateless-webgl' | 'stateful-cpu-webgl' | 'stateful-gpu-webgl';
+  export type CRCParticleExecution = 'unbound' | 'stateless-canvas';
   export interface CRCParticleStartEvent { readonly type: 'start' }
   export interface CRCParticleBurstAcceptedEvent { readonly type: 'burst-accepted'; readonly emitter: string; readonly requested: number; readonly accepted: number }
   export interface CRCParticleBurstRejectedEvent { readonly type: 'burst-rejected'; readonly emitter: string; readonly requested: number; readonly accepted: number; readonly reason: 'capacity' | 'paused' | 'stopped' | 'disposed' }
@@ -838,9 +835,9 @@
     readonly onEvent?: (event: CRCParticleSystemEvent) => void;
     readonly onError?: (error: unknown) => void;
   }
-  export interface CRCParticleBurstOverrides<Dimension extends 2 | 3 = 2 | 3> {
+  export interface CRCParticleBurstOverrides {
     readonly count?: number;
-    readonly position?: Dimension extends 2 ? readonly [number, number] : readonly [number, number, number];
+    readonly position?: readonly [number, number];
     readonly seedSalt?: number;
     readonly parameters?: Readonly<Record<string, number | readonly number[] | string>>;
   }
@@ -848,16 +845,15 @@
   export interface CRCParticleSystem<
     EmitterName extends string = string,
     Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
-    Dimension extends 2 | 3 = 2 | 3,
   > {
-    readonly [particleSystemBrand]: { readonly parameters: Parameters; readonly dimension: Dimension };
+    readonly [particleSystemBrand]: { readonly parameters: Parameters; readonly dimension: 2 };
     readonly status: Signal<CRCParticleSystemStatus>;
     readonly execution: Signal<CRCParticleExecution>;
     play(): void;
     pause(): void;
     resume(): void;
     restart(options?: Readonly<{ seed?: number }>): void;
-    emit(emitter: EmitterName, options?: CRCParticleBurstOverrides<Dimension>): void;
+    emit(emitter: EmitterName, options?: CRCParticleBurstOverrides): void;
     stop(options?: Readonly<{ mode?: 'drain' | 'clear' }>): void;
   }
   export interface CRCParticleCommonProps<Parameters extends CRCParticleParameterValues>
@@ -874,7 +870,7 @@
     Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
   > = CRCParticleCommonProps<Parameters> & { readonly style?: Particles2DStyle } & (
     | { readonly effect: CRCParticleEffect2D<EmitterName, Parameters>; readonly system?: never; readonly autoplay?: boolean; readonly seed?: number }
-    | { readonly effect?: never; readonly system: CRCParticleSystem<EmitterName, Parameters, 2>; readonly autoplay?: never; readonly seed?: never }
+    | { readonly effect?: never; readonly system: CRCParticleSystem<EmitterName, Parameters>; readonly autoplay?: never; readonly seed?: never }
   );
 
   export declare function defineParticleEffect2D<const Input extends CRCParticleEffect2DInput>(
@@ -897,7 +893,7 @@
   >(
     effect: CRCParticleEffect2D<EmitterName, Parameters>,
     options?: CRCParticleSystemOptions,
-  ): CRCParticleSystem<EmitterName, Parameters, 2>;
+  ): CRCParticleSystem<EmitterName, Parameters>;
   export declare function Particles2D<
     EmitterName extends string,
     Parameters extends CRCParticleParameterValues,

@@ -40,7 +40,6 @@ import type {
   CRCParticleValueFor,
   CRCParticleValuesOf,
   CRCParticleVector2,
-  CRCParticleVector3,
   Particles2DProps,
   Particles2DStyle,
 } from "@crc/particles";
@@ -78,7 +77,7 @@ type InferredSystem =
     infer EmitterName,
     infer EffectParameters
   >
-    ? CRCParticleSystem<EmitterName, EffectParameters, 2>
+    ? CRCParticleSystem<EmitterName, EffectParameters>
     : never;
 
 declare const effect2D: InferredEffect;
@@ -86,7 +85,6 @@ declare const system2D: InferredSystem;
 
 function assertParticlePublicTypes(): void {
   const vector2Reference: CRCParticleVector2 = particleParameter("wind");
-  const vector3Reference: CRCParticleVector3 = particleParameter("velocity");
   const parameterizedInitial2D: CRCParticleInitial2D = {
     lifetimeMilliseconds: 1_000,
     velocity: particleParameter("wind"),
@@ -97,7 +95,6 @@ function assertParticlePublicTypes(): void {
     value: particleParameter("wind"),
   };
   void vector2Reference;
-  void vector3Reference;
   void parameterizedInitial2D;
   void parameterizedMotion2D;
 
@@ -126,7 +123,7 @@ void assertParticlePublicTypes;
 
 it("runs as an inert compile fixture", () => {
   expectTypeOf<InferredSystem>().toMatchTypeOf<
-    CRCParticleSystem<"impact" | "smoke", Parameters, 2>
+    CRCParticleSystem<"impact" | "smoke", Parameters>
   >();
 });
 
@@ -170,7 +167,6 @@ type RootPublicTypes =
   | CRCParticleSystemOptions
   | CRCParticleSystemStatus
   | CRCParticleVector2
-  | CRCParticleVector3
   | Particles2DStyle;
 
 declare const rootPublicTypes: RootPublicTypes;

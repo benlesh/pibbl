@@ -175,7 +175,6 @@ describe("Particles2D component", () => {
       schedulerRegistrations: baseline.schedulerRegistrations,
       canvasLedgers: baseline.canvasLedgers,
       canvasRasterEntries: baseline.canvasRasterEntries,
-      webglRecipes: baseline.webglRecipes,
     });
   });
 
@@ -197,7 +196,7 @@ describe("Particles2D component", () => {
     expect(pixel(implicit.canvas, 10, 10)[3]).toBeGreaterThan(0);
 
     const manual = effect();
-    let system!: CRCParticleSystem<"marks", Record<never, never>, 2>;
+    let system!: CRCParticleSystem<"marks", Record<never, never>>;
     const Explicit = () => {
       system = useParticleSystem(manual);
       return <Particles2D system={system} style={{ width: 40, height: 40 }} />;
@@ -313,7 +312,7 @@ describe("Particles2D component", () => {
 
   it("invalidates an explicit Layer and captures the combined primitive through a nonempty filter", () => {
     const definition = effect({ count: 3 });
-    let system!: CRCParticleSystem<"marks", Record<never, never>, 2>;
+    let system!: CRCParticleSystem<"marks", Record<never, never>>;
     const arcs = vi.spyOn(OffscreenCanvasRenderingContext2D.prototype, "arc");
     const offscreenDraws = vi.spyOn(
       OffscreenCanvasRenderingContext2D.prototype,

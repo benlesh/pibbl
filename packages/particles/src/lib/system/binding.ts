@@ -4,7 +4,7 @@ import {
   useInternalHookSlot,
   type CRCInternalRenderOwner,
 } from "@crc/core/internal";
-import type { CompiledEffect2D, CompiledEffect3D } from "../compiler.js";
+import type { CompiledEffect2D } from "../compiler.js";
 import type {
   CRCParticleExecution,
   CRCParticleSystem,
@@ -18,7 +18,7 @@ import {
   type ParticleSystemController,
 } from "./controller.js";
 
-export type CompiledParticleEffect = CompiledEffect2D | CompiledEffect3D;
+export type CompiledParticleEffect = CompiledEffect2D;
 
 export interface ParticleBindingFrameState {
   readonly liveCount: number;
@@ -33,8 +33,7 @@ export interface ParticleBindingBurstRequest {
   readonly birthTimeMilliseconds: number;
   readonly seed: number;
   readonly seedSalt: number;
-  readonly origin:
-    readonly [number, number] | readonly [number, number, number];
+  readonly origin: readonly [number, number];
   readonly spawnEpoch: number;
 }
 
@@ -46,7 +45,7 @@ export interface ParticleBindingBurstResult extends ParticleBindingFrameState {
 
 export interface ParticleBindingCandidate {
   readonly owner: CRCInternalRenderOwner;
-  readonly backend: "canvas" | "webgl";
+  readonly backend: "canvas";
   readonly execution: CRCParticleExecution;
   readonly compiled: CompiledParticleEffect;
   readonly parameters: Readonly<Float64Array>;
@@ -75,7 +74,7 @@ export interface ParticleSystemFrame {
 
 export interface ParticleSystemBindingInput {
   readonly system: CRCParticleSystem;
-  readonly backend: "canvas" | "webgl";
+  readonly backend: "canvas";
   readonly create: (owner: CRCInternalRenderOwner) => ParticleBindingCandidate;
   readonly onEvent?: (event: CRCParticleSystemEvent) => void;
   readonly onError?: (error: unknown) => void;

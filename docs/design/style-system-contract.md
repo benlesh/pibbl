@@ -1,7 +1,7 @@
 # CRC style-system contract
 
-Status: current implemented contract, updated for WebGL lighting, materials,
-background, and genuine shadows on 2026-09-15.
+Status: current implemented contract, updated for external render-layer style
+and Three.js integration on 2026-09-28.
 
 CRC has one typed, local, closed `style` prop. Geometry, paint, cursor,
 transforms, clipping, image source, text layout, and layout participation live
@@ -207,12 +207,11 @@ subset; CRC-native behavior uses names such as `rotationDegrees`, `fit`, and
 Filters do not accept raw CSS strings, `url()`/SVG filter graphs,
 `backdrop-filter`, or `boxShadow`/CSS box-shadow semantics.
 
-WebGL styles do not add textures, image environments/IBL, PBR, glow/bloom,
-area lights, cascaded/soft/contact/transparent shadows, public shadow cameras,
-map sizes, bias/filter controls, shader graphs, multiple viewports/cameras,
-Canvas filter descriptors on inner objects, or arbitrary ambient GL state.
-Application-specific data belongs in ordinary component props and may be
-translated into `Mesh` geometry or style declarations.
+CRC style does not configure an external renderer's textures, environments,
+materials, lighting, shadows, shader graphs, viewports, cameras, or ambient
+graphics state. Application-specific data belongs in ordinary component props
+and may be translated into Three objects or other renderer-native state during
+the render-layer lifecycle.
 
 See the [layout contract](./layout-system-contract.md), [drawing
 contract](./drawing-components-contract.md), and [custom primitive

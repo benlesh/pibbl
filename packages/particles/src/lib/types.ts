@@ -24,11 +24,6 @@ export type CRCParticleParameterDefinition =
       timing: CRCParticleParameterTiming;
     }>
   | Readonly<{
-      type: "vector3";
-      default: readonly [number, number, number];
-      timing: CRCParticleParameterTiming;
-    }>
-  | Readonly<{
       type: "color";
       default: string;
       timing: CRCParticleParameterTiming;
@@ -44,11 +39,9 @@ export type CRCParticleValueFor<
   ? number
   : Definition["type"] extends "vector2"
     ? readonly [number, number]
-    : Definition["type"] extends "vector3"
-      ? readonly [number, number, number]
-      : Definition["type"] extends "color"
-        ? string
-        : never;
+    : Definition["type"] extends "color"
+      ? string
+      : never;
 
 export type CRCParticleValuesOf<
   Definitions extends CRCParticleParameterDefinitions | undefined,
@@ -61,8 +54,7 @@ export type CRCParticleValuesOf<
 export type CRCParticleParameterValue =
   | number
   | string
-  | readonly [number, number]
-  | readonly [number, number, number];
+  | readonly [number, number];
 
 export type CRCParticleParameterValues = Readonly<
   Record<string, CRCParticleParameterValue>
@@ -99,10 +91,6 @@ export type CRCParticleScalar =
 
 export type CRCParticleVector2 =
   | readonly [CRCParticleScalar, CRCParticleScalar]
-  | CRCParticleParameterReference<string>;
-
-export type CRCParticleVector3 =
-  | readonly [CRCParticleScalar, CRCParticleScalar, CRCParticleScalar]
   | CRCParticleParameterReference<string>;
 
 export type CRCParticleCurveValue = number | readonly [number, number];
@@ -270,11 +258,7 @@ export type CRCParticleSystemStatus =
 
 export type CRCParticleExecution =
   | "unbound"
-  | "stateless-canvas"
-  | "stateful-canvas"
-  | "stateless-webgl"
-  | "stateful-cpu-webgl"
-  | "stateful-gpu-webgl";
+  | "stateless-canvas";
 
 export interface CRCParticleStartEvent {
   readonly type: "start";
@@ -346,11 +330,9 @@ export interface CRCParticleSystemOptions {
   readonly onError?: (error: unknown) => void;
 }
 
-export interface CRCParticleBurstOverrides<Dimension extends 2 | 3 = 2 | 3> {
+export interface CRCParticleBurstOverrides {
   readonly count?: number;
-  readonly position?: Dimension extends 2
-    ? readonly [number, number]
-    : readonly [number, number, number];
+  readonly position?: readonly [number, number];
   readonly seedSalt?: number;
   readonly parameters?: Readonly<
     Record<string, number | readonly number[] | string>
@@ -362,11 +344,10 @@ declare const particleSystemBrand: unique symbol;
 export interface CRCParticleSystem<
   EmitterName extends string = string,
   Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
-  Dimension extends 2 | 3 = 2 | 3,
 > {
   readonly [particleSystemBrand]: {
     readonly parameters: Parameters;
-    readonly dimension: Dimension;
+    readonly dimension: 2;
   };
   readonly status: Signal<CRCParticleSystemStatus>;
   readonly execution: Signal<CRCParticleExecution>;
@@ -376,7 +357,7 @@ export interface CRCParticleSystem<
   restart(options?: Readonly<{ seed?: number }>): void;
   emit(
     emitter: EmitterName,
-    options?: CRCParticleBurstOverrides<Dimension>,
+    options?: CRCParticleBurstOverrides,
   ): void;
   stop(options?: Readonly<{ mode?: "drain" | "clear" }>): void;
 }
@@ -424,7 +405,7 @@ export type Particles2DProps<
       }
     | {
         readonly effect?: never;
-        readonly system: CRCParticleSystem<EmitterName, Parameters, 2>;
+        readonly system: CRCParticleSystem<EmitterName, Parameters>;
         readonly autoplay?: never;
         readonly seed?: never;
       }

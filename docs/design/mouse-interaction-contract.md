@@ -1,7 +1,7 @@
 # CRC mouse interaction contract
 
 Status: current geometry, coordinates, cursor, and observer contract, updated
-for WebGL lighting, orbit-camera, and genuine-shadow behavior on 2026-09-15.
+for external render-layer and Three.js interaction on 2026-09-28.
 The DOM-aligned [user-event contract](./user-events-contract.md)
 superseded this document's mouse-only non-propagation, hidden related-target,
 no-cancellation, no-capture, and sibling no-activation clauses on 2026-08-29.
@@ -27,7 +27,7 @@ The platform evidence is consistent on the important shape: mouse events target 
 
 ## Terms
 
-- **Paint target:** a default-participating Canvas path, geometry-backed WebGL object, or explicit Canvas target registration. Its identity is the owning mounted component plus that target slot, not a particular handler function.
+- **Paint target:** a default-participating Canvas path, committed render-layer target, or explicit Canvas target registration. Its identity is the owning mounted component plus that target slot, not a particular handler function.
 - **Logical target:** the one live paint/custom target selected for a native mouse event.
 - **Paint order:** the order in which CRC composites interactive paths, including layers. Later paint is visually above earlier paint.
 - **Live target:** a region still owned by the current rendered tree with the target generation selected for dispatch.
@@ -55,9 +55,10 @@ without replacing the keyed/tree-slot component preserves identity.
    deepest painted interactive child remains the hit target.
 8. Cursor selection uses this same target. It must not run a separate “first cursor handler to write” policy.
 
-Canvas and WebGL drawing primitives participate by default even without a
-handler or cursor. `pointerEvents="none"` releases one leaf from coordinate and
-focus participation while leaving paint unchanged. Hit eligibility follows
+Canvas drawing primitives and committed render-layer targets participate by
+default even without a handler or cursor. `pointerEvents="none"` releases one
+leaf or layer from coordinate and focus participation while leaving paint
+unchanged. Hit eligibility follows
 declared geometry rather than rendered opacity: a configured transparent fill
 is still a fill hit area, and zero opacity does not disable interaction. A
 Canvas path with neither a fill hit area nor a positive stroke interaction
@@ -262,6 +263,10 @@ JSX or `createElement` over branded `CRCElement` descriptors.
 - [W3C CSSOM View — MouseEvent coordinate extensions](https://www.w3.org/TR/cssom-view/#extensions-to-the-mouseevent-interface)
 - [WHATWG HTML — Canvas paths, clipping, hit testing, and drawing images](https://html.spec.whatwg.org/multipage/canvas.html)
 
-## 3D physics queries
+## External 3D geometry
 
-Mouse and pointer events report root-logical Canvas coordinates and WebGL renderer targets; they are not physics query results. A physics interaction explicitly projects the pointer through the committed camera to a world-space ray, calls the authoritative `@crc/physics/3d` query surface, and sends commands through a generation-bound body handle. Queries neither synthesize DOM events nor start a private simulation/render loop.
+Mouse and pointer events report root-logical Canvas coordinates and committed
+render-layer targets; they are not physics query results. A Three integration
+projects through its committed camera and raycasts its scene or invokes the
+application's picker. Pure `@crc/physics/3d/geometry` operations neither
+synthesize DOM events nor start a simulation or render loop.
