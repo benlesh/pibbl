@@ -8,7 +8,7 @@ import { getLayoutBox } from "../layout/context.js";
 import { resolveLength } from "../style/resolve-length.js";
 import type { CRCNode } from "../element/types.js";
 import type { BoxStyle, LayoutItemStyle } from "../style/types.js";
-import type { SystemStyle } from "../types.js";
+import type { RenderingContext2D, SystemStyle } from "../types.js";
 import type { CRCManipulationController } from "./controller-types.js";
 import { manipulationHandlers } from "./controller.js";
 import { requireManipulationFrame } from "./frame.js";
@@ -169,12 +169,7 @@ export const ResizeHandle = definePrimitive<CRCResizeHandleProps>(
         style: { transform: cssHandleChildTransform(state, x, y) },
         children: props.children,
       });
-    const visual = cssHandlePath(state, x, y, 8);
-    ctx.fillStyle = "#ffffff";
-    ctx.fill(visual);
-    ctx.strokeStyle = "#2563eb";
-    ctx.lineWidth = 1;
-    ctx.stroke(visual);
+    paintDefaultHandle(ctx, state, x, y);
   },
 );
 export function ResizeHandles(props: CRCResizeHandlesProps): CRCNode {
@@ -209,6 +204,18 @@ function frameToCss(
         .multiply(world)
     : world;
   return css;
+}
+
+function paintDefaultHandle(
+  ctx: RenderingContext2D,
+  state: import("./controller.js").ManipulationState,
+  x: number,
+  y: number,
+): void {
+  ctx.fillStyle = "#2563eb";
+  ctx.fill(cssHandlePath(state, x, y, 8));
+  ctx.fillStyle = "#ffffff";
+  ctx.fill(cssHandlePath(state, x, y, 6));
 }
 
 function cssHandlePath(
@@ -290,10 +297,6 @@ export const RotationHandle = definePrimitive<CRCRotationHandleProps>(
         style: { transform: cssHandleChildTransform(state, x, y) },
         children: props.children,
       });
-    ctx.fillStyle = "#ffffff";
-    ctx.fill(cssHandlePath(state, x, y, 8));
-    ctx.strokeStyle = "#2563eb";
-    ctx.lineWidth = 1;
-    ctx.stroke(cssHandlePath(state, x, y, 8));
+    paintDefaultHandle(ctx, state, x, y);
   },
 );

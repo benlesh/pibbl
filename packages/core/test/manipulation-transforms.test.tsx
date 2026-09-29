@@ -310,6 +310,24 @@ function rectanglePath(x: number, y: number, width: number, height: number): Pat
   return path;
 }
 
+function paintedAlphaBounds(canvas: HTMLCanvasElement) {
+  const image = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height);
+  let left = canvas.width;
+  let top = canvas.height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < canvas.height; y++) {
+    for (let x = 0; x < canvas.width; x++) {
+      if (image.data[(y * canvas.width + x) * 4 + 3] === 0) continue;
+      left = Math.min(left, x);
+      top = Math.min(top, y);
+      right = Math.max(right, x);
+      bottom = Math.max(bottom, y);
+    }
+  }
+  return { left, top, width: right - left + 1, height: bottom - top + 1 };
+}
+
 function paintedBounds(
   canvas: HTMLCanvasElement,
   color: readonly [number, number, number],
@@ -401,4 +419,27 @@ it("replaces an active controller when one mounted frame receives a different co
   ]);
   await settle();
   expect(secondBox.get()).toEqual({ left: 200, top: 70, width: 100, height: 80 });
+});
+
+it("keeps default resize-handle chrome at an eight CSS-pixel extent under scale", async () => {
+  const box = signal({ left: 10, top: 10, width: 40, height: 30 });
+  const canvas = document.createElement("canvas");
+  canvas.width = 320;
+  canvas.height = 240;
+  canvas.dataset.manipulationTest = "";
+  document.body.append(canvas);
+  function Scene(): CRCNode {
+    const manipulation = useManipulation({ box, resize: {} });
+    return (
+      <Group style={{ scaleX: 3, scaleY: 3 }}>
+        <ManipulationFrame {...manipulation.frameProps}>
+          <ResizeHandle controller={manipulation} position="bottom-right" />
+        </ManipulationFrame>
+      </Group>
+    );
+  }
+  controller = crc(canvas, <Scene />, { pixelRatio: 1 });
+  await settle();
+
+  expect(paintedAlphaBounds(canvas)).toEqual({ left: 146, top: 116, width: 8, height: 8 });
 });
