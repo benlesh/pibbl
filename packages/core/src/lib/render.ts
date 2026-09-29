@@ -6,7 +6,7 @@ import {
 import { Teardowns } from './teardowns.js';
 import { CRCComponentRefs } from './types.js';
 import { finalizeHookSlots } from './hooks/hook-slot.js';
-import { resolveElementStyle } from './style/resolve-dispatch.js';
+import { resolveElementStyle, takePreNormalizedStyle } from './style/resolve-dispatch.js';
 import {
   enterElementEnhancers,
   exitElementEnhancers,
@@ -204,9 +204,11 @@ function renderComponentElement<P>(
                 getElementSource(componentRefs.element),
               );
             }
+            const preparedStyle = takePreNormalizedStyle(componentRefs.element);
             const inputs = resolvePrimitiveInputs(
               componentRefs.element,
               definition,
+              preparedStyle,
             );
             const style = (() => {
               const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
@@ -216,6 +218,7 @@ function renderComponentElement<P>(
                   componentRefs.element,
                   inputs.style,
                   true,
+                  preparedStyle,
                 );
               } finally {
                 GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
@@ -276,6 +279,8 @@ function renderComponentElement<P>(
               );
             }
           } else {
+            // Placement consumes outer style; plain functions retain author props.
+            takePreNormalizedStyle(componentRefs.element);
             renderProgram(() =>
               componentRefs.element.type(componentRefs.element.props)
             );

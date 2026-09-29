@@ -1,7 +1,17 @@
 # Responsive style queries — discussion draft
 
-Status: exploratory; no API, implementation, or execution approval.
+Status: historical exploration; the linked specification owns the current proposal.
 Started: 2026-09-28. Separate from the first-class visualization slice.
+
+A concrete [allocation-relative responsive styles specification](../superpowers/specs/2026-09-28-responsive-style-queries-design.md)
+now recommends width and height conditions in the first slice, exact authoring,
+evaluation, ownership, and explicit structural and timing performance acceptance
+criteria. Its reviewed scope distinguishes outer placement from internal content
+styles and defers responsive intrinsic measurement. The current revision also
+includes an agent-facing decision table, explicit diagnostic repairs, and
+performance nonregression gates. It has completed independent design review and is approved for implementation; this
+exploratory draft remains historical motivation, not an implementation authorization.
+Capability queries and the broader mobile chart redesign remain deferred.
 
 ## Motivation
 

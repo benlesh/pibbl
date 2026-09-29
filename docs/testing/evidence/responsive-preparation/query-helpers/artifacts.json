@@ -1,0 +1,13 @@
+{
+  "hashes": {
+    "A": "7715036665232727efd094146d48ee4cc10ef1231a9e227bdf99c139fa3a39aa",
+    "B": "7715036665232727efd094146d48ee4cc10ef1231a9e227bdf99c139fa3a39aa",
+    "C": "04dcc036cbf20f350bbb784554446325093b6e1868c7f4f4c3598f5bccb728cf"
+  },
+  "baselineArchive": "cab31508006e2f947400a74db43b273526e8f2d29eaed332e98c0c75bce32eec",
+  "node": "v24.15.0",
+  "workload": "preparation-1000-receivers-one-width-rule-one-match",
+  "warmups": 100,
+  "batches": 200,
+  "updatesPerBatch": 20
+}

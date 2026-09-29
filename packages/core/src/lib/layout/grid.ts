@@ -1,3 +1,4 @@
+import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { cloneCRCElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
@@ -26,7 +27,7 @@ import type {
   SystemStyle,
 } from '../types.js';
 import {
-  normalizeDirectChildStyle,
+  prepareDirectChildStyle,
   materializeLayoutChildren,
   placeDirectChildren,
   prepareLayoutChildren,
@@ -188,7 +189,8 @@ function resolveGridPlacements(
       GLOBAL_STATE.primitiveReceiverToken,
       placements.length,
     );
-    const normalized = normalizeDirectChildStyle(child, receiverToken) as Readonly<
+    const prepared = prepareDirectChildStyle(child, receiverToken, container);
+    const normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & GridItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
     rejectUnsupportedItemFields(child, normalized, container);
@@ -285,6 +287,7 @@ function resolveGridPlacements(
         normalized,
         child,
         receiverToken,
+        preparedStyleQuery(prepared),
       );
       measured = measurement.measureElement(measurementChild, {
         minWidth: 0,
@@ -343,6 +346,7 @@ function resolveGridPlacements(
       renderedStyle,
       child,
       receiverToken,
+      preparedStyleQuery(prepared),
     );
     placements.push({ box, element: renderedChild });
   }

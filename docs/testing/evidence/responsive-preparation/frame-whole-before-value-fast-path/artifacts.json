@@ -1,0 +1,13 @@
+{
+  "hashes": {
+    "A": "9b3b4bdb7265d36b19a33803bdc7cce5c5719f9a42876fc2eec294a105ce489b",
+    "B": "9b3b4bdb7265d36b19a33803bdc7cce5c5719f9a42876fc2eec294a105ce489b",
+    "C": "add39f0b1ed4c62ee894d40c667b60162964d1e247de2b79536e847e935d1ba8"
+  },
+  "baselineArchive": "cab31508006e2f947400a74db43b273526e8f2d29eaed332e98c0c75bce32eec",
+  "node": "v24.15.0",
+  "workload": "full-1000-frame-whole",
+  "warmups": 100,
+  "batches": 200,
+  "updatesPerBatch": 20
+}

@@ -23,6 +23,11 @@ import type {
 import { GLOBAL_STATE } from './global-state.js';
 import { withSignalWriteForbidden } from './signals/graph.js';
 
+type DeclaresWhen<S> = S extends unknown ? 'when' extends keyof S ? true : false : never;
+type PrimitiveStyleGuard<S, N, R> = true extends DeclaresWhen<S> | DeclaresWhen<N> | DeclaresWhen<R> ? {
+  readonly 'CRC: style.when is framework-owned; remove when from the primitive style type': never;
+} : unknown;
+
 type AllocationValue = `${number}%` | 'auto';
 type DeclaredStyleValue<S> = S extends unknown
   ? S[Exclude<keyof S, 'custom'>]
@@ -35,7 +40,7 @@ type PrimitiveCapabilitiesInput<
   S extends SystemStyle,
   N extends SystemStyle,
   R extends SystemStyle,
-> = Readonly<PrimitiveCapabilities<P, S, N, R>> & (
+> = Readonly<PrimitiveCapabilities<P, S, N, R>> & PrimitiveStyleGuard<S, N, R> & (
   [PreservedSignalPropKey<P>] extends [never] ? object : {
     readonly preserveSignalProps: readonly [
       PreservedSignalPropKey<P>,
@@ -66,7 +71,7 @@ export function definePrimitive<
   N extends SystemStyle = S,
   R extends SystemStyle = N,
 >(
-  render: PrimitiveRender<P, R> & (
+  render: PrimitiveRender<P, R> & PrimitiveStyleGuard<S, N, R> & (
     PrimitiveInput<P, S> extends never ? never : unknown
   ),
   ...capabilityArguments: CapabilityArguments<P, S, N, R>
@@ -87,7 +92,7 @@ export function defineBackendPrimitive<
   E = unknown,
 >(
   backend: CRCBackendToken,
-  program: CRCBackendPrimitiveProgram<P, R, E> & (
+  program: CRCBackendPrimitiveProgram<P, R, E> & PrimitiveStyleGuard<S, N, R> & (
     PrimitiveInput<P, S> extends never ? never : unknown
   ),
   ...capabilityArguments: CapabilityArguments<P, S, N, R>

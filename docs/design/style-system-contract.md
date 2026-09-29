@@ -29,8 +29,8 @@ const card = (
 
 This vocabulary is CSS-familiar, not CSS. Styles do not cascade or inherit.
 There are no selectors, stylesheets, specificity, ambient parent styles,
-computed DOM values, class names, variables, or media/container queries. Reuse
-is ordinary JavaScript object composition.
+computed DOM values, class names, or variables. Reuse is ordinary JavaScript
+object composition.
 
 ## Public style model
 
@@ -294,3 +294,39 @@ cursor, event, or layout fields.
 ## 3D physics transform authority
 
 A 3D rigid-body pose contains translation and quaternion orientation, never scale. CRC forward-composes exact authored transform lineage below a compound body; scale and mirroring are baked into immutable collider geometry and automatic mass/inertia. Enabled dynamics reject competing authored root-pose changes, kinematic targets are application-owned moving poses, statics follow authored placement as topology, and disabled bodies stop physics presentation and accept authored motion. Shape/BVH and shape-to-render-geometry identity caches use weak descriptor keys rather than reference-counted runtime ownership.
+
+## Allocation-relative responsive inputs
+
+Primitive inputs accept `CRCResponsiveStyle<S>`: the ordinary shallow signal
+style plus an optional readonly `when` list of `CRCStyleRule<S>`. Each rule has
+`query: CRCSizeQuery` and a partial specified-style patch. Queries require at
+least one inclusive finite nonnegative bound: min/max width or height. Both axes
+combine with AND. Unknown query keys, conflicting ranges, malformed records,
+and nested lists reject, including in inactive branches. `when` is reserved in
+custom primitive specified, normalized, and resolved style declarations.
+
+Selection uses available containing size before normalization and placement. A
+layout item's outer rules see the parent's content dimensions. A plain component
+placed in a Grid cell receives raw author props and may return an inner primitive
+whose rules see the assigned cell. Extracting a directly placed primitive into
+a function can therefore change the query basis. No cascade, final-size
+rematching, or iterative layout pass is introduced.
+
+Base fields and all matching patch fields resolve once per preparation, even
+when later overwritten; inactive patch signals are unread. Last assignment wins,
+objects/arrays replace, and explicit undefined receives ordinary defaults after
+merging. Whole-style signals are allowed; rule/query/patch-object signals are
+not. Custom normalizers and resolvers never receive `when` (including undefined
+or empty lists). Existing receiver provisions own reads during parent inspection
+and transfer them to the receiver without rereading its authored style. Query
+metadata is occurrence-local, never recovered from receiver-token history.
+
+Mounted intrinsic and recursive measurement of query-bearing items is
+unsupported. Standalone top-level measurement requires finite maxima on queried
+axes. Query-free descendants remain measurable under allocated responsive
+containers. Unsupported paths read no unprepared base/patch fields; malformed
+envelopes still throw. Untracked measurement retains no reactive ownership.
+
+See the [public guide](../site/learn/guides/responsive-styles.md) for canonical
+JSX and createElement recipes, the [layout contract](./layout-system-contract.md)
+for placement.

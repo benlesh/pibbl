@@ -1,3 +1,4 @@
+import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
@@ -16,7 +17,7 @@ import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import {
   childWithUsedSize,
   prepareLayoutChildren,
-  normalizeDirectChildStyle,
+  prepareDirectChildStyle,
   placeDirectChildren,
   resolveContainerBox,
   resolveDirectChildBox,
@@ -110,7 +111,8 @@ function resolveOverlayChildPlacement(
   alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>> = {},
   receiverToken?: object,
 ): { box: LayoutBox; element: CRCElement<any> } {
-  const item = normalizeDirectChildStyle(child, receiverToken) as Readonly<
+  const prepared = prepareDirectChildStyle(child, receiverToken, container);
+  const item = preparedStyleValue(prepared) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
   const resolved = resolveDirectChildBox(
@@ -166,6 +168,7 @@ function resolveOverlayChildPlacement(
       Math.max(0, box.width - horizontalPadding),
       Math.max(0, box.height - verticalPadding),
       receiverToken,
+      preparedStyleQuery(prepared),
     ),
   };
 }

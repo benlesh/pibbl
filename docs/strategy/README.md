@@ -37,6 +37,12 @@ assumption rather than rewriting historical plans or field notes.
   exploratory general styling ideas prompted by the visualization mobile gap;
   not part of visualization implementation or an approved API.
 
+- [Agent verification capability inventory](./agent-verification-inventory.md)
+  (2026-09-28): an agent-first inventory of observation, control, assertion,
+  diagnosis and evidence needs for complex CRC applications. It includes
+  ownership boundaries, conditional visualization/renderer facets, exclusions
+  and a consistency review. It is design input, not an implementation commitment.
+
 ## Executive view
 
 The strongest working thesis is:

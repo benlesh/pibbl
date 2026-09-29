@@ -87,6 +87,27 @@ export type SignalStyle<S> = Readonly<{
   [K in keyof S]: K extends "custom" ? S[K] : SignalValue<S[K]>;
 }>;
 
+/** Conditions on the available containing size, in logical units. All bounds are inclusive. */
+export type CRCSizeQuery = Readonly<{
+  minWidth?: number; maxWidth?: number; minHeight?: number; maxHeight?: number;
+} & ({ minWidth: number } | { maxWidth: number } | { minHeight: number } | { maxHeight: number })>;
+
+export type CRCStyleRule<S extends SystemStyle> = Readonly<{
+  query: CRCSizeQuery;
+  style: Partial<SignalStyle<S>> & { readonly when?: never };
+}>;
+
+/** Local ordered patches. Layout-item rules query the parent; internal rules query the assigned box. */
+export type CRCResponsiveStyle<S extends SystemStyle> = SignalStyle<S> & Readonly<{
+  /**
+   * Ordered local patches against the available containing size, not this
+   * receiver's final size. All matches merge in order; later fields win.
+   * Hoist stable lists for Layer cache reuse. Intrinsic responsive measurement
+   * is unsupported: use a definite allocation and adapt its inner content.
+   */
+  when?: readonly CRCStyleRule<S>[];
+}>;
+
 export type PreservedSignalPropKey<P> = {
   [K in keyof PrimitiveProgramProps<P>]-?: [PrimitiveProgramProps<P>[K]] extends [never]
     ? never
@@ -100,7 +121,7 @@ export type PreservedSignalPropKey<P> = {
 export type PrimitiveInput<
   P,
   S extends SystemStyle = SystemStyle,
-> = SignalProgramProps<P> & StyleField<SignalStyle<SpecifiedStyle<S>>>;
+> = SignalProgramProps<P> & StyleField<CRCResponsiveStyle<SpecifiedStyle<S>>>;
 
 export type Canvas = HTMLCanvasElement | OffscreenCanvas;
 export type RenderingContext2D =

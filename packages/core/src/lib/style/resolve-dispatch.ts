@@ -1,3 +1,4 @@
+import { type PreparedQuery } from './responsive.js';
 import { getLayoutBox, getPercentageBasis } from '../layout/context.js';
 import { EMPTY_STYLE } from './empty-style.js';
 import {
@@ -18,10 +19,12 @@ import { resolveFilterList } from './filter.js';
 import type { CRCFilter } from './filter-types.js';
 
 const opaqueStyleProperties = new WeakMap<Function, ReadonlySet<string>>();
-const preNormalizedStyles = new WeakMap<
-  CRCElement<any>,
-  { style: Readonly<SystemStyle>; source: CRCElement<any> }
->();
+export interface PreparedStyleInput {
+  style: Readonly<SystemStyle>;
+  source: CRCElement<any>;
+  query?: PreparedQuery;
+}
+const preNormalizedStyles = new WeakMap<CRCElement<any>, PreparedStyleInput>();
 
 /** @internal Carries one normalized style through an internal placement descriptor. */
 export function setPreNormalizedStyle(
@@ -29,15 +32,16 @@ export function setPreNormalizedStyle(
   style: Readonly<SystemStyle>,
   source: CRCElement<any> = element,
   receiverToken?: object,
+  query?: PreparedQuery,
 ): void {
-  preNormalizedStyles.set(element, { style, source });
+  preNormalizedStyles.set(element, { style, source, query });
   if (receiverToken) setPrimitiveReceiverToken(element, receiverToken);
 }
 
 /** @internal Consumes an internal normalized-style override exactly once. */
 export function takePreNormalizedStyle(
   element: CRCElement<any>,
-): { style: Readonly<SystemStyle>; source: CRCElement<any> } | undefined {
+): PreparedStyleInput | undefined {
   const value = preNormalizedStyles.get(element);
   preNormalizedStyles.delete(element);
   return value;
@@ -62,7 +66,7 @@ export function extractSystemFilter(
 export function withoutSystemFilter(
   style: Readonly<SystemStyle>,
 ): Readonly<SystemStyle> {
-  const { filter: _filter, ...withoutFilter } = style;
+  const { filter: _filter, when: _when, ...withoutFilter } = style as Readonly<SystemStyle> & { when?: unknown };
   return Object.freeze(withoutFilter);
 }
 
@@ -74,6 +78,7 @@ export function resolveElementStyle<
   element: CRCElement<any>,
   resolvedSpecifiedStyle?: Readonly<SystemStyle>,
   hasResolvedSpecifiedStyle = false,
+  prepared?: PreparedStyleInput,
 ): ResolvedStyle<R> {
   const allocation = getLayoutBox();
   const percentageBasis = getPercentageBasis();
@@ -98,7 +103,8 @@ export function resolveElementStyle<
     component,
     algorithm: 'render-dispatch',
   };
-  const preNormalized = takePreNormalizedStyle(element);
+  // The renderer already consumed placement metadata before resolving inputs.
+  const preNormalized = prepared;
   const specified = ((hasResolvedSpecifiedStyle ?
     resolvedSpecifiedStyle : getSpecifiedStyle(element)) ?? EMPTY_STYLE) as
     SpecifiedStyle<S>;

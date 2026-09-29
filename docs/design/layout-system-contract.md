@@ -254,3 +254,24 @@ contract](./runtime-resource-ownership.md).
 ## 3D physics and layout
 
 Layout treats a `WebGLLayer` as one ordinary allocated Canvas item and does not inspect its inner physics scene. Authored placement at body creation or re-enable seeds world-local pose, but layout is not a continuing constraint on an enabled dynamic body; physics presentation is applied inside the already allocated island and never changes Canvas measurement or allocation.
+
+## Responsive style inspection
+
+`style.when` selects local patches against the parent's established content box
+before direct-child normalization, measurement eligibility checks, and allocation.
+The prepared normalized style and query eligibility travel with that occurrence's
+private clones; rendering does not rematch against the final allocated size.
+Queries in an inner primitive returned by a placed plain component instead use
+that component's incoming allocation. Outer placement props remain raw in plain
+functions. Query-free styles retain the existing allocation path.
+
+Nonempty queries on an item that needs mounted intrinsic measurement are
+unsupported, including descendants inspected by a measure callback. Give the
+item a definite allocation and adapt inside it. Standalone top-level measurement
+can use finite maxima on every queried axis; indefinite unqueried axes are
+allowed subject to existing measurement support. The eligibility preflight for
+indefinite standalone constraints can scan rules before selection, without
+repeating signal reads or adding mounted layout passes.
+
+The [responsive styles guide](../site/learn/guides/responsive-styles.md) explains
+the placement/content distinction and its observable refactoring consequence.

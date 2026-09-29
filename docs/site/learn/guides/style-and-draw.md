@@ -253,3 +253,6 @@ resolved pipeline. Allocation syntax such as percentages must resolve to finite
 Canvas geometry before painting. [The style contract](../../../design/style-system-contract.md)
 defines the accepted language, while [custom components and
 primitives](#/learn/guides/custom-components-and-primitives) explains advanced extension.
+
+See [responsive local styles](#/learn/guides/responsive-styles) for typed width
+and height conditions, the placement/content distinction, and measurement limits.

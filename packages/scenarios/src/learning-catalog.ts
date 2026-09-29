@@ -953,6 +953,30 @@ const drafts = [
     load: () => import("./learning/layout/flow.example"),
   },
   {
+    slug: "responsive-styles",
+    title: "Responsive local styles",
+    shortTitle: "Responsive styles",
+    section: "layout",
+    order: 129,
+    summary: "Adapt reusable controls to available width and height with local style rules.",
+    api: ["Flow", "Grid", "useLayoutBox"],
+    objectives: [
+      "Use inclusive width and height rules without a cascade.",
+      "Distinguish outer placement styles from internal responsive content.",
+    ],
+    prompts: {
+      gesture: "Switch the root size, then change the Grid cell width and height. Click counts survive reflow.",
+      code: "Change the 600-unit width or 120-unit height threshold in the shared rule list.",
+    },
+    apiNotes: [
+      "An outer layout-item rule sees its parent's content size; inner rules see the assigned allocation.",
+      "Rules do not imply touch capability or conditional structure.",
+    ],
+    canvas: { width: 1000, height: 640 },
+    related: ["flow", "grid"],
+    load: () => import("./learning/layout/responsive-styles.example"),
+  },
+  {
     slug: "flex",
     title: "Flex layout",
     shortTitle: "Flex",

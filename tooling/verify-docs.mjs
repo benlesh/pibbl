@@ -81,6 +81,7 @@ const publicGuidePaths = [
   "docs/site/learn/guides/signals-and-animation.md",
   "docs/site/learn/guides/state-and-lifecycle.md",
   "docs/site/learn/guides/style-and-draw.md",
+  "docs/site/learn/guides/responsive-styles.md",
   "docs/site/learn/guides/webgl-islands.md",
   "docs/site/learn/guides/webgl-lighting.md",
 ];
@@ -255,6 +256,7 @@ const currentMarkdownPaths = [
   "docs/scenario-index.md",
   "docs/strategy/README.md",
   "docs/strategy/responsive-style-queries.md",
+  "docs/strategy/agent-verification-inventory.md",
   "docs/strategy/particle-effects-research.md",
   "docs/testing/dependency-freshness.md",
   "docs/testing/dependency-inventory.md",
