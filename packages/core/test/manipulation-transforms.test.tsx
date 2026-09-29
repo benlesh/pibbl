@@ -151,10 +151,77 @@ it('lets a custom rotation child receive its pointer event without replacing the
   expect(rotation.get()).toBeCloseTo(Math.PI / 2, 4);
 });
 
+it('paints custom handle children in CSS-pixel local coordinates under a scaled frame', async () => {
+  const box = signal({ left: 10, top: 10, width: 40, height: 30 });
+  const canvas = document.createElement('canvas');
+  canvas.width = 640;
+  canvas.height = 480;
+  canvas.style.cssText = 'display:block; width:160px; height:120px';
+  canvas.dataset.manipulationTest = '';
+  document.body.append(canvas);
+  function Scene(): CRCNode {
+    const manipulation = useManipulation({ box, resize: {} });
+    return <Group style={{ scaleX: 3, scaleY: 3 }}>
+      <ManipulationFrame {...manipulation.frameProps}>
+        <ResizeHandle controller={manipulation} position="bottom-right">
+          <Rectangle style={{ width: 8, height: 8, fill: '#16a34a' }} />
+        </ResizeHandle>
+      </ManipulationFrame>
+    </Group>;
+  }
+  controller = crc(canvas, <Scene />, {
+    viewport: { width: 320, height: 240 },
+    fit: 'contain',
+    pixelRatio: 2,
+  });
+  await settle();
+
+  const bounds = paintedBounds(canvas, [22, 163, 74]);
+  expect(bounds).toMatchObject({ left: 150, top: 120, width: 16, height: 16 });
+
+  await commands.manipulationPointer([
+    { type: 'move', x: 75, y: 60 },
+    { type: 'down' },
+    { type: 'move', x: 90, y: 67.5 },
+    { type: 'up' },
+  ]);
+  await settle();
+
+  expect(box.get().width).toBeCloseTo(50, 4);
+  expect(box.get().height).toBeCloseTo(35, 4);
+});
+
 function rectanglePath(x: number, y: number, width: number, height: number): Path2D {
   const path = new Path2D();
   path.rect(x, y, width, height);
   return path;
+}
+
+function paintedBounds(
+  canvas: HTMLCanvasElement,
+  color: readonly [number, number, number],
+) {
+  const image = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height);
+  let left = canvas.width;
+  let top = canvas.height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < canvas.height; y++) {
+    for (let x = 0; x < canvas.width; x++) {
+      const offset = (y * canvas.width + x) * 4;
+      if (
+        image.data[offset] !== color[0] ||
+        image.data[offset + 1] !== color[1] ||
+        image.data[offset + 2] !== color[2] ||
+        image.data[offset + 3] !== 255
+      ) continue;
+      left = Math.min(left, x);
+      top = Math.min(top, y);
+      right = Math.max(right, x);
+      bottom = Math.max(bottom, y);
+    }
+  }
+  return { left, top, width: right - left + 1, height: bottom - top + 1 };
 }
 
 function settle(): Promise<void> {

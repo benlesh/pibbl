@@ -1,5 +1,5 @@
 import { createElement } from "../element/create-element.js";
-import { Group } from "../components/g.js";
+import { setPrimitivePresentation } from "../primitive-presentation.js";
 import { getCurrentWorldTransform } from "../render-target.js";
 import { definePrimitive } from "../define-primitive.js";
 import { useEventListener } from "../hooks/use-event-listener.js";
@@ -25,6 +25,26 @@ interface ResolvedDragStyle extends SystemStyle {
   height: number;
   cursor?: string;
 }
+
+interface CssHandleContentProps {
+  readonly children?: CRCNode;
+}
+interface CssHandleContentStyle extends SystemStyle {
+  readonly transform: DOMMatrix;
+}
+
+/** Private CSS-pixel basis for author-provided handle visuals. */
+const CssHandleContent = definePrimitive<
+  CssHandleContentProps,
+  CssHandleContentStyle
+>(function CssHandleContent(props) {
+  return props.children;
+}, { childInput: "structural" });
+
+setPrimitivePresentation<CssHandleContentStyle>(
+  CssHandleContent,
+  style => ({ transform: style.transform }),
+);
 export const DragHandle = definePrimitive<
   CRCDragHandleProps,
   CRCDragHandleStyle,
@@ -78,6 +98,7 @@ export interface CRCResizeHandleProps {
   readonly controller: CRCManipulationController;
   readonly position: import("./types.js").CRCResizePosition;
   readonly hitSize?: number;
+  /** Visual children use CSS-pixel local coordinates from the handle anchor. */
   readonly children?: CRCNode;
 }
 export interface CRCResizeHandlesProps {
@@ -144,8 +165,8 @@ export const ResizeHandle = definePrimitive<CRCResizeHandleProps>(
       keyboardNavigationBounds: { x: x - 4, y: y - 4, width: 8, height: 8 },
     });
     if (props.children !== undefined)
-      return createElement(Group, {
-        style: { translateX: x, translateY: y },
+      return createElement(CssHandleContent, {
+        style: { transform: cssHandleChildTransform(state, x, y) },
         children: props.children,
       });
     const visual = cssHandlePath(state, x, y, 8);
@@ -218,9 +239,24 @@ function cssHandlePath(
   return path;
 }
 
+function cssHandleChildTransform(
+  state: import("./controller.js").ManipulationState,
+  x: number,
+  y: number,
+): DOMMatrix {
+  const css = frameToCss(state);
+  const inverse = new DOMMatrix([css.a, css.b, css.c, css.d, 0, 0]).inverse();
+  if (![inverse.a, inverse.b, inverse.c, inverse.d].every(Number.isFinite))
+    throw new Error(
+      "Manipulation handle cannot use a singular presentation transform.",
+    );
+  return new DOMMatrix([inverse.a, inverse.b, inverse.c, inverse.d, x, y]);
+}
+
 export interface CRCRotationHandleProps {
   readonly controller: CRCManipulationController;
   readonly hitSize?: number;
+  /** Visual children use CSS-pixel local coordinates from the handle anchor. */
   readonly children?: CRCNode;
 }
 export const RotationHandle = definePrimitive<CRCRotationHandleProps>(
@@ -250,8 +286,8 @@ export const RotationHandle = definePrimitive<CRCRotationHandleProps>(
       keyboardNavigationBounds: { x: x - 4, y: y - 4, width: 8, height: 8 },
     });
     if (props.children !== undefined)
-      return createElement(Group, {
-        style: { translateX: x, translateY: y },
+      return createElement(CssHandleContent, {
+        style: { transform: cssHandleChildTransform(state, x, y) },
         children: props.children,
       });
     ctx.fillStyle = "#ffffff";
