@@ -1,5 +1,6 @@
 import {
   Clip,
+  DragHandle,
   Group,
   Layer,
   Manipulable,
@@ -189,6 +190,118 @@ it('paints custom handle children in CSS-pixel local coordinates under a scaled 
 
   expect(box.get().width).toBeCloseTo(50, 4);
   expect(box.get().height).toBeCloseTo(35, 4);
+});
+
+it("replaces a keyed frame attachment without remounting its controller", async () => {
+  const box = signal({ left: 40, top: 50, width: 100, height: 80 });
+  const replacement = signal(false);
+  const canvas = document.createElement("canvas");
+  canvas.width = 320;
+  canvas.height = 240;
+  canvas.dataset.manipulationTest = "";
+  document.body.append(canvas);
+  function Scene(): CRCNode {
+    const manipulation = useManipulation({ box, move: {} });
+    return (
+      <ManipulationFrame
+        key={replacement.get() ? "replacement" : "initial"}
+        {...manipulation.frameProps}
+      >
+        <DragHandle
+          controller={manipulation}
+          style={{ width: 100, height: 80 }}
+        />
+      </ManipulationFrame>
+    );
+  }
+  controller = crc(canvas, <Scene />, { pixelRatio: 1 });
+  await settle();
+  replacement.set(true);
+  await settle();
+
+  await commands.manipulationPointer([
+    { type: "move", x: 60, y: 70 },
+    { type: "down" },
+    { type: "move", x: 80, y: 90 },
+    { type: "up" },
+  ]);
+  await settle();
+
+  expect(box.get()).toEqual({ left: 60, top: 70, width: 100, height: 80 });
+});
+
+it("cancels the next captured move when an ancestor or root CSS mapping changes", async () => {
+  const box = signal({ left: 40, top: 50, width: 100, height: 80 });
+  const translation = signal(0);
+  const cancellations: string[] = [];
+  const canvas = document.createElement("canvas");
+  canvas.width = 400;
+  canvas.height = 300;
+  canvas.style.cssText = "display:block; width:200px; height:150px";
+  canvas.dataset.manipulationTest = "";
+  document.body.append(canvas);
+  function Scene(): CRCNode {
+    const manipulation = useManipulation({
+      box,
+      move: {},
+      onCancel: (event) => cancellations.push(event.reason),
+    });
+    return (
+      <Group style={{ translateX: translation.get() }}>
+        <ManipulationFrame {...manipulation.frameProps}>
+          <DragHandle
+            controller={manipulation}
+            style={{ width: 100, height: 80 }}
+          />
+        </ManipulationFrame>
+      </Group>
+    );
+  }
+  controller = crc(canvas, <Scene />, {
+    viewport: { width: 400, height: 300 },
+    pixelRatio: 1,
+  });
+  await settle();
+
+  await commands.manipulationPointer([
+    { type: "move", x: 30, y: 35 },
+    { type: "down" },
+    { type: "move", x: 50, y: 45 },
+  ]);
+  expect(box.get()).toEqual({ left: 80, top: 70, width: 100, height: 80 });
+
+  translation.set(20);
+  await settle();
+  await commands.manipulationPointer([{ type: "move", x: 55, y: 50 }]);
+  expect(cancellations).toEqual(["coordinate-space-changed"]);
+
+  box.set({ left: 40, top: 50, width: 100, height: 80 });
+  translation.set(0);
+  await settle();
+  await commands.manipulationPointer([
+    { type: "move", x: 30, y: 35 },
+    { type: "down" },
+    { type: "move", x: 50, y: 45 },
+  ]);
+  canvas.style.marginLeft = "20px";
+  await commands.manipulationPointer([{ type: "move", x: 55, y: 50 }]);
+
+  box.set({ left: 40, top: 50, width: 100, height: 80 });
+  canvas.style.marginLeft = "0px";
+  await settle();
+  await commands.manipulationPointer([
+    { type: "move", x: 30, y: 35 },
+    { type: "down" },
+    { type: "move", x: 50, y: 45 },
+  ]);
+  canvas.style.width = "250px";
+  await commands.manipulationPointer([{ type: "move", x: 55, y: 50 }]);
+
+  expect(cancellations).toEqual([
+    "coordinate-space-changed",
+    "coordinate-space-changed",
+    "coordinate-space-changed",
+  ]);
 });
 
 function rectanglePath(x: number, y: number, width: number, height: number): Path2D {
