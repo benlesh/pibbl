@@ -1,10 +1,10 @@
 # Visualization Points, Custom Plots, and Inspection Implementation Plan
 
-> **For agentic workers:** Use `superpowers:executing-plans` for inline execution. If the user chooses delegation, use `superpowers:subagent-driven-development`, subject to the repository's limits and feedback checkpoint. Steps use checkboxes for tracking. Execution approved in an isolated worktree; stop at the Task 4 feedback checkpoint.
+> **For agentic workers:** Use `superpowers:executing-plans` for inline execution. If the user chooses delegation, use `superpowers:subagent-driven-development`, subject to the repository's limits and feedback checkpoint. Steps use checkboxes for tracking. Base execution approved in an isolated worktree. Task 4 is complete; the approved hover extension has new H3/H4 feedback checkpoints.
 
-**Goal:** Ship batched PointSeries dots, PlotSeries custom CRC marks, and pure nearest-data helpers, demonstrated together in a runnable Studio lesson.
+**Goal:** Ship batched PointSeries dots, PlotSeries custom CRC marks, pure nearest-data helpers, function-based HoverData queries, and anchor-protecting HoverCard placement; demonstrate single and multi-line inspection in runnable Studio lessons.
 
-**Architecture:** Both series consume existing allocation-relative Scale providers and core signals. PointSeries paints ordered circles with one union target; PlotSeries emits keyed translated subtrees whose returned elements retain normal CRC behavior. Lookup helpers operate on plain data and resolved linear-scale snapshots without owning reactive state.
+**Architecture:** Both series consume existing allocation-relative Scale providers and core signals. PointSeries paints ordered circles with one union target; PlotSeries emits keyed translated subtrees whose returned elements retain normal CRC behavior. Lookup helpers operate on plain data and resolved linear-scale snapshots without owning reactive state. HoverData receives ordinary query functions and owns their render-time signal reads; HoverCard independently handles declared-box placement.
 
 **Tech Stack:** TypeScript, CRC JSX, Canvas 2D/Path2D, Vitest with Playwright Chromium, Node 24.15+ on Node 24 LTS, pnpm 11.21.0.
 
@@ -18,7 +18,7 @@
 - Preserve existing LineSeries, Axis, ScaleAdjust, scale signal ownership, and same-rendering-instance provider restriction.
 - Public contracts need public-API evidence. Add failing focused tests before production changes; internal counters only supplement that evidence.
 - PointSeries has bounded component/target counts. PlotSeries deliberately has per-row subtrees. Never implement PointSeries through PlotSeries.
-- Deliver the runnable slice before broad hardening, documentation polish, or aggregate verification. Stop for experiential feedback at Task 4.
+- Deliver the runnable slice before broad hardening, documentation polish, or aggregate verification. The initial Task 4 checkpoint is complete; stop at H3 and H4 for the new slices.
 - Use native inline execution by default; tasks share implementation context. At most one implementation agent and one reused review agent if delegation is chosen. Do not override configured model defaults.
 - Stage only explicitly owned files for milestone commits. Do not bundle the concurrent responsive specification, tests, strategy edits, or verifier changes. No push/merge is implied.
 
@@ -135,6 +135,190 @@ and create `docs/site/api/components/point-series.md`,
 - [x] Create a focused milestone commit of owned files once checks pass, with message `feat(viz): add points custom plots and inspection slice`; preserve concurrent work.
 - [x] Report **slice ready for feedback**, exact working URL, actions to inspect, focused results, and any deferred responsive integration. Stop here for hands-on feedback. Do not start Tasks 5–7 merely because the focused tests passed.
 
+## Approved continuation: hover queries and protected cards
+
+The user approved the function-query design and requested this plan update.
+These tasks are **not implemented**. Run H1–H3 as the next vertical slice before
+Tasks 5–7; then H4 supplies the multi-line slice and its own feedback checkpoint.
+Only after that feedback, run H5 and the expanded Tasks 5–7. Preserve the completed
+Tasks 0–4 and current worktree. No new worktree, public Plot/PlotPointer wrapper,
+query AST, sampling string, or general core coordinate API is implied.
+
+### Extension file map
+
+| File | Responsibility |
+| --- | --- |
+| `packages/viz/src/lib/hover-types.ts` | Query/context/props, structural series, keyed hit union, exact/interpolated sample, helper option types |
+| `packages/viz/src/lib/hover-data.tsx` | Stable query receiver, scoped snapshot access, callback invocation |
+| `packages/viz/src/lib/hover-queries.ts` | defineSeries, closestPoint, closestX, interpolateX, linearInterpolation factories |
+| `packages/viz/src/lib/hover-card.tsx` | Core-owned style/box resolution, background and allocated content |
+| `packages/viz/src/lib/hover-placement.ts` | Pure candidate placement and protected-anchor exclusion |
+| `packages/viz/test/hover-data.test.tsx` | Public callback results, reactivity, inference/identity runtime evidence |
+| `packages/viz/test/hover-queries.test.tsx` | Numerical query contracts through captured public scale snapshots |
+| `packages/viz/test/hover-card.test.tsx` | Public geometry, boundary exclusion, paint, pointer pass-through |
+| `packages/viz/test/hover-ownership.test.tsx` | Post-feedback ownership/failure cleanup |
+| `packages/scenarios/src/learning/composition/viz-hover-comparison.example.tsx` | Complete editable two-line real-data inspection lesson |
+| `packages/scenarios/src/viz-hover-lab.ts` | Deterministic adapter for the three query modes and dragged inspection line |
+| `packages/viz/test/hover-lab.test.ts` | Public scenario semantic/interaction evidence |
+
+Also modify index.ts, type-tests/public.tsx, the existing penguin lesson and its
+test, catalogs/source adapter, Studio declarations/test, and final delivery files
+already named in Task 7. Create public component pages `hover-data.md` and
+`hover-card.md` under `docs/site/api/components/`; function pages `define-series.md`,
+`closest-point.md`, `closest-x.md`, `interpolate-x.md`, `linear-interpolation.md`
+under `docs/site/api/functions/`. Minimal export coverage docs move with each
+export if required to start browser tests; full documentation follows feedback.
+
+### H1: Function query receiver and first nearest-point helper
+
+**Interfaces:** Implement HoverQueryContext, HoverQuery<T>, HoverDataProps<T>, and
+HoverData<T> exactly as specified. Export structural HoverSeries<D> and
+`defineSeries<D>(options: HoverSeries<D>): HoverSeries<D>`; export
+`closestPoint<S>(options: ClosestPointOptions<S>): HoverQuery<ClosestPointHit<S>>`.
+S preserves each string record key and its descriptor datum type; ClosestPointHit
+is the mapped discriminated union described in the spec. Context accepts current
+ScaleId and returns ResolvedLinearScale. Options use SignalValue for position and
+descriptor data, ordinary scale IDs, and optional numeric maxDistance.
+
+- [ ] Add failing public tests: a custom query reads a cursor signal and named
+  scale and returns `{label,anchor}`; children receives inferred data or undefined
+  exactly once per evaluation. Change the cursor and see new output. Replace the
+  query/callback functions while preserving a stateful same-type/key returned
+  component. Assert an async query is rejected rather than passed as data.
+- [ ] Add a nearest fixture with scales mapping x `[0,10]→[0,100]`, y
+  `[0,10]→[100,0]`; series A has `(2,3)` and B `(8,9)`. Query local `(23,74)`
+  returns A, original index 0, anchor `(20,70)`, distance 5, domain `(2,3)`.
+  maxDistance 5 includes it; 4 omits it. Null position returns undefined. Assert
+  factory creation does not read signals or accessors.
+- [ ] Run `corepack pnpm@11.21.0 exec vitest run packages/viz/test/hover-data.test.tsx packages/viz/test/hover-queries.test.tsx --browser.headless --browser.ui=false`;
+  confirm missing-feature failures before production code.
+- [ ] Implement the stable ordinary receiver and invocation-scoped context;
+  inspect existing scale-context internals before using the official friend seam.
+  Query scale resolution must not introduce query hooks or retain contexts. Reuse
+  coordinate eligibility/nearest arithmetic without changing existing helpers.
+  Factories return unbranded functions; shallow-freeze descriptor configuration,
+  not user arrays or records. Add source exports, minimal docs, and editor types.
+- [ ] Add public type consumers for inline custom queries, composed objects,
+  heterogeneous series-key narrowing, signal data, JSX and createElement; reject
+  Promise results and unsupported coordinate keys. Run focused tests plus
+  `corepack pnpm@11.21.0 exec tsc -p packages/viz/type-tests/tsconfig.json --noEmit`.
+  Commit owned H1 files when green.
+
+### H2: HoverCard and the never-cover-anchor rule
+
+**Interfaces:** Export HoverCardProps, HoverCardStyle, and HoverCard(props).
+Consume the exact anchor/bounds/style/default rules from the design. Internal
+`placeHoverCard({anchor,anchorRadius,gap,bounds,width,height,strokeWidth,placement})`
+returns local `{x,y}`; it allocates no resources and is not a public export.
+
+- [ ] Add failing public mounts at four edges/corners and center of a 100×100
+  allocation. A 40×24 card with radius 6, gap 8, strokeWidth 2 must keep its
+  outer stroked rectangle at least 14 units from the anchor. Include a 150×120
+  oversized card: overflow is permitted; intersection is not. Assert preferred
+  side/auto order, tangential sliding, radius/gap updates, and allocation resize.
+- [ ] Run `corepack pnpm@11.21.0 exec vitest run packages/viz/test/hover-card.test.tsx --browser.headless --browser.ui=false` and confirm red.
+- [ ] Implement pure side selection and core-owned declared-box/style resolution.
+  Use current core layout semantics for content padding and percentage dimensions;
+  do not invent recursive pointerEvents or copy responsive evaluation. Background
+  has pointerEvents=none; decorations in examples explicitly opt out. Reject
+  nonfinite geometry, negative dimensions, and unsupported transforms/filters.
+- [ ] Assert underlying mark still receives hover/click through the background
+  and decorative content; explicitly interactive children retain ordinary targets.
+  Check rounded translucent paint with narrow pixel evidence against public core
+  primitives; semantic exclusion geometry remains the main oracle. Re-run focused
+  test and type consumer; commit owned H2 files when green.
+
+### H3: Penguin query/card slice and feedback
+
+**Files:** Existing penguin lesson, penguins-example.test.ts, points-lab.test.ts,
+lab adapter if state evidence needs extension, Studio declarations and test.
+
+- [ ] Add a failing public scenario regression that moves inspection to a boundary
+  anchor, checks the rendered label box is disjoint from its protected circle,
+  and still receives pointer selection under the card. Check both panels after
+  resize and reorder. Keep exact source data and existing keyed-mark state tests.
+- [ ] Replace manual nearest/readout positioning with a plain custom query or
+  closestPoint function and HoverCard. Keep the real static dataset, selection
+  controls, local-coordinate conversion, credits, and separate synthetic lab.
+  Draw cards after series and at plot origin; do not translate their anchor twice.
+- [ ] Run the new/affected hover, penguin, points-lab, and Studio tests plus type
+  consumers and `corepack pnpm@11.21.0 scenarios:check`. Inspect the actual existing
+  Studio URL at wide/narrow sizes and all plot edges; verify text contrast,
+  exclusion, pass-through selection, and no TypeScript/page errors.
+- [ ] Commit owned files and report **hover/card slice ready for feedback** with
+  exact live URL and focused results. Pause implementation for hands-on feedback
+  before broad matrices or aggregate trust. Preserve H4–H5 as outstanding work.
+
+### H4: Two-line nearest and interpolated inspection slice
+
+**Interfaces:** Export `closestX<D>(options: ClosestXOptions<D>): HoverQuery<ClosestXHit<D>>`,
+`interpolateX<D>(options: InterpolateXOptions<D>): HoverQuery<HoverSample<D>>`,
+`linearInterpolation(): HoverInterpolation`, and
+`HoverInterpolation = (beforeY:number, afterY:number, fraction:number) => number`.
+Option/result fields and duplicate/gap policies are exactly those in the design.
+Reuse H1 descriptors/context and H2 cards; introduce no second interaction system.
+
+- [ ] Add failing numerical tests: rows `(0,10),(10,30)`, queried x=5, return
+  first original row for closestX on a tie, but interpolation returns x=5,y=20,
+  fraction .5, both original endpoints, and the mapped anchor. Exact x=10 returns
+  kind exact and the original row. maxDelta 5 includes nearest; 4 omits it.
+  maxGap 10 permits interpolation; 9 omits it; exact matches still succeed.
+  A custom interpolator returning beforeY yields 10, proving ordinary function use.
+- [ ] Add the contract-establishing gap/order cases: null-y row between endpoints
+  forbids interpolation, outside-domain x yields undefined, decreasing finite x
+  throws, duplicates error by default and follow explicit first/last policies.
+  Validate the complete source rather than returning before an invalid tail.
+- [ ] Run focused query tests to confirm red; implement the two factories and
+  linear function with per-invocation signal reads, source indices, eligibility,
+  and finite arithmetic checks. Add exports, editor/types, and minimal API docs;
+  re-run query and type consumers green before constructing the lesson.
+- [ ] Add a failing public lab test for modes `closest-point`, `nearest-per-line`,
+  and `interpolated-x`, with unequal source timestamps and known expected results.
+  State reports mode, domain inspection x, result kind/data/anchors, and card bounds;
+  actions select mode, set inspection time, and reset. Drive ordinary pointer
+  events to move and drag the guide, release capture, and leave the plot.
+- [ ] Implement the standalone lesson and adapter using a credited static real
+  two-line dataset with compatible units. Verify the chosen source and embed its
+  provenance/missing-value policy before use; keep synthetic exact-value fixtures
+  in the lab. Preserve the existing accepted CO₂ example. Show complete event to
+  local to domain conversion, ordinary Line/Group/Circle guide/highlights, one
+  result across lines, two nearest recorded results, two samples at shared x,
+  and an inline custom query combining helper outputs into one comparison record.
+  Guard collapsed-range inversion; use no unimplemented placeholder components.
+- [ ] Register route `#/examples/composition/viz-hover-comparison`, lab
+  `viz-hover-lab`, source adapter, and Studio consumers. Regenerate/check catalogs,
+  run focused lab/query/Studio/type checks, inspect all modes and dragging at wide
+  and narrow allocations, commit, and report **multi-line slice ready for feedback**
+  with the actual live URL. Pause for feedback before H5/final hardening.
+
+### H5: Harden approved hover behavior and extend final delivery
+
+- [ ] Extend query tests for heterogeneous keyed inference, arbitrary custom return
+  objects, ties, empty/all-invalid inputs, original indices, independent scopes,
+  reversed/collapsed ranges, missing providers, overflow, nonfinite query/options/
+  interpolator output, gaps with unknown x, duplicates at segment boundaries, and
+  first/last policies. Prove custom callbacks and composed helper queries preserve
+  the same receiver-owned signal dependencies; no rendering/styles during lookup.
+- [ ] Add hover-ownership.test.tsx for dynamic branch cleanup, callback/query
+  exceptions, illegal writes, removal/disposal, independent roots, Layer boundary
+  errors, and retained source writes after disposal requesting no work. Assert
+  query function replacement preserves returned-component identity and undefined
+  transitions unmount normally. Factory creation owns zero observers/resources.
+- [ ] Extend card tests for zero/tiny/oversized bounds, anchors outside bounds,
+  borders, every preference, explicit bounds, percentage sizing/padding, transforms
+  of the containing plot, clips, responsive allocation changes, and invalid styles.
+  Test exclusion in the common local frame; document limits for overflowing child
+  paint and multiple cards. Re-review only changed code or unresolved findings.
+- [ ] Fold all seven new runtime exports (`HoverData`, `HoverCard`, `defineSeries`,
+  `closestPoint`, `closestX`, `interpolateX`, `linearInterpolation`) and their public
+  types into Task 7's exact packed exports, Bundler/NodeNext, source/built/Studio
+  consumers and public API docs. Keep existing nearest helpers compatible. Explain
+  data-space interpolation, units, pass-through authoring, source paint order,
+  function ownership, and all three runnable patterns in the visualization guide.
+- [ ] Run the expanded focused suite/type consumer once, then complete Tasks 5–7,
+  including current responsive dependency inspection and proportional final review/
+  trust gate. Never mark these pending tasks complete using the old 30-test record.
+
 ## Task 5: Harden accepted geometry, identity, and ownership
 
 **Files:** Extend point-series.test.tsx, plot-series.test.tsx, nearest.test.tsx; create points-ownership.test.tsx; change only affected production modules for failing regressions.
@@ -164,9 +348,9 @@ and create `docs/site/api/components/point-series.md`,
 
 **Files:** Root/type exports, type consumer, packed verifier, Studio declarations/tests, README and public docs listed in the file map; relevant docs registry only. Preserve concurrent edits in shared verifier files.
 
-**Interfaces:** Runtime root exports add exactly `PointSeries`, `PlotSeries`, `nearestDomainValue`, `nearestPoint`. Type-only exports match the approved declarations. No new subpath, visualization dependency, or JSX runtime.
+**Interfaces:** Base runtime root exports add `PointSeries`, `PlotSeries`, `nearestDomainValue`, `nearestPoint`; H5 adds exactly the seven approved hover runtime exports. Type-only exports match the approved declarations. No new subpath, visualization dependency, or JSX runtime.
 
-- [ ] Add failing packed/type assertions for all four runtime names and new types. Cover both JSX and createElement, datum/key accessor inference, callback returns, and negative contracts. Keep packed import of root pure helpers safe without Canvas/DOM access at module evaluation.
+- [ ] Add failing packed/type assertions for all eleven added runtime names and new types. Cover both JSX and createElement, datum/key accessor inference, callback returns, and negative contracts. Keep packed import of root pure helpers safe without Canvas/DOM access at module evaluation.
 - [ ] Update `tooling/verify-packed-viz.mjs`'s exact sorted export list and declaration probes. Preserve externalized core/core-internal identity, peer version matching, and rejection of private subpaths. Update the maintained `playground/src/crc-editor-types.txt` viz module and add the new lesson to `tooling/verify-studio-types.mjs` consumer inputs. Check new public types against source, built, and editor declarations rather than only testing that the root library exists.
 - [ ] Document default dots versus custom subtrees; radius units; paint order; keyBy/state; callback versus returned-component hooks; local coordinate conversion; nearest-anchor semantics; ordinary per-element interaction; and the actual responsive support status. Public search includes only the lesson/public API pages, not lab metadata or this plan.
 - [ ] Run `corepack pnpm@11.21.0 build`, `corepack pnpm@11.21.0 test:viz-package`, and `corepack pnpm@11.21.0 exec vitest run packages/viz/test --mode built --browser.headless --browser.ui=false`. Confirm source/built behavior and consumer coverage, fixing genuine failures before final review.
@@ -181,7 +365,7 @@ Coverage: Tasks 1–2 cover dot rendering and pure helpers; Task 3 covers custom
 subtrees; Task 4 proves their end-to-end composition and enforces the feedback
 checkpoint; Task 5 covers errors/ownership/identity; Task 6 isolates the concurrent
 responsive dependency; Task 7 covers package, editor, docs, review, and trust.
-All new API signatures come from the approved spec. The performance distinction
+H1–H3 cover function queries, the first helper, and protected cards in the penguin lesson; H4 covers independent nearest and synchronized interpolation with a full two-line lesson; H5 extends ownership, numerical, placement, and delivery evidence. All new API signatures come from the approved spec. The performance distinction
 between batched dots and custom trees remains explicit in both tests and copy.
 
 Recommended execution is inline because the tasks share coordinate eligibility,
@@ -193,7 +377,7 @@ The user subsequently approved implementation in an isolated worktree.
 
 Implemented in `/Users/benlesh/.codex/worktrees/viz-points/crc` on
 `codex/viz-points`, starting from `4717dc9`. Tasks 0–4 are complete; Tasks 5–7
-remain after experiential feedback. No merge or push performed.
+remain outstanding. The subsequently approved H1–H5 continuation is planned above, not implemented. No merge or push performed.
 
 Fresh evidence under Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium:
 
@@ -228,3 +412,18 @@ Implementation rulings:
 Core responsive queries were not implemented at the isolated base. Shared
 styles use today's signal contract; returned custom elements use current core
 styles. No conditional-style support or aggregate trust result is claimed.
+
+## Design-update record — function-based hover continuation
+
+The user approved query functions after considering target-only presentation,
+string sampling, and descriptor queries. The design and H1–H5 now capture ordinary
+custom/helper function composition, typed results, receiver ownership, precise
+nearest/interpolation contracts, and HoverCard placement that cannot cover its
+protected anchor. Illustration-only Plot/PlotPointer/InspectionLine components
+are not added to the public scope. No extension runtime work is claimed here.
+
+Feedback already implemented before this update: the penguin dataset replacement
+(commit `678ca87`) and readable rounded foreground labels (`0cc4efb`), after the
+initial slice (`941558b`). The label currently uses manual clamping; it does not
+yet implement the approved never-cover contract and will be replaced in H3.
+Historical test counts above describe the initial slice only.

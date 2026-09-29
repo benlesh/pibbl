@@ -1,6 +1,6 @@
 # Visualization expansion: points, custom plots, and inspection
 
-Status: design approved by the user on 2026-09-28; implementation plan requested.
+Status: base design and function-based HoverData/HoverCard extension approved by the user on 2026-09-28. Extension implementation remains planned.
 Execution approved by the user in an isolated worktree; delivery stops at the
 first runnable slice for feedback.
 Date: 2026-09-28. Source inspection: `4717dc9` plus the concurrent responsive
@@ -364,6 +364,240 @@ Nonuniform transforms mean local nearest and screen-space nearest can differ;
 this helper promises local distance only. A general event-to-local conversion
 API would be core work and is not silently added here.
 
+## Approved extension: function-based hover queries
+
+Approved in the subsequent design conversation. This section adds planned work;
+it is not a claim that these APIs already exist. It supersedes the conversational
+`PointCallout`, `HoverData target`, string-valued `sampling`, and immutable query
+AST proposals. Existing `nearestPoint` and `nearestDomainValue` remain unchanged.
+
+Separate three responsibilities: application events write inspection signals;
+`HoverData` evaluates a synchronous query and renders its result; `HoverCard`
+positions and paints an optional readable card. No series discovery, registration,
+selection store, event loop, or required Chart container is added. One query can
+inspect any number of datasets, irrespective of which drawing components use them.
+
+### Query receiver and render callback
+
+```ts
+export interface HoverQueryContext {
+  scale(id: ScaleId): ResolvedLinearScale;
+}
+export type HoverQuery<T> = (context: HoverQueryContext) => T | undefined;
+export interface HoverDataProps<T> {
+  readonly query: HoverQuery<T>;
+  readonly children: (result: T | undefined) => CRCNode;
+}
+export function HoverData<T>(props: HoverDataProps<T>): CRCNode;
+```
+
+`HoverData` invokes query once per receiving component evaluation, then invokes
+children once, including when the result is undefined. An empty query result does
+not dictate UI: the callback can return null, an empty-state node, or other CRC
+content. Result types, including arbitrary custom records and discriminated
+unions, flow into children without casts. Equivalent non-JSX authoring passes
+`children` explicitly in `createElement(HoverData, { query, children })`.
+This function-child input belongs to HoverData only; it does not change CRCNode
+or PlotSeries's existing render prop.
+
+Context scale lookup reads the current resolved snapshot under the receiving
+component's normal lexical scale scope. Cache each requested snapshot within
+that query invocation; preserve missing-provider and cross-Layer/root diagnostics.
+The context is invocation-local, not a retained scale service. Queries are ordinary
+functions, not branded descriptors. Helper factories return such functions and
+perform no subscription, resource acquisition, or data scanning at construction.
+
+Queries and render callbacks are synchronous render-time calculations: no hooks,
+writes, promises, resources, or async work. Hooks belong in returned components.
+Explicit signal reads in query and children are owned by HoverData; reads inside
+returned components retain their own receiver. Branch changes replace dependencies;
+removal, failure, and disposal release them. Normal render write guards apply.
+Do not use function identity as subtree identity: replacing a query or callback
+preserves same-type/key returned components under the same parent. Returning no
+nodes still unmounts prior descendants normally. Render callback output follows
+normal CRCNode validation; async query results get an actionable diagnostic.
+
+### Series inputs and function-producing helpers
+
+`defineSeries<D>({ data, x, y, defined? }): HoverSeries<D>` is a small immutable,
+unbranded descriptor factory for readonly data/accessors. `data` accepts
+`SignalValue<readonly D[]>`; accessors reuse PointAccessor and defined's existing
+signature. It creates no copy of the dataset, index, observer, or runtime owner.
+Applications may use structurally compatible plain descriptors instead. Data
+signals are read by the query, once per series per invocation; datum records stay
+opaque. Explicit accessor signal reads belong to that same query receiver.
+
+Helper option objects are ordinary configuration, not query ASTs:
+
+- `closestPoint({ series, position, xScale, yScale, maxDistance? })` returns a
+  HoverQuery. `series` is a readonly record of named HoverSeries descriptors;
+  `position` is a plain/signal local `{x,y}` or null. It searches eligible recorded
+  points across the record in Object.keys order and source order, minimizing
+  mapped Euclidean distance. Exact ties retain the first candidate. maxDistance
+  is inclusive, finite, nonnegative, and in local plot pixels; omitted is unlimited.
+  Result: `{ series, datum, index, x, y, anchor, distance }`, with domain x/y,
+  mapped local anchor, original datum/index, and a literal series key. Heterogeneous
+  series produce a discriminated union associating each key with its datum type.
+- `closestX({ series, x, xScale, yScale, maxDelta? })` returns a HoverQuery for one
+  descriptor. `x` is a plain/signal domain number or null. It minimizes absolute
+  domain-x distance, independent of cursor y; unsorted data is allowed. Earliest
+  source row wins ties. Inclusive finite nonnegative maxDelta uses domain units;
+  omission is unlimited. Result: `{ datum, index, x, y, anchor, delta }`, preserving
+  the chosen observation and its actual x rather than the queried x.
+- `interpolateX({ series, x, xScale, yScale, interpolation, maxGap?, duplicateX? })`
+  returns a HoverQuery for one descriptor. `interpolation` is an ordinary
+  `(beforeY: number, afterY: number, fraction: number) => number` function;
+  `linearInterpolation()` returns the standard linear function. Custom rules use
+  the same contract. `duplicateX` is `"error" | "first" | "last"`, default error;
+  first/last explicitly chooses by source order among equal-x rows. maxGap is an
+  inclusive finite nonnegative domain interval limit; omission is unlimited.
+
+Nearest helpers use the existing defined/coordinate eligibility and never invoke
+styles or mark renderers. Null inspection inputs and empty/all-invalid data return
+undefined. Nonfinite query inputs, invalid options, mapping/distance overflow, and
+nonfinite interpolator output throw. No hidden global cache or persistent index;
+nearest scans remain O(total rows). Scale IDs initially share one local frame and
+one x/y pair per query; alternate axes can be composed as separate query functions.
+
+Interpolation requires finite source x values in nondecreasing order and does not
+sort or mutate the source. A decreasing finite x throws. Rows with defined=false
+or missing/nonfinite x/y separate segments; they must not be removed to fabricate
+a connecting interval. Duplicate policy applies to equal-x runs within each
+segment; distinct segments never become one segment. Exact matches return the
+first eligible matching segment in source order after duplicate resolution.
+No extrapolation and no crossing segment gaps. A query inside a valid bracketing
+interval returns undefined if the interval exceeds maxGap. Exact recorded matches
+remain available regardless of maxGap. Validate duplicate/order policy before
+returning an early exact match, so the result does not depend on scan shortcuts.
+
+```ts
+export type HoverSample<D> =
+  | { kind: "exact"; x: number; y: number; datum: D;
+      index: number; anchor: Readonly<{ x: number; y: number }> }
+  | { kind: "interpolated"; x: number; y: number; before: D; after: D;
+      beforeIndex: number; afterIndex: number; fraction: number;
+      anchor: Readonly<{ x: number; y: number }> };
+```
+
+For interpolation, fraction is `(x - beforeX) / (afterX - beforeX)`, evaluated
+with overflow checks; y is evaluated in data space before mapping. An estimate
+never invents an original datum. Preserve endpoint references and source indices.
+This estimates the chosen data function, not a promise of lying on a differently
+curved/styled rendered path. The first supplied interpolation function is linear;
+additional built-in curve families are deferred.
+
+### Wiring one result, independent results, and shared-x estimates
+
+The following uses proposed exports inside existing Scale providers. Application
+handlers write `cursor` after explicitly converting root-logical event coordinates
+to the plot's local frame. For translation-only plots subtract the known plot
+origin; no new Plot, PlotPointer, InspectionLine, or automatic inverse-transform
+API is approved by the earlier illustrative pseudocode.
+
+```tsx
+const nearestAcrossLines = closestPoint({
+  series: { temperature, forecast }, position: cursor,
+  xScale: "time", yScale: "temperature", maxDistance: 24,
+});
+const temperatureAtTime = interpolateX({
+  series: temperature, x: inspectedTime,
+  xScale: "time", yScale: "temperature",
+  interpolation: linearInterpolation(), maxGap: 2 * HOUR,
+});
+const forecastAtTime = interpolateX({
+  series: forecast, x: inspectedTime,
+  xScale: "time", yScale: "temperature",
+  interpolation: linearInterpolation(), maxGap: 2 * HOUR,
+});
+
+// One original observation across both lines.
+<HoverData query={nearestAcrossLines}>
+  {(hit) => hit && <Reading hit={hit} />}
+</HoverData>
+
+// Two independent results: use two HoverData receivers, each with closestX
+// for its series and the same inspectedTime signal. Actual timestamps may differ.
+
+// Two estimates or exact observations at one time, with a combined readout.
+<HoverData query={(context) => ({
+  temperature: temperatureAtTime(context),
+  forecast: forecastAtTime(context),
+})}>
+  {(result) => result && <Comparison {...result} />}
+</HoverData>
+```
+
+These snippets illustrate ordinary component composition, not new automatic
+interaction. The implementation lesson must show all three complete wirings with
+public imports and actual event-coordinate conversion (no placeholder components).
+Convert cursor x to domain time with the current x snapshot's invert operation;
+if inversion is unavailable for a collapsed range, clear inspection. A draggable
+line writes the same inspectedTime signal using ordinary pointer capture/events.
+Render highlights through Group/Circle and the vertical guide through Line. Render
+hover output after marks. A custom query can return any shape and close over its
+own data/signals, with no factory or registration requirement.
+
+### HoverCard: readable placement without covering its anchor
+
+HoverCard is independent of query resolution and drawing series. Proposed inputs:
+`anchor: SignalValue<Readonly<{x:number;y:number}>>`, `anchorRadius?: SignalValue<number>`
+(default 0), `gap?: SignalValue<number>` (default 8),
+`placement?: "auto" | "above" | "below" | "right" | "left"` (default auto),
+`bounds?: SignalValue<Readonly<{x:number;y:number;width:number;height:number}>>`,
+`style`, and ordinary CRCNode children. Bounds default to the incoming allocation's
+local `[0,width] × [0,height]` rectangle. Anchor/bounds are in that same local
+frame: mount the card at plot origin, not inside an already-translated mark.
+
+Use a closed core-derived style with declared width/height, padding, fill, stroke,
+strokeWidth, cornerRadius, and opacity. Width and height are required finite resolved
+sizes; no implicit text measurement. Defaults: padding 10, cornerRadius 7,
+fill `rgba(255,255,255,0.92)`, stroke `rgba(98,117,139,0.35)`, strokeWidth 1,
+opacity 1. Core box sizing, percentage resolution, and content allocation rules
+apply. Do not allow arbitrary transforms/filters on the card itself to silently
+invalidate the placement guarantee. Children can draw freely, but overflowing child
+paint is the author's responsibility; the guarantee covers the declared card box
+including half its border stroke, not arbitrary descendant/filter overflow.
+
+Try above, below, right, left in that order for auto. A preferred side is tried
+first, followed by the remaining auto order. Center along a side, then slide only
+tangentially to fit bounds. Never clamp the perpendicular offset toward the anchor.
+Choose the first fitting candidate. If no side fits, use the first candidate with
+tangential adjustment and allow overflow; do not cover the point or scale content
+to force a fit. Parent Clip boundaries still apply. Zero/tiny allocations and
+oversized cards do not weaken exclusion. Anchor coordinates must be finite; radius,
+gap, bounds dimensions, and resolved card dimensions must be finite/nonnegative.
+
+Every placement must keep the card's outer box outside the anchor's protected
+radius plus gap, including when the anchor lies at a boundary or outside bounds.
+This is conservative circle exclusion, independent of the painted point shape.
+Rectangular protected marks and automatic multi-card collision avoidance are
+future extensions; multiple cards can choose different preferred sides explicitly.
+
+The built-in background is pointerEvents=none. CRC structural containers do not
+recursively disable descendant targets: authored Text/shape decorations must also
+use pointerEvents=none, as the documented card examples will do. Interactive
+children retain normal explicitly authored core targets; do not invent a recursive
+pointer flag or second hit-testing layer. HoverData/HoverCard own no pointer state.
+The card paints at its ordinary source position; authors put it after marks.
+
+### Extension evidence and responsive boundary
+
+First extend the penguin example with a function query and HoverCard, proving that
+cards at all four edges never cover the selected circle, including narrow plots.
+Then add a focused real-data two-line lesson showing one nearest overall result,
+two nearest recorded results, and two exact/interpolated results at shared time,
+plus a draggable guide and a custom combined query. Both need deterministic public
+lab adapters and focused tests before production implementation. Preserve the
+existing accepted CO₂ lesson unless its modification is separately required.
+
+HoverData uses core receiver ownership and no style evaluator. HoverCard must use
+the actual core declared-box/style boundary; re-evaluate bounds and placement on
+allocation or signal changes. Use core's published responsive types/evaluator only
+when implemented, never copy it into viz. Query factories do not add responsiveness,
+listeners, animation frames, or a second coordinate system. Surface all new APIs
+consistently in root/types, packed consumers, Studio declarations, source/built
+browser modes, and public docs; design approval alone is not implementation evidence.
+
 ## Responsive styling integration
 
 The [concurrent responsive style specification](2026-09-28-responsive-style-queries-design.md)
@@ -415,10 +649,12 @@ custom marks must not be confused with support on PointSeries's own style input.
 
 Proposed new learning route:
 `http://localhost:5173/#/examples/composition/viz-points-and-inspection`.
-It does not exist yet. Keep the accepted CO₂ lesson unchanged.
+The first slice is implemented; its actual preview is on port 5180 (see the plan). Keep the accepted CO₂ lesson unchanged.
 
-Use two independently allocated plots: a scatter dataset with overlap and
-missing values, and an ordered line-plus-point dataset. Include shared and
+The original slice proposed scatter and line-plus-point panels. Accepted feedback
+replaced these with two views of a credited static Palmer Penguins snapshot:
+344 records, 342 complete points, flipper length versus body mass, with no line
+joining independent observations. Use two independently allocated plots. Include shared and
 datum-resolved styles, custom PlotSeries markers with labels, an ordinary selection signal, a visible readout, pointer
 inspection, click/tap selection, and simple previous/next selection controls.
 Controls are application composition, not a new library selection API. They do
@@ -454,8 +690,8 @@ the repository trust gate. Design-time inspection is not test evidence.
 
 ## Review boundary
 
-This draft recommends batched dots, custom plotted CRC subtrees, and pure
-inspection as the next expansion. It specifies radius rather than area,
+The approved scope includes batched dots, custom plotted CRC subtrees, pure
+inspection, and the function-based hover-query/card extension above. It specifies radius rather than area,
 one PointSeries target versus ordinary custom-element targets, keyed row
 identity, source-order compositing, local nearest-anchor distance, opaque datum
 style callbacks, and core-owned responsive evaluation.
