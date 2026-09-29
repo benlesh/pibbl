@@ -9,9 +9,17 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "071f2e2518b76645a70add08db61d7d50342d5dbcf2b887d725e9054e8f522d7";
+  "abe522a6456b01a01e5ea5f4982610fc7b1e2ce05554b39355e96b50588608e2";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
+const THREE_PIVOT_APPROVAL_RECORD = "three-full-pivot";
+const THREE_PIVOT_APPROVED_SECTIONS = new Set([
+  "Decision",
+  "Public experience",
+  "Runtime contracts kept from the prototype",
+  "Repository migration",
+  "Completion evidence",
+]);
 const SIGNALS_SCHEDULER_APPROVED_SECTIONS = new Set([
   "Signal ownership",
   "Scheduler and root ownership",
@@ -86,6 +94,14 @@ const MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS = new Set([
 ]);
 
 const POST_BASELINE_CONTRACT_PROFILES = new Map([
+  [
+    "docs/design/render-layer-and-three-contract.md",
+    {
+      unitPrefix: "t",
+      approvalRecordId: THREE_PIVOT_APPROVAL_RECORD,
+      allowedSections: THREE_PIVOT_APPROVED_SECTIONS,
+    },
+  ],
   [
     "docs/design/signals-and-scheduling-contract.md",
     {
@@ -634,6 +650,7 @@ export function assertContractPreservationBaseline({
       "postBaselineContracts",
       "translations",
       "additions",
+      "retirements",
       "evidenceMappings",
     ],
     "Contract-preservation manifest",
@@ -838,8 +855,20 @@ export function assertContractPreservationBaseline({
     baselineUnitCount += contract.baselineUnits.length;
     currentUnitCount += contract.currentUnits.length;
   }
+  for (const record of manifest.postBaselineContracts) {
+    const source = currentSources.get(record.path);
+    assert.equal(
+      typeof source,
+      "string",
+      `Missing current normative contract ${record.path}`,
+    );
+    contractsByPath.set(record.path, {
+      currentUnits: extractContractUnits(source, record.unitPrefix),
+    });
+  }
 
   const translatedBaseline = new Set();
+  const retiredBaseline = new Set();
   const translatedCurrent = new Set();
   const addedCurrent = new Set();
   const translationReasons = new Set();
@@ -1138,13 +1167,71 @@ export function assertContractPreservationBaseline({
     }
   }
 
+  for (const retirement of manifest.retirements) {
+    const label = `Pivot retirement ${retirement.id ?? "<unknown>"}`;
+    assertExactObjectKeys(
+      retirement,
+      ["id", "path", "baselineIds", "reason", "approval", "sharedAnchors"],
+      label,
+    );
+    assert.match(retirement.id, /^[a-z0-9-]+$/u, `${label} has an invalid id`);
+    assert.ok(
+      typeof retirement.reason === "string" && retirement.reason.length >= 24,
+      `${label} needs a specific reason`,
+    );
+    assert.ok(
+      Array.isArray(retirement.baselineIds) && retirement.baselineIds.length > 0,
+      `${label} must identify exact removed baseline units`,
+    );
+    const { approvalUnits } = resolveApprovalRecordUnits({
+      approval: retirement.approval,
+      approvalRecordsById,
+      label,
+      reason: retirement.reason,
+      requiredRecordId: THREE_PIVOT_APPROVAL_RECORD,
+      allowedSections: THREE_PIVOT_APPROVED_SECTIONS,
+    });
+    const baselineUnits = retirement.baselineIds.map((id) =>
+      resolveUnit(retirement.path, "baseline", id, label),
+    );
+    const contract = contractsByPath.get(retirement.path);
+    for (const unit of baselineUnits) {
+      assert.ok(
+        !contract.currentUnits.some(
+          (current) => current.kind === unit.kind && current.text === unit.text,
+        ),
+        `${label} cannot retire a clause still in the current contract`,
+      );
+      assert.ok(
+        retirement.reason.includes(unit.id),
+        `${label} reason must identify exact baseline unit ${unit.id}`,
+      );
+      const identity = `${retirement.path}\0${unit.id}`;
+      assert.ok(
+        !translatedBaseline.has(identity) && !retiredBaseline.has(identity),
+        `${label} repeats baseline unit ${unit.id}`,
+      );
+      retiredBaseline.add(identity);
+    }
+    assertAnchors(
+      joinedUnitText(baselineUnits),
+      retirement.sharedAnchors,
+      `${label} retired claim relevance`,
+    );
+    assertAnchors(
+      joinedUnitText(approvalUnits),
+      retirement.sharedAnchors,
+      `${label} approved removal relevance`,
+    );
+  }
+
   for (const contract of manifest.contracts) {
     const unmatched = unmatchedUnitIds(
       contract.baselineUnits,
       contract.currentUnits,
     );
     assert.deepEqual(
-      [...translatedBaseline]
+      [...translatedBaseline, ...retiredBaseline]
         .filter((identity) => identity.startsWith(`${contract.path}\0`))
         .map((identity) => identity.slice(contract.path.length + 1))
         .sort(),
@@ -1217,7 +1304,7 @@ export function assertContractPreservationBaseline({
       if (role === "source") {
         assert.match(
           evidence.path,
-          /^packages\/(?:core|physics|webgl)\/src\/.*\.[cm]?[jt]sx?$/u,
+          /^packages\/(?:core|physics|three)\/src\/.*\.[cm]?[jt]sx?$/u,
           `${label} implementation evidence must be runtime source`,
         );
         assert.doesNotMatch(
@@ -1228,7 +1315,7 @@ export function assertContractPreservationBaseline({
       } else {
         assert.match(
           evidence.path,
-          /^packages\/(?:core|physics|webgl)\/(?:src|test)\/.*\.test\.[cm]?[jt]sx?$/u,
+          /^packages\/(?:core|physics|three)\/(?:src|test)\/.*\.test\.[cm]?[jt]sx?$/u,
           `${label} executable evidence must be an official package test`,
         );
       }
