@@ -24,6 +24,10 @@ import {
 } from "./ownership.js";
 import { suppressManipulationActivation } from "../events/dispatch.js";
 import { solveManipulation } from "./solve.js";
+import {
+  currentRootCoordinateMapping,
+  sameRootCoordinateMapping,
+} from "./coordinates.js";
 import type { CRCResizePosition } from "./types.js";
 import type {
   CRCManipulationActive,
@@ -63,6 +67,7 @@ interface Session {
   angle: number;
   rotationDelta: number;
   snapshot: CRCManipulationSnapshot;
+  coordinateMapping: readonly number[];
   releaseObservation?: () => void;
   sample?: PointerSample;
 }
@@ -73,6 +78,7 @@ export interface ManipulationState {
   root: CRCInstance;
   frame?: CRCComponentRefs<any>;
   parent: DOMMatrix;
+  coordinateMapping?: readonly number[];
   session?: Session;
   active: WritableSignal<CRCManipulationActive | null>;
   snapshot: WritableSignal<CRCManipulationSnapshot | null>;
@@ -247,6 +253,20 @@ function validateSession(state: ManipulationState): Session | undefined {
   }
   if (!enabled(state, session.operation)) {
     cancel(state, "disabled");
+    return;
+  }
+  if (
+    !sameRootCoordinateMapping(
+      session.coordinateMapping,
+      currentRootCoordinateMapping(state.root),
+    ) ||
+    (state.coordinateMapping !== undefined &&
+      !sameRootCoordinateMapping(
+        session.coordinateMapping,
+        state.coordinateMapping,
+      ))
+  ) {
+    cancel(state, "coordinate-space-changed");
     return;
   }
   if (
@@ -506,6 +526,7 @@ export function manipulationHandlers(
         ),
         rotationDelta: 0,
         snapshot,
+        coordinateMapping: currentRootCoordinateMapping(state.root),
       };
       owners.set(state.options.box, state);
       if (state.options.rotation) owners.set(state.options.rotation, state);

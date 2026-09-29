@@ -5,6 +5,7 @@ import { GLOBAL_STATE } from "../global-state.js";
 import { useHookSlot, requireHookContext } from "../hooks/hook-slot.js";
 import { pushLayoutBox } from "../layout/context.js";
 import { getCurrentWorldTransform } from "../render-target.js";
+import { currentRootCoordinateMapping } from "./coordinates.js";
 import type { CRCNode } from "../element/types.js";
 import type { SystemStyle } from "../types.js";
 import type { CRCManipulationBox } from "./types.js";
@@ -40,10 +41,13 @@ export const ManipulationFrame = definePrimitive<FrameProps, FrameStyle>(
       throw new Error(
         "A manipulation controller cannot attach across CRC roots.",
       );
-    if (state.frame && state.frame !== componentRefs)
-      throw new Error(
-        "A manipulation controller can attach to only one frame.",
-      );
+    if (state.frame && state.frame !== componentRefs) {
+      if (GLOBAL_STATE.seenIds?.has(state.frame.id))
+        throw new Error(
+          "A manipulation controller can attach to only one frame.",
+        );
+      detachManipulationFrame(state);
+    }
     useHookSlot("manipulationFrame", (teardowns) => {
       state.frame = componentRefs;
       teardowns.add(() => {
@@ -72,6 +76,7 @@ export const ManipulationFrame = definePrimitive<FrameProps, FrameStyle>(
     transaction.onFinish((success) => {
       if (success && state.alive && state.frame === componentRefs) {
         state.parent = parent;
+        state.coordinateMapping = currentRootCoordinateMapping(state.root);
       }
     });
     const releaseLayout = pushLayoutBox(
