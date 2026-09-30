@@ -3,6 +3,11 @@ export { useScale } from "./lib/use-scale.js";
 export type {
   ScaleId,
   LinearDomain,
+  BandCategory,
+  BandDomain,
+  BandScaleProps,
+  BandScaleRange,
+  ResolvedBandScale,
   ScaleRange,
   ScaleLayoutStyle,
   LinearScaleProps,
@@ -77,6 +82,15 @@ export type {
   AnchoredPlacement,
   AnchoredLayoutProps,
 } from "./lib/anchored-layout.js";
+
+export { BarSeries } from "./lib/bar-series.js";
+export type {
+  BarThresholdFill,
+  BarCategoryAccessor,
+  BarSeriesStyle,
+  BarStyleResolver,
+  BarSeriesProps,
+} from "./lib/bar-series.js";
 
 export { pieSlices } from "./lib/pie-slices.js";
 export type { PieOptions, PieSliceGeometry } from "./lib/pie-slices.js";

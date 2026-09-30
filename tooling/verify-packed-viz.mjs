@@ -75,6 +75,7 @@ try {
     "ScaleAdjust",
     "useScale",
     "PointSeries",
+    "BarSeries",
     "PlotSeries",
     "nearestDomainValue",
     "nearestPoint",

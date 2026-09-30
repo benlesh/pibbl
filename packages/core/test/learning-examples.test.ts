@@ -1214,11 +1214,17 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 65 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 68 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(65);
+    expect(learningExampleCatalog).toHaveLength(68);
+    expect(learningExampleCatalog.filter(entry =>
+      entry.slug === "viz-band-bars" || entry.slug === "viz-grouped-bars"
+    ).map(entry => getLearningExampleRoute(entry)).sort()).toEqual([
+      "#/examples/composition/viz-band-bars",
+      "#/examples/composition/viz-grouped-bars",
+    ]);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1285,6 +1291,9 @@ describe("learning example catalog", () => {
         "physics-panels",
         "signal-inputs",
         "signals-and-animation",
+        "viz-stacked-bars",
+        "viz-band-bars",
+        "viz-grouped-bars",
         "viz-hover-comparison",
         "viz-pie-composition",
         "viz-points-and-inspection",
@@ -1375,6 +1384,9 @@ describe("learning example catalog", () => {
       "physics-2d",
       "layer",
       "physics-panels",
+      "viz-stacked-bars",
+      "viz-grouped-bars",
+      "viz-band-bars",
       "viz-pie-composition",
       "viz-hover-comparison",
       "viz-points-and-inspection",
@@ -1738,6 +1750,7 @@ describe("learning example catalog", () => {
         "Scale",
         "Axis",
         "LineSeries",
+        "BarSeries",
         "PointSeries",
         "PlotSeries",
         "ScaleAdjust",

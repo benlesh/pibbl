@@ -59,7 +59,7 @@ void createElement(
 void (<LineSeries data={data} x="name" y="value" xScale="x" yScale="y" />);
 // @ts-expect-error no curve catalog in this slice
 void (<LineSeries {...line} curve="basis" />);
-// @ts-expect-error no band scale in this slice
+// Band domains can also contain finite numeric categories.
 void (<Scale {...props} type="band" />);
 // @ts-expect-error paired coordinate and ID
 void (<ScaleAdjust x={1} />);
@@ -302,6 +302,139 @@ const invalidAnchoredItem: AnchoredItem = {
   height: 20,
 };
 void invalidAnchoredItem;
+
+import { BarSeries, type ResolvedBandScale } from "@crc/viz";
+void (
+  <BarSeries
+    data={[{ category: "A", value: -2 }]}
+    x="category"
+    y="value"
+    xScale="categories"
+    yScale="values"
+  />
+);
+function BandConsumer() {
+  const band: ResolvedBandScale = useScale("categories", "band").get();
+  const start: number | undefined = band.map("A");
+  void start;
+  // @ts-expect-error bands have no numeric inversion
+  band.invert(1);
+  return null;
+}
+void BandConsumer;
+
+void (
+  <BarSeries
+    data={[{ category: "A", value: 42 }]}
+    x="category"
+    y="value"
+    xScale="categories"
+    yScale="values"
+    style={{
+      fill: signal({
+        type: "threshold" as const,
+        thresholds: [0, 30],
+        colors: ["orange", "green", "red"],
+      }),
+    }}
+  />
+);
+
+import type {
+  BandScaleRange,
+  BarStyleResolver,
+  BarSeriesProps,
+} from "@crc/viz";
+const groupedRows = [{ category: "A", group: "East", value: 12 }];
+const nestedRange: BandScaleRange = { bandwidthOf: Symbol("category") };
+const groupStyle: BarStyleResolver<(typeof groupedRows)[number]> = (row) => ({
+  fill: row.group === "East" ? "teal" : "orange",
+});
+void (
+  <Scale id="g" type="band" domain={["East"]} range={signal(nestedRange)} />
+);
+void (
+  <BarSeries
+    data={groupedRows}
+    x="category"
+    y="value"
+    group="group"
+    groupScale="g"
+    xScale="c"
+    yScale="v"
+    style={groupStyle}
+  />
+);
+// @ts-expect-error group requires groupScale
+const incompleteGroup: BarSeriesProps<(typeof groupedRows)[number]> = {
+  data: groupedRows,
+  x: "category",
+  y: "value",
+  group: "group",
+  xScale: "c",
+  yScale: "v",
+};
+void incompleteGroup;
+void (
+  (
+    // @ts-expect-error numeric scales cannot use bandwidthOf
+    <Scale id="v" type="linear" domain={[0, 1]} range={{ bandwidthOf: "c" }} />
+  )
+);
+const signalGroupStyle: BarStyleResolver<
+  (typeof groupedRows)[number]
+> = () => ({
+  // @ts-expect-error datum style callbacks return plain values
+  opacity: signal(0.5),
+});
+void signalGroupStyle;
+
+const stackRows = [{ category: "Q1", group: "Actual", from: -5, to: -9 }];
+void (
+  <BarSeries
+    data={stackRows}
+    x="category"
+    yStart="from"
+    yEnd="to"
+    xScale="c"
+    yScale="v"
+    group="group"
+    groupScale="g"
+    style={{ fill: "orange" }}
+  />
+);
+// @ts-expect-error range endpoints must be paired
+const missingRangeEnd: BarSeriesProps<(typeof stackRows)[number]> = {
+  data: stackRows,
+  x: "category",
+  yStart: "from",
+  xScale: "c",
+  yScale: "v",
+};
+const mixedInput = {
+  data: stackRows,
+  x: "category",
+  y: "to",
+  yStart: "from",
+  yEnd: "to",
+  xScale: "c",
+  yScale: "v",
+} as const;
+// @ts-expect-error value and range geometry cannot be mixed
+const mixedGeometry: BarSeriesProps<(typeof stackRows)[number]> = mixedInput;
+// @ts-expect-error explicit ranges cannot also use a shared baseline
+const rangeBaseline: BarSeriesProps<(typeof stackRows)[number]> = {
+  data: stackRows,
+  x: "category",
+  yStart: "from",
+  yEnd: "to",
+  baseline: 0,
+  xScale: "c",
+  yScale: "v",
+};
+void missingRangeEnd;
+void mixedGeometry;
+void rangeBaseline;
 
 import { PieLayout, PieSlice, PieLabel, pieSlices, type PieSliceGeometry } from "@crc/viz";
 const pieData = [{ id: "a", amount: 2, name: "Alpha" }];

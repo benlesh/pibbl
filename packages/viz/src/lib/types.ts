@@ -9,6 +9,7 @@ import type { SignalStyle } from "@crc/core/internal";
 export type ScaleId = string | symbol;
 export type LinearDomain = readonly [number, number];
 export type ScaleRange = "width" | "height" | readonly [number, number];
+export type BandScaleRange = ScaleRange | { readonly bandwidthOf: ScaleId };
 export type ScaleLayoutStyle = Pick<BoxStyle, "width" | "height"> &
   LayoutItemStyle;
 export interface LinearScaleProps {
@@ -20,7 +21,28 @@ export interface LinearScaleProps {
   readonly style?: SignalValue<SignalStyle<ScaleLayoutStyle>>;
   readonly children?: CRCNode;
 }
-export type ScaleProps = LinearScaleProps;
+export type BandCategory = string | number;
+export type BandDomain = readonly BandCategory[];
+export interface BandScaleProps extends Omit<
+  LinearScaleProps,
+  "type" | "domain" | "range"
+> {
+  readonly type: "band";
+  readonly domain: SignalValue<BandDomain>;
+  readonly range: SignalValue<BandScaleRange>;
+  readonly paddingInner?: SignalValue<number>;
+  readonly paddingOuter?: SignalValue<number>;
+}
+export type ScaleProps = LinearScaleProps | BandScaleProps;
+export interface ResolvedBandScale {
+  readonly type: "band";
+  readonly domain: BandDomain;
+  readonly range: readonly [number, number];
+  readonly frame: Readonly<LayoutBox>;
+  readonly bandwidth: number;
+  readonly step: number;
+  map(value: BandCategory): number | undefined;
+}
 export interface ResolvedLinearScale {
   readonly type: "linear";
   readonly domain: LinearDomain;
@@ -30,7 +52,7 @@ export interface ResolvedLinearScale {
   invert(pixel: number): number;
   ticks(count?: number): readonly number[];
 }
-export type ResolvedScale = ResolvedLinearScale;
+export type ResolvedScale = ResolvedLinearScale | ResolvedBandScale;
 
 import type {
   CRCEventHandlers,

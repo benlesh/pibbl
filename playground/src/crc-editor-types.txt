@@ -1081,6 +1081,7 @@ type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : Sig
 export type ScaleId = string | symbol;
 export type LinearDomain = readonly [number, number];
 export type ScaleRange = 'width' | 'height' | readonly [number, number];
+export type BandScaleRange = ScaleRange | { readonly bandwidthOf: ScaleId };
 export type ScaleLayoutStyle = Pick<BoxStyle, 'width' | 'height'> & LayoutItemStyle;
 export interface LinearScaleProps {
   readonly id: ScaleId;
@@ -1091,7 +1092,26 @@ export interface LinearScaleProps {
   readonly style?: SignalValue<SignalStyle<ScaleLayoutStyle>>;
   readonly children?: CRCNode;
 }
-export type ScaleProps = LinearScaleProps;
+export type BandCategory = string | number;
+export type BandDomain = readonly BandCategory[];
+export interface BandScaleProps extends Omit<LinearScaleProps, "type" | "domain" | "range"> {
+  readonly type: "band";
+  readonly domain: SignalValue<BandDomain>;
+  readonly range: SignalValue<BandScaleRange>;
+  readonly paddingInner?: SignalValue<number>;
+  readonly paddingOuter?: SignalValue<number>;
+}
+export type ScaleProps = LinearScaleProps | BandScaleProps;
+export interface ResolvedBandScale {
+  readonly type: "band";
+  readonly domain: BandDomain;
+  readonly range: readonly [number, number];
+  readonly frame: Readonly<LayoutBox>;
+  readonly bandwidth: number;
+  readonly step: number;
+  map(value: BandCategory): number | undefined;
+}
+
 export interface ResolvedLinearScale {
   readonly type: 'linear';
   readonly domain: LinearDomain;
@@ -1101,7 +1121,7 @@ export interface ResolvedLinearScale {
   invert(pixel: number): number;
   ticks(count?: number): readonly number[];
 }
-export type ResolvedScale = ResolvedLinearScale;
+export type ResolvedScale = ResolvedLinearScale | ResolvedBandScale;
 
 import type { CRCEventHandlers, CRCEventParticipationOptions, FillStyle, StrokeStyle } from '@crc/core';
 export interface AxisStyle { readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly fill?: FillStyle; readonly font?: string; readonly opacity?: number }
@@ -1130,7 +1150,8 @@ export type ScaleAdjustProps = ScaleAdjustX & ScaleAdjustY & { readonly children
 
 import type { Signal } from "@crc/core";
 export declare function Scale(props: ScaleProps): CRCNode;
-export declare function useScale(id: ScaleId): Signal<ResolvedScale>;
+export declare function useScale(id: ScaleId, type?: "linear"): Signal<ResolvedLinearScale>;
+export declare function useScale(id: ScaleId, type: "band"): Signal<ResolvedBandScale>;
 export declare function Axis(props: AxisProps): CRCNode;
 export declare function LineSeries<D>(props: LineSeriesProps<D>): CRCNode;
 export declare function ScaleAdjust(props: ScaleAdjustProps): CRCNode;
@@ -1311,6 +1332,34 @@ export interface AnchoredLayoutProps<T extends AnchoredItem> {
 }
 
 export declare function AnchoredLayout<T extends AnchoredItem>(props: AnchoredLayoutProps<T>): CRCNode;
+
+export type BarCategoryAccessor<D> =
+  | { [K in keyof D]-?: D[K] extends BandCategory | null | undefined ? K : never }[keyof D]
+  | ((datum: D, index: number, data: readonly D[]) => BandCategory | null | undefined);
+export interface BarThresholdFill { readonly type: "threshold"; readonly thresholds: readonly number[]; readonly colors: readonly string[]; }
+export interface BarSeriesStyle {
+  readonly bandwidth?: number | "auto";
+  readonly fill?: FillStyle | BarThresholdFill;
+  readonly stroke?: StrokeStyle;
+  readonly strokeWidth?: number;
+  readonly opacity?: number;
+  readonly cursor?: string;
+}
+export type BarStyleResolver<D> = (datum: D, index: number, data: readonly D[]) => BarSeriesStyle;
+interface BarSeriesBaseProps<D> extends CRCEventHandlers, CRCEventParticipationOptions {
+  readonly data: SignalValue<readonly D[]>;
+  readonly orientation?: "vertical";
+  readonly x: BarCategoryAccessor<D>;
+  readonly xScale: ScaleId;
+  readonly yScale: ScaleId;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  readonly style?: SignalValue<SignalStyle<BarSeriesStyle> | BarStyleResolver<D>>;
+}
+export type BarSeriesProps<D> = BarSeriesBaseProps<D> & (
+    | { readonly y: LineAccessor<D>; readonly baseline?: SignalValue<number>; readonly yStart?: never; readonly yEnd?: never }
+    | { readonly y?: never; readonly baseline?: never; readonly yStart: LineAccessor<D>; readonly yEnd: LineAccessor<D> }
+  ) & ({ readonly group: BarCategoryAccessor<D>; readonly groupScale: ScaleId } | { readonly group?: never; readonly groupScale?: never });
+export declare function BarSeries<D>(props: BarSeriesProps<D>): CRCNode;
 
 export interface PieOptions<D> {
   readonly value: LineAccessor<D>;

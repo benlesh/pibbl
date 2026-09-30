@@ -68,7 +68,7 @@ presentation and a fully evaluated casual-touch experience remain deferred.
 Core supports responsive style queries on returned CRC elements; conditional
 styles for viz-owned marks remain a separate follow-up.
 
-Linear scales and linear curves are the current scope. Time/UTC, band scales,
+Linear and band scales are available; line curves are linear. Time/UTC,
 additional curves and series, and automatic legends remain future work.
 Nearest-data inspection is available through the functions below.
 
@@ -186,6 +186,66 @@ local anchors and declared outer sizes; its child callback renders ordinary CRC
 content at each placed origin. It arranges the boxes together and keeps them
 clear of every supplied anchor. The Hover comparisons lesson demonstrates this
 with connector lines and a shared column that flips at the plot edge.
+
+## Categorical comparisons
+
+The [band scales and bars example](#/examples/composition/viz-band-bars) uses
+an ordered category domain and a numeric value scale to compare population changes
+in the six most populous U.S. states (Census Bureau, Vintage 2023). Positive and
+negative bars share a zero baseline. Hover or tap reveals exact counts without
+changing the bar geometry. Missing-value behavior is covered in the tests.
+
+```tsx
+<Scale
+  id="channels"
+  type="band"
+  domain={["Search", "Email"]}
+  range="width"
+  paddingInner={0.3}
+  paddingOuter={0.2}
+>
+  <Scale id="change" type="linear" domain={[-30, 30]} range="height" reverse>
+    <BarSeries
+      data={[
+        { channel: "Search", change: 20 },
+        { channel: "Email", change: -10 },
+      ]}
+      x="channel"
+      y="change"
+      xScale="channels"
+      yScale="change"
+    />
+  </Scale>
+</Scale>
+```
+
+Import `BarSeries` from `@crc/viz`. `useScale("channels", "band").get()` exposes
+band starts and bandwidth for composed labels and inspection. Categories are
+strings or finite numbers; order is explicit, duplicates reject, and unknowns
+map to undefined. Padding and domain can be signals. This feedback slice supports
+vertical value and range bars; horizontal bars remain deferred.
+
+For grouped bars, nest another band scale with
+`range={{ bandwidthOf: "categories" }}` and pass paired `group` and
+`groupScale` props to the same BarSeries. Its inner domain sets group order;
+missing rows leave their slots empty. A style callback supplies per-row colors
+without splitting the series. See [Grouped bars](#/examples/composition/viz-grouped-bars)
+for a complete editable example with two or three groups, responsive sizing,
+and inspection.
+
+To color different value regions within the same bar, pass a threshold fill in
+`style`: `{ fill: { type: "threshold", thresholds: [0, 300_000], colors:
+["orange", "green", "red"] } }`. One `BarSeries` paints all intervals; a bar
+crossing a threshold changes color there while retaining one border and target.
+Thresholds use the numeric value scale's domain, not pixels. The population
+example demonstrates this with green gains up to 300,000 and red above it.
+
+For stacked bars, derive each segment's start and end in a pure data transform,
+then pass `yStart` and `yEnd` in place of `y` and `baseline`.
+The same styles and grouped positioning apply. See
+[Stacked bars](#/examples/composition/viz-stacked-bars) for positive and negative
+cash flows with segment inspection. The example defines stack order and separate
+positive/negative accumulators; the renderer does not choose a stacking policy.
 
 ## Compose a pie with coordinated labels
 
