@@ -13,6 +13,7 @@ import {
   PieLabel,
   HoverCard,
   type PieSliceGeometry,
+  type PieLayoutSlice,
   type PieLabelPlacement,
 } from "@crc/viz";
 // Illustrative survey data, not real-world statistics. Both samples total 100.
@@ -94,6 +95,45 @@ function Scene() {
   const box = narrow.get()
     ? { x: 170, y: 115, width: 320, height: 310 }
     : { x: 20, y: 115, width: 620, height: 310 };
+  const pieStyle = {
+    cx: 330,
+    cy: 270,
+    radius: 112,
+    innerRadius: donut.get() ? 58 : 0,
+    labelFont: "13px sans-serif",
+    labelGap: 10,
+  };
+  function LabelledPie({
+    children,
+  }: {
+    children: (slice: PieLayoutSlice<Datum>) => CRCNode;
+  }) {
+    return cards.get() ? (
+      <PieLayout
+        data={data}
+        value="value"
+        keyBy="id"
+        labelBox={() => ({ width: 120, height: 38 })}
+        placement={placement}
+        bounds={box}
+        style={pieStyle}
+      >
+        {children}
+      </PieLayout>
+    ) : (
+      <PieLayout
+        data={data}
+        value="value"
+        keyBy="id"
+        label={label}
+        placement={placement}
+        bounds={box}
+        style={pieStyle}
+      >
+        {children}
+      </PieLayout>
+    );
+  }
   return (
     <Group>
       <Rectangle style={{ width: 1000, height: 570, fill: "#fcfbf8" }} />
@@ -124,23 +164,7 @@ function Scene() {
           cornerRadius: 6,
         }}
       />
-      <PieLayout
-        data={data}
-        value="value"
-        keyBy="id"
-        label={cards.get() ? undefined : label}
-        labelBox={cards.get() ? () => ({ width: 120, height: 38 }) : undefined}
-        placement={placement}
-        bounds={box}
-        style={{
-          cx: 330,
-          cy: 270,
-          radius: 112,
-          innerRadius: donut.get() ? 58 : 0,
-          labelFont: "13px sans-serif",
-          labelGap: 10,
-        }}
-      >
+      <LabelledPie>
         {(slice) => (
           <PieSlice
             slice={slice}
@@ -207,7 +231,7 @@ function Scene() {
             </PieLabel>
           </PieSlice>
         )}
-      </PieLayout>
+      </LabelledPie>
       <Text
         pointerEvents="none"
         style={{

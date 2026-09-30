@@ -1,5 +1,6 @@
 import {
   Group,
+  Absolute,
   Path,
   Wedge,
   definePrimitive,
@@ -368,7 +369,11 @@ export function PieLabel<D>({
         />
       ) : (
         <Group style={{ translateX: label.x, translateY: label.y }}>
-          {children}
+          <Absolute style={{ width: label.width, height: label.height }}>
+            <Group style={{ width: label.width, height: label.height }}>
+              {children}
+            </Group>
+          </Absolute>
         </Group>
       )}
     </Group>
