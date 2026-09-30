@@ -6,6 +6,12 @@ import { getCRCInstance } from "../../core/src/lib/global-state.js";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
+it("skips hole-distance work for solid-pie labels", () => {
+  const hypot = vi.spyOn(Math, "hypot");
+  expect(boxOutsideInnerCircle(0, 0, 10, 10, 5, 5, 0)).toBe(true);
+  expect(hypot).not.toHaveBeenCalled();
+  hypot.mockRestore();
+});
 it("lays out explicit outside labels once and reuses geometry and measurements during selection", () => {
   expect(viz).toHaveProperty("PieLayout");
   runtime = testRuntime();
