@@ -148,6 +148,7 @@ let currentFrameOrderedPlaybackCompletions:
   OrderedPlaybackCompletion[] | undefined;
 let nextOrderedPlaybackCompletionSequence = 0;
 let schedulerTraceCollector: CRCSchedulerTraceCollector | undefined;
+let schedulerTraceExclusive = false;
 
 setSignalGraphPlanWorkNotifier(syncSignalGraphPlanWork);
 
@@ -347,8 +348,10 @@ export function recordSchedulerTrace(record: CRCSchedulerTraceRecord): void {
   try {
     collector(Object.freeze(record));
   } catch {
-    if (schedulerTraceCollector === collector)
+    if (schedulerTraceCollector === collector) {
       schedulerTraceCollector = undefined;
+      schedulerTraceExclusive = false;
+    }
   }
 }
 
@@ -471,12 +474,19 @@ export function installSchedulerDriverForTest(
 /** @internal Test/diagnostic seam; production retains no trace history. */
 export function installSchedulerTraceCollectorForTest(
   collector: CRCSchedulerTraceCollector,
+  exclusive = false,
 ): () => void {
+  if (schedulerTraceExclusive || (exclusive && schedulerTraceCollector !== undefined)) {
+    throw new Error('Scheduler trace collector is already owned.');
+  }
   const previous = schedulerTraceCollector;
   schedulerTraceCollector = collector;
+  schedulerTraceExclusive = exclusive;
   return () => {
-    if (schedulerTraceCollector === collector)
+    if (schedulerTraceCollector === collector) {
       schedulerTraceCollector = previous;
+      schedulerTraceExclusive = false;
+    }
   };
 }
 
@@ -504,6 +514,7 @@ function runFrame(hostTime: number): void {
   }> = [];
 
   phase = "begin";
+  if (schedulerTraceCollector) recordSchedulerTrace({ kind: 'scheduler-phase', collectedErrors: errors.length, phase, ...snapshot });
   let rootJobs = captureRootJobs();
   const commands = beginCommands.splice(0);
   const completions = frameCompletions.splice(0);
@@ -536,6 +547,7 @@ function runFrame(hostTime: number): void {
   );
 
   phase = "advance";
+  if (schedulerTraceCollector) recordSchedulerTrace({ kind: 'scheduler-phase', collectedErrors: errors.length, phase, ...snapshot });
   for (const registration of registrations) {
     if (!registration.active) continue;
     const { participant } = registration;
@@ -551,6 +563,7 @@ function runFrame(hostTime: number): void {
   }
 
   phase = "commit";
+  if (schedulerTraceCollector) recordSchedulerTrace({ kind: 'scheduler-phase', collectedErrors: errors.length, phase, ...snapshot });
   let commitApplied = false;
   try {
     withCurrentFramePlanAdmission(() =>
@@ -575,6 +588,7 @@ function runFrame(hostTime: number): void {
   }
 
   phase = "plan";
+  if (schedulerTraceCollector) recordSchedulerTrace({ kind: 'scheduler-phase', collectedErrors: errors.length, commitApplied, phase, ...snapshot });
   try {
     withCurrentFramePlanAdmission(flushPendingComputedValidations);
   } catch (error) {
@@ -597,6 +611,7 @@ function runFrame(hostTime: number): void {
   const retryRendererOwners = new Set<RendererParticipantOwner>();
 
   phase = "render";
+  if (schedulerTraceCollector) recordSchedulerTrace({ kind: 'scheduler-phase', collectedErrors: errors.length, commitApplied, phase, ...snapshot });
   for (const rootJob of rootJobs) {
     if (
       !registeredRoots.has(rootJob.root) ||
@@ -691,6 +706,7 @@ function runFrame(hostTime: number): void {
   }
 
   phase = "complete";
+  if (schedulerTraceCollector) recordSchedulerTrace({ kind: 'scheduler-phase', collectedErrors: errors.length, commitApplied, phase, ...snapshot });
   const reactions = reactionCompletions.splice(0);
   for (const record of transactions) {
     try {
@@ -768,6 +784,7 @@ function runFrame(hostTime: number): void {
   batch.clear();
   currentFrame = undefined;
   phase = "idle";
+  if (schedulerTraceCollector) recordSchedulerTrace({ kind: 'scheduler-phase', collectedErrors: errors.length, commitApplied, phase, ...snapshot, errorCount: errors.length });
   promoteNextFrameWork();
   requestHostFrameIfNeeded();
   throwCollectedErrors(errors);

@@ -38,6 +38,7 @@ const expected = [
   "Line",
   "Overlay",
   "Path",
+  "PathGeometry",
   "Polygon",
   "Rectangle",
   "RegularPolygon",
@@ -64,6 +65,11 @@ const expected = [
   "definePrimitive",
   "defineRenderLayer",
   "easing",
+  "flattenPath",
+  "simplifyPath",
+  "subdividePath",
+  "toPath2D",
+  "toSvgPathData",
   "isSignal",
   "keyframes",
   "layoutDiagnostic",
@@ -99,6 +105,9 @@ const expected = [
   "useSvgPath",
   "useTransition",
   "wait",
+  "warpPath",
+  "bendPathAlongArc",
+  "bendPathAlongPath",
 ].sort();
 
 const actual = Object.keys(core).sort();
@@ -194,9 +203,9 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 80) {
+if (actual.length !== 89) {
   throw new Error(
-    `Expected 80 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected 89 @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 
@@ -446,4 +455,46 @@ for (const specifier of [
       throw error;
     }
   }
+}
+
+
+const editableGeometry = new core.PathGeometry();
+editableGeometry.moveTo(0, 0);
+editableGeometry.lineTo(10, 10);
+const editableCopy = editableGeometry.clone();
+editableCopy.setSegment(1, { type: 'line', x: 20, y: 20 });
+if (core.toSvgPathData(editableGeometry) !== 'M 0 0 L 10 10' ||
+    core.toSvgPathData(editableCopy) !== 'M 0 0 L 20 20') {
+  throw new Error('Packed editable path copies must remain independent.');
+}
+if (core.subdividePath(editableGeometry, { divisions: 2 }).segmentCount !== 3) {
+  throw new Error('Packed geometry utilities are not operational.');
+}
+
+const warpProbe = new core.PathGeometry();
+warpProbe.moveTo(0, 0); warpProbe.lineTo(1, 1);
+for (const mode of ['bilinear', 'perspective']) {
+  const warped = core.warpPath(warpProbe, {
+    source: { x: 0, y: 0, width: 1, height: 1 },
+    destination: { topLeft: { x: 0, y: 0 }, topRight: { x: 10, y: 0 }, bottomLeft: { x: 0, y: 10 }, bottomRight: { x: 10, y: 5 } },
+    mode, tolerance: 0.01,
+  });
+  const end = warped.getSegment(warped.segmentCount - 1);
+  if (end.type !== 'line' || end.x !== 10 || end.y !== 5 || warpProbe.segmentCount !== 2) {
+    throw new Error(`Packed ${mode} warp failed endpoint/ownership evidence.`);
+  }
+}
+
+const bendProbe = new core.PathGeometry(); bendProbe.moveTo(25, 7);
+const bendGuide = new core.PathGeometry(); bendGuide.moveTo(30, 40); bendGuide.bezierCurveTo(30, 40, 30, 40, 130, 40);
+const bendOptions = { source: { x: 0, y: 0, width: 100, height: 10 }, baseline: 0, tolerance: 0.01 };
+const bentPoint = core.bendPathAlongPath(bendProbe, bendGuide, bendOptions).getSegment(0);
+if (bentPoint.type !== 'move' || Math.hypot(bentPoint.x - 55, bentPoint.y - 47) > 0.01) {
+  throw new Error('Packed Along Path must use arc length and preserve normal displacement.');
+}
+const arcPoint = core.bendPathAlongArc(bendProbe, {
+  ...bendOptions, arc: { cx: 10, cy: 20, radius: 50, startAngle: 0, sweep: Math.PI },
+}).getSegment(0);
+if (arcPoint.type !== 'move' || Math.hypot(arcPoint.x - (10 + 43 * Math.cos(0.5)), arcPoint.y - (20 + 43 * Math.sin(0.5))) > 0.01 || core.toSvgPathData(bendProbe) !== 'M 25 7') {
+  throw new Error('Packed Along Arc failed analytic geometry or input ownership.');
 }

@@ -1,4 +1,5 @@
 export {
+  agentTargetingVerificationScenarioEntry,
   animationLabScenarioEntry,
   canvasSurfaceScenarioEntry,
   responsiveStylesScenarioEntry,
@@ -30,6 +31,9 @@ export {
   threeInstancingLabScenarioEntry,
   validateScenarioCatalog,
 } from './catalog';
+export { AGENT_TARGETING_ACTION_IDS } from './agent-targeting-verification';
+export type { AgentTargetingAction, AgentTargetingState } from './agent-targeting-verification';
+export type { AgentTargetingDelivery, AgentTargetingMode } from './agent-targeting-verification.example';
 export type {
   AnimationLabAction,
   AnimationLabState,

@@ -1,0 +1,32 @@
+import { afterEach, expect, it } from 'vitest';
+import { probeHostPoint } from '../../../tooling/agent-verification/browser';
+import { clickMouse } from './support/mouse-input';
+afterEach(() => document.body.replaceChildren());
+it('separates document hit routing from Canvas geometry and native delivery', async () => {
+  const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
+  const bounds = canvas.getBoundingClientRect();
+  let canvasClicks = 0, overlayClicks = 0;
+  canvas.addEventListener('click', () => canvasClicks++);
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `position:fixed;left:${bounds.left}px;top:${bounds.top}px;width:100px;height:100px;z-index:1000`;
+  overlay.addEventListener('click', () => overlayClicks++); document.body.append(overlay);
+  const blocked = probeHostPoint(canvas, bounds.left + 25, bounds.top + 25);
+  expect(blocked).toMatchObject({ status: 'blocked', targetTag: 'div', scope: 'owner-document', ancestorFrames: 'unavailable' });
+  await clickMouse(canvas, { x: 25, y: 25 });
+  expect([canvasClicks, overlayClicks]).toEqual([0, 1]);
+  overlay.style.pointerEvents = 'none';
+  expect(probeHostPoint(canvas, bounds.left + 25, bounds.top + 25).status).toBe('canvas');
+  await clickMouse(canvas, { x: 25, y: 25 });
+  expect([canvasClicks, overlayClicks]).toEqual([1, 1]);
+  expect(Object.isFrozen(blocked)).toBe(true);
+  expect(blocked.status).toBe('blocked');
+});
+it('labels invalid, offscreen and unsupported hosts explicitly', () => {
+  const canvas = document.createElement('canvas');
+  expect(probeHostPoint(canvas, 0, 0).status).toBe('unavailable');
+  document.body.append(canvas);
+  expect(probeHostPoint(canvas, NaN, 0).status).toBe('invalid');
+  expect(probeHostPoint(canvas, -1, 0).status).toBe('out-of-viewport');
+  const host = document.createElement('div'); document.body.append(host); host.attachShadow({ mode: 'open' }).append(canvas);
+  expect(probeHostPoint(canvas, 0, 0).status).toBe('unsupported');
+});

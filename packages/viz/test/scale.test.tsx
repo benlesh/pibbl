@@ -5,6 +5,41 @@ import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
 
+it.each([
+  { domain: [0, 10], range: [0, 240], reverse: false },
+  { domain: [10, 0], range: [20, 260], reverse: false },
+  { domain: [-2.5, 7.5], range: [-30, 170], reverse: true },
+  { domain: [0.125, 0.625], range: [180, -20], reverse: true },
+] as const)("round-trips finite linear coordinates with explicit tolerances: %j", ({ domain, range, reverse }) => {
+  runtime = testRuntime();
+  const fractions = [-0.25, 0, 0.125, 0.5, 1, 1.25];
+  const domainTolerance = Math.abs(domain[1] - domain[0]) * 1e-12;
+  const pixelTolerance = Math.abs(range[1] - range[0]) * 1e-12;
+  let checked = 0;
+  function Probe() {
+    const scale = useScale("round-trip").get();
+    const start = reverse ? range[1] : range[0];
+    const end = reverse ? range[0] : range[1];
+    for (const fraction of fractions) {
+      // Fixture arithmetic does not derive the expected position from map/invert.
+      const value = domain[0] + fraction * (domain[1] - domain[0]);
+      const pixel = start + fraction * (end - start);
+      expect(Math.abs(scale.map(value) - pixel)).toBeLessThanOrEqual(pixelTolerance);
+      expect(Math.abs(scale.invert(pixel) - value)).toBeLessThanOrEqual(domainTolerance);
+      expect(Math.abs(scale.invert(scale.map(value)) - value)).toBeLessThanOrEqual(domainTolerance);
+      expect(Math.abs(scale.map(scale.invert(pixel)) - pixel)).toBeLessThanOrEqual(pixelTolerance);
+      checked++;
+    }
+  }
+  runtime.mount(
+    <Scale id="round-trip" type="linear" domain={domain} range={range} reverse={reverse}>
+      <Probe />
+    </Scale>,
+  );
+  runtime.flush();
+  expect(checked).toBe(fractions.length);
+});
+
 it("maps local allocations and updates the same scale signal during reflow", () => {
   runtime = testRuntime();
   const domain = signal<readonly [number, number]>([0, 10]);

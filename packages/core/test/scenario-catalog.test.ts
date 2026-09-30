@@ -909,7 +909,7 @@ describe('scenario catalog trust gate', () => {
     expect(
       scenarioCatalogIndex.byApi.find(group => group.key === 'defineThreeLayer')
         ?.scenarios.map(entry => entry.metadata.id),
-    ).toEqual(['three-instancing']);
+    ).toEqual(['three-instancing', 'three-picking-generation']);
   });
 
   it('rejects duplicate executable source identities and paths', () => {

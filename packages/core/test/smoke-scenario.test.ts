@@ -175,6 +175,11 @@ describe('shared smoke scenario', () => {
     if (import.meta.env.VITE_CRC_VISUAL_DRILL === '1') {
       await controller.perform('update');
     }
+    if (import.meta.env.VITE_CRC_VISUAL_DRILL === 'mask-gap') {
+      const context = canvas.getContext('2d')!;
+      context.fillStyle = '#ff0000';
+      context.fillRect(60, 100, 12, 6);
+    }
     const visual = document.querySelector('[data-testid="smoke-visual"]');
     if (!visual) {
       throw new Error('The smoke visual surface was not mounted.');
@@ -186,12 +191,18 @@ describe('shared smoke scenario', () => {
       actualPath: `../../../test-screenshots/dep-03/${packageMode}/smoke.actual.png`,
       diffPath: `test-screenshots/dep-03/${packageMode}/smoke.diff.png`,
       ignoreRegions: [
-        { x: 40, y: 68, width: 184, height: 78 },
-        { x: 238, y: 48, width: 234, height: 104 },
-        { x: 494, y: 16, width: 218, height: 26 },
-        { x: 494, y: 52, width: 218, height: 46 },
-        { x: 494, y: 109, width: 218, height: 46 },
-        { x: 494, y: 166, width: 218, height: 46 },
+        { x: 46, y: 74, width: 168, height: 24, reason: 'Canvas control title: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
+        { x: 46, y: 112, width: 128, height: 22, reason: 'Canvas control state line: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
+        { x: 246, y: 58, width: 144, height: 24, reason: 'Canvas status heading: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
+        { x: 246, y: 90, width: 118, height: 22, reason: 'Canvas action line: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
+        { x: 246, y: 118, width: 136, height: 22, reason: 'Canvas instructions: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
+        { x: 498, y: 20, width: 146, height: 16, reason: 'DOM state heading: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
+        { x: 498, y: 56, width: 64, height: 16, reason: 'DOM revision label: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
+        { x: 498, y: 76, width: 18, height: 20, reason: 'DOM revision value: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
+        { x: 498, y: 115, width: 46, height: 16, reason: 'DOM clicks label: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
+        { x: 498, y: 134, width: 18, height: 20, reason: 'DOM clicks value: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
+        { x: 498, y: 174, width: 70, height: 16, reason: 'DOM action label: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
+        { x: 498, y: 193, width: 44, height: 20, reason: 'DOM action value: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
       ],
     });
     if (import.meta.env.VITE_CRC_VISUAL_DRILL === '1') {

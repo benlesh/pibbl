@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "70786cb00b7ba60adf09dd5d21a32ca3f69409846899900ff52c1ecba724f902";
+  "67ddbcfcf1976b317bc2f1b1d68b875684c50cbcf63532846198e613a6aa7cba";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const THREE_PIVOT_APPROVAL_RECORD = "three-full-pivot";
@@ -104,6 +104,21 @@ const MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS = new Set([
 ]);
 
 const POST_BASELINE_CONTRACT_PROFILES = new Map([
+  [
+    "docs/design/textures-contract.md",
+    {
+      unitPrefix: "x",
+      approvalRecordId: "procedural-textures",
+      allowedSections: new Set([
+        "Optional procedural textures decision record",
+        "Package boundary",
+        "Persistence and timing",
+        "Input and updates",
+        "Composition and reuse",
+        "Ownership and evidence",
+      ]),
+    },
+  ],
   [
     "docs/design/physics-2d-contract.md",
     {
@@ -1198,7 +1213,8 @@ export function assertContractPreservationBaseline({
       `${label} needs a specific reason`,
     );
     assert.ok(
-      Array.isArray(retirement.baselineIds) && retirement.baselineIds.length > 0,
+      Array.isArray(retirement.baselineIds) &&
+        retirement.baselineIds.length > 0,
       `${label} must identify exact removed baseline units`,
     );
     const { approvalUnits } = resolveApprovalRecordUnits({

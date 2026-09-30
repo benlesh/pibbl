@@ -1,4 +1,5 @@
 import type { LayoutBox } from '../layout/types.js';
+import type { PathGeometry } from '../geometry/path-geometry.js';
 
 export interface CRCEvent<TOriginal extends Event = Event> {
   readonly type: string;
@@ -43,7 +44,7 @@ export interface CRCEventFocusOptions {
 }
 
 export interface CRCEventTargetOptions extends CRCEventFocusOptions {
-  readonly path: Path2D;
+  readonly path: Path2D | PathGeometry;
   readonly fill?: boolean;
   readonly lineInteractionWidth?: number;
   readonly cursor?: string;

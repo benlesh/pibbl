@@ -17,6 +17,7 @@ import {
   IcosahedronGeometry,
   MeshPhongMaterial,
   Object3D,
+  Scene,
   OrbitControls,
 } from '../../scenarios/test-support/three-instancing-resources';
 import {
@@ -73,14 +74,16 @@ function pixelSignature(canvas: HTMLCanvasElement): number {
 }
 
 function applicationResourceIdentities(
-  calls: readonly (readonly Object3D[])[],
+  renderedScenes: readonly Object3D[],
 ): Readonly<{
   geometries: readonly IcosahedronGeometry[];
   materials: readonly MeshPhongMaterial[];
 }> {
   const geometries = new Set<IcosahedronGeometry>();
   const materials = new Set<MeshPhongMaterial>();
-  for (const object of calls.flat()) {
+  // Only the application scene is submitted to the GPU renderer. Picking
+  // snapshots also call Object3D.add but their CPU copies are not app resources.
+  for (const scene of renderedScenes) scene.traverse(object => {
     const mesh = object as Object3D & {
       readonly geometry?: unknown;
       readonly material?: unknown;
@@ -91,7 +94,7 @@ function applicationResourceIdentities(
     if (mesh.material instanceof MeshPhongMaterial) {
       materials.add(mesh.material);
     }
-  }
+  });
   return {
     geometries: [...geometries],
     materials: [...materials],
@@ -333,7 +336,12 @@ describe('public Three instancing proving scenarios', () => {
       controls.add(this);
       return originalControlsUpdate.apply(this, args);
     });
-    const objectAdd = vi.spyOn(Object3D.prototype, 'add');
+    const renderedScenes = new Set<Scene>();
+    const originalBeforeRender = Scene.prototype.onBeforeRender;
+    vi.spyOn(Scene.prototype, 'onBeforeRender').mockImplementation(function (this: Scene, ...args: Parameters<Scene['onBeforeRender']>) {
+      renderedScenes.add(this);
+      return originalBeforeRender.apply(this, args);
+    });
     const disposedControls: OrbitControls[] = [];
     const originalControlsDispose = OrbitControls.prototype.dispose;
     const controlsDispose = vi
@@ -360,7 +368,7 @@ describe('public Three instancing proving scenarios', () => {
       });
 
     const { canvas, controller } = await mountThreeInstancingLab();
-    const initialResources = applicationResourceIdentities(objectAdd.mock.calls);
+    const initialResources = applicationResourceIdentities([...renderedScenes]);
     const initialControls = [...controls];
     expect(initialControls).toHaveLength(1);
     expect(initialResources.geometries).toHaveLength(2);
@@ -393,7 +401,7 @@ describe('public Three instancing proving scenarios', () => {
     await controller.settled();
     expect(controller.getState().revision).toBe(1);
     expect(pixelSignature(canvas)).not.toBe(beforeResize);
-    const resizedResources = applicationResourceIdentities(objectAdd.mock.calls);
+    const resizedResources = applicationResourceIdentities([...renderedScenes]);
     const resizedControls = [...controls];
     expect(resizedControls).toHaveLength(1);
     expect(resizedControls[0]).toBe(initialControls[0]);

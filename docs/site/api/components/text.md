@@ -18,7 +18,10 @@ import { Text } from "@crc/core";
 `Text` uses [`TextProps`](#/api/types/elements-components#textprops) and [`TextStyle`](#/api/types/styles#textstyle), and accepts recursive [`CRCTextChild`](#/api/types/elements-components#crctextchild)
 content rather than visual child elements. It supports paint, wrapping, fitting,
 and measurement under its local style. Font rasterization and measurement are
-browser behavior.
+browser behavior. Ellipsis fitting preserves complete grapheme clusters, including
+combining marks and joined emoji, using the browser’s `Intl.Segmenter`. It does not
+truncate inside a cluster. Font loading and any update needed after a font arrives
+remain application responsibilities.
 
 ```tsx
 <Text style={{ x: 20, y: 44, fill: "#0f172a", font: "600 24px sans-serif" }}>

@@ -49,6 +49,11 @@ interface ConsumerState extends SignalDependencyConsumer {
 
 const consumerStates = new WeakMap<SignalRenderConsumer, ConsumerState>();
 
+/** @internal Opaque identity for repository-local passive ownership correlation. */
+export function signalRenderConsumerIdentity(consumer: SignalRenderConsumer): object | undefined {
+  return consumerStates.get(consumer);
+}
+
 export function createSignalRenderConsumer(
   options: SignalRenderConsumerOptions,
 ): SignalRenderConsumer {

@@ -1,4 +1,5 @@
 import { getInteractionRoot } from '../global-state.js';
+import type { PathGeometry } from '../geometry/path-geometry.js';
 import {
   refreshCursorDefault,
   removeCursorDefault,
@@ -26,7 +27,7 @@ export function useCursor({
   fill = false,
   lineInteractionWidth = 0,
 }: {
-  path?: Path2D;
+  path?: Path2D | PathGeometry;
   style?: string;
   fill?: boolean;
   lineInteractionWidth?: number;

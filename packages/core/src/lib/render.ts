@@ -5,6 +5,7 @@ import {
 } from './global-state.js';
 import { Teardowns } from './teardowns.js';
 import { CRCComponentRefs } from './types.js';
+import type { LayoutBox } from './layout/types.js';
 import { finalizeHookSlots } from './hooks/hook-slot.js';
 import { resolveElementStyle, takePreNormalizedStyle } from './style/resolve-dispatch.js';
 import {
@@ -385,7 +386,24 @@ function prepareComponentScope<P>(
   componentRefs.parent = parent;
   componentRefs.element = element;
   componentRefs.renderGeneration = crcInstance.renderGeneration;
+  const layout = GLOBAL_STATE.layoutStack?.at(-1);
+  if (!layout) componentRefs.layoutEntry = undefined;
+  else {
+    const previous = componentRefs.layoutEntry;
+    const allocation = captureLayoutBox(previous?.allocation, layout.allocation);
+    const percentageBasis = captureLayoutBox(previous?.percentageBasis, layout.percentageBasis);
+    if (allocation !== previous?.allocation || percentageBasis !== previous?.percentageBasis) {
+      componentRefs.layoutEntry = Object.freeze({ allocation, percentageBasis });
+    }
+  }
   return componentRefs;
+}
+
+/** Constant-sized numeric evidence; unchanged entry contexts allocate nothing. */
+function captureLayoutBox(previous: Readonly<LayoutBox> | undefined, box: Readonly<LayoutBox>): Readonly<LayoutBox> {
+  if (previous && previous.x === box.x && previous.y === box.y &&
+      previous.width === box.width && previous.height === box.height) return previous;
+  return Object.freeze({ x: box.x, y: box.y, width: box.width, height: box.height });
 }
 
 function getElementTypeName(element: CRCElement<any>, parentId: string): string {

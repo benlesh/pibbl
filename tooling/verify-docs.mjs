@@ -83,8 +83,14 @@ const publicGuidePaths = [
   "docs/site/learn/guides/style-and-draw.md",
   "docs/site/learn/guides/responsive-styles.md",
   "docs/site/learn/guides/three-js.md",
+  "docs/site/learn/guides/procedural-textures.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/components/reaction-diffusion.md",
+  "docs/site/api/components/procedural-texture.md",
+  "docs/site/api/types/textures.md",
+  "docs/site/api/functions/path-bending.md",
+  "docs/site/api/functions/path-geometry.md",
   "docs/site/learn/guides/data-visualization.md",
   "docs/site/api/components/scale.md",
   "docs/site/api/components/axis.md",
@@ -220,6 +226,8 @@ const publicSiteMarkdownPaths = [
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
+  "docs/design/textures-contract.md",
+  "packages/textures/README.md",
   "AGENTS.md",
   "README.md",
   "packages/core/README.md",
@@ -252,8 +260,11 @@ const currentMarkdownPaths = [
   "docs/scenario-index.md",
   "docs/design/physics-2d-contract.md",
   "tooling/physics-comparison/README.md",
+  "tooling/agent-verification/README.md",
   "docs/strategy/README.md",
   "docs/strategy/responsive-style-queries.md",
+  "docs/strategy/agent-verification-inventory.md",
+  "docs/strategy/agent-verification-progress.md",
   "docs/strategy/particle-effects-research.md",
   "docs/testing/dependency-freshness.md",
   "docs/testing/dependency-inventory.md",
@@ -819,6 +830,9 @@ async function typecheckCompleteSnippets(snippets) {
               ],
               "@crc/particles": [
                 join(repositoryRoot, "packages/particles/src/index.ts"),
+              ],
+              "@crc/textures": [
+                join(repositoryRoot, "packages/textures/src/index.ts"),
               ],
               "@crc/viz": [join(repositoryRoot, "packages/viz/src/index.ts")],
               "@crc/three": [
@@ -1669,6 +1683,20 @@ for (const kind of ["values", "types"])
     vizExports[kind],
     `Documented @crc/viz ${kind}`,
   );
+const textureSource = await readFile(
+  join(repositoryRoot, "packages/textures/src/index.ts"),
+  "utf8",
+);
+const textureExports = exportedSpecifiers(
+  textureSource,
+  "packages/textures/src/index.ts",
+);
+for (const kind of ["values", "types"])
+  assertSameNames(
+    [...documentedApiSymbols].filter((name) => textureExports[kind].has(name)),
+    textureExports[kind],
+    `Documented @crc/textures ${kind}`,
+  );
 const namespaceMembers = jsxNamespaceMembers(
   runtimeSource,
   "packages/core/src/jsx-runtime.ts",
@@ -2151,6 +2179,7 @@ const currentNormativeContractPaths = [
   ),
 ].sort();
 const postBaselineNormativeContractPaths = new Set([
+  "docs/design/textures-contract.md",
   "docs/design/animation-contract.md",
   "docs/design/signals-and-scheduling-contract.md",
   "docs/design/physics-2d-contract.md",

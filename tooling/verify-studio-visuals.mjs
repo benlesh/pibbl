@@ -161,19 +161,23 @@ let browser;
 try {
   await waitForServer(server);
   browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({
+  const pageOptions = {
     viewport: { width: 1280, height: 900 },
     colorScheme: "light",
     reducedMotion: "reduce",
     locale: "en-US",
     timezoneId: "UTC",
     deviceScaleFactor: 1,
-  });
+  };
   await mkdir(resolve(workspaceRoot, "test-screenshots/studio"), {
     recursive: true,
   });
 
   for (const route of routes) {
+    // Each reference is a direct route load. Reusing a page after Learn leaves
+    // browser font state that changes Canvas generic-font rendering in Filters.
+    // A fresh context makes route captures independent of their execution order.
+    const page = await browser.newPage(pageOptions);
     await page.goto(`${origin}/${route.hash}`);
     await page.locator(route.ready).waitFor({ timeout: 30_000 });
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
@@ -251,6 +255,7 @@ try {
     await writeFile(actualPath, actual);
     if (update) {
       await writeFile(baselinePath, actual);
+      await page.close();
       continue;
     }
     const expected = await readFile(baselinePath).catch(() => undefined);
@@ -264,6 +269,7 @@ try {
         `Studio visual "${route.name}" differs by ${comparison.differentPixels} pixels (${comparison.dimensions}). Inspect ${actualPath}.`,
       );
     }
+    await page.close();
   }
   process.stdout.write(
     `${update ? "Updated and inspected" : "Matched"} ${routes.length} CRC studio visual baselines.\n`,

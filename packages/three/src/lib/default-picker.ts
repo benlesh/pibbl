@@ -1,3 +1,4 @@
+import { snapshotPickingScene } from "./picking-snapshot.js";
 import {
   Vector2,
   type Camera,
@@ -17,15 +18,27 @@ export function createDefaultPicker(
   targetMap: ReadonlyMap<Object3D, CRCThreeTarget>,
   disabledRoots: ReadonlySet<Object3D>,
 ): CRCThreePicker {
+  const snapshot = snapshotPickingScene(scene, camera);
+  const snapshotTargets = new Map<Object3D, CRCThreeTarget>();
+  const snapshotDisabled = new Set<Object3D>();
+  for (const [object, target] of targetMap) {
+    const copy = snapshot.copies.get(object);
+    if (copy) snapshotTargets.set(copy, target);
+  }
+  for (const object of disabledRoots) {
+    const copy = snapshot.copies.get(object);
+    if (copy) snapshotDisabled.add(copy);
+  }
   const ndc = new Vector2();
   return (point) => {
     ndc.set((point.x / size.width) * 2 - 1, 1 - (point.y / size.height) * 2);
-    raycaster.layers.mask = camera.layers.mask;
-    raycaster.setFromCamera(ndc, camera);
-    const intersections = raycaster.intersectObject(scene, true);
+    raycaster.layers.mask = snapshot.camera.layers.mask;
+    raycaster.setFromCamera(ndc, snapshot.camera);
+    const intersections = raycaster.intersectObject(snapshot.scene, true);
     for (const intersection of intersections) {
-      if (!isEligible(intersection, disabledRoots)) continue;
-      const target = nearestTarget(intersection.object, targetMap);
+      if (!isEligible(intersection, snapshotDisabled)) continue;
+      const matched = nearestTarget(intersection.object, snapshotTargets);
+      const target = matched && snapshot.originals.get(matched);
       return target
         ? Object.freeze({ kind: "target" as const, target })
         : Object.freeze({ kind: "block" as const });

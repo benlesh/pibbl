@@ -4,7 +4,7 @@ import { isAbsolute, resolve, sep } from "node:path";
 const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const CRC_ENTRY_POINT =
-  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles|physics\/(?:2d(?:\/geometry)?|3d\/geometry)|viz|three)$/;
+  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles|physics\/(?:2d(?:\/geometry)?|3d\/geometry)|viz|three|textures)$/;
 const THREE_ENTRY_POINT = /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
 
 const threeEntryPoints = new Map([
@@ -28,6 +28,7 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
   const directory = mode === "built" ? "dist" : "src";
   const extension = mode === "built" ? "mjs" : "ts";
   return new Map([
+    ["@crc/textures", resolve(import.meta.dirname, `../packages/textures/${directory}/index.${extension}`)],
     [
       "@crc/viz",
       resolve(
@@ -109,7 +110,7 @@ function assertSingleRuntimeMode(
   const inputs = Object.keys(metafile.inputs).map((path) =>
     isAbsolute(path) ? path : resolve(repositoryRoot, path),
   );
-  for (const packageName of ["core", "particles", "physics", "three", "viz"]) {
+  for (const packageName of ["core", "particles", "physics", "three", "viz", "textures"]) {
     const packageRoot = resolve(repositoryRoot, `packages/${packageName}`);
     const expectedRoot = resolve(
       packageRoot,

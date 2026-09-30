@@ -92,6 +92,7 @@ export default defineConfig(({ mode }) => ({
       mode === "built"
         ? []
         : [
+            { find: /^@crc\/textures$/, replacement: fileURLToPath(new URL("./packages/textures/src/index.ts", import.meta.url)) },
             {
               find: /^@crc\/viz$/,
               replacement: fileURLToPath(
@@ -185,6 +186,9 @@ export default defineConfig(({ mode }) => ({
       ".superpowers/**",
       ".worktrees/**",
       "tooling/surviving-package-entries.test.ts",
+      // Node-runner suites own browser processes; they cannot run inside Chromium.
+      // Kept in test:agent-verification:{requirements,identity,watchdog}.
+      "tooling/agent-verification/**/*.test.mjs",
       "packages/physics/src/lib/2d/public-types.test.ts",
       "packages/physics/src/lib/3d/public-types.test.ts",
     ],

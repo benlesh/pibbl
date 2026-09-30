@@ -193,6 +193,8 @@ function baselineTop(
   return y;
 }
 
+let graphemeSegmenter: Intl.Segmenter | undefined;
+
 function getEllipsisText(
   measureText: MeasureText,
   text: string,
@@ -201,19 +203,26 @@ function getEllipsisText(
   if (measureText(text).width <= maxWidth) return text;
   if (maxWidth <= 0 || measureText('...').width > maxWidth) return '';
 
+  // Search only complete grapheme boundaries: UTF-16 offsets can split a
+  // surrogate pair, combining sequence, flag or joined emoji.
+  graphemeSegmenter ??= new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+  const boundaries = [0];
+  for (const segment of graphemeSegmenter.segment(text)) {
+    boundaries.push(segment.index + segment.segment.length);
+  }
   let low = 0;
-  let high = text.length;
+  let high = boundaries.length - 1;
 
   while (1 + low < high) {
     const mid = low + ((high - low) >> 1);
-    if (measureText(`${text.substring(0, mid)}...`).width > maxWidth) {
+    if (measureText(`${text.substring(0, boundaries[mid])}...`).width > maxWidth) {
       high = mid;
     } else {
       low = mid;
     }
   }
 
-  return `${text.substring(0, low)}...`;
+  return `${text.substring(0, boundaries[low])}...`;
 }
 
 function unionBounds(bounds: readonly TextBounds[]): TextBounds | undefined {

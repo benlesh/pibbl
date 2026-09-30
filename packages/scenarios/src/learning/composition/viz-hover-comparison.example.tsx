@@ -12,6 +12,8 @@ import {
   type CRCController,
   type CRCPointerEvent,
   type WritableSignal,
+  type SignalValue,
+  type Signal,
 } from "@crc/core";
 import {
   Axis,
@@ -26,8 +28,10 @@ import {
   linearInterpolation,
   useScale,
   type HoverQueryContext,
+  type HoverHit,
+  type HoverSample,
 } from "@crc/viz";
-type Row = { x: number; y: number | null };
+type Row = { id?: string; x: number; y: number | null };
 type Mode = "closest-point" | "nearest-per-line" | "interpolated-x";
 type Reading = {
   series: string;
@@ -35,15 +39,25 @@ type Reading = {
   x: number;
   y: number;
   anchor: { x: number; y: number };
+  distance: { space: "plot-pixels" | "domain-x"; value: number } | null;
+  provenance:
+    | { kind: "recorded"; index: number; id: string | null }
+    | { kind: "interpolated"; beforeIndex: number; afterIndex: number; beforeId: string | null; afterId: string | null; fraction: number };
 };
 type Snapshot = {
+  duplicateX: "error" | "first" | "last";
+  generation: number;
+  viewport: { width: number; height: number };
   mode: Mode;
   inspection: number | null;
+  pointer: { x: number; y: number } | null;
   results: readonly Reading[];
   plot: { x: number; y: number; width: number; height: number };
 };
 interface Fixture {
-  first?: readonly Row[];
+  first?: SignalValue<readonly Row[]>;
+  generation?: Signal<number>;
+  duplicateX?: Signal<"error" | "first" | "last">;
   second?: readonly Row[];
   xDomain?: readonly [number, number];
   yDomain?: readonly [number, number];
@@ -103,11 +117,13 @@ function Plot({
   mode,
   inspection,
   origin,
+  viewport,
 }: {
   fixture: Fixture;
   mode: WritableSignal<Mode>;
   inspection: WritableSignal<number | null>;
   origin: { x: number; y: number };
+  viewport: { width: number; height: number };
 }) {
   const xs = useScale("time").get(),
     ys = useScale("co2").get();
@@ -148,6 +164,7 @@ function Plot({
     xScale: "time",
     yScale: "co2",
     interpolation: linearInterpolation(),
+    duplicateX: fixture.duplicateX?.get() ?? "error",
   });
   const sampleB = interpolateX({
     series: second,
@@ -156,6 +173,13 @@ function Plot({
     yScale: "co2",
     interpolation: linearInterpolation(),
   });
+  function provenance(hit: HoverHit<Row> | HoverSample<Row>): Reading["provenance"] {
+    if ("kind" in hit && hit.kind === "interpolated") return {
+      kind: "interpolated", beforeIndex: hit.beforeIndex, afterIndex: hit.afterIndex,
+      beforeId: hit.before.id ?? null, afterId: hit.after.id ?? null, fraction: hit.fraction,
+    };
+    return { kind: "recorded", index: hit.index, id: hit.datum.id ?? null };
+  }
   function query(context: HoverQueryContext) {
     const selected = mode.get();
     const results: Reading[] = [];
@@ -168,6 +192,8 @@ function Plot({
           x: hit.x,
           y: hit.y,
           anchor: hit.anchor,
+          provenance: provenance(hit),
+          distance: { space: "plot-pixels", value: hit.distance },
         });
     } else {
       const a =
@@ -181,6 +207,8 @@ function Plot({
           x: a.x,
           y: a.y,
           anchor: a.anchor,
+          provenance: provenance(a),
+          distance: "delta" in a ? { space: "domain-x", value: a.delta } : null,
         });
       if (b)
         results.push({
@@ -189,11 +217,17 @@ function Plot({
           x: b.x,
           y: b.y,
           anchor: b.anchor,
+          provenance: provenance(b),
+          distance: "delta" in b ? { space: "domain-x", value: b.delta } : null,
         });
     }
     fixture.onSnapshot?.({
+      duplicateX: fixture.duplicateX?.get() ?? "error",
+      generation: fixture.generation?.get() ?? 0,
+      viewport,
       mode: selected,
       inspection: inspection.get(),
+      pointer: position.get(),
       results,
       plot: {
         x: origin.x,
@@ -486,6 +520,7 @@ function Scene({ fixture }: { fixture: Fixture }) {
               mode={mode}
               inspection={inspection}
               origin={{ x: left, y: top }}
+              viewport={{ width: box.width, height: box.height }}
             />
           </Scale>
         </Scale>

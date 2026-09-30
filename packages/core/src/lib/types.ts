@@ -187,6 +187,11 @@ export interface InternalIdentityHint {
 }
 
 export interface CRCComponentRefs<P> {
+  /** Last traversal entry context, not proof that this evaluation painted successfully. */
+  layoutEntry?: Readonly<{
+    allocation: Readonly<LayoutBox>;
+    percentageBasis: Readonly<LayoutBox>;
+  }>;
   id: string;
   parent: CRCComponentRefs<any> | undefined;
   element: CRCElement<P>;

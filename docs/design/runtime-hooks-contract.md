@@ -287,3 +287,10 @@ arbitrary application data is never recursively unwrapped.
 `@crc/core/internal` is a separate version-coupled friend entry for official
 lockstep renderer packages. It is neither re-exported at the root nor available
 to ordinary Studio examples.
+
+## Editable geometry inputs
+
+Explicit paths in useEventTarget, useEvent, useRegion, and useCursor accept
+PathGeometry as well as Path2D. Each registration update resolves geometry to a
+native snapshot. Mutation alone does not update a registration or schedule a
+frame. Existing memoized path hooks continue to return Path2D.

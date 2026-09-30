@@ -175,3 +175,13 @@ postconditions.
 Values from `@crc/physics/3d/geometry` are immutable application values. The
 entry owns no scheduler participant, renderer resources, component bindings, or
 runtime world lifecycle.
+
+## Editable geometry snapshots
+
+Application-owned PathGeometry holds private typed buffers and a numeric
+revision. Public native conversions are independently caller-owned. CRC's
+module-local WeakMap retains only the latest successful native snapshot per
+live geometry; it introduces no scheduler participant, listeners, or explicit
+resource leases. Historical paint/clip records retain their own native snapshot
+until replacement or normal teardown. Revisions never mutate an existing native
+snapshot, and a failed conversion does not replace the last successful entry.
