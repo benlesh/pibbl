@@ -155,6 +155,17 @@ const drafts = [
     load: () => import("./learning/composition/viz-band-bars.example"),
   },
   {
+    slug: "viz-grouped-stacked-bars", title: "Comparing regional cash flow", shortTitle: "Grouped stacked bars",
+    section: "composition", order: 192,
+    summary: "Compose separate positive and negative stacks within nested regional bands.",
+    api: ["Scale", "useScale", "BarSeries", "Axis"],
+    objectives: ["Combine nested band scales with explicit stack endpoints.", "Keep inspection and group identity across orientations."],
+    prompts: { gesture: "Toggle orientation, then hover or tap a segment for its region and component.", code: "Change regional values or the pure stack transform." },
+    apiNotes: ["Illustrative quarterly operating cash flow in thousands of dollars; not reported financial results.", "Color identifies each component. North precedes South within every quarter; positive and negative stacks accumulate separately for each region."],
+    canvas: { width: 940, height: 660 }, related: ["viz-stacked-bars", "viz-grouped-bars", "viz-band-bars"],
+    load: () => import("./learning/composition/viz-grouped-stacked-bars.example"),
+  },
+  {
     slug: "viz-stacked-bars", title: "Stacking cash inflows and outflows", shortTitle: "Stacked bars",
     section: "composition", order: 193,
     summary: "Compose signed stacks from range endpoints using one BarSeries.",

@@ -300,6 +300,8 @@ const migrationMarkdownPaths = new Set([
 const operationalMarkdownPaths = new Set([
   "packages/text/test/fixtures/source-serif/LICENSE.md",
   "docs/project-plans/remaining-viz-roadmap.md",
+  "docs/project-plans/viz-utc-contract-proposal.md",
+  "docs/project-plans/viz-pie-label-contract-proposal.md",
   "docs/project-plans/viz-bars-slice-evidence.md",
   "docs/project-plans/viz-donut-slice-evidence.md",
   ".beads/README.md",

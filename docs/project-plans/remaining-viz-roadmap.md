@@ -258,3 +258,65 @@ was proposed asynchronously; awaiting explicit user approval before code.
 - Grouped-stacked next slice is a separate example commit, not yet accepted.
   Custom label composition and UTC scale contracts remain unapproved; no
   production implementation for either has begun.
+
+## Incremental main delivery
+
+- Accepted bars/axes/donut work pushed to remote main at
+  `6d02d20d577be2d9cd0d0dfec4b2c46151617362`; remote ref verified.
+- Final full trust passed on that exact committed tree (log
+  /tmp/crc-viz-trust-final.log): main browser suite 3,210 passed / six skipped,
+  including two opt-in diagnostic files; all other aggregate phases passed.
+- Identical baseline/candidate structural probes matched all target, paint,
+  fill, label and pointer-hit counts at 100/1,000 solid slices, before/after
+  data replacement. Both raw outputs are retained with timing evidence.
+- Main's unrelated changes and all unrelated working checkouts were preserved.
+- Grouped-stacked example is integrated only on the preview branch for the next
+  experiential slice. Catalog authoring validation is being resolved before
+  declaring it ready; focused mount test and typecheck pass.
+- UTC-only scale contract was sent for explicit approval. Generic numeric extent
+  and explicitly typed UTC niceDomain helpers are proposed; implementation
+  remains blocked on that design decision. Local time/log remain in scope.
+
+## Grouped-stacked feedback checkpoint
+
+- Registered editable example at
+  http://127.0.0.1:5187/#/examples/composition/viz-grouped-stacked-bars .
+- Focused mount/inspection test passed; typecheck passed; learning-source
+  validation passed. Catalog now includes 69 lessons.
+- Fresh Studio browser check toggled horizontal orientation and inspected
+  Q1 / North / Products / $160k. No runtime errors or editor TypeScript issues.
+  Screenshot inspected; component legend and top ticks have separate rows.
+- Slice ready for feedback, not feature complete or pushed to main. Await
+  experiential feedback before broader hardening and independent review.
+- Preview remains on port 5187; preserve coordinator checkout/server.
+
+## Pending design sources
+
+- [UTC scale proposal](viz-utc-contract-proposal.md): approval pending. Includes
+  exact numeric/helper/tick boundaries and a stateless full-ISO default formatter
+  so generated and explicit endpoint labels do not depend on prior tick calls.
+- [Custom pie labels](viz-pie-label-contract-proposal.md): preserves the earlier
+  explicit-box/PieLabel-children proposal; approval pending.
+- Grouped-stacked experiential feedback remains pending. This boundary blocks
+  broad hardening, review, and main integration of that example.
+- The preceding goal turn made concrete progress: accepted slices were pushed
+  after exact-tree trust and the next runnable example was delivered. No
+  additional contract or feedback approval has arrived in this continuation.
+
+## Next-wave approval, 2026-09-30
+
+User approved the grouped-stacked feedback slice and both pending UTC/custom
+pie-label designs, and requested commit, merge, push, then continued data-viz
+work. Grouped-stacked independent review and final exact-tree trust precede the
+push. UTC and custom label implementation starts after that integration.
+Prior pending statuses above are historical checkpoints, superseded here.
+The full roadmap remains in scope; local-time/log and later capabilities still
+require their own concrete contract approvals.
+
+Grouped-stacked hardening: independent review found no runtime/public-surface
+defect. The identified horizontal-inspection evidence gap is covered by fresh
+readout assertions for horizontal North/Products and South/Payroll, plus a
+vertical negative Payroll segment; focused Chromium test passes. This example
+adds no library runtime path: 32 prepared ranges use the already measured
+BarSeries, and inspection scans those 32 rows with no retained index or new
+scheduler. Broad large-data claims are not made for this teaching example.

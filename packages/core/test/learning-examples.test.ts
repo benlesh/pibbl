@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 69 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 70 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(69);
+    expect(learningExampleCatalog).toHaveLength(70);
     expect(
       learningExampleCatalog
         .filter(
@@ -1298,6 +1298,7 @@ describe("learning example catalog", () => {
         "physics-panels",
         "signal-inputs",
         "signals-and-animation",
+        "viz-grouped-stacked-bars",
         "viz-stacked-bars",
         "viz-band-bars",
         "viz-grouped-bars",
@@ -1391,6 +1392,7 @@ describe("learning example catalog", () => {
       "physics-2d",
       "layer",
       "physics-panels",
+      "viz-grouped-stacked-bars",
       "viz-stacked-bars",
       "viz-grouped-bars",
       "viz-band-bars",
