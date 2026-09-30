@@ -1,4 +1,4 @@
-import { signal } from "@crc/core";
+import { Group, signal } from "@crc/core";
 import { BarSeries, Scale } from "@crc/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
@@ -201,4 +201,59 @@ it("omits missing, nonfinite, zero-length and excluded ranges from paint and tar
     );
   }
   expect(hits).toBe(0);
+});
+
+it("maps grouped horizontal ranges and threshold bands in normal and reversed value ranges", () => {
+  runtime = testRuntime();
+  let hits = 0;
+  const rows = [
+    { c: "A", g: "actual", from: 2, to: 8 },
+    { c: "A", g: "plan", from: 8, to: 2 },
+  ];
+  const threshold = {
+    type: "threshold" as const,
+    thresholds: [5],
+    colors: ["#008000", "#ff0000"],
+  };
+  const bars = (prefix: string, range: readonly [number, number]) => (
+    <Scale id={`${prefix}-category`} type="band" domain={["A"]} range={[0, 100]}>
+      <Scale id={`${prefix}-group`} type="band" domain={["actual", "plan"]} range={{ bandwidthOf: `${prefix}-category` }}>
+        <Scale id={`${prefix}-value`} type="linear" domain={[0, 10]} range={range}>
+          <BarSeries
+            orientation="horizontal"
+            data={rows}
+            category="c"
+            valueStart="from"
+            valueEnd="to"
+            group="g"
+            categoryScale={`${prefix}-category`}
+            groupScale={`${prefix}-group`}
+            valueScale={`${prefix}-value`}
+            onPointerDown={() => hits++}
+            style={{ fill: threshold }}
+          />
+        </Scale>
+      </Scale>
+    </Scale>
+  );
+  const canvas = runtime.mount(<>{bars("normal", [0, 200])}<Group style={{ translateY: 120 }}>{bars("reverse", [200, 0])}</Group></>);
+  runtime.flush();
+  const pixel = (x: number, y: number) => [
+    ...canvas.getContext("2d")!.getImageData(x, y, 1, 1).data,
+  ];
+  for (const y of [25, 75]) {
+    expect(pixel(80, y)).toEqual([0, 128, 0, 255]);
+    expect(pixel(120, y)).toEqual([255, 0, 0, 255]);
+    expect(pixel(80, y + 120)).toEqual([255, 0, 0, 255]);
+    expect(pixel(120, y + 120)).toEqual([0, 128, 0, 255]);
+  }
+  const bounds = canvas.getBoundingClientRect();
+  for (const [x, y] of [[80, 25], [120, 75], [80, 145], [120, 195]]) {
+    canvas.dispatchEvent(new PointerEvent("pointerdown", {
+      clientX: bounds.left + x,
+      clientY: bounds.top + y,
+      bubbles: true,
+    }));
+  }
+  expect(hits).toBe(4);
 });
