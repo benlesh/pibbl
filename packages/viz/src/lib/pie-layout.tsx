@@ -192,15 +192,22 @@ export function PieSlice<D>({
       </Group>
     );
   }
+  const sweep = resolveClockwiseSweep(slice.startAngle, slice.endAngle);
   const path = new Path2D();
-  path.arc(slice.cx, slice.cy, slice.radius, slice.startAngle, slice.endAngle);
+  path.arc(
+    slice.cx,
+    slice.cy,
+    slice.radius,
+    sweep.startAngle,
+    sweep.endAngle,
+  );
   if (slice.innerRadius > 0)
     path.arc(
       slice.cx,
       slice.cy,
       slice.innerRadius,
-      slice.endAngle,
-      slice.startAngle,
+      sweep.endAngle,
+      sweep.startAngle,
       true,
     );
   else path.lineTo(slice.cx, slice.cy);
@@ -211,7 +218,7 @@ export function PieSlice<D>({
         {...events}
         keyboardNavigationBounds={
           events.keyboardNavigationBounds ??
-          annularSliceBounds(slice)
+          annularSliceBounds(slice, sweep)
         }
         style={{
           ...style,
@@ -224,13 +231,22 @@ export function PieSlice<D>({
 }
 
 /** The outer and inner arcs both contribute to an annular path's focus box. */
-function annularSliceBounds(slice: PieLayoutSlice<unknown>) {
-  const angles = [slice.startAngle, slice.endAngle];
+function annularSliceBounds(
+  slice: PieLayoutSlice<unknown>,
+  sweep: Readonly<ClockwiseSweep>,
+) {
+  if (sweep.sweep === 0) return undefined;
+  if (sweep.fullCircle)
+    return {
+      x: slice.cx - slice.radius,
+      y: slice.cy - slice.radius,
+      width: slice.radius * 2,
+      height: slice.radius * 2,
+    };
+  const angles = [sweep.startAngle, sweep.endAngle];
   for (const cardinal of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
-    const first = Math.ceil((slice.startAngle - cardinal) / (Math.PI * 2));
-    const last = Math.floor((slice.endAngle - cardinal) / (Math.PI * 2));
-    for (let turn = first; turn <= last; turn++)
-      angles.push(cardinal + turn * Math.PI * 2);
+    const angle = cardinal < sweep.startAngle ? cardinal + fullTurn : cardinal;
+    if (angle <= sweep.endAngle) angles.push(angle);
   }
   const xs: number[] = [];
   const ys: number[] = [];
@@ -251,6 +267,48 @@ function annularSliceBounds(slice: PieLayoutSlice<unknown>) {
   const top = Math.min(...ys);
   const bottom = Math.max(...ys);
   return { x: left, y: top, width: right - left, height: bottom - top };
+}
+
+const fullTurn = Math.PI * 2;
+
+interface ClockwiseSweep {
+  readonly startAngle: number;
+  readonly endAngle: number;
+  readonly sweep: number;
+  readonly fullCircle: boolean;
+}
+
+/** Matches Canvas's bounded clockwise arc rule without retaining unbounded turns. */
+function resolveClockwiseSweep(
+  startAngle: number,
+  endAngle: number,
+): ClockwiseSweep {
+  if (!Number.isFinite(startAngle) || !Number.isFinite(endAngle))
+    throw new RangeError("PieSlice: slice angles must be finite.");
+  const start = positiveModulo(startAngle, fullTurn);
+  if (endAngle - startAngle >= fullTurn)
+    return {
+      startAngle: start,
+      endAngle: start + fullTurn,
+      sweep: fullTurn,
+      fullCircle: true,
+    };
+  const sweep = positiveModulo(
+    positiveModulo(endAngle, fullTurn) - start,
+    fullTurn,
+  );
+  return {
+    startAngle: start,
+    endAngle: start + sweep,
+    sweep,
+    fullCircle: false,
+  };
+}
+
+function positiveModulo(value: number, divisor: number) {
+  const result = value % divisor;
+  if (result === 0) return 0;
+  return result < 0 ? result + divisor : result;
 }
 
 const LabelText = definePrimitive<
