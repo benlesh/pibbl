@@ -299,6 +299,9 @@ const migrationMarkdownPaths = new Set([
 ]);
 const operationalMarkdownPaths = new Set([
   "packages/text/test/fixtures/source-serif/LICENSE.md",
+  "docs/project-plans/remaining-viz-roadmap.md",
+  "docs/project-plans/viz-bars-slice-evidence.md",
+  "docs/project-plans/viz-donut-slice-evidence.md",
   ".beads/README.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
   "docs/testing/evidence/component-manipulation/progress.md",

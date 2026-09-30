@@ -110,7 +110,9 @@ describe('public editable path geometry', () => {
     expect(context.isPointInPath(svg, 70, 15)).toBe(true);
     expect(context.isPointInPath(svg, 20, 15)).toBe(false);
   });
-  it('drives the learning example through captured control-point dragging', async () => {
+  it('applies path playground operations and restores original curves on reset', async () => {
+    const cubic = vi.spyOn(Path2D.prototype, 'bezierCurveTo');
+    const move = vi.spyOn(Path2D.prototype, 'moveTo');
     const drawn: string[] = [];
     const original = CanvasRenderingContext2D.prototype.fillText;
     const text = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText')
@@ -120,26 +122,50 @@ describe('public editable path geometry', () => {
       });
     const element = document.createElement('canvas');
     element.width = 760;
-    element.height = 460;
+    element.height = 520;
     document.body.appendChild(element);
     const controller = mountPathGeometryExample(element);
     const canvas = new TestCanvas(element, controller);
     try {
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-      expect(drawn).toContain('M 80 280 C 150 100 290 100 360 280 Z');
-      await canvas.mouseDown({ position: { x: 150, y: 100 } });
-      await canvas.mouseMove({ position: { x: 180, y: 170 } });
-      await canvas.mouseUp({ position: { x: 180, y: 170 } });
-      expect(drawn).toContain('M 80 280 C 180 170 290 100 360 280 Z');
-      await canvas.mouseMove({ position: { x: 220, y: 190 } });
-      expect(drawn).not.toContain('M 80 280 C 220 190 290 100 360 280 Z');
-      for (const operation of ['Flatten', 'Simplify', 'Subdivide', 'Original']) {
-        await canvas.click({ position: { x: 580, y: 327 } });
-        expect(drawn.some(value => value.startsWith(`${operation} ·`))).toBe(true);
+      expect(drawn).toContain('Original · 2 curves · 3 anchors · 4 controls');
+      await canvas.mouseDown({ position: { x: 160, y: 90 } });
+      await canvas.mouseMove({ position: { x: 180, y: 120 } });
+      await canvas.mouseUp({ position: { x: 180, y: 120 } });
+      expect(cubic).toHaveBeenCalledWith(180, 120, 240, 330, 370, 205);
+      cubic.mockClear();
+      await canvas.mouseMove({ position: { x: 200, y: 150 } });
+      expect(cubic).not.toHaveBeenCalledWith(200, 150, 240, 330, 370, 205);
+      await canvas.mouseMove({ position: { x: 80, y: 245 } });
+      await canvas.mouseDown({ position: { x: 80, y: 245 } });
+      await canvas.mouseMove({ position: { x: 95, y: 260 } });
+      await canvas.mouseUp({ position: { x: 95, y: 260 } });
+      expect(move).toHaveBeenCalledWith(95, 260);
+      for (const [x, label] of [[100, 'Flatten'], [285, 'Simplify'], [470, 'Subdivide']] as const) {
+        drawn.length = 0;
+        await canvas.click({ position: { x, y: 395 } });
+        expect(drawn.some(value => value.startsWith(`${label} ·`))).toBe(true);
+        if (label !== 'Subdivide') expect(drawn.some(value => value.endsWith('0 controls'))).toBe(true);
       }
+      drawn.length = 0;
+      await canvas.click({ position: { x: 655, y: 395 } });
+      expect(drawn).toContain('Original · 2 curves · 3 anchors · 4 controls');
+      await canvas.click({ position: { x: 470, y: 395 } });
+      expect(drawn).toContain('Subdivide · 8 curves · 9 anchors · 16 controls');
+      await canvas.click({ position: { x: 655, y: 395 } });
+      for (const [x, label] of [[100, 'Wang'], [285, 'Radial + DP'], [470, 'Dense preset']] as const) {
+        drawn.length = 0;
+        await canvas.click({ position: { x, y: 439 } });
+        expect(drawn.some(value => value.startsWith(`${label} ·`))).toBe(true);
+        expect(drawn.some(value => value.endsWith('0 controls'))).toBe(true);
+      }
+
+
     } finally {
       canvas.dispose();
       text.mockRestore();
+      cubic.mockRestore();
+      move.mockRestore();
     }
   });
 

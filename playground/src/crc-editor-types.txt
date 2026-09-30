@@ -33,6 +33,8 @@
   export interface FlattenPathOptions { readonly tolerance: number; readonly maxSegments?: number }
   export interface SimplifyPathOptions { readonly tolerance: number; readonly maxSegments?: number }
   export interface SubdividePathOptions { readonly divisions: number; readonly maxSegments?: number }
+  export function flattenPathWang(path: PathGeometry, options: Readonly<FlattenPathOptions>): PathGeometry;
+  export function simplifyPathRadial(path: PathGeometry, options: Readonly<SimplifyPathOptions>): PathGeometry;
   export function flattenPath(path: PathGeometry, options: Readonly<FlattenPathOptions>): PathGeometry;
   export function simplifyPath(path: PathGeometry, options: Readonly<SimplifyPathOptions>): PathGeometry;
   export function subdividePath(path: PathGeometry, options: Readonly<SubdividePathOptions>): PathGeometry;
@@ -1125,13 +1127,17 @@ export type ResolvedScale = ResolvedLinearScale | ResolvedBandScale;
 
 import type { CRCEventHandlers, CRCEventParticipationOptions, FillStyle, StrokeStyle } from '@crc/core';
 export interface AxisStyle { readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly fill?: FillStyle; readonly font?: string; readonly opacity?: number }
-export interface AxisProps {
+interface AxisBaseProps {
   readonly scale: ScaleId;
-  readonly position: 'bottom' | 'left';
-  readonly tickCount?: SignalValue<number>;
-  readonly tickFormat?: (value: number, index: number) => string;
+  readonly position: "bottom" | "left" | "top" | "right";
+  readonly tickFormat?: (value: number | string, index: number) => string;
   readonly style?: SignalValue<SignalStyle<AxisStyle>>;
 }
+export type AxisProps = AxisBaseProps & (
+  | { readonly tickValues: SignalValue<readonly (number | string)[]>; readonly tickCount?: never }
+  | { readonly tickValues?: never; readonly tickCount?: SignalValue<number> }
+);
+
 export type LineCoordinate = number | null | undefined;
 export type LineAccessor<D> = { [K in keyof D]-?: D[K] extends LineCoordinate ? K : never }[keyof D] | ((datum: D, index: number, data: readonly D[]) => LineCoordinate);
 export type LineCurve = 'linear';
@@ -1348,16 +1354,16 @@ export interface BarSeriesStyle {
 export type BarStyleResolver<D> = (datum: D, index: number, data: readonly D[]) => BarSeriesStyle;
 interface BarSeriesBaseProps<D> extends CRCEventHandlers, CRCEventParticipationOptions {
   readonly data: SignalValue<readonly D[]>;
-  readonly orientation?: "vertical";
-  readonly x: BarCategoryAccessor<D>;
-  readonly xScale: ScaleId;
-  readonly yScale: ScaleId;
+  readonly orientation?: "vertical" | "horizontal";
+  readonly category: BarCategoryAccessor<D>;
+  readonly categoryScale: ScaleId;
+  readonly valueScale: ScaleId;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly style?: SignalValue<SignalStyle<BarSeriesStyle> | BarStyleResolver<D>>;
 }
 export type BarSeriesProps<D> = BarSeriesBaseProps<D> & (
-    | { readonly y: LineAccessor<D>; readonly baseline?: SignalValue<number>; readonly yStart?: never; readonly yEnd?: never }
-    | { readonly y?: never; readonly baseline?: never; readonly yStart: LineAccessor<D>; readonly yEnd: LineAccessor<D> }
+    | { readonly value: LineAccessor<D>; readonly baseline?: SignalValue<number>; readonly valueStart?: never; readonly valueEnd?: never }
+    | { readonly value?: never; readonly baseline?: never; readonly valueStart: LineAccessor<D>; readonly valueEnd: LineAccessor<D> }
   ) & ({ readonly group: BarCategoryAccessor<D>; readonly groupScale: ScaleId } | { readonly group?: never; readonly groupScale?: never });
 export declare function BarSeries<D>(props: BarSeriesProps<D>): CRCNode;
 
@@ -1395,9 +1401,11 @@ export interface PieLayoutSlice<D> extends PieSliceGeometry<D> {
   readonly cx: number;
   readonly cy: number;
   readonly radius: number;
+  readonly innerRadius: number;
   readonly label?: PieLabelLayout;
 }
 export interface PieLayoutStyle {
+  readonly innerRadius?: number;
   readonly cx?: number;
   readonly cy?: number;
   readonly radius?: number;
@@ -1405,6 +1413,7 @@ export interface PieLayoutStyle {
   readonly labelGap?: number;
 }
 export interface PieLayoutProps<D> extends PieOptions<D> {
+  readonly revision?: SignalValue<number>;
   readonly data: SignalValue<readonly D[]>;
   readonly label?: (slice: PieSliceGeometry<D>) => string;
   readonly placement?: SignalValue<PieLabelPlacement>;

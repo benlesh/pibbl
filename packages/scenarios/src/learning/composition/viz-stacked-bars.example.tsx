@@ -139,16 +139,16 @@ function Plot({
         scale="cash"
         position="left"
         tickCount={cash.frame.height >= 250 ? 9 : 5}
-        tickFormat={money}
+        tickFormat={(value) => typeof value === "number" ? money(value) : value}
         style={{ stroke: "#a4b3b7", fill: "#637785", font: "11px sans-serif" }}
       />
       <BarSeries
         data={rows}
-        x="period"
-        yStart="start"
-        yEnd="end"
-        xScale="periods"
-        yScale="cash"
+        category="period"
+        valueStart="start"
+        valueEnd="end"
+        categoryScale="periods"
+        valueScale="cash"
         style={(row) => ({ fill: row.color })}
       />
       <Line

@@ -1,4 +1,4 @@
-import { signal } from "@crc/core";
+import { Group, signal } from "@crc/core";
 import { BarSeries, Scale } from "@crc/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
@@ -27,11 +27,11 @@ it("renders reactive positive and negative stack segments using range endpoints 
       <Scale id="v" type="linear" domain={[-10, 10]} range={[200, 0]}>
         <BarSeries
           data={data}
-          x="c"
-          yStart="start"
-          yEnd="end"
-          xScale="c"
-          yScale="v"
+          category="c"
+          valueStart="start"
+          valueEnd="end"
+          categoryScale="c"
+          valueScale="v"
           style={(row) => ({ fill: row.color })}
           onPointerDown={() => hits++}
         />
@@ -88,13 +88,13 @@ it("composes grouped ranges and absolute threshold fills without extending segme
               { c: "A", g: "actual", from: 2, to: 8 },
               { c: "A", g: "plan", from: 8, to: 2 },
             ]}
-            x="c"
+            category="c"
             group="g"
             groupScale="g"
-            xScale="c"
-            yScale="v"
-            yStart="from"
-            yEnd="to"
+            categoryScale="c"
+            valueScale="v"
+            valueStart="from"
+            valueEnd="to"
             style={{
               bandwidth: 60,
               fill: {
@@ -122,19 +122,19 @@ it("composes grouped ranges and absolute threshold fills without extending segme
 
 it.each([
   {},
-  { yStart: "start" },
-  { yEnd: "end" },
-  { y: "end", yStart: "start", yEnd: "end" },
-  { baseline: 0, yStart: "start", yEnd: "end" },
+  { valueStart: "start" },
+  { valueEnd: "end" },
+  { value: "end", valueStart: "start", valueEnd: "end" },
+  { baseline: 0, valueStart: "start", valueEnd: "end" },
 ])(
   "rejects incomplete or mixed geometry even for empty data: %j",
   (geometry) => {
     runtime = testRuntime();
     const props = {
       data: [],
-      x: "c",
-      xScale: "c",
-      yScale: "v",
+      category: "c",
+      categoryScale: "c",
+      valueScale: "v",
       ...geometry,
     } as unknown as import("@crc/viz").BarSeriesProps<{
       c: string;
@@ -148,7 +148,7 @@ it.each([
         </Scale>
       </Scale>,
     );
-    expect(() => runtime.flush()).toThrow(/either y.*both yStart and yEnd/);
+    expect(() => runtime.flush()).toThrow(/either value.*both valueStart and valueEnd/);
   },
 );
 
@@ -173,15 +173,15 @@ it("omits missing, nonfinite, zero-length and excluded ranges from paint and tar
       <Scale id="v" type="linear" domain={[0, 10]} range={[100, 0]}>
         <BarSeries
           data={rows}
-          x="c"
-          xScale="c"
-          yScale="v"
+          category="c"
+          categoryScale="c"
+          valueScale="v"
           defined={(row) => row.include}
-          yStart={(row) => {
+          valueStart={(row) => {
             if (!row.include) throw new Error("excluded accessor");
             return row.from;
           }}
-          yEnd="to"
+          valueEnd="to"
           onPointerDown={() => hits++}
           style={{ fill: "red", stroke: "black", strokeWidth: 4 }}
         />
@@ -201,4 +201,59 @@ it("omits missing, nonfinite, zero-length and excluded ranges from paint and tar
     );
   }
   expect(hits).toBe(0);
+});
+
+it("maps grouped horizontal ranges and threshold bands in normal and reversed value ranges", () => {
+  runtime = testRuntime();
+  let hits = 0;
+  const rows = [
+    { c: "A", g: "actual", from: 2, to: 8 },
+    { c: "A", g: "plan", from: 8, to: 2 },
+  ];
+  const threshold = {
+    type: "threshold" as const,
+    thresholds: [5],
+    colors: ["#008000", "#ff0000"],
+  };
+  const bars = (prefix: string, range: readonly [number, number]) => (
+    <Scale id={`${prefix}-category`} type="band" domain={["A"]} range={[0, 100]}>
+      <Scale id={`${prefix}-group`} type="band" domain={["actual", "plan"]} range={{ bandwidthOf: `${prefix}-category` }}>
+        <Scale id={`${prefix}-value`} type="linear" domain={[0, 10]} range={range}>
+          <BarSeries
+            orientation="horizontal"
+            data={rows}
+            category="c"
+            valueStart="from"
+            valueEnd="to"
+            group="g"
+            categoryScale={`${prefix}-category`}
+            groupScale={`${prefix}-group`}
+            valueScale={`${prefix}-value`}
+            onPointerDown={() => hits++}
+            style={{ fill: threshold }}
+          />
+        </Scale>
+      </Scale>
+    </Scale>
+  );
+  const canvas = runtime.mount(<>{bars("normal", [0, 200])}<Group style={{ translateY: 120 }}>{bars("reverse", [200, 0])}</Group></>);
+  runtime.flush();
+  const pixel = (x: number, y: number) => [
+    ...canvas.getContext("2d")!.getImageData(x, y, 1, 1).data,
+  ];
+  for (const y of [25, 75]) {
+    expect(pixel(80, y)).toEqual([0, 128, 0, 255]);
+    expect(pixel(120, y)).toEqual([255, 0, 0, 255]);
+    expect(pixel(80, y + 120)).toEqual([255, 0, 0, 255]);
+    expect(pixel(120, y + 120)).toEqual([0, 128, 0, 255]);
+  }
+  const bounds = canvas.getBoundingClientRect();
+  for (const [x, y] of [[80, 25], [120, 75], [80, 145], [120, 195]]) {
+    canvas.dispatchEvent(new PointerEvent("pointerdown", {
+      clientX: bounds.left + x,
+      clientY: bounds.top + y,
+      bubbles: true,
+    }));
+  }
+  expect(hits).toBe(4);
 });

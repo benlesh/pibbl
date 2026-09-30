@@ -1,3 +1,5 @@
+export { flattenPathWang } from './lib/geometry/path-wang.js';
+export { simplifyPathRadial } from './lib/geometry/path-radial.js';
 export { PathGeometry, type PathSegment } from './lib/geometry/path-geometry.js';
 export { toPath2D, toSvgPathData } from './lib/geometry/path-conversion.js';
 export {

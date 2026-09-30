@@ -59,6 +59,11 @@ it("runs the editable bars lesson through its public mount", () => {
     const beforeResize = categoryX();
     click(390);
     expect(categoryX()).toBeLessThan(beforeResize);
+    click(540);
+    expect(categoryX()).toBeLessThan(firstX);
+    expect(text.mock.calls.map((call) => call[0])).toContain(
+      "300k · color threshold",
+    );
   } finally {
     controller.dispose();
   }

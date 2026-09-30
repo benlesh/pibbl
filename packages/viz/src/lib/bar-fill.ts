@@ -11,6 +11,7 @@ export function barFill(
   ctx: Pick<CanvasRenderingContext2D, "createLinearGradient">,
   fill: FillStyle | BarThresholdFill,
   map: (value: number) => number,
+  orientation: "vertical" | "horizontal",
 ): (start: number, end: number) => FillStyle {
   if (
     typeof fill === "string" ||
@@ -53,17 +54,22 @@ export function barFill(
       high = Math.max(start, end);
     let index = 0;
     while (index < thresholds.length && thresholds[index] <= low) index++;
-    const y0 = map(low),
-      y1 = map(high);
-    if (y0 === y1) return colors[index];
+    const valueStart = map(low),
+      valueEnd = map(high);
+    if (valueStart === valueEnd) return colors[index];
     // Rectangle placement translates its local paint coordinates.
-    const top = Math.min(y0, y1);
-    const gradient = ctx.createLinearGradient(0, y0 - top, 0, y1 - top);
+    const origin = Math.min(valueStart, valueEnd);
+    const gradient = orientation === "vertical"
+      ? ctx.createLinearGradient(0, valueStart - origin, 0, valueEnd - origin)
+      : ctx.createLinearGradient(valueStart - origin, 0, valueEnd - origin, 0);
     gradient.addColorStop(0, colors[index]);
     for (; index < thresholds.length && thresholds[index] < high; index++) {
       const offset = Math.max(
         0,
-        Math.min(1, (map(thresholds[index]) - y0) / (y1 - y0)),
+        Math.min(
+          1,
+          (map(thresholds[index]) - valueStart) / (valueEnd - valueStart),
+        ),
       );
       gradient.addColorStop(offset, colors[index]);
       gradient.addColorStop(offset, colors[index + 1]);

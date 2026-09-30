@@ -121,7 +121,8 @@ function Plot({
         scale="population"
         position="left"
         tickCount={5}
-        tickFormat={(v) => `${v / 1000000}m`}
+        tickFormat={(v) =>
+          typeof v === "number" ? `${v / 1000000}m` : v}
         style={{ stroke: "#a4b3b7", fill: "#637785", font: "11px sans-serif" }}
       />
       <Line
@@ -137,11 +138,11 @@ function Plot({
       />
       <BarSeries
         data={rows}
-        x="state"
-        y="population"
+        category="state"
+        value="population"
         group="year"
-        xScale="states"
-        yScale="population"
+        categoryScale="states"
+        valueScale="population"
         groupScale="years"
         style={(row) => ({ fill: colors[row.year] })}
       />
