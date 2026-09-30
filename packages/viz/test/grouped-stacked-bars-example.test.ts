@@ -16,8 +16,9 @@ it("runs the grouped-stacked lesson with inspection and an orientation toggle", 
     runtime.flush();
     const labels = () => text.mock.calls.map((call) => call[0]);
     expect(labels()).toContain("Regional cash flow");
-    expect(labels()).toContain("North");
-    expect(labels()).toContain("South");
+    expect(labels()).toContain(
+      "Within each quarter: North slot first · South slot second",
+    );
 
     const bounds = canvas.getBoundingClientRect();
     const point = (x: number, y: number) => ({
