@@ -116,6 +116,19 @@ describe('editable path geometry utilities', () => {
     ]);
   });
 
+  it('retains a distant point beside a tiny finite segment', () => {
+    const path = new PathGeometry();
+    path.moveTo(0, 0);
+    path.lineTo(0, 1e300);
+    path.lineTo(1e-300, 0);
+
+    expect(Array.from(simplifyPath(path, { tolerance: 1 }))).toEqual([
+      { type: 'move', x: 0, y: 0 },
+      { type: 'line', x: 0, y: 1e300 },
+      { type: 'line', x: 1e-300, y: 0 },
+    ]);
+  });
+
   it('retains a closed contour current point for lines that follow close markers', () => {
     const path = new PathGeometry();
     path.spliceSegments(0, 0, [

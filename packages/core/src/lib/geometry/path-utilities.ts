@@ -305,11 +305,14 @@ function samePoint(a: Point, b: Point): boolean { return a[0] === b[0] && a[1] =
 function pointSegmentDistance(point: Point, a: Point, b: Point): number {
   const x = difference(b[0], a[0]), y = difference(b[1], a[1]);
   const px = difference(point[0], a[0]), py = difference(point[1], a[1]);
-  const scale = Math.max(Math.abs(x), Math.abs(y));
+  const scale = Math.max(Math.abs(x), Math.abs(y), Math.abs(px), Math.abs(py));
   if (scale === 0) return Math.hypot(px, py);
   const scaledX = x / scale, scaledY = y / scale;
-  const t = Math.max(0, Math.min(1, ((px / scale) * scaledX + (py / scale) * scaledY) / (scaledX * scaledX + scaledY * scaledY)));
-  return Math.hypot(px - x * t, py - y * t);
+  const scaledPX = px / scale, scaledPY = py / scale;
+  const length = scaledX * scaledX + scaledY * scaledY;
+  if (length === 0) return Math.hypot(px, py);
+  const t = Math.max(0, Math.min(1, (scaledPX * scaledX + scaledPY * scaledY) / length));
+  return scale * Math.hypot(scaledPX - scaledX * t, scaledPY - scaledY * t);
 }
 function difference(value: number, origin: number): number {
   const result = value - origin;
