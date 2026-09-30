@@ -7,6 +7,8 @@ import type {
   CRCEventType,
 } from "./types.js";
 import { GLOBAL_STATE } from "../global-state.js";
+import { resolvePath } from '../geometry/resolve-path.js';
+import type { PathGeometry } from '../geometry/path-geometry.js';
 import type { LayoutBox } from "../layout/types.js";
 import { getCurrentWorldTransform } from "../render-target.js";
 import type {
@@ -136,7 +138,7 @@ export function updateTarget(
   updateTargetRegistration(
     target,
     handlers,
-    options,
+    { ...options, path: resolvePath(options.path) },
     participatesInPaint,
     preserveKeyboardNavigationGeometry,
   );
@@ -153,18 +155,19 @@ export function updateLegacyTarget(
     lineInteractionWidth = 0,
     cursor,
   }: {
-    path?: Path2D;
+    path?: Path2D | PathGeometry;
     fill?: boolean;
     lineInteractionWidth?: number;
     cursor?: string;
   },
 ): void {
-  configureLegacyHitGeometry(target, path);
+  const resolvedPath = path === undefined ? undefined : resolvePath(path);
+  configureLegacyHitGeometry(target, resolvedPath);
   updateTargetRegistration(
     target,
     handlers,
     {
-      path: path ?? target.paintEntry?.path ?? new Path2D(),
+      path: resolvedPath ?? target.paintEntry?.path ?? new Path2D(),
       fill,
       lineInteractionWidth,
       cursor,
@@ -194,7 +197,7 @@ export function getLegacyHitGeometry(
 function updateTargetRegistration(
   target: CRCEventTargetRegistration,
   handlers: CRCEventHandlers | CRCRegionHandlers,
-  options: CRCEventTargetOptions,
+  options: Omit<CRCEventTargetOptions, 'path'> & { readonly path: Path2D },
   participatesInPaint = false,
   preserveKeyboardNavigationGeometry = false,
   legacyHandlers = false,

@@ -590,6 +590,27 @@ const drafts = [
     load: () => import("./learning/drawing/path.example"),
   },
   {
+    slug: "path-geometry",
+    title: "Editable path geometry",
+    shortTitle: "Path geometry",
+    section: "drawing",
+    order: 31,
+    summary: "Drag cubic control points, transform an independent copy, and export SVG path data.",
+    api: ["PathGeometry", "Path", "toPath2D", "toSvgPathData"],
+    objectives: ["Edit a mutable cubic path through the public API.", "Export snapshots and transform independent geometry."],
+    prompts: {
+      gesture: "Drag the gold control points and hover inside the outline.",
+      code: "Change the preview DOMMatrix or add another segment to the outline.",
+    },
+    apiNotes: [
+      "Mutating PathGeometry does not schedule rendering; this example updates a separate signal after each edit.",
+      "Change operation to compare flattening, simplification, and curve-preserving subdivision.",
+    ],
+    canvas: { width: 760, height: 460 },
+    related: ["path", "svg-path"],
+    load: () => import("./learning/drawing/path-geometry.example"),
+  },
+  {
     slug: "svg-path",
     title: "SVG path",
     shortTitle: "SVG path",

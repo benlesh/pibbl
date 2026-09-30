@@ -9,6 +9,8 @@ import type {
   CRCMouseEventListener,
 } from '../types.js';
 import { getMouseCoordinates } from '../util/get-mouse-coordinates.js';
+import type { PathGeometry } from '../geometry/path-geometry.js';
+import { resolvePath } from '../geometry/resolve-path.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
 import { createRegion, releaseRegion, updateRegion } from './use-region.js';
 
@@ -22,14 +24,14 @@ export function useEvent<
 >(
   type: K,
   handler: CRCEventHandler<K> | undefined,
-  path: Path2D,
+  path: Path2D | PathGeometry,
   fill?: boolean,
   lineInteractionWidth?: number,
 ): void;
 export function useEvent<K extends keyof CRCEventRegistry>(
   type: K,
   handler?: CRCMouseEventListener,
-  path?: Path2D,
+  path?: Path2D | PathGeometry,
   fill?: boolean,
   lineInteractionWidth?: number,
 ): void;
@@ -38,7 +40,7 @@ export function useEvent<
 >(
   type: K,
   handler?: CRCMouseEventListener | CRCEventHandler<K>,
-  path?: Path2D,
+  path?: Path2D | PathGeometry,
   fill = false,
   lineInteractionWidth = 0,
 ): void {
@@ -60,7 +62,7 @@ export function useEvent<
   if (path) {
     updateRegion(crcInstance, slot.value.region, {
       handlers: { [type]: handler as CRCMouseEventListener | undefined },
-      path,
+      path: resolvePath(path),
       fill,
       lineInteractionWidth,
     });

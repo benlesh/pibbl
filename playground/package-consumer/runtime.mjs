@@ -40,6 +40,7 @@ const expected = [
   "Line",
   "Overlay",
   "Path",
+  "PathGeometry",
   "Polygon",
   "Rectangle",
   "RegularPolygon",
@@ -66,6 +67,11 @@ const expected = [
   "definePrimitive",
   "defineRenderLayer",
   "easing",
+  "flattenPath",
+  "simplifyPath",
+  "subdividePath",
+  "toPath2D",
+  "toSvgPathData",
   "isSignal",
   "keyframes",
   "layoutDiagnostic",
@@ -196,9 +202,9 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 88) {
+if (actual.length !== 94) {
   throw new Error(
-    `Expected 88 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected 94 @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 
@@ -448,4 +454,18 @@ for (const specifier of [
       throw error;
     }
   }
+}
+
+
+const editableGeometry = new core.PathGeometry();
+editableGeometry.moveTo(0, 0);
+editableGeometry.lineTo(10, 10);
+const editableCopy = editableGeometry.clone();
+editableCopy.setSegment(1, { type: 'line', x: 20, y: 20 });
+if (core.toSvgPathData(editableGeometry) !== 'M 0 0 L 10 10' ||
+    core.toSvgPathData(editableCopy) !== 'M 0 0 L 20 20') {
+  throw new Error('Packed editable path copies must remain independent.');
+}
+if (core.subdividePath(editableGeometry, { divisions: 2 }).segmentCount !== 3) {
+  throw new Error('Packed geometry utilities are not operational.');
 }

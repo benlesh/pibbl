@@ -1,3 +1,4 @@
+import { PathGeometry, toPath2D } from '@crc/core';
 import type {
   CRCParticleAppearance,
   CRCParticleBounds2D,
@@ -16,8 +17,11 @@ export interface ParticleDefinitionCapabilities {
   readonly requiresStateful: readonly string[];
 }
 
+type NativeParticleRenderer2D = Exclude<CRCParticleRenderer2D, { type: 'path' }> | Readonly<{ type: 'path'; path: Path2D; blend?: 'source-over' | 'additive' }>;
+
 export interface ParticleEmitter2DRecord
-  extends Omit<CRCParticleEmitter2D, 'bounds'> {
+  extends Omit<CRCParticleEmitter2D, 'bounds' | 'renderer'> {
+  readonly renderer: NativeParticleRenderer2D;
   readonly nameHash: number;
   readonly bounds: CRCParticleBounds2D;
   readonly boundsSource: 'explicit' | 'derived';
@@ -510,7 +514,7 @@ export function normalizeBounds2D(
 export function normalizeRenderer2D(
   renderer: CRCParticleRenderer2D,
   context: ParticleValidationContext,
-): CRCParticleRenderer2D {
+): NativeParticleRenderer2D {
   if (renderer === null || typeof renderer !== 'object') {
     particleDefinitionError(
       { ...context, property: 'renderer' }, 'must be a record', renderer,
@@ -536,8 +540,11 @@ export function normalizeRenderer2D(
         blend,
       });
     case 'path':
+      if (renderer.path instanceof PathGeometry) {
+        return Object.freeze({ type: 'path', path: toPath2D(renderer.path), blend });
+      }
       if (typeof Path2D === 'undefined' || !(renderer.path instanceof Path2D)) {
-        particleDefinitionError({ ...context, module, property: 'path' }, 'must be a Path2D', renderer.path);
+        particleDefinitionError({ ...context, module, property: 'path' }, 'must be a Path2D or PathGeometry', renderer.path);
       }
       return Object.freeze({ type: 'path', path: new Path2D(renderer.path), blend });
     case 'sprite':

@@ -1,7 +1,7 @@
 ---
 id: api-component-clip
 title: Clip
-summary: Restricts recursive children to a Path2D clipping region.
+summary: Restricts recursive children to a Path2D or PathGeometry clipping region.
 kind: api
 slug: clip
 apiCategory: component
@@ -15,7 +15,7 @@ relatedTypes: [CRCNode, ClipProps, ClipStyle]
 import { Circle, Clip } from "@crc/core";
 ```
 
-`Clip` uses [`ClipProps`](#/api/types/elements-components#clipprops) and [`ClipStyle`](#/api/types/styles#clipstyle) to apply a `Path2D` and fill rule to
+`Clip` uses [`ClipProps`](#/api/types/elements-components#clipprops) and [`ClipStyle`](#/api/types/styles#clipstyle) to apply a `Path2D` or [`PathGeometry`](#/api/functions/path-geometry) and fill rule to
 recursive [`CRCNode`](#/api/types/elements-components#crcnode) children. The clip geometry stays aligned with paint and
 hit testing. Filters on the receiving clip are composed before its own clip is
 presented.

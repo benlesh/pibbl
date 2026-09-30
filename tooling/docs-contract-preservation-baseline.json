@@ -108,6 +108,12 @@
       "path": "docs/superpowers/specs/2026-09-29-physics-2d-quality-design.md",
       "sourceSha256": "c77f63950ecf004946146ce1238d14de25be03b639fc53616a9791e103d033fe",
       "unitPrefix": "h"
+    },
+    {
+      "id": "mutable-path-geometry",
+      "path": "docs/superpowers/specs/2026-09-29-path-geometry-design.md",
+      "sourceSha256": "0d4a859c0e0ce874061f607946ad714ef208d247ed4affc399100f43b294184b",
+      "unitPrefix": "q"
     }
   ],
   "contracts": [
@@ -3269,6 +3275,30 @@
         },
         {
           "id": "c0076",
+          "kind": "prose",
+          "section": "Editable path geometry (2026-09-29 extension)",
+          "text": "`PathGeometry` adds mutable, packed canonical geometry to the public core entry. Path and Clip accept `PathGeometry | Path2D` in `style.d`; this extends the native path-only inputs described above. Existing path creators and memoized hooks still return Path2D. Native browser context methods still require native paths."
+        },
+        {
+          "id": "c0077",
+          "kind": "prose",
+          "section": "Editable path geometry (2026-09-29 extension)",
+          "text": "The class supports Canvas path builders, copying, affine transforms, canonical segment editing and a read-only mutation revision. Public `toPath2D` conversion always returns a fresh snapshot; `toSvgPathData` exports absolute SVG data. CRC privately resolves an unchanged instance/revision to one native snapshot and replaces that snapshot after edits. Paint and hit/clip geometry share the same consumed snapshot. Conversion does not occur during pointer dispatch. Old root or retained-Layer generations keep their previous native paths until updated."
+        },
+        {
+          "id": "c0078",
+          "kind": "prose",
+          "section": "Editable path geometry (2026-09-29 extension)",
+          "text": "Geometry edits do not schedule rendering. No content-equality/hash API or SVG parser is implied. `flattenPath`, `simplifyPath`, and `subdividePath` return new geometry, with explicit accuracy/output limits. Simplification accepts polylines only and does not promise topology preservation. Singular ellipse transforms preserve traversal through explicit lines, whose turning-point stroke joins may differ from a browser's degenerate native conics."
+        },
+        {
+          "id": "c0079",
+          "kind": "prose",
+          "section": "Editable path geometry (2026-09-29 extension)",
+          "text": "Public evidence lives in `path-geometry.test.tsx`, `path-geometry-builders.test.ts`, `path-geometry-utilities.test.ts`, and the editable path learning example. The approved design is [mutable path geometry](../superpowers/specs/2026-09-29-path-geometry-design.md)."
+        },
+        {
+          "id": "c0080",
           "kind": "prose",
           "section": "Component manipulation",
           "text": "`ManipulationFrame` binds one writable finite box signal to a positioned local allocation. `DragHandle` is a structural listener: only participating descendant hit geometry can start a move. `ResizeHandle`, `ResizeHandles`, and `RotationHandle` retain explicit control geometry. No frame infers bounds from content. Resize and rotation controls keep CSS-pixel visual and hit geometry while their centers follow the frame. See the [component-manipulation contract](./component-manipulation-contract.md)."
@@ -7218,6 +7248,12 @@
           "kind": "prose",
           "section": "First-class signal integration",
           "text": "`@crc/core/internal` is a separate version-coupled friend entry for official lockstep renderer packages. It is neither re-exported at the root nor available to ordinary Studio examples."
+        },
+        {
+          "id": "c0071",
+          "kind": "prose",
+          "section": "Editable geometry inputs",
+          "text": "Explicit paths in useEventTarget, useEvent, useRegion, and useCursor accept PathGeometry as well as Path2D. Each registration update resolves geometry to a native snapshot. Mutation alone does not update a registration or schedule a frame. Existing memoized path hooks continue to return Path2D."
         }
       ]
     },
@@ -7799,6 +7835,12 @@
         },
         {
           "id": "c0064",
+          "kind": "prose",
+          "section": "Editable geometry snapshots",
+          "text": "Application-owned PathGeometry holds private typed buffers and a numeric revision. Public native conversions are independently caller-owned. CRC's module-local WeakMap retains only the latest successful native snapshot per live geometry; it introduces no scheduler participant, listeners, or explicit resource leases. Historical paint/clip records retain their own native snapshot until replacement or normal teardown. Revisions never mutate an existing native snapshot, and a failed conversion does not replace the last successful entry."
+        },
+        {
+          "id": "c0065",
           "kind": "prose",
           "section": "Component manipulation ownership",
           "text": "A manipulation controller owns native pointer capture, bounded source observations, and its temporary session until a terminal event, frame removal, component teardown, or root disposal. Release is idempotent. Teardown restores only a preview still owned by that session and invokes no disposed callback. If a signal write guard prevents immediate restoration, CRC queues one generation-checked Begin cleanup record; a newer external write or later owner generation invalidates it. See the [component-manipulation contract](./component-manipulation-contract.md)."
@@ -11914,10 +11956,74 @@
       "sharedAnchors": ["target"]
     },
     {
+      "id": "mutable-path-geometry-drawing-components",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0076", "c0077", "c0078", "c0079"],
+      "reason": "mutable-path-geometry units q0003 q0004 q0005 q0006 q0008 q0009 q0011 q0015 q0034 q0037 q0040 q0043 q0044 q0045 q0046 q0047 q0048 q0049 q0051 q0052 q0054 q0056 q0060 q0061 q0062 q0063 q0064 q0065 q0066 q0067 authorize drawing contract units c0076 c0077 c0078 c0079 for the PathGeometry public input, snapshots, utilities, and evidence.",
+      "approval": {
+        "recordId": "mutable-path-geometry",
+        "unitIds": [
+          "q0003",
+          "q0004",
+          "q0005",
+          "q0006",
+          "q0008",
+          "q0009",
+          "q0011",
+          "q0015",
+          "q0034",
+          "q0037",
+          "q0040",
+          "q0043",
+          "q0044",
+          "q0045",
+          "q0046",
+          "q0047",
+          "q0048",
+          "q0049",
+          "q0051",
+          "q0052",
+          "q0054",
+          "q0056",
+          "q0060",
+          "q0061",
+          "q0062",
+          "q0063",
+          "q0064",
+          "q0065",
+          "q0066",
+          "q0067"
+        ]
+      },
+      "sharedAnchors": ["PathGeometry"]
+    },
+    {
+      "id": "mutable-path-geometry-runtime-hooks",
+      "path": "docs/design/runtime-hooks-contract.md",
+      "currentIds": ["c0071"],
+      "reason": "mutable-path-geometry units q0045 q0046 q0037 q0049 authorize runtime hook contract unit c0071 for PathGeometry and Path2D registration snapshots.",
+      "approval": {
+        "recordId": "mutable-path-geometry",
+        "unitIds": ["q0045", "q0046", "q0037", "q0049"]
+      },
+      "sharedAnchors": ["PathGeometry", "Path2D"]
+    },
+    {
+      "id": "mutable-path-geometry-runtime-ownership",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0064"],
+      "reason": "mutable-path-geometry units q0005 q0006 q0008 q0047 q0048 q0049 authorize runtime ownership unit c0064 for PathGeometry snapshot cache ownership and replacement.",
+      "approval": {
+        "recordId": "mutable-path-geometry",
+        "unitIds": ["q0005", "q0006", "q0008", "q0047", "q0048", "q0049"]
+      },
+      "sharedAnchors": ["PathGeometry", "snapshot"]
+    },
+    {
       "id": "component-manipulation-drawing-contract",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0076"],
-      "reason": "Approved component-manipulation records n0004, n0006, n0007, n0008, n0009, n0039 and child-defined-drag-handles records h0001, h0002, h0004 authorize current clause c0076 for explicit frame and child-defined handle drawing behavior.",
+      "currentIds": ["c0080"],
+      "reason": "Approved component-manipulation records n0004, n0006, n0007, n0008, n0009, n0039 and child-defined-drag-handles records h0001, h0002, h0004 authorize current clause c0080 for explicit frame and child-defined handle drawing behavior.",
       "approval": {
         "recordId": "component-manipulation",
         "unitIds": ["n0004", "n0006", "n0007", "n0008", "n0009", "n0039"]
@@ -11933,8 +12039,8 @@
     {
       "id": "component-manipulation-resource-ownership",
       "path": "docs/design/runtime-resource-ownership.md",
-      "currentIds": ["c0064"],
-      "reason": "Approved component-manipulation record n0025 authorizes current clause c0064 for the generation-checked teardown and restoration ownership contract.",
+      "currentIds": ["c0065"],
+      "reason": "Approved component-manipulation record n0025 authorizes current clause c0065 for the generation-checked teardown and restoration ownership contract.",
       "approval": {
         "recordId": "component-manipulation",
         "unitIds": ["n0025"]

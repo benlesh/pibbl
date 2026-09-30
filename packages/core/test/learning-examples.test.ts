@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 67 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 68 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(67);
+    expect(learningExampleCatalog).toHaveLength(68);
     expect(learningExampleCatalog.filter(entry =>
       entry.slug === "viz-band-bars" || entry.slug === "viz-grouped-bars"
     ).map(entry => getLearningExampleRoute(entry)).sort()).toEqual([
@@ -1272,6 +1272,7 @@ describe("learning example catalog", () => {
         "image",
         "line",
         "path",
+        "path-geometry",
         "polygon",
         "rectangle",
         "regular-polygon",
@@ -1778,6 +1779,9 @@ describe("learning example catalog", () => {
         "Star",
         "createRegularPolygonPath",
         "Path",
+        "PathGeometry",
+        "toPath2D",
+        "toSvgPathData",
         "SvgPath",
         "Line",
         "HorizontalLine",

@@ -1,4 +1,5 @@
 import { GLOBAL_STATE } from '../global-state.js';
+import type { PathGeometry } from '../geometry/path-geometry.js';
 import {
   createTarget,
   updateLegacyTarget,
@@ -19,7 +20,7 @@ export function useRegion({
   cursor,
 }: {
   handlers: CRCRegionHandlers;
-  path?: Path2D;
+  path?: Path2D | PathGeometry;
   fill?: boolean;
   lineInteractionWidth?: number;
   cursor?: string;
@@ -59,7 +60,7 @@ export function updateRegion(
     cursor,
   }: {
     handlers: CRCRegionHandlers;
-    path?: Path2D;
+    path?: Path2D | PathGeometry;
     fill?: boolean;
     lineInteractionWidth?: number;
     cursor?: string;
