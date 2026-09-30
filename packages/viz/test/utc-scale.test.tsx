@@ -56,10 +56,33 @@ it("exposes bounded UTC mapping, labels, and pure domain helpers", () => {
     return null;
   }
   runtime.mount(
-    <Scale id="weekly" type="utc" domain={[weekStart, Date.UTC(2026, 0, 12)]} range={[0, 100]}>
+    <Scale
+      id="weekly"
+      type="utc"
+      domain={[weekStart, Date.UTC(2026, 0, 12)]}
+      range={[0, 100]}
+    >
       <Weekly />
     </Scale>,
   );
   runtime.flush();
   expect(weekly?.ticks(5)).toContain(Date.UTC(2026, 0, 5));
+  let full: ResolvedUtcScale | undefined;
+  function FullRange() {
+    full = useScale("full", "utc").get();
+    return null;
+  }
+  runtime.mount(
+    <Scale
+      id="full"
+      type="utc"
+      domain={[-8_640_000_000_000_000, 8_640_000_000_000_000]}
+      range={[0, 100]}
+    >
+      <FullRange />
+    </Scale>,
+  );
+  runtime.flush();
+  expect(() => full?.ticks(3)).not.toThrow();
+  expect(full?.ticks(3).length).toBeLessThanOrEqual(3);
 });

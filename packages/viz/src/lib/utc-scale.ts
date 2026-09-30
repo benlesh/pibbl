@@ -38,9 +38,21 @@ const fixed = [
   7_200_000, 10_800_000, 21_600_000, 43_200_000, 86_400_000, 172_800_000,
   604_800_000,
 ] as const;
-function monthOrdinal(value: number): number {
+interface MonthInfo {
+  readonly ordinal: number;
+  readonly boundary: boolean;
+}
+function monthInfo(value: number): MonthInfo {
   const date = new Date(value);
-  return date.getUTCFullYear() * 12 + date.getUTCMonth();
+  return {
+    ordinal: date.getUTCFullYear() * 12 + date.getUTCMonth(),
+    boundary:
+      date.getUTCDate() === 1 &&
+      date.getUTCHours() === 0 &&
+      date.getUTCMinutes() === 0 &&
+      date.getUTCSeconds() === 0 &&
+      date.getUTCMilliseconds() === 0,
+  };
 }
 function monthStart(ordinal: number): number {
   const year = Math.floor(ordinal / 12);
@@ -51,14 +63,60 @@ function monthStart(ordinal: number): number {
   const value = date.getTime();
   return utcValue(value, "calendar boundary", true);
 }
-function monthInteriorCount(lo: number, hi: number, step: number): number {
-  const first = Math.floor(monthOrdinal(lo) / step) * step;
-  let value = monthStart(first);
-  const start = value <= lo ? first + step : first;
-  const last = Math.floor(monthOrdinal(hi) / step) * step;
-  value = monthStart(last);
-  const end = value >= hi ? last - step : last;
+function monthInteriorCount(
+  lo: MonthInfo,
+  hi: MonthInfo,
+  step: number,
+): number {
+  const start = Math.floor(lo.ordinal / step) * step + step;
+  const end =
+    Math.floor(hi.ordinal / step) * step -
+    (hi.boundary && hi.ordinal % step === 0 ? step : 0);
   return end < start ? 0 : Math.floor((end - start) / step) + 1;
+}
+function fixedInteriorCount(
+  lo: number,
+  hi: number,
+  step: number,
+  anchor: number,
+): number {
+  const first = Math.ceil((lo - anchor) / step);
+  const last = Math.floor((hi - anchor) / step);
+  return Math.max(
+    0,
+    last -
+      first +
+      1 -
+      ((lo - anchor) % step === 0 ? 1 : 0) -
+      ((hi - anchor) % step === 0 ? 1 : 0),
+  );
+}
+type UtcCadence =
+  | { readonly kind: "fixed"; readonly step: number; readonly anchor: number }
+  | { readonly kind: "month"; readonly step: number };
+function selectCadence(
+  lo: number,
+  hi: number,
+  capacity: number,
+): UtcCadence | undefined {
+  for (const step of fixed) {
+    const anchor = step === 604_800_000 ? 345_600_000 : 0;
+    if (
+      fixedInteriorCount(lo, hi, step, anchor) <= capacity &&
+      fixedInteriorCount(lo, hi, step, anchor) > 0
+    )
+      return { kind: "fixed", step, anchor };
+  }
+  const loMonth = monthInfo(lo);
+  const hiMonth = monthInfo(hi);
+  const candidates = [1, 2, 3, 6];
+  for (let years = 1; years <= 1_000_000; years *= 10)
+    for (const factor of [1, 2, 5]) candidates.push(12 * factor * years);
+  for (const step of candidates) {
+    const interior = monthInteriorCount(loMonth, hiMonth, step);
+    if (interior > 0 && interior <= capacity) return { kind: "month", step };
+  }
+  return undefined;
 }
 function calendarTicks(input: UtcDomain, count: number): readonly number[] {
   const ascending =
@@ -67,54 +125,26 @@ function calendarTicks(input: UtcDomain, count: number): readonly number[] {
   if (count === 2)
     return Object.freeze(input[0] < input[1] ? [lo, hi] : [hi, lo]);
   const capacity = count - 2;
-  let step: number | undefined;
-  let fixedAnchor = 0;
-  for (const candidate of fixed) {
-    const anchor = candidate === 604_800_000 ? 345_600_000 : 0;
-    const first = Math.ceil((lo - anchor) / candidate);
-    const last = Math.floor((hi - anchor) / candidate);
-    const interior = Math.max(
-      0,
-      last -
-        first +
-        1 -
-        ((lo - anchor) % candidate === 0 ? 1 : 0) -
-        ((hi - anchor) % candidate === 0 ? 1 : 0),
-    );
-    if (interior > 0 && interior <= capacity) {
-      step = candidate;
-      fixedAnchor = anchor;
-      break;
-    }
-  }
+  const cadence = selectCadence(lo, hi, capacity);
   const values = [lo];
-  if (step !== undefined) {
+  if (cadence?.kind === "fixed") {
     for (
-      let value = fixedAnchor + Math.ceil((lo - fixedAnchor) / step) * step;
+      let value =
+        cadence.anchor +
+        Math.ceil((lo - cadence.anchor) / cadence.step) * cadence.step;
       value < hi && values.length < count - 1;
-      value += step
+      value += cadence.step
     )
       if (value > lo) values.push(value);
-  } else {
-    const monthSteps = [
-      1, 2, 3, 6, 12, 24, 60, 120, 240, 600, 1_200, 2_400, 6_000, 12_000,
-      24_000, 60_000, 120_000, 240_000, 600_000,
-    ];
-    const months = monthSteps.find((candidate) => {
-      const interior = monthInteriorCount(lo, hi, candidate);
-      return interior > 0 && interior <= capacity;
-    });
-    if (months !== undefined) {
-      let ordinal = Math.floor(monthOrdinal(lo) / months) * months;
-      if (monthStart(ordinal) <= lo) ordinal += months;
-      for (
-        let value = monthStart(ordinal);
-        value < hi && values.length < count - 1;
-      ) {
-        values.push(value);
-        ordinal += months;
-        value = monthStart(ordinal);
-      }
+  } else if (cadence?.kind === "month") {
+    const loMonth = monthInfo(lo);
+    let ordinal =
+      Math.floor(loMonth.ordinal / cadence.step) * cadence.step + cadence.step;
+    while (values.length < count - 1) {
+      const value = monthStart(ordinal);
+      if (value >= hi) break;
+      values.push(value);
+      ordinal += cadence.step;
     }
   }
   values.push(hi);
@@ -185,9 +215,30 @@ export function niceDomain(
     return Object.freeze([a - 1, a + 1]);
   }
   if (count === 2) return Object.freeze([a, b]);
-  const ascending = a < b ? [a, b] as const : [b, a] as const;
-  const start = monthStart(monthOrdinal(ascending[0]));
-  const end = monthStart(monthOrdinal(ascending[1]) + 1);
-  if (start < dateMinimum || end > dateMaximum) throw new RangeError("UTC nice domain exceeds the Date range.");
+  const ascending = a < b ? ([a, b] as const) : ([b, a] as const);
+  const cadence = selectCadence(ascending[0], ascending[1], count - 2);
+  if (cadence === undefined) return Object.freeze([a, b]);
+  const start =
+    cadence.kind === "fixed"
+      ? cadence.anchor +
+        Math.floor((ascending[0] - cadence.anchor) / cadence.step) *
+          cadence.step
+      : monthStart(
+          Math.floor(monthInfo(ascending[0]).ordinal / cadence.step) *
+            cadence.step,
+        );
+  const highMonth = monthInfo(ascending[1]);
+  const end =
+    cadence.kind === "fixed"
+      ? cadence.anchor +
+        Math.ceil((ascending[1] - cadence.anchor) / cadence.step) * cadence.step
+      : monthStart(
+          Math.floor(highMonth.ordinal / cadence.step) * cadence.step +
+            (highMonth.boundary && highMonth.ordinal % cadence.step === 0
+              ? 0
+              : cadence.step),
+        );
+  if (start < dateMinimum || end > dateMaximum)
+    throw new RangeError("UTC nice domain exceeds the Date range.");
   return Object.freeze(a < b ? [start, end] : [end, start]);
 }
