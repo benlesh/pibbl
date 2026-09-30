@@ -255,7 +255,7 @@ function Scene() {
   const horizontal = useSignal(false);
   const selected = useSignal<Segment | null>(null);
   const narrow = box.width < 500;
-  const origin = { x: horizontal.get() ? 88 : 72, y: narrow ? 231 : 189 };
+  const origin = { x: horizontal.get() ? 88 : 72, y: narrow ? 235 : 205 };
   const width = Math.max(210, box.width - origin.x - 36);
   const height = Math.max(150, box.height - origin.y - 104);
   return (
@@ -296,7 +296,10 @@ function Scene() {
       {components.map((component, index) => (
         <Group
           key={component.name}
-          style={{ translateX: 28 + index * 142, translateY: origin.y - 31 }}
+          style={{
+            translateX: 28 + (narrow ? index % 2 : index) * 142,
+            translateY: 150 + (narrow ? Math.floor(index / 2) * 24 : 0),
+          }}
         >
           <Rectangle
             style={{

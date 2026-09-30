@@ -27,7 +27,7 @@ it("runs the grouped-stacked lesson with inspection and an orientation toggle", 
       bubbles: true,
       button: 0,
     });
-    canvas.dispatchEvent(new PointerEvent("pointerdown", point(145, 365)));
+    canvas.dispatchEvent(new PointerEvent("pointerdown", point(145, 381)));
     runtime.flush();
     expect(labels()).toContain("Q1 · North · Products · $160k");
 
