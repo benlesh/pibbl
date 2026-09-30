@@ -11,11 +11,29 @@ interface Metrics {
   left: number;
   ascent: number;
 }
+/** Checks the closest point of a complete label box, not just its corners. */
+export function boxOutsideInnerCircle(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  cx: number,
+  cy: number,
+  innerRadius: number,
+): boolean {
+  return (
+    Math.hypot(
+      Math.max(x - cx, 0, cx - (x + width)),
+      Math.max(y - cy, 0, cy - (y + height)),
+    ) >= innerRadius
+  );
+}
 export function layoutPie<D>(
   slices: readonly PieSliceGeometry<D>[],
   cx: number,
   cy: number,
   radius: number,
+  innerRadius: number,
   bounds: HoverBounds,
   font: string,
   gap: number,
@@ -72,8 +90,9 @@ export function layoutPie<D>(
     }
     const m = measure(text);
     const mid = (slice.startAngle + slice.endAngle) / 2;
-    const x = cx + Math.cos(mid) * radius * 0.65 - m.width / 2;
-    const y = cy + Math.sin(mid) * radius * 0.65 - m.height / 2;
+    const labelRadius = innerRadius + (radius - innerRadius) * 0.65;
+    const x = cx + Math.cos(mid) * labelRadius - m.width / 2;
+    const y = cy + Math.sin(mid) * labelRadius - m.height / 2;
     const corners = [
       [x, y],
       [x + m.width, y],
@@ -94,7 +113,8 @@ export function layoutPie<D>(
           Math.abs(relative) <=
             Math.min(Math.PI / 2, (slice.endAngle - slice.startAngle) / 2)
         );
-      });
+      }) &&
+      boxOutsideInnerCircle(x, y, m.width, m.height, cx, cy, innerRadius);
     if (placement !== "outside" && fits) {
       labels[index] = placed(text, m, x, y, "inside");
       return;
@@ -199,7 +219,14 @@ export function layoutPie<D>(
   });
   return Object.freeze(
     slices.map((slice, index) =>
-      Object.freeze({ ...slice, cx, cy, radius, label: labels[index] }),
+      Object.freeze({
+        ...slice,
+        cx,
+        cy,
+        radius,
+        innerRadius,
+        label: labels[index],
+      }),
     ),
   );
 }

@@ -1,6 +1,7 @@
-import { signal } from "@crc/core";
+import { Rectangle, signal } from "@crc/core";
 import * as viz from "@crc/viz";
 import { afterEach, expect, it, vi } from "vitest";
+import { boxOutsideInnerCircle } from "../src/lib/layout-pie.js";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
@@ -28,6 +29,7 @@ it("lays out explicit outside labels once and reuses geometry and measurements d
     return (
       <viz.PieLayout
         data={rows}
+        revision={0}
         value={value}
         keyBy="id"
         label={label}
@@ -68,6 +70,104 @@ it("lays out explicit outside labels once and reuses geometry and measurements d
   expect(label).toHaveBeenCalledTimes(4);
   expect(renders).toBe(8);
   expect(resolved.every((s, i) => s === before[i])).toBe(true);
+});
+it("draws an annular slice and leaves its hole available to underlying content", () => {
+  runtime = testRuntime();
+  const hits: string[] = [];
+  const canvas = runtime.mount(
+    <>
+      <Rectangle
+        style={{ width: 600, height: 400, fill: "white" }}
+        onPointerDown={() => hits.push("background")}
+      />
+      <viz.PieLayout
+        data={[1]}
+        value={(value: number) => value}
+        style={{ cx: 300, cy: 200, radius: 80, innerRadius: 40 }}
+      >
+        {(slice) => (
+          <viz.PieSlice
+            slice={slice}
+            style={{ fill: "red" }}
+            onPointerDown={() => hits.push("slice")}
+          />
+        )}
+      </viz.PieLayout>
+    </>,
+  );
+  runtime.flush();
+  const rect = canvas.getBoundingClientRect();
+  const press = (x: number, y: number) =>
+    canvas.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        clientX: rect.left + x,
+        clientY: rect.top + y,
+        bubbles: true,
+      }),
+    );
+  press(300, 200);
+  press(350, 200);
+  expect(hits).toEqual(["background", "slice"]);
+});
+it("rejects a label box whose edge crosses the donut hole even when its corners clear it", () => {
+  const corners = [
+    [-90, -20],
+    [90, -20],
+    [-90, 20],
+    [90, 20],
+  ];
+  expect(corners.every(([x, y]) => Math.hypot(x, y) >= 40)).toBe(true);
+  expect(boxOutsideInnerCircle(-90, -20, 180, 40, 0, 0, 40)).toBe(false);
+});
+it("hides a non-fitting donut label inside and moves it outside in auto mode", () => {
+  runtime = testRuntime();
+  const placement = signal<viz.PieLabelPlacement>("inside");
+  let result: viz.PieLayoutSlice<number> | undefined;
+  runtime.mount(
+    <viz.PieLayout
+      data={[1]}
+      value={(value: number) => value}
+      label={() => "A label wider than this ring"}
+      placement={placement}
+      bounds={{ x: 0, y: 0, width: 600, height: 400 }}
+      style={{ cx: 300, cy: 200, radius: 80, innerRadius: 40 }}
+    >
+      {(slice) => {
+        result = slice;
+        return <viz.PieLabel slice={slice} />;
+      }}
+    </viz.PieLayout>,
+  );
+  runtime.flush();
+  expect(result?.label).toMatchObject({ status: "hidden", reason: "inside-fit" });
+  placement.set("auto");
+  runtime.flush();
+  expect(result?.label).toMatchObject({ status: "placed", placement: "outside" });
+});
+it("re-evaluates pie accessors and labels by default on each consuming render", () => {
+  runtime = testRuntime();
+  const placement = signal<viz.PieLabelPlacement>("outside");
+  const data = [1];
+  const value = vi.fn((n: number) => n);
+  const label = vi.fn((slice: viz.PieSliceGeometry<number>) => `${slice.value}`);
+  function Scene() {
+    return (
+      <viz.PieLayout
+        data={data}
+        value={value}
+        label={label}
+        placement={placement}
+      >
+        {(slice) => <viz.PieLabel slice={slice} />}
+      </viz.PieLayout>
+    );
+  }
+  runtime.mount(<Scene />);
+  runtime.flush();
+  placement.set("auto");
+  runtime.flush();
+  expect(value).toHaveBeenCalledTimes(2);
+  expect(label).toHaveBeenCalledTimes(2);
 });
 it("moves non-fitting labels outside in auto mode and exposes strict-inside and space omissions", () => {
   runtime = testRuntime();

@@ -1,6 +1,6 @@
 import {
   Group,
-  Wedge,
+  Path,
   definePrimitive,
   Line,
   Rectangle,
@@ -48,6 +48,15 @@ export function PieLayout<D>(props: PieLayoutProps<D>) {
     "radius",
     true,
   );
+  const innerRadius = finite(
+    resolveSignalValue(style.innerRadius) ?? 0,
+    "innerRadius",
+    true,
+  );
+  if (radius === 0 ? innerRadius !== 0 : innerRadius >= radius)
+    throw new RangeError(
+      "PieLayout: innerRadius must be zero when radius is zero, or less than radius.",
+    );
   const gap = finite(resolveSignalValue(style.labelGap) ?? 8, "labelGap", true);
   finite(cx + radius + gap, "right label edge");
   finite(cx - radius - gap, "left label edge");
@@ -65,13 +74,25 @@ export function PieLayout<D>(props: PieLayoutProps<D>) {
     throw new TypeError(
       "PieLayout: children must be a function returning CRC elements.",
     );
+  const revision =
+    props.revision === undefined ? undefined : resolveSignalValue(props.revision);
+  if (
+    revision !== undefined &&
+    (!Number.isSafeInteger(revision) || revision < 0)
+  )
+    throw new RangeError(
+      "PieLayout: revision must be a finite nonnegative safe integer.",
+    );
+  // An omitted revision deliberately replaces this token on every evaluation.
+  // Stable callback identities alone are not evidence of stable results.
+  const cacheKey = revision === undefined ? {} : revision;
   const slices = useComputed(
     () =>
       pieSlices(resolveSignalValue(props.data), {
         value: props.value,
         keyBy: props.keyBy,
       }),
-    [props.data, props.value, props.keyBy],
+    [cacheKey, props.data, props.value, props.keyBy],
   );
   const layout = useComputed(() => {
     context.save();
@@ -92,6 +113,7 @@ export function PieLayout<D>(props: PieLayoutProps<D>) {
         cx,
         cy,
         radius,
+        innerRadius,
         { x: bx, y: by, width: bw, height: bh },
         context.font,
         gap,
@@ -121,6 +143,7 @@ export function PieLayout<D>(props: PieLayoutProps<D>) {
     cx,
     cy,
     radius,
+    innerRadius,
     bx,
     by,
     bw,
@@ -149,17 +172,26 @@ export function PieSlice<D>({
   ...events
 }: PieSliceProps<D>) {
   const style = resolveSignalValue(input) ?? {};
+  const path = new Path2D();
+  path.arc(slice.cx, slice.cy, slice.radius, slice.startAngle, slice.endAngle);
+  if (slice.innerRadius > 0)
+    path.arc(
+      slice.cx,
+      slice.cy,
+      slice.innerRadius,
+      slice.endAngle,
+      slice.startAngle,
+      true,
+    );
+  else path.lineTo(slice.cx, slice.cy);
+  path.closePath();
   return (
     <Group>
-      <Wedge
+      <Path
         {...events}
         style={{
           ...style,
-          cx: slice.cx,
-          cy: slice.cy,
-          radius: slice.radius,
-          startAngle: slice.startAngle,
-          endAngle: slice.endAngle,
+          d: path,
         }}
       />
       {children}
