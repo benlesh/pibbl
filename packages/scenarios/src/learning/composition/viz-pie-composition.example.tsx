@@ -55,7 +55,7 @@ function LabelledPie({
       data={data}
       value="value"
       keyBy="id"
-      labelBox={() => ({ width: 120, height: 38 })}
+      labelBox={() => ({ width: 140, height: 38 })}
       placement={placement}
       bounds={bounds}
       style={style}
@@ -214,7 +214,7 @@ function Scene() {
                   <Rectangle
                     pointerEvents="none"
                     style={{
-                      width: 120,
+                      width: 140,
                       height: 38,
                       cornerRadius: 5,
                       fill: "#fffdf8",
@@ -227,6 +227,7 @@ function Scene() {
                     style={{
                       left: 8,
                       top: 15,
+                      textBaseline: "alphabetic",
                       font: "bold 12px sans-serif",
                       fill: "#182c42",
                     }}
@@ -238,6 +239,7 @@ function Scene() {
                     style={{
                       left: 8,
                       top: 30,
+                      textBaseline: "alphabetic",
                       font: "11px sans-serif",
                       fill: "#62758b",
                     }}

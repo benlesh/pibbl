@@ -461,23 +461,6 @@ void (<PieLayout data={pieData} value="amount" revision={signal(0)} style={{ rad
 // @ts-expect-error cache revisions are numeric
 void (<PieLayout data={pieData} value="amount" revision="stale">{() => null}</PieLayout>);
 
-// Approved UTC numeric authoring and pure domain helpers.
-import { extent, niceDomain, type NumericDomain, type ResolvedUtcScale } from "@crc/viz";
-const epochRows = [{ at: Date.UTC(2026, 0, 1), value: 2 }, { at: Date.UTC(2026, 2, 1), value: 5 }];
-const epochExtent: NumericDomain | undefined = extent(epochRows, row => row.at);
-const utcDomain = niceDomain(epochExtent!, { type: "utc", count: 5 });
-function UtcProbe() {
-  const utc: ResolvedUtcScale = useScale("time", "utc").get();
-  const continuous = useScale("time", "continuous").get();
-  void continuous.invert(0);
-  return <Axis scale="time" position="bottom" tickFormat={value => typeof value === "number" ? utc.formatTick(value) : value} />;
-}
-void (<Scale id="time" type="utc" domain={utcDomain} range="width"><UtcProbe /><LineSeries data={epochRows} x="at" y="value" xScale="time" yScale="value" /></Scale>);
-// @ts-expect-error UTC coordinates remain numeric epochs, not Date objects
-void (<Scale id="bad-time" type="utc" domain={[new Date(), new Date()]} range="width" />);
-// @ts-expect-error UTC nice-domain policy requires an explicit kind
-void niceDomain([0, 1], { count: 5 });
-
 // Approved explicit-box custom content reuses PieLabel.
 void (<PieLayout data={pieData} value="amount" labelBox={() => ({ width: 100, height: 32 })} placement="auto">
   {slice => <PieSlice slice={slice}><PieLabel slice={slice}><Text>{slice.datum.name}</Text></PieLabel></PieSlice>}

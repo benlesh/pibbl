@@ -190,10 +190,10 @@ const drafts = [
   {
     slug: "viz-pie-composition", title: "Compose an interactive pie", shortTitle: "Pie composition",
     section: "composition", order: 196,
-    summary: "Compose pie and donut slices with coordinated labels, legends, and readouts.",
+    summary: "Compose pie and donut slices with coordinated text or custom card labels, legends, and readouts.",
     api: ["PieLayout", "PieSlice", "PieLabel", "pieSlices", "HoverCard"],
     objectives: ["Reuse pure slice geometry.", "Inspect category-keyed wedges through ordinary CRC events."],
-    prompts: { gesture: "Toggle the donut, compare inside and automatic labels, click to pin, then reverse the slices.", code: "Change the values or compose your own labels from slice angles." },
+    prompts: { gesture: "Toggle the donut and label cards, compare inside and automatic placement, click a card to pin, then reverse the slices.", code: "Change the values or compose your own labels from slice angles." },
     apiNotes: ["Illustrative data: 100 fictional transport survey responses.", "Angles follow Canvas conventions; stable category keys survive reorder."],
     canvas: { width: 1000, height: 570 }, related: ["viz-points-and-inspection", "signals"],
     load: () => import("./learning/composition/viz-pie-composition.example"),

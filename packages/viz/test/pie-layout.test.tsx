@@ -625,6 +625,7 @@ it("falls back to an outside custom label box and rejects ambiguous label source
   runtime.dispose();
   runtime = testRuntime();
   runtime.mount(
+    // @ts-expect-error exercise runtime rejection of deliberately conflicting sources
     <viz.PieLayout
       data={[1]}
       value={(value: number) => value}

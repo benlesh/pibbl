@@ -338,3 +338,30 @@ scheduler. Broad large-data claims are not made for this teaching example.
   requests any new barrel exports from the single UTC/barrel owner.
 - Both implementations follow approved contracts, test-first and a runnable
   feedback milestone. Further broad hardening waits for that feedback.
+
+## Custom label feedback slice and UTC checkpoint
+
+- Custom label implementation integrated as a87816e9, allocation/exclusive-prop
+  fixes 2de32d69, and stable example identity b0757ccc. PieLabelBox is public;
+  Studio mirrors the discriminated text/content layout and exclusive inputs.
+- Focused pie-layout/example checks pass 23/23. Public typecheck passes after
+  keeping the pending UTC declarations out of this independent preview. The
+  deliberately invalid runtime test has a targeted expected type error.
+- Studio preview: http://127.0.0.1:5187/#/examples/composition/viz-pie-composition .
+  Show donut, Show label cards, click a card, then reverse. Fresh headless Studio
+  run had no editor/runtime errors and preserved Walk selection across reorder.
+  Screenshot inspected. Card text uses explicit baselines and a 140x38 box;
+  maximum bold example label plus padding measured 124.67px, within that box.
+- This is ready for experiential feedback, not final hardening or main push.
+- UTC source commits 207c22d6, ff4d6e32, f1e8d27c remain in the series worktree.
+  Corrections cover actual nice rounding, Monday weekly ticks and bounded
+  full-Date-range calendar selection. Count-two niceDomain behavior awaits
+  the user's explicit clarification (identity versus default-cadence rounding).
+- UTC integration evidence is preserved: public type assertions in f4a23202
+  (and /tmp/crc-viz-utc-public-types.txt); minimal API docs in 0a0f165f; full
+  editor draft /tmp/crc-viz-next-editor.txt. UTC docs were reverted in 6393f311
+  only to keep the ready custom-label preview independent of unfinished UTC.
+  Restore these when UTC lands; do not drop the scope or its tests.
+- Linear baseline is recorded at d503ded1 in the continuous-performance JSON
+  and opt-in public fixture. Controlled candidate comparison waits for UTC
+  integration. New custom-label broad performance/review follows feedback.
