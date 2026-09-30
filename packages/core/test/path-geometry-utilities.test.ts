@@ -79,6 +79,24 @@ describe('editable path geometry utilities', () => {
     expect(simplifiedRing.filter(segment => segment.type === 'line')).toHaveLength(2);
   });
 
+  it('retains three distinct vertices when a closed contour begins with duplicate points', () => {
+    const path = new PathGeometry();
+    path.moveTo(0, 0);
+    path.lineTo(0, 0);
+    path.lineTo(10, 0);
+    path.lineTo(0, 10);
+    path.closePath();
+
+    const result = Array.from(simplifyPath(path, { tolerance: 100 }));
+
+    expect(result).toEqual([
+      { type: 'move', x: 0, y: 0 },
+      { type: 'line', x: 10, y: 0 },
+      { type: 'line', x: 0, y: 10 },
+      { type: 'close' },
+    ]);
+  });
+
   it('retains a closed contour current point for lines that follow close markers', () => {
     const path = new PathGeometry();
     path.spliceSegments(0, 0, [
