@@ -12,6 +12,8 @@ symbols:
     toPath2D,
     toSvgPathData,
     flattenPath,
+    flattenPathWang,
+    simplifyPathRadial,
     simplifyPath,
     subdividePath,
     FlattenPathOptions,
@@ -128,3 +130,31 @@ including Move/Close). Exceeding it throws without changing the input.
 
 Equal-distance resampling and curve fitting are separate future operations.
 Try the [editable path example](#/examples/drawing/path-geometry).
+
+## Alternate algorithms
+
+Import alternate helpers independently from `@crc/core`. The default helpers do
+not dispatch to them; unused algorithms are removed by compatible production
+bundlers. CRC verifies this for source, built, and packed consumers.
+
+```ts
+import { flattenPathWang, simplifyPathRadial } from "@crc/core";
+
+const uniformLines = flattenPathWang(geometry, { tolerance: 0.25 });
+const reducedDenseLines = simplifyPathRadial(uniformLines, { tolerance: 0.5 });
+```
+
+`flattenPathWang` accepts `FlattenPathOptions` and uses a second-derivative bound
+with uniform parameter steps for Béziers. Transformed arcs use a bound based on
+their maximum affine stretch. It can generate more segments than adaptive
+flattening where curvature varies; predictable counts and less subdivision work
+are its main tradeoffs. It preserves the same input-space distance-tolerance,
+contour, independent-output, and output-limit contracts as `flattenPath`.
+
+`simplifyPathRadial` accepts `SimplifyPathOptions`. It removes nearby samples
+before Douglas–Peucker and splits the tolerance equally between the two passes.
+Its error budget is relative to the original polyline, not just the prefiltered
+points. It is useful for dense input but can retain more points or be slower for
+sparse input. Like `simplifyPath`, it requires line-only geometry and does not
+promise topology preservation. Defaults remain adaptive flattening and ordinary
+Douglas–Peucker. `subdividePath` retains de Casteljau subdivision.
