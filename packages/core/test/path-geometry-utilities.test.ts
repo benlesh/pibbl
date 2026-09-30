@@ -97,6 +97,25 @@ describe('editable path geometry utilities', () => {
     ]);
   });
 
+  it('simplifies closed contours with large finite coordinates without malformed anchors', () => {
+    const path = new PathGeometry();
+    path.moveTo(0, 0);
+    path.lineTo(1e308, 1e308);
+    path.lineTo(1e308, 0);
+    path.lineTo(0, 1e308);
+    path.closePath();
+
+    const result = Array.from(simplifyPath(path, { tolerance: 1e307 }));
+
+    expect(result).toEqual([
+      { type: 'move', x: 0, y: 0 },
+      { type: 'line', x: 1e308, y: 1e308 },
+      { type: 'line', x: 1e308, y: 0 },
+      { type: 'line', x: 0, y: 1e308 },
+      { type: 'close' },
+    ]);
+  });
+
   it('retains a closed contour current point for lines that follow close markers', () => {
     const path = new PathGeometry();
     path.spliceSegments(0, 0, [

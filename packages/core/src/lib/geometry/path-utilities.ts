@@ -261,7 +261,7 @@ function simplifyClosed(points: readonly Point[], tolerance: number): Point[] {
 function closedAnchors(points: readonly Point[]): readonly [number, number] {
   let farthest = 1, farthestDistance = -1;
   for (let i = 1; i < points.length; i++) {
-    const distance = squaredDistance(points[0], points[i]);
+    const distance = pointDistance(points[0], points[i]);
     if (distance > farthestDistance) { farthestDistance = distance; farthest = i; }
   }
   let third = -1, thirdDistance = -1;
@@ -300,12 +300,20 @@ function splitCubic(a: Point, b: Point, c: Point, d: Point, t: number): readonly
 function line([x, y]: Point): PathSegment { return { type: 'line', x, y }; }
 function midpoint(a: Point, b: Point): Point { return interpolate(a, b, 0.5); }
 function interpolate(a: Point, b: Point, t: number): Point { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; }
-function squaredDistance(a: Point, b: Point): number { const x = a[0] - b[0], y = a[1] - b[1]; return x * x + y * y; }
+function pointDistance(a: Point, b: Point): number { return Math.hypot(difference(a[0], b[0]), difference(a[1], b[1])); }
 function samePoint(a: Point, b: Point): boolean { return a[0] === b[0] && a[1] === b[1]; }
 function pointSegmentDistance(point: Point, a: Point, b: Point): number {
-  const x = b[0] - a[0], y = b[1] - a[1], length = x * x + y * y;
-  if (length === 0) return Math.hypot(point[0] - a[0], point[1] - a[1]);
-  const t = Math.max(0, Math.min(1, ((point[0] - a[0]) * x + (point[1] - a[1]) * y) / length));
-  return Math.hypot(point[0] - (a[0] + x * t), point[1] - (a[1] + y * t));
+  const x = difference(b[0], a[0]), y = difference(b[1], a[1]);
+  const px = difference(point[0], a[0]), py = difference(point[1], a[1]);
+  const scale = Math.max(Math.abs(x), Math.abs(y));
+  if (scale === 0) return Math.hypot(px, py);
+  const scaledX = x / scale, scaledY = y / scale;
+  const t = Math.max(0, Math.min(1, ((px / scale) * scaledX + (py / scale) * scaledY) / (scaledX * scaledX + scaledY * scaledY)));
+  return Math.hypot(px - x * t, py - y * t);
+}
+function difference(value: number, origin: number): number {
+  const result = value - origin;
+  if (!Number.isFinite(result)) throw new RangeError('Path utility cannot compare coordinates with an unrepresentable difference.');
+  return result;
 }
 function normalizeAngle(angle: number): number { const normalized = angle % TAU; return Object.is(normalized, -0) ? 0 : normalized; }
