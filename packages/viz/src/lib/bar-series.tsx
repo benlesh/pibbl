@@ -178,6 +178,7 @@ export function BarSeries<D>({
           : width(resolved.bandwidth, "BarSeries bandwidth"),
       fill: barFill(ctx, resolved.fill ?? "#2563eb", (value) =>
         values.map(value),
+        orientation,
       ),
       stroke: resolved.stroke,
       strokeWidth: width(resolved.strokeWidth ?? 1, "BarSeries strokeWidth"),
