@@ -68,8 +68,8 @@ export function PointSeries<D>({
   style: styleInput,
   ...events
 }: PointSeriesProps<D>) {
-  const xs = useScale(xId).get(),
-    ys = useScale(yId).get();
+  const xs = useScale(xId, "continuous").get(),
+    ys = useScale(yId, "continuous").get();
   const data = pointData(resolveSignalValue(input), "PointSeries");
   const x = pointAccessor(xInput),
     y = pointAccessor(yInput);

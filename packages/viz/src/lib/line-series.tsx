@@ -21,8 +21,8 @@ export function LineSeries<D>({
   style: styleInput,
   ...eventProps
 }: LineSeriesProps<D>) {
-  const xScale = useScale(xId).get();
-  const yScale = useScale(yId).get();
+  const xScale = useScale(xId, "continuous").get();
+  const yScale = useScale(yId, "continuous").get();
   const x = useInternalValueMemoSlot("vizXAccessor", () => accessor(xInput), [
     xInput,
   ]);

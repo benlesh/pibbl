@@ -1,11 +1,11 @@
-import type { ResolvedLinearScale } from "./types.js";
+import type { ResolvedContinuousScale } from "./types.js";
 import type { PointAccessor } from "./point-types.js";
 import { finiteCoordinate, pointAccessor, pointData } from "./point-data.js";
 export interface NearestPointOptions<D> {
   readonly x: PointAccessor<D>;
   readonly y: PointAccessor<D>;
-  readonly xScale: ResolvedLinearScale;
-  readonly yScale: ResolvedLinearScale;
+  readonly xScale: ResolvedContinuousScale;
+  readonly yScale: ResolvedContinuousScale;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly maxDistance?: number;
 }
@@ -22,7 +22,7 @@ function finite(value: unknown, name: string): asserts value is number {
 export function nearestDomainValue(
   values: readonly number[],
   rangeValue: number,
-  scale: ResolvedLinearScale,
+  scale: ResolvedContinuousScale,
 ): number | undefined {
   pointData(values, "nearestDomainValue");
   finite(rangeValue, "nearestDomainValue rangeValue");

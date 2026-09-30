@@ -1,13 +1,13 @@
 import type { CRCNode } from "@crc/core";
 import { withHooksForbidden } from "@crc/core/internal";
 import type { HoverDataProps, HoverQueryContext } from "./hover-types.js";
-import type { ResolvedLinearScale, ScaleId } from "./types.js";
+import type { ResolvedContinuousScale, ScaleId } from "./types.js";
 import { readScale } from "./scale-context.js";
 /** Evaluates an ordinary synchronous query under the current scale scope. */
 export function HoverData<T>({ query, children }: HoverDataProps<T>): CRCNode {
   if (typeof query !== "function" || typeof children !== "function")
     throw new TypeError("HoverData requires query and children functions.");
-  const snapshots = new Map<ScaleId, ResolvedLinearScale>();
+  const snapshots = new Map<ScaleId, ResolvedContinuousScale>();
   let active = true;
   const context: HoverQueryContext = {
     scale(id) {
@@ -17,17 +17,17 @@ export function HoverData<T>({ query, children }: HoverDataProps<T>): CRCNode {
         );
       let snapshot = snapshots.get(id);
       if (!snapshot) {
-        const value = readScale(id, "HoverData");
+        const value = readScale(id, "HoverData", "continuous");
         if (!value) throw new TypeError("HoverData requires a scale ID.");
         const resolved = value.get();
-        if (resolved.type !== "linear")
+        if (resolved.type === "band")
           throw new TypeError(
-            "HoverData numeric queries require linear scales.",
+            "HoverData numeric queries require continuous scales.",
           );
         snapshot = resolved;
         snapshots.set(id, snapshot);
       }
-      return snapshot;
+      return snapshot!;
     },
   };
   let result: T | undefined;
