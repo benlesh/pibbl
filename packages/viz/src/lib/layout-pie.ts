@@ -21,6 +21,7 @@ export function boxOutsideInnerCircle(
   cy: number,
   innerRadius: number,
 ): boolean {
+  if (innerRadius === 0) return true;
   return (
     Math.hypot(
       Math.max(x - cx, 0, cx - (x + width)),
@@ -90,7 +91,10 @@ export function layoutPie<D>(
     }
     const m = measure(text);
     const mid = (slice.startAngle + slice.endAngle) / 2;
-    const labelRadius = innerRadius + (radius - innerRadius) * 0.65;
+    const labelRadius =
+      innerRadius === 0
+        ? radius * 0.65
+        : innerRadius + (radius - innerRadius) * 0.65;
     const x = cx + Math.cos(mid) * labelRadius - m.width / 2;
     const y = cy + Math.sin(mid) * labelRadius - m.height / 2;
     const corners = [
