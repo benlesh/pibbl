@@ -68,26 +68,29 @@ function calendarTicks(input: UtcDomain, count: number): readonly number[] {
     return Object.freeze(input[0] < input[1] ? [lo, hi] : [hi, lo]);
   const capacity = count - 2;
   let step: number | undefined;
+  let fixedAnchor = 0;
   for (const candidate of fixed) {
-    const first = Math.ceil(lo / candidate);
-    const last = Math.floor(hi / candidate);
+    const anchor = candidate === 604_800_000 ? 345_600_000 : 0;
+    const first = Math.ceil((lo - anchor) / candidate);
+    const last = Math.floor((hi - anchor) / candidate);
     const interior = Math.max(
       0,
       last -
         first +
         1 -
-        (lo % candidate === 0 ? 1 : 0) -
-        (hi % candidate === 0 ? 1 : 0),
+        ((lo - anchor) % candidate === 0 ? 1 : 0) -
+        ((hi - anchor) % candidate === 0 ? 1 : 0),
     );
     if (interior > 0 && interior <= capacity) {
       step = candidate;
+      fixedAnchor = anchor;
       break;
     }
   }
   const values = [lo];
   if (step !== undefined) {
     for (
-      let value = Math.ceil(lo / step) * step;
+      let value = fixedAnchor + Math.ceil((lo - fixedAnchor) / step) * step;
       value < hi && values.length < count - 1;
       value += step
     )
@@ -181,7 +184,10 @@ export function niceDomain(
     if (a === dateMaximum) return Object.freeze([a - 2, a]);
     return Object.freeze([a - 1, a + 1]);
   }
-  // When count leaves no bounded calendar candidate, no implicit padding occurs.
-  const ticks = calendarTicks([a, b], count);
-  return Object.freeze([ticks[0]!, ticks[ticks.length - 1]!]);
+  if (count === 2) return Object.freeze([a, b]);
+  const ascending = a < b ? [a, b] as const : [b, a] as const;
+  const start = monthStart(monthOrdinal(ascending[0]));
+  const end = monthStart(monthOrdinal(ascending[1]) + 1);
+  if (start < dateMinimum || end > dateMaximum) throw new RangeError("UTC nice domain exceeds the Date range.");
+  return Object.freeze(a < b ? [start, end] : [end, start]);
 }

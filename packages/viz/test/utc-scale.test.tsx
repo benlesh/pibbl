@@ -45,4 +45,21 @@ it("exposes bounded UTC mapping, labels, and pure domain helpers", () => {
     start - 1,
     start + 1,
   ]);
+  expect(niceDomain([start, end], { type: "utc", count: 5 })).toEqual([
+    Date.UTC(2026, 0, 1),
+    Date.UTC(2026, 3, 1),
+  ]);
+  const weekStart = Date.UTC(2026, 0, 1);
+  let weekly: ResolvedUtcScale | undefined;
+  function Weekly() {
+    weekly = useScale("weekly", "utc").get();
+    return null;
+  }
+  runtime.mount(
+    <Scale id="weekly" type="utc" domain={[weekStart, Date.UTC(2026, 0, 12)]} range={[0, 100]}>
+      <Weekly />
+    </Scale>,
+  );
+  runtime.flush();
+  expect(weekly?.ticks(5)).toContain(Date.UTC(2026, 0, 5));
 });
