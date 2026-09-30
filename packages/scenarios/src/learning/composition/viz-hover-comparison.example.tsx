@@ -249,7 +249,7 @@ function Plot({
         position="bottom"
         tickCount={5}
         tickFormat={(value) =>
-          fixture.xDomain ? String(Math.round(value)) : date(value).slice(0, 7)
+          typeof value === "string" ? value : fixture.xDomain ? String(Math.round(value)) : date(value).slice(0, 7)
         }
         style={{ font: "10px sans-serif", fill: muted, stroke: "#bac8d5" }}
       />
