@@ -30,13 +30,26 @@ it("runs the grouped-stacked lesson with inspection and an orientation toggle", 
     canvas.dispatchEvent(new PointerEvent("pointerdown", point(145, 381)));
     runtime.flush();
     expect(labels()).toContain("Q1 · North · Products · $160k");
+    text.mockClear();
+    canvas.dispatchEvent(new PointerEvent("pointerdown", point(145, 498)));
+    runtime.flush();
+    expect(labels()).toContain("Q1 · North · Payroll · −$105k");
 
     for (const type of ["mousedown", "mouseup", "click"])
       canvas.dispatchEvent(new MouseEvent(type, point(110, 99)));
     runtime.flush();
     expect(labels()).toContain("Horizontal bars");
     expect(labels()).toContain("Q1");
+    text.mockClear();
+    canvas.dispatchEvent(new PointerEvent("pointerdown", point(508, 241)));
+    runtime.flush();
+    expect(labels()).toContain("Q1 · North · Products · $160k");
+    text.mockClear();
+    canvas.dispatchEvent(new PointerEvent("pointerdown", point(323, 277)));
+    runtime.flush();
+    expect(labels()).toContain("Q1 · South · Payroll · −$96k");
   } finally {
     controller.dispose();
+    text.mockRestore();
   }
 });

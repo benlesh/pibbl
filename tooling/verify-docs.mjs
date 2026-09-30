@@ -295,6 +295,11 @@ const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
+  "docs/project-plans/remaining-viz-roadmap.md",
+  "docs/project-plans/viz-utc-contract-proposal.md",
+  "docs/project-plans/viz-pie-label-contract-proposal.md",
+  "docs/project-plans/viz-bars-slice-evidence.md",
+  "docs/project-plans/viz-donut-slice-evidence.md",
   ".beads/README.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
   "docs/testing/evidence/component-manipulation/progress.md",

@@ -35,17 +35,21 @@ export interface PieLayoutSlice<D> extends PieSliceGeometry<D> {
   readonly cx: number;
   readonly cy: number;
   readonly radius: number;
+  readonly innerRadius: number;
   readonly label?: PieLabelLayout;
 }
 export interface PieLayoutStyle {
   readonly cx?: number;
   readonly cy?: number;
   readonly radius?: number;
+  readonly innerRadius?: number;
   readonly labelFont?: string;
   readonly labelGap?: number;
 }
 export interface PieLayoutProps<D> extends PieOptions<D> {
   readonly data: SignalValue<readonly D[]>;
+  /** Opts into cached geometry for mutable inputs; advance after nonreactive changes. */
+  readonly revision?: SignalValue<number>;
   readonly label?: (slice: PieSliceGeometry<D>) => string;
   readonly placement?: SignalValue<PieLabelPlacement>;
   readonly bounds?: SignalValue<HoverBounds>;

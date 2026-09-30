@@ -214,6 +214,7 @@ it("formats original tick values in an allocated reversed bottom axis", () => {
           position="bottom"
           tickCount={3}
           tickFormat={(value, index) => {
+            if (typeof value !== "number") throw new TypeError("Expected numeric tick");
             formatted.push([value, index]);
             return `v${value}`;
           }}

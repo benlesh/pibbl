@@ -1,6 +1,9 @@
-# UTC scale contract proposal (unapproved)
+# UTC scale contract (approved)
 
-## Approval summary (294 words)
+Status: approved by the user on 2026-09-30. Implementation is authorized;
+this contract is not yet shipped behavior.
+
+## Approval summary
 
 Add one continuous scale kind, `type="utc"`, before local-time or logarithmic
 scales. It accepts a finite epoch-millisecond domain and retains numeric
@@ -18,8 +21,8 @@ may not be equal. Mapping extrapolates and invert does not clamp, preserving
 linear behavior. A generated Axis count remains bounded at 100. Count zero
 emits no ticks; count one emits the first domain endpoint. For larger counts,
 the resolver chooses a UTC cadence without constructing an unbounded candidate
-list, adds aligned interior boundaries, and uses the domain endpoints when no
-boundary fits. Thus even a domain spanning the full Date range allocates at
+list, includes the original endpoints and as many aligned interior boundaries as
+the selected cadence admits. Thus even a domain spanning the full Date range allocates at
 most 100 tick values and Date objects.
 
 Export two future-ready pure helpers. Generic numeric `extent` makes one
@@ -118,11 +121,16 @@ UTC month ordinals before construction. Only after selection may implementation
 construct its at-most-98 interior timestamps; arithmetic or Date overflow
 rejects rather than wrapping.
 
-`formatTick` is deterministic UTC text: `YYYY` for year cadence, `YYYY-MM` for
-month, `MM-DD` for day/week, `HH:mm` for minute/hour, `HH:mm:ss` for seconds,
-and `HH:mm:ss.SSS` for milliseconds. Append `Z` to time-of-day forms. Axis uses
-this default only when no `tickFormat` is supplied; supplied formatters receive
-the numeric epoch and emitted index.
+`formatTick(value)` returns the full UTC ISO timestamp using `toISOString()`;
+it is deterministic and independent of previous `ticks()` calls. This preserves
+non-aligned endpoint information without mutable tick-generation state. Display
+precision is milliseconds: fractional input milliseconds use Date's truncation
+toward zero, while the actual tick position retains the numeric value. Inputs
+must be finite and within the Date range. Extended years use ISO's signed
+six-digit form. Axis uses this default only when no formatter is supplied;
+caller formatters receive the original numeric epoch and emitted index. The
+editable example demonstrates a compact formatter for readable calendar labels.
+No automatic label collision solver is introduced.
 
 ## Helpers and invalidation
 

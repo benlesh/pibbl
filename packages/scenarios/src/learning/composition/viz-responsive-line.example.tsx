@@ -930,7 +930,7 @@ function Plot({
             scale="x"
             position="bottom"
             tickCount={5}
-            tickFormat={(value) => date(Math.round(value))}
+            tickFormat={(value) => typeof value === "string" ? value : date(Math.round(value))}
             style={{ stroke: "#ccd7e3", fill: muted, font: "11px sans-serif" }}
           />
           <Line

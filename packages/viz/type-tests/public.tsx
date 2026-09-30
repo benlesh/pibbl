@@ -307,10 +307,10 @@ import { BarSeries, type ResolvedBandScale } from "@crc/viz";
 void (
   <BarSeries
     data={[{ category: "A", value: -2 }]}
-    x="category"
-    y="value"
-    xScale="categories"
-    yScale="values"
+    category="category"
+    value="value"
+    categoryScale="categories"
+    valueScale="values"
   />
 );
 function BandConsumer() {
@@ -326,10 +326,10 @@ void BandConsumer;
 void (
   <BarSeries
     data={[{ category: "A", value: 42 }]}
-    x="category"
-    y="value"
-    xScale="categories"
-    yScale="values"
+    category="category"
+    value="value"
+    categoryScale="categories"
+    valueScale="values"
     style={{
       fill: signal({
         type: "threshold" as const,
@@ -356,23 +356,23 @@ void (
 void (
   <BarSeries
     data={groupedRows}
-    x="category"
-    y="value"
+    category="category"
+    value="value"
     group="group"
     groupScale="g"
-    xScale="c"
-    yScale="v"
+    categoryScale="c"
+    valueScale="v"
     style={groupStyle}
   />
 );
 // @ts-expect-error group requires groupScale
 const incompleteGroup: BarSeriesProps<(typeof groupedRows)[number]> = {
   data: groupedRows,
-  x: "category",
-  y: "value",
+  category: "category",
+  value: "value",
   group: "group",
-  xScale: "c",
-  yScale: "v",
+  categoryScale: "c",
+  valueScale: "v",
 };
 void incompleteGroup;
 void (
@@ -393,11 +393,11 @@ const stackRows = [{ category: "Q1", group: "Actual", from: -5, to: -9 }];
 void (
   <BarSeries
     data={stackRows}
-    x="category"
-    yStart="from"
-    yEnd="to"
-    xScale="c"
-    yScale="v"
+    category="category"
+    valueStart="from"
+    valueEnd="to"
+    categoryScale="c"
+    valueScale="v"
     group="group"
     groupScale="g"
     style={{ fill: "orange" }}
@@ -406,31 +406,31 @@ void (
 // @ts-expect-error range endpoints must be paired
 const missingRangeEnd: BarSeriesProps<(typeof stackRows)[number]> = {
   data: stackRows,
-  x: "category",
-  yStart: "from",
-  xScale: "c",
-  yScale: "v",
+  category: "category",
+  valueStart: "from",
+  categoryScale: "c",
+  valueScale: "v",
 };
 const mixedInput = {
   data: stackRows,
-  x: "category",
-  y: "to",
-  yStart: "from",
-  yEnd: "to",
-  xScale: "c",
-  yScale: "v",
+  category: "category",
+  value: "to",
+  valueStart: "from",
+  valueEnd: "to",
+  categoryScale: "c",
+  valueScale: "v",
 } as const;
 // @ts-expect-error value and range geometry cannot be mixed
 const mixedGeometry: BarSeriesProps<(typeof stackRows)[number]> = mixedInput;
 // @ts-expect-error explicit ranges cannot also use a shared baseline
 const rangeBaseline: BarSeriesProps<(typeof stackRows)[number]> = {
   data: stackRows,
-  x: "category",
-  yStart: "from",
-  yEnd: "to",
+  category: "category",
+  valueStart: "from",
+  valueEnd: "to",
   baseline: 0,
-  xScale: "c",
-  yScale: "v",
+  categoryScale: "c",
+  valueScale: "v",
 };
 void missingRangeEnd;
 void mixedGeometry;
@@ -453,3 +453,10 @@ void (<Axis scale="value" position="top" tickCount={0} />);
 void (<Axis scale="value" position="bottom" tickValues={[1, 2]} tickCount={2} />);
 // @ts-expect-error explicit ticks accept numbers or strings, not Date objects
 void (<Axis scale="value" position="bottom" tickValues={[new Date()]} />);
+
+void (<BarSeries data={[{ name: "A", total: 2 }]} orientation="horizontal" category="name" value="total" categoryScale="c" valueScale="v" />);
+// @ts-expect-error old coordinate props were removed, without compatibility aliases
+void (<BarSeries data={[{ category: "A", value: 2 }]} x="category" y="value" xScale="c" yScale="v" />);
+void (<PieLayout data={pieData} value="amount" revision={signal(0)} style={{ radius: 100, innerRadius: signal(55) }}>{slice => { const hole: number = slice.innerRadius; void hole; return <PieSlice slice={slice} />; }}</PieLayout>);
+// @ts-expect-error cache revisions are numeric
+void (<PieLayout data={pieData} value="amount" revision="stale">{() => null}</PieLayout>);

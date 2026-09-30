@@ -210,10 +210,10 @@ changing the bar geometry. Missing-value behavior is covered in the tests.
         { channel: "Search", change: 20 },
         { channel: "Email", change: -10 },
       ]}
-      x="channel"
-      y="change"
-      xScale="channels"
-      yScale="change"
+      category="channel"
+      value="change"
+      categoryScale="channels"
+      valueScale="change"
     />
   </Scale>
 </Scale>
@@ -222,8 +222,10 @@ changing the bar geometry. Missing-value behavior is covered in the tests.
 Import `BarSeries` from `@crc/viz`. `useScale("channels", "band").get()` exposes
 band starts and bandwidth for composed labels and inspection. Categories are
 strings or finite numbers; order is explicit, duplicates reject, and unknowns
-map to undefined. Padding and domain can be signals. This feedback slice supports
-vertical value and range bars; horizontal bars remain deferred.
+map to undefined. Padding and domain can be signals. Value and range bars support both orientations. With `orientation="horizontal"`,
+use category range `"height"` and value range `"width"`; callers choose Axis
+positions. The semantic props stay unchanged when orientation changes. Axis
+supports categorical labels, all four edges and explicit bounded tick lists.
 
 For grouped bars, nest another band scale with
 `range={{ bandwidthOf: "categories" }}` and pass paired `group` and
@@ -241,7 +243,7 @@ Thresholds use the numeric value scale's domain, not pixels. The population
 example demonstrates this with green gains up to 300,000 and red above it.
 
 For stacked bars, derive each segment's start and end in a pure data transform,
-then pass `yStart` and `yEnd` in place of `y` and `baseline`.
+then pass `valueStart` and `valueEnd` in place of `value` and `baseline`.
 The same styles and grouped positioning apply. See
 [Stacked bars](#/examples/composition/viz-stacked-bars) for positive and negative
 cash flows with segment inspection. The example defines stack order and separate
@@ -273,9 +275,11 @@ const label = (slice) => `${slice.datum.name} · ${slice.value}`;
 ```
 
 Label text is declared before children render, so the chart measures and places
-it once without evaluating arbitrary component trees. Keep callbacks stable and
-use immutable data updates to reuse computed angles and placements. Paint-only
-selection updates need no new label measurement or collision layout. Core still
+it once without evaluating arbitrary component trees. By default, callbacks reevaluate when PieLayout evaluates. Supply `revision`
+to opt into cached angles and placements, and change it for in-place data or
+nonreactive callback dependency changes. With that explicit contract, paint-only
+selection updates reuse label measurements and layout. Tracked signal reads
+remain dependencies even when callback identities stay stable. Core still
 repaints the Canvas normally.
 
 Choose `inside`, `outside`, or `auto`. Auto moves non-fitting labels outside;
@@ -295,4 +299,7 @@ Values must be nonnegative and finite; missing values have zero area. See
 [pieSlices](#/api/functions/pie-slices) and
 [PieLayout](#/api/components/pie-layout) for identity, empty-data, and placement
 contracts. The initial label renderer supports single-line text. Custom label
-content and donuts remain later additions.
+content remains a later addition. Set `style.innerRadius` for a donut. Inside
+labels must fit entirely in the ring, including exclusion of the hole; auto
+placement moves non-fitting labels outside. The editable example includes a
+donut toggle.

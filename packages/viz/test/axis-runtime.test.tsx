@@ -9,9 +9,8 @@ it("emits the singleton category once with the default tick count", () => {
   runtime = testRuntime();
   const labels: string[] = [];
   vi.spyOn(CanvasRenderingContext2D.prototype, "fillText").mockImplementation(
-    function (this: CanvasRenderingContext2D, text, x, y, maxWidth) {
+    (text) => {
       labels.push(String(text));
-      if (maxWidth === undefined) return;
     },
   );
   runtime.mount(
