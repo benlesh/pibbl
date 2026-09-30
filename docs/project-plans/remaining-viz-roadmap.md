@@ -183,3 +183,18 @@ Alternative: require immutable rows and pure callbacks everywhere. Recommendatio
 - Coordinator baseline on Node v24.15.0, pnpm 11.21.0: locked install, workspace build, and tsc --noEmit passed.
 - Focused public Axis type evidence added first: tsc failed with TS2322 for right/top positions before type changes. Runtime implementation remains agent-owned.
 - No experiential feedback, independent implementation review, main integration or push yet.
+
+
+## Integrated first-slice feedback ledger
+
+- Integrated preview branch: donut `4824e4a4` (agent source `5527aa17`), bars/axes `e20e537a` (agent source `35581ea8`). Main is unchanged.
+- Combined `tsc --noEmit` passed. Focused Chromium integration: bar-series, grouped-bars, stacked-bars, bars-example, pie-layout, pie-example, composition — 7 files / 41 tests passed (Node 24.15.0, pnpm 11.21.0). No timing comparison is claimed.
+- Preview: http://127.0.0.1:5187/ (coordinator checkout). Runtime bundling requires restarting this preview after implementation commits; restart performed after integration.
+- Donut Studio toggle exercised in Chromium, no runtime errors and no TypeScript issues. Hole pixel matches background; ring pixel remains colored. Visual inspection completed. Slice ready for feedback at http://127.0.0.1:5187/#/examples/composition/viz-pie-composition . User feedback requested; independent review/hardening pending.
+- Horizontal bars Studio toggle works and displays categorical left/top numeric axes, but visual inspection found threshold gradient still oriented vertically. Agent assigned focused fix before declaring bars ready.
+- Source/build/package completion, controlled performance comparison, broader hardening and main merges remain pending experiential feedback.
+
+- Follow-up bars correction integrated as `7f1dcae8` (agent source `aee5ef47`): horizontal normal/reversed threshold gradients, singleton category selection, mutually exclusive tick runtime validation and early tick validation. Affected Chromium rerun: 3 files / 8 tests passed. Combined tsc subsequently passed after removing unused test-spy parameters.
+- Fresh Studio runtime restarted after that correction. Horizontal toggle exercised with no TypeScript issues/runtime errors; screenshot inspected and confirms red fill begins at the 300k rule. Bars/axes slice now ready for feedback: http://127.0.0.1:5187/#/examples/composition/viz-band-bars . Inspect orientation, categorical labels/top ticks, signed baseline, threshold fill, hover/tap and reverse/spacing/resize controls.
+- Both first slices await experiential feedback. No independent review/hardening or main merge yet. Preview remains running on port 5187; preserve its coordinator checkout. All three managed worktrees remain active for follow-up.
+- Next custom-label design researched only: prefer explicit finite box allocation and reuse PieLabel composition, with the same approved whole-box containment. No custom-label public contract approved or implemented yet.
