@@ -39,11 +39,11 @@ for (const [name, action] of cases) {
     samples.push((performance.now() - start) / REPEATS);
   }
   samples.sort((a, b) => a - b);
-  console.log(JSON.stringify({
+  process.stdout.write(JSON.stringify({
     name,
     milliseconds: { median: round(samples[Math.floor(samples.length / 2)]), p95: round(samples[Math.floor(samples.length * 0.95)]) },
     outputSegments: result.segmentCount,
-  }));
+  }) + '\n');
 }
 
 function cubicPath(count) {

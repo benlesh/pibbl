@@ -18,7 +18,7 @@ try {
   const page = await browser.newPage();
   await page.setContent('<!doctype html><title>Path algorithm benchmark</title>');
   await page.addScriptTag({ content: bundle.outputFiles[0].text });
-  console.log(JSON.stringify(await page.evaluate(() => CRCPathAlgorithmBenchmark.runPathAlgorithmBrowserBenchmark())));
+  process.stdout.write(JSON.stringify(await page.evaluate(() => globalThis.CRCPathAlgorithmBenchmark.runPathAlgorithmBrowserBenchmark())) + '\n');
 } finally {
   await browser.close();
 }

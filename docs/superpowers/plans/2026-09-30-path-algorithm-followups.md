@@ -1,5 +1,7 @@
 # Path algorithm follow-ups — 2026-09-30
 
+> **Historical status: IMPLEMENTATION AND EVALUATION RECORD.** This dated record explains decisions and measurements; current public contracts and executable tests define shipped behavior.
+
 ## Objective
 
 Complete the closed-contour simplification fix, evaluate and implement useful
