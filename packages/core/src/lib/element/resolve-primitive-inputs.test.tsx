@@ -31,7 +31,7 @@ describe('primitive signal-valued inputs', () => {
     const x = signal(10);
     const canvas = createCanvas();
     const Outer = (_props: {}) => (
-      <Rectangle style={{ x, width: 20, height: 20 }} />
+      <Rectangle style={{ left: x, width: 20, height: 20 }} />
     );
     const baseline = signalGraphSnapshot();
     const controller = crc(canvas, <Outer />);
@@ -54,7 +54,7 @@ describe('primitive signal-valued inputs', () => {
     const x = signal(10);
     const canvas = createCanvas();
     const Outer = (_props: {}) => (
-      <Rectangle style={{ x: x.get(), width: 20, height: 20 }} />
+      <Rectangle style={{ left: x.get(), width: 20, height: 20 }} />
     );
     const controller = crc(canvas, <Outer />);
     await nextFrame();
@@ -190,7 +190,7 @@ describe('primitive signal-valued inputs', () => {
     const controller = crc(canvas, (
       <Rectangle
         onClick={onClick}
-        style={{ x: 0, y: 0, width: 20, height: 20, fill: 'red' }}
+        style={{ left: 0, top: 0, width: 20, height: 20, fill: 'red' }}
       />
     ));
     await nextFrame();

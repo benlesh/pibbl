@@ -222,8 +222,8 @@ export function BarSeries<D>({
         key={i}
         pointerEvents={pointerEvents}
         style={{
-          x: start + (slotWidth - bandwidth) / 2,
-          y: Math.min(base, end),
+          left: start + (slotWidth - bandwidth) / 2,
+          top: Math.min(base, end),
           width: bandwidth,
           height,
           fill: fill(from, v),

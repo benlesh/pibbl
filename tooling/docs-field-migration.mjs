@@ -40,6 +40,7 @@ const componentSpecificRenames = new Map([
   ["g\0x", "translateX"],
   ["g\0y", "translateY"],
 ]);
+const removedPositionFields = new Set(["rect\0x", "rect\0y", "text\0x", "text\0y", "img\0x", "img\0y"]);
 
 const expandedBaselineFields = new Map([
   // The reviewed baseline's Text row says "paint/cursor fields". These are
@@ -48,8 +49,9 @@ const expandedBaselineFields = new Map([
 ]);
 
 const expectedBehaviorByIdentity = new Map([
-  ["rect\0x", "Optional; defaults to `0`"],
-  ["rect\0y", "Optional; defaults to `0`"],
+  ["rect\0x", "Removed; use `left`"], ["rect\0y", "Removed; use `top`"],
+  ["text\0x", "Removed; use `left`"], ["text\0y", "Removed; use `top`"],
+  ["img\0x", "Removed; use `left`"], ["img\0y", "Removed; use `top`"],
   ["rect\0width", "Required"],
   ["rect\0height", "Required"],
   ["rect\0fillStyle", "Same fill value"],
@@ -120,8 +122,6 @@ const expectedBehaviorByIdentity = new Map([
     "text\0text",
     "Numeric zero remains visible; empty values add no content",
   ],
-  ["text\0x", "Optional; defaults to `0`"],
-  ["text\0y", "Optional; defaults to `0`"],
   ["text\0maxWidth", "Optional text box width"],
   ["text\0maxHeight", "Optional text box height"],
   ["text\0lineHeight", "Defaults to `13`"],
@@ -136,8 +136,6 @@ const expectedBehaviorByIdentity = new Map([
   ["text\0alpha", "Multiplies the current Canvas alpha"],
   ["text\0cursor", "Same cursor value"],
   ["img\0src", "Required"],
-  ["img\0x", "Optional; defaults to `0`"],
-  ["img\0y", "Optional; defaults to `0`"],
   [
     "img\0width",
     "Omission uses loaded natural width, otherwise `0`",
@@ -232,8 +230,6 @@ const currentSharedFieldInterfaces = new Map([
 ]);
 
 const legacyRequiredIdentities = new Set([
-  "rect\0x",
-  "rect\0y",
   "rect\0width",
   "rect\0height",
   "path\0path",
@@ -242,11 +238,7 @@ const legacyRequiredIdentities = new Set([
   "verticalLine\0x",
   "svgPath\0d",
   "text\0text",
-  "text\0x",
-  "text\0y",
   "img\0src",
-  "img\0x",
-  "img\0y",
   "g\0children",
   "clip\0path",
   "clip\0children",
@@ -368,6 +360,11 @@ function assertFieldSourceTypes({
     : undefined;
 
   for (const [identity, requirement] of requirements) {
+    if (removedPositionFields.has(identity)) {
+      const interfaceName = currentStyleInterfaces.get(requirement.finalComponent);
+      assert.ok(!currentInterfaces.get(interfaceName)?.has(requirement.field), `Current field must remove ${interfaceName}.${requirement.field}`);
+      continue;
+    }
     const [currentInterface, currentField] =
       currentFieldDeclaration(requirement);
     const currentProperty = propertyEvidence(
@@ -433,6 +430,9 @@ function markdownSection(source, heading) {
 }
 
 function expectedReplacement(component, field) {
+  if (removedPositionFields.has(`${component}\0${field}`)) {
+    return undefined;
+  }
   if (
     field === "children" ||
     (component === "text" && field === "text") ||
@@ -563,7 +563,9 @@ export function assertFieldMigrationCompleteness({
     );
     assert.deepEqual(
       row.finalCodes,
-      [requirement.finalComponent, requirement.replacement],
+      requirement.replacement === undefined
+        ? []
+        : [requirement.finalComponent, requirement.replacement],
       `Field-level migration ${requirement.component}.${requirement.field} has the wrong final replacement`,
     );
     assert.equal(
@@ -571,6 +573,8 @@ export function assertFieldMigrationCompleteness({
       expectedBehaviorByIdentity.get(identity),
       `Field-level migration ${requirement.component}.${requirement.field} has the wrong final behavior`,
     );
+
+    if (requirement.replacement === undefined) continue;
 
     const finalRow = finalRows.get(requirement.finalComponent);
     assert.ok(

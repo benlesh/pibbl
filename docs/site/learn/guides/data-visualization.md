@@ -246,3 +246,53 @@ The same styles and grouped positioning apply. See
 [Stacked bars](#/examples/composition/viz-stacked-bars) for positive and negative
 cash flows with segment inspection. The example defines stack order and separate
 positive/negative accumulators; the renderer does not choose a stacking policy.
+
+## Compose a pie with coordinated labels
+
+`pieSlices(data, { value: "amount", keyBy: "id" })` remains a pure geometry helper.
+For coordinated label layout, use `PieLayout` with ordinary `PieSlice` and
+`PieLabel` children:
+
+```tsx
+const label = (slice) => `${slice.datum.name} · ${slice.value}`;
+
+<PieLayout
+  data={data}
+  value="amount"
+  keyBy="id"
+  label={label}
+  placement="auto"
+  style={{ cx: 300, cy: 200, radius: 110, labelFont: "14px sans-serif" }}
+>
+  {(slice) => (
+    <PieSlice slice={slice} style={{ fill: slice.datum.color }}>
+      <PieLabel slice={slice} />
+    </PieSlice>
+  )}
+</PieLayout>;
+```
+
+Label text is declared before children render, so the chart measures and places
+it once without evaluating arbitrary component trees. Keep callbacks stable and
+use immutable data updates to reuse computed angles and placements. Paint-only
+selection updates need no new label measurement or collision layout. Core still
+repaints the Canvas normally.
+
+Choose `inside`, `outside`, or `auto`. Auto moves non-fitting labels outside;
+strict inside omits them. Outside labels pack into separate left/right lanes,
+with leaders entirely outside the circle. If the available bounds cannot hold
+all labels, `slice.label` exposes a hidden result and reason. No small wedge is
+inflated or silently aggregated. Compose an interactive key as an alternative
+to hitting tiny slices. `PieLabel` is decorative unless explicitly given
+`pointerEvents="auto"`; its target does not enlarge the wedge.
+
+The [pie composition](#/examples/composition/viz-pie-composition) includes all
+three modes, tiny categories on both sides, long names, reordering, and limited
+label space. It keeps the hover/pinned readout in a reserved area outside the
+whole pie. A full chart or automatic legend is not required.
+
+Values must be nonnegative and finite; missing values have zero area. See
+[pieSlices](#/api/functions/pie-slices) and
+[PieLayout](#/api/components/pie-layout) for identity, empty-data, and placement
+contracts. The initial label renderer supports single-line text. Custom label
+content and donuts remain later additions.

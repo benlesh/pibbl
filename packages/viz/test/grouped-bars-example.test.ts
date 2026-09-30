@@ -6,7 +6,14 @@ afterEach(() => runtime?.dispose());
 
 it("runs the grouped lesson, inspects a bar, and composes two or three years through controls", () => {
   runtime = testRuntime();
-  const text = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText");
+  const positions: [string, number][] = [];
+  const original = CanvasRenderingContext2D.prototype.fillText;
+  const text = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText")
+    .mockImplementation(function (this: CanvasRenderingContext2D, ...args: Parameters<CanvasRenderingContext2D["fillText"]>) {
+      const point = new DOMPoint(args[1], args[2]).matrixTransform(this.getTransform());
+      positions.push([args[0], point.x]);
+      original.apply(this, args);
+    });
   const canvas = document.createElement("canvas");
   canvas.style.cssText = "width:940px;height:660px";
   document.body.append(canvas);
@@ -40,11 +47,11 @@ it("runs the grouped lesson, inspects a bar, and composes two or three years thr
     expect(
       labels().filter((label) => ["2020", "2022", "2023"].includes(label)),
     ).toEqual(["2023", "2022", "2020"]);
-    const before = text.mock.calls.findLast(
+    const before = positions.findLast(
       (call) => call[0] === "Illinois",
     )![1];
     click(390);
-    const after = text.mock.calls.findLast(
+    const after = positions.findLast(
       (call) => call[0] === "Illinois" || call[0] === "IL",
     )![1];
     expect(after).toBeLessThan(before);

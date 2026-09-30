@@ -84,8 +84,8 @@ function Button({
       <Text
         pointerEvents="none"
         style={{
-          x: 69,
-          y: 16,
+          left: 69,
+          top: 16,
           textAlign: "center",
           textBaseline: "middle",
           font: "12px sans-serif",
@@ -167,8 +167,8 @@ function Plot({
           key={period}
           pointerEvents="none"
           style={{
-            x: periods.map(period)! + periods.bandwidth / 2,
-            y: periods.frame.height + 23,
+            left: periods.map(period)! + periods.bandwidth / 2,
+            top: periods.frame.height + 23,
             textAlign: "center",
             font: "12px sans-serif",
             fill: ink,
@@ -180,8 +180,8 @@ function Plot({
       <Text
         pointerEvents="none"
         style={{
-          x: -35,
-          y: periods.frame.height + 55,
+          left: -35,
+          top: periods.frame.height + 55,
           font: "13px sans-serif",
           fill: ink,
         }}
@@ -193,8 +193,8 @@ function Plot({
       <Text
         pointerEvents="none"
         style={{
-          x: -35,
-          y: periods.frame.height + 80,
+          left: -35,
+          top: periods.frame.height + 80,
           font: "11px sans-serif",
           fill: "#637785",
         }}
@@ -223,10 +223,10 @@ function Scene() {
         pointerEvents="none"
         style={{ width: box.width, height: box.height, fill: "#fffdf8" }}
       />
-      <Text style={{ x: 28, y: 25, font: "bold 26px sans-serif", fill: ink }}>
+      <Text style={{ left: 28, top: 25, font: "bold 26px sans-serif", fill: ink }}>
         Quarterly cash flow
       </Text>
-      <Text style={{ x: 28, y: 59, font: "12px sans-serif", fill: "#637785" }}>
+      <Text style={{ left: 28, top: 59, font: "12px sans-serif", fill: "#637785" }}>
         Illustrative business · amounts in $ thousands
       </Text>
       <Button
@@ -262,7 +262,7 @@ function Scene() {
           }}
         >
           <Rectangle style={{ width: 12, height: 12, fill: component.color }} />
-          <Text style={{ x: 19, y: 10, font: "12px sans-serif", fill: ink }}>
+          <Text style={{ left: 19, top: 10, font: "12px sans-serif", fill: ink }}>
             {component.name}
           </Text>
         </Group>

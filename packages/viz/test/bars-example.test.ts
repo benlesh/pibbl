@@ -5,7 +5,14 @@ let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
 it("runs the editable bars lesson through its public mount", () => {
   runtime = testRuntime();
-  const text = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText");
+  const positions: [string, number][] = [];
+  const original = CanvasRenderingContext2D.prototype.fillText;
+  const text = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText")
+    .mockImplementation(function (this: CanvasRenderingContext2D, ...args: Parameters<CanvasRenderingContext2D["fillText"]>) {
+      const point = new DOMPoint(args[1], args[2]).matrixTransform(this.getTransform());
+      positions.push([args[0], point.x]);
+      original.apply(this, args);
+    });
   const host = document.createElement("div");
   host.style.cssText = "width:940px;height:660px";
   const canvas = document.createElement("canvas");
@@ -37,7 +44,7 @@ it("runs the editable bars lesson through its public mount", () => {
     );
     expect(ctx.getImageData(0, 170, 940, 345).data).toEqual(beforeHover);
     const categoryX = () =>
-      text.mock.calls.findLast(
+      positions.findLast(
         (call) => call[0] === "California" || call[0] === "CA",
       )![1];
     const firstX = categoryX();

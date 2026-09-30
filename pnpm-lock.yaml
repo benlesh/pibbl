@@ -199,6 +199,10 @@ importers:
         version: link:../core
 
   packages/physics:
+    dependencies:
+      '@dimforge/rapier2d-compat':
+        specifier: 0.21.0
+        version: 0.21.0
     devDependencies:
       '@crc/core':
         specifier: workspace:*
@@ -404,6 +408,9 @@ packages:
 
   '@bundled-es-modules/tough-cookie@0.1.6':
     resolution: {integrity: sha512-dvMHbL464C0zI+Yqxbz6kZ5TOEp7GLW+pry/RWndAR8MJQAXZ2rPmIs8tziTZjeIyhSNZgZbCePtfSbdWqStJw==}
+
+  '@dimforge/rapier2d-compat@0.21.0':
+    resolution: {integrity: sha512-cMStLQZbY5D/ajAPjOwTwoYuAJAungTYB45MNFEa5B+LGaMiZfxLwjHsfpxH5B0sDa+gkmcQFJJKiHNKnlpMnA==}
 
   '@dimforge/rapier3d-compat@0.12.0':
     resolution: {integrity: sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow==}
@@ -2251,6 +2258,8 @@ snapshots:
       '@types/tough-cookie': 4.0.5
       tough-cookie: 4.1.4
     optional: true
+
+  '@dimforge/rapier2d-compat@0.21.0': {}
 
   '@dimforge/rapier3d-compat@0.12.0': {}
 

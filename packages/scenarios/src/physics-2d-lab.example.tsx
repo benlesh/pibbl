@@ -1,5 +1,6 @@
 import {
   Circle,
+  definePrimitive,
   Ellipse,
   Group,
   Polygon,
@@ -23,7 +24,6 @@ import {
   dynamicBody2D,
   enableBody2D,
   kinematicBody2D,
-  setLinearVelocity2D,
   staticBody2D,
   teleportBody2D,
   type CRCPhysicsBodyHandle2D,
@@ -189,13 +189,6 @@ export function createPhysics2DLabModel(): Physics2DLabModel {
       Object.freeze({
         onStart: (event: CRCPhysicsOverlapEvent2D) => {
           recordOverlap(model, "start", event);
-          if (id === "sensor") {
-            teleportBody2D(event.otherBody, {
-              position: [360, 104],
-              rotationDegrees: 0,
-            });
-            setLinearVelocity2D(event.otherBody, [0, 0]);
-          }
         },
         onEnd: (event: CRCPhysicsOverlapEvent2D) =>
           recordOverlap(model, "end", event),
@@ -260,6 +253,7 @@ function DynamicBody({
       style={{ translateX: position[0], translateY: position[1] }}
     >
       {children}
+      <PaintPoseProbe model={model} id={id} />
     </Group>
   );
 }
@@ -298,11 +292,12 @@ function Platform({ model }: { readonly model: Physics2DLabModel }) {
       })}
       style={{ translateX: position[0], translateY: position[1] }}
     >
+      <PaintPoseProbe model={model} id="platform" />
       <Rectangle
         physics={collider2D({ tag: "platform", friction: 0.8 })}
         style={{
-          x: -42,
-          y: -7,
+          left: -42,
+          top: -7,
           width: 84,
           height: 14,
           cornerRadius: 5,
@@ -331,6 +326,7 @@ function HandoffBall({ model }: { readonly model: Physics2DLabModel }) {
       })}
       style={{ translateX: position[0], translateY: position[1] }}
     >
+      <PaintPoseProbe model={model} id="handoff" />
       <Circle
         physics={collider2D({ tag: "handoff", restitution: 0.25 })}
         style={{
@@ -361,8 +357,8 @@ function Sensor({ model }: { readonly model: Physics2DLabModel }) {
           onOverlapEnd: handlers.onEnd,
         })}
         style={{
-          x: -10,
-          y: -22,
+          left: -10,
+          top: -22,
           width: 20,
           height: 44,
           fill: "#38bdf833",
@@ -446,19 +442,20 @@ function AnimationOwners({ model }: { readonly model: Physics2DLabModel }) {
   return undefined;
 }
 
+// Capture the actual Canvas transform at the body's local origin. This is
+// independent of the authoritative signal and includes presentation interpolation.
+const PaintPoseProbe = definePrimitive<{
+  readonly model: Physics2DLabModel;
+  readonly id: Physics2DLabBodyId;
+}>((props, _style, context) => {
+  const matrix = context.getTransform();
+  props.model.presentedPositions[props.id] = Object.freeze([
+    matrix.e,
+    matrix.f,
+  ]);
+});
+
 function PresentationProbe({ model }: { readonly model: Physics2DLabModel }) {
-  for (const id of PHYSICS_2D_LAB_BODY_IDS) {
-    const handle = model.handles[id];
-    if (!handle) continue;
-    const position =
-      id === "handoff" && !model.handoffEnabled.get()
-        ? model.handoffPosition.get()
-        : handle.position.get();
-    model.presentedPositions[id] = Object.freeze([...position] as [
-      number,
-      number,
-    ]);
-  }
   model.publish?.();
   return undefined;
 }
@@ -478,12 +475,7 @@ export function Physics2DLabRoot({
         pointerEvents="none"
         style={{ width: 480, height: 240, fill: "#eff6ff" }}
       />
-      <PhysicsWorld2D
-        gravity={[0, 600]}
-        fixedStepMilliseconds={50}
-        maxCatchUpSteps={3}
-        sleeping
-      >
+      <PhysicsWorld2D gravity={[0, 600]} maxCatchUpSteps={3} sleeping>
         <WorldCapture model={model} />
         <AnimationOwners model={model} />
         <Rectangle
@@ -495,15 +487,15 @@ export function Physics2DLabRoot({
               onCollisionEnd: groundHandlers.onEnd,
             },
           })}
-          style={{ x: 12, y: 216, width: 456, height: 20, fill: "#334155" }}
+          style={{ left: 12, top: 216, width: 456, height: 20, fill: "#334155" }}
         />
         <Rectangle
           physics={staticBody2D({ collider: { tag: "left-wall" } })}
-          style={{ x: 0, y: 0, width: 12, height: 236, fill: "#64748b" }}
+          style={{ left: 0, top: 0, width: 12, height: 236, fill: "#64748b" }}
         />
         <Rectangle
           physics={staticBody2D({ collider: { tag: "right-wall" } })}
-          style={{ x: 468, y: 0, width: 12, height: 236, fill: "#64748b" }}
+          style={{ left: 468, top: 0, width: 12, height: 236, fill: "#64748b" }}
         />
         <DynamicBody id="circle" model={model} position={[64, 202]}>
           <SolidCollider id="circle" model={model}>
@@ -526,8 +518,8 @@ export function Physics2DLabRoot({
               <Rectangle
                 physics={physics}
                 style={{
-                  x: -12,
-                  y: -12,
+                  left: -12,
+                  top: -12,
                   width: 24,
                   height: 24,
                   fill: "#8b5cf6",
@@ -602,13 +594,13 @@ export function Physics2DLabRoot({
       </PhysicsWorld2D>
       <Text
         pointerEvents="none"
-        style={{ x: 18, y: 24, fill: "#0f172a", font: "700 14px Arial" }}
+        style={{ left: 18, top: 24, fill: "#0f172a", font: "700 14px Arial" }}
       >
         2D PHYSICS · SHARED CRC SCHEDULER
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 18, y: 44, fill: "#475569", font: "11px Arial" }}
+        style={{ left: 18, top: 44, fill: "#475569", font: "11px Arial" }}
       >
         solids · sensor · kinematic target · explicit animation handoff
       </Text>

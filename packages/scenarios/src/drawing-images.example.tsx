@@ -51,8 +51,8 @@ function featuredImage(state: Readonly<DrawingImagesState>) {
       key="featured-image"
       style={{
         src: DRAWING_IMAGE_SOURCES[state.mode],
-        x: 24,
-        y: 32,
+        left: 24,
+        top: 32,
         ...dimensions,
         alignToPixelGrid: 'round',
       }}
@@ -62,8 +62,8 @@ function featuredImage(state: Readonly<DrawingImagesState>) {
 const DrawingImagesScene = ({ state }: DrawingImagesSceneProps) => [
   <Rectangle
     style={{
-      x: 0,
-      y: 0,
+      left: 0,
+      top: 0,
       width: 480,
       height: 240,
       fill: '#f8fafc',
@@ -71,8 +71,8 @@ const DrawingImagesScene = ({ state }: DrawingImagesSceneProps) => [
   />,
   <Rectangle
     style={{
-      x: 16,
-      y: 24,
+      left: 16,
+      top: 24,
       width: 166,
       height: 116,
       fill: '#e2e8f0',
@@ -81,8 +81,8 @@ const DrawingImagesScene = ({ state }: DrawingImagesSceneProps) => [
   featuredImage(state),
   <Rectangle
     style={{
-      x: 214,
-      y: 24,
+      left: 214,
+      top: 24,
       width: 106,
       height: 76,
       fill: '#e2e8f0',
@@ -92,14 +92,14 @@ const DrawingImagesScene = ({ state }: DrawingImagesSceneProps) => [
     key="natural-image"
     style={{
       src: DRAWING_IMAGE_SOURCES.secondary,
-      x: 222,
-      y: 32,
+      left: 222,
+      top: 32,
     }}
   />,
   <Rectangle
     style={{
-      x: 350,
-      y: 24,
+      left: 350,
+      top: 24,
       width: 106,
       height: 76,
       fill: '#ef4444',
@@ -109,8 +109,8 @@ const DrawingImagesScene = ({ state }: DrawingImagesSceneProps) => [
     key="zero-alpha-image"
     style={{
       src: DRAWING_IMAGE_SOURCES.primary,
-      x: 358,
-      y: 32,
+      left: 358,
+      top: 32,
       width: 90,
       height: 60,
       opacity: 0,
@@ -118,8 +118,8 @@ const DrawingImagesScene = ({ state }: DrawingImagesSceneProps) => [
   />,
   <Rectangle
     style={{
-      x: 16,
-      y: 164,
+      left: 16,
+      top: 164,
       width: 440,
       height: 44,
       fill: '#dbeafe',
@@ -129,8 +129,8 @@ const DrawingImagesScene = ({ state }: DrawingImagesSceneProps) => [
     key="half-alpha-image"
     style={{
       src: DRAWING_IMAGE_SOURCES.primary,
-      x: 24.2,
-      y: 172.2,
+      left: 24.2,
+      top: 172.2,
       width: 424,
       height: 28,
       opacity: 0.5,

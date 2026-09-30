@@ -153,15 +153,18 @@ describe("public 2D physics laboratory", () => {
       },
     });
     expect(controller.getState().worldRevision).toBeGreaterThan(0);
+    // Interpolation presents a previous pose; this must measure paint independently.
+    flushAfter(25);
     expect(
-      Object.values(controller.getState().bodies).every(
-        (body) => body.presentationOffset <= 0.01,
-      ),
-    ).toBe(true);
+      controller.getState().bodies.circle.presentationOffset,
+    ).toBeGreaterThan(0);
 
     await perform(controller, "settle");
     expect(driver.pendingHostFrames).toBe(1);
-    flushAfter();
+    for (let frame = 0; frame < 100; frame++) {
+      hostTime += 50;
+      if (driver.pendingHostFrames) driver.flush(hostTime);
+    }
     expect(controller.getState().bodies.circle.sleeping).toBe(true);
 
     await perform(controller, "impulse");
@@ -175,11 +178,17 @@ describe("public 2D physics laboratory", () => {
     await perform(controller, "cross-sensor");
     expect(driver.pendingHostFrames).toBe(1);
     flushAfter();
+    // The mover must travel into the sensor; no teleport manufactures an overlap.
+    expect(controller.getState().overlaps).toEqual([]);
+    expect(
+      controller.getState().bodies.sensorMover.linearVelocity[0],
+    ).toBeGreaterThan(0);
+    for (let frame = 0; frame < 7; frame++) flushAfter();
     expect(controller.getState().overlaps).toEqual([
       "sensor>sensor-mover:start",
       "sensor-mover>sensor:start",
     ]);
-    flushAfter();
+    for (let frame = 0; frame < 12; frame++) flushAfter();
     const completedOverlaps = [
       "sensor>sensor-mover:start",
       "sensor-mover>sensor:start",

@@ -10,14 +10,14 @@ import type {
   Signal,
   SignalValue,
   SystemStyle,
-} from '@crc/core';
+} from "@crc/core";
 import type {
   CRCPhysicsAabb2D,
   CRCPhysicsContactPoint2D,
   CRCPhysicsShape2D,
   CRCPhysicsShapeHit2D,
   CRCPhysicsVector2,
-} from '../../2d-geometry.js';
+} from "../../2d-geometry.js";
 
 export interface CRCPhysicsCollisionFilter {
   readonly category?: number;
@@ -39,7 +39,7 @@ export type CRCPhysicsBodyStateHandler2D = (
 ) => void;
 
 export interface CRCPhysicsColliderConfiguration2D {
-  readonly shape?: 'self' | CRCPhysicsShape2D;
+  readonly shape?: "self" | CRCPhysicsShape2D;
   readonly offset?: CRCPhysicsVector2;
   readonly rotationDegrees?: number;
   readonly density?: number;
@@ -64,24 +64,20 @@ export interface CRCPhysicsDynamicBody2DOptions {
   readonly linearDamping?: number;
   readonly angularDamping?: number;
   readonly gravityScale?: number;
-  readonly mass?: 'auto' | number;
+  readonly mass?: "auto" | number;
   readonly fixedRotation?: boolean;
   readonly allowSleep?: boolean;
   readonly ccd?: boolean;
-  readonly reenableVelocity?: 'zero' | 'preserve';
+  readonly reenableVelocity?: "zero" | "preserve";
   readonly collider?:
-    | false
-    | CRCPhysicsColliderConfiguration2D
-    | CRCPhysicsShape2D;
+    false | CRCPhysicsColliderConfiguration2D | CRCPhysicsShape2D;
 }
 
 export interface CRCPhysicsStaticBody2DOptions {
   readonly enabled?: boolean;
   readonly handle?: CRCPhysicsBodyHandle2D;
   readonly collider?:
-    | false
-    | CRCPhysicsColliderConfiguration2D
-    | CRCPhysicsShape2D;
+    false | CRCPhysicsColliderConfiguration2D | CRCPhysicsShape2D;
 }
 
 export interface CRCPhysicsKinematicTarget2D {
@@ -95,23 +91,20 @@ export interface CRCPhysicsKinematicBody2DOptions {
   readonly target?: CRCPhysicsKinematicTarget2D;
   readonly allowSleep?: boolean;
   readonly collider?:
-    | false
-    | CRCPhysicsColliderConfiguration2D
-    | CRCPhysicsShape2D;
+    false | CRCPhysicsColliderConfiguration2D | CRCPhysicsShape2D;
 }
 
 declare const physicsAttachment2DBrand: unique symbol;
 export interface CRCPhysicsBodyAttachment2D {
-  readonly [physicsAttachment2DBrand]: 'body';
+  readonly [physicsAttachment2DBrand]: "body";
 }
 export interface CRCPhysicsColliderAttachment2D {
-  readonly [physicsAttachment2DBrand]: 'collider';
+  readonly [physicsAttachment2DBrand]: "collider";
 }
 export type CRCPhysicsAttachment2D =
-  | CRCPhysicsBodyAttachment2D
-  | CRCPhysicsColliderAttachment2D;
+  CRCPhysicsBodyAttachment2D | CRCPhysicsColliderAttachment2D;
 
-declare module '@crc/core' {
+declare module "@crc/core" {
   interface CRCPhysics2DPropExtension {
     readonly physics?: CRCPhysicsAttachment2D;
   }
@@ -123,10 +116,12 @@ export interface CRCPhysicsSolverOptions {
 }
 
 interface CRCPhysicsWorld2DValues {
+  /** Local space follows the world component viewport; root preserves root-logical coordinates. Creation-only. */
+  readonly space?: "root" | "local";
   readonly gravity?: CRCPhysicsVector2;
   readonly fixedStepMilliseconds?: number;
   readonly maxCatchUpSteps?: number;
-  readonly interpolation?: 'linear' | 'none';
+  readonly interpolation?: "linear" | "none";
   readonly sleeping?: boolean;
   readonly solver?: CRCPhysicsSolverOptions;
   readonly onSleep?: CRCPhysicsBodyStateHandler2D;
@@ -168,7 +163,7 @@ export interface Segment2DProps extends CRCPhysicsPrimitiveProps2D {}
 export interface Segment2DStyle
   extends
     SystemStyle,
-    Omit<PaintStyle, 'fill'>,
+    Omit<PaintStyle, "fill">,
     CursorStyle,
     BoxStyle,
     LayoutItemStyle {
@@ -209,13 +204,13 @@ export interface CRCPhysicsWorldHandle2D {
   readonly revision: Signal<number>;
 }
 
-export type CRCPhysicsQueryMode = 'closest' | 'any' | 'all';
+export type CRCPhysicsQueryMode = "closest" | "any" | "all";
 
 export interface CRCPhysicsQueryOptions2D<
-  Mode extends CRCPhysicsQueryMode = 'closest',
+  Mode extends CRCPhysicsQueryMode = "closest",
 > {
   readonly mode?: Mode;
-  readonly sensors?: 'include' | 'exclude' | 'only';
+  readonly sensors?: "include" | "exclude" | "only";
   readonly collisionFilter?: CRCPhysicsCollisionFilter;
   readonly excludeBody?: CRCPhysicsBodyHandle2D;
   readonly excludeCollider?: CRCPhysicsColliderHandle2D;
@@ -240,9 +235,9 @@ export interface CRCPhysicsQueryMatch2D {
 export type CRCPhysicsQueryResult2D<
   Mode extends CRCPhysicsQueryMode,
   Result,
-> = Mode extends 'any'
+> = Mode extends "any"
   ? boolean
-  : Mode extends 'all'
+  : Mode extends "all"
     ? readonly Result[]
     : Result | null;
 

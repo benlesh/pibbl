@@ -5,8 +5,7 @@ const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const CRC_ENTRY_POINT =
   /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles|physics\/(?:2d(?:\/geometry)?|3d\/geometry)|viz|three)$/;
-const THREE_ENTRY_POINT =
-  /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
+const THREE_ENTRY_POINT = /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
 
 const threeEntryPoints = new Map([
   [
@@ -29,7 +28,13 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
   const directory = mode === "built" ? "dist" : "src";
   const extension = mode === "built" ? "mjs" : "ts";
   return new Map([
-    ["@crc/viz", resolve(import.meta.dirname, `../packages/viz/${directory}/index.${extension}`)],
+    [
+      "@crc/viz",
+      resolve(
+        import.meta.dirname,
+        `../packages/viz/${directory}/index.${extension}`,
+      ),
+    ],
     [
       "@crc/core",
       resolve(
@@ -136,8 +141,12 @@ function assertSingleRuntimeMode(
 
 export function crcRuntimeSource(mode: string) {
   const entryPoints = crcEntryPoints(mode);
+  let production = false;
   return {
     name: "crc-runtime-source",
+    configResolved(config: { isProduction: boolean }) {
+      production = config.isProduction;
+    },
     resolveId(id: string) {
       if (id === VIRTUAL_RUNTIME_ID) return RESOLVED_RUNTIME_ID;
       return entryPoints.get(id);
@@ -147,13 +156,15 @@ export function crcRuntimeSource(mode: string) {
       const repositoryRoot = resolve(import.meta.dirname, "..");
       const result = await build({
         absWorkingDir: repositoryRoot,
-        entryPoints: [
-          resolve(import.meta.dirname, "./crc-studio-runtime-entry.ts"),
-        ],
+        stdin: {
+          contents:
+            'import * as runtime from "./tooling/crc-studio-runtime-entry.ts"; globalThis["CRC_CORE"] = runtime;',
+          resolveDir: repositoryRoot,
+          loader: "ts",
+        },
         bundle: true,
-        define: { "import.meta.env.DEV": "false" },
-        format: "iife",
-        globalName: "CRC_CORE",
+        define: { "import.meta.env.DEV": production ? "false" : "true" },
+        format: "esm",
         metafile: true,
         platform: "browser",
         plugins: [

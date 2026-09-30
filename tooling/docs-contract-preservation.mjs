@@ -9,10 +9,28 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "abe522a6456b01a01e5ea5f4982610fc7b1e2ce05554b39355e96b50588608e2";
+  "501668f3b7e47b56c9f915175f2f4c525afa84852d9a87d0bc26782f8dcf025f";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const THREE_PIVOT_APPROVAL_RECORD = "three-full-pivot";
+const COMPONENT_MANIPULATION_APPROVAL_RECORD = "component-manipulation";
+const PHYSICS_2D_QUALITY_APPROVAL_RECORD = "physics-2d-quality";
+const COMPONENT_MANIPULATION_APPROVED_SECTIONS = new Set([
+  "Component manipulation design",
+  "Intent",
+  "Agreed direction",
+  "Authoring sketch",
+  "Proposed gesture and state rules",
+  "Approved positioning direction",
+  "Layout composition",
+  "Snapping and constraints",
+  "Interaction evidence",
+  "2026-09-29 extension: handle presentation and readouts",
+  "Geometry and default presentation",
+  "Readout behavior",
+  "Authoring surface",
+  "2026-09-29 feedback: outward resize labels",
+]);
 const THREE_PIVOT_APPROVED_SECTIONS = new Set([
   "Decision",
   "Public experience",
@@ -88,12 +106,29 @@ const ANIMATION_APPROVED_SECTIONS = new Set([
   "Compatibility and migration",
   "Final boundaries",
 ]);
+const PHYSICS_2D_QUALITY_APPROVED_SECTIONS = new Set([
+  "2D physics quality decision record",
+  "Authorization and scope",
+  "Engine decision",
+  "Units and scheduling",
+  "Collision quality and composition",
+  "Observation and agentic testing",
+  "Performance evidence",
+]);
 const MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS = new Set([
   ...SIGNALS_SCHEDULER_APPROVED_SECTIONS,
   ...ANIMATION_APPROVED_SECTIONS,
 ]);
 
 const POST_BASELINE_CONTRACT_PROFILES = new Map([
+  [
+    "docs/design/physics-2d-contract.md",
+    {
+      unitPrefix: "q",
+      approvalRecordId: PHYSICS_2D_QUALITY_APPROVAL_RECORD,
+      allowedSections: PHYSICS_2D_QUALITY_APPROVED_SECTIONS,
+    },
+  ],
   [
     "docs/design/render-layer-and-three-contract.md",
     {
@@ -119,6 +154,14 @@ const POST_BASELINE_CONTRACT_PROFILES = new Map([
       unitPrefix: "m",
       approvalRecordId: SIGNALS_SCHEDULER_APPROVAL_RECORD,
       allowedSections: ANIMATION_APPROVED_SECTIONS,
+    },
+  ],
+  [
+    "docs/design/component-manipulation-contract.md",
+    {
+      unitPrefix: "n",
+      approvalRecordId: COMPONENT_MANIPULATION_APPROVAL_RECORD,
+      allowedSections: COMPONENT_MANIPULATION_APPROVED_SECTIONS,
     },
   ],
 ]);
@@ -1180,7 +1223,8 @@ export function assertContractPreservationBaseline({
       `${label} needs a specific reason`,
     );
     assert.ok(
-      Array.isArray(retirement.baselineIds) && retirement.baselineIds.length > 0,
+      Array.isArray(retirement.baselineIds) &&
+        retirement.baselineIds.length > 0,
       `${label} must identify exact removed baseline units`,
     );
     const { approvalUnits } = resolveApprovalRecordUnits({

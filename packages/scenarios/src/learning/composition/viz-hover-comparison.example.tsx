@@ -355,8 +355,8 @@ function Plot({
                     <Rectangle
                       pointerEvents="none"
                       style={{
-                        x: 0.5,
-                        y: 0.5,
+                        left: 0.5,
+                        top: 0.5,
                         width: item.width - 1,
                         height: item.height - 1,
                         cornerRadius: 7,
@@ -376,13 +376,13 @@ function Plot({
                       </Text>
                       <Text
                         pointerEvents="none"
-                        style={{ y: 17, font: "12px sans-serif", fill: ink }}
+                        style={{ top: 17, font: "12px sans-serif", fill: ink }}
                       >
                         {`${result.y.toFixed(2)} ppm · ${result.kind === "interpolated" ? "estimated" : "recorded"}`}
                       </Text>
                       <Text
                         pointerEvents="none"
-                        style={{ y: 34, font: "10px sans-serif", fill: muted }}
+                        style={{ top: 34, font: "10px sans-serif", fill: muted }}
                       >
                         {fixture.xDomain
                           ? `x = ${result.x.toFixed(2)}`
@@ -421,10 +421,10 @@ function Scene({ fixture }: { fixture: Fixture }) {
         pointerEvents="none"
         style={{ width: box.width, height: box.height, fill: "#f4f7fb" }}
       />
-      <Text style={{ x: 24, y: 20, font: "bold 24px sans-serif", fill: ink }}>
+      <Text style={{ left: 24, top: 20, font: "bold 24px sans-serif", fill: ink }}>
         Two lines. Three questions.
       </Text>
-      <Text style={{ x: 24, y: 55, font: "12px sans-serif", fill: muted }}>
+      <Text style={{ left: 24, top: 55, font: "12px sans-serif", fill: muted }}>
         Mauna Loa CO₂ · 2020–2021 · ppm
       </Text>
       {modes.map((value, i) => (
@@ -447,7 +447,7 @@ function Scene({ fixture }: { fixture: Fixture }) {
           />
           <Text
             pointerEvents="none"
-            style={{ x: 10, y: 10, font: "12px sans-serif", fill: ink }}
+            style={{ left: 10, top: 10, font: "12px sans-serif", fill: ink }}
           >
             {
               [
@@ -460,7 +460,7 @@ function Scene({ fixture }: { fixture: Fixture }) {
         </Group>
       ))}
       <Text
-        style={{ x: 24, y: top - 30, font: "11px sans-serif", fill: muted }}
+        style={{ left: 24, top: top - 30, font: "11px sans-serif", fill: muted }}
       >
         Move to inspect · Press and drag the guide
       </Text>
@@ -492,8 +492,8 @@ function Scene({ fixture }: { fixture: Fixture }) {
       </Absolute>
       <Text
         style={{
-          x: 24,
-          y: box.height - 27,
+          left: 24,
+          top: box.height - 27,
           font: "10px sans-serif",
           fill: muted,
         }}

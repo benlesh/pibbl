@@ -71,8 +71,8 @@ function FlexStudy() {
     </Flex>,
     <Text
       style={{
-        x: 360,
-        y: 54,
+        left: 360,
+        top: 54,
         fill: "#17211d",
         font: "900 20px sans-serif",
         textAlign: "center",

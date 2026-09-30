@@ -12,13 +12,11 @@ import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
 
 describe('absolute layout', () => {
-  it('places from parent-owned left/top while primitive x/y stay local', () => {
+  it('places from parent-owned left/top', () => {
     const child = createElement(Rectangle, {
       style: {
         left: '25%',
         top: 12,
-        x: 7,
-        y: 3,
         width: 40,
         height: 20,
       },

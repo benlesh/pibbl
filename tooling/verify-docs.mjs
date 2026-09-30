@@ -78,12 +78,16 @@ const publicGuidePaths = [
   "docs/site/learn/guides/particle-effects.md",
   "docs/site/learn/guides/react-integration.md",
   "docs/site/learn/guides/signals-and-animation.md",
+  "docs/site/learn/guides/physics-2d.md",
   "docs/site/learn/guides/state-and-lifecycle.md",
   "docs/site/learn/guides/style-and-draw.md",
   "docs/site/learn/guides/responsive-styles.md",
   "docs/site/learn/guides/three-js.md",
+  "docs/site/learn/guides/manipulation.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/components/pie-layout.md",
+  "docs/site/api/functions/pie-slices.md",
   "docs/site/learn/guides/data-visualization.md",
   "docs/site/api/components/scale.md",
   "docs/site/api/components/bar-series.md",
@@ -119,6 +123,12 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/image.md",
   "docs/site/api/components/keyboard-navigation.md",
   "docs/site/api/components/layer.md",
+  "docs/site/api/components/drag-handle.md",
+  "docs/site/api/components/manipulable.md",
+  "docs/site/api/components/manipulation-frame.md",
+  "docs/site/api/components/resize-handle.md",
+  "docs/site/api/components/resize-handles.md",
+  "docs/site/api/components/rotation-handle.md",
   "docs/site/api/components/line.md",
   "docs/site/api/components/overlay.md",
   "docs/site/api/components/path.md",
@@ -149,6 +159,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/define-render-layer.md",
   "docs/site/api/functions/define-three-layer.md",
   "docs/site/api/functions/define-primitive.md",
+  "docs/site/api/functions/degrees.md",
   "docs/site/api/functions/easing.md",
   "docs/site/api/functions/is-signal.md",
   "docs/site/api/functions/keyframes.md",
@@ -159,6 +170,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/parallel.md",
   "docs/site/api/functions/define-particle-effect-2d.md",
   "docs/site/api/functions/particle-descriptors.md",
+  "docs/site/api/functions/physics-2d-testing.md",
+  "docs/site/api/functions/physics-2d.md",
   "docs/site/api/functions/physics-3d-geometry.md",
   "docs/site/api/functions/repeat.md",
   "docs/site/api/functions/resolve-signal-value.md",
@@ -181,6 +194,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-event-target.md",
   "docs/site/api/hooks/use-layout-box.md",
   "docs/site/api/hooks/use-line-path.md",
+  "docs/site/api/hooks/use-manipulation.md",
   "docs/site/api/hooks/use-particle-system.md",
   "docs/site/api/hooks/use-playback.md",
   "docs/site/api/hooks/use-rect-path.md",
@@ -195,6 +209,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/filters.md",
   "docs/site/api/types/layout.md",
   "docs/site/api/types/particles.md",
+  "docs/site/api/types/physics-2d.md",
+  "docs/site/api/types/physics-2d-testing.md",
   "docs/site/api/types/physics-3d-geometry.md",
   "docs/site/api/types/signal-inputs.md",
   "docs/site/api/types/styles.md",
@@ -227,6 +243,7 @@ const currentMarkdownPaths = [
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
+  "docs/design/component-manipulation-contract.md",
   "docs/design/animation-contract.md",
   "docs/design/drawing-components-contract.md",
   "docs/design/event-resource-ownership.md",
@@ -246,6 +263,8 @@ const currentMarkdownPaths = [
   "docs/project-plans/README.md",
   "docs/project-plans/WORKFLOW.md",
   "docs/scenario-index.md",
+  "docs/design/physics-2d-contract.md",
+  "tooling/physics-comparison/README.md",
   "docs/strategy/README.md",
   "docs/strategy/responsive-style-queries.md",
   "docs/strategy/particle-effects-research.md",
@@ -254,6 +273,15 @@ const currentMarkdownPaths = [
   "docs/testing/scenario-gallery.md",
   "docs/testing/test-tooling-opportunities.md",
   "docs/testing/trust-gate.md",
+  "docs/site/api/components/drag-handle.md",
+  "docs/site/api/components/manipulable.md",
+  "docs/site/api/components/manipulation-frame.md",
+  "docs/site/api/components/resize-handle.md",
+  "docs/site/api/components/resize-handles.md",
+  "docs/site/api/components/rotation-handle.md",
+  "docs/site/api/functions/degrees.md",
+  "docs/site/api/hooks/use-manipulation.md",
+  "docs/site/learn/guides/manipulation.md",
   ...publicSiteMarkdownPaths,
 ];
 const linkCheckedPaths = [
@@ -268,6 +296,7 @@ const migrationMarkdownPaths = new Set([
 const operationalMarkdownPaths = new Set([
   ".beads/README.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
+  "docs/testing/evidence/component-manipulation/progress.md",
   "tooling/studio-docs/fixtures/invalid-script.md",
   "tooling/studio-docs/fixtures/valid-guide.md",
 ]);
@@ -823,6 +852,9 @@ async function typecheckCompleteSnippets(snippets) {
               ],
               "@crc/physics/2d/geometry": [
                 join(repositoryRoot, "packages/physics/src/2d-geometry.ts"),
+              ],
+              "@crc/physics/2d/testing": [
+                join(repositoryRoot, "packages/physics/src/2d-testing.ts"),
               ],
               "@crc/physics/3d/geometry": [
                 join(repositoryRoot, "packages/physics/src/3d-geometry.ts"),
@@ -1750,8 +1782,8 @@ const physicsManifest = JSON.parse(
 );
 assert.deepEqual(
   Object.keys(physicsManifest.exports),
-  ["./2d", "./2d/geometry", "./3d/geometry"],
-  "@crc/physics must expose only its 2D runtime and pure geometry entries.",
+  ["./2d", "./2d/geometry", "./2d/testing", "./3d/geometry"],
+  "@crc/physics must expose its 2D runtime, testing, and pure geometry entries only.",
 );
 assert.deepEqual(
   physicsManifest.peerDependencies,
@@ -2143,7 +2175,9 @@ const currentNormativeContractPaths = [
 ].sort();
 const postBaselineNormativeContractPaths = new Set([
   "docs/design/animation-contract.md",
+  "docs/design/component-manipulation-contract.md",
   "docs/design/signals-and-scheduling-contract.md",
+  "docs/design/physics-2d-contract.md",
   "docs/design/render-layer-and-three-contract.md",
 ]);
 const baselineSnapshotContractPaths = currentNormativeContractPaths.filter(
@@ -2780,6 +2814,15 @@ const matrixRequirements = [
     guides: ["migrations/default-pointer-participation.md"],
     evidence: ["public-pointer-events.test.ts"],
   },
+  {
+    topic:
+      /Signal-owned component move, resize, rotation, child-defined handles, snapping, and cancellation/u,
+    guides: [
+      "site/learn/guides/manipulation.md",
+      "design/component-manipulation-contract.md",
+    ],
+    evidence: ["manipulation.example.tsx", "manipulation-interaction.test.tsx"],
+  },
 ];
 
 export function assertAcceptanceMatrix(matrixSource) {
@@ -3386,8 +3429,8 @@ export async function verifyMutationProbes() {
     /field-level migration rect\.fillStyle has the wrong final behavior/iu,
   );
   const wrongFieldRequiredness = migrationSource.replace(
-    "`Rectangle` `style.x`                         | Optional; defaults to `0`",
-    "`Rectangle` `style.x`                         | Required; defaults to `0`",
+    "`Rectangle` `style.width`                     | Required",
+    "`Rectangle` `style.width`                     | Optional",
   );
   assert.notEqual(
     wrongFieldRequiredness,
@@ -3400,7 +3443,7 @@ export async function verifyMutationProbes() {
         ...fieldMigrationArguments,
         migrationSource: wrongFieldRequiredness,
       }),
-    /field-level migration rect\.x has the wrong final behavior/iu,
+    /field-level migration rect\.width has the wrong final behavior/iu,
   );
   throws(
     () =>

@@ -177,7 +177,7 @@ function AnimatedLabel(): CRCNode {
   return (
     <Group style={{ translateX: transitioned.get() }}>
       <Rectangle
-        style={{ x: x.get(), width: 10, height: 10 }}
+        style={{ left: x.get(), width: 10, height: 10 }}
         onClick={() => player.play()}
       />
     </Group>
@@ -304,17 +304,15 @@ function Poster({ labels, showTitle }: PosterProps): CRCNode {
         />
       ))}
       {showTitle && (
-        <Text
+        <Group
           style={{
-            x: 12,
-            y: 24,
             gridColumnStart: 1,
             gridColumnSpan: 2,
             gridRowStart: 2,
           }}
         >
-          {labels.join(', ')}
-        </Text>
+          <Text style={{ left: 12, top: 24 }}>{labels.join(', ')}</Text>
+        </Group>
       )}
     </Grid>
   );

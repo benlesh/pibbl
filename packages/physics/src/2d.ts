@@ -11,6 +11,7 @@ import type {
   CRCPhysicsQueryMode,
   CRCPhysicsQueryOptions2D,
   CRCPhysicsQueryResult2D,
+  CRCPhysicsBodyHandle2D,
   CRCPhysicsWorldHandle2D,
 } from "./lib/2d/types.js";
 import {
@@ -37,6 +38,8 @@ import {
   crcPhysicsBody2D,
   disableBody2D,
   enableBody2D,
+  isPhysicsBodyHandle2D,
+  physicsBodyHandleBinding2D,
   setAngularVelocity2D,
   setLinearVelocity2D,
   sleepBody2D,
@@ -126,3 +129,53 @@ export function queryPoint2D<Mode extends CRCPhysicsQueryMode = "closest">(
 ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
   return requirePhysicsWorld2DController(world).queryPoint(point, options);
 }
+
+/** Converts root-logical pointer coordinates to this world's simulation space. */
+export function toPhysicsPoint2D(
+  world: CRCPhysicsWorldHandle2D,
+  point: CRCPhysicsVector2,
+): CRCPhysicsVector2 {
+  return requirePhysicsWorld2DController(world).convertPoint(point, false);
+}
+
+/** Converts a simulation-space point to root-logical Canvas coordinates. */
+export function fromPhysicsPoint2D(
+  world: CRCPhysicsWorldHandle2D,
+  point: CRCPhysicsVector2,
+): CRCPhysicsVector2 {
+  return requirePhysicsWorld2DController(world).convertPoint(point, true);
+}
+
+export type {
+  CRCPhysicsInspection2D,
+  CRCPhysicsBodyInspection2D,
+  CRCPhysicsColliderInspection2D,
+  CRCPhysicsContactInspection2D,
+} from "./lib/2d/inspection-types.js";
+
+/** Returns immutable JSON-safe observations without advancing the simulation. */
+export function inspectPhysics2D(
+  world: CRCPhysicsWorldHandle2D,
+): import("./lib/2d/inspection-types.js").CRCPhysicsInspection2D;
+
+/** Returns the immutable observation for this currently bound body, if any. */
+export function inspectPhysics2D(
+  body: CRCPhysicsBodyHandle2D,
+): import("./lib/2d/inspection-types.js").CRCPhysicsBodyInspection2D | undefined;
+export function inspectPhysics2D(
+  target: CRCPhysicsWorldHandle2D | CRCPhysicsBodyHandle2D,
+):
+  | import("./lib/2d/inspection-types.js").CRCPhysicsInspection2D
+  | import("./lib/2d/inspection-types.js").CRCPhysicsBodyInspection2D
+  | undefined {
+  if (isPhysicsBodyHandle2D(target)) {
+    const binding = physicsBodyHandleBinding2D(target);
+    return binding?.controller.inspectBody(binding.bodyId);
+  }
+  return requirePhysicsWorld2DController(target).inspect();
+}
+
+export {
+  PhysicsDebug2D,
+  type CRCPhysicsDebug2DProps,
+} from "./lib/2d/canvas/debug.js";

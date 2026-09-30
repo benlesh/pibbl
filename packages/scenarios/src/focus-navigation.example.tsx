@@ -119,8 +119,8 @@ const CanvasControl = function CanvasControl({
     <Rectangle
       pointerEvents="none"
       style={{
-        x,
-        y,
+        left: x,
+        top: y,
         width,
         height,
         fill,
@@ -132,8 +132,8 @@ const CanvasControl = function CanvasControl({
       <Rectangle
         pointerEvents="none"
         style={{
-          x: x - 5,
-          y: y - 5,
+          left: x - 5,
+          top: y - 5,
           width: width + 10,
           height: height + 10,
           stroke: '#020617',
@@ -144,8 +144,8 @@ const CanvasControl = function CanvasControl({
     <Text
       pointerEvents="none"
       style={{
-        x: x + width / 2,
-        y: y + height / 2,
+        left: x + width / 2,
+        top: y + height / 2,
         textAlign: 'center',
         textBaseline: 'middle',
         font: navigation ? '700 14px Arial' : '700 13px Arial',
@@ -181,8 +181,8 @@ const FocusNavigationScene = function FocusNavigationScene(
     <Rectangle
       pointerEvents="none"
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 560,
         height: 420,
         fill: '#f8fafc',
@@ -191,8 +191,8 @@ const FocusNavigationScene = function FocusNavigationScene(
     <Text
       pointerEvents="none"
       style={{
-        x: 28,
-        y: 25,
+        left: 28,
+        top: 25,
         font: '700 15px Arial',
         fill: '#0f172a',
       }}
@@ -246,8 +246,8 @@ const FocusNavigationScene = function FocusNavigationScene(
     <Text
       pointerEvents="none"
       style={{
-        x: 390,
-        y: 356,
+        left: 390,
+        top: 356,
         font: '13px Arial',
         fill: '#334155',
       }}
@@ -255,8 +255,8 @@ const FocusNavigationScene = function FocusNavigationScene(
     <Text
       pointerEvents="none"
       style={{
-        x: 390,
-        y: 380,
+        left: 390,
+        top: 380,
         font: '13px Arial',
         fill: '#334155',
       }}

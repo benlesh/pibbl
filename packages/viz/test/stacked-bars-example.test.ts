@@ -6,7 +6,14 @@ afterEach(() => runtime?.dispose());
 
 it("runs the stacked cash-flow lesson with segment inspection and interactive restacking", () => {
   runtime = testRuntime();
-  const text = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText");
+  const positions: [string, number][] = [];
+  const original = CanvasRenderingContext2D.prototype.fillText;
+  const text = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText")
+    .mockImplementation(function (this: CanvasRenderingContext2D, ...args: Parameters<CanvasRenderingContext2D["fillText"]>) {
+      const point = new DOMPoint(args[1], args[2]).matrixTransform(this.getTransform());
+      positions.push([args[0], point.x]);
+      original.apply(this, args);
+    });
   const canvas = document.createElement("canvas");
   canvas.style.cssText = "width:940px;height:720px";
   document.body.append(canvas);
@@ -42,10 +49,10 @@ it("runs the stacked cash-flow lesson with segment inspection and interactive re
     click(240);
     expect(pixel().slice(0, 3)).toEqual([255, 253, 248]);
     expect(labels()).toContain("Show costs");
-    const before = text.mock.calls.findLast((call) => call[0] === "Q4")![1];
+    const before = positions.findLast((call) => call[0] === "Q4")![1];
     click(390);
     expect(
-      text.mock.calls.findLast((call) => call[0] === "Q4")![1],
+      positions.findLast((call) => call[0] === "Q4")![1],
     ).toBeLessThan(before);
   } finally {
     controller.dispose();

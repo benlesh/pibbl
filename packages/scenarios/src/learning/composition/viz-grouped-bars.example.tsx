@@ -67,8 +67,8 @@ function Button({
       <Text
         pointerEvents="none"
         style={{
-          x: 69,
-          y: 16,
+          left: 69,
+          top: 16,
           textAlign: "center",
           textBaseline: "middle",
           font: "12px sans-serif",
@@ -153,8 +153,8 @@ function Plot({
             key={state.state}
             pointerEvents="none"
             style={{
-              x: x + states.bandwidth / 2,
-              y: states.frame.height + 23,
+              left: x + states.bandwidth / 2,
+              top: states.frame.height + 23,
               textAlign: "center",
               font: "12px sans-serif",
               fill: ink,
@@ -167,8 +167,8 @@ function Plot({
       <Text
         pointerEvents="none"
         style={{
-          x: -35,
-          y: states.frame.height + 56,
+          left: -35,
+          top: states.frame.height + 56,
           font: "13px sans-serif",
           fill: ink,
         }}
@@ -178,8 +178,8 @@ function Plot({
       <Text
         pointerEvents="none"
         style={{
-          x: -35,
-          y: states.frame.height + 81,
+          left: -35,
+          top: states.frame.height + 81,
           font: "11px sans-serif",
           fill: "#637785",
         }}
@@ -204,10 +204,10 @@ function Scene() {
         pointerEvents="none"
         style={{ width: box.width, height: box.height, fill: "#fffdf8" }}
       />
-      <Text style={{ x: 28, y: 25, font: "bold 26px sans-serif", fill: ink }}>
+      <Text style={{ left: 28, top: 25, font: "bold 26px sans-serif", fill: ink }}>
         Population, side by side
       </Text>
-      <Text style={{ x: 28, y: 59, font: "12px sans-serif", fill: "#637785" }}>
+      <Text style={{ left: 28, top: 59, font: "12px sans-serif", fill: "#637785" }}>
         Six largest U.S. states · population in millions
       </Text>
       <Button
@@ -244,7 +244,7 @@ function Scene() {
           style={{ translateX: 28 + index * 110, translateY: origin.y - 35 }}
         >
           <Rectangle style={{ width: 12, height: 12, fill: colors[year] }} />
-          <Text style={{ x: 19, y: 10, font: "12px sans-serif", fill: ink }}>
+          <Text style={{ left: 19, top: 10, font: "12px sans-serif", fill: ink }}>
             {year}
           </Text>
         </Group>

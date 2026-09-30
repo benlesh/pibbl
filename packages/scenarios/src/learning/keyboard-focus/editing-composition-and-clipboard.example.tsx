@@ -115,8 +115,8 @@ function EditingCompositionClipboardLesson({
     />,
     <Text
       style={{
-        x: 360,
-        y: 31,
+        left: 360,
+        top: 31,
         textAlign: "center",
         fill: "#4a044e",
         font: "800 20px Arial",
@@ -126,8 +126,8 @@ function EditingCompositionClipboardLesson({
     </Text>,
     <Rectangle
       style={{
-        x: 88,
-        y: 86,
+        left: 88,
+        top: 86,
         width: 544,
         height: 118,
         fill: "#a21caf",
@@ -138,8 +138,8 @@ function EditingCompositionClipboardLesson({
     snapshot.isFocusVisible ? (
       <Rectangle
         style={{
-          x: 80,
-          y: 78,
+          left: 80,
+          top: 78,
           width: 560,
           height: 134,
           stroke: "#facc15",
@@ -149,8 +149,8 @@ function EditingCompositionClipboardLesson({
     ) : undefined,
     <Text
       style={{
-        x: 360,
-        y: 132,
+        left: 360,
+        top: 132,
         textAlign: "center",
         fill: "#ffffff",
         font: "700 15px Arial",
@@ -160,8 +160,8 @@ function EditingCompositionClipboardLesson({
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 164,
+        left: 360,
+        top: 164,
         textAlign: "center",
         fill: "#fce7f3",
         font: "12px Arial",
@@ -173,8 +173,8 @@ function EditingCompositionClipboardLesson({
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 180,
+        left: 360,
+        top: 180,
         textAlign: "center",
         fill: "#fce7f3",
         font: "11px monospace",
@@ -184,8 +184,8 @@ function EditingCompositionClipboardLesson({
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 193,
+        left: 360,
+        top: 193,
         textAlign: "center",
         fill: "#fce7f3",
         font: "11px monospace",
@@ -195,8 +195,8 @@ function EditingCompositionClipboardLesson({
     </Text>,
     <Rectangle
       style={{
-        x: 56,
-        y: 234,
+        left: 56,
+        top: 234,
         width: 608,
         height: 142,
         fill: "#4a044e",
@@ -204,8 +204,8 @@ function EditingCompositionClipboardLesson({
     />,
     <Text
       style={{
-        x: 76,
-        y: 258,
+        left: 76,
+        top: 258,
         fill: "#f5d0fe",
         font: "700 12px monospace",
       }}
@@ -220,8 +220,8 @@ function EditingCompositionClipboardLesson({
     ).map((entry, index) => (
       <Text
         style={{
-          x: 76,
-          y: 278 + index * 12,
+          left: 76,
+          top: 278 + index * 12,
           fill: "#fdf4ff",
           font: "10px monospace",
         }}
@@ -231,8 +231,8 @@ function EditingCompositionClipboardLesson({
     )),
     <Text
       style={{
-        x: 360,
-        y: 405,
+        left: 360,
+        top: 405,
         textAlign: "center",
         fill: "#701a75",
         font: "11px Arial",

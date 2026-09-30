@@ -6,6 +6,7 @@ import type {
 } from "../types.js";
 
 export interface CRCResolvedPhysicsWorld2DProps {
+  readonly space?: "root" | "local";
   readonly gravity?: CRCPhysicsVector2;
   readonly fixedStepMilliseconds?: number;
   readonly maxCatchUpSteps?: number;

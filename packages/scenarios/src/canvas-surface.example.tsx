@@ -55,8 +55,8 @@ const CanvasSurfaceScene = ({
     <Rectangle
       pointerEvents="none"
       style={{
-        x: box.width / 4,
-        y: box.height / 4,
+        left: box.width / 4,
+        top: box.height / 4,
         width: box.width / 2,
         height: box.height / 2,
         fill: mode === 'fixed' ? '#2563eb' : '#10b981',
@@ -67,8 +67,8 @@ const CanvasSurfaceScene = ({
     <Text
       pointerEvents="none"
       style={{
-        x: box.width / 2,
-        y: box.height / 2,
+        left: box.width / 2,
+        top: box.height / 2,
         textAlign: 'center',
         textBaseline: 'middle',
         font: '700 16px Arial',

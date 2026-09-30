@@ -1,17 +1,14 @@
-import { executeRender } from '../execute-render.js';
-import {
-  GLOBAL_STATE,
-  NO_PENDING_ROOT,
-} from '../global-state.js';
+import { executeRender } from "../execute-render.js";
+import { GLOBAL_STATE, NO_PENDING_ROOT } from "../global-state.js";
 import {
   createSignalCommitBatch,
   flushPendingComputedValidations,
   hasPendingComputedValidations,
   setSignalGraphPlanWorkNotifier,
   withDirectSignalWriteForbidden,
-} from '../signals/graph.js';
-import type { CRCInstance, CRCRenderTransaction } from '../types.js';
-import { runTeardown } from '../teardowns.js';
+} from "../signals/graph.js";
+import type { CRCInstance, CRCRenderTransaction } from "../types.js";
+import { runTeardown } from "../teardowns.js";
 import type {
   CRCAdvanceLane,
   CRCAdvanceParticipant,
@@ -25,13 +22,13 @@ import type {
   CRCSchedulerTraceCollector,
   CRCSchedulerTraceRecord,
   SchedulerDriver,
-} from './types.js';
+} from "./types.js";
 
 interface InstanceRenderJob {
   readonly instance: CRCInstance;
   readonly firstRevision: number;
   readonly revision: number;
-  readonly pendingRoot: CRCInstance['pendingRoot'];
+  readonly pendingRoot: CRCInstance["pendingRoot"];
   readonly pendingRootRevision: number;
   readonly pendingUpdateParents: boolean;
 }
@@ -40,13 +37,13 @@ interface PendingInstanceWork {
   /** Earliest accepted revision not yet completed in this eligibility bucket. */
   firstRevision: number;
   revision: number;
-  pendingRoot: CRCInstance['pendingRoot'];
+  pendingRoot: CRCInstance["pendingRoot"];
   pendingRootRevision: number;
   pendingUpdateParents: boolean;
 }
 
 interface InstanceRenderRequest {
-  readonly pendingRoot: CRCInstance['pendingRoot'];
+  readonly pendingRoot: CRCInstance["pendingRoot"];
   readonly pendingUpdateParents: boolean;
 }
 
@@ -63,6 +60,7 @@ interface AdvanceRegistration {
   readonly participant: CRCAdvanceParticipant;
   readonly lane: CRCAdvanceLane;
   readonly registrationOrder: number;
+  readonly requestsFrames: boolean;
   active: boolean;
 }
 
@@ -88,7 +86,7 @@ export interface RendererParticipantOwner {
 
 interface RendererParticipantWorkRequest {
   readonly key: object;
-  readonly kind: 'resource' | 'draw' | 'compose';
+  readonly kind: "resource" | "draw" | "compose";
   readonly run: CRCFrameCompletion;
 }
 
@@ -122,10 +120,11 @@ const nextRendererWorkByOwner = new Map<
   RendererParticipantOwner,
   Map<object, RendererParticipantWorkRegistration>
 >();
-const currentRendererParticipantCompletions: RendererParticipantCompletion[] = [];
+const currentRendererParticipantCompletions: RendererParticipantCompletion[] =
+  [];
 const nextRendererParticipantCompletions: RendererParticipantCompletion[] = [];
 
-let phase: CRCFramePhase = 'idle';
+let phase: CRCFramePhase = "idle";
 let pendingHostFrame: number | undefined;
 let currentFrame: CRCFrameSnapshot | undefined;
 let nextFrameId = 0;
@@ -143,8 +142,10 @@ let releasedCompletionCallbacks = 0;
 let currentFramePlanAdmissionDepth = 0;
 let nextBeginCommandSequence = 0;
 let currentFramePlaybackCompletions: CRCFrameCompletion[] | undefined;
-let currentFrameCommitAcknowledgements: CRCFrameCommitAcknowledgement[] | undefined;
-let currentFrameOrderedPlaybackCompletions: OrderedPlaybackCompletion[] | undefined;
+let currentFrameCommitAcknowledgements:
+  CRCFrameCommitAcknowledgement[] | undefined;
+let currentFrameOrderedPlaybackCompletions:
+  OrderedPlaybackCompletion[] | undefined;
 let nextOrderedPlaybackCompletionSequence = 0;
 let schedulerTraceCollector: CRCSchedulerTraceCollector | undefined;
 
@@ -173,8 +174,9 @@ export function requestInstanceRender(
   },
 ): number {
   const revision = ++nextWorkRevision;
-  const target = shouldDeferNewFrameWork() ?
-    nextInstanceWork : currentInstanceWork;
+  const target = shouldDeferNewFrameWork()
+    ? nextInstanceWork
+    : currentInstanceWork;
   if (
     target === currentInstanceWork &&
     request.pendingRoot !== NO_PENDING_ROOT
@@ -189,13 +191,16 @@ export function requestInstanceRender(
       revision,
       pendingRoot: current === instance ? request.pendingRoot : NO_PENDING_ROOT,
       pendingRootRevision:
-        current === instance && request.pendingRoot !== NO_PENDING_ROOT ?
-          revision : 0,
+        current === instance && request.pendingRoot !== NO_PENDING_ROOT
+          ? revision
+          : 0,
       pendingUpdateParents:
         current === instance && request.pendingUpdateParents,
     });
     synchronizeInstancePendingState(current);
-    current = current.parent ? GLOBAL_STATE.crcInstances.get(current.parent) : undefined;
+    current = current.parent
+      ? GLOBAL_STATE.crcInstances.get(current.parent)
+      : undefined;
   }
   requestHostFrameIfNeeded();
   return revision;
@@ -203,18 +208,22 @@ export function requestInstanceRender(
 
 /** Whether an instance has work that has not yet completed a successful render. */
 export function hasPendingInstanceRender(instance: CRCInstance): boolean {
-  return instance.requestedRenderRevision > instance.completedRenderRevision &&
-    !(phase === 'render' && nextInstanceWork.has(instance));
+  return (
+    instance.requestedRenderRevision > instance.completedRenderRevision &&
+    !(phase === "render" && nextInstanceWork.has(instance))
+  );
 }
 
 export function registerAdvanceParticipant(
   participant: CRCAdvanceParticipant,
-  lane: CRCAdvanceLane = 'animation',
+  lane: CRCAdvanceLane = "animation",
+  requestsFrames = true,
 ): () => void {
   const registration: AdvanceRegistration = {
     participant,
     lane,
     registrationOrder: ++nextAdvanceRegistrationOrder,
+    requestsFrames,
     active: true,
   };
   advanceRegistrations.add(registration);
@@ -228,7 +237,9 @@ export function registerAdvanceParticipant(
 }
 
 /** Queues immutable, realm-ordered work for the next frozen Begin prefix. */
-export function queueBeginCommand(command: CRCBeginCommand): CRCBeginCommandHandle {
+export function queueBeginCommand(
+  command: CRCBeginCommand,
+): CRCBeginCommandHandle {
   const sequence = ++nextBeginCommandSequence;
   const registration: BeginCommandRegistration = {
     accepted: Object.freeze({ sequence, command }),
@@ -257,8 +268,10 @@ export function queueBeginCommand(command: CRCBeginCommand): CRCBeginCommandHand
 export function queueCurrentFrameCompletion(
   callback: CRCFrameCompletion,
 ): () => void {
-  if (currentFramePlaybackCompletions === undefined ||
-    (phase !== 'begin' && phase !== 'advance')) {
+  if (
+    currentFramePlaybackCompletions === undefined ||
+    (phase !== "begin" && phase !== "advance")
+  ) {
     return queueFrameCompletion(callback);
   }
   currentFramePlaybackCompletions.push(callback);
@@ -270,10 +283,12 @@ export function queueCurrentFrameCompletion(
 export function queueCurrentFrameCommitAcknowledgement(
   callback: CRCFrameCommitAcknowledgement,
 ): () => void {
-  if (currentFrameCommitAcknowledgements === undefined ||
-    (phase !== 'begin' && phase !== 'advance')) {
+  if (
+    currentFrameCommitAcknowledgements === undefined ||
+    (phase !== "begin" && phase !== "advance")
+  ) {
     throw new Error(
-      'CRC frame Commit acknowledgements may only be queued during Begin or Advance.',
+      "CRC frame Commit acknowledgements may only be queued during Begin or Advance.",
     );
   }
   currentFrameCommitAcknowledgements.push(callback);
@@ -332,7 +347,8 @@ export function recordSchedulerTrace(record: CRCSchedulerTraceRecord): void {
   try {
     collector(Object.freeze(record));
   } catch {
-    if (schedulerTraceCollector === collector) schedulerTraceCollector = undefined;
+    if (schedulerTraceCollector === collector)
+      schedulerTraceCollector = undefined;
   }
 }
 
@@ -341,8 +357,9 @@ export function requestRendererParticipantWork(
   request: RendererParticipantWorkRequest,
 ): void {
   if (!owner.isActive()) return;
-  const rendererWorkByOwner = shouldDeferNewFrameWork() ?
-    nextRendererWorkByOwner : currentRendererWorkByOwner;
+  const rendererWorkByOwner = shouldDeferNewFrameWork()
+    ? nextRendererWorkByOwner
+    : currentRendererWorkByOwner;
   let workByKey = rendererWorkByOwner.get(owner);
   if (!workByKey) {
     workByKey = new Map();
@@ -366,9 +383,9 @@ export function queueRendererParticipantComplete(
   callback: CRCFrameCompletion,
 ): void {
   if (!owner.isActive()) return;
-  const completions = shouldDeferNewFrameWork() ?
-    nextRendererParticipantCompletions :
-    currentRendererParticipantCompletions;
+  const completions = shouldDeferNewFrameWork()
+    ? nextRendererParticipantCompletions
+    : currentRendererParticipantCompletions;
   completions.push({
     owner,
     callback,
@@ -434,14 +451,18 @@ export function snapshotRealmScheduler(): RealmSchedulerSnapshot {
 export function installSchedulerDriverForTest(
   driver: SchedulerDriver,
 ): () => void {
-  if (pendingHostFrame !== undefined || phase !== 'idle') {
-    throw new Error('Cannot replace the CRC scheduler driver while a frame is active.');
+  if (pendingHostFrame !== undefined || phase !== "idle") {
+    throw new Error(
+      "Cannot replace the CRC scheduler driver while a frame is active.",
+    );
   }
   const previous = schedulerDriver;
   schedulerDriver = driver;
   return () => {
-    if (pendingHostFrame !== undefined || phase !== 'idle') {
-      throw new Error('Cannot restore the CRC scheduler driver while a frame is active.');
+    if (pendingHostFrame !== undefined || phase !== "idle") {
+      throw new Error(
+        "Cannot restore the CRC scheduler driver while a frame is active.",
+      );
     }
     schedulerDriver = previous;
   };
@@ -454,12 +475,13 @@ export function installSchedulerTraceCollectorForTest(
   const previous = schedulerTraceCollector;
   schedulerTraceCollector = collector;
   return () => {
-    if (schedulerTraceCollector === collector) schedulerTraceCollector = previous;
+    if (schedulerTraceCollector === collector)
+      schedulerTraceCollector = previous;
   };
 }
 
 function requestHostFrameIfNeeded(): void {
-  if (pendingHostFrame !== undefined || phase !== 'idle' || !hasFrameWork()) {
+  if (pendingHostFrame !== undefined || phase !== "idle" || !hasFrameWork()) {
     return;
   }
   const driver = getSchedulerDriver();
@@ -481,7 +503,7 @@ function runFrame(hostTime: number): void {
     success: boolean;
   }> = [];
 
-  phase = 'begin';
+  phase = "begin";
   let rootJobs = captureRootJobs();
   const commands = beginCommands.splice(0);
   const completions = frameCompletions.splice(0);
@@ -513,13 +535,13 @@ function runFrame(hostTime: number): void {
     ),
   );
 
-  phase = 'advance';
+  phase = "advance";
   for (const registration of registrations) {
     if (!registration.active) continue;
     const { participant } = registration;
     try {
       withDirectSignalWriteForbidden(
-        'Cannot write to a signal directly during CRC scheduler Advance; stage it through the provided batch.',
+        "Cannot write to a signal directly during CRC scheduler Advance; stage it through the provided batch.",
         () => participant(snapshot, batch),
       );
     } catch (error) {
@@ -528,12 +550,14 @@ function runFrame(hostTime: number): void {
     }
   }
 
-  phase = 'commit';
+  phase = "commit";
   let commitApplied = false;
   try {
-    withCurrentFramePlanAdmission(() => batch.commit(() => {
-      commitApplied = true;
-    }));
+    withCurrentFramePlanAdmission(() =>
+      batch.commit(() => {
+        commitApplied = true;
+      }),
+    );
   } catch (error) {
     errors.push(error);
   }
@@ -550,7 +574,7 @@ function runFrame(hostTime: number): void {
     }
   }
 
-  phase = 'plan';
+  phase = "plan";
   try {
     withCurrentFramePlanAdmission(flushPendingComputedValidations);
   } catch (error) {
@@ -558,8 +582,8 @@ function runFrame(hostTime: number): void {
   }
   rootJobs = mergeRootJobs(rootJobs, captureRootJobs());
   const executableInstances = new Set(
-    rootJobs.flatMap(rootJob =>
-      rootJob.instances.map(instanceJob => instanceJob.instance),
+    rootJobs.flatMap((rootJob) =>
+      rootJob.instances.map((instanceJob) => instanceJob.instance),
     ),
   );
   const blockedRendererOwners = new Set<RendererParticipantOwner>();
@@ -572,13 +596,20 @@ function runFrame(hostTime: number): void {
   );
   const retryRendererOwners = new Set<RendererParticipantOwner>();
 
-  phase = 'render';
+  phase = "render";
   for (const rootJob of rootJobs) {
-    if (!registeredRoots.has(rootJob.root) || rootJob.root.mainTeardowns.closed) {
+    if (
+      !registeredRoots.has(rootJob.root) ||
+      rootJob.root.mainTeardowns.closed
+    ) {
       continue;
     }
     const transaction = createRootTransaction();
-    const transactionRecord = { root: rootJob.root, transaction, success: false };
+    const transactionRecord = {
+      root: rootJob.root,
+      transaction,
+      success: false,
+    };
     transactions.push(transactionRecord);
     rootJob.root.eventRoot.renderTransaction = transaction;
     let failedInstance: CRCInstance | undefined;
@@ -590,7 +621,7 @@ function runFrame(hostTime: number): void {
         const participantWork = rendererWork.get(job.instance);
         const resourceFailures = runRendererParticipantStage(
           participantWork,
-          'resource',
+          "resource",
           snapshot,
         );
         if (resourceFailures.length > 0) {
@@ -606,7 +637,7 @@ function runFrame(hostTime: number): void {
         }
         const drawFailures = runRendererParticipantStage(
           participantWork,
-          'draw',
+          "draw",
           snapshot,
         );
         if (drawFailures.length > 0) {
@@ -630,7 +661,7 @@ function runFrame(hostTime: number): void {
           );
           const composeFailures = runRendererParticipantStage(
             participantWork,
-            'compose',
+            "compose",
             snapshot,
           );
           if (composeFailures.length > 0) {
@@ -659,7 +690,7 @@ function runFrame(hostTime: number): void {
     }
   }
 
-  phase = 'complete';
+  phase = "complete";
   const reactions = reactionCompletions.splice(0);
   for (const record of transactions) {
     try {
@@ -703,9 +734,10 @@ function runFrame(hostTime: number): void {
   currentFramePlaybackCompletions = undefined;
   const orderedPlaybackCompletions = currentFrameOrderedPlaybackCompletions;
   currentFrameOrderedPlaybackCompletions = undefined;
-  orderedPlaybackCompletions.sort((left, right) =>
-    left.registrationOrder - right.registrationOrder ||
-    left.sequence - right.sequence,
+  orderedPlaybackCompletions.sort(
+    (left, right) =>
+      left.registrationOrder - right.registrationOrder ||
+      left.sequence - right.sequence,
   );
   for (const completion of orderedPlaybackCompletions) {
     try {
@@ -735,7 +767,7 @@ function runFrame(hostTime: number): void {
   }
   batch.clear();
   currentFrame = undefined;
-  phase = 'idle';
+  phase = "idle";
   promoteNextFrameWork();
   requestHostFrameIfNeeded();
   throwCollectedErrors(errors);
@@ -755,10 +787,9 @@ function createFrameCompletionCancellation(
   return () => {
     if (!active) return;
     active = false;
-    for (const completions of ownedCompletions === undefined ? [
-      frameCompletions,
-      currentFramePlaybackCompletions,
-    ] : [ownedCompletions]) {
+    for (const completions of ownedCompletions === undefined
+      ? [frameCompletions, currentFramePlaybackCompletions]
+      : [ownedCompletions]) {
       const index = completions?.indexOf(callback) ?? -1;
       if (index < 0) continue;
       completions!.splice(index, 1);
@@ -794,7 +825,10 @@ function captureRootJobs(): RootRenderJob[] {
   for (const root of registeredRoots) {
     const jobs = jobsByRoot.get(root);
     if (!jobs) continue;
-    jobs.sort((left, right) => instanceDepth(right.instance) - instanceDepth(left.instance));
+    jobs.sort(
+      (left, right) =>
+        instanceDepth(right.instance) - instanceDepth(left.instance),
+    );
     result.push({ root, instances: jobs });
   }
   return result;
@@ -804,10 +838,12 @@ function mergeRootJobs(
   initial: RootRenderJob[],
   planned: RootRenderJob[],
 ): RootRenderJob[] {
-  const plannedByRoot = new Map(planned.map(job => [job.root, job.instances]));
+  const plannedByRoot = new Map(
+    planned.map((job) => [job.root, job.instances]),
+  );
   const merged: RootRenderJob[] = [];
   for (const root of registeredRoots) {
-    const initialJob = initial.find(job => job.root === root);
+    const initialJob = initial.find((job) => job.root === root);
     const plannedInstances = plannedByRoot.get(root);
     if (!initialJob && !plannedInstances) continue;
     const byInstance = new Map<CRCInstance, InstanceRenderJob>();
@@ -816,24 +852,34 @@ function mergeRootJobs(
     }
     for (const job of plannedInstances ?? []) {
       const existing = byInstance.get(job.instance);
-      byInstance.set(job.instance, existing ? {
-        instance: job.instance,
-        firstRevision: Math.min(existing.firstRevision, job.firstRevision),
-        revision: Math.max(existing.revision, job.revision),
-        pendingRoot:
-          job.pendingRootRevision > existing.pendingRootRevision ?
-            job.pendingRoot : existing.pendingRoot,
-        pendingRootRevision: Math.max(
-          existing.pendingRootRevision,
-          job.pendingRootRevision,
-        ),
-        pendingUpdateParents:
-          existing.pendingUpdateParents || job.pendingUpdateParents,
-      } : job);
+      byInstance.set(
+        job.instance,
+        existing
+          ? {
+              instance: job.instance,
+              firstRevision: Math.min(
+                existing.firstRevision,
+                job.firstRevision,
+              ),
+              revision: Math.max(existing.revision, job.revision),
+              pendingRoot:
+                job.pendingRootRevision > existing.pendingRootRevision
+                  ? job.pendingRoot
+                  : existing.pendingRoot,
+              pendingRootRevision: Math.max(
+                existing.pendingRootRevision,
+                job.pendingRootRevision,
+              ),
+              pendingUpdateParents:
+                existing.pendingUpdateParents || job.pendingUpdateParents,
+            }
+          : job,
+      );
     }
     const instances = Array.from(byInstance.values());
-    instances.sort((left, right) =>
-      instanceDepth(right.instance) - instanceDepth(left.instance),
+    instances.sort(
+      (left, right) =>
+        instanceDepth(right.instance) - instanceDepth(left.instance),
     );
     merged.push({ root, instances });
   }
@@ -875,7 +921,9 @@ function isInstanceWithin(
   let current: CRCInstance | undefined = instance;
   while (current) {
     if (current === ancestor) return true;
-    current = current.parent ? GLOBAL_STATE.crcInstances.get(current.parent) : undefined;
+    current = current.parent
+      ? GLOBAL_STATE.crcInstances.get(current.parent)
+      : undefined;
   }
   return false;
 }
@@ -930,33 +978,36 @@ function countDirtyRoots(): number {
 }
 
 function countDirtyInstances(): number {
-  return new Set([
-    ...currentInstanceWork.keys(),
-    ...nextInstanceWork.keys(),
-  ]).size;
+  return new Set([...currentInstanceWork.keys(), ...nextInstanceWork.keys()])
+    .size;
+}
+
+function hasActiveAdvanceParticipant(): boolean {
+  for (const registration of advanceRegistrations)
+    if (registration.requestsFrames) return true;
+  return false;
 }
 
 function hasFrameWork(): boolean {
-  return currentInstanceWork.size > 0 ||
+  return (
+    currentInstanceWork.size > 0 ||
     nextInstanceWork.size > 0 ||
     hasPendingComputedValidations() ||
     beginCommands.length > 0 ||
-    advanceRegistrations.size > 0 ||
+    hasActiveAdvanceParticipant() ||
     frameCompletions.length > 0 ||
     reactionCompletions.length > 0 ||
     currentRendererWorkByOwner.size > 0 ||
     nextRendererWorkByOwner.size > 0 ||
     currentRendererParticipantCompletions.length > 0 ||
-    nextRendererParticipantCompletions.length > 0;
+    nextRendererParticipantCompletions.length > 0
+  );
 }
 
 function captureRendererParticipantWork(
   executableInstances: ReadonlySet<CRCInstance>,
   blockedOwners: Set<RendererParticipantOwner>,
-): Map<
-  CRCInstance,
-  RendererParticipantWorkRegistration[]
-> {
+): Map<CRCInstance, RendererParticipantWorkRegistration[]> {
   const byInstance = new Map<
     CRCInstance,
     RendererParticipantWorkRegistration[]
@@ -979,9 +1030,10 @@ function captureRendererParticipantWork(
   }
   const kindOrder = { resource: 0, draw: 1, compose: 2 } as const;
   for (const work of byInstance.values()) {
-    work.sort((left, right) =>
-      kindOrder[left.request.kind] - kindOrder[right.request.kind] ||
-      left.order - right.order,
+    work.sort(
+      (left, right) =>
+        kindOrder[left.request.kind] - kindOrder[right.request.kind] ||
+        left.order - right.order,
     );
   }
   return byInstance;
@@ -1006,16 +1058,13 @@ function captureRendererParticipantCompletions(
 
 function runRendererParticipantStage(
   work: RendererParticipantWorkRegistration[] | undefined,
-  kind: RendererParticipantWorkRequest['kind'],
+  kind: RendererParticipantWorkRequest["kind"],
   snapshot: CRCFrameSnapshot,
 ): unknown[] {
   const errors: unknown[] = [];
   if (!work) return errors;
   for (const registration of work) {
-    if (
-      registration.request.kind !== kind ||
-      !registration.owner.isActive()
-    ) {
+    if (registration.request.kind !== kind || !registration.owner.isActive()) {
       continue;
     }
     try {
@@ -1087,8 +1136,13 @@ function mergePendingInstanceWork(
 function synchronizeInstancePendingState(instance: CRCInstance): void {
   const current = currentInstanceWork.get(instance);
   const next = nextInstanceWork.get(instance);
-  const rootSource = !current ? next : !next ? current :
-    current.pendingRootRevision >= next.pendingRootRevision ? current : next;
+  const rootSource = !current
+    ? next
+    : !next
+      ? current
+      : current.pendingRootRevision >= next.pendingRootRevision
+        ? current
+        : next;
   instance.pendingRoot = rootSource ? rootSource.pendingRoot : NO_PENDING_ROOT;
   instance.pendingUpdateParents = Boolean(
     current?.pendingUpdateParents || next?.pendingUpdateParents,
@@ -1179,16 +1233,20 @@ function withCurrentFramePlanAdmission<T>(callback: () => T): T {
 }
 
 function shouldDeferNewFrameWork(): boolean {
-  return phase !== 'idle' &&
-    phase !== 'begin' &&
-    currentFramePlanAdmissionDepth === 0;
+  return (
+    phase !== "idle" &&
+    phase !== "begin" &&
+    currentFramePlanAdmissionDepth === 0
+  );
 }
 
 function getSchedulerDriver(): SchedulerDriver {
-  return schedulerDriver ?? {
-    requestFrame: callback => globalThis.requestAnimationFrame(callback),
-    cancelFrame: frameId => globalThis.cancelAnimationFrame(frameId),
-  };
+  return (
+    schedulerDriver ?? {
+      requestFrame: (callback) => globalThis.requestAnimationFrame(callback),
+      cancelFrame: (frameId) => globalThis.cancelAnimationFrame(frameId),
+    }
+  );
 }
 
 function createRootTransaction(): RootTransaction {
@@ -1223,6 +1281,6 @@ function createRootTransaction(): RootTransaction {
 function throwCollectedErrors(errors: unknown[]): void {
   if (errors.length === 1) throw errors[0];
   if (errors.length > 1) {
-    throw new AggregateError(errors, 'Multiple CRC frame operations failed.');
+    throw new AggregateError(errors, "Multiple CRC frame operations failed.");
   }
 }

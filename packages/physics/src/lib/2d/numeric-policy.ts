@@ -16,10 +16,10 @@ export const RADIANS_TO_DEGREES = 180 / Math.PI;
 export const DEFAULT_GRAVITY = Object.freeze([0, 0] as const);
 export const DEFAULT_FIXED_STEP_MILLISECONDS = 1000 / 60;
 export const DEFAULT_MAX_CATCH_UP_STEPS = 4;
-export const DEFAULT_INTERPOLATION = 'linear' as const;
+export const DEFAULT_INTERPOLATION = "linear" as const;
 export const DEFAULT_SLEEPING = true;
-export const DEFAULT_VELOCITY_ITERATIONS = 8;
-export const DEFAULT_POSITION_ITERATIONS = 3;
+export const DEFAULT_VELOCITY_ITERATIONS = 4;
+export const DEFAULT_POSITION_ITERATIONS = 1;
 
 export const MIN_SOLVER_ITERATIONS = 1;
 export const MAX_SOLVER_ITERATIONS = 32;

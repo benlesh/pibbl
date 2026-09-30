@@ -56,7 +56,9 @@ export function barFill(
     const y0 = map(low),
       y1 = map(high);
     if (y0 === y1) return colors[index];
-    const gradient = ctx.createLinearGradient(0, y0, 0, y1);
+    // Rectangle placement translates its local paint coordinates.
+    const top = Math.min(y0, y1);
+    const gradient = ctx.createLinearGradient(0, y0 - top, 0, y1 - top);
     gradient.addColorStop(0, colors[index]);
     for (; index < thresholds.length && thresholds[index] < high; index++) {
       const offset = Math.max(

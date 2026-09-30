@@ -37,12 +37,12 @@ function DiagramEditor() {
     <Rectangle style={{ width: 960, height: 56, fill: "#fffdf6" }} />,
     <Text
       pointerEvents="none"
-      style={{ x: 24, y: 34, fill: "#17211d", font: "900 22px sans-serif" }}
+      style={{ left: 24, top: 34, fill: "#17211d", font: "900 22px sans-serif" }}
     >
       WORKFLOW MAP
     </Text>,
     <Rectangle
-      style={{ x: 0, y: 56, width: 960, height: 512, fill: "#eef2e8" }}
+      style={{ left: 0, top: 56, width: 960, height: 512, fill: "#eef2e8" }}
     />,
     <Path
       pointerEvents="none"
@@ -70,8 +70,8 @@ function DiagramEditor() {
       <Text
         pointerEvents="none"
         style={{
-          x: 84,
-          y: 34,
+          left: 84,
+          top: 34,
           fill: "#17211d",
           font: "900 18px sans-serif",
           textAlign: "center",
@@ -82,8 +82,8 @@ function DiagramEditor() {
       <Text
         pointerEvents="none"
         style={{
-          x: 84,
-          y: 59,
+          left: 84,
+          top: 59,
           fill: "#17211d",
           font: "700 12px sans-serif",
           textAlign: "center",
@@ -94,8 +94,8 @@ function DiagramEditor() {
       <Rectangle
         pointerEvents="none"
         style={{
-          x: -5,
-          y: 37,
+          left: -5,
+          top: 37,
           width: 10,
           height: 10,
           fill: "#fffdf6",
@@ -107,8 +107,8 @@ function DiagramEditor() {
       <Rectangle
         pointerEvents="none"
         style={{
-          x: 163,
-          y: 37,
+          left: 163,
+          top: 37,
           width: 10,
           height: 10,
           fill: "#fffdf6",
@@ -132,8 +132,8 @@ function DiagramEditor() {
       <Text
         pointerEvents="none"
         style={{
-          x: 84,
-          y: 34,
+          left: 84,
+          top: 34,
           fill: "#17211d",
           font: "900 18px sans-serif",
           textAlign: "center",
@@ -144,8 +144,8 @@ function DiagramEditor() {
       <Text
         pointerEvents="none"
         style={{
-          x: 84,
-          y: 59,
+          left: 84,
+          top: 59,
           fill: "#17211d",
           font: "700 12px sans-serif",
           textAlign: "center",
@@ -156,8 +156,8 @@ function DiagramEditor() {
       <Rectangle
         pointerEvents="none"
         style={{
-          x: -5,
-          y: 37,
+          left: -5,
+          top: 37,
           width: 10,
           height: 10,
           fill: "#fffdf6",
@@ -169,8 +169,8 @@ function DiagramEditor() {
       <Rectangle
         pointerEvents="none"
         style={{
-          x: 163,
-          y: 37,
+          left: 163,
+          top: 37,
           width: 10,
           height: 10,
           fill: "#fffdf6",
@@ -181,11 +181,11 @@ function DiagramEditor() {
       />
     </Group>,
     <Rectangle
-      style={{ x: 0, y: 568, width: 960, height: 32, fill: "#17211d" }}
+      style={{ left: 0, top: 568, width: 960, height: 32, fill: "#17211d" }}
     />,
     <Text
       pointerEvents="none"
-      style={{ x: 20, y: 589, fill: "#fffdf6", font: "700 12px monospace" }}
+      style={{ left: 20, top: 589, fill: "#fffdf6", font: "700 12px monospace" }}
     >
       READY · 100%
     </Text>,

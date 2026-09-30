@@ -247,7 +247,8 @@ async function searchContract(page) {
   if (
     resultUrls.length === 0 ||
     resultUrls.some((url) => url === null || url.startsWith("#/testing")) ||
-    resultContents.some((content) => /testing|test lab|scenario/u.test(content))
+    // Public testing APIs belong in search; private lab routes and records do not.
+    resultContents.some((content) => /test lab|scenario/u.test(content))
   ) {
     throw failure(
       route,

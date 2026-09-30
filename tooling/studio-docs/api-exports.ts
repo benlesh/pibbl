@@ -56,6 +56,7 @@ export interface ApiCoverage {
 }
 
 export const crcPublicCompilerOptions: CompilerOptions = {
+  target: 99,
   jsx: 4, // react-jsx; the native TypeScript API does not export JsxEmit.
   jsxImportSource: "@crc/core",
 };
@@ -64,7 +65,9 @@ export const crcPublicEntryPaths = {
   root: fileURLToPath(
     new URL("../../packages/core/src/index.ts", import.meta.url),
   ),
-  viz: fileURLToPath(new URL("../../packages/viz/src/index.ts", import.meta.url)),
+  viz: fileURLToPath(
+    new URL("../../packages/viz/src/index.ts", import.meta.url),
+  ),
   three: fileURLToPath(
     new URL("../../packages/three/src/index.ts", import.meta.url),
   ),
@@ -97,6 +100,10 @@ export const crcPhysicsEntryPaths = {
 /** Exact public entries rendered by the Studio API reference. */
 export const crcStudioPublicEntryPaths = {
   ...crcPublicEntryPaths,
+  physics2d: crcPhysicsEntryPaths.root,
+  physics2dTesting: fileURLToPath(
+    new URL("../../packages/physics/src/2d-testing.ts", import.meta.url),
+  ),
   physics3dGeometry: crcPhysicsEntryPaths.physics3dGeometry,
 } as const;
 

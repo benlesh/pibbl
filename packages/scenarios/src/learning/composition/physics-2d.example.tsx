@@ -16,6 +16,7 @@ import {
   disableBody2D,
   dynamicBody2D,
   enableBody2D,
+  inspectPhysics2D,
   setLinearVelocity2D,
   staticBody2D,
   teleportBody2D,
@@ -66,15 +67,23 @@ function releaseVelocity(
 ): readonly [number, number] {
   const final = trail.at(-1);
   if (!final) return [0, 0];
-  const oldest = trail.find(
-    (sample) =>
-      sample.timeStamp < final.timeStamp &&
-      final.timeStamp - sample.timeStamp <= TRAIL_WINDOW_MILLISECONDS,
-  );
+  const oldest =
+    trail.find(
+      (sample) =>
+        sample.timeStamp < final.timeStamp &&
+        final.timeStamp - sample.timeStamp <= TRAIL_WINDOW_MILLISECONDS,
+    ) ??
+    [...trail]
+      .reverse()
+      .find(
+        (sample) =>
+          sample !== final &&
+          sample.timeStamp === final.timeStamp &&
+          (sample.x !== final.x || sample.y !== final.y),
+      );
   if (!oldest) return [0, 0];
 
-  const seconds = (final.timeStamp - oldest.timeStamp) / 1000;
-  if (seconds <= 0) return [0, 0];
+  const seconds = Math.max(1, final.timeStamp - oldest.timeStamp) / 1000;
   const velocityX = (final.x - oldest.x) / seconds;
   const velocityY = (final.y - oldest.y) / seconds;
   const magnitude = Math.hypot(velocityX, velocityY);
@@ -189,13 +198,17 @@ function DraggableBall() {
           }}
           onPointerDown={(event) => {
             if (dragSession.current !== null) return;
-            const [x, y] = body.position.get();
+            const displayedBody = inspectPhysics2D(body);
+            const [x, y] =
+              displayedBody?.presentationPose.position ?? body.position.get();
             const position = [x, y] as const;
             dragSession.current = {
               pointerId: event.pointerId,
               offsetX: x - event.x,
               offsetY: y - event.y,
-              rotationDegrees: body.rotationDegrees.get(),
+              rotationDegrees:
+                displayedBody?.presentationPose.rotationDegrees ??
+                body.rotationDegrees.get(),
               position,
               trail: [],
             };
@@ -257,8 +270,8 @@ function GroundSensor() {
         physics={collider2D({ sensor: true, tag: "ground-check" })}
         pointerEvents="none"
         style={{
-          x: 164,
-          y: 304,
+          left: 164,
+          top: 304,
           width: 92,
           height: 12,
           fill: "#38bdf833",
@@ -279,21 +292,21 @@ function PhysicsLesson() {
           physics={staticBody2D({
             collider: { tag: "ground", friction: 0.55 },
           })}
-          style={{ x: 54, y: 316, width: 612, height: 34, fill: "#334155" }}
+          style={{ left: 54, top: 316, width: 612, height: 34, fill: "#334155" }}
         />
         <Rectangle
           physics={staticBody2D({
             collider: { tag: "left-wall", friction: 0.4 },
           })}
           pointerEvents="none"
-          style={{ x: 54, y: 96, width: 20, height: 220, fill: "#475569" }}
+          style={{ left: 54, top: 96, width: 20, height: 220, fill: "#475569" }}
         />
         <Rectangle
           physics={staticBody2D({
             collider: { tag: "right-wall", friction: 0.4 },
           })}
           pointerEvents="none"
-          style={{ x: 646, y: 96, width: 20, height: 220, fill: "#475569" }}
+          style={{ left: 646, top: 96, width: 20, height: 220, fill: "#475569" }}
         />
         <StaticBumper
           x={250}
@@ -322,8 +335,8 @@ function PhysicsLesson() {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 54,
+          left: 360,
+          top: 54,
           fill: "#17211d",
           font: "900 24px Arial",
           textAlign: "center",
@@ -334,8 +347,8 @@ function PhysicsLesson() {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 82,
+          left: 360,
+          top: 82,
           fill: "#475569",
           font: "600 13px Arial",
           textAlign: "center",
@@ -346,8 +359,8 @@ function PhysicsLesson() {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 390,
+          left: 360,
+          top: 390,
           fill: "#0f172a",
           font: "600 12px monospace",
           textAlign: "center",

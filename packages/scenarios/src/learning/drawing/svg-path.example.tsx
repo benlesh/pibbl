@@ -12,8 +12,8 @@ function SvgPathStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7c948",
@@ -21,8 +21,8 @@ function SvgPathStudy() {
     />,
     <Rectangle
       style={{
-        x: 52,
-        y: 52,
+        left: 52,
+        top: 52,
         width: 616,
         height: 316,
         fill: "#fffdf6",
@@ -51,8 +51,8 @@ function SvgPathStudy() {
     </Group>,
     <Text
       style={{
-        x: 360,
-        y: 326,
+        left: 360,
+        top: 326,
         fill: "#17211d",
         font: "800 17px sans-serif",
         textAlign: "center",

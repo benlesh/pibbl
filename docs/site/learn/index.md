@@ -24,6 +24,7 @@ question while you work.
 - [Understand components, props, and children](#/learn/guides/components-props-and-children)
 - [Style and draw](#/learn/guides/style-and-draw)
 - [Compose and lay out scenes](#/learn/guides/compose-and-layout)
+- [Move, resize, and rotate components](#/learn/guides/manipulation)
 - [Manage state and lifecycle](#/learn/guides/state-and-lifecycle)
 - [Use signals and animation](#/learn/guides/signals-and-animation)
 - [Use Three.js inside CRC](#/learn/guides/three-js)

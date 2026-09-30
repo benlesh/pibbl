@@ -51,8 +51,8 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
       { key: label, children: null },
       createElement(Rectangle, {
         style: {
-          x: 32 + index * 100,
-          y: 100,
+          left: 32 + index * 100,
+          top: 100,
           width: 84,
           height: 56,
           fill: "#f7c948",
@@ -62,7 +62,7 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
       }),
       createElement(
         Text,
-        { pointerEvents: "none", style: { x: 64 + index * 100, y: 116 } },
+        { pointerEvents: "none", style: { left: 64 + index * 100, top: 116 } },
         label,
       ),
     ),
@@ -84,7 +84,7 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
           Text,
           {
             pointerEvents: "none",
-            style: { x: 24, y: 28, fill: "white" },
+            style: { left: 24, top: 28, fill: "white" },
           },
           "Selected: ",
           message,
@@ -142,7 +142,7 @@ raw strings and nonzero numbers outside `Text` are errors.
 Pass textual values to `Text` as constructor children:
 
 ```ts
-createElement(Text, { style: { x: 20, y: 20 } }, "Count: ", 0);
+createElement(Text, { style: { left: 20, top: 20 } }, "Count: ", 0);
 ```
 
 Zero renders inside `Text`. Text children may be nested arrays or finite

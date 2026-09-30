@@ -75,8 +75,8 @@ function Button({
       <Text
         pointerEvents="none"
         style={{
-          x: 69,
-          y: 17,
+          left: 69,
+          top: 17,
           textAlign: "center",
           textBaseline: "middle",
           font: "12px sans-serif",
@@ -193,8 +193,8 @@ function Bars({
       <Text
         pointerEvents="none"
         style={{
-          x: band.frame.width - 5,
-          y: thresholdY - 10,
+          left: band.frame.width - 5,
+          top: thresholdY - 10,
           textAlign: "right",
           textBaseline: "bottom",
           font: "11px sans-serif",
@@ -213,8 +213,8 @@ function Bars({
             <Text
               pointerEvents="none"
               style={{
-                x: center,
-                y: band.frame.height + 18,
+                left: center,
+                top: band.frame.height + 18,
                 textAlign: "center",
                 font: "12px sans-serif",
                 fill: muted,
@@ -225,8 +225,8 @@ function Bars({
             <Text
               pointerEvents="none"
               style={{
-                x: center,
-                y: end + (row.value < 0 ? 12 : -20),
+                left: center,
+                top: end + (row.value < 0 ? 12 : -20),
                 textAlign: "center",
                 font: "bold 13px sans-serif",
                 fill: ink,
@@ -240,8 +240,8 @@ function Bars({
       <Text
         pointerEvents="none"
         style={{
-          x: 0,
-          y: band.frame.height + 61,
+          left: 0,
+          top: band.frame.height + 61,
           font: "bold 15px sans-serif",
           fill: ink,
         }}
@@ -253,8 +253,8 @@ function Bars({
       <Text
         pointerEvents="none"
         style={{
-          x: 0,
-          y: band.frame.height + 88,
+          left: 0,
+          top: band.frame.height + 88,
           font: "11px sans-serif",
           fill: muted,
         }}
@@ -285,13 +285,13 @@ function Scene() {
       />
       <Text
         pointerEvents="none"
-        style={{ x: 28, y: 25, font: "bold 27px sans-serif", fill: ink }}
+        style={{ left: 28, top: 25, font: "bold 27px sans-serif", fill: ink }}
       >
         Annual population change
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 28, y: 64, font: "13px sans-serif", fill: muted }}
+        style={{ left: 28, top: 64, font: "13px sans-serif", fill: muted }}
       >
         Six most populous U.S. states · July 2022–July 2023
       </Text>
@@ -316,8 +316,8 @@ function Scene() {
       <Text
         pointerEvents="none"
         style={{
-          x: 28,
-          y: origin.y - 42,
+          left: 28,
+          top: origin.y - 42,
           font: "11px sans-serif",
           fill: muted,
         }}
