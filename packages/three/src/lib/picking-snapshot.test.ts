@@ -62,3 +62,19 @@ it("isolates batched transform texture data without replacing application storag
     expect(batch.getMatrixAt(0, new Matrix4()).elements[12]).toBe(20);
   } finally { batch.dispose(); geometry.dispose(); material.dispose(); }
 });
+
+it('copies BatchedMesh children exactly once through the snapshot identity map', () => {
+  const scene = new Scene(), camera = new PerspectiveCamera();
+  const geometry = new BoxGeometry(), material = new MeshBasicMaterial();
+  const batch = new BatchedMesh(1, 24, 36, material), child = new Mesh(geometry, material);
+  batch.addInstance(batch.addGeometry(geometry)); batch.add(child); scene.add(batch);
+  try {
+    const snapshot = snapshotPickingScene(scene, camera);
+    const copy = snapshot.copies.get(batch)!;
+    expect(copy.children).toHaveLength(1);
+    expect(copy.children[0]).toBe(snapshot.copies.get(child));
+    expect(snapshot.originals.get(copy.children[0])).toBe(child);
+    expect(batch.children).toEqual([child]);
+    expect(child.parent).toBe(batch);
+  } finally { batch.dispose(); geometry.dispose(); material.dispose(); }
+});

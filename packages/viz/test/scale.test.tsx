@@ -1,5 +1,5 @@
 import { Absolute, Layer, crc, signal, type Signal } from "@crc/core";
-import { Scale, useScale, type ResolvedScale } from "@crc/viz";
+import { Scale, useScale, type ResolvedLinearScale } from "@crc/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -43,7 +43,7 @@ it.each([
 it("maps local allocations and updates the same scale signal during reflow", () => {
   runtime = testRuntime();
   const domain = signal<readonly [number, number]>([0, 10]);
-  const identities: Signal<ResolvedScale>[] = [];
+  const identities: Signal<ResolvedLinearScale>[] = [];
   const values: number[][] = [];
   function Probe() {
     const x = useScale("x");
@@ -83,7 +83,7 @@ it("maps local allocations and updates the same scale signal during reflow", () 
 
 it("restores shadowed scopes and rolls back a failed candidate", () => {
   runtime = testRuntime();
-  const captured: Signal<ResolvedScale>[] = [];
+  const captured: Signal<ResolvedLinearScale>[] = [];
   function Probe() {
     const x = useScale("x");
     captured.push(x);
@@ -191,7 +191,7 @@ it("resolves whole allocation styles and dynamic scale inputs through core signa
   const style = signal({ width: 200, height: 80 });
   const reverse = signal(false);
   const range = signal<"width" | readonly [number, number]>("width");
-  let scale!: ResolvedScale;
+  let scale!: ResolvedLinearScale;
   function Probe() {
     scale = useScale("x").get();
   }

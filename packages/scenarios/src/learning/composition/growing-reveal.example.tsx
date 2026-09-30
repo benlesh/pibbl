@@ -90,8 +90,8 @@ function Button({
       <Text
         pointerEvents="none"
         style={{
-          x: 73,
-          y: 24,
+          left: 73,
+          top: 24,
           textBaseline: "alphabetic",
           textAlign: "center",
           font: "600 12px Arial",
@@ -124,8 +124,8 @@ function GrowingReveal({ canvas }: { canvas: HTMLCanvasElement }) {
         <Text
           pointerEvents="none"
           style={{
-            x: 28,
-            y: 30,
+            left: 28,
+            top: 30,
             textBaseline: "alphabetic",
             font: "600 11px Arial",
             fill: "#d3a9b3",
@@ -136,8 +136,8 @@ function GrowingReveal({ canvas }: { canvas: HTMLCanvasElement }) {
         <Text
           pointerEvents="none"
           style={{
-            x: 28,
-            y: 70,
+            left: 28,
+            top: 70,
             textBaseline: "alphabetic",
             font: "600 34px Georgia",
             fill: "#f5e5dc",
@@ -148,8 +148,8 @@ function GrowingReveal({ canvas }: { canvas: HTMLCanvasElement }) {
         <Text
           pointerEvents="none"
           style={{
-            x: 28,
-            y: 95,
+            left: 28,
+            top: 95,
             textBaseline: "alphabetic",
             font: "13px Arial",
             fill: "#aeb0c4",
@@ -209,8 +209,8 @@ function GrowingReveal({ canvas }: { canvas: HTMLCanvasElement }) {
         <Text
           pointerEvents="none"
           style={{
-            x: 28,
-            y: 602,
+            left: 28,
+            top: 602,
             textBaseline: "alphabetic",
             font: "11px Arial",
             fill: "#929bae",

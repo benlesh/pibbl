@@ -12,6 +12,8 @@ symbols:
     toPath2D,
     toSvgPathData,
     flattenPath,
+    flattenPathWang,
+    simplifyPathRadial,
     simplifyPath,
     subdividePath,
     FlattenPathOptions,
@@ -141,10 +143,13 @@ Try the [editable path example](#/examples/drawing/path-geometry).
 independent line geometry mapped from a local source rectangle to four named
 corners. `PathWarpRect` supplies x, y, width, height; `PathWarpCorners` supplies
 topLeft, topRight, bottomLeft, bottomRight as `PathWarpPoint` values.
-`WarpPathOptions` requires positive destination-space tolerance. `PathWarpMode` is `'bilinear'` (default) or `'perspective'`. Bilinear stretches
-between corners; perspective projects onto a strictly convex quadrilateral.
+`WarpPathOptions` requires positive destination-space tolerance. `PathWarpMode`
+is `'bilinear'` (default) or `'perspective'`. Bilinear stretches between corners;
+perspective projects onto a strictly convex quadrilateral.
 
 ```ts
+import { warpPath } from "@crc/core";
+
 const warped = warpPath(geometry, {
   source: { x: 0, y: 0, width: 200, height: 100 },
   destination: {
@@ -167,16 +172,37 @@ at a projection pole are rejected, even outside the source rectangle.
 
 Output contains only Move, Line, and Close segments. Curves, arcs, and closing
 edges are approximated after warping to meet tolerance in destination units;
-transforming the original control points is not equivalent. Later display scaling
-magnifies that error. No stroke-outline or topology preservation is promised.
+transforming original control points is not equivalent. No stroke-outline or
+topology preservation is promised. Invalid values, invalid perspective
+destinations, overflow, unachievable precision, and exhausted limits throw
+without modifying the input or returning a partial result. Recompute from the
+original geometry while editing. Try the
+[four-corner rocket demo](#/examples/drawing/path-warp).
 
-`maxSegments` defaults to 1,000,000 and includes Move/Close. Invalid numbers,
-invalid perspective destinations, overflow, unachievable precision, and exhausted
-output/work limits throw RangeError without modifying the input. Malformed input
-kinds or unknown modes throw TypeError. No partial result is returned.
+## Alternate algorithms
 
-Retain the original geometry and call warpPath again when handles change.
-Publish the new result through existing CRC state/signals; warpPath does not
-schedule rendering or invalidate Layers. Try the
-[four-corner rocket demo](#/examples/drawing/path-warp) to drag corners and switch
-modes without resetting their positions.
+Import alternate helpers independently from `@crc/core`. The default helpers do
+not dispatch to them; unused algorithms are removed by compatible production
+bundlers. CRC verifies this for source, built, and packed consumers.
+
+```ts
+import { flattenPathWang, simplifyPathRadial } from "@crc/core";
+
+const uniformLines = flattenPathWang(geometry, { tolerance: 0.25 });
+const reducedDenseLines = simplifyPathRadial(uniformLines, { tolerance: 0.5 });
+```
+
+`flattenPathWang` accepts `FlattenPathOptions` and uses a second-derivative bound
+with uniform parameter steps for Béziers. Transformed arcs use a bound based on
+their maximum affine stretch. It can generate more segments than adaptive
+flattening where curvature varies; predictable counts and less subdivision work
+are its main tradeoffs. It preserves the same input-space distance-tolerance,
+contour, independent-output, and output-limit contracts as `flattenPath`.
+
+`simplifyPathRadial` accepts `SimplifyPathOptions`. It removes nearby samples
+before Douglas–Peucker and splits the tolerance equally between the two passes.
+Its error budget is relative to the original polyline, not just the prefiltered
+points. It is useful for dense input but can retain more points or be slower for
+sparse input. Like `simplifyPath`, it requires line-only geometry and does not
+promise topology preservation. Defaults remain adaptive flattening and ordinary
+Douglas–Peucker. `subdividePath` retains de Casteljau subdivision.

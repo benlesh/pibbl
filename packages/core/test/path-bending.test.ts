@@ -270,3 +270,15 @@ describe('path bending boundaries', () => {
     }
   });
 });
+
+it('accepts smooth cubic guides at fractional coordinates produced by scaled pointer drags', () => {
+  const source = new PathGeometry(); source.rect(0, -28, 280, 56);
+  for (let i = 1; i <= 10; i++) {
+    const guide = new PathGeometry(); guide.moveTo(180, 330);
+    guide.bezierCurveTo(280 + i * 6.01357, 230 + i * 15.01793, 520, 390, 620, 310);
+    expect(() => bendPathAlongPath(source, guide, {
+      source: { x: 0, y: -28, width: 280, height: 56 },
+      fit: 'stretch', overflow: 'extend', tolerance: 0.15,
+    })).not.toThrow();
+  }
+});

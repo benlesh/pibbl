@@ -64,10 +64,13 @@ export function snapshotPickingScene(scene: Scene, camera: Camera) {
 function cloneWithoutMetadata<T extends Object3D | Material>(source: T): T {
   const metadata = Object.getOwnPropertyDescriptor(source, "userData");
   // A shadow input inherits ordinary fields, avoiding one descriptor allocation
-  // per source property. Only metadata is overridden for Three's copy() call.
+  // per source property. Override only inputs managed by this snapshot walk.
   const input = Object.create(source, {
     userData: { value: {}, writable: true, enumerable: true, configurable: true },
   }) as T;
+  // BatchedMesh.copy ignores recursive=false. Only our identity-mapped walk
+  // may copy children; built-in copy methods must see an empty child list.
+  if ((source as Object3D).isObject3D) Object.defineProperty(input, "children", { value: [] });
   if ((source as unknown as LOD).isLOD) Object.defineProperty(input, "levels", { value: [] });
   if ((source as unknown as { isBatchedMesh?: boolean }).isBatchedMesh) {
     // BatchedMesh.copy clones its textures, then writes image.data. Texture.clone

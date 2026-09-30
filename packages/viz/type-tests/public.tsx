@@ -37,7 +37,7 @@ function Probe() {
     <Axis
       scale="x"
       position="bottom"
-      tickFormat={(value) => String(scale.map(value))}
+      tickFormat={(value) => typeof value === "number" ? String(scale.map(value)) : value}
     />
   );
 }
@@ -59,7 +59,7 @@ void createElement(
 void (<LineSeries data={data} x="name" y="value" xScale="x" yScale="y" />);
 // @ts-expect-error no curve catalog in this slice
 void (<LineSeries {...line} curve="basis" />);
-// @ts-expect-error no band scale in this slice
+// Band domains can also contain finite numeric categories.
 void (<Scale {...props} type="band" />);
 // @ts-expect-error paired coordinate and ID
 void (<ScaleAdjust x={1} />);
@@ -302,3 +302,161 @@ const invalidAnchoredItem: AnchoredItem = {
   height: 20,
 };
 void invalidAnchoredItem;
+
+import { BarSeries, type ResolvedBandScale } from "@crc/viz";
+void (
+  <BarSeries
+    data={[{ category: "A", value: -2 }]}
+    category="category"
+    value="value"
+    categoryScale="categories"
+    valueScale="values"
+  />
+);
+function BandConsumer() {
+  const band: ResolvedBandScale = useScale("categories", "band").get();
+  const start: number | undefined = band.map("A");
+  void start;
+  // @ts-expect-error bands have no numeric inversion
+  band.invert(1);
+  return null;
+}
+void BandConsumer;
+
+void (
+  <BarSeries
+    data={[{ category: "A", value: 42 }]}
+    category="category"
+    value="value"
+    categoryScale="categories"
+    valueScale="values"
+    style={{
+      fill: signal({
+        type: "threshold" as const,
+        thresholds: [0, 30],
+        colors: ["orange", "green", "red"],
+      }),
+    }}
+  />
+);
+
+import type {
+  BandScaleRange,
+  BarStyleResolver,
+  BarSeriesProps,
+} from "@crc/viz";
+const groupedRows = [{ category: "A", group: "East", value: 12 }];
+const nestedRange: BandScaleRange = { bandwidthOf: Symbol("category") };
+const groupStyle: BarStyleResolver<(typeof groupedRows)[number]> = (row) => ({
+  fill: row.group === "East" ? "teal" : "orange",
+});
+void (
+  <Scale id="g" type="band" domain={["East"]} range={signal(nestedRange)} />
+);
+void (
+  <BarSeries
+    data={groupedRows}
+    category="category"
+    value="value"
+    group="group"
+    groupScale="g"
+    categoryScale="c"
+    valueScale="v"
+    style={groupStyle}
+  />
+);
+// @ts-expect-error group requires groupScale
+const incompleteGroup: BarSeriesProps<(typeof groupedRows)[number]> = {
+  data: groupedRows,
+  category: "category",
+  value: "value",
+  group: "group",
+  categoryScale: "c",
+  valueScale: "v",
+};
+void incompleteGroup;
+void (
+  (
+    // @ts-expect-error numeric scales cannot use bandwidthOf
+    <Scale id="v" type="linear" domain={[0, 1]} range={{ bandwidthOf: "c" }} />
+  )
+);
+const signalGroupStyle: BarStyleResolver<
+  (typeof groupedRows)[number]
+> = () => ({
+  // @ts-expect-error datum style callbacks return plain values
+  opacity: signal(0.5),
+});
+void signalGroupStyle;
+
+const stackRows = [{ category: "Q1", group: "Actual", from: -5, to: -9 }];
+void (
+  <BarSeries
+    data={stackRows}
+    category="category"
+    valueStart="from"
+    valueEnd="to"
+    categoryScale="c"
+    valueScale="v"
+    group="group"
+    groupScale="g"
+    style={{ fill: "orange" }}
+  />
+);
+// @ts-expect-error range endpoints must be paired
+const missingRangeEnd: BarSeriesProps<(typeof stackRows)[number]> = {
+  data: stackRows,
+  category: "category",
+  valueStart: "from",
+  categoryScale: "c",
+  valueScale: "v",
+};
+const mixedInput = {
+  data: stackRows,
+  category: "category",
+  value: "to",
+  valueStart: "from",
+  valueEnd: "to",
+  categoryScale: "c",
+  valueScale: "v",
+} as const;
+// @ts-expect-error value and range geometry cannot be mixed
+const mixedGeometry: BarSeriesProps<(typeof stackRows)[number]> = mixedInput;
+// @ts-expect-error explicit ranges cannot also use a shared baseline
+const rangeBaseline: BarSeriesProps<(typeof stackRows)[number]> = {
+  data: stackRows,
+  category: "category",
+  valueStart: "from",
+  valueEnd: "to",
+  baseline: 0,
+  categoryScale: "c",
+  valueScale: "v",
+};
+void missingRangeEnd;
+void mixedGeometry;
+void rangeBaseline;
+
+import { PieLayout, PieSlice, PieLabel, pieSlices, type PieSliceGeometry } from "@crc/viz";
+const pieData = [{ id: "a", amount: 2, name: "Alpha" }];
+const pieLabel = (slice: PieSliceGeometry<typeof pieData[number]>) => slice.datum.name;
+const pieGeometry = pieSlices(pieData, { value: "amount", keyBy: "id" });
+void pieGeometry;
+const pie = <PieLayout data={pieData} value="amount" keyBy="id" label={pieLabel} placement="auto">
+  {slice => <PieSlice slice={slice} style={{ fill: "red" }}><PieLabel slice={slice} pointerEvents="auto" onClick={() => {}} /></PieSlice>}
+</PieLayout>;
+void pie;
+
+// Approved categorical and explicit Axis tick contract.
+void (<Axis scale="category" position="right" tickValues={signal<readonly (number | string)[]>(["A", 2])} tickFormat={(value, index) => `${index}: ${value}`} />);
+void (<Axis scale="value" position="top" tickCount={0} />);
+// @ts-expect-error explicit ticks and count are mutually exclusive
+void (<Axis scale="value" position="bottom" tickValues={[1, 2]} tickCount={2} />);
+// @ts-expect-error explicit ticks accept numbers or strings, not Date objects
+void (<Axis scale="value" position="bottom" tickValues={[new Date()]} />);
+
+void (<BarSeries data={[{ name: "A", total: 2 }]} orientation="horizontal" category="name" value="total" categoryScale="c" valueScale="v" />);
+// @ts-expect-error old coordinate props were removed, without compatibility aliases
+void (<BarSeries data={[{ category: "A", value: 2 }]} x="category" y="value" xScale="c" yScale="v" />);
+void (<PieLayout data={pieData} value="amount" revision={signal(0)} style={{ radius: 100, innerRadius: signal(55) }}>{slice => { const hole: number = slice.innerRadius; void hole; return <PieSlice slice={slice} />; }}</PieLayout>);
+// @ts-expect-error cache revisions are numeric
+void (<PieLayout data={pieData} value="amount" revision="stale">{() => null}</PieLayout>);

@@ -120,8 +120,8 @@ const DirectSparseProfileScene = ({ revision }: { revision: number }) => {
     nodes[index] = createElement(Rectangle, {
       key: target,
       style: {
-        x: 20 + (index % 100) * 4,
-        y: 20 + Math.floor(index / 100) * 2,
+        left: 20 + (index % 100) * 4,
+        top: 20 + Math.floor(index / 100) * 2,
         width: 3,
         height: 2,
         fill: index === 0 ? '#16a34a' : '#2563eb',
@@ -141,8 +141,8 @@ const StructuralEventScene = ({ count, recordAncestor, recordTarget }: {
   return Array.from({ length: count }, (_, index) => createElement(Rectangle, {
     key: `structural-target-${index}`,
     style: {
-      x: 0,
-      y: 0,
+      left: 0,
+      top: 0,
       width: 20,
       height: 20,
       fill: '#2563eb',
@@ -412,7 +412,7 @@ describe('shared event performance laboratory', () => {
     });
   });
 
-  it('shares one native listener, stops at the topmost hit, and tests every live miss candidate without retaining dispatch state', async () => {
+  it('shares one native listener, stops at the topmost hit, and retains one root activation cleanup across dispatches', async () => {
     const canvas = document.createElement('canvas');
     canvas.width = 100;
     canvas.height = 100;
@@ -454,7 +454,11 @@ describe('shared event performance laboratory', () => {
     expect(topmostPathTests).toBe(1);
     expect(targets).toEqual([targetCount - 1]);
     expect(ancestorCalls).toBe(1);
-    expect(diagnostics.snapshot()).toEqual(baseline);
+    const afterFirstPointerPress = diagnostics.snapshot();
+    expect(afterFirstPointerPress).toEqual({
+      ...baseline,
+      mainTeardowns: baseline.mainTeardowns + 1,
+    });
 
     targets.length = 0;
     ancestorCalls = 0;
@@ -464,7 +468,7 @@ describe('shared event performance laboratory', () => {
     expect(missPathTests).toBe(targetCount);
     expect(targets).toEqual([]);
     expect(ancestorCalls).toBe(0);
-    expect(diagnostics.snapshot()).toEqual(baseline);
+    expect(diagnostics.snapshot()).toEqual(afterFirstPointerPress);
   });
 
   it('ignores unrelated bubbling moves and finalizes only the matching Canvas dispatch once', async () => {

@@ -145,5 +145,25 @@ Environment: Node 24.15.0, pnpm 11.21.0, Playwright Chromium on macOS.
   and Rapier integration tests passed **225/225**. The physics package was rebuilt
   successfully. Formatting and `git diff --check` passed.
 
-The aggregate gate remains blocked only at the unrelated historical-status
-validation described above; it is not reported green.
+That initial aggregate attempt was blocked by the unrelated historical-status
+validation described above. The merged-main verification below supersedes that
+status.
+
+## Merged-main verification — 2026-09-29
+
+Integrated with main's component manipulation and unified `left`/`top` positioning
+APIs. Preserved both catalogs and documentation contracts, migrated physics
+lesson positioning, and isolated bundled preview bindings while awaiting WASM
+initialization. The five preview regression tests pass; independent review
+confirmed startup and mount error handling.
+
+`corepack pnpm@11.21.0 trust` completed successfully (exit 0) on Node 24.15.0,
+pnpm 11.21.0 and Playwright Chromium on macOS. The full browser suite passed
+276 files / 3,121 tests, with four opt-in performance guards skipped. The gate
+also passed 973 documentation mutation probes, types, lint/format, builds,
+packed consumers, source/built/packed positioning environments, Studio navigation
+and visual checks, built smoke (1 test), lifecycle ownership (43 tests), and
+structural performance (49 tests, four opt-in guards skipped).
+
+The accepted repair scope is complete and verified. Unrelated drafts and changes
+in the original checkout were excluded from the physics commit and merge.

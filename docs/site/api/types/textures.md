@@ -36,7 +36,7 @@ and `render`. Materials idle until inputs change.
 ## `TextureBrush`
 
 `{ radius, strength }`: finite radius in (0,128] simulation cells and strength
-in [0,1]. `false` disables the reaction–diffusion brush.
+in `0–1`. `false` disables the reaction–diffusion brush.
 
 ## `TexturePalette`
 

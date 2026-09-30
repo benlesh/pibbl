@@ -6,6 +6,7 @@ import type {
   SystemStyle,
 } from '../types.js';
 import type { LayoutBox } from '../layout/types.js';
+import type { PositioningStyle } from './positioning.js';
 
 export type Percentage = `${number}%`;
 export type Length = number | Percentage | 'auto';
@@ -40,9 +41,7 @@ export interface ResolvedBoxStyle {
   contentBox: LayoutBox;
 }
 
-export interface LayoutItemStyle {
-  left?: Exclude<Length, 'auto'>;
-  top?: Exclude<Length, 'auto'>;
+export interface LayoutItemStyle extends PositioningStyle {
   alignSelf?:
     'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
   justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
@@ -106,8 +105,6 @@ export interface RectStyle
     CursorStyle,
     BoxStyle,
     LayoutItemStyle {
-  x?: Exclude<Length, 'auto'>;
-  y?: Exclude<Length, 'auto'>;
   width: Length;
   height: Length;
   alignToPixelGrid?: PixelGridAlignment;
@@ -132,8 +129,6 @@ export interface TextStyle
     CursorStyle,
     BoxStyle,
     LayoutItemStyle {
-  x?: Exclude<Length, 'auto'>;
-  y?: Exclude<Length, 'auto'>;
   lineHeight?: number;
   wrap?: boolean;
   fit?: TextFit;
@@ -148,8 +143,6 @@ export interface ImgStyle
     BoxStyle,
     LayoutItemStyle {
   src: string;
-  x?: Exclude<Length, 'auto'>;
-  y?: Exclude<Length, 'auto'>;
   stroke?: StrokeStyle;
   strokeWidth?: number;
   opacity?: number;

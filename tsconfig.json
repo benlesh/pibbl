@@ -20,7 +20,8 @@
       "@crc/types": ["./packages/types/src/index.ts"],
       "virtual:crc-studio-docs": ["./playground/src/studio-docs.d.ts"],
       "@crc/viz": ["./packages/viz/src/index.ts"],
-      "@crc/textures": ["./packages/textures/src/index.ts"]
+      "@crc/textures": ["./packages/textures/src/index.ts"],
+      "@crc/text": ["./packages/text/src/index.ts"]
     },
     "resolveJsonModule": true,
     "types": ["vite/client", "node", "vitest/config"],

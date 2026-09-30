@@ -2810,7 +2810,7 @@
         }
       ],
       "remaining": "Harden snapshot copying for broader Three/custom subclass behavior, external scene-parent relationships and resource lifetime. Measure per-frame CPU copy/allocation cost and preserve custom picker generation responsibilities. Representative instancing/skinning/morph and perspective focus-generation checks now pass, but do not certify arbitrary renderer resources or custom picking.",
-      "verificationRun": "three-lab-wait-ownership-2026-09-30"
+      "verificationRun": "three-batched-child-identity-2026-09-30"
     },
     {
       "id": "REN-08",
@@ -5534,6 +5534,13 @@
       "command": "node --test tooling/agent-verification/failure-evidence.test.mjs; vitest packages/core/test/layout-foundation.test.ts; pnpm typecheck; focused ESLint",
       "result": "New serializer assertion failed before implementation. Five Node serializer tests and five browser layout tests passed afterward, including real runtime diagnostic objects. Typecheck and focused lint passed.",
       "scope": "Bounded serialization of locally available diagnostic fields; not proof of browser transport preservation, source/generation attribution or aggregate trust."
+    },
+    "three-batched-child-identity-2026-09-30": {
+      "date": "2026-09-30",
+      "environment": "Node 24.15.0; pnpm 11.21.0; Playwright Chromium; normal configuration",
+      "command": "vitest picking-snapshot, define-three-layer, three-instancing-lab and three-picking-verification suites; pnpm typecheck; focused ESLint",
+      "result": "Two regression tests failed before repair: BatchedMesh snapshot duplicated its child and public child click was blocked. Shadowing Object3D children during clone preparation makes the identity-mapped traversal the only child copier. All 50 tests across four suites passed; typecheck and lint passed. Source children/parent identities remain unchanged.",
+      "scope": "Ordinary BatchedMesh child identity and native click delivery before/after geometry commit; not arbitrary subclass copy semantics or full inventory completion."
     }
   }
 }

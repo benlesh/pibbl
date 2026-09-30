@@ -739,7 +739,7 @@ it("removes an active target-local drag before pointer-up without a ghost loss o
     );
     return createElement(Rectangle, {
       pointerEvents: "none",
-      style: { x: 40, y: 40, width: 120, height: 80, fill: "#ff6b57" },
+      style: { left: 40, top: 40, width: 120, height: 80, fill: "#ff6b57" },
     });
   }
 

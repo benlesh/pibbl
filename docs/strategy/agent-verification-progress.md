@@ -2675,6 +2675,25 @@ lifecycle test changed for this repair. The integration coordinator owns combine
 verification; this chat returns to holding edits and makes no independent commit.
 The inventory remains open and counts unchanged.
 
+## BatchedMesh child identity repair — 2026-09-30
+
+Read-only review reproduced another built-in copy mismatch: Three BatchedMesh.copy
+ignores recursive=false and copies children itself. Snapshot traversal then added
+the mapped children again, creating an unmapped duplicate that blocked a registered
+leaf click. Integration assigned this repair back to the verification chat.
+
+Two tests failed before production changes: one original child became two snapshot
+children, and the public registered child received zero clicks. Clone preparation
+now shadows Object3D children with an empty list; only the snapshot identity walk
+copies them. Original application child lists/parent identities remain intact.
+The existing LOD-specific level handling remains necessary and covered.
+
+All 50 tests pass across snapshot, adapter, instancing lifecycle and manual/headless
+picking-lab suites. Workspace typecheck and focused lint pass on Node 24.15.0 /
+pnpm 11.21.0 / Chromium. The integration coordinator owns the final aggregate gate;
+this chat returns to holding edits after reporting the fix. No commit or push was
+made here. REN-07 remains partial and inventory counts are unchanged.
+
 ## Follow-on slices, preserving the full objective
 
 These tasks are not a substitute for the remaining requirements; they identify

@@ -115,7 +115,7 @@ function Scene() {
   return (
     <>
       <Rectangle style={{ width: 240, height: 120, fill: "navy" }} />
-      <Text style={{ x: 16, y: 16, fill: "white" }}>JavaScript</Text>
+      <Text style={{ left: 16, top: 16, fill: "white" }}>JavaScript</Text>
     </>
   );
 }
@@ -159,8 +159,8 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
       <Text
         pointerEvents="none"
         style={{
-          x: 200,
-          y: 100,
+          left: 200,
+          top: 100,
           fill: "#fff",
           font: "800 48px sans-serif",
           textAlign: "center",

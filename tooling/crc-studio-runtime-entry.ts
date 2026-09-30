@@ -30,3 +30,4 @@ export const __crcStudioModules = crcStudioThreeModules;
 export * from "@crc/viz";
 
 export * from "@crc/textures";
+export { loadOutlineFont, createTextGeometry } from "@crc/text";

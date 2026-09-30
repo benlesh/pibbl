@@ -4,8 +4,8 @@ function ContextMenuStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7f0df",
@@ -13,8 +13,8 @@ function ContextMenuStudy() {
     />,
     <Rectangle
       style={{
-        x: 98,
-        y: 82,
+        left: 98,
+        top: 82,
         width: 350,
         height: 256,
         fill: "#ff6b57",
@@ -29,8 +29,8 @@ function ContextMenuStudy() {
     />,
     <Text
       style={{
-        x: 273,
-        y: 170,
+        left: 273,
+        top: 170,
         fill: "#17211d",
         font: "900 38px sans-serif",
         textAlign: "center",
@@ -40,8 +40,8 @@ function ContextMenuStudy() {
     </Text>,
     <Text
       style={{
-        x: 560,
-        y: 154,
+        left: 560,
+        top: 154,
         width: 130,
         lineHeight: 26,
         wrap: true,

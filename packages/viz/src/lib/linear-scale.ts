@@ -1,4 +1,9 @@
-import type { LinearDomain, ResolvedScale, ScaleRange } from "./types.js";
+import type {
+  LinearDomain,
+  ResolvedLinearScale,
+  ResolvedScale,
+  ScaleRange,
+} from "./types.js";
 function finite(value: number, field: string): number {
   if (typeof value !== "number" || !Number.isFinite(value))
     throw new RangeError(`Scale ${field} must be finite.`);
@@ -18,7 +23,7 @@ export function resolveLinearScale(
   reverse: boolean,
   width: number,
   height: number,
-): ResolvedScale {
+): ResolvedLinearScale {
   finite(width, "frame.width");
   finite(height, "frame.height");
   if (width < 0 || height < 0)
@@ -80,8 +85,12 @@ export function resolveLinearScale(
 export function equalScale(a: ResolvedScale, b: ResolvedScale): boolean {
   return (
     a.type === b.type &&
-    Object.is(a.domain[0], b.domain[0]) &&
-    Object.is(a.domain[1], b.domain[1]) &&
+    a.domain.length === b.domain.length &&
+    a.domain.every((value, index) => Object.is(value, b.domain[index])) &&
+    (a.type !== "band" ||
+      (b.type === "band" &&
+        a.bandwidth === b.bandwidth &&
+        a.step === b.step)) &&
     Object.is(a.range[0], b.range[0]) &&
     Object.is(a.range[1], b.range[1]) &&
     Object.is(a.frame.width, b.frame.width) &&

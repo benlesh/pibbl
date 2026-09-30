@@ -5,7 +5,7 @@ function CircleStudy() {
 
   return [
     <Rectangle
-      style={{ x: 0, y: 0, width: 720, height: 420, fill: "#f7f0df" }}
+      style={{ left: 0, top: 0, width: 720, height: 420, fill: "#f7f0df" }}
     />,
     <Circle
       style={{

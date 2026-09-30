@@ -35,7 +35,7 @@ function Card({ title, selected, onSelect }: CardProps): CRCNode {
         }}
         onClick={onSelect}
       />
-      <Text pointerEvents="none" style={{ x: 16, y: 20, fill: "white" }}>
+      <Text pointerEvents="none" style={{ left: 16, top: 20, fill: "white" }}>
         {title}
       </Text>
     </Group>

@@ -46,8 +46,8 @@ function Button({
         pointerEvents="none"
         style={{
           textBaseline: "alphabetic",
-          x: 52,
-          y: 23,
+          left: 52,
+          top: 23,
           textAlign: "center",
           font: "600 12px Arial",
           fill: active ? "#172c28" : "#e1eee9",
@@ -87,8 +87,8 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
         <Text
           style={{
             textBaseline: "alphabetic",
-            x: 28,
-            y: 30,
+            left: 28,
+            top: 30,
             fill: "#97c4b2",
             font: "600 11px Arial",
           }}
@@ -99,8 +99,8 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
         <Text
           style={{
             textBaseline: "alphabetic",
-            x: 28,
-            y: 70,
+            left: 28,
+            top: 70,
             fill: "#eff5e8",
             font: "600 34px Georgia",
           }}
@@ -111,8 +111,8 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
         <Text
           style={{
             textBaseline: "alphabetic",
-            x: 28,
-            y: 95,
+            left: 28,
+            top: 95,
             fill: "#9bb7be",
             font: "13px Arial",
           }}
@@ -145,8 +145,8 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
               pointerEvents="none"
               style={{
                 textBaseline: "alphabetic",
-                x: 16,
-                y: 25,
+                left: 16,
+                top: 25,
                 fill: "#f4f3df",
                 font: "600 16px Georgia",
               }}
@@ -157,8 +157,8 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
               pointerEvents="none"
               style={{
                 textBaseline: "alphabetic",
-                x: 16,
-                y: 45,
+                left: 16,
+                top: 45,
                 fill: "#a8c8c7",
                 font: "11px Arial",
               }}
@@ -220,8 +220,8 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
           pointerEvents="none"
           style={{
             textBaseline: "alphabetic",
-            x: 28,
-            y: 602,
+            left: 28,
+            top: 602,
             fill: "#819fa9",
             font: "11px Arial",
           }}

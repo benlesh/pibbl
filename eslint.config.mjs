@@ -50,6 +50,7 @@ const typescriptRules = {
 export default defineConfig([
   globalIgnores([
     '**/node_modules/**',
+    'packages/text/.cache/**',
     '**/dist/**',
     '**/.nx/**',
     '**/.vite/**',

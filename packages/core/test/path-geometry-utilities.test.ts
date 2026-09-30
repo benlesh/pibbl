@@ -79,6 +79,56 @@ describe('editable path geometry utilities', () => {
     expect(simplifiedRing.filter(segment => segment.type === 'line')).toHaveLength(2);
   });
 
+  it('retains three distinct vertices when a closed contour begins with duplicate points', () => {
+    const path = new PathGeometry();
+    path.moveTo(0, 0);
+    path.lineTo(0, 0);
+    path.lineTo(10, 0);
+    path.lineTo(0, 10);
+    path.closePath();
+
+    const result = Array.from(simplifyPath(path, { tolerance: 100 }));
+
+    expect(result).toEqual([
+      { type: 'move', x: 0, y: 0 },
+      { type: 'line', x: 10, y: 0 },
+      { type: 'line', x: 0, y: 10 },
+      { type: 'close' },
+    ]);
+  });
+
+  it('simplifies closed contours with large finite coordinates without malformed anchors', () => {
+    const path = new PathGeometry();
+    path.moveTo(0, 0);
+    path.lineTo(1e308, 1e308);
+    path.lineTo(1e308, 0);
+    path.lineTo(0, 1e308);
+    path.closePath();
+
+    const result = Array.from(simplifyPath(path, { tolerance: 1e307 }));
+
+    expect(result).toEqual([
+      { type: 'move', x: 0, y: 0 },
+      { type: 'line', x: 1e308, y: 1e308 },
+      { type: 'line', x: 1e308, y: 0 },
+      { type: 'line', x: 0, y: 1e308 },
+      { type: 'close' },
+    ]);
+  });
+
+  it('retains a distant point beside a tiny finite segment', () => {
+    const path = new PathGeometry();
+    path.moveTo(0, 0);
+    path.lineTo(0, 1e300);
+    path.lineTo(1e-300, 0);
+
+    expect(Array.from(simplifyPath(path, { tolerance: 1 }))).toEqual([
+      { type: 'move', x: 0, y: 0 },
+      { type: 'line', x: 0, y: 1e300 },
+      { type: 'line', x: 1e-300, y: 0 },
+    ]);
+  });
+
   it('retains a closed contour current point for lines that follow close markers', () => {
     const path = new PathGeometry();
     path.spliceSegments(0, 0, [

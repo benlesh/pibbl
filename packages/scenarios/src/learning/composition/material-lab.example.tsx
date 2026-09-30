@@ -63,8 +63,8 @@ function Button({
       <Text
         pointerEvents="none"
         style={{
-          x: 54,
-          y: 23,
+          left: 54,
+          top: 23,
           textBaseline: "alphabetic",
           textAlign: "center",
           font: "600 12px Arial",
@@ -95,8 +95,8 @@ function MaterialLab() {
         <Text
           pointerEvents="none"
           style={{
-            x: 28,
-            y: 30,
+            left: 28,
+            top: 30,
             textBaseline: "alphabetic",
             font: "600 11px Arial",
             fill: "#d6b798",
@@ -107,8 +107,8 @@ function MaterialLab() {
         <Text
           pointerEvents="none"
           style={{
-            x: 28,
-            y: 70,
+            left: 28,
+            top: 70,
             textBaseline: "alphabetic",
             font: "600 34px Georgia",
             fill: "#f6ead5",
@@ -119,8 +119,8 @@ function MaterialLab() {
         <Text
           pointerEvents="none"
           style={{
-            x: 28,
-            y: 95,
+            left: 28,
+            top: 95,
             textBaseline: "alphabetic",
             font: "13px Arial",
             fill: "#bcb9c5",
@@ -143,8 +143,8 @@ function MaterialLab() {
           <Text
             pointerEvents="none"
             style={{
-              x: 580,
-              y: 270,
+              left: 580,
+              top: 270,
               textBaseline: "alphabetic",
               font: "600 24px Georgia",
               fill: "#fff5df",
@@ -155,8 +155,8 @@ function MaterialLab() {
           <Text
             pointerEvents="none"
             style={{
-              x: 580,
-              y: 299,
+              left: 580,
+              top: 299,
               textBaseline: "alphabetic",
               font: "12px Arial",
               fill: "#e5d9c8",
@@ -167,8 +167,8 @@ function MaterialLab() {
           <Text
             pointerEvents="none"
             style={{
-              x: 580,
-              y: 325,
+              left: 580,
+              top: 325,
               textBaseline: "alphabetic",
               font: "11px Arial",
               fill: "#b8c6c2",
@@ -225,8 +225,8 @@ function MaterialLab() {
         <Text
           pointerEvents="none"
           style={{
-            x: 28,
-            y: 582,
+            left: 28,
+            top: 582,
             textBaseline: "alphabetic",
             font: "12px Arial",
             fill: "#d0c7bc",
@@ -235,8 +235,8 @@ function MaterialLab() {
         <Text
           pointerEvents="none"
           style={{
-            x: 28,
-            y: 606,
+            left: 28,
+            top: 606,
             textBaseline: "alphabetic",
             font: "11px Arial",
             fill: "#9396a6",

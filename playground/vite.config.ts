@@ -1,4 +1,5 @@
 import { targetingIdentityPlugin } from '../tooling/agent-verification/identity-plugin.mjs';
+import { textAssets } from "../tooling/text-assets.ts";
 import { defineConfig } from "vite";
 import { resolve } from "node:path";
 import { assertBuiltCore } from "../tooling/assert-built-core.ts";
@@ -15,6 +16,7 @@ export default defineConfig(({ mode }) => {
   const isStudioDocsAcceptance = mode === "studio-docs-acceptance";
   const sourceAliases = [
     ["@crc/textures", "../packages/textures/src/index.ts"],
+    ["@crc/text", "../packages/text/src/index.ts"],
     ["@crc/viz", "../packages/viz/src/index.ts"],
     ["@crc/core/internal", "../packages/core/src/internal.ts"],
     ["@crc/core/jsx-dev-runtime", "../packages/core/src/jsx-dev-runtime.ts"],
@@ -30,6 +32,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       targetingIdentityPlugin(resolve(import.meta.dirname, "..")),
+      textAssets(),
       ...(mode === "built" ? [assertBuiltCore()] : []),
       crcRuntimeSource(mode),
       crcStudioDocs({ repositoryRoot: resolve(import.meta.dirname, "..") }),

@@ -1,7 +1,9 @@
 # Four-corner path warp implementation plan
 
-Status: implemented and focused verification passed, 2026-09-30. Aggregate
-feature completion remains pending shared-checkout gate failures recorded below.
+> **Historical status: Implementation-plan record; it does not define current shipped behavior.**
+
+Status: feature complete and aggregate verification passed, 2026-09-30.
+The final integrated verification record below supersedes earlier blockers.
 
 ## Authorized combined delivery
 
@@ -242,7 +244,7 @@ feature completion below.
 - [x] Add implemented contract text without claiming topology or stroke-outline
       preservation. Update source-preservation tooling only through its existing
       workflow; do not weaken checks or rewrite history to admit new text.
-- [ ] Finish aggregate catalog/docs/search and visual-baseline verification;
+- [x] Finish aggregate catalog/docs/search and visual-baseline verification;
       source/built editor parity passed.
       If a navigation addition affects visual baselines, inspect expected,
       actual, and diff images and record the intentional change before updating.
@@ -287,10 +289,10 @@ required final verification without repeated speculative broad runs.
 
 - [x] Approved public API implements both modes for every canonical segment type.
 - [x] Draggable rocket demo supports mode switching, error recovery, and Reset.
-- [ ] Final acceptance and aggregate verification; accuracy, numeric limits, ownership, and integration
+- [x] Final acceptance and aggregate verification; accuracy, numeric limits, ownership, and integration
       evidence complete; review findings resolved.
 - [x] Public docs, source/built/packed consumers, and Studio declarations agree.
-- [ ] Aggregate trust gate passes in the recorded environment.
+- [x] Aggregate trust gate passes in the recorded environment.
 
 Only report **feature complete** after the outstanding aggregate checks pass.
 The record below distinguishes verified warp behavior from shared-checkout gaps.
@@ -455,3 +457,65 @@ review are delivered. Goal status is blocked on shared aggregate verification,
 not complete. Resume after the texture-contract integration and outstanding
 shared visual/gate issues are resolved. The preview listener was confirmed live
 at 127.0.0.1:5175 in this audit.
+
+### Integration against current main
+
+The user authorized all current checkout work. An isolated
+`codex/combined-geometry-delivery` checkout captured the completed shared work,
+then merged current main. Main's newer PathGeometry utility fixes, manipulation,
+text outlines, visualization entries, and existing Filters capture isolation were
+preserved. The superseded shared-checkout Filters isolation change is not needed
+in the integrated diff.
+
+Main's approved `left`/`top` component placement required syntax-aware migration
+of incoming example/test style objects; path coordinates remain unchanged.
+Whole-project typecheck passed. The migrated lesson/text tests passed 260 tests.
+A complete integrated browser run passed 3,428 tests and found one image-gallery
+fixture mismatch: its old fractional x/y placement was no longer drawing-local.
+The fixture now keeps placement integral and exercises pixel rounding through
+fractional dimensions. All seven gallery tests then passed against the unchanged
+baseline; no mask or threshold was widened.
+
+Self-review found overlapping declaration counts and catalog ordering, both
+reconciled across main's text package and the new textures package. The runtime
+consumer checks pass with all 99 core exports. Independent Three review found a
+BatchedMesh clone duplicating children; the owner supplied failing snapshot and
+public-click regressions, fixed the clone traversal, and passed 50 focused tests.
+Those fixes and their evidence were incorporated before final verification.
+
+Merged warp browser QA at `http://127.0.0.1:5176/#/examples/drawing/path-warp`
+verified both modes, corner dragging, invalid-perspective recovery, Reset, and
+1440×1100 / 390×844 layouts with no console errors or error overlay. The complete
+aggregate gate and remote merge/push are still required before completion.
+
+Production Studio visual review after merging main found 23,792 changed Filters
+pixels. Expected, actual, diff, and sidebar crops were inspected. A complete
+pixel-by-pixel classification found 23,738 differences within the sidebar
+(x < 286), 54 within the lesson-number label (x 340–489, y 48–89), and **zero
+outside those regions**, including zero in the Canvas. The sidebar adds the
+user-requested standalone Along Arc and Along Path entries in alphabetical order,
+which moves the selected Filters row down. The lesson number reflects the added
+lessons. Refreshing this one reference accepts those intended navigation changes;
+it does not accept any drawing/font difference or broaden a comparison mask.
+
+## Final integrated verification — 2026-09-30
+
+The combined delivery was integrated with main at
+`40fd5fdf681aa68091383a71beac452b54a83efd` in the isolated
+`codex/combined-geometry-delivery` checkout, preserving the original shared
+checkout for ongoing work. `corepack pnpm@11.21.0 trust` completed with exit 0
+on Node 24.15.0, pnpm 11.21.0, and Playwright Chromium 151. This is fresh
+aggregate evidence, superseding the earlier shared-checkout blockers.
+
+The gate includes documentation and its 986 mutation probes, catalog, types,
+lint/format, source and built packages/Studio, packed consumers, browser and
+visual checks, lifecycle cleanup, and structural performance. The full browser
+suite passed 3,429 tests (six skipped) across 313 passing files (two skipped).
+All eight Studio visual baselines passed. The image fixture retained its original
+baseline; only the inspected Filters navigation baseline changed as detailed above.
+
+Warp dragging, both mapping modes, invalid-input recovery, reset, and mobile
+layout were also checked against the integrated preview at port 5176. The
+standalone Bend Along Path and draggable arc feedback are included. Final
+completion-record edits are documentation-only and receive a fresh documentation
+check before commit. The final response records the verified remote main commit.

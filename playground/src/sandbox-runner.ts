@@ -107,12 +107,16 @@ function createFrameSource(options: {
       send({ kind: 'error', message: error instanceof Error ? error.message : printable(error) });
     }
   `;
+  // Keep bundled names separate from boot variables while awaiting WASM startup.
   return `<!doctype html><html><head><meta charset="utf-8"><style>
     *{box-sizing:border-box}html,body{height:100%;margin:0}body{display:grid;place-items:center;background:#fffdf6;overflow:hidden}
     canvas{display:block;width:100%;height:100%;min-width:0;min-height:0;max-height:100%;object-fit:contain;touch-action:none}
   </style></head><body><canvas width="${options.width}" height="${options.height}" aria-label="Live CRC lesson preview"></canvas>
   <script type="module">try {
-${escapeScript(runtimeSource)}\n${escapeScript(boot)}
+await (async () => {
+${escapeScript(runtimeSource)}
+})();
+${escapeScript(boot)}
 } catch (error) { parent.postMessage({ protocol: '${PROTOCOL}', version: ${VERSION}, runId: ${options.runId}, kind: 'error', message: String(error) }, '*'); }</script></body></html>`;
 }
 

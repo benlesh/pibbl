@@ -399,8 +399,8 @@ function rootFill(record: GeometryMatrixRecord) {
   return interactiveRect('fill', record, {
     key: 'root-fill',
     style: {
-      x: 160,
-      y: 80,
+      left: 160,
+      top: 80,
       width: 160,
       height: 80,
       fill: '#2563eb',
@@ -438,8 +438,8 @@ function compoundTransformClip(record: GeometryMatrixRecord) {
           {interactiveRect('transformed', record, {
             key: 'transformed-target',
             style: {
-              x: -10,
-              y: -10,
+              left: -10,
+              top: -10,
               width: 60,
               height: 40,
               fill: '#2563eb',
@@ -478,8 +478,8 @@ function nestedClipIntersection(record: GeometryMatrixRecord) {
           {interactiveRect('clipped', record, {
             key: 'clipped-target',
             style: {
-              x: 0,
-              y: 0,
+              left: 0,
+              top: 0,
               width: 380,
               height: 240,
               fill: '#2563eb',
@@ -496,8 +496,8 @@ function layerPaintOrder(record: GeometryMatrixRecord) {
     interactiveRect('root-under', record, {
       key: 'root-under',
       style: {
-        x: 20,
-        y: 60,
+        left: 20,
+        top: 60,
         width: 430,
         height: 120,
         fill: '#93c5fd',
@@ -508,8 +508,8 @@ function layerPaintOrder(record: GeometryMatrixRecord) {
       {interactiveRect('layer-one', record, {
         key: 'layer-one-target',
         style: {
-          x: 80,
-          y: 60,
+          left: 80,
+          top: 60,
           width: 280,
           height: 120,
           fill: '#f59e0b',
@@ -520,8 +520,8 @@ function layerPaintOrder(record: GeometryMatrixRecord) {
     interactiveRect('root-middle', record, {
       key: 'root-middle',
       style: {
-        x: 230,
-        y: 60,
+        left: 230,
+        top: 60,
         width: 160,
         height: 120,
         fill: '#7c3aed',
@@ -532,8 +532,8 @@ function layerPaintOrder(record: GeometryMatrixRecord) {
       {interactiveRect('layer-two', record, {
         key: 'layer-two-target',
         style: {
-          x: 320,
-          y: 60,
+          left: 320,
+          top: 60,
           width: 130,
           height: 120,
           fill: '#10b981',
@@ -563,8 +563,8 @@ function transformedNestedLayer(record: GeometryMatrixRecord) {
           {interactiveRect('layer-base', record, {
             key: 'layer-base-target',
             style: {
-              x: 0,
-              y: 0,
+              left: 0,
+              top: 0,
               width: 160,
               height: 120,
               fill: '#f59e0b',
@@ -581,8 +581,8 @@ function transformedNestedLayer(record: GeometryMatrixRecord) {
             {interactiveRect('nested-layer', record, {
               key: 'nested-layer-target',
               style: {
-                x: 20,
-                y: 10,
+                left: 20,
+                top: 10,
                 width: 80,
                 height: 60,
                 fill: '#10b981',
@@ -644,8 +644,8 @@ const GeometryMatrixScene = ({ caseId, record }: GeometryMatrixSceneProps) => [
   <Rectangle
     key="background"
     style={{
-      x: 0,
-      y: 0,
+      left: 0,
+      top: 0,
       width: 480,
       height: 240,
       fill: '#f8fafc',

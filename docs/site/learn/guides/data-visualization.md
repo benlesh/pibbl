@@ -68,7 +68,7 @@ presentation and a fully evaluated casual-touch experience remain deferred.
 Core supports responsive style queries on returned CRC elements; conditional
 styles for viz-owned marks remain a separate follow-up.
 
-Linear scales and linear curves are the current scope. Time/UTC, band scales,
+Linear and band scales are available; line curves are linear. Time/UTC,
 additional curves and series, and automatic legends remain future work.
 Nearest-data inspection is available through the functions below.
 
@@ -186,3 +186,120 @@ local anchors and declared outer sizes; its child callback renders ordinary CRC
 content at each placed origin. It arranges the boxes together and keeps them
 clear of every supplied anchor. The Hover comparisons lesson demonstrates this
 with connector lines and a shared column that flips at the plot edge.
+
+## Categorical comparisons
+
+The [band scales and bars example](#/examples/composition/viz-band-bars) uses
+an ordered category domain and a numeric value scale to compare population changes
+in the six most populous U.S. states (Census Bureau, Vintage 2023). Positive and
+negative bars share a zero baseline. Hover or tap reveals exact counts without
+changing the bar geometry. Missing-value behavior is covered in the tests.
+
+```tsx
+<Scale
+  id="channels"
+  type="band"
+  domain={["Search", "Email"]}
+  range="width"
+  paddingInner={0.3}
+  paddingOuter={0.2}
+>
+  <Scale id="change" type="linear" domain={[-30, 30]} range="height" reverse>
+    <BarSeries
+      data={[
+        { channel: "Search", change: 20 },
+        { channel: "Email", change: -10 },
+      ]}
+      category="channel"
+      value="change"
+      categoryScale="channels"
+      valueScale="change"
+    />
+  </Scale>
+</Scale>
+```
+
+Import `BarSeries` from `@crc/viz`. `useScale("channels", "band").get()` exposes
+band starts and bandwidth for composed labels and inspection. Categories are
+strings or finite numbers; order is explicit, duplicates reject, and unknowns
+map to undefined. Padding and domain can be signals. Value and range bars support both orientations. With `orientation="horizontal"`,
+use category range `"height"` and value range `"width"`; callers choose Axis
+positions. The semantic props stay unchanged when orientation changes. Axis
+supports categorical labels, all four edges and explicit bounded tick lists.
+
+For grouped bars, nest another band scale with
+`range={{ bandwidthOf: "categories" }}` and pass paired `group` and
+`groupScale` props to the same BarSeries. Its inner domain sets group order;
+missing rows leave their slots empty. A style callback supplies per-row colors
+without splitting the series. See [Grouped bars](#/examples/composition/viz-grouped-bars)
+for a complete editable example with two or three groups, responsive sizing,
+and inspection.
+
+To color different value regions within the same bar, pass a threshold fill in
+`style`: `{ fill: { type: "threshold", thresholds: [0, 300_000], colors:
+["orange", "green", "red"] } }`. One `BarSeries` paints all intervals; a bar
+crossing a threshold changes color there while retaining one border and target.
+Thresholds use the numeric value scale's domain, not pixels. The population
+example demonstrates this with green gains up to 300,000 and red above it.
+
+For stacked bars, derive each segment's start and end in a pure data transform,
+then pass `valueStart` and `valueEnd` in place of `value` and `baseline`.
+The same styles and grouped positioning apply. See
+[Stacked bars](#/examples/composition/viz-stacked-bars) for positive and negative
+cash flows with segment inspection. The example defines stack order and separate
+positive/negative accumulators; the renderer does not choose a stacking policy.
+
+## Compose a pie with coordinated labels
+
+`pieSlices(data, { value: "amount", keyBy: "id" })` remains a pure geometry helper.
+For coordinated label layout, use `PieLayout` with ordinary `PieSlice` and
+`PieLabel` children:
+
+```tsx
+const label = (slice) => `${slice.datum.name} · ${slice.value}`;
+
+<PieLayout
+  data={data}
+  value="amount"
+  keyBy="id"
+  label={label}
+  placement="auto"
+  style={{ cx: 300, cy: 200, radius: 110, labelFont: "14px sans-serif" }}
+>
+  {(slice) => (
+    <PieSlice slice={slice} style={{ fill: slice.datum.color }}>
+      <PieLabel slice={slice} />
+    </PieSlice>
+  )}
+</PieLayout>;
+```
+
+Label text is declared before children render, so the chart measures and places
+it once without evaluating arbitrary component trees. By default, callbacks reevaluate when PieLayout evaluates. Supply `revision`
+to opt into cached angles and placements, and change it for in-place data or
+nonreactive callback dependency changes. With that explicit contract, paint-only
+selection updates reuse label measurements and layout. Tracked signal reads
+remain dependencies even when callback identities stay stable. Core still
+repaints the Canvas normally.
+
+Choose `inside`, `outside`, or `auto`. Auto moves non-fitting labels outside;
+strict inside omits them. Outside labels pack into separate left/right lanes,
+with leaders entirely outside the circle. If the available bounds cannot hold
+all labels, `slice.label` exposes a hidden result and reason. No small wedge is
+inflated or silently aggregated. Compose an interactive key as an alternative
+to hitting tiny slices. `PieLabel` is decorative unless explicitly given
+`pointerEvents="auto"`; its target does not enlarge the wedge.
+
+The [pie composition](#/examples/composition/viz-pie-composition) includes all
+three modes, tiny categories on both sides, long names, reordering, and limited
+label space. It keeps the hover/pinned readout in a reserved area outside the
+whole pie. A full chart or automatic legend is not required.
+
+Values must be nonnegative and finite; missing values have zero area. See
+[pieSlices](#/api/functions/pie-slices) and
+[PieLayout](#/api/components/pie-layout) for identity, empty-data, and placement
+contracts. The initial label renderer supports single-line text. Custom label
+content remains a later addition. Set `style.innerRadius` for a donut. Inside
+labels must fit entirely in the ring, including exclusion of the hole; auto
+placement moves non-fitting labels outside. The editable example includes a
+donut toggle.

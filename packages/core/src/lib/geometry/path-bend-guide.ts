@@ -93,12 +93,19 @@ export function measureBendGuide(
       }
     }
     length = 0; uncertainty = 0;
-    let compensation = 0, sag = 0, normalError = 0, normalSlope = 0;
+    let compensation = 0, sag = 0, normalError = 0, normalSlope = 0, joinError = JOIN_ROUNDOFF;
     let previous: Leaf | undefined;
     for (const leaf of leaves) {
-      // A cusp can lie inside an original segment exactly at a subdivision
-      // boundary. Certifying the two regular halves alone would miss it.
-      if (previous) sameTangent(previous.last.normal, leaf.first.normal);
+      // Original segment joins were validated before subdivision. Inside a
+      // polynomial/ellipse, the two limiting tangents at a split must agree or
+      // reverse at a cusp. Subtracted tiny control edges amplify roundoff, so
+      // do not reuse the original-join angular threshold here. Reject reversals
+      // and account for the shared-knot normal replacement in the error bound.
+      if (previous) {
+        const a = previous.last.normal, b = leaf.first.normal;
+        if (a[0] * b[0] + a[1] * b[1] <= 0) throw new RangeError('Along Path guide reverses direction at an internal cusp.');
+        joinError = Math.max(joinError, norm(subtract(a, b)));
+      }
       previous = leaf;
       // Compensated sums avoid accumulating an O(number-of-leaves) length bias.
       const next = leaf.chord - compensation, sum = length + next;
@@ -113,7 +120,7 @@ export function measureBendGuide(
     // constant <=1. Its deviation from identity is bounded by total excess.
     // distanceFactor includes fit/alignment and any unwrapped guide laps.
     const distanceError = uncertainty * distanceFactor(length);
-    error = sag + maxDisplacement * (normalError + JOIN_ROUNDOFF) + (1 + maxDisplacement * normalSlope) * distanceError + roundoff;
+    error = sag + maxDisplacement * (normalError + joinError) + (1 + maxDisplacement * normalSlope) * distanceError + roundoff;
     if (Number.isFinite(error) && error <= tolerance / 4) break;
     if (pass === 23) throw new RangeError('Along Path cannot certify its guide-distance and normal error.');
     target /= 2;

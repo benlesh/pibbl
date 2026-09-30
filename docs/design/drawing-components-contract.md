@@ -452,30 +452,39 @@ See the [approved design](../superpowers/specs/2026-09-30-path-warp-design.md).
 
 ## Along Arc and Along Path bending
 
-`bendPathAlongArc(source, options)` and
-`bendPathAlongPath(source, guide, options)` return independent Move/Line/Close
-geometry. They map source X into distance along a guide and source Y into signed
-normal displacement. The explicit source frame controls start/center/end
-alignment and top/center/bottom/numeric baseline; it is not a clipping rectangle.
-Fitting stretches only the distance axis. Positive normal offsets follow the
-right-hand side of guide traversal in Canvas coordinates.
+`bendPathAlongArc(source, options)` and `bendPathAlongPath(source, guide, options)`
+return independent Move/Line/Close geometry. They map source X into distance along
+a guide and source Y into signed normal displacement. The explicit source frame
+controls start/center/end alignment and top/center/bottom/numeric baseline; it is
+not a clipping rectangle. Fitting stretches only the distance axis. Positive
+normal offsets follow the right-hand side of guide traversal in Canvas coordinates.
 
 Arc guides have positive radius and nonzero signed sweep of at most one turn.
 Path guides require one positive-length contour with continuous directed tangent;
 sharp joins, cusps, reversals, and multiple contours are rejected. Zero-length
-segments are ignored and removable stationary points with defined limiting
-tangents are supported. Self-intersections follow the authored traversal.
+segments are ignored and removable stationary points with defined limiting tangents
+are supported. Self-intersections follow the authored traversal.
 
-Error is the default overflow policy. Extend uses endpoint tangent rays;
-wrap requires a full-circle arc or an explicitly closed smooth path. All source
-segments and closing edges undergo bounded approximation in output coordinates;
-Along Path includes distance and normal measurement uncertainty in its tolerance.
-Limits and unachievable precision throw without partial output or input mutation.
-Default maxSegments is 1,000,000 including Move/Close. There is no automatic
-scheduling, retained resource, topology repair, or stroke-outline conversion.
+Error is the default overflow policy. Extend uses endpoint tangent rays; wrap
+requires a full-circle arc or an explicitly closed smooth path. All source segments
+and closing edges undergo bounded approximation in output coordinates; Along Path
+includes distance and normal measurement uncertainty in its tolerance. Limits and
+unachievable precision throw without partial output or input mutation. Default
+maxSegments is 1,000,000 including Move/Close. There is no automatic scheduling,
+retained resource, topology repair, or stroke-outline conversion.
 
 Evidence: `path-bending.test.ts`, `path-bending-integration.test.tsx`, packed
-consumer probes, and the interactive `path-bending` (Along Arc) and `along-path` learning examples. The
-[approved design](../superpowers/specs/2026-09-30-path-bending-design.md) and
-[implementation record](../superpowers/plans/2026-09-30-path-bending-implementation.md)
+consumer probes, and the interactive `path-bending` (Along Arc) and `along-path`
+learning examples. The [approved design](../superpowers/specs/2026-09-30-path-bending-design.md)
+and [implementation record](../superpowers/plans/2026-09-30-path-bending-implementation.md)
 describe the numerical certificates and internal work limits.
+
+## Component manipulation
+
+`ManipulationFrame` binds one writable finite box signal to a positioned local
+allocation. `DragHandle` is a structural listener: only participating descendant
+hit geometry can start a move. `ResizeHandle`, `ResizeHandles`, and
+`RotationHandle` retain explicit control geometry. No frame infers bounds from
+content. Resize and rotation controls keep CSS-pixel visual and hit geometry
+while their centers follow the frame. See the
+[component-manipulation contract](./component-manipulation-contract.md).

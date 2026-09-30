@@ -24,7 +24,9 @@ truncate inside a cluster. Font loading and any update needed after a font arriv
 remain application responsibilities.
 
 ```tsx
-<Text style={{ x: 20, y: 44, fill: "#0f172a", font: "600 24px sans-serif" }}>
+<Text
+  style={{ left: 20, top: 44, fill: "#0f172a", font: "600 24px sans-serif" }}
+>
   Hello, {42}
 </Text>
 ```

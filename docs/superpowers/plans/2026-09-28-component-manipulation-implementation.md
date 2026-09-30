@@ -1,5 +1,7 @@
 # Component Manipulation Implementation Plan
 
+> **Historical status: IMPLEMENTATION RECORD.** This dated plan preserves the approved execution sequence and its task-level evidence.
+
 > **For agentic workers:** Use superpowers:subagent-driven-development or superpowers:executing-plans task by task. The user selected parallel subagents; preserve that choice. Repository thin-slice and review rules override repeated per-task review ceremonies. Track execution with the checkboxes below.
 
 **Goal:** Ship unified component positioning and agent-verifiable moving, resizing, rotation, handles, and snapping through the public CRC API.
@@ -55,7 +57,7 @@ Only one agent edits render.ts, primitive-presentation.ts, element metadata, sha
 
 ### Positioning
 
-Standalone left/top translates the component's local origin before its own presentation transforms. A parent placement record consumes those fields and supplies the used allocation; renderer traversal never reapplies them. Carry this record through existing element metadata/pre-normalized-style paths, preserving keyed identity and receiver-owned style resolution. Plain components retain authored props and receive the positioned allocation without changing ordinary style-forwarding behavior.
+Standalone left/top translates the component's local origin before its own presentation transforms. A parent placement record consumes those fields and supplies the used allocation; renderer traversal never reapplies them. Carry this record through existing element metadata/pre-normalized-style paths, preserving keyed identity and receiver-owned style resolution. Plain components receive the same public style fields and style-signal identity. A positioned object style may be a readonly shallow copy carrying private forwarding provenance: never mutate the caller object or change public keys/values, and do not promise object identity on that path. A spread that retains matching resolved left/top is parent-consumed once; differing values are local, while a new non-forwarded style is always local.
 
 Rectangle and Image render at local origin after placement. Text renders at local anchor (0,0), preserving textAlign/textBaseline; left/top positions that anchor, not an inferred ink bounding box. Center-based shapes and paths retain their local geometric coordinates. Existing examples using both layout placement and x/y must explicitly restructure local drawing or combine offsets where semantically valid; do not blindly replace keys inside Flex/Flow/Grid. Group transforms keep their existing ordering, units, and meaning after placement.
 
@@ -121,7 +123,7 @@ Pointer up evaluates the final sample then emits commit exactly once if activate
 **Interfaces:** internal `resolveStandalonePosition(style, percentageBasis)` returns finite `{left,top}`; metadata distinguishes parent-consumed placement from standalone placement. It is not a new public style mode. Use existing stable placement identity and used-size handoff.
 
 - [ ] Add `positions standalone Rectangle with left/top`: public mount at (10,20), width 80/height 40; assert paint and pointer hit at translated geometry.
-- [ ] Add `does not double-place an Absolute child`: same final geometry under Absolute. Add one plain function forwarding style to a primitive to pin exactly-once semantics.
+- [ ] Add `does not double-place an Absolute child`: same final geometry under Absolute. Add paired plain-function forwarding cases: matching selected field values stay parent-consumed (including same-value reassignment), differing values are local, and an independently authored style remains local even when equal. Assert caller-object keys/values remain unchanged; retain exact style-signal identity.
 - [ ] Run `corepack pnpm@11.21.0 exec vitest run packages/core/test/component-positioning.test.tsx --browser.headless --browser.ui=false`; observe the expected missing-behavior failure before production edits.
 - [ ] Implement placement ownership; remove positioning-style x/y, move Rectangle/Image local geometry to zero and preserve Text anchor semantics. Keep public geometric x/y intact.
 - [ ] Migrate affected source usages necessary to keep this slice runnable and type-correct. Inventory with rg, classify each occurrence; no repository-wide textual x/y rename.

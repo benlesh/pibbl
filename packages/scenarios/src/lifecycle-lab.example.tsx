@@ -92,8 +92,8 @@ function region({
     <Rectangle
       key={key}
       style={{
-        x,
-        y,
+        left: x,
+        top: y,
         width,
         height,
         fill: fillStyle,
@@ -107,8 +107,8 @@ function region({
     <Text
       pointerEvents="none"
       style={{
-        x: x + 10,
-        y: y + 18,
+        left: x + 10,
+        top: y + 18,
         font: '700 12px Arial',
         fill: '#ffffff',
       }}
@@ -138,8 +138,8 @@ const LifecycleLabScene = ({ state, recordCall }: LifecycleLabSceneProps) => [
   <Rectangle
     key="background"
     style={{
-      x: 0,
-      y: 0,
+      left: 0,
+      top: 0,
       width: 480,
       height: 240,
       fill: state.runtime === 'mounted' ? '#f8fafc' : '#e2e8f0',
@@ -209,8 +209,8 @@ const LifecycleLabScene = ({ state, recordCall }: LifecycleLabSceneProps) => [
   <Text
     pointerEvents="none"
     style={{
-      x: 18,
-      y: 24,
+      left: 18,
+      top: 24,
       font: '700 14px Arial',
       fill: '#0f172a',
     }}
@@ -219,8 +219,8 @@ const LifecycleLabScene = ({ state, recordCall }: LifecycleLabSceneProps) => [
   <Text
     pointerEvents="none"
     style={{
-      x: 18,
-      y: 143,
+      left: 18,
+      top: 143,
       font: '13px Arial',
       fill: '#334155',
     }}
@@ -229,8 +229,8 @@ const LifecycleLabScene = ({ state, recordCall }: LifecycleLabSceneProps) => [
   <Text
     pointerEvents="none"
     style={{
-      x: 18,
-      y: 224,
+      left: 18,
+      top: 224,
       font: '13px Arial',
       fill: '#475569',
     }}

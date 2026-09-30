@@ -12,8 +12,8 @@ function LayerStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#ff6b57",
@@ -21,8 +21,8 @@ function LayerStudy() {
     />,
     <Rectangle
       style={{
-        x: 132,
-        y: 82,
+        left: 132,
+        top: 82,
         width: 456,
         height: 256,
         fill: "#fffdf6",
@@ -44,8 +44,8 @@ function LayerStudy() {
       >
         <Rectangle
           style={{
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 344,
             height: 214,
             fill: active.get() ? "#f7c948" : "#74d3ae",
@@ -57,8 +57,8 @@ function LayerStudy() {
         />
         <Rectangle
           style={{
-            x: 34,
-            y: 34,
+            left: 34,
+            top: 34,
             width: 86,
             height: 146,
             fill: "#1f4bd8",
@@ -66,8 +66,8 @@ function LayerStudy() {
         />
         <Text
           style={{
-            x: 226,
-            y: 84,
+            left: 226,
+            top: 84,
             fill: "#17211d",
             font: "900 25px sans-serif",
             textAlign: "center",
@@ -77,8 +77,8 @@ function LayerStudy() {
         </Text>
         <Text
           style={{
-            x: 226,
-            y: 130,
+            left: 226,
+            top: 130,
             fill: "#17211d",
             font: "700 12px monospace",
             textAlign: "center",

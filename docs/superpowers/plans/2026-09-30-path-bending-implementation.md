@@ -1,5 +1,7 @@
 # Path bending implementation plan
 
+> **Historical status: Authorized implementation-plan record; it does not define current shipped behavior.**
+
 Status: in progress, 2026-09-30. The user approved the
 [design](../specs/2026-09-30-path-bending-design.md) and requested implementation.
 Both Along Arc and Along Path remain the completion target.

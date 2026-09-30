@@ -26,6 +26,7 @@ const expectedModules = new Map([
   ["@crc/particles", "node_modules/@crc/particles/index.d.ts"],
   ["@crc/three", "node_modules/@crc/three/index.d.ts"],
   ["@crc/viz", "node_modules/@crc/viz/index.d.ts"],
+  ["@crc/text", "node_modules/@crc/text/index.d.ts"],
 ]);
 const bundle = await readFile(
   join(repositoryRoot, "playground/src/crc-editor-types.txt"),
@@ -53,6 +54,7 @@ const sourceEntries = {
   particles: join(repositoryRoot, "packages/particles/src/index.ts"),
   three: join(repositoryRoot, "packages/three/src/index.ts"),
   viz: join(repositoryRoot, "packages/viz/src/index.ts"),
+  text: join(repositoryRoot, "packages/text/src/index.ts"),
 };
 const builtEntries = Object.fromEntries(
   Object.entries(sourceEntries).map(([name, path]) => [
@@ -79,6 +81,7 @@ const inventoryKey = new Map([
   ["@crc/particles", "particles"],
   ["@crc/three", "three"],
   ["@crc/viz", "viz"],
+  ["@crc/text", "text"],
 ]);
 
 function explicitNames(content) {
@@ -136,8 +139,10 @@ try {
   }
   const consumer = `
     /** @jsxImportSource @crc/core */
-    import { crc, Rectangle, type CRCNode } from '@crc/core';
+    import { crc, Rectangle, DragHandle, ManipulationFrame, ResizeHandles, RotationHandle, useManipulation, useSignal, type CRCNode } from '@crc/core';
     import { defineThreeLayer, type CRCThreeTarget } from '@crc/three';
+    import { loadOutlineFont, createTextGeometry } from '@crc/text';
+    async function textOutline(bytes: Uint8Array) { using font = await loadOutlineFont(bytes); return createTextGeometry(font, 'Hello', {fontSize: 100, missingGlyphs: 'error'}); }
     import { Particles2D } from '@crc/particles';
     import { ReactionDiffusion, ProceduralTexture, texturePalettes, type TextureRenderer } from '@crc/textures';
     const textureRenderer: TextureRenderer = (ctx, texture) => { ctx.drawImage(texture.source, 0, 0, texture.width, texture.height); };
@@ -162,7 +167,9 @@ try {
     function App(): CRCNode {
       void Particles2D; void PhysicsWorld2D; void OrbitControls;
       void boundsOfShape3D(sphereShape3D({ radius: 1 }));
-      return <><Rectangle style={{ width: 20, height: 20 }} /><Layer angle={1} style={{ width: 20, height: 20 }} /></>;
+      const box = useSignal({ left: 20, top: 30, width: 100, height: 60 });
+      const manipulation = useManipulation({ box });
+      return <><ManipulationFrame {...manipulation.frameProps}><DragHandle controller={manipulation} formatReadout={({ left, top }) => String(left + top)} style={{ readout: { gap: 5, active: { visible: true, fill: 'blue' } } }}><Rectangle keyboardFocusable style={{ width: 20, height: 20, cursor: 'grab' }} /></DragHandle><ResizeHandles controller={manipulation} /><RotationHandle controller={manipulation} /></ManipulationFrame><Layer angle={1} style={{ width: 20, height: 20 }} /></>;
     }
     declare const canvas: HTMLCanvasElement;
     crc(canvas, <App />);
@@ -225,21 +232,8 @@ try {
   const built = await runtime("built");
   assert.deepEqual(Object.keys(source).sort(), Object.keys(built).sort());
   for (const runtime of [source, built]) {
-    for (const name of [
-      "crc",
-      "defineRenderLayer",
-      "defineThreeLayer",
-      "ReactionDiffusion",
-      "ProceduralTexture",
-      "Particles2D",
-      "PhysicsWorld2D",
-      "sphereShape3D",
-    ]) {
-      assert.equal(
-        typeof runtime[name],
-        "function",
-        `${name} must be in the Studio runtime`,
-      );
+    for (const name of ['ReactionDiffusion', 'ProceduralTexture', 'loadOutlineFont', 'createTextGeometry', 'crc', 'useManipulation', 'Manipulable', 'ManipulationFrame', 'DragHandle', 'ResizeHandle', 'ResizeHandles', 'RotationHandle', 'degrees', 'defineRenderLayer', 'defineThreeLayer', 'Particles2D', 'PhysicsWorld2D', 'sphereShape3D']) {
+      assert.equal(typeof runtime[name], 'function', `${name} must be in the Studio runtime`);
     }
     for (const name of [
       "WebGLLayer",

@@ -1,3 +1,4 @@
+import { setPlacementConsumed } from '../element/metadata';
 import { describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
 import { getCRCInstance } from '../global-state';
@@ -252,6 +253,7 @@ describe('resolved built-in styles', () => {
       },
       onClick: onHorizontalClick,
     });
+    setPlacementConsumed(horizontal);
     const horizontalCanvas = await componentTest(placeChild({
       element: horizontal,
       box: { x: 50, y: 10, width: 100, height: 40 },
@@ -274,6 +276,7 @@ describe('resolved built-in styles', () => {
       },
       onClick: onVerticalClick,
     });
+    setPlacementConsumed(vertical);
     const verticalCanvas = await componentTest(placeChild({
       element: vertical,
       box: { x: 100, y: 10, width: 40, height: 80 },
@@ -286,7 +289,7 @@ describe('resolved built-in styles', () => {
   it('resolves root percentages against intrinsic Canvas allocation', async () => {
     const canvas = await componentTest(createElement(Rectangle, {
       style: {
-        x: '10%',
+        left: '10%',
         width: '50%',
         height: 20,
         fill: 'red',
@@ -405,7 +408,7 @@ describe('resolved built-in styles', () => {
   });
 
   // @ts-expect-error local paint offsets do not accept auto
-  void createElement(Rectangle, { style: { x: 'auto', width: 20, height: 20 } });
+  void createElement(Rectangle, { style: { left: 'auto', width: 20, height: 20 } });
 });
 
 function nextFrame(): Promise<void> {

@@ -9,6 +9,11 @@ import type { LayoutBox } from './layout/types.js';
 import { finalizeHookSlots } from './hooks/hook-slot.js';
 import { resolveElementStyle, takePreNormalizedStyle } from './style/resolve-dispatch.js';
 import {
+  getPlacementSignalHandoff,
+  enterPlacementHandoffCapture,
+  withPlacementHandoff,
+} from './style/positioning.js';
+import {
   enterElementEnhancers,
   exitElementEnhancers,
   hasElementEnhancers,
@@ -20,6 +25,7 @@ import {
   getPrimitiveDefinition,
   getPrimitiveReceiverToken,
   getElementSource,
+  isPlacementConsumed,
 } from './element/metadata.js';
 import { resolvePrimitiveInputs } from './element/resolve-primitive-inputs.js';
 import { materializeContainerChildren } from './element/children.js';
@@ -280,11 +286,27 @@ function renderComponentElement<P>(
               );
             }
           } else {
-            // Placement consumes outer style; plain functions retain author props.
-            takePreNormalizedStyle(componentRefs.element);
-            renderProgram(() =>
-              componentRefs.element.type(componentRefs.element.props)
-            );
+            // Layout owns the outer translation. A private marker survives one
+            // intentional `{ ...style }` forward without changing other children.
+            const preparedStyle = takePreNormalizedStyle(componentRefs.element);
+            const signalHandoff = getPlacementSignalHandoff(componentRefs.element);
+            const consumedStyle = preparedStyle?.style ?? signalHandoff;
+            const receivesPlacementHandoff =
+              isPlacementConsumed(componentRefs.element) ||
+              signalHandoff !== undefined;
+            const props = isPlacementConsumed(componentRefs.element) ?
+              withPlacementHandoff(componentRefs.element.props, consumedStyle) :
+              componentRefs.element.props;
+            renderProgram(() => {
+              const releaseHandoff = receivesPlacementHandoff ?
+                enterPlacementHandoffCapture(props, consumedStyle) :
+                undefined;
+              try {
+                return componentRefs.element.type(props);
+              } finally {
+                releaseHandoff?.();
+              }
+            });
           }
         });
         componentRefs.signalConsumer?.markClean();

@@ -1,0 +1,39 @@
+{
+  "name": "@crc/text",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Editable text outlines for CRC, powered by HarfBuzz WASM",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "build": "node scripts/build.mjs",
+    "clean": "node scripts/clean.mjs",
+    "test": "node scripts/test.mjs",
+    "bench": "node scripts/bench.mjs",
+    "test:browser": "node test/studio.browser.mjs",
+    "bench:browser": "node scripts/bench-browser.mjs",
+    "verify:reproducible": "node scripts/reproducible.mjs",
+    "reference": "node scripts/reference.mjs"
+  },
+  "peerDependencies": {
+    "@crc/core": "0.0.1"
+  },
+  "devDependencies": {
+    "@crc/core": "workspace:*"
+  },
+  "browser": {
+    "./dist/engine.mjs": "./dist/engine-browser.mjs"
+  }
+}

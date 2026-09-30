@@ -20,8 +20,8 @@ function PointerCaptureStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#17211d",
@@ -29,8 +29,8 @@ function PointerCaptureStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 45,
+        left: 360,
+        top: 45,
         fill: "#fffdf6",
         font: "900 25px sans-serif",
         textAlign: "center",
@@ -40,8 +40,8 @@ function PointerCaptureStudy() {
     </Text>,
     <Rectangle
       style={{
-        x: 74,
-        y: 84,
+        left: 74,
+        top: 84,
         width: 292,
         height: 216,
         fill: capturedId.get() === null ? "#1f4bd8" : "#74d3ae",
@@ -85,8 +85,8 @@ function PointerCaptureStudy() {
     />,
     <Text
       style={{
-        x: 220,
-        y: 155,
+        left: 220,
+        top: 155,
         fill: "#17211d",
         font: "900 27px sans-serif",
         textAlign: "center",
@@ -96,8 +96,8 @@ function PointerCaptureStudy() {
     </Text>,
     <Text
       style={{
-        x: 220,
-        y: 194,
+        left: 220,
+        top: 194,
         fill: "#17211d",
         font: "700 13px sans-serif",
         textAlign: "center",
@@ -107,8 +107,8 @@ function PointerCaptureStudy() {
     </Text>,
     <Rectangle
       style={{
-        x: 406,
-        y: 84,
+        left: 406,
+        top: 84,
         width: 240,
         height: 216,
         fill: "#f7f0df",
@@ -116,8 +116,8 @@ function PointerCaptureStudy() {
     />,
     <Text
       style={{
-        x: 526,
-        y: 130,
+        left: 526,
+        top: 130,
         fill: "#17211d",
         font: "900 17px monospace",
         textAlign: "center",
@@ -127,8 +127,8 @@ function PointerCaptureStudy() {
     </Text>,
     <Text
       style={{
-        x: 526,
-        y: 174,
+        left: 526,
+        top: 174,
         fill: "#1f4bd8",
         font: "900 23px sans-serif",
         textAlign: "center",
@@ -138,8 +138,8 @@ function PointerCaptureStudy() {
     </Text>,
     <Text
       style={{
-        x: 526,
-        y: 218,
+        left: 526,
+        top: 218,
         fill: "#17211d",
         font: "700 12px monospace",
         textAlign: "center",
@@ -147,8 +147,8 @@ function PointerCaptureStudy() {
     >{`latest move: ${Math.round(position.get().x)}, ${Math.round(position.get().y)}`}</Text>,
     <Text
       style={{
-        x: 360,
-        y: 326,
+        left: 360,
+        top: 326,
         fill: "#f7c948",
         font: "600 12px sans-serif",
         textAlign: "center",
@@ -160,8 +160,8 @@ function PointerCaptureStudy() {
     </Text>,
     <Text
       style={{
-        x: 48,
-        y: 352,
+        left: 48,
+        top: 352,
         width: 624,
         lineHeight: 17,
         fit: "ellipsis",

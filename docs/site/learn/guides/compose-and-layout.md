@@ -74,6 +74,41 @@ box calculated by the parent comes from `useLayoutBox()`. Parent placement uses
 content boxes, padding is numeric, and `overflow: "clip"` clips both paint and
 target geometry without creating scrolling.
 
+### Forwarding a placed style
+
+An `Absolute` child can forward its received `style` to a returned drawing
+child with `{ ...style }`. CRC consumes the resolved `left` and `top` once for
+that forwarding path. The rule is value-based: assigning the same resolved
+`left` or `top` again still forwards parent placement, while a different value
+becomes the returned child's local offset. A new style object that does not
+spread the received style is independent local geometry, even when its numeric
+offsets equal the parent's.
+
+```tsx
+function Card({ style }: { style: { left: number; top: number } }) {
+  return (
+    <Rectangle style={{ ...style, width: 120, height: 64, fill: "tomato" }} />
+  );
+}
+
+function Badge(_props: { style: { left: number; top: number } }) {
+  return (
+    <Rectangle
+      style={{ left: 30, top: 40, width: 24, height: 16, fill: "gold" }}
+    />
+  );
+}
+
+<Absolute>
+  <Card style={{ left: 30, top: 40 }} />
+  <Badge style={{ left: 30, top: 40 }} />
+</Absolute>;
+```
+
+`Card` paints at `(30, 40)`. `Badge` has independent local geometry and paints
+at `(60, 80)`. This rule concerns resolved placement values, not the identity
+or mutability of the style object.
+
 Layout parents inspect normalized direct-child style without invoking child
 components. Measurement is pure and opt-in. See the [layout
 contract](../../../design/layout-system-contract.md) for every supported Flex, Flow,
@@ -105,7 +140,7 @@ const transformed = (
     }}
   >
     <Rectangle style={{ width: 200, height: 100, fill: "tomato" }} />
-    <Text style={{ x: 20, y: 20 }}>Transformed together</Text>
+    <Text style={{ left: 20, top: 20 }}>Transformed together</Text>
   </Group>
 );
 ```
@@ -133,7 +168,7 @@ const hexagon = createRegularPolygonPath({
 
 const clipped = (
   <Clip style={{ d: hexagon }}>
-    <Image style={{ src, x: 40, y: 10, width: 160, height: 160 }} />
+    <Image style={{ src, left: 40, top: 10, width: 160, height: 160 }} />
   </Clip>
 );
 ```
@@ -153,7 +188,9 @@ import { Layer, Rectangle, Text, type CRCNode } from "@crc/core";
 
 function Chart(): CRCNode {
   return (
-    <Rectangle style={{ x: 40, y: 60, width: 220, height: 80, fill: "navy" }} />
+    <Rectangle
+      style={{ left: 40, top: 60, width: 220, height: 80, fill: "navy" }}
+    />
   );
 }
 
@@ -161,7 +198,7 @@ const cached = (
   <Layer style={{ width: 300, height: 200 }}>
     <Rectangle style={{ width: 300, height: 200, fill: "#eef2ff" }} />
     <Chart />
-    <Text style={{ x: 12, y: 12 }}>Cached offscreen content</Text>
+    <Text style={{ left: 12, top: 12 }}>Cached offscreen content</Text>
   </Layer>
 );
 ```

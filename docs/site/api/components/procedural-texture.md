@@ -13,7 +13,7 @@ relatedTypes: [ProceduralTextureProps, TextureKind, TextureRenderer]
 
 Import from `@crc/textures`. Required `kind` is `marble`, `paper`, or `cellular`.
 Defaults: seed 42, 256 × 160 resolution, scale 6, detail 0.65, porcelain palette.
-Scale is in [1,32]; detail is in [0,1]. Shape inputs regenerate; palettes recolor.
+Scale is in `1–32`; detail is in `0–1`. Shape inputs regenerate; palettes recolor.
 Display dimensions do not change the generated field.
 
 It uses the render-layer style/event surface and stops scheduling after generation.

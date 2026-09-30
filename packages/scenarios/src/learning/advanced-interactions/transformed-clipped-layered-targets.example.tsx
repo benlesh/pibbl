@@ -19,8 +19,8 @@ function Moon(props: MoonProps) {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 300,
         height: 260,
         fill: "#1f4bd8",
@@ -36,8 +36,8 @@ function Moon(props: MoonProps) {
     />,
     <Rectangle
       style={{
-        x: 128,
-        y: 30,
+        left: 128,
+        top: 30,
         width: 44,
         height: 200,
         fill: "#ff6b57",
@@ -53,8 +53,8 @@ function ComposedTargetStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#17211d",
@@ -85,8 +85,8 @@ function ComposedTargetStudy() {
     </Group>,
     <Text
       style={{
-        x: 360,
-        y: 360,
+        left: 360,
+        top: 360,
         fill: "#fffdf6",
         font: "800 16px monospace",
         textAlign: "center",

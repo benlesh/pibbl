@@ -949,18 +949,29 @@ it("commits projected focus bounds with picking and preserves them across a fail
   } finally { mounted.dispose(); }
 });
 
-it("preserves registered leaf identity inside an ordinary Three LOD", () => {
+it.each(["LOD", "BatchedMesh"] as const)("preserves registered leaf identity inside an ordinary Three %s", (parentKind) => {
   let selected = 0;
   let resources!: ReturnType<typeof createResourcesWithBox>;
   let invalidate!: () => void;
   const Layer = defineThreeLayer<{}, typeof resources>({
     create(context) {
       invalidate = context.invalidate; resources = createResourcesWithBox();
-      const lod = new LOD(); lod.addLevel(resources.mesh, 0); resources.scene.add(lod);
+      if (parentKind === "LOD") {
+        const lod = new LOD(); lod.addLevel(resources.mesh, 0); resources.scene.add(lod);
+      } else {
+        const batch = new BatchedMesh(1, 24, 36, resources.mesh.material as MeshBasicMaterial);
+        batch.addInstance(batch.addGeometry(resources.mesh.geometry));
+        batch.setMatrixAt(0, new Matrix4().makeTranslation(20, 0, 0));
+        batch.add(resources.mesh); resources.scene.add(batch);
+      }
       return resources;
     },
     targets(value) { return [{ object: value.mesh, handlers: { onClick: () => selected++ } }]; },
-    dispose(value) { value.mesh.geometry.dispose(); (value.mesh.material as MeshBasicMaterial).dispose(); },
+    dispose(value) {
+      const parent = value.mesh.parent;
+      if (parent instanceof BatchedMesh) parent.dispose();
+      value.mesh.geometry.dispose(); (value.mesh.material as MeshBasicMaterial).dispose();
+    },
   });
   const mounted = mount(<Layer style={{ width: 100, height: 100 }} />);
   try {
