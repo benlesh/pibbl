@@ -205,24 +205,16 @@ function Plot({
           <Text
             key={period}
             pointerEvents="none"
-            style={
-              horizontal
-                ? {
-                    left: -14,
-                    top: start + category.bandwidth / 2,
-                    textAlign: "right",
-                    textBaseline: "middle",
-                    font: "12px sans-serif",
-                    fill: ink,
-                  }
-                : {
-                    left: start + category.bandwidth / 2,
-                    top: category.frame.height + 23,
-                    textAlign: "center",
-                    font: "12px sans-serif",
-                    fill: ink,
-                  }
-            }
+            style={{
+              left: horizontal ? -14 : start + category.bandwidth / 2,
+              top: horizontal
+                ? start + category.bandwidth / 2
+                : category.frame.height + 23,
+              textAlign: horizontal ? "right" : "center",
+              textBaseline: horizontal ? "middle" : "alphabetic",
+              font: "12px sans-serif",
+              fill: ink,
+            }}
           >
             {period}
           </Text>
