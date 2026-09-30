@@ -1,6 +1,7 @@
 import {
   Group,
   Path,
+  Wedge,
   definePrimitive,
   Line,
   Rectangle,
@@ -12,6 +13,7 @@ import {
 import { withHooksForbidden } from "@crc/core/internal";
 import type {
   PieLayoutProps,
+  PieLayoutSlice,
   PieSliceProps,
   PieLabelProps,
   PieLabelLayout,
@@ -172,6 +174,24 @@ export function PieSlice<D>({
   ...events
 }: PieSliceProps<D>) {
   const style = resolveSignalValue(input) ?? {};
+  if (slice.innerRadius === 0) {
+    return (
+      <Group>
+        <Wedge
+          {...events}
+          style={{
+            ...style,
+            cx: slice.cx,
+            cy: slice.cy,
+            radius: slice.radius,
+            startAngle: slice.startAngle,
+            endAngle: slice.endAngle,
+          }}
+        />
+        {children}
+      </Group>
+    );
+  }
   const path = new Path2D();
   path.arc(slice.cx, slice.cy, slice.radius, slice.startAngle, slice.endAngle);
   if (slice.innerRadius > 0)
@@ -189,6 +209,10 @@ export function PieSlice<D>({
     <Group>
       <Path
         {...events}
+        keyboardNavigationBounds={
+          events.keyboardNavigationBounds ??
+          annularSliceBounds(slice)
+        }
         style={{
           ...style,
           d: path,
@@ -197,6 +221,36 @@ export function PieSlice<D>({
       {children}
     </Group>
   );
+}
+
+/** The outer and inner arcs both contribute to an annular path's focus box. */
+function annularSliceBounds(slice: PieLayoutSlice<unknown>) {
+  const angles = [slice.startAngle, slice.endAngle];
+  for (const cardinal of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
+    const first = Math.ceil((slice.startAngle - cardinal) / (Math.PI * 2));
+    const last = Math.floor((slice.endAngle - cardinal) / (Math.PI * 2));
+    for (let turn = first; turn <= last; turn++)
+      angles.push(cardinal + turn * Math.PI * 2);
+  }
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const angle of angles) {
+    const cosine = Math.cos(angle);
+    const sine = Math.sin(angle);
+    xs.push(
+      slice.cx + slice.radius * cosine,
+      slice.cx + slice.innerRadius * cosine,
+    );
+    ys.push(
+      slice.cy + slice.radius * sine,
+      slice.cy + slice.innerRadius * sine,
+    );
+  }
+  const left = Math.min(...xs);
+  const right = Math.max(...xs);
+  const top = Math.min(...ys);
+  const bottom = Math.max(...ys);
+  return { x: left, y: top, width: right - left, height: bottom - top };
 }
 
 const LabelText = definePrimitive<

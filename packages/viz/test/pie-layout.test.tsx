@@ -210,6 +210,61 @@ it("tracks dynamic signal dependencies in cached value and label callbacks", () 
   runtime.flush();
   expect(result[0]?.value).toBe(3);
 });
+it("preserves solid wedge focus geometry and gives annular slices their painted bounds", () => {
+  runtime = testRuntime();
+  const canvas = runtime.mount(
+    <>
+      <viz.PieLayout
+        data={[4, 1, 7]}
+        value={(value: number) => value}
+        style={{ cx: 100, cy: 100, radius: 80 }}
+      >
+        {(slice) => (
+          <viz.PieSlice
+            slice={slice}
+            style={{ fill: "red" }}
+            onPointerDown={() => undefined}
+          />
+        )}
+      </viz.PieLayout>
+      <viz.PieLayout
+        data={[4, 1, 7]}
+        value={(value: number) => value}
+        style={{ cx: 300, cy: 100, radius: 80, innerRadius: 30 }}
+      >
+        {(slice) => (
+          <viz.PieSlice
+            slice={slice}
+            style={{ fill: "red" }}
+            onPointerDown={() => undefined}
+          />
+        )}
+      </viz.PieLayout>
+    </>,
+  );
+  runtime.flush();
+  const targets = [...getCRCInstance(canvas).eventRoot.targets];
+  expect(targets[1]?.keyboardNavigationBounds).toMatchObject({
+    x: 100,
+    y: 100,
+  });
+  expect(targets[1]?.keyboardNavigationBounds?.width).toBeCloseTo(
+    80 * Math.cos(Math.PI / 6),
+  );
+  expect(targets[1]?.keyboardNavigationBounds?.height).toBeCloseTo(
+    80 * Math.sin(Math.PI / 3),
+  );
+  expect(targets[4]?.keyboardNavigationBounds).toMatchObject({
+    x: 300 + 30 * Math.cos(Math.PI / 3),
+    y: 100 + 30 * Math.sin(Math.PI / 6),
+  });
+  expect(targets[4]?.keyboardNavigationBounds?.width).toBeCloseTo(
+    80 * Math.cos(Math.PI / 6) - 30 * Math.cos(Math.PI / 3),
+  );
+  expect(targets[4]?.keyboardNavigationBounds?.height).toBeCloseTo(
+    80 * Math.sin(Math.PI / 3) - 30 * Math.sin(Math.PI / 6),
+  );
+});
 it.each([
   { radius: 0, innerRadius: 1 },
   { radius: 80, innerRadius: 80 },
