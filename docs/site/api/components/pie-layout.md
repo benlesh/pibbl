@@ -14,6 +14,7 @@ symbols:
     PieLayoutStyle,
     PieLayoutSlice,
     PieLabelPlacement,
+    PieLabelBox,
     PieLabelLayout,
     PieSliceProps,
     PieSliceStyle,
@@ -126,3 +127,22 @@ loop, global cache or retained paint cache.
 The label renderer supports single-line text. Load custom fonts before mounting
 or change revision when their metrics change. Multiline/custom label content
 and automatic legend generation remain separate capabilities.
+
+## Explicit custom label content
+
+Supply `labelBox(slice)` instead of `label` to declare a positive finite width
+and height, then put ordinary CRC elements inside `PieLabel`. `PieLabelBox`
+contains those two dimensions. Null or undefined omits that label. String
+labels and explicit content boxes cannot be supplied together.
+
+`PieLabelLayout.kind` distinguishes `"text"` and `"content"`. Text layouts
+retain text/font positions; content layouts expose the same placed box and
+optional leader without measured text fields. Both use the same whole-box
+inside/automatic/outside placement rules, including donut-hole exclusion.
+Hidden content unmounts; visible stable keys preserve child state on reorder.
+
+Custom children receive the declared box allocation at the placed label origin.
+Callers keep content within that box; no automatic measurement or clipping is
+added. Nonempty custom children on a string-label layout reject because the
+string's measured box does not size arbitrary content. Box-accessor dependencies
+follow the same default evaluation and explicit revision policy as text labels.

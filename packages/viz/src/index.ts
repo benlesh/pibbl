@@ -96,4 +96,4 @@ export { pieSlices } from "./lib/pie-slices.js";
 export type { PieOptions, PieSliceGeometry } from "./lib/pie-slices.js";
 
 export { PieLayout, PieSlice, PieLabel } from "./lib/pie-layout.js";
-export type { PieLayoutProps, PieLayoutStyle, PieLayoutSlice, PieLabelPlacement, PieLabelLayout, PieSliceProps, PieSliceStyle, PieLabelProps, PieLabelStyle } from "./lib/pie-types.js";
+export type { PieLayoutProps, PieLayoutStyle, PieLayoutSlice, PieLabelPlacement, PieLabelBox, PieLabelLayout, PieSliceProps, PieSliceStyle, PieLabelProps, PieLabelStyle } from "./lib/pie-types.js";
