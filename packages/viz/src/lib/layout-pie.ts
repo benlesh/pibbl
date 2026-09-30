@@ -3,6 +3,7 @@ import type {
   PieLayoutSlice,
   PieLabelLayout,
   PieLabelPlacement,
+  PieLabelBox,
 } from "./pie-types.js";
 import type { HoverBounds } from "./hover-placement.js";
 interface Metrics {
@@ -10,6 +11,41 @@ interface Metrics {
   height: number;
   left: number;
   ascent: number;
+}
+type LabelCandidate =
+  | Readonly<{ kind: "text"; text: string; metrics: Metrics }>
+  | Readonly<{ kind: "content"; metrics: Metrics }>;
+
+function textCandidate(
+  text: string,
+  measure: (text: string) => Metrics,
+): LabelCandidate {
+  if (typeof text !== "string" || /[\r\n]/u.test(text))
+    throw new TypeError("PieLayout: label must return a single-line string.");
+  return {
+    kind: "text",
+    text,
+    metrics: text ? measure(text) : { width: 0, height: 0, left: 0, ascent: 0 },
+  };
+}
+
+function contentCandidate(
+  box: PieLabelBox | null | undefined,
+): LabelCandidate | undefined {
+  if (box == null) return undefined;
+  if (
+    !Number.isFinite(box.width) ||
+    !Number.isFinite(box.height) ||
+    box.width <= 0 ||
+    box.height <= 0
+  )
+    throw new RangeError(
+      "PieLayout: labelBox must return positive finite width and height.",
+    );
+  return {
+    kind: "content",
+    metrics: { width: box.width, height: box.height, left: 0, ascent: 0 },
+  };
 }
 /** Checks the closest point of a complete label box, not just its corners. */
 export function boxOutsideInnerCircle(
@@ -40,56 +76,84 @@ export function layoutPie<D>(
   gap: number,
   placement: PieLabelPlacement,
   label: ((slice: PieSliceGeometry<D>) => string) | undefined,
+  labelBox:
+    | ((slice: PieSliceGeometry<D>) => PieLabelBox | null | undefined)
+    | undefined,
   measure: (text: string) => Metrics,
 ): readonly PieLayoutSlice<D>[] {
   const labels: (PieLabelLayout | undefined)[] = slices.map(() => undefined);
   const lanes: {
     index: number;
-    text: string;
-    metrics: Metrics;
+    candidate: LabelCandidate;
     anchor: [number, number];
     y: number;
   }[][] = [[], []];
   function placed(
-    text: string,
-    m: Metrics,
+    candidate: LabelCandidate,
     x: number,
     y: number,
     location: "inside" | "outside",
     leader?: readonly (readonly [number, number])[],
   ): PieLabelLayout {
-    return Object.freeze({
+    const geometry = {
       status: "placed",
       placement: location,
-      text,
-      font,
       x,
       y,
-      width: m.width,
-      height: m.height,
-      textX: x + m.left,
-      textY: y + m.ascent,
+      width: candidate.metrics.width,
+      height: candidate.metrics.height,
       leader,
-    });
+    } as const;
+    return candidate.kind === "text"
+      ? Object.freeze({
+          kind: "text",
+          ...geometry,
+          text: candidate.text,
+          font,
+          textX: x + candidate.metrics.left,
+          textY: y + candidate.metrics.ascent,
+        })
+      : Object.freeze({ kind: "content", ...geometry });
   }
   const inBounds = (x: number, y: number, w: number, h: number) =>
     x >= bounds.x &&
     y >= bounds.y &&
     x + w <= bounds.x + bounds.width &&
     y + h <= bounds.y + bounds.height;
+  const hidden = (
+    candidate: LabelCandidate,
+    reason: "empty" | "inside-fit" | "space",
+  ): PieLabelLayout =>
+    candidate.kind === "text"
+      ? Object.freeze({
+          kind: "text",
+          status: "hidden",
+          reason,
+          text: candidate.text,
+        })
+      : Object.freeze({
+          kind: "content",
+          status: "hidden",
+          reason: reason === "empty" ? "inside-fit" : reason,
+        });
   slices.forEach((slice, index) => {
-    if (!label) return;
-    const text = label(slice);
-    if (typeof text !== "string" || /[\r\n]/u.test(text))
-      throw new TypeError("PieLayout: label must return a single-line string.");
+    if (!label && !labelBox) return;
+    const candidate = label
+      ? textCandidate(label(slice), measure)
+      : contentCandidate(labelBox!(slice));
+    if (!candidate) return;
     const hide = (reason: "empty" | "inside-fit" | "space") => {
-      labels[index] = Object.freeze({ status: "hidden", reason, text });
+      labels[index] = hidden(candidate, reason);
     };
-    if (!text || !radius || slice.endAngle <= slice.startAngle) {
+    if (
+      (candidate.kind === "text" && !candidate.text) ||
+      !radius ||
+      slice.endAngle <= slice.startAngle
+    ) {
       hide("empty");
       return;
     }
-    const m = measure(text);
+    const m = candidate.metrics;
     const mid = (slice.startAngle + slice.endAngle) / 2;
     const labelRadius =
       innerRadius === 0
@@ -120,7 +184,7 @@ export function layoutPie<D>(
       }) &&
       boxOutsideInnerCircle(x, y, m.width, m.height, cx, cy, innerRadius);
     if (placement !== "outside" && fits) {
-      labels[index] = placed(text, m, x, y, "inside");
+      labels[index] = placed(candidate, x, y, "inside");
       return;
     }
     if (placement === "inside") {
@@ -133,8 +197,7 @@ export function layoutPie<D>(
     ];
     lanes[Math.cos(mid) < 0 ? 0 : 1].push({
       index,
-      text,
-      metrics: m,
+      candidate,
       anchor,
       y: 0,
     });
@@ -144,17 +207,20 @@ export function layoutPie<D>(
     let used = 0;
     const accepted = lane.filter((row) => {
       const x =
-        side === 0 ? cx - radius - gap - row.metrics.width : cx + radius + gap;
-      const next = used + (used ? gap : 0) + row.metrics.height;
+        side === 0
+          ? cx - radius - gap - row.candidate.metrics.width
+          : cx + radius + gap;
+      const next = used + (used ? gap : 0) + row.candidate.metrics.height;
       if (
         next > bounds.height ||
-        !inBounds(x, bounds.y, row.metrics.width, row.metrics.height)
+        !inBounds(
+          x,
+          bounds.y,
+          row.candidate.metrics.width,
+          row.candidate.metrics.height,
+        )
       ) {
-        labels[row.index] = Object.freeze({
-          status: "hidden",
-          reason: "space",
-          text: row.text,
-        });
+        labels[row.index] = hidden(row.candidate, "space");
         return false;
       }
       used = next;
@@ -176,7 +242,7 @@ export function layoutPie<D>(
       for (const row of rows) {
         const dx = row.anchor[0] - cx;
         const dy = row.anchor[1] - cy;
-        const half = row.metrics.height / 2;
+        const half = row.candidate.metrics.height / 2;
         const ideal = cy + (dy * (radius + gap)) / radius;
         const tangent =
           dy === 0 ? cy : cy + (radius * radius - dx * (rail - cx)) / dy;
@@ -187,13 +253,9 @@ export function layoutPie<D>(
         row.y = center - half;
         if (
           row.y < bounds.y ||
-          row.y + row.metrics.height > bounds.y + bounds.height
+          row.y + row.candidate.metrics.height > bounds.y + bounds.height
         ) {
-          labels[row.index] = Object.freeze({
-            status: "hidden",
-            reason: "space",
-            text: row.text,
-          });
+          labels[row.index] = hidden(row.candidate, "space");
           continue;
         }
         visible.add(row);
@@ -203,22 +265,17 @@ export function layoutPie<D>(
     for (const row of accepted) {
       if (!visible.has(row)) continue;
       const x =
-        side === 0 ? cx - radius - gap - row.metrics.width : cx + radius + gap;
-      const edge = side === 0 ? x + row.metrics.width : x;
-      const center = row.y + row.metrics.height / 2;
+        side === 0
+          ? cx - radius - gap - row.candidate.metrics.width
+          : cx + radius + gap;
+      const edge = side === 0 ? x + row.candidate.metrics.width : x;
+      const center = row.y + row.candidate.metrics.height / 2;
       const leader = Object.freeze([
         Object.freeze(row.anchor),
         Object.freeze([rail, center] as const),
         Object.freeze([edge, center] as const),
       ]);
-      labels[row.index] = placed(
-        row.text,
-        row.metrics,
-        x,
-        row.y,
-        "outside",
-        leader,
-      );
+      labels[row.index] = placed(row.candidate, x, row.y, "outside", leader);
     }
   });
   return Object.freeze(
