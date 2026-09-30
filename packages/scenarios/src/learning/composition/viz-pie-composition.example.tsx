@@ -14,6 +14,7 @@ import {
   HoverCard,
   type PieSliceGeometry,
   type PieLayoutSlice,
+  type PieLayoutProps,
   type PieLabelPlacement,
 } from "@crc/viz";
 // Illustrative survey data, not real-world statistics. Both samples total 100.
@@ -32,9 +33,49 @@ const tiny = [
   { id: "accessible", label: "Accessible transit", value: 1, color: "#986448" },
 ];
 type Datum = (typeof balanced)[number];
-// Stable callback identity lets label placement reuse its computed result.
 const label = (slice: PieSliceGeometry<Datum>) =>
   `${slice.datum.label} · ${Math.round(slice.fraction * 100)}%`;
+function LabelledPie({
+  cards,
+  data,
+  placement,
+  bounds,
+  style,
+  children,
+}: {
+  cards: boolean;
+  data: PieLayoutProps<Datum>["data"];
+  placement: PieLayoutProps<Datum>["placement"];
+  bounds: PieLayoutProps<Datum>["bounds"];
+  style: PieLayoutProps<Datum>["style"];
+  children: (slice: PieLayoutSlice<Datum>) => CRCNode;
+}) {
+  return cards ? (
+    <PieLayout
+      data={data}
+      value="value"
+      keyBy="id"
+      labelBox={() => ({ width: 120, height: 38 })}
+      placement={placement}
+      bounds={bounds}
+      style={style}
+    >
+      {children}
+    </PieLayout>
+  ) : (
+    <PieLayout
+      data={data}
+      value="value"
+      keyBy="id"
+      label={label}
+      placement={placement}
+      bounds={bounds}
+      style={style}
+    >
+      {children}
+    </PieLayout>
+  );
+}
 function Button({
   x,
   y,
@@ -103,37 +144,6 @@ function Scene() {
     labelFont: "13px sans-serif",
     labelGap: 10,
   };
-  function LabelledPie({
-    children,
-  }: {
-    children: (slice: PieLayoutSlice<Datum>) => CRCNode;
-  }) {
-    return cards.get() ? (
-      <PieLayout
-        data={data}
-        value="value"
-        keyBy="id"
-        labelBox={() => ({ width: 120, height: 38 })}
-        placement={placement}
-        bounds={box}
-        style={pieStyle}
-      >
-        {children}
-      </PieLayout>
-    ) : (
-      <PieLayout
-        data={data}
-        value="value"
-        keyBy="id"
-        label={label}
-        placement={placement}
-        bounds={box}
-        style={pieStyle}
-      >
-        {children}
-      </PieLayout>
-    );
-  }
   return (
     <Group>
       <Rectangle style={{ width: 1000, height: 570, fill: "#fcfbf8" }} />
@@ -164,7 +174,13 @@ function Scene() {
           cornerRadius: 6,
         }}
       />
-      <LabelledPie>
+      <LabelledPie
+        cards={cards.get()}
+        data={data}
+        placement={placement}
+        bounds={box}
+        style={pieStyle}
+      >
         {(slice) => (
           <PieSlice
             slice={slice}
