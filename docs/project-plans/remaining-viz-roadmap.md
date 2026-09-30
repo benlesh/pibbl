@@ -1,6 +1,6 @@
 # Remaining visualization roadmap
 
-Status: roadmap, semantic BarSeries replacement, and complete label-fit/tick/invalidation resolution packet approved. First bars/axes and donut slices in implementation.
+Status: roadmap, semantic BarSeries replacement, and complete label-fit/tick/invalidation resolution packet approved. First bars/axes and donut slices accepted; hardening and integrated verification underway.
 Audit date: 2026-09-30. Audited and fetched main: `d9c28931da2dc659314baed6c0c79c13ab14e48a`.
 Objective source: `/Users/benlesh/.codex/attachments/31d3419b-d22d-4d2f-9276-a048e890465a/goal-objective.md`.
 
@@ -15,16 +15,16 @@ Each concurrent implementation gets its own managed worktree and codex branch. T
 
 Current public exports: `packages/viz/src/index.ts`. Current behavior: `packages/viz/src/lib/`; public evidence: `packages/viz/test/`; public guide: `docs/site/learn/guides/data-visualization.md`.
 
-| Area | Shipped evidence | Remaining deliverables | Dependencies | State |
-| --- | --- | --- | --- | --- |
-| Bars | Vertical values/ranges, thresholds, grouping via nested band scales; bar-series, grouped-bars, stacked-bars tests | Horizontal value/range bars; grouped-stacked editable example; equivalent styling, thresholds, inspection, grouping in both orientations | Orientation contract | Proposed |
-| Axes | Linear bottom/left; types.ts and axis.tsx | Band ticks/labels; top/right; bounded tick selection, formatting and domain behavior | Tick contract, later continuous scale work | Proposed |
-| Scales | Linear/band; finite explicit domains; evenly spaced numeric ticks; scale tests | Time/UTC/log; domain helpers; nice domains/ticks; validation, unknown/missing, clamping, timezone/calendar and extension rules | Coordinator cross-cutting design | Proposed |
-| Lines | Numeric straight lines, gaps, source order, one path; Point/Plot series | Step and smooth curves; segment styling; categorical line/point coordinates; matching hit geometry | Scale capability and curve/style decisions | Proposed |
-| Pie | pieSlices, PieLayout/PieSlice/PieLabel; identity, coordinated labels and inspection | Donuts; custom label content with explicit measurement and bounded placement | Ring geometry and label measurement contracts | Proposed |
-| Responsive interaction/accessibility | Core responsive styles/events/focus; example brush/pan; point touch target test | Viz-owned responsive styles; phone/touch evaluation; keyboard exploration; synced host-owned semantic summary/table; reusable selection, brush, pan/zoom, linked views | Scale inversion; responsive resolution; explicit interaction design | Proposed |
-| Additional series | None of requested families exported | Area; HighLowSeries, OHLCSeries, CandlestickSeries; BoxPlotSeries + pure boxPlotSummary; histograms; heatmaps | Scale/line foundation; statistics and bin contracts | Proposed |
-| Large data | Batched line/point targets; nearest and hover linear scans; bars have per-row Rectangles | Sampling/decimation; nearest indexing and efficient picking; small/stress examples; accuracy/update/memory/ownership guarantees | Data revision and geometry contracts | Proposed |
+| Area                                 | Shipped evidence                                                                                                  | Remaining deliverables                                                                                                                                                 | Dependencies                                                        | State    |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------- |
+| Bars                                 | Vertical values/ranges, thresholds, grouping via nested band scales; bar-series, grouped-bars, stacked-bars tests | Horizontal value/range bars; grouped-stacked editable example; equivalent styling, thresholds, inspection, grouping in both orientations                               | Orientation contract                                                | Proposed |
+| Axes                                 | Linear bottom/left; types.ts and axis.tsx                                                                         | Band ticks/labels; top/right; bounded tick selection, formatting and domain behavior                                                                                   | Tick contract, later continuous scale work                          | Proposed |
+| Scales                               | Linear/band; finite explicit domains; evenly spaced numeric ticks; scale tests                                    | Time/UTC/log; domain helpers; nice domains/ticks; validation, unknown/missing, clamping, timezone/calendar and extension rules                                         | Coordinator cross-cutting design                                    | Proposed |
+| Lines                                | Numeric straight lines, gaps, source order, one path; Point/Plot series                                           | Step and smooth curves; segment styling; categorical line/point coordinates; matching hit geometry                                                                     | Scale capability and curve/style decisions                          | Proposed |
+| Pie                                  | pieSlices, PieLayout/PieSlice/PieLabel; identity, coordinated labels and inspection                               | Donuts; custom label content with explicit measurement and bounded placement                                                                                           | Ring geometry and label measurement contracts                       | Proposed |
+| Responsive interaction/accessibility | Core responsive styles/events/focus; example brush/pan; point touch target test                                   | Viz-owned responsive styles; phone/touch evaluation; keyboard exploration; synced host-owned semantic summary/table; reusable selection, brush, pan/zoom, linked views | Scale inversion; responsive resolution; explicit interaction design | Proposed |
+| Additional series                    | None of requested families exported                                                                               | Area; HighLowSeries, OHLCSeries, CandlestickSeries; BoxPlotSeries + pure boxPlotSummary; histograms; heatmaps                                                          | Scale/line foundation; statistics and bin contracts                 | Proposed |
+| Large data                           | Batched line/point targets; nearest and hover linear scans; bars have per-row Rectangles                          | Sampling/decimation; nearest indexing and efficient picking; small/stress examples; accuracy/update/memory/ownership guarantees                                        | Data revision and geometry contracts                                | Proposed |
 
 Grouped-stacked behavior already has composition evidence; dedicated presentation and orientation coverage remain. Core responsive support does not imply viz marks accept responsive rules. Canvas focus does not provide semantic accessibility.
 
@@ -46,15 +46,30 @@ Roadmap approval approves sequencing and scope, not unspecified public APIs. Eac
 Approved semantic bar API (breaking replacement, no aliases):
 
 ```tsx
-<BarSeries orientation="horizontal" data={rows}
-  category="category" value="value" baseline={0}
-  categoryScale="category" valueScale="value" />
-<BarSeries orientation="horizontal" data={ranges}
-  category="category" valueStart="start" valueEnd="end"
-  categoryScale="category" valueScale="value"
-  group="group" groupScale="group" />
-<Axis scale="category" position="left" />
-<Axis scale="value" position="top" />
+<>
+  <BarSeries
+    orientation="horizontal"
+    data={rows}
+    category="category"
+    value="value"
+    baseline={0}
+    categoryScale="category"
+    valueScale="value"
+  />
+  <BarSeries
+    orientation="horizontal"
+    data={ranges}
+    category="category"
+    valueStart="start"
+    valueEnd="end"
+    categoryScale="category"
+    valueScale="value"
+    group="group"
+    groupScale="group"
+  />
+  <Axis scale="category" position="left" />
+  <Axis scale="value" position="top" />
+</>
 ```
 
 Replace old x/y/xStart/xEnd/yStart/yEnd/xScale/yScale bar vocabulary outright. Value bars take value and optional baseline; ranges require both valueStart/valueEnd and forbid value/baseline. Category, categoryScale, valueScale are required. Keep orientation (default vertical), group/groupScale as a paired input. Lines/points keep x/y. Orientation determines physical dimensions; callers supply matching scale ranges and axis positions. Threshold fills follow the value axis. Nested group offsets follow the categorical axis. Migrate all source examples, public docs, declarations, consumers and tests; historical records remain historical.
@@ -105,7 +120,6 @@ Feature complete = accepted behavior + hardening/docs/performance + independent 
 - Initial roadmap and delivery order: approved by user on 2026-09-30.
 - Semantic BarSeries replacement: explicitly approved; no compatibility aliases. Numeric/string tick formatter compatibility is not a blocker. Remaining first-batch details approved by user ("I approve").
 - All slice feedback/reviews/merges/pushes: pending.
-
 
 ## Contract resolution packet — approved
 
@@ -174,7 +188,6 @@ const revision = signal(0);
 
 Alternative: require immutable rows and pure callbacks everywhere. Recommendation is safe default plus explicit revision-based reuse, retaining CRC signal tracking and supporting mutable/streaming callers without pretending mutations are observable automatically.
 
-
 ## First-wave implementation ledger
 
 - Coordinator owns shared types/exports, Studio declarations, packed consumer, catalogs and integration in codex/viz-roadmap.
@@ -183,7 +196,6 @@ Alternative: require immutable rows and pure callbacks everywhere. Recommendatio
 - Coordinator baseline on Node v24.15.0, pnpm 11.21.0: locked install, workspace build, and tsc --noEmit passed.
 - Focused public Axis type evidence added first: tsc failed with TS2322 for right/top positions before type changes. Runtime implementation remains agent-owned.
 - No experiential feedback, independent implementation review, main integration or push yet.
-
 
 ## Integrated first-slice feedback ledger
 
@@ -198,3 +210,30 @@ Alternative: require immutable rows and pure callbacks everywhere. Recommendatio
 - Fresh Studio runtime restarted after that correction. Horizontal toggle exercised with no TypeScript issues/runtime errors; screenshot inspected and confirms red fill begins at the 300k rule. Bars/axes slice now ready for feedback: http://127.0.0.1:5187/#/examples/composition/viz-band-bars . Inspect orientation, categorical labels/top ticks, signed baseline, threshold fill, hover/tap and reverse/spacing/resize controls.
 - Both first slices await experiential feedback. No independent review/hardening or main merge yet. Preview remains running on port 5187; preserve its coordinator checkout. All three managed worktrees remain active for follow-up.
 - Next custom-label design researched only: prefer explicit finite box allocation and reuse PieLabel composition, with the same approved whole-box containment. No custom-label public contract approved or implemented yet.
+
+## Acceptance and hardening checkpoint
+
+User accepted both first slices: “Approved. Very cool.” Independent cross-reviews
+completed by the agent who did not implement each slice. No material runtime
+findings in those initial reviews; documentation prop-name typos were found and
+corrected. Donut hardening integrated as 87149968; bars/axes as 2a247e3b.
+Latest origin/main path-playground changes were merged into the integration
+branch before final verification. Original working checkout remains untouched.
+
+Public docs now describe semantic bar props, explicit categorical/four-sided
+ticks, full-box donut label containment and revision caching. Docs verification
+and all 979 mutation probes pass after source snippets and file classification
+were corrected.
+
+Controlled first performance pair uses an identical opt-in public fixture,
+Chromium 151.0.7922.34 on macOS arm64, Node 24.15.0 and pnpm 11.21.0. Baseline
+is d9c28931 in a separate managed checkout. No other agent browser work ran
+during the pair. Warmed medians use two warmups and seven observations; cold
+mount time is descriptive only. Bar results show no clear slowdown. Dense solid
+pie redraw measured 29.4 ms versus 25.6 ms (+14.8%); this is under investigation,
+not accepted or omitted. Preserve original solid Wedge behavior if the optional
+donut path changes inactive cost or focus bounds.
+
+Grouped-stacked editable example is assigned to audit_series as a separate
+approved-API feedback slice. Custom-label finite-box/PieLabel-children contract
+was proposed asynchronously; awaiting explicit user approval before code.

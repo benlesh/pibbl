@@ -18,9 +18,13 @@ symbols:
 
 # BarSeries
 
-Import from `@crc/viz`. This component supports vertical value and range bars. For value bars use
-`data`, `x` (category key/accessor), `y` (numeric key/accessor), `xScale` (band),
-and `yScale` (linear). `orientation` may be `"vertical"` or omitted.
+Import from `@crc/viz`. This component supports vertical and horizontal value
+and range bars. For value bars use `data`, `category` (category key/accessor),
+`value` (numeric key/accessor), `categoryScale` (band), and `valueScale`
+(linear). `orientation` is `"vertical"` (default) or `"horizontal"`.
+Orientation assigns the category and value dimensions to physical axes; callers
+choose matching scale ranges and Axis positions. For horizontal bars, use a
+category range of `"height"` and a value range of `"width"`.
 `baseline` is a signal-capable finite domain value, defaulting to zero. Linear
 mapping extrapolates; use core Clip when clipping to a plot is desired.
 
@@ -40,11 +44,13 @@ Coordinates remain root-logical. There is no datum-enriched event: inspect via
 `useScale(id, "band")`, data, and ordinary events. Per-row nodes have ordinary
 component cost; this slice makes no large-data batching guarantee.
 
-Horizontal bars remain a future extension of the same BarSeries.
+The former bar coordinate props (`x`, `y`, `xScale`, `yScale`, `yStart`,
+`yEnd`) were removed. There are no compatibility aliases. Lines and points
+continue to use coordinate props.
 
 ## Range and stacked bars
 
-Replace `y` and `baseline` with paired `yStart` and `yEnd` numeric keys or
+Replace `value` and `baseline` with paired `valueStart` and `valueEnd` numeric keys or
 accessors. Mixing the two forms rejects. Each range renders one rectangle
 between its mapped endpoints; reversed endpoints work, missing/nonfinite
 endpoints skip the row, and equal endpoints paint and target nothing.
@@ -84,11 +90,11 @@ const grouped = (
       <Scale id="sales" type="linear" domain={[0, 100]} range="height" reverse>
         <BarSeries
           data={rows}
-          x="month"
-          y="sales"
+          category="month"
+          value="sales"
           group="team"
-          xScale="month"
-          yScale="sales"
+          categoryScale="month"
+          valueScale="sales"
           groupScale="team"
           style={(row) => ({ fill: row.team === "East" ? "teal" : "orange" })}
         />
@@ -124,10 +130,10 @@ A single series can color regions of each bar by value-scale coordinates:
 const thresholdBars = (
   <BarSeries
     data={rows}
-    x="category"
-    y="value"
-    xScale="categories"
-    yScale="values"
+    category="category"
+    value="value"
+    categoryScale="categories"
+    valueScale="values"
     style={{
       fill: {
         type: "threshold",
@@ -146,10 +152,20 @@ color; each threshold begins the next interval. Empty thresholds with one color
 are valid. Colors are sharp regions, not interpolated gradients or whole-bar
 classifications. A bar crossing multiple intervals receives each corresponding
 color. Thresholds outside the bar do not extend it. Baseline and reversed value
-scales preserve the same domain-based coloring.
+scales preserve the same domain-based coloring in either orientation. Threshold
+regions follow the physical value axis; group offsets follow the category axis.
 
 The complete fill descriptor can be a signal, as can the whole style. Nested
 threshold/color arrays contain plain values; replace the descriptor to update.
 Stroke, opacity, and hit geometry remain those of one complete rectangle; color
 boundaries add no borders or targets. Standard solid, gradient, and pattern fills
 continue to work.
+
+## Cost and updates
+
+Rendering is O(n) in rows with one ordinary Rectangle per eligible nonzero bar.
+Accessors and datum styles reevaluate in the receiving component's tracked
+evaluation; same callback identity does not cache their results. Signals read
+inside them schedule updates. Plain in-place mutations alone do not schedule a
+render. There is no series-owned index, retained geometry cache or extra event
+system.

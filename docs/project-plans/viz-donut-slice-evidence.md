@@ -26,8 +26,8 @@ Focused evidence after the change:
 - `packages/viz/test/pie-example.test.ts` loads the editable pie composition;
   it now contains a **Show donut** control.
 - Fresh focused command: `corepack pnpm@11.21.0 exec vitest run
-  packages/viz/test/pie-layout.test.tsx packages/viz/test/pie-example.test.ts
-  --browser.headless --browser.ui=false` — 9 tests passed.
+packages/viz/test/pie-layout.test.tsx packages/viz/test/pie-example.test.ts
+--browser.headless --browser.ui=false` — 9 tests passed.
 
 This was a slice ready for feedback. Documentation, package-consumer checks,
 and independent review remain pending integration.
