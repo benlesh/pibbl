@@ -1,4 +1,7 @@
-# UTC scale contract proposal (unapproved)
+# UTC scale contract (approved)
+
+Status: approved by the user on 2026-09-30. Implementation is authorized;
+this contract is not yet shipped behavior.
 
 ## Approval summary
 

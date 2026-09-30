@@ -302,3 +302,21 @@ was proposed asynchronously; awaiting explicit user approval before code.
 - The preceding goal turn made concrete progress: accepted slices were pushed
   after exact-tree trust and the next runnable example was delivered. No
   additional contract or feedback approval has arrived in this continuation.
+
+## Next-wave approval, 2026-09-30
+
+User approved the grouped-stacked feedback slice and both pending UTC/custom
+pie-label designs, and requested commit, merge, push, then continued data-viz
+work. Grouped-stacked independent review and final exact-tree trust precede the
+push. UTC and custom label implementation starts after that integration.
+Prior pending statuses above are historical checkpoints, superseded here.
+The full roadmap remains in scope; local-time/log and later capabilities still
+require their own concrete contract approvals.
+
+Grouped-stacked hardening: independent review found no runtime/public-surface
+defect. The identified horizontal-inspection evidence gap is covered by fresh
+readout assertions for horizontal North/Products and South/Payroll, plus a
+vertical negative Payroll segment; focused Chromium test passes. This example
+adds no library runtime path: 32 prepared ranges use the already measured
+BarSeries, and inspection scans those 32 rows with no retained index or new
+scheduler. Broad large-data claims are not made for this teaching example.

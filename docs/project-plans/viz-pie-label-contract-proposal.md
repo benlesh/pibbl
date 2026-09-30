@@ -1,7 +1,7 @@
-# Custom pie label proposal (unapproved)
+# Custom pie label contract (approved)
 
-Status: awaiting the explicit contract approval already requested. This is a
-proposal, not shipped behavior and not authorization to implement it.
+Status: approved by the user on 2026-09-30. Implementation is authorized;
+this contract is not yet shipped behavior.
 
 ## Proposed composition
 
