@@ -1,3 +1,13 @@
+export { PathGeometry, type PathSegment } from './lib/geometry/path-geometry.js';
+export { toPath2D, toSvgPathData } from './lib/geometry/path-conversion.js';
+export {
+  flattenPath,
+  simplifyPath,
+  subdividePath,
+  type FlattenPathOptions,
+  type SimplifyPathOptions,
+  type SubdividePathOptions,
+} from './lib/geometry/path-utilities.js';
 // components
 export { Arc, type ArcProps, type ArcStyle } from './lib/components/arc.js';
 export {

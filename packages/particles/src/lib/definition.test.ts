@@ -1,3 +1,4 @@
+import { PathGeometry } from '@crc/core';
 import { describe, expect, it } from 'vitest';
 import { defineParticleEffect2D } from '../index.js';
 import { particle } from './particle.js';
@@ -351,6 +352,21 @@ describe('defineParticleEffect2D', () => {
     expect(Object.isFrozen(record.emitters[0]!.initial.velocity)).toBe(true);
     expect(Object.isFrozen(record.emitters[0]!.motion![0]!)).toBe(true);
     expect(Object.isFrozen(record.emitters[0]!.bounds.min)).toBe(true);
+  });
+
+  it('snapshots editable geometry when defining a particle path asset', () => {
+    const source = new PathGeometry();
+    source.rect(0, 0, 10, 10);
+    const effect = defineParticleEffect2D({ emitters: [emitter({
+      renderer: { type: 'path', path: source },
+      bounds: { min: [-10, -10], max: [10, 10] },
+    })] });
+    const renderer = getParticleEffect2DRecord(effect).emitters[0]!.renderer;
+    if (renderer.type !== 'path') throw new Error('expected path renderer');
+    source.clear();
+    expect(renderer.path).toBeInstanceOf(Path2D);
+    const ctx = document.createElement('canvas').getContext('2d')!;
+    expect(ctx.isPointInPath(renderer.path, 5, 5)).toBe(true);
   });
 
   it('clones Path2D renderer assets instead of retaining caller-owned mutable paths', () => {

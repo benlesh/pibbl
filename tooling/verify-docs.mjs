@@ -85,6 +85,7 @@ const publicGuidePaths = [
   "docs/site/learn/guides/three-js.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/functions/path-geometry.md",
   "docs/site/learn/guides/data-visualization.md",
   "docs/site/api/components/scale.md",
   "docs/site/api/components/axis.md",

@@ -1,4 +1,42 @@
 /* @crc-studio-module @crc/core */
+  export type PathSegment =
+    | { type: 'move' | 'line'; x: number; y: number }
+    | { type: 'quadratic'; cpx: number; cpy: number; x: number; y: number }
+    | { type: 'cubic'; cp1x: number; cp1y: number; cp2x: number; cp2y: number; x: number; y: number }
+    | { type: 'arc'; cx: number; cy: number; ux: number; uy: number; vx: number; vy: number; startAngle: number; sweep: number }
+    | { type: 'close' };
+  export class PathGeometry implements Iterable<PathSegment> {
+    constructor(source?: PathGeometry);
+    readonly revision: number;
+    readonly segmentCount: number;
+    clone(): PathGeometry;
+    clear(): void;
+    moveTo(x: number, y: number): void;
+    lineTo(x: number, y: number): void;
+    quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void;
+    bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number): void;
+    closePath(): void;
+    arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, counterclockwise?: boolean): void;
+    ellipse(x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, counterclockwise?: boolean): void;
+    arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): void;
+    "rect"(x: number, y: number, width: number, height: number): void;
+    roundRect(x: number, y: number, width: number, height: number, radii?: number | DOMPointInit | (number | DOMPointInit)[]): void;
+    addPath(other: PathGeometry, matrix?: DOMMatrix2DInit): void;
+    spliceSegments(start: number, deleteCount: number, segments?: readonly PathSegment[]): void;
+    getSegment(index: number): PathSegment;
+    setSegment(index: number, segment: PathSegment): void;
+    transform(matrix: DOMMatrix2DInit): void;
+    [Symbol.iterator](): IterableIterator<PathSegment>;
+  }
+  export function toPath2D(geometry: PathGeometry): Path2D;
+  export function toSvgPathData(geometry: PathGeometry): string;
+  export interface FlattenPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+  export interface SimplifyPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+  export interface SubdividePathOptions { readonly divisions: number; readonly maxSegments?: number }
+  export function flattenPath(path: PathGeometry, options: Readonly<FlattenPathOptions>): PathGeometry;
+  export function simplifyPath(path: PathGeometry, options: Readonly<SimplifyPathOptions>): PathGeometry;
+  export function subdividePath(path: PathGeometry, options: Readonly<SubdividePathOptions>): PathGeometry;
+
   export interface CRCController {
     dispose(): void;
   }
@@ -85,7 +123,7 @@
     readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
   }
   export interface CRCEventTargetOptions extends CRCEventFocusOptions {
-    readonly path: Path2D;
+    readonly path: Path2D | PathGeometry;
     readonly fill?: boolean;
     readonly lineInteractionWidth?: number;
     readonly cursor?: string;
@@ -260,7 +298,7 @@
   }
   export interface PaintStyle extends SystemStyle { fill?: FillStyle; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number }
   export interface CursorStyle extends SystemStyle { cursor?: string }
-  export interface PathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: Path2D; lineInteractionWidth?: number }
+  export interface PathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: Path2D | PathGeometry; lineInteractionWidth?: number }
   export interface RectStyle extends RoundedCornerStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; width: Length; height: Length; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export interface CircleStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; lineInteractionWidth?: number }
   export interface EllipseStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radiusX: Exclude<Length, 'auto'>; radiusY: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; rotation?: number; lineInteractionWidth?: number }
@@ -279,7 +317,7 @@
   export interface TextStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; lineHeight?: number; wrap?: boolean; fit?: TextFit; font?: string; textBaseline?: CanvasTextBaseline; textAlign?: CanvasTextAlign }
   export interface ImgStyle extends CursorStyle, BoxStyle, LayoutItemStyle { src: string; x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment }
   export interface GStyle extends BoxStyle, LayoutItemStyle { scaleX?: number; scaleY?: number; rotationDegrees?: number; rotationOrigin?: [number, number]; translateX?: number; translateY?: number; skewX?: number; skewY?: number }
-  export interface ClipStyle extends BoxStyle, LayoutItemStyle { d: Path2D; fillRule?: CanvasFillRule }
+  export interface ClipStyle extends BoxStyle, LayoutItemStyle { d: Path2D | PathGeometry; fillRule?: CanvasFillRule }
   export interface LayerStyle extends BoxStyle, LayoutItemStyle {}
 
   export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
@@ -504,9 +542,9 @@
   export function useTransition(target: number, options: CRCSpringTransitionOptions): Signal<number>;
   export function useTransition<T>(target: T, options: CRCTweenTransitionOptions<T>): Signal<T>;
   export function useReaction(setup: () => void | (() => void), dependencies?: readonly unknown[], options?: CRCReactionOptions): void;
-  export function useCursor(options: { style?: string; path?: Path2D; fill?: boolean; lineInteractionWidth?: number }): void;
-  export function useEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
-  export function useEvent<K extends 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>(eventName: K, listener?: CRCMouseEventListener, path?: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
+  export function useCursor(options: { style?: string; path?: Path2D | PathGeometry; fill?: boolean; lineInteractionWidth?: number }): void;
+  export function useEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D | PathGeometry, fill?: boolean, lineInteractionWidth?: number): void;
+  export function useEvent<K extends 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>(eventName: K, listener?: CRCMouseEventListener, path?: Path2D | PathGeometry, fill?: boolean, lineInteractionWidth?: number): void;
   export function useEventListener(handlers: CRCEventHandlers): void;
   export function useEventTarget(handlers: CRCEventHandlers, options: CRCEventTargetOptions): CRCEventTargetSnapshot;
   export function useLinePath(coords: [number, number][], config?: { closePath?: boolean }): Path2D;
@@ -835,7 +873,7 @@
   export type CRCParticleRenderer2D =
     | Readonly<{ type: 'circle'; blend?: 'source-over' | 'additive' }>
     | Readonly<{ type: 'rectangle'; aspectRatio?: number; blend?: 'source-over' | 'additive' }>
-    | Readonly<{ type: 'path'; path: Path2D; blend?: 'source-over' | 'additive' }>
+    | Readonly<{ type: 'path'; path: Path2D | import('@crc/core').PathGeometry; blend?: 'source-over' | 'additive' }>
     | Readonly<{ type: 'sprite'; source: CanvasImageSource; anchor?: readonly [number, number]; blend?: 'source-over' | 'additive' }>;
   export interface CRCParticleBounds2D { readonly min: readonly [number, number]; readonly max: readonly [number, number] }
   export type CRCParticleOverflow = 'reject-newest' | 'recycle-oldest';

@@ -1680,3 +1680,22 @@ export const physics3DGeometryConsumer = {
 };
 
 void (undefined as unknown as Physics3DGeometryTypes.CRCPhysicsShape3D);
+
+// Editable path geometry is consumed exclusively through the public entry.
+import { PathGeometry, toPath2D, toSvgPathData } from '@crc/core';
+import type { PathSegment } from '@crc/core';
+const editableOutline = new PathGeometry();
+editableOutline.rect(0, 0, 20, 20);
+editableOutline.arc(20, 20, 10, 0, Math.PI);
+editableOutline.addPath(editableOutline.clone(), { e: 10 });
+const editableSegment: PathSegment = editableOutline.getSegment(0);
+editableOutline.setSegment(0, editableSegment);
+const editableNative: Path2D = toPath2D(editableOutline);
+const editableSvg: string = toSvgPathData(editableOutline);
+void [editableNative, editableSvg];
+import { flattenPath, simplifyPath, subdividePath } from '@crc/core';
+const flattenedOutline = flattenPath(editableOutline, { tolerance: 0.25 });
+void simplifyPath(flattenedOutline, { tolerance: 0.5 });
+void subdividePath(editableOutline, { divisions: 2 });
+const editableTarget: CRCEventTargetOptions = { path: editableOutline, fill: true };
+void editableTarget;

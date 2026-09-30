@@ -399,3 +399,30 @@ per-shape memo hooks.
 `@crc/physics/3d/geometry` provides pure immutable shapes and collision
 queries. It does not add drawing components, Three bindings, a world runtime, or
 a scheduler participant.
+
+## Editable path geometry (2026-09-29 extension)
+
+`PathGeometry` adds mutable, packed canonical geometry to the public core entry.
+Path and Clip accept `PathGeometry | Path2D` in `style.d`; this extends the native
+path-only inputs described above. Existing path creators and memoized hooks still
+return Path2D. Native browser context methods still require native paths.
+
+The class supports Canvas path builders, copying, affine transforms, canonical
+segment editing and a read-only mutation revision. Public `toPath2D` conversion
+always returns a fresh snapshot; `toSvgPathData` exports absolute SVG data.
+CRC privately resolves an unchanged instance/revision to one native snapshot and
+replaces that snapshot after edits. Paint and hit/clip geometry share the same
+consumed snapshot. Conversion does not occur during pointer dispatch. Old root
+or retained-Layer generations keep their previous native paths until updated.
+
+Geometry edits do not schedule rendering. No content-equality/hash API or SVG
+parser is implied. `flattenPath`, `simplifyPath`, and `subdividePath` return new
+geometry, with explicit accuracy/output limits. Simplification accepts polylines
+only and does not promise topology preservation. Singular ellipse transforms
+preserve traversal through explicit lines, whose turning-point stroke joins may
+differ from a browser's degenerate native conics.
+
+Public evidence lives in `path-geometry.test.tsx`,
+`path-geometry-builders.test.ts`, `path-geometry-utilities.test.ts`, and the
+editable path learning example. The approved design is
+[mutable path geometry](../superpowers/specs/2026-09-29-path-geometry-design.md).

@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 62 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 63 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(62);
+    expect(learningExampleCatalog).toHaveLength(63);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1266,6 +1266,7 @@ describe("learning example catalog", () => {
         "image",
         "line",
         "path",
+        "path-geometry",
         "polygon",
         "rectangle",
         "regular-polygon",
@@ -1758,6 +1759,9 @@ describe("learning example catalog", () => {
         "Star",
         "createRegularPolygonPath",
         "Path",
+        "PathGeometry",
+        "toPath2D",
+        "toSvgPathData",
         "SvgPath",
         "Line",
         "HorizontalLine",

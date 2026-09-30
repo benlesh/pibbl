@@ -1,3 +1,4 @@
+import { resolvePath } from '../geometry/resolve-path.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
@@ -21,7 +22,7 @@ export function renderPath(
   ctx: RenderingContext2D,
 ) {
   const {
-    d,
+    d: input,
     fill,
     stroke,
     strokeWidth,
@@ -29,6 +30,8 @@ export function renderPath(
     cursor,
     lineInteractionWidth = strokeWidth ?? 0,
   } = style;
+
+  const d = resolvePath(input);
 
   if (opacity !== undefined) {
     ctx.globalAlpha = ctx.globalAlpha * opacity;
