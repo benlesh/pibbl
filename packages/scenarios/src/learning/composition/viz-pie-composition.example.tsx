@@ -84,6 +84,7 @@ function Scene() {
   const small = useSignal(false);
   const placement = useSignal<PieLabelPlacement>("auto");
   const narrow = useSignal(false);
+  const donut = useSignal(false);
   const hovered = useSignal<string | null>(null);
   const pinned = useSignal<string | null>(null);
   const active = pinned.get() ?? hovered.get();
@@ -126,6 +127,7 @@ function Scene() {
           cx: 330,
           cy: 270,
           radius: 112,
+          innerRadius: donut.get() ? 58 : 0,
           labelFont: "13px sans-serif",
           labelGap: 10,
         }}
@@ -300,6 +302,14 @@ function Scene() {
         width={138}
         text={narrow.get() ? "Restore label space" : "Limit label space"}
         action={() => narrow.set(!narrow.get())}
+      />
+      <Button
+        x={690}
+        y={438}
+        width={136}
+        text={donut.get() ? "Show pie" : "Show donut"}
+        active={donut.get()}
+        action={() => donut.set(!donut.get())}
       />
       <Button
         x={690}
