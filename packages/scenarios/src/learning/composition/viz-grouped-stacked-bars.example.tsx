@@ -250,7 +250,9 @@ function Plot({
           fill: "#637785",
         }}
       >
-        Stacks reset per region · inflows above zero · outflows below zero
+        {horizontal
+          ? "Stacks reset per region · inflows right of zero · outflows left of zero"
+          : "Stacks reset per region · inflows above zero · outflows below zero"}
       </Text>
     </Group>
   );
@@ -293,22 +295,28 @@ function Scene() {
       >
         {horizontal.get() ? "Horizontal bars" : "Vertical bars"}
       </Text>
-      {regions.map((region, index) => (
+      <Text
+        pointerEvents="none"
+        style={{ left: 28, top: 126, font: "11px sans-serif", fill: "#637785" }}
+      >
+        Within each quarter: North slot first · South slot second
+      </Text>
+      {components.map((component, index) => (
         <Group
-          key={region}
-          style={{ translateX: 28 + index * 104, translateY: origin.y - 31 }}
+          key={component.name}
+          style={{ translateX: 28 + index * 142, translateY: origin.y - 31 }}
         >
           <Rectangle
             style={{
               width: 12,
               height: 12,
-              fill: index === 0 ? "#197d70" : "#4e78ad",
+              fill: component.color,
             }}
           />
           <Text
             style={{ left: 19, top: 10, font: "12px sans-serif", fill: ink }}
           >
-            {region}
+            {component.name}
           </Text>
         </Group>
       ))}
