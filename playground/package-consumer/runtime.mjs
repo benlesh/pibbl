@@ -204,9 +204,9 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 94) {
+if (actual.length !== 96) {
   throw new Error(
-    `Expected 94 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected 96 @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 
