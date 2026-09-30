@@ -67,13 +67,17 @@ export interface AxisStyle {
   readonly font?: string;
   readonly opacity?: number;
 }
-export interface AxisProps {
+interface AxisBaseProps {
   readonly scale: ScaleId;
-  readonly position: "bottom" | "left";
-  readonly tickCount?: SignalValue<number>;
-  readonly tickFormat?: (value: number, index: number) => string;
+  readonly position: "bottom" | "left" | "top" | "right";
+  readonly tickFormat?: (value: number | string, index: number) => string;
   readonly style?: SignalValue<SignalStyle<AxisStyle>>;
 }
+export type AxisProps = AxisBaseProps & (
+  | { readonly tickValues: SignalValue<readonly (number | string)[]>; readonly tickCount?: never }
+  | { readonly tickValues?: never; readonly tickCount?: SignalValue<number> }
+);
+
 export type LineCoordinate = number | null | undefined;
 export type LineAccessor<D> =
   | { [K in keyof D]-?: D[K] extends LineCoordinate ? K : never }[keyof D]
