@@ -258,3 +258,34 @@ was proposed asynchronously; awaiting explicit user approval before code.
 - Grouped-stacked next slice is a separate example commit, not yet accepted.
   Custom label composition and UTC scale contracts remain unapproved; no
   production implementation for either has begun.
+
+## Incremental main delivery
+
+- Accepted bars/axes/donut work pushed to remote main at
+  `6d02d20d577be2d9cd0d0dfec4b2c46151617362`; remote ref verified.
+- Final full trust passed on that exact committed tree (log
+  /tmp/crc-viz-trust-final.log): main browser suite 3,210 passed / six skipped,
+  including two opt-in diagnostic files; all other aggregate phases passed.
+- Identical baseline/candidate structural probes matched all target, paint,
+  fill, label and pointer-hit counts at 100/1,000 solid slices, before/after
+  data replacement. Both raw outputs are retained with timing evidence.
+- Main's unrelated changes and all unrelated working checkouts were preserved.
+- Grouped-stacked example is integrated only on the preview branch for the next
+  experiential slice. Catalog authoring validation is being resolved before
+  declaring it ready; focused mount test and typecheck pass.
+- UTC-only scale contract was sent for explicit approval. Generic numeric extent
+  and explicitly typed UTC niceDomain helpers are proposed; implementation
+  remains blocked on that design decision. Local time/log remain in scope.
+
+## Grouped-stacked feedback checkpoint
+
+- Registered editable example at
+  http://127.0.0.1:5187/#/examples/composition/viz-grouped-stacked-bars .
+- Focused mount/inspection test passed; typecheck passed; learning-source
+  validation passed. Catalog now includes 69 lessons.
+- Fresh Studio browser check toggled horizontal orientation and inspected
+  Q1 / North / Products / $160k. No runtime errors or editor TypeScript issues.
+  Screenshot inspected; component legend and top ticks have separate rows.
+- Slice ready for feedback, not feature complete or pushed to main. Await
+  experiential feedback before broader hardening and independent review.
+- Preview remains on port 5187; preserve coordinator checkout/server.
