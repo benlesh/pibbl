@@ -78,7 +78,7 @@ function flattenArc(arc: ArcSegment, tolerance: number, output: ReturnType<typeo
   const span = Math.min(Math.PI, 4 * Math.asin(Math.sqrt(ratio / 2)));
   const n = checkedSegments(Math.ceil(Math.abs(arc.sweep) / span));
   output.reserve(n);
-  for (let i = 1; i <= n; i++) output.add(line(arcPoint(arc, arc.startAngle + arc.sweep * i / n)));
+  for (let i = 1; i <= n; i++) output.add(line(arcPoint(arc, i === n ? arc.startAngle + arc.sweep : arc.startAngle + arc.sweep * i / n)));
 }
 
 function segmentsForSecondDifference(difference: Point, degree: 2 | 3, tolerance: number): number {

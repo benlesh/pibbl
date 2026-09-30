@@ -12,15 +12,22 @@ const REPEATS = 10;
 
 const curves = cubicPath(200);
 const linework = noisyLine(10_000);
+const denseTrace = denseTracePath(10_000);
 
 const cases = [
   ['adaptive flatten', () => flattenPath(curves, { tolerance: 0.25 })],
   ['Wang flatten', () => flattenPathWang(curves, { tolerance: 0.25 })],
   ['Douglas--Peucker', () => simplifyPath(linework, { tolerance: 0.5 })],
   ['radial + Douglas--Peucker', () => simplifyPathRadial(linework, { tolerance: 0.5 })],
+  ['Douglas--Peucker dense trace', () => simplifyPath(denseTrace, { tolerance: 0.5 })],
+  ['radial + Douglas--Peucker dense trace', () => simplifyPathRadial(denseTrace, { tolerance: 0.5 })],
   ['de Casteljau subdivision', () => subdividePath(curves, { divisions: 8 })],
   ['direct subdivision prototype', () => subdivideCubicsDirect(curves, 8)],
 ];
+
+const direct = subdivideCubicsDirect(curves, 8);
+const reference = subdividePath(curves, { divisions: 8 });
+if (!sameCubicsAtSamples(direct, reference)) throw new Error('Direct subdivision prototype changed cubic geometry.');
 
 for (const [name, action] of cases) {
   for (let i = 0; i < WARMUP; i++) action();
@@ -53,6 +60,16 @@ function noisyLine(count) {
   const path = new PathGeometry();
   path.moveTo(0, 0);
   for (let index = 1; index <= count; index++) path.lineTo(index, Math.sin(index / 30) * 0.1);
+  return path;
+}
+
+function denseTracePath(count) {
+  const path = new PathGeometry();
+  path.moveTo(0, 0);
+  for (let index = 1; index <= count; index++) {
+    const x = index / 100;
+    path.lineTo(x, Math.sin(x * 2.3) * 1.5 + Math.sin(x * 13.7) * 0.08);
+  }
   return path;
 }
 
@@ -94,4 +111,21 @@ function derivative([a, b, c, d], t) {
   return lerp(lerp(ab, bc, t), lerp(bc, cd, t), t);
 }
 function lerp(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; }
+function sameCubicsAtSamples(left, right) {
+  const leftSegments = Array.from(left).filter(segment => segment.type === 'cubic');
+  const rightSegments = Array.from(right).filter(segment => segment.type === 'cubic');
+  if (leftSegments.length !== rightSegments.length) return false;
+  let leftStart = [0, 0], rightStart = [0, 0];
+  for (let index = 0; index < leftSegments.length; index++) {
+    const a = leftSegments[index], b = rightSegments[index];
+    for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+      const p = cubic([leftStart, [a.cp1x, a.cp1y], [a.cp2x, a.cp2y], [a.x, a.y]], t);
+      const q = cubic([rightStart, [b.cp1x, b.cp1y], [b.cp2x, b.cp2y], [b.x, b.y]], t);
+      if (Math.hypot(p[0] - q[0], p[1] - q[1]) > 1e-10) return false;
+    }
+    leftStart = [a.x, a.y];
+    rightStart = [b.x, b.y];
+  }
+  return true;
+}
 function round(value) { return Math.round(value * 1000) / 1000; }

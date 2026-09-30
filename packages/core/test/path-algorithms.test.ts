@@ -37,6 +37,25 @@ describe('alternate path algorithms', () => {
     expect(path.revision).toBe(revision);
   });
 
+  it('preserves degenerate curves, closed continuations, and singular arcs', () => {
+    const path = new PathGeometry();
+    path.spliceSegments(0, 0, [
+      { type: 'move', x: 0, y: 0 },
+      { type: 'quadratic', cpx: 5, cpy: 0, x: 10, y: 0 },
+      { type: 'cubic', cp1x: 10 + 10 / 3, cp1y: 0, cp2x: 10 + 20 / 3, cp2y: 0, x: 20, y: 0 },
+      { type: 'close' },
+      { type: 'line', x: 10, y: 10 },
+      { type: 'arc', cx: 10, cy: 10, ux: 5, uy: 0, vx: 0, vy: 0, startAngle: 0, sweep: Math.PI },
+    ]);
+
+    const result = Array.from(flattenPathWang(path, { tolerance: 0.1, maxSegments: 20 }));
+
+    expect(result.slice(0, 5).map(segment => segment.type)).toEqual(['move', 'line', 'line', 'close', 'line']);
+    expect(result[4]).toEqual({ type: 'line', x: 10, y: 10 });
+    expect(result[5]).toEqual({ type: 'line', x: 15, y: 10 });
+    expect(result.at(-1)).toEqual({ type: 'line', x: 5, y: 10 });
+  });
+
   it('uses a split error budget for radial filtering and retains valid closed contours', () => {
     const open = new PathGeometry();
     open.moveTo(0, 0);
@@ -68,11 +87,12 @@ describe('alternate path algorithms', () => {
     expect(path.revision).toBe(revision);
   });
 
-  it('accepts the smallest positive radial tolerance', () => {
+  it('falls back to the exact default contract when a tolerance cannot be split', () => {
     const path = new PathGeometry();
     path.moveTo(0, 0);
     path.lineTo(1, 0);
-    expect(() => simplifyPathRadial(path, { tolerance: Number.MIN_VALUE })).not.toThrow();
+    expect(Array.from(simplifyPathRadial(path, { tolerance: Number.MIN_VALUE })))
+      .toEqual(Array.from(path));
   });
 });
 
@@ -111,7 +131,12 @@ function* samples(path: PathGeometry, count: number): Iterable<Point> {
   for (const segment of path) {
     switch (segment.type) {
       case 'move': current = [segment.x, segment.y]; break;
-      case 'line': current = [segment.x, segment.y]; break;
+      case 'line': {
+        const start = current, end: Point = [segment.x, segment.y];
+        for (let i = 0; i <= count; i++) yield interpolate(start, end, i / count);
+        current = end;
+        break;
+      }
       case 'quadratic': {
         const start = current, control: Point = [segment.cpx, segment.cpy], end: Point = [segment.x, segment.y];
         for (let i = 0; i <= count; i++) yield quadratic(start, control, end, i / count);

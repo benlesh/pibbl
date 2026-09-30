@@ -10,9 +10,11 @@ type Point = readonly [number, number];
  */
 export function simplifyPathRadial(path: PathGeometry, options: Readonly<SimplifyPathOptions>): PathGeometry {
   const tolerance = requiredPositive(options.tolerance, 'tolerance');
-  // Prevent an otherwise valid minimum subnormal public tolerance from
-  // underflowing to zero before it reaches the shared simplifier.
-  const stageTolerance = Math.max(Number.MIN_VALUE, tolerance / 2);
+  const stageTolerance = tolerance / 2;
+  // A two-stage split cannot represent half of the smallest subnormal number
+  // without exceeding the caller's error budget. Retain the exact default
+  // contract in that case instead of applying the radial prepass.
+  if (stageTolerance === 0) return simplifyPath(path, options);
   const filtered = new PathGeometry();
   let current: Point | undefined;
   let start: Point | undefined;
