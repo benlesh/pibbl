@@ -122,7 +122,7 @@ describe('public editable path geometry', () => {
       });
     const element = document.createElement('canvas');
     element.width = 760;
-    element.height = 460;
+    element.height = 520;
     document.body.appendChild(element);
     const controller = mountPathGeometryExample(element);
     const canvas = new TestCanvas(element, controller);
@@ -152,6 +152,14 @@ describe('public editable path geometry', () => {
       expect(drawn).toContain('Original · 2 curves · 3 anchors · 4 controls');
       await canvas.click({ position: { x: 470, y: 395 } });
       expect(drawn).toContain('Subdivide · 8 curves · 9 anchors · 16 controls');
+      await canvas.click({ position: { x: 655, y: 395 } });
+      for (const [x, label] of [[100, 'Wang'], [285, 'Radial + DP'], [470, 'Dense preset']] as const) {
+        drawn.length = 0;
+        await canvas.click({ position: { x, y: 439 } });
+        expect(drawn.some(value => value.startsWith(`${label} ·`))).toBe(true);
+        expect(drawn.some(value => value.endsWith('0 controls'))).toBe(true);
+      }
+
 
     } finally {
       canvas.dispose();

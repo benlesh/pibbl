@@ -1781,6 +1781,8 @@ describe("learning example catalog", () => {
         "Path",
         "PathGeometry",
         "flattenPath",
+        "flattenPathWang",
+        "simplifyPathRadial",
         "simplifyPath",
         "subdividePath",
         "SvgPath",

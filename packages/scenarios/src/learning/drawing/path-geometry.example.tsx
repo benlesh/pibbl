@@ -1,6 +1,6 @@
 import {
   crc, Path, PathGeometry, Circle, Line, Rectangle, Text,
-  flattenPath, simplifyPath, subdividePath, useConst, useSignal, useRef,
+  flattenPath, flattenPathWang, simplifyPath, simplifyPathRadial, subdividePath, useConst, useSignal, useRef,
   type CRCController, type CRCNode, type CRCPointerEvent,
 } from '@crc/core';
 
@@ -92,12 +92,12 @@ function PathGeometryStudy() {
       message.set('Point limit reached. Reset to explore again.');
     }
   };
-  const button = (left: number, label: string, action: () => void, secondary = false) => <>
-    <Rectangle style={{ left, top: 376, width: 170, height: 38, fill: secondary ? '#e6e5dd' : '#16766d', cursor: 'pointer' }} onClick={action} />
-    <Text style={{ left: left + 85, top: 387, textAlign: 'center', font: '600 14px sans-serif', fill: secondary ? '#273e39' : '#ffffff' }} pointerEvents="none">{label}</Text>
+  const button = (left: number, label: string, action: () => void, secondary = false, top = 376) => <>
+    <Rectangle style={{ left, top, width: 170, height: 38, fill: secondary ? '#e6e5dd' : '#16766d', cursor: 'pointer' }} onClick={action} />
+    <Text style={{ left: left + 85, top: top + 11, textAlign: 'center', font: '600 14px sans-serif', fill: secondary ? '#273e39' : '#ffffff' }} pointerEvents="none">{label}</Text>
   </>;
   return <>
-    <Rectangle style={{ width: 760, height: 460, fill: '#fffdf6' }} pointerEvents="none" />
+    <Rectangle style={{ width: 760, height: 520, fill: '#fffdf6' }} pointerEvents="none" />
     <Text style={{ left: 25, top: 22, font: '700 24px sans-serif', fill: '#203e38' }} pointerEvents="none">Path playground</Text>
     <Text style={{ left: 25, top: 57, font: '13px sans-serif', fill: '#65736c' }} pointerEvents="none">Drag outlined anchors or gold controls. Gray line: original</Text>
     <Path style={{ d: original, stroke: '#d7dad4', strokeWidth: 7 }} pointerEvents="none" />
@@ -113,7 +113,10 @@ function PathGeometryStudy() {
       geometry.set(original); operation.set('Original');
       message.set('Original restored. Try a different operation.');
     }, true)}
-    <Text style={{ left: 25, top: 433, font: '13px sans-serif', fill: '#65736c' }} pointerEvents="none">{message.get()}</Text>
+    {button(25, 'Flatten · Wang', () => apply('Wang', value => flattenPathWang(value, { tolerance: 2, maxSegments: 2048 }), 'Wang: uniform curve steps within 2 units. Reset to compare with Flatten.'), false, 420)}
+    {button(205, 'Simplify · Radial', () => apply('Radial + DP', value => simplifyPathRadial(flattenPath(value, { tolerance: 1, maxSegments: 2048 }), { tolerance: 8, maxSegments: 2048 }), 'Radial + DP: 8 units total; curves are flattened to 1 unit first.'), false, 420)}
+    {button(385, 'Dense preset', () => apply('Dense preset', () => subdividePath(flattenPath(original, { tolerance: 0.5 }), { divisions: 8, maxSegments: 2048 }), 'Dense preset loaded. Compare Simplify and Radial on these points.'), true, 420)}
+    <Text style={{ left: 25, top: 481, font: '13px sans-serif', fill: '#65736c' }} pointerEvents="none">{message.get()}</Text>
   </>;
 }
 
