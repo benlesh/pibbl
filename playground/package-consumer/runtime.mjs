@@ -68,6 +68,8 @@ const expected = [
   "defineRenderLayer",
   "easing",
   "flattenPath",
+  "flattenPathWang",
+  "simplifyPathRadial",
   "simplifyPath",
   "subdividePath",
   "toPath2D",
@@ -202,9 +204,9 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 94) {
+if (actual.length !== 96) {
   throw new Error(
-    `Expected 94 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected 96 @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 
@@ -468,4 +470,10 @@ if (core.toSvgPathData(editableGeometry) !== 'M 0 0 L 10 10' ||
 }
 if (core.subdividePath(editableGeometry, { divisions: 2 }).segmentCount !== 3) {
   throw new Error('Packed geometry utilities are not operational.');
+}
+
+const wangGeometry = core.flattenPathWang(editableGeometry, { tolerance: 0.25 });
+const radialGeometry = core.simplifyPathRadial(wangGeometry, { tolerance: 0.5 });
+if (!(wangGeometry instanceof core.PathGeometry) || !(radialGeometry instanceof core.PathGeometry)) {
+  throw new Error('Alternate path helpers did not return public geometry.');
 }

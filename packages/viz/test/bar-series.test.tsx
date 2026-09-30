@@ -1,6 +1,6 @@
-import { Absolute, signal } from "@crc/core";
+import { Absolute, Group, signal } from "@crc/core";
 import * as Viz from "@crc/viz";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
@@ -44,10 +44,10 @@ it("maps ordered reactive bands and targets signed bars, not padding or missing 
               { category: "missing", value: null },
               { category: "unknown", value: 9 },
             ]}
-            x="category"
-            y="value"
-            xScale="category"
-            yScale="value"
+            category="category"
+            value="value"
+            categoryScale="category"
+            valueScale="value"
             style={{ fill: "#ff0000" }}
             onPointerDown={() => clicks++}
           />
@@ -90,6 +90,60 @@ it("maps ordered reactive bands and targets signed bars, not padding or missing 
   expect(identities.at(-1)).toBe(identities[0]);
 });
 
+it("maps semantic horizontal values across a categorical left axis", () => {
+  runtime = testRuntime();
+  const labels: Array<[string, number, number]> = [];
+  const fillText = CanvasRenderingContext2D.prototype.fillText;
+  vi.spyOn(CanvasRenderingContext2D.prototype, "fillText").mockImplementation(
+    function (this: CanvasRenderingContext2D, text, x, y, maxWidth) {
+      const point = this.getTransform().transformPoint({ x, y });
+      labels.push([String(text), point.x, point.y]);
+      if (maxWidth === undefined) fillText.call(this, text, x, y);
+      else fillText.call(this, text, x, y, maxWidth);
+    },
+  );
+  const canvas = runtime.mount(
+    <Absolute>
+      <Viz.Scale
+        id="category"
+        type="band"
+        domain={["gain", "loss"]}
+        range="height"
+        style={{ width: 300, height: 200 }}
+      >
+        <Viz.Scale id="value" type="linear" domain={[-10, 10]} range="width">
+          <Viz.Axis scale="category" position="left" />
+          <Viz.Axis scale="value" position="top" tickCount={3} />
+          <Viz.BarSeries
+            orientation="horizontal"
+            data={[
+              { category: "gain", value: 8 },
+              { category: "loss", value: -6 },
+            ]}
+            category="category"
+            value="value"
+            categoryScale="category"
+            valueScale="value"
+            style={{ fill: "#ff0000" }}
+          />
+        </Viz.Scale>
+      </Viz.Scale>
+    </Absolute>,
+  );
+  runtime.flush();
+  const context = canvas.getContext("2d")!;
+  const alpha = (x: number, y: number) =>
+    context.getImageData(x, y, 1, 1).data[3];
+  expect(alpha(210, 50)).toBe(255);
+  expect(alpha(60, 150)).toBe(255);
+  expect(alpha(100, 50)).toBe(0);
+  expect(labels).toContainEqual(["gain", -10, 50]);
+  expect(labels).toContainEqual(["loss", -10, 150]);
+  expect(labels).toContainEqual(["-10", 0, -10]);
+  expect(labels).toContainEqual(["0", 150, -10]);
+  expect(labels).toContainEqual(["10", 300, -10]);
+});
+
 it("lets decorative bars opt out of targeting", () => {
   runtime = testRuntime();
   let hits = 0;
@@ -98,10 +152,10 @@ it("lets decorative bars opt out of targeting", () => {
       <Viz.Scale id="value" type="linear" domain={[0, 10]} range={[100, 0]}>
         <Viz.BarSeries
           data={[{ c: "A", v: 10 }]}
-          x="c"
-          y="v"
-          xScale="category"
-          yScale="value"
+          category="c"
+          value="v"
+          categoryScale="category"
+          valueScale="value"
           pointerEvents="none"
           onPointerDown={() => hits++}
         />
@@ -143,10 +197,10 @@ it("fills each bar by reactive domain thresholds without changing its border or 
             { c: "A", v: 50 },
             { c: "B", v: -10 },
           ]}
-          x="c"
-          y="v"
-          xScale="category"
-          yScale="value"
+          category="c"
+          value="v"
+          categoryScale="category"
+          valueScale="value"
           style={{ fill, stroke: "#000000", strokeWidth: 2 }}
           onPointerDown={() => hits++}
         />
@@ -181,4 +235,54 @@ it("fills each bar by reactive domain thresholds without changing its border or 
   });
   runtime.flush();
   expect(pixel(50, 100)).toEqual([0, 128, 0, 255]);
+});
+
+it("follows the horizontal value axis for threshold fills in either range direction", () => {
+  runtime = testRuntime();
+  const rows = [{ c: "A", v: 50 }];
+  const threshold = {
+    type: "threshold" as const,
+    thresholds: [0, 30],
+    colors: ["#ff8000", "#008000", "#ff0000"],
+  };
+  const canvas = runtime.mount(
+    <>
+      <Viz.Scale id="normal-category" type="band" domain={["A"]} range={[0, 100]}>
+        <Viz.Scale id="normal-value" type="linear" domain={[-20, 60]} range={[0, 320]}>
+          <Viz.BarSeries
+            orientation="horizontal"
+            data={rows}
+            category="c"
+            value="v"
+            categoryScale="normal-category"
+            valueScale="normal-value"
+            style={{ fill: threshold }}
+          />
+        </Viz.Scale>
+      </Viz.Scale>
+      <Group style={{ translateY: 120 }}>
+        <Viz.Scale id="reversed-category" type="band" domain={["A"]} range={[0, 100]}>
+          <Viz.Scale id="reversed-value" type="linear" domain={[-20, 60]} range={[320, 0]}>
+            <Viz.BarSeries
+              orientation="horizontal"
+              data={rows}
+              category="c"
+              value="v"
+              categoryScale="reversed-category"
+              valueScale="reversed-value"
+              style={{ fill: threshold }}
+            />
+          </Viz.Scale>
+        </Viz.Scale>
+      </Group>
+    </>,
+  );
+  runtime.flush();
+  const pixel = (x: number, y: number) => [
+    ...canvas.getContext("2d")!.getImageData(x, y, 1, 1).data,
+  ];
+  expect(pixel(120, 50)).toEqual([0, 128, 0, 255]);
+  expect(pixel(240, 50)).toEqual([255, 0, 0, 255]);
+  expect(pixel(180, 170)).toEqual([0, 128, 0, 255]);
+  expect(pixel(80, 170)).toEqual([255, 0, 0, 255]);
 });

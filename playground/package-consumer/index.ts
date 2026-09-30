@@ -1789,3 +1789,8 @@ void simplifyPath(flattenedOutline, { tolerance: 0.5 });
 void subdividePath(editableOutline, { divisions: 2 });
 const editableTarget: CRCEventTargetOptions = { path: editableOutline, fill: true };
 void editableTarget;
+
+import { flattenPathWang, simplifyPathRadial } from '@crc/core';
+const wangOutline: PathGeometry = flattenPathWang(editableOutline, { tolerance: 0.25 });
+const radialOutline: PathGeometry = simplifyPathRadial(wangOutline, { tolerance: 0.5 });
+void radialOutline;
