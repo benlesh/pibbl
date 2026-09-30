@@ -320,3 +320,21 @@ vertical negative Payroll segment; focused Chromium test passes. This example
 adds no library runtime path: 32 prepared ranges use the already measured
 BarSeries, and inspection scans those 32 rows with no retained index or new
 scheduler. Broad large-data claims are not made for this teaching example.
+
+## Grouped-stacked delivery and next-wave ownership
+
+- Pushed accepted grouped-stacked work and approved contracts to remote main at
+  d503ded1b524f6538d20ca17796967c9e0a3c5c0. Exact-tree full trust passed:
+  3,212 browser tests passed / six intentional skips; all package, visual, built,
+  lifecycle and structural performance phases passed. Log:
+  /tmp/crc-viz-grouped-trust-final.log. No baseline changes.
+- Next UTC implementation: audit_series reuses viz-semantic-bars checkout.
+  For this slice it is the sole author of UTC additions to types.ts and index.ts,
+  along with scale/continuous consumers, focused tests and UTC example source.
+  Coordinator retains API approval, final integration, Studio declarations,
+  catalogs/indexes and public consumer evidence.
+- Custom labels: audit_interaction reuses viz-donuts checkout and owns only pie
+  layout/types/rendering, focused tests and existing pie example source. It
+  requests any new barrel exports from the single UTC/barrel owner.
+- Both implementations follow approved contracts, test-first and a runnable
+  feedback milestone. Further broad hardening waits for that feedback.
