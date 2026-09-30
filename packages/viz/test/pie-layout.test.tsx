@@ -1,4 +1,4 @@
-import { Rectangle, signal, useSignal } from "@crc/core";
+import { Rectangle, signal, useLayoutBox, useSignal } from "@crc/core";
 import * as viz from "@crc/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { boxOutsideInnerCircle } from "../src/lib/layout-pie.js";
@@ -531,10 +531,13 @@ it("places explicit custom label boxes, tracks their signals, and unmounts hidde
   runtime = testRuntime();
   const width = signal(200);
   const states: object[] = [];
+  const allocations: { width: number; height: number }[] = [];
   let result: viz.PieLayoutSlice<{ id: string; value: number }>[] = [];
   function Card() {
     const state = useSignal({});
+    const box = useLayoutBox();
     states.push(state);
+    allocations.push({ width: box.width, height: box.height });
     return <Rectangle style={{ width: 20, height: 16, fill: "blue" }} />;
   }
   function Scene() {
@@ -580,6 +583,7 @@ it("places explicit custom label boxes, tracks their signals, and unmounts hidde
     height: 20,
   });
   expect(states).toHaveLength(1);
+  expect(allocations.at(-1)).toEqual({ width: 20, height: 20 });
   const visible = states[0];
   width.set(200);
   runtime.flush();

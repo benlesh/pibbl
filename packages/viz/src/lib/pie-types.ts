@@ -67,19 +67,27 @@ export interface PieLayoutStyle {
   readonly labelFont?: string;
   readonly labelGap?: number;
 }
-export interface PieLayoutProps<D> extends PieOptions<D> {
+interface PieLayoutBaseProps<D> extends PieOptions<D> {
   readonly data: SignalValue<readonly D[]>;
   /** Opts into cached geometry for mutable inputs; advance after nonreactive changes. */
   readonly revision?: SignalValue<number>;
-  readonly label?: (slice: PieSliceGeometry<D>) => string;
-  readonly labelBox?: (
-    slice: PieSliceGeometry<D>,
-  ) => PieLabelBox | null | undefined;
   readonly placement?: SignalValue<PieLabelPlacement>;
   readonly bounds?: SignalValue<HoverBounds>;
   readonly style?: SignalValue<SignalStyle<PieLayoutStyle>>;
   readonly children: (slice: PieLayoutSlice<D>) => CRCNode;
 }
+type PieTextLabelSource<D> = Readonly<{
+  readonly label?: ((slice: PieSliceGeometry<D>) => string) | undefined;
+  readonly labelBox?: undefined;
+}>;
+type PieContentLabelSource<D> = Readonly<{
+  readonly label?: undefined;
+  readonly labelBox?:
+    | ((slice: PieSliceGeometry<D>) => PieLabelBox | null | undefined)
+    | undefined;
+}>;
+export type PieLayoutProps<D> = PieLayoutBaseProps<D> &
+  (PieTextLabelSource<D> | PieContentLabelSource<D>);
 export type PieSliceStyle = Omit<
   WedgeStyle,
   "cx" | "cy" | "radius" | "startAngle" | "endAngle" | "counterclockwise"
