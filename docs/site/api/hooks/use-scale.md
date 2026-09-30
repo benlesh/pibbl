@@ -26,8 +26,3 @@ ordinary call order. IDs do not connect unrelated roots or cross Layer boundarie
 Scale formulas use core transactional `useComputed`: successful traversal commits
 updates, failed traversal rolls back candidate formulas, and removal releases
 consumer dependencies. There is no separate visualization subscription loop.
-
-`useScale(id, "utc")` returns `Signal<ResolvedUtcScale>`.
-`useScale(id, "continuous")` accepts either linear or UTC and returns
-`Signal<ResolvedContinuousScale>`. Both retain numeric map/invert coordinates.
-The default and explicit `"linear"` overloads still require a linear provider.
