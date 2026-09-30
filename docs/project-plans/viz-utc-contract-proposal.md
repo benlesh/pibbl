@@ -22,12 +22,13 @@ list, adds aligned interior boundaries, and uses the domain endpoints when no
 boundary fits. Thus even a domain spanning the full Date range allocates at
 most 100 tick values and Date objects.
 
-Export two pure helpers. `extent` makes one source-order pass, skips only
-`null`/`undefined`, and returns a frozen epoch extent or `undefined`; malformed
-values reject. `niceDomain` chooses the same bounded UTC cadence and expands
-to enclosing boundaries. It pads a singleton by one millisecond on each side
-(or inward at Date limits), producing a valid scale domain. Neither helper
-observes signals or caches data; callers own invocation and invalidation.
+Export two future-ready pure helpers. Generic numeric `extent` makes one
+source-order pass, skips only `null`/`undefined`, and returns a frozen finite
+extent or `undefined`; malformed values reject. `niceDomain` requires a
+discriminant; this slice implements only `{ type: "utc" }`, which chooses the
+bounded UTC cadence and expands to enclosing boundaries. It pads a singleton by
+one millisecond on each side (or inward at Date limits). Helpers own neither
+subscriptions nor caches; callers own invocation and invalidation.
 
 The smallest runnable slice is UTC Scale plus Axis calendar labels, helpers,
 focused boundary tests, and one editable UTC line example. Existing `linear`
@@ -37,7 +38,8 @@ remain future work, rather than being implied by this API.
 ## Public surface
 
 ```ts
-export type UtcDomain = readonly [number, number];
+export type NumericDomain = readonly [number, number];
+export type UtcDomain = NumericDomain;
 
 export interface UtcScaleProps extends Omit<
   LinearScaleProps,
@@ -65,12 +67,12 @@ export function extent<D>(
     index: number,
     data: readonly D[],
   ) => number | null | undefined,
-): UtcDomain | undefined;
+): NumericDomain | undefined;
 
 export function niceDomain(
-  domain: UtcDomain,
-  options?: { readonly count?: number },
-): UtcDomain;
+  domain: NumericDomain,
+  options: { readonly type: "utc"; readonly count?: number },
+): NumericDomain;
 ```
 
 `UtcScaleProps` has the same `id`, `range`, `reverse`, `style`, and child
@@ -125,23 +127,27 @@ the numeric epoch and emitted index.
 ## Helpers and invalidation
 
 `extent` invokes the accessor exactly once per source row in source order.
-`null` and `undefined` are missing and skipped; any other non-number, unsafe
-integer, out-of-Date-range value, `NaN`, or infinity throws. Its frozen result
-may be a singleton `[t, t]`; that is not directly valid for Scale.
+`null` and `undefined` are missing and skipped; any other non-number, `NaN`,
+or infinity throws. It has no UTC Date-range or safe-integer policy: it returns
+a generic frozen numeric extent, which may be a singleton `[t, t]` and may need
+the target scale's own validation before use.
 
-`niceDomain` validates Date-range/safe-integer endpoints. Its count defaults to
-5 and accepts integers `2..100`. For unequal endpoints it selects the cadence above and rounds
-outward to enclosing UTC boundaries, preserving input direction. For `[t,t]`
-it returns `[t-1,t+1]`; at the lower bound it returns `[min,min+2]`, and at the
-upper bound `[max-2,max]`. These are the only implicit domain-padding rules.
+`niceDomain` requires `{ type: "utc" }` now, reserving `linear`, `time`, and
+`log` discriminants for their approvals. UTC validates Date-range/safe-integer
+endpoints. Its count defaults to 5 and accepts integers `2..100`. For unequal
+endpoints it selects the cadence above and rounds outward to enclosing UTC
+boundaries, preserving input direction. For `[t,t]` it returns `[t-1,t+1]`; at
+the lower bound it returns `[min,min+2]`, and at the upper bound `[max-2,max]`.
+These are the only implicit domain-padding rules.
 
-Both helpers are pure snapshots: they resolve no `SignalValue`, subscribe to no
-signal, copy no rows, and retain no cache. A caller may invoke them during a
-tracked component evaluation; signal reads performed by that caller-owned
-accessor then follow normal CRC dependency tracking. Calling them outside an
-evaluation has no hidden reactivity. Replacing data/domain/range/reverse or any
-resolved UTC cadence input invalidates ordinary mapping consumers; no automatic
-domain extension, mutation observation, or history cache exists.
+Both helpers are pure snapshots: they resolve no `SignalValue`, create no
+subscription themselves, copy no rows, and retain no cache. A caller may invoke
+`extent` during a tracked component evaluation; signal reads in its accessor are
+therefore owned by that caller context and participate in normal CRC dependency
+tracking. Calling either helper outside evaluation has no hidden reactivity.
+Replacing data/domain/range/reverse or any resolved UTC cadence input invalidates
+ordinary mapping consumers; no automatic domain extension, mutation observation,
+or history cache exists.
 
 ## Evidence and deferred decisions
 
