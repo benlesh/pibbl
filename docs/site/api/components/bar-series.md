@@ -18,7 +18,7 @@ symbols:
 
 # BarSeries
 
-Import from `@crc/viz`. This component supports vertical value bars:
+Import from `@crc/viz`. This component supports vertical value and range bars. For value bars use
 `data`, `x` (category key/accessor), `y` (numeric key/accessor), `xScale` (band),
 and `yScale` (linear). `orientation` may be `"vertical"` or omitted.
 `baseline` is a signal-capable finite domain value, defaulting to zero. Linear
@@ -40,7 +40,26 @@ Coordinates remain root-logical. There is no datum-enriched event: inspect via
 `useScale(id, "band")`, data, and ordinary events. Per-row nodes have ordinary
 component cost; this slice makes no large-data batching guarantee.
 
-Horizontal and ranged bars remain future extensions of the same BarSeries.
+Horizontal bars remain a future extension of the same BarSeries.
+
+## Range and stacked bars
+
+Replace `y` and `baseline` with paired `yStart` and `yEnd` numeric keys or
+accessors. Mixing the two forms rejects. Each range renders one rectangle
+between its mapped endpoints; reversed endpoints work, missing/nonfinite
+endpoints skip the row, and equal endpoints paint and target nothing.
+
+Stacking is a pure data transform that produces these endpoints. BarSeries
+does not accumulate or reorder rows. The [stacked cash flow example](#/examples/composition/viz-stacked-bars)
+accumulates positive and negative values separately from zero, in explicit
+component order, omitting nonfinite values. This is the example's stacking policy,
+not an implicit renderer policy or a new exported stacking helper.
+
+Ranges support the same shared styles, datum style callbacks, threshold fills,
+and optional `group`/`groupScale` placement as ordinary bars. Thresholds
+continue to use value-scale domain coordinates, not each segment's magnitude.
+Hit geometry belongs to each individual segment; no whole-stack hover box is
+added.
 
 ## Grouped bars
 

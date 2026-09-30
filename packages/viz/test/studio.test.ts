@@ -105,3 +105,18 @@ it("loads grouped bars as the canonical editable public lesson", async () => {
     loadLearningSource(getLearningExampleBySlug("viz-grouped-bars")!),
   ).resolves.toBe(groupedLesson);
 });
+
+import stackedLesson from "../../scenarios/src/learning/composition/viz-stacked-bars.example.tsx?raw";
+it("loads stacked bars as the canonical editable public lesson", async () => {
+  expect(() =>
+    validateLearningSourceText(stackedLesson, {
+      authoring: "jsx",
+      label: 'Learning example "viz-stacked-bars"',
+      sourcePath:
+        "packages/scenarios/src/learning/composition/viz-stacked-bars.example.tsx",
+    }),
+  ).not.toThrow();
+  await expect(
+    loadLearningSource(getLearningExampleBySlug("viz-stacked-bars")!),
+  ).resolves.toBe(stackedLesson);
+});

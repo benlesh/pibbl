@@ -51,16 +51,28 @@ interface BarSeriesBaseProps<D>
   readonly data: SignalValue<readonly D[]>;
   readonly orientation?: "vertical";
   readonly x: BarCategoryAccessor<D>;
-  readonly y: LineAccessor<D>;
   readonly xScale: ScaleId;
   readonly yScale: ScaleId;
-  readonly baseline?: SignalValue<number>;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly style?: SignalValue<
     SignalStyle<BarSeriesStyle> | BarStyleResolver<D>
   >;
 }
 export type BarSeriesProps<D> = BarSeriesBaseProps<D> &
+  (
+    | {
+        readonly y: LineAccessor<D>;
+        readonly baseline?: SignalValue<number>;
+        readonly yStart?: never;
+        readonly yEnd?: never;
+      }
+    | {
+        readonly y?: never;
+        readonly baseline?: never;
+        readonly yStart: LineAccessor<D>;
+        readonly yEnd: LineAccessor<D>;
+      }
+  ) &
   (
     | { readonly group: BarCategoryAccessor<D>; readonly groupScale: ScaleId }
     | { readonly group?: never; readonly groupScale?: never }
@@ -71,6 +83,8 @@ export function BarSeries<D>({
   orientation,
   x,
   y,
+  yStart,
+  yEnd,
   xScale,
   yScale,
   baseline,
@@ -98,17 +112,28 @@ export function BarSeries<D>({
   const slotWidth =
     groups?.type === "band" ? groups.bandwidth : categories.bandwidth;
   if (orientation !== undefined && orientation !== "vertical")
-    throw new TypeError(
-      "BarSeries currently supports vertical value bars only.",
-    );
+    throw new TypeError("BarSeries currently supports vertical bars only.");
   const data = pointData(resolveSignalValue(input), "BarSeries");
   const category =
     typeof x === "function"
       ? x
       : (datum: D) => datum[x] as BandCategory | null | undefined;
-  const value = pointAccessor(y);
+  const ranged = yStart !== undefined || yEnd !== undefined;
+  if (
+    ranged
+      ? y !== undefined ||
+        baseline !== undefined ||
+        yStart === undefined ||
+        yEnd === undefined
+      : y === undefined
+  )
+    throw new TypeError(
+      "BarSeries requires either y with optional baseline, or both yStart and yEnd without y or baseline.",
+    );
+  const value = pointAccessor((ranged ? yEnd : y)!);
+  const startValue = ranged ? pointAccessor(yStart!) : undefined;
   const baselineValue = resolveSignalValue(baseline ?? 0);
-  const base = values.map(baselineValue);
+  const sharedBase = ranged ? undefined : values.map(baselineValue);
   const specified = resolveSignalValue(styleInput);
   const ctx = useCanvasContext();
   function normalize(input: unknown, callback: boolean) {
@@ -168,8 +193,9 @@ export function BarSeries<D>({
     const datum = data[i];
     if (defined && !defined(datum, i, data)) continue;
     const c = category(datum, i, data),
-      v = value(datum, i, data);
-    if (c == null || !finiteCoordinate(v)) continue;
+      v = value(datum, i, data),
+      from = startValue ? startValue(datum, i, data) : baselineValue;
+    if (c == null || !finiteCoordinate(v) || !finiteCoordinate(from)) continue;
     const categoryStart = categories.map(c);
     const g = groups ? groupValue(datum, i, data) : undefined;
     const offset = groups ? (g == null ? undefined : groups.map(g)) : 0;
@@ -185,6 +211,7 @@ export function BarSeries<D>({
         true,
       );
     if (bandwidth === 0) continue;
+    const base = sharedBase ?? values.map(from);
     const end = values.map(v);
     const height = Math.abs(end - base);
     if (!Number.isFinite(height))
@@ -199,7 +226,7 @@ export function BarSeries<D>({
           y: Math.min(base, end),
           width: bandwidth,
           height,
-          fill: fill(baselineValue, v),
+          fill: fill(from, v),
           stroke,
           strokeWidth,
           opacity: alpha,

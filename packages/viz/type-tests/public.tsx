@@ -376,8 +376,10 @@ const incompleteGroup: BarSeriesProps<(typeof groupedRows)[number]> = {
 };
 void incompleteGroup;
 void (
-  // @ts-expect-error numeric scales cannot use bandwidthOf
-  <Scale id="v" type="linear" domain={[0, 1]} range={{ bandwidthOf: "c" }} />
+  (
+    // @ts-expect-error numeric scales cannot use bandwidthOf
+    <Scale id="v" type="linear" domain={[0, 1]} range={{ bandwidthOf: "c" }} />
+  )
 );
 const signalGroupStyle: BarStyleResolver<
   (typeof groupedRows)[number]
@@ -386,3 +388,50 @@ const signalGroupStyle: BarStyleResolver<
   opacity: signal(0.5),
 });
 void signalGroupStyle;
+
+const stackRows = [{ category: "Q1", group: "Actual", from: -5, to: -9 }];
+void (
+  <BarSeries
+    data={stackRows}
+    x="category"
+    yStart="from"
+    yEnd="to"
+    xScale="c"
+    yScale="v"
+    group="group"
+    groupScale="g"
+    style={{ fill: "orange" }}
+  />
+);
+// @ts-expect-error range endpoints must be paired
+const missingRangeEnd: BarSeriesProps<(typeof stackRows)[number]> = {
+  data: stackRows,
+  x: "category",
+  yStart: "from",
+  xScale: "c",
+  yScale: "v",
+};
+const mixedInput = {
+  data: stackRows,
+  x: "category",
+  y: "to",
+  yStart: "from",
+  yEnd: "to",
+  xScale: "c",
+  yScale: "v",
+} as const;
+// @ts-expect-error value and range geometry cannot be mixed
+const mixedGeometry: BarSeriesProps<(typeof stackRows)[number]> = mixedInput;
+// @ts-expect-error explicit ranges cannot also use a shared baseline
+const rangeBaseline: BarSeriesProps<(typeof stackRows)[number]> = {
+  data: stackRows,
+  x: "category",
+  yStart: "from",
+  yEnd: "to",
+  baseline: 0,
+  xScale: "c",
+  yScale: "v",
+};
+void missingRangeEnd;
+void mixedGeometry;
+void rangeBaseline;

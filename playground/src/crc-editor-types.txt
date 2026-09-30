@@ -1222,12 +1222,13 @@ interface BarSeriesBaseProps<D> extends CRCEventHandlers, CRCEventParticipationO
   readonly data: SignalValue<readonly D[]>;
   readonly orientation?: "vertical";
   readonly x: BarCategoryAccessor<D>;
-  readonly y: LineAccessor<D>;
   readonly xScale: ScaleId;
   readonly yScale: ScaleId;
-  readonly baseline?: SignalValue<number>;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly style?: SignalValue<SignalStyle<BarSeriesStyle> | BarStyleResolver<D>>;
 }
-export type BarSeriesProps<D> = BarSeriesBaseProps<D> & ({ readonly group: BarCategoryAccessor<D>; readonly groupScale: ScaleId } | { readonly group?: never; readonly groupScale?: never });
+export type BarSeriesProps<D> = BarSeriesBaseProps<D> & (
+    | { readonly y: LineAccessor<D>; readonly baseline?: SignalValue<number>; readonly yStart?: never; readonly yEnd?: never }
+    | { readonly y?: never; readonly baseline?: never; readonly yStart: LineAccessor<D>; readonly yEnd: LineAccessor<D> }
+  ) & ({ readonly group: BarCategoryAccessor<D>; readonly groupScale: ScaleId } | { readonly group?: never; readonly groupScale?: never });
 export declare function BarSeries<D>(props: BarSeriesProps<D>): CRCNode;

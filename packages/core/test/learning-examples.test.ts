@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 63 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 64 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(63);
+    expect(learningExampleCatalog).toHaveLength(64);
     expect(learningExampleCatalog.filter(entry =>
       entry.slug === "viz-band-bars" || entry.slug === "viz-grouped-bars"
     ).map(entry => getLearningExampleRoute(entry)).sort()).toEqual([
@@ -1289,6 +1289,7 @@ describe("learning example catalog", () => {
         "physics-2d",
         "signal-inputs",
         "signals-and-animation",
+        "viz-stacked-bars",
         "viz-band-bars",
         "viz-grouped-bars",
         "viz-hover-comparison",
@@ -1372,6 +1373,7 @@ describe("learning example catalog", () => {
       "particle-effects",
       "physics-2d",
       "layer",
+      "viz-stacked-bars",
       "viz-grouped-bars",
       "viz-band-bars",
       "viz-hover-comparison",

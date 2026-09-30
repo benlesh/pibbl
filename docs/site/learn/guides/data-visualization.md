@@ -223,7 +223,7 @@ Import `BarSeries` from `@crc/viz`. `useScale("channels", "band").get()` exposes
 band starts and bandwidth for composed labels and inspection. Categories are
 strings or finite numbers; order is explicit, duplicates reject, and unknowns
 map to undefined. Padding and domain can be signals. This feedback slice supports
-vertical value bars; horizontal and range forms remain deferred.
+vertical value and range bars; horizontal bars remain deferred.
 
 For grouped bars, nest another band scale with
 `range={{ bandwidthOf: "categories" }}` and pass paired `group` and
@@ -239,3 +239,10 @@ To color different value regions within the same bar, pass a threshold fill in
 crossing a threshold changes color there while retaining one border and target.
 Thresholds use the numeric value scale's domain, not pixels. The population
 example demonstrates this with green gains up to 300,000 and red above it.
+
+For stacked bars, derive each segment's start and end in a pure data transform,
+then pass `yStart` and `yEnd` in place of `y` and `baseline`.
+The same styles and grouped positioning apply. See
+[Stacked bars](#/examples/composition/viz-stacked-bars) for positive and negative
+cash flows with segment inspection. The example defines stack order and separate
+positive/negative accumulators; the renderer does not choose a stacking policy.
