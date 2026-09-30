@@ -2,6 +2,7 @@ import { parse } from "@babel/parser";
 
 const SUPPORTED_MODULES = new Set([
   "@crc/core",
+  "@crc/text",
   "@crc/viz",
   "@crc/core/jsx-runtime",
   "@crc/core/jsx-dev-runtime",

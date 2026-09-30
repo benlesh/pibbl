@@ -590,6 +590,17 @@ const drafts = [
     load: () => import("./learning/drawing/path.example"),
   },
   {
+    slug: "text-geometry", title: "Editable text outlines", shortTitle: "Text outlines",
+    section: "drawing", order: 32,
+    summary: "Type text, generate font outlines, and drag their control points.",
+    api: ["loadOutlineFont", "createTextGeometry", "PathGeometry", "Path"],
+    objectives: ["Shape text with HarfBuzz into editable curves.", "Manipulate glyph outlines without reshaping during dragging."],
+    prompts: { gesture: "Type a word, generate its outline, then drag gold or white points.", code: "Change the font size or the starting text." },
+    apiNotes: ["Font loading is asynchronous; conversion and point editing are synchronous.", "The font handle is disposed when the example is unmounted."],
+    canvas: { width: 900, height: 480 }, related: ["path-geometry", "text"],
+    load: () => import("./learning/drawing/text-geometry.example"),
+  },
+  {
     slug: "path-geometry",
     title: "Editable path geometry",
     shortTitle: "Path geometry",

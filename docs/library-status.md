@@ -160,8 +160,8 @@ pivot, and the evidence inventory maps those obligations to direct source and
 test evidence. It covers 667 preserved baseline units and 826 current semantic
 units across all 12 baseline-snapshotted normative contracts. Together with the
 post-baseline signal, animation, render-layer/Three, component-manipulation,
-and 2D physics records, this covers 17 current normative contracts. Those five
-records contain 174 exhaustively mapped post-baseline units. The evidence inventory contains 56 unique direct
+2D physics, and text geometry records, this covers 18 current normative contracts. Those six
+records contain 187 exhaustively mapped post-baseline units. The evidence inventory contains 56 unique direct
 source/test mappings. It also inspects the cited examples/tests for the
 behaviors claimed in the Text, Layer, focus, and complete non-JSX rows;
 scenario/browser gates execute that code.

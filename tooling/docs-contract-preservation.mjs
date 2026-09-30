@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "e83f5a8baee9e7eb1b3949d0ada32e718358c80d5f060fb9b0f6c9951a9c965d";
+  "e7f52017d0c1aad16e15f4f688eb532a292b3f6d8ecb73bd90e28f0f30493e07";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const THREE_PIVOT_APPROVAL_RECORD = "three-full-pivot";
@@ -121,6 +121,24 @@ const MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS = new Set([
 ]);
 
 const POST_BASELINE_CONTRACT_PROFILES = new Map([
+  [
+    "docs/design/text-geometry-contract.md",
+    {
+      unitPrefix: "x",
+      approvalRecordId: "text-path-geometry",
+      allowedSections: new Set([
+        "Recommendation",
+        "Intended behavior",
+        "Workspace package and command workflow",
+        "Existing PathGeometry integration",
+        "Native boundary and efficient data flow",
+        "Proposed JavaScript API",
+        "Loading, ownership, and failure handling",
+        "Delivery and validation",
+        "Build-time generation",
+      ]),
+    },
+  ],
   [
     "docs/design/physics-2d-contract.md",
     {

@@ -4,7 +4,7 @@ import { isAbsolute, resolve, sep } from "node:path";
 const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const CRC_ENTRY_POINT =
-  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles|physics\/(?:2d(?:\/geometry)?|3d\/geometry)|viz|three)$/;
+  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles|physics\/(?:2d(?:\/geometry)?|3d\/geometry)|viz|text|three)$/;
 const THREE_ENTRY_POINT = /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
 
 const threeEntryPoints = new Map([
@@ -28,6 +28,7 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
   const directory = mode === "built" ? "dist" : "src";
   const extension = mode === "built" ? "mjs" : "ts";
   return new Map([
+    ["@crc/text", resolve(import.meta.dirname, `../packages/text/${directory}/index.${extension}`)],
     [
       "@crc/viz",
       resolve(
@@ -109,7 +110,7 @@ function assertSingleRuntimeMode(
   const inputs = Object.keys(metafile.inputs).map((path) =>
     isAbsolute(path) ? path : resolve(repositoryRoot, path),
   );
-  for (const packageName of ["core", "particles", "physics", "three", "viz"]) {
+  for (const packageName of ["core", "particles", "physics", "three", "viz", "text"]) {
     const packageRoot = resolve(repositoryRoot, `packages/${packageName}`);
     const expectedRoot = resolve(
       packageRoot,
@@ -171,6 +172,11 @@ export function crcRuntimeSource(mode: string) {
           {
             name: "crc-studio-runtime-entries",
             setup(build) {
+              build.onResolve({ filter: /engine\.mjs$/ }, args => {
+                if (!args.importer.includes('/packages/text/')) return undefined;
+                return { path: 'text-engine-loader', namespace: 'crc-text' };
+              });
+              build.onLoad({ filter: /.*/, namespace: 'crc-text' }, () => ({ contents: 'export default async function () { const url = new URL("/crc-text/engine.mjs", document.baseURI).href; const module = await import(url); return module.default(); }', loader: 'js' }));
               build.onResolve({ filter: CRC_ENTRY_POINT }, (args) => {
                 const path = entryPoints.get(args.path);
                 if (!path) return undefined;

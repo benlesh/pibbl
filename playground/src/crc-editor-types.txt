@@ -1431,3 +1431,50 @@ export interface PieLabelProps<D> extends CRCEventHandlers, CRCEventParticipatio
 export declare function PieLayout<D>(props: PieLayoutProps<D>): CRCNode;
 export declare function PieSlice<D>(props: PieSliceProps<D>): CRCNode;
 export declare function PieLabel<D>(props: PieLabelProps<D>): CRCNode;
+
+/* @crc-studio-module @crc/text */
+import { PathGeometry } from '@crc/core';
+
+export interface InkBounds {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+}
+export interface OutlineFont extends Disposable {
+    dispose(): void;
+}
+export interface OutlineFontOptions {
+    signal?: AbortSignal;
+    monochromeFallback?: boolean;
+}
+export interface TextGeometryOptions {
+    fontSize: number;
+    maxSegments?: number;
+    missingGlyphs?: 'error' | 'notdef';
+    direction?: 'ltr' | 'rtl';
+    script?: string;
+    language?: string;
+    features?: Readonly<Record<string, boolean>>;
+}
+export interface TextGlyph {
+    readonly glyphId: number;
+    readonly cluster: number;
+    readonly segmentStart: number;
+    readonly segmentCount: number;
+    readonly x: number;
+    readonly y: number;
+    readonly xAdvance: number;
+    readonly yAdvance: number;
+}
+export interface TextGeometryResult {
+    readonly geometry: PathGeometry;
+    readonly inkBounds: Readonly<InkBounds> | null;
+    readonly advance: Readonly<{
+        x: number;
+        y: number;
+    }>;
+    readonly glyphs: readonly TextGlyph[];
+}
+export declare function loadOutlineFont(source: string | URL | ArrayBuffer | Uint8Array, options?: OutlineFontOptions): Promise<OutlineFont>;
+export declare function createTextGeometry(font: OutlineFont, text: string, options: TextGeometryOptions): TextGeometryResult;

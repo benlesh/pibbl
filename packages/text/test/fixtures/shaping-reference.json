@@ -1,0 +1,378 @@
+{
+  "harfbuzz": {
+    "version": "14.5.0",
+    "url": "https://codeload.github.com/harfbuzz/harfbuzz/tar.gz/refs/tags/14.5.0",
+    "sha256": "97ec7488a46b974e18e08ee774af93173e7e1dbf738424796eb315ebcb735ec5"
+  },
+  "method": "native/reference.cpp; direct native HarfBuzz without CRC wrapper",
+  "glyphColumns": [
+    "id",
+    "utf16Cluster",
+    "xAdvance",
+    "yAdvance",
+    "xOffset",
+    "yOffset"
+  ],
+  "cases": [
+    {
+      "name": "Latin kerning",
+      "font": "ABeeZee-Regular.ttf",
+      "text": "AV",
+      "features": {
+        "kern": true
+      },
+      "fontSha256": "2901c8df256648cc2bb2e3afb381cb8d28e65ed3dbe11de20695ae4d5ffdeda9",
+      "expected": {
+        "upem": 1000,
+        "glyphs": [
+          [
+            1,
+            0,
+            603,
+            0,
+            0,
+            0
+          ],
+          [
+            61,
+            1,
+            640,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Latin without kerning",
+      "font": "ABeeZee-Regular.ttf",
+      "text": "AV",
+      "features": {
+        "kern": false
+      },
+      "fontSha256": "2901c8df256648cc2bb2e3afb381cb8d28e65ed3dbe11de20695ae4d5ffdeda9",
+      "expected": {
+        "upem": 1000,
+        "glyphs": [
+          [
+            1,
+            0,
+            668,
+            0,
+            0,
+            0
+          ],
+          [
+            61,
+            1,
+            640,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Latin ligature",
+      "font": "lato/Lato-Regular.ttf",
+      "text": "office",
+      "features": {
+        "liga": true
+      },
+      "fontSha256": "d636e4683231f931eda222d588e944d082bfd3bdba02f928bee461c0f185b251",
+      "expected": {
+        "upem": 2000,
+        "glyphs": [
+          [
+            111,
+            0,
+            1112,
+            0,
+            0,
+            0
+          ],
+          [
+            76,
+            1,
+            1775,
+            0,
+            0,
+            0
+          ],
+          [
+            49,
+            4,
+            937,
+            0,
+            0,
+            0
+          ],
+          [
+            59,
+            5,
+            1056,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Latin without ligature",
+      "font": "lato/Lato-Regular.ttf",
+      "text": "office",
+      "features": {
+        "liga": false
+      },
+      "fontSha256": "d636e4683231f931eda222d588e944d082bfd3bdba02f928bee461c0f185b251",
+      "expected": {
+        "upem": 2000,
+        "glyphs": [
+          [
+            111,
+            0,
+            1112,
+            0,
+            0,
+            0
+          ],
+          [
+            61,
+            1,
+            701,
+            0,
+            0,
+            0
+          ],
+          [
+            61,
+            2,
+            701,
+            0,
+            0,
+            0
+          ],
+          [
+            98,
+            3,
+            480,
+            0,
+            0,
+            0
+          ],
+          [
+            49,
+            4,
+            937,
+            0,
+            0,
+            0
+          ],
+          [
+            59,
+            5,
+            1056,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Arabic marks and RTL",
+      "font": "noto-naskh/NotoNaskhArabic-Regular.ttf",
+      "text": "سَلَام",
+      "fontSha256": "2f4b88e6ee50fa82c617e2d1d4ba18281cb1c6cd71c3af3ec64970c23995db4b",
+      "expected": {
+        "upem": 1000,
+        "glyphs": [
+          [
+            485,
+            5,
+            489,
+            0,
+            0,
+            0
+          ],
+          [
+            1576,
+            4,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1426,
+            2,
+            0,
+            0,
+            363,
+            278
+          ],
+          [
+            450,
+            2,
+            610,
+            0,
+            0,
+            0
+          ],
+          [
+            1426,
+            0,
+            0,
+            0,
+            268,
+            24
+          ],
+          [
+            250,
+            0,
+            658,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "CFF and accents",
+      "font": "source-serif/SourceSerif4-Regular.otf",
+      "text": "Oé fi",
+      "fontSha256": "edf160d0d584deee8a3bb2c3371b2a7624ca63580fbe02c57c1f4c91e84d8787",
+      "expected": {
+        "upem": 1000,
+        "glyphs": [
+          [
+            16,
+            0,
+            707,
+            0,
+            0,
+            0
+          ],
+          [
+            264,
+            1,
+            510,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            2,
+            233,
+            0,
+            0,
+            0
+          ],
+          [
+            417,
+            3,
+            607,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Combining accent",
+      "font": "lato/Lato-Regular.ttf",
+      "text": "Á",
+      "fontSha256": "d636e4683231f931eda222d588e944d082bfd3bdba02f928bee461c0f185b251",
+      "expected": {
+        "upem": 2000,
+        "glyphs": [
+          [
+            1836,
+            0,
+            1354,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Supplementary UTF-16 cluster",
+      "font": "lato/Lato-Regular.ttf",
+      "text": "🙂A",
+      "missingGlyphs": "notdef",
+      "fontSha256": "d636e4683231f931eda222d588e944d082bfd3bdba02f928bee461c0f185b251",
+      "expected": {
+        "upem": 2000,
+        "glyphs": [
+          [
+            0,
+            0,
+            1063,
+            0,
+            0,
+            0
+          ],
+          [
+            3,
+            2,
+            1354,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Default ignorables",
+      "font": "ABeeZee-Regular.ttf",
+      "text": "A‍‎B",
+      "fontSha256": "2901c8df256648cc2bb2e3afb381cb8d28e65ed3dbe11de20695ae4d5ffdeda9",
+      "expected": {
+        "upem": 1000,
+        "glyphs": [
+          [
+            1,
+            0,
+            668,
+            0,
+            0,
+            0
+          ],
+          [
+            161,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            161,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            9,
+            3,
+            630,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    }
+  ]
+}

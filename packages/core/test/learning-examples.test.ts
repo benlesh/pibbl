@@ -1214,14 +1214,20 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 68 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 69 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(68);
-    expect(learningExampleCatalog.filter(entry =>
-      entry.slug === "viz-band-bars" || entry.slug === "viz-grouped-bars"
-    ).map(entry => getLearningExampleRoute(entry)).sort()).toEqual([
+    expect(learningExampleCatalog).toHaveLength(69);
+    expect(
+      learningExampleCatalog
+        .filter(
+          (entry) =>
+            entry.slug === "viz-band-bars" || entry.slug === "viz-grouped-bars",
+        )
+        .map((entry) => getLearningExampleRoute(entry))
+        .sort(),
+    ).toEqual([
       "#/examples/composition/viz-band-bars",
       "#/examples/composition/viz-grouped-bars",
     ]);
@@ -1279,6 +1285,7 @@ describe("learning example catalog", () => {
         "star",
         "svg-path",
         "text",
+        "text-geometry",
         "vertical-line",
         "wedge",
       ],
@@ -1747,6 +1754,8 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "loadOutlineFont",
+        "createTextGeometry",
         "Scale",
         "Axis",
         "LineSeries",

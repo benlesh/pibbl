@@ -87,6 +87,7 @@ const publicGuidePaths = [
 ];
 const publicSiteMarkdownPaths = [
   "docs/site/api/functions/path-geometry.md",
+  "docs/site/api/functions/text-geometry.md",
   "docs/site/api/components/pie-layout.md",
   "docs/site/api/functions/pie-slices.md",
   "docs/site/learn/guides/data-visualization.md",
@@ -240,6 +241,7 @@ const currentMarkdownPaths = [
   "packages/particles/README.md",
   "packages/physics/README.md",
   "packages/three/README.md",
+  "packages/text/README.md",
   "packages/types/README.md",
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
@@ -256,6 +258,7 @@ const currentMarkdownPaths = [
   "docs/design/runtime-resource-ownership.md",
   "docs/design/signals-and-scheduling-contract.md",
   "docs/design/style-system-contract.md",
+  "docs/design/text-geometry-contract.md",
   "docs/design/user-events-contract.md",
   "docs/documentation-follow-up.md",
   "docs/follow-ups.md",
@@ -295,6 +298,7 @@ const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
+  "packages/text/test/fixtures/source-serif/LICENSE.md",
   ".beads/README.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
   "docs/testing/evidence/component-manipulation/progress.md",
@@ -845,6 +849,7 @@ async function typecheckCompleteSnippets(snippets) {
                 join(repositoryRoot, "packages/particles/src/index.ts"),
               ],
               "@crc/viz": [join(repositoryRoot, "packages/viz/src/index.ts")],
+              "@crc/text": [join(repositoryRoot, "packages/text/src/index.ts")],
               "@crc/three": [
                 join(repositoryRoot, "packages/three/src/index.ts"),
               ],
@@ -2175,6 +2180,7 @@ const currentNormativeContractPaths = [
   ),
 ].sort();
 const postBaselineNormativeContractPaths = new Set([
+  "docs/design/text-geometry-contract.md",
   "docs/design/animation-contract.md",
   "docs/design/component-manipulation-contract.md",
   "docs/design/signals-and-scheduling-contract.md",

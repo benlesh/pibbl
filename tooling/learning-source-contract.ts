@@ -65,6 +65,7 @@ const THREE_MODULE = "three";
 const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = ["@crc", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
+  "@crc/text",
   VIZ_MODULE,
   CORE_MODULE,
   PARTICLES_MODULE,
@@ -1117,7 +1118,11 @@ function inspectSource(source: string, label: string): SourceInspection {
     if (node.type !== "VariableDeclarator") return;
     const name = identifierName(node.id);
     const initializer = unwrapTransparentExpression(node.init);
-    if (name && initializer?.type === "CallExpression" && resolveCoreValue(initializer.callee) === "useManipulation") {
+    if (
+      name &&
+      initializer?.type === "CallExpression" &&
+      resolveCoreValue(initializer.callee) === "useManipulation"
+    ) {
       manipulationBindings.add(name);
     }
   });
@@ -1125,7 +1130,11 @@ function inspectSource(source: string, label: string): SourceInspection {
     const argument = unwrapTransparentExpression(attribute.argument);
     if (!argument || argument.type !== "MemberExpression") return false;
     const owner = identifierName(argument.object);
-    return owner !== undefined && manipulationBindings.has(owner) && staticMemberName(argument) === "frameProps";
+    return (
+      owner !== undefined &&
+      manipulationBindings.has(owner) &&
+      staticMemberName(argument) === "frameProps"
+    );
   };
 
   const inspectCreateElementArguments = (argumentsValue: unknown): void => {
@@ -1267,11 +1276,13 @@ function inspectSource(source: string, label: string): SourceInspection {
       const orbitHandlerSpreads = spreadAttributes.filter(
         isOrbitHandlersSpread,
       );
-      const manipulationFrameSpreads = componentName === "ManipulationFrame"
-        ? spreadAttributes.filter(isManipulationFrameSpread)
-        : [];
+      const manipulationFrameSpreads =
+        componentName === "ManipulationFrame"
+          ? spreadAttributes.filter(isManipulationFrameSpread)
+          : [];
       if (
-        spreadAttributes.length !== orbitHandlerSpreads.length + manipulationFrameSpreads.length ||
+        spreadAttributes.length !==
+          orbitHandlerSpreads.length + manipulationFrameSpreads.length ||
         (orbitHandlerSpreads.length > 0 && componentName !== "Group")
       ) {
         hasUninspectableProps = true;
@@ -1460,7 +1471,7 @@ export function validateScenarioSourceText(
   ) {
     throw invalid(
       label,
-      "must use supported static imports from @crc/core, @crc/viz, @crc/particles, @crc/physics/2d, @crc/three, three, and supported Three addons; relative imports must be type-only; and at least one public @crc/core value is required.",
+      "must use supported static imports from @crc/core, @crc/text, @crc/viz, @crc/particles, @crc/physics/2d, @crc/three, three, and supported Three addons; relative imports must be type-only; and at least one public @crc/core value is required.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1526,37 +1537,39 @@ export function validateLearningSourceText(
         label === "physics-2d" ||
         label === 'Learning example "physics-2d"'));
   const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE);
-  const hasExactPackageImports = isVizLesson
-    ? inspection.hasNamedValueCoreImport &&
-      inspection.packageImportModules.length === 2
-    : isThreeLesson
+  const isTextLesson = inspection.packageImportModules.includes("@crc/text");
+  const hasExactPackageImports =
+    isVizLesson || isTextLesson
       ? inspection.hasNamedValueCoreImport &&
-        inspection.hasThreeAdapterValueImport &&
-        inspection.hasThreeValueImport &&
-        inspection.hasOrbitControlsValueImport === isThreeControlsLesson &&
-        !inspection.hasNamedValueParticlesImport &&
-        !inspection.hasNamedValueWebGLImport &&
-        inspection.packageImportModules.length ===
-          (isThreeControlsLesson ? 4 : 3)
-      : isParticlesLesson
+        inspection.packageImportModules.length === 2
+      : isThreeLesson
         ? inspection.hasNamedValueCoreImport &&
-          inspection.hasNamedValueParticlesImport &&
-          !inspection.hasNamedValuePhysicsImport &&
+          inspection.hasThreeAdapterValueImport &&
+          inspection.hasThreeValueImport &&
+          inspection.hasOrbitControlsValueImport === isThreeControlsLesson &&
+          !inspection.hasNamedValueParticlesImport &&
           !inspection.hasNamedValueWebGLImport &&
-          inspection.packageImportModules.length === 2
-        : isPhysicsLesson
+          inspection.packageImportModules.length ===
+            (isThreeControlsLesson ? 4 : 3)
+        : isParticlesLesson
           ? inspection.hasNamedValueCoreImport &&
-            inspection.hasNamedValuePhysicsImport &&
-            inspection.hasPhysics2DValueImport &&
-            !inspection.hasPhysics3DValueImport &&
-            !inspection.hasNamedValueParticlesImport &&
-            !inspection.hasNamedValueWebGLImport &&
-            inspection.packageImportModules.length === 2
-          : inspection.hasNamedValueCoreImport &&
-            !inspection.hasNamedValueParticlesImport &&
+            inspection.hasNamedValueParticlesImport &&
             !inspection.hasNamedValuePhysicsImport &&
             !inspection.hasNamedValueWebGLImport &&
-            inspection.packageImportModules.length === 1;
+            inspection.packageImportModules.length === 2
+          : isPhysicsLesson
+            ? inspection.hasNamedValueCoreImport &&
+              inspection.hasNamedValuePhysicsImport &&
+              inspection.hasPhysics2DValueImport &&
+              !inspection.hasPhysics3DValueImport &&
+              !inspection.hasNamedValueParticlesImport &&
+              !inspection.hasNamedValueWebGLImport &&
+              inspection.packageImportModules.length === 2
+            : inspection.hasNamedValueCoreImport &&
+              !inspection.hasNamedValueParticlesImport &&
+              !inspection.hasNamedValuePhysicsImport &&
+              !inspection.hasNamedValueWebGLImport &&
+              inspection.packageImportModules.length === 1;
   if (!inspection.hasOnlyApprovedImports || !hasExactPackageImports) {
     throw invalid(
       label,

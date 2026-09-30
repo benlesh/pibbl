@@ -25,6 +25,7 @@ const expectedModules = new Map([
   ["@crc/particles", "node_modules/@crc/particles/index.d.ts"],
   ["@crc/three", "node_modules/@crc/three/index.d.ts"],
   ["@crc/viz", "node_modules/@crc/viz/index.d.ts"],
+  ["@crc/text", "node_modules/@crc/text/index.d.ts"],
 ]);
 const bundle = await readFile(
   join(repositoryRoot, "playground/src/crc-editor-types.txt"),
@@ -51,6 +52,7 @@ const sourceEntries = {
   particles: join(repositoryRoot, "packages/particles/src/index.ts"),
   three: join(repositoryRoot, "packages/three/src/index.ts"),
   viz: join(repositoryRoot, "packages/viz/src/index.ts"),
+  text: join(repositoryRoot, "packages/text/src/index.ts"),
 };
 const builtEntries = Object.fromEntries(
   Object.entries(sourceEntries).map(([name, path]) => [
@@ -76,6 +78,7 @@ const inventoryKey = new Map([
   ["@crc/particles", "particles"],
   ["@crc/three", "three"],
   ["@crc/viz", "viz"],
+  ["@crc/text", "text"],
 ]);
 
 function explicitNames(content) {
@@ -135,6 +138,8 @@ try {
     /** @jsxImportSource @crc/core */
     import { crc, Rectangle, DragHandle, ManipulationFrame, ResizeHandles, RotationHandle, useManipulation, useSignal, type CRCNode } from '@crc/core';
     import { defineThreeLayer, type CRCThreeTarget } from '@crc/three';
+    import { loadOutlineFont, createTextGeometry } from '@crc/text';
+    async function textOutline(bytes: Uint8Array) { using font = await loadOutlineFont(bytes); return createTextGeometry(font, 'Hello', {fontSize: 100, missingGlyphs: 'error'}); }
     import { Particles2D } from '@crc/particles';
     import { sphereShape3D, boundsOfShape3D } from '@crc/physics/3d/geometry';
     import { PhysicsWorld2D } from '@crc/physics/2d';
@@ -220,7 +225,7 @@ try {
   const built = await runtime("built");
   assert.deepEqual(Object.keys(source).sort(), Object.keys(built).sort());
   for (const runtime of [source, built]) {
-    for (const name of ['crc', 'useManipulation', 'Manipulable', 'ManipulationFrame', 'DragHandle', 'ResizeHandle', 'ResizeHandles', 'RotationHandle', 'degrees', 'defineRenderLayer', 'defineThreeLayer', 'Particles2D', 'PhysicsWorld2D', 'sphereShape3D']) {
+    for (const name of ['loadOutlineFont', 'createTextGeometry', 'crc', 'useManipulation', 'Manipulable', 'ManipulationFrame', 'DragHandle', 'ResizeHandle', 'ResizeHandles', 'RotationHandle', 'degrees', 'defineRenderLayer', 'defineThreeLayer', 'Particles2D', 'PhysicsWorld2D', 'sphereShape3D']) {
       assert.equal(typeof runtime[name], 'function', `${name} must be in the Studio runtime`);
     }
     for (const name of [

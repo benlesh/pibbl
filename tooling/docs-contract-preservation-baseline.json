@@ -114,6 +114,12 @@
       "path": "docs/superpowers/specs/2026-09-29-path-geometry-design.md",
       "sourceSha256": "0d4a859c0e0ce874061f607946ad714ef208d247ed4affc399100f43b294184b",
       "unitPrefix": "q"
+    },
+    {
+      "id": "text-path-geometry",
+      "path": "docs/superpowers/specs/2026-09-30-text-path-geometry-design.md",
+      "sourceSha256": "137d802bc97c193b2d669a904c0ce04628847c5120e6d6ba00e39923afac44f4",
+      "unitPrefix": "y"
     }
   ],
   "contracts": [
@@ -13154,6 +13160,105 @@
     }
   ],
   "postBaselineContracts": [
+    {
+      "path": "docs/design/text-geometry-contract.md",
+      "unitPrefix": "x",
+      "currentUnitCount": 13,
+      "currentUnitsSha256": "68ac483ef09eb0a8f7e4cca9665deb9d947cf8aabd066f525b29002705608907",
+      "approvalRecordId": "text-path-geometry",
+      "mappings": [
+        {
+          "id": "package",
+          "currentIds": ["x0001"],
+          "reason": "The text-path-geometry approved design units y0004, y0008, y0009, y0011 authorize package in current units x0001.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0004", "y0008", "y0009", "y0011"]
+          },
+          "sharedAnchors": ["harfbuzz"]
+        },
+        {
+          "id": "loading",
+          "currentIds": ["x0002"],
+          "reason": "The text-path-geometry approved design units y0045, y0051 authorize asynchronous font-byte ownership and lazy loading in current unit x0002.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0045", "y0051"]
+          },
+          "sharedAnchors": ["wasm"]
+        },
+        {
+          "id": "ownership",
+          "currentIds": ["x0003", "x0004"],
+          "reason": "The text-path-geometry approved design units y0031, y0034, y0041, y0044, y0052 authorize ownership in current units x0003, x0004.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0031", "y0034", "y0041", "y0044", "y0052"]
+          },
+          "sharedAnchors": ["dispose"]
+        },
+        {
+          "id": "shaping",
+          "currentIds": ["x0005"],
+          "reason": "The text-path-geometry approved design units y0010, y0035, y0037, y0048 authorize shaping in current units x0005.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0010", "y0035", "y0037", "y0048"]
+          },
+          "sharedAnchors": ["cluster"]
+        },
+        {
+          "id": "outline-conversion",
+          "currentIds": ["x0006"],
+          "reason": "The text-path-geometry approved design units y0027, y0032, y0034, y0036, y0037 authorize outline-conversion in current units x0006.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0027", "y0032", "y0034", "y0036", "y0037"]
+          },
+          "sharedAnchors": ["callbacks"]
+        },
+        {
+          "id": "mutable-results",
+          "currentIds": ["x0007"],
+          "reason": "The text-path-geometry approved design units y0026, y0047, y0049, y0052 authorize mutable-results in current units x0007.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0026", "y0047", "y0049", "y0052"]
+          },
+          "sharedAnchors": ["metadata"]
+        },
+        {
+          "id": "input-limits",
+          "currentIds": ["x0008", "x0009"],
+          "reason": "The text-path-geometry approved design units y0046, y0053, y0054 authorize input-limits in current units x0008, x0009.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0046", "y0053", "y0054"]
+          },
+          "sharedAnchors": ["glyph"]
+        },
+        {
+          "id": "distribution-and-tooling",
+          "currentIds": ["x0010", "x0011"],
+          "reason": "The text-path-geometry approved design units y0011, y0020, y0021, y0022, y0023, y0051 authorize distribution-and-tooling in current units x0010, x0011.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0011", "y0020", "y0021", "y0022", "y0023", "y0051"]
+          },
+          "sharedAnchors": ["wasm"]
+        },
+        {
+          "id": "evidence-and-deferrals",
+          "currentIds": ["x0012", "x0013"],
+          "reason": "The text-path-geometry approved design units y0070, y0071, y0072, y0055 authorize evidence-and-deferrals in current units x0012, x0013.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0070", "y0071", "y0072", "y0055"]
+          },
+          "sharedAnchors": ["geometry"]
+        }
+      ]
+    },
     {
       "path": "docs/design/animation-contract.md",
       "unitPrefix": "m",

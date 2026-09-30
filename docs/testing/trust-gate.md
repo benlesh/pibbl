@@ -59,9 +59,9 @@ contention observed during earlier upgrade and visual work.
   narrow design unit IDs and excerpts; every translation has exact
   baseline/current unit IDs, unique rationale,
   shared clause anchors, and minimum content similarity checked before the
-  digest. Together with 174 mapped units across the post-baseline signal,
-  animation, render-layer/Three, component-manipulation, and 2D physics
-  records, this covers 17 current normative contracts. The 56 direct source/test mappings use claims no broader than their
+  digest. Together with 187 mapped units across the post-baseline signal,
+  animation, render-layer/Three, component-manipulation, 2D physics, and text geometry
+  records, this covers 18 current normative contracts. The 56 direct source/test mappings use claims no broader than their
   cited tests and require the same claim-specific anchors near both markers;
 - the migration guide contains one mechanically checked row for each of the 85
   field/structural inputs derived from the reviewed baseline style table, and
