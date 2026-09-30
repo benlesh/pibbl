@@ -289,3 +289,16 @@ was proposed asynchronously; awaiting explicit user approval before code.
 - Slice ready for feedback, not feature complete or pushed to main. Await
   experiential feedback before broader hardening and independent review.
 - Preview remains on port 5187; preserve coordinator checkout/server.
+
+## Pending design sources
+
+- [UTC scale proposal](viz-utc-contract-proposal.md): approval pending. Includes
+  exact numeric/helper/tick boundaries and a stateless full-ISO default formatter
+  so generated and explicit endpoint labels do not depend on prior tick calls.
+- [Custom pie labels](viz-pie-label-contract-proposal.md): preserves the earlier
+  explicit-box/PieLabel-children proposal; approval pending.
+- Grouped-stacked experiential feedback remains pending. This boundary blocks
+  broad hardening, review, and main integration of that example.
+- The preceding goal turn made concrete progress: accepted slices were pushed
+  after exact-tree trust and the next runnable example was delivered. No
+  additional contract or feedback approval has arrived in this continuation.
