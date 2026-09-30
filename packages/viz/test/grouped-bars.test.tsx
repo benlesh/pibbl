@@ -51,11 +51,11 @@ it("composes reactive inner bands and styled grouped bars in one allocated frame
               <Probe />
               <BarSeries
                 data={data}
-                x="month"
-                y="value"
+                category="month"
+                value="value"
                 group="group"
-                xScale="month"
-                yScale="value"
+                categoryScale="month"
+                valueScale="value"
                 groupScale="group"
                 style={(row) => ({
                   fill: row.group === "actual" ? color.get() : "#0000ff",
@@ -130,11 +130,11 @@ it("keeps three slots stable for missing groups, custom widths, reversed domains
         <Scale id="v" type="linear" domain={[-10, 10]} range={[200, 0]}>
           <BarSeries
             data={data}
-            x="c"
-            y="v"
+            category="c"
+            value="v"
             group="g"
-            xScale="c"
-            yScale="v"
+            categoryScale="c"
+            valueScale="v"
             groupScale="g"
             baseline={2}
             style={{ bandwidth: 40, fill: "#ff0000" }}
@@ -168,11 +168,11 @@ it("collapses nested bands without painted or interactive bars and restores them
           <Probe />
           <BarSeries
             data={[{ c: "A", g: "one", v: 8 }]}
-            x="c"
-            y="v"
+            category="c"
+            value="v"
             group="g"
-            xScale="c"
-            yScale="v"
+            categoryScale="c"
+            valueScale="v"
             groupScale="g"
             style={{ fill: "#ff0000", bandwidth: 20 }}
           />
@@ -324,10 +324,10 @@ it.each(["signal", "promise", "hook", "unknown"] as const)(
         <Scale id="v" type="linear" domain={[0, 10]} range={[100, 0]}>
           <BarSeries
             data={[{ c: "A", v: 8 }]}
-            x="c"
-            y="v"
-            xScale="c"
-            yScale="v"
+            category="c"
+            value="v"
+            categoryScale="c"
+            valueScale="v"
             style={
               invalid as unknown as import("@crc/viz").BarStyleResolver<{
                 c: string;

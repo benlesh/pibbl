@@ -49,10 +49,10 @@ export type BarStyleResolver<D> = (
 interface BarSeriesBaseProps<D>
   extends CRCEventHandlers, CRCEventParticipationOptions {
   readonly data: SignalValue<readonly D[]>;
-  readonly orientation?: "vertical";
-  readonly x: BarCategoryAccessor<D>;
-  readonly xScale: ScaleId;
-  readonly yScale: ScaleId;
+  readonly orientation?: "vertical" | "horizontal";
+  readonly category: BarCategoryAccessor<D>;
+  readonly categoryScale: ScaleId;
+  readonly valueScale: ScaleId;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly style?: SignalValue<
     SignalStyle<BarSeriesStyle> | BarStyleResolver<D>
@@ -61,16 +61,16 @@ interface BarSeriesBaseProps<D>
 export type BarSeriesProps<D> = BarSeriesBaseProps<D> &
   (
     | {
-        readonly y: LineAccessor<D>;
+        readonly value: LineAccessor<D>;
         readonly baseline?: SignalValue<number>;
-        readonly yStart?: never;
-        readonly yEnd?: never;
+        readonly valueStart?: never;
+        readonly valueEnd?: never;
       }
     | {
-        readonly y?: never;
+        readonly value?: never;
         readonly baseline?: never;
-        readonly yStart: LineAccessor<D>;
-        readonly yEnd: LineAccessor<D>;
+        readonly valueStart: LineAccessor<D>;
+        readonly valueEnd: LineAccessor<D>;
       }
   ) &
   (
@@ -80,13 +80,13 @@ export type BarSeriesProps<D> = BarSeriesBaseProps<D> &
 /** Value bars in source order; rectangles supply ordinary paint and event geometry. */
 export function BarSeries<D>({
   data: input,
-  orientation,
-  x,
-  y,
-  yStart,
-  yEnd,
-  xScale,
-  yScale,
+  orientation = "vertical",
+  category: categoryInput,
+  value: valueInput,
+  valueStart,
+  valueEnd,
+  categoryScale,
+  valueScale,
   baseline,
   group,
   groupScale,
@@ -95,8 +95,8 @@ export function BarSeries<D>({
   pointerEvents,
   ...events
 }: BarSeriesProps<D>) {
-  const categories = useScale(xScale, "band").get();
-  const values = useScale(yScale).get();
+  const categories = useScale(categoryScale, "band").get();
+  const values = useScale(valueScale).get();
   const groups = lookupScale(groupScale, "BarSeries groupScale", "band")?.get();
   if ((group === undefined) !== (groupScale === undefined))
     throw new TypeError("BarSeries requires group and groupScale together.");
@@ -111,27 +111,28 @@ export function BarSeries<D>({
             : (datum[group] as BandCategory | null | undefined);
   const slotWidth =
     groups?.type === "band" ? groups.bandwidth : categories.bandwidth;
-  if (orientation !== undefined && orientation !== "vertical")
-    throw new TypeError("BarSeries currently supports vertical bars only.");
+  if (orientation !== "vertical" && orientation !== "horizontal")
+    throw new TypeError("BarSeries orientation must be vertical or horizontal.");
   const data = pointData(resolveSignalValue(input), "BarSeries");
   const category =
-    typeof x === "function"
-      ? x
-      : (datum: D) => datum[x] as BandCategory | null | undefined;
-  const ranged = yStart !== undefined || yEnd !== undefined;
+    typeof categoryInput === "function"
+      ? categoryInput
+      : (datum: D) =>
+          datum[categoryInput] as BandCategory | null | undefined;
+  const ranged = valueStart !== undefined || valueEnd !== undefined;
   if (
     ranged
-      ? y !== undefined ||
+      ? valueInput !== undefined ||
         baseline !== undefined ||
-        yStart === undefined ||
-        yEnd === undefined
-      : y === undefined
+        valueStart === undefined ||
+        valueEnd === undefined
+      : valueInput === undefined
   )
     throw new TypeError(
-      "BarSeries requires either y with optional baseline, or both yStart and yEnd without y or baseline.",
+      "BarSeries requires either value with optional baseline, or both valueStart and valueEnd without value or baseline.",
     );
-  const value = pointAccessor((ranged ? yEnd : y)!);
-  const startValue = ranged ? pointAccessor(yStart!) : undefined;
+  const value = pointAccessor((ranged ? valueEnd : valueInput)!);
+  const startValue = ranged ? pointAccessor(valueStart!) : undefined;
   const baselineValue = resolveSignalValue(baseline ?? 0);
   const sharedBase = ranged ? undefined : values.map(baselineValue);
   const specified = resolveSignalValue(styleInput);
@@ -213,19 +214,20 @@ export function BarSeries<D>({
     if (bandwidth === 0) continue;
     const base = sharedBase ?? values.map(from);
     const end = values.map(v);
-    const height = Math.abs(end - base);
-    if (!Number.isFinite(height))
-      throw new RangeError("BarSeries height must be finite.");
-    if (height === 0) continue;
+    const extent = Math.abs(end - base);
+    if (!Number.isFinite(extent))
+      throw new RangeError("BarSeries value extent must be finite.");
+    if (extent === 0) continue;
+    const vertical = orientation === "vertical";
     nodes.push(
       <Rectangle
         key={i}
         pointerEvents={pointerEvents}
         style={{
-          left: start + (slotWidth - bandwidth) / 2,
-          top: Math.min(base, end),
-          width: bandwidth,
-          height,
+          left: vertical ? start + (slotWidth - bandwidth) / 2 : Math.min(base, end),
+          top: vertical ? Math.min(base, end) : start + (slotWidth - bandwidth) / 2,
+          width: vertical ? bandwidth : extent,
+          height: vertical ? extent : bandwidth,
           fill: fill(from, v),
           stroke,
           strokeWidth,

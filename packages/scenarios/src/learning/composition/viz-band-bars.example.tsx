@@ -93,21 +93,30 @@ function Bars({
   rows,
   selected,
   origin,
+  orientation,
 }: {
   rows: readonly Reading[];
   selected: WritableSignal<string | null>;
   origin: { x: number; y: number };
+  orientation: "vertical" | "horizontal";
 }) {
   const band = useScale("states", "band").get();
   const values = useScale("change").get();
   const baseline = values.map(0);
   const thresholdY = values.map(300_000);
   const thresholdDots = new Path2D();
-  for (let x = 0; x <= band.frame.width; x += 6) {
-    thresholdDots.moveTo(x + 1, thresholdY);
-    thresholdDots.arc(x, thresholdY, 1, 0, Math.PI * 2);
-  }
+  if (orientation === "horizontal") {
+    for (let y = 0; y <= band.frame.height; y += 6) {
+      thresholdDots.moveTo(thresholdY + 1, y);
+      thresholdDots.arc(thresholdY, y, 1, 0, Math.PI * 2);
+    }
+  } else
+    for (let x = 0; x <= band.frame.width; x += 6) {
+      thresholdDots.moveTo(x + 1, thresholdY);
+      thresholdDots.arc(x, thresholdY, 1, 0, Math.PI * 2);
+    }
   const active = selected.get();
+  const horizontal = orientation === "horizontal";
   function inspect(event: CRCPointerEvent) {
     const x = event.x - origin.x,
       y = event.y - origin.y;
@@ -116,10 +125,15 @@ function Bars({
       if (start === undefined || row.value === 0) return false;
       const end = values.map(row.value);
       return (
-        x >= start &&
-        x <= start + band.bandwidth &&
-        y >= Math.min(end, baseline) &&
-        y <= Math.max(end, baseline)
+        horizontal
+          ? x >= Math.min(end, baseline) &&
+            x <= Math.max(end, baseline) &&
+            y >= start &&
+            y <= start + band.bandwidth
+          : x >= start &&
+            x <= start + band.bandwidth &&
+            y >= Math.min(end, baseline) &&
+            y <= Math.max(end, baseline)
       );
     });
     selected.set(hit?.category ?? null);
@@ -145,8 +159,12 @@ function Bars({
             pointerEvents="none"
             style={{
               coords: [
-                [0, values.map(tick)],
-                [band.frame.width, values.map(tick)],
+                horizontal
+                  ? [values.map(tick), 0]
+                  : [0, values.map(tick)],
+                horizontal
+                  ? [values.map(tick), band.frame.height]
+                  : [band.frame.width, values.map(tick)],
               ],
               stroke: "#e8ebe6",
               strokeWidth: 1,
@@ -155,18 +173,30 @@ function Bars({
         ),
       )}
       <Axis
+        scale="states"
+        position={horizontal ? "left" : "bottom"}
+        tickValues={band.domain}
+        tickFormat={(value) =>
+          typeof value === "string" && band.step < 105
+            ? abbreviations[value]
+            : String(value)}
+        style={{ fill: muted, stroke: "#b5c0bf" }}
+      />
+      <Axis
         scale="change"
-        position="left"
+        position={horizontal ? "top" : "left"}
         tickCount={8}
-        tickFormat={(value) => (value === 0 ? "0" : `${value / 1000}k`)}
+        tickFormat={(value) =>
+          typeof value === "number" && value === 0 ? "0" : `${Number(value) / 1000}k`}
         style={{ fill: muted, stroke: "#b5c0bf" }}
       />
       <BarSeries
+        orientation={orientation}
         data={rows}
-        x="category"
-        y="value"
-        xScale="states"
-        yScale="change"
+        category="category"
+        value="value"
+        categoryScale="states"
+        valueScale="change"
         style={{
           fill: {
             type: "threshold",
@@ -179,8 +209,8 @@ function Bars({
         pointerEvents="none"
         style={{
           coords: [
-            [0, baseline],
-            [band.frame.width, baseline],
+            horizontal ? [baseline, 0] : [0, baseline],
+            horizontal ? [baseline, band.frame.height] : [band.frame.width, baseline],
           ],
           stroke: ink,
           strokeWidth: 1,
@@ -193,10 +223,10 @@ function Bars({
       <Text
         pointerEvents="none"
         style={{
-          left: band.frame.width - 5,
-          top: thresholdY - 10,
-          textAlign: "right",
-          textBaseline: "bottom",
+          left: horizontal ? thresholdY + 5 : band.frame.width - 5,
+          top: horizontal ? 5 : thresholdY - 10,
+          textAlign: horizontal ? "left" : "right",
+          textBaseline: horizontal ? "top" : "bottom",
           font: "11px sans-serif",
           fill: "#8d3432",
         }}
@@ -213,21 +243,10 @@ function Bars({
             <Text
               pointerEvents="none"
               style={{
-                left: center,
-                top: band.frame.height + 18,
-                textAlign: "center",
-                font: "12px sans-serif",
-                fill: muted,
-              }}
-            >
-              {band.step < 105 ? abbreviations[row.category] : row.category}
-            </Text>
-            <Text
-              pointerEvents="none"
-              style={{
-                left: center,
-                top: end + (row.value < 0 ? 12 : -20),
-                textAlign: "center",
+                left: horizontal ? end + (row.value < 0 ? -8 : 8) : center,
+                top: horizontal ? center : end + (row.value < 0 ? 12 : -20),
+                textAlign: horizontal ? row.value < 0 ? "right" : "left" : "center",
+                textBaseline: horizontal ? "middle" : "alphabetic",
                 font: "bold 13px sans-serif",
                 fill: ink,
               }}
@@ -272,10 +291,12 @@ function Scene() {
   );
   const padding = useSignal(0.3);
   const compact = useSignal(false);
+  const orientation = useSignal<"vertical" | "horizontal">("vertical");
   const selected = useSignal<string | null>(null);
+  const mode = orientation.get();
   const narrow = box.width < 480;
-  const origin = { x: 65, y: narrow ? 240 : 190 };
-  const width = Math.max(260, (box.width - 100) * (compact.get() ? 0.75 : 1));
+  const origin = { x: mode === "horizontal" ? 128 : 65, y: narrow ? 240 : 190 };
+  const width = Math.max(220, (box.width - origin.x - 35) * (compact.get() ? 0.75 : 1));
   const height = Math.max(60, box.height - origin.y - 110);
   return (
     <Group>
@@ -313,6 +334,15 @@ function Scene() {
         label="Resize plot"
         action={() => compact.set(!compact.get())}
       />
+      <Button
+        x={narrow ? 178 : 478}
+        y={narrow ? 140 : 96}
+        label={mode === "vertical" ? "Horizontal bars" : "Vertical bars"}
+        action={() =>
+          orientation.set(
+            orientation.get() === "vertical" ? "horizontal" : "vertical",
+          )}
+      />
       <Text
         pointerEvents="none"
         style={{
@@ -330,7 +360,7 @@ function Scene() {
             id="states"
             type="band"
             domain={order}
-            range="width"
+            range={mode === "horizontal" ? "height" : "width"}
             style={{ width, height }}
             paddingInner={padding}
             paddingOuter={0.2}
@@ -339,10 +369,15 @@ function Scene() {
               id="change"
               type="linear"
               domain={[-200000, 500000]}
-              range="height"
-              reverse
+              range={mode === "horizontal" ? "width" : "height"}
+              reverse={mode === "vertical"}
             >
-              <Bars rows={initial} selected={selected} origin={origin} />
+              <Bars
+                rows={initial}
+                selected={selected}
+                origin={origin}
+                orientation={mode}
+              />
             </Scale>
           </Scale>
         </Absolute>
