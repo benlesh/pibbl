@@ -27,11 +27,11 @@ it("renders reactive positive and negative stack segments using range endpoints 
       <Scale id="v" type="linear" domain={[-10, 10]} range={[200, 0]}>
         <BarSeries
           data={data}
-          x="c"
-          yStart="start"
-          yEnd="end"
-          xScale="c"
-          yScale="v"
+          category="c"
+          valueStart="start"
+          valueEnd="end"
+          categoryScale="c"
+          valueScale="v"
           style={(row) => ({ fill: row.color })}
           onPointerDown={() => hits++}
         />
@@ -88,13 +88,13 @@ it("composes grouped ranges and absolute threshold fills without extending segme
               { c: "A", g: "actual", from: 2, to: 8 },
               { c: "A", g: "plan", from: 8, to: 2 },
             ]}
-            x="c"
+            category="c"
             group="g"
             groupScale="g"
-            xScale="c"
-            yScale="v"
-            yStart="from"
-            yEnd="to"
+            categoryScale="c"
+            valueScale="v"
+            valueStart="from"
+            valueEnd="to"
             style={{
               bandwidth: 60,
               fill: {
@@ -122,19 +122,19 @@ it("composes grouped ranges and absolute threshold fills without extending segme
 
 it.each([
   {},
-  { yStart: "start" },
-  { yEnd: "end" },
-  { y: "end", yStart: "start", yEnd: "end" },
-  { baseline: 0, yStart: "start", yEnd: "end" },
+  { valueStart: "start" },
+  { valueEnd: "end" },
+  { value: "end", valueStart: "start", valueEnd: "end" },
+  { baseline: 0, valueStart: "start", valueEnd: "end" },
 ])(
   "rejects incomplete or mixed geometry even for empty data: %j",
   (geometry) => {
     runtime = testRuntime();
     const props = {
       data: [],
-      x: "c",
-      xScale: "c",
-      yScale: "v",
+      category: "c",
+      categoryScale: "c",
+      valueScale: "v",
       ...geometry,
     } as unknown as import("@crc/viz").BarSeriesProps<{
       c: string;
@@ -148,7 +148,7 @@ it.each([
         </Scale>
       </Scale>,
     );
-    expect(() => runtime.flush()).toThrow(/either y.*both yStart and yEnd/);
+    expect(() => runtime.flush()).toThrow(/either value.*both valueStart and valueEnd/);
   },
 );
 
@@ -173,15 +173,15 @@ it("omits missing, nonfinite, zero-length and excluded ranges from paint and tar
       <Scale id="v" type="linear" domain={[0, 10]} range={[100, 0]}>
         <BarSeries
           data={rows}
-          x="c"
-          xScale="c"
-          yScale="v"
+          category="c"
+          categoryScale="c"
+          valueScale="v"
           defined={(row) => row.include}
-          yStart={(row) => {
+          valueStart={(row) => {
             if (!row.include) throw new Error("excluded accessor");
             return row.from;
           }}
-          yEnd="to"
+          valueEnd="to"
           onPointerDown={() => hits++}
           style={{ fill: "red", stroke: "black", strokeWidth: 4 }}
         />
