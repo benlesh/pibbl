@@ -18,10 +18,53 @@ export class InkSimulation {
     this.nextB = new Float32Array(count);
     const random = seededRandom(seed);
     for (let i = 0; i < Math.max(6, Math.floor(count / 500)); i++) {
-      this.paint(random() * width, random() * height, 1.5 + random() * 2, 0.9);
+      this.seedPatch(
+        random() * width,
+        random() * height,
+        1.5 + random() * 2,
+        0.9,
+      );
     }
   }
   paint(x: number, y: number, radius: number, strength: number) {
+    // A broad, uniform dose exhausts its fuel and collapses in the spots regime.
+    // Plant separated nuclei instead, leaving established colonies undisturbed.
+    const seedRadius = Math.min(radius, 3);
+    const spread = radius - seedRadius;
+    const extent = Math.floor(spread / 6) * 6;
+    let hasCandidate = false;
+    for (let dy = -extent; dy <= extent; dy += 12) {
+      for (let dx = -extent; dx <= extent; dx += 12) {
+        if (Math.hypot(dx, dy) > spread) continue;
+        hasCandidate = true;
+        this.plant(x + dx, y + dy, seedRadius, strength);
+      }
+    }
+    if (!hasCandidate) this.plant(x, y, seedRadius, strength);
+  }
+  private plant(x: number, y: number, radius: number, strength: number) {
+    // Keep both existing ink and its immediate diffusion boundary intact.
+    const guard = radius + 2;
+    for (
+      let py = Math.max(0, Math.floor(y - guard));
+      py <= Math.min(this.height - 1, Math.ceil(y + guard));
+      py++
+    ) {
+      for (
+        let px = Math.max(0, Math.floor(x - guard));
+        px <= Math.min(this.width - 1, Math.ceil(x + guard));
+        px++
+      ) {
+        if (
+          Math.hypot(px + 0.5 - x, py + 0.5 - y) < guard &&
+          this.b[py * this.width + px] > 0.08
+        )
+          return;
+      }
+    }
+    this.seedPatch(x, y, radius, strength);
+  }
+  private seedPatch(x: number, y: number, radius: number, strength: number) {
     for (
       let py = Math.max(0, Math.floor(y - radius));
       py <= Math.min(this.height - 1, Math.ceil(y + radius));

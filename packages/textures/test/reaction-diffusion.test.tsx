@@ -62,3 +62,65 @@ it("paints through routed input while paused and preserves the field across reev
   }
   expect(driver.pendingHostFrames).toBe(0);
 });
+
+it("keeps pointer-planted ink visible after two seconds of simulation", async () => {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  const canvases = [
+    document.createElement("canvas"),
+    document.createElement("canvas"),
+  ];
+  for (const canvas of canvases) {
+    canvas.width = 128;
+    canvas.height = 80;
+    document.body.append(canvas);
+  }
+  const snapshots: Uint8ClampedArray[] = [];
+  const scene = (index: number, paused: boolean) => (
+    <ReactionDiffusion
+      paused={paused}
+      seed={42}
+      resolution={{ width: 128, height: 80 }}
+      brush={{ radius: 6, strength: 0.8 }}
+      style={{ width: 128, height: 80 }}
+      render={(context, texture) => {
+        snapshots[index] = texture.mask
+          .getContext("2d")!
+          .getImageData(0, 0, 128, 80).data;
+        context.drawImage(texture.source, 0, 0);
+      }}
+    />
+  );
+  const controllers = canvases.map((canvas, i) => crc(canvas, scene(i, true)));
+  const mass = (index: number, x: number, y: number) => {
+    let total = 0;
+    for (let py = y - 10; py <= y + 10; py++)
+      for (let px = x - 10; px <= x + 10; px++)
+        total += snapshots[index][(py * 128 + px) * 4 + 3];
+    return total;
+  };
+  try {
+    driver.flush(0);
+    let point: { x: number; y: number } | undefined;
+    for (let y = 12; y < 68 && !point; y++)
+      for (let x = 12; x < 116 && !point; x++)
+        if (mass(0, x, y) === 0) point = { x, y };
+    expect(point).toBeDefined();
+    await pointerDownLogicalPoint(canvases[0], point!);
+    await pointerUpLogicalPoint(canvases[0], point!);
+    driver.flush(16);
+    expect(mass(0, point!.x, point!.y)).toBeGreaterThan(1000);
+    canvases.forEach((canvas, i) => crc(canvas, scene(i, false)));
+    driver.flush(32);
+    for (let frame = 1; frame <= 120; frame++)
+      driver.flush(32 + (frame * 1000) / 60);
+    // Compare the painted colony with an identically seeded, unpainted surface.
+    expect(
+      mass(0, point!.x, point!.y) - mass(1, point!.x, point!.y),
+    ).toBeGreaterThan(1000);
+  } finally {
+    controllers.forEach((controller) => controller.dispose());
+    restore();
+  }
+  expect(driver.pendingHostFrames).toBe(0);
+});

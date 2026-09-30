@@ -36,3 +36,20 @@ it("matches material edge values before colorization, including corners", () => 
       expect(field[x]).toBeCloseTo(field[80 * 129 + x], 6);
   }
 });
+
+for (const radius of [3, 6, 12])
+  it(`keeps a radius-${radius} painted spot alive and does not erase it when painted again`, () => {
+    const ink = new InkSimulation(80, 80, 42, "spots");
+    // Isolate a user-created colony from the constructor's seeded pattern.
+    ink.a.fill(1);
+    ink.b.fill(0);
+    ink.paint(40, 40, radius, 0.8);
+    ink.advance(960);
+    const mass = () => ink.b.reduce((sum, value) => sum + value, 0);
+    expect(mass()).toBeGreaterThan(25);
+    const settled = mass();
+    for (let i = 0; i < 12; i++) ink.paint(40, 40, radius, 0.8);
+    ink.advance(960);
+    expect(mass()).toBeGreaterThan(settled * 0.8);
+    ink.dispose();
+  });
