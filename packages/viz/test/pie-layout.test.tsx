@@ -265,6 +265,56 @@ it("preserves solid wedge focus geometry and gives annular slices their painted 
     80 * Math.sin(Math.PI / 3) - 30 * Math.sin(Math.PI / 6),
   );
 });
+it("bounds a large finite structural annular sweep as one full clockwise turn", () => {
+  runtime = testRuntime();
+  const canvas = runtime.mount(
+    <viz.PieSlice
+      slice={{
+        datum: null,
+        index: 0,
+        key: "large-sweep",
+        value: 1,
+        fraction: 1,
+        startAngle: 0,
+        endAngle: 1_000_000,
+        cx: 100,
+        cy: 100,
+        radius: 80,
+        innerRadius: 30,
+      }}
+      style={{ fill: "red" }}
+      onPointerDown={() => undefined}
+    />,
+  );
+  expect(() => runtime.flush()).not.toThrow();
+  expect([...getCRCInstance(canvas).eventRoot.targets][0]
+    ?.keyboardNavigationBounds).toEqual({ x: 20, y: 20, width: 160, height: 160 });
+});
+it("bounds an extreme finite structural annular sweep", () => {
+  runtime = testRuntime();
+  const canvas = runtime.mount(
+    <viz.PieSlice
+      slice={{
+        datum: null,
+        index: 0,
+        key: "extreme-sweep",
+        value: 1,
+        fraction: 1,
+        startAngle: 0,
+        endAngle: Number.MAX_VALUE,
+        cx: 100,
+        cy: 100,
+        radius: 80,
+        innerRadius: 30,
+      }}
+      style={{ fill: "red" }}
+      onPointerDown={() => undefined}
+    />,
+  );
+  expect(() => runtime.flush()).not.toThrow();
+  expect([...getCRCInstance(canvas).eventRoot.targets][0]
+    ?.keyboardNavigationBounds).toEqual({ x: 20, y: 20, width: 160, height: 160 });
+});
 it.each([
   { radius: 0, innerRadius: 1 },
   { radius: 80, innerRadius: 80 },
