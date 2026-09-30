@@ -29,6 +29,20 @@ Focused evidence after the change:
   packages/viz/test/pie-layout.test.tsx packages/viz/test/pie-example.test.ts
   --browser.headless --browser.ui=false` — 9 tests passed.
 
-This is a slice ready for feedback. Broader donut edge-case hardening,
-documentation, package-consumer checks, and independent review remain pending
-feedback and integration.
+This was a slice ready for feedback. Documentation, package-consumer checks,
+and independent review remain pending integration.
+
+## Accepted-slice hardening
+
+After feedback acceptance, the focused suite additionally proves that dynamic
+signal branches inside cached value and label callbacks replace their old
+dependencies; a write to a detached branch does not schedule work, while the
+active branch updates the layout. It rejects zero-radius positive holes,
+inverted/equal rings, negative values, and NaN. Keyed donut descendants retain
+their hook state on source reordering, removed slices release their targets,
+and disposal releases all remaining refs and targets.
+
+Fresh hardening command: `corepack pnpm@11.21.0 exec vitest run
+packages/viz/test/pie-layout.test.tsx packages/viz/test/pie-slices.test.tsx
+packages/viz/test/pie-example.test.ts --browser.headless --browser.ui=false`
+— 18 tests passed.

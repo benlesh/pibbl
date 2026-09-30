@@ -1,7 +1,8 @@
-import { Rectangle, signal } from "@crc/core";
+import { Rectangle, signal, useSignal } from "@crc/core";
 import * as viz from "@crc/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { boxOutsideInnerCircle } from "../src/lib/layout-pie.js";
+import { getCRCInstance } from "../../core/src/lib/global-state.js";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
@@ -168,6 +169,108 @@ it("re-evaluates pie accessors and labels by default on each consuming render", 
   runtime.flush();
   expect(value).toHaveBeenCalledTimes(2);
   expect(label).toHaveBeenCalledTimes(2);
+});
+it("tracks dynamic signal dependencies in cached value and label callbacks", () => {
+  runtime = testRuntime();
+  const useFirst = signal(true);
+  const firstValue = signal(1);
+  const secondValue = signal(2);
+  const firstLabel = signal("first");
+  const secondLabel = signal("second");
+  let result: viz.PieLayoutSlice<{ id: string }>[] = [];
+  function Scene() {
+    result = [];
+    return (
+      <viz.PieLayout
+        data={[{ id: "a" }]}
+        revision={0}
+        value={() => (useFirst.get() ? firstValue.get() : secondValue.get())}
+        label={() => (useFirst.get() ? firstLabel.get() : secondLabel.get())}
+        placement="inside"
+      >
+        {(slice) => {
+          result.push(slice);
+          return <viz.PieLabel slice={slice} />;
+        }}
+      </viz.PieLayout>
+    );
+  }
+  runtime.mount(<Scene />);
+  runtime.flush();
+  expect(result[0]?.value).toBe(1);
+  expect(result[0]?.label).toMatchObject({ text: "first" });
+  useFirst.set(false);
+  runtime.flush();
+  expect(result[0]?.value).toBe(2);
+  expect(result[0]?.label).toMatchObject({ text: "second" });
+  firstValue.set(9);
+  firstLabel.set("stale");
+  expect(runtime.pending).toBe(0);
+  secondValue.set(3);
+  runtime.flush();
+  expect(result[0]?.value).toBe(3);
+});
+it.each([
+  { radius: 0, innerRadius: 1 },
+  { radius: 80, innerRadius: 80 },
+  { radius: 80, innerRadius: 81 },
+  { radius: 80, innerRadius: -1 },
+  { radius: 80, innerRadius: Number.NaN },
+])("rejects invalid inner radius allocation %j", (style) => {
+  runtime = testRuntime();
+  runtime.mount(
+    <viz.PieLayout
+      data={[1]}
+      value={(value: number) => value}
+      style={style}
+    >
+      {(slice) => <viz.PieSlice slice={slice} />}
+    </viz.PieLayout>,
+  );
+  expect(() => runtime.flush()).toThrow(/innerRadius/);
+});
+it("keeps keyed donut state on reorder and releases removed interaction targets", () => {
+  runtime = testRuntime();
+  type Row = { id: string; value: number };
+  const rows = signal<readonly Row[]>([
+    { id: "a", value: 1 },
+    { id: "b", value: 3 },
+  ]);
+  const states = new Map<string, object>();
+  function Mark({ slice }: { slice: viz.PieLayoutSlice<Row> }) {
+    const state = useSignal({});
+    states.set(slice.key, state);
+    return <viz.PieSlice slice={slice} style={{ fill: "red" }} onPointerDown={() => undefined} />;
+  }
+  function Scene() {
+    return (
+      <viz.PieLayout
+        data={rows}
+        revision={0}
+        value="value"
+        keyBy="id"
+        style={{ cx: 100, cy: 100, radius: 80, innerRadius: 30 }}
+      >
+        {(slice) => <Mark slice={slice} />}
+      </viz.PieLayout>
+    );
+  }
+  const canvas = runtime.mount(<Scene />);
+  runtime.flush();
+  const firstA = states.get("a");
+  const firstB = states.get("b");
+  const instance = getCRCInstance(canvas);
+  expect(instance.eventRoot.targets.size).toBe(2);
+  rows.set([...rows.get()].reverse());
+  runtime.flush();
+  expect(states.get("a")).toBe(firstA);
+  expect(states.get("b")).toBe(firstB);
+  rows.set([{ id: "a", value: 1 }]);
+  runtime.flush();
+  expect(instance.eventRoot.targets.size).toBe(1);
+  runtime.dispose();
+  expect(instance.refs.size).toBe(0);
+  expect(instance.eventRoot.targets.size).toBe(0);
 });
 it("moves non-fitting labels outside in auto mode and exposes strict-inside and space omissions", () => {
   runtime = testRuntime();
