@@ -1,5 +1,7 @@
 # Visualization first-wave performance observations
 
+> **Historical status: DATED PERFORMANCE EVIDENCE.** These observations describe the named revisions and environment, not current API guarantees.
+
 Date: 2026-09-30. This is measured work evidence, not a large-data API promise.
 Baseline revision: d9c28931. Initial candidate: 2a247e3b. Corrected candidate:
 0ee84b7d. Raw observations live in the adjacent JSON file.
@@ -58,3 +60,47 @@ For the baseline checkout, copy the same probe and additionally set
 `VITE_CRC_VIZ_LEGACY=1`. Provision/build both locked checkouts first. Do not run
 another browser suite concurrently. The probe is skipped in ordinary trust
 runs; structural/ownership tests remain ordinary correctness gates.
+
+## Final fast-path correction
+
+Revision 341bb003 also removes the tautological hole-distance calculation when
+innerRadius is zero and restores the original solid label-radius expression.
+A focused structural test verifies no hole-distance hypot call. Independent
+review found no remaining material default-path work beyond a constant branch
+per PieSlice and one revision validation per PieLayout evaluation. Solid slices
+retain the original Wedge drawing, targeting, and focus implementation.
+
+The final serial candidate/baseline pair (same fixture) measured:
+
+| Workload         | Baseline redraw / update ms | Candidate redraw / update ms | Baseline / candidate pointer ms |
+| ---------------- | --------------------------: | ---------------------------: | ------------------------------: |
+| 100 bars         |                   1.7 / 1.5 |                    1.7 / 1.5 |                     .015 / .010 |
+| 10,000 bars      |               129.9 / 127.9 |                128.3 / 126.3 |                     .035 / .040 |
+| 100,000 bars     |             1601.5 / 1611.3 |              1599.5 / 1611.4 |                     .270 / .275 |
+| 100 pie slices   |                   3.8 / 3.9 |                    3.4 / 3.6 |                     .075 / .075 |
+| 1,000 pie slices |                 33.4 / 30.0 |                  33.6 / 31.9 |                    .940 / 1.050 |
+
+The dense-pie update median is 6.3% higher and pointer median 11.7% higher in this
+last pair. Earlier corrected pairs had update differences of -5.3% and +14.8%,
+and pointer differences of -5.9% and +5.8%. These short browser measurements do
+not establish equivalence or isolate a consistent causal regression. All raw
+observations remain available; the residual timing uncertainty is explicit.
+
+## Exact solid-pie work comparison
+
+The same opt-in `pie-solid-structure.test.tsx` fixture passed on d9c28931 and
+36d3c9ce (the accepted implementation plus current main and the probe). It mounts
+the same labeled public composition as the timed workload. Every captured
+field matched exactly, both on mount and after replacing data:
+
+- 100 slices: 100 targets, 100 paint entries, 100 wedge fills, 51 path-hit checks
+  for one pointer dispatch; 22 label draws on mount and 21 after update.
+- 1,000 slices: 1,000 targets, 1,000 paint entries, 1,000 wedge fills, 730 path-hit
+  checks per dispatch; six label draws in both states.
+
+Source review also confirms the same solid Wedge path, handler registration,
+focus bounds, and dispatch path. The extra slice innerRadius field is read
+outside pointer dispatch. Together these checks found no remaining material
+causal regression; they do not prove timing equivalence. The measured timing
+variation remains recorded above rather than being waived by a percentage
+threshold. No known performance regression is accepted as a tradeoff.

@@ -237,3 +237,24 @@ donut path changes inactive cost or focus bounds.
 Grouped-stacked editable example is assigned to audit_series as a separate
 approved-API feedback slice. Custom-label finite-box/PieLabel-children contract
 was proposed asynchronously; awaiting explicit user approval before code.
+
+## Accepted-tree verification, 2026-09-30
+
+- Integrated current main 1a664bb6 and preserved all upstream path-algorithm work.
+- Donut focus correction 0ee84b7d restores original Wedge behavior for solid pies;
+  b54e80f4 bounds annular sweep work even for huge finite angles. Independent
+  review cleared both fixes. 341bb003 removes zero-hole distance work; focused
+  PieLayout suite: 19 passed; independent changed-code review cleared it.
+- Full `corepack pnpm@11.21.0 trust` passed on the combined production tree at
+  341bb003 using Node 24.15.0, pnpm 11.21.0, Playwright Chromium 151.0.7922.34.
+  Main browser suite: 290 files passed, one opt-in file skipped; 3,210 tests
+  passed, five skipped. Packed consumers, Bundler/NodeNext, Studio source/built
+  declaration parity, visual safeguard/Studio visuals, built smoke, lifecycle
+  (43 passed), and structural performance (49 passed, four skipped) all passed.
+  No visual baselines changed. Fresh logs: /tmp/crc-viz-trust.log.
+- Performance baseline/candidate/repeated/corrected raw records and investigation
+  are in docs/testing/field-notes/2026-09-30-viz-first-wave-performance.{md,json}.
+  No arbitrary percent tolerance was accepted; timing variation is reported.
+- Grouped-stacked next slice is a separate example commit, not yet accepted.
+  Custom label composition and UTC scale contracts remain unapproved; no
+  production implementation for either has begun.
