@@ -5,8 +5,8 @@ function MouseDownStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#ff6b57",
@@ -14,8 +14,8 @@ function MouseDownStudy() {
     />,
     <Rectangle
       style={{
-        x: 150,
-        y: 92,
+        left: 150,
+        top: 92,
         width: 420,
         height: 236,
         fill: "#1f4bd8",
@@ -31,8 +31,8 @@ function MouseDownStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 164,
+        left: 360,
+        top: 164,
         fill: "#fffdf6",
         font: "900 40px sans-serif",
         textAlign: "center",
@@ -42,8 +42,8 @@ function MouseDownStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 238,
+        left: 360,
+        top: 238,
         fill: "#fffdf6",
         font: "700 15px monospace",
         textAlign: "center",

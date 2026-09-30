@@ -42,8 +42,8 @@ function DirectionalSquare({ label, record, x, y }: SquareProps) {
   return [
     <Rectangle
       style={{
-        x,
-        y,
+        left: x,
+        top: y,
         width,
         height,
         fill: "#2563eb",
@@ -54,8 +54,8 @@ function DirectionalSquare({ label, record, x, y }: SquareProps) {
     snapshot.isFocusVisible ? (
       <Rectangle
         style={{
-          x: x - 4,
-          y: y - 4,
+          left: x - 4,
+          top: y - 4,
           width: width + 8,
           height: height + 8,
           stroke: "#facc15",
@@ -65,8 +65,8 @@ function DirectionalSquare({ label, record, x, y }: SquareProps) {
     ) : undefined,
     <Text
       style={{
-        x: x + width / 2,
-        y: y + 33,
+        left: x + width / 2,
+        top: y + 33,
         textAlign: "center",
         fill: "#ffffff",
         font: "800 17px Arial",
@@ -90,8 +90,8 @@ function PlainButton({ label, record, x, y }: SquareProps) {
   return [
     <Rectangle
       style={{
-        x,
-        y,
+        left: x,
+        top: y,
         width: 204,
         height: 38,
         fill: "#0f766e",
@@ -101,8 +101,8 @@ function PlainButton({ label, record, x, y }: SquareProps) {
     />,
     <Text
       style={{
-        x: x + 102,
-        y: y + 25,
+        left: x + 102,
+        top: y + 25,
         textAlign: "center",
         fill: "#ffffff",
         font: "700 13px Arial",
@@ -142,8 +142,8 @@ function DirectionalNavigationLesson() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 30,
+        left: 360,
+        top: 30,
         textAlign: "center",
         fill: "#172554",
         font: "800 21px Arial",
@@ -168,8 +168,8 @@ function DirectionalNavigationLesson() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 334,
+        left: 360,
+        top: 334,
         textAlign: "center",
         fill: "#1e3a8a",
         font: "13px Arial",
@@ -179,8 +179,8 @@ function DirectionalNavigationLesson() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 356,
+        left: 360,
+        top: 356,
         textAlign: "center",
         fill: "#1e3a8a",
         font: "12px Arial",
@@ -192,8 +192,8 @@ function DirectionalNavigationLesson() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 378,
+        left: 360,
+        top: 378,
         textAlign: "center",
         fill: "#172554",
         font: "11px monospace",
@@ -205,8 +205,8 @@ function DirectionalNavigationLesson() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 406,
+        left: 360,
+        top: 406,
         textAlign: "center",
         fill: "#334155",
         font: "12px monospace",

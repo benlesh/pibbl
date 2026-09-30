@@ -20,8 +20,8 @@ describe('clip', () => {
       children: [
         createElement(Rectangle, {
           style: {
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 60,
             height: 20,
             fill: 'red',
@@ -44,8 +44,8 @@ describe('clip', () => {
       },
       children: [createElement(Rectangle, {
         style: {
-          x: 0,
-          y: 0,
+          left: 0,
+          top: 0,
           width: 40,
           height: 40,
           fill: 'red'
@@ -67,8 +67,8 @@ describe('clip', () => {
       },
       children: [createElement(Rectangle, {
         style: {
-          x: 0,
-          y: 0,
+          left: 0,
+          top: 0,
           width: 200,
           height: 200,
           fill: 'blue'
@@ -92,8 +92,8 @@ describe('clip', () => {
       },
       children: [createElement(Rectangle, {
         style: {
-          x: 0,
-          y: 0,
+          left: 0,
+          top: 0,
           width: 200,
           height: 200,
           fill: 'red'
@@ -113,16 +113,16 @@ describe('clip', () => {
       },
       children: [createElement(Rectangle, {
         style: {
-          x: 50,
-          y: 50,
+          left: 50,
+          top: 50,
           width: 100,
           height: 100,
           fill: 'green'
         }
       }), createElement(Text, {
         style: {
-          x: 75,
-          y: 100,
+          left: 75,
+          top: 100,
           fill: 'white'
         }
       }, 'Clipped Text')]
@@ -143,8 +143,8 @@ describe('clip', () => {
       },
       children: [createElement(Rectangle, {
         style: {
-          x: 0,
-          y: 0,
+          left: 0,
+          top: 0,
           width: 250,
           height: 250,
           fill: 'purple'
@@ -155,8 +155,8 @@ describe('clip', () => {
         },
         children: [createElement(Rectangle, {
           style: {
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 250,
             height: 250,
             fill: 'orange'
@@ -182,7 +182,7 @@ describe('clip', () => {
           },
         },
         children: createElement(Rectangle, {
-          style: { x: 5, y: 5, width: 10, height: 10, fill: 'red' },
+          style: { left: 5, top: 5, width: 10, height: 10, fill: 'red' },
           onClick,
         }),
       }), { width: 60, height: 30 });
@@ -210,7 +210,7 @@ describe('clip', () => {
             },
           },
           children: createElement(Rectangle, {
-            style: { x: 5, y: 5, width: 10, height: 10, fill: 'red' },
+            style: { left: 5, top: 5, width: 10, height: 10, fill: 'red' },
             onClick,
           }),
         }),
@@ -239,7 +239,7 @@ describe('clip', () => {
         children: createElement(Clip, {
           style: { d: clipPath },
           children: createElement(Rectangle, {
-            style: { x: 5, y: 5, width: 15, height: 10, fill: 'red' },
+            style: { left: 5, top: 5, width: 15, height: 10, fill: 'red' },
             onClick,
           }),
         }),
@@ -284,16 +284,16 @@ describe('clip', () => {
       },
       children: [createElement(Rectangle, {
         style: {
-          x: 0,
-          y: 0,
+          left: 0,
+          top: 0,
           width: 200,
           height: 200,
           fill: 'yellow'
         }
       }), createElement(Text, {
         style: {
-          x: 60,
-          y: 100,
+          left: 60,
+          top: 100,
           fill: 'black'
         }
       }, 'Star Clip')]
@@ -314,8 +314,8 @@ describe('clip', () => {
         },
         children: [createElement(Rectangle, {
           style: {
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 200,
             height: 200,
             fill: 'goldenrod'
@@ -347,8 +347,8 @@ describe('clip', () => {
         },
         children: [createElement(Rectangle, {
           style: {
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 200,
             height: 200,
             fill: 'red',
@@ -387,8 +387,8 @@ describe('clip', () => {
         },
         children: [createElement(Rectangle, {
           style: {
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 200,
             height: 200,
             fill: 'blue',
@@ -401,8 +401,8 @@ describe('clip', () => {
           },
           children: [createElement(Rectangle, {
             style: {
-              x: 0,
-              y: 0,
+              left: 0,
+              top: 0,
               width: 200,
               height: 200,
               fill: 'green',

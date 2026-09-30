@@ -133,7 +133,7 @@ try {
   }
   const consumer = `
     /** @jsxImportSource @crc/core */
-    import { crc, Rectangle, type CRCNode } from '@crc/core';
+    import { crc, Rectangle, DragHandle, ManipulationFrame, ResizeHandles, RotationHandle, useManipulation, useSignal, type CRCNode } from '@crc/core';
     import { defineThreeLayer, type CRCThreeTarget } from '@crc/three';
     import { Particles2D } from '@crc/particles';
     import { sphereShape3D, boundsOfShape3D } from '@crc/physics/3d/geometry';
@@ -155,7 +155,9 @@ try {
     function App(): CRCNode {
       void Particles2D; void PhysicsWorld2D; void OrbitControls;
       void boundsOfShape3D(sphereShape3D({ radius: 1 }));
-      return <><Rectangle style={{ width: 20, height: 20 }} /><Layer angle={1} style={{ width: 20, height: 20 }} /></>;
+      const box = useSignal({ left: 20, top: 30, width: 100, height: 60 });
+      const manipulation = useManipulation({ box });
+      return <><ManipulationFrame {...manipulation.frameProps}><DragHandle controller={manipulation} formatReadout={({ left, top }) => String(left + top)} style={{ readout: { gap: 5, active: { visible: true, fill: 'blue' } } }}><Rectangle keyboardFocusable style={{ width: 20, height: 20, cursor: 'grab' }} /></DragHandle><ResizeHandles controller={manipulation} /><RotationHandle controller={manipulation} /></ManipulationFrame><Layer angle={1} style={{ width: 20, height: 20 }} /></>;
     }
     declare const canvas: HTMLCanvasElement;
     crc(canvas, <App />);
@@ -218,19 +220,8 @@ try {
   const built = await runtime("built");
   assert.deepEqual(Object.keys(source).sort(), Object.keys(built).sort());
   for (const runtime of [source, built]) {
-    for (const name of [
-      "crc",
-      "defineRenderLayer",
-      "defineThreeLayer",
-      "Particles2D",
-      "PhysicsWorld2D",
-      "sphereShape3D",
-    ]) {
-      assert.equal(
-        typeof runtime[name],
-        "function",
-        `${name} must be in the Studio runtime`,
-      );
+    for (const name of ['crc', 'useManipulation', 'Manipulable', 'ManipulationFrame', 'DragHandle', 'ResizeHandle', 'ResizeHandles', 'RotationHandle', 'degrees', 'defineRenderLayer', 'defineThreeLayer', 'Particles2D', 'PhysicsWorld2D', 'sphereShape3D']) {
+      assert.equal(typeof runtime[name], 'function', `${name} must be in the Studio runtime`);
     }
     for (const name of [
       "WebGLLayer",

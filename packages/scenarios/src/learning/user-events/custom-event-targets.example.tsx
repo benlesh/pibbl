@@ -50,8 +50,8 @@ function CustomBadge() {
     />,
     <Rectangle
       style={{
-        x: 284,
-        y: 160,
+        left: 284,
+        top: 160,
         width: 152,
         height: 76,
         fill: "#17211d",
@@ -60,8 +60,8 @@ function CustomBadge() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 190,
+        left: 360,
+        top: 190,
         lineHeight: 22,
         fill: "#fffdf6",
         font: "800 15px monospace",
@@ -71,8 +71,8 @@ function CustomBadge() {
     >{`CUSTOM\nTARGET / ${clicks.get()}`}</Text>,
     <Text
       style={{
-        x: 360,
-        y: 278,
+        left: 360,
+        top: 278,
         fill: "#17211d",
         font: "700 12px monospace",
         textAlign: "center",
@@ -86,8 +86,8 @@ function CustomEventTargetsStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7f0df",
@@ -95,8 +95,8 @@ function CustomEventTargetsStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 46,
+        left: 360,
+        top: 46,
         fill: "#17211d",
         font: "900 24px sans-serif",
         textAlign: "center",
@@ -107,8 +107,8 @@ function CustomEventTargetsStudy() {
     <CustomBadge />,
     <Text
       style={{
-        x: 360,
-        y: 352,
+        left: 360,
+        top: 352,
         width: 620,
         fill: "#17211d",
         font: "600 14px sans-serif",
@@ -121,8 +121,8 @@ function CustomEventTargetsStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 382,
+        left: 360,
+        top: 382,
         width: 620,
         fill: "#445267",
         font: "600 12px monospace",

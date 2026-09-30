@@ -22,8 +22,8 @@ function SignalCard() {
     <Rectangle style={{ width: 720, height: 420, fill: "#eef2ff" }} />,
     <Rectangle
       style={{
-        x,
-        y: 126,
+        left: x,
+        top: 126,
         width: 432,
         height: 174,
         fill: color,
@@ -38,8 +38,8 @@ function SignalCard() {
     <Text
       pointerEvents="none"
       style={{
-        x: 360,
-        y: 180,
+        left: 360,
+        top: 180,
         fill: "#ffffff",
         font: "900 28px sans-serif",
         textAlign: "center",
@@ -50,8 +50,8 @@ function SignalCard() {
     <Text
       pointerEvents="none"
       style={{
-        x: 360,
-        y: 222,
+        left: 360,
+        top: 222,
         fill: "#f7c948",
         font: "700 15px monospace",
         textAlign: "center",
@@ -62,8 +62,8 @@ function SignalCard() {
     <Text
       pointerEvents="none"
       style={{
-        x: 360,
-        y: 264,
+        left: 360,
+        top: 264,
         fill: "#ffffff",
         font: "600 13px monospace",
         textAlign: "center",

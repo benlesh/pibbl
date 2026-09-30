@@ -1,10 +1,11 @@
-import { writeFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { defineBrowserCommand, playwright } from "@vitest/browser-playwright";
-import { configDefaults, defineConfig } from "vitest/config";
-import { assertBuiltCore } from "./tooling/assert-built-core.ts";
-import { crcRuntimeSource } from "./tooling/crc-runtime-source.ts";
-import { crcStudioDocs } from "./tooling/studio-docs/vite-plugin.ts";
+import { writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { defineBrowserCommand, playwright } from '@vitest/browser-playwright';
+import { configDefaults, defineConfig } from 'vitest/config';
+import { assertBuiltCore } from './tooling/assert-built-core.ts';
+import { crcRuntimeSource } from './tooling/crc-runtime-source.ts';
+import { crcStudioDocs } from './tooling/studio-docs/vite-plugin.ts';
+import { manipulationPointer } from './tooling/manipulation-browser-command.ts';
 
 interface DevToolsSession {
   send(method: string, params?: Record<string, unknown>): Promise<any>;
@@ -190,6 +191,7 @@ export default defineConfig(({ mode }) => ({
     ],
     browser: {
       commands: {
+        manipulationPointer,
         startDevToolsProfile,
         stopDevToolsProfile,
       },

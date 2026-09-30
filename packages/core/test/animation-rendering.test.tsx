@@ -74,8 +74,8 @@ describe('animation rendering integration', () => {
         <Group>
           <Rectangle
             style={{
-              x: currentX,
-              y: currentY,
+              left: currentX,
+              top: currentY,
               width: 10,
               height: 10,
               fill: 'red',
@@ -96,8 +96,8 @@ describe('animation rendering integration', () => {
       return (
         <Rectangle
           style={{
-            x: currentX,
-            y: currentY,
+            left: currentX,
+            top: currentY,
             width: 10,
             height: 10,
             fill: 'blue',
@@ -160,7 +160,7 @@ describe('animation rendering integration', () => {
       observed.push(value);
       return (
         <Rectangle
-          style={{ x: value * 10, width: 10, height: 10, fill: 'blue' }}
+          style={{ left: value * 10, width: 10, height: 10, fill: 'blue' }}
         />
       );
     }
@@ -238,7 +238,7 @@ describe('animation rendering integration', () => {
           <Group style={{ translateX: currentTranslateX }}>
             <Rectangle
               style={{
-                x: currentRectangleX,
+                left: currentRectangleX,
                 width: 20,
                 height: 10,
                 fill: 'red',
@@ -251,7 +251,7 @@ describe('animation rendering integration', () => {
             />
             <Rectangle
               style={{
-                x: currentRectangleX,
+                left: currentRectangleX,
                 width: 20,
                 height: 10,
                 fill: 'blue',

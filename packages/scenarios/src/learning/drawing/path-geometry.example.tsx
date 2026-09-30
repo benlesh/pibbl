@@ -59,32 +59,32 @@ function PathGeometryStudy() {
   );
   return <>
     <Rectangle style={{ width: 760, height: 460, fill: '#f7f0df' }} pointerEvents="none" />
-    <Text style={{ x: 30, y: 38, font: '800 24px sans-serif', fill: '#17211d' }} pointerEvents="none">
+    <Text style={{ left: 30, top: 38, font: '800 24px sans-serif', fill: '#17211d' }} pointerEvents="none">
       EDITABLE PATH GEOMETRY
     </Text>
-    <Text style={{ x: 30, y: 63, font: '14px sans-serif', fill: '#44554d' }} pointerEvents="none">
+    <Text style={{ left: 30, top: 63, font: '14px sans-serif', fill: '#44554d' }} pointerEvents="none">
       Drag the gold control points. Hover inside the filled outline.
     </Text>
     <Path style={{ d: geometry, fill: hovering.get() ? '#f0b7ce' : '#74d3ae', stroke: '#17211d', strokeWidth: 3 }}
       onPointerEnter={() => hovering.set(true)} onPointerLeave={() => hovering.set(false)} />
     <Path style={{ d: preview, fill: '#b9c7f3', stroke: '#334f94', strokeWidth: 2 }} pointerEvents="none" />
-    <Text style={{ x: 440, y: 300, font: '13px sans-serif', fill: '#334f94' }} pointerEvents="none">
+    <Text style={{ left: 440, top: 300, font: '13px sans-serif', fill: '#334f94' }} pointerEvents="none">
       {`${modes[currentMode]} · ${preview.segmentCount} segments · transformed copy`}
     </Text>
     <Line style={{ coords: [[80, 280], [curve.cp1x, curve.cp1y]], stroke: '#7a877e', strokeWidth: 1 }} pointerEvents="none" />
     <Line style={{ coords: [[360, 280], [curve.cp2x, curve.cp2y]], stroke: '#7a877e', strokeWidth: 1 }} pointerEvents="none" />
     {handle(1, curve.cp1x, curve.cp1y)}
     {handle(2, curve.cp2x, curve.cp2y)}
-    <Rectangle style={{ x: 440, y: 315, width: 280, height: 27, fill: '#334f94', cursor: 'pointer' }}
+    <Rectangle style={{ left: 440, top: 315, width: 280, height: 27, fill: '#334f94', cursor: 'pointer' }}
       onClick={() => mode.update(value => (value + 1) % modes.length)} />
-    <Text style={{ x: 580, y: 321, textAlign: 'center', font: '13px sans-serif', fill: '#ffffff' }} pointerEvents="none">
+    <Text style={{ left: 580, top: 321, textAlign: 'center', font: '13px sans-serif', fill: '#ffffff' }} pointerEvents="none">
       Change operation →
     </Text>
-    <Rectangle style={{ x: 20, y: 350, width: 720, height: 90, fill: '#17211d' }} pointerEvents="none" />
-    <Text style={{ x: 36, y: 377, font: '700 13px monospace', fill: '#74d3ae' }} pointerEvents="none">
+    <Rectangle style={{ left: 20, top: 350, width: 720, height: 90, fill: '#17211d' }} pointerEvents="none" />
+    <Text style={{ left: 36, top: 377, font: '700 13px monospace', fill: '#74d3ae' }} pointerEvents="none">
       {`SVG PATH DATA · revision ${geometry.revision}`}
     </Text>
-    <Text style={{ x: 36, y: 410, font: '14px monospace', fill: '#fffdf6' }} pointerEvents="none">
+    <Text style={{ left: 36, top: 410, font: '14px monospace', fill: '#fffdf6' }} pointerEvents="none">
       {toSvgPathData(geometry)}
     </Text>
   </>;

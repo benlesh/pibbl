@@ -83,9 +83,12 @@ const publicGuidePaths = [
   "docs/site/learn/guides/style-and-draw.md",
   "docs/site/learn/guides/responsive-styles.md",
   "docs/site/learn/guides/three-js.md",
+  "docs/site/learn/guides/manipulation.md",
 ];
 const publicSiteMarkdownPaths = [
   "docs/site/api/functions/path-geometry.md",
+  "docs/site/api/components/pie-layout.md",
+  "docs/site/api/functions/pie-slices.md",
   "docs/site/learn/guides/data-visualization.md",
   "docs/site/api/components/scale.md",
   "docs/site/api/components/axis.md",
@@ -120,6 +123,12 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/image.md",
   "docs/site/api/components/keyboard-navigation.md",
   "docs/site/api/components/layer.md",
+  "docs/site/api/components/drag-handle.md",
+  "docs/site/api/components/manipulable.md",
+  "docs/site/api/components/manipulation-frame.md",
+  "docs/site/api/components/resize-handle.md",
+  "docs/site/api/components/resize-handles.md",
+  "docs/site/api/components/rotation-handle.md",
   "docs/site/api/components/line.md",
   "docs/site/api/components/overlay.md",
   "docs/site/api/components/path.md",
@@ -150,6 +159,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/define-render-layer.md",
   "docs/site/api/functions/define-three-layer.md",
   "docs/site/api/functions/define-primitive.md",
+  "docs/site/api/functions/degrees.md",
   "docs/site/api/functions/easing.md",
   "docs/site/api/functions/is-signal.md",
   "docs/site/api/functions/keyframes.md",
@@ -184,6 +194,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-event-target.md",
   "docs/site/api/hooks/use-layout-box.md",
   "docs/site/api/hooks/use-line-path.md",
+  "docs/site/api/hooks/use-manipulation.md",
   "docs/site/api/hooks/use-particle-system.md",
   "docs/site/api/hooks/use-playback.md",
   "docs/site/api/hooks/use-rect-path.md",
@@ -232,6 +243,7 @@ const currentMarkdownPaths = [
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
+  "docs/design/component-manipulation-contract.md",
   "docs/design/animation-contract.md",
   "docs/design/drawing-components-contract.md",
   "docs/design/event-resource-ownership.md",
@@ -261,6 +273,15 @@ const currentMarkdownPaths = [
   "docs/testing/scenario-gallery.md",
   "docs/testing/test-tooling-opportunities.md",
   "docs/testing/trust-gate.md",
+  "docs/site/api/components/drag-handle.md",
+  "docs/site/api/components/manipulable.md",
+  "docs/site/api/components/manipulation-frame.md",
+  "docs/site/api/components/resize-handle.md",
+  "docs/site/api/components/resize-handles.md",
+  "docs/site/api/components/rotation-handle.md",
+  "docs/site/api/functions/degrees.md",
+  "docs/site/api/hooks/use-manipulation.md",
+  "docs/site/learn/guides/manipulation.md",
   ...publicSiteMarkdownPaths,
 ];
 const linkCheckedPaths = [
@@ -275,6 +296,7 @@ const migrationMarkdownPaths = new Set([
 const operationalMarkdownPaths = new Set([
   ".beads/README.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
+  "docs/testing/evidence/component-manipulation/progress.md",
   "tooling/studio-docs/fixtures/invalid-script.md",
   "tooling/studio-docs/fixtures/valid-guide.md",
 ]);
@@ -2153,6 +2175,7 @@ const currentNormativeContractPaths = [
 ].sort();
 const postBaselineNormativeContractPaths = new Set([
   "docs/design/animation-contract.md",
+  "docs/design/component-manipulation-contract.md",
   "docs/design/signals-and-scheduling-contract.md",
   "docs/design/physics-2d-contract.md",
   "docs/design/render-layer-and-three-contract.md",
@@ -2791,6 +2814,15 @@ const matrixRequirements = [
     guides: ["migrations/default-pointer-participation.md"],
     evidence: ["public-pointer-events.test.ts"],
   },
+  {
+    topic:
+      /Signal-owned component move, resize, rotation, child-defined handles, snapping, and cancellation/u,
+    guides: [
+      "site/learn/guides/manipulation.md",
+      "design/component-manipulation-contract.md",
+    ],
+    evidence: ["manipulation.example.tsx", "manipulation-interaction.test.tsx"],
+  },
 ];
 
 export function assertAcceptanceMatrix(matrixSource) {
@@ -3397,8 +3429,8 @@ export async function verifyMutationProbes() {
     /field-level migration rect\.fillStyle has the wrong final behavior/iu,
   );
   const wrongFieldRequiredness = migrationSource.replace(
-    "`Rectangle` `style.x`                         | Optional; defaults to `0`",
-    "`Rectangle` `style.x`                         | Required; defaults to `0`",
+    "`Rectangle` `style.width`                     | Required",
+    "`Rectangle` `style.width`                     | Optional",
   );
   assert.notEqual(
     wrongFieldRequiredness,
@@ -3411,7 +3443,7 @@ export async function verifyMutationProbes() {
         ...fieldMigrationArguments,
         migrationSource: wrongFieldRequiredness,
       }),
-    /field-level migration rect\.x has the wrong final behavior/iu,
+    /field-level migration rect\.width has the wrong final behavior/iu,
   );
   throws(
     () =>

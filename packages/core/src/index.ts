@@ -366,3 +366,16 @@ export type {
   CRCTouchEvent,
   CRCWheelEvent,
 } from './lib/events/types.js';
+
+export { useManipulation } from './lib/manipulation/controller.js';
+export { ManipulationFrame } from './lib/manipulation/frame.js';
+export { DragHandle, ResizeHandle, ResizeHandles, RotationHandle } from './lib/manipulation/handles.js';
+export type { CRCManipulationController, CRCManipulationOptions, CRCManipulationSnapshot, CRCManipulationEvent, CRCManipulationCommitEvent, CRCManipulationCancelEvent, CRCManipulationCancelReason, CRCManipulationGeometry, CRCManipulationOperation, CRCManipulationActive, CRCManipulationFrameProps, CRCManipulationMoveInput, CRCManipulationResizeInput, CRCManipulationRotateInput } from './lib/manipulation/controller-types.js';
+export type { CRCManipulationBox, CRCManipulationPoint, CRCManipulationWhen, CRCResizePosition } from './lib/manipulation/types.js';
+export type { CRCDragHandleProps, CRCDragHandleStyle } from './lib/manipulation/handles.js';
+
+export type { CRCResizeHandleProps, CRCResizeHandlesProps, CRCRotationHandleProps, CRCResizeHandleStyle, CRCRotationHandleStyle, CRCManipulationReadoutStyle, CRCManipulationReadoutStateStyle, CRCRotationConnectorStyle, CRCRotationArcStyle } from './lib/manipulation/handles.js';
+
+export { degrees } from './lib/manipulation/degrees.js';
+export { Manipulable } from './lib/manipulation/manipulable.js';
+export type { CRCManipulableProps } from './lib/manipulation/manipulable.js';

@@ -119,8 +119,8 @@ function NodeCard({ node }: NodeCardProps) {
       <Rectangle
         pointerEvents="none"
         style={{
-          x: -5,
-          y: 37,
+          left: -5,
+          top: 37,
           width: 10,
           height: 10,
           fill: "#17211d",
@@ -130,8 +130,8 @@ function NodeCard({ node }: NodeCardProps) {
       <Rectangle
         pointerEvents="none"
         style={{
-          x: 163,
-          y: 37,
+          left: 163,
+          top: 37,
           width: 10,
           height: 10,
           fill: "#17211d",
@@ -141,8 +141,8 @@ function NodeCard({ node }: NodeCardProps) {
       <Text
         pointerEvents="none"
         style={{
-          x: 84,
-          y: 34,
+          left: 84,
+          top: 34,
           fill: "#17211d",
           font: "900 16px sans-serif",
           textAlign: "center",
@@ -153,8 +153,8 @@ function NodeCard({ node }: NodeCardProps) {
       <Text
         pointerEvents="none"
         style={{
-          x: 84,
-          y: 59,
+          left: 84,
+          top: 59,
           fill: "#17211d",
           font: "600 13px sans-serif",
           textAlign: "center",
@@ -201,14 +201,14 @@ function DiagramEditor() {
     <Rectangle style={{ width: 960, height: 56, fill: "#fffdf6" }} />,
     <Text
       pointerEvents="none"
-      style={{ x: 24, y: 34, fill: "#17211d", font: "900 22px sans-serif" }}
+      style={{ left: 24, top: 34, fill: "#17211d", font: "900 22px sans-serif" }}
     >
       WORKFLOW MAP
     </Text>,
     <Rectangle
       style={{
-        x: 0,
-        y: WORKSPACE_TOP,
+        left: 0,
+        top: WORKSPACE_TOP,
         width: 960,
         height: WORKSPACE_HEIGHT,
         fill: "#eef2e8",
@@ -225,11 +225,11 @@ function DiagramEditor() {
       </Fragment>
     </Group>,
     <Rectangle
-      style={{ x: 0, y: 568, width: 960, height: 32, fill: "#17211d" }}
+      style={{ left: 0, top: 568, width: 960, height: 32, fill: "#17211d" }}
     />,
     <Text
       pointerEvents="none"
-      style={{ x: 20, y: 589, fill: "#fffdf6", font: "700 12px monospace" }}
+      style={{ left: 20, top: 589, fill: "#fffdf6", font: "700 12px monospace" }}
     >
       READY · {Math.round(INITIAL_VIEW.zoom * 100)}%
     </Text>,

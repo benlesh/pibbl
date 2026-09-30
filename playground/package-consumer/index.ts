@@ -51,6 +51,12 @@ import type {
   CRCInterpolator,
   CRCKeyframesOptions,
   CRCLogicalMouseEvent,
+  CRCManipulableProps,
+  CRCManipulationBox,
+  CRCManipulationController,
+  CRCManipulationOptions,
+  CRCManipulationResizeInput,
+  CRCResizePosition,
   CRCMouseEvent,
   CRCNode,
   CRCOpacityFilter,
@@ -234,6 +240,7 @@ import {
   defineAnimation,
   definePrimitive,
   defineRenderLayer,
+  DragHandle,
   easing,
   Absolute,
   Arc,
@@ -248,11 +255,16 @@ import {
   Image,
   Layer,
   Line,
+  Manipulable,
+  ManipulationFrame,
   Overlay,
   Path,
   Polygon,
   RegularPolygon,
   Rectangle,
+  ResizeHandle,
+  ResizeHandles,
+  RotationHandle,
   Star,
   SvgPath,
   Text,
@@ -278,8 +290,10 @@ import {
   resolveSignalValue,
   sequence,
   useCanvasContext,
+  useManipulation,
   batch,
   computed,
+  degrees,
   isSignal,
   signal,
   spring,
@@ -547,8 +561,8 @@ function PublicEventProbe(): CRCNode {
 createElement(PublicEventProbe, {});
 
 const rectangleStyle = {
-  x: 10,
-  y: 10,
+  left: 10,
+  top: 10,
   width: 40,
   height: 20,
   fill: '#2563eb',
@@ -833,8 +847,8 @@ const verticalLineStyle = {
 createElement(VerticalLine, { style: verticalLineStyle });
 
 const textStyle = {
-  x: 20,
-  y: 24,
+  left: 20,
+  top: 24,
   width: 180,
   height: 60,
   lineHeight: 18,
@@ -1074,6 +1088,82 @@ createElement(Image, {});
 createElement(Image, { style: { src: 'legacy.png', strokeStyle: 'red', lineWidth: 1 } });
 // @ts-expect-error image does not accept visual values as program props
 createElement(Image, { style: { src: 'styled.png' }, alpha: 0.5 });
+
+const manipulationBox = signal<CRCManipulationBox>({
+  left: 20,
+  top: 30,
+  width: 180,
+  height: 100,
+});
+const manipulationRotation = signal(degrees(15));
+const manipulationOptions = {
+  box: manipulationBox,
+  rotation: manipulationRotation,
+  move: { axis: 'both', snap: { step: { x: 8, y: 8 }, origin: { x: 0 } } },
+  resize: {
+    minWidth: 40,
+    minHeight: 20,
+    snap: { target: 'size', step: { width: 8, height: 8 } },
+  },
+  rotate: { snap: { step: degrees(15), origin: 0 } },
+} satisfies CRCManipulationOptions;
+const manipulationController: CRCManipulationController =
+  useManipulation(manipulationOptions);
+const manipulationHandle: CRCResizePosition = 'bottom-right';
+const manipulableProps = {
+  style: manipulationBox,
+  rotation: manipulationRotation,
+  draggable: { axis: 'x', snap: { step: 8 } },
+  resizable: { snap: { target: 'grid', step: { x: 8, y: 8 } } },
+  rotatable: { snap: { step: degrees(15) } },
+} satisfies CRCManipulableProps;
+createElement(Manipulable, manipulableProps);
+createElement(ManipulationFrame, {
+  ...manipulationController.frameProps,
+  children: [
+    createElement(DragHandle, { controller: manipulationController, style: { readout: { gap: 8, active: { visible: true } } }, formatReadout: ({ left, top }) => `${left}, ${top}`, children: createElement(Rectangle, { keyboardFocusable: true, style: { width: 24, height: 24, fill: "blue", cursor: "grab" } }) }),
+    createElement(ResizeHandle, {
+      controller: manipulationController,
+      position: manipulationHandle,
+      hitSize: 24,
+    }),
+    createElement(ResizeHandles, {
+      controller: manipulationController,
+      positions: 'edges-and-corners',
+      hitSize: 24,
+    }),
+    createElement(RotationHandle, { controller: manipulationController }),
+  ],
+});
+
+// @ts-expect-error Rectangle positioning uses left/top; RectStyle no longer has x.
+const retiredRectanglePosition: RectStyle = { x: 20, width: 40, height: 20 };
+// @ts-expect-error Text positioning uses left/top; TextStyle no longer has y.
+const retiredTextPosition: TextStyle = { y: 20 };
+// @ts-expect-error Image positioning uses left/top; ImgStyle no longer has x.
+const retiredImagePosition: ImgStyle = { src: 'asset.png', x: 20 };
+const invalidGridResizeSnap: CRCManipulationResizeInput = {
+  snap: {
+    target: 'grid',
+    // @ts-expect-error Grid resize snapping uses parent-space x/y increments.
+    step: { width: 8, height: 8 },
+  },
+};
+const invalidSizeResizeSnap: CRCManipulationResizeInput = {
+  snap: {
+    target: 'size',
+    step: 8,
+    // @ts-expect-error Size resize snapping cannot supply a parent-space origin.
+    origin: { x: 0 },
+  },
+};
+void [
+  retiredRectanglePosition,
+  retiredTextPosition,
+  retiredImagePosition,
+  invalidGridResizeSnap,
+  invalidSizeResizeSnap,
+];
 // @ts-expect-error group translation is style-only
 createElement(Group, { x: 10 }, []);
 // @ts-expect-error CRC-native transform names replace the legacy aliases
@@ -1098,7 +1188,7 @@ function RuntimeProbe({ count }: { count: number; label?: string }): CRCNode {
   const reactiveCount = useSignal(count);
   publicContext.fillRect(0, 0, reactiveCount.get(), reactiveCount.get());
   return [
-    createElement(Rectangle, { style: { x: count, y: 0, width: 1, height: 1 } }),
+    createElement(Rectangle, { style: { left: count, top: 0, width: 1, height: 1 } }),
     false,
     null,
     undefined,
@@ -1360,7 +1450,7 @@ const reactiveRectangleX = signal(10);
 const reactiveRectangleFill = signal('red');
 const reactiveRectangleHandler = signal<CRCEventHandler<'click'>>(() => {});
 const reactiveRectangleStyle = signal<RectStyle>({
-  x: 10,
+  left: 10,
   fill: 'red',
   width: 20,
   height: 20,
@@ -1368,7 +1458,7 @@ const reactiveRectangleStyle = signal<RectStyle>({
 const signalValuedRectangle = createElement(Rectangle, {
   onClick: reactiveRectangleHandler,
   style: {
-    x: reactiveRectangleX,
+    left: reactiveRectangleX,
     fill: reactiveRectangleFill,
     width: 20,
     height: 20,
@@ -1505,7 +1595,7 @@ type FreePlay = CoreExports['play'];
 // @ts-expect-error readonly signals do not expose writes
 readonlyCount.set(2);
 // @ts-expect-error CRC style accepts resolved numbers, not signal containers
-const badSignalStyle: RectStyle = { x: writableCount, width: 10, height: 10 };
+const badSignalStyle: RectStyle = { left: writableCount, width: 10, height: 10 };
 // @ts-expect-error computed values are readonly
 computed(() => writableCount.get() * 2).update(value => value + 1);
 void untrackedCount;

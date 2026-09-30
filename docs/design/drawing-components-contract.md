@@ -426,3 +426,13 @@ Public evidence lives in `path-geometry.test.tsx`,
 `path-geometry-builders.test.ts`, `path-geometry-utilities.test.ts`, and the
 editable path learning example. The approved design is
 [mutable path geometry](../superpowers/specs/2026-09-29-path-geometry-design.md).
+
+## Component manipulation
+
+`ManipulationFrame` binds one writable finite box signal to a positioned local
+allocation. `DragHandle` is a structural listener: only participating descendant
+hit geometry can start a move. `ResizeHandle`, `ResizeHandles`, and
+`RotationHandle` retain explicit control geometry. No frame infers bounds from
+content. Resize and rotation controls keep CSS-pixel visual and hit geometry
+while their centers follow the frame. See the
+[component-manipulation contract](./component-manipulation-contract.md).

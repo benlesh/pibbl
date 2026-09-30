@@ -30,7 +30,7 @@ describe('component signal reads', () => {
     function Scene() {
       const value = x.get();
       values.push(value);
-      return <Rectangle style={{ x: value, width: 10, height: 10 }} />;
+      return <Rectangle style={{ left: value, width: 10, height: 10 }} />;
     }
 
     const controller = crc(createCanvas(), <Scene />);
@@ -59,7 +59,7 @@ describe('component signal reads', () => {
     const renders = vi.fn();
     function Scene() {
       renders();
-      return <Rectangle style={{ x: snapshot, width: 10, height: 10 }} />;
+      return <Rectangle style={{ left: snapshot, width: 10, height: 10 }} />;
     }
 
     const controller = crc(createCanvas(), <Scene />);
@@ -81,7 +81,7 @@ describe('component signal reads', () => {
       renders();
       return (
         <Rectangle
-          style={{ x: parity.get() * 10, width: 10, height: 10 }}
+          style={{ left: parity.get() * 10, width: 10, height: 10 }}
         />
       );
     }
@@ -111,7 +111,7 @@ describe('component signal reads', () => {
     const right = signal(20);
     function Scene() {
       const value = chooseLeft.get() ? left.get() : right.get();
-      return <Rectangle style={{ x: value, width: 10, height: 10 }} />;
+      return <Rectangle style={{ left: value, width: 10, height: 10 }} />;
     }
 
     const controller = crc(createCanvas(), <Scene />);
@@ -165,7 +165,7 @@ describe('component signal reads', () => {
     const x = signal(1);
     const canvas = createCanvas();
     function Scene() {
-      return <Rectangle style={{ x: x.get(), width: 10, height: 10 }} />;
+      return <Rectangle style={{ left: x.get(), width: 10, height: 10 }} />;
     }
 
     const controller = crc(canvas, <Scene />);

@@ -18,8 +18,8 @@ function PointerEventsStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7f0df",
@@ -27,8 +27,8 @@ function PointerEventsStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 46,
+        left: 360,
+        top: 46,
         fill: "#17211d",
         font: "900 24px sans-serif",
         textAlign: "center",
@@ -38,8 +38,8 @@ function PointerEventsStudy() {
     </Text>,
     <Rectangle
       style={{
-        x: 70,
-        y: 82,
+        left: 70,
+        top: 82,
         width: 580,
         height: 204,
         fill: inside.get() ? "#f7c948" : "#74d3ae",
@@ -68,8 +68,8 @@ function PointerEventsStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 166,
+        left: 360,
+        top: 166,
         fill: "#17211d",
         font: "900 35px sans-serif",
         textAlign: "center",
@@ -79,8 +79,8 @@ function PointerEventsStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 207,
+        left: 360,
+        top: 207,
         fill: "#17211d",
         font: "700 13px monospace",
         textAlign: "center",
@@ -92,8 +92,8 @@ function PointerEventsStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 244,
+        left: 360,
+        top: 244,
         fill: "#17211d",
         font: "600 12px sans-serif",
         textAlign: "center",
@@ -105,8 +105,8 @@ function PointerEventsStudy() {
     </Text>,
     <Rectangle
       style={{
-        x: 34,
-        y: 316,
+        left: 34,
+        top: 316,
         width: 652,
         height: 76,
         fill: "#17211d",
@@ -116,8 +116,8 @@ function PointerEventsStudy() {
     />,
     <Text
       style={{
-        x: 54,
-        y: 337,
+        left: 54,
+        top: 337,
         width: 612,
         lineHeight: 18,
         fit: "ellipsis",

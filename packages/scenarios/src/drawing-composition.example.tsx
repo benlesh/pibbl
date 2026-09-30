@@ -15,8 +15,8 @@ interface LayerArtworkProps {
 const LayerArtwork = ({ updated }: LayerArtworkProps) => [
   <Rectangle
     style={{
-      x: 0,
-      y: 0,
+      left: 0,
+      top: 0,
       width: 112,
       height: 92,
       fill: updated ? '#fbcfe8' : '#dbeafe',
@@ -41,8 +41,8 @@ function clipPath(updated: boolean): Path2D {
 const DrawingCompositionScene = ({ state }: DrawingCompositionSceneProps) => [
   <Rectangle
     style={{
-      x: 0,
-      y: 0,
+      left: 0,
+      top: 0,
       width: 480,
       height: 240,
       fill: '#f8fafc',
@@ -59,8 +59,8 @@ const DrawingCompositionScene = ({ state }: DrawingCompositionSceneProps) => [
   >
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 116,
         height: 104,
         fill: '#bfdbfe',
@@ -68,8 +68,8 @@ const DrawingCompositionScene = ({ state }: DrawingCompositionSceneProps) => [
     />
     <Rectangle
       style={{
-        x: 18,
-        y: 18,
+        left: 18,
+        top: 18,
         width: 80,
         height: 68,
         fill: '#2563eb',
@@ -83,8 +83,8 @@ const DrawingCompositionScene = ({ state }: DrawingCompositionSceneProps) => [
   >
     <Rectangle
       style={{
-        x: 174,
-        y: 28,
+        left: 174,
+        top: 28,
         width: 138,
         height: 136,
         fill: '#fef3c7',
@@ -92,8 +92,8 @@ const DrawingCompositionScene = ({ state }: DrawingCompositionSceneProps) => [
     />
     <Rectangle
       style={{
-        x: 190,
-        y: 44,
+        left: 190,
+        top: 44,
         width: 106,
         height: 104,
         fill: '#f59e0b',
@@ -110,8 +110,8 @@ const DrawingCompositionScene = ({ state }: DrawingCompositionSceneProps) => [
   >
     <Rectangle
       style={{
-        x: 210,
-        y: 54,
+        left: 210,
+        top: 54,
         width: 66,
         height: 84,
         fill: '#fef3c7',
@@ -137,8 +137,8 @@ const DrawingCompositionScene = ({ state }: DrawingCompositionSceneProps) => [
   </Group>,
   <Rectangle
     style={{
-      x: 24,
-      y: 190,
+      left: 24,
+      top: 190,
       width: 432,
       height: 20,
       fill: '#e2e8f0',

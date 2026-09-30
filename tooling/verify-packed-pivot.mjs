@@ -286,6 +286,7 @@ try {
       consumer,
     );
   run(process.execPath, ["runtime.mjs"], consumer);
+  process.stdout.write(run(process.execPath, [join(root, "tooling/verify-positioning-environments.mjs"), "--packed-entry", installedCore]));
   const shared = await bundle(
     `
     import { crc, Rectangle, createElement } from '@crc/core';

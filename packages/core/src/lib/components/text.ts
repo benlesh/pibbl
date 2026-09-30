@@ -7,7 +7,6 @@ import type {
   CRCEventParticipationOptions,
 } from '../events/types.js';
 import {
-  resolveLocalOffset,
   resolveOptionalLength,
   stripLayoutParticipation,
 } from '../style/resolve-built-in.js';
@@ -130,8 +129,8 @@ export const Text = definePrimitive<
   childInput: 'text',
   resolveStyle: (style, context) => ({
     ...stripLayoutParticipation(style),
-    x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
-    y: resolveLocalOffset(style.y, context.percentageBasis.height, 'y', context),
+    x: 0,
+    y: 0,
     width: resolveOptionalLength(
       style.width,
       context.percentageBasis.width,

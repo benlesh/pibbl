@@ -1,5 +1,7 @@
 # Mutable path geometry design
 
+> **Historical status: APPROVED DESIGN.** This dated record captures the approved 2026-09-29 direction; current contracts and tests define shipped behavior.
+
 Status: approved by the user, 2026-09-29. This records the conversation's
 agreed direction and proposes the remaining detailed contracts. It does not
 describe shipped behavior or authorize unrelated runtime changes.

@@ -141,8 +141,12 @@ function assertSingleRuntimeMode(
 
 export function crcRuntimeSource(mode: string) {
   const entryPoints = crcEntryPoints(mode);
+  let production = false;
   return {
     name: "crc-runtime-source",
+    configResolved(config: { isProduction: boolean }) {
+      production = config.isProduction;
+    },
     resolveId(id: string) {
       if (id === VIRTUAL_RUNTIME_ID) return RESOLVED_RUNTIME_ID;
       return entryPoints.get(id);
@@ -159,7 +163,7 @@ export function crcRuntimeSource(mode: string) {
           loader: "ts",
         },
         bundle: true,
-        define: { "import.meta.env.DEV": "false" },
+        define: { "import.meta.env.DEV": production ? "false" : "true" },
         format: "esm",
         metafile: true,
         platform: "browser",

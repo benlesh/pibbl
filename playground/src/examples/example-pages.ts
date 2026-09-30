@@ -220,15 +220,15 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
 function HeroScene(props: { phase: number; onActivate: () => void }) {
   const angle = props.phase % 2 ? 11 : -7;
   return [
-    createElement(Rectangle, { style: { x: 0, y: 0, width: 720, height: 420, fill: "#f7c948" } }),
-    createElement(Rectangle, { style: { x: 38, y: 38, width: 644, height: 344, fill: "#fffdf6", stroke: "#17211d", strokeWidth: 6 } }),
+    createElement(Rectangle, { style: { left: 0, top: 0, width: 720, height: 420, fill: "#f7c948" } }),
+    createElement(Rectangle, { style: { left: 38, top: 38, width: 644, height: 344, fill: "#fffdf6", stroke: "#17211d", strokeWidth: 6 } }),
     createElement(Group, { style: { translateX: 76, translateY: 60, rotationDegrees: angle, rotationOrigin: [284, 150] }, children: [
-      createElement(Rectangle, { style: { x: 46, y: 22, width: 222, height: 252, fill: "#1f4bd8", cursor: "pointer" }, onClick: props.onActivate }),
-      createElement(Rectangle, { style: { x: 238, y: 84, width: 252, height: 152, fill: props.phase % 2 ? "#74d3ae" : "#ff6b57", stroke: "#17211d", strokeWidth: 6, cursor: "pointer" }, onClick: props.onActivate }),
-      createElement(Rectangle, { style: { x: 456, y: 18, width: 92, height: 92, fill: "#f7c948", stroke: "#17211d", strokeWidth: 5, cursor: "pointer" }, onClick: props.onActivate }),
+      createElement(Rectangle, { style: { left: 46, top: 22, width: 222, height: 252, fill: "#1f4bd8", cursor: "pointer" }, onClick: props.onActivate }),
+      createElement(Rectangle, { style: { left: 238, top: 84, width: 252, height: 152, fill: props.phase % 2 ? "#74d3ae" : "#ff6b57", stroke: "#17211d", strokeWidth: 6, cursor: "pointer" }, onClick: props.onActivate }),
+      createElement(Rectangle, { style: { left: 456, top: 18, width: 92, height: 92, fill: "#f7c948", stroke: "#17211d", strokeWidth: 5, cursor: "pointer" }, onClick: props.onActivate }),
     ] }),
-    createElement(Text, { style: { x: 358, y: 150, fill: "#17211d", font: "900 54px sans-serif", textAlign: "center" } }, "DRAW."),
-    createElement(Text, { style: { x: 358, y: 222, fill: "#17211d", font: "900 42px sans-serif", textAlign: "center" } }, "MOVE. LEARN."),
+    createElement(Text, { style: { left: 358, top: 150, fill: "#17211d", font: "900 54px sans-serif", textAlign: "center" } }, "DRAW."),
+    createElement(Text, { style: { left: 358, top: 222, fill: "#17211d", font: "900 42px sans-serif", textAlign: "center" } }, "MOVE. LEARN."),
   ];
 }
 

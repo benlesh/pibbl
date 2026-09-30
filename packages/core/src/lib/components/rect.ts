@@ -7,7 +7,6 @@ import type {
 import { RenderingContext2D } from '../types.js';
 import type { CRCPhysics2DPropExtension } from '../types.js';
 import {
-  resolveLocalOffset,
   resolveRequiredLength,
   stripLayoutParticipation,
 } from '../style/resolve-built-in.js';
@@ -85,8 +84,8 @@ export const Rectangle = definePrimitive<
 >(renderRectangle, {
   resolveStyle: (style, context) => ({
     ...stripLayoutParticipation(style),
-    x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
-    y: resolveLocalOffset(style.y, context.percentageBasis.height, 'y', context),
+    x: 0,
+    y: 0,
     width: resolveRequiredLength(
       style.width,
       context.percentageBasis.width,

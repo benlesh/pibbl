@@ -302,3 +302,13 @@ const invalidAnchoredItem: AnchoredItem = {
   height: 20,
 };
 void invalidAnchoredItem;
+
+import { PieLayout, PieSlice, PieLabel, pieSlices, type PieSliceGeometry } from "@crc/viz";
+const pieData = [{ id: "a", amount: 2, name: "Alpha" }];
+const pieLabel = (slice: PieSliceGeometry<typeof pieData[number]>) => slice.datum.name;
+const pieGeometry = pieSlices(pieData, { value: "amount", keyBy: "id" });
+void pieGeometry;
+const pie = <PieLayout data={pieData} value="amount" keyBy="id" label={pieLabel} placement="auto">
+  {slice => <PieSlice slice={slice} style={{ fill: "red" }}><PieLabel slice={slice} pointerEvents="auto" onClick={() => {}} /></PieSlice>}
+</PieLayout>;
+void pie;

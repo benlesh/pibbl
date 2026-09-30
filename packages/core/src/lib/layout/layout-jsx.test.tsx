@@ -605,13 +605,28 @@ describe('JSX layout boundaries', () => {
       const capture: LayoutCapture = { mounts: 0, observations: new Map() };
       const execution = { runs: 0 };
       const initial = layoutCase.build(capture, false, execution);
+      const initialAuthoredStyleKeys = {
+        a: Reflect.ownKeys(initial.styles.a),
+        b: Reflect.ownKeys(initial.styles.b),
+      };
+      const initialAuthoredStyleEntries = {
+        a: Object.entries(initial.styles.a),
+        b: Object.entries(initial.styles.b),
+      };
       const canvas = createCanvas();
       const controller = crc(canvas, initial.node);
       controllers.add(controller);
       await nextFrame();
 
       expect(execution.runs).toBe(1);
-      expectObservations(capture, initial.styles, layoutCase.expected);
+      expectObservations(
+        capture,
+        initial.styles,
+        layoutCase.expected,
+        layoutCase.name,
+        initialAuthoredStyleKeys,
+        initialAuthoredStyleEntries,
+      );
       const initialMounts = new Map(
         [...capture.observations].map(([name, value]) => [name, value.mount]),
       );
@@ -621,6 +636,14 @@ describe('JSX layout boundaries', () => {
       expect(pixel(canvas, ...layoutCase.outsideClip)).toEqual([0, 0, 0, 0]);
 
       const reordered = layoutCase.build(capture, true, execution);
+      const reorderedAuthoredStyleKeys = {
+        a: Reflect.ownKeys(reordered.styles.a),
+        b: Reflect.ownKeys(reordered.styles.b),
+      };
+      const reorderedAuthoredStyleEntries = {
+        a: Object.entries(reordered.styles.a),
+        b: Object.entries(reordered.styles.b),
+      };
       crc(canvas, reordered.node);
       await nextFrame();
 
@@ -629,6 +652,9 @@ describe('JSX layout boundaries', () => {
         capture,
         reordered.styles,
         layoutCase.expectedReordered ?? layoutCase.expected,
+        layoutCase.name,
+        reorderedAuthoredStyleKeys,
+        reorderedAuthoredStyleEntries,
       );
       expect(capture.observations.get('a')!.mount).toBe(initialMounts.get('a'));
       expect(capture.observations.get('b')!.mount).toBe(initialMounts.get('b'));
@@ -924,10 +950,26 @@ function expectObservations(
   capture: LayoutCapture,
   styles: Readonly<Record<'a' | 'b', Readonly<CardStyle>>>,
   expected: RenderLayoutCase['expected'],
+  layout: RenderLayoutCase['name'],
+  authoredStyleKeys: Readonly<Record<'a' | 'b', readonly PropertyKey[]>>,
+  authoredStyleEntries: Readonly<Record<
+    'a' | 'b',
+    readonly (readonly [string, unknown])[]
+  >>,
 ): void {
   for (const name of ['a', 'b'] as const) {
     const observation = capture.observations.get(name)!;
-    expect(observation.style).toBe(styles[name]);
+    if (layout === 'Absolute') {
+      expect(observation.style).not.toBe(styles[name]);
+      expect(Object.isFrozen(observation.style)).toBe(true);
+      expect(Object.fromEntries(Object.entries(observation.style))).toEqual(
+        Object.fromEntries(authoredStyleEntries[name]),
+      );
+      expect(Reflect.ownKeys(styles[name])).toEqual(authoredStyleKeys[name]);
+      expect(Object.entries(styles[name])).toEqual(authoredStyleEntries[name]);
+    } else {
+      expect(observation.style).toBe(styles[name]);
+    }
     expect(observation.box).toEqual({
       x: 0,
       y: 0,

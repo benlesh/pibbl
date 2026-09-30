@@ -19,6 +19,8 @@ import {
 } from "@crc/core/jsx-dev-runtime";
 
 const expected = [
+  "DragHandle", "ResizeHandle", "ResizeHandles", "RotationHandle",
+  "ManipulationFrame", "Manipulable", "useManipulation", "degrees",
   "Absolute",
   "Arc",
   "Circle",
@@ -200,9 +202,9 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 86) {
+if (actual.length !== 94) {
   throw new Error(
-    `Expected 86 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected 94 @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 

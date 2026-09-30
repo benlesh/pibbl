@@ -9,11 +9,28 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "c5caa3c7bf71abb0b615cccc0778701220972ac08403aa6149d4a82e263bf545";
+  "e83f5a8baee9e7eb1b3949d0ada32e718358c80d5f060fb9b0f6c9951a9c965d";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const THREE_PIVOT_APPROVAL_RECORD = "three-full-pivot";
+const COMPONENT_MANIPULATION_APPROVAL_RECORD = "component-manipulation";
 const PHYSICS_2D_QUALITY_APPROVAL_RECORD = "physics-2d-quality";
+const COMPONENT_MANIPULATION_APPROVED_SECTIONS = new Set([
+  "Component manipulation design",
+  "Intent",
+  "Agreed direction",
+  "Authoring sketch",
+  "Proposed gesture and state rules",
+  "Approved positioning direction",
+  "Layout composition",
+  "Snapping and constraints",
+  "Interaction evidence",
+  "2026-09-29 extension: handle presentation and readouts",
+  "Geometry and default presentation",
+  "Readout behavior",
+  "Authoring surface",
+  "2026-09-29 feedback: outward resize labels",
+]);
 const THREE_PIVOT_APPROVED_SECTIONS = new Set([
   "Decision",
   "Public experience",
@@ -137,6 +154,14 @@ const POST_BASELINE_CONTRACT_PROFILES = new Map([
       unitPrefix: "m",
       approvalRecordId: SIGNALS_SCHEDULER_APPROVAL_RECORD,
       allowedSections: ANIMATION_APPROVED_SECTIONS,
+    },
+  ],
+  [
+    "docs/design/component-manipulation-contract.md",
+    {
+      unitPrefix: "n",
+      approvalRecordId: COMPONENT_MANIPULATION_APPROVAL_RECORD,
+      allowedSections: COMPONENT_MANIPULATION_APPROVED_SECTIONS,
     },
   ],
 ]);
@@ -1198,7 +1223,8 @@ export function assertContractPreservationBaseline({
       `${label} needs a specific reason`,
     );
     assert.ok(
-      Array.isArray(retirement.baselineIds) && retirement.baselineIds.length > 0,
+      Array.isArray(retirement.baselineIds) &&
+        retirement.baselineIds.length > 0,
       `${label} must identify exact removed baseline units`,
     );
     const { approvalUnits } = resolveApprovalRecordUnits({
