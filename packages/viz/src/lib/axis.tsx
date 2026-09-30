@@ -6,6 +6,8 @@ import { width, opacity } from "./paint.js";
 type Tick = number | string;
 
 function ticks(scale: ResolvedScale, props: AxisProps): readonly Tick[] {
+  if (props.tickValues !== undefined && props.tickCount !== undefined)
+    throw new TypeError("Axis tickValues and tickCount are mutually exclusive.");
   const explicit = props.tickValues === undefined
     ? undefined
     : resolveSignalValue(props.tickValues);
@@ -42,6 +44,7 @@ function ticks(scale: ResolvedScale, props: AxisProps): readonly Tick[] {
   if (n === 0) return [];
   if (count === 1) return [scale.domain[0]];
   const m = Math.min(count, n);
+  if (m === 1) return [scale.domain[0]];
   return Array.from(
     { length: m },
     (_, index) => scale.domain[Math.round((index * (n - 1)) / (m - 1))]!,
@@ -55,6 +58,13 @@ function position(scale: ResolvedScale, value: Tick): number {
 }
 
 export function Axis(props: AxisProps) {
+  if (
+    props.position !== "bottom" &&
+    props.position !== "left" &&
+    props.position !== "top" &&
+    props.position !== "right"
+  )
+    throw new TypeError("Axis position must be bottom, left, top, or right.");
   const source = lookupScale(props.scale, "Axis");
   if (!source) throw new TypeError("Axis requires a scale ID.");
   const scale = source.get();
@@ -69,6 +79,7 @@ export function Axis(props: AxisProps) {
   const baseline = horizontal
     ? props.position === "bottom" ? scale.frame.height : 0
     : props.position === "right" ? scale.frame.width : 0;
+  const selected = ticks(scale, props);
   const path = new Path2D();
   if (horizontal) {
     path.moveTo(scale.range[0], baseline);
@@ -77,7 +88,7 @@ export function Axis(props: AxisProps) {
     path.moveTo(baseline, scale.range[0]);
     path.lineTo(baseline, scale.range[1]);
   }
-  const labels = ticks(scale, props).map((value, index) => {
+  const labels = selected.map((value, index) => {
     const p = position(scale, value);
     if (horizontal) {
       path.moveTo(p, baseline);

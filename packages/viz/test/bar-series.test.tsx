@@ -1,4 +1,4 @@
-import { Absolute, signal } from "@crc/core";
+import { Absolute, Group, signal } from "@crc/core";
 import * as Viz from "@crc/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
@@ -235,4 +235,54 @@ it("fills each bar by reactive domain thresholds without changing its border or 
   });
   runtime.flush();
   expect(pixel(50, 100)).toEqual([0, 128, 0, 255]);
+});
+
+it("follows the horizontal value axis for threshold fills in either range direction", () => {
+  runtime = testRuntime();
+  const rows = [{ c: "A", v: 50 }];
+  const threshold = {
+    type: "threshold" as const,
+    thresholds: [0, 30],
+    colors: ["#ff8000", "#008000", "#ff0000"],
+  };
+  const canvas = runtime.mount(
+    <>
+      <Viz.Scale id="normal-category" type="band" domain={["A"]} range={[0, 100]}>
+        <Viz.Scale id="normal-value" type="linear" domain={[-20, 60]} range={[0, 320]}>
+          <Viz.BarSeries
+            orientation="horizontal"
+            data={rows}
+            category="c"
+            value="v"
+            categoryScale="normal-category"
+            valueScale="normal-value"
+            style={{ fill: threshold }}
+          />
+        </Viz.Scale>
+      </Viz.Scale>
+      <Group style={{ translateY: 120 }}>
+        <Viz.Scale id="reversed-category" type="band" domain={["A"]} range={[0, 100]}>
+          <Viz.Scale id="reversed-value" type="linear" domain={[-20, 60]} range={[320, 0]}>
+            <Viz.BarSeries
+              orientation="horizontal"
+              data={rows}
+              category="c"
+              value="v"
+              categoryScale="reversed-category"
+              valueScale="reversed-value"
+              style={{ fill: threshold }}
+            />
+          </Viz.Scale>
+        </Viz.Scale>
+      </Group>
+    </>,
+  );
+  runtime.flush();
+  const pixel = (x: number, y: number) => [
+    ...canvas.getContext("2d")!.getImageData(x, y, 1, 1).data,
+  ];
+  expect(pixel(120, 50)).toEqual([0, 128, 0, 255]);
+  expect(pixel(240, 50)).toEqual([255, 0, 0, 255]);
+  expect(pixel(180, 170)).toEqual([0, 128, 0, 255]);
+  expect(pixel(80, 170)).toEqual([255, 0, 0, 255]);
 });
