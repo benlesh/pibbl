@@ -37,7 +37,7 @@ function Probe() {
     <Axis
       scale="x"
       position="bottom"
-      tickFormat={(value) => String(scale.map(value))}
+      tickFormat={(value) => typeof value === "number" ? String(scale.map(value)) : value}
     />
   );
 }
@@ -445,3 +445,11 @@ const pie = <PieLayout data={pieData} value="amount" keyBy="id" label={pieLabel}
   {slice => <PieSlice slice={slice} style={{ fill: "red" }}><PieLabel slice={slice} pointerEvents="auto" onClick={() => {}} /></PieSlice>}
 </PieLayout>;
 void pie;
+
+// Approved categorical and explicit Axis tick contract.
+void (<Axis scale="category" position="right" tickValues={signal<readonly (number | string)[]>(["A", 2])} tickFormat={(value, index) => `${index}: ${value}`} />);
+void (<Axis scale="value" position="top" tickCount={0} />);
+// @ts-expect-error explicit ticks and count are mutually exclusive
+void (<Axis scale="value" position="bottom" tickValues={[1, 2]} tickCount={2} />);
+// @ts-expect-error explicit ticks accept numbers or strings, not Date objects
+void (<Axis scale="value" position="bottom" tickValues={[new Date()]} />);
