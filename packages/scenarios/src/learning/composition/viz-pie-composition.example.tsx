@@ -85,6 +85,7 @@ function Scene() {
   const placement = useSignal<PieLabelPlacement>("auto");
   const narrow = useSignal(false);
   const donut = useSignal(false);
+  const cards = useSignal(false);
   const hovered = useSignal<string | null>(null);
   const pinned = useSignal<string | null>(null);
   const active = pinned.get() ?? hovered.get();
@@ -97,11 +98,18 @@ function Scene() {
     <Group>
       <Rectangle style={{ width: 1000, height: 570, fill: "#fcfbf8" }} />
       <Text
-        style={{ left: 28, top: 38, font: "bold 26px sans-serif", fill: "#182c42" }}
+        style={{
+          left: 28,
+          top: 38,
+          font: "bold 26px sans-serif",
+          fill: "#182c42",
+        }}
       >
         How we get around
       </Text>
-      <Text style={{ left: 28, top: 67, font: "14px sans-serif", fill: "#62758b" }}>
+      <Text
+        style={{ left: 28, top: 67, font: "14px sans-serif", fill: "#62758b" }}
+      >
         100 fictional responses · Labels share one layout; slices keep ordinary
         CRC events.
       </Text>
@@ -120,7 +128,8 @@ function Scene() {
         data={data}
         value="value"
         keyBy="id"
-        label={label}
+        label={cards.get() ? undefined : label}
+        labelBox={cards.get() ? () => ({ width: 120, height: 38 }) : undefined}
         placement={placement}
         bounds={box}
         style={{
@@ -159,7 +168,43 @@ function Scene() {
               onPointerEnter={() => hovered.set(slice.key)}
               onPointerLeave={() => hovered.set(null)}
               onClick={() => toggle(slice.key)}
-            />
+            >
+              {cards.get() && (
+                <Group>
+                  <Rectangle
+                    pointerEvents="none"
+                    style={{
+                      width: 120,
+                      height: 38,
+                      cornerRadius: 5,
+                      fill: "#fffdf8",
+                      stroke: slice.datum.color,
+                      strokeWidth: 1,
+                    }}
+                  />
+                  <Text
+                    pointerEvents="none"
+                    style={{
+                      left: 8,
+                      top: 15,
+                      font: "bold 12px sans-serif",
+                      fill: "#182c42",
+                    }}
+                  >
+                    {slice.datum.label}
+                  </Text>
+                  <Text
+                    pointerEvents="none"
+                    style={{
+                      left: 8,
+                      top: 30,
+                      font: "11px sans-serif",
+                      fill: "#62758b",
+                    }}
+                  >{`${slice.datum.value} of 100 responses`}</Text>
+                </Group>
+              )}
+            </PieLabel>
           </PieSlice>
         )}
       </PieLayout>
@@ -193,7 +238,13 @@ function Scene() {
           />
           <Rectangle
             pointerEvents="none"
-            style={{ left: 10, top: 12, width: 12, height: 12, fill: datum.color }}
+            style={{
+              left: 10,
+              top: 12,
+              width: 12,
+              height: 12,
+              fill: datum.color,
+            }}
           />
           <Text
             pointerEvents="none"
@@ -302,6 +353,14 @@ function Scene() {
         width={138}
         text={narrow.get() ? "Restore label space" : "Limit label space"}
         action={() => narrow.set(!narrow.get())}
+      />
+      <Button
+        x={502}
+        y={438}
+        width={138}
+        text={cards.get() ? "Show text labels" : "Show label cards"}
+        active={cards.get()}
+        action={() => cards.set(!cards.get())}
       />
       <Button
         x={690}
