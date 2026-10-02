@@ -5,6 +5,7 @@ export interface WaterWavesOptions {
   readonly seed?: number;
   readonly speed?: number;
   readonly scale?: number;
+  readonly rippleStrength?: number;
   readonly paused?: boolean;
 }
 
@@ -13,7 +14,7 @@ export type WaterWavesMessage =
   | { readonly type: "reset" }
   | { readonly type: "ripple"; readonly x: number; readonly y: number };
 
-interface Config { seed: number; speed: number; scale: number; paused: boolean }
+interface Config { seed: number; speed: number; scale: number; rippleStrength: number; paused: boolean }
 interface Mode { x: number; y: number; phase: number }
 interface Ripple { x: number; y: number; age: number }
 interface State { config: Config; modes: readonly Mode[]; phase: number; paused: boolean; fresh: boolean; ripples: Ripple[] }
@@ -25,9 +26,11 @@ function config(input: WaterWavesOptions): Config {
   const seed = validateSeed(input.seed ?? 0);
   const speed = input.speed ?? 1;
   const scale = input.scale ?? 4;
+  const rippleStrength = input.rippleStrength ?? 1;
   if (!Number.isFinite(speed) || speed < 0) throw new RangeError("Water wave speed must be finite and nonnegative.");
   if (!Number.isInteger(scale) || scale < 1 || scale > 32) throw new RangeError("Water wave scale must be an integer from 1 to 32.");
-  return { seed, speed, scale, paused: input.paused ?? false };
+  if (!Number.isFinite(rippleStrength) || rippleStrength < 0) throw new RangeError("Water ripple strength must be finite and nonnegative.");
+  return { seed, speed, scale, rippleStrength, paused: input.paused ?? false };
 }
 
 function assertDataTexture(context: TextureContext): void {
@@ -60,6 +63,7 @@ const recipe = defineTexture<WaterWavesOptions, State, WaterWavesMessage>({
     const next = config(input);
     const previous = state.config;
     if (next.seed !== previous.seed || next.scale !== previous.scale) { state.phase = 0; state.modes = modes(next); context.invalidate(); }
+    if (next.rippleStrength !== previous.rippleStrength) context.invalidate();
     if (next.paused !== previous.paused) state.paused = next.paused;
     if (next.paused !== previous.paused || next.speed !== previous.speed) state.fresh = true;
     state.config = next;
@@ -111,8 +115,8 @@ const recipe = defineTexture<WaterWavesOptions, State, WaterWavesMessage>({
         const radius = progress * 1.75;
         const ring = Math.exp(-((distance - radius) ** 2) / 0.018) * (1 - progress);
         const direction = distance === 0 ? 0 : 1 / distance;
-        dx += horizontal * direction * ring * 0.9;
-        dy += vertical * direction * ring * 0.9;
+        dx += horizontal * direction * ring * 0.9 * state.config.rippleStrength;
+        dy += vertical * direction * ring * 0.9 * state.config.rippleStrength;
       }
       const index = (y * context.canvas.width + x) * 4;
       image.data[index] = encode(dx); image.data[index + 1] = encode(dy); image.data[index + 2] = 128; image.data[index + 3] = 255;
