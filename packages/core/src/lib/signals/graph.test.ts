@@ -60,6 +60,33 @@ describe('signal', () => {
     discarded.commit();
     expect(calls).toEqual(['apply:1', 'abort']);
     expect(revision.get()).toBe(1);
+
+    const suppressed = createSignalCommitBatch();
+    suppressed.stage(revision, 1, writer);
+    suppressed.registerLifecycle(writer, {
+      apply() {
+        calls.push('unexpected');
+      },
+      abort() {
+        calls.push('suppressed');
+      },
+    });
+    suppressed.commit();
+    expect(calls).toEqual(['apply:1', 'abort', 'suppressed']);
+
+    const failing = createSignalCommitBatch();
+    failing.stage(revision, 2, writer);
+    failing.registerLifecycle(writer, {
+      apply() {
+        throw new Error('publication failed');
+      },
+      abort() {
+        calls.push('failed');
+        throw new Error('cleanup must not mask publication failure');
+      },
+    });
+    expect(() => failing.commit()).toThrow('publication failed');
+    expect(calls).toEqual(['apply:1', 'abort', 'suppressed', 'failed']);
   });
 
   it('provides explicit reads, writes, and one cached readonly view', () => {
