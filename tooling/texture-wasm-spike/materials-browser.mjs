@@ -2,7 +2,7 @@ import {crc,createElement,defineRenderLayer} from '../../packages/core/src/index
 import {ManualSchedulerDriver,installSchedulerDriverForTest} from '../../packages/core/src/lib/scheduler/testing.ts';
 import {materialField} from './reference-material-field.ts';
 import {TextureRaster} from './reference-presentation.ts';
-import {paletteLut} from '../../packages/textures/src/lib/palette.ts';
+import {paletteLut} from '../../packages/core/src/features/textures/lib/palette.ts';
 import {WasmMaterial,MatchedMaterial} from './materials-runtime.mjs';
 import {createControl} from './materials-control.mjs';
 const bytes=await (await fetch('./materials.wasm')).arrayBuffer(),compileStart=performance.now();

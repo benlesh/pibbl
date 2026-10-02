@@ -15,7 +15,7 @@ Verified implementation revision before this evidence-only note: `ee4fe30`
 ## Delivered scope
 
 The completed work adds first-class deterministic 3D physics to
-`@crc/physics/3d` and pure geometry to `@crc/physics/3d/geometry`. It preserves
+`@crc/core/physics/3d` and pure geometry to `@crc/core/physics/3d/geometry`. It preserves
 CRC's component-owned lifecycle and realm scheduler: mounted worlds contribute
 one simulation participant, fixed ticks run in the scheduler's simulation
 lane, and successful commits publish one coherent pose/revision generation for
@@ -108,7 +108,7 @@ Fresh Node.js `v24.15.0` evidence included:
 
 Repository scans found no external engine, WASM, Worker, timer, or independent
 animation-frame loop in 3D production source; no public manual world step; and
-no production import through an `@crc/physics` root barrel. The package exposes
+no production import through an `@crc/core/physics` root barrel. The package exposes
 only `./2d`, `./2d/geometry`, `./3d`, and `./3d/geometry`, with optional peer
 relationships to matching Core and WebGL packages.
 

@@ -14,7 +14,7 @@ keywords: [particles, canvas, effects, emission]
 # Particles2D
 
 ```ts
-import { Particles2D } from "@crc/particles";
+import { Particles2D } from "@crc/core/particles";
 ```
 
 `Particles2D` binds a 2D effect or an explicitly owned particle system to the
@@ -23,7 +23,7 @@ can use `autoplay` and `seed`; system mode takes its lifecycle from
 [`useParticleSystem`](#/api/hooks/use-particle-system).
 
 ```tsx
-declare const sparks: import("@crc/particles").CRCParticleEffect2D;
+declare const sparks: import("@crc/core/particles").CRCParticleEffect2D;
 
 <Particles2D
   effect={sparks}

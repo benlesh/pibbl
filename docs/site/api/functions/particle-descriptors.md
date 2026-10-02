@@ -36,7 +36,7 @@ import {
   particleInteger,
   particleParameter,
   particleRange,
-} from "@crc/particles";
+} from "@crc/core/particles";
 ```
 
 These direct, tree-shakable functions create immutable definition descriptors.

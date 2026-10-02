@@ -11,7 +11,7 @@ import {
   useReaction,
   type CRCController,
 } from "@crc/core";
-import { useTexture, reactionDiffusion, texturePalettes } from "@crc/textures";
+import { useTexture, reactionDiffusion, texturePalettes } from "@crc/core/textures";
 
 const palettes = [
   texturePalettes.lagoon,

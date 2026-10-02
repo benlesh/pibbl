@@ -317,8 +317,8 @@ variations of confetti:
 | Embers    | Yes | Yes      | High-count stateless motion, additive rendering, turbulence substitute     |
 
 Preset entry points should be separately importable and tree-shakable. A
-plausible package shape is `@crc/particles/presets` for Canvas-oriented 2D
-factories and `@crc/particles/presets/webgl` for 3D factories. Presets should
+plausible package shape is `@crc/core/particles/presets` for Canvas-oriented 2D
+factories and `@crc/core/particles/presets/webgl` for 3D factories. Presets should
 never fetch remote assets. They should use procedural assets, package-owned
 small assets, or explicit caller-supplied decoded sources.
 
@@ -398,7 +398,7 @@ resources.[^28] Unity similarly distinguishes cheap explicit planes from world
 collision and exposes quality and maximum-shape limits.[^29]
 
 If CRC later adds physics, it should be separate work. A plausible
-`@crc/physics` package would own a component-scoped world, fixed-step execution,
+`@crc/core/physics` package would own a component-scoped world, fixed-step execution,
 body/collider lifetime, and committed read-only snapshots. Box2D recommends a
 fixed timestep and exposes collision queries separately from simulation;
 Rapier likewise separates its world solver from filtered scene queries.[^30][^31]
@@ -644,11 +644,11 @@ availability.
 The recommended optional package exposes:
 
 - `Particles2D`, shared value helpers, definitions, and `crcParticleSystem` from
-  `@crc/particles`.
+  `@crc/core/particles`.
 - `Particles3D` and 3D definition/rendering vocabulary from
-  `@crc/particles/webgl`, valid only inside `WebGLLayer`.
-- eventual tree-shakable preset factories from `@crc/particles/presets` and
-  `@crc/particles/presets/webgl`.
+  `@crc/core/particles/webgl`, valid only inside `WebGLLayer`.
+- eventual tree-shakable preset factories from `@crc/core/particles/presets` and
+  `@crc/core/particles/presets/webgl`.
 
 The package uses the core automatic JSX runtime and adds no competing element
 protocol. Its Canvas root entry does not import or require `@crc/webgl`.
@@ -668,7 +668,7 @@ high-count 2D effects, but an implicit hidden WebGL context inside a Canvas
 primitive would violate CRC's explicit backend boundary.
 
 The settled-scene redesign must provide a scene-aware extension seam for an
-official sibling such as `@crc/particles/webgl`. Whether that seam is public or
+official sibling such as `@crc/core/particles/webgl`. Whether that seam is public or
 version-coupled internal belongs to the WebGL design, but it must let particles
 submit immutable frame descriptions and renderer-owned resource recipes without
 exposing raw GL commands during composition. The particle package must not add
@@ -1201,9 +1201,9 @@ correctness gate. Keep them opt-in and record the exact environment.
 Proceed to a formal architectural design, followed by a proving implementation
 tranche before the full surface is considered stable.
 
-The design should specify an optional `@crc/particles` package with immutable
+The design should specify an optional `@crc/core/particles` package with immutable
 effect definitions, a component-owned system, a Canvas2D `Particles2D`
-component, and a `@crc/particles/webgl` `Particles3D` scene contributor. The
+component, and a `@crc/core/particles/webgl` `Particles3D` scene contributor. The
 WebGL portion should be specified only after the settled-scene contract exposes
 the required official extension seam. The first
 implementation tranche should exercise one stateless effect in each backend and

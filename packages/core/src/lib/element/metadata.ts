@@ -284,3 +284,12 @@ export function getPlacementSignalHandoffStyle(
 ): Readonly<SystemStyle> | undefined {
   return elementMetadata.get(element)?.placementSignalHandoff;
 }
+
+const opaquePrimitiveProps = new WeakMap<Function, readonly string[]>();
+/** @internal Built-in opaque payloads, without widening definePrimitive's API. */
+export function registerOpaquePrimitiveProps(type: Function, keys: readonly string[]): void {
+  opaquePrimitiveProps.set(type, keys);
+}
+export function getOpaquePrimitiveProps(type: Function): readonly string[] | undefined {
+  return opaquePrimitiveProps.get(type);
+}

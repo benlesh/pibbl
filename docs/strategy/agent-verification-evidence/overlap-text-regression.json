@@ -1,0 +1,394 @@
+{
+  "schema": "crc-text-replay/1",
+  "status": "pass",
+  "url": "http://127.0.0.1:5199/#/testing/agent-text-verification",
+  "requiredChecks": [
+    {
+      "actionId": "initial",
+      "checkId": "initial.ready-revision"
+    },
+    {
+      "actionId": "initial",
+      "checkId": "initial.exact-fixture-label"
+    },
+    {
+      "actionId": "initial",
+      "checkId": "initial.private-text-redacted"
+    },
+    {
+      "actionId": "initial",
+      "checkId": "initial.bounded-call-evidence"
+    },
+    {
+      "actionId": "repair",
+      "checkId": "repair.ready-revision"
+    },
+    {
+      "actionId": "repair",
+      "checkId": "repair.exact-fixture-label"
+    },
+    {
+      "actionId": "repair",
+      "checkId": "repair.private-text-redacted"
+    },
+    {
+      "actionId": "repair",
+      "checkId": "repair.bounded-call-evidence"
+    },
+    {
+      "actionId": "seed",
+      "checkId": "seed.ready-revision"
+    },
+    {
+      "actionId": "seed",
+      "checkId": "seed.exact-fixture-label"
+    },
+    {
+      "actionId": "seed",
+      "checkId": "seed.private-text-redacted"
+    },
+    {
+      "actionId": "seed",
+      "checkId": "seed.bounded-call-evidence"
+    }
+  ],
+  "steps": [
+    {
+      "actionId": "initial",
+      "status": "pass",
+      "transport": "page-navigation",
+      "state": {
+        "mode": "seed",
+        "status": "ready",
+        "revision": 1,
+        "expected": "Revenue: 42",
+        "assertion": "fail",
+        "observation": {
+          "schema": "crc-text-call-evidence/1",
+          "status": "stopped",
+          "scope": "one-context-successful-calls",
+          "geometry": "draw-positions-not-glyph-bounds",
+          "fontAttribution": "unknown",
+          "fontRequest": "not-recorded",
+          "clipping": "not-observed",
+          "pixels": "not-observed",
+          "observationFailures": 0,
+          "completeness": "complete",
+          "total": 2,
+          "dropped": 0,
+          "capacity": 8,
+          "records": [
+            {
+              "sequence": 1,
+              "operation": "fillText",
+              "content": {
+                "status": "fixture",
+                "value": "Revenue: 24"
+              },
+              "x": 24,
+              "y": 48,
+              "maxWidth": null,
+              "alignment": "left",
+              "baseline": "top"
+            },
+            {
+              "sequence": 2,
+              "operation": "fillText",
+              "content": {
+                "status": "redacted"
+              },
+              "x": 24,
+              "y": 88,
+              "maxWidth": null,
+              "alignment": "left",
+              "baseline": "top"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "actionId": "repair",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "mode": "repair",
+        "status": "ready",
+        "revision": 2,
+        "expected": "Revenue: 42",
+        "assertion": "pass",
+        "observation": {
+          "schema": "crc-text-call-evidence/1",
+          "status": "stopped",
+          "scope": "one-context-successful-calls",
+          "geometry": "draw-positions-not-glyph-bounds",
+          "fontAttribution": "unknown",
+          "fontRequest": "not-recorded",
+          "clipping": "not-observed",
+          "pixels": "not-observed",
+          "observationFailures": 0,
+          "completeness": "complete",
+          "total": 2,
+          "dropped": 0,
+          "capacity": 8,
+          "records": [
+            {
+              "sequence": 1,
+              "operation": "fillText",
+              "content": {
+                "status": "fixture",
+                "value": "Revenue: 42"
+              },
+              "x": 24,
+              "y": 48,
+              "maxWidth": null,
+              "alignment": "left",
+              "baseline": "top"
+            },
+            {
+              "sequence": 2,
+              "operation": "fillText",
+              "content": {
+                "status": "redacted"
+              },
+              "x": 24,
+              "y": 88,
+              "maxWidth": null,
+              "alignment": "left",
+              "baseline": "top"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "actionId": "seed",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "mode": "seed",
+        "status": "ready",
+        "revision": 3,
+        "expected": "Revenue: 42",
+        "assertion": "fail",
+        "observation": {
+          "schema": "crc-text-call-evidence/1",
+          "status": "stopped",
+          "scope": "one-context-successful-calls",
+          "geometry": "draw-positions-not-glyph-bounds",
+          "fontAttribution": "unknown",
+          "fontRequest": "not-recorded",
+          "clipping": "not-observed",
+          "pixels": "not-observed",
+          "observationFailures": 0,
+          "completeness": "complete",
+          "total": 2,
+          "dropped": 0,
+          "capacity": 8,
+          "records": [
+            {
+              "sequence": 1,
+              "operation": "fillText",
+              "content": {
+                "status": "fixture",
+                "value": "Revenue: 24"
+              },
+              "x": 24,
+              "y": 48,
+              "maxWidth": null,
+              "alignment": "left",
+              "baseline": "top"
+            },
+            {
+              "sequence": 2,
+              "operation": "fillText",
+              "content": {
+                "status": "redacted"
+              },
+              "x": 24,
+              "y": 88,
+              "maxWidth": null,
+              "alignment": "left",
+              "baseline": "top"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "droppedErrors": 0,
+  "scope": "Native Studio action buttons and successful single-context text calls; no glyph visibility or other-surface claim.",
+  "run": {
+    "schema": "crc-replay-run/1",
+    "runId": "ce38072b-0fee-4af7-b1f3-efacf11e5816",
+    "kind": "text",
+    "startedAt": "2026-10-02T03:13:05.763Z",
+    "clock": "UTC-wall-clock",
+    "environment": {
+      "node": "v24.15.0",
+      "platform": "darwin",
+      "architecture": "arm64",
+      "browserContext": {
+        "viewport": {
+          "width": 1280,
+          "height": 1000
+        },
+        "deviceScaleFactor": 1,
+        "locale": "en-US",
+        "timezoneId": "UTC",
+        "reducedMotion": "reduce",
+        "colorScheme": "light"
+      },
+      "observedPage": {
+        "status": "observed",
+        "scope": "page-reported-at-capture",
+        "viewportCss": {
+          "width": 1280,
+          "height": 1000
+        },
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "browserZoom": "unavailable",
+        "language": "en-US",
+        "timezone": "UTC",
+        "preferences": {
+          "dark": false,
+          "reducedMotion": true
+        }
+      }
+    },
+    "rerun": {
+      "executable": "/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "arguments": [
+        "/Users/benlesh/GitHub/crc/tooling/agent-verification/text-replay.mjs",
+        "http://127.0.0.1:5199/#/testing/agent-text-verification"
+      ],
+      "cwd": "/Users/benlesh/GitHub/crc",
+      "environment": {},
+      "unsetEnvironment": [
+        "CRC_VERIFY_BROWSER_ENDPOINT"
+      ],
+      "outputPolicy": "fresh-default-directory",
+      "preconditions": [
+        "Provision the recorded checkout dependencies and Playwright Chromium.",
+        "Serve the source Studio from the intended checkout at the recorded URL; served/local identity checks must pass."
+      ]
+    },
+    "toolIdentity": {
+      "schema": "crc-replay-tool-identity/1",
+      "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+      "sha256": "7f10763ea6ca50ee7435cac9750e5e526161281f08ec07d67352d52a93dd680e",
+      "files": 11,
+      "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
+    },
+    "toolIdentityAfter": {
+      "schema": "crc-replay-tool-identity/1",
+      "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+      "sha256": "7f10763ea6ca50ee7435cac9750e5e526161281f08ec07d67352d52a93dd680e",
+      "files": 11,
+      "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
+    }
+  },
+  "expectedIdentity": {
+    "schema": "crc-targeting-identity/1",
+    "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+    "sha256": "19903eb811b0132286485a5534f2e3065f5f674a0b64c76bd6611e037823be25",
+    "files": 196
+  },
+  "browser": "151.0.7922.34",
+  "checks": [
+    {
+      "checkId": "initial.ready-revision",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "initial.exact-fixture-label",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "initial.private-text-redacted",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "initial.bounded-call-evidence",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repair.ready-revision",
+      "actionId": "repair",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repair.exact-fixture-label",
+      "actionId": "repair",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repair.private-text-redacted",
+      "actionId": "repair",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repair.bounded-call-evidence",
+      "actionId": "repair",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "seed.ready-revision",
+      "actionId": "seed",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "seed.exact-fixture-label",
+      "actionId": "seed",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "seed.private-text-redacted",
+      "actionId": "seed",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "seed.bounded-call-evidence",
+      "actionId": "seed",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    }
+  ],
+  "toolVerification": {
+    "status": "matching-on-disk"
+  },
+  "requiredActions": [
+    "initial",
+    "repair",
+    "seed"
+  ]
+}

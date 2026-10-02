@@ -1,9 +1,9 @@
 import * as core from "@crc/core";
 import * as internal from "@crc/core/internal";
-import * as particles from "@crc/particles";
+import * as particles from "@crc/core/particles";
 import * as threeAdapter from "@crc/three";
-import * as physics2d from "@crc/physics/2d";
-import * as physics3dGeometry from "@crc/physics/3d/geometry";
+import * as physics2d from "@crc/core/physics/2d";
+import * as physics3dGeometry from "@crc/core/physics/3d/geometry";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { readFileSync } from "node:fs";
@@ -33,6 +33,7 @@ const expected = [
   "Fragment",
   "Grid",
   "Group",
+  "HtmlBox",
   "HorizontalLine",
   "Image",
   "KeyboardNavigation",
@@ -276,12 +277,12 @@ const expectedParticles = [
 const actualParticles = Object.keys(particles).sort();
 if (JSON.stringify(actualParticles) !== JSON.stringify(expectedParticles)) {
   throw new Error(
-    `Unexpected @crc/particles exports: ${actualParticles.join(", ")}`,
+    `Unexpected @crc/core/particles exports: ${actualParticles.join(", ")}`,
   );
 }
 for (const exportName of expectedParticles) {
   if (typeof particles[exportName] !== "function") {
-    throw new Error(`Expected @crc/particles ${exportName} to be callable.`);
+    throw new Error(`Expected @crc/core/particles ${exportName} to be callable.`);
   }
 }
 const expectedThreeAdapter = ["defineThreeLayer"];
@@ -325,7 +326,7 @@ if (
   JSON.stringify(Object.keys(physics3dGeometry).sort()) !==
   JSON.stringify(expectedPhysics3DGeometry)
 ) {
-  throw new Error("Unexpected pure @crc/physics/3d/geometry runtime exports.");
+  throw new Error("Unexpected pure @crc/core/physics/3d/geometry runtime exports.");
 }
 const packedPhysicsSphere = physics3dGeometry.sphereShape3D({ radius: 1 });
 const packedPhysicsHit = physics3dGeometry.raycastShape3D(

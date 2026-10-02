@@ -5,7 +5,7 @@ import {
   crcPhysicsWorld2D,
   physicsObstacles2D,
   staticBody2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 import {
   Particles2D,
   defineParticleEffect2D,
@@ -13,7 +13,7 @@ import {
   useFlowField2D,
   useFlowSource2D,
   type CRCFlowField2D,
-} from "@crc/particles";
+} from "@crc/core/particles";
 
 let root: ReturnType<typeof crc> | undefined;
 afterEach(() => {

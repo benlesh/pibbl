@@ -334,7 +334,7 @@ descendants.
 
 Three coordinate events target the nearest committed visible object through the
 adapter's camera-aware raycasting, or through an application-supplied picker.
-Pure operations from `@crc/physics/3d/geometry` do not create event targets or
+Pure operations from `@crc/core/physics/3d/geometry` do not create event targets or
 retain an authoritative world. Applications that combine those operations with
 a Three scene explicitly derive their world-space query input and register the
 corresponding Three object as a CRC target; normal event propagation and pointer

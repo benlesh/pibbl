@@ -11,7 +11,7 @@ import {
   type CRCPointerEvent,
   type WritableSignal,
 } from "@crc/core";
-import { Axis, BarSeries, Scale, useScale } from "@crc/viz";
+import { Axis, BarSeries, Scale, useScale } from "@crc/core/viz";
 
 // Census Bureau, Vintage 2023, Table 1. Historical snapshot, not current estimates.
 // https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html

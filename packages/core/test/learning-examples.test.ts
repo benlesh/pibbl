@@ -251,7 +251,7 @@ describe("learning example catalog", () => {
   it("permits only the exact physics lesson to import the public 2D entry", () => {
     const source = `
       import { Circle, crc, type CRCController } from "@crc/core";
-      import { PhysicsWorld2D, dynamicBody2D } from "@crc/physics/2d";
+      import { PhysicsWorld2D, dynamicBody2D } from "@crc/core/physics/2d";
       function Scene() {
         return (
           <PhysicsWorld2D>
@@ -285,14 +285,14 @@ describe("learning example catalog", () => {
     ).toThrow(/only from @crc\/core/u);
     expect(() =>
       validateLearningSourceText(
-        source.replace("@crc/physics/2d", "@crc/physics/src/2d"),
+        source.replace("@crc/core/physics/2d", "@crc/core/physics/src/2d"),
         {
           authoring: "jsx",
           label: "fixture",
           sourcePath: physicsLessonSourcePath,
         },
       ),
-    ).toThrow(/both @crc\/core and @crc\/physics\/2d/u);
+    ).toThrow(/both @crc\/core and @crc\/core\/physics\/2d/u);
   });
 
   it.each([
@@ -1283,6 +1283,7 @@ describe("learning example catalog", () => {
     ]);
     const expectedBrowseGroups = {
       drawing: [
+        "along-path",
         "arc",
         "circle",
         "ellipse",
@@ -1310,6 +1311,7 @@ describe("learning example catalog", () => {
         "clip",
         "group",
         "growing-reveal",
+        "html-box",
         "layer",
         "living-ink",
         "material-lab",
@@ -1831,6 +1833,8 @@ describe("learning example catalog", () => {
         "createRegularPolygonPath",
         "Path",
         "PathGeometry",
+        "HtmlBox",
+        "FocusManagement",
         "defineRenderLayer",
         "bendPathAlongArc",
         "bendPathAlongPath",
@@ -1850,6 +1854,8 @@ describe("learning example catalog", () => {
         "Clip",
         "Layer",
         "CRCFilter",
+        "useTexture",
+        "defineTexture",
         "defineThreeLayer",
         "InstancedMesh",
         "Mesh",

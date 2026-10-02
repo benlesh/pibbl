@@ -1,3 +1,4 @@
+import { portablePath } from '../html/portable-clips.js';
 import { definePrimitive } from '../define-primitive.js';
 import { PathGeometry } from '../geometry/path-geometry.js';
 import { resolvePath } from '../geometry/resolve-path.js';
@@ -45,5 +46,5 @@ export const Clip = definePrimitive<
 
 setPrimitivePresentation<ResolvedClipStyle>(Clip, style => {
   const { d, fillRule = 'nonzero' } = style;
-  return { clip: { path: resolvePath(d), fillRule } };
+  return { clip: { path: resolvePath(d), fillRule, svgPath: portablePath(d) } };
 });

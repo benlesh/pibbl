@@ -200,6 +200,7 @@ describe('public CRC API', () => {
       'Grid',
       'Group',
       'HorizontalLine',
+      'HtmlBox',
       'Image',
       'KeyboardNavigation',
       'Layer',

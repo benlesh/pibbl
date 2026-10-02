@@ -35,7 +35,7 @@ symbols:
 
 # Texture types and palettes
 
-Import these types and `texturePalettes` from `@crc/textures`.
+Import these types and `texturePalettes` from `@crc/core/textures`.
 
 ## `ReactionDiffusionProps`
 
@@ -49,8 +49,9 @@ and `render`. Materials idle until inputs change.
 
 ## `TextureBrush`
 
-`{ radius, strength }`: finite radius in (0,128] simulation cells and strength
-in [0,1]. `false` disables the reaction–diffusion brush.
+`{ radius, strength }`: finite radius from greater than zero through 128
+simulation cells and strength from 0 through 1. `false` disables the
+reaction–diffusion brush.
 
 ## `TexturePalette`
 

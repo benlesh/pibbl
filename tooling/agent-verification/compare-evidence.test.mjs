@@ -82,3 +82,22 @@ test('labels declared-only comparisons and compares observed facts when availabl
   after.run.environment.observedPage.preferences.dark = true;
   assert.ok(compareReplayReports(before, after).reasons.includes('environment:differs'));
 });
+
+test('compares explicit check evidence and refuses contradictory required-check passes', () => {
+  const before = report(); before.checks = [{ checkId: 'optional', status: 'skipped', required: false, reason: 'Not requested.' }];
+  const after = structuredClone(before); after.checks[0].reason = 'Explicitly deferred.';
+  assert.equal(compareReplayReports(before, after).checksChanged, true);
+  after.checks[0].required = true;
+  assert.ok(compareReplayReports(before, after).reasons.includes('after:contradictory-check-pass'));
+  after.checks[0].required = false; after.checks[0].status = 'unknown';
+  assert.ok(compareReplayReports(before, after).reasons.includes('after:invalid-check-outcomes'));
+});
+
+test('refuses missing required-check evidence and differing declared check manifests', () => {
+  const before = report(); before.requiredChecks = [{ checkId: 'hover.value', actionId: 'hover' }];
+  before.checks = [{ ...before.requiredChecks[0], status: 'pass', required: true, reason: null }];
+  const after = structuredClone(before); after.checks = [];
+  assert.ok(compareReplayReports(before, after).reasons.includes('after:incomplete-required-checks'));
+  after.checks = before.checks; delete after.requiredChecks;
+  assert.ok(compareReplayReports(before, after).reasons.includes('check-manifest:differs'));
+});

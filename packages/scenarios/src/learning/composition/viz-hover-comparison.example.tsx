@@ -30,8 +30,8 @@ import {
   type HoverQueryContext,
   type HoverHit,
   type HoverSample,
-} from "@crc/viz";
-type Row = { id?: string; x: number; y: number | null };
+} from "@crc/core/viz";
+type Row = { id?: string; x: number; y: number | null | undefined };
 type Mode = "closest-point" | "nearest-per-line" | "interpolated-x";
 type Reading = {
   series: string;

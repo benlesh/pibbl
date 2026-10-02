@@ -15,20 +15,20 @@ creates a fresh cache key and reevaluates data/value/key/label callbacks; signal
 reads in those callbacks remain tracked by the computed receivers.
 
 Baseline: after building workspace package entries, the pre-change focused
-`packages/viz/test/pie-layout.test.tsx` suite passed 4 tests in 14 ms test time
+`packages/core/test/features/viz/pie-layout.test.tsx` suite passed 4 tests in 14 ms test time
 on 2026-09-30 using Node 24.15.0, pnpm 11.21.0, and Chromium. This was a
 structural baseline only; concurrent browser work makes it unsuitable as a
 comparative timing result.
 
 Focused evidence after the change:
 
-- `packages/viz/test/pie-layout.test.tsx` checks annular hit-through, complete
+- `packages/core/test/features/viz/pie-layout.test.tsx` checks annular hit-through, complete
   box hole exclusion, strict-inside to auto-outside fallback, revision reuse,
   and default reevaluation.
-- `packages/viz/test/pie-example.test.ts` loads the editable pie composition;
+- `packages/core/test/features/viz/pie-example.test.ts` loads the editable pie composition;
   it now contains a **Show donut** control.
 - Fresh focused command: `corepack pnpm@11.21.0 exec vitest run
-packages/viz/test/pie-layout.test.tsx packages/viz/test/pie-example.test.ts
+packages/core/test/features/viz/pie-layout.test.tsx packages/core/test/features/viz/pie-example.test.ts
 --browser.headless --browser.ui=false` — 9 tests passed.
 
 This was a slice ready for feedback. Documentation, package-consumer checks,
@@ -45,6 +45,6 @@ their hook state on source reordering, removed slices release their targets,
 and disposal releases all remaining refs and targets.
 
 Fresh hardening command: `corepack pnpm@11.21.0 exec vitest run
-packages/viz/test/pie-layout.test.tsx packages/viz/test/pie-slices.test.tsx
-packages/viz/test/pie-example.test.ts --browser.headless --browser.ui=false`
+packages/core/test/features/viz/pie-layout.test.tsx packages/core/test/features/viz/pie-slices.test.tsx
+packages/core/test/features/viz/pie-example.test.ts --browser.headless --browser.ui=false`
 — 18 tests passed.

@@ -3,7 +3,7 @@
 Status: implemented, 2026-10-01.
 
 CRC texture production is authored through `defineTexture()` and mounted through
-`useTexture()` from `@crc/core`. `@crc/textures` is an optional package of
+`useTexture()` from `@crc/core`. `@crc/core/textures` is an optional package of
 recipes and existing texture components; it has no scheduler of its own and
 does not import the core friend entry. Creating a recipe or importing either
 package is inert. A mounted `useTexture` hook owns the live resource.
@@ -92,7 +92,7 @@ release invalid GPU handles on context loss, and invalidate consumers on restore
 Cross-context sharing and a generic public texture consumer protocol remain outside
 the public contract.
 
-`waterWaves()` in `@crc/textures` is an optional numeric RG displacement-map
+`waterWaves()` in `@crc/core/textures` is an optional numeric RG displacement-map
 recipe. It produces periodic integer-wave fields, accepts finite nonnegative
 speed and integer scale 1 through 32, rejects palettes, and supports `pause`
 and `reset` messages, plus normalized `ripple` impulses. `rippleStrength` changes
@@ -119,7 +119,7 @@ paint and opacity inside the filtered composition, with `pointerEvents="none"`.
 ## Existing texture components
 
 `ReactionDiffusion`, `ProceduralTexture`, `TextureRenderer`, and
-`texturePalettes` remain public `@crc/textures` exports. Each mounted legacy
+`texturePalettes` remain public `@crc/core/textures` exports. Each mounted legacy
 component owns an independent render-layer resource and source raster; it does
 not become a shared live `Texture` resource. Importing it is inert, and its
 render-layer lifecycle continues to own creation, resize, rendering, and
@@ -128,16 +128,12 @@ Gray--Scott field, bounded fixed-step timing, fresh-baseline pause/reset
 behavior, and CRC-routed primary-pointer brush queue. It advances only through
 the supplied frame invalidator, never by a second scheduler loop.
 
-CRC resolves one topmost target and supplies layer-local pointer coordinates.
-The default brush mapping scales the displayed rectangle into the simulation.
-A single primary pointer is captured through CRC; release/cancel ends the stroke.
-Stamps interpolate movement and clip to the field, without clamping out-of-bounds
-points to its edge. Brush settings are snapshotted into each queued stamp. Work is
-bounded to 4096 stamps per event and 8192 queued stamps; pathological overload can
-lose excess stamps. Queued painting applies before numerical steps. Painting plants separated nuclei
-within the brush area and skips occupied neighborhoods, avoiding the broad
-uniform doses that extinguish spots. Large brushes plant clusters; small or weak
-marks are not guaranteed to survive. Initialization retains its seeded patches.
+`send(message)` queues a structured-cloned message for the next eligible frame.
+It is forbidden during CRC evaluation, rejects a recipe without `receive`, and
+is inert after disposal. Messages are bounded at 8192. A texture may be shared
+between consumers in its owning CRC root tree, including nested Layers; a
+foreign-root or disposed value rejects when rendered. A texture resource has
+one producer regardless of how many paints or filters consume it.
 
 Its preset, seed, reset revision, and simulation-resolution changes reset the
 reaction field and clear queued strokes, capture, and elapsed time. Equal

@@ -25,7 +25,7 @@ The failed command was:
 
 ```sh
 PATH=/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin:$PATH \
-corepack pnpm@11.21.0 exec vitest run packages/viz/test/bar-series.test.tsx \
+corepack pnpm@11.21.0 exec vitest run packages/core/test/features/viz/bar-series.test.tsx \
   --browser.headless --browser.ui=false
 ```
 
@@ -42,10 +42,10 @@ Fresh Node 24.15.0 / pnpm 11.21.0 evidence:
 PATH=/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin:$PATH \
 corepack pnpm@11.21.0 -C packages/viz run build && \
 corepack pnpm@11.21.0 exec vitest run \
-  packages/viz/test/bar-series.test.tsx \
-  packages/viz/test/grouped-bars.test.tsx \
-  packages/viz/test/stacked-bars.test.tsx \
-  packages/viz/test/bars-example.test.ts \
+  packages/core/test/features/viz/bar-series.test.tsx \
+  packages/core/test/features/viz/grouped-bars.test.tsx \
+  packages/core/test/features/viz/stacked-bars.test.tsx \
+  packages/core/test/features/viz/bars-example.test.ts \
   --browser.headless --browser.ui=false
 ```
 
@@ -62,11 +62,11 @@ After hands-on approval, fresh Node 24.15.0 / pnpm 11.21.0 evidence:
 PATH=/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin:$PATH \
 corepack pnpm@11.21.0 -C packages/viz run build && \
 corepack pnpm@11.21.0 exec vitest run \
-  packages/viz/test/axis-runtime.test.tsx \
-  packages/viz/test/bar-series.test.tsx \
-  packages/viz/test/grouped-bars.test.tsx \
-  packages/viz/test/stacked-bars.test.tsx \
-  packages/viz/test/bars-example.test.ts \
+  packages/core/test/features/viz/axis-runtime.test.tsx \
+  packages/core/test/features/viz/bar-series.test.tsx \
+  packages/core/test/features/viz/grouped-bars.test.tsx \
+  packages/core/test/features/viz/stacked-bars.test.tsx \
+  packages/core/test/features/viz/bars-example.test.ts \
   --browser.headless --browser.ui=false
 ```
 

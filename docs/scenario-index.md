@@ -124,6 +124,10 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 |    65 | <a id="focus-and-keyboard-navigation"></a>**Focus and keyboard navigation**<br>Cross one Canvas focus host, traverse explicit logical controls, and use contained directional navigation.                                                              | Keyboard interaction  | documentation-candidate / contract | `#/testing/focus-and-keyboard-navigation` | [`packages/scenarios/src/focus-navigation.example.tsx`](../packages/scenarios/src/focus-navigation.example.tsx)                                                             |
 |    70 | <a id="mouse-interaction-contract"></a>**Mouse interaction contract**<br>Explore the approved native evidence and the target/order rules implemented by CRC’s dispatcher.                                                                              | Interaction contracts | test-laboratory / contract         | `#/testing/mouse-interaction-contract`    | [`packages/scenarios/src/mouse-contract.example.tsx`](../packages/scenarios/src/mouse-contract.example.tsx)                                                                 |
 |    75 | <a id="agent-targeting-verification"></a>**Agent targeting verification**<br>Diagnose a decorative Canvas overlay that intercepts an intended item selection, then verify its repair with the same native click.                                       | Diagnostics           | test-laboratory / contract         | `#/testing/agent-targeting-verification`  | [`packages/scenarios/src/agent-targeting-verification.example.tsx`](../packages/scenarios/src/agent-targeting-verification.example.tsx)                                     |
+|    76 | <a id="agent-text-verification"></a>**Agent text verification**<br>Verify an exact fixture label while redacting private text from machine evidence.                                                                                                   | Diagnostics           | test-laboratory / contract         | `#/testing/agent-text-verification`       | [`packages/scenarios/src/agent-text-verification.example.tsx`](../packages/scenarios/src/agent-text-verification.example.tsx)                                               |
+|    77 | <a id="agent-signal-mutation"></a>**Signal mutation diagnosis**<br>Distinguish reference-equal writes from a stale amount after in-place mutation, then repair by replacing the object.                                                                | Diagnostics           | test-laboratory / contract         | `#/testing/agent-signal-mutation`         | [`packages/scenarios/src/agent-signal-mutation.example.tsx`](../packages/scenarios/src/agent-signal-mutation.example.tsx)                                                   |
+|    78 | <a id="agent-layout-placement"></a>**Layout placement diagnosis**<br>Separate parent placement from local shape offsets and diagnose a clipped shape.                                                                                                  | Diagnostics           | test-laboratory / characterization | `#/testing/agent-layout-placement`        | [`packages/scenarios/src/agent-layout-placement.example.tsx`](../packages/scenarios/src/agent-layout-placement.example.tsx)                                                 |
+|    79 | <a id="agent-late-font"></a>**Late font readiness diagnosis**<br>Distinguish loaded fonts from scheduled repaint and responsive text updates.                                                                                                          | Diagnostics           | test-laboratory / characterization | `#/testing/agent-late-font`               | [`packages/scenarios/src/agent-late-font.example.tsx`](../packages/scenarios/src/agent-late-font.example.tsx)                                                               |
 |    80 | <a id="interaction-trace-lab"></a>**User-event contract laboratory**<br>Drive propagation, capture, touch retention, cancellation, keyboard, composition, clipboard, drag/drop, and legacy mouse rules through shared public-API fixtures.             | Interaction contracts | test-laboratory / trusted          | `#/testing/interaction-trace-lab`         | [`packages/scenarios/src/interaction-lab.example.tsx`](../packages/scenarios/src/interaction-lab.example.tsx)                                                               |
 |    90 | <a id="event-lifecycle-lab"></a>**Event lifecycle laboratory**<br>Exercise rerender, handler, subtree, layer, abort, dispose, remount, and stale-cleanup ownership flows.                                                                              | Diagnostics           | test-laboratory / trusted          | `#/testing/event-lifecycle-lab`           | [`packages/scenarios/src/lifecycle-lab.example.tsx`](../packages/scenarios/src/lifecycle-lab.example.tsx)                                                                   |
 |   100 | <a id="geometry-composition-matrix"></a>**Geometry composition matrix**<br>Probe intrinsic coordinates, nested transforms and clips, global layer paint order, layer bounds, and stroke interaction geometry.                                          | Interaction contracts | test-laboratory / trusted          | `#/testing/geometry-composition-matrix`   | [`packages/scenarios/src/geometry-matrix.example.tsx`](../packages/scenarios/src/geometry-matrix.example.tsx)                                                               |
@@ -147,7 +151,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 
 ## Test labs by public API
 
-- **Absolute:** [Layout foundation laboratory](#layout-foundation)
+- **Absolute:** [Layout placement diagnosis](#agent-layout-placement), [Layout foundation laboratory](#layout-foundation)
 - **Arc:** [Draw shapes](#drawing-shapes)
 - **Axis:** [Visualization foundation laboratory](#viz-foundation-lab)
 - **CRCController:** [Event lifecycle laboratory](#event-lifecycle-lab)
@@ -160,7 +164,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **Flow:** [Responsive style thresholds](#responsive-styles)
 - **FocusManagement:** [Focus and keyboard navigation](#focus-and-keyboard-navigation)
 - **Grid:** [Responsive style thresholds](#responsive-styles), [Layout foundation laboratory](#layout-foundation)
-- **Group:** [Compose a scene](#drawing-composition), [Mouse interaction contract](#mouse-interaction-contract), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [First-class filters laboratory](#first-class-filters)
+- **Group:** [Compose a scene](#drawing-composition), [Mouse interaction contract](#mouse-interaction-contract), [Layout placement diagnosis](#agent-layout-placement), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [First-class filters laboratory](#first-class-filters)
 - **HorizontalLine:** [Draw lines](#drawing-lines)
 - **HoverCard:** [Hover query comparison laboratory](#viz-hover-lab)
 - **HoverData:** [Hover query comparison laboratory](#viz-hover-lab)
@@ -179,13 +183,13 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **PlotSeries:** [Points and custom plots laboratory](#viz-points-lab)
 - **PointSeries:** [Points and custom plots laboratory](#viz-points-lab)
 - **Polygon:** [Draw shapes](#drawing-shapes)
-- **Rectangle:** [Baseline smoke](#baseline-smoke), [Draw shapes](#drawing-shapes), [Mouse interaction contract](#mouse-interaction-contract), [Agent targeting verification](#agent-targeting-verification), [User-event contract laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Canvas surface laboratory](#canvas-surface)
+- **Rectangle:** [Baseline smoke](#baseline-smoke), [Draw shapes](#drawing-shapes), [Mouse interaction contract](#mouse-interaction-contract), [Agent targeting verification](#agent-targeting-verification), [Signal mutation diagnosis](#agent-signal-mutation), [Layout placement diagnosis](#agent-layout-placement), [User-event contract laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Canvas surface laboratory](#canvas-surface)
 - **RegularPolygon:** [Draw shapes](#drawing-shapes)
 - **ResizeHandles:** [Component manipulation laboratory](#component-manipulation)
 - **Scale:** [Visualization foundation laboratory](#viz-foundation-lab)
 - **Star:** [Draw shapes](#drawing-shapes)
 - **SvgPath:** [Draw shapes](#drawing-shapes)
-- **Text:** [Baseline smoke](#baseline-smoke), [Draw text](#drawing-text), [Layout foundation laboratory](#layout-foundation), [Canvas surface laboratory](#canvas-surface)
+- **Text:** [Baseline smoke](#baseline-smoke), [Draw text](#drawing-text), [Agent text verification](#agent-text-verification), [Signal mutation diagnosis](#agent-signal-mutation), [Late font readiness diagnosis](#agent-late-font), [Layout foundation laboratory](#layout-foundation), [Canvas surface laboratory](#canvas-surface)
 - **VerticalLine:** [Draw lines](#drawing-lines)
 - **Wedge:** [Draw shapes](#drawing-shapes)
 - **applyImpulse2D:** [First-class 2D physics laboratory](#first-class-physics-2d)
@@ -195,7 +199,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **collider2D:** [First-class 2D physics laboratory](#first-class-physics-2d)
 - **composition events:** [User-event contract laboratory](#interaction-trace-lab)
 - **computed:** [First-class signals laboratory](#first-class-signals)
-- **crc:** [Baseline smoke](#baseline-smoke), [Mouse interaction contract](#mouse-interaction-contract), [Agent targeting verification](#agent-targeting-verification), [User-event contract laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Runtime and hooks laboratory](#runtime-hooks-laboratory), [Canvas surface laboratory](#canvas-surface), [First-class signals laboratory](#first-class-signals)
+- **crc:** [Baseline smoke](#baseline-smoke), [Mouse interaction contract](#mouse-interaction-contract), [Agent targeting verification](#agent-targeting-verification), [Agent text verification](#agent-text-verification), [User-event contract laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Runtime and hooks laboratory](#runtime-hooks-laboratory), [Canvas surface laboratory](#canvas-surface), [First-class signals laboratory](#first-class-signals)
 - **crcPhysicsBody2D:** [First-class 2D physics laboratory](#first-class-physics-2d)
 - **crcPhysicsWorld2D:** [First-class 2D physics laboratory](#first-class-physics-2d)
 - **createRegularPolygonPath:** [Draw shapes](#drawing-shapes)
@@ -232,7 +236,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **useEvent:** [User-event contract laboratory](#interaction-trace-lab)
 - **useEventListener:** [User-event contract laboratory](#interaction-trace-lab)
 - **useEventTarget:** [Focus and keyboard navigation](#focus-and-keyboard-navigation), [User-event contract laboratory](#interaction-trace-lab)
-- **useLayoutBox:** [Responsive style thresholds](#responsive-styles), [Layout foundation laboratory](#layout-foundation), [Canvas surface laboratory](#canvas-surface)
+- **useLayoutBox:** [Layout placement diagnosis](#agent-layout-placement), [Late font readiness diagnosis](#agent-late-font), [Responsive style thresholds](#responsive-styles), [Layout foundation laboratory](#layout-foundation), [Canvas surface laboratory](#canvas-surface)
 - **useLinePath:** [Runtime and hooks laboratory](#runtime-hooks-laboratory)
 - **useManipulation:** [Component manipulation laboratory](#component-manipulation)
 - **useParticleSystem:** [Canvas particle celebration laboratory](#first-class-particle-celebration)
@@ -259,7 +263,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **central scheduler:** [First-class animation laboratory](#first-class-animation), [First-class 2D physics laboratory](#first-class-physics-2d)
 - **click identity:** [Mouse interaction contract](#mouse-interaction-contract)
 - **clip intersection:** [Geometry composition matrix](#geometry-composition-matrix)
-- **clipping:** [Draw shapes](#drawing-shapes), [Compose a scene](#drawing-composition), [Layout foundation laboratory](#layout-foundation)
+- **clipping:** [Draw shapes](#drawing-shapes), [Compose a scene](#drawing-composition), [Layout placement diagnosis](#agent-layout-placement), [Layout foundation laboratory](#layout-foundation)
 - **collision ordering:** [First-class 2D physics laboratory](#first-class-physics-2d)
 - **combined silhouette:** [First-class filters laboratory](#first-class-filters)
 - **committed picking:** [Three picking generation laboratory](#three-picking-generation)
@@ -277,6 +281,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **dispose:** [Event lifecycle laboratory](#event-lifecycle-lab)
 - **dynamic dependencies:** [First-class signals laboratory](#first-class-signals)
 - **equal write:** [First-class signals laboratory](#first-class-signals)
+- **equality:** [Signal mutation diagnosis](#agent-signal-mutation)
 - **even-odd fill:** [Compose a scene](#drawing-composition)
 - **event order:** [Mouse interaction contract](#mouse-interaction-contract), [User-event contract laboratory](#interaction-trace-lab)
 - **event ownership:** [Event lifecycle laboratory](#event-lifecycle-lab)
@@ -289,6 +294,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **fixed-step simulation:** [First-class animation laboratory](#first-class-animation)
 - **flattened Three layer:** [Three.js instancing integration laboratory](#three-instancing)
 - **focus-visible:** [Focus and keyboard navigation](#focus-and-keyboard-navigation)
+- **fonts:** [Late font readiness diagnosis](#agent-late-font)
 - **generated geometry:** [Draw shapes](#drawing-shapes)
 - **generation consistency:** [Three picking generation laboratory](#three-picking-generation)
 - **hit boundaries:** [Geometry composition matrix](#geometry-composition-matrix)
@@ -297,7 +303,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **idempotent disposal:** [Runtime cleanup stress laboratory](#runtime-cleanup-stress)
 - **identity:** [Points and custom plots laboratory](#viz-points-lab)
 - **image loading:** [Draw images](#drawing-images)
-- **inspection:** [Agent targeting verification](#agent-targeting-verification), [Hover query comparison laboratory](#viz-hover-lab)
+- **inspection:** [Agent targeting verification](#agent-targeting-verification), [Agent text verification](#agent-text-verification), [Hover query comparison laboratory](#viz-hover-lab)
 - **interaction arbitration:** [Three.js instancing integration laboratory](#three-instancing)
 - **interaction bounds:** [Draw text](#drawing-text)
 - **interpolation:** [Hover query comparison laboratory](#viz-hover-lab)
@@ -306,6 +312,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **keyed reconciliation:** [Runtime and hooks laboratory](#runtime-hooks-laboratory)
 - **kinematic target:** [First-class 2D physics laboratory](#first-class-physics-2d)
 - **layer reuse:** [First-class signals laboratory](#first-class-signals)
+- **layout:** [Layout placement diagnosis](#agent-layout-placement)
 - **local allocation:** [Visualization foundation laboratory](#viz-foundation-lab), [Points and custom plots laboratory](#viz-points-lab)
 - **logical focus:** [Focus and keyboard navigation](#focus-and-keyboard-navigation)
 - **logical viewport:** [Canvas surface laboratory](#canvas-surface)
@@ -313,6 +320,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **mount:** [Baseline smoke](#baseline-smoke)
 - **mount stress:** [Runtime cleanup stress laboratory](#runtime-cleanup-stress)
 - **mouse click:** [Baseline smoke](#baseline-smoke)
+- **mutation:** [Signal mutation diagnosis](#agent-signal-mutation)
 - **native input:** [Agent targeting verification](#agent-targeting-verification)
 - **natural size:** [Draw images](#drawing-images)
 - **nested boundaries:** [First-class filters laboratory](#first-class-filters)
@@ -331,6 +339,8 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **pose ownership handoff:** [First-class 2D physics laboratory](#first-class-physics-2d)
 - **propagation:** [User-event contract laboratory](#interaction-trace-lab)
 - **reactions:** [First-class signals laboratory](#first-class-signals)
+- **readiness:** [Late font readiness diagnosis](#agent-late-font)
+- **redaction:** [Agent text verification](#agent-text-verification)
 - **registered Three target:** [Three.js instancing integration laboratory](#three-instancing)
 - **registration:** [Event performance laboratory](#event-performance-lab)
 - **related targets:** [User-event contract laboratory](#interaction-trace-lab)
@@ -357,17 +367,19 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **target retention:** [User-event contract laboratory](#interaction-trace-lab)
 - **targeting:** [Agent targeting verification](#agent-targeting-verification)
 - **teardown:** [Event lifecycle laboratory](#event-lifecycle-lab)
+- **text:** [Agent text verification](#agent-text-verification)
 - **topmost target:** [Mouse interaction contract](#mouse-interaction-contract), [User-event contract laboratory](#interaction-trace-lab)
 - **transforms:** [Compose a scene](#drawing-composition)
 - **typography:** [Draw text](#drawing-text)
 - **updates:** [Draw shapes](#drawing-shapes), [Draw lines](#drawing-lines), [Compose a scene](#drawing-composition)
+- **verification:** [Signal mutation diagnosis](#agent-signal-mutation), [Layout placement diagnosis](#agent-layout-placement), [Late font readiness diagnosis](#agent-late-font)
 - **visual overflow:** [First-class filters laboratory](#first-class-filters)
 - **word wrap:** [Draw text](#drawing-text)
 - **world queries:** [First-class 2D physics laboratory](#first-class-physics-2d)
 
 ## By category
 
-- **Diagnostics:** [Agent targeting verification](#agent-targeting-verification), [Event lifecycle laboratory](#event-lifecycle-lab), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Runtime and hooks laboratory](#runtime-hooks-laboratory)
+- **Diagnostics:** [Agent targeting verification](#agent-targeting-verification), [Agent text verification](#agent-text-verification), [Signal mutation diagnosis](#agent-signal-mutation), [Layout placement diagnosis](#agent-layout-placement), [Late font readiness diagnosis](#agent-late-font), [Event lifecycle laboratory](#event-lifecycle-lab), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Runtime and hooks laboratory](#runtime-hooks-laboratory)
 - **Drawing basics:** [Draw shapes](#drawing-shapes), [Draw lines](#drawing-lines), [Draw text](#drawing-text), [Draw images](#drawing-images)
 - **Drawing composition:** [Compose a scene](#drawing-composition)
 - **Getting started:** [Baseline smoke](#baseline-smoke)

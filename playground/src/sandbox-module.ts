@@ -4,15 +4,15 @@ const SUPPORTED_MODULES = new Set([
   "@crc/core",
   "@crc/core/filters",
   "@crc/text",
-  "@crc/viz",
-  "@crc/textures",
+  "@crc/core/viz",
+  "@crc/core/textures",
   "@crc/core/jsx-runtime",
   "@crc/core/jsx-dev-runtime",
-  "@crc/particles",
+  "@crc/core/particles",
   "@crc/three",
-  "@crc/physics/2d",
-  "@crc/physics/2d/geometry",
-  "@crc/physics/3d/geometry",
+  "@crc/core/physics/2d",
+  "@crc/core/physics/2d/geometry",
+  "@crc/core/physics/3d/geometry",
   "three",
   "three/addons/controls/OrbitControls.js",
 ]);
@@ -49,10 +49,10 @@ interface SourceEdit {
 
 function invalidModuleShape(): Error {
   return new Error(
-    "Lessons may contain named imports only from @crc/core, @crc/viz, @crc/textures, " +
-      "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, @crc/particles, " +
-      "@crc/physics/2d, @crc/physics/2d/geometry, " +
-      "@crc/physics/3d/geometry, @crc/three, three, and " +
+    "Lessons may contain named imports only from @crc/core, @crc/core/filters, @crc/core/viz, @crc/core/textures, " +
+      "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, @crc/core/particles, " +
+      "@crc/core/physics/2d, @crc/core/physics/2d/geometry, " +
+      "@crc/core/physics/3d/geometry, @crc/three, three, and " +
       "three/addons/controls/OrbitControls.js, plus exactly " +
       "one default mount(canvas) export.",
   );

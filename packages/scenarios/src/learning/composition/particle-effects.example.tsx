@@ -18,7 +18,7 @@ import {
   particleCurve,
   particleRange,
   useParticleSystem,
-} from '@crc/particles';
+} from '@crc/core/particles';
 
 const burningSquareEffect = defineParticleEffect2D({
   debugName: 'learning burning square',

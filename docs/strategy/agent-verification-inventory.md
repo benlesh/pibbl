@@ -544,7 +544,7 @@ not implied by those authoring APIs; inspect actual tooling coverage separately.
 **Owners:** Application, optional visualization package, browser/harness.
 The linear-scale, line/point/custom-series and hover-query surface is implemented.
 Additional chart families and data-pipeline operations remain capability-specific;
-this inventory does not imply that all listed operations ship in `@crc/viz`.
+this inventory does not imply that all listed operations ship in `@crc/core/viz`.
 
 - **DAT-01:** Identify dataset version, stable row keys, schema, units, source and
   freshness expectations without requiring full data disclosure.
@@ -692,7 +692,7 @@ Third-party simulation inside Three belongs to an application/adapter facet.
   births/deaths and effect age; do not require per-particle components or observers.
 - **SIM-06:** Verify fixed-step, clamping, repeatability and bounded catch-up under
   controlled conditions without promising cross-platform bit-identical simulation.
-  The existing `@crc/physics/2d/testing` harness advances requested host frames;
+  The existing `@crc/core/physics/2d/testing` harness advances requested host frames;
   one host frame must not be reported as one guaranteed physics tick.
 - **SIM-07:** Detect double-driving a value through physics, animation and direct
   writes where ownership rules prohibit that combination.
@@ -1122,9 +1122,9 @@ from source files or another chat's historical report.
 | Identity/source metadata  | `packages/core/src/lib/render.ts` and runtime/hooks contract                            | Useful internal facts exist; avoid making private ref paths public IDs                                                                     |
 | Targeting prototype       | Branch `codex/agent-verification`, commit `51821c12` plus uncommitted hardening         | Bounded root-path snapshots and active probes exist separately; integration and fresh verification remain outstanding here                 |
 | Signals                   | `packages/core/src/index.ts`, signal graph and owned hook sources                       | Receiver-owned inputs, batch, useComputed, useConst and useReaction are implemented; general signal tracing is separate work               |
-| Visualization             | `packages/viz/src/index.ts` and `packages/viz/test/`                                    | Scales, axes, line/point/custom series, hover queries/cards and anchored layout exist; do not duplicate their calculations in an inspector |
+| Visualization             | `packages/core/src/features/viz/index.ts` and `packages/core/test/features/viz/`                                    | Scales, axes, line/point/custom series, hover queries/cards and anchored layout exist; do not duplicate their calculations in an inspector |
 | External rendering        | `docs/design/render-layer-and-three-contract.md`, core and Three public entries         | Inspect CRC composition/lifecycle and request optional Three facts; no removed custom WebGL package or 3D runtime should be recreated      |
-| Physics observations      | `packages/physics/src/2d.ts`, `packages/physics/src/2d-testing.ts` and physics contract | inspectPhysics2D, PhysicsDebug2D and the isolated host-frame harness already serve part of the simulation requirements                     |
+| Physics observations      | `packages/core/src/features/physics/2d.ts`, `packages/core/src/features/physics/2d-testing.ts` and physics contract | inspectPhysics2D, PhysicsDebug2D and the isolated host-frame harness already serve part of the simulation requirements                     |
 | Ownership/performance     | Runtime ownership contract and trust-gate policy                                        | Existing internal counters/tests are candidates for evidence reuse, not proof of an external inspection API                                |
 | Browser/scenario evidence | Trust gate and test-tooling opportunities                                               | Preserve shared manual/headless scenarios and native input verification                                                                    |
 | Accessibility             | Canvas accessibility guidance                                                           | Application-authored semantics remain necessary                                                                                            |

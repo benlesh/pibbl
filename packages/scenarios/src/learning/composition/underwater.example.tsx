@@ -14,7 +14,7 @@ import {
   type CRCManipulationBox,
 } from "@crc/core";
 import { displacement, reflectedLight } from "@crc/core/filters";
-import { marble, waterSurface } from "@crc/textures";
+import { marble, waterSurface } from "@crc/core/textures";
 
 const skyReflection = defineTexture({
   create: () => ({}),

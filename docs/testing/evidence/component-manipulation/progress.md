@@ -69,7 +69,7 @@ This section supersedes the earlier next-action list; the feature remains incomp
 
 ## Migration and final-scope audit follow-up
 
-- Fresh integrated physics + complete learning catalog: `vitest run packages/physics/src/lib/2d packages/core/test/learning-examples.test.ts --browser.headless --browser.ui=false --maxWorkers=4` passed 26 files / 442 tests. The physics regression was real: local Rectangle/Text/Image inference and body/collider placement transforms required migration together. Commit `a8ab779d` restores alignment without changing tolerances.
+- Fresh integrated physics + complete learning catalog: `vitest run packages/core/src/features/physics/lib/2d packages/core/test/learning-examples.test.ts --browser.headless --browser.ui=false --maxWorkers=4` passed 26 files / 442 tests. The physics regression was real: local Rectangle/Text/Image inference and body/collider placement transforms required migration together. Commit `a8ab779d` restores alignment without changing tolerances.
 - Integrated terminal and lab evidence passed eight tests across three files (public example, terminal paths, private lab). The example now installs `FocusManagement`, so native Escape restores the preview and does not add a commit. New private lab route: `#/testing/manipulation`.
 - Integrated same-mounted-frame controller replacement fix `0386608f`; former controller releases/rolls back and the existing frame adopts its new controller. Worker focused evidence: 23 tests / four files.
 - Documentation checks passed with 1028 mutation probes; Studio docs inventory/search checks passed. Lint and typecheck passed after formatting and callback error-cause fixes. Formatting changes in the docs manifest preserve its parsed semantics and reviewed hash.

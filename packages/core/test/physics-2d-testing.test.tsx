@@ -7,8 +7,8 @@ import {
   dynamicBody2D,
   kinematicBody2D,
   type CRCPhysicsBodyHandle2D,
-} from "@crc/physics/2d";
-import { createPhysicsTestHarness2D } from "@crc/physics/2d/testing";
+} from "@crc/core/physics/2d";
+import { createPhysicsTestHarness2D } from "@crc/core/physics/2d/testing";
 import { describe, expect, it } from "vitest";
 
 describe("public physics 2D test harness", () => {

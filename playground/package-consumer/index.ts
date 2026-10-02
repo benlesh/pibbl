@@ -131,8 +131,8 @@ import type {
   WritableSignal,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
-import * as ParticleRuntime from '@crc/particles';
-import type * as ParticleTypes from '@crc/particles';
+import * as ParticleRuntime from '@crc/core/particles';
+import type * as ParticleTypes from '@crc/core/particles';
 import * as ThreeRuntime from '@crc/three';
 import {
   defineThreeLayer,
@@ -157,10 +157,10 @@ import {
   type CRCParticleParameterValues,
   type CRCParticleSystem,
   type Particles2DProps,
-} from '@crc/particles';
-import { PhysicsWorld2D, crcPhysicsWorld2D, physicsObstacles2D } from '@crc/physics/2d';
-import * as Physics3DGeometry from '@crc/physics/3d/geometry';
-import type * as Physics3DGeometryTypes from '@crc/physics/3d/geometry';
+} from '@crc/core/particles';
+import { PhysicsWorld2D, crcPhysicsWorld2D, physicsObstacles2D } from '@crc/core/physics/2d';
+import * as Physics3DGeometry from '@crc/core/physics/3d/geometry';
+import type * as Physics3DGeometryTypes from '@crc/core/physics/3d/geometry';
 import {
   createBackendToken,
   defineBackendPrimitive,
@@ -233,6 +233,7 @@ import {
   useTransition,
   useReaction,
   createElement,
+  HtmlBox,
   defineAnimation,
   definePrimitive,
   defineRenderLayer,

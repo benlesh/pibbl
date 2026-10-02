@@ -45,7 +45,7 @@ test('identity is embedded in the loaded fixture only for source development', a
   assert.ok(vizTransformed.code.includes(JSON.stringify(vizIdentity)));
   assert.ok(!vizTransformed.code.includes(identityMarker));
   assert.notEqual(vizIdentity.sha256, identity.sha256);
-  assert.ok(vizIdentity.files > identity.files);
+  // Both scopes now include feature modules through the consolidated core tree.
 });
 
 test('native replay blocks a mismatched served fixture before exercising actions', { timeout: 30000 }, async () => {
@@ -123,7 +123,7 @@ test('native replay retains structured assertion evidence from a controlled fixt
   const server = createServer((_request, response) => {
     response.setHeader('Content-Type', 'text/html');
     response.end(`<script type="application/json" data-testid="agent-targeting-evidence">${JSON.stringify({
-      schema: 'crc-targeting-fixture/1', identity, state: { inspectionAvailability: 'unsupported-test-fixture' },
+      schema: 'crc-targeting-fixture/1', identity, state: { runtimeCompatibility: { status: 'accepted', diagnostic: { relation: 'same-runtime', versions: 'matching' } }, inspectionAvailability: 'unsupported-test-fixture' },
     })}</script>`);
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));

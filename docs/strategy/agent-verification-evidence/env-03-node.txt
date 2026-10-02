@@ -1,0 +1,24 @@
+✔ checks declared core peer pins without confusing package versions with peer compatibility (0.914458ms)
+✔ does not infer compatibility from unsupported ranges, missing declarations or duplicate manifests (0.34725ms)
+✔ audits current official manifests with provenance and explicitly limited scope (3.481584ms)
+✔ CLI retains incompatible peer evidence and exits nonzero for a mismatched core pin (33.720041ms)
+✔ served identity rejects different fixture bytes even with the same revision (4.845125ms)
+✔ identity is embedded in the loaded fixture only for source development (95.775583ms)
+✔ native replay blocks a mismatched served fixture before exercising actions (375.201666ms)
+✔ visualization replay blocks a mismatched served fixture before exercising actions (347.2255ms)
+✔ native replay retains structured assertion evidence from a controlled fixture (341.598667ms)
+✔ uses installed manifests and standard peer ranges without executing resolved packages (8.624875ms)
+✔ reports required missing, optional missing and invalid ranges distinctly (4.833875ms)
+✔ distinguishes duplicate physical core installations from proof of loaded duplicate runtimes (3.809333ms)
+✔ observes current official consumers including the Three.js peer (6.473083ms)
+✔ does not call an installed but broken optional peer absent (3.723167ms)
+✔ distinguishes actual bundled runtime copies from independent JavaScript realms (21.553291ms)
+✔ reports incompatible versions and unavailable or accessor bindings without evaluating user properties (9.03975ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1208.396917

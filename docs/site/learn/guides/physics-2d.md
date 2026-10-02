@@ -13,7 +13,9 @@ keywords:
 
 Use `PhysicsWorld2D` around normal CRC components with `physics` attachments.
 CRC supplies the clock and component lifecycle; the bundled Rapier engine solves
-solid contacts. Do not start another animation loop or call the engine directly.
+solid contacts. Physics and geometry subpaths are included in `@crc/core`;
+Rapier requires no separate installation. Core drawing and pure geometry
+imports do not load or initialize the engine. Do not start another animation loop or call the engine directly.
 
 ```tsx
 import { Circle, Group, Rectangle } from "@crc/core";
@@ -24,7 +26,7 @@ import {
   crcPhysicsBody2D,
   dynamicBody2D,
   staticBody2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 
 function Ball() {
   const body = crcPhysicsBody2D();
@@ -84,7 +86,7 @@ dragging or animation handoff. Keep the handle stable and use its `enabled` and
 
 A compound body is a `Group` with `collider: false` and child `collider2D`
 attachments. Children may be solids or sensors; custom geometry comes from the
-pure `@crc/physics/2d/geometry` factories. `mass: "auto"` derives mass and center
+pure `@crc/core/physics/2d/geometry` factories. `mass: "auto"` derives mass and center
 of mass from contributing colliders; explicit `mass` gives a predictable impulse
 response. Public body position is the authored origin, not necessarily its COM.
 
@@ -138,7 +140,7 @@ its Canvas and uses the same public components as a manual scene.
 ```tsx
 import { expect } from "vitest";
 import { Circle, Rectangle } from "@crc/core";
-import { createPhysicsTestHarness2D } from "@crc/physics/2d/testing";
+import { createPhysicsTestHarness2D } from "@crc/core/physics/2d/testing";
 import {
   PhysicsWorld2D,
   crcPhysicsWorld2D,
@@ -146,7 +148,7 @@ import {
   staticBody2D,
   inspectPhysics2D,
   type CRCPhysicsWorldHandle2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 
 const canvas = document.createElement("canvas");
 canvas.width = 240;

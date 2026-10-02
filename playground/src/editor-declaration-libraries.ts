@@ -11,24 +11,24 @@ interface DeclarationLibraryDefaults {
 
 const declarationModulePaths = new Map([
   ["@crc/core/filters", "file:///node_modules/@crc/core/filters.d.ts"],
-  ["@crc/textures", "file:///node_modules/@crc/textures/index.d.ts"],
+  ["@crc/core/textures", "file:///node_modules/@crc/core/textures/index.d.ts"],
   ["@crc/text", "file:///node_modules/@crc/text/index.d.ts"],
-  ["@crc/viz", "file:///node_modules/@crc/viz/index.d.ts"],
+  ["@crc/core/viz", "file:///node_modules/@crc/core/viz/index.d.ts"],
   ["@crc/core", "file:///node_modules/@crc/core/index.d.ts"],
   ["@crc/core/jsx-runtime", "file:///node_modules/@crc/core/jsx-runtime.d.ts"],
   [
     "@crc/core/jsx-dev-runtime",
     "file:///node_modules/@crc/core/jsx-dev-runtime.d.ts",
   ],
-  ["@crc/particles", "file:///node_modules/@crc/particles/index.d.ts"],
-  ["@crc/physics/2d", "file:///node_modules/@crc/physics/2d.d.ts"],
+  ["@crc/core/particles", "file:///node_modules/@crc/core/particles/index.d.ts"],
+  ["@crc/core/physics/2d", "file:///node_modules/@crc/core/physics/2d.d.ts"],
   [
-    "@crc/physics/2d/geometry",
-    "file:///node_modules/@crc/physics/2d/geometry.d.ts",
+    "@crc/core/physics/2d/geometry",
+    "file:///node_modules/@crc/core/physics/2d/geometry.d.ts",
   ],
   [
-    "@crc/physics/3d/geometry",
-    "file:///node_modules/@crc/physics/3d/geometry.d.ts",
+    "@crc/core/physics/3d/geometry",
+    "file:///node_modules/@crc/core/physics/3d/geometry.d.ts",
   ],
   ["@crc/three", "file:///node_modules/@crc/three/index.d.ts"],
 ]);

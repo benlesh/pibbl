@@ -2,7 +2,7 @@
 
 ## Active plan
 
-No project plan is currently active.
+[004 — HtmlBox](./004-html-box.md) is active.
 
 ## Strategy input
 
@@ -18,6 +18,7 @@ may instead state that it does not advance a strategy initiative.
 - [`001 — Trustworthy existing features`](./001-trustworthy-existing-features.md)
 - [`002 — CRC interactive examples studio`](./002-crc-interactive-examples-studio.md)
 - [`003 — First-class style and layout`](./003-first-class-style-and-layout.md)
+- [`005 — Package consolidation`](./005-package-consolidation.md)
 
 ## Operating protocol
 

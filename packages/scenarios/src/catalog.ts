@@ -951,6 +951,79 @@ export const mouseContractScenarioEntry: ScenarioCatalogEntry<MouseContractScena
       (await import("./mouse-contract-scenario")).mouseContractScenario,
   };
 
+
+
+const agentLateFontEntry: ScenarioCatalogEntry<import('./agent-late-font').AgentLateFontState> = {
+  metadata: {
+    id: 'agent-late-font', slug: 'agent-late-font', title: 'Late font readiness diagnosis',
+    summary: 'Distinguish loaded fonts from scheduled repaint and responsive text updates.', category: 'Diagnostics',
+    apiTags: ['Text', 'signal', 'useLayoutBox'], conceptTags: ['fonts', 'readiness', 'verification'],
+    manualSteps: [
+      { action: 'Choose Load font.', expected: 'Font readiness and measured width change; existing Canvas pixels wait for repaint.' },
+      { action: 'Choose Repaint.', expected: 'An application signal requests rendering with the ready font.' },
+      { action: 'Choose Narrow canvas.', expected: 'The responsive allocation becomes 200 pixels wide and text size becomes 16px.' },
+    ],
+    knownLimitations: ['No-redraw observations cover two host frames only. Measurements do not prove individual glyph font attribution.', 'Source scheduler inspection only; no served-build attestation.'],
+    learningOrder: 79, visibility: 'test-laboratory', visibilityReason: 'Controlled local font readiness and application repaint evidence.', maturity: 'characterization',
+  },
+  canvas: { width: 400, height: 120 },
+  actions: [{ id: 'load-font', label: 'Load font' }, { id: 'repaint', label: 'Repaint' }, { id: 'narrow', label: 'Narrow canvas' }, { id: 'wide', label: 'Wide canvas' }, { id: 'reset', label: 'Reset' }],
+  source: { id: 'agent-late-font-example', language: 'tsx', marker: "AGENT_LATE_FONT_SOURCE_ID = 'agent-late-font-example'", path: 'packages/scenarios/src/agent-late-font.example.tsx' },
+  load: async () => (await import('./agent-late-font')).agentLateFontScenario,
+};
+
+const agentLayoutPlacementEntry: ScenarioCatalogEntry<import('./agent-layout-placement').AgentLayoutPlacementState> = {
+  metadata: {
+    id: 'agent-layout-placement', slug: 'agent-layout-placement', title: 'Layout placement diagnosis',
+    summary: 'Separate parent placement from local shape offsets and diagnose a clipped shape.', category: 'Diagnostics',
+    apiTags: ['Absolute', 'Group', 'Rectangle', 'useLayoutBox'], conceptTags: ['layout', 'clipping', 'verification'],
+    manualSteps: [
+      { action: 'Inspect the clipped mode.', expected: 'Allocation exists but the local offset puts the shape outside the parent clip.' },
+      { action: 'Choose Allow overflow and click the blue shape.', expected: 'The same offset is visible and targetable under the explicit policy.' },
+      { action: 'Choose Repair local offset and click the blue shape.', expected: 'The shape moves inside the clip; allocation stays unchanged.' },
+    ],
+    knownLimitations: ['Controlled input provenance, not a general style inspector. Source inspection only; no served-build attestation yet.', 'Point probes establish targeting geometry, not painted visibility.'],
+    learningOrder: 78, visibility: 'test-laboratory', visibilityReason: 'Controlled placement failure and repair for agent diagnosis.', maturity: 'characterization',
+  },
+  canvas: { width: 400, height: 240 },
+  actions: [{ id: 'clipped', label: 'Seed clipped offset' }, { id: 'overflow-visible', label: 'Allow overflow' }, { id: 'repaired', label: 'Repair local offset' }, { id: 'overlap-allowed', label: 'Allow overlap' }, { id: 'overlap-prohibited', label: 'Require separation' }],
+  source: { id: 'agent-layout-placement-example', language: 'tsx', marker: "AGENT_LAYOUT_PLACEMENT_SOURCE_ID = 'agent-layout-placement-example'", path: 'packages/scenarios/src/agent-layout-placement.example.tsx' },
+  load: async () => (await import('./agent-layout-placement')).agentLayoutPlacementScenario,
+};
+
+const agentSignalMutationEntry: ScenarioCatalogEntry<import('./agent-signal-mutation').AgentSignalMutationState> = {
+  metadata: {
+    id: 'agent-signal-mutation', slug: 'agent-signal-mutation', title: 'Signal mutation diagnosis',
+    summary: 'Distinguish reference-equal writes from a stale amount after in-place mutation, then repair by replacing the object.', category: 'Diagnostics',
+    apiTags: ['signal', 'Rectangle', 'Text'], conceptTags: ['signals', 'equality', 'mutation', 'verification'],
+    manualSteps: [
+      { action: 'Choose Equal no-op.', expected: 'Amount stays 10; equal reference is intentional and the assertion passes.' },
+      { action: 'Choose Mutate in place.', expected: 'Source amount becomes 42 while the painted bar and label remain at 10; the assertion fails.' },
+      { action: 'Choose Replace object.', expected: 'The bar and label update to 42; signal revision advances and the assertion passes.' },
+    ],
+    knownLimitations: ['This explicit application sequence diagnoses the default Object.is policy; it is not a universal deep-mutation detector.', 'No-redraw evidence is bounded to two observed host frames. Signal revision inspection requires the source runtime.'],
+    learningOrder: 77, visibility: 'test-laboratory', visibilityReason: 'Controlled application equality failure with independent intended value.', maturity: 'contract',
+  },
+  canvas: { width: 480, height: 180 },
+  actions: [{ id: 'equal-noop', label: 'Equal no-op' }, { id: 'in-place', label: 'Mutate in place' }, { id: 'replace', label: 'Replace object' }, { id: 'reset', label: 'Reset' }],
+  source: { id: 'agent-signal-mutation-example', language: 'tsx', marker: "AGENT_SIGNAL_MUTATION_SOURCE_ID = 'agent-signal-mutation-example'", path: 'packages/scenarios/src/agent-signal-mutation.example.tsx' },
+  load: async () => (await import('./agent-signal-mutation')).agentSignalMutationScenario,
+};
+
+const agentTextScenarioEntry: ScenarioCatalogEntry<import('./agent-text-verification').AgentTextState> = {
+  metadata: {
+    id: 'agent-text-verification', slug: 'agent-text-verification', title: 'Agent text verification',
+    summary: 'Verify an exact fixture label while redacting private text from machine evidence.', category: 'Diagnostics',
+    apiTags: ['crc', 'Text'], conceptTags: ['text', 'redaction', 'inspection'],
+    manualSteps: [{ action: 'Inspect the seeded label, then choose Repair.', expected: 'The assertion changes from fail to pass; the second string stays redacted in evidence.' }],
+    knownLimitations: ['Source development only; successful calls are not proof of glyph visibility, font selection or clipping.'],
+    learningOrder: 76, visibility: 'test-laboratory', visibilityReason: 'Controlled private and fixture text for agent assertions.', maturity: 'contract',
+  },
+  canvas: { width: 480, height: 160 }, actions: [{ id: 'seed', label: 'Seed wrong label' }, { id: 'repair', label: 'Repair label' }],
+  source: { id: 'agent-text-verification-example', language: 'tsx', marker: "AGENT_TEXT_SOURCE_ID = 'agent-text-verification-example'", path: 'packages/scenarios/src/agent-text-verification.example.tsx' },
+  load: async () => (await import('./agent-text-verification')).agentTextScenario,
+};
+
 const agentTargetingVerificationMetadata: ScenarioMetadata = {
   id: "agent-targeting-verification",
   slug: "agent-targeting-verification",
@@ -997,6 +1070,9 @@ export const agentTargetingVerificationScenarioEntry: ScenarioCatalogEntry<Agent
     { id: "dom-overlay", label: "Add DOM overlay" },
     { id: "remove-dom-overlay", label: "Remove DOM overlay" },
     { id: "capture-drag", label: "Capture drag" },
+    { id: "pagination-scene", label: "Show 100 extra targets" },
+    { id: "scene-page-first", label: "Start scene query" },
+    { id: "scene-page-next", label: "Next scene page" },
     { id: "inspect", label: "Inspect target" },
     { id: "inspect-outside-layer", label: "Inspect outside Layer" },
     { id: "repair", label: "Repair decoration" },
@@ -2228,6 +2304,7 @@ export const vizHoverScenarioEntry: ScenarioCatalogEntry<
     { id: "interpolated-x", label: "Interpolate" },
     { id: "update-data", label: "Update first series" },
     { id: "missing-data", label: "Insert missing observation" },
+    { id: "zero-missing-invalid", label: "Zero, missing and invalid values" },
     { id: "duplicate-first", label: "Duplicate x: first row" },
     { id: "duplicate-last", label: "Duplicate x: last row" },
     { id: "duplicate-reordered", label: "Reorder duplicate rows" },
@@ -2235,6 +2312,12 @@ export const vizHoverScenarioEntry: ScenarioCatalogEntry<
     { id: "empty-data", label: "Nearest: empty first series" },
     { id: "weighted-data", label: "Weighted aggregation" },
     { id: "weighted-data-bug", label: "Inject wrong average" },
+    { id: "async-start-old", label: "Start older request" },
+    { id: "async-start-new", label: "Start newer request / retry" },
+    { id: "async-resolve-old", label: "Complete older request" },
+    { id: "async-resolve-new", label: "Complete newer request" },
+    { id: "async-reject-old", label: "Fail older request" },
+    { id: "async-reject-new", label: "Fail newer request" },
     { id: "reset", label: "Reset" },
   ],
   source: {
@@ -2323,6 +2406,10 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     focusNavigationScenarioEntry,
     mouseContractScenarioEntry,
     agentTargetingVerificationScenarioEntry,
+    agentTextScenarioEntry,
+    agentSignalMutationEntry,
+    agentLayoutPlacementEntry,
+    agentLateFontEntry,
     interactionLabScenarioEntry,
     lifecycleLabScenarioEntry,
     geometryMatrixScenarioEntry,

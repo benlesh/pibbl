@@ -18,7 +18,7 @@ symbols:
 
 # LineSeries
 
-Import `LineSeries` and its types from `@crc/viz`. `LineSeriesProps<D>` requires
+Import `LineSeries` and its types from `@crc/core/viz`. `LineSeriesProps<D>` requires
 `data`, `x`, `y`, `xScale`, and `yScale`. Data is a readonly array or a core signal
 of an array. It is not a thunk. Replace arrays to notify consumers; mutation alone
 is not reactive.

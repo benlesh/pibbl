@@ -15,7 +15,7 @@ import {
   type CRCEventTarget,
   type WritableSignal,
 } from "@crc/core";
-import { Axis, LineSeries, Scale, ScaleAdjust, useScale } from "@crc/viz";
+import { Axis, LineSeries, Scale, ScaleAdjust, useScale } from "@crc/core/viz";
 
 type Window = readonly [number, number];
 type PanelSnapshot = { width: number; height: number; domain: Window };

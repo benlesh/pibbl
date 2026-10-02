@@ -84,7 +84,7 @@ scope. Pure geometry avoids WASM; runtime imports require ESM/top-level await.
 - Compound COM updates stay aligned, engine-range/geometry-complexity limits fail
   explicitly, and per-body presentation/handle access no longer snapshots all
   bodies. Reference broad-phase/geometry tests remain in the suite.
-- `inspectPhysics2D`, `PhysicsDebug2D`, and `@crc/physics/2d/testing` support public
+- `inspectPhysics2D`, `PhysicsDebug2D`, and `@crc/core/physics/2d/testing` support public
   observations and deterministic isolated browser tests. The harness restores
   the clock on disposal and failed reset.
 - Searchable public API/guide pages cover all 2D exports, including units,

@@ -190,6 +190,14 @@ it('exposes weighted aggregation evidence independently of correct chart geometr
   expect(state.pipeline).toEqual({
     generation: 1, operation: 'weighted-mean', units: 'score', rounding: 'none',
     inputCount: 5, includedCount: 4, excludedCount: 1, outputCount: 2,
+    aggregation: {
+      policy: { grouping: 'exact-x', order: 'ascending-x', output: 'one-weighted-mean-per-included-group',
+        preserves: ['included-count', 'weight-sum', 'weighted-sum-per-group'], extrema: 'not-preserved', gaps: 'not-present-in-fixture' },
+      includedTotals: { count: 4, weightSum: 8, weightedSum: 160 },
+      displayedTotals: { pointCount: 2, representedCount: 4, representedWeight: 8, reconstructedWeightedSum: 160 },
+      includedValueRange: [0, 40], displayedValueRange: [10, 30],
+      reconstruction: [{ x: 0, sourceWeightedSum: 40, displayedWeightedSum: 40 }, { x: 10, sourceWeightedSum: 120, displayedWeightedSum: 120 }],
+    },
     groups: [
       { x: 0, count: 2, weightedSum: 40, weightSum: 4, value: 10 },
       { x: 10, count: 2, weightedSum: 120, weightSum: 4, value: 30 },
@@ -211,6 +219,13 @@ it('diagnoses an injected unweighted mean and verifies repair without changing g
   await controller.settled();
   const broken = controller.getState();
   expect(broken.pipeline.groups.map((g: any) => g.value)).toEqual([20, 20]);
+  // A conserved grand total alone misses errors that cancel between groups.
+  expect(broken.pipeline.aggregation.displayedTotals.reconstructedWeightedSum).toBe(160);
+  expect(broken.pipeline.aggregation.reconstruction).toEqual([
+    { x: 0, sourceWeightedSum: 40, displayedWeightedSum: 80 },
+    { x: 10, sourceWeightedSum: 120, displayedWeightedSum: 80 },
+  ]);
+  expect(broken.pipeline.aggregation.displayedValueRange).toEqual([20, 20]);
   expect(broken.pipeline.groups.map((g: any) => g.weightedSum / g.weightSum)).toEqual([10, 30]);
   expect(broken.results[0]).toMatchObject({ x: 2.5, y: 20, anchor: { x: 229.25, y: 187.5 } });
   await controller.perform('weighted-data');
@@ -220,4 +235,84 @@ it('diagnoses an injected unweighted mean and verifies repair without changing g
   expect(repaired.pipeline.groups.map((g: any) => g.value)).toEqual([10, 30]);
   expect(repaired.results[0]).toMatchObject({ x: 2.5, y: 15, anchor: { x: 229.25, y: 234.375 } });
   expect(broken.pipeline.groups.map((g: any) => g.value)).toEqual([20, 20]);
+});
+
+it('records latest-request-wins loading, stale success/error, failure and retry independently of chart generation', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 1000; canvas.height = 620;
+  canvas.style.cssText = 'width:1000px;height:620px'; document.body.append(canvas);
+  controller = await (await loadScenario(getScenarioBySlug('viz-hover-lab')!)).mount({ canvas });
+  await controller.perform('interpolated-x');
+  await moveMouse(canvas, { x: 513.5, y: 362.5 }); await controller.settled();
+  const initial = controller.getState();
+  await controller.perform('async-start-old'); await controller.perform('async-start-new');
+  expect(controller.getState().request).toMatchObject({ policy: 'latest-request-wins', status: 'loading', activeId: 2, pending: 2 });
+  expect(controller.getState().generation).toBe(initial.generation);
+  await controller.perform('async-resolve-new');
+  const applied = controller.getState();
+  expect(applied.request).toMatchObject({ status: 'success', pending: 1, lastCompletion: { id: 2, outcome: 'applied' } });
+  expect(applied.results[0]).toMatchObject({ y: 30 });
+  await controller.perform('async-resolve-old');
+  expect(controller.getState().generation).toBe(applied.generation);
+  expect(controller.getState().results).toEqual(applied.results);
+  expect(controller.getState().request.lastCompletion).toEqual({ id: 1, outcome: 'ignored-success' });
+  await controller.perform('async-start-old'); await controller.perform('async-start-new');
+  await controller.perform('async-reject-old');
+  expect(controller.getState().request).toMatchObject({ status: 'loading', lastCompletion: { id: 3, outcome: 'ignored-error' } });
+  await controller.perform('async-reject-new');
+  expect(controller.getState().request).toMatchObject({ status: 'error', pending: 0, error: 'Controlled data failure' });
+  expect(controller.getState().generation).toBe(applied.generation);
+  await controller.perform('async-start-new'); await controller.perform('async-resolve-new');
+  expect(controller.getState().request).toMatchObject({ status: 'success', error: null, activeId: 5, pending: 0 });
+  expect(controller.getState().generation).toBe(applied.generation + 1);
+  expect(initial.results[0].y).toBe(20);
+  await controller.perform('async-start-old'); await controller.reset();
+  expect(controller.getState().request).toMatchObject({ status: 'idle', activeId: null, pending: 0 });
+  await expect(controller.perform('async-resolve-old')).rejects.toThrow('No pending');
+});
+
+it('revokes a queued response on reset before a replacement request reuses its transport slot', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 1000; canvas.height = 620;
+  canvas.style.cssText = 'width:1000px;height:620px'; document.body.append(canvas);
+  controller = await (await loadScenario(getScenarioBySlug('viz-hover-lab')!)).mount({ canvas });
+  await controller.perform('async-start-new');
+  const completion = controller.perform('async-resolve-new');
+  const reset = controller.reset();
+  const replacement = controller.perform('async-start-new');
+  await Promise.all([completion, reset, replacement]);
+  expect(controller.getState().request).toMatchObject({ activeId: 2, pending: 1, status: 'loading', lastCompletion: null });
+  expect(controller.getState().generation).toBe(1); // Reset only; revoked completion cannot commit.
+  await expect(controller.perform('async-start-new')).rejects.toThrow('already pending');
+  await controller.perform('async-resolve-new');
+  expect(controller.getState().request).toMatchObject({ activeId: 2, pending: 0, status: 'success', lastCompletion: { id: 2, outcome: 'applied' } });
+  expect(controller.getState().generation).toBe(2);
+});
+
+it('revokes queued success and error on disposal without publishing or mutating a new mount', async () => {
+  for (const action of ['async-resolve-new', 'async-reject-new']) {
+    const canvas = document.createElement('canvas'); canvas.width = 1000; canvas.height = 620;
+    canvas.style.cssText = 'width:1000px;height:620px';
+    const host = document.createElement('div'); document.body.append(canvas, host);
+    const definition = await loadScenario(getScenarioBySlug('viz-hover-lab')!);
+    const publications: unknown[] = [];
+    controller = await definition.mount({ canvas, referenceHost: host, onStateChange: value => publications.push(value) });
+    await controller.perform('async-start-new');
+    const before = controller.getState();
+    const completion = controller.perform(action).then(() => 'unexpected success', error => error.message);
+    const count = publications.length;
+    await controller.dispose();
+    expect(await completion).toContain('disposed');
+    expect(publications).toHaveLength(count);
+    expect(host.children).toHaveLength(0);
+    expect(controller.getState().request).toMatchObject({ status: 'disposed', pending: 0, activeId: null });
+    expect(controller.getState().generation).toBe(before.generation);
+    expect(before.request).toMatchObject({ status: 'loading', pending: 1 });
+    await controller.dispose();
+    controller = await definition.mount({ canvas, referenceHost: host });
+    await controller.perform('interpolated-x');
+    await moveMouse(canvas, { x: 513.5, y: 362.5 }); await controller.settled();
+    expect(controller.getState().request).toMatchObject({ status: 'idle', pending: 0, activeId: null });
+    expect(controller.getState().results[0].y).toBe(20);
+    await controller.dispose(); controller = undefined;
+    canvas.remove(); host.remove();
+  }
 });

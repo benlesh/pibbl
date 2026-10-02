@@ -37,7 +37,7 @@ import {
 } from "@crc/core";
 import { displacement } from "@crc/core/filters";
 import { filterBoundaryExecutor } from "../src/filters/filter-executor.js";
-import { waterWaves } from "@crc/textures";
+import { waterWaves } from "@crc/core/textures";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,

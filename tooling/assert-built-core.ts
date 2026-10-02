@@ -3,18 +3,18 @@ import { resolve } from 'node:path';
 
 const BUILT_ENTRY_SUFFIXES = new Map([
   ["@crc/core/filters", "/packages/core/dist/filters.mjs"],
-  ["@crc/textures", "/packages/textures/dist/index.mjs"],
+  ["@crc/core/textures", "/packages/core/dist/features/textures/index.mjs"],
   ["@crc/text", "/packages/text/dist/index.mjs"],
-  ["@crc/viz", "/packages/viz/dist/index.mjs"],
+  ["@crc/core/viz", "/packages/core/dist/features/viz/index.mjs"],
   ['@crc/core', '/packages/core/dist/index.mjs'],
   ['@crc/core/internal', '/packages/core/dist/internal.mjs'],
   ['@crc/core/jsx-runtime', '/packages/core/dist/jsx-runtime.mjs'],
   ['@crc/core/jsx-dev-runtime', '/packages/core/dist/jsx-dev-runtime.mjs'],
   ['@crc/three', '/packages/three/dist/index.mjs'],
-  ['@crc/particles', '/packages/particles/dist/index.mjs'],
-  ['@crc/physics/2d', '/packages/physics/dist/2d.mjs'],
-  ['@crc/physics/2d/geometry', '/packages/physics/dist/2d-geometry.mjs'],
-  ['@crc/physics/3d/geometry', '/packages/physics/dist/3d-geometry.mjs'],
+  ['@crc/core/particles', '/packages/core/dist/features/particles/index.mjs'],
+  ['@crc/core/physics/2d', '/packages/core/dist/features/physics/2d.mjs'],
+  ['@crc/core/physics/2d/geometry', '/packages/core/dist/features/physics/2d-geometry.mjs'],
+  ['@crc/core/physics/3d/geometry', '/packages/core/dist/features/physics/3d-geometry.mjs'],
 ]);
 
 export function assertBuiltCore(): Plugin {
@@ -41,13 +41,13 @@ export function assertBuiltCore(): Plugin {
     transform(_, id) {
       const normalizedId = id.replaceAll('\\', '/');
       if (
-        normalizedId.includes('/packages/textures/src/') ||
-        normalizedId.includes('/packages/viz/src/') ||
+        normalizedId.includes('/packages/core/src/features/textures/') ||
+        normalizedId.includes('/packages/core/src/features/viz/') ||
         normalizedId.includes('/packages/text/src/') ||
         normalizedId.includes('/packages/core/src/') ||
         normalizedId.includes('/packages/three/src/') ||
-        normalizedId.includes('/packages/particles/src/') ||
-        normalizedId.includes('/packages/physics/src/')
+        normalizedId.includes('/packages/core/src/features/particles/') ||
+        normalizedId.includes('/packages/core/src/features/physics/')
       ) {
         this.error(`Built mode loaded CRC source instead of package output: ${id}`);
       }

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import {
   access,
@@ -41,7 +42,7 @@ const repositoryRoot = resolve(import.meta.dirname, "..");
 const require = createRequire(import.meta.url);
 
 function trackedRepositoryFiles(pathspecs) {
-  const listing = spawnSync("git", ["ls-files", "--", ...pathspecs], {
+  const listing = spawnSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "--", ...pathspecs], {
     cwd: repositoryRoot,
     encoding: "utf8",
   });
@@ -50,7 +51,7 @@ function trackedRepositoryFiles(pathspecs) {
     0,
     `Could not inventory tracked repository files:\n${listing.stderr}`,
   );
-  return listing.stdout.split("\n").filter(Boolean).sort();
+  return [...new Set(listing.stdout.split("\n").filter((path) => path && existsSync(join(repositoryRoot, path))))].sort();
 }
 
 function sourceAtCommit(commit, path) {
@@ -68,6 +69,7 @@ function sourceAtCommit(commit, path) {
   return result.stdout;
 }
 const publicGuidePaths = [
+  "docs/site/learn/guides/package-migration.md",
   "docs/site/learn/guides/author-without-jsx.md",
   "docs/site/learn/guides/components-props-and-children.md",
   "docs/site/learn/guides/compose-and-layout.md",
@@ -87,6 +89,10 @@ const publicGuidePaths = [
   "docs/site/learn/guides/manipulation.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/components/html-box.md",
+  "docs/site/api/types/html-box.md",
+  "docs/site/api/types/electric-textures.md",
+  "docs/site/api/types/texture-resources.md",
   "docs/site/api/components/reaction-diffusion.md",
   "docs/site/api/components/procedural-texture.md",
   "docs/site/api/types/textures.md",
@@ -243,6 +249,8 @@ const publicSiteMarkdownPaths = [
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
+  "docs/design/html-box-contract.md",
+  "docs/design/weighted-electric-sources-contract.md",
   "docs/design/textures-contract.md",
   "docs/design/weighted-electric-sources-contract.md",
   "docs/design/component-manipulation-contract.md",
@@ -252,11 +260,10 @@ const currentMarkdownPaths = [
   "AGENTS.md",
   "README.md",
   "packages/core/README.md",
-  "packages/viz/README.md",
-  "packages/particles/README.md",
-  "packages/physics/README.md",
+  "packages/core/src/features/viz/README.md",
+  "packages/core/src/features/particles/README.md",
+  "packages/core/src/features/physics/README.md",
   "packages/three/README.md",
-  "packages/types/README.md",
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
@@ -307,6 +314,12 @@ const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
+  // Active execution records are not historical shipped contracts.
+  "docs/project-plans/004-html-box.md",
+  "docs/superpowers/specs/2026-10-02-html-host-design.md",
+  "docs/superpowers/plans/2026-10-02-html-box-implementation.md",
+  "docs/testing/field-notes/html-box.md",
+  "tooling/texture-wasm-spike/README.md",
   ".beads/README.md",
   "packages/text/test/fixtures/source-serif/LICENSE.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
@@ -855,29 +868,29 @@ async function typecheckCompleteSnippets(snippets) {
               "@crc/core/types": [
                 join(repositoryRoot, "packages/core/src/types.ts"),
               ],
-              "@crc/particles": [
-                join(repositoryRoot, "packages/particles/src/index.ts"),
+              "@crc/core/particles": [
+                join(repositoryRoot, "packages/core/src/features/particles/index.ts"),
               ],
               "@crc/core/filters": [join(repositoryRoot, "packages/core/src/filters.ts")],
-              "@crc/textures": [
-                join(repositoryRoot, "packages/textures/src/index.ts"),
+              "@crc/core/textures": [
+                join(repositoryRoot, "packages/core/src/features/textures/index.ts"),
               ],
               "@crc/text": [join(repositoryRoot, "packages/text/src/index.ts")],
-              "@crc/viz": [join(repositoryRoot, "packages/viz/src/index.ts")],
+              "@crc/core/viz": [join(repositoryRoot, "packages/core/src/features/viz/index.ts")],
               "@crc/three": [
                 join(repositoryRoot, "packages/three/src/index.ts"),
               ],
-              "@crc/physics/2d": [
-                join(repositoryRoot, "packages/physics/src/2d.ts"),
+              "@crc/core/physics/2d": [
+                join(repositoryRoot, "packages/core/src/features/physics/2d.ts"),
               ],
-              "@crc/physics/2d/geometry": [
-                join(repositoryRoot, "packages/physics/src/2d-geometry.ts"),
+              "@crc/core/physics/2d/geometry": [
+                join(repositoryRoot, "packages/core/src/features/physics/2d-geometry.ts"),
               ],
-              "@crc/physics/2d/testing": [
-                join(repositoryRoot, "packages/physics/src/2d-testing.ts"),
+              "@crc/core/physics/2d/testing": [
+                join(repositoryRoot, "packages/core/src/features/physics/2d-testing.ts"),
               ],
-              "@crc/physics/3d/geometry": [
-                join(repositoryRoot, "packages/physics/src/3d-geometry.ts"),
+              "@crc/core/physics/3d/geometry": [
+                join(repositoryRoot, "packages/core/src/features/physics/3d-geometry.ts"),
               ],
             },
             skipLibCheck: true,
@@ -1425,7 +1438,7 @@ assert.equal(
   0,
   `Could not inventory repository Markdown:\n${markdownListing.stderr}`,
 );
-const repositoryMarkdownPaths = markdownListing.stdout.trim().split("\n");
+const repositoryMarkdownPaths = markdownListing.stdout.trim().split("\n").filter(path => existsSync(join(repositoryRoot, path)));
 const currentMarkdownSet = new Set(currentMarkdownPaths);
 const historicalMarkdownPaths = repositoryMarkdownPaths.filter(
   (path) =>
@@ -1614,11 +1627,11 @@ const threeSource = await readFile(
   "utf8",
 );
 const particlesSource = await readFile(
-  join(repositoryRoot, "packages/particles/src/index.ts"),
+  join(repositoryRoot, "packages/core/src/features/particles/index.ts"),
   "utf8",
 );
 const physics3dGeometrySource = await readFile(
-  join(repositoryRoot, "packages/physics/src/3d-geometry.ts"),
+  join(repositoryRoot, "packages/core/src/features/physics/3d-geometry.ts"),
   "utf8",
 );
 const rootExports = exportedSpecifiers(
@@ -1639,11 +1652,11 @@ const threeExports = exportedSpecifiers(
 );
 const particleExports = exportedSpecifiers(
   particlesSource,
-  "packages/particles/src/index.ts",
+  "packages/core/src/features/particles/index.ts",
 );
 const physics3dGeometryExports = exportedSpecifiers(
   physics3dGeometrySource,
-  "packages/physics/src/3d-geometry.ts",
+  "packages/core/src/features/physics/3d-geometry.ts",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => rootExports.values.has(name)),
@@ -1680,37 +1693,45 @@ assertSameNames(
 assertSameNames(
   [...documentedApiSymbols].filter((name) => particleExports.values.has(name)),
   particleExports.values,
-  "Documented @crc/particles runtime values",
+  "Documented @crc/core/particles runtime values",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => particleExports.types.has(name)),
   particleExports.types,
-  "Documented @crc/particles types",
+  "Documented @crc/core/particles types",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) =>
     physics3dGeometryExports.values.has(name),
   ),
   physics3dGeometryExports.values,
-  "Documented @crc/physics/3d/geometry runtime values",
+  "Documented @crc/core/physics/3d/geometry runtime values",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) =>
     physics3dGeometryExports.types.has(name),
   ),
   physics3dGeometryExports.types,
-  "Documented @crc/physics/3d/geometry types",
+  "Documented @crc/core/physics/3d/geometry types",
 );
 const vizSource = await readFile(
-  join(repositoryRoot, "packages/viz/src/index.ts"),
+  join(repositoryRoot, "packages/core/src/features/viz/index.ts"),
   "utf8",
 );
-const vizExports = exportedSpecifiers(vizSource, "packages/viz/src/index.ts");
+const vizExports = exportedSpecifiers(vizSource, "packages/core/src/features/viz/index.ts");
 for (const kind of ["values", "types"])
   assertSameNames(
     [...documentedApiSymbols].filter((name) => vizExports[kind].has(name)),
     vizExports[kind],
-    `Documented @crc/viz ${kind}`,
+    `Documented @crc/core/viz ${kind}`,
+  );
+const filterSource = await readFile(join(repositoryRoot, "packages/core/src/filters.ts"), "utf8");
+const filterExports = exportedSpecifiers(filterSource, "packages/core/src/filters.ts");
+for (const kind of ["values", "types"])
+  assertSameNames(
+    [...documentedApiSymbols].filter((name) => filterExports[kind].has(name)),
+    filterExports[kind],
+    `Documented @crc/core/filters ${kind}`,
   );
 const filterSource = await readFile(join(repositoryRoot, "packages/core/src/filters.ts"), "utf8");
 const filterExports = exportedSpecifiers(filterSource, "packages/core/src/filters.ts");
@@ -1721,18 +1742,18 @@ for (const kind of ["values", "types"])
     `Documented @crc/core/filters ${kind}`,
   );
 const textureSource = await readFile(
-  join(repositoryRoot, "packages/textures/src/index.ts"),
+  join(repositoryRoot, "packages/core/src/features/textures/index.ts"),
   "utf8",
 );
 const textureExports = exportedSpecifiers(
   textureSource,
-  "packages/textures/src/index.ts",
+  "packages/core/src/features/textures/index.ts",
 );
 for (const kind of ["values", "types"])
   assertSameNames(
     [...documentedApiSymbols].filter((name) => textureExports[kind].has(name)),
     textureExports[kind],
-    `Documented @crc/textures ${kind}`,
+    `Documented @crc/core/textures ${kind}`,
   );
 const namespaceMembers = jsxNamespaceMembers(
   runtimeSource,
@@ -1802,49 +1823,12 @@ for (const dependencies of [
     "@crc/three must not depend on @crc/types.",
   );
 }
-const particlesManifest = JSON.parse(
-  await readFile(
-    join(repositoryRoot, "packages/particles/package.json"),
-    "utf8",
-  ),
-);
-assert.deepEqual(
-  Object.keys(particlesManifest.exports),
-  [".", "./package.json"],
-  "@crc/particles must expose its Canvas root and manifest only.",
-);
-assert.deepEqual(
-  particlesManifest.peerDependencies,
-  { "@crc/core": "0.0.1" },
-  "@crc/particles must use the matching core peer release only.",
-);
-assert.equal(particlesManifest.sideEffects, false);
-const physicsManifest = JSON.parse(
-  await readFile(join(repositoryRoot, "packages/physics/package.json"), "utf8"),
-);
-assert.deepEqual(
-  Object.keys(physicsManifest.exports),
-  ["./2d", "./2d/geometry", "./2d/testing", "./3d/geometry"],
-  "@crc/physics must expose its 2D runtime, testing, and pure geometry entries only.",
-);
-assert.deepEqual(
-  physicsManifest.peerDependencies,
-  { "@crc/core": "0.0.1" },
-  "@crc/physics must not retain a renderer-coupled peer.",
-);
-assert.equal(
-  physicsManifest.peerDependenciesMeta?.["@crc/core"]?.optional,
-  true,
-);
-assert.equal(physicsManifest.sideEffects, false);
-const typesManifest = JSON.parse(
-  await readFile(join(repositoryRoot, "packages/types/package.json"), "utf8"),
-);
-assert.doesNotMatch(
-  typesManifest.description,
-  /shared public types/iu,
-  "@crc/types package prose must not claim ownership of the core public surface.",
-);
+for (const entry of ["particles", "viz", "textures", "physics/2d", "physics/2d/geometry", "physics/2d/testing", "physics/3d/geometry"]) {
+  assert.ok(coreManifest.exports[`./${entry}`], `Missing consolidated entry ${entry}`);
+}
+assert.equal(coreManifest.sideEffects, false);
+assert.equal(Object.keys(coreManifest.dependencies ?? {}).length, 0, "Core must have no consumer runtime dependencies.");
+assert.ok(coreManifest.devDependencies["@dimforge/rapier2d-compat"], "Rapier is a private build dependency.");
 const trustWorkflow = await readFile(
   join(repositoryRoot, ".github/workflows/trust.yml"),
   "utf8",
@@ -2216,6 +2200,7 @@ const currentNormativeContractPaths = [
   ),
 ].sort();
 const postBaselineNormativeContractPaths = new Set([
+  "docs/design/html-box-contract.md",
   "docs/design/textures-contract.md",
   "docs/design/animation-contract.md",
   "docs/design/component-manipulation-contract.md",
@@ -2224,8 +2209,22 @@ const postBaselineNormativeContractPaths = new Set([
   "docs/design/render-layer-and-three-contract.md",
   "docs/design/text-geometry-contract.md",
 ]);
+// This shipped contract predates this migration but was never registered in the
+// approved-design mapping manifest. Preserve its exact committed bytes; do not
+// invent an approval record or silently exclude it from the normative inventory.
+// Snapshot source: 1d1a2ec49f6bca52be99abf24bd34e1b3cb3f16e:docs/design/weighted-electric-sources-contract.md
+const shippedContractSnapshots = new Map([
+  ["docs/design/weighted-electric-sources-contract.md", "920fc18c95a64afcb38d2f1ac97cceaa7c88a02f871687a3a4aaff38f8b1e484"],
+]);
+export function assertShippedContractSnapshots(sources) {
+  for (const [path, digest] of shippedContractSnapshots) {
+    assert.equal(typeof sources.get(path), "string", `Missing shipped contract ${path}`);
+    assert.equal(sha256(sources.get(path)), digest, `Shipped contract changed without a reviewed preservation mapping: ${path}`);
+  }
+}
+assertShippedContractSnapshots(currentSources);
 const baselineSnapshotContractPaths = currentNormativeContractPaths.filter(
-  (path) => !postBaselineNormativeContractPaths.has(path),
+  (path) => !postBaselineNormativeContractPaths.has(path) && !shippedContractSnapshots.has(path),
 );
 
 export function assertCurrentNormativeContractInventory(paths) {
@@ -2542,8 +2541,8 @@ const trackedContractEvidencePaths = new Set(
   trackedRepositoryFiles([
     "packages/core/src",
     "packages/core/test",
-    "packages/physics/src",
-    "packages/physics/test",
+    "packages/core/src/features/physics",
+    "packages/core/test/features/physics",
     "packages/three/src",
     "packages/three/test",
   ]),
@@ -4218,6 +4217,7 @@ process.stdout.write(
     `${contractPreservationBaseline.contracts.length} baseline-snapshotted normative contracts, ` +
     `${currentNormativeContractPaths.length} current normative contracts, ` +
     `${postBaselineUnitCount} exhaustively mapped post-baseline units, ` +
+    `${shippedContractSnapshots.size} exact committed-contract snapshots, ` +
     `${contractPreservationResult.evidenceMappingCount} direct evidence mappings, ` +
     `${fieldMigrationResult.fieldMigrationCount} baseline-derived field migrations, ` +
     `baseline provenance ${contractPreservationResult.provenanceVerified ? "verified" : "embedded/digest-locked"}, ` +

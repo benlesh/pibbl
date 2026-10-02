@@ -10,7 +10,7 @@ symbols: [physicsObstacles2D]
 
 # physicsObstacles2D
 
-Import from `@crc/physics/2d`. Call `physicsObstacles2D(world)` during
+Import from `@crc/core/physics/2d`. Call `physicsObstacles2D(world)` during
 component evaluation to obtain a stable source accepted by
 `useFlowField2D({ ..., obstacles: source })`. The world retains the source and
 its reusable numerical buffers until disposal. Worlds that never request it

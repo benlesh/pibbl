@@ -26,7 +26,15 @@ import {
   applyTabDefault,
 } from "./keyboard-defaults.js";
 import { transitionLogicalFocus } from "./focus-events.js";
-import type { CRCDirectionalBoundary, CRCFocusCandidate } from "./types.js";
+import type { HtmlFocusRegion } from "./html-focus-region.js";
+import {
+  isHtmlFocusCandidate,
+  type CRCDirectionalBoundary,
+  type CRCFocusCandidate,
+  type CRCHtmlFocusCandidate,
+  type CRCNavigationCandidate,
+} from "./types.js";
+import { getManagedTabStops } from "./dom-tab-stops.js";
 
 const UNFOCUSED_SNAPSHOT = Object.freeze({
   isFocused: false,
@@ -45,9 +53,17 @@ interface PendingCandidate {
   readonly directionalBoundary: DirectionalBoundary | undefined;
 }
 
+interface PendingHtmlRegion {
+  readonly region: HtmlFocusRegion;
+  readonly directionalBoundary: DirectionalBoundary | undefined;
+}
+
 interface PendingFrame {
+  readonly entries: (PendingCandidate | PendingHtmlRegion)[];
   readonly targets: PendingCandidate[];
+  readonly htmlRegions: PendingHtmlRegion[];
   readonly observedTargets: Set<CRCEventTargetRegistration>;
+  readonly observedHtmlRegions: Set<HtmlFocusRegion>;
   readonly ineligibleTargets: Set<CRCEventTargetRegistration>;
   readonly boundaries: Set<DirectionalBoundary>;
 }
@@ -66,15 +82,16 @@ interface RepresentedPointerPress extends RepresentedPress {
 const COMPATIBILITY_PRESS_WINDOW_MS = 1_500;
 
 class DirectionalBoundary implements CRCDirectionalBoundary {
-  private committedCandidates: readonly CRCFocusCandidate[] = Object.freeze([]);
+  private committedCandidates: readonly CRCNavigationCandidate[] =
+    Object.freeze([]);
 
   constructor(readonly owner: CRCInstance) {}
 
-  get candidates(): readonly CRCFocusCandidate[] {
+  get candidates(): readonly CRCNavigationCandidate[] {
     return this.committedCandidates;
   }
 
-  commit(candidates: readonly CRCFocusCandidate[]): void {
+  commit(candidates: readonly CRCNavigationCandidate[]): void {
     this.committedCandidates = candidates;
   }
 }
@@ -152,9 +169,8 @@ class FocusManagerCoordinator {
 
   syncDOMFocusHost(manager: CRCFocusManager): void {
     if (this.active === manager) {
-      this.domFocusHost?.syncCandidateAvailability(
-        manager.hasFocusCandidates,
-      );
+      this.domFocusHost?.syncCandidateAvailability(manager.hasFocusCandidates);
+      this.domFocusHost?.syncHtmlRegions(manager.htmlFocusRegions);
     }
   }
 
@@ -303,6 +319,10 @@ class FocusManagerCoordinator {
 
 export class CRCFocusManager implements CRCFocusPolicyBridge {
   private committedCandidates: readonly CRCFocusCandidate[] = Object.freeze([]);
+  private committedHtmlCandidates: readonly CRCHtmlFocusCandidate[] =
+    Object.freeze([]);
+  private committedNavigationCandidates: readonly CRCNavigationCandidate[] =
+    Object.freeze([]);
   private committedBoundaries = new Set<DirectionalBoundary>();
   private pending: PendingFrame | undefined;
   private transactionalPending:
@@ -313,6 +333,8 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     | undefined;
   private directionalStack: DirectionalBoundary[] = [];
   private focusedTarget: CRCEventTargetRegistration | undefined;
+  private focusedHtmlRegion: HtmlFocusRegion | undefined;
+  private pendingHtmlFocusModality: "keyboard" | "pointer" | undefined;
   private focusVisible = false;
   private pendingSpaceTarget: CRCEventTargetRegistration | undefined;
   private pendingPressFocus:
@@ -362,10 +384,47 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     return this.committedCandidates;
   }
 
+  /** @internal Full source-order list including native HtmlBox regions. */
+  get navigationCandidates(): readonly CRCNavigationCandidate[] {
+    return this.committedNavigationCandidates;
+  }
+
+  get htmlFocusRegions(): readonly HtmlFocusRegion[] {
+    return this.committedHtmlCandidates.map((candidate) => candidate.region);
+  }
+
+  get focusedNavigationCandidate(): CRCNavigationCandidate | undefined {
+    if (this.focusedHtmlRegion) {
+      return this.committedHtmlCandidates.find(
+        (candidate) => candidate.region === this.focusedHtmlRegion,
+      );
+    }
+    return this.focusedTarget
+      ? this.committedCandidates.find(
+          (candidate) => candidate.target === this.focusedTarget,
+        )
+      : undefined;
+  }
+
+  /** @internal Resolves dynamic native eligibility at each navigation boundary. */
+  isNavigationCandidateFocusable(candidate: CRCNavigationCandidate): boolean {
+    return isHtmlFocusCandidate(candidate)
+      ? Boolean(
+          candidate.region.active &&
+          candidate.region.content &&
+          getManagedTabStops(candidate.region.content).length,
+        )
+      : Boolean(this.liveFocusCandidate(candidate.target));
+  }
+
   /** Includes a successful render's collected candidates before commit callbacks settle. */
   get hasFocusCandidates(): boolean {
-    return this.committedCandidates.length > 0 ||
-      (this.transactionalPending?.frame.targets.length ?? 0) > 0;
+    return (
+      this.committedNavigationCandidates.length > 0 ||
+      (this.transactionalPending?.frame.targets.length ?? 0) +
+        (this.transactionalPending?.frame.htmlRegions.length ?? 0) >
+        0
+    );
   }
 
   get isDestroyed(): boolean {
@@ -397,8 +456,11 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     }
     this.coordinator.claim(this);
     this.pending = {
+      entries: [],
       targets: [],
+      htmlRegions: [],
       observedTargets: new Set(),
+      observedHtmlRegions: new Set(),
       ineligibleTargets: new Set(),
       boundaries: new Set(this.directionalStack),
     };
@@ -427,18 +489,37 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   }
 
   private commitCollection(pending: PendingFrame): void {
-    const candidates = Object.freeze(
-      pending.targets.map(
-        (observed, sourceIndex) =>
+    const collected: CRCNavigationCandidate[] = [];
+    for (const [sourceIndex, observed] of pending.entries.entries()) {
+      if ("target" in observed) {
+        const target = observed.target;
+        collected.push(
           Object.freeze({
-            target: observed.target,
+            target,
             sourceIndex,
             directionalBoundary: observed.directionalBoundary,
-            rootBounds: resolveTargetRootBounds(observed.target),
+            rootBounds: resolveTargetRootBounds(target),
           }) satisfies CRCFocusCandidate,
-      ),
+        );
+        continue;
+      }
+      const region = observed.region;
+      if (region.active && region.content)
+        collected.push(
+          Object.freeze({
+            region,
+            sourceIndex,
+            directionalBoundary: observed.directionalBoundary,
+            rootBounds: region.rootBounds,
+          }) satisfies CRCHtmlFocusCandidate,
+        );
+    }
+    const navigation = Object.freeze(collected);
+    this.commitNavigationCandidates(navigation, pending.boundaries);
+    const candidates = navigation.filter(
+      (candidate): candidate is CRCFocusCandidate =>
+        !isHtmlFocusCandidate(candidate),
     );
-    this.commitCandidates(candidates, pending.boundaries);
     for (const candidate of candidates) {
       if (candidate.directionalBoundary) {
         retainedDirectionalBoundaries.set(
@@ -465,6 +546,87 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.recordPendingTarget(target, this.currentDirectionalBoundary());
   }
 
+  /** @internal Collects one published HtmlBox in source order. */
+  observeHtmlRegion(region: HtmlFocusRegion): void {
+    const pending = this.pending;
+    if (!pending || pending.observedHtmlRegions.has(region)) return;
+    pending.observedHtmlRegions.add(region);
+    const observed = {
+      region,
+      directionalBoundary: this.currentDirectionalBoundary(),
+    };
+    pending.htmlRegions.push(observed);
+    pending.entries.push(observed);
+  }
+
+  /** @internal Removes an unmounted HtmlBox without manufacturing a Canvas target. */
+  removeHtmlFocusRegion(region: HtmlFocusRegion): void {
+    if (this.pending?.observedHtmlRegions.delete(region)) {
+      this.pending.htmlRegions.splice(
+        this.pending.htmlRegions.findIndex((entry) => entry.region === region),
+        1,
+      );
+      const index = this.pending.entries.findIndex(
+        (entry) => "region" in entry && entry.region === region,
+      );
+      if (index >= 0) this.pending.entries.splice(index, 1);
+      return;
+    }
+    if (
+      !this.committedHtmlCandidates.some(
+        (candidate) => candidate.region === region,
+      )
+    )
+      return;
+    const wasFocused = this.focusedHtmlRegion === region;
+    const canvas = this.eventRoot.canvas;
+    const shouldReturnNativeFocus = Boolean(
+      wasFocused &&
+      canvas &&
+      !this.eventRoot.rootInstance?.mainTeardowns.closed &&
+      region.content?.contains(canvas.ownerDocument.activeElement),
+    );
+    this.commitNavigationCandidates(
+      this.committedNavigationCandidates.filter(
+        (candidate) =>
+          !isHtmlFocusCandidate(candidate) || candidate.region !== region,
+      ),
+      this.committedBoundaries,
+    );
+    if (shouldReturnNativeFocus && canvas) {
+      this.coordinator.focusCanvasFromPress(this);
+      // Canvas focus synchronously enters the ordinary DOM host. A retired
+      // region must leave no logical selection behind that would turn this
+      // removal into an unintended navigation action.
+      this.clearFocusState();
+    }
+    if (wasFocused) this.clearHtmlFocus(region);
+  }
+
+  /** @internal Deactivates retained DOM hosts while the root has no display area. */
+  suspendHtmlRegions(): void {
+    if (this.committedHtmlCandidates.length === 0) return;
+    const focused = this.focusedHtmlRegion;
+    const canvas = this.eventRoot.canvas;
+    const shouldReturnNativeFocus = Boolean(
+      focused &&
+      canvas &&
+      !this.eventRoot.rootInstance?.mainTeardowns.closed &&
+      focused.content?.contains(canvas.ownerDocument.activeElement),
+    );
+    this.commitNavigationCandidates(
+      this.committedNavigationCandidates.filter(
+        (candidate) => !isHtmlFocusCandidate(candidate),
+      ),
+      this.committedBoundaries,
+    );
+    if (shouldReturnNativeFocus && canvas) {
+      this.coordinator.focusCanvasFromPress(this);
+      this.clearFocusState();
+    }
+    if (focused) this.clearHtmlFocus(focused);
+  }
+
   observeTransactionalTarget(target: CRCEventTargetRegistration): void {
     const transactional = this.transactionalPending;
     if (
@@ -482,16 +644,22 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
         (candidate) => candidate.target === target,
       );
       if (index !== -1) pending.targets.splice(index, 1);
+      const entryIndex = pending.entries.findIndex(
+        (entry) => "target" in entry && entry.target === target,
+      );
+      if (entryIndex !== -1) pending.entries.splice(entryIndex, 1);
       pending.observedTargets.delete(target);
       return;
     }
     pending.ineligibleTargets.delete(target);
     if (pending.observedTargets.has(target)) return;
     pending.observedTargets.add(target);
-    pending.targets.push({
+    const observed = {
       target,
       directionalBoundary: this.currentDirectionalBoundary(),
-    });
+    };
+    pending.targets.push(observed);
+    pending.entries.push(observed);
   }
 
   removeTarget(target: CRCEventTargetRegistration): void {
@@ -606,10 +774,13 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
       );
       return;
     }
-    const candidate = backwards
-      ? this.committedCandidates.at(-1)
-      : this.committedCandidates[0];
-    transitionLogicalFocus(this, candidate?.target, "keyboard");
+    const candidates = backwards
+      ? [...this.committedNavigationCandidates].reverse()
+      : this.committedNavigationCandidates;
+    for (const candidate of candidates) {
+      if (this.focusNavigationCandidate(candidate, "keyboard", backwards))
+        return;
+    }
   }
 
   leaveDOMFocus(): void {
@@ -620,6 +791,69 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
 
   activateDOMHost(): void {
     if (!this.destroyed) this.coordinator.syncDOMFocusHost(this);
+  }
+
+  focusNavigationCandidate(
+    candidate: CRCNavigationCandidate | undefined,
+    modality: "keyboard" | "pointer",
+    backwards = false,
+  ): boolean {
+    if (!candidate) return false;
+    if (!isHtmlFocusCandidate(candidate)) {
+      this.focusedHtmlRegion && this.clearHtmlFocus(this.focusedHtmlRegion);
+      transitionLogicalFocus(
+        this,
+        this.liveFocusCandidate(candidate.target),
+        modality,
+      );
+      return true;
+    }
+    const region = candidate.region;
+    const content = region.active ? region.content : undefined;
+    const stops = content ? getManagedTabStops(content) : [];
+    const destination = backwards ? stops.at(-1) : stops[0];
+    if (!destination) return false;
+    if (this.focusedTarget) transitionLogicalFocus(this, undefined, modality);
+    this.adoptHtmlFocus(region, modality);
+    this.pendingHtmlFocusModality = modality;
+    destination.focus({ preventScroll: true });
+    this.pendingHtmlFocusModality = undefined;
+    return true;
+  }
+
+  /** @internal Called by the native region listeners after the browser focuses a descendant. */
+  adoptNativeHtmlFocus(
+    region: HtmlFocusRegion,
+    modality: "keyboard" | "pointer" | undefined,
+  ): void {
+    if (
+      !this.committedHtmlCandidates.some(
+        (candidate) => candidate.region === region,
+      )
+    )
+      return;
+    const carriedModality =
+      modality ?? (this.focusVisible ? "keyboard" : "pointer");
+    if (this.focusedTarget)
+      transitionLogicalFocus(this, undefined, carriedModality);
+    this.adoptHtmlFocus(
+      region,
+      this.pendingHtmlFocusModality ?? carriedModality,
+    );
+  }
+
+  /** @internal Native blur settled outside a registered host. */
+  clearNativeHtmlFocus(region: HtmlFocusRegion): void {
+    if (this.focusedHtmlRegion === region) this.clearHtmlFocus(region);
+  }
+
+  /** @internal Reconciles a committed host list with the browser focus owner. */
+  reconcileNativeHtmlFocus(region: HtmlFocusRegion | undefined): void {
+    if (region) {
+      this.adoptNativeHtmlFocus(region, undefined);
+    } else if (this.focusedHtmlRegion) {
+      this.clearHtmlFocus(this.focusedHtmlRegion);
+    }
   }
 
   replayRetainedSubtree(instance: CRCInstance): void {
@@ -636,6 +870,74 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   }
 
   private replayRetainedTargets(instance: CRCInstance): void {
+    // A cached Layer must replay the exact mixed source sequence from its last
+    // successful render.  Enumerating eventRoot.targets would lose HtmlBox
+    // positions because native regions intentionally have no event target.
+    const retained = this.committedNavigationCandidates.filter((candidate) =>
+      isHtmlFocusCandidate(candidate)
+        ? isInstanceWithin(candidate.region.owner, instance)
+        : isInstanceWithin(candidate.target.owner, instance),
+    );
+    // Preserve the established Canvas-only replay behavior.  A Canvas target
+    // registration can be refreshed independently of its original collection
+    // position; the mixed sequence is required only once native regions exist.
+    if (!retained.some(isHtmlFocusCandidate)) {
+      this.replayCanvasOnlyTargets(instance);
+      return;
+    }
+    if (this.pending) {
+      for (const candidate of retained) {
+        const retainedBoundary = isHtmlFocusCandidate(candidate)
+          ? candidate.directionalBoundary instanceof DirectionalBoundary &&
+            isInstanceWithin(candidate.directionalBoundary.owner, instance)
+            ? candidate.directionalBoundary
+            : undefined
+          : retainedDirectionalBoundaries.get(candidate.target);
+        const directionalBoundary =
+          retainedBoundary && isInstanceWithin(retainedBoundary.owner, instance)
+            ? retainedBoundary
+            : this.currentDirectionalBoundary();
+        if (directionalBoundary) {
+          this.pending.boundaries.add(directionalBoundary);
+        }
+        if (isHtmlFocusCandidate(candidate)) {
+          const region = candidate.region;
+          if (!region.active || !region.content) continue;
+          if (!this.pending.observedHtmlRegions.has(region)) {
+            this.pending.observedHtmlRegions.add(region);
+            const observed = { region, directionalBoundary };
+            this.pending.htmlRegions.push(observed);
+            this.pending.entries.push(observed);
+          }
+        } else if (isKeyboardFocusable(candidate.target)) {
+          this.recordPendingTarget(candidate.target, directionalBoundary);
+        } else {
+          this.markPendingIneligible(candidate.target);
+        }
+      }
+      return;
+    }
+
+    if (retained.length === 0) return;
+    const replayed = new Set(retained);
+    const candidates = Object.freeze(
+      this.committedNavigationCandidates.map((candidate) => {
+        if (!replayed.has(candidate)) return candidate;
+        return isHtmlFocusCandidate(candidate)
+          ? Object.freeze({
+              ...candidate,
+              rootBounds: candidate.region.rootBounds,
+            })
+          : Object.freeze({
+              ...candidate,
+              rootBounds: resolveTargetRootBounds(candidate.target),
+            });
+      }),
+    );
+    this.commitNavigationCandidates(candidates, this.committedBoundaries);
+  }
+
+  private replayCanvasOnlyTargets(instance: CRCInstance): void {
     const targets: CRCEventTargetRegistration[] = [];
     collectRetainedTargets(instance, targets);
     if (this.pending) {
@@ -649,22 +951,19 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
           retainedBoundary && isInstanceWithin(retainedBoundary.owner, instance)
             ? retainedBoundary
             : this.currentDirectionalBoundary();
-        if (directionalBoundary) {
+        if (directionalBoundary)
           this.pending.boundaries.add(directionalBoundary);
-        }
         this.recordPendingTarget(target, directionalBoundary);
       }
       return;
     }
-
     const replayed = new Set(targets);
     if (
       !this.committedCandidates.some((candidate) =>
         replayed.has(candidate.target),
       )
-    ) {
+    )
       return;
-    }
     const candidates = Object.freeze(
       this.committedCandidates.map((candidate) =>
         replayed.has(candidate.target)
@@ -792,7 +1091,9 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     const pending = this.pending;
     if (!pending || pending.observedTargets.has(target)) return;
     pending.observedTargets.add(target);
-    pending.targets.push({ target, directionalBoundary });
+    const observed = { target, directionalBoundary };
+    pending.targets.push(observed);
+    pending.entries.push(observed);
   }
 
   private markPendingIneligible(target: CRCEventTargetRegistration): void {
@@ -805,15 +1106,43 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
         pending.targets.splice(index, 1);
       }
     }
+    for (let index = pending.entries.length - 1; index >= 0; index--) {
+      const entry = pending.entries[index];
+      if ("target" in entry && entry.target === target)
+        pending.entries.splice(index, 1);
+    }
   }
 
   private commitCandidates(
     candidates: readonly CRCFocusCandidate[],
     boundaries: ReadonlySet<DirectionalBoundary>,
   ): void {
+    const canvasByTarget = new Map(
+      candidates.map((candidate) => [candidate.target, candidate]),
+    );
+    const navigation = this.committedNavigationCandidates
+      .map((candidate) =>
+        isHtmlFocusCandidate(candidate)
+          ? candidate
+          : (canvasByTarget.get(candidate.target) ?? candidate),
+      )
+      .filter(
+        (candidate) =>
+          isHtmlFocusCandidate(candidate) ||
+          candidates.some((canvas) => canvas.target === candidate.target),
+      );
+    if (navigation.length === 0 && candidates.length > 0)
+      navigation.push(...candidates);
+    this.commitNavigationCandidates(Object.freeze(navigation), boundaries);
+  }
+
+  private commitNavigationCandidates(
+    candidates: readonly CRCNavigationCandidate[],
+    boundaries: ReadonlySet<DirectionalBoundary>,
+  ): void {
     const pendingByBoundary = new Map<
       DirectionalBoundary,
-      CRCFocusCandidate[]
+      CRCNavigationCandidate[]
     >();
     for (const boundary of boundaries) pendingByBoundary.set(boundary, []);
     for (const candidate of candidates) {
@@ -826,7 +1155,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     // collection failures therefore leave every committed direct list intact.
     const committedByBoundary = new Map<
       DirectionalBoundary,
-      readonly CRCFocusCandidate[]
+      readonly CRCNavigationCandidate[]
     >();
     for (const [boundary, directCandidates] of pendingByBoundary) {
       committedByBoundary.set(boundary, Object.freeze(directCandidates));
@@ -841,13 +1170,35 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
       boundary.commit(directCandidates);
     }
     this.committedBoundaries = new Set(committedByBoundary.keys());
-    this.committedCandidates = candidates;
+    this.committedNavigationCandidates = candidates;
+    this.committedCandidates = Object.freeze(
+      candidates.filter(
+        (candidate): candidate is CRCFocusCandidate =>
+          !isHtmlFocusCandidate(candidate),
+      ),
+    );
+    this.committedHtmlCandidates = Object.freeze(
+      candidates.filter((candidate): candidate is CRCHtmlFocusCandidate =>
+        isHtmlFocusCandidate(candidate),
+      ),
+    );
     if (
       this.focusedTarget &&
-      !candidates.some((candidate) => candidate.target === this.focusedTarget)
+      !candidates.some(
+        (candidate) =>
+          !isHtmlFocusCandidate(candidate) &&
+          candidate.target === this.focusedTarget,
+      )
     ) {
       this.clearFocusState();
     }
+    if (
+      this.focusedHtmlRegion &&
+      !this.committedHtmlCandidates.some(
+        (candidate) => candidate.region === this.focusedHtmlRegion,
+      )
+    )
+      this.clearHtmlFocus(this.focusedHtmlRegion);
     this.activateDOMHost();
   }
 
@@ -867,6 +1218,36 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.cancelSpaceActivation();
     this.focusedTarget = undefined;
     this.focusVisible = false;
+  }
+
+  private adoptHtmlFocus(
+    region: HtmlFocusRegion,
+    modality: "keyboard" | "pointer",
+  ): void {
+    const visible = modality === "keyboard";
+    if (this.focusedHtmlRegion === region && this.focusVisible === visible)
+      return;
+    const previous = this.focusedHtmlRegion;
+    this.focusedHtmlRegion = region;
+    this.focusVisible = visible;
+    if (previous && previous !== region)
+      this.notifyHtmlFocus(previous, false, false);
+    this.notifyHtmlFocus(region, true, visible);
+  }
+
+  private clearHtmlFocus(region: HtmlFocusRegion): void {
+    if (this.focusedHtmlRegion !== region) return;
+    this.focusedHtmlRegion = undefined;
+    this.focusVisible = false;
+    this.notifyHtmlFocus(region, false, false);
+  }
+
+  private notifyHtmlFocus(
+    region: HtmlFocusRegion,
+    isFocusWithin: boolean,
+    isFocusVisible: boolean,
+  ): void {
+    region.onFocusSnapshot?.(Object.freeze({ isFocusWithin, isFocusVisible }));
   }
 
   private applyPressFocus(

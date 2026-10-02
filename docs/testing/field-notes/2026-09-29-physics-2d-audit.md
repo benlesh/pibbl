@@ -13,7 +13,7 @@ For agentic coding, the target is a component that can be composed, exercised, o
 ## Fresh evidence and limits
 
 - Environment: macOS, Node **26.9.0**, pnpm **11.21.0**, Playwright Chromium. Node differs from the documented Node 24.15+ LTS environment; this is diagnostic evidence, not a release trust-gate claim.
-- Command: `corepack pnpm@11.21.0 exec vitest run packages/physics/src/lib/2d packages/core/test/physics-2d-lab.test.ts packages/core/src/lib/backend/physics-presentation.test.tsx --browser.headless --browser.ui=false --maxWorkers=4`.
+- Command: `corepack pnpm@11.21.0 exec vitest run packages/core/src/features/physics/lib/2d packages/core/test/physics-2d-lab.test.ts packages/core/src/lib/backend/physics-presentation.test.tsx --browser.headless --browser.ui=false --maxWorkers=4`.
 - Result: **27 files, 218 tests passed**, 2.59 s. Public type-only tests are excluded by the existing Vitest configuration. No aggregate trust gate, package build, or cross-browser determinism claim was made.
 - Opened `http://127.0.0.1:5173/#/testing/physics-2d` in the browser. Untouched bodies disappeared below the floor; the live circle state later showed downward velocity above 3,798 logical units/s.
 - A temporary browser diagnostic mounted the actual public lab controller, attached its canvas, installed the existing test scheduler, and flushed 601 frames at 50 ms intervals without invoking an action. The committed samples are in [the measurements file](2026-09-29-physics-2d-audit-measurements.json).

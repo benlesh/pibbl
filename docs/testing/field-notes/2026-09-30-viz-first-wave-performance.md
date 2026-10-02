@@ -13,7 +13,7 @@ replacement allocation occurs outside the update timing. Pointer dispatch
 reports a 20-dispatch mean per observation and verifies 140 delivered hits.
 Cold mount is a single descriptive observation, not a regression comparison.
 
-Both trees use the identical `packages/viz/test/first-wave-performance.test.tsx`
+Both trees use the identical `packages/core/test/features/viz/first-wave-performance.test.tsx`
 fixture. The baseline selects legacy bar prop names; the candidate selects the
 approved semantic names. Solid pies use the candidate's explicit `revision: 0`
 cache contract versus the baseline's implicit identity caching. This protects
@@ -52,7 +52,7 @@ To reproduce in the repository root with the documented Node environment:
 ```sh
 VITE_CRC_VIZ_PERF=1 VITE_CRC_VIZ_RESULT="$PWD/viz-perf-result.json" \
   corepack pnpm@11.21.0 exec vitest run \
-  packages/viz/test/first-wave-performance.test.tsx \
+  packages/core/test/features/viz/first-wave-performance.test.tsx \
   --browser.headless --browser.ui=false --maxWorkers=1
 ```
 

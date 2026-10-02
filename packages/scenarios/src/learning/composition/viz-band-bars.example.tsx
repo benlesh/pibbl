@@ -12,7 +12,7 @@ import {
   type CRCPointerEvent,
   type WritableSignal,
 } from "@crc/core";
-import { Axis, BarSeries, Scale, useScale } from "@crc/viz";
+import { Axis, BarSeries, Scale, useScale } from "@crc/core/viz";
 
 interface Reading {
   category: string;

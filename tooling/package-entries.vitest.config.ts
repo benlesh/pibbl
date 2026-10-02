@@ -24,9 +24,9 @@ export default defineConfig({
         ),
       },
       {
-        find: /^@crc\/particles$/,
+        find: /^@crc\/core\/particles$/,
         replacement: fileURLToPath(
-          new URL("../packages/particles/src/index.ts", import.meta.url),
+          new URL("../packages/core/src/features/particles/index.ts", import.meta.url),
         ),
       },
     ],

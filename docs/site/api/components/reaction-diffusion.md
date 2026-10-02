@@ -11,7 +11,7 @@ relatedTypes: [ReactionDiffusionProps, TextureBrush, TextureRenderer]
 
 # ReactionDiffusion
 
-Import from `@crc/textures`. Defaults: `seed=42`, `preset="spots"`,
+Import from `@crc/core/textures`. Defaults: `seed=42`, `preset="spots"`,
 `resolution={width:256,height:160}`, lagoon palette, running, and a radius-6,
 strength-0.8 brush. `preset` also accepts `stripes`.
 

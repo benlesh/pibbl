@@ -1,7 +1,7 @@
 ---
 id: guide-data-visualization
 title: Compose data visualizations
-summary: Build allocated, signal-driven line plots with the official @crc/viz primitives.
+summary: Build allocated, signal-driven line plots with the official @crc/core/viz primitives.
 kind: guide
 slug: data-visualization
 order: 67
@@ -11,13 +11,13 @@ exampleSlug: viz-responsive-line
 
 # Compose data visualizations
 
-`@crc/viz` provides scale and drawing primitives. Core owns layout, signals,
+`@crc/core/viz` provides scale and drawing primitives. Core owns layout, signals,
 events, clipping, and the JSX runtime. No chart container or second rendering
 loop is required.
 
 ```tsx
 import { Absolute, Group } from "@crc/core";
-import { Axis, LineSeries, Scale } from "@crc/viz";
+import { Axis, LineSeries, Scale } from "@crc/core/viz";
 
 const readings = [
   { time: 0, value: 10 },
@@ -219,7 +219,7 @@ changing the bar geometry. Missing-value behavior is covered in the tests.
 </Scale>
 ```
 
-Import `BarSeries` from `@crc/viz`. `useScale("channels", "band").get()` exposes
+Import `BarSeries` from `@crc/core/viz`. `useScale("channels", "band").get()` exposes
 band starts and bandwidth for composed labels and inspection. Categories are
 strings or finite numbers; order is explicit, duplicates reject, and unknowns
 map to undefined. Padding and domain can be signals. Value and range bars support both orientations. With `orientation="horizontal"`,

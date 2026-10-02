@@ -10,7 +10,7 @@ keywords: [particles, canvas, confetti, sparks, trails]
 
 # Create particle effects
 
-`@crc/particles` provides deterministic 2D effects for UI-scale sparks,
+`@crc/core/particles` provides deterministic 2D effects for UI-scale sparks,
 confetti, click feedback, trails, and other Canvas composition. An immutable
 effect describes a population; `Particles2D` binds it into ordinary CRC
 layout, events, filters, lifecycle, and scheduling.
@@ -25,7 +25,7 @@ import {
   particleChoice,
   particleCurve,
   particleRange,
-} from "@crc/particles";
+} from "@crc/core/particles";
 
 const celebration = defineParticleEffect2D({
   emitters: [
@@ -103,7 +103,7 @@ controls; decorative effects opt out of pointer targeting.
 For interacting smoke, create one field with `useFlowField2D`, add force/heat
 sources with `useFlowSource2D`, and pass it to `useParticleSystem(effect, { flow })`.
 Many particles can sample that shared field without owning rigid bodies. With
-optional `@crc/physics/2d`, `physicsObstacles2D(crcPhysicsWorld2D())` provides
+optional `@crc/core/physics/2d`, `physicsObstacles2D(crcPhysicsWorld2D())` provides
 committed box, ellipse, and polygon geometry and motion. Both systems must use
 the same coordinates. The adapter copies numerical data and does not depend on
 shared WASM memory or apply smoke forces back to the physics world.

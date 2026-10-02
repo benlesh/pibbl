@@ -15,7 +15,7 @@ Each concurrent implementation gets its own managed worktree and codex branch. T
 
 ## Audit and capability checklist
 
-Current public exports: `packages/viz/src/index.ts`. Current behavior: `packages/viz/src/lib/`; public evidence: `packages/viz/test/`; public guide: `docs/site/learn/guides/data-visualization.md`.
+Current public exports: `packages/core/src/features/viz/index.ts`. Current behavior: `packages/core/src/features/viz/lib/`; public evidence: `packages/core/test/features/viz/`; public guide: `docs/site/learn/guides/data-visualization.md`.
 
 | Area                                 | Shipped evidence                                                                                                  | Remaining deliverables                                                                                                                                                 | Dependencies                                                        | State    |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------- |

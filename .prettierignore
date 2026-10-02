@@ -9,3 +9,6 @@ packages/text/dist/
 
 # Preserve upstream font licenses and pinned fixture metadata
 packages/text/test/fixtures/
+# Retained verification reports are byte-fingerprinted evidence, not authored docs.
+docs/strategy/agent-verification-evidence/
+docs/testing/package-consolidation-evidence/

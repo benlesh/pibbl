@@ -64,8 +64,8 @@ keywords: [physics, 2d, types, collision, rapier]
 
 # 2D physics types
 
-Import these contracts with `type` from `@crc/physics/2d`. The pure geometry
-subset is also available from `@crc/physics/2d/geometry`. For composition
+Import these contracts with `type` from `@crc/core/physics/2d`. The pure geometry
+subset is also available from `@crc/core/physics/2d/geometry`. For composition
 recipes, see the [2D physics guide](#/learn/guides/physics-2d).
 
 ## Geometry

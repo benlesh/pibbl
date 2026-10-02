@@ -120,19 +120,55 @@ const MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS = new Set([
   ...ANIMATION_APPROVED_SECTIONS,
 ]);
 
+const HTML_BOX_APPROVAL_RECORD = "html-box";
+const HTML_BOX_APPROVED_SECTIONS = new Set([
+  "HtmlBox design",
+  "Purpose",
+  "Public authoring surface",
+  "Root DOM arrangement and ownership",
+  "Layout, transforms, and paint",
+  "Clipping representation and DOM projection",
+  "Mount lifetime and frame publication",
+  "Native input and focus bridge",
+  "Navigation rules",
+  "Entry, exit, and cancellation",
+  "Accessibility and bounded behavior",
+  "Delivery sequence and evidence",
+]);
+
 const POST_BASELINE_CONTRACT_PROFILES = new Map([
+  [
+    "docs/design/html-box-contract.md",
+    {
+      unitPrefix: "y",
+      approvalRecordId: HTML_BOX_APPROVAL_RECORD,
+      allowedSections: HTML_BOX_APPROVED_SECTIONS,
+    },
+  ],
   [
     "docs/design/textures-contract.md",
     {
       unitPrefix: "u",
       approvalRecordId: "procedural-textures",
       allowedSections: new Set([
-        "Optional procedural textures decision record",
-        "Package boundary",
-        "Persistence and timing",
-        "Input and updates",
-        "Composition and reuse",
-        "Ownership and evidence",
+        "Draft design for tree shakeable filters and texture effects",
+        "Decisions",
+        "Evidence from the current repository",
+        "Goals and boundaries",
+        "Public authoring",
+        "Runtime dependency direction",
+        "Texture consumption and borrowing",
+        "Displacement semantics",
+        "GPU processing and capabilities",
+        "Animated underwater recipe",
+        "Scheduling and successful generations",
+        "Caching and interaction invariants",
+        "Ownership and failure ledger",
+        "Packaging and the wider optional feature audit",
+        "Consumer bundle evidence",
+        "Concurrent texture and WASM integration clarification",
+        "Behavior and lifecycle verification",
+        "Migration and documentation",
       ]),
     },
   ],
