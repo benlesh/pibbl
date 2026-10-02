@@ -112,15 +112,15 @@ entries and the freshly emitted package artifacts. `three` remains external,
 as it is a peer dependency. Each probe fails if the selected export emits no
 bytes or has no retained attributed input.
 
-| Selected public export | Source bytes | Packed-artifact bytes | Current evidence |
-| --- | ---: | ---: | --- |
-| `tween` / `spring` / `stepper` | 11,029 / 9,172 / 1,865 | 11,031 / 9,174 / 1,866 | Core preserved-module output retains the selected animation definitions rather than the old shared core chunk. |
-| `Flow` / `Grid` | 111,616 / 116,255 | 111,651 / 116,290 | Each packed probe retains its selected layout module (`flow.js` or `grid.js`); this is a positive packed-output boundary. |
-| `defineRenderLayer` / `defineThreeLayer` | 189,926 / 207,861 | 190,710 / 208,417 | The Three adapter adds its own 17,605-byte emitted artifact; `three` itself is external. |
-| `sphereShape3D` / `circleShape2D` | 1,839 / 5,391 | 4,395 / 5,565 | Geometry remains far smaller than the physics runtime. |
-| `PhysicsWorld2D` | 3,903,730 | 4,004,613 | The selected runtime deliberately retains Rapier and the 2D world; this is not a light helper. |
-| `Axis` / `LineSeries` | 99,145 / 81,687 | 124,381 / 110,044 | The selected Viz exports retain their own artifact plus core dependencies; they are not equivalent-sized bundles. |
-| `particleRange` / `Particles2D` | 5,898 / 336,923 | 89,324 / 348,892 | Source keeps the parameter helper small; packed particles still couples that helper to its flattened artifact and core runtime. |
+| Selected public export                   |           Source bytes |  Packed-artifact bytes | Current evidence                                                                                                                |
+| ---------------------------------------- | ---------------------: | ---------------------: | ------------------------------------------------------------------------------------------------------------------------------- |
+| `tween` / `spring` / `stepper`           | 11,029 / 9,172 / 1,865 | 11,031 / 9,174 / 1,866 | Core preserved-module output retains the selected animation definitions rather than the old shared core chunk.                  |
+| `Flow` / `Grid`                          |      111,616 / 116,255 |      111,651 / 116,290 | Each packed probe retains its selected layout module (`flow.js` or `grid.js`); this is a positive packed-output boundary.       |
+| `defineRenderLayer` / `defineThreeLayer` |      189,926 / 207,861 |      190,710 / 208,417 | The Three adapter adds its own 17,605-byte emitted artifact; `three` itself is external.                                        |
+| `sphereShape3D` / `circleShape2D`        |          1,839 / 5,391 |          4,395 / 5,565 | Geometry remains far smaller than the physics runtime.                                                                          |
+| `PhysicsWorld2D`                         |              3,903,730 |              4,004,613 | The selected runtime deliberately retains Rapier and the 2D world; this is not a light helper.                                  |
+| `Axis` / `LineSeries`                    |        99,145 / 81,687 |      124,381 / 110,044 | The selected Viz exports retain their own artifact plus core dependencies; they are not equivalent-sized bundles.               |
+| `particleRange` / `Particles2D`          |        5,898 / 336,923 |       89,324 / 348,892 | Source keeps the parameter helper small; packed particles still couples that helper to its flattened artifact and core runtime. |
 
 ### Current conclusions and scoped follow-ups
 
@@ -152,14 +152,14 @@ for installed packed-package consumers that expose usable scenes. They measure
 whole consumer output, not the incremental price of one effect. Structural
 implementation exclusions remain the hard gate; these sizes are review baselines.
 
-| Consumer | esbuild bytes / gzip | Vite bytes / gzip |
-| --- | ---: | ---: |
-| Plain Rectangle/Text | 124,130 / 37,323 | 181,884 / 42,341 |
-| Explicit Layer | 121,600 / 36,368 | 177,932 / 41,208 |
-| Native blur | 132,558 / 40,003 | 193,186 / 45,244 |
-| Marble paint | 152,836 / 45,516 | 190,143 / 45,470 |
-| Water paint | 155,008 / 46,198 | 184,185 / 43,598 |
-| User-defined texture displacement | 149,860 / 45,476 | 214,733 / 51,171 |
+| Consumer                          | esbuild bytes / gzip | Vite bytes / gzip |
+| --------------------------------- | -------------------: | ----------------: |
+| Plain Rectangle/Text              |     124,130 / 37,323 |  181,884 / 42,341 |
+| Explicit Layer                    |     121,600 / 36,368 |  177,932 / 41,208 |
+| Native blur                       |     132,558 / 40,003 |  193,186 / 45,244 |
+| Marble paint                      |     152,836 / 45,516 |  190,143 / 45,470 |
+| Water paint                       |     155,008 / 46,198 |  184,185 / 43,598 |
+| User-defined texture displacement |     149,860 / 45,476 |  214,733 / 51,171 |
 
 Reproduce with `node tooling/verify-optional-feature-bundles.mjs` after building
 and packing the packages. The checker reports source and packed, minified and
