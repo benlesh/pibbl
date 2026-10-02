@@ -1,3 +1,7 @@
+import { resolveFilterList } from '../style/filter';
+import type { NativePreparedFilter } from '../../filters/native-operations';
+import { peekNativeFilterPool } from './render-filter-boundary';
+import { blur, dropShadow, grayscale, opacity } from '@crc/core/filters';
 import {
   Absolute,
   Group,
@@ -79,18 +83,12 @@ describe('filter integration', () => {
     const canvas = await renderScene(createElement(Counted, {
       label: 'outer',
       children: createElement(Group, {
-        style: { filter: { type: 'blur', radius: 4 } },
+        style: { filter: blur({ radius: 4 }) },
         children: createElement(Counted, {
           label: 'middle',
           children: createElement(Group, {
             style: {
-              filter: {
-                type: 'dropShadow',
-                offsetX: 6,
-                offsetY: 3,
-                blurRadius: 2,
-                color: 'black',
-              },
+              filter: dropShadow({ offsetX: 6, offsetY: 3, blurRadius: 2, color: 'black' }),
             },
             children: createElement(Counted, {
               label: 'inner',
@@ -101,7 +99,7 @@ describe('filter integration', () => {
                   width: 30,
                   height: 30,
                   fill: 'red',
-                  filter: { type: 'grayscale', amount: 1 },
+                  filter: grayscale({ amount: 1 }),
                 },
               }),
             }),
@@ -133,7 +131,7 @@ describe('filter integration', () => {
     ]);
     expect(offscreenDraws.mock.invocationCallOrder[4])
       .toBeLessThan(parentDraws.mock.invocationCallOrder[0]!);
-    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
       surfaceSlots: 6,
       activePairs: 0,
       peakActivePairs: 3,
@@ -154,15 +152,9 @@ describe('filter integration', () => {
       'set',
     );
     const first = await renderScene(filteredRectangle([
-      { type: 'grayscale', amount: 1 },
-      {
-        type: 'dropShadow',
-        offsetX: 24,
-        offsetY: 0,
-        blurRadius: 0,
-        color: 'blue',
-      },
-      { type: 'blur', radius: 1 },
+      grayscale({ amount: 1 }),
+      dropShadow({ offsetX: 24, offsetY: 0, blurRadius: 0, color: 'blue' }),
+      blur({ radius: 1 }),
     ]), 80, 40);
 
     expect(filterAssignments.mock.calls
@@ -171,7 +163,7 @@ describe('filter integration', () => {
       .toEqual([
         'grayscale(1) drop-shadow(24px 0px 0px blue) blur(1px)',
       ]);
-    expect(getCRCInstance(first).filterSurfacePool.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(getCRCInstance(first))!.snapshot()).toMatchObject({
       surfaceSlots: 2,
       peakActivePairs: 1,
       pairCheckouts: 1,
@@ -180,15 +172,9 @@ describe('filter integration', () => {
 
     filterAssignments.mockClear();
     const swapped = await renderScene(filteredRectangle([
-      {
-        type: 'dropShadow',
-        offsetX: 24,
-        offsetY: 0,
-        blurRadius: 0,
-        color: 'blue',
-      },
-      { type: 'grayscale', amount: 1 },
-      { type: 'blur', radius: 1 },
+      dropShadow({ offsetX: 24, offsetY: 0, blurRadius: 0, color: 'blue' }),
+      grayscale({ amount: 1 }),
+      blur({ radius: 1 }),
     ]), 80, 40);
 
     expect(filterAssignments.mock.calls
@@ -212,12 +198,7 @@ describe('filter integration', () => {
         width: 4,
         height: 4,
         fill: 'red',
-        filter: {
-          type: 'dropShadow',
-          offsetX: 8,
-          offsetY: 0,
-          color: 'contrast-color(red)',
-        },
+        filter: dropShadow({ offsetX: 8, offsetY: 0, color: 'contrast-color(red)' }),
       },
     }), 18, 10);
 
@@ -235,7 +216,7 @@ describe('filter integration', () => {
             width: 3,
             height: 16,
             fill: 'red',
-            filter: { type: 'blur', radius: 3 },
+            filter: blur({ radius: 3 }),
           },
         }),
         createElement(Rectangle, {
@@ -245,12 +226,7 @@ describe('filter integration', () => {
             width: 4,
             height: 16,
             fill: 'red',
-            filter: {
-              type: 'dropShadow',
-              offsetX: -6,
-              offsetY: 0,
-              color: 'blue',
-            },
+            filter: dropShadow({ offsetX: -6, offsetY: 0, color: 'blue' }),
           },
         }),
       ],
@@ -270,12 +246,7 @@ describe('filter integration', () => {
           width: 10,
           height: 5,
           fill: 'red',
-          filter: {
-            type: 'dropShadow',
-            offsetX: 0,
-            offsetY: -10,
-            color: 'blue',
-          },
+          filter: dropShadow({ offsetX: 0, offsetY: -10, color: 'blue' }),
         },
       }),
       { logicalWidth: 40, logicalHeight: 20, displayWidth: 40, displayHeight: 40, fit: 'contain' },
@@ -304,7 +275,7 @@ describe('filter integration', () => {
     const checkouts = vi.spyOn(FilterSurfacePool.prototype, 'checkoutPair');
     const canvas = await renderFixedScene(
       createElement(Group, {
-        style: { filter: { type: 'opacity', amount: 1 } },
+        style: { filter: opacity({ amount: 1 }) },
         children: [
           createElement(Rectangle, {
             style: { x: -10, y: -10, width: 3, height: 3, fill: 'red' },
@@ -338,7 +309,7 @@ describe('filter integration', () => {
     const checkouts = vi.spyOn(FilterSurfacePool.prototype, 'checkoutPair');
     const canvas = await renderFixedScene(
       createElement(Group, {
-        style: { filter: { type: 'opacity', amount: 1 } },
+        style: { filter: opacity({ amount: 1 }) },
         children: [
           createElement(Rectangle, {
             style: { x: 0, y: -30, width: 4, height: 2, fill: 'red' },
@@ -372,7 +343,7 @@ describe('filter integration', () => {
     const checkouts = vi.spyOn(FilterSurfacePool.prototype, 'checkoutPair');
     const canvas = await renderFixedScene(
       createElement(Group, {
-        style: { filter: { type: 'opacity', amount: 1 } },
+        style: { filter: opacity({ amount: 1 }) },
         children: [
           createElement(Rectangle, {
             style: { x: 10, y: 0, width: 1, height: 20, fill: 'red' },
@@ -430,7 +401,7 @@ describe('filter integration', () => {
         scaleY: 3,
         rotationDegrees: 90,
         translateX: 20,
-        filter: { type: 'blur', radius: 1 },
+        filter: blur({ radius: 1 }),
       },
       children: createElement(Probe, {}),
     }), 100, 80, 2);
@@ -480,7 +451,7 @@ describe('filter integration', () => {
     const canvas = await renderScene(createElement(Group, {
       style: {
         scaleX: 0,
-        filter: { type: 'blur', radius: 2 },
+        filter: blur({ radius: 2 }),
       },
       children: createElement(Probe, {}),
     }), 40, 30);
@@ -495,12 +466,7 @@ describe('filter integration', () => {
     dispatchClick(canvas, 2, 2);
     expect(onClick).not.toHaveBeenCalled();
     expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(1);
-    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
-      surfaceSlots: 0,
-      activePairs: 0,
-      pairCheckouts: 0,
-      pairReturns: 0,
-    });
+    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
   });
 
   it('rejects a zero-scale concrete native color before the discard callback', () => {
@@ -510,12 +476,7 @@ describe('filter integration', () => {
     const canvas = mountScheduled(createElement(Group, {
       style: {
         scaleX: 0,
-        filter: {
-          type: 'dropShadow',
-          offsetX: 2,
-          offsetY: 2,
-          color: 'not-a-color',
-        },
+        filter: dropShadow({ offsetX: 2, offsetY: 2, color: 'not-a-color' }),
       },
       children: createElement(filteredCallbackProbe(callback), {}),
     }));
@@ -538,12 +499,7 @@ describe('filter integration', () => {
     const canvas = mountScheduled(createElement(Group, {
       style: {
         scaleX: 0,
-        filter: {
-          type: 'dropShadow',
-          offsetX: 2,
-          offsetY: 2,
-          color: 'currentColor',
-        },
+        filter: dropShadow({ offsetX: 2, offsetY: 2, color: 'currentColor' }),
       },
       children: createElement(Probe, {}),
     }));
@@ -565,7 +521,7 @@ describe('filter integration', () => {
     const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
     expect(Reflect.deleteProperty(prototype, 'filter')).toBe(true);
     const canvas = mountScheduled(createElement(Group, {
-      style: { scaleX: 0, filter: { type: 'blur', radius: 1 } },
+      style: { scaleX: 0, filter: blur({ radius: 1 }) },
       children: createElement(filteredCallbackProbe(callback), {}),
     }));
 
@@ -602,7 +558,7 @@ describe('filter integration', () => {
       },
     });
     const canvas = mountScheduled(createElement(Group, {
-      style: { scaleX: 0, filter: { type: 'blur', radius: 1 } },
+      style: { scaleX: 0, filter: blur({ radius: 1 }) },
       children: createElement(filteredCallbackProbe(callback), {}),
     }));
 
@@ -637,7 +593,7 @@ describe('filter integration', () => {
       },
     });
     const canvas = mountScheduled(createElement(Group, {
-      style: { scaleX: 0, filter: { type: 'blur', radius: 1 } },
+      style: { scaleX: 0, filter: blur({ radius: 1 }) },
       children: createElement(filteredCallbackProbe(callback), {}),
     }));
 
@@ -645,8 +601,7 @@ describe('filter integration', () => {
       expect(() => frames.runNext())
         .toThrow(/Group.*native Canvas filter state could not reset to none/i);
       expect(callback).not.toHaveBeenCalled();
-      expect(getCRCInstance(canvas).filterSurfacePool.snapshot())
-        .toMatchObject({ activePairs: 0, pairCheckouts: 0, pairReturns: 0 });
+      expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
     } finally {
       Object.defineProperty(prototype, 'filter', descriptor);
     }
@@ -678,7 +633,7 @@ describe('filter integration', () => {
       'drawImage',
     );
     const canvas = mountScheduled(createElement(Group, {
-      style: { scaleX: 0, filter: { type: 'grayscale', amount: 1 } },
+      style: { scaleX: 0, filter: grayscale({ amount: 1 }) },
       children: createElement(filteredCallbackProbe(callback), {}),
     }));
 
@@ -733,7 +688,7 @@ describe('filter integration', () => {
 
     await renderScene(createElement(ParentState, {
       children: createElement(FilteredProbe, {
-        style: { filter: { type: 'opacity', amount: 1 } },
+        style: { filter: opacity({ amount: 1 }) },
       }),
     }), 32, 24);
 
@@ -800,7 +755,7 @@ describe('filter integration', () => {
     const canvas = await renderScene(createElement(ParentClip, {
       children: [
         createElement(Group, {
-          style: { filter: { type: 'opacity', amount: 1 } },
+          style: { filter: opacity({ amount: 1 }) },
           children: createElement(StatefulChild, {}),
         }),
         createElement(Sibling, {}),
@@ -846,7 +801,7 @@ describe('filter integration', () => {
     );
     const canvas = await renderScene(createElement(ParentPath, {
       children: createElement(FilteredDraw, {
-        style: { filter: { type: 'opacity', amount: 1 } },
+        style: { filter: opacity({ amount: 1 }) },
       }),
     }), 32, 16);
 
@@ -869,12 +824,7 @@ describe('filter integration', () => {
           top: 10,
           width: 20,
           height: 20,
-          filter: {
-            type: 'dropShadow',
-            offsetX: 15,
-            offsetY: 0,
-            color: 'blue',
-          },
+          filter: dropShadow({ offsetX: 15, offsetY: 0, color: 'blue' }),
         },
         children: createElement(Probe, {}),
       }),
@@ -903,7 +853,7 @@ describe('filter integration', () => {
             width: 10,
             height: 11,
             fill: 'red',
-            filter: { type: 'blur', radius: 8 },
+            filter: blur({ radius: 8 }),
           },
           keyboardNavigationBounds: firstBounds,
           onClick: () => undefined,
@@ -915,12 +865,7 @@ describe('filter integration', () => {
             width: 10,
             height: 11,
             fill: 'blue',
-            filter: {
-              type: 'dropShadow',
-              offsetX: 20,
-              offsetY: 0,
-              color: 'black',
-            },
+            filter: dropShadow({ offsetX: 20, offsetY: 0, color: 'black' }),
           },
           keyboardNavigationBounds: secondBounds,
           onClick: () => undefined,
@@ -957,7 +902,7 @@ describe('filter integration', () => {
           width: 10,
           height: 10,
           fill: 'red',
-          filter: { type: 'blur', radius: radius.get() },
+          filter: blur({ radius: radius.get() }),
         },
         keyboardNavigationBounds: bounds,
         onClick,
@@ -1064,7 +1009,7 @@ describe('filter integration', () => {
       context.fill(path);
     });
     const controller = mountCRC(root, createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     }));
     controllers.add(controller);
 
@@ -1095,7 +1040,7 @@ describe('filter integration', () => {
       ],
     }), 28, 24);
     const groupOpacity = await renderScene(createElement(Group, {
-      style: { filter: { type: 'opacity', amount: 0.5 } },
+      style: { filter: opacity({ amount: 0.5 }) },
       children: [
         createElement(Rectangle, {
           style: { x: 4, y: 4, width: 16, height: 16, fill: 'red' },
@@ -1164,9 +1109,7 @@ describe('filter failure recovery', () => {
     try {
       expect(() => renderFilterBoundary({
         component: 'BoundaryProbe',
-        filters: {
-          values: Object.freeze([{ type: 'blur' as const, radius: 1 }]),
-        },
+        filters: resolveFilterList(blur({ radius: 1 }), { allocation: { x: 0, y: 0, width: 100, height: 100 }, percentageBasis: { x: 0, y: 0, width: 100, height: 100 }, component: 'BoundaryProbe', algorithm: 'render-dispatch', constraints: { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 100 } })!.values as readonly NativePreparedFilter[],
         presentation: {
           transform: presentationTransform,
           clip: { path: boundaryClip, fillRule: 'nonzero' },
@@ -1191,7 +1134,7 @@ describe('filter failure recovery', () => {
       expect(GLOBAL_STATE.clippingStack).toEqual([priorClipEntry]);
       expect(context.getTransform()).toEqual(transform);
       expect(canvasState(context)).toEqual(state);
-      expect(instance.filterSurfacePool.snapshot()).toMatchObject({
+      expect(peekNativeFilterPool(instance)!.snapshot()).toMatchObject({
         activePairs: 0,
         pairCheckouts: 1,
         pairReturns: 1,
@@ -1222,7 +1165,7 @@ describe('filter failure recovery', () => {
     const baseline = temporaryGlobalSnapshot();
     vi.stubGlobal('OffscreenCanvas', undefined);
     const canvas = mountScheduled(createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     }));
 
     expect(() => frames.runNext()).toThrow(/Probe.*OffscreenCanvas support/i);
@@ -1243,7 +1186,7 @@ describe('filter failure recovery', () => {
     const baseline = temporaryGlobalSnapshot();
     const cause = new Error('host rejected pooled allocation');
     const root = createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     });
     function ThrowingOffscreenCanvas(): never {
       throw cause;
@@ -1270,7 +1213,7 @@ describe('filter failure recovery', () => {
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
     expect(getCRCInstance(canvas)).toBe(instance);
-    expect(instance.filterSurfacePool.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(instance)!.snapshot()).toMatchObject({
       surfaceSlots: 2,
       activePairs: 0,
       pairCheckouts: 1,
@@ -1285,7 +1228,7 @@ describe('filter failure recovery', () => {
     const baseline = temporaryGlobalSnapshot();
     const cause = new Error('host rejected pooled 2D context');
     const root = createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     });
     const getContext = vi.spyOn(OffscreenCanvas.prototype, 'getContext')
       .mockImplementation(() => {
@@ -1312,7 +1255,7 @@ describe('filter failure recovery', () => {
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
     expect(getCRCInstance(canvas)).toBe(instance);
-    expect(instance.filterSurfacePool.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(instance)!.snapshot()).toMatchObject({
       surfaceSlots: 2,
       activePairs: 0,
       pairCheckouts: 1,
@@ -1351,12 +1294,7 @@ describe('filter failure recovery', () => {
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
     expect(getCRCInstance(canvas)).toBe(instance);
-    expect(instance.filterSurfacePool.snapshot()).toMatchObject({
-      surfaceSlots: 0,
-      activePairs: 0,
-      pairCheckouts: 0,
-      pairReturns: 0,
-    });
+    expect(peekNativeFilterPool(instance)).toBeUndefined();
   });
 
   it('wraps a throwing discard 2D-context acquisition and recovers the same instance', () => {
@@ -1390,12 +1328,7 @@ describe('filter failure recovery', () => {
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
     expect(getCRCInstance(canvas)).toBe(instance);
-    expect(instance.filterSurfacePool.snapshot()).toMatchObject({
-      surfaceSlots: 0,
-      activePairs: 0,
-      pairCheckouts: 0,
-      pairReturns: 0,
-    });
+    expect(peekNativeFilterPool(instance)).toBeUndefined();
   });
 
   it('recovers filtering on the same instance after a missing accessor without expando poisoning', () => {
@@ -1411,12 +1344,12 @@ describe('filter failure recovery', () => {
     });
     const frames = controlFrames();
     const canvas = mountScheduled(createElement(PixelProbe, {
-      style: { filter: { type: 'opacity', amount: 1 } },
+      style: { filter: opacity({ amount: 1 }) },
     }));
     frames.runNext();
     expect(pixel(canvas, 2, 2)).toEqual([255, 0, 0, 255]);
     const instance = getCRCInstance(canvas);
-    for (const context of idlePoolContexts(instance.filterSurfacePool)) {
+    for (const context of idlePoolContexts(peekNativeFilterPool(instance)!)) {
       Object.defineProperty(context, 'filter', {
         configurable: true,
         writable: true,
@@ -1430,19 +1363,19 @@ describe('filter failure recovery', () => {
     const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
     expect(Reflect.deleteProperty(prototype, 'filter')).toBe(true);
     crc(canvas, createElement(PixelProbe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     }));
 
     try {
       expect(() => frames.runNext())
         .toThrow(/PixelProbe.*native Canvas filter support/i);
       expect(callback).not.toHaveBeenCalled();
-      expect(instance.filterSurfacePool.snapshot()).toMatchObject({
+      expect(peekNativeFilterPool(instance)!.snapshot()).toMatchObject({
         activePairs: 0,
         pairCheckouts: 2,
         pairReturns: 2,
       });
-      for (const context of idlePoolContexts(instance.filterSurfacePool)) {
+      for (const context of idlePoolContexts(peekNativeFilterPool(instance)!)) {
         expect(Object.hasOwn(context, 'filter')).toBe(false);
       }
     } finally {
@@ -1450,7 +1383,7 @@ describe('filter failure recovery', () => {
     }
 
     crc(canvas, createElement(PixelProbe, {
-      style: { filter: { type: 'grayscale', amount: 1 } },
+      style: { filter: grayscale({ amount: 1 }) },
     }));
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
@@ -1476,11 +1409,11 @@ describe('filter failure recovery', () => {
     });
     const frames = controlFrames();
     const canvas = mountScheduled(createElement(PixelProbe, {
-      style: { filter: { type: 'opacity', amount: 1 } },
+      style: { filter: opacity({ amount: 1 }) },
     }));
     frames.runNext();
     const instance = getCRCInstance(canvas);
-    const resultContext = idlePoolContexts(instance.filterSurfacePool)[1]!;
+    const resultContext = idlePoolContexts(peekNativeFilterPool(instance)!)[1]!;
     const prototype = OffscreenCanvasRenderingContext2D.prototype;
     const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
     resultContext.restore();
@@ -1506,7 +1439,7 @@ describe('filter failure recovery', () => {
       },
     });
     crc(canvas, createElement(PixelProbe, {
-      style: { filter: { type: 'grayscale', amount: 1 } },
+      style: { filter: grayscale({ amount: 1 }) },
     }));
 
     try {
@@ -1525,12 +1458,12 @@ describe('filter failure recovery', () => {
     }
 
     crc(canvas, createElement(PixelProbe, {
-      style: { filter: { type: 'grayscale', amount: 1 } },
+      style: { filter: grayscale({ amount: 1 }) },
     }));
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
     expect(getCRCInstance(canvas)).toBe(instance);
-    expect(idlePoolContexts(instance.filterSurfacePool)[1]).toBe(resultContext);
+    expect(idlePoolContexts(peekNativeFilterPool(instance)!)[1]).toBe(resultContext);
     const recovered = pixel(canvas, 2, 2);
     expect(Math.max(recovered[0]!, recovered[1]!, recovered[2]!) -
       Math.min(recovered[0]!, recovered[1]!, recovered[2]!))
@@ -1554,14 +1487,14 @@ describe('filter failure recovery', () => {
       set: descriptor.set,
     });
     const canvas = mountScheduled(createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     }));
 
     try {
       expect(() => frames.runNext())
         .toThrow(/Probe.*property filter.*native Canvas filter getter threw/i);
       expect(callback).not.toHaveBeenCalled();
-      expect(getCRCInstance(canvas).filterSurfacePool.snapshot())
+      expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot())
         .toMatchObject({ activePairs: 0, pairCheckouts: 1, pairReturns: 1 });
     } finally {
       Object.defineProperty(prototype, 'filter', descriptor);
@@ -1583,14 +1516,14 @@ describe('filter failure recovery', () => {
       },
     });
     const canvas = mountScheduled(createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     }));
 
     try {
       expect(() => frames.runNext())
         .toThrow(/Probe.*property filter.*native Canvas filter setter threw/i);
       expect(callback).not.toHaveBeenCalled();
-      expect(getCRCInstance(canvas).filterSurfacePool.snapshot())
+      expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot())
         .toMatchObject({ activePairs: 0, pairCheckouts: 1, pairReturns: 1 });
     } finally {
       Object.defineProperty(prototype, 'filter', descriptor);
@@ -1604,12 +1537,7 @@ describe('filter failure recovery', () => {
     const baseline = temporaryGlobalSnapshot();
     const canvas = mountScheduled(createElement(Probe, {
       style: {
-        filter: {
-          type: 'dropShadow',
-          offsetX: 2,
-          offsetY: 2,
-          color: 'not-a-color',
-        },
+        filter: dropShadow({ offsetX: 2, offsetY: 2, color: 'not-a-color' }),
       },
     }));
 
@@ -1625,12 +1553,7 @@ describe('filter failure recovery', () => {
     const baseline = temporaryGlobalSnapshot();
     const canvas = mountScheduled(createElement(Probe, {
       style: {
-        filter: {
-          type: 'dropShadow',
-          offsetX: 2,
-          offsetY: 2,
-          color: 'currentColor',
-        },
+        filter: dropShadow({ offsetX: 2, offsetY: 2, color: 'currentColor' }),
       },
     }));
 
@@ -1657,7 +1580,7 @@ describe('filter failure recovery', () => {
         return (nativeGetContext as Function).apply(this, args);
       } as typeof OffscreenCanvas.prototype.getContext);
     const canvas = mountScheduled(createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     }));
 
     expect(() => frames.runNext()).toThrow(/Probe.*result.*2D context/i);
@@ -1679,7 +1602,7 @@ describe('filter failure recovery', () => {
     const frames = controlFrames();
     const baseline = temporaryGlobalSnapshot();
     const canvas = mountScheduled(createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     }));
 
     expect(() => frames.runNext()).toThrowError('receiving primitive failed');
@@ -1698,13 +1621,13 @@ describe('filter failure recovery', () => {
     const Probe = definePrimitive<{}, SystemStyle>(callback);
     const frames = controlFrames();
     const canvas = mountScheduled(createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     }));
 
     expect(() => frames.runNext())
       .toThrowError('pattern-bearing primitive failed');
     expect(callback).toHaveBeenCalledOnce();
-    const pool = getCRCInstance(canvas).filterSurfacePool;
+    const pool = peekNativeFilterPool(getCRCInstance(canvas))!;
     expect(pool.snapshot()).toMatchObject({
       activePairs: 0,
       pairCheckouts: 1,
@@ -1732,12 +1655,12 @@ describe('filter failure recovery', () => {
     const Probe = definePrimitive<{}, SystemStyle>(callback);
     const frames = controlFrames();
     const canvas = mountScheduled(createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     }));
 
     expect(() => frames.runNext()).toThrowError('original render failure');
     expect(scrubWrites).toBe(1);
-    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
       activePairs: 0,
       pairCheckouts: 1,
       pairReturns: 1,
@@ -1766,24 +1689,22 @@ describe('filter failure recovery', () => {
     const frames = controlFrames();
     const baseline = temporaryGlobalSnapshot();
     const canvas = mountScheduled(createElement(Outer, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
       children: createElement(Inner, {
-        style: { filter: { type: 'grayscale', amount: 1 } },
+        style: { filter: grayscale({ amount: 1 }) },
         children: createElement(Descendant, {}),
       }),
     }));
-    const instance = getCRCInstance(canvas);
     const rootContext = canvas.getContext('2d')!;
-    const pool = instance.filterSurfacePool;
-    const checkoutPair = pool.checkoutPair.bind(pool);
+    const checkoutPair = FilterSurfacePool.prototype.checkoutPair;
     const sources = new Map<number, RenderingContext2D>();
     const releases: Array<{
       depth: number;
       context: RenderingContext2D | undefined;
     }> = [];
-    vi.spyOn(pool, 'checkoutPair').mockImplementation(windows => {
-      const lease = checkoutPair(windows);
-      const depth = pool.snapshot().activePairs;
+    vi.spyOn(FilterSurfacePool.prototype, 'checkoutPair').mockImplementation(function (this: FilterSurfacePool, windows) {
+      const lease = checkoutPair.call(this, windows);
+      const depth = this.snapshot().activePairs;
       sources.set(depth, lease.source.context);
       return {
         ...lease,
@@ -1820,7 +1741,7 @@ describe('filter failure recovery', () => {
         throw new Error('final composite failed');
       });
     const canvas = mountScheduled(createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 1 } },
+      style: { filter: blur({ radius: 1 }) },
     }));
 
     expect(() => frames.runNext()).toThrowError('final composite failed');
@@ -1854,7 +1775,7 @@ function clickableRectangle(
       width: 20,
       height: 20,
       fill: filtered ? 'red' : 'blue',
-      filter: filtered ? { type: 'blur', radius: 2 } : undefined,
+      filter: filtered ? blur({ radius: 2 }) : undefined,
     },
     onClick,
   });
@@ -1874,7 +1795,7 @@ function filteredCallbackProbe(callback: () => void) {
 function singularFilteredProbe(callback: () => void): CRCNode {
   const Probe = filteredCallbackProbe(callback);
   return createElement(Group, {
-    style: { scaleX: 0, filter: { type: 'blur', radius: 1 } },
+    style: { scaleX: 0, filter: blur({ radius: 1 }) },
     children: createElement(Probe, {}),
   });
 }
@@ -1922,11 +1843,11 @@ function expectFreshFilteredRecovery(
   const callback = vi.fn();
   const Probe = filteredCallbackProbe(callback);
   const canvas = mountScheduled(createElement(Probe, {
-    style: { filter: { type: 'grayscale', amount: 1 } },
+    style: { filter: grayscale({ amount: 1 }) },
   }));
   expect(() => frames.runNext()).not.toThrow();
   expect(callback).toHaveBeenCalledOnce();
-  expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+  expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
     activePairs: 0,
     pairCheckouts: 1,
     pairReturns: 1,
@@ -1972,10 +1893,13 @@ function expectFailureBaseline(
   },
 ): void {
   expect(callback).toHaveBeenCalledTimes(expectedCalls);
-  expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
-    activePairs: 0,
-    ...pool,
-  });
+  const actualPool = peekNativeFilterPool(getCRCInstance(canvas));
+  if (actualPool === undefined) {
+    expect(Object.values(pool).every(value => value === 0)).toBe(true);
+  } else {
+    expect(actualPool).toBeDefined();
+    expect(actualPool!.snapshot()).toMatchObject({ activePairs: 0, ...pool });
+  }
   expect(getCRCInstance(canvas).refs.size).toBe(0);
   expectTemporaryGlobals(baseline);
 }
