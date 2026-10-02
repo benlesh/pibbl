@@ -5,23 +5,25 @@ import {
   type RenderTargetSnapshot,
   withRenderTarget,
 } from '../render-target.js';
-import {
-  assertNativeFilter,
-  compileFilterList,
-  resetNativeFilter,
-  type ResolvedFilterList,
-} from '../style/filter.js';
+import { getOptionalService } from '../optional-services.js';
+import type { NativePreparedFilter } from '../../filters/native-operations.js';
+import { compileNativeFilters } from '../../filters/native-operations.js';
+import { assertNativeCanvasFilter, resetNativeCanvasFilter } from '../../filters/native-canvas-filter.js';
 import { copyFilterSourceState } from './canvas-state.js';
+import { FilterSurfacePool } from './filter-surface-pool.js';
 import { resolveFilterWindows } from './filter-region.js';
 import {
   enterPrimitivePresentation,
   type PrimitivePresentation,
 } from '../primitive-presentation.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
+import type { CRCInstance } from '../types.js';
+
+const FILTER_SURFACE_POOL = Symbol('crc.native-filter-surface-pool');
 
 export interface RenderFilterBoundaryInput {
   readonly component: string;
-  readonly filters: ResolvedFilterList;
+  readonly filters: readonly NativePreparedFilter[];
   readonly presentation?: Readonly<PrimitivePresentation>;
 }
 
@@ -44,14 +46,16 @@ export function renderFilterBoundary(
   const windows = resolveFilterWindows(
     parentTarget,
     boundaryPaintTransform,
-    input.filters,
+    { values: input.filters },
   );
   if (windows === 'discard') {
     renderDiscardedBoundary(input, parent, parentWorld, renderSubtree);
     return;
   }
 
-  const pair = instance.filterSurfacePool.checkoutPair(windows);
+  const pool = getOptionalService(instance, FILTER_SURFACE_POOL, () => new NativeFilterService(instance));
+  pool.used = true;
+  const pair = pool.pool.checkoutPair(windows);
   try {
     const { source, result } = pair;
     result.context.setTransform(1, 0, 0, 1, 0, 0);
@@ -108,6 +112,26 @@ export function renderFilterBoundary(
   }
 }
 
+/** @internal Read-only test/diagnostic access; it never allocates a pool. */
+export function peekNativeFilterPool(instance: CRCInstance): FilterSurfacePool | undefined {
+  return (instance.optionalServices.get(FILTER_SURFACE_POOL) as NativeFilterService | undefined)?.pool;
+}
+
+class NativeFilterService {
+  readonly pool = new FilterSurfacePool();
+  used = false;
+
+  constructor(private readonly instance: NonNullable<typeof GLOBAL_STATE.currentCRCInstance>) {}
+
+  beginRender(): void { this.used = false; }
+  endRender(success: boolean): void {
+    if (!success || this.used) return;
+    this.pool.dispose();
+    this.instance.optionalServices.delete(FILTER_SURFACE_POOL);
+  }
+  dispose(): void { this.pool.dispose(); }
+}
+
 function renderDiscardedBoundary(
   input: Readonly<RenderFilterBoundaryInput>,
   parent: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
@@ -150,7 +174,7 @@ function renderDiscardedBoundary(
   context.clearRect(0, 0, 1, 1);
   context.beginPath();
   validateNativeFilter(input, context, 1);
-  resetNativeFilter(context, input.component);
+  resetNativeCanvasFilter(context, input.component);
   copyFilterSourceState(parent, context);
   const target: RenderTargetSnapshot = {
     logicalBounds: Object.freeze({ x: 0, y: 0, width: 1, height: 1 }),
@@ -177,14 +201,8 @@ function validateNativeFilter(
   context: OffscreenCanvasRenderingContext2D,
   density: number,
 ): void {
-  const cssText = compileFilterList(input.filters, density);
-  assertNativeFilter(
-    context,
-    cssText,
-    input.component,
-    input.filters,
-    density,
-  );
+  const cssText = compileNativeFilters(input.filters, density);
+  assertNativeCanvasFilter(context, cssText, input.component);
 }
 
 function filterCapabilityError(

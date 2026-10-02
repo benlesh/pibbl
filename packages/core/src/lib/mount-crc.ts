@@ -26,7 +26,6 @@ import {
   createRootSurfaceState,
   mountRootSurface,
 } from './surface/root-surface.js';
-import { FilterSurfacePool } from './filter/filter-surface-pool.js';
 import { CANVAS_2D_BACKEND } from './backend/canvas-2d-backend.js';
 import type {
   CRCBackendDriver,
@@ -57,7 +56,6 @@ export function mountCRC(
     throw new Error('CRC is already mounted on this element.');
   }
   const mainTeardowns = new Teardowns();
-  const filterSurfacePool = new FilterSurfacePool();
   const signal = config?.signal;
   let ownedInstance: CRCInstance | undefined;
   const controller: CRCController = {
@@ -141,7 +139,7 @@ export function mountCRC(
           surface.kind === 'root' ? surface.display.height : canvas.height),
     }),
     surface,
-    filterSurfacePool,
+    optionalServices: new Map(),
     backendDriver: config?.driver ?? CANVAS_2D_BACKEND,
   };
   crcInstance.interactionRoot = parent ?

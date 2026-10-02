@@ -2,7 +2,7 @@ import { GLOBAL_STATE } from '../global-state.js';
 import type { LayoutBox } from '../layout/types.js';
 import type { RenderTargetSnapshot } from '../render-target.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
-import type { ResolvedFilterList } from '../style/filter.js';
+import type { NativePreparedFilter } from '../../filters/native-operations.js';
 
 export const BLUR_EXTENT_FACTOR = (3 * Math.sqrt(2 * Math.PI)) / 4;
 
@@ -35,7 +35,7 @@ export interface FilterWindows {
 
 export function reverseFilterInfluence(
   output: Readonly<PixelBounds>,
-  filters: ResolvedFilterList,
+  filters: { readonly values: readonly NativePreparedFilter[] },
   density: number,
 ): PixelBounds {
   let left = output.x;
@@ -46,25 +46,16 @@ export function reverseFilterInfluence(
 
   for (let index = filters.values.length - 1; index >= 0; index -= 1) {
     const filter = filters.values[index]!;
-    if (filter.type === 'blur') {
-      const extent = blurExtent(filter.radius, density);
-      left -= extent;
-      top -= extent;
-      right += extent;
-      bottom += extent;
-    } else if (filter.type === 'dropShadow') {
-      const extent = blurExtent(filter.blurRadius ?? 0, density);
-      const offsetX = filter.offsetX * density;
-      const offsetY = filter.offsetY * density;
-      const shadowLeft = Math.floor(left - offsetX - extent);
-      const shadowTop = Math.floor(top - offsetY - extent);
-      const shadowRight = Math.ceil(right - offsetX + extent);
-      const shadowBottom = Math.ceil(bottom - offsetY + extent);
-      left = Math.min(left, shadowLeft);
-      top = Math.min(top, shadowTop);
-      right = Math.max(right, shadowRight);
-      bottom = Math.max(bottom, shadowBottom);
-    }
+    const influenced = filter.reverseInfluence({
+      x: left,
+      y: top,
+      width: right - left,
+      height: bottom - top,
+    }, density);
+    left = influenced.x;
+    top = influenced.y;
+    right = influenced.x + influenced.width;
+    bottom = influenced.y + influenced.height;
     assertPixelEdges(left, top, right, bottom);
   }
 
@@ -107,7 +98,7 @@ export function largestAffineScale(matrix: DOMMatrixReadOnly): number {
 export function resolveFilterWindows(
   parentTarget: RenderTargetSnapshot,
   parentPaintTransform: DOMMatrixReadOnly,
-  filters: ResolvedFilterList,
+  filters: { readonly values: readonly NativePreparedFilter[] },
 ): FilterWindows | 'discard' {
   if (!isFiniteAffine(parentPaintTransform)) return 'discard';
   const inverseProject = createInverseProjector(parentPaintTransform);
