@@ -1,4 +1,5 @@
 import { peekNativeFilterPool } from './filter/render-filter-boundary';
+import { FilterSurfacePool } from './filter/filter-surface-pool';
 import { blur, grayscale } from '@crc/core/filters';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -279,6 +280,7 @@ describe('crc root updates', () => {
     ).mockImplementation(() => {
       throw new Error('filtered final composite failed');
     });
+    const checkout = vi.spyOn(FilterSurfacePool.prototype, 'checkoutPair');
 
     try {
       crc(canvas, [
@@ -301,7 +303,9 @@ describe('crc root updates', () => {
       expect(cleanups).toBe(0);
       expect(failed.refs.size).toBe(0);
       expect(failed.eventRoot.targets.size).toBe(0);
-      expect(peekNativeFilterPool(failed)!.snapshot()).toMatchObject({
+      expect(peekNativeFilterPool(failed)).toBeUndefined();
+      const disposedPool = checkout.mock.instances[0]! as FilterSurfacePool;
+      expect(disposedPool.snapshot()).toMatchObject({
         activePairs: 0,
         pairCheckouts: 1,
         pairReturns: 1,
@@ -322,8 +326,8 @@ describe('crc root updates', () => {
       expect(getCRCInstance(canvas).refs.size).toBe(1);
       expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
         activePairs: 0,
-        pairCheckouts: 2,
-        pairReturns: 2,
+        pairCheckouts: 1,
+        pairReturns: 1,
       });
     } finally {
       drawImage.mockRestore();
