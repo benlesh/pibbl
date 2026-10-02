@@ -2,6 +2,46 @@ import { describe, expect, it, vi } from 'vitest';
 import { DisplacementGpu } from './displacement-gpu.js';
 
 describe('displacement GPU pass', () => {
+  it('releases its context listeners on disposal', () => {
+    const add = vi.spyOn(OffscreenCanvas.prototype, 'addEventListener');
+    const remove = vi.spyOn(OffscreenCanvas.prototype, 'removeEventListener');
+    const gpu = new DisplacementGpu();
+    try {
+      expect(add).toHaveBeenCalledWith('webglcontextlost', expect.any(Function));
+      expect(add).toHaveBeenCalledWith('webglcontextrestored', expect.any(Function));
+    } finally {
+      gpu.dispose();
+      expect(remove).toHaveBeenCalledWith('webglcontextlost', expect.any(Function));
+      expect(remove).toHaveBeenCalledWith('webglcontextrestored', expect.any(Function));
+      add.mockRestore(); remove.mockRestore();
+    }
+  });
+
+  it('aborts while its context is lost and rebuilds lazily after restoration', async () => {
+    const source = new OffscreenCanvas(1, 1), map = new OffscreenCanvas(1, 1);
+    source.getContext('2d')!.fillRect(0, 0, 1, 1);
+    map.getContext('2d')!.fillStyle = 'rgb(128 128 128)'; map.getContext('2d')!.fillRect(0, 0, 1, 1);
+    let losses = 0, restorations = 0;
+    const gpu = new DisplacementGpu({ onContextLost: () => { losses += 1; }, onContextRestored: () => { restorations += 1; } });
+    const gl = (gpu as unknown as { canvas: OffscreenCanvas }).canvas.getContext('webgl2')!;
+    const lose = gl.getExtension('WEBGL_lose_context');
+    expect(lose).not.toBeNull();
+    try {
+      gpu.apply(source, { source: map, width: 1, height: 1, revision: 1, resource: {}, placement: {} }, 0).close();
+      expect((gpu as unknown as { maps: Map<object, unknown> }).maps.size).toBe(1);
+      lose!.loseContext();
+      await new Promise<void>(resolve => setTimeout(resolve, 50));
+      expect(losses).toBe(1);
+      expect((gpu as unknown as { maps: Map<object, unknown>; resources: unknown }).maps.size).toBe(0);
+      expect((gpu as unknown as { resources: unknown }).resources).toBeUndefined();
+      expect(() => gpu.apply(source, { source: map, width: 1, height: 1, revision: 1, resource: {}, placement: {} }, 0)).toThrow(/context was lost/);
+      lose!.restoreContext();
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      expect(restorations).toBe(1);
+      gpu.apply(source, { source: map, width: 1, height: 1, revision: 1, resource: {}, placement: {} }, 0).close();
+    } finally { gpu.dispose(); }
+  });
+
   it('preserves top-down orientation for an asymmetric neutral source', () => {
     const source = new OffscreenCanvas(2, 2); const sourceContext = source.getContext('2d')!;
     sourceContext.fillStyle = 'red'; sourceContext.fillRect(0, 0, 1, 1);

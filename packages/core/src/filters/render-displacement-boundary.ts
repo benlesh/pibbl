@@ -1,6 +1,7 @@
 import { borrowTextureRaster, type TexturePaint } from '../lib/textures/texture-protocol.js';
 import { GLOBAL_STATE, getCRCInstance } from '../lib/global-state.js';
 import { getOptionalService } from '../lib/optional-services.js';
+import { update } from '../lib/update.js';
 import type { CRCInstance } from '../lib/types.js';
 import type { FilterWindows } from '../lib/filter/filter-region.js';
 import { DisplacementGpu } from './displacement-gpu.js';
@@ -9,14 +10,27 @@ const GPU_BORROWER = Symbol('crc.displacement-borrower');
 const rootServices = new WeakMap<CRCInstance, RootGpuService>();
 
 class RootGpuService {
-  readonly gpu = new DisplacementGpu();
+  readonly gpu: DisplacementGpu;
   readonly borrowers = new Set<GpuBorrower>();
+  private disposed = false;
+  private recoveryRequested = false;
+  constructor(private readonly root: CRCInstance) {
+    this.gpu = new DisplacementGpu({
+      onContextRestored: () => {
+        if (this.disposed || this.recoveryRequested || this.root.mainTeardowns.closed) return;
+        this.recoveryRequested = true;
+        for (const borrower of this.borrowers) update(borrower.instance.canvas, undefined, true);
+      },
+    });
+  }
+  beginRender(): void { this.recoveryRequested = false; }
   pruneMaps(): void {
     const resources = new Set<object>();
     for (const borrower of this.borrowers) for (const resource of borrower.resources) resources.add(resource);
     this.gpu.retainMaps(resources);
   }
   dispose(): void {
+    this.disposed = true;
     this.gpu.dispose();
   }
 }
@@ -29,16 +43,16 @@ class GpuBorrower {
   private disposed = false;
   readonly shared: RootGpuService;
   private readonly root: CRCInstance;
-  constructor(private readonly instance: CRCInstance) {
+  constructor(readonly instance: CRCInstance) {
     let root = instance;
     while (root.parent) root = getCRCInstance(root.parent);
     this.root = root;
     let shared = rootServices.get(root);
-    if (!shared) { shared = new RootGpuService(); rootServices.set(root, shared); }
+    if (!shared) { shared = new RootGpuService(root); rootServices.set(root, shared); }
     this.shared = shared;
     shared.borrowers.add(this);
   }
-  beginRender(): void { this.used = false; this.candidates.clear(); }
+  beginRender(): void { this.shared.beginRender(); this.used = false; this.candidates.clear(); }
   useMap(resource: object): void { this.candidates.add(resource); }
   endRender(success: boolean): void {
     if (success && this.used) {
@@ -47,6 +61,7 @@ class GpuBorrower {
       this.shared.pruneMaps();
       return;
     }
+    if (this.shared.gpu.isContextLost) return;
     if (success || !this.committed) this.dispose();
     else this.shared.pruneMaps();
   }
@@ -60,6 +75,13 @@ class GpuBorrower {
       this.shared.dispose();
     } else this.shared.pruneMaps();
   }
+}
+
+/** @internal Test-only read-only access; it never creates a GPU service. */
+export function peekDisplacementGpu(instance: CRCInstance): DisplacementGpu | undefined {
+  let root = instance;
+  while (root.parent) root = getCRCInstance(root.parent);
+  return rootServices.get(root)?.gpu;
 }
 
 export function processDisplacement(source: OffscreenCanvas, windows: FilterWindows, paint: TexturePaint, strength: number, region: Readonly<{ x: number; y: number; width: number; height: number }>): ImageBitmap {
