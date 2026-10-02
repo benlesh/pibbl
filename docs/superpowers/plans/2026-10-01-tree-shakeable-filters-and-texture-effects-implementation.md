@@ -1,6 +1,6 @@
 # Tree shakeable filters and texture effects implementation plan
 
-Status: initial plan for independent review, 2026-10-01.
+Status: reviewed and corrected implementation plan, 2026-10-01. Production implementation may begin.
 Approved design: [tree shakeable filters and texture effects](../specs/2026-10-01-tree-shakeable-filters-and-texture-effects-design.md).
 
 ## Scope and success
@@ -188,4 +188,62 @@ one reviewer unless genuinely independent recipe work saves time.
 
 ## Review findings and corrections
 
-Pending independent review.
+Independent review completed by `filter_review` in the managed
+`filter-plan-review` checkout before production implementation. Corrections:
+
+1. **P0 publication order:** Add batch-local resource publication registration.
+   Validate writer permissions/equality and all fallible preparation before signal
+   assignment. Adopt already-prepared raster pointers in the existing pre-observer
+   applied phase, then notify observers. Adoption must be nonthrowing. Rejected
+   batches and discarded writers run exact abort cleanup. Scheduler commit
+   acknowledgements run too late and are not used for pixel publication. Verify
+   notification observers can read only the matching new raster and revision.
+2. **P0 separate transactions:** Advance publication belongs to scheduler Commit.
+   A later render failure does not roll back a committed raster/revision. Initial
+   creation during Render uses a transaction-local provisional raster visible only
+   to that render transaction; successful finish adopts it, failure disposes it.
+   Test both outcomes and dependency cleanup. Never wait until Complete to adopt
+   an already committed Advance raster.
+3. **P1 stable producer canvas:** Keep `TextureContext.canvas` as the stable producer
+   working surface. Copy completed producer output into a candidate publication
+   surface; maintain separate committed publication pixels until adoption. This
+   adds an explicit small-raster copy, measured in full-frame costs. Do not swap a
+   frozen context property or change callback signatures. Candidate publication
+   buffers are CRC-owned and never alias retained WASM linear-memory views.
+4. **P1 writer identity:** Store one stable participant function/token and use that
+   exact writer for signal staging and publication registration. `discardWriter`
+   must abort its candidate. Test a throw after staging, rejected Commit, disposal
+   during notification, and absence of stale retry/continuing work.
+5. **P1 ownership precision:** Native pools remain lazy per CRC instance because
+   Layer captures have independent target lifetimes. GPU service is separately
+   owned by the root CRC tree, with cross-Layer occurrence reference counts. Remove
+   concrete imports/fields from mount-crc, global-state, types, backend, and style
+   dispatch; only generic optional services are visible to base core. Test one GPU
+   context across nested Layers and final-borrower release.
+6. **P1 packaging decision:** Begin with an explicit `src/filters.ts` build entry,
+   export map, declaration entry and `typesVersions` entry; use one source module
+   per native operation and recipe. Keep current split ESM only if both downstream
+   bundlers prove exclusions from the packed artifact. If they fail, change affected
+   output to preserve modules (with `.js` ESM internal paths and public export paths
+   updated consistently) rather than adding public per-effect deep imports. Step 1
+   must establish this decision with built attribution before broad migration.
+7. **P2 identity validation:** Strength zero validates genuine map identity, owning
+   root, liveness and placement without subscribing to pixel revisions or allocating
+   a service. Disposed/foreign maps still reject when encountered by rendering.
+   This does not proactively rerender an identity filter when an unused map dies.
+   Add source-region, rotated receiver, map rotation, repeat/stretch tests.
+8. **P2 migration evidence:** Reject old descriptors before optional allocation;
+   migrate SystemStyle, types, source/built aliases and Studio editor declarations.
+   The packed texture verifier has stale export expectations; update it to the
+   actual authoritative committed surface before adding water and treat the
+   historical three-export list as drift, not a target to regress to.
+
+Baseline observed before production edits: an observable source-bundled plain
+Rectangle mount retains 37,212 unminified attributed bytes across filter validator,
+region, capture, pool and Canvas-state modules (esbuild in the isolated checkout).
+This is a diagnostic baseline, not a packed/minified guarantee. Node 24.15.0 was
+provisioned at `/Users/benlesh/.npm/_npx/1c56de6e9acc34f8/node_modules/node/bin/node`;
+isolated workspace dependencies were installed from the lockfile with pnpm 11.21.0.
+
+These corrections govern the earlier step summaries where more specific. They
+clarify the approved architecture without narrowing feature scope.
