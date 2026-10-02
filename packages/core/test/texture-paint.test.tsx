@@ -47,7 +47,7 @@ it("shares a mount-owned texture across shape and text, updates cached consumers
         <Layer style={{ width: 64, height: 64 }}>
           <Rectangle style={{ width: 32, height: 32, fill: texture }} />
         </Layer>
-        <Text style={{ x: 35, y: 40, font: "20px Arial", fill: texture }}>
+        <Text style={{ left: 35, top: 40, font: "20px Arial", fill: texture }}>
           Ink
         </Text>
       </>
@@ -104,8 +104,8 @@ it("publishes one committed raster revision to every paint consumer", () => {
       observed.push([raster.revision, raster.source.getContext("2d")!.getImageData(0, 0, 1, 1).data[0]!]);
     });
     return <>
-      <Rectangle style={{ x: 0, y: 0, width: 20, height: 20, fill: texture }} />
-      <Rectangle style={{ x: 24, y: 0, width: 20, height: 20, fill: texture }} />
+      <Rectangle style={{ left: 0, top: 0, width: 20, height: 20, fill: texture }} />
+      <Rectangle style={{ left: 24, top: 0, width: 20, height: 20, fill: texture }} />
     </>;
   }
   const canvas = document.createElement("canvas");

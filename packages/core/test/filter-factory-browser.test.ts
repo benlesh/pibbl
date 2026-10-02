@@ -22,7 +22,7 @@ describe('native filter factories', () => {
     controllers.push(crc(canvas, createElement(Group, {
       style: { filter: blur({ radius: 3 }) },
       children: createElement(Rectangle, {
-        style: { x: 20, y: 20, width: 20, height: 20, fill: 'red' },
+        style: { left: 20, top: 20, width: 20, height: 20, fill: 'red' },
         onClick: () => { clicks += 1; },
       }),
     })));

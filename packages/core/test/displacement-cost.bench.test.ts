@@ -162,8 +162,8 @@ describe.skipIf(!enabled)("animated displacement cost probe", () => {
             createElement(Rectangle, {
               key: i,
               style: {
-                x: i === 0 ? phase : (i % 8) * (size / 8),
-                y: Math.floor(i / 8) * (size / 8),
+                left: i === 0 ? phase : (i % 8) * (size / 8),
+                top: Math.floor(i / 8) * (size / 8),
                 width: size / 10,
                 height: size / 10,
                 fill: i % 2 ? "#1677ff" : "#f6c343",

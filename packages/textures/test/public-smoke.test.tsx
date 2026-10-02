@@ -44,7 +44,7 @@ it("composes and recolors textures through the public package entry in source an
           style={{ width: 120, height: 120 }}
         />
       </Group>
-      <Text pointerEvents="none" style={{ x: 8, y: 8, fill: "#ffffff" }}>
+      <Text pointerEvents="none" style={{ left: 8, top: 8, fill: "#ffffff" }}>
         Backgrounds
       </Text>
     </Group>
