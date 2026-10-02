@@ -167,12 +167,14 @@ large output bitmap. Filter lengths and offsets are scaled to backing pixels
 before native compilation; rotation and nonuniform scaling happen later at
 composite time.
 
-A nonempty filter list requires browser `OffscreenCanvas`, a 2D context, and
-native Canvas `filter` support on that context. Unsupported chains, invalid
-dimensions, allocation failure, and context-acquisition failure are actionable
-render errors. CRC does not fall back to a DOM canvas or silently reduce
-resolution. An empty filter list is a direct-path no-op and adds no capability
-requirement.
+A nonempty native-filter segment requires browser `OffscreenCanvas`, a 2D
+context, and native Canvas `filter` support on that context. A displacement
+segment requires `OffscreenCanvas` WebGL2 and the processor's texture-size
+limit. Unsupported chains, invalid dimensions, allocation, context-acquisition,
+shader, upload, or context-loss failure are actionable render errors. CRC does
+not fall back to a DOM canvas, CPU processing, or silently reduced resolution.
+An empty list is a direct-path no-op. A zero-strength displacement validates its
+map but has no capture or WebGL requirement.
 
 ## Scheduling and lifetime
 
@@ -211,6 +213,12 @@ layer suites prove logical coordinates and nested high-density composition.
 Filter projection tests additionally cover upright local capture, conservative
 windows, root and Layer density exactly once, unchanged target geometry, and
 nested high-density filter composition.
+
+Texture/displacement suites additionally cover map placement in logical region
+coordinates, committed raster/revision borrowing, zero-strength validation, and
+one root-tree GPU service shared by active displacement boundaries. Context-loss
+recovery and persistent map-upload caching are not implemented surface
+guarantees.
 
 Render-layer and Three adapter suites cover logical/backing viewport snapshots,
 outer layout/transforms/clips/Layers, transparent bitmap composition, delegated
