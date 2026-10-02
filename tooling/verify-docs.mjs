@@ -208,6 +208,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/physics-3d-geometry.md",
   "docs/site/api/types/signal-inputs.md",
   "docs/site/api/types/styles.md",
+  "docs/site/api/types/texture-resources.md",
   "docs/site/api/types/three.md",
   "docs/site/learn/index.md",
   "docs/site/learn/tutorials/diagram-editor/index.md",
@@ -276,10 +277,12 @@ const currentMarkdownPaths = [
 const linkCheckedPaths = [
   ...currentMarkdownPaths,
   "docs/migrations/default-pointer-participation.md",
+  "docs/migrations/filter-factory-values.md",
   "docs/migrations/jsx-authoring-pivot.md",
 ];
 const migrationMarkdownPaths = new Set([
   "docs/migrations/default-pointer-participation.md",
+  "docs/migrations/filter-factory-values.md",
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
