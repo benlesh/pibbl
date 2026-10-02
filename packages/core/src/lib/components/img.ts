@@ -1,4 +1,4 @@
-import { resolveTexturePaint } from '../textures/texture.js';
+import { resolveTexturePaint } from '../textures/texture-protocol.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,

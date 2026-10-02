@@ -1218,6 +1218,15 @@ interface StagedSignalValue {
 
 interface SignalCommitBatchState {
   readonly staged: Map<SignalNode<unknown>, StagedSignalValue>;
+  readonly lifecycles: Map<object, SignalCommitLifecycle>;
+}
+
+/** @internal Couples a non-signal resource publication to a staged writer. */
+export interface SignalCommitLifecycle {
+  /** Runs after all fallible commit validation and before signal observers. */
+  apply(): void;
+  /** Releases a candidate when its writer never reaches Commit. */
+  abort(): void;
 }
 
 const signalCommitBatchStates = new WeakMap<
@@ -1228,6 +1237,7 @@ const signalCommitBatchStates = new WeakMap<
 export interface SignalCommitBatch {
   read<T>(signal: WritableSignal<T>): T;
   stage<T>(signal: WritableSignal<T>, value: T, writer: object): void;
+  registerLifecycle(writer: object, lifecycle: SignalCommitLifecycle): void;
   discardWriter(writer: object): void;
   commit(onApplied?: () => void): void;
   clear(): void;
@@ -1251,50 +1261,72 @@ export function createSignalCommitBatch(): SignalCommitBatch {
         undefined,
       );
     },
+    registerLifecycle(writer: object, lifecycle: SignalCommitLifecycle): void {
+      const prior = state.lifecycles.get(writer);
+      if (prior) prior.abort();
+      state.lifecycles.set(writer, lifecycle);
+    },
     discardWriter(writer: object): void {
       for (const [node, candidate] of staged) {
         if (candidate.writer === writer) {
           staged.delete(node);
         }
       }
+      const lifecycle = state.lifecycles.get(writer);
+      state.lifecycles.delete(writer);
+      lifecycle?.abort();
     },
     commit(onApplied?: () => void): void {
       const candidates = [...staged.values()];
       staged.clear();
-      for (const candidate of candidates) {
-        signalWriterLeasePolicy?.assertStagedWriteAllowed(
-          candidate.node,
-          candidate.writer,
-          candidate.authorization,
-        );
-      }
-
-      const changed: StagedSignalValue[] = [];
-      for (const candidate of candidates) {
-        const node = candidate.node;
-        if (!node.equals(node.value, candidate.value)) {
-          changed.push(candidate);
+      try {
+        for (const candidate of candidates) {
+          signalWriterLeasePolicy?.assertStagedWriteAllowed(
+            candidate.node,
+            candidate.writer,
+            candidate.authorization,
+          );
         }
-      }
 
-      for (const candidate of changed) {
-        const node = candidate.node;
-        recordPublicBatchEntry(node);
-        node.value = candidate.value;
-        node.version++;
+        const changed: StagedSignalValue[] = [];
+        for (const candidate of candidates) {
+          const node = candidate.node;
+          if (!node.equals(node.value, candidate.value)) {
+            changed.push(candidate);
+          }
+        }
+
+        for (const candidate of changed) {
+          const node = candidate.node;
+          recordPublicBatchEntry(node);
+          node.value = candidate.value;
+          node.version++;
+        }
+        for (const candidate of candidates) {
+          const lifecycle = state.lifecycles.get(candidate.writer);
+          state.lifecycles.delete(candidate.writer);
+          lifecycle?.apply();
+        }
+        onApplied?.();
+        const failures: unknown[] = [];
+        for (const candidate of changed) {
+          failures.push(...notifySignalObservers(candidate.node));
+        }
+        throwSignalObserverFailures(failures);
+      } catch (error) {
+        for (const lifecycle of state.lifecycles.values()) lifecycle.abort();
+        state.lifecycles.clear();
+        throw error;
       }
-      onApplied?.();
-      const failures: unknown[] = [];
-      for (const candidate of changed) {
-        failures.push(...notifySignalObservers(candidate.node));
-      }
-      throwSignalObserverFailures(failures);
     },
     clear(): void {
       staged.clear();
+      for (const lifecycle of state.lifecycles.values()) lifecycle.abort();
+      state.lifecycles.clear();
     },
   };
-  signalCommitBatchStates.set(batch, { staged });
+  const state: SignalCommitBatchState = { staged, lifecycles: new Map() };
+  signalCommitBatchStates.set(batch, state);
   return batch;
 }
 
