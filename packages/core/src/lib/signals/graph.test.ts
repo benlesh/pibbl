@@ -28,6 +28,40 @@ import {
 } from '../animation/writer-leases';
 
 describe('signal', () => {
+  it('applies staged resource publication after values change and before observers', () => {
+    const revision = signal(0);
+    const writer = {};
+    const batch = createSignalCommitBatch();
+    const calls: string[] = [];
+    batch.stage(revision, 1, writer);
+    batch.registerLifecycle(writer, {
+      apply() {
+        calls.push(`apply:${revision.get()}`);
+      },
+      abort() {
+        calls.push('abort');
+      },
+    });
+
+    batch.commit();
+
+    expect(calls).toEqual(['apply:1']);
+    const discarded = createSignalCommitBatch();
+    discarded.stage(revision, 2, writer);
+    discarded.registerLifecycle(writer, {
+      apply() {
+        calls.push('unexpected');
+      },
+      abort() {
+        calls.push('abort');
+      },
+    });
+    discarded.discardWriter(writer);
+    discarded.commit();
+    expect(calls).toEqual(['apply:1', 'abort']);
+    expect(revision.get()).toBe(1);
+  });
+
   it('provides explicit reads, writes, and one cached readonly view', () => {
     const point = signal(
       { x: 1 },

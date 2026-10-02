@@ -7,20 +7,16 @@ import {
 import { registerAdvanceParticipant } from "../scheduler/realm-scheduler.js";
 import { signal } from "../signals/graph.js";
 import type { CRCInstance, RenderingContext2D } from "../types.js";
+import {
+  registerTexturePaint,
+  type BorrowedTextureRaster,
+  type TexturePaint,
+  type TexturePlacement,
+} from "./texture-protocol.js";
 
-declare const textureBrand: unique symbol;
+export type { TexturePaint, TexturePlacement } from "./texture-protocol.js";
+
 declare const recipeBrand: unique symbol;
-export interface TexturePlacement {
-  readonly mode?: "repeat" | "stretch";
-  readonly tileWidth?: number;
-  readonly tileHeight?: number;
-  readonly offsetX?: number;
-  readonly offsetY?: number;
-  readonly rotation?: number;
-}
-export interface TexturePaint {
-  readonly [textureBrand]: true;
-}
 export interface Texture<Message = never> extends TexturePaint {
   send(message: Message): void;
   paint(placement: TexturePlacement): TexturePaint;
@@ -63,10 +59,6 @@ interface Recipe {
   config: any;
 }
 const recipes = new WeakMap<object, Recipe>();
-const paints = new WeakMap<
-  object,
-  { resource: Resource; placement: Readonly<TexturePlacement> }
->();
 
 /** Defines a pure recipe factory; resource allocation starts at useTexture. */
 export function defineTexture<Config, State, Message = never>(
@@ -121,6 +113,8 @@ function dimensions(options: TextureOptions): [number, number] {
 class Resource {
   readonly revision = signal(0);
   readonly canvas: OffscreenCanvas;
+  private committed: OffscreenCanvas | undefined;
+  private provisional: { canvas: OffscreenCanvas; transaction: NonNullable<typeof GLOBAL_STATE.renderTransaction> } | undefined;
   readonly context: TextureContext;
   readonly handle: Texture<any>;
   state: any;
@@ -164,6 +158,12 @@ class Resource {
         }
       },
     });
+    const registerPaint = (value: TexturePaint, placement: Readonly<TexturePlacement>) =>
+      registerTexturePaint(value, {
+        resolvePaint: (ctx, bounds) => this.resolvePaint(ctx, bounds, placement),
+        validate: () => this.assertOwner(),
+        borrow: callback => callback(this.borrow(placement)),
+      });
     this.handle = Object.freeze({
       send: (message: unknown) => {
         if (this.disposed) return;
@@ -178,14 +178,11 @@ class Resource {
       },
       paint: (value: TexturePlacement) => {
         const paint = Object.freeze({}) as TexturePaint;
-        paints.set(paint, { resource: this, placement: placement(value) });
+        registerPaint(paint, placement(value));
         return paint;
       },
     }) as Texture<any>;
-    paints.set(this.handle, {
-      resource: this,
-      placement: placement(this.definition.defaultPlacement),
-    });
+    registerPaint(this.handle, placement(this.definition.defaultPlacement));
     try {
       this.state = this.call(() =>
         this.definition.create(this.context, recipe.config),
@@ -195,6 +192,7 @@ class Resource {
       this.canvas.width = this.canvas.height = 0;
       throw error;
     }
+    this.publishInitial();
     this.initializing = false;
   }
   private call<T>(fn: () => T): T {
@@ -236,7 +234,7 @@ class Resource {
   }
   private schedule() {
     if (this.unregister || this.disposed) return;
-    this.unregister = registerAdvanceParticipant((frame, batch) => {
+    const participant = (frame: { logicalTime: number }, batch: any) => {
       this.unschedule();
       const wasContinuing = this.continuing;
       this.continuing = false;
@@ -263,8 +261,16 @@ class Resource {
           );
         this.lastTime = this.continuing ? frame.logicalTime : undefined;
         if (this.dirty) {
-          this.rasterize();
-          batch.stage(this.revision, ++this.sequence, this);
+          const candidate = this.rasterizeCandidate();
+          batch.stage(this.revision, ++this.sequence, participant);
+          batch.registerLifecycle(participant, {
+            apply: () => {
+              if (!this.disposed) this.committed = candidate;
+            },
+            abort: () => {
+              candidate.width = candidate.height = 0;
+            },
+          });
         }
         if (!this.continuing && this.messages.length === 0) {
           this.unschedule();
@@ -274,10 +280,10 @@ class Resource {
         this.continuing = false;
         throw error;
       }
-    });
+    };
+    this.unregister = registerAdvanceParticipant(participant);
   }
-  rasterize() {
-    if (!this.dirty) return;
+  private rasterizeCandidate(): OffscreenCanvas {
     const ctx = this.canvas.getContext("2d");
     if (!ctx) throw new Error("Textures require OffscreenCanvas 2D.");
     ctx.save();
@@ -289,6 +295,55 @@ class Resource {
     } finally {
       ctx.restore();
     }
+    const candidate = new OffscreenCanvas(this.canvas.width, this.canvas.height);
+    const candidateContext = candidate.getContext("2d");
+    if (!candidateContext) throw new Error("Textures require OffscreenCanvas 2D.");
+    candidateContext.drawImage(this.canvas, 0, 0);
+    return candidate;
+  }
+  private publishInitial(): void {
+    const candidate = this.rasterizeCandidate();
+    const transaction = GLOBAL_STATE.renderTransaction;
+    if (!transaction) {
+      this.committed = candidate;
+      return;
+    }
+    this.provisional = { canvas: candidate, transaction };
+    transaction.onFinish(success => {
+      if (this.provisional?.transaction !== transaction) return;
+      const provisional = this.provisional;
+      this.provisional = undefined;
+      if (success && !this.disposed) this.committed = provisional.canvas;
+      else provisional.canvas.width = provisional.canvas.height = 0;
+    });
+  }
+  private assertOwner(): void {
+    if (this.disposed) throw new Error("Cannot paint with a disposed texture.");
+    let root = GLOBAL_STATE.currentCRCInstance;
+    while (root?.parent) root = GLOBAL_STATE.crcInstances.get(root.parent);
+    let owner = this.owner;
+    while (owner.parent) owner = GLOBAL_STATE.crcInstances.get(owner.parent)!;
+    if (root !== owner) throw new Error("Textures may only be shared within their owning CRC tree.");
+  }
+  private borrow(placement: Readonly<TexturePlacement>): BorrowedTextureRaster {
+    this.assertOwner();
+    const revision = this.revision.get();
+    const provisional = this.provisional;
+    const source =
+      provisional !== undefined && provisional.transaction === GLOBAL_STATE.renderTransaction ?
+        provisional.canvas : this.committed;
+    if (!source) throw new Error("Texture pixels are not committed for this render transaction.");
+    return Object.freeze({ source, width: source.width, height: source.height, revision, resource: this, placement });
+  }
+  private resolvePaint(ctx: RenderingContext2D, bounds: { x: number; y: number; width: number; height: number }, p: Readonly<TexturePlacement>): string | CanvasGradient | CanvasPattern {
+    const borrowed = this.borrow(p);
+    const pattern = ctx.createPattern(borrowed.source, "repeat");
+    if (!pattern) throw new Error("Could not create texture paint.");
+    const stretch = p.mode === "stretch";
+    const width = stretch ? bounds.width : (p.tileWidth ?? borrowed.width);
+    const height = stretch ? bounds.height : (p.tileHeight ?? borrowed.height);
+    pattern.setTransform(new DOMMatrix().translate(bounds.x + (p.offsetX ?? 0), bounds.y + (p.offsetY ?? 0)).rotate(p.rotation ?? 0).scale(Math.max(0.000001, width) / borrowed.width, Math.max(0.000001, height) / borrowed.height));
+    return pattern;
   }
   dispose() {
     if (this.disposed) return;
@@ -299,6 +354,8 @@ class Resource {
       this.call(() => this.definition.dispose?.(this.state, this.context));
     } finally {
       this.canvas.width = this.canvas.height = 0;
+      this.committed && (this.committed.width = this.committed.height = 0);
+      this.provisional && (this.provisional.canvas.width = this.provisional.canvas.height = 0);
       this.state = undefined;
     }
   }
@@ -325,45 +382,4 @@ export function useTexture<Message>(
       if (success) resource.update(recipe, options);
     });
   return resource.handle;
-}
-
-/** Internal paint resolution shared by Canvas built-ins. */
-export function resolveTexturePaint(
-  value: string | CanvasGradient | CanvasPattern | TexturePaint,
-  ctx: RenderingContext2D,
-  bounds: { x: number; y: number; width: number; height: number },
-): string | CanvasGradient | CanvasPattern {
-  const entry =
-    typeof value === "object" && value !== null ? paints.get(value) : undefined;
-  if (!entry) return value as string | CanvasGradient | CanvasPattern;
-  const { resource, placement: p } = entry;
-  if (resource.disposed)
-    throw new Error("Cannot paint with a disposed texture.");
-  let root = GLOBAL_STATE.currentCRCInstance;
-  while (root?.parent) root = GLOBAL_STATE.crcInstances.get(root.parent);
-  let owner = resource.owner;
-  while (owner.parent) owner = GLOBAL_STATE.crcInstances.get(owner.parent)!;
-  if (root !== owner)
-    throw new Error(
-      "Textures may only be shared within their owning CRC tree.",
-    );
-  resource.revision.get();
-  resource.rasterize();
-  const pattern = ctx.createPattern(resource.canvas, "repeat");
-  if (!pattern) throw new Error("Could not create texture paint.");
-  const stretch = p.mode === "stretch";
-  const width = stretch ? bounds.width : (p.tileWidth ?? resource.canvas.width);
-  const height = stretch
-    ? bounds.height
-    : (p.tileHeight ?? resource.canvas.height);
-  pattern.setTransform(
-    new DOMMatrix()
-      .translate(bounds.x + (p.offsetX ?? 0), bounds.y + (p.offsetY ?? 0))
-      .rotate(p.rotation ?? 0)
-      .scale(
-        Math.max(0.000001, width) / resource.canvas.width,
-        Math.max(0.000001, height) / resource.canvas.height,
-      ),
-  );
-  return pattern;
 }
