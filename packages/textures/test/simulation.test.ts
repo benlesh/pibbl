@@ -64,3 +64,49 @@ it("keeps paper grain in a pale, narrow tonal range rather than broad dark bands
     expect(Math.max(...paper) - Math.min(...paper)).toBeGreaterThan(0.005);
   }
 });
+
+it("stirs existing ink locally without creating a new brush colony or changing memory", () => {
+  const ink = new InkSimulation(64, 40, 42, "spots");
+  const before = ink.b.slice(),
+    memory = ink.b.buffer;
+  ink.stir(30, 20, 0, 0, 10);
+  expect(ink.b).toEqual(before);
+  ink.stir(30, 20, 4, 2, 10);
+  expect(ink.b.buffer).toBe(memory);
+  expect(ink.b).not.toEqual(before);
+  for (let y = 0; y < 40; y++)
+    for (let x = 0; x < 64; x++) {
+      if (Math.hypot(x - 30, y - 20) >= 10)
+        expect(ink.b[y * 64 + x]).toBe(before[y * 64 + x]);
+    }
+  expect(ink.b.every((v) => Number.isFinite(v) && v >= 0 && v <= 1)).toBe(true);
+  ink.dispose();
+});
+
+it("backtraces both fields correctly after buffer swaps and preserves uniform edge fields", () => {
+  const ink = new InkSimulation(16, 8, 42, "stripes");
+  try {
+    ink.advance(1); // Exercise the alternate A/B field pair.
+    for (let i = 0; i < ink.b.length; i++) {
+      ink.b[i] = (i % 16) / 16;
+      ink.a[i] = 1 - ink.b[i];
+    }
+    ink.stir(8, 4, 2, 0, 4);
+    expect(ink.b[4 * 16 + 8]).toBe(6 / 16);
+    expect(ink.a[4 * 16 + 8]).toBe(10 / 16);
+    ink.a.fill(0.75);
+    ink.b.fill(0.25);
+    for (const [x, y] of [
+      [0, 0],
+      [16, 0],
+      [0, 8],
+      [16, 8],
+    ]) {
+      ink.stir(x, y, 16, -8, 128);
+      expect(ink.a.every((value) => value === 0.75)).toBe(true);
+      expect(ink.b.every((value) => value === 0.25)).toBe(true);
+    }
+  } finally {
+    ink.dispose();
+  }
+});

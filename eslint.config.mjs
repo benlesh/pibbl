@@ -58,6 +58,10 @@ export default defineConfig([
     '**/fixtures/**',
     '**/vendor/**',
     '**/test/out/**',
+    // Generated texture benchmark preview bundles.
+    'tooling/texture-wasm-spike/bundle.js',
+    'tooling/texture-wasm-spike/*-bundle.js',
+    'tooling/texture-wasm-spike/optimized.mjs',
   ]),
   {
     files: ['**/*.{js,mjs,cjs}'],

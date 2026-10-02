@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 78 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 79 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(78);
+    expect(learningExampleCatalog).toHaveLength(79);
     expect(
       learningExampleCatalog
         .filter(
@@ -1293,6 +1293,7 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+        "stirred-ink",
         "clip",
         "group",
         "growing-reveal",
@@ -1413,6 +1414,7 @@ describe("learning example catalog", () => {
       "material-lab",
       "growing-reveal",
       "plasma-globe",
+      "stirred-ink",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1771,6 +1773,10 @@ describe("learning example catalog", () => {
       new Set([
         "defineTexture",
         "useTexture",
+        "marble",
+        "paper",
+        "cellular",
+        "reactionDiffusion",
         "ReactionDiffusion",
         "ProceduralTexture",
         "loadOutlineFont",

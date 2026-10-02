@@ -1,5 +1,23 @@
-import { expect, it } from "vitest";
-import { chooseSource, site, sources } from "../src/lib/electric-sources.js";
+import { afterEach, beforeEach, expect, it } from "vitest";
+import { site, sources, type SourceSite } from "../src/lib/electric-sources.js";
+
+import { ElectricMemory } from "../src/lib/wasm/electric.js";
+import { lazyKernel } from "../src/lib/wasm/memory.js";
+import { bytes } from "../src/lib/wasm/tendrils-bytes.js";
+const module = lazyKernel(bytes);
+let memory: ElectricMemory;
+beforeEach(() => {
+  memory = new ElectricMemory(module());
+});
+afterEach(() => memory.dispose());
+function chooseSource(
+  pool: readonly SourceSite[],
+  seed: number,
+  ticket: number,
+) {
+  memory.setSources(pool);
+  return memory.choose(seed, ticket);
+}
 
 it("selects proportionally by weight, ignores zero weight, and is independent of input ordering", () => {
   const pool = sources([

@@ -1,0 +1,7 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>CRC · WASM texture integration</title>
+<style>body{font:16px system-ui;background:#101f2b;color:#e9e7de;max-width:760px;margin:32px auto;padding:0 20px}canvas{display:block;width:600px;max-width:100%;height:auto;border-radius:8px}button{font:inherit;padding:8px 16px;cursor:pointer}label{margin-left:16px}p{line-height:1.5}small{color:#b4c6c4}</style>
+<h1>Textures in motion</h1><p>Animation changes the marble, paper, and cellular textures above. Below, the moving stirrer drags the existing ink into a wake. The reaction keeps branching and reshaping it. Pause the reaction to isolate the stirrer’s displacement.</p>
+<p><button>Reset scene</button><label><input type="checkbox"> Pause reaction</label></p>
+<canvas width="600" height="480" aria-label="Three animated materials above a moving stirrer that deforms living ink"></canvas>
+<p><small>Uses CRC’s public texture, animation, and physics APIs. Texture computation and Rapier physics run in separate WASM memories; small movement messages connect them. Animation remains on CRC’s existing scheduler.</small></p>
+<script type="module" src="/production-bundle.js"></script></html>

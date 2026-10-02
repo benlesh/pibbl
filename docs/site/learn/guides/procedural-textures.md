@@ -17,6 +17,52 @@ Install the optional `@crc/textures` package alongside `@crc/core`. It provides
 seeded marble, paper, and cellular materials. Both participate in CRC scheduling,
 layout, clipping, filters, and resource disposal.
 
+## Shared fills and animated parameters
+
+`useTexture` mounts one resource that can supply several fills or strokes in its
+owning root. The four field generators use WASM internally; configuration stays
+ordinary TypeScript. There is no engine switch or separate animation loop.
+
+```tsx
+import { Rectangle, useTexture } from "@crc/core";
+import { marble } from "@crc/textures";
+
+function Material({ detail }: { detail: number }) {
+  const surface = useTexture(marble({ detail }), {
+    resolution: { width: 256, height: 160 },
+  });
+  return <Rectangle style={{ width: 640, height: 400, fill: surface }} />;
+}
+```
+
+Pass a signal's `.get()` value from a component to animate detail. Field parameters
+reuse existing memory; changing resolution replaces it. Use `surface.paint(...)`
+for repeat/stretch placement. Palette updates recolor without regenerating shape.
+
+## Stir existing ink
+
+A `reactionDiffusion` resource accepts movement as well as paint:
+
+```ts
+ink.send({ type: "stir", u: 0.5, v: 0.5, du: 0.02, dv: -0.01, radius: 20 });
+```
+
+The center and displacement are normalized to the texture dimensions. Radius is
+in texture cells. Stir moves existing ink with smooth falloff, while paint plants
+new nuclei. Both work with the reaction paused. Spots can settle toward an
+unchanging pattern; the stripes preset and moving disturbances create a more
+active surface.
+
+Read a physics body's committed position in `useReaction`, compute the displacement
+from its previous position, and send it to the texture. Reset that previous
+position on initial placement or teleport. The body and texture keep separate
+WASM memories; only small movement messages connect them. This is a texture
+response to motion, not a fluid simulation or a new physics solver.
+
+Try [Stirred Ink](#/examples/composition/stirred-ink): pause the reaction to isolate
+movement, or stop stirring to watch the reaction alone. Animation also changes
+the three static materials above the ink.
+
 ## A living background
 
 ```tsx
