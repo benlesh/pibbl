@@ -179,13 +179,13 @@ one reviewer unless genuinely independent recipe work saves time.
 - [x] Native factories and capture are actually removable in consumer bundles
 - [x] Texture production and recipe families are independently removable
 - [x] Texture pixels and revisions publish together on successful transactions
-- [ ] Displacement and animated water satisfy all specified semantics
-- [ ] Public runnable lessons inspected; focused checks and feedback incorporated
+- [x] Displacement and animated water satisfy all specified semantics
+- [x] Public runnable lessons inspected; focused checks and feedback incorporated
 - [x] Geometry/physics/animation/input remain appearance-independent
-- [ ] Ownership, failures, capability handling and no-readback behavior evidenced
+- [x] Ownership, failures, capability handling and no-readback behavior evidenced
 - [x] Migration/docs/contracts/packed/declaration/Studio parity complete
 - [x] Optional feature audit and byte evidence recorded
-- [ ] Independent final review corrected and aggregate trust gate passes
+- [x] Independent final review corrected and aggregate trust gate passes
 - [ ] Integrated result preserves concurrent WASM/electric/agent work
 
 ## Review findings and corrections
@@ -305,3 +305,23 @@ An independent fresh primary-build capture is byte-for-byte identical to the
 integration actual, establishing that this drift predates the filter changes.
 Geometry, fills, connectors, and shadows are unchanged. The single reference is
 refreshed without masks or tolerances; search-open and test-lab match exactly.
+
+## Final isolated verification
+
+`corepack pnpm@11.21.0 trust` completed with exit 0 on implementation commit
+`fe9b4b18`, using Node 24.15.0, pnpm 11.21.0, and Playwright Chromium. The run
+passed static/documentation preservation, packed consumer/import-inertness gates,
+3,316 browser tests (five skipped), all eight Studio visual references, the exact
+diagram-editor teaser, two built smoke tests, identity/watchdog checks, 32 lifecycle
+tests, and 48 structural performance tests (four opt-in checks skipped).
+
+Independent review findings are resolved. Focused public evidence now covers
+map replacement, texture owner rejection, stable producer canvas/reset ownership,
+controlled animation, logical focus/cursor/keyboard behavior, and external layer
+interaction invariance. Real GPU fault tests cover exact handle cleanup and retry.
+The live underwater lesson was inspected through automated desktop/mobile controls;
+no further user visual feedback was received, so visual preference remains available
+for follow-up rather than being represented as explicit user acceptance.
+
+Shared-checkout integration and proportional combined-state verification are the
+only remaining delivery steps. The latest WASM spike remains untouched.
