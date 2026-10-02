@@ -6,6 +6,7 @@ import {
   Rectangle,
   Text,
   Layer,
+  signal,
 } from "@crc/core";
 import {
   ManualSchedulerDriver,
@@ -152,6 +153,46 @@ it("releases an initial provisional texture raster when its render transaction f
     expect(() => driver.flush(0)).toThrow("texture mount failed");
     expect(source!.width).toBe(0);
     expect(source!.height).toBe(0);
+  } finally {
+    controller.dispose();
+    restore();
+  }
+});
+
+it("keeps an Advance-committed texture raster when the later render fails", () => {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  const fail = signal(false);
+  const solid = defineTexture<{}, { color: string }, { color: string }>({
+    create: () => ({ color: "#ff0000" }),
+    rasterize(state, context) {
+      const ctx = context.canvas.getContext("2d")!;
+      ctx.fillStyle = state.color;
+      ctx.fillRect(0, 0, 8, 8);
+    },
+    receive(state, message, context) {
+      state.color = message.color;
+      context.invalidate();
+    },
+  });
+  const observed: number[] = [];
+  let texture: ReturnType<typeof useTexture<{ color: string }>>;
+  function Scene() {
+    texture = useTexture(solid({}), { resolution: { width: 8, height: 8 } });
+    borrowTextureRaster(texture, raster => observed.push(raster.source.getContext("2d")!.getImageData(0, 0, 1, 1).data[1]!));
+    if (fail.get()) throw new Error("later texture render failed");
+    return <Rectangle style={{ width: 8, height: 8, fill: texture }} />;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 16;
+  document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  try {
+    driver.flush(0);
+    texture!.send({ color: "#00ff00" });
+    fail.set(true);
+    expect(() => driver.flush(16)).toThrow("later texture render failed");
+    expect(observed).toEqual([0, 255]);
   } finally {
     controller.dispose();
     restore();
