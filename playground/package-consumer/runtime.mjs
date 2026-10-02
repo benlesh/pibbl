@@ -64,6 +64,7 @@ const expected = [
   "defineAnimation",
   "definePrimitive",
   "defineRenderLayer",
+  "defineTexture",
   "easing",
   "flattenPath",
   "simplifyPath",
@@ -104,6 +105,7 @@ const expected = [
   "useSignal",
   "useSvgPath",
   "useTransition",
+  "useTexture",
   "wait",
   "warpPath",
   "bendPathAlongArc",
@@ -124,6 +126,7 @@ for (const removedName of ["useState", "useMemo", "useWhenChanged"]) {
 
 const expectedInternal = [
   "CRCInternalManualSchedulerDriver",
+  "borrowTextureRaster",
   "cancelBackendMountFrame",
   "crcInternalAssertCommandAllowed",
   "crcInternalCreatePropAttachment",
@@ -170,12 +173,14 @@ const expectedInternal = [
   "registerNestedInteractionResolver",
   "releaseBackendEventTarget",
   "requestCurrentInstanceFrame",
+  "resolveTexturePaint",
   "retainBackendMountRoot",
   "setCurrentComponentAfterRender",
   "snapshotLayerNodeTree",
   "useBackendEventTarget",
   "useInternalHookSlot",
   "useInternalValueMemoSlot",
+  "validateTexturePaint",
   "withHooksForbidden",
 ];
 const actualInternal = Object.keys(internal).sort();
@@ -203,35 +208,27 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 89) {
+if (actual.length !== 91) {
   throw new Error(
-    `Expected 89 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected 91 @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 
 const requireFromRuntime = createRequire(import.meta.url);
 const coreEntry = requireFromRuntime.resolve("@crc/core");
 const internalEntry = requireFromRuntime.resolve("@crc/core/internal");
-const coreSource = readFileSync(coreEntry, "utf8");
-const internalSource = readFileSync(internalEntry, "utf8");
-const chunkImports = (source) =>
-  new Set(
-    [...source.matchAll(/from "(\.\/chunks\/[^"\n]+)"/gu)].map(
-      (match) => match[1],
-    ),
-  );
-const coreChunks = chunkImports(coreSource);
-const sharedSchedulerChunk = [...chunkImports(internalSource)].find(
-  (chunk) =>
-    coreChunks.has(chunk) &&
-    readFileSync(resolve(dirname(internalEntry), chunk), "utf8").includes(
-      "function registerAdvanceParticipant",
-    ),
-);
-if (sharedSchedulerChunk === undefined) {
-  throw new Error(
-    "@crc/core/internal did not share the packed core scheduler identity.",
-  );
+function schedulerModules(entry, visited = new Set()) {
+  if (visited.has(entry)) return [];
+  visited.add(entry);
+  const source = readFileSync(entry, "utf8");
+  const own = source.includes("function registerAdvanceParticipant") ? [entry] : [];
+  const imports = [...source.matchAll(/from ["'](\.[^"'\n]+)["']/gu)];
+  return own.concat(imports.flatMap(match => schedulerModules(resolve(dirname(entry), match[1]), visited)));
+}
+const coreSchedulers = schedulerModules(coreEntry);
+const internalSchedulers = schedulerModules(internalEntry);
+if (coreSchedulers.length !== 1 || internalSchedulers.length !== 1 || coreSchedulers[0] !== internalSchedulers[0]) {
+  throw new Error("@crc/core/internal did not share the packed core scheduler identity.");
 }
 
 const runtimeCount = core.signal(2, { debugName: "runtime count" });

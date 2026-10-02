@@ -1,6 +1,7 @@
 import { crcStudioThreeModules } from "../playground/src/studio-three-runtime";
 
 export * from "@crc/core";
+export * from "@crc/core/filters";
 export * from "@crc/particles";
 export * from "@crc/three";
 export * from "@crc/physics/2d";

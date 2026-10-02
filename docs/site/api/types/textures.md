@@ -23,6 +23,9 @@ symbols:
     MaterialOptions,
     ReactionDiffusionOptions,
     InkMessage,
+    waterWaves,
+    WaterWavesOptions,
+    WaterWavesMessage,
   ]
 ---
 
@@ -42,8 +45,9 @@ and `render`. Materials idle until inputs change.
 
 ## `TextureBrush`
 
-`{ radius, strength }`: finite radius in (0,128] simulation cells and strength
-in [0,1]. `false` disables the reaction–diffusion brush.
+`{ radius, strength }`: finite radius from greater than zero through 128
+simulation cells and strength from 0 through 1. `false` disables the
+reaction–diffusion brush.
 
 ## `TexturePalette`
 
@@ -89,9 +93,20 @@ Seed and spots/stripes preset for the `reactionDiffusion` recipe factory.
 Typed `paint` (normalized u/v, radius in cells, strength), `pause` (paused boolean),
 and `reset` messages delivered through the texture's `send` method.
 
+## WaterWavesOptions
+
+Optional unsigned `seed`, finite nonnegative `speed`, integer `scale` from 1
+through 32, and initial `paused` state. This numeric displacement map rejects
+palettes.
+
+## WaterWavesMessage
+
+Typed `pause` and `reset` messages. Reset returns phase to its seeded initial
+state while preserving the current pause state.
+
 ## Recipe factories
 
-`marble`, `paper`, `cellular`, and `reactionDiffusion` create inert recipes consumed
+`marble`, `paper`, `cellular`, `reactionDiffusion`, and `waterWaves` create inert recipes consumed
 by `useTexture` from core (also re-exported by this package). Use the returned
 resource directly as `style.fill` or `style.stroke`; no renderer callback is needed.
 
@@ -110,3 +125,9 @@ Creates a seamless toroidal cell-field recipe.
 ## reactionDiffusion
 
 Creates a living Gray–Scott recipe that accepts `InkMessage` values.
+
+## waterWaves
+
+Creates a periodic numeric RG displacement map for the `displacement` filter.
+It advances through CRC's scheduler and remains static when paused or at speed
+zero.

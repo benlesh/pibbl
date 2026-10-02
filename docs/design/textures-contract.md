@@ -1,92 +1,158 @@
-# Procedural textures contract
+# Texture resources contract
 
-Status: implemented, 2026-09-30.
+Status: implemented, 2026-10-01.
 
-`@crc/textures` is an optional peer of `@crc/core`, implemented exclusively through
-public `defineRenderLayer`. It owns no second scheduler and imports no core friend
-entry. Its public values are `ReactionDiffusion`, `ProceduralTexture`, and
-`texturePalettes`; its types describe props, palettes, resolutions, brushes,
-material kinds, and the synchronous presentation callback.
+CRC texture production is authored through `defineTexture()` and mounted through
+`useTexture()` from `@crc/core`. `@crc/textures` is an optional package of
+recipes and existing texture components; it has no scheduler of its own and
+does not import the core friend entry. Creating a recipe or importing either
+package is inert. A mounted `useTexture` hook owns the live resource.
 
-## Persistence and timing
+```ts
+const recipe = defineTexture({
+  create(context, options) { /* create producer state */ },
+  rasterize(state, context) { /* draw context.canvas */ },
+});
 
-One mounted identity owns one simulation/scalar field and low-resolution raster.
-Resource creation is inert at module import. Render-layer lifecycle creation,
-updates, resizing, rendering, and disposal determine all ownership. Reevaluation
-and display-density changes preserve the field. Every source raster is independent
-of display dimensions; core still owns a display-resolution presentation surface.
+const texture = useTexture(recipe(options));
+<Rectangle style={{ fill: texture.paint({ mode: "repeat" }) }} />
+```
 
-Gray–Scott uses double-buffered float fields, the nine-point stencil with center
-−1, cardinal 0.2, diagonal 0.05, diffusion coefficients 1 and 0.5, and numerical
-time step 1. Spots use feed 0.0367/kill 0.0649; stripes use 0.029/0.057. Boundaries
-are periodic. Seeded distributed patches initialize concentrations. Each eligible
-CRC render admits at most 50 ms, retains fractional step time, and executes up to
-24 steps at 480 steps/second. Excess host time is discarded. Initial/reset/resume
-frames establish a fresh baseline. Paused fields accept brushes and recoloring
-without numerical advancement or continuing frame requests.
+`TextureContext.canvas` is the stable producer canvas. Recipe callbacks may use
+it synchronously during `create`, `update`, `receive`, `advance`, `rasterize`,
+and `dispose`. They cannot call CRC hooks. `invalidate()` marks source pixels
+dirty and `requestFrame()` asks the realm scheduler for another frame; stopping
+is the recipe's choice not to request another frame. Recipe factories clone
+their configuration and allocate no canvas or scheduler participant.
 
-The implementation advances private fields during the external render callback,
-not in the scheduler's Advance phase. It never writes public signals in that
-callback. Continuing work uses the supplied frame invalidator. No arbitrary-time
-seeking, checkpoints, rollback of chemical fields, GPU, workers, or WASM are promised.
+## Handles, placement, and ownership
 
-## Input and update semantics
+`useTexture()` returns a stable `Texture<Message>` handle for its mounted hook
+slot. `paint(placement)` returns an opaque paint value. Both the handle and
+paint values may be used by Canvas drawing, and their placement supports
+`repeat` or `stretch`, optional positive tile dimensions, offsets, and rotation.
+The public surface never exposes the producer canvas or a committed source
+raster.
 
-CRC resolves one topmost target and supplies layer-local pointer coordinates.
-The default brush mapping scales the displayed rectangle into the simulation.
-A single primary pointer is captured through CRC; release/cancel ends the stroke.
-Stamps interpolate movement and clip to the field, without clamping out-of-bounds
-points to its edge. Brush settings are snapshotted into each queued stamp. Work is
-bounded to 4096 stamps per event and 8192 queued stamps; pathological overload can
-lose excess stamps. Queued painting applies before numerical steps. Painting plants separated nuclei
-within the brush area and skips occupied neighborhoods, avoiding the broad
-uniform doses that extinguish spots. Large brushes plant clusters; small or weak
-marks are not guaranteed to survive. Initialization retains its seeded patches.
+`send(message)` queues a structured-cloned message for the next eligible frame.
+It is forbidden during CRC evaluation, rejects a recipe without `receive`, and
+is inert after disposal. Messages are bounded at 8192. A texture may be shared
+between consumers in its owning CRC root tree, including nested Layers; a
+foreign-root or disposed value rejects when rendered. A texture resource has
+one producer regardless of how many paints or filters consume it.
 
-Changing preset, seed, reset revision, or simulation resolution resets the field
-and clears pending strokes/capture/time. Value-equal option objects do not reset.
-Palette changes rebuild color lookup data without regeneration. Display resizing,
-placement, outer clipping, and density preserve concentrations. Pause clears
-elapsed debt. Disabling brushes releases active capture.
+Built-in drawing resolves a paint through the internal value-owned capability.
+The capability validates ownership and resolves the current committed raster
+synchronously. It is not a registry or public extension point.
 
-Static materials regenerate only for kind, seed, resolution, scale, or detail
-changes. Their scalar fields remain available for recoloring. They request no
-continuing frames. Marble uses periodic warped noise bands, paper uses periodic directional noise
-and wrapped integer-hashed grain, and cellular wraps jittered sites across a torus.
-Raster endpoints match in both axes. Scale selects whole feature periods (rounded
-where necessary); octave periods double together. No post-generation edge blur or
-mirroring hides a discontinuity.
+## Publication and scheduling
 
-## Composition and borrowing
+Texture rasterization happens at most once for a dirty resource in an admitted
+frame. It draws first to the stable producer canvas and copies that result into
+a separately owned candidate publication canvas. On a successful Commit, the
+candidate and its revision become the committed pair before observers are
+notified. Paint consumers and filters therefore see matching pixels and
+revision for that publication.
 
-The default presenter stretches the low-resolution color image to its allocation.
-A `TextureRenderer` may instead draw it repeatedly, use Canvas patterns, or compose
-artwork with the alpha mask. Coordinates are logical display units. Mask storage
-is lazy; color/mask sources are never transferred. The callback is synchronous
-and its Canvas state is restored even on failure. Outer CRC composition is unchanged.
+The resource reuses a bounded committed/spare publication pair at one
+resolution. A resolution reset recreates producer state, clears queued
+messages, discards elapsed-time debt, and releases incompatible publication
+surfaces. Failed candidate rasterization or Commit leaves the previously
+committed pair visible; a later eligible frame retries dirty work. An initial
+render failure clears its provisional candidate. A later ordinary render
+failure does not promise rollback of already committed texture pixels.
 
-Sources are borrowed only for the callback; callers must not mutate, transfer,
-retain, or dispose them. A caller may copy a still to its own Canvas. One callback
-may reuse the same image arbitrarily without advancing the simulation again.
-There is no shared live-source resource across independently mounted components.
-There is no new core Image input, raster Clip, child-subtree masking, or retained
-display list. The current interaction geometry remains the allocated rectangle;
-custom display remapping does not remap painting automatically.
+Recipe `advance` receives logical frame time and a nonnegative delta. Recipes
+that pause or otherwise change timing policy establish their own fresh baseline
+through their state; CRC does not preserve a generic simulation rollback or
+checkpoint. The scheduler, rather than a recipe-owned `requestAnimationFrame`,
+owns all continuing work.
 
-## Resource release and errors
+## Filter borrowing and displacement
 
-The package releases array references, callback/brush queues, pointer capture,
-and raster/mask backing stores. CRC owns the display surface, committed/candidate
-bitmaps, event registrations, and scheduler work. Duplicate disposal is inert.
-Render failures preserve CRC's last committed generation and are reported through
-its completion mechanism; package state is not a transactional checkpoint. Final
-removal disposes the resources exactly once. Invalid inputs throw actionable errors.
+Official filter code may validate a `TexturePaint` without subscribing to or
+rasterizing it. A non-identity consumer may synchronously borrow the committed
+raster for one callback. The private borrowed record includes source,
+dimensions, revision, resource identity, and placement. Consumers must not
+retain, transfer, mutate, or expose that source; a GPU consumer may retain only
+its own derived upload keyed to the resource/revision.
 
-## Evidence
+`displacement()` from `@crc/core/filters` accepts a texture `map`, a finite
+nonnegative logical `strength`, and a finite positive logical `region`. Red and
+green encode signed horizontal and vertical offsets, alpha weights the offset,
+and blue is ignored. Map placement is evaluated in the documented logical
+region, including repeat/stretch, offsets, and rotation. A strength of zero
+still validates map ownership, liveness, and placement, but does not borrow a
+raster or create GPU resources.
 
-Package browser tests cover routed paused painting, reset, display resizing,
-fixed-step and long-gap behavior, pause/resume, color-only changes, multiple roots,
-static seeded reproducibility, repeated fills, alpha masks, overlap, and teardown.
-The three public Studio lessons use the same package entry. Package-consumer and
-Studio export/declaration checks cover the built public boundary. Performance
-measurements are evidence for the tested machine, not portable time guarantees.
+The implemented processor uses an `OffscreenCanvas` WebGL2 context and has no
+CPU fallback. It rejects missing WebGL2, lost context, oversized targets, upload
+or shader failures. It does not currently promise context-loss recovery,
+per-revision upload caching, cross-context sharing, or a generic public texture
+consumer protocol.
+
+`waterWaves()` in `@crc/textures` is an optional numeric RG displacement-map
+recipe. It produces periodic integer-wave fields, accepts finite nonnegative
+speed and integer scale 1 through 32, rejects palettes, and supports `pause`
+and `reset` messages. Pausing, reset, and speed changes discard elapsed-time
+debt; zero speed requests no continuing work. Importing or painting water does
+not import the displacement processor.
+
+## Existing texture components
+
+`ReactionDiffusion`, `ProceduralTexture`, `TextureRenderer`, and
+`texturePalettes` remain public `@crc/textures` exports. Each mounted legacy
+component owns an independent render-layer resource and source raster; it does
+not become a shared live `Texture` resource. Importing it is inert, and its
+render-layer lifecycle continues to own creation, resize, rendering, and
+disposal. `ReactionDiffusion` keeps its documented double-buffered periodic
+Gray--Scott field, bounded fixed-step timing, fresh-baseline pause/reset
+behavior, and CRC-routed primary-pointer brush queue. It advances only through
+the supplied frame invalidator, never by a second scheduler loop.
+
+Its preset, seed, reset revision, and simulation-resolution changes reset the
+reaction field and clear queued strokes, capture, and elapsed time. Equal
+options and display-only resizing preserve it; palette changes recolor without
+regeneration. A paused field accepts brushes and recoloring without numerical
+advancement or continuing frame requests. `ProceduralTexture` remains a seeded
+static material: marble, paper, and cellular fields are periodic at both
+endpoints, regenerate only for field-defining options, and request no
+continuing frame. Its palette changes recolor the existing scalar field.
+
+`TextureRenderer` callbacks receive a synchronous borrowed legacy raster whose
+Canvas state is restored on failure; they may draw it repeatedly but must not
+mutate, transfer, retain, or dispose it. Legacy display remapping does not
+remap brush interaction. Component disposal releases fields, rasters, queues,
+captures, and callbacks exactly once; duplicate disposal is inert. Legacy
+render failures preserve CRC's last committed render-layer generation and do
+not promise simulation-state rollback. Invalid legacy inputs remain actionable
+errors.
+
+## Release and errors
+
+The texture hook owns producer state, producer canvas, committed/spare and
+provisional publication canvases, queued messages, and its scheduler
+participant. Disposal is idempotent, makes sends and callbacks inert, zeros
+owned canvases, and invokes recipe disposal once. A filter borrower never owns
+or disposes the texture resource. Filter removal releases its GPU borrow but
+does not dispose an independently mounted texture.
+
+Validation and raster errors are actionable render errors. CRC preserves the
+last successful texture publication where one exists, but it does not provide
+transactional rollback for arbitrary producer state or an all-Canvas-frame
+atomicity guarantee.
+
+## Boundaries and evidence
+
+There is no interactive ripple API, worker/WASM execution contract, raw-source
+accessor, global producer registry, cross-root texture sharing, or automatic
+semantic/input remapping. Texture pixels affect appearance only; a displacement
+filter does not alter layout, measurement, events, focus, physics, animation
+semantics, or hit areas.
+
+Focused browser tests cover one-raster-per-revision sharing, committed
+pixel/revision observation, Commit failure and retry, initial and later render
+failure behavior, bounded publication-surface reuse, root validation, water
+timing/messages/seams, and texture/displacement ownership. Packed consumer
+checks cover public exports and source/packed feature selection. They do not
+constitute a context-loss or GPU-cache recovery guarantee.

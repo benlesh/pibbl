@@ -189,7 +189,14 @@ function MaterialLab() {
           A little geology. A little paper. A reproducible accident.
         </Text>
         <Group style={{ translateX: 24, translateY: 118 }}>
-          <MaterialSwatches key={s.kind} {...s} />
+          <MaterialSwatches
+            key={s.kind}
+            kind={s.kind}
+            seed={s.seed}
+            scale={s.scale}
+            detail={s.detail}
+            palette={s.palette}
+          />
           <Text
             pointerEvents="none"
             style={{

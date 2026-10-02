@@ -161,7 +161,10 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
   crcInstance.focusParentBridge = undefined;
   crcInstance.mainTeardowns.execute();
   runTeardown(() => crcInstance.backendDriver.dispose());
-  runTeardown(() => crcInstance.filterSurfacePool.dispose());
+  runTeardown(() => {
+    for (const service of crcInstance.optionalServices.values()) service.dispose();
+    crcInstance.optionalServices.clear();
+  });
   if (!crcInstance.parent) {
     for (const observers of crcInstance.eventRoot.observers.values()) {
       observers.clear();

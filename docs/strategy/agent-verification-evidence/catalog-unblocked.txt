@@ -1,0 +1,1 @@
+Validated 70 lessons, 12 tutorial snapshots, 31 test labs, and docs/scenario-index.md.

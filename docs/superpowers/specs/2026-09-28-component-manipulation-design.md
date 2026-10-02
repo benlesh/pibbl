@@ -1,5 +1,7 @@
 # Component manipulation design
 
+> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+
 Status: product design approved, 2026-09-28. The user approved hooks plus
 convenience components, explicit geometry, configurable snapping,
 agent-friendly authoring and verification, unified left/top positioning,

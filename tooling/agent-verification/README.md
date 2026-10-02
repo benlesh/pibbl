@@ -6,6 +6,186 @@ locally with the current checkout. The fixture stays in the internal testing cat
 public learning examples and search. Production and built-runtime Studio
 report inspection as unsupported and omit the source inspector.
 
+## Integrated reference workflow
+
+Use one entry point to connect a requirement to its curated reproducer, run the
+native browser checks with a 60-second parent watchdog, and retrieve a compact
+machine-readable handoff:
+
+```sh
+node tooling/agent-verification/workflow.mjs plan TXT-08 http://127.0.0.1:5199 /tmp/crc-text-run-1
+node tooling/agent-verification/workflow.mjs run TXT-08 http://127.0.0.1:5199 /tmp/crc-text-run-1
+```
+
+`plan` is read-only. `run` requires a running source Studio and a fresh output
+directory. It creates `workflow.json`, `watchdog.json`, and `replay/report.json`.
+The handoff joins requirement ID, source paths, independent acceptance criteria,
+remaining scope, replay run ID, action/check summaries and an exact next query.
+Use the returned `next` argument vector for paginated action retrieval; the
+existing reader also supports check selection and bounded field projection.
+
+Supported runners cover targeting, visualization, text and signal mutation.
+Examples: HIT-12, DAT-07, TXT-08 and SIG-14. Layout's distinct smoke protocol and
+unmapped requirements return explicit unsupported/unmapped errors before launch.
+Only fixed repository runners execute, with argument arrays rather than shell
+interpolation. A timeout, nonzero exit, missing report or unconfirmed browser
+termination cannot produce a passing workflow. A checkpoint cannot pass as a
+final report. Existing evidence directories are never reused.
+
+Failure handoffs prefer the recorded first failed check, then a recorded failed
+action, for the next evidence query. Each targeted selector is validated through
+the bounded reader before it is offered. Missing, ambiguous or oversized detail
+records are listed in `next.unavailableSelections`; fallback does not silently
+claim that those records were inspected. Failed actions beyond the first summary
+page remain directly retrievable. Truncated identifiers are not used as exact
+check locators. Without a final report, the runner attempts the sibling checkpoint
+and retains the original read failure. A corrupt or invalid final report does not
+fall back to a checkpoint. Checkpoint evidence remains partial; if neither file
+is usable, `next` is null and both read failures remain explicit. Failure stages
+and check IDs are recorded context, not proof of an underlying cause.
+
+A pass means the controlled reference replay passed; `requirementCompletion`
+remains `not-established`. This does not run an arbitrary application, implement a
+repair, certify every linked requirement or refresh closure fingerprints.
+
+## Explicit check outcomes
+
+Replay reports may carry up to 256 `checks`, each with a unique nonempty
+`checkId` (maximum 128 characters), `status`, explicit Boolean `required`, and a
+nonempty `reason` for every non-pass (maximum 1,024 characters). Supported statuses
+are `pass`, `fail`, `blocked`, `inconclusive`, `skipped`, and `not-applicable`.
+
+An executed `fail` fails the run even for an optional check. Required blocked
+evidence blocks a provisionally passing run; other required non-passes make it
+inconclusive. Optional omissions preserve their statuses and reasons without
+becoming passes. Earlier operation failures remain failures. Missing reasons,
+unknown enums, duplicate IDs or invalid records fail finalization. Existing
+required-action ordering and completion checks still apply independently.
+
+The targeting replay explicitly records physical hardware input as skipped and
+protected-action permission checks as not applicable to its controlled fixture.
+This does not imply those checks are optional in an application that needs them.
+The evidence reader shows the first 16 checks with bounded reasons and omission
+counts; comparison detects changed check evidence and contradictory pass claims.
+Old reports without a `checks` field remain readable as legacy evidence, not proof
+that unrecorded checks ran. Most existing assertions still need migration to this
+identified check protocol; observation availability remains a separate concept.
+
+## Aggregation conservation evidence
+
+The existing weighted-data fixture publishes `pipeline.aggregation`: its intended
+exact-x grouping and ordering policy, included totals, displayed point count and
+represented row/weight totals, included/displayed value ranges, and per-group
+weighted-sum reconstruction. The policy requires represented counts, weights and
+weighted sums per group; it explicitly does not preserve extrema. This controlled
+aggregation input contains no gaps. The declarations are application assertions,
+not guarantees that a buggy implementation satisfies them.
+
+Independent fixture arithmetic establishes four included rows with total weight 8
+and weighted sum 160, displayed as two points. Correct means 10 and 30 reconstruct
+per-group weighted sums 40 and 120. The intentional unweighted-mean bug displays
+20 and 20 and reconstructs 80 and 80: the grand total still equals 160, so a totals-
+only check would miss the error. Repair restores per-group equality. Included
+extrema [0,40] become [10,30] after correct averaging, as the declared policy allows.
+Both the manual lab and native replay consume the same public application.
+
+This evidence is bounded to five controlled fixture rows. It does not introduce a
+CRC aggregation API, a decimator, an extrema-preserving algorithm or a generic
+lineage inspector. Other transformations must supply their own actual policy and
+independent invariants.
+
+## Required checks are declared before execution
+
+`required-checks.mjs` defines the targeting and visualization check/action pairs
+independently of runtime observations. Both reports include `requiredChecks` from
+initial setup, and verifier fingerprints include the declaration. A report cannot
+pass merely because every recorded check passed: missing expected IDs, required
+checks relabeled optional, wrong action links and unexpected required IDs reject
+completion. Duplicate or malformed manifests are invalid. This complements the
+existing ordered required-action manifest; it does not replace it.
+
+The reader summary distinguishes `requiredCheckCount` from `checkCount`, and
+`--manifest` includes the declared pairs. Comparisons refuse inconsistent pass
+claims and differing check manifests. Legacy reports without a check manifest
+remain readable but do not establish this completeness guarantee. Current manifests
+cover the 21 targeting and 74 visualization checks already migrated; they do not
+claim every remaining raw assertion or inventory requirement is represented.
+
+## Retrieve one recorded assertion
+
+`recordAssertion(report, { checkId, actionId }, assertion)` wraps a trusted
+harness-owned assertion, not application callbacks discovered by inspection. It
+requires a unique bounded check ID and one existing action, and rejects exhausted
+capacity before executing the assertion. Pending async work is recorded as blocked;
+only successful settlement replaces that record with pass. Failure retains bounded
+expected/actual/operator evidence using the existing error encoder, records the
+first failed check ID, and rethrows the original value. It does not serialize
+arbitrary return values. Snapshot/assertion semantics still come from the fixture's
+independent oracle.
+
+The targeting replay records seven checks per seed/repair/intentional-block action:
+pixels, input provenance, selected entity, selection count, delivery generation,
+delivery target and selection intent. Other assertions remain in their original
+replay locations and still fail the run normally.
+
+```sh
+node tooling/agent-verification/evidence-reader.mjs REPORT.json --check repair.selected-entity
+```
+
+The visualization replay also records every existing numerical tolerance check
+and both weighted-aggregation pipeline comparisons. IDs include the action,
+series or pointer sample where needed (for example,
+`weighted-data.aggregate-interpolation`). Failed numerical checks retain actual,
+expected, exclusive tolerance, difference and units through the bounded error
+encoder. Initial interpolation observations are attached before assertions so a
+failed check still has its action's recorded data. A complete current replay
+contains 74 required checks; structural/setup assertions remain outside that count.
+
+Check detail uses the existing 64 KiB limit. Summary records include action links
+and the first failed check, without loading assertion operands into the summary.
+`--check`, `--action` and `--manifest` are mutually exclusive. The reader reports
+saved evidence; it never executes recorded commands or repeats an assertion.
+
+## Requirement closure contract
+
+The ledger supports reviewed `complete` records as well as open `partial`, `gap`
+and `unassessed` records. Completion is version-bound: it means the **full exact
+inventory requirement** has been reviewed against the current supported surface,
+not that a selected scenario or convenient subset passed. Conditional clauses
+need a justified applicability review; unsupported future product features are
+not permission to manufacture new APIs or silently drop present obligations.
+
+A complete row must have empty `remaining` and a `closure` object containing:
+
+- `schema: "crc-requirement-closure/1"`, the current `inventorySha256`, and
+  `requirementText` copied from the full inventory bullet with whitespace normalized.
+- `reviewedAt` and a substantive `review` explaining coverage of every clause,
+  conditional applicability, independent expectations and material limitations.
+- Nonempty `acceptance` entries linking each `criterion` to declared
+  `evidencePaths` and `checkIds`.
+- Passing `checks` with unique `id`, exact rerun `command`, `environment`, `result`
+  and retained `artifact` path. Commands are inert data and are never executed
+  by accounting validation.
+- `files`: unique repository-relative paths and SHA-256 fingerprints for every
+  cited evidence file and check artifact. Include all relevant implementation,
+  test, configuration and dependency inputs needed to invalidate stale conclusions;
+  the tool cannot infer an omitted dependency.
+
+The gate rejects incomplete records, changed inventory wording, missing linked
+checks/artifacts, changed or deleted evidence, files larger than 8 MiB, and paths
+or symlinks escaping the repository. It does not rewrite stale closures as passing.
+Re-review changed work or reopen the requirement with explicit remaining work.
+Maximum closure sizes are 64 acceptance entries, 64 checks and 256 fingerprinted
+files. Retain evidence in a durable repository location before making a closure;
+ignored temporary replay directories are unsuitable as the only durable record.
+
+The `certifiedComplete` count is the count of reviewed closure claims whose
+structure and files passed validation. It is **not an automated proof that prose,
+test selection, recorded results or coverage claims are true**. Review must inspect
+actual outcomes and match their scope to the requirement. No current row has been
+promoted merely because this mechanism exists. Partial counts remain assessment
+coverage, never a completion percentage.
+
 ## Find a focused workflow
 
 ```sh
@@ -1375,3 +1555,261 @@ on both sides retain the explicit `declared-only` environment scope. With valid
 observations, scope is `declared-and-initial-page-observation`; differences in any
 recorded environment field still reject comparison. Neither scope attests browser
 zoom or environment stability throughout the run.
+
+### Page saved action and check summaries
+
+Use `node tooling/agent-verification/evidence-reader.mjs REPORT.json --page checks`
+(or `--page actions`) to enumerate records beyond the summary's initial window.
+Pass the returned `nextCursor` as the final argument to continue. Each CLI page
+contains at most 16 summaries; the imported API accepts `pageSize` from 1 to 32.
+Exact action/check detail remains available through `--action` and `--check`.
+
+Cursors bind the collection, page size, offset and SHA-256 of the complete saved
+file. Changed bytes return `status: "cursor-expired"` with no records, requiring
+an explicit restart. Invalid or mismatched cursors fail rather than restarting.
+No server-side snapshot retention is allocated. A cursor is a continuation token,
+not an authorization credential; this reader already requires access to the file.
+
+Pages report total, remaining, field truncation and next cursor. Checkpoints label
+history `checkpoint-prefix`; final reports label it `not-established` because a
+saved report cannot prove that it captured all application history. Pagination
+covers saved record summaries only, not omitted live scene nodes or nested oversized
+observations. The existing 4 MiB input and 12 KiB summary/page output budgets apply.
+
+### Page committed scene records in source development
+
+`createTargetingInspector(canvas).page()` starts one bounded expansion of the
+committed paint ledger; `.page(nextCursor)` continues it. Each page has at most
+32 immutable records, retaining at most 256 records and 512 clip references with
+the existing depth limit of 16. The ordinary `.snapshot()` budget stays at 64.
+The inspector retains only copied observations, not runtime nodes or native paths.
+
+Only one expansion is retained per inspector. Starting another, disposing the
+inspector or mount, or changing/requesting a new render expires continuations.
+Invalid cursors report `invalid`; expired cursors report `cursor-expired` without
+returning another generation's records. Continue only while `nextCursor` exists.
+`remaining` describes the retained prefix, not undiscovered scene entries: a final
+page can still have `completeness: "truncated"`, `totalRecords: null` and a reason.
+This is current committed geometry evidence, not retained application history.
+Probes and coordinate conversion retain their existing 64-record observation
+scope; an expanded record does not silently expand those operation budgets.
+
+The shared Studio lab demonstrates this at
+`http://127.0.0.1:5196/#/testing/agent-targeting-verification`: choose **Show 100
+extra targets**, **Start scene query**, then **Next scene page**. Inspect the
+`Scene page` state. The 103 committed entries occupy four pages (32/32/32/7).
+To demonstrate expiration, start a query, choose **Repair**, then request the next
+page. It reports `cursor-expired` with no records. The native targeting replay
+retains these pages and the expiration outcome in its `scene-pagination` action.
+
+### Compare explicit runtime identities
+
+The source-only `runtime-identity.ts` helper exports `captureRuntimeBinding()`
+and `compareRuntimeBindings(left, right)`. Capture once in each cooperating
+participant's own runtime module graph, then compare the live bindings in process.
+A helper bundled separately from the application describes that helper's runtime,
+not automatically the application's runtime. This is not global runtime discovery.
+
+Comparison distinguishes the same runtime, distinct runtimes in one realm,
+separate realms with independent schedulers, inconsistent bindings and unavailable
+identity evidence. It separately reports matching/mismatched declared core versions;
+matching version strings do not prove API or build compatibility. No runtime or
+scheduler function is called, and unknown signals are not treated as proof of a
+second runtime. Output is frozen, serializable and contains no runtime references.
+
+Bindings themselves contain live references and must not be serialized. Holding a
+binding retains its realm; discard it after comparison. Cross-process/worker JSON
+cannot establish reference identity. Inputs are explicit cooperating-runtime data,
+not a security attestation or an arbitrary-object/Proxy sandbox. Descriptor reads
+reject accessors without invoking getters. Peer-package compatibility policy and
+automatic application/inspector handshake remain separate integration work.
+
+Use `createRuntimeCheckedInspector(canvas, applicationBinding)` from
+`runtime-inspection.ts` for an opt-in checked targeting session. A matching binding
+returns `status: "accepted"` and an inspector; dispose that inspector when done.
+Acceptance establishes module identity, not that a Canvas is mounted or ready;
+query the inspector's snapshot for those states. Refusal returns `status: "blocked"`,
+`inspector: null`, a serializable diagnostic and a repair direction. In particular,
+separate realms require creating the inspector inside the application realm.
+The function does not retain the supplied application binding or create a targeting
+inspector on refusal. The targeting lab now uses this wrapper and publishes Runtime compatibility in its
+state. Its binding includes the actual application crc function, so a different
+application module resolution cannot silently compare inspector identity with itself.
+
+### Audit official core peer requirements
+
+`node tooling/agent-verification/core-peer-compatibility.mjs [REPOSITORY]` reads
+core and the five official peer manifests (Three, viz, particles, physics and
+textures), reports each declared core requirement against the observed core version,
+and records SHA-256 provenance for all six files. It runs in
+`test:agent-verification:identity` and exits nonzero for incompatibility or unavailable
+compatibility evidence. It never installs or executes a package.
+
+Current official core peer declarations are exact numeric release pins. Other
+range forms report unavailable, rather than being treated as compatible by a
+partial semver parser. A package's own version is not substituted for its peer
+requirement. This audits the specified repository manifests only: installed graph
+resolution, other peers (such as Three.js), and live runtime identity are separate
+observations. Input is bounded to six 64 KiB manifest files; the direct audit helper
+accepts 1–32 uniquely named peer manifests.
+
+### Inspect resolved consumer peer dependencies
+
+`node tooling/agent-verification/installed-peers.mjs [CONSUMER_PACKAGE_JSON ...]`
+audits up to 16 explicit consumer manifests and 128 declared peer dependencies.
+With no arguments it checks the five official CRC consumer packages. It resolves
+from each consumer using Node's require/default conditions, reads the resolved
+package manifest without importing its code, and checks the declared range with
+`semver`. Reports retain consumer and resolved-manifest hashes and real paths.
+This command also runs in the identity gate.
+
+Missing required peers, incompatible versions, unsupported ranges and unavailable
+resolution fail the command. Optional absence is accepted only after bounded lookup
+confirms no installed package: a broken installed optional export is unavailable,
+not absent. Physical core installations are deduplicated by real path and reported
+separately. Multiple installations do not prove that multiple runtimes were loaded;
+use the live binding check for that. Browser/import-condition resolution, loaders,
+PnP and dynamically loaded dependencies are outside this Node-resolution receipt.
+
+## Redacted text call evidence
+
+`createTextRecorder(context, { capacity, fixtureText })` from `text.ts` is opt-in
+source tooling that temporarily wraps one native context's fillText/strokeText.
+The default history is 64 calls, with a maximum of 256. An explicit allowlist
+contains at most 16 exact strings of at most 256 UTF-16 units each. Other inputs
+are redacted without exporting their length, prefix, hash or coerced value.
+Native conversion occurs only in the original drawing method.
+
+Snapshots contain call positions and alignment/baseline, not glyph bounds or
+visible pixels. Font attribution is unknown; clipping and other contexts,
+including Layer/filter surfaces, are not observed. Complete refers only to the
+retained call stream; truncation and observation failures are explicit. Native
+drawing errors propagate; observation errors are counted without their messages
+and do not turn successful drawing into a failure. Stop restores owned methods;
+dispose clears retained evidence. This instrumentation changes method identity
+while active and is not passive inspection or a security sandbox.
+
+Focused check: `corepack pnpm@11.21.0 exec vitest run packages/core/test/agent-text-observation.test.ts --browser.headless --browser.ui=false`.
+The shared Studio lab is `#/testing/agent-text-verification`. Seeded text says
+Revenue: 24; its independent expectation is Revenue: 42. Repair changes the
+assertion from fail to pass. Private fixture text stays redacted in the evidence
+panel even though the application intentionally paints it. Overlapping actions
+are rejected; pending/disposed captures cannot be reported as ready.
+
+Run native verification with `node tooling/agent-verification/text-replay.mjs
+http://127.0.0.1:5199/#/testing/agent-text-verification OUTPUT_DIRECTORY` after
+starting the source Studio. The replay checks source identity, performs native
+repair/seed clicks and requires all 12 declared checks. It validates the entire
+bounded payload before retaining it; unexpected fields and private error strings
+are excluded from reports and checkpoints. It takes no screenshots. This is a
+text-specific evidence boundary, not a claim that screenshots elsewhere redact
+Canvas pixels. Recorder snapshots are bounded below 512 KiB even at maximum
+capacity with worst-case JSON-escaped allowlisted strings; this fixture's replay
+accepts less than 8 KiB per envelope.
+
+Retained browser, Node and native replay evidence lives under
+`docs/strategy/agent-verification-evidence/txt-08-*`. TXT-08 is reviewed complete
+for explicit fixture text assertions and redacted bounded text evidence. Text
+layout, glyph visibility, font arrival and other surfaces remain separate open
+requirements.
+
+## Signal mutation diagnosis
+
+The source Studio lab `#/testing/agent-signal-mutation` uses the actual default
+Object.is signal equality. Equal no-op is intentional; mutating amount from 10 to
+42 on the same object produces a stale display, and replacing the object repairs
+it. The fixture records reference equality, before/after amount, signal revision,
+component evaluations and an independently specified expected amount. It reads only
+its explicit application-owned data; it does not inspect arbitrary object graphs.
+
+Component evaluation is separate from pixel evidence. The focused browser test
+independently checks the bar's pixels. The two-host-frame observation window is
+finite and bounded by a five-second deadline; it cannot establish that another
+action will never repaint the root. Native replay and lifecycle hardening have retained evidence in
+`docs/strategy/agent-verification-evidence/sig-14-*`. SIG-14 is reviewed complete
+for this declared application diagnosis. Repeated equal writes retain the stale
+display; reset and immutable replacement have independently specified outcomes.
+The fixture rejects unavailable 2D contexts before scheduling and cancels pending
+observations on disposal.
+
+Run `node tooling/agent-verification/signal-mutation-replay.mjs
+http://127.0.0.1:5199/#/testing/agent-signal-mutation OUTPUT_DIRECTORY` against the
+source Studio. Six native steps require thirty checks. Pixel sampling is an
+explicit active readback using independently calculated offsets for the declared
+480x180 contain viewport; reports retain logical and backing coordinates. This
+separates source publication, component evaluation and pixels and avoids assuming
+that CSS display dimensions equal logical coordinates.
+
+## Bounded saved-field queries
+
+The reader supports targeting, visualization, text and signal-mutation replay v1
+reports and their checkpoints. `sourceSchema` identifies the saved report; the
+view's `verification: saved-evidence-only` does not certify its claims. Comparison
+is a separate operation and still refuses unsupported replay kinds.
+
+For example, read only the repaired amount and its diagnosis:
+
+```sh
+node tooling/agent-verification/evidence-reader.mjs docs/strategy/agent-verification-evidence/sig-14-replay.json --action replacement --fields '["/state/sourceAmount","/state/evaluatedAmount","/state/diagnosis"]'
+```
+
+`--fields` accepts 1–16 unique JSON pointers under the selected action or check,
+each up to 512 UTF-16 units and 16 segments. Standard `~0` and `~1` escaping is
+supported. Traversal uses only own JSON fields; array segments select indices.
+Absent fields remain distinct from null. Scalars are returned directly; strings
+over 1,024 units carry explicit truncation and original length. Negative zero
+and nonfinite parsed numbers use a `special-number` tag. Arrays return their
+length; objects return counts and up to eight bounded key hints. Select a deeper
+pointer to retrieve a particular member. No unrelated values are expanded.
+
+Projection outputs stay within 64 KiB or reject with a budget code, including
+JSON escape overhead. Source files still have a 4 MiB read/parse budget; this is
+saved-file retrieval, not a streaming file index or a live application query.
+The snapshot hash binds the view to exact source bytes. Cross-read changes must
+be checked using that hash; paging continues to enforce cursor expiration.
+
+CLI failures include machine codes for unsupported schema/query, malformed
+evidence, invalid selectors/cursors, no match, ambiguous match and exceeded
+budgets. Future schema versions are rejected; unknown check outcomes are not
+converted into passes. Redacted failure reasons and stages remain visible.
+
+`node tooling/agent-verification/discover.mjs TXT-08` and the equivalent SIG-14
+query now return the shared lab, independent expectations, check/replay recipe
+and field-query examples. Discovery does not execute a recipe or certify a result.
+
+## Mixed-validity visualization fixture
+
+In `#/testing/viz-hover-lab`, choose **Zero, missing and invalid values**. The
+controlled first series retains zero at x=1 and breaks the line/interpolation
+across null, undefined, NaN and positive/negative infinity. Its finite points
+resume at x=8; interpolation at x=9 is 25. The second series remains independent.
+
+Generation-bound `missingness` evidence records ten source rows as five finite
+values (one zero), two missing and three invalid. Explicit category tags preserve
+null/undefined/nonfinite distinctions through JSON. Replacing the dataset clears
+this policy evidence; changing hover mode keeps it for the same generation.
+
+The focused `agent-viz-missingness.test.ts` workflow tests 1000- and 375-pixel plots,
+native hover, zero preservation, non-bridging gaps, subsequent interpolation and
+two independent pixel regions. Actual tooltip-label evidence and a retained native
+replay of this new mode remain before DAT-07 closure.
+
+## Layout and mixed-value workflow discovery
+
+`node tooling/agent-verification/discover.mjs LAY-02` (or `LAY-06`) returns the
+layout lab, independent expected root coordinates, browser check command and
+native smoke recipe. The smoke requires a new report file path and produces
+`crc-layout-studio-smoke/1`. The shared evidence reader supports its summaries,
+action details, content-bound pages and bounded field projections. Every view
+reports `attestation: not-provided-by-schema`; missing action statuses remain null.
+Its `steps[].before` and `steps[].after` are controlled local observations, not
+verified build identity. Run/check manifests and checkpoint wrappers are rejected
+for this smoke schema. A saved smoke error remains visible in the summary.
+
+`node tooling/agent-verification/discover.mjs DAT-07` returns the mixed zero,
+missing and nonfinite-value workflow. Its native recipe runs the complete
+visualization replay. Its saved report supports the shared evidence reader's
+`zero-missing-invalid` action and bounded scalar projections into
+`/observations/0/state/missingness/counts/zero`, `/missing` and `/invalid` under
+that same `counts` parent. Discovery reports ledger status; finding a recipe
+never certifies that it ran or that a requirement is complete.

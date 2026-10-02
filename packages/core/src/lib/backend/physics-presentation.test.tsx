@@ -1,3 +1,4 @@
+import { opacity } from '@crc/core/filters';
 import {
   Group,
   Rectangle,
@@ -95,7 +96,7 @@ describe('primitive attachment presentation', () => {
           width: 12,
           height: 12,
           fill: '#2563eb',
-          filter: { type: 'opacity', amount: 1 },
+          filter: opacity({ amount: 1 }),
         }}
         onClick={() => clicks.push('hit')}
       />,

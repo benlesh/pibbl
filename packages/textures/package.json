@@ -40,15 +40,18 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@crc/core",
+    "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts src/lib/definitions.ts src/lib/water-waves.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --outbase=src --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@crc/core",
     "dev": "pnpm run build",
     "prepublishOnly": "pnpm run build",
-    "test": "vitest"
+    "test": "vitest",
+    "build:wasm": "node ../../tooling/build-texture-wasm.mjs",
+    "check:wasm": "node ../../tooling/build-texture-wasm.mjs --check"
   },
   "peerDependencies": {
     "@crc/core": "0.0.1"
   },
   "devDependencies": {
-    "@crc/core": "workspace:*"
+    "@crc/core": "workspace:*",
+    "assemblyscript": "0.28.20"
   }
 }

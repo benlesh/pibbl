@@ -1,0 +1,12 @@
+✔ reports overflow facts without inventing an application error (0.582625ms)
+✔ distinguishes positive overlap, touching, separation and degenerate boxes (0.098875ms)
+✔ refuses malformed and unrepresentable geometry and unknown policies (0.076833ms)
+✔ returns detached frozen facts without mutating declared boxes (0.072166ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 33.5855

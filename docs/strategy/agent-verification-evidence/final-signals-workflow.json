@@ -1,0 +1,217 @@
+{
+  "schema": "crc-agent-workflow-run/1",
+  "status": "pass",
+  "requirementId": "SIG-14",
+  "requirementCompletion": "not-established",
+  "scope": "Controlled reference workflow only; not arbitrary application or full requirement verification.",
+  "scenario": "agent-signal-mutation",
+  "url": "http://127.0.0.1:5199/#/testing/agent-signal-mutation",
+  "sources": [
+    "packages/scenarios/src/agent-signal-mutation.ts",
+    "packages/core/test/agent-signal-mutation.test.ts",
+    "tooling/agent-verification/signal-mutation-replay.mjs"
+  ],
+  "remaining": "",
+  "acceptance": [
+    "Same-reference mutation does not advance the signal revision or evaluate the component.",
+    "Replacement publishes and displays 42; an independent pixel must be blue.",
+    "Native pixel sampling includes contain offsets; finite observation is two host frames."
+  ],
+  "watchdog": {
+    "status": "exited",
+    "exitCode": 0,
+    "browserCleanup": {
+      "status": "terminated",
+      "pid": 28460,
+      "processExited": true
+    }
+  },
+  "evidence": {
+    "schema": "crc-replay-evidence-view/1",
+    "sourceSchema": "crc-signal-mutation-replay/1",
+    "source": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/final-signals/replay/report.json",
+    "verification": "saved-evidence-only",
+    "kind": "final-report",
+    "claimedStatus": "pass",
+    "runId": "869d11b3-8c73-47a3-80e6-57f5d9ef9e6b",
+    "view": "summary",
+    "actionCount": 6,
+    "firstFailedCheck": null,
+    "requiredCheckCount": 30,
+    "checkCount": 30,
+    "checks": [
+      {
+        "checkId": "initial.application-intent",
+        "actionId": "initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "initial.equality-diagnosis",
+        "actionId": "initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "initial.publication-evaluation",
+        "actionId": "initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "initial.bounded-window",
+        "actionId": "initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "initial.bar-pixels",
+        "actionId": "initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "intentional-noop.application-intent",
+        "actionId": "intentional-noop",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "intentional-noop.equality-diagnosis",
+        "actionId": "intentional-noop",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "intentional-noop.publication-evaluation",
+        "actionId": "intentional-noop",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "intentional-noop.bounded-window",
+        "actionId": "intentional-noop",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "intentional-noop.bar-pixels",
+        "actionId": "intentional-noop",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "mutation.application-intent",
+        "actionId": "mutation",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "mutation.equality-diagnosis",
+        "actionId": "mutation",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "mutation.publication-evaluation",
+        "actionId": "mutation",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "mutation.bounded-window",
+        "actionId": "mutation",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "mutation.bar-pixels",
+        "actionId": "mutation",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repeat-mutation.application-intent",
+        "actionId": "repeat-mutation",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      }
+    ],
+    "omittedChecks": 14,
+    "actions": [
+      {
+        "actionId": "initial",
+        "status": "pass"
+      },
+      {
+        "actionId": "intentional-noop",
+        "status": "pass"
+      },
+      {
+        "actionId": "mutation",
+        "status": "pass"
+      },
+      {
+        "actionId": "repeat-mutation",
+        "status": "pass"
+      },
+      {
+        "actionId": "replacement",
+        "status": "pass"
+      },
+      {
+        "actionId": "reset",
+        "status": "pass"
+      }
+    ],
+    "omittedActions": 0,
+    "failure": null,
+    "otherFailures": {
+      "observation": null,
+      "check": null,
+      "checkCompletion": null,
+      "completion": null,
+      "checkpoint": null,
+      "cleanup": null,
+      "verifier": null
+    },
+    "recordedPageErrors": 0,
+    "droppedPageErrors": 0,
+    "manifestAvailable": true,
+    "checkpoint": null,
+    "truncatedFields": []
+  },
+  "readFailure": null,
+  "checkpointFailure": null,
+  "evidencePath": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/final-signals/replay/report.json",
+  "artifacts": {
+    "report": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/final-signals/replay/report.json",
+    "watchdog": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/final-signals/watchdog.json"
+  },
+  "next": {
+    "executable": "/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+    "arguments": [
+      "/Users/benlesh/GitHub/crc/tooling/agent-verification/evidence-reader.mjs",
+      "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/final-signals/replay/report.json",
+      "--page",
+      "actions"
+    ],
+    "unavailableSelections": []
+  }
+}

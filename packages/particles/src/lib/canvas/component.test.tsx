@@ -1,3 +1,4 @@
+import { blur } from '@crc/core/filters';
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   Absolute,
@@ -327,7 +328,7 @@ describe("Particles2D component", () => {
             style={{
               width: 40,
               height: 40,
-              filter: { type: "blur", radius: 1 },
+              filter: blur({ radius: 1 }),
             }}
           />
         </Layer>

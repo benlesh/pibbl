@@ -130,3 +130,25 @@ no pixel readback. WASM must improve the complete frame cost enough to justify i
 loading and maintenance cost; no speedup is claimed without measurement. Workers
 and GPU implementations are independent decisions and the public API does not
 require any particular implementation language.
+
+### WASM texture slice
+
+The built-in marble, paper, cellular, and reaction-diffusion kernels run in WASM.
+The public authoring APIs are unchanged. There is no backend switch or JavaScript
+fallback for these four kernels. Other recipes are outside this migration slice.
+
+Each live field borrows a fixed-size WASM memory; Canvas uploads use an ImageData
+view of that memory. Uploading into Canvas still has a browser-managed cost.
+Modules compile lazily on first use, with no fetch or initialization during import.
+The original JavaScript implementations remain benchmark controls under
+`tooling/texture-wasm-spike/`, not runtime backends.
+
+Regenerate checked-in kernel bytes with `pnpm --filter @crc/textures build:wasm`;
+verify them with `pnpm --filter @crc/textures check:wasm`. AssemblyScript is pinned
+in this package. Kernel sources live in `assembly/`.
+
+Animation uses the existing CRC signal and scheduler contract. Physics collision
+callbacks can send ink paint messages for a subsequent texture frame. Rapier and
+textures have separate WASM memories; this slice does not move the animation
+engine into WASM or expose Rapier's private memory. The public-API proof is at
+`http://127.0.0.1:4381/crc` while `node tooling/texture-wasm-spike/serve.mjs` runs.

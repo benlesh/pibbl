@@ -1,3 +1,4 @@
+import { rasterizeField } from "./wasm/memory.js";
 import { defineTexture, type TextureContext } from "@crc/core";
 import {
   marbleField,
@@ -30,19 +31,9 @@ export type InkMessage =
 function colorize(field: Float32Array, context: TextureContext, gain = 1) {
   const ctx = context.canvas.getContext("2d")!;
   const lut = paletteLut(context.palette ?? texturePalettes.porcelain);
-  const pixels = ctx.createImageData(
-    context.canvas.width,
-    context.canvas.height,
-  );
-  for (let i = 0; i < field.length; i++) {
-    const index =
-      Math.min(255, Math.max(0, Math.round(field[i] * 255 * gain))) * 4;
-    pixels.data[i * 4] = lut[index];
-    pixels.data[i * 4 + 1] = lut[index + 1];
-    pixels.data[i * 4 + 2] = lut[index + 2];
-    pixels.data[i * 4 + 3] = 255;
-  }
-  ctx.putImageData(pixels, 0, 0);
+  const raster = rasterizeField(field, lut, gain);
+  if (!raster) throw new Error("Texture field has no WASM owner.");
+  ctx.putImageData(raster.image, 0, 0);
 }
 function materialConfig(config: MaterialOptions) {
   const seed = validateSeed(config.seed),
@@ -99,9 +90,9 @@ function material(generate: MaterialGenerator) {
   });
   return (options: MaterialOptions = {}) => recipe(options);
 }
-export const marble = material(marbleField);
-export const paper = material(paperField);
-export const cellular = material(cellularField);
+export const marble = /* @__PURE__ */ material(marbleField);
+export const paper = /* @__PURE__ */ material(paperField);
+export const cellular = /* @__PURE__ */ material(cellularField);
 function inkConfig(input: ReactionDiffusionOptions) {
   const seed = validateSeed(input.seed),
     preset = input.preset ?? "spots";
@@ -129,7 +120,7 @@ function reset(state: InkState, context: TextureContext) {
   state.fresh = true;
   context.invalidate();
 }
-const inkRecipe = defineTexture<ReactionDiffusionOptions, InkState, InkMessage>(
+const inkRecipe = /* @__PURE__ */ defineTexture<ReactionDiffusionOptions, InkState, InkMessage>(
   {
     defaultPlacement: { mode: "stretch" },
     create(context, input) {

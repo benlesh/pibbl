@@ -1,0 +1,11 @@
+{
+  "status": "fail",
+  "provenance": "local-studio-no-build-attestation",
+  "steps": [],
+  "errors": [
+    "Error: No source adapter matches scenario source \"packages/scenarios/src/agent-late-font.example.tsx\"."
+  ],
+  "url": "http://127.0.0.1:5199/#/testing/agent-late-font",
+  "title": "CRC Interactive Examples Studio",
+  "error": "TimeoutError: locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('agent-late-font-evidence') to be visible\u001b[22m\n"
+}

@@ -1,3 +1,4 @@
+import { dropShadow } from '@crc/core/filters';
 import {
   Circle,
   Clip,
@@ -198,13 +199,13 @@ function ParticleCelebrationOwner({
         width: 640,
         height: 360,
         filter: glowEnabled
-          ? {
-              type: 'dropShadow',
+          ? dropShadow({
+              
               offsetX: 0,
               offsetY: 5,
               blurRadius: 5,
               color: '#38bdf888',
-            }
+            })
           : [],
       }}
     >

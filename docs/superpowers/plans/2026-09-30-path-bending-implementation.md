@@ -1,5 +1,7 @@
 # Path bending implementation plan
 
+> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+
 Status: feature complete, integrated, and pushed to main, 2026-09-30. The user approved the
 [design](../specs/2026-09-30-path-bending-design.md) and requested implementation.
 Both Along Arc and Along Path remain the completion target.
@@ -308,7 +310,6 @@ public compatibility promises.
   and rect() preserves a trailing Move after Close. The bending implementation
   preserves those source semantics instead of changing the builders.
 
-
 ## Final feedback and focused handoff, 2026-09-30
 
 The user reported that guide edits left the bent preview unchanged, requested a
@@ -367,7 +368,6 @@ checks or claiming aggregate success. The coordinator owns final combined trust,
 commit, merge, and push. Bending changes are held for that verification; no separate
 commit or push was made. **Feature complete** remains contingent on the combined
 gate. The approved requirements audit found no remaining bending behavior gaps.
-
 
 ## Verified combined delivery — 2026-09-30
 

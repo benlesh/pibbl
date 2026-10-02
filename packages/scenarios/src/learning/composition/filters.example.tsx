@@ -1,3 +1,4 @@
+import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
 import {
   Circle,
   crc,
@@ -11,57 +12,57 @@ import {
 const SAMPLE_WIDTH = 160;
 
 const FILTER_SAMPLES = [
-  { label: "BLUR", detail: "4px", filter: { type: "blur", radius: 4 } },
+  { label: "BLUR", detail: "4px", filter: blur({  radius: 4 }) },
   {
     label: "BRIGHTNESS",
     detail: "135%",
-    filter: { type: "brightness", amount: 1.35 },
+    filter: brightness({  amount: 1.35 }),
   },
   {
     label: "CONTRAST",
     detail: "150%",
-    filter: { type: "contrast", amount: 1.5 },
+    filter: contrast({  amount: 1.5 }),
   },
   {
     label: "DROP SHADOW",
     detail: "8px 7px 4px",
-    filter: {
-      type: "dropShadow",
+    filter: dropShadow({
+      
       offsetX: 8,
       offsetY: 7,
       blurRadius: 4,
       color: "rgb(15 23 42)",
-    },
+    }),
   },
   {
     label: "GRAYSCALE",
     detail: "100%",
-    filter: { type: "grayscale", amount: 1 },
+    filter: grayscale({  amount: 1 }),
   },
   {
     label: "HUE ROTATE",
     detail: "120deg",
-    filter: { type: "hueRotate", degrees: 120 },
+    filter: hueRotate({  degrees: 120 }),
   },
   {
     label: "INVERT",
     detail: "100%",
-    filter: { type: "invert", amount: 1 },
+    filter: invert({  amount: 1 }),
   },
   {
     label: "OPACITY",
     detail: "55%",
-    filter: { type: "opacity", amount: 0.55 },
+    filter: opacity({  amount: 0.55 }),
   },
   {
     label: "SATURATE",
     detail: "200%",
-    filter: { type: "saturate", amount: 2 },
+    filter: saturate({  amount: 2 }),
   },
   {
     label: "SEPIA",
     detail: "100%",
-    filter: { type: "sepia", amount: 1 },
+    filter: sepia({  amount: 1 }),
   },
 ] satisfies readonly {
   label: string;
@@ -70,24 +71,24 @@ const FILTER_SAMPLES = [
 }[];
 
 const ORDERED_FILTERS = [
-  { type: "grayscale", amount: 0.35 },
-  { type: "contrast", amount: 1.4 },
-  {
-    type: "dropShadow",
+  grayscale({  amount: 0.35 }),
+  contrast({  amount: 1.4 }),
+  dropShadow({
+    
     offsetX: 7,
     offsetY: 6,
     blurRadius: 3,
     color: "rgb(15 23 42)",
-  },
+  }),
 ] satisfies readonly CRCFilter[];
 
-const NESTED_SHADOW = {
-  type: "dropShadow",
+const NESTED_SHADOW = dropShadow({
+  
   offsetX: 7,
   offsetY: 6,
   blurRadius: 3,
   color: "rgb(15 23 42)",
-} satisfies CRCFilter;
+}) satisfies CRCFilter;
 
 interface GradientArtworkProps {
   gradient: CanvasGradient;
@@ -228,9 +229,9 @@ function CompositeTile({
     mode === "array" ? (
       <Group style={{ filter: ORDERED_FILTERS }}>{artwork}</Group>
     ) : (
-      <Group style={{ filter: { type: "blur", radius: 1.5 } }}>
+      <Group style={{ filter: blur({  radius: 1.5 }) }}>
         <Group style={{ filter: NESTED_SHADOW }}>
-          <Group style={{ filter: { type: "hueRotate", degrees: 155 } }}>
+          <Group style={{ filter: hueRotate({  degrees: 155 }) }}>
             {artwork}
           </Group>
         </Group>

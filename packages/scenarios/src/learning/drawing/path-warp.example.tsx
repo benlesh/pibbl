@@ -66,7 +66,7 @@ function WarpStudy() {
     drag.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
-  const text = (value: string, x: number, y: number, font = '11px monospace', fill = '#8d99b9') =>
+  const labelText = (value: string, x: number, y: number, font = '11px monospace', fill = '#8d99b9') =>
     <Text style={{ x, y, font, fill }} pointerEvents="none">{value}</Text>;
   return <>
     <Rectangle style={{ width: 900, height: 580, fill: '#0c1223' }} pointerEvents="none" />
@@ -74,16 +74,16 @@ function WarpStudy() {
       cx: 28 + (i * 173 % 845), cy: 115 + (i * 97 % 390), radius: i % 3 === 0 ? 1.4 : 0.7,
       fill: i % 3 === 0 ? '#677896' : '#2d3b54',
     }} pointerEvents="none" />)}
-    {text('CRC / GEOMETRY LAB', 30, 24, '11px monospace', '#8df0d1')}
-    {text('Bend the flight plan.', 28, 47, 'bold 32px sans-serif', '#f0f0ff')}
-    {text('Four corners. One continuous transformation.', 30, 91, '13px sans-serif')}
+    {labelText('CRC / GEOMETRY LAB', 30, 24, '11px monospace', '#8df0d1')}
+    {labelText('Bend the flight plan.', 28, 47, 'bold 32px sans-serif', '#f0f0ff')}
+    {labelText('Four corners. One continuous transformation.', 30, 91, '13px sans-serif')}
     <Line style={{ coords: [[30, 122], [298, 122]], stroke: '#29334b', strokeWidth: 1 }} pointerEvents="none" />
-    {text('01 / ORIGINAL', 32, 164)}
-    {text('A little rocket. A lot of possibility.', 32, 188, '12px sans-serif')}
+    {labelText('01 / ORIGINAL', 32, 164)}
+    {labelText('A little rocket. A lot of possibility.', 32, 188, '12px sans-serif')}
     <Rectangle style={{ x: 85, y: 220, width: 132, height: 165, stroke: '#35425e', strokeWidth: 1 }} pointerEvents="none" />
     <Path style={{ d: reference, fill: '#34425d', stroke: '#6c7d9f', strokeWidth: 1 }} pointerEvents="none" />
-    {text('240 × 300 / LOCAL SPACE', 62, 409, '10px monospace')}
-    {text('02 / WARPED', 380, 86, '11px monospace', '#8df0d1')}
+    {labelText('240 × 300 / LOCAL SPACE', 62, 409, '10px monospace')}
+    {labelText('02 / WARPED', 380, 86, '11px monospace', '#8df0d1')}
     <Path style={{ d: current.paths[0], stroke: '#223951', strokeWidth: 1 }} pointerEvents="none" />
     <Path style={{ d: current.paths[1], fill: '#ff916c', stroke: '#ffc49f', strokeWidth: 1.5 }} pointerEvents="none" />
     <Path style={{ d: current.paths[2], fill: '#c8bcff', stroke: '#eee8ff', strokeWidth: 2 }} pointerEvents="none" />
@@ -92,7 +92,7 @@ function WarpStudy() {
     <Line style={{ coords: [...names, names[0]].map(name => [current.corners[name].x, current.corners[name].y] as const), stroke: '#528d89', strokeWidth: 1 }} pointerEvents="none" />
     {names.map((name, i) => {
       const p = current.corners[name];
-      return text(labels[i], p.x - 24, p.y + (i < 2 ? -28 : 22), '9px monospace', '#a5d9cf');
+      return labelText(labels[i], p.x - 24, p.y + (i < 2 ? -28 : 22), '9px monospace', '#a5d9cf');
     })}
     {names.map(name => {
       const p = current.corners[name];
@@ -115,20 +115,20 @@ function WarpStudy() {
       <Rectangle key={mode} style={{ x: 30 + i * 126, y: 434, width: 118, height: 32,
         fill: current.mode === mode ? '#8df0d1' : '#202c43', cursor: 'pointer' }}
         onClick={() => update(state.get().corners, mode)} />
-      {text(mode === 'bilinear' ? 'Bilinear' : 'Perspective', 45 + i * 126, 444, '12px sans-serif', current.mode === mode ? '#102d2a' : '#d6ddf1')}
+      {labelText(mode === 'bilinear' ? 'Bilinear' : 'Perspective', 45 + i * 126, 444, '12px sans-serif', current.mode === mode ? '#102d2a' : '#d6ddf1')}
     </>)}
-    {text(current.mode === 'bilinear' ? 'BILINEAR / RUBBER SHEET' : 'PERSPECTIVE / PROJECTED', 32, 479, '10px monospace', '#8df0d1')}
+    {labelText(current.mode === 'bilinear' ? 'BILINEAR / RUBBER SHEET' : 'PERSPECTIVE / PROJECTED', 32, 479, '10px monospace', '#8df0d1')}
     {current.error && <>
       <Rectangle style={{ x: 340, y: 490, width: 515, height: 20, fill: '#492d32' }} pointerEvents="none" />
-      {text('PREVIOUS VALID PREVIEW', 350, 495, '9px monospace', '#ffc2a3')}
-      {text(current.error, 546, 495, '10px sans-serif', '#ffe2d2')}
+      {labelText('PREVIOUS VALID PREVIEW', 350, 495, '9px monospace', '#ffc2a3')}
+      {labelText(current.error, 546, 495, '10px sans-serif', '#ffe2d2')}
     </>}
     <Rectangle style={{ x: 30, y: 512, width: 840, height: 44, fill: '#151e32' }} pointerEvents="none" />
-    {text('DRAG THE MINT HANDLES', 46, 528, '10px monospace', '#e3e8fa')}
-    {text(`${current.paths.reduce((sum, path) => sum + path.segmentCount, 0)} segments · 0.3 tolerance`, 294, 528, '10px monospace')}
+    {labelText('DRAG THE MINT HANDLES', 46, 528, '10px monospace', '#e3e8fa')}
+    {labelText(`${current.paths.reduce((sum, path) => sum + path.segmentCount, 0)} segments · 0.3 tolerance`, 294, 528, '10px monospace')}
     <Rectangle style={{ x: 758, y: 520, width: 94, height: 28, fill: '#293651', cursor: 'pointer' }}
       onClick={() => update(initial, 'bilinear')} />
-    {text('RESET ↗', 779, 528, '10px monospace', '#e3e8fa')}
+    {labelText('RESET ↗', 779, 528, '10px monospace', '#e3e8fa')}
   </>;
 }
 

@@ -1,3 +1,4 @@
+import { dropShadow } from '@crc/core/filters';
 import {
   Absolute,
   Clip,
@@ -286,13 +287,13 @@ function NodePaint({
     <Group
       style={{
         filter: selected
-          ? {
-              type: "dropShadow",
+          ? dropShadow({
+              
               offsetX: 6,
               offsetY: 8,
               blurRadius: 10,
               color: "rgb(23 33 29 / 35%)",
-            }
+            })
           : [],
       }}
     >

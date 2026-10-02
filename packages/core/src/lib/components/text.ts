@@ -1,4 +1,4 @@
-import { resolveTexturePaint } from '../textures/texture.js';
+import { resolveTexturePaint } from '../textures/texture-protocol.js';
 import { definePrimitive } from '../define-primitive.js';
 import { materializeTextChildren } from '../element/children.js';
 import { GLOBAL_STATE } from '../global-state.js';

@@ -246,17 +246,8 @@
     [K in CRCEventType as `${CRCEventPropMap[K]}Capture`]: CRCEventHandler<K>;
   }>;
 
-  export interface CRCBlurFilter { type: 'blur'; radius: number }
-  export interface CRCBrightnessFilter { type: 'brightness'; amount: number }
-  export interface CRCContrastFilter { type: 'contrast'; amount: number }
-  export interface CRCDropShadowFilter { type: 'dropShadow'; offsetX: number; offsetY: number; blurRadius?: number; color: string }
-  export interface CRCGrayscaleFilter { type: 'grayscale'; amount: number }
-  export interface CRCHueRotateFilter { type: 'hueRotate'; degrees: number }
-  export interface CRCInvertFilter { type: 'invert'; amount: number }
-  export interface CRCOpacityFilter { type: 'opacity'; amount: number }
-  export interface CRCSaturateFilter { type: 'saturate'; amount: number }
-  export interface CRCSepiaFilter { type: 'sepia'; amount: number }
-  export type CRCFilter = CRCBlurFilter | CRCBrightnessFilter | CRCContrastFilter | CRCDropShadowFilter | CRCGrayscaleFilter | CRCHueRotateFilter | CRCInvertFilter | CRCOpacityFilter | CRCSaturateFilter | CRCSepiaFilter;
+  declare const crcFilterBrand: unique symbol;
+  export interface CRCFilter { readonly [crcFilterBrand]: true }
   export interface SystemStyle { custom?: unknown; filter?: CRCFilter | readonly CRCFilter[] }
   export interface CRCPhysics2DPropExtension {}
   type PrimitiveReservedKey = 'key' | 'style';
@@ -1308,6 +1299,17 @@ export interface AnchoredLayoutProps<T extends AnchoredItem> {
 export declare function AnchoredLayout<T extends AnchoredItem>(props: AnchoredLayoutProps<T>): CRCNode;
 
 /* @crc-studio-module @crc/textures */
+  export {useTexture} from '@crc/core';
+  export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
+  export interface WaterWavesOptions { readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; }
+  export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' };
+  export function waterWaves(options?: WaterWavesOptions): import('@crc/core').TextureRecipe<WaterWavesMessage>;
+  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
+  export type InkMessage = {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
+  export function marble(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function paper(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function cellular(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function reactionDiffusion(options?: ReactionDiffusionOptions): import('@crc/core').TextureRecipe<InkMessage>;
   export interface ElectricPoint { readonly x: number; readonly y: number; }
   export interface ElectricOptions { readonly seed?: number; readonly branching?: number; readonly glow?: number; }
   export type ElectricControl = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset'; readonly seed?: number };
@@ -1319,14 +1321,6 @@ export declare function AnchoredLayout<T extends AnchoredItem>(props: AnchoredLa
   export type LightningMessage = ElectricControl | { readonly type: 'connect'; readonly id: string; readonly positive: ElectricPoint; readonly negative: ElectricPoint } | { readonly type: 'disconnect'; readonly id: string } | { readonly type: 'configure'; readonly positive?: ElectricPoint; readonly negative?: ElectricPoint; readonly edge?: LightningOptions['edge']; readonly active?: boolean; readonly branching?: number; readonly glow?: number; readonly frequency?: number };
   export function tendrils(options?: TendrilsOptions): import('@crc/core').TextureRecipe<TendrilsMessage>;
   export function lightning(options?: LightningOptions): import('@crc/core').TextureRecipe<LightningMessage>;
-  export {useTexture} from '@crc/core';
-  export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
-  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
-  export type InkMessage = {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
-  export function marble(options?: MaterialOptions): import('@crc/core').TextureRecipe;
-  export function paper(options?: MaterialOptions): import('@crc/core').TextureRecipe;
-  export function cellular(options?: MaterialOptions): import('@crc/core').TextureRecipe;
-  export function reactionDiffusion(options?: ReactionDiffusionOptions): import('@crc/core').TextureRecipe<InkMessage>;
 import type { CRCComponent, CRCRenderLayerComponentProps } from '@crc/core';
 export type TexturePalette = readonly string[];
 export interface TextureResolution { readonly width: number; readonly height: number; }
@@ -1364,3 +1358,29 @@ export interface ProceduralTextureProps {
   readonly render?: TextureRenderer;
 }
 export const ProceduralTexture: CRCComponent<ProceduralTextureProps & CRCRenderLayerComponentProps>;
+
+/* @crc-studio-module @crc/core/filters */
+import type { CRCFilter, SignalValue } from '@crc/core';
+export type { CRCFilter } from '@crc/core';
+export interface CRCBlurFilterOptions { readonly radius: SignalValue<number> }
+export interface CRCBrightnessFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCContrastFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCDropShadowFilterOptions { readonly offsetX: SignalValue<number>; readonly offsetY: SignalValue<number>; readonly blurRadius?: SignalValue<number>; readonly color: SignalValue<string> }
+export interface CRCGrayscaleFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCHueRotateFilterOptions { readonly degrees: SignalValue<number> }
+export interface CRCInvertFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCOpacityFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCSaturateFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCSepiaFilterOptions { readonly amount: SignalValue<number> }
+export function blur(options: Readonly<CRCBlurFilterOptions>): CRCFilter;
+export function brightness(options: Readonly<CRCBrightnessFilterOptions>): CRCFilter;
+export function contrast(options: Readonly<CRCContrastFilterOptions>): CRCFilter;
+export function dropShadow(options: Readonly<CRCDropShadowFilterOptions>): CRCFilter;
+export function grayscale(options: Readonly<CRCGrayscaleFilterOptions>): CRCFilter;
+export function hueRotate(options: Readonly<CRCHueRotateFilterOptions>): CRCFilter;
+export function invert(options: Readonly<CRCInvertFilterOptions>): CRCFilter;
+export function opacity(options: Readonly<CRCOpacityFilterOptions>): CRCFilter;
+export function saturate(options: Readonly<CRCSaturateFilterOptions>): CRCFilter;
+export function sepia(options: Readonly<CRCSepiaFilterOptions>): CRCFilter;
+export interface CRCDisplacementFilterOptions { readonly map: SignalValue<import('@crc/core').TexturePaint>; readonly strength: SignalValue<number>; readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; }
+export function displacement(options: Readonly<CRCDisplacementFilterOptions>): CRCFilter;

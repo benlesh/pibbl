@@ -169,7 +169,7 @@ function input(
 }
 
 /** An independently sized, persistent Gray–Scott surface, advanced by CRC's scheduler. */
-export const ReactionDiffusion = defineRenderLayer<
+export const ReactionDiffusion = /* @__PURE__ */ defineRenderLayer<
   ReactionDiffusionProps,
   Resources
 >({

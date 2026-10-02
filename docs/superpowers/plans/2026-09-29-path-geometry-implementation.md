@@ -1,5 +1,7 @@
 # PathGeometry implementation plan
 
+> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+
 **Goal:** Deliver editable public path geometry in observable vertical slices.
 
 **Architecture:** Private packed buffers hold canonical geometry; fresh conversion

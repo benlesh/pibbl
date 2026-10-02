@@ -73,6 +73,7 @@ try {
     "paper",
     "cellular",
     "reactionDiffusion",
+    "waterWaves",
     "tendrils",
     "lightning",
   ].sort();

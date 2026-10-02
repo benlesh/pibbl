@@ -1,3 +1,4 @@
+import { dropShadow } from '@crc/core/filters';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { Fragment } from '../element/fragment';
@@ -298,12 +299,11 @@ describe('filtered Group event integration', () => {
       rotationDegrees: 30,
       translateX: 60,
       translateY: 20,
-      filter: {
-        type: 'dropShadow' as const,
+      filter: dropShadow({
         offsetX: 35,
         offsetY: 0,
         color: 'black',
-      },
+      }),
     };
     const expectedWorld = new DOMMatrix()
       .scale(style.scaleX, style.scaleY)

@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>CRC material generation benchmark</title>
+<style>body{font:16px system-ui;background:#10212b;color:#e4eee9;margin:28px;max-width:1200px}h1{font-size:30px}fieldset{min-inline-size:0;border:1px solid #45636d;display:flex;flex-wrap:wrap;gap:16px;padding:16px;border-radius:8px}label{display:flex;gap:8px;align-items:center}select,input,button{font:inherit}select,button{padding:8px}input[type=number]{width:90px}#gallery{display:flex;gap:24px;flex-wrap:wrap}section{max-width:100%}canvas{max-width:100%;height:auto}#bench-host{position:fixed;left:-10000px;top:0}pre{white-space:pre-wrap}small{color:#bbd1d5}button{cursor:pointer}@media(max-width:600px){body{margin:16px}label{width:100%;flex-wrap:wrap}select{min-width:0;max-width:100%;flex:1}}</style>
+<h1>Material generation: JavaScript &amp; WASM</h1>
+<p>Compare the current recipes with richer candidates using the same seed, resolution and palette. Switch engines to compare identical calculations; unchanged textures remain idle.</p>
+<fieldset id="controls"><legend>Preview</legend>
+<label>Material <select id="kind"><option>marble</option><option>paper</option><option>cellular</option></select></label>
+<label>Engine <select id="engine"><option value="wasm">WASM</option><option value="matched-js">Matched JavaScript</option></select></label>
+<label>Resolution <select id="resolution"><option>128</option><option>256</option><option selected>512</option><option value="1024">1024 · experimental</option></select></label>
+<label>Seed <input id="seed" type="number" min="0" max="4294967295" value="42"></label>
+<label>Scale <input id="scale" type="range" min="1" max="16" step=".5" value="6"></label>
+<label>Detail <input id="detail" type="range" min="0" max="1" step=".05" value=".65"></label>
+<label><input id="tiles" type="checkbox">Show 2×2 tiles</label><button id="render">Render comparison</button><button id="benchmark">Run benchmarks</button></fieldset>
+<p id="status">Loading…</p><div id="gallery"></div><small>1024² is an experimental stress case beyond the shipped texture resolution limit. Timings include CPU generation and Canvas work, not physical display presentation.</small>
+<div id="bench-host"></div><pre id="results"></pre><script type="module" src="./materials-bundle.js"></script></html>
