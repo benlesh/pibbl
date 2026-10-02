@@ -130,18 +130,25 @@ function HtmlBoxLesson() {
         flash = 1;
         for (let i = 0; i < 160; i++) {
           const edge = i % 4;
-          const seed = ++commands.serial;
-          const fraction = Math.abs((Math.sin(seed * 127.1) * 43758.5453) % 1);
+          let seed = Math.imul(++commands.serial, 0x9e3779b9) >>> 0;
+          const random = () => {
+            seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+            return (seed >>> 0) / 4294967296;
+          };
+          // Separate draws avoid tying launch speed to position along the edge.
+          const fraction = random();
           const horizontal = edge < 2;
           const normal = edge % 2 === 0 ? -1 : 1;
-          const speed = 90 + fraction * 170;
-          const tangent = ((seed % 11) / 10 - 0.5) * 160;
+          const launchAngle = (random() - 0.5) * 2.2;
+          const speed = 65 + Math.pow(random(), 0.7) * 350;
+          const outward = Math.cos(launchAngle) * speed;
+          const tangent = Math.sin(launchAngle) * speed;
           sparks.push({
             x: horizontal ? box.x + 6 + fraction * (box.width - 12) : box.x + (normal > 0 ? box.width + 2 : -2),
             y: horizontal ? box.y + (normal > 0 ? box.height + 2 : -2) : box.y + 6 + fraction * (box.height - 12),
-            vx: horizontal ? tangent : normal * speed,
-            vy: horizontal ? normal * speed : tangent,
-            life: 1.3 + (seed % 5) * 0.1,
+            vx: horizontal ? tangent : normal * outward,
+            vy: horizontal ? normal * outward : tangent,
+            life: 1.3 + random() * 0.4,
           });
         }
       }
@@ -206,8 +213,8 @@ function HtmlBoxLesson() {
       </Group>
     </Manipulable>
     <Rectangle style={{ left: 32, top: 404, width: 190, height: 40, fill: '#203c52', cursor: 'pointer' }} onClick={() => after.update(n => n + 1)} />
-    <Text pointerEvents="none" style={{ left: 127, top: 430, textAlign: 'center', font: '700 12px system-ui', fill: 'white' }}>{`CANVAS CLICKS: ${after.get()}`}</Text>
-    <Text style={{ left: 242, top: 429, font: '13px system-ui', fill: '#91a8c2' }}>Type to spark. Drag the panel, corners, or rotation handle.</Text>
+    <Text pointerEvents="none" style={{ left: 127, top: 424, textAlign: 'center', textBaseline: 'middle', font: '700 12px system-ui', fill: 'white' }}>{`CANVAS CLICKS: ${after.get()}`}</Text>
+    <Text style={{ left: 242, top: 424, textBaseline: 'middle', font: '13px system-ui', fill: '#91a8c2' }}>Type to spark. Drag the panel, corners, or rotation handle.</Text>
   </Group></FocusManagement>;
 }
 
