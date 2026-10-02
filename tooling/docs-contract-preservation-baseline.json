@@ -2567,7 +2567,7 @@
           "id": "c0038",
           "kind": "prose",
           "section": "Interaction and composition",
-          "text": "A nonempty filter list requires browser `OffscreenCanvas`, a 2D context, and native Canvas `filter` support on that context. Unsupported chains, invalid dimensions, allocation failure, and context-acquisition failure are actionable render errors. CRC does not fall back to a DOM canvas or silently reduce resolution. An empty filter list is a direct-path no-op and adds no capability requirement."
+          "text": "A nonempty native-filter segment requires browser `OffscreenCanvas`, a 2D context, and native Canvas `filter` support on that context. A displacement segment requires `OffscreenCanvas` WebGL2 and the processor's texture-size limit. Unsupported chains, invalid dimensions, allocation, context-acquisition, shader, upload, or context-loss failure are actionable render errors. CRC does not fall back to a DOM canvas, CPU processing, or silently reduced resolution. An empty list is a direct-path no-op. A zero-strength displacement validates its map but has no capture or WebGL requirement."
         },
         {
           "id": "c0039",
@@ -2603,7 +2603,7 @@
           "id": "c0044",
           "kind": "prose",
           "section": "Evidence",
-          "text": "Render-layer and Three adapter suites cover logical/backing viewport snapshots, outer layout/transforms/clips/Layers, transparent bitmap composition, delegated object picking, density changes, bitmap/interaction generation transactions, constant-time clean cache reuse, and deterministic removal/disposal."
+          "text": "Render-layer and Three adapter suites cover logical/backing viewport snapshots, outer layout/transforms/clips/Layers, transparent bitmap composition, delegated object picking, density changes, bitmap/interaction generation transactions, constant-time clean cache reuse, and deterministic removal/disposal. Texture/ displacement suites additionally cover map placement in logical region coordinates, committed raster/revision borrowing, zero-strength validation, and one root-tree GPU service shared by active displacement boundaries. Context-loss recovery and persistent map-upload caching are not implemented surface guarantees."
         },
         {
           "id": "c0045",
@@ -7609,7 +7609,7 @@
           "id": "c0019",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| Filter scratch pool | CRC instance construction | That CRC instance | Instance main teardown | Every reusable source/result canvas and context reference is released; a remount receives a distinct pool. |"
+          "text": "| Native filter scratch pool | First active native-filter boundary | Optional service on that CRC instance | Last service release or instance main teardown | Every reusable source/result canvas and context reference is released; a remount receives a distinct pool. |"
         },
         {
           "id": "c0020",
@@ -7663,7 +7663,7 @@
           "id": "c0028",
           "kind": "prose",
           "section": "Filter scratch semantics",
-          "text": "Each instance owns one depth-indexed pool. A boundary atomically reserves the next consecutive source/result pair in constant time; nested boundaries use the next pair and completed siblings reuse the current pair. Capacity is exactly two surface slots per maximum active filter depth, independent of sibling count and the number of functions in a list. Filter capture does not create a component, hook frame, event root, nested CRC mount, or Layer-like cache."
+          "text": "Each native-filter service owns one depth-indexed pool. A boundary atomically reserves the next consecutive source/result pair in constant time; nested boundaries use the next pair and completed siblings reuse the current pair. Capacity is exactly two surface slots per maximum active filter depth, independent of sibling count and the number of functions in a list. Filter capture does not create a component, hook frame, event root, nested CRC mount, or Layer-like cache."
         },
         {
           "id": "c0029",
@@ -7675,7 +7675,7 @@
           "id": "c0030",
           "kind": "prose",
           "section": "Filter scratch semantics",
-          "text": "Filter validation, allocation, local render-target/world-transform changes, primitive and descendant execution, and compositing are guarded by nested `try`/`finally` scopes. Any failure returns every acquired pair and restores temporary renderer globals before normal render-failure teardown clears owned component resources. Pixels painted earlier in the failing frame remain under the general render-failure contract; the failed filter result is not composited. The filter scopes specifically restore the current render target and world transform to their entering values."
+          "text": "Filter validation, allocation, local render-target/world-transform changes, primitive and descendant execution, and compositing are guarded by nested `try`/`finally` scopes. Any failure returns every acquired pair and restores temporary renderer globals before normal render-failure teardown clears owned component resources. Pixels painted earlier in the failing frame remain under the general render-failure contract; the failed filter result is not composited. The filter scopes specifically restore the current render target and world transform to their entering values. A mounted `useTexture` hook separately owns its stable producer canvas, bounded committed/spare publication pair, optional provisional candidate, queued messages, and scheduler participant. It adopts matching pixels and revision before observer notification, retains the last committed pair on a failed Commit, clears an initial failed candidate, and does not promise rollback of an already committed pair or arbitrary recipe state. Paint and map values borrow synchronously and never own these resources. The first non-identity displacement pass creates one root-tree GPU service; nested Layers borrow it and final borrower release disposes its processor and scratch targets. Native-only and zero-strength paths acquire no GPU service; context-loss recovery and map-upload caches are not current ownership promises."
         },
         {
           "id": "c0031",
@@ -8240,92 +8240,92 @@
         {
           "id": "c0021",
           "kind": "prose",
-          "section": "Filter descriptors",
-          "text": "One descriptor is a one-item list. A readonly list runs in declaration order; `[]` is exactly a no-op, performs no offscreen capture, and requires no filter capability. CRC copies and freezes normalized descriptors without mutating the caller-owned descriptor or array."
+          "section": "Filter values",
+          "text": "`style.filter` accepts opaque immutable values made by named factories imported from `@crc/core/filters`. A value is a one-item list. A readonly list runs in declaration order; `[]` is exactly a no-op, performs no offscreen capture, and requires no filter capability. CRC never accepts a string-tagged descriptor or a lookalike object. It keeps the caller-owned value and array immutable while preparing the values for the receiving primitive generation."
         },
         {
           "id": "c0022",
           "kind": "prose",
-          "section": "Filter descriptors",
-          "text": "The root package exports `CRCFilter` and all ten named descriptor types. This is the complete function and numeric contract:"
+          "section": "Filter values",
+          "text": "`@crc/core` exports the shared `CRCFilter` type. The factory functions and their `*Options` types are exported by `@crc/core/filters`. Native factories are `blur`, `brightness`, `contrast`, `dropShadow`, `grayscale`, `hueRotate`, `invert`, `opacity`, `saturate`, and `sepia`. This is their numeric contract:"
         },
         {
           "id": "c0023",
           "kind": "table",
-          "section": "Filter descriptors",
+          "section": "Filter values",
           "text": "| Descriptor type | Fields and normalization | Native unit/function |"
         },
         {
           "id": "c0024",
           "kind": "table",
-          "section": "Filter descriptors",
-          "text": "| `blur` (`CRCBlurFilter`) | `radius` must be finite and nonnegative. It is a Gaussian standard deviation in local logical units. | Density-scaled `px` in `blur()` |"
+          "section": "Filter values",
+          "text": "| `blur` (`CRCBlurFilterOptions`) | `radius` must be finite and nonnegative. It is a Gaussian standard deviation in local logical units. | Density-scaled `px` in `blur()` |"
         },
         {
           "id": "c0025",
           "kind": "table",
-          "section": "Filter descriptors",
-          "text": "| `brightness` (`CRCBrightnessFilter`) | `amount` must be finite and nonnegative; values above `1` are preserved. | Unitless ratio in `brightness()` |"
+          "section": "Filter values",
+          "text": "| `brightness` (`CRCBrightnessFilterOptions`) | `amount` must be finite and nonnegative; values above `1` are preserved. | Unitless ratio in `brightness()` |"
         },
         {
           "id": "c0026",
           "kind": "table",
-          "section": "Filter descriptors",
-          "text": "| `contrast` (`CRCContrastFilter`) | `amount` must be finite and nonnegative; values above `1` are preserved. | Unitless ratio in `contrast()` |"
+          "section": "Filter values",
+          "text": "| `contrast` (`CRCContrastFilterOptions`) | `amount` must be finite and nonnegative; values above `1` are preserved. | Unitless ratio in `contrast()` |"
         },
         {
           "id": "c0027",
           "kind": "table",
-          "section": "Filter descriptors",
-          "text": "| `dropShadow` (`CRCDropShadowFilter`) | Signed `offsetX`/`offsetY` must be finite. `blurRadius` defaults to `0`, must be finite and nonnegative, and is a Gaussian standard deviation. `color` must be concrete. | Density-scaled `px` in `drop-shadow()` |"
+          "section": "Filter values",
+          "text": "| `dropShadow` (`CRCDropShadowFilterOptions`) | Signed `offsetX`/`offsetY` must be finite. `blurRadius` defaults to `0`, must be finite and nonnegative, and is a Gaussian standard deviation. `color` must be concrete. | Density-scaled `px` in `drop-shadow()` |"
         },
         {
           "id": "c0028",
           "kind": "table",
-          "section": "Filter descriptors",
-          "text": "| `grayscale` (`CRCGrayscaleFilter`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `grayscale()` |"
+          "section": "Filter values",
+          "text": "| `grayscale` (`CRCGrayscaleFilterOptions`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `grayscale()` |"
         },
         {
           "id": "c0029",
           "kind": "table",
-          "section": "Filter descriptors",
-          "text": "| `hueRotate` (`CRCHueRotateFilter`) | `degrees` may be any finite number and is not modulo-normalized. | `deg` in `hue-rotate()` |"
+          "section": "Filter values",
+          "text": "| `hueRotate` (`CRCHueRotateFilterOptions`) | `degrees` may be any finite number and is not modulo-normalized. | `deg` in `hue-rotate()` |"
         },
         {
           "id": "c0030",
           "kind": "table",
-          "section": "Filter descriptors",
-          "text": "| `invert` (`CRCInvertFilter`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `invert()` |"
+          "section": "Filter values",
+          "text": "| `invert` (`CRCInvertFilterOptions`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `invert()` |"
         },
         {
           "id": "c0031",
           "kind": "table",
-          "section": "Filter descriptors",
-          "text": "| `opacity` (`CRCOpacityFilter`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `opacity()` |"
+          "section": "Filter values",
+          "text": "| `opacity` (`CRCOpacityFilterOptions`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `opacity()` |"
         },
         {
           "id": "c0032",
           "kind": "table",
-          "section": "Filter descriptors",
-          "text": "| `saturate` (`CRCSaturateFilter`) | `amount` must be finite and nonnegative; values above `1` are preserved. | Unitless ratio in `saturate()` |"
+          "section": "Filter values",
+          "text": "| `saturate` (`CRCSaturateFilterOptions`) | `amount` must be finite and nonnegative; values above `1` are preserved. | Unitless ratio in `saturate()` |"
         },
         {
           "id": "c0033",
           "kind": "table",
-          "section": "Filter descriptors",
-          "text": "| `sepia` (`CRCSepiaFilter`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `sepia()` |"
+          "section": "Filter values",
+          "text": "| `sepia` (`CRCSepiaFilterOptions`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `sepia()` |"
         },
         {
           "id": "c0034",
           "kind": "prose",
-          "section": "Filter descriptors",
+          "section": "Filter values",
           "text": "Amounts are ratios, so `1` means 100 percent. `blur.radius` and `dropShadow.blurRadius` deliberately use filter-function standard-deviation semantics, not CSS `box-shadow` blur-radius semantics. Drop-shadow color syntax is accepted only when the active browser's Canvas filter parser accepts it; `currentColor`, `var(...)`, system/contextual colors, and other contextual references reject. Diagnostics identify `filter`, a list index when present, the failing field, received value, and component before its render callback."
         },
         {
           "id": "c0035",
           "kind": "prose",
-          "section": "Filter descriptors",
-          "text": "CRC compiles the complete nonempty list once for one native Canvas filter operation. `style.opacity` remains the primitive's existing paint-alpha behavior; an `opacity` filter is a separate ordered effect over the combined raster and can differ where paint overlaps."
+          "section": "Filter values",
+          "text": "CRC compiles the complete nonempty list once for one native Canvas filter operation. `style.opacity` remains the primitive's existing paint-alpha behavior; an `opacity` filter is a separate ordered effect over the combined raster and can differ where paint overlaps. `displacement({ map, strength, region })` is a separate optional filter factory. It accepts a genuine texture paint map, finite nonnegative logical strength, and finite positive region dimensions; it samples red/green signed offsets with alpha weighting and changes pixels only. Zero strength validates the map but does not borrow pixels or allocate its WebGL2 processor. Mixed native and displacement lists preserve declaration order, with native segments around displacement passes. Measurement does no capability check or raster work."
         },
         {
           "id": "c0036",
@@ -14797,7 +14797,7 @@
       "contract": "docs/design/runtime-resource-ownership.md",
       "claim": {
         "kind": "prose",
-        "text": "Each instance owns one depth-indexed pool."
+        "text": "Each native-filter service owns one depth-indexed pool."
       },
       "source": {
         "path": "packages/core/src/lib/filter/filter-surface-pool.ts",

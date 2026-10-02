@@ -13,7 +13,7 @@ relatedTypes: [ProceduralTextureProps, TextureKind, TextureRenderer]
 
 Import from `@crc/textures`. Required `kind` is `marble`, `paper`, or `cellular`.
 Defaults: seed 42, 256 × 160 resolution, scale 6, detail 0.65, porcelain palette.
-Scale is in [1,32]; detail is in [0,1]. Shape inputs regenerate; palettes recolor.
+Scale is in the inclusive range 1 to 32; detail is in the inclusive range 0 to 1. Shape inputs regenerate; palettes recolor.
 Display dimensions do not change the generated field.
 
 It uses the render-layer style/event surface and stops scheduling after generation.
@@ -21,4 +21,4 @@ Use `pointerEvents="none"` for decorative content. The optional `render` callbac
 supports images, repeating fills, and masks. All three materials have matching opposite edges for seamless repetition.
 Feature counts round to whole periods where needed. See [Material Lab](#/examples/composition/material-lab).
 
-Options: [ProceduralTextureProps](#/api/types/textures#proceduraltextureprops), [TextureKind](#/api/types/textures#texturekind), [TextureRenderer](#/api/types/textures#texturerenderer).
+Options: [ProceduralTextureProps](../types/textures.md#proceduraltextureprops), [TextureKind](../types/textures.md#texturekind), [TextureRenderer](../types/textures.md#texturerenderer).
