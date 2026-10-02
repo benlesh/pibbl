@@ -16,6 +16,16 @@ symbols:
     TextureRenderer,
     TextureRenderFrame,
     texturePalettes,
+    marble,
+    paper,
+    cellular,
+    reactionDiffusion,
+    MaterialOptions,
+    ReactionDiffusionOptions,
+    InkMessage,
+    waterWaves,
+    WaterWavesOptions,
+    WaterWavesMessage,
   ]
 ---
 
@@ -36,7 +46,7 @@ and `render`. Materials idle until inputs change.
 ## `TextureBrush`
 
 `{ radius, strength }`: finite radius in (0,128] simulation cells and strength
-in `0–1`. `false` disables the reaction–diffusion brush.
+in [0,1]. `false` disables the reaction–diffusion brush.
 
 ## `TexturePalette`
 
@@ -68,3 +78,55 @@ canvas with normalized field intensity as alpha. `width`/`height` describe the
 display allocation; `textureWidth`/`textureHeight` describe generation resolution.
 Sources are read-only, callback-scoped borrows. Do not retain, transfer, resize,
 or dispose them. Copy to an application-owned surface for a still image.
+
+## MaterialOptions
+
+Seed, scale, and detail for `marble`, `paper`, and `cellular` recipe factories.
+
+## ReactionDiffusionOptions
+
+Seed and spots/stripes preset for the `reactionDiffusion` recipe factory.
+
+## InkMessage
+
+Typed `paint` (normalized u/v, radius in cells, strength), `pause` (paused boolean),
+and `reset` messages delivered through the texture's `send` method.
+
+## WaterWavesOptions
+
+Optional unsigned `seed`, finite nonnegative `speed`, integer `scale` from 1
+through 32, and initial `paused` state. This numeric displacement map rejects
+palettes.
+
+## WaterWavesMessage
+
+Typed `pause` and `reset` messages. Reset returns phase to its seeded initial
+state while preserving the current pause state.
+
+## Recipe factories
+
+`marble`, `paper`, `cellular`, `reactionDiffusion`, and `waterWaves` create inert recipes consumed
+by `useTexture` from core (also re-exported by this package). Use the returned
+resource directly as `style.fill` or `style.stroke`; no renderer callback is needed.
+
+## marble
+
+Creates a seamless warped-band material recipe.
+
+## paper
+
+Creates a seamless fiber and grain recipe.
+
+## cellular
+
+Creates a seamless toroidal cell-field recipe.
+
+## reactionDiffusion
+
+Creates a living Gray–Scott recipe that accepts `InkMessage` values.
+
+## waterWaves
+
+Creates a periodic numeric RG displacement map for the `displacement` filter.
+It advances through CRC's scheduler and remains static when paused or at speed
+zero.
