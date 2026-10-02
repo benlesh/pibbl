@@ -265,10 +265,18 @@ class Resource {
           batch.stage(this.revision, ++this.sequence, participant);
           batch.registerLifecycle(participant, {
             apply: () => {
-              if (!this.disposed) this.committed = candidate;
+              if (this.disposed) {
+                candidate.width = candidate.height = 0;
+              } else {
+                this.committed = candidate;
+              }
             },
             abort: () => {
               candidate.width = candidate.height = 0;
+              if (!this.disposed) {
+                this.dirty = true;
+                this.schedule();
+              }
             },
           });
         }
