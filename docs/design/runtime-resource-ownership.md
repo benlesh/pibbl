@@ -78,11 +78,18 @@ provisional candidate, queued messages, and scheduler participant. It adopts
 matching pixels and revision before observer notification, retains the last
 committed pair on a failed Commit, clears an initial failed candidate, and does
 not promise rollback of an already committed pair or arbitrary recipe state.
-Paint and map values borrow synchronously and never own these resources. The
-first non-identity displacement pass creates one root-tree GPU service; nested
-Layers borrow it and final borrower release disposes its processor and scratch
-targets. Native-only and zero-strength paths acquire no GPU service;
-context-loss recovery and map-upload caches are not current ownership promises.
+Paint and map values borrow synchronously and never own these resources;
+cross-root and disposed values reject at use time. Hook disposal clears messages,
+invokes the recipe disposer once, and zeros producer and publication canvases.
+The first non-identity displacement pass creates one root-tree GPU service;
+nested Layers borrow it and final borrower release removes its cached map uploads,
+context listeners, processor, and scratch targets. A map upload is keyed by the
+borrowed resource identity and committed revision, and remains only while a
+committed borrower still references that resource. Context loss releases GPU
+resources and invalidates that cache without disposing the service. Context
+restoration schedules one coalesced root update for its live borrowers; their
+next render recreates resources and uploads their committed maps. Native-only
+and zero-strength paths acquire no GPU service.
 
 ## External render-layer transaction semantics
 
