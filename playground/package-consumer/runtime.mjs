@@ -181,11 +181,11 @@ const expectedInternal = [
   "resolveTexturePaint",
   "retainBackendMountRoot",
   "setCurrentComponentAfterRender",
-  "validateTexturePaint",
   "snapshotLayerNodeTree",
   "useBackendEventTarget",
   "useInternalHookSlot",
   "useInternalValueMemoSlot",
+  "validateTexturePaint",
   "withHooksForbidden",
 ];
 const actualInternal = Object.keys(internal).sort();
