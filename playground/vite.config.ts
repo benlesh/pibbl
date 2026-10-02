@@ -14,6 +14,7 @@ const sandboxAssetHeaders = { "Access-Control-Allow-Origin": "*" };
 export default defineConfig(({ mode }) => {
   const isStudioDocsAcceptance = mode === "studio-docs-acceptance";
   const sourceAliases = [
+    ["@crc/core/filters", "../packages/core/src/filters.ts"],
     ["@crc/textures", "../packages/textures/src/index.ts"],
     ["@crc/viz", "../packages/viz/src/index.ts"],
     ["@crc/core/internal", "../packages/core/src/internal.ts"],

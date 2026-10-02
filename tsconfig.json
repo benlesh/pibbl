@@ -6,6 +6,7 @@
     "module": "esnext",
     "moduleResolution": "Bundler",
     "paths": {
+      "@crc/core/filters": ["./packages/core/src/filters.ts"],
       "@crc/core/internal": ["./packages/core/src/internal.ts"],
       "@crc/core/jsx-dev-runtime": ["./packages/core/src/jsx-dev-runtime.ts"],
       "@crc/core/jsx-runtime": ["./packages/core/src/jsx-runtime.ts"],

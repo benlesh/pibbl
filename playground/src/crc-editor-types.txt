@@ -228,17 +228,8 @@
     [K in CRCEventType as `${CRCEventPropMap[K]}Capture`]: CRCEventHandler<K>;
   }>;
 
-  export interface CRCBlurFilter { type: 'blur'; radius: number }
-  export interface CRCBrightnessFilter { type: 'brightness'; amount: number }
-  export interface CRCContrastFilter { type: 'contrast'; amount: number }
-  export interface CRCDropShadowFilter { type: 'dropShadow'; offsetX: number; offsetY: number; blurRadius?: number; color: string }
-  export interface CRCGrayscaleFilter { type: 'grayscale'; amount: number }
-  export interface CRCHueRotateFilter { type: 'hueRotate'; degrees: number }
-  export interface CRCInvertFilter { type: 'invert'; amount: number }
-  export interface CRCOpacityFilter { type: 'opacity'; amount: number }
-  export interface CRCSaturateFilter { type: 'saturate'; amount: number }
-  export interface CRCSepiaFilter { type: 'sepia'; amount: number }
-  export type CRCFilter = CRCBlurFilter | CRCBrightnessFilter | CRCContrastFilter | CRCDropShadowFilter | CRCGrayscaleFilter | CRCHueRotateFilter | CRCInvertFilter | CRCOpacityFilter | CRCSaturateFilter | CRCSepiaFilter;
+  declare const crcFilterBrand: unique symbol;
+  export interface CRCFilter { readonly [crcFilterBrand]: true }
   export interface SystemStyle { custom?: unknown; filter?: CRCFilter | readonly CRCFilter[] }
   export interface CRCPhysics2DPropExtension {}
   type PrimitiveReservedKey = 'key' | 'style';
@@ -1358,3 +1349,27 @@ declare module "@crc/textures" {
   export function cellular(options?: MaterialOptions): import('@crc/core').TextureRecipe;
   export function reactionDiffusion(options?: ReactionDiffusionOptions): import('@crc/core').TextureRecipe<InkMessage>;
 }
+
+/* @crc-studio-module @crc/core/filters */
+import type { CRCFilter, SignalValue } from '@crc/core';
+export type { CRCFilter } from '@crc/core';
+export interface CRCBlurFilterOptions { readonly radius: SignalValue<number> }
+export interface CRCBrightnessFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCContrastFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCDropShadowFilterOptions { readonly offsetX: SignalValue<number>; readonly offsetY: SignalValue<number>; readonly blurRadius?: SignalValue<number>; readonly color: SignalValue<string> }
+export interface CRCGrayscaleFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCHueRotateFilterOptions { readonly degrees: SignalValue<number> }
+export interface CRCInvertFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCOpacityFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCSaturateFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCSepiaFilterOptions { readonly amount: SignalValue<number> }
+export function blur(options: Readonly<CRCBlurFilterOptions>): CRCFilter;
+export function brightness(options: Readonly<CRCBrightnessFilterOptions>): CRCFilter;
+export function contrast(options: Readonly<CRCContrastFilterOptions>): CRCFilter;
+export function dropShadow(options: Readonly<CRCDropShadowFilterOptions>): CRCFilter;
+export function grayscale(options: Readonly<CRCGrayscaleFilterOptions>): CRCFilter;
+export function hueRotate(options: Readonly<CRCHueRotateFilterOptions>): CRCFilter;
+export function invert(options: Readonly<CRCInvertFilterOptions>): CRCFilter;
+export function opacity(options: Readonly<CRCOpacityFilterOptions>): CRCFilter;
+export function saturate(options: Readonly<CRCSaturateFilterOptions>): CRCFilter;
+export function sepia(options: Readonly<CRCSepiaFilterOptions>): CRCFilter;

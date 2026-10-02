@@ -65,6 +65,7 @@ const THREE_MODULE = "three";
 const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = ["@crc", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
+  "@crc/core/filters",
   VIZ_MODULE,
   "@crc/textures",
   CORE_MODULE,
@@ -1507,10 +1508,11 @@ export function validateLearningSourceText(
         label === 'Learning example "physics-panels"' ||
         label === "physics-2d" ||
         label === 'Learning example "physics-2d"'));
+  const optionalFilterImports = inspection.packageImportModules.includes("@crc/core/filters") ? 1 : 0;
   const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE) || inspection.packageImportModules.includes("@crc/textures");
   const hasExactPackageImports = isVizLesson
     ? inspection.hasNamedValueCoreImport &&
-      inspection.packageImportModules.length === 2
+      inspection.packageImportModules.length === 2 + optionalFilterImports
     : isThreeLesson
       ? inspection.hasNamedValueCoreImport &&
         inspection.hasThreeAdapterValueImport &&
@@ -1519,13 +1521,13 @@ export function validateLearningSourceText(
         !inspection.hasNamedValueParticlesImport &&
         !inspection.hasNamedValueWebGLImport &&
         inspection.packageImportModules.length ===
-          (isThreeControlsLesson ? 4 : 3)
+          (isThreeControlsLesson ? 4 : 3) + optionalFilterImports
       : isParticlesLesson
         ? inspection.hasNamedValueCoreImport &&
           inspection.hasNamedValueParticlesImport &&
           !inspection.hasNamedValuePhysicsImport &&
           !inspection.hasNamedValueWebGLImport &&
-          inspection.packageImportModules.length === 2
+          inspection.packageImportModules.length === 2 + optionalFilterImports
         : isPhysicsLesson
           ? inspection.hasNamedValueCoreImport &&
             inspection.hasNamedValuePhysicsImport &&
@@ -1533,12 +1535,12 @@ export function validateLearningSourceText(
             !inspection.hasPhysics3DValueImport &&
             !inspection.hasNamedValueParticlesImport &&
             !inspection.hasNamedValueWebGLImport &&
-            inspection.packageImportModules.length === 2
+            inspection.packageImportModules.length === 2 + optionalFilterImports
           : inspection.hasNamedValueCoreImport &&
             !inspection.hasNamedValueParticlesImport &&
             !inspection.hasNamedValuePhysicsImport &&
             !inspection.hasNamedValueWebGLImport &&
-            inspection.packageImportModules.length === 1;
+            inspection.packageImportModules.length === 1 + optionalFilterImports;
   if (!inspection.hasOnlyApprovedImports || !hasExactPackageImports) {
     throw invalid(
       label,

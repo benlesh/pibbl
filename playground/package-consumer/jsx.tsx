@@ -1,20 +1,11 @@
+import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
 import type {
   CRCAnimationProgram,
-  CRCBlurFilter,
-  CRCBrightnessFilter,
-  CRCContrastFilter,
   CRCController,
-  CRCDropShadowFilter,
   CRCElement,
   CRCFilter,
-  CRCGrayscaleFilter,
-  CRCHueRotateFilter,
-  CRCInvertFilter,
   CRCNode,
   CRCNodeInput,
-  CRCOpacityFilter,
-  CRCSaturateFilter,
-  CRCSepiaFilter,
   CRCTextChild,
   CRCTextInput,
   Signal,
@@ -187,21 +178,21 @@ function AnimatedLabel(): CRCNode {
 export const animatedElement: CRCElement = <AnimatedLabel />;
 
 const jsxFilterTypes = [
-  { type: 'blur', radius: 2 } satisfies CRCBlurFilter,
-  { type: 'brightness', amount: 1.25 } satisfies CRCBrightnessFilter,
-  { type: 'contrast', amount: 0.8 } satisfies CRCContrastFilter,
-  {
-    type: 'dropShadow',
+  blur({  radius: 2 }) satisfies CRCFilter,
+  brightness({  amount: 1.25 }) satisfies CRCFilter,
+  contrast({  amount: 0.8 }) satisfies CRCFilter,
+  dropShadow({
+    
     offsetX: 3,
     offsetY: 4,
     color: 'black',
-  } satisfies CRCDropShadowFilter,
-  { type: 'grayscale', amount: 0.5 } satisfies CRCGrayscaleFilter,
-  { type: 'hueRotate', degrees: 45 } satisfies CRCHueRotateFilter,
-  { type: 'invert', amount: 0.25 } satisfies CRCInvertFilter,
-  { type: 'opacity', amount: 0.75 } satisfies CRCOpacityFilter,
-  { type: 'saturate', amount: 1.5 } satisfies CRCSaturateFilter,
-  { type: 'sepia', amount: 0.4 } satisfies CRCSepiaFilter,
+  }) satisfies CRCFilter,
+  grayscale({  amount: 0.5 }) satisfies CRCFilter,
+  hueRotate({  degrees: 45 }) satisfies CRCFilter,
+  invert({  amount: 0.25 }) satisfies CRCFilter,
+  opacity({  amount: 0.75 }) satisfies CRCFilter,
+  saturate({  amount: 1.5 }) satisfies CRCFilter,
+  sepia({  amount: 0.4 }) satisfies CRCFilter,
 ] as const satisfies readonly CRCFilter[];
 
 interface FilterPrimitiveStyle extends SystemStyle {

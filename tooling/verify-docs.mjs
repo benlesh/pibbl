@@ -831,6 +831,7 @@ async function typecheckCompleteSnippets(snippets) {
               "@crc/particles": [
                 join(repositoryRoot, "packages/particles/src/index.ts"),
               ],
+              "@crc/core/filters": [join(repositoryRoot, "packages/core/src/filters.ts")],
               "@crc/textures": [
                 join(repositoryRoot, "packages/textures/src/index.ts"),
               ],
@@ -1682,6 +1683,14 @@ for (const kind of ["values", "types"])
     [...documentedApiSymbols].filter((name) => vizExports[kind].has(name)),
     vizExports[kind],
     `Documented @crc/viz ${kind}`,
+  );
+const filterSource = await readFile(join(repositoryRoot, "packages/core/src/filters.ts"), "utf8");
+const filterExports = exportedSpecifiers(filterSource, "packages/core/src/filters.ts");
+for (const kind of ["values", "types"])
+  assertSameNames(
+    [...documentedApiSymbols].filter((name) => filterExports[kind].has(name)),
+    filterExports[kind],
+    `Documented @crc/core/filters ${kind}`,
   );
 const textureSource = await readFile(
   join(repositoryRoot, "packages/textures/src/index.ts"),

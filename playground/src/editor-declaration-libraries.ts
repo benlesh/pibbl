@@ -10,6 +10,7 @@ interface DeclarationLibraryDefaults {
 }
 
 const declarationModulePaths = new Map([
+  ["@crc/core/filters", "file:///node_modules/@crc/core/filters.d.ts"],
   ["@crc/textures", "file:///node_modules/@crc/textures/index.d.ts"],
   ["@crc/viz", "file:///node_modules/@crc/viz/index.d.ts"],
   ["@crc/core", "file:///node_modules/@crc/core/index.d.ts"],

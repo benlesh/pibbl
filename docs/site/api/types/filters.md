@@ -1,90 +1,167 @@
 ---
 id: api-types-filters
-title: Filter types
-summary: Typed Canvas filter descriptors and their validated numeric fields.
+title: Filters
+summary: Import appearance-only filter factories without including unused effects.
 kind: api
 slug: filters
 apiCategory: types
 typeDomain: filters
 symbols:
-  [
-    CRCBlurFilter,
-    CRCBrightnessFilter,
-    CRCContrastFilter,
-    CRCDropShadowFilter,
-    CRCFilter,
-    CRCGrayscaleFilter,
-    CRCHueRotateFilter,
-    CRCInvertFilter,
-    CRCOpacityFilter,
-    CRCSaturateFilter,
-    CRCSepiaFilter,
-  ]
-keywords: [filter, blur, drop shadow, Canvas]
+  [CRCFilter, CRCBlurFilterOptions, CRCBrightnessFilterOptions, CRCContrastFilterOptions, CRCDropShadowFilterOptions, CRCGrayscaleFilterOptions, CRCHueRotateFilterOptions, CRCInvertFilterOptions, CRCOpacityFilterOptions, CRCSaturateFilterOptions, CRCSepiaFilterOptions, blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia]
+keywords: [filter, blur, drop shadow, Canvas, tree shaking]
 ---
 
-# Filter types
+# Filters
 
-Every primitive accepts one `CRCFilter` descriptor or an ordered readonly list.
-CRC compiles the list into one native Canvas filter operation. An empty list is
-a no-op; nonempty filters require browser `OffscreenCanvas` and Canvas `filter`
-support. Filter pixels never alter layout, measurement, hit testing, focus
-bounds, pointer coordinates, cursor regions, or source paint order.
+Import each effect from `@crc/core/filters`. Every primitive accepts one opaque
+`CRCFilter` value or a readonly ordered list in `style.filter`.
 
-## CRCBlurFilter
+```tsx
+import { Group, Rectangle } from '@crc/core';
+import { blur, dropShadow } from '@crc/core/filters';
 
-`CRCBlurFilter` has discriminator `"blur"` and finite nonnegative `radius`, a
-Gaussian standard deviation compiled as density-scaled `blur(...px)`.
+const scene = (
+  <Group style={{ filter: [
+    blur({ radius: 2 }),
+    dropShadow({ offsetX: 0, offsetY: 4, color: '#0008' }),
+  ] }}>
+    <Rectangle style={{ width: 120, height: 80, fill: 'coral' }} />
+  </Group>
+);
+```
 
-## CRCBrightnessFilter
-
-`CRCBrightnessFilter` has discriminator `"brightness"` and a finite
-nonnegative `amount` ratio. Values above `1` are preserved.
-
-## CRCContrastFilter
-
-`CRCContrastFilter` has discriminator `"contrast"` and a finite nonnegative
-`amount` ratio. Values above `1` are preserved.
-
-## CRCDropShadowFilter
-
-`CRCDropShadowFilter` has discriminator `"dropShadow"`, signed finite
-`offsetX`/`offsetY`, optional nonnegative finite `blurRadius` (default `0`),
-and a concrete browser-accepted CSS `color`. Offsets and blur are density-scaled
-pixels; contextual colors such as `currentColor` and `var(...)` reject.
+A factory creates an immutable value. It does not allocate a surface, start an
+animation, or require browser capabilities at import time. Optimizing ESM bundlers
+can remove unused effects. A string object such as `{ type: 'blur', radius: 2 }`
+is no longer a filter; use `blur({ radius: 2 })`.
 
 ## CRCFilter
 
-`CRCFilter` is the closed union of the ten named descriptors. A receiver and
-all of its recursive output form one filtered raster silhouette; nested
-boundaries resolve inside out.
+`CRCFilter` is the opaque factory result, also available as a type from
+`@crc/core`. The receiving primitive and its descendants form one raster. Lists
+run in declaration order; nested boundaries run inside out. Adjacent native
+filters compile into one Canvas filter operation. An empty list is a direct-path
+no-op. Active native filters require `OffscreenCanvas` and Canvas `filter` support.
 
-## CRCGrayscaleFilter
+Filters change pixels only. Layout, measurement, hit testing, focus bounds, pointer
+coordinates, cursor regions, physics and source paint order use the original
+logical geometry. A shadow or blurred fringe does not extend the target area.
 
-`CRCGrayscaleFilter` has discriminator `"grayscale"` and a finite nonnegative
-ratio `amount`, clamped to `1` when compiled.
+## Native factories and options
 
-## CRCHueRotateFilter
+The factories and their option types are exported from `@crc/core/filters`.
+Declared numeric fields accept a number or a numeric signal. Drop-shadow color
+also accepts a string signal. The receiving primitive owns these signal reads;
+calling `.get()` yourself makes the enclosing component the consumer instead.
 
-`CRCHueRotateFilter` has discriminator `"hueRotate"` and any finite `degrees`;
-the value is not modulo-normalized before `hue-rotate(...deg)` compilation.
+| Factory | Option type | Fields |
+| --- | --- | --- |
+| `blur` | `CRCBlurFilterOptions` | `radius`: finite nonnegative Gaussian standard deviation in local logical units |
+| `brightness` | `CRCBrightnessFilterOptions` | `amount`: finite nonnegative ratio; values above 1 are preserved |
+| `contrast` | `CRCContrastFilterOptions` | `amount`: finite nonnegative ratio; values above 1 are preserved |
+| `dropShadow` | `CRCDropShadowFilterOptions` | Signed finite `offsetX` and `offsetY`; nonnegative `blurRadius` defaults to 0; concrete browser-accepted `color` |
+| `grayscale` | `CRCGrayscaleFilterOptions` | Nonnegative finite `amount`, clamped to 1 |
+| `hueRotate` | `CRCHueRotateFilterOptions` | Any finite `degrees`, without modulo normalization |
+| `invert` | `CRCInvertFilterOptions` | Nonnegative finite `amount`, clamped to 1 |
+| `opacity` | `CRCOpacityFilterOptions` | Nonnegative finite `amount`, clamped to 1 |
+| `saturate` | `CRCSaturateFilterOptions` | Nonnegative finite `amount`; values above 1 are preserved |
+| `sepia` | `CRCSepiaFilterOptions` | Nonnegative finite `amount`, clamped to 1 |
 
-## CRCInvertFilter
+Drop-shadow offsets and blur radii scale with backing density. Contextual colors
+such as `currentColor`, system colors, and `var(...)` reject. The opacity filter
+acts on the captured combined raster; it is distinct from a primitive's ordinary
+paint opacity.
 
-`CRCInvertFilter` has discriminator `"invert"` and a finite nonnegative ratio
-`amount`, clamped to `1` when compiled.
+Invalid input is diagnosed during receiving-primitive preparation, before its
+render callback. Custom style normalization cannot remove or reinterpret filters.
+Pure measurement ignores their appearance and acquires no raster resources.
 
-## CRCOpacityFilter
+## blur
 
-`CRCOpacityFilter` has discriminator `"opacity"` and a finite nonnegative
-ratio `amount`, clamped to `1` when compiled.
+`blur(options)` creates an opaque filter for Gaussian blur with a logical radius.
 
-## CRCSaturateFilter
+## CRCBlurFilterOptions
 
-`CRCSaturateFilter` has discriminator `"saturate"` and a finite nonnegative
-ratio `amount`. Values above `1` are preserved.
+`CRCBlurFilterOptions` describes the validated inputs to `blur`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
 
-## CRCSepiaFilter
+## brightness
 
-`CRCSepiaFilter` has discriminator `"sepia"` and a finite nonnegative ratio
-`amount`, clamped to `1` when compiled.
+`brightness(options)` creates an opaque filter for brightness scaling.
+
+## CRCBrightnessFilterOptions
+
+`CRCBrightnessFilterOptions` describes the validated inputs to `brightness`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## contrast
+
+`contrast(options)` creates an opaque filter for contrast scaling.
+
+## CRCContrastFilterOptions
+
+`CRCContrastFilterOptions` describes the validated inputs to `contrast`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## dropShadow
+
+`dropShadow(options)` creates an opaque filter for a shadow of the combined silhouette.
+
+## CRCDropShadowFilterOptions
+
+`CRCDropShadowFilterOptions` describes the validated inputs to `dropShadow`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## grayscale
+
+`grayscale(options)` creates an opaque filter for grayscale conversion.
+
+## CRCGrayscaleFilterOptions
+
+`CRCGrayscaleFilterOptions` describes the validated inputs to `grayscale`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## hueRotate
+
+`hueRotate(options)` creates an opaque filter for hue rotation in degrees.
+
+## CRCHueRotateFilterOptions
+
+`CRCHueRotateFilterOptions` describes the validated inputs to `hueRotate`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## invert
+
+`invert(options)` creates an opaque filter for color inversion.
+
+## CRCInvertFilterOptions
+
+`CRCInvertFilterOptions` describes the validated inputs to `invert`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## opacity
+
+`opacity(options)` creates an opaque filter for combined-raster opacity.
+
+## CRCOpacityFilterOptions
+
+`CRCOpacityFilterOptions` describes the validated inputs to `opacity`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## saturate
+
+`saturate(options)` creates an opaque filter for saturation scaling.
+
+## CRCSaturateFilterOptions
+
+`CRCSaturateFilterOptions` describes the validated inputs to `saturate`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## sepia
+
+`sepia(options)` creates an opaque filter for sepia conversion.
+
+## CRCSepiaFilterOptions
+
+`CRCSepiaFilterOptions` describes the validated inputs to `sepia`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
