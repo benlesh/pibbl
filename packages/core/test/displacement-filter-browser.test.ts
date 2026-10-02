@@ -21,6 +21,31 @@ const rightMap = defineTexture({
 });
 
 describe('public displacement filters', () => {
+  it('releases the final displacement service while its context is lost', async () => {
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 40; document.body.append(canvas);
+    function Filtered() {
+      const texture = useTexture(map({}));
+      return createElement(Group, { style: { filter: displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Rectangle, { style: { x: 10, y: 10, width: 10, height: 10, fill: 'red' } }) });
+    }
+    const controller = crc(canvas, createElement(Filtered, {}));
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    const instance = getCRCInstance(canvas);
+    const gpu = peekDisplacementGpu(instance)!;
+    const gl = (gpu as unknown as { canvas: OffscreenCanvas }).canvas.getContext('webgl2')!;
+    const lose = gl.getExtension('WEBGL_lose_context');
+    expect(lose).not.toBeNull();
+    lose!.loseContext();
+    await new Promise<void>(resolve => setTimeout(resolve, 50));
+    crc(canvas, createElement(Rectangle, { style: { x: 10, y: 10, width: 10, height: 10, fill: 'red' } }));
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    expect(peekDisplacementGpu(instance)).toBeUndefined();
+    const revision = instance.requestedRenderRevision;
+    lose!.restoreContext();
+    await new Promise<void>(resolve => setTimeout(resolve, 50));
+    expect(instance.requestedRenderRevision).toBe(revision);
+    controller.dispose();
+  });
+
   it('requests exactly one lazy recovery render after a WebGL context restoration', async () => {
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = 40; document.body.append(canvas);
     function Scene() {
