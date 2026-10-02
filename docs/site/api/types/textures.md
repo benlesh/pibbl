@@ -99,13 +99,15 @@ and `reset` messages delivered through the texture's `send` method.
 ## WaterWavesOptions
 
 Optional unsigned `seed`, finite nonnegative `speed`, integer `scale` from 1
-through 32, and initial `paused` state. This numeric displacement map rejects
-palettes.
+through 32, finite nonnegative `rippleStrength` (default 1), and initial `paused`
+state. Ripple strength changes existing ripples independently of ambient waves.
+This numeric displacement map rejects palettes.
 
 ## WaterWavesMessage
 
-Typed `pause` and `reset` messages. Reset returns phase to its seeded initial
-state while preserving the current pause state.
+Typed `pause`, `reset`, and `{ type: "ripple", x, y }` messages with normalized
+coordinates in `[0, 1]`. Reset returns phase to its seeded initial state and clears
+ripples while preserving the current pause state.
 
 ## WaterSurfaceObstacle
 
@@ -158,8 +160,8 @@ Creates a living Gray–Scott recipe that accepts `InkMessage` values.
 ## waterWaves
 
 Creates a periodic numeric RG displacement map for the `displacement` filter.
-It advances through CRC's scheduler and remains static when paused or at speed
-zero.
+It advances through CRC's scheduler and remains static when paused. Speed zero
+stops ambient motion while active ripples continue to spread.
 
 ## waterSurface
 

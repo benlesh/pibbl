@@ -956,7 +956,7 @@ const drafts = [
     title: "Optional filters",
     shortTitle: "Optional filters",
     section: "composition",
-    order: 208,
+    order: 212,
     summary: "Import a blur factory, animate its input, and keep the original click geometry.",
     api: ["Group", "Rectangle", "Text", "CRCFilter", "useSignal"],
     objectives: ["Use an explicitly imported appearance-only filter.", "Observe unchanged target geometry while blur changes."],

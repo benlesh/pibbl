@@ -80,17 +80,6 @@
     dispose(): void;
   }
 
-  export interface TexturePlacement { readonly mode?: 'repeat' | 'stretch'; readonly tileWidth?: number; readonly tileHeight?: number; readonly offsetX?: number; readonly offsetY?: number; readonly rotation?: number; }
-  export interface TexturePaint { readonly __crcTexturePaint?: true; }
-  export interface Texture<Message = never> extends TexturePaint { send(message: Message): void; paint(placement: TexturePlacement): TexturePaint; }
-  export interface TextureOptions { readonly resolution?: { readonly width: number; readonly height: number }; readonly palette?: readonly string[]; }
-  export interface TextureContext { readonly canvas: OffscreenCanvas; readonly palette: readonly string[] | undefined; invalidate(): void; requestFrame(): void; }
-  export interface TextureFrame { readonly delta: number; readonly time: number; }
-  export interface TextureDefinition<Config, State, Message = never> { readonly defaultPlacement?: TexturePlacement; create(context: TextureContext, config: Readonly<Config>): State; update?(state: State, config: Readonly<Config>, context: TextureContext): void; receive?(state: State, message: Message, context: TextureContext): void; advance?(state: State, frame: TextureFrame, context: TextureContext): void; rasterize(state: State, context: TextureContext): void; dispose?(state: State, context: TextureContext): void; }
-  export interface TextureRecipe<Message = never> { readonly __crcTextureRecipe?: (message: Message) => Message; }
-  export function defineTexture<Config, State, Message = never>(definition: TextureDefinition<Config, State, Message>): (config: Config) => TextureRecipe<Message>;
-  export function useTexture<Message>(input: TextureRecipe<Message>, options?: TextureOptions): Texture<Message>;
-
   export type CRCFit = 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   export type CRCPixelRatio = 'device' | number;
   export interface CRCFixedViewportConfig {

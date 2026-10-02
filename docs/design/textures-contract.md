@@ -87,16 +87,34 @@ raster or create GPU resources.
 
 The implemented processor uses an `OffscreenCanvas` WebGL2 context and has no
 CPU fallback. It rejects missing WebGL2, lost context, oversized targets, upload
-or shader failures. It does not currently promise context-loss recovery,
-per-revision upload caching, cross-context sharing, or a generic public texture
-consumer protocol.
+or shader failures. Root-owned processors cache uploads by resource/revision,
+release invalid GPU handles on context loss, and invalidate consumers on restore.
+Cross-context sharing and a generic public texture consumer protocol remain outside
+the public contract.
 
 `waterWaves()` in `@crc/textures` is an optional numeric RG displacement-map
 recipe. It produces periodic integer-wave fields, accepts finite nonnegative
 speed and integer scale 1 through 32, rejects palettes, and supports `pause`
-and `reset` messages. Pausing, reset, and speed changes discard elapsed-time
-debt; zero speed requests no continuing work. Importing or painting water does
-not import the displacement processor.
+and `reset` messages, plus normalized `ripple` impulses. `rippleStrength` changes
+existing ripples independently of ambient waves. Pausing, reset, and speed changes
+discard elapsed-time debt; zero speed still advances active ripples. Importing or
+painting water does not import the displacement processor.
+
+`waterSurface()` adds a bounded WASM height field with reflective outer edges
+and explicitly supplied normalized rectangular obstacles. Moving obstacles leave
+bounded wakes; they are visual boundaries and never become scene physics colliders.
+The simulation uses at most 128 cells on its short edge, 256 on its long edge,
+and six 1/120-second steps per frame. `viscosity` ranges from 0 to 1 and combines
+slower propagation with increased damping; it is an artistic control rather than
+physical density or a mass-conserving fluid model. Changes preserve the existing
+field and paused state. The dedicated WASM memory is fixed in size for that grid.
+
+`reflectedLight()` accepts a color, decoded caller-owned image, or CRC texture
+paint. It blends light selectively from the displacement-map slope, preserves
+scene alpha, and never closes a caller-owned image. Its opacity is independent of
+wave strength. An immediately preceding `displacement()` fuses into one GPU pass
+and bitmap transfer. Solid color or texture surface overlays use ordinary CRC
+paint and opacity inside the filtered composition, with `pointerEvents="none"`.
 
 ## Existing texture components
 
@@ -155,8 +173,8 @@ atomicity guarantee.
 
 ## Boundaries and evidence
 
-There is no interactive ripple API, worker/WASM execution contract, raw-source
-accessor, global producer registry, cross-root texture sharing, or automatic
+There is no public worker/WASM execution API, raw-source accessor, global producer
+registry, cross-root texture sharing, or automatic
 semantic/input remapping. Texture pixels affect appearance only; a displacement
 filter does not alter layout, measurement, events, focus, physics, animation
 semantics, or hit areas.
@@ -166,4 +184,4 @@ pixel/revision observation, Commit failure and retry, initial and later render
 failure behavior, bounded publication-surface reuse, root validation, water
 timing/messages/seams, and texture/displacement ownership. Packed consumer
 checks cover public exports and source/packed feature selection. They do not
-constitute a context-loss or GPU-cache recovery guarantee.
+constitute a guarantee of physical fluid accuracy or two-way scene physics.

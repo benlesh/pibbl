@@ -90,6 +90,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/reaction-diffusion.md",
   "docs/site/api/components/procedural-texture.md",
   "docs/site/api/types/textures.md",
+  "docs/site/api/types/electric-textures.md",
   "docs/site/api/functions/path-bending.md",
   "docs/site/api/functions/path-geometry.md",
   "docs/site/api/functions/text-geometry.md",
@@ -243,6 +244,7 @@ const publicSiteMarkdownPaths = [
 ];
 const currentMarkdownPaths = [
   "docs/design/textures-contract.md",
+  "docs/design/weighted-electric-sources-contract.md",
   "docs/design/component-manipulation-contract.md",
   "docs/design/text-geometry-contract.md",
   "packages/textures/README.md",

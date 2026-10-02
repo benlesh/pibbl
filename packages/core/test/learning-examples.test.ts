@@ -1214,11 +1214,15 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 78 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 80 unique, ordered, source-backed routes including optional filters and underwater", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(78);
+    expect(learningExampleCatalog).toHaveLength(80);
+    expect(learningExampleCatalog.filter(entry => entry.slug === "underwater" || entry.slug === "optional-filters").map(getLearningExampleRoute).sort()).toEqual([
+      "#/examples/composition/optional-filters",
+      "#/examples/composition/underwater",
+    ]);
     expect(
       learningExampleCatalog
         .filter(
@@ -1299,6 +1303,7 @@ describe("learning example catalog", () => {
         "layer",
         "living-ink",
         "material-lab",
+        "optional-filters",
         "particle-effects",
         "physics-2d",
         "physics-panels",
@@ -1306,6 +1311,7 @@ describe("learning example catalog", () => {
         "fire-and-flow",
         "signal-inputs",
         "signals-and-animation",
+        "underwater",
         "viz-grouped-stacked-bars",
         "viz-stacked-bars",
         "viz-band-bars",
@@ -1413,6 +1419,8 @@ describe("learning example catalog", () => {
       "material-lab",
       "growing-reveal",
       "plasma-globe",
+      "underwater",
+      "optional-filters",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
