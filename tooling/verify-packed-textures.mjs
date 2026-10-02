@@ -67,7 +67,13 @@ try {
   const names = [
     "ProceduralTexture",
     "ReactionDiffusion",
+    "cellular",
+    "marble",
+    "paper",
+    "reactionDiffusion",
     "texturePalettes",
+    "useTexture",
+    "waterWaves",
   ].sort();
   assert.deepEqual(Object.keys(textures).sort(), names);
   if (process.argv.includes("--self-test-missing-export"))
