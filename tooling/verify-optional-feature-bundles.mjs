@@ -26,14 +26,14 @@ const pnpm = (args, cwd = root) =>
     stdio: "pipe",
   });
 
-// Keep selected exports live so retained-byte checks exercise actual consumer code.
+// Observable public mounts keep the entire selected feature path live.
 const fixtures = {
-  plain: `import { crc, Rectangle, Text } from '@crc/core'; globalThis.keep=[crc,Rectangle,Text];`,
-  layer: `import { Layer } from '@crc/core'; globalThis.keep=Layer;`,
-  blur: `import { blur } from '@crc/core/filters'; globalThis.keep=blur;`,
-  marble: `import { marble } from '@crc/textures'; globalThis.keep=marble;`,
-  water: `import { waterWaves } from '@crc/textures'; globalThis.keep=waterWaves;`,
-  displacement: `import { defineTexture } from '@crc/core'; import { displacement } from '@crc/core/filters'; const map=defineTexture({create(){return {}},rasterize(){}})({}); globalThis.keep=[map,displacement];`,
+  plain: `import { crc, createElement, Group, Rectangle, Text } from '@crc/core'; export function mount(canvas) { return crc(canvas, createElement(Group, { children: [createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red' } }), createElement(Text, { children: 'Plain' })] })); }`,
+  layer: `import { crc, createElement, Layer, Rectangle } from '@crc/core'; export function mount(canvas) { return crc(canvas, createElement(Layer, { children: createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red' } }) })); }`,
+  blur: `import { crc, createElement, Rectangle } from '@crc/core'; import { blur } from '@crc/core/filters'; export function mount(canvas) { return crc(canvas, createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: blur({ radius: 2 }) } })); }`,
+  marble: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { marble } from '@crc/textures'; function Scene() { const map = useTexture(marble({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
+  water: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { waterWaves } from '@crc/textures'; function Scene() { const map = useTexture(waterWaves({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
+  displacement: `import { crc, createElement, Rectangle, defineTexture, useTexture } from '@crc/core'; import { displacement } from '@crc/core/filters'; const recipe=defineTexture({create(){return {}},rasterize(_, { canvas }){const c=canvas.getContext('2d'); c.fillStyle='rgb(128 128 128)'; c.fillRect(0,0,canvas.width,canvas.height);}}); function Scene() { const map=useTexture(recipe({})); return createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: displacement({ map, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
   animation: `import { usePlayback } from '@crc/core'; globalThis.keep=usePlayback;`,
   coreImportOnly: `import '@crc/core';`,
   filtersImportOnly: `import '@crc/core/filters';`,
@@ -359,6 +359,24 @@ try {
             attributedBytes(es.inputs, isTexture) > 0,
             `${name} ${key} esbuild positive detector retained no texture bytes`,
           );
+        if (["marble", "water", "displacement"].includes(name)) {
+          for (const [bundler, code] of [["esbuild", es.code], ["Vite", vi.code]]) {
+            assert.ok(code.includes("Texture message queue is full"), `${name} ${key} ${bundler} texture producer positive detector failed`);
+          }
+        }
+        if (name === "marble" || name === "water") {
+          assert.equal(attributedBytes(es.inputs, isFilter), 0, `${name} ${key} retained filter implementation`);
+          for (const [bundler, code] of [["esbuild", es.code], ["Vite", vi.code]]) {
+            assert.equal(code.includes("displacement filter value"), false, `${name} ${key} ${bundler} retained displacement`);
+            assert.equal(code.includes("Filter surface pairs must be released"), false, `${name} ${key} ${bundler} retained capture pool`);
+          }
+        }
+        if (name === "displacement") {
+          for (const [bundler, code] of [["esbuild", es.code], ["Vite", vi.code]]) {
+            assert.equal(code.includes("waterWaves is a numeric displacement map"), false, `${name} ${key} ${bundler} retained water recipe`);
+            assert.equal(code.includes("drop-shadow("), false, `${name} ${key} ${bundler} retained native shadow implementation`);
+          }
+        }
         if (name === "marble") {
           assert.equal(
             es.code.includes("waterWaves is a numeric displacement map"),
