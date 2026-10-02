@@ -51,7 +51,8 @@ const recipe = defineTexture<WaterWavesOptions, State, WaterWavesMessage>({
     const next = config(input);
     const previous = state.config;
     if (next.seed !== previous.seed || next.scale !== previous.scale) { state.phase = 0; state.modes = modes(next); context.invalidate(); }
-    if (next.paused !== previous.paused || next.speed !== previous.speed) { state.paused = next.paused; state.fresh = true; }
+    if (next.paused !== previous.paused) state.paused = next.paused;
+    if (next.paused !== previous.paused || next.speed !== previous.speed) state.fresh = true;
     state.config = next;
     if (!state.paused && next.speed > 0) context.requestFrame();
   },
