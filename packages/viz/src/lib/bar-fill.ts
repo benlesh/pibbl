@@ -19,7 +19,7 @@ export function barFill(
     fill instanceof CanvasPattern
   )
     return () => fill;
-  if (!fill || fill.type !== "threshold")
+  if (!fill || !("type" in fill) || fill.type !== "threshold")
     throw new TypeError("BarSeries fill must be a paint or a threshold fill.");
   const { thresholds, colors } = fill;
   if (

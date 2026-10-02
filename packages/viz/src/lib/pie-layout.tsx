@@ -10,7 +10,7 @@ import {
   useCanvasContext,
   useLayoutBox,
 } from "@crc/core";
-import { withHooksForbidden } from "@crc/core/internal";
+import { resolveTexturePaint, withHooksForbidden } from "@crc/core/internal";
 import type {
   PieLayoutProps,
   PieLayoutSlice,
@@ -318,7 +318,12 @@ const LabelText = definePrimitive<
   context.font = label.font;
   context.textAlign = "left";
   context.textBaseline = "alphabetic";
-  context.fillStyle = style.fill;
+  context.fillStyle = resolveTexturePaint(style.fill, context, {
+    x: label.textX,
+    y: label.textY,
+    width: 0,
+    height: 0,
+  });
   context.fillText(label.text, label.textX, label.textY);
 });
 
