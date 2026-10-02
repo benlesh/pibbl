@@ -115,7 +115,12 @@ class Resource {
   readonly canvas: OffscreenCanvas;
   private committed: OffscreenCanvas | undefined;
   private spare: OffscreenCanvas | undefined;
-  private provisional: { canvas: OffscreenCanvas; transaction: NonNullable<typeof GLOBAL_STATE.renderTransaction> } | undefined;
+  private provisional:
+    | {
+        canvas: OffscreenCanvas;
+        transaction: NonNullable<typeof GLOBAL_STATE.renderTransaction>;
+      }
+    | undefined;
   readonly context: TextureContext;
   readonly handle: Texture<any>;
   state: any;
@@ -160,11 +165,15 @@ class Resource {
         }
       },
     });
-    const registerPaint = (value: TexturePaint, placement: Readonly<TexturePlacement>) =>
+    const registerPaint = (
+      value: TexturePaint,
+      placement: Readonly<TexturePlacement>,
+    ) =>
       registerTexturePaint(value, {
-        resolvePaint: (ctx, bounds) => this.resolvePaint(ctx, bounds, placement),
+        resolvePaint: (ctx, bounds) =>
+          this.resolvePaint(ctx, bounds, placement),
         validate: () => this.assertOwner(),
-        borrow: callback => callback(this.borrow(placement)),
+        borrow: (callback) => callback(this.borrow(placement)),
       });
     this.handle = Object.freeze({
       send: (message: unknown) => {
@@ -314,11 +323,17 @@ class Resource {
     } finally {
       ctx.restore();
     }
-    const candidate = this.spare?.width === this.canvas.width && this.spare.height === this.canvas.height ?
-      this.spare : this.createPublicationCanvas();
+    const candidate =
+      this.spare?.width === this.canvas.width &&
+      this.spare.height === this.canvas.height
+        ? this.spare
+        : this.createPublicationCanvas();
     this.spare = undefined;
     const candidateContext = candidate.getContext("2d");
-    if (!candidateContext) throw new Error("Textures require OffscreenCanvas 2D.");
+    if (!candidateContext)
+      throw new Error("Textures require OffscreenCanvas 2D.");
+    // Publication canvases are reused; transparent source pixels must erase old paint.
+    candidateContext.clearRect(0, 0, candidate.width, candidate.height);
     candidateContext.drawImage(this.canvas, 0, 0);
     return candidate;
   }
@@ -328,7 +343,9 @@ class Resource {
   }
   /** @internal Structural ownership evidence for texture publication tests. */
   publicationSnapshot(): Readonly<{ publicationCanvasesCreated: number }> {
-    return Object.freeze({ publicationCanvasesCreated: this.publicationCanvasesCreated });
+    return Object.freeze({
+      publicationCanvasesCreated: this.publicationCanvasesCreated,
+    });
   }
   private publishInitial(): void {
     const candidate = this.rasterizeCandidate();
@@ -338,7 +355,7 @@ class Resource {
       return;
     }
     this.provisional = { canvas: candidate, transaction };
-    transaction.onFinish(success => {
+    transaction.onFinish((success) => {
       if (this.provisional?.transaction !== transaction) return;
       const provisional = this.provisional;
       this.provisional = undefined;
@@ -352,26 +369,53 @@ class Resource {
     while (root?.parent) root = GLOBAL_STATE.crcInstances.get(root.parent);
     let owner = this.owner;
     while (owner.parent) owner = GLOBAL_STATE.crcInstances.get(owner.parent)!;
-    if (root !== owner) throw new Error("Textures may only be shared within their owning CRC tree.");
+    if (root !== owner)
+      throw new Error(
+        "Textures may only be shared within their owning CRC tree.",
+      );
   }
   private borrow(placement: Readonly<TexturePlacement>): BorrowedTextureRaster {
     this.assertOwner();
     const revision = this.revision.get();
     const provisional = this.provisional;
     const source =
-      provisional !== undefined && provisional.transaction === GLOBAL_STATE.renderTransaction ?
-        provisional.canvas : this.committed;
-    if (!source) throw new Error("Texture pixels are not committed for this render transaction.");
-    return Object.freeze({ source, width: source.width, height: source.height, revision, resource: this, placement });
+      provisional !== undefined &&
+      provisional.transaction === GLOBAL_STATE.renderTransaction
+        ? provisional.canvas
+        : this.committed;
+    if (!source)
+      throw new Error(
+        "Texture pixels are not committed for this render transaction.",
+      );
+    return Object.freeze({
+      source,
+      width: source.width,
+      height: source.height,
+      revision,
+      resource: this,
+      placement,
+    });
   }
-  private resolvePaint(ctx: RenderingContext2D, bounds: { x: number; y: number; width: number; height: number }, p: Readonly<TexturePlacement>): string | CanvasGradient | CanvasPattern {
+  private resolvePaint(
+    ctx: RenderingContext2D,
+    bounds: { x: number; y: number; width: number; height: number },
+    p: Readonly<TexturePlacement>,
+  ): string | CanvasGradient | CanvasPattern {
     const borrowed = this.borrow(p);
     const pattern = ctx.createPattern(borrowed.source, "repeat");
     if (!pattern) throw new Error("Could not create texture paint.");
     const stretch = p.mode === "stretch";
     const width = stretch ? bounds.width : (p.tileWidth ?? borrowed.width);
     const height = stretch ? bounds.height : (p.tileHeight ?? borrowed.height);
-    pattern.setTransform(new DOMMatrix().translate(bounds.x + (p.offsetX ?? 0), bounds.y + (p.offsetY ?? 0)).rotate(p.rotation ?? 0).scale(Math.max(0.000001, width) / borrowed.width, Math.max(0.000001, height) / borrowed.height));
+    pattern.setTransform(
+      new DOMMatrix()
+        .translate(bounds.x + (p.offsetX ?? 0), bounds.y + (p.offsetY ?? 0))
+        .rotate(p.rotation ?? 0)
+        .scale(
+          Math.max(0.000001, width) / borrowed.width,
+          Math.max(0.000001, height) / borrowed.height,
+        ),
+    );
     return pattern;
   }
   dispose() {
@@ -385,7 +429,8 @@ class Resource {
       this.canvas.width = this.canvas.height = 0;
       this.committed && (this.committed.width = this.committed.height = 0);
       this.spare && (this.spare.width = this.spare.height = 0);
-      this.provisional && (this.provisional.canvas.width = this.provisional.canvas.height = 0);
+      this.provisional &&
+        (this.provisional.canvas.width = this.provisional.canvas.height = 0);
       this.state = undefined;
     }
   }
