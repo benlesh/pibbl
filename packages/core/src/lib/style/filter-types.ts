@@ -1,6 +1,7 @@
 import type { PrimitivePresentation } from '../primitive-presentation.js';
 import type { StyleResolutionContext } from '../types.js';
 import type { SignalValue } from '../signals/types.js';
+import type { TexturePaint } from '../textures/texture-protocol.js';
 
 /** Opaque, imported appearance effect accepted by `style.filter`. */
 export interface CRCFilter {
@@ -39,3 +40,8 @@ export interface CRCInvertFilterOptions { readonly amount: SignalValue<number>; 
 export interface CRCOpacityFilterOptions { readonly amount: SignalValue<number>; }
 export interface CRCSaturateFilterOptions { readonly amount: SignalValue<number>; }
 export interface CRCSepiaFilterOptions { readonly amount: SignalValue<number>; }
+export interface CRCDisplacementFilterOptions {
+  readonly map: SignalValue<TexturePaint>;
+  readonly strength: SignalValue<number>;
+  readonly region: Readonly<{ x: number; y: number; width: number; height: number }>;
+}

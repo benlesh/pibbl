@@ -7,7 +7,7 @@ slug: filters
 apiCategory: types
 typeDomain: filters
 symbols:
-  [CRCFilter, CRCBlurFilterOptions, CRCBrightnessFilterOptions, CRCContrastFilterOptions, CRCDropShadowFilterOptions, CRCGrayscaleFilterOptions, CRCHueRotateFilterOptions, CRCInvertFilterOptions, CRCOpacityFilterOptions, CRCSaturateFilterOptions, CRCSepiaFilterOptions, blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia]
+  [CRCFilter, CRCBlurFilterOptions, CRCBrightnessFilterOptions, CRCContrastFilterOptions, CRCDropShadowFilterOptions, CRCGrayscaleFilterOptions, CRCHueRotateFilterOptions, CRCInvertFilterOptions, CRCOpacityFilterOptions, CRCSaturateFilterOptions, CRCSepiaFilterOptions, CRCDisplacementFilterOptions, blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia, displacement]
 keywords: [filter, blur, drop shadow, Canvas, tree shaking]
 ---
 
@@ -165,3 +165,15 @@ field table above. Numeric fields support signals owned by the receiving primiti
 
 `CRCSepiaFilterOptions` describes the validated inputs to `sepia`, shown in the
 field table above. Numeric fields support signals owned by the receiving primitive.
+
+## displacement
+
+`displacement(options)` samples the captured scene through a numeric texture map.
+It changes pixels only; the receiving primitive retains its original hit geometry.
+
+## CRCDisplacementFilterOptions
+
+`map` is a mounted `TexturePaint`; `strength` is a finite nonnegative logical
+maximum offset; and `region` supplies finite local coordinates with positive width
+and height for texture placement. A zero strength validates the map identity but
+does not acquire GPU processing or subscribe to map pixel revisions.

@@ -25,6 +25,7 @@ export interface RenderFilterBoundaryInput {
   readonly component: string;
   readonly filters: readonly NativePreparedFilter[];
   readonly presentation?: Readonly<PrimitivePresentation>;
+  readonly process?: (source: OffscreenCanvas, result: OffscreenCanvasRenderingContext2D, windows: ReturnType<typeof resolveFilterWindows> extends infer T ? Exclude<T, 'discard'> : never) => void;
 }
 
 export function renderFilterBoundary(
@@ -59,7 +60,7 @@ export function renderFilterBoundary(
   try {
     const { source, result } = pair;
     result.context.setTransform(1, 0, 0, 1, 0, 0);
-    validateNativeFilter(input, result.context, windows.density);
+    if (!input.process) validateNativeFilter(input, result.context, windows.density);
 
     copyFilterSourceState(parent, source.context);
     source.context.setTransform(windows.source.renderTransform);
@@ -80,11 +81,8 @@ export function renderFilterBoundary(
       },
     );
 
-    result.context.drawImage(
-      source.canvas,
-      windows.sourceToOutputX,
-      windows.sourceToOutputY,
-    );
+    if (input.process) input.process(source.canvas, result.context, windows);
+    else result.context.drawImage(source.canvas, windows.sourceToOutputX, windows.sourceToOutputY);
     parent.save();
     let releasePresentation: (() => void) | undefined;
     try {
