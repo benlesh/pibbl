@@ -558,6 +558,25 @@
   export function useRectPath(x: number, y: number, width: number, height: number, config?: { alignToPixelGrid?: PixelGridAlignment; lineWidth?: number; cornerRadius?: number; cornerRadii?: readonly (number | null | undefined)[] }): Path2D;
   export function useSvgPath(data: string): Path2D;
 
+export interface TexturePaint { readonly __crcTexturePaint: unique symbol; }
+export interface TexturePlacement { readonly mode?: 'repeat' | 'stretch'; readonly tileWidth?: number; readonly tileHeight?: number; readonly offsetX?: number; readonly offsetY?: number; readonly rotation?: number; }
+export interface Texture<Message = never> extends TexturePaint { send(message: Message): void; paint(placement: TexturePlacement): TexturePaint; }
+export interface TextureOptions { readonly resolution?: {readonly width: number; readonly height: number}; readonly palette?: readonly string[]; }
+export interface TextureRecipe<Message = never> {readonly __crcTextureRecipe: (message: Message) => Message;}
+export interface TextureContext {readonly canvas: OffscreenCanvas; readonly palette: readonly string[] | undefined; invalidate(): void; requestFrame(): void;}
+export interface TextureFrame {readonly delta: number; readonly time: number;}
+export interface TextureDefinition<Config, State, Message = never> {
+  readonly defaultPlacement?: TexturePlacement;
+  create(context: TextureContext, config: Readonly<Config>): State;
+  update?(state: State, config: Readonly<Config>, context: TextureContext): void;
+  receive?(state: State, message: Message, context: TextureContext): void;
+  advance?(state: State, frame: TextureFrame, context: TextureContext): void;
+  rasterize(state: State, context: TextureContext): void;
+  dispose?(state: State, context: TextureContext): void;
+}
+export function defineTexture<Config, State, Message = never>(definition: TextureDefinition<Config, State, Message>): (config: Config) => TextureRecipe<Message>;
+export function useTexture<Message>(recipe: TextureRecipe<Message>, options?: TextureOptions): Texture<Message>;
+
 /* @crc-studio-module @crc/core/jsx-runtime */
   import type { CRCElement, CRCElementType, CRCKey, CRCPrimitiveComponent, PrimitiveInputOf } from '@crc/core';
   export { Fragment } from '@crc/core';
@@ -1319,39 +1338,18 @@ export interface ProceduralTextureProps {
 }
 export const ProceduralTexture: CRCComponent<ProceduralTextureProps & CRCRenderLayerComponentProps>;
 
-declare module "@crc/core" {
-  export interface TexturePaint { readonly __crcTexturePaint: unique symbol; }
-  export interface TexturePlacement { readonly mode?: 'repeat' | 'stretch'; readonly tileWidth?: number; readonly tileHeight?: number; readonly offsetX?: number; readonly offsetY?: number; readonly rotation?: number; }
-  export interface Texture<Message = never> extends TexturePaint { send(message: Message): void; paint(placement: TexturePlacement): TexturePaint; }
-  export interface TextureOptions { readonly resolution?: {readonly width: number; readonly height: number}; readonly palette?: readonly string[]; }
-  export interface TextureRecipe<Message = never> {readonly __crcTextureRecipe: (message: Message) => Message;}
-  export interface TextureContext {readonly canvas: OffscreenCanvas; readonly palette: readonly string[] | undefined; invalidate(): void; requestFrame(): void;}
-  export interface TextureFrame {readonly delta: number; readonly time: number;}
-  export interface TextureDefinition<Config, State, Message = never> {
-    readonly defaultPlacement?: TexturePlacement;
-    create(context: TextureContext, config: Readonly<Config>): State;
-    update?(state: State, config: Readonly<Config>, context: TextureContext): void;
-    receive?(state: State, message: Message, context: TextureContext): void;
-    advance?(state: State, frame: TextureFrame, context: TextureContext): void;
-    rasterize(state: State, context: TextureContext): void;
-    dispose?(state: State, context: TextureContext): void;
-  }
-  export function defineTexture<Config, State, Message = never>(definition: TextureDefinition<Config, State, Message>): (config: Config) => TextureRecipe<Message>;
-  export function useTexture<Message>(recipe: TextureRecipe<Message>, options?: TextureOptions): Texture<Message>;
-}
-declare module "@crc/textures" {
-  export {useTexture} from '@crc/core';
-  export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
-  export interface WaterWavesOptions { readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; }
-  export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' };
-  export function waterWaves(options?: WaterWavesOptions): import('@crc/core').TextureRecipe<WaterWavesMessage>;
-  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
-  export type InkMessage = {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
-  export function marble(options?: MaterialOptions): import('@crc/core').TextureRecipe;
-  export function paper(options?: MaterialOptions): import('@crc/core').TextureRecipe;
-  export function cellular(options?: MaterialOptions): import('@crc/core').TextureRecipe;
-  export function reactionDiffusion(options?: ReactionDiffusionOptions): import('@crc/core').TextureRecipe<InkMessage>;
-}
+
+export {useTexture} from '@crc/core';
+export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
+export interface WaterWavesOptions { readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; }
+export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' };
+export function waterWaves(options?: WaterWavesOptions): import('@crc/core').TextureRecipe<WaterWavesMessage>;
+export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
+export type InkMessage = {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
+export function marble(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+export function paper(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+export function cellular(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+export function reactionDiffusion(options?: ReactionDiffusionOptions): import('@crc/core').TextureRecipe<InkMessage>;
 
 /* @crc-studio-module @crc/core/filters */
 import type { CRCFilter, SignalValue } from '@crc/core';

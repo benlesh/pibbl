@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { gzipSync } from "node:zlib";
 import { execFileSync } from "node:child_process";
 import {
   mkdtempSync,
@@ -107,10 +108,11 @@ const viteOutput = (result) =>
             {
               file: item.fileName,
               bytes: Buffer.byteLength(item.code),
+              gzipBytes: gzipSync(item.code).byteLength,
               code: item.code,
             },
           ]
-        : [{ file: item.fileName, bytes: item.source.length, code: "" }],
+        : [{ file: item.fileName, bytes: Buffer.byteLength(item.source), gzipBytes: gzipSync(item.source).byteLength, code: "" }],
     );
 
 async function bundleEsbuild(source, directory, minify, plugins = []) {
@@ -131,6 +133,7 @@ async function bundleEsbuild(source, directory, minify, plugins = []) {
       (sum, file) => sum + file.contents.byteLength,
       0,
     ),
+    gzipBytes: result.outputFiles.reduce((sum, file) => sum + gzipSync(file.contents).byteLength, 0),
     inputs: attributedInputs(result.metafile),
     code: outputText(result),
   };
@@ -152,6 +155,7 @@ async function bundleVite(source, directory, name, minify, aliases) {
   const output = viteOutput(result);
   return {
     bytes: output.reduce((sum, file) => sum + file.bytes, 0),
+    gzipBytes: output.reduce((sum, file) => sum + file.gzipBytes, 0),
     output,
     code: output.map((file) => file.code).join("\n"),
   };
@@ -181,6 +185,7 @@ function summary(es, vi) {
   return {
     esbuild: {
       bytes: es.bytes,
+      gzipBytes: es.gzipBytes,
       attributed: {
         filters: attributedBytes(es.inputs, isFilter),
         displacement: attributedBytes(es.inputs, isDisplacement),
@@ -195,6 +200,7 @@ function summary(es, vi) {
     },
     vite: {
       bytes: vi.bytes,
+      gzipBytes: vi.gzipBytes,
       files: vi.output.map(({ file, bytes }) => ({ file, bytes })),
       markers: Object.fromEntries(
         Object.entries(markers).map(([name, marker]) => [
