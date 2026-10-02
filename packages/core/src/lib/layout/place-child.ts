@@ -1,3 +1,4 @@
+import { rectangleSvg } from '../html/portable-clips.js';
 import { definePrimitive } from '../define-primitive.js';
 import { createElement } from '../element/create-element.js';
 import { setPlacementIdentityHint } from '../element/metadata.js';
@@ -51,7 +52,7 @@ function PlacedChild(
     if (clip) {
       const path = new Path2D();
       path.rect(clip.x, clip.y, clip.width, clip.height);
-      releaseClip = pushClippingPath(ctx, path);
+      releaseClip = pushClippingPath(ctx, path, 'nonzero', true, rectangleSvg(clip));
     }
   } catch (error) {
     releaseLayout();

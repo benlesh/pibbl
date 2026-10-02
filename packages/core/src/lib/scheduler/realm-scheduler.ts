@@ -1,3 +1,4 @@
+import { RootRenderTransaction } from '../render-transaction.js';
 import { executeRender } from "../execute-render.js";
 import { GLOBAL_STATE, NO_PENDING_ROOT } from "../global-state.js";
 import {
@@ -1267,32 +1268,7 @@ function getSchedulerDriver(): SchedulerDriver {
 }
 
 function createRootTransaction(): RootTransaction {
-  const callbacks = new Set<(success: boolean) => void>();
-  let result: boolean | undefined;
-  return {
-    onFinish(callback): void {
-      if (result !== undefined) {
-        callback(result);
-      } else {
-        callbacks.add(callback);
-      }
-    },
-    finish(success): void {
-      if (result !== undefined) return;
-      result = success;
-      const pending = Array.from(callbacks);
-      callbacks.clear();
-      const failures: unknown[] = [];
-      for (const callback of pending) {
-        try {
-          callback(success);
-        } catch (error) {
-          failures.push(error);
-        }
-      }
-      throwCollectedErrors(failures);
-    },
-  };
+  return new RootRenderTransaction();
 }
 
 function throwCollectedErrors(errors: unknown[]): void {

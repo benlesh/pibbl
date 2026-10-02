@@ -18,7 +18,8 @@ export function createRootSurfaceState(
   return {
     kind: 'root',
     config: resolved,
-    display: readCanvasContentBox(canvas),
+    display: readCanvasContentBox(canvas, Boolean(config?.htmlOverlay)),
+    untransformedDisplay: Boolean(config?.htmlOverlay),
     pixelRatio: readRequestedPixelRatio(resolved.pixelRatio),
     snapshot: undefined,
     ownedWidth: undefined,
@@ -49,7 +50,7 @@ export function mountRootSurface(
   }
 
   const resizeObserver = new ResizeObserver(() => {
-    const display = readCanvasContentBox(canvas);
+    const display = readCanvasContentBox(canvas, state.untransformedDisplay);
     if (setDisplaySize(state, display)) {
       update(canvas);
     }
@@ -84,7 +85,7 @@ export function prepareSurface(
   }
 
   const canvas = instance.canvas as HTMLCanvasElement;
-  state.display = readCanvasContentBox(canvas);
+  state.display = readCanvasContentBox(canvas, state.untransformedDisplay);
   if (state.config.pixelRatio === 'device') {
     state.pixelRatio = readRequestedPixelRatio('device');
   }
@@ -98,7 +99,7 @@ export function prepareSurface(
   if (dimensionsChanged) {
     canvas.width = snapshot.backingWidth;
     canvas.height = snapshot.backingHeight;
-    const after = readCanvasContentBox(canvas);
+    const after = readCanvasContentBox(canvas, state.untransformedDisplay);
     if (!nearlyEqual(after.width, before.width)) {
       state.ownedWidth = ownInlineSize(
         canvas,
@@ -115,7 +116,7 @@ export function prepareSurface(
         state.ownedHeight,
       );
     }
-    const stabilized = readCanvasContentBox(canvas);
+    const stabilized = readCanvasContentBox(canvas, state.untransformedDisplay);
     if (setDisplaySize(state, stabilized)) {
       snapshot = resolveSurface(state.config, stabilized, state.pixelRatio);
       state.snapshot = snapshot;
@@ -134,7 +135,20 @@ export function prepareSurface(
 
 export function readCanvasContentBox(
   canvas: HTMLCanvasElement,
+  untransformed = false,
 ): SurfaceDisplaySize {
+  if (untransformed) {
+    // HtmlBox shares an affine CSS ancestor with the canvas. Its layout box is
+    // the pre-transform used size, not the axis-aligned client bounding box.
+    if (canvas.getClientRects().length === 0) return { width: 0, height: 0 };
+    const style = getComputedStyle(canvas);
+    const insetWidth = style.boxSizing === 'border-box' ? boxInsets(style, 'width') : 0;
+    const insetHeight = style.boxSizing === 'border-box' ? boxInsets(style, 'height') : 0;
+    return {
+      width: Math.max(0, Number.parseFloat(style.width) - insetWidth),
+      height: Math.max(0, Number.parseFloat(style.height) - insetHeight),
+    };
+  }
   const rect = canvas.getBoundingClientRect();
   const style = getComputedStyle(canvas);
   return {

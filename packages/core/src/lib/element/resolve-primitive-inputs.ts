@@ -1,6 +1,7 @@
 import { resolveResponsiveStyle, preparedStyleValue, type ResponsiveStylePreparation, type QueryBasis } from '../style/responsive.js';
 import {
   getPrimitiveProgramProps,
+  getOpaquePrimitiveProps,
   getSpecifiedStyle,
   type PrimitiveDefinition,
 } from './metadata.js';
@@ -32,7 +33,7 @@ export function resolvePrimitiveInputs(
 
   for (const key in rawProps) {
     const value = rawProps[key];
-    if (key === 'children' || preserve?.includes(key)) {
+    if (key === 'children' || preserve?.includes(key) || getOpaquePrimitiveProps(element.type)?.includes(key)) {
       if (programProps !== undefined) programProps[key] = value;
       continue;
     }

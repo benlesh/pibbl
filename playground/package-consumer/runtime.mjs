@@ -30,6 +30,7 @@ const expected = [
   "Fragment",
   "Grid",
   "Group",
+  "HtmlBox",
   "HorizontalLine",
   "Image",
   "KeyboardNavigation",
@@ -208,9 +209,9 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 91) {
+if (actual.length !== 92) {
   throw new Error(
-    `Expected 91 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected 92 @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 
@@ -495,3 +496,10 @@ const arcPoint = core.bendPathAlongArc(bendProbe, {
 if (arcPoint.type !== 'move' || Math.hypot(arcPoint.x - (10 + 43 * Math.cos(0.5)), arcPoint.y - (20 + 43 * Math.sin(0.5))) > 0.01 || core.toSvgPathData(bendProbe) !== 'M 25 7') {
   throw new Error('Packed Along Arc failed analytic geometry or input ownership.');
 }
+
+const htmlDescriptor = core.createElement(core.HtmlBox, {
+  data: { text: 'inert construction' },
+  mount() { throw new Error('HtmlBox construction must not mount DOM'); },
+  style: { width: 100, height: 40 },
+});
+if (htmlDescriptor.type !== core.HtmlBox) throw new Error('HtmlBox descriptor lost its public identity');

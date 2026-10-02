@@ -202,3 +202,11 @@ live geometry; it introduces no scheduler participant, listeners, or explicit
 resource leases. Historical paint/clip records retain their own native snapshot
 until replacement or normal teardown. Revisions never mutate an existing native
 snapshot, and a failed conversion does not replace the last successful entry.
+
+## HtmlBox ownership
+
+A configured root exclusively reserves its application-owned overlay. Component
+identities own persistent DIVs and AbortControllers; the root owns SVG clipping
+definitions and publication snapshots. Abort fires once before removing connected
+content, including partial setup/update failure. Root disposal removes owned
+nodes and listeners and releases the lease. See the [HtmlBox contract](./html-box-contract.md).

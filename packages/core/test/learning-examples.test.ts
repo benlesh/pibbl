@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 73 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 74 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(73);
+    expect(learningExampleCatalog).toHaveLength(74);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1287,6 +1287,7 @@ describe("learning example catalog", () => {
         "clip",
         "group",
         "growing-reveal",
+        "html-box",
         "layer",
         "living-ink",
         "material-lab",
@@ -1392,6 +1393,7 @@ describe("learning example catalog", () => {
       "plasma-globe",
       "underwater",
       "stirred-ink",
+      "html-box",
       "optional-filters",
     ]);
 
@@ -1783,6 +1785,8 @@ describe("learning example catalog", () => {
         "createRegularPolygonPath",
         "Path",
         "PathGeometry",
+        "HtmlBox",
+        "FocusManagement",
         "defineRenderLayer",
         "bendPathAlongArc",
         "bendPathAlongPath",

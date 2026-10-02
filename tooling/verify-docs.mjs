@@ -86,6 +86,8 @@ const publicGuidePaths = [
   "docs/site/learn/guides/procedural-textures.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/components/html-box.md",
+  "docs/site/api/types/html-box.md",
   "docs/site/api/types/electric-textures.md",
   "docs/site/api/types/texture-resources.md",
   "docs/site/api/components/reaction-diffusion.md",
@@ -229,6 +231,7 @@ const publicSiteMarkdownPaths = [
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
+  "docs/design/html-box-contract.md",
   "docs/design/weighted-electric-sources-contract.md",
   "docs/design/textures-contract.md",
   "packages/textures/README.md",
@@ -2195,6 +2198,7 @@ const currentNormativeContractPaths = [
   ),
 ].sort();
 const postBaselineNormativeContractPaths = new Set([
+  "docs/design/html-box-contract.md",
   "docs/design/weighted-electric-sources-contract.md",
   "docs/design/textures-contract.md",
   "docs/design/animation-contract.md",

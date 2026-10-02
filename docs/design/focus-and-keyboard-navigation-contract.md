@@ -241,3 +241,12 @@ the projected focus bounds associated with the visible bitmap/interaction
 generation. Pure geometry queries do not create focus candidates or change
 keyboard order. Disabled or removed objects follow the ordinary committed
 render-layer target and focus-removal rules.
+
+## HtmlBox native focus regions
+
+The canvas-only native host rules above apply to roots without HtmlBox. With an
+active HtmlBox and FocusManagement, registered HTML regions join source order and
+root-owned sentinels coordinate native entry/exit. Descendant native focus owns
+editing and activation; Canvas event targets remain logical and no duplicate
+click is synthesized. The [HtmlBox contract](./html-box-contract.md) defines the
+explicit exception, light-DOM scope, cleanup, and reading-order limits.
