@@ -1,9 +1,9 @@
-import { createElement, crc, defineTexture, Group, Rectangle, useTexture } from '@crc/core';
+import { createElement, crc, defineTexture, FocusManagement, Group, Rectangle, useTexture } from '@crc/core';
 import { blur, brightness, displacement, opacity } from '@crc/core/filters';
 import { describe, expect, it } from 'vitest';
 import { getCRCInstance } from '../src/lib/global-state';
 import { peekDisplacementGpu } from '../src/filters/render-displacement-boundary';
-import { clickMouse } from './support/mouse-input';
+import { clickMouse, moveMouse } from './support/mouse-input';
 
 const map = defineTexture({
   create: () => undefined,
@@ -105,6 +105,55 @@ describe('public displacement filters', () => {
     await clickMouse(canvas, { x: 12, y: 12 });
     expect(clicks).toBe(1);
     controller.dispose();
+  });
+
+  it('keeps displaced pixels out of focus, keyboard, cursor, and source-order targeting', async () => {
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 40; document.body.append(canvas);
+    const displacedBounds = { x: 10, y: 10, width: 10, height: 10 };
+    const followingBounds = { x: 25, y: 10, width: 8, height: 8 };
+    let activations = 0;
+    function Scene() {
+      const texture = useTexture(rightMap({}));
+      return createElement(FocusManagement, { children: createElement(Group, { children: [
+        createElement(Group, { style: { filter: displacement({ map: texture, strength: 4, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Rectangle, {
+          style: { ...displacedBounds, fill: 'red', cursor: 'pointer' },
+          keyboardFocusable: true,
+          keyboardNavigationBounds: displacedBounds,
+          onClick: () => { activations += 1; },
+        }) }),
+        createElement(Rectangle, {
+          style: { ...followingBounds, fill: 'blue' },
+          keyboardFocusable: true,
+          keyboardNavigationBounds: followingBounds,
+          onClick: () => undefined,
+        }),
+      ] }) });
+    }
+    const controller = crc(canvas, createElement(Scene, {}));
+    try {
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      const context = canvas.getContext('2d')!;
+      expect(context.getImageData(7, 12, 1, 1).data[3]).toBeGreaterThan(200);
+      expect(context.getImageData(18, 12, 1, 1).data[3]).toBe(0);
+      const instance = getCRCInstance(canvas);
+      const targets = Array.from(instance.eventRoot.targets);
+      const policy = instance.eventRoot.focusPolicy as unknown as {
+        readonly candidates: readonly { readonly target: unknown }[];
+      };
+      expect(targets.map(target => target.keyboardNavigationBounds))
+        .toEqual([displacedBounds, followingBounds]);
+      expect(policy.candidates.map(candidate => candidate.target)).toEqual(targets);
+
+      await moveMouse(canvas, { x: 7, y: 12 });
+      expect(canvas.style.cursor).toBe('');
+      await moveMouse(canvas, { x: 18, y: 12 });
+      expect(canvas.style.cursor).toBe('pointer');
+      await clickMouse(canvas, { x: 18, y: 12 });
+      expect(activations).toBe(1);
+      canvas.focus({ preventScroll: true });
+      canvas.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter' }));
+      expect(activations).toBe(2);
+    } finally { controller.dispose(); canvas.remove(); }
   });
 });
 
