@@ -85,3 +85,59 @@ relevant observations without treating temporary files as repository artifacts.
 - Re-run this matrix on the integrated head, with the same Node/pnpm/bundler
   versions and emitted chunks/assets included, after filter work and any package
   output changes.
+
+## Current integrated audit — 2026-10-01 (`e0675129`)
+
+The preceding section is historical baseline evidence from `c838c434`. The
+following results are a new run at integrated commit `e0675129`, after the core
+preserved-module package output change. They are not a claim that every feature
+family is independently tree-shakeable.
+
+### Reproducible method
+
+From this checkout, Node `v24.15.0`, pnpm `11.21.0`, and esbuild `0.28.2`:
+
+```sh
+corepack pnpm@11.21.0 build
+node tooling/audit-optional-feature-matrix.mjs
+```
+
+The checked-in script bundles one selected public export into an ESM browser
+entry (`globalThis.keep = selectedExport`) with syntax minification and
+tree-shaking enabled. It records total emitted bytes and the five largest
+`metafile.outputs[*].inputs[*].bytesInOutput` contributors for both source
+entries and the freshly emitted package artifacts. `three` remains external,
+as it is a peer dependency. Each probe fails if the selected export emits no
+bytes or has no retained attributed input.
+
+| Selected public export | Source bytes | Packed-artifact bytes | Current evidence |
+| --- | ---: | ---: | --- |
+| `tween` / `spring` / `stepper` | 11,029 / 9,172 / 1,865 | 11,031 / 9,174 / 1,866 | Core preserved-module output retains the selected animation definitions rather than the old shared core chunk. |
+| `Flow` / `Grid` | 111,616 / 116,255 | 111,651 / 116,290 | Each packed probe retains its selected layout module (`flow.js` or `grid.js`); this is a positive packed-output boundary. |
+| `defineRenderLayer` / `defineThreeLayer` | 189,926 / 207,861 | 190,710 / 208,417 | The Three adapter adds its own 17,605-byte emitted artifact; `three` itself is external. |
+| `sphereShape3D` / `circleShape2D` | 1,839 / 5,391 | 4,395 / 5,565 | Geometry remains far smaller than the physics runtime. |
+| `PhysicsWorld2D` | 3,903,730 | 4,004,613 | The selected runtime deliberately retains Rapier and the 2D world; this is not a light helper. |
+| `Axis` / `LineSeries` | 99,145 / 81,687 | 124,381 / 110,044 | The selected Viz exports retain their own artifact plus core dependencies; they are not equivalent-sized bundles. |
+| `particleRange` / `Particles2D` | 5,898 / 336,923 | 89,324 / 348,892 | Source keeps the parameter helper small; packed particles still couples that helper to its flattened artifact and core runtime. |
+
+### Current conclusions and scoped follow-ups
+
+1. The core output topology now gives animation and layout selected-export
+   probes near-identical source and packed sizes. This is evidence for those
+   sampled boundaries only.
+2. Render layers and Three retain their intended package boundary: core does
+   not embed the Three adapter, and the adapter does not embed its external
+   peer.
+3. Physics geometry remains distinct from the Rapier-backed 2D runtime. The
+   audit emitted esbuild's existing warning that `2d-geometry.mjs` has a bare
+   shared-chunk import treated as side-effect-free; investigate that artifact
+   declaration before relying on the packed geometry result for initialization
+   semantics.
+4. Packed Viz and particles still have coarse package-root coupling. In
+   particular, `particleRange` grows from 5,898 B to 89,324 B because the
+   particles root artifact is flattened, and the packed probe resolves core
+   runtime dependencies. A separate package-output decision is needed before
+   promising helper-level optionality there.
+5. This matrix intentionally excludes filters/textures, whose dedicated
+   `verify-optional-feature-bundles.mjs` harness supplies stronger public-mount,
+   Vite, package-consumer, and import-inertness checks.
