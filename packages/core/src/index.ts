@@ -271,17 +271,7 @@ export { normalizeEdges } from './lib/style/normalize.js';
 export { resolveLength } from './lib/style/resolve-length.js';
 export { resolveBox } from './lib/layout/box.js';
 export type {
-  CRCBlurFilter,
-  CRCBrightnessFilter,
-  CRCContrastFilter,
-  CRCDropShadowFilter,
   CRCFilter,
-  CRCGrayscaleFilter,
-  CRCHueRotateFilter,
-  CRCInvertFilter,
-  CRCOpacityFilter,
-  CRCSaturateFilter,
-  CRCSepiaFilter,
 } from './lib/style/filter-types.js';
 export type {
   Constraints,
