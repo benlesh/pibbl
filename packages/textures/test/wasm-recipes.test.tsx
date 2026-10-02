@@ -204,3 +204,34 @@ it("fails explicitly when WASM allocation is unavailable and leaves no scheduled
   }
   expect(driver.pendingHostFrames).toBe(0);
 });
+
+it("legacy texture masks borrow their WASM heap without a JS pixel-generation fallback", async () => {
+  const { ProceduralTexture } = await import("@crc/textures");
+  const driver = new ManualSchedulerDriver(),
+    restore = installSchedulerDriverForTest(driver);
+  const memory = memorySpy();
+  const uploads = vi.spyOn(
+    OffscreenCanvasRenderingContext2D.prototype,
+    "putImageData",
+  );
+  const surface = canvas();
+  const controller = crc(
+    surface,
+    <ProceduralTexture
+      kind="marble"
+      resolution={{ width: 16, height: 16 }}
+      style={{ width: 64, height: 64 }}
+      render={(context, raster) => context.drawImage(raster.mask, 0, 0)}
+    />,
+  );
+  try {
+    driver.flush(0);
+    const mask = uploads.mock.calls.at(-1)![0];
+    expect(mask.data.buffer === memory.mock.results[0].value.buffer).toBe(true);
+    for (let i = 0; i < mask.data.length; i += 4)
+      expect(Array.from(mask.data.subarray(i, i + 3))).toEqual([255, 255, 255]);
+  } finally {
+    controller.dispose();
+    restore();
+  }
+});

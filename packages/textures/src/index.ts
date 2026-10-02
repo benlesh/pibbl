@@ -12,8 +12,29 @@ export type {
   TextureRenderer,
   TextureRenderFrame,
 } from "./lib/presentation.js";
-export { useTexture, marble, paper, cellular, reactionDiffusion } from './lib/definitions.js';
-export type { MaterialOptions, ReactionDiffusionOptions, InkMessage } from './lib/definitions.js';
+export {
+  useTexture,
+  marble,
+  paper,
+  cellular,
+  reactionDiffusion,
+} from "./lib/definitions.js";
+export type {
+  MaterialOptions,
+  ReactionDiffusionOptions,
+  InkMessage,
+} from "./lib/definitions.js";
+export { waterWaves } from "./lib/water-waves.js";
+export type {
+  WaterWavesOptions,
+  WaterWavesMessage,
+} from "./lib/water-waves.js";
+export { waterSurface } from "./lib/water-surface.js";
+export type {
+  WaterSurfaceMessage,
+  WaterSurfaceObstacle,
+  WaterSurfaceOptions,
+} from "./lib/water-surface.js";
 export { tendrils } from "./lib/tendrils.js";
 export type { TendrilsOptions, TendrilsMessage } from "./lib/tendrils.js";
 export { lightning } from "./lib/lightning.js";

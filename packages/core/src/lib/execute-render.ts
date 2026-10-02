@@ -93,6 +93,7 @@ export function executeRender(
     );
     GLOBAL_STATE.frameSnapshot = activeFrameSnapshot;
     GLOBAL_STATE.currentCRCInstance = crcInstance;
+    for (const service of crcInstance.optionalServices.values()) service.beginRender?.();
     GLOBAL_STATE.renderTransaction = renderTransaction;
     GLOBAL_STATE.currentCRCInstance.renderTimestamp = activeFrameSnapshot.logicalTime;
     GLOBAL_STATE.canvas = canvas;
@@ -171,9 +172,11 @@ export function executeRender(
       crcInstance.refs.delete(id);
     }
     frameSuccess = true;
+    for (const service of crcInstance.optionalServices.values()) service.endRender?.(true);
     driver.finishFrame(frame, true);
     finishTransaction(true);
   } catch (error) {
+    for (const service of crcInstance.optionalServices.values()) service.endRender?.(false);
     finishTransaction(false);
     for (const refs of crcInstance.refs.values()) {
       refs.teardowns.execute();

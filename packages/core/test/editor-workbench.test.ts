@@ -35,8 +35,9 @@ describe("Studio editor declaration libraries", () => {
     const libraries = declarationLibraries();
     const filePaths = new Set(libraries.map(({ filePath }) => filePath));
 
-    expect(libraries).toHaveLength(11);
-    expect(filePaths.size).toBe(11);
+    expect(libraries).toHaveLength(12);
+    expect(filePaths.size).toBe(12);
+    expect(filePaths).toContain("file:///node_modules/@crc/core/filters.d.ts");
     expect(filePaths).toContain("file:///node_modules/@crc/textures/index.d.ts");
     expect(filePaths).toContain("file:///node_modules/@crc/text/index.d.ts");
     expect(filePaths).toContain("file:///node_modules/@crc/viz/index.d.ts");

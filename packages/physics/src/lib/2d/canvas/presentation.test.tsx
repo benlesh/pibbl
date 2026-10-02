@@ -1,4 +1,5 @@
-import { Circle, Group, Rectangle, crc, type CRCController } from "@crc/core";
+import { displacement, opacity } from "@crc/core/filters";
+import { Circle, Group, Rectangle, crc, defineTexture, signal, useTexture, type CRCController } from "@crc/core";
 /** @jsxImportSource @crc/core */
 import {
   PhysicsWorld2D,
@@ -77,7 +78,7 @@ describe("Canvas 2D physics pose presentation", () => {
               width: 10,
               height: 10,
               fill: "#2563eb",
-              filter: { type: "opacity", amount: 1 },
+              filter: opacity({ amount: 1 }),
             }}
             onClick={() => clicks.push("hit")}
           />
@@ -112,6 +113,44 @@ describe("Canvas 2D physics pose presentation", () => {
 
     crc(canvas, root(11));
     expect(() => frames.flush(3)).toThrow(/ancestor transform|authored pose/i);
+  });
+
+  it("keeps physics pose, velocity and targeting unchanged when visible displacement is enabled", () => {
+    const frames = new ManualFrames(); frames.install();
+    const strength = signal(0);
+    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    let clicks = 0;
+    const mapRecipe = defineTexture({
+      create() {},
+      rasterize(_state, { canvas }) {
+        const c = canvas.getContext("2d")!;
+        c.fillStyle = "rgb(255 128 128)"; c.fillRect(0, 0, canvas.width, canvas.height);
+      },
+    });
+    function Effect() {
+      body = crcPhysicsBody2D();
+      const map = useTexture(mapRecipe({}), { resolution: { width: 8, height: 8 } });
+      return <Group style={{ filter: displacement({ map, strength, region: { x: 0, y: 0, width: 70, height: 40 } }) }}>
+        <Circle physics={dynamicBody2D({ handle: body, mass: 1 })} style={{ cx: 20, cy: 20, radius: 5, fill: "#2563eb" }} onClick={() => clicks++} />
+      </Group>;
+    }
+    const canvas = document.createElement("canvas"); canvas.width = 70; canvas.height = 40; document.body.append(canvas);
+    mounts.push(crc(canvas, <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}><Effect /></PhysicsWorld2D>));
+    frames.flush(0); frames.flush(0);
+    setLinearVelocity2D(body, [100, 0]); frames.flush(100);
+    const pose = [...body.position.get()], velocity = [...body.linearVelocity.get()];
+    expect(pose[0]).toBeCloseTo(10, 5);
+    expect(pixelAt(canvas, 23, 20)[3]).toBeGreaterThan(200);
+    click(canvas, 23, 20); expect(clicks).toBe(1);
+    strength.set(6); frames.flush(100);
+    expect(body.position.get()).toEqual(pose); expect(body.linearVelocity.get()).toEqual(velocity);
+    expect(pixelAt(canvas, 11, 20)[3]).toBeGreaterThan(200);
+    expect(pixelAt(canvas, 23, 20)[3]).toBe(0);
+    click(canvas, 11, 20); expect(clicks).toBe(1);
+    click(canvas, 23, 20); expect(clicks).toBe(2);
+    frames.flush(200);
+    expect(body.position.get()[0]).toBeCloseTo(20, 5);
+    expect(body.linearVelocity.get()).toEqual(velocity);
   });
 
   it("moves a dynamic primitive when its Canvas click applies an impulse", () => {

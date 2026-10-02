@@ -28,6 +28,73 @@ import {
 } from '../animation/writer-leases';
 
 describe('signal', () => {
+  it('adopts staged resources before publishing signal values and notifying observers', () => {
+    const revision = signal(0);
+    const writer = {};
+    const batch = createSignalCommitBatch();
+    const calls: string[] = [];
+    let published = false;
+    const observations: unknown[] = [];
+    getSignalNode(revision).observers.add(() => observations.push([revision.get(), published]));
+    batch.stage(revision, 1, writer);
+    batch.registerLifecycle(writer, {
+      apply() {
+        calls.push(`apply:${revision.get()}`);
+        published = true;
+      },
+      abort() {
+        calls.push('abort');
+      },
+    });
+
+    batch.commit();
+
+    expect(calls).toEqual(['apply:0']);
+    expect(observations).toEqual([[1, true]]);
+    const discarded = createSignalCommitBatch();
+    discarded.stage(revision, 2, writer);
+    discarded.registerLifecycle(writer, {
+      apply() {
+        calls.push('unexpected');
+      },
+      abort() {
+        calls.push('abort');
+      },
+    });
+    discarded.discardWriter(writer);
+    discarded.commit();
+    expect(calls).toEqual(['apply:0', 'abort']);
+    expect(revision.get()).toBe(1);
+
+    const suppressed = createSignalCommitBatch();
+    suppressed.stage(revision, 1, writer);
+    suppressed.registerLifecycle(writer, {
+      apply() {
+        calls.push('unexpected');
+      },
+      abort() {
+        calls.push('suppressed');
+      },
+    });
+    suppressed.commit();
+    expect(calls).toEqual(['apply:0', 'abort', 'suppressed']);
+
+    const failing = createSignalCommitBatch();
+    failing.stage(revision, 2, writer);
+    failing.registerLifecycle(writer, {
+      apply() {
+        throw new Error('publication failed');
+      },
+      abort() {
+        calls.push('failed');
+        throw new Error('cleanup must not mask publication failure');
+      },
+    });
+    expect(() => failing.commit()).toThrow('publication failed');
+    expect(calls).toEqual(['apply:0', 'abort', 'suppressed', 'failed']);
+    expect(revision.get()).toBe(1);
+  });
+
   it('provides explicit reads, writes, and one cached readonly view', () => {
     const point = signal(
       { x: 1 },

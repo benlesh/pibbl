@@ -1,3 +1,4 @@
+import { grayscale, sepia, hueRotate, opacity } from '@crc/core/filters';
 import type { FilterLabState, ScenarioController } from '@crc/scenarios';
 import {
   FILTER_LAB_PROBES,
@@ -275,7 +276,7 @@ describe('first-class filter public scenarios', () => {
           height: 60,
           cornerRadius: 12,
           fill: '#ef4444',
-          filter: { type: 'grayscale', amount: 1 },
+          filter: grayscale({ amount: 1 }),
         },
       }),
       createElement(Polygon, {
@@ -283,7 +284,7 @@ describe('first-class filter public scenarios', () => {
           coords: [[80, 75], [105, 20], [130, 75]],
           cornerRadius: 6,
           fill: '#facc15',
-          filter: { type: 'sepia', amount: 1 },
+          filter: sepia({ amount: 1 }),
         },
       }),
       createElement(RegularPolygon, {
@@ -294,7 +295,7 @@ describe('first-class filter public scenarios', () => {
           circumradius: 32,
           cornerRadius: 4,
           fill: '#10b981',
-          filter: { type: 'hueRotate', degrees: 120 },
+          filter: hueRotate({ degrees: 120 }),
         },
       }),
       createElement(Star, {
@@ -306,7 +307,7 @@ describe('first-class filter public scenarios', () => {
           innerRadius: 16,
           cornerRadius: 3,
           fill: '#2563eb',
-          filter: { type: 'opacity', amount: 0.55 },
+          filter: opacity({ amount: 0.55 }),
         },
       }),
     ]);

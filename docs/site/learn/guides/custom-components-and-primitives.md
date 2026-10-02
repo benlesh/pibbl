@@ -137,12 +137,9 @@ private capabilities on the returned component value, resolves style before
 render, and permits pure measurement without invoking the renderer.
 
 ```tsx docs:complete-snippet=custom-primitive
-import {
-  definePrimitive,
-  type FillStyle,
-  type Percentage,
-  type SystemStyle,
-} from "@crc/core";
+import { definePrimitive, type Percentage, type SystemStyle } from "@crc/core";
+
+type GaugeFill = string | CanvasGradient | CanvasPattern;
 
 interface GaugeProps {
   value: number;
@@ -151,19 +148,19 @@ interface GaugeProps {
 interface GaugeStyle extends SystemStyle {
   width: number | Percentage;
   height?: number;
-  fill?: FillStyle;
+  fill?: GaugeFill;
 }
 
 interface NormalizedGaugeStyle extends SystemStyle {
   width: number | Percentage;
   height: number;
-  fill: FillStyle;
+  fill: GaugeFill;
 }
 
 interface ResolvedGaugeStyle extends SystemStyle {
   width: number;
   height: number;
-  fill: FillStyle;
+  fill: GaugeFill;
 }
 
 export const Gauge = definePrimitive<

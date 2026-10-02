@@ -77,6 +77,8 @@ test("built optional entries and their factories do not allocate browser resourc
       textures.reactionDiffusion,
       textures.tendrils,
       textures.lightning,
+      textures.waterWaves,
+      textures.waterSurface,
     ])
       assert.doesNotThrow(() => factory({ seed: 42 }));
   } finally {

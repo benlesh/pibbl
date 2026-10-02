@@ -10,14 +10,17 @@ export function lazyKernel(bytes: string): () => WebAssembly.Module {
 interface Raster {
   readonly image: ImageData;
   readonly alpha: Uint8ClampedArray;
+  readonly mask: () => ImageData;
 }
 let owners: WeakMap<Float32Array, FieldMemory> | undefined;
 export function rasterizeField(
   field: Float32Array,
   lut: Uint8ClampedArray,
   gain = 1,
-): Raster | undefined {
-  return owners?.get(field)?.rasterize(field, lut, gain);
+): Raster {
+  const owner = owners?.get(field);
+  if (!owner) throw new Error("Texture raster requires a live WASM field.");
+  return owner.rasterize(field, lut, gain);
 }
 export function reuseFieldMemory(
   field: Float32Array | undefined,
@@ -44,6 +47,8 @@ export class FieldMemory {
   private readonly alpha: Uint8ClampedArray<ArrayBuffer>;
   private readonly lut: Uint8ClampedArray<ArrayBuffer>;
   private image?: ImageData;
+  private maskImage?: ImageData;
+  private readonly maskPixels: Uint8ClampedArray<ArrayBuffer>;
   readonly stamps: Float64Array<ArrayBuffer>;
   constructor(
     readonly module: WebAssembly.Module,
@@ -56,7 +61,8 @@ export class FieldMemory {
     const alpha = pixels + n * 4,
       lut = (alpha + n + 3) & ~3,
       stamps = (lut + 1024 + 7) & ~7;
-    const pages = Math.ceil((stamps + 32) / 65536);
+    const mask = stamps + 32;
+    const pages = Math.ceil((mask + n * 4) / 65536);
     this.memory = new WebAssembly.Memory({ initial: pages, maximum: pages });
     this.kernel = new WebAssembly.Instance(module, {
       env: {
@@ -74,6 +80,7 @@ export class FieldMemory {
     this.alpha = new Uint8ClampedArray(this.memory.buffer, alpha, n);
     this.lut = new Uint8ClampedArray(this.memory.buffer, lut, 1024);
     this.stamps = new Float64Array(this.memory.buffer, stamps, 4);
+    this.maskPixels = new Uint8ClampedArray(this.memory.buffer, mask, n * 4);
     owners ??= new WeakMap();
     for (const field of this.fields) owners.set(field, this);
   }
@@ -88,7 +95,23 @@ export class FieldMemory {
       gain,
     );
     this.image ??= new ImageData(this.pixels, this.width, this.height);
-    return { image: this.image, alpha: this.alpha };
+    return {
+      image: this.image,
+      alpha: this.alpha,
+      mask: () => this.rasterizeMask(),
+    };
+  }
+  private rasterizeMask(): ImageData {
+    this.kernel.mask(
+      this.alpha.byteOffset,
+      this.maskPixels.byteOffset,
+      this.alpha.length,
+    );
+    return (this.maskImage ??= new ImageData(
+      this.maskPixels,
+      this.width,
+      this.height,
+    ));
   }
   dispose() {
     for (const field of this.fields) owners?.delete(field);

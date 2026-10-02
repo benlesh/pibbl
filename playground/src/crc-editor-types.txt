@@ -251,17 +251,8 @@
     [K in CRCEventType as `${CRCEventPropMap[K]}Capture`]: CRCEventHandler<K>;
   }>;
 
-  export interface CRCBlurFilter { type: 'blur'; radius: number }
-  export interface CRCBrightnessFilter { type: 'brightness'; amount: number }
-  export interface CRCContrastFilter { type: 'contrast'; amount: number }
-  export interface CRCDropShadowFilter { type: 'dropShadow'; offsetX: number; offsetY: number; blurRadius?: number; color: string }
-  export interface CRCGrayscaleFilter { type: 'grayscale'; amount: number }
-  export interface CRCHueRotateFilter { type: 'hueRotate'; degrees: number }
-  export interface CRCInvertFilter { type: 'invert'; amount: number }
-  export interface CRCOpacityFilter { type: 'opacity'; amount: number }
-  export interface CRCSaturateFilter { type: 'saturate'; amount: number }
-  export interface CRCSepiaFilter { type: 'sepia'; amount: number }
-  export type CRCFilter = CRCBlurFilter | CRCBrightnessFilter | CRCContrastFilter | CRCDropShadowFilter | CRCGrayscaleFilter | CRCHueRotateFilter | CRCInvertFilter | CRCOpacityFilter | CRCSaturateFilter | CRCSepiaFilter;
+  declare const crcFilterBrand: unique symbol;
+  export interface CRCFilter { readonly [crcFilterBrand]: true; }
   export interface SystemStyle { custom?: unknown; filter?: CRCFilter | readonly CRCFilter[] }
   export interface CRCPhysics2DPropExtension {}
   type PrimitiveReservedKey = 'key' | 'style';
@@ -1610,3 +1601,39 @@ export interface ProceduralTextureProps {
   readonly render?: TextureRenderer;
 }
 export const ProceduralTexture: CRCComponent<ProceduralTextureProps & CRCRenderLayerComponentProps>;
+export interface WaterWavesOptions { readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; }
+export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
+export function waterWaves(options?: WaterWavesOptions): import('@crc/core').TextureRecipe<WaterWavesMessage>;
+export interface WaterSurfaceObstacle { readonly x: number; readonly y: number; readonly width: number; readonly height: number; }
+export interface WaterSurfaceOptions { readonly viscosity?: number; readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; readonly obstacles?: readonly WaterSurfaceObstacle[]; }
+export type WaterSurfaceMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
+export function waterSurface(options?: WaterSurfaceOptions): import('@crc/core').TextureRecipe<WaterSurfaceMessage>;
+/* @crc-studio-module @crc/core/filters */
+import type { CRCFilter, SignalValue } from '@crc/core';
+export type { CRCFilter } from '@crc/core';
+export interface CRCBlurFilterOptions { readonly radius: SignalValue<number> }
+export interface CRCBrightnessFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCContrastFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCDropShadowFilterOptions { readonly offsetX: SignalValue<number>; readonly offsetY: SignalValue<number>; readonly blurRadius?: SignalValue<number>; readonly color: SignalValue<string> }
+export interface CRCGrayscaleFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCHueRotateFilterOptions { readonly degrees: SignalValue<number> }
+export interface CRCInvertFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCOpacityFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCSaturateFilterOptions { readonly amount: SignalValue<number> }
+export interface CRCSepiaFilterOptions { readonly amount: SignalValue<number> }
+export function blur(options: Readonly<CRCBlurFilterOptions>): CRCFilter;
+export function brightness(options: Readonly<CRCBrightnessFilterOptions>): CRCFilter;
+export function contrast(options: Readonly<CRCContrastFilterOptions>): CRCFilter;
+export function dropShadow(options: Readonly<CRCDropShadowFilterOptions>): CRCFilter;
+export function grayscale(options: Readonly<CRCGrayscaleFilterOptions>): CRCFilter;
+export function hueRotate(options: Readonly<CRCHueRotateFilterOptions>): CRCFilter;
+export function invert(options: Readonly<CRCInvertFilterOptions>): CRCFilter;
+export function opacity(options: Readonly<CRCOpacityFilterOptions>): CRCFilter;
+export function saturate(options: Readonly<CRCSaturateFilterOptions>): CRCFilter;
+export function sepia(options: Readonly<CRCSepiaFilterOptions>): CRCFilter;
+
+export interface CRCDisplacementFilterOptions { readonly map: SignalValue<import('@crc/core').TexturePaint>; readonly strength: SignalValue<number>; readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; }
+export function displacement(options: Readonly<CRCDisplacementFilterOptions>): CRCFilter;
+export type CRCReflectedLightSource = string | import('@crc/core').TexturePaint | HTMLImageElement | ImageBitmap;
+export interface CRCReflectedLightFilterOptions { readonly map: SignalValue<import('@crc/core').TexturePaint>; readonly region: Readonly<{x:number;y:number;width:number;height:number}>; readonly source?: SignalValue<CRCReflectedLightSource>; readonly opacity?: SignalValue<number>; readonly threshold?: SignalValue<number>; readonly softness?: SignalValue<number>; readonly direction?: readonly [number,number]; }
+export function reflectedLight(options: CRCReflectedLightFilterOptions): CRCFilter;

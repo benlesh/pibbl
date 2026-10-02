@@ -7,17 +7,24 @@ import { build as viteBuild } from "vite";
 const root = resolve(import.meta.dirname, "..");
 const temp = mkdtempSync(join(tmpdir(), "crc-wasm-bundles-"));
 const kernels = Object.fromEntries(
-  ["marble", "paper", "cellular", "ink", "tendrils", "lightning"].map(
-    (name) => {
-      const text = readFileSync(
-        join(root, `packages/textures/src/lib/wasm/${name}-bytes.ts`),
-        "utf8",
-      );
-      const match = text.match(/bytes = "([^"]+)"/);
-      assert.ok(match, `Missing ${name} kernel`);
-      return [name, match[1]];
-    },
-  ),
+  [
+    "marble",
+    "paper",
+    "cellular",
+    "ink",
+    "tendrils",
+    "lightning",
+    "water-waves",
+    "water-surface",
+  ].map((name) => {
+    const text = readFileSync(
+      join(root, `packages/textures/src/lib/wasm/${name}-bytes.ts`),
+      "utf8",
+    );
+    const match = text.match(/bytes = "([^"]+)"/);
+    assert.ok(match, `Missing ${name} kernel`);
+    return [name, match[1]];
+  }),
 );
 try {
   let checks = 0;
@@ -32,7 +39,14 @@ try {
       ]),
     );
     for (const name of ["plain", ...Object.keys(kernels)]) {
-      const factory = name === "ink" ? "reactionDiffusion" : name;
+      const factory =
+        name === "ink"
+          ? "reactionDiffusion"
+          : name === "water-waves"
+            ? "waterWaves"
+            : name === "water-surface"
+              ? "waterSurface"
+              : name;
       const contents =
         name === "plain"
           ? "import {crc,createElement,Rectangle} from '@crc/core'; export function mount(c){return crc(c,createElement(Rectangle,{style:{width:40,height:40,fill:'red'}}));}"

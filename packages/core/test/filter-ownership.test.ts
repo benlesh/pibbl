@@ -1,3 +1,5 @@
+import { peekNativeFilterPool } from '../src/lib/filter/render-filter-boundary';
+import { grayscale, blur, opacity } from '@crc/core/filters';
 import {
   Group,
   Rectangle,
@@ -10,7 +12,7 @@ import {
 } from "@crc/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { clearSharedState, getCRCInstance } from "../src/lib/global-state";
-import type { FilterSurfacePool } from "../src/lib/filter/filter-surface-pool";
+import { FilterSurfacePool } from "../src/lib/filter/filter-surface-pool";
 
 const controllers = new Set<CRCController>();
 
@@ -55,7 +57,7 @@ describe("filter surface ownership", () => {
     const siblings = oneHundredFilteredSiblings(
       createElement(PatternPrimitive, {
         key: "pattern-bearing-sibling",
-        style: { filter: { type: "grayscale", amount: 1 } },
+        style: { filter: grayscale({ amount: 1 }) },
       }),
     );
     const controller = crc(canvas, siblings, { pixelRatio: 1 });
@@ -63,7 +65,7 @@ describe("filter surface ownership", () => {
     frames.runNext();
 
     const instance = getCRCInstance(canvas);
-    const firstPool = instance.filterSurfacePool;
+    const firstPool = peekNativeFilterPool(instance)!;
     expect(firstPool.snapshot()).toEqual({
       surfaceSlots: 2,
       createdSurfaceSlots: 2,
@@ -91,6 +93,7 @@ describe("filter surface ownership", () => {
       releasedSurfaceSlots: 0,
     });
 
+    const idleContexts = idlePoolContexts(firstPool);
     crc(canvas, undefined);
     frames.runNext(1_001);
     expect(instance.refs.size).toBe(0);
@@ -105,7 +108,6 @@ describe("filter surface ownership", () => {
     expect(patternAssignment.context.strokeStyle).not.toBe(
       patternAssignment.pattern,
     );
-    const idleContexts = idlePoolContexts(firstPool);
     expect(idleContexts).toHaveLength(2);
     expect(idleContexts).toContain(patternAssignment.context);
     for (const context of idleContexts) {
@@ -114,33 +116,20 @@ describe("filter surface ownership", () => {
       expect(context.fillStyle).not.toBe(patternAssignment.pattern);
       expect(context.strokeStyle).not.toBe(patternAssignment.pattern);
     }
-    expect(firstPool.snapshot()).toEqual({
-      surfaceSlots: 2,
-      createdSurfaceSlots: 2,
-      activePairs: 0,
-      peakActivePairs: 1,
-      pairCheckouts: 100_100,
-      pairReturns: 100_100,
-      resized: 0,
-      releasedSurfaceSlots: 0,
-    });
+    expectReleased(firstPool, 2, 100_100);
+    expect(peekNativeFilterPool(instance)).toBeUndefined();
 
+    const checkout = vi.spyOn(FilterSurfacePool.prototype, "checkoutPair");
     crc(canvas, threeNestedFilters(createElement(ThrowingPrimitive, {})));
     expect(() => frames.runNext(1_002)).toThrowError("forced filter failure");
     expect(instance.refs.size).toBe(0);
-    expect(firstPool.snapshot()).toEqual({
-      surfaceSlots: 6,
-      createdSurfaceSlots: 6,
-      activePairs: 0,
-      peakActivePairs: 3,
-      pairCheckouts: 100_103,
-      pairReturns: 100_103,
-      resized: 1,
-      releasedSurfaceSlots: 0,
-    });
+    const replacementPool = checkout.mock.instances[0]! as FilterSurfacePool;
+    expect(replacementPool).not.toBe(firstPool);
+    expect(peekNativeFilterPool(instance)).toBeUndefined();
+    expectReleased(replacementPool, 6, 3);
+    checkout.mockRestore();
 
     controller.dispose();
-    expectReleased(firstPool, 6, 100_103, 1);
 
     const freshController = crc(
       canvas,
@@ -153,7 +142,7 @@ describe("filter surface ownership", () => {
     );
     controllers.add(freshController);
     frames.runNext(1_003);
-    const freshPool = getCRCInstance(canvas).filterSurfacePool;
+    const freshPool = peekNativeFilterPool(getCRCInstance(canvas))!;
     expect(freshPool).not.toBe(firstPool);
     expect(freshPool.snapshot()).toEqual({
       surfaceSlots: 6,
@@ -188,7 +177,7 @@ function oneHundredFilteredSiblings(firstSibling: CRCNode): CRCNode {
               width: 1,
               height: 1,
               fill: "red",
-              filter: { type: "grayscale", amount: 1 },
+              filter: grayscale({ amount: 1 }),
             },
           }),
     ),
@@ -197,11 +186,11 @@ function oneHundredFilteredSiblings(firstSibling: CRCNode): CRCNode {
 
 function threeNestedFilters(child: CRCNode): CRCNode {
   return createElement(Group, {
-    style: { filter: { type: "blur", radius: 1 } },
+    style: { filter: blur({ radius: 1 }) },
     children: createElement(Group, {
-      style: { filter: { type: "grayscale", amount: 1 } },
+      style: { filter: grayscale({ amount: 1 }) },
       children: createElement(Group, {
-        style: { filter: { type: "opacity", amount: 0.75 } },
+        style: { filter: opacity({ amount: 0.75 }) },
         children: child,
       }),
     }),

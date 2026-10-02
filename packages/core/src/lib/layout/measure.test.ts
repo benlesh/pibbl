@@ -1,3 +1,4 @@
+import { dropShadow } from '@crc/core/filters';
 import { describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
 import { Image } from '../components/img';
@@ -180,12 +181,7 @@ describe('pure element measurement', () => {
     });
     const filtered = createElement(Measuring, {
       style: {
-        filter: {
-          type: 'dropShadow',
-          offsetX: 2,
-          offsetY: 4,
-          color: 'not-a-browser-color',
-        },
+        filter: dropShadow({ offsetX: 2, offsetY: 4, color: 'not-a-browser-color' }),
       },
     });
 

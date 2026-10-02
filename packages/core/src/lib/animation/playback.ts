@@ -597,6 +597,9 @@ export function createAnimationPlaybackController(
       discardWriter(writer: object): void {
         batch.discardWriter(writer);
       },
+      registerLifecycle(writer, lifecycle): void {
+        batch.registerLifecycle(writer, lifecycle);
+      },
       commit(): void {
         batch.commit();
       },

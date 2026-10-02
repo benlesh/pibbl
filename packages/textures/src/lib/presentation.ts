@@ -17,11 +17,9 @@ export type TextureRenderer = (
 export class TextureRaster {
   readonly surface: OffscreenCanvas;
   readonly context: OffscreenCanvasRenderingContext2D;
-  private pixels: ImageData;
-  private alpha: Uint8ClampedArray;
+  private maskRaster?: () => ImageData;
   private maskSurface?: OffscreenCanvas;
   private maskContext?: OffscreenCanvasRenderingContext2D;
-  private maskPixels?: ImageData;
   private maskDirty = true;
   constructor(
     readonly width: number,
@@ -34,37 +32,11 @@ export class TextureRaster {
       throw new Error("Textures require offscreen Canvas 2D.");
     }
     this.context = context;
-    try {
-      this.pixels = new ImageData(width, height);
-      this.alpha = new Uint8ClampedArray(width * height);
-    } catch (error) {
-      this.surface.width = this.surface.height = 0;
-      throw error;
-    }
   }
   update(field: Float32Array, lut: Uint8ClampedArray, gain = 1) {
     const raster = rasterizeField(field, lut, gain);
-    if (raster) {
-      this.pixels = raster.image;
-      this.alpha = raster.alpha;
-      this.context.putImageData(this.pixels, 0, 0);
-      this.maskDirty = true;
-      return;
-    }
-    const data = this.pixels.data;
-    for (let i = 0; i < field.length; i++) {
-      const value = Math.max(
-          0,
-          Math.min(255, Math.round(field[i] * 255 * gain)),
-        ),
-        index = value * 4;
-      this.alpha[i] = value;
-      data[i * 4] = lut[index];
-      data[i * 4 + 1] = lut[index + 1];
-      data[i * 4 + 2] = lut[index + 2];
-      data[i * 4 + 3] = 255;
-    }
-    this.context.putImageData(this.pixels, 0, 0);
+    this.maskRaster = raster.mask;
+    this.context.putImageData(raster.image, 0, 0);
     this.maskDirty = true;
   }
   private getMask(): OffscreenCanvas {
@@ -73,15 +45,11 @@ export class TextureRaster {
       this.maskContext = this.maskSurface.getContext("2d") ?? undefined;
       if (!this.maskContext)
         throw new Error("Textures require offscreen Canvas 2D.");
-      this.maskPixels = new ImageData(this.width, this.height);
     }
     if (this.maskDirty) {
-      const data = this.maskPixels!.data;
-      for (let i = 0; i < this.alpha.length; i++) {
-        data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = 255;
-        data[i * 4 + 3] = this.alpha[i];
-      }
-      this.maskContext!.putImageData(this.maskPixels!, 0, 0);
+      if (!this.maskRaster)
+        throw new Error("Texture mask requires a live WASM raster.");
+      this.maskContext!.putImageData(this.maskRaster(), 0, 0);
       this.maskDirty = false;
     }
     return this.maskSurface;
@@ -127,8 +95,7 @@ export class TextureRaster {
     if (this.maskSurface) this.maskSurface.width = this.maskSurface.height = 0;
     this.maskSurface = undefined;
     this.maskContext = undefined;
-    this.maskPixels = undefined;
-    this.alpha = new Uint8ClampedArray(0);
-    this.pixels = new ImageData(1, 1);
+
+    this.maskRaster = undefined;
   }
 }

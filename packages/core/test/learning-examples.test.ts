@@ -7,7 +7,7 @@ import {
   validateLearningExampleCatalog,
 } from "@crc/scenarios";
 import type { LearningBrowseGroup } from "@crc/scenarios";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   learningSourcePaths,
   loadLearningSource,
@@ -1214,11 +1214,24 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 79 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 81 unique, ordered, source-backed routes including optional filters and underwater", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(79);
+    expect(learningExampleCatalog).toHaveLength(81);
+    expect(
+      learningExampleCatalog
+        .filter(
+          (entry) =>
+            entry.slug === "underwater" || entry.slug === "optional-filters",
+        )
+        .map(getLearningExampleRoute)
+        .sort(),
+    ).toEqual([
+      "#/examples/composition/optional-filters",
+      "#/examples/composition/underwater",
+    ]);
+
     expect(
       learningExampleCatalog
         .filter(
@@ -1300,6 +1313,7 @@ describe("learning example catalog", () => {
         "layer",
         "living-ink",
         "material-lab",
+        "optional-filters",
         "particle-effects",
         "physics-2d",
         "physics-panels",
@@ -1307,6 +1321,7 @@ describe("learning example catalog", () => {
         "fire-and-flow",
         "signal-inputs",
         "signals-and-animation",
+        "underwater",
         "viz-grouped-stacked-bars",
         "viz-stacked-bars",
         "viz-band-bars",
@@ -1414,7 +1429,9 @@ describe("learning example catalog", () => {
       "material-lab",
       "growing-reveal",
       "plasma-globe",
+      "underwater",
       "stirred-ink",
+      "optional-filters",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1996,20 +2013,45 @@ describe("learning example catalog", () => {
     const before = solidBlueBounds(canvas);
     const target = { x: 360, y: 120 };
 
-    await pointerDownLogicalPoint(canvas, {
-      x: before.centerX,
-      y: before.centerY,
-    });
-    for (let sample = 0; sample < 8; sample += 1) {
-      await pointerMoveLogicalPoint(canvas, target);
-    }
-    await pointerUpLogicalPoint(canvas, target);
-    await nextPaint();
-    const released = solidBlueBounds(canvas);
-    for (let frame = 0; frame < 4; frame += 1) await nextPaint();
-    const rolling = solidBlueBounds(canvas);
+    // This test exercises sample retention, not host-speed-dependent event timing.
+    const nativeTimestamp = Object.getOwnPropertyDescriptor(
+      Event.prototype,
+      "timeStamp",
+    )!.get!;
+    const sampleTimes = new WeakMap<Event, number>();
+    let timestamp = 1000;
+    const timestamps = vi
+      .spyOn(Event.prototype, "timeStamp", "get")
+      .mockImplementation(function (this: Event) {
+        if (this instanceof PointerEvent && this.target === canvas) {
+          let time = sampleTimes.get(this);
+          if (time === undefined) {
+            time = timestamp;
+            timestamp += 8;
+            sampleTimes.set(this, time);
+          }
+          return time;
+        }
+        return nativeTimestamp.call(this);
+      });
+    try {
+      await pointerDownLogicalPoint(canvas, {
+        x: before.centerX,
+        y: before.centerY,
+      });
+      for (let sample = 0; sample < 8; sample += 1) {
+        await pointerMoveLogicalPoint(canvas, target);
+      }
+      await pointerUpLogicalPoint(canvas, target);
+      await nextPaint();
+      const released = solidBlueBounds(canvas);
+      for (let frame = 0; frame < 4; frame += 1) await nextPaint();
+      const rolling = solidBlueBounds(canvas);
 
-    expect(rolling.centerX).toBeGreaterThan(released.centerX + 30);
+      expect(rolling.centerX).toBeGreaterThan(released.centerX + 30);
+    } finally {
+      timestamps.mockRestore();
+    }
   });
 
   it("preserves the off-center grab offset while dragging the physics lesson ball", async () => {

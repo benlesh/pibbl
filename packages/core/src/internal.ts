@@ -443,4 +443,5 @@ export {
 
 export { getCurrentWorldTransform as crcInternalCurrentWorldTransform } from "./lib/render-target.js";
 
-export { resolveTexturePaint } from './lib/textures/texture.js';
+export { borrowTextureRaster, resolveTexturePaint, validateTexturePaint } from './lib/textures/texture-protocol.js';
+export type { BorrowedTextureRaster } from './lib/textures/texture-protocol.js';

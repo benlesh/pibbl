@@ -15,14 +15,20 @@ try {
     "ink",
     "tendrils",
     "lightning",
+    "water-waves",
   ].entries()) {
     let source = await readFile(
       new URL(
-        `assembly/${index >= 4 ? "electric" : name === "ink" ? "ink" : "materials"}.asc`,
+        `assembly/${name === "water-waves" ? "water-waves" : index >= 4 ? "electric" : name === "ink" ? "ink" : "materials"}.asc`,
         root,
       ),
       "utf8",
     );
+    if (name === "water-waves")
+      source =
+        (await readFile(new URL("assembly/water-modes.asc", root), "utf8")) +
+        "\n" +
+        source;
     if (index < 3) {
       source = source
         .replace("function sample(", "@inline\nfunction sample(")

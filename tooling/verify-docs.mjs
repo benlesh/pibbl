@@ -90,6 +90,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/reaction-diffusion.md",
   "docs/site/api/components/procedural-texture.md",
   "docs/site/api/types/textures.md",
+  "docs/site/api/types/electric-textures.md",
   "docs/site/api/functions/path-bending.md",
   "docs/site/api/functions/path-geometry.md",
   "docs/site/api/functions/text-geometry.md",
@@ -223,6 +224,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/physics-3d-geometry.md",
   "docs/site/api/types/signal-inputs.md",
   "docs/site/api/types/styles.md",
+  "docs/site/api/types/texture-resources.md",
   "docs/site/api/types/three.md",
   "docs/site/learn/index.md",
   "docs/site/learn/tutorials/diagram-editor/index.md",
@@ -242,6 +244,7 @@ const publicSiteMarkdownPaths = [
 ];
 const currentMarkdownPaths = [
   "docs/design/textures-contract.md",
+  "docs/design/weighted-electric-sources-contract.md",
   "docs/design/component-manipulation-contract.md",
   "docs/design/text-geometry-contract.md",
   "packages/textures/README.md",
@@ -278,6 +281,7 @@ const currentMarkdownPaths = [
   "docs/scenario-index.md",
   "docs/design/physics-2d-contract.md",
   "tooling/physics-comparison/README.md",
+  "tooling/texture-wasm-spike/README.md",
   "tooling/agent-verification/README.md",
   "docs/strategy/README.md",
   "docs/strategy/responsive-style-queries.md",
@@ -294,10 +298,12 @@ const currentMarkdownPaths = [
 const linkCheckedPaths = [
   ...currentMarkdownPaths,
   "docs/migrations/default-pointer-participation.md",
+  "docs/migrations/filter-factory-values.md",
   "docs/migrations/jsx-authoring-pivot.md",
 ];
 const migrationMarkdownPaths = new Set([
   "docs/migrations/default-pointer-participation.md",
+  "docs/migrations/filter-factory-values.md",
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
@@ -852,6 +858,7 @@ async function typecheckCompleteSnippets(snippets) {
               "@crc/particles": [
                 join(repositoryRoot, "packages/particles/src/index.ts"),
               ],
+              "@crc/core/filters": [join(repositoryRoot, "packages/core/src/filters.ts")],
               "@crc/textures": [
                 join(repositoryRoot, "packages/textures/src/index.ts"),
               ],
@@ -1704,6 +1711,14 @@ for (const kind of ["values", "types"])
     [...documentedApiSymbols].filter((name) => vizExports[kind].has(name)),
     vizExports[kind],
     `Documented @crc/viz ${kind}`,
+  );
+const filterSource = await readFile(join(repositoryRoot, "packages/core/src/filters.ts"), "utf8");
+const filterExports = exportedSpecifiers(filterSource, "packages/core/src/filters.ts");
+for (const kind of ["values", "types"])
+  assertSameNames(
+    [...documentedApiSymbols].filter((name) => filterExports[kind].has(name)),
+    filterExports[kind],
+    `Documented @crc/core/filters ${kind}`,
   );
 const textureSource = await readFile(
   join(repositoryRoot, "packages/textures/src/index.ts"),
