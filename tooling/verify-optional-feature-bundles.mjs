@@ -78,8 +78,10 @@ const isDisplacement = (path) =>
   path.includes("filters/displacement") ||
   path.includes("filters/render-displacement");
 const isTexture = (path) =>
+  path.includes("packages/core/src/lib/textures/texture.ts") ||
   path.includes("packages/textures/src/") ||
   path.endsWith("/textures/dist/index.mjs");
+const isAnimation = (path) => path.includes("packages/core/src/lib/animation/");
 const attributedInputs = (metafile) =>
   Object.entries(metafile.outputs)
     .flatMap(([output, entry]) =>
@@ -170,7 +172,10 @@ function assertExcluded(label, evidence, detector, name) {
 
 function summary(es, vi) {
   const markers = {
+    animation: "CRC animation playback run is already ending",
     displacement: "displacement filter value",
+    nativeDropShadow: "drop-shadow(",
+    textureProducer: "Texture message queue is full",
     water: "waterWaves is a numeric displacement map",
   };
   return {
@@ -229,6 +234,15 @@ try {
     ],
     consumer,
   );
+  writeFileSync(
+    join(consumer, "import-only-inert.mjs"),
+    `globalThis.OffscreenCanvas = class { constructor() { throw new Error("import allocated a canvas"); } };\nglobalThis.requestAnimationFrame = () => { throw new Error("import scheduled a frame"); };\nawait import("@crc/core");\nawait import("@crc/core/filters");\nawait import("@crc/textures");\n`,
+  );
+  execFileSync(process.execPath, ["import-only-inert.mjs"], {
+    cwd: consumer,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
 
   const evidence = {};
   for (const [name, source] of Object.entries(fixtures)) {
@@ -265,6 +279,28 @@ try {
             false,
             `${name} ${key} Vite retained filter machinery`,
           );
+          for (const [feature, marker] of Object.entries({
+            animation: "CRC animation playback run is already ending",
+            displacement: "displacement filter value",
+            textureProducer: "Texture message queue is full",
+            water: "waterWaves is a numeric displacement map",
+          })) {
+            assert.equal(
+              es.code.includes(marker),
+              false,
+              `${name} ${key} esbuild retained ${feature}`,
+            );
+            assert.equal(
+              vi.code.includes(marker),
+              false,
+              `${name} ${key} Vite retained ${feature}`,
+            );
+          }
+          assert.equal(
+            attributedBytes(es.inputs, isAnimation),
+            0,
+            `${name} ${key} retained animation source bytes`,
+          );
         }
         if (name === "animation") {
           assert.ok(es.code.includes("unresolved-stepper"), `animation ${key} esbuild positive detector failed`);
@@ -289,6 +325,16 @@ try {
             vi.code.includes("displacement filter value"),
             false,
             `blur ${key} Vite retained displacement program`,
+          );
+          assert.equal(
+            es.code.includes("drop-shadow("),
+            false,
+            `blur ${key} esbuild retained drop-shadow implementation`,
+          );
+          assert.equal(
+            vi.code.includes("drop-shadow("),
+            false,
+            `blur ${key} Vite retained drop-shadow implementation`,
           );
         }
         if (name === "displacement") {
