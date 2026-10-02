@@ -132,7 +132,6 @@ export class DisplacementGpu {
       this.maps.set(map.resource, cached);
     }
     this.upload(gl, 1, cached.texture, map.source, false, placement.mode !== 'stretch', cached.revision !== map.revision);
-    cached.revision = map.revision;
     const density = coordinates?.density ?? 1;
     const region = coordinates?.region ?? { x: 0, y: 0, width: source.width / density, height: source.height / density };
     const uniform = (name: string) => gl.getUniformLocation(program, name);
@@ -147,6 +146,7 @@ export class DisplacementGpu {
     if (this.isContextLost) throw new Error('Displacement WebGL2 context was lost.');
     const error = gl.getError();
     if (error !== gl.NO_ERROR) throw new Error(`Displacement GPU processing failed (${error}).`);
+    cached.revision = map.revision;
     return this.canvas.transferToImageBitmap();
   }
   private acquireResourcesWithContext(): DisplacementResources & { gl: WebGL2RenderingContext } {

@@ -29,4 +29,4 @@ released on removal.
 See [the texture guide](#/learn/guides/procedural-textures) and
 [Living Ink](#/examples/composition/living-ink).
 
-Options: [ReactionDiffusionProps](../types/textures.md#reactiondiffusionprops), [TextureBrush](../types/textures.md#texturebrush), [TextureRenderer](../types/textures.md#texturerenderer).
+Options: [ReactionDiffusionProps](#/api/types/textures#reactiondiffusionprops), [TextureBrush](#/api/types/textures#texturebrush), [TextureRenderer](#/api/types/textures#texturerenderer).
