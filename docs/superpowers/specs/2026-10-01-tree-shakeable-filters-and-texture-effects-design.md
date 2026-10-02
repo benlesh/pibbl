@@ -1,5 +1,7 @@
 # Draft design for tree shakeable filters and texture effects
 
+> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+
 Status: proposed design for review, 2026-10-01. Not an implemented contract or
 approval to change public APIs. This proposal covers optional filter architecture,
 texture consumption, animated underwater displacement, migration, and evidence.

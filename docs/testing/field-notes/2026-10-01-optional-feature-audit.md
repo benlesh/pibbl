@@ -1,5 +1,7 @@
 # Optional-feature audit — 2026-10-01
 
+> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+
 This audit records the optionality of existing feature families at base commit
 `c838c434`. It is evidence for a follow-up audit, not a claim about the
 tree-shakeable filter implementation, which was not present when these bundles

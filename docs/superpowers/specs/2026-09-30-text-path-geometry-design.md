@@ -1,5 +1,7 @@
 # Text conversion to PathGeometry
 
+> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+
 Status: Approved by the user, including pnpm tooling and Symbol.dispose support.
 Not an implemented contract.
 

@@ -1,5 +1,7 @@
 # Text PathGeometry implementation plan
 
+> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+
 Status: Planned implementation of the approved design. No implementation tasks
 have been completed by this plan.
 

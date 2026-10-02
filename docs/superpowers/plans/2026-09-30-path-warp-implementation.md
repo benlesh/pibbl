@@ -1,5 +1,7 @@
 # Four-corner path warp implementation plan
 
+> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+
 Status: implemented and focused verification passed, 2026-09-30. Aggregate
 feature completion remains pending shared-checkout gate failures recorded below.
 

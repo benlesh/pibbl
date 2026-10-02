@@ -1,5 +1,7 @@
 # Along Arc and Along Path geometry transformations
 
+> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+
 Status: approved by the user, 2026-09-30. Implementation is in progress; this
 document does not claim shipped behavior. This document uses the repository's
 existing design directory.
