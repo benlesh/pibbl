@@ -39,7 +39,10 @@ export function replayToolFiles(kind) {
   const names = [kind === 'viz' ? 'viz-replay.mjs' : 'replay.mjs', 'run-manifest.mjs',
     'identity.mjs', 'evidence-directory.mjs', 'checkpoint.mjs', 'replay-outcome.mjs', 'browser-failure.mjs', 'failure-evidence.mjs'];
   if (kind === 'viz') names.push('numeric-assertion.mjs');
+<<<<<<< HEAD
   else names.push('input-provenance.mjs');
+=======
+>>>>>>> origin/main
   return names.map(name => `tooling/agent-verification/${name}`);
 }
 
@@ -68,6 +71,7 @@ export async function finalizeReplayToolIdentity(report, repository) {
     report.toolVerification = { status: 'failed', ...describeReplayError(error) };
   }
 }
+<<<<<<< HEAD
 
 /** Page-reported facts at one capture boundary, not trusted OS/zoom attestation. */
 export async function capturePageEnvironment(page) {
@@ -91,3 +95,5 @@ export async function capturePageEnvironment(page) {
     return { status: 'unavailable', scope: 'page-reported-at-capture', failure: describeReplayError(error) };
   }
 }
+=======
+>>>>>>> origin/main

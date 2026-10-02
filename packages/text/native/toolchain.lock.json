@@ -1,0 +1,36 @@
+{
+  "protocolVersion": 2,
+  "emsdk": {
+    "version": "4.0.22",
+    "url": "https://codeload.github.com/emscripten-core/emsdk/tar.gz/refs/tags/4.0.22",
+    "sha256": "8f5e26de5c103c41ae04411e1be1ffc17983fb368343b15102a1859b3aa64626",
+    "compilerBuild": "bebaf7e50e31865b0724f17eaa52e161e2dfef5a",
+    "compilerArchives": {
+      "darwin-arm64": {
+        "url": "https://storage.googleapis.com/webassembly/emscripten-releases-builds/mac/bebaf7e50e31865b0724f17eaa52e161e2dfef5a/wasm-binaries-arm64.tar.xz",
+        "sha256": "1a3fb183385682e790cf617824681dc72c2b30e8db2afc9189d0dadea9ccd466",
+        "bytes": 297963416
+      },
+      "darwin-x64": {
+        "url": "https://storage.googleapis.com/webassembly/emscripten-releases-builds/mac/bebaf7e50e31865b0724f17eaa52e161e2dfef5a/wasm-binaries.tar.xz",
+        "sha256": "a40cfb7c4c4f8cac9c6521475abca80f20986c8c438d46ac745bb4316d838a30",
+        "bytes": 316015520
+      },
+      "linux-x64": {
+        "url": "https://storage.googleapis.com/webassembly/emscripten-releases-builds/linux/bebaf7e50e31865b0724f17eaa52e161e2dfef5a/wasm-binaries.tar.xz",
+        "sha256": "81219e78defb2f46d12a67a2fa6d128344d850f1e4375b173a324036236b40ef",
+        "bytes": 355640648
+      },
+      "linux-arm64": {
+        "url": "https://storage.googleapis.com/webassembly/emscripten-releases-builds/linux/bebaf7e50e31865b0724f17eaa52e161e2dfef5a/wasm-binaries-arm64.tar.xz",
+        "sha256": "5bff19114edb410863634b14e3f459e7d90dc5339f7e5c7bdd5a946356b1dd54",
+        "bytes": 337866768
+      }
+    }
+  },
+  "harfbuzz": {
+    "version": "14.5.0",
+    "url": "https://codeload.github.com/harfbuzz/harfbuzz/tar.gz/refs/tags/14.5.0",
+    "sha256": "97ec7488a46b974e18e08ee774af93173e7e1dbf738424796eb315ebcb735ec5"
+  }
+}

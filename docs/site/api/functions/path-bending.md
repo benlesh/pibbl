@@ -27,6 +27,12 @@ following a circular guide. It bends entire curves and closing edges. Source
 geometry is unchanged, and the operation does not schedule rendering.
 
 ```ts
+<<<<<<< HEAD
+=======
+import { bendPathAlongArc, PathGeometry } from "@crc/core";
+
+const outline = new PathGeometry();
+>>>>>>> origin/main
 const bent = bendPathAlongArc(outline, {
   source: { x: 0, y: -20, width: 180, height: 40 },
   arc: { cx: 250, cy: 250, radius: 160, startAngle: -Math.PI, sweep: Math.PI },

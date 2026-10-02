@@ -1,6 +1,12 @@
 # Path bending implementation plan
 
+<<<<<<< HEAD
 Status: feature complete, integrated, and pushed to main, 2026-09-30. The user approved the
+=======
+> **Historical status: Authorized implementation-plan record; it does not define current shipped behavior.**
+
+Status: in progress, 2026-09-30. The user approved the
+>>>>>>> origin/main
 [design](../specs/2026-09-30-path-bending-design.md) and requested implementation.
 Both Along Arc and Along Path remain the completion target.
 
@@ -38,8 +44,13 @@ Do not refactor another thread's geometry engine to get the first slice working.
 - [x] Drive the same example headlessly; check focused tests and TypeScript;
       inspect the live Studio route and one meaningful interaction in Chromium.
 - [x] Provide the actual Studio URL as **slice ready for feedback**.
+<<<<<<< HEAD
 - [x] Incorporate feedback: separate Along Path discovery and add draggable
       center/radius/sweep controls to Along Arc. Aggregate verification remains separate.
+=======
+- [ ] Incorporate feedback before broad hardening. The first slice is not
+      feature complete.
+>>>>>>> origin/main
 
 ## Slice 2: Along Path
 
@@ -56,6 +67,7 @@ Do not refactor another thread's geometry engine to get the first slice working.
 - [x] Reuse common placement/source/output infrastructure with specialized guide
       evaluation. Handle nonmonotonic source X across segment/extension/wrap
       boundaries without shortcuts that lose traversal.
+<<<<<<< HEAD
 - [x] Add editable smooth cubic guide, expose the second public function/types,
       and test the interaction. User feedback subsequently split this into the
       standalone `drawing/along-path` example.
@@ -64,10 +76,20 @@ Do not refactor another thread's geometry engine to get the first slice working.
 ## Hardening and delivery
 
 - [x] Cover design evidence matrix: every segment kind, contour/Close semantics,
+=======
+- [x] Add the Along Path mode and editable smooth cubic guide to the same example,
+      expose the second public function/types, and test the interaction.
+- [ ] Show the runnable second slice and incorporate experiential feedback.
+
+## Hardening and delivery
+
+- [ ] Cover design evidence matrix: every segment kind, contour/Close semantics,
+>>>>>>> origin/main
       fitting and signed offsets, source-frame origins/zero height, source outside
       frame, stationary guides, rejected discontinuities, wrapping/repeated laps,
       folds/collapse, precision extremes, overflow/work budgets, empty inputs,
       option errors, and input/output independence.
+<<<<<<< HEAD
 - [x] Verify analytical bounds with independent geometric oracles. Dense sampling
       is supplemental; it does not establish a guaranteed tolerance alone.
 - [x] Exercise Path paint, Clip, targeting, SVG/native conversion, and existing
@@ -81,6 +103,21 @@ Do not refactor another thread's geometry engine to get the first slice working.
       Record actual environment and fresh output. Shared-checkout failures must
       be identified and resolved or reported; never claim an unrun/failed gate.
 - [x] Audit every approved requirement before reporting **feature complete**.
+=======
+- [ ] Verify analytical bounds with independent geometric oracles. Dense sampling
+      is supplemental; it does not establish a guaranteed tolerance alone.
+- [ ] Exercise Path paint, Clip, targeting, SVG/native conversion, and existing
+      scheduling through the supported public surfaces.
+- [ ] Synchronize documentation, runtime/types, Studio declarations, export tests,
+      Bundler/NodeNext consumers, packed consumers, and source/built browser tests.
+- [ ] Review changed math and interactions once; resolve material findings and
+      re-review only fixes. Measure representative work/output, not uncontrolled
+      wall-clock performance as a correctness gate.
+- [ ] Run proportional final verification and `corepack pnpm@11.21.0 trust`.
+      Record actual environment and fresh output. Shared-checkout failures must
+      be identified and resolved or reported; never claim an unrun/failed gate.
+- [ ] Audit every approved requirement before reporting **feature complete**.
+>>>>>>> origin/main
 
 ## Planned focused verification
 
@@ -307,6 +344,7 @@ public compatibility promises.
   repeated builder Close is a no-op (explicit segment editing can retain repeats),
   and rect() preserves a trailing Move after Close. The bending implementation
   preserves those source semantics instead of changing the builders.
+<<<<<<< HEAD
 
 
 ## Final feedback and focused handoff, 2026-09-30
@@ -387,3 +425,5 @@ this completion note records delivered evidence without creating another commit.
 Both approved operations, alignment/placement/overflow/accuracy contracts,
 public integration and packaged exports, and the requested interactive feedback
 are delivered. No bending implementation requirement remains outstanding.
+=======
+>>>>>>> origin/main

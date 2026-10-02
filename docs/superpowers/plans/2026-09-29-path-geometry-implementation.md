@@ -1,5 +1,10 @@
 # PathGeometry implementation plan
 
+<<<<<<< HEAD
+=======
+> **Historical status: IMPLEMENTATION PLAN.** This dated execution record is historical evidence; current contracts and tests define shipped behavior.
+
+>>>>>>> origin/main
 **Goal:** Deliver editable public path geometry in observable vertical slices.
 
 **Architecture:** Private packed buffers hold canonical geometry; fresh conversion
@@ -57,7 +62,11 @@ coordinates; `revision`, `segmentCount`, `getSegment`, `setSegment`, `clone`,
 - [x] Add flatten, simplify and subdivide utilities with finite-segment error
       bounds, closure preservation, bounded output and explicit failures; test loops,
       backtracking, degenerate contours and error accumulation.
+<<<<<<< HEAD
 - [ ] Harden docs, packed consumers, NodeNext/Bundler declarations, source/built
+=======
+- [x] Harden docs, packed consumers, NodeNext/Bundler declarations, source/built
+>>>>>>> origin/main
       modes and Studio declarations. Review changed code, then run proportional
       final verification and aggregate trust gate before feature completion.
 
@@ -118,3 +127,25 @@ sequence still exposes Canvas-text drift in the Filters gallery (16,160 pixels,
 within x401–1163/y659–1211), absent in its isolated run. That additional drift
 was not accepted into the baseline. Aggregate feature completion remains pending
 resolution of these shared-checkout verification failures.
+<<<<<<< HEAD
+=======
+
+## Final integration — 2026-09-30
+
+Feature complete. Isolated PathGeometry from the shared checkout and integrated
+origin/main at 6d372f0d, preserving component manipulation, positioning, and pie
+APIs. Updated the example to use left/top positioning. Resolved documentation
+snapshots, declaration inventories, and catalog counts for the combined surface.
+
+The Filters visual mismatch was reproduced after earlier routes in the same page;
+iframe font/paint waiting and forced redraw did not remove it. Capturing that
+sandboxed Canvas route in a fresh page did. The baseline contains only the
+inspected navigation-row and lesson-number change. SPA navigation remains covered
+by Studio documentation acceptance. Full eight-route visual runs now pass.
+
+Fresh aggregate verification: `corepack pnpm@11.21.0 trust`, Node v24.15.0, exited 0. This includes 979 documentation mutation probes, typecheck and formatting,
+source/built Studio and package builds, packed consumers, 3,148 browser tests
+(4 intentionally skipped), documentation/search acceptance, visual safeguards,
+all eight Studio baselines, built smoke, 43 lifecycle tests, and 49 structural
+performance tests (4 intentionally skipped). No visual mismatch was waived.
+>>>>>>> origin/main

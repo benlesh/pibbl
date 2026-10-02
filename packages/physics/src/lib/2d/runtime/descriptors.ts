@@ -420,10 +420,11 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
                     ? matrixFromPose(presentation.initialPose)
                         .inverse()
                         .multiply(simulationParent)
+                        .multiply(local)
                     : relativeColliderTransform2D(
                         effectiveBodyFrame,
                         input.parentWorldTransform,
-                      ),
+                      ).multiply(local),
                 ),
               );
       const effectiveDescriptor =
@@ -458,11 +459,15 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
           this.descriptor.options.shape === "self"
             ? this.resolveSelfShape(input)
             : this.descriptor.options.shape,
-          lineageTransform ??
+          (
+            lineageTransform ??
             relativeColliderTransform2D(
               bodyFrame.poseMatrix,
               input.parentWorldTransform,
-            ),
+            )
+          ).multiply(
+            bodyLocalTransformFromPrimitive2D(input.componentType, input.style),
+          ),
           lineageTransform === undefined,
         ),
       );

@@ -37,20 +37,28 @@ it('diagnoses interception and verifies the repair through the same public appli
   expect(capturedSources.signalInspection.ownership.components.records.some((record: { source: { status: string } }) => record.source.status === 'available')).toBe(true);
   expect(capturedSources.renderCount).toBe(seed.renderCount);
   expect(pixel()).toEqual([37, 99, 235, 255]);
+<<<<<<< HEAD
   expect(seed.delivery.input).toBeNull();
   expect(seed.inspection.status).toBe('ready');
   expect(seed.inspection.records.some((record: { kind: string }) => record.kind === 'nested-surface')).toBe(true);
   expect(seed.pointSearch).toMatchObject({ status: 'verified-geometry', targetId: seed.probe.targetId, point: { x: 144, y: 112 }, hostOcclusion: 'not-observed' });
+=======
+  expect(seed.inspection.status).toBe('ready');
+  expect(seed.inspection.records.some((record: { kind: string }) => record.kind === 'nested-surface')).toBe(true);
+>>>>>>> origin/main
   expect(seed.probe.status).toBe('target');
   expect(seed.probe.candidates.filter((candidate: { outcome: string }) => candidate.outcome === 'hit')).toHaveLength(2);
   await clickMouse(canvas, { x: 144, y: 112 });
   await controller.settled();
   expect(controller.getState()).toMatchObject({ selectedItem: null, selections: 0, deliveredTo: 'decoration' });
+<<<<<<< HEAD
   expect(controller.getState().delivery.input).toMatchObject({
     original: { type: 'click', isTrusted: true }, source: null,
     userActivation: { status: 'available', scope: 'window-at-delivery', isActive: true, hasBeenActive: true },
     permissions: 'not-observed',
   });
+=======
+>>>>>>> origin/main
   expect(controller.getState().delivery.targetId).toBe(seed.probe.targetId);
   expect(controller.getState().delivery.generation).toEqual(seed.inspection.generation);
 
@@ -220,11 +228,14 @@ it('reports logical focus and native keyboard activation in the shared lab', asy
   expect(state.inspection.focus).toMatchObject({ status: 'ready', nativeFocus: 'canvas' });
   expect(state.inspection.focus.targetId).toBe(state.delivery.targetId);
   expect(state.selections).toBe(2);
+<<<<<<< HEAD
   expect(state.delivery.input).toMatchObject({
     original: { type: 'click', isTrusted: false },
     source: { type: 'keydown', isTrusted: true },
     permissions: 'not-observed',
   });
+=======
+>>>>>>> origin/main
   const outside = document.createElement('button'); outside.textContent = 'Outside'; canvas.after(outside);
   await clickMouse(outside, { x: 5, y: 5 }); await controller.settled();
   expect(focusPixel()).toEqual([248, 250, 252, 255]);
@@ -267,6 +278,7 @@ it('publishes bounded before-after component evidence through the shared inspect
   await controller.perform('inspect');
   expect(controller.getState().componentChanges).toBeNull();
 });
+<<<<<<< HEAD
 
 
 it('distinguishes script-dispatched input from browser input even when both select the item', async () => {
@@ -313,3 +325,5 @@ it('exposes opt-in bounded click propagation evidence through the shared scenari
   expect(controller.getState().selections).toBe(2);
   expect(controller.getState().eventTrace).toEqual(stopped);
 });
+=======
+>>>>>>> origin/main

@@ -20,8 +20,8 @@ const SmokeScene = ({ state, onClick }: SmokeSceneProps) => {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 480,
         height: 240,
         fill: '#f8fafc',
@@ -29,8 +29,8 @@ const SmokeScene = ({ state, onClick }: SmokeSceneProps) => {
     />,
     <Rectangle
       style={{
-        x: 28,
-        y: 48,
+        left: 28,
+        top: 48,
         width: 188,
         height: 120,
         fill: fillStyle,
@@ -41,8 +41,8 @@ const SmokeScene = ({ state, onClick }: SmokeSceneProps) => {
     />,
     <Text
       style={{
-        x: 48,
-        y: 78,
+        left: 48,
+        top: 78,
         font: '700 16px Arial',
         fill: '#ffffff',
       }}
@@ -51,16 +51,16 @@ const SmokeScene = ({ state, onClick }: SmokeSceneProps) => {
     </Text>,
     <Text
       style={{
-        x: 48,
-        y: 116,
+        left: 48,
+        top: 116,
         font: '14px Arial',
         fill: '#ffffff',
       }}
     >{`revision ${state.revision} · clicks ${state.clicks}`}</Text>,
     <Text
       style={{
-        x: 248,
-        y: 62,
+        left: 248,
+        top: 62,
         font: '700 16px Arial',
         fill: '#0f172a',
       }}
@@ -69,16 +69,16 @@ const SmokeScene = ({ state, onClick }: SmokeSceneProps) => {
     </Text>,
     <Text
       style={{
-        x: 248,
-        y: 94,
+        left: 248,
+        top: 94,
         font: '14px Arial',
         fill: '#334155',
       }}
     >{`last action: ${state.lastAction}`}</Text>,
     <Text
       style={{
-        x: 248,
-        y: 122,
+        left: 248,
+        top: 122,
         font: '14px Arial',
         fill: '#475569',
       }}

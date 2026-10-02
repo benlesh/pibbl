@@ -1,7 +1,13 @@
+<<<<<<< HEAD
 import { assertNativeDeliveryProvenance } from './input-provenance.mjs';
 import { reserveEvidenceDirectory } from './evidence-directory.mjs';
 import { describeReplayError, recordReplayFailure } from './failure-evidence.mjs';
 import { capturePageEnvironment, createReplayManifest, captureReplayToolIdentity, finalizeReplayToolIdentity } from './run-manifest.mjs';
+=======
+import { reserveEvidenceDirectory } from './evidence-directory.mjs';
+import { describeReplayError } from './failure-evidence.mjs';
+import { createReplayManifest, captureReplayToolIdentity, finalizeReplayToolIdentity } from './run-manifest.mjs';
+>>>>>>> origin/main
 import { createCheckpointWriter } from './checkpoint.mjs';
 import { finalizeReplayOutcome } from './replay-outcome.mjs';
 import { observeBrowserFailure } from './browser-failure.mjs';
@@ -60,7 +66,10 @@ try {
   stage = 'navigation';
   await checkpoint(report, stage);
   await page.goto(url);
+<<<<<<< HEAD
   report.run.environment.observedPage = await capturePageEnvironment(page);
+=======
+>>>>>>> origin/main
   const evidence = page.getByTestId('agent-targeting-evidence');
   await evidence.waitFor({ state: 'attached' });
   const readEvidence = async () => {
@@ -121,6 +130,7 @@ try {
     await waitState('deliveredTo', delivery);
     const actual = await readEvidence();
     step.actual = actual;
+<<<<<<< HEAD
     assert.equal(actual.eventTrace.scope, 'wrapped-handlers-only');
     assert.equal(actual.eventTrace.identityScope, 'trace-local');
     const eventRecords = actual.eventTrace.records.slice(-6);
@@ -134,6 +144,8 @@ try {
     assert.equal(eventRecords[0].targetId, eventRecords[2].currentTargetId);
     assert.equal(eventRecords[0].currentTargetId, eventRecords[4].currentTargetId);
     assertNativeDeliveryProvenance(actual.delivery.input, 'pointer');
+=======
+>>>>>>> origin/main
     assert.equal(actual.selectedItem, selected);
     assert.equal(actual.selections, mode === 'repair' ? 1 : 0);
     assert.deepEqual(actual.delivery.generation, prediction.inspection.generation);
@@ -299,7 +311,10 @@ try {
     return state.inspection.focus?.nativeFocus === 'canvas' && state.inspection.focus?.targetId === state.delivery.targetId && state.inspection.focus?.visible === true;
   });
   focus.actual = await readEvidence();
+<<<<<<< HEAD
   assertNativeDeliveryProvenance(focus.actual.delivery.input, 'keyboard');
+=======
+>>>>>>> origin/main
   assert.equal(focus.actual.focusObservationError, null);
   assert.equal(focus.actual.selectedItem, 'item-a');
   assert.equal(focus.actual.inspection.focus.status, 'ready');
@@ -327,6 +342,7 @@ try {
 } catch (error) {
   failed = true;
   report.browserFailure = browserFailure?.snapshot() ?? null;
+<<<<<<< HEAD
   recordReplayFailure(report, error, stage);
 } finally {
   try { await checkpoint(report, 'before-cleanup'); }
@@ -334,6 +350,16 @@ try {
   browserFailure?.beginCleanup();
   try { await browser?.close(); }
   catch (error) { failed = true; report.status = 'fail'; report.cleanupFailure = describeReplayError(error).message.slice(0, 1000); }
+=======
+  report.status = report.browserFailure?.category ? 'fail' : stage === 'setup' || stage === 'navigation' || String(error).includes('fixture identity') ? 'blocked' : 'fail';
+  report.failure = { category: report.browserFailure?.category ?? 'operation-error', stage, actionId: report.steps.at(-1)?.status === 'incomplete' ? report.steps.at(-1).actionId : null, lastActionId: report.steps.at(-1)?.actionId ?? null, ...describeReplayError(error) };
+} finally {
+  try { await checkpoint(report, 'before-cleanup'); }
+  catch (error) { report.checkpointFailure = String(error).slice(0, 1000); report.status = 'fail'; process.exitCode = 1; }
+  browserFailure?.beginCleanup();
+  try { await browser?.close(); }
+  catch (error) { failed = true; report.status = 'fail'; report.cleanupFailure = String(error).slice(0, 1000); }
+>>>>>>> origin/main
   report.browserFailure = browserFailure?.snapshot() ?? null;
   browserFailure?.dispose();
   await finalizeReplayToolIdentity(report, repository);

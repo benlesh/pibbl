@@ -1,6 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+<<<<<<< HEAD
 import { describeReplayError, recordReplayFailure } from './failure-evidence.mjs';
+=======
+import { describeReplayError } from './failure-evidence.mjs';
+>>>>>>> origin/main
 
 test('retains structured expected/actual values from native assertion errors', () => {
   let failure;
@@ -65,6 +69,7 @@ test('preserves layout diagnostic fields without invoking supplied-value accesso
   assert.ok(evidence.detail.omissions.includes('accessor'));
   assert.equal(describeReplayError(new Error('ordinary')).layoutDiagnostic, null);
 });
+<<<<<<< HEAD
 
 test('records a thrown value without custom conversion and preserves action identity', () => {
   let conversions = 0;
@@ -119,3 +124,5 @@ test('preserves special numbers and sparse array absence through JSON serializat
   assert.deepEqual(saved.assertion.expected.items, [0]);
   assert.deepEqual(saved.detail.omissions, []);
 });
+=======
+>>>>>>> origin/main

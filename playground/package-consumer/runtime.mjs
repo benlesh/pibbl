@@ -19,6 +19,8 @@ import {
 } from "@crc/core/jsx-dev-runtime";
 
 const expected = [
+  "DragHandle", "ResizeHandle", "ResizeHandles", "RotationHandle",
+  "ManipulationFrame", "Manipulable", "useManipulation", "degrees",
   "Absolute",
   "Arc",
   "Circle",
@@ -66,6 +68,11 @@ const expected = [
   "defineRenderLayer",
   "easing",
   "flattenPath",
+<<<<<<< HEAD
+=======
+  "flattenPathWang",
+  "simplifyPathRadial",
+>>>>>>> origin/main
   "simplifyPath",
   "subdividePath",
   "toPath2D",
@@ -203,9 +210,15 @@ for (const exportName of expected) {
     );
   }
 }
+<<<<<<< HEAD
 if (actual.length !== 89) {
   throw new Error(
     `Expected 89 @crc/core runtime exports, received ${actual.length}.`,
+=======
+if (actual.length !== 99) {
+  throw new Error(
+    `Expected 99 @crc/core runtime exports, received ${actual.length}.`,
+>>>>>>> origin/main
   );
 }
 
@@ -498,3 +511,12 @@ const arcPoint = core.bendPathAlongArc(bendProbe, {
 if (arcPoint.type !== 'move' || Math.hypot(arcPoint.x - (10 + 43 * Math.cos(0.5)), arcPoint.y - (20 + 43 * Math.sin(0.5))) > 0.01 || core.toSvgPathData(bendProbe) !== 'M 25 7') {
   throw new Error('Packed Along Arc failed analytic geometry or input ownership.');
 }
+<<<<<<< HEAD
+=======
+
+const wangGeometry = core.flattenPathWang(editableGeometry, { tolerance: 0.25 });
+const radialGeometry = core.simplifyPathRadial(wangGeometry, { tolerance: 0.5 });
+if (!(wangGeometry instanceof core.PathGeometry) || !(radialGeometry instanceof core.PathGeometry)) {
+  throw new Error('Alternate path helpers did not return public geometry.');
+}
+>>>>>>> origin/main

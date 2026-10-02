@@ -267,7 +267,7 @@ describe('crc root updates', () => {
     const ResourceBearingSibling = (_props: {}) => {
       useReaction(setup, []);
       return createElement(Rectangle, {
-        style: { x: 2, y: 2, width: 8, height: 8, fill: 'blue' },
+        style: { left: 2, top: 2, width: 8, height: 8, fill: 'blue' },
         onClick: () => undefined,
       });
     };
@@ -283,8 +283,8 @@ describe('crc root updates', () => {
         createElement(ResourceBearingSibling, {}),
         createElement(Rectangle, {
           style: {
-            x: 12,
-            y: 2,
+            left: 12,
+            top: 2,
             width: 8,
             height: 8,
             fill: 'red',
@@ -308,8 +308,8 @@ describe('crc root updates', () => {
       drawImage.mockRestore();
       crc(canvas, createElement(Rectangle, {
         style: {
-          x: 4,
-          y: 4,
+          left: 4,
+          top: 4,
           width: 8,
           height: 8,
           fill: 'green',
@@ -636,7 +636,7 @@ describe('crc root updates', () => {
       failedRenders.push(value);
       if (shouldFail && value > 0) throw renderFailure;
       return createElement(Rectangle, {
-        style: { x: value, width: 10, height: 10, fill: 'red' },
+        style: { left: value, width: 10, height: 10, fill: 'red' },
       });
     };
     const HealthyRoot = (_props: {}) => {
@@ -646,14 +646,14 @@ describe('crc root updates', () => {
       const value = healthyOutput.get();
       healthyRenders.push(value);
       return createElement(Rectangle, {
-        style: { x: value, width: 10, height: 10, fill: 'blue' },
+        style: { left: value, width: 10, height: 10, fill: 'blue' },
       });
     };
     const RecoveredRoot = (_props: {}) => {
       const value = failedOutput.get();
       recoveredRenders.push(value);
       return createElement(Rectangle, {
-        style: { x: value, width: 10, height: 10, fill: 'green' },
+        style: { left: value, width: 10, height: 10, fill: 'green' },
       });
     };
     const failedController = crc(
@@ -741,7 +741,7 @@ describe('crc root updates', () => {
       return [
         createElement(Rectangle, {
           style: {
-            x: firstFailedOutput.get(),
+            left: firstFailedOutput.get(),
             width: 5,
             height: 5,
             fill: 'red',
@@ -749,8 +749,8 @@ describe('crc root updates', () => {
         }),
         createElement(Rectangle, {
           style: {
-            x: secondFailedOutput.get(),
-            y: 5,
+            left: secondFailedOutput.get(),
+            top: 5,
             width: 5,
             height: 5,
             fill: 'red',
@@ -765,7 +765,7 @@ describe('crc root updates', () => {
       const value = healthyOutput.get();
       healthyRenders.push(value);
       return createElement(Rectangle, {
-        style: { x: value, width: 5, height: 5, fill: 'blue' },
+        style: { left: value, width: 5, height: 5, fill: 'blue' },
       });
     };
     const failedController = crc(createCanvas(), createElement(FailingRoot, {}));

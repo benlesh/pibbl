@@ -191,6 +191,7 @@ describe('public CRC API', () => {
       'Arc',
       'Circle',
       'Clip',
+      'DragHandle',
       'Ellipse',
       'Flex',
       'Flow',
@@ -204,12 +205,17 @@ describe('public CRC API', () => {
       'Layer',
       'LayoutDiagnostic',
       'Line',
+      'Manipulable',
+      'ManipulationFrame',
       'Overlay',
       'Path',
       'PathGeometry',
       'Polygon',
       'Rectangle',
       'RegularPolygon',
+      'ResizeHandle',
+      'ResizeHandles',
+      'RotationHandle',
       'Star',
       'SvgPath',
       'Text',
@@ -234,8 +240,13 @@ describe('public CRC API', () => {
       'defineAnimation',
       'definePrimitive',
       'defineRenderLayer',
+      'degrees',
       'easing',
       'flattenPath',
+<<<<<<< HEAD
+=======
+      'flattenPathWang',
+>>>>>>> origin/main
       'isSignal',
       'keyframes',
       'layoutDiagnostic',
@@ -250,6 +261,10 @@ describe('public CRC API', () => {
       'sequence',
       'signal',
       'simplifyPath',
+<<<<<<< HEAD
+=======
+      'simplifyPathRadial',
+>>>>>>> origin/main
       'spring',
       'stepper',
       'subdividePath',
@@ -267,6 +282,7 @@ describe('public CRC API', () => {
       'useEventTarget',
       'useLayoutBox',
       'useLinePath',
+      'useManipulation',
       'usePlayback',
       'useReaction',
       'useRectPath',

@@ -35,9 +35,16 @@ describe("Studio editor declaration libraries", () => {
     const libraries = declarationLibraries();
     const filePaths = new Set(libraries.map(({ filePath }) => filePath));
 
+<<<<<<< HEAD
     expect(libraries).toHaveLength(10);
     expect(filePaths.size).toBe(10);
     expect(filePaths).toContain("file:///node_modules/@crc/textures/index.d.ts");
+=======
+    expect(libraries).toHaveLength(11);
+    expect(filePaths.size).toBe(11);
+    expect(filePaths).toContain("file:///node_modules/@crc/textures/index.d.ts");
+    expect(filePaths).toContain("file:///node_modules/@crc/text/index.d.ts");
+>>>>>>> origin/main
     expect(filePaths).toContain("file:///node_modules/@crc/viz/index.d.ts");
     expect(filePaths).toContain("file:///node_modules/@crc/three/index.d.ts");
     expect(filePaths).not.toContain("file:///node_modules/three/index.d.ts");
@@ -72,8 +79,6 @@ describe("Studio editor declaration libraries", () => {
     expect(filePaths).toContain(
       "file:///node_modules/three/addons/controls/OrbitControls.d.ts",
     );
-    expect(filePaths).toContain(
-      "file:///node_modules/@types/webxr/index.d.ts",
-    );
+    expect(filePaths).toContain("file:///node_modules/@types/webxr/index.d.ts");
   });
 });

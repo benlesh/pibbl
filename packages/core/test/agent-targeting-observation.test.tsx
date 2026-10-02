@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { KeyboardNavigation, FocusManagement, Clip, Group, Layer, Line, Rectangle, computed, crc, defineRenderLayer, signal, type CRCController, type CRCNode } from '@crc/core';
+=======
+import { FocusManagement, Clip, Group, Layer, Line, Rectangle, computed, crc, defineRenderLayer, signal, type CRCController, type CRCNode } from '@crc/core';
+>>>>>>> origin/main
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
 import { signalGraphSnapshot } from '../src/lib/signals/graph';
@@ -34,7 +38,11 @@ it('inspection preserves lazy evaluation, graph edges, scheduler work, Canvas st
   let renders = 0;
   const visible = computed(() => { evaluations++; return source.get() ? '#008000' : '#0000ff'; });
   const dormant = computed(() => { dormantEvaluations++; return source.get(); });
+<<<<<<< HEAD
   function Scene() { renders++; return <Rectangle style={{ x: 20, y: 20, width: 80, height: 40, fill: visible }} onClick={() => undefined} />; }
+=======
+  function Scene() { renders++; return <Rectangle style={{ left: 20, top: 20, width: 80, height: 40, fill: visible }} onClick={() => undefined} />; }
+>>>>>>> origin/main
   controller = crc(canvas, <Scene />, { pixelRatio: 1 });
   driver.flush(1);
   const inspector = createTargetingInspector(canvas);
@@ -50,7 +58,10 @@ it('inspection preserves lazy evaluation, graph edges, scheduler work, Canvas st
   for (let index = 0; index < 50; index++) {
     const observation = inspector.snapshot();
     expect(observation.status).toBe('ready');
+<<<<<<< HEAD
     expect(observation.focus).toMatchObject({ status: 'unconfigured', policy: null });
+=======
+>>>>>>> origin/main
     expect(Object.isFrozen(observation.records[0])).toBe(true);
     expect(inspector.probe(observation.generation!, 30, 30).status).toBe('target');
     expect(inspector.convert(observation.generation!, 'root-logical', 'backing', { x: 30, y: 30 }).status).toBe('mapped');
@@ -96,7 +107,11 @@ it('enabled inspection and disabled inspection have identical render and schedul
     const canvas = host();
     const source = signal(0);
     let renders = 0;
+<<<<<<< HEAD
     function Scene() { renders++; return <Rectangle style={{ x: source.get(), y: 0, width: 10, height: 10, fill: '#fff' }} />; }
+=======
+    function Scene() { renders++; return <Rectangle style={{ left: source.get(), top: 0, width: 10, height: 10, fill: '#fff' }} />; }
+>>>>>>> origin/main
     const initialRequests = driver.requestCount;
     const graphBefore = signalGraphSnapshot();
     const mount = crc(canvas, <Scene />, { pixelRatio: 1 });
@@ -121,7 +136,11 @@ it('enabled inspection and disabled inspection have identical render and schedul
 
 it('reports bounded, unsupported, clipped and stale evidence instead of false matches', () => {
   const canvas = host();
+<<<<<<< HEAD
   controller = crc(canvas, Array.from({ length: 65 }, (_, index) => <Rectangle key={index} style={{ x: index, y: 0, width: 10, height: 10, fill: '#fff' }} />));
+=======
+  controller = crc(canvas, Array.from({ length: 65 }, (_, index) => <Rectangle key={index} style={{ left: index, top: 0, width: 10, height: 10, fill: '#fff' }} />));
+>>>>>>> origin/main
   driver.flush(1);
   const inspector = createTargetingInspector(canvas);
   const tooLarge = inspector.snapshot();
@@ -174,7 +193,11 @@ it('probes transformed clipped Layers with bounded snapshots and rejects stale c
   let delivered: number | null = null;
   controller = crc(canvas, <Group style={{ translateX: 80, translateY: 40 }}><Group style={{ scaleX: 2, scaleY: 2 }}>
     <Layer style={{ width: 60, height: 60 }}><Clip style={{ d: clip }}>
+<<<<<<< HEAD
       <Rectangle style={{ x, width: 40, height: 40, fill: '#fff' }} onClick={event => { delivered = inspector.identifyTarget(event.target); }} />
+=======
+      <Rectangle style={{ left: x, width: 40, height: 40, fill: '#fff' }} onClick={event => { delivered = inspector.identifyTarget(event.target); }} />
+>>>>>>> origin/main
     </Clip></Layer>
   </Group></Group>, { pixelRatio: 2 });
   driver.flush(1);
@@ -330,7 +353,11 @@ it('reports logical capture separately from geometry without changing native dra
     <Rectangle style={{ width: 40, height: 40, fill: '#00f' }}
       onPointerDown={event => { pointerId = event.pointerId; event.currentTarget.setPointerCapture(pointerId); }}
       onPointerMove={event => { delivered = inspector.identifyTarget(event.target); }} />
+<<<<<<< HEAD
     <Rectangle style={{ x: 100, width: 40, height: 40, fill: '#f00' }} />
+=======
+    <Rectangle style={{ left: 100, width: 40, height: 40, fill: '#f00' }} />
+>>>>>>> origin/main
   </>);
   driver.flush(1);
   const inspector = createTargetingInspector(canvas);
@@ -356,8 +383,13 @@ it('observes native Canvas focus and logical keyboard order independently', asyn
   const before = document.createElement('button'), after = document.createElement('button');
   before.textContent = 'before'; after.textContent = 'after'; canvas.before(before); canvas.after(after);
   controller = crc(canvas, <FocusManagement><Group>
+<<<<<<< HEAD
     <KeyboardNavigation mode="directional"><Rectangle style={{ width: 40, height: 40, fill: '#00f' }} onClick={() => undefined} /></KeyboardNavigation>
     <Rectangle style={{ x: 60, width: 40, height: 40, fill: '#f00' }} onClick={() => undefined} />
+=======
+    <Rectangle style={{ width: 40, height: 40, fill: '#00f' }} onClick={() => undefined} />
+    <Rectangle style={{ left: 60, width: 40, height: 40, fill: '#f00' }} onClick={() => undefined} />
+>>>>>>> origin/main
   </Group></FocusManagement>);
   driver.flush(1);
   const inspector = createTargetingInspector(canvas);
@@ -365,12 +397,15 @@ it('observes native Canvas focus and logical keyboard order independently', asyn
   const initial = inspector.snapshot();
   expect(initial.focus).toMatchObject({ status: 'ready', nativeFocus: 'other', completeness: 'complete' });
   expect(initial.focus.records.map(record => record.targetId)).toEqual(initial.records.map(record => record.targetId));
+<<<<<<< HEAD
   expect(initial.focus.policy).toEqual({ kind: 'crc-focus-management', tab: 'source-order-exit', keyboardActivation: 'enter-space' });
   const boundaryId = initial.focus.records[0].directionalBoundaryId;
   expect(boundaryId).toBeGreaterThan(0);
   expect(initial.focus.records[1].directionalBoundaryId).toBeNull();
   expect(inspector.snapshot().focus.records[0].directionalBoundaryId).toBe(boundaryId);
   expect(Object.isFrozen(initial.focus.policy)).toBe(true);
+=======
+>>>>>>> origin/main
   await tab(); driver.flush(2);
   const first = inspector.snapshot();
   expect(document.activeElement).toBe(canvas);
@@ -389,7 +424,11 @@ it('reports committed fitted surface geometry without measuring DOM and agrees w
   const canvas = host();
   canvas.style.cssText = 'width:600px;height:400px';
   let delivered: { x: number; y: number } | null = null;
+<<<<<<< HEAD
   controller = crc(canvas, <Rectangle style={{ x: 40, y: 20, width: 20, height: 20, fill: '#ff0000' }} onClick={event => { delivered = { x: event.x, y: event.y }; }} />, {
+=======
+  controller = crc(canvas, <Rectangle style={{ left: 40, top: 20, width: 20, height: 20, fill: '#ff0000' }} onClick={event => { delivered = { x: event.x, y: event.y }; }} />, {
+>>>>>>> origin/main
     viewport: { width: 300, height: 100 }, fit: 'contain', pixelRatio: 2,
   });
   driver.flush(1);
@@ -425,7 +464,11 @@ it('reports committed fitted surface geometry without measuring DOM and agrees w
 it('converts points and vectors only with matching committed geometry and explicit supported spaces', () => {
   const canvas = host(); canvas.style.cssText = 'width:600px;height:400px';
   const x = signal(40);
+<<<<<<< HEAD
   controller = crc(canvas, <Rectangle style={{ x, y: 20, width: 20, height: 20, fill: '#ff0000' }} />, {
+=======
+  controller = crc(canvas, <Rectangle style={{ left: x, top: 20, width: 20, height: 20, fill: '#ff0000' }} />, {
+>>>>>>> origin/main
     viewport: { width: 300, height: 100 }, fit: 'contain', pixelRatio: 2,
   });
   driver.flush(1);
@@ -452,7 +495,11 @@ it('converts points and vectors only with matching committed geometry and explic
 it('tracks fractional responsive resize and hidden-host recovery without reusing old geometry', async () => {
   const canvas = host(); canvas.style.cssText = 'display:block;width:600px;height:400px';
   const delivered: { x: number; y: number }[] = [];
+<<<<<<< HEAD
   controller = crc(canvas, <Rectangle style={{ x: 20, y: 20, width: 20, height: 20, fill: '#ff0000' }} onClick={event => { delivered.push({ x: event.x, y: event.y }); }} />, { viewport: 'responsive', pixelRatio: 1.5 });
+=======
+  controller = crc(canvas, <Rectangle style={{ left: 20, top: 20, width: 20, height: 20, fill: '#ff0000' }} onClick={event => { delivered.push({ x: event.x, y: event.y }); }} />, { viewport: 'responsive', pixelRatio: 1.5 });
+>>>>>>> origin/main
   driver.flush(1);
   const inspector = createTargetingInspector(canvas);
   const original = inspector.snapshot();

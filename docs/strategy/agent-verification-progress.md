@@ -9,7 +9,11 @@
 
 The working result is a source-development verification prototype, not a finished
 373-requirement implementation. The current ledger accounts for every ID:
+<<<<<<< HEAD
 **348 partial, 25 known gaps, 0 unassessed, none certified complete**. These
+=======
+**229 partial, 18 known gaps, 126 unassessed, none certified complete**. These
+>>>>>>> origin/main
 measure assessment coverage, not percentage complete. Later dated entries below
 supersede earlier historical counts and verification results.
 
@@ -2694,6 +2698,7 @@ pnpm 11.21.0 / Chromium. The integration coordinator owns the final aggregate ga
 this chat returns to holding edits after reporting the fix. No commit or push was
 made here. REN-07 remains partial and inventory counts are unchanged.
 
+<<<<<<< HEAD
 ## Post-checkpoint replay failure hardening — 2026-09-30
 
 Integration released the shared-checkout hold after copying the completed work
@@ -3091,6 +3096,8 @@ unwrapped listeners, stop reasons, async completion and causal action links are
 not inferred. Counts: 348 partial, 25 gaps, zero unassessed, none certified complete.
 No aggregate gate or completion of the full verification system is claimed.
 
+=======
+>>>>>>> origin/main
 ## Follow-on slices, preserving the full objective
 
 These tasks are not a substitute for the remaining requirements; they identify

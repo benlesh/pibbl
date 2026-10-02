@@ -33,9 +33,7 @@ no Canvas resources. It peers on the application's `@crc/core`.
 
 `ReactionDiffusion` supports `seed`, `preset` (`spots` or `stripes`), `resolution`,
 `palette`, `paused`, `resetRevision`, and `brush` (`false` or `{ radius, strength }`).
-The brush radius is in simulation cells. It plants small colonies, with larger
-brushes planting clusters, and skips established ink instead of overdosing it.
-Very small or weak marks can still dissipate. Pause still allows painting. Changing
+The brush radius is in simulation cells. Pause still allows painting. Changing
 seed, preset, resolution, or reset revision resets the field; palette and display
 changes preserve it. Defaults are seed 42, spots, 256 × 160, lagoon palette,
 unpaused, and a brush of radius 6/strength 0.8.

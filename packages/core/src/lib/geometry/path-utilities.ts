@@ -232,7 +232,12 @@ function subdivideCubic(a: Point, b: Point, c: Point, d: Point, divisions: numbe
 
 function simplifyOpen(points: readonly Point[], tolerance: number): Point[] {
   if (points.length <= 2) return [...points];
+<<<<<<< HEAD
   const keep = new Set([0, points.length - 1]);
+=======
+  const keep = new Uint8Array(points.length);
+  keep[0] = keep[points.length - 1] = 1;
+>>>>>>> origin/main
   const stack: Array<readonly [number, number]> = [[0, points.length - 1]];
   while (stack.length) {
     const [first, last] = stack.pop()!;
@@ -241,13 +246,22 @@ function simplifyOpen(points: readonly Point[], tolerance: number): Point[] {
       const distance = pointSegmentDistance(points[i], points[first], points[last]);
       if (distance > maximum) { maximum = distance; index = i; }
     }
+<<<<<<< HEAD
     if (index !== -1) { keep.add(index); stack.push([first, index], [index, last]); }
   }
   return [...keep].sort((a, b) => a - b).map(index => points[index]);
+=======
+    if (index !== -1) { keep[index] = 1; stack.push([first, index], [index, last]); }
+  }
+  const result: Point[] = [];
+  for (let i = 0; i < points.length; i++) if (keep[i]) result.push(points[i]);
+  return result;
+>>>>>>> origin/main
 }
 
 function simplifyClosed(points: readonly Point[], tolerance: number): Point[] {
   if (points.length <= 3 || !hasThreeDistinct(points)) return [...points];
+<<<<<<< HEAD
   let farthest = 1, distance = -1;
   for (let i = 1; i < points.length; i++) {
     const next = squaredDistance(points[0], points[i]);
@@ -258,15 +272,50 @@ function simplifyClosed(points: readonly Point[], tolerance: number): Point[] {
   const joined = [...first, ...second.slice(1, -1)];
   if (hasThreeDistinct(joined)) return joined;
   return points.slice(0, 3);
+=======
+  const [firstAnchor, secondAnchor] = closedAnchors(points);
+  const first = simplifyOpen(points.slice(0, firstAnchor + 1), tolerance);
+  const second = simplifyOpen(points.slice(firstAnchor, secondAnchor + 1), tolerance);
+  const third = simplifyOpen([...points.slice(secondAnchor), points[0]], tolerance);
+  return [...first, ...second.slice(1), ...third.slice(1, -1)];
+}
+
+function closedAnchors(points: readonly Point[]): readonly [number, number] {
+  let farthest = 1, farthestDistance = -1;
+  for (let i = 1; i < points.length; i++) {
+    const distance = pointDistance(points[0], points[i]);
+    if (distance > farthestDistance) { farthestDistance = distance; farthest = i; }
+  }
+  let third = -1, thirdDistance = -1;
+  for (let i = 1; i < points.length; i++) {
+    if (i === farthest || samePoint(points[i], points[0]) || samePoint(points[i], points[farthest])) continue;
+    const distance = pointSegmentDistance(points[i], points[0], points[farthest]);
+    if (distance > thirdDistance) { thirdDistance = distance; third = i; }
+  }
+  const [firstAnchor, secondAnchor] = [farthest, third].sort((a, b) => a - b);
+  return [firstAnchor, secondAnchor];
+>>>>>>> origin/main
 }
 
 function withoutClosingDuplicate(points: readonly Point[]): Point[] {
   return points.length > 1 && samePoint(points[0], points.at(-1)!) ? points.slice(0, -1) : [...points];
 }
 function hasThreeDistinct(points: readonly Point[]): boolean {
+<<<<<<< HEAD
   const unique: Point[] = [];
   for (const point of points) if (!unique.some(other => samePoint(point, other))) unique.push(point);
   return unique.length >= 3;
+=======
+  const first = points[0];
+  let second: Point | undefined;
+  for (let i = 1; i < points.length; i++) {
+    const point = points[i];
+    if (samePoint(point, first)) continue;
+    if (!second) second = point;
+    else if (!samePoint(point, second)) return true;
+  }
+  return false;
+>>>>>>> origin/main
 }
 function splitQuadratic(a: Point, b: Point, c: Point, t: number): readonly [readonly [Point, Point, Point], readonly [Point, Point, Point]] {
   const ab = interpolate(a, b, t), bc = interpolate(b, c, t), p = interpolate(ab, bc, t);
@@ -280,6 +329,7 @@ function splitCubic(a: Point, b: Point, c: Point, d: Point, t: number): readonly
 function line([x, y]: Point): PathSegment { return { type: 'line', x, y }; }
 function midpoint(a: Point, b: Point): Point { return interpolate(a, b, 0.5); }
 function interpolate(a: Point, b: Point, t: number): Point { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; }
+<<<<<<< HEAD
 function squaredDistance(a: Point, b: Point): number { const x = a[0] - b[0], y = a[1] - b[1]; return x * x + y * y; }
 function samePoint(a: Point, b: Point): boolean { return a[0] === b[0] && a[1] === b[1]; }
 function pointSegmentDistance(point: Point, a: Point, b: Point): number {
@@ -287,5 +337,25 @@ function pointSegmentDistance(point: Point, a: Point, b: Point): number {
   if (length === 0) return Math.hypot(point[0] - a[0], point[1] - a[1]);
   const t = Math.max(0, Math.min(1, ((point[0] - a[0]) * x + (point[1] - a[1]) * y) / length));
   return Math.hypot(point[0] - (a[0] + x * t), point[1] - (a[1] + y * t));
+=======
+function pointDistance(a: Point, b: Point): number { return Math.hypot(difference(a[0], b[0]), difference(a[1], b[1])); }
+function samePoint(a: Point, b: Point): boolean { return a[0] === b[0] && a[1] === b[1]; }
+function pointSegmentDistance(point: Point, a: Point, b: Point): number {
+  const x = difference(b[0], a[0]), y = difference(b[1], a[1]);
+  const px = difference(point[0], a[0]), py = difference(point[1], a[1]);
+  const scale = Math.max(Math.abs(x), Math.abs(y), Math.abs(px), Math.abs(py));
+  if (scale === 0) return Math.hypot(px, py);
+  const scaledX = x / scale, scaledY = y / scale;
+  const scaledPX = px / scale, scaledPY = py / scale;
+  const length = scaledX * scaledX + scaledY * scaledY;
+  if (length === 0) return Math.hypot(px, py);
+  const t = Math.max(0, Math.min(1, (scaledPX * scaledX + scaledPY * scaledY) / length));
+  return scale * Math.hypot(scaledPX - scaledX * t, scaledPY - scaledY * t);
+}
+function difference(value: number, origin: number): number {
+  const result = value - origin;
+  if (!Number.isFinite(result)) throw new RangeError('Path utility cannot compare coordinates with an unrepresentable difference.');
+  return result;
+>>>>>>> origin/main
 }
 function normalizeAngle(angle: number): number { const normalized = angle % TAU; return Object.is(normalized, -0) ? 0 : normalized; }

@@ -161,7 +161,11 @@ let browser;
 try {
   await waitForServer(server);
   browser = await chromium.launch({ headless: true });
+<<<<<<< HEAD
   const pageOptions = {
+=======
+  const mainPage = await browser.newPage({
+>>>>>>> origin/main
     viewport: { width: 1280, height: 900 },
     colorScheme: "light",
     reducedMotion: "reduce",
@@ -174,10 +178,28 @@ try {
   });
 
   for (const route of routes) {
+<<<<<<< HEAD
     // Each reference is a direct route load. Reusing a page after Learn leaves
     // browser font state that changes Canvas generic-font rendering in Filters.
     // A fresh context makes route captures independent of their execution order.
     const page = await browser.newPage(pageOptions);
+=======
+    // Chromium renders this sandboxed Canvas text differently after earlier
+    // routes in the same page, even after iframe fonts and paint have settled.
+    // Capture it in a fresh page; navigation continuity is covered separately
+    // by the Studio documentation acceptance suite.
+    const isolated = route.name === "filters";
+    const page = isolated
+      ? await browser.newPage({
+          viewport: { width: 1280, height: 900 },
+          colorScheme: "light",
+          reducedMotion: "reduce",
+          locale: "en-US",
+          timezoneId: "UTC",
+          deviceScaleFactor: 1,
+        })
+      : mainPage;
+>>>>>>> origin/main
     await page.goto(`${origin}/${route.hash}`);
     await page.locator(route.ready).waitFor({ timeout: 30_000 });
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
@@ -205,6 +227,20 @@ try {
           `Studio lesson must use exactly one opaque script-only preview frame; received ${frameCount} frame(s) with sandbox=${JSON.stringify(sandbox)}.`,
         );
       }
+      const preview = frames.first().contentFrame();
+      if (!preview) throw new Error("Studio lesson preview frame is unavailable.");
+      const canvas = preview.locator("canvas");
+      await canvas.waitFor({ timeout: 30_000 });
+      await canvas.evaluate(async (element) => {
+        const document = element.ownerDocument;
+        const window = document.defaultView;
+        if (!window) throw new Error("Studio lesson preview window is unavailable.");
+        await document.fonts.ready;
+        const nextFrames = () => new Promise((resolvePromise) =>
+          window.requestAnimationFrame(() => window.requestAnimationFrame(resolvePromise)),
+        );
+        await nextFrames();
+      });
     }
     if (route.name === "test-lab") {
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
@@ -255,7 +291,11 @@ try {
     await writeFile(actualPath, actual);
     if (update) {
       await writeFile(baselinePath, actual);
+<<<<<<< HEAD
       await page.close();
+=======
+      if (isolated) await page.close();
+>>>>>>> origin/main
       continue;
     }
     const expected = await readFile(baselinePath).catch(() => undefined);
@@ -269,7 +309,11 @@ try {
         `Studio visual "${route.name}" differs by ${comparison.differentPixels} pixels (${comparison.dimensions}). Inspect ${actualPath}.`,
       );
     }
+<<<<<<< HEAD
     await page.close();
+=======
+    if (isolated) await page.close();
+>>>>>>> origin/main
   }
   process.stdout.write(
     `${update ? "Updated and inspected" : "Matched"} ${routes.length} CRC studio visual baselines.\n`,

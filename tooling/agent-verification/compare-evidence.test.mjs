@@ -46,6 +46,7 @@ test('compares recorded failure changes and refuses a pass with unfinished actio
   after.status = 'pass';
   assert.ok(compareReplayReports(before, after).reasons.includes('after:contradictory-pass'));
 });
+<<<<<<< HEAD
 
 const observed = () => ({ status: 'observed', scope: 'page-reported-at-capture',
   viewportCss: { width: 1280, height: 1000 }, devicePixelRatio: 1, visualViewportScale: 1,
@@ -82,3 +83,5 @@ test('labels declared-only comparisons and compares observed facts when availabl
   after.run.environment.observedPage.preferences.dark = true;
   assert.ok(compareReplayReports(before, after).reasons.includes('environment:differs'));
 });
+=======
+>>>>>>> origin/main

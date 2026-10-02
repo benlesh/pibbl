@@ -5,6 +5,11 @@ export {
   type PathBendFrame, type PathBendArc, type PathBendAlign, type PathBendBaseline,
   type PathBendFit, type PathBendOverflow, type PathBendOptions, type BendPathAlongArcOptions,
 } from './lib/geometry/path-bending.js';
+<<<<<<< HEAD
+=======
+export { flattenPathWang } from './lib/geometry/path-wang.js';
+export { simplifyPathRadial } from './lib/geometry/path-radial.js';
+>>>>>>> origin/main
 export { PathGeometry, type PathSegment } from './lib/geometry/path-geometry.js';
 export { toPath2D, toSvgPathData } from './lib/geometry/path-conversion.js';
 export {
@@ -374,5 +379,20 @@ export type {
   CRCWheelEvent,
 } from './lib/events/types.js';
 
+<<<<<<< HEAD
 export { defineTexture, useTexture } from './lib/textures/texture.js';
 export type { Texture, TexturePaint, TextureRecipe, TextureDefinition, TextureOptions, TexturePlacement, TextureContext, TextureFrame } from './lib/textures/texture.js';
+=======
+export { useManipulation } from './lib/manipulation/controller.js';
+export { ManipulationFrame } from './lib/manipulation/frame.js';
+export { DragHandle, ResizeHandle, ResizeHandles, RotationHandle } from './lib/manipulation/handles.js';
+export type { CRCManipulationController, CRCManipulationOptions, CRCManipulationSnapshot, CRCManipulationEvent, CRCManipulationCommitEvent, CRCManipulationCancelEvent, CRCManipulationCancelReason, CRCManipulationGeometry, CRCManipulationOperation, CRCManipulationActive, CRCManipulationFrameProps, CRCManipulationMoveInput, CRCManipulationResizeInput, CRCManipulationRotateInput } from './lib/manipulation/controller-types.js';
+export type { CRCManipulationBox, CRCManipulationPoint, CRCManipulationWhen, CRCResizePosition } from './lib/manipulation/types.js';
+export type { CRCDragHandleProps, CRCDragHandleStyle } from './lib/manipulation/handles.js';
+
+export type { CRCResizeHandleProps, CRCResizeHandlesProps, CRCRotationHandleProps, CRCResizeHandleStyle, CRCRotationHandleStyle, CRCManipulationReadoutStyle, CRCManipulationReadoutStateStyle, CRCRotationConnectorStyle, CRCRotationArcStyle } from './lib/manipulation/handles.js';
+
+export { degrees } from './lib/manipulation/degrees.js';
+export { Manipulable } from './lib/manipulation/manipulable.js';
+export type { CRCManipulableProps } from './lib/manipulation/manipulable.js';
+>>>>>>> origin/main

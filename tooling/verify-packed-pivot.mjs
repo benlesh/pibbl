@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { verifyPathTreeShaking } from "./verify-path-tree-shaking.mjs";
 import { execFileSync } from "node:child_process";
 import {
   cpSync,
@@ -286,6 +287,8 @@ try {
       consumer,
     );
   run(process.execPath, ["runtime.mjs"], consumer);
+  process.stdout.write(run(process.execPath, [join(root, "tooling/verify-positioning-environments.mjs"), "--packed-entry", installedCore]));
+  await verifyPathTreeShaking(installedCore, "packed");
   const shared = await bundle(
     `
     import { crc, Rectangle, createElement } from '@crc/core';

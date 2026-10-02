@@ -1,7 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
+<<<<<<< HEAD
 import { capturePageEnvironment, createReplayManifest } from './run-manifest.mjs';
+=======
+import { createReplayManifest } from './run-manifest.mjs';
+>>>>>>> origin/main
 
 test('records an executable rerun recipe without reusing evidence or copying ambient secrets', () => {
   const manifest = createReplayManifest({ runId: 'fixture-run', repository: '/tmp/crc fixture', kind: 'viz', url: 'http://127.0.0.1:5195/#/testing/viz-hover-lab', density: 2 });
@@ -26,6 +30,7 @@ test('targeting recipe keeps its fixed density and rejects invalid configuration
   assert.throws(() => createReplayManifest({ ...args, density: 2 }), /density/);
   assert.throws(() => createReplayManifest({ ...args, kind: 'viz', density: 3 }), /density/);
 });
+<<<<<<< HEAD
 
 
 test('records observed page environment separately from requested options', { timeout: 15000 }, async () => {
@@ -56,3 +61,5 @@ test('records observed page environment separately from requested options', { ti
     assert.equal(unavailable.viewportCss, undefined);
   } finally { await browser.close(); }
 });
+=======
+>>>>>>> origin/main

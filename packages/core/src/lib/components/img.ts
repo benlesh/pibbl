@@ -17,7 +17,6 @@ import type {
 } from '../types.js';
 import { resolveLength } from '../style/resolve-length.js';
 import {
-  resolveLocalOffset,
   resolveOptionalLength,
   stripLayoutParticipation,
 } from '../style/resolve-built-in.js';
@@ -147,8 +146,8 @@ function resolveImageStyle(
 ): ResolvedImgStyle {
   return {
     ...stripLayoutParticipation(style),
-    x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
-    y: resolveLocalOffset(style.y, context.percentageBasis.height, 'y', context),
+    x: 0,
+    y: 0,
     width: resolveOptionalLength(
       style.width,
       context.percentageBasis.width,

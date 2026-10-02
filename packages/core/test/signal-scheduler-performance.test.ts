@@ -344,7 +344,7 @@ describe('signal and scheduler structural performance', () => {
       Array.from({ length: 100 }, (_, index) =>
         createElement(Rectangle, {
           key: `plain-${index}`,
-          style: { x: index * 4, width: 4, height: 4 },
+          style: { left: index * 4, width: 4, height: 4 },
         }),
       ),
     ));
@@ -372,7 +372,7 @@ describe('signal and scheduler structural performance', () => {
         children: Array.from({ length: 100 }, (_, index) =>
           createElement(Rectangle, {
             key: `placed-${index}`,
-            style: { left, top: 0, width: 4, height: 4, x: index * 4 },
+            style: { left, top: 0, width: 4, height: 4 },
           }),
         ),
       }),
@@ -545,7 +545,7 @@ function observePrimitiveInputWorkload(
       ...Array.from({ length: count }, (_, index) =>
         createElement(Rectangle, {
           key: `rectangle-${index}`,
-          style: { x: x + index, y: tick, width: 1, height: 1 },
+          style: { left: x + index, top: tick, width: 1, height: 1 },
         }),
       ),
       createElement(Text, { key: 'label', children: text }),
@@ -571,7 +571,7 @@ function observeReceiverInputWorkload(
   count: number,
 ): AuthoringBaselineObservation {
   const position = signal(0);
-  const wholeStyle = signal({ x: 0, y: 0, width: 1, height: 1 });
+  const wholeStyle = signal({ left: 0, top: 0, width: 1, height: 1 });
   const label = signal('Current');
   const data = signal<readonly number[]>([1, 2, 3]);
   const domain = signal<readonly [number, number]>([0, 3]);
@@ -589,7 +589,7 @@ function observeReceiverInputWorkload(
     traversals++;
     if (kind === 'signal-field') updateValue = next => position.set(next);
     if (kind === 'whole-style') {
-      updateValue = next => wholeStyle.set({ x: next, y: 0, width: 1, height: 1 });
+      updateValue = next => wholeStyle.set({ left: next, top: 0, width: 1, height: 1 });
     }
     if (kind === 'text-data') {
       updateValue = next => batch(() => {
@@ -605,7 +605,7 @@ function observeReceiverInputWorkload(
           key: `receiver-${index}`,
           style: kind === 'whole-style'
             ? wholeStyle
-            : { x: position, y: index, width: 1, height: 1 },
+            : { left: position, top: index, width: 1, height: 1 },
         }),
       ),
       createElement(Text, {

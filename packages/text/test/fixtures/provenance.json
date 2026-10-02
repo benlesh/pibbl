@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/google/fonts",
+  "revision": "fffdadf0f0c9cc1ec8b407063424a8bfbee05611",
+  "directory": "ofl/abeezee",
+  "sha256": {
+    "ABeeZee-Regular.ttf": "2901c8df256648cc2bb2e3afb381cb8d28e65ed3dbe11de20695ae4d5ffdeda9",
+    "OFL.txt": "f0376d04eb58fb19e9f1690a99a1eb37380ad0246f7d503f2abd8e8a74ed12be"
+  }
+}

@@ -66,7 +66,11 @@ it('opens Along Path and bends the outline when a cubic guide handle is dragged'
   const canvas = new TestCanvas(element, mountPath(element));
   try {
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> origin/main
     expect(text.mock.calls.some(call => call[0] === 'ALONG PATH')).toBe(true);
     const before = element.getContext('2d')!.getImageData(170, 220, 470, 185).data.slice();
     await canvas.mouseDown({ position: { x: 280, y: 230 } });
@@ -91,7 +95,11 @@ it('continuously updates the actual green bent outline throughout a captured gui
   const canvas = new TestCanvas(element, mountPath(element));
   try {
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> origin/main
     await canvas.mouseDown({ position: { x: 280, y: 230 } });
     let previous = bentPixels(element);
     for (const position of [{ x: 300, y: 270 }, { x: 320, y: 320 }, { x: 340, y: 380 }]) {

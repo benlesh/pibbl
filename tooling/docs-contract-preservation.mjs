@@ -9,11 +9,32 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
+<<<<<<< HEAD
   "1de33f7d43491feb3c01164e34aae6126ba1183f00d1c9d99667e40370f509db";
+=======
+  "c2dda3cc3d979dcfdd8d485de811ce34c12c3a80d1f6f422dc3f32bd29aeb663";
+>>>>>>> origin/main
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const THREE_PIVOT_APPROVAL_RECORD = "three-full-pivot";
+const COMPONENT_MANIPULATION_APPROVAL_RECORD = "component-manipulation";
 const PHYSICS_2D_QUALITY_APPROVAL_RECORD = "physics-2d-quality";
+const COMPONENT_MANIPULATION_APPROVED_SECTIONS = new Set([
+  "Component manipulation design",
+  "Intent",
+  "Agreed direction",
+  "Authoring sketch",
+  "Proposed gesture and state rules",
+  "Approved positioning direction",
+  "Layout composition",
+  "Snapping and constraints",
+  "Interaction evidence",
+  "2026-09-29 extension: handle presentation and readouts",
+  "Geometry and default presentation",
+  "Readout behavior",
+  "Authoring surface",
+  "2026-09-29 feedback: outward resize labels",
+]);
 const THREE_PIVOT_APPROVED_SECTIONS = new Set([
   "Decision",
   "Public experience",
@@ -107,7 +128,11 @@ const POST_BASELINE_CONTRACT_PROFILES = new Map([
   [
     "docs/design/textures-contract.md",
     {
+<<<<<<< HEAD
       unitPrefix: "x",
+=======
+      unitPrefix: "u",
+>>>>>>> origin/main
       approvalRecordId: "procedural-textures",
       allowedSections: new Set([
         "Optional procedural textures decision record",
@@ -120,6 +145,27 @@ const POST_BASELINE_CONTRACT_PROFILES = new Map([
     },
   ],
   [
+<<<<<<< HEAD
+=======
+    "docs/design/text-geometry-contract.md",
+    {
+      unitPrefix: "x",
+      approvalRecordId: "text-path-geometry",
+      allowedSections: new Set([
+        "Recommendation",
+        "Intended behavior",
+        "Workspace package and command workflow",
+        "Existing PathGeometry integration",
+        "Native boundary and efficient data flow",
+        "Proposed JavaScript API",
+        "Loading, ownership, and failure handling",
+        "Delivery and validation",
+        "Build-time generation",
+      ]),
+    },
+  ],
+  [
+>>>>>>> origin/main
     "docs/design/physics-2d-contract.md",
     {
       unitPrefix: "q",
@@ -152,6 +198,14 @@ const POST_BASELINE_CONTRACT_PROFILES = new Map([
       unitPrefix: "m",
       approvalRecordId: SIGNALS_SCHEDULER_APPROVAL_RECORD,
       allowedSections: ANIMATION_APPROVED_SECTIONS,
+    },
+  ],
+  [
+    "docs/design/component-manipulation-contract.md",
+    {
+      unitPrefix: "n",
+      approvalRecordId: COMPONENT_MANIPULATION_APPROVAL_RECORD,
+      allowedSections: COMPONENT_MANIPULATION_APPROVED_SECTIONS,
     },
   ],
 ]);

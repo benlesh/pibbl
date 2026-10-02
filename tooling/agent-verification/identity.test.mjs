@@ -15,7 +15,11 @@ test('served identity rejects different fixture bytes even with the same revisio
     await writeFile(join(root, 'fixture/app.ts'), 'export const selected = 2;');
     const served = await fingerprint(root, ['fixture/app.ts'], 'revision-a');
     assert.throws(() => assertIdentity(expected, served), /identity mismatch/);
+<<<<<<< HEAD
     assert.throws(() => assertIdentity(expected, null), { code: 'CRC_FIXTURE_IDENTITY_UNAVAILABLE' });
+=======
+    assert.throws(() => assertIdentity(expected, null), /identity unavailable/);
+>>>>>>> origin/main
     assert.throws(() => assertIdentity(expected, { ...expected, revision: 'other' }), /identity mismatch/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -71,9 +75,12 @@ test('native replay blocks a mismatched served fixture before exercising actions
     assert.deepEqual(report.run.toolIdentityAfter, report.run.toolIdentity);
     assert.equal(report.toolVerification.status, 'matching-on-disk');
     assert.match(report.failure.message, /identity mismatch/);
+<<<<<<< HEAD
     assert.equal(report.failure.code, 'CRC_FIXTURE_IDENTITY_MISMATCH');
     assert.equal(report.run.environment.observedPage.status, 'observed');
     assert.deepEqual(report.run.environment.observedPage.viewportCss, { width: 1280, height: 1000 });
+=======
+>>>>>>> origin/main
     assert.deepEqual(report.steps, []);
     assert.equal(report.servedIdentity.sha256, wrong.sha256);
   } finally {
@@ -105,9 +112,12 @@ test('visualization replay blocks a mismatched served fixture before exercising 
     assert.deepEqual(report.run.toolIdentityAfter, report.run.toolIdentity);
     assert.equal(report.toolVerification.status, 'matching-on-disk');
     assert.match(report.failure.message, /identity mismatch/);
+<<<<<<< HEAD
     assert.equal(report.failure.code, 'CRC_FIXTURE_IDENTITY_MISMATCH');
     assert.equal(report.run.environment.observedPage.status, 'observed');
     assert.deepEqual(report.run.environment.observedPage.viewportCss, { width: 1280, height: 1000 });
+=======
+>>>>>>> origin/main
     assert.deepEqual(report.steps, []);
     assert.equal(report.servedIdentity.sha256, wrong.sha256);
   } finally {

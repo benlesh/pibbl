@@ -1,10 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+<<<<<<< HEAD
 import { validateRequirementLedger, verifyClosureFiles } from './requirements.mjs';
 import { mkdtemp, writeFile, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+=======
+import { validateRequirementLedger } from './requirements.mjs';
+>>>>>>> origin/main
 
 const inventory = '- **ID-01:** First requirement.\n  More detail.\n- **ID-02:** Second requirement.\n';
 const row = id => ({ id, status: 'unassessed', evidence: [], remaining: 'Audit the exact requirement.' });
@@ -24,6 +28,7 @@ test('distinguishes an audited gap from an unassessed requirement', () => {
   assert.equal(validateRequirementLedger(inventory, { requirements }).gap, 1);
   assert.throws(() => validateRequirementLedger(inventory, { requirements: [{ ...requirements[0], evidence: [] }, row('ID-02')] }));
 });
+<<<<<<< HEAD
 
 test('accepts a fully specified reviewed closure but rejects incomplete claims', () => {
   const complete = { ...row('ID-01'), status: 'complete', remaining: '',
@@ -73,3 +78,5 @@ test('closure evidence expires after changes or deletion and cannot escape throu
     await assert.rejects(verifyClosureFiles(root, ledger), /escapes repository/);
   } finally { await rm(root, { recursive: true, force: true }); await rm(external, { recursive: true, force: true }); }
 });
+=======
+>>>>>>> origin/main

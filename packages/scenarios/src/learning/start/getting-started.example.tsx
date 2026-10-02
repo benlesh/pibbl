@@ -9,8 +9,8 @@ function PosterCard({ message, onSelect }: PosterCardProps) {
   return [
     <Rectangle
       style={{
-        x: 154,
-        y: 112,
+        left: 154,
+        top: 112,
         width: 412,
         height: 196,
         fill: "#1f4bd8",
@@ -20,8 +20,8 @@ function PosterCard({ message, onSelect }: PosterCardProps) {
     />,
     <Text
       style={{
-        x: 360,
-        y: 180,
+        left: 360,
+        top: 180,
         fill: "#fffdf6",
         font: "800 64px sans-serif",
         textAlign: "center",
@@ -31,8 +31,8 @@ function PosterCard({ message, onSelect }: PosterCardProps) {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 258,
+        left: 360,
+        top: 258,
         fill: "#fffdf6",
         font: "700 14px monospace",
         textAlign: "center",
@@ -56,8 +56,8 @@ function Poster() {
     />,
     <Rectangle
       style={{
-        x: 74,
-        y: 72,
+        left: 74,
+        top: 72,
         width: 572,
         height: 276,
         fill: "#f7c948",

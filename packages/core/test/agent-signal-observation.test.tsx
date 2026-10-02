@@ -2,9 +2,14 @@ import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import type { CRCAdvanceParticipant } from '../src/lib/scheduler/types';
 import { queueBeginCommand, registerAdvanceParticipant, queueFrameCompletion } from '../src/lib/scheduler/realm-scheduler';
 import { createSchedulerHistory, observeScheduler } from '../../../tooling/agent-verification/scheduler';
+<<<<<<< HEAD
 import { computed, createElement, crc, Absolute, Group, Layer, Rectangle, signal, useReaction, useConst, useLayoutBox, type BoxStyle } from '@crc/core';
 import { expect, it } from 'vitest';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
+=======
+import { computed, createElement, crc, Absolute, Group, Layer, Rectangle, signal, useConst, useLayoutBox, type BoxStyle } from '@crc/core';
+import { expect, it } from 'vitest';
+>>>>>>> origin/main
 import { createSignalInspector } from '../../../tooling/agent-verification/signals';
 import { ManualSchedulerDriver, installSchedulerDriverForTest, installSchedulerTraceCollectorForTest } from '../src/lib/scheduler/testing';
 import { getSignalNode, signalGraphSnapshot } from '../src/lib/signals/graph';
@@ -121,7 +126,11 @@ it('reports subscribed computed/render consumers and pending direct dirtiness wi
   const source = signal(1); let evaluations = 0;
   const derived = computed(() => { evaluations++; return source.get() * 2; });
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
+<<<<<<< HEAD
   const controller = crc(canvas, <><Rectangle style={{ x: source, width: 10, height: 10, fill: '#fff' }} /><Rectangle style={{ y: 20, width: derived, height: 10, fill: '#fff' }} /></>);
+=======
+  const controller = crc(canvas, <><Rectangle style={{ left: source, width: 10, height: 10, fill: '#fff' }} /><Rectangle style={{ top: 20, width: derived, height: 10, fill: '#fff' }} /></>);
+>>>>>>> origin/main
   driver.flush(1);
   const inspector = createSignalInspector(); inspector.register(source); const derivedId = inspector.register(derived);
   try {
@@ -152,7 +161,11 @@ it('bounds direct observer traversal and never reads legacy callback flag getter
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
   const source = signal(1);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
+<<<<<<< HEAD
   const controller = crc(canvas, Array.from({ length: 129 }, (_, index) => <Rectangle key={index} style={{ x: source, width: 1, height: 1, fill: '#fff' }} />));
+=======
+  const controller = crc(canvas, Array.from({ length: 129 }, (_, index) => <Rectangle key={index} style={{ left: source, width: 1, height: 1, fill: '#fff' }} />));
+>>>>>>> origin/main
   driver.flush(1);
   const inspector = createSignalInspector(); inspector.register(source);
   try {
@@ -564,7 +577,11 @@ it.each(['begin', 'advance'] as const)('preserves transaction isolation when %s 
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
   const rejected = signal(10); const accepted = signal(10);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
+<<<<<<< HEAD
   const controller = crc(canvas, <><Rectangle style={{ width: rejected, height: 10, fill: '#ff0000' }} /><Rectangle style={{ y: 20, width: accepted, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+=======
+  const controller = crc(canvas, <><Rectangle style={{ width: rejected, height: 10, fill: '#ff0000' }} /><Rectangle style={{ top: 20, width: accepted, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+>>>>>>> origin/main
   driver.flush(100);
   const inspector = createSignalInspector(canvas); inspector.register(rejected); inspector.register(accepted);
   const history = createSchedulerHistory();
@@ -605,7 +622,11 @@ it('distinguishes Commit validation failure from participant rollback without pu
   const failure = new Error('private equality failure'); let comparisons = 0;
   const first = signal(10); const second = signal(10, { equals(a, b) { comparisons++; if (b === 30) throw failure; return a === b; } });
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
+<<<<<<< HEAD
   const controller = crc(canvas, <><Rectangle style={{ width: first, height: 10, fill: '#ff0000' }} /><Rectangle style={{ y: 20, width: second, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+=======
+  const controller = crc(canvas, <><Rectangle style={{ width: first, height: 10, fill: '#ff0000' }} /><Rectangle style={{ top: 20, width: second, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+>>>>>>> origin/main
   driver.flush(100);
   const inspector = createSignalInspector(canvas); inspector.register(first); inspector.register(second);
   const history = createSchedulerHistory();
@@ -633,7 +654,11 @@ it('records applied Commit despite observer failure and preserves unrelated publ
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
   const first = signal(10); const second = signal(10);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
+<<<<<<< HEAD
   const controller = crc(canvas, <><Rectangle style={{ width: first, height: 10, fill: '#ff0000' }} /><Rectangle style={{ y: 20, width: second, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+=======
+  const controller = crc(canvas, <><Rectangle style={{ width: first, height: 10, fill: '#ff0000' }} /><Rectangle style={{ top: 20, width: second, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+>>>>>>> origin/main
   driver.flush(100);
   const inspector = createSignalInspector(canvas); inspector.register(first); inspector.register(second);
   const history = createSchedulerHistory(); const failure = new Error('private observer failure');
@@ -1118,6 +1143,7 @@ it.each([false, true])('restores sibling allocations after a failed child (neste
     } finally { inspector.dispose(); }
   } finally { controller.dispose(); canvas.remove(); restore(); }
 });
+<<<<<<< HEAD
 
 
 it.each(['root', 'layer'] as const)('observes %s reaction subscriptions without running setup or confusing them with render reads', surfaceKind => {
@@ -1228,3 +1254,5 @@ it('keeps partial Canvas pixels visible after render failure without calling the
     expect(pixel(80)).toEqual([0, 0, 255, 255]);
   } finally { inspector.dispose(); history.dispose(); controller.dispose(); canvas.remove(); restore(); }
 });
+=======
+>>>>>>> origin/main

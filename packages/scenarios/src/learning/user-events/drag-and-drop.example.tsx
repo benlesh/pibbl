@@ -19,8 +19,8 @@ function DragAndDropStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#17211d",
@@ -28,8 +28,8 @@ function DragAndDropStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 46,
+        left: 360,
+        top: 46,
         fill: "#fffdf6",
         font: "900 24px sans-serif",
         textAlign: "center",
@@ -39,8 +39,8 @@ function DragAndDropStudy() {
     </Text>,
     <Rectangle
       style={{
-        x: 74,
-        y: 104,
+        left: 74,
+        top: 104,
         width: 226,
         height: 176,
         fill: "#1f4bd8",
@@ -57,8 +57,8 @@ function DragAndDropStudy() {
     />,
     <Text
       style={{
-        x: 187,
-        y: 174,
+        left: 187,
+        top: 174,
         lineHeight: 28,
         fill: "#fffdf6",
         font: "900 22px sans-serif",
@@ -70,8 +70,8 @@ function DragAndDropStudy() {
     </Text>,
     <Rectangle
       style={{
-        x: 420,
-        y: 104,
+        left: 420,
+        top: 104,
         width: 226,
         height: 176,
         fill: "#26354a",
@@ -95,8 +95,8 @@ function DragAndDropStudy() {
     />,
     <Text
       style={{
-        x: 533,
-        y: 164,
+        left: 533,
+        top: 164,
         fill: "#74d3ae",
         font: "900 22px sans-serif",
         textAlign: "center",
@@ -106,8 +106,8 @@ function DragAndDropStudy() {
     </Text>,
     <Text
       style={{
-        x: 533,
-        y: 204,
+        left: 533,
+        top: 204,
         width: 190,
         fill: "#fffdf6",
         font: "700 11px monospace",
@@ -118,8 +118,8 @@ function DragAndDropStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 314,
+        left: 360,
+        top: 314,
         width: 660,
         lineHeight: 17,
         wrap: true,
@@ -135,8 +135,8 @@ function DragAndDropStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 398,
+        left: 360,
+        top: 398,
         fill: "#a9b8c9",
         font: "600 11px sans-serif",
         textAlign: "center",

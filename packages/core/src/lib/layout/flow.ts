@@ -31,6 +31,7 @@ import {
 } from './absolute.js';
 import { pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
+import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { measureElement } from './measure.js';
 import type { Constraints, LayoutBox } from './types.js';
 
@@ -178,6 +179,7 @@ function resolveFlowPlacements(
     const normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & LayoutItemStyle
     >;
+    assertSupportedChildPosition('Flow', child, normalized);
     const needsWidth = normalized.width === undefined || normalized.width === 'auto';
     const needsHeight = normalized.height === undefined || normalized.height === 'auto';
     let measuredWidth: number | undefined;

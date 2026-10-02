@@ -1,7 +1,12 @@
 import { reserveEvidenceDirectory } from './evidence-directory.mjs';
 import { assertNear } from './numeric-assertion.mjs';
+<<<<<<< HEAD
 import { describeReplayError, recordReplayFailure } from './failure-evidence.mjs';
 import { capturePageEnvironment, createReplayManifest, captureReplayToolIdentity, finalizeReplayToolIdentity } from './run-manifest.mjs';
+=======
+import { describeReplayError } from './failure-evidence.mjs';
+import { createReplayManifest, captureReplayToolIdentity, finalizeReplayToolIdentity } from './run-manifest.mjs';
+>>>>>>> origin/main
 import { createCheckpointWriter } from './checkpoint.mjs';
 import { finalizeReplayOutcome } from './replay-outcome.mjs';
 import { observeBrowserFailure } from './browser-failure.mjs';
@@ -37,7 +42,10 @@ try {
   page.on('pageerror', error => { if (report.errors.length < 16) report.errors.push(error.message.slice(0, 1000)); else report.droppedErrors++; });
   await checkpoint(report, 'navigation');
   await page.goto(url);
+<<<<<<< HEAD
   report.run.environment.observedPage = await capturePageEnvironment(page);
+=======
+>>>>>>> origin/main
   const evidence = page.getByTestId('agent-viz-evidence');
   await evidence.waitFor({ state: 'attached' });
   const readEvidence = async () => {
@@ -241,12 +249,21 @@ try {
   await readEvidence();
   assertIdentity(report.expectedIdentity, await sourceIdentity(repository, 'viz'));
   report.status = 'pass';
+<<<<<<< HEAD
 } catch (error) { report.browserFailure = browserFailure?.snapshot() ?? null; recordReplayFailure(report, error); process.exitCode = 1; }
 finally {
   try { await checkpoint(report, 'before-cleanup'); }
   catch (error) { report.checkpointFailure = describeReplayError(error).message.slice(0, 1000); report.status = 'fail'; process.exitCode = 1; }
   browserFailure?.beginCleanup();
   try { await browser?.close(); } catch (error) { report.browserFailure = browserFailure?.snapshot() ?? null; report.status = 'fail'; report.cleanupFailure = describeReplayError(error).message; process.exitCode = 1; }
+=======
+} catch (error) { report.browserFailure = browserFailure?.snapshot() ?? null; report.status = String(error).includes('fixture identity') ? 'blocked' : 'fail'; report.failure = { category: report.browserFailure?.category ?? 'operation-error', actionId: report.steps.at(-1)?.status === 'incomplete' ? report.steps.at(-1).actionId : null, lastActionId: report.steps.at(-1)?.actionId ?? null, ...describeReplayError(error) }; process.exitCode = 1; }
+finally {
+  try { await checkpoint(report, 'before-cleanup'); }
+  catch (error) { report.checkpointFailure = String(error).slice(0, 1000); report.status = 'fail'; process.exitCode = 1; }
+  browserFailure?.beginCleanup();
+  try { await browser?.close(); } catch (error) { report.browserFailure = browserFailure?.snapshot() ?? null; report.status = 'fail'; report.cleanupFailure = String(error); process.exitCode = 1; }
+>>>>>>> origin/main
   report.browserFailure = browserFailure?.snapshot() ?? null;
   browserFailure?.dispose();
   await finalizeReplayToolIdentity(report, repository);

@@ -1,5 +1,10 @@
 # Four-corner path warp design
 
+<<<<<<< HEAD
+=======
+> **Historical status: Approved design record; it does not define current shipped behavior.**
+
+>>>>>>> origin/main
 Status: approved by the user, 2026-09-30, including the interactive demo contract.
 The API, mode defaults, and validation policies below are the approved target,
 not shipped behavior. This document does not authorize implementation of

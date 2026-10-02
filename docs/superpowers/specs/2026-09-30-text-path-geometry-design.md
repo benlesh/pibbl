@@ -1,15 +1,23 @@
 # Text conversion to PathGeometry
 
+<<<<<<< HEAD
+=======
+> **Historical status: APPROVED DESIGN.** This dated record captures the approved direction; current contracts and tests define implemented behavior.
+
+>>>>>>> origin/main
 Status: Approved by the user, including pnpm tooling and Symbol.dispose support.
 Not an implemented contract.
 
 Date: 2026-09-30
 
+<<<<<<< HEAD
 Implementation plan: [Text PathGeometry implementation plan](../plans/2026-09-30-text-path-geometry-implementation.md).
 
 These documents use the repository's existing design/plan directories; they do
 not require the Superpowers plugin or its workflow.
 
+=======
+>>>>>>> origin/main
 ## Recommendation
 
 Build a small CRC-owned text-to-geometry module over a pinned native HarfBuzz

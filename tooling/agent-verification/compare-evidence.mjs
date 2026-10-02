@@ -8,6 +8,7 @@ function identity(value, schema) {
     typeof value.sha256 === 'string' && /^[a-f0-9]{64}$/.test(value.sha256) && Number.isSafeInteger(value.files) && value.files > 0;
 }
 
+<<<<<<< HEAD
 function validObservedEnvironment(value) {
   const positive = number => Number.isFinite(number) && number > 0;
   const text = value => typeof value === 'string' && value.length > 0 && value.length <= 128;
@@ -18,6 +19,8 @@ function validObservedEnvironment(value) {
     typeof value.preferences?.dark === 'boolean' && typeof value.preferences?.reducedMotion === 'boolean';
 }
 
+=======
+>>>>>>> origin/main
 /** Compare recorded data, never certify results or infer a causal regression. */
 export function compareReplayReports(before, after) {
   const reasons = [];
@@ -36,9 +39,12 @@ export function compareReplayReports(before, after) {
       !Number.isFinite(environment.browserContext.deviceScaleFactor) || environment.browserContext.deviceScaleFactor <= 0 ||
       !['locale', 'timezoneId', 'reducedMotion', 'colorScheme'].every(key => typeof environment.browserContext[key] === 'string') ||
       typeof value.browser !== 'string' || typeof value.url !== 'string') reasons.push(`${side}:environment-incomplete`);
+<<<<<<< HEAD
     if (environment && Object.hasOwn(environment, 'observedPage') && !validObservedEnvironment(environment.observedPage)) {
       reasons.push(`${side}:observed-environment-unavailable-or-invalid`);
     }
+=======
+>>>>>>> origin/main
     const required = value.requiredActions;
     if (!Array.isArray(required) || !required.length || required.length > 128 || required.some(id => typeof id !== 'string' || !id || id.length > 128) || new Set(required).size !== required.length) {
       reasons.push(`${side}:action-manifest-invalid`);
@@ -54,7 +60,10 @@ export function compareReplayReports(before, after) {
     ['browser', before?.browser, after?.browser], ['fixture-url', before?.url, after?.url], ['action-manifest', before?.requiredActions, after?.requiredActions],
   ]) if (!isDeepStrictEqual(left, right)) reasons.push(`${name}:differs`);
   const base = { schema: 'crc-replay-comparison/1', verification: 'saved-evidence-only',
+<<<<<<< HEAD
     environmentScope: before?.run?.environment?.observedPage === undefined && after?.run?.environment?.observedPage === undefined ? 'declared-only' : 'declared-and-initial-page-observation',
+=======
+>>>>>>> origin/main
     runs: { before: typeof before?.run?.runId === 'string' ? before.run.runId.slice(0, 128) : null, after: typeof after?.run?.runId === 'string' ? after.run.runId.slice(0, 128) : null },
     scope: 'Exact recorded action data under matching declared provenance; not causal or pixel-equivalence proof.' };
   if (reasons.length) return { ...base, status: 'incomparable', reasons };

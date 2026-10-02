@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import type { createEventTrace } from '../../../tooling/agent-verification/events.js';
+=======
+>>>>>>> origin/main
 import type { createSchedulerHistory } from '../../../tooling/agent-verification/scheduler.js';
 import type { probeHostPoint } from '../../../tooling/agent-verification/browser.js';
 import type { createSignalInspector } from '../../../tooling/agent-verification/signals.js';
@@ -6,7 +9,10 @@ import { crc, createElement, computed, signal, type CRCLogicalMouseEvent, type C
 import type {
   createTargetingInspector,
   TargetingProbe,
+<<<<<<< HEAD
   InteractionPointSearch,
+=======
+>>>>>>> origin/main
   CoordinateConversion,
   TargetingSnapshot,
 } from '../../../tooling/agent-verification/targeting.js';
@@ -42,6 +48,7 @@ export type AgentTargetingAction =
 export interface AgentTargetingDeliveryRecord {
   readonly targetId: number | null;
   readonly generation: TargetingSnapshot['generation'];
+<<<<<<< HEAD
   readonly input: {
     readonly original: { readonly type: string; readonly isTrusted: boolean };
     readonly source: { readonly type: string; readonly isTrusted: boolean } | null;
@@ -50,11 +57,16 @@ export interface AgentTargetingDeliveryRecord {
       | { readonly status: 'unavailable'; readonly scope: 'window-at-delivery' };
     readonly permissions: 'not-observed';
   } | null;
+=======
+>>>>>>> origin/main
 }
 
 export interface AgentTargetingState {
   readonly componentChanges: ReturnType<ReturnType<typeof createSignalInspector>['compareComponents']> | null;
+<<<<<<< HEAD
   readonly eventTrace: ReturnType<ReturnType<typeof createEventTrace>['snapshot']> | null;
+=======
+>>>>>>> origin/main
   readonly schedulerHistory: ReturnType<ReturnType<typeof createSchedulerHistory>['snapshot']> | null;
   readonly coordinateMappings: { readonly backing: CoordinateConversion; readonly cssContent: CoordinateConversion } | null;
   readonly signalInspection: ReturnType<ReturnType<typeof createSignalInspector>['snapshot']> | null;
@@ -62,7 +74,10 @@ export interface AgentTargetingState {
   readonly browserProbe: ReturnType<typeof probeHostPoint> | null;
   readonly domOverlayClicks: number;
   readonly capturedDelivery: { readonly pointerId: number; readonly targetId: number | null; readonly x: number; readonly y: number } | null;
+<<<<<<< HEAD
   readonly pointSearch: InteractionPointSearch | null;
+=======
+>>>>>>> origin/main
   readonly probePoint: { readonly x: number; readonly y: number } | null;
   readonly mode: AgentTargetingMode;
   readonly expectedSelection: boolean;
@@ -100,13 +115,19 @@ function unavailableState() {
   return {
     componentChanges: null,
     schedulerHistory: null,
+<<<<<<< HEAD
     eventTrace: null,
+=======
+>>>>>>> origin/main
     coordinateMappings: null,
     focusObservationError: null,
     browserProbe: null,
     capturedDelivery: null,
     signalInspection: null,
+<<<<<<< HEAD
     pointSearch: null,
+=======
+>>>>>>> origin/main
     probePoint: null,
     inspection: { status: 'unavailable' as const, generation: null },
     probe: { status: 'unavailable' as const, targetId: null, candidates: [] as const },
@@ -126,9 +147,12 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       (await import('../../../tooling/agent-verification/signals.js')).createSignalInspector : undefined;
     const historyFactory = import.meta.env.DEV && import.meta.env.MODE !== 'built' ?
       (await import('../../../tooling/agent-verification/scheduler.js')).createSchedulerHistory : undefined;
+<<<<<<< HEAD
     const eventTraceFactory = import.meta.env.DEV && import.meta.env.MODE !== 'built' ?
       (await import('../../../tooling/agent-verification/events.js')).createEventTrace : undefined;
     let eventTrace: ReturnType<typeof createEventTrace> | undefined;
+=======
+>>>>>>> origin/main
     let history: ReturnType<typeof createSchedulerHistory> | undefined;
     let signalInspector: ReturnType<typeof createSignalInspector> | undefined;
     let previousSignalSnapshot: ReturnType<ReturnType<typeof createSignalInspector>['snapshot']> | undefined;
@@ -177,7 +201,11 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       selectedItem: null,
       selections: 0,
       deliveredTo: null,
+<<<<<<< HEAD
       delivery: { targetId: null, generation: null, input: null },
+=======
+      delivery: { targetId: null, generation: null },
+>>>>>>> origin/main
       inspectionEnabled: !!inspectorFactory,
       inspectionAvailability: inspectorFactory ? 'source-runtime' : 'unsupported-build',
       renderCount: 0,
@@ -214,7 +242,11 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       frame = requestAnimationFrame(poll);
     });
     const updateLatest = (update: Partial<AgentTargetingState>) => {
+<<<<<<< HEAD
       latest = { ...latest, ...update, renderCount, dormantMetricEvaluations, schedulerHistory: history?.snapshot() ?? null, eventTrace: eventTrace?.snapshot() ?? null };
+=======
+      latest = { ...latest, ...update, renderCount, dormantMetricEvaluations, schedulerHistory: history?.snapshot() ?? null };
+>>>>>>> origin/main
       publish();
     };
     const setMode = (nextMode: AgentTargetingMode) => {
@@ -229,7 +261,11 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
         selectedItem: null,
         selections: 0,
         deliveredTo: null,
+<<<<<<< HEAD
         delivery: { targetId: null, generation: null, input: null },
+=======
+        delivery: { targetId: null, generation: null },
+>>>>>>> origin/main
         ...unavailableState(),
       });
     };
@@ -237,6 +273,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       target: Exclude<AgentTargetingDelivery, null>,
       event: CRCLogicalMouseEvent,
     ) => {
+<<<<<<< HEAD
       // Capture synchronously. Window activation can come from earlier input and
       // does not certify this event's trust or grant a particular permission.
       const activation = context.canvas.ownerDocument.defaultView?.navigator.userActivation;
@@ -249,6 +286,8 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
         } : { status: 'unavailable', scope: 'window-at-delivery' },
         permissions: 'not-observed',
       };
+=======
+>>>>>>> origin/main
       const targetId = latest.inspectionEnabled && inspector ?
         inspector.identifyTarget(event.target) : null;
       const generation = latest.inspectionEnabled && inspector ?
@@ -262,7 +301,11 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
         selectedItem: target === 'action' ? 'item-a' : null,
         selections: target === 'action' ? latest.selections + 1 : latest.selections,
         deliveredTo: target,
+<<<<<<< HEAD
         delivery: { targetId, generation, input },
+=======
+        delivery: { targetId, generation },
+>>>>>>> origin/main
       });
     };
 
@@ -282,7 +325,10 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       disposed = true;
       removeOverlay();
       history?.dispose(); history = undefined;
+<<<<<<< HEAD
       eventTrace?.dispose(); eventTrace = undefined;
+=======
+>>>>>>> origin/main
       inspector?.dispose();
       inspector = undefined;
       signalInspector?.dispose(); signalInspector = undefined; previousSignalSnapshot = undefined;
@@ -300,11 +346,14 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
         selections,
         deliveredTo,
         onDelivery,
+<<<<<<< HEAD
         wrapClick: (label, handler) => event => {
           if (!eventTrace) { handler(event); return; }
           try { eventTrace.wrap(label, handler)(event); }
           finally { if (!disposed) updateLatest({}); }
         },
+=======
+>>>>>>> origin/main
         onFocusEvidence,
         onCapturedMove: (event: CRCPointerEvent) => {
           if (!inspector) return;
@@ -349,15 +398,22 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       const probe = inspection.generation ?
         inspector.probe(inspection.generation, point.x, point.y) :
         { status: 'unavailable' as const, targetId: null, candidates: [] as const };
+<<<<<<< HEAD
       // This searches for the observed winner, not an inferred semantic action.
       const pointSearch = inspection.generation && probe.targetId !== null ?
         inspector.findInteractionPoint(inspection.generation, probe.targetId, { x: 80, y: 64, width: 128, height: 96 }) : null;
+=======
+>>>>>>> origin/main
       const bounds = context.canvas.getBoundingClientRect();
       const signalInspection = signalInspector?.snapshot() ?? null;
       const componentChanges = signalInspector && previousSignalSnapshot && signalInspection ?
         signalInspector.compareComponents(previousSignalSnapshot, signalInspection) : null;
       previousSignalSnapshot = signalInspection ?? undefined;
+<<<<<<< HEAD
       updateLatest({ inspection, probe, pointSearch, coordinateMappings: mapCoordinates(inspection, point), probePoint: point, signalInspection, componentChanges,
+=======
+      updateLatest({ inspection, probe, coordinateMappings: mapCoordinates(inspection, point), probePoint: point, signalInspection, componentChanges,
+>>>>>>> origin/main
         browserProbe: browserProbe?.(context.canvas, bounds.left + point.x * bounds.width / 480, bounds.top + point.y * bounds.height / 240) ?? null });
     };
 
@@ -377,10 +433,17 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
             updateLatest({ signalInspection: signalInspector.snapshot() }); break;
           }
           case 'trace-start': {
+<<<<<<< HEAD
             if (!historyFactory || !eventTraceFactory) throw new Error('Recording requires the source runtime.');
             history?.dispose(); history = undefined; history = historyFactory(128); eventTrace?.dispose(); eventTrace = eventTraceFactory({ capacity: 32 }); updateLatest({}); break;
           }
           case 'trace-stop': history?.stop(); eventTrace?.stop(); updateLatest({}); break;
+=======
+            if (!historyFactory) throw new Error('Scheduler recording requires the source runtime.');
+            history?.dispose(); history = undefined; history = historyFactory(128); updateLatest({}); break;
+          }
+          case 'trace-stop': history?.stop(); updateLatest({}); break;
+>>>>>>> origin/main
           case 'keyboard-focus': setMode('keyboard-focus'); await settled(); break;
           case 'dom-overlay': {
             setMode('repair'); await settled();

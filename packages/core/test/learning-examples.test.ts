@@ -1214,11 +1214,31 @@ describe("learning example catalog", () => {
     );
   });
 
+<<<<<<< HEAD
   it("contains 68 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
     expect(learningExampleCatalog).toHaveLength(68);
+=======
+  it("contains 76 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+    expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
+      learningExampleCatalog,
+    );
+    expect(learningExampleCatalog).toHaveLength(76);
+    expect(
+      learningExampleCatalog
+        .filter(
+          (entry) =>
+            entry.slug === "viz-band-bars" || entry.slug === "viz-grouped-bars",
+        )
+        .map((entry) => getLearningExampleRoute(entry))
+        .sort(),
+    ).toEqual([
+      "#/examples/composition/viz-band-bars",
+      "#/examples/composition/viz-grouped-bars",
+    ]);
+>>>>>>> origin/main
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1266,6 +1286,10 @@ describe("learning example catalog", () => {
         "image",
         "line",
         "path",
+<<<<<<< HEAD
+=======
+        "along-path",
+>>>>>>> origin/main
         "path-bending",
         "path-geometry",
         "path-warp",
@@ -1275,6 +1299,7 @@ describe("learning example catalog", () => {
         "star",
         "svg-path",
         "text",
+        "text-geometry",
         "vertical-line",
         "wedge",
       ],
@@ -1290,7 +1315,12 @@ describe("learning example catalog", () => {
         "physics-panels",
         "signal-inputs",
         "signals-and-animation",
+        "viz-grouped-stacked-bars",
+        "viz-stacked-bars",
+        "viz-band-bars",
+        "viz-grouped-bars",
         "viz-hover-comparison",
+        "viz-pie-composition",
         "viz-points-and-inspection",
         "viz-responsive-line",
       ],
@@ -1316,6 +1346,7 @@ describe("learning example catalog", () => {
         "mouse-out",
         "mouse-over",
         "mouse-up",
+        "manipulation",
         "overlap-and-paint-order",
         "pointer-capture",
         "pointer-events",
@@ -1378,6 +1409,11 @@ describe("learning example catalog", () => {
       "physics-2d",
       "layer",
       "physics-panels",
+      "viz-grouped-stacked-bars",
+      "viz-stacked-bars",
+      "viz-grouped-bars",
+      "viz-band-bars",
+      "viz-pie-composition",
       "viz-hover-comparison",
       "viz-points-and-inspection",
       "viz-responsive-line",
@@ -1742,9 +1778,15 @@ describe("learning example catalog", () => {
       new Set([
         "ReactionDiffusion",
         "ProceduralTexture",
+<<<<<<< HEAD
+=======
+        "loadOutlineFont",
+        "createTextGeometry",
+>>>>>>> origin/main
         "Scale",
         "Axis",
         "LineSeries",
+        "BarSeries",
         "PointSeries",
         "PlotSeries",
         "ScaleAdjust",
@@ -1752,6 +1794,10 @@ describe("learning example catalog", () => {
         "HoverData",
         "HoverCard",
         "AnchoredLayout",
+        "PieLayout",
+        "PieSlice",
+        "PieLabel",
+        "pieSlices",
         "defineSeries",
         "closestPoint",
         "closestX",
@@ -1774,8 +1820,16 @@ describe("learning example catalog", () => {
         "bendPathAlongArc",
         "bendPathAlongPath",
         "warpPath",
+<<<<<<< HEAD
         "toPath2D",
         "toSvgPathData",
+=======
+        "flattenPath",
+        "flattenPathWang",
+        "simplifyPathRadial",
+        "simplifyPath",
+        "subdividePath",
+>>>>>>> origin/main
         "SvgPath",
         "Line",
         "HorizontalLine",

@@ -202,8 +202,8 @@ const Sibling = ({ color, metrics, siblingKey, slot }: SiblingProps) => {
     <Rectangle
       key={`${siblingKey}-fill`}
       style={{
-        x: 190 + slot * 82,
-        y: 50,
+        left: 190 + slot * 82,
+        top: 50,
         width: 64,
         height: 64,
         fill: color,
@@ -248,8 +248,8 @@ function sceneNodes({ metrics, model }: RuntimeHooksSceneProps) {
     <Rectangle
       key="runtime-hooks-background"
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 480,
         height: 240,
         fill: model.rootVariant === 'a' ? '#f8fafc' : '#eef2ff',

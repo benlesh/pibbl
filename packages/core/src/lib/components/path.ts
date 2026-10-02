@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 import { resolveTexturePaint } from '../textures/texture.js';
 import { getLayoutBox } from '../layout/context.js';
+=======
+>>>>>>> origin/main
 import { resolvePath } from '../geometry/resolve-path.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {

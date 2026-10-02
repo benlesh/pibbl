@@ -11,20 +11,32 @@ export function describeReplayError(error) {
     remainingString -= length;
     return value.slice(0, length);
   };
+<<<<<<< HEAD
   const absent = Symbol('absent-array-entry');
   const own = (value, key, missing = undefined) => {
+=======
+  const own = (value, key) => {
+>>>>>>> origin/main
     if (!value || (typeof value !== 'object' && typeof value !== 'function')) return undefined;
     try {
       const descriptor = Object.getOwnPropertyDescriptor(value, key);
       if (descriptor && !('value' in descriptor)) return omitted('accessor');
+<<<<<<< HEAD
       return descriptor ? descriptor.value : missing;
+=======
+      return descriptor?.value;
+>>>>>>> origin/main
     } catch { return omitted('unavailable-descriptor'); }
   };
   function encode(value, depth = 0) {
     if (++nodes > limits.nodes) return omitted('node-limit');
     if (value === null || typeof value === 'boolean') return value;
     if (typeof value === 'string') return string(value);
+<<<<<<< HEAD
     if (typeof value === 'number') return Object.is(value, -0) ? { type: 'negative-zero' } : Number.isFinite(value) ? value : { type: 'nonfinite', value: String(value) };
+=======
+    if (typeof value === 'number') return Number.isFinite(value) ? value : { type: 'nonfinite', value: String(value) };
+>>>>>>> origin/main
     if (value === undefined) return { type: 'undefined' };
     if (typeof value !== 'object') return omitted(`unsupported-${typeof value}`);
     if (seen.has(value)) return omitted('cycle');
@@ -36,8 +48,12 @@ export function describeReplayError(error) {
         const items = [];
         for (let index = 0; index < Math.min(length, limits.entries); index++) {
           if (nodes >= limits.nodes) { omissions.add('node-limit'); break; }
+<<<<<<< HEAD
           const entry = own(value, String(index), absent);
           items.push(entry === absent ? { type: 'absent' } : encode(entry, depth + 1));
+=======
+          items.push(encode(own(value, String(index)), depth + 1));
+>>>>>>> origin/main
         }
         if (length > items.length) omissions.add('entry-limit');
         return { type: 'array', length, items };
@@ -81,6 +97,7 @@ export function describeReplayError(error) {
     detail: { limits, omissions: [...omissions] },
   };
 }
+<<<<<<< HEAD
 
 /** Records the original operation failure without coercing the thrown value. */
 export function recordReplayFailure(report, error, stage) {
@@ -98,3 +115,5 @@ export function recordReplayFailure(report, error, stage) {
     ...evidence,
   };
 }
+=======
+>>>>>>> origin/main

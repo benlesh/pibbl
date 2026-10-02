@@ -6,6 +6,7 @@ locally with the current checkout. The fixture stays in the internal testing cat
 public learning examples and search. Production and built-runtime Studio
 report inspection as unsupported and omit the source inspector.
 
+<<<<<<< HEAD
 ## Find a focused workflow
 
 ```sh
@@ -98,6 +99,8 @@ activation without inventing a false value; it does not require transient
 activation to remain active after asynchronous replay work. Drag/capture event
 provenance and protected-action permission outcomes remain outside these checks.
 
+=======
+>>>>>>> origin/main
 ## Debugging task and independent oracle
 
 The blue **Select item A** control occupies x=80..208, y=64..160 in a fixed
@@ -840,7 +843,11 @@ operating-system device-density transition.
 
 Registered signal records include an immutable `observers` facet with scope
 `direct-subscriptions`, completeness, and bounded records. Each record gives a
+<<<<<<< HEAD
 session-local consumer ID, computed/render/reaction/other classification, an already
+=======
+session-local consumer ID, computed/render/other classification, an already
+>>>>>>> origin/main
 registered computed signal ID when available, the edge's observed version, and
 render dirtiness when represented by an own data field. Consumer IDs identify subscriptions within the inspection session. The optional
 canvas ownership facet below correlates component consumers; dirtiness is not an
@@ -1277,6 +1284,7 @@ as assertion values, including omission markers, nonfinite number tags and no
 getter/toJSON invocation. Browser-transmitted errors that have already lost their
 custom properties cannot be reconstructed by this serializer. Source/generation
 correlation and end-to-end transport of those fields remain separate work.
+<<<<<<< HEAD
 
 ## Failure classification without custom conversion
 
@@ -1375,3 +1383,5 @@ on both sides retain the explicit `declared-only` environment scope. With valid
 observations, scope is `declared-and-initial-page-observation`; differences in any
 recorded environment field still reject comparison. Neither scope attests browser
 zoom or environment stability throughout the run.
+=======
+>>>>>>> origin/main

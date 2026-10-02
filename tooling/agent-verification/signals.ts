@@ -5,7 +5,11 @@ import { createSignalOwnershipObserver, type SignalConsumerOwner } from './signa
 import type { ReactiveEdge, SignalDependencyConsumer } from '../../packages/core/src/lib/signals/edge';
 import { getSignalNode, isSignal, type SignalNode } from '../../packages/core/src/lib/signals/graph';
 
+<<<<<<< HEAD
 type Preview = Readonly<{ kind: 'unavailable' } | { kind: 'special-number'; value: '-0' | 'NaN' | 'Infinity' | '-Infinity' } | { kind: 'opaque'; type: string } | { kind: 'scalar'; value: string | number | boolean | null; truncated?: boolean }>;
+=======
+type Preview = Readonly<{ kind: 'unavailable' } | { kind: 'opaque'; type: string } | { kind: 'scalar'; value: string | number | boolean | null; truncated?: boolean }>;
+>>>>>>> origin/main
 interface ComputedView extends SignalNode<unknown> {
   dependencyHead: ReactiveEdge | undefined; dependencyCount: number;
   kind: 'computed'; hasValue: boolean; hasError: boolean;
@@ -14,12 +18,16 @@ interface ComputedView extends SignalNode<unknown> {
 function preview(value: unknown): Preview {
   if (value === null || typeof value === 'boolean') return Object.freeze({ kind: 'scalar', value });
   if (typeof value === 'string') return Object.freeze({ kind: 'scalar', value: value.slice(0, 128), truncated: value.length > 128 });
+<<<<<<< HEAD
   if (typeof value === 'number') {
     if (Object.is(value, -0)) return Object.freeze({ kind: 'special-number', value: '-0' });
     if (Number.isNaN(value)) return Object.freeze({ kind: 'special-number', value: 'NaN' });
     if (!Number.isFinite(value)) return Object.freeze({ kind: 'special-number', value: value > 0 ? 'Infinity' : '-Infinity' });
     return Object.freeze({ kind: 'scalar', value });
   }
+=======
+  if (typeof value === 'number' && Number.isFinite(value)) return Object.freeze({ kind: 'scalar', value });
+>>>>>>> origin/main
   // No getters, serializers, iterators, constructors or error messages are read.
   return Object.freeze({ kind: 'opaque', type: typeof value });
 }
@@ -74,7 +82,11 @@ export function createSignalInspector(canvas?: HTMLCanvasElement) {
       unavailableDependencies ||= unavailable;
       const dependencies = Object.freeze({ count: unavailable ? null : computed?.dependencyCount ?? 0,
         completeness: dependencyCompleteness, edges: Object.freeze(edges) });
+<<<<<<< HEAD
       const observerRecords: Readonly<{ owner: Readonly<SignalConsumerOwner> | null; consumerId: number; kind: 'computed' | 'render' | 'reaction' | 'other'; registeredSignalId: number | null; observedVersion: number; dirty: boolean | null }>[] = [];
+=======
+      const observerRecords: Readonly<{ owner: Readonly<SignalConsumerOwner> | null; consumerId: number; kind: 'computed' | 'render' | 'other'; registeredSignalId: number | null; observedVersion: number; dirty: boolean | null }>[] = [];
+>>>>>>> origin/main
       const observersUnavailable = !!node.activeObserverCursor || computed?.state === 'evaluating';
       let observer = observersUnavailable ? undefined : node.observerHead;
       while (observer && remainingObservers > 0) {
@@ -85,9 +97,15 @@ export function createSignalInspector(canvas?: HTMLCanvasElement) {
         // Legacy consumer flags can be getters into user functions. Inspect only
         // own data descriptors on these CRC-owned records; never invoke accessors.
         const own = (key: string): unknown => Object.getOwnPropertyDescriptor(consumer, key)?.value;
+<<<<<<< HEAD
         const kind = own('kind') === 'computed' ? 'computed' : own('kind') === 'reaction' ? 'reaction' : own('renderInvalidation') === true ? 'render' : 'other';
         const dirty = kind === 'render' ? own('dirty') : undefined;
         observerRecords.push(Object.freeze({ consumerId, kind, owner: ownership.records.get(consumer) ?? (kind === 'reaction' ? ownership.componentOwners.get(own('ownerComponent') as object) : undefined) ?? null,
+=======
+        const kind = own('kind') === 'computed' ? 'computed' : own('renderInvalidation') === true ? 'render' : 'other';
+        const dirty = kind === 'render' ? own('dirty') : undefined;
+        observerRecords.push(Object.freeze({ consumerId, kind, owner: ownership.records.get(consumer) ?? null,
+>>>>>>> origin/main
           registeredSignalId: kind === 'computed' ? ids.get(consumer as unknown as SignalNode<unknown>) ?? null : null,
           observedVersion: observer.observedVersion, dirty: typeof dirty === 'boolean' ? dirty : null,
         }));

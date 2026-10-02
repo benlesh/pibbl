@@ -36,7 +36,10 @@ export interface PointerCaptureObservation {
   readonly records: readonly Readonly<{ pointerId: number; targetId: number; live: boolean }>[];
 }
 export interface FocusObservation {
+<<<<<<< HEAD
   readonly policy: Readonly<{ kind: 'crc-focus-management'; tab: 'source-order-exit'; keyboardActivation: 'enter-space' }> | null;
+=======
+>>>>>>> origin/main
   readonly boundsSemantics: Readonly<{
     coordinateSpace: 'root-logical';
     representation: 'axis-aligned-envelope';
@@ -50,7 +53,11 @@ export interface FocusObservation {
   readonly targetId: number | null;
   readonly visible: boolean | null;
   readonly completeness: 'complete' | 'truncated' | 'unavailable';
+<<<<<<< HEAD
   readonly records: readonly Readonly<{ targetId: number; sourceIndex: number; directionalBoundaryId: number | null; bounds: Readonly<{ x: number; y: number; width: number; height: number }> | null }>[];
+=======
+  readonly records: readonly Readonly<{ targetId: number; sourceIndex: number; bounds: Readonly<{ x: number; y: number; width: number; height: number }> | null }>[];
+>>>>>>> origin/main
 }
 export interface SurfaceObservation {
   readonly status: 'available' | 'unavailable';
@@ -127,6 +134,7 @@ export interface TargetingProbe {
   readonly reason: string | null;
 }
 
+<<<<<<< HEAD
 export interface InteractionPointSearch {
   readonly status: 'verified-geometry' | 'no-verified-point' | 'unknown-target' | 'invalid' | 'stale' | 'unavailable' | 'unsupported' | 'truncated';
   readonly routing: 'geometry-only';
@@ -141,6 +149,8 @@ export interface InteractionPointSearch {
   readonly reason: string | null;
 }
 
+=======
+>>>>>>> origin/main
 const RECORD_LIMIT = 64;
 const NATIVE_CALL_LIMIT = 128;
 const CLIP_REFERENCE_LIMIT = 128;
@@ -192,6 +202,7 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
   const canvasRef = new WeakRef(canvas);
   let targetIds = new WeakMap<CRCEventTarget, number>();
   let nextTarget = 0;
+<<<<<<< HEAD
   let boundaryIds = new WeakMap<object, number>();
   let nextBoundary = 0;
   function identifyBoundary(boundary: object | undefined): number | null {
@@ -200,6 +211,8 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
     if (id === undefined) boundaryIds.set(boundary, id = ++nextBoundary);
     return id;
   }
+=======
+>>>>>>> origin/main
   let disposed = false;
 
   function identifyTarget(target: CRCEventTarget): number {
@@ -258,11 +271,18 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
     const manager = status === 'ready' && policy instanceof CRCFocusManager && !policy.isDestroyed && !policy.ownerWasReleased ? policy : undefined;
     const focused = host?.ownerDocument.activeElement;
     const focusRecords = manager ? manager.candidates.slice(0, 64).map(candidate => Object.freeze({
+<<<<<<< HEAD
       targetId: identifyTarget(candidate.target.publicTarget), sourceIndex: candidate.sourceIndex, directionalBoundaryId: identifyBoundary(candidate.directionalBoundary),
       bounds: candidate.rootBounds ? Object.freeze({ x: candidate.rootBounds.x, y: candidate.rootBounds.y, width: candidate.rootBounds.width, height: candidate.rootBounds.height }) : null,
     })) : [];
     const focus: FocusObservation = Object.freeze({
       policy: manager ? Object.freeze({ kind: 'crc-focus-management', tab: 'source-order-exit', keyboardActivation: 'enter-space' }) : null,
+=======
+      targetId: identifyTarget(candidate.target.publicTarget), sourceIndex: candidate.sourceIndex,
+      bounds: candidate.rootBounds ? Object.freeze({ x: candidate.rootBounds.x, y: candidate.rootBounds.y, width: candidate.rootBounds.width, height: candidate.rootBounds.height }) : null,
+    })) : [];
+    const focus: FocusObservation = Object.freeze({
+>>>>>>> origin/main
       boundsSemantics: Object.freeze({ coordinateSpace: 'root-logical', representation: 'axis-aligned-envelope', source: 'navigation-metadata', paintedGeometryRelation: 'unknown', hitGeometryRelation: 'unknown' }),
       status: manager ? 'ready' : status === 'ready' && !policy ? 'unconfigured' : 'unavailable',
       nativeFocus: focused === host ? 'canvas' : focused ? 'other' : 'none', nativeScope: 'owner-document',
@@ -422,6 +442,7 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
     return result(winner === null ? 'miss' : 'target', winner);
   }
 
+<<<<<<< HEAD
   /** Nine fixed samples; caller bounds are a search region, never assumed hit bounds. */
   function findInteractionPoint(
     expected: TargetingGeneration,
@@ -464,5 +485,10 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
   return Object.freeze({
     snapshot, probe, convert, identifyTarget, findInteractionPoint,
     dispose() { disposed = true; targetIds = new WeakMap(); boundaryIds = new WeakMap(); },
+=======
+  return Object.freeze({
+    snapshot, probe, convert, identifyTarget,
+    dispose() { disposed = true; targetIds = new WeakMap(); },
+>>>>>>> origin/main
   });
 }

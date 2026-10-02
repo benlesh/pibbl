@@ -12,7 +12,10 @@ const fixedFiles = [fixturePath,
   'tooling/agent-verification/signals.ts',
   'tooling/agent-verification/component-diff.ts',
   'tooling/agent-verification/scheduler.ts',
+<<<<<<< HEAD
   'tooling/agent-verification/events.ts',
+=======
+>>>>>>> origin/main
   'tooling/agent-verification/signal-ownership.ts',
   'tooling/agent-verification/browser.ts',
   'tooling/agent-verification/identity.mjs',
@@ -51,9 +54,16 @@ export async function sourceIdentity(root, scope = 'targeting') {
 
 export function assertIdentity(expected, served) {
   if (!served || served.schema !== 'crc-targeting-identity/1') {
+<<<<<<< HEAD
     throw Object.assign(new Error('Served fixture identity unavailable; use the source development Studio with provenance enabled.'), { code: 'CRC_FIXTURE_IDENTITY_UNAVAILABLE' });
   }
   if (served.revision !== expected.revision || served.sha256 !== expected.sha256 || served.files !== expected.files) {
     throw Object.assign(new Error('Served fixture identity mismatch; reload the intended checkout before verifying.'), { code: 'CRC_FIXTURE_IDENTITY_MISMATCH' });
+=======
+    throw new Error('Served fixture identity unavailable; use the source development Studio with provenance enabled.');
+  }
+  if (served.revision !== expected.revision || served.sha256 !== expected.sha256 || served.files !== expected.files) {
+    throw new Error('Served fixture identity mismatch; reload the intended checkout before verifying.');
+>>>>>>> origin/main
   }
 }

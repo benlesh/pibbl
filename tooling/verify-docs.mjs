@@ -84,6 +84,10 @@ const publicGuidePaths = [
   "docs/site/learn/guides/responsive-styles.md",
   "docs/site/learn/guides/three-js.md",
   "docs/site/learn/guides/procedural-textures.md",
+<<<<<<< HEAD
+=======
+  "docs/site/learn/guides/manipulation.md",
+>>>>>>> origin/main
 ];
 const publicSiteMarkdownPaths = [
   "docs/site/api/components/reaction-diffusion.md",
@@ -91,6 +95,21 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/textures.md",
   "docs/site/api/functions/path-bending.md",
   "docs/site/api/functions/path-geometry.md",
+<<<<<<< HEAD
+=======
+  "docs/site/api/functions/text-geometry.md",
+  "docs/site/api/functions/degrees.md",
+  "docs/site/api/functions/pie-slices.md",
+  "docs/site/api/hooks/use-manipulation.md",
+  "docs/site/api/components/bar-series.md",
+  "docs/site/api/components/drag-handle.md",
+  "docs/site/api/components/manipulable.md",
+  "docs/site/api/components/manipulation-frame.md",
+  "docs/site/api/components/pie-layout.md",
+  "docs/site/api/components/resize-handle.md",
+  "docs/site/api/components/resize-handles.md",
+  "docs/site/api/components/rotation-handle.md",
+>>>>>>> origin/main
   "docs/site/learn/guides/data-visualization.md",
   "docs/site/api/components/scale.md",
   "docs/site/api/components/axis.md",
@@ -227,7 +246,14 @@ const publicSiteMarkdownPaths = [
 ];
 const currentMarkdownPaths = [
   "docs/design/textures-contract.md",
+<<<<<<< HEAD
   "packages/textures/README.md",
+=======
+  "docs/design/component-manipulation-contract.md",
+  "docs/design/text-geometry-contract.md",
+  "packages/textures/README.md",
+  "packages/text/README.md",
+>>>>>>> origin/main
   "AGENTS.md",
   "README.md",
   "packages/core/README.md",
@@ -284,6 +310,7 @@ const migrationMarkdownPaths = new Set([
 ]);
 const operationalMarkdownPaths = new Set([
   ".beads/README.md",
+  "packages/text/test/fixtures/source-serif/LICENSE.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
   "tooling/studio-docs/fixtures/invalid-script.md",
   "tooling/studio-docs/fixtures/valid-guide.md",
@@ -313,6 +340,8 @@ const historicalMarkdownPatterns = [
   /^\.superpowers\/sdd\//u,
   /^docs\/design\/tfc-01-characterization-baseline\.md$/u,
   /^docs\/project-plans\/\d{3}-/u,
+  /^docs\/project-plans\/(?:remaining-viz-roadmap|viz-.*)\.md$/u,
+  /^docs\/testing\/evidence\/component-manipulation\/progress\.md$/u,
   /^docs\/superpowers\/(?:plans|specs)\//u,
   /^docs\/testing\/dep-\d+-upgrade-notes\.md$/u,
   /^docs\/testing\/field-notes\//u,
@@ -834,6 +863,10 @@ async function typecheckCompleteSnippets(snippets) {
               "@crc/textures": [
                 join(repositoryRoot, "packages/textures/src/index.ts"),
               ],
+<<<<<<< HEAD
+=======
+              "@crc/text": [join(repositoryRoot, "packages/text/src/index.ts")],
+>>>>>>> origin/main
               "@crc/viz": [join(repositoryRoot, "packages/viz/src/index.ts")],
               "@crc/three": [
                 join(repositoryRoot, "packages/three/src/index.ts"),
@@ -2181,9 +2214,11 @@ const currentNormativeContractPaths = [
 const postBaselineNormativeContractPaths = new Set([
   "docs/design/textures-contract.md",
   "docs/design/animation-contract.md",
+  "docs/design/component-manipulation-contract.md",
   "docs/design/signals-and-scheduling-contract.md",
   "docs/design/physics-2d-contract.md",
   "docs/design/render-layer-and-three-contract.md",
+  "docs/design/text-geometry-contract.md",
 ]);
 const baselineSnapshotContractPaths = currentNormativeContractPaths.filter(
   (path) => !postBaselineNormativeContractPaths.has(path),
@@ -2782,6 +2817,22 @@ const matrixRequirements = [
       "site/api/types/physics-3d-geometry.md",
     ],
     evidence: ["shapes.test.ts", "casts.test.ts"],
+  },
+  {
+    topic: /Signal-owned component move, resize, rotation/u,
+    guides: [
+      "site/learn/guides/manipulation.md",
+      "design/component-manipulation-contract.md",
+    ],
+    evidence: ["manipulation.example.tsx", "manipulation-interaction.test.tsx"],
+  },
+  {
+    topic: /Procedural textures/u,
+    guides: [
+      "site/learn/guides/procedural-textures.md",
+      "design/textures-contract.md",
+    ],
+    evidence: ["material.test.tsx", "reaction-diffusion.test.tsx"],
   },
   {
     topic: /Generic external-renderer lifecycle/u,
@@ -3425,8 +3476,8 @@ export async function verifyMutationProbes() {
     /field-level migration rect\.fillStyle has the wrong final behavior/iu,
   );
   const wrongFieldRequiredness = migrationSource.replace(
-    "`Rectangle` `style.x`                         | Optional; defaults to `0`",
-    "`Rectangle` `style.x`                         | Required; defaults to `0`",
+    "`Rectangle` `style.width`                     | Required",
+    "`Rectangle` `style.width`                     | Optional",
   );
   assert.notEqual(
     wrongFieldRequiredness,
@@ -3439,7 +3490,7 @@ export async function verifyMutationProbes() {
         ...fieldMigrationArguments,
         migrationSource: wrongFieldRequiredness,
       }),
-    /field-level migration rect\.x has the wrong final behavior/iu,
+    /field-level migration rect\.width has the wrong final behavior/iu,
   );
   throws(
     () =>

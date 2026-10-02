@@ -2,3 +2,10 @@ pnpm-lock.yaml
 .beads/
 .superpowers/
 _bmad-output/
+
+# Downloaded native dependencies and generated text artifacts
+packages/text/.cache/
+packages/text/dist/
+
+# Preserve upstream font licenses and pinned fixture metadata
+packages/text/test/fixtures/

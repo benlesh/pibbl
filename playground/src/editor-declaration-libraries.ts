@@ -11,6 +11,10 @@ interface DeclarationLibraryDefaults {
 
 const declarationModulePaths = new Map([
   ["@crc/textures", "file:///node_modules/@crc/textures/index.d.ts"],
+<<<<<<< HEAD
+=======
+  ["@crc/text", "file:///node_modules/@crc/text/index.d.ts"],
+>>>>>>> origin/main
   ["@crc/viz", "file:///node_modules/@crc/viz/index.d.ts"],
   ["@crc/core", "file:///node_modules/@crc/core/index.d.ts"],
   ["@crc/core/jsx-runtime", "file:///node_modules/@crc/core/jsx-runtime.d.ts"],
