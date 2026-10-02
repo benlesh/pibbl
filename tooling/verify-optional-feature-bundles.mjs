@@ -35,6 +35,8 @@ const fixtures = {
   marble: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { marble } from '@crc/textures'; function Scene() { const map = useTexture(marble({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
   water: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { waterWaves } from '@crc/textures'; function Scene() { const map = useTexture(waterWaves({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
   displacement: `import { crc, createElement, Rectangle, defineTexture, useTexture } from '@crc/core'; import { displacement } from '@crc/core/filters'; const recipe=defineTexture({create(){return {}},rasterize(_, { canvas }){const c=canvas.getContext('2d'); c.fillStyle='rgb(128 128 128)'; c.fillRect(0,0,canvas.width,canvas.height);}}); function Scene() { const map=useTexture(recipe({})); return createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: displacement({ map, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
+  waterSurface: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { waterSurface } from '@crc/textures'; function Scene() { const map = useTexture(waterSurface({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
+  reflection: `import { crc, createElement, Rectangle, defineTexture, useTexture } from '@crc/core'; import { reflectedLight } from '@crc/core/filters'; const recipe=defineTexture({create(){return {}},rasterize(_, { canvas }){const c=canvas.getContext('2d'); c.fillStyle='rgb(255 128 128)'; c.fillRect(0,0,canvas.width,canvas.height);}}); function Scene() { const map=useTexture(recipe({})); return createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: reflectedLight({ map, region: { x: 0, y: 0, width: 40, height: 40 } }) } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
   animation: `import { usePlayback } from '@crc/core'; globalThis.keep=usePlayback;`,
   coreImportOnly: `import '@crc/core';`,
   filtersImportOnly: `import '@crc/core/filters';`,
@@ -307,6 +309,10 @@ try {
             0,
             `${name} ${key} retained animation source bytes`,
           );
+        }
+        for (const [bundler, code] of [["esbuild", es.code], ["Vite", vi.code]]) {
+          assert.equal(code.includes("Water surface WASM aborted."), name === "waterSurface", `${name} ${key} ${bundler} water simulation tree shaking`);
+          assert.equal(code.includes("reflected-light filter value"), name === "reflection", `${name} ${key} ${bundler} reflection tree shaking`);
         }
         if (name === "animation") {
           assert.ok(es.code.includes("unresolved-stepper"), `animation ${key} esbuild positive detector failed`);

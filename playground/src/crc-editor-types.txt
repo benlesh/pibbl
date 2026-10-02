@@ -62,6 +62,17 @@
     dispose(): void;
   }
 
+  export interface TexturePlacement { readonly mode?: 'repeat' | 'stretch'; readonly tileWidth?: number; readonly tileHeight?: number; readonly offsetX?: number; readonly offsetY?: number; readonly rotation?: number; }
+  export interface TexturePaint { readonly __crcTexturePaint?: true; }
+  export interface Texture<Message = never> extends TexturePaint { send(message: Message): void; paint(placement: TexturePlacement): TexturePaint; }
+  export interface TextureOptions { readonly resolution?: { readonly width: number; readonly height: number }; readonly palette?: readonly string[]; }
+  export interface TextureContext { readonly canvas: OffscreenCanvas; readonly palette: readonly string[] | undefined; invalidate(): void; requestFrame(): void; }
+  export interface TextureFrame { readonly delta: number; readonly time: number; }
+  export interface TextureDefinition<Config, State, Message = never> { readonly defaultPlacement?: TexturePlacement; create(context: TextureContext, config: Readonly<Config>): State; update?(state: State, config: Readonly<Config>, context: TextureContext): void; receive?(state: State, message: Message, context: TextureContext): void; advance?(state: State, frame: TextureFrame, context: TextureContext): void; rasterize(state: State, context: TextureContext): void; dispose?(state: State, context: TextureContext): void; }
+  export interface TextureRecipe<Message = never> { readonly __crcTextureRecipe?: (message: Message) => Message; }
+  export function defineTexture<Config, State, Message = never>(definition: TextureDefinition<Config, State, Message>): (config: Config) => TextureRecipe<Message>;
+  export function useTexture<Message>(input: TextureRecipe<Message>, options?: TextureOptions): Texture<Message>;
+
   export type CRCFit = 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   export type CRCPixelRatio = 'device' | number;
   export interface CRCFixedViewportConfig {
@@ -284,8 +295,8 @@
   }
   type PrimitiveCapabilityArguments<P, S extends SystemStyle, N extends SystemStyle, R extends SystemStyle> = RequiresResolver<R> extends true ? [capabilities: never] : RequiresResolver<S> extends true ? [capabilities: Readonly<PrimitiveCapabilities<P, S, N, R>> & { resolveStyle: NonNullable<PrimitiveCapabilities<P, S, N, R>['resolveStyle']> }] : [capabilities?: Readonly<PrimitiveCapabilities<P, S, N, R>>];
   export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
-  export type FillStyle = CanvasRenderingContext2D['fillStyle'];
-  export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'];
+  export type FillStyle = CanvasRenderingContext2D['fillStyle'] | TexturePaint;
+  export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'] | TexturePaint;
 
   export type Percentage = `${number}%`;
   export type Length = number | Percentage | 'auto';
@@ -1578,6 +1589,10 @@ export interface MaterialOptions {readonly seed?: number; readonly scale?: numbe
 export interface WaterWavesOptions { readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; }
 export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
 export function waterWaves(options?: WaterWavesOptions): import('@crc/core').TextureRecipe<WaterWavesMessage>;
+export interface WaterSurfaceObstacle { readonly x: number; readonly y: number; readonly width: number; readonly height: number; }
+export interface WaterSurfaceOptions { readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; readonly obstacles?: readonly WaterSurfaceObstacle[]; }
+export type WaterSurfaceMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
+export function waterSurface(options?: WaterSurfaceOptions): import('@crc/core').TextureRecipe<WaterSurfaceMessage>;
 export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
 export type InkMessage = {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
 export function marble(options?: MaterialOptions): import('@crc/core').TextureRecipe;
@@ -1611,3 +1626,6 @@ export function sepia(options: Readonly<CRCSepiaFilterOptions>): CRCFilter;
 
 export interface CRCDisplacementFilterOptions { readonly map: SignalValue<import('@crc/core').TexturePaint>; readonly strength: SignalValue<number>; readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; }
 export function displacement(options: Readonly<CRCDisplacementFilterOptions>): CRCFilter;
+export type CRCReflectedLightSource = string | import('@crc/core').TexturePaint | HTMLImageElement | ImageBitmap;
+export interface CRCReflectedLightFilterOptions { readonly map: SignalValue<import('@crc/core').TexturePaint>; readonly region: Readonly<{x:number;y:number;width:number;height:number}>; readonly source?: SignalValue<CRCReflectedLightSource>; readonly opacity?: SignalValue<number>; readonly threshold?: SignalValue<number>; readonly softness?: SignalValue<number>; readonly direction?: readonly [number,number]; }
+export function reflectedLight(options: CRCReflectedLightFilterOptions): CRCFilter;

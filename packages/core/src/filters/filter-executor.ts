@@ -1,3 +1,4 @@
+import type { TexturePaint } from '../lib/textures/texture-protocol.js';
 import { GLOBAL_STATE } from '../lib/global-state.js';
 import { getOptionalService } from '../lib/optional-services.js';
 import { enterPrimitivePresentation } from '../lib/primitive-presentation.js';
@@ -11,6 +12,9 @@ import { assertNativeCanvasFilter } from './native-canvas-filter.js';
 /** An operation-owned pass. The shared executor knows nothing about its inputs. */
 export interface CustomPreparedFilter extends PreparedCRCFilter {
   readonly reverseInfluence: (output: Readonly<PixelBounds>, density: number) => PixelBounds;
+  /** Private fusion capability; no concrete GPU implementation enters this module. */
+  readonly textureWarp?: Readonly<{ map: TexturePaint; strength: number; region: Readonly<{x:number;y:number;width:number;height:number}> }>;
+  readonly fuseWithPrevious?: (previous: CustomPreparedFilter) => CustomPreparedFilter | undefined;
   readonly process?: (source: OffscreenCanvas, windows: FilterWindows) => ImageBitmap;
 }
 type Operation = NativePreparedFilter | CustomPreparedFilter;
@@ -43,7 +47,15 @@ class PassScratch {
 
 export const filterBoundaryExecutor: CRCFilterBoundaryExecutor = {
   render(input) {
-    const operations = (input.filters as readonly Operation[]).filter(operation => 'css' in operation || operation.process);
+    const operations: Operation[] = [];
+    for (const operation of input.filters as readonly Operation[]) {
+      if (!('css' in operation) && !operation.process) continue;
+      const previous = operations.at(-1);
+      const fused = previous && !('css' in previous) && !('css' in operation)
+        ? operation.fuseWithPrevious?.(previous) : undefined;
+      if (fused) operations[operations.length - 1] = fused;
+      else operations.push(operation);
+    }
     if (!operations.length) {
       const release = enterPrimitivePresentation(input.presentation);
       try { input.renderSubtree(); } finally { release(); }
