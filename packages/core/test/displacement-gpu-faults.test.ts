@@ -27,7 +27,11 @@ afterEach(() => vi.restoreAllMocks());
 
 type Restore = () => void;
 
-function mountFaultedScene(inject: () => Restore, expected: RegExp): void {
+function mountFaultedScene(
+  inject: () => Restore,
+  expected: RegExp,
+  afterFailure?: () => void,
+): void {
   const driver = new ManualSchedulerDriver();
   const restoreDriver = installSchedulerDriverForTest(driver);
   const canvas = document.createElement("canvas");
@@ -69,6 +73,7 @@ function mountFaultedScene(inject: () => Restore, expected: RegExp): void {
           type === "webglcontextlost" || type === "webglcontextrestored",
       ),
     ).toHaveLength(2);
+    afterFailure?.();
     restoreFault();
     crc(canvas, createElement(Scene, {}));
     driver.flush(16);
@@ -164,5 +169,141 @@ describe("displacement GPU first-generation faults", () => {
         });
       return () => spy.mockRestore();
     }, /Cross-origin texture source/);
+  });
+
+  it("deletes every allocated GPU handle once when an upload fails", () => {
+    const shaders: WebGLShader[] = [];
+    const programs: WebGLProgram[] = [];
+    const vertexArrays: WebGLVertexArrayObject[] = [];
+    const buffers: WebGLBuffer[] = [];
+    const textures: WebGLTexture[] = [];
+    const createShader = WebGL2RenderingContext.prototype.createShader;
+    const createProgram = WebGL2RenderingContext.prototype.createProgram;
+    const createVertexArray =
+      WebGL2RenderingContext.prototype.createVertexArray;
+    const createBuffer = WebGL2RenderingContext.prototype.createBuffer;
+    const createTexture = WebGL2RenderingContext.prototype.createTexture;
+    vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      "createShader",
+    ).mockImplementation(function (
+      this: WebGL2RenderingContext,
+      ...args: any[]
+    ) {
+      const handle = (createShader as any).apply(
+        this,
+        args,
+      ) as WebGLShader | null;
+      if (handle) shaders.push(handle);
+      return handle;
+    });
+    vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      "createProgram",
+    ).mockImplementation(function (this: WebGL2RenderingContext) {
+      const handle = createProgram.call(this);
+      if (handle) programs.push(handle);
+      return handle;
+    });
+    vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      "createVertexArray",
+    ).mockImplementation(function (this: WebGL2RenderingContext) {
+      const handle = createVertexArray.call(this);
+      if (handle) vertexArrays.push(handle);
+      return handle;
+    });
+    vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      "createBuffer",
+    ).mockImplementation(function (this: WebGL2RenderingContext) {
+      const handle = createBuffer.call(this);
+      if (handle) buffers.push(handle);
+      return handle;
+    });
+    vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      "createTexture",
+    ).mockImplementation(function (this: WebGL2RenderingContext) {
+      const handle = createTexture.call(this);
+      if (handle) textures.push(handle);
+      return handle;
+    });
+    const deleteShader = vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      "deleteShader",
+    );
+    const deleteProgram = vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      "deleteProgram",
+    );
+    const deleteVertexArray = vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      "deleteVertexArray",
+    );
+    const deleteBuffer = vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      "deleteBuffer",
+    );
+    const deleteTexture = vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      "deleteTexture",
+    );
+    const exactlyOnce = (
+      handles: readonly unknown[],
+      calls: readonly unknown[][],
+    ) => {
+      expect(handles.length).toBeGreaterThan(0);
+      for (const handle of handles)
+        expect(calls.filter(([value]) => value === handle)).toHaveLength(1);
+    };
+    mountFaultedScene(
+      () => {
+        const upload = vi
+          .spyOn(WebGL2RenderingContext.prototype, "texImage2D")
+          .mockImplementationOnce(() => {
+            throw new DOMException(
+              "Cross-origin texture source.",
+              "SecurityError",
+            );
+          });
+        return () => upload.mockRestore();
+      },
+      /Cross-origin texture source/,
+      () => {
+        exactlyOnce(shaders, deleteShader.mock.calls);
+        exactlyOnce(programs, deleteProgram.mock.calls);
+        exactlyOnce(vertexArrays, deleteVertexArray.mock.calls);
+        exactlyOnce(buffers, deleteBuffer.mock.calls);
+        exactlyOnce(textures, deleteTexture.mock.calls);
+      },
+    );
+  });
+
+  it("deletes the source texture when map texture allocation fails", () => {
+    const textures: WebGLTexture[] = [];
+    const createTexture = WebGL2RenderingContext.prototype.createTexture;
+    const textureSpy = vi
+      .spyOn(WebGL2RenderingContext.prototype, "createTexture")
+      .mockImplementation(function (this: WebGL2RenderingContext) {
+        if (textures.length > 0) return null as unknown as WebGLTexture;
+        const handle = createTexture.call(this)!;
+        textures.push(handle);
+        return handle;
+      });
+    const deleteTexture = vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      "deleteTexture",
+    );
+    mountFaultedScene(
+      () => () => textureSpy.mockRestore(),
+      /map texture/,
+      () => {
+        expect(textures).toHaveLength(1);
+        expect(
+          deleteTexture.mock.calls.filter(([value]) => value === textures[0]),
+        ).toHaveLength(1);
+      },
+    );
   });
 });
