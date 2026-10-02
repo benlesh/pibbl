@@ -68,4 +68,14 @@ describe('component positioning', () => {
     expect(Array.from(context.getImageData(35, 47, 1, 1).data)).toEqual([37, 99, 235, 255]);
     expect(Array.from(context.getImageData(65, 87, 1, 1).data)[3]).toBe(0);
   });
+  it('preserves independent child offsets inside a parent-positioned function component', () => {
+    function Card(_props: { style: { left: number; top: number; width: number; height: number } }) {
+      return <Rectangle style={{ left: 5, top: 7, width: 10, height: 10, fill: '#ff0000' }} />;
+    }
+    const canvas = mount(<Absolute><Card style={{ left: 30, top: 40, width: 30, height: 30 }} /></Absolute>);
+    const context = canvas.getContext('2d')!;
+    expect(Array.from(context.getImageData(35, 47, 1, 1).data)).toEqual([255, 0, 0, 255]);
+    expect(Array.from(context.getImageData(30, 40, 1, 1).data)[3]).toBe(0);
+  });
+
 });
