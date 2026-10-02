@@ -11,14 +11,14 @@ import {
   staticBody2D,
   type CRCPhysicsWorldHandle2D,
   type CRCPhysicsBodyHandle2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 import {
   loadScenario,
   physics2DLabScenarioEntry,
   type Physics2DLabState,
   type ScenarioController,
 } from "@crc/scenarios";
-import { createPhysicsTestHarness2D } from "@crc/physics/2d/testing";
+import { createPhysicsTestHarness2D } from "@crc/core/physics/2d/testing";
 import { describe, it, expect } from "vitest";
 import {
   ManualSchedulerDriver,

@@ -119,6 +119,16 @@ function browseGroupFor(
 
 const drafts = [
   {
+    slug: "html-box", title: "HTML Box", shortTitle: "HTML Box", section: "composition", order: 212,
+    summary: "Mount native HTML with CRC transforms, clipping, and coordinated focus.",
+    api: ["HtmlBox", "Group", "Clip", "FocusManagement"],
+    objectives: ["Keep native inputs alive while CRC moves their box.", "Share clipping geometry and source-order keyboard navigation."],
+    prompts: { gesture: "Type a note, rotate/move/scale its box, then Tab between Canvas and HTML controls.", code: "Mount ordinary DOM in HtmlBox and release resources through its AbortSignal." },
+    apiNotes: ["HTML is always above Canvas paint. PathGeometry supplies portable ancestor clips.", "The application supplies the canvas wrapper and overlay; CRC owns each mounted box."],
+    canvas: { width: 720, height: 480 }, related: ["group", "clip"],
+    load: () => import("./learning/composition/html-box.example"),
+  },
+  {
     slug: "plasma-globe", title: "Plasma Globe", shortTitle: "Plasma Globe", section: "composition", order: 208,
     summary: "Mix reusable tendrils and lightning fills into a glowing, interactive plasma globe.",
     api: ["useTexture", "defineTexture", "Circle", "Rectangle"],
@@ -143,7 +153,7 @@ const drafts = [
     summary: "Explore seeded marble, paper, and cellular surfaces as backgrounds and repeating fills.", api: ["ProceduralTexture", "Group", "useSignal"],
     objectives: ["Reuse procedural texture output in Canvas composition.", "Keep texture generation independent of display size."],
     prompts: { gesture: "Switch materials, cycle the palette, and make a new variation.", code: "Change the seed to reproduce a material or customize the rendering callback." },
-    apiNotes: ["Uses the optional @crc/textures package and the public render-layer lifecycle.", "Texture renderer sources are borrowed for the synchronous callback; CRC owns presentation."],
+    apiNotes: ["Uses the optional @crc/core/textures package and the public render-layer lifecycle.", "Texture renderer sources are borrowed for the synchronous callback; CRC owns presentation."],
     canvas: { width: 880, height: 630 }, related: ["living-ink"],
     load: () => import("./learning/composition/material-lab.example"),
   },
@@ -152,7 +162,7 @@ const drafts = [
     summary: "Paint a living alpha mask that reveals illustrated landscapes and colorful typography.", api: ["ReactionDiffusion", "defineRenderLayer", "Group", "useSignal"],
     objectives: ["Reuse procedural texture output in Canvas composition.", "Keep texture generation independent of display size."],
     prompts: { gesture: "Paint the artwork, pause the mask, and switch between landscape and typography.", code: "Use texture.mask with destination-in to reveal your own Canvas artwork." },
-    apiNotes: ["Uses the optional @crc/textures package and the public render-layer lifecycle.", "Texture renderer sources are borrowed for the synchronous callback; CRC owns presentation."],
+    apiNotes: ["Uses the optional @crc/core/textures package and the public render-layer lifecycle.", "Texture renderer sources are borrowed for the synchronous callback; CRC owns presentation."],
     canvas: { width: 880, height: 630 }, related: ["living-ink"],
     load: () => import("./learning/composition/growing-reveal.example"),
   },
@@ -163,7 +173,7 @@ const drafts = [
     api: ["ReactionDiffusion", "Group", "useSignal"],
     objectives: ["Paint into a persistent scheduled texture.", "Compose ordinary CRC content over a living background."],
     prompts: { gesture: "Draw on the ink, pause it, and cycle the palette.", code: "Change resolution independently from the displayed size." },
-    apiNotes: ["ReactionDiffusion comes from the optional @crc/textures package.", "Reset repeats the seed; New seed creates another variation."],
+    apiNotes: ["ReactionDiffusion comes from the optional @crc/core/textures package.", "Reset repeats the seed; New seed creates another variation."],
     canvas: { width: 880, height: 630 }, related: ["layer", "three-layer"],
     load: () => import("./learning/composition/living-ink.example"),
   },

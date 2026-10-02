@@ -54,7 +54,7 @@ contention observed during earlier upgrade and visual work.
 - the fixed preservation manifest records every normalized prose paragraph,
   list obligation, table row, and fenced-code obligation from the normative
   contract baseline (667 units), with per-file source digests, plus the complete
-  reviewed current form (828 units across 12 baseline-snapshotted contracts)
+  reviewed current form (832 units across 12 baseline-snapshotted contracts)
   and explicit approved translation, retirement, and addition mappings tied to
   narrow design unit IDs and excerpts; every translation has exact
   baseline/current unit IDs, unique rationale,

@@ -10,7 +10,7 @@ keywords: [particles, canvas, confetti, sparks, trails]
 
 # Create particle effects
 
-`@crc/particles` provides deterministic 2D effects for UI-scale sparks,
+`@crc/core/particles` provides deterministic 2D effects for UI-scale sparks,
 confetti, click feedback, trails, and other Canvas composition. An immutable
 effect describes a population; `Particles2D` binds it into ordinary CRC
 layout, events, filters, lifecycle, and scheduling.
@@ -25,7 +25,7 @@ import {
   particleChoice,
   particleCurve,
   particleRange,
-} from "@crc/particles";
+} from "@crc/core/particles";
 
 const celebration = defineParticleEffect2D({
   emitters: [

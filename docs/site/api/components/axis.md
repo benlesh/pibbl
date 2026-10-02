@@ -10,7 +10,7 @@ symbols: [Axis, AxisProps, AxisStyle]
 
 # Axis
 
-Import `Axis` from `@crc/viz`. `AxisProps` requires `scale: ScaleId` and
+Import `Axis` from `@crc/core/viz`. `AxisProps` requires `scale: ScaleId` and
 `position: "bottom" | "left"`. It accepts signal-valued `tickCount` (default 5),
 `tickFormat(value, index)` returning a string, and an optional signal-valued style.
 

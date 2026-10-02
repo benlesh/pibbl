@@ -4,7 +4,7 @@ import { isAbsolute, resolve, sep } from "node:path";
 const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const CRC_ENTRY_POINT =
-  /^@crc\/(?:core(?:\/filters|\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles|physics\/(?:2d(?:\/geometry)?|3d\/geometry)|viz|three|textures)$/;
+  /^@crc\/(?:core(?:\/(?:filters|internal|jsx-runtime|jsx-dev-runtime|particles|textures|viz|physics\/(?:2d(?:\/geometry)?|3d\/geometry)))?|three)$/;
 const THREE_ENTRY_POINT = /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
 
 const threeEntryPoints = new Map([
@@ -29,12 +29,12 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
   const extension = mode === "built" ? "mjs" : "ts";
   return new Map([
     ["@crc/core/filters", resolve(import.meta.dirname, `../packages/core/${directory}/filters.${extension}`)],
-    ["@crc/textures", resolve(import.meta.dirname, `../packages/textures/${directory}/index.${extension}`)],
+    ["@crc/core/textures", resolve(import.meta.dirname, `../packages/core/${directory}/features/textures/index.${extension}`)],
     [
-      "@crc/viz",
+      "@crc/core/viz",
       resolve(
         import.meta.dirname,
-        `../packages/viz/${directory}/index.${extension}`,
+        `../packages/core/${directory}/features/viz/index.${extension}`,
       ),
     ],
     [
@@ -66,10 +66,10 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
       ),
     ],
     [
-      "@crc/particles",
+      "@crc/core/particles",
       resolve(
         import.meta.dirname,
-        `../packages/particles/${directory}/index.${extension}`,
+        `../packages/core/${directory}/features/particles/index.${extension}`,
       ),
     ],
     [
@@ -80,24 +80,24 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
       ),
     ],
     [
-      "@crc/physics/2d",
+      "@crc/core/physics/2d",
       resolve(
         import.meta.dirname,
-        `../packages/physics/${directory}/2d.${extension}`,
+        `../packages/core/${directory}/features/physics/2d.${extension}`,
       ),
     ],
     [
-      "@crc/physics/2d/geometry",
+      "@crc/core/physics/2d/geometry",
       resolve(
         import.meta.dirname,
-        `../packages/physics/${directory}/2d-geometry.${extension}`,
+        `../packages/core/${directory}/features/physics/2d-geometry.${extension}`,
       ),
     ],
     [
-      "@crc/physics/3d/geometry",
+      "@crc/core/physics/3d/geometry",
       resolve(
         import.meta.dirname,
-        `../packages/physics/${directory}/3d-geometry.${extension}`,
+        `../packages/core/${directory}/features/physics/3d-geometry.${extension}`,
       ),
     ],
   ]);
@@ -111,7 +111,7 @@ function assertSingleRuntimeMode(
   const inputs = Object.keys(metafile.inputs).map((path) =>
     isAbsolute(path) ? path : resolve(repositoryRoot, path),
   );
-  for (const packageName of ["core", "particles", "physics", "three", "viz", "textures"]) {
+  for (const packageName of ["core", "three"]) {
     const packageRoot = resolve(repositoryRoot, `packages/${packageName}`);
     const expectedRoot = resolve(
       packageRoot,

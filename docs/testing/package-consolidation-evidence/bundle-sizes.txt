@@ -1,0 +1,6 @@
+core: 118192 bytes minified, 35416 bytes gzip; Rapier=false, WASM=false
+geometry: 50900 bytes minified, 16420 bytes gzip; Rapier=false, WASM=false
+physics: 3682203 bytes minified, 1358268 bytes gzip; Rapier=true, WASM=true
+real 0.21
+user 0.08
+sys 0.01

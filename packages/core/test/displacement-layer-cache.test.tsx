@@ -1,7 +1,7 @@
 /** @jsxImportSource @crc/core */
 import { crc, definePrimitive, Group, Layer, Rectangle, useTexture } from '@crc/core';
 import { displacement } from '@crc/core/filters';
-import { waterWaves } from '@crc/textures';
+import { waterWaves } from '@crc/core/textures';
 import { expect, it, vi } from 'vitest';
 import { DisplacementGpu } from '../src/filters/displacement-gpu';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';

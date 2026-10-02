@@ -47,7 +47,6 @@ export async function sourceIdentity(root, scope = 'targeting') {
     }
   }
   await walk('packages/core/src');
-  if (scope === 'viz') await walk('packages/viz/src');
   const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
   return fingerprint(root, files, revision);
 }

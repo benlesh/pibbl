@@ -254,3 +254,12 @@ export function setPlacementIdentityHint<T>(element: CRCElement<any>, value: T):
   const current = elementMetadata.get(element) ?? {};
   elementMetadata.set(element, { ...current, identityHint: value });
 }
+
+const opaquePrimitiveProps = new WeakMap<Function, readonly string[]>();
+/** @internal Built-in opaque payloads, without widening definePrimitive's API. */
+export function registerOpaquePrimitiveProps(type: Function, keys: readonly string[]): void {
+  opaquePrimitiveProps.set(type, keys);
+}
+export function getOpaquePrimitiveProps(type: Function): readonly string[] | undefined {
+  return opaquePrimitiveProps.get(type);
+}

@@ -1,3 +1,5 @@
+import type { HtmlBridge } from './html/types.js';
+import type { HtmlFocusRegion } from './focus/html-focus-region.js';
 import type { Teardowns } from "./teardowns.js";
 import type { CRCSurfaceState } from "./surface/types.js";
 import type { Constraints, LayoutBox, Size } from "./layout/types.js";
@@ -229,6 +231,7 @@ export type CRCRegionHandlers = Partial<
 >;
 
 export interface CRCClippingStackEntry {
+  readonly svgPath?: string;
   path: Path2D;
   fillRule: CanvasFillRule;
   transform: DOMMatrix;
@@ -282,6 +285,8 @@ export interface CRCEventRoot {
   readonly pointerCaptures: Map<number, CRCEventNode>;
   onNodeRelease: ((node: CRCEventNode) => void) | undefined;
   onTargetUpdate: ((target: CRCEventTargetRegistration) => void) | undefined;
+  htmlOverlay?: HTMLElement;
+  html?: HtmlBridge;
   focusPolicy?: CRCFocusPolicyBridge;
   /** @internal Shared by nested layer renders; consumers register only erased callbacks. */
   renderTransaction?: CRCRenderTransaction;
@@ -289,10 +294,14 @@ export interface CRCEventRoot {
 
 /** @internal Root-wide render completion seam for optional policies. */
 export interface CRCRenderTransaction {
+  onPublish?(callback: () => void): void;
   onFinish(callback: (success: boolean) => void): void;
 }
 
 export interface CRCFocusPolicyBridge {
+  observeHtmlRegion?(region: HtmlFocusRegion): void;
+  suspendHtmlRegions?(): void;
+  removeHtmlFocusRegion?(region: HtmlFocusRegion): void;
   snapshot(target: CRCEventTargetRegistration): CRCEventTargetSnapshot;
   observeTarget(target: CRCEventTargetRegistration): void;
   /** @internal Records a target committed during the active render transaction. */

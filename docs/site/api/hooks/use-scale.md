@@ -10,7 +10,7 @@ symbols: [useScale]
 
 # useScale
 
-Import `useScale` from `@crc/viz`. Call `useScale(id)` in a component to obtain
+Import `useScale` from `@crc/core/viz`. Call `useScale(id)` in a component to obtain
 `Signal<ResolvedScale>`, then call `.get()` where the dependency should be owned.
 The returned signal has stable identity for that provider mount. Its immutable
 value changes when the resolved domain, range, or local frame changes.

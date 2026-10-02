@@ -30,7 +30,6 @@ the strategy document does not override it.
 - A public scrolling or virtualization API. Applications currently own large
   datasets and pass a bounded visible window of descriptors to CRC.
 - A worker renderer or spatial-index/event-architecture rewrite without the measured trigger.
-- Populating or removing the separate empty `@crc/types` compatibility package.
 - A published documentation site, generated API-reference renderer, search,
   versioning, or release campaign; see the [renderer
   brief](./documentation-follow-up.md). The current Markdown reference is

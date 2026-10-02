@@ -1,7 +1,7 @@
 ---
 id: api-types-particles
 title: Particle types
-summary: Definitions, descriptors, execution state, emitters, renderers, component props, and styles for @crc/particles.
+summary: Definitions, descriptors, execution state, emitters, renderers, component props, and styles for @crc/core/particles.
 kind: api
 slug: particles
 apiCategory: types
@@ -57,7 +57,7 @@ keywords: [particles, types, emitters, canvas, execution]
 
 # Particle types
 
-Import these public contracts with `type` from `@crc/particles`.
+Import these public contracts with `type` from `@crc/core/particles`.
 
 ## `CRCParticleAppearance`
 

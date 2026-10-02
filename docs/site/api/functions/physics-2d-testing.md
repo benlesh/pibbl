@@ -12,11 +12,11 @@ keywords: [physics, testing, deterministic, agentic]
 # 2D physics test harness
 
 ```ts
-import { createPhysicsTestHarness2D } from "@crc/physics/2d/testing";
+import { createPhysicsTestHarness2D } from "@crc/core/physics/2d/testing";
 import type {
   CRCPhysicsTestHarness2D,
   CRCPhysicsTestHarness2DOptions,
-} from "@crc/physics/2d/testing";
+} from "@crc/core/physics/2d/testing";
 ```
 
 `createPhysicsTestHarness2D` mounts a public CRC root with a deterministic

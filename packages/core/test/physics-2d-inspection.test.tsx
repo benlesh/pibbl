@@ -16,7 +16,7 @@ import {
   fromPhysicsPoint2D,
   type CRCPhysicsBodyHandle2D,
   type CRCPhysicsWorldHandle2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 import { expect, it } from "vitest";
 import {
   ManualSchedulerDriver,

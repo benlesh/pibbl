@@ -1,7 +1,7 @@
 ---
 id: guide-data-visualization
 title: Compose data visualizations
-summary: Build allocated, signal-driven line plots with the official @crc/viz primitives.
+summary: Build allocated, signal-driven line plots with the official @crc/core/viz primitives.
 kind: guide
 slug: data-visualization
 order: 67
@@ -11,13 +11,13 @@ exampleSlug: viz-responsive-line
 
 # Compose data visualizations
 
-`@crc/viz` provides scale and drawing primitives. Core owns layout, signals,
+`@crc/core/viz` provides scale and drawing primitives. Core owns layout, signals,
 events, clipping, and the JSX runtime. No chart container or second rendering
 loop is required.
 
 ```tsx
 import { Absolute, Group } from "@crc/core";
-import { Axis, LineSeries, Scale } from "@crc/viz";
+import { Axis, LineSeries, Scale } from "@crc/core/viz";
 
 const readings = [
   { time: 0, value: 10 },

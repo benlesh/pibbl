@@ -45,7 +45,7 @@ test('identity is embedded in the loaded fixture only for source development', a
   assert.ok(vizTransformed.code.includes(JSON.stringify(vizIdentity)));
   assert.ok(!vizTransformed.code.includes(identityMarker));
   assert.notEqual(vizIdentity.sha256, identity.sha256);
-  assert.ok(vizIdentity.files > identity.files);
+  // Both scopes now include feature modules through the consolidated core tree.
 });
 
 test('native replay blocks a mismatched served fixture before exercising actions', { timeout: 30000 }, async () => {

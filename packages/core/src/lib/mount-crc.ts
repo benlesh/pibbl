@@ -1,3 +1,4 @@
+import { reserveHtmlOverlay } from './html/overlay-config.js';
 import {
   cleanupCRCInstance,
   GLOBAL_STATE,
@@ -156,6 +157,7 @@ export function mountCRC(
   GLOBAL_STATE.crcInstances.set(canvas, crcInstance);
 
   try {
+    if (config?.htmlOverlay) reserveHtmlOverlay(crcInstance, config.htmlOverlay);
     if (!parent && rootCanvas) {
       mountRootSurface(crcInstance, rootCanvas);
     }

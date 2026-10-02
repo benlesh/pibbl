@@ -66,12 +66,13 @@ export const CANVAS_2D_BACKEND: CRCBackendDriver<RenderingContext2D> = {
     });
     if (filters) {
       const executor = filters.values[0]!.executor;
-      executor.render({
+      GLOBAL_STATE.htmlFilterDepth++;
+      try { executor.render({
         component: input.componentName,
         filters: filters.values,
         presentation,
         renderSubtree: invoke,
-      });
+      }); } finally { GLOBAL_STATE.htmlFilterDepth--; }
       return;
     }
     const releasePresentation = enterPrimitivePresentation(presentation);

@@ -23,7 +23,7 @@ import {
   Scale,
   nearestPoint,
   useScale,
-} from "@crc/viz";
+} from "@crc/core/viz";
 
 type Row = {
   id: string;

@@ -2,3 +2,6 @@ pnpm-lock.yaml
 .beads/
 .superpowers/
 _bmad-output/
+# Retained verification reports are byte-fingerprinted evidence, not authored docs.
+docs/strategy/agent-verification-evidence/
+docs/testing/package-consolidation-evidence/

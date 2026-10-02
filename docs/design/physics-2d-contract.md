@@ -7,7 +7,7 @@ entries do not initialize WebAssembly or require a renderer.
 
 ## Loading, units, and numerical policy
 
-`@crc/physics/2d` is an ES module with top-level await. Its embedded WASM
+`@crc/core/physics/2d` is an ES module with top-level await. Its embedded WASM
 initializes before imports resolve; no external WASM fetch or engine animation
 loop is created. Applications use ordinary static imports or await dynamic
 imports. Studio loads its bundled runtime as a module before mounting the scene.
@@ -110,7 +110,7 @@ observation without selecting another body; an unbound or stale handle returns
 without registering pointer targets or mutating physics. Linear interpolation
 can make its authoritative bounds slightly lead the displayed body between ticks.
 
-`@crc/physics/2d/testing` provides an isolated browser harness using the existing
+`@crc/core/physics/2d/testing` provides an isolated browser harness using the existing
 realm scheduler. It rejects a realm containing a live CRC root. `flush()`
 delivers one pending frame at current time; `advanceFrames(n, ms)` delivers up to
 n pending host frames; `act()` performs an action then flushes once. These are

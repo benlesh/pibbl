@@ -19,7 +19,7 @@ const root = resolve(import.meta.dirname, "..");
 // A selected WASM recipe must not retain another recipe's embedded kernel.
 const wasmKernels = Object.fromEntries(
   ["marble", "paper", "cellular", "ink"].flatMap((name) => {
-    const path = join(root, `packages/textures/src/lib/wasm/${name}-bytes.ts`);
+    const path = join(root, `packages/core/src/features/textures/lib/wasm/${name}-bytes.ts`);
     if (!existsSync(path)) return [];
     const match = readFileSync(path, "utf8").match(/bytes = "([^"]+)"/);
     assert.ok(match, `Cannot inspect ${name} WASM kernel`);
@@ -43,13 +43,13 @@ const fixtures = {
   plain: `import { crc, createElement, Group, Rectangle, Text } from '@crc/core'; export function mount(canvas) { return crc(canvas, createElement(Group, { children: [createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red' } }), createElement(Text, { children: 'Plain' })] })); }`,
   layer: `import { crc, createElement, Layer, Rectangle } from '@crc/core'; export function mount(canvas) { return crc(canvas, createElement(Layer, { children: createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red' } }) })); }`,
   blur: `import { crc, createElement, Rectangle } from '@crc/core'; import { blur } from '@crc/core/filters'; export function mount(canvas) { return crc(canvas, createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: blur({ radius: 2 }) } })); }`,
-  marble: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { marble } from '@crc/textures'; function Scene() { const map = useTexture(marble({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
-  water: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { waterWaves } from '@crc/textures'; function Scene() { const map = useTexture(waterWaves({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
+  marble: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { marble } from '@crc/core/textures'; function Scene() { const map = useTexture(marble({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
+  water: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { waterWaves } from '@crc/core/textures'; function Scene() { const map = useTexture(waterWaves({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
   displacement: `import { crc, createElement, Rectangle, defineTexture, useTexture } from '@crc/core'; import { displacement } from '@crc/core/filters'; const recipe=defineTexture({create(){return {}},rasterize(_, { canvas }){const c=canvas.getContext('2d'); c.fillStyle='rgb(128 128 128)'; c.fillRect(0,0,canvas.width,canvas.height);}}); function Scene() { const map=useTexture(recipe({})); return createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: displacement({ map, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
   animation: `import { usePlayback } from '@crc/core'; globalThis.keep=usePlayback;`,
   coreImportOnly: `import '@crc/core';`,
   filtersImportOnly: `import '@crc/core/filters';`,
-  texturesImportOnly: `import '@crc/textures';`,
+  texturesImportOnly: `import '@crc/core/textures';`,
 };
 
 for (const [name, factory] of [["paper", "paper"], ["cellular", "cellular"], ["ink", "reactionDiffusion"]]) {
@@ -64,14 +64,11 @@ const sourceAliases = [
   },
   { find: "@crc/core", replacement: join(root, "packages/core/src/index.ts") },
   {
-    find: "@crc/textures",
-    replacement: join(root, "packages/textures/src/index.ts"),
-  },
-  {
-    find: "@crc/types",
-    replacement: join(root, "packages/types/src/index.ts"),
+    find: "@crc/core/textures",
+    replacement: join(root, "packages/core/src/features/textures/index.ts"),
   },
 ];
+sourceAliases.sort((a, b) => b.find.length - a.find.length);
 const sourceAliasByName = Object.fromEntries(
   sourceAliases.map(({ find, replacement }) => [find, replacement]),
 );
@@ -79,7 +76,7 @@ const sourceResolver = {
   name: "crc-source",
   setup(build) {
     build.onResolve(
-      { filter: /^@crc\/(?:core|textures|types)(?:\/filters)?$/ },
+      { filter: /^@crc\/core(?:\/(?:filters|textures))?$/ },
       ({ path }) => ({ path: sourceAliasByName[path] }),
     );
   },
@@ -95,8 +92,8 @@ const isDisplacement = (path) =>
   path.includes("filters/render-displacement");
 const isTexture = (path) =>
   path.includes("packages/core/src/lib/textures/texture.ts") ||
-  path.includes("packages/textures/src/") ||
-  path.endsWith("/textures/dist/index.mjs");
+  path.includes("packages/core/src/features/textures/") ||
+  path.includes("/core/dist/features/textures/");
 const isAnimation = (path) => path.includes("packages/core/src/lib/animation/");
 const attributedInputs = (metafile) =>
   Object.entries(metafile.outputs)
@@ -229,7 +226,7 @@ function summary(es, vi) {
 
 try {
   const tarballs = {};
-  for (const name of ["types", "core", "textures"]) {
+  for (const name of ["core"]) {
     const file = join(temp, `${name}.tgz`);
     pnpm(["pack", "--out", file], join(root, "packages", name));
     tarballs[`@crc/${name}`] = `file:${file}`;
@@ -242,7 +239,7 @@ try {
   );
   writeFileSync(
     join(consumer, "pnpm-workspace.yaml"),
-    `packages:\n  - .\noverrides:\n  '@crc/types': ${tarballs["@crc/types"]}\n`,
+    `packages:\n  - .\n`,
   );
   pnpm(
     [
@@ -257,7 +254,7 @@ try {
   );
   writeFileSync(
     join(consumer, "import-only-inert.mjs"),
-    `globalThis.OffscreenCanvas = class { constructor() { throw new Error("import allocated a canvas"); } };\nglobalThis.requestAnimationFrame = () => { throw new Error("import scheduled a frame"); };\nawait import("@crc/core");\nawait import("@crc/core/filters");\nawait import("@crc/textures");\n`,
+    `globalThis.OffscreenCanvas = class { constructor() { throw new Error("import allocated a canvas"); } };\nglobalThis.requestAnimationFrame = () => { throw new Error("import scheduled a frame"); };\nawait import("@crc/core");\nawait import("@crc/core/filters");\nawait import("@crc/core/textures");\n`,
   );
   execFileSync(process.execPath, ["import-only-inert.mjs"], {
     cwd: consumer,

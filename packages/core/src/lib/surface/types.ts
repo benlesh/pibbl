@@ -8,6 +8,7 @@ export type CRCFit =
 export type CRCPixelRatio = 'device' | number;
 
 export interface CRCFixedViewportConfig {
+  htmlOverlay?: HTMLElement;
   signal?: AbortSignal;
   viewport?: Readonly<{
     width: number;
@@ -18,6 +19,7 @@ export interface CRCFixedViewportConfig {
 }
 
 export interface CRCResponsiveViewportConfig {
+  htmlOverlay?: HTMLElement;
   signal?: AbortSignal;
   viewport: 'responsive';
   pixelRatio?: CRCPixelRatio;

@@ -262,3 +262,13 @@ package-consumer, and Studio declaration suites are the executable evidence.
 - Animation values and hooks use these same reads and declared inputs, staging, frame
   phases, consumer boundaries, and ownership rules. Their specialized behavior
   lives in the [animation contract](./animation-contract.md).
+
+## Native HTML publication
+
+HtmlBox uses the root render transaction's optional publication stage before
+finish callbacks and focus metadata adoption. Scheduled roots publish at the start
+of Complete; direct private renders finish synchronously. Publication failure
+notifies finish callbacks of failure and releases affected HTML while unrelated
+roots complete. This adds no scheduler or animation loop. HtmlBox data remains
+opaque; lifecycle setup/update/abort cleanup forbid signal writes. See the
+[HtmlBox contract](./html-box-contract.md).

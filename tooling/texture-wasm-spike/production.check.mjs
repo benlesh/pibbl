@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { InkSimulation } from "../../packages/textures/src/lib/simulation.ts";
+import { InkSimulation } from "../../packages/core/src/features/textures/lib/simulation.ts";
 import { InkSimulation as Reference } from "./reference-simulation.ts";
-import { materialField } from "../../packages/textures/src/lib/material-field.ts";
+import { materialField } from "../../packages/core/src/features/textures/lib/material-field.ts";
 import { materialField as reference } from "./reference-material-field.ts";
 test("production kernels preserve the original seeded fields, brush effects, and fixed steps", () => {
   for (const seed of [0, 42, 4294967295]) {

@@ -2,10 +2,10 @@ import { crcStudioThreeModules } from "../playground/src/studio-three-runtime";
 
 export * from "@crc/core";
 export * from "@crc/core/filters";
-export * from "@crc/particles";
+export * from "@crc/core/particles";
 export * from "@crc/three";
-export * from "@crc/physics/2d";
-export * from "@crc/physics/3d/geometry";
+export * from "@crc/core/physics/2d";
+export * from "@crc/core/physics/3d/geometry";
 export { computed, useSignal, isSignal, signal, untracked } from "@crc/core";
 export {
   usePlayback,
@@ -28,6 +28,6 @@ export { jsxDEV } from "@crc/core/jsx-dev-runtime";
 
 export const __crcStudioModules = crcStudioThreeModules;
 
-export * from "@crc/viz";
+export * from "@crc/core/viz";
 
-export * from "@crc/textures";
+export * from "@crc/core/textures";

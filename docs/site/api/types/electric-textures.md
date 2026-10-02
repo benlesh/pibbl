@@ -23,7 +23,7 @@ symbols:
 
 # Electric textures
 
-These TypeScript recipes from `@crc/textures` use the public resource-backed
+These TypeScript recipes from `@crc/core/textures` use the public resource-backed
 `defineTexture` lifecycle. Mount with `useTexture`, use the handle in `style.fill`
 or `style.stroke`, and send typed commands outside component evaluation. Paint
 views share source pixels and lifetime within the owning CRC tree.

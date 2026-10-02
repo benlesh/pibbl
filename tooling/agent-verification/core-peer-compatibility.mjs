@@ -30,7 +30,7 @@ export function auditCorePeerPins(core, peers) {
 export async function readCorePeerAudit(root) {
   const manifests = [];
   const values = [];
-  for (const name of ['core', 'three', 'viz', 'particles', 'physics', 'textures']) {
+  for (const name of ['core', 'three']) {
     const path = `packages/${name}/package.json`;
     const file = await open(resolve(root, path), 'r');
     let bytes;

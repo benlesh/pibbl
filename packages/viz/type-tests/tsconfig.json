@@ -1,7 +1,0 @@
-{
-  "extends": "../../../tsconfig.json",
-  "compilerOptions": { "types": [] },
-  "files": ["public.tsx"],
-  "include": [],
-  "exclude": []
-}

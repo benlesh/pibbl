@@ -47,7 +47,7 @@ import {
   defineParticleEffect2D,
   particleCurve,
   particleRange,
-} from '@crc/particles';
+} from '@crc/core/particles';
 import {
   defineThreeLayer,
   type CRCThreeLayerResources,

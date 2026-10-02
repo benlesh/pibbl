@@ -3789,8 +3789,7 @@ complete; no new completion claim.
 ## Native overlap policy slice — 2026-10-01
 
 The existing Studio layout lab now exposes box relations and two overlap modes.
-Both draw the same blue rectangle and later orange peer, with local overlap area
-200. Allow overlap reports no separation assertion; Require separation reports a
+Both draw the same blue rectangle and later orange peer, with local overlap area 200. Allow overlap reports no separation assertion; Require separation reports a
 failed explicit expectation. Their pixels and click routing stay identical:
 root (130,90) is orange and delivers to the peer; (110,90) is blue and delivers
 to the primary shape. The helper's declared common-space scope remains explicit.
@@ -4073,16 +4072,16 @@ be relabeled approved merely to improve the completion count.
 The user's three-priority finishing pass is complete to the verified scope below.
 Implementation stops here. The exhaustive inventory is deferred, not completed.
 
-| Priority path | Fresh result | Retained evidence |
-| --- | --- | --- |
-| Targeting interception and repair | Pass: 8 actions, 23 checks | final-targeting-report.json |
-| Visualization data correctness and repair | Pass: 22 actions, 127 checks | final-viz-report.json |
-| Stale signal mutation and replacement | Pass: 6 actions, 30 checks | final-signals-report.json |
-| Layout/clipping and overlap policy | Pass: 5 native modes, independent placement and click assertions | final-layout-native.json |
-| Exact handoff queries | All three generated commands execute and return saved-evidence pages | final-handoff-queries.json |
-| Workflow, reader and discovery tests | 31 pass | final-tools-node.txt |
-| Focused workflow lint | Pass | Terminal verification in this final pass |
-| Aggregate trust | Failed at ENV-03 manifest fingerprint; later stages not reached | final-trust-attempt.txt |
+| Priority path                             | Fresh result                                                         | Retained evidence                        |
+| ----------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------- |
+| Targeting interception and repair         | Pass: 8 actions, 23 checks                                           | final-targeting-report.json              |
+| Visualization data correctness and repair | Pass: 22 actions, 127 checks                                         | final-viz-report.json                    |
+| Stale signal mutation and replacement     | Pass: 6 actions, 30 checks                                           | final-signals-report.json                |
+| Layout/clipping and overlap policy        | Pass: 5 native modes, independent placement and click assertions     | final-layout-native.json                 |
+| Exact handoff queries                     | All three generated commands execute and return saved-evidence pages | final-handoff-queries.json               |
+| Workflow, reader and discovery tests      | 31 pass                                                              | final-tools-node.txt                     |
+| Focused workflow lint                     | Pass                                                                 | Terminal verification in this final pass |
+| Aggregate trust                           | Failed at ENV-03 manifest fingerprint; later stages not reached      | final-trust-attempt.txt                  |
 
 All retained files above are under docs/strategy/agent-verification-evidence/.
 Native runs used Node 24.15.0, pnpm 11.21.0, Playwright Chromium and source Studio

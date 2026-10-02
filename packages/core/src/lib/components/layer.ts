@@ -178,6 +178,8 @@ function renderLayer(
   slot.focusRenderRevision =
     renderedFocusPolicy?.layerFocusRenderRevision?.(layerCRC);
 
+  parentInstance.eventRoot.html?.recordLayer(parentInstance, layerCRC, interactionLayer, ctx.globalAlpha, ctx.globalCompositeOperation);
+
   ctx.drawImage(
     offscreenCanvas,
     0,

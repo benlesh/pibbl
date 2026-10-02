@@ -36,7 +36,7 @@ import {
   boxShape3D,
   overlapShapes3D,
   raycastShape3D,
-} from "@crc/physics/3d/geometry";
+} from "@crc/core/physics/3d/geometry";
 ```
 
 The 3D geometry entry is pure and renderer independent. The named shape

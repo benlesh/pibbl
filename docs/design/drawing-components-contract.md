@@ -396,7 +396,7 @@ per-shape memo hooks.
 
 ## Renderer-independent 3D geometry
 
-`@crc/physics/3d/geometry` provides pure immutable shapes and collision
+`@crc/core/physics/3d/geometry` provides pure immutable shapes and collision
 queries. It does not add drawing components, Three bindings, a world runtime, or
 a scheduler participant.
 
@@ -479,3 +479,10 @@ consumer probes, and the interactive `path-bending` (Along Arc) and `along-path`
 [approved design](../superpowers/specs/2026-09-30-path-bending-design.md) and
 [implementation record](../superpowers/plans/2026-09-30-path-bending-implementation.md)
 describe the numerical certificates and internal work limits.
+
+## HtmlBox
+
+HtmlBox is a native HTML boundary with a logical box and no Canvas paint. It
+uses existing Group transforms and box allocation, portable PathGeometry clips,
+and the shared scheduler. It always appears above the canvas. See the
+[HtmlBox contract](./html-box-contract.md) for authoring and native focus.
