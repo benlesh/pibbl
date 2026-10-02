@@ -126,3 +126,34 @@ it("publishes one committed raster revision to every paint consumer", () => {
     restore();
   }
 });
+
+it("releases an initial provisional texture raster when its render transaction fails", () => {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  let source: OffscreenCanvas | undefined;
+  const solid = defineTexture<{}, {}>({
+    create(context) {
+      source = context.canvas;
+      return {};
+    },
+    rasterize(_state, context) {
+      context.canvas.getContext("2d")!.fillRect(0, 0, 8, 8);
+    },
+  });
+  function Broken() {
+    useTexture(solid({}), { resolution: { width: 8, height: 8 } });
+    throw new Error("texture mount failed");
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 16;
+  document.body.append(canvas);
+  const controller = crc(canvas, <Broken />);
+  try {
+    expect(() => driver.flush(0)).toThrow("texture mount failed");
+    expect(source!.width).toBe(0);
+    expect(source!.height).toBe(0);
+  } finally {
+    controller.dispose();
+    restore();
+  }
+});
