@@ -98,6 +98,36 @@ and `reset` messages. Pausing, reset, and speed changes discard elapsed-time
 debt; zero speed requests no continuing work. Importing or painting water does
 not import the displacement processor.
 
+## Existing texture components
+
+`ReactionDiffusion`, `ProceduralTexture`, `TextureRenderer`, and
+`texturePalettes` remain public `@crc/textures` exports. Each mounted legacy
+component owns an independent render-layer resource and source raster; it does
+not become a shared live `Texture` resource. Importing it is inert, and its
+render-layer lifecycle continues to own creation, resize, rendering, and
+disposal. `ReactionDiffusion` keeps its documented double-buffered periodic
+Gray--Scott field, bounded fixed-step timing, fresh-baseline pause/reset
+behavior, and CRC-routed primary-pointer brush queue. It advances only through
+the supplied frame invalidator, never by a second scheduler loop.
+
+Its preset, seed, reset revision, and simulation-resolution changes reset the
+reaction field and clear queued strokes, capture, and elapsed time. Equal
+options and display-only resizing preserve it; palette changes recolor without
+regeneration. A paused field accepts brushes and recoloring without numerical
+advancement or continuing frame requests. `ProceduralTexture` remains a seeded
+static material: marble, paper, and cellular fields are periodic at both
+endpoints, regenerate only for field-defining options, and request no
+continuing frame. Its palette changes recolor the existing scalar field.
+
+`TextureRenderer` callbacks receive a synchronous borrowed legacy raster whose
+Canvas state is restored on failure; they may draw it repeatedly but must not
+mutate, transfer, retain, or dispose it. Legacy display remapping does not
+remap brush interaction. Component disposal releases fields, rasters, queues,
+captures, and callbacks exactly once; duplicate disposal is inert. Legacy
+render failures preserve CRC's last committed render-layer generation and do
+not promise simulation-state rollback. Invalid legacy inputs remain actionable
+errors.
+
 ## Release and errors
 
 The texture hook owns producer state, producer canvas, committed/spare and
