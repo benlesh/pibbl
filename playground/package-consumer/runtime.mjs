@@ -67,6 +67,8 @@ const expected = [
   "defineAnimation",
   "definePrimitive",
   "defineRenderLayer",
+  "defineTexture",
+  "useTexture",
   "easing",
   "flattenPath",
   "flattenPathWang",
@@ -208,9 +210,9 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 99) {
+if (actual.length !== 101) {
   throw new Error(
-    `Expected 99 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected 101 @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 

@@ -9,9 +9,11 @@ import {
   type CRCController,
 } from "@crc/core";
 import {
-  ProceduralTexture,
+  useTexture,
+  marble,
+  paper,
+  cellular,
   type TextureKind,
-  type TextureRenderer,
 } from "@crc/textures";
 
 const palettes = [
@@ -20,22 +22,80 @@ const palettes = [
   ["#321c35", "#986780", "#e8b6a0", "#fff0cc"],
 ];
 const kinds: readonly TextureKind[] = ["marble", "paper", "cellular"];
-// One generated image is used twice: stretched as a panel, and repeated as a card fill.
-const present: TextureRenderer = (ctx, texture) => {
-  ctx.drawImage(texture.source, 0, 0, 520, 370);
-  ctx.save();
-  ctx.translate(540, 0);
-  ctx.beginPath();
-  ctx.roundRect(0, 0, 292, 370, 18);
-  ctx.clip();
-  const pattern = ctx.createPattern(texture.source, "repeat")!;
-  pattern.setTransform(new DOMMatrix().scale(0.5));
-  ctx.fillStyle = pattern;
-  ctx.fillRect(0, 0, 292, 370);
-  ctx.fillStyle = "#14232cbb";
-  ctx.fillRect(20, 222, 252, 126);
-  ctx.restore();
-};
+function MaterialSwatches({
+  kind,
+  seed,
+  scale,
+  detail,
+  palette,
+}: {
+  kind: TextureKind;
+  seed: number;
+  scale: number;
+  detail: number;
+  palette: number;
+}) {
+  const factories = { marble, paper, cellular };
+  const texture = useTexture(factories[kind]({ seed, scale, detail }), {
+    resolution: { width: 320, height: 240 },
+    palette: palettes[palette],
+  });
+  return (
+    <>
+      <Rectangle
+        pointerEvents="none"
+        style={{
+          width: 520,
+          height: 370,
+          fill: texture.paint({ mode: "stretch" }),
+        }}
+      />
+      <Rectangle
+        pointerEvents="none"
+        style={{
+          left: 540,
+          width: 292,
+          height: 370,
+          cornerRadius: 18,
+          fill: texture.paint({
+            mode: "repeat",
+            tileWidth: 160,
+            tileHeight: 120,
+          }),
+        }}
+      />
+      <Rectangle
+        pointerEvents="none"
+        style={{ left: 560, top: 222, width: 252, height: 126, fill: "#14232cbb" }}
+      />
+      <Rectangle
+        pointerEvents="none"
+        style={{
+          left: 18,
+          top: 304,
+          width: 350,
+          height: 50,
+          cornerRadius: 10,
+          fill: "#14232cee",
+        }}
+      />
+      <Text
+        pointerEvents="none"
+        style={{
+          left: 32,
+          top: 338,
+          textBaseline: "alphabetic",
+          font: "bold 28px Georgia",
+          fill: texture,
+          stroke: "#f4ead7",
+          strokeWidth: 0.6,
+        }}
+      >
+        One source. Real fills.
+      </Text>
+    </>
+  );
+}
 function Button({
   x,
   label,
@@ -129,17 +189,7 @@ function MaterialLab() {
           A little geology. A little paper. A reproducible accident.
         </Text>
         <Group style={{ translateX: 24, translateY: 118 }}>
-          <ProceduralTexture
-            kind={s.kind}
-            seed={s.seed}
-            scale={s.scale}
-            detail={s.detail}
-            palette={palettes[s.palette]}
-            render={present}
-            resolution={{ width: 320, height: 240 }}
-            pointerEvents="none"
-            style={{ width: 832, height: 370 }}
-          />
+          <MaterialSwatches key={s.kind} kind={s.kind} seed={s.seed} scale={s.scale} detail={s.detail} palette={s.palette} />
           <Text
             pointerEvents="none"
             style={{

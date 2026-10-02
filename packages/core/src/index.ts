@@ -388,3 +388,5 @@ export type { CRCResizeHandleProps, CRCResizeHandlesProps, CRCRotationHandleProp
 export { degrees } from './lib/manipulation/degrees.js';
 export { Manipulable } from './lib/manipulation/manipulable.js';
 export type { CRCManipulableProps } from './lib/manipulation/manipulable.js';
+export { defineTexture, useTexture } from './lib/textures/texture.js';
+export type { Texture, TexturePaint, TextureRecipe, TextureDefinition, TextureOptions, TexturePlacement, TextureContext, TextureFrame } from './lib/textures/texture.js';

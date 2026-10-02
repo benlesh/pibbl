@@ -9,7 +9,7 @@
 
 The working result is a source-development verification prototype, not a finished
 373-requirement implementation. The current ledger accounts for every ID:
-**229 partial, 18 known gaps, 126 unassessed, none certified complete**. These
+**348 partial, 25 known gaps, 0 unassessed, none certified complete**. These
 measure assessment coverage, not percentage complete. Later dated entries below
 supersede earlier historical counts and verification results.
 
@@ -2693,6 +2693,403 @@ picking-lab suites. Workspace typecheck and focused lint pass on Node 24.15.0 /
 pnpm 11.21.0 / Chromium. The integration coordinator owns the final aggregate gate;
 this chat returns to holding edits after reporting the fix. No commit or push was
 made here. REN-07 remains partial and inventory counts are unchanged.
+
+## Post-checkpoint replay failure hardening — 2026-09-30
+
+Integration released the shared-checkout hold after copying the completed work
+through BatchedMesh repair into its separate worktree. Everything in this entry
+is later work for a subsequent integration; this chat makes no commit/merge/push.
+
+Both replay catch paths previously called String(error) before safe serialization,
+allowing a custom conversion failure to replace the original failure. A shared
+recordReplayFailure now uses bounded descriptor-only evidence first, retains
+action IDs and prioritizes observed transport failure over blocked setup.
+Checkpoint and cleanup summaries no longer call custom string conversion either.
+
+Eight error-evidence tests and all 46 Node harness tests pass, along with focused
+lint and CLI syntax checks. Node 24.15.0 / pnpm 11.21.0. New helper test import was
+red before implementation. No fresh full targeting/viz native replay was run in
+this slice; existing harness browser cases passed. Message-based fixture identity
+classification and fuller cause chains remain open. Counts unchanged.
+
+## Typed identity failures and evidence audit — 2026-09-30
+
+Post-checkpoint work replaces fixture-identity message matching with explicit
+unavailable/mismatch codes. A lookalike application message remains a failure;
+localized identity diagnostics still classify as blocked. The regression failed
+before implementation. All 14 error/identity tests and focused ESLint passed on
+Node 24.15.0 / pnpm 11.21.0, including both replay CLI rejection paths.
+
+Audited EVD-02, EVD-03 and EVD-11 against current producers. Action/run correlation,
+conservative pass/fail/blocked handling and bounded opt-in signal observation exist.
+Assertion-level correlation, a complete six-state outcome vocabulary and sensitive
+scalar/artifact redaction do not. These are harness/application responsibilities;
+this audit does not propose new Canvas runtime capabilities or certify completion.
+Counts now: 232 partial, 18 gaps, 123 unassessed. No aggregate gate claimed.
+
+## Signal category evidence audit — 2026-09-30
+
+Audited SIG-01/02/04/05/06/09/11/12/13 against current inspection code and
+functional fixtures. All 118 tests in five signal, owned-hook and lifecycle suites
+passed in the normal Chromium configuration on Node 24.15.0 / pnpm 11.21.0.
+The ledger now records existing support rather than treating these as missing
+runtime features. No production code was changed by this audit.
+
+The key implementation gaps are explanatory: explicit write-outcome history,
+causal links across validation and redraw, candidate/rollback provenance for
+owned computeds, and named reaction lifetimes/dependencies/cleanup outcomes.
+Synchronous batching and staged Commit publication need separate evidence.
+Runtime tests alone do not close those inspection requirements. Counts now:
+241 partial, 18 gaps, 114 unassessed. No completion or aggregate pass claimed.
+
+## Passive reaction subscriber classification — 2026-09-30
+
+Added a CRC-owned reaction kind marker and descriptor-only inspector classification.
+Public useReaction evidence verifies stable identity across dynamic branches,
+subscription removal at disposal, immutable old snapshots and unchanged counters
+under repeated inspection. Reaction dirtiness remains unknown rather than borrowing
+render semantics. Owner links and setup/cleanup history remain open.
+
+An initial detached-canvas fixture did not mount the reaction; attaching the host
+corrected the fixture, then the expected other-versus-reaction regression failed.
+After implementation all 51 tests in observation/reaction suites passed, along with
+workspace typecheck and focused lint on Node 24.15.0 / pnpm 11.21.0 / Chromium.
+SIG-12 remains partial. Counts unchanged; this is post-checkpoint integration work.
+
+## Reaction owner correlation — 2026-09-30
+
+Reaction consumers now retain their existing owning component identity explicitly.
+The source inspector resolves it through its bounded component walk, without
+scanning hook arrays or invoking callbacks. Root and Layer owners join component
+IDs; unrelated Canvas inspectors report null ownership. Null remains unknown, not
+proof of an ownerless reaction. Runtime-path debug names are not callback names.
+
+The new owner assertion failed before implementation. All 52 observation/reaction
+tests passed on Node 24.15.0 / pnpm 11.21.0 / Chromium. Typecheck caught a missing
+Group child in the fixture; after correction typecheck and focused lint passed.
+SIG-12 remains partial for pending-generation and setup/cleanup history. Counts
+unchanged. This work follows the earlier integration checkpoint.
+
+## Scheduler category audit — 2026-09-30
+
+All eleven scheduler requirements now have scoped evidence and specific remaining
+work. All 111 tests across scheduler realm/simulation/renderer, signal observation
+and public targeting scenario suites passed in normal Chromium configuration on
+Node 24.15.0 / pnpm 11.21.0. The Three focus/bitmap/picking fixture was inspected
+but not rerun in this audit; its ledger entry says so explicitly.
+
+Existing behavior covers ordered phases, staged publication, failure isolation,
+deferral, lifecycle cleanup and bounded phase history. Agent-facing gaps remain
+in per-root request causes, writer/transaction correlation, timeout explanations
+and reusable selected-update readiness. Fixture-specific readiness is not generic
+application readiness; idle state is not success or a presented-pixel guarantee.
+Counts: 252 partial, 18 gaps, 103 unassessed. No new runtime feature or completion
+claim follows from this audit.
+
+## Exceptional values in saved evidence — 2026-09-30
+
+JSON roundtrip regressions exposed negative-zero loss in assertion and signal
+previews, plus conflation of sparse array holes with explicit undefined in error
+details. Added explicit tags while preserving null and ordinary finite values.
+Signal NaN/infinities are now distinguishable instead of opaque-number previews.
+No getter invocation or lazy evaluation is added.
+
+Both new tests failed before implementation. All 16 Node serializer/reader tests
+and 43 browser observation tests passed; typecheck and focused lint passed on
+Node 24.15.0 / pnpm 11.21.0 / Chromium. QRY-07 is partial: other producers and
+schema compatibility remain open. Counts: 253 partial, 18 gaps, 102 unassessed.
+This is post-checkpoint work; no aggregate gate or overall completion claimed.
+
+## Focus and keyboard category audit — 2026-09-30
+
+Audited all eight focus requirements against the bounded inspector, native input
+fixtures and accessibility guidance. All 156 tests across thirteen focus/public
+scenario suites passed on Node 24.15.0 / pnpm 11.21.0 / Chromium. Native Tab and
+Shift+Tab cover entry and exit between surrounding DOM buttons and logical Canvas
+targets. The shared agent lab independently checks indicator pixels and selection.
+
+Remaining tooling work includes policy/enrollment reasons, directional candidate
+ranking and native-action correlation. Application-defined disabled/clipped states,
+restoration and semantic alternatives require explicit application contracts.
+Keyboard operation never certifies screen-reader semantics. Counts: 261 partial,
+18 gaps, 94 unassessed. This is evidence assessment, not feature completion.
+
+## Focus policy observation and checkpoint delivery — 2026-09-30
+
+Committed focus snapshots now identify CRC management, source-order Tab exit and
+Enter/Space defaults. Candidates expose session-local directional boundary IDs;
+null membership means no boundary for that candidate. IDs are weakly held and
+bounded by existing candidate traversal. Handler prevention, ranking, eligibility
+reasons and empty boundary discovery are not inferred.
+
+The new assertion failed before implementation. All 27 targeting observation/lab
+tests passed, including mixed directional/ordinary candidates and native Tab
+behavior. Typecheck and focused lint passed on Node 24.15.0 / pnpm 11.21.0.
+FOC-01/04 remain partial; accounting counts are unchanged. The final added-assertion
+run terminated with a closed browser connection before executing tests; its
+2026-10-01 retry passed all 27 tests.
+
+The integration coordinator reports the earlier combined checkpoint passed the
+full trust gate and was pushed to main at c6f35d02011bb997007982482a03065dc02e1c96.
+The local origin/main ref and commit identity were verified here. This is a
+coordinator-reported gate result, not a fresh gate run in this checkout. Later
+post-checkpoint changes recorded above remain separate and are not covered by
+that report. Future integration must account for the newer main.
+
+## Environment category audit — 2026-10-01
+
+Audited eight remaining environment requirements. Thirteen identity, manifest,
+tool-provenance and real browser-failure tests passed on Node 24.15.0 / pnpm 11.21.0.
+Existing source fingerprints, configured environment and crash/pageerror evidence
+are partial support. Capability guards and packed-output verifiers were inspected,
+not freshly executed or counted as successful environment-wide verification.
+
+Explicit duplicate-runtime/version diagnostics are a known gap: module-local signal
+recognition is not duplicate-runtime detection. Other remaining work includes
+unified capability discovery, observed zoom/platform facts, host/backend discovery,
+early console/network/worker capture and installed-version documentation linkage.
+Counts: 268 partial, 19 gaps, 86 unassessed. No implementation completion inferred.
+
+## Observed page environment — 2026-10-01
+
+Both replays capture actual page-reported viewport, density, locale/timezone and
+media preferences after navigation. Configured browser options remain separate.
+Browser zoom remains unavailable; visual viewport scale is identified separately.
+Unavailable capture retains bounded error evidence and does not fabricate values.
+The capture is initial only, and page scripts can override browser-facing APIs.
+
+New helper import was red before implementation. Fourteen manifest, identity,
+tool-provenance and comparison tests passed, including changed browser settings,
+closed-page capture and environment fields from both real replay CLIs. Focused
+lint passed on Node 24.15.0 / pnpm 11.21.0. ENV-04 stays partial; counts unchanged.
+
+## Query category source audit — 2026-10-01
+
+Reviewed all eight remaining query requirements against current targeting,
+signal, comparison and saved-evidence reader implementations. This is a source
+and test-content audit; no new browser run is claimed. Prior focused executions
+remain dated evidence under their existing entries.
+
+Recorded support includes mount/generation checks, selected signal/action scopes,
+bounded summaries, paint/source order and explicit active geometry probes. Gaps
+remain in cross-facet atomic snapshots, projections and access to excluded records,
+per-field redaction and schema compatibility. Snapshot-consistent pagination is
+absent; its requirement does not mandate pagination for views already complete
+within their bounds. A future expansion design must not mix generations or retain
+unbounded snapshots. Counts: 275 partial, 20 gaps, 78 unassessed.
+
+## Paint category audit — 2026-10-01
+
+Audited twelve paint requirements. All 112 tests in Canvas state, filter rendering,
+filter integration, structural performance and public filter lab suites passed on
+Node 24.15.0 / pnpm 11.21.0 / Chromium. Other cited fixture sources were inspected,
+not counted as fresh executions. No visual baseline was modified.
+
+Confirmed general inspection gaps include emitted drawing per component, resolved
+paint state and partial-frame pixel failure evidence. Targeting entries and
+component evaluation are not paint proof. Existing controlled fixtures support
+state isolation, filter order/alpha, geometry preservation, bitmap reuse and
+semantic raster checks; they do not explain arbitrary invisibility. Counts:
+284 partial, 23 gaps, 66 unassessed. Full objective remains incomplete.
+
+## Ordinary Canvas partial-frame evidence — 2026-10-01
+
+Added a public scene that paints blue successfully, then paints a red prefix and
+throws from a later component. Independent pixel assertions prove the new red
+prefix survives while cleared unpainted space is transparent. The inspector
+refuses current geometry (pending status); history records a Render error.
+Historical ready snapshots stay immutable but do not describe currently visible
+pixels. Explicit successful rerender restores blue across the canvas.
+
+All 44 observation tests, typecheck and focused lint passed on Node 24.15.0 /
+pnpm 11.21.0 / Chromium. This is new behavior evidence, not a runtime fix.
+PNT-11 moves from gap to partial; per-root failed-attempt attribution remains open.
+Counts: 285 partial, 22 gaps, 66 unassessed. Overall objective remains incomplete.
+
+## Targeting and event category audit — 2026-10-01
+
+Assessed 22 remaining targeting/event requirements. All 127 tests across eleven
+event and native-agent suites passed on Node 24.15.0 / pnpm 11.21.0 / Chromium.
+The ledger distinguishes runtime propagation/facade tests from native transport
+and final domain outcomes; one does not silently stand in for the other.
+
+Known gaps include a reusable bounded event-path recorder, verified interaction
+point search and trust/user-activation reporting. Other open work includes
+cross-backend generation/input correlation, action-time races, boundary/cancel
+reasons and explicit transport capabilities. No universal pass-through guarantee
+is inferred from alpha or hit geometry. Counts: 304 partial, 25 gaps, 44 unassessed.
+
+## Remaining geometry, signals and pixels audit — 2026-10-01
+
+Inspected eleven remaining requirements against current conversion/query code,
+primitive input tests, computed graph tests and visual evidence policy. This is
+source/test-content assessment, not a new browser run. Existing dated executions
+remain available in their earlier records.
+
+Supported pieces include named coordinate conversion, opaque-path point queries,
+receiver input attribution, opaque payload preservation and cycle recovery tests.
+Outstanding work includes host geometry explanations, declared signal-position
+metadata, passive cycle provenance and application mutation diagnostics. Bounded
+frame-sequence capture is a known gap; action screenshots cannot exclude flicker.
+Overlay rules are conditional on actual diagnostic overlays and do not authorize
+building them by default. Counts: 314 partial, 26 gaps, 33 unassessed.
+
+## Inspection safety and lifetime source audit — 2026-10-01
+
+Assessed eight remaining observation requirements against active-probe separation,
+source acquisition, weak ownership, bounded history and production gates. This is
+source/test-content review, not a fresh browser or production build result.
+
+Known support includes explicit probe effects, stale handle rejection, contained
+source acquisition failures and native/pixel cross-checks. Remaining work includes
+redaction policy, cross-realm coherence, extended retention stress and final packed
+production evidence. General custom-facet compatibility is absent and remains a
+conditional extension design gap, not an existing public promise. Counts:
+321 partial, 27 gaps, 25 unassessed. None is certified complete.
+
+## Intent, agent workflow and human support audit — 2026-10-01
+
+Assessed sixteen remaining intent/workflow/human requirements using scenario
+oracles, source capture, report readers and visual evidence. This is source and
+test-content assessment, not a new runtime execution. The targeting invariant
+and hand-computed weighted dataset are concrete support, not universal coverage.
+
+Remaining work includes executable requirement-to-scenario discovery, complete
+cross-report correlation and compact reproducible handoffs. Human diagnostic
+overlays are absent and optional; they do not take priority over agent workflows.
+Accessibility and product intent retain separate human/application acceptance
+needs. Counts: 336 partial, 28 gaps, 9 unassessed (the cross-cutting rules).
+
+## Initial full-inventory assessment complete — 2026-10-01
+
+All 373 inventory IDs now have an explicit assessment, scoped evidence and
+remaining work. The final nine cross-cutting rules were reviewed against current
+state/provenance/passivity/bounds/oracle/contract/data-only safeguards. Counts:
+345 partial, 28 known gaps, zero unassessed. This completes the initial assessment,
+not the implementation objective or certification of any requirement.
+
+The next implementation priority is a compact executable discovery/acceptance
+manifest joining requirements to scenarios, supported queries and focused checks.
+This should make the existing vertical workflows usable without reading this
+chronological log, while retaining every remaining requirement and conditional
+application responsibility. New capabilities still need public scenarios and
+independent evidence; completing the audit is not permission to shrink scope.
+
+## Executable workflow discovery slice — 2026-10-01
+
+Added a data-only requirement lookup with two curated workflows: targeting
+interception and weighted aggregation. Each provides route, prerequisites, actions,
+independent oracle, source paths and focused-check argument arrays. Known unmapped
+requirements explicitly remain unmapped; unknown IDs reject with a code. The tool
+never executes recorded commands or promotes a requirement to complete.
+
+Three discovery tests passed after the initial missing-module failure. Both exact
+scenario selectors ran successfully: 17 Chromium tests passed. CLI and focused
+lint passed on Node 24.15.0 / pnpm 11.21.0. Discovery tests now run in the existing
+requirement gate. The README starts with the lookup commands. Inventory counts
+remain 345 partial, 28 gaps, zero unassessed; broader task coverage remains open.
+
+## Observed environment comparison guard — 2026-10-01
+
+Saved report comparison now rejects equal unavailable or malformed observed-page
+records. Matching failure text cannot establish matching browser conditions.
+Older reports with no observations on either side explicitly compare declared
+settings only. Valid initial observations are compared strictly and retain their
+limited scope; desktop zoom and changes during the run remain unverified.
+
+Two new tests failed before implementation. All 11 comparison/reader tests and
+focused lint passed on Node 24.15.0 / pnpm 11.21.0. Counts unchanged; this repairs
+an evidence acceptance gap without claiming an application or aggregate test run.
+
+## Delivered event trust and activation evidence — 2026-10-01
+
+The shared targeting scenario now records original and source event type/trust,
+synchronous owning-window activation flags (or explicit unavailability), and
+unobserved permission status. No delivery/reset remains null. Keyboard activation
+preserves the distinction between a synthetic click and its trusted key source;
+script-dispatched clicks can satisfy selection without becoming trusted. Sticky
+window activation is not attributed to the current input. No runtime dispatch
+behavior or permission checks changed.
+
+Three focused assertions failed before implementation. After correcting an
+intermediate canvas-reference error, all 11 Chromium scenario tests passed;
+typecheck and focused ESLint passed on Node 24.15.0 / pnpm 11.21.0. General event
+traces, other input families, unavailable-API browser evidence and capability
+permission scenarios remain open. EVT-09 is partial: 346 partial, 27 known gaps,
+zero unassessed, none certified complete. No aggregate gate claimed.
+
+## Native replay provenance acceptance — 2026-10-01
+
+The targeting replay now verifies original/source event trust and activation
+observation shape for seed, repair, intentionally blocked pointer clicks and
+keyboard activation. A new assertion helper rejects missing provenance, untrusted
+pointer input, incorrect keyboard source attribution, malformed activation and
+permission-grant claims. Unavailable activation remains explicit. Its file is
+included in the replay tool fingerprint and its tests in the harness gate.
+
+The initial helper test failed before implementation. Six provenance and tool
+identity Node tests passed, as did focused lint. The full source-Studio replay
+passed all seven actions with zero page errors and matching final tool identity;
+the watchdog exited 0. Evidence: `packages/core/test/out/agent-watchdog/event-provenance-2026-10-01-1/report.json`.
+Environment: Node 24.15.0 / pnpm 11.21.0 / Chromium. The scenario remains available
+for this local session at `http://127.0.0.1:5196/#/testing/agent-targeting-verification`.
+Capture/drag provenance and protected-action permissions are not certified by
+these checks. EVT-09 remains partial; counts remain 346 partial and 27 gaps.
+
+## Bounded interaction-point search — 2026-10-01
+
+Added an opt-in nine-sample search over caller-supplied root-logical bounds. It
+returns a frozen verified geometry point only when the requested target wins the
+existing committed-generation probe. The center is followed by the remaining
+3×3 cell centers. Failed samples return no verified point, not proof that the
+target is unreachable. Bounds validation, unknown handles, stale/unavailable,
+unsupported and truncated outcomes remain explicit. Work is bounded to nine
+probes and at most 1,152 native geometry calls; Canvas state is restored.
+
+A transformed clipped target with a covered center receives real browser input
+at the returned off-center point. Tiny unsampled and fully covered targets remain
+inconclusive. The shared scenario exposes pointSearch for its observed winner,
+without confusing the intercepting decoration with application intent. DOM
+occlusion, pointer capture and action-time generation must still be checked by
+the caller.
+
+31 tests across point search, targeting observation and shared scenario passed;
+typecheck and focused lint passed on Node 24.15.0 / pnpm 11.21.0 / Chromium. Tests
+failed before the method and scenario evidence were introduced. HIT-06 is partial;
+counts are 347 partial, 26 gaps, zero unassessed, none certified complete.
+The full source-Studio watchdog replay also passed all seven actions with zero
+page errors. Saved `pointSearch` output was inspected in
+`packages/core/test/out/agent-watchdog/interaction-point-2026-10-01-1/report.json`.
+For manual feedback, open `http://127.0.0.1:5196/#/testing/agent-targeting-verification`,
+use Inspect in seed/repair modes and inspect `state.pointSearch`.
+
+## Explicit handler event-trace workflow — 2026-10-01
+
+Added bounded opt-in wrapping for public application handlers, with ordered
+enter/return/throw records, event/invocation identity, capture/target/bubble phases,
+target/currentTarget and root-to-target path. Default prevention and original/source
+trust are copied without retaining event/target objects or serializing payloads,
+handler return values or exceptions. History and path limits, dropped records,
+stop/dispose and immutable historical snapshots have executable evidence.
+
+Integrated recording into the shared scenario's existing trace-start/trace-stop
+controls. It records 32 entries for scene capture/bubble and action/decoration
+clicks. The full native replay asserts propagation in seed, repair and intentionally
+blocked modes while retaining independent application and pixel oracles.
+
+The helper import failed before implementation and the scenario assertion failed
+before integration. All 15 affected Chromium tests passed, as did typecheck and
+focused ESLint. The full watchdog replay passed all seven actions with zero page
+errors and matching final verifier identity; report:
+`packages/core/test/out/agent-watchdog/event-trace-2026-10-01-1/report.json`.
+Environment: Node 24.15.0 / pnpm 11.21.0 / Chromium. For manual inspection use
+`http://127.0.0.1:5196/#/testing/agent-targeting-verification`, Trace start, click,
+and inspect `state.eventTrace`.
+
+EVT-01 is partial. Only wrapped handlers are observed; IDs are trace-local and
+unwrapped listeners, stop reasons, async completion and causal action links are
+not inferred. Counts: 348 partial, 25 gaps, zero unassessed, none certified complete.
+No aggregate gate or completion of the full verification system is claimed.
 
 ## Follow-on slices, preserving the full objective
 

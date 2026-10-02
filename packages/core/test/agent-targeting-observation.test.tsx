@@ -1,4 +1,4 @@
-import { FocusManagement, Clip, Group, Layer, Line, Rectangle, computed, crc, defineRenderLayer, signal, type CRCController, type CRCNode } from '@crc/core';
+import { KeyboardNavigation, FocusManagement, Clip, Group, Layer, Line, Rectangle, computed, crc, defineRenderLayer, signal, type CRCController, type CRCNode } from '@crc/core';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
 import { signalGraphSnapshot } from '../src/lib/signals/graph';
@@ -50,6 +50,7 @@ it('inspection preserves lazy evaluation, graph edges, scheduler work, Canvas st
   for (let index = 0; index < 50; index++) {
     const observation = inspector.snapshot();
     expect(observation.status).toBe('ready');
+    expect(observation.focus).toMatchObject({ status: 'unconfigured', policy: null });
     expect(Object.isFrozen(observation.records[0])).toBe(true);
     expect(inspector.probe(observation.generation!, 30, 30).status).toBe('target');
     expect(inspector.convert(observation.generation!, 'root-logical', 'backing', { x: 30, y: 30 }).status).toBe('mapped');
@@ -355,7 +356,7 @@ it('observes native Canvas focus and logical keyboard order independently', asyn
   const before = document.createElement('button'), after = document.createElement('button');
   before.textContent = 'before'; after.textContent = 'after'; canvas.before(before); canvas.after(after);
   controller = crc(canvas, <FocusManagement><Group>
-    <Rectangle style={{ width: 40, height: 40, fill: '#00f' }} onClick={() => undefined} />
+    <KeyboardNavigation mode="directional"><Rectangle style={{ width: 40, height: 40, fill: '#00f' }} onClick={() => undefined} /></KeyboardNavigation>
     <Rectangle style={{ left: 60, width: 40, height: 40, fill: '#f00' }} onClick={() => undefined} />
   </Group></FocusManagement>);
   driver.flush(1);
@@ -364,6 +365,12 @@ it('observes native Canvas focus and logical keyboard order independently', asyn
   const initial = inspector.snapshot();
   expect(initial.focus).toMatchObject({ status: 'ready', nativeFocus: 'other', completeness: 'complete' });
   expect(initial.focus.records.map(record => record.targetId)).toEqual(initial.records.map(record => record.targetId));
+  expect(initial.focus.policy).toEqual({ kind: 'crc-focus-management', tab: 'source-order-exit', keyboardActivation: 'enter-space' });
+  const boundaryId = initial.focus.records[0].directionalBoundaryId;
+  expect(boundaryId).toBeGreaterThan(0);
+  expect(initial.focus.records[1].directionalBoundaryId).toBeNull();
+  expect(inspector.snapshot().focus.records[0].directionalBoundaryId).toBe(boundaryId);
+  expect(Object.isFrozen(initial.focus.policy)).toBe(true);
   await tab(); driver.flush(2);
   const first = inspector.snapshot();
   expect(document.activeElement).toBe(canvas);

@@ -39,6 +39,7 @@ export function replayToolFiles(kind) {
   const names = [kind === 'viz' ? 'viz-replay.mjs' : 'replay.mjs', 'run-manifest.mjs',
     'identity.mjs', 'evidence-directory.mjs', 'checkpoint.mjs', 'replay-outcome.mjs', 'browser-failure.mjs', 'failure-evidence.mjs'];
   if (kind === 'viz') names.push('numeric-assertion.mjs');
+  else names.push('input-provenance.mjs');
   return names.map(name => `tooling/agent-verification/${name}`);
 }
 
@@ -65,5 +66,28 @@ export async function finalizeReplayToolIdentity(report, repository) {
   } catch (error) {
     report.status = 'fail';
     report.toolVerification = { status: 'failed', ...describeReplayError(error) };
+  }
+}
+
+/** Page-reported facts at one capture boundary, not trusted OS/zoom attestation. */
+export async function capturePageEnvironment(page) {
+  try {
+    return await page.evaluate(() => ({
+      status: 'observed',
+      scope: 'page-reported-at-capture',
+      viewportCss: { width: globalThis.innerWidth, height: globalThis.innerHeight },
+      devicePixelRatio: globalThis.devicePixelRatio,
+      visualViewportScale: globalThis.visualViewport?.scale ?? null,
+      // Visual viewport scale is pinch zoom, not a reliable browser zoom oracle.
+      browserZoom: 'unavailable',
+      language: globalThis.navigator.language.slice(0, 128),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone.slice(0, 128),
+      preferences: {
+        dark: globalThis.matchMedia('(prefers-color-scheme: dark)').matches,
+        reducedMotion: globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      },
+    }));
+  } catch (error) {
+    return { status: 'unavailable', scope: 'page-reported-at-capture', failure: describeReplayError(error) };
   }
 }

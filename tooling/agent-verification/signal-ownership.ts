@@ -140,11 +140,12 @@ export function createSignalOwnershipObserver(canvas?: HTMLCanvasElement) {
       const none: Readonly<ComponentRelation> = Object.freeze({ status: 'none', componentId: null });
       let componentsTruncated = false;
       const records = new Map<object, Readonly<SignalConsumerOwner>>();
+      const componentOwners = new Map<object, Readonly<SignalConsumerOwner>>();
       const visited = { surfaces: 0, components: 0, paintEntries: 0 };
       const instance = rootRef?.deref(); const element = host?.deref();
       let completeness: 'complete' | 'truncated' | 'unavailable' = 'complete';
       if (disposed || !instance || !element || instance.mainTeardowns.closed || GLOBAL_STATE.crcInstances.get(element) !== instance) {
-        return { records, completeness: 'unavailable' as const, limits, visited: Object.freeze(visited), components: Object.freeze({ completeness: 'unavailable' as const, limit: componentRecordLimit, removals: removalSnapshot(), records: Object.freeze(componentRecords) }) };
+        return { records, componentOwners, completeness: 'unavailable' as const, limits, visited: Object.freeze(visited), components: Object.freeze({ completeness: 'unavailable' as const, limit: componentRecordLimit, removals: removalSnapshot(), records: Object.freeze(componentRecords) }) };
       }
       // Only positive teardown evidence creates a tombstone. Missing, collected,
       // out-of-budget and out-of-snapshot handles do not prove removal.
@@ -180,6 +181,11 @@ export function createSignalOwnershipObserver(canvas?: HTMLCanvasElement) {
               hasSignalConsumer: !!refs.signalConsumer,
               layout: Object.freeze({ status: refs.layoutEntry ? 'entry-context' : 'unavailable', allocation: refs.layoutEntry?.allocation ?? null, percentageBasis: refs.layoutEntry?.percentageBasis ?? null }) }));
           } else componentsTruncated = true;
+          componentOwners.set(refs, Object.freeze({ componentId, runtimePath: refs.id.slice(0, 256), runtimePathTruncated: refs.id.length > 256,
+            debugName: refs.id.slice(0, 256), surfaceId,
+            surfaceKind: surface === instance ? 'root' : 'layer',
+            renderGeneration: surface.renderGeneration, requestedRevision: surface.requestedRenderRevision,
+            completedRevision: surface.completedRenderRevision }));
           if (!refs.signalConsumer) continue;
           const identity = signalRenderConsumerIdentity(refs.signalConsumer);
           if (!identity) continue;
@@ -208,7 +214,7 @@ export function createSignalOwnershipObserver(canvas?: HTMLCanvasElement) {
       };
       const relatedRecords = componentRecords.map((record, index) => Object.freeze({ ...record, label: labelObservation(record.label),
         componentParent: relation(relations[index].parent), surfaceHost: relation(relations[index].host) }));
-      return { records, completeness, limits, visited: Object.freeze(visited), components: Object.freeze({ completeness: componentsTruncated || completeness === 'truncated' ? 'truncated' as const : 'complete' as const, limit: componentRecordLimit, removals: removalSnapshot(), records: Object.freeze(relatedRecords) }) };
+      return { records, componentOwners, completeness, limits, visited: Object.freeze(visited), components: Object.freeze({ completeness: componentsTruncated || completeness === 'truncated' ? 'truncated' as const : 'complete' as const, limit: componentRecordLimit, removals: removalSnapshot(), records: Object.freeze(relatedRecords) }) };
     },
     dispose() { disposed = true; labels = new WeakMap(); labeledLifetimes = new WeakSet(); handles.clear(); removalRecords.length = 0; droppedRemovals = 0; ids = new WeakMap(); componentIds = new WeakMap(); typeIds = new WeakMap(); sources = new WeakMap(); },
   };

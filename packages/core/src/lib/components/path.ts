@@ -1,3 +1,5 @@
+import { resolveTexturePaint } from '../textures/texture.js';
+import { getLayoutBox } from '../layout/context.js';
 import { resolvePath } from '../geometry/resolve-path.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
@@ -20,6 +22,7 @@ export function renderPath(
   props: PathProps,
   style: Readonly<ResolvedPathStyle>,
   ctx: RenderingContext2D,
+  paintBounds = getLayoutBox(),
 ) {
   const {
     d: input,
@@ -38,12 +41,12 @@ export function renderPath(
   }
 
   if (fill && !isTransparent(fill)) {
-    ctx.fillStyle = fill;
+    ctx.fillStyle = resolveTexturePaint(fill, ctx, paintBounds);
     ctx.fill(d);
   }
 
   if (stroke && strokeWidth && strokeWidth > 0) {
-    ctx.strokeStyle = stroke;
+    ctx.strokeStyle = resolveTexturePaint(stroke, ctx, paintBounds);
     ctx.lineWidth = strokeWidth;
     ctx.stroke(d);
   }

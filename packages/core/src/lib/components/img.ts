@@ -1,3 +1,4 @@
+import { resolveTexturePaint } from '../textures/texture.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
@@ -110,7 +111,7 @@ function renderImage(
   }
 
   if (stroke && strokeWidth) {
-    ctx.strokeStyle = stroke;
+    ctx.strokeStyle = resolveTexturePaint(stroke, ctx, { x, y, width, height });
     ctx.lineWidth = strokeWidth;
     ctx.stroke(imagePath);
   }

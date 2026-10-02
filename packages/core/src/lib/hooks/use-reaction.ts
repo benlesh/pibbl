@@ -34,6 +34,8 @@ export interface CRCReactionOptions {
 }
 
 interface ReactionConsumerState extends SignalDependencyConsumer {
+  readonly kind: 'reaction';
+  readonly ownerComponent: CRCComponentRefs<any>;
   collecting: boolean;
   disposed: boolean;
 }
@@ -100,7 +102,7 @@ export function useReaction(
     slot.dependencies = dependencySnapshot;
     if (!slot.mounted) {
       slot.mounted = true;
-      slot.consumer = createReactionConsumer(() => scheduleReaction(slot));
+      slot.consumer = createReactionConsumer(() => scheduleReaction(slot), slot.componentRefs);
     }
     if (dependenciesChanged) {
       clearPendingReaction(slot);
@@ -111,8 +113,11 @@ export function useReaction(
 
 function createReactionConsumer(
   invalidate: () => void,
+  ownerComponent: CRCComponentRefs<any>,
 ): ReactionConsumerState {
   const state: ReactionConsumerState = {
+    kind: 'reaction',
+    ownerComponent,
     dependencyHead: undefined,
     dependencyTail: undefined,
     dependencyFreeHead: undefined,

@@ -36,3 +36,31 @@ it("matches material edge values before colorization, including corners", () => 
       expect(field[x]).toBeCloseTo(field[80 * 129 + x], 6);
   }
 });
+
+for (const radius of [3, 6, 12])
+  it(`reshapes a radius-${radius} mature spot without collapsing it`, () => {
+    const ink = new InkSimulation(80, 80, 42, "spots");
+    // Isolate a user-created colony from the constructor's seeded pattern.
+    ink.a.fill(1);
+    ink.b.fill(0);
+    ink.paint(40, 40, radius, 0.8);
+    ink.advance(960);
+    const mass = () => ink.b.reduce((sum, value) => sum + value, 0);
+    expect(mass()).toBeGreaterThan(25);
+    const settled = mass();
+    const before = new Float32Array(ink.b);
+    ink.paint(40, 40, radius, 0.8);
+    expect(ink.b).not.toEqual(before);
+    ink.advance(960);
+    expect(mass()).toBeGreaterThan(settled * 0.6);
+    ink.dispose();
+  });
+
+it("keeps paper grain in a pale, narrow tonal range rather than broad dark bands", () => {
+  for (const detail of [0, 0.65, 1]) {
+    const paper = materialField(128, 128, "paper", 42, 6, detail);
+    expect(Math.max(...paper)).toBeLessThan(0.23);
+    expect(Math.min(...paper)).toBeGreaterThan(0.02);
+    expect(Math.max(...paper) - Math.min(...paper)).toBeGreaterThan(0.005);
+  }
+});

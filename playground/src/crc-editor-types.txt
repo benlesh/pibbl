@@ -1,4 +1,22 @@
 /* @crc-studio-module @crc/core */
+  export interface TexturePaint { readonly __crcTexturePaint: unique symbol; }
+  export interface TexturePlacement { readonly mode?: 'repeat' | 'stretch'; readonly tileWidth?: number; readonly tileHeight?: number; readonly offsetX?: number; readonly offsetY?: number; readonly rotation?: number; }
+  export interface Texture<Message = never> extends TexturePaint { send(message: Message): void; paint(placement: TexturePlacement): TexturePaint; }
+  export interface TextureOptions { readonly resolution?: {readonly width: number; readonly height: number}; readonly palette?: readonly string[]; }
+  export interface TextureRecipe<Message = never> {readonly __crcTextureRecipe: (message: Message) => Message;}
+  export interface TextureContext {readonly canvas: OffscreenCanvas; readonly palette: readonly string[] | undefined; invalidate(): void; requestFrame(): void;}
+  export interface TextureFrame {readonly delta: number; readonly time: number;}
+  export interface TextureDefinition<Config, State, Message = never> {
+    readonly defaultPlacement?: TexturePlacement;
+    create(context: TextureContext, config: Readonly<Config>): State;
+    update?(state: State, config: Readonly<Config>, context: TextureContext): void;
+    receive?(state: State, message: Message, context: TextureContext): void;
+    advance?(state: State, frame: TextureFrame, context: TextureContext): void;
+    rasterize(state: State, context: TextureContext): void;
+    dispose?(state: State, context: TextureContext): void;
+  }
+  export function defineTexture<Config, State, Message = never>(definition: TextureDefinition<Config, State, Message>): (config: Config) => TextureRecipe<Message>;
+  export function useTexture<Message>(recipe: TextureRecipe<Message>, options?: TextureOptions): Texture<Message>;
   export type PathSegment =
     | { type: 'move' | 'line'; x: number; y: number }
     | { type: 'quadratic'; cpx: number; cpy: number; x: number; y: number }
@@ -284,8 +302,8 @@
   }
   type PrimitiveCapabilityArguments<P, S extends SystemStyle, N extends SystemStyle, R extends SystemStyle> = RequiresResolver<R> extends true ? [capabilities: never] : RequiresResolver<S> extends true ? [capabilities: Readonly<PrimitiveCapabilities<P, S, N, R>> & { resolveStyle: NonNullable<PrimitiveCapabilities<P, S, N, R>['resolveStyle']> }] : [capabilities?: Readonly<PrimitiveCapabilities<P, S, N, R>>];
   export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
-  export type FillStyle = CanvasRenderingContext2D['fillStyle'];
-  export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'];
+  export type FillStyle = CanvasRenderingContext2D['fillStyle'] | TexturePaint;
+  export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'] | TexturePaint;
 
   export type Percentage = `${number}%`;
   export type Length = number | Percentage | 'auto';
@@ -1536,6 +1554,25 @@ export declare function loadOutlineFont(source: string | URL | ArrayBuffer | Uin
 export declare function createTextGeometry(font: OutlineFont, text: string, options: TextGeometryOptions): TextGeometryResult;
 
 /* @crc-studio-module @crc/textures */
+  export interface ElectricPoint { readonly x: number; readonly y: number; }
+  export interface ElectricOptions { readonly seed?: number; readonly branching?: number; readonly glow?: number; }
+  export type ElectricControl = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset'; readonly seed?: number };
+  export interface ElectricSource { readonly id: string; readonly point: ElectricPoint; readonly weight: number; }
+  export type ElectricSourceMessage = { readonly type: 'upsert-source'; readonly source: ElectricSource } | { readonly type: 'remove-source'; readonly id: string } | { readonly type: 'set-sources'; readonly sources: readonly ElectricSource[] };
+  export interface TendrilsOptions extends ElectricOptions { readonly center?: ElectricPoint; readonly sources?: readonly ElectricSource[]; readonly boundary?: readonly ElectricPoint[]; readonly count?: number; readonly rise?: number; readonly crackle?: number; readonly frequency?: number; }
+  export type TendrilsMessage = ElectricControl | ElectricSourceMessage | { readonly type: 'configure'; readonly branching?: number; readonly glow?: number; readonly rise?: number; readonly crackle?: number; readonly frequency?: number };
+  export interface LightningOptions extends ElectricOptions { readonly positive?: ElectricPoint; readonly negative?: ElectricPoint; readonly edge?: 'top' | 'right' | 'bottom' | 'left'; readonly active?: boolean; readonly frequency?: number; readonly contactCore?: boolean; }
+  export type LightningMessage = ElectricControl | { readonly type: 'connect'; readonly id: string; readonly positive: ElectricPoint; readonly negative: ElectricPoint } | { readonly type: 'disconnect'; readonly id: string } | { readonly type: 'configure'; readonly positive?: ElectricPoint; readonly negative?: ElectricPoint; readonly edge?: LightningOptions['edge']; readonly active?: boolean; readonly branching?: number; readonly glow?: number; readonly frequency?: number };
+  export function tendrils(options?: TendrilsOptions): import('@crc/core').TextureRecipe<TendrilsMessage>;
+  export function lightning(options?: LightningOptions): import('@crc/core').TextureRecipe<LightningMessage>;
+  export {useTexture} from '@crc/core';
+  export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
+  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
+  export type InkMessage = {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
+  export function marble(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function paper(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function cellular(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function reactionDiffusion(options?: ReactionDiffusionOptions): import('@crc/core').TextureRecipe<InkMessage>;
 import type { CRCComponent, CRCRenderLayerComponentProps } from '@crc/core';
 export type TexturePalette = readonly string[];
 export interface TextureResolution { readonly width: number; readonly height: number; }

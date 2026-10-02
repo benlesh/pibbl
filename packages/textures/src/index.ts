@@ -12,3 +12,11 @@ export type {
   TextureRenderer,
   TextureRenderFrame,
 } from "./lib/presentation.js";
+export { useTexture, marble, paper, cellular, reactionDiffusion } from './lib/definitions.js';
+export type { MaterialOptions, ReactionDiffusionOptions, InkMessage } from './lib/definitions.js';
+export { tendrils } from "./lib/tendrils.js";
+export type { TendrilsOptions, TendrilsMessage } from "./lib/tendrils.js";
+export { lightning } from "./lib/lightning.js";
+export type { LightningOptions, LightningMessage } from "./lib/lightning.js";
+export type { ElectricPoint, ElectricOptions, ElectricControl } from "./lib/electric-shared.js";
+export type { ElectricSource, ElectricSourceMessage } from "./lib/electric-sources.js";

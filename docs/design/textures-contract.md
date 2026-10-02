@@ -38,7 +38,10 @@ A single primary pointer is captured through CRC; release/cancel ends the stroke
 Stamps interpolate movement and clip to the field, without clamping out-of-bounds
 points to its edge. Brush settings are snapshotted into each queued stamp. Work is
 bounded to 4096 stamps per event and 8192 queued stamps; pathological overload can
-lose excess stamps. Queued painting applies before numerical steps.
+lose excess stamps. Queued painting applies before numerical steps. Painting plants separated nuclei
+within the brush area and skips occupied neighborhoods, avoiding the broad
+uniform doses that extinguish spots. Large brushes plant clusters; small or weak
+marks are not guaranteed to survive. Initialization retains its seeded patches.
 
 Changing preset, seed, reset revision, or simulation resolution resets the field
 and clears pending strokes/capture/time. Value-equal option objects do not reset.
