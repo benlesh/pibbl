@@ -1,5 +1,7 @@
 # Tree shakeable filters and texture effects implementation plan
 
+> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+
 Status: reviewed and corrected implementation plan, 2026-10-01. Production implementation may begin.
 Approved design: [tree shakeable filters and texture effects](../specs/2026-10-01-tree-shakeable-filters-and-texture-effects-design.md).
 
