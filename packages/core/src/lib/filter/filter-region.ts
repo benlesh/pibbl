@@ -130,17 +130,6 @@ export function resolveFilterWindows(
   };
 }
 
-function blurExtent(radius: number, density: number): number {
-  const scaled = radius * density * BLUR_EXTENT_FACTOR;
-  if (!Number.isFinite(scaled) || !Number.isSafeInteger(Math.ceil(scaled))) {
-    throw filterRegionError(
-      scaled,
-      'filter expansion exceeds finite safe-integer backing arithmetic',
-    );
-  }
-  return Math.ceil(scaled);
-}
-
 function projectBounds(
   bounds: Readonly<LayoutBox>,
   inverseProject: InverseProjector,
