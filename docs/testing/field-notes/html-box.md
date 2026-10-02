@@ -199,3 +199,21 @@ and green key bursts. There were no page errors. Inspected screenshots:
 `/private/tmp/html-green-sparks.png` and
 `/private/tmp/html-sparks-manipulated.png`. The same preview URL is served from
 the integrated checkout: http://127.0.0.1:5176/#/examples/composition/html-box.
+
+## Perimeter bursts and Canvas-downward gravity — 2026-10-02
+
+User refinement increases each typing burst from 16 to 160 sparks, distributed
+across all four input edges. The live-particle cap increases proportionally to
+1,600. Native input border/outline/glow use the same committed flash state as
+Canvas lightning and return to their normal appearance when the flash expires.
+Gravity is inverse-rotated and inverse-scaled into the panel's local coordinates;
+the acceleration stays downward in Canvas space while collisions remain local.
+
+The border-flash regression failed before implementation and passed afterward
+in both source and built smoke. Typecheck, focused ESLint and scenario validation
+passed. Real-browser verification rotated the panel approximately 90 degrees,
+typed with focus retained outside hover, and measured the green-pixel centroid
+moving from Canvas backing y=389 to y=533 over 550 ms after the flash expired.
+No browser errors occurred. Inspected screenshots:
+`/private/tmp/html-perimeter-flash.png` and
+`/private/tmp/html-perimeter-falling.png`.

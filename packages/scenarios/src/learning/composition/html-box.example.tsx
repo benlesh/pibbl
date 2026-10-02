@@ -3,6 +3,7 @@ import { crc, HtmlBox, Manipulable, Group, Clip, FocusManagement, Rectangle, Tex
 interface InputBox { readonly x: number; readonly y: number; readonly width: number; readonly height: number; }
 interface EditorData {
   readonly title: string;
+  readonly flash: number;
   readonly onInputActivity: (box: InputBox | null) => void;
   readonly onKeystroke: (box: InputBox) => void;
 }
@@ -42,7 +43,14 @@ const mountEditor: HtmlMountCallback<EditorData> = (element, initial, signal) =>
   const observer = new ResizeObserver(report);
   observer.observe(input); observer.observe(label);
   signal.addEventListener('abort', () => observer.disconnect(), { once: true });
-  return next => { current = next; caption.textContent = next.title; };
+  return next => {
+    current = next; caption.textContent = next.title;
+    input.style.borderColor = next.flash > 0 ? '#60ff91' : '#6187a6';
+    input.style.outlineColor = next.flash > 0 ? '#60ff91' : '#94e8ff';
+    input.style.boxShadow = next.flash > 0
+      ? `0 0 ${4 + next.flash * 15}px rgb(96 255 145 / ${next.flash * 0.8}), inset 0 0 ${next.flash * 7}px rgb(225 255 235 / ${next.flash * 0.45})`
+      : 'none';
+  };
 };
 
 /** Deterministic jagged branches from the measured input to the panel perimeter. */
@@ -81,9 +89,9 @@ interface FieldState { time: number; flash: number; sparks: Spark[]; }
 
 // Tiny example-owned particle simulation. Gravity and restitution operate in
 // panel coordinates, using a circular collision normal at each rounded corner.
-function advanceSpark(spark: Spark, dt: number): Spark {
+function advanceSpark(spark: Spark, dt: number, gravityX: number, gravityY: number): Spark {
   let { x, y, vx, vy, life } = spark;
-  vy += 480 * dt;
+  vx += gravityX * dt; vy += gravityY * dt;
   x += vx * dt; y += vy * dt;
   const cx = Math.max(24, Math.min(316, x));
   const cy = Math.max(24, Math.min(166, y));
@@ -111,25 +119,40 @@ function HtmlBoxLesson() {
     initial: (value: FieldState) => value,
     step(state: FieldState, milliseconds: number): FieldState {
       const dt = milliseconds / 1000;
-      const sparks = state.sparks.map(spark => advanceSpark(spark, dt)).filter(spark => spark.life > 0);
+      // Inverse of Manipulable's rotation and the inner scale: gravity stays
+      // Canvas-downward while collisions remain in the panel's local space.
+      const angle = rotation.get(); const size = box.get();
+      const gravityX = Math.sin(angle) * 480 / (size.width / 340);
+      const gravityY = Math.cos(angle) * 480 / (size.height / 190);
+      const sparks = state.sparks.map(spark => advanceSpark(spark, dt, gravityX, gravityY)).filter(spark => spark.life > 0);
       let flash = Math.max(0, state.flash - dt * 5);
       for (const box of commands.bursts.splice(0)) {
         flash = 1;
-        for (let i = 0; i < 16; i++) {
-          const right = i % 2 === 0;
+        for (let i = 0; i < 160; i++) {
+          const edge = i % 4;
           const seed = ++commands.serial;
-          const random = (Math.sin(seed * 127.1) * 43758.5453) % 1;
-          sparks.push({ x: box.x + (right ? box.width + 2 : -2), y: box.y + box.height * (0.2 + Math.abs(random) * 0.6), vx: (right ? 1 : -1) * (90 + Math.abs(random) * 170), vy: -150 + (seed % 7) * 45, life: 1.3 + (seed % 5) * 0.1 });
+          const fraction = Math.abs((Math.sin(seed * 127.1) * 43758.5453) % 1);
+          const horizontal = edge < 2;
+          const normal = edge % 2 === 0 ? -1 : 1;
+          const speed = 90 + fraction * 170;
+          const tangent = ((seed % 11) / 10 - 0.5) * 160;
+          sparks.push({
+            x: horizontal ? box.x + 6 + fraction * (box.width - 12) : box.x + (normal > 0 ? box.width + 2 : -2),
+            y: horizontal ? box.y + (normal > 0 ? box.height + 2 : -2) : box.y + 6 + fraction * (box.height - 12),
+            vx: horizontal ? tangent : normal * speed,
+            vy: horizontal ? normal * speed : tangent,
+            life: 1.3 + (seed % 5) * 0.1,
+          });
         }
       }
-      return { time: state.time + milliseconds, flash, sparks: sparks.slice(-160) };
+      return { time: state.time + milliseconds, flash, sparks: sparks.slice(-1600) };
     },
     read: (state: FieldState) => state,
     done: (state: FieldState) => !commands.active && commands.bursts.length === 0 && state.sparks.length === 0 && state.flash === 0,
   })));
   const playback = usePlayback(program);
   const editorData = useConst<EditorData>(() => ({
-    title: 'Your note',
+    title: 'Your note', flash: 0,
     onInputActivity(box) {
       commands.active = box !== null;
       inputBox.set(box);
@@ -176,7 +199,7 @@ function HtmlBoxLesson() {
               if (target instanceof Element && target.closest('input, button, label')) event.stopPropagation();
             }}
             mount={mountEditor}
-            data={editorData}
+            data={{ ...editorData, flash: state.flash }}
             style={{ width: 340, height: 190 }}
           />
         </Clip>

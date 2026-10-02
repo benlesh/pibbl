@@ -39,13 +39,16 @@ it('runs the public HtmlBox lesson with native input and retained geometry in so
     expect(Array.from(context.getImageData(0, 0, canvas.width, canvas.height).data)).not.toEqual(beforeSpark);
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
     await frame();
+    expect(input.style.borderColor).toBe('rgb(96, 255, 145)');
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
     let green = 0;
     for (let i = 0; i < pixels.length; i += 4) if (pixels[i + 1] > 170 && pixels[i + 1] > pixels[i] * 1.3 && pixels[i + 1] > pixels[i + 2] * 1.15) green++;
-    expect(green).toBeGreaterThan(30);
+    expect(green).toBeGreaterThan(200);
     input.blur();
     await new Promise(resolve => setTimeout(resolve, 2200));
     await frame();
+    expect(input.style.borderColor).toBe('rgb(97, 135, 166)');
+    expect(input.style.boxShadow).toBe('none');
     expect(Array.from(context.getImageData(0, 0, canvas.width, canvas.height).data)).toEqual(beforeSpark);
   } finally {
     controller.dispose();
