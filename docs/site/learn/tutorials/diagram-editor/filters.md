@@ -44,7 +44,7 @@ import { dropShadow } from "@crc/core/filters";
   }}
 >
   {cardPaint}
-</Group>
+</Group>;
 ```
 
 The [filter type reference](#/api/types/filters) lists every supported typed filter value and its validation rules. [Style and draw](#/learn/guides/style-and-draw) explains the complete local composition model.
