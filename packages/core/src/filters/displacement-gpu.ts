@@ -6,6 +6,10 @@ export interface DisplacementCoordinates {
   readonly density: number;
   readonly region: Readonly<{ x: number; y: number; width: number; height: number }>;
 }
+export interface DisplacementGpuCallbacks {
+  readonly onContextLost?: () => void;
+  readonly onContextRestored?: () => void;
+}
 const vertexSource = `#version 300 es
 in vec2 p;
 out vec2 uv;
@@ -47,17 +51,40 @@ void main() {
 /** Optional synchronous image processor; scene pixels are never read back. */
 export class DisplacementGpu {
   private readonly canvas = new OffscreenCanvas(1, 1);
-  private readonly gl: WebGL2RenderingContext;
-  private readonly program: WebGLProgram;
-  private readonly vao: WebGLVertexArrayObject;
-  private readonly buffer: WebGLBuffer;
-  private readonly source: WebGLTexture;
+  private gl: WebGL2RenderingContext | undefined;
+  private resources: DisplacementResources | undefined;
   private readonly maps = new Map<object, { texture: WebGLTexture; revision: number }>();
   private disposed = false;
+  private lost = false;
+  private readonly onContextLost = (event: Event): void => {
+    event.preventDefault();
+    if (this.disposed || this.lost) return;
+    this.lost = true;
+    this.releaseResources(false);
+    this.callbacks.onContextLost?.();
+  };
+  private readonly onContextRestored = (): void => {
+    if (this.disposed || !this.lost) return;
+    this.lost = false;
+    this.callbacks.onContextRestored?.();
+  };
 
-  constructor() {
+  constructor(private readonly callbacks: Readonly<DisplacementGpuCallbacks> = {}) {
+    this.canvas.addEventListener('webglcontextlost', this.onContextLost);
+    this.canvas.addEventListener('webglcontextrestored', this.onContextRestored);
+  }
+
+  get isContextLost(): boolean {
+    return this.lost || this.gl?.isContextLost() === true;
+  }
+
+  private acquireResources(): DisplacementResources {
+    if (this.disposed) throw new Error('Cannot use a disposed displacement processor.');
+    if (this.isContextLost) throw new Error('Displacement WebGL2 context was lost.');
+    if (this.resources) return this.resources;
     const gl = this.canvas.getContext('webgl2', { premultipliedAlpha: true, preserveDrawingBuffer: false });
     if (!gl) throw new Error('Displacement requires OffscreenCanvas WebGL2 support.');
+    if (gl.isContextLost()) throw new Error('Displacement WebGL2 context was lost.');
     this.gl = gl;
     const vertex = compile(gl, gl.VERTEX_SHADER, vertexSource);
     let fragment: WebGLShader | undefined;
@@ -70,10 +97,8 @@ export class DisplacementGpu {
       if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(`Displacement shader link failed: ${gl.getProgramInfoLog(program)}`);
     } catch (error) { if (program) gl.deleteProgram(program); throw error; }
     finally { gl.deleteShader(vertex); if (fragment) gl.deleteShader(fragment); }
-    this.program = program;
     const vao = gl.createVertexArray(), buffer = gl.createBuffer();
     if (!vao || !buffer) { if (vao) gl.deleteVertexArray(vao); if (buffer) gl.deleteBuffer(buffer); gl.deleteProgram(program); throw new Error('Could not allocate displacement geometry.'); }
-    this.vao = vao; this.buffer = buffer;
     gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     const location = gl.getAttribLocation(program, 'p');
@@ -84,21 +109,21 @@ export class DisplacementGpu {
       gl.deleteBuffer(buffer); gl.deleteVertexArray(vao); gl.deleteProgram(program);
       throw new Error('Could not allocate displacement textures.');
     }
-    this.source = source;
+    const resources: DisplacementResources = { program, vao, buffer, source };
     gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+    this.resources = resources;
+    return resources;
   }
 
   apply(source: OffscreenCanvas, map: BorrowedTextureRaster, strengthPixels: number, placement: Readonly<TexturePlacement> = map.placement, coordinates?: DisplacementCoordinates): ImageBitmap {
-    if (this.disposed) throw new Error('Cannot use a disposed displacement processor.');
-    const gl = this.gl;
-    if (gl.isContextLost()) throw new Error('Displacement WebGL2 context was lost.');
+    const { gl, program, vao, source: sourceTexture } = this.acquireResourcesWithContext();
     const maximum = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
     if (Math.max(source.width, source.height, map.width, map.height) > maximum) throw new RangeError('Displacement target exceeds WebGL2 maximum texture size.');
     if (this.canvas.width !== source.width) this.canvas.width = source.width;
     if (this.canvas.height !== source.height) this.canvas.height = source.height;
     gl.viewport(0, 0, source.width, source.height);
-    gl.useProgram(this.program); gl.bindVertexArray(this.vao);
-    this.upload(0, this.source, source, true, false);
+    gl.useProgram(program); gl.bindVertexArray(vao);
+    this.upload(gl, 0, sourceTexture, source, true, false);
     let cached = this.maps.get(map.resource);
     if (!cached) {
       const texture = gl.createTexture();
@@ -106,11 +131,11 @@ export class DisplacementGpu {
       cached = { texture, revision: -1 };
       this.maps.set(map.resource, cached);
     }
-    this.upload(1, cached.texture, map.source, false, placement.mode !== 'stretch', cached.revision !== map.revision);
+    this.upload(gl, 1, cached.texture, map.source, false, placement.mode !== 'stretch', cached.revision !== map.revision);
     cached.revision = map.revision;
     const density = coordinates?.density ?? 1;
     const region = coordinates?.region ?? { x: 0, y: 0, width: source.width / density, height: source.height / density };
-    const uniform = (name: string) => gl.getUniformLocation(this.program, name);
+    const uniform = (name: string) => gl.getUniformLocation(program, name);
     gl.uniform1i(uniform('scene'), 0); gl.uniform1i(uniform('map'), 1);
     gl.uniform2f(uniform('strength'), strengthPixels / source.width, strengthPixels / source.height);
     gl.uniform2f(uniform('logicalOrigin'), coordinates?.originX ?? 0, coordinates?.originY ?? 0);
@@ -119,12 +144,18 @@ export class DisplacementGpu {
     gl.uniform2f(uniform('tileSize'), placement.mode === 'stretch' ? region.width : placement.tileWidth ?? map.width, placement.mode === 'stretch' ? region.height : placement.tileHeight ?? map.height);
     gl.uniform1f(uniform('rotation'), (placement.rotation ?? 0) * Math.PI / 180);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    if (this.isContextLost) throw new Error('Displacement WebGL2 context was lost.');
     const error = gl.getError();
     if (error !== gl.NO_ERROR) throw new Error(`Displacement GPU processing failed (${error}).`);
     return this.canvas.transferToImageBitmap();
   }
-  private upload(unit: number, texture: WebGLTexture, canvas: OffscreenCanvas, premultiply: boolean, repeat: boolean, upload = true): void {
+  private acquireResourcesWithContext(): DisplacementResources & { gl: WebGL2RenderingContext } {
+    const resources = this.acquireResources();
     const gl = this.gl;
+    if (!gl || gl.isContextLost()) throw new Error('Displacement WebGL2 context was lost.');
+    return { ...resources, gl };
+  }
+  private upload(gl: WebGL2RenderingContext, unit: number, texture: WebGLTexture, canvas: OffscreenCanvas, premultiply: boolean, repeat: boolean, upload = true): void {
     gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -134,18 +165,36 @@ export class DisplacementGpu {
     if (upload) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
   }
   retainMaps(resources: ReadonlySet<object>): void {
+    const gl = this.gl;
     for (const [resource, cached] of this.maps) {
-      if (!resources.has(resource)) { this.gl.deleteTexture(cached.texture); this.maps.delete(resource); }
+      if (!resources.has(resource)) { if (gl && !gl.isContextLost()) gl.deleteTexture(cached.texture); this.maps.delete(resource); }
     }
+  }
+  private releaseResources(deleteResources: boolean): void {
+    const gl = this.gl;
+    const resources = this.resources;
+    this.resources = undefined;
+    if (gl && !gl.isContextLost() && deleteResources) {
+      gl.deleteTexture(resources?.source ?? null);
+      for (const cached of this.maps.values()) gl.deleteTexture(cached.texture);
+      if (resources) { gl.deleteBuffer(resources.buffer); gl.deleteVertexArray(resources.vao); gl.deleteProgram(resources.program); }
+    }
+    this.maps.clear();
   }
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    const gl = this.gl;
-    gl.deleteTexture(this.source); this.retainMaps(new Set()); gl.deleteBuffer(this.buffer);
-    gl.deleteVertexArray(this.vao); gl.deleteProgram(this.program);
+    this.canvas.removeEventListener('webglcontextlost', this.onContextLost);
+    this.canvas.removeEventListener('webglcontextrestored', this.onContextRestored);
+    this.releaseResources(true);
     this.canvas.width = 0; this.canvas.height = 0;
   }
+}
+interface DisplacementResources {
+  readonly program: WebGLProgram;
+  readonly vao: WebGLVertexArrayObject;
+  readonly buffer: WebGLBuffer;
+  readonly source: WebGLTexture;
 }
 function compile(gl: WebGL2RenderingContext, kind: number, source: string): WebGLShader {
   const shader = gl.createShader(kind);

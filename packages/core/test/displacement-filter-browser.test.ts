@@ -1,6 +1,8 @@
 import { createElement, crc, defineTexture, Group, Rectangle, useTexture } from '@crc/core';
 import { blur, brightness, displacement, opacity } from '@crc/core/filters';
 import { describe, expect, it } from 'vitest';
+import { getCRCInstance } from '../src/lib/global-state';
+import { peekDisplacementGpu } from '../src/filters/render-displacement-boundary';
 import { clickMouse } from './support/mouse-input';
 
 const map = defineTexture({
@@ -19,6 +21,31 @@ const rightMap = defineTexture({
 });
 
 describe('public displacement filters', () => {
+  it('requests exactly one lazy recovery render after a WebGL context restoration', async () => {
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 40; document.body.append(canvas);
+    function Scene() {
+      const texture = useTexture(map({}));
+      return createElement(Group, { style: { filter: displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Rectangle, { style: { x: 10, y: 10, width: 10, height: 10, fill: 'red' } }) });
+    }
+    const controller = crc(canvas, createElement(Scene, {}));
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    const instance = getCRCInstance(canvas);
+    const gpu = peekDisplacementGpu(instance)!;
+    const gl = (gpu as unknown as { canvas: OffscreenCanvas }).canvas.getContext('webgl2')!;
+    const lose = gl.getExtension('WEBGL_lose_context');
+    expect(lose).not.toBeNull();
+    const revision = instance.requestedRenderRevision;
+    lose!.loseContext();
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    lose!.restoreContext();
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    expect(instance.requestedRenderRevision).toBe(revision + 1);
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    expect(instance.completedRenderRevision).toBe(instance.requestedRenderRevision);
+    expect(canvas.getContext('2d')!.getImageData(12, 12, 1, 1).data[0]).toBeGreaterThan(200);
+    controller.dispose();
+  });
+
   it('keeps neutral chained displacement pixels and logical hit geometry', async () => {
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = 40; document.body.append(canvas);
     let clicks = 0;
