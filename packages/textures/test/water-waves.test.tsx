@@ -7,6 +7,56 @@ import { ManualSchedulerDriver, installSchedulerDriverForTest } from "../../core
 
 afterEach(() => { clearSharedState(); document.body.innerHTML = ""; });
 
+it("adds bounded click ripples, freezes them while paused, and idles after their lifetime", () => {
+  const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
+  const frames: number[][] = [];
+  let texture: ReturnType<typeof useTexture<any>>;
+  function Scene() {
+    texture = useTexture(waterWaves({ seed: 4, speed: 0 }), { resolution: { width: 16, height: 8 } });
+    borrowTextureRaster(texture, raster => frames.push(Array.from(raster.source.getContext("2d")!.getImageData(0, 0, 16, 8).data)));
+    return <Rectangle style={{ width: 16, height: 8, fill: texture }} />;
+  }
+  const canvas = document.createElement("canvas"); canvas.width = 32; canvas.height = 16; document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  const capture = (time: number) => { crc(canvas, <Scene />); driver.flush(time); return frames.at(-1)!; };
+  try {
+    driver.flush(0);
+    const baseline = frames.at(-1)!;
+    texture!.send({ type: "ripple", x: 0.25, y: 0.5 }); driver.flush(16);
+    const started = capture(16);
+    expect(started).not.toEqual(baseline);
+    driver.flush(616);
+    expect(capture(616)).not.toEqual(started);
+    texture!.send({ type: "pause", paused: true }); driver.flush(632);
+    const paused = capture(632);
+    expect(driver.pendingHostFrames).toBe(0);
+    expect(frames.at(-1)).toEqual(paused);
+    texture!.send({ type: "pause", paused: false }); driver.flush(1_648);
+    expect(capture(1_648)).toEqual(paused);
+    driver.flush(4_100);
+    expect(driver.pendingHostFrames).toBe(0);
+    texture!.send({ type: "ripple", x: 0.75, y: 0.5 }); driver.flush(10_000);
+    expect(frames.at(-1)).not.toEqual(baseline);
+    driver.flush(10_016);
+    expect(frames.at(-1)).not.toEqual(baseline);
+    texture!.send({ type: "reset" }); driver.flush(10_032);
+    expect(frames.at(-1)).toEqual(baseline);
+  } finally { controller.dispose(); restore(); }
+});
+
+it("rejects non-finite normalized ripple coordinates", () => {
+  const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
+  let texture: ReturnType<typeof useTexture<any>>;
+  function Scene() { texture = useTexture(waterWaves({ speed: 0 })); return <Rectangle style={{ width: 1, height: 1, fill: texture }} />; }
+  const canvas = document.createElement("canvas"); document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  try {
+    driver.flush(0);
+    texture!.send({ type: "ripple", x: Infinity, y: 0 });
+    expect(() => driver.flush(16)).toThrow("must be finite");
+  } finally { controller.dispose(); restore(); }
+});
+
 it("is deterministic, advances only when active, and resets through messages", () => {
   const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
   const frames: number[][] = [];
