@@ -26,6 +26,10 @@ symbols:
     waterWaves,
     WaterWavesOptions,
     WaterWavesMessage,
+    waterSurface,
+    WaterSurfaceObstacle,
+    WaterSurfaceOptions,
+    WaterSurfaceMessage,
   ]
 ---
 
@@ -104,9 +108,27 @@ palettes.
 Typed `pause` and `reset` messages. Reset returns phase to its seeded initial
 state while preserving the current pause state.
 
+## WaterSurfaceObstacle
+
+A normalized axis-aligned `{ x, y, width, height }` rectangle within `[0, 1]`.
+It is a visual water boundary only and has no hit-testing or physics effect.
+
+## WaterSurfaceOptions
+
+The same seed, speed, scale, ripple-strength, and paused inputs as
+`waterWaves`, plus optional `obstacles`. `waterSurface` is a WASM-backed,
+bounded reflective height field: it uses a maximum 128-cell short edge and
+256-cell long edge, while preserving the source aspect ratio.
+
+## WaterSurfaceMessage
+
+The same typed `pause`, `reset`, and normalized `ripple` messages as
+`waterWaves`. A ripple can keep a speed-zero field active until its damped
+energy settles; a paused field discards elapsed time.
+
 ## Recipe factories
 
-`marble`, `paper`, `cellular`, `reactionDiffusion`, and `waterWaves` create inert recipes consumed
+`marble`, `paper`, `cellular`, `reactionDiffusion`, `waterWaves`, and `waterSurface` create inert recipes consumed
 by `useTexture` from core (also re-exported by this package). Use the returned
 resource directly as `style.fill` or `style.stroke`; no renderer callback is needed.
 
@@ -131,3 +153,9 @@ Creates a living Gray–Scott recipe that accepts `InkMessage` values.
 Creates a periodic numeric RG displacement map for the `displacement` filter.
 It advances through CRC's scheduler and remains static when paused or at speed
 zero.
+
+## waterSurface
+
+Creates a numeric RG displacement map with bounded, reflecting outer and
+rectangle-obstacle boundaries. Solid obstacle pixels are transparent. It is
+appearance-only and does not couple to CRC physics.

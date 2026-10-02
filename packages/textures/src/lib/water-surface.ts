@@ -160,8 +160,9 @@ class WaterSimulation {
       this.height.length,
     );
   }
-  setObstacles(obstacles: readonly WaterSurfaceObstacle[]) {
-    if (sameObstacles(this.previousObstacles, obstacles)) return;
+  setObstacles(obstacles: readonly WaterSurfaceObstacle[]): number {
+    if (sameObstacles(this.previousObstacles, obstacles)) return 0;
+    const previous = this.previousObstacles;
     this.solid.fill(0);
     for (let y = 0; y < this.rows; y++)
       for (let x = 0; x < this.width; x++) {
@@ -186,6 +187,48 @@ class WaterSimulation {
           this.nextVelocity[i] =
             0;
     this.previousObstacles = obstacles;
+    // A moving solid leaves one bounded impulse at its trailing edge. The
+    // height-field remains an appearance-only texture; this is not a force or
+    // collider update in CRC physics.
+    let wakeEnergy = 0;
+    for (
+      let index = 0;
+      index < Math.min(previous.length, obstacles.length);
+      index++
+    ) {
+      const before = previous[index],
+        after = obstacles[index];
+      const dx = after.x + after.width / 2 - (before.x + before.width / 2);
+      const dy = after.y + after.height / 2 - (before.y + before.height / 2);
+      const distance = Math.hypot(dx * this.width, dy * this.rows);
+      if (distance <= 1e-6) continue;
+      const u = Math.max(
+        0,
+        Math.min(
+          1,
+          dx > 0
+            ? before.x - 1 / this.width
+            : dx < 0
+              ? before.x + before.width + 1 / this.width
+              : before.x + before.width / 2,
+        ),
+      );
+      const v = Math.max(
+        0,
+        Math.min(
+          1,
+          dy > 0
+            ? before.y - 1 / this.rows
+            : dy < 0
+              ? before.y + before.height + 1 / this.rows
+              : before.y + before.height / 2,
+        ),
+      );
+      const strength = Math.min(2, distance * 0.12);
+      this.ripple(u, v, strength);
+      wakeEnergy += strength;
+    }
+    return wakeEnergy;
   }
   ripple(u: number, v: number, strength: number) {
     this.kernel.impulse(
@@ -318,12 +361,14 @@ function replaceSimulation(
   state: State,
   context: TextureContext,
   config: Config,
-) {
+): number {
   const [width, rows] = gridSize(context.canvas.width, context.canvas.height);
   if (state.simulation.width !== width || state.simulation.rows !== rows) {
     state.simulation.dispose();
     state.simulation = new WaterSimulation(width, rows, config.obstacles);
-  } else state.simulation.setObstacles(config.obstacles);
+    return 0;
+  }
+  return state.simulation.setObstacles(config.obstacles);
 }
 function encode(value: number) {
   return Math.max(0, Math.min(255, Math.round(128 + value * 92)));
@@ -355,7 +400,8 @@ const recipe = /* @__PURE__ */ defineTexture<
     assertDataTexture(context);
     const next = options(input),
       previous = state.config;
-    replaceSimulation(state, context, next);
+    const wasActive = active(state);
+    const wakeEnergy = replaceSimulation(state, context, next);
     if (next.seed !== previous.seed || next.scale !== previous.scale) {
       state.phase = 0;
       state.modes = modes(next.seed, next.scale);
@@ -368,6 +414,13 @@ const recipe = /* @__PURE__ */ defineTexture<
       state.elapsed = 0;
     }
     state.config = next;
+    if (wakeEnergy > 0) {
+      state.energy = Math.max(state.energy, wakeEnergy);
+      if (!wasActive) {
+        state.fresh = true;
+        state.elapsed = 0;
+      }
+    }
     context.invalidate();
     if (!state.paused && active(state)) context.requestFrame();
   },
@@ -391,14 +444,13 @@ const recipe = /* @__PURE__ */ defineTexture<
     if (message.type === "ripple") {
       assertCoordinate(message.x, "x");
       assertCoordinate(message.y, "y");
-      state.simulation.ripple(
-        message.x,
-        message.y,
-        state.config.rippleStrength,
-      );
+      const wasActive = active(state);
+      state.simulation.ripple(message.x, message.y, 1);
       state.energy = Math.max(state.energy, 1);
-      state.fresh = true;
-      state.elapsed = 0;
+      if (!wasActive) {
+        state.fresh = true;
+        state.elapsed = 0;
+      }
       context.invalidate();
       if (!state.paused) context.requestFrame();
       return;
@@ -457,12 +509,14 @@ const recipe = /* @__PURE__ */ defineTexture<
           (sample(u + 1 / simulation.width, v) -
             sample(u - 1 / simulation.width, v)) *
           simulation.width *
-          0.45;
+          0.45 *
+          state.config.rippleStrength;
         let dy =
           (sample(u, v + 1 / simulation.rows) -
             sample(u, v - 1 / simulation.rows)) *
           simulation.rows *
-          0.45;
+          0.45 *
+          state.config.rippleStrength;
         for (const mode of state.modes) {
           const phase =
             Math.PI * 2 * (mode.x * u + mode.y * v) + state.phase + mode.phase;

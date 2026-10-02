@@ -154,3 +154,91 @@ it("rejects invalid normalized obstacles", () => {
     return null;
   }
 });
+
+it("starts a bounded wake when an obstacle moves from an idle surface", () => {
+  const driver = new ManualSchedulerDriver(),
+    restore = installSchedulerDriverForTest(driver);
+  let left = 0.3;
+  const frames: number[][] = [];
+  function Scene() {
+    const water = useTexture(
+      waterSurface({
+        speed: 0,
+        obstacles: [{ x: left, y: 0.25, width: 0.16, height: 0.5 }],
+      }),
+      { resolution: { width: 48, height: 24 } },
+    );
+    borrowTextureRaster(water, (raster) =>
+      frames.push(
+        Array.from(
+          raster.source.getContext("2d")!.getImageData(0, 0, 48, 24).data,
+        ),
+      ),
+    );
+    return <Rectangle style={{ width: 48, height: 24, fill: water }} />;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = 96;
+  canvas.height = 48;
+  document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  try {
+    driver.flush(0);
+    const idle = frames.at(-1)!;
+    left = 0.52;
+    crc(canvas, <Scene />);
+    driver.flush(16);
+    driver.flush(48);
+    driver.flush(80);
+    const wake = frames.at(-1)!;
+    // This point is fluid before and after the move, behind the old obstacle.
+    expect(wake.slice((12 * 48 + 8) * 4, (12 * 48 + 12) * 4)).not.toEqual(
+      idle.slice((12 * 48 + 8) * 4, (12 * 48 + 12) * 4),
+    );
+  } finally {
+    controller.dispose();
+    restore();
+  }
+});
+
+it("applies rippleStrength live to an already simulated surface", () => {
+  const driver = new ManualSchedulerDriver(),
+    restore = installSchedulerDriverForTest(driver);
+  let rippleStrength = 0;
+  let texture!: ReturnType<typeof useTexture<any>>;
+  const frames: number[][] = [];
+  function Scene() {
+    texture = useTexture(waterSurface({ speed: 0, rippleStrength }), {
+      resolution: { width: 24, height: 16 },
+    });
+    borrowTextureRaster(texture, (raster) =>
+      frames.push(
+        Array.from(
+          raster.source.getContext("2d")!.getImageData(0, 0, 24, 16).data,
+        ),
+      ),
+    );
+    return <Rectangle style={{ width: 24, height: 16, fill: texture }} />;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = 48;
+  canvas.height = 32;
+  document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  try {
+    driver.flush(0);
+    const baseline = frames.at(-1)!;
+    texture.send({ type: "ripple", x: 0.3, y: 0.5 });
+    driver.flush(16);
+    driver.flush(48);
+    expect(frames.at(-1)).toEqual(baseline);
+    rippleStrength = 1;
+    crc(canvas, <Scene />);
+    driver.flush(64);
+    driver.flush(80);
+    expect(frames.at(-1)).not.toEqual(baseline);
+  } finally {
+    controller.dispose();
+    restore();
+  }
+});
