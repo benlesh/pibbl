@@ -2,6 +2,7 @@ import * as core from "@crc/core";
 import * as internal from "@crc/core/internal";
 import * as particles from "@crc/particles";
 import * as threeAdapter from "@crc/three";
+import * as physics2d from "@crc/physics/2d";
 import * as physics3dGeometry from "@crc/physics/3d/geometry";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -271,6 +272,8 @@ const expectedParticles = [
   "particleInteger",
   "particleParameter",
   "particleRange",
+  "useFlowField2D",
+  "useFlowSource2D",
   "useParticleSystem",
 ];
 const actualParticles = Object.keys(particles).sort();
@@ -507,4 +510,8 @@ const wangGeometry = core.flattenPathWang(editableGeometry, { tolerance: 0.25 })
 const radialGeometry = core.simplifyPathRadial(wangGeometry, { tolerance: 0.5 });
 if (!(wangGeometry instanceof core.PathGeometry) || !(radialGeometry instanceof core.PathGeometry)) {
   throw new Error('Alternate path helpers did not return public geometry.');
+}
+
+if (typeof physics2d.physicsObstacles2D !== "function" || "physicsBoxObstacles2D" in physics2d) {
+  throw new Error("Expected the general committed-obstacle API without its superseded box-only name.");
 }

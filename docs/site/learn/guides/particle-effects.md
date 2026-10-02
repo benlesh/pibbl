@@ -80,8 +80,8 @@ parameter registers, and curve or gradient tables.
 
 ## Motion, capacity, and bounds
 
-`acceleration`, `gravity`, `drag`, and the other motion modules update the
-members of a population. They do not replace CRC animation: continue to drive
+`acceleration`, `gravity`, `drag`, and the other motion modules calculate
+particle motion analytically at its logical age. They do not replace CRC animation: continue to drive
 component transforms and ordinary application values with signals plus
 `tween`, `keyframes`, `spring`, `defineAnimation`, or `stepper`.
 
@@ -91,3 +91,32 @@ shape, velocity, acceleration, and size for the full lifetime so Canvas can
 perform coarse paint culling.
 
 Start with [Particle effects](#/examples/composition/particle-effects).
+
+## Fire, smoke, and shared flow
+
+A convincing flame needs coherent internal detail as well as moving particles.
+The [Fire and Flow example](#/examples/composition/fire-and-flow) combines a small
+animated procedural flame texture, sparse embers, and soft smoke sprites. Its
+artwork is generated locally. Shape selection and manipulation use ordinary CRC
+controls; decorative effects opt out of pointer targeting.
+
+For interacting smoke, create one field with `useFlowField2D`, add force/heat
+sources with `useFlowSource2D`, and pass it to `useParticleSystem(effect, { flow })`.
+Many particles can sample that shared field without owning rigid bodies. With
+optional `@crc/physics/2d`, `physicsObstacles2D(crcPhysicsWorld2D())` provides
+committed box, ellipse, and polygon geometry and motion. Both systems must use
+the same coordinates. The adapter copies numerical data and does not depend on
+shared WASM memory or apply smoke forces back to the physics world.
+
+Flow-bound particles use the field for translation. Put wind and upward force
+on the flow source, rather than adding particle initial velocity or translational
+motion modules. Angular motion, deterministic random appearance, and lifetime
+curves remain available. Ordinary particles keep analytical motion; flow adds
+stateful transport with [explicit timing and replay limits](#/api/hooks/use-flow-field).
+
+Effect recipes belong to the application. A helper such as `useFireAndSmoke`
+can compose these hooks and return the systems and controls its scene needs;
+CRC does not export a growing catalog of named fire/smoke presets. Canvas paint
+order determines which whole elements appear in front. Soft particle pixels can
+cross an obstacle boundary even when their centers cannot; this is not volumetric
+lighting or depth-aware sprite clipping.

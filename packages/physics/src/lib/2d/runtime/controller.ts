@@ -1,4 +1,4 @@
-import { CommittedBoxObstacles2D } from "./box-obstacles.js";
+import { CommittedObstacles2D } from "./obstacles.js";
 import { boundsOfShape2D } from "../../../2d-geometry.js";
 import { createShape2D } from "../shape-records.js";
 import type {
@@ -161,21 +161,21 @@ export class PhysicsWorld2DController {
   readonly handle: CRCPhysicsWorldHandle2D;
   private revision: WritableSignal<number> | undefined;
   private committedRevision = 0;
-  private boxObstacles: CommittedBoxObstacles2D | undefined;
-  private boxObstacleSource: Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array }> }> | undefined;
+  private obstacles: CommittedObstacles2D | undefined;
+  private obstacleSource: Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array; ellipses: Float64Array; polygons: Float64Array }> }> | undefined;
 
-  getBoxObstacleSource(): Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array }> }> {
+  getObstacleSource(): Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array; ellipses: Float64Array; polygons: Float64Array }> }> {
     this.assertActive();
-    if (!this.boxObstacleSource) {
-      if (this.liveCandidate) throw new Error("Create physics box obstacles before simulation Advance.");
-      this.boxObstacles = new CommittedBoxObstacles2D();
-      this.boxObstacles.publish(this.kernel, this.acceptedColliders, this.committedRevision);
-      this.boxObstacleSource = Object.freeze({ read: () => {
+    if (!this.obstacleSource) {
+      if (this.liveCandidate) throw new Error("Create physics obstacles before simulation Advance.");
+      this.obstacles = new CommittedObstacles2D();
+      this.obstacles.publish(this.kernel, this.acceptedColliders, this.committedRevision);
+      this.obstacleSource = Object.freeze({ read: () => {
         this.assertActive();
-        return this.boxObstacles!.read();
+        return this.obstacles!.read();
       } });
     }
-    return this.boxObstacleSource;
+    return this.obstacleSource;
   }
   private failedFrames = 0;
   private lastFailure: string | null = null;
@@ -574,8 +574,8 @@ export class PhysicsWorld2DController {
         );
       }
     }
-    this.boxObstacles = undefined;
-    this.boxObstacleSource = undefined;
+    this.obstacles = undefined;
+    this.obstacleSource = undefined;
     this.kernel.dispose();
     this.queries.invalidate();
     this.acceptedBodies = Object.freeze([]);
@@ -918,7 +918,7 @@ export class PhysicsWorld2DController {
           }
           this.kernel.adopt(candidate!);
           this.committedRevision = nextRevision;
-          this.boxObstacles?.publish(this.kernel, this.acceptedColliders, nextRevision);
+          this.obstacles?.publish(this.kernel, this.acceptedColliders, nextRevision);
           adopted = true;
           crcInternalRequestSimulationRender(this.owner);
           if (

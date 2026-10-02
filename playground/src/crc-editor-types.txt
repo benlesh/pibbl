@@ -798,7 +798,7 @@
   export function queryAabb2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, bounds: CRCPhysicsAabb2D, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
   export function queryPoint2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, point: CRCPhysicsVector2, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
 
-  export function physicsBoxObstacles2D(world: CRCPhysicsWorldHandle2D): Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array }> }>;
+  export function physicsObstacles2D(world: CRCPhysicsWorldHandle2D): Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array; ellipses: Float64Array; polygons: Float64Array }> }>;
 
 /* @crc-studio-module @crc/physics/3d/geometry */
   export type CRCPhysicsVector3 = readonly [x: number, y: number, z: number];
@@ -1052,7 +1052,7 @@
     Parameters extends CRCParticleParameterValues,
   >(props: Particles2DProps<EmitterName, Parameters>): CRCNode;
 
-  export interface CRCFlowObstacleBatch2D { readonly revision: number; readonly boxes: Float64Array; }
+  export interface CRCFlowObstacleBatch2D { readonly revision: number; readonly boxes: Float64Array; readonly ellipses?: Float64Array; readonly polygons?: Float64Array; }
   export interface CRCFlowObstacleSource2D { read(): CRCFlowObstacleBatch2D; }
   export interface CRCFlowFieldOptions2D {
     readonly bounds: Readonly<{ width: number; height: number }>;

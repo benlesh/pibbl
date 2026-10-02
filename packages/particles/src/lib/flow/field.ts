@@ -6,6 +6,13 @@ export interface FlowSource2D {
   /** Normalized heat injected per second; carried and dissipated by the field. */
   readonly heat?: number;
 }
+const EMPTY_GEOMETRY = new Float64Array(0);
+export interface FlowObstacleGeometry2D {
+  readonly boxes?: Float64Array;
+  readonly ellipses?: Float64Array;
+  /** count, vx, vy, omega, COM x/y, followed by interleaved world vertices. */
+  readonly polygons?: Float64Array;
+}
 const NO_SOURCES: readonly FlowSource2D[] = Object.freeze([]);
 
 /**
@@ -142,48 +149,126 @@ export class FlowFieldKernel2D {
    * Overlapping solids resolve in batch order, with the last solid owning motion.
    */
   setBoxes(boxes: Float64Array): void {
-    if (boxes.length % 10 !== 0)
-      throw new RangeError("Malformed flow box batch.");
-    for (let i = 0; i < boxes.length; i++) {
-      if (!Number.isFinite(boxes[i]))
-        throw new RangeError("Flow box values must be finite.");
-      if ((i % 10 === 2 || i % 10 === 3) && boxes[i]! <= 0) {
-        throw new RangeError("Flow box half extents must be positive.");
+    this.setObstacles({ boxes });
+  }
+
+  setObstacles(geometry: FlowObstacleGeometry2D): void {
+    const boxes = geometry.boxes ?? EMPTY_GEOMETRY;
+    const ellipses = geometry.ellipses ?? EMPTY_GEOMETRY;
+    const polygons = geometry.polygons ?? EMPTY_GEOMETRY;
+    for (let kind = 0; kind < 2; kind++) {
+      const packed = kind === 0 ? boxes : ellipses;
+      if (packed.length % 10 !== 0)
+        throw new RangeError("Malformed flow obstacle batch.");
+      for (let i = 0; i < packed.length; i++) {
+        if (!Number.isFinite(packed[i]))
+          throw new RangeError("Flow obstacle values must be finite.");
+        if ((i % 10 === 2 || i % 10 === 3) && packed[i]! <= 0)
+          throw new RangeError("Flow obstacle extents must be positive.");
       }
+    }
+    for (let at = 0; at < polygons.length;) {
+      const count = polygons[at]!;
+      const end = at + 6 + count * 2;
+      if (!Number.isInteger(count) || count < 3 || end > polygons.length)
+        throw new RangeError("Malformed flow polygon batch.");
+      for (let i = at; i < end; i++)
+        if (!Number.isFinite(polygons[i]))
+          throw new RangeError("Flow polygon values must be finite.");
+      at = end;
     }
     const { columns: nx, rows: ny, dx, dy } = this;
     this.solid.fill(0);
     this.cellVX.fill(0);
     this.cellVY.fill(0);
-    for (let b = 0; b < boxes.length; b += 10) {
-      const cx = boxes[b]!,
-        cy = boxes[b + 1]!;
-      const hx = boxes[b + 2]!,
-        hy = boxes[b + 3]!;
-      const c = Math.cos(boxes[b + 4]!),
-        s = Math.sin(boxes[b + 4]!);
-      const ex = Math.abs(c) * hx + Math.abs(s) * hy;
-      const ey = Math.abs(s) * hx + Math.abs(c) * hy;
-      const x0 = Math.max(0, Math.floor((cx - ex) / dx));
-      const x1 = Math.min(nx - 1, Math.floor((cx + ex) / dx));
-      const y0 = Math.max(0, Math.floor((cy - ey) / dy));
-      const y1 = Math.min(ny - 1, Math.floor((cy + ey) / dy));
-      for (let y = y0; y <= y1; y++) {
+    for (let kind = 0; kind < 2; kind++) {
+      const packed = kind === 0 ? boxes : ellipses;
+      for (let b = 0; b < packed.length; b += 10) {
+        const cx = packed[b]!,
+          cy = packed[b + 1]!;
+        const hx = packed[b + 2]!,
+          hy = packed[b + 3]!;
+        const c = Math.cos(packed[b + 4]!),
+          s = Math.sin(packed[b + 4]!);
+        const ex = Math.abs(c) * hx + Math.abs(s) * hy;
+        const ey = Math.abs(s) * hx + Math.abs(c) * hy;
+        const x0 = Math.max(0, Math.floor((cx - ex) / dx));
+        const x1 = Math.min(nx - 1, Math.floor((cx + ex) / dx));
+        const y0 = Math.max(0, Math.floor((cy - ey) / dy));
+        const y1 = Math.min(ny - 1, Math.floor((cy + ey) / dy));
+        for (let y = y0; y <= y1; y++) {
+          for (let x = x0; x <= x1; x++) {
+            const px = (x + 0.5) * dx,
+              py = (y + 0.5) * dy;
+            const rx = px - cx,
+              ry = py - cy;
+            const localX = (c * rx + s * ry) / hx,
+              localY = (-s * rx + c * ry) / hy;
+            if (
+              kind === 0
+                ? Math.abs(localX) > 1 || Math.abs(localY) > 1
+                : localX * localX + localY * localY > 1
+            )
+              continue;
+            const i = y * nx + x;
+            this.solid[i] = 1;
+            // At u faces y equals the cell-center y; at v faces x equals
+            // cell-center x, so these are exact normal rigid velocities.
+            this.cellVX[i] =
+              packed[b + 5]! - packed[b + 7]! * (py - packed[b + 9]!);
+            this.cellVY[i] =
+              packed[b + 6]! + packed[b + 7]! * (px - packed[b + 8]!);
+          }
+        }
+      }
+    }
+    for (let at = 0; at < polygons.length;) {
+      const count = polygons[at]!,
+        first = at + 6,
+        end = first + count * 2;
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+      for (let v = first; v < end; v += 2) {
+        minX = Math.min(minX, polygons[v]!);
+        maxX = Math.max(maxX, polygons[v]!);
+        minY = Math.min(minY, polygons[v + 1]!);
+        maxY = Math.max(maxY, polygons[v + 1]!);
+      }
+      const x0 = Math.max(0, Math.floor(minX / dx)),
+        x1 = Math.min(nx - 1, Math.floor(maxX / dx));
+      const y0 = Math.max(0, Math.floor(minY / dy)),
+        y1 = Math.min(ny - 1, Math.floor(maxY / dy));
+      for (let y = y0; y <= y1; y++)
         for (let x = x0; x <= x1; x++) {
           const px = (x + 0.5) * dx,
             py = (y + 0.5) * dy;
-          const rx = px - cx,
-            ry = py - cy;
-          if (Math.abs(c * rx + s * ry) > hx || Math.abs(-s * rx + c * ry) > hy)
-            continue;
+          let inside = false;
+          for (
+            let v = first, previous = end - 2;
+            v < end;
+            previous = v, v += 2
+          ) {
+            const ax = polygons[v]!,
+              ay = polygons[v + 1]!,
+              bx = polygons[previous]!,
+              by = polygons[previous + 1]!;
+            if (
+              ay > py !== by > py &&
+              px < ((bx - ax) * (py - ay)) / (by - ay) + ax
+            )
+              inside = !inside;
+          }
+          if (!inside) continue;
           const i = y * nx + x;
           this.solid[i] = 1;
-          // At u faces y equals the cell-center y; at v faces x equals
-          // cell-center x, so these are exact normal rigid velocities.
-          this.cellVX[i] = boxes[b + 5]! - boxes[b + 7]! * (py - boxes[b + 9]!);
-          this.cellVY[i] = boxes[b + 6]! + boxes[b + 7]! * (px - boxes[b + 8]!);
+          this.cellVX[i] =
+            polygons[at + 1]! - polygons[at + 3]! * (py - polygons[at + 5]!);
+          this.cellVY[i] =
+            polygons[at + 2]! + polygons[at + 3]! * (px - polygons[at + 4]!);
         }
-      }
+      at = end;
     }
     for (let y = 0; y < ny; y++) {
       for (let x = 0; x <= nx; x++) {
@@ -585,8 +670,17 @@ export class FlowFieldKernel2D {
 
   /** Cache the Poisson stencil in red/black order once per obstacle update. */
   private rebuildStencil(): void {
-    const { columns: nx, rows: ny, solid, neighbors, inverseWeight, solveOrder } = this;
-    const sentinel = nx * ny, wx = 1 / (this.dx * this.dx), wy = 1 / (this.dy * this.dy);
+    const {
+      columns: nx,
+      rows: ny,
+      solid,
+      neighbors,
+      inverseWeight,
+      solveOrder,
+    } = this;
+    const sentinel = nx * ny,
+      wx = 1 / (this.dx * this.dx),
+      wy = 1 / (this.dy * this.dy);
     let count = 0;
     for (let parity = 0; parity < 2; parity++) {
       for (let y = 0; y < ny; y++) {
@@ -633,10 +727,15 @@ export class FlowFieldKernel2D {
     this.projectionIterations = 0;
     for (let iteration = 0; iteration < 80; iteration++) {
       for (let entry = 0; entry < this.solveCount; entry++) {
-        const i = this.solveOrder[entry]!, offset = i * 4;
-        const sum = wx * p[this.neighbors[offset]!]! + wx * p[this.neighbors[offset + 1]!]! +
-          wy * p[this.neighbors[offset + 2]!]! + wy * p[this.neighbors[offset + 3]!]!;
-        p[i] += 1.7 * ((sum - this.divergence[i]!) * this.inverseWeight[i]! - p[i]!);
+        const i = this.solveOrder[entry]!,
+          offset = i * 4;
+        const sum =
+          wx * p[this.neighbors[offset]!]! +
+          wx * p[this.neighbors[offset + 1]!]! +
+          wy * p[this.neighbors[offset + 2]!]! +
+          wy * p[this.neighbors[offset + 3]!]!;
+        p[i] +=
+          1.7 * ((sum - this.divergence[i]!) * this.inverseWeight[i]! - p[i]!);
       }
       this.projectionIterations = iteration + 1;
       if ((iteration & 7) === 7) {

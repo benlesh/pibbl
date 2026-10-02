@@ -151,6 +151,10 @@ import { PerspectiveCamera, Scene } from 'three';
 import {
   Particles2D,
   useParticleSystem,
+  useFlowField2D,
+  useFlowSource2D,
+  type CRCFlowField2D,
+  type CRCFlowObstacleSource2D,
   defineParticleEffect2D,
   particleChoice,
   particleCurve,
@@ -163,6 +167,7 @@ import {
   type CRCParticleSystem,
   type Particles2DProps,
 } from '@crc/particles';
+import { PhysicsWorld2D, crcPhysicsWorld2D, physicsObstacles2D } from '@crc/physics/2d';
 import * as Physics3DGeometry from '@crc/physics/3d/geometry';
 import type * as Physics3DGeometryTypes from '@crc/physics/3d/geometry';
 import {
@@ -1821,3 +1826,19 @@ import { flattenPathWang, simplifyPathRadial } from '@crc/core';
 const wangOutline: PathGeometry = flattenPathWang(editableOutline, { tolerance: 0.25 });
 const radialOutline: PathGeometry = simplifyPathRadial(wangOutline, { tolerance: 0.5 });
 void radialOutline;
+
+
+const packedSmoke = defineParticleEffect2D({ emitters: [{
+  name: 'smoke', capacity: 32, emission: [{ type: 'manual', count: 1 }],
+  shape: { type: 'point' }, initial: { lifetimeMilliseconds: 1000 },
+  renderer: { type: 'circle' },
+}] });
+function PackedFlowScene() {
+  const obstacles: CRCFlowObstacleSource2D = physicsObstacles2D(crcPhysicsWorld2D());
+  const field: CRCFlowField2D = useFlowField2D({ bounds: { width: 240, height: 160 }, resolution: [24, 16], obstacles });
+  useFlowSource2D(field, { position: useSignal<readonly [number, number]>([120, 120]), radius: 24, heat: 2 });
+  const system = useParticleSystem(packedSmoke, { flow: field });
+  field.sampleBatch(new Float32Array([120, 80]), new Float32Array(2), 1);
+  return createElement(Particles2D, { system, pointerEvents: 'none' as const, style: { width: 240, height: 160 } });
+}
+createElement(PhysicsWorld2D, {}, createElement(PackedFlowScene, {}));

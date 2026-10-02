@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 76 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 77 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(76);
+    expect(learningExampleCatalog).toHaveLength(77);
     expect(
       learningExampleCatalog
         .filter(
@@ -1302,6 +1302,7 @@ describe("learning example catalog", () => {
         "particle-effects",
         "physics-2d",
         "physics-panels",
+        "fire-and-flow",
         "signal-inputs",
         "signals-and-animation",
         "viz-grouped-stacked-bars",
@@ -1398,6 +1399,7 @@ describe("learning example catalog", () => {
       "physics-2d",
       "layer",
       "physics-panels",
+      "fire-and-flow",
       "viz-grouped-stacked-bars",
       "viz-stacked-bars",
       "viz-grouped-bars",
@@ -1832,6 +1834,8 @@ describe("learning example catalog", () => {
         "batch",
         "useComputed",
         "useParticleSystem",
+        "useFlowField2D",
+        "useFlowSource2D",
         "useSignal",
         "useTransition",
         "usePlayback",
@@ -2133,11 +2137,13 @@ describe("learning example catalog", () => {
   );
 });
 
-
 it("path-warp drags a corner and resets the same public rocket example", async () => {
   const { canvas } = await renderLearningExample("path-warp");
   const snapshot = () => canvas.toDataURL();
-  const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  const frame = () =>
+    new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
   const before = snapshot();
   await pointerDownLogicalPoint(canvas, { x: 425, y: 156 });
   await pointerMoveLogicalPoint(canvas, { x: 340, y: 220 });
@@ -2152,7 +2158,10 @@ it("path-warp drags a corner and resets the same public rocket example", async (
 
 it("path-warp switches modes without resetting handles and recovers from invalid perspective", async () => {
   const { canvas, textPaints } = await renderLearningExample("path-warp");
-  const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  const frame = () =>
+    new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
   await pointerDownLogicalPoint(canvas, { x: 425, y: 156 });
   await pointerMoveLogicalPoint(canvas, { x: 400, y: 180 });
   await pointerUpLogicalPoint(canvas, { x: 400, y: 180 });
@@ -2160,21 +2169,116 @@ it("path-warp switches modes without resetting handles and recovers from invalid
   const bilinear = canvas.toDataURL();
   await clickLogicalPoint(canvas, { x: 208, y: 450 });
   await frame();
-  expect(textPaints.some(p => p.text === 'PERSPECTIVE / PROJECTED')).toBe(true);
+  expect(textPaints.some((p) => p.text === "PERSPECTIVE / PROJECTED")).toBe(
+    true,
+  );
   expect(canvas.toDataURL()).not.toBe(bilinear);
   expect(pixelAt(canvas, 400, 180)).toEqual([141, 240, 209, 255]);
   await pointerDownLogicalPoint(canvas, { x: 400, y: 180 });
   await pointerMoveLogicalPoint(canvas, { x: 790, y: 470 });
   await pointerUpLogicalPoint(canvas, { x: 790, y: 470 });
   await frame();
-  expect(textPaints.some(p => p.text === 'PREVIOUS VALID PREVIEW')).toBe(true);
+  expect(textPaints.some((p) => p.text === "PREVIOUS VALID PREVIEW")).toBe(
+    true,
+  );
   expect(pixelAt(canvas, 790, 470)).toEqual([141, 240, 209, 255]);
   const paintCount = textPaints.length;
   await clickLogicalPoint(canvas, { x: 84, y: 450 });
   await frame();
-  expect(textPaints.slice(paintCount).some(p => p.text === 'PREVIOUS VALID PREVIEW')).toBe(false);
+  expect(
+    textPaints
+      .slice(paintCount)
+      .some((p) => p.text === "PREVIOUS VALID PREVIEW"),
+  ).toBe(false);
   expect(pixelAt(canvas, 790, 470)).toEqual([141, 240, 209, 255]);
   await clickLogicalPoint(canvas, { x: 770, y: 534 });
   await frame();
   expect(pixelAt(canvas, 425, 156)).toEqual([141, 240, 209, 255]);
+});
+
+it("lets Fire and Flow shapes move, resize, rotate, and deselect through decorative effects", async () => {
+  const { canvas } = await renderLearningExample("fire-and-flow");
+  const bounds = (color: readonly [number, number, number]) => {
+    const pixels = canvas.getContext("2d")!.getImageData(0, 0, 720, 480).data;
+    let left = 720,
+      top = 480,
+      right = -1,
+      bottom = -1,
+      handles = 0;
+    for (let y = 0; y < 480; y++)
+      for (let x = 0; x < 720; x++) {
+        const i = (y * 720 + x) * 4;
+        if (
+          pixels[i] === color[0] &&
+          pixels[i + 1] === color[1] &&
+          pixels[i + 2] === color[2]
+        ) {
+          left = Math.min(left, x);
+          top = Math.min(top, y);
+          right = Math.max(right, x);
+          bottom = Math.max(bottom, y);
+        }
+        if (
+          pixels[i]! < 80 &&
+          pixels[i + 1]! > 70 &&
+          pixels[i + 1]! < 180 &&
+          pixels[i + 2]! > 200
+        )
+          handles++;
+      }
+    return {
+      left,
+      top,
+      width: right - left + 1,
+      height: bottom - top + 1,
+      handles,
+    };
+  };
+  const drag = async (
+    from: readonly [number, number],
+    to: readonly [number, number],
+  ) => {
+    await pointerDownLogicalPoint(canvas, { x: from[0], y: from[1] });
+    await pointerMoveLogicalPoint(canvas, { x: to[0], y: to[1] });
+    await pointerUpLogicalPoint(canvas, { x: to[0], y: to[1] });
+    await nextPaint();
+  };
+  const rectangle = [57, 123, 131] as const;
+  expect(bounds(rectangle).left).toBeGreaterThanOrEqual(285);
+  await clickLogicalPoint(canvas, { x: 335, y: 272 });
+  await nextPaint();
+  expect(bounds(rectangle).handles).toBeGreaterThan(5);
+  await drag([335, 272], [425, 300]);
+  expect(Math.abs(bounds(rectangle).left - 376)).toBeLessThan(2);
+  await drag([475, 328], [515, 348]);
+  expect(bounds(rectangle).width).toBeGreaterThan(135);
+  await drag([445, 253], [503, 253]);
+  expect(bounds(rectangle).height).toBeGreaterThan(100);
+  await clickLogicalPoint(canvas, { x: 650, y: 400 });
+  await nextPaint();
+  expect(bounds(rectangle).handles).toBe(0);
+  for (const [color, from, to] of [
+    [
+      [101, 126, 155],
+      [447, 177],
+      [477, 207],
+    ],
+    [
+      [153, 114, 84],
+      [235, 175],
+      [205, 195],
+    ],
+  ] as const) {
+    const before = bounds(color);
+    await drag(from, to);
+    expect(
+      Math.abs(bounds(color).left - before.left - (to[0] - from[0])),
+    ).toBeLessThan(3);
+    expect(
+      Math.abs(bounds(color).top - before.top - (to[1] - from[1])),
+    ).toBeLessThan(3);
+  }
+  await clickLogicalPoint(canvas, { x: 550, y: 460 });
+  await nextPaint();
+  expect(bounds(rectangle).handles).toBe(0);
 });

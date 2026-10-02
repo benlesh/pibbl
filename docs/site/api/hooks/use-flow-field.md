@@ -35,7 +35,7 @@ field's local coordinates, with origin `[0, 0]`. Sampling outside the grid
 extends its edge velocity. A retained handle rejects sampling after disposal.
 
 Obstacle sources return committed batches; they do not share engine memory.
-Boxes rasterize to solid cells. Boundary normal velocity follows solid motion,
+Boxes, ellipses, and polygons rasterize to solid cells. Boundary normal velocity follows solid motion,
 while tangential velocity is free-slip. Grid resolution limits obstacle detail.
 
 Pass the field as `useParticleSystem(effect, { flow })` to advect particle
@@ -50,3 +50,27 @@ reborn. It cannot reappear when the obstacle moves away. Its ledger slot remains
 reserved until normal lifetime expiry or recycling. Sprite pixels can still
 extend across a solid boundary; this is center-based transport, not sprite
 clipping or volumetric occlusion.
+
+## Timing, replay, and ownership
+
+Physics obstacles, field velocities, and particle positions have separate
+committed snapshots. A field step reads the last committed physics snapshot;
+particle transport reads the last committed field. This deliberate pipeline
+keeps sibling registration order from changing the result. It is not a promise
+that particles see a rigid body's new position in the same simulation step.
+
+The field uses fixed steps with bounded catch-up; transport uses midpoint
+integration with swept solid-cell checks. Stateful trajectories depend on the
+sequence of frame times, source changes, and committed obstacle snapshots, not
+just a seed and final elapsed time. The public particle system has no seek
+command. Restarting a particle system clears its population, but does not reset
+a field shared with other systems. Replay requires recreating the field and
+replaying the same input and frame sequence; cross-engine bitwise floating-point
+identity is not promised.
+
+Enabled sources and advancing particle systems retain the field's clock.
+Disabling/removing the last source and pausing/stopping the last consumer freezes
+the field until work resumes. Removing the field owner disposes it; keep that
+owner mounted for as long as any source or particle system uses the handle.
+Failed obstacle reads leave the committed field unchanged and can be retried on
+a later frame. Failed initial mounts release their clocks and field storage.

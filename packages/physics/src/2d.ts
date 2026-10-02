@@ -180,9 +180,9 @@ export {
   type CRCPhysicsDebug2DProps,
 } from "./lib/2d/canvas/debug.js";
 
-/** A borrowed committed box batch, structurally compatible with a flow obstacle source. */
-export function physicsBoxObstacles2D(world: CRCPhysicsWorldHandle2D): Readonly<{
-  read(): Readonly<{ revision: number; boxes: Float64Array }>;
+/** A borrowed committed solid batch, structurally compatible with a flow obstacle source. */
+export function physicsObstacles2D(world: CRCPhysicsWorldHandle2D): Readonly<{
+  read(): Readonly<{ revision: number; boxes: Float64Array; ellipses: Float64Array; polygons: Float64Array }>;
 }> {
-  return requirePhysicsWorld2DController(world).getBoxObstacleSource();
+  return requirePhysicsWorld2DController(world).getObstacleSource();
 }

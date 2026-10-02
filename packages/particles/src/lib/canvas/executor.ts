@@ -415,6 +415,7 @@ export function createCanvasParticleExecutor(
     context.globalCompositeOperation =
       renderer.blend === "additive" ? "lighter" : "source-over";
 
+    const { a, b, c, d, e, f } = baseTransform;
     let slot = emitterLedger.oldestSlot;
     let visited = 0;
     while (
@@ -444,10 +445,15 @@ export function createCanvasParticleExecutor(
               registers[Particle2DRegister.X]! + emitterLedger.origins[slot * 2]!;
             const y = population ? population.positions[slot * 2 + 1]! :
               registers[Particle2DRegister.Y]! + emitterLedger.origins[slot * 2 + 1]!;
-            context.setTransform(baseTransform);
-            context.translate(x, y);
-            context.rotate(
-              registers[Particle2DRegister.Rotation]! * DEGREES_TO_RADIANS,
+            const angle = registers[Particle2DRegister.Rotation]! * DEGREES_TO_RADIANS;
+            // Compose B × translate(x, y) × rotate(angle) in one Canvas call.
+            // Zero rotation is common for smoke and avoids trigonometry entirely.
+            const cosine = angle === 0 ? 1 : Math.cos(angle);
+            const sine = angle === 0 ? 0 : Math.sin(angle);
+            context.setTransform(
+              a * cosine + c * sine, b * cosine + d * sine,
+              c * cosine - a * sine, d * cosine - b * sine,
+              a * x + c * y + e, b * x + d * y + f,
             );
             context.globalAlpha = baseAlpha * alpha;
             const colorKey = renderer.type === "sprite" ? 0 : fillColor(context);

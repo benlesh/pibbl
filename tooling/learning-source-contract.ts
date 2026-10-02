@@ -1528,6 +1528,9 @@ export function validateLearningSourceText(
     (sourcePath === undefined &&
       (label === "three-instancing" ||
         label === 'Learning example "three-instancing"'));
+  const isFlowLesson =
+    sourcePath === "packages/scenarios/src/learning/composition/fire-and-flow.example.tsx" ||
+    (sourcePath === undefined && (label === "fire-and-flow" || label === 'Learning example "fire-and-flow"'));
   const isPhysicsLesson =
     sourcePath === PHYSICS_LEARNING_SOURCE_PATH ||
     sourcePath ===
@@ -1539,8 +1542,11 @@ export function validateLearningSourceText(
         label === 'Learning example "physics-2d"'));
   const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE);
   const isTextLesson = inspection.packageImportModules.includes("@crc/text");
-  const hasExactPackageImports =
-    isVizLesson || isTextLesson || inspection.packageImportModules.includes("@crc/textures")
+  const hasExactPackageImports = isFlowLesson
+    ? inspection.hasNamedValueCoreImport && inspection.hasNamedValueParticlesImport &&
+      inspection.hasPhysics2DValueImport && !inspection.hasPhysics3DValueImport &&
+      !inspection.hasNamedValueWebGLImport && inspection.packageImportModules.length === 3
+    : isVizLesson || isTextLesson || inspection.packageImportModules.includes("@crc/textures")
       ? inspection.hasNamedValueCoreImport &&
         inspection.packageImportModules.length === 2
       : isThreeLesson

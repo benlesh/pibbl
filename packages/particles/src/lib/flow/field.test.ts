@@ -38,7 +38,7 @@ describe("obstacle-aware flow", () => {
     const field = new FlowFieldKernel2D(16, 16, 160, 160);
     const bytes = field.byteLength;
     field.setBoxes(new Float64Array([80, 80, 20, 20, 0, 0, 0, 0, 80, 80]));
-    expect(() => field.setBoxes(new Float64Array([1, 2]))).toThrow(/box/);
+    expect(() => field.setBoxes(new Float64Array([1, 2]))).toThrow(/obstacle/);
     for (let i = 0; i < 10; i++) field.advance(1 / 60);
     expect(field.byteLength).toBe(bytes);
     expect(field.isSolid(80, 80)).toBe(true);
@@ -96,11 +96,13 @@ it("carries buoyancy with the plume so smoke rises past the obstacle", () => {
   }
 });
 
-it('rasterizes ellipse and triangle outlines rather than their bounding boxes', () => {
+it("rasterizes ellipse and triangle outlines rather than their bounding boxes", () => {
   const field = new FlowFieldKernel2D(48, 48, 480, 480);
   field.setObstacles({
     ellipses: new Float64Array([120, 120, 60, 30, 0, 20, 0, 0, 120, 120]),
-    polygons: new Float64Array([3, 0, -10, 0, 300, 130, 240, 180, 300, 60, 360, 180]),
+    polygons: new Float64Array([
+      3, 0, -10, 0, 300, 130, 240, 180, 300, 60, 360, 180,
+    ]),
   });
   expect(field.isSolid(120, 120)).toBe(true);
   expect(field.isSolid(170, 140)).toBe(false);
@@ -108,6 +110,8 @@ it('rasterizes ellipse and triangle outlines rather than their bounding boxes', 
   expect(field.isSolid(250, 80)).toBe(false);
   field.advance(1 / 60);
   expect(field.maximumSolidFluxError()).toBe(0);
-  expect(() => field.setObstacles({ polygons: new Float64Array([3, 0, 0, 0, 0, 0, 1]) })).toThrow();
+  expect(() =>
+    field.setObstacles({ polygons: new Float64Array([3, 0, 0, 0, 0, 0, 1]) }),
+  ).toThrow();
   expect(field.isSolid(300, 120)).toBe(true);
 });

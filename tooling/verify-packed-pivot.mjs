@@ -199,13 +199,14 @@ try {
     "@crc/particles": `file:${particles.file}`,
   });
   assert.ok(!existsSync(join(particleDir, "node_modules/three")));
+  assert.ok(!existsSync(join(particleDir, "node_modules/@crc/physics")));
   const particleBundle = await bundle(
-    `import { defineParticleEffect2D, particleRange } from '@crc/particles'; console.log(defineParticleEffect2D({ emitters: [{ name: 'spark', capacity: 1, emission: [{ type: 'rate', particlesPerSecond: 1 }], shape: { type: 'point' }, initial: { lifetimeMilliseconds: particleRange(100, 200) }, renderer: { type: 'circle' } }] }).dimension);`,
+    `import { defineParticleEffect2D, particleRange, useFlowField2D, useFlowSource2D } from '@crc/particles'; console.log(useFlowField2D, useFlowSource2D, defineParticleEffect2D({ emitters: [{ name: 'spark', capacity: 1, emission: [{ type: 'rate', particlesPerSecond: 1 }], shape: { type: 'point' }, initial: { lifetimeMilliseconds: particleRange(100, 200) }, renderer: { type: 'circle' } }] }).dimension);`,
     particleDir,
   );
   assert.ok(
     particleBundle.inputs.every(
-      (input) => !input.includes("/node_modules/three/"),
+      (input) => !input.includes("/node_modules/three/") && !input.includes("/node_modules/@crc/physics/"),
     ),
   );
   assert.ok(!particleBundle.code.includes("gl_InstanceID"));

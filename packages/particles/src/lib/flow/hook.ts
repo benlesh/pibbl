@@ -19,6 +19,8 @@ export interface CRCFlowObstacleBatch2D {
   readonly revision: number;
   /** cx, cy, halfWidth, halfHeight, radians, vx, vy, omega, COM x/y. */
   readonly boxes: Float64Array;
+  readonly ellipses?: Float64Array;
+  readonly polygons?: Float64Array;
 }
 export interface CRCFlowObstacleSource2D {
   /** Returns committed simulation state. Buffers are borrowed for this call only. */
@@ -49,7 +51,7 @@ export interface CRCFlowSourceOptions2D {
 }
 const controllers = new WeakMap<CRCFlowField2D, FlowController2D>();
 const STEP = 1000 / 60;
-const EMPTY_BOXES = new Float64Array(0);
+const EMPTY_OBSTACLES = Object.freeze({ boxes: new Float64Array(0) });
 
 /** Private coupling point; ordinary callers see only the read-only field handle. */
 export function getFlowController2D(handle: CRCFlowField2D): FlowController2D {
@@ -167,11 +169,11 @@ export class FlowController2D {
           candidate.copyFrom(committed);
           const obstacles = this.options.obstacles?.read();
           const nextObstacleRevision = obstacles?.revision;
-          if (
+          const obstaclesChanged =
             this.obstacleSourceChanged ||
-            nextObstacleRevision !== this.obstacleRevision
-          ) {
-            candidate.setBoxes(obstacles?.boxes ?? EMPTY_BOXES);
+            nextObstacleRevision !== this.obstacleRevision;
+          if (obstaclesChanged) {
+            candidate.setObstacles(obstacles ?? EMPTY_OBSTACLES);
           }
           for (let i = 0; i < steps; i++)
             candidate.advance(
@@ -179,7 +181,7 @@ export class FlowController2D {
               this.sourceList,
               this.options.buoyancy ?? -300,
             );
-          if (steps > 0 || nextObstacleRevision !== this.obstacleRevision) {
+          if (steps > 0 || obstaclesChanged) {
             batch.stage(this.revision, this.revision.get() + 1, this);
           }
           crcInternalQueueSimulationCommitAcknowledgement(
