@@ -116,6 +116,12 @@
       "unitPrefix": "d"
     },
     {
+      "id": "tree-shakeable-filters-and-texture-effects",
+      "path": "docs/superpowers/specs/2026-10-01-tree-shakeable-filters-and-texture-effects-design.md",
+      "sourceSha256": "7be27fa1761318f6dbd2203880517bdd504c202d2d860fab4a9e0f918aeeb9d2",
+      "unitPrefix": "n"
+    },
+    {
       "id": "path-bending",
       "path": "docs/superpowers/specs/2026-09-30-path-bending-design.md",
       "sourceSha256": "a0565e2cfe7a28f00ed2e7393a50195985755a114aba895d5ff81a36171fc63f",
@@ -14918,197 +14924,300 @@
     {
       "path": "docs/design/textures-contract.md",
       "unitPrefix": "x",
-      "currentUnitCount": 12,
-      "currentUnitsSha256": "3563c2f689010c23decec52074c1e5b99086b59f79ed4d762f08aeb45baa9ad1",
-      "approvalRecordId": "procedural-textures",
+      "currentUnitCount": 21,
+      "currentUnitsSha256": "e4983f99ceaece66b4f1b27b41ac5a451bada56bd0251b6baf4e620325d47092",
+      "approvalRecordId": "tree-shakeable-filters-and-texture-effects",
       "mappings": [
         {
           "id": "textures-2",
           "currentIds": [
-            "x0001",
-            "x0002"
+            "x0001"
           ],
-          "reason": "x0001 and x0002 records the implemented procedural textures contract behavior authorized by d0001 and d0002; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "reason": "x0001 records the implemented status authorized by tree-shakeable-filters-and-texture-effects n0001 for this approved texture-effects contract.",
           "approval": {
-            "recordId": "procedural-textures",
+            "recordId": "tree-shakeable-filters-and-texture-effects",
             "unitIds": [
-              "d0001",
-              "d0002"
+              "n0001"
             ]
           },
           "sharedAnchors": [
-            "textures",
-            "defineRenderLayer"
+            "Status",
+            "2026-10-01"
           ]
         },
         {
           "id": "textures-3",
           "currentIds": [
-            "x0003"
+            "x0002",
+            "x0003",
+            "x0004"
           ],
-          "reason": "x0003 records the implemented persistence and timing behavior authorized by d0003; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "reason": "x0002 x0003 and x0004 record the public texture authoring and producer callback surface authorized by tree-shakeable-filters-and-texture-effects n0005 n0049 and n0053.",
           "approval": {
-            "recordId": "procedural-textures",
+            "recordId": "tree-shakeable-filters-and-texture-effects",
             "unitIds": [
-              "d0003"
+              "n0005",
+              "n0049",
+              "n0053"
             ]
           },
           "sharedAnchors": [
-            "simulation",
-            "raster"
+            "texture",
+            "useTexture"
           ]
         },
         {
           "id": "textures-4",
           "currentIds": [
-            "x0004"
+            "x0005",
+            "x0006",
+            "x0007"
           ],
-          "reason": "x0004 records the implemented persistence and timing behavior authorized by d0004; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "reason": "x0005 x0006 and x0007 record handles, paint placement, ownership, and private consumption authorized by tree-shakeable-filters-and-texture-effects n0049 n0050 n0052 and n0053.",
           "approval": {
-            "recordId": "procedural-textures",
+            "recordId": "tree-shakeable-filters-and-texture-effects",
             "unitIds": [
-              "d0004"
+              "n0049",
+              "n0050",
+              "n0052",
+              "n0053"
             ]
           },
           "sharedAnchors": [
-            "steps",
-            "periodic"
+            "texture",
+            "placement",
+            "owner"
           ]
         },
         {
           "id": "textures-5",
           "currentIds": [
-            "x0005"
+            "x0008",
+            "x0009",
+            "x0010"
           ],
-          "reason": "x0005 records the implemented persistence and timing behavior authorized by d0005; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "reason": "x0008 x0009 and x0010 record committed publication, retry, and logical scheduling authorized by tree-shakeable-filters-and-texture-effects n0076 n0077 and n0079.",
           "approval": {
-            "recordId": "procedural-textures",
+            "recordId": "tree-shakeable-filters-and-texture-effects",
             "unitIds": [
-              "d0005"
+              "n0076",
+              "n0077",
+              "n0079"
             ]
           },
           "sharedAnchors": [
-            "signals",
-            "callback"
+            "Commit",
+            "candidate",
+            "frame"
           ]
         },
         {
           "id": "textures-6",
           "currentIds": [
-            "x0006"
+            "x0011"
           ],
-          "reason": "x0006 records the implemented input and update semantics behavior authorized by d0006; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "reason": "x0011 records synchronous raster borrowing and consumer ownership authorized by tree-shakeable-filters-and-texture-effects n0050 n0051 and n0052.",
           "approval": {
-            "recordId": "procedural-textures",
+            "recordId": "tree-shakeable-filters-and-texture-effects",
             "unitIds": [
-              "d0006"
+              "n0050",
+              "n0051",
+              "n0052"
             ]
           },
           "sharedAnchors": [
-            "pointer",
-            "stamps"
+            "borrow",
+            "raster",
+            "texture"
           ]
         },
         {
           "id": "textures-7",
           "currentIds": [
-            "x0007"
+            "x0012",
+            "x0013"
           ],
-          "reason": "x0007 records the implemented input and update semantics behavior authorized by d0007; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "reason": "x0012 and x0013 record displacement semantics and the optional GPU capability boundary authorized by tree-shakeable-filters-and-texture-effects n0056 n0057 n0058 n0062 n0063 and n0065.",
           "approval": {
-            "recordId": "procedural-textures",
+            "recordId": "tree-shakeable-filters-and-texture-effects",
             "unitIds": [
-              "d0007"
+              "n0056",
+              "n0057",
+              "n0058",
+              "n0062",
+              "n0063",
+              "n0065"
             ]
           },
           "sharedAnchors": [
-            "palette",
-            "capture"
+            "displacement",
+            "WebGL2",
+            "texture"
           ]
         },
         {
           "id": "textures-8",
           "currentIds": [
-            "x0008"
+            "x0014"
           ],
-          "reason": "x0008 records the implemented input and update semantics behavior authorized by d0008; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "reason": "x0014 records periodic water-wave generation, messages, timing, and independent packaging authorized by tree-shakeable-filters-and-texture-effects n0007 n0069 n0070 n0071 n0072 and n0075.",
           "approval": {
-            "recordId": "procedural-textures",
+            "recordId": "tree-shakeable-filters-and-texture-effects",
             "unitIds": [
-              "d0008"
+              "n0007",
+              "n0069",
+              "n0070",
+              "n0071",
+              "n0072",
+              "n0075"
             ]
           },
           "sharedAnchors": [
-            "periodic",
-            "grain"
+            "water",
+            "speed",
+            "texture"
           ]
         },
         {
           "id": "textures-9",
           "currentIds": [
-            "x0009"
+            "x0015"
           ],
-          "reason": "x0009 records the implemented composition and borrowing behavior authorized by d0009; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "reason": "x0015 preserves the existing component ownership behavior required by tree-shakeable-filters-and-texture-effects n0006 and n0021, with procedural-textures d0001 d0002 d0003 d0004 and d0005 retaining its concrete legacy guarantees.",
           "approval": {
-            "recordId": "procedural-textures",
+            "recordId": "tree-shakeable-filters-and-texture-effects",
             "unitIds": [
-              "d0009"
+              "n0006",
+              "n0021"
             ]
           },
           "sharedAnchors": [
-            "mask",
-            "synchronous"
+            "component",
+            "texture",
+            "render"
+          ],
+          "supplementalApprovals": [
+            {
+              "recordId": "procedural-textures",
+              "unitIds": [
+                "d0001",
+                "d0002",
+                "d0003",
+                "d0004",
+                "d0005"
+              ]
+            }
           ]
         },
         {
           "id": "textures-10",
           "currentIds": [
-            "x0010"
+            "x0016"
           ],
-          "reason": "x0010 records the implemented composition and borrowing behavior authorized by d0010; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "reason": "x0016 preserves existing component update and timing behavior required by tree-shakeable-filters-and-texture-effects n0006 and n0021, with procedural-textures d0006 d0007 and d0008 retaining the legacy field guarantees.",
           "approval": {
-            "recordId": "procedural-textures",
+            "recordId": "tree-shakeable-filters-and-texture-effects",
             "unitIds": [
-              "d0010"
+              "n0006",
+              "n0021"
             ]
           },
           "sharedAnchors": [
-            "sources",
-            "painting"
+            "field",
+            "texture",
+            "palette"
+          ],
+          "supplementalApprovals": [
+            {
+              "recordId": "procedural-textures",
+              "unitIds": [
+                "d0006",
+                "d0007",
+                "d0008"
+              ]
+            }
           ]
         },
         {
           "id": "textures-11",
           "currentIds": [
-            "x0011"
+            "x0017"
           ],
-          "reason": "x0011 records the implemented resource release and errors behavior authorized by d0011; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "reason": "x0017 preserves existing component presentation, borrowing, release, and error behavior required by tree-shakeable-filters-and-texture-effects n0006 and n0021, with procedural-textures d0009 d0010 and d0011 retaining the concrete legacy guarantees.",
           "approval": {
-            "recordId": "procedural-textures",
+            "recordId": "tree-shakeable-filters-and-texture-effects",
             "unitIds": [
-              "d0011"
+              "n0006",
+              "n0021"
             ]
           },
           "sharedAnchors": [
-            "disposal",
-            "errors"
+            "component",
+            "texture",
+            "raster"
+          ],
+          "supplementalApprovals": [
+            {
+              "recordId": "procedural-textures",
+              "unitIds": [
+                "d0009",
+                "d0010",
+                "d0011"
+              ]
+            }
           ]
         },
         {
           "id": "textures-12",
           "currentIds": [
-            "x0012"
+            "x0018",
+            "x0019"
           ],
-          "reason": "x0012 records the implemented evidence behavior authorized by d0012; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "reason": "x0018 and x0019 record release, disposal, and non-rollback failures authorized by tree-shakeable-filters-and-texture-effects n0083 n0088 n0089 n0092 and n0093.",
           "approval": {
-            "recordId": "procedural-textures",
+            "recordId": "tree-shakeable-filters-and-texture-effects",
             "unitIds": [
-              "d0012"
+              "n0083",
+              "n0088",
+              "n0089",
+              "n0092",
+              "n0093"
             ]
           },
           "sharedAnchors": [
-            "Studio",
-            "evidence"
+            "hook",
+            "texture",
+            "dispose"
+          ]
+        },
+        {
+          "id": "textures-13",
+          "currentIds": [
+            "x0020",
+            "x0021"
+          ],
+          "reason": "x0020 and x0021 record appearance-only boundaries and focused behavior and packed-consumer evidence authorized by tree-shakeable-filters-and-texture-effects n0008 n0025 n0081 n0082 n0094 n0112 n0113 n0114 n0116 n0120 n0121 and n0122.",
+          "approval": {
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": [
+              "n0008",
+              "n0025",
+              "n0081",
+              "n0082",
+              "n0094",
+              "n0112",
+              "n0113",
+              "n0114",
+              "n0116",
+              "n0120",
+              "n0121",
+              "n0122"
+            ]
+          },
+          "sharedAnchors": [
+            "texture",
+            "filter",
+            "displacement"
           ]
         }
       ]
