@@ -1,3 +1,5 @@
+import { peekNativeFilterPool } from './filter/render-filter-boundary';
+import { blur, grayscale } from '@crc/core/filters';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   Circle,
@@ -288,7 +290,7 @@ describe('crc root updates', () => {
             width: 8,
             height: 8,
             fill: 'red',
-            filter: { type: 'blur', radius: 1 },
+            filter: blur({ radius: 1 }),
           },
         }),
       ]);
@@ -299,7 +301,7 @@ describe('crc root updates', () => {
       expect(cleanups).toBe(0);
       expect(failed.refs.size).toBe(0);
       expect(failed.eventRoot.targets.size).toBe(0);
-      expect(failed.filterSurfacePool.snapshot()).toMatchObject({
+      expect(peekNativeFilterPool(failed)!.snapshot()).toMatchObject({
         activePairs: 0,
         pairCheckouts: 1,
         pairReturns: 1,
@@ -313,12 +315,12 @@ describe('crc root updates', () => {
           width: 8,
           height: 8,
           fill: 'green',
-          filter: { type: 'grayscale', amount: 1 },
+          filter: grayscale({ amount: 1 }),
         },
       }));
       expect(() => pending?.(1)).not.toThrow();
       expect(getCRCInstance(canvas).refs.size).toBe(1);
-      expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+      expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
         activePairs: 0,
         pairCheckouts: 2,
         pairReturns: 2,

@@ -1,3 +1,4 @@
+import { dropShadow } from '@crc/core/filters';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../test-utils/component-test';
@@ -174,12 +175,7 @@ describe('clip', () => {
       const canvas = await componentTest(createElement(Clip, {
         style: {
           d: clipPath,
-          filter: {
-            type: 'dropShadow',
-            offsetX: 20,
-            offsetY: 0,
-            color: 'black',
-          },
+          filter: dropShadow({ offsetX: 20, offsetY: 0, color: 'black' }),
         },
         children: createElement(Rectangle, {
           style: { x: 5, y: 5, width: 10, height: 10, fill: 'red' },
@@ -202,12 +198,7 @@ describe('clip', () => {
         style: { d: clipPath },
         children: createElement(Group, {
           style: {
-            filter: {
-              type: 'dropShadow',
-              offsetX: 20,
-              offsetY: 0,
-              color: 'black',
-            },
+            filter: dropShadow({ offsetX: 20, offsetY: 0, color: 'black' }),
           },
           children: createElement(Rectangle, {
             style: { x: 5, y: 5, width: 10, height: 10, fill: 'red' },
@@ -229,12 +220,7 @@ describe('clip', () => {
       const onClick = vi.fn();
       const canvas = await componentTest(createElement(Group, {
         style: {
-          filter: {
-            type: 'dropShadow',
-            offsetX: 20,
-            offsetY: 0,
-            color: 'black',
-          },
+          filter: dropShadow({ offsetX: 20, offsetY: 0, color: 'black' }),
         },
         children: createElement(Clip, {
           style: { d: clipPath },
