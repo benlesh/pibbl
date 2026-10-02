@@ -1,8 +1,9 @@
 # Animated displacement cost probe — 2026-10-01
 
-> **Historical status — 2026-10-01.** This opt-in measurement harness records
-> machine-specific investigative evidence. It is not a performance promise or
-> a default correctness gate.
+> **Historical status: Performance investigation record; current behavior is defined by runtime contracts.**
+
+This opt-in measurement harness records machine-specific investigative evidence.
+It is not a performance promise or a default correctness gate.
 
 Run the opt-in Chromium probe sequentially:
 
