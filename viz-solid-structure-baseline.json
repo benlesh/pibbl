@@ -1,0 +1,39 @@
+{
+  "legacy": true,
+  "results": [
+    {
+      "count": 100,
+      "afterMount": {
+        "targets": 100,
+        "paintEntries": 100,
+        "fillCalls": 100,
+        "fillTextCalls": 22,
+        "isPointInPathCalls": 51
+      },
+      "afterUpdate": {
+        "targets": 100,
+        "paintEntries": 100,
+        "fillCalls": 100,
+        "fillTextCalls": 21,
+        "isPointInPathCalls": 51
+      }
+    },
+    {
+      "count": 1000,
+      "afterMount": {
+        "targets": 1000,
+        "paintEntries": 1000,
+        "fillCalls": 1000,
+        "fillTextCalls": 6,
+        "isPointInPathCalls": 730
+      },
+      "afterUpdate": {
+        "targets": 1000,
+        "paintEntries": 1000,
+        "fillCalls": 1000,
+        "fillTextCalls": 6,
+        "isPointInPathCalls": 730
+      }
+    }
+  ]
+}
