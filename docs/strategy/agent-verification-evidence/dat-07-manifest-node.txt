@@ -1,0 +1,22 @@
+✔ records completed assertions and retains failure operands with exact action identity (1.08375ms)
+✔ pending async checks remain non-passing until the assertion settles (0.077334ms)
+✔ invalid identities and exhausted capacity cannot execute assertions (0.444417ms)
+✔ errors arriving after provisional success cannot produce a passing report (0.595041ms)
+✔ overflow and transport failures also invalidate provisional success (0.061709ms)
+✔ clean shutdown passes but existing failure or blocked evidence is preserved (0.047416ms)
+✔ a pass label cannot hide missing or unfinished required actions (0.103625ms)
+✔ required action identities reject substitutions, duplicates and reordered evidence (0.109875ms)
+✔ invalid required action manifests cannot silently certify a run (0.183708ms)
+✔ explicit check outcomes retain non-pass reasons and cannot certify missing required evidence (0.110291ms)
+✔ optional skipped or inapplicable checks remain visible without becoming passed checks (0.058625ms)
+✔ rejects unknown, ambiguous and reasonless check records instead of treating them as success (0.07375ms)
+✔ a declared check manifest prevents passing a completed subset or relabeling required checks (0.223375ms)
+✔ declares independent immutable check manifests for both replay recipes (0.651791ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 35.600291

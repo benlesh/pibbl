@@ -91,6 +91,17 @@ export interface TargetingSnapshot {
   readonly coordinateSpace: 'root-logical';
   readonly recordLimit: number;
 }
+export interface TargetingPage {
+  readonly status: 'ready' | 'unavailable' | 'invalid' | 'cursor-expired';
+  readonly generation: TargetingGeneration | null;
+  readonly completeness: TargetingSnapshot['completeness'];
+  readonly records: readonly TargetingRecord[];
+  readonly totalRecords: number | null;
+  readonly retainedRecords: number;
+  readonly remaining: number;
+  readonly nextCursor: string | null;
+  readonly reason: string | null;
+}
 /** Identifies tested committed geometry, not the source component that declared it. */
 export interface TargetingExclusion {
   readonly kind: 'clip' | 'surface-bounds';
@@ -147,7 +158,7 @@ const CLIP_REFERENCE_LIMIT = 128;
 let nextSession = 0;
 
 /** Ephemeral traversal: all records and native-call budgets include descendants. */
-function collectEntries(root: CRCInstance) {
+function collectEntries(root: CRCInstance, recordLimit = RECORD_LIMIT, clipLimit = CLIP_REFERENCE_LIMIT) {
   const entries: { entry: CRCPaintEntry; transform: DOMMatrix; clips: readonly ObservedClip[]; surfacePath: readonly number[] }[] = [];
   let truncated = false;
   let clipReferences = 0;
@@ -156,9 +167,9 @@ function collectEntries(root: CRCInstance) {
     if (owner.mainTeardowns.closed) return;
     if (owner.requestedRenderRevision !== owner.completedRenderRevision) pending = true;
     for (const entry of owner.paintEntries) {
-      if (entries.length >= RECORD_LIMIT || surfacePath.length > 16) { truncated = true; return; }
+      if (entries.length >= recordLimit || surfacePath.length > 16) { truncated = true; return; }
       const clipCount = inherited.length + entry.clippingStack.length;
-      if (clipReferences + clipCount > CLIP_REFERENCE_LIMIT) { truncated = true; return; }
+      if (clipReferences + clipCount > clipLimit) { truncated = true; return; }
       clipReferences += clipCount;
       const transform = parent.multiply(entry.transform);
       const order = entries.length;
@@ -209,7 +220,7 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
     return id;
   }
 
-  function snapshot(): TargetingSnapshot {
+  function snapshot(recordLimit = RECORD_LIMIT, clipLimit = CLIP_REFERENCE_LIMIT): TargetingSnapshot {
     const root = rootRef?.deref();
     const host = canvasRef.deref();
     const scheduler = snapshotRealmScheduler();
@@ -217,7 +228,7 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
       root.mainTeardowns.closed || GLOBAL_STATE.crcInstances.get(host) !== root ? 'stale-root' :
       !root.surface.snapshot || root.renderGeneration === 0 ? 'unavailable' :
       scheduler.phase !== 'idle' || root.requestedRenderRevision !== root.completedRenderRevision ? 'pending' : 'ready';
-    const collected = status === 'ready' ? collectEntries(root!) : null;
+    const collected = status === 'ready' ? collectEntries(root!, recordLimit, clipLimit) : null;
     if (collected?.pending) status = 'pending';
     const generation = root && status !== 'disposed' && status !== 'stale-root' ? Object.freeze({
       session, render: root.renderGeneration,
@@ -293,8 +304,48 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
       schema: 'crc-targeting-prototype/1', status, generation,
       completeness: status !== 'ready' ? 'unavailable' : collected!.truncated ? 'truncated' : 'complete',
       totalRecords, records: Object.freeze(records), visibility: 'unavailable',
-      coordinateSpace: 'root-logical', recordLimit: RECORD_LIMIT,
+      coordinateSpace: 'root-logical', recordLimit,
       pendingRealmWork: scheduler.pendingHostFrames > 0,
+    });
+  }
+
+  // One immutable, bounded expansion. It contains no live runtime objects.
+  let retained: TargetingSnapshot | null = null;
+  let pageSequence = 0;
+  function page(cursor?: string): TargetingPage {
+    const failure = (status: TargetingPage['status'], reason: string): TargetingPage => Object.freeze({
+      status, reason, generation: null, completeness: 'unavailable', records: Object.freeze([]),
+      totalRecords: null, retainedRecords: 0, remaining: 0, nextCursor: null,
+    });
+    let offset = 0;
+    if (cursor !== undefined) {
+      if (typeof cursor !== 'string' || cursor.length > 96 || !/^\d+:\d+:\d+$/.test(cursor)) return failure('invalid', 'Malformed scene cursor.');
+      const [owner, sequence, index] = cursor.split(':').map(Number);
+      if (![owner, sequence, index].every(Number.isSafeInteger) || owner < 1 || sequence < 1 || `${owner}:${sequence}:${index}` !== cursor || index < 32 || index % 32 !== 0) return failure('invalid', 'Invalid scene cursor offset.');
+      if (owner !== session || sequence !== pageSequence || !retained || disposed) return failure('cursor-expired', 'The retained scene expansion was replaced or released.');
+      const current = snapshot(256, 512);
+      if (current.status !== 'ready' || JSON.stringify(current.generation) !== JSON.stringify(retained.generation)) {
+        retained = null;
+        return failure('cursor-expired', 'The mount or committed generation changed or has pending work.');
+      }
+      if (index >= retained.records.length) return failure('invalid', 'Cursor is outside the retained expansion.');
+      offset = index;
+    } else {
+      pageSequence++;
+      retained = null;
+      const captured = snapshot(256, 512);
+      if (captured.status !== 'ready') return failure('unavailable', `Scene is ${captured.status}.`);
+      retained = captured;
+    }
+    const captured = retained!;
+    const records = Object.freeze(captured.records.slice(offset, offset + 32));
+    const end = offset + records.length;
+    return Object.freeze({
+      status: 'ready', generation: captured.generation, completeness: captured.completeness,
+      records, totalRecords: captured.totalRecords, retainedRecords: captured.records.length,
+      remaining: captured.records.length - end,
+      nextCursor: end < captured.records.length ? `${session}:${pageSequence}:${end}` : null,
+      reason: captured.completeness === 'truncated' ? 'Expansion stopped at record, clip-reference or depth budget; no continuation beyond the retained prefix.' : null,
     });
   }
 
@@ -462,7 +513,7 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
   }
 
   return Object.freeze({
-    snapshot, probe, convert, identifyTarget, findInteractionPoint,
-    dispose() { disposed = true; targetIds = new WeakMap(); boundaryIds = new WeakMap(); },
+    snapshot: () => snapshot(), page, probe, convert, identifyTarget, findInteractionPoint,
+    dispose() { disposed = true; retained = null; targetIds = new WeakMap(); boundaryIds = new WeakMap(); },
   });
 }

@@ -1,0 +1,21 @@
+✔ summary omits bulky observations; explicit action and manifest views retain exact data (4.797791ms)
+✔ checkpoint views cannot promote a completed subset to final success (0.920375ms)
+✔ ambiguous/missing actions and invalid or oversized evidence reject (7.145459ms)
+✔ summary reports omitted actions explicitly and remains compact (1.684167ms)
+✔ summary includes secondary failure categories without conflating them with operation errors (1.081417ms)
+✔ checkpoint summary preserves clock identity and correlation limits (1.447583ms)
+✔ summarizes explicit non-pass check reasons and refuses unknown outcome enums (2.976542ms)
+✔ retrieves one identified assertion failure with its action and operands (1.589583ms)
+✔ exposes declared check expectations separately from completed checks (1.217875ms)
+✔ check expectations alone cannot masquerade as a missing run manifest (1.445166ms)
+✔ pages saved action records with content-bound cursors and explicit checkpoint history (2.715083ms)
+✔ bounds pagination and rejects malformed or mismatched cursors instead of silently restarting (1.245166ms)
+✔ rejects noncanonical encoded cursors rather than accepting whitespace aliases (0.720792ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 71.215167

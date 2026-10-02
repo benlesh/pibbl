@@ -1,3 +1,4 @@
+import { validCheckOutcomes, requiredCheckFailure } from './replay-outcome.mjs';
 import { isDeepStrictEqual } from 'node:util';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -39,6 +40,14 @@ export function compareReplayReports(before, after) {
     if (environment && Object.hasOwn(environment, 'observedPage') && !validObservedEnvironment(environment.observedPage)) {
       reasons.push(`${side}:observed-environment-unavailable-or-invalid`);
     }
+    if (value.checks !== undefined) {
+      if (!validCheckOutcomes(value.checks)) reasons.push(`${side}:invalid-check-outcomes`);
+      else if (value.status === 'pass' && value.checks.some(check => check.status === 'fail' || (check.required && check.status !== 'pass'))) reasons.push(`${side}:contradictory-check-pass`);
+    }
+    if (value.requiredChecks !== undefined) {
+      const failure = requiredCheckFailure(value.requiredChecks, value.checks);
+      if (failure && (value.status === 'pass' || failure.category === 'invalid-required-check-manifest')) reasons.push(`${side}:${failure.category}`);
+    }
     const required = value.requiredActions;
     if (!Array.isArray(required) || !required.length || required.length > 128 || required.some(id => typeof id !== 'string' || !id || id.length > 128) || new Set(required).size !== required.length) {
       reasons.push(`${side}:action-manifest-invalid`);
@@ -52,6 +61,7 @@ export function compareReplayReports(before, after) {
     ['schema', before?.schema, after?.schema], ['fixture-build', before?.expectedIdentity, after?.expectedIdentity],
     ['verifier-build', before?.run?.toolIdentity, after?.run?.toolIdentity], ['environment', before?.run?.environment, after?.run?.environment],
     ['browser', before?.browser, after?.browser], ['fixture-url', before?.url, after?.url], ['action-manifest', before?.requiredActions, after?.requiredActions],
+    ['check-manifest', before?.requiredChecks, after?.requiredChecks],
   ]) if (!isDeepStrictEqual(left, right)) reasons.push(`${name}:differs`);
   const base = { schema: 'crc-replay-comparison/1', verification: 'saved-evidence-only',
     environmentScope: before?.run?.environment?.observedPage === undefined && after?.run?.environment?.observedPage === undefined ? 'declared-only' : 'declared-and-initial-page-observation',
@@ -59,9 +69,10 @@ export function compareReplayReports(before, after) {
     scope: 'Exact recorded action data under matching declared provenance; not causal or pixel-equivalence proof.' };
   if (reasons.length) return { ...base, status: 'incomparable', reasons };
   return { ...base, status: 'comparable', outcome: { before: before.status, after: after.status },
+    checksChanged: !isDeepStrictEqual(before.checks, after.checks),
     failureEvidenceChanged: !isDeepStrictEqual(
-      ['failure', 'observationFailure', 'completionFailure', 'checkpointFailure', 'cleanupFailure', 'errors', 'droppedErrors', 'toolVerification'].map(key => before[key]),
-      ['failure', 'observationFailure', 'completionFailure', 'checkpointFailure', 'cleanupFailure', 'errors', 'droppedErrors', 'toolVerification'].map(key => after[key]),
+      ['checkCompletionFailure', 'checkFailure', 'failure', 'observationFailure', 'completionFailure', 'checkpointFailure', 'cleanupFailure', 'errors', 'droppedErrors', 'toolVerification'].map(key => before[key]),
+      ['checkCompletionFailure', 'checkFailure', 'failure', 'observationFailure', 'completionFailure', 'checkpointFailure', 'cleanupFailure', 'errors', 'droppedErrors', 'toolVerification'].map(key => after[key]),
     ),
     actions: before.requiredActions.map((actionId, index) => ({ actionId,
       before: before.steps[index]?.status ?? 'not-recorded', after: after.steps[index]?.status ?? 'not-recorded',

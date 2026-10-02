@@ -86,6 +86,8 @@ const publicGuidePaths = [
   "docs/site/learn/guides/procedural-textures.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/types/electric-textures.md",
+  "docs/site/api/types/texture-resources.md",
   "docs/site/api/components/reaction-diffusion.md",
   "docs/site/api/components/procedural-texture.md",
   "docs/site/api/types/textures.md",
@@ -227,6 +229,7 @@ const publicSiteMarkdownPaths = [
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
+  "docs/design/weighted-electric-sources-contract.md",
   "docs/design/textures-contract.md",
   "packages/textures/README.md",
   "AGENTS.md",
@@ -286,6 +289,7 @@ const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
+  "tooling/texture-wasm-spike/README.md",
   ".beads/README.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
   "tooling/studio-docs/fixtures/invalid-script.md",
@@ -2191,6 +2195,7 @@ const currentNormativeContractPaths = [
   ),
 ].sort();
 const postBaselineNormativeContractPaths = new Set([
+  "docs/design/weighted-electric-sources-contract.md",
   "docs/design/textures-contract.md",
   "docs/design/animation-contract.md",
   "docs/design/signals-and-scheduling-contract.md",

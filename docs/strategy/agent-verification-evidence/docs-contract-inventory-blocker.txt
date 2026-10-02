@@ -1,0 +1,40 @@
+$ node tooling/verify-docs-mutations.mjs
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Post-baseline preservation inventory must cover each current contract outside the dated snapshot
++ actual - expected
+
+  [
+-   'docs/design/weighted-electric-sources-contract.md',
+    'docs/design/textures-contract.md',
+    'docs/design/animation-contract.md',
+    'docs/design/signals-and-scheduling-contract.md',
+    'docs/design/physics-2d-contract.md',
+    'docs/design/render-layer-and-three-contract.md'
+
+    at file:///Users/benlesh/GitHub/crc/tooling/verify-docs.mjs:2233:8 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'docs/design/textures-contract.md',
+    'docs/design/animation-contract.md',
+    'docs/design/signals-and-scheduling-contract.md',
+    'docs/design/physics-2d-contract.md',
+    'docs/design/render-layer-and-three-contract.md'
+  ],
+  expected: [
+    'docs/design/weighted-electric-sources-contract.md',
+    'docs/design/textures-contract.md',
+    'docs/design/animation-contract.md',
+    'docs/design/signals-and-scheduling-contract.md',
+    'docs/design/physics-2d-contract.md',
+    'docs/design/render-layer-and-three-contract.md'
+  ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.15.0
+[ELIFECYCLE] Command failed with exit code 1.

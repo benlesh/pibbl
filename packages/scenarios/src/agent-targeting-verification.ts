@@ -1,3 +1,4 @@
+import type { createRuntimeCheckedInspector } from '../../../tooling/agent-verification/runtime-inspection.js';
 import type { createEventTrace } from '../../../tooling/agent-verification/events.js';
 import type { createSchedulerHistory } from '../../../tooling/agent-verification/scheduler.js';
 import type { probeHostPoint } from '../../../tooling/agent-verification/browser.js';
@@ -6,6 +7,7 @@ import { crc, createElement, computed, signal, type CRCLogicalMouseEvent, type C
 import type {
   createTargetingInspector,
   TargetingProbe,
+  TargetingPage,
   InteractionPointSearch,
   CoordinateConversion,
   TargetingSnapshot,
@@ -30,6 +32,9 @@ export type AgentTargetingAction =
   | 'dom-overlay'
   | 'remove-dom-overlay'
   | 'capture-drag'
+  | 'pagination-scene'
+  | 'scene-page-first'
+  | 'scene-page-next'
   | 'inspect'
   | 'inspect-outside-layer'
   | 'inspection-off'
@@ -53,6 +58,8 @@ export interface AgentTargetingDeliveryRecord {
 }
 
 export interface AgentTargetingState {
+  readonly runtimeCompatibility: Omit<ReturnType<typeof createRuntimeCheckedInspector>, 'inspector'> | null;
+  readonly scenePage: TargetingPage | null;
   readonly componentChanges: ReturnType<ReturnType<typeof createSignalInspector>['compareComponents']> | null;
   readonly eventTrace: ReturnType<ReturnType<typeof createEventTrace>['snapshot']> | null;
   readonly schedulerHistory: ReturnType<ReturnType<typeof createSchedulerHistory>['snapshot']> | null;
@@ -83,6 +90,7 @@ export const AGENT_TARGETING_ACTION_IDS: readonly AgentTargetingAction[] = [
   'dom-overlay',
   'remove-dom-overlay',
   'capture-drag',
+  'pagination-scene', 'scene-page-first', 'scene-page-next',
   'inspect',
   'inspect-outside-layer',
   'repair',
@@ -98,6 +106,7 @@ const TARGET_POINT = { x: 144, y: 112 } as const;
 
 function unavailableState() {
   return {
+    scenePage: null,
     componentChanges: null,
     schedulerHistory: null,
     eventTrace: null,
@@ -120,8 +129,18 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
   sourceId: AGENT_TARGETING_VERIFICATION_SOURCE_ID,
   actionIds: AGENT_TARGETING_ACTION_IDS,
   async mount(context: ScenarioMountContext<AgentTargetingState>) {
-    const inspectorFactory = import.meta.env.DEV && import.meta.env.MODE !== 'built' ?
-      (await import('../../../tooling/agent-verification/targeting.js')).createTargetingInspector : undefined;
+    const runtimeTools = import.meta.env.DEV && import.meta.env.MODE !== 'built' ?
+      await import('../../../tooling/agent-verification/runtime-inspection.js') : undefined;
+    const applicationIdentity = runtimeTools ? await import('../../../tooling/agent-verification/runtime-identity.js') : undefined;
+    let runtimeCompatibility: AgentTargetingState['runtimeCompatibility'] = null;
+    const inspectorFactory = runtimeTools && applicationIdentity ? (canvas: HTMLCanvasElement) => {
+      // Bind to the crc function actually used below, so differing resolution
+      // cannot silently compare the inspector's identity only with itself.
+      const binding = { ...applicationIdentity.captureRuntimeBinding(), runtime: crc };
+      const checked = runtimeTools.createRuntimeCheckedInspector(canvas, binding);
+      runtimeCompatibility = { status: checked.status, diagnostic: checked.diagnostic, reason: checked.reason };
+      return checked.inspector ?? undefined;
+    } : undefined;
     const signalInspectorFactory = import.meta.env.DEV && import.meta.env.MODE !== 'built' ?
       (await import('../../../tooling/agent-verification/signals.js')).createSignalInspector : undefined;
     const historyFactory = import.meta.env.DEV && import.meta.env.MODE !== 'built' ?
@@ -137,6 +156,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
     let removeOverlay = () => {};
     let disposed = false;
     let inspector: ReturnType<typeof createTargetingInspector> | undefined;
+    let sceneCursor: string | null = null;
     const mapCoordinates = (inspection: TargetingSnapshot, point: { readonly x: number; readonly y: number }) => inspection.generation && inspector ? {
       backing: inspector.convert(inspection.generation, 'root-logical', 'backing', point),
       cssContent: inspector.convert(inspection.generation, 'root-logical', 'css-content', point),
@@ -165,12 +185,13 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       if (root) signalInspector.labelComponent({ session: snapshot.session, componentId: root.componentId, renderGeneration: root.renderGeneration }, 'targeting-scene');
     };
     const enableSignalInspection = () => {
-      if (!signalInspectorFactory || signalInspector) return;
+      if (!signalInspectorFactory || signalInspector || !inspector) return;
       previousSignalSnapshot = undefined;
       signalInspector = signalInspectorFactory(context.canvas);
       for (const value of [mode, selectedItem, selections, deliveredTo, dormantMetric, selectionLabel]) signalInspector.register(value);
     };
     let latest: AgentTargetingState = {
+      runtimeCompatibility: null,
       mode: 'seed',
       domOverlayClicks: 0,
       expectedSelection: true,
@@ -214,7 +235,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       frame = requestAnimationFrame(poll);
     });
     const updateLatest = (update: Partial<AgentTargetingState>) => {
-      latest = { ...latest, ...update, renderCount, dormantMetricEvaluations, schedulerHistory: history?.snapshot() ?? null, eventTrace: eventTrace?.snapshot() ?? null };
+      latest = { ...latest, ...update, runtimeCompatibility, renderCount, dormantMetricEvaluations, schedulerHistory: history?.snapshot() ?? null, eventTrace: eventTrace?.snapshot() ?? null };
       publish();
     };
     const setMode = (nextMode: AgentTargetingMode) => {
@@ -327,7 +348,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
     enableSignalInspection();
     await settled();
     labelScene();
-    updateLatest({});
+    updateLatest({ inspectionEnabled: !!inspector });
     } catch (error) {
       dispose();
       throw error;
@@ -404,13 +425,23 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
           }
           case 'remove-dom-overlay': removeOverlay(); break;
           case 'capture-drag': setMode('capture-drag'); await settled(); break;
+          case 'pagination-scene': setMode('pagination'); await settled(); break;
+          case 'scene-page-first':
+          case 'scene-page-next': {
+            if (!inspector) throw new Error('Scene pages require enabled source-runtime inspection.');
+            if (actionId === 'scene-page-next' && !sceneCursor) throw new Error('No scene continuation; start a new scene query.');
+            const scenePage = inspector.page(actionId === 'scene-page-next' ? sceneCursor! : undefined);
+            sceneCursor = scenePage.nextCursor;
+            updateLatest({ scenePage });
+            break;
+          }
           case 'inspect': inspect(); break;
           case 'inspect-outside-layer': inspect({ x: 300, y: 112 }); break;
           case 'repair': setMode('repair'); await settled(); break;
           case 'seed': setMode('seed'); await settled(); break;
           case 'intentional-block': setMode('intentional-block'); await settled(); break;
           case 'inspection-off': signalInspector?.dispose(); signalInspector = undefined; previousSignalSnapshot = undefined; inspector?.dispose(); inspector = undefined; updateLatest({ inspectionEnabled: false, ...unavailableState() }); break;
-          case 'inspection-on': enableSignalInspection(); labelScene(); inspector ??= inspectorFactory?.(context.canvas); updateLatest({ inspectionEnabled: !!inspector }); break;
+          case 'inspection-on': inspector ??= inspectorFactory?.(context.canvas); enableSignalInspection(); labelScene(); updateLatest({ inspectionEnabled: !!inspector }); break;
           case 'reset': setMode('seed'); await settled(); break;
           default: throw new Error(`Unknown targeting verification action "${actionId}".`);
         }
@@ -449,11 +480,13 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       { label: 'Mode', value: state.mode },
       { label: 'Browser point', value: state.browserProbe ? JSON.stringify(state.browserProbe) : 'not captured' },
       { label: 'DOM overlay clicks', value: String(state.domOverlayClicks) },
+      { label: 'Scene page', value: JSON.stringify(state.scenePage) },
       { label: 'Focus observation', value: snapshotAvailable ? JSON.stringify(state.inspection.focus) : 'unavailable' },
       { label: 'Captured move', value: state.capturedDelivery ? JSON.stringify(state.capturedDelivery) : 'not captured' },
       { label: 'Logical capture owners', value: snapshotAvailable ? JSON.stringify(state.inspection.pointerCapture) : 'unavailable' },
       { label: 'Signal observation', value: state.signalInspection ? state.signalInspection.records.map(record => record.status === 'available' ? `${record.id}: ${record.kind} ${record.cache}/${record.validation} ${JSON.stringify(record.preview)} deps:${record.dependencies.edges.map(edge => edge.sourceId ?? '?').join(',') || 'none'} (${record.dependencies.completeness})` : `${record.id}: released`).join(' · ') : 'not captured' },
       { label: 'Probe point', value: state.probePoint ? `${state.probePoint.x}, ${state.probePoint.y} (root logical)` : 'not captured' },
+      { label: 'Runtime compatibility', value: JSON.stringify(state.runtimeCompatibility) },
       { label: 'Inspection capability', value: state.inspectionAvailability },
       { label: 'Independent requirement', value: requirement },
       { label: 'Delivered to', value: `${state.deliveredTo ?? 'none'} · target ${state.delivery.targetId ?? 'unavailable'}` },
