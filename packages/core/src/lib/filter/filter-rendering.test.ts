@@ -1,3 +1,5 @@
+import { peekNativeFilterPool } from './render-filter-boundary';
+import { dropShadow, grayscale, hueRotate, opacity, brightness } from '@crc/core/filters';
 import {
   Group,
   Image,
@@ -14,7 +16,7 @@ import {
 } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clearSharedState, getCRCInstance } from '../global-state.js';
-import { assertNativeFilter } from '../style/filter.js';
+import { assertNativeCanvasFilter } from '../../filters/native-canvas-filter.js';
 
 const controllers = new Set<CRCController>();
 
@@ -37,12 +39,7 @@ describe('filter rendering', () => {
         fill: 'red',
         stroke: 'blue',
         strokeWidth: 4,
-        filter: {
-          type: 'dropShadow',
-          offsetX: 12,
-          offsetY: 0,
-          color: 'black',
-        },
+        filter: dropShadow({ offsetX: 12, offsetY: 0, color: 'black' }),
       },
     }), 64, 48);
 
@@ -53,12 +50,11 @@ describe('filter rendering', () => {
   it('shadows Path fill and stroke once instead of stacking their alpha', async () => {
     const d = new Path2D();
     d.rect(10, 10, 20, 20);
-    const shadow = {
-      type: 'dropShadow' as const,
+    const shadow = dropShadow({
       offsetX: 40,
       offsetY: 0,
       color: 'rgb(0 0 0 / 50%)',
-    };
+    });
 
     const combined = await renderScene(createElement(Path, {
       style: {
@@ -92,12 +88,7 @@ describe('filter rendering', () => {
   it('captures overlapping Group children as one combined silhouette', async () => {
     const canvas = await renderScene(createElement(Group, {
       style: {
-        filter: {
-          type: 'dropShadow',
-          offsetX: 12,
-          offsetY: 0,
-          color: 'black',
-        },
+        filter: dropShadow({ offsetX: 12, offsetY: 0, color: 'black' }),
       },
       children: [
         createElement(Rectangle, {
@@ -115,12 +106,11 @@ describe('filter rendering', () => {
   });
 
   it('shadows overlapping Group children once instead of stacking their alpha', async () => {
-    const shadow = {
-      type: 'dropShadow' as const,
+    const shadow = dropShadow({
       offsetX: 40,
       offsetY: 0,
       color: 'rgb(0 0 0 / 50%)',
-    };
+    });
     const children = [
       createElement(Rectangle, {
         style: { x: 10, y: 10, width: 30, height: 30, fill: 'red' },
@@ -170,10 +160,7 @@ describe('filter rendering', () => {
 
     expect(contexts).toHaveLength(1);
     expect(contexts[0]!.canvas).toBe(canvas);
-    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
-      surfaceSlots: 0,
-      pairCheckouts: 0,
-    });
+    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
     expect(pixel(canvas, 2, 2)).toEqual([0, 128, 0, 255]);
   });
 
@@ -200,9 +187,9 @@ describe('filter rendering', () => {
         height: 12,
         fill: 'red',
         filter: [
-          { type: 'grayscale', amount: 0.5 },
-          { type: 'dropShadow', offsetX: 3, offsetY: -2, color: 'black' },
-          { type: 'hueRotate', degrees: 45 },
+          grayscale({ amount: 0.5 }),
+          dropShadow({ offsetX: 3, offsetY: -2, color: 'black' }),
+          hueRotate({ degrees: 45 }),
         ],
       },
     }), 32, 32);
@@ -238,7 +225,7 @@ describe('filter rendering', () => {
     });
 
     await renderScene(createElement(ParentProbe, {
-      style: { filter: { type: 'opacity', amount: 0.75 } },
+      style: { filter: opacity({ amount: 0.75 }) },
       children: [
         createElement(ChildProbe, { label: 'first' }),
         createElement(ChildProbe, { label: 'second' }),
@@ -262,7 +249,7 @@ describe('filter rendering', () => {
     });
 
     await renderScene(createElement(Probe, {
-      style: { filter: { type: 'grayscale', amount: 1 } },
+      style: { filter: grayscale({ amount: 1 }) },
     }), 24, 16);
 
     expect(observations).toHaveLength(1);
@@ -293,7 +280,7 @@ describe('filter rendering', () => {
     );
 
     await renderScene(createElement(Group, {
-      style: { filter: { type: 'grayscale', amount: 1 } },
+      style: { filter: grayscale({ amount: 1 }) },
       children: [
         createElement(Rectangle, {
           style: { x: 2, y: 2, width: 8, height: 8, fill: 'red' },
@@ -343,19 +330,9 @@ describe('filter rendering', () => {
     const runFrame = scheduleScene(canvas, createElement(Probe, {
       style: {
         filter: [
-          { type: 'grayscale', amount: 1 },
-          {
-            type: 'dropShadow',
-            offsetX: 1,
-            offsetY: 1,
-            color: 'red',
-          },
-          {
-            type: 'dropShadow',
-            offsetX: 2,
-            offsetY: 2,
-            color: 'not-a-color',
-          },
+          grayscale({ amount: 1 }),
+          dropShadow({ offsetX: 1, offsetY: 1, color: 'red' }),
+          dropShadow({ offsetX: 2, offsetY: 2, color: 'not-a-color' }),
         ],
       },
     }));
@@ -371,7 +348,7 @@ describe('filter rendering', () => {
       'drop-shadow(1px 1px 0px red)',
       'drop-shadow(2px 2px 0px not-a-color)',
     ]);
-    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
       activePairs: 0,
       pairCheckouts: 1,
       pairReturns: 1,
@@ -392,12 +369,7 @@ describe('filter rendering', () => {
     const canvas = createCanvas(32, 24);
     const runFrame = scheduleScene(canvas, createElement(Probe, {
       style: {
-        filter: {
-          type: 'dropShadow',
-          offsetX: 2,
-          offsetY: 2,
-          color,
-        },
+        filter: dropShadow({ offsetX: 2, offsetY: 2, color }),
       },
     }));
 
@@ -409,7 +381,7 @@ describe('filter rendering', () => {
       'drop-shadow(2px 2px 0px not-a-color)',
       'drop-shadow(2px 2px 0px not-a-color)',
     ]);
-    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
       activePairs: 0,
       pairCheckouts: 1,
       pairReturns: 1,
@@ -432,24 +404,14 @@ describe('filter rendering', () => {
     const canvas = createCanvas(32, 24);
     const runFrame = scheduleScene(canvas, createElement(Probe, {
       style: {
-        filter: {
-          type: 'dropShadow',
-          offsetX: 2,
-          offsetY: 2,
-          color,
-        },
+        filter: dropShadow({ offsetX: 2, offsetY: 2, color }),
       },
     }));
 
     expect(runFrame).toThrow(/Probe.*property filter\.color .*balanced.*boundary/i);
     expect(callback).not.toHaveBeenCalled();
     expect(filterAssignments).not.toHaveBeenCalled();
-    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
-      surfaceSlots: 0,
-      activePairs: 0,
-      pairCheckouts: 0,
-      pairReturns: 0,
-    });
+    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
   });
 
   it.each([
@@ -493,12 +455,7 @@ describe('filter rendering', () => {
       const canvas = createCanvas(32, 24);
       const runFrame = scheduleScene(canvas, createElement(Probe, {
         style: {
-          filter: {
-            type: 'dropShadow',
-            offsetX: 2,
-            offsetY: 2,
-            color,
-          },
+          filter: dropShadow({ offsetX: 2, offsetY: 2, color }),
         },
       }));
 
@@ -506,10 +463,7 @@ describe('filter rendering', () => {
         .toThrow(/Probe.*property filter\.color .*contextual/);
       expect(callback).not.toHaveBeenCalled();
       expect(filterAssignments).not.toHaveBeenCalled();
-      expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
-        surfaceSlots: 0,
-        pairCheckouts: 0,
-      });
+      expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
     },
   );
 
@@ -527,13 +481,8 @@ describe('filter rendering', () => {
     const runFrame = scheduleScene(canvas, createElement(Probe, {
       style: {
         filter: [
-          { type: 'grayscale', amount: 1 },
-          {
-            type: 'dropShadow',
-            offsetX: 2,
-            offsetY: 2,
-            color: 'color-mix(in srgb, red, -webkit-active\\6c ink)',
-          },
+          grayscale({ amount: 1 }),
+          dropShadow({ offsetX: 2, offsetY: 2, color: 'color-mix(in srgb, red, -webkit-active\\6c ink)' }),
         ],
       },
     }));
@@ -542,10 +491,7 @@ describe('filter rendering', () => {
       .toThrow(/Probe.*property filter\[1\]\.color .*contextual/);
     expect(callback).not.toHaveBeenCalled();
     expect(filterAssignments).not.toHaveBeenCalled();
-    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
-      surfaceSlots: 0,
-      pairCheckouts: 0,
-    });
+    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
   });
 
   it.each([
@@ -570,12 +516,7 @@ describe('filter rendering', () => {
     const canvas = createCanvas(32, 24);
     const runFrame = scheduleScene(canvas, createElement(Probe, {
       style: {
-        filter: {
-          type: 'dropShadow',
-          offsetX: 2,
-          offsetY: 2,
-          color,
-        },
+        filter: dropShadow({ offsetX: 2, offsetY: 2, color }),
       },
     }));
 
@@ -602,9 +543,9 @@ describe('filter rendering', () => {
     const runFrame = scheduleScene(canvas, createElement(Probe, {
       style: {
         filter: [
-          { type: 'dropShadow', offsetX: 1, offsetY: 1, color: 'red' },
-          { type: 'brightness', amount: 1 },
-          { type: 'dropShadow', offsetX: 2, offsetY: 2, color: 'blue' },
+          dropShadow({ offsetX: 1, offsetY: 1, color: 'red' }),
+          brightness({ amount: 1 }),
+          dropShadow({ offsetX: 2, offsetY: 2, color: 'blue' }),
         ],
       },
     }));
@@ -625,7 +566,7 @@ describe('filter rendering', () => {
   it('reports rejection of an otherwise unsupported complete native chain', () => {
     const context = new OffscreenCanvas(8, 8).getContext('2d')!;
 
-    expect(() => assertNativeFilter(
+    expect(() => assertNativeCanvasFilter(
       context,
       'blur(1px) unsupported-filter(1)',
       'Probe',
