@@ -10,6 +10,7 @@ export {
   saturate,
   sepia,
 } from './filters/native.js';
+export { displacement } from './filters/displacement.js';
 export type {
   CRCFilter,
   CRCBlurFilterOptions,
@@ -22,4 +23,5 @@ export type {
   CRCOpacityFilterOptions,
   CRCSaturateFilterOptions,
   CRCSepiaFilterOptions,
+  CRCDisplacementFilterOptions,
 } from './lib/style/filter-types.js';
