@@ -1263,7 +1263,7 @@ export function createSignalCommitBatch(): SignalCommitBatch {
     },
     registerLifecycle(writer: object, lifecycle: SignalCommitLifecycle): void {
       const prior = state.lifecycles.get(writer);
-      if (prior) prior.abort();
+      if (prior) abortLifecycle(prior);
       state.lifecycles.set(writer, lifecycle);
     },
     discardWriter(writer: object): void {
@@ -1274,7 +1274,7 @@ export function createSignalCommitBatch(): SignalCommitBatch {
       }
       const lifecycle = state.lifecycles.get(writer);
       state.lifecycles.delete(writer);
-      lifecycle?.abort();
+      if (lifecycle) abortLifecycle(lifecycle);
     },
     commit(onApplied?: () => void): void {
       const candidates = [...staged.values()];
@@ -1302,10 +1302,21 @@ export function createSignalCommitBatch(): SignalCommitBatch {
           node.value = candidate.value;
           node.version++;
         }
+        const changedWriters = new Set(changed.map(candidate => candidate.writer));
         for (const candidate of candidates) {
           const lifecycle = state.lifecycles.get(candidate.writer);
           state.lifecycles.delete(candidate.writer);
-          lifecycle?.apply();
+          if (!lifecycle) continue;
+          if (!changedWriters.has(candidate.writer)) {
+            abortLifecycle(lifecycle);
+            continue;
+          }
+          try {
+            lifecycle.apply();
+          } catch (error) {
+            abortLifecycle(lifecycle);
+            throw error;
+          }
         }
         onApplied?.();
         const failures: unknown[] = [];
@@ -1314,20 +1325,29 @@ export function createSignalCommitBatch(): SignalCommitBatch {
         }
         throwSignalObserverFailures(failures);
       } catch (error) {
-        for (const lifecycle of state.lifecycles.values()) lifecycle.abort();
+        for (const lifecycle of state.lifecycles.values()) abortLifecycle(lifecycle);
         state.lifecycles.clear();
         throw error;
       }
     },
     clear(): void {
       staged.clear();
-      for (const lifecycle of state.lifecycles.values()) lifecycle.abort();
+      for (const lifecycle of state.lifecycles.values()) abortLifecycle(lifecycle);
       state.lifecycles.clear();
     },
   };
   const state: SignalCommitBatchState = { staged, lifecycles: new Map() };
   signalCommitBatchStates.set(batch, state);
   return batch;
+}
+
+function abortLifecycle(lifecycle: SignalCommitLifecycle): void {
+  try {
+    lifecycle.abort();
+  } catch {
+    // Abort is cleanup for an already failing or discarded transaction. It must
+    // not replace the originating scheduler/commit failure.
+  }
 }
 
 /** @internal Stages a candidate with rollback provenance for one owner. */

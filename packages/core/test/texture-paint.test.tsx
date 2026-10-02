@@ -12,6 +12,7 @@ import {
   installSchedulerDriverForTest,
 } from "../src/lib/scheduler/testing.js";
 import { clearSharedState } from "../src/lib/global-state.js";
+import { borrowTextureRaster } from "@crc/core/internal";
 
 afterEach(() => {
   clearSharedState();
@@ -75,4 +76,53 @@ it("shares a mount-owned texture across shape and text, updates cached consumers
   }
   expect(dispose).toHaveBeenCalledTimes(1);
   expect(driver.pendingHostFrames).toBe(0);
+});
+
+it("publishes one committed raster revision to every paint consumer", () => {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  const rasterize = vi.fn((state: { color: string }, context: any) => {
+    const ctx = context.canvas.getContext("2d")!;
+    ctx.fillStyle = state.color;
+    ctx.fillRect(0, 0, context.canvas.width, context.canvas.height);
+  });
+  const solid = defineTexture<{}, { color: string }, { color: string }>({
+    create: () => ({ color: "#ff0000" }),
+    rasterize,
+    receive(state, message, context) {
+      state.color = message.color;
+      context.invalidate();
+    },
+  });
+  const observed: Array<readonly [number, number]> = [];
+  let texture: ReturnType<typeof useTexture<{ color: string }>>;
+  function Scene() {
+    texture = useTexture(solid({}), { resolution: { width: 8, height: 8 } });
+    borrowTextureRaster(texture, raster => {
+      observed.push([raster.revision, raster.source.getContext("2d")!.getImageData(0, 0, 1, 1).data[0]!]);
+    });
+    return <>
+      <Rectangle style={{ x: 0, y: 0, width: 20, height: 20, fill: texture }} />
+      <Rectangle style={{ x: 24, y: 0, width: 20, height: 20, fill: texture }} />
+    </>;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = 48;
+  canvas.height = 24;
+  document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  try {
+    driver.flush(0);
+    expect(rasterize).toHaveBeenCalledTimes(1);
+    expect(observed).toEqual([[0, 255]]);
+    texture!.send({ color: "#00ff00" });
+    driver.flush(16);
+    expect(rasterize).toHaveBeenCalledTimes(2);
+    expect(observed).toEqual([[0, 255], [1, 0]]);
+    expect([...canvas.getContext("2d")!.getImageData(4, 4, 1, 1).data]).toEqual([0, 255, 0, 255]);
+    expect([...canvas.getContext("2d")!.getImageData(28, 4, 1, 1).data]).toEqual([0, 255, 0, 255]);
+  } finally {
+    controller.dispose();
+    restore();
+  }
 });
