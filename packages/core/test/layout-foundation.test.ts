@@ -1,4 +1,5 @@
 import { mountLayoutFoundation } from '@crc/scenarios';
+import { describeReplayError } from '../../../tooling/agent-verification/failure-evidence.mjs';
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Rectangle } from '../src/index';
@@ -216,6 +217,13 @@ function expectDiagnostic(
     expect(error).toBeInstanceOf(LayoutDiagnostic);
     expect(error).toMatchObject(expected);
     const diagnostic = error as LayoutDiagnostic;
+    const evidence = describeReplayError(diagnostic);
+    expect(evidence.layoutDiagnostic).toMatchObject({
+      component: diagnostic.component,
+      property: diagnostic.property,
+      algorithm: diagnostic.algorithm,
+    });
+    expect(evidence.layoutDiagnostic?.constraints).toMatchObject({ type: 'object' });
     expect(diagnostic.message).toContain(expected.component);
     expect(diagnostic.message).toContain(expected.property);
     expect(diagnostic.message).toContain(expected.algorithm);

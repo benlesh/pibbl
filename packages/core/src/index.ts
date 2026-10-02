@@ -1,3 +1,20 @@
+export { warpPath, type PathWarpPoint, type PathWarpRect, type PathWarpCorners, type PathWarpMode, type WarpPathOptions } from './lib/geometry/path-warp.js';
+export {
+  bendPathAlongArc,
+  bendPathAlongPath,
+  type PathBendFrame, type PathBendArc, type PathBendAlign, type PathBendBaseline,
+  type PathBendFit, type PathBendOverflow, type PathBendOptions, type BendPathAlongArcOptions,
+} from './lib/geometry/path-bending.js';
+export { PathGeometry, type PathSegment } from './lib/geometry/path-geometry.js';
+export { toPath2D, toSvgPathData } from './lib/geometry/path-conversion.js';
+export {
+  flattenPath,
+  simplifyPath,
+  subdividePath,
+  type FlattenPathOptions,
+  type SimplifyPathOptions,
+  type SubdividePathOptions,
+} from './lib/geometry/path-utilities.js';
 // components
 export { Arc, type ArcProps, type ArcStyle } from './lib/components/arc.js';
 export {
@@ -356,3 +373,6 @@ export type {
   CRCTouchEvent,
   CRCWheelEvent,
 } from './lib/events/types.js';
+
+export { defineTexture, useTexture } from './lib/textures/texture.js';
+export type { Texture, TexturePaint, TextureRecipe, TextureDefinition, TextureOptions, TexturePlacement, TextureContext, TextureFrame } from './lib/textures/texture.js';

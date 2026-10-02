@@ -26,6 +26,12 @@ its opt-in primitive capability. It is pure: it cannot render or acquire
 runtime resources. Components without a measure capability return an
 `unsupported` result, and cyclic measurement dependencies are rejected.
 
+Signal writes are rejected throughout measurement, including custom normalization,
+measurement callbacks and the text-measurement service. This also applies when
+called outside a mounted component. A rejected signal update does not run its
+updater or change its value; ordinary writes remain available after measurement
+returns or throws.
+
 ```ts
 const element = createElement(Rectangle, {
   style: { width: 120, height: 60, fill: "#2563eb" },

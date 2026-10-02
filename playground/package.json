@@ -21,7 +21,8 @@
     "minisearch": "catalog:",
     "monaco-editor": "catalog:",
     "three": "catalog:",
-    "@crc/viz": "workspace:*"
+    "@crc/viz": "workspace:*",
+    "@crc/textures": "workspace:*"
   },
   "devDependencies": {
     "@types/three": "catalog:",

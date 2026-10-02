@@ -16,6 +16,7 @@ const repositoryRoot = resolve(import.meta.dirname, "..");
 const require = createRequire(import.meta.url);
 const tsc = join(dirname(require.resolve("typescript")), "tsc.js");
 const expectedModules = new Map([
+  ["@crc/textures", "node_modules/@crc/textures/index.d.ts"],
   ["@crc/core", "node_modules/@crc/core/index.d.ts"],
   ["@crc/core/jsx-runtime", "node_modules/@crc/core/jsx-runtime.d.ts"],
   ["@crc/core/jsx-dev-runtime", "node_modules/@crc/core/jsx-dev-runtime.d.ts"],
@@ -36,6 +37,7 @@ assert.deepEqual(
   [...expectedModules.keys()].sort(),
 );
 const sourceEntries = {
+  textures: join(repositoryRoot, "packages/textures/src/index.ts"),
   root: join(repositoryRoot, "packages/core/src/index.ts"),
   jsxRuntime: join(repositoryRoot, "packages/core/src/jsx-runtime.ts"),
   jsxDevRuntime: join(repositoryRoot, "packages/core/src/jsx-dev-runtime.ts"),
@@ -67,6 +69,7 @@ const builtInventory = await collectPublicExports(
   crcPublicCompilerOptions,
 );
 const inventoryKey = new Map([
+  ["@crc/textures", "textures"],
   ["@crc/core", "root"],
   ["@crc/core/jsx-runtime", "jsxRuntime"],
   ["@crc/core/jsx-dev-runtime", "jsxDevRuntime"],
@@ -136,6 +139,10 @@ try {
     import { crc, Rectangle, type CRCNode } from '@crc/core';
     import { defineThreeLayer, type CRCThreeTarget } from '@crc/three';
     import { Particles2D } from '@crc/particles';
+    import { ReactionDiffusion, ProceduralTexture, texturePalettes, type TextureRenderer } from '@crc/textures';
+    const textureRenderer: TextureRenderer = (ctx, texture) => { ctx.drawImage(texture.source, 0, 0, texture.width, texture.height); };
+    const textures = <><ReactionDiffusion paused palette={texturePalettes.ember} render={textureRenderer} /><ProceduralTexture kind="paper" /></>;
+    void textures;
     import { sphereShape3D, boundsOfShape3D } from '@crc/physics/3d/geometry';
     import { PhysicsWorld2D } from '@crc/physics/2d';
     import { Scene, PerspectiveCamera, Mesh, BoxGeometry, MeshBasicMaterial } from 'three';
@@ -222,6 +229,8 @@ try {
       "crc",
       "defineRenderLayer",
       "defineThreeLayer",
+      "ReactionDiffusion",
+      "ProceduralTexture",
       "Particles2D",
       "PhysicsWorld2D",
       "sphereShape3D",

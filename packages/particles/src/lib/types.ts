@@ -1,5 +1,6 @@
 import type {
   BoxStyle,
+  PathGeometry,
   CRCEventHandlers,
   CRCEventParticipationOptions,
   CursorStyle,
@@ -197,7 +198,7 @@ export type CRCParticleRenderer2D =
     }>
   | Readonly<{
       type: "path";
-      path: Path2D;
+      path: Path2D | PathGeometry;
       blend?: "source-over" | "additive";
     }>
   | Readonly<{

@@ -2,6 +2,7 @@ import type { Plugin } from 'vite';
 import { resolve } from 'node:path';
 
 const BUILT_ENTRY_SUFFIXES = new Map([
+  ["@crc/textures", "/packages/textures/dist/index.mjs"],
   ["@crc/viz", "/packages/viz/dist/index.mjs"],
   ['@crc/core', '/packages/core/dist/index.mjs'],
   ['@crc/core/internal', '/packages/core/dist/internal.mjs'],
@@ -38,6 +39,7 @@ export function assertBuiltCore(): Plugin {
     transform(_, id) {
       const normalizedId = id.replaceAll('\\', '/');
       if (
+        normalizedId.includes('/packages/textures/src/') ||
         normalizedId.includes('/packages/viz/src/') ||
         normalizedId.includes('/packages/core/src/') ||
         normalizedId.includes('/packages/three/src/') ||

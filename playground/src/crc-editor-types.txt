@@ -1,4 +1,58 @@
 /* @crc-studio-module @crc/core */
+  export type PathSegment =
+    | { type: 'move' | 'line'; x: number; y: number }
+    | { type: 'quadratic'; cpx: number; cpy: number; x: number; y: number }
+    | { type: 'cubic'; cp1x: number; cp1y: number; cp2x: number; cp2y: number; x: number; y: number }
+    | { type: 'arc'; cx: number; cy: number; ux: number; uy: number; vx: number; vy: number; startAngle: number; sweep: number }
+    | { type: 'close' };
+  export class PathGeometry implements Iterable<PathSegment> {
+    constructor(source?: PathGeometry);
+    readonly revision: number;
+    readonly segmentCount: number;
+    clone(): PathGeometry;
+    clear(): void;
+    moveTo(x: number, y: number): void;
+    lineTo(x: number, y: number): void;
+    quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void;
+    bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number): void;
+    closePath(): void;
+    arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, counterclockwise?: boolean): void;
+    ellipse(x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, counterclockwise?: boolean): void;
+    arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): void;
+    "rect"(x: number, y: number, width: number, height: number): void;
+    roundRect(x: number, y: number, width: number, height: number, radii?: number | DOMPointInit | (number | DOMPointInit)[]): void;
+    addPath(other: PathGeometry, matrix?: DOMMatrix2DInit): void;
+    spliceSegments(start: number, deleteCount: number, segments?: readonly PathSegment[]): void;
+    getSegment(index: number): PathSegment;
+    setSegment(index: number, segment: PathSegment): void;
+    transform(matrix: DOMMatrix2DInit): void;
+    [Symbol.iterator](): IterableIterator<PathSegment>;
+  }
+  export function toPath2D(geometry: PathGeometry): Path2D;
+  export function toSvgPathData(geometry: PathGeometry): string;
+  export interface PathBendFrame { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
+  export interface PathBendArc { readonly cx: number; readonly cy: number; readonly radius: number; readonly startAngle: number; readonly sweep: number }
+  export type PathBendAlign = 'start' | 'center' | 'end';
+  export type PathBendBaseline = 'center' | 'top' | 'bottom' | number;
+  export type PathBendFit = 'none' | 'stretch';
+  export type PathBendOverflow = 'error' | 'extend' | 'wrap';
+  export interface PathBendOptions { readonly source: PathBendFrame; readonly align?: PathBendAlign; readonly baseline?: PathBendBaseline; readonly fit?: PathBendFit; readonly offset?: number; readonly normalOffset?: number; readonly overflow?: PathBendOverflow; readonly tolerance: number; readonly maxSegments?: number }
+  export interface BendPathAlongArcOptions extends PathBendOptions { readonly arc: PathBendArc }
+  export function bendPathAlongArc(source: PathGeometry, options: Readonly<BendPathAlongArcOptions>): PathGeometry;
+  export function bendPathAlongPath(source: PathGeometry, guide: PathGeometry, options: Readonly<PathBendOptions>): PathGeometry;
+  export interface PathWarpPoint { readonly x: number; readonly y: number }
+  export interface PathWarpRect { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
+  export interface PathWarpCorners { readonly topLeft: PathWarpPoint; readonly topRight: PathWarpPoint; readonly bottomLeft: PathWarpPoint; readonly bottomRight: PathWarpPoint }
+  export type PathWarpMode = 'bilinear' | 'perspective';
+  export interface WarpPathOptions { readonly source: PathWarpRect; readonly destination: PathWarpCorners; readonly mode?: PathWarpMode; readonly tolerance: number; readonly maxSegments?: number }
+  export function warpPath(path: PathGeometry, options: Readonly<WarpPathOptions>): PathGeometry;
+  export interface FlattenPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+  export interface SimplifyPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+  export interface SubdividePathOptions { readonly divisions: number; readonly maxSegments?: number }
+  export function flattenPath(path: PathGeometry, options: Readonly<FlattenPathOptions>): PathGeometry;
+  export function simplifyPath(path: PathGeometry, options: Readonly<SimplifyPathOptions>): PathGeometry;
+  export function subdividePath(path: PathGeometry, options: Readonly<SubdividePathOptions>): PathGeometry;
+
   export interface CRCController {
     dispose(): void;
   }
@@ -85,7 +139,7 @@
     readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
   }
   export interface CRCEventTargetOptions extends CRCEventFocusOptions {
-    readonly path: Path2D;
+    readonly path: Path2D | PathGeometry;
     readonly fill?: boolean;
     readonly lineInteractionWidth?: number;
     readonly cursor?: string;
@@ -225,8 +279,8 @@
   }
   type PrimitiveCapabilityArguments<P, S extends SystemStyle, N extends SystemStyle, R extends SystemStyle> = RequiresResolver<R> extends true ? [capabilities: never] : RequiresResolver<S> extends true ? [capabilities: Readonly<PrimitiveCapabilities<P, S, N, R>> & { resolveStyle: NonNullable<PrimitiveCapabilities<P, S, N, R>['resolveStyle']> }] : [capabilities?: Readonly<PrimitiveCapabilities<P, S, N, R>>];
   export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
-  export type FillStyle = CanvasRenderingContext2D['fillStyle'];
-  export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'];
+  export type FillStyle = CanvasRenderingContext2D['fillStyle'] | TexturePaint;
+  export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'] | TexturePaint;
 
   export type Percentage = `${number}%`;
   export type Length = number | Percentage | 'auto';
@@ -260,7 +314,7 @@
   }
   export interface PaintStyle extends SystemStyle { fill?: FillStyle; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number }
   export interface CursorStyle extends SystemStyle { cursor?: string }
-  export interface PathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: Path2D; lineInteractionWidth?: number }
+  export interface PathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: Path2D | PathGeometry; lineInteractionWidth?: number }
   export interface RectStyle extends RoundedCornerStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; width: Length; height: Length; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export interface CircleStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; lineInteractionWidth?: number }
   export interface EllipseStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radiusX: Exclude<Length, 'auto'>; radiusY: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; rotation?: number; lineInteractionWidth?: number }
@@ -279,7 +333,7 @@
   export interface TextStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; lineHeight?: number; wrap?: boolean; fit?: TextFit; font?: string; textBaseline?: CanvasTextBaseline; textAlign?: CanvasTextAlign }
   export interface ImgStyle extends CursorStyle, BoxStyle, LayoutItemStyle { src: string; x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment }
   export interface GStyle extends BoxStyle, LayoutItemStyle { scaleX?: number; scaleY?: number; rotationDegrees?: number; rotationOrigin?: [number, number]; translateX?: number; translateY?: number; skewX?: number; skewY?: number }
-  export interface ClipStyle extends BoxStyle, LayoutItemStyle { d: Path2D; fillRule?: CanvasFillRule }
+  export interface ClipStyle extends BoxStyle, LayoutItemStyle { d: Path2D | PathGeometry; fillRule?: CanvasFillRule }
   export interface LayerStyle extends BoxStyle, LayoutItemStyle {}
 
   export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
@@ -504,9 +558,9 @@
   export function useTransition(target: number, options: CRCSpringTransitionOptions): Signal<number>;
   export function useTransition<T>(target: T, options: CRCTweenTransitionOptions<T>): Signal<T>;
   export function useReaction(setup: () => void | (() => void), dependencies?: readonly unknown[], options?: CRCReactionOptions): void;
-  export function useCursor(options: { style?: string; path?: Path2D; fill?: boolean; lineInteractionWidth?: number }): void;
-  export function useEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
-  export function useEvent<K extends 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>(eventName: K, listener?: CRCMouseEventListener, path?: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
+  export function useCursor(options: { style?: string; path?: Path2D | PathGeometry; fill?: boolean; lineInteractionWidth?: number }): void;
+  export function useEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D | PathGeometry, fill?: boolean, lineInteractionWidth?: number): void;
+  export function useEvent<K extends 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>(eventName: K, listener?: CRCMouseEventListener, path?: Path2D | PathGeometry, fill?: boolean, lineInteractionWidth?: number): void;
   export function useEventListener(handlers: CRCEventHandlers): void;
   export function useEventTarget(handlers: CRCEventHandlers, options: CRCEventTargetOptions): CRCEventTargetSnapshot;
   export function useLinePath(coords: [number, number][], config?: { closePath?: boolean }): Path2D;
@@ -835,7 +889,7 @@
   export type CRCParticleRenderer2D =
     | Readonly<{ type: 'circle'; blend?: 'source-over' | 'additive' }>
     | Readonly<{ type: 'rectangle'; aspectRatio?: number; blend?: 'source-over' | 'additive' }>
-    | Readonly<{ type: 'path'; path: Path2D; blend?: 'source-over' | 'additive' }>
+    | Readonly<{ type: 'path'; path: Path2D | import('@crc/core').PathGeometry; blend?: 'source-over' | 'additive' }>
     | Readonly<{ type: 'sprite'; source: CanvasImageSource; anchor?: readonly [number, number]; blend?: 'source-over' | 'additive' }>;
   export interface CRCParticleBounds2D { readonly min: readonly [number, number]; readonly max: readonly [number, number] }
   export type CRCParticleOverflow = 'reject-newest' | 'recycle-oldest';
@@ -1234,3 +1288,73 @@ export interface AnchoredLayoutProps<T extends AnchoredItem> {
 }
 
 export declare function AnchoredLayout<T extends AnchoredItem>(props: AnchoredLayoutProps<T>): CRCNode;
+
+/* @crc-studio-module @crc/textures */
+import type { CRCComponent, CRCRenderLayerComponentProps } from '@crc/core';
+export type TexturePalette = readonly string[];
+export interface TextureResolution { readonly width: number; readonly height: number; }
+export interface TextureBrush { readonly radius: number; readonly strength: number; }
+export interface ReactionDiffusionProps {
+  readonly render?: TextureRenderer;
+  readonly resolution?: TextureResolution;
+  readonly seed?: number;
+  readonly preset?: 'spots' | 'stripes';
+  readonly palette?: TexturePalette;
+  readonly paused?: boolean;
+  readonly resetRevision?: number;
+  readonly brush?: TextureBrush | false;
+}
+export const ReactionDiffusion: CRCComponent<ReactionDiffusionProps & CRCRenderLayerComponentProps>;
+export const texturePalettes: Readonly<{ lagoon: TexturePalette; porcelain: TexturePalette; ember: TexturePalette }>;
+
+export type TextureKind = 'marble' | 'paper' | 'cellular';
+export interface TextureRenderFrame {
+  readonly source: OffscreenCanvas;
+  readonly mask: OffscreenCanvas;
+  readonly width: number;
+  readonly height: number;
+  readonly textureWidth: number;
+  readonly textureHeight: number;
+}
+export type TextureRenderer = (context: OffscreenCanvasRenderingContext2D, texture: Readonly<TextureRenderFrame>) => void;
+export interface ProceduralTextureProps {
+  readonly kind: TextureKind;
+  readonly seed?: number;
+  readonly resolution?: TextureResolution;
+  readonly scale?: number;
+  readonly detail?: number;
+  readonly palette?: TexturePalette;
+  readonly render?: TextureRenderer;
+}
+export const ProceduralTexture: CRCComponent<ProceduralTextureProps & CRCRenderLayerComponentProps>;
+
+declare module "@crc/core" {
+  export interface TexturePaint { readonly __crcTexturePaint: unique symbol; }
+  export interface TexturePlacement { readonly mode?: 'repeat' | 'stretch'; readonly tileWidth?: number; readonly tileHeight?: number; readonly offsetX?: number; readonly offsetY?: number; readonly rotation?: number; }
+  export interface Texture<Message = never> extends TexturePaint { send(message: Message): void; paint(placement: TexturePlacement): TexturePaint; }
+  export interface TextureOptions { readonly resolution?: {readonly width: number; readonly height: number}; readonly palette?: readonly string[]; }
+  export interface TextureRecipe<Message = never> {readonly __crcTextureRecipe: (message: Message) => Message;}
+  export interface TextureContext {readonly canvas: OffscreenCanvas; readonly palette: readonly string[] | undefined; invalidate(): void; requestFrame(): void;}
+  export interface TextureFrame {readonly delta: number; readonly time: number;}
+  export interface TextureDefinition<Config, State, Message = never> {
+    readonly defaultPlacement?: TexturePlacement;
+    create(context: TextureContext, config: Readonly<Config>): State;
+    update?(state: State, config: Readonly<Config>, context: TextureContext): void;
+    receive?(state: State, message: Message, context: TextureContext): void;
+    advance?(state: State, frame: TextureFrame, context: TextureContext): void;
+    rasterize(state: State, context: TextureContext): void;
+    dispose?(state: State, context: TextureContext): void;
+  }
+  export function defineTexture<Config, State, Message = never>(definition: TextureDefinition<Config, State, Message>): (config: Config) => TextureRecipe<Message>;
+  export function useTexture<Message>(recipe: TextureRecipe<Message>, options?: TextureOptions): Texture<Message>;
+}
+declare module "@crc/textures" {
+  export {useTexture} from '@crc/core';
+  export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
+  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
+  export type InkMessage = {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
+  export function marble(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function paper(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function cellular(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function reactionDiffusion(options?: ReactionDiffusionOptions): import('@crc/core').TextureRecipe<InkMessage>;
+}

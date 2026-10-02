@@ -71,6 +71,7 @@ function renderRectangle(
       d: rectPath,
     },
     ctx,
+    { x, y, width, height },
   );
 }
 

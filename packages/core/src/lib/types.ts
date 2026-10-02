@@ -187,6 +187,11 @@ export interface InternalIdentityHint {
 }
 
 export interface CRCComponentRefs<P> {
+  /** Last traversal entry context, not proof that this evaluation painted successfully. */
+  layoutEntry?: Readonly<{
+    allocation: Readonly<LayoutBox>;
+    percentageBasis: Readonly<LayoutBox>;
+  }>;
   id: string;
   parent: CRCComponentRefs<any> | undefined;
   element: CRCElement<P>;
@@ -338,8 +343,8 @@ export interface CRCController {
   dispose(): void;
 }
 
-export type FillStyle = CanvasRenderingContext2D["fillStyle"];
-export type StrokeStyle = CanvasRenderingContext2D["strokeStyle"];
+export type FillStyle = CanvasRenderingContext2D["fillStyle"] | import('./textures/texture.js').TexturePaint;
+export type StrokeStyle = CanvasRenderingContext2D["strokeStyle"] | import('./textures/texture.js').TexturePaint;
 
 export interface CRCInstance {
   canvas: Canvas;

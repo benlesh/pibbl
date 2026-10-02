@@ -46,6 +46,18 @@ export type CRCFrameCommitAcknowledgement = (
 
 export type CRCSchedulerTraceRecord =
   | {
+      readonly kind: 'scheduler-phase';
+      readonly collectedErrors: number;
+      /** Known from Plan onward; true includes empty/equality-suppressed batches. */
+      readonly commitApplied?: boolean;
+      /** Only present on idle: entries collected for subsequent error delivery. */
+      readonly errorCount?: number;
+      readonly phase: CRCFramePhase;
+      readonly frameId: number;
+      readonly hostTime: number;
+      readonly logicalTime: number;
+    }
+  | {
       readonly kind: 'animation-command';
       readonly frameId: number;
       readonly logicalTime: number;

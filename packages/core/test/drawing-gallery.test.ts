@@ -19,7 +19,7 @@ import {
   validateScenarioCatalog,
 } from '@crc/scenarios';
 import { page, userEvent } from 'vitest/browser';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import drawingCompositionSource from '../../scenarios/src/drawing-composition.example.tsx?raw';
 import drawingImagesSource from '../../scenarios/src/drawing-images.example.tsx?raw';
 import drawingLinesSource from '../../scenarios/src/drawing-lines.example.tsx?raw';
@@ -76,6 +76,7 @@ async function waitForPixel(
 
 async function mountLesson<TState>(
   entry: AnyScenarioCatalogEntry,
+  beforeMount?: (canvas: HTMLCanvasElement) => void,
 ): Promise<{
   canvas: HTMLCanvasElement;
   controller: ScenarioController<TState>;
@@ -87,6 +88,7 @@ async function mountLesson<TState>(
   canvas.style.cssText = 'display:block; width:480px; height:240px';
   document.body.replaceChildren(canvas);
   const definition = await loadScenario(entry) as ScenarioDefinition<TState>;
+  beforeMount?.(canvas);
   const controller = await definition.mount({ canvas });
   activeControllers.add(controller as ScenarioController<unknown>);
   return { canvas, controller, definition };
@@ -97,6 +99,7 @@ afterEach(async () => {
     await controller.dispose();
   }
   activeControllers.clear();
+  vi.restoreAllMocks();
   document.body.replaceChildren();
 });
 
@@ -289,6 +292,73 @@ describe('complete public drawing gallery', () => {
     });
   });
 
+  it('verifies masked text content, placement and visible ink through updates and reset', async () => {
+    type Draw = { text: string; x: number; y: number; alpha: number; font: string; maxWidth?: number };
+    const draws: Draw[] = [];
+    const { canvas, controller } = await mountLesson<DrawingTextState>(drawingTextScenarioEntry, canvas => {
+      const context = canvas.getContext('2d')!;
+      const fillText = context.fillText.bind(context);
+      vi.spyOn(context, 'fillText').mockImplementation((text, x, y, maxWidth) => {
+        const point = context.getTransform().transformPoint({ x, y });
+        draws.push({ text, x: point.x, y: point.y, alpha: context.globalAlpha, font: context.font, maxWidth });
+        // Mutation probe: command intent still exists, but no glyph reaches the bitmap.
+        if (import.meta.env.VITE_CRC_DRAWING_VISUAL_DRILL !== 'omit-text-ink') fillText(text, x, y, maxWidth);
+      });
+    });
+    function verify(updated: boolean) {
+      const at = (x: number, y: number) => {
+        const matches = draws.filter(draw => draw.x === x && draw.y === y);
+        expect(matches).toHaveLength(1);
+        return matches[0];
+      };
+      expect(at(24, 18).text).toBe(updated ? 'Updated canvas text' : 'Canvas text');
+      expect(at(374, 24).text).toBe('centered');
+      const ellipsis = at(32, 76);
+      const source = updated ? 'A newly updated sentence' : 'A sentence that is too long';
+      expect(ellipsis.text.endsWith('...')).toBe(true);
+      const prefix = ellipsis.text.slice(0, -3);
+      expect(prefix.length).toBeGreaterThan(0);
+      expect(source.startsWith(prefix)).toBe(true);
+      const measuring = document.createElement('canvas').getContext('2d')!;
+      measuring.font = ellipsis.font;
+      expect(measuring.measureText(ellipsis.text).width).toBeLessThanOrEqual(154);
+      expect(measuring.measureText(source.slice(0, prefix.length + 1) + '...').width).toBeGreaterThan(154);
+      expect(at(252, 76)).toMatchObject({ text: 'This line is fitted to its card', maxWidth: 196 });
+      const wrapped = draws.filter(draw => draw.x === 34);
+      expect(wrapped.length).toBeGreaterThan(1);
+      expect(wrapped.map(draw => draw.text).join(' ')).toBe(updated
+        ? 'Updated words wrap across this bounded card'
+        : 'Several words wrap across this bounded card');
+      expect(wrapped.map(draw => draw.y)).toEqual(wrapped.map((_, index) => 136 + index * 21));
+      expect(at(264, 136).text).toBe('Clipped text stays inside this golden card');
+      expect(at(264, 193)).toMatchObject({ text: 'invisible at alpha zero', alpha: 0 });
+      expect(draws).toHaveLength(6 + wrapped.length);
+      // Pixel evidence supplements command intent. Each region must contain visible
+      // glyph ink, without pinning platform-specific antialiased glyph boundaries.
+      for (const [x, y, width, height, background] of [
+        [20, 10, 260, 44, [248, 250, 252]], [330, 4, 96, 46, [248, 250, 252]],
+        [28, 72, 164, 28, [226, 232, 240]], [248, 72, 204, 28, [226, 232, 240]],
+        [30, 132, 194, 68, [219, 234, 254]], [260, 132, 192, 36, [254, 243, 199]],
+      ] as const) {
+        const pixels = canvas.getContext('2d')!.getImageData(x, y, width, height).data;
+        let ink = 0;
+        for (let offset = 0; offset < pixels.length; offset += 4) {
+          if (background.some((channel, index) => Math.abs(pixels[offset + index] - channel) > 16)) ink++;
+        }
+        expect(ink, `visible glyph ink in region ${x},${y}`).toBeGreaterThan(20);
+      }
+    }
+    try {
+      verify(false);
+      draws.length = 0;
+      await controller.perform('update-copy');
+      verify(true);
+      draws.length = 0;
+      await controller.reset();
+      verify(false);
+    } finally { vi.restoreAllMocks(); }
+  });
+
   it('drives explicit/natural image sizing, alpha, source change, failure, removal, and recovery', async () => {
     const { canvas, controller } =
       await mountLesson<DrawingImagesState>(drawingImagesScenarioEntry);
@@ -369,16 +439,16 @@ describe('complete public drawing gallery', () => {
       entry,
       ignoreRegions: entry === drawingTextScenarioEntry ? [
         // Text glyph rasterization is platform-sensitive; cards stay exact.
-        { x: 18, y: 10, width: 230, height: 44 },
-        { x: 330, y: 4, width: 96, height: 46 },
-        { x: 28, y: 68, width: 164, height: 34 },
-        { x: 248, y: 68, width: 204, height: 34 },
-        { x: 30, y: 126, width: 194, height: 76 },
-        { x: 260, y: 126, width: 192, height: 42 },
+        { x: 22, y: 14, width: 140, height: 30, reason: 'Text glyph rasterization is platform-sensitive; surrounding cards remain unmasked.' },
+        { x: 334, y: 10, width: 80, height: 28, reason: 'Text glyph rasterization is platform-sensitive; surrounding cards remain unmasked.' },
+        { x: 30, y: 72, width: 160, height: 24, reason: 'Text glyph rasterization is platform-sensitive; surrounding cards remain unmasked.' },
+        { x: 250, y: 72, width: 200, height: 24, reason: 'Text glyph rasterization is platform-sensitive; surrounding cards remain unmasked.' },
+        { x: 32, y: 132, width: 188, height: 42, reason: 'Text glyph rasterization is platform-sensitive; surrounding cards remain unmasked.' },
+        { x: 262, y: 132, width: 186, height: 26, reason: 'Text glyph rasterization is platform-sensitive; surrounding cards remain unmasked.' },
       ] : entry === drawingImagesScenarioEntry ? [
-        // Decoded/scaled SVG edges vary; their exact semantic pixels are asserted above.
-        { x: 20, y: 28, width: 158, height: 108 },
-        { x: 20, y: 168, width: 432, height: 36 },
+        // Scaled SVG curves vary; filled centers are checked below and outside backgrounds stay exact.
+        { x: 68, y: 51, width: 62, height: 62, reason: 'Scaled SVG curve rasterization varies by platform; filled centers are checked separately and exterior backgrounds remain unmasked.' },
+        { x: 153, y: 176, width: 165, height: 20, reason: 'Scaled SVG curve rasterization varies by platform; filled centers are checked separately and exterior backgrounds remain unmasked.' },
       ] : [],
     }));
 
@@ -388,12 +458,29 @@ describe('complete public drawing gallery', () => {
         await waitForPixel(canvas, { x: 30, y: 40 }, [14, 165, 233, 255]);
         await waitForPixel(canvas, { x: 230, y: 40 }, [236, 72, 153, 255]);
         await waitForPixel(canvas, { x: 420, y: 185 }, [115, 199, 243, 255]);
+        expect(pixelAt(canvas, 99, 82)).toEqual([224, 242, 254, 255]);
+        const translucentCenter = pixelAt(canvas, 235, 185);
+        // Independent source-over oracle: SVG #e0f2fe at 0.5 over #dbeafe.
+        // Allow one channel unit for premultiplied-alpha quantization.
+        for (const [channel, expected] of [221.5, 238, 254].entries()) {
+          expect(Math.abs(translucentCenter[channel] - expected)).toBeLessThanOrEqual(1);
+        }
+        expect(translucentCenter[3]).toBe(255);
       }
       if (
         import.meta.env.VITE_CRC_DRAWING_VISUAL_DRILL === '1' &&
         visual.entry === drawingShapesScenarioEntry
       ) {
         await controller.perform('update-shapes');
+      }
+      if (
+        (import.meta.env.VITE_CRC_DRAWING_VISUAL_DRILL === 'text-mask-gap' && visual.entry === drawingTextScenarioEntry) ||
+        (import.meta.env.VITE_CRC_DRAWING_VISUAL_DRILL === 'image-mask-background' && visual.entry === drawingImagesScenarioEntry)
+      ) {
+        const context = canvas.getContext('2d')!;
+        context.fillStyle = '#ff0000';
+        context.fillRect(visual.entry === drawingTextScenarioEntry ? 40 : 30,
+          visual.entry === drawingTextScenarioEntry ? 180 : 50, 12, 6);
       }
       const slug = visual.entry.metadata.slug;
       await expectVisualMatch({

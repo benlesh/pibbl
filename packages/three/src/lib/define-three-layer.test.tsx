@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   BoxGeometry,
+  BatchedMesh,
+  LOD,
+  Bone,
+  Skeleton,
+  SkinnedMesh,
+  InstancedMesh,
+  Matrix4,
+  Float32BufferAttribute,
   Group as ThreeGroup,
   Mesh,
   MeshBasicMaterial,
@@ -711,6 +719,268 @@ describe("defineThreeLayer OrbitControls input", () => {
     );
     expect(camera.position.equals(disposedPosition)).toBe(true);
   });
+});
+
+// Picking must describe the committed bitmap, even when application resources mutate.
+it.each(["visibility", "world-transform", "camera", "geometry", "failed-render"] as const)(
+  "preserves committed picking across %s", (mutation) => {
+  const trace: string[] = [];
+  let resources!: ReturnType<typeof createResourcesWithBox>;
+  let renders = 0;
+  let failNext = false;
+  let disposals = 0;
+  let invalidate!: () => void;
+  const Layer = defineThreeLayer<{}, ReturnType<typeof createResourcesWithBox>>({
+    create(context) { invalidate = context.invalidate; resources = createResourcesWithBox(); return resources; },
+    render(value, _frame, context) {
+      renders++;
+      if (failNext) { value.mesh.visible = false; throw new Error("REN-07 candidate failed"); }
+      context.renderer.render(value.scene, value.camera);
+    },
+    targets(value) {
+      return [{ object: value.mesh, handlers: { onClick: () => trace.push("three") } }];
+    },
+    dispose(value) {
+      disposals++;
+      value.mesh.geometry.dispose();
+      (value.mesh.material as MeshBasicMaterial).dispose();
+    },
+  });
+  const mounted = mount(<>
+    <Rectangle style={{ width: 100, height: 100, fill: "#2563eb" }} onClick={() => trace.push("canvas")} />
+    <Layer style={{ width: 100, height: 100 }} />
+  </>);
+  try {
+    const context = mounted.canvas.getContext("2d")!;
+    const before = Array.from(context.getImageData(50, 50, 1, 1).data);
+    expect(before).toEqual([255, 255, 255, 255]);
+    click(mounted.canvas, 50, 50);
+    expect(trace).toEqual(["three"]);
+    if (mutation === "visibility") resources.mesh.visible = false;
+    if (mutation === "world-transform") {
+      resources.mesh.position.x = 20;
+      resources.mesh.updateMatrixWorld(true);
+    }
+    if (mutation === "camera") {
+      resources.camera.position.x = 20;
+      resources.camera.updateMatrixWorld(true);
+    }
+    if (mutation === "geometry") resources.mesh.geometry.translate(20, 0, 0);
+    if (mutation === "failed-render") {
+      failNext = true; invalidate();
+      expect(() => mounted.driver.flush(20)).not.toThrow();
+      expect(() => mounted.driver.flush(30)).toThrowError("REN-07 candidate failed");
+    }
+    // No successful replacement render: the visible white box is still committed.
+    click(mounted.canvas, 50, 50);
+    expect(renders).toBe(mutation === "failed-render" ? 2 : 1);
+    expect(Array.from(context.getImageData(50, 50, 1, 1).data)).toEqual(before);
+    if (mutation === "failed-render") {
+      // Candidate failure gates input while retaining resources and the old bitmap.
+      expect(disposals).toBe(0);
+      expect(trace).toEqual(["three"]);
+      failNext = false; resources.mesh.visible = true; invalidate();
+      mounted.driver.flush(40);
+      click(mounted.canvas, 50, 50);
+      expect(renders).toBe(3);
+      expect(trace).toEqual(["three", "three"]);
+    } else {
+      expect(disposals).toBe(0);
+      // The displayed box remains the target until a replacement frame commits.
+      expect(trace).toEqual(["three", "three"]);
+      invalidate(); mounted.driver.flush(40);
+      expect(renders).toBe(2);
+      expect(Array.from(context.getImageData(50, 50, 1, 1).data)).toEqual([37, 99, 235, 255]);
+      click(mounted.canvas, 50, 50);
+      expect(trace).toEqual(["three", "three", "canvas"]);
+    }
+  } finally { mounted.dispose(); }
+});
+
+it.each(["scene", "camera", "mesh", "material"] as const)(
+  "does not serialize %s application metadata while preparing picking", (owner) => {
+    let serializations = 0;
+    const metadata: Record<string, unknown> = {
+      toJSON() { serializations++; throw new Error("application metadata must not be serialized"); },
+    };
+    metadata.self = metadata;
+    let selected = 0;
+    let resources!: ReturnType<typeof createResourcesWithBox>;
+    const Layer = defineThreeLayer<{}, ReturnType<typeof createResourcesWithBox>>({
+      create() {
+        resources = createResourcesWithBox();
+        const target = owner === "material" ? resources.mesh.material as MeshBasicMaterial : resources[owner];
+        target.userData = metadata;
+        if (owner === "mesh") resources.mesh.raycast = function (raycaster, intersections) {
+          if (this.userData === metadata) Mesh.prototype.raycast.call(this, raycaster, intersections);
+        };
+        return resources;
+      },
+      targets(value) { return [{ object: value.mesh, handlers: { onClick: () => selected++ } }]; },
+      dispose(value) { value.mesh.geometry.dispose(); (value.mesh.material as MeshBasicMaterial).dispose(); },
+    });
+    const mounted = mount(<Layer style={{ width: 100, height: 100 }} />);
+    try {
+      click(mounted.canvas, 50, 50);
+      expect(selected).toBe(1);
+      expect(serializations).toBe(0);
+      const target = owner === "material" ? resources.mesh.material as MeshBasicMaterial : resources[owner];
+      expect(target.userData).toBe(metadata);
+      expect(metadata.self).toBe(metadata);
+    } finally { mounted.dispose(); }
+  },
+);
+
+it.each(["instance-matrix", "batch-matrix", "bone", "morph"] as const)(
+  "keeps %s picking aligned with each committed frame", (mutation) => {
+    const trace: string[] = [];
+    let invalidate!: () => void;
+    let resources!: CRCThreeLayerResources & { mesh: Mesh; bone?: Bone };
+    const Layer = defineThreeLayer<{}, typeof resources>({
+      create(context) {
+        invalidate = context.invalidate;
+        const base = createResources();
+        const geometry = new BoxGeometry(2, 2, 2);
+        const material = new MeshBasicMaterial({ color: 0xffffff });
+        let mesh: Mesh;
+        let bone: Bone | undefined;
+        if (mutation === "instance-matrix") {
+          mesh = new InstancedMesh(geometry, material, 1);
+          (mesh as InstancedMesh).setMatrixAt(0, new Matrix4());
+        } else if (mutation === "batch-matrix") {
+          const batched = new BatchedMesh(1, 24, 36, material);
+          const geometryId = batched.addGeometry(geometry);
+          batched.addInstance(geometryId); geometry.dispose(); mesh = batched;
+        } else if (mutation === "bone") {
+          const count = geometry.attributes.position.count;
+          geometry.setAttribute("skinIndex", new Float32BufferAttribute(new Float32Array(count * 4), 4));
+          const weights = new Float32Array(count * 4);
+          for (let index = 0; index < count; index++) weights[index * 4] = 1;
+          geometry.setAttribute("skinWeight", new Float32BufferAttribute(weights, 4));
+          const skinned = new SkinnedMesh(geometry, material);
+          bone = new Bone(); skinned.add(bone); skinned.bind(new Skeleton([bone])); mesh = skinned;
+        } else {
+          const positions = geometry.attributes.position.array.slice();
+          for (let index = 0; index < positions.length; index += 3) positions[index] += 20;
+          geometry.morphAttributes.position = [new Float32BufferAttribute(positions, 3)];
+          mesh = new Mesh(geometry, material);
+        }
+        base.scene.add(mesh); resources = { ...base, mesh, bone }; return resources;
+      },
+      targets(value) { return [{ object: value.mesh, handlers: { onClick: () => trace.push("three") } }]; },
+      dispose(value) {
+        if (value.mesh instanceof BatchedMesh) value.mesh.dispose(); else value.mesh.geometry.dispose();
+        (value.mesh.material as MeshBasicMaterial).dispose();
+        if (value.mesh instanceof SkinnedMesh) value.mesh.skeleton.dispose();
+      },
+    });
+    const mounted = mount(<>
+      <Rectangle style={{ width: 100, height: 100, fill: "#2563eb" }} onClick={() => trace.push("canvas")} />
+      <Layer style={{ width: 100, height: 100 }} />
+    </>);
+    try {
+      const pixel = () => Array.from(mounted.canvas.getContext("2d")!.getImageData(50, 50, 1, 1).data);
+      expect(pixel()).toEqual([255, 255, 255, 255]);
+      click(mounted.canvas, 50, 50);
+      if (resources.mesh instanceof InstancedMesh) {
+        resources.mesh.setMatrixAt(0, new Matrix4().makeTranslation(20, 0, 0));
+        resources.mesh.instanceMatrix.needsUpdate = true;
+        resources.mesh.computeBoundingSphere();
+      } else if (resources.mesh instanceof BatchedMesh) {
+        resources.mesh.setMatrixAt(0, new Matrix4().makeTranslation(20, 0, 0));
+        resources.mesh.computeBoundingSphere();
+      } else if (resources.bone) {
+        resources.bone.position.x = 20; resources.mesh.updateMatrixWorld(true);
+        (resources.mesh as SkinnedMesh).computeBoundingSphere();
+      } else resources.mesh.morphTargetInfluences![0] = 1;
+      click(mounted.canvas, 50, 50);
+      expect(pixel()).toEqual([255, 255, 255, 255]);
+      expect(trace).toEqual(["three", "three"]);
+      invalidate(); mounted.driver.flush(40);
+      expect(pixel()).toEqual([37, 99, 235, 255]);
+      click(mounted.canvas, 50, 50);
+      expect(trace).toEqual(["three", "three", "canvas"]);
+    } finally { mounted.dispose(); }
+  },
+);
+
+it("commits projected focus bounds with picking and preserves them across a failed candidate", () => {
+  let resources!: ReturnType<typeof createResourcesWithBox>;
+  let invalidate!: () => void;
+  let failNext = false;
+  let selected = 0;
+  const Layer = defineThreeLayer<{}, typeof resources>({
+    create(context) { invalidate = context.invalidate; resources = createResourcesWithBox(); return resources; },
+    render(value, _frame, context) {
+      if (failNext) throw new Error("focus candidate failed");
+      context.renderer.render(value.scene, value.camera);
+    },
+    targets(value) { return [{ object: value.mesh, keyboardFocusable: true, handlers: { onClick: () => selected++ } }]; },
+    dispose(value) { value.mesh.geometry.dispose(); (value.mesh.material as MeshBasicMaterial).dispose(); },
+  });
+  const mounted = mount(<>
+    <Rectangle style={{ width: 100, height: 100, fill: "#2563eb" }} />
+    <FocusManagement><Layer style={{ width: 100, height: 100 }} /></FocusManagement>
+  </>);
+  try {
+    const registration = () => Array.from(getCRCInstance(mounted.canvas).eventRoot.targets).find(target => target.keyboardFocusable)!;
+    const original = registration();
+    const bounds = resolveTargetRootBounds(original)!;
+    expect(bounds.x).toBeCloseTo(37.5, 8); expect(bounds.width).toBeCloseTo(25, 8);
+    resources.mesh.position.x = 2; resources.mesh.updateMatrixWorld(true);
+    expect(resolveTargetRootBounds(registration())).toEqual(bounds);
+    click(mounted.canvas, 50, 50); expect(selected).toBe(1);
+    failNext = true; invalidate(); mounted.driver.flush(20);
+    expect(() => mounted.driver.flush(30)).toThrowError("focus candidate failed");
+    expect(resolveTargetRootBounds(registration())).toEqual(bounds);
+    click(mounted.canvas, 50, 50); expect(selected).toBe(1);
+    failNext = false; invalidate(); mounted.driver.flush(40);
+    expect(registration()).toBe(original);
+    const updated = resolveTargetRootBounds(registration())!;
+    // Camera at z=5, 90-degree FOV; translated box spans x=[1,3], z=[-1,1].
+    expect(updated.x).toBeCloseTo(50 + 50 / 6, 8);
+    expect(updated.x + updated.width).toBeCloseTo(50 + 150 / 4, 8);
+    expect(updated.y).toBeCloseTo(37.5, 8); expect(updated.height).toBeCloseTo(25, 8);
+    click(mounted.canvas, 50, 50); expect(selected).toBe(1);
+    click(mounted.canvas, 75, 50); expect(selected).toBe(2);
+    const context = mounted.canvas.getContext("2d")!;
+    expect(Array.from(context.getImageData(50, 50, 1, 1).data)).toEqual([37, 99, 235, 255]);
+    expect(Array.from(context.getImageData(75, 50, 1, 1).data)).toEqual([255, 255, 255, 255]);
+  } finally { mounted.dispose(); }
+});
+
+it.each(["LOD", "BatchedMesh"] as const)("preserves registered leaf identity inside an ordinary Three %s", (parentKind) => {
+  let selected = 0;
+  let resources!: ReturnType<typeof createResourcesWithBox>;
+  let invalidate!: () => void;
+  const Layer = defineThreeLayer<{}, typeof resources>({
+    create(context) {
+      invalidate = context.invalidate; resources = createResourcesWithBox();
+      if (parentKind === "LOD") {
+        const lod = new LOD(); lod.addLevel(resources.mesh, 0); resources.scene.add(lod);
+      } else {
+        const batch = new BatchedMesh(1, 24, 36, resources.mesh.material as MeshBasicMaterial);
+        batch.addInstance(batch.addGeometry(resources.mesh.geometry));
+        batch.setMatrixAt(0, new Matrix4().makeTranslation(20, 0, 0));
+        batch.add(resources.mesh); resources.scene.add(batch);
+      }
+      return resources;
+    },
+    targets(value) { return [{ object: value.mesh, handlers: { onClick: () => selected++ } }]; },
+    dispose(value) {
+      const parent = value.mesh.parent;
+      if (parent instanceof BatchedMesh) parent.dispose();
+      value.mesh.geometry.dispose(); (value.mesh.material as MeshBasicMaterial).dispose();
+    },
+  });
+  const mounted = mount(<Layer style={{ width: 100, height: 100 }} />);
+  try {
+    click(mounted.canvas, 50, 50); expect(selected).toBe(1);
+    resources.mesh.geometry.translate(20, 0, 0);
+    click(mounted.canvas, 50, 50); expect(selected).toBe(2);
+    invalidate(); mounted.driver.flush(40);
+    click(mounted.canvas, 50, 50); expect(selected).toBe(2);
+  } finally { mounted.dispose(); }
 });
 
 function createResources(): CRCThreeLayerResources {

@@ -442,3 +442,5 @@ export {
 } from "./lib/scheduler/testing.js";
 
 export { getCurrentWorldTransform as crcInternalCurrentWorldTransform } from "./lib/render-target.js";
+
+export { resolveTexturePaint } from './lib/textures/texture.js';

@@ -21,7 +21,7 @@ import type {
 import type { CRCElement } from '../element/types.js';
 import { prepareElementPolicies } from '../element/children.js';
 import type { Constraints } from './types.js';
-import { untracked } from '../signals/graph.js';
+import { untracked, withSignalWriteForbidden } from '../signals/graph.js';
 
 export type {
   CanvasMeasurementService,
@@ -40,9 +40,11 @@ export function measureElement(
   };
   const mode = getStyleMeasurementMode() ? 'recursive' :
     GLOBAL_STATE.componentRefs ? 'mounted-intrinsic' : 'standalone-root';
-  return withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
-    measureElementInternal(element, constraints, service, context),
-  ));
+  return withSignalWriteForbidden('Signal writes are forbidden during CRC measurement', () =>
+    withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
+      measureElementInternal(element, constraints, service, context),
+    )),
+  );
 }
 
 interface MeasurementContext {

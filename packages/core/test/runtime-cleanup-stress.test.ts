@@ -59,21 +59,25 @@ class ControlledImages {
     window.Image = function ControlledImage() {
       const element = document.createElement('img');
       let source = '';
+      let savedLoad: HTMLImageElement['onload'] = null;
+      let savedError: HTMLImageElement['onerror'] = null;
       Object.defineProperty(element, 'src', {
         configurable: true,
         get: () => source,
         set: value => {
           source = String(value);
+          savedLoad = element.onload;
+          savedError = element.onerror;
         },
       });
       records.push({
         element,
         getSource: () => source,
         completeError: () => {
-          element.onerror?.call(element, new Event('error'));
+          savedError?.call(element, new Event('error'));
         },
         completeLoad: () => {
-          element.onload?.call(element, new Event('load'));
+          savedLoad?.call(element, new Event('load'));
         },
       });
       return element;
@@ -322,6 +326,19 @@ afterEach(async () => {
 });
 
 describe('shared runtime cleanup stress laboratory', () => {
+  it('replays saved image completions even after listener detachment', () => {
+    const images = new ControlledImages(); activeImages.add(images);
+    const image = new Image();
+    let loads = 0; let errors = 0;
+    image.onload = () => { loads++; };
+    image.onerror = () => { errors++; };
+    image.src = 'controlled.png';
+    image.onload = null; image.onerror = null;
+    images.records[0].completeLoad(); images.records[0].completeError();
+    expect(loads).toBe(1); expect(errors).toBe(1);
+    expect(image.onload).toBeNull(); expect(image.onerror).toBeNull();
+  });
+
   it('keeps exact ownership stable through 1,000 live layout reflows', () => {
     const canvas = document.createElement('canvas');
     canvas.width = 320;

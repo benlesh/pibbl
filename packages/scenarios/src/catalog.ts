@@ -15,6 +15,7 @@ import {
   type FocusNavigationState,
 } from "./focus-navigation.example";
 import type { InteractionLabState } from "./interaction-lab.example";
+import type { AgentTargetingState } from "./agent-targeting-verification";
 import type { LifecycleLabState } from "./lifecycle-lab.example";
 import type { LayoutFoundationState } from "./layout-foundation.example";
 import type { MouseContractScenarioState } from "./mouse-contract.example";
@@ -947,6 +948,75 @@ export const mouseContractScenarioEntry: ScenarioCatalogEntry<MouseContractScena
     load: async () =>
       (await import("./mouse-contract-scenario")).mouseContractScenario,
   };
+
+const agentTargetingVerificationMetadata: ScenarioMetadata = {
+  id: "agent-targeting-verification",
+  slug: "agent-targeting-verification",
+  title: "Agent targeting verification",
+  summary:
+    "Diagnose a decorative Canvas overlay that intercepts an intended item selection, then verify its repair with the same native click.",
+  category: "Diagnostics",
+  apiTags: ["crc", "Rectangle", "signal", "pointerEvents"],
+  conceptTags: ["targeting", "paint order", "native input", "inspection"],
+  manualSteps: [
+    {
+      action: "Choose Inspect, then click the center of the blue Select item A control.",
+      expected:
+        "The probe identifies the upper decoration and the click is delivered there, leaving item A unselected.",
+    },
+    {
+      action: "Choose Repair, Inspect, then click the same point.",
+      expected:
+        "The decoration keeps painting but stops participating in targeting; the same click selects item A.",
+    },
+    {
+      action: "Choose Intentional block and repeat the click.",
+      expected:
+        "The decoration receives the click again, while the scenario labels this as an intentional non-selection rather than a defect.",
+    },
+  ],
+  knownLimitations: [
+    "Clip attribution identifies committed interaction records, not source component identities.",
+    "The bounded inspector reports this committed root and target point only; it does not expose a general component tree, application objects, or visibility proof.",
+    "The fixture uses opaque rectangle geometry. Arbitrary custom drawing, blending, filters, and backend-specific picking require separate evidence.",
+  ],
+  learningOrder: 75,
+  visibility: "test-laboratory",
+  visibilityReason:
+    "It is a deterministic, agent-oriented diagnostic fixture with an independently stated application outcome and one real browser input path.",
+  maturity: "contract",
+};
+
+export const agentTargetingVerificationScenarioEntry: ScenarioCatalogEntry<AgentTargetingState> = {
+  metadata: agentTargetingVerificationMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    { id: "keyboard-focus", label: "Keyboard focus" },
+    { id: "dom-overlay", label: "Add DOM overlay" },
+    { id: "remove-dom-overlay", label: "Remove DOM overlay" },
+    { id: "capture-drag", label: "Capture drag" },
+    { id: "inspect", label: "Inspect target" },
+    { id: "inspect-outside-layer", label: "Inspect outside Layer" },
+    { id: "repair", label: "Repair decoration" },
+    { id: "seed", label: "Restore seeded failure" },
+    { id: "intentional-block", label: "Show intentional block" },
+    { id: "inspection-off", label: "Disable inspection" },
+    { id: "inspection-on", label: "Enable inspection" },
+    { id: "capture-sources", label: "Capture source locations" },
+    { id: "trace-start", label: "Start phase recording" },
+    { id: "trace-stop", label: "Stop phase recording" },
+    { id: "reset", label: "Reset" },
+  ],
+  source: {
+    id: "agent-targeting-verification-example",
+    language: "tsx",
+    marker:
+      "AGENT_TARGETING_VERIFICATION_SOURCE_ID = 'agent-targeting-verification-example'",
+    path: "packages/scenarios/src/agent-targeting-verification.example.tsx",
+  },
+  load: async () =>
+    (await import("./agent-targeting-verification")).agentTargetingVerificationScenario,
+};
 
 const lifecycleLabMetadata: ScenarioMetadata = {
   id: "event-lifecycle-lab",
@@ -2091,6 +2161,15 @@ export const vizHoverScenarioEntry: ScenarioCatalogEntry<
     { id: "closest-point", label: "Closest point" },
     { id: "nearest-per-line", label: "Nearest per line" },
     { id: "interpolated-x", label: "Interpolate" },
+    { id: "update-data", label: "Update first series" },
+    { id: "missing-data", label: "Insert missing observation" },
+    { id: "duplicate-first", label: "Duplicate x: first row" },
+    { id: "duplicate-last", label: "Duplicate x: last row" },
+    { id: "duplicate-reordered", label: "Reorder duplicate rows" },
+    { id: "nearest-unsorted", label: "Nearest: unsorted rows" },
+    { id: "empty-data", label: "Nearest: empty first series" },
+    { id: "weighted-data", label: "Weighted aggregation" },
+    { id: "weighted-data-bug", label: "Inject wrong average" },
     { id: "reset", label: "Reset" },
   ],
   source: {
@@ -2143,6 +2222,26 @@ export const responsiveStylesScenarioEntry: ScenarioCatalogEntry<ResponsiveStyle
         .responsiveStylesScenario,
   };
 
+export const threePickingScenarioEntry: ScenarioCatalogEntry<import('./three-picking-lab.example').ThreePickingState> = {
+  metadata: {
+    id: 'three-picking-generation', slug: 'three-picking-generation',
+    title: 'Three picking generation laboratory',
+    summary: 'Separate live scene edits from the displayed bitmap and verify click routing before and after commit.',
+    category: 'Rendering', apiTags: ['defineThreeLayer'], conceptTags: ['committed picking', 'generation consistency'],
+    manualSteps: [
+      { action: 'Choose Mutate without frame, then click the white box at the center.', expected: 'liveVisible is false, displayedVisible is true, and threeClicks increases while frames stays at 1.' },
+      { action: 'Choose Commit frame, then click the same position.', expected: 'The box disappears, displayedVisible is false, and canvasClicks increases. Reset restores the box.' },
+    ],
+    knownLimitations: ['Requires WebGL2 and OffscreenCanvas. This deterministic fixture verifies visibility mutation, not arbitrary custom raycasts.'],
+    learningOrder: 178, visibility: 'test-laboratory', maturity: 'contract',
+    visibilityReason: 'Exposes intentionally uncommitted scene state for verification, separate from learning examples.',
+  },
+  canvas: { width: 400, height: 300 },
+  actions: [{ id: 'mutate-without-frame', label: 'Mutate without frame' }, { id: 'commit-frame', label: 'Commit frame' }],
+  source: { id: 'three-picking-generation-example', language: 'tsx', marker: "THREE_PICKING_SOURCE_ID = 'three-picking-generation-example'", path: 'packages/scenarios/src/three-picking-lab.example.tsx' },
+  load: async () => (await import('./three-picking-lab.example')).threePickingScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
   validateScenarioCatalog([
     responsiveStylesScenarioEntry,
@@ -2157,6 +2256,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     drawingCompositionScenarioEntry,
     focusNavigationScenarioEntry,
     mouseContractScenarioEntry,
+    agentTargetingVerificationScenarioEntry,
     interactionLabScenarioEntry,
     lifecycleLabScenarioEntry,
     geometryMatrixScenarioEntry,
@@ -2167,6 +2267,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     canvasSurfaceScenarioEntry,
     filterLabScenarioEntry,
     threeInstancingLabScenarioEntry,
+    threePickingScenarioEntry,
     signalsLabScenarioEntry,
     animationLabScenarioEntry,
     particleCelebrationLabScenarioEntry,

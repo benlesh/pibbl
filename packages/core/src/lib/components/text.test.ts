@@ -407,6 +407,21 @@ describe('text', () => {
   });
 
   describe('text specific features', () => {
+    it.each([
+      ['surrogate pair', '😀ABCD', 40, '...'],
+      ['combining mark', 'e\u0301ABCD', 40, '...'],
+      ['flag sequence', '🇺🇸ABCD', 50, '...'],
+      ['joined emoji', '👩‍💻ABCD', 50, '...'],
+      ['whole emoji fits', '😀ABCD', 50, '😀...'],
+    ] as const)('does not split a %s when fitting an ellipsis', async (_case, content, width, expected) => {
+      const metrics = useFixedWidthTextMetrics();
+      const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+      try {
+        await componentTest(createElement(Text, { style: { x: 10, y: 20, fill: 'black', width, fit: 'ellipsis' } }, content));
+        expect(fillText).toHaveBeenCalledExactlyOnceWith(expected, 10, 20, undefined);
+      } finally { metrics.mockRestore(); fillText.mockRestore(); }
+    });
+
     it('renders the exact single-line ellipsis selected by measured width', async () => {
       const measureText = useFixedWidthTextMetrics();
       const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');

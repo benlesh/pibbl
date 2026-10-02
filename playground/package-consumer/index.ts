@@ -1680,3 +1680,50 @@ export const physics3DGeometryConsumer = {
 };
 
 void (undefined as unknown as Physics3DGeometryTypes.CRCPhysicsShape3D);
+
+// Editable path geometry is consumed exclusively through the public entry.
+import { PathGeometry, toPath2D, toSvgPathData } from '@crc/core';
+import type { PathSegment } from '@crc/core';
+const editableOutline = new PathGeometry();
+editableOutline.rect(0, 0, 20, 20);
+editableOutline.arc(20, 20, 10, 0, Math.PI);
+editableOutline.addPath(editableOutline.clone(), { e: 10 });
+const editableSegment: PathSegment = editableOutline.getSegment(0);
+editableOutline.setSegment(0, editableSegment);
+const editableNative: Path2D = toPath2D(editableOutline);
+const editableSvg: string = toSvgPathData(editableOutline);
+void [editableNative, editableSvg];
+import { flattenPath, simplifyPath, subdividePath } from '@crc/core';
+const flattenedOutline = flattenPath(editableOutline, { tolerance: 0.25 });
+void simplifyPath(flattenedOutline, { tolerance: 0.5 });
+void subdividePath(editableOutline, { divisions: 2 });
+const editableTarget: CRCEventTargetOptions = { path: editableOutline, fill: true };
+void editableTarget;
+
+import { warpPath, type PathWarpPoint, type PathWarpRect, type PathWarpCorners, type PathWarpMode, type WarpPathOptions } from '@crc/core';
+const warpOrigin: PathWarpPoint = { x: 0, y: 0 };
+const warpSource: PathWarpRect = { ...warpOrigin, width: 20, height: 20 };
+const warpCorners: PathWarpCorners = { topLeft: warpOrigin, topRight: { x: 30, y: 0 }, bottomLeft: { x: 0, y: 20 }, bottomRight: { x: 20, y: 20 } };
+for (const mode of ['bilinear', 'perspective'] satisfies PathWarpMode[]) {
+  const options: WarpPathOptions = { source: warpSource, destination: warpCorners, mode, tolerance: 0.25 };
+  const warped: PathGeometry = warpPath(editableOutline, options);
+  void toSvgPathData(warped);
+}
+
+import {
+  bendPathAlongArc, bendPathAlongPath,
+  type PathBendFrame, type PathBendArc, type PathBendAlign, type PathBendBaseline,
+  type PathBendFit, type PathBendOverflow, type PathBendOptions, type BendPathAlongArcOptions,
+} from '@crc/core';
+const bendFrame: PathBendFrame = { x: 0, y: 0, width: 20, height: 20 };
+const bendArc: PathBendArc = { cx: 50, cy: 50, radius: 40, startAngle: 0, sweep: Math.PI };
+const bendAlign: PathBendAlign = 'center';
+const bendBaseline: PathBendBaseline = 'bottom';
+const bendFit: PathBendFit = 'stretch';
+const bendOverflow: PathBendOverflow = 'extend';
+const bendOptions: Readonly<PathBendOptions> = { source: bendFrame, align: bendAlign, baseline: bendBaseline, fit: bendFit, overflow: bendOverflow, tolerance: 0.1 };
+const bendArcOptions: Readonly<BendPathAlongArcOptions> = { ...bendOptions, arc: bendArc };
+const bendGuide = new PathGeometry(); bendGuide.moveTo(0, 0); bendGuide.quadraticCurveTo(50, 0, 100, 50);
+const bentArc: PathGeometry = bendPathAlongArc(editableOutline, bendArcOptions);
+const bentPath: PathGeometry = bendPathAlongPath(editableOutline, bendGuide, bendOptions);
+void [toSvgPathData(bentArc), toSvgPathData(bentPath)];

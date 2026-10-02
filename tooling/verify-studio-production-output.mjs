@@ -21,6 +21,11 @@ const output = await Promise.all(
 );
 for (const marker of [
   "crcStudioSearchRetry",
+  "crc-targeting-prototype/1",
+  "crc-signal-observation/1",
+  "crc-scheduler-observation/1",
+  "crc-scheduler-history/1",
+  "crc-browser-point/1",
   "Intentional verifier search loader failure.",
   "createAcceptanceSearchLoaderOptions",
 ]) {

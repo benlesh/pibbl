@@ -1,3 +1,4 @@
+import { resolveTexturePaint } from '../textures/texture.js';
 import { definePrimitive } from '../define-primitive.js';
 import { materializeTextChildren } from '../element/children.js';
 import { GLOBAL_STATE } from '../global-state.js';
@@ -86,13 +87,13 @@ function renderText(
 
     for (const line of layout.lines) {
       if (stroke && strokeWidth) {
-        ctx.strokeStyle = stroke;
+        ctx.strokeStyle = resolveTexturePaint(stroke, ctx, layout.bounds ?? line.bounds);
         ctx.lineWidth = strokeWidth;
         ctx.strokeText(line.text, line.x, line.y, line.squishWidth);
       }
 
       if (fill) {
-        ctx.fillStyle = fill;
+        ctx.fillStyle = resolveTexturePaint(fill, ctx, layout.bounds ?? line.bounds);
         ctx.fillText(line.text, line.x, line.y, line.squishWidth);
       }
 

@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 62 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 68 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(62);
+    expect(learningExampleCatalog).toHaveLength(68);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1266,6 +1266,9 @@ describe("learning example catalog", () => {
         "image",
         "line",
         "path",
+        "path-bending",
+        "path-geometry",
+        "path-warp",
         "polygon",
         "rectangle",
         "regular-polygon",
@@ -1278,7 +1281,10 @@ describe("learning example catalog", () => {
       composition: [
         "clip",
         "group",
+        "growing-reveal",
         "layer",
+        "living-ink",
+        "material-lab",
         "particle-effects",
         "physics-2d",
         "physics-panels",
@@ -1375,6 +1381,9 @@ describe("learning example catalog", () => {
       "viz-hover-comparison",
       "viz-points-and-inspection",
       "viz-responsive-line",
+      "living-ink",
+      "material-lab",
+      "growing-reveal",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1731,6 +1740,8 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "ReactionDiffusion",
+        "ProceduralTexture",
         "Scale",
         "Axis",
         "LineSeries",
@@ -1758,6 +1769,13 @@ describe("learning example catalog", () => {
         "Star",
         "createRegularPolygonPath",
         "Path",
+        "PathGeometry",
+        "defineRenderLayer",
+        "bendPathAlongArc",
+        "bendPathAlongPath",
+        "warpPath",
+        "toPath2D",
+        "toSvgPathData",
         "SvgPath",
         "Line",
         "HorizontalLine",
@@ -2078,4 +2096,50 @@ describe("learning example catalog", () => {
     },
     15_000,
   );
+});
+
+
+it("path-warp drags a corner and resets the same public rocket example", async () => {
+  const { canvas } = await renderLearningExample("path-warp");
+  const snapshot = () => canvas.toDataURL();
+  const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  const before = snapshot();
+  await pointerDownLogicalPoint(canvas, { x: 425, y: 156 });
+  await pointerMoveLogicalPoint(canvas, { x: 340, y: 220 });
+  await pointerUpLogicalPoint(canvas, { x: 340, y: 220 });
+  await frame();
+  expect(snapshot()).not.toBe(before);
+  expect(pixelAt(canvas, 340, 220)).toEqual([141, 240, 209, 255]);
+  await clickLogicalPoint(canvas, { x: 770, y: 534 });
+  await frame();
+  expect(snapshot()).toBe(before);
+});
+
+it("path-warp switches modes without resetting handles and recovers from invalid perspective", async () => {
+  const { canvas, textPaints } = await renderLearningExample("path-warp");
+  const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  await pointerDownLogicalPoint(canvas, { x: 425, y: 156 });
+  await pointerMoveLogicalPoint(canvas, { x: 400, y: 180 });
+  await pointerUpLogicalPoint(canvas, { x: 400, y: 180 });
+  await frame();
+  const bilinear = canvas.toDataURL();
+  await clickLogicalPoint(canvas, { x: 208, y: 450 });
+  await frame();
+  expect(textPaints.some(p => p.text === 'PERSPECTIVE / PROJECTED')).toBe(true);
+  expect(canvas.toDataURL()).not.toBe(bilinear);
+  expect(pixelAt(canvas, 400, 180)).toEqual([141, 240, 209, 255]);
+  await pointerDownLogicalPoint(canvas, { x: 400, y: 180 });
+  await pointerMoveLogicalPoint(canvas, { x: 790, y: 470 });
+  await pointerUpLogicalPoint(canvas, { x: 790, y: 470 });
+  await frame();
+  expect(textPaints.some(p => p.text === 'PREVIOUS VALID PREVIEW')).toBe(true);
+  expect(pixelAt(canvas, 790, 470)).toEqual([141, 240, 209, 255]);
+  const paintCount = textPaints.length;
+  await clickLogicalPoint(canvas, { x: 84, y: 450 });
+  await frame();
+  expect(textPaints.slice(paintCount).some(p => p.text === 'PREVIOUS VALID PREVIEW')).toBe(false);
+  expect(pixelAt(canvas, 790, 470)).toEqual([141, 240, 209, 255]);
+  await clickLogicalPoint(canvas, { x: 770, y: 534 });
+  await frame();
+  expect(pixelAt(canvas, 425, 156)).toEqual([141, 240, 209, 255]);
 });

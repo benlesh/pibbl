@@ -602,6 +602,7 @@ assert.deepEqual(
     "Use Three.js inside CRC",
     "Create particle effects",
     "Compose data visualizations",
+    "Procedural textures",
     "Add focus and keyboard navigation",
     "Create custom components and primitives",
     "Integrate with React",

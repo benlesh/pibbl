@@ -399,3 +399,83 @@ per-shape memo hooks.
 `@crc/physics/3d/geometry` provides pure immutable shapes and collision
 queries. It does not add drawing components, Three bindings, a world runtime, or
 a scheduler participant.
+
+## Editable path geometry (2026-09-29 extension)
+
+`PathGeometry` adds mutable, packed canonical geometry to the public core entry.
+Path and Clip accept `PathGeometry | Path2D` in `style.d`; this extends the native
+path-only inputs described above. Existing path creators and memoized hooks still
+return Path2D. Native browser context methods still require native paths.
+
+The class supports Canvas path builders, copying, affine transforms, canonical
+segment editing and a read-only mutation revision. Public `toPath2D` conversion
+always returns a fresh snapshot; `toSvgPathData` exports absolute SVG data.
+CRC privately resolves an unchanged instance/revision to one native snapshot and
+replaces that snapshot after edits. Paint and hit/clip geometry share the same
+consumed snapshot. Conversion does not occur during pointer dispatch. Old root
+or retained-Layer generations keep their previous native paths until updated.
+
+Geometry edits do not schedule rendering. No content-equality/hash API or SVG
+parser is implied. `flattenPath`, `simplifyPath`, and `subdividePath` return new
+geometry, with explicit accuracy/output limits. Simplification accepts polylines
+only and does not promise topology preservation. Singular ellipse transforms
+preserve traversal through explicit lines, whose turning-point stroke joins may
+differ from a browser's degenerate native conics.
+
+Public evidence lives in `path-geometry.test.tsx`,
+`path-geometry-builders.test.ts`, `path-geometry-utilities.test.ts`, and the
+editable path learning example. The approved design is
+[mutable path geometry](../superpowers/specs/2026-09-29-path-geometry-design.md).
+
+## Four-corner path warp
+
+`warpPath(path, { source, destination, mode?, tolerance, maxSegments? })` returns
+independent Move/Line/Close geometry. The positive-sized source rectangle is a
+local coordinate reference, not a clip. Named destination corners correspond to
+source topLeft, topRight, bottomLeft, bottomRight; outside points extrapolate.
+Bilinear (default) accepts finite folded/collapsed destinations. Perspective
+requires a strictly convex quadrilateral in either orientation and rejects
+projection poles on traced geometry, including closing edges and isolated moves.
+
+Tolerance is positive and measured after mapping, in destination coordinate
+units. Curves, general ellipse arcs, and bilinear-warped lines/closing edges
+undergo bounded adaptive approximation. Moving original Bézier controls alone
+is not equivalent. Output limits include Move/Close (default 1,000,000);
+numerical uncertainty, overflow, and exhausted subdivision budgets throw without
+changing the source or returning partial geometry. The utility owns no persistent
+resources, cache, or scheduler work. Recompute from original geometry while
+editing; approximation does not preserve topology or warp a stroke outline.
+
+Evidence: `path-warp.test.ts`, `path-warp-integration.test.tsx`,
+`path-warp-performance.test.ts`, and the interactive `path-warp` learning example.
+See the [approved design](../superpowers/specs/2026-09-30-path-warp-design.md).
+
+## Along Arc and Along Path bending
+
+`bendPathAlongArc(source, options)` and
+`bendPathAlongPath(source, guide, options)` return independent Move/Line/Close
+geometry. They map source X into distance along a guide and source Y into signed
+normal displacement. The explicit source frame controls start/center/end
+alignment and top/center/bottom/numeric baseline; it is not a clipping rectangle.
+Fitting stretches only the distance axis. Positive normal offsets follow the
+right-hand side of guide traversal in Canvas coordinates.
+
+Arc guides have positive radius and nonzero signed sweep of at most one turn.
+Path guides require one positive-length contour with continuous directed tangent;
+sharp joins, cusps, reversals, and multiple contours are rejected. Zero-length
+segments are ignored and removable stationary points with defined limiting
+tangents are supported. Self-intersections follow the authored traversal.
+
+Error is the default overflow policy. Extend uses endpoint tangent rays;
+wrap requires a full-circle arc or an explicitly closed smooth path. All source
+segments and closing edges undergo bounded approximation in output coordinates;
+Along Path includes distance and normal measurement uncertainty in its tolerance.
+Limits and unachievable precision throw without partial output or input mutation.
+Default maxSegments is 1,000,000 including Move/Close. There is no automatic
+scheduling, retained resource, topology repair, or stroke-outline conversion.
+
+Evidence: `path-bending.test.ts`, `path-bending-integration.test.tsx`, packed
+consumer probes, and the interactive `path-bending` (Along Arc) and `along-path` learning examples. The
+[approved design](../superpowers/specs/2026-09-30-path-bending-design.md) and
+[implementation record](../superpowers/plans/2026-09-30-path-bending-implementation.md)
+describe the numerical certificates and internal work limits.

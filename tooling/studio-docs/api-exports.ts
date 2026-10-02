@@ -62,6 +62,7 @@ export const crcPublicCompilerOptions: CompilerOptions = {
 };
 
 export const crcPublicEntryPaths = {
+  textures: fileURLToPath(new URL("../../packages/textures/src/index.ts", import.meta.url)),
   root: fileURLToPath(
     new URL("../../packages/core/src/index.ts", import.meta.url),
   ),

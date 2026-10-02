@@ -66,6 +66,7 @@ const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = ["@crc", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
   VIZ_MODULE,
+  "@crc/textures",
   CORE_MODULE,
   PARTICLES_MODULE,
   THREE_ADAPTER_MODULE,
@@ -1506,7 +1507,7 @@ export function validateLearningSourceText(
         label === 'Learning example "physics-panels"' ||
         label === "physics-2d" ||
         label === 'Learning example "physics-2d"'));
-  const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE);
+  const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE) || inspection.packageImportModules.includes("@crc/textures");
   const hasExactPackageImports = isVizLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.packageImportModules.length === 2

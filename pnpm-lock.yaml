@@ -116,6 +116,9 @@ importers:
       '@crc/scenarios':
         specifier: workspace:*
         version: link:packages/scenarios
+      '@crc/textures':
+        specifier: workspace:*
+        version: link:packages/textures
       '@crc/three':
         specifier: workspace:*
         version: link:packages/three
@@ -219,6 +222,9 @@ importers:
       '@crc/physics':
         specifier: workspace:*
         version: link:../physics
+      '@crc/textures':
+        specifier: workspace:*
+        version: link:../textures
       '@crc/three':
         specifier: workspace:*
         version: link:../three
@@ -232,6 +238,12 @@ importers:
       '@types/three':
         specifier: 'catalog:'
         version: 0.186.0
+
+  packages/textures:
+    devDependencies:
+      '@crc/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/three:
     devDependencies:
@@ -270,6 +282,9 @@ importers:
       '@crc/scenarios':
         specifier: workspace:*
         version: link:../packages/scenarios
+      '@crc/textures':
+        specifier: workspace:*
+        version: link:../packages/textures
       '@crc/three':
         specifier: workspace:*
         version: link:../packages/three

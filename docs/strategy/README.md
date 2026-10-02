@@ -33,9 +33,22 @@ assumption rather than rewriting historical plans or field notes.
 
 ## Related design inputs
 
+- [Requirement-level verification ledger](./agent-verification-ledger.json):
+  every inventory ID, explicit audit status, evidence scope and remaining work.
+  Accounting coverage is not an implementation completion percentage.
+- [Agent verification continuation audit](./agent-verification-progress.md)
+  (2026-09-29): complete requirement accounting, current integration state and
+  the next executable verification slice. No blanket completion claims.
+
 - [Responsive style queries](./responsive-style-queries.md) (2026-09-28):
   exploratory general styling ideas prompted by the visualization mobile gap;
   not part of visualization implementation or an approved API.
+
+- [Agent verification capability inventory](./agent-verification-inventory.md)
+  (2026-09-28): an agent-first inventory of observation, control, assertion,
+  diagnosis and evidence needs for complex CRC applications. It includes
+  ownership boundaries, conditional visualization/renderer facets, exclusions
+  and a consistency review. It is design input, not an implementation commitment.
 
 ## Executive view
 

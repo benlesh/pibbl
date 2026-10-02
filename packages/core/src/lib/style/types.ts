@@ -1,3 +1,4 @@
+import type { PathGeometry } from '../geometry/path-geometry.js';
 import type {
   FillStyle,
   PixelGridAlignment,
@@ -94,7 +95,7 @@ export interface PathStyle
     CursorStyle,
     BoxStyle,
     LayoutItemStyle {
-  d: Path2D;
+  d: Path2D | PathGeometry;
   lineInteractionWidth?: number;
 }
 

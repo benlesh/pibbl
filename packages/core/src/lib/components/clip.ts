@@ -1,4 +1,6 @@
 import { definePrimitive } from '../define-primitive.js';
+import { PathGeometry } from '../geometry/path-geometry.js';
+import { resolvePath } from '../geometry/resolve-path.js';
 import { CRCNodeInput, SystemStyle } from '../types.js';
 import { setPrimitivePresentation } from '../primitive-presentation.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
@@ -17,7 +19,7 @@ export interface ClipProps extends CRCStructuralEventProps {
 }
 
 export interface ClipStyle extends SystemStyle, BoxStyle, LayoutItemStyle {
-  d: Path2D;
+  d: Path2D | PathGeometry;
   fillRule?: CanvasFillRule;
 }
 
@@ -43,5 +45,5 @@ export const Clip = definePrimitive<
 
 setPrimitivePresentation<ResolvedClipStyle>(Clip, style => {
   const { d, fillRule = 'nonzero' } = style;
-  return { clip: { path: d, fillRule } };
+  return { clip: { path: resolvePath(d), fillRule } };
 });
