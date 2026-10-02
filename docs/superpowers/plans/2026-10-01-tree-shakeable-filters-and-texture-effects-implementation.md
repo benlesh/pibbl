@@ -287,3 +287,12 @@ unchanged by this feature. Root inspected expected, actual, and a computed diff
 showing only “DRAW.” / “MOVE. LEARN.” glyphs. The single examples-landing baseline
 is intentionally refreshed for current Chromium generic-sans rendering. No mask,
 tolerance, font wait, or runtime change was introduced.
+
+### Inspected filter lesson migration baseline
+
+The Filters lesson reference is intentionally refreshed after inspecting expected,
+actual, and computed diff. All 53,874 changed pixels are confined to the sidebar
+(23,738), lesson number (58), and editor factory-import/source migration (30,078).
+The rendered filter gallery contains zero changed pixels, and the remaining page
+content is identical. This preserves exact native rendering evidence while updating
+the public authoring example and expanded catalog navigation.
