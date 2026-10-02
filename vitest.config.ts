@@ -93,6 +93,7 @@ export default defineConfig(({ mode }) => ({
       mode === "built"
         ? []
         : [
+            { find: /^@crc\/core\/filters$/, replacement: fileURLToPath(new URL("./packages/core/src/filters.ts", import.meta.url)) },
             { find: /^@crc\/textures$/, replacement: fileURLToPath(new URL("./packages/textures/src/index.ts", import.meta.url)) },
             {
               find: /^@crc\/viz$/,

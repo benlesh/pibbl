@@ -66,6 +66,7 @@ const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = ["@crc", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
   "@crc/text",
+  "@crc/core/filters",
   VIZ_MODULE,
   "@crc/textures",
   CORE_MODULE,

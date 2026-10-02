@@ -4,7 +4,7 @@ import { isAbsolute, resolve, sep } from "node:path";
 const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const CRC_ENTRY_POINT =
-  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles|physics\/(?:2d(?:\/geometry)?|3d\/geometry)|viz|text|three|textures)$/;
+  /^@crc\/(?:core(?:\/filters|\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles|physics\/(?:2d(?:\/geometry)?|3d\/geometry)|viz|text|three|textures)$/;
 const THREE_ENTRY_POINT = /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
 
 const threeEntryPoints = new Map([
@@ -28,6 +28,7 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
   const directory = mode === "built" ? "dist" : "src";
   const extension = mode === "built" ? "mjs" : "ts";
   return new Map([
+    ["@crc/core/filters", resolve(import.meta.dirname, `../packages/core/${directory}/filters.${extension}`)],
     ["@crc/textures", resolve(import.meta.dirname, `../packages/textures/${directory}/index.${extension}`)],
     ["@crc/text", resolve(import.meta.dirname, `../packages/text/${directory}/index.${extension}`)],
     [
