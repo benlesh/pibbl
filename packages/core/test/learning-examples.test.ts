@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 72 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 73 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(72);
+    expect(learningExampleCatalog).toHaveLength(73);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1280,6 +1280,7 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+        "stirred-ink",
         "plasma-globe",
         "underwater",
         "optional-filters",
@@ -1390,6 +1391,7 @@ describe("learning example catalog", () => {
       "growing-reveal",
       "plasma-globe",
       "underwater",
+      "stirred-ink",
       "optional-filters",
     ]);
 
@@ -1747,6 +1749,10 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "marble",
+        "paper",
+        "cellular",
+        "reactionDiffusion",
         "ReactionDiffusion",
         "ProceduralTexture",
         "Scale",

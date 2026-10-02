@@ -55,7 +55,7 @@ try {
       if ((await readFile(destination, "utf8")) !== text)
         throw new Error(`Stale ${name} kernel; run build:wasm`);
     } else await writeFile(destination, text);
-    console.log(`${name}: ${bytes.length} bytes`);
+    console.warn(`${name}: ${bytes.length} bytes`);
   }
 } finally {
   await rm(temp, { recursive: true, force: true });

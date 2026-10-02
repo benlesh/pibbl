@@ -90,8 +90,17 @@ Seed and spots/stripes preset for the `reactionDiffusion` recipe factory.
 
 ## InkMessage
 
-Typed `paint` (normalized u/v, radius in cells, strength), `pause` (paused boolean),
-and `reset` messages delivered through the texture's `send` method.
+Typed `paint`, `stir`, `pause`, and `reset` messages delivered through the texture's
+`send` method. Paint uses normalized `u`/`v`, a radius in cells (default 6), and
+strength in [0, 1] (default 0.8). Stir uses normalized `u`/`v`, normalized `du`/`dv`
+displacements in [-1, 1], and a radius in cells (default 16). Radii must be finite,
+greater than zero, and at most 128. All coordinates/vectors must be finite;
+centers outside [0, 1] are ignored.
+
+Stir displaces existing ink with smooth local falloff; it adds no ink. Pause stops
+reaction stepping while explicit paint/stir commands still apply. Reset repeats
+the seed and preserves pause. Messages run in send order on the next eligible
+texture frame, and sends after disposal are inert.
 
 ## WaterWavesOptions
 

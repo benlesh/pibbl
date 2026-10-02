@@ -282,3 +282,105 @@ baseline/enhanced recipe pairs, valid desktop/mobile controls and layout, and no
 page errors. Focused numerical tests also preserve seams and memory identity.
 Production exports and defaults are unchanged; visual preference for the richer
 candidates remains a user judgment.
+
+## Production migration slice
+
+`/crc` now runs the public recipe APIs with WASM marble, paper, cellular, and ink,
+including animated material parameters and Rapier collision messages that paint
+ink. The comparison pages retain the pre-migration JS implementations in
+`reference-*.ts`; they must not silently benchmark WASM against itself.
+
+The production kernels are generated from `packages/textures/assembly/` by
+`node tooling/build-texture-wasm.mjs`. Static parameter updates reuse memory;
+resolution or generator changes replace it. Full-field and RGBA transport does
+not cross through copies in JavaScript; Canvas upload remains browser work.
+
+Focused parity: `node --import tsx --test tooling/texture-wasm-spike/production.check.mjs`.
+Public browser contracts: `packages/textures/test/wasm-runtime.test.tsx` and
+`wasm-integration.test.tsx`. The latter pauses ink evolution and verifies that
+physics collision messages alter its pixels, while animated materials keep
+three stable pixel buffers across 360 scheduled frames.
+
+This is a runnable slice for feedback, not completion of every texture recipe or
+of an animation engine port. The richer visual candidates remain experimental.
+
+Fresh slice verification (2026-10-01 local, Node 26.9.0, pnpm 11.21.0,
+Playwright Chromium 151 on macOS arm64; not the repository's Node 24 LTS baseline):
+
+```sh
+corepack pnpm@11.21.0 exec vitest run packages/textures/test/wasm-runtime.test.tsx packages/textures/test/wasm-integration.test.tsx packages/textures/test/material.test.tsx packages/textures/test/simulation.test.ts packages/textures/test/reaction-diffusion.test.tsx packages/textures/test/lifecycle.test.tsx packages/textures/test/presentation.test.tsx --browser.headless --browser.ui=false
+```
+
+Result: 7 files, 36 tests passed. `corepack pnpm@11.21.0 exec tsc --noEmit
+--pretty false`, the textures package build, generated-kernel `--check`, and the
+production numerical parity check passed. Focused ESLint passed. The refreshed
+`check-production.mjs` browser run reported no page errors, observed animation
+and a collision, verified pause/reset, and captured desktop/mobile screenshots.
+The aggregate trust gate and full packed-consumer matrix have not been run for
+this slice.
+
+### Living-ink feedback revision
+
+The `/crc` preview now uses the branching preset and continuous physics-driven
+`stir` messages instead of collision paint stamps. A mount-owned `useReaction`
+reads the body's committed position; initial placement/teleports are excluded.
+“Pause reaction” stops Gray–Scott stepping while leaving displacement active.
+
+Fresh focused check: `corepack pnpm@11.21.0 exec vitest run
+packages/textures/test/simulation.test.ts packages/textures/test/wasm-integration.test.tsx
+packages/textures/test/wasm-runtime.test.tsx --browser.headless --browser.ui=false`
+passed 13 tests in Chromium on Node 26.9.0. Package build, focused ESLint, and
+kernel reproducibility check passed. Browser QA observed 298 movement messages
+in five seconds with no page errors; desktop/mobile and reset/pause checked.
+Repository typecheck reported an unrelated existing `ripple` message type error
+in `packages/scenarios/src/learning/composition/underwater.example.tsx:29`.
+
+### Accepted migration completion — 2026-10-01
+
+The accepted scope is marble, paper, cellular, reaction-diffusion, and the
+physics-driven stirring example. Water, tendrils, and lightning are separate
+work; this record does not claim those generators use WASM. Richer material
+candidates remain in the comparison spike. CRC's existing animation scheduler
+and Rapier integration are unchanged, and texture and physics memories remain
+separate.
+
+The public Studio example is `#/examples/composition/stirred-ink`. Its pause,
+stir, and reset controls demonstrate that reaction evolution and displacement
+are independent. Run `node tooling/texture-wasm-spike/check-studio.mjs` against
+Studio on port 4382, or set `CRC_STUDIO_ORIGIN`. The check exercises the editable
+public source and asserts runtime behavior, including zero ink uploads with both
+controls paused, one upload on reset, and continued stirring with the reaction
+paused. No TypeScript or browser runtime errors were observed; the Canvas output
+was also visually inspected.
+
+Final checks used Node 24.15.0, pnpm 11.21.0, and Playwright Chromium on macOS
+arm64:
+
+- `test:texture-kernels`: reproducible generated binaries and both numerical
+  parity tests passed, including boundary dimensions and option values.
+- `test:textures`: 72 tests in 15 files passed. A subsequent focused solver test
+  also checks exact displacement after buffer swaps and constant-field
+  preservation at all four edges.
+- `trust:package`: packed package boundaries, Bundler/NodeNext consumers, import
+  inertness (including forbidden WASM allocation), package entries, and source/
+  packed esbuild/Vite tree-shaking checks passed. Each selected texture retains
+  only its own kernel, and plain CRC retains none.
+- `learning-examples.test.ts`: all 221 tests passed with the added Studio route.
+- `test:smoke:built`: both built browser smoke tests passed.
+- `scenarios:check`, `studio-docs:check`, `playground:build`, `lint:code`, package
+  builds, and `git diff --check` passed.
+- `VITE_CRC_REPORT_PERF=1` with `performance.test.tsx`: 256×144 reaction-diffusion,
+  displayed at 832×400, 60 measured frames after warmup: solver mean 0.995 ms,
+  raster/upload mean 0.032 ms, full CRC frame median 1.8 ms, p95 1.9 ms. This is a
+  machine-specific descriptive sample, not a timing guard or display latency.
+
+The mixed checkout is **not aggregate-trust green**. `trust` stopped at the
+pre-existing ENV-03 core-manifest evidence fingerprint. Independently running
+later checks exposed an unfinished underwater `rippleStrength` option in root
+TypeScript, the missing weighted-electric contract preservation inventory in
+`docs:check`, and formatting differences in 76 unrelated evidence/document files.
+The full browser suite passed 3,389 tests but failed two new catalog expectations
+(fixed and reverified above) and two unrelated scenario actions: `viz-hover-lab`
+("No pending old request") and `agent-targeting-verification` (missing scene
+continuation). Existing approval hashes, visual baselines, and unrelated work
+were not rewritten to suppress those failures.

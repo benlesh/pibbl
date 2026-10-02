@@ -1510,7 +1510,12 @@ export function validateLearningSourceText(
         label === 'Learning example "physics-2d"'));
   const optionalFilterImports = inspection.packageImportModules.includes("@crc/core/filters") ? 1 : 0;
   const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE) || inspection.packageImportModules.includes("@crc/textures");
-  const hasExactPackageImports = isVizLesson
+  const isStirredInkLesson = sourcePath === "packages/scenarios/src/learning/composition/stirred-ink.example.tsx" ||
+    (sourcePath === undefined && (label === "stirred-ink" || label === 'Learning example "stirred-ink"'));
+  const hasExactPackageImports = isStirredInkLesson
+    ? inspection.hasNamedValueCoreImport && inspection.hasPhysics2DValueImport &&
+      inspection.packageImportModules.includes("@crc/textures") && inspection.packageImportModules.length === 3
+    : isVizLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.packageImportModules.length === 2 + optionalFilterImports
     : isThreeLesson

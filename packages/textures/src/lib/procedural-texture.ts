@@ -1,3 +1,4 @@
+import { releaseField } from "./wasm/memory.js";
 import { defineRenderLayer } from "@crc/core";
 import {
   paletteLut,
@@ -56,7 +57,7 @@ interface Resources {
   output: OffscreenCanvasRenderingContext2D;
   dirty: boolean;
 }
-function generate(o: Options) {
+function generate(o: Options, previous?: Float32Array) {
   return materialField(
     o.resolution.width,
     o.resolution.height,
@@ -64,6 +65,7 @@ function generate(o: Options) {
     o.seed,
     o.scale,
     o.detail,
+    previous,
   );
 }
 
@@ -112,7 +114,7 @@ export const ProceduralTexture = /* @__PURE__ */ defineRenderLayer<
       next.scale !== old.scale ||
       next.detail !== old.detail
     ) {
-      const field = generate(next);
+      const field = generate(next, r.field);
       if (resized) {
         const raster = new TextureRaster(
           next.resolution.width,
@@ -121,6 +123,7 @@ export const ProceduralTexture = /* @__PURE__ */ defineRenderLayer<
         r.raster.dispose();
         r.raster = raster;
       }
+      if (field !== r.field) releaseField(r.field);
       r.field = field;
       r.dirty = true;
     }
@@ -142,6 +145,7 @@ export const ProceduralTexture = /* @__PURE__ */ defineRenderLayer<
   },
   dispose(r) {
     r.raster.dispose();
+    releaseField(r.field);
     r.field = new Float32Array(0);
     r.options.render = undefined;
   },

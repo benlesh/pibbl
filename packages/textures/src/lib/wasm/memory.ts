@@ -19,6 +19,23 @@ export function rasterizeField(
 ): Raster | undefined {
   return owners?.get(field)?.rasterize(field, lut, gain);
 }
+export function reuseFieldMemory(
+  field: Float32Array | undefined,
+  module: WebAssembly.Module,
+  width: number,
+  height: number,
+): FieldMemory {
+  const owner = field && owners?.get(field);
+  return owner &&
+    owner.module === module &&
+    owner.width === width &&
+    owner.height === height
+    ? owner
+    : new FieldMemory(module, width, height, 1);
+}
+export function releaseField(field: Float32Array) {
+  owners?.get(field)?.dispose();
+}
 export class FieldMemory {
   readonly memory: WebAssembly.Memory;
   readonly kernel: Kernel;
@@ -29,7 +46,7 @@ export class FieldMemory {
   private image?: ImageData;
   readonly stamps: Float64Array<ArrayBuffer>;
   constructor(
-    module: WebAssembly.Module,
+    readonly module: WebAssembly.Module,
     readonly width: number,
     readonly height: number,
     fieldCount: number,

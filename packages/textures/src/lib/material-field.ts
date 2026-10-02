@@ -1,4 +1,4 @@
-import { FieldMemory, lazyKernel } from "./wasm/memory.js";
+import { reuseFieldMemory, lazyKernel } from "./wasm/memory.js";
 import { bytes as marbleBytes } from "./wasm/marble-bytes.js";
 import { bytes as paperBytes } from "./wasm/paper-bytes.js";
 import { bytes as cellularBytes } from "./wasm/cellular-bytes.js";
@@ -9,11 +9,12 @@ export type MaterialGenerator = (
   seed: number,
   scale: number,
   detail: number,
+  previous?: Float32Array,
 ) => Float32Array;
 function generator(bytes: string): MaterialGenerator {
   const module = lazyKernel(bytes);
-  return (width, height, seed, scale, detail) => {
-    const owner = new FieldMemory(module(), width, height, 1);
+  return (width, height, seed, scale, detail, previous) => {
+    const owner = reuseFieldMemory(previous, module(), width, height);
     const field = owner.fields[0];
     owner.kernel.run(field.byteOffset, width, height, seed, scale, detail);
     return field;
@@ -34,6 +35,7 @@ export function materialField(
   seed: number,
   scale: number,
   detail: number,
+  previous?: Float32Array,
 ): Float32Array {
-  return generators[kind](width, height, seed, scale, detail);
+  return generators[kind](width, height, seed, scale, detail, previous);
 }

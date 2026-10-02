@@ -129,6 +129,16 @@ const drafts = [
     load: () => import("./learning/composition/plasma-globe.example"),
   },
   {
+    slug: "stirred-ink", title: "Stirred Ink", shortTitle: "Stirred Ink", section: "composition", order: 211,
+    summary: "Animate material parameters and stir living ink with a moving physics body.",
+    api: ["useTexture", "reactionDiffusion", "marble", "paper", "cellular", "useReaction", "usePlayback", "PhysicsWorld2D"],
+    objectives: ["Drive WASM texture parameters with CRC animation.", "Displace existing ink using committed physics positions."],
+    prompts: { gesture: "Pause the reaction to isolate the wake, stop stirring, or reset the ink.", code: "Send normalized stir vectors from another moving object." },
+    apiNotes: ["Physics and textures own separate WASM memories; only small movement messages cross between them.", "Texture messages are queued through CRC; there is no second animation loop."],
+    canvas: { width: 600, height: 580 }, related: ["living-ink", "material-lab", "physics-panels"],
+    load: () => import("./learning/composition/stirred-ink.example"),
+  },
+  {
     slug: "material-lab", title: "Material Lab", shortTitle: "Material Lab", section: "composition", order: 206,
     summary: "Explore seeded marble, paper, and cellular surfaces as backgrounds and repeating fills.", api: ["ProceduralTexture", "Group", "useSignal"],
     objectives: ["Reuse procedural texture output in Canvas composition.", "Keep texture generation independent of display size."],

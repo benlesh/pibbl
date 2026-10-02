@@ -52,6 +52,10 @@ const fixtures = {
   texturesImportOnly: `import '@crc/textures';`,
 };
 
+for (const [name, factory] of [["paper", "paper"], ["cellular", "cellular"], ["ink", "reactionDiffusion"]]) {
+  fixtures[name] = fixtures.marble.replaceAll("marble", factory);
+}
+
 const normalized = (path) => path.replaceAll("\\", "/");
 const sourceAliases = [
   {
@@ -279,10 +283,10 @@ try {
         );
         evidence[name] ??= {};
         evidence[name][key] = summary(es, vi);
-        if (["plain", "layer", "blur", "marble", "water", "displacement"].includes(name)) {
+        if (["plain", "layer", "blur", "marble", "paper", "cellular", "ink", "water", "displacement"].includes(name)) {
           for (const [bundler, code] of [["esbuild", es.code], ["Vite", vi.code]]) {
             for (const [kernel, bytes] of Object.entries(wasmKernels)) {
-              assert.equal(code.includes(bytes), name === "marble" && kernel === "marble",
+              assert.equal(code.includes(bytes), name === kernel,
                 `${name} ${key} ${bundler} has incorrect ${kernel} WASM retention`);
             }
           }

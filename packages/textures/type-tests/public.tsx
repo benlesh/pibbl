@@ -124,3 +124,25 @@ const oldCommand: TendrilsMessage = obsoleteCommand;
 const oldOptions: TendrilsOptions = { termination: "perimeter" };
 void oldCommand;
 void oldOptions;
+
+import { reactionDiffusion, type InkMessage } from "@crc/textures";
+const stir: InkMessage = {
+  type: "stir",
+  u: 0.5,
+  v: 0.5,
+  du: 0.01,
+  dv: -0.02,
+  radius: 20,
+};
+export function StirredInkConsumer() {
+  const texture = useTexture(reactionDiffusion({ preset: "stripes" }));
+  return (
+    <Rectangle
+      style={{ width: 256, height: 128, fill: texture }}
+      onClick={() => texture.send(stir)}
+    />
+  );
+}
+// @ts-expect-error Displacement requires both normalized vector components.
+const incompleteStir: InkMessage = { type: "stir", u: 0.5, v: 0.5, du: 0.1 };
+void incompleteStir;

@@ -4,7 +4,7 @@ import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
 } from "../../core/src/lib/scheduler/testing.js";
-it("drives WASM texture parameters with animation and paints from Rapier collision events", () => {
+it("drives WASM texture parameters with animation and displaces ink continuously from Rapier movement", () => {
   const driver = new ManualSchedulerDriver(),
     restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement("canvas");
@@ -29,8 +29,14 @@ it("drives WASM texture parameters with animation and paints from Rapier collisi
     for (let frame = 1; frame <= 360; frame++)
       driver.flush((frame * 1000) / 60);
     expect(scene.observations.materialDetail).toBeGreaterThan(start);
-    expect(scene.observations.impacts).toBeGreaterThan(0);
+    expect(scene.observations.disturbances).toBeGreaterThan(100);
     expect(inkPixels()).not.toEqual(initialInk);
+    const materialBuffers = new Set(
+      uploads.mock.calls
+        .filter(([image]) => image.width === 96 && image.height === 96)
+        .map(([image]) => image.data.buffer),
+    );
+    expect(materialBuffers.size).toBe(3);
     expect(
       canvas.getContext("2d")!.getImageData(0, 0, 192, 160).data,
     ).not.toEqual(before);

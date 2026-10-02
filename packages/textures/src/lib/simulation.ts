@@ -39,6 +39,23 @@ export class InkSimulation {
       1,
     );
   }
+  stir(x: number, y: number, dx: number, dy: number, radius: number) {
+    const owner = this.owner!,
+      next = 2 - this.parity;
+    owner.kernel.stir(
+      this.a.byteOffset,
+      this.b.byteOffset,
+      owner.fields[next].byteOffset,
+      owner.fields[next + 1].byteOffset,
+      this.width,
+      this.height,
+      x,
+      y,
+      dx,
+      dy,
+      radius,
+    );
+  }
   advance(count: number) {
     const owner = this.owner!,
       next = 2 - this.parity;

@@ -98,6 +98,43 @@ and `reset` messages. Pausing, reset, and speed changes discard elapsed-time
 debt; zero speed requests no continuing work. Importing or painting water does
 not import the displacement processor.
 
+## WASM field implementation
+
+The marble, paper, cellular, and reaction-diffusion kernels execute in WASM.
+Configuration, lifecycle callbacks, and scheduling remain ordinary CRC code.
+There is no runtime backend selector or JavaScript fallback for these kernels.
+The other optional recipes have their own implementation contracts.
+
+Each selected embedded module compiles lazily on first resource creation, never
+on import or inert recipe creation. Every live field owns fixed, bounded memory;
+parameter changes reuse it, while resolution/generator changes replace it. Ink
+keeps four fields for fixed stepping and scratch work. The RGBA ImageData and
+alpha views borrow that memory without a JavaScript full-buffer copy. Canvas
+upload and committed publication still incur browser work. Memory is never grown
+while those views are live. Disposal detaches field-owner associations and drops
+resource views; module caches remain reusable. No GC timing guarantee is made.
+
+`reactionDiffusion` accepts ordered `paint`, `stir`, `pause`, and `reset` messages.
+Stir uses a normalized center and displacement vector (each displacement in
+[-1, 1]), with a finite radius greater than zero through 128 texture cells
+(default 16). It backtraces a smooth local displacement into the existing A/B
+fields with bilinear sampling and clamped edges, using the existing scratch
+fields. It neither deposits ink nor implements incompressible-fluid pressure.
+Zero displacement is an exact field no-op. Finite out-of-domain centers are
+ignored; invalid numerical inputs reject without publishing a new raster.
+Explicit paint/stir work while reaction stepping is paused.
+
+Animation supplies parameters through existing signals. A `useReaction` can read
+committed physics positions and send small stir messages. Rapier and textures
+retain separate WASM memories. Neither raw pointers nor pixel/field buffers cross
+the public boundary, and the connection does not alter scheduler phases or
+promise same-frame bidirectional coupling. Animation itself is not ported to
+WASM by this change.
+
+Pinned AssemblyScript generates checked-in per-kernel byte modules. The trust gate
+checks reproducibility, JS-reference parity, lazy import behavior, public recipe
+ownership/messages, and selected-kernel tree shaking in source and packed builds.
+
 ## Existing texture components
 
 `ReactionDiffusion`, `ProceduralTexture`, `TextureRenderer`, and
@@ -144,7 +181,7 @@ atomicity guarantee.
 
 ## Boundaries and evidence
 
-There is no interactive ripple API, worker/WASM execution contract, raw-source
+There is no worker execution contract or public shared-WASM-memory ABI, raw-source
 accessor, global producer registry, cross-root texture sharing, or automatic
 semantic/input remapping. Texture pixels affect appearance only; a displacement
 filter does not alter layout, measurement, events, focus, physics, animation

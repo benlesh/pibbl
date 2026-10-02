@@ -1305,7 +1305,7 @@ export declare function AnchoredLayout<T extends AnchoredItem>(props: AnchoredLa
   export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' };
   export function waterWaves(options?: WaterWavesOptions): import('@crc/core').TextureRecipe<WaterWavesMessage>;
   export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
-  export type InkMessage = {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
+  export type InkMessage = {readonly type: 'stir'; readonly u: number; readonly v: number; readonly du: number; readonly dv: number; readonly radius?: number} | {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
   export function marble(options?: MaterialOptions): import('@crc/core').TextureRecipe;
   export function paper(options?: MaterialOptions): import('@crc/core').TextureRecipe;
   export function cellular(options?: MaterialOptions): import('@crc/core').TextureRecipe;
