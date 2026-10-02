@@ -12,7 +12,7 @@ import {
 } from "@crc/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { clearSharedState, getCRCInstance } from "../src/lib/global-state";
-import type { FilterSurfacePool } from "../src/lib/filter/filter-surface-pool";
+import { FilterSurfacePool } from "../src/lib/filter/filter-surface-pool";
 
 const controllers = new Set<CRCController>();
 
@@ -119,18 +119,17 @@ describe("filter surface ownership", () => {
     expectReleased(firstPool, 2, 100_100);
     expect(peekNativeFilterPool(instance)).toBeUndefined();
 
+    const checkout = vi.spyOn(FilterSurfacePool.prototype, "checkoutPair");
     crc(canvas, threeNestedFilters(createElement(ThrowingPrimitive, {})));
     expect(() => frames.runNext(1_002)).toThrowError("forced filter failure");
     expect(instance.refs.size).toBe(0);
-    const replacementPool = peekNativeFilterPool(instance)!;
+    const replacementPool = checkout.mock.instances[0]! as FilterSurfacePool;
     expect(replacementPool).not.toBe(firstPool);
-    expect(replacementPool.snapshot()).toMatchObject({
-      surfaceSlots: 6, createdSurfaceSlots: 6, activePairs: 0,
-      peakActivePairs: 3, pairCheckouts: 3, pairReturns: 3,
-    });
+    expect(peekNativeFilterPool(instance)).toBeUndefined();
+    expectReleased(replacementPool, 6, 3);
+    checkout.mockRestore();
 
     controller.dispose();
-    expectReleased(replacementPool, 6, 3);
 
     const freshController = crc(
       canvas,

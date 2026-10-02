@@ -118,12 +118,17 @@ export function peekNativeFilterPool(instance: CRCInstance): FilterSurfacePool |
 class NativeFilterService {
   readonly pool = new FilterSurfacePool();
   used = false;
+  private committed = false;
 
   constructor(private readonly instance: NonNullable<typeof GLOBAL_STATE.currentCRCInstance>) {}
 
   beginRender(): void { this.used = false; }
   endRender(success: boolean): void {
-    if (!success || this.used) return;
+    if (success && this.used) {
+      this.committed = true;
+      return;
+    }
+    if (!success && this.committed) return;
     this.pool.dispose();
     this.instance.optionalServices.delete(FILTER_SURFACE_POOL);
   }

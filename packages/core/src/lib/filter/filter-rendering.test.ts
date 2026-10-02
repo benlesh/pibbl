@@ -348,11 +348,7 @@ describe('filter rendering', () => {
       'drop-shadow(1px 1px 0px red)',
       'drop-shadow(2px 2px 0px not-a-color)',
     ]);
-    expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
-      activePairs: 0,
-      pairCheckouts: 1,
-      pairReturns: 1,
-    });
+    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
   });
 
   it('reports a singular invalid color after full-chain-first native parsing', () => {
@@ -381,11 +377,7 @@ describe('filter rendering', () => {
       'drop-shadow(2px 2px 0px not-a-color)',
       'drop-shadow(2px 2px 0px not-a-color)',
     ]);
-    expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
-      activePairs: 0,
-      pairCheckouts: 1,
-      pairReturns: 1,
-    });
+    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
   });
 
   it.each([
