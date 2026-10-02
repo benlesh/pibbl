@@ -29,7 +29,7 @@ const displacementExecutor: CRCFilterExecutor = {
     }
     const map = isSignal(options.map) ? options.map.get() : options.map;
     validateTexturePaint(map);
-    return Object.freeze({ executor: nativeExecutor, map, strength: strengthValue, region: Object.freeze({ x, y, width, height }) }) as PreparedDisplacement;
+    return Object.freeze({ executor: displacementExecutor, map, strength: strengthValue, region: Object.freeze({ x, y, width, height }) }) as PreparedDisplacement;
   },
   render(input: Readonly<CRCFilterRenderInput>): void {
     renderDisplacementBoundary(input, input.filters as readonly PreparedDisplacement[]);

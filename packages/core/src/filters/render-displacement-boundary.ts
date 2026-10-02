@@ -9,21 +9,15 @@ import { assertNativeCanvasFilter } from './native-canvas-filter.js';
 export interface PreparedDisplacement extends PreparedCRCFilter { readonly map: TexturePaint; readonly strength: number; readonly region: Readonly<{x:number;y:number;width:number;height:number}>; }
 let gpu: DisplacementGpu | undefined;
 export function renderDisplacementBoundary(input: Readonly<CRCFilterRenderInput>, filters: readonly PreparedDisplacement[]): void {
-  const index=filters.findIndex(filter => 'map' in filter);
-  const effect=filters[index]!;
-  if (effect.strength === 0) { input.renderSubtree(); return; }
+  const effects=filters as readonly (PreparedDisplacement | NativePreparedFilter)[];
   renderFilterBoundary({ component: input.component, filters: [{ reverseInfluence: (output: any) => output } as any], presentation: input.presentation, process(source: OffscreenCanvas, result: OffscreenCanvasRenderingContext2D, windows: any) {
-    const before=filters.slice(0,index) as unknown as readonly NativePreparedFilter[];
-    const after=filters.slice(index+1) as unknown as readonly NativePreparedFilter[];
-    borrowTextureRaster(effect.map, map => {
-      let gpuSource=source;
-      if (before.length) {
-        const canvas=new OffscreenCanvas(source.width,source.height); const context=canvas.getContext('2d')!;
-        assertNativeCanvasFilter(context,compileNativeFilters(before,windows.density),input.component);
-        context.drawImage(source,0,0); gpuSource=canvas;
-      }
-      gpu ??= new DisplacementGpu(); const bitmap=gpu.apply(gpuSource,map,effect.strength*windows.density);
-      try { if(after.length) assertNativeCanvasFilter(result,compileNativeFilters(after,windows.density),input.component); result.drawImage(bitmap,windows.sourceToOutputX,windows.sourceToOutputY); } finally { bitmap.close(); }
-    });
+    let current=source; let native: NativePreparedFilter[]=[];
+    const applyNative=() => { if(!native.length) return; const canvas=new OffscreenCanvas(current.width,current.height); const context=canvas.getContext('2d')!; assertNativeCanvasFilter(context,compileNativeFilters(native,windows.density),input.component); context.drawImage(current,0,0); current=canvas; native=[]; };
+    for(const effect of effects) {
+      if(!('map' in effect)) { native.push(effect); continue; }
+      applyNative(); if(effect.strength===0) continue;
+      borrowTextureRaster(effect.map,map=>{ gpu ??= new DisplacementGpu(); const bitmap=gpu.apply(current,map,effect.strength*windows.density); const canvas=new OffscreenCanvas(current.width,current.height); canvas.getContext('2d')!.drawImage(bitmap,0,0); bitmap.close(); current=canvas; });
+    }
+    applyNative(); result.drawImage(current,windows.sourceToOutputX,windows.sourceToOutputY);
   } } as any, input.renderSubtree);
 }
