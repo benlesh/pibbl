@@ -123,6 +123,7 @@ class Resource {
   disposed = false;
   dirty = true;
   private sequence = 0;
+  private publicationCanvasesCreated = 0;
   private messages: unknown[] = [];
   private unregister?: () => void;
   private continuing = false;
@@ -307,12 +308,20 @@ class Resource {
       ctx.restore();
     }
     const candidate = this.spare?.width === this.canvas.width && this.spare.height === this.canvas.height ?
-      this.spare : new OffscreenCanvas(this.canvas.width, this.canvas.height);
+      this.spare : this.createPublicationCanvas();
     this.spare = undefined;
     const candidateContext = candidate.getContext("2d");
     if (!candidateContext) throw new Error("Textures require OffscreenCanvas 2D.");
     candidateContext.drawImage(this.canvas, 0, 0);
     return candidate;
+  }
+  private createPublicationCanvas(): OffscreenCanvas {
+    this.publicationCanvasesCreated++;
+    return new OffscreenCanvas(this.canvas.width, this.canvas.height);
+  }
+  /** @internal Structural ownership evidence for texture publication tests. */
+  publicationSnapshot(): Readonly<{ publicationCanvasesCreated: number }> {
+    return Object.freeze({ publicationCanvasesCreated: this.publicationCanvasesCreated });
   }
   private publishInitial(): void {
     const candidate = this.rasterizeCandidate();

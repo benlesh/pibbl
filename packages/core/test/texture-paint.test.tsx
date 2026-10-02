@@ -198,3 +198,43 @@ it("keeps an Advance-committed texture raster when the later render fails", () =
     restore();
   }
 });
+
+it("reuses its bounded publication pair across 100 committed updates", () => {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  const textureRecipe = defineTexture<{}, { value: number }, { value: number }>({
+    create: () => ({ value: 0 }),
+    rasterize(state, context) {
+      const image = context.canvas.getContext("2d")!.createImageData(1, 1);
+      image.data[0] = state.value;
+      image.data[3] = 255;
+      context.canvas.getContext("2d")!.putImageData(image, 0, 0);
+    },
+    receive(state, message, context) {
+      state.value = message.value;
+      context.invalidate();
+    },
+  });
+  let texture: ReturnType<typeof useTexture<{ value: number }>>;
+  let resource: any;
+  function Scene() {
+    texture = useTexture(textureRecipe({}), { resolution: { width: 8, height: 8 } });
+    borrowTextureRaster(texture, raster => { resource = raster.resource; });
+    return <Rectangle style={{ width: 8, height: 8, fill: texture }} />;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 16;
+  document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  try {
+    driver.flush(0);
+    for (let value = 1; value <= 100; value++) {
+      texture!.send({ value });
+      driver.flush(value * 16);
+    }
+    expect(resource.publicationSnapshot()).toEqual({ publicationCanvasesCreated: 2 });
+  } finally {
+    controller.dispose();
+    restore();
+  }
+});
