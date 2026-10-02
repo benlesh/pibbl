@@ -157,3 +157,25 @@ Move and Scale. The yellow Canvas spark was visibly behind the translucent,
 rotated HTML host. No browser page or console errors were observed. Both screenshots
 were inspected: `/private/tmp/html-box-desktop.png` and
 `/private/tmp/html-box-mobile.png`. No visual baseline was changed.
+
+## Input-edge lightning refinement — 2026-10-02
+
+Replaced the labelled placeholder with branching blue-white Canvas lightning
+from the hovered native input to a dark rounded panel. Native code sends a typed
+`onInputHover` callback through HtmlBox data. The example keeps the supplied
+positioned DIV as the input's offsetParent, measures its untransformed native
+layout offsets and dimensions, and renders both in the same CRC Group. This is
+an example-specific layout contract, not a general nested-DOM geometry API.
+ResizeObserver refreshes geometry while hovered and disconnects on abort. CRC
+playback starts on entry and pauses on exit; no independent animation loop runs.
+
+The updated public smoke test failed before implementation, then passed in source
+and built modes, asserting animation starts, changes over time, stops on exit,
+and native input identity survives transforms. Built smoke: 3 tests passed.
+Typecheck and focused ESLint passed under the same Node/pnpm/browser versions.
+Playwright desktop inspection confirmed the same input node and text after Rotate,
+Move and Scale, with correctly aligned lightning and no page errors. The native
+box measured x=22, y=50, width=296, height=40 in its DIV. Desktop and mobile images
+were inspected at `/private/tmp/html-lightning-transformed.png` and
+`/private/tmp/html-lightning-mobile.png`. Browser plugin unavailable; used the
+repository Playwright installation.

@@ -123,7 +123,7 @@ const drafts = [
     summary: "Mount native HTML with CRC transforms, clipping, and coordinated focus.",
     api: ["HtmlBox", "Group", "Clip", "FocusManagement"],
     objectives: ["Keep native inputs alive while CRC moves their box.", "Share clipping geometry and source-order keyboard navigation."],
-    prompts: { gesture: "Type a note, rotate/move/scale its box, then Tab between Canvas and HTML controls.", code: "Mount ordinary DOM in HtmlBox and release resources through its AbortSignal." },
+    prompts: { gesture: "Hover the input to arc lightning to the panel edges. Type a note, rotate/move/scale, then Tab between Canvas and HTML.", code: "Report native input geometry through a typed data callback. Draw and animate the effect in the same CRC Group." },
     apiNotes: ["HTML is always above Canvas paint. PathGeometry supplies portable ancestor clips.", "The application supplies the canvas wrapper and overlay; CRC owns each mounted box."],
     canvas: { width: 720, height: 480 }, related: ["group", "clip"],
     load: () => import("./learning/composition/html-box.example"),

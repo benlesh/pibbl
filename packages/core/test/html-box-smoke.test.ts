@@ -31,9 +31,14 @@ it('runs the public HtmlBox lesson with native input and retained geometry in so
     expect(input.value).toBe('Native state survives');
     const context = canvas.getContext('2d')!;
     const beforeSpark = Array.from(context.getImageData(0, 0, canvas.width, canvas.height).data);
-    input.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 300, clientY: 260, pointerId: 1, pointerType: 'mouse' }));
+    input.dispatchEvent(new PointerEvent('pointerenter', { pointerId: 1, pointerType: 'mouse' }));
     await frame();
-    expect(Array.from(context.getImageData(0, 0, canvas.width, canvas.height).data)).not.toEqual(beforeSpark);
+    const firstArc = Array.from(context.getImageData(0, 0, canvas.width, canvas.height).data);
+    expect(firstArc).not.toEqual(beforeSpark);
+    await expect.poll(() => Array.from(context.getImageData(0, 0, canvas.width, canvas.height).data)).not.toEqual(firstArc);
+    input.dispatchEvent(new PointerEvent('pointerleave', { pointerId: 1, pointerType: 'mouse' }));
+    await frame();
+    expect(Array.from(context.getImageData(0, 0, canvas.width, canvas.height).data)).toEqual(beforeSpark);
   } finally {
     controller.dispose();
     expect(parent.querySelector('[data-crc-html-box]')).toBeNull();
