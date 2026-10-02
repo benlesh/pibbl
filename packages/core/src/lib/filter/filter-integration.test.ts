@@ -20,7 +20,7 @@ import {
   type RenderingContext2D,
   type SystemStyle,
 } from '@crc/core';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   clearSharedState,
   getCRCInstance,
@@ -39,6 +39,19 @@ import { FilterSurfacePool } from './filter-surface-pool.js';
 import { renderFilterBoundary } from './render-filter-boundary.js';
 
 const controllers = new Set<CRCController>();
+let disposedNativePools: Array<{
+  readonly pool: FilterSurfacePool;
+  readonly snapshot: ReturnType<FilterSurfacePool['snapshot']>;
+}> = [];
+
+beforeEach(() => {
+  disposedNativePools = [];
+  const dispose = FilterSurfacePool.prototype.dispose;
+  vi.spyOn(FilterSurfacePool.prototype, 'dispose').mockImplementation(function(this: FilterSurfacePool) {
+    disposedNativePools.push({ pool: this, snapshot: this.snapshot() });
+    return dispose.call(this);
+  });
+});
 
 afterEach(() => {
   for (const controller of controllers) controller.dispose();
@@ -1494,8 +1507,8 @@ describe('filter failure recovery', () => {
       expect(() => frames.runNext())
         .toThrow(/Probe.*property filter.*native Canvas filter getter threw/i);
       expect(callback).not.toHaveBeenCalled();
-      expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot())
-        .toMatchObject({ activePairs: 0, pairCheckouts: 1, pairReturns: 1 });
+      expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+      expectDisposedNativePool({ pairCheckouts: 1, pairReturns: 1 });
     } finally {
       Object.defineProperty(prototype, 'filter', descriptor);
     }
@@ -1523,8 +1536,8 @@ describe('filter failure recovery', () => {
       expect(() => frames.runNext())
         .toThrow(/Probe.*property filter.*native Canvas filter setter threw/i);
       expect(callback).not.toHaveBeenCalled();
-      expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot())
-        .toMatchObject({ activePairs: 0, pairCheckouts: 1, pairReturns: 1 });
+      expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+      expectDisposedNativePool({ pairCheckouts: 1, pairReturns: 1 });
     } finally {
       Object.defineProperty(prototype, 'filter', descriptor);
     }
@@ -1623,17 +1636,16 @@ describe('filter failure recovery', () => {
     const canvas = mountScheduled(createElement(Probe, {
       style: { filter: blur({ radius: 1 }) },
     }));
+    const checkout = vi.spyOn(FilterSurfacePool.prototype, 'checkoutPair');
 
     expect(() => frames.runNext())
       .toThrowError('pattern-bearing primitive failed');
     expect(callback).toHaveBeenCalledOnce();
-    const pool = peekNativeFilterPool(getCRCInstance(canvas))!;
-    expect(pool.snapshot()).toMatchObject({
-      activePairs: 0,
-      pairCheckouts: 1,
-      pairReturns: 1,
-    });
-    for (const context of idlePoolContexts(pool)) {
+    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+    expectDisposedNativePool({ pairCheckouts: 1, pairReturns: 1 });
+    const lease = checkout.mock.results[0]?.value;
+    expect(lease).toBeDefined();
+    for (const context of [lease!.source.context, lease!.result.context]) {
       expect(context.fillStyle).toBe('#000000');
       expect(context.strokeStyle).toBe('#000000');
     }
@@ -1660,11 +1672,8 @@ describe('filter failure recovery', () => {
 
     expect(() => frames.runNext()).toThrowError('original render failure');
     expect(scrubWrites).toBe(1);
-    expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
-      activePairs: 0,
-      pairCheckouts: 1,
-      pairReturns: 1,
-    });
+    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+    expectDisposedNativePool({ pairCheckouts: 1, pairReturns: 1 });
   });
 
   it('unwinds two filtered ancestors in strict LIFO target order when a descendant throws', () => {
@@ -1895,13 +1904,26 @@ function expectFailureBaseline(
   expect(callback).toHaveBeenCalledTimes(expectedCalls);
   const actualPool = peekNativeFilterPool(getCRCInstance(canvas));
   if (actualPool === undefined) {
-    expect(Object.values(pool).every(value => value === 0)).toBe(true);
+    const disposed = disposedNativePools.at(-1);
+    if (disposed) {
+      expect(disposed.snapshot).toMatchObject({ activePairs: 0, ...pool });
+    } else {
+      expect(Object.values(pool).every(value => value === 0)).toBe(true);
+    }
   } else {
     expect(actualPool).toBeDefined();
     expect(actualPool!.snapshot()).toMatchObject({ activePairs: 0, ...pool });
   }
   expect(getCRCInstance(canvas).refs.size).toBe(0);
   expectTemporaryGlobals(baseline);
+}
+
+function expectDisposedNativePool(
+  expected: Readonly<Record<string, number>>,
+): void {
+  expect(disposedNativePools).toHaveLength(1);
+  expect(disposedNativePools[0]!.snapshot)
+    .toMatchObject({ activePairs: 0, ...expected });
 }
 
 function filteredRectangle(
