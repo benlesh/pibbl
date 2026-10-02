@@ -8,7 +8,7 @@ import {
   type PreparedCRCFilter,
 } from '../lib/style/filter-types.js';
 import type { StyleResolutionContext } from '../lib/types.js';
-import { validateTexturePaint } from '../lib/textures/texture-protocol.js';
+import { borrowTextureRaster, validateTexturePaint } from '../lib/textures/texture-protocol.js';
 import { processDisplacement } from './render-displacement-boundary.js';
 import { filterBoundaryExecutor, type CustomPreparedFilter } from './filter-executor.js';
 import { expandDisplacementInput } from './displacement-math.js';
@@ -27,7 +27,12 @@ const displacementExecutor: CRCFilterExecutor = {
       throw diagnostic(`${property}.region`, options.region, 'must have finite coordinates and positive finite dimensions', context);
     }
     const map = isSignal(options.map) ? options.map.get() : options.map;
-    try { validateTexturePaint(map); }
+    try {
+      validateTexturePaint(map);
+      // Receiver preparation owns revision dependencies, before subtree execution
+      // changes signal tracking to descendant consumers.
+      if (strengthValue !== 0) borrowTextureRaster(map, () => undefined);
+    }
     catch (error) {
       throw diagnostic(`${property}.map`, map, error instanceof Error ? error.message : String(error), context);
     }
