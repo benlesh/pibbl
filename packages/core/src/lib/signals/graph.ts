@@ -1225,6 +1225,8 @@ interface SignalCommitBatchState {
 export interface SignalCommitLifecycle {
   /** Runs after all fallible commit validation and before signal observers. */
   apply(): void;
+  /** Restores a completed apply if a later writer cannot publish. */
+  rollback?(): void;
   /** Releases a candidate when its writer never reaches Commit. */
   abort(): void;
 }
@@ -1297,6 +1299,7 @@ export function createSignalCommitBatch(): SignalCommitBatch {
         }
 
         const changedWriters = new Set(changed.map(candidate => candidate.writer));
+        const applied: SignalCommitLifecycle[] = [];
         for (const candidate of candidates) {
           const lifecycle = state.lifecycles.get(candidate.writer);
           state.lifecycles.delete(candidate.writer);
@@ -1307,8 +1310,13 @@ export function createSignalCommitBatch(): SignalCommitBatch {
           }
           try {
             lifecycle.apply();
+            applied.push(lifecycle);
           } catch (error) {
             abortLifecycle(lifecycle);
+            for (const appliedLifecycle of applied.reverse()) {
+              try { appliedLifecycle.rollback?.(); } catch {}
+              abortLifecycle(appliedLifecycle);
+            }
             throw error;
           }
         }

@@ -13,6 +13,7 @@ import {
   installSchedulerDriverForTest,
 } from "../src/lib/scheduler/testing.js";
 import { clearSharedState } from "../src/lib/global-state.js";
+import { getSignalNode } from "../src/lib/signals/graph.js";
 import { borrowTextureRaster } from "@crc/core/internal";
 
 afterEach(() => {
@@ -233,6 +234,50 @@ it("reuses its bounded publication pair across 100 committed updates", () => {
       driver.flush(value * 16);
     }
     expect(resource.publicationSnapshot()).toEqual({ publicationCanvasesCreated: 2 });
+  } finally {
+    controller.dispose();
+    restore();
+  }
+});
+
+it("retains committed pixels when Commit rejects a texture revision and retries", () => {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  const recipe = defineTexture<{}, { color: string }, { color: string }>({
+    create: () => ({ color: "#ff0000" }),
+    rasterize(state, context) {
+      const ctx = context.canvas.getContext("2d")!;
+      ctx.fillStyle = state.color;
+      ctx.fillRect(0, 0, 8, 8);
+    },
+    receive(state, message, context) { state.color = message.color; context.invalidate(); },
+  });
+  const observed: number[] = [];
+  let texture: ReturnType<typeof useTexture<{ color: string }>>;
+  let resource: any;
+  function Scene() {
+    texture = useTexture(recipe({}), { resolution: { width: 8, height: 8 } });
+    borrowTextureRaster(texture, raster => {
+      resource = raster.resource;
+      observed.push(raster.source.getContext("2d")!.getImageData(0, 0, 1, 1).data[1]!);
+    });
+    return <Rectangle style={{ width: 8, height: 8, fill: texture }} />;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 16;
+  document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  try {
+    driver.flush(0);
+    const node = getSignalNode(resource.revision) as any;
+    const equals = node.equals;
+    node.equals = () => { throw new Error("texture Commit rejected"); };
+    texture!.send({ color: "#00ff00" });
+    expect(() => driver.flush(16)).toThrow("texture Commit rejected");
+    expect(observed).toEqual([0]);
+    node.equals = equals;
+    driver.flush(32);
+    expect(observed).toEqual([0, 255]);
   } finally {
     controller.dispose();
     restore();
