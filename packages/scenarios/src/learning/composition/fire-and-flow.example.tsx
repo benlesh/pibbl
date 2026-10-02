@@ -45,15 +45,20 @@ import {
 function smokeSprite(variant: number): OffscreenCanvas {
   const canvas = new OffscreenCanvas(96, 96);
   const context = canvas.getContext("2d")!;
-  for (let i = 0; i < 5; i++) {
+  // Overlapping shaded lobes give each soft sprite internal volume, rather
+  // than a single bright dot. Three silhouettes keep the plume irregular.
+  for (let i = 0; i < 7; i++) {
     const angle = i * 2.4 + variant;
-    const x = 48 + Math.cos(angle) * 14,
-      y = 48 + Math.sin(angle) * 11;
-    const gradient = context.createRadialGradient(x, y, 1, x, y, 29);
-    gradient.addColorStop(0, "rgba(186,198,207,0.65)");
-    gradient.addColorStop(0.4, "rgba(164,179,192,0.4)");
-    gradient.addColorStop(1, "rgba(145,160,175,0)");
-    context.fillStyle = gradient;
+    const x = 48 + Math.cos(angle) * (10 + (i % 3) * 4),
+      y = 48 + Math.sin(angle) * 13;
+    const radius = 22 + ((i + variant) % 3) * 3;
+    const body = context.createRadialGradient(x - 5, y - 7, 0, x, y, radius);
+    body.addColorStop(0, "rgba(193,204,211,0.52)");
+    body.addColorStop(0.28, "rgba(156,171,183,0.48)");
+    body.addColorStop(0.6, "rgba(84,102,119,0.34)");
+    body.addColorStop(0.82, "rgba(61,78,94,0.14)");
+    body.addColorStop(1, "rgba(61,78,94,0)");
+    context.fillStyle = body;
     context.fillRect(0, 0, 96, 96);
   }
   return canvas;
@@ -83,24 +88,23 @@ function createFlameSurface() {
     return a + (b - a) * fx + (c - a + (a - b - c + d) * fx) * fy;
   };
   let lastTime = -1,
-    lastIntensity = -1,
-    lastWind = NaN;
+    lastIntensity = -1;
   return {
     canvas,
-    update(time: number, intensity: number, wind: number) {
-      if (time === lastTime && intensity === lastIntensity && wind === lastWind)
+    update(time: number, intensity: number) {
+      if (time === lastTime && intensity === lastIntensity)
         return;
       lastTime = time;
       lastIntensity = intensity;
-      lastWind = wind;
       for (let y = 0; y < canvas.height; y++) {
         const height = 1 - y / (canvas.height - 1);
         for (let x = 0; x < canvas.width; x++) {
           const u = (x / (canvas.width - 1) - 0.5) * 2;
-          const lift = height * 5 + time * 2.4;
+          // Height increases upward; subtract time so the noise rises with it.
+          const lift = height * 5 - time * 2.4;
           const curl = noise(u * 2.4 + 8, lift * 0.65) - 0.5;
           const bent =
-            u - (wind / 180) * height * height - curl * height * 0.75;
+            u - curl * height * 0.75;
           const grain =
             noise(bent * 5 + 20, lift) * 0.62 +
             noise(bent * 11 + 40, lift * 1.8) * 0.26 +
@@ -135,18 +139,17 @@ const Flame = definePrimitive<{
   surface: ReturnType<typeof createFlameSurface>;
   time: number;
   intensity: number;
-  wind: number;
   x: number;
   y: number;
   pointerEvents: "none";
 }>((props, _style, context) => {
-  props.surface.update(props.time, props.intensity, props.wind);
+  props.surface.update(props.time, props.intensity);
   const height = 100 + props.intensity * 45;
   context.drawImage(
     props.surface.canvas,
-    props.x - 84,
+    props.x - 66,
     props.y - height + 6,
-    168,
+    132,
     height,
   );
 });
@@ -274,7 +277,6 @@ function Obstacle({
 function FireAndFlow() {
   const burning = useSignal(true);
   const intensity = useSignal(0.8);
-  const wind = useSignal(0);
   const origin = useSignal<readonly [number, number]>([360, 370]);
   const drag = useSignal<number | null>(null);
   const fuelGesture = useConst(() => ({ x: 0, y: 0, moved: false }));
@@ -286,7 +288,7 @@ function FireAndFlow() {
     obstacles,
   });
   const force = useComputed(
-    () => [wind.get(), -180 * intensity.get()] as const,
+    () => [0, -180 * intensity.get()] as const,
   );
   const heat = useComputed(() => 4 * intensity.get());
   useFlowSource2D(flow, {
@@ -300,7 +302,7 @@ function FireAndFlow() {
     const smokeEmitter = (variant: number): CRCParticleEmitter2D => ({
       bounds: { min: [-720, -480], max: [720, 480] },
       name: `smoke${variant}`,
-      capacity: 140,
+      capacity: 360,
       overflow: "recycle-oldest" as const,
       emission: [{ type: "manual" as const, count: 1 }],
       shape: {
@@ -314,14 +316,14 @@ function FireAndFlow() {
       },
       appearance: {
         size: particleCurve([
-          [0, 18],
-          [0.25, 38],
-          [1, 75],
+          [0, 20 + variant * 3],
+          [0.25, 44 + variant * 5],
+          [1, 85 + variant * 8],
         ]),
         opacity: particleCurve([
           [0, 0],
-          [0.08, 0.26],
-          [0.6, 0.16],
+          [0.08, 0.32],
+          [0.6, 0.2],
           [1, 0],
         ]),
       },
@@ -374,10 +376,9 @@ function FireAndFlow() {
       flameTime.update((time) => time + 0.04);
       tick.value++;
       if (tick.value % 4 === 0) fire.emit("embers", { position });
-      if (tick.value % 2 === 0)
-        smoke.emit(`smoke${tick.value % 3}`, {
+      smoke.emit(`smoke${tick.value % 3}`, {
           position,
-          count: Math.ceil(2 * intensity.get()),
+          count: Math.ceil(3 * intensity.get()),
         });
     },
   });
@@ -469,7 +470,6 @@ function FireAndFlow() {
           surface={flameSurface}
           time={flameTime.get()}
           intensity={intensity.get()}
-          wind={wind.get()}
           x={x}
           y={y}
           pointerEvents="none"
@@ -527,11 +527,11 @@ function FireAndFlow() {
         Intensity {Math.round(intensity.get() * 100)}%
       </Text>
       <Rectangle
-        onClick={() => wind.update((v) => (v >= 80 ? -80 : v + 80))}
+        onClick={() => selected.set(null)}
         style={{
           left: 226,
           top: 447,
-          width: 170,
+          width: 462,
           height: 26,
           fill: "#2d3d49",
           cursor: "pointer",
@@ -541,28 +541,6 @@ function FireAndFlow() {
         pointerEvents="none"
         style={{
           left: 239,
-          top: 465,
-          fill: "#d5e1e8",
-          font: "12px sans-serif",
-        }}
-      >
-        Wind {wind.get() < 0 ? "←" : wind.get() > 0 ? "→" : "still"}
-      </Text>
-      <Rectangle
-        onClick={() => selected.set(null)}
-        style={{
-          left: 410,
-          top: 447,
-          width: 278,
-          height: 26,
-          fill: "#2d3d49",
-          cursor: "pointer",
-        }}
-      />
-      <Text
-        pointerEvents="none"
-        style={{
-          left: 423,
           top: 465,
           fill: "#d5e1e8",
           font: "12px sans-serif",
