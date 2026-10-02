@@ -1,3 +1,4 @@
+import { CommittedBoxObstacles2D } from "./box-obstacles.js";
 import { boundsOfShape2D } from "../../../2d-geometry.js";
 import { createShape2D } from "../shape-records.js";
 import type {
@@ -160,6 +161,22 @@ export class PhysicsWorld2DController {
   readonly handle: CRCPhysicsWorldHandle2D;
   private revision: WritableSignal<number> | undefined;
   private committedRevision = 0;
+  private boxObstacles: CommittedBoxObstacles2D | undefined;
+  private boxObstacleSource: Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array }> }> | undefined;
+
+  getBoxObstacleSource(): Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array }> }> {
+    this.assertActive();
+    if (!this.boxObstacleSource) {
+      if (this.liveCandidate) throw new Error("Create physics box obstacles before simulation Advance.");
+      this.boxObstacles = new CommittedBoxObstacles2D();
+      this.boxObstacles.publish(this.kernel, this.acceptedColliders, this.committedRevision);
+      this.boxObstacleSource = Object.freeze({ read: () => {
+        this.assertActive();
+        return this.boxObstacles!.read();
+      } });
+    }
+    return this.boxObstacleSource;
+  }
   private failedFrames = 0;
   private lastFailure: string | null = null;
   private readonly kernel: PhysicsWorld2DKernel;
@@ -557,6 +574,8 @@ export class PhysicsWorld2DController {
         );
       }
     }
+    this.boxObstacles = undefined;
+    this.boxObstacleSource = undefined;
     this.kernel.dispose();
     this.queries.invalidate();
     this.acceptedBodies = Object.freeze([]);
@@ -899,6 +918,7 @@ export class PhysicsWorld2DController {
           }
           this.kernel.adopt(candidate!);
           this.committedRevision = nextRevision;
+          this.boxObstacles?.publish(this.kernel, this.acceptedColliders, nextRevision);
           adopted = true;
           crcInternalRequestSimulationRender(this.owner);
           if (

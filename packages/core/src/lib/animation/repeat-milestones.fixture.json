@@ -1,0 +1,68 @@
+{
+  "normal:forward": [
+    ["marker", "start,[0]", 32, [0, 0], 32],
+    ["marker", "end", 32, [0, 2, 0, 2], 2],
+    ["marker", "end", 32, [0, 3], 31],
+    ["iteration", null, 32, [], 32],
+    ["marker", "inner", 32.25, [0, 2, 0, 0], 0]
+  ],
+  "normal:reverse": [
+    ["marker", "end", 32, [0, 2, 0, 2], 2],
+    ["marker", "end", 32, [0, 3], 31],
+    ["iteration", null, 32, [], 32],
+    ["marker", "start,[0]", 32, [0, 0], 32],
+    ["marker", "inner", 31.75, [0, 2, 0, 0], 2],
+    ["marker", "inner", 31.75, [0, 2, 0, 0], 1],
+    ["iteration", null, 31.75, [0, 2], 2]
+  ],
+  "reverse:forward": [
+    ["marker", "start,[0]", 32, [0, 0], 32],
+    ["marker", "start,[0]", 32, [0, 0], 31],
+    ["iteration", null, 32, [], 32],
+    ["marker", "end", 32, [0, 2, 0, 2], 2],
+    ["marker", "end", 32, [0, 3], 32],
+    ["marker", "inner", 32.25, [0, 2, 0, 0], 1],
+    ["iteration", null, 32.25, [0, 2], 2],
+    ["marker", "inner", 32.25, [0, 2, 0, 0], 2]
+  ],
+  "reverse:reverse": [
+    ["marker", "start,[0]", 32, [0, 0], 31],
+    ["iteration", null, 32, [], 32],
+    ["marker", "end", 32, [0, 2, 0, 2], 2],
+    ["marker", "end", 32, [0, 3], 32],
+    ["marker", "inner", 31.75, [0, 2, 0, 0], 0]
+  ],
+  "alternate:forward": [
+    ["marker", "start,[0]", 32, [0, 0], 32],
+    ["marker", "start,[0]", 32, [0, 0], 31],
+    ["iteration", null, 32, [], 32],
+    ["marker", "inner", 32.25, [0, 2, 0, 0], 0]
+  ],
+  "alternate:reverse": [
+    ["marker", "start,[0]", 32, [0, 0], 31],
+    ["iteration", null, 32, [], 32],
+    ["marker", "start,[0]", 32, [0, 0], 32],
+    ["marker", "inner", 31.75, [0, 2, 0, 0], 0]
+  ],
+  "alternate-reverse:forward": [
+    ["marker", "start,[0]", 32, [0, 0], 32],
+    ["marker", "end", 32, [0, 2, 0, 2], 2],
+    ["marker", "end", 32, [0, 3], 31],
+    ["iteration", null, 32, [], 32],
+    ["marker", "end", 32, [0, 2, 0, 2], 2],
+    ["marker", "end", 32, [0, 3], 32],
+    ["marker", "inner", 32.25, [0, 2, 0, 0], 1],
+    ["iteration", null, 32.25, [0, 2], 2],
+    ["marker", "inner", 32.25, [0, 2, 0, 0], 2]
+  ],
+  "alternate-reverse:reverse": [
+    ["marker", "end", 32, [0, 2, 0, 2], 2],
+    ["marker", "end", 32, [0, 3], 31],
+    ["iteration", null, 32, [], 32],
+    ["marker", "end", 32, [0, 2, 0, 2], 2],
+    ["marker", "end", 32, [0, 3], 32],
+    ["marker", "inner", 31.75, [0, 2, 0, 0], 2],
+    ["marker", "inner", 31.75, [0, 2, 0, 0], 1],
+    ["iteration", null, 31.75, [0, 2], 2]
+  ]
+}

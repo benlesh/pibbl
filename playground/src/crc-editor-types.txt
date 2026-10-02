@@ -798,6 +798,8 @@
   export function queryAabb2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, bounds: CRCPhysicsAabb2D, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
   export function queryPoint2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, point: CRCPhysicsVector2, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
 
+  export function physicsBoxObstacles2D(world: CRCPhysicsWorldHandle2D): Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array }> }>;
+
 /* @crc-studio-module @crc/physics/3d/geometry */
   export type CRCPhysicsVector3 = readonly [x: number, y: number, z: number];
   export type CRCPhysicsQuaternion = readonly [x: number, y: number, z: number, w: number];
@@ -842,6 +844,7 @@
     LayoutBox,
     LayoutItemStyle,
     Signal,
+    SignalValue,
     SystemStyle,
   } from '@crc/core';
 
@@ -965,7 +968,7 @@
   }
 
   export type CRCParticleSystemStatus = 'idle' | 'scheduled' | 'running' | 'paused' | 'draining' | 'finished' | 'disposed';
-  export type CRCParticleExecution = 'unbound' | 'stateless-canvas';
+  export type CRCParticleExecution = 'unbound' | 'stateless-canvas' | 'flow-canvas';
   export interface CRCParticleStartEvent { readonly type: 'start' }
   export interface CRCParticleBurstAcceptedEvent { readonly type: 'burst-accepted'; readonly emitter: string; readonly requested: number; readonly accepted: number }
   export interface CRCParticleBurstRejectedEvent { readonly type: 'burst-rejected'; readonly emitter: string; readonly requested: number; readonly accepted: number; readonly reason: 'capacity' | 'paused' | 'stopped' | 'disposed' }
@@ -978,6 +981,7 @@
     | Readonly<{ type: 'asset-invalid' | 'binding-conflict' | 'backend-mismatch'; message: string; effect?: string; emitter?: string }>
     | Readonly<{ type: 'capacity-rejected' | 'execution-failed' | 'disposed'; message: string; effect?: string; emitter?: string }>;
   export interface CRCParticleSystemOptions {
+    readonly flow?: CRCFlowField2D;
     readonly autoplay?: boolean;
     readonly seed?: number;
     readonly debugName?: string;
@@ -1047,6 +1051,30 @@
     EmitterName extends string,
     Parameters extends CRCParticleParameterValues,
   >(props: Particles2DProps<EmitterName, Parameters>): CRCNode;
+
+  export interface CRCFlowObstacleBatch2D { readonly revision: number; readonly boxes: Float64Array; }
+  export interface CRCFlowObstacleSource2D { read(): CRCFlowObstacleBatch2D; }
+  export interface CRCFlowFieldOptions2D {
+    readonly bounds: Readonly<{ width: number; height: number }>;
+    readonly resolution: readonly [number, number];
+    readonly obstacles?: CRCFlowObstacleSource2D;
+    readonly buoyancy?: number;
+  }
+  declare const flowBrand: unique symbol;
+  export interface CRCFlowField2D {
+    readonly [flowBrand]: true;
+    readonly revision: Signal<number>;
+    sampleBatch(positions: Float32Array, velocities: Float32Array, count: number): void;
+  }
+  export interface CRCFlowSourceOptions2D {
+    readonly position: SignalValue<readonly [number, number]>;
+    readonly radius: SignalValue<number>;
+    readonly acceleration?: SignalValue<readonly [number, number]>;
+    readonly heat?: SignalValue<number>;
+    readonly enabled?: SignalValue<boolean>;
+  }
+  export declare function useFlowField2D(options: CRCFlowFieldOptions2D): CRCFlowField2D;
+  export declare function useFlowSource2D(field: CRCFlowField2D, options: CRCFlowSourceOptions2D): void;
 
 /* @crc-studio-module @crc/three */
   import type * as THREE from 'three';

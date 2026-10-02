@@ -2446,6 +2446,8 @@ function collectTimeline(
   transform: TimeTransform,
   events: TimelineEvent[],
   nextSourceOrder: { value: number },
+  windowStart: number,
+  windowEnd: number,
 ): void {
   const record = getProgramRecord(program);
   const localTime = Math.max(0, requestedTime);
@@ -2482,6 +2484,8 @@ function collectTimeline(
         }),
         events,
         nextSourceOrder,
+        windowStart,
+        windowEnd,
       );
       if (remaining < duration) return;
       remaining = Math.max(0, remaining - duration);
@@ -2504,14 +2508,32 @@ function collectTimeline(
         transform,
         events,
         nextSourceOrder,
+        windowStart,
+        windowEnd,
       );
     }
     return;
   }
 
-  let remaining = localTime;
+  // Fixed-duration repeats can jump to the crossed window. Include the prior
+  // occurrence at an exact boundary because it can end with a zero-time marker.
+  // Dynamic/terminal-stepper durations retain their sequential discovery path.
+  const fixedDuration = getExactSeekableProgramDuration(record.children[0]!);
+  let firstIteration = 0;
+  let lastIteration = record.iterations - 1;
   let offset = 0;
-  for (let iteration = 0; iteration < record.iterations; iteration++) {
+  if (fixedDuration !== undefined && Number.isFinite(fixedDuration) && fixedDuration > 0) {
+    const firstLocal = (windowStart - transform.origin) * transform.scale;
+    const lastLocal = (windowEnd - transform.origin) * transform.scale;
+    const lower = Math.max(0, Math.min(firstLocal, lastLocal));
+    const upper = Math.min(localTime, Math.max(firstLocal, lastLocal));
+    if (upper < lower) return;
+    firstIteration = Math.max(0, Math.ceil(lower / fixedDuration) - 1);
+    lastIteration = Math.min(lastIteration, Math.floor(upper / fixedDuration));
+    offset = firstIteration * fixedDuration;
+  }
+  let remaining = Math.max(0, localTime - offset);
+  for (let iteration = firstIteration; iteration <= lastIteration; iteration++) {
     const child = record.children[0]!;
     const childPath = [...path, 0];
     const iterationPath = [...repeatIterations, iteration];
@@ -2542,6 +2564,8 @@ function collectTimeline(
       childTransform,
       events,
       nextSourceOrder,
+      windowStart,
+      windowEnd,
     );
     if (remaining < duration) return;
     remaining = Math.max(0, remaining - duration);
@@ -2698,31 +2722,30 @@ function crossedMilestones(
     Object.freeze({ origin: 0, scale: 1 }),
     timeline,
     { value: state.nextTimelineSourceOrder.value },
+    Math.min(input.previousTime ?? 0, input.time),
+    Math.max(input.previousTime ?? 0, input.time),
   );
-  const uniqueTimeline = timeline.filter((event, index) =>
-    timeline.findIndex(candidate =>
-      candidate.kind === event.kind &&
-      candidate.marker === event.marker &&
-      candidate.programTime === event.programTime &&
-      candidate.iteration === event.iteration &&
-      candidate.repeatIterations.length === event.repeatIterations.length &&
-      candidate.repeatIterations.every(
-        (part, pathIndex) => part === event.repeatIterations[pathIndex],
-      ) &&
-      candidate.programPath.length === event.programPath.length &&
-      candidate.programPath.every(
-        (part, pathIndex) => part === event.programPath[pathIndex],
-      ),
-    ) === index,
-  );
-  const crossed = uniqueTimeline.filter(event => {
-    if (input.previousTime === undefined) {
-      return event.programTime >= 0 && event.programTime <= input.time;
-    }
-    return input.direction === 'forward' ?
-      event.programTime > input.previousTime && event.programTime <= input.time :
-      event.programTime >= input.time && event.programTime < input.previousTime;
-  });
+  // Most collected events precede this frame. Filter before deduplication;
+  // scanning the entire timeline once per event made repeated clocks quadratic.
+  const crossed: TimelineEvent[] = [];
+  const seen = new Set<string>();
+  for (const event of timeline) {
+    const isCrossed = input.previousTime === undefined ?
+      event.programTime >= 0 && event.programTime <= input.time :
+      input.direction === 'forward' ?
+        event.programTime > input.previousTime && event.programTime <= input.time :
+        event.programTime >= input.time && event.programTime < input.previousTime;
+    if (!isCrossed) continue;
+    // Structured encoding preserves arbitrary marker names and nested paths.
+    // Keep the first occurrence's sourceOrder, matching the previous contract.
+    const key = JSON.stringify([
+      event.kind, event.marker, event.programTime, event.iteration,
+      event.repeatIterations, event.programPath,
+    ]);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    crossed.push(event);
+  }
   crossed.sort((first, second) => {
     const timeOrder = input.direction === 'forward' ?
       first.programTime - second.programTime : second.programTime - first.programTime;

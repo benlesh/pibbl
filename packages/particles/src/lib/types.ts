@@ -1,3 +1,4 @@
+import type { CRCFlowField2D } from "./flow/hook.js";
 import type {
   BoxStyle,
   PathGeometry,
@@ -259,7 +260,8 @@ export type CRCParticleSystemStatus =
 
 export type CRCParticleExecution =
   | "unbound"
-  | "stateless-canvas";
+  | "stateless-canvas"
+  | "flow-canvas";
 
 export interface CRCParticleStartEvent {
   readonly type: "start";
@@ -324,6 +326,8 @@ export type CRCParticleDiagnostic =
     }>;
 
 export interface CRCParticleSystemOptions {
+  /** Mount-owned field binding; advects emitter positions instead of analytic translation. */
+  readonly flow?: CRCFlowField2D;
   readonly autoplay?: boolean;
   readonly seed?: number;
   readonly debugName?: string;

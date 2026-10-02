@@ -158,6 +158,7 @@ export interface CompiledExecutionCapability {
 
 export interface CompiledExecutionCapabilities {
   readonly "stateless-canvas": CompiledExecutionCapability;
+  readonly "flow-canvas": CompiledExecutionCapability;
 }
 
 export interface CompiledEffect2D {
@@ -622,6 +623,7 @@ function execution2D(
   record: ParticleEffect2DRecord,
 ): CompiledExecutionCapabilities {
   return Object.freeze({
+    "flow-canvas": executionCapability(true),
     "stateless-canvas": executionCapability(
       record.capabilities.statelessCanvas,
       record.capabilities.statelessCanvas

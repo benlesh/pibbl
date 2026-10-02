@@ -310,6 +310,7 @@ export function Particles2D<
         }
         const next = createCanvasParticleExecutor({
           owner: bindingOwner,
+          flow: controller.flow,
           compiled,
           parameters,
           requestRender: () => crcInternalRequestRender(bindingOwner),

@@ -55,3 +55,12 @@ export type {
   Particles2DProps,
   Particles2DStyle,
 } from "./lib/types.js";
+
+export { useFlowField2D, useFlowSource2D } from "./lib/flow/hook.js";
+export type {
+  CRCFlowField2D,
+  CRCFlowFieldOptions2D,
+  CRCFlowObstacleBatch2D,
+  CRCFlowObstacleSource2D,
+  CRCFlowSourceOptions2D,
+} from "./lib/flow/hook.js";
