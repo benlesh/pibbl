@@ -1,3 +1,5 @@
+import { compileNativeFilters, type NativePreparedFilter } from '../../filters/native-operations';
+import { invert, blur } from '@crc/core/filters';
 import { describe, expect, it, vi } from 'vitest';
 import { definePrimitive } from '../define-primitive';
 import { createElement } from '../element/create-element';
@@ -112,15 +114,13 @@ describe('render style dispatch', () => {
     );
 
     const mounted = mountAndRender(createElement(Probe, {
-      style: { filter: { type: 'invert', amount: 1 } },
+      style: { filter: invert({ amount: 1 }) },
     }));
     try {
       expect(normalizerInput).not.toHaveProperty('filter');
       expect(resolverInput).not.toHaveProperty('filter');
-      expect(renderedStyle).toEqual({
-        label: 'resolved',
-        filter: [{ type: 'invert', amount: 1 }],
-      });
+      expect(renderedStyle?.label).toBe('resolved');
+      expect(compileNativeFilters(renderedStyle!.filter as unknown as readonly NativePreparedFilter[], 1)).toBe('invert(1)');
     } finally {
       mounted.controller.dispose();
     }
@@ -152,14 +152,14 @@ describe('render style dispatch', () => {
       },
     );
     const source = createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 3 } },
+      style: { filter: blur({ radius: 3 }) },
     });
     const placed = createElement(Probe, {
-      style: { filter: { type: 'blur', radius: 3 } },
+      style: { filter: blur({ radius: 3 }) },
     });
     const placedStyle: ProbeStyle = {
       label: 'placed',
-      filter: { type: 'invert', amount: 1 },
+      filter: invert({ amount: 1 }),
     };
     setPreNormalizedStyle(placed, placedStyle, source);
 
@@ -167,10 +167,8 @@ describe('render style dispatch', () => {
     try {
       expect(normalizerCalls).toBe(0);
       expect(resolverInput).not.toHaveProperty('filter');
-      expect(renderedStyle).toEqual({
-        label: 'resolved',
-        filter: [{ type: 'invert', amount: 1 }],
-      });
+      expect(renderedStyle?.label).toBe('resolved');
+      expect(compileNativeFilters(renderedStyle!.filter as unknown as readonly NativePreparedFilter[], 1)).toBe('invert(1)');
     } finally {
       mounted.controller.dispose();
     }
@@ -184,8 +182,8 @@ describe('render style dispatch', () => {
     const mounted = mount(createElement(Probe, {
       style: {
         filter: [
-          { type: 'invert', amount: 1 },
-          { type: 'blur', radius: -1 },
+          invert({ amount: 1 }),
+          blur({ radius: -1 }),
         ],
       },
     }));

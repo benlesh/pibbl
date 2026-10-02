@@ -1,3 +1,5 @@
+import { peekNativeFilterPool } from '../filter/render-filter-boundary';
+import { opacity, blur } from '@crc/core/filters';
 import type { RectangleProps } from './rect';
 import type { RectStyle } from '../style/types';
 import type { SystemStyle } from '../types';
@@ -359,7 +361,7 @@ describe('Layer children and retained subtree contract', () => {
         track(parentOpacity, tween({ from: 1, to: 0.5, duration: 100 })),
       ));
       const offset = parentOffset.get();
-      const opacity = parentOpacity.get();
+      const opacityAmount = parentOpacity.get();
       return createElement(Fragment, {
         children: [
           createElement(Group, {
@@ -368,7 +370,7 @@ describe('Layer children and retained subtree contract', () => {
               style: {
                 width: 30,
                 height: 10,
-                filter: { type: 'opacity', amount: opacity },
+                filter: opacity({ amount: opacityAmount }),
               },
               children: createElement(AChild, {}),
             }),
@@ -481,7 +483,7 @@ describe('Layer children and retained subtree contract', () => {
       style: {
         width: 60,
         height: 50,
-        filter: { type: 'opacity', amount },
+        filter: opacity({ amount }),
       },
       children: createElement(Counted, {}),
     });
@@ -496,12 +498,12 @@ describe('Layer children and retained subtree contract', () => {
     expect(childRenders).toBe(1);
     expect(firstAlpha).toBeGreaterThan(180);
     expect(pixel(mounted.canvas, 20, 20)[3]).toBeLessThan(70);
-    expect(parent.filterSurfacePool.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(parent)!.snapshot()).toMatchObject({
       activePairs: 0,
       pairCheckouts: 2,
       pairReturns: 2,
     });
-    expect(child.filterSurfacePool.snapshot().surfaceSlots).toBe(0);
+    expect(peekNativeFilterPool(child)).toBeUndefined();
     mounted.controller.dispose();
   });
 
@@ -520,7 +522,7 @@ describe('Layer children and retained subtree contract', () => {
               width: 30,
               height: 20,
               fill: '#2563eb',
-              filter: { type: 'blur', radius: 2 },
+              filter: blur({ radius: 2 }),
             },
             onClick,
           }),
@@ -535,11 +537,11 @@ describe('Layer children and retained subtree contract', () => {
       .find(instance => instance.parent === child.canvas)!;
     const childCanvas = child.canvas;
     const grandchildCanvas = grandchild.canvas;
-    const childPool = child.filterSurfacePool;
-    const grandchildPool = grandchild.filterSurfacePool;
+    const childPool = peekNativeFilterPool(child);
+    const grandchildPool = peekNativeFilterPool(grandchild)!;
 
-    expect(parent.filterSurfacePool.snapshot().surfaceSlots).toBe(0);
-    expect(childPool.snapshot().surfaceSlots).toBe(0);
+    expect(peekNativeFilterPool(parent)).toBeUndefined();
+    expect(childPool).toBeUndefined();
     expect(grandchildPool.snapshot()).toMatchObject({
       surfaceSlots: 2,
       activePairs: 0,
@@ -554,10 +556,7 @@ describe('Layer children and retained subtree contract', () => {
     expect(GLOBAL_STATE.crcInstances.has(childCanvas)).toBe(false);
     expect(GLOBAL_STATE.crcInstances.has(grandchildCanvas)).toBe(false);
     expect(parent.paintEntries.size).toBe(0);
-    expect(childPool.snapshot()).toMatchObject({
-      surfaceSlots: 0,
-      activePairs: 0,
-    });
+    expect(peekNativeFilterPool(child)).toBeUndefined();
     expect(grandchildPool.snapshot()).toMatchObject({
       surfaceSlots: 0,
       activePairs: 0,

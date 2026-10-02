@@ -1,7 +1,11 @@
+import { dropShadow, blur, brightness, contrast, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clearTempState, GLOBAL_STATE } from '../global-state';
 import type { RenderTargetSnapshot } from '../render-target';
-import { resolveFilterList, type ResolvedFilterList } from '../style/filter';
+import { resolveFilterList as resolveFilters } from '../style/filter';
+import type { NativePreparedFilter } from '../../filters/native-operations';
+type ResolvedFilterList = { readonly values: readonly NativePreparedFilter[] };
+const resolveFilterList = (...args: Parameters<typeof resolveFilters>): ResolvedFilterList | undefined => resolveFilters(...args) as ResolvedFilterList | undefined;
 import type { StyleResolutionContext } from '../types';
 import {
   BLUR_EXTENT_FACTOR,
@@ -31,14 +35,8 @@ describe('reverse filter influence', () => {
     const shadowOffsetX = 10 * density;
     const shadowOffsetY = -4 * density;
     const filters = resolveFilterList([
-      {
-        type: 'dropShadow',
-        offsetX: 10,
-        offsetY: -4,
-        blurRadius: shadowRadius,
-        color: 'black',
-      },
-      { type: 'blur', radius: finalBlurRadius },
+      dropShadow({ offsetX: 10, offsetY: -4, blurRadius: shadowRadius, color: 'black' }),
+      blur({ radius: finalBlurRadius }),
     ], context)!;
 
     const finalBlurExtent = Math.ceil(
@@ -80,13 +78,7 @@ describe('reverse filter influence', () => {
   });
 
   it('rounds fractional reverse-shadow edges outward', () => {
-    const filters = resolveFilterList({
-      type: 'dropShadow',
-      offsetX: 0.25,
-      offsetY: -0.25,
-      blurRadius: 0,
-      color: 'black',
-    }, context)!;
+    const filters = resolveFilterList(dropShadow({ offsetX: 0.25, offsetY: -0.25, blurRadius: 0, color: 'black' }), context)!;
 
     expect(reverseFilterInfluence(
       { x: 10, y: 20, width: 30, height: 40 },
@@ -98,14 +90,14 @@ describe('reverse filter influence', () => {
   it('leaves bounds unchanged for color-only filters', () => {
     const output = { x: -12, y: 7, width: 81, height: 39 };
     const filters = resolveFilterList([
-      { type: 'brightness', amount: 1.2 },
-      { type: 'contrast', amount: 0.5 },
-      { type: 'grayscale', amount: 1 },
-      { type: 'hueRotate', degrees: 45 },
-      { type: 'invert', amount: 0.2 },
-      { type: 'opacity', amount: 0.8 },
-      { type: 'saturate', amount: 2 },
-      { type: 'sepia', amount: 0.3 },
+      brightness({ amount: 1.2 }),
+      contrast({ amount: 0.5 }),
+      grayscale({ amount: 1 }),
+      hueRotate({ degrees: 45 }),
+      invert({ amount: 0.2 }),
+      opacity({ amount: 0.8 }),
+      saturate({ amount: 2 }),
+      sepia({ amount: 0.3 }),
     ], context)!;
 
     expect(reverseFilterInfluence(output, filters, 3)).toEqual(output);
@@ -113,9 +105,9 @@ describe('reverse filter influence', () => {
 
   it('reads filter descriptors in descending index order', () => {
     const filters = resolveFilterList([
-      { type: 'brightness', amount: 1.2 },
-      { type: 'contrast', amount: 0.5 },
-      { type: 'opacity', amount: 0.8 },
+      brightness({ amount: 1.2 }),
+      contrast({ amount: 0.5 }),
+      opacity({ amount: 0.8 }),
     ], context)!;
     const descriptorReads: number[] = [];
     const values = new Proxy(filters.values, {
@@ -166,7 +158,7 @@ describe('filter windows', () => {
     const parentPaintTransform = new DOMMatrix()
       .translate(10, 20)
       .scale(2, 3);
-    const filters = resolveFilterList({ type: 'brightness', amount: 1 }, context)!;
+    const filters = resolveFilterList(brightness({ amount: 1 }), context)!;
 
     const windows = resolveFilterWindows(
       target,
@@ -207,7 +199,7 @@ describe('filter windows', () => {
     const parentPaintTransform = new DOMMatrix()
       .translate(20, 30)
       .rotate(90);
-    const filters = resolveFilterList({ type: 'blur', radius: 1 }, context)!;
+    const filters = resolveFilterList(blur({ radius: 1 }), context)!;
 
     const windows = resolveFilterWindows(
       target,
@@ -261,7 +253,7 @@ describe('filter windows', () => {
       inverseRenderTransform: scaleMatrix(scale),
     };
     const parentPaintTransform = scaleMatrix(scale);
-    const filters = resolveFilterList({ type: 'opacity', amount: 1 }, context)!;
+    const filters = resolveFilterList(opacity({ amount: 1 }), context)!;
 
     const windows = resolveFilterWindows(
       target,
@@ -304,7 +296,7 @@ describe('filter windows', () => {
       renderTransform: scaleMatrix(density),
       inverseRenderTransform: scaleMatrix(1 / density),
     };
-    const filters = resolveFilterList({ type: 'opacity', amount: 1 }, context)!;
+    const filters = resolveFilterList(opacity({ amount: 1 }), context)!;
 
     const windows = resolveFilterWindows(target, new DOMMatrix(), filters);
 
@@ -370,7 +362,7 @@ describe('filter windows', () => {
       -1e308,
       0,
     ]);
-    const filters = resolveFilterList({ type: 'opacity', amount: 1 }, context)!;
+    const filters = resolveFilterList(opacity({ amount: 1 }), context)!;
 
     const windows = resolveFilterWindows(
       target,
@@ -396,7 +388,7 @@ describe('filter windows', () => {
       { x: 0, y: 0, width: 100, height: 50 },
       new DOMMatrix().scale(2),
     );
-    const filters = resolveFilterList({ type: 'blur', radius: 1 }, context)!;
+    const filters = resolveFilterList(blur({ radius: 1 }), context)!;
 
     expect(resolveFilterWindows(target, transform, filters)).toBe('discard');
   });
@@ -410,7 +402,7 @@ describe('filter windows', () => {
       { x: 0, y: 0, width: 0x1_0000_0000, height: 1 },
       new DOMMatrix(),
     );
-    const filters = resolveFilterList({ type: 'blur', radius: 0 }, context)!;
+    const filters = resolveFilterList(blur({ radius: 0 }), context)!;
 
     expect(() => resolveFilterWindows(target, new DOMMatrix(), filters))
       .toThrow(/OverflowProbe.*backing.*4294967296.*unsigned-long/i);
@@ -421,7 +413,7 @@ describe('filter windows', () => {
       { x: 0, y: 0, width: 100_000_000, height: 100_000_000 },
       new DOMMatrix(),
     );
-    const filters = resolveFilterList({ type: 'opacity', amount: 1 }, context)!;
+    const filters = resolveFilterList(opacity({ amount: 1 }), context)!;
 
     expect(() => resolveFilterWindows(target, new DOMMatrix(), filters))
       .toThrow(/backing.*area.*safe integer/i);
