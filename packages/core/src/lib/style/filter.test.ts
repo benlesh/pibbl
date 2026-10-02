@@ -1,7 +1,8 @@
+import { compileNativeFilters, type NativePreparedFilter } from '../../filters/native-operations';
+import { grayscale, dropShadow, hueRotate, blur, brightness, contrast, invert, opacity, saturate, sepia } from '@crc/core/filters';
 import { describe, expect, it } from 'vitest';
 import type { CRCFilter } from './filter-types';
 import {
-  compileFilterList,
   getResolvedFilterList,
   resolveFilterList,
 } from './filter';
@@ -19,99 +20,75 @@ describe('filter lists', () => {
   it('normalizes and compiles the representative ordered list', () => {
     const resolved = resolveFilterList(
       [
-        { type: 'grayscale', amount: 2 },
-        {
-          type: 'dropShadow',
-          offsetX: 4,
-          offsetY: -6,
-          blurRadius: 3,
-          color: 'rgb(0 0 0 / 50%)',
-        },
-        { type: 'hueRotate', degrees: -450 },
+        grayscale({ amount: 2 }),
+        dropShadow({ offsetX: 4, offsetY: -6, blurRadius: 3, color: 'rgb(0 0 0 / 50%)' }),
+        hueRotate({ degrees: -450 }),
       ],
       context,
     );
 
-    expect(resolved?.values).toEqual([
-      { type: 'grayscale', amount: 1 },
-      {
-        type: 'dropShadow',
-        offsetX: 4,
-        offsetY: -6,
-        blurRadius: 3,
-        color: 'rgb(0 0 0 / 50%)',
-      },
-      { type: 'hueRotate', degrees: -450 },
-    ]);
-    expect(compileFilterList(resolved!, 2)).toBe(
+    expect(compileNativeFilters(resolved!.values as readonly NativePreparedFilter[], 2)).toBe(
       'grayscale(1) drop-shadow(8px -12px 6px rgb(0 0 0 / 50%)) hue-rotate(-450deg)',
     );
   });
 
   it('normalizes one descriptor to a list and treats an empty list as absent', () => {
-    const single = resolveFilterList({ type: 'blur', radius: 3 }, context);
+    const single = resolveFilterList(blur({ radius: 3 }), context);
 
-    expect(single?.values).toEqual([{ type: 'blur', radius: 3 }]);
+    expect(compileNativeFilters(single!.values as readonly NativePreparedFilter[], 1)).toBe('blur(3px)');
     expect(resolveFilterList([], context)).toBeUndefined();
   });
 
   it.each([
-    [{ type: 'blur', radius: 3 }, 'blur(6px)'],
-    [{ type: 'brightness', amount: 1.5 }, 'brightness(1.5)'],
-    [{ type: 'contrast', amount: 1.5 }, 'contrast(1.5)'],
+    [blur({ radius: 3 }), 'blur(6px)'],
+    [brightness({ amount: 1.5 }), 'brightness(1.5)'],
+    [contrast({ amount: 1.5 }), 'contrast(1.5)'],
     [
-      { type: 'dropShadow', offsetX: 4, offsetY: -6, color: 'black' },
+      dropShadow({ offsetX: 4, offsetY: -6, color: 'black' }),
       'drop-shadow(8px -12px 0px black)',
     ],
-    [{ type: 'grayscale', amount: 0.5 }, 'grayscale(0.5)'],
-    [{ type: 'hueRotate', degrees: -90 }, 'hue-rotate(-90deg)'],
-    [{ type: 'invert', amount: 0.5 }, 'invert(0.5)'],
-    [{ type: 'opacity', amount: 0.5 }, 'opacity(0.5)'],
-    [{ type: 'saturate', amount: 1.5 }, 'saturate(1.5)'],
-    [{ type: 'sepia', amount: 0.5 }, 'sepia(0.5)'],
+    [grayscale({ amount: 0.5 }), 'grayscale(0.5)'],
+    [hueRotate({ degrees: -90 }), 'hue-rotate(-90deg)'],
+    [invert({ amount: 0.5 }), 'invert(0.5)'],
+    [opacity({ amount: 0.5 }), 'opacity(0.5)'],
+    [saturate({ amount: 1.5 }), 'saturate(1.5)'],
+    [sepia({ amount: 0.5 }), 'sepia(0.5)'],
   ] as const)(
     'normalizes and compiles %o',
     (value: CRCFilter, expected: string) => {
       const resolved = resolveFilterList(value, context)!;
 
-      expect(compileFilterList(resolved, 2)).toBe(expected);
+      expect(compileNativeFilters(resolved.values as readonly NativePreparedFilter[], 2)).toBe(expected);
     },
   );
 
   it('defaults a drop-shadow blur radius and preserves or clamps amounts by filter kind', () => {
     const resolved = resolveFilterList(
       [
-        { type: 'dropShadow', offsetX: 1, offsetY: 2, color: 'black' },
-        { type: 'brightness', amount: 2 },
-        { type: 'contrast', amount: 2 },
-        { type: 'saturate', amount: 2 },
-        { type: 'grayscale', amount: 2 },
-        { type: 'invert', amount: 2 },
-        { type: 'opacity', amount: 2 },
-        { type: 'sepia', amount: 2 },
+        dropShadow({ offsetX: 1, offsetY: 2, color: 'black' }),
+        brightness({ amount: 2 }),
+        contrast({ amount: 2 }),
+        saturate({ amount: 2 }),
+        grayscale({ amount: 2 }),
+        invert({ amount: 2 }),
+        opacity({ amount: 2 }),
+        sepia({ amount: 2 }),
       ],
       context,
     )!;
 
-    expect(resolved.values).toEqual([
-      { type: 'dropShadow', offsetX: 1, offsetY: 2, blurRadius: 0, color: 'black' },
-      { type: 'brightness', amount: 2 },
-      { type: 'contrast', amount: 2 },
-      { type: 'saturate', amount: 2 },
-      { type: 'grayscale', amount: 1 },
-      { type: 'invert', amount: 1 },
-      { type: 'opacity', amount: 1 },
-      { type: 'sepia', amount: 1 },
-    ]);
+    expect(compileNativeFilters(resolved.values as readonly NativePreparedFilter[], 1)).toBe(
+      'drop-shadow(1px 2px 0px black) brightness(2) contrast(2) saturate(2) grayscale(1) invert(1) opacity(1) sepia(1)',
+    );
   });
 
   it('does not mutate caller-owned lists or descriptors and returns immutable normalized values', () => {
-    const descriptor: CRCFilter = { type: 'grayscale', amount: 2 };
+    const descriptor: CRCFilter = grayscale({ amount: 2 });
     const values = [descriptor] as const;
 
     const resolved = resolveFilterList(values, context)!;
 
-    expect(values).toEqual([{ type: 'grayscale', amount: 2 }]);
+    expect(values[0]).toBe(descriptor);
     expect(resolved.values).not.toBe(values);
     expect(resolved.values[0]).not.toBe(descriptor);
     expect(Object.isFrozen(resolved)).toBe(true);
@@ -120,12 +97,12 @@ describe('filter lists', () => {
   });
 
   it.each([
-    [{ type: 'blur', radius: -1 }, 'filter.radius', 'nonnegative'],
-    [{ type: 'blur', radius: Number.NaN }, 'filter.radius', 'finite'],
-    [{ type: 'brightness', amount: -1 }, 'filter.amount', 'nonnegative'],
-    [{ type: 'dropShadow', offsetX: Number.POSITIVE_INFINITY, offsetY: 0, color: 'black' }, 'filter.offsetX', 'finite'],
-    [{ type: 'dropShadow', offsetX: 0, offsetY: 0, blurRadius: -1, color: 'black' }, 'filter.blurRadius', 'nonnegative'],
-    [{ type: 'hueRotate', degrees: Number.NEGATIVE_INFINITY }, 'filter.degrees', 'finite'],
+    [blur({ radius: -1 }), 'filter.radius', 'nonnegative'],
+    [blur({ radius: Number.NaN }), 'filter.radius', 'finite'],
+    [brightness({ amount: -1 }), 'filter.amount', 'nonnegative'],
+    [dropShadow({ offsetX: Number.POSITIVE_INFINITY, offsetY: 0, color: 'black' }), 'filter.offsetX', 'finite'],
+    [dropShadow({ offsetX: 0, offsetY: 0, blurRadius: -1, color: 'black' }), 'filter.blurRadius', 'nonnegative'],
+    [hueRotate({ degrees: Number.NEGATIVE_INFINITY }), 'filter.degrees', 'finite'],
   ] as const)(
     'rejects invalid numeric filter values',
     (value, property, reason) => {
@@ -136,25 +113,19 @@ describe('filter lists', () => {
   );
 
   it('rejects an explicitly null drop-shadow blur radius', () => {
-    expect(() => resolveFilterList({
-      type: 'dropShadow',
-      offsetX: 0,
-      offsetY: 0,
-      blurRadius: null,
-      color: 'black',
-    } as unknown as CRCFilter, context)).toThrow(/filter\.blurRadius.*finite/);
+    expect(() => resolveFilterList(dropShadow({ offsetX: 0, offsetY: 0, blurRadius: null as unknown as number, color: 'black' }) as unknown as CRCFilter, context)).toThrow(/filter\.blurRadius.*finite/);
   });
 
   it('reports indexed property paths and unsupported discriminators', () => {
     expect(() => resolveFilterList([
-      { type: 'blur', radius: 1 },
-      { type: 'sepia', amount: 1 },
-      { type: 'grayscale', amount: -1 },
+      blur({ radius: 1 }),
+      sepia({ amount: 1 }),
+      grayscale({ amount: -1 }),
     ], context)).toThrow(/filter\[2\]\.amount.*nonnegative/);
     expect(() => resolveFilterList(
       { type: 'url', value: '#unsupported' } as unknown as CRCFilter,
       context,
-    )).toThrow(/filter\.type.*unsupported/);
+    )).toThrow(/filter.*removed descriptor.*@crc\/core\/filters/);
   });
 
   it.each([
@@ -179,21 +150,14 @@ describe('filter lists', () => {
   ])(
     'rejects contextual drop-shadow color %s',
     color => {
-      expect(() => resolveFilterList({
-        type: 'dropShadow', offsetX: 0, offsetY: 0, color,
-      }, context)).toThrow(/filter\.color.*contextual/);
+      expect(() => resolveFilterList(dropShadow({ offsetX: 0, offsetY: 0, color }), context)).toThrow(/filter\.color.*contextual/);
     },
   );
 
   it('reports the exact indexed path for a nested vendor contextual color', () => {
     expect(() => resolveFilterList([
-      { type: 'blur', radius: 1 },
-      {
-        type: 'dropShadow',
-        offsetX: 0,
-        offsetY: 0,
-        color: 'color-mix(in srgb, red, -webkit-active\\6c ink)',
-      },
+      blur({ radius: 1 }),
+      dropShadow({ offsetX: 0, offsetY: 0, color: 'color-mix(in srgb, red, -webkit-active\\6c ink)' }),
     ], context)).toThrow(/property filter\[1\]\.color .*contextual/);
   });
 
@@ -202,9 +166,7 @@ describe('filter lists', () => {
     'rgb(0 0 0',
     'color-mix(in srgb, red, blue]]',
   ])('rejects color %s that escapes its balanced token boundary', color => {
-    expect(() => resolveFilterList({
-      type: 'dropShadow', offsetX: 0, offsetY: 0, color,
-    }, context)).toThrow(/filter\.color.*balanced.*boundary/i);
+    expect(() => resolveFilterList(dropShadow({ offsetX: 0, offsetY: 0, color }), context)).toThrow(/filter\.color.*balanced.*boundary/i);
   });
 
   it('ignores contextual names and delimiters inside comments, strings, and escapes', () => {
@@ -215,9 +177,8 @@ describe('filter lists', () => {
     ];
 
     for (const color of colors) {
-      expect(resolveFilterList({
-        type: 'dropShadow', offsetX: 0, offsetY: 0, color,
-      }, context)?.values[0]).toMatchObject({ color });
+      const resolved = resolveFilterList(dropShadow({ offsetX: 0, offsetY: 0, color }), context)!;
+      expect(compileNativeFilters(resolved.values as readonly NativePreparedFilter[], 1)).toBe(`drop-shadow(0px 0px 0px ${color})`);
     }
   });
 
@@ -232,15 +193,14 @@ describe('filter lists', () => {
     ];
 
     for (const color of colors) {
-      expect(resolveFilterList({
-        type: 'dropShadow', offsetX: 0, offsetY: 0, color,
-      }, context)?.values[0]).toMatchObject({ color });
+      const resolved = resolveFilterList(dropShadow({ offsetX: 0, offsetY: 0, color }), context)!;
+      expect(compileNativeFilters(resolved.values as readonly NativePreparedFilter[], 1)).toBe(`drop-shadow(0px 0px 0px ${color})`);
     }
   });
 
   it('gets an already-resolved nonempty filter list from system style', () => {
-    const resolved = resolveFilterList({ type: 'blur', radius: 2 }, context)!;
-    const style: SystemStyle = { filter: resolved.values };
+    const resolved = resolveFilterList(blur({ radius: 2 }), context)!;
+    const style: SystemStyle = { filter: resolved.values as unknown as readonly CRCFilter[] };
 
     expect(getResolvedFilterList(style)?.values).toBe(resolved.values);
     expect(getResolvedFilterList({ filter: [] })).toBeUndefined();
