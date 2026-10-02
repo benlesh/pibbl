@@ -301,6 +301,18 @@ try {
             attributedBytes(es.inputs, isTexture) > 0,
             `${name} ${key} esbuild positive detector retained no texture bytes`,
           );
+        if (name === "marble") {
+          assert.equal(
+            es.code.includes("waterWaves is a numeric displacement map"),
+            false,
+            `marble ${key} esbuild retained water recipe code`,
+          );
+          assert.equal(
+            vi.code.includes("waterWaves is a numeric displacement map"),
+            false,
+            `marble ${key} Vite retained water recipe code`,
+          );
+        }
         if (name === "water") {
           assert.equal(
             es.code.includes("waterWaves is a numeric displacement map"),
