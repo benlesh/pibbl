@@ -96,7 +96,7 @@ describe.skipIf(!enabled)("animated displacement cost probe", () => {
         gpuSubmit: [],
         transfer: [],
       };
-      const collect = <T>(name: keyof Samples, fn: () => T): T => {
+      const collect = <T,>(name: keyof Samples, fn: () => T): T => {
         const start = now();
         try {
           return fn();
