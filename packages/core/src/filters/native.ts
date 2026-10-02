@@ -1,30 +1,28 @@
 import { concreteColor } from './native-color.js';
 import { isSignal } from '../lib/signals/graph.js';
-import { renderFilterBoundary } from '../lib/filter/render-filter-boundary.js';
+import { filterBoundaryExecutor } from './filter-executor.js';
 import { BLUR_EXTENT_FACTOR, type PixelBounds } from '../lib/filter/filter-region.js';
 import { layoutDiagnostic } from '../lib/style/diagnostics.js';
-import { CRC_FILTER_EXECUTOR, type CRCFilter, type CRCFilterExecutor, type CRCFilterRenderInput, type PreparedCRCFilter, type CRCBlurFilterOptions, type CRCBrightnessFilterOptions, type CRCContrastFilterOptions, type CRCDropShadowFilterOptions, type CRCGrayscaleFilterOptions, type CRCHueRotateFilterOptions, type CRCInvertFilterOptions, type CRCOpacityFilterOptions, type CRCSaturateFilterOptions, type CRCSepiaFilterOptions } from '../lib/style/filter-types.js';
+import { CRC_FILTER_EXECUTOR, type CRCFilter, type CRCFilterExecutor, type CRCFilterBoundaryExecutor, type PreparedCRCFilter, type CRCBlurFilterOptions, type CRCBrightnessFilterOptions, type CRCContrastFilterOptions, type CRCDropShadowFilterOptions, type CRCGrayscaleFilterOptions, type CRCHueRotateFilterOptions, type CRCInvertFilterOptions, type CRCOpacityFilterOptions, type CRCSaturateFilterOptions, type CRCSepiaFilterOptions } from '../lib/style/filter-types.js';
 import type { StyleResolutionContext } from '../lib/types.js';
 import type { NativePreparedFilter } from './native-operations.js';
 
-interface NativeOperation { prepare(executor: CRCFilterExecutor, property: string, context: Readonly<StyleResolutionContext>): NativePreparedFilter; }
+interface NativeOperation { prepare(executor: CRCFilterBoundaryExecutor, property: string, context: Readonly<StyleResolutionContext>): NativePreparedFilter; }
 const operations = new WeakMap<CRCFilter, NativeOperation>();
 export const nativeExecutor: CRCFilterExecutor = {
   prepare(value, property, context): PreparedCRCFilter {
     const operation = operations.get(value);
     if (!operation) throw new Error('A native filter value was created by an incompatible CRC runtime.');
-    return operation.prepare(nativeExecutor, property, context);
+    return operation.prepare(filterBoundaryExecutor, property, context);
   },
-  render(input: Readonly<CRCFilterRenderInput>): void {
-    renderFilterBoundary({ component: input.component, filters: input.filters as readonly NativePreparedFilter[], presentation: input.presentation }, input.renderSubtree);
-  },
+  render: filterBoundaryExecutor.render,
 };
 function filter(operation: NativeOperation): CRCFilter {
   const value = Object.freeze({ [CRC_FILTER_EXECUTOR]: nativeExecutor });
   operations.set(value, operation);
   return value;
 }
-function prepared(executor: CRCFilterExecutor, css: (density: number) => string, reverseInfluence: (output: Readonly<PixelBounds>, density: number) => PixelBounds, onRejected?: () => void): NativePreparedFilter {
+function prepared(executor: CRCFilterBoundaryExecutor, css: (density: number) => string, reverseInfluence: (output: Readonly<PixelBounds>, density: number) => PixelBounds, onRejected?: () => void): NativePreparedFilter {
   return Object.freeze({ executor, css, reverseInfluence, onRejected });
 }
 const unchanged = (output: Readonly<PixelBounds>): PixelBounds => ({ ...output });

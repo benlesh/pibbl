@@ -171,8 +171,10 @@ function renderDiscardedBoundary(
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.clearRect(0, 0, 1, 1);
   context.beginPath();
-  validateNativeFilter(input, context, 1);
-  resetNativeCanvasFilter(context, input.component);
+  if (!input.process) {
+    validateNativeFilter(input, context, 1);
+    resetNativeCanvasFilter(context, input.component);
+  }
   copyFilterSourceState(parent, context);
   const target: RenderTargetSnapshot = {
     logicalBounds: Object.freeze({ x: 0, y: 0, width: 1, height: 1 }),

@@ -71,7 +71,7 @@ export const CANVAS_2D_BACKEND: CRCBackendDriver<RenderingContext2D> = {
       return program(input.props, input.style, context);
     });
     if (filters) {
-      const executor = filters.values.find(filter => 'map' in filter)?.executor ?? filters.values[0]!.executor;
+      const executor = filters.values[0]!.executor;
       executor.render({
         component: input.componentName,
         filters: filters.values,

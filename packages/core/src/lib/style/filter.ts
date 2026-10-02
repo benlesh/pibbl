@@ -22,6 +22,9 @@ export function resolveFilterList(
     Array.isArray(value) ? `filter[${index}]` : 'filter',
     context,
   ));
+  if (values.some(value => value.executor !== values[0]!.executor)) {
+    throw invalidFilter('filter', value, 'contains incompatible boundary executors', context);
+  }
   return Object.freeze({ values: Object.freeze(values) });
 }
 

@@ -13,11 +13,15 @@ export const CRC_FILTER_EXECUTOR = Symbol('crc.filter.executor');
 
 /** @internal A value prepared for one receiving primitive generation. */
 export interface PreparedCRCFilter {
-  readonly executor: CRCFilterExecutor;
+  readonly executor: CRCFilterBoundaryExecutor;
 }
 
 /** @internal Optional filter implementations own validation and pixel processing. */
-export interface CRCFilterExecutor {
+export interface CRCFilterBoundaryExecutor {
+  render(input: Readonly<CRCFilterRenderInput>): void;
+}
+
+export interface CRCFilterExecutor extends CRCFilterBoundaryExecutor {
   prepare(value: CRCFilter, property: string, context: Readonly<StyleResolutionContext>): PreparedCRCFilter;
   render(input: Readonly<CRCFilterRenderInput>): void;
 }
