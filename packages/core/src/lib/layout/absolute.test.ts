@@ -1,3 +1,5 @@
+import { compileNativeFilters, type NativePreparedFilter } from '../../filters/native-operations';
+import { invert } from '@crc/core/filters';
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
 import { crc } from '../crc';
@@ -216,17 +218,13 @@ describe('absolute layout', () => {
     await componentTest(createElement(Absolute, {
       style: { width: 100, height: 50 },
       children: createElement(Child, {
-        style: { filter: { type: 'invert', amount: 1 } },
+        style: { filter: invert({ amount: 1 }) },
       }),
     }));
 
     expect(normalizerInput).not.toHaveProperty('filter');
-    expect(renderedStyle).toEqual({
-      width: 20,
-      height: 10,
-      label: 'normalized',
-      filter: [{ type: 'invert', amount: 1 }],
-    });
+    expect(renderedStyle).toMatchObject({ width: 20, height: 10, label: 'normalized' });
+    expect(compileNativeFilters(renderedStyle!.filter as unknown as readonly NativePreparedFilter[], 1)).toBe('invert(1)');
   });
 
   // @ts-expect-error absolute has no overlay alignment vocabulary

@@ -1,3 +1,4 @@
+import { dropShadow, blur } from '@crc/core/filters';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../test-utils/component-test';
@@ -243,12 +244,7 @@ describe('g', () => {
           rotationDegrees: 90,
           translateX: 20,
           translateY: -100,
-          filter: {
-            type: 'dropShadow',
-            offsetX: 20,
-            offsetY: 0,
-            color: 'black',
-          },
+          filter: dropShadow({ offsetX: 20, offsetY: 0, color: 'black' }),
         },
         children: createElement(Rectangle, {
           style: { left: 10, top: 10, width: 20, height: 20, fill: 'red' },
@@ -267,7 +263,7 @@ describe('g', () => {
           scaleY: 1,
           translateX: 20,
           translateY: 30,
-          filter: { type: 'blur', radius: 4 },
+          filter: blur({ radius: 4 }),
         },
         children: createElement(Circle, {
           style: { cx: 10, cy: 10, radius: 5, fill: 'black' },
