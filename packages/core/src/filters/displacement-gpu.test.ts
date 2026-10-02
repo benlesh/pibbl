@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DisplacementGpu } from './displacement-gpu.js';
 
 describe('displacement GPU pass', () => {
@@ -71,4 +71,27 @@ it('uses transparent source samples beyond the edge, including the bilinear foot
     output.drawImage(bitmap, 0, 0); bitmap.close();
     expect(output.getImageData(1, 0, 1, 1).data[3]).toBeCloseTo(128, -1);
   } finally { gpu.dispose(); }
+});
+
+it('replaces one cached map upload per committed revision and releases its final lease', () => {
+  const source = new OffscreenCanvas(2, 1), map = new OffscreenCanvas(1, 1);
+  const mapContext = map.getContext('2d')!;
+  mapContext.fillStyle = 'rgb(128 128 128)'; mapContext.fillRect(0, 0, 1, 1);
+  const resource = {};
+  const gpu = new DisplacementGpu();
+  const upload = vi.spyOn(WebGL2RenderingContext.prototype, 'texImage2D');
+  const remove = vi.spyOn(WebGL2RenderingContext.prototype, 'deleteTexture');
+  try {
+    const apply = (revision: number) => gpu.apply(source, { source: map, width: 1, height: 1, revision, resource, placement: {} }, 1).close();
+    apply(1); apply(1);
+    expect(upload).toHaveBeenCalledTimes(3); // Two scenes, one shared map.
+    apply(2);
+    expect(upload).toHaveBeenCalledTimes(5); // New scene and replacement map pixels.
+    gpu.retainMaps(new Set([resource]));
+    expect(remove).not.toHaveBeenCalled();
+    gpu.retainMaps(new Set());
+    expect(remove).toHaveBeenCalledTimes(1);
+    apply(2);
+    expect(upload).toHaveBeenCalledTimes(7); // A new lease cannot reuse a released upload.
+  } finally { gpu.dispose(); upload.mockRestore(); remove.mockRestore(); }
 });

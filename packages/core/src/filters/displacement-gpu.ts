@@ -52,7 +52,7 @@ export class DisplacementGpu {
   private readonly vao: WebGLVertexArrayObject;
   private readonly buffer: WebGLBuffer;
   private readonly source: WebGLTexture;
-  private readonly map: WebGLTexture;
+  private readonly maps = new Map<object, { texture: WebGLTexture; revision: number }>();
   private disposed = false;
 
   constructor() {
@@ -78,13 +78,13 @@ export class DisplacementGpu {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     const location = gl.getAttribLocation(program, 'p');
     gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location, 2, gl.FLOAT, false, 0, 0);
-    const source = gl.createTexture(), map = gl.createTexture();
-    if (!source || !map) {
-      if (source) gl.deleteTexture(source); if (map) gl.deleteTexture(map);
+    const source = gl.createTexture();
+    if (!source) {
+      if (source) gl.deleteTexture(source);
       gl.deleteBuffer(buffer); gl.deleteVertexArray(vao); gl.deleteProgram(program);
       throw new Error('Could not allocate displacement textures.');
     }
-    this.source = source; this.map = map;
+    this.source = source;
     gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
   }
 
@@ -99,7 +99,15 @@ export class DisplacementGpu {
     gl.viewport(0, 0, source.width, source.height);
     gl.useProgram(this.program); gl.bindVertexArray(this.vao);
     this.upload(0, this.source, source, true, false);
-    this.upload(1, this.map, map.source, false, placement.mode !== 'stretch');
+    let cached = this.maps.get(map.resource);
+    if (!cached) {
+      const texture = gl.createTexture();
+      if (!texture) throw new Error('Could not allocate displacement map texture.');
+      cached = { texture, revision: -1 };
+      this.maps.set(map.resource, cached);
+    }
+    this.upload(1, cached.texture, map.source, false, placement.mode !== 'stretch', cached.revision !== map.revision);
+    cached.revision = map.revision;
     const density = coordinates?.density ?? 1;
     const region = coordinates?.region ?? { x: 0, y: 0, width: source.width / density, height: source.height / density };
     const uniform = (name: string) => gl.getUniformLocation(this.program, name);
@@ -115,7 +123,7 @@ export class DisplacementGpu {
     if (error !== gl.NO_ERROR) throw new Error(`Displacement GPU processing failed (${error}).`);
     return this.canvas.transferToImageBitmap();
   }
-  private upload(unit: number, texture: WebGLTexture, canvas: OffscreenCanvas, premultiply: boolean, repeat: boolean): void {
+  private upload(unit: number, texture: WebGLTexture, canvas: OffscreenCanvas, premultiply: boolean, repeat: boolean, upload = true): void {
     const gl = this.gl;
     gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -123,13 +131,18 @@ export class DisplacementGpu {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+    if (upload) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+  }
+  retainMaps(resources: ReadonlySet<object>): void {
+    for (const [resource, cached] of this.maps) {
+      if (!resources.has(resource)) { this.gl.deleteTexture(cached.texture); this.maps.delete(resource); }
+    }
   }
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
     const gl = this.gl;
-    gl.deleteTexture(this.source); gl.deleteTexture(this.map); gl.deleteBuffer(this.buffer);
+    gl.deleteTexture(this.source); this.retainMaps(new Set()); gl.deleteBuffer(this.buffer);
     gl.deleteVertexArray(this.vao); gl.deleteProgram(this.program);
     this.canvas.width = 0; this.canvas.height = 0;
   }
