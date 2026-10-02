@@ -34,6 +34,7 @@ const fixtures = {
   marble: `import { marble } from '@crc/textures'; globalThis.keep=marble;`,
   water: `import { waterWaves } from '@crc/textures'; globalThis.keep=waterWaves;`,
   displacement: `import { defineTexture } from '@crc/core'; import { displacement } from '@crc/core/filters'; const map=defineTexture({create(){return {}},rasterize(){}})({}); globalThis.keep=[map,displacement];`,
+  animation: `import { usePlayback } from '@crc/core'; globalThis.keep=usePlayback;`,
   coreImportOnly: `import '@crc/core';`,
   filtersImportOnly: `import '@crc/core/filters';`,
   texturesImportOnly: `import '@crc/textures';`,
@@ -69,6 +70,8 @@ const sourceResolver = {
 };
 const isFilter = (path) =>
   path.includes("packages/core/src/filters/") ||
+  path.includes("/core/dist/filters/") ||
+  path.includes("/core/dist/lib/filter/") ||
   path.includes("packages/core/src/lib/filter/") ||
   path.endsWith("/core/dist/filters.mjs");
 const isDisplacement = (path) =>
@@ -246,6 +249,11 @@ try {
         evidence[name] ??= {};
         evidence[name][key] = summary(es, vi);
         if (name === "plain" || name === "layer") {
+          for (const [bundler, code] of [["esbuild", es.code], ["Vite", vi.code]]) {
+            assert.equal(code.includes("unresolved-stepper"), false, `${name} ${key} ${bundler} retained animation evaluation state`);
+            assert.equal(code.includes("Texture message queue is full."), false, `${name} ${key} ${bundler} retained texture producer`);
+          }
+
           assertExcluded(
             `${name} ${key} esbuild`,
             es,
@@ -257,6 +265,10 @@ try {
             false,
             `${name} ${key} Vite retained filter machinery`,
           );
+        }
+        if (name === "animation") {
+          assert.ok(es.code.includes("unresolved-stepper"), `animation ${key} esbuild positive detector failed`);
+          assert.ok(vi.code.includes("unresolved-stepper"), `animation ${key} Vite positive detector failed`);
         }
         if (name === "blur") {
           assert.ok(
