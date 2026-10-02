@@ -283,3 +283,39 @@ it("retains committed pixels when Commit rejects a texture revision and retries"
     restore();
   }
 });
+
+it("resets texture state on resolution changes while preserving the producer canvas and exact teardown", () => {
+  const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
+  const resolution = signal(8), displayWidth = signal(16);
+  const canvases: OffscreenCanvas[] = [];
+  const dispose = vi.fn();
+  const receive = vi.fn((state: { color: string }, color: string, context: any) => { state.color = color; context.invalidate(); });
+  const recipe = defineTexture<{}, { color: string }, string>({
+    create(context) { canvases.push(context.canvas); return { color: 'red' }; },
+    receive,
+    rasterize(state, { canvas }) { const context = canvas.getContext('2d')!; context.fillStyle = state.color; context.fillRect(0, 0, canvas.width, canvas.height); },
+    dispose,
+  });
+  let texture!: ReturnType<typeof useTexture<string>>;
+  function Scene() {
+    texture = useTexture(recipe({}), { resolution: { width: resolution.get(), height: resolution.get() } });
+    return <Rectangle style={{ width: displayWidth, height: 16, fill: texture }} />;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 40; canvas.height = 20; document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  try {
+    driver.flush(0);
+    texture.send('blue'); driver.flush(16);
+    expect(canvas.getContext('2d')!.getImageData(2, 2, 1, 1).data[2]).toBe(255);
+    displayWidth.set(24); driver.flush(32);
+    expect(canvases).toHaveLength(1); expect(dispose).not.toHaveBeenCalled();
+    resolution.set(16); driver.flush(48); driver.flush(64);
+    expect(canvases).toHaveLength(2); expect(canvases[1]).toBe(canvases[0]);
+    expect(canvases[0].width).toBe(16); expect(dispose).toHaveBeenCalledTimes(1);
+    expect(canvas.getContext('2d')!.getImageData(2, 2, 1, 1).data[0]).toBe(255);
+    controller.dispose();
+    expect(dispose).toHaveBeenCalledTimes(2); expect(canvases[0].width).toBe(0);
+    texture.send('blue');
+    expect(receive).toHaveBeenCalledTimes(1); expect(driver.pendingHostFrames).toBe(0);
+  } finally { controller.dispose(); restore(); canvas.remove(); }
+});
