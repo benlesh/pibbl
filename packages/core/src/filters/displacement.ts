@@ -5,12 +5,13 @@ import {
   type CRCDisplacementFilterOptions,
   type CRCFilter,
   type CRCFilterExecutor,
-  type CRCFilterRenderInput,
   type PreparedCRCFilter,
 } from '../lib/style/filter-types.js';
 import type { StyleResolutionContext } from '../lib/types.js';
 import { validateTexturePaint } from '../lib/textures/texture-protocol.js';
-import { renderDisplacementBoundary, type PreparedDisplacement } from './render-displacement-boundary.js';
+import { processDisplacement } from './render-displacement-boundary.js';
+import { filterBoundaryExecutor, type CustomPreparedFilter } from './filter-executor.js';
+import { expandDisplacementInput } from './displacement-math.js';
 
 const definitions = new WeakMap<CRCFilter, Readonly<CRCDisplacementFilterOptions>>();
 const displacementExecutor: CRCFilterExecutor = {
@@ -27,11 +28,14 @@ const displacementExecutor: CRCFilterExecutor = {
     }
     const map = isSignal(options.map) ? options.map.get() : options.map;
     validateTexturePaint(map);
-    return Object.freeze({ executor: displacementExecutor, map, strength: strengthValue, region: Object.freeze({ x, y, width, height }) }) as PreparedDisplacement;
+    const region = Object.freeze({ x, y, width, height });
+    return Object.freeze({
+      executor: filterBoundaryExecutor,
+      reverseInfluence: (output, density) => expandDisplacementInput(output, strengthValue, density),
+      process: strengthValue === 0 ? undefined : (source, windows) => processDisplacement(source, windows, map, strengthValue, region),
+    } satisfies CustomPreparedFilter);
   },
-  render(input: Readonly<CRCFilterRenderInput>): void {
-    renderDisplacementBoundary(input, input.filters as readonly PreparedDisplacement[]);
-  },
+  render: filterBoundaryExecutor.render,
 };
 
 export function displacement(options: CRCDisplacementFilterOptions): CRCFilter {

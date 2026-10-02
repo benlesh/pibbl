@@ -50,3 +50,17 @@ it('shares one GPU across root and Layers and releases it after the last consume
   } finally { controller.dispose(); }
   expect(dispose).toHaveBeenCalledTimes(2);
 });
+
+it('evaluates a discarded displacement subtree once without acquiring a GPU', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = canvas.height = 40; document.body.append(canvas);
+  const contexts = vi.spyOn(OffscreenCanvas.prototype, 'getContext');
+  let renders = 0;
+  function Child() { renders++; return createElement(Rectangle, { style: { width: 10, height: 10, fill: 'red' } }); }
+  function Scene() {
+    const map = useTexture(neutral({}));
+    return createElement(Group, { style: { scaleX: 0, filter: displacement({ map, strength: 4, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Child, {}) });
+  }
+  const controller = crc(canvas, createElement(Scene, {}));
+  try { await frame(); expect(renders).toBe(1); expect(contexts.mock.calls.filter(([kind]) => kind === 'webgl2')).toHaveLength(0); }
+  finally { controller.dispose(); }
+});
