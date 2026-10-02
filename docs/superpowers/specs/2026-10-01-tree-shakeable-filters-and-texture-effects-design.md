@@ -34,15 +34,15 @@ and CRC scheduler rather than introducing another animation system.
 
 The following are observations from this checkout, not bundle measurements:
 
-| Current boundary | Evidence | Consequence |
-| --- | --- | --- |
-| Core mounting | `packages/core/src/lib/mount-crc.ts` imports and constructs `FilterSurfacePool` | A plain mount reaches filter resource machinery, although backing surfaces are lazy |
-| Canvas rendering | `packages/core/src/lib/backend/canvas-2d-backend.ts` imports `renderFilterBoundary` | The renderer reaches filter capture and execution |
-| Style resolution | `packages/core/src/lib/style/resolve-dispatch.ts` imports `resolveFilterList` | Every primitive can reach the complete descriptor validator |
-| Filter compilation and bounds | `packages/core/src/lib/style/filter.ts` and `packages/core/src/lib/filter/filter-region.ts` branch on filter type | Factory syntax alone cannot isolate individual implementations |
-| Texture consumption | Text, Path, and Image import `resolveTexturePaint` from `textures/texture.ts` | Consumption and production currently share a module and state; exact retained bytes require a bundle test |
-| Texture recipes | `packages/textures/src/lib/definitions.ts` creates multiple recipes at module scope | Unused factory calls and shared tables must be checked for retained work |
-| Package output | Core uses bundled split ESM and declares `sideEffects: false` | Existing configuration does not remove code still reachable from mounting/rendering |
+| Current boundary              | Evidence                                                                                                          | Consequence                                                                                               |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Core mounting                 | `packages/core/src/lib/mount-crc.ts` imports and constructs `FilterSurfacePool`                                   | A plain mount reaches filter resource machinery, although backing surfaces are lazy                       |
+| Canvas rendering              | `packages/core/src/lib/backend/canvas-2d-backend.ts` imports `renderFilterBoundary`                               | The renderer reaches filter capture and execution                                                         |
+| Style resolution              | `packages/core/src/lib/style/resolve-dispatch.ts` imports `resolveFilterList`                                     | Every primitive can reach the complete descriptor validator                                               |
+| Filter compilation and bounds | `packages/core/src/lib/style/filter.ts` and `packages/core/src/lib/filter/filter-region.ts` branch on filter type | Factory syntax alone cannot isolate individual implementations                                            |
+| Texture consumption           | Text, Path, and Image import `resolveTexturePaint` from `textures/texture.ts`                                     | Consumption and production currently share a module and state; exact retained bytes require a bundle test |
+| Texture recipes               | `packages/textures/src/lib/definitions.ts` creates multiple recipes at module scope                               | Unused factory calls and shared tables must be checked for retained work                                  |
+| Package output                | Core uses bundled split ESM and declares `sideEffects: false`                                                     | Existing configuration does not remove code still reachable from mounting/rendering                       |
 
 The [style contract](../../design/style-system-contract.md) specifies the closed
 string descriptor vocabulary, one native operation per filter chain, and
@@ -89,15 +89,19 @@ Existing native operations become named factories. Factory option fields retain
 the current meanings, defaults, ranges, clamping, and concrete-color requirements.
 
 ```tsx
-import { Group, Rectangle } from '@crc/core';
-import { blur, dropShadow } from '@crc/core/filters';
+import { Group, Rectangle } from "@crc/core";
+import { blur, dropShadow } from "@crc/core/filters";
 
-<Group style={{ filter: [
-  blur({ radius: 2 }),
-  dropShadow({ offsetX: 0, offsetY: 4, blurRadius: 3, color: '#0008' }),
-] }}>
-  <Rectangle style={{ width: 120, height: 80, fill: 'coral' }} />
-</Group>
+<Group
+  style={{
+    filter: [
+      blur({ radius: 2 }),
+      dropShadow({ offsetX: 0, offsetY: 4, blurRadius: 3, color: "#0008" }),
+    ],
+  }}
+>
+  <Rectangle style={{ width: 120, height: 80, fill: "coral" }} />
+</Group>;
 ```
 
 The complete initial native exports are `blur`, `brightness`, `contrast`,
@@ -381,9 +385,9 @@ phase to the seeded initial state and retains the current pause state. Paused
 configuration changes can invalidate one frame without starting a loop.
 
 ```tsx
-import { Group, Layer, useTexture } from '@crc/core';
-import { displacement } from '@crc/core/filters';
-import { waterWaves } from '@crc/textures';
+import { Group, Layer, useTexture } from "@crc/core";
+import { displacement } from "@crc/core/filters";
+import { waterWaves } from "@crc/textures";
 
 function UnderwaterScene() {
   const water = useTexture(waterWaves({ seed: 7, speed: 0.4, scale: 4 }), {
@@ -391,11 +395,15 @@ function UnderwaterScene() {
   });
 
   return (
-    <Group style={{ filter: displacement({
-      map: water.paint({ mode: 'repeat', tileWidth: 160, tileHeight: 160 }),
-      strength: 6,
-      region: { x: 0, y: 0, width: 640, height: 360 },
-    }) }}>
+    <Group
+      style={{
+        filter: displacement({
+          map: water.paint({ mode: "repeat", tileWidth: 160, tileHeight: 160 }),
+          strength: 6,
+          region: { x: 0, y: 0, width: 640, height: 360 },
+        }),
+      }}
+    >
       <Layer>
         <Scene />
       </Layer>
@@ -471,17 +479,17 @@ distorted; pause is not equivalent to strength zero.
 
 ## Ownership and failure ledger
 
-| Resource | Owner | Release or replacement |
-| --- | --- | --- |
-| Filter factory value | Ordinary application value | Garbage collection; no runtime teardown |
-| Prepared filter dependencies | Receiver generation | Successful replacement, abort, removal, or root disposal |
-| Native capture pool | Lazily attached instance service | Last active boundary removed or instance disposal |
-| Scratch surface leases | Current boundary invocation | Every success or failure path in `finally` |
-| Texture state, source rasters, messages, scheduler work | Existing texture hook slot | Hook teardown; resolution reset where documented |
-| Borrowed map | Synchronous consumer callback | Callback return; never transferred or retained |
-| GPU service and context listeners | Root-tree optional service | Last active displacement removed or root disposal |
-| Map upload cache entry | GPU service with live borrower count | Revision replacement, final borrower removal, context loss, or disposal |
-| Candidate raster publication | Exact producer publication transaction | Successful adoption or rejection cleanup |
+| Resource                                                | Owner                                  | Release or replacement                                                  |
+| ------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------- |
+| Filter factory value                                    | Ordinary application value             | Garbage collection; no runtime teardown                                 |
+| Prepared filter dependencies                            | Receiver generation                    | Successful replacement, abort, removal, or root disposal                |
+| Native capture pool                                     | Lazily attached instance service       | Last active boundary removed or instance disposal                       |
+| Scratch surface leases                                  | Current boundary invocation            | Every success or failure path in `finally`                              |
+| Texture state, source rasters, messages, scheduler work | Existing texture hook slot             | Hook teardown; resolution reset where documented                        |
+| Borrowed map                                            | Synchronous consumer callback          | Callback return; never transferred or retained                          |
+| GPU service and context listeners                       | Root-tree optional service             | Last active displacement removed or root disposal                       |
+| Map upload cache entry                                  | GPU service with live borrower count   | Revision replacement, final borrower removal, context loss, or disposal |
+| Candidate raster publication                            | Exact producer publication transaction | Successful adoption or rejection cleanup                                |
 
 Unmounting a filter does not dispose its texture. A texture owner may continue
 animating while mounted even if currently unused; automatic visibility suspension
@@ -509,19 +517,19 @@ consumer output, not a requirement to change every package build immediately.
 
 Audit the following independently and report retained implementation families:
 
-| Consumer | Must not retain |
-| --- | --- |
+| Consumer                                    | Must not retain                                                                                                              |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Core mount and a plain Rectangle/Text scene | Filter execution/pools, texture producers, animation evaluators, external renderer implementations, sibling feature packages |
-| Explicit Layer scene | Filters and texture producers merely because it uses a retained bitmap |
-| Native blur | Other native operation-specific implementations, GPU effects, texture producers |
-| Static marble paint | Ink/electric/water simulation, filters, GPU effects |
-| Water texture painted directly | Displacement processor and native filters |
-| Displacement with a user-defined texture | Official texture recipes, native filter-specific validators, Three |
-| Tween-only animation | Spring/stepper evaluators if structurally separable; report current coupling before proposing changes |
-| One layout component | Unrelated layout algorithms; investigate shared dispatch coupling |
-| Core render-layer usage | Three adapter and Three.js |
-| Physics geometry only | Runtime world, simulation scheduling, renderer adapters |
-| One visualization or particle entry | Unrelated optional package families |
+| Explicit Layer scene                        | Filters and texture producers merely because it uses a retained bitmap                                                       |
+| Native blur                                 | Other native operation-specific implementations, GPU effects, texture producers                                              |
+| Static marble paint                         | Ink/electric/water simulation, filters, GPU effects                                                                          |
+| Water texture painted directly              | Displacement processor and native filters                                                                                    |
+| Displacement with a user-defined texture    | Official texture recipes, native filter-specific validators, Three                                                           |
+| Tween-only animation                        | Spring/stepper evaluators if structurally separable; report current coupling before proposing changes                        |
+| One layout component                        | Unrelated layout algorithms; investigate shared dispatch coupling                                                            |
+| Core render-layer usage                     | Three adapter and Three.js                                                                                                   |
+| Physics geometry only                       | Runtime world, simulation scheduling, renderer adapters                                                                      |
+| One visualization or particle entry         | Unrelated optional package families                                                                                          |
 
 The first six rows and core-versus-sibling isolation are hard acceptance gates for
 this feature. Other rows produce an evidence-backed audit and scoped follow-up
@@ -602,18 +610,18 @@ removing. Replace all repository call sites and documentation in the release tha
 changes `CRCFilter`. Runtime rejection of an old object should say to import a
 factory from `@crc/core/filters`, without importing the legacy implementation.
 
-| Existing form | Proposed form |
-| --- | --- |
-| `{ type: 'blur', radius: 4 }` | `blur({ radius: 4 })` |
-| `{ type: 'brightness', amount: 1.2 }` | `brightness({ amount: 1.2 })` |
-| `{ type: 'contrast', amount: 1.2 }` | `contrast({ amount: 1.2 })` |
+| Existing form                                                    | Proposed form                                            |
+| ---------------------------------------------------------------- | -------------------------------------------------------- |
+| `{ type: 'blur', radius: 4 }`                                    | `blur({ radius: 4 })`                                    |
+| `{ type: 'brightness', amount: 1.2 }`                            | `brightness({ amount: 1.2 })`                            |
+| `{ type: 'contrast', amount: 1.2 }`                              | `contrast({ amount: 1.2 })`                              |
 | `{ type: 'dropShadow', offsetX: 1, offsetY: 2, color: 'black' }` | `dropShadow({ offsetX: 1, offsetY: 2, color: 'black' })` |
-| `{ type: 'grayscale', amount: 1 }` | `grayscale({ amount: 1 })` |
-| `{ type: 'hueRotate', degrees: 90 }` | `hueRotate({ degrees: 90 })` |
-| `{ type: 'invert', amount: 1 }` | `invert({ amount: 1 })` |
-| `{ type: 'opacity', amount: 0.5 }` | `opacity({ amount: 0.5 })` |
-| `{ type: 'saturate', amount: 1.5 }` | `saturate({ amount: 1.5 })` |
-| `{ type: 'sepia', amount: 0.5 }` | `sepia({ amount: 0.5 })` |
+| `{ type: 'grayscale', amount: 1 }`                               | `grayscale({ amount: 1 })`                               |
+| `{ type: 'hueRotate', degrees: 90 }`                             | `hueRotate({ degrees: 90 })`                             |
+| `{ type: 'invert', amount: 1 }`                                  | `invert({ amount: 1 })`                                  |
+| `{ type: 'opacity', amount: 0.5 }`                               | `opacity({ amount: 0.5 })`                               |
+| `{ type: 'saturate', amount: 1.5 }`                              | `saturate({ amount: 1.5 })`                              |
+| `{ type: 'sepia', amount: 0.5 }`                                 | `sepia({ amount: 0.5 })`                                 |
 
 Replace named descriptor interfaces with explicitly named option types such as
 `CRCBlurFilterOptions`. Code reading `.type` or spreading descriptors must retain
