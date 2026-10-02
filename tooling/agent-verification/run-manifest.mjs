@@ -5,8 +5,8 @@ import { resolve } from 'node:path';
 
 /** Data-only recipe: consumers pass arguments directly, never concatenate a shell command. */
 export function createReplayManifest({ runId, repository, kind, url, density = 1 }) {
-  if (kind !== 'targeting' && kind !== 'viz') throw new Error('Unknown replay kind.');
-  if ((density !== 1 && density !== 2) || (kind === 'targeting' && density !== 1)) {
+  if (kind !== 'targeting' && kind !== 'viz' && kind !== 'text' && kind !== 'signal-mutation') throw new Error('Unknown replay kind.');
+  if ((density !== 1 && density !== 2) || (kind !== 'viz' && density !== 1)) {
     throw new Error('Unsupported replay density.');
   }
   return {
@@ -22,7 +22,7 @@ export function createReplayManifest({ runId, repository, kind, url, density = 1
     },
     rerun: {
       executable: process.execPath,
-      arguments: [resolve(repository, 'tooling/agent-verification', kind === 'viz' ? 'viz-replay.mjs' : 'replay.mjs'), url],
+      arguments: [resolve(repository, 'tooling/agent-verification', kind === 'viz' ? 'viz-replay.mjs' : kind === 'text' ? 'text-replay.mjs' : kind === 'signal-mutation' ? 'signal-mutation-replay.mjs' : 'replay.mjs'), url],
       cwd: repository,
       environment: kind === 'viz' ? { CRC_VERIFY_DENSITY: String(density) } : {},
       unsetEnvironment: ['CRC_VERIFY_BROWSER_ENDPOINT'],
@@ -35,10 +35,13 @@ export function createReplayManifest({ runId, repository, kind, url, density = 1
 
 
 export function replayToolFiles(kind) {
-  if (kind !== 'targeting' && kind !== 'viz') throw new Error('Unknown replay kind.');
-  const names = [kind === 'viz' ? 'viz-replay.mjs' : 'replay.mjs', 'run-manifest.mjs',
-    'identity.mjs', 'evidence-directory.mjs', 'checkpoint.mjs', 'replay-outcome.mjs', 'browser-failure.mjs', 'failure-evidence.mjs'];
-  if (kind === 'viz') names.push('numeric-assertion.mjs');
+  if (kind !== 'targeting' && kind !== 'viz' && kind !== 'text' && kind !== 'signal-mutation') throw new Error('Unknown replay kind.');
+  const names = [kind === 'viz' ? 'viz-replay.mjs' : kind === 'text' ? 'text-replay.mjs' : kind === 'signal-mutation' ? 'signal-mutation-replay.mjs' : 'replay.mjs', 'run-manifest.mjs',
+    'required-checks.mjs', 'identity.mjs', 'evidence-directory.mjs', 'checkpoint.mjs', 'replay-outcome.mjs', 'browser-failure.mjs', 'failure-evidence.mjs'];
+  if (kind === 'signal-mutation') names.push('signal-mutation-identity.mjs', 'recorded-check.mjs');
+  else if (kind === 'text') names.push('text-identity.mjs', 'recorded-check.mjs');
+  else if (kind === 'viz') names.push('numeric-assertion.mjs', 'recorded-check.mjs');
+  else names.push('input-provenance.mjs', 'recorded-check.mjs');
   return names.map(name => `tooling/agent-verification/${name}`);
 }
 

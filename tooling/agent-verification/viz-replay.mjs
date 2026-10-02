@@ -1,3 +1,5 @@
+import { requiredReplayChecks } from './required-checks.mjs';
+import { recordAssertion } from './recorded-check.mjs';
 import { reserveEvidenceDirectory } from './evidence-directory.mjs';
 import { assertNear } from './numeric-assertion.mjs';
 import { describeReplayError } from './failure-evidence.mjs';
@@ -17,7 +19,7 @@ const url = process.argv[2];
 if (!url) throw new Error('Provide the source Studio URL ending in #/testing/viz-hover-lab');
 const output = process.argv[3] ? resolve(process.argv[3]) : resolve(repository, 'packages/core/test/out/agent-viz', new Date().toISOString().replaceAll(':', '-'));
 await reserveEvidenceDirectory(output);
-const report = { schema: 'crc-viz-replay/1', status: 'incomplete', url, node: process.version, density,
+const report = { requiredChecks: requiredReplayChecks('viz'), schema: 'crc-viz-replay/1', status: 'incomplete', url, node: process.version, density,
   provenance: 'Loaded fixture fingerprint covers core/viz source, fixture/example, identity tooling, dev config and lockfile; not full installed dependency or asset attestation.', steps: [], errors: [], droppedErrors: 0 };
 const checkpoint = createCheckpointWriter(output);
 report.checkpointRunId = checkpoint.runId;
@@ -68,6 +70,7 @@ try {
       return state.generation === generation && state.mode === 'interpolated-x' && state.inspection !== null && Math.abs(state.inspection - 5) < 1e-8;
     }, generation);
     const state = await readEvidence();
+    step.state = state;
     assert.equal(Math.round(state.viewport.width), size.width);
     assert.equal(Math.round(state.viewport.height), size.height);
     assert.deepEqual(state.plot, report.oracle.plot);
@@ -75,9 +78,9 @@ try {
     for (const result of state.results) {
       const y = result.series === 'monthly' && generation ? 30 : 20;
       assert.equal(result.kind, 'interpolated');
-      assertNear(result.x, 5, 1e-8, { quantity: 'interpolated x', units: 'data-x' }); assertNear(result.y, y, 1e-8, { quantity: 'interpolated y', units: 'data-y' });
-      assertNear(result.anchor.x, width / 2, 1e-8, { quantity: 'interpolated anchor x', units: 'plot-pixels' });
-      assertNear(result.anchor.y, height * (1 - y / 40), 1e-8, { quantity: 'interpolated anchor y', units: 'plot-pixels' });
+      await recordAssertion(report, { checkId: `${step.actionId}.${result.series}.interpolated-x`, actionId: step.actionId }, () => assertNear(result.x, 5, 1e-8, { quantity: 'interpolated x', units: 'data-x' })); await recordAssertion(report, { checkId: `${step.actionId}.${result.series}.interpolated-y`, actionId: step.actionId }, () => assertNear(result.y, y, 1e-8, { quantity: 'interpolated y', units: 'data-y' }));
+      await recordAssertion(report, { checkId: `${step.actionId}.${result.series}.interpolated-anchor-x`, actionId: step.actionId }, () => assertNear(result.anchor.x, width / 2, 1e-8, { quantity: 'interpolated anchor x', units: 'plot-pixels' }));
+      await recordAssertion(report, { checkId: `${step.actionId}.${result.series}.interpolated-anchor-y`, actionId: step.actionId }, () => assertNear(result.anchor.y, height * (1 - y / 40), 1e-8, { quantity: 'interpolated anchor y', units: 'plot-pixels' }));
     }
     step.state = state;
     step.status = 'pass';
@@ -108,14 +111,14 @@ try {
       const first = state.results[0];
       const y = x === 5 ? expectedY : (10 + expectedY) / 2;
       assert.equal(first.kind, x === 5 ? 'exact' : 'interpolated');
-      assertNear(first.x, x, 1e-8, { quantity: 'duplicate-policy x', units: 'data-x' });
-      assertNear(first.y, y, 1e-8, { quantity: 'duplicate-policy y', units: 'data-y' });
-      assertNear(first.anchor.x, width * x / 10, 1e-8, { quantity: 'duplicate-policy anchor x', units: 'plot-pixels' });
-      assertNear(first.anchor.y, height * (1 - y / 40), 1e-8, { quantity: 'duplicate-policy anchor y', units: 'plot-pixels' });
+      await recordAssertion(report, { checkId: `${action}.x-${x}.duplicate-policy-x`, actionId: action }, () => assertNear(first.x, x, 1e-8, { quantity: 'duplicate-policy x', units: 'data-x' }));
+      await recordAssertion(report, { checkId: `${action}.x-${x}.duplicate-policy-y`, actionId: action }, () => assertNear(first.y, y, 1e-8, { quantity: 'duplicate-policy y', units: 'data-y' }));
+      await recordAssertion(report, { checkId: `${action}.x-${x}.duplicate-policy-anchor-x`, actionId: action }, () => assertNear(first.anchor.x, width * x / 10, 1e-8, { quantity: 'duplicate-policy anchor x', units: 'plot-pixels' }));
+      await recordAssertion(report, { checkId: `${action}.x-${x}.duplicate-policy-anchor-y`, actionId: action }, () => assertNear(first.anchor.y, height * (1 - y / 40), 1e-8, { quantity: 'duplicate-policy anchor y', units: 'plot-pixels' }));
       assert.deepEqual(first.provenance, x === 5
         ? { kind: 'recorded', index, id }
         : { kind: 'interpolated', beforeIndex: 0, afterIndex: index, beforeId: 'start', afterId: id, fraction: 0.5 });
-      assertNear(state.results[1].y, (30 - (x - 2) * 20 / 6), 1e-8, { quantity: 'secondary series interpolation', units: 'data-y' });
+      await recordAssertion(report, { checkId: `${action}.x-${x}.secondary-series-interpolation`, actionId: action }, () => assertNear(state.results[1].y, (30 - (x - 2) * 20 / 6), 1e-8, { quantity: 'secondary series interpolation', units: 'data-y' }));
     }
     step.status = 'pass';
     await checkpoint(report, `${action}:complete`);
@@ -141,8 +144,8 @@ try {
       assert.equal(selected.series, 'monthly'); assert.equal(selected.kind, 'recorded');
       assert.equal(selected.x, selectedX); assert.equal(selected.y, 30);
       assert.deepEqual(selected.provenance, { kind: 'recorded', index, id });
-      assertNear(selected.anchor.x, width * selectedX / 10, 1e-8, { quantity: 'nearest anchor x', units: 'plot-pixels' });
-      assertNear(selected.anchor.y, height / 4, 1e-8, { quantity: 'nearest anchor y', units: 'plot-pixels' });
+      await recordAssertion(report, { checkId: `${nearest.actionId}.x-${x}.y-${yFraction}.nearest-anchor-x`, actionId: nearest.actionId }, () => assertNear(selected.anchor.x, width * selectedX / 10, 1e-8, { quantity: 'nearest anchor x', units: 'plot-pixels' }));
+      await recordAssertion(report, { checkId: `${nearest.actionId}.x-${x}.y-${yFraction}.nearest-anchor-y`, actionId: nearest.actionId }, () => assertNear(selected.anchor.y, height / 4, 1e-8, { quantity: 'nearest anchor y', units: 'plot-pixels' }));
     }
   }
   nearest.status = 'pass'; await checkpoint(report, 'nearest-unsorted:complete');
@@ -193,7 +196,7 @@ try {
       assert.deepEqual(hit.anchor, { x: 0, y: height * 0.75 });
       assert.deepEqual(hit.provenance, { kind: 'recorded', index: 0, id: null });
       assert.equal(hit.distance.space, 'plot-pixels');
-      assertNear(hit.distance.value, distance, 0.0001, { quantity: 'closest-point distance', units: 'plot-pixels' });
+      await recordAssertion(report, { checkId: `${point.actionId}.distance-${distance}.closest-point-distance`, actionId: point.actionId }, () => assertNear(hit.distance.value, distance, 0.0001, { quantity: 'closest-point distance', units: 'plot-pixels' }));
     }
   }
   point.status = 'pass'; await checkpoint(report, `${point.action}:complete`);
@@ -215,19 +218,29 @@ try {
     }, generation);
     const state = await readEvidence(); step.state = state;
     assert.deepEqual(state.plot, report.oracle.plot);
-    assert.deepEqual(state.pipeline, {
+    await recordAssertion(report, { checkId: `${action}.aggregation-pipeline`, actionId: action }, () => assert.deepEqual(state.pipeline, {
       generation, operation: 'weighted-mean', units: 'score', rounding: 'none',
       inputCount: 5, includedCount: 4, excludedCount: 1, outputCount: 2,
+      aggregation: {
+        policy: { grouping: 'exact-x', order: 'ascending-x', output: 'one-weighted-mean-per-included-group',
+          preserves: ['included-count', 'weight-sum', 'weighted-sum-per-group'], extrema: 'not-preserved', gaps: 'not-present-in-fixture' },
+        includedTotals: { count: 4, weightSum: 8, weightedSum: 160 },
+        displayedTotals: { pointCount: 2, representedCount: 4, representedWeight: 8, reconstructedWeightedSum: 160 },
+        includedValueRange: [0, 40], displayedValueRange: action === 'weighted-data-bug' ? [20, 20] : [10, 30],
+        reconstruction: action === 'weighted-data-bug' ?
+          [{ x: 0, sourceWeightedSum: 40, displayedWeightedSum: 80 }, { x: 10, sourceWeightedSum: 120, displayedWeightedSum: 80 }] :
+          [{ x: 0, sourceWeightedSum: 40, displayedWeightedSum: 40 }, { x: 10, sourceWeightedSum: 120, displayedWeightedSum: 120 }],
+      },
       groups: [
         { x: 0, count: 2, weightedSum: 40, weightSum: 4, value: values[0] },
         { x: 10, count: 2, weightedSum: 120, weightSum: 4, value: values[1] },
       ],
-    });
+    }));
     const hit = state.results.find(result => result.series === 'monthly'); assert.ok(hit);
-    assertNear(hit.x, 2.5, 1e-8, { quantity: 'aggregation inspection x', units: 'data-x' });
-    assertNear(hit.y, hoverY, 1e-8, { quantity: 'aggregate interpolation', units: 'score' });
-    assertNear(hit.anchor.x, width / 4, 0.0001, { quantity: 'aggregate anchor x', units: 'plot-pixels' });
-    assertNear(hit.anchor.y, height * (1 - hoverY / 40), 0.0001, { quantity: 'aggregate anchor y', units: 'plot-pixels' });
+    await recordAssertion(report, { checkId: `${action}.aggregation-inspection-x`, actionId: action }, () => assertNear(hit.x, 2.5, 1e-8, { quantity: 'aggregation inspection x', units: 'data-x' }));
+    await recordAssertion(report, { checkId: `${action}.aggregate-interpolation`, actionId: action }, () => assertNear(hit.y, hoverY, 1e-8, { quantity: 'aggregate interpolation', units: 'score' }));
+    await recordAssertion(report, { checkId: `${action}.aggregate-anchor-x`, actionId: action }, () => assertNear(hit.anchor.x, width / 4, 0.0001, { quantity: 'aggregate anchor x', units: 'plot-pixels' }));
+    await recordAssertion(report, { checkId: `${action}.aggregate-anchor-y`, actionId: action }, () => assertNear(hit.anchor.y, height * (1 - hoverY / 40), 0.0001, { quantity: 'aggregate anchor y', units: 'plot-pixels' }));
     step.analysis = {
       intendedGroupValues: [10, 30], observedGroupValues: values,
       intendedHoverValue: 15, observedHoverValue: hit.y,
@@ -236,6 +249,74 @@ try {
     };
     step.status = 'pass'; await checkpoint(report, `${action}:complete`);
   }
+  // Expected request transitions are specified independently of application output.
+  for (const [actionId, action, activeId, pending, status, completionId, outcome, generation, y] of [
+    ['async-loading-old', 'async-start-old', 1, 1, 'loading', null, null, 10, 20],
+    ['async-loading-new', 'async-start-new', 2, 2, 'loading', null, null, 10, 20],
+    ['async-current-success', 'async-resolve-new', 2, 1, 'success', 2, 'applied', 11, 30],
+    ['async-stale-success', 'async-resolve-old', 2, 0, 'success', 1, 'ignored-success', 11, 30],
+    ['async-second-old', 'async-start-old', 3, 1, 'loading', 1, 'ignored-success', 11, 30],
+    ['async-second-new', 'async-start-new', 4, 2, 'loading', 1, 'ignored-success', 11, 30],
+    ['async-stale-error', 'async-reject-old', 4, 1, 'loading', 3, 'ignored-error', 11, 30],
+    ['async-current-error', 'async-reject-new', 4, 0, 'error', 4, 'error', 11, 30],
+    ['async-retry-loading', 'async-start-new', 5, 1, 'loading', 4, 'error', 11, 30],
+    ['async-retry-success', 'async-resolve-new', 5, 0, 'success', 5, 'applied', 12, 30],
+  ]) {
+    const step = { actionId, action, status: 'incomplete', transport: 'native-playwright-pointer' };
+    report.steps.push(step); await checkpoint(report, actionId);
+    await page.locator(`[data-scenario-action="${action}"]`).click();
+    await canvas.scrollIntoViewIfNeeded();
+    const bounds = await canvas.boundingBox(); assert.ok(bounds);
+    await page.mouse.move(bounds.x + 55 + width / 2, bounds.y + top + height / 2);
+    await page.waitForFunction(({ activeId, pending, generation }) => {
+      const text = document.querySelector('[data-testid="agent-viz-evidence"]')?.textContent;
+      if (!text) return false;
+      const state = JSON.parse(text).state;
+      return state.request?.activeId === activeId && state.request.pending === pending && state.generation === generation && Math.abs(state.inspection - 5) < 1e-8;
+    }, { activeId, pending, generation });
+    const state = await readEvidence(); step.state = state;
+    const check = (subject, assertion) => recordAssertion(report, { checkId: `${actionId}.${subject}`, actionId }, assertion);
+    await check('request-policy', () => assert.deepEqual(state.request, {
+      policy: 'latest-request-wins', status, activeId, pending,
+      error: status === 'error' ? 'Controlled data failure' : null,
+      lastCompletion: completionId === null ? null : { id: completionId, outcome },
+    }));
+    await check('rendered-generation', () => assert.equal(state.generation, generation));
+    const hit = state.results.find(result => result.series === 'monthly');
+    await check('hover-value', () => { assert.ok(hit); assertNear(hit.x, 5, 1e-8, { quantity: 'async inspection x', units: 'data-x' }); assertNear(hit.y, y, 1e-8, { quantity: 'async hover value', units: 'score' }); });
+    await check('hover-anchor', () => { assertNear(hit.anchor.x, width / 2, 0.0001, { quantity: 'async anchor x', units: 'plot-pixels' }); assertNear(hit.anchor.y, height * (1 - y / 40), 0.0001, { quantity: 'async anchor y', units: 'plot-pixels' }); });
+    step.status = 'pass'; await checkpoint(report, `${actionId}:complete`);
+  }
+  const mixed = { actionId: 'zero-missing-invalid', action: 'zero-missing-invalid', status: 'incomplete', transport: 'native-playwright-pointer', observations: [] };
+  report.steps.push(mixed); await checkpoint(report, mixed.actionId);
+  await page.locator('[data-scenario-action="zero-missing-invalid"]').click();
+  await canvas.scrollIntoViewIfNeeded();
+  const mixedHost = await canvas.boundingBox(); assert.ok(mixedHost);
+  const mixedCheck = (subject, assertion) => recordAssertion(report, { checkId: `${mixed.actionId}.${subject}`, actionId: mixed.actionId }, assertion);
+  for (const x of [1, 2.5, 3, 4, 5, 6, 7, 7.5, 9]) {
+    await page.mouse.move(mixedHost.x + 55 + width * x / 10, mixedHost.y + top + height / 2);
+    // CDP pointer coordinates are float32: observed x=3 arrives as
+    // 2.999999385... on the 397px plot. Bound transport tolerance explicitly;
+    // require a delivered pointer so the action's seeded inspection cannot pass.
+    await page.waitForFunction(x => {
+      const text = document.querySelector('[data-testid="agent-viz-evidence"]')?.textContent;
+      if (!text) return false;
+      const state = JSON.parse(text).state;
+      return state.generation === 13 && state.pointer !== null && state.inspection !== null && Math.abs(state.inspection - x) < 1e-5;
+    }, x).catch(async error => { mixed.pendingPointer = { requestedX: x, state: await readEvidence() }; throw error; });
+    const state = await readEvidence(); mixed.observations.push({ x, state });
+    const hit = state.results.find(result => result.series === 'monthly');
+    if (x === 1) {
+      await mixedCheck('generation', () => assert.equal(state.missingness.generation, state.generation));
+      await mixedCheck('policy', () => assert.equal(state.missingness.policy, 'finite-including-zero;missing-and-invalid-break-segments'));
+      await mixedCheck('counts', () => assert.deepEqual(state.missingness.counts, { input: 10, finite: 5, zero: 1, missing: 2, invalid: 3 }));
+      await mixedCheck('categories', () => assert.deepEqual(state.missingness.rows.map(row => row.value.kind), ['number', 'number', 'number', 'missing-null', 'missing-undefined', 'invalid-nan', 'invalid-positive-infinity', 'invalid-negative-infinity', 'number', 'number']));
+      await mixedCheck('zero', () => { assert.ok(hit); assert.ok(['exact', 'interpolated'].includes(hit.kind)); assertNear(hit.x, 1, 1e-5, { quantity: 'zero x', units: 'data-x' }); assertNear(hit.y, 0, 1e-4, { quantity: 'zero y', units: 'data-y' }); });
+    } else if (x === 9) {
+      await mixedCheck('interpolated', () => { assert.ok(hit); assert.equal(hit.kind, 'interpolated'); assertNear(hit.y, 25, 1e-4, { quantity: 'post-gap interpolation', units: 'data-y' }); });
+    } else await mixedCheck(`gap-${x}`, () => assert.equal(hit, undefined));
+  }
+  mixed.status = 'pass'; await checkpoint(report, `${mixed.actionId}:complete`);
   assert.deepEqual(report.errors, []);
   await readEvidence();
   assertIdentity(report.expectedIdentity, await sourceIdentity(repository, 'viz'));
@@ -249,7 +330,7 @@ finally {
   report.browserFailure = browserFailure?.snapshot() ?? null;
   browserFailure?.dispose();
   await finalizeReplayToolIdentity(report, repository);
-  if (!finalizeReplayOutcome(report, ['interpolation-initial', 'interpolation-updated', 'interpolation-missing', 'duplicate-first', 'duplicate-last', 'duplicate-reordered', 'nearest-unsorted', 'empty-data', 'closest-point-native', 'weighted-data-bug', 'weighted-data'])) process.exitCode = 1;
+  if (!finalizeReplayOutcome(report, ['interpolation-initial', 'interpolation-updated', 'interpolation-missing', 'duplicate-first', 'duplicate-last', 'duplicate-reordered', 'nearest-unsorted', 'empty-data', 'closest-point-native', 'weighted-data-bug', 'weighted-data', 'async-loading-old', 'async-loading-new', 'async-current-success', 'async-stale-success', 'async-second-old', 'async-second-new', 'async-stale-error', 'async-current-error', 'async-retry-loading', 'async-retry-success', 'zero-missing-invalid'])) process.exitCode = 1;
   await writeFile(resolve(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
   process.stdout.write(`${report.status}: ${resolve(output, 'report.json')}\n`);
 }

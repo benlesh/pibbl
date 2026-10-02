@@ -1,3 +1,5 @@
+import { FilterSurfacePool } from '../filter/filter-surface-pool';
+import { opacity } from '@crc/core/filters';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Rectangle, definePrimitive } from '../../index.js';
 import { jsxDEV } from '../../jsx-dev-runtime.js';
@@ -192,7 +194,7 @@ describe('backend-neutral component traversal', () => {
     });
     const canvas = createCanvas();
     const controller = mountCRC(canvas, <Probe style={{
-      filter: { type: 'opacity', amount: 0.5 },
+      filter: opacity({ amount: 0.5 }),
     }} />, {
       viewport: { width: 80, height: 20 },
       fit: 'fill',
@@ -737,7 +739,8 @@ describe('backend-neutral component traversal', () => {
     child.render(<OwnedScene />, 1);
     child.requestFrame(false);
     const instance = getCRCInstance(canvas);
-    const pool = instance.filterSurfacePool;
+    const pool = new FilterSurfacePool();
+    instance.optionalServices.set(Symbol('test-owned-filter-pool'), { dispose: () => pool.dispose() });
     const pair = pool.checkoutPair(createTestFilterWindows());
     pair.release();
     expect(instance.eventRoot.targets.size).toBe(1);

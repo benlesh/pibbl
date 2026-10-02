@@ -1,0 +1,84 @@
+{
+  "schema": "crc-agent-workflow-run/1",
+  "status": "fail",
+  "requirementId": "TXT-08",
+  "requirementCompletion": "not-established",
+  "scope": "Controlled reference workflow only; not arbitrary application or full requirement verification.",
+  "scenario": "agent-text-verification",
+  "url": "http://127.0.0.1:1/#/testing/agent-text-verification",
+  "sources": [
+    "packages/scenarios/src/agent-text-verification.ts",
+    "packages/core/test/agent-text-workflow.test.ts",
+    "tooling/agent-verification/text-replay.mjs"
+  ],
+  "remaining": "",
+  "acceptance": [
+    "Exact fixture labels remain available; other strings and observation errors stay redacted.",
+    "All twelve required native checks complete, including seeded failure detection."
+  ],
+  "watchdog": {
+    "status": "exited",
+    "exitCode": 1,
+    "browserCleanup": {
+      "status": "terminated",
+      "pid": 22656,
+      "processExited": true
+    }
+  },
+  "evidence": {
+    "schema": "crc-replay-evidence-view/1",
+    "sourceSchema": "crc-text-replay/1",
+    "source": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/unavailable-studio/replay/report.json",
+    "verification": "saved-evidence-only",
+    "kind": "final-report",
+    "claimedStatus": "fail",
+    "runId": "327bac1d-d34e-4f8d-ac74-3e53b644610b",
+    "view": "summary",
+    "actionCount": 0,
+    "firstFailedCheck": null,
+    "requiredCheckCount": 12,
+    "checkCount": 0,
+    "checks": [],
+    "omittedChecks": 0,
+    "actions": [],
+    "omittedActions": 0,
+    "failure": {
+      "category": null,
+      "code": null,
+      "stage": "navigation",
+      "reason": "Text verification did not complete; unvalidated payload and error details redacted.",
+      "actionId": null,
+      "message": null
+    },
+    "otherFailures": {
+      "observation": null,
+      "check": null,
+      "checkCompletion": "incomplete-required-checks",
+      "completion": null,
+      "checkpoint": null,
+      "cleanup": null,
+      "verifier": null
+    },
+    "recordedPageErrors": 0,
+    "droppedPageErrors": 0,
+    "manifestAvailable": true,
+    "checkpoint": null,
+    "truncatedFields": []
+  },
+  "readFailure": null,
+  "checkpointFailure": null,
+  "evidencePath": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/unavailable-studio/replay/report.json",
+  "artifacts": {
+    "report": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/unavailable-studio/replay/report.json",
+    "watchdog": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/unavailable-studio/watchdog.json"
+  },
+  "next": {
+    "executable": "/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+    "arguments": [
+      "/Users/benlesh/GitHub/crc/tooling/agent-verification/evidence-reader.mjs",
+      "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/unavailable-studio/replay/report.json",
+      "--page",
+      "actions"
+    ]
+  }
+}

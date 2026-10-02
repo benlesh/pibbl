@@ -3,6 +3,7 @@ import { parse } from "@babel/parser";
 const SUPPORTED_MODULES = new Set([
   "@crc/core",
   "@crc/text",
+  "@crc/core/filters",
   "@crc/viz",
   "@crc/textures",
   "@crc/core/jsx-runtime",
@@ -48,7 +49,7 @@ interface SourceEdit {
 
 function invalidModuleShape(): Error {
   return new Error(
-    "Lessons may contain named imports only from @crc/core, @crc/viz, @crc/textures, " +
+    "Lessons may contain named imports only from @crc/core, @crc/core/filters, @crc/viz, @crc/textures, " +
       "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, @crc/particles, " +
       "@crc/physics/2d, @crc/physics/2d/geometry, " +
       "@crc/physics/3d/geometry, @crc/three, three, and " +

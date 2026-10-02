@@ -87,6 +87,8 @@ const publicGuidePaths = [
   "docs/site/learn/guides/manipulation.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/types/electric-textures.md",
+  "docs/site/api/types/texture-resources.md",
   "docs/site/api/components/reaction-diffusion.md",
   "docs/site/api/components/procedural-texture.md",
   "docs/site/api/types/textures.md",
@@ -223,6 +225,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/physics-3d-geometry.md",
   "docs/site/api/types/signal-inputs.md",
   "docs/site/api/types/styles.md",
+  "docs/site/api/types/texture-resources.md",
   "docs/site/api/types/three.md",
   "docs/site/learn/index.md",
   "docs/site/learn/tutorials/diagram-editor/index.md",
@@ -241,6 +244,7 @@ const publicSiteMarkdownPaths = [
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
+  "docs/design/weighted-electric-sources-contract.md",
   "docs/design/textures-contract.md",
   "docs/design/component-manipulation-contract.md",
   "docs/design/text-geometry-contract.md",
@@ -294,13 +298,16 @@ const currentMarkdownPaths = [
 const linkCheckedPaths = [
   ...currentMarkdownPaths,
   "docs/migrations/default-pointer-participation.md",
+  "docs/migrations/filter-factory-values.md",
   "docs/migrations/jsx-authoring-pivot.md",
 ];
 const migrationMarkdownPaths = new Set([
   "docs/migrations/default-pointer-participation.md",
+  "docs/migrations/filter-factory-values.md",
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
+  "tooling/texture-wasm-spike/README.md",
   ".beads/README.md",
   "packages/text/test/fixtures/source-serif/LICENSE.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
@@ -852,6 +859,7 @@ async function typecheckCompleteSnippets(snippets) {
               "@crc/particles": [
                 join(repositoryRoot, "packages/particles/src/index.ts"),
               ],
+              "@crc/core/filters": [join(repositoryRoot, "packages/core/src/filters.ts")],
               "@crc/textures": [
                 join(repositoryRoot, "packages/textures/src/index.ts"),
               ],
@@ -1705,6 +1713,14 @@ for (const kind of ["values", "types"])
     vizExports[kind],
     `Documented @crc/viz ${kind}`,
   );
+const filterSource = await readFile(join(repositoryRoot, "packages/core/src/filters.ts"), "utf8");
+const filterExports = exportedSpecifiers(filterSource, "packages/core/src/filters.ts");
+for (const kind of ["values", "types"])
+  assertSameNames(
+    [...documentedApiSymbols].filter((name) => filterExports[kind].has(name)),
+    filterExports[kind],
+    `Documented @crc/core/filters ${kind}`,
+  );
 const textureSource = await readFile(
   join(repositoryRoot, "packages/textures/src/index.ts"),
   "utf8",
@@ -2201,6 +2217,7 @@ const currentNormativeContractPaths = [
   ),
 ].sort();
 const postBaselineNormativeContractPaths = new Set([
+  "docs/design/weighted-electric-sources-contract.md",
   "docs/design/textures-contract.md",
   "docs/design/animation-contract.md",
   "docs/design/component-manipulation-contract.md",

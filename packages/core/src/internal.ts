@@ -442,3 +442,6 @@ export {
 } from "./lib/scheduler/testing.js";
 
 export { getCurrentWorldTransform as crcInternalCurrentWorldTransform } from "./lib/render-target.js";
+
+export { borrowTextureRaster, resolveTexturePaint, validateTexturePaint } from './lib/textures/texture-protocol.js';
+export type { BorrowedTextureRaster } from './lib/textures/texture-protocol.js';

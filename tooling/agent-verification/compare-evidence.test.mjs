@@ -46,3 +46,58 @@ test('compares recorded failure changes and refuses a pass with unfinished actio
   after.status = 'pass';
   assert.ok(compareReplayReports(before, after).reasons.includes('after:contradictory-pass'));
 });
+
+const observed = () => ({ status: 'observed', scope: 'page-reported-at-capture',
+  viewportCss: { width: 1280, height: 1000 }, devicePixelRatio: 1, visualViewportScale: 1,
+  browserZoom: 'unavailable', language: 'en-US', timezone: 'UTC',
+  preferences: { dark: false, reducedMotion: true } });
+
+test('refuses equally unavailable or malformed observed environments', () => {
+  for (const mutate of [
+    () => ({ status: 'unavailable', failure: { message: 'page closed' } }),
+    () => null,
+    value => ({ ...value, viewportCss: { width: 0, height: 1000 } }),
+    value => ({ ...value, devicePixelRatio: NaN }),
+    value => ({ ...value, preferences: { dark: 'false', reducedMotion: true } }),
+    value => ({ ...value, visualViewportScale: -1 }),
+    value => ({ ...value, language: '' }),
+  ]) {
+    const before = report(); before.run.environment.observedPage = mutate(observed());
+    const after = structuredClone(before);
+    const result = compareReplayReports(before, after);
+    assert.equal(result.status, 'incomparable');
+    assert.ok(result.reasons.includes('before:observed-environment-unavailable-or-invalid'));
+    assert.equal(result.actions, undefined);
+  }
+});
+
+test('labels declared-only comparisons and compares observed facts when available', () => {
+  const before = report(), after = structuredClone(before);
+  assert.equal(compareReplayReports(before, after).environmentScope, 'declared-only');
+  before.run.environment.observedPage = observed();
+  assert.equal(compareReplayReports(before, after).status, 'incomparable');
+  after.run.environment.observedPage = observed();
+  assert.equal(compareReplayReports(before, after).environmentScope, 'declared-and-initial-page-observation');
+  assert.equal(compareReplayReports(before, after).status, 'comparable');
+  after.run.environment.observedPage.preferences.dark = true;
+  assert.ok(compareReplayReports(before, after).reasons.includes('environment:differs'));
+});
+
+test('compares explicit check evidence and refuses contradictory required-check passes', () => {
+  const before = report(); before.checks = [{ checkId: 'optional', status: 'skipped', required: false, reason: 'Not requested.' }];
+  const after = structuredClone(before); after.checks[0].reason = 'Explicitly deferred.';
+  assert.equal(compareReplayReports(before, after).checksChanged, true);
+  after.checks[0].required = true;
+  assert.ok(compareReplayReports(before, after).reasons.includes('after:contradictory-check-pass'));
+  after.checks[0].required = false; after.checks[0].status = 'unknown';
+  assert.ok(compareReplayReports(before, after).reasons.includes('after:invalid-check-outcomes'));
+});
+
+test('refuses missing required-check evidence and differing declared check manifests', () => {
+  const before = report(); before.requiredChecks = [{ checkId: 'hover.value', actionId: 'hover' }];
+  before.checks = [{ ...before.requiredChecks[0], status: 'pass', required: true, reason: null }];
+  const after = structuredClone(before); after.checks = [];
+  assert.ok(compareReplayReports(before, after).reasons.includes('after:incomplete-required-checks'));
+  after.checks = before.checks; delete after.requiredChecks;
+  assert.ok(compareReplayReports(before, after).reasons.includes('check-manifest:differs'));
+});

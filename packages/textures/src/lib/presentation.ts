@@ -1,3 +1,4 @@
+import { rasterizeField } from "./wasm/memory.js";
 /** Borrowed sources are valid only during the synchronous renderer callback. */
 export interface TextureRenderFrame {
   readonly source: OffscreenCanvas;
@@ -42,6 +43,14 @@ export class TextureRaster {
     }
   }
   update(field: Float32Array, lut: Uint8ClampedArray, gain = 1) {
+    const raster = rasterizeField(field, lut, gain);
+    if (raster) {
+      this.pixels = raster.image;
+      this.alpha = raster.alpha;
+      this.context.putImageData(this.pixels, 0, 0);
+      this.maskDirty = true;
+      return;
+    }
     const data = this.pixels.data;
     for (let i = 0; i < field.length; i++) {
       const value = Math.max(

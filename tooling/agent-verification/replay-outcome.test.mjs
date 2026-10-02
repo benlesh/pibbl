@@ -64,3 +64,52 @@ test('invalid required action manifests cannot silently certify a run', () => {
     assert.throws(() => finalizeReplayOutcome({ status: 'pass', errors: [], steps: [] }, manifest), /action/i);
   }
 });
+
+test('explicit check outcomes retain non-pass reasons and cannot certify missing required evidence', () => {
+  for (const [status, expected] of [['pass', 'pass'], ['fail', 'fail'], ['blocked', 'blocked'], ['inconclusive', 'inconclusive'], ['skipped', 'inconclusive'], ['not-applicable', 'inconclusive']]) {
+    const report = { status: 'pass', errors: [], steps: [{ actionId: 'inspect', status: 'pass' }],
+      checks: [{ checkId: 'geometry', status, required: true, reason: status === 'pass' ? null : 'Explicit fixture condition.' }] };
+    assert.equal(finalizeReplayOutcome(report, ['inspect']), status === 'pass');
+    assert.equal(report.status, expected);
+    if (status !== 'pass') assert.equal(report.checkFailure.checkId, 'geometry');
+  }
+});
+
+test('optional skipped or inapplicable checks remain visible without becoming passed checks', () => {
+  const checks = ['blocked', 'inconclusive', 'skipped', 'not-applicable'].map(status => ({ checkId: status, status, required: false, reason: 'Declared optional applicability or coverage limit.' }));
+  const report = { status: 'pass', errors: [], checks };
+  assert.equal(finalizeReplayOutcome(report), true);
+  assert.deepEqual(report.checks, checks);
+  report.checks.push({ checkId: 'actual-failure', status: 'fail', required: false, reason: 'An executed assertion failed.' });
+  assert.equal(finalizeReplayOutcome(report), false);
+  assert.equal(report.status, 'fail');
+});
+
+test('rejects unknown, ambiguous and reasonless check records instead of treating them as success', () => {
+  const valid = { checkId: 'one', status: 'pass', required: true, reason: null };
+  for (const checks of [[{ ...valid, status: 'probably-pass' }], [{ ...valid, status: 'skipped' }], [{ ...valid, required: undefined }], [valid, valid], [{}], 'pass']) {
+    const report = { status: 'pass', errors: [], checks };
+    assert.equal(finalizeReplayOutcome(report), false);
+    assert.equal(report.status, 'fail');
+    assert.equal(report.checkFailure.category, 'invalid-check-outcomes');
+  }
+});
+
+test('a declared check manifest prevents passing a completed subset or relabeling required checks', () => {
+  const manifest = [{ checkId: 'one', actionId: 'inspect' }, { checkId: 'two', actionId: 'inspect' }];
+  const checks = manifest.map(item => ({ ...item, status: 'pass', required: true, reason: null }));
+  for (const observed of [checks.slice(0, 1), [], [{ ...checks[0], required: false }, checks[1]], [{ ...checks[0], actionId: 'other' }, checks[1]], [...checks, { ...checks[0], checkId: 'extra' }]]) {
+    const report = { status: 'pass', errors: [], requiredChecks: manifest, checks: observed };
+    assert.equal(finalizeReplayOutcome(report), false);
+    assert.equal(report.checkCompletionFailure.category, 'incomplete-required-checks');
+  }
+  const complete = { status: 'pass', errors: [], requiredChecks: manifest, checks };
+  assert.equal(finalizeReplayOutcome(complete), true);
+  const absent = { status: 'pass', errors: [], requiredChecks: manifest };
+  assert.equal(finalizeReplayOutcome(absent), false);
+  for (const requiredChecks of [[], [manifest[0], manifest[0]], [{ checkId: 'one' }], 'one']) {
+    const report = { status: 'pass', errors: [], requiredChecks, checks };
+    assert.equal(finalizeReplayOutcome(report), false);
+    assert.equal(report.checkCompletionFailure.category, 'invalid-required-check-manifest');
+  }
+});

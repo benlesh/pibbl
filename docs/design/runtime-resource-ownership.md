@@ -25,7 +25,7 @@ This contract extends the [event resource ownership contract](./event-resource-o
 | Render-layer candidate bitmap/interaction | Completed external render and bitmap transfer    | Current uncommitted layer transaction            | Successful parent Canvas composite/commit, or any transfer/composite failure               | Bitmap and interaction metadata commit together; an uncommitted bitmap closes and its metadata is discarded.                                                      |
 | Render-layer committed generation         | Successful parent Canvas composition             | Owning layer generation                          | Successful replacement, layer removal, invalidation that discards output, or disposal      | Visible bitmap and selectable/focus metadata always describe the same generation; replaced bitmap closes once.                                                    |
 | Three renderer/input bridge               | Mounted `defineThreeLayer` component             | Exact Three adapter resources                    | Layer removal, failure teardown, or disposal                                               | Adapter listeners and bridge state detach, renderer disposes, stale callbacks become inert, and application resources release through the definition's `dispose`. |
-| Filter scratch pool                       | CRC instance construction                        | That CRC instance                                | Instance main teardown                                                                     | Every reusable source/result canvas and context reference is released; a remount receives a distinct pool.                                                        |
+| Native filter scratch pool                | First active native-filter boundary              | Optional service on that CRC instance            | Last service release or instance main teardown                                             | Every reusable source/result canvas and context reference is released; a remount receives a distinct pool.                                                        |
 | Filter surface-pair lease                 | Start of one active nonempty filter boundary     | Current synchronous boundary                     | Boundary `finally`, including validation/render/composite failure, or owning pool disposal | Source and result slots return together in strict LIFO order; no active pair or user reference survives.                                                          |
 | Root surface observers                    | First root mount                                 | Root instance main teardown                      | Abort, controller disposal, or failed mount                                                | Resize, window-resize, and resolution-query listeners are detached; stale notifications cannot schedule the replacement.                                          |
 | Intrinsic-size stabilization              | Backing resize that changes CSS size             | Root surface state                               | Root disposal while CRC still owns the inline value                                        | The prior inline width/height is restored without overwriting a later external style change.                                                                      |
@@ -50,7 +50,7 @@ image handler's primary cleanup mechanism.
 
 ## Filter scratch semantics
 
-Each instance owns one depth-indexed pool. A boundary atomically reserves the
+Each native-filter service owns one depth-indexed pool. A boundary atomically reserves the
 next consecutive source/result pair in constant time; nested boundaries use the
 next pair and completed siblings reuse the current pair. Capacity is exactly two
 surface slots per maximum active filter depth, independent of sibling count and
@@ -72,7 +72,24 @@ temporary renderer globals before normal render-failure teardown clears owned
 component resources. Pixels painted earlier in the failing frame remain under
 the general render-failure contract; the failed filter result is not composited.
 The filter scopes specifically restore the current render target and world
-transform to their entering values.
+transform to their entering values. A mounted `useTexture` hook separately owns
+its stable producer canvas, bounded committed/spare publication pair, optional
+provisional candidate, queued messages, and scheduler participant. It adopts
+matching pixels and revision before observer notification, retains the last
+committed pair on a failed Commit, clears an initial failed candidate, and does
+not promise rollback of an already committed pair or arbitrary recipe state.
+Paint and map values borrow synchronously and never own these resources;
+cross-root and disposed values reject at use time. Hook disposal clears messages,
+invokes the recipe disposer once, and zeros producer and publication canvases.
+The first non-identity displacement pass creates one root-tree GPU service;
+nested Layers borrow it and final borrower release removes its cached map uploads,
+context listeners, processor, and scratch targets. A map upload is keyed by the
+borrowed resource identity and committed revision, and remains only while a
+committed borrower still references that resource. Context loss releases GPU
+resources and invalidates that cache without disposing the service. Context
+restoration schedules one coalesced root update for its live borrowers; their
+next render recreates resources and uploads their committed maps. Native-only
+and zero-strength paths acquire no GPU service.
 
 ## External render-layer transaction semantics
 

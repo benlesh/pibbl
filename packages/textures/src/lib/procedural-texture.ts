@@ -68,7 +68,7 @@ function generate(o: Options) {
 }
 
 /** A seeded static material. It requests no continuing animation frames. */
-export const ProceduralTexture = defineRenderLayer<
+export const ProceduralTexture = /* @__PURE__ */ defineRenderLayer<
   ProceduralTextureProps,
   Resources
 >({

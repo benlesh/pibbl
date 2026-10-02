@@ -1,3 +1,6 @@
+import { requiredReplayChecks } from './required-checks.mjs';
+import { recordAssertion } from './recorded-check.mjs';
+import { assertNativeDeliveryProvenance } from './input-provenance.mjs';
 import { reserveEvidenceDirectory } from './evidence-directory.mjs';
 import { describeReplayError } from './failure-evidence.mjs';
 import { createReplayManifest, captureReplayToolIdentity, finalizeReplayToolIdentity } from './run-manifest.mjs';
@@ -18,12 +21,17 @@ const url = process.argv[2] ?? 'http://127.0.0.1:5193/#/testing/agent-targeting-
 const output = resolve(process.argv[3] ?? `${repository}/packages/core/test/out/agent-targeting/${new Date().toISOString().replaceAll(':', '-')}`);
 await reserveEvidenceDirectory(output);
 const report = {
+  requiredChecks: requiredReplayChecks('targeting'),
   schema: 'crc-targeting-replay/1', status: 'incomplete', url,
   node: process.version, browser: null, timestamp: new Date().toISOString(),
   environment: { viewport: { width: 1280, height: 1000 }, density: 1, locale: 'en-US', timezone: 'UTC' },
   provenanceScope: 'Loaded fixture marker compared with local core source, fixture, inspector, development configuration and lockfile; not full dependency or asset attestation.',
   oracle: { point: { x: 144, y: 112 }, expectedColor: [37, 99, 235, 255], requiredSelection: 'item-a' },
   steps: [], errors: [], droppedErrors: 0,
+  checks: [
+    { checkId: 'protected-action-permissions', status: 'not-applicable', required: false, reason: 'This controlled fixture invokes no clipboard, fullscreen or other permission-gated action.' },
+    { checkId: 'real-hardware-input', status: 'skipped', required: false, reason: 'This run uses Playwright Chromium automation; physical touch/pen hardware is not exercised.' },
+  ],
 };
 const checkpoint = createCheckpointWriter(output);
 report.checkpointRunId = checkpoint.runId;
@@ -78,6 +86,10 @@ try {
   }, { field, value });
   await page.waitForFunction(() => !!document.querySelector('[data-testid="agent-targeting-evidence"]')?.textContent, undefined, { timeout: 10_000 });
   const initial = await readEvidence();
+  report.runtimeCompatibility = initial.runtimeCompatibility;
+  assert.equal(initial.runtimeCompatibility?.status, 'accepted');
+  assert.equal(initial.runtimeCompatibility.diagnostic.relation, 'same-runtime');
+  assert.equal(initial.runtimeCompatibility.diagnostic.versions, 'matching');
   assert.equal(initial.inspectionAvailability, 'source-runtime', 'Inspection is unavailable in this build; use the source development Studio.');
   assert.equal(initial.schedulerHistory, null);
   await page.locator('[data-scenario-action="capture-sources"]').click();
@@ -114,16 +126,29 @@ try {
     assert.deepEqual(prediction.inspection.surface.geometry.backingToLogical, [1, 0, 0, 1, 0, 0]);
     assert.equal(prediction.probe.status, 'target');
     step.pixel = await canvas.evaluate(canvas => [...canvas.getContext('2d').getImageData(144, 112, 1, 1).data]);
-    assert.deepEqual(step.pixel, report.oracle.expectedColor);
+    await recordAssertion(report, { checkId: `${mode}.pixels`, actionId: mode }, () => assert.deepEqual(step.pixel, report.oracle.expectedColor));
     await canvas.click({ position: report.oracle.point });
     await waitState('deliveredTo', delivery);
     const actual = await readEvidence();
     step.actual = actual;
-    assert.equal(actual.selectedItem, selected);
-    assert.equal(actual.selections, mode === 'repair' ? 1 : 0);
-    assert.deepEqual(actual.delivery.generation, prediction.inspection.generation);
-    assert.equal(actual.delivery.targetId, prediction.probe.targetId);
-    assert.equal(actual.expectedSelection, mode !== 'intentional-block');
+    assert.equal(actual.eventTrace.scope, 'wrapped-handlers-only');
+    assert.equal(actual.eventTrace.identityScope, 'trace-local');
+    const eventRecords = actual.eventTrace.records.slice(-6);
+    assert.deepEqual(eventRecords.map(record => [record.label, record.stage, record.phase]), [
+      ['scene-capture', 'enter', 1], ['scene-capture', 'return', 1],
+      [delivery, 'enter', 2], [delivery, 'return', 2],
+      ['scene-bubble', 'enter', 3], ['scene-bubble', 'return', 3],
+    ]);
+    assert.equal(new Set(eventRecords.map(record => record.eventId)).size, 1);
+    assert.ok(eventRecords.every(record => record.original.isTrusted && record.type === 'click'));
+    assert.equal(eventRecords[0].targetId, eventRecords[2].currentTargetId);
+    assert.equal(eventRecords[0].currentTargetId, eventRecords[4].currentTargetId);
+    await recordAssertion(report, { checkId: `${mode}.input-provenance`, actionId: mode }, () => assertNativeDeliveryProvenance(actual.delivery.input, 'pointer'));
+    await recordAssertion(report, { checkId: `${mode}.selected-entity`, actionId: mode }, () => assert.equal(actual.selectedItem, selected));
+    await recordAssertion(report, { checkId: `${mode}.selection-count`, actionId: mode }, () => assert.equal(actual.selections, mode === 'repair' ? 1 : 0));
+    await recordAssertion(report, { checkId: `${mode}.delivery-generation`, actionId: mode }, () => assert.deepEqual(actual.delivery.generation, prediction.inspection.generation));
+    await recordAssertion(report, { checkId: `${mode}.delivery-target`, actionId: mode }, () => assert.equal(actual.delivery.targetId, prediction.probe.targetId));
+    await recordAssertion(report, { checkId: `${mode}.selection-intent`, actionId: mode }, () => assert.equal(actual.expectedSelection, mode !== 'intentional-block'));
     await page.locator('[data-scenario-action="inspect"]').click();
     const observed = await readEvidence();
     step.schedulerHistory = observed.schedulerHistory;
@@ -303,6 +328,42 @@ try {
   assert.ok(focus.componentRemovals.records.every(record => record.reason === 'component-disposed'));
   focus.status = 'pass';
     await checkpoint(report, `${stage}:complete`);
+  stage = 'scene-pagination';
+  const pagination = { actionId: stage, status: 'incomplete', pages: [], transport: 'native-playwright-pointer' };
+  report.steps.push(pagination); await checkpoint(report, stage);
+  await page.locator('[data-scenario-action="pagination-scene"]').click();
+  await waitState('mode', 'pagination');
+  await page.locator('[data-scenario-action="scene-page-first"]').click();
+  await page.waitForFunction(() => JSON.parse(document.querySelector('[data-testid="agent-targeting-evidence"]').textContent).state.scenePage?.status === 'ready');
+  let sceneState = await readEvidence();
+  const initialPage = sceneState.scenePage;
+  const initialRenderCount = sceneState.renderCount;
+  // The fixed fixture adds 100 separate target paths to the existing three entries.
+  assert.equal(initialPage.totalRecords, 103);
+  for (let index = 0; index < 4; index++) {
+    const observed = sceneState.scenePage;
+    pagination.pages.push(observed);
+    assert.equal(observed.status, 'ready'); assert.equal(observed.completeness, 'complete');
+    assert.deepEqual(observed.generation, initialPage.generation);
+    assert.equal(sceneState.renderCount, initialRenderCount);
+    assert.equal(sceneState.dormantMetricEvaluations, 0);
+    if (index < 3) {
+      assert.ok(observed.nextCursor);
+      await page.locator('[data-scenario-action="scene-page-next"]').click();
+      await page.waitForFunction(order => JSON.parse(document.querySelector('[data-testid="agent-targeting-evidence"]').textContent).state.scenePage?.records[0]?.order === order, (index + 1) * 32);
+      sceneState = await readEvidence();
+    }
+  }
+  const records = pagination.pages.flatMap(item => item.records);
+  assert.deepEqual(records.map(record => record.order), Array.from({ length: 103 }, (_, index) => index));
+  assert.equal(pagination.pages[3].nextCursor, null);
+  await page.locator('[data-scenario-action="scene-page-first"]').click();
+  await page.locator('[data-scenario-action="repair"]').click(); await waitState('mode', 'repair');
+  await page.locator('[data-scenario-action="scene-page-next"]').click();
+  await page.waitForFunction(() => JSON.parse(document.querySelector('[data-testid="agent-targeting-evidence"]').textContent).state.scenePage?.status === 'cursor-expired');
+  pagination.expired = (await readEvidence()).scenePage;
+  assert.deepEqual(pagination.expired.records, []); assert.equal(pagination.expired.nextCursor, null);
+  pagination.status = 'pass'; await checkpoint(report, `${stage}:complete`);
   assert.deepEqual(report.errors, []);
   assert.equal(report.droppedErrors, 0);
   await readEvidence();
@@ -322,7 +383,7 @@ try {
   report.browserFailure = browserFailure?.snapshot() ?? null;
   browserFailure?.dispose();
   await finalizeReplayToolIdentity(report, repository);
-  if (!finalizeReplayOutcome(report, ['seed', 'repair', 'intentional-block', 'outside-layer', 'capture-drag', 'dom-overlay', 'keyboard-focus'])) failed = true;
+  if (!finalizeReplayOutcome(report, ['seed', 'repair', 'intentional-block', 'outside-layer', 'capture-drag', 'dom-overlay', 'keyboard-focus', 'scene-pagination'])) failed = true;
   await writeFile(resolve(output, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
   process.stdout.write(`${report.status}: ${resolve(output, 'report.json')}\n`);
   if (failed) process.exitCode = 1;

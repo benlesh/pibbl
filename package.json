@@ -18,7 +18,7 @@
     "test:smoke": "vitest run packages/core/test/smoke-scenario.test.ts --browser.headless --browser.ui=false",
     "test:smoke:built": "corepack pnpm@11.21.0 build && vitest run packages/core/test/smoke-scenario.test.ts packages/textures/test/public-smoke.test.tsx packages/particles/test/public-flow-smoke.test.tsx --mode built --browser.headless --browser.ui=false",
     "test:package-consumer": "corepack pnpm@11.21.0 build && tsc -p playground/package-consumer/tsconfig.bundler.json && tsc -p playground/package-consumer/tsconfig.nodenext.json && node playground/package-consumer/runtime.mjs",
-    "test:package-consumer:packed": "corepack pnpm@11.21.0 build && node tooling/verify-packed-pivot.mjs && node tooling/verify-packed-viz.mjs && node tooling/verify-packed-textures.mjs",
+    "test:package-consumer:packed": "corepack pnpm@11.21.0 build && node tooling/verify-packed-pivot.mjs && node tooling/verify-packed-viz.mjs && node tooling/verify-packed-textures.mjs && node tooling/verify-optional-feature-bundles.mjs && node --test tooling/optional-import-inertness.test.mjs",
     "test:package-entries": "vitest run --config tooling/package-entries.vitest.config.ts",
     "test:visual-safeguard": "node tooling/verify-visual-safeguard.mjs",
     "test:studio-visual": "corepack pnpm@11.21.0 playground:build && node tooling/verify-diagram-editor-teaser.mjs && node tooling/verify-studio-visuals.mjs",
@@ -45,15 +45,15 @@
     "playground:build:studio-docs-acceptance": "node tooling/verify-studio-pivot.mjs && corepack pnpm@11.21.0 -C playground run playground:build:studio-docs-acceptance",
     "playground:build:built": "corepack pnpm@11.21.0 build && node tooling/verify-studio-pivot.mjs && corepack pnpm@11.21.0 -C playground run playground:build:built",
     "bench": "vitest bench",
-    "trust:static": "corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 scenarios:check && corepack pnpm@11.21.0 docs:check && corepack pnpm@11.21.0 studio-docs:check && corepack pnpm@11.21.0 test:studio-docs:production-boundary && corepack pnpm@11.21.0 typecheck && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 playground:build && corepack pnpm@11.21.0 playground:build:built",
+    "trust:static": "corepack pnpm@11.21.0 test:filter-authoring && corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 scenarios:check && corepack pnpm@11.21.0 docs:check && corepack pnpm@11.21.0 studio-docs:check && corepack pnpm@11.21.0 test:studio-docs:production-boundary && corepack pnpm@11.21.0 typecheck && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 playground:build && corepack pnpm@11.21.0 playground:build:built",
     "trust:package": "corepack pnpm@11.21.0 test:package-consumer:packed && corepack pnpm@11.21.0 test:package-entries && corepack pnpm@11.21.0 test:path-tree-shaking && corepack pnpm@11.21.0 test:text-package",
     "trust:browser": "corepack pnpm@11.21.0 test:ci && corepack pnpm@11.21.0 test:studio-docs && corepack pnpm@11.21.0 test:visual-safeguard && corepack pnpm@11.21.0 test:studio-visual && corepack pnpm@11.21.0 test:smoke:built && corepack pnpm@11.21.0 test:agent-verification:identity && corepack pnpm@11.21.0 test:agent-verification:watchdog && corepack pnpm@11.21.0 text:test:browser && corepack pnpm@11.21.0 text:test:browser --production",
     "trust:lifecycle": "corepack pnpm@11.21.0 test:lifecycle && corepack pnpm@11.21.0 test:performance && corepack pnpm@11.21.0 --filter @crc/text run test",
     "trust": "corepack pnpm@11.21.0 trust:static && corepack pnpm@11.21.0 trust:package && corepack pnpm@11.21.0 trust:browser && corepack pnpm@11.21.0 trust:lifecycle",
     "test:viz-package": "node tooling/verify-packed-viz.mjs",
-    "test:agent-verification:identity": "node --test tooling/agent-verification/identity.test.mjs",
-    "test:agent-verification:watchdog": "node --test tooling/agent-verification/evidence-directory.test.mjs tooling/agent-verification/watchdog.test.mjs tooling/agent-verification/watchdog-browser.test.mjs tooling/agent-verification/browser-failure.test.mjs tooling/agent-verification/checkpoint.test.mjs tooling/agent-verification/replay-outcome.test.mjs tooling/agent-verification/run-manifest.test.mjs tooling/agent-verification/tool-identity.test.mjs tooling/agent-verification/failure-evidence.test.mjs tooling/agent-verification/numeric-assertion.test.mjs tooling/agent-verification/evidence-reader.test.mjs tooling/agent-verification/compare-evidence.test.mjs",
-    "test:agent-verification": "corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 test:agent-verification:identity && corepack pnpm@11.21.0 test:agent-verification:watchdog && vitest run packages/core/test/agent-targeting-observation.test.tsx packages/core/test/agent-targeting-verification.test.ts packages/core/test/agent-signal-observation.test.tsx packages/core/test/agent-browser-observation.test.ts packages/core/test/agent-viz-verification.test.ts packages/core/test/three-picking-verification.test.ts packages/viz/test/hover-lab.test.ts --browser.headless --browser.ui=false",
+    "test:agent-verification:identity": "node --test tooling/agent-verification/identity.test.mjs tooling/agent-verification/core-peer-compatibility.test.mjs tooling/agent-verification/installed-peers.test.mjs && node tooling/agent-verification/core-peer-compatibility.mjs && node tooling/agent-verification/installed-peers.mjs",
+    "test:agent-verification:watchdog": "node --test tooling/agent-verification/runtime-identity.test.mjs tooling/agent-verification/required-checks.test.mjs tooling/agent-verification/recorded-check.test.mjs tooling/agent-verification/input-provenance.test.mjs tooling/agent-verification/evidence-directory.test.mjs tooling/agent-verification/watchdog.test.mjs tooling/agent-verification/watchdog-browser.test.mjs tooling/agent-verification/browser-failure.test.mjs tooling/agent-verification/checkpoint.test.mjs tooling/agent-verification/replay-outcome.test.mjs tooling/agent-verification/run-manifest.test.mjs tooling/agent-verification/tool-identity.test.mjs tooling/agent-verification/failure-evidence.test.mjs tooling/agent-verification/numeric-assertion.test.mjs tooling/agent-verification/evidence-reader.test.mjs tooling/agent-verification/compare-evidence.test.mjs",
+    "test:agent-verification": "corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 test:agent-verification:identity && corepack pnpm@11.21.0 test:agent-verification:watchdog && vitest run packages/core/test/agent-runtime-identity.test.ts packages/core/test/agent-event-trace.test.tsx packages/core/test/agent-targeting-pagination.test.tsx packages/core/test/agent-interaction-point.test.tsx packages/core/test/agent-targeting-observation.test.tsx packages/core/test/agent-targeting-verification.test.ts packages/core/test/agent-signal-observation.test.tsx packages/core/test/agent-browser-observation.test.ts packages/core/test/agent-viz-verification.test.ts packages/core/test/three-picking-verification.test.ts packages/viz/test/hover-lab.test.ts --browser.headless --browser.ui=false",
     "test:agent-verification:requirements": "node --test tooling/agent-verification/requirements.test.mjs && node tooling/agent-verification/requirements.mjs",
     "test:textures": "vitest run packages/textures/test --browser.headless --browser.ui=false",
     "test:path-tree-shaking": "node tooling/verify-path-tree-shaking.mjs",
@@ -67,7 +67,8 @@
     "text:bench:browser": "corepack pnpm@11.21.0 --filter @crc/text run bench:browser",
     "test:text-package": "node tooling/verify-packed-text.mjs",
     "text:verify-reproducible": "corepack pnpm@11.21.0 --filter @crc/text run verify:reproducible",
-    "text:reference": "corepack pnpm@11.21.0 --filter @crc/text run reference"
+    "text:reference": "corepack pnpm@11.21.0 --filter @crc/text run reference",
+    "test:filter-authoring": "node --import tsx --test tooling/filter-authoring.test.mjs tooling/filter-validation.test.mjs"
   },
   "devDependencies": {
     "@babel/core": "catalog:",
@@ -100,6 +101,7 @@
     "vitest": "catalog:",
     "yaml": "catalog:",
     "@crc/viz": "workspace:*",
-    "@crc/textures": "workspace:*"
+    "@crc/textures": "workspace:*",
+    "semver": "7.8.5"
   }
 }

@@ -1,3 +1,4 @@
+import { dropShadow } from '@crc/core/filters';
 /** @jsxImportSource @crc/core */
 import {
   FocusManagement,
@@ -121,13 +122,13 @@ function ThreeLayerLesson() {
               width: 580,
               height: 260,
               filter: [
-                {
-                  type: 'dropShadow',
+                dropShadow({
+                  
                   offsetX: 0,
                   offsetY: 10,
                   blurRadius: 18,
                   color: '#0009',
-                },
+                }),
               ],
             }}
           />

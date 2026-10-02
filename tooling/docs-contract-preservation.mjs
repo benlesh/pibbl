@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "c2dda3cc3d979dcfdd8d485de811ce34c12c3a80d1f6f422dc3f32bd29aeb663";
+  "7edfbc7a9cbe761c2ad6f35e85f3203a01a025a11942062b407710b25d90b219";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const THREE_PIVOT_APPROVAL_RECORD = "three-full-pivot";
@@ -124,15 +124,26 @@ const POST_BASELINE_CONTRACT_PROFILES = new Map([
   [
     "docs/design/textures-contract.md",
     {
-      unitPrefix: "u",
-      approvalRecordId: "procedural-textures",
+      unitPrefix: "x",
+      approvalRecordId: "tree-shakeable-filters-and-texture-effects",
       allowedSections: new Set([
-        "Optional procedural textures decision record",
-        "Package boundary",
-        "Persistence and timing",
-        "Input and updates",
-        "Composition and reuse",
-        "Ownership and evidence",
+        "Draft design for tree shakeable filters and texture effects",
+        "Decisions",
+        "Evidence from the current repository",
+        "Goals and boundaries",
+        "Public authoring",
+        "Runtime dependency direction",
+        "Texture consumption and borrowing",
+        "Displacement semantics",
+        "GPU processing and capabilities",
+        "Animated underwater recipe",
+        "Scheduling and successful generations",
+        "Caching and interaction invariants",
+        "Ownership and failure ledger",
+        "Packaging and the wider optional feature audit",
+        "Consumer bundle evidence",
+        "Behavior and lifecycle verification",
+        "Migration and documentation",
       ]),
     },
   ],

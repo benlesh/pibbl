@@ -25,6 +25,7 @@ it('diagnoses interception and verifies the repair through the same public appli
   // center (144, 112) lies within the action; one click must select item A.
   await controller.perform('inspect');
   const seed = controller.getState();
+  expect(seed.runtimeCompatibility).toMatchObject({ status: 'accepted', reason: null, diagnostic: { relation: 'same-runtime', schedulers: 'shared', versions: 'matching' } });
   const pixel = () => Array.from(canvas.getContext('2d')!.getImageData(144, 112, 1, 1).data);
   expect(pixel()).toEqual([37, 99, 235, 255]);
   expect(seed.signalInspection?.records).toHaveLength(6);
@@ -254,4 +255,74 @@ it('publishes bounded before-after component evidence through the shared inspect
   await controller.perform('inspection-on');
   await controller.perform('inspect');
   expect(controller.getState().componentChanges).toBeNull();
+});
+
+
+it('distinguishes script-dispatched input from browser input even when both select the item', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 240;
+  canvas.style.cssText = 'width:480px;height:240px'; document.body.append(canvas);
+  controller = await (await loadScenario(getScenarioBySlug('agent-targeting-verification')!)).mount({ canvas });
+  await controller.perform('repair');
+  await clickMouse(canvas, { x: 144, y: 112 }); await controller.settled();
+  const nativeDelivery = controller.getState().delivery;
+  expect(nativeDelivery.input.original.isTrusted).toBe(true);
+  const bounds = canvas.getBoundingClientRect();
+  for (const type of ['mousedown', 'mouseup', 'click']) {
+    canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true,
+      clientX: bounds.left + 144, clientY: bounds.top + 112, button: 0 }));
+  }
+  await controller.settled();
+  expect(controller.getState()).toMatchObject({ selectedItem: 'item-a', selections: 2,
+    delivery: { input: { original: { type: 'click', isTrusted: false }, source: null,
+      userActivation: { status: 'available', hasBeenActive: true }, permissions: 'not-observed' } } });
+  // Sticky activation from an earlier event is not evidence that this event was trusted.
+  expect(nativeDelivery.input.original.isTrusted).toBe(true);
+  await controller.perform('reset');
+  expect(controller.getState().delivery.input).toBeNull();
+});
+
+it('exposes opt-in bounded click propagation evidence through the shared scenario', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 240;
+  canvas.style.cssText = 'width:480px;height:240px'; document.body.append(canvas);
+  controller = await (await loadScenario(getScenarioBySlug('agent-targeting-verification')!)).mount({ canvas });
+  expect(controller.getState().eventTrace).toBeNull();
+  await controller.perform('repair'); await controller.perform('trace-start');
+  await clickMouse(canvas, { x: 144, y: 112 }); await controller.settled();
+  const recorded = controller.getState().eventTrace;
+  expect(recorded).toMatchObject({ scope: 'wrapped-handlers-only', capacity: 32, dropped: 0 });
+  expect(recorded.records.filter((record: any) => record.stage === 'enter').map((record: any) => [record.label, record.phase])).toEqual([
+    ['scene-capture', 1], ['action', 2], ['scene-bubble', 3],
+  ]);
+  expect(new Set(recorded.records.map((record: any) => record.eventId)).size).toBe(1);
+  expect(recorded.records).toHaveLength(6);
+  expect(controller.getState().selections).toBe(1);
+  await controller.perform('trace-stop');
+  const stopped = controller.getState().eventTrace;
+  await clickMouse(canvas, { x: 144, y: 112 }); await controller.settled();
+  expect(controller.getState().selections).toBe(2);
+  expect(controller.getState().eventTrace).toEqual(stopped);
+});
+
+it('exposes scene pages and cursor expiration through the same manually runnable lab actions', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 240;
+  canvas.style.cssText = 'width:480px;height:240px'; document.body.append(canvas);
+  const host = document.createElement('div'); document.body.append(host);
+  controller = await (await loadScenario(getScenarioBySlug('agent-targeting-verification')!)).mount({ canvas, referenceHost: host });
+  await controller.perform('pagination-scene'); await controller.perform('scene-page-first');
+  const first = controller.getState();
+  expect(first.scenePage).toMatchObject({ status: 'ready', completeness: 'complete' });
+  expect(first.scenePage.totalRecords).toBeGreaterThan(100);
+  const records = [...first.scenePage.records];
+  while (controller.getState().scenePage.nextCursor) {
+    await controller.perform('scene-page-next'); records.push(...controller.getState().scenePage.records);
+  }
+  expect(records).toHaveLength(first.scenePage.totalRecords);
+  expect(records.map(record => record.order)).toEqual(Array.from({ length: records.length }, (_, i) => i));
+  expect(controller.getState().renderCount).toBe(first.renderCount);
+  expect(controller.getState().dormantMetricEvaluations).toBe(0);
+  await expect(controller.perform('scene-page-next')).rejects.toThrow('No scene continuation');
+  await controller.perform('scene-page-first'); await controller.perform('repair');
+  await controller.perform('scene-page-next');
+  expect(controller.getState().scenePage).toMatchObject({ status: 'cursor-expired', records: [], nextCursor: null });
+  expect(first.scenePage.records).toHaveLength(32);
 });

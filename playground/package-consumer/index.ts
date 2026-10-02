@@ -1,3 +1,4 @@
+import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
 import type {
   CRCAnimationDefinition,
   CRCAnimationOptions,
@@ -6,11 +7,8 @@ import type {
   CRCAnimationRepeatOptions,
   CRCAnimationSampleInput,
   CRCConfig,
-  CRCBlurFilter,
-  CRCBrightnessFilter,
   CRCClipboardEvent,
   CRCCompositionEvent,
-  CRCContrastFilter,
   CRCController,
   CRCRenderLayerComponentProps,
   CRCRenderLayerContext,
@@ -42,10 +40,7 @@ import type {
   CRCFit,
   CRCFixedViewportConfig,
   CRCFocusEvent,
-  CRCGrayscaleFilter,
-  CRCHueRotateFilter,
   CRCInputEvent,
-  CRCInvertFilter,
   CRCKeyboardEvent,
   CRCKeyboardNavigationOptions,
   CRCInterpolator,
@@ -59,7 +54,6 @@ import type {
   CRCResizePosition,
   CRCMouseEvent,
   CRCNode,
-  CRCOpacityFilter,
   CRCPixelRatio,
   CRCPointerEvent,
   CRCPlayback,
@@ -72,13 +66,10 @@ import type {
   CRCSpringOptions,
   CRCSpringTransitionOptions,
   CRCStepperOptions,
-  CRCSaturateFilter,
-  CRCSepiaFilter,
   CRCTouchEvent,
   CRCTweenOptions,
   CRCTweenTransitionOptions,
   CRCWheelEvent,
-  CRCDropShadowFilter,
   ArcProps,
   ArcStyle,
   ArcPathOptions,
@@ -574,31 +565,31 @@ const rectangleStyle = {
 } satisfies RectStyle;
 const rectangleProps = {} satisfies RectangleProps;
 
-const blurFilter: CRCBlurFilter = { type: 'blur', radius: 2 };
-const brightnessFilter: CRCBrightnessFilter = {
-  type: 'brightness',
+const blurFilter: CRCFilter = blur({  radius: 2 });
+const brightnessFilter: CRCFilter = brightness({
+  
   amount: 1.25,
-};
-const contrastFilter: CRCContrastFilter = { type: 'contrast', amount: 0.8 };
-const dropShadowFilter: CRCDropShadowFilter = {
-  type: 'dropShadow',
+});
+const contrastFilter: CRCFilter = contrast({  amount: 0.8 });
+const dropShadowFilter: CRCFilter = dropShadow({
+  
   offsetX: 3,
   offsetY: 4,
   blurRadius: 2,
   color: 'rgb(0 0 0 / 40%)',
-};
-const grayscaleFilter: CRCGrayscaleFilter = {
-  type: 'grayscale',
+});
+const grayscaleFilter: CRCFilter = grayscale({
+  
   amount: 0.5,
-};
-const hueRotateFilter: CRCHueRotateFilter = {
-  type: 'hueRotate',
+});
+const hueRotateFilter: CRCFilter = hueRotate({
+  
   degrees: 45,
-};
-const invertFilter: CRCInvertFilter = { type: 'invert', amount: 0.25 };
-const opacityFilter: CRCOpacityFilter = { type: 'opacity', amount: 0.75 };
-const saturateFilter: CRCSaturateFilter = { type: 'saturate', amount: 1.5 };
-const sepiaFilter: CRCSepiaFilter = { type: 'sepia', amount: 0.4 };
+});
+const invertFilter: CRCFilter = invert({  amount: 0.25 });
+const opacityFilter: CRCFilter = opacity({  amount: 0.75 });
+const saturateFilter: CRCFilter = saturate({  amount: 1.5 });
+const sepiaFilter: CRCFilter = sepia({  amount: 0.4 });
 const publicFilterList = [
   blurFilter,
   brightnessFilter,

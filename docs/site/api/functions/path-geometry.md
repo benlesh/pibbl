@@ -35,7 +35,7 @@ It supports the Canvas path-building vocabulary, segment editing, 2D affine
 transforms, and independent native/SVG conversion.
 
 ```ts
-import { PathGeometry, toPath2D, toSvgPathData } from "@crc/core";
+import { PathGeometry, toPath2D, toSvgPathData, warpPath } from "@crc/core";
 
 const geometry = new PathGeometry();
 geometry.moveTo(10, 10);

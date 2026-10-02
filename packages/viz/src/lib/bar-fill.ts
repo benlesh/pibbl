@@ -1,3 +1,4 @@
+import { validateTexturePaint } from "@crc/core/internal";
 import type { FillStyle } from "@crc/core";
 
 /** Domain thresholds divide the bar fill into sharp, ordered color intervals. */
@@ -19,7 +20,8 @@ export function barFill(
     fill instanceof CanvasPattern
   )
     return () => fill;
-  if (!fill || fill.type !== "threshold")
+  if (fill && !("type" in fill)) { validateTexturePaint(fill); return () => fill; }
+  if (!fill || !("type" in fill) || fill.type !== "threshold")
     throw new TypeError("BarSeries fill must be a paint or a threshold fill.");
   const { thresholds, colors } = fill;
   if (

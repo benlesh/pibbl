@@ -1,3 +1,6 @@
+import { blur } from '@crc/core/filters';
+import { Rectangle } from '@crc/core';
+import { peekNativeFilterPool } from './render-filter-boundary';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { executeRender } from '../execute-render';
@@ -317,7 +320,7 @@ describe('CRC instance filter-surface ownership', () => {
     executeRender(canvas, 0);
 
     expect(offscreenConstructor).not.toHaveBeenCalled();
-    expect(getCRCInstance(canvas).filterSurfacePool.snapshot().surfaceSlots).toBe(0);
+    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
     controller.dispose();
   });
 
@@ -330,11 +333,11 @@ describe('CRC instance filter-surface ownership', () => {
     let snapshotDuringComponentTeardown:
       | ReturnType<FilterSurfacePool['snapshot']>
       | undefined;
-    const Root = (_props: {}) => undefined;
+    const Root = (_props: {}) => createElement(Rectangle, { style: { width: 20, height: 10, fill: 'red', filter: blur({ radius: 1 }) } });
     const controller = mountCRC(canvas, createElement(Root, {}));
     executeRender(canvas, 0);
     const instance = getCRCInstance(canvas);
-    const pool = instance.filterSurfacePool;
+    const pool = peekNativeFilterPool(instance)!;
     const componentRefs = [...instance.refs.values()][0]!;
     componentRefs.teardowns.add(() => {
       snapshotDuringComponentTeardown = pool.snapshot();

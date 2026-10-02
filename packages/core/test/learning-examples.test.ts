@@ -7,7 +7,7 @@ import {
   validateLearningExampleCatalog,
 } from "@crc/scenarios";
 import type { LearningBrowseGroup } from "@crc/scenarios";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   learningSourcePaths,
   loadLearningSource,
@@ -1270,6 +1270,7 @@ describe("learning example catalog", () => {
     ]);
     const expectedBrowseGroups = {
       drawing: [
+        "along-path",
         "arc",
         "circle",
         "ellipse",
@@ -1293,6 +1294,9 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+        "plasma-globe",
+        "underwater",
+        "optional-filters",
         "clip",
         "group",
         "growing-reveal",
@@ -1411,6 +1415,9 @@ describe("learning example catalog", () => {
       "living-ink",
       "material-lab",
       "growing-reveal",
+      "plasma-globe",
+      "underwater",
+      "optional-filters",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1823,6 +1830,8 @@ describe("learning example catalog", () => {
         "Clip",
         "Layer",
         "CRCFilter",
+        "useTexture",
+        "defineTexture",
         "defineThreeLayer",
         "InstancedMesh",
         "Mesh",
@@ -1986,20 +1995,34 @@ describe("learning example catalog", () => {
     const before = solidBlueBounds(canvas);
     const target = { x: 360, y: 120 };
 
-    await pointerDownLogicalPoint(canvas, {
-      x: before.centerX,
-      y: before.centerY,
+    // This test exercises sample retention, not host-speed-dependent event timing.
+    const nativeTimestamp = Object.getOwnPropertyDescriptor(Event.prototype, "timeStamp")!.get!;
+    const sampleTimes = new WeakMap<Event, number>();
+    let timestamp = 1000;
+    const timestamps = vi.spyOn(Event.prototype, "timeStamp", "get").mockImplementation(function (this: Event) {
+      if (this instanceof PointerEvent && this.target === canvas) {
+        let time = sampleTimes.get(this);
+        if (time === undefined) { time = timestamp; timestamp += 8; sampleTimes.set(this, time); }
+        return time;
+      }
+      return nativeTimestamp.call(this);
     });
-    for (let sample = 0; sample < 8; sample += 1) {
-      await pointerMoveLogicalPoint(canvas, target);
-    }
-    await pointerUpLogicalPoint(canvas, target);
-    await nextPaint();
-    const released = solidBlueBounds(canvas);
-    for (let frame = 0; frame < 4; frame += 1) await nextPaint();
-    const rolling = solidBlueBounds(canvas);
-
-    expect(rolling.centerX).toBeGreaterThan(released.centerX + 30);
+    try {
+      await pointerDownLogicalPoint(canvas, {
+        x: before.centerX,
+        y: before.centerY,
+      });
+      for (let sample = 0; sample < 8; sample += 1) {
+        await pointerMoveLogicalPoint(canvas, target);
+      }
+      await pointerUpLogicalPoint(canvas, target);
+      await nextPaint();
+      const released = solidBlueBounds(canvas);
+      for (let frame = 0; frame < 4; frame += 1) await nextPaint();
+      const rolling = solidBlueBounds(canvas);
+  
+      expect(rolling.centerX).toBeGreaterThan(released.centerX + 30);
+    } finally { timestamps.mockRestore(); }
   });
 
   it("preserves the off-center grab offset while dragging the physics lesson ball", async () => {

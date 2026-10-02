@@ -135,20 +135,20 @@ for an upgrade audit.
 ## Filters are typed local style
 
 Every primitive, including composition and layout primitives, accepts one
-filter descriptor or a readonly ordered list:
+imported filter value or a readonly ordered list:
 
 ```tsx
 import { Group, Rectangle, type CRCFilter } from "@crc/core";
+import { grayscale, dropShadow } from "@crc/core/filters";
 
 const effects = [
-  { type: "grayscale", amount: 1 },
-  {
-    type: "dropShadow",
+  grayscale({ amount: 1 }),
+  dropShadow({
     offsetX: 8,
     offsetY: 6,
     blurRadius: 4,
     color: "rgb(0 0 0 / 45%)",
-  },
+  }),
 ] satisfies readonly CRCFilter[];
 
 const filteredCard = (
@@ -164,7 +164,7 @@ const filteredCard = (
 The list runs in declaration order over one combined image of the receiving
 primitive and everything it returns. Put the filter on a `Group` when several
 siblings should form one silhouette. Nested filtered primitives resolve inside
-out. A single descriptor means a one-item list; `[]` means no filter and stays
+out. A single filter value means a one-item list; `[]` means no filter and stays
 on the direct rendering path.
 
 Filters affect pixels only. They do not enlarge layout or measurement, and

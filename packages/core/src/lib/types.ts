@@ -19,8 +19,8 @@ import type {
 import type { CRCElement, CRCElementType, CRCNode } from "./element/types.js";
 import type { PendingRoot } from "./global-state.js";
 import type { CRCFilter } from "./style/filter-types.js";
-import type { FilterSurfacePool } from "./filter/filter-surface-pool.js";
 import type { CRCBackendDriver } from "./backend/types.js";
+import type { OptionalService } from "./optional-services.js";
 import type { SignalRenderConsumer } from "./signals/render-consumer.js";
 import type { Signal, SignalValue } from "./signals/types.js";
 export type {
@@ -343,8 +343,8 @@ export interface CRCController {
   dispose(): void;
 }
 
-export type FillStyle = CanvasRenderingContext2D["fillStyle"];
-export type StrokeStyle = CanvasRenderingContext2D["strokeStyle"];
+export type FillStyle = CanvasRenderingContext2D["fillStyle"] | import('./textures/texture.js').TexturePaint;
+export type StrokeStyle = CanvasRenderingContext2D["strokeStyle"] | import('./textures/texture.js').TexturePaint;
 
 export interface CRCInstance {
   canvas: Canvas;
@@ -373,7 +373,8 @@ export interface CRCInstance {
   focusParentBridge: CRCNestedPaintEntry | undefined;
   rootLayoutBox: Readonly<LayoutBox>;
   surface: CRCSurfaceState;
-  filterSurfacePool: FilterSurfacePool;
+  /** Feature-owned resources, installed only by imported optional entries. */
+  optionalServices: Map<symbol, OptionalService>;
   backendDriver: CRCBackendDriver<unknown>;
 }
 

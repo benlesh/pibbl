@@ -106,28 +106,32 @@ specified filter is normalized by this same framework path around the completed
 layer bitmap. Three objects remain ordinary application resources and cannot
 reinterpret a Canvas filter as Three renderer state.
 
-## Filter descriptors
+## Filter values
 
-One descriptor is a one-item list. A readonly list runs in declaration order;
+`style.filter` accepts opaque immutable values made by named factories imported
+from `@crc/core/filters`. A value is a one-item list. A readonly list runs in declaration order;
 `[]` is exactly a no-op, performs no offscreen capture, and requires no filter
-capability. CRC copies and freezes normalized descriptors without mutating the
-caller-owned descriptor or array.
+capability. CRC never accepts a string-tagged descriptor or a lookalike object.
+It keeps the caller-owned value and array immutable while preparing the values
+for the receiving primitive generation.
 
-The root package exports `CRCFilter` and all ten named descriptor types. This is
-the complete function and numeric contract:
+`@crc/core` exports the shared `CRCFilter` type. The factory functions and their
+`*Options` types are exported by `@crc/core/filters`. Native factories are
+`blur`, `brightness`, `contrast`, `dropShadow`, `grayscale`, `hueRotate`,
+`invert`, `opacity`, `saturate`, and `sepia`. This is their numeric contract:
 
-| Descriptor type                      | Fields and normalization                                                                                                                                                 | Native unit/function                   |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
-| `blur` (`CRCBlurFilter`)             | `radius` must be finite and nonnegative. It is a Gaussian standard deviation in local logical units.                                                                     | Density-scaled `px` in `blur()`        |
-| `brightness` (`CRCBrightnessFilter`) | `amount` must be finite and nonnegative; values above `1` are preserved.                                                                                                 | Unitless ratio in `brightness()`       |
-| `contrast` (`CRCContrastFilter`)     | `amount` must be finite and nonnegative; values above `1` are preserved.                                                                                                 | Unitless ratio in `contrast()`         |
-| `dropShadow` (`CRCDropShadowFilter`) | Signed `offsetX`/`offsetY` must be finite. `blurRadius` defaults to `0`, must be finite and nonnegative, and is a Gaussian standard deviation. `color` must be concrete. | Density-scaled `px` in `drop-shadow()` |
-| `grayscale` (`CRCGrayscaleFilter`)   | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `grayscale()`        |
-| `hueRotate` (`CRCHueRotateFilter`)   | `degrees` may be any finite number and is not modulo-normalized.                                                                                                         | `deg` in `hue-rotate()`                |
-| `invert` (`CRCInvertFilter`)         | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `invert()`           |
-| `opacity` (`CRCOpacityFilter`)       | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `opacity()`          |
-| `saturate` (`CRCSaturateFilter`)     | `amount` must be finite and nonnegative; values above `1` are preserved.                                                                                                 | Unitless ratio in `saturate()`         |
-| `sepia` (`CRCSepiaFilter`)           | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `sepia()`            |
+| Descriptor type                             | Fields and normalization                                                                                                                                                 | Native unit/function                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| `blur` (`CRCBlurFilterOptions`)             | `radius` must be finite and nonnegative. It is a Gaussian standard deviation in local logical units.                                                                     | Density-scaled `px` in `blur()`        |
+| `brightness` (`CRCBrightnessFilterOptions`) | `amount` must be finite and nonnegative; values above `1` are preserved.                                                                                                 | Unitless ratio in `brightness()`       |
+| `contrast` (`CRCContrastFilterOptions`)     | `amount` must be finite and nonnegative; values above `1` are preserved.                                                                                                 | Unitless ratio in `contrast()`         |
+| `dropShadow` (`CRCDropShadowFilterOptions`) | Signed `offsetX`/`offsetY` must be finite. `blurRadius` defaults to `0`, must be finite and nonnegative, and is a Gaussian standard deviation. `color` must be concrete. | Density-scaled `px` in `drop-shadow()` |
+| `grayscale` (`CRCGrayscaleFilterOptions`)   | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `grayscale()`        |
+| `hueRotate` (`CRCHueRotateFilterOptions`)   | `degrees` may be any finite number and is not modulo-normalized.                                                                                                         | `deg` in `hue-rotate()`                |
+| `invert` (`CRCInvertFilterOptions`)         | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `invert()`           |
+| `opacity` (`CRCOpacityFilterOptions`)       | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `opacity()`          |
+| `saturate` (`CRCSaturateFilterOptions`)     | `amount` must be finite and nonnegative; values above `1` are preserved.                                                                                                 | Unitless ratio in `saturate()`         |
+| `sepia` (`CRCSepiaFilterOptions`)           | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `sepia()`            |
 
 Amounts are ratios, so `1` means 100 percent. `blur.radius` and
 `dropShadow.blurRadius` deliberately use filter-function standard-deviation
@@ -140,7 +144,14 @@ the failing field, received value, and component before its render callback.
 CRC compiles the complete nonempty list once for one native Canvas filter
 operation. `style.opacity` remains the primitive's existing paint-alpha
 behavior; an `opacity` filter is a separate ordered effect over the combined
-raster and can differ where paint overlaps.
+raster and can differ where paint overlaps. `displacement({ map, strength,
+region })` is a separate optional filter factory. It accepts a genuine texture
+paint map, finite nonnegative logical strength, and finite positive region
+dimensions; it samples red/green signed offsets with alpha weighting and
+changes pixels only. Zero strength validates the map but does not borrow pixels
+or allocate its WebGL2 processor. Mixed native and displacement lists preserve
+declaration order, with native segments around displacement passes. Measurement
+does no capability check or raster work.
 
 ## Length and box rules
 

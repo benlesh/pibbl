@@ -117,7 +117,7 @@ test('native replay retains structured assertion evidence from a controlled fixt
   const server = createServer((_request, response) => {
     response.setHeader('Content-Type', 'text/html');
     response.end(`<script type="application/json" data-testid="agent-targeting-evidence">${JSON.stringify({
-      schema: 'crc-targeting-fixture/1', identity, state: { inspectionAvailability: 'unsupported-test-fixture' },
+      schema: 'crc-targeting-fixture/1', identity, state: { runtimeCompatibility: { status: 'accepted', diagnostic: { relation: 'same-runtime', versions: 'matching' } }, inspectionAvailability: 'unsupported-test-fixture' },
     })}</script>`);
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));

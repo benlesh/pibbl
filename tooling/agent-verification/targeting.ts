@@ -36,6 +36,7 @@ export interface PointerCaptureObservation {
   readonly records: readonly Readonly<{ pointerId: number; targetId: number; live: boolean }>[];
 }
 export interface FocusObservation {
+  readonly policy: Readonly<{ kind: 'crc-focus-management'; tab: 'source-order-exit'; keyboardActivation: 'enter-space' }> | null;
   readonly boundsSemantics: Readonly<{
     coordinateSpace: 'root-logical';
     representation: 'axis-aligned-envelope';
@@ -49,7 +50,7 @@ export interface FocusObservation {
   readonly targetId: number | null;
   readonly visible: boolean | null;
   readonly completeness: 'complete' | 'truncated' | 'unavailable';
-  readonly records: readonly Readonly<{ targetId: number; sourceIndex: number; bounds: Readonly<{ x: number; y: number; width: number; height: number }> | null }>[];
+  readonly records: readonly Readonly<{ targetId: number; sourceIndex: number; directionalBoundaryId: number | null; bounds: Readonly<{ x: number; y: number; width: number; height: number }> | null }>[];
 }
 export interface SurfaceObservation {
   readonly status: 'available' | 'unavailable';
@@ -90,6 +91,17 @@ export interface TargetingSnapshot {
   readonly coordinateSpace: 'root-logical';
   readonly recordLimit: number;
 }
+export interface TargetingPage {
+  readonly status: 'ready' | 'unavailable' | 'invalid' | 'cursor-expired';
+  readonly generation: TargetingGeneration | null;
+  readonly completeness: TargetingSnapshot['completeness'];
+  readonly records: readonly TargetingRecord[];
+  readonly totalRecords: number | null;
+  readonly retainedRecords: number;
+  readonly remaining: number;
+  readonly nextCursor: string | null;
+  readonly reason: string | null;
+}
 /** Identifies tested committed geometry, not the source component that declared it. */
 export interface TargetingExclusion {
   readonly kind: 'clip' | 'surface-bounds';
@@ -126,13 +138,27 @@ export interface TargetingProbe {
   readonly reason: string | null;
 }
 
+export interface InteractionPointSearch {
+  readonly status: 'verified-geometry' | 'no-verified-point' | 'unknown-target' | 'invalid' | 'stale' | 'unavailable' | 'unsupported' | 'truncated';
+  readonly routing: 'geometry-only';
+  readonly hostOcclusion: 'not-observed';
+  readonly completeness: 'sampled';
+  readonly generation: TargetingGeneration | null;
+  readonly targetId: number;
+  readonly point: Readonly<{ x: number; y: number }> | null;
+  readonly attempts: number;
+  readonly nativeCalls: number;
+  readonly pendingRealmWork: boolean;
+  readonly reason: string | null;
+}
+
 const RECORD_LIMIT = 64;
 const NATIVE_CALL_LIMIT = 128;
 const CLIP_REFERENCE_LIMIT = 128;
 let nextSession = 0;
 
 /** Ephemeral traversal: all records and native-call budgets include descendants. */
-function collectEntries(root: CRCInstance) {
+function collectEntries(root: CRCInstance, recordLimit = RECORD_LIMIT, clipLimit = CLIP_REFERENCE_LIMIT) {
   const entries: { entry: CRCPaintEntry; transform: DOMMatrix; clips: readonly ObservedClip[]; surfacePath: readonly number[] }[] = [];
   let truncated = false;
   let clipReferences = 0;
@@ -141,9 +167,9 @@ function collectEntries(root: CRCInstance) {
     if (owner.mainTeardowns.closed) return;
     if (owner.requestedRenderRevision !== owner.completedRenderRevision) pending = true;
     for (const entry of owner.paintEntries) {
-      if (entries.length >= RECORD_LIMIT || surfacePath.length > 16) { truncated = true; return; }
+      if (entries.length >= recordLimit || surfacePath.length > 16) { truncated = true; return; }
       const clipCount = inherited.length + entry.clippingStack.length;
-      if (clipReferences + clipCount > CLIP_REFERENCE_LIMIT) { truncated = true; return; }
+      if (clipReferences + clipCount > clipLimit) { truncated = true; return; }
       clipReferences += clipCount;
       const transform = parent.multiply(entry.transform);
       const order = entries.length;
@@ -177,6 +203,14 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
   const canvasRef = new WeakRef(canvas);
   let targetIds = new WeakMap<CRCEventTarget, number>();
   let nextTarget = 0;
+  let boundaryIds = new WeakMap<object, number>();
+  let nextBoundary = 0;
+  function identifyBoundary(boundary: object | undefined): number | null {
+    if (!boundary) return null;
+    let id = boundaryIds.get(boundary);
+    if (id === undefined) boundaryIds.set(boundary, id = ++nextBoundary);
+    return id;
+  }
   let disposed = false;
 
   function identifyTarget(target: CRCEventTarget): number {
@@ -186,7 +220,7 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
     return id;
   }
 
-  function snapshot(): TargetingSnapshot {
+  function snapshot(recordLimit = RECORD_LIMIT, clipLimit = CLIP_REFERENCE_LIMIT): TargetingSnapshot {
     const root = rootRef?.deref();
     const host = canvasRef.deref();
     const scheduler = snapshotRealmScheduler();
@@ -194,7 +228,7 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
       root.mainTeardowns.closed || GLOBAL_STATE.crcInstances.get(host) !== root ? 'stale-root' :
       !root.surface.snapshot || root.renderGeneration === 0 ? 'unavailable' :
       scheduler.phase !== 'idle' || root.requestedRenderRevision !== root.completedRenderRevision ? 'pending' : 'ready';
-    const collected = status === 'ready' ? collectEntries(root!) : null;
+    const collected = status === 'ready' ? collectEntries(root!, recordLimit, clipLimit) : null;
     if (collected?.pending) status = 'pending';
     const generation = root && status !== 'disposed' && status !== 'stale-root' ? Object.freeze({
       session, render: root.renderGeneration,
@@ -235,10 +269,11 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
     const manager = status === 'ready' && policy instanceof CRCFocusManager && !policy.isDestroyed && !policy.ownerWasReleased ? policy : undefined;
     const focused = host?.ownerDocument.activeElement;
     const focusRecords = manager ? manager.candidates.slice(0, 64).map(candidate => Object.freeze({
-      targetId: identifyTarget(candidate.target.publicTarget), sourceIndex: candidate.sourceIndex,
+      targetId: identifyTarget(candidate.target.publicTarget), sourceIndex: candidate.sourceIndex, directionalBoundaryId: identifyBoundary(candidate.directionalBoundary),
       bounds: candidate.rootBounds ? Object.freeze({ x: candidate.rootBounds.x, y: candidate.rootBounds.y, width: candidate.rootBounds.width, height: candidate.rootBounds.height }) : null,
     })) : [];
     const focus: FocusObservation = Object.freeze({
+      policy: manager ? Object.freeze({ kind: 'crc-focus-management', tab: 'source-order-exit', keyboardActivation: 'enter-space' }) : null,
       boundsSemantics: Object.freeze({ coordinateSpace: 'root-logical', representation: 'axis-aligned-envelope', source: 'navigation-metadata', paintedGeometryRelation: 'unknown', hitGeometryRelation: 'unknown' }),
       status: manager ? 'ready' : status === 'ready' && !policy ? 'unconfigured' : 'unavailable',
       nativeFocus: focused === host ? 'canvas' : focused ? 'other' : 'none', nativeScope: 'owner-document',
@@ -269,8 +304,48 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
       schema: 'crc-targeting-prototype/1', status, generation,
       completeness: status !== 'ready' ? 'unavailable' : collected!.truncated ? 'truncated' : 'complete',
       totalRecords, records: Object.freeze(records), visibility: 'unavailable',
-      coordinateSpace: 'root-logical', recordLimit: RECORD_LIMIT,
+      coordinateSpace: 'root-logical', recordLimit,
       pendingRealmWork: scheduler.pendingHostFrames > 0,
+    });
+  }
+
+  // One immutable, bounded expansion. It contains no live runtime objects.
+  let retained: TargetingSnapshot | null = null;
+  let pageSequence = 0;
+  function page(cursor?: string): TargetingPage {
+    const failure = (status: TargetingPage['status'], reason: string): TargetingPage => Object.freeze({
+      status, reason, generation: null, completeness: 'unavailable', records: Object.freeze([]),
+      totalRecords: null, retainedRecords: 0, remaining: 0, nextCursor: null,
+    });
+    let offset = 0;
+    if (cursor !== undefined) {
+      if (typeof cursor !== 'string' || cursor.length > 96 || !/^\d+:\d+:\d+$/.test(cursor)) return failure('invalid', 'Malformed scene cursor.');
+      const [owner, sequence, index] = cursor.split(':').map(Number);
+      if (![owner, sequence, index].every(Number.isSafeInteger) || owner < 1 || sequence < 1 || `${owner}:${sequence}:${index}` !== cursor || index < 32 || index % 32 !== 0) return failure('invalid', 'Invalid scene cursor offset.');
+      if (owner !== session || sequence !== pageSequence || !retained || disposed) return failure('cursor-expired', 'The retained scene expansion was replaced or released.');
+      const current = snapshot(256, 512);
+      if (current.status !== 'ready' || JSON.stringify(current.generation) !== JSON.stringify(retained.generation)) {
+        retained = null;
+        return failure('cursor-expired', 'The mount or committed generation changed or has pending work.');
+      }
+      if (index >= retained.records.length) return failure('invalid', 'Cursor is outside the retained expansion.');
+      offset = index;
+    } else {
+      pageSequence++;
+      retained = null;
+      const captured = snapshot(256, 512);
+      if (captured.status !== 'ready') return failure('unavailable', `Scene is ${captured.status}.`);
+      retained = captured;
+    }
+    const captured = retained!;
+    const records = Object.freeze(captured.records.slice(offset, offset + 32));
+    const end = offset + records.length;
+    return Object.freeze({
+      status: 'ready', generation: captured.generation, completeness: captured.completeness,
+      records, totalRecords: captured.totalRecords, retainedRecords: captured.records.length,
+      remaining: captured.records.length - end,
+      nextCursor: end < captured.records.length ? `${session}:${pageSequence}:${end}` : null,
+      reason: captured.completeness === 'truncated' ? 'Expansion stopped at record, clip-reference or depth budget; no continuation beyond the retained prefix.' : null,
     });
   }
 
@@ -398,8 +473,47 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
     return result(winner === null ? 'miss' : 'target', winner);
   }
 
+  /** Nine fixed samples; caller bounds are a search region, never assumed hit bounds. */
+  function findInteractionPoint(
+    expected: TargetingGeneration,
+    targetId: number,
+    bounds: Readonly<{ x: number; y: number; width: number; height: number }>,
+  ): InteractionPointSearch {
+    const current = snapshot();
+    let attempts = 0;
+    let nativeCalls = 0;
+    let pendingRealmWork = current.pendingRealmWork;
+    const result = (status: InteractionPointSearch['status'], point: InteractionPointSearch['point'] = null, reason: string | null = null): InteractionPointSearch => Object.freeze({
+      status, routing: 'geometry-only', hostOcclusion: 'not-observed', completeness: 'sampled',
+      generation: current.generation, targetId, point: point ? Object.freeze(point) : null,
+      attempts, nativeCalls, pendingRealmWork, reason,
+    });
+    if (!Number.isSafeInteger(targetId) || targetId < 1 ||
+        ![bounds.x, bounds.y, bounds.width, bounds.height, bounds.x + bounds.width, bounds.y + bounds.height].every(Number.isFinite) ||
+        bounds.width <= 0 || bounds.height <= 0) return result('invalid', null, 'Use a positive target handle and finite positive root-logical search bounds.');
+    if (current.status !== 'ready') return result('unavailable', null, current.status);
+    const actual = current.generation!;
+    if (expected.session !== actual.session || expected.render !== actual.render || expected.requested !== actual.requested || expected.completed !== actual.completed) {
+      return result('stale', null, 'Capture a new snapshot before searching.');
+    }
+    if (current.completeness === 'truncated') return result('truncated', null, 'Target traversal is incomplete.');
+    if (!current.records.some(record => record.targetId === targetId)) return result('unknown-target', null, 'Target is absent from this complete committed snapshot.');
+    // Center first, then the other cell centers of a 3x3 grid in row order.
+    const samples = [[1, 1], [0, 0], [1, 0], [2, 0], [0, 1], [2, 1], [0, 2], [1, 2], [2, 2]] as const;
+    for (const [column, row] of samples) {
+      const point = { x: bounds.x + bounds.width * ((column + 0.5) / 3), y: bounds.y + bounds.height * ((row + 0.5) / 3) };
+      const observed = probe(expected, point.x, point.y);
+      attempts++;
+      nativeCalls += observed.nativeCalls;
+      pendingRealmWork ||= observed.pendingRealmWork;
+      if (observed.status !== 'target' && observed.status !== 'miss') return result(observed.status, null, observed.reason);
+      if (observed.targetId === targetId) return result('verified-geometry', point);
+    }
+    return result('no-verified-point', null, 'No requested-target winner among nine samples; unsampled points may still work.');
+  }
+
   return Object.freeze({
-    snapshot, probe, convert, identifyTarget,
-    dispose() { disposed = true; targetIds = new WeakMap(); },
+    snapshot: () => snapshot(), page, probe, convert, identifyTarget, findInteractionPoint,
+    dispose() { disposed = true; retained = null; targetIds = new WeakMap(); boundaryIds = new WeakMap(); },
   });
 }

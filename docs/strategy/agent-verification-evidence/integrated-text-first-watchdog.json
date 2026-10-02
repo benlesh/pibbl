@@ -1,0 +1,27 @@
+{
+  "schema": "crc-replay-watchdog/1",
+  "status": "exited",
+  "timestamp": "2026-10-02T03:47:46.406Z",
+  "deadlineMs": 60000,
+  "graceMs": 1000,
+  "elapsedMs": 1214,
+  "pid": 19142,
+  "exitCode": 0,
+  "exitSignal": null,
+  "childExited": true,
+  "cleanupScope": "Replay child and parent-owned Playwright browser process group; arbitrary escaped descendants are outside scope.",
+  "browserCleanup": {
+    "status": "terminated",
+    "pid": 19139,
+    "processExited": true
+  },
+  "stdout": {
+    "text": "pass: /Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/text-first/replay/report.json\n",
+    "truncated": false
+  },
+  "stderr": {
+    "text": "",
+    "truncated": false
+  },
+  "failure": null
+}

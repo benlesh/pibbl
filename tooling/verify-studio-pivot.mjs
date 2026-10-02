@@ -16,6 +16,7 @@ const repositoryRoot = resolve(import.meta.dirname, "..");
 const require = createRequire(import.meta.url);
 const tsc = join(dirname(require.resolve("typescript")), "tsc.js");
 const expectedModules = new Map([
+  ["@crc/core/filters", "node_modules/@crc/core/filters.d.ts"],
   ["@crc/textures", "node_modules/@crc/textures/index.d.ts"],
   ["@crc/core", "node_modules/@crc/core/index.d.ts"],
   ["@crc/core/jsx-runtime", "node_modules/@crc/core/jsx-runtime.d.ts"],
@@ -38,6 +39,7 @@ assert.deepEqual(
   [...expectedModules.keys()].sort(),
 );
 const sourceEntries = {
+  filters: join(repositoryRoot, "packages/core/src/filters.ts"),
   textures: join(repositoryRoot, "packages/textures/src/index.ts"),
   root: join(repositoryRoot, "packages/core/src/index.ts"),
   jsxRuntime: join(repositoryRoot, "packages/core/src/jsx-runtime.ts"),
@@ -71,6 +73,7 @@ const builtInventory = await collectPublicExports(
   crcPublicCompilerOptions,
 );
 const inventoryKey = new Map([
+  ["@crc/core/filters", "filters"],
   ["@crc/textures", "textures"],
   ["@crc/core", "root"],
   ["@crc/core/jsx-runtime", "jsxRuntime"],
