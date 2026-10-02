@@ -200,7 +200,20 @@ function validateNativeFilter(
   density: number,
 ): void {
   const cssText = compileNativeFilters(input.filters, density);
-  assertNativeCanvasFilter(context, cssText, input.component);
+  assertNativeCanvasFilter(context, cssText, input.component, () => {
+    for (const filter of input.filters) {
+      if (!filter.onRejected) continue;
+      try {
+        assertNativeCanvasFilter(
+          context,
+          compileNativeFilters([filter], density),
+          input.component,
+        );
+      } catch {
+        filter.onRejected();
+      }
+    }
+  });
 }
 
 function filterCapabilityError(

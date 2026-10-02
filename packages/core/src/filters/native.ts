@@ -9,7 +9,7 @@ import type { NativePreparedFilter } from './native-operations.js';
 
 interface NativeOperation { prepare(executor: CRCFilterExecutor, property: string, context: Readonly<StyleResolutionContext>): NativePreparedFilter; }
 const operations = new WeakMap<CRCFilter, NativeOperation>();
-const nativeExecutor: CRCFilterExecutor = {
+export const nativeExecutor: CRCFilterExecutor = {
   prepare(value, property, context): PreparedCRCFilter {
     const operation = operations.get(value);
     if (!operation) throw new Error('A native filter value was created by an incompatible CRC runtime.');
@@ -24,8 +24,8 @@ function filter(operation: NativeOperation): CRCFilter {
   operations.set(value, operation);
   return value;
 }
-function prepared(executor: CRCFilterExecutor, css: (density: number) => string, reverseInfluence: (output: Readonly<PixelBounds>, density: number) => PixelBounds): NativePreparedFilter {
-  return Object.freeze({ executor, css, reverseInfluence });
+function prepared(executor: CRCFilterExecutor, css: (density: number) => string, reverseInfluence: (output: Readonly<PixelBounds>, density: number) => PixelBounds, onRejected?: () => void): NativePreparedFilter {
+  return Object.freeze({ executor, css, reverseInfluence, onRejected });
 }
 const unchanged = (output: Readonly<PixelBounds>): PixelBounds => ({ ...output });
 function number(value: unknown, property: string, context: Readonly<StyleResolutionContext>, nonnegative = false): number {
@@ -59,6 +59,6 @@ export function dropShadow(options: CRCDropShadowFilterOptions): CRCFilter {
   const offsetXInput = options.offsetX; const offsetYInput = options.offsetY; const radiusInput = options.blurRadius === undefined ? 0 : options.blurRadius; const colorInput = options.color;
   return filter({ prepare(executor, property, context) {
     const offsetX = number(offsetXInput, `${property}.offsetX`, context); const offsetY = number(offsetYInput, `${property}.offsetY`, context); const radius = number(radiusInput, `${property}.blurRadius`, context, true); const color = concreteColor(isSignal(colorInput) ? colorInput.get() : colorInput, `${property}.color`, context);
-    return prepared(executor, density => `drop-shadow(${offsetX * density}px ${offsetY * density}px ${radius * density}px ${color})`, (output, density) => { const extent = Math.ceil(radius * density * BLUR_EXTENT_FACTOR); const x = Math.min(output.x, Math.floor(output.x - offsetX * density - extent)); const y = Math.min(output.y, Math.floor(output.y - offsetY * density - extent)); const right = Math.max(output.x + output.width, Math.ceil(output.x + output.width - offsetX * density + extent)); const bottom = Math.max(output.y + output.height, Math.ceil(output.y + output.height - offsetY * density + extent)); return { x, y, width: right - x, height: bottom - y }; });
+    return prepared(executor, density => `drop-shadow(${offsetX * density}px ${offsetY * density}px ${radius * density}px ${color})`, (output, density) => { const extent = Math.ceil(radius * density * BLUR_EXTENT_FACTOR); const x = Math.min(output.x, Math.floor(output.x - offsetX * density - extent)); const y = Math.min(output.y, Math.floor(output.y - offsetY * density - extent)); const right = Math.max(output.x + output.width, Math.ceil(output.x + output.width - offsetX * density + extent)); const bottom = Math.max(output.y + output.height, Math.ceil(output.y + output.height - offsetY * density + extent)); return { x, y, width: right - x, height: bottom - y }; }, () => { throw layoutDiagnostic({ component: context.component, property: `${property}.color`, value: color, algorithm: 'filter-rendering', constraints: context.constraints, reason: 'was rejected by the native Canvas filter color parser' }); });
   } });
 }
