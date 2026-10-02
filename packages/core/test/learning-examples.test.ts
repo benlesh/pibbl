@@ -179,6 +179,24 @@ afterEach(() => {
 });
 
 describe("learning example catalog", () => {
+  it("accepts Manipulable's signal-owned box without allowing arbitrary style expressions", () => {
+    for (const authoring of ["jsx", "createElement"] as const) {
+      const scene = authoring === "jsx"
+        ? "<Manipulable style={box} />"
+        : "createElement(Manipulable, { style: box })";
+      const root = authoring === "jsx" ? "<Scene />" : "createElement(Scene, {})";
+      const source = `import { crc, Manipulable, useSignal, createElement, type CRCController } from '@crc/core';
+        function Scene() {
+          const box = useSignal({ left: 0, top: 0, width: 100, height: 80 });
+          return ${scene};
+        }
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, ${root});
+        }`;
+      expectValidLearningSource(source, authoring);
+      expectInvalidLearningSource(source.replace(authoring === "jsx" ? "style={box}" : "style: box", authoring === "jsx" ? "style={unknownBox}" : "style: unknownBox"), authoring);
+    }
+  });
   const threeLayerSourcePath =
     "packages/scenarios/src/learning/three/three-layer.example.tsx";
   const threeInstancingSourcePath =
@@ -1214,11 +1232,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 77 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 78 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(77);
+    expect(learningExampleCatalog).toHaveLength(78);
     expect(
       learningExampleCatalog
         .filter(
@@ -1296,6 +1314,7 @@ describe("learning example catalog", () => {
         "clip",
         "group",
         "growing-reveal",
+        "html-box",
         "layer",
         "living-ink",
         "material-lab",
@@ -1411,6 +1430,7 @@ describe("learning example catalog", () => {
       "living-ink",
       "material-lab",
       "growing-reveal",
+      "html-box",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1804,6 +1824,8 @@ describe("learning example catalog", () => {
         "createRegularPolygonPath",
         "Path",
         "PathGeometry",
+        "HtmlBox",
+        "FocusManagement",
         "defineRenderLayer",
         "bendPathAlongArc",
         "bendPathAlongPath",

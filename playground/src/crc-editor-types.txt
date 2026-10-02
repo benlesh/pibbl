@@ -65,12 +65,14 @@
   export type CRCFit = 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   export type CRCPixelRatio = 'device' | number;
   export interface CRCFixedViewportConfig {
+    htmlOverlay?: HTMLElement;
     signal?: AbortSignal;
     viewport?: Readonly<{ width: number; height: number }>;
     fit?: CRCFit;
     pixelRatio?: CRCPixelRatio;
   }
   export interface CRCResponsiveViewportConfig {
+    htmlOverlay?: HTMLElement;
     signal?: AbortSignal;
     viewport: 'responsive';
     pixelRatio?: CRCPixelRatio;
@@ -559,6 +561,14 @@
   export const VerticalLine: CRCPrimitiveComponent<VerticalLineProps, PrimitiveInput<VerticalLineProps, VerticalLineStyle>>;
   export const Text: CRCPrimitiveComponent<TextProps, PrimitiveInput<TextProps, TextStyle>>;
   export const Image: CRCPrimitiveComponent<ImageProps, PrimitiveInput<ImageProps, ImgStyle>>;
+  export type HtmlUpdateFunction<Props> = (props: Props) => void;
+  export type HtmlMountCallback<Props> = (element: HTMLDivElement, initialProps: Props, signal: AbortSignal) => HtmlUpdateFunction<Props>;
+  export interface HtmlBoxFocusState { readonly isFocusWithin: boolean; readonly isFocusVisible: boolean }
+  type HtmlBoxEvent<Event> = Event extends { readonly x: number; readonly y: number } ? Event & { readonly localX: number; readonly localY: number } : Event;
+  export type HtmlBoxEventHandlers = { [Key in keyof CRCEventHandlers]: (event: HtmlBoxEvent<Parameters<NonNullable<CRCEventHandlers[Key]>>[0]>) => void };
+  export interface HtmlBoxProps<Props> extends HtmlBoxEventHandlers { data: Props; mount: HtmlMountCallback<Props>; pointerEvents?: 'auto' | 'none'; onFocusChange?: (state: Readonly<HtmlBoxFocusState>) => void }
+  export interface HtmlBoxStyle extends GStyle { opacity?: number }
+  export function HtmlBox<Props>(props: Omit<PrimitiveInput<HtmlBoxProps<Props>, HtmlBoxStyle>, 'data' | 'mount'> & Pick<HtmlBoxProps<Props>, 'data' | 'mount'>): CRCRenderResult;
   export const Group: CRCPrimitiveComponent<GroupProps, PrimitiveInput<GroupProps, GStyle>>;
   export const Clip: CRCPrimitiveComponent<ClipProps, PrimitiveInput<ClipProps, ClipStyle>>;
   export const Layer: CRCPrimitiveComponent<LayerProps, PrimitiveInput<LayerProps, LayerStyle>>;

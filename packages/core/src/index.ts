@@ -388,3 +388,6 @@ export type { CRCResizeHandleProps, CRCResizeHandlesProps, CRCRotationHandleProp
 export { degrees } from './lib/manipulation/degrees.js';
 export { Manipulable } from './lib/manipulation/manipulable.js';
 export type { CRCManipulableProps } from './lib/manipulation/manipulable.js';
+
+export { HtmlBox } from './lib/components/html-box.js';
+export type { HtmlBoxProps, HtmlBoxStyle, HtmlMountCallback, HtmlUpdateFunction, HtmlBoxFocusState, HtmlBoxEventHandlers } from './lib/html/types.js';

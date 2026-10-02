@@ -9,7 +9,8 @@ trust gate for current results._
 CRC is a scheduled immediate-mode Canvas 2D component runtime. Its preferred
 surface is automatic JSX over opaque branded elements; `createElement` is the
 complete non-JSX equivalent. Ordinary components are synchronous functions.
-CRC has no React dependency and creates no DOM.
+CRC has no React dependency. Canvas components create no DOM; explicit HtmlBox
+hosts mount application-owned native content above the canvas.
 
 External renderers integrate through public `defineRenderLayer()`.
 `@crc/three` is the official thin adapter: applications use ordinary Three.js
@@ -140,7 +141,7 @@ complete CSS.
 
 | Area                | Current confidence                                                                                                                                                                                                                                                                                   | Boundary                                                               |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Public declarations | **Trusted.** Exact source/built/Studio export-name parity covers the surviving core, particles, physics 2D/geometry, visualization, and Three adapter entries, including 241 root type imports; strict TSX, Bundler, NodeNext, and mixed-runtime consumers pass.                                     | `@crc/types` remains a deliberately minimal compatibility package.     |
+| Public declarations | **Trusted.** Exact source/built/Studio export-name parity covers the surviving core, particles, physics 2D/geometry, visualization, and Three adapter entries, including 247 root type imports; strict TSX, Bundler, NodeNext, and mixed-runtime consumers pass.                                     | `@crc/types` remains a deliberately minimal compatibility package.     |
 | Package output      | **Trusted.** ESM runtime/declarations/maps, packed no-source consumers, blocked private imports, one external Three identity, and the version-coupled internal seam used only by matching official packages are covered.                                                                             | ESM-only; application code must not import `@crc/core/internal`.       |
 | Studio              | **Trusted.** TSX automatic runtime, source/built execution, exact surviving runtime/editor export parity, 62 lessons, 27 labs, editing diagnostics, and catalog/source identity are covered.                                                                                                         | Internal Studio, not a hosted documentation product.                   |
 | Documentation       | **Checked.** Required guides, link anchors, fail-closed API inventories, exhaustive current-contract preservation, explicit pivot approvals, direct source/test mappings, snippets, compiler transforms, historical banners, adversarial mutations, and active-vocabulary scans run in `docs:check`. | Prose cannot replace browser/runtime evidence.                         |
@@ -157,11 +158,11 @@ manifest and JSX-era translation/evidence allowlist, and
 configuration/vocabulary rules. The manifest covers every current normative
 contract, including explicit retirement/addition mappings for the Three.js
 pivot, and the evidence inventory maps those obligations to direct source and
-test evidence. It covers 667 preserved baseline units and 833 current semantic
+test evidence. It covers 667 preserved baseline units and 837 current semantic
 units across all 12 baseline-snapshotted normative contracts. Together with the
 post-baseline textures, signal, animation, render-layer/Three, component-manipulation,
-2D physics, and text geometry records, this covers 19 current normative contracts. Those seven
-records contain 199 exhaustively mapped post-baseline units. The evidence inventory contains 56 unique direct
+2D physics, text geometry, and HtmlBox records, this covers 20 current normative contracts. Those eight
+records contain 225 exhaustively mapped post-baseline units. The evidence inventory contains 56 unique direct
 source/test mappings. It also inspects the cited examples/tests for the
 behaviors claimed in the Text, Layer, focus, and complete non-JSX rows;
 scenario/browser gates execute that code.

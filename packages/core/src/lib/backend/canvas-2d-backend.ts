@@ -72,11 +72,12 @@ export const CANVAS_2D_BACKEND: CRCBackendDriver<RenderingContext2D> = {
       return program(input.props, input.style, context);
     });
     if (filters) {
-      renderFilterBoundary({
+      GLOBAL_STATE.htmlFilterDepth++;
+      try { renderFilterBoundary({
         component: input.componentName,
         filters,
         presentation,
-      }, invoke);
+      }, invoke); } finally { GLOBAL_STATE.htmlFilterDepth--; }
       return;
     }
     const releasePresentation = enterPrimitivePresentation(presentation);

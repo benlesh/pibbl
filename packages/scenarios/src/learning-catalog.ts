@@ -119,6 +119,16 @@ function browseGroupFor(
 
 const drafts = [
   {
+    slug: "html-box", title: "HTML Box", shortTitle: "HTML Box", section: "composition", order: 212,
+    summary: "Mount native HTML with CRC transforms, clipping, and coordinated focus.",
+    api: ["HtmlBox", "Group", "Clip", "FocusManagement"],
+    objectives: ["Keep native inputs alive while CRC moves their box.", "Share clipping geometry and source-order keyboard navigation."],
+    prompts: { gesture: "Focus the input and type to release green sparks. Drag the panel or use its resize and rotation handles.", code: "Report native input geometry through typed callbacks; use CRC playback for physics and Manipulable for transforms." },
+    apiNotes: ["HTML is always above Canvas paint. PathGeometry supplies portable ancestor clips.", "The application supplies the canvas wrapper and overlay; CRC owns each mounted box."],
+    canvas: { width: 720, height: 480 }, related: ["group", "clip"],
+    load: () => import("./learning/composition/html-box.example"),
+  },
+  {
     slug: "material-lab", title: "Material Lab", shortTitle: "Material Lab", section: "composition", order: 206,
     summary: "Explore seeded marble, paper, and cellular surfaces as backgrounds and repeating fills.", api: ["ProceduralTexture", "Group", "useSignal"],
     objectives: ["Reuse procedural texture output in Canvas composition.", "Keep texture generation independent of display size."],

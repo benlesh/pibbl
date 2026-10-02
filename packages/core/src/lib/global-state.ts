@@ -51,6 +51,7 @@ export interface GlobalState {
   seenIds: Set<string> | undefined;
   seenKeys: Set<string> | undefined;
   clippingStack: CRCClippingStackEntry[];
+  htmlFilterDepth: number;
   layoutStack: LayoutContext[] | undefined;
   anonElementNames: WeakMap<any, string>;
   anon: number;
@@ -79,6 +80,7 @@ export const GLOBAL_STATE: GlobalState = {
   seenIds: undefined,
   seenKeys: undefined,
   clippingStack: [],
+  htmlFilterDepth: 0,
   layoutStack: undefined,
   anonElementNames: new WeakMap(),
   anon: 0,

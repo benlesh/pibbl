@@ -196,3 +196,11 @@ a signal write guard prevents immediate restoration, CRC queues one
 generation-checked Begin cleanup record; a newer external write or later owner
 generation invalidates it. See the
 [component-manipulation contract](./component-manipulation-contract.md).
+
+## HtmlBox ownership
+
+A configured root exclusively reserves its application-owned overlay. Component
+identities own persistent DIVs and AbortControllers; the root owns SVG clipping
+definitions and publication snapshots. Abort fires once before removing connected
+content, including partial setup/update failure. Root disposal removes owned
+nodes and listeners and releases the lease. See the [HtmlBox contract](./html-box-contract.md).

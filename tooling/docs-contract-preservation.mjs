@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "c2dda3cc3d979dcfdd8d485de811ce34c12c3a80d1f6f422dc3f32bd29aeb663";
+  "d3278ef5bfcd38138384b9fe0d30912454d5ede3d1b42deea596f7f648c76255";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const THREE_PIVOT_APPROVAL_RECORD = "three-full-pivot";
@@ -120,7 +120,32 @@ const MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS = new Set([
   ...ANIMATION_APPROVED_SECTIONS,
 ]);
 
+const HTML_BOX_APPROVAL_RECORD = "html-box";
+const HTML_BOX_APPROVED_SECTIONS = new Set([
+  "HtmlBox design",
+  "Native component event extension — 2026-10-02",
+  "Purpose",
+  "Public authoring surface",
+  "Root DOM arrangement and ownership",
+  "Layout, transforms, and paint",
+  "Clipping representation and DOM projection",
+  "Mount lifetime and frame publication",
+  "Native input and focus bridge",
+  "Navigation rules",
+  "Entry, exit, and cancellation",
+  "Accessibility and bounded behavior",
+  "Delivery sequence and evidence",
+]);
+
 const POST_BASELINE_CONTRACT_PROFILES = new Map([
+  [
+    "docs/design/html-box-contract.md",
+    {
+      unitPrefix: "y",
+      approvalRecordId: HTML_BOX_APPROVAL_RECORD,
+      allowedSections: HTML_BOX_APPROVED_SECTIONS,
+    },
+  ],
   [
     "docs/design/textures-contract.md",
     {

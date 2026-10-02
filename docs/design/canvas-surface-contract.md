@@ -222,3 +222,10 @@ headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical
 reflow, responsive logical reflow without remount, and logical mouse
 coordinates. Full-page Studio baselines provide the corresponding sharpness
 and composition evidence.
+
+## Native HTML boxes
+
+`HtmlBox` explicitly mounts native content above Canvas paint through the
+mount-only `htmlOverlay` configuration. It shares root projection and world
+geometry, while application-owned wrapper CSS aligns the two surfaces. See the
+[HtmlBox contract](./html-box-contract.md) for clipping and composition limits.

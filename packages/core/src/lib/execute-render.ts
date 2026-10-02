@@ -1,3 +1,4 @@
+import { RootRenderTransaction } from './render-transaction.js';
 import {
   clearTempState,
   GLOBAL_STATE,
@@ -8,7 +9,6 @@ import { initializeCurrentWorldTransformAnchor } from './render-target.js';
 import {
   Canvas,
   type CRCNode,
-  type CRCRenderTransaction,
 } from './types.js';
 import type {
   CRCBackendFrame,
@@ -111,9 +111,11 @@ export function executeRender(
       renderTimestamp: activeFrameSnapshot.logicalTime,
     });
     if (!frame) {
+      crcInstance.eventRoot.html?.suspend(crcInstance);
       finishTransaction(true);
       return;
     }
+    crcInstance.eventRoot.html?.beginRender(crcInstance);
     GLOBAL_STATE.backendFrame = frame;
     GLOBAL_STATE.backendEnvironment = frame.environment;
     GLOBAL_STATE.renderContext = frame.context2D;
@@ -235,25 +237,4 @@ export function executeBackendCRC(
   timestamp: number,
 ): void {
   mount.render(root, timestamp);
-}
-
-class RootRenderTransaction implements CRCRenderTransaction {
-  private callbacks = new Set<(success: boolean) => void>();
-  private result: boolean | undefined;
-
-  onFinish(callback: (success: boolean) => void): void {
-    if (this.result !== undefined) {
-      callback(this.result);
-      return;
-    }
-    this.callbacks.add(callback);
-  }
-
-  finish(success: boolean): void {
-    if (this.result !== undefined) return;
-    this.result = success;
-    const callbacks = Array.from(this.callbacks);
-    this.callbacks.clear();
-    for (const callback of callbacks) callback(success);
-  }
 }

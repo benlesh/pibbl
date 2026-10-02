@@ -33,6 +33,7 @@ const expected = [
   "Fragment",
   "Grid",
   "Group",
+  "HtmlBox",
   "HorizontalLine",
   "Image",
   "KeyboardNavigation",
@@ -208,9 +209,9 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 99) {
+if (actual.length !== 100) {
   throw new Error(
-    `Expected 99 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected 100 @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 
@@ -515,3 +516,10 @@ if (!(wangGeometry instanceof core.PathGeometry) || !(radialGeometry instanceof 
 if (typeof physics2d.physicsObstacles2D !== "function" || "physicsBoxObstacles2D" in physics2d) {
   throw new Error("Expected the general committed-obstacle API without its superseded box-only name.");
 }
+
+const htmlDescriptor = core.createElement(core.HtmlBox, {
+  data: { text: 'inert construction' },
+  mount() { throw new Error('HtmlBox construction must not mount DOM'); },
+  style: { width: 100, height: 40 },
+});
+if (htmlDescriptor.type !== core.HtmlBox) throw new Error('HtmlBox descriptor lost its public identity');
