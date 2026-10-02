@@ -264,15 +264,22 @@ class Resource {
         this.lastTime = this.continuing ? frame.logicalTime : undefined;
         if (this.dirty) {
           const candidate = this.rasterizeCandidate();
+          let previous: OffscreenCanvas | undefined;
           batch.stage(this.revision, ++this.sequence, participant);
           batch.registerLifecycle(participant, {
             apply: () => {
               if (this.disposed) {
                 candidate.width = candidate.height = 0;
               } else {
-                const previous = this.committed;
+                previous = this.committed;
                 this.committed = candidate;
                 this.spare = previous;
+              }
+            },
+            rollback: () => {
+              if (!this.disposed) {
+                this.committed = previous;
+                this.spare = candidate;
               }
             },
             abort: () => {
