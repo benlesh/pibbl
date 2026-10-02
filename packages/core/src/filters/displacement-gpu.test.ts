@@ -182,3 +182,20 @@ it('rotates repeated map placement without rotating its displacement axes', () =
     expect(output.getImageData(1, 1, 1, 1).data[0]).toBe(0);
   } finally { gpu.dispose(); }
 });
+
+it('retries a map upload after an unsuccessful GPU pass', () => {
+  const source = new OffscreenCanvas(2, 1), map = new OffscreenCanvas(1, 1), resource = {};
+  const gpu = new DisplacementGpu();
+  const upload = vi.spyOn(WebGL2RenderingContext.prototype, 'texImage2D');
+  const error = vi.spyOn(WebGL2RenderingContext.prototype, 'getError');
+  const apply = (revision: number) => gpu.apply(source, { source: map, width: 1, height: 1, revision, resource, placement: {} }, 1).close();
+  try {
+    apply(1);
+    expect(upload).toHaveBeenCalledTimes(2);
+    error.mockReturnValueOnce(WebGL2RenderingContext.INVALID_OPERATION);
+    expect(() => apply(2)).toThrow(/GPU processing failed/);
+    expect(upload).toHaveBeenCalledTimes(4);
+    apply(2);
+    expect(upload).toHaveBeenCalledTimes(6);
+  } finally { gpu.dispose(); upload.mockRestore(); error.mockRestore(); }
+});

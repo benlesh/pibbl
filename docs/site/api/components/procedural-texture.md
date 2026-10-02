@@ -21,4 +21,4 @@ Use `pointerEvents="none"` for decorative content. The optional `render` callbac
 supports images, repeating fills, and masks. All three materials have matching opposite edges for seamless repetition.
 Feature counts round to whole periods where needed. See [Material Lab](#/examples/composition/material-lab).
 
-Options: [ProceduralTextureProps](../types/textures.md#proceduraltextureprops), [TextureKind](../types/textures.md#texturekind), [TextureRenderer](../types/textures.md#texturerenderer).
+Options: [ProceduralTextureProps](#/api/types/textures#proceduraltextureprops), [TextureKind](#/api/types/textures#texturekind), [TextureRenderer](#/api/types/textures#texturerenderer).
