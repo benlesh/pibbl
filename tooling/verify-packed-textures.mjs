@@ -74,6 +74,13 @@ try {
     "texturePalettes",
     "useTexture",
     "waterWaves",
+    "waterSurface",
+    "marble",
+    "paper",
+    "cellular",
+    "reactionDiffusion",
+    "tendrils",
+    "lightning",
   ].sort();
   assert.deepEqual(Object.keys(textures).sort(), names);
   if (process.argv.includes("--self-test-missing-export"))

@@ -15,6 +15,10 @@ Import from `@crc/textures`. Defaults: `seed=42`, `preset="spots"`,
 `resolution={width:256,height:160}`, lagoon palette, running, and a radius-6,
 strength-0.8 brush. `preset` also accepts `stripes`.
 
+The brush plants viable patches rather than a uniform chemical flood. Larger
+brushes plant clusters; established ink is left intact. Very small or weak marks
+may still dissipate as the field evolves.
+
 `paused` stops evolution but permits painting. `brush={false}` disables painting.
 A changed `resetRevision`, seed, preset, or simulation resolution resets the field.
 Palette and display-size changes preserve it. Configurations are compared by value.

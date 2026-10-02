@@ -318,12 +318,7 @@ const LabelText = definePrimitive<
   context.font = label.font;
   context.textAlign = "left";
   context.textBaseline = "alphabetic";
-  context.fillStyle = resolveTexturePaint(style.fill, context, {
-    x: label.textX,
-    y: label.textY,
-    width: 0,
-    height: 0,
-  });
+  context.fillStyle = resolveTexturePaint(style.fill, context, { x: label.x, y: label.y, width: label.width, height: label.height });
   context.fillText(label.text, label.textX, label.textY);
 });
 

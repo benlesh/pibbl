@@ -6,10 +6,12 @@ import {
   Text,
   FocusManagement,
   useSignal,
+  useConst,
+  type CRCPointerEvent,
   useReaction,
   type CRCController,
 } from "@crc/core";
-import { ReactionDiffusion, texturePalettes } from "@crc/textures";
+import { useTexture, reactionDiffusion, texturePalettes } from "@crc/textures";
 
 const palettes = [
   texturePalettes.lagoon,
@@ -72,11 +74,49 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
     paused: false,
     preset: "spots" as "spots" | "stripes",
     palette: 0,
-    reset: 0,
     brush: 6,
     seed: 42,
   });
   const s = state.get();
+  const ink = useTexture(
+    reactionDiffusion({ seed: s.seed, preset: s.preset }),
+    {
+      resolution: { width: 256, height: 144 },
+      palette: palettes[s.palette],
+    },
+  );
+  const stroke = useConst(() => ({
+    id: undefined as number | undefined,
+    u: 0,
+    v: 0,
+  }));
+  const paint = (event: CRCPointerEvent) => {
+    // CRC coordinates are root-logical. This lesson's panel is at (24,116).
+    const u = (event.x - 24) / 832,
+      v = (event.y - 116) / 400;
+    const count = Math.min(
+      256,
+      Math.max(
+        1,
+        Math.ceil(Math.hypot((u - stroke.u) * 256, (v - stroke.v) * 144) / 2),
+      ),
+    );
+    for (let i = 1; i <= count; i++)
+      ink.send({
+        type: "paint",
+        u: stroke.u + ((u - stroke.u) * i) / count,
+        v: stroke.v + ((v - stroke.v) * i) / count,
+        radius: s.brush,
+        strength: 0.85,
+      });
+    stroke.u = u;
+    stroke.v = v;
+  };
+  const end = (event: CRCPointerEvent) => {
+    if (stroke.id !== event.pointerId) return;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    stroke.id = undefined;
+  };
   return (
     <FocusManagement>
       <Group>
@@ -118,18 +158,29 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
           }}
           pointerEvents="none"
         >
-          Draw a line. Watch it grow. Pause to compose, then let it wander.
+          Paint living ink. Pause to compose, then let it evolve.
         </Text>
         <Group style={{ translateX: 24, translateY: 116 }}>
-          <ReactionDiffusion
-            seed={s.seed}
-            preset={s.preset}
-            palette={palettes[s.palette]}
-            paused={s.paused}
-            resetRevision={s.reset}
-            resolution={{ width: 256, height: 144 }}
-            brush={{ radius: s.brush, strength: 0.85 }}
-            style={{ width: 832, height: 400 }}
+          <Rectangle
+            style={{ width: 832, height: 400, fill: ink }}
+            onPointerDown={(event) => {
+              if (
+                event.button !== 0 ||
+                !event.isPrimary ||
+                stroke.id !== undefined
+              )
+                return;
+              stroke.id = event.pointerId;
+              stroke.u = (event.x - 24) / 832;
+              stroke.v = (event.y - 116) / 400;
+              event.currentTarget.setPointerCapture(event.pointerId);
+              paint(event);
+            }}
+            onPointerMove={(event) => {
+              if (stroke.id === event.pointerId) paint(event);
+            }}
+            onPointerUp={end}
+            onPointerCancel={end}
           />
           <Group style={{ translateX: 22, translateY: 320 }}>
             <Rectangle
@@ -201,12 +252,15 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
             x={488}
             label={s.paused ? "Resume" : "Pause"}
             active={s.paused}
-            onClick={() => state.update((v) => ({ ...v, paused: !v.paused }))}
+            onClick={() => {
+              ink.send({ type: "pause", paused: !s.paused });
+              state.update((v) => ({ ...v, paused: !v.paused }));
+            }}
           />
           <Button
             x={600}
             label="Reset"
-            onClick={() => state.update((v) => ({ ...v, reset: v.reset + 1 }))}
+            onClick={() => ink.send({ type: "reset" })}
           />
           <Button
             x={712}

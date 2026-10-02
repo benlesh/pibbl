@@ -6,6 +6,98 @@ locally with the current checkout. The fixture stays in the internal testing cat
 public learning examples and search. Production and built-runtime Studio
 report inspection as unsupported and omit the source inspector.
 
+## Find a focused workflow
+
+```sh
+node tooling/agent-verification/discover.mjs HIT-12
+node tooling/agent-verification/discover.mjs DAT-06
+```
+
+The data-only response links a requirement to scenario routes, prerequisites,
+actions, independent acceptance expectations, source files and exact focused-check
+arguments. It does not execute those commands or certify the requirement. Supply
+your running Studio origin before the route for manual use. Known requirements
+without a curated workflow return `unmapped` with their remaining work; unknown IDs
+reject with a typed code. The initial catalog covers targeting interception and
+weighted aggregation only. Current ledger status remains separate from discovery.
+
+## Trace explicit application handlers
+
+`createEventTrace({ capacity: 128, pathLimit: 32 })` from `events.ts` supplies
+`wrap(label, handler)`, `snapshot()`, `stop()` and `dispose()`. Wrap the particular
+public CRC event handlers you want observed. The helper installs no listeners or
+runtime hooks. Labels are explicit fixture text limited to 64 characters.
+Capacity is 1–256 records and pathLimit is 1–64 target IDs per record.
+
+Records distinguish handler entry, synchronous return and throw, with event and
+invocation IDs, event type/phase, target/currentTarget, root-to-target path and
+original/source event trust. Return values and thrown objects pass through
+unchanged and are not serialized. Nor are text, clipboard, keyboard payloads or
+arbitrary target objects. Event and target IDs use weak identity maps and are
+local to the trace, not interchangeable with inspector IDs.
+
+Coverage is `wrapped-handlers-only`. Dropped history and truncated paths are
+explicit; a retained history is not a complete-dispatch guarantee. Unwrapped
+handlers, propagation-stop reasons and asynchronous completion are unobserved.
+A `return` record for an async handler only means it returned its promise. Stopping
+within a handler can leave its entry without an exit. Stopped/disposed wrappers
+still call the original handler; disposal clears retained evidence. Earlier
+immutable snapshots remain historical.
+
+In the shared targeting scenario, **Trace start** enables both scheduler history
+and a 32-record event trace. Click the Canvas, then inspect `state.eventTrace`.
+Seed and intentionally blocked modes trace delivery to the decoration; repair
+traces delivery to the action. **Trace stop** retains the last event history while
+ordinary selection continues. Native replay verifies the capture/target/bubble
+sequence in those three modes with independent selection and pixel checks.
+
+## Find a sampled interaction point
+
+`inspector.findInteractionPoint(generation, targetId, { x, y, width, height })`
+uses finite positive root-logical search bounds supplied by the caller. Bounds
+are a search region, not inferred paint or hit bounds. It probes the center first,
+then the other eight cell centers of a 3×3 grid. Each probe retains the existing
+64-record, 16-depth, 128-clip-reference and 128-native-call limits; the whole search
+uses at most nine probes and 1,152 native geometry calls. It installs no callbacks
+or resources and retains no candidate history.
+
+`verified-geometry` supplies a frozen point whose topmost committed geometry
+winner was the requested handle. Generation and pending-realm-work metadata remain
+explicit. `no-verified-point` means the nine samples failed; thin or irregular
+regions may contain valid unsampled points. Invalid bounds, unknown handles,
+stale generations, unavailable state, unsupported geometry and truncation remain
+separate outcomes. Searches do not invoke external renderer resolvers.
+
+`hostOcclusion: "not-observed"` and `routing: "geometry-only"` are deliberate:
+check current browser host geometry/occlusion and capture routing, then correlate
+actual delivery before claiming success. The shared scenario's inspect action
+exposes `state.pointSearch` for the observed winner; that winner can be the
+intercepting decoration and is not assumed to be the intended application action.
+
+## Delivered input provenance
+
+The targeting fixture's `state.delivery.input` is null until delivery (and after
+reset). It records original event type/trust and the optional source event
+separately. CRC keyboard activation creates an untrusted click whose source may
+be a trusted keyboard event. A browser-dispatched trusted event does not prove
+physical human input; a script-dispatched untrusted event can still change the
+application's selection.
+
+`userActivation` is a synchronous snapshot of the canvas owning window during
+delivery. Its transient/sticky flags can reflect earlier input, so they do not
+establish this event's trust. An unavailable API is reported as unavailable, not
+false. `permissions: "not-observed"` makes no permission grant or clipboard,
+fullscreen, popup, or other protected-action success claim. Consumers must verify
+the particular capability separately. These fields are copied into fixture state
+and its JSON evidence; reading them later does not refresh activation.
+
+The native replay checks original/source provenance for its seed, repair,
+intentional-block clicks and keyboard activation. It rejects missing or malformed
+evidence and incorrect trust/source attribution. It accepts explicit unavailable
+activation without inventing a false value; it does not require transient
+activation to remain active after asynchronous replay work. Drag/capture event
+provenance and protected-action permission outcomes remain outside these checks.
+
 ## Debugging task and independent oracle
 
 The blue **Select item A** control occupies x=80..208, y=64..160 in a fixed
@@ -748,7 +840,7 @@ operating-system device-density transition.
 
 Registered signal records include an immutable `observers` facet with scope
 `direct-subscriptions`, completeness, and bounded records. Each record gives a
-session-local consumer ID, computed/render/other classification, an already
+session-local consumer ID, computed/render/reaction/other classification, an already
 registered computed signal ID when available, the edge's observed version, and
 render dirtiness when represented by an own data field. Consumer IDs identify subscriptions within the inspection session. The optional
 canvas ownership facet below correlates component consumers; dirtiness is not an
@@ -1185,3 +1277,101 @@ as assertion values, including omission markers, nonfinite number tags and no
 getter/toJSON invocation. Browser-transmitted errors that have already lost their
 custom properties cannot be reconstructed by this serializer. Source/generation
 correlation and end-to-end transport of those fields remain separate work.
+
+## Failure classification without custom conversion
+
+Both replay entry points use `recordReplayFailure` to encode a thrown value before
+classifying it. Classification uses explicit identity-error codes and the execution stage; it does not call
+custom toString or Symbol.toPrimitive. Known browser transport failure takes
+precedence over blocked setup/navigation. Primary failure action IDs remain
+separate from the last completed action. Cleanup and checkpoint summaries also
+use descriptor-only error encoding rather than arbitrary string conversion.
+Fixture identity failures carry `CRC_FIXTURE_IDENTITY_UNAVAILABLE` or
+`CRC_FIXTURE_IDENTITY_MISMATCH`. Similar wording in an ordinary application error
+does not classify it as blocked. These codes describe local harness failures,
+not authenticated claims from arbitrary applications.
+
+## Passive reaction classification
+
+Direct subscribers identify CRC-owned reaction consumers using an own data
+marker. Their session consumer identity persists when dynamic dependencies move
+between registered signals. Inspection never runs setup or cleanup, and reaction
+reads are not reported as render dependencies. `dirty` remains null: the render
+dirtiness field is not a reaction scheduling claim. Reaction owners resolve through the existing bounded component traversal of the
+bound Canvas, including managed Layers. Other roots and excluded components keep
+null ownership; null does not establish that no owner exists. Owner debugName is
+the bounded runtime path, not the reaction callback name. Component IDs join the
+existing explicitly acquired source/label records. Pending generation and
+setup/cleanup history remain unavailable in this facet.
+
+## JSON-safe exceptional values
+
+Assertion details encode negative zero as `{ type: 'negative-zero' }`, nonfinite
+numbers as `{ type: 'nonfinite', value: 'NaN' | 'Infinity' | '-Infinity' }`,
+undefined as `{ type: 'undefined' }` and absent array entries as
+`{ type: 'absent' }`. Null and ordinary finite numbers retain their values.
+Array holes are observed through own descriptors, without inherited getters.
+Objects are structurally wrapped, so application objects resembling these tags
+are not confused with scalar tags. Existing cycle/unsupported omission markers
+remain explicit; this is bounded diagnostic encoding, not object reconstruction.
+
+Signal previews use `kind: 'special-number'` with the string `-0`, `NaN`,
+`Infinity` or `-Infinity`; ordinary finite values retain `kind: 'scalar'`.
+Consumers must branch on the tag rather than interpreting all previews as numbers.
+This source-only prototype change does not establish a general schema migration
+policy or guarantee special-value preservation in unrelated evidence producers.
+
+## Focus policy and directional scope
+
+A recognized committed CRC focus manager reports `policy.kind` as
+`crc-focus-management`, Tab behavior as `source-order-exit`, and keyboard
+activation as `enter-space`. These describe the available defaults; handlers can
+prevent them, so this is not a prediction that an individual key will act.
+Unconfigured or unavailable focus reports null policy with its distinct status.
+
+Each bounded committed candidate has a session-local `directionalBoundaryId`, or
+null when no directional boundary applies. Equal IDs identify the same boundary;
+IDs are not source order, application IDs, or portable across inspection sessions.
+The weak identity map does not retain boundaries after application teardown.
+This reports membership, not candidate ranking, enrollment reasons, or the full
+boundary hierarchy. Hidden or empty boundaries are not discovered from candidates.
+
+## Requested versus observed page environment
+
+Both replay entry points record `run.environment.observedPage` after navigation,
+before scenario actions. It contains page-reported CSS viewport, device pixel
+ratio, language, timezone, dark/reduced-motion preferences and visual viewport
+scale. Requested Playwright settings remain separately in `browserContext`.
+Browser version remains the report's browser field; Node platform is not a browser
+OS attestation. Browser zoom is explicitly unavailable: visual viewport scale
+cannot establish desktop browser zoom.
+
+This is a single initial observation, not continuous monitoring. Page scripts may
+alter these APIs, so its scope is `page-reported-at-capture`. A closed/unreadable
+page produces unavailable evidence with a bounded failure, never invented values.
+It is optional diagnostic evidence, not an additional application readiness gate.
+The existing comparison requires equal recorded environment objects; no volatile
+capture timestamp is inserted into the environment comparison keys.
+
+## Ordinary Canvas partial-frame failure
+
+A failed ordinary Canvas render does not restore the preceding bitmap. A controlled
+public-API fixture first paints a blue canvas, then clears and paints a red prefix
+before a later component throws. Native pixel reads prove the red prefix remains
+and the rest is transparent. The targeting snapshot reports pending work with no
+current surface geometry or targeting records; scheduler history records the
+Render error. A saved earlier ready snapshot remains historical evidence, not a
+claim that its pixels are still displayed. Explicit recovery repaints blue.
+
+Use error history and raster evidence together. Pending alone cannot distinguish
+failed work from ordinary queued work, and realm error counts do not identify a
+particular root. The fixture does not generalize to filter/external-layer commit
+boundaries or prove which pixels arbitrary application drawing changed.
+
+Cross-run comparison validates any recorded `observedPage` before comparing it.
+Equal unavailable records or malformed values are incomparable; matching error
+messages cannot establish matching browser conditions. Reports without this facet
+on both sides retain the explicit `declared-only` environment scope. With valid
+observations, scope is `declared-and-initial-page-observation`; differences in any
+recorded environment field still reject comparison. Neither scope attests browser
+zoom or environment stability throughout the run.

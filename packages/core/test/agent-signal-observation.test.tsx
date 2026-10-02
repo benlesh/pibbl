@@ -2,8 +2,9 @@ import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import type { CRCAdvanceParticipant } from '../src/lib/scheduler/types';
 import { queueBeginCommand, registerAdvanceParticipant, queueFrameCompletion } from '../src/lib/scheduler/realm-scheduler';
 import { createSchedulerHistory, observeScheduler } from '../../../tooling/agent-verification/scheduler';
-import { computed, createElement, crc, Absolute, Group, Layer, Rectangle, signal, useConst, useLayoutBox, type BoxStyle } from '@crc/core';
+import { computed, createElement, crc, Absolute, Group, Layer, Rectangle, signal, useReaction, useConst, useLayoutBox, type BoxStyle } from '@crc/core';
 import { expect, it } from 'vitest';
+import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
 import { createSignalInspector } from '../../../tooling/agent-verification/signals';
 import { ManualSchedulerDriver, installSchedulerDriverForTest, installSchedulerTraceCollectorForTest } from '../src/lib/scheduler/testing';
 import { getSignalNode, signalGraphSnapshot } from '../src/lib/signals/graph';
@@ -1116,4 +1117,114 @@ it.each([false, true])('restores sibling allocations after a failed child (neste
       expect(records.find(record => record.layout.allocation?.width === 100)?.layout.percentageBasis).toEqual({ x: 0, y: 0, width: nestedLayer ? 200 : 400, height: nestedLayer ? 100 : 200 });
     } finally { inspector.dispose(); }
   } finally { controller.dispose(); canvas.remove(); restore(); }
+});
+
+
+it.each(['root', 'layer'] as const)('observes %s reaction subscriptions without running setup or confusing them with render reads', surfaceKind => {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  const canvas = document.createElement('canvas'); document.body.append(canvas);
+  const branch = signal(true); const left = signal(1); const right = signal(2);
+  let setups = 0; let cleanups = 0; let renders = 0;
+  function Scene() {
+    renders++;
+    useReaction(() => {
+      setups++;
+      (branch.get() ? left : right).get();
+      return () => { cleanups++; };
+    });
+  }
+  const controller = crc(canvas, surfaceKind === 'root' ? <Scene /> : <Layer style={{ width: 100, height: 100 }}><Scene /></Layer>);
+  const inspector = createSignalInspector(canvas);
+  inspector.register(branch); inspector.register(left); inspector.register(right);
+  const subscribers = (index: number) => {
+    const record = inspector.snapshot().records[index];
+    if (record?.status !== 'available') throw new Error('Expected signal');
+    return record.observers.records;
+  };
+  try {
+    driver.flush(1);
+    const initial = subscribers(1);
+    expect(initial).toHaveLength(1);
+    expect(initial[0]).toMatchObject({ kind: 'reaction', dirty: null, registeredSignalId: null });
+    const scene = inspector.snapshot().ownership.components.records.find(record => record.typeId === inspector.identifyType(Scene));
+    expect(scene).toBeDefined();
+    expect(initial[0].owner).toMatchObject({ componentId: scene!.componentId, surfaceKind });
+    const unrelatedCanvas = document.createElement('canvas'); document.body.append(unrelatedCanvas);
+    const unrelatedController = crc(unrelatedCanvas, <Group>{null}</Group>);
+    const unrelated = createSignalInspector(unrelatedCanvas); unrelated.register(left);
+    try {
+      const record = unrelated.snapshot().records[0];
+      if (record?.status !== 'available') throw new Error('Expected shared signal');
+      expect(record.observers.records[0]).toMatchObject({ kind: 'reaction', owner: null });
+    } finally { unrelated.dispose(); unrelatedController.dispose(); unrelatedCanvas.remove(); }
+    const before = signalGraphSnapshot();
+    for (let index = 0; index < 10; index++) inspector.snapshot();
+    expect(signalGraphSnapshot()).toEqual(before);
+    expect([setups, cleanups, renders]).toEqual([1, 0, 1]);
+    branch.set(false);
+    expect(subscribers(1)[0].consumerId).toBe(initial[0].consumerId);
+    expect(subscribers(2)).toHaveLength(0);
+    expect([setups, cleanups]).toEqual([1, 0]);
+    driver.flush(2);
+    expect(subscribers(1)).toHaveLength(0);
+    expect(subscribers(2)[0]).toMatchObject({ kind: 'reaction', consumerId: initial[0].consumerId });
+    expect([setups, cleanups, renders]).toEqual([2, 1, 1]);
+    controller.dispose();
+    expect(subscribers(2)).toHaveLength(0);
+    expect([setups, cleanups]).toEqual([2, 2]);
+    expect(initial[0].kind).toBe('reaction');
+  } finally { inspector.dispose(); controller.dispose(); canvas.remove(); restore(); }
+});
+
+it('preserves exceptional numeric previews through saved JSON without validating signals', () => {
+  const inspector = createSignalInspector();
+  [-0, 0, NaN, Infinity, -Infinity].forEach(value => inspector.register(signal(value)));
+  try {
+    const saved = JSON.parse(JSON.stringify(inspector.snapshot()));
+    expect(saved.records.map((record: { preview: unknown }) => record.preview)).toEqual([
+      { kind: 'special-number', value: '-0' }, { kind: 'scalar', value: 0 },
+      { kind: 'special-number', value: 'NaN' },
+      { kind: 'special-number', value: 'Infinity' },
+      { kind: 'special-number', value: '-Infinity' },
+    ]);
+  } finally { inspector.dispose(); }
+});
+
+
+it('keeps partial Canvas pixels visible after render failure without calling the frame committed', () => {
+  const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100;
+  canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
+  const fail = signal(false); const failure = new Error('after prefix paint');
+  function Broken() { throw failure; }
+  function Scene() {
+    return fail.get() ? <><Rectangle style={{ width: 40, height: 100, fill: '#ff0000' }} /><Broken /></> :
+      <Rectangle style={{ width: 100, height: 100, fill: '#0000ff' }} />;
+  }
+  const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
+  const history = createSchedulerHistory();
+  const controller = crc(canvas, <Scene />, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+  const inspector = createTargetingInspector(canvas);
+  const pixel = (x: number) => Array.from(canvas.getContext('2d')!.getImageData(x, 50, 1, 1).data);
+  try {
+    driver.flush(1);
+    const successful = inspector.snapshot();
+    expect(successful.status).toBe('ready');
+    expect(pixel(20)).toEqual([0, 0, 255, 255]);
+    expect(pixel(80)).toEqual([0, 0, 255, 255]);
+    fail.set(true);
+    expect(() => driver.flush(2)).toThrow(failure);
+    expect(pixel(20)).toEqual([255, 0, 0, 255]);
+    expect(pixel(80)).toEqual([0, 0, 0, 0]);
+    const failed = inspector.snapshot();
+    expect(failed.status).toBe('pending');
+    expect(failed.records).toEqual([]);
+    expect(failed.surface.status).toBe('unavailable');
+    expect(history.snapshot().frames.at(-1)).toMatchObject({ outcome: 'errors-collected', phaseErrors: { render: 1 } });
+    expect(successful.status).toBe('ready');
+    fail.set(false); crc(canvas, <Scene />); driver.flush(3);
+    expect(inspector.snapshot().status).toBe('ready');
+    expect(pixel(20)).toEqual([0, 0, 255, 255]);
+    expect(pixel(80)).toEqual([0, 0, 255, 255]);
+  } finally { inspector.dispose(); history.dispose(); controller.dispose(); canvas.remove(); restore(); }
 });

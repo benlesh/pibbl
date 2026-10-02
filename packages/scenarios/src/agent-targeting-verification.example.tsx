@@ -2,6 +2,7 @@ import {
   computed,
   FocusManagement,
   useEventTarget,
+  useEventListener,
   Group,
   Layer,
   Rectangle,
@@ -17,6 +18,7 @@ export type AgentTargetingMode = 'seed' | 'repair' | 'intentional-block' | 'capt
 export type AgentTargetingDelivery = 'action' | 'decoration' | null;
 
 export interface AgentTargetingSceneProps {
+  readonly wrapClick: (label: string, handler: (event: CRCLogicalMouseEvent) => void) => (event: CRCLogicalMouseEvent) => void;
   readonly mode: Signal<AgentTargetingMode>;
   readonly onFocusEvidence: () => void;
   readonly onCapturedMove: (event: CRCPointerEvent) => void;
@@ -31,10 +33,10 @@ export interface AgentTargetingSceneProps {
   readonly onRender: (state: { mode: AgentTargetingMode; selectedItem: 'item-a' | null; selections: number; deliveredTo: AgentTargetingDelivery }) => void;
 }
 
-function KeyboardAction({ onDelivery, onFocusEvidence }: Pick<AgentTargetingSceneProps, 'onDelivery' | 'onFocusEvidence'>) {
+function KeyboardAction({ onDelivery, onFocusEvidence, wrapClick }: Pick<AgentTargetingSceneProps, 'onDelivery' | 'onFocusEvidence' | 'wrapClick'>) {
   const path = new Path2D(); path.rect(40, 32, 128, 96);
   const focus = useEventTarget({
-    onClick: event => onDelivery('action', event),
+    onClick: wrapClick('action', event => onDelivery('action', event)),
     onFocus: onFocusEvidence, onBlur: onFocusEvidence, onKeyUp: onFocusEvidence,
   }, { path, fill: true, keyboardFocusable: true });
   return <>
@@ -50,6 +52,7 @@ function KeyboardAction({ onDelivery, onFocusEvidence }: Pick<AgentTargetingScen
  */
 export function AgentTargetingVerificationScene({
   mode,
+  wrapClick,
   selectionLabel,
   selectedItem,
   selections,
@@ -59,6 +62,7 @@ export function AgentTargetingVerificationScene({
   onFocusEvidence,
   onRender,
 }: AgentTargetingSceneProps) {
+  useEventListener({ onClickCapture: wrapClick('scene-capture', () => undefined), onClick: wrapClick('scene-bubble', () => undefined) });
   const rendered = { mode: mode.get(), selectedItem: selectedItem.get(), selections: selections.get(), deliveredTo: deliveredTo.get() };
   onRender(rendered);
   const repaired = rendered.mode === 'repair' || rendered.mode === 'capture-drag' || rendered.mode === 'keyboard-focus';
@@ -71,7 +75,7 @@ export function AgentTargetingVerificationScene({
       />
       <Group style={{ translateX: 40, translateY: 32 }}>
       <Layer style={{ width: 240, height: 160 }}>
-      {rendered.mode === 'keyboard-focus' ? <KeyboardAction onDelivery={onDelivery} onFocusEvidence={onFocusEvidence} /> : <Rectangle
+      {rendered.mode === 'keyboard-focus' ? <KeyboardAction onDelivery={onDelivery} onFocusEvidence={onFocusEvidence} wrapClick={wrapClick} /> : <Rectangle
         style={{
           left: 40,
           top: 32,
@@ -86,7 +90,7 @@ export function AgentTargetingVerificationScene({
         onFocus={onFocusEvidence}
         onBlur={onFocusEvidence}
         onKeyUp={onFocusEvidence}
-        onClick={(event) => onDelivery('action', event)}
+        onClick={wrapClick('action', event => onDelivery('action', event))}
       />}
       <Rectangle
         pointerEvents={repaired ? 'none' : 'auto'}
@@ -97,7 +101,7 @@ export function AgentTargetingVerificationScene({
           height: 96,
           fill: 'rgba(0, 0, 0, 0)',
         }}
-        onClick={(event) => onDelivery('decoration', event)}
+        onClick={wrapClick('decoration', event => onDelivery('decoration', event))}
       />
       </Layer>
       </Group>

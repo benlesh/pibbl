@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 77 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 78 unique, ordered, source-backed routes including responsive layout, manipulation, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(77);
+    expect(learningExampleCatalog).toHaveLength(78);
     expect(
       learningExampleCatalog
         .filter(
@@ -1302,6 +1302,7 @@ describe("learning example catalog", () => {
         "particle-effects",
         "physics-2d",
         "physics-panels",
+        "plasma-globe",
         "fire-and-flow",
         "signal-inputs",
         "signals-and-animation",
@@ -1411,6 +1412,7 @@ describe("learning example catalog", () => {
       "living-ink",
       "material-lab",
       "growing-reveal",
+      "plasma-globe",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1767,6 +1769,8 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "defineTexture",
+        "useTexture",
         "ReactionDiffusion",
         "ProceduralTexture",
         "loadOutlineFont",

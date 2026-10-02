@@ -11,19 +11,20 @@ export function describeReplayError(error) {
     remainingString -= length;
     return value.slice(0, length);
   };
-  const own = (value, key) => {
+  const absent = Symbol('absent-array-entry');
+  const own = (value, key, missing = undefined) => {
     if (!value || (typeof value !== 'object' && typeof value !== 'function')) return undefined;
     try {
       const descriptor = Object.getOwnPropertyDescriptor(value, key);
       if (descriptor && !('value' in descriptor)) return omitted('accessor');
-      return descriptor?.value;
+      return descriptor ? descriptor.value : missing;
     } catch { return omitted('unavailable-descriptor'); }
   };
   function encode(value, depth = 0) {
     if (++nodes > limits.nodes) return omitted('node-limit');
     if (value === null || typeof value === 'boolean') return value;
     if (typeof value === 'string') return string(value);
-    if (typeof value === 'number') return Number.isFinite(value) ? value : { type: 'nonfinite', value: String(value) };
+    if (typeof value === 'number') return Object.is(value, -0) ? { type: 'negative-zero' } : Number.isFinite(value) ? value : { type: 'nonfinite', value: String(value) };
     if (value === undefined) return { type: 'undefined' };
     if (typeof value !== 'object') return omitted(`unsupported-${typeof value}`);
     if (seen.has(value)) return omitted('cycle');
@@ -35,7 +36,8 @@ export function describeReplayError(error) {
         const items = [];
         for (let index = 0; index < Math.min(length, limits.entries); index++) {
           if (nodes >= limits.nodes) { omissions.add('node-limit'); break; }
-          items.push(encode(own(value, String(index)), depth + 1));
+          const entry = own(value, String(index), absent);
+          items.push(entry === absent ? { type: 'absent' } : encode(entry, depth + 1));
         }
         if (length > items.length) omissions.add('entry-limit');
         return { type: 'array', length, items };
@@ -77,5 +79,22 @@ export function describeReplayError(error) {
     assertion,
     layoutDiagnostic,
     detail: { limits, omissions: [...omissions] },
+  };
+}
+
+/** Records the original operation failure without coercing the thrown value. */
+export function recordReplayFailure(report, error, stage) {
+  const evidence = describeReplayError(error);
+  const transport = report.browserFailure?.category;
+  const identityFailure = evidence.code === 'CRC_FIXTURE_IDENTITY_UNAVAILABLE' || evidence.code === 'CRC_FIXTURE_IDENTITY_MISMATCH';
+  report.status = transport ? 'fail' :
+    stage === 'setup' || stage === 'navigation' || identityFailure ? 'blocked' : 'fail';
+  const last = report.steps?.at(-1);
+  report.failure = {
+    category: transport ?? 'operation-error',
+    ...(stage === undefined ? {} : { stage }),
+    actionId: last?.status === 'incomplete' ? last.actionId : null,
+    lastActionId: last?.actionId ?? null,
+    ...evidence,
   };
 }

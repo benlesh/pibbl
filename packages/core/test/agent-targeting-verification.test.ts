@@ -37,13 +37,20 @@ it('diagnoses interception and verifies the repair through the same public appli
   expect(capturedSources.signalInspection.ownership.components.records.some((record: { source: { status: string } }) => record.source.status === 'available')).toBe(true);
   expect(capturedSources.renderCount).toBe(seed.renderCount);
   expect(pixel()).toEqual([37, 99, 235, 255]);
+  expect(seed.delivery.input).toBeNull();
   expect(seed.inspection.status).toBe('ready');
   expect(seed.inspection.records.some((record: { kind: string }) => record.kind === 'nested-surface')).toBe(true);
+  expect(seed.pointSearch).toMatchObject({ status: 'verified-geometry', targetId: seed.probe.targetId, point: { x: 144, y: 112 }, hostOcclusion: 'not-observed' });
   expect(seed.probe.status).toBe('target');
   expect(seed.probe.candidates.filter((candidate: { outcome: string }) => candidate.outcome === 'hit')).toHaveLength(2);
   await clickMouse(canvas, { x: 144, y: 112 });
   await controller.settled();
   expect(controller.getState()).toMatchObject({ selectedItem: null, selections: 0, deliveredTo: 'decoration' });
+  expect(controller.getState().delivery.input).toMatchObject({
+    original: { type: 'click', isTrusted: true }, source: null,
+    userActivation: { status: 'available', scope: 'window-at-delivery', isActive: true, hasBeenActive: true },
+    permissions: 'not-observed',
+  });
   expect(controller.getState().delivery.targetId).toBe(seed.probe.targetId);
   expect(controller.getState().delivery.generation).toEqual(seed.inspection.generation);
 
@@ -213,6 +220,11 @@ it('reports logical focus and native keyboard activation in the shared lab', asy
   expect(state.inspection.focus).toMatchObject({ status: 'ready', nativeFocus: 'canvas' });
   expect(state.inspection.focus.targetId).toBe(state.delivery.targetId);
   expect(state.selections).toBe(2);
+  expect(state.delivery.input).toMatchObject({
+    original: { type: 'click', isTrusted: false },
+    source: { type: 'keydown', isTrusted: true },
+    permissions: 'not-observed',
+  });
   const outside = document.createElement('button'); outside.textContent = 'Outside'; canvas.after(outside);
   await clickMouse(outside, { x: 5, y: 5 }); await controller.settled();
   expect(focusPixel()).toEqual([248, 250, 252, 255]);
@@ -254,4 +266,50 @@ it('publishes bounded before-after component evidence through the shared inspect
   await controller.perform('inspection-on');
   await controller.perform('inspect');
   expect(controller.getState().componentChanges).toBeNull();
+});
+
+
+it('distinguishes script-dispatched input from browser input even when both select the item', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 240;
+  canvas.style.cssText = 'width:480px;height:240px'; document.body.append(canvas);
+  controller = await (await loadScenario(getScenarioBySlug('agent-targeting-verification')!)).mount({ canvas });
+  await controller.perform('repair');
+  await clickMouse(canvas, { x: 144, y: 112 }); await controller.settled();
+  const nativeDelivery = controller.getState().delivery;
+  expect(nativeDelivery.input.original.isTrusted).toBe(true);
+  const bounds = canvas.getBoundingClientRect();
+  for (const type of ['mousedown', 'mouseup', 'click']) {
+    canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true,
+      clientX: bounds.left + 144, clientY: bounds.top + 112, button: 0 }));
+  }
+  await controller.settled();
+  expect(controller.getState()).toMatchObject({ selectedItem: 'item-a', selections: 2,
+    delivery: { input: { original: { type: 'click', isTrusted: false }, source: null,
+      userActivation: { status: 'available', hasBeenActive: true }, permissions: 'not-observed' } } });
+  // Sticky activation from an earlier event is not evidence that this event was trusted.
+  expect(nativeDelivery.input.original.isTrusted).toBe(true);
+  await controller.perform('reset');
+  expect(controller.getState().delivery.input).toBeNull();
+});
+
+it('exposes opt-in bounded click propagation evidence through the shared scenario', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 240;
+  canvas.style.cssText = 'width:480px;height:240px'; document.body.append(canvas);
+  controller = await (await loadScenario(getScenarioBySlug('agent-targeting-verification')!)).mount({ canvas });
+  expect(controller.getState().eventTrace).toBeNull();
+  await controller.perform('repair'); await controller.perform('trace-start');
+  await clickMouse(canvas, { x: 144, y: 112 }); await controller.settled();
+  const recorded = controller.getState().eventTrace;
+  expect(recorded).toMatchObject({ scope: 'wrapped-handlers-only', capacity: 32, dropped: 0 });
+  expect(recorded.records.filter((record: any) => record.stage === 'enter').map((record: any) => [record.label, record.phase])).toEqual([
+    ['scene-capture', 1], ['action', 2], ['scene-bubble', 3],
+  ]);
+  expect(new Set(recorded.records.map((record: any) => record.eventId)).size).toBe(1);
+  expect(recorded.records).toHaveLength(6);
+  expect(controller.getState().selections).toBe(1);
+  await controller.perform('trace-stop');
+  const stopped = controller.getState().eventTrace;
+  await clickMouse(canvas, { x: 144, y: 112 }); await controller.settled();
+  expect(controller.getState().selections).toBe(2);
+  expect(controller.getState().eventTrace).toEqual(stopped);
 });

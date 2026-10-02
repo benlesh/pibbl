@@ -119,6 +119,16 @@ function browseGroupFor(
 
 const drafts = [
   {
+    slug: "plasma-globe", title: "Plasma Globe", shortTitle: "Plasma Globe", section: "composition", order: 208,
+    summary: "Mix reusable tendrils and lightning fills into a glowing, interactive plasma globe.",
+    api: ["useTexture", "defineTexture", "Circle", "Rectangle"],
+    objectives: ["Compose independently reusable electric textures as ordinary fills.", "Route pointer input and manual commands into shared texture resources."],
+    prompts: { gesture: "Hover or touch the globe, try a manual contact, and tune the crackling glow.", code: "Reuse tendrils and lightning independently; send typed commands to either resource." },
+    apiNotes: ["Two mount-owned resources feed the globe and every preview without additional simulation copies.", "Seeded replay also requires the same frame deltas and input history; long gaps are capped."],
+    canvas: { width: 880, height: 720 }, related: ["living-ink", "material-lab"],
+    load: () => import("./learning/composition/plasma-globe.example"),
+  },
+  {
     slug: "material-lab", title: "Material Lab", shortTitle: "Material Lab", section: "composition", order: 206,
     summary: "Explore seeded marble, paper, and cellular surfaces as backgrounds and repeating fills.", api: ["ProceduralTexture", "Group", "useSignal"],
     objectives: ["Reuse procedural texture output in Canvas composition.", "Keep texture generation independent of display size."],

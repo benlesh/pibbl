@@ -42,7 +42,10 @@ rectangular display into simulation coordinates. Capture one primary pointer,
 interpolate brush stamps, and end on release/cancel. Ignore outside samples rather
 than clamping them onto an edge. Snapshot brush settings per stamp and apply painting
 before numerical steps. Bound pathological work to 4096 stamps/event and 8192 queued
-stamps, allowing overload to drop excess input.
+stamps, allowing overload to drop excess input. Subsequent hands-on feedback
+reported that broad brush doses erased spots. Painting now plants separated
+nuclei, leaves occupied neighborhoods intact, and uses clusters for larger
+brushes; small or weak marks may still dissipate. Seeded initialization is unchanged.
 
 Seed, preset, reset revision, and simulation resolution reset the field, strokes,
 capture, and elapsed time. Value-equal options preserve state. Palette changes

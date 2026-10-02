@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
-import { createReplayManifest } from './run-manifest.mjs';
+import { capturePageEnvironment, createReplayManifest } from './run-manifest.mjs';
 
 test('records an executable rerun recipe without reusing evidence or copying ambient secrets', () => {
   const manifest = createReplayManifest({ runId: 'fixture-run', repository: '/tmp/crc fixture', kind: 'viz', url: 'http://127.0.0.1:5195/#/testing/viz-hover-lab', density: 2 });
@@ -25,4 +25,34 @@ test('targeting recipe keeps its fixed density and rejects invalid configuration
   assert.throws(() => createReplayManifest({ ...args, kind: 'unknown' }), /kind/);
   assert.throws(() => createReplayManifest({ ...args, density: 2 }), /density/);
   assert.throws(() => createReplayManifest({ ...args, kind: 'viz', density: 3 }), /density/);
+});
+
+
+test('records observed page environment separately from requested options', { timeout: 15000 }, async () => {
+  const { chromium } = await import('playwright');
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ viewport: { width: 640, height: 480 }, deviceScaleFactor: 2,
+      locale: 'fr-FR', timezoneId: 'America/Chicago', colorScheme: 'dark', reducedMotion: 'reduce' });
+    const first = await capturePageEnvironment(page);
+    assert.equal(first.status, 'observed');
+    assert.deepEqual(first.viewportCss, { width: 640, height: 480 });
+    assert.equal(first.devicePixelRatio, 2);
+    assert.equal(first.language, 'fr-FR');
+    assert.equal(first.timezone, 'America/Chicago');
+    assert.deepEqual(first.preferences, { dark: true, reducedMotion: true });
+    assert.equal(first.browserZoom, 'unavailable');
+    assert.deepEqual(await capturePageEnvironment(page), first);
+    await page.setViewportSize({ width: 800, height: 600 });
+    await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
+    const changed = await capturePageEnvironment(page);
+    assert.deepEqual(changed.viewportCss, { width: 800, height: 600 });
+    assert.deepEqual(changed.preferences, { dark: false, reducedMotion: false });
+    assert.deepEqual(first.viewportCss, { width: 640, height: 480 });
+    await page.close();
+    const unavailable = await capturePageEnvironment(page);
+    assert.equal(unavailable.status, 'unavailable');
+    assert.equal(typeof unavailable.failure.message, 'string');
+    assert.equal(unavailable.viewportCss, undefined);
+  } finally { await browser.close(); }
 });

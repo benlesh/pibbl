@@ -110,6 +110,17 @@ Gray--Scott field, bounded fixed-step timing, fresh-baseline pause/reset
 behavior, and CRC-routed primary-pointer brush queue. It advances only through
 the supplied frame invalidator, never by a second scheduler loop.
 
+CRC resolves one topmost target and supplies layer-local pointer coordinates.
+The default brush mapping scales the displayed rectangle into the simulation.
+A single primary pointer is captured through CRC; release/cancel ends the stroke.
+Stamps interpolate movement and clip to the field, without clamping out-of-bounds
+points to its edge. Brush settings are snapshotted into each queued stamp. Work is
+bounded to 4096 stamps per event and 8192 queued stamps; pathological overload can
+lose excess stamps. Queued painting applies before numerical steps. Painting plants separated nuclei
+within the brush area and skips occupied neighborhoods, avoiding the broad
+uniform doses that extinguish spots. Large brushes plant clusters; small or weak
+marks are not guaranteed to survive. Initialization retains its seeded patches.
+
 Its preset, seed, reset revision, and simulation-resolution changes reset the
 reaction field and clear queued strokes, capture, and elapsed time. Equal
 options and display-only resizing preserve it; palette changes recolor without

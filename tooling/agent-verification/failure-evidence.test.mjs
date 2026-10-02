@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { describeReplayError } from './failure-evidence.mjs';
+import { describeReplayError, recordReplayFailure } from './failure-evidence.mjs';
 
 test('retains structured expected/actual values from native assertion errors', () => {
   let failure;
@@ -64,4 +64,58 @@ test('preserves layout diagnostic fields without invoking supplied-value accesso
   assert.equal(reads, 0);
   assert.ok(evidence.detail.omissions.includes('accessor'));
   assert.equal(describeReplayError(new Error('ordinary')).layoutDiagnostic, null);
+});
+
+test('records a thrown value without custom conversion and preserves action identity', () => {
+  let conversions = 0;
+  const error = { message: 'operation failed', toString() { conversions++; throw new Error('must not run'); } };
+  const report = { status: 'pass', steps: [{ actionId: 'selection', status: 'incomplete' }] };
+  recordReplayFailure(report, error, 'selection');
+  assert.equal(conversions, 0);
+  assert.equal(report.status, 'fail');
+  assert.equal(report.failure.message, 'operation failed');
+  assert.equal(report.failure.actionId, 'selection');
+  assert.equal(report.failure.stage, 'selection');
+});
+test('transport failure takes precedence over blocked setup and completed actions', () => {
+  const report = { status: 'pass', browserFailure: { category: 'browser-disconnected' }, steps: [{ actionId: 'done', status: 'pass' }] };
+  recordReplayFailure(report, new Error('fixture identity mismatch'), 'setup');
+  assert.equal(report.status, 'fail');
+  assert.equal(report.failure.category, 'browser-disconnected');
+  assert.equal(report.failure.actionId, null);
+  assert.equal(report.failure.lastActionId, 'done');
+});
+test('setup remains blocked when no transport failure was observed', () => {
+  const report = { status: 'pass', steps: [] };
+  recordReplayFailure(report, 'unavailable', 'setup');
+  assert.equal(report.status, 'blocked');
+  assert.equal(report.failure.lastActionId, null);
+});
+
+test('classifies identity failures by code rather than similar message text', () => {
+  const lookalike = { status: 'pass', steps: [] };
+  recordReplayFailure(lookalike, new Error('application failed while displaying fixture identity'));
+  assert.equal(lookalike.status, 'fail');
+  for (const code of ['CRC_FIXTURE_IDENTITY_UNAVAILABLE', 'CRC_FIXTURE_IDENTITY_MISMATCH']) {
+    const report = { status: 'pass', steps: [] };
+    recordReplayFailure(report, Object.assign(new Error('localized diagnostic text'), { code }));
+    assert.equal(report.status, 'blocked');
+    assert.equal(report.failure.code, code);
+  }
+});
+
+test('preserves special numbers and sparse array absence through JSON serialization', () => {
+  const actual = [-0, 0, NaN, Infinity, -Infinity, undefined, null, 'removed', false];
+  delete actual[7];
+  const error = Object.assign(new Error('numeric mismatch'), { code: 'ERR_ASSERTION', operator: 'deepStrictEqual', expected: [0], actual });
+  const saved = JSON.parse(JSON.stringify(describeReplayError(error)));
+  assert.deepEqual(saved.assertion.actual.items, [
+    { type: 'negative-zero' }, 0,
+    { type: 'nonfinite', value: 'NaN' },
+    { type: 'nonfinite', value: 'Infinity' },
+    { type: 'nonfinite', value: '-Infinity' },
+    { type: 'undefined' }, null, { type: 'absent' }, false,
+  ]);
+  assert.deepEqual(saved.assertion.expected.items, [0]);
+  assert.deepEqual(saved.detail.omissions, []);
 });
