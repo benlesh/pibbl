@@ -67,12 +67,14 @@ try {
   const names = [
     "ProceduralTexture",
     "ReactionDiffusion",
-    "texturePalettes",
-    "useTexture",
+    "cellular",
     "marble",
     "paper",
-    "cellular",
     "reactionDiffusion",
+    "texturePalettes",
+    "useTexture",
+    "waterWaves",
+    "waterSurface",
     "tendrils",
     "lightning",
   ].sort();

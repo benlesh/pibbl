@@ -1,3 +1,4 @@
+import { opacity } from "@crc/core/filters";
 /** @jsxImportSource @crc/core */
 import {
   Circle,
@@ -585,7 +586,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
               rotationDegrees: 17,
               scaleX: scaleX.get(),
               scaleY: 0.8,
-              filter: { type: "opacity", amount: 1 },
+              filter: opacity({ amount: 1 }),
             }}
           >
             <Circle

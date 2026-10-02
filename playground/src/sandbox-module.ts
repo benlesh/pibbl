@@ -2,6 +2,7 @@ import { parse } from "@babel/parser";
 
 const SUPPORTED_MODULES = new Set([
   "@crc/core",
+  "@crc/core/filters",
   "@crc/text",
   "@crc/viz",
   "@crc/textures",

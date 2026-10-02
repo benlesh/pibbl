@@ -66,6 +66,7 @@ const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = ["@crc", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
   "@crc/text",
+  "@crc/core/filters",
   VIZ_MODULE,
   "@crc/textures",
   CORE_MODULE,
@@ -1542,13 +1543,16 @@ export function validateLearningSourceText(
         label === 'Learning example "physics-2d"'));
   const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE);
   const isTextLesson = inspection.packageImportModules.includes("@crc/text");
+  // Filter factories compose with every supported example package set.
+  // The approved-module and named-import checks below still apply to them.
+  const basePackageCount = inspection.packageImportModules.filter(module => module !== "@crc/core/filters").length;
   const hasExactPackageImports = isFlowLesson
     ? inspection.hasNamedValueCoreImport && inspection.hasNamedValueParticlesImport &&
       inspection.hasPhysics2DValueImport && !inspection.hasPhysics3DValueImport &&
-      !inspection.hasNamedValueWebGLImport && inspection.packageImportModules.length === 3
+      !inspection.hasNamedValueWebGLImport && basePackageCount === 3
     : isVizLesson || isTextLesson || inspection.packageImportModules.includes("@crc/textures")
       ? inspection.hasNamedValueCoreImport &&
-        inspection.packageImportModules.length === 2
+        basePackageCount === 2
       : isThreeLesson
         ? inspection.hasNamedValueCoreImport &&
           inspection.hasThreeAdapterValueImport &&
@@ -1556,14 +1560,14 @@ export function validateLearningSourceText(
           inspection.hasOrbitControlsValueImport === isThreeControlsLesson &&
           !inspection.hasNamedValueParticlesImport &&
           !inspection.hasNamedValueWebGLImport &&
-          inspection.packageImportModules.length ===
+          basePackageCount ===
             (isThreeControlsLesson ? 4 : 3)
         : isParticlesLesson
           ? inspection.hasNamedValueCoreImport &&
             inspection.hasNamedValueParticlesImport &&
             !inspection.hasNamedValuePhysicsImport &&
             !inspection.hasNamedValueWebGLImport &&
-            inspection.packageImportModules.length === 2
+            basePackageCount === 2
           : isPhysicsLesson
             ? inspection.hasNamedValueCoreImport &&
               inspection.hasNamedValuePhysicsImport &&
@@ -1571,12 +1575,12 @@ export function validateLearningSourceText(
               !inspection.hasPhysics3DValueImport &&
               !inspection.hasNamedValueParticlesImport &&
               !inspection.hasNamedValueWebGLImport &&
-              inspection.packageImportModules.length === 2
+              basePackageCount === 2
             : inspection.hasNamedValueCoreImport &&
               !inspection.hasNamedValueParticlesImport &&
               !inspection.hasNamedValuePhysicsImport &&
               !inspection.hasNamedValueWebGLImport &&
-              inspection.packageImportModules.length === 1;
+              basePackageCount === 1;
   if (!inspection.hasOnlyApprovedImports || !hasExactPackageImports) {
     throw invalid(
       label,

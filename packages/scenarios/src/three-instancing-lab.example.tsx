@@ -1,3 +1,4 @@
+import { dropShadow } from '@crc/core/filters';
 /** @jsxImportSource @crc/core */
 // Adapted from Three.js "webgl_instancing_raycast":
 // https://github.com/mrdoob/three.js/blob/dev/examples/webgl_instancing_raycast.html
@@ -336,13 +337,13 @@ export function createThreeInstancingLabScene(
           onClickCapture={props.onThreeTargetCapture}
           onClick={props.onThreeTargetBubble}
           style={{
-            filter: {
-              type: 'dropShadow',
+            filter: dropShadow({
+              
               offsetX: 10,
               offsetY: 7,
               blurRadius: 5,
               color: 'rgb(2 8 23 / 82%)',
-            },
+            }),
           }}
         >
           <Clip style={{ d: clip }}>

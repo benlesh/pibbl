@@ -273,17 +273,7 @@ export { normalizeEdges } from './lib/style/normalize.js';
 export { resolveLength } from './lib/style/resolve-length.js';
 export { resolveBox } from './lib/layout/box.js';
 export type {
-  CRCBlurFilter,
-  CRCBrightnessFilter,
-  CRCContrastFilter,
-  CRCDropShadowFilter,
   CRCFilter,
-  CRCGrayscaleFilter,
-  CRCHueRotateFilter,
-  CRCInvertFilter,
-  CRCOpacityFilter,
-  CRCSaturateFilter,
-  CRCSepiaFilter,
 } from './lib/style/filter-types.js';
 export type {
   Constraints,
@@ -388,5 +378,6 @@ export type { CRCResizeHandleProps, CRCResizeHandlesProps, CRCRotationHandleProp
 export { degrees } from './lib/manipulation/degrees.js';
 export { Manipulable } from './lib/manipulation/manipulable.js';
 export type { CRCManipulableProps } from './lib/manipulation/manipulable.js';
+
 export { defineTexture, useTexture } from './lib/textures/texture.js';
 export type { Texture, TexturePaint, TextureRecipe, TextureDefinition, TextureOptions, TexturePlacement, TextureContext, TextureFrame } from './lib/textures/texture.js';

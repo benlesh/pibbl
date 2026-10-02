@@ -2,6 +2,7 @@ import type { Plugin } from 'vite';
 import { resolve } from 'node:path';
 
 const BUILT_ENTRY_SUFFIXES = new Map([
+  ["@crc/core/filters", "/packages/core/dist/filters.mjs"],
   ["@crc/textures", "/packages/textures/dist/index.mjs"],
   ["@crc/text", "/packages/text/dist/index.mjs"],
   ["@crc/viz", "/packages/viz/dist/index.mjs"],

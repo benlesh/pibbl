@@ -1,7 +1,7 @@
 import { GLOBAL_STATE } from '../global-state.js';
 import type { RenderTargetSnapshot } from '../render-target.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
-import { resetNativeFilterIfSupported } from '../style/filter.js';
+import { resetNativeCanvasFilter } from '../../filters/native-canvas-filter.js';
 import type { FilterPixelWindow, FilterWindows } from './filter-region.js';
 
 const MAX_UNSIGNED_LONG = 0xffff_ffff;
@@ -207,7 +207,7 @@ function installDefaultState(
 ): void {
   context.direction = 'inherit';
   context.fillStyle = '#000000';
-  resetNativeFilterIfSupported(context);
+  resetIfSupported(context);
   context.font = '10px sans-serif';
   setIfPresent(context, 'fontKerning', 'auto');
   setIfPresent(context, 'fontStretch', 'normal');
@@ -246,7 +246,15 @@ function scrubIdleSurface(surface: FilterSurface): void {
   } catch {
     // CanvasGradient and CanvasPattern are the other reference-bearing state.
   }
-  resetNativeFilterIfSupported(context);
+  resetIfSupported(context);
+}
+
+function resetIfSupported(context: OffscreenCanvasRenderingContext2D): void {
+  try {
+    resetNativeCanvasFilter(context, 'filter surface');
+  } catch {
+    // Pool reset/release must not mask the boundary's component-aware error.
+  }
 }
 
 function setIfPresent(

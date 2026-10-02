@@ -1,3 +1,5 @@
+import { peekNativeFilterPool } from '../src/lib/filter/render-filter-boundary';
+import { grayscale, blur, brightness, contrast, dropShadow, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
 import {
   Group,
   Layer,
@@ -19,9 +21,11 @@ import {
 import { clearSharedState, getCRCInstance } from "../src/lib/global-state";
 import { mountCRC } from "../src/lib/mount-crc";
 import * as filterStyle from "../src/lib/style/filter";
+import * as nativeOperations from "../src/filters/native-operations";
 
 vi.mock("../src/lib/filter/filter-region", { spy: true });
 vi.mock("../src/lib/style/filter", { spy: true });
+vi.mock("../src/filters/native-operations", { spy: true });
 
 const controllers = new Set<CRCController>();
 
@@ -50,7 +54,7 @@ describe("filter structural performance", () => {
       }),
     );
 
-    const pool = getCRCInstance(canvas).filterSurfacePool;
+    const pool = peekNativeFilterPool(getCRCInstance(canvas))!;
     const singleTenFunctionList = ledger.snapshot(pool, primitiveExecutions);
     expect(singleTenFunctionList).toMatchObject({
       primitiveExecutions: 1,
@@ -96,7 +100,7 @@ describe("filter structural performance", () => {
   it("bounds slots by nesting depth rather than sibling count", () => {
     const nestedCanvas = renderScene(threeNestedFilters(undefined));
     const threeNestedBoundaries =
-      getCRCInstance(nestedCanvas).filterSurfacePool.snapshot();
+      peekNativeFilterPool(getCRCInstance(nestedCanvas))!.snapshot();
     expect(threeNestedBoundaries).toMatchObject({
       surfaceSlots: 6,
       peakActivePairs: 3,
@@ -107,7 +111,7 @@ describe("filter structural performance", () => {
 
     const siblingCanvas = renderScene(oneHundredSiblingFilters());
     const oneHundredSiblingBoundaries =
-      getCRCInstance(siblingCanvas).filterSurfacePool.snapshot();
+      peekNativeFilterPool(getCRCInstance(siblingCanvas))!.snapshot();
     expect(oneHundredSiblingBoundaries).toMatchObject({
       surfaceSlots: 2,
       peakActivePairs: 1,
@@ -139,7 +143,7 @@ describe("filter structural performance", () => {
         ),
       }),
     );
-    const pool = getCRCInstance(canvas).filterSurfacePool;
+    const pool = peekNativeFilterPool(getCRCInstance(canvas))!;
 
     expect(pool.snapshot()).toMatchObject({
       surfaceSlots: 2,
@@ -215,7 +219,7 @@ describe("filter structural performance", () => {
     executeRender(canvas, 1, filteredLayer(0.5, retainedChild));
 
     expect(childExecutions).toBe(1);
-    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
       surfaceSlots: 2,
       pairCheckouts: 2,
       pairReturns: 2,
@@ -224,25 +228,19 @@ describe("filter structural performance", () => {
   });
 });
 
-const COLOR_FILTER = { type: "grayscale", amount: 1 } as const;
+const COLOR_FILTER = grayscale({ amount: 1 });
 
 const TEN_FUNCTION_FILTER_LIST: readonly CRCFilter[] = [
-  { type: "blur", radius: 1 },
-  { type: "brightness", amount: 1 },
-  { type: "contrast", amount: 1 },
-  {
-    type: "dropShadow",
-    offsetX: 2,
-    offsetY: 1,
-    blurRadius: 0,
-    color: "contrast-color(red)",
-  },
-  { type: "grayscale", amount: 1 },
-  { type: "hueRotate", degrees: 0 },
-  { type: "invert", amount: 0 },
-  { type: "opacity", amount: 1 },
-  { type: "saturate", amount: 1 },
-  { type: "sepia", amount: 0 },
+  blur({ radius: 1 }),
+  brightness({ amount: 1 }),
+  contrast({ amount: 1 }),
+  dropShadow({ offsetX: 2, offsetY: 1, blurRadius: 0, color: "contrast-color(red)" }),
+  grayscale({ amount: 1 }),
+  hueRotate({ degrees: 0 }),
+  invert({ amount: 0 }),
+  opacity({ amount: 1 }),
+  saturate({ amount: 1 }),
+  sepia({ amount: 0 }),
 ];
 
 class FilterWorkLedger {
@@ -253,7 +251,7 @@ class FilterWorkLedger {
   private readonly resolveFilterWindows = vi.mocked(
     filterRegion.resolveFilterWindows,
   );
-  private readonly compileFilterList = vi.mocked(filterStyle.compileFilterList);
+  private readonly compileFilterList = vi.mocked(nativeOperations.compileNativeFilters);
   private readonly offscreenConstructor: ReturnType<typeof vi.fn>;
   private readonly offscreenGetImageData = vi.spyOn(
     OffscreenCanvasRenderingContext2D.prototype,
@@ -470,7 +468,7 @@ function filteredLayer(amount: number, child: CRCNode): CRCNode {
     style: {
       width: 32,
       height: 24,
-      filter: { type: "opacity", amount },
+      filter: opacity({ amount }),
     },
     children: child,
   });

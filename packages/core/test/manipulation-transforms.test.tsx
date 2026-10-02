@@ -14,6 +14,7 @@ import {
   type CRCController,
   type CRCNode,
 } from '@crc/core';
+import { blur } from '@crc/core/filters';
 import { afterEach, expect, it } from 'vitest';
 import { commands } from 'vitest/browser';
 
@@ -38,7 +39,7 @@ it('keeps a custom resize child aligned and active through fit, density, Layer, 
     const manipulation = useManipulation({ box, resize: {} });
     return <Layer style={{ width: 320, height: 240 }}>
       <Group style={{
-        filter: { type: 'blur', radius: 1 },
+        filter: blur({ radius: 1 }),
         translateX: 30,
         translateY: 20,
         rotationDegrees: 30,
