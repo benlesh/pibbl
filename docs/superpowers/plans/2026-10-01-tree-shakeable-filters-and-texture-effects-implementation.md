@@ -296,3 +296,12 @@ actual, and computed diff. All 53,874 changed pixels are confined to the sidebar
 The rendered filter gallery contains zero changed pixels, and the remaining page
 content is identical. This preserves exact native rendering evidence while updating
 the public authoring example and expanded catalog navigation.
+
+### Inspected diagram-editor text baseline correction
+
+The diagram-editor reference differs by 7,754 pixels limited to header, footer,
+and node glyph rasterization. Root inspected expected, actual, and computed diff.
+An independent fresh primary-build capture is byte-for-byte identical to the
+integration actual, establishing that this drift predates the filter changes.
+Geometry, fills, connectors, and shadows are unchanged. The single reference is
+refreshed without masks or tolerances; search-open and test-lab match exactly.
