@@ -61,9 +61,11 @@ class GpuBorrower {
       this.shared.pruneMaps();
       return;
     }
-    if (this.shared.gpu.isContextLost) return;
-    if (success || !this.committed) this.dispose();
-    else this.shared.pruneMaps();
+    if (success || !this.committed) {
+      this.dispose();
+      return;
+    }
+    if (!this.shared.gpu.isContextLost) this.shared.pruneMaps();
   }
   dispose(): void {
     if (this.disposed) return;
