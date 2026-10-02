@@ -214,16 +214,15 @@ Filter projection tests additionally cover upright local capture, conservative
 windows, root and Layer density exactly once, unchanged target geometry, and
 nested high-density filter composition.
 
-Texture/displacement suites additionally cover map placement in logical region
+Render-layer and Three adapter suites cover logical/backing viewport snapshots,
+outer layout/transforms/clips/Layers, transparent bitmap composition, delegated
+object picking, density changes, bitmap/interaction generation transactions,
+constant-time clean cache reuse, and deterministic removal/disposal. Texture/
+displacement suites additionally cover map placement in logical region
 coordinates, committed raster/revision borrowing, zero-strength validation, and
 one root-tree GPU service shared by active displacement boundaries. Context-loss
 recovery and persistent map-upload caching are not implemented surface
 guarantees.
-
-Render-layer and Three adapter suites cover logical/backing viewport snapshots,
-outer layout/transforms/clips/Layers, transparent bitmap composition, delegated
-object picking, density changes, bitmap/interaction generation transactions,
-constant-time clean cache reuse, and deterministic removal/disposal.
 
 The public `canvas-surface` laboratory is loaded by both the Studio and
 headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical

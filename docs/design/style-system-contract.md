@@ -144,16 +144,14 @@ the failing field, received value, and component before its render callback.
 CRC compiles the complete nonempty list once for one native Canvas filter
 operation. `style.opacity` remains the primitive's existing paint-alpha
 behavior; an `opacity` filter is a separate ordered effect over the combined
-raster and can differ where paint overlaps.
-
-`displacement({ map, strength, region })` is a separate optional filter factory.
-It accepts a genuine texture paint map, a finite nonnegative logical strength,
-and finite positive region dimensions. It samples red/green signed offsets with
-alpha weighting and changes pixels only. A zero strength validates the map but
-does not borrow pixels or allocate its WebGL2 processor. Mixed native and
-displacement lists preserve declaration order; native runs form their own Canvas
-segments around displacement passes. Measurement still does no capability check
-or raster work.
+raster and can differ where paint overlaps. `displacement({ map, strength,
+region })` is a separate optional filter factory. It accepts a genuine texture
+paint map, finite nonnegative logical strength, and finite positive region
+dimensions; it samples red/green signed offsets with alpha weighting and
+changes pixels only. Zero strength validates the map but does not borrow pixels
+or allocate its WebGL2 processor. Mixed native and displacement lists preserve
+declaration order, with native segments around displacement passes. Measurement
+does no capability check or raster work.
 
 ## Length and box rules
 
