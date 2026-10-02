@@ -1296,12 +1296,6 @@ export function createSignalCommitBatch(): SignalCommitBatch {
           }
         }
 
-        for (const candidate of changed) {
-          const node = candidate.node;
-          recordPublicBatchEntry(node);
-          node.value = candidate.value;
-          node.version++;
-        }
         const changedWriters = new Set(changed.map(candidate => candidate.writer));
         for (const candidate of candidates) {
           const lifecycle = state.lifecycles.get(candidate.writer);
@@ -1318,11 +1312,19 @@ export function createSignalCommitBatch(): SignalCommitBatch {
             throw error;
           }
         }
+        for (const candidate of changed) {
+          const node = candidate.node;
+          recordPublicBatchEntry(node);
+          node.value = candidate.value;
+          node.version++;
+        }
         onApplied?.();
         const failures: unknown[] = [];
         for (const candidate of changed) {
           failures.push(...notifySignalObservers(candidate.node));
         }
+        for (const lifecycle of state.lifecycles.values()) abortLifecycle(lifecycle);
+        state.lifecycles.clear();
         throwSignalObserverFailures(failures);
       } catch (error) {
         for (const lifecycle of state.lifecycles.values()) abortLifecycle(lifecycle);

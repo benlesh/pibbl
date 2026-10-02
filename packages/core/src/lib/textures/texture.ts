@@ -114,6 +114,7 @@ class Resource {
   readonly revision = signal(0);
   readonly canvas: OffscreenCanvas;
   private committed: OffscreenCanvas | undefined;
+  private spare: OffscreenCanvas | undefined;
   private provisional: { canvas: OffscreenCanvas; transaction: NonNullable<typeof GLOBAL_STATE.renderTransaction> } | undefined;
   readonly context: TextureContext;
   readonly handle: Texture<any>;
@@ -268,11 +269,13 @@ class Resource {
               if (this.disposed) {
                 candidate.width = candidate.height = 0;
               } else {
+                const previous = this.committed;
                 this.committed = candidate;
+                this.spare = previous;
               }
             },
             abort: () => {
-              candidate.width = candidate.height = 0;
+              this.spare = candidate;
               if (!this.disposed) {
                 this.dirty = true;
                 this.schedule();
@@ -303,7 +306,9 @@ class Resource {
     } finally {
       ctx.restore();
     }
-    const candidate = new OffscreenCanvas(this.canvas.width, this.canvas.height);
+    const candidate = this.spare?.width === this.canvas.width && this.spare.height === this.canvas.height ?
+      this.spare : new OffscreenCanvas(this.canvas.width, this.canvas.height);
+    this.spare = undefined;
     const candidateContext = candidate.getContext("2d");
     if (!candidateContext) throw new Error("Textures require OffscreenCanvas 2D.");
     candidateContext.drawImage(this.canvas, 0, 0);
@@ -363,6 +368,7 @@ class Resource {
     } finally {
       this.canvas.width = this.canvas.height = 0;
       this.committed && (this.committed.width = this.committed.height = 0);
+      this.spare && (this.spare.width = this.spare.height = 0);
       this.provisional && (this.provisional.canvas.width = this.provisional.canvas.height = 0);
       this.state = undefined;
     }

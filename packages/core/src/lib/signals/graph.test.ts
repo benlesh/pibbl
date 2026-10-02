@@ -87,6 +87,7 @@ describe('signal', () => {
     });
     expect(() => failing.commit()).toThrow('publication failed');
     expect(calls).toEqual(['apply:1', 'abort', 'suppressed', 'failed']);
+    expect(revision.get()).toBe(1);
   });
 
   it('provides explicit reads, writes, and one cached readonly view', () => {
