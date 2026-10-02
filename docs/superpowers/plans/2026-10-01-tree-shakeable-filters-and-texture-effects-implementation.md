@@ -175,16 +175,16 @@ one reviewer unless genuinely independent recipe work saves time.
 
 ## Completion checklist
 
-- [ ] Plan reviewed independently in isolated workspace and corrected before code
-- [ ] Native factories and capture are actually removable in consumer bundles
-- [ ] Texture production and recipe families are independently removable
-- [ ] Texture pixels and revisions publish together on successful transactions
+- [x] Plan reviewed independently in isolated workspace and corrected before code
+- [x] Native factories and capture are actually removable in consumer bundles
+- [x] Texture production and recipe families are independently removable
+- [x] Texture pixels and revisions publish together on successful transactions
 - [ ] Displacement and animated water satisfy all specified semantics
 - [ ] Public runnable lessons inspected; focused checks and feedback incorporated
-- [ ] Geometry/physics/animation/input remain appearance-independent
+- [x] Geometry/physics/animation/input remain appearance-independent
 - [ ] Ownership, failures, capability handling and no-readback behavior evidenced
-- [ ] Migration/docs/contracts/packed/declaration/Studio parity complete
-- [ ] Optional feature audit and byte evidence recorded
+- [x] Migration/docs/contracts/packed/declaration/Studio parity complete
+- [x] Optional feature audit and byte evidence recorded
 - [ ] Independent final review corrected and aggregate trust gate passes
 - [ ] Integrated result preserves concurrent WASM/electric/agent work
 
@@ -249,3 +249,41 @@ isolated workspace dependencies were installed from the lockfile with pnpm 11.21
 
 These corrections govern the earlier step summaries where more specific. They
 clarify the approved architecture without narrowing feature scope.
+
+## Verification progress — 2026-10-01
+
+The isolated integration branch implements both public slices. The underwater
+lesson at `http://127.0.0.1:4392/#/examples/composition/underwater` passed automated
+motion, pause, control, click, and page-error checks after the map-subscription fix.
+This is inspected runnable evidence; explicit user visual acceptance is not recorded.
+
+The aggregate run on Node 24.15.0 / pnpm 11.21.0 passed static checks, source/built
+Studio declaration parity, packed consumer exclusions and import inertness, then
+3,304 browser tests (five skipped). It stopped at the examples-landing screenshot
+comparison; that difference is under investigation, and the aggregate gate is not
+yet claimed complete. Separate subsequent gates passed built smoke (two tests),
+lifecycle (32), structural performance (48, four skipped), identity, and watchdog.
+
+Additional focused public evidence covers map replacement and old-consumer
+cleanup, cross-root/disposed map rejection including zero strength, controlled
+animation values, focus/keyboard/cursor geometry, and external-render-layer routing.
+Texture publication tests also verify a stable producer canvas across resolution
+reset and exact disposal; the focused texture suite passed seven tests. The WASM
+chat was rechecked and remains a tooling-only spike with production defaults unchanged.
+
+GPU fault injection covers real context, shader, program, allocation, and upload
+failure paths with cleanup and successful retry; exact handle-count assertions are
+being finalized. Measured per-frame pipeline costs and packed bundle baselines are
+recorded in the associated testing field notes. Shared-checkout integration is still
+pending: temporary three-way merge drafts preserve concurrent electric exports,
+editor declarations, example changes, and agent-verification tooling.
+
+### Inspected Studio baseline correction
+
+The reviewer reproduced exactly 5,612 changed pixels in five fresh integration
+contexts and one current primary-build context, confined to the hero Canvas text
+(x=870–1077, y=356–430). Font readiness was stable; hero source and geometry are
+unchanged by this feature. Root inspected expected, actual, and a computed diff
+showing only “DRAW.” / “MOVE. LEARN.” glyphs. The single examples-landing baseline
+is intentionally refreshed for current Chromium generic-sans rendering. No mask,
+tolerance, font wait, or runtime change was introduced.
