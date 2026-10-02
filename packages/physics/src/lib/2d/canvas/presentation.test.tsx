@@ -1,3 +1,4 @@
+import { opacity } from "@crc/core/filters";
 import { Circle, Group, Rectangle, crc, type CRCController } from "@crc/core";
 /** @jsxImportSource @crc/core */
 import {
@@ -58,7 +59,7 @@ describe("Canvas 2D physics pose presentation", () => {
               width: 10,
               height: 10,
               fill: "#2563eb",
-              filter: { type: "opacity", amount: 1 },
+              filter: opacity({ amount: 1 }),
             }}
             onClick={() => clicks.push("hit")}
           />

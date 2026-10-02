@@ -28,15 +28,19 @@ import {
 } from '../animation/writer-leases';
 
 describe('signal', () => {
-  it('applies staged resource publication after values change and before observers', () => {
+  it('adopts staged resources before publishing signal values and notifying observers', () => {
     const revision = signal(0);
     const writer = {};
     const batch = createSignalCommitBatch();
     const calls: string[] = [];
+    let published = false;
+    const observations: unknown[] = [];
+    getSignalNode(revision).observers.add(() => observations.push([revision.get(), published]));
     batch.stage(revision, 1, writer);
     batch.registerLifecycle(writer, {
       apply() {
         calls.push(`apply:${revision.get()}`);
+        published = true;
       },
       abort() {
         calls.push('abort');
@@ -45,7 +49,8 @@ describe('signal', () => {
 
     batch.commit();
 
-    expect(calls).toEqual(['apply:1']);
+    expect(calls).toEqual(['apply:0']);
+    expect(observations).toEqual([[1, true]]);
     const discarded = createSignalCommitBatch();
     discarded.stage(revision, 2, writer);
     discarded.registerLifecycle(writer, {
@@ -58,7 +63,7 @@ describe('signal', () => {
     });
     discarded.discardWriter(writer);
     discarded.commit();
-    expect(calls).toEqual(['apply:1', 'abort']);
+    expect(calls).toEqual(['apply:0', 'abort']);
     expect(revision.get()).toBe(1);
 
     const suppressed = createSignalCommitBatch();
@@ -72,7 +77,7 @@ describe('signal', () => {
       },
     });
     suppressed.commit();
-    expect(calls).toEqual(['apply:1', 'abort', 'suppressed']);
+    expect(calls).toEqual(['apply:0', 'abort', 'suppressed']);
 
     const failing = createSignalCommitBatch();
     failing.stage(revision, 2, writer);
@@ -86,7 +91,7 @@ describe('signal', () => {
       },
     });
     expect(() => failing.commit()).toThrow('publication failed');
-    expect(calls).toEqual(['apply:1', 'abort', 'suppressed', 'failed']);
+    expect(calls).toEqual(['apply:0', 'abort', 'suppressed', 'failed']);
     expect(revision.get()).toBe(1);
   });
 

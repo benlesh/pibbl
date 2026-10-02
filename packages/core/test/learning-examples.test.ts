@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 68 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 71 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(68);
+    expect(learningExampleCatalog).toHaveLength(71);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1258,6 +1258,7 @@ describe("learning example catalog", () => {
     ]);
     const expectedBrowseGroups = {
       drawing: [
+        "along-path",
         "arc",
         "circle",
         "ellipse",
@@ -1279,6 +1280,8 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+        "underwater",
+        "optional-filters",
         "clip",
         "group",
         "growing-reveal",
@@ -1384,6 +1387,8 @@ describe("learning example catalog", () => {
       "living-ink",
       "material-lab",
       "growing-reveal",
+      "optional-filters",
+      "underwater",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1786,6 +1791,7 @@ describe("learning example catalog", () => {
         "Clip",
         "Layer",
         "CRCFilter",
+        "useTexture",
         "defineThreeLayer",
         "InstancedMesh",
         "Mesh",

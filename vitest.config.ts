@@ -190,6 +190,10 @@ export default defineConfig(({ mode }) => ({
       // Node-runner suites own browser processes; they cannot run inside Chromium.
       // Kept in test:agent-verification:{requirements,identity,watchdog}.
       "tooling/agent-verification/**/*.test.mjs",
+      // Node-only checks run in trust:static and trust:package.
+      "tooling/filter-authoring.test.mjs",
+      "tooling/filter-validation.test.mjs",
+      "tooling/optional-import-inertness.test.mjs",
       "packages/physics/src/lib/2d/public-types.test.ts",
       "packages/physics/src/lib/3d/public-types.test.ts",
     ],
