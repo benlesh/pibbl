@@ -143,3 +143,24 @@ bytes or has no retained attributed input.
 5. This matrix intentionally excludes filters/textures, whose dedicated
    `verify-optional-feature-bundles.mjs` harness supplies stronger public-mount,
    Vite, package-consumer, and import-inertness checks.
+
+### Observable packed-consumer size baseline
+
+The dedicated optional-feature checker passed with Node 24.15.0, pnpm 11.21.0,
+esbuild 0.28.2, and Vite 8.2.1. These are minified output bytes / gzip bytes
+for installed packed-package consumers that expose usable scenes. They measure
+whole consumer output, not the incremental price of one effect. Structural
+implementation exclusions remain the hard gate; these sizes are review baselines.
+
+| Consumer | esbuild bytes / gzip | Vite bytes / gzip |
+| --- | ---: | ---: |
+| Plain Rectangle/Text | 124,130 / 37,323 | 181,884 / 42,341 |
+| Explicit Layer | 121,600 / 36,368 | 177,932 / 41,208 |
+| Native blur | 132,558 / 40,003 | 193,186 / 45,244 |
+| Marble paint | 152,836 / 45,516 | 190,143 / 45,470 |
+| Water paint | 155,008 / 46,198 | 184,185 / 43,598 |
+| User-defined texture displacement | 149,860 / 45,476 | 214,733 / 51,171 |
+
+Reproduce with `node tooling/verify-optional-feature-bundles.mjs` after building
+and packing the packages. The checker reports source and packed, minified and
+unminified variants and includes emitted assets in the totals.
