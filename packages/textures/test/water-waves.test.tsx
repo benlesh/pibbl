@@ -78,3 +78,25 @@ it("discards paused elapsed debt and preserves message pause across equal author
     expect(driver.pendingHostFrames).toBe(1);
   } finally { controller.dispose(); restore(); }
 });
+
+it("preserves a message pause when authored speed changes", () => {
+  const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
+  let texture: ReturnType<typeof useTexture<any>>;
+  let speed = 1;
+  function Scene() {
+    texture = useTexture(waterWaves({ seed: 3, speed }), { resolution: { width: 8, height: 8 } });
+    return <Rectangle style={{ width: 8, height: 8, fill: texture }} />;
+  }
+  const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  try {
+    driver.flush(0);
+    texture!.send({ type: "pause", paused: true }); driver.flush(16);
+    expect(driver.pendingHostFrames).toBe(0);
+    speed = 2;
+    crc(canvas, <Scene />); driver.flush(1000);
+    expect(driver.pendingHostFrames).toBe(0);
+    texture!.send({ type: "pause", paused: false }); driver.flush(1016);
+    expect(driver.pendingHostFrames).toBe(1);
+  } finally { controller.dispose(); restore(); }
+});
