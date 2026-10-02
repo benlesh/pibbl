@@ -199,3 +199,32 @@ it('retries a map upload after an unsuccessful GPU pass', () => {
     expect(upload).toHaveBeenCalledTimes(6);
   } finally { gpu.dispose(); upload.mockRestore(); error.mockRestore(); }
 });
+
+it('stretches the map over its region and clamps samples outside that region', () => {
+  const source = new OffscreenCanvas(10, 1), context = source.getContext('2d')!;
+  const pixels = context.createImageData(10, 1);
+  for (let x = 0; x < 10; x++) {
+    pixels.data[x * 4] = x * 25;
+    pixels.data[x * 4 + 3] = 255;
+  }
+  context.putImageData(pixels, 0, 0);
+  const map = new OffscreenCanvas(2, 1), field = map.getContext('2d')!;
+  field.fillStyle = 'rgb(255 128 128)'; field.fillRect(0, 0, 1, 1);
+  field.fillStyle = 'rgb(0 128 128)'; field.fillRect(1, 0, 1, 1);
+  const gpu = new DisplacementGpu();
+  try {
+    const bitmap = gpu.apply(source, { source: map, width: 2, height: 1, revision: 1, resource: {}, placement: {} }, 1,
+      { mode: 'stretch' }, { originX: 0, originY: 0, density: 1, region: { x: 4, y: 0, width: 2, height: 1 } });
+    const target = new OffscreenCanvas(10, 1), result = target.getContext('2d')!;
+    result.drawImage(bitmap, 0, 0); bitmap.close();
+    const output = result.getImageData(0, 0, 10, 1).data;
+    // Before the region, all map samples use its positive first texel.
+    expect(output[1 * 4]).toBe(50);
+    expect(output[2 * 4]).toBe(75);
+    // Texel centers align to the region; after it, samples stay negative.
+    expect(output[4 * 4]).toBe(125);
+    expect(output[5 * 4]).toBe(100);
+    expect(output[7 * 4]).toBe(150);
+    expect(output[8 * 4]).toBe(175);
+  } finally { gpu.dispose(); }
+});
