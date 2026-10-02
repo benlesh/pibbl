@@ -36,6 +36,7 @@ import {
   useTexture,
 } from "@crc/core";
 import { displacement } from "@crc/core/filters";
+import { filterBoundaryExecutor } from "../src/filters/filter-executor.js";
 import { waterWaves } from "@crc/textures";
 import {
   ManualSchedulerDriver,
@@ -52,6 +53,7 @@ type Samples = Record<
   | "frameCpu"
   | "waterRaster"
   | "sourceCapture"
+  | "offscreenComposition"
   | "rootComposite"
   | "gpuUpload"
   | "gpuSubmit"
@@ -88,6 +90,7 @@ describe.skipIf(!enabled)("animated displacement cost probe", () => {
         frameCpu: [],
         waterRaster: [],
         sourceCapture: [],
+        offscreenComposition: [],
         rootComposite: [],
         gpuUpload: [],
         gpuSubmit: [],
@@ -101,6 +104,10 @@ describe.skipIf(!enabled)("animated displacement cost probe", () => {
           if (timing.collecting) samples[name].push(now() - start);
         }
       };
+      const executeBoundary = filterBoundaryExecutor.render;
+      const captureSpy = vi.spyOn(filterBoundaryExecutor, "render").mockImplementation(input => {
+        return executeBoundary({ ...input, renderSubtree: () => collect("sourceCapture", input.renderSubtree) });
+      });
       const sourceDrawImage = OffscreenCanvasRenderingContext2D.prototype
         .drawImage as (...args: any[]) => void;
       const upload = WebGL2RenderingContext.prototype.texImage2D;
@@ -110,7 +117,7 @@ describe.skipIf(!enabled)("animated displacement cost probe", () => {
         this: OffscreenCanvasRenderingContext2D,
         ...args: any[]
       ) {
-        return collect("sourceCapture", () =>
+        return collect("offscreenComposition", () =>
           sourceDrawImage.apply(this, args),
         );
       } as typeof OffscreenCanvasRenderingContext2D.prototype.drawImage;
@@ -182,13 +189,21 @@ describe.skipIf(!enabled)("animated displacement cost probe", () => {
           timing.collecting = index >= 6;
           if (index === 6) timing.waterRaster.length = 0;
           phase.set(index % 2);
+          const offsets = Object.fromEntries(Object.entries(samples).map(([name, values]) => [name, values.length]));
           const start = now();
           driver.flush(index * (1000 / 60));
-          if (timing.collecting) samples.frameCpu.push(now() - start);
+          if (timing.collecting) {
+            samples.frameCpu.push(now() - start);
+            for (const name of ["sourceCapture", "offscreenComposition", "rootComposite", "gpuUpload", "gpuSubmit", "transfer"] as const) {
+              const spans = samples[name].splice(offsets[name]);
+              samples[name].push(spans.reduce((total, span) => total + span, 0));
+            }
+          }
         }
       } finally {
         timing.collecting = false;
         controller.dispose();
+        captureSpy.mockRestore();
         restoreDriver();
         OffscreenCanvasRenderingContext2D.prototype.drawImage = sourceDrawImage;
         canvas.remove();
@@ -219,7 +234,7 @@ describe.skipIf(!enabled)("animated displacement cost probe", () => {
         warmupFrames: 6,
         measuredFrames: 30,
         nestedTiming: [
-          "waterRaster, sourceCapture, rootComposite, gpuUpload, gpuSubmit, and transfer overlap frameCpu and must not be summed",
+          "waterRaster, sourceCapture, offscreenComposition, rootComposite, gpuUpload, gpuSubmit, and transfer overlap frameCpu and must not be summed",
         ],
         gpuElapsed:
           "unavailable: WebGL timer queries are intentionally not used by this probe",

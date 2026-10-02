@@ -17,8 +17,7 @@ CSS canvas size to the logical size and asserts the backing store is
 then measures 30 synchronous `flush()` calls at 60 Hz logical time.
 
 The emitted JSON records median and p95 CPU submission durations for the whole
-CRC flush, water recipe rasterization (including generation), source-capture
-Canvas drawing, final root Canvas composition, WebGL texture-upload submission,
+CRC flush, water recipe rasterization (including generation), source subtree traversal and drawing, offscreen Canvas copies, final root Canvas composition, WebGL texture-upload submission,
 WebGL draw submission, and image-bitmap transfer. The stage timings overlap the
 whole flush and one another, so they must never be added together. GPU elapsed
 time is unavailable: this probe deliberately does not use timer queries and
@@ -37,13 +36,23 @@ On 2026-10-01, the command above passed in HeadlessChrome 151.0.7922.34 on the
 local macOS host (reported `hardwareConcurrency: 18`; Node is executed by the
 browser runner). With six warm-ups and 30 measured synchronous flushes:
 
-| Logical size / DPR | Complete flush median / p95 | Water raster median / p95 | Root composition median / p95 | Upload median / p95 | Transfer median / p95 |
-| ------------------ | --------------------------- | ------------------------- | ----------------------------- | ------------------- | --------------------- |
-| 320 / 1            | 3.4 / 3.9 ms                | 1.6 / 1.7 ms              | 0.0 / 0.1 ms                  | 0.0 / 0.1 ms        | 1.1 / 1.2 ms          |
-| 960 / 2            | 39.0 / 42.2 ms              | 1.6 / 1.7 ms              | 1.0 / 1.1 ms                  | 1.8 / 2.2 ms        | 30.7 / 33.3 ms        |
+| CPU span per frame, median / p95 |  320 / DPR 1 |    960 / DPR 2 |
+| -------------------------------- | -----------: | -------------: |
+| Complete flush                   | 3.4 / 3.8 ms | 37.9 / 40.2 ms |
+| Water rasterization              | 1.5 / 1.6 ms |   1.6 / 1.7 ms |
+| Source subtree capture           | 0.3 / 0.5 ms |   0.3 / 0.5 ms |
+| Offscreen composition            | 0.1 / 0.2 ms |   2.5 / 2.7 ms |
+| Root composition                 | 0.0 / 0.1 ms |   1.0 / 1.1 ms |
+| Texture upload submission        | 0.1 / 0.2 ms |   1.8 / 2.0 ms |
+| Draw submission                  | 0.0 / 0.1 ms |   0.0 / 0.0 ms |
+| Bitmap transfer                  | 1.1 / 1.3 ms | 29.9 / 31.3 ms |
 
-The per-stage samples are nested CPU submission spans. For example, the
-960/DPR 2 transfer time is already part of the 39.0 ms whole-flush median; the
-table must not be summed. Source-capture draws and GPU draw submission had
-sub-millisecond medians at this timer's resolution. GPU elapsed time remains
-unavailable.
+This refreshed run used Node 24.15.0 and pnpm 11.21.0. Every metric contains
+30 per-frame samples; multiple calls within a stage are summed within that frame.
+Source capture wraps the existing executor's subtree callback, including traversal
+and drawing. Offscreen composition separately observes offscreen bitmap copies,
+including publication and effect intermediates. No production timing API is added.
+
+Stage timings overlap the complete flush and must not be summed with it. The
+high-density transfer cost dominates this measured pipeline; the result does not
+establish a portable frame-rate guarantee. GPU elapsed time remains unavailable.
