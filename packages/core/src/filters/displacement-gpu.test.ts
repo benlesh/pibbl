@@ -135,3 +135,50 @@ it('replaces one cached map upload per committed revision and releases its final
     expect(upload).toHaveBeenCalledTimes(7); // A new lease cannot reuse a released upload.
   } finally { gpu.dispose(); upload.mockRestore(); remove.mockRestore(); }
 });
+
+it('weights unpremultiplied map channels by alpha exactly once', () => {
+  const source = new OffscreenCanvas(4, 1), input = source.getContext('2d')!;
+  for (let x = 0; x < 4; x++) { input.fillStyle = `rgb(${x * 80} 0 0)`; input.fillRect(x, 0, 1, 1); }
+  const map = new OffscreenCanvas(1, 1), mapContext = map.getContext('2d')!;
+  const image = mapContext.createImageData(1, 1); image.data.set([255, 128, 128, 128]); mapContext.putImageData(image, 0, 0);
+  const gpu = new DisplacementGpu();
+  try {
+    const bitmap = gpu.apply(source, { source: map, width: 1, height: 1, revision: 1, resource: {}, placement: {} }, 2);
+    const output = new OffscreenCanvas(4, 1).getContext('2d')!; output.drawImage(bitmap, 0, 0); bitmap.close();
+    expect(output.getImageData(0, 0, 1, 1).data[0]).toBeGreaterThan(70);
+    expect(output.getImageData(0, 0, 1, 1).data[0]).toBeLessThan(90);
+    mapContext.clearRect(0, 0, 1, 1);
+    const transparent = gpu.apply(source, { source: map, width: 1, height: 1, revision: 2, resource: {}, placement: {} }, 2);
+    output.clearRect(0, 0, 4, 1); output.drawImage(transparent, 0, 0); transparent.close();
+    expect(output.getImageData(1, 0, 1, 1).data).toEqual(new Uint8ClampedArray([80, 0, 0, 255]));
+  } finally { gpu.dispose(); }
+});
+
+it('interpolates scene pixels with premultiplied alpha without dark fringes', () => {
+  const source = new OffscreenCanvas(2, 1), input = source.getContext('2d')!;
+  input.fillStyle = 'rgba(255, 0, 0, 0.5)'; input.fillRect(0, 0, 1, 1);
+  const map = new OffscreenCanvas(1, 1), mapContext = map.getContext('2d')!;
+  mapContext.fillStyle = 'rgb(255 128 128)'; mapContext.fillRect(0, 0, 1, 1);
+  const gpu = new DisplacementGpu();
+  try {
+    const bitmap = gpu.apply(source, { source: map, width: 1, height: 1, revision: 1, resource: {}, placement: {} }, 0.5);
+    const output = new OffscreenCanvas(2, 1).getContext('2d')!; output.drawImage(bitmap, 0, 0); bitmap.close();
+    const pixel = output.getImageData(0, 0, 1, 1).data;
+    expect(pixel[0]).toBe(255); expect(pixel[1]).toBe(0); expect(pixel[2]).toBe(0); expect(pixel[3]).toBeCloseTo(64, -1);
+  } finally { gpu.dispose(); }
+});
+
+it('rotates repeated map placement without rotating its displacement axes', () => {
+  const source = new OffscreenCanvas(4, 2), input = source.getContext('2d')!;
+  for (let x = 0; x < 4; x++) { input.fillStyle = `rgb(${x * 40} 0 0)`; input.fillRect(x, 0, 1, 2); }
+  const map = new OffscreenCanvas(2, 1), mapContext = map.getContext('2d')!;
+  mapContext.fillStyle = 'rgb(255 128 128)'; mapContext.fillRect(0, 0, 1, 1);
+  mapContext.fillStyle = 'rgb(0 128 128)'; mapContext.fillRect(1, 0, 1, 1);
+  const gpu = new DisplacementGpu();
+  try {
+    const bitmap = gpu.apply(source, { source: map, width: 2, height: 1, revision: 1, resource: {}, placement: { rotation: 90 } }, 1);
+    const output = new OffscreenCanvas(4, 2).getContext('2d')!; output.drawImage(bitmap, 0, 0); bitmap.close();
+    expect(output.getImageData(1, 0, 1, 1).data[0]).toBe(80);
+    expect(output.getImageData(1, 1, 1, 1).data[0]).toBe(0);
+  } finally { gpu.dispose(); }
+});

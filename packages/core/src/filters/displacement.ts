@@ -27,12 +27,22 @@ const displacementExecutor: CRCFilterExecutor = {
       throw diagnostic(`${property}.region`, options.region, 'must have finite coordinates and positive finite dimensions', context);
     }
     const map = isSignal(options.map) ? options.map.get() : options.map;
-    validateTexturePaint(map);
+    try { validateTexturePaint(map); }
+    catch (error) {
+      throw diagnostic(`${property}.map`, map, error instanceof Error ? error.message : String(error), context);
+    }
     const region = Object.freeze({ x, y, width, height });
     return Object.freeze({
       executor: filterBoundaryExecutor,
       reverseInfluence: (output, density) => expandDisplacementInput(output, strengthValue, density),
-      process: strengthValue === 0 ? undefined : (source, windows) => processDisplacement(source, windows, map, strengthValue, region),
+      process: strengthValue === 0 ? undefined : (source, windows) => {
+        try { return processDisplacement(source, windows, map, strengthValue, region); }
+        catch (error) {
+          const failure = diagnostic(property, { strength: strengthValue, region }, `displacement processing failed: ${error instanceof Error ? error.message : String(error)}`, context);
+          Object.defineProperty(failure, 'cause', { value: error });
+          throw failure;
+        }
+      },
     } satisfies CustomPreparedFilter);
   },
   render: filterBoundaryExecutor.render,
