@@ -14,7 +14,7 @@ import {
   type CRCManipulationBox,
 } from "@crc/core";
 import { displacement, reflectedLight } from "@crc/core/filters";
-import { waterSurface } from "@crc/textures";
+import { marble, waterSurface } from "@crc/textures";
 
 const skyReflection = defineTexture({
   create: () => ({}),
@@ -38,6 +38,13 @@ function Underwater() {
   const speed = useSignal(0.4);
   const rippleStrength = useSignal(1);
   const clicks = useSignal(0);
+  const viscosity = useSignal(0);
+  const surface = useSignal(0);
+  const surfaceOpacity = useSignal(0.5);
+  const lava = useTexture(marble({ seed: 12, scale: 8, detail: 0.8 }), {
+    resolution: { width: 256, height: 128 },
+    palette: ["#200b08", "#591408", "#d53a0c", "#ffb323"],
+  });
   const lightOpacity = useSignal(0.15);
   const patternedLight = useSignal(false);
   const obstacle = useSignal<CRCManipulationBox>({
@@ -60,6 +67,7 @@ function Underwater() {
       speed: speed.get(),
       paused: paused.get(),
       rippleStrength: rippleStrength.get(),
+      viscosity: viscosity.get(),
       obstacles: [
         {
           x: (obstacleBox.left - 32) / 592,
@@ -111,7 +119,7 @@ function Underwater() {
   ];
   const lightButtons = [
     {
-      label: `REFLECTION ${Math.round(lightOpacity.get() * 100)}%`,
+      label: `REFLECT ${Math.round(lightOpacity.get() * 100)}%`,
       click: () =>
         lightOpacity.update((value) =>
           value === 0 ? 0.15 : value === 0.15 ? 0.3 : value === 0.3 ? 0.5 : 0,
@@ -122,6 +130,26 @@ function Underwater() {
       click: () => patternedLight.update((value) => !value),
     },
   ];
+  lightButtons.push(
+    {
+      label: `VISCOSITY ${viscosity.get()}`,
+      click: () =>
+        viscosity.update((value) =>
+          value === 0 ? 0.3 : value === 0.3 ? 0.7 : value === 0.7 ? 1 : 0,
+        ),
+    },
+    {
+      label: `SURFACE: ${["CLEAR", "BLUE", "AMBER", "LAVA"][surface.get()]}`,
+      click: () => surface.update((value) => (value + 1) % 4),
+    },
+    {
+      label: `SURFACE ${Math.round(surfaceOpacity.get() * 100)}%`,
+      click: () =>
+        surfaceOpacity.update((value) =>
+          value === 0.25 ? 0.5 : value === 0.5 ? 0.8 : value === 0.8 ? 1 : 0.25,
+        ),
+    },
+  );
   return (
     <Group>
       <Rectangle style={{ width: 800, height: 540, fill: "#edf3ee" }} />
@@ -243,6 +271,24 @@ function Underwater() {
           >
             CLICK ME
           </Text>
+          {surface.get() !== 0 && (
+            <Rectangle
+              pointerEvents="none"
+              style={{
+                left: 32,
+                top: 94,
+                width: 592,
+                height: 292,
+                fill:
+                  surface.get() === 1
+                    ? "#168ab0"
+                    : surface.get() === 2
+                      ? "#a65b0a"
+                      : lava.paint({ mode: "stretch" }),
+                opacity: surfaceOpacity.get(),
+              }}
+            />
+          )}
           <ManipulationFrame {...obstacleManipulation.frameProps}>
             <DragHandle controller={obstacleManipulation}>
               <Rectangle
@@ -371,9 +417,9 @@ function Underwater() {
         <Group key={`light-${index}`}>
           <Rectangle
             style={{
-              left: 32 + index * 225,
+              left: 32 + index * 150,
               top: 458,
-              width: 210,
+              width: 140,
               height: 36,
               fill: "#2d6872",
               cursor: "pointer",
@@ -383,7 +429,7 @@ function Underwater() {
           <Text
             pointerEvents="none"
             style={{
-              left: 137 + index * 225,
+              left: 102 + index * 150,
               top: 470,
               textAlign: "center",
               font: "700 13px sans-serif",

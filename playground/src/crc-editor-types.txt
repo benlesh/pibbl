@@ -1590,7 +1590,7 @@ export interface WaterWavesOptions { readonly rippleStrength?: number; readonly 
 export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
 export function waterWaves(options?: WaterWavesOptions): import('@crc/core').TextureRecipe<WaterWavesMessage>;
 export interface WaterSurfaceObstacle { readonly x: number; readonly y: number; readonly width: number; readonly height: number; }
-export interface WaterSurfaceOptions { readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; readonly obstacles?: readonly WaterSurfaceObstacle[]; }
+export interface WaterSurfaceOptions { readonly viscosity?: number; readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; readonly obstacles?: readonly WaterSurfaceObstacle[]; }
 export type WaterSurfaceMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
 export function waterSurface(options?: WaterSurfaceOptions): import('@crc/core').TextureRecipe<WaterSurfaceMessage>;
 export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}

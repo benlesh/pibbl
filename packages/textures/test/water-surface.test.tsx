@@ -242,3 +242,58 @@ it("applies rippleStrength live to an already simulated surface", () => {
     restore();
   }
 });
+
+it("viscosity keeps disturbances local", () => {
+  const driver = new ManualSchedulerDriver(),
+    restore = installSchedulerDriverForTest(driver);
+  const textures: ReturnType<typeof useTexture<any>>[] = [];
+  const snapshots: number[][] = [];
+  function Scene() {
+    return (
+      <>
+        {[0, 1].map((viscosity, index) => {
+          const texture = useTexture(waterSurface({ speed: 0, viscosity }), {
+            resolution: { width: 48, height: 24 },
+          });
+          textures[index] = texture;
+          borrowTextureRaster(texture, (raster) => {
+            snapshots[index] = Array.from(
+              raster.source.getContext("2d")!.getImageData(0, 0, 48, 24).data,
+            );
+          });
+          return (
+            <Rectangle
+              key={index}
+              style={{ width: 48, height: 24, fill: texture }}
+            />
+          );
+        })}
+      </>
+    );
+  }
+  const canvas = document.createElement("canvas");
+  document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  try {
+    driver.flush(0);
+    const baseline = snapshots.map((value) => [...value]);
+    for (const texture of textures)
+      texture.send({ type: "ripple", x: 0.5, y: 0.5 });
+    for (let time = 16; time <= 416; time += 16) driver.flush(time);
+    const outerChange = (index: number) =>
+      snapshots[index].reduce((total, value, offset) => {
+        const pixel = Math.floor(offset / 4),
+          x = pixel % 48,
+          y = Math.floor(pixel / 48);
+        return offset % 4 < 2 && Math.hypot(x - 23.5, y - 11.5) > 6
+          ? total + Math.abs(value - baseline[index][offset])
+          : total;
+      }, 0);
+    expect(outerChange(0)).toBeGreaterThan(0);
+    expect(outerChange(1)).toBeLessThan(outerChange(0) * 0.25);
+    expect(snapshots[1]).not.toEqual(baseline[1]);
+  } finally {
+    controller.dispose();
+    restore();
+  }
+});

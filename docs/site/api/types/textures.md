@@ -116,7 +116,15 @@ It is a visual water boundary only and has no hit-testing or physics effect.
 ## WaterSurfaceOptions
 
 The same seed, speed, scale, ripple-strength, and paused inputs as
-`waterWaves`, plus optional `obstacles`. `waterSurface` is a WASM-backed,
+`waterWaves`, plus optional `obstacles` and `viscosity`. Viscosity defaults to 0
+and accepts 0–1: increasing it slows wave propagation and ambient motion and
+increases damping. It is an artistic thickness control, not physical density
+or a mass-conserving fluid solver. Changes preserve existing waves and pause state.
+For colored or textured liquid, paint a decorative Rectangle with a color or
+CRC texture and `style.opacity` inside the displaced group; keep
+`pointerEvents="none"` so it does not intercept scene input.
+
+`waterSurface` is a WASM-backed,
 bounded reflective height field: it uses a maximum 128-cell short edge and
 256-cell long edge, while preserving the source aspect ratio.
 

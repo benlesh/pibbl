@@ -18,6 +18,8 @@ export interface WaterSurfaceOptions {
   readonly speed?: number;
   readonly scale?: number;
   readonly rippleStrength?: number;
+  /** Artistic thickness from 0 (water) to 1 (slow, strongly damped). */
+  readonly viscosity?: number;
   readonly paused?: boolean;
   readonly obstacles?: readonly WaterSurfaceObstacle[];
 }
@@ -32,6 +34,7 @@ interface Config {
   readonly speed: number;
   readonly scale: number;
   readonly rippleStrength: number;
+  readonly viscosity: number;
   readonly paused: boolean;
   readonly obstacles: readonly WaterSurfaceObstacle[];
 }
@@ -242,7 +245,7 @@ class WaterSimulation {
       strength * 1.8,
     );
   }
-  step(count: number): number {
+  step(count: number, viscosity: number): number {
     let energy = 0;
     for (let i = 0; i < count; i++)
       energy = this.kernel.step(
@@ -254,8 +257,8 @@ class WaterSimulation {
         this.width,
         this.rows,
         FIXED_STEP,
-        30,
-        0.996,
+        30 / (1 + 4 * viscosity),
+        Math.pow(0.996, 1 + 30 * viscosity),
       );
     return energy;
   }
@@ -287,7 +290,12 @@ function options(input: WaterSurfaceOptions): Config {
   const seed = validateSeed(input.seed ?? 0),
     speed = input.speed ?? 1,
     scale = input.scale ?? 4,
-    rippleStrength = input.rippleStrength ?? 1;
+    rippleStrength = input.rippleStrength ?? 1,
+    viscosity = input.viscosity ?? 0;
+  if (!Number.isFinite(viscosity) || viscosity < 0 || viscosity > 1)
+    throw new RangeError(
+      "Water surface viscosity must be finite and within [0, 1].",
+    );
   if (!Number.isFinite(speed) || speed < 0)
     throw new RangeError("Water surface speed must be finite and nonnegative.");
   if (!Number.isInteger(scale) || scale < 1 || scale > 32)
@@ -322,6 +330,7 @@ function options(input: WaterSurfaceOptions): Config {
     speed,
     scale,
     rippleStrength,
+    viscosity,
     paused: input.paused ?? false,
     obstacles,
   };
@@ -464,8 +473,10 @@ const recipe = /* @__PURE__ */ defineTexture<
       const steps = Math.min(MAX_STEPS, Math.floor(state.elapsed / FIXED_STEP));
       if (steps) {
         state.elapsed -= steps * FIXED_STEP;
-        state.energy = state.simulation.step(steps);
-        state.phase += (frame.delta / 1000) * state.config.speed;
+        state.energy = state.simulation.step(steps, state.config.viscosity);
+        state.phase +=
+          ((frame.delta / 1000) * state.config.speed) /
+          (1 + 4 * state.config.viscosity);
         context.invalidate();
       }
     }
