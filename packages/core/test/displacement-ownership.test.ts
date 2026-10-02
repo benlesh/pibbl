@@ -25,6 +25,8 @@ it('shares one GPU across root and Layers and releases it after the last consume
     constructor(width: number, height: number) { super(width, height); allocations++; }
   });
   const dispose = vi.spyOn(DisplacementGpu.prototype, 'dispose');
+  const applies = vi.spyOn(DisplacementGpu.prototype, 'apply');
+  const uploads = vi.spyOn(WebGL2RenderingContext.prototype, 'texImage2D');
   function Scene() {
     const texture = useTexture(neutral({}));
     const filter = enabled.get() ? displacement({ map: texture, strength, region: { x: 0, y: 0, width: 40, height: 40 } }) : [];
@@ -40,6 +42,7 @@ it('shares one GPU across root and Layers and releases it after the last consume
     const initialAllocations = allocations;
     for (let index = 0; index < 100; index++) { strength.set(index % 2 + 1); await frame(); }
     expect(allocations).toBe(initialAllocations);
+    expect(uploads).toHaveBeenCalledTimes(applies.mock.calls.length + 1);
     enabled.set(false); await frame();
     expect(dispose).toHaveBeenCalledTimes(1);
     enabled.set(true); await frame();

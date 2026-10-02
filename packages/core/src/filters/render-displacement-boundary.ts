@@ -22,7 +22,12 @@ const rootServices = new WeakMap<CRCInstance, RootGpuService>();
 class RootGpuService {
   readonly gpu = new DisplacementGpu();
   readonly scratch: OffscreenCanvas[] = [];
-  borrowers = 0;
+  readonly borrowers = new Set<GpuBorrower>();
+  pruneMaps(): void {
+    const resources = new Set<object>();
+    for (const borrower of this.borrowers) for (const resource of borrower.resources) resources.add(resource);
+    this.gpu.retainMaps(resources);
+  }
   target(index: number, width: number, height: number): OffscreenCanvasRenderingContext2D {
     const canvas = this.scratch[index] ??= new OffscreenCanvas(width, height);
     if (canvas.width !== width) canvas.width = width;
@@ -41,6 +46,8 @@ class RootGpuService {
 
 class GpuBorrower {
   used = false;
+  resources = new Set<object>();
+  private candidates = new Set<object>();
   private committed = false;
   private disposed = false;
   readonly shared: RootGpuService;
@@ -52,21 +59,29 @@ class GpuBorrower {
     let shared = rootServices.get(root);
     if (!shared) { shared = new RootGpuService(); rootServices.set(root, shared); }
     this.shared = shared;
-    shared.borrowers++;
+    shared.borrowers.add(this);
   }
-  beginRender(): void { this.used = false; }
+  beginRender(): void { this.used = false; this.candidates.clear(); }
+  useMap(resource: object): void { this.candidates.add(resource); }
   endRender(success: boolean): void {
-    if (success && this.used) { this.committed = true; return; }
+    if (success && this.used) {
+      this.committed = true;
+      this.resources = new Set(this.candidates);
+      this.shared.pruneMaps();
+      return;
+    }
     if (success || !this.committed) this.dispose();
+    else this.shared.pruneMaps();
   }
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
     this.instance.optionalServices.delete(GPU_BORROWER);
-    if (--this.shared.borrowers === 0) {
+    this.shared.borrowers.delete(this);
+    if (this.shared.borrowers.size === 0) {
       rootServices.delete(this.root);
       this.shared.dispose();
-    }
+    } else this.shared.pruneMaps();
   }
 }
 
@@ -112,6 +127,7 @@ export function renderDisplacementBoundary(input: Readonly<CRCFilterRenderInput>
         if (!('map' in effect)) { native.push(effect); continue; }
         applyNative();
         borrowTextureRaster(effect.map, map => {
+          borrower.useMap(map.resource);
           const bitmap = shared.gpu.apply(current, map, effect.strength * windows.density, map.placement, {
             originX: windows.source.backingX / windows.density,
             originY: windows.source.backingY / windows.density,
