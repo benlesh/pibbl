@@ -1,3 +1,5 @@
+import { resolveTexturePaint } from '@crc/core/internal';
+import type { FillStyle, StrokeStyle } from '@crc/core';
 import {
   useEventTarget,
   definePrimitive,
@@ -129,8 +131,8 @@ function resolvePhysicsShapeStyle(style: Readonly<PhysicsShape2DStyle>): Resolve
 function renderShape(
   props: PhysicsShape2DProps,
   style: Readonly<{
-    readonly fill?: CanvasRenderingContext2D['fillStyle'];
-    readonly stroke?: CanvasRenderingContext2D['strokeStyle'];
+    readonly fill?: FillStyle;
+    readonly stroke?: StrokeStyle;
     readonly strokeWidth?: number;
     readonly opacity?: number;
     readonly cursor?: string;
@@ -145,18 +147,19 @@ function renderShape(
   if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) {
     throw new RangeError('Physics shape opacity must be finite from zero through one.');
   }
+  const bounds = boundsOfShape2D(shape);
+  const paintBounds = {x: bounds.min[0], y: bounds.min[1], width: bounds.max[0]-bounds.min[0], height: bounds.max[1]-bounds.min[1]};
   context.globalAlpha *= opacity;
   if (style.fill !== undefined) {
-    context.fillStyle = style.fill;
+    context.fillStyle = resolveTexturePaint(style.fill, context, paintBounds);
     context.fill(path);
   }
   const strokeWidth = nonnegative(style.strokeWidth ?? 0, 'Physics shape strokeWidth');
   if (style.stroke !== undefined && strokeWidth > 0) {
-    context.strokeStyle = style.stroke;
+    context.strokeStyle = resolveTexturePaint(style.stroke, context, paintBounds);
     context.lineWidth = strokeWidth;
     context.stroke(path);
   }
-  const bounds = boundsOfShape2D(shape);
   const interactivePath = props.pointerEvents === 'none' ? new Path2D() : path;
   useEventTarget(props, {
     path: interactivePath,

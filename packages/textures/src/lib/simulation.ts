@@ -43,26 +43,9 @@ export class InkSimulation {
     if (!hasCandidate) this.plant(x, y, seedRadius, strength);
   }
   private plant(x: number, y: number, radius: number, strength: number) {
-    // Keep both existing ink and its immediate diffusion boundary intact.
-    const guard = radius + 2;
-    for (
-      let py = Math.max(0, Math.floor(y - guard));
-      py <= Math.min(this.height - 1, Math.ceil(y + guard));
-      py++
-    ) {
-      for (
-        let px = Math.max(0, Math.floor(x - guard));
-        px <= Math.min(this.width - 1, Math.ceil(x + guard));
-        px++
-      ) {
-        if (
-          Math.hypot(px + 0.5 - x, py + 0.5 - y) < guard &&
-          this.b[py * this.width + px] > 0.08
-        )
-          return;
-      }
-    }
-    this.seedPatch(x, y, radius, strength);
+    // A gentle, localized dose works on both blank territory and mature ink.
+    // It avoids the fuel-starving flash that a full-strength patch produces.
+    this.seedPatch(x, y, radius, strength * 0.45);
   }
   private seedPatch(x: number, y: number, radius: number, strength: number) {
     for (

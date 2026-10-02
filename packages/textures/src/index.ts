@@ -12,3 +12,5 @@ export type {
   TextureRenderer,
   TextureRenderFrame,
 } from "./lib/presentation.js";
+export { useTexture, marble, paper, cellular, reactionDiffusion } from './lib/definitions.js';
+export type { MaterialOptions, ReactionDiffusionOptions, InkMessage } from './lib/definitions.js';

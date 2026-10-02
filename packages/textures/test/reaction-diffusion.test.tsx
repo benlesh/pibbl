@@ -124,3 +124,115 @@ it("keeps pointer-planted ink visible after two seconds of simulation", async ()
   }
   expect(driver.pendingHostFrames).toBe(0);
 });
+
+it("lets a pointer reshape a mature spots colony and keep evolving", async () => {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  const canvases = [
+    document.createElement("canvas"),
+    document.createElement("canvas"),
+  ];
+  for (const canvas of canvases) {
+    canvas.width = 128;
+    canvas.height = 80;
+    document.body.append(canvas);
+  }
+  const masks = [new Uint8ClampedArray(), new Uint8ClampedArray()];
+  const scene = (index: number, paused: boolean) => (
+    <ReactionDiffusion
+      paused={paused}
+      seed={42}
+      resolution={{ width: 128, height: 80 }}
+      brush={{ radius: 6, strength: 0.8 }}
+      style={{ width: 128, height: 80 }}
+      render={(context, texture) => {
+        masks[index] = texture.mask
+          .getContext("2d")!
+          .getImageData(0, 0, 128, 80).data;
+        context.drawImage(texture.source, 0, 0);
+      }}
+    />
+  );
+  const controllers = canvases.map((canvas, index) =>
+    crc(canvas, scene(index, false)),
+  );
+  try {
+    driver.flush(0);
+    for (let frame = 1; frame <= 120; frame++)
+      driver.flush((frame * 1000) / 60);
+    let point = { x: 8, y: 8, alpha: -1 };
+    for (let y = 8; y < 72; y++)
+      for (let x = 8; x < 120; x++) {
+        const alpha = masks[0][(y * 128 + x) * 4 + 3];
+        if (alpha > point.alpha) point = { x, y, alpha };
+      }
+    expect(point.alpha).toBeGreaterThan(100);
+    canvases.forEach((canvas, index) => crc(canvas, scene(index, true)));
+    driver.flush(2100);
+    await pointerDownLogicalPoint(canvases[0], point);
+    await pointerUpLogicalPoint(canvases[0], point);
+    driver.flush(2116);
+    expect(masks[0]).not.toEqual(masks[1]);
+    canvases.forEach((canvas, index) => crc(canvas, scene(index, false)));
+    for (let frame = 1; frame <= 120; frame++)
+      driver.flush(2116 + (frame * 1000) / 60);
+    expect(masks[0]).not.toEqual(masks[1]);
+  } finally {
+    controllers.forEach((controller) => controller.dispose());
+    restore();
+  }
+  expect(driver.pendingHostFrames).toBe(0);
+});
+
+it("lets a pointer add ink to an established stripes surface", async () => {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  const canvases = [
+    document.createElement("canvas"),
+    document.createElement("canvas"),
+  ];
+  for (const canvas of canvases) {
+    canvas.width = 128;
+    canvas.height = 80;
+    document.body.append(canvas);
+  }
+  const masks = [new Uint8ClampedArray(), new Uint8ClampedArray()];
+  const scene = (index: number, paused: boolean) => (
+    <ReactionDiffusion
+      paused={paused}
+      preset="stripes"
+      seed={42}
+      resolution={{ width: 128, height: 80 }}
+      brush={{ radius: 6, strength: 0.8 }}
+      style={{ width: 128, height: 80 }}
+      render={(context, texture) => {
+        masks[index] = texture.mask
+          .getContext("2d")!
+          .getImageData(0, 0, 128, 80).data;
+        context.drawImage(texture.source, 0, 0);
+      }}
+    />
+  );
+  const controllers = canvases.map((canvas, index) =>
+    crc(canvas, scene(index, false)),
+  );
+  try {
+    driver.flush(0);
+    for (let frame = 1; frame <= 120; frame++)
+      driver.flush((frame * 1000) / 60);
+    canvases.forEach((canvas, index) => crc(canvas, scene(index, true)));
+    driver.flush(2100);
+    await pointerDownLogicalPoint(canvases[0], { x: 64, y: 40 });
+    await pointerUpLogicalPoint(canvases[0], { x: 64, y: 40 });
+    driver.flush(2116);
+    expect(masks[0]).not.toEqual(masks[1]);
+    canvases.forEach((canvas, index) => crc(canvas, scene(index, false)));
+    for (let frame = 1; frame <= 120; frame++)
+      driver.flush(2116 + (frame * 1000) / 60);
+    expect(masks[0]).not.toEqual(masks[1]);
+  } finally {
+    controllers.forEach((controller) => controller.dispose());
+    restore();
+  }
+  expect(driver.pendingHostFrames).toBe(0);
+});
