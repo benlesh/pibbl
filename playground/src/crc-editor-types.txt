@@ -1342,6 +1342,9 @@ declare module "@crc/core" {
 declare module "@crc/textures" {
   export {useTexture} from '@crc/core';
   export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
+  export interface WaterWavesOptions { readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; }
+  export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' };
+  export function waterWaves(options?: WaterWavesOptions): import('@crc/core').TextureRecipe<WaterWavesMessage>;
   export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
   export type InkMessage = {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
   export function marble(options?: MaterialOptions): import('@crc/core').TextureRecipe;
@@ -1373,3 +1376,6 @@ export function invert(options: Readonly<CRCInvertFilterOptions>): CRCFilter;
 export function opacity(options: Readonly<CRCOpacityFilterOptions>): CRCFilter;
 export function saturate(options: Readonly<CRCSaturateFilterOptions>): CRCFilter;
 export function sepia(options: Readonly<CRCSepiaFilterOptions>): CRCFilter;
+
+export interface CRCDisplacementFilterOptions { readonly map: SignalValue<import('@crc/core').TexturePaint>; readonly strength: SignalValue<number>; readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; }
+export function displacement(options: Readonly<CRCDisplacementFilterOptions>): CRCFilter;
