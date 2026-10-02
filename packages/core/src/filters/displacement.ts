@@ -9,12 +9,10 @@ import {
   type PreparedCRCFilter,
 } from '../lib/style/filter-types.js';
 import type { StyleResolutionContext } from '../lib/types.js';
-import { validateTexturePaint, type TexturePaint } from '../lib/textures/texture-protocol.js';
+import { validateTexturePaint } from '../lib/textures/texture-protocol.js';
 import { renderDisplacementBoundary, type PreparedDisplacement } from './render-displacement-boundary.js';
-import { nativeExecutor } from './native.js';
 
 const definitions = new WeakMap<CRCFilter, Readonly<CRCDisplacementFilterOptions>>();
-const executor: CRCFilterExecutor = nativeExecutor;
 const displacementExecutor: CRCFilterExecutor = {
   prepare(value, property, context): PreparedCRCFilter {
     const options = definitions.get(value);
