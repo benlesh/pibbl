@@ -1,9 +1,10 @@
-import { crc, HtmlBox, Group, Clip, FocusManagement, Rectangle, Text, Path, PathGeometry, useSignal, useConst, usePlayback, repeat, sequence, wait, track, tween, type CRCController, type HtmlMountCallback } from '@crc/core';
+import { crc, HtmlBox, Group, Clip, FocusManagement, Rectangle, Text, Path, PathGeometry, useSignal, useConst, usePlayback, stepper, track, type CRCController, type HtmlMountCallback } from '@crc/core';
 
 interface InputBox { readonly x: number; readonly y: number; readonly width: number; readonly height: number; }
 interface EditorData {
   readonly title: string;
-  readonly onInputHover: (box: InputBox | null) => void;
+  readonly onInputActivity: (box: InputBox | null) => void;
+  readonly onKeystroke: (box: InputBox) => void;
 }
 
 const mountEditor: HtmlMountCallback<EditorData> = (element, initial, signal) => {
@@ -12,10 +13,11 @@ const mountEditor: HtmlMountCallback<EditorData> = (element, initial, signal) =>
   element.style.cssText += ';padding:22px;font:15px system-ui;color:#d9edf7';
   let current = initial;
   let hovered = false;
+  let focused = false;
   const label = document.createElement('label');
   label.style.cssText = 'display:grid;gap:10px;font-weight:650';
   const caption = document.createElement('span'); caption.textContent = current.title;
-  const input = document.createElement('input'); input.placeholder = 'Hover here to charge the field';
+  const input = document.createElement('input'); input.placeholder = 'Type to release green sparks';
   input.style.cssText = 'width:100%;padding:10px;border:1px solid #6187a6;border-radius:6px;font:inherit;box-sizing:border-box;background:#091725;color:#edfaff;outline-color:#94e8ff';
   label.append(caption, input);
   const button = document.createElement('button'); button.textContent = 'Native clicks: 0';
@@ -23,12 +25,18 @@ const mountEditor: HtmlMountCallback<EditorData> = (element, initial, signal) =>
   let clicks = 0;
   button.addEventListener('click', () => { button.textContent = `Native clicks: ${++clicks}`; }, { signal });
   element.append(label, button);
+  const measure = () => ({ x: input.offsetLeft, y: input.offsetTop, width: input.offsetWidth, height: input.offsetHeight });
   const report = () => {
-    if (!hovered || signal.aborted) return;
-    current.onInputHover({ x: input.offsetLeft, y: input.offsetTop, width: input.offsetWidth, height: input.offsetHeight });
+    if (!signal.aborted) current.onInputActivity(hovered || focused ? measure() : null);
   };
   input.addEventListener('pointerenter', () => { hovered = true; report(); }, { signal });
-  input.addEventListener('pointerleave', () => { hovered = false; current.onInputHover(null); }, { signal });
+  input.addEventListener('pointerleave', () => { hovered = false; report(); }, { signal });
+  input.addEventListener('focus', () => { focused = true; report(); }, { signal });
+  input.addEventListener('blur', () => { focused = false; report(); }, { signal });
+  input.addEventListener('keydown', event => {
+    if (!event.ctrlKey && !event.metaKey && !event.isComposing &&
+        (event.key.length === 1 || ['Backspace', 'Delete', 'Enter'].includes(event.key))) current.onKeystroke(measure());
+  }, { signal });
   // ResizeObserver reports after layout, outside mount/update evaluation. Keep
   // the arc origins aligned if fonts or the native input's dimensions change.
   const observer = new ResizeObserver(report);
@@ -68,22 +76,76 @@ function discharge(box: InputBox, frame: number) {
   return path;
 }
 
+interface Spark { x: number; y: number; vx: number; vy: number; life: number; }
+interface FieldState { time: number; flash: number; sparks: Spark[]; }
+
+// Tiny example-owned particle simulation. Gravity and restitution operate in
+// panel coordinates, using a circular collision normal at each rounded corner.
+function advanceSpark(spark: Spark, dt: number): Spark {
+  let { x, y, vx, vy, life } = spark;
+  vy += 480 * dt;
+  x += vx * dt; y += vy * dt;
+  const cx = Math.max(24, Math.min(316, x));
+  const cy = Math.max(24, Math.min(166, y));
+  const dx = x - cx; const dy = y - cy; const distance = Math.hypot(dx, dy);
+  if (distance > 22) {
+    const nx = dx / distance; const ny = dy / distance;
+    x = cx + nx * 22; y = cy + ny * 22;
+    const outward = vx * nx + vy * ny;
+    if (outward > 0) { vx -= 1.72 * outward * nx; vy -= 1.72 * outward * ny; }
+  }
+  const drag = Math.exp(-0.35 * dt);
+  return { x, y, vx: vx * drag, vy: vy * drag, life: life - dt };
+}
+
 function HtmlBoxLesson() {
   const angle = useSignal(0); const position = useSignal(0); const scale = useSignal(1); const after = useSignal(0);
   const inputBox = useSignal<InputBox | null>(null);
-  const clock = useSignal(0);
-  const playback = usePlayback(repeat(sequence(track(clock, tween({ from: 0, to: 1000, duration: 1000 })), wait(16)), { iterations: Infinity }));
+  const field = useSignal<FieldState>({ time: 0, flash: 0, sparks: [] });
+  const commands = useConst(() => ({ active: false, bursts: [] as InputBox[], serial: 0 }));
+  const program = useConst(() => track(field, stepper({
+    stepMilliseconds: 1000 / 120,
+    maxElapsedMilliseconds: 50,
+    initial: (value: FieldState) => value,
+    step(state: FieldState, milliseconds: number): FieldState {
+      const dt = milliseconds / 1000;
+      const sparks = state.sparks.map(spark => advanceSpark(spark, dt)).filter(spark => spark.life > 0);
+      let flash = Math.max(0, state.flash - dt * 5);
+      for (const box of commands.bursts.splice(0)) {
+        flash = 1;
+        for (let i = 0; i < 16; i++) {
+          const right = i % 2 === 0;
+          const seed = ++commands.serial;
+          const random = (Math.sin(seed * 127.1) * 43758.5453) % 1;
+          sparks.push({ x: box.x + (right ? box.width + 2 : -2), y: box.y + box.height * (0.2 + Math.abs(random) * 0.6), vx: (right ? 1 : -1) * (90 + Math.abs(random) * 170), vy: -150 + (seed % 7) * 45, life: 1.3 + (seed % 5) * 0.1 });
+        }
+      }
+      return { time: state.time + milliseconds, flash, sparks: sparks.slice(-160) };
+    },
+    read: (state: FieldState) => state,
+    done: (state: FieldState) => !commands.active && commands.bursts.length === 0 && state.sparks.length === 0 && state.flash === 0,
+  })));
+  const playback = usePlayback(program);
   const editorData = useConst<EditorData>(() => ({
     title: 'Your note',
-    onInputHover(box) {
-      const wasHovered = inputBox.get() !== null;
+    onInputActivity(box) {
+      commands.active = box !== null;
       inputBox.set(box);
-      if (box && !wasHovered) playback.play();
-      else if (!box) playback.pause();
+      if (box && !['running', 'scheduled'].includes(playback.status.get())) playback.play();
+    },
+    onKeystroke(box) {
+      commands.bursts.push(box);
+      if (!['running', 'scheduled'].includes(playback.status.get())) playback.play();
     },
   }));
   const measured = inputBox.get();
-  const arcs = measured ? discharge(measured, Math.floor(clock.get() / 65)) : null;
+  const state = field.get();
+  const arcs = measured ? discharge(measured, Math.floor(state.time / 65)) : null;
+  const sparkPath = new PathGeometry();
+  for (const spark of state.sparks) {
+    sparkPath.moveTo(spark.x, spark.y);
+    sparkPath.lineTo(spark.x - spark.vx * 0.012, spark.y - spark.vy * 0.012);
+  }
   const clip = useConst(() => { const path = new PathGeometry(); path.roundRect(0, 0, 340, 190, 24); return path; });
   const controls = [
     { text: 'ROTATE', action: () => angle.update(value => value === 20 ? -20 : value + 10) },
@@ -103,11 +165,13 @@ function HtmlBoxLesson() {
         <Clip style={{ d: clip }}>
           <Path key="panel" pointerEvents="none" style={{ d: clip, fill: '#102536', stroke: '#35586e', strokeWidth: 2 }} />
           {arcs && <Group key="lightning">
-            <Path pointerEvents="none" style={{ d: arcs, stroke: '#398bff', strokeWidth: 11, opacity: 0.1 }} />
-            <Path pointerEvents="none" style={{ d: arcs, stroke: '#55bdff', strokeWidth: 5, opacity: 0.22 }} />
-            <Path pointerEvents="none" style={{ d: arcs, stroke: '#a0eaff', strokeWidth: 1.8, opacity: 0.85 }} />
-            <Path pointerEvents="none" style={{ d: arcs, stroke: '#f1fcff', strokeWidth: 0.7 }} />
+            <Path pointerEvents="none" style={{ d: arcs, stroke: state.flash > 0 ? '#35ff75' : '#398bff', strokeWidth: 11, opacity: 0.1 }} />
+            <Path pointerEvents="none" style={{ d: arcs, stroke: state.flash > 0 ? '#53ff84' : '#55bdff', strokeWidth: 5, opacity: 0.22 }} />
+            <Path pointerEvents="none" style={{ d: arcs, stroke: state.flash > 0 ? '#99ffb3' : '#a0eaff', strokeWidth: 1.8 + state.flash * 1.8, opacity: 0.85 }} />
+            <Path pointerEvents="none" style={{ d: arcs, stroke: '#f1fff4', strokeWidth: 0.7 + state.flash }} />
           </Group>}
+          <Path key="spark-glow" pointerEvents="none" style={{ d: sparkPath, stroke: '#32ff79', strokeWidth: 7, opacity: 0.15 }} />
+          <Path key="sparks" pointerEvents="none" style={{ d: sparkPath, stroke: '#60ff91', strokeWidth: 2 }} />
           <HtmlBox
             key="native-editor"
             mount={mountEditor}
@@ -119,7 +183,7 @@ function HtmlBoxLesson() {
     </Group>
     <Rectangle style={{ x: 32, y: 404, width: 190, height: 40, fill: '#203c52', cursor: 'pointer' }} onClick={() => after.update(n => n + 1)} />
     <Text pointerEvents="none" style={{ x: 127, y: 430, textAlign: 'center', font: '700 12px system-ui', fill: 'white' }}>{`CANVAS CLICKS: ${after.get()}`}</Text>
-    <Text style={{ x: 242, y: 429, font: '13px system-ui', fill: '#91a8c2' }}>Hover the input. Native layout powers Canvas lightning.</Text>
+    <Text style={{ x: 242, y: 429, font: '13px system-ui', fill: '#91a8c2' }}>Focus and type to spark. Drag the bar or corner handles.</Text>
   </Group></FocusManagement>;
 }
 

@@ -36,7 +36,18 @@ it('runs the public HtmlBox lesson with native input and retained geometry in so
     const firstArc = Array.from(context.getImageData(0, 0, canvas.width, canvas.height).data);
     expect(firstArc).not.toEqual(beforeSpark);
     await expect.poll(() => Array.from(context.getImageData(0, 0, canvas.width, canvas.height).data)).not.toEqual(firstArc);
+    input.focus();
     input.dispatchEvent(new PointerEvent('pointerleave', { pointerId: 1, pointerType: 'mouse' }));
+    await frame();
+    expect(Array.from(context.getImageData(0, 0, canvas.width, canvas.height).data)).not.toEqual(beforeSpark);
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+    await frame();
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let green = 0;
+    for (let i = 0; i < pixels.length; i += 4) if (pixels[i + 1] > 170 && pixels[i + 1] > pixels[i] * 1.3 && pixels[i + 1] > pixels[i + 2] * 1.15) green++;
+    expect(green).toBeGreaterThan(30);
+    input.blur();
+    await new Promise(resolve => setTimeout(resolve, 2200));
     await frame();
     expect(Array.from(context.getImageData(0, 0, canvas.width, canvas.height).data)).toEqual(beforeSpark);
   } finally {
