@@ -67,6 +67,7 @@ const expected = [
   "defineAnimation",
   "definePrimitive",
   "defineRenderLayer",
+  "defineTexture",
   "easing",
   "flattenPath",
   "flattenPathWang",
@@ -109,6 +110,7 @@ const expected = [
   "useSignal",
   "useSvgPath",
   "useTransition",
+  "useTexture",
   "wait",
   "warpPath",
   "bendPathAlongArc",
@@ -129,6 +131,7 @@ for (const removedName of ["useState", "useMemo", "useWhenChanged"]) {
 
 const expectedInternal = [
   "CRCInternalManualSchedulerDriver",
+  "borrowTextureRaster",
   "cancelBackendMountFrame",
   "crcInternalAssertCommandAllowed",
   "crcInternalCreatePropAttachment",
@@ -175,8 +178,10 @@ const expectedInternal = [
   "registerNestedInteractionResolver",
   "releaseBackendEventTarget",
   "requestCurrentInstanceFrame",
+  "resolveTexturePaint",
   "retainBackendMountRoot",
   "setCurrentComponentAfterRender",
+  "validateTexturePaint",
   "snapshotLayerNodeTree",
   "useBackendEventTarget",
   "useInternalHookSlot",
@@ -208,9 +213,9 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 99) {
+if (actual.length !== 101) {
   throw new Error(
-    `Expected 99 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected 101 @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 
