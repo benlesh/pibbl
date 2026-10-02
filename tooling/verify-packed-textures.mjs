@@ -75,10 +75,6 @@ try {
     "useTexture",
     "waterWaves",
     "waterSurface",
-    "marble",
-    "paper",
-    "cellular",
-    "reactionDiffusion",
     "tendrils",
     "lightning",
   ].sort();
