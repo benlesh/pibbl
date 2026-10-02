@@ -56,7 +56,7 @@
     "test:agent-verification": "corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 test:agent-verification:identity && corepack pnpm@11.21.0 test:agent-verification:watchdog && vitest run packages/core/test/agent-targeting-observation.test.tsx packages/core/test/agent-targeting-verification.test.ts packages/core/test/agent-signal-observation.test.tsx packages/core/test/agent-browser-observation.test.ts packages/core/test/agent-viz-verification.test.ts packages/core/test/three-picking-verification.test.ts packages/viz/test/hover-lab.test.ts --browser.headless --browser.ui=false",
     "test:agent-verification:requirements": "node --test tooling/agent-verification/requirements.test.mjs && node tooling/agent-verification/requirements.mjs",
     "test:textures": "vitest run packages/textures/test --browser.headless --browser.ui=false",
-    "test:filter-authoring": "node --import tsx --test tooling/filter-authoring.test.mjs",
+    "test:filter-authoring": "node --import tsx --test tooling/filter-authoring.test.mjs tooling/filter-validation.test.mjs",
     "test:path-tree-shaking": "node tooling/verify-path-tree-shaking.mjs",
     "text:setup": "corepack pnpm@11.21.0 --filter @crc/text run setup",
     "text:doctor": "corepack pnpm@11.21.0 --filter @crc/text run doctor",

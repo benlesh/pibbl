@@ -1,3 +1,4 @@
+import { concreteColor } from './native-color.js';
 import { isSignal } from '../lib/signals/graph.js';
 import { renderFilterBoundary } from '../lib/filter/render-filter-boundary.js';
 import { BLUR_EXTENT_FACTOR, type PixelBounds } from '../lib/filter/filter-region.js';
@@ -29,7 +30,8 @@ function prepared(executor: CRCFilterExecutor, css: (density: number) => string,
 const unchanged = (output: Readonly<PixelBounds>): PixelBounds => ({ ...output });
 function number(value: unknown, property: string, context: Readonly<StyleResolutionContext>, nonnegative = false): number {
   const resolved = isSignal(value) ? value.get() : value;
-  if (typeof resolved !== 'number' || !Number.isFinite(resolved) || (nonnegative && resolved < 0)) throw invalid(property, resolved, nonnegative ? 'must be nonnegative' : 'must be a finite number', context);
+  if (typeof resolved !== 'number' || !Number.isFinite(resolved)) throw invalid(property, resolved, 'must be a finite number', context);
+  if (nonnegative && resolved < 0) throw invalid(property, resolved, 'must be nonnegative', context);
   return resolved;
 }
 function invalid(property: string, value: unknown, reason: string, context: Readonly<StyleResolutionContext>): Error { return layoutDiagnostic({ component: context.component, property, value, algorithm: context.algorithm, constraints: context.constraints, reason }); }
@@ -54,10 +56,9 @@ export function saturate(options: CRCSaturateFilterOptions): CRCFilter { return 
 export function sepia(options: CRCSepiaFilterOptions): CRCFilter { return amountFilter('sepia', options, true); }
 export function hueRotate(options: CRCHueRotateFilterOptions): CRCFilter { const degreesInput = options.degrees; return filter({ prepare(executor, property, context) { const degrees = number(degreesInput, `${property}.degrees`, context); return prepared(executor, () => `hue-rotate(${degrees}deg)`, unchanged); } }); }
 export function dropShadow(options: CRCDropShadowFilterOptions): CRCFilter {
-  const offsetXInput = options.offsetX; const offsetYInput = options.offsetY; const radiusInput = options.blurRadius ?? 0; const colorInput = options.color;
+  const offsetXInput = options.offsetX; const offsetYInput = options.offsetY; const radiusInput = options.blurRadius === undefined ? 0 : options.blurRadius; const colorInput = options.color;
   return filter({ prepare(executor, property, context) {
-    const offsetX = number(offsetXInput, `${property}.offsetX`, context); const offsetY = number(offsetYInput, `${property}.offsetY`, context); const radius = number(radiusInput, `${property}.blurRadius`, context, true); const color = isSignal(colorInput) ? colorInput.get() : colorInput;
-    if (typeof color !== 'string' || !color.trim() || /\b(?:currentcolor|inherit|var|env|attr)\b/i.test(color)) throw invalid(`${property}.color`, color, 'must be a concrete CSS color string', context);
+    const offsetX = number(offsetXInput, `${property}.offsetX`, context); const offsetY = number(offsetYInput, `${property}.offsetY`, context); const radius = number(radiusInput, `${property}.blurRadius`, context, true); const color = concreteColor(isSignal(colorInput) ? colorInput.get() : colorInput, `${property}.color`, context);
     return prepared(executor, density => `drop-shadow(${offsetX * density}px ${offsetY * density}px ${radius * density}px ${color})`, (output, density) => { const extent = Math.ceil(radius * density * BLUR_EXTENT_FACTOR); const x = Math.min(output.x, Math.floor(output.x - offsetX * density - extent)); const y = Math.min(output.y, Math.floor(output.y - offsetY * density - extent)); const right = Math.max(output.x + output.width, Math.ceil(output.x + output.width - offsetX * density + extent)); const bottom = Math.max(output.y + output.height, Math.ceil(output.y + output.height - offsetY * density + extent)); return { x, y, width: right - x, height: bottom - y }; });
   } });
 }
