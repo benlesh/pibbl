@@ -220,14 +220,20 @@ class Resource {
       this.palette = options.palette && Object.freeze([...options.palette]);
       this.optionsKey = nextKey;
       if (width !== this.canvas.width || height !== this.canvas.height) {
-        this.call(() => this.definition.dispose?.(this.state, this.context));
+        this.disposeState();
         this.canvas.width = width;
         this.canvas.height = height;
         this.messages.length = 0;
         this.lastTime = undefined;
-        this.state = this.call(() =>
-          this.definition.create(this.context, recipe.config),
-        );
+        try {
+          this.state = this.call(() =>
+            this.definition.create(this.context, recipe.config),
+          );
+          this.hasState = true;
+        } catch (error) {
+          try { this.dispose(); } catch { /* Preserve the recreate failure. */ }
+          throw error;
+        }
       }
       this.context.invalidate();
     }
@@ -321,9 +327,10 @@ class Resource {
     }
     const spare = this.spare;
     this.spare = undefined;
-    const candidate = spare?.width === this.canvas.width && spare.height === this.canvas.height ?
-      spare : this.createPublicationCanvas();
-    if (spare && spare !== candidate) spare.width = spare.height = 0;
+    const reusable = spare?.width === this.canvas.width && spare.height === this.canvas.height ?
+      spare : undefined;
+    if (spare && spare !== reusable) spare.width = spare.height = 0;
+    const candidate = reusable ?? this.createPublicationCanvas();
     try {
       const candidateContext = candidate.getContext("2d");
       if (!candidateContext) throw new Error("Textures require OffscreenCanvas 2D.");
@@ -333,6 +340,7 @@ class Resource {
       return candidate;
     } catch (error) {
       candidate.width = candidate.height = 0;
+      this.dirty = true;
       throw error;
     }
   }
@@ -341,8 +349,8 @@ class Resource {
     return new OffscreenCanvas(this.canvas.width, this.canvas.height);
   }
   /** @internal Structural ownership evidence for texture publication tests. */
-  publicationSnapshot(): Readonly<{ publicationCanvasesCreated: number }> {
-    return Object.freeze({ publicationCanvasesCreated: this.publicationCanvasesCreated });
+  publicationSnapshot(): Readonly<{ publicationCanvasesCreated: number; hasOwner: boolean }> {
+    return Object.freeze({ publicationCanvasesCreated: this.publicationCanvasesCreated, hasOwner: this.owner !== undefined });
   }
   private publishInitial(): void {
     const candidate = this.rasterizeCandidate();
@@ -394,8 +402,7 @@ class Resource {
     this.unschedule();
     this.messages.length = 0;
     try {
-      if (this.hasState)
-        this.call(() => this.definition.dispose?.(this.state, this.context));
+      this.disposeState();
     } finally {
       this.canvas.width = this.canvas.height = 0;
       this.committed && (this.committed.width = this.committed.height = 0);
@@ -408,6 +415,13 @@ class Resource {
       this.provisional = undefined;
       this.owner = undefined;
     }
+  }
+  private disposeState() {
+    if (!this.hasState) return;
+    this.hasState = false;
+    const state = this.state;
+    this.state = undefined;
+    this.call(() => this.definition.dispose?.(state, this.context));
   }
 }
 

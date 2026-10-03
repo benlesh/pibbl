@@ -266,7 +266,7 @@ it("reuses its bounded publication pair across 100 committed updates", () => {
       texture!.send({ value });
       driver.flush(value * 16);
     }
-    expect(resource.publicationSnapshot()).toEqual({ publicationCanvasesCreated: 2 });
+    expect(resource.publicationSnapshot()).toEqual({ publicationCanvasesCreated: 2, hasOwner: true });
   } finally {
     controller.dispose();
     restore();
