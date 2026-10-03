@@ -21,25 +21,28 @@ try {
       const [core, textures, scheduler] = await Promise.all([import(`${base}packages/core/src/index.ts`), import(`${base}packages/textures/src/index.ts`), import(`${base}packages/core/src/lib/scheduler/testing.ts`)]);
       if (core.useTexture !== textures.useTexture) throw new Error('Source-mode public useTexture runtime identity mismatch.');
       const driver = new scheduler.ManualSchedulerDriver(), restore = scheduler.installSchedulerDriverForTest(driver);
-      let stale, rootElement, canvas, controller;
-      function Scene(_props) { const texture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 64, height: 40 } }); if (retain) stale = texture; return core.createElement(core.Rectangle, { style: { width: 64, height: 40, fill: texture.paint({ mode: 'stretch' }) } }); }
+      let stale, rootElement, canvas, controller, renders = 0;
+      function Scene({ retainHandle }) { renders++; const texture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 64, height: 40 } }); if (retainHandle) stale = texture; return core.createElement(core.Rectangle, { style: { width: 64, height: 40, fill: texture.paint({ mode: 'stretch' }) } }); }
       canvas = document.createElement('canvas');
-      rootElement = core.createElement(Scene, {});
+      rootElement = core.createElement(Scene, { retainHandle: retain });
       const weakRoot = new WeakRef(rootElement), weakCanvas = new WeakRef(canvas);
       controller = core.crc(canvas, rootElement);
+      const pendingBeforeInitialFlush = driver.pendingHostFrames;
       driver.flush(0);
       const hasConfiguredStaleHandle = retain ? stale !== undefined : stale === undefined;
-      window.__crcWeakAudit = { weakRoot, weakCanvas, stale, hasConfiguredStaleHandle, controller, scheduler, restore };
+      window.__crcWeakAudit = { weakRoot, weakCanvas, stale, hasConfiguredStaleHandle, renders, pendingBeforeInitialFlush, controller, scheduler, restore };
       rootElement = undefined;
       canvas = undefined;
     }, { workspace: root, retain });
     const positiveControl = await page.evaluate(({ retain }) => ({
       retain,
       hasConfiguredStaleHandle: window.__crcWeakAudit.hasConfiguredStaleHandle,
+      renders: window.__crcWeakAudit.renders,
+      pendingBeforeInitialFlush: window.__crcWeakAudit.pendingBeforeInitialFlush,
       rootReachableBeforeDispose: window.__crcWeakAudit.weakRoot.deref() !== undefined,
       canvasReachableBeforeDispose: window.__crcWeakAudit.weakCanvas.deref() !== undefined,
     }), { retain });
-    if (!positiveControl.hasConfiguredStaleHandle || !positiveControl.rootReachableBeforeDispose || !positiveControl.canvasReachableBeforeDispose) throw new Error('WeakRef pre-disposal positive control failed.');
+    if (!positiveControl.hasConfiguredStaleHandle || positiveControl.renders < 1 || !positiveControl.rootReachableBeforeDispose || !positiveControl.canvasReachableBeforeDispose) throw new Error(`WeakRef pre-disposal positive control failed: ${JSON.stringify(positiveControl)}`);
     const disposeState = await page.evaluate(() => {
       const state = window.__crcWeakAudit;
       state.controller.dispose();
