@@ -48,4 +48,4 @@ try{for(const config of cases){
  },{root,cfg:config});
  result.after=await page.evaluate(()=>window.auditAfter);report.cases.push(result);process.stdout.write(JSON.stringify(result)+'\n');
  }catch(e){report.cases.push({config,error:String(e)});process.stdout.write('FAILED '+JSON.stringify(config)+' '+e+'\n')}finally{save();await page.close()}
-}report.complete=!timedOut;}catch(error){report.errors.push(String(error));report.complete=false;}finally{clearTimeout(watchdog);save();await browser.close()}
+}report.complete=!timedOut && report.errors.length===0 && report.cases.every(entry=>!entry.error);if(!report.complete)process.exitCode=1;}catch(error){report.errors.push(String(error));report.complete=false;}finally{clearTimeout(watchdog);save();await browser.close()}

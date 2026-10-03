@@ -1,0 +1,76 @@
+{
+  "baseline": "0559b523386b9c59aef6565e6414c2e30c9ea28e",
+  "node": "v24.15.0",
+  "browser": "151.0.7922.34",
+  "sourceRoot": "/Users/benlesh/.codex/worktrees/runtime-perf-audit/crc",
+  "mode": "source",
+  "meaning": "Synthetic public-API scheduler CPU wall time; excludes compositor presentation. Timing cases uninstrumented except scalar duration samples. Structural copy counters measured separately. No forced GC.",
+  "cases": [
+    {
+      "config": {
+        "kind": "physics-retention",
+        "n": 1000,
+        "frames": 0
+      },
+      "warmup": 0,
+      "flushed": 0,
+      "idle": 0,
+      "samples": 0,
+      "extra": {
+        "inspection": "private cache counts supplement public query hit and stale enabled=false assertions",
+        "before": {
+          "bodies": 0,
+          "colliders": 0
+        },
+        "afterChurn": {
+          "bodies": 0,
+          "colliders": 0
+        },
+        "afterDispose": {
+          "bodies": 0,
+          "colliders": 0
+        }
+      },
+      "live": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 1,
+        "releasedRootRegistrations": 1,
+        "createdBeginCommands": 2000,
+        "releasedBeginCommands": 2000,
+        "createdCompletionCallbacks": 2000,
+        "releasedCompletionCallbacks": 2000,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "after": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 1,
+        "releasedRootRegistrations": 1,
+        "createdBeginCommands": 2000,
+        "releasedBeginCommands": 2000,
+        "createdCompletionCallbacks": 2000,
+        "releasedCompletionCallbacks": 2000,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      }
+    }
+  ],
+  "errors": [],
+  "complete": true
+}

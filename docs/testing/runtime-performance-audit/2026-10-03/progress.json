@@ -1,31 +1,33 @@
 {
-  "task": "fresh aggressive audit requested after old-baseline discovery",
-  "status": "audit evidence complete; remediation open",
+  "task": "priority remediation of the fresh committed-main audit",
+  "status": "priority fixes implemented and independently verified locally; integration blocked",
   "productionBaseline": "690bb10a99246b6f5f57df9b0341774209905827",
   "remoteMainVerified": "690bb10a99246b6f5f57df9b0341774209905827",
-  "runtimeChanges": false,
-  "integration": "No runtime fixes, merges or pushes in this audit. Audit artifacts committed separately.",
+  "runtimeChanges": true,
+  "integration": "No main merges or pushes. Required aggregate trust remains blocked by pre-existing texture contract provenance inventory. See REMEDIATION.md.",
   "findings": {
-    "A01": "open; reproduced",
-    "A02": "open; reproduced",
-    "A03": "open; reproduced",
-    "A04": "open; reproduced",
-    "A05": "open; reproduced",
-    "A06": "open; reproduced",
-    "A07": "open; reproduced",
-    "A08": "open; reproduced",
+    "A01": "fixed/reviewed/verified locally; integration blocked",
+    "A02": "fixed/reviewed/verified locally; integration blocked",
+    "A03": "blocked on delivery-policy decision",
+    "A04": "confirmed worst-case allocation pressure mitigated, measured and reviewed; scaled presentations retain pattern pressure",
+    "A05": "fixed/reviewed/verified locally; integration blocked",
+    "A06": "fixed/reviewed/verified locally; integration blocked",
+    "A07": "profile-directed rendering and physics staging optimized, measured and reviewed",
+    "A08": "deferred; safe generic pooling needs generation-release contract",
     "A09": "source-supported follow-up",
     "A10": "source-supported follow-up",
-    "A11": "open; reproduced"
+    "A11": "fixed/reviewed/verified locally; integration blocked"
   },
   "blockers": [
-    "Pristine baseline trust fails classification of 12 docs/website-rebuild/*.md files.",
-    "Native/GPU allocation attribution not established by RSS; requires separate profiling."
+    "A03 requires the requested public delivery-policy choice.",
+    "Aggregate trust: texture contract inventory has12 recorded versus31 current semantic units; no approved-design provenance found for units25\u201331."
   ],
   "next": [
-    "A01 initialization ownership",
-    "A11 stale Texture owner release",
-    "A02 physics historical handle-cache retention"
+    "Resolve A03 delivery policy without silent message loss/reordering.",
+    "Reconcile approved texture-contract provenance; rerun aggregate trust.",
+    "Integrate reviewed issue candidates one at a time and verify remote main after each push."
   ],
-  "review": "Independent reviewer validated corrected ownership, weak-reference controls, broad evidence and report; README records rejected evidence and reconciliation."
+  "review": "Independent code and verification reviews reconciled in REMEDIATION.md; all blocking findings in delivered changes fixed.",
+  "candidate": "6f505d04",
+  "measuredRuntimeCommit": "31d8417f09f6bc2bb76a96395735065bcf697108"
 }

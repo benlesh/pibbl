@@ -2,6 +2,8 @@
 
 > **Historical status: Completed baseline audit; remediation is tracked separately.**
 
+Current fix dispositions, measurements, reviews, and integration blockers are in [the remediation record](REMEDIATION.md). The findings below preserve the original baseline audit.
+
 This fresh audit finds reproducible reaction-diffusion initialization and stale-texture ownership bugs, retained physics handle caches, expensive overload handling, and substantial transient Canvas memory pressure. Normal diffusion teardown passed 1,000 cycles on each of two public paths. This does **not** establish that CRC is leak-free.
 
 This is an audit, not a completed remediation. No production code was changed; every open finding below still needs its own regression, implementation, review, and release verification. The user's request for a fresh audit superseded execution of the old remediation queue.

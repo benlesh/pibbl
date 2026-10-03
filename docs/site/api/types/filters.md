@@ -172,6 +172,7 @@ The map, region, source, opacity, threshold, softness, and direction accepted by
 ## CRCReflectedLightSource
 
 A concrete CSS color, CRC texture paint, decoded HTMLImageElement, or ImageBitmap.
+
 ## CRCSaturateFilterOptions
 
 `CRCSaturateFilterOptions` describes the validated inputs to `saturate`, shown in the
