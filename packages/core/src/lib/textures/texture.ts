@@ -221,12 +221,12 @@ class Resource {
       this.palette = options.palette && Object.freeze([...options.palette]);
       this.optionsKey = nextKey;
       if (width !== this.canvas.width || height !== this.canvas.height) {
-        this.disposeState();
-        this.canvas.width = width;
-        this.canvas.height = height;
-        this.messages.length = 0;
-        this.lastTime = undefined;
         try {
+          this.disposeState();
+          this.canvas.width = width;
+          this.canvas.height = height;
+          this.messages.length = 0;
+          this.lastTime = undefined;
           this.state = this.call(() =>
             this.definition.create(this.context, recipe.config),
           );
@@ -334,8 +334,9 @@ class Resource {
     const reusable = spare?.width === this.canvas.width && spare.height === this.canvas.height ?
       spare : undefined;
     if (spare && spare !== reusable) spare.width = spare.height = 0;
-    const candidate = reusable ?? this.createPublicationCanvas();
+    let candidate: OffscreenCanvas | undefined;
     try {
+      candidate = reusable ?? this.createPublicationCanvas();
       const candidateContext = candidate.getContext("2d");
       if (!candidateContext) throw new Error("Textures require OffscreenCanvas 2D.");
       // Publication canvases are reused; transparent source pixels must erase old paint.
@@ -343,7 +344,7 @@ class Resource {
       candidateContext.drawImage(this.canvas, 0, 0);
       return candidate;
     } catch (error) {
-      candidate.width = candidate.height = 0;
+      if (candidate) candidate.width = candidate.height = 0;
       this.dirty = true;
       if (!this.retryScheduled) {
         this.retryScheduled = true;
