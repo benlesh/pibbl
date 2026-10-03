@@ -1,0 +1,40 @@
+import { chromium } from '/Users/benlesh/GitHub/crc/node_modules/playwright/index.mjs';
+import { writeFileSync } from 'node:fs';
+const browser=await chromium.launch({headless:true});
+console.log(JSON.stringify({browser:browser.version(),node:process.version}));
+const context=await browser.newContext({viewport:{width:1280,height:900},deviceScaleFactor:1});
+const page=await context.newPage();
+const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.route('**/audit.html',r=>r.fulfill({contentType:'text/html',body:'<title>CRC stress audit</title><body></body>'}));
+await page.goto('http://127.0.0.1:5199/audit.html');
+await page.evaluate(async()=>{
+ const base='/@fs/Users/benlesh/GitHub/crc/';
+ window.core=await import(base+'packages/core/src/index.ts');
+ window.catalog=await import(base+'packages/scenarios/src/learning-catalog.ts');
+ window.sched=await import(base+'packages/core/src/lib/scheduler/realm-scheduler.ts');
+ window.gs=await import(base+'packages/core/src/lib/global-state.ts');
+ window.tex=await import(base+'packages/core/src/features/textures/index.ts');
+ window.testing=await import(base+'packages/core/src/lib/scheduler/testing.ts');
+ window.metrics={frames:0,renders:0,ms:[],last:0};
+ sched.installSchedulerTraceCollectorForTest(record=>{
+  if(record.phase==='begin') { metrics.frames++;metrics.last=performance.now(); }
+  if(record.phase==='idle') metrics.ms.push(performance.now()-metrics.last);
+ });
+ window.mountExample=async slug=>{const entry=catalog.learningExampleCatalog.find(x=>x.slug===slug); const mod=await catalog.loadLearningExample(entry);const canvas=document.createElement('canvas');canvas.width=entry.canvas.width;canvas.height=entry.canvas.height;document.body.replaceChildren(canvas);const ctx=canvas.getContext('2d');const clear=ctx.clearRect;ctx.clearRect=function(...args){metrics.renders++;return clear.apply(this,args)};window.controller=mod.default(canvas);window.canvas=canvas;};
+ window.summary=()=>{const s=sched.snapshotRealmScheduler();const sorted=metrics.ms.toSorted((a,b)=>a-b);return {...metrics,ms:undefined,last:undefined,median:sorted[Math.floor(sorted.length*.5)],p95:sorted[Math.floor(sorted.length*.95)],max:sorted.at(-1),scheduler:s,instances:[...gs.GLOBAL_STATE.crcInstances.values()].map(i=>({refs:i.refs.size,paintEntries:i.paintEntries.size})),heap:performance.memory?.usedJSHeapSize};};
+});
+const cdp=await context.newCDPSession(page);
+const results=[];
+for(const [slug,seconds] of [['living-ink',180],['stirred-ink',90],['physics-2d',60],['physics-panels',60],['particle-effects',60],['underwater',60]]){
+ console.log('START',slug);
+ await page.evaluate(async slug=>{metrics={frames:0,renders:0,ms:[],last:0};await mountExample(slug)},slug);
+ const samples=[];
+ for(let t=0;t<seconds;t+=15){await page.waitForTimeout(15000);await cdp.send('HeapProfiler.collectGarbage');const sample=await page.evaluate(()=>summary());samples.push(sample);console.log(JSON.stringify({slug,t:t+15,...sample}));}
+ await page.screenshot({path:'/tmp/crc-review-'+slug+'.png'});
+ if(slug==='living-ink'){
+ await page.mouse.click(24+488+52,532+18);await page.waitForTimeout(500); const a=await page.evaluate(()=>summary());await page.waitForTimeout(2000);const b=await page.evaluate(()=>summary());console.log('PAUSE',JSON.stringify({deltaFrames:b.frames-a.frames,deltaRenders:b.renders-a.renders,scheduler:b.scheduler}));
+ }
+ await page.evaluate(()=>controller.dispose());await page.waitForTimeout(100);const after=await page.evaluate(()=>summary());console.log('DISPOSE',slug,JSON.stringify(after.scheduler));
+ results.push({slug,samples,after,errors:[...errors]});writeFileSync('/tmp/crc-review-soak-results.json',JSON.stringify(results,null,2));
+}
+await browser.close();
