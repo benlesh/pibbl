@@ -121,6 +121,7 @@ class Resource {
   state: any;
   definition: Definition;
   disposed = false;
+  private hasState = false;
   dirty = true;
   private sequence = 0;
   private publicationCanvasesCreated = 0;
@@ -132,7 +133,7 @@ class Resource {
   private palette?: readonly string[];
   private optionsKey: string;
   constructor(
-    readonly owner: CRCInstance,
+    private owner: CRCInstance | undefined,
     recipe: Recipe,
     options: TextureOptions,
   ) {
@@ -189,13 +190,17 @@ class Resource {
       this.state = this.call(() =>
         this.definition.create(this.context, recipe.config),
       );
+      this.hasState = true;
+      this.publishInitial();
+      this.initializing = false;
     } catch (error) {
-      this.unregister?.();
-      this.canvas.width = this.canvas.height = 0;
+      try {
+        this.dispose();
+      } catch {
+        // The initialization failure remains the actionable error.
+      }
       throw error;
     }
-    this.publishInitial();
-    this.initializing = false;
   }
   private call<T>(fn: () => T): T {
     return withHooksForbidden(
@@ -353,7 +358,7 @@ class Resource {
     let root = GLOBAL_STATE.currentCRCInstance;
     while (root?.parent) root = GLOBAL_STATE.crcInstances.get(root.parent);
     let owner = this.owner;
-    while (owner.parent) owner = GLOBAL_STATE.crcInstances.get(owner.parent)!;
+    while (owner?.parent) owner = GLOBAL_STATE.crcInstances.get(owner.parent);
     if (root !== owner) throw new Error("Textures may only be shared within their owning CRC tree.");
   }
   private borrow(placement: Readonly<TexturePlacement>): BorrowedTextureRaster {
@@ -382,13 +387,19 @@ class Resource {
     this.unschedule();
     this.messages.length = 0;
     try {
-      this.call(() => this.definition.dispose?.(this.state, this.context));
+      if (this.hasState)
+        this.call(() => this.definition.dispose?.(this.state, this.context));
     } finally {
       this.canvas.width = this.canvas.height = 0;
       this.committed && (this.committed.width = this.committed.height = 0);
       this.spare && (this.spare.width = this.spare.height = 0);
       this.provisional && (this.provisional.canvas.width = this.provisional.canvas.height = 0);
       this.state = undefined;
+      this.hasState = false;
+      this.committed = undefined;
+      this.spare = undefined;
+      this.provisional = undefined;
+      this.owner = undefined;
     }
   }
 }

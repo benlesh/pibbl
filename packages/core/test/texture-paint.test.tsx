@@ -160,6 +160,39 @@ it("releases an initial provisional texture raster when its render transaction f
   }
 });
 
+it("cleans a failed initial texture publication without masking its error", () => {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  const dispose = vi.fn(() => { throw new Error("recipe cleanup failed"); });
+  let source: OffscreenCanvas | undefined;
+  const recipe = defineTexture<{}, {}>({
+    create(context) {
+      source = context.canvas;
+      context.requestFrame();
+      return {};
+    },
+    rasterize() { throw new Error("initial publication failed"); },
+    dispose,
+  });
+  function Broken() {
+    useTexture(recipe({}), { resolution: { width: 8, height: 8 } });
+    return <Rectangle style={{ width: 8, height: 8, fill: "red" }} />;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 16;
+  document.body.append(canvas);
+  const controller = crc(canvas, <Broken />);
+  try {
+    expect(() => driver.flush(0)).toThrow("initial publication failed");
+    expect(dispose).toHaveBeenCalledTimes(1);
+    expect(source).toMatchObject({ width: 0, height: 0 });
+    expect(driver.pendingHostFrames).toBe(0);
+  } finally {
+    controller.dispose();
+    restore();
+  }
+});
+
 it("keeps an Advance-committed texture raster when the later render fails", () => {
   const driver = new ManualSchedulerDriver();
   const restore = installSchedulerDriverForTest(driver);
