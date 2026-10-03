@@ -130,6 +130,7 @@ class Resource {
   private continuing = false;
   private lastTime?: number;
   private initializing = true;
+  private retryScheduled = false;
   private palette?: readonly string[];
   private optionsKey: string;
   constructor(
@@ -285,6 +286,7 @@ class Resource {
                 previous = this.committed;
                 this.committed = candidate;
                 this.spare = previous;
+                this.retryScheduled = false;
               }
             },
             rollback: () => {
@@ -308,6 +310,7 @@ class Resource {
       } catch (error) {
         this.unschedule();
         this.continuing = false;
+        if (this.retryScheduled) this.schedule();
         throw error;
       }
     };
@@ -341,6 +344,10 @@ class Resource {
     } catch (error) {
       candidate.width = candidate.height = 0;
       this.dirty = true;
+      if (!this.retryScheduled) {
+        this.retryScheduled = true;
+        this.schedule();
+      }
       throw error;
     }
   }
