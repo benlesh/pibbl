@@ -17,7 +17,7 @@ try {
     await page.route('**/crc-weak-audit.html', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>CRC WeakRef audit</title>' }));
     await page.goto(`${baseUrl}/crc-weak-audit.html`);
     await page.evaluate(async ({ workspace, retain }) => {
-      const base = `/@fs/${workspace}/`;
+      const base = `/@fs${workspace}/`;
       const [core, textures, scheduler] = await Promise.all([import(`${base}packages/core/src/index.ts`), import(`${base}packages/textures/src/index.ts`), import(`${base}packages/core/src/lib/scheduler/testing.ts`)]);
       if (core.useTexture !== textures.useTexture) throw new Error('Source-mode public useTexture runtime identity mismatch.');
       const driver = new scheduler.ManualSchedulerDriver(), restore = scheduler.installSchedulerDriverForTest(driver);

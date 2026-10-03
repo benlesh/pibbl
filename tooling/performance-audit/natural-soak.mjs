@@ -28,7 +28,7 @@ try {
     await page.goto(`${baseUrl}/crc-natural-audit.html`);
     const cdp = await page.context().newCDPSession(page); await cdp.send('Performance.enable');
     await page.evaluate(async ({ workspace, slug }) => {
-      const base = `/@fs/${workspace}/`;
+      const base = `/@fs${workspace}/`;
       const [core, textures, catalog, scheduler] = await Promise.all([import(`${base}packages/core/src/index.ts`), import(`${base}packages/textures/src/index.ts`), import(`${base}packages/scenarios/src/learning-catalog.ts`), import(`${base}packages/core/src/lib/scheduler/realm-scheduler.ts`)]);
       const durations = new Float64Array(4096); let count = 0, start = 0, worst = 0, overBudget = 0;
       const release = scheduler.installSchedulerTraceCollectorForTest(event => { if (event.kind !== 'scheduler-phase') return; const now = performance.now(); if (event.phase === 'begin') start = now; if (event.phase === 'idle') { const duration = now - start; durations[count++ % durations.length] = duration; worst = Math.max(worst, duration); if (duration > 16.667) overBudget++; } });

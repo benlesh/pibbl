@@ -56,7 +56,7 @@ try {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
   const mainSuite = await page.evaluate(async ({ workspace, frames, cycles }) => {
-    const base = `/@fs/${workspace}/`;
+    const base = `/@fs${workspace}/`;
     const strongCanvases = []; // Deliberately retains canvases only to inspect explicit zero-dimension release.
     const memorySizes = [];
     const NativeCanvas = window.OffscreenCanvas;
@@ -121,7 +121,9 @@ try {
     ];
     const lifecycle = [];
     for (let index = 0; index < cycles; index++) lifecycle.push(safe(`reaction-diffusion lifecycle ${index}`, () => run(`reaction-diffusion lifecycle ${index}`, () => legacy({ paused: true }), undefined, 3, false)));
-    results.push({ name: 'reaction-diffusion legacy lifecycle', cycles, first: lifecycle[0], last: lifecycle.at(-1), final: counter() });
+    const legacyLifecycleFinal = counter();
+    if (legacyLifecycleFinal.simulationDisposals <= lifecycle[0].before.simulationDisposals) throw new Error('RD disposal positive control did not observe InkSimulation.dispose during successful legacy lifecycle churn.');
+    results.push({ name: 'reaction-diffusion legacy lifecycle', cycles, first: lifecycle[0], last: lifecycle.at(-1), final: legacyLifecycleFinal });
     function SharedRecipe() {
       const texture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 128, height: 80 } });
       const paint = texture.paint({ mode: 'stretch' });
@@ -139,7 +141,9 @@ try {
     function PausedRecipe() { const texture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 128, height: 80 } }); return h(core.Rectangle, { style: { width: 200, height: 160, fill: texture.paint({ mode: 'stretch' }) } }); }
     const recipeLifecycle = [];
     for (let index = 0; index < cycles; index++) recipeLifecycle.push(safe(`reaction-diffusion recipe lifecycle ${index}`, () => run(`reaction-diffusion recipe lifecycle ${index}`, () => h(PausedRecipe, {}), undefined, 3, false)));
-    results.push({ name: 'reaction-diffusion recipe lifecycle', cycles, first: recipeLifecycle[0], last: recipeLifecycle.at(-1), final: counter() });
+    const recipeLifecycleFinal = counter();
+    if (recipeLifecycleFinal.simulationDisposals <= legacyLifecycleFinal.simulationDisposals) throw new Error('RD disposal positive control did not observe InkSimulation.dispose during successful recipe lifecycle churn.');
+    results.push({ name: 'reaction-diffusion recipe lifecycle', cycles, first: recipeLifecycle[0], last: recipeLifecycle.at(-1), final: recipeLifecycleFinal });
     let stormTexture;
     function ResetStorm() {
       stormTexture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 128, height: 80 } });
@@ -174,7 +178,7 @@ try {
   await faultPage.goto(`${baseUrl}/crc-audit-fault.html`, { waitUntil: 'domcontentloaded' });
   try {
     report.cases.push(await faultPage.evaluate(async ({ workspace }) => {
-      const base = `/@fs/${workspace}/`;
+      const base = `/@fs${workspace}/`;
       const [core, textures, scheduler] = await Promise.all([
         import(`${base}packages/core/src/index.ts`), import(`${base}packages/textures/src/index.ts`), import(`${base}packages/core/src/lib/scheduler/testing.ts`),
       ]);
@@ -198,7 +202,7 @@ try {
   await rasterFaultPage.goto(`${baseUrl}/crc-audit-raster-fault.html`, { waitUntil: 'domcontentloaded' });
   try {
     report.cases.push(await rasterFaultPage.evaluate(async ({ workspace }) => {
-      const base = `/@fs/${workspace}/`;
+      const base = `/@fs${workspace}/`;
       const [core, textures, scheduler, simulation] = await Promise.all([import(`${base}packages/core/src/index.ts`), import(`${base}packages/textures/src/index.ts`), import(`${base}packages/core/src/lib/scheduler/testing.ts`), import(`${base}packages/textures/src/lib/simulation.ts`)]);
       if (core.useTexture !== textures.useTexture) throw new Error('Source-mode public useTexture runtime identity mismatch.');
       const nativePut = OffscreenCanvasRenderingContext2D.prototype.putImageData; let remainingFaults = 1;
