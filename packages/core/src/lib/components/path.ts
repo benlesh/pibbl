@@ -42,7 +42,8 @@ export function renderPath(
   }
 
   if (fill && !isTransparent(fill)) {
-    if (!directTextureFill || !drawSimpleStretchedTexture(fill, ctx, paintBounds)) {
+    if (!directTextureFill || (stroke && strokeWidth && strokeWidth > 0) ||
+      !drawSimpleStretchedTexture(fill, ctx, paintBounds)) {
       ctx.fillStyle = resolveTexturePaint(fill, ctx, paintBounds);
       ctx.fill(d);
     }
