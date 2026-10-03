@@ -8,10 +8,25 @@ This maintenance work does not advance a separate strategy initiative.
 Unrelated dirty package consolidation/HtmlBox work remains untouched.
 The fresh audit supersedes the earlier dirty-checkout measurements for this work.
 
+## Integration update
+
+The user explicitly instructed committing, merging, and pushing after the known
+aggregate documentation failure was disclosed. GitHub reported main unprotected.
+The reviewed candidate was merged normally as
+`dc53e01e9e74d89dbad232fc3160d9b99361e4c1`; its complete tree exactly matched
+`51e7fb69388d500377cf19cefc41706708ad149e`. A normal non-force push succeeded,
+and an independent remote query verified that same main commit.
+
+The implementation fixes below are now integrated. The documentation inventory
+failure remains unresolved and was not reported as a passing gate. A03 remains
+open pending delivery policy; A08–A10 retain their recorded deferred dispositions.
+The earlier verification/blocker narrative below is historical evidence preceding
+the user-authorized integration exception.
+
 ## Dispositions
 
-No fix below is yet merged into main or pushed. Focused acceptance and code review
-are distinct from integration; the aggregate gate remains blocked.
+The reviewed local fixes are merged and pushed as recorded above. Focused
+acceptance and code review passed; the aggregate documentation failure remains.
 
 | Issue                                   | Local disposition                                                   | Candidate / evidence                                                                                                                                                                                                                                                             |
 | --------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
