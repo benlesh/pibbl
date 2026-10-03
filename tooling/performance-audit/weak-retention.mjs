@@ -10,7 +10,7 @@ const outputDirectory = resolve(root, 'docs/testing/runtime-performance-audit/20
 await mkdir(outputDirectory, { recursive: true });
 const output = resolve(outputDirectory, `weak-retention-${new Date().toISOString().replaceAll(':', '-')}.json`);
 const browser = await chromium.launch({ headless: true });
-const report = { schema: 'crc-weak-retention/1', baseUrl, methodology: 'Each dereference happens in a new browser evaluation after CDP forced GC. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.', cases: [], errors: [] };
+const report = { schema: 'crc-weak-retention/2', baseUrl, methodology: 'Each dereference happens in a new browser evaluation after CDP forced GC. The probe weakly observes the actual root CRCElement and HTMLCanvasElement; the retain case keeps only the public Texture handle. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.', cases: [], errors: [] };
 try {
   for (const retain of [false, true]) {
     const page = await browser.newPage();
@@ -21,15 +21,44 @@ try {
       const [core, textures, scheduler] = await Promise.all([import(`${base}packages/core/src/index.ts`), import(`${base}packages/textures/src/index.ts`), import(`${base}packages/core/src/lib/scheduler/testing.ts`)]);
       if (core.useTexture !== textures.useTexture) throw new Error('Source-mode public useTexture runtime identity mismatch.');
       const driver = new scheduler.ManualSchedulerDriver(), restore = scheduler.installSchedulerDriverForTest(driver);
-      let sentinel = { label: retain ? 'retained-stale-texture' : 'dropped-texture' }, stale;
+      let stale, rootElement, canvas, controller;
       function Scene(_props) { const texture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 64, height: 40 } }); if (retain) stale = texture; return core.createElement(core.Rectangle, { style: { width: 64, height: 40, fill: texture.paint({ mode: 'stretch' }) } }); }
-      const weak = new WeakRef(sentinel); const canvas = document.createElement('canvas'); const controller = core.crc(canvas, core.createElement(Scene, { auditPayload: sentinel })); driver.flush(0); controller.dispose(); restore(); sentinel = undefined; window.__crcWeakAudit = { weak, stale, scheduler: scheduler.snapshotRealmScheduler() };
+      canvas = document.createElement('canvas');
+      rootElement = core.createElement(Scene, {});
+      const weakRoot = new WeakRef(rootElement), weakCanvas = new WeakRef(canvas);
+      controller = core.crc(canvas, rootElement);
+      driver.flush(0);
+      window.__crcWeakAudit = { weakRoot, weakCanvas, stale, controller, scheduler, restore };
+      rootElement = undefined;
+      canvas = undefined;
     }, { workspace: root, retain });
+    const positiveControl = await page.evaluate(({ retain }) => ({
+      retain,
+      rootReachableBeforeDispose: window.__crcWeakAudit.weakRoot.deref() !== undefined,
+      canvasReachableBeforeDispose: window.__crcWeakAudit.weakCanvas.deref() !== undefined,
+    }), { retain });
+    if (!positiveControl.rootReachableBeforeDispose || !positiveControl.canvasReachableBeforeDispose) throw new Error('WeakRef positive control failed before disposal.');
+    await page.evaluate(() => {
+      const state = window.__crcWeakAudit;
+      state.controller.dispose();
+      state.controller = undefined;
+      state.restore();
+      state.scheduler = state.scheduler.snapshotRealmScheduler();
+    });
     const cdp = await page.context().newCDPSession(page); await cdp.send('HeapProfiler.collectGarbage');
-    const beforeDrop = await page.evaluate(({ retain }) => ({ retain, reachableWithConfiguredHandleState: window.__crcWeakAudit.weak.deref() !== undefined, scheduler: window.__crcWeakAudit.scheduler }), { retain });
+    const beforeDrop = await page.evaluate(({ retain, positiveControl }) => ({
+      ...positiveControl,
+      retain,
+      rootReachableWithConfiguredHandleState: window.__crcWeakAudit.weakRoot.deref() !== undefined,
+      canvasReachableWithConfiguredHandleState: window.__crcWeakAudit.weakCanvas.deref() !== undefined,
+      scheduler: window.__crcWeakAudit.scheduler,
+    }), { retain, positiveControl });
     await page.evaluate(() => { window.__crcWeakAudit.stale = undefined; });
     await cdp.send('HeapProfiler.collectGarbage');
-    report.cases.push({ ...beforeDrop, reachableAfterDroppingStaleAndSecondGC: await page.evaluate(() => window.__crcWeakAudit.weak.deref() !== undefined) });
+    report.cases.push({ ...beforeDrop, ...await page.evaluate(() => ({
+      rootReachableAfterDroppingStaleAndSecondGC: window.__crcWeakAudit.weakRoot.deref() !== undefined,
+      canvasReachableAfterDroppingStaleAndSecondGC: window.__crcWeakAudit.weakCanvas.deref() !== undefined,
+    })) });
     await page.close();
   }
 } catch (error) { report.errors.push(error instanceof Error ? error.stack ?? error.message : String(error)); }
