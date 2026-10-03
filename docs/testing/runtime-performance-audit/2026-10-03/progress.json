@@ -1,0 +1,31 @@
+{
+  "task": "fresh aggressive audit requested after old-baseline discovery",
+  "status": "audit evidence complete; remediation open",
+  "productionBaseline": "690bb10a99246b6f5f57df9b0341774209905827",
+  "remoteMainVerified": "690bb10a99246b6f5f57df9b0341774209905827",
+  "runtimeChanges": false,
+  "integration": "No runtime fixes, merges or pushes in this audit. Audit artifacts committed separately.",
+  "findings": {
+    "A01": "open; reproduced",
+    "A02": "open; reproduced",
+    "A03": "open; reproduced",
+    "A04": "open; reproduced",
+    "A05": "open; reproduced",
+    "A06": "open; reproduced",
+    "A07": "open; reproduced",
+    "A08": "open; reproduced",
+    "A09": "source-supported follow-up",
+    "A10": "source-supported follow-up",
+    "A11": "open; reproduced"
+  },
+  "blockers": [
+    "Pristine baseline trust fails classification of 12 docs/website-rebuild/*.md files.",
+    "Native/GPU allocation attribution not established by RSS; requires separate profiling."
+  ],
+  "next": [
+    "A01 initialization ownership",
+    "A11 stale Texture owner release",
+    "A02 physics historical handle-cache retention"
+  ],
+  "review": "Independent reviewer validated corrected ownership, weak-reference controls, broad evidence and report; README records rejected evidence and reconciliation."
+}

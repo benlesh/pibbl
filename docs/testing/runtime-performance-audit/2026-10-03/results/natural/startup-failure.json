@@ -1,0 +1,14 @@
+{
+  "baseline": "690bb10a99246b6f5f57df9b0341774209905827",
+  "node": "v24.15.0",
+  "browser": "151.0.7922.34",
+  "platform": "darwin",
+  "arch": "arm64",
+  "mode": "source",
+  "gc": "No forced GC during workload; explicitly separate post-disposal GC sample",
+  "timing": "scheduler begin-to-idle CPU wall time, bounded 4096-frame reservoir per 30-second window; excludes presentation",
+  "samples": [],
+  "errors": [
+    "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:5203/@fs/Users/benlesh/.codex/worktrees/perf-verification/crc/packages/core/src/index.ts"
+  ]
+}
