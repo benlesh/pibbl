@@ -319,15 +319,22 @@ class Resource {
     } finally {
       ctx.restore();
     }
-    const candidate = this.spare?.width === this.canvas.width && this.spare.height === this.canvas.height ?
-      this.spare : this.createPublicationCanvas();
+    const spare = this.spare;
     this.spare = undefined;
-    const candidateContext = candidate.getContext("2d");
-    if (!candidateContext) throw new Error("Textures require OffscreenCanvas 2D.");
-    // Publication canvases are reused; transparent source pixels must erase old paint.
-    candidateContext.clearRect(0, 0, candidate.width, candidate.height);
-    candidateContext.drawImage(this.canvas, 0, 0);
-    return candidate;
+    const candidate = spare?.width === this.canvas.width && spare.height === this.canvas.height ?
+      spare : this.createPublicationCanvas();
+    if (spare && spare !== candidate) spare.width = spare.height = 0;
+    try {
+      const candidateContext = candidate.getContext("2d");
+      if (!candidateContext) throw new Error("Textures require OffscreenCanvas 2D.");
+      // Publication canvases are reused; transparent source pixels must erase old paint.
+      candidateContext.clearRect(0, 0, candidate.width, candidate.height);
+      candidateContext.drawImage(this.canvas, 0, 0);
+      return candidate;
+    } catch (error) {
+      candidate.width = candidate.height = 0;
+      throw error;
+    }
   }
   private createPublicationCanvas(): OffscreenCanvas {
     this.publicationCanvasesCreated++;

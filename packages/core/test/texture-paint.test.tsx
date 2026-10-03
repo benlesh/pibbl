@@ -321,6 +321,7 @@ it("resets texture state on resolution changes while preserving the producer can
   const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
   const resolution = signal(8), displayWidth = signal(16);
   const canvases: OffscreenCanvas[] = [];
+  let firstPublication: OffscreenCanvas | undefined;
   const dispose = vi.fn();
   const receive = vi.fn((state: { color: string }, color: string, context: any) => { state.color = color; context.invalidate(); });
   const recipe = defineTexture<{}, { color: string }, string>({
@@ -332,6 +333,7 @@ it("resets texture state on resolution changes while preserving the producer can
   let texture!: ReturnType<typeof useTexture<string>>;
   function Scene() {
     texture = useTexture(recipe({}), { resolution: { width: resolution.get(), height: resolution.get() } });
+    borrowTextureRaster(texture, raster => { firstPublication ??= raster.source; });
     return <Rectangle style={{ width: displayWidth, height: 16, fill: texture }} />;
   }
   const canvas = document.createElement('canvas'); canvas.width = 40; canvas.height = 20; document.body.append(canvas);
@@ -345,6 +347,7 @@ it("resets texture state on resolution changes while preserving the producer can
     resolution.set(16); driver.flush(48); driver.flush(64);
     expect(canvases).toHaveLength(2); expect(canvases[1]).toBe(canvases[0]);
     expect(canvases[0].width).toBe(16); expect(dispose).toHaveBeenCalledTimes(1);
+    expect(firstPublication).toMatchObject({ width: 0, height: 0 });
     expect(canvas.getContext('2d')!.getImageData(2, 2, 1, 1).data[0]).toBe(255);
     controller.dispose();
     expect(dispose).toHaveBeenCalledTimes(2); expect(canvases[0].width).toBe(0);
