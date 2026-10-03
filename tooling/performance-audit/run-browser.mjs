@@ -92,10 +92,12 @@ try {
       try {
         controller = core.crc(canvas, scene());
         for (let index = 0; index < frameCount; index++) {
-          frame?.({ index, canvas, driver });
+          const actionMeasurement = frame?.({ index, canvas, driver });
           if (driver.pendingHostFrames) {
             const flushStart = performance.now(); driver.flush(index * 1000 / 60);
-            if (index >= 10) flushDurations.push(performance.now() - flushStart);
+            const flushDuration = performance.now() - flushStart;
+            if (actionMeasurement) Object.assign(actionMeasurement, { drainMilliseconds: flushDuration, pendingAfterDrain: driver.pendingHostFrames });
+            if (index >= 10) flushDurations.push(flushDuration);
           } else idleFrames++;
         }
       } catch (error) { errors.push(error instanceof Error ? error.message : String(error)); }
@@ -143,11 +145,14 @@ try {
       stormTexture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 128, height: 80 } });
       return h(core.Rectangle, { style: { width: 200, height: 160, fill: stormTexture.paint({ mode: 'stretch' }) } });
     }
+    const burstMeasurements = [];
     const resetStorm = safe('reaction-diffusion recipe reset-paint overload', () => run('reaction-diffusion recipe reset-paint overload', () => h(ResetStorm, {}), ({ index }) => {
-      if (index === 12) for (const count of [16, 128, 512]) for (let message = 0; message < count; message++) stormTexture.send({ type: 'reset' });
-      if (index === 14) for (let message = 0; message < 1_024; message++) stormTexture.send({ type: 'paint', u: .5, v: .5, radius: 128, strength: .8 });
-      if (index === 16) for (let message = 0; message < 8_192; message++) stormTexture.send({ type: 'stir', u: .5, v: .5, du: .1, dv: -.1, radius: 128 });
+      const runBurst = (name, count, message) => { const measurement = { frame: index, name, count, enqueueMilliseconds: 0 }; const start = performance.now(); for (let sent = 0; sent < count; sent++) stormTexture.send(message); measurement.enqueueMilliseconds = performance.now() - start; burstMeasurements.push(measurement); return measurement; };
+      if (index === 12) return runBurst('reset-656', 656, { type: 'reset' });
+      if (index === 14) return runBurst('paint-1024-radius-128', 1_024, { type: 'paint', u: .5, v: .5, radius: 128, strength: .8 });
+      if (index === 16) { const measurement = runBurst('stir-8192-radius-128', 8_192, { type: 'stir', u: .5, v: .5, du: .1, dv: -.1, radius: 128 }); try { stormTexture.send({ type: 'stir', u: .5, v: .5, du: .1, dv: -.1, radius: 128 }); measurement.overflow = 'accepted'; } catch (caught) { measurement.overflow = caught instanceof Error ? caught.message : String(caught); } return measurement; }
     }));
+    resetStorm.bursts = burstMeasurements;
     stormTexture = undefined;
     results.push(resetStorm);
     const emission = core.repeat(core.sequence(core.wait(1), core.marker('emit')), { iterations: Infinity });
