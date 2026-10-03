@@ -48,6 +48,7 @@ try {
       const state = window.__crcWeakAudit;
       state.controller.dispose();
       state.controller = undefined;
+      document.querySelector('canvas')?.remove();
       let restoreError;
       try { state.restore(); } catch (error) { restoreError = error instanceof Error ? error.message : String(error); }
       state.scheduler = state.scheduler.snapshotRealmScheduler();
