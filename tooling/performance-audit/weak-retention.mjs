@@ -28,23 +28,28 @@ try {
       const weakRoot = new WeakRef(rootElement), weakCanvas = new WeakRef(canvas);
       controller = core.crc(canvas, rootElement);
       driver.flush(0);
-      window.__crcWeakAudit = { weakRoot, weakCanvas, stale, controller, scheduler, restore };
+      const hasConfiguredStaleHandle = retain ? stale !== undefined : stale === undefined;
+      window.__crcWeakAudit = { weakRoot, weakCanvas, stale, hasConfiguredStaleHandle, controller, scheduler, restore };
       rootElement = undefined;
       canvas = undefined;
     }, { workspace: root, retain });
     const positiveControl = await page.evaluate(({ retain }) => ({
       retain,
+      hasConfiguredStaleHandle: window.__crcWeakAudit.hasConfiguredStaleHandle,
       rootReachableBeforeDispose: window.__crcWeakAudit.weakRoot.deref() !== undefined,
       canvasReachableBeforeDispose: window.__crcWeakAudit.weakCanvas.deref() !== undefined,
     }), { retain });
-    if (!positiveControl.rootReachableBeforeDispose || !positiveControl.canvasReachableBeforeDispose) throw new Error('WeakRef positive control failed before disposal.');
-    await page.evaluate(() => {
+    if (!positiveControl.hasConfiguredStaleHandle || !positiveControl.rootReachableBeforeDispose || !positiveControl.canvasReachableBeforeDispose) throw new Error('WeakRef pre-disposal positive control failed.');
+    const disposeState = await page.evaluate(() => {
       const state = window.__crcWeakAudit;
       state.controller.dispose();
       state.controller = undefined;
-      state.restore();
+      let restoreError;
+      try { state.restore(); } catch (error) { restoreError = error instanceof Error ? error.message : String(error); }
       state.scheduler = state.scheduler.snapshotRealmScheduler();
+      return { restoreError };
     });
+    if (disposeState.restoreError) throw new Error(`WeakRef probe scheduler restore failed: ${disposeState.restoreError}`);
     const cdp = await page.context().newCDPSession(page); await cdp.send('HeapProfiler.collectGarbage');
     const beforeDrop = await page.evaluate(({ retain, positiveControl }) => ({
       ...positiveControl,
