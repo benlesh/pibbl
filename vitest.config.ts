@@ -197,6 +197,7 @@ export default defineConfig(({ mode }) => ({
       "tooling/filter-authoring.test.mjs",
       "tooling/filter-validation.test.mjs",
       "tooling/optional-import-inertness.test.mjs",
+      "tooling/texture-import-inertness.test.mjs",
       "packages/physics/src/lib/2d/public-types.test.ts",
       "packages/physics/src/lib/3d/public-types.test.ts",
     ],
