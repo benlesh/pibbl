@@ -80,8 +80,8 @@ its own derived upload keyed to the resource/revision.
 `displacement()` from `@crc/core/filters` accepts a texture `map`, a finite
 nonnegative logical `strength`, and a finite positive logical `region`. Red and
 green encode signed horizontal and vertical offsets, alpha weights the offset,
-and blue is ignored. Map placement is evaluated in the documented logical
-region, including repeat/stretch, offsets, and rotation. A strength of zero
+and blue is ignored unless optional `blurRadius` is positive. Blue times alpha then scales a local mip-filtered 5×5 binomial blur support radius; it is not Gaussian sigma. Map placement is evaluated in the documented logical
+region, including repeat/stretch, offsets, and rotation. When strength and blur radius are both zero, the filter
 still validates map ownership, liveness, and placement, but does not borrow a
 raster or create GPU resources.
 
@@ -242,3 +242,26 @@ bound; control updates upload obstacle rectangles, not pixel arrays. Resizing
 replaces the heap, while ordinary option updates reuse it. Public-API parity
 tests compare the prior water implementation across ripple, pause/reset, seed,
 scale, viscosity, and moving-obstacle updates.
+
+## Rain on glass
+
+`rainDrops()` produces a seeded height-derived displacement field with optional
+condensation encoded in blue. A fixed resolution owns reusable film, residual
+trail, height, grain, and image arrays. No scene pixels are read back. Advancing
+beads gather swept film, merge by volume, leave spatially seeded uneven residual
+water, and acquire gravity-driven and irregular lateral motion. Small beads
+cling. Film recovery and trail drying use exponential retention controlled by
+`trailPersistence`; pausing stops both. Pointer nudges use the same swept path
+operation even while paused. Reset repeats the seed and restores the film.
+The simulation bounds live beads to 256 and elapsed advancement to 50 ms with
+substeps no larger than 1/120 second. It is a stylized wet-glass effect, not an
+incompressible fluid solver. Scene blur is a separate optional displacement
+filter setting; zero blur preserves the former displacement-only behavior.
+
+Finger contact messages wipe swept capsules directly, including stationary
+presses on film without existing drops. Touched free beads and removed film/
+residual volume accumulate in one separately held bead. Held beads do not
+advance with gravity or participate in ordinary free-bead merging. Release
+returns the bead to the free simulation at rest; reset discards the contact.
+The bound is 256 free beads plus one transient held bead; a full-capacity release
+coalesces the closest free pair by volume before returning the held bead.

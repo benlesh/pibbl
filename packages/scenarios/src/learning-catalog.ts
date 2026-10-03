@@ -119,6 +119,16 @@ function browseGroupFor(
 
 const drafts = [
   {
+    slug: "rainy-window", title: "Rainy Window", shortTitle: "Rainy Window", section: "composition", order: 213,
+    summary: "Watch water bead, merge, and roll down glass while refracting a city scene.",
+    api: ["useTexture", "rainDrops", "displacement", "Layer"],
+    objectives: ["Use a live droplet texture as a displacement map.", "Wipe mist and collect droplets through captured pointer drags."],
+    prompts: { gesture: "Click and drag to wipe the mist and gather beads under your finger. Release to let the collected drop fall.", code: "Wrap your own scene with displacement and reuse the rain texture." },
+    apiNotes: ["Droplets use CRC scheduling and bounded seeded simulation; no extra animation loop.", "Mist blurs locally; moving drops clear the film and leave persistent beaded trails."],
+    canvas: { width: 880, height: 700 }, related: ["underwater", "living-ink"],
+    load: () => import("./learning/composition/rainy-window.example"),
+  },
+  {
     slug: "stirred-ink", title: "Stirred Ink", shortTitle: "Stirred Ink", section: "composition", order: 211,
     summary: "Animate material parameters and stir living ink with a moving physics body.",
     api: ["useTexture", "reactionDiffusion", "marble", "paper", "cellular", "useReaction", "usePlayback", "PhysicsWorld2D"],

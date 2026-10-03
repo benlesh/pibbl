@@ -86,7 +86,7 @@ export function peekDisplacementGpu(instance: CRCInstance): DisplacementGpu | un
   return rootServices.get(root)?.gpu;
 }
 
-export function processDisplacement(source: OffscreenCanvas, windows: FilterWindows, paint: TexturePaint, strength: number, region: Readonly<{ x: number; y: number; width: number; height: number }>): ImageBitmap {
+export function processDisplacement(source: OffscreenCanvas, windows: FilterWindows, paint: TexturePaint, strength: number, region: Readonly<{ x: number; y: number; width: number; height: number }>, blurRadius = 0): ImageBitmap {
   const instance = GLOBAL_STATE.currentCRCInstance;
   if (!instance) throw new Error('Displacement requires an active CRC instance.');
   const borrower = getOptionalService(instance, GPU_BORROWER, () => new GpuBorrower(instance));
@@ -96,7 +96,7 @@ export function processDisplacement(source: OffscreenCanvas, windows: FilterWind
     return borrower.shared.gpu.apply(source, map, strength * windows.density, map.placement, {
       originX: windows.source.backingX / windows.density,
       originY: windows.source.backingY / windows.density,
-      density: windows.density, region,
+      density: windows.density, region, blurRadius,
     });
   });
 }

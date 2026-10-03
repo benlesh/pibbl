@@ -1,6 +1,7 @@
 import type { BorrowedTextureRaster, TexturePlacement } from '../lib/textures/texture-protocol.js';
 
 export interface DisplacementCoordinates {
+  readonly blurRadius?: number;
   readonly originX: number;
   readonly originY: number;
   readonly density: number;
@@ -18,7 +19,7 @@ void main() { uv = vec2((p.x + 1.) * .5, 1. - (p.y + 1.) * .5); gl_Position = ve
 const fragmentSource = `#version 300 es
 precision highp float;
 uniform sampler2D scene, map;
-uniform vec2 strength, logicalOrigin, logicalSize, mapOrigin, tileSize;
+uniform vec2 blurStep, strength, logicalOrigin, logicalSize, mapOrigin, tileSize;
 uniform float rotation;
 in vec2 uv;
 out vec4 outputColor;
@@ -44,7 +45,26 @@ void main() {
   vec2 mapUV = vec2(c * local.x + s * local.y, -s * local.x + c * local.y) / tileSize;
   vec4 field = texture(map, mapUV);
   vec2 displacement = vec2(decode(field.r), decode(field.g)) * field.a * strength;
-  outputColor = sourceSample(uv + displacement);
+  vec2 at = uv + displacement;
+  vec2 spread = blurStep * field.b * field.a;
+  if (max(spread.x, spread.y) <= 0.) {
+    outputColor = sourceSample(at);
+  } else {
+    // Mip-filtered samples remove wide-kernel aliasing. Offsets plus the
+    // selected mip footprint stay inside the declared blur support radius.
+    float radiusPixels = spread.x * float(textureSize(scene, 0).x);
+    float level = max(0., log2(max(1., radiusPixels * .5)));
+    vec4 color = vec4(0);
+    for (int y = -2; y <= 2; y++) for (int x = -2; x <= 2; x++) {
+      float wx = x == 0 ? 6. : (abs(x) == 1 ? 4. : 1.);
+      float wy = y == 0 ? 6. : (abs(y) == 1 ? 4. : 1.);
+      vec2 sampleUV = at + vec2(float(x), float(y)) * spread * .25;
+      vec4 sampleColor = any(lessThan(sampleUV, vec2(0))) || any(greaterThan(sampleUV, vec2(1)))
+        ? vec4(0) : textureLod(scene, sampleUV, level);
+      color += sampleColor * wx * wy;
+    }
+    outputColor = color / 256.;
+  }
 }
 `;
 
@@ -124,6 +144,10 @@ export class DisplacementGpu {
     gl.viewport(0, 0, source.width, source.height);
     gl.useProgram(program); gl.bindVertexArray(vao);
     this.upload(gl, 0, sourceTexture, source, true, false);
+    if ((coordinates?.blurRadius ?? 0) > 0) {
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    }
     let cached = this.maps.get(map.resource);
     if (!cached) {
       const texture = gl.createTexture();
@@ -136,6 +160,7 @@ export class DisplacementGpu {
     const region = coordinates?.region ?? { x: 0, y: 0, width: source.width / density, height: source.height / density };
     const uniform = (name: string) => gl.getUniformLocation(program, name);
     gl.uniform1i(uniform('scene'), 0); gl.uniform1i(uniform('map'), 1);
+    gl.uniform2f(uniform('blurStep'), (coordinates?.blurRadius ?? 0) * density / source.width, (coordinates?.blurRadius ?? 0) * density / source.height);
     gl.uniform2f(uniform('strength'), strengthPixels / source.width, strengthPixels / source.height);
     gl.uniform2f(uniform('logicalOrigin'), coordinates?.originX ?? 0, coordinates?.originY ?? 0);
     gl.uniform2f(uniform('logicalSize'), source.width / density, source.height / density);

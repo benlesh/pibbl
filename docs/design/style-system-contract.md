@@ -148,8 +148,7 @@ raster and can differ where paint overlaps. `displacement({ map, strength,
 region })` is a separate optional filter factory. It accepts a genuine texture
 paint map, finite nonnegative logical strength, and finite positive region
 dimensions; it samples red/green signed offsets with alpha weighting and
-changes pixels only. Zero strength validates the map but does not borrow pixels
-or allocate its WebGL2 processor. Mixed native and displacement lists preserve
+changes pixels only. Optional finite nonnegative `blurRadius` uses blue times alpha as local blur coverage. Only when strength and blur radius are both zero does validation avoid borrowing pixels or allocating the WebGL2 processor. Mixed native and displacement lists preserve
 declaration order, with native segments around displacement passes. Measurement
 does no capability check or raster work.
 

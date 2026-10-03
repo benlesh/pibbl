@@ -146,3 +146,11 @@ export function StirredInkConsumer() {
 // @ts-expect-error Displacement requires both normalized vector components.
 const incompleteStir: InkMessage = { type: "stir", u: 0.5, v: 0.5, du: 0.1 };
 void incompleteStir;
+
+import { rainDrops, type RainDropsMessage } from "@crc/textures";
+import { displacement } from "@crc/core/filters";
+export function RainGlassConsumer() {
+  const rain = useTexture(rainDrops({ condensation: 0.8, trailPersistence: 20, irregularity: 1 }));
+  const finger: RainDropsMessage = { type: "finger", x: 0.5, y: 0.5, radius: 0.05 };
+  return <Group children={null} style={{ filter: displacement({ map: rain.paint({ mode: "stretch" }), strength: 18, blurRadius: 16, region: { x: 0, y: 0, width: 200, height: 100 } }) }} onPointerDown={() => rain.send(finger)} onPointerUp={() => rain.send({ type: "release" })} />;
+}
