@@ -198,6 +198,13 @@
       "path": "results/2026-10-03T21-11-15.947Z.json.partial.jsonl",
       "bytes": 17928,
       "sha256": "bc210c64b35e3fa6a7995967e48312414a1c6add808bfcf39f4d570e2bb97ead"
+    },
+    {
+      "path": "results/remediation/trust-cc3a5d53.log",
+      "bytes": 3812,
+      "sha256": "642b744e6ce3097c2364e6ded1232c164a6d5e6366083b111048b88a3a37cdcb"
     }
-  ]
+  ],
+  "aggregateGateCandidate": "cc3a5d539379429c5f76b07b91694b362b4d88b6",
+  "aggregateGateResult": "blocked: baseline texture contract inventory12 !=31"
 }

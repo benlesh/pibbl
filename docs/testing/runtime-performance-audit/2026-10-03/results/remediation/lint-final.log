@@ -1,0 +1,5 @@
+$ corepack pnpm@11.21.0 lint:code && corepack pnpm@11.21.0 lint:format
+$ eslint . --cache
+$ prettier --check '**/*.{md,css,json,jsonc,yaml,yml}'
+Checking formatting...
+All matched files use Prettier code style!
