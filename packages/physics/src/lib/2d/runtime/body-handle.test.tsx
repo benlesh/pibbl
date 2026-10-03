@@ -30,6 +30,7 @@ import {
   requirePhysicsWorld2DController,
   snapshotPhysicsWorld2DControllerForTest,
 } from "./controller.js";
+import { installPhysicsWorld2DFailureInjectorForTest } from "../world/world.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 let frames: ManualFrames;
@@ -435,6 +436,9 @@ describe("2D physics body handles", () => {
     frames.flush(1);
     const first = queryPoint2D(world, [0, 0], { mode: "all" });
     expect(first).toHaveLength(1_000);
+    const repeated = queryPoint2D(world, [0, 0], { mode: "all" });
+    expect(repeated[0]!.body).toBe(first[0]!.body);
+    expect(repeated[0]!.collider).toBe(first[0]!.collider);
     expect(snapshotWorld(world)).toMatchObject({
       materializedBodyHandles: 1_000,
       materializedColliderHandles: 1_000,
@@ -471,6 +475,88 @@ describe("2D physics body handles", () => {
       materializedBodyHandles: 0,
       materializedColliderHandles: 0,
     });
+  });
+
+  it("keeps query caches bounded across repeated topology churn", () => {
+    const shape = circleShape2D({ radius: 2 });
+    let include = true;
+    let world!: CRCPhysicsWorldHandle2D;
+    const Root = () => (
+      <PhysicsWorld2D gravity={[0, 0]}>
+        <WorldCapture capture={(value) => (world = value)} />
+        {include ? (
+          <Circle
+            physics={staticBody2D({ collider: { shape } })}
+            style={{ radius: 2 }}
+          />
+        ) : undefined}
+      </PhysicsWorld2D>
+    );
+    const mount = mountCRC(<Root />);
+    frames.flush(0);
+    frames.flush(1);
+    for (let cycle = 0; cycle < 100; cycle += 1) {
+      expect(queryPoint2D(world, [0, 0], { mode: "all" })).toHaveLength(1);
+      expect(snapshotWorld(world)).toMatchObject({
+        materializedBodyHandles: 1,
+        materializedColliderHandles: 1,
+      });
+      include = false;
+      crc(canvasOf(mount), <Root />);
+      const time = 2 + cycle * 4;
+      frames.flush(time);
+      frames.flush(time + 1);
+      expect(snapshotWorld(world)).toMatchObject({
+        materializedBodyHandles: 0,
+        materializedColliderHandles: 0,
+      });
+      include = true;
+      crc(canvasOf(mount), <Root />);
+      frames.flush(time + 2);
+      frames.flush(time + 3);
+    }
+  });
+
+  it("retains live query handles when a topology candidate fails", () => {
+    const shape = circleShape2D({ radius: 2 });
+    let include = true;
+    let world!: CRCPhysicsWorldHandle2D;
+    const Root = () => (
+      <PhysicsWorld2D gravity={[0, 0]}>
+        <WorldCapture capture={(value) => (world = value)} />
+        {include ? (
+          <Circle
+            physics={staticBody2D({ collider: { shape } })}
+            style={{ radius: 2 }}
+          />
+        ) : undefined}
+      </PhysicsWorld2D>
+    );
+    const mount = mountCRC(<Root />);
+    frames.flush(0);
+    frames.flush(1);
+    const before = queryPoint2D(world, [0, 0], { mode: "all" });
+    include = false;
+    crc(canvasOf(mount), <Root />);
+    frames.flush(2);
+    const restoreFailure = installPhysicsWorld2DFailureInjectorForTest(
+      (stage) => {
+        if (stage === "topology") throw new Error("topology adoption failed");
+      },
+    );
+    try {
+      expect(() => frames.flush(3)).toThrow("topology adoption failed");
+    } finally {
+      restoreFailure();
+    }
+    const after = queryPoint2D(world, [0, 0], { mode: "all" });
+    expect(after[0]!.body).toBe(before[0]!.body);
+    expect(after[0]!.collider).toBe(before[0]!.collider);
+    expect(snapshotWorld(world)).toMatchObject({
+      materializedBodyHandles: 1,
+      materializedColliderHandles: 1,
+    });
+    mount.dispose();
   });
 });
 
