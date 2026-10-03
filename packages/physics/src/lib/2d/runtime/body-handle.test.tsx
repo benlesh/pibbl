@@ -413,6 +413,65 @@ describe("2D physics body handles", () => {
     expect(snapshotPhysicsBodyHandle2DForTest(hit!.body).bound).toBe(false);
     expect(() => queryPoint2D(world, [0, 0])).toThrow(/live.*world handle/i);
   });
+
+  it("evicts retired query handles while preserving live query identity", () => {
+    const shape = circleShape2D({ radius: 2 });
+    let count = 1_000;
+    let world!: CRCPhysicsWorldHandle2D;
+    const Root = () => (
+      <PhysicsWorld2D gravity={[0, 0]}>
+        <WorldCapture capture={(value) => (world = value)} />
+        {Array.from({ length: count }, (_, index) => (
+          <Circle
+            key={index}
+            physics={staticBody2D({ collider: { shape } })}
+            style={{ radius: 2 }}
+          />
+        ))}
+      </PhysicsWorld2D>
+    );
+    const mount = mountCRC(<Root />);
+    frames.flush(0);
+    frames.flush(1);
+    const first = queryPoint2D(world, [0, 0], { mode: "all" });
+    expect(first).toHaveLength(1_000);
+    expect(snapshotWorld(world)).toMatchObject({
+      materializedBodyHandles: 1_000,
+      materializedColliderHandles: 1_000,
+    });
+
+    count = 0;
+    crc(canvasOf(mount), <Root />);
+    frames.flush(2);
+    frames.flush(3);
+    expect(queryPoint2D(world, [0, 0], { mode: "all" })).toEqual([]);
+    expect(snapshotWorld(world)).toMatchObject({
+      materializedBodyHandles: 0,
+      materializedColliderHandles: 0,
+    });
+
+    count = 1_000;
+    crc(canvasOf(mount), <Root />);
+    frames.flush(4);
+    frames.flush(5);
+    const replacement = queryPoint2D(world, [0, 0], { mode: "all" });
+    expect(replacement).toHaveLength(1_000);
+    expect(replacement[0]!.body).not.toBe(first[0]!.body);
+    expect(replacement[0]!.collider).not.toBe(first[0]!.collider);
+    disableBody2D(first[0]!.body);
+    frames.flush(6);
+    expect(replacement[0]!.body.enabled.get()).toBe(true);
+    expect(snapshotWorld(world)).toMatchObject({
+      materializedBodyHandles: 1_000,
+      materializedColliderHandles: 1_000,
+    });
+
+    mount.dispose();
+    expect(snapshotWorld(world)).toMatchObject({
+      materializedBodyHandles: 0,
+      materializedColliderHandles: 0,
+    });
+  });
 });
 
 function WorldCapture({

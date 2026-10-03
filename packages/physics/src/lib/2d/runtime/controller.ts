@@ -574,6 +574,8 @@ export class PhysicsWorld2DController {
         );
       }
     }
+    this.materializedBodyHandles.clear();
+    this.materializedColliderHandles.clear();
     this.obstacles = undefined;
     this.obstacleSource = undefined;
     this.kernel.dispose();
@@ -917,6 +919,7 @@ export class PhysicsWorld2DController {
             return;
           }
           this.kernel.adopt(candidate!);
+          this.evictRetiredMaterializedHandles();
           this.committedRevision = nextRevision;
           this.obstacles?.publish(this.kernel, this.acceptedColliders, nextRevision);
           adopted = true;
@@ -1299,6 +1302,39 @@ export class PhysicsWorld2DController {
     return (this.revision ??= signal(this.committedRevision, {
       debugName: "PhysicsWorld2D.revision",
     }));
+  }
+
+  /** Query handles are cached only while their kernel identity remains live. */
+  private evictRetiredMaterializedHandles(): void {
+    for (const [key, handle] of this.materializedBodyHandles) {
+      const separator = key.indexOf(":");
+      const index = Number(key.slice(0, separator));
+      const generation = Number(key.slice(separator + 1));
+      if (this.kernel.bodyIdForIdentity(index, generation) !== undefined)
+        continue;
+      const binding = physicsBodyHandleBinding2D(handle);
+      if (binding?.controller === this) {
+        unbindPhysicsBodyHandle2D(
+          handle,
+          this,
+          binding.bodyId,
+          binding.bindingGeneration,
+        );
+      }
+      this.materializedBodyHandles.delete(key);
+    }
+    for (const [key, handle] of this.materializedColliderHandles) {
+      const identity = physicsColliderHandleIdentity2D(handle);
+      if (
+        identity?.controller === this &&
+        this.kernel.colliderIdForIdentity(
+          identity.index,
+          identity.generation,
+        ) !== undefined
+      )
+        continue;
+      this.materializedColliderHandles.delete(key);
+    }
   }
 
   private materializeBodyHandle(
