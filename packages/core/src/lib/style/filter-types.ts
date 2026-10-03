@@ -45,6 +45,8 @@ export interface CRCOpacityFilterOptions { readonly amount: SignalValue<number>;
 export interface CRCSaturateFilterOptions { readonly amount: SignalValue<number>; }
 export interface CRCSepiaFilterOptions { readonly amount: SignalValue<number>; }
 export interface CRCDisplacementFilterOptions {
+  /** Optional local blur support radius. Blue × alpha scales it; zero preserves displacement-only behavior. */
+  readonly blurRadius?: SignalValue<number>;
   readonly map: SignalValue<TexturePaint>;
   readonly strength: SignalValue<number>;
   readonly region: Readonly<{ x: number; y: number; width: number; height: number }>;

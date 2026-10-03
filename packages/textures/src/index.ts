@@ -41,3 +41,6 @@ export { lightning } from "./lib/lightning.js";
 export type { LightningOptions, LightningMessage } from "./lib/lightning.js";
 export type { ElectricPoint, ElectricOptions, ElectricControl } from "./lib/electric-shared.js";
 export type { ElectricSource, ElectricSourceMessage } from "./lib/electric-sources.js";
+
+export { rainDrops } from "./lib/rain-drops.js";
+export type { RainDropsOptions, RainDropsMessage } from "./lib/rain-drops.js";

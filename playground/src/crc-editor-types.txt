@@ -1601,6 +1601,9 @@ export interface ProceduralTextureProps {
   readonly render?: TextureRenderer;
 }
 export const ProceduralTexture: CRCComponent<ProceduralTextureProps & CRCRenderLayerComponentProps>;
+  export interface RainDropsOptions { readonly condensation?: number; readonly trailPersistence?: number; readonly trailStrength?: number; readonly irregularity?: number; readonly seed?: number; readonly rainRate?: number; readonly gravity?: number; readonly initialDrops?: number; readonly paused?: boolean; }
+  export type RainDropsMessage = { readonly type: 'finger'; readonly x: number; readonly y: number; readonly radius?: number } | { readonly type: 'release' } | { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'nudge'; readonly x: number; readonly y: number; readonly dx: number; readonly dy: number; readonly radius?: number };
+  export function rainDrops(options?: RainDropsOptions): import('@crc/core').TextureRecipe<RainDropsMessage>;
 export interface WaterWavesOptions { readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; }
 export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
 export function waterWaves(options?: WaterWavesOptions): import('@crc/core').TextureRecipe<WaterWavesMessage>;
@@ -1632,7 +1635,7 @@ export function opacity(options: Readonly<CRCOpacityFilterOptions>): CRCFilter;
 export function saturate(options: Readonly<CRCSaturateFilterOptions>): CRCFilter;
 export function sepia(options: Readonly<CRCSepiaFilterOptions>): CRCFilter;
 
-export interface CRCDisplacementFilterOptions { readonly map: SignalValue<import('@crc/core').TexturePaint>; readonly strength: SignalValue<number>; readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; }
+export interface CRCDisplacementFilterOptions { readonly blurRadius?: SignalValue<number>; readonly map: SignalValue<import('@crc/core').TexturePaint>; readonly strength: SignalValue<number>; readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; }
 export function displacement(options: Readonly<CRCDisplacementFilterOptions>): CRCFilter;
 export type CRCReflectedLightSource = string | import('@crc/core').TexturePaint | HTMLImageElement | ImageBitmap;
 export interface CRCReflectedLightFilterOptions { readonly map: SignalValue<import('@crc/core').TexturePaint>; readonly region: Readonly<{x:number;y:number;width:number;height:number}>; readonly source?: SignalValue<CRCReflectedLightSource>; readonly opacity?: SignalValue<number>; readonly threshold?: SignalValue<number>; readonly softness?: SignalValue<number>; readonly direction?: readonly [number,number]; }

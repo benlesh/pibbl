@@ -22,6 +22,11 @@ const displacementExecutor: CRCFilterExecutor = {
     if (typeof strengthValue !== 'number' || !Number.isFinite(strengthValue) || strengthValue < 0) {
       throw diagnostic(`${property}.strength`, strengthValue, 'must be a finite nonnegative number', context);
     }
+    const blurRadius = isSignal(options.blurRadius) ? options.blurRadius.get() : options.blurRadius ?? 0;
+    if (typeof blurRadius !== 'number' || !Number.isFinite(blurRadius) || blurRadius < 0) {
+      throw diagnostic(`${property}.blurRadius`, blurRadius, 'must be a finite nonnegative number', context);
+    }
+    const identity = strengthValue === 0 && blurRadius === 0;
     const { x, y, width, height } = options.region;
     if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) {
       throw diagnostic(`${property}.region`, options.region, 'must have finite coordinates and positive finite dimensions', context);
@@ -31,7 +36,7 @@ const displacementExecutor: CRCFilterExecutor = {
       validateTexturePaint(map);
       // Receiver preparation owns revision dependencies, before subtree execution
       // changes signal tracking to descendant consumers.
-      if (strengthValue !== 0) borrowTextureRaster(map, () => undefined);
+      if (!identity) borrowTextureRaster(map, () => undefined);
     }
     catch (error) {
       throw diagnostic(`${property}.map`, map, error instanceof Error ? error.message : String(error), context);
@@ -39,10 +44,10 @@ const displacementExecutor: CRCFilterExecutor = {
     const region = Object.freeze({ x, y, width, height });
     return Object.freeze({
       executor: filterBoundaryExecutor,
-      textureWarp: Object.freeze({ map, strength: strengthValue, region }),
-      reverseInfluence: (output, density) => expandDisplacementInput(output, strengthValue, density),
-      process: strengthValue === 0 ? undefined : (source, windows) => {
-        try { return processDisplacement(source, windows, map, strengthValue, region); }
+      textureWarp: blurRadius === 0 ? Object.freeze({ map, strength: strengthValue, region }) : undefined,
+      reverseInfluence: (output, density) => expandDisplacementInput(output, strengthValue + blurRadius, density),
+      process: identity ? undefined : (source, windows) => {
+        try { return processDisplacement(source, windows, map, strengthValue, region, blurRadius); }
         catch (error) {
           const failure = diagnostic(property, { strength: strengthValue, region }, `displacement processing failed: ${error instanceof Error ? error.message : String(error)}`, context);
           Object.defineProperty(failure, 'cause', { value: error });
@@ -55,7 +60,7 @@ const displacementExecutor: CRCFilterExecutor = {
 };
 
 export function displacement(options: CRCDisplacementFilterOptions): CRCFilter {
-  const definition = Object.freeze({ map: options.map, strength: options.strength, region: Object.freeze({ ...options.region }) });
+  const definition = Object.freeze({ map: options.map, strength: options.strength, blurRadius: options.blurRadius, region: Object.freeze({ ...options.region }) });
   const value = Object.freeze({ [CRC_FILTER_EXECUTOR]: displacementExecutor });
   definitions.set(value, definition);
   return value;

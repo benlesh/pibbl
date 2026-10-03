@@ -73,6 +73,7 @@ try {
     "reactionDiffusion",
     "texturePalettes",
     "useTexture",
+    "rainDrops",
     "waterWaves",
     "waterSurface",
     "tendrils",

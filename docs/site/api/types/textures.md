@@ -23,6 +23,9 @@ symbols:
     MaterialOptions,
     ReactionDiffusionOptions,
     InkMessage,
+    rainDrops,
+    RainDropsOptions,
+    RainDropsMessage,
     waterWaves,
     WaterWavesOptions,
     WaterWavesMessage,
@@ -177,3 +180,52 @@ stops ambient motion while active ripples continue to spread.
 Creates a numeric RG displacement map with bounded, reflecting outer and
 rectangle-obstacle boundaries. Solid obstacle pixels are transparent. It is
 appearance-only and does not couple to CRC physics.
+
+## rainDrops
+
+`rainDrops(options?)` creates a seeded rain-on-glass displacement map. Mount it
+with `useTexture` and pass its stretched paint to `displacement({ map, strength,
+region, blurRadius })`. Blue encodes local condensation blur. Small beads cling, overlapping beads merge conserving volume, and
+larger beads slide downward. This is a droplet simulation, not Gray–Scott ink.
+
+## RainDropsOptions
+
+`seed` is an unsigned 32-bit integer (default 7). `rainRate` is new beads per
+second, 0–120 (default 24); `gravity` is a multiplier, 0–10 (default 1).
+`initialDrops` is an integer, 0–256 (default 100). `paused` defaults to false.
+At most 256 free beads and one held finger bead are live. Radius and motion scale with the shorter texture
+side. Palettes are rejected because red/green encode displacement data.
+
+`condensation` is film coverage, 0–1 (default 0). `trailPersistence` is the
+exponential recovery/drying time in seconds, 0–60 (default 8); zero clears old
+trails at the next advancing frame. `trailStrength` controls newly deposited
+residual water, 0–1 (default 0.65). `irregularity` controls outline and path
+variation, 0–1 (default 0.8). These controls update without resetting the field.
+Moving beads gather film along their swept footprints, leaving clearer paths
+and uneven residual water. Film recovery and trail drying pause with the drops.
+The bounded, stylized height field models visual behavior, not fluid pressure.
+
+Use a positive displacement `blurRadius` to soften only misted regions. At zero
+condensation the dry map is transparent; with condensation it is opaque and
+neutral in cleared regions, preserving blue-channel coverage independently
+from the displacement normals.
+
+## RainDropsMessage
+
+`pause` carries `paused`; `reset` repeats the configured seed. `nudge` carries
+normalized `x`/`y` in [0, 1], normalized width/height movement `dx`/`dy` in
+[-1, 1], and optional `radius` in (0, 2], measured against the shorter side
+(default 0.12). Nudges work while paused. Seed or initial-count changes reset
+simulation state; display resizing alone does not. Long frame gaps are capped
+at 50 ms. Refraction affects only filtered CRC content, not arbitrary HTML.
+
+`finger` begins or moves one contact with normalized `x`/`y` in [0, 1] and
+optional positive `radius` up to 2 (default 0.045, relative to the shorter side).
+It wipes a continuous swept path through condensation and residual trails,
+collecting that water and intersected beads into one droplet pinned to the
+contact. It works while paused. `release` leaves the gathered bead at the last
+contact position with zero initial velocity; gravity resumes on advancement.
+Repeated release is harmless. Reset cancels the contact. Applications own
+pointer capture and should send release on up, cancel, or lost capture.
+At free-bead capacity, release coalesces the nearest free pair to make room,
+preserving their combined volume.
