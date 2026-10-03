@@ -9,3 +9,6 @@ packages/text/dist/
 
 # Preserve upstream font licenses and pinned fixture metadata
 packages/text/test/fixtures/
+
+# Immutable, SHA-256-addressed performance audit captures
+docs/testing/runtime-performance-audit/*/results/

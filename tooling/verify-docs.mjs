@@ -307,6 +307,7 @@ const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
+  ...trackedRepositoryFiles(["docs/website-rebuild"]).filter((path) => path.endsWith(".md")),
   ".beads/README.md",
   "packages/text/test/fixtures/source-serif/LICENSE.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
@@ -335,6 +336,7 @@ for (const representative of [
   );
 }
 const historicalMarkdownPatterns = [
+  /^docs\/testing\/runtime-performance-audit\//u,
   /^\.superpowers\/sdd\//u,
   /^docs\/design\/tfc-01-characterization-baseline\.md$/u,
   /^docs\/project-plans\/\d{3}-/u,

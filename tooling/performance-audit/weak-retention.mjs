@@ -21,18 +21,21 @@ try {
       const [core, textures, scheduler] = await Promise.all([import(`${base}packages/core/src/index.ts`), import(`${base}packages/textures/src/index.ts`), import(`${base}packages/core/src/lib/scheduler/testing.ts`)]);
       if (core.useTexture !== textures.useTexture) throw new Error('Source-mode public useTexture runtime identity mismatch.');
       const driver = new scheduler.ManualSchedulerDriver(), restore = scheduler.installSchedulerDriverForTest(driver);
-      let stale, rootElement, canvas, controller, renders = 0;
+      let stale, rootElement, canvas, renders = 0;
       function Scene({ retainHandle }) { renders++; const texture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 64, height: 40 } }); if (retainHandle) stale = texture; return core.createElement(core.Rectangle, { style: { width: 64, height: 40, fill: texture.paint({ mode: 'stretch' }) } }); }
       canvas = document.createElement('canvas');
       document.body.append(canvas);
       rootElement = core.createElement(Scene, { retainHandle: retain });
       const weakRoot = new WeakRef(rootElement), weakCanvas = new WeakRef(canvas);
-      controller = core.crc(canvas, rootElement);
+      const controller = core.crc(canvas, rootElement);
       const pendingBeforeInitialFlush = driver.pendingHostFrames;
       driver.flush(0);
       const hasConfiguredStaleHandle = retain ? stale !== undefined : stale === undefined;
       window.__crcWeakAudit = { weakRoot, weakCanvas, stale, hasConfiguredStaleHandle, renders, pendingBeforeInitialFlush, controller, scheduler, restore };
+      // Explicitly sever local references before later forced-GC evaluations.
+      // eslint-disable-next-line no-useless-assignment
       rootElement = undefined;
+      // eslint-disable-next-line no-useless-assignment
       canvas = undefined;
     }, { workspace: root, retain });
     const positiveControl = await page.evaluate(({ retain }) => ({

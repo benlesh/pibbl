@@ -21,7 +21,7 @@ try{for(const config of cases){
  const canvas=()=>{const c=document.createElement('canvas');c.width=880;c.height=630;document.body.append(c);return c};
  const flush=()=>{if(driver.pendingHostFrames){driver.flush(time+=1000/60);return true}return false};
  const flushQuiet=()=>{for(let k=0;k<32&&driver.pendingHostFrames;k++)flush();if(driver.pendingHostFrames)throw Error('Failed to reach idle within32frames')};
- let action=()=>{},extra={};
+ let action=()=>{};const extra={};
  try{
  if(cfg.kind==='physics-retention'){
  const cm=await import(base+'packages/physics/src/lib/2d/runtime/controller.ts');const present=core.signal(false);let world;function Capture(){world=physics.crcPhysicsWorld2D();return undefined}function Body(){return present.get()?h(core.Circle,{physics:physics.staticBody2D(),style:{cx:20,cy:20,radius:5}}):undefined}
@@ -46,6 +46,6 @@ try{for(const config of cases){
  if(['roots','rectangles','isolation'].includes(cfg.kind)&&times.length!==cfg.frames)throw Error('Expected all measured frames to run');return {config:cfg,warmup:cfg.frames?warmup:0,flushed,idle,...stats(times),extra,copied:cfg.counters?{slices,bytes}:undefined,live:s.snapshotRealmScheduler()};
  }finally{for(const undo of patches)undo();for(const m of mounts)m.dispose();window.auditAfter=s.snapshotRealmScheduler();restore()}
  },{root,cfg:config});
- result.after=await page.evaluate(()=>window.auditAfter);report.cases.push(result);console.log(JSON.stringify(result));
- }catch(e){report.cases.push({config,error:String(e)});console.log('FAILED '+JSON.stringify(config)+' '+e)}finally{save();await page.close()}
+ result.after=await page.evaluate(()=>window.auditAfter);report.cases.push(result);process.stdout.write(JSON.stringify(result)+'\n');
+ }catch(e){report.cases.push({config,error:String(e)});process.stdout.write('FAILED '+JSON.stringify(config)+' '+e+'\n')}finally{save();await page.close()}
 }report.complete=!timedOut;}catch(error){report.errors.push(String(error));report.complete=false;}finally{clearTimeout(watchdog);save();await browser.close()}
