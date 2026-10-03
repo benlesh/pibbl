@@ -252,10 +252,14 @@ it("retries one failed publication copy without replacing committed pixels", () 
     driver.flush(0);
     texture.send("#00ff00");
     let fail = true;
-    OffscreenCanvasRenderingContext2D.prototype.drawImage = function (...args) {
+    const failFirstPublicationCopy = function (
+      this: OffscreenCanvasRenderingContext2D,
+      ...args: unknown[]
+    ) {
       if (fail) { fail = false; throw new Error("publication copy failed"); }
-      return nativeDrawImage.apply(this, args);
+      return (nativeDrawImage as (...parameters: unknown[]) => void).apply(this, args);
     };
+    OffscreenCanvasRenderingContext2D.prototype.drawImage = failFirstPublicationCopy as typeof nativeDrawImage;
     expect(() => driver.flush(16)).toThrow("publication copy failed");
     expect(canvas.getContext("2d")!.getImageData(1, 1, 1, 1).data[0]).toBe(255);
     expect(driver.pendingHostFrames).toBe(1);
@@ -280,7 +284,6 @@ it("cleans the incompatible spare before replacement allocation fails", () => {
   try {
     driver.flush(0); texture.send("update"); driver.flush(16);
     let allocations = 0;
-    // @ts-expect-error Deliberate browser constructor fault injection.
     globalThis.OffscreenCanvas = class extends NativeCanvas { constructor(width: number, height: number) { if (++allocations === 1) throw new Error("publication allocation failed"); super(width, height); } };
     size.set(16); driver.flush(32);
     expect(() => driver.flush(48)).toThrow("publication allocation failed");
