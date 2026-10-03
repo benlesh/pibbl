@@ -1,5 +1,6 @@
 // Opt-in descriptive browser audit. Never use as a correctness or CI performance gate.
 import { mkdir, writeFile } from 'node:fs/promises';
+import { appendFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { platform, arch } from 'node:os';
@@ -21,6 +22,7 @@ if (!Number.isSafeInteger(cycles) || cycles < 1 || !Number.isSafeInteger(frames)
 const outputDirectory = resolve(root, 'docs/testing/runtime-performance-audit/2026-10-03/results');
 await mkdir(outputDirectory, { recursive: true });
 const output = resolve(outputDirectory, `${new Date().toISOString().replaceAll(':', '-')}.json`);
+const partialOutput = `${output}.partial.jsonl`;
 const timeoutMilliseconds = Number(options.get('timeout-ms') ?? 1_200_000);
 if (!Number.isSafeInteger(timeoutMilliseconds) || timeoutMilliseconds < 10_000) throw new RangeError('--timeout-ms must be a safe integer of at least 10000.');
 const baseline = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
@@ -38,14 +40,17 @@ let browser;
 const save = () => writeFile(output, `${JSON.stringify(report, null, 2)}\n`);
 const deadline = setTimeout(() => {
   report.errors.push(`Outer audit deadline of ${timeoutMilliseconds} ms exceeded; browser shutdown requested.`);
-  void save();
+  writeFileSync(output, `${JSON.stringify(report, null, 2)}\n`);
   void browser?.close();
 }, timeoutMilliseconds);
 try {
   browser = await chromium.launch({ headless: true });
   report.environment.browser = browser.version();
   const page = await browser.newPage({ viewport: { width: 960, height: 640 } });
-  await page.exposeFunction('__crcAuditRecord', record => { report.cases.push(record); void save(); });
+  await page.exposeFunction('__crcAuditRecord', record => {
+    report.cases.push(record);
+    appendFileSync(partialOutput, `${JSON.stringify(record)}\n`);
+  });
   await page.route('**/crc-audit.html', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>CRC audit</title>' }));
   await page.goto(`${baseUrl}/crc-audit.html`, { waitUntil: 'domcontentloaded' });
   const pageErrors = [];
@@ -80,7 +85,7 @@ try {
     if (textures.useTexture !== core.useTexture) throw new Error('Source-mode imports did not share the public useTexture runtime identity.');
     const h = core.createElement;
     const legacy = (props = {}) => h(textures.ReactionDiffusion, { resolution: { width: 128, height: 80 }, style: { width: 256, height: 160 }, ...props });
-    const run = (name, scene, frame, frameCount = frames) => {
+    const run = (name, scene, frame, frameCount = frames, record = true) => {
       const driver = new scheduler.ManualSchedulerDriver(), restore = scheduler.installSchedulerDriverForTest(driver);
       const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 320; document.body.replaceChildren(canvas);
       const before = counter(), flushDurations = [], errors = []; let idleFrames = 0, controller;
@@ -97,7 +102,7 @@ try {
       finally { controller?.dispose(); restore(); }
       const summarize = values => ({ samples: values.length, median: percentile(values, .5), p95: percentile(values, .95), max: Math.max(0, ...values) });
       const observation = { name, frameCount, warmupFrames: Math.min(10, frameCount), idleFrames, before, after: counter(), scheduler: scheduler.snapshotRealmScheduler(), errors, flushDurationMs: summarize(flushDurations) };
-      void window.__crcAuditRecord?.(observation);
+      if (record) void window.__crcAuditRecord?.(observation);
       return observation;
     };
     const safe = (name, execute) => { try { return execute(); } catch (error) { return { name, errors: [error instanceof Error ? error.message : String(error)] }; } };
@@ -113,7 +118,7 @@ try {
       safe('reaction-diffusion legacy initial renderer failure', () => run('reaction-diffusion legacy initial renderer failure', () => legacy({ render: () => { throw new Error('audit initial renderer failure'); } }))),
     ];
     const lifecycle = [];
-    for (let index = 0; index < cycles; index++) lifecycle.push(safe(`reaction-diffusion lifecycle ${index}`, () => run(`reaction-diffusion lifecycle ${index}`, () => legacy({ paused: true }), undefined, 3)));
+    for (let index = 0; index < cycles; index++) lifecycle.push(safe(`reaction-diffusion lifecycle ${index}`, () => run(`reaction-diffusion lifecycle ${index}`, () => legacy({ paused: true }), undefined, 3, false)));
     results.push({ name: 'reaction-diffusion legacy lifecycle', cycles, first: lifecycle[0], last: lifecycle.at(-1), final: counter() });
     function SharedRecipe() {
       const texture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 128, height: 80 } });
@@ -131,7 +136,7 @@ try {
     })));
     function PausedRecipe() { const texture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 128, height: 80 } }); return h(core.Rectangle, { style: { width: 200, height: 160, fill: texture.paint({ mode: 'stretch' }) } }); }
     const recipeLifecycle = [];
-    for (let index = 0; index < cycles; index++) recipeLifecycle.push(safe(`reaction-diffusion recipe lifecycle ${index}`, () => run(`reaction-diffusion recipe lifecycle ${index}`, () => h(PausedRecipe, {}), undefined, 3)));
+    for (let index = 0; index < cycles; index++) recipeLifecycle.push(safe(`reaction-diffusion recipe lifecycle ${index}`, () => run(`reaction-diffusion recipe lifecycle ${index}`, () => h(PausedRecipe, {}), undefined, 3, false)));
     results.push({ name: 'reaction-diffusion recipe lifecycle', cycles, first: recipeLifecycle[0], last: recipeLifecycle.at(-1), final: counter() });
     let stormTexture;
     function ResetStorm() {
