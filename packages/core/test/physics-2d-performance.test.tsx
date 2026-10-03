@@ -10,6 +10,7 @@ import {
 } from "@crc/physics/2d";
 import { expect, it, vi } from "vitest";
 import { PhysicsWorld2DKernel } from "../../physics/src/lib/2d/world/world.js";
+import { getSignalNode } from "../src/lib/signals/graph.js";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
@@ -22,15 +23,22 @@ it("does not copy the entire world for each body presentation", () => {
   canvas.width = 480;
   canvas.height = 240;
   document.body.append(canvas);
+  const bodies: CRCPhysicsBodyHandle2D[] = [];
+  function Ball({ index }: { index: number }) {
+    const body = crcPhysicsBody2D();
+    bodies[index] = body;
+    return (
+      <Circle
+        physics={dynamicBody2D({ handle: body, linearVelocity: [1, 0] })}
+        style={{ cx: index * 12, cy: 10, radius: 2 }}
+      />
+    );
+  }
   const mount = crc(
     canvas,
     <PhysicsWorld2D>
       {Array.from({ length: 32 }, (_, i) => (
-        <Circle
-          key={i}
-          physics={dynamicBody2D({ linearVelocity: [1, 0] })}
-          style={{ cx: i * 12, cy: 10, radius: 2 }}
-        />
+        <Ball key={i} index={i} />
       ))}
     </PhysicsWorld2D>,
   );
@@ -39,9 +47,75 @@ it("does not copy the entire world for each body presentation", () => {
     driver.flush(0);
     const spy = vi.spyOn(PhysicsWorld2DKernel.prototype, "snapshot");
     driver.flush(20);
-    expect(spy.mock.calls.length).toBeLessThanOrEqual(5);
+    expect(spy).not.toHaveBeenCalled();
+    expect(bodies[0]!.linearVelocity.get()).toEqual([1, 0]);
+    expect(bodies[0]!.rotationDegrees.get()).toBe(0);
+    expect(bodies[0]!.angularVelocityDegreesPerSecond.get()).toBe(0);
+    expect(bodies[0]!.sleeping.get()).toBe(false);
+    expect(bodies[0]!.enabled.get()).toBe(true);
+    expect(bodies[0]!.generation.get()).toBe(1);
   } finally {
     vi.restoreAllMocks();
+    mount.dispose();
+    restore();
+    canvas.remove();
+  }
+});
+
+it("rolls back direct body signal staging when Commit rejects a physics candidate", () => {
+  const driver = new ManualSchedulerDriver();
+  const restore = installSchedulerDriverForTest(driver);
+  const canvas = document.createElement("canvas");
+  canvas.width = 100;
+  canvas.height = 100;
+  document.body.append(canvas);
+  let body!: CRCPhysicsBodyHandle2D;
+  function Ball() {
+    body = crcPhysicsBody2D();
+    return (
+      <Circle
+        physics={dynamicBody2D({ handle: body, linearVelocity: [1, 0] })}
+        style={{ radius: 2 }}
+      />
+    );
+  }
+  const mount = crc(
+    canvas,
+    <PhysicsWorld2D>
+      <Ball />
+    </PhysicsWorld2D>,
+  );
+  try {
+    driver.flush(0);
+    driver.flush(0);
+    const before = {
+      position: body.position.get(),
+      rotationDegrees: body.rotationDegrees.get(),
+      linearVelocity: body.linearVelocity.get(),
+      angularVelocityDegreesPerSecond:
+        body.angularVelocityDegreesPerSecond.get(),
+      sleeping: body.sleeping.get(),
+      enabled: body.enabled.get(),
+      generation: body.generation.get(),
+    };
+    const node = getSignalNode(body.position) as any;
+    const equals = node.equals;
+    node.equals = () => {
+      throw new Error("physics Commit rejected");
+    };
+    expect(() => driver.flush(20)).toThrow("physics Commit rejected");
+    node.equals = equals;
+    expect({
+      position: body.position.get(),
+      rotationDegrees: body.rotationDegrees.get(),
+      linearVelocity: body.linearVelocity.get(),
+      angularVelocityDegreesPerSecond:
+        body.angularVelocityDegreesPerSecond.get(),
+      sleeping: body.sleeping.get(),
+      enabled: body.enabled.get(),
+      generation: body.generation.get(),
+    }).toEqual(before);
+  } finally {
     mount.dispose();
     restore();
     canvas.remove();
