@@ -249,6 +249,7 @@ class Resource {
   private schedule() {
     if (this.unregister || this.disposed) return;
     const participant = (frame: { logicalTime: number }, batch: any) => {
+      const retryAtEntry = this.retryScheduled;
       this.unschedule();
       const wasContinuing = this.continuing;
       this.continuing = false;
@@ -310,7 +311,7 @@ class Resource {
       } catch (error) {
         this.unschedule();
         this.continuing = false;
-        if (this.retryScheduled) this.schedule();
+        if (this.retryScheduled && !retryAtEntry) this.schedule();
         throw error;
       }
     };
