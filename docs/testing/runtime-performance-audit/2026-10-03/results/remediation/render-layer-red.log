@@ -1,0 +1,78 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+ ❯ |chromium| packages/core/test/render-layer-surface-ownership.test.tsx (4 tests | 4 failed) 221ms
+   × releases the owned render-layer surface after normal lifecycle 86ms
+   × releases the owned render-layer surface after create lifecycle 44ms
+   × releases the owned render-layer surface after render lifecycle 44ms
+   × releases the owned render-layer surface after dispose lifecycle 48ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |chromium| packages/core/test/render-layer-surface-ownership.test.tsx > releases the owned render-layer surface after normal lifecycle
+ FAIL  |chromium| packages/core/test/render-layer-surface-ownership.test.tsx > releases the owned render-layer surface after create lifecycle
+ FAIL  |chromium| packages/core/test/render-layer-surface-ownership.test.tsx > releases the owned render-layer surface after render lifecycle
+ FAIL  |chromium| packages/core/test/render-layer-surface-ownership.test.tsx > releases the owned render-layer surface after dispose lifecycle
+AssertionError: expected OffscreenCanvas{} to match object { width: +0, height: +0 }
+
+Failure screenshots:
+  - packages/core/test/__screenshots__/render-layer-surface-ownership.test.tsx/releases-the-owned-render-layer-surface-after-normal-lifecycle-1.png
+  - packages/core/test/__screenshots__/render-layer-surface-ownership.test.tsx/releases-the-owned-render-layer-surface-after-create-lifecycle-1.png
+  - packages/core/test/__screenshots__/render-layer-surface-ownership.test.tsx/releases-the-owned-render-layer-surface-after-render-lifecycle-1.png
+  - packages/core/test/__screenshots__/render-layer-surface-ownership.test.tsx/releases-the-owned-render-layer-surface-after-dispose-lifecycle-1.png
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- {[39m
+[32m-   "height": 0,[39m
+[32m-   "width": 0,[39m
+[32m- }[39m
+[31m+ OffscreenCanvas {}[39m
+
+ ❯ packages/core/test/render-layer-surface-ownership.test.tsx:48:22
+     46|       controller.dispose();
+     47|       controller.dispose();
+     48|       expect(surface).toMatchObject({ width: 0, height: 0 });
+       |                      ^
+     49|       expect(disposedSizes).toEqual(failure === "create" ? [] : [[20, …
+     50|       expect(snapshotRealmScheduler()).toMatchObject({ registeredRoots…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  15:35:37
+   Duration  2.52s (transform 0ms, setup 0ms, import 190ms, tests 221ms, environment 0ms)
+

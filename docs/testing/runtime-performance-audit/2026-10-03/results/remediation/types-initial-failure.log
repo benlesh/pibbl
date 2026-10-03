@@ -1,0 +1,8 @@
+$ tsc --noEmit
+packages/core/test/texture-paint.test.tsx(255,5): error TS2322: Type '(args_0: CanvasImageSource, args_1: number, args_2: number, args_3: unknown, args_4: unknown, args_5: unknown, args_6: unknown, args_7: unknown, args_8: unknown) => void' is not assignable to type '{ (image: CanvasImageSource, dx: number, dy: number): void; (image: CanvasImageSource, dx: number, dy: number, dw: number, dh: number): void; (image: CanvasImageSource, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void; }'.
+  Target signature provides too few arguments. Expected 9 or more, but got 3.
+packages/core/test/texture-paint.test.tsx(257,42): error TS2345: Argument of type '[CanvasImageSource, number, number, unknown, unknown, unknown, unknown, unknown, unknown]' is not assignable to parameter of type '[image: CanvasImageSource, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number]'.
+  Type at position 3 in source is not compatible with type at position 3 in target.
+    Type 'unknown' is not assignable to type 'number'.
+packages/core/test/texture-paint.test.tsx(283,5): error TS2578: Unused '@ts-expect-error' directive.
+[ELIFECYCLE] Command failed with exit code 1.

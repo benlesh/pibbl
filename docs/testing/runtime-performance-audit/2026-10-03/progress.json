@@ -1,0 +1,40 @@
+{
+  "task": "priority remediation of the fresh committed-main audit",
+  "status": "priority fixes implemented and independently verified locally; integration blocked",
+  "productionBaseline": "690bb10a99246b6f5f57df9b0341774209905827",
+  "remoteMainVerified": "dc20f992a0a3902b431732c2fc039dc055eff962",
+  "runtimeChanges": true,
+  "integration": "No remediation merges or pushes. Clean local main fast-forwarded to published dc20f992. Candidate includes that upstream rain feature. Required trust remains blocked by texture contract provenance inventory.",
+  "findings": {
+    "A01": "fixed/reviewed/verified locally; integration blocked",
+    "A02": "fixed/reviewed/verified locally; integration blocked",
+    "A03": "blocked on delivery-policy decision",
+    "A04": "confirmed worst-case allocation pressure mitigated, measured and reviewed; scaled presentations retain pattern pressure",
+    "A05": "fixed/reviewed/verified locally; integration blocked",
+    "A06": "fixed/reviewed/verified locally; integration blocked",
+    "A07": "profile-directed rendering and physics staging optimized, measured and reviewed",
+    "A08": "deferred; safe generic pooling needs generation-release contract",
+    "A09": "source-supported follow-up",
+    "A10": "source-supported follow-up",
+    "A11": "fixed/reviewed/verified locally; integration blocked"
+  },
+  "blockers": [
+    "A03 requires the requested public delivery-policy choice.",
+    "Aggregate trust on current main plus fixes: texture contract inventory has12 recorded versus33 current semantic units; missing approved-design provenance remains unresolved."
+  ],
+  "next": [
+    "Resolve A03 delivery policy without silent message loss/reordering.",
+    "Reconcile approved texture-contract provenance; rerun aggregate trust.",
+    "Integrate reviewed issue candidates one at a time and verify remote main after each push."
+  ],
+  "review": "Independent code and verification reviews reconciled in REMEDIATION.md; all blocking findings in delivered changes fixed.",
+  "candidate": "1ad66ddd022338d6e526dff423a5e4cadcfc6b2e",
+  "measuredRuntimeCommit": "31d8417f09f6bc2bb76a96395735065bcf697108",
+  "aggregateGateCandidate": "b66260dc1eb79d492b8253b8b141708a4aea2826",
+  "browserVerification": {
+    "candidate": "1ad66ddd022338d6e526dff423a5e4cadcfc6b2e",
+    "filesPassed": 350,
+    "testsPassed": 3614,
+    "testsSkipped": 7
+  }
+}

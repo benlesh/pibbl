@@ -1,4 +1,4 @@
-import { resolveTexturePaint } from '../textures/texture-protocol.js';
+import { drawSimpleStretchedTexture, resolveTexturePaint } from '../textures/texture-protocol.js';
 import { getLayoutBox } from '../layout/context.js';
 import { resolvePath } from '../geometry/resolve-path.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -23,6 +23,7 @@ export function renderPath(
   style: Readonly<ResolvedPathStyle>,
   ctx: RenderingContext2D,
   paintBounds = getLayoutBox(),
+  directTextureFill = false,
 ) {
   const {
     d: input,
@@ -41,8 +42,11 @@ export function renderPath(
   }
 
   if (fill && !isTransparent(fill)) {
-    ctx.fillStyle = resolveTexturePaint(fill, ctx, paintBounds);
-    ctx.fill(d);
+    if (!directTextureFill || (stroke && strokeWidth && strokeWidth > 0) ||
+      !drawSimpleStretchedTexture(fill, ctx, paintBounds)) {
+      ctx.fillStyle = resolveTexturePaint(fill, ctx, paintBounds);
+      ctx.fill(d);
+    }
   }
 
   if (stroke && strokeWidth && strokeWidth > 0) {

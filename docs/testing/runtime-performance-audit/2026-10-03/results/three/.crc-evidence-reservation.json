@@ -1,0 +1,6 @@
+{
+  "schema": "crc-evidence-reservation/1",
+  "id": "e61cb6b6-d1e0-4f94-9239-e1246df0d309",
+  "createdAt": "2026-10-03T19:30:13.405Z",
+  "meaning": "persistent-reservation-not-liveness"
+}

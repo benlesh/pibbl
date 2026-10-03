@@ -1214,21 +1214,24 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 81 unique, ordered, source-backed routes including optional filters and underwater", async () => {
+  it("contains 82 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(81);
+    expect(learningExampleCatalog).toHaveLength(82);
     expect(
       learningExampleCatalog
         .filter(
           (entry) =>
-            entry.slug === "underwater" || entry.slug === "optional-filters",
+            entry.slug === "underwater" ||
+            entry.slug === "optional-filters" ||
+            entry.slug === "rainy-window",
         )
         .map(getLearningExampleRoute)
         .sort(),
     ).toEqual([
       "#/examples/composition/optional-filters",
+      "#/examples/composition/rainy-window",
       "#/examples/composition/underwater",
     ]);
 
@@ -1318,6 +1321,7 @@ describe("learning example catalog", () => {
         "physics-2d",
         "physics-panels",
         "plasma-globe",
+        "rainy-window",
         "fire-and-flow",
         "signal-inputs",
         "signals-and-animation",
@@ -1432,6 +1436,7 @@ describe("learning example catalog", () => {
       "underwater",
       "stirred-ink",
       "optional-filters",
+      "rainy-window",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1789,11 +1794,13 @@ describe("learning example catalog", () => {
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
         "defineTexture",
+        "displacement",
         "useTexture",
         "marble",
         "paper",
         "cellular",
         "reactionDiffusion",
+        "rainDrops",
         "ReactionDiffusion",
         "ProceduralTexture",
         "loadOutlineFont",

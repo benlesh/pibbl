@@ -4,6 +4,7 @@ import {
 } from './element/metadata.js';
 import { GLOBAL_STATE } from './global-state.js';
 import {
+  getCurrentPaintTransform,
   getCurrentWorldTransform,
   hasCurrentWorldTransformCanvasDelta,
   setCurrentWorldTransformAnchor,
@@ -74,14 +75,23 @@ export function enterPrimitivePresentation(
 
   const { transform, clip } = presentation;
   if (transform) {
+    // These calculations share one synchronous Canvas snapshot. No user code runs
+    // between the read and applying the CRC-owned presentation transform.
+    const currentPaint = getCurrentPaintTransform();
+    const currentWorld = getCurrentWorldTransform(currentPaint);
     const untrackedCanvasTransformCount =
       (previousLineage?.untrackedCanvasTransformCount ?? 0) +
-      (hasCurrentWorldTransformCanvasDelta() ? 1 : 0);
-    const currentWorld = getCurrentWorldTransform();
+      (GLOBAL_STATE.presentationTransformLineageTrackingDepth > 0 &&
+        hasCurrentWorldTransformCanvasDelta(currentPaint) ? 1 : 0);
     if (options.deferPaint) {
       GLOBAL_STATE.worldBaseTransform = previousWorldBase.multiply(transform);
     } else {
-      context.setTransform(context.getTransform().multiply(transform));
+      if (transform.is2D) {
+        context.transform(transform.a, transform.b, transform.c, transform.d, transform.e, transform.f);
+      } else {
+        // Keep Canvas validation for unsupported non-affine matrices.
+        context.setTransform(context.getTransform().multiply(transform));
+      }
     }
     setCurrentWorldTransformAnchor(currentWorld.multiply(transform));
     if (GLOBAL_STATE.presentationTransformLineageTrackingDepth > 0) {
