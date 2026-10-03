@@ -72,3 +72,21 @@ export function resolveTexturePaint(
     typeof value === "object" && value !== null ? capabilities.get(value) : undefined;
   return capability ? capability.resolvePaint(ctx, bounds) : value as string | CanvasGradient | CanvasPattern;
 }
+
+/** Internal Rectangle-only fast path for the exact simple stretch-fill case. */
+export function drawSimpleStretchedTexture(
+  value: string | CanvasGradient | CanvasPattern | TexturePaint | undefined,
+  ctx: RenderingContext2D,
+  bounds: { x: number; y: number; width: number; height: number },
+): boolean {
+  const capability = typeof value === "object" && value !== null ? capabilities.get(value) : undefined;
+  if (!capability || ctx.globalCompositeOperation !== "source-over" || ctx.filter !== "none" ||
+    ctx.shadowBlur !== 0 || ctx.shadowOffsetX !== 0 || ctx.shadowOffsetY !== 0) return false;
+  capability.validate();
+  return capability.borrow(raster => {
+    const placement = raster.placement;
+    if (placement.mode !== "stretch" || placement.offsetX || placement.offsetY || placement.rotation) return false;
+    ctx.drawImage(raster.source, bounds.x, bounds.y, bounds.width, bounds.height);
+    return true;
+  });
+}

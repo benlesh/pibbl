@@ -71,6 +71,7 @@ function renderRectangle(
     },
     ctx,
     { x, y, width, height },
+    cornerRadius === undefined && cornerRadii === undefined,
   );
 }
 
