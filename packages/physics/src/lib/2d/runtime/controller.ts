@@ -199,6 +199,7 @@ export class PhysicsWorld2DController {
     string,
     CRCPhysicsColliderHandle2D
   >();
+  private materializedHandleTopologyPending = false;
   private readonly queries: CommittedWorldQueries2D;
   private queuedBegin: Readonly<{ cancel(): void }> | undefined;
   private releaseAdvance: (() => void) | undefined;
@@ -574,6 +575,9 @@ export class PhysicsWorld2DController {
         );
       }
     }
+    this.materializedBodyHandles.clear();
+    this.materializedColliderHandles.clear();
+    this.materializedHandleTopologyPending = false;
     this.obstacles = undefined;
     this.obstacleSource = undefined;
     this.kernel.dispose();
@@ -801,6 +805,7 @@ export class PhysicsWorld2DController {
     this.targetConsumer.markClean();
     this.acceptedTopology = topology;
     this.kernel.updateColliderMetadata(topology);
+    if (topologyChanged) this.materializedHandleTopologyPending = true;
     if (!topologyChanged && !configurationChanged) return;
     this.acceptedConfiguration = draft.configuration;
     this.queuedBegin?.cancel();
@@ -834,9 +839,6 @@ export class PhysicsWorld2DController {
     const previousById = new Map(
       this.acceptedBodies.map((body) => [body.id, body]),
     );
-    const kernelById = new Map(
-      this.kernel.snapshot().bodies.map((body) => [body.id, body]),
-    );
     const overrides = new Map<number, BodyVelocity2D>();
     for (const body of draft.bodies.values()) {
       const previous = previousById.get(body.id);
@@ -851,14 +853,15 @@ export class PhysicsWorld2DController {
         !currentDynamic.options.enabled &&
         previousDynamic?.options.enabled
       ) {
-        const state = kernelById.get(body.id);
-        if (state !== undefined) {
+        const identity = this.kernel.bodyIdentity(body.id);
+        if (identity !== undefined) {
+          const bodies = this.kernel.bodies;
           this.suspendedVelocities.set(
             body.id,
             Object.freeze({
-              linearVelocityX: state.linearVelocityX,
-              linearVelocityY: state.linearVelocityY,
-              angularVelocity: state.angularVelocity,
+              linearVelocityX: bodies.linearVelocityX[identity.index]!,
+              linearVelocityY: bodies.linearVelocityY[identity.index]!,
+              angularVelocity: bodies.angularVelocity[identity.index]!,
             }),
           );
         }
@@ -917,6 +920,10 @@ export class PhysicsWorld2DController {
             return;
           }
           this.kernel.adopt(candidate!);
+          if (this.materializedHandleTopologyPending) {
+            this.evictRetiredMaterializedHandles();
+            this.materializedHandleTopologyPending = false;
+          }
           this.committedRevision = nextRevision;
           this.obstacles?.publish(this.kernel, this.acceptedColliders, nextRevision);
           adopted = true;
@@ -991,28 +998,28 @@ export class PhysicsWorld2DController {
     if (this.revision !== undefined) {
       batch.stage(this.revision, nextRevision, this);
     }
-    const snapshot = this.kernel.snapshot();
-    const acceptedById = new Map(
-      this.acceptedBodies.map((body) => [body.id, body] as const),
-    );
-    for (const state of snapshot.bodies) {
-      const explicit = acceptedById.get(state.id)?.descriptor.options.handle;
+    const bodies = this.kernel.bodies;
+    for (const body of this.acceptedBodies) {
+      const identity = this.kernel.bodyIdentity(body.id);
+      if (identity === undefined) continue;
+      const explicit = body.descriptor.options.handle;
       const materialized = this.materializedBodyHandles.get(
-        `${String(state.index)}:${String(state.generation)}`,
+        `${String(identity.index)}:${String(identity.generation)}`,
       );
-      const pose = this.kernel.authoritativePose(state.id);
+      if (explicit === undefined && materialized === undefined) continue;
+      const pose = this.kernel.authoritativePose(body.id);
       const values = {
         position: pose.position,
         rotationDegrees: pose.rotationDegrees,
         linearVelocity: Object.freeze([
-          state.linearVelocityX,
-          state.linearVelocityY,
+          bodies.linearVelocityX[identity.index]!,
+          bodies.linearVelocityY[identity.index]!,
         ] as const),
         angularVelocityDegreesPerSecond:
-          (state.angularVelocity * 180) / Math.PI,
-        sleeping: (state.flags & BODY_SLEEPING_2D) !== 0,
-        enabled: this.kernel.isBodyEnabled(state.id),
-        generation: state.generation,
+          (bodies.angularVelocity[identity.index]! * 180) / Math.PI,
+        sleeping: (bodies.flags[identity.index]! & BODY_SLEEPING_2D) !== 0,
+        enabled: this.kernel.isBodyEnabled(body.id),
+        generation: identity.generation,
       } as const;
       if (explicit !== undefined) {
         stagePhysicsBodyHandle2D(batch, explicit, values, this);
@@ -1255,17 +1262,22 @@ export class PhysicsWorld2DController {
       )
         return true;
     }
-    for (const body of this.kernel.snapshot().bodies) {
+    const bodies = this.kernel.bodies;
+    for (const body of this.acceptedBodies) {
+      const identity = this.kernel.bodyIdentity(body.id);
+      if (identity === undefined) continue;
+      const index = identity.index;
+      const flags = bodies.flags[index]!;
       if (
-        (body.flags & BODY_TYPE_KINEMATIC_2D) !== 0 &&
-        (body.linearVelocityX !== 0 ||
-          body.linearVelocityY !== 0 ||
-          body.angularVelocity !== 0)
+        (flags & BODY_TYPE_KINEMATIC_2D) !== 0 &&
+        (bodies.linearVelocityX[index]! !== 0 ||
+          bodies.linearVelocityY[index]! !== 0 ||
+          bodies.angularVelocity[index]! !== 0)
       )
         return true;
       if (
-        (body.flags & BODY_TYPE_DYNAMIC_2D) !== 0 &&
-        (body.flags & BODY_SLEEPING_2D) === 0
+        (flags & BODY_TYPE_DYNAMIC_2D) !== 0 &&
+        (flags & BODY_SLEEPING_2D) === 0
       )
         return true;
     }
@@ -1299,6 +1311,39 @@ export class PhysicsWorld2DController {
     return (this.revision ??= signal(this.committedRevision, {
       debugName: "PhysicsWorld2D.revision",
     }));
+  }
+
+  /** Query handles are cached only while their kernel identity remains live. */
+  private evictRetiredMaterializedHandles(): void {
+    for (const [key, handle] of this.materializedBodyHandles) {
+      const separator = key.indexOf(":");
+      const index = Number(key.slice(0, separator));
+      const generation = Number(key.slice(separator + 1));
+      if (this.kernel.bodyIdForIdentity(index, generation) !== undefined)
+        continue;
+      const binding = physicsBodyHandleBinding2D(handle);
+      if (binding?.controller === this) {
+        unbindPhysicsBodyHandle2D(
+          handle,
+          this,
+          binding.bodyId,
+          binding.bindingGeneration,
+        );
+      }
+      this.materializedBodyHandles.delete(key);
+    }
+    for (const [key, handle] of this.materializedColliderHandles) {
+      const identity = physicsColliderHandleIdentity2D(handle);
+      if (
+        identity?.controller === this &&
+        this.kernel.colliderIdForIdentity(
+          identity.index,
+          identity.generation,
+        ) !== undefined
+      )
+        continue;
+      this.materializedColliderHandles.delete(key);
+    }
   }
 
   private materializeBodyHandle(
