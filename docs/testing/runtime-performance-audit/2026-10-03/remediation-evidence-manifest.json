@@ -203,8 +203,42 @@
       "path": "results/remediation/trust-cc3a5d53.log",
       "bytes": 3812,
       "sha256": "642b744e6ce3097c2364e6ded1232c164a6d5e6366083b111048b88a3a37cdcb"
+    },
+    {
+      "path": "results/remediation/current-lint.log",
+      "bytes": 211,
+      "sha256": "ab5a9ac4854c135dde5e415da7ca5202947f9e42719213c52b56f36b2ccbe8e7"
+    },
+    {
+      "path": "results/remediation/current-package.log",
+      "bytes": 30372,
+      "sha256": "aa5623dcfd4ad6100961717e91bf549282df260f711e16f6d6254e426d84f067"
+    },
+    {
+      "path": "results/remediation/current-tests-final.log",
+      "bytes": 3866,
+      "sha256": "49569d74850b6d3ed70c86aebcd04d734b0d2825ee82fff8662cf48d5d9e7297"
+    },
+    {
+      "path": "results/remediation/current-tests.log",
+      "bytes": 6828,
+      "sha256": "4e80c5de4795ab452ac9e17d671189dc5ee33c711b4c91f022d419b5753b2f10"
+    },
+    {
+      "path": "results/remediation/current-trust.log",
+      "bytes": 3812,
+      "sha256": "63ca45904835f805dadbcedad2d15ce1923d6550b7e299859160e5235542172a"
+    },
+    {
+      "path": "results/remediation/current-types.log",
+      "bytes": 15,
+      "sha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
     }
   ],
   "aggregateGateCandidate": "cc3a5d539379429c5f76b07b91694b362b4d88b6",
-  "aggregateGateResult": "blocked: baseline texture contract inventory12 !=31"
+  "aggregateGateResult": "blocked: baseline texture contract inventory12 !=31",
+  "latestUpstream": "dc20f992a0a3902b431732c2fc039dc055eff962",
+  "latestVerifiedRuntimeAndTestCandidate": "1ad66ddd022338d6e526dff423a5e4cadcfc6b2e",
+  "latestAggregateGateCandidate": "467e74f952ae03da3deec18c3d180d51d2da68ec",
+  "latestAggregateGateResult": "blocked: baseline texture contract inventory12 !=33"
 }

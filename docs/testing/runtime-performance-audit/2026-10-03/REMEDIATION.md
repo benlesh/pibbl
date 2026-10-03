@@ -73,8 +73,9 @@ format failure was one missing blank line in `docs/site/api/types/filters.md`; t
 blank line was restored without semantic changes.
 
 The automation prompt explicitly makes an unrelated baseline gate failure an
-integration blocker. Main remains at the production baseline until this is
-resolved. A03 also remains incomplete pending the public delivery-policy choice.
+integration blocker. The remediation remains unmerged until this is
+resolved; clean local main was later fast-forwarded only to an already-published
+upstream update (see below). A03 also remains incomplete pending the public delivery-policy choice.
 
 ## Verification and measurements
 
@@ -145,14 +146,34 @@ Combined candidate branch: `codex/perf-verification-gate` in managed worktree
 `runtime-perf-audit/crc`. Combined runtime commit before remaining verification:
 `31d8417f09f6bc2bb76a96395735065bcf697108`.
 Clean main integration checkout: managed `perf-verification/crc`.
-Verified origin is `https://github.com/benlesh/crc.git`; remote main was freshly
-confirmed at `690bb10a99246b6f5f57df9b0341774209905827`. No remote write this turn.
-All runtime changes after measured `31d8417f` are absent: later commits add tests,
-correct test types, or repair runner discovery. The source runtime measured is the
-source runtime being delivered.
+Verified origin is `https://github.com/benlesh/crc.git`. It advanced during final
+verification from `690bb10a` to `dc20f992a0a3902b431732c2fc039dc055eff962`
+(`feat(textures): add interactive rain on glass`). Clean local main was fast-forwarded
+to that already-published commit, as authorized. No remote write this turn.
+
+The candidate incorporated upstream normally as
+`467e74f952ae03da3deec18c3d180d51d2da68ec`, with no conflicts. Independent review
+confirmed no changes to audited texture ownership/paint, transform, physics, or
+synthetic workload source. The module graph gains an inactive rain export/catalog
+entry, so the measurements remain attributed to their recorded `31d8417f` candidate;
+they are not mislabeled as a new measurement of `467e74f9`.
+
+After this merge, types, lint, and the complete package gate pass. Full browser
+verification exposed two stale upstream catalog expectations (81 routes versus 82,
+and missing rainDrops/displacement API tags). Author corrected the exact route,
+order, browse membership, and API expectations in `b5861471`; orchestrator reviewed
+that assertions were strengthened, not removed. Focused learning suite passed
+231/231; merged as `1ad66ddd`. Final full browser suite passed **350 files / 3,614 tests**, with 3 files / 7 tests
+skipped.
+The exact aggregate gate on `467e74f9` remains blocked at texture contract inventory
+**12 recorded versus 33 current units**. The earlier 12-versus-31 result is retained
+as historical evidence, not reported as the latest gate output.
 
 Next actions: obtain the A03 delivery-policy decision; reconcile the missing
 approved-design provenance for the baseline texture contract; rerun the complete
 aggregate gate on each proposed integration candidate before normal main merges
 and non-force pushes. A08 remains an explicit contract-sensitive optimization
 follow-up. No item blocked on those prerequisites is declared integrated or done.
+
+Owned audit servers were stopped after verification. Managed worktrees and issue
+branches are preserved for the blocked integration; unrelated work remains intact.

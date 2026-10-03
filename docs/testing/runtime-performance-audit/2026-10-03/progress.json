@@ -2,9 +2,9 @@
   "task": "priority remediation of the fresh committed-main audit",
   "status": "priority fixes implemented and independently verified locally; integration blocked",
   "productionBaseline": "690bb10a99246b6f5f57df9b0341774209905827",
-  "remoteMainVerified": "690bb10a99246b6f5f57df9b0341774209905827",
+  "remoteMainVerified": "dc20f992a0a3902b431732c2fc039dc055eff962",
   "runtimeChanges": true,
-  "integration": "No main merges or pushes. Required aggregate trust remains blocked by pre-existing texture contract provenance inventory. See REMEDIATION.md.",
+  "integration": "No remediation merges or pushes. Clean local main fast-forwarded to published dc20f992. Candidate includes that upstream rain feature. Required trust remains blocked by texture contract provenance inventory.",
   "findings": {
     "A01": "fixed/reviewed/verified locally; integration blocked",
     "A02": "fixed/reviewed/verified locally; integration blocked",
@@ -20,7 +20,7 @@
   },
   "blockers": [
     "A03 requires the requested public delivery-policy choice.",
-    "Aggregate trust: texture contract inventory has12 recorded versus31 current semantic units; no approved-design provenance found for units25\u201331."
+    "Aggregate trust on current main plus fixes: texture contract inventory has12 recorded versus33 current semantic units; missing approved-design provenance remains unresolved."
   ],
   "next": [
     "Resolve A03 delivery policy without silent message loss/reordering.",
@@ -28,6 +28,6 @@
     "Integrate reviewed issue candidates one at a time and verify remote main after each push."
   ],
   "review": "Independent code and verification reviews reconciled in REMEDIATION.md; all blocking findings in delivered changes fixed.",
-  "candidate": "6f505d04",
+  "candidate": "1ad66ddd022338d6e526dff423a5e4cadcfc6b2e",
   "measuredRuntimeCommit": "31d8417f09f6bc2bb76a96395735065bcf697108"
 }
