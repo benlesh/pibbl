@@ -59,14 +59,16 @@ function bitmapVisibleLogicalBounds(
 
 export function getCurrentPaintTransform(): DOMMatrix {
   const target = getCurrentRenderTarget();
-  return target.inverseRenderTransform.multiply(getCurrentRenderContext().getTransform());
+  const canvasTransform = getCurrentRenderContext().getTransform();
+  return target.inverseRenderTransform.isIdentity ? canvasTransform :
+    target.inverseRenderTransform.multiply(canvasTransform);
 }
 
-export function getCurrentWorldTransform(): DOMMatrix {
+export function getCurrentWorldTransform(paintTransform?: DOMMatrix): DOMMatrix {
   const exactWorld = GLOBAL_STATE.worldExactTransform;
   const paintAnchor = GLOBAL_STATE.worldPaintAnchorTransform;
   if (exactWorld && paintAnchor) {
-    const currentPaint = getCurrentPaintTransform();
+    const currentPaint = paintTransform ?? getCurrentPaintTransform();
     if (sameMatrixExactly(paintAnchor, currentPaint)) return exactWorld;
     return exactWorld.multiply(paintAnchor.inverse()).multiply(currentPaint);
   }
@@ -74,14 +76,14 @@ export function getCurrentWorldTransform(): DOMMatrix {
   if (!worldBase) {
     throw new Error('No world transform is available.');
   }
-  return worldBase.multiply(getCurrentPaintTransform());
+  return worldBase.multiply(paintTransform ?? getCurrentPaintTransform());
 }
 
 /** Whether direct Canvas calls changed paint since the last CRC-owned anchor. */
-export function hasCurrentWorldTransformCanvasDelta(): boolean {
+export function hasCurrentWorldTransformCanvasDelta(paintTransform?: DOMMatrix): boolean {
   const paintAnchor = GLOBAL_STATE.worldPaintAnchorTransform;
   return paintAnchor !== undefined &&
-    !sameMatrixExactly(paintAnchor, getCurrentPaintTransform());
+    !sameMatrixExactly(paintAnchor, paintTransform ?? getCurrentPaintTransform());
 }
 
 function sameMatrixExactly(
