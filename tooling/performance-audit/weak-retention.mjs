@@ -24,6 +24,7 @@ try {
       let stale, rootElement, canvas, controller, renders = 0;
       function Scene({ retainHandle }) { renders++; const texture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 64, height: 40 } }); if (retainHandle) stale = texture; return core.createElement(core.Rectangle, { style: { width: 64, height: 40, fill: texture.paint({ mode: 'stretch' }) } }); }
       canvas = document.createElement('canvas');
+      document.body.append(canvas);
       rootElement = core.createElement(Scene, { retainHandle: retain });
       const weakRoot = new WeakRef(rootElement), weakCanvas = new WeakRef(canvas);
       controller = core.crc(canvas, rootElement);
