@@ -117,6 +117,25 @@ describe('primitive presentation', () => {
     });
   });
 
+  it('uses the legacy Canvas fallback and restores world state for a non-2D presentation matrix', () => {
+    const context = document.createElement('canvas').getContext('2d')!;
+    const target = identityTarget(40, 30);
+    const non2D = new DOMMatrix();
+    non2D.m13 = 0.25;
+    const nativeTransform = vi.spyOn(context, 'transform');
+    const setTransform = vi.spyOn(context, 'setTransform');
+
+    withRenderTarget(context, target, new DOMMatrix().translate(100, 200), () => {
+      const release = enterPrimitivePresentation({ transform: non2D });
+      expect(nativeTransform).not.toHaveBeenCalled();
+      expect(setTransform).toHaveBeenCalled();
+      expect(getCurrentWorldTransform().m13).toBe(0.25);
+      release();
+      expect(matrixValues(getCurrentWorldTransform()))
+        .toEqual(matrixValues(new DOMMatrix().translate(100, 200)));
+    });
+  });
+
   it('does not allocate presentation lineage outside an attachment traversal', () => {
     const context = document.createElement('canvas').getContext('2d')!;
     const target = identityTarget(40, 30);
