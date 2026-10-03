@@ -147,7 +147,7 @@ try {
       if (index === 12) for (const count of [16, 128, 512]) for (let message = 0; message < count; message++) stormTexture.send({ type: 'reset' });
       if (index === 14) for (let message = 0; message < 1_024; message++) stormTexture.send({ type: 'paint', u: .5, v: .5, radius: 128, strength: .8 });
       if (index === 16) for (let message = 0; message < 8_192; message++) stormTexture.send({ type: 'stir', u: .5, v: .5, du: .1, dv: -.1, radius: 128 });
-    })));
+    }));
     stormTexture = undefined;
     results.push(resetStorm);
     const emission = core.repeat(core.sequence(core.wait(1), core.marker('emit')), { iterations: Infinity });
