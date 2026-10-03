@@ -244,13 +244,13 @@ it("retries one failed publication copy without replacing committed pixels", () 
     receive(state, color, context) { state.color = color; context.invalidate(); },
   });
   let texture!: ReturnType<typeof useTexture<string>>;
+  const nativeDrawImage = OffscreenCanvasRenderingContext2D.prototype.drawImage;
   function Scene() { texture = useTexture(recipe({}), { resolution: { width: 8, height: 8 } }); return <Rectangle style={{ width: 8, height: 8, fill: texture }} />; }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
   const controller = crc(canvas, <Scene />);
   try {
     driver.flush(0);
     texture.send("#00ff00");
-    const nativeDrawImage = OffscreenCanvasRenderingContext2D.prototype.drawImage;
     let fail = true;
     OffscreenCanvasRenderingContext2D.prototype.drawImage = function (...args) {
       if (fail) { fail = false; throw new Error("publication copy failed"); }
@@ -262,7 +262,7 @@ it("retries one failed publication copy without replacing committed pixels", () 
     OffscreenCanvasRenderingContext2D.prototype.drawImage = nativeDrawImage;
     driver.flush(32);
     expect(canvas.getContext("2d")!.getImageData(1, 1, 1, 1).data[1]).toBe(255);
-  } finally { controller.dispose(); restore(); }
+  } finally { OffscreenCanvasRenderingContext2D.prototype.drawImage = nativeDrawImage; controller.dispose(); restore(); }
 });
 
 it("cleans the incompatible spare before replacement allocation fails", () => {
@@ -273,19 +273,34 @@ it("cleans the incompatible spare before replacement allocation fails", () => {
     receive(_state, _message, context) { context.invalidate(); },
   });
   let texture!: ReturnType<typeof useTexture<string>>;
+  const NativeCanvas = OffscreenCanvas;
   function Scene() { texture = useTexture(recipe({}), { resolution: { width: size.get(), height: size.get() } }); borrowTextureRaster(texture, raster => { first ??= raster.source; }); return <Rectangle style={{ width: 8, height: 8, fill: texture }} />; }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
   const controller = crc(canvas, <Scene />);
   try {
     driver.flush(0); texture.send("update"); driver.flush(16);
-    const NativeCanvas = OffscreenCanvas; let allocations = 0;
+    let allocations = 0;
     // @ts-expect-error Deliberate browser constructor fault injection.
     globalThis.OffscreenCanvas = class extends NativeCanvas { constructor(width: number, height: number) { if (++allocations === 1) throw new Error("publication allocation failed"); super(width, height); } };
     size.set(16); driver.flush(32);
     expect(() => driver.flush(48)).toThrow("publication allocation failed");
     expect(first).toMatchObject({ width: 0, height: 0 });
-    globalThis.OffscreenCanvas = NativeCanvas;
-  } finally { controller.dispose(); restore(); }
+  } finally { globalThis.OffscreenCanvas = NativeCanvas; controller.dispose(); restore(); }
+});
+
+it("stops after one automatic retry for a persistent publication copy failure", () => {
+  const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
+  const recipe = defineTexture<{}, {}, string>({ create: () => ({}), rasterize(_s, { canvas }) { canvas.getContext("2d")!.fillRect(0, 0, 1, 1); }, receive(_s, _m, context) { context.invalidate(); } });
+  let texture!: ReturnType<typeof useTexture<string>>;
+  function Scene() { texture = useTexture(recipe({}), { resolution: { width: 8, height: 8 } }); return <Rectangle style={{ width: 8, height: 8, fill: texture }} />; }
+  const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
+  const controller = crc(canvas, <Scene />); const nativeDrawImage = OffscreenCanvasRenderingContext2D.prototype.drawImage;
+  try {
+    driver.flush(0); texture.send("retry");
+    OffscreenCanvasRenderingContext2D.prototype.drawImage = () => { throw new Error("persistent copy failure"); };
+    expect(() => driver.flush(16)).toThrow("persistent copy failure"); expect(driver.pendingHostFrames).toBe(1);
+    expect(() => driver.flush(32)).toThrow("persistent copy failure"); expect(driver.pendingHostFrames).toBe(0);
+  } finally { OffscreenCanvasRenderingContext2D.prototype.drawImage = nativeDrawImage; controller.dispose(); restore(); }
 });
 
 it("does not dispose an already released state again when recreation fails", () => {
@@ -303,6 +318,23 @@ it("does not dispose an already released state again when recreation fails", () 
     expect(() => driver.flush(16)).toThrow("recreation failed");
     expect(dispose).toHaveBeenCalledTimes(1);
     expect(driver.pendingHostFrames).toBe(0);
+  } finally { controller.dispose(); restore(); }
+});
+
+it("cleans a texture when its resized state disposer throws", () => {
+  const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
+  const size = signal(8), dispose = vi.fn(() => { throw new Error("resize disposal failed"); });
+  const recipe = defineTexture<{}, {}>({
+    create(context) { context.requestFrame(); return {}; },
+    rasterize(_state, { canvas }) { canvas.getContext("2d")!.fillRect(0, 0, 1, 1); }, dispose,
+  });
+  function Scene() { const texture = useTexture(recipe({}), { resolution: { width: size.get(), height: size.get() } }); return <Rectangle style={{ width: 8, height: 8, fill: texture }} />; }
+  const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  try {
+    driver.flush(0); size.set(16);
+    expect(() => driver.flush(16)).toThrow("resize disposal failed");
+    expect(dispose).toHaveBeenCalledTimes(1); expect(driver.pendingHostFrames).toBe(0);
   } finally { controller.dispose(); restore(); }
 });
 
