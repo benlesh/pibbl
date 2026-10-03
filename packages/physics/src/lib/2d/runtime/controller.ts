@@ -199,6 +199,7 @@ export class PhysicsWorld2DController {
     string,
     CRCPhysicsColliderHandle2D
   >();
+  private materializedHandleTopologyPending = false;
   private readonly queries: CommittedWorldQueries2D;
   private queuedBegin: Readonly<{ cancel(): void }> | undefined;
   private releaseAdvance: (() => void) | undefined;
@@ -576,6 +577,7 @@ export class PhysicsWorld2DController {
     }
     this.materializedBodyHandles.clear();
     this.materializedColliderHandles.clear();
+    this.materializedHandleTopologyPending = false;
     this.obstacles = undefined;
     this.obstacleSource = undefined;
     this.kernel.dispose();
@@ -803,6 +805,7 @@ export class PhysicsWorld2DController {
     this.targetConsumer.markClean();
     this.acceptedTopology = topology;
     this.kernel.updateColliderMetadata(topology);
+    if (topologyChanged) this.materializedHandleTopologyPending = true;
     if (!topologyChanged && !configurationChanged) return;
     this.acceptedConfiguration = draft.configuration;
     this.queuedBegin?.cancel();
@@ -919,7 +922,10 @@ export class PhysicsWorld2DController {
             return;
           }
           this.kernel.adopt(candidate!);
-          this.evictRetiredMaterializedHandles();
+          if (this.materializedHandleTopologyPending) {
+            this.evictRetiredMaterializedHandles();
+            this.materializedHandleTopologyPending = false;
+          }
           this.committedRevision = nextRevision;
           this.obstacles?.publish(this.kernel, this.acceptedColliders, nextRevision);
           adopted = true;
