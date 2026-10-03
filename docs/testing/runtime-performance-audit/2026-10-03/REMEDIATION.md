@@ -177,3 +177,11 @@ follow-up. No item blocked on those prerequisites is declared integrated or done
 
 Owned audit servers were stopped after verification. Managed worktrees and issue
 branches are preserved for the blocked integration; unrelated work remains intact.
+
+Final committed aggregate recheck: `b66260dc1eb79d492b8253b8b141708a4aea2826`
+failed only as far as the first reported texture inventory assertion (12 ≠ 33);
+no later aggregate stages are claimed passed by that command. Separately run
+checks are listed above. This final evidence-only bookkeeping commit changes no
+source or test behavior. Raw logs deliberately preserve original whitespace;
+source edits pass whitespace checks. All original and remediation evidence hashes
+were verified, and every manifest entry is tracked.

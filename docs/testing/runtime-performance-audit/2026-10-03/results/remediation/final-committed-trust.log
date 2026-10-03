@@ -1,0 +1,67 @@
+$ corepack pnpm@11.21.0 trust:static && corepack pnpm@11.21.0 trust:package && corepack pnpm@11.21.0 trust:browser && corepack pnpm@11.21.0 trust:lifecycle
+$ corepack pnpm@11.21.0 test:texture-kernels && corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 scenarios:check && corepack pnpm@11.21.0 docs:check && corepack pnpm@11.21.0 studio-docs:check && corepack pnpm@11.21.0 test:studio-docs:production-boundary && corepack pnpm@11.21.0 typecheck && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 playground:build && corepack pnpm@11.21.0 playground:build:built
+$ node tooling/build-texture-wasm.mjs --check && node tooling/build-water-surface-wasm.mjs --check && node --import tsx --test tooling/texture-wasm-spike/production.check.mjs
+marble: 10126 bytes
+paper: 7711 bytes
+cellular: 7517 bytes
+ink: 8953 bytes
+tendrils: 15923 bytes
+lightning: 6519 bytes
+water-waves: 6935 bytes
+water-surface: 13261 bytes
+✔ production kernels preserve the original seeded fields, brush effects, and fixed steps (28.865416ms)
+✔ static WASM fields preserve edge and numeric behavior at boundary dimensions and parameters (466.353333ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 616.695459
+$ node --test tooling/agent-verification/requirements.test.mjs tooling/agent-verification/discover.test.mjs && node tooling/agent-verification/requirements.mjs
+✔ finds a requirement-linked runnable scenario with independent acceptance evidence (1.412209ms)
+✔ distinguishes known unmapped requirements from invalid IDs without inventing coverage (0.369208ms)
+✔ maps analytical correctness to independent arithmetic rather than screenshot similarity (0.457125ms)
+✔ requires every inventory ID exactly once (1.250375ms)
+✔ rejects unsupported completion claims and missing remaining work (0.134625ms)
+✔ distinguishes an audited gap from an unassessed requirement (0.096167ms)
+✔ accepts a fully specified reviewed closure but rejects incomplete claims (1.07475ms)
+✔ closure evidence expires after changes or deletion and cannot escape through symlinks (9.081042ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 40.568333
+{"accounting":"valid","total":373,"unassessed":0,"partial":348,"gap":25,"complete":0,"certifiedComplete":0,"closures":{"verifiedFiles":0,"scope":"recorded-file-integrity-not-semantic-proof"},"note":"Complete counts reviewed closure claims with checked file integrity; semantic coverage requires review. Partial is not a completion percentage."}
+$ tsx tooling/scenario-source-discovery.check.ts && tsx tooling/scenario-catalog.ts
+Scenario discovery fixture ignored non-TSX and rejected uncataloged example sources.
+Validated 82 lessons, 12 tutorial snapshots, 29 test labs, and docs/scenario-index.md.
+$ node tooling/verify-docs-mutations.mjs
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Post-baseline contract docs/design/textures-contract.md semantic unit count is stale
+
+12 !== 33
+
+    at assertPostBaselineContractPreservation (file:///Users/benlesh/.codex/worktrees/runtime-perf-audit/crc/tooling/docs-contract-preservation.mjs:575:10)
+    at file:///Users/benlesh/.codex/worktrees/runtime-perf-audit/crc/tooling/verify-docs.mjs:2346:5
+    at Array.map (<anonymous>)
+    at file:///Users/benlesh/.codex/worktrees/runtime-perf-audit/crc/tooling/verify-docs.mjs:2345:54 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 12,
+  expected: 33,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.15.0
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.

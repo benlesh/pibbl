@@ -233,12 +233,17 @@
       "path": "results/remediation/current-types.log",
       "bytes": 15,
       "sha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+    },
+    {
+      "path": "results/remediation/final-committed-trust.log",
+      "bytes": 3814,
+      "sha256": "d364ad5f3b7ed68c188634c781db2c7a3816d6d696005b78f389f0ea7c0dc51d"
     }
   ],
   "aggregateGateCandidate": "cc3a5d539379429c5f76b07b91694b362b4d88b6",
   "aggregateGateResult": "blocked: baseline texture contract inventory12 !=31",
   "latestUpstream": "dc20f992a0a3902b431732c2fc039dc055eff962",
   "latestVerifiedRuntimeAndTestCandidate": "1ad66ddd022338d6e526dff423a5e4cadcfc6b2e",
-  "latestAggregateGateCandidate": "467e74f952ae03da3deec18c3d180d51d2da68ec",
+  "latestAggregateGateCandidate": "b66260dc1eb79d492b8253b8b141708a4aea2826",
   "latestAggregateGateResult": "blocked: baseline texture contract inventory12 !=33"
 }
