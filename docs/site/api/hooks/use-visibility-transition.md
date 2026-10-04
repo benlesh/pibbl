@@ -99,6 +99,8 @@ These change captured pixels only. Presentation transforms and regions do not al
 `defineTransition({ render, linger? })` makes an inert reusable definition. CRC owns capture, scheduling, completion, and pooled surfaces. `render(frame)` is synchronous and receives `progress`, `phase`, a forward `elapsed` clock, historical `progressAt(time)`, the borrowed `context` and `source`, local `sourceBounds`, and `drawSource()`. Settled endpoints bypass the callback. With a nonzero tail, the callback also runs at progress 0 or 1 until the tail finishes; it must keep the material hidden or visible appropriately while drawing its remaining particles.
 
 ```ts
+import { defineTransition } from "@crc/core";
+
 const effect = defineTransition({
   render({ context, progress, drawSource }) {
     context.globalAlpha = progress * progress;

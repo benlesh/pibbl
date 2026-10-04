@@ -48,13 +48,15 @@ remaining scope. Unassessed entries explicitly require an evidence/ownership aud
 they are not automatically a backlog of new runtime APIs. The inventory includes
 application responsibilities, ongoing constraints and conditional capabilities.
 
-`corepack pnpm@11.21.0 test:agent-verification:requirements` verifies complete ID
-coverage, no duplicates, supported audit statuses, evidence paths/scopes, remaining
-work and inventory fingerprint. Two negative-test cases prove omission, duplicate,
-extra IDs, unsupported completion claims, missing gaps and unsupported partial
-claims fail validation. This cheap accounting gate is included in the focused
-verification command and the aggregate static gate. Passing it certifies only
-accounting integrity, never implementation correctness.
+`corepack pnpm@11.21.0 test:agent-verification:requirements` tests the ledger
+validator and discovery behavior, including rejection of invalid completion claims.
+These executable regression tests remain in the static trust gate.
+
+`corepack pnpm@11.21.0 audit:agent-verification:claims` separately checks the
+strategy ledger's recorded file fingerprints and accounting. Run it when reviewing
+or renewing those historical closure claims. Changed evidence invalidates the
+recorded claim, but does not by itself establish a current runtime regression, so
+this audit is not a merge gate. Never refresh fingerprints without renewed review.
 
 Next consolidation work is to assess the remaining categories against existing
 public tests and contracts, without adding duplicate capabilities, and organize

@@ -1,5 +1,7 @@
 # Physics retains handles for retired body generations
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Issue: CRC-PERF-03  
 Priority: P1  
 Status: Open  

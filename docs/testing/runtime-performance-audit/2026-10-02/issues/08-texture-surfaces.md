@@ -1,5 +1,7 @@
 # Texture resizing leaves obsolete publication surfaces to garbage collection
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Issue: CRC-PERF-08  
 Priority: P2  
 Status: Open  

@@ -10,161 +10,17 @@ permissions:
   contents: read
 
 jobs:
-  static:
-    name: Static contracts
+  contracts:
+    name: Trust / ${{ matrix.stage }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js and pnpm
-        uses: pnpm/setup@v2
-        with:
-          runtime: node@24.19.0
-          cache: true
-          install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --strict-peer-dependencies
-
-      - name: Validate scenario catalog
-        run: pnpm scenarios:check
-
-      - name: Validate current documentation
-        run: pnpm docs:check
-        env:
-          CRC_VERIFY_CONTRACT_PROVENANCE: 1
-
-      - name: Validate Studio documentation manifest
-        run: pnpm studio-docs:check
-
-      - name: Prove Studio production excludes acceptance-only retry behavior
-        run: pnpm test:studio-docs:production-boundary
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Lint and format
-        run: pnpm lint
-
-      - name: Build packages and galleries
-        run: |
-          pnpm build
-          pnpm playground:build
-          pnpm playground:build:built
-
-  package:
-    name: Packed package
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Node.js and pnpm
-        uses: pnpm/setup@v2
-        with:
-          runtime: node@24.19.0
-          cache: true
-          install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --strict-peer-dependencies
-
-      - name: Verify packed consumers
-        run: pnpm test:package-consumer:packed
-
-  browser:
-    name: Browser and visual contracts
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # Checked against the local aggregate by tooling/trust-workflow.test.mjs.
+        stage: [static, package, browser, lifecycle, native]
     env:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Node.js and pnpm
-        uses: pnpm/setup@v2
-        with:
-          runtime: node@24.19.0
-          cache: true
-          install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --strict-peer-dependencies
-
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Run browser contracts
-        run: pnpm test:ci
-
-      - name: Validate Studio documentation browser acceptance
-        run: pnpm test:studio-docs
-
-      - name: Prove visual safeguards
-        run: pnpm test:visual-safeguard
-
-      - name: Match Studio visual baselines
-        run: pnpm test:studio-visual
-
-      - name: Verify built gallery smoke
-        run: pnpm test:smoke:built
-
-      - name: Upload browser evidence
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: browser-evidence-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            **/.vitest-attachments/**
-            **/test-screenshots/**
-          retention-days: 14
-          if-no-files-found: error
-          compression-level: 9
-          include-hidden-files: true
-
-  lifecycle:
-    name: Lifecycle and structural performance
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Node.js and pnpm
-        uses: pnpm/setup@v2
-        with:
-          runtime: node@24.19.0
-          cache: true
-          install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --strict-peer-dependencies
-
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Run lifecycle stress contracts
-        run: pnpm test:lifecycle
-
-      - name: Run structural performance contracts
-        run: pnpm test:performance
-
-  text:
-    name: Text geometry and native build
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -174,6 +30,8 @@ jobs:
           runtime: node@24.19.0
           cache: true
           install: false
+      - name: Install Corepack used by repository scripts
+        run: npm install --global corepack@0.35.0
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --strict-peer-dependencies
       - name: Cache pinned native inputs
@@ -188,37 +46,32 @@ jobs:
           key: text-native-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/text/native/**', 'packages/text/scripts/**') }}
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
-      - name: Build and test text geometry
-        run: pnpm text:test
-      - name: Check toolchain and packed consumers
-        run: |
-          pnpm text:doctor
-          pnpm test:text-package
-      - name: Verify reproducible native output
-        run: pnpm text:verify-reproducible
-      - name: Verify interactive text editing
-        run: pnpm text:test:browser
-      - name: Report text performance
-        run: |
-          pnpm text:bench
-          pnpm text:bench:browser
+      - name: Build browser test assets
+        if: matrix.stage == 'browser'
+        run: pnpm build
+      - name: Run canonical trust stage
+        run: pnpm run trust:${{ matrix.stage }}
+      - name: Upload available failure evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: trust-${{ matrix.stage }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            **/.vitest-attachments/**
+            **/test-screenshots/**
+          retention-days: 14
+          # Startup failures have no screenshots; preserve the original failure.
+          if-no-files-found: ignore
+          compression-level: 9
+          include-hidden-files: true
 
   trust-gate:
     name: Trust gate
     if: always()
-    needs: [static, package, browser, lifecycle, text]
+    needs: [contracts]
     runs-on: ubuntu-latest
     steps:
-      - name: Require every trust job
+      - name: Require every trust stage
         env:
-          STATIC_RESULT: ${{ needs.static.result }}
-          PACKAGE_RESULT: ${{ needs.package.result }}
-          BROWSER_RESULT: ${{ needs.browser.result }}
-          LIFECYCLE_RESULT: ${{ needs.lifecycle.result }}
-          TEXT_RESULT: ${{ needs.text.result }}
-        run: |
-          test "$STATIC_RESULT" = success
-          test "$PACKAGE_RESULT" = success
-          test "$BROWSER_RESULT" = success
-          test "$LIFECYCLE_RESULT" = success
-          test "$TEXT_RESULT" = success
+          CONTRACTS_RESULT: ${{ needs.contracts.result }}
+        run: test "$CONTRACTS_RESULT" = success

@@ -1,5 +1,7 @@
 # Physics updates copy and rebuild whole world state
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Issue: CRC-PERF-04  
 Priority: P1  
 Status: Open  

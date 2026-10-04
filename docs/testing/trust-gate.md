@@ -17,6 +17,7 @@ Requirements:
 From a fresh checkout:
 
 ```sh
+npm install --global corepack@0.35.0
 corepack pnpm@11.21.0 install --frozen-lockfile --strict-peer-dependencies
 corepack pnpm@11.21.0 exec playwright install chromium
 corepack pnpm@11.21.0 trust
@@ -51,39 +52,16 @@ contention observed during earlier upgrade and visual work.
 - every explicitly marked complete TypeScript/TSX program extracted directly
   from its guide, plus the marked JavaScript program transformed independently
   by esbuild and the real Babel automatic-runtime plugin;
-- the fixed preservation manifest records every normalized prose paragraph,
-  list obligation, table row, and fenced-code obligation from the normative
-  contract baseline (667 units), with per-file source digests, plus the complete
-  reviewed current form (833 units across 12 baseline-snapshotted contracts)
-  and explicit approved translation, retirement, and addition mappings tied to
-  narrow design unit IDs and excerpts; every translation has exact
-  baseline/current unit IDs, unique rationale,
-  shared clause anchors, and minimum content similarity checked before the
-  digest. Together with 199 mapped units across the post-baseline textures,
-  signal, animation, render-layer/Three, component-manipulation, 2D physics, and text geometry
-  records, this covers 19 current normative contracts. The 56 direct source/test mappings use claims no broader than their
-  cited tests and require the same claim-specific anchors near both markers;
-- the migration guide contains one mechanically checked row for each of the 85
-  field/structural inputs derived from the reviewed baseline style table, and
-  every final replacement must also appear in the normative final-field table;
-- ordinary `docs:check` validates that embedded digest-locked baseline without
-  requiring historical Git objects. When `0040d65` is available it also proves
-  every embedded baseline unit and source digest against Git; static CI fetches
-  full history and requires that provenance mode explicitly;
-- fail-closed export discovery, source-inspected acceptance-matrix evidence,
-  mounted/driven non-JSX behavior, literal `Historical status` banners, and RED
-  mutations proving rejection of heading-only documents, natural negation,
-  arbitrary token insertion, prose moved into headings/code, deletion of every
-  reviewed semantic unit, changed table defaults/hook rows, baseline-digest
-  tampering, same-contract translation swaps and global evidence rotation even
-  after recomputing the candidate manifest digest, field-replacement drift,
-  repeated generic evidence, and missing evidence markers;
+- the migration guide's field replacements agree with the current field table;
+- source-inspected acceptance evidence, executable snippets, historical banners,
+  and negative tests for missing guarantees, invalid links, unsupported exports,
+  and incorrect field replacements;
 - TypeScript, ESLint, Prettier, package output, and source/built Studio builds.
 
 Component manipulation adds focused public browser evidence for signal-owned
 move, resize, rotation, snapping, child-defined drag geometry, readouts,
 pointer capture, cancellation, and teardown. That evidence supplements the
-preservation inventory; it does not weaken baseline or source-inspection rules.
+current documentation checks and source-inspection rules.
 
 `trust:package` builds real tarballs and installs them into strict Bundler and
 NodeNext consumers. It verifies runtime loading, declarations, source maps,
@@ -144,11 +122,35 @@ are inspected before any baseline decision. This evidence does not claim
 cross-browser/GPU pixel identity, and no uncontrolled wall-clock measurement is
 a default correctness gate.
 
-The unified GitHub Actions workflow runs the same responsibilities as parallel
-static, package, browser, and lifecycle jobs, then exposes one stable aggregate
-result suitable for branch protection. Browser jobs upload named evidence even
-when a behavior check fails. Hosted branch-protection configuration remains a
-repository-administration action outside local source control.
+The GitHub Actions matrix runs the same `trust:static`, `trust:package`,
+`trust:browser`, `trust:lifecycle`, and `trust:native` scripts as local `trust`.
+A regression check rejects a missing or extra CI stage. Each clean runner installs
+Corepack and Chromium; browser jobs build their assets before testing. A startup
+failure remains the primary error even when no screenshot artifacts exist.
+The stable **Trust gate** result requires every matrix stage to succeed.
+
+`trust:native` verifies text geometry, the pinned native toolchain, and two-build
+reproducibility. Wall-clock text benchmarks remain explicit diagnostic commands,
+not correctness gates.
+
+### Historical audits versus merge checks
+
+`audit:docs:preservation` retains the dated migration manifest, paragraph digests,
+reviewed mappings, and their adversarial tests. `audit:agent-verification:claims`
+retains strategy-ledger evidence fingerprints. These audits can report stale
+claims after legitimate changes; they do not establish current runtime defects.
+They are deliberately outside `trust`. Renewing a claim requires review, not an
+automatic digest refresh. `CRC_VERIFY_CONTRACT_PROVENANCE=1` requires full Git
+history when running the documentation audit.
+
+The required gate retains current API/documentation parity, valid links and
+snippets, scenario coverage, real packed consumers, browser behavior, visual
+comparisons, resource ownership, and structural performance. These checks compare
+observable behavior or current sources rather than hand-maintained historical
+counts. The scenario index remains a checked generated artifact because readers
+use its routes and API links; regenerate it with `scenarios:write-index` after
+catalog edits. Source API discovery uses the repository's source mappings, so a
+previous local build cannot hide missing declarations in a clean checkout.
 
 ## Documentation evidence semantics
 
@@ -219,6 +221,21 @@ When an intentional product change requires a new baseline:
 
 The Studio baseline update command is
 `corepack pnpm@11.21.0 test:studio-visual:update`; CI never invokes it.
+
+### 2026-10-04 trust repair visual review
+
+The Filters Studio baseline was updated for the already-shipped lesson numbering
+(25 to 26) and the displayed `SvgPath` import added by the positioning migration.
+Expected, actual, and pixel-diff images were inspected, including native-resolution
+editor detail. All 23,256 changed pixels were confined to the ordinal and editor
+source; the Canvas gallery and surrounding layout were unchanged. Only
+`studio-filters.expected.png` was regenerated through the route-specific update.
+
+The examples landing mismatch was different: all 5,612 changed pixels were in
+two Canvas text labels, and a fresh page matched the existing baseline exactly.
+Visual routes now use independent pages to avoid Chromium's navigation-dependent
+Canvas text rasterization. Navigation continuity remains covered by the separate
+Studio acceptance suite; no landing baseline or pixel tolerance was changed.
 
 ## Performance cadence
 

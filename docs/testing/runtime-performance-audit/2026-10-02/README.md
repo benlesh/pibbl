@@ -1,5 +1,7 @@
 # CRC runtime performance audit
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 This queue records the 2026-10-02 review and provides separately actionable issues for automated remediation. It is a review backlog, not a claim that all proposed optimizations are confirmed defects. No runtime fixes were made during the audit or while creating these documents.
 
 The strongest confirmed progressive slowdown is repeated animation milestone reconstruction. Two separate probes confirmed orphaned texture scheduling after initialization failure and retained physics handles after body removal. Passive Living Ink did not crash during the three-minute test.

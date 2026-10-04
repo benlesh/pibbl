@@ -1,5 +1,7 @@
 # CRC performance remediation orchestration prompt
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Copy the following prompt into a new CRC execution chat. This file records instructions for that future run; it does not start implementation by itself.
 
 ---

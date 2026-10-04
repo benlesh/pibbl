@@ -1,5 +1,7 @@
 # Repeating animation history grows with elapsed time
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Issue: CRC-PERF-01  
 Priority: P1  
 Status: Open  

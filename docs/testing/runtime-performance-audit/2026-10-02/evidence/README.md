@@ -1,5 +1,7 @@
 # Audit evidence
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 These files are historical measurements from 2026-10-02, not current pass/fail certificates. Read the [audit index](../README.md) for environment, baseline, fixture corrections, and limitations.
 
 - [Real-time soak](soak-results.json) and [stdout](soak.log).

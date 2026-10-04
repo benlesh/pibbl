@@ -1,5 +1,7 @@
 # Three picking clones static geometry every rendered generation
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Issue: CRC-PERF-05  
 Priority: P1  
 Status: Open  

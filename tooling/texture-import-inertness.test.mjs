@@ -65,7 +65,7 @@ test("built optional entries and their factories do not allocate browser resourc
     assert.throws(() => document.createElement("canvas"), /must remain inert/);
 
     const core = await importBuilt("@crc/core");
-    const textures = await importBuilt("@crc/textures");
+    const textures = await importBuilt("@crc/core/textures");
 
     assert.doesNotThrow(() =>
       core.createElement(core.Rectangle, { style: { width: 1, height: 1 } }),

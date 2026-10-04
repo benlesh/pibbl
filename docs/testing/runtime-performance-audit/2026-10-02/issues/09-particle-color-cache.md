@@ -1,5 +1,7 @@
 # Particle color string caching lacks an explicit size bound
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Issue: CRC-PERF-09  
 Priority: P2  
 Status: Open  
