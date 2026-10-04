@@ -1,4 +1,5 @@
-import { bendPathAlongArc, bendPathAlongPath, PathGeometry, toSvgPathData, type PathBendOptions } from '@crc/core';
+import { PathGeometry, toSvgPathData, type BendTransformOptions, type TransformPathOptions, transformPath, pathBendTransform, arcBendTransform } from '@crc/core';
+
 import { describe, expect, it } from 'vitest';
 
 describe('public path bending', () => {
@@ -8,7 +9,7 @@ describe('public path bending', () => {
     const controls = [[length(0.2), -10], [length(0.9), 80], [length(0.1), -80], [length(0.8), 10]];
     const source = point(controls[0][0], controls[0][1]);
     source.bezierCurveTo(controls[1][0], controls[1][1], controls[2][0], controls[2][1], controls[3][0], controls[3][1]);
-    const result = bendPathAlongPath(source, guide, { source: frame, baseline: 0, tolerance: 0.1 });
+    const result = transformPath(source, pathBendTransform({ ...{ source: frame, baseline: 0 }, guide }), { tolerance: 0.1 });
     const vertices = Array.from(result).flatMap(s => s.type === 'move' || s.type === 'line' ? [[s.x, s.y] as const] : []);
     for (let i = 0; i <= 200; i++) {
       const t = i / 200, u = 1 - t, weights = [u ** 3, 3 * t * u * u, 3 * t * t * u, t ** 3];
@@ -36,9 +37,7 @@ describe('public path bending', () => {
     source.moveTo(x0, -8); source.lineTo(x0, 8);
     source.lineTo(x1, 8); source.lineTo(x1, -8); source.closePath();
     const revision = guide.revision, sourceRevision = source.revision;
-    const result = bendPathAlongPath(source, guide, {
-      source: { x: 0, y: -8, width: length(1), height: 16 }, baseline: 0, tolerance: 0.05,
-    });
+    const result = transformPath(source, pathBendTransform({ ...{ source: { x: 0, y: -8, width: length(1), height: 16 }, baseline: 0 }, guide }), { tolerance: 0.05 });
     const vertices = Array.from(result).flatMap(s => s.type === 'move' || s.type === 'line' ? [[s.x, s.y] as const] : []);
     const expected = (t: number, d: number) => {
       const speed = Math.hypot(1, 2 * t);
@@ -68,11 +67,7 @@ describe('public path bending', () => {
     const before = Array.from(source);
     const revision = source.revision;
     const tolerance = 0.05;
-    const bent = bendPathAlongArc(source, {
-      source: { x: 0, y: -10, width: 100, height: 20 },
-      arc: { cx: 200, cy: 200, radius: 100, startAngle: 0, sweep: Math.PI / 2 },
-      align: 'center', baseline: 0, tolerance,
-    });
+    const bent = transformPath(source, arcBendTransform({ source: { x: 0, y: -10, width: 100, height: 20 }, arc: { cx: 200, cy: 200, radius: 100, startAngle: 0, sweep: Math.PI / 2 }, align: 'center', baseline: 0 }), { tolerance });
     expect(bent).not.toBe(source);
     expect(source.revision).toBe(revision);
     expect(Array.from(source)).toEqual(before);
@@ -113,32 +108,32 @@ function closeTo(actual: readonly number[], expected: readonly number[], toleran
   expect(Math.hypot(actual[0] - expected[0], actual[1] - expected[1])).toBeLessThanOrEqual(tolerance);
 }
 function lineGuide() { const p = new PathGeometry(); p.moveTo(30, 40); p.lineTo(130, 40); return p; }
-const options: PathBendOptions = { source: frame, tolerance: 0.01, baseline: 0 };
+const options: (BendTransformOptions & TransformPathOptions) = { source: frame, tolerance: 0.01, baseline: 0 };
 
 describe('path bending boundaries', () => {
   it('places start, center, end, baselines, fitting, and signed offsets in guide distance', () => {
     const guide = lineGuide();
     for (const [align, x] of [['start', 30], ['center', 55], ['end', 80]] as const) {
-      closeTo(first(bendPathAlongPath(point(10, 20), guide, { source: { x: 10, y: 20, width: 50, height: 20 }, align, baseline: 'top', tolerance: 0.01 })), [x, 40]);
+      closeTo(first(transformPath(point(10, 20), pathBendTransform({ ...{ source: { x: 10, y: 20, width: 50, height: 20 }, align, baseline: 'top' }, guide }), { tolerance: 0.01 })), [x, 40]);
     }
     for (const [baseline, y] of [['top', 50], ['center', 40], ['bottom', 30]] as const) {
-      closeTo(first(bendPathAlongPath(point(0, 0), guide, { ...options, baseline })), [30, y]);
+      closeTo(first(transformPath(point(0, 0), pathBendTransform({ ...{ ...options, baseline }, guide }), { ...options })), [30, y]);
     }
-    closeTo(first(bendPathAlongPath(point(25, 5), guide, { ...options, source: { x: 0, y: 0, width: 50, height: 0 }, fit: 'stretch', offset: 8, normalOffset: -2 })), [88, 43]);
+    closeTo(first(transformPath(point(25, 5), pathBendTransform({ ...{ ...options, source: { x: 0, y: 0, width: 50, height: 0 }, fit: 'stretch', offset: 8, normalOffset: -2 }, guide }), { ...options })), [88, 43]);
   });
 
   it('follows vertical and reversed guide direction without an automatic upright flip', () => {
     const guide = new PathGeometry(); guide.moveTo(50, 100); guide.lineTo(50, 0);
-    closeTo(first(bendPathAlongPath(point(25, 10), guide, options)), [60, 75]);
+    closeTo(first(transformPath(point(25, 10), pathBendTransform({ ...options, guide }), options)), [60, 75]);
   });
 
   it('measures uneven straight Béziers, stationary endpoints, and a removable interior stationary point', () => {
     for (const controls of [[0, 0, 100], [10, 15, 100], [90, -120, 370]]) {
       const guide = new PathGeometry(); guide.moveTo(0, 0); guide.bezierCurveTo(controls[0], 0, controls[1], 0, controls[2], 0);
-      closeTo(first(bendPathAlongPath(point(50, 7), guide, options)), [50, 7]);
+      closeTo(first(transformPath(point(50, 7), pathBendTransform({ ...options, guide }), options)), [50, 7]);
     }
     const curved = new PathGeometry(); curved.moveTo(0, 0); curved.bezierCurveTo(0, 0, 100, 0, 100, 100);
-    closeTo(first(bendPathAlongPath(point(0, 7), curved, options)), [0, 7]);
+    closeTo(first(transformPath(point(0, 7), pathBendTransform({ ...options, guide: curved }), options)), [0, 7]);
   });
 
   it('agrees with analytic circles for both directions and negative/multiple wrapped laps', () => {
@@ -147,8 +142,8 @@ describe('path bending boundaries', () => {
       for (const x of [-750, -100, 0, 40, 710]) {
         const source = point(x, 15);
         const common = { ...options, overflow: 'wrap' as const, tolerance: 0.1 };
-        const expected = first(bendPathAlongArc(source, { ...common, arc: { ...arc, sweep: direction * Math.PI * 2 } }));
-        closeTo(first(bendPathAlongPath(source, guide, common)), expected, 0.1);
+        const expected = first(transformPath(source, arcBendTransform({ ...common, arc: { ...arc, sweep: direction * Math.PI * 2 } }), { ...common }));
+        closeTo(first(transformPath(source, pathBendTransform({ ...common, guide }), common)), expected, 0.1);
       }
     }
   });
@@ -158,7 +153,7 @@ describe('path bending boundaries', () => {
     const source = point(0, 0), circumference = Math.PI * 40;
     source.lineTo(circumference * 3, 0);
     const common = { source: { x: 0, y: 0, width: circumference * 3, height: 0 }, baseline: 0, overflow: 'wrap' as const, tolerance: 0.05 };
-    for (const result of [bendPathAlongPath(source, guide, common), bendPathAlongArc(source, { ...common, arc: { cx: 0, cy: 0, radius: 20, startAngle: 0, sweep: Math.PI * 2 } })]) {
+    for (const result of [transformPath(source, pathBendTransform({ ...common, guide }), common), transformPath(source, arcBendTransform({ ...common, arc: { cx: 0, cy: 0, radius: 20, startAngle: 0, sweep: Math.PI * 2 } }), { ...common })]) {
       const vertices = Array.from(result).flatMap(s => s.type === 'move' || s.type === 'line' ? [[s.x, s.y] as const] : []);
       let turn = 0;
       for (let i = 1; i < vertices.length; i++) {
@@ -177,7 +172,7 @@ describe('path bending boundaries', () => {
     // The builder treats repeated Close as a no-op; canonical editing can retain it.
     source.spliceSegments(source.segmentCount, 0, [{ type: 'close' }]);
     const before = toSvgPathData(source), revision = source.revision;
-    const bent = bendPathAlongPath(source, lineGuide(), options);
+    const bent = transformPath(source, pathBendTransform({ ...options, guide: lineGuide() }), options);
     expect(Array.from(bent).filter(s => s.type === 'move')).toHaveLength(2);
     expect(Array.from(bent).filter(s => s.type === 'close')).toHaveLength(3);
     expect(Array.from(bent).every(s => ['move', 'line', 'close'].includes(s.type))).toBe(true);
@@ -187,52 +182,52 @@ describe('path bending boundaries', () => {
 
   it('preserves a source reversal that touches the guide boundary without rejecting its outside control point', () => {
     const source = point(0, 0); source.quadraticCurveTo(200, 0, 0, 0);
-    const result = bendPathAlongPath(source, lineGuide(), options);
+    const result = transformPath(source, pathBendTransform({ ...options, guide: lineGuide() }), options);
     const xs = Array.from(result).flatMap(s => s.type === 'move' || s.type === 'line' ? [s.x] : []);
     expect(Math.max(...xs)).toBeCloseTo(130, 10); expect(xs.at(-1)).toBe(30);
   });
 
   it('accepts a curved source extremum at a non-dyadic parameter on the guide boundary', () => {
     const source = point(0, 0); source.quadraticCurveTo(150, 10, 75, 20); // max X=100 at t=2/3
-    expect(bendPathAlongPath(source, lineGuide(), options).segmentCount).toBeGreaterThan(2);
-    expect(bendPathAlongArc(source, { ...options, arc: { cx: 0, cy: 0, radius: 100, startAngle: 0, sweep: 1 } }).segmentCount).toBeGreaterThan(2);
+    expect(transformPath(source, pathBendTransform({ ...options, guide: lineGuide() }), options).segmentCount).toBeGreaterThan(2);
+    expect(transformPath(source, arcBendTransform({ ...options, arc: { cx: 0, cy: 0, radius: 100, startAngle: 0, sweep: 1 } }), { ...options }).segmentCount).toBeGreaterThan(2);
   });
 
   it('fails explicitly when huge unwrapped angles cannot support the requested output accuracy', () => {
-    expect(() => bendPathAlongArc(point(1e9, 100), { ...options, arc: { cx: 0, cy: 0, radius: 1e-10, startAngle: 0, sweep: Math.PI * 2 }, overflow: 'wrap' })).toThrow(RangeError);
+    expect(() => transformPath(point(1e9, 100), arcBendTransform({ ...options, arc: { cx: 0, cy: 0, radius: 1e-10, startAngle: 0, sweep: Math.PI * 2 }, overflow: 'wrap' }), { ...options })).toThrow(RangeError);
   });
 
   it('supports smooth line/curve joins and rejects corners even in unused guide portions', () => {
     const guide = new PathGeometry(); guide.moveTo(0, 0); guide.lineTo(100, 0); guide.quadraticCurveTo(150, 0, 180, 80);
-    closeTo(first(bendPathAlongPath(point(50, 3), guide, options)), [50, 3]);
+    closeTo(first(transformPath(point(50, 3), pathBendTransform({ ...options, guide }), options)), [50, 3]);
     guide.lineTo(190, -40);
-    expect(() => bendPathAlongPath(point(10, 0), guide, options)).toThrow(/smooth|corner|cusp/);
+    expect(() => transformPath(point(10, 0), pathBendTransform({ ...options, guide }), options)).toThrow(/smooth|corner|cusp/);
   });
 
   it('supports a general affine ellipse guide and a collapsed monotonic arc', () => {
     const guide = new PathGeometry(); guide.ellipse(10, 20, 70, 30, 0.5, 0, Math.PI);
-    const p = first(bendPathAlongPath(point(0, 0), guide, options));
+    const p = first(transformPath(point(0, 0), pathBendTransform({ ...options, guide }), options));
     closeTo(p, [10 + 70 * Math.cos(0.5), 20 + 70 * Math.sin(0.5)]);
     const flat = new PathGeometry(); flat.ellipse(0, 0, 100, 0, 0, 0, Math.PI);
-    closeTo(first(bendPathAlongPath(point(50, 10), flat, options)), [50, -10]);
+    closeTo(first(transformPath(point(50, 10), pathBendTransform({ ...options, guide: flat }), options)), [50, -10]);
   });
 
   it('continues endpoint tangents and rejects unsupported wrapping or default overflow', () => {
     const guide = lineGuide();
-    closeTo(first(bendPathAlongPath(point(-20, 8), guide, { ...options, overflow: 'extend' })), [10, 48]);
-    closeTo(first(bendPathAlongPath(point(130, -8), guide, { ...options, overflow: 'extend' })), [160, 32]);
-    expect(() => bendPathAlongPath(point(-1, 0), guide, options)).toThrow(RangeError);
-    expect(() => bendPathAlongPath(point(101, 0), guide, options)).toThrow(RangeError);
-    expect(() => bendPathAlongPath(point(0, 0), guide, { ...options, overflow: 'wrap' })).toThrow(/closed/);
-    closeTo(first(bendPathAlongArc(point(-20, 5), { ...options, arc: { ...arc, sweep: Math.PI }, overflow: 'extend' })), [195, 80]);
+    closeTo(first(transformPath(point(-20, 8), pathBendTransform({ ...{ ...options, overflow: 'extend' }, guide }), { ...options })), [10, 48]);
+    closeTo(first(transformPath(point(130, -8), pathBendTransform({ ...{ ...options, overflow: 'extend' }, guide }), { ...options })), [160, 32]);
+    expect(() => transformPath(point(-1, 0), pathBendTransform({ ...options, guide }), options)).toThrow(RangeError);
+    expect(() => transformPath(point(101, 0), pathBendTransform({ ...options, guide }), options)).toThrow(RangeError);
+    expect(() => transformPath(point(0, 0), pathBendTransform({ ...{ ...options, overflow: 'wrap' }, guide }), { ...options })).toThrow(/closed/);
+    closeTo(first(transformPath(point(-20, 5), arcBendTransform({ ...options, arc: { ...arc, sweep: Math.PI }, overflow: 'extend' }), { ...options })), [195, 80]);
   });
 
   it('allows folds, circle-center collapse, self-intersections, and a source equal to its guide', () => {
-    closeTo(first(bendPathAlongArc(point(30, 100), { ...options, arc })), [100, 100]);
+    closeTo(first(transformPath(point(30, 100), arcBendTransform({ ...options, arc }), { ...options })), [100, 100]);
     const guide = new PathGeometry(); guide.moveTo(0, 0); guide.bezierCurveTo(200, 200, -100, 200, 100, 0);
-    expect(bendPathAlongPath(point(20, 200), guide, options).segmentCount).toBe(1);
+    expect(transformPath(point(20, 200), pathBendTransform({ ...options, guide }), options).segmentCount).toBe(1);
     const same = new PathGeometry(); same.moveTo(0, 0); same.lineTo(100, 0);
-    expect(toSvgPathData(bendPathAlongPath(same, same, options))).toBe('M 0 0 L 100 0');
+    expect(toSvgPathData(transformPath(same, pathBendTransform({ ...options, guide: same }), options))).toBe('M 0 0 L 100 0');
   });
 
   it('rejects multiple contours, reversals, empty guides, and sharp closed seams', () => {
@@ -240,33 +235,33 @@ describe('path bending boundaries', () => {
     const reversal = new PathGeometry(); reversal.moveTo(0, 0); reversal.bezierCurveTo(100, 0, -100, 0, 10, 0);
     const seam = new PathGeometry(); seam.moveTo(0, 0); seam.lineTo(100, 0); seam.lineTo(100, 100); seam.closePath();
     for (const guide of [multi, reversal, seam, new PathGeometry(), point(0, 0)]) {
-      expect(() => bendPathAlongPath(new PathGeometry(), guide, options)).toThrow(RangeError);
+      expect(() => transformPath(new PathGeometry(), pathBendTransform({ ...options, guide }), options)).toThrow(RangeError);
     }
   });
 
   it('rejects a cusp inside one guide segment even when adaptive halves are individually regular', () => {
     const quadratic = point(0, 0); quadratic.quadraticCurveTo(100, 100, 0, 0);
     const cubic = point(0, 0); cubic.bezierCurveTo(100, 100, 0, 100, 100, 0);
-    for (const guide of [quadratic, cubic]) expect(() => bendPathAlongPath(point(1, 0), guide, options)).toThrow(RangeError);
+    for (const guide of [quadratic, cubic]) expect(() => transformPath(point(1, 0), pathBendTransform({ ...options, guide }), options)).toThrow(RangeError);
   });
 
   it('validates even empty input and leaves geometry/revisions unchanged on budget failures', () => {
     const source = point(0, 0); source.lineTo(100, 0);
     const guide = lineGuide(), revision = source.revision, guideRevision = guide.revision;
-    expect(() => bendPathAlongPath(source, guide, { ...options, maxSegments: 1 })).toThrow(/maxSegments/);
+    expect(() => transformPath(source, pathBendTransform({ ...{ ...options }, guide }), { ...options, maxSegments: 1 })).toThrow(/maxSegments/);
     expect(source.revision).toBe(revision); expect(guide.revision).toBe(guideRevision);
     const empty = new PathGeometry();
-    expect(bendPathAlongPath(empty, guide, options)).not.toBe(empty);
-    expect(() => bendPathAlongPath(empty, guide, { ...options, tolerance: 0 })).toThrow(RangeError);
-    expect(() => bendPathAlongArc(empty, { ...options, arc: { ...arc, radius: 0 } })).toThrow(RangeError);
-    expect(() => bendPathAlongPath(source, guide, { ...options, tolerance: 1e-20 })).toThrow(RangeError);
+    expect(transformPath(empty, pathBendTransform({ ...options, guide }), options)).not.toBe(empty);
+    expect(() => transformPath(empty, pathBendTransform({ ...{ ...options }, guide }), { ...options, tolerance: 0 })).toThrow(RangeError);
+    expect(() => transformPath(empty, arcBendTransform({ ...options, arc: { ...arc, radius: 0 } }), { ...options })).toThrow(RangeError);
+    expect(() => transformPath(source, pathBendTransform({ ...{ ...options }, guide }), { ...options, tolerance: 1e-20 })).toThrow(RangeError);
   });
 
   it('rejects explicit null numeric options instead of silently applying defaults', () => {
     for (const key of ['baseline', 'offset', 'normalOffset', 'maxSegments']) {
-      const invalid = { ...options, [key]: null } as unknown as PathBendOptions;
-      expect(() => bendPathAlongPath(point(0, 0), lineGuide(), invalid)).toThrow();
-      expect(() => bendPathAlongArc(point(0, 0), { ...invalid, arc })).toThrow();
+      const invalid = { ...options, [key]: null } as unknown as (BendTransformOptions & TransformPathOptions);
+      expect(() => transformPath(point(0, 0), pathBendTransform({ ...invalid, guide: lineGuide() }), invalid)).toThrow();
+      expect(() => transformPath(point(0, 0), arcBendTransform({ ...invalid, arc }), { ...invalid })).toThrow();
     }
   });
 });
@@ -276,9 +271,6 @@ it('accepts smooth cubic guides at fractional coordinates produced by scaled poi
   for (let i = 1; i <= 10; i++) {
     const guide = new PathGeometry(); guide.moveTo(180, 330);
     guide.bezierCurveTo(280 + i * 6.01357, 230 + i * 15.01793, 520, 390, 620, 310);
-    expect(() => bendPathAlongPath(source, guide, {
-      source: { x: 0, y: -28, width: 280, height: 56 },
-      fit: 'stretch', overflow: 'extend', tolerance: 0.15,
-    })).not.toThrow();
+    expect(() => transformPath(source, pathBendTransform({ ...{ source: { x: 0, y: -28, width: 280, height: 56 }, fit: 'stretch', overflow: 'extend' }, guide }), { tolerance: 0.15 })).not.toThrow();
   }
 });

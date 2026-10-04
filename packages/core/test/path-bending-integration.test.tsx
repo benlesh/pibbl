@@ -1,5 +1,6 @@
+import { Clip, Path, PathGeometry, Rectangle, toPath2D, toSvgPathData, transformPath, pathBendTransform, arcBendTransform } from '@crc/core';
 import { expect, it, vi } from 'vitest';
-import { bendPathAlongArc, bendPathAlongPath, Clip, Path, PathGeometry, Rectangle, toPath2D, toSvgPathData } from '@crc/core';
+
 import mount from '../../scenarios/src/learning/drawing/path-bending.example';
 import mountPath from '../../scenarios/src/learning/drawing/along-path.example';
 import { componentTest, TestCanvas } from '../src/lib/test-utils/component-test';
@@ -9,8 +10,8 @@ it('uses bent public geometry for Clip, paint, targeting, and independent native
   const guide = new PathGeometry(); guide.arc(100, 100, 60, -Math.PI / 2, 0);
   const options = { source: { x: 0, y: -10, width: 80, height: 20 }, baseline: 0, tolerance: 0.1 };
   const schedule = vi.spyOn(window, 'requestAnimationFrame');
-  const bent = bendPathAlongPath(source, guide, options);
-  const analytic = bendPathAlongArc(source, { ...options, arc: { cx: 100, cy: 100, radius: 60, startAngle: -Math.PI / 2, sweep: Math.PI / 2 } });
+  const bent = transformPath(source, pathBendTransform({ ...options, guide }), options);
+  const analytic = transformPath(source, arcBendTransform({ ...options, arc: { cx: 100, cy: 100, radius: 60, startAngle: -Math.PI / 2, sweep: Math.PI / 2 } }), { ...options });
   expect(schedule).not.toHaveBeenCalled(); schedule.mockRestore();
   const click = vi.fn();
   const canvas = await componentTest(<Clip style={{ d: bent }}>

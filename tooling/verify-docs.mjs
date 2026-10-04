@@ -87,6 +87,7 @@ const publicGuidePaths = [
   "docs/site/learn/guides/manipulation.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/functions/path-transforms.md",
   "docs/site/api/components/reaction-diffusion.md",
   "docs/site/api/components/procedural-texture.md",
   "docs/site/api/types/textures.md",
@@ -243,6 +244,7 @@ const publicSiteMarkdownPaths = [
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
+  "docs/design/path-transforms-contract.md",
   "docs/design/textures-contract.md",
   "docs/design/weighted-electric-sources-contract.md",
   "docs/design/component-manipulation-contract.md",

@@ -51,22 +51,53 @@
   export interface FlattenPathOptions { readonly tolerance: number; readonly maxSegments?: number }
   export interface SimplifyPathOptions { readonly tolerance: number; readonly maxSegments?: number }
   export interface SubdividePathOptions { readonly divisions: number; readonly maxSegments?: number }
-  export interface PathBendFrame { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
-  export interface PathBendArc { readonly cx: number; readonly cy: number; readonly radius: number; readonly startAngle: number; readonly sweep: number }
-  export type PathBendAlign = 'start' | 'center' | 'end';
-  export type PathBendBaseline = 'center' | 'top' | 'bottom' | number;
-  export type PathBendFit = 'none' | 'stretch';
-  export type PathBendOverflow = 'error' | 'extend' | 'wrap';
-  export interface PathBendOptions { readonly source: PathBendFrame; readonly align?: PathBendAlign; readonly baseline?: PathBendBaseline; readonly fit?: PathBendFit; readonly offset?: number; readonly normalOffset?: number; readonly overflow?: PathBendOverflow; readonly tolerance: number; readonly maxSegments?: number }
-  export interface BendPathAlongArcOptions extends PathBendOptions { readonly arc: PathBendArc }
-  export function bendPathAlongArc(source: PathGeometry, options: Readonly<BendPathAlongArcOptions>): PathGeometry;
-  export function bendPathAlongPath(source: PathGeometry, guide: PathGeometry, options: Readonly<PathBendOptions>): PathGeometry;
-  export interface PathWarpPoint { readonly x: number; readonly y: number }
-  export interface PathWarpRect { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
-  export interface PathWarpCorners { readonly topLeft: PathWarpPoint; readonly topRight: PathWarpPoint; readonly bottomLeft: PathWarpPoint; readonly bottomRight: PathWarpPoint }
-  export type PathWarpMode = 'bilinear' | 'perspective';
-  export interface WarpPathOptions { readonly source: PathWarpRect; readonly destination: PathWarpCorners; readonly mode?: PathWarpMode; readonly tolerance: number; readonly maxSegments?: number }
-  export function warpPath(path: PathGeometry, options: Readonly<WarpPathOptions>): PathGeometry;
+
+export interface PathPoint { readonly x: number; readonly y: number }
+export interface PathRect extends PathPoint { readonly width: number; readonly height: number }
+export interface PathQuadCorners { readonly topLeft: PathPoint; readonly topRight: PathPoint; readonly bottomLeft: PathPoint; readonly bottomRight: PathPoint }
+export type PathQuadMode = 'bilinear' | 'perspective';
+export interface PathBendArc { readonly cx: number; readonly cy: number; readonly radius: number; readonly startAngle: number; readonly sweep: number }
+export type PathBendAlign = 'start' | 'center' | 'end';
+export type PathBendBaseline = 'center' | 'top' | 'bottom' | number;
+export type PathBendFit = 'none' | 'stretch';
+export type PathBendOverflow = 'error' | 'extend' | 'wrap';
+export interface BendTransformOptions { readonly source: PathRect; readonly align?: PathBendAlign; readonly baseline?: PathBendBaseline; readonly fit?: PathBendFit; readonly offset?: number; readonly normalOffset?: number; readonly overflow?: PathBendOverflow }
+export interface ArcBendTransformOptions extends BendTransformOptions { readonly arc: PathBendArc }
+export interface PathBendTransformOptions extends BendTransformOptions { readonly guide: PathGeometry }
+export interface QuadTransformOptions { readonly source: PathRect; readonly destination: PathQuadCorners; readonly mode?: PathQuadMode }
+export interface TransformPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+declare const transformBrand: unique symbol;
+export interface PathTransform { readonly [transformBrand]: true; mapPoint(point: PathPoint, options?: {readonly tolerance?: number}): PathPoint }
+export function transformPath(path: PathGeometry, transform: PathTransform, options: TransformPathOptions): PathGeometry;
+export function composeTransforms(...transforms: readonly PathTransform[]): PathTransform;
+export function affineTransform(matrix?: DOMMatrix2DInit): PathTransform;
+export function quadTransform(options: QuadTransformOptions): PathTransform;
+export function envelopeTransform(options: EnvelopeTransformOptions): PathTransform;
+export function meshTransform(options: MeshTransformOptions): PathTransform;
+export function arcBendTransform(options: ArcBendTransformOptions): PathTransform;
+export function pathBendTransform(options: PathBendTransformOptions): PathTransform;
+export interface PathGuideStation { readonly at: number; readonly distance: number }
+export interface PathGuideOptions {
+  readonly path: PathGeometry;
+  readonly reverse?: boolean;
+  readonly stations?: readonly PathGuideStation[];
+}
+export type PathGuide = PathGeometry | PathGuideOptions;
+export interface EnvelopeGuide { readonly at: number; readonly path: PathGuide }
+export type EnvelopeTransformOptions = {
+  readonly source: PathRect;
+  readonly interpolation?: 'linear';
+} & ({ readonly top: PathGuide; readonly bottom: PathGuide; readonly guides?: never } |
+  { readonly guides: readonly EnvelopeGuide[]; readonly top?: never; readonly bottom?: never });
+export interface MeshTransformOptions {
+  readonly source: PathRect;
+  readonly columns: readonly number[];
+  readonly rows: readonly number[];
+  /** Boundary rows; each contains columns.length - 1 left-to-right edges. */
+  readonly horizontal: readonly (readonly PathGuide[])[];
+  /** Boundary columns; each contains rows.length - 1 top-to-bottom edges. */
+  readonly vertical: readonly (readonly PathGuide[])[];
+}
   export interface FlattenPathOptions { readonly tolerance: number; readonly maxSegments?: number }
   export interface SimplifyPathOptions { readonly tolerance: number; readonly maxSegments?: number }
   export interface SubdividePathOptions { readonly divisions: number; readonly maxSegments?: number }

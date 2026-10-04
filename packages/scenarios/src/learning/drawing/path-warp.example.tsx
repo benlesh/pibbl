@@ -1,23 +1,8 @@
-import {
-  crc,
-  Path,
-  PathGeometry,
-  Circle,
-  Line,
-  Rectangle,
-  Text,
-  warpPath,
-  useConst,
-  useSignal,
-  useRef,
-  type CRCController,
-  type CRCPointerEvent,
-  type PathWarpCorners,
-  type PathWarpMode,
-} from "@crc/core";
+import { crc, Path, PathGeometry, Circle, Line, Rectangle, Text, useConst, useSignal, useRef, type CRCController, type CRCPointerEvent, type PathQuadCorners, type PathQuadMode, transformPath, quadTransform } from '@crc/core';
+
 
 const source = { x: 0, y: 0, width: 240, height: 300 };
-const initial: PathWarpCorners = {
+const initial: PathQuadCorners = {
   topLeft: { x: 425, y: 156 },
   topRight: { x: 735, y: 126 },
   bottomLeft: { x: 380, y: 464 },
@@ -69,25 +54,19 @@ function rocket() {
 
 function WarpStudy() {
   const original = useConst(rocket);
-  const transform = (corners: PathWarpCorners, mode: PathWarpMode) =>
+  const transform = (corners: PathQuadCorners, mode: PathQuadMode) =>
     original.map((path) =>
-      warpPath(path, {
-        source,
-        destination: corners,
-        mode,
-        tolerance: 0.3,
-        maxSegments: 20_000,
-      }),
+      transformPath(path, quadTransform({ source, destination: corners, mode }), { tolerance: 0.3, maxSegments: 20_000 }),
     );
   const state = useSignal(
     useConst(() => ({
       corners: initial,
-      mode: "bilinear" as PathWarpMode,
+      mode: "bilinear" as PathQuadMode,
       paths: transform(initial, "bilinear"),
       error: "",
     })),
   );
-  const update = (corners: PathWarpCorners, mode: PathWarpMode) => {
+  const update = (corners: PathQuadCorners, mode: PathQuadMode) => {
     try {
       state.set({ corners, mode, paths: transform(corners, mode), error: "" });
     } catch (error) {
@@ -105,7 +84,7 @@ function WarpStudy() {
   };
   const drag = useRef<{
     pointerId: number;
-    corner: keyof PathWarpCorners;
+    corner: keyof PathQuadCorners;
   } | null>(null);
   const reference = useConst(() => {
     const path = original[2].clone();

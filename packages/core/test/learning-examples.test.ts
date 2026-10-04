@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 82 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
+  it("contains 83 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(82);
+    expect(learningExampleCatalog).toHaveLength(83);
     expect(
       learningExampleCatalog
         .filter(
@@ -1305,6 +1305,7 @@ describe("learning example catalog", () => {
         "svg-path",
         "text",
         "text-geometry",
+        "text-envelope",
         "vertical-line",
         "wedge",
       ],
@@ -1839,9 +1840,13 @@ describe("learning example catalog", () => {
         "Path",
         "PathGeometry",
         "defineRenderLayer",
-        "bendPathAlongArc",
-        "bendPathAlongPath",
-        "warpPath",
+        "arcBendTransform",
+        "pathBendTransform",
+        "quadTransform",
+        "transformPath",
+        "affineTransform",
+        "composeTransforms",
+        "envelopeTransform",
         "flattenPath",
         "flattenPathWang",
         "simplifyPathRadial",

@@ -1,12 +1,13 @@
-import { Clip, Path, PathGeometry, Rectangle, toPath2D, toSvgPathData, warpPath } from '@crc/core';
+import { Clip, Path, PathGeometry, Rectangle, toPath2D, toSvgPathData, transformPath, quadTransform } from '@crc/core';
+
 import { expect, it, vi } from 'vitest';
 import { componentTest } from '../src/lib/test-utils/component-test';
 
 it('uses warped geometry for paint, clipping, targeting, and independent native/SVG snapshots', async () => {
   const source = new PathGeometry(); source.rect(0, 0, 1, 1);
-  const warped = warpPath(source, { source: { x: 0, y: 0, width: 1, height: 1 }, destination: {
+  const warped = transformPath(source, quadTransform({ source: { x: 0, y: 0, width: 1, height: 1 }, destination: {
     topLeft: { x: 10, y: 10 }, topRight: { x: 70, y: 10 }, bottomLeft: { x: 10, y: 70 }, bottomRight: { x: 50, y: 60 },
-  }, mode: 'perspective', tolerance: 0.1 });
+  }, mode: 'perspective' }), { tolerance: 0.1 });
   const native = toPath2D(warped), svg = new Path2D(toSvgPathData(warped));
   const onClick = vi.fn();
   const canvas = await componentTest(<Clip style={{ d: warped }}>
