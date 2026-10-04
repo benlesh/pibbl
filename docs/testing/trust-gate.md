@@ -26,9 +26,13 @@ corepack pnpm@11.21.0 trust
 On a fresh Linux CI runner, install Chromium with `--with-deps`. Browser
 launches run serially inside the local aggregate to avoid port/process
 contention observed during earlier upgrade and visual work. The full Vitest browser
-suite also uses one worker: four concurrent browser workers lost their test iframe
-on the hosted Linux runner before the suite could finish. Serial execution bounds
-resource demand without dropping tests or retrying failed assertions.
+suite runs eight deterministic shards sequentially, each with one worker in a
+fresh Vitest/Chromium process. Both four-worker CI execution and a long-lived
+single-worker local run lost their browser connection partway through the suite.
+Sharding bounds process lifetime as well as concurrency. Vitest discovers and
+partitions the full suite; no test-file inventory is copied. Every shard must
+succeed, crashes propagate as failures, and nothing is retried automatically.
+
 
 ## Gate contents
 
@@ -209,6 +213,13 @@ The [documentation information architecture and search field note](./field-notes
 records the verification of the current Learn/API/Examples Studio experience.
 
 ## Visual baseline policy
+
+The filter laboratory masks only the ten unfiltered system-monospace label
+bounds (10 pixels high). Linux CI differed from macOS by 1,537 label pixels;
+inspection of expected, actual, and diff artifacts confirmed every filtered
+shape matched exactly. Filter tiles, shadows, and intervening gaps remain
+unmasked, with zero pixel tolerance. Each mask records its platform-font reason
+in the comparison report; the committed laboratory baseline is unchanged.
 
 Visual baselines are check-only in normal tests and CI. Never rewrite a
 baseline merely to clear a red check. The safeguard records committed baseline

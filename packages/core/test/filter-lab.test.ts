@@ -434,6 +434,15 @@ describe('first-class filter public scenarios', () => {
       expectedArtifactPath: 'test-screenshots/first-class-filters/filters.expected.png',
       actualPath: '../../../test-screenshots/first-class-filters/filters.actual.png',
       diffPath: 'test-screenshots/first-class-filters/filters.diff.png',
+      // System monospace glyphs differ between Linux and macOS. These tight
+      // label-only bounds leave every filtered tile and the gaps unmasked.
+      ignoreRegions: ['blur', 'bright', 'contrast', 'shadow', 'gray', 'hue', 'invert', 'opacity', 'saturate', 'sepia'].map((label, index) => ({
+        x: 42 + (index % 5) * 94 - (label.length * 6 + 2) / 2,
+        y: 67 + Math.floor(index / 5) * 98,
+        width: label.length * 6 + 2,
+        height: 10,
+        reason: `System monospace rasterization of the unfiltered ${label} label varies by platform.`,
+      })),
     });
   });
 });
