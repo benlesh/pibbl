@@ -1,6 +1,9 @@
+import { lazyTransitionKernel } from './wasm/kernel.js';
+import { bytes } from './wasm/hologram-bytes.js';
+const createKernel = lazyTransitionKernel(bytes);
 import { opacity } from '../../filters/native.js';
 import { defineTransitionEffect, type CRCTransitionEffect } from './fade.js';
-import { captureTransition, clamp, finite, regionSnapshot, seededNoise, type TransitionRegion } from './capture.js';
+import { captureTransition, clamp, finite, regionSnapshot, type TransitionRegion } from './capture.js';
 
 export interface CRCHologramOptions {
   readonly region: TransitionRegion;
@@ -17,12 +20,14 @@ export function hologram(options: CRCHologramOptions): CRCTransitionEffect {
   const entry = { x: finite(options.entry?.x ?? r.x + r.width / 2, 'entry.x'), y: finite(options.entry?.y ?? r.y + r.height, 'entry.y') };
   const hue = finite(options.hue ?? 183, 'hue'), brightness = finite(options.brightness ?? 1, 'brightness', 0);
   const fog = finite(options.fog ?? 1, 'fog', 0), glitch = finite(options.glitch ?? 1, 'glitch', 0);
-  const noise = seededNoise(finite(options.seed ?? 0, 'seed'));
+  const kernel = createKernel(finite(options.seed ?? 0, 'seed'));
   return defineTransitionEffect(q => {
     if (q === 1) return [];
     if (q === 0) return [opacity({ amount: 0 })];
     return [captureTransition(({ context: c, windows, drawSource, drawTint }) => {
-      const y = r.y + r.height * (1 - q), power = Math.pow(Math.sin(Math.PI * q), .65) * brightness;
+      const { exports, values } = kernel();
+      exports.sample!(q, brightness, fog, glitch, r.x, r.y, r.width, r.height, entry.x, entry.y);
+      const y = values[0]!, power = values[1]!;
       const color = (a: number, light = 75) => `hsla(${hue},100%,${light}%,${clamp(a)})`;
       const glow = (x: number, cy: number, rx: number, ry: number, a: number) => {
         c.save(); c.translate(x, cy); c.scale(rx, ry);
@@ -39,20 +44,19 @@ export function hologram(options: CRCHologramOptions): CRCTransitionEffect {
       // Transient strips copy only captured pixels, preserving gaps in the subject.
       c.save(); c.beginPath(); c.rect(r.x, y, r.width, r.height * q); c.clip();
       for (let i = 0; i < 9; i++) {
-        const pulse = Math.pow(Math.max(0, Math.sin(q * (35 + noise(i) * 24) + i * 2.7)), 12) * (1 - q) * glitch;
+        const offset = 2 + i * 4, pulse = values[offset]!;
         if (pulse < .03) continue;
-        c.save(); c.beginPath(); c.rect(r.x, r.y + noise(i + 11) * r.height, r.width, 2 + noise(i + 21) * 7); c.clip();
-        c.translate((noise(i + 31) - .5) * 28 * pulse, 0); c.globalAlpha = clamp(pulse); drawTint(color(1, 92)); c.restore();
+        c.save(); c.beginPath(); c.rect(r.x, values[offset + 1]!, r.width, values[offset + 2]!); c.clip();
+        c.translate(values[offset + 3]!, 0); c.globalAlpha = clamp(pulse); drawTint(color(1, 92)); c.restore();
       }
       c.restore(); c.globalCompositeOperation = 'lighter';
       for (let i = 0; i < 25; i++) {
-        c.strokeStyle = color(power * (.035 + noise(i) * .045)); c.lineWidth = 1;
+        c.strokeStyle = color(values[38 + i]!); c.lineWidth = 1;
         c.beginPath(); c.moveTo(entry.x, entry.y); c.lineTo(r.x + i / 24 * r.width, y); c.stroke();
       }
       for (let i = 0; i < 24; i++) {
-        const drift = (noise(i + 17) + q * .3) % 1;
-        glow(entry.x + (r.x + r.width / 2 - entry.x) * drift + Math.sin(i * 2.4 + q * 3) * r.width * .24,
-          entry.y + (y - entry.y) * drift, 16 + noise(i) * r.width * .16, 8 + noise(i + 3) * 19, power * fog * .065);
+        const offset = 63 + i * 5;
+        glow(values[offset]!, values[offset + 1]!, values[offset + 2]!, values[offset + 3]!, values[offset + 4]!);
       }
       glow(r.x + r.width / 2, y, r.width * .6, 28, power * .5);
       c.save(); c.filter = `blur(${9 * windows.density}px)`; c.strokeStyle = color(power * .65, 87); c.lineWidth = 7;

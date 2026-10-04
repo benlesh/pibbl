@@ -1,3 +1,6 @@
+import { lazyTransitionKernel } from './wasm/kernel.js';
+import { bytes } from './wasm/embers-bytes.js';
+const createKernel = lazyTransitionKernel(bytes, 2);
 import { opacity } from '../../filters/native.js';
 import { filterBoundaryExecutor, type CustomPreparedFilter } from '../../filters/filter-executor.js';
 import { GLOBAL_STATE } from '../global-state.js';
@@ -54,7 +57,7 @@ export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
     if (!Number.isFinite(value)) throw new RangeError(`embers ${name} must be finite.`);
   }
   if (!(region.width > 0 && region.height > 0) || charDepth < 0 || burnWidth < 0 || linger < 0) throw new RangeError('embers requires a positive region and nonnegative charDepth/burnWidth/linger.');
-  const noise = (n: number) => { const v = Math.sin(n * 127.1 + seed * 31.7) * 43758.5453; return v - Math.floor(v); };
+  const kernel = createKernel(seed);
   return defineTransitionEffect((q, phase, frame) => {
     if ((!frame.active || !linger) && q === 1) return [];
     if ((!frame.active || !linger) && q === 0) return [opacity({ amount: 0 })];
@@ -74,30 +77,22 @@ export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
             const matrix = windows.source.renderTransform;
             const roughness = Math.min(5, region.height * .015);
             const front = region.y + region.height + roughness * 2 - q * (region.height + roughness * 4);
-            // Evolve several spatial scales at different rates. Progress drives the
-            // material contour so pauses/reversals are stable; the bounded derivative
-            // keeps each local front advancing instead of regrowing burnt material.
-            const burnAt = (x: number, progress: number) => region.y + region.height + roughness * 2 - progress * (region.height + roughness * 4) + roughness * (
-              Math.sin(x * .12 + seed + progress * 6) * .65 +
-              Math.sin(x * .37 - progress * 10) * .4 +
-              Math.sin(x * .71 + progress * 14 + Math.sin(x * .18 - progress * 8)) * .2
-            );
-            const burnY = (x: number) => burnAt(x, q);
             const segments = Math.min(512, Math.max(1, Math.ceil(region.width / 2)));
-            const contour = Array.from({ length: segments + 1 }, (_, i) => {
-              const x = region.x + i / segments * region.width;
-              return { x, y: burnY(x) };
-            });
+            const { exports, values } = kernel();
+            exports.births!(frame.elapsed, linger);
+            // The controller remains the source of truth for reversal history.
+            if (linger) for (let i = 0; i < 1200; i++) values[11166 + i] = frame.progressAt(values[12366 + i]!);
+            exports.sample!(q, phase === 'enter' ? 1 : 0, frame.elapsed, linger, wind, burnWidth, region.x, region.y, region.width, region.height, segments);
             const bandPath = (depth: number) => {
               c.beginPath();
-              for (const point of contour) c.lineTo(point.x, point.y);
-              for (let i = contour.length - 1; i >= 0; i--) { const point = contour[i]!; c.lineTo(point.x, point.y + depth); }
+              for (let i = 0; i <= segments; i++) c.lineTo(values[i * 2]!, values[i * 2 + 1]!);
+              for (let i = segments; i >= 0; i--) c.lineTo(values[i * 2]!, values[i * 2 + 1]! + depth);
               c.closePath();
             };
             const path = (depth: number) => {
               c.beginPath(); c.moveTo(region.x, region.y + region.height + charDepth + 40);
-              for (const point of contour) c.lineTo(point.x, point.y + depth);
-              c.lineTo(region.x + region.width, burnY(region.x + region.width) + depth);
+              for (let i = 0; i <= segments; i++) c.lineTo(values[i * 2]!, values[i * 2 + 1]! + depth);
+              c.lineTo(region.x + region.width, values[segments * 2 + 1]! + depth);
               c.lineTo(region.x + region.width, region.y + region.height + charDepth + 40); c.closePath();
             };
             if (q > 0) {
@@ -127,9 +122,8 @@ export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
               c.restore();
             }
             for (let i = 0; i < 180; i++) {
-              const x = region.x + noise(i * 3) * region.width;
-              const y = burnY(x) + noise(i * 3 + 1) * burnWidth;
-              const r = 1 + noise(i * 3 + 2) * burnWidth * .6;
+              const offset = 1026 + i * 3;
+              const x = values[offset]!, y = values[offset + 1]!, r = values[offset + 2]!;
               const heat = c.createRadialGradient(x, y, 0, x, y, r);
               heat.addColorStop(0, `rgba(255,222,145,${strength * .5})`);
               heat.addColorStop(.3, `rgba(247,92,15,${strength * .4})`);
@@ -141,28 +135,27 @@ export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
             // Tint a copy of the subject once. Sampling small patches means transparent
             // gaps cannot emit particles, without reading pixels back from the canvas.
             tint.drawImage(source, 0, 0); tint.globalCompositeOperation = 'source-in';
-            tint.fillStyle = '#ffd49a'; tint.fillRect(0, 0, source.width, source.height);
+            tint.fillStyle = '#fff4cf'; tint.fillRect(0, 0, source.width, source.height);
+            const ash = scratch.context(2, source.width, source.height);
+            ash.drawImage(source, 0, 0); ash.globalCompositeOperation = 'source-in';
+            ash.fillStyle = '#766b60'; ash.fillRect(0, 0, source.width, source.height);
             c.globalCompositeOperation = 'source-over';
-            const flow = (phase === 'enter' ? q : 1 - q) * 3;
-            const power = Math.min(1, q * 12, (1 - q) * 12);
-            for (let i = 0; i < 240; i++) {
-              const x = region.x + noise(i * 7) * region.width;
-              const lifetime = linger * (.55 + .45 * noise(i + 5));
-              const period = lifetime * 1.4;
-              const offset = noise(i + 19) * period;
-              const born = linger ? Math.floor((frame.elapsed - offset) / period) * period + offset : 0;
-              const age = linger ? (frame.elapsed - born) / lifetime : (noise(i + 19) + flow * (.4 + noise(i + 5) * .6)) % 1;
-              const birthProgress = linger ? frame.progressAt(born) : q;
-              if (linger && (born < 0 || age >= 1 || birthProgress <= 0 || birthProgress >= 1)) continue;
-              const y = burnAt(x, birthProgress) + 2;
-              const size = 1 + noise(i + 9) * 3;
+            for (let i = 0; i < 1200; i++) {
+              const offset = 1566 + i * 8, alpha = values[offset + 5]!;
+              if (alpha < 0) continue;
+              const x = values[offset]!, y = values[offset + 1]!, size = values[offset + 2]!;
               const sample = new DOMPoint(x, y).matrixTransform(matrix);
-              const dx = age * wind + Math.sin(age * 9 + i) * age * 16;
-              const dy = -age * (25 + noise(i + 11) * 100) - age * age * 25;
-              c.save(); c.globalAlpha = (linger ? 1 : power) * (1 - age) * (1 - age);
-              c.translate(x + dx, y + dy); c.rotate(i + age * 5);
-              c.filter = age > .6 || i % 3 === 0 ? 'grayscale(1) brightness(.5)' : 'none';
+              const dx = values[offset + 3]!, dy = values[offset + 4]!, age = values[offset + 7]!;
+              c.save(); c.globalAlpha = alpha;
+              c.translate(x + dx, y + dy); c.rotate(values[offset + 6]!);
+              // Hot fragments cool continuously into dim ash rather than switching off.
+              const cooling = clamp((age - .2) / .8);
+              c.globalAlpha = alpha * (1 - cooling);
               c.drawImage(tint.canvas, sample.x, sample.y, size * windows.density, size * windows.density, -size / 2, -size / 2, size, size);
+              if (cooling > 0) {
+                c.globalAlpha = alpha * cooling;
+                c.drawImage(ash.canvas, sample.x, sample.y, size * windows.density, size * windows.density, -size / 2, -size / 2, size, size);
+              }
               c.restore();
             }
             return c.canvas.transferToImageBitmap();

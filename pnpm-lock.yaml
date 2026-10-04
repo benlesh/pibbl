@@ -198,6 +198,11 @@ importers:
         specifier: workspace:*
         version: link:../types
 
+    devDependencies:
+      assemblyscript:
+        specifier: 0.28.20
+        version: 0.28.20
+
   packages/particles:
     devDependencies:
       '@crc/core':

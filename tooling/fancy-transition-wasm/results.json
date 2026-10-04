@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-04T17:19:38.909Z",
+  "browser": "151.0.7922.34",
+  "node": "v26.9.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "embers": {
+    "parityFrames": 95,
+    "maxGeometryError": 3.877431709042867e-9,
+    "maxPixelError": 0,
+    "changedChannels": 0,
+    "submissionMedianMs": {
+      "js": 34.90000009536743,
+      "wasm": 34.700000047683716
+    },
+    "synchronizedMedianMs": {
+      "js": 34.90000009536743,
+      "wasm": 34.799999952316284
+    }
+  },
+  "hologram": {
+    "parityFrames": 95,
+    "maxGeometryError": 5.798286295544131e-10,
+    "maxPixelError": 0,
+    "changedChannels": 0,
+    "submissionMedianMs": {
+      "js": 1.7000000476837158,
+      "wasm": 1.7000000476837158
+    },
+    "synchronizedMedianMs": {
+      "js": 1.8999998569488525,
+      "wasm": 1.8000001907348633
+    }
+  }
+}

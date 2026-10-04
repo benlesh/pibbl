@@ -68,12 +68,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs",
+    "build": "node ../../tooling/build-transition-wasm.mjs --check && rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs",
     "dev": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "test": "vitest"
   },
   "dependencies": {
     "@crc/types": "workspace:*"
+  },
+  "devDependencies": {
+    "assemblyscript": "0.28.20"
   }
 }

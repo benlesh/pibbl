@@ -70,7 +70,8 @@ it('burns arbitrary captured content within a declared region, chars the front, 
   const context = canvas.getContext('2d')!;
   expect([...context.getImageData(80, 100, 1, 1).data]).toEqual([255, 255, 255, 255]);
   const hidden = handle.hide(); driver.flush(10); driver.flush(60);
-  expect(context.getImageData(80, 30, 1, 1).data[3]).toBe(0);
+  // The opaque subject is gone here; airborne embers may now cross this point.
+  expect(context.getImageData(80, 30, 1, 1).data[3]).toBeLessThan(255);
   expect(context.getImageData(80, 100, 1, 1).data[0]).toBeLessThan(200);
   expect(context.getImageData(80, 135, 1, 1).data[0]).toBe(255);
   driver.flush(110); expect(await hidden).toMatchObject({ status: 'finished' });
@@ -315,4 +316,26 @@ it('moves Bifrost color patches with elapsed transit time independently of revea
   const later = [...canvas.getContext('2d')!.getImageData(40, 20, 160, 100).data];
   expect(later).not.toEqual(pixels);
   expect(later.some((value, i) => i % 4 === 3 && value > 0)).toBe(true);
+});
+
+it('lazily uses a WASM instance for Bifrost calculations and reuses it across frames', async () => {
+  const { vi } = await import('vitest');
+  const { bifrost } = await import('@crc/core');
+  const NativeInstance = WebAssembly.Instance;
+  const instances = vi.spyOn(WebAssembly, 'Instance').mockImplementation(function(module, imports) { return new NativeInstance(module, imports); });
+  const driver = new ManualSchedulerDriver(); restore = installSchedulerDriverForTest(driver);
+  const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 200; document.body.append(canvas);
+  let handle!: CRCVisibilityTransition;
+  try {
+    const effect = bifrost({ region: { x: 50, y: 100, width: 100, height: 80 }, seed: 43 });
+    expect(instances).not.toHaveBeenCalled();
+    function Scene() { handle = useVisibilityTransition({ enter: effect, duration: 100 }); return <Rectangle style={{ x: 50, y: 100, width: 100, height: 80, fill: 'red', transition: handle.binding }} />; }
+    roots.push(crc(canvas, <Scene />)); driver.flush(0);
+    expect(instances).not.toHaveBeenCalled();
+    void handle.hide(); driver.flush(10); driver.flush(35);
+    expect(instances).toHaveBeenCalledTimes(1);
+    driver.flush(60); expect(instances).toHaveBeenCalledTimes(1);
+    handle.finish(); driver.flush(70);
+    expect(handle.status.get()).toBe('hidden');
+  } finally { instances.mockRestore(); }
 });

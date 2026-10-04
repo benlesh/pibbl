@@ -1,6 +1,7 @@
+import { bifrostKernel } from './wasm/bifrost-kernel.js';
 import { opacity } from '../../filters/native.js';
 import { defineTransitionEffect, type CRCTransitionEffect } from './fade.js';
-import { captureTransition, clamp, finite, regionSnapshot, seededNoise, type TransitionRegion } from './capture.js';
+import { captureTransition, clamp, finite, regionSnapshot, type TransitionRegion } from './capture.js';
 
 export interface CRCBifrostOptions {
   readonly region: TransitionRegion;
@@ -17,7 +18,7 @@ export function bifrost(options: CRCBifrostOptions): CRCTransitionEffect {
   const ex = finite(options.entry?.x ?? ax, 'entry.x'), ey = finite(options.entry?.y ?? r.y - r.height * 2, 'entry.y');
   const brightness = finite(options.brightness ?? 1, 'brightness', 0), hue = finite(options.hue ?? 0, 'hue');
   const stretchAmount = finite(options.stretch ?? 7, 'stretch', 0), aura = finite(options.glow ?? 1, 'glow', 0);
-  const noise = seededNoise(finite(options.seed ?? 0, 'seed'));
+  const samplePatches = bifrostKernel(finite(options.seed ?? 0, 'seed'));
   const distance = Math.hypot(ex - ax, ey - ay), ux = distance ? (ex - ax) / distance : 0, uy = distance ? (ey - ay) / distance : -1;
   return defineTransitionEffect((q, phase, frame) => {
     if (q === 1) return [];
@@ -40,18 +41,11 @@ export function bifrost(options: CRCBifrostOptions): CRCTransitionEffect {
       c.translate(ex, ey); c.rotate(angle);
       c.beginPath(); c.rect(-Math.max(1, distance), -r.width * 2, Math.max(1, distance) * 2, r.width * 4); c.clip();
       c.rotate(-angle); c.translate(-ex, -ey);
+      const patches = samplePatches(seconds, flow, power, r.width, distance, ex, ey, dx, dy);
       for (let i = 0; i < 56; i++) {
-        const speed = 1.6 + noise(i * 11 + 1) * 2.8;
-        const position = noise(i * 11 + 2) * 1.8 + flow * seconds * speed;
-        const t = ((position % 1.8) + 1.8) % 1.8 - .4;
-        const lateral = (noise(i * 11 + 3) - .5) * r.width * .95
-          + Math.sin(seconds * 3 + noise(i * 11 + 4) * 20) * r.width * .035;
-        const length = Math.max(20, distance * (.13 + noise(i * 11 + 5) * .28));
-        const width = Math.max(4, r.width * (.045 + noise(i * 11 + 6) * .13));
-        const h = noise(i * 11 + 7) * 360;
-        const alpha = power * (.14 + noise(i * 11 + 8) * .22);
-        c.save();
-        c.translate(ex + dx * t - Math.sin(angle) * lateral, ey + dy * t + Math.cos(angle) * lateral);
+        const offset = i * 6;
+        const length = patches[offset + 2]!, width = patches[offset + 3]!, h = patches[offset + 4]!, alpha = patches[offset + 5]!;
+        c.save(); c.translate(patches[offset]!, patches[offset + 1]!);
         c.rotate(angle); c.scale(length, width);
         const patch = c.createRadialGradient(0, 0, 0, 0, 0, 1);
         patch.addColorStop(0, color(h, alpha, 78));
