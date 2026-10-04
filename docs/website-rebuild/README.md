@@ -1,10 +1,14 @@
 # CRC website rebuild planning pack
 
-Draft for Ben Lesh and Jessica Sachs · October 2, 2026
+Draft for Ben Lesh and Jessica Sachs · Updated October 4, 2026
 
 This pack separates the website rebuild into content strategy, product behavior, and visual design. It is meant to be read in the repository or shared as one folder. It proposes a clearer website and much stronger demonstrations of CRC, without starting implementation or choosing the site's visual identity.
 
 The starting problem is Ben's assessment: the current website feels disorganized, many examples are uninteresting, and some compelling examples bury their point in too much code. The response should improve what the site says and teaches before deciding how it looks.
+
+## October 4 direction
+
+Prioritize comprehensive agent guidance alongside concise human pages. Add separate shapes, filters, textures, and reaction-diffusion catalogs; advanced composition guides; directly retrievable Markdown companions; a versioned public content catalog; and discoverable installable skills. Start with the [updated documentation architecture](12-documentation-architecture.md), [agent documentation and skills plan](13-agent-documentation-and-skills.md), and [platform recommendation](14-documentation-platform-options.md). These refine the earlier navigation proposals. Platform selection and implementation remain pending.
 
 ## Start here
 

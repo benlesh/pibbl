@@ -59,3 +59,7 @@ Audit current examples as keep, simplify, split, remake, or keep only in the tes
 ## Acceptance questions
 
 Can someone explain the point after one interaction? Is the relevant code easy to find? Is the edit prompt achievable without understanding unrelated machinery? Does the screenshot match the live result? Does Open in playground preserve the complete experience? Can users pause motion, operate relevant controls with a keyboard, and understand fallback states?
+
+## Catalogs and agent companions
+
+In addition to the complete-example gallery, provide distinct catalogs for shapes, filters, textures, and reaction-diffusion as defined in the [updated architecture](12-documentation-architecture.md). Each entry pairs comparable visual output with a short source excerpt, reference links, and playground access. Every advanced example also has a public, explicitly linked Markdown companion explaining architecture, safe adaptations, limitations, and validation; keep that depth out of the default human page layout.

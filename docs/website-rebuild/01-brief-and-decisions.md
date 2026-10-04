@@ -15,6 +15,10 @@ The website should make CRC understandable quickly, demonstrate why someone woul
 
 “Reaction-diffusion” is the technical term used here for the living-pattern effect described in the request as reactive diffusion.
 
+## Additional requirements from October 4
+
+Make agent discovery and comprehensive task guidance central. Document every public component; provide dedicated shape, filter, texture, and reaction-diffusion catalogs; connect advanced examples to playground projects and detailed agent companions; add advanced composition guides and a discoverable skills collection. Keep human pages concise while detailed public guidance is accessible through explicit links. Evaluate an established documentation platform. See the [updated architecture](12-documentation-architecture.md).
+
 ## Recommended product decisions
 
 | Decision           | Recommendation                                                     | Why                                                                                    |
@@ -35,7 +39,7 @@ These recommendations are not approved implementation choices. In particular, pr
 
 These do not block this planning pack.
 
-1. Who should feel addressed first: frontend developers adding expressive interactions, creative developers, or application/tool builders? Recommended starting audience: frontend developers, with an early route to deeper creative work.
+1. Who should feel addressed first: frontend developers adding expressive interactions, creative developers, or application/tool builders? The October 4 direction prioritizes agents implementing CRC correctly while retaining a clear human reading path; refine the human audience within that constraint.
 2. Should the main invitation be “Explore examples” or “Open playground”? Recommend examples for first-time visitors and a persistent playground link for returning developers.
 3. How much editor scope belongs in the first release? Recommend enough editable TSX, HTML, CSS, and local assets to run the chosen launch examples, without a terminal or arbitrary package installation.
 4. Should URL projects replay against a pinned runtime indefinitely? Recommend a clearly stated compatibility policy before promising durable snapshots.
