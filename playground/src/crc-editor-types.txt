@@ -248,7 +248,7 @@
 
   declare const crcFilterBrand: unique symbol;
   export interface CRCFilter { readonly [crcFilterBrand]: true }
-  export interface SystemStyle { custom?: unknown; filter?: CRCFilter | readonly CRCFilter[] }
+  export interface SystemStyle { transition?: CRCTransitionBinding; custom?: unknown; filter?: CRCFilter | readonly CRCFilter[] }
   export interface CRCPhysics2DPropExtension {}
   type PrimitiveReservedKey = 'key' | 'style';
   type UnionKeys<T> = T extends unknown ? keyof T : never;
@@ -415,8 +415,8 @@
   export interface CRCTweenOptions<T> { readonly from?: T; readonly to: T; readonly duration: number; readonly easing?: CRCEasing; readonly interpolate?: CRCInterpolator<T>; readonly debugName?: string }
   export interface CRCKeyframesOptions<T> { readonly values: readonly [T, T, ...T[]]; readonly duration: number; readonly offsets?: readonly number[]; readonly easing?: CRCEasing | readonly CRCEasing[]; readonly interpolate?: CRCInterpolator<T>; readonly debugName?: string }
   export interface CRCSpringOptions { readonly from?: number; readonly to: number; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly debugName?: string }
-  export interface CRCTweenTransitionOptions<T> { readonly type: 'tween'; readonly duration: number; readonly easing?: CRCEasing; readonly interpolate?: CRCInterpolator<T>; readonly equals?: SignalEquals<T>; readonly initial?: T; readonly debugName?: string }
-  export interface CRCSpringTransitionOptions { readonly type: 'spring'; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly equals?: SignalEquals<number>; readonly initial?: number; readonly debugName?: string }
+  export interface CRCTweenAnimatedValueOptions<T> { readonly type: 'tween'; readonly duration: number; readonly easing?: CRCEasing; readonly interpolate?: CRCInterpolator<T>; readonly equals?: SignalEquals<T>; readonly initial?: T; readonly debugName?: string }
+  export interface CRCSpringAnimatedValueOptions { readonly type: 'spring'; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly equals?: SignalEquals<number>; readonly initial?: number; readonly debugName?: string }
   export interface CRCAnimationSampleInput<T> { readonly initialValue: T; readonly localTime: number; readonly progress: number }
   export interface CRCAnimationOptions<T> { readonly duration: number; readonly sample: (input: CRCAnimationSampleInput<T>) => T; readonly debugName?: string }
   export interface CRCStepperOptions<State, T> { readonly stepMilliseconds: number; readonly maxElapsedMilliseconds?: number; readonly initial: (currentValue: T) => State; readonly step: (state: State, deltaMilliseconds: number) => State; readonly read: (state: State) => T; readonly done?: (state: State) => boolean; readonly debugName?: string }
@@ -564,8 +564,37 @@
   export function useRef<T>(initial?: T): CRCRef<T>;
   export function useSignal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
   export function usePlayback(program: CRCAnimationProgram, options?: CRCPlaybackOptions): CRCPlayback;
-  export function useTransition(target: number, options: CRCSpringTransitionOptions): Signal<number>;
-  export function useTransition<T>(target: T, options: CRCTweenTransitionOptions<T>): Signal<T>;
+  declare const transitionBindingBrand: unique symbol;
+  declare const transitionEffectBrand: unique symbol;
+  export interface CRCTransitionBinding { readonly [transitionBindingBrand]: true }
+  export interface CRCTransitionEffect { readonly [transitionEffectBrand]: true }
+  export type CRCVisibilityTransitionStatus = 'hidden' | 'entering' | 'visible' | 'exiting' | 'disposed';
+  export interface CRCVisibilityTransitionResult { readonly requestId: number; readonly phase: 'enter' | 'exit'; readonly status: 'finished' | 'cancelled' | 'disposed' }
+  export interface CRCVisibilityTransitionOptions { readonly initial?: boolean; readonly enter: CRCTransitionEffect; readonly exit?: CRCTransitionEffect; readonly duration?: number }
+  export interface CRCVisibilityTransition { readonly binding: CRCTransitionBinding; readonly visible: Signal<boolean>; readonly progress: Signal<number>; readonly status: Signal<CRCVisibilityTransitionStatus>; show(): Promise<CRCVisibilityTransitionResult>; hide(): Promise<CRCVisibilityTransitionResult>; finish(): void }
+  export interface CRCEmbersOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly charDepth?: number; readonly burnWidth?: number; readonly wind?: number; readonly seed?: number; readonly linger?: number }
+  export function embers(options: CRCEmbersOptions): CRCTransitionEffect;
+  export interface CRCHologramOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly entry?: Readonly<{ x: number; y: number }>; readonly hue?: number; readonly brightness?: number; readonly fog?: number; readonly glitch?: number; readonly seed?: number }
+  export interface CRCBifrostOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly entry?: Readonly<{ x: number; y: number }>; readonly hue?: number; readonly brightness?: number; readonly stretch?: number; readonly glow?: number; readonly seed?: number }
+  export function hologram(options: CRCHologramOptions): CRCTransitionEffect;
+  export function bifrost(options: CRCBifrostOptions): CRCTransitionEffect;
+  export interface CRCSlideOptions { readonly x?: number; readonly y?: number }
+  export interface CRCZoomOptions { readonly origin: Readonly<{ x: number; y: number }>; readonly from?: number }
+  export interface CRCWipeOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly direction?: 'left' | 'right' | 'top' | 'bottom' }
+  export interface CRCBlurRevealOptions { readonly radius?: number }
+  export interface CRCDissolveOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly cellSize?: number; readonly seed?: number }
+  export function slide(options?: CRCSlideOptions): CRCTransitionEffect;
+  export function zoom(options: CRCZoomOptions): CRCTransitionEffect;
+  export function wipe(options: CRCWipeOptions): CRCTransitionEffect;
+  export function blurReveal(options?: CRCBlurRevealOptions): CRCTransitionEffect;
+  export function dissolve(options: CRCDissolveOptions): CRCTransitionEffect;
+  export interface CRCTransitionRenderFrame { readonly context: OffscreenCanvasRenderingContext2D; readonly source: OffscreenCanvas; readonly sourceBounds: Readonly<{ x: number; y: number; width: number; height: number }>; readonly progress: number; readonly phase: 'enter' | 'exit'; readonly elapsed: number; readonly progressAt: (elapsed: number) => number; readonly drawSource: () => void }
+  export interface CRCTransitionDefinition { readonly render: (frame: Readonly<CRCTransitionRenderFrame>) => void; readonly linger?: number }
+  export function defineTransition(definition: CRCTransitionDefinition): CRCTransitionEffect;
+  export function fade(): CRCTransitionEffect;
+  export function useVisibilityTransition(options: CRCVisibilityTransitionOptions): CRCVisibilityTransition;
+  export function useAnimatedValue(target: number, options: CRCSpringAnimatedValueOptions): Signal<number>;
+  export function useAnimatedValue<T>(target: T, options: CRCTweenAnimatedValueOptions<T>): Signal<T>;
   export function useReaction(setup: () => void | (() => void), dependencies?: readonly unknown[], options?: CRCReactionOptions): void;
   export function useCursor(options: { style?: string; path?: Path2D | PathGeometry; fill?: boolean; lineInteractionWidth?: number }): void;
   export function useEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D | PathGeometry, fill?: boolean, lineInteractionWidth?: number): void;

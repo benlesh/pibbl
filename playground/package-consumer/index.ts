@@ -58,11 +58,11 @@ import type {
   CRCRef,
   CRCResponsiveViewportConfig,
   CRCSpringOptions,
-  CRCSpringTransitionOptions,
+  CRCSpringAnimatedValueOptions,
   CRCStepperOptions,
   CRCTouchEvent,
   CRCTweenOptions,
-  CRCTweenTransitionOptions,
+  CRCTweenAnimatedValueOptions,
   CRCWheelEvent,
   ArcProps,
   ArcStyle,
@@ -219,7 +219,7 @@ import {
   useRef,
   useSignal,
   useSvgPath,
-  useTransition,
+  useAnimatedValue,
   useReaction,
   createElement,
   defineAnimation,
@@ -1465,17 +1465,17 @@ const stepperOptions: CRCStepperOptions<{ value: number }, number> = {
 const playbackOptions: CRCPlaybackOptions = { autoplay: false };
 const playbackStatus: CRCPlaybackStatus = 'scheduled';
 const playbackEvent = null as CRCPlaybackEvent | null;
-const tweenTransitionOptions: CRCTweenTransitionOptions<{ x: number }> = {
+const tweenTransitionOptions: CRCTweenAnimatedValueOptions<{ x: number }> = {
   type: 'tween',
   duration: 100,
   interpolate: objectInterpolator,
 };
-const springTransitionOptions: CRCSpringTransitionOptions = { type: 'spring' };
+const springTransitionOptions: CRCSpringAnimatedValueOptions = { type: 'spring' };
 
 function AnimationProbe(): CRCNode {
   const player: CRCPlayback = usePlayback(animationProgram, playbackOptions);
-  const tweened = useTransition({ x: 10 }, tweenTransitionOptions);
-  const sprung = useTransition(10, springTransitionOptions);
+  const tweened = useAnimatedValue({ x: 10 }, tweenTransitionOptions);
+  const sprung = useAnimatedValue(10, springTransitionOptions);
   return createElement(
     Text,
     null,

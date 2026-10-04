@@ -8,7 +8,7 @@ import {
   crc,
   computed,
   useConst,
-  useTransition,
+  useAnimatedValue,
   signal,
   type Signal,
 } from '../../index.js';
@@ -54,7 +54,7 @@ function mount(node: Parameters<typeof crc>[1]): {
   return { canvas, controller };
 }
 
-describe('useTransition mount behavior', () => {
+describe('useAnimatedValue mount behavior', () => {
   it('resolves signal-valued targets, option objects, and direct option fields', () => {
     const target = signal(10);
     const duration = signal(100);
@@ -66,7 +66,7 @@ describe('useTransition mount behavior', () => {
     });
     let output!: Signal<number>;
     function Probe() {
-      output = useTransition(target, options);
+      output = useAnimatedValue(target, options);
       output.get();
     }
 
@@ -89,7 +89,7 @@ describe('useTransition mount behavior', () => {
     const values: number[] = [];
     const outputs: Signal<number>[] = [];
     function Probe({ target }: { target: number }) {
-      const output = useTransition(target, { type: 'tween', duration: 100 });
+      const output = useAnimatedValue(target, { type: 'tween', duration: 100 });
       outputs.push(output);
       values.push(output.get());
     }
@@ -116,7 +116,7 @@ describe('useTransition mount behavior', () => {
     const values: number[] = [];
     let output!: Signal<number>;
     function Probe() {
-      output = useTransition(10, {
+      output = useAnimatedValue(10, {
         type: 'tween',
         duration: 100,
         initial: 0,
@@ -144,7 +144,7 @@ describe('useTransition mount behavior', () => {
     const beforePlaybacks = animationPlaybackSnapshot();
     let output!: Signal<number>;
     function Probe({ target }: { target: number }) {
-      output = useTransition(target, {
+      output = useAnimatedValue(target, {
         type: 'tween',
         duration: 100,
         initial: 1.2,
@@ -167,11 +167,11 @@ describe('useTransition mount behavior', () => {
   });
 });
 
-describe('useTransition retargeting', () => {
+describe('useAnimatedValue retargeting', () => {
   it('restarts a tween at full duration from the last committed presented value', () => {
     let output!: Signal<number>;
     function Probe({ target }: { target: number }) {
-      output = useTransition(target, {
+      output = useAnimatedValue(target, {
         type: 'tween',
         duration: 100,
         initial: 0,
@@ -198,7 +198,7 @@ describe('useTransition retargeting', () => {
   it('coalesces successful target changes before Begin to one latest retarget', () => {
     let output!: Signal<number>;
     function Probe({ target }: { target: number }) {
-      output = useTransition(target, { type: 'tween', duration: 100 });
+      output = useAnimatedValue(target, { type: 'tween', duration: 100 });
       output.get();
     }
 
@@ -218,7 +218,7 @@ describe('useTransition retargeting', () => {
 
   it('validates changed options during render even when the target is equal', () => {
     function Probe({ duration }: { duration: number }) {
-      useTransition(10, { type: 'tween', duration }).get();
+      useAnimatedValue(10, { type: 'tween', duration }).get();
     }
 
     const { canvas } = mount(<Probe duration={100} />);
@@ -245,7 +245,7 @@ describe('useTransition retargeting', () => {
     };
     let output!: Signal<number>;
     function Probe({ target }: { target: number }) {
-      output = useTransition(target, springOptions);
+      output = useAnimatedValue(target, springOptions);
       output.get();
     }
 
@@ -277,7 +277,7 @@ describe('useTransition retargeting', () => {
   it('uses successful option-only changes for the next target without restarting early', () => {
     let output!: Signal<number>;
     function Probe({ duration, target }: { duration: number; target: number }) {
-      output = useTransition(target, { type: 'tween', duration });
+      output = useAnimatedValue(target, { type: 'tween', duration });
       output.get();
     }
 
@@ -299,7 +299,7 @@ describe('useTransition retargeting', () => {
       if (record.kind === 'animation-sample') sampleNames.push(record.debugName);
     });
     function Probe({ debugName }: { debugName: string }) {
-      useTransition(10, {
+      useAnimatedValue(10, {
         type: 'tween',
         duration: 100,
         initial: 0,
@@ -330,7 +330,7 @@ describe('useTransition retargeting', () => {
     let failComposition = false;
     const workKey = {};
     function Probe({ target }: { target: number }) {
-      output = useTransition(target, { type: 'tween', duration: 100 });
+      output = useAnimatedValue(target, { type: 'tween', duration: 100 });
       output.get();
       owner ??= crcInternalCurrentRenderOwner();
     }
@@ -364,7 +364,7 @@ describe('useTransition retargeting', () => {
     let equalityCalls = 0;
     let output!: Signal<number>;
     function Probe({ fail, target }: { fail: boolean; target: number }) {
-      output = useTransition(target, {
+      output = useAnimatedValue(target, {
         type: 'tween',
         duration: 100,
         equals: fail ? () => {
@@ -395,7 +395,7 @@ describe('useTransition retargeting', () => {
   it('runs target equality under the Render signal-write guard', () => {
     const external = signal(0);
     function Probe({ target, write }: { target: number; write: boolean }) {
-      useTransition(target, {
+      useAnimatedValue(target, {
         type: 'tween',
         duration: 100,
         equals: write ? () => {
@@ -428,8 +428,8 @@ describe('useTransition retargeting', () => {
     const workKey = {};
     function Child({ initial, target }: { initial?: number; target: number }) {
       const output = initial === undefined ?
-        useTransition(target, { type: 'tween', duration: 100 }) :
-        useTransition(target, { type: 'tween', duration: 100, initial });
+        useAnimatedValue(target, { type: 'tween', duration: 100 }) :
+        useAnimatedValue(target, { type: 'tween', duration: 100, initial });
       const doubled = useConst(() => computed(() => output.get() * 2));
       if (observedOutput === undefined) {
         observedOutput = output;
@@ -487,9 +487,9 @@ describe('useTransition retargeting', () => {
   });
 });
 
-describe('useTransition public types and lifecycle', () => {
+describe('useAnimatedValue public types and lifecycle', () => {
   it('returns readonly signals, keeps spring numeric, and supports generic tween interpolation', () => {
-    const tweenTransition = () => useTransition(
+    const tweenTransition = () => useAnimatedValue(
       { x: 10 },
       {
         type: 'tween',
@@ -500,14 +500,14 @@ describe('useTransition public types and lifecycle', () => {
         }),
       },
     );
-    const springTransition = () => useTransition(10, { type: 'spring' });
+    const springTransition = () => useAnimatedValue(10, { type: 'spring' });
 
     expectTypeOf(tweenTransition).returns.toEqualTypeOf<Signal<{ x: number }>>();
     expectTypeOf(springTransition).returns.toEqualTypeOf<Signal<number>>();
     const invalidTypeExamples = () => {
       // @ts-expect-error spring transitions accept only numeric targets
-      useTransition('ten', { type: 'spring' });
-      const readonly = useTransition(1, { type: 'spring' });
+      useAnimatedValue('ten', { type: 'spring' });
+      const readonly = useAnimatedValue(1, { type: 'spring' });
       // @ts-expect-error transition outputs deliberately expose no write method
       readonly.set(2);
     };
@@ -521,7 +521,7 @@ describe('useTransition public types and lifecycle', () => {
       const beforeGraph = signalGraphSnapshot();
       let output!: Signal<number>;
       function Probe() {
-        output = useTransition(10, {
+        output = useAnimatedValue(10, {
           type: 'tween',
           duration: 100,
           initial: 0,

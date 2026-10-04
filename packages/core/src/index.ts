@@ -168,7 +168,7 @@ export type {
   CRCAnimationRepeatDirection,
   CRCAnimationRepeatOptions,
   CRCAnimationSampleInput,
-  CRCSpringTransitionOptions,
+  CRCSpringAnimatedValueOptions,
   CRCPlayback,
   CRCPlaybackEvent,
   CRCPlaybackOptions,
@@ -179,7 +179,7 @@ export type {
   CRCSpringOptions,
   CRCStepperOptions,
   CRCTweenOptions,
-  CRCTweenTransitionOptions,
+  CRCTweenAnimatedValueOptions,
 } from './lib/animation/types.js';
 export type {
   CRCConfig,
@@ -296,7 +296,7 @@ export {
   useReaction,
   type CRCReactionOptions,
 } from './lib/hooks/use-reaction.js';
-export { useTransition } from './lib/hooks/use-transition.js';
+export { useAnimatedValue } from './lib/hooks/use-animated-value.js';
 export { useSignal } from './lib/hooks/use-signal.js';
 export { useSvgPath } from './lib/hooks/use-svg-path.js';
 export type {
@@ -366,3 +366,23 @@ export type {
 
 export { defineTexture, useTexture } from './lib/textures/texture.js';
 export type { Texture, TexturePaint, TextureRecipe, TextureDefinition, TextureOptions, TexturePlacement, TextureContext, TextureFrame } from './lib/textures/texture.js';
+
+export { fade } from './lib/transitions/fade.js';
+export type { CRCTransitionEffect } from './lib/transitions/fade.js';
+export type { CRCTransitionBinding } from './lib/transitions/binding.js';
+export { useVisibilityTransition } from './lib/hooks/use-visibility-transition.js';
+export type { CRCVisibilityTransition, CRCVisibilityTransitionOptions, CRCVisibilityTransitionResult, CRCVisibilityTransitionStatus } from './lib/hooks/use-visibility-transition.js';
+
+export { embers } from './lib/transitions/embers.js';
+export type { CRCEmbersOptions } from './lib/transitions/embers.js';
+
+export { hologram } from './lib/transitions/hologram.js';
+export type { CRCHologramOptions } from './lib/transitions/hologram.js';
+export { bifrost } from './lib/transitions/bifrost.js';
+export type { CRCBifrostOptions } from './lib/transitions/bifrost.js';
+
+export { slide, zoom, wipe, blurReveal, dissolve } from './lib/transitions/common.js';
+export type { CRCSlideOptions, CRCZoomOptions, CRCWipeOptions, CRCBlurRevealOptions, CRCDissolveOptions } from './lib/transitions/common.js';
+
+export { defineTransition } from './lib/transitions/define-transition.js';
+export type { CRCTransitionDefinition, CRCTransitionRenderFrame } from './lib/transitions/define-transition.js';

@@ -1,0 +1,175 @@
+import { opacity } from '../../filters/native.js';
+import { filterBoundaryExecutor, type CustomPreparedFilter } from '../../filters/filter-executor.js';
+import { GLOBAL_STATE } from '../global-state.js';
+import { getOptionalService } from '../optional-services.js';
+import { CRC_FILTER_EXECUTOR, type CRCFilterExecutor } from '../style/filter-types.js';
+import type { CRCInstance } from '../types.js';
+import { defineTransitionEffect, type CRCTransitionEffect } from './fade.js';
+
+export interface CRCEmbersOptions {
+  /** Local coordinates enclosing the subject; the burn travels upward through this area. */
+  readonly region: Readonly<{ x: number; y: number; width: number; height: number }>;
+  readonly charDepth?: number;
+  readonly burnWidth?: number;
+  /** Horizontal drift in local units; negative blows left. */
+  readonly wind?: number;
+  readonly seed?: number;
+  /** Maximum airborne particle lifetime in milliseconds; completion includes this tail. Default 700. */
+  readonly linger?: number;
+}
+const SCRATCH = Symbol('crc.transition.embers');
+class EmberSurfaces {
+  private surfaces: OffscreenCanvas[] = [];
+  used = false;
+  private committed = false;
+  constructor(private readonly instance: CRCInstance) {}
+  beginRender(): void { this.used = false; }
+  endRender(success: boolean): void {
+    if (success && this.used) { this.committed = true; return; }
+    if (success || !this.committed) this.dispose();
+  }
+  context(index: number, width: number, height: number): OffscreenCanvasRenderingContext2D {
+    const canvas = this.surfaces[index] ??= new OffscreenCanvas(width, height);
+    if (canvas.width !== width) canvas.width = width;
+    if (canvas.height !== height) canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Embers requires a Canvas 2D surface.');
+    context.reset();
+    return context;
+  }
+  dispose(): void {
+    for (const surface of this.surfaces) { surface.width = 0; surface.height = 0; }
+    this.surfaces = [];
+    this.instance.optionalServices.delete(SCRATCH);
+  }
+}
+const clamp = (value: number) => Math.max(0, Math.min(1, value));
+
+/** A seeded burn/char front over one captured subtree, with outward drifting fragments. */
+export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
+  const region = Object.freeze({ ...options.region });
+  const charDepth = options.charDepth ?? 65, burnWidth = options.burnWidth ?? 12;
+  const wind = options.wind ?? 110, seed = options.seed ?? 0, linger = options.linger ?? 700;
+  for (const [name, value] of Object.entries({ ...region, charDepth, burnWidth, wind, seed, linger })) {
+    if (!Number.isFinite(value)) throw new RangeError(`embers ${name} must be finite.`);
+  }
+  if (!(region.width > 0 && region.height > 0) || charDepth < 0 || burnWidth < 0 || linger < 0) throw new RangeError('embers requires a positive region and nonnegative charDepth/burnWidth/linger.');
+  const noise = (n: number) => { const v = Math.sin(n * 127.1 + seed * 31.7) * 43758.5453; return v - Math.floor(v); };
+  return defineTransitionEffect((q, phase, frame) => {
+    if ((!frame.active || !linger) && q === 1) return [];
+    if ((!frame.active || !linger) && q === 0) return [opacity({ amount: 0 })];
+    const executor: CRCFilterExecutor = {
+      render: filterBoundaryExecutor.render,
+      prepare(): CustomPreparedFilter {
+        return {
+          executor: filterBoundaryExecutor,
+          reverseInfluence: output => ({ ...output }),
+          process(source, windows) {
+            const instance = GLOBAL_STATE.currentCRCInstance;
+            if (!instance) throw new Error('Embers requires an active CRC instance.');
+            const scratch = getOptionalService(instance, SCRATCH, () => new EmberSurfaces(instance));
+            scratch.used = true;
+            const c = scratch.context(0, source.width, source.height);
+            const tint = scratch.context(1, source.width, source.height);
+            const matrix = windows.source.renderTransform;
+            const roughness = Math.min(5, region.height * .015);
+            const front = region.y + region.height + roughness * 2 - q * (region.height + roughness * 4);
+            // Evolve several spatial scales at different rates. Progress drives the
+            // material contour so pauses/reversals are stable; the bounded derivative
+            // keeps each local front advancing instead of regrowing burnt material.
+            const burnAt = (x: number, progress: number) => region.y + region.height + roughness * 2 - progress * (region.height + roughness * 4) + roughness * (
+              Math.sin(x * .12 + seed + progress * 6) * .65 +
+              Math.sin(x * .37 - progress * 10) * .4 +
+              Math.sin(x * .71 + progress * 14 + Math.sin(x * .18 - progress * 8)) * .2
+            );
+            const burnY = (x: number) => burnAt(x, q);
+            const segments = Math.min(512, Math.max(1, Math.ceil(region.width / 2)));
+            const contour = Array.from({ length: segments + 1 }, (_, i) => {
+              const x = region.x + i / segments * region.width;
+              return { x, y: burnY(x) };
+            });
+            const bandPath = (depth: number) => {
+              c.beginPath();
+              for (const point of contour) c.lineTo(point.x, point.y);
+              for (let i = contour.length - 1; i >= 0; i--) { const point = contour[i]!; c.lineTo(point.x, point.y + depth); }
+              c.closePath();
+            };
+            const path = (depth: number) => {
+              c.beginPath(); c.moveTo(region.x, region.y + region.height + charDepth + 40);
+              for (const point of contour) c.lineTo(point.x, point.y + depth);
+              c.lineTo(region.x + region.width, burnY(region.x + region.width) + depth);
+              c.lineTo(region.x + region.width, region.y + region.height + charDepth + 40); c.closePath();
+            };
+            if (q > 0) {
+            c.save(); c.setTransform(matrix); path(0); c.clip();
+            c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(source, 0, 0); c.restore();
+            c.setTransform(matrix); c.globalCompositeOperation = 'source-atop';
+            const strength = clamp((1 - q) / .12);
+            // Continuous overlapping contour bands avoid vertical striping at the hot edge.
+            for (let band = 48; band > 0 && charDepth > 0; band--) {
+              const depth = charDepth * band / 48;
+              c.save();
+              bandPath(depth); c.clip();
+              c.fillStyle = `rgba(27,16,12,${.12 * strength})`;
+              c.fillRect(region.x, front - roughness * 2, region.width, depth + roughness * 4);
+              c.restore();
+            }
+            // A connected thermal front carries the light; individual coals only
+            // add texture. Source-atop preserves holes in the captured silhouette.
+            if (burnWidth > 0) {
+              c.save(); c.globalAlpha = strength;
+              c.filter = `blur(${Math.min(3, burnWidth * .16) * windows.density}px)`;
+              bandPath(burnWidth * 1.45); c.fillStyle = '#8d2a0c'; c.fill();
+              c.filter = 'none';
+              bandPath(burnWidth * .85); c.fillStyle = '#d9510c'; c.fill();
+              bandPath(burnWidth * .48); c.fillStyle = '#ff942c'; c.fill();
+              bandPath(burnWidth * .2); c.fillStyle = '#ffd27c'; c.fill();
+              c.restore();
+            }
+            for (let i = 0; i < 180; i++) {
+              const x = region.x + noise(i * 3) * region.width;
+              const y = burnY(x) + noise(i * 3 + 1) * burnWidth;
+              const r = 1 + noise(i * 3 + 2) * burnWidth * .6;
+              const heat = c.createRadialGradient(x, y, 0, x, y, r);
+              heat.addColorStop(0, `rgba(255,222,145,${strength * .5})`);
+              heat.addColorStop(.3, `rgba(247,92,15,${strength * .4})`);
+              heat.addColorStop(1, 'rgba(100,20,0,0)');
+              c.fillStyle = heat; c.fillRect(x - r, y - r, r * 2, r * 2);
+            }
+            }
+            c.setTransform(matrix);
+            // Tint a copy of the subject once. Sampling small patches means transparent
+            // gaps cannot emit particles, without reading pixels back from the canvas.
+            tint.drawImage(source, 0, 0); tint.globalCompositeOperation = 'source-in';
+            tint.fillStyle = '#ffd49a'; tint.fillRect(0, 0, source.width, source.height);
+            c.globalCompositeOperation = 'source-over';
+            const flow = (phase === 'enter' ? q : 1 - q) * 3;
+            const power = Math.min(1, q * 12, (1 - q) * 12);
+            for (let i = 0; i < 240; i++) {
+              const x = region.x + noise(i * 7) * region.width;
+              const lifetime = linger * (.55 + .45 * noise(i + 5));
+              const period = lifetime * 1.4;
+              const offset = noise(i + 19) * period;
+              const born = linger ? Math.floor((frame.elapsed - offset) / period) * period + offset : 0;
+              const age = linger ? (frame.elapsed - born) / lifetime : (noise(i + 19) + flow * (.4 + noise(i + 5) * .6)) % 1;
+              const birthProgress = linger ? frame.progressAt(born) : q;
+              if (linger && (born < 0 || age >= 1 || birthProgress <= 0 || birthProgress >= 1)) continue;
+              const y = burnAt(x, birthProgress) + 2;
+              const size = 1 + noise(i + 9) * 3;
+              const sample = new DOMPoint(x, y).matrixTransform(matrix);
+              const dx = age * wind + Math.sin(age * 9 + i) * age * 16;
+              const dy = -age * (25 + noise(i + 11) * 100) - age * age * 25;
+              c.save(); c.globalAlpha = (linger ? 1 : power) * (1 - age) * (1 - age);
+              c.translate(x + dx, y + dy); c.rotate(i + age * 5);
+              c.filter = age > .6 || i % 3 === 0 ? 'grayscale(1) brightness(.5)' : 'none';
+              c.drawImage(tint.canvas, sample.x, sample.y, size * windows.density, size * windows.density, -size / 2, -size / 2, size, size);
+              c.restore();
+            }
+            return c.canvas.transferToImageBitmap();
+          },
+        };
+      },
+    };
+    return [Object.freeze({ [CRC_FILTER_EXECUTOR]: executor })];
+  }, linger);
+}

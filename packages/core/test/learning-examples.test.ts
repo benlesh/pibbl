@@ -1813,7 +1813,7 @@ describe("learning example catalog", () => {
         "useComputed",
         "useParticleSystem",
         "useSignal",
-        "useTransition",
+        "useAnimatedValue",
         "usePlayback",
         "useReaction",
         "parallel",

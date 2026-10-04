@@ -21,12 +21,12 @@ component-owned playback advances a program through the realm scheduler
 
 Definitions and programs are nominal, opaque, immutable values. They contain no
 component identity or independent clock. A program becomes stateful only when
-`usePlayback` or `useTransition` creates a run owned by a mounted hook slot.
+`usePlayback` or `useAnimatedValue` creates a run owned by a mounted hook slot.
 There is no free `play(program)` function.
 
 The root `@crc/core` entry exports the runtime values `easing`, `tween`,
 `keyframes`, `spring`, `defineAnimation`, `stepper`, `track`, `sequence`,
-`parallel`, `wait`, `marker`, `repeat`, `usePlayback`, and `useTransition`, plus
+`parallel`, `wait`, `marker`, `repeat`, `usePlayback`, and `useAnimatedValue`, plus
 their named public types. Private definition samplers, activation records,
 program records, playback controllers, scheduler drivers, and trace collectors
 are not public APIs.
@@ -231,7 +231,7 @@ shared-Commit rejection and are delivered exactly once.
 
 ## Update-driven transitions
 
-`useTransition(target, options)` returns one stable readonly signal. Spring
+`useAnimatedValue(target, options)` returns one stable readonly signal. Spring
 options are number-only; tween options are generic and use the same explicit
 interpolator rule. Both accept `initial`, `equals`, and `debugName`; equality
 defaults to `Object.is`.
@@ -290,7 +290,7 @@ directly at declared inputs:
 
 ```tsx
 function MovingCard() {
-  const x = useTransition(120, { type: "spring", initial: 0 });
+  const x = useAnimatedValue(120, { type: "spring", initial: 0 });
   return <Rectangle style={{ x, width: 48, height: 32 }} />;
 }
 ```
@@ -369,3 +369,30 @@ function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
   identical. Custom callbacks and nonserializable values stay on the main thread.
 - Applications select reduced or alternate motion; CRC does not infer
   accessibility preferences or decide which motion is essential.
+
+## Explicit visual visibility transitions
+
+`useVisibilityTransition` owns mount-time enter/exit effect definitions, material
+progress, a forward run clock, and request-scoped completion. Its binding captures
+one receiving primitive and descendants through `style.transition`; it preserves
+layout and input geometry. It does not retain removed content. The public API and
+custom callback contract are documented in
+[useVisibilityTransition](../site/api/hooks/use-visibility-transition.md).
+
+- Reversals retain every earlier progress segment in the current run. History
+  anchors enter Begin with playback commands and include the hold from the last
+  committed sample until command admission. A fresh inactive run resets history.
+- Zero material duration still commits the requested endpoint. Each direction's
+  configured tail delays completion independently; `finish()` skips the tail.
+- A new request cancels the preceding pending request. Owner teardown settles
+  pending requests as disposed and cancels queued history and playback work.
+  Render failure uses the same normal owner teardown path.
+- A binding cannot cross CRC roots or attach to simultaneous receivers. A keyed
+  receiver replacement within the same render instance is allowed; independent
+  managed Layer generations never imply that another receiver was removed.
+- Transforms, clips, ordinary filters, nested transition captures, and managed
+  Layers preserve existing composition order and filter executor restrictions.
+
+Executable regression evidence lives in
+`packages/core/test/visibility-transition-lifecycle.test.tsx` and
+`packages/core/test/visibility-transition.test.tsx`.

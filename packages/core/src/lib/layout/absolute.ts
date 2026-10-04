@@ -235,7 +235,7 @@ export function prepareDirectChildStyle(
   const normalized = definition?.normalizeStyle ?
       definition.normalizeStyle(withoutSystemFilter(style)) :
       withoutSystemFilter(style);
-  const final = filter === undefined ? normalized : { ...normalized, filter };
+  const final = { ...normalized, ...(filter === undefined ? {} : { filter }), ...(style.transition === undefined ? {} : { transition: (style as Readonly<SystemStyle>).transition }) };
   if (prepared instanceof ResponsiveStylePreparation) {
     prepared.style = final;
     return prepared;

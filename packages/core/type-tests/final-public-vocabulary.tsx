@@ -20,7 +20,7 @@ import {
   useRef,
   useSignal,
   useSvgPath,
-  useTransition,
+  useAnimatedValue,
   definePrimitive,
   defineAnimation,
   easing,
@@ -79,10 +79,10 @@ import {
   type CRCReactionOptions,
   type RectStyle,
   type CRCSpringOptions,
-  type CRCSpringTransitionOptions,
+  type CRCSpringAnimatedValueOptions,
   type CRCStepperOptions,
   type CRCTweenOptions,
-  type CRCTweenTransitionOptions,
+  type CRCTweenAnimatedValueOptions,
   type Signal,
   type SignalEquals,
   type SignalOptions,
@@ -123,7 +123,7 @@ const importedFinalVocabulary = {
   useRef,
   useSignal,
   useSvgPath,
-  useTransition,
+  useAnimatedValue,
   definePrimitive,
   defineAnimation,
   easing,
@@ -431,17 +431,17 @@ const stepperOptions: CRCStepperOptions<{ value: number }, number> = {
 const playbackOptions: CRCPlaybackOptions = { autoplay: false };
 const playbackStatus: CRCPlaybackStatus = 'idle';
 const playbackEvent = null as CRCPlaybackEvent | null;
-const tweenTransitionOptions: CRCTweenTransitionOptions<{ x: number }> = {
+const tweenTransitionOptions: CRCTweenAnimatedValueOptions<{ x: number }> = {
   type: 'tween',
   duration: 100,
   interpolate: objectInterpolator,
 };
-const springTransitionOptions: CRCSpringTransitionOptions = { type: 'spring' };
+const springTransitionOptions: CRCSpringAnimatedValueOptions = { type: 'spring' };
 
 function AnimationHookScene(): CRCNode {
   const player: CRCPlayback = usePlayback(animationProgram, playbackOptions);
-  const tweened = useTransition({ x: 10 }, tweenTransitionOptions);
-  const sprung = useTransition(10, springTransitionOptions);
+  const tweened = useAnimatedValue({ x: 10 }, tweenTransitionOptions);
+  const sprung = useAnimatedValue(10, springTransitionOptions);
   return <Text>{`${player.status.get()}:${tweened.get().x}:${sprung.get()}`}</Text>;
 }
 

@@ -1853,7 +1853,7 @@ const animationLabMetadata: ScenarioMetadata = {
   category: "Rendering",
   apiTags: [
     "usePlayback",
-    "useTransition",
+    "useAnimatedValue",
     "tween",
     "spring",
     "stepper",

@@ -359,7 +359,7 @@ analytic springs, custom seekable definitions, and fixed-step stateful
 steppers. Immutable programs compose `track`, `sequence`, `parallel`, `wait`,
 `marker`, and `repeat`; whole-run writer leases reject ambiguous writers unless
 replacement is explicit. `usePlayback` owns stable controls/status/current time
-for one mounted hook slot, while `useTransition` provides explicit target-driven
+for one mounted hook slot, while `useAnimatedValue` provides explicit target-driven
 spring and tween values. Signals may flow directly into declared CRC style and
 component inputs; `.get()` remains the way to make the enclosing component the
 consumer.

@@ -65,6 +65,17 @@ const expected = [
   "definePrimitive",
   "defineRenderLayer",
   "defineTexture",
+  "defineTransition",
+  "useVisibilityTransition",
+  "fade",
+  "bifrost",
+  "embers",
+  "hologram",
+  "slide",
+  "zoom",
+  "wipe",
+  "blurReveal",
+  "dissolve",
   "easing",
   "flattenPath",
   "simplifyPath",
@@ -104,7 +115,7 @@ const expected = [
   "useRef",
   "useSignal",
   "useSvgPath",
-  "useTransition",
+  "useAnimatedValue",
   "useTexture",
   "wait",
   "warpPath",
@@ -208,9 +219,9 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 91) {
+if (actual.length !== 102) {
   throw new Error(
-    `Expected 91 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected 102 @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 

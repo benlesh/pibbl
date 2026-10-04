@@ -1,6 +1,6 @@
 import {
   usePlayback,
-  useTransition,
+  useAnimatedValue,
   Group,
   Layer,
   marker,
@@ -207,7 +207,7 @@ function AnimationOwner({ model }: { readonly model: AnimationLabModel }) {
       model.publish?.();
     },
   });
-  const presentedScale = useTransition(model.transitionTarget.get(), {
+  const presentedScale = useAnimatedValue(model.transitionTarget.get(), {
     type: 'tween',
     duration: 120,
     initial: 1,

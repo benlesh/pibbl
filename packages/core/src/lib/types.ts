@@ -40,6 +40,7 @@ export type {
 } from "./element/types.js";
 
 export interface SystemStyle {
+  transition?: import("./transitions/binding.js").CRCTransitionBinding;
   custom?: unknown;
   filter?: CRCFilter | readonly CRCFilter[];
 }

@@ -1021,7 +1021,7 @@ const drafts = [
       "Compose immutable animation definitions into one component-owned program whose committed signal values enter ordinary styles explicitly.",
     api: [
       "useSignal",
-      "useTransition",
+      "useAnimatedValue",
       "usePlayback",
       "parallel",
       "sequence",

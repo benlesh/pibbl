@@ -31,7 +31,7 @@ import {
   useComputed,
   usePlayback,
   useSignal,
-  useTransition,
+  useAnimatedValue,
   definePrimitive,
   isSignal,
   marker,
@@ -161,7 +161,7 @@ function AnimatedLabel(): CRCNode {
     track(x, spring({ to: 0 })),
   );
   const player = usePlayback(program);
-  const transitioned = useTransition(x.get(), {
+  const transitioned = useAnimatedValue(x.get(), {
     type: 'tween',
     duration: 80,
   });

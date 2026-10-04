@@ -21,7 +21,7 @@ CRC drawing components accept signals directly at declared inputs:
 
 ```tsx
 function Card({ targetX }: { targetX: number }) {
-  const x = useTransition(targetX, {
+  const x = useAnimatedValue(targetX, {
     type: "spring",
     initial: 0,
   });

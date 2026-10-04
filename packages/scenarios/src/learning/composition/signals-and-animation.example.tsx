@@ -2,7 +2,7 @@ import {
   crc,
   usePlayback,
   useSignal,
-  useTransition,
+  useAnimatedValue,
   FocusManagement,
   Group,
   marker,
@@ -26,7 +26,7 @@ function AnimatedCard() {
   });
   const targetScale = useSignal(1);
   const message = useSignal("CLICK OR PRESS ENTER");
-  const presentedScale = useTransition(targetScale.get(), {
+  const presentedScale = useAnimatedValue(targetScale.get(), {
     type: "spring",
     stiffness: 240,
     damping: 22,

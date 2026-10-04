@@ -7277,7 +7277,7 @@
           "id": "c0068",
           "kind": "prose",
           "section": "First-class signal integration",
-          "text": "`useSignal(initialValue, options?)` returns one writable signal created for the mounted hook slot. The initial value, equality function, and debug name are mount-only. Explicit `get()` reads subscribe the evaluating component. Removal detaches that owner; a retained signal remains readable and writable but cannot schedule the removed owner. Focused `use-signal`, signal graph, component-consumer, scheduler, Layer, and error-isolation suites cover these rules. `usePlayback(program, options?)` and `useTransition(target, options)` are ordered render-only hook slots. The first returns a stable component-owned handle; the second returns a stable readonly signal backed by private playback. Only successful renders adopt candidates or queue autoplay, entrance, and retarget work. Teardown releases registrations, writer leases, evaluator and stepper state, queued commands and milestones, and live callbacks exactly once; stale controls and retained transition results cannot schedule a replacement identity. All commands enter the shared realm scheduler, outputs/status/time publish in one Commit, and specialized behavior lives in the [animation contract](./animation-contract.md)."
+          "text": "`useSignal(initialValue, options?)` returns one writable signal created for the mounted hook slot. The initial value, equality function, and debug name are mount-only. Explicit `get()` reads subscribe the evaluating component. Removal detaches that owner; a retained signal remains readable and writable but cannot schedule the removed owner. Focused `use-signal`, signal graph, component-consumer, scheduler, Layer, and error-isolation suites cover these rules. `usePlayback(program, options?)` and `useAnimatedValue(target, options)` are ordered render-only hook slots. The first returns a stable component-owned handle; the second returns a stable readonly signal backed by private playback. Only successful renders adopt candidates or queue autoplay, entrance, and retarget work. Teardown releases registrations, writer leases, evaluator and stepper state, queued commands and milestones, and live callbacks exactly once; stale controls and retained transition results cannot schedule a replacement identity. All commands enter the shared realm scheduler, outputs/status/time publish in one Commit, and specialized behavior lives in the [animation contract](./animation-contract.md)."
         },
         {
           "id": "c0069",
@@ -11504,7 +11504,7 @@
       "id": "design-runtime-hooks-contract-signal-hook-addition",
       "path": "docs/design/runtime-hooks-contract.md",
       "currentIds": ["c0068"],
-      "reason": "first-class-signals-and-scheduler units g0050 g0055 g0056 g0063 g0120 g0121 g0122 g0126 g0128 g0138 g0213 authorize c0068 as the mounted useSignal, usePlayback, and useTransition component-hook contract with successful adoption, shared Commit, live callbacks, and exact teardown. Reviewed Task 5 remapping retains current units c0070. Current snapshot units c0068 are the mechanically remapped exact clauses.",
+      "reason": "first-class-signals-and-scheduler units g0050 g0055 g0056 g0063 g0120 g0121 g0122 g0126 g0128 g0138 g0213 authorize c0068 as the mounted useSignal, usePlayback, and useAnimatedValue component-hook contract with successful adoption, shared Commit, live callbacks, and exact teardown. Reviewed Task 5 remapping retains current units c0070. Current snapshot units c0068 are the mechanically remapped exact clauses.",
       "approval": {
         "recordId": "first-class-signals-and-scheduler",
         "unitIds": [
@@ -12720,7 +12720,7 @@
       },
       "source": {
         "path": "packages/core/src/lib/events/dispatch.ts",
-        "marker": "function dispatchMouseTransition("
+        "marker": "function dispatchMouseAnimatedValue("
       },
       "test": {
         "path": "packages/core/src/lib/events/mouse-dispatch.test.ts",

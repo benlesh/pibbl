@@ -107,7 +107,7 @@ describe('first-class animation public scenarios', () => {
       section: 'composition',
       api: [
         'useSignal',
-        'useTransition',
+        'useAnimatedValue',
         'usePlayback',
         'parallel',
         'sequence',

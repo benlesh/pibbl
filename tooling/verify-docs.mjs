@@ -198,7 +198,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-ref.md",
   "docs/site/api/hooks/use-signal.md",
   "docs/site/api/hooks/use-svg-path.md",
-  "docs/site/api/hooks/use-transition.md",
+  "docs/site/api/hooks/use-animated-value.md",
   "docs/site/api/types/canvas-runtime.md",
   "docs/site/api/types/elements-components.md",
   "docs/site/api/types/events.md",

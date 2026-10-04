@@ -6,8 +6,8 @@ import { spring, tween } from '../animation/definition.js';
 import { track } from '../animation/program.js';
 import type {
   CRCAnimationProgram,
-  CRCSpringTransitionOptions,
-  CRCTweenTransitionOptions,
+  CRCSpringAnimatedValueOptions,
+  CRCTweenAnimatedValueOptions,
 } from '../animation/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import {
@@ -27,17 +27,17 @@ import type { CRCComponentRefs, CRCInstance } from '../types.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
 
 type CRCTransitionOptions<T> =
-  | CRCTweenTransitionOptions<T>
-  | CRCSpringTransitionOptions;
+  | CRCTweenAnimatedValueOptions<T>
+  | CRCSpringAnimatedValueOptions;
 
 type CRCTransitionOptionsInput<T> =
   | {
-      readonly [K in keyof CRCTweenTransitionOptions<T>]:
-        SignalValue<CRCTweenTransitionOptions<T>[K]>;
+      readonly [K in keyof CRCTweenAnimatedValueOptions<T>]:
+        SignalValue<CRCTweenAnimatedValueOptions<T>[K]>;
     }
   | {
-      readonly [K in keyof CRCSpringTransitionOptions]:
-        SignalValue<CRCSpringTransitionOptions[K]>;
+      readonly [K in keyof CRCSpringAnimatedValueOptions]:
+        SignalValue<CRCSpringAnimatedValueOptions[K]>;
     };
 
 interface CRCTransitionCandidate<T> {
@@ -148,21 +148,21 @@ function isCurrentSlot<T>(slot: CRCTransitionHookSlot<T>): boolean {
     slot.crcInstance.refs.get(slot.componentRefs.id) === slot.componentRefs;
 }
 
-export function useTransition(
+export function useAnimatedValue(
   target: SignalValue<number>,
   options: SignalValue<{
-    readonly [K in keyof CRCSpringTransitionOptions]:
-      SignalValue<CRCSpringTransitionOptions[K]>;
+    readonly [K in keyof CRCSpringAnimatedValueOptions]:
+      SignalValue<CRCSpringAnimatedValueOptions[K]>;
   }>,
 ): Signal<number>;
-export function useTransition<T>(
+export function useAnimatedValue<T>(
   target: SignalValue<T>,
   options: SignalValue<{
-    readonly [K in keyof CRCTweenTransitionOptions<T>]:
-      SignalValue<CRCTweenTransitionOptions<T>[K]>;
+    readonly [K in keyof CRCTweenAnimatedValueOptions<T>]:
+      SignalValue<CRCTweenAnimatedValueOptions<T>[K]>;
   }>,
 ): Signal<T>;
-export function useTransition<T>(
+export function useAnimatedValue<T>(
   targetInput: SignalValue<T>,
   optionsInput: SignalValue<CRCTransitionOptionsInput<T>>,
 ): Signal<T> {
@@ -200,7 +200,7 @@ export function useTransition<T>(
     !Object.is(previousProvisionalValue, candidate.initial);
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) {
-    throw new Error('useTransition requires an active CRC render transaction.');
+    throw new Error('useAnimatedValue requires an active CRC render transaction.');
   }
   if (hasProvisionalValue) {
     provisionSignalValueForRender(slot.output, candidate.initial, transaction);

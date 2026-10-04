@@ -9,7 +9,7 @@ export * from "@crc/physics/3d/geometry";
 export { computed, useSignal, isSignal, signal, untracked } from "@crc/core";
 export {
   usePlayback,
-  useTransition,
+  useAnimatedValue,
   defineAnimation,
   easing,
   keyframes,
