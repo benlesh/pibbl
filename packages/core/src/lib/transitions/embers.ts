@@ -1,6 +1,8 @@
+import { emberSimulation, resolveEmbersPhysics, type CRCEmbersPhysicsOptions } from './embers-physics.js';
 import { lazyTransitionKernel } from './wasm/kernel.js';
 import { bytes } from './wasm/embers-bytes.js';
 const createKernel = lazyTransitionKernel(bytes, 2);
+const createPhysicsKernel = lazyTransitionKernel(bytes, 4);
 import { opacity } from '../../filters/native.js';
 import { filterBoundaryExecutor, type CustomPreparedFilter } from '../../filters/filter-executor.js';
 import { GLOBAL_STATE } from '../global-state.js';
@@ -19,6 +21,8 @@ export interface CRCEmbersOptions {
   readonly seed?: number;
   /** Maximum airborne particle lifetime in milliseconds; completion includes this tail. Default 700. */
   readonly linger?: number;
+  /** Opt-in local force simulation and collision. Requires a positive linger. */
+  readonly physics?: CRCEmbersPhysicsOptions;
 }
 const SCRATCH = Symbol('crc.transition.embers');
 class EmberSurfaces {
@@ -57,8 +61,10 @@ export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
     if (!Number.isFinite(value)) throw new RangeError(`embers ${name} must be finite.`);
   }
   if (!(region.width > 0 && region.height > 0) || charDepth < 0 || burnWidth < 0 || linger < 0) throw new RangeError('embers requires a positive region and nonnegative charDepth/burnWidth/linger.');
-  const kernel = createKernel(seed);
-  return defineTransitionEffect((q, phase, frame) => {
+  const physics = options.physics === undefined ? undefined : resolveEmbersPhysics(options.physics);
+  if (physics && linger === 0) throw new RangeError('Ember physics requires a positive linger.');
+  const sampler = (kernel: ReturnType<typeof createKernel>, simulation?: ReturnType<typeof emberSimulation>): import('./fade.js').TransitionSampler => (q, phase, frame) => {
+    if (simulation?.disposed) return [opacity({ amount: 0 })];
     if ((!frame.active || !linger) && q === 1) return [];
     if ((!frame.active || !linger) && q === 0) return [opacity({ amount: 0 })];
     const executor: CRCFilterExecutor = {
@@ -83,6 +89,7 @@ export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
             // The controller remains the source of truth for reversal history.
             if (linger) for (let i = 0; i < 1200; i++) values[11166 + i] = frame.progressAt(values[12366 + i]!);
             exports.sample!(q, phase === 'enter' ? 1 : 0, frame.elapsed, linger, wind, burnWidth, region.x, region.y, region.width, region.height, segments);
+            simulation?.present();
             const bandPath = (depth: number) => {
               c.beginPath();
               for (let i = 0; i <= segments; i++) c.lineTo(values[i * 2]!, values[i * 2 + 1]!);
@@ -164,5 +171,10 @@ export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
       },
     };
     return [Object.freeze({ [CRC_FILTER_EXECUTOR]: executor })];
-  }, linger);
+  };
+  return defineTransitionEffect(sampler(createKernel(seed)), linger, physics ? () => {
+    const kernel = createPhysicsKernel(seed);
+    const simulation = emberSimulation(kernel, physics, region, linger, burnWidth);
+    return { sample: sampler(kernel, simulation), advance: simulation.advance, reset: simulation.reset, dispose: simulation.dispose };
+  } : undefined);
 }

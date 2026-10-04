@@ -182,7 +182,7 @@ stale-result rejection, lifecycle, and main-thread fallback remain
 observationally identical.
 
 Particle `acceleration`, `gravity`, `drag`, and related modules from
-`@crc/particles` are closed population-domain descriptors. They tell a particle
+`@crc/core/particles` are closed population-domain descriptors. They tell a particle
 executor how each emitted member moves; they are not a new general animation
 system. Continue to drive component transforms, cameras, materials, lights,
 and ordinary application values with signals and the animation definitions

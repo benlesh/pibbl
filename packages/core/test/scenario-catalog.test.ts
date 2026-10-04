@@ -958,6 +958,17 @@ describe('scenario catalog trust gate', () => {
       await controller.settled();
       expect(definition.formatState(controller.getState()).length).toBeGreaterThan(0);
       for (const action of entry.actions) {
+        // Each action starts from reset state; establish only its required setup.
+        if (entry.metadata.id === 'viz-hover-lab' && /^async-(resolve|reject)-/.test(action.id)) {
+          await controller.perform(`async-start-${action.id.endsWith('old') ? 'old' : 'new'}`);
+          await controller.settled();
+        }
+        if (entry.metadata.id === 'agent-targeting-verification' && action.id === 'scene-page-next') {
+          await controller.perform('pagination-scene');
+          await controller.settled();
+          await controller.perform('scene-page-first');
+          await controller.settled();
+        }
         await controller.perform(action.id);
         await controller.settled();
         expect(definition.formatState(controller.getState()).length).toBeGreaterThan(0);

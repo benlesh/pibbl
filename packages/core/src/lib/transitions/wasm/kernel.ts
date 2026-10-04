@@ -3,7 +3,7 @@ export function lazyTransitionKernel(bytes: string, pages = 1) {
   let compiled: WebAssembly.Module | undefined;
   return (seed: number) => {
     let state: { exports: Record<string, (...args: number[]) => void>; values: Float64Array } | undefined;
-    return () => {
+    const get = () => {
       if (!state) {
         compiled ??= new WebAssembly.Module(Uint8Array.from(atob(bytes), c => c.charCodeAt(0)));
         const memory = new WebAssembly.Memory({ initial: pages, maximum: pages });
@@ -14,5 +14,6 @@ export function lazyTransitionKernel(bytes: string, pages = 1) {
       }
       return state;
     };
+    return Object.assign(get, { dispose() { state = undefined; } });
   };
 }

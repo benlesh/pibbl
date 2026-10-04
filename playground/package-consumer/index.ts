@@ -125,8 +125,8 @@ import type {
   WritableSignal,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
-import * as ParticleRuntime from '@crc/particles';
-import type * as ParticleTypes from '@crc/particles';
+import * as ParticleRuntime from '@crc/core/particles';
+import type * as ParticleTypes from '@crc/core/particles';
 import * as ThreeRuntime from '@crc/three';
 import {
   defineThreeLayer,
@@ -147,9 +147,9 @@ import {
   type CRCParticleParameterValues,
   type CRCParticleSystem,
   type Particles2DProps,
-} from '@crc/particles';
-import * as Physics3DGeometry from '@crc/physics/3d/geometry';
-import type * as Physics3DGeometryTypes from '@crc/physics/3d/geometry';
+} from '@crc/core/particles';
+import * as Physics3DGeometry from '@crc/core/physics/3d/geometry';
+import type * as Physics3DGeometryTypes from '@crc/core/physics/3d/geometry';
 import {
   createBackendToken,
   defineBackendPrimitive,
@@ -222,6 +222,7 @@ import {
   useAnimatedValue,
   useReaction,
   createElement,
+  HtmlBox,
   defineAnimation,
   definePrimitive,
   defineRenderLayer,
@@ -1718,3 +1719,25 @@ const bendGuide = new PathGeometry(); bendGuide.moveTo(0, 0); bendGuide.quadrati
 const bentArc: PathGeometry = bendPathAlongArc(editableOutline, bendArcOptions);
 const bentPath: PathGeometry = bendPathAlongPath(editableOutline, bendGuide, bendOptions);
 void [toSvgPathData(bentArc), toSvgPathData(bentPath)];
+
+
+// HtmlBox preserves the application's generic payload across mount and update.
+const htmlMount: import('@crc/core').HtmlMountCallback<{ label: string }> = (element, initial, abort) => {
+  element.textContent = initial.label;
+  element.addEventListener('click', () => undefined, { signal: abort });
+  return next => { element.textContent = next.label; };
+};
+createElement(HtmlBox, { data: { label: 'native' }, mount: htmlMount, style: { width: 120, height: 40, rotationDegrees: 5 } });
+// @ts-expect-error payload and mount callback types must agree
+createElement(HtmlBox<{ label: string }>, { data: { label: 42 }, mount: htmlMount });
+const htmlConfig: CRCConfig = { viewport: 'responsive', htmlOverlay: undefined };
+void htmlConfig;
+
+// Ember physics stays opt-in and uses receiver-local swept point collisions.
+import { embers as physicsEmbers, type CRCEmbersPhysicsOptions, type CRCEmberCollision } from '@crc/core';
+const emberHit: CRCEmberCollision = {fraction:.5,normal:[0,-1]};
+const emberPhysicsOptions: CRCEmbersPhysicsOptions = {gravity:[0,500],wind:[20,0],drag:3,restitution:.5,collide:()=>emberHit};
+void physicsEmbers({region:{x:0,y:0,width:100,height:100},linger:1000,physics:emberPhysicsOptions});
+// @ts-expect-error collision callbacks must return a hit synchronously
+const asyncEmberPhysics: CRCEmbersPhysicsOptions = {collide:async()=>emberHit};
+void asyncEmberPhysics;

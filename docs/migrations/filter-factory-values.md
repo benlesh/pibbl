@@ -38,7 +38,7 @@ Use the new optional displacement effect only with a mounted texture paint:
 ```tsx
 import { Group, useTexture } from "@crc/core";
 import { displacement } from "@crc/core/filters";
-import { waterWaves } from "@crc/textures";
+import { waterWaves } from "@crc/core/textures";
 
 const water = useTexture(waterWaves({ speed: 0.7 }));
 const map = water.paint({ mode: "repeat", tileWidth: 96, tileHeight: 96 });

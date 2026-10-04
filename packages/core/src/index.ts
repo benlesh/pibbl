@@ -1,3 +1,4 @@
+export { transformPath, composeTransforms, affineTransform, quadTransform, envelopeTransform, type PathTransform, type PathPoint, type PathRect, type TransformPathOptions, type QuadTransformOptions, type EnvelopeTransformOptions, type EnvelopeGuide, type PathGuide, type PathGuideOptions, type PathGuideStation } from './lib/geometry/path-transforms.js';
 export { warpPath, type PathWarpPoint, type PathWarpRect, type PathWarpCorners, type PathWarpMode, type WarpPathOptions } from './lib/geometry/path-warp.js';
 export {
   bendPathAlongArc,
@@ -367,6 +368,9 @@ export type {
 export { defineTexture, useTexture } from './lib/textures/texture.js';
 export type { Texture, TexturePaint, TextureRecipe, TextureDefinition, TextureOptions, TexturePlacement, TextureContext, TextureFrame } from './lib/textures/texture.js';
 
+export { HtmlBox } from './lib/components/html-box.js';
+export type { HtmlBoxProps, HtmlBoxStyle, HtmlMountCallback, HtmlUpdateFunction, HtmlBoxFocusState } from './lib/html/types.js';
+
 export { fade } from './lib/transitions/fade.js';
 export type { CRCTransitionEffect } from './lib/transitions/fade.js';
 export type { CRCTransitionBinding } from './lib/transitions/binding.js';
@@ -386,3 +390,5 @@ export type { CRCSlideOptions, CRCZoomOptions, CRCWipeOptions, CRCBlurRevealOpti
 
 export { defineTransition } from './lib/transitions/define-transition.js';
 export type { CRCTransitionDefinition, CRCTransitionRenderFrame } from './lib/transitions/define-transition.js';
+
+export type { CRCEmbersPhysicsOptions, CRCEmberCollision } from './lib/transitions/embers-physics.js';

@@ -3,10 +3,10 @@
 Status: implemented, 2026-10-01.
 
 CRC texture production is authored through `defineTexture()` and mounted through
-`useTexture()` from `@crc/core`. `@crc/textures` is an optional package of
+`useTexture()` from `@crc/core`. `@crc/core/textures` is an optional entry of
 recipes and existing texture components; it has no scheduler of its own and
 does not import the core friend entry. Creating a recipe or importing either
-package is inert. A mounted `useTexture` hook owns the live resource.
+entry is inert. A mounted `useTexture` hook owns the live resource.
 
 ```ts
 const recipe = defineTexture({
@@ -80,8 +80,10 @@ its own derived upload keyed to the resource/revision.
 `displacement()` from `@crc/core/filters` accepts a texture `map`, a finite
 nonnegative logical `strength`, and a finite positive logical `region`. Red and
 green encode signed horizontal and vertical offsets, alpha weights the offset,
-and blue is ignored. Map placement is evaluated in the documented logical
-region, including repeat/stretch, offsets, and rotation. A strength of zero
+and blue is ignored unless optional `blurRadius` is positive. Blue times alpha
+then scales a local mip-filtered 5×5 binomial blur support radius, in logical units; it is
+not Gaussian sigma. The source influence includes displacement plus blur support. Map placement is evaluated in the documented logical
+region, including repeat/stretch, offsets, and rotation. When strength and blur radius are both zero, the filter
 still validates map ownership, liveness, and placement, but does not borrow a
 raster or create GPU resources.
 
@@ -91,7 +93,7 @@ or shader failures. It does not currently promise context-loss recovery,
 per-revision upload caching, cross-context sharing, or a generic public texture
 consumer protocol.
 
-`waterWaves()` in `@crc/textures` is an optional numeric RG displacement-map
+`waterWaves()` in `@crc/core/textures` is an optional numeric RG displacement-map
 recipe. It produces periodic integer-wave fields, accepts finite nonnegative
 speed and integer scale 1 through 32, rejects palettes, and supports `pause`
 and `reset` messages. Pausing, reset, and speed changes discard elapsed-time
@@ -138,7 +140,7 @@ ownership/messages, and selected-kernel tree shaking in source and packed builds
 ## Existing texture components
 
 `ReactionDiffusion`, `ProceduralTexture`, `TextureRenderer`, and
-`texturePalettes` remain public `@crc/textures` exports. Each mounted legacy
+`texturePalettes` remain public `@crc/core/textures` exports. Each mounted legacy
 component owns an independent render-layer resource and source raster; it does
 not become a shared live `Texture` resource. Importing it is inert, and its
 render-layer lifecycle continues to own creation, resize, rendering, and
@@ -193,3 +195,26 @@ failure behavior, bounded publication-surface reuse, root validation, water
 timing/messages/seams, and texture/displacement ownership. Packed consumer
 checks cover public exports and source/packed feature selection. They do not
 constitute a context-loss or GPU-cache recovery guarantee.
+
+## Rain on glass
+
+`rainDrops()` produces a seeded height-derived displacement field with optional
+condensation encoded in blue. A fixed resolution owns reusable film, residual
+trail, height, grain, and image arrays. No scene pixels are read back. Advancing
+beads gather swept film, merge by volume, leave spatially seeded uneven residual
+water, and acquire gravity-driven and irregular lateral motion. Small beads
+cling. Film recovery and trail drying use exponential retention controlled by
+`trailPersistence`; pausing stops both. Pointer nudges use the same swept path
+operation even while paused. Reset repeats the seed and restores the film.
+The simulation bounds live beads to 256 and elapsed advancement to 50 ms with
+substeps no larger than 1/120 second. It is a stylized wet-glass effect, not an
+incompressible fluid solver. Scene blur is a separate optional displacement
+filter setting; zero blur preserves the former displacement-only behavior.
+
+Finger contact messages wipe swept capsules directly, including stationary
+presses on film without existing drops. Touched free beads and removed film/
+residual volume accumulate in one separately held bead. Held beads do not
+advance with gravity or participate in ordinary free-bead merging. Release
+returns the bead to the free simulation at rest; reset discards the contact.
+The bound is 256 free beads plus one transient held bead; a full-capacity release
+coalesces the closest free pair by volume before returning the held bead.

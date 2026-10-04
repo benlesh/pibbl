@@ -6,7 +6,7 @@ import {
   crcPhysicsBody2D,
   dynamicBody2D,
   type CRCPhysicsBodyHandle2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 import { expect, it } from "vitest";
 import {
   ManualSchedulerDriver,

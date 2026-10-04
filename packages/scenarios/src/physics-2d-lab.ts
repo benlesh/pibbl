@@ -8,7 +8,7 @@ import {
   teleportBody2D,
   type CRCPhysicsBodyHandle2D,
   type CRCPhysicsVector2,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 import {
   PHYSICS_2D_LAB_BODY_IDS,
   PHYSICS_2D_LAB_SOURCE_ID,

@@ -225,6 +225,26 @@
         {
           "path": "tooling/agent-verification/identity.mjs",
           "supports": "Loaded lab fingerprint covers runtime-check helpers and core manifest."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/browser.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/node.txt",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/declared-peers.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/installed-peers.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/targeting.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
         }
       ],
       "remaining": "",
@@ -233,8 +253,8 @@
         "schema": "crc-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **ENV-03:** Detect incompatible package versions or duplicate core runtimes; distinguish separate JavaScript realms and their independent schedulers.",
-        "reviewedAt": "2026-10-01",
-        "review": "Reviewed every clause of ENV-03 against explicit live binding comparison, checked targeting workflow, repository declarations and actual resolved consumer peer audit. Tests evaluate separately bundled real CRC graphs in one realm and different realms; browser tests use an actual iframe and public Canvas mount. Duplicate same-realm runtimes are refused, separate realms are identified as independent schedulers, and mismatched/unknown bindings never become empty-scene success. Standard semver checks diagnose installed incompatible peers, missing required peers and broken optional peers without executing packages. Physical duplicate installs are reported separately from live runtime duplication. The shared native lab retains a matching application/inspector handshake before actions. Installed resolution is explicitly Node require/default; live runtime evidence covers cooperating source browser participants. No global discovery, arbitrary-object attestation, or inference about unobserved custom-loader/worker graphs is claimed. A stale port-5196 fingerprint was correctly blocked, retained separately, and replaced by a passing run on a fresh verified port-5199 server.",
+        "reviewedAt": "2026-10-02",
+        "review": "Reviewed every clause of ENV-03 against explicit live binding comparison, checked targeting workflow, repository declarations and actual resolved consumer peer audit. Tests evaluate separately bundled real CRC graphs in one realm and different realms; browser tests use an actual iframe and public Canvas mount. Duplicate same-realm runtimes are refused, separate realms are identified as independent schedulers, and mismatched/unknown bindings never become empty-scene success. Standard semver checks diagnose installed incompatible peers, missing required peers and broken optional peers without executing packages. Physical duplicate installs are reported separately from live runtime duplication. The shared native lab retains a matching application/inspector handshake before actions. Installed resolution is explicitly Node require/default; live runtime evidence covers cooperating source browser participants. No global discovery, arbitrary-object attestation, or inference about unobserved custom-loader/worker graphs is claimed. A stale port-5196 fingerprint was correctly blocked, retained separately, and replaced by a passing run on a fresh verified port-5199 server. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
         "acceptance": [
           {
             "criterion": "Detect incompatible package versions using actual declared requirements and consumer resolution; unavailable evidence must not become compatible.",
@@ -243,12 +263,22 @@
               "tooling/agent-verification/installed-peers.mjs",
               "docs/strategy/agent-verification-evidence/env-03-installed-peers.json",
               "docs/strategy/agent-verification-evidence/env-03-declared-peers.json",
-              "docs/strategy/agent-verification-evidence/env-03-node.txt"
+              "docs/strategy/agent-verification-evidence/env-03-node.txt",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/declared-peers.json",
+              "docs/testing/package-consolidation-evidence/installed-peers.json",
+              "docs/testing/package-consolidation-evidence/targeting.json"
             ],
             "checkIds": [
               "node-tests",
               "installed-peers",
-              "declared-peers"
+              "declared-peers",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-declared-peers",
+              "consolidation-installed-peers",
+              "consolidation-targeting"
             ]
           },
           {
@@ -256,10 +286,20 @@
             "evidencePaths": [
               "tooling/agent-verification/runtime-identity.ts",
               "tooling/agent-verification/runtime-identity.test.mjs",
-              "docs/strategy/agent-verification-evidence/env-03-node.txt"
+              "docs/strategy/agent-verification-evidence/env-03-node.txt",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/declared-peers.json",
+              "docs/testing/package-consolidation-evidence/installed-peers.json",
+              "docs/testing/package-consolidation-evidence/targeting.json"
             ],
             "checkIds": [
-              "node-tests"
+              "node-tests",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-declared-peers",
+              "consolidation-installed-peers",
+              "consolidation-targeting"
             ]
           },
           {
@@ -268,11 +308,21 @@
               "tooling/agent-verification/runtime-identity.ts",
               "packages/core/test/agent-runtime-identity.test.ts",
               "docs/strategy/agent-verification-evidence/env-03-browser.json",
-              "docs/strategy/agent-verification-evidence/env-03-node.txt"
+              "docs/strategy/agent-verification-evidence/env-03-node.txt",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/declared-peers.json",
+              "docs/testing/package-consolidation-evidence/installed-peers.json",
+              "docs/testing/package-consolidation-evidence/targeting.json"
             ],
             "checkIds": [
               "browser-tests",
-              "node-tests"
+              "node-tests",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-declared-peers",
+              "consolidation-installed-peers",
+              "consolidation-targeting"
             ]
           },
           {
@@ -281,11 +331,21 @@
               "tooling/agent-verification/runtime-inspection.ts",
               "packages/scenarios/src/agent-targeting-verification.ts",
               "tooling/agent-verification/replay.mjs",
-              "docs/strategy/agent-verification-evidence/env-03-replay.json"
+              "docs/strategy/agent-verification-evidence/env-03-replay.json",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/declared-peers.json",
+              "docs/testing/package-consolidation-evidence/installed-peers.json",
+              "docs/testing/package-consolidation-evidence/targeting.json"
             ],
             "checkIds": [
               "browser-tests",
-              "native-replay"
+              "native-replay",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-declared-peers",
+              "consolidation-installed-peers",
+              "consolidation-targeting"
             ]
           }
         ],
@@ -324,6 +384,41 @@
             "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium",
             "result": "pass",
             "artifact": "docs/strategy/agent-verification-evidence/env-03-replay.json"
+          },
+          {
+            "id": "consolidation-browser",
+            "command": "corepack pnpm@11.21.0 exec vitest run packages/core/test/agent-runtime-identity.test.ts packages/core/test/agent-targeting-verification.test.ts packages/core/test/agent-targeting-pagination.test.tsx packages/core/test/agent-targeting-observation.test.tsx packages/core/test/agent-layout-workflow.test.ts packages/core/test/agent-layout-placement.test.tsx packages/core/test/agent-text-workflow.test.ts packages/core/test/agent-text-observation.test.ts packages/core/test/agent-signal-mutation.test.ts packages/core/test/agent-viz-missingness.test.ts packages/core/test/agent-viz-verification.test.ts packages/core/test/features/viz/hover-queries.test.tsx packages/core/test/features/viz/plot-series.test.tsx packages/core/src/lib/layout/absolute.test.ts --browser.headless --browser.ui=false --reporter=json --outputFile=docs/testing/package-consolidation-evidence/browser.json",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/browser.json"
+          },
+          {
+            "id": "consolidation-node",
+            "command": "node --test tooling/agent-verification/runtime-identity.test.mjs tooling/agent-verification/identity.test.mjs tooling/agent-verification/core-peer-compatibility.test.mjs tooling/agent-verification/installed-peers.test.mjs tooling/agent-verification/evidence-reader.test.mjs tooling/agent-verification/compare-evidence.test.mjs tooling/agent-verification/discover.test.mjs tooling/agent-verification/text-replay.test.mjs tooling/agent-verification/text-identity.test.mjs tooling/agent-verification/run-manifest.test.mjs tooling/agent-verification/tool-identity.test.mjs tooling/agent-verification/signal-mutation-identity.test.mjs tooling/agent-verification/required-checks.test.mjs tooling/agent-verification/recorded-check.test.mjs tooling/agent-verification/replay-outcome.test.mjs",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/node.txt"
+          },
+          {
+            "id": "consolidation-declared-peers",
+            "command": "node tooling/agent-verification/core-peer-compatibility.mjs",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/declared-peers.json"
+          },
+          {
+            "id": "consolidation-installed-peers",
+            "command": "node tooling/agent-verification/installed-peers.mjs",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/installed-peers.json"
+          },
+          {
+            "id": "consolidation-targeting",
+            "command": "node tooling/agent-verification/watchdog.mjs targeting http://127.0.0.1:5182/#/testing/agent-targeting-verification /tmp/crc-migration-targeting 60000",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/targeting.json"
           }
         ],
         "files": [
@@ -345,11 +440,11 @@
           },
           {
             "path": "tooling/agent-verification/core-peer-compatibility.mjs",
-            "sha256": "6e225d93e9930fb14d49b23bcff88ca17ca362651e378b84260ae376a5de3e2e"
+            "sha256": "6d9353473181dbcb0f5aa3e5367457632039f206f7ef30bfc772e3c1a4e0a80b"
           },
           {
             "path": "tooling/agent-verification/core-peer-compatibility.test.mjs",
-            "sha256": "6a920ea5fd66913560073c92c0179e381f010f13934e2927e5f9b20bc443a990"
+            "sha256": "8c961016d53dced03937dc14465e45cd6140520a5773e0c5fb4314e46e175e07"
           },
           {
             "path": "packages/scenarios/src/agent-targeting-verification.ts",
@@ -361,11 +456,11 @@
           },
           {
             "path": "tooling/agent-verification/installed-peers.mjs",
-            "sha256": "535f489f846bf709970c11255457eecdf3bbb43d6f7a21ec8b2fbec541070c06"
+            "sha256": "1da6d59804a2a40bf164837aafe12d09d4498c17bc31a4322c29a428f7ef95a0"
           },
           {
             "path": "tooling/agent-verification/installed-peers.test.mjs",
-            "sha256": "d508c4aebd7967d7e92fe7026b85a45a5af13b52cbf77a401b7ddadfc784e826"
+            "sha256": "5968c5f938dfbde7996ea867289c169280b58a3c6e7c85488ac6ce62322722ea"
           },
           {
             "path": "docs/strategy/agent-verification-evidence/env-03-installed-peers.json",
@@ -389,19 +484,39 @@
           },
           {
             "path": "packages/core/package.json",
-            "sha256": "6f241b89799d1b350a26ca658a17089a3cc58f2157e031209c91f840ddeb0f1e"
+            "sha256": "bafbfc955fd89813b39b8ee194f09da81d8155477d475ea0189f46c919418618"
           },
           {
             "path": "package.json",
-            "sha256": "3e8ffb815c786645d6833fe5ac2dd373e0d99d5a4ce480da699733ec8f3d4f57"
+            "sha256": "2ad1ff8838d23ff85f24c8c84765a95762b95e646120124896da5608fa1558a4"
           },
           {
             "path": "pnpm-lock.yaml",
-            "sha256": "fc2e2bf9ae67ccd14bb0805d6f21688641847c773cd256d567f1288c596d5f45"
+            "sha256": "f19c5e2c6da5548fc0190031a3994e92ca32aa044efd03b26371fcbb3609d5f8"
           },
           {
             "path": "tooling/agent-verification/identity.mjs",
-            "sha256": "ecd7e32e4aa3d9848238d525c2fb6e0f537cbb8a671185ec43ee3c836c90f096"
+            "sha256": "83dc90eaff2199dd9a6e9cc498e75ee649a0752bc29e1fd0b6df494dd4da8493"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/browser.json",
+            "sha256": "38c9e8565f5e9a74843dfcb84f5bff734cede1122cfbe7b48fb7918cfc8a8c72"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/node.txt",
+            "sha256": "a9e01e53be845273c21d1aae3cf759c67158e5ed7669dc839c8045890e308901"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/declared-peers.json",
+            "sha256": "be1bbf1ba6da7b0d50dd470e0911dc60239991543e2d284434906ee13663de68"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/installed-peers.json",
+            "sha256": "2498624e650160c880d1096eabc300502219f18785d3f505a893721c92d8d1c5"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/targeting.json",
+            "sha256": "6ad39d47f8767ecd6b438fa12af2e42a587638ff2b536bcaac30762ef02bf255"
           }
         ]
       }
@@ -607,7 +722,7 @@
     },
     {
       "id": "INT-05",
-      "requirement": "- INT-05: Distinguish user intent from runtime mechanics: \u201cselected customer A\u201d is an application assertion, not merely \u201cpointer handler ran.\u201d",
+      "requirement": "- INT-05: Distinguish user intent from runtime mechanics: “selected customer A” is an application assertion, not merely “pointer handler ran.”",
       "status": "partial",
       "evidence": [
         {
@@ -806,6 +921,18 @@
         {
           "path": "docs/strategy/agent-verification-evidence/layout-reader-cli.json",
           "supports": "Actual scalar projection from the saved native overlap report retains explicit absent attestation and returns failure policy, area 200 and delivered peer."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/browser.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/node.txt",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/targeting.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
         }
       ],
       "remaining": "",
@@ -814,8 +941,8 @@
         "schema": "crc-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **QRY-04:** Make pagination snapshot-consistent; cursors must not silently mix changing scene generations. Report cursor expiration and incomplete history.",
-        "reviewedAt": "2026-10-01",
-        "review": "Reviewed full QRY-04 wording against both supported pagination surfaces. Scene pages are copied immutable records from one bounded committed generation, with one retained expansion and explicit expiration on pending/render changes, query replacement, disposal or mount replacement; nested Layer changes are tested. Saved pages bind complete evidence content hash and collection/page size; changed bytes expire continuation. Final truncated scene pages preserve unknown total and a reason; saved checkpoints report prefix history, and final reports do not imply complete application history. Malformed, foreign, aliased and out-of-range scene cursors do not substitute fresh data. Native public-API scenario and replay verify the same manual actions. Bounded truncation is part of this contract; this closure does not promise unbounded traversal, nested payload pagination or a historical scene store. Re-reviewed after migrating the shared lab to runtime-checked inspection: 36 browser tests and the eight-action native replay passed; the preserved pagination contract is unchanged. Updated source and artifact fingerprints only after that verification. Saved reader schema/projection additions were re-reviewed on 2026-10-01. All existing snapshot-bound paging/expiry tests still pass within twenty reader tests; scene pagination code and its retained native/browser evidence are unchanged. New sourceSchema is additive and projection snapshots bind to exact saved bytes. Layout smoke schema support re-reviewed against all twenty-one reader tests and twelve comparator/discovery regressions. Existing pagination/expiry behavior remains passing; only reader and reader-test fingerprints refreshed. Live scene pagination did not change.",
+        "reviewedAt": "2026-10-02",
+        "review": "Reviewed full QRY-04 wording against both supported pagination surfaces. Scene pages are copied immutable records from one bounded committed generation, with one retained expansion and explicit expiration on pending/render changes, query replacement, disposal or mount replacement; nested Layer changes are tested. Saved pages bind complete evidence content hash and collection/page size; changed bytes expire continuation. Final truncated scene pages preserve unknown total and a reason; saved checkpoints report prefix history, and final reports do not imply complete application history. Malformed, foreign, aliased and out-of-range scene cursors do not substitute fresh data. Native public-API scenario and replay verify the same manual actions. Bounded truncation is part of this contract; this closure does not promise unbounded traversal, nested payload pagination or a historical scene store. Re-reviewed after migrating the shared lab to runtime-checked inspection: 36 browser tests and the eight-action native replay passed; the preserved pagination contract is unchanged. Updated source and artifact fingerprints only after that verification. Saved reader schema/projection additions were re-reviewed on 2026-10-01. All existing snapshot-bound paging/expiry tests still pass within twenty reader tests; scene pagination code and its retained native/browser evidence are unchanged. New sourceSchema is additive and projection snapshots bind to exact saved bytes. Layout smoke schema support re-reviewed against all twenty-one reader tests and twelve comparator/discovery regressions. Existing pagination/expiry behavior remains passing; only reader and reader-test fingerprints refreshed. Live scene pagination did not change. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
         "acceptance": [
           {
             "criterion": "Pagination must not silently mix changing scene generations.",
@@ -823,12 +950,18 @@
               "tooling/agent-verification/targeting.ts",
               "packages/core/test/agent-targeting-pagination.test.tsx",
               "docs/strategy/agent-verification-evidence/qry-04-browser-runtime-handshake.json",
-              "docs/strategy/agent-verification-evidence/qry-04-replay-runtime-handshake.json"
+              "docs/strategy/agent-verification-evidence/qry-04-replay-runtime-handshake.json",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/targeting.json"
             ],
             "checkIds": [
               "browser",
               "native",
-              "layout-reader-regression"
+              "layout-reader-regression",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-targeting"
             ]
           },
           {
@@ -837,11 +970,17 @@
               "tooling/agent-verification/evidence-reader.mjs",
               "tooling/agent-verification/evidence-reader.test.mjs",
               "docs/strategy/agent-verification-evidence/qry-04-reader.txt",
-              "docs/strategy/agent-verification-evidence/evidence-projection-node.txt"
+              "docs/strategy/agent-verification-evidence/evidence-projection-node.txt",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/targeting.json"
             ],
             "checkIds": [
               "reader",
-              "reader-projection-regression"
+              "reader-projection-regression",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-targeting"
             ]
           },
           {
@@ -852,13 +991,19 @@
               "docs/strategy/agent-verification-evidence/qry-04-browser-runtime-handshake.json",
               "docs/strategy/agent-verification-evidence/qry-04-reader.txt",
               "docs/strategy/agent-verification-evidence/qry-04-replay-runtime-handshake.json",
-              "docs/strategy/agent-verification-evidence/evidence-projection-node.txt"
+              "docs/strategy/agent-verification-evidence/evidence-projection-node.txt",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/targeting.json"
             ],
             "checkIds": [
               "browser",
               "reader",
               "native",
-              "reader-projection-regression"
+              "reader-projection-regression",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-targeting"
             ]
           }
         ],
@@ -897,6 +1042,27 @@
             "environment": "Node 24.15.0 / pnpm 11.21.0",
             "result": "pass",
             "artifact": "docs/strategy/agent-verification-evidence/layout-reader-node.txt"
+          },
+          {
+            "id": "consolidation-browser",
+            "command": "corepack pnpm@11.21.0 exec vitest run packages/core/test/agent-runtime-identity.test.ts packages/core/test/agent-targeting-verification.test.ts packages/core/test/agent-targeting-pagination.test.tsx packages/core/test/agent-targeting-observation.test.tsx packages/core/test/agent-layout-workflow.test.ts packages/core/test/agent-layout-placement.test.tsx packages/core/test/agent-text-workflow.test.ts packages/core/test/agent-text-observation.test.ts packages/core/test/agent-signal-mutation.test.ts packages/core/test/agent-viz-missingness.test.ts packages/core/test/agent-viz-verification.test.ts packages/core/test/features/viz/hover-queries.test.tsx packages/core/test/features/viz/plot-series.test.tsx packages/core/src/lib/layout/absolute.test.ts --browser.headless --browser.ui=false --reporter=json --outputFile=docs/testing/package-consolidation-evidence/browser.json",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/browser.json"
+          },
+          {
+            "id": "consolidation-node",
+            "command": "node --test tooling/agent-verification/runtime-identity.test.mjs tooling/agent-verification/identity.test.mjs tooling/agent-verification/core-peer-compatibility.test.mjs tooling/agent-verification/installed-peers.test.mjs tooling/agent-verification/evidence-reader.test.mjs tooling/agent-verification/compare-evidence.test.mjs tooling/agent-verification/discover.test.mjs tooling/agent-verification/text-replay.test.mjs tooling/agent-verification/text-identity.test.mjs tooling/agent-verification/run-manifest.test.mjs tooling/agent-verification/tool-identity.test.mjs tooling/agent-verification/signal-mutation-identity.test.mjs tooling/agent-verification/required-checks.test.mjs tooling/agent-verification/recorded-check.test.mjs tooling/agent-verification/replay-outcome.test.mjs",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/node.txt"
+          },
+          {
+            "id": "consolidation-targeting",
+            "command": "node tooling/agent-verification/watchdog.mjs targeting http://127.0.0.1:5182/#/testing/agent-targeting-verification /tmp/crc-migration-targeting 60000",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/targeting.json"
           }
         ],
         "files": [
@@ -954,7 +1120,7 @@
           },
           {
             "path": "tooling/agent-verification/identity.mjs",
-            "sha256": "ecd7e32e4aa3d9848238d525c2fb6e0f537cbb8a671185ec43ee3c836c90f096"
+            "sha256": "83dc90eaff2199dd9a6e9cc498e75ee649a0752bc29e1fd0b6df494dd4da8493"
           },
           {
             "path": "docs/strategy/agent-verification-evidence/evidence-projection-node.txt",
@@ -967,6 +1133,18 @@
           {
             "path": "docs/strategy/agent-verification-evidence/layout-reader-cli.json",
             "sha256": "733ccaeef4038c3e48d1745c222f6b31de601fd8f51013f0fbd816e3f2703c98"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/browser.json",
+            "sha256": "38c9e8565f5e9a74843dfcb84f5bff734cede1122cfbe7b48fb7918cfc8a8c72"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/node.txt",
+            "sha256": "a9e01e53be845273c21d1aae3cf759c67158e5ed7669dc839c8045890e308901"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/targeting.json",
+            "sha256": "6ad39d47f8767ecd6b438fa12af2e42a587638ff2b536bcaac30762ef02bf255"
           }
         ]
       }
@@ -1500,6 +1678,14 @@
         {
           "path": "tooling/agent-verification/layout-box-relations.mjs",
           "supports": "New declared-rectangle relation dependency keeps facts separate from explicit containment/separation assertions."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/browser.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/layout.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
         }
       ],
       "remaining": "",
@@ -1508,19 +1694,23 @@
         "schema": "crc-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **LAY-02:** Explain parent placement versus primitive-local drawing coordinates, including the difference between layout `left`/`top` and shape `x`/`y`.",
-        "reviewedAt": "2026-10-01",
-        "review": "Reviewed the entire LAY-02 wording. The public application declares parent left/top separately from Rectangle x/y; useLayoutBox reports a local allocation, not a root position or paint bound. Machine evidence includes the committed transform and converted shape center, while the explanation names the nested translation and scale. Independent browser assertions establish root centers, matrix, clip exclusion and actual pixels; native clicks prove the original offset can be intentionally allowed or repaired while allocation stays unchanged. Cancellation, publication failure and disposal withdraw current evidence and preserve historical snapshots. This closes the placement-explanation capability for the supported reference workflow, not general style-resolution tracing, all layout algorithm explanations, broad overlap diagnosis or served-build attestation. The native smoke explicitly lacks build attestation; the authoritative source browser tests provide direct current-code evidence. The unrelated material-lab catalog validation failure prevents an aggregate trust claim, not this placement result. Overlap-mode extension re-reviewed against twenty focused browser tests and fresh native regression. Existing placement/text/signal contracts remain unchanged; only affected fingerprints refreshed.",
+        "reviewedAt": "2026-10-02",
+        "review": "Reviewed the entire LAY-02 wording. The public application declares parent left/top separately from Rectangle x/y; useLayoutBox reports a local allocation, not a root position or paint bound. Machine evidence includes the committed transform and converted shape center, while the explanation names the nested translation and scale. Independent browser assertions establish root centers, matrix, clip exclusion and actual pixels; native clicks prove the original offset can be intentionally allowed or repaired while allocation stays unchanged. Cancellation, publication failure and disposal withdraw current evidence and preserve historical snapshots. This closes the placement-explanation capability for the supported reference workflow, not general style-resolution tracing, all layout algorithm explanations, broad overlap diagnosis or served-build attestation. The native smoke explicitly lacks build attestation; the authoritative source browser tests provide direct current-code evidence. The unrelated material-lab catalog validation failure prevents an aggregate trust claim, not this placement result. Overlap-mode extension re-reviewed against twenty focused browser tests and fresh native regression. Existing placement/text/signal contracts remain unchanged; only affected fingerprints refreshed. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
         "acceptance": [
           {
             "criterion": "Explain parent-relative left/top independently from primitive-local x/y and local allocation.",
             "evidencePaths": [
               "packages/scenarios/src/agent-layout-placement.example.tsx",
               "packages/scenarios/src/agent-layout-placement.ts",
-              "packages/core/test/agent-layout-placement.test.tsx"
+              "packages/core/test/agent-layout-placement.test.tsx",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/layout.json"
             ],
             "checkIds": [
               "layout-browser",
-              "overlap-native-regression"
+              "overlap-native-regression",
+              "consolidation-browser",
+              "consolidation-layout"
             ]
           },
           {
@@ -1529,11 +1719,15 @@
               "packages/core/test/agent-layout-placement.test.tsx",
               "packages/core/test/agent-layout-workflow.test.ts",
               "docs/strategy/agent-verification-evidence/layout-lifecycle-complete-browser.json",
-              "docs/strategy/agent-verification-evidence/layout-lifecycle-native.json"
+              "docs/strategy/agent-verification-evidence/layout-lifecycle-native.json",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/layout.json"
             ],
             "checkIds": [
               "layout-browser",
-              "layout-native"
+              "layout-native",
+              "consolidation-browser",
+              "consolidation-layout"
             ]
           },
           {
@@ -1541,10 +1735,14 @@
             "evidencePaths": [
               "packages/scenarios/src/agent-layout-placement.ts",
               "packages/core/test/agent-layout-workflow.test.ts",
-              "docs/strategy/agent-verification-evidence/layout-discovery.json"
+              "docs/strategy/agent-verification-evidence/layout-discovery.json",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/layout.json"
             ],
             "checkIds": [
-              "layout-browser"
+              "layout-browser",
+              "consolidation-browser",
+              "consolidation-layout"
             ]
           }
         ],
@@ -1569,12 +1767,26 @@
             "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio 5199",
             "result": "pass",
             "artifact": "docs/strategy/agent-verification-evidence/layout-overlap-native.json"
+          },
+          {
+            "id": "consolidation-browser",
+            "command": "corepack pnpm@11.21.0 exec vitest run packages/core/test/agent-runtime-identity.test.ts packages/core/test/agent-targeting-verification.test.ts packages/core/test/agent-targeting-pagination.test.tsx packages/core/test/agent-targeting-observation.test.tsx packages/core/test/agent-layout-workflow.test.ts packages/core/test/agent-layout-placement.test.tsx packages/core/test/agent-text-workflow.test.ts packages/core/test/agent-text-observation.test.ts packages/core/test/agent-signal-mutation.test.ts packages/core/test/agent-viz-missingness.test.ts packages/core/test/agent-viz-verification.test.ts packages/core/test/features/viz/hover-queries.test.tsx packages/core/test/features/viz/plot-series.test.tsx packages/core/src/lib/layout/absolute.test.ts --browser.headless --browser.ui=false --reporter=json --outputFile=docs/testing/package-consolidation-evidence/browser.json",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/browser.json"
+          },
+          {
+            "id": "consolidation-layout",
+            "command": "node tooling/agent-verification/layout-smoke.mjs http://127.0.0.1:5182/#/testing/agent-layout-placement /tmp/crc-migration-layout.json",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/layout.json"
           }
         ],
         "files": [
           {
             "path": "packages/core/src/lib/layout/absolute.test.ts",
-            "sha256": "809c70f3a71870b5d50349e89db2b9e66cc21bbb98744b475399088d929182b0"
+            "sha256": "48a0a5366868ce7fecbcbc5837bd23531e08f8dceb402853d7c3ba368adf8247"
           },
           {
             "path": "packages/core/src/lib/layout/place-child.test.ts",
@@ -1635,6 +1847,14 @@
           {
             "path": "tooling/agent-verification/layout-box-relations.mjs",
             "sha256": "f9d38278f47a7be6766c3ba1c2bb1a8561ea56f4626f379da293707aa6758885"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/browser.json",
+            "sha256": "38c9e8565f5e9a74843dfcb84f5bff734cede1122cfbe7b48fb7918cfc8a8c72"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/layout.json",
+            "sha256": "7f10cc00a878be0338e0ac235f8ad08350880a17fc692bf55c7100a740431596"
           }
         ]
       }
@@ -1812,10 +2032,7 @@
               "packages/core/test/agent-layout-relations.test.ts",
               "packages/core/test/agent-layout-placement.test.tsx"
             ],
-            "checkIds": [
-              "relations-node",
-              "layout-browser"
-            ]
+            "checkIds": ["relations-node", "layout-browser"]
           },
           {
             "criterion": "Identify overlap independently of intent; require explicit application expectations before reporting an error.",
@@ -1824,10 +2041,7 @@
               "packages/scenarios/src/agent-layout-placement.ts",
               "docs/strategy/agent-verification-evidence/layout-overlap-native.json"
             ],
-            "checkIds": [
-              "layout-browser",
-              "layout-native"
-            ]
+            "checkIds": ["layout-browser", "layout-native"]
           },
           {
             "criterion": "Make boundary/invalid geometry explicit and avoid carrying stale relation assertions across application updates or failures.",
@@ -1836,10 +2050,7 @@
               "packages/core/test/agent-layout-overlap.test.ts",
               "docs/strategy/agent-verification-evidence/layout-overlap-lifecycle-browser.json"
             ],
-            "checkIds": [
-              "relations-node",
-              "layout-browser"
-            ]
+            "checkIds": ["relations-node", "layout-browser"]
           }
         ],
         "checks": [
@@ -2138,7 +2349,7 @@
     },
     {
       "id": "PNT-05",
-      "requirement": "- PNT-05: Separate proven causes from possible occlusion. Arbitrary blends, filters and custom drawing prevent a universal exact \u201cvisible pixel\u201d answer.",
+      "requirement": "- PNT-05: Separate proven causes from possible occlusion. Arbitrary blends, filters and custom drawing prevent a universal exact “visible pixel” answer.",
       "status": "partial",
       "evidence": [
         {
@@ -2321,7 +2532,7 @@
         },
         {
           "path": "packages/core/test/smoke-scenario.test.ts",
-          "supports": "Fresh mixed Canvas/DOM screenshot passed; inspected report has viewport 800\u00d7600, composed element bounds 720\u00d7240, density 1 and null backing dimensions for the DOM container."
+          "supports": "Fresh mixed Canvas/DOM screenshot passed; inspected report has viewport 800×600, composed element bounds 720×240, density 1 and null backing dimensions for the DOM container."
         }
       ],
       "remaining": "Add application-requested font loading predicates and fallback uncertainty evidence. Document FontFaceSet status is recorded but does not identify the face used for individual glyphs or prove every desired font is available.",
@@ -2507,6 +2718,18 @@
         {
           "path": "docs/strategy/agent-verification-evidence/overlap-text-regression.json",
           "supports": "Fresh native regression passes after shared overlap-mode changes."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/browser.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/node.txt",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/text.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
         }
       ],
       "remaining": "",
@@ -2515,8 +2738,8 @@
         "schema": "crc-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **TXT-08:** Preserve text redaction and payload limits while allowing explicit fixture text to serve as an assertion or locator.",
-        "reviewedAt": "2026-10-01",
-        "review": "Reviewed the full TXT-08 requirement: default private text stays redacted, bounded exact fixture strings support independent assertions, and payload/history limits persist through saved native evidence. Requirement allows assertions or locators; the delivered assertion path satisfies that alternative without claiming a general locator API. One explicitly instrumented native context is the supported acquisition surface. Layout, font resolution, visibility and other-context coverage are separate open requirements, not silently inferred. Lifecycle and hostile report payload regressions are included; built runtime inspection is explicitly unavailable. This closure does not claim a full trust pass. Shared catalog registration of the signal mutation lab was re-reviewed on 2026-10-01: all nine text browser regressions and twelve native text checks still pass, with fresh retained artifacts. Signal-mutation identity/replay support was added without changing text acquisition or assertions. Re-reviewed shared plugin/manifest changes with sixteen Node regressions, nine text browser regressions and twelve native text checks; fresh artifacts preserve the closure. Mixed-validity visualization mode was added on 2026-10-01. Re-reviewed the affected shared lab/catalog against twenty-six focused browser tests and a fresh native replay of this completed workflow; only the reviewed shared-file fingerprints were refreshed. Layout lab catalog addition re-reviewed against sixteen focused browser tests and a fresh native replay of this workflow; only the shared catalog fingerprint was refreshed. Overlap-mode extension re-reviewed against twenty focused browser tests and fresh native regression. Existing placement/text/signal contracts remain unchanged; only affected fingerprints refreshed. Late-font catalog addition reviewed against focused browser regressions and fresh native text/signal replays; existing entries unchanged. Refreshed only the catalog fingerprint.",
+        "reviewedAt": "2026-10-02",
+        "review": "Reviewed the full TXT-08 requirement: default private text stays redacted, bounded exact fixture strings support independent assertions, and payload/history limits persist through saved native evidence. Requirement allows assertions or locators; the delivered assertion path satisfies that alternative without claiming a general locator API. One explicitly instrumented native context is the supported acquisition surface. Layout, font resolution, visibility and other-context coverage are separate open requirements, not silently inferred. Lifecycle and hostile report payload regressions are included; built runtime inspection is explicitly unavailable. This closure does not claim a full trust pass. Shared catalog registration of the signal mutation lab was re-reviewed on 2026-10-01: all nine text browser regressions and twelve native text checks still pass, with fresh retained artifacts. Signal-mutation identity/replay support was added without changing text acquisition or assertions. Re-reviewed shared plugin/manifest changes with sixteen Node regressions, nine text browser regressions and twelve native text checks; fresh artifacts preserve the closure. Mixed-validity visualization mode was added on 2026-10-01. Re-reviewed the affected shared lab/catalog against twenty-six focused browser tests and a fresh native replay of this completed workflow; only the reviewed shared-file fingerprints were refreshed. Layout lab catalog addition re-reviewed against sixteen focused browser tests and a fresh native replay of this workflow; only the shared catalog fingerprint was refreshed. Overlap-mode extension re-reviewed against twenty focused browser tests and fresh native regression. Existing placement/text/signal contracts remain unchanged; only affected fingerprints refreshed. Late-font catalog addition reviewed against focused browser regressions and fresh native text/signal replays; existing entries unchanged. Refreshed only the catalog fingerprint. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
         "checks": [
           {
             "id": "text-browser",
@@ -2601,6 +2824,27 @@
             "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio 5199",
             "result": "pass",
             "artifact": "docs/strategy/agent-verification-evidence/overlap-text-regression.json"
+          },
+          {
+            "id": "consolidation-browser",
+            "command": "corepack pnpm@11.21.0 exec vitest run packages/core/test/agent-runtime-identity.test.ts packages/core/test/agent-targeting-verification.test.ts packages/core/test/agent-targeting-pagination.test.tsx packages/core/test/agent-targeting-observation.test.tsx packages/core/test/agent-layout-workflow.test.ts packages/core/test/agent-layout-placement.test.tsx packages/core/test/agent-text-workflow.test.ts packages/core/test/agent-text-observation.test.ts packages/core/test/agent-signal-mutation.test.ts packages/core/test/agent-viz-missingness.test.ts packages/core/test/agent-viz-verification.test.ts packages/core/test/features/viz/hover-queries.test.tsx packages/core/test/features/viz/plot-series.test.tsx packages/core/src/lib/layout/absolute.test.ts --browser.headless --browser.ui=false --reporter=json --outputFile=docs/testing/package-consolidation-evidence/browser.json",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/browser.json"
+          },
+          {
+            "id": "consolidation-node",
+            "command": "node --test tooling/agent-verification/runtime-identity.test.mjs tooling/agent-verification/identity.test.mjs tooling/agent-verification/core-peer-compatibility.test.mjs tooling/agent-verification/installed-peers.test.mjs tooling/agent-verification/evidence-reader.test.mjs tooling/agent-verification/compare-evidence.test.mjs tooling/agent-verification/discover.test.mjs tooling/agent-verification/text-replay.test.mjs tooling/agent-verification/text-identity.test.mjs tooling/agent-verification/run-manifest.test.mjs tooling/agent-verification/tool-identity.test.mjs tooling/agent-verification/signal-mutation-identity.test.mjs tooling/agent-verification/required-checks.test.mjs tooling/agent-verification/recorded-check.test.mjs tooling/agent-verification/replay-outcome.test.mjs",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/node.txt"
+          },
+          {
+            "id": "consolidation-text",
+            "command": "node tooling/agent-verification/text-replay.mjs http://127.0.0.1:5182/#/testing/agent-text-verification /tmp/crc-migration-text",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/text.json"
           }
         ],
         "acceptance": [
@@ -2609,12 +2853,18 @@
             "evidencePaths": [
               "tooling/agent-verification/text.ts",
               "packages/core/test/agent-text-observation.test.ts",
-              "packages/core/test/agent-text-workflow.test.ts"
+              "packages/core/test/agent-text-workflow.test.ts",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/text.json"
             ],
             "checkIds": [
               "text-browser",
               "layout-catalog-native",
-              "overlap-native-regression"
+              "overlap-native-regression",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-text"
             ]
           },
           {
@@ -2623,10 +2873,16 @@
               "tooling/agent-verification/text.ts",
               "packages/core/test/agent-text-observation.test.ts",
               "packages/scenarios/src/agent-text-verification.ts",
-              "packages/core/test/agent-text-workflow.test.ts"
+              "packages/core/test/agent-text-workflow.test.ts",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/text.json"
             ],
             "checkIds": [
-              "text-browser"
+              "text-browser",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-text"
             ]
           },
           {
@@ -2637,7 +2893,10 @@
               "tooling/agent-verification/text-replay.test.mjs",
               "docs/strategy/agent-verification-evidence/txt-08-replay.json",
               "docs/strategy/agent-verification-evidence/signal-mutation-slice-browser.json",
-              "docs/strategy/agent-verification-evidence/txt-08-signal-catalog-replay.json"
+              "docs/strategy/agent-verification-evidence/txt-08-signal-catalog-replay.json",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/text.json"
             ],
             "checkIds": [
               "text-browser",
@@ -2649,7 +2908,10 @@
               "text-signal-tools-node",
               "text-signal-tools-native",
               "missingness-regression-browser",
-              "missingness-regression-native"
+              "missingness-regression-native",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-text"
             ]
           }
         ],
@@ -2708,7 +2970,7 @@
           },
           {
             "path": "tooling/agent-verification/identity-plugin.mjs",
-            "sha256": "bc8d2e0bc90f9e49a4fa0efb6de387b5a826bfdfbee6c28d96ff27e2c21c2e4d"
+            "sha256": "0751513ddbbc78e2e15a1d182436b232f62d1a880029be806e6f3eaf0d1b3491"
           },
           {
             "path": "tooling/agent-verification/run-manifest.mjs",
@@ -2720,7 +2982,7 @@
           },
           {
             "path": "tooling/agent-verification/identity.mjs",
-            "sha256": "ecd7e32e4aa3d9848238d525c2fb6e0f537cbb8a671185ec43ee3c836c90f096"
+            "sha256": "83dc90eaff2199dd9a6e9cc498e75ee649a0752bc29e1fd0b6df494dd4da8493"
           },
           {
             "path": "tooling/agent-verification/recorded-check.mjs",
@@ -2789,6 +3051,18 @@
           {
             "path": "docs/strategy/agent-verification-evidence/late-font-text-regression.json",
             "sha256": "c4772e6d07a477729b116f52e9defbf84f9aaa62d329ab76f13f04e88d5605ee"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/browser.json",
+            "sha256": "38c9e8565f5e9a74843dfcb84f5bff734cede1122cfbe7b48fb7918cfc8a8c72"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/node.txt",
+            "sha256": "a9e01e53be845273c21d1aae3cf759c67158e5ed7669dc839c8045890e308901"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/text.json",
+            "sha256": "7c7b51d6ba81f0dc303df563e1df5e4a5b02a5c8bbd6bcf67c69c6839f0d4c16"
           }
         ]
       }
@@ -3702,6 +3976,18 @@
         {
           "path": "docs/strategy/agent-verification-evidence/overlap-signal-mutation-regression.json",
           "supports": "Fresh native regression passes after shared overlap-mode changes."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/browser.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/node.txt",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/signals.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
         }
       ],
       "remaining": "",
@@ -3710,8 +3996,8 @@
         "schema": "crc-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **SIG-14:** Diagnose likely in-place-mutation mistakes through documented equality semantics and explicit app assertions; no universal deep mutation detector is assumed.",
-        "reviewedAt": "2026-10-01",
-        "review": "Reviewed the complete SIG-14 wording against the documented and actual default Object.is policy, explicit application-owned reference/value facts, independently fixed intended values and independent pixel checks. The application distinguishes a benign equal no-op, the known in-place change leaving evaluation/pixels stale, another equal write retaining that stale display, and immutable replacement repair. Diagnosis is scoped to that declared application sequence and recorded source revision; it does not recursively inspect objects, infer arbitrary custom equality, guarantee that another action cannot repaint, or claim a universal deep mutation detector. Finite two-frame evidence, setup/cancel/reset/remount cases and native Studio evidence are retained. The first native pixel test sampled without the contain offset; its failed report is retained, geometry was independently derived from the explicit viewport and an extra aspect-ratio regression was added before success. No aggregate trust pass is claimed. Mixed-validity visualization mode was added on 2026-10-01. Re-reviewed the affected shared lab/catalog against twenty-six focused browser tests and a fresh native replay of this completed workflow; only the reviewed shared-file fingerprints were refreshed. Layout lab catalog addition re-reviewed against sixteen focused browser tests and a fresh native replay of this workflow; only the shared catalog fingerprint was refreshed. Overlap-mode extension re-reviewed against twenty focused browser tests and fresh native regression. Existing placement/text/signal contracts remain unchanged; only affected fingerprints refreshed. Late-font catalog addition reviewed against focused browser regressions and fresh native text/signal replays; existing entries unchanged. Refreshed only the catalog fingerprint.",
+        "reviewedAt": "2026-10-02",
+        "review": "Reviewed the complete SIG-14 wording against the documented and actual default Object.is policy, explicit application-owned reference/value facts, independently fixed intended values and independent pixel checks. The application distinguishes a benign equal no-op, the known in-place change leaving evaluation/pixels stale, another equal write retaining that stale display, and immutable replacement repair. Diagnosis is scoped to that declared application sequence and recorded source revision; it does not recursively inspect objects, infer arbitrary custom equality, guarantee that another action cannot repaint, or claim a universal deep mutation detector. Finite two-frame evidence, setup/cancel/reset/remount cases and native Studio evidence are retained. The first native pixel test sampled without the contain offset; its failed report is retained, geometry was independently derived from the explicit viewport and an extra aspect-ratio regression was added before success. No aggregate trust pass is claimed. Mixed-validity visualization mode was added on 2026-10-01. Re-reviewed the affected shared lab/catalog against twenty-six focused browser tests and a fresh native replay of this completed workflow; only the reviewed shared-file fingerprints were refreshed. Layout lab catalog addition re-reviewed against sixteen focused browser tests and a fresh native replay of this workflow; only the shared catalog fingerprint was refreshed. Overlap-mode extension re-reviewed against twenty focused browser tests and fresh native regression. Existing placement/text/signal contracts remain unchanged; only affected fingerprints refreshed. Late-font catalog addition reviewed against focused browser regressions and fresh native text/signal replays; existing entries unchanged. Refreshed only the catalog fingerprint. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
         "checks": [
           {
             "id": "signal-browser",
@@ -3761,6 +4047,27 @@
             "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio 5199",
             "result": "pass",
             "artifact": "docs/strategy/agent-verification-evidence/overlap-signal-mutation-regression.json"
+          },
+          {
+            "id": "consolidation-browser",
+            "command": "corepack pnpm@11.21.0 exec vitest run packages/core/test/agent-runtime-identity.test.ts packages/core/test/agent-targeting-verification.test.ts packages/core/test/agent-targeting-pagination.test.tsx packages/core/test/agent-targeting-observation.test.tsx packages/core/test/agent-layout-workflow.test.ts packages/core/test/agent-layout-placement.test.tsx packages/core/test/agent-text-workflow.test.ts packages/core/test/agent-text-observation.test.ts packages/core/test/agent-signal-mutation.test.ts packages/core/test/agent-viz-missingness.test.ts packages/core/test/agent-viz-verification.test.ts packages/core/test/features/viz/hover-queries.test.tsx packages/core/test/features/viz/plot-series.test.tsx packages/core/src/lib/layout/absolute.test.ts --browser.headless --browser.ui=false --reporter=json --outputFile=docs/testing/package-consolidation-evidence/browser.json",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/browser.json"
+          },
+          {
+            "id": "consolidation-node",
+            "command": "node --test tooling/agent-verification/runtime-identity.test.mjs tooling/agent-verification/identity.test.mjs tooling/agent-verification/core-peer-compatibility.test.mjs tooling/agent-verification/installed-peers.test.mjs tooling/agent-verification/evidence-reader.test.mjs tooling/agent-verification/compare-evidence.test.mjs tooling/agent-verification/discover.test.mjs tooling/agent-verification/text-replay.test.mjs tooling/agent-verification/text-identity.test.mjs tooling/agent-verification/run-manifest.test.mjs tooling/agent-verification/tool-identity.test.mjs tooling/agent-verification/signal-mutation-identity.test.mjs tooling/agent-verification/required-checks.test.mjs tooling/agent-verification/recorded-check.test.mjs tooling/agent-verification/replay-outcome.test.mjs",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/node.txt"
+          },
+          {
+            "id": "consolidation-signals",
+            "command": "node tooling/agent-verification/signal-mutation-replay.mjs http://127.0.0.1:5182/#/testing/agent-signal-mutation /tmp/crc-migration-signals",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/signals.json"
           }
         ],
         "acceptance": [
@@ -3770,13 +4077,19 @@
               "docs/design/signals-and-scheduling-contract.md",
               "packages/core/src/lib/signals/graph.ts",
               "packages/scenarios/src/agent-signal-mutation.ts",
-              "packages/core/test/agent-signal-mutation.test.ts"
+              "packages/core/test/agent-signal-mutation.test.ts",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/signals.json"
             ],
             "checkIds": [
               "signal-browser",
               "signal-native",
               "layout-catalog-native",
-              "overlap-native-regression"
+              "overlap-native-regression",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-signals"
             ]
           },
           {
@@ -3785,11 +4098,17 @@
               "packages/scenarios/src/agent-signal-mutation.example.tsx",
               "packages/core/test/agent-signal-mutation.test.ts",
               "tooling/agent-verification/signal-mutation-replay.mjs",
-              "docs/strategy/agent-verification-evidence/sig-14-replay.json"
+              "docs/strategy/agent-verification-evidence/sig-14-replay.json",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/signals.json"
             ],
             "checkIds": [
               "signal-browser",
-              "signal-native"
+              "signal-native",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-signals"
             ]
           },
           {
@@ -3799,25 +4118,31 @@
               "packages/core/test/agent-signal-mutation.test.ts",
               "tooling/agent-verification/signal-mutation-identity.test.mjs",
               "docs/strategy/agent-verification-evidence/sig-14-browser.json",
-              "docs/strategy/agent-verification-evidence/sig-14-node.txt"
+              "docs/strategy/agent-verification-evidence/sig-14-node.txt",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/signals.json"
             ],
             "checkIds": [
               "signal-browser",
               "signal-node",
               "signal-native",
               "missingness-regression-browser",
-              "missingness-regression-native"
+              "missingness-regression-native",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-signals"
             ]
           }
         ],
         "files": [
           {
             "path": "docs/design/signals-and-scheduling-contract.md",
-            "sha256": "0d99a390de1549d7c426719f9a8eedf12adf4e0cfe516cc887686a380f076057"
+            "sha256": "38e523e3f53111862a7392c7d7a904e75b24bd2df0f66c274ef8eadf8c6859f2"
           },
           {
             "path": "packages/core/src/lib/signals/graph.ts",
-            "sha256": "5d80953f651e19972c2c81f566d0ef90d7268449c2807f1fbfdbc903659d37cd"
+            "sha256": "1579da74710597f3983cfbc5002d7baac53c85b749b5ed1bbf0a2e4149e7f3ee"
           },
           {
             "path": "packages/scenarios/src/agent-signal-mutation.example.tsx",
@@ -3877,11 +4202,11 @@
           },
           {
             "path": "tooling/agent-verification/identity-plugin.mjs",
-            "sha256": "bc8d2e0bc90f9e49a4fa0efb6de387b5a826bfdfbee6c28d96ff27e2c21c2e4d"
+            "sha256": "0751513ddbbc78e2e15a1d182436b232f62d1a880029be806e6f3eaf0d1b3491"
           },
           {
             "path": "tooling/agent-verification/identity.mjs",
-            "sha256": "ecd7e32e4aa3d9848238d525c2fb6e0f537cbb8a671185ec43ee3c836c90f096"
+            "sha256": "83dc90eaff2199dd9a6e9cc498e75ee649a0752bc29e1fd0b6df494dd4da8493"
           },
           {
             "path": "tooling/agent-verification/run-manifest.mjs",
@@ -3926,6 +4251,18 @@
           {
             "path": "docs/strategy/agent-verification-evidence/late-font-signal-regression.json",
             "sha256": "1d17fd4c3b81deaca6a45fbcd00f52df96fd15d7a589107f8ebb34d38d5c20c1"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/browser.json",
+            "sha256": "38c9e8565f5e9a74843dfcb84f5bff734cede1122cfbe7b48fb7918cfc8a8c72"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/node.txt",
+            "sha256": "a9e01e53be845273c21d1aae3cf759c67158e5ed7669dc839c8045890e308901"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/signals.json",
+            "sha256": "03b8105b0914f265bef2736e1ef4bd6c4ae989f9b0e2fdcc1561cf4db722c670"
           }
         ]
       }
@@ -4000,7 +4337,7 @@
     },
     {
       "id": "SCH-05",
-      "requirement": "- SCH-05: Provide an observable completion condition for a selected update or root; a generic \u201cwait two frames\u201d is not a reliable readiness oracle.",
+      "requirement": "- SCH-05: Provide an observable completion condition for a selected update or root; a generic “wait two frames” is not a reliable readiness oracle.",
       "status": "partial",
       "evidence": [
         {
@@ -4428,11 +4765,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Complete scale scope inside Layer maps 5 to 100; wrapping Layer in an external scale provider rejects lookup."
         },
         {
-          "path": "packages/viz/test/hover-ownership.test.tsx",
+          "path": "packages/core/test/features/viz/hover-ownership.test.tsx",
           "supports": "Hover query crossing a Layer boundary produces an explicit diagnostic."
         }
       ],
@@ -4475,7 +4812,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/hover-queries.test.tsx",
+          "path": "packages/core/test/features/viz/hover-queries.test.tsx",
           "supports": "Exact/nearest results retain original datum/index; interpolated results retain before/after records, indices and fraction."
         },
         {
@@ -4492,15 +4829,15 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/src/lib/point-data.ts",
+          "path": "packages/core/src/features/viz/lib/point-data.ts",
           "supports": "finiteCoordinate accepts only finite numbers; property/function accessors do not coerce strings or dates."
         },
         {
-          "path": "packages/viz/test/point-series.test.tsx",
+          "path": "packages/core/test/features/viz/point-series.test.tsx",
           "supports": "Missing rows skip styling/marks; defined=false skips accessors and style."
         },
         {
-          "path": "packages/viz/test/hover-queries.test.tsx",
+          "path": "packages/core/test/features/viz/hover-queries.test.tsx",
           "supports": "Invalid query coordinates and nonfinite interpolation output reject explicitly."
         }
       ],
@@ -4513,7 +4850,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/src/index.ts",
+          "path": "packages/core/src/features/viz/index.ts",
           "supports": "Current public surface is scales/series/hover/placement, without pipeline-stage observation for joins, grouping, binning or aggregation."
         },
         {
@@ -4538,11 +4875,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/plot-series.test.tsx",
+          "path": "packages/core/test/features/viz/plot-series.test.tsx",
           "supports": "Keyed rows preserve hook state on reorder and run cleanup on removal."
         },
         {
-          "path": "packages/viz/test/hover-queries.test.tsx",
+          "path": "packages/core/test/features/viz/hover-queries.test.tsx",
           "supports": "Duplicate-x first/last/error and unsorted interpolation policies have explicit fixtures."
         }
       ],
@@ -4555,11 +4892,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/hover-queries.test.tsx",
+          "path": "packages/core/test/features/viz/hover-queries.test.tsx",
           "supports": "Literal interpolation value/fraction fixtures prove selected numerical behavior, not aggregate denominators, weighting or rounding."
         },
         {
-          "path": "packages/viz/src/index.ts",
+          "path": "packages/core/src/features/viz/index.ts",
           "supports": "No public aggregate pipeline contract is exported."
         },
         {
@@ -4584,11 +4921,11 @@
       "status": "complete",
       "evidence": [
         {
-          "path": "packages/viz/test/hover-queries.test.tsx",
+          "path": "packages/core/test/features/viz/hover-queries.test.tsx",
           "supports": "Explicit null y/x gaps prevent bridging; valid zero coordinates appear in interpolation fixtures."
         },
         {
-          "path": "packages/viz/test/plot-series.test.tsx",
+          "path": "packages/core/test/features/viz/plot-series.test.tsx",
           "supports": "Null coordinates suppress row rendering and detach dependencies."
         },
         {
@@ -4630,6 +4967,18 @@
         {
           "path": "docs/strategy/agent-verification-evidence/dat-07-pointer-precision-failure.json",
           "supports": "Retained unsuccessful run records requested x=3 and observed 2.999999385036209, establishing why exact native-coordinate equality was invalid."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/browser.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/node.txt",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
+        },
+        {
+          "path": "docs/testing/package-consolidation-evidence/viz.json",
+          "supports": "Fresh package consolidation regression evidence; preserves the scope of the named checks and native scenario."
         }
       ],
       "remaining": "",
@@ -4638,19 +4987,25 @@
         "schema": "crc-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **DAT-07:** Verify missing, zero and invalid values retain distinct semantics; do not treat missing data as zero unless the application explicitly requires it.",
-        "reviewedAt": "2026-10-01",
-        "review": "Reviewed complete DAT-07 wording against the supported public visualization workflow. Input tags preserve finite zero, null, undefined, NaN and both infinities; independent expected counts/category order guard JSON conflation. Exact zero query and actual emitted tooltip text, a painted segment through zero, absent queries across all missing/invalid positions, absent bridging pixels, and valid post-gap interpolation establish distinct semantics. Generation-bound replacement removes old metadata. Native Studio replay exercises the same application via pointer input; measured float32 transport precision is explicit and cannot be mistaken for missing-as-zero. This establishes the declared application policy, not automatic inference of arbitrary business coercion or unobscured glyph visibility. No production API or broader data/visualization requirement is certified by this closure.",
+        "reviewedAt": "2026-10-02",
+        "review": "Reviewed complete DAT-07 wording against the supported public visualization workflow. Input tags preserve finite zero, null, undefined, NaN and both infinities; independent expected counts/category order guard JSON conflation. Exact zero query and actual emitted tooltip text, a painted segment through zero, absent queries across all missing/invalid positions, absent bridging pixels, and valid post-gap interpolation establish distinct semantics. Generation-bound replacement removes old metadata. Native Studio replay exercises the same application via pointer input; measured float32 transport precision is explicit and cannot be mistaken for missing-as-zero. This establishes the declared application policy, not automatic inference of arbitrary business coercion or unobscured glyph visibility. No production API or broader data/visualization requirement is certified by this closure. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
         "acceptance": [
           {
             "criterion": "Preserve zero as a valid numeric observation while distinctly reporting missing and nonfinite invalid inputs.",
             "evidencePaths": [
               "packages/scenarios/src/viz-hover-lab.ts",
               "packages/core/test/agent-viz-missingness.test.ts",
-              "docs/strategy/agent-verification-evidence/dat-07-replay.json"
+              "docs/strategy/agent-verification-evidence/dat-07-replay.json",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/viz.json"
             ],
             "checkIds": [
               "mixed-native",
-              "mixed-browser"
+              "mixed-browser",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-viz"
             ]
           },
           {
@@ -4658,11 +5013,17 @@
             "evidencePaths": [
               "packages/core/test/agent-viz-missingness.test.ts",
               "docs/strategy/agent-verification-evidence/missingness-tooltip-browser.json",
-              "docs/strategy/agent-verification-evidence/dat-07-replay.json"
+              "docs/strategy/agent-verification-evidence/dat-07-replay.json",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/viz.json"
             ],
             "checkIds": [
               "mixed-browser",
-              "mixed-native"
+              "mixed-native",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-viz"
             ]
           },
           {
@@ -4671,11 +5032,17 @@
               "packages/scenarios/src/viz-hover-lab.ts",
               "packages/core/test/agent-viz-missingness.test.ts",
               "tooling/agent-verification/required-checks.mjs",
-              "docs/strategy/agent-verification-evidence/dat-07-manifest-node.txt"
+              "docs/strategy/agent-verification-evidence/dat-07-manifest-node.txt",
+              "docs/testing/package-consolidation-evidence/browser.json",
+              "docs/testing/package-consolidation-evidence/node.txt",
+              "docs/testing/package-consolidation-evidence/viz.json"
             ],
             "checkIds": [
               "mixed-browser",
-              "manifest-node"
+              "manifest-node",
+              "consolidation-browser",
+              "consolidation-node",
+              "consolidation-viz"
             ]
           }
         ],
@@ -4700,16 +5067,37 @@
             "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio 5199",
             "result": "pass",
             "artifact": "docs/strategy/agent-verification-evidence/dat-07-manifest-node.txt"
+          },
+          {
+            "id": "consolidation-browser",
+            "command": "corepack pnpm@11.21.0 exec vitest run packages/core/test/agent-runtime-identity.test.ts packages/core/test/agent-targeting-verification.test.ts packages/core/test/agent-targeting-pagination.test.tsx packages/core/test/agent-targeting-observation.test.tsx packages/core/test/agent-layout-workflow.test.ts packages/core/test/agent-layout-placement.test.tsx packages/core/test/agent-text-workflow.test.ts packages/core/test/agent-text-observation.test.ts packages/core/test/agent-signal-mutation.test.ts packages/core/test/agent-viz-missingness.test.ts packages/core/test/agent-viz-verification.test.ts packages/core/test/features/viz/hover-queries.test.tsx packages/core/test/features/viz/plot-series.test.tsx packages/core/src/lib/layout/absolute.test.ts --browser.headless --browser.ui=false --reporter=json --outputFile=docs/testing/package-consolidation-evidence/browser.json",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/browser.json"
+          },
+          {
+            "id": "consolidation-node",
+            "command": "node --test tooling/agent-verification/runtime-identity.test.mjs tooling/agent-verification/identity.test.mjs tooling/agent-verification/core-peer-compatibility.test.mjs tooling/agent-verification/installed-peers.test.mjs tooling/agent-verification/evidence-reader.test.mjs tooling/agent-verification/compare-evidence.test.mjs tooling/agent-verification/discover.test.mjs tooling/agent-verification/text-replay.test.mjs tooling/agent-verification/text-identity.test.mjs tooling/agent-verification/run-manifest.test.mjs tooling/agent-verification/tool-identity.test.mjs tooling/agent-verification/signal-mutation-identity.test.mjs tooling/agent-verification/required-checks.test.mjs tooling/agent-verification/recorded-check.test.mjs tooling/agent-verification/replay-outcome.test.mjs",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/node.txt"
+          },
+          {
+            "id": "consolidation-viz",
+            "command": "node tooling/agent-verification/viz-replay.mjs http://127.0.0.1:5182/#/testing/viz-hover-lab /tmp/crc-migration-viz",
+            "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
+            "result": "pass",
+            "artifact": "docs/testing/package-consolidation-evidence/viz.json"
           }
         ],
         "files": [
           {
-            "path": "packages/viz/test/hover-queries.test.tsx",
-            "sha256": "975e81851927dbc95c6d4793ac490f9f2b904fa043831926ded4141dd56e7939"
+            "path": "packages/core/test/features/viz/hover-queries.test.tsx",
+            "sha256": "ce23a689c9ef0528eace90fded624907d1c73c9eabfe8d22d1684c734b7f5786"
           },
           {
-            "path": "packages/viz/test/plot-series.test.tsx",
-            "sha256": "fc5545f21aeab85f37f111ef51ff5a6650eb3f378255f8ce61bea65abe9e73ce"
+            "path": "packages/core/test/features/viz/plot-series.test.tsx",
+            "sha256": "4462c7ca5f4bcc4a8528c652e88d2e06d60a88f83a2c236362ba0b75a334b940"
           },
           {
             "path": "packages/scenarios/src/viz-hover-lab.ts",
@@ -4753,11 +5141,23 @@
           },
           {
             "path": "packages/scenarios/src/learning/composition/viz-hover-comparison.example.tsx",
-            "sha256": "00dbbc9891f46f0ea1852a0d37a0d3456a5753c7ed205e7f00749c4a6791a211"
+            "sha256": "bad7a5a7d920f6b7b3da191318bdcfa86ff860d04e29dd007c8001d5d57d05e8"
           },
           {
             "path": "tooling/agent-verification/text.ts",
             "sha256": "9a0066e6adefdefa8e36ca4e67d283bcd055ebea74eec27904b6f378bc035923"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/browser.json",
+            "sha256": "38c9e8565f5e9a74843dfcb84f5bff734cede1122cfbe7b48fb7918cfc8a8c72"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/node.txt",
+            "sha256": "a9e01e53be845273c21d1aae3cf759c67158e5ed7669dc839c8045890e308901"
+          },
+          {
+            "path": "docs/testing/package-consolidation-evidence/viz.json",
+            "sha256": "0f2bba9af81ffdeff071cda13cf6bc7ee689a5d290419ace8e56b0a924dd6b2a"
           }
         ]
       }
@@ -4768,11 +5168,11 @@
       "status": "gap",
       "evidence": [
         {
-          "path": "packages/viz/src/lib/linear-scale.ts",
+          "path": "packages/core/src/features/viz/lib/linear-scale.ts",
           "supports": "Implemented scale uses finite numeric endpoints and arithmetic; no calendar/timezone/DST or categorical order semantics."
         },
         {
-          "path": "packages/viz/src/index.ts",
+          "path": "packages/core/src/features/viz/index.ts",
           "supports": "Only linear scale family is exported."
         }
       ],
@@ -4785,7 +5185,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/plot-series.test.tsx",
+          "path": "packages/core/test/features/viz/plot-series.test.tsx",
           "supports": "Signal array replacement/reorder/removal updates keyed rows and releases removed state."
         },
         {
@@ -4840,11 +5240,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/hover-queries.test.tsx",
+          "path": "packages/core/test/features/viz/hover-queries.test.tsx",
           "supports": "Empty data produces no interpolation; explicit gaps and invalid outputs have assertions."
         },
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Constant domain rejects through public Scale and collapsed-range inversion has a diagnostic."
         }
       ],
@@ -4861,7 +5261,7 @@
           "supports": "Fixture emits selected reading provenance with fixed known fields, but provides no general bounded/redacted row or aggregate query contract."
         },
         {
-          "path": "packages/viz/src/lib/hover-types.ts",
+          "path": "packages/core/src/features/viz/lib/hover-types.ts",
           "supports": "Hover types carry application data; original datum access is not a redaction boundary."
         }
       ],
@@ -4874,7 +5274,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Public useScale exposes stable signal identity, resolved domain/range/frame; shadowed provider scopes are tested."
         }
       ],
@@ -4887,11 +5287,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/src/lib/linear-scale.ts",
+          "path": "packages/core/src/features/viz/lib/linear-scale.ts",
           "supports": "Explicit finite unequal endpoints, optional range reversal and unclamped arithmetic; no auto-domain or nice/calendar algorithm."
         },
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Descending domain extrapolation and reversed range have literal expected results."
         }
       ],
@@ -4904,7 +5304,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "New four-case public Scale matrix tests independent expected map/invert values and both round trips for fractions -0.25 through 1.25; tolerances are span times 1e-12. Existing collapsed range rejects inversion."
         }
       ],
@@ -4917,11 +5317,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Local 240/360 allocations and domain changes assert exact mapped values and stable signal identity."
         },
         {
-          "path": "packages/viz/test/foundation-lab.test.ts",
+          "path": "packages/core/test/features/viz/foundation-lab.test.ts",
           "supports": "Detail and overview have different allocations and both resize without changing data count."
         }
       ],
@@ -4930,15 +5330,15 @@
     },
     {
       "id": "VIZ-05",
-      "requirement": "- VIZ-05: Inspect tick values, positions, formatting and axis side; distinguish exact evenly spaced ticks from \u201cnice\u201d or calendar-aware tick algorithms.",
+      "requirement": "- VIZ-05: Inspect tick values, positions, formatting and axis side; distinguish exact evenly spaced ticks from “nice” or calendar-aware tick algorithms.",
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/composition.test.tsx",
+          "path": "packages/core/test/features/viz/composition.test.tsx",
           "supports": "Reversed bottom axis asserts original values/indices and exact v0/v5/v10 text positions."
         },
         {
-          "path": "packages/viz/src/lib/axis.tsx",
+          "path": "packages/core/src/features/viz/lib/axis.tsx",
           "supports": "Only bottom/left sides are accepted; tick values come from linear scale and formatting is explicit."
         }
       ],
@@ -4951,11 +5351,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/composition.test.tsx",
+          "path": "packages/core/test/features/viz/composition.test.tsx",
           "supports": "Formatter receives original tick value and index, and text positions are asserted."
         },
         {
-          "path": "packages/viz/src/lib/axis.tsx",
+          "path": "packages/core/src/features/viz/lib/axis.tsx",
           "supports": "Default formatter uses six significant digits; custom formatter must return a string."
         }
       ],
@@ -4968,15 +5368,15 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/composition.test.tsx",
+          "path": "packages/core/test/features/viz/composition.test.tsx",
           "supports": "Two connected line runs separated by null assert exact moveTo/lineTo calls and one stroke."
         },
         {
-          "path": "packages/viz/test/point-series.test.tsx",
+          "path": "packages/core/test/features/viz/point-series.test.tsx",
           "supports": "Point marks check pixel placement, holes, overlap order and hit union."
         },
         {
-          "path": "packages/viz/test/plot-series.test.tsx",
+          "path": "packages/core/test/features/viz/plot-series.test.tsx",
           "supports": "Custom elements have literal mapped transforms and keyed state checks."
         }
       ],
@@ -4989,15 +5389,15 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/composition.test.tsx",
+          "path": "packages/core/test/features/viz/composition.test.tsx",
           "supports": "Null coordinate creates two separate runs; clicking the gap hits background."
         },
         {
-          "path": "packages/viz/test/point-series.test.tsx",
+          "path": "packages/core/test/features/viz/point-series.test.tsx",
           "supports": "Missing/excluded rows skip mark/style evaluation."
         },
         {
-          "path": "packages/viz/test/hover-queries.test.tsx",
+          "path": "packages/core/test/features/viz/hover-queries.test.tsx",
           "supports": "Null interpolation gaps do not bridge."
         }
       ],
@@ -5010,11 +5410,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/point-series.test.tsx",
+          "path": "packages/core/test/features/viz/point-series.test.tsx",
           "supports": "Growing 10 to 10000 dots keeps component/target counts constant and disposes all state."
         },
         {
-          "path": "packages/viz/test/composition.test.tsx",
+          "path": "packages/core/test/features/viz/composition.test.tsx",
           "supports": "20000 line samples paint in one stroke; signal data is read once per series evaluation."
         }
       ],
@@ -5027,15 +5427,15 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/point-series.test.tsx",
+          "path": "packages/core/test/features/viz/point-series.test.tsx",
           "supports": "Translucent fill/stroke pixels match ordinary Circle composition; defined=false skips style/accessors."
         },
         {
-          "path": "packages/viz/test/composition.test.tsx",
+          "path": "packages/core/test/features/viz/composition.test.tsx",
           "supports": "Direct stroke signal changes observed paint color without extra data reads."
         },
         {
-          "path": "packages/viz/src/lib/point-series.tsx",
+          "path": "packages/core/src/features/viz/lib/point-series.tsx",
           "supports": "Point style normalization and per-row paint preserve supported fill/stroke/radius behavior."
         }
       ],
@@ -5048,11 +5448,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/composition.test.tsx",
+          "path": "packages/core/test/features/viz/composition.test.tsx",
           "supports": "ScaleAdjust moves ordinary Circle annotations to exact x/y positions and supports changing selected axes."
         },
         {
-          "path": "packages/viz/test/plot-series.test.tsx",
+          "path": "packages/core/test/features/viz/plot-series.test.tsx",
           "supports": "Ordinary Rectangle custom marks use mapped transforms."
         }
       ],
@@ -5065,11 +5465,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/src/lib/scale.ts",
+          "path": "packages/core/src/features/viz/lib/scale.ts",
           "supports": "Scale supplies allocation-based computed scope and returns children; it does not install a clip, padding or hit region."
         },
         {
-          "path": "packages/viz/test/composition.test.tsx",
+          "path": "packages/core/test/features/viz/composition.test.tsx",
           "supports": "Axis labels deliberately extend outside local frame edges."
         }
       ],
@@ -5082,7 +5482,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Reflow/domain changes preserve signal identity and expose current mappings; failed candidate preserves old domain and replaced dependencies detach."
         }
       ],
@@ -5095,11 +5495,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Nearest shadowed provider restores outer scope; missing ID and cross-Layer lookup reject."
         },
         {
-          "path": "packages/viz/test/hover-ownership.test.tsx",
+          "path": "packages/core/test/features/viz/hover-ownership.test.tsx",
           "supports": "Hover scale lookup across Layer produces a boundary diagnostic."
         }
       ],
@@ -5112,11 +5512,11 @@
       "status": "gap",
       "evidence": [
         {
-          "path": "packages/viz/test/point-series.test.tsx",
+          "path": "packages/core/test/features/viz/point-series.test.tsx",
           "supports": "Paint-style tests validate radii/colors/compositing but do not prove quantitative area, sign, units or categorical legend semantics."
         },
         {
-          "path": "packages/viz/src/index.ts",
+          "path": "packages/core/src/features/viz/index.ts",
           "supports": "Public package offers styling primitives, not a semantic encoding/legend verification contract."
         }
       ],
@@ -5129,15 +5529,15 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/nearest.test.tsx",
+          "path": "packages/core/test/features/viz/nearest.test.tsx",
           "supports": "Mapped local Euclidean distance uses a 3-4-5 fixture and inclusive maxDistance; source-order ties are preserved."
         },
         {
-          "path": "packages/viz/test/hover-queries.test.tsx",
+          "path": "packages/core/test/features/viz/hover-queries.test.tsx",
           "supports": "closestX recorded samples differ from interpolateX estimates, with explicit delta/maxGap."
         },
         {
-          "path": "packages/viz/test/composition.test.tsx",
+          "path": "packages/core/test/features/viz/composition.test.tsx",
           "supports": "Stroke hit and missing run gap are asserted separately from nearest queries."
         }
       ],
@@ -5150,7 +5550,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/nearest.test.tsx",
+          "path": "packages/core/test/features/viz/nearest.test.tsx",
           "supports": "Collapsed/reversed ranges, ties, invalid points, empty input and limits have fixtures."
         },
         {
@@ -5171,7 +5571,7 @@
           "supports": "Recorded provenance includes original IDs/indices after duplicate reorder and fixture data generation updates."
         },
         {
-          "path": "packages/viz/test/penguins-example.test.ts",
+          "path": "packages/core/test/features/viz/penguins-example.test.ts",
           "supports": "Known source row IDs are preserved in panel anchor reports while missing rows are absent."
         }
       ],
@@ -5188,7 +5588,7 @@
           "supports": "Native hover asserts interpolated x/y, exact local anchors and changed data-generation values."
         },
         {
-          "path": "packages/viz/test/hover-card.test.tsx",
+          "path": "packages/core/test/features/viz/hover-card.test.tsx",
           "supports": "Independent nearest-box geometry checks anchor clearance across edges, corners and oversized bounds."
         }
       ],
@@ -5201,7 +5601,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/foundation-lab.test.ts",
+          "path": "packages/core/test/features/viz/foundation-lab.test.ts",
           "supports": "Archive brush uses literal expected month domains for both handle resizing and interval movement."
         },
         {
@@ -5218,7 +5618,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/hover-data.test.tsx",
+          "path": "packages/core/test/features/viz/hover-data.test.tsx",
           "supports": "Null cursor clears returned content; restoring it creates a fresh component identity."
         },
         {
@@ -5226,7 +5626,7 @@
           "supports": "Data replacement recalculates hovered results at retained inspection x."
         },
         {
-          "path": "packages/viz/test/foundation-lab.test.ts",
+          "path": "packages/core/test/features/viz/foundation-lab.test.ts",
           "supports": "Reset and brush resize/movement have explicit fixture outcomes."
         }
       ],
@@ -5239,7 +5639,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/foundation-lab.test.ts",
+          "path": "packages/core/test/features/viz/foundation-lab.test.ts",
           "supports": "Brush panning/resizing changes detail domain while overview stays full extent and sample count remains 504."
         }
       ],
@@ -5252,11 +5652,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/foundation-lab.test.ts",
+          "path": "packages/core/test/features/viz/foundation-lab.test.ts",
           "supports": "Overview brush changes detail domain; overview domain remains [0,503] and selected date is asserted."
         },
         {
-          "path": "packages/viz/test/hover-ownership.test.tsx",
+          "path": "packages/core/test/features/viz/hover-ownership.test.tsx",
           "supports": "Identically named providers are isolated across roots."
         }
       ],
@@ -5269,11 +5669,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/hover-card.test.tsx",
+          "path": "packages/core/test/features/viz/hover-card.test.tsx",
           "supports": "Decorative card content passes pointer input through; explicitly interactive content receives it."
         },
         {
-          "path": "packages/viz/src/lib/axis.tsx",
+          "path": "packages/core/src/features/viz/lib/axis.tsx",
           "supports": "Axis path and labels declare pointerEvents none."
         }
       ],
@@ -5286,15 +5686,15 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/hover-queries.test.tsx",
+          "path": "packages/core/test/features/viz/hover-queries.test.tsx",
           "supports": "Constructing closestPoint leaves accessor read count at zero; evaluation is explicit."
         },
         {
-          "path": "packages/viz/test/hover-ownership.test.tsx",
+          "path": "packages/core/test/features/viz/hover-ownership.test.tsx",
           "supports": "Inactive branches and removed receivers stop requesting frames when their old signals change."
         },
         {
-          "path": "packages/viz/src/lib/nearest.ts",
+          "path": "packages/core/src/features/viz/lib/nearest.ts",
           "supports": "Nearest helpers scan input arrays on invocation; no retained index is built."
         }
       ],
@@ -5307,11 +5707,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/src/lib/nearest.ts",
+          "path": "packages/core/src/features/viz/lib/nearest.ts",
           "supports": "Stateless scan reads supplied current data/scales on each call; no cached spatial index to invalidate."
         },
         {
-          "path": "packages/viz/test/hover-ownership.test.tsx",
+          "path": "packages/core/test/features/viz/hover-ownership.test.tsx",
           "supports": "Branch dependencies detach and disposed sources schedule no work."
         },
         {
@@ -5328,11 +5728,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/foundation-lab.test.ts",
+          "path": "packages/core/test/features/viz/foundation-lab.test.ts",
           "supports": "Synthetic pointer movement outside bounds clamps brush; pointercancel ends subsequent changes."
         },
         {
-          "path": "packages/viz/test/hover-card.test.tsx",
+          "path": "packages/core/test/features/viz/hover-card.test.tsx",
           "supports": "Canvas card decoration passes input through and explicit interactive children can receive it."
         }
       ],
@@ -5577,7 +5977,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/physics/src/lib/2d/inspection-types.ts",
+          "path": "packages/core/src/features/physics/lib/2d/inspection-types.ts",
           "supports": "Inspection separates pose/presentationPose and exposes revision, tick, advancing and failure facts."
         },
         {
@@ -5598,7 +5998,7 @@
           "supports": "Body handle inspection distinguishes requested bodies and labels/collider bounds; coordinate conversion is independently asserted."
         },
         {
-          "path": "packages/physics/src/lib/2d/runtime/body-handle.test.tsx",
+          "path": "packages/core/src/features/physics/lib/2d/runtime/body-handle.test.tsx",
           "supports": "Public committed queries do not request a frame; stable hook-slot handle and lazy readonly signals are tested."
         }
       ],
@@ -5611,11 +6011,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/physics/src/lib/2d/runtime/body-handle.test.tsx",
+          "path": "packages/core/src/features/physics/lib/2d/runtime/body-handle.test.tsx",
           "supports": "Removed generations ignore stale commands and re-add increments the same handle generation; duplicate binding rejects."
         },
         {
-          "path": "packages/physics/src/lib/2d/runtime/events.test.tsx",
+          "path": "packages/core/src/features/physics/lib/2d/runtime/events.test.tsx",
           "supports": "Collision end and sleep/wake event delivery, deferred callback commands and removed-handler suppression have assertions."
         }
       ],
@@ -5628,7 +6028,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/physics/src/lib/2d/canvas/presentation.test.tsx",
+          "path": "packages/core/src/features/physics/lib/2d/canvas/presentation.test.tsx",
           "supports": "Dynamic motion through filters and coordinate targeting, Canvas-click impulse and authored pose ownership are tested."
         },
         {
@@ -5645,7 +6045,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/particles/src/lib/system/controller.test.ts",
+          "path": "packages/core/src/features/particles/lib/system/controller.test.ts",
           "supports": "Capacity fixture records requested five/accepted three, seed/restart and exact birth/drain behavior with frame/logical times."
         },
         {
@@ -5662,7 +6062,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/physics/src/2d-testing.ts",
+          "path": "packages/core/src/features/physics/2d-testing.ts",
           "supports": "Public harness advances requested host frames, explicitly allowing zero/one/multiple physics ticks; no cross-platform bit identity promise."
         },
         {
@@ -5670,7 +6070,7 @@
           "supports": "Public harness reset/action/realm isolation and advancing frames are exercised."
         },
         {
-          "path": "packages/particles/src/lib/random.test.ts",
+          "path": "packages/core/src/features/particles/lib/random.test.ts",
           "supports": "Deterministic random sampling has focused tests."
         }
       ],
@@ -5683,11 +6083,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/physics/src/lib/2d/canvas/presentation.test.tsx",
+          "path": "packages/core/src/features/physics/lib/2d/canvas/presentation.test.tsx",
           "supports": "Authored pose changes while enabled dynamic bodies own pose are diagnosed."
         },
         {
-          "path": "packages/physics/src/lib/2d/runtime/controller.test.tsx",
+          "path": "packages/core/src/features/physics/lib/2d/runtime/controller.test.tsx",
           "supports": "Kinematic target reads follow staged animation-lane writes and world revision publishes at Commit."
         }
       ],
@@ -5700,15 +6100,15 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/physics/src/lib/2d/runtime/body-handle.test.tsx",
+          "path": "packages/core/src/features/physics/lib/2d/runtime/body-handle.test.tsx",
           "supports": "Stale removed-body commands are inert and generation changes on rebind."
         },
         {
-          "path": "packages/particles/src/lib/system/controller.test.ts",
+          "path": "packages/core/src/features/particles/lib/system/controller.test.ts",
           "supports": "Invalid command admission and real renderer transaction failure paths have ownership assertions."
         },
         {
-          "path": "packages/particles/src/lib/system/hook.test.tsx",
+          "path": "packages/core/src/features/particles/lib/system/hook.test.tsx",
           "supports": "Mounted particle hook lifecycle is exercised."
         },
         {
@@ -5725,11 +6125,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/particles/src/lib/sample.test.ts",
+          "path": "packages/core/src/features/particles/lib/sample.test.ts",
           "supports": "Analytic acceleration fixture at 500ms asserts position 2.5/3.25, velocity 4/2 and angular value 20 independently."
         },
         {
-          "path": "packages/physics/src/lib/2d/canvas/presentation.test.tsx",
+          "path": "packages/core/src/features/physics/lib/2d/canvas/presentation.test.tsx",
           "supports": "Public dynamic motion/collision presentation provides geometric checks beyond screenshots."
         }
       ],
@@ -5956,11 +6356,7 @@
               "tooling/agent-verification/viz-replay.mjs",
               "docs/strategy/agent-verification-evidence/app-11-replay.json"
             ],
-            "checkIds": [
-              "native-replay",
-              "browser-lifecycle",
-              "mixed-native"
-            ]
+            "checkIds": ["native-replay", "browser-lifecycle", "mixed-native"]
           },
           {
             "criterion": "Record asynchronous completion ordering and obey declared latest-request-wins policy for both stale success and stale error.",
@@ -5969,11 +6365,7 @@
               "packages/core/test/agent-viz-verification.test.ts",
               "docs/strategy/agent-verification-evidence/app-11-replay.json"
             ],
-            "checkIds": [
-              "native-replay",
-              "browser-lifecycle",
-              "mixed-native"
-            ]
+            "checkIds": ["native-replay", "browser-lifecycle", "mixed-native"]
           },
           {
             "criterion": "Revoke queued responses on reset/disposal, preserve historical snapshots, and isolate subsequent mounts.",
@@ -6224,7 +6616,7 @@
           "supports": "Pure resolver failures restore hook authority."
         },
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Provider candidate failure preserves prior scale and unknown scope rejects."
         }
       ],
@@ -6267,7 +6659,7 @@
     },
     {
       "id": "ERR-11",
-      "requirement": "- ERR-11: State whether a diagnosis is causal evidence or a heuristic. A cycle path can be proven; \u201cthis overlap is unintended\u201d usually needs application intent.",
+      "requirement": "- ERR-11: State whether a diagnosis is causal evidence or a heuristic. A cycle path can be proven; “this overlap is unintended” usually needs application intent.",
       "status": "partial",
       "evidence": [
         {
@@ -6611,7 +7003,7 @@
           "supports": "Sparse/miss workloads span 100,1000,10000 targets with explicit structural expectations."
         },
         {
-          "path": "packages/viz/test/point-series.test.tsx",
+          "path": "packages/core/test/features/viz/point-series.test.tsx",
           "supports": "10-to-10000 point growth retains constant component/target counts."
         }
       ],
@@ -6632,7 +7024,7 @@
           "supports": "No unnecessary pixel-copy work and cached Layer child reuse are asserted."
         },
         {
-          "path": "packages/viz/test/composition.test.tsx",
+          "path": "packages/core/test/features/viz/composition.test.tsx",
           "supports": "Large line batch uses one stroke and series signal is read once."
         }
       ],
@@ -6926,7 +7318,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/physics/src/2d-testing.ts",
+          "path": "packages/core/src/features/physics/2d-testing.ts",
           "supports": "Explicit application harness controls requested host-frame time."
         },
         {
@@ -7028,7 +7420,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/physics/src/2d-testing.ts",
+          "path": "packages/core/src/features/physics/2d-testing.ts",
           "supports": "Reset remounts a fresh root without moving host time backward."
         },
         {
@@ -7141,7 +7533,7 @@
     },
     {
       "id": "TST-03",
-      "requirement": "- TST-03: Bound negative observations explicitly: \u201cno late action during this interval/after these controlled completions,\u201d not \u201cthis can never happen.\u201d",
+      "requirement": "- TST-03: Bound negative observations explicitly: “no late action during this interval/after these controlled completions,” not “this can never happen.”",
       "status": "partial",
       "evidence": [
         {
@@ -7165,7 +7557,7 @@
           "supports": "Pause/resume/reverse/replacement/rollback/disposal sequences are exercised."
         },
         {
-          "path": "packages/viz/test/foundation-lab.test.ts",
+          "path": "packages/core/test/features/viz/foundation-lab.test.ts",
           "supports": "Brush resize/pan/release/cancel is a multi-action sequence."
         }
       ],
@@ -7177,11 +7569,11 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Public numeric matrix checks independent map/invert expectations and both round trips."
         },
         {
-          "path": "packages/viz/test/plot-series.test.tsx",
+          "path": "packages/core/test/features/viz/plot-series.test.tsx",
           "supports": "Keyed reorder preserves state and removed rows clean up."
         }
       ],
@@ -7209,7 +7601,7 @@
           "supports": "Signals, transformed Layer clips, resize, density and native input are combined."
         },
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Layer scope and reactive scale boundaries are exercised."
         },
         {
@@ -7286,7 +7678,7 @@
       "status": "partial",
       "evidence": [
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Expected positions are computed independently of scale map/invert, with explicit tolerances."
         },
         {
@@ -7310,7 +7702,7 @@
           "supports": "Negative tests reject duplicate, substituted, missing-ID and reordered actions, as well as empty/unfinished/failed steps and invalid manifests."
         },
         {
-          "path": "packages/viz/test/scale.test.tsx",
+          "path": "packages/core/test/features/viz/scale.test.tsx",
           "supports": "Round-trip probe asserts checked sample count so an unmounted probe cannot pass silently."
         }
       ],
@@ -7332,7 +7724,7 @@
         },
         {
           "path": "packages/core/test/smoke-scenario.test.ts",
-          "supports": "Fresh mixed Canvas/DOM screenshot passed; inspected report has viewport 800\u00d7600, composed element bounds 720\u00d7240, density 1 and null backing dimensions for the DOM container."
+          "supports": "Fresh mixed Canvas/DOM screenshot passed; inspected report has viewport 800×600, composed element bounds 720×240, density 1 and null backing dimensions for the DOM container."
         }
       ],
       "remaining": "Join capture IDs with suite/build provenance and authoritative render generations; add application-specific asset/font readiness predicates. Before/after element bounds are observations, not an atomic guarantee of screenshot crop/frame identity.",
@@ -7353,11 +7745,11 @@
         },
         {
           "path": "packages/core/test/smoke-scenario.test.ts",
-          "supports": "Fresh mixed Canvas/DOM screenshot passed; inspected report has viewport 800\u00d7600, composed element bounds 720\u00d7240, density 1 and null backing dimensions for the DOM container."
+          "supports": "Fresh mixed Canvas/DOM screenshot passed; inspected report has viewport 800×600, composed element bounds 720×240, density 1 and null backing dimensions for the DOM container."
         },
         {
           "path": "packages/core/test/visual-comparison-evidence.test.ts",
-          "supports": "Two native screenshot fixtures compare raw red Canvas readback against sibling blue DOM overlay composition. Plain overlay yields exactly 100 changed pixels; 2\u00d7 CSS scaling plus ancestor overflow clipping yields exactly 200 at bounds (70,20,10,20). Overlay removal restores a match while backing pixels stay unchanged."
+          "supports": "Two native screenshot fixtures compare raw red Canvas readback against sibling blue DOM overlay composition. Plain overlay yields exactly 100 changed pixels; 2× CSS scaling plus ancestor overflow clipping yields exactly 200 at bounds (70,20,10,20). Overlay removal restores a match while backing pixels stay unchanged."
         }
       ],
       "remaining": "Extend surface-specific evidence to representative CRC overlays, other browser/backend capabilities and capture paths outside this helper. These fixtures prove rectangular sibling overlay composition and integer CSS scaling/clipping, not arbitrary transforms, browser UI or cross-origin frames.",
@@ -7407,7 +7799,7 @@
         },
         {
           "path": "tooling/verify-visual-safeguard.mjs",
-          "supports": "New 12\u00d76 inter-line defect drill passed incorrectly before narrowing; now rejects with exactly 72 differing pixels and bounds (60,100,12,6). Original application-state drill also rejects; clean recovery passes with unchanged baseline bytes. Gallery probes inject 12\u00d76 defects in wrapped-card background and scaled-image background; both passed incorrectly before narrowing and now reject with exactly 72 changed pixels and expected bounds, followed by clean recovery and unchanged baselines."
+          "supports": "New 12×6 inter-line defect drill passed incorrectly before narrowing; now rejects with exactly 72 differing pixels and bounds (60,100,12,6). Original application-state drill also rejects; clean recovery passes with unchanged baseline bytes. Gallery probes inject 12×6 defects in wrapped-card background and scaled-image background; both passed incorrectly before narrowing and now reject with exactly 72 changed pixels and expected bounds, followed by clean recovery and unchanged baselines."
         },
         {
           "path": "packages/core/test/drawing-gallery.test.ts",

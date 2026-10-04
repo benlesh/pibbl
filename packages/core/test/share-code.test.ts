@@ -218,7 +218,7 @@ export default function mount(canvas) {
       `
 import { crc } from "@crc/core";
 import { jsx as _jsx } from "@crc/core/jsx-runtime";
-import { Particles2D, defineParticleEffect2D, particleRange } from "@crc/particles";
+import { Particles2D, defineParticleEffect2D, particleRange } from "@crc/core/particles";
 const effect = defineParticleEffect2D({
   emitters: [{
     name: "spark",
@@ -339,8 +339,8 @@ export default function mount(canvas) {
       `
 import { crc } from "@crc/core";
 import { jsx as _jsx } from "@crc/core/jsx-runtime";
-import { PhysicsWorld2D, dynamicBody2D } from "@crc/physics/2d";
-import { circleShape2D } from "@crc/physics/2d/geometry";
+import { PhysicsWorld2D, dynamicBody2D } from "@crc/core/physics/2d";
+import { circleShape2D } from "@crc/core/physics/2d/geometry";
 export default function mount(canvas) {
   return crc(canvas, _jsx(PhysicsWorld2D, {
     gravity: [0, 600],

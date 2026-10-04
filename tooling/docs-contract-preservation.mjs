@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "7edfbc7a9cbe761c2ad6f35e85f3203a01a025a11942062b407710b25d90b219";
+  "1b46d81f0513549efc9d2080ddebfef0b919c3750fa8b9a3a7be3769c8844485";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const THREE_PIVOT_APPROVAL_RECORD = "three-full-pivot";
@@ -103,7 +103,31 @@ const MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS = new Set([
   ...ANIMATION_APPROVED_SECTIONS,
 ]);
 
+const HTML_BOX_APPROVAL_RECORD = "html-box";
+const HTML_BOX_APPROVED_SECTIONS = new Set([
+  "HtmlBox design",
+  "Purpose",
+  "Public authoring surface",
+  "Root DOM arrangement and ownership",
+  "Layout, transforms, and paint",
+  "Clipping representation and DOM projection",
+  "Mount lifetime and frame publication",
+  "Native input and focus bridge",
+  "Navigation rules",
+  "Entry, exit, and cancellation",
+  "Accessibility and bounded behavior",
+  "Delivery sequence and evidence",
+]);
+
 const POST_BASELINE_CONTRACT_PROFILES = new Map([
+  [
+    "docs/design/html-box-contract.md",
+    {
+      unitPrefix: "y",
+      approvalRecordId: HTML_BOX_APPROVAL_RECORD,
+      allowedSections: HTML_BOX_APPROVED_SECTIONS,
+    },
+  ],
   [
     "docs/design/textures-contract.md",
     {
@@ -125,6 +149,7 @@ const POST_BASELINE_CONTRACT_PROFILES = new Map([
         "Ownership and failure ledger",
         "Packaging and the wider optional feature audit",
         "Consumer bundle evidence",
+        "Concurrent texture and WASM integration clarification",
         "Behavior and lifecycle verification",
         "Migration and documentation",
       ]),

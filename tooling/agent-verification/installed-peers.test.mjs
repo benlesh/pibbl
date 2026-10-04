@@ -54,8 +54,8 @@ test('distinguishes duplicate physical core installations from proof of loaded d
 });
 
 test('observes current official consumers including the Three.js peer', async () => {
-  const result = await auditInstalledPeers(['three', 'viz', 'particles', 'physics', 'textures'].map(name => resolve('packages', name, 'package.json')));
-  assert.equal(result.status, 'compatible'); assert.equal(result.peers.length, 6);
+  const result = await auditInstalledPeers(['three'].map(name => resolve('packages', name, 'package.json')));
+  assert.equal(result.status, 'compatible'); assert.equal(result.peers.length, 2);
   assert.equal(result.coreInstallations.length, 1);
   assert.equal(result.peers.find(peer => peer.name === 'three').version, '0.186.0');
 });

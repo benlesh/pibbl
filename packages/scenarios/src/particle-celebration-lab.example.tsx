@@ -17,7 +17,7 @@ import {
   particleRange,
   type CRCParticleSystem,
   type CRCParticleSystemEvent,
-} from '@crc/particles';
+} from '@crc/core/particles';
 
 // prettier-ignore
 export const PARTICLE_CELEBRATION_LAB_SOURCE_ID = 'first-class-particle-celebration-laboratory-example';

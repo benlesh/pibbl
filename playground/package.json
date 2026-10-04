@@ -13,16 +13,13 @@
     "@fontsource-variable/space-grotesk": "catalog:",
     "@babel/parser": "catalog:",
     "@crc/core": "workspace:*",
-    "@crc/particles": "workspace:*",
-    "@crc/physics": "workspace:*",
     "@crc/scenarios": "workspace:*",
     "@crc/three": "workspace:*",
     "lz-string": "catalog:",
     "minisearch": "catalog:",
     "monaco-editor": "catalog:",
     "three": "catalog:",
-    "@crc/viz": "workspace:*",
-    "@crc/textures": "workspace:*"
+    "@crc/text": "workspace:*"
   },
   "devDependencies": {
     "@types/three": "catalog:",

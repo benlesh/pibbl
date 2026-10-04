@@ -63,18 +63,18 @@ export const crcPublicCompilerOptions: CompilerOptions = {
 
 export const crcPublicEntryPaths = {
   filters: fileURLToPath(new URL("../../packages/core/src/filters.ts", import.meta.url)),
-  textures: fileURLToPath(new URL("../../packages/textures/src/index.ts", import.meta.url)),
+  textures: fileURLToPath(new URL("../../packages/core/src/features/textures/index.ts", import.meta.url)),
   root: fileURLToPath(
     new URL("../../packages/core/src/index.ts", import.meta.url),
   ),
   viz: fileURLToPath(
-    new URL("../../packages/viz/src/index.ts", import.meta.url),
+    new URL("../../packages/core/src/features/viz/index.ts", import.meta.url),
   ),
   three: fileURLToPath(
     new URL("../../packages/three/src/index.ts", import.meta.url),
   ),
   particles: fileURLToPath(
-    new URL("../../packages/particles/src/index.ts", import.meta.url),
+    new URL("../../packages/core/src/features/particles/index.ts", import.meta.url),
   ),
   types: fileURLToPath(
     new URL("../../packages/core/src/types.ts", import.meta.url),
@@ -89,13 +89,13 @@ export const crcPublicEntryPaths = {
 
 export const crcPhysicsEntryPaths = {
   root: fileURLToPath(
-    new URL("../../packages/physics/src/2d.ts", import.meta.url),
+    new URL("../../packages/core/src/features/physics/2d.ts", import.meta.url),
   ),
   physics2dGeometry: fileURLToPath(
-    new URL("../../packages/physics/src/2d-geometry.ts", import.meta.url),
+    new URL("../../packages/core/src/features/physics/2d-geometry.ts", import.meta.url),
   ),
   physics3dGeometry: fileURLToPath(
-    new URL("../../packages/physics/src/3d-geometry.ts", import.meta.url),
+    new URL("../../packages/core/src/features/physics/3d-geometry.ts", import.meta.url),
   ),
 } as const;
 
@@ -104,7 +104,7 @@ export const crcStudioPublicEntryPaths = {
   ...crcPublicEntryPaths,
   physics2d: crcPhysicsEntryPaths.root,
   physics2dTesting: fileURLToPath(
-    new URL("../../packages/physics/src/2d-testing.ts", import.meta.url),
+    new URL("../../packages/core/src/features/physics/2d-testing.ts", import.meta.url),
   ),
   physics3dGeometry: crcPhysicsEntryPaths.physics3dGeometry,
 } as const;

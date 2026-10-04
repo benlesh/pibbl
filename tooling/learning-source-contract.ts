@@ -56,10 +56,10 @@ interface SourceInspection {
   readonly packageImportModules: readonly string[];
 }
 
-const VIZ_MODULE = "@crc/viz";
+const VIZ_MODULE = "@crc/core/viz";
 const CORE_MODULE = "@crc/core";
-const PARTICLES_MODULE = "@crc/particles";
-const PARTICLES_WEBGL_MODULE = ["@crc/particles", "webgl"].join("/");
+const PARTICLES_MODULE = "@crc/core/particles";
+const PARTICLES_WEBGL_MODULE = ["@crc/core/particles", "webgl"].join("/");
 const THREE_ADAPTER_MODULE = "@crc/three";
 const THREE_MODULE = "three";
 const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
@@ -67,7 +67,8 @@ const WEBGL_MODULE = ["@crc", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
   "@crc/core/filters",
   VIZ_MODULE,
-  "@crc/textures",
+  "@crc/core/textures",
+  "@crc/text",
   CORE_MODULE,
   PARTICLES_MODULE,
   THREE_ADAPTER_MODULE,
@@ -76,7 +77,7 @@ const LEARNING_VALUE_MODULES = new Set([
 ]);
 const PARTICLES_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/particle-effects.example.tsx";
-const PHYSICS_2D_MODULE = "@crc/physics/2d";
+const PHYSICS_2D_MODULE = "@crc/core/physics/2d";
 const PHYSICS_MODULES = new Set([PHYSICS_2D_MODULE]);
 for (const physicsModule of PHYSICS_MODULES) {
   LEARNING_VALUE_MODULES.add(physicsModule);
@@ -1443,7 +1444,7 @@ export function validateScenarioSourceText(
   ) {
     throw invalid(
       label,
-      "must use supported static imports from @crc/core, @crc/viz, @crc/particles, @crc/physics/2d, @crc/three, three, and supported Three addons; relative imports must be type-only; and at least one public @crc/core value is required.",
+      "must use supported static imports from @crc/core, @crc/core/viz, @crc/core/particles, @crc/core/physics/2d, @crc/three, three, and supported Three addons; relative imports must be type-only; and at least one public @crc/core value is required.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1509,12 +1510,12 @@ export function validateLearningSourceText(
         label === "physics-2d" ||
         label === 'Learning example "physics-2d"'));
   const optionalFilterImports = inspection.packageImportModules.includes("@crc/core/filters") ? 1 : 0;
-  const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE) || inspection.packageImportModules.includes("@crc/textures");
+  const isVizLesson = inspection.packageImportModules.includes("@crc/text") || inspection.packageImportModules.includes(VIZ_MODULE) || inspection.packageImportModules.includes("@crc/core/textures");
   const isStirredInkLesson = sourcePath === "packages/scenarios/src/learning/composition/stirred-ink.example.tsx" ||
     (sourcePath === undefined && (label === "stirred-ink" || label === 'Learning example "stirred-ink"'));
   const hasExactPackageImports = isStirredInkLesson
     ? inspection.hasNamedValueCoreImport && inspection.hasPhysics2DValueImport &&
-      inspection.packageImportModules.includes("@crc/textures") && inspection.packageImportModules.length === 3
+      inspection.packageImportModules.includes("@crc/core/textures") && inspection.packageImportModules.length === 3
     : isVizLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.packageImportModules.length === 2 + optionalFilterImports
@@ -1554,9 +1555,9 @@ export function validateLearningSourceText(
           ? "must use direct, unaliased static named value imports from @crc/core, @crc/three, three, and three/addons/controls/OrbitControls.js."
           : "must use direct, unaliased static named value imports from @crc/core, @crc/three, and three."
         : isParticlesLesson
-          ? "must use direct, unaliased static named value imports from both @crc/core and @crc/particles."
+          ? "must use direct, unaliased static named value imports from both @crc/core and @crc/core/particles."
           : isPhysicsLesson
-            ? "must use direct, unaliased static named value imports from both @crc/core and @crc/physics/2d."
+            ? "must use direct, unaliased static named value imports from both @crc/core and @crc/core/physics/2d."
             : "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
     );
   }
@@ -1582,9 +1583,9 @@ export function validateLearningSourceText(
       isThreeLesson
         ? "must use direct Three lesson bindings without aliases, reassignment, or shadowing."
         : isParticlesLesson
-          ? "must use direct @crc/core and @crc/particles bindings without aliases, reassignment, or shadowing."
+          ? "must use direct @crc/core and @crc/core/particles bindings without aliases, reassignment, or shadowing."
           : isPhysicsLesson
-            ? "must use direct @crc/core and @crc/physics/2d bindings without aliases, reassignment, or shadowing."
+            ? "must use direct @crc/core and @crc/core/physics/2d bindings without aliases, reassignment, or shadowing."
             : "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
     );
   }

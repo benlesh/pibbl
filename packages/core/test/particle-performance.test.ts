@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { compileParticleEffect2D } from "../../particles/src/lib/compiler.js";
-import { createCanvasBirthLedger } from "../../particles/src/lib/canvas/birth-ledger.js";
-import { defineParticleEffect2D } from "../../particles/src/lib/definition.js";
+import { compileParticleEffect2D } from "../src/features/particles/lib/compiler.js";
+import { createCanvasBirthLedger } from "../src/features/particles/lib/canvas/birth-ledger.js";
+import { defineParticleEffect2D } from "../src/features/particles/lib/definition.js";
 
 describe("particle structural performance", () => {
   it("commits fixed Canvas storage proportional to declared capacity", () => {

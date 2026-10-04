@@ -14,7 +14,7 @@ import {
   paper,
   cellular,
   type TextureKind,
-} from "@crc/textures";
+} from "@crc/core/textures";
 
 const palettes = [
   ["#f2e8d7", "#c4b8a9", "#625e68", "#252c3f"],

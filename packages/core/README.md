@@ -41,15 +41,16 @@ layout, scheduling, event, focus, and teardown boundary. The optional
 `@crc/three` package specializes that public lifecycle for ordinary Three.js
 scenes without introducing another JSX runtime or scene graph.
 
-The optional `@crc/particles` package also shares this runtime. It adds Canvas
-particle components, systems, and immutable 2D effect definitions.
+Particles, visualization, textures, and physics ship in this package under
+`@crc/core/particles`, `@crc/core/viz`, `@crc/core/textures`, and
+`@crc/core/physics/2d`. Import only the features you use; the root does not
+re-export them. Each feature shares the same runtime and scheduler.
 
-The optional matching `@crc/physics` package is also a sibling rather than a
-core export. Its `/2d` runtime uses the version-coupled friend scheduler so one
-awake world is one Advance participant; bodies never create a second loop.
-Renderer-independent geometry is available from `/2d/geometry` and
-`/3d/geometry`. Applications do not import `@crc/core/internal` or a root
-`@crc/physics` barrel.
+Pure geometry is available from `@crc/core/physics/2d/geometry` and
+`@crc/core/physics/3d/geometry`. Those entries and core drawing do not load or
+initialize Rapier. The physics entry includes private precompiled Rapier WASM
+and JS bindings; consumers do not install Rapier. There is no root physics
+barrel. `@crc/core/internal` remains private to official integrations.
 
 Drawing and layout values use closed, local `style` objects. Styles do not
 cascade or inherit. Structural containers accept recursive synchronous
@@ -72,4 +73,4 @@ contracts](../../docs/design/runtime-hooks-contract.md).
 For transparent 3D composition, use the [Three.js integration
 guide](../../docs/site/learn/guides/three-js.md) and install `@crc/three` plus
 `three`. Pure 3D collision geometry remains available from
-`@crc/physics/3d/geometry`.
+`@crc/core/physics/3d/geometry`.

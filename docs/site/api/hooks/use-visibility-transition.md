@@ -26,6 +26,8 @@ symbols:
     CRCBifrostOptions,
     embers,
     CRCEmbersOptions,
+    CRCEmbersPhysicsOptions,
+    CRCEmberCollision,
     useVisibilityTransition,
     fade,
     CRCTransitionBinding,
@@ -120,3 +122,25 @@ Transitions compose with ordinary filters, clipping, transforms, and nested
 managed Layers under the existing filter executor restrictions. A custom-renderer
 failure follows normal CRC failure cleanup: the hook owner is torn down, pending
 requests resolve as `disposed`, and its animation participants are released.
+
+## Opt-in Ember physics
+
+`embers({ region, linger: 1400, physics: { gravity: [0, 500], wind: [60, 0], drag: 4, restitution: 0.5, collide } })`
+opts into a controller-owned fixed-step particle simulation. Coordinates are local
+to the receiving primitive; forces use units/second², wind uses units/second, and
+drag uses inverse seconds. `linger` must be positive. Gravity defaults to `[0,-60]`,
+wind to `[0,-45]`, drag to 4, and restitution to 0.5.
+
+The optional synchronous `collide(from, to)` callback receives a swept point segment
+and returns the closest `{ fraction, normal }` hit or `undefined`. It runs during
+Advance and must not write signals or retain borrowed data. Normal is a local
+outward vector, fraction is in `[0,1]`. Query a local physics world in this callback
+for obstacle interaction. This is one-way point collision: particles do not push
+bodies. Keep the receiver and queried world in the same coordinate space or
+explicitly convert points and normals. No physics-world import occurs implicitly.
+
+The simulation takes 1/60-second steps with at most four catch-up steps per frame;
+excess wall time is dropped. Reversal preserves existing motion; a fresh settled
+run starts a fresh simulation. Completion still waits for the particle tail, and
+owner disposal stops simulation. Physics owns 256 KiB fixed WASM memory per used
+controller. The existing analytic effect remains the default when physics is omitted.

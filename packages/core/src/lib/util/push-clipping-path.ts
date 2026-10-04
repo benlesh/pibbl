@@ -11,9 +11,11 @@ export function pushClippingPath(
   path: Path2D,
   fillRule: CanvasFillRule = 'nonzero',
   applyPaint = true,
+  svgPath?: string,
 ): () => void {
   GLOBAL_STATE.clippingStack.push({
     path,
+    svgPath,
     fillRule,
     transform: getCurrentWorldTransform(),
   });

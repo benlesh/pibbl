@@ -18,7 +18,7 @@ symbols:
 
 # PointSeries
 
-Import from `@crc/viz`. Supply `data`, `x`, `y`, `xScale`, and `yScale` as for
+Import from `@crc/core/viz`. Supply `data`, `x`, `y`, `xScale`, and `yScale` as for
 LineSeries. Invalid coordinates skip independent marks; `defined` runs first.
 Data may be a signal. Arrays and nested row values are never implicitly unwrapped.
 

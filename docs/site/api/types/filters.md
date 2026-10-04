@@ -121,8 +121,12 @@ field table above. Numeric fields support signals owned by the receiving primiti
 
 `map` is a mounted `TexturePaint`; `strength` is a finite nonnegative logical
 maximum offset; and `region` supplies finite local coordinates with positive width
-and height for texture placement. A zero strength validates the map identity but
-does not acquire GPU processing or subscribe to map pixel revisions.
+and height for texture placement. Optional `blurRadius` is a finite nonnegative
+logical support radius (default 0). Blue × alpha scales the local blur radius;
+red/green × alpha still control displacement. A bounded mip-filtered 5×5 binomial kernel
+softens the refracted scene; this radius is not native Gaussian blur sigma.
+Only when both strength and blur radius are zero does the filter validate the
+map without acquiring GPU processing or subscribing to map pixel revisions.
 
 ## CRCDropShadowFilterOptions
 

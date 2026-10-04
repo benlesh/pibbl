@@ -49,3 +49,14 @@ it('launches embers in all directions then turns every fragment into an upward f
   }
   expect(quadrants).toEqual(new Set(['1:1', '-1:1', '1:-1', '-1:-1']));
 });
+
+it('reflects a swept physics particle at the collision point and separates it from the surface', () => {
+  const memory=new WebAssembly.Memory({initial:4,maximum:4});
+  const module=new WebAssembly.Module(Uint8Array.from(atob(bytes),c=>c.charCodeAt(0)));
+  const exports=new WebAssembly.Instance(module,{env:{memory,abort(){throw Error('kernel abort');}}}).exports as Record<string,(...args:number[])=>void>;
+  const v=new Float64Array(memory.buffer,16384), s=14000;
+  v[s]=30;v[s+1]=110;v[s+2]=20;v[s+3]=100;v[s+5]=20;v[s+6]=90;
+  exports.collidePhysics!(0,.5,0,-1,.6);
+  expect(v[s]).toBe(25);expect(v[s+1]).toBeCloseTo(99.95);
+  expect(v[s+2]).toBe(20);expect(v[s+3]).toBeCloseTo(-60);
+});

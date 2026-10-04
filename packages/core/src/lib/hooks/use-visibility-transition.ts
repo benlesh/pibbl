@@ -4,7 +4,7 @@ import { track } from '../animation/program.js';
 import { defineAnimation, tween } from '../animation/definition.js';
 import type { CRCPlayback } from '../animation/types.js';
 import { createTransitionBinding, type CRCTransitionBinding } from '../transitions/binding.js';
-import { transitionEffectSampler, transitionEffectTail, type CRCTransitionEffect } from '../transitions/fade.js';
+import { createTransitionRuntime, transitionEffectSampler, transitionEffectTail, type CRCTransitionEffect } from '../transitions/fade.js';
 import { useHookSlot } from './hook-slot.js';
 import { queueBeginCommand } from '../scheduler/realm-scheduler.js';
 import type { CRCBeginCommandHandle } from '../scheduler/types.js';
@@ -38,10 +38,14 @@ export function useVisibilityTransition(options: CRCVisibilityTransitionOptions)
   const duration = options.duration ?? 300;
   if (!Number.isFinite(duration) || duration < 0) throw new RangeError('Visibility transition duration must be finite and nonnegative.');
   if (options.initial !== undefined && typeof options.initial !== 'boolean') throw new TypeError('Visibility transition initial must be boolean.');
-  const enter = transitionEffectSampler(options.enter);
-  const exit = transitionEffectSampler(options.exit ?? options.enter);
+  transitionEffectSampler(options.enter);
+  transitionEffectSampler(options.exit ?? options.enter);
   const enterTail = transitionEffectTail(options.enter), exitTail = transitionEffectTail(options.exit ?? options.enter);
   const state = useHookSlot('visibility-transition', teardowns => {
+    const enterRuntime = createTransitionRuntime(options.enter);
+    const exitRuntime = options.exit && options.exit !== options.enter ? createTransitionRuntime(options.exit) : enterRuntime;
+    const runtimes = [...new Set([enterRuntime, exitRuntime])];
+    const enter = enterRuntime.sample, exit = exitRuntime.sample;
     const visible = signal(options.initial ?? true);
     const progress = signal(visible.get() ? 1 : 0);
     const status = signal<CRCVisibilityTransitionStatus>(visible.get() ? 'visible' : 'hidden');
@@ -89,7 +93,7 @@ export function useVisibilityTransition(options: CRCVisibilityTransitionOptions)
         command = queueBeginCommand(snapshot => {
           historyCommands.delete(command);
           if (disposed) return;
-          if (!wasActive) { history = []; runInitial = from; runStart = snapshot.logicalTime; }
+          if (!wasActive) { history = []; runInitial = from; runStart = snapshot.logicalTime; for (const runtime of runtimes) runtime.reset?.(); }
           const append = (time: number, slope: number) => {
             if (history.at(-1)?.time === time) history.pop();
             history.push({ time, progress: from, direction: slope });
@@ -131,18 +135,22 @@ export function useVisibilityTransition(options: CRCVisibilityTransitionOptions)
       binding, visible: visible.asReadonly(), progress: progress.asReadonly(), status: status.asReadonly(),
       show: () => request(true), hide: () => request(false), finish: () => { if (!disposed && pending) { forced.set(true); if (tailRunning) tail.finish(); else if (pending.target) playback.finish(); else playback.seek(0); } },
     });
-    teardowns.add(() => { disposed = true; history = []; for (const command of historyCommands) command.cancel(); historyCommands.clear(); status.set('disposed'); settle('disposed'); });
+    teardowns.add(() => { disposed = true; for (const runtime of runtimes) runtime.dispose?.(); history = []; for (const command of historyCommands) command.cancel(); historyCommands.clear(); status.set('disposed'); settle('disposed'); });
     return {
       handle, program: track(progress, duration === 0 ? defineAnimation({ duration: 0, sample: () => Number(visible.get()) }) : tween({ from: 0, to: 1, duration })),
-      clockProgram: track(elapsed, tween({ from: 0, to: 1e12, duration: 1e12 })),
+      clockProgram: track(elapsed, defineAnimation({ duration: 1e12, sample: ({ localTime }) => {
+        if (pending && !forced.get()) (visible.get() ? enterRuntime : exitRuntime).advance?.(localTime, progressAt);
+        return localTime;
+      } })),
       tailProgram: track(tailTime, tween({ from: 0, to: 1, duration: maxTail })),
       setPlayback(value: CRCPlayback, clockValue: CRCPlayback, tailValue: CRCPlayback) { playback = value; clock = clockValue; tail = tailValue; },
+      fail() { disposed = true; for (const runtime of runtimes) runtime.dispose?.(); forced.set(true); status.set('disposed'); settle('disposed'); playback.cancel(); clock.cancel(); tail.cancel(); },
       startTail,
       completeTail() { if (tailRunning) complete(); },
     };
   }).value;
   const playback = usePlayback(state.program, { onEvent: event => { if (event.type === 'finish') state.startTail(); } });
-  const clock = usePlayback(state.clockProgram);
+  const clock = usePlayback(state.clockProgram, { onError: error => { state.fail(); throw error; } });
   const tail = usePlayback(state.tailProgram, { onEvent: event => { if (event.type === 'finish') state.completeTail(); } });
   state.setPlayback(playback, clock, tail);
   return state.handle;

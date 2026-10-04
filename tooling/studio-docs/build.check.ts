@@ -599,6 +599,7 @@ assert.deepEqual(
     "Manage state and lifecycle",
     "Use signals and animation",
     "Compose and test 2D physics",
+    "Migrate to one CRC package",
     "Use Three.js inside CRC",
     "Create particle effects",
     "Compose data visualizations",

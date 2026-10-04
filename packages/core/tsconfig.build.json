@@ -8,7 +8,10 @@
     "noEmit": false,
     "noEmitOnError": true,
     "outDir": "./dist",
-    "paths": {},
+    "paths": {
+      "@crc/core": ["./src/index.ts"],
+      "@crc/core/internal": ["./src/internal.ts"]
+    },
     "rootDir": "./src",
     "types": []
   },
@@ -18,7 +21,14 @@
     "src/filters.ts",
     "src/types.ts",
     "src/jsx-runtime.ts",
-    "src/jsx-dev-runtime.ts"
+    "src/jsx-dev-runtime.ts",
+    "src/features/particles/index.ts",
+    "src/features/viz/index.ts",
+    "src/features/textures/index.ts",
+    "src/features/physics/2d.ts",
+    "src/features/physics/2d-geometry.ts",
+    "src/features/physics/2d-testing.ts",
+    "src/features/physics/3d-geometry.ts"
   ],
   "include": []
 }

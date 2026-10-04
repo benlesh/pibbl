@@ -21,7 +21,6 @@ export function targetingIdentityPlugin(root) {
       const file = context.file;
       if (file.startsWith(resolve(root, 'packages/core/src') + '/') ||
           file.startsWith(resolve(root, 'tooling/agent-verification') + '/') ||
-          file.startsWith(resolve(root, 'packages/viz/src') + '/') ||
           file.includes('/viz-hover') ||
           file.includes('/agent-targeting-verification') || file.includes('/agent-text-verification') || file.includes('/agent-signal-mutation')) {
         context.server.moduleGraph.invalidateAll();

@@ -290,13 +290,13 @@ including animated material parameters and Rapier collision messages that paint
 ink. The comparison pages retain the pre-migration JS implementations in
 `reference-*.ts`; they must not silently benchmark WASM against itself.
 
-The production kernels are generated from `packages/textures/assembly/` by
+The production kernels are generated from `packages/core/assembly/textures/` by
 `node tooling/build-texture-wasm.mjs`. Static parameter updates reuse memory;
 resolution or generator changes replace it. Full-field and RGBA transport does
 not cross through copies in JavaScript; Canvas upload remains browser work.
 
 Focused parity: `node --import tsx --test tooling/texture-wasm-spike/production.check.mjs`.
-Public browser contracts: `packages/textures/test/wasm-runtime.test.tsx` and
+Public browser contracts: `packages/core/test/features/textures/wasm-runtime.test.tsx` and
 `wasm-integration.test.tsx`. The latter pauses ink evolution and verifies that
 physics collision messages alter its pixels, while animated materials keep
 three stable pixel buffers across 360 scheduled frames.
@@ -308,7 +308,7 @@ Fresh slice verification (2026-10-01 local, Node 26.9.0, pnpm 11.21.0,
 Playwright Chromium 151 on macOS arm64; not the repository's Node 24 LTS baseline):
 
 ```sh
-corepack pnpm@11.21.0 exec vitest run packages/textures/test/wasm-runtime.test.tsx packages/textures/test/wasm-integration.test.tsx packages/textures/test/material.test.tsx packages/textures/test/simulation.test.ts packages/textures/test/reaction-diffusion.test.tsx packages/textures/test/lifecycle.test.tsx packages/textures/test/presentation.test.tsx --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/test/features/textures/wasm-runtime.test.tsx packages/core/test/features/textures/wasm-integration.test.tsx packages/core/test/features/textures/material.test.tsx packages/core/test/features/textures/simulation.test.ts packages/core/test/features/textures/reaction-diffusion.test.tsx packages/core/test/features/textures/lifecycle.test.tsx packages/core/test/features/textures/presentation.test.tsx --browser.headless --browser.ui=false
 ```
 
 Result: 7 files, 36 tests passed. `corepack pnpm@11.21.0 exec tsc --noEmit
@@ -327,8 +327,8 @@ reads the body's committed position; initial placement/teleports are excluded.
 “Pause reaction” stops Gray–Scott stepping while leaving displacement active.
 
 Fresh focused check: `corepack pnpm@11.21.0 exec vitest run
-packages/textures/test/simulation.test.ts packages/textures/test/wasm-integration.test.tsx
-packages/textures/test/wasm-runtime.test.tsx --browser.headless --browser.ui=false`
+packages/core/test/features/textures/simulation.test.ts packages/core/test/features/textures/wasm-integration.test.tsx
+packages/core/test/features/textures/wasm-runtime.test.tsx --browser.headless --browser.ui=false`
 passed 13 tests in Chromium on Node 26.9.0. Package build, focused ESLint, and
 kernel reproducibility check passed. Browser QA observed 298 movement messages
 in five seconds with no page errors; desktop/mobile and reset/pause checked.
