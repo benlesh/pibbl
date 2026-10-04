@@ -26,12 +26,15 @@ corepack pnpm@11.21.0 trust
 On a fresh Linux CI runner, install Chromium with `--with-deps`. Browser
 launches run serially inside the local aggregate to avoid port/process
 contention observed during earlier upgrade and visual work. The full Vitest browser
-suite runs eight deterministic shards sequentially, each with one worker in a
-fresh Vitest/Chromium process. Both four-worker CI execution and a long-lived
-single-worker local run lost their browser connection partway through the suite.
-Sharding bounds process lifetime as well as concurrency. Vitest discovers and
-partitions the full suite; no test-file inventory is copied. Every shard must
-succeed, crashes propagate as failures, and nothing is retried automatically.
+suite discovers its files with Vitest and partitions them into deterministic
+sequential shards of at most 16 files, each in a fresh Vitest/Chromium process.
+Vitest retains completed frames within a shard; Linux CI reported Chromium
+`ERR_INSUFFICIENT_RESOURCES` even with one worker and 48-file shards. Bounding
+files per browser keeps that limit independent of suite growth. Every discovered
+file remains included. A five-minute per-process watchdog fails a stalled
+browser; it is infrastructure protection, not a performance benchmark. Discovery
+errors, empty inventories, test failures, and crashes all fail the gate without
+retries. CI logs failed browser request URLs and Chromium error codes.
 
 ## Gate contents
 

@@ -2,32 +2,70 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { runBrowserContracts } from "./run-browser-contracts.mjs";
 
-test("runs every shard once in separate bounded browser invocations", () => {
-  const calls = [];
-  assert.equal(
-    runBrowserContracts((command, args, options) => {
-      calls.push({ command, args, options });
-      return { status: 0 };
-    }),
-    0,
+const inventory = (count) =>
+  JSON.stringify(
+    Array.from({ length: count }, (_, i) => ({
+      file: `/tests/${i}.test.ts`,
+      projectName: "chromium",
+    })),
   );
-  assert.equal(calls.length, 8);
-  assert.deepEqual(
-    calls.map(({ args }) => args.at(-1)),
-    Array.from({ length: 8 }, (_, index) => `--shard=${index + 1}/8`),
-  );
-  for (const { command, args, options } of calls) {
-    assert.equal(command, process.execPath);
-    assert.ok(args.includes("--maxWorkers=1"));
-    assert.equal(options.stdio, "inherit");
+
+test("discovers all tests and bounds each fresh-browser shard as the suite grows", () => {
+  for (const count of [1, 16, 17, 383, 1000]) {
+    const calls = [];
+    assert.equal(
+      runBrowserContracts(
+        (command, args, options) => {
+          calls.push({ command, args, options });
+          return { status: 0, stdout: inventory(count) };
+        },
+        () => {},
+      ),
+      0,
+    );
+    assert.deepEqual(calls[0].args.slice(1), ["list", "--filesOnly", "--json"]);
+    const shards = Math.ceil(count / 16);
+    assert.equal(calls.length, shards + 1);
+    assert.deepEqual(
+      calls.slice(1).map(({ args }) => args.at(-1)),
+      Array.from({ length: shards }, (_, i) => `--shard=${i + 1}/${shards}`),
+    );
+    for (const { command, args, options } of calls.slice(1)) {
+      assert.equal(command, process.execPath);
+      assert.ok(args.includes("--maxWorkers=1"));
+      assert.equal(options.stdio, "inherit");
+      assert.ok(
+        options.timeout > 0,
+        "stalled Chromium must not hang indefinitely",
+      );
+    }
   }
 });
 
-test("a failed or crashed shard fails the gate without retrying or running later shards", () => {
+test("discovery failure, empty discovery, or malformed discovery cannot pass", () => {
+  assert.equal(
+    runBrowserContracts(
+      () => ({ status: 7 }),
+      () => {},
+    ),
+    7,
+  );
+  for (const stdout of ["[]", "not JSON", "{}", "[{}]"]) {
+    assert.throws(() =>
+      runBrowserContracts(
+        () => ({ status: 0, stdout }),
+        () => {},
+      ),
+    );
+  }
+});
+
+test("a failed or crashed shard fails without retrying or running later shards", () => {
   for (const failure of [{ status: 7 }, { status: null, signal: "SIGKILL" }]) {
     let calls = 0;
-    const status = runBrowserContracts(() =>
-      ++calls === 3 ? failure : { status: 0 },
+    const status = runBrowserContracts(
+      () => (++calls === 3 ? failure : { status: 0, stdout: inventory(100) }),
+      () => {},
     );
     assert.equal(status, failure.status ?? 1);
     assert.equal(calls, 3);
