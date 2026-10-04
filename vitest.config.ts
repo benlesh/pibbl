@@ -189,6 +189,7 @@ export default defineConfig(({ mode }) => ({
       "tooling/agent-verification/**/*.test.mjs",
       // Node-only checks run in trust:static and trust:package.
       "tooling/trust-workflow.test.mjs",
+      "tooling/run-browser-contracts.test.mjs",
       "tooling/filter-authoring.test.mjs",
       "tooling/filter-validation.test.mjs",
       "tooling/optional-import-inertness.test.mjs",
