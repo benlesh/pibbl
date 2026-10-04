@@ -1,0 +1,174 @@
+$ vitest run --browser.headless --maxWorkers=4
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+4:10:52 PM [vite] (client) [console.warn] [CRC physics] Ignored stale disable command for body handle generation 0.
+ ❯ |chromium| playground/test/shell.test.ts (6 tests | 1 failed) 180ms
+     × defers the shortcut to an open mobile drawer and removes trigger listeners on dispose 111ms
+4:11:20 PM [vite] (client) warning: 
+/Users/benlesh/.codex/worktrees/runtime-perf-audit/crc/tooling/texture-import-inertness.test.mjs
+8  |  
+9  |  function importBuilt(specifier) {
+10 |  ...unner__"].wrapDynamicImport(() => import(requireBuiltPackage.resolve(specifier)));
+   |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+11 |  }
+12 |  
+The above dynamic import cannot be analyzed by Vite.
+See https://vite.dev/guide/features#dynamic-import for supported dynamic import formats. If this is intended to be left as-is, you can use the /* @vite-ignore */ comment inside the import() call to suppress this warning.
+
+  Plugin: vite:import-analysis
+  File: /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc/tooling/texture-import-inertness.test.mjs
+ ❯ |chromium| tooling/texture-import-inertness.test.mjs (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |chromium| tooling/texture-import-inertness.test.mjs [ tooling/texture-import-inertness.test.mjs ]
+Error: Failed to import test file /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc/tooling/texture-import-inertness.test.mjs
+Caused by: Error: Module "node:module" has been externalized for browser compatibility. Cannot access "node:module.createRequire" in client code.  See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+ ❯ tooling/texture-import-inertness.test.mjs:1:39
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |chromium| playground/test/shell.test.ts > Studio shell navigation > defers the shortcut to an open mobile drawer and removes trigger listeners on dispose
+AssertionError: expected <dialog …(3)>…(7)</dialog> to be null
+
+Failure screenshot:
+  - playground/test/__screenshots__/shell.test.ts/Studio-shell-navigation-defers-the-shortcut-to-an-open-mobile-drawer-and-removes-trigger-listeners-on-dispose-1.png
+
+[32m- Expected:[39m
+null
+
+[31m+ Received:[39m
+<dialog
+  aria-label="Search CRC documentation"
+  aria-labelledby="studio-search-title"
+  class="studio-search-dialog"
+>
+  <header
+    class="studio-search-dialog__header"
+  >
+    <h2
+      id="studio-search-title"
+    >
+      Search docs
+    </h2>
+    <button
+      aria-label="Close search"
+      class="studio-search-dialog__close"
+      type="button"
+    >
+      ×
+    </button>
+  </header>
+  <label
+    class="studio-search-dialog__label"
+    for="studio-search-input"
+  >
+    Search Learn, API, and Examples
+  </label>
+  <input
+    aria-autocomplete="list"
+    aria-controls="studio-search-results"
+    aria-expanded="false"
+    aria-haspopup="listbox"
+    autocomplete="off"
+    class="studio-search-dialog__input"
+    data-search-input=""
+    id="studio-search-input"
+    placeholder="Search docs..."
+    role="combobox"
+    type="search"
+  />
+  <fieldset
+    class="studio-search-dialog__filters"
+  >
+    <legend>
+      Search in
+    </legend>
+    <button
+      aria-pressed="true"
+      data-search-kind="learn"
+      type="button"
+    />
+    <button
+      aria-pressed="true"
+      data-search-kind="api"
+      type="button"
+    />
+    <button
+      aria-pressed="true"
+      data-search-kind="example"
+      type="button"
+    />
+  </fieldset>
+  <p
+    aria-live="polite"
+    class="studio-search-dialog__status"
+    role="status"
+  />
+  <div
+    aria-label="Search results"
+    class="studio-search-dialog__results"
+    id="studio-search-results"
+    role="listbox"
+  />
+  <button
+    class="studio-search-dialog__retry"
+    data-search-retry=""
+    hidden=""
+    type="button"
+  >
+    Retry search
+  </button>
+</dialog>
+
+ ❯ playground/test/shell.test.ts:203:60
+    201|     );
+    202|     await settle();
+    203|     expect(document.querySelector(".studio-search-dialog")).toBeNull();
+       |                                                            ^
+    204|     expect(bundleLoads).toBe(0);
+    205|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 347 passed | 3 skipped (352)
+      Tests  1 failed | 3606 passed | 7 skipped (3614)
+   Start at  16:10:37
+   Duration  47.30s (transform 0ms, setup 0ms, import 37.20s, tests 125.65s, environment 0ms)
+
+[ELIFECYCLE] Command failed with exit code 1.

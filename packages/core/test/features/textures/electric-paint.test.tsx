@@ -40,8 +40,8 @@ it("composes independent electric fills, shares pixels, and routes typed contact
       <>
         <Rectangle style={{ width: 160, height: 160, fill: threads }} />
         <Rectangle style={{ width: 160, height: 160, fill: sparks }} />
-        <Rectangle style={{ x: 160, width: 160, height: 160, fill: threads }} />
-        <Rectangle style={{ x: 160, width: 160, height: 160, fill: sparks }} />
+        <Rectangle style={{ left: 160, width: 160, height: 160, fill: threads }} />
+        <Rectangle style={{ left: 160, width: 160, height: 160, fill: sparks }} />
       </>
     );
   }

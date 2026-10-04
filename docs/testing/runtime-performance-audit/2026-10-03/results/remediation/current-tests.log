@@ -1,0 +1,114 @@
+$ vitest run --browser.headless --maxWorkers=4
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+ ❯ |chromium| packages/core/test/learning-examples.test.ts (231 tests | 2 failed) 6006ms
+     × contains 81 unique, ordered, source-backed routes including optional filters and underwater 80ms
+     × covers every drawing, composition, and Three export plus each supported mouse event 40ms
+4:25:54 PM [vite] (client) [console.warn] [CRC physics] Ignored stale disable command for body handle generation 0.
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |chromium| packages/core/test/learning-examples.test.ts > learning example catalog > contains 81 unique, ordered, source-backed routes including optional filters and underwater
+AssertionError: expected [ …(82) ] to have a length of 81 but got 82
+
+Failure screenshot:
+  - packages/core/test/__screenshots__/learning-examples.test.ts/learning-example-catalog-contains-81-unique--ordered--source-backed-routes-including-optional-filters-and-underwater-1.png
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 81[39m
+[31m+ 82[39m
+
+ ❯ packages/core/test/learning-examples.test.ts:1221:35
+    1219|       learningExampleCatalog,
+    1220|     );
+    1221|     expect(learningExampleCatalog).toHaveLength(81);
+       |                                   ^
+    1222|     expect(
+    1223|       learningExampleCatalog
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |chromium| packages/core/test/learning-examples.test.ts > learning example catalog > covers every drawing, composition, and Three export plus each supported mouse event
+AssertionError: expected Set{ 'Rectangle', 'Circle', …(102) } to deeply equal Set{ 'defineTexture', …(101) }
+
+Failure screenshot:
+  - packages/core/test/__screenshots__/learning-examples.test.ts/learning-example-catalog-covers-every-drawing--composition--and-Three-export-plus-each-supported-mouse-event-1.png
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -57,10 +57,11 @@[39m
+[2m    "defineRenderLayer",[22m
+[2m    "defineSeries",[22m
+[2m    "defineTexture",[22m
+[2m    "defineThreeLayer",[22m
+[2m    "disableBody2D",[22m
+[31m+   "displacement",[39m
+[2m    "dynamicBody2D",[22m
+[2m    "enableBody2D",[22m
+[2m    "flattenPath",[22m
+[2m    "flattenPathWang",[22m
+[2m    "interpolateX",[22m
+[33m@@ -74,10 +75,11 @@[39m
+[2m    "parallel",[22m
+[2m    "particleChoice",[22m
+[2m    "particleCurve",[22m
+[2m    "particleRange",[22m
+[2m    "pieSlices",[22m
+[31m+   "rainDrops",[39m
+[2m    "reactionDiffusion",[22m
+[2m    "repeat",[22m
+[2m    "resolveSignalValue",[22m
+[2m    "sequence",[22m
+[2m    "setLinearVelocity2D",[22m
+
+ ❯ packages/core/test/learning-examples.test.ts:1789:43
+    1787|       )
+    1788|       .flatMap((entry) => entry.api);
+    1789|     expect(new Set(drawingAndComposition)).toEqual(
+       |                                           ^
+    1790|       new Set([
+    1791|         "defineTexture",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 349 passed | 3 skipped (353)
+      Tests  2 failed | 3612 passed | 7 skipped (3621)
+   Start at  16:25:19
+   Duration  45.14s (transform 0ms, setup 0ms, import 29.61s, tests 128.19s, environment 0ms)
+
+[ELIFECYCLE] Command failed with exit code 1.

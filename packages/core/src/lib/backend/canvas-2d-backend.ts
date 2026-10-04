@@ -53,12 +53,18 @@ export const CANVAS_2D_BACKEND: CRCBackendDriver<RenderingContext2D> = {
       definition,
       input.style,
     );
-    const presentation = input.presentationTransform2D ? {
+    const position = input.style as Readonly<{ left?: number; top?: number }>;
+    const positionedPresentation = (position.left || position.top) ? {
       ...definitionPresentation,
-      transform: definitionPresentation?.transform ?
-        input.presentationTransform2D.multiply(definitionPresentation.transform) :
-        input.presentationTransform2D,
+      transform: new DOMMatrix().translate(position.left ?? 0, position.top ?? 0)
+        .multiply(definitionPresentation?.transform ?? new DOMMatrix()),
     } : definitionPresentation;
+    const presentation = input.presentationTransform2D ? {
+      ...positionedPresentation,
+      transform: positionedPresentation?.transform ?
+        input.presentationTransform2D.multiply(positionedPresentation.transform) :
+        input.presentationTransform2D,
+    } : positionedPresentation;
     const filters = getResolvedFilterList(input.style as Readonly<SystemStyle>);
     const invoke = () => runProgram(() => {
       const context = requireCanvasContext();

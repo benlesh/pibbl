@@ -1,0 +1,65 @@
+{
+  "baseline": "fe2fcab343fa0a0296659a28e68436380fce4557",
+  "node": "v24.15.0",
+  "browser": "151.0.7922.34",
+  "sourceRoot": "/Users/benlesh/.codex/worktrees/runtime-perf-audit/crc",
+  "mode": "source",
+  "meaning": "Synthetic public-API scheduler CPU wall time; excludes compositor presentation. Timing cases uninstrumented except scalar duration samples. Structural copy counters measured separately. No forced GC.",
+  "cases": [
+    {
+      "config": {
+        "kind": "rectangles",
+        "n": 10000,
+        "frames": 60
+      },
+      "warmup": 20,
+      "flushed": 60,
+      "idle": 0,
+      "samples": 60,
+      "median": 123,
+      "p95": 130.5,
+      "worst": 132.79999995231628,
+      "extra": {},
+      "live": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 1,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 1,
+        "releasedRootRegistrations": 0,
+        "createdBeginCommands": 0,
+        "releasedBeginCommands": 0,
+        "createdCompletionCallbacks": 0,
+        "releasedCompletionCallbacks": 0,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "after": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 1,
+        "releasedRootRegistrations": 1,
+        "createdBeginCommands": 0,
+        "releasedBeginCommands": 0,
+        "createdCompletionCallbacks": 0,
+        "releasedCompletionCallbacks": 0,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      }
+    }
+  ],
+  "errors": [],
+  "complete": true
+}

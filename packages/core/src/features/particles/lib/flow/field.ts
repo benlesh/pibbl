@@ -1,3 +1,20 @@
+export interface FlowSource2D {
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly acceleration?: readonly [number, number];
+  /** Normalized heat injected per second; carried and dissipated by the field. */
+  readonly heat?: number;
+}
+const EMPTY_GEOMETRY = new Float64Array(0);
+export interface FlowObstacleGeometry2D {
+  readonly boxes?: Float64Array;
+  readonly ellipses?: Float64Array;
+  /** count, vx, vy, omega, COM x/y, followed by interleaved world vertices. */
+  readonly polygons?: Float64Array;
+}
+const NO_SOURCES: readonly FlowSource2D[] = Object.freeze([]);
+
 /**
  * Renderer-independent MAC grid. Velocities are logical units/second; pressure
  * stores the velocity potential (dt / density folded in). Open domain edges
@@ -17,8 +34,14 @@ export class FlowFieldKernel2D {
   private readonly fixedV: Uint8Array;
   private readonly pressure: Float32Array;
   private readonly divergence: Float32Array;
+  private readonly neighbors: Uint32Array;
+  private readonly inverseWeight: Float64Array;
+  private readonly solveOrder: Uint32Array;
+  private solveCount = 0;
   private readonly cellVX: Float32Array;
   private readonly cellVY: Float32Array;
+  private temperature: Float32Array;
+  private nextTemperature: Float32Array;
   readonly dx: number;
   readonly dy: number;
   projectionIterations = 0;
@@ -57,10 +80,45 @@ export class FlowFieldKernel2D {
     this.fixedU = new Uint8Array(this.u.length);
     this.fixedV = new Uint8Array(this.v.length);
     this.solid = new Uint8Array(cells);
-    this.pressure = new Float32Array(cells);
+    this.pressure = new Float32Array(cells + 1); // final entry is the zero-pressure sentinel
+    this.neighbors = new Uint32Array(cells * 4);
+    this.inverseWeight = new Float64Array(cells);
+    this.solveOrder = new Uint32Array(cells);
     this.divergence = new Float32Array(cells);
     this.cellVX = new Float32Array(cells);
     this.cellVY = new Float32Array(cells);
+    this.temperature = new Float32Array(cells);
+    this.nextTemperature = new Float32Array(cells);
+    this.rebuildStencil();
+  }
+
+  /** Copy committed state into a reusable candidate before a transactional frame. */
+  copyFrom(other: FlowFieldKernel2D): void {
+    if (
+      this.columns !== other.columns ||
+      this.rows !== other.rows ||
+      this.width !== other.width ||
+      this.height !== other.height
+    ) {
+      throw new RangeError("Cannot copy differently sized flow fields.");
+    }
+    this.u.set(other.u);
+    this.v.set(other.v);
+    this.solid.set(other.solid);
+    this.wallU.set(other.wallU);
+    this.wallV.set(other.wallV);
+    this.fixedU.set(other.fixedU);
+    this.fixedV.set(other.fixedV);
+    this.pressure.set(other.pressure);
+    this.neighbors.set(other.neighbors);
+    this.inverseWeight.set(other.inverseWeight);
+    this.solveOrder.set(other.solveOrder);
+    this.solveCount = other.solveCount;
+    this.cellVX.set(other.cellVX);
+    this.cellVY.set(other.cellVY);
+    this.temperature.set(other.temperature);
+    this.projectionIterations = other.projectionIterations;
+    this.projectionResidual = other.projectionResidual;
   }
 
   get byteLength(): number {
@@ -76,8 +134,13 @@ export class FlowFieldKernel2D {
       this.solid.byteLength +
       this.pressure.byteLength +
       this.divergence.byteLength +
+      this.neighbors.byteLength +
+      this.inverseWeight.byteLength +
+      this.solveOrder.byteLength +
       this.cellVX.byteLength +
-      this.cellVY.byteLength
+      this.cellVY.byteLength +
+      this.temperature.byteLength +
+      this.nextTemperature.byteLength
     );
   }
 
@@ -86,48 +149,126 @@ export class FlowFieldKernel2D {
    * Overlapping solids resolve in batch order, with the last solid owning motion.
    */
   setBoxes(boxes: Float64Array): void {
-    if (boxes.length % 10 !== 0)
-      throw new RangeError("Malformed flow box batch.");
-    for (let i = 0; i < boxes.length; i++) {
-      if (!Number.isFinite(boxes[i]))
-        throw new RangeError("Flow box values must be finite.");
-      if ((i % 10 === 2 || i % 10 === 3) && boxes[i]! <= 0) {
-        throw new RangeError("Flow box half extents must be positive.");
+    this.setObstacles({ boxes });
+  }
+
+  setObstacles(geometry: FlowObstacleGeometry2D): void {
+    const boxes = geometry.boxes ?? EMPTY_GEOMETRY;
+    const ellipses = geometry.ellipses ?? EMPTY_GEOMETRY;
+    const polygons = geometry.polygons ?? EMPTY_GEOMETRY;
+    for (let kind = 0; kind < 2; kind++) {
+      const packed = kind === 0 ? boxes : ellipses;
+      if (packed.length % 10 !== 0)
+        throw new RangeError("Malformed flow obstacle batch.");
+      for (let i = 0; i < packed.length; i++) {
+        if (!Number.isFinite(packed[i]))
+          throw new RangeError("Flow obstacle values must be finite.");
+        if ((i % 10 === 2 || i % 10 === 3) && packed[i]! <= 0)
+          throw new RangeError("Flow obstacle extents must be positive.");
       }
+    }
+    for (let at = 0; at < polygons.length;) {
+      const count = polygons[at]!;
+      const end = at + 6 + count * 2;
+      if (!Number.isInteger(count) || count < 3 || end > polygons.length)
+        throw new RangeError("Malformed flow polygon batch.");
+      for (let i = at; i < end; i++)
+        if (!Number.isFinite(polygons[i]))
+          throw new RangeError("Flow polygon values must be finite.");
+      at = end;
     }
     const { columns: nx, rows: ny, dx, dy } = this;
     this.solid.fill(0);
     this.cellVX.fill(0);
     this.cellVY.fill(0);
-    for (let b = 0; b < boxes.length; b += 10) {
-      const cx = boxes[b]!,
-        cy = boxes[b + 1]!;
-      const hx = boxes[b + 2]!,
-        hy = boxes[b + 3]!;
-      const c = Math.cos(boxes[b + 4]!),
-        s = Math.sin(boxes[b + 4]!);
-      const ex = Math.abs(c) * hx + Math.abs(s) * hy;
-      const ey = Math.abs(s) * hx + Math.abs(c) * hy;
-      const x0 = Math.max(0, Math.floor((cx - ex) / dx));
-      const x1 = Math.min(nx - 1, Math.floor((cx + ex) / dx));
-      const y0 = Math.max(0, Math.floor((cy - ey) / dy));
-      const y1 = Math.min(ny - 1, Math.floor((cy + ey) / dy));
-      for (let y = y0; y <= y1; y++) {
+    for (let kind = 0; kind < 2; kind++) {
+      const packed = kind === 0 ? boxes : ellipses;
+      for (let b = 0; b < packed.length; b += 10) {
+        const cx = packed[b]!,
+          cy = packed[b + 1]!;
+        const hx = packed[b + 2]!,
+          hy = packed[b + 3]!;
+        const c = Math.cos(packed[b + 4]!),
+          s = Math.sin(packed[b + 4]!);
+        const ex = Math.abs(c) * hx + Math.abs(s) * hy;
+        const ey = Math.abs(s) * hx + Math.abs(c) * hy;
+        const x0 = Math.max(0, Math.floor((cx - ex) / dx));
+        const x1 = Math.min(nx - 1, Math.floor((cx + ex) / dx));
+        const y0 = Math.max(0, Math.floor((cy - ey) / dy));
+        const y1 = Math.min(ny - 1, Math.floor((cy + ey) / dy));
+        for (let y = y0; y <= y1; y++) {
+          for (let x = x0; x <= x1; x++) {
+            const px = (x + 0.5) * dx,
+              py = (y + 0.5) * dy;
+            const rx = px - cx,
+              ry = py - cy;
+            const localX = (c * rx + s * ry) / hx,
+              localY = (-s * rx + c * ry) / hy;
+            if (
+              kind === 0
+                ? Math.abs(localX) > 1 || Math.abs(localY) > 1
+                : localX * localX + localY * localY > 1
+            )
+              continue;
+            const i = y * nx + x;
+            this.solid[i] = 1;
+            // At u faces y equals the cell-center y; at v faces x equals
+            // cell-center x, so these are exact normal rigid velocities.
+            this.cellVX[i] =
+              packed[b + 5]! - packed[b + 7]! * (py - packed[b + 9]!);
+            this.cellVY[i] =
+              packed[b + 6]! + packed[b + 7]! * (px - packed[b + 8]!);
+          }
+        }
+      }
+    }
+    for (let at = 0; at < polygons.length;) {
+      const count = polygons[at]!,
+        first = at + 6,
+        end = first + count * 2;
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+      for (let v = first; v < end; v += 2) {
+        minX = Math.min(minX, polygons[v]!);
+        maxX = Math.max(maxX, polygons[v]!);
+        minY = Math.min(minY, polygons[v + 1]!);
+        maxY = Math.max(maxY, polygons[v + 1]!);
+      }
+      const x0 = Math.max(0, Math.floor(minX / dx)),
+        x1 = Math.min(nx - 1, Math.floor(maxX / dx));
+      const y0 = Math.max(0, Math.floor(minY / dy)),
+        y1 = Math.min(ny - 1, Math.floor(maxY / dy));
+      for (let y = y0; y <= y1; y++)
         for (let x = x0; x <= x1; x++) {
           const px = (x + 0.5) * dx,
             py = (y + 0.5) * dy;
-          const rx = px - cx,
-            ry = py - cy;
-          if (Math.abs(c * rx + s * ry) > hx || Math.abs(-s * rx + c * ry) > hy)
-            continue;
+          let inside = false;
+          for (
+            let v = first, previous = end - 2;
+            v < end;
+            previous = v, v += 2
+          ) {
+            const ax = polygons[v]!,
+              ay = polygons[v + 1]!,
+              bx = polygons[previous]!,
+              by = polygons[previous + 1]!;
+            if (
+              ay > py !== by > py &&
+              px < ((bx - ax) * (py - ay)) / (by - ay) + ax
+            )
+              inside = !inside;
+          }
+          if (!inside) continue;
           const i = y * nx + x;
           this.solid[i] = 1;
-          // At u faces y equals the cell-center y; at v faces x equals
-          // cell-center x, so these are exact normal rigid velocities.
-          this.cellVX[i] = boxes[b + 5]! - boxes[b + 7]! * (py - boxes[b + 9]!);
-          this.cellVY[i] = boxes[b + 6]! + boxes[b + 7]! * (px - boxes[b + 8]!);
+          this.cellVX[i] =
+            polygons[at + 1]! - polygons[at + 3]! * (py - polygons[at + 5]!);
+          this.cellVY[i] =
+            polygons[at + 2]! + polygons[at + 3]! * (px - polygons[at + 4]!);
         }
-      }
+      at = end;
     }
     for (let y = 0; y < ny; y++) {
       for (let x = 0; x <= nx; x++) {
@@ -161,6 +302,7 @@ export class FlowFieldKernel2D {
       }
     }
     this.enforceWalls();
+    this.rebuildStencil();
     // Geometry changes invalidate the previous pressure initial guess.
     this.pressure.fill(0);
   }
@@ -342,31 +484,97 @@ export class FlowFieldKernel2D {
     return 1;
   }
 
-  /** One accepted fixed step; source acceleration has a compact smooth footprint. */
+  /** One accepted fixed step. Sources touch only their bounded footprints. */
   advance(
     seconds: number,
-    sourceX = 0,
-    sourceY = 0,
-    radius = 1,
-    ax = 0,
-    ay = 0,
+    sources: readonly FlowSource2D[] = NO_SOURCES,
+    buoyancy = -300,
   ): void {
     if (
       !Number.isFinite(seconds) ||
       seconds <= 0 ||
       seconds > 0.1 ||
-      !Number.isFinite(sourceX) ||
-      !Number.isFinite(sourceY) ||
-      !Number.isFinite(radius) ||
-      radius <= 0 ||
-      !Number.isFinite(ax) ||
-      !Number.isFinite(ay)
+      !Number.isFinite(buoyancy)
     ) {
-      throw new RangeError("Flow step and source must be finite and bounded.");
+      throw new RangeError(
+        "Flow step and buoyancy must be finite and bounded.",
+      );
+    }
+    // Preflight every source before touching simulation storage.
+    for (const source of sources) {
+      if (
+        !Number.isFinite(source.x) ||
+        !Number.isFinite(source.y) ||
+        !Number.isFinite(source.radius) ||
+        source.radius <= 0 ||
+        !Number.isFinite(source.acceleration?.[0] ?? 0) ||
+        !Number.isFinite(source.acceleration?.[1] ?? 0) ||
+        !Number.isFinite(source.heat ?? 0) ||
+        (source.heat ?? 0) < 0
+      ) {
+        throw new RangeError(
+          "Flow source must have finite coordinates, positive radius and nonnegative heat.",
+        );
+      }
     }
     const { columns: nx, rows: ny, dx, dy } = this;
-    const inverseRadiusSquared = 1 / (radius * radius);
     const damping = Math.exp(-0.15 * seconds);
+    const cooling = Math.exp(-0.3 * seconds);
+    for (let y = 0; y < ny; y++) {
+      for (let x = 0; x < nx; x++) {
+        const i = y * nx + x;
+        if (this.solid[i]) {
+          this.nextTemperature[i] = 0;
+          continue;
+        }
+        const px = (x + 0.5) * dx,
+          py = (y + 0.5) * dy;
+        const bx = px - seconds * this.velocityX(px, py);
+        const by = py - seconds * this.velocityY(px, py);
+        this.nextTemperature[i] =
+          bx < 0 ||
+          by < 0 ||
+          bx >= this.width ||
+          by >= this.height ||
+          this.isSolid(bx, by)
+            ? 0
+            : this.interpolate(
+                this.temperature,
+                nx,
+                ny,
+                bx / dx - 0.5,
+                by / dy - 0.5,
+              ) * cooling;
+      }
+    }
+    for (const source of sources) {
+      if (!source.heat) continue;
+      const inverseRadiusSquared = 1 / (source.radius * source.radius);
+      const x0 = Math.max(0, Math.floor((source.x - source.radius) / dx));
+      const x1 = Math.min(nx - 1, Math.floor((source.x + source.radius) / dx));
+      const y0 = Math.max(0, Math.floor((source.y - source.radius) / dy));
+      const y1 = Math.min(ny - 1, Math.floor((source.y + source.radius) / dy));
+      for (let y = y0; y <= y1; y++) {
+        for (let x = x0; x <= x1; x++) {
+          const i = y * nx + x;
+          if (this.solid[i]) continue;
+          const rx = (x + 0.5) * dx - source.x,
+            ry = (y + 0.5) * dy - source.y;
+          const falloff = Math.max(
+            0,
+            1 - (rx * rx + ry * ry) * inverseRadiusSquared,
+          );
+          this.nextTemperature[i] = Math.min(
+            1,
+            this.nextTemperature[i]! +
+              source.heat * seconds * falloff * falloff,
+          );
+        }
+      }
+    }
+    const oldTemperature = this.temperature;
+    this.temperature = this.nextTemperature;
+    this.nextTemperature = oldTemperature;
     for (let y = 0; y < ny; y++) {
       for (let x = 0; x <= nx; x++) {
         const i = y * (nx + 1) + x;
@@ -380,14 +588,8 @@ export class FlowFieldKernel2D {
           vy = this.velocityY(px, py);
         const bx = px - seconds * vx,
           by = py - seconds * vy;
-        const falloff = Math.max(
-          0,
-          1 -
-            ((px - sourceX) ** 2 + (py - sourceY) ** 2) * inverseRadiusSquared,
-        );
         this.nextU[i] =
-          (this.isSolid(bx, by) ? vx : this.velocityX(bx, by)) * damping +
-          ax * seconds * falloff * falloff;
+          (this.isSolid(bx, by) ? vx : this.velocityX(bx, by)) * damping;
       }
     }
     for (let y = 0; y <= ny; y++) {
@@ -403,14 +605,51 @@ export class FlowFieldKernel2D {
           vy = this.v[i]!;
         const bx = px - seconds * vx,
           by = py - seconds * vy;
-        const falloff = Math.max(
-          0,
-          1 -
-            ((px - sourceX) ** 2 + (py - sourceY) ** 2) * inverseRadiusSquared,
-        );
+        // At a face, average only adjacent fluid-cell temperatures.
+        const above =
+          y > 0 && !this.solid[i - nx] ? this.temperature[i - nx]! : 0;
+        const below = y < ny && !this.solid[i] ? this.temperature[i]! : 0;
         this.nextV[i] =
           (this.isSolid(bx, by) ? vy : this.velocityY(bx, by)) * damping +
-          ay * seconds * falloff * falloff;
+          seconds * buoyancy * (above + below) * 0.5;
+      }
+    }
+    for (const source of sources) {
+      const ax = source.acceleration?.[0] ?? 0,
+        ay = source.acceleration?.[1] ?? 0;
+      if (ax === 0 && ay === 0) continue;
+      const inverseRadiusSquared = 1 / (source.radius * source.radius);
+      const x0 = Math.max(0, Math.floor((source.x - source.radius) / dx));
+      const x1 = Math.min(nx, Math.ceil((source.x + source.radius) / dx));
+      const y0 = Math.max(0, Math.floor((source.y - source.radius) / dy));
+      const y1 = Math.min(ny, Math.ceil((source.y + source.radius) / dy));
+      for (let y = y0; y <= y1; y++) {
+        for (let x = x0; x <= x1; x++) {
+          if (ax !== 0 && y < ny) {
+            const i = y * (nx + 1) + x;
+            if (!this.fixedU[i]) {
+              const rx = x * dx - source.x,
+                ry = (y + 0.5) * dy - source.y;
+              const falloff = Math.max(
+                0,
+                1 - (rx * rx + ry * ry) * inverseRadiusSquared,
+              );
+              this.nextU[i] += seconds * ax * falloff * falloff;
+            }
+          }
+          if (ay !== 0 && x < nx) {
+            const i = y * nx + x;
+            if (!this.fixedV[i]) {
+              const rx = (x + 0.5) * dx - source.x,
+                ry = y * dy - source.y;
+              const falloff = Math.max(
+                0,
+                1 - (rx * rx + ry * ry) * inverseRadiusSquared,
+              );
+              this.nextV[i] += seconds * ay * falloff * falloff;
+            }
+          }
+        }
       }
     }
     const oldU = this.u,
@@ -429,8 +668,49 @@ export class FlowFieldKernel2D {
       if (this.fixedV[i]) this.v[i] = this.wallV[i]!;
   }
 
+  /** Cache the Poisson stencil in red/black order once per obstacle update. */
+  private rebuildStencil(): void {
+    const {
+      columns: nx,
+      rows: ny,
+      solid,
+      neighbors,
+      inverseWeight,
+      solveOrder,
+    } = this;
+    const sentinel = nx * ny,
+      wx = 1 / (this.dx * this.dx),
+      wy = 1 / (this.dy * this.dy);
+    let count = 0;
+    for (let parity = 0; parity < 2; parity++) {
+      for (let y = 0; y < ny; y++) {
+        for (let x = (y + parity) & 1; x < nx; x += 2) {
+          const i = y * nx + x;
+          if (solid[i]) continue;
+          let weight = 0;
+          const left = x > 0 && !solid[i - 1];
+          const right = x < nx - 1 && !solid[i + 1];
+          const above = y > 0 && !solid[i - nx];
+          const below = y < ny - 1 && !solid[i + nx];
+          if (x === 0 || left) weight += wx;
+          if (x === nx - 1 || right) weight += wx;
+          if (y === 0 || above) weight += wy;
+          if (y === ny - 1 || below) weight += wy;
+          if (weight === 0) continue;
+          neighbors[i * 4] = left ? i - 1 : sentinel;
+          neighbors[i * 4 + 1] = right ? i + 1 : sentinel;
+          neighbors[i * 4 + 2] = above ? i - nx : sentinel;
+          neighbors[i * 4 + 3] = below ? i + nx : sentinel;
+          inverseWeight[i] = 1 / weight;
+          solveOrder[count++] = i;
+        }
+      }
+    }
+    this.solveCount = count;
+  }
+
   private project(): void {
-    const { columns: nx, rows: ny, dx, dy, pressure: p, solid } = this;
+    const { columns: nx, rows: ny, dx, dy, pressure: p } = this;
     const wx = 1 / (dx * dx),
       wy = 1 / (dy * dy);
     for (let y = 0; y < ny; y++) {
@@ -446,33 +726,16 @@ export class FlowFieldKernel2D {
     // Free boundaries use p=0; solid neighbors impose Neumann conditions.
     this.projectionIterations = 0;
     for (let iteration = 0; iteration < 80; iteration++) {
-      for (let parity = 0; parity < 2; parity++) {
-        for (let y = 0; y < ny; y++) {
-          for (let x = (y + parity) & 1; x < nx; x += 2) {
-            const i = y * nx + x;
-            if (solid[i]) continue;
-            let weight = 0,
-              sum = 0;
-            if (x === 0 || !solid[i - 1]) {
-              weight += wx;
-              if (x > 0) sum += wx * p[i - 1]!;
-            }
-            if (x === nx - 1 || !solid[i + 1]) {
-              weight += wx;
-              if (x < nx - 1) sum += wx * p[i + 1]!;
-            }
-            if (y === 0 || !solid[i - nx]) {
-              weight += wy;
-              if (y > 0) sum += wy * p[i - nx]!;
-            }
-            if (y === ny - 1 || !solid[i + nx]) {
-              weight += wy;
-              if (y < ny - 1) sum += wy * p[i + nx]!;
-            }
-            if (weight > 0)
-              p[i] += 1.7 * ((sum - this.divergence[i]!) / weight - p[i]!);
-          }
-        }
+      for (let entry = 0; entry < this.solveCount; entry++) {
+        const i = this.solveOrder[entry]!,
+          offset = i * 4;
+        const sum =
+          wx * p[this.neighbors[offset]!]! +
+          wx * p[this.neighbors[offset + 1]!]! +
+          wy * p[this.neighbors[offset + 2]!]! +
+          wy * p[this.neighbors[offset + 3]!]!;
+        p[i] +=
+          1.7 * ((sum - this.divergence[i]!) * this.inverseWeight[i]! - p[i]!);
       }
       this.projectionIterations = iteration + 1;
       if ((iteration & 7) === 7) {

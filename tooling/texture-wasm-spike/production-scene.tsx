@@ -64,7 +64,7 @@ export function mountProductionScene(canvas: HTMLCanvasElement) {
         {[a, b, c].map((texture, i) => (
           <Rectangle
             key={i}
-            style={{ x: i * 200, y: 0, width: 192, height: 160, fill: texture }}
+            style={{ left: i * 200, top: 0, width: 192, height: 160, fill: texture }}
           />
         ))}
       </Group>
@@ -96,23 +96,23 @@ export function mountProductionScene(canvas: HTMLCanvasElement) {
     return (
       <PhysicsWorld2D gravity={[0, 0]}>
         <Rectangle
-          style={{ x: 0, y: 180, width: 600, height: 300, fill: ink }}
+          style={{ left: 0, top: 180, width: 600, height: 300, fill: ink }}
         />
         <Rectangle
           physics={staticBody2D({ collider: { restitution: 1, friction: 0 } })}
-          style={{ x: 0, y: 180, width: 600, height: 8, fill: "#6c9699" }}
+          style={{ left: 0, top: 180, width: 600, height: 8, fill: "#6c9699" }}
         />
         <Rectangle
           physics={staticBody2D({ collider: { restitution: 1, friction: 0 } })}
-          style={{ x: 0, y: 472, width: 600, height: 8, fill: "#6c9699" }}
+          style={{ left: 0, top: 472, width: 600, height: 8, fill: "#6c9699" }}
         />
         <Rectangle
           physics={staticBody2D({ collider: { restitution: 1, friction: 0 } })}
-          style={{ x: 0, y: 180, width: 8, height: 300, fill: "#6c9699" }}
+          style={{ left: 0, top: 180, width: 8, height: 300, fill: "#6c9699" }}
         />
         <Rectangle
           physics={staticBody2D({ collider: { restitution: 1, friction: 0 } })}
-          style={{ x: 592, y: 180, width: 8, height: 300, fill: "#6c9699" }}
+          style={{ left: 592, top: 180, width: 8, height: 300, fill: "#6c9699" }}
         />
         <Group
           physics={dynamicBody2D({

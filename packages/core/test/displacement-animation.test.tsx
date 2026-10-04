@@ -16,7 +16,7 @@ it('changes presentation without changing animation samples at identical logical
     const texture = useTexture(map({}), { resolution: { width: 8, height: 8 } });
     playback = usePlayback(track(offset, tween({ from: 10, to: 30, duration: 100 })));
     return <Group style={{ filter: enabled.get() ? displacement({ map: texture, strength: 4, region: { x: 0, y: 0, width: 50, height: 30 } }) : [] }}>
-      <Rectangle style={{ x: offset, y: 10, width: 8, height: 8, fill: 'red' }} />
+      <Rectangle style={{ left: offset, top: 10, width: 8, height: 8, fill: 'red' }} />
     </Group>;
   }
   const canvas = document.createElement('canvas'); canvas.width = 50; canvas.height = 30; document.body.append(canvas);

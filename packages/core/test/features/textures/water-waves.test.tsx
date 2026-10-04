@@ -7,6 +7,33 @@ import { ManualSchedulerDriver, installSchedulerDriverForTest } from "../../../s
 
 afterEach(() => { clearSharedState(); document.body.innerHTML = ""; });
 
+it("changes only active ripple displacement when rippleStrength is updated", () => {
+  const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
+  const frames: number[][] = [];
+  let texture: ReturnType<typeof useTexture<any>>;
+  let rippleStrength = 1;
+  function Scene() {
+    texture = useTexture(waterWaves({ seed: 5, speed: 0, rippleStrength }), { resolution: { width: 16, height: 8 } });
+    borrowTextureRaster(texture, raster => frames.push(Array.from(raster.source.getContext("2d")!.getImageData(0, 0, 16, 8).data)));
+    return <Rectangle style={{ width: 16, height: 8, fill: texture }} />;
+  }
+  const canvas = document.createElement("canvas"); canvas.width = 32; canvas.height = 16; document.body.append(canvas);
+  const controller = crc(canvas, <Scene />);
+  const capture = (time: number) => { crc(canvas, <Scene />); driver.flush(time); return frames.at(-1)!; };
+  try {
+    driver.flush(0);
+    const base = frames.at(-1)!;
+    texture!.send({ type: "ripple", x: 0.25, y: 0.5 }); driver.flush(16);
+    texture!.send({ type: "pause", paused: true }); driver.flush(32);
+    const active = frames.at(-1)!;
+    expect(active).not.toEqual(base);
+    rippleStrength = 0; crc(canvas, <Scene />); driver.flush(48);
+    expect(capture(48)).toEqual(base);
+    rippleStrength = 1; crc(canvas, <Scene />); driver.flush(64);
+    expect(capture(64)).toEqual(active);
+  } finally { controller.dispose(); restore(); }
+});
+
 it("adds bounded click ripples, freezes them while paused, and idles after their lifetime", () => {
   const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
   const frames: number[][] = [];
@@ -55,6 +82,15 @@ it("rejects non-finite normalized ripple coordinates", () => {
     texture!.send({ type: "ripple", x: Infinity, y: 0 });
     expect(() => driver.flush(16)).toThrow("must be finite");
   } finally { controller.dispose(); restore(); }
+});
+
+it("rejects an invalid rippleStrength", () => {
+  const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
+  const canvas = document.createElement("canvas"); document.body.append(canvas);
+  const controller = crc(canvas, <Probe />);
+  try { expect(() => driver.flush(0)).toThrow("Water ripple strength must be finite and nonnegative"); }
+  finally { controller.dispose(); restore(); }
+  function Probe() { useTexture(waterWaves({ rippleStrength: -1 })); return null; }
 });
 
 it("is deterministic, advances only when active, and resets through messages", () => {
@@ -148,29 +184,5 @@ it("preserves a message pause when authored speed changes", () => {
     expect(driver.pendingHostFrames).toBe(0);
     texture!.send({ type: "pause", paused: false }); driver.flush(1016);
     expect(driver.pendingHostFrames).toBe(1);
-  } finally { controller.dispose(); restore(); }
-});
-
-
-it("updates ripple strength while paused without changing the underlying waves", () => {
-  const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
-  let texture: ReturnType<typeof useTexture<any>>;
-  let strength = 0;
-  function Scene() {
-    texture = useTexture(waterWaves({ seed: 4, speed: 0, paused: true, rippleStrength: strength }), { resolution: { width: 32, height: 32 } });
-    return <Rectangle style={{ width: 32, height: 32, fill: texture }} />;
-  }
-  const canvas = document.createElement("canvas"); canvas.width = canvas.height = 32; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
-  const pixels = () => Array.from(canvas.getContext("2d")!.getImageData(0, 0, 32, 32).data);
-  const update = () => { crc(canvas, <Scene />); driver.flush(16); driver.flush(32); };
-  try {
-    driver.flush(0); const baseline = pixels();
-    texture!.send({ type: "ripple", x: 0.5, y: 0.5 }); driver.flush(16);
-    expect(pixels()).toEqual(baseline);
-    strength = 1; update(); const normal = pixels(); expect(normal).not.toEqual(baseline);
-    strength = 2; update(); expect(pixels()).not.toEqual(normal);
-    strength = 0; update(); expect(pixels()).toEqual(baseline);
-    expect(driver.pendingHostFrames).toBe(0);
   } finally { controller.dispose(); restore(); }
 });

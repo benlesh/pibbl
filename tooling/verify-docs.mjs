@@ -86,8 +86,11 @@ const publicGuidePaths = [
   "docs/site/learn/guides/responsive-styles.md",
   "docs/site/learn/guides/three-js.md",
   "docs/site/learn/guides/procedural-textures.md",
+  "docs/site/learn/guides/manipulation.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/functions/path-transforms.md",
+  "docs/site/api/hooks/use-visibility-transition.md",
   "docs/site/api/components/html-box.md",
   "docs/site/api/types/html-box.md",
   "docs/site/api/types/electric-textures.md",
@@ -95,8 +98,21 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/reaction-diffusion.md",
   "docs/site/api/components/procedural-texture.md",
   "docs/site/api/types/textures.md",
+  "docs/site/api/types/electric-textures.md",
   "docs/site/api/functions/path-bending.md",
   "docs/site/api/functions/path-geometry.md",
+  "docs/site/api/functions/text-geometry.md",
+  "docs/site/api/functions/degrees.md",
+  "docs/site/api/functions/pie-slices.md",
+  "docs/site/api/hooks/use-manipulation.md",
+  "docs/site/api/components/bar-series.md",
+  "docs/site/api/components/drag-handle.md",
+  "docs/site/api/components/manipulable.md",
+  "docs/site/api/components/manipulation-frame.md",
+  "docs/site/api/components/pie-layout.md",
+  "docs/site/api/components/resize-handle.md",
+  "docs/site/api/components/resize-handles.md",
+  "docs/site/api/components/rotation-handle.md",
   "docs/site/learn/guides/data-visualization.md",
   "docs/site/api/components/scale.md",
   "docs/site/api/components/axis.md",
@@ -173,6 +189,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/particle-descriptors.md",
   "docs/site/api/functions/physics-2d-testing.md",
   "docs/site/api/functions/physics-2d.md",
+  "docs/site/api/functions/physics-obstacles.md",
   "docs/site/api/functions/physics-3d-geometry.md",
   "docs/site/api/functions/repeat.md",
   "docs/site/api/functions/resolve-signal-value.md",
@@ -193,6 +210,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-event.md",
   "docs/site/api/hooks/use-event-listener.md",
   "docs/site/api/hooks/use-event-target.md",
+  "docs/site/api/hooks/use-flow-field.md",
   "docs/site/api/hooks/use-layout-box.md",
   "docs/site/api/hooks/use-line-path.md",
   "docs/site/api/hooks/use-particle-system.md",
@@ -233,6 +251,11 @@ const publicSiteMarkdownPaths = [
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
+  "docs/design/component-manipulation-contract.md",
+  "docs/design/text-geometry-contract.md",
+  "docs/site/api/functions/path-transforms.md",
+  "docs/site/api/hooks/use-visibility-transition.md",
+  "packages/text/README.md",
   "docs/design/html-box-contract.md",
   "docs/design/weighted-electric-sources-contract.md",
   "docs/design/textures-contract.md",
@@ -268,6 +291,7 @@ const currentMarkdownPaths = [
   "docs/scenario-index.md",
   "docs/design/physics-2d-contract.md",
   "tooling/physics-comparison/README.md",
+  "tooling/texture-wasm-spike/README.md",
   "tooling/agent-verification/README.md",
   "docs/strategy/README.md",
   "docs/strategy/responsive-style-queries.md",
@@ -288,11 +312,16 @@ const linkCheckedPaths = [
   "docs/migrations/jsx-authoring-pivot.md",
 ];
 const migrationMarkdownPaths = new Set([
+  "docs/migrations/animated-value-hook.md",
   "docs/migrations/default-pointer-participation.md",
   "docs/migrations/filter-factory-values.md",
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
+  "docs/testing/field-notes/visibility-transition-integration.md",
+  ...trackedRepositoryFiles(["docs/website-rebuild/*.md", "games/kube-inferno/*.md"]),
+  "tooling/fancy-transition-wasm/README.md",
+  "tooling/transition-wasm-spike/README.md",
   // Active execution records are not historical shipped contracts.
   "docs/project-plans/004-html-box.md",
   "docs/superpowers/specs/2026-10-02-html-host-design.md",
@@ -300,6 +329,7 @@ const operationalMarkdownPaths = new Set([
   "docs/testing/field-notes/html-box.md",
   "tooling/texture-wasm-spike/README.md",
   ".beads/README.md",
+  "packages/text/test/fixtures/source-serif/LICENSE.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
   "tooling/studio-docs/fixtures/invalid-script.md",
   "tooling/studio-docs/fixtures/valid-guide.md",
@@ -326,9 +356,12 @@ for (const representative of [
   );
 }
 const historicalMarkdownPatterns = [
+  /^docs\/testing\/runtime-performance-audit\//u,
   /^\.superpowers\/sdd\//u,
   /^docs\/design\/tfc-01-characterization-baseline\.md$/u,
   /^docs\/project-plans\/\d{3}-/u,
+  /^docs\/project-plans\/(?:remaining-viz-roadmap|viz-.*)\.md$/u,
+  /^docs\/testing\/evidence\/component-manipulation\/progress\.md$/u,
   /^docs\/superpowers\/(?:plans|specs)\//u,
   /^docs\/testing\/dep-\d+-upgrade-notes\.md$/u,
   /^docs\/testing\/field-notes\//u,
@@ -2055,7 +2088,7 @@ const contractPrecisionRequirements = new Map([
       "CRC never automatically promotes\na stable component",
       "External render layers and the official `@crc/three` adapter use this same",
       "CRC exposes no public scheduler clock, frame-step API,\ntrace history",
-      "Future worker or WASM number crunching may use packed buffers only if Begin",
+      "Worker or WASM number crunching may use packed buffers only if Begin",
     ],
   ],
   [
@@ -2170,9 +2203,11 @@ const postBaselineNormativeContractPaths = new Set([
   "docs/design/html-box-contract.md",
   "docs/design/textures-contract.md",
   "docs/design/animation-contract.md",
+  "docs/design/component-manipulation-contract.md",
   "docs/design/signals-and-scheduling-contract.md",
   "docs/design/physics-2d-contract.md",
   "docs/design/render-layer-and-three-contract.md",
+  "docs/design/text-geometry-contract.md",
 ]);
 // This shipped contract predates this migration but was never registered in the
 // approved-design mapping manifest. Preserve its exact committed bytes; do not
@@ -2785,6 +2820,22 @@ const matrixRequirements = [
       "site/api/types/physics-3d-geometry.md",
     ],
     evidence: ["shapes.test.ts", "casts.test.ts"],
+  },
+  {
+    topic: /Signal-owned component move, resize, rotation/u,
+    guides: [
+      "site/learn/guides/manipulation.md",
+      "design/component-manipulation-contract.md",
+    ],
+    evidence: ["manipulation.example.tsx", "manipulation-interaction.test.tsx"],
+  },
+  {
+    topic: /Procedural textures/u,
+    guides: [
+      "site/learn/guides/procedural-textures.md",
+      "design/textures-contract.md",
+    ],
+    evidence: ["material.test.tsx", "reaction-diffusion.test.tsx"],
   },
   {
     topic: /Generic external-renderer lifecycle/u,
@@ -3428,8 +3479,8 @@ export async function verifyMutationProbes() {
     /field-level migration rect\.fillStyle has the wrong final behavior/iu,
   );
   const wrongFieldRequiredness = migrationSource.replace(
-    "`Rectangle` `style.x`                         | Optional; defaults to `0`",
-    "`Rectangle` `style.x`                         | Required; defaults to `0`",
+    "`Rectangle` `style.width`                     | Required",
+    "`Rectangle` `style.width`                     | Optional",
   );
   assert.notEqual(
     wrongFieldRequiredness,
@@ -3442,7 +3493,7 @@ export async function verifyMutationProbes() {
         ...fieldMigrationArguments,
         migrationSource: wrongFieldRequiredness,
       }),
-    /field-level migration rect\.x has the wrong final behavior/iu,
+    /field-level migration rect\.width has the wrong final behavior/iu,
   );
   throws(
     () =>

@@ -297,7 +297,7 @@ describe('animation structural performance', () => {
       })));
       return createElement(Rectangle, {
         style: {
-          x: output.get(),
+          left: output.get(),
           width: 2,
           height: 2,
           fill: 'red',

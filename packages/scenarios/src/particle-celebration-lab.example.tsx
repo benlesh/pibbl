@@ -232,8 +232,8 @@ function ParticleCelebrationOwner({
           <Text
             pointerEvents="none"
             style={{
-              x,
-              y: y - 8,
+              left: x,
+              top: y - 8,
               fill: '#ffffff',
               font: '900 14px sans-serif',
               textAlign: 'center',
@@ -258,22 +258,22 @@ export function ParticleCelebrationLabRoot({
       <Rectangle style={{ width: 640, height: 360, fill: '#07111f' }} />
       <Rectangle
         pointerEvents="none"
-        style={{ x: 12, y: 52, width: 616, height: 292, fill: '#10233f' }}
+        style={{ left: 12, top: 52, width: 616, height: 292, fill: '#10233f' }}
       />
       <Clip style={{ d: celebrationClip() }}>
         <ParticleCelebrationOwner model={model} />
       </Clip>
       <Text
         pointerEvents="none"
-        style={{ x: 24, y: 20, fill: '#f8fafc', font: '800 18px sans-serif' }}
+        style={{ left: 24, top: 20, fill: '#f8fafc', font: '800 18px sans-serif' }}
       >
         CANVAS PARTICLE CELEBRATION
       </Text>
       <Text
         pointerEvents="none"
         style={{
-          x: 616,
-          y: 22,
+          left: 616,
+          top: 22,
           fill: '#7dd3fc',
           font: '700 11px monospace',
           textAlign: 'right',
@@ -283,7 +283,7 @@ export function ParticleCelebrationLabRoot({
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 24, y: 326, fill: '#cbd5e1', font: '700 12px monospace' }}
+        style={{ left: 24, top: 326, fill: '#cbd5e1', font: '700 12px monospace' }}
       >
         {selectedPointCount === 0
           ? 'PLACE POINTS, THEN LAUNCH'

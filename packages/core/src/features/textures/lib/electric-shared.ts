@@ -31,63 +31,6 @@ export function electricOptions(o: ElectricOptions) {
     glow: range(o.glow ?? 1, 0, 2, "Glow"),
   };
 }
-/** Stable integer hash; never uses ambient Math.random. */
-export function noise(seed: number, index: number) {
-  let x = (seed ^ Math.imul(index + 1, 0x9e3779b9)) >>> 0;
-  x = Math.imul(x ^ (x >>> 16), 0x21f0aaad);
-  x = Math.imul(x ^ (x >>> 15), 0x735a2d97);
-  return ((x ^ (x >>> 15)) >>> 0) / 4294967296;
-}
-export interface Filament {
-  points: ElectricPoint[];
-  intensity: number;
-  hue: number;
-  width: number;
-}
-export function mix(
-  a: ElectricPoint,
-  b: ElectricPoint,
-  t: number,
-): ElectricPoint {
-  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-}
-/** One bounded path list, layered glow strokes followed by a sharp core. */
-export function drawFilaments(
-  context: TextureContext,
-  lines: readonly Filament[],
-  glow: number,
-) {
-  const ctx = context.canvas.getContext("2d")!;
-  const w = context.canvas.width,
-    h = context.canvas.height,
-    scale = Math.min(w, h);
-  ctx.globalCompositeOperation = "lighter";
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  for (const pass of [0, 1, 2, 3]) {
-    if (pass < 2 && glow === 0) continue;
-    for (const line of lines) {
-      if (line.intensity < 0.005) continue;
-      ctx.beginPath();
-      line.points.forEach((p, i) =>
-        i ? ctx.lineTo(p.x * w, p.y * h) : ctx.moveTo(p.x * w, p.y * h),
-      );
-      const alpha = Math.min(
-        1,
-        line.intensity * [0.055 * glow, 0.16 * glow, 0.65, 0.95][pass],
-      );
-      ctx.strokeStyle =
-        pass === 3
-          ? `rgba(245,239,255,${alpha})`
-          : `hsla(${line.hue},100%,${pass === 2 ? 72 : 58}%,${alpha})`;
-      ctx.lineWidth = Math.max(
-        0.45,
-        scale * line.width * [16 * glow, 6 * glow, 2, 0.65][pass],
-      );
-      ctx.stroke();
-    }
-  }
-}
 export function drawCore(
   context: TextureContext,
   p: ElectricPoint,

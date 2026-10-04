@@ -1,0 +1,66 @@
+$ vitest run --browser.headless --maxWorkers=4
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/perf-verification/crc
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+Port 63315 is in use, trying another one...
+4:14:00 PM [vite] (client) warning: 
+/Users/benlesh/.codex/worktrees/perf-verification/crc/tooling/texture-import-inertness.test.mjs
+8  |  
+9  |  function importBuilt(specifier) {
+10 |  ...unner__"].wrapDynamicImport(() => import(requireBuiltPackage.resolve(specifier)));
+   |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+11 |  }
+12 |  
+The above dynamic import cannot be analyzed by Vite.
+See https://vite.dev/guide/features#dynamic-import for supported dynamic import formats. If this is intended to be left as-is, you can use the /* @vite-ignore */ comment inside the import() call to suppress this warning.
+
+  Plugin: vite:import-analysis
+  File: /Users/benlesh/.codex/worktrees/perf-verification/crc/tooling/texture-import-inertness.test.mjs
+ ❯ |chromium| tooling/texture-import-inertness.test.mjs (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |chromium| tooling/texture-import-inertness.test.mjs [ tooling/texture-import-inertness.test.mjs ]
+Error: Failed to import test file /Users/benlesh/.codex/worktrees/perf-verification/crc/tooling/texture-import-inertness.test.mjs
+Caused by: Error: Module "node:module" has been externalized for browser compatibility. Cannot access "node:module.createRequire" in client code.  See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+ ❯ tooling/texture-import-inertness.test.mjs:1:39
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 345 passed | 3 skipped (349)
+      Tests  3586 passed | 7 skipped (3593)
+   Start at  16:13:17
+   Duration  46.21s (transform 0ms, setup 0ms, import 30.52s, tests 131.22s, environment 0ms)
+
+[ELIFECYCLE] Command failed with exit code 1.

@@ -51,3 +51,15 @@ export interface CRCDisplacementFilterOptions {
   readonly strength: SignalValue<number>;
   readonly region: Readonly<{ x: number; y: number; width: number; height: number }>;
 }
+
+/** Surface-light source. Images are caller-owned and must already be decoded. */
+export type CRCReflectedLightSource = string | TexturePaint | HTMLImageElement | ImageBitmap;
+export interface CRCReflectedLightFilterOptions {
+  readonly map: SignalValue<TexturePaint>;
+  readonly region: Readonly<{ x: number; y: number; width: number; height: number }>;
+  readonly source?: SignalValue<CRCReflectedLightSource>;
+  readonly opacity?: SignalValue<number>;
+  readonly threshold?: SignalValue<number>;
+  readonly softness?: SignalValue<number>;
+  readonly direction?: readonly [number, number];
+}

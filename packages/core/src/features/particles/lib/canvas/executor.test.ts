@@ -187,7 +187,7 @@ describe("Canvas particle executor commands", () => {
     expect(snapshot()).toEqual(expected);
   });
 
-  it("uses the bounded raster cache for repeated complex paths and sprites", () => {
+  it("caches complex paths but draws reusable sprites directly without size rasters", () => {
     const path = new Path2D();
     path.rect(-0.5, -0.5, 1, 1);
     const sprite = new OffscreenCanvas(2, 2);
@@ -233,6 +233,7 @@ describe("Canvas particle executor commands", () => {
     executor.draw(ctx, { x: 0, y: 0, width: 100, height: 100 }, 1, "visible");
 
     expect(drawImage).toHaveBeenCalledTimes(6);
-    expect(executor.cacheEntries).toBe(2);
+    expect(executor.cacheEntries).toBe(1);
+    expect(drawImage.mock.calls.filter((call) => call[0] === sprite)).toHaveLength(3);
   });
 });

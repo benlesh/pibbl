@@ -21,6 +21,8 @@ symbols:
     CRCHueRotateFilterOptions,
     CRCInvertFilterOptions,
     CRCOpacityFilterOptions,
+    CRCReflectedLightFilterOptions,
+    CRCReflectedLightSource,
     CRCSaturateFilterOptions,
     CRCSepiaFilterOptions,
     displacement,
@@ -29,6 +31,7 @@ symbols:
     hueRotate,
     invert,
     opacity,
+    reflectedLight,
     saturate,
     sepia,
   ]
@@ -165,6 +168,15 @@ field table above. Numeric fields support signals owned by the receiving primiti
 `CRCOpacityFilterOptions` describes the validated inputs to `opacity`, shown in the
 field table above. Numeric fields support signals owned by the receiving primitive.
 
+## CRCReflectedLightFilterOptions
+
+The map, region, source, opacity, threshold, softness, and direction accepted by
+`reflectedLight`. Numeric controls and the map/source accept signals.
+
+## CRCReflectedLightSource
+
+A concrete CSS color, CRC texture paint, decoded HTMLImageElement, or ImageBitmap.
+
 ## CRCSaturateFilterOptions
 
 `CRCSaturateFilterOptions` describes the validated inputs to `saturate`, shown in the
@@ -199,6 +211,20 @@ It changes pixels only; the receiving primitive retains its original hit geometr
 ## opacity
 
 `opacity(options)` creates an opaque filter for combined-raster opacity.
+
+## reflectedLight
+
+`reflectedLight({ map, region, source, opacity, threshold, softness, direction })`
+adds translucent light only on selected wave slopes. `source` accepts a concrete
+CSS color, a CRC texture paint, or a caller-owned, already-decoded HTML image or
+ImageBitmap. It does not load URLs or close caller-owned images. A changed image
+requires ordinary CRC invalidation; CRC texture revisions update automatically.
+
+Opacity defaults to 0.15 (0–1). Threshold defaults to 0.1 (-1–1), softness to 0.25
+(positive, at most 2), and direction to `[-0.6, -0.8]`. Map and region use the same
+coordinates as displacement. Scene alpha and all logical geometry are preserved.
+Place this directly after `displacement()` to fuse the two into one GPU draw and
+one final bitmap transfer. This is an image-space surface-light approximation.
 
 ## saturate
 

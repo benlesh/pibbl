@@ -6,7 +6,23 @@ kind: api
 slug: path-transforms
 apiCategory: function
 symbols:
-  [transformPath, composeTransforms, affineTransform, quadTransform, envelopeTransform, PathTransform, PathPoint, PathRect, TransformPathOptions, QuadTransformOptions, EnvelopeTransformOptions, EnvelopeGuide, PathGuide, PathGuideOptions, PathGuideStation]
+  [
+    transformPath,
+    composeTransforms,
+    affineTransform,
+    quadTransform,
+    envelopeTransform,
+    PathTransform,
+    PathPoint,
+    PathRect,
+    TransformPathOptions,
+    QuadTransformOptions,
+    EnvelopeTransformOptions,
+    EnvelopeGuide,
+    PathGuide,
+    PathGuideOptions,
+    PathGuideStation,
+  ]
 ---
 
 # Composable path transforms

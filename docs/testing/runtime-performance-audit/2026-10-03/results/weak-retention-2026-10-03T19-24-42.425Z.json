@@ -1,0 +1,56 @@
+{
+  "schema": "crc-weak-retention/1",
+  "baseUrl": "http://127.0.0.1:5204",
+  "methodology": "Each dereference happens in a new browser evaluation after CDP forced GC. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.",
+  "cases": [
+    {
+      "retain": false,
+      "reachableWithConfiguredHandleState": false,
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 1,
+        "releasedRootRegistrations": 1,
+        "createdBeginCommands": 0,
+        "releasedBeginCommands": 0,
+        "createdCompletionCallbacks": 0,
+        "releasedCompletionCallbacks": 0,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "reachableAfterDroppingStaleAndSecondGC": false
+    },
+    {
+      "retain": true,
+      "reachableWithConfiguredHandleState": false,
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 1,
+        "releasedRootRegistrations": 1,
+        "createdBeginCommands": 0,
+        "releasedBeginCommands": 0,
+        "createdCompletionCallbacks": 0,
+        "releasedCompletionCallbacks": 0,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "reachableAfterDroppingStaleAndSecondGC": false
+    }
+  ],
+  "errors": []
+}

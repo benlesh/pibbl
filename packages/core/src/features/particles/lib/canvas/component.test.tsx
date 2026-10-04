@@ -9,6 +9,7 @@ import {
   Layer,
   Rectangle,
   crc,
+  definePrimitive,
   signal,
   type CRCNode,
 } from "@crc/core";
@@ -117,19 +118,22 @@ describe("Particles2D component", () => {
     driver.flush(0);
     flush(1);
 
-    expect(particleSystemOwnershipSnapshot().activeSystems)
-      .toBe(baseline.activeSystems + 1);
+    expect(particleSystemOwnershipSnapshot().activeSystems).toBe(
+      baseline.activeSystems + 1,
+    );
 
     selected.set(effect({ automatic: true, color: "#0000ff" }));
     driver.flush(2);
     flush(3);
-    expect(particleSystemOwnershipSnapshot().activeSystems)
-      .toBe(baseline.activeSystems + 1);
+    expect(particleSystemOwnershipSnapshot().activeSystems).toBe(
+      baseline.activeSystems + 1,
+    );
 
     root.dispose();
     roots.delete(root);
-    expect(particleSystemOwnershipSnapshot().activeSystems)
-      .toBe(baseline.activeSystems);
+    expect(particleSystemOwnershipSnapshot().activeSystems).toBe(
+      baseline.activeSystems,
+    );
   });
 
   it("balances systems, bindings, scheduler registration, and the fixed ledger on disposal", () => {
@@ -297,7 +301,7 @@ describe("Particles2D component", () => {
           </Clip>
         </Group>
         <Rectangle
-          style={{ x: 35, y: 5, width: 10, height: 10, fill: "green" }}
+          style={{ left: 35, top: 5, width: 10, height: 10, fill: "green" }}
         />
       </Fragment>,
     );
@@ -378,4 +382,67 @@ describe("Particles2D component", () => {
         .isPointInPath(targets[0]!.paintEntry!.path, 29, 19),
     ).toBe(true);
   });
+});
+
+it("combines particle placement into one Canvas transform without per-particle translate or rotate calls", () => {
+  const rotate = vi.spyOn(CanvasRenderingContext2D.prototype, "rotate");
+  const translate = vi.spyOn(CanvasRenderingContext2D.prototype, "translate");
+  const transforms: DOMMatrix[] = [];
+  const originalArc = CanvasRenderingContext2D.prototype.arc;
+  vi.spyOn(CanvasRenderingContext2D.prototype, "arc").mockImplementation(
+    function (
+      this: CanvasRenderingContext2D,
+      ...args: Parameters<typeof originalArc>
+    ) {
+      transforms.push(this.getTransform());
+      return originalArc.apply(this, args);
+    },
+  );
+  const sparks = defineParticleEffect2D({
+    emitters: [
+      {
+        name: "sparks",
+        capacity: 32,
+        emission: [{ type: "burst", atMilliseconds: 0, count: 32 }],
+        shape: { type: "point", position: [10, 10] },
+        initial: { lifetimeMilliseconds: 1000, size: 4, rotationDegrees: 45 },
+        renderer: { type: "circle" },
+        bounds: { min: [0, 0], max: [40, 40] },
+      },
+    ],
+  });
+  let base!: DOMMatrix;
+  const Probe = definePrimitive((_props, _style, context) => {
+    base = context.getTransform();
+  });
+  function Scene() {
+    const system = useParticleSystem(sparks, { autoplay: true });
+    return (
+      <Group
+        style={{
+          left: 10,
+          top: 20,
+          scaleX: 2,
+          scaleY: 1.5,
+          rotationDegrees: 30,
+        }}
+      >
+        <Probe />
+        <Particles2D system={system} style={{ width: 40, height: 40 }} />
+      </Group>
+    );
+  }
+  mount(<Scene />);
+  driver.flush(0);
+  flush(1);
+  flush(2);
+  flush(3);
+  expect(transforms.length).toBeGreaterThanOrEqual(32);
+  const matrix = transforms.at(-1)!;
+  const expected = base.translate(10, 10).rotate(45);
+  // Canvas stores transforms at float precision; compare below 0.00001 logical units.
+  for (const key of ["a", "b", "c", "d", "e", "f"] as const)
+    expect(Math.abs(matrix[key] - expected[key])).toBeLessThan(1e-5);
+  expect(rotate.mock.calls.length).toBeLessThan(4);
+  expect(translate.mock.calls.length).toBeLessThan(4);
 });

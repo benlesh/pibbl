@@ -5,6 +5,7 @@ const BUILT_ENTRY_SUFFIXES = new Map([
   ["@crc/core/filters", "/packages/core/dist/filters.mjs"],
   ["@crc/core/textures", "/packages/core/dist/features/textures/index.mjs"],
   ["@crc/core/viz", "/packages/core/dist/features/viz/index.mjs"],
+  ["@crc/text", "/packages/text/dist/index.mjs"],
   ['@crc/core', '/packages/core/dist/index.mjs'],
   ['@crc/core/internal', '/packages/core/dist/internal.mjs'],
   ['@crc/core/jsx-runtime', '/packages/core/dist/jsx-runtime.mjs'],
@@ -42,6 +43,7 @@ export function assertBuiltCore(): Plugin {
       if (
         normalizedId.includes('/packages/core/src/features/textures/') ||
         normalizedId.includes('/packages/core/src/features/viz/') ||
+        normalizedId.includes('/packages/text/src/') ||
         normalizedId.includes('/packages/core/src/') ||
         normalizedId.includes('/packages/three/src/') ||
         normalizedId.includes('/packages/core/src/features/particles/') ||

@@ -1,0 +1,9 @@
+{
+  "schema": "crc-weak-retention/2",
+  "baseUrl": "http://127.0.0.1:5204",
+  "methodology": "Each dereference happens in a new browser evaluation after CDP forced GC. The probe weakly observes the actual root CRCElement and HTMLCanvasElement; the retain case keeps only the public Texture handle. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.",
+  "cases": [],
+  "errors": [
+    "Error: WeakRef pre-disposal positive control failed: {\"retain\":false,\"hasConfiguredStaleHandle\":true,\"renders\":0,\"pendingBeforeInitialFlush\":1,\"rootReachableBeforeDispose\":true,\"canvasReachableBeforeDispose\":true}\n    at file:///Users/benlesh/.codex/worktrees/perf-implementation/crc/tooling/performance-audit/weak-retention.mjs:45:185"
+  ]
+}

@@ -589,8 +589,8 @@ function Label({
     <Text
       pointerEvents="none"
       style={{
-        x,
-        y,
+        left: x,
+        top: y,
         font: `${bold ? "600 " : ""}${size}px sans-serif`,
         fill: color,
       }}
@@ -616,8 +616,8 @@ function Button({
     <Group>
       <Rectangle
         style={{
-          x,
-          y,
+          left: x,
+          top: y,
           width: 112,
           height: 28,
           fill: active ? ink : "#e7edf4",
@@ -723,8 +723,8 @@ function Brush({
         <Text
           pointerEvents="none"
           style={{
-            x: labelLeft + 39,
-            y: top + 6,
+            left: labelLeft + 39,
+            top: top + 6,
             textAlign: "center",
             font: "11px sans-serif",
             fill: "white",
@@ -750,8 +750,8 @@ function Brush({
         <Rectangle
           key="hit"
           style={{
-            x: mode === "start" ? px - 9 : px - Math.min(9, (right - left) / 2),
-            y: -3,
+            left: mode === "start" ? px - 9 : px - Math.min(9, (right - left) / 2),
+            top: -3,
             width: 9 + Math.min(9, (right - left) / 2),
             height: height + 6,
             fill: "transparent",
@@ -791,8 +791,8 @@ function Brush({
               <Text
                 pointerEvents="none"
                 style={{
-                  x: px,
-                  y: height + 9,
+                  left: px,
+                  top: height + 9,
                   textAlign: year === 1980 ? "left" : "center",
                   font: "10px sans-serif",
                   fill: muted,
@@ -811,7 +811,7 @@ function Brush({
       <Rectangle
         key="selection"
         style={{
-          x: left,
+          left,
           width: right - left,
           height,
           fill: "transparent",
@@ -888,7 +888,7 @@ function Plot({
         <Rectangle
           pointerEvents="none"
           style={{
-            x: x.map(start),
+            left: x.map(start),
             width: x.map(end) - x.map(start),
             height: frame.height,
             fill: "#d7e4fa",
@@ -930,7 +930,7 @@ function Plot({
             scale="x"
             position="bottom"
             tickCount={5}
-            tickFormat={(value) => date(Math.round(value))}
+            tickFormat={(value) => typeof value === "string" ? value : date(Math.round(value))}
             style={{ stroke: "#ccd7e3", fill: muted, font: "11px sans-serif" }}
           />
           <Line

@@ -40,8 +40,8 @@ function KeyboardAction({ onDelivery, onFocusEvidence, wrapClick }: Pick<AgentTa
     onFocus: onFocusEvidence, onBlur: onFocusEvidence, onKeyUp: onFocusEvidence,
   }, { path, fill: true, keyboardFocusable: true });
   return <>
-    <Rectangle pointerEvents="none" style={{ x: 40, y: 32, width: 128, height: 96, fill: '#2563eb', stroke: '#1e3a8a', strokeWidth: 2 }} />
-    {focus.isFocusVisible ? <Rectangle pointerEvents="none" style={{ x: 36, y: 28, width: 136, height: 104, stroke: '#ff00ff', strokeWidth: 2 }} /> : null}
+    <Rectangle pointerEvents="none" style={{ left: 40, top: 32, width: 128, height: 96, fill: '#2563eb', stroke: '#1e3a8a', strokeWidth: 2 }} />
+    {focus.isFocusVisible ? <Rectangle pointerEvents="none" style={{ left: 36, top: 28, width: 136, height: 104, stroke: '#ff00ff', strokeWidth: 2 }} /> : null}
   </>;
 }
 
@@ -75,15 +75,15 @@ export function AgentTargetingVerificationScene({
       />
       {rendered.mode === 'pagination' ? Array.from({ length: 100 }, (_, index) => <Rectangle
         key={index}
-        style={{ x: 300 + (index % 10) * 6, y: 174 + Math.floor(index / 10) * 6, width: 4, height: 4, fill: '#0f766e' }}
+        style={{ left: 300 + (index % 10) * 6, top: 174 + Math.floor(index / 10) * 6, width: 4, height: 4, fill: '#0f766e' }}
         onClick={() => undefined}
       />) : null}
       <Group style={{ translateX: 40, translateY: 32 }}>
       <Layer style={{ width: 240, height: 160 }}>
       {rendered.mode === 'keyboard-focus' ? <KeyboardAction onDelivery={onDelivery} onFocusEvidence={onFocusEvidence} wrapClick={wrapClick} /> : <Rectangle
         style={{
-          x: 40,
-          y: 32,
+          left: 40,
+          top: 32,
           width: 128,
           height: 96,
           fill: '#2563eb',
@@ -100,8 +100,8 @@ export function AgentTargetingVerificationScene({
       <Rectangle
         pointerEvents={repaired ? 'none' : 'auto'}
         style={{
-          x: 40,
-          y: 32,
+          left: 40,
+          top: 32,
           width: 128,
           height: 96,
           fill: 'rgba(0, 0, 0, 0)',
@@ -112,31 +112,31 @@ export function AgentTargetingVerificationScene({
       </Group>
       <Text
         pointerEvents="none"
-        style={{ x: 80, y: 36, fill: '#0f172a', font: '700 16px sans-serif' }}
+        style={{ left: 80, top: 36, fill: '#0f172a', font: '700 16px sans-serif' }}
       >
         {'Targeting verification fixture'}
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 80, y: 118, fill: '#ffffff', font: '700 15px sans-serif' }}
+        style={{ left: 80, top: 118, fill: '#ffffff', font: '700 15px sans-serif' }}
       >
         {'Select item A'}
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 232, y: 92, fill: '#334155', font: '14px sans-serif' }}
+        style={{ left: 232, top: 92, fill: '#334155', font: '14px sans-serif' }}
       >
         {`expected item-a: ${mode.get() !== 'intentional-block' ? 'yes' : 'no'}`}
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 232, y: 116, fill: '#334155', font: '14px sans-serif' }}
+        style={{ left: 232, top: 116, fill: '#334155', font: '14px sans-serif' }}
       >
         {`selected: ${selectionLabel.get()}`}
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 232, y: 140, fill: '#334155', font: '14px sans-serif' }}
+        style={{ left: 232, top: 140, fill: '#334155', font: '14px sans-serif' }}
       >
         {`deliveries: ${selections.get()} (${deliveredTo.get() ?? 'none'})`}
       </Text>

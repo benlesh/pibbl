@@ -5,3 +5,13 @@ _bmad-output/
 # Retained verification reports are byte-fingerprinted evidence, not authored docs.
 docs/strategy/agent-verification-evidence/
 docs/testing/package-consolidation-evidence/
+
+# Downloaded native dependencies and generated text artifacts
+packages/text/.cache/
+packages/text/dist/
+
+# Preserve upstream font licenses and pinned fixture metadata
+packages/text/test/fixtures/
+
+# Immutable, SHA-256-addressed performance audit captures
+docs/testing/runtime-performance-audit/*/results/

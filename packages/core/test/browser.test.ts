@@ -40,8 +40,8 @@ describe('crc browser tests', () => {
     const SimpleRect = (_props: {}) => {
       return createElement(Rectangle, {
         style: {
-          x: 50,
-          y: 50,
+          left: 50,
+          top: 50,
           width: 100,
           height: 100,
           fill: 'red',

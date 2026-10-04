@@ -1,0 +1,40 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+3:49:05 PM [vite] (client) [console.warn] [CRC physics] Ignored stale disable command for body handle generation 0.
+
+ Test Files  44 passed (44)
+      Tests  377 passed (377)
+   Start at  15:49:02
+   Duration  5.58s (transform 0ms, setup 0ms, import 1.20s, tests 1.51s, environment 0ms)
+

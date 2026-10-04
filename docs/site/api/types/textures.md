@@ -29,6 +29,10 @@ symbols:
     waterWaves,
     WaterWavesOptions,
     WaterWavesMessage,
+    waterSurface,
+    WaterSurfaceObstacle,
+    WaterSurfaceOptions,
+    WaterSurfaceMessage,
   ]
 ---
 
@@ -48,9 +52,8 @@ and `render`. Materials idle until inputs change.
 
 ## `TextureBrush`
 
-`{ radius, strength }`: finite radius from greater than zero through 128
-simulation cells and strength from 0 through 1. `false` disables the
-reaction–diffusion brush.
+`{ radius, strength }`: finite radius in (0,128] simulation cells and strength
+in [0,1]. `false` disables the reaction–diffusion brush.
 
 ## `TexturePalette`
 
@@ -95,10 +98,10 @@ Seed and spots/stripes preset for the `reactionDiffusion` recipe factory.
 
 Typed `paint`, `stir`, `pause`, and `reset` messages delivered through the texture's
 `send` method. Paint uses normalized `u`/`v`, a radius in cells (default 6), and
-strength in `[0, 1]` (default 0.8). Stir uses normalized `u`/`v`, normalized `du`/`dv`
-displacements in `[-1, 1]`, and a radius in cells (default 16). Radii must be finite,
+strength in [0, 1] (default 0.8). Stir uses normalized `u`/`v`, normalized `du`/`dv`
+displacements in [-1, 1], and a radius in cells (default 16). Radii must be finite,
 greater than zero, and at most 128. All coordinates/vectors must be finite;
-centers outside `[0, 1]` are ignored.
+centers outside [0, 1] are ignored.
 
 Stir displaces existing ink with smooth local falloff; it adds no ink. Pause stops
 reaction stepping while explicit paint/stir commands still apply. Reset repeats
@@ -108,18 +111,45 @@ texture frame, and sends after disposal are inert.
 ## WaterWavesOptions
 
 Optional unsigned `seed`, finite nonnegative `speed`, integer `scale` from 1
-through 32, finite nonnegative `rippleStrength` (default 1), and initial `paused` state.
-Strength scales click ripples; zero hides them without altering the base waves. This numeric displacement map rejects
-palettes.
+through 32, finite nonnegative `rippleStrength` (default 1), and initial `paused`
+state. Ripple strength changes existing ripples independently of ambient waves.
+This numeric displacement map rejects palettes.
 
 ## WaterWavesMessage
 
-Typed `pause` and `reset` messages. Reset returns phase to its seeded initial
-state while preserving the current pause state.
+Typed `pause`, `reset`, and `{ type: "ripple", x, y }` messages with normalized
+coordinates in `[0, 1]`. Reset returns phase to its seeded initial state and clears
+ripples while preserving the current pause state.
+
+## WaterSurfaceObstacle
+
+A normalized axis-aligned `{ x, y, width, height }` rectangle within `[0, 1]`.
+It is a visual water boundary only and has no hit-testing or physics effect.
+
+## WaterSurfaceOptions
+
+The same seed, speed, scale, ripple-strength, and paused inputs as
+`waterWaves`, plus optional `obstacles` and `viscosity`. Viscosity defaults to 0
+and accepts 0–1: increasing it slows wave propagation and ambient motion and
+increases damping. It is an artistic thickness control, not physical density
+or a mass-conserving fluid solver. Changes preserve existing waves and pause state.
+For colored or textured liquid, paint a decorative Rectangle with a color or
+CRC texture and `style.opacity` inside the displaced group; keep
+`pointerEvents="none"` so it does not intercept scene input.
+
+`waterSurface` is a WASM-backed,
+bounded reflective height field: it uses a maximum 128-cell short edge and
+256-cell long edge, while preserving the source aspect ratio.
+
+## WaterSurfaceMessage
+
+The same typed `pause`, `reset`, and normalized `ripple` messages as
+`waterWaves`. A ripple can keep a speed-zero field active until its damped
+energy settles; a paused field discards elapsed time.
 
 ## Recipe factories
 
-`marble`, `paper`, `cellular`, `reactionDiffusion`, and `waterWaves` create inert recipes consumed
+`marble`, `paper`, `cellular`, `reactionDiffusion`, `waterWaves`, and `waterSurface` create inert recipes consumed
 by `useTexture` from core (also re-exported by this package). Use the returned
 resource directly as `style.fill` or `style.stroke`; no renderer callback is needed.
 
@@ -142,13 +172,14 @@ Creates a living Gray–Scott recipe that accepts `InkMessage` values.
 ## waterWaves
 
 Creates a periodic numeric RG displacement map for the `displacement` filter.
-Send `{ type: 'ripple', x, y }` to add an expanding ring at a normalized position
-from zero to one, measured from the top-left. Use stretch placement for localized
-click ripples; repeat placement repeats them with the texture.
+It advances through CRC's scheduler and remains static when paused. Speed zero
+stops ambient motion while active ripples continue to spread.
 
-Ripples fade over 2.4 seconds, with at most 16 active rings. They advance through
-CRC's scheduler even when base-wave speed is zero. Pause freezes both; reset
-clears the rings and resets the waves. With no rings and speed zero, the map idles.
+## waterSurface
+
+Creates a numeric RG displacement map with bounded, reflecting outer and
+rectangle-obstacle boundaries. Solid obstacle pixels are transparent. It is
+appearance-only and does not couple to CRC physics.
 
 ## rainDrops
 

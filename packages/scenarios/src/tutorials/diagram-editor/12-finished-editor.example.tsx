@@ -185,8 +185,8 @@ function FocusRing({
       <Rectangle
         pointerEvents="none"
         style={{
-          x: x - 7,
-          y: y - 7,
+          left: x - 7,
+          top: y - 7,
           width: width + 14,
           height: height + 14,
           stroke: "#fffdf6",
@@ -197,8 +197,8 @@ function FocusRing({
       <Rectangle
         pointerEvents="none"
         style={{
-          x: x - 3,
-          y: y - 3,
+          left: x - 3,
+          top: y - 3,
           width: width + 6,
           height: height + 6,
           stroke: "#17211d",
@@ -311,8 +311,8 @@ function NodePaint({
       <Rectangle
         pointerEvents="none"
         style={{
-          x: -5,
-          y: 37,
+          left: -5,
+          top: 37,
           width: 10,
           height: 10,
           fill: "#17211d",
@@ -322,8 +322,8 @@ function NodePaint({
       <Rectangle
         pointerEvents="none"
         style={{
-          x: 163,
-          y: 37,
+          left: 163,
+          top: 37,
           width: 10,
           height: 10,
           fill: "#17211d",
@@ -333,8 +333,8 @@ function NodePaint({
       <Text
         pointerEvents="none"
         style={{
-          x: 84,
-          y: 34,
+          left: 84,
+          top: 34,
           fill: "#17211d",
           font: "900 16px sans-serif",
           textAlign: "center",
@@ -345,8 +345,8 @@ function NodePaint({
       <Text
         pointerEvents="none"
         style={{
-          x: 84,
-          y: 59,
+          left: 84,
+          top: 59,
           fill: "#17211d",
           font: "600 13px sans-serif",
           textAlign: "center",
@@ -448,8 +448,8 @@ function ResetPaint(): CRCNode {
       <Text
         pointerEvents="none"
         style={{
-          x: 58,
-          y: 16,
+          left: 58,
+          top: 16,
           fill: "#17211d",
           font: "800 12px sans-serif",
           textAlign: "center",
@@ -498,13 +498,13 @@ function Toolbar({
       />
       <Text
         pointerEvents="none"
-        style={{ x: 24, y: 34, fill: "#17211d", font: "900 22px sans-serif" }}
+        style={{ left: 24, top: 34, fill: "#17211d", font: "900 22px sans-serif" }}
       >
         WORKFLOW MAP
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 250, y: 32, fill: "#667066", font: "600 13px sans-serif" }}
+        style={{ left: 250, top: 32, fill: "#667066", font: "600 13px sans-serif" }}
       >
         DRAG NODES · DRAG SPACE · WHEEL TO ZOOM
       </Text>
@@ -633,15 +633,15 @@ function StatusBar({
       />
       <Text
         pointerEvents="none"
-        style={{ x: 20, y: 21, fill: "#fffdf6", font: "700 12px monospace" }}
+        style={{ left: 20, top: 21, fill: "#fffdf6", font: "700 12px monospace" }}
       >
         {selected ? `SELECTED · ${selected.title}` : "NO SELECTION"}
       </Text>
       <Text
         pointerEvents="none"
         style={{
-          x: 940,
-          y: 21,
+          left: 940,
+          top: 21,
           fill: "#fffdf6",
           font: "700 12px monospace",
           textAlign: "right",

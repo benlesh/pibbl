@@ -6,6 +6,7 @@ import { cloneCRCElement } from '../element/create-element.js';
 import {
   getPrimitiveDefinition,
   getChildPrimitiveReceiverToken,
+  setPlacementConsumed,
 } from '../element/metadata.js';
 import { resolvePrimitiveStyleInput } from '../element/resolve-primitive-inputs.js';
 import type { CRCElement } from '../element/types.js';
@@ -171,6 +172,7 @@ export function childWithUsedSize(
   query?: PreparedQuery,
 ): CRCElement<any> {
   const renderedChild = cloneCRCElement(child);
+  setPlacementConsumed(renderedChild);
   setPreNormalizedStyle(renderedChild, Object.freeze({
     ...style,
     width,

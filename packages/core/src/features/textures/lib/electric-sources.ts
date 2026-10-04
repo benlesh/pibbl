@@ -1,4 +1,4 @@
-import { noise, point, range, type ElectricPoint } from "./electric-shared.js";
+import { point, range, type ElectricPoint } from "./electric-shared.js";
 
 /** A weighted attachment site in normalized texture coordinates. */
 export interface ElectricSource {
@@ -53,30 +53,4 @@ export function site(value: ElectricSource): SourceSite {
   for (let i = 0; i < value.id.length; i++)
     hash = Math.imul(hash ^ value.id.charCodeAt(i), 16777619);
   return { ...value, point: { ...value.point }, hash };
-}
-/** Order-independent weighted exponential race. Zero weight is never selected. */
-export function chooseSource(
-  sites: readonly SourceSite[],
-  seed: number,
-  ticket: number,
-): SourceSite | undefined {
-  let selected: SourceSite | undefined,
-    best = Infinity;
-  for (const candidate of sites) {
-    if (candidate.weight === 0) continue;
-    const logWeight = Math.log(candidate.weight);
-    const score =
-      Math.log(
-        -Math.log(Math.max(1e-9, noise(seed ^ candidate.hash, ticket))),
-      ) - logWeight;
-    if (
-      !selected ||
-      score < best ||
-      (score === best && candidate.id < selected.id)
-    ) {
-      best = score;
-      selected = candidate;
-    }
-  }
-  return selected;
 }

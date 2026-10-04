@@ -92,6 +92,18 @@
       "unitPrefix": "p"
     },
     {
+      "id": "component-manipulation",
+      "path": "docs/superpowers/specs/2026-09-28-component-manipulation-design.md",
+      "sourceSha256": "56c97b229f807ef529f152bf9858bd48f26ecca7f340441645d2162492e6a80a",
+      "unitPrefix": "n"
+    },
+    {
+      "id": "child-defined-drag-handles",
+      "path": "docs/superpowers/specs/2026-09-29-child-defined-drag-handles.md",
+      "sourceSha256": "089b9bbb68b2694321e646ca2d2c2edc482e6beb35befe66027d97da80575f95",
+      "unitPrefix": "h"
+    },
+    {
       "id": "physics-2d-quality",
       "path": "docs/superpowers/specs/2026-09-29-physics-2d-quality-design.md",
       "sourceSha256": "c77f63950ecf004946146ce1238d14de25be03b639fc53616a9791e103d033fe",
@@ -100,32 +112,38 @@
     {
       "id": "mutable-path-geometry",
       "path": "docs/superpowers/specs/2026-09-29-path-geometry-design.md",
-      "sourceSha256": "f1fe162e6d48233a038409f89db7c528984dffdbb52864469197a3d12f7c14b0",
+      "sourceSha256": "0d4a859c0e0ce874061f607946ad714ef208d247ed4affc399100f43b294184b",
       "unitPrefix": "q"
+    },
+    {
+      "id": "text-path-geometry",
+      "path": "docs/superpowers/specs/2026-09-30-text-path-geometry-design.md",
+      "sourceSha256": "137d802bc97c193b2d669a904c0ce04628847c5120e6d6ba00e39923afac44f4",
+      "unitPrefix": "y"
     },
     {
       "id": "four-corner-path-warp",
       "path": "docs/superpowers/specs/2026-09-30-path-warp-design.md",
-      "sourceSha256": "41655e8b819c4c27c0d4cd4a50d6111e867f31c5c1e744aa138998c71437d5fe",
+      "sourceSha256": "00c1e512db47743561fe0c9d2e4d4e1af69f9d0ed50f6163c2cf75dafbc8885a",
       "unitPrefix": "z"
     },
     {
       "id": "procedural-textures",
       "path": "docs/superpowers/specs/2026-09-30-procedural-textures-design.md",
-      "sourceSha256": "23e9307417f50fe1bc6f2ce4084a2c2e509278db26ae3c8a37d51738ce60557c",
+      "sourceSha256": "a3037df203612535df390350599377dcfb8953ef2ceff1c7c14fd9b07954e848",
       "unitPrefix": "d"
+    },
+    {
+      "id": "path-bending",
+      "path": "docs/superpowers/specs/2026-09-30-path-bending-design.md",
+      "sourceSha256": "2aafdd5d66c8be1d618e1c38546e325f1779c11641d000db823c209c9c0efe9f",
+      "unitPrefix": "j"
     },
     {
       "id": "tree-shakeable-filters-and-texture-effects",
       "path": "docs/superpowers/specs/2026-10-01-tree-shakeable-filters-and-texture-effects-design.md",
       "sourceSha256": "f2599fd238c4cb212ccf6e4ceae8a0cb606746c17173fa81f40d12219bf3b3b9",
       "unitPrefix": "n"
-    },
-    {
-      "id": "path-bending",
-      "path": "docs/superpowers/specs/2026-09-30-path-bending-design.md",
-      "sourceSha256": "6f791338ef1f1b38d96f57d3bcbfda6d11245bbebf2d7d2b5442e06ccfc4d260",
-      "unitPrefix": "j"
     },
     {
       "id": "html-box",
@@ -647,7 +665,7 @@
           "id": "b0085",
           "kind": "code",
           "section": "Nested layout",
-          "text": "text flex ├── rect └── grid ├── text └── image"
+          "text": "text flex \u251c\u2500\u2500 rect \u2514\u2500\u2500 grid \u251c\u2500\u2500 text \u2514\u2500\u2500 image"
         },
         {
           "id": "b0086",
@@ -707,7 +725,7 @@
           "id": "b0095",
           "kind": "code",
           "section": "Transforms",
-          "text": "text ancestor transform × layout placement × child transform × local geometry"
+          "text": "text ancestor transform \u00d7 layout placement \u00d7 child transform \u00d7 local geometry"
         },
         {
           "id": "b0096",
@@ -1213,19 +1231,19 @@
           "id": "c0021",
           "kind": "list",
           "section": "Component type capabilities",
-          "text": "- no primitive metadata → invoke the plain function with its props;"
+          "text": "- no primitive metadata \u2192 invoke the plain function with its props;"
         },
         {
           "id": "c0022",
           "kind": "list",
           "section": "Component type capabilities",
-          "text": "- primitive metadata → normalize/resolve style and invoke the primitive render callback with program props, finite style, and isolated Canvas context;"
+          "text": "- primitive metadata \u2192 normalize/resolve style and invoke the primitive render callback with program props, finite style, and isolated Canvas context;"
         },
         {
           "id": "c0023",
           "kind": "list",
           "section": "Component type capabilities",
-          "text": "- policy metadata → prepare exactly one child before identity dispatch without invoking the policy as an ordinary component."
+          "text": "- policy metadata \u2192 prepare exactly one child before identity dispatch without invoking the policy as an ordinary component."
         },
         {
           "id": "c0024",
@@ -1495,7 +1513,7 @@
           "id": "c0068",
           "kind": "code",
           "section": "Nested layout",
-          "text": "text Flex ├── Rectangle └── Grid ├── Text └── Image"
+          "text": "text Flex \u251c\u2500\u2500 Rectangle \u2514\u2500\u2500 Grid \u251c\u2500\u2500 Text \u2514\u2500\u2500 Image"
         },
         {
           "id": "c0069",
@@ -1597,7 +1615,7 @@
           "id": "c0085",
           "kind": "code",
           "section": "Transforms",
-          "text": "text root surface × ancestor Group × layout placement × child Group × local geometry"
+          "text": "text root surface \u00d7 ancestor Group \u00d7 layout placement \u00d7 child Group \u00d7 local geometry"
         },
         {
           "id": "c0086",
@@ -2616,12 +2634,6 @@
           "kind": "prose",
           "section": "Evidence",
           "text": "The public `canvas-surface` laboratory is loaded by both the Studio and headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical reflow, responsive logical reflow without remount, and logical mouse coordinates. Full-page Studio baselines provide the corresponding sharpness and composition evidence."
-        },
-        {
-          "id": "c0046",
-          "kind": "prose",
-          "section": "Native HTML boxes",
-          "text": "`HtmlBox` explicitly mounts native content above Canvas paint through the mount-only `htmlOverlay` configuration. It shares root projection and world geometry, while application-owned wrapper CSS aligns the two surfaces. See the [HtmlBox contract](./html-box-contract.md) for clipping and composition limits."
         }
       ]
     },
@@ -2843,7 +2855,7 @@
           "id": "b0036",
           "kind": "prose",
           "section": "Visual evidence and limitations",
-          "text": "Each learner source and test fixture is loaded from its validated catalog path, and browser checks import the same modules shown by the Studio. Five native 480×240 fixture baselines retain exact geometry outside tight font and decoded-SVG edge masks. CRC adds its documented layout contexts, but not rich text, DOM accessibility, image CORS policy, SVG validation, or a complete CSS formatting engine."
+          "text": "Each learner source and test fixture is loaded from its validated catalog path, and browser checks import the same modules shown by the Studio. Five native 480\u00d7240 fixture baselines retain exact geometry outside tight font and decoded-SVG edge masks. CRC adds its documented layout contexts, but not rich text, DOM accessibility, image CORS policy, SVG validation, or a complete CSS formatting engine."
         }
       ],
       "currentUnits": [
@@ -3019,7 +3031,7 @@
           "id": "c0029",
           "kind": "prose",
           "section": "Standard shape geometry",
-          "text": "Circle has required `radius`. Ellipse has required `radiusX` and `radiusY`, and its optional finite `rotation` is in radians. Arc and Wedge have required `radius`, `startAngle`, and `endAngle`; their angles are finite radians and their direction and angle normalization follow `Path2D.arc`. A clockwise difference of at least `2π`, or a counterclockwise difference of at least `2π` in that requested direction, is a full turn. Opposite-direction differences wrap in the requested direction as Canvas specifies."
+          "text": "Circle has required `radius`. Ellipse has required `radiusX` and `radiusY`, and its optional finite `rotation` is in radians. Arc and Wedge have required `radius`, `startAngle`, and `endAngle`; their angles are finite radians and their direction and angle normalization follow `Path2D.arc`. A clockwise difference of at least `2\u03c0`, or a counterclockwise difference of at least `2\u03c0` in that requested direction, is a full turn. Opposite-direction differences wrap in the requested direction as Canvas specifies."
         },
         {
           "id": "c0030",
@@ -3067,7 +3079,7 @@
           "id": "c0037",
           "kind": "code",
           "section": "Text layout details",
-          "text": "tsx <Text style={{ x: 40, y: 80, fill: \"black\" }}> Hello {name} — {0} unread </Text>"
+          "text": "tsx <Text style={{ x: 40, y: 80, fill: \"black\" }}> Hello {name} \u2014 {0} unread </Text>"
         },
         {
           "id": "c0038",
@@ -3211,7 +3223,7 @@
           "id": "c0061",
           "kind": "prose",
           "section": "Visual evidence and limitations",
-          "text": "The Studio exposes one lesson for each drawing/composition value under `#/examples/drawing/rectangle` through `#/examples/drawing/image`, including the five standard-shape lessons, and `#/examples/composition/group` through `#/examples/composition/layer`. It also retains the five stable `#/testing/drawing-*` integration fixtures. Their `.example.tsx` modules are loaded by both Studio and browser tests. The stable 480×240 baselines retain semantic, Canvas-call, geometry, interaction, and inspected-pixel evidence. Image comparison masks only glyph rasterization and decoded-SVG edges where documented; surrounding cards, clipping, layout, state, and interaction bounds remain exact."
+          "text": "The Studio exposes one lesson for each drawing/composition value under `#/examples/drawing/rectangle` through `#/examples/drawing/image`, including the five standard-shape lessons, and `#/examples/composition/group` through `#/examples/composition/layer`. It also retains the five stable `#/testing/drawing-*` integration fixtures. Their `.example.tsx` modules are loaded by both Studio and browser tests. The stable 480\u00d7240 baselines retain semantic, Canvas-call, geometry, interaction, and inspected-pixel evidence. Image comparison masks only glyph rasterization and decoded-SVG edges where documented; surrounding cards, clipping, layout, state, and interaction bounds remain exact."
         },
         {
           "id": "c0062",
@@ -3295,7 +3307,7 @@
           "id": "c0075",
           "kind": "prose",
           "section": "Renderer-independent 3D geometry",
-          "text": "`@crc/core/physics/3d/geometry` provides pure immutable shapes and collision queries. It does not add drawing components, Three bindings, a world runtime, or a scheduler participant."
+          "text": "`@crc/physics/3d/geometry` provides pure immutable shapes and collision queries. It does not add drawing components, Three bindings, a world runtime, or a scheduler participant."
         },
         {
           "id": "c0076",
@@ -3331,7 +3343,7 @@
           "id": "c0081",
           "kind": "prose",
           "section": "Four-corner path warp",
-          "text": "Tolerance is positive and measured after mapping, in destination coordinate units. Curves, general ellipse arcs, and bilinear-warped lines/closing edges undergo bounded adaptive approximation. Moving original Bézier controls alone is not equivalent. Output limits include Move/Close (default 1,000,000); numerical uncertainty, overflow, and exhausted subdivision budgets throw without changing the source or returning partial geometry. The utility owns no persistent resources, cache, or scheduler work. Recompute from original geometry while editing; approximation does not preserve topology or warp a stroke outline."
+          "text": "Tolerance is positive and measured after mapping, in destination coordinate units. Curves, general ellipse arcs, and bilinear-warped lines/closing edges undergo bounded adaptive approximation. Moving original B\u00e9zier controls alone is not equivalent. Output limits include Move/Close (default 1,000,000); numerical uncertainty, overflow, and exhausted subdivision budgets throw without changing the source or returning partial geometry. The utility owns no persistent resources, cache, or scheduler work. Recompute from original geometry while editing; approximation does not preserve topology or warp a stroke outline."
         },
         {
           "id": "c0082",
@@ -3366,8 +3378,8 @@
         {
           "id": "c0087",
           "kind": "prose",
-          "section": "HtmlBox",
-          "text": "HtmlBox is a native HTML boundary with a logical box and no Canvas paint. It uses existing Group transforms and box allocation, portable PathGeometry clips, and the shared scheduler. It always appears above the canvas. See the [HtmlBox contract](./html-box-contract.md) for authoring and native focus."
+          "section": "Component manipulation",
+          "text": "`ManipulationFrame` binds one writable finite box signal to a positioned local allocation. `DragHandle` is a structural listener: only participating descendant hit geometry can start a move. `ResizeHandle`, `ResizeHandles`, and `RotationHandle` retain explicit control geometry. No frame infers bounds from content. Resize and rotation controls keep CSS-pixel visual and hit geometry while their centers follow the frame. See the [component-manipulation contract](./component-manipulation-contract.md)."
         }
       ]
     },
@@ -4704,12 +4716,6 @@
           "kind": "prose",
           "section": "External 3D presentation",
           "text": "An interactive Three object remains the same logical focus target while its registered target identity survives. Its committed target metadata provides the projected focus bounds associated with the visible bitmap/interaction generation. Pure geometry queries do not create focus candidates or change keyboard order. Disabled or removed objects follow the ordinary committed render-layer target and focus-removal rules."
-        },
-        {
-          "id": "c0051",
-          "kind": "prose",
-          "section": "HtmlBox native focus regions",
-          "text": "The canvas-only native host rules above apply to roots without HtmlBox. With an active HtmlBox and FocusManagement, registered HTML regions join source order and root-owned sentinels coordinate native entry/exit. Descendant native focus owns editing and activation; Canvas event targets remain logical and no duplicate click is synthesized. The [HtmlBox contract](./html-box-contract.md) defines the explicit exception, light-DOM scope, cleanup, and reading-order limits."
         }
       ]
     },
@@ -5081,7 +5087,7 @@
           "id": "b0061",
           "kind": "prose",
           "section": "Composition, failure, and ownership",
-          "text": "The geometry equation is ancestor Canvas transform × layout placement × child transform × local geometry. Paint paths, clipping, layers, and mouse regions use that same composition, including fractional and negative local offsets."
+          "text": "The geometry equation is ancestor Canvas transform \u00d7 layout placement \u00d7 child transform \u00d7 local geometry. Paint paths, clipping, layers, and mouse regions use that same composition, including fractional and negative local offsets."
         },
         {
           "id": "b0062",
@@ -5179,7 +5185,7 @@
           "id": "c0012",
           "kind": "prose",
           "section": "Shared box, placement, and overflow rules",
-          "text": "The runtime places one private wrapper per direct child. The wrapper preserves the original brand, component type, props, key, compiler source metadata, policy metadata, and identity hint while translating the child's allocation. Keyed children survive reflow; unkeyed same-type children retain occurrence-order identity, and keyed siblings do not consume unkeyed occurrence slots. A placed child's `useLayoutBox()` is the stable, readonly local box `{ x: 0, y: 0, width, height }`; reading it never schedules an update. Plain component props retain their exact specified style; the finite used allocation is exposed separately through `useLayoutBox()`."
+          "text": "The runtime places one private wrapper per direct child. The wrapper preserves the original brand, component type, props, key, compiler source metadata, policy metadata, and identity hint while translating the child's allocation. Keyed children survive reflow; unkeyed same-type children retain occurrence-order identity, and keyed siblings do not consume unkeyed occurrence slots. A placed child's `useLayoutBox()` is the stable, readonly local box `{ x: 0, y: 0, width, height }`; reading it never schedules an update. Plain component props retain the exact specified public style fields and signal identity; the finite used allocation is exposed separately through `useLayoutBox()`. For a positioned object style, CRC may pass a readonly shallow copy to carry private placement provenance. It never mutates the authored object or changes its public keys/values, but object identity is not a contract on that placed path."
         },
         {
           "id": "c0013",
@@ -5509,7 +5515,7 @@
           "id": "c0067",
           "kind": "prose",
           "section": "Composition, failure, and ownership",
-          "text": "The geometry equation is ancestor Canvas transform × layout placement × child transform × local geometry. Paint paths, clipping, layers, and coordinate regions use that same composition, including fractional and negative local offsets."
+          "text": "The geometry equation is ancestor Canvas transform \u00d7 layout placement \u00d7 child transform \u00d7 local geometry. Paint paths, clipping, layers, and coordinate regions use that same composition, including fractional and negative local offsets."
         },
         {
           "id": "c0068",
@@ -5552,6 +5558,12 @@
           "kind": "prose",
           "section": "Responsive style inspection",
           "text": "The [responsive styles guide](../site/learn/guides/responsive-styles.md) explains the placement/content distinction and its observable refactoring consequence."
+        },
+        {
+          "id": "c0075",
+          "kind": "prose",
+          "section": "Component manipulation",
+          "text": "`ManipulationFrame` presents one writable finite box as a freely positioned allocation. A nested `Flex`, `Flow`, or `Grid` consumes that allocation and reflows on resize; the frame's handles are chrome rather than layout items. The outer direct layout parent still owns its child's placement, so a frame with authored `left` or `top` is invalid directly under `Flex`, `Flow`, or `Grid` in development/test execution and has no production placement effect. See the [component-manipulation contract](./component-manipulation-contract.md)."
         }
       ]
     },
@@ -5689,7 +5701,7 @@
           "id": "b0022",
           "kind": "list",
           "section": "Target selection",
-          "text": "7. Cursor selection uses this same target. It must not run a separate “first cursor handler to write” policy."
+          "text": "7. Cursor selection uses this same target. It must not run a separate \u201cfirst cursor handler to write\u201d policy."
         },
         {
           "id": "b0023",
@@ -5737,7 +5749,7 @@
           "id": "b0030",
           "kind": "prose",
           "section": "TFC-05 composition boundary",
-          "text": "Layout placement is another transform in that same composition. A region inside Absolute, Overlay, Flow, Flex, or Grid is hit at ancestor transform × placement × child transform × local geometry. Fractional and negative offsets retain fractional precision. Layout `overflow: \"clip\"` contributes the content-box clip to the same clip stack used for paint and hit testing; visible overflow adds no clip. Layout inside explicit `clip` or `layer`, and explicit clips/layers inside layout, therefore share identical pixel and mouse geometry."
+          "text": "Layout placement is another transform in that same composition. A region inside Absolute, Overlay, Flow, Flex, or Grid is hit at ancestor transform \u00d7 placement \u00d7 child transform \u00d7 local geometry. Fractional and negative offsets retain fractional precision. Layout `overflow: \"clip\"` contributes the content-box clip to the same clip stack used for paint and hit testing; visible overflow adds no clip. Layout inside explicit `clip` or `layer`, and explicit clips/layers inside layout, therefore share identical pixel and mouse geometry."
         },
         {
           "id": "b0031",
@@ -5761,7 +5773,7 @@
           "id": "b0034",
           "kind": "table",
           "section": "Movement and boundary order",
-          "text": "| none | A | `mouseover(A, logicalRelated=canvas-background) → mousemove(A)` |"
+          "text": "| none | A | `mouseover(A, logicalRelated=canvas-background) \u2192 mousemove(A)` |"
         },
         {
           "id": "b0035",
@@ -5773,7 +5785,7 @@
           "id": "b0036",
           "kind": "table",
           "section": "Movement and boundary order",
-          "text": "| A | B | `mouseout(A, logicalRelated=B) → mouseover(B, logicalRelated=A) → mousemove(B)` |"
+          "text": "| A | B | `mouseout(A, logicalRelated=B) \u2192 mouseover(B, logicalRelated=A) \u2192 mousemove(B)` |"
         },
         {
           "id": "b0037",
@@ -5791,7 +5803,7 @@
           "id": "b0039",
           "kind": "table",
           "section": "Movement and boundary order",
-          "text": "| none after re-entry | A | `mouseover(A, logicalRelated=outside-root) → mousemove(A)` |"
+          "text": "| none after re-entry | A | `mouseover(A, logicalRelated=outside-root) \u2192 mousemove(A)` |"
         },
         {
           "id": "b0040",
@@ -5809,7 +5821,7 @@
           "id": "b0042",
           "kind": "prose",
           "section": "Decision on the four disputed ordering expectations",
-          "text": "The historical untracked event test named by the plan is no longer present. The baseline recorded four failing instances of the same entry-order disagreement—current CRC emitted movement before entry—across fill/stroke/interaction-width geometry variants. The exact deleted cases cannot be reconstructed more strongly. The approved oracle therefore covers fill, stroke, and expanded interaction-width hits explicitly and requires `mouseover → mousemove` for each. TFC-01 independently proves the same defect on entry and region switching. These are implementation defects for TFC-04, not reasons to weaken this contract."
+          "text": "The historical untracked event test named by the plan is no longer present. The baseline recorded four failing instances of the same entry-order disagreement\u2014current CRC emitted movement before entry\u2014across fill/stroke/interaction-width geometry variants. The exact deleted cases cannot be reconstructed more strongly. The approved oracle therefore covers fill, stroke, and expanded interaction-width hits explicitly and requires `mouseover \u2192 mousemove` for each. TFC-01 independently proves the same defect on entry and region switching. These are implementation defects for TFC-04, not reasons to weaken this contract."
         },
         {
           "id": "b0043",
@@ -5863,7 +5875,7 @@
           "id": "b0051",
           "kind": "prose",
           "section": "Double click",
-          "text": "`down(A) → up(A) → click(A) → down(A) → up(A) → click(A) → dblclick(A)`."
+          "text": "`down(A) \u2192 up(A) \u2192 click(A) \u2192 down(A) \u2192 up(A) \u2192 click(A) \u2192 dblclick(A)`."
         },
         {
           "id": "b0052",
@@ -5875,7 +5887,7 @@
           "id": "b0053",
           "kind": "prose",
           "section": "Secondary/context menu",
-          "text": "Each native `mousedown`, `contextmenu`, and `mouseup` independently targets the topmost live region at that event's coordinate. Reference Chromium on macOS measured `mousedown(button=2) → contextmenu → mouseup`; that sequence is reference evidence, not a universal approved CRC order. The platform permits browser/OS differences, so CRC preserves the native sequence it receives rather than synthesizing or accepting only one universal sequence."
+          "text": "Each native `mousedown`, `contextmenu`, and `mouseup` independently targets the topmost live region at that event's coordinate. Reference Chromium on macOS measured `mousedown(button=2) \u2192 contextmenu \u2192 mouseup`; that sequence is reference evidence, not a universal approved CRC order. The platform permits browser/OS differences, so CRC preserves the native sequence it receives rather than synthesizing or accepting only one universal sequence."
         },
         {
           "id": "b0054",
@@ -6061,49 +6073,49 @@
           "id": "b0084",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C Pointer Events Level 4 — mouse event order](https://www.w3.org/TR/pointerevents/#mouse-event-order)"
+          "text": "- [W3C Pointer Events Level 4 \u2014 mouse event order](https://www.w3.org/TR/pointerevents/#mouse-event-order)"
         },
         {
           "id": "b0085",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C Pointer Events — click/auxclick/contextmenu dispatch](https://www.w3.org/TR/pointerevents/#event-dispatch)"
+          "text": "- [W3C Pointer Events \u2014 click/auxclick/contextmenu dispatch](https://www.w3.org/TR/pointerevents/#event-dispatch)"
         },
         {
           "id": "b0086",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C Pointer Events — boundary events caused by layout changes](https://www.w3.org/TR/pointerevents/#boundary-events-caused-by-layout-changes)"
+          "text": "- [W3C Pointer Events \u2014 boundary events caused by layout changes](https://www.w3.org/TR/pointerevents/#boundary-events-caused-by-layout-changes)"
         },
         {
           "id": "b0087",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C UI Events Algorithms — native mouse movement](https://www.w3.org/TR/uievents/event-algo.html#handle-native-mouse-move)"
+          "text": "- [W3C UI Events Algorithms \u2014 native mouse movement](https://www.w3.org/TR/uievents/event-algo.html#handle-native-mouse-move)"
         },
         {
           "id": "b0088",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [WHATWG DOM — listener invocation, removal, and exception isolation](https://dom.spec.whatwg.org/#concept-event-listener-invoke)"
+          "text": "- [WHATWG DOM \u2014 listener invocation, removal, and exception isolation](https://dom.spec.whatwg.org/#concept-event-listener-invoke)"
         },
         {
           "id": "b0089",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C CSSOM View — topmost-first hit-test order](https://www.w3.org/TR/cssom-view/#dom-document-elementsfrompoint)"
+          "text": "- [W3C CSSOM View \u2014 topmost-first hit-test order](https://www.w3.org/TR/cssom-view/#dom-document-elementsfrompoint)"
         },
         {
           "id": "b0090",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C CSSOM View — MouseEvent coordinate extensions](https://www.w3.org/TR/cssom-view/#extensions-to-the-mouseevent-interface)"
+          "text": "- [W3C CSSOM View \u2014 MouseEvent coordinate extensions](https://www.w3.org/TR/cssom-view/#extensions-to-the-mouseevent-interface)"
         },
         {
           "id": "b0091",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [WHATWG HTML — Canvas paths, clipping, hit testing, and drawing images](https://html.spec.whatwg.org/multipage/canvas.html)"
+          "text": "- [WHATWG HTML \u2014 Canvas paths, clipping, hit testing, and drawing images](https://html.spec.whatwg.org/multipage/canvas.html)"
         }
       ],
       "currentUnits": [
@@ -6243,7 +6255,7 @@
           "id": "c0023",
           "kind": "list",
           "section": "Target selection",
-          "text": "8. Cursor selection uses this same target. It must not run a separate “first cursor handler to write” policy."
+          "text": "8. Cursor selection uses this same target. It must not run a separate \u201cfirst cursor handler to write\u201d policy."
         },
         {
           "id": "c0024",
@@ -6297,7 +6309,7 @@
           "id": "c0032",
           "kind": "prose",
           "section": "TFC-05 composition boundary",
-          "text": "Layout placement is another transform in that same composition. A region inside Absolute, Overlay, Flow, Flex, or Grid is hit at ancestor transform × placement × child transform × local geometry. Fractional and negative offsets retain fractional precision. Layout `overflow: \"clip\"` contributes the content-box clip to the same clip stack used for paint and hit testing; visible overflow adds no clip. Layout inside explicit `Clip` or `Layer`, and explicit clips/layers inside layout, therefore share identical pixel and mouse geometry."
+          "text": "Layout placement is another transform in that same composition. A region inside Absolute, Overlay, Flow, Flex, or Grid is hit at ancestor transform \u00d7 placement \u00d7 child transform \u00d7 local geometry. Fractional and negative offsets retain fractional precision. Layout `overflow: \"clip\"` contributes the content-box clip to the same clip stack used for paint and hit testing; visible overflow adds no clip. Layout inside explicit `Clip` or `Layer`, and explicit clips/layers inside layout, therefore share identical pixel and mouse geometry."
         },
         {
           "id": "c0033",
@@ -6321,7 +6333,7 @@
           "id": "c0036",
           "kind": "table",
           "section": "Movement and boundary order",
-          "text": "| none | A | `mouseover(A, logicalRelated=canvas-background) → mousemove(A)` |"
+          "text": "| none | A | `mouseover(A, logicalRelated=canvas-background) \u2192 mousemove(A)` |"
         },
         {
           "id": "c0037",
@@ -6333,7 +6345,7 @@
           "id": "c0038",
           "kind": "table",
           "section": "Movement and boundary order",
-          "text": "| A | B | `mouseout(A, logicalRelated=B) → mouseover(B, logicalRelated=A) → mousemove(B)` |"
+          "text": "| A | B | `mouseout(A, logicalRelated=B) \u2192 mouseover(B, logicalRelated=A) \u2192 mousemove(B)` |"
         },
         {
           "id": "c0039",
@@ -6351,7 +6363,7 @@
           "id": "c0041",
           "kind": "table",
           "section": "Movement and boundary order",
-          "text": "| none after re-entry | A | `mouseover(A, logicalRelated=outside-root) → mousemove(A)` |"
+          "text": "| none after re-entry | A | `mouseover(A, logicalRelated=outside-root) \u2192 mousemove(A)` |"
         },
         {
           "id": "c0042",
@@ -6369,7 +6381,7 @@
           "id": "c0044",
           "kind": "prose",
           "section": "Decision on the four disputed ordering expectations",
-          "text": "The historical untracked event test named by the plan is no longer present. The baseline recorded four failing instances of the same entry-order disagreement—current CRC emitted movement before entry—across fill/stroke/interaction-width geometry variants. The exact deleted cases cannot be reconstructed more strongly. The approved oracle therefore covers fill, stroke, and expanded interaction-width hits explicitly and requires `mouseover → mousemove` for each. TFC-01 independently proves the same defect on entry and region switching. These are implementation defects for TFC-04, not reasons to weaken this contract."
+          "text": "The historical untracked event test named by the plan is no longer present. The baseline recorded four failing instances of the same entry-order disagreement\u2014current CRC emitted movement before entry\u2014across fill/stroke/interaction-width geometry variants. The exact deleted cases cannot be reconstructed more strongly. The approved oracle therefore covers fill, stroke, and expanded interaction-width hits explicitly and requires `mouseover \u2192 mousemove` for each. TFC-01 independently proves the same defect on entry and region switching. These are implementation defects for TFC-04, not reasons to weaken this contract."
         },
         {
           "id": "c0045",
@@ -6423,7 +6435,7 @@
           "id": "c0053",
           "kind": "prose",
           "section": "Double click",
-          "text": "`down(A) → up(A) → click(A) → down(A) → up(A) → click(A) → dblclick(A)`."
+          "text": "`down(A) \u2192 up(A) \u2192 click(A) \u2192 down(A) \u2192 up(A) \u2192 click(A) \u2192 dblclick(A)`."
         },
         {
           "id": "c0054",
@@ -6435,7 +6447,7 @@
           "id": "c0055",
           "kind": "prose",
           "section": "Secondary/context menu",
-          "text": "Each native `mousedown`, `contextmenu`, and `mouseup` independently targets the topmost live region at that event's coordinate. Reference Chromium on macOS measured `mousedown(button=2) → contextmenu → mouseup`; that sequence is reference evidence, not a universal approved CRC order. The platform permits browser/OS differences, so CRC preserves the native sequence it receives rather than synthesizing or accepting only one universal sequence."
+          "text": "Each native `mousedown`, `contextmenu`, and `mouseup` independently targets the topmost live region at that event's coordinate. Reference Chromium on macOS measured `mousedown(button=2) \u2192 contextmenu \u2192 mouseup`; that sequence is reference evidence, not a universal approved CRC order. The platform permits browser/OS differences, so CRC preserves the native sequence it receives rather than synthesizing or accepting only one universal sequence."
         },
         {
           "id": "c0056",
@@ -6621,55 +6633,55 @@
           "id": "c0086",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C Pointer Events Level 4 — mouse event order](https://www.w3.org/TR/pointerevents/#mouse-event-order)"
+          "text": "- [W3C Pointer Events Level 4 \u2014 mouse event order](https://www.w3.org/TR/pointerevents/#mouse-event-order)"
         },
         {
           "id": "c0087",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C Pointer Events — click/auxclick/contextmenu dispatch](https://www.w3.org/TR/pointerevents/#event-dispatch)"
+          "text": "- [W3C Pointer Events \u2014 click/auxclick/contextmenu dispatch](https://www.w3.org/TR/pointerevents/#event-dispatch)"
         },
         {
           "id": "c0088",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C Pointer Events — boundary events caused by layout changes](https://www.w3.org/TR/pointerevents/#boundary-events-caused-by-layout-changes)"
+          "text": "- [W3C Pointer Events \u2014 boundary events caused by layout changes](https://www.w3.org/TR/pointerevents/#boundary-events-caused-by-layout-changes)"
         },
         {
           "id": "c0089",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C UI Events Algorithms — native mouse movement](https://www.w3.org/TR/uievents/event-algo.html#handle-native-mouse-move)"
+          "text": "- [W3C UI Events Algorithms \u2014 native mouse movement](https://www.w3.org/TR/uievents/event-algo.html#handle-native-mouse-move)"
         },
         {
           "id": "c0090",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [WHATWG DOM — listener invocation, removal, and exception isolation](https://dom.spec.whatwg.org/#concept-event-listener-invoke)"
+          "text": "- [WHATWG DOM \u2014 listener invocation, removal, and exception isolation](https://dom.spec.whatwg.org/#concept-event-listener-invoke)"
         },
         {
           "id": "c0091",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C CSSOM View — topmost-first hit-test order](https://www.w3.org/TR/cssom-view/#dom-document-elementsfrompoint)"
+          "text": "- [W3C CSSOM View \u2014 topmost-first hit-test order](https://www.w3.org/TR/cssom-view/#dom-document-elementsfrompoint)"
         },
         {
           "id": "c0092",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [W3C CSSOM View — MouseEvent coordinate extensions](https://www.w3.org/TR/cssom-view/#extensions-to-the-mouseevent-interface)"
+          "text": "- [W3C CSSOM View \u2014 MouseEvent coordinate extensions](https://www.w3.org/TR/cssom-view/#extensions-to-the-mouseevent-interface)"
         },
         {
           "id": "c0093",
           "kind": "list",
           "section": "Primary sources",
-          "text": "- [WHATWG HTML — Canvas paths, clipping, hit testing, and drawing images](https://html.spec.whatwg.org/multipage/canvas.html)"
+          "text": "- [WHATWG HTML \u2014 Canvas paths, clipping, hit testing, and drawing images](https://html.spec.whatwg.org/multipage/canvas.html)"
         },
         {
           "id": "c0094",
           "kind": "prose",
           "section": "External 3D geometry",
-          "text": "Mouse and pointer events report root-logical Canvas coordinates and committed render-layer targets; they are not physics query results. A Three integration projects through its committed camera and raycasts its scene or invokes the application's picker. Pure `@crc/core/physics/3d/geometry` operations neither synthesize DOM events nor start a simulation or render loop."
+          "text": "Mouse and pointer events report root-logical Canvas coordinates and committed render-layer targets; they are not physics query results. A Three integration projects through its committed camera and raycasts its scene or invokes the application's picker. Pure `@crc/physics/3d/geometry` operations neither synthesize DOM events nor start a simulation or render loop."
         }
       ]
     },
@@ -6825,7 +6837,7 @@
           "id": "b0025",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `crcLayoutBox()` | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared outside-render hook diagnostic. | Layout foundation and measurement-isolation suites |"
+          "text": "| `crcLayoutBox()` | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context\u2014including during pure measurement\u2014throws `No CRC layout context is available`, not the shared outside-render hook diagnostic. | Layout foundation and measurement-isolation suites |"
         },
         {
           "id": "b0026",
@@ -7193,7 +7205,7 @@
           "id": "c0050",
           "kind": "table",
           "section": "Public hook contracts",
-          "text": "| `useLayoutBox()` | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared hook diagnostic. | layout foundation and measurement-isolation suites |"
+          "text": "| `useLayoutBox()` | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context\u2014including during pure measurement\u2014throws `No CRC layout context is available`, not the shared hook diagnostic. | layout foundation and measurement-isolation suites |"
         },
         {
           "id": "c0051",
@@ -7301,7 +7313,7 @@
           "id": "c0068",
           "kind": "prose",
           "section": "First-class signal integration",
-          "text": "`useSignal(initialValue, options?)` returns one writable signal created for the mounted hook slot. The initial value, equality function, and debug name are mount-only. Explicit `get()` reads subscribe the evaluating component. Removal detaches that owner; a retained signal remains readable and writable but cannot schedule the removed owner. Focused `use-signal`, signal graph, component-consumer, scheduler, Layer, and error-isolation suites cover these rules. `usePlayback(program, options?)` and `useAnimatedValue(target, options)` are ordered render-only hook slots. The first returns a stable component-owned handle; the second returns a stable readonly signal backed by private playback. Only successful renders adopt candidates or queue autoplay, entrance, and retarget work. Teardown releases registrations, writer leases, evaluator and stepper state, queued commands and milestones, and live callbacks exactly once; stale controls and retained transition results cannot schedule a replacement identity. All commands enter the shared realm scheduler, outputs/status/time publish in one Commit, and specialized behavior lives in the [animation contract](./animation-contract.md)."
+          "text": "`useSignal(initialValue, options?)` returns one writable signal created for the mounted hook slot. The initial value, equality function, and debug name are mount-only. Explicit `get()` reads subscribe the evaluating component. Removal detaches that owner; a retained signal remains readable and writable but cannot schedule the removed owner. Focused `use-signal`, signal graph, component-consumer, scheduler, Layer, and error-isolation suites cover these rules. `usePlayback(program, options?)` and `useTransition(target, options)` are ordered render-only hook slots. The first returns a stable component-owned handle; the second returns a stable readonly signal backed by private playback. Only successful renders adopt candidates or queue autoplay, entrance, and retarget work. Teardown releases registrations, writer leases, evaluator and stepper state, queued commands and milestones, and live callbacks exactly once; stale controls and retained transition results cannot schedule a replacement identity. All commands enter the shared realm scheduler, outputs/status/time publish in one Commit, and specialized behavior lives in the [animation contract](./animation-contract.md)."
         },
         {
           "id": "c0069",
@@ -7693,7 +7705,7 @@
           "id": "c0029",
           "kind": "prose",
           "section": "Filter scratch semantics",
-          "text": "Fresh and resized slots are already transparent. Same-size reuse clears the exact active source and result bitmaps, resets Canvas state and the current path, and scrubs reference-bearing fill/stroke/filter values before the pair becomes idle. Dimensions always match the current snapped windows rather than a historical high-water size. Returned slots retain only their reusable canvas, context, and target metadata—not elements, component refs, events, images, patterns, hooks, callbacks, or user state."
+          "text": "Fresh and resized slots are already transparent. Same-size reuse clears the exact active source and result bitmaps, resets Canvas state and the current path, and scrubs reference-bearing fill/stroke/filter values before the pair becomes idle. Dimensions always match the current snapped windows rather than a historical high-water size. Returned slots retain only their reusable canvas, context, and target metadata\u2014not elements, component refs, events, images, patterns, hooks, callbacks, or user state."
         },
         {
           "id": "c0030",
@@ -7897,7 +7909,7 @@
           "id": "c0063",
           "kind": "prose",
           "section": "Renderer-independent 3D geometry ownership",
-          "text": "Values from `@crc/core/physics/3d/geometry` are immutable application values. The entry owns no scheduler participant, renderer resources, component bindings, or runtime world lifecycle."
+          "text": "Values from `@crc/physics/3d/geometry` are immutable application values. The entry owns no scheduler participant, renderer resources, component bindings, or runtime world lifecycle."
         },
         {
           "id": "c0064",
@@ -7908,8 +7920,8 @@
         {
           "id": "c0065",
           "kind": "prose",
-          "section": "HtmlBox ownership",
-          "text": "A configured root exclusively reserves its application-owned overlay. Component identities own persistent DIVs and AbortControllers; the root owns SVG clipping definitions and publication snapshots. Abort fires once before removing connected content, including partial setup/update failure. Root disposal removes owned nodes and listeners and releases the lease. See the [HtmlBox contract](./html-box-contract.md)."
+          "section": "Component manipulation ownership",
+          "text": "A manipulation controller owns native pointer capture, bounded source observations, and its temporary session until a terminal event, frame removal, component teardown, or root disposal. Release is idempotent. Teardown restores only a preview still owned by that session and invokes no disposed callback. If a signal write guard prevents immediate restoration, CRC queues one generation-checked Begin cleanup record; a newer external write or later owner generation invalidates it. See the [component-manipulation contract](./component-manipulation-contract.md)."
         }
       ]
     },
@@ -8053,13 +8065,13 @@
           "id": "b0023",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `rect` | `x`, `y`, `width`, `height`, `fillStyle`, `strokeStyle`, `lineWidth`, `alpha`, `cursor`, `alignToPixelGrid` | `x?`, `y?`, `width`, `height`, `fill`, `stroke`, `strokeWidth`, `opacity`, `cursor`, `alignToPixelGrid`, `lineInteractionWidth` | `fillStyle` → `fill`; `strokeStyle` → `stroke`; `lineWidth` → `strokeWidth`; `alpha` → `opacity`; `x`/`y` are optional and default to zero. |"
+          "text": "| `rect` | `x`, `y`, `width`, `height`, `fillStyle`, `strokeStyle`, `lineWidth`, `alpha`, `cursor`, `alignToPixelGrid` | `x?`, `y?`, `width`, `height`, `fill`, `stroke`, `strokeWidth`, `opacity`, `cursor`, `alignToPixelGrid`, `lineInteractionWidth` | `fillStyle` \u2192 `fill`; `strokeStyle` \u2192 `stroke`; `lineWidth` \u2192 `strokeWidth`; `alpha` \u2192 `opacity`; `x`/`y` are optional and default to zero. |"
         },
         {
           "id": "b0024",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `path` | `path`, `fillStyle`, `strokeStyle`, `lineWidth`, `alpha`, `cursor`, `lineInteractionWidth` | `d`, `fill`, `stroke`, `strokeWidth`, `opacity`, `cursor`, `lineInteractionWidth` | `path` → `d`, plus the shared paint renames. |"
+          "text": "| `path` | `path`, `fillStyle`, `strokeStyle`, `lineWidth`, `alpha`, `cursor`, `lineInteractionWidth` | `d`, `fill`, `stroke`, `strokeWidth`, `opacity`, `cursor`, `lineInteractionWidth` | `path` \u2192 `d`, plus the shared paint renames. |"
         },
         {
           "id": "b0025",
@@ -8071,13 +8083,13 @@
           "id": "b0026",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `horizontalLine` | `y`, `left?`, `right?`, `strokeStyle`, `lineWidth`, `cursor`, `alignToPixelGrid`, `lineInteractionWidth` | `y`, `x1?`, `x2?`, `stroke`, `strokeWidth`, `opacity`, `cursor`, `alignToPixelGrid`, `lineInteractionWidth` | `left` → `x1` (default zero); `right` → `x2` (default allocation width); shared paint renames. |"
+          "text": "| `horizontalLine` | `y`, `left?`, `right?`, `strokeStyle`, `lineWidth`, `cursor`, `alignToPixelGrid`, `lineInteractionWidth` | `y`, `x1?`, `x2?`, `stroke`, `strokeWidth`, `opacity`, `cursor`, `alignToPixelGrid`, `lineInteractionWidth` | `left` \u2192 `x1` (default zero); `right` \u2192 `x2` (default allocation width); shared paint renames. |"
         },
         {
           "id": "b0027",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `verticalLine` | `x`, `top?`, `bottom?`, `strokeStyle`, `lineWidth`, `cursor`, `alignToPixelGrid`, `lineInteractionWidth` | `x`, `y1?`, `y2?`, `stroke`, `strokeWidth`, `opacity`, `cursor`, `alignToPixelGrid`, `lineInteractionWidth` | `top` → `y1` (default zero); `bottom` → `y2` (default allocation height); shared paint renames. |"
+          "text": "| `verticalLine` | `x`, `top?`, `bottom?`, `strokeStyle`, `lineWidth`, `cursor`, `alignToPixelGrid`, `lineInteractionWidth` | `x`, `y1?`, `y2?`, `stroke`, `strokeWidth`, `opacity`, `cursor`, `alignToPixelGrid`, `lineInteractionWidth` | `top` \u2192 `y1` (default zero); `bottom` \u2192 `y2` (default allocation height); shared paint renames. |"
         },
         {
           "id": "b0028",
@@ -8089,7 +8101,7 @@
           "id": "b0029",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `text` | `text`, `x`, `y`, `maxWidth`, `maxHeight`, `lineHeight`, `wordWrap`, `overflow`, `font`, `textBaseline`, `textAlign`, paint/cursor fields | `text`, `x?`, `y?`, `width?`, `height?`, `lineHeight`, `wrap`, `fit`, `font`, `textBaseline`, `textAlign`, paint/cursor fields | `maxWidth`/`maxHeight` → `width`/`height`; `wordWrap` → `wrap`; `overflow` → `fit`; shared paint renames; `x`/`y` default to zero. |"
+          "text": "| `text` | `text`, `x`, `y`, `maxWidth`, `maxHeight`, `lineHeight`, `wordWrap`, `overflow`, `font`, `textBaseline`, `textAlign`, paint/cursor fields | `text`, `x?`, `y?`, `width?`, `height?`, `lineHeight`, `wrap`, `fit`, `font`, `textBaseline`, `textAlign`, paint/cursor fields | `maxWidth`/`maxHeight` \u2192 `width`/`height`; `wordWrap` \u2192 `wrap`; `overflow` \u2192 `fit`; shared paint renames; `x`/`y` default to zero. |"
         },
         {
           "id": "b0030",
@@ -8101,13 +8113,13 @@
           "id": "b0031",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `g` | `scaleX`, `scaleY`, `rotate`, `rotateOrigin`, `x`, `y`, `skewX`, `skewY`, plus structural `children` | `scaleX`, `scaleY`, `rotationDegrees`, `rotationOrigin`, `translateX`, `translateY`, `skewX`, `skewY`; prop `children` | `rotate` → `rotationDegrees`; `rotateOrigin` → `rotationOrigin`; `x`/`y` → `translateX`/`translateY`; transform order is unchanged. |"
+          "text": "| `g` | `scaleX`, `scaleY`, `rotate`, `rotateOrigin`, `x`, `y`, `skewX`, `skewY`, plus structural `children` | `scaleX`, `scaleY`, `rotationDegrees`, `rotationOrigin`, `translateX`, `translateY`, `skewX`, `skewY`; prop `children` | `rotate` \u2192 `rotationDegrees`; `rotateOrigin` \u2192 `rotationOrigin`; `x`/`y` \u2192 `translateX`/`translateY`; transform order is unchanged. |"
         },
         {
           "id": "b0032",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `clip` | `path`, `fillRule`, plus structural `children` | `d`, `fillRule`; prop `children` | `path` → `d`; structural children remain props. |"
+          "text": "| `clip` | `path`, `fillRule`, plus structural `children` | `d`, `fillRule`; prop `children` | `path` \u2192 `d`; structural children remain props. |"
         },
         {
           "id": "b0033",
@@ -8584,6 +8596,12 @@
           "kind": "prose",
           "section": "Allocation-relative responsive inputs",
           "text": "See the [public guide](../site/learn/guides/responsive-styles.md) for canonical JSX and createElement recipes, the [layout contract](./layout-system-contract.md) for placement."
+        },
+        {
+          "id": "c0074",
+          "kind": "prose",
+          "section": "Component manipulation positioning",
+          "text": "Component placement uses `left` and `top`. `Rectangle`, `Text`, and `Image` do not accept positioning-style `x` or `y`; those names remain geometric data where their individual contracts define them. A freely positioned `ManipulationFrame` publishes its writable finite box through this same local style channel. Direct `Flex`, `Flow`, and `Grid` placement remains parent-owned. See the [component-manipulation contract](./component-manipulation-contract.md)."
         }
       ]
     },
@@ -9221,7 +9239,13 @@
           "id": "c0056",
           "kind": "prose",
           "section": "External 3D geometry boundary",
-          "text": "Three coordinate events target the nearest committed visible object through the adapter's camera-aware raycasting, or through an application-supplied picker. Pure operations from `@crc/core/physics/3d/geometry` do not create event targets or retain an authoritative world. Applications that combine those operations with a Three scene explicitly derive their world-space query input and register the corresponding Three object as a CRC target; normal event propagation and pointer capture remain unchanged."
+          "text": "Three coordinate events target the nearest committed visible object through the adapter's camera-aware raycasting, or through an application-supplied picker. Pure operations from `@crc/physics/3d/geometry` do not create event targets or retain an authoritative world. Applications that combine those operations with a Three scene explicitly derive their world-space query input and register the corresponding Three object as a CRC target; normal event propagation and pointer capture remain unchanged."
+        },
+        {
+          "id": "c0057",
+          "kind": "prose",
+          "section": "Component manipulation events",
+          "text": "`ManipulationFrame` hosts one controller. A `DragHandle` begins only when a participating descendant's primary pointer press bubbles to it; it adds no implicit hit region. Resize and rotation controls provide their own explicit targets. Three CSS pixels starts a gesture, native pointer capture retains it outside the initiating child, and the controller suppresses only the activated click. Focus and Escape bubble from focusable children to the existing cancellation path. The [component-manipulation contract](./component-manipulation-contract.md) defines constraints, snapping, and terminal behavior."
         }
       ]
     }
@@ -9322,7 +9346,7 @@
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0001", "b0002"],
       "currentIds": ["c0001"],
-      "reason": "This mapping collapses the historical Plan 003 heading into the implemented architecture title without changing its status; b0001, b0002 → c0001 is the exact unit boundary, and `2026-08-18`, `project`, `plan` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
+      "reason": "This mapping collapses the historical Plan 003 heading into the implemented architecture title without changing its status; b0001, b0002 \u2192 c0001 is the exact unit boundary, and `2026-08-18`, `project`, `plan` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0177",
         "kind": "prose",
@@ -9335,7 +9359,7 @@
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0003"],
       "currentIds": ["c0002"],
-      "reason": "This mapping recasts the purpose from delivery-plan language to the current immediate-mode implementation; b0003 → c0002 is the exact unit boundary, and `immediate-mode`, `architecture`, `implementation` remain shared semantic anchors. Approved-design unit a0006 authorizes that bounded JSX-era change.",
+      "reason": "This mapping recasts the purpose from delivery-plan language to the current immediate-mode implementation; b0003 \u2192 c0002 is the exact unit boundary, and `immediate-mode`, `architecture`, `implementation` remain shared semantic anchors. Approved-design unit a0006 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0006",
         "kind": "prose",
@@ -9375,7 +9399,7 @@
         "c0011",
         "c0012"
       ],
-      "reason": "This mapping consolidates renderer constraints while retaining scheduling, Canvas isolation, identity, events, and resource limits; b0004, b0005, b0006, b0007, b0008, b0009, b0010, b0011, b0012, b0013, b0014, b0015, b0016, b0017, b0018 → c0003, c0004, c0005, c0006, c0007, c0008, c0009, c0010, c0011, c0012 is the exact unit boundary, and `coalescing`, `restore`, `save` remain shared semantic anchors. Approved-design unit a0006 authorizes that bounded JSX-era change.",
+      "reason": "This mapping consolidates renderer constraints while retaining scheduling, Canvas isolation, identity, events, and resource limits; b0004, b0005, b0006, b0007, b0008, b0009, b0010, b0011, b0012, b0013, b0014, b0015, b0016, b0017, b0018 \u2192 c0003, c0004, c0005, c0006, c0007, c0008, c0009, c0010, c0011, c0012 is the exact unit boundary, and `coalescing`, `restore`, `save` remain shared semantic anchors. Approved-design unit a0006 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0006",
         "kind": "prose",
@@ -9405,7 +9429,7 @@
         "c0018",
         "c0019"
       ],
-      "reason": "This mapping replaces factory-era element metadata terminology with the opaque CRC element and primitive metadata model; b0019, b0020, b0021, b0022, b0023, b0024, b0025, b0026 → c0013, c0014, c0015, c0016, c0017, c0018, c0019 is the exact unit boundary, and `descriptor`, `metadata`, `interface` remain shared semantic anchors. Approved-design unit a0044 authorizes that bounded JSX-era change.",
+      "reason": "This mapping replaces factory-era element metadata terminology with the opaque CRC element and primitive metadata model; b0019, b0020, b0021, b0022, b0023, b0024, b0025, b0026 \u2192 c0013, c0014, c0015, c0016, c0017, c0018, c0019 is the exact unit boundary, and `descriptor`, `metadata`, `interface` remain shared semantic anchors. Approved-design unit a0044 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0044",
         "kind": "prose",
@@ -9438,7 +9462,7 @@
         "c0036",
         "c0037"
       ],
-      "reason": "This mapping reorders style-schema internals around primitive metadata without changing closed schemas or resolution stages; b0027, b0028, b0029, b0030, b0031, b0032, b0033, b0034 → c0028, c0029, c0030, c0031, c0032, c0033, c0034, c0035, c0036, c0037 is the exact unit boundary, and `item-participation`, `layoutitemstyle`, `development` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
+      "reason": "This mapping reorders style-schema internals around primitive metadata without changing closed schemas or resolution stages; b0027, b0028, b0029, b0030, b0031, b0032, b0033, b0034 \u2192 c0028, c0029, c0030, c0031, c0032, c0033, c0034, c0035, c0036, c0037 is the exact unit boundary, and `item-participation`, `layoutitemstyle`, `development` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0079",
         "kind": "prose",
@@ -9465,7 +9489,7 @@
         "b0047"
       ],
       "currentIds": ["c0038", "c0039", "c0040", "c0041", "c0042"],
-      "reason": "This mapping consolidates the length grammar and constraints without changing parsing, defaults, or finite allocation rules; b0035, b0036, b0037, b0038, b0039, b0040, b0041, b0042, b0043, b0044, b0045, b0046, b0047 → c0038, c0039, c0040, c0041, c0042 is the exact unit boundary, and `separately`, `shorthands`, `maxheight` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
+      "reason": "This mapping consolidates the length grammar and constraints without changing parsing, defaults, or finite allocation rules; b0035, b0036, b0037, b0038, b0039, b0040, b0041, b0042, b0043, b0044, b0045, b0046, b0047 \u2192 c0038, c0039, c0040, c0041, c0042 is the exact unit boundary, and `separately`, `shorthands`, `maxheight` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0079",
         "kind": "prose",
@@ -9487,7 +9511,7 @@
         "c0026",
         "c0027"
       ],
-      "reason": "This mapping renames the capability-bearing definition mechanism from `defineComp` metadata to `definePrimitive`; b0048, b0049, b0050, b0051, b0052 → c0020, c0021, c0022, c0023, c0024, c0025, c0026, c0027 is the exact unit boundary, and `normalizestyle`, `programprops`, `resolvestyle` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change.",
+      "reason": "This mapping renames the capability-bearing definition mechanism from `defineComp` metadata to `definePrimitive`; b0048, b0049, b0050, b0051, b0052 \u2192 c0020, c0021, c0022, c0023, c0024, c0025, c0026, c0027 is the exact unit boundary, and `normalizestyle`, `programprops`, `resolvestyle` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0089",
         "kind": "prose",
@@ -9519,7 +9543,7 @@
         "c0049",
         "c0050"
       ],
-      "reason": "This mapping expresses layout callbacks through JSX-era primitive definitions while retaining placement, clip, and identity rules; b0053, b0054, b0055, b0056, b0057, b0058, b0059, b0060, b0061 → c0043, c0044, c0045, c0046, c0047, c0048, c0049, c0050 is the exact unit boundary, and `internalidentityhint`, `clipinchildspace`, `childplacement` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping expresses layout callbacks through JSX-era primitive definitions while retaining placement, clip, and identity rules; b0053, b0054, b0055, b0056, b0057, b0058, b0059, b0060, b0061 \u2192 c0043, c0044, c0045, c0046, c0047, c0048, c0049, c0050 is the exact unit boundary, and `internalidentityhint`, `clipinchildspace`, `childplacement` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -9553,7 +9577,7 @@
         "c0057",
         "c0058"
       ],
-      "reason": "This mapping expresses the drawing pipeline through primitive rendering and returned-child traversal; b0062, b0063, b0064, b0065, b0066, b0067, b0068 → c0051, c0052, c0053, c0054, c0055, c0056, c0057, c0058 is the exact unit boundary, and `allocation-dependent`, `traverses`, `leaves` remain shared semantic anchors. Approved-design unit a0197 authorizes that bounded JSX-era change.",
+      "reason": "This mapping expresses the drawing pipeline through primitive rendering and returned-child traversal; b0062, b0063, b0064, b0065, b0066, b0067, b0068 \u2192 c0051, c0052, c0053, c0054, c0055, c0056, c0057, c0058 is the exact unit boundary, and `allocation-dependent`, `traverses`, `leaves` remain shared semantic anchors. Approved-design unit a0197 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0197",
         "kind": "list",
@@ -9591,7 +9615,7 @@
         "c0065",
         "c0066"
       ],
-      "reason": "This mapping expresses the layout pipeline through JSX child materialization and primitive allocation; b0069, b0070, b0071, b0072, b0073, b0074, b0075, b0076, b0077, b0078, b0079, b0080, b0081, b0082, b0083 → c0059, c0060, c0061, c0062, c0063, c0064, c0065, c0066 is the exact unit boundary, and `descriptors`, `speculative`, `allocated` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping expresses the layout pipeline through JSX child materialization and primitive allocation; b0069, b0070, b0071, b0072, b0073, b0074, b0075, b0076, b0077, b0078, b0079, b0080, b0081, b0082, b0083 \u2192 c0059, c0060, c0061, c0062, c0063, c0064, c0065, c0066 is the exact unit boundary, and `descriptors`, `speculative`, `allocated` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -9604,7 +9628,7 @@
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0084", "b0085", "b0086", "b0087"],
       "currentIds": ["c0067", "c0068", "c0069"],
-      "reason": "This mapping uses JSX tree vocabulary for nested layout while retaining the hidden-allocation limitation; b0084, b0085, b0086, b0087 → c0067, c0068, c0069 is the exact unit boundary, and `already-declared`, `subtree`, `hides` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping uses JSX tree vocabulary for nested layout while retaining the hidden-allocation limitation; b0084, b0085, b0086, b0087 \u2192 c0067, c0068, c0069 is the exact unit boundary, and `already-declared`, `subtree`, `hides` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -9617,7 +9641,7 @@
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0088", "b0089", "b0090", "b0091", "b0092", "b0093"],
       "currentIds": ["c0083"],
-      "reason": "This mapping consolidates local coordinate prose under the final drawing and layout pipeline; b0088, b0089, b0090, b0091, b0092, b0093 → c0083 is the exact unit boundary, and `translates`, `available`, `origin` remain shared semantic anchors. Approved-design unit a0197 authorizes that bounded JSX-era change.",
+      "reason": "This mapping consolidates local coordinate prose under the final drawing and layout pipeline; b0088, b0089, b0090, b0091, b0092, b0093 \u2192 c0083 is the exact unit boundary, and `translates`, `available`, `origin` remain shared semantic anchors. Approved-design unit a0197 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0197",
         "kind": "list",
@@ -9640,7 +9664,7 @@
         "c0091",
         "c0092"
       ],
-      "reason": "This mapping names final `Group` transform behavior while retaining pixel-grid and interaction geometry; b0094, b0095, b0096 → c0084, c0085, c0086, c0087, c0088, c0089, c0090, c0091, c0092 is the exact unit boundary, and `adjustment`, `pixel-grid`, `known` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping names final `Group` transform behavior while retaining pixel-grid and interaction geometry; b0094, b0095, b0096 \u2192 c0084, c0085, c0086, c0087, c0088, c0089, c0090, c0091, c0092 is the exact unit boundary, and `adjustment`, `pixel-grid`, `known` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -9653,7 +9677,7 @@
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0097"],
       "currentIds": ["c0093"],
-      "reason": "This mapping uses final `Clip` vocabulary while retaining intersection and no-scrolling semantics; b0097 → c0093 is the exact unit boundary, and `intersection`, `crc-managed`, `scrolling` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping uses final `Clip` vocabulary while retaining intersection and no-scrolling semantics; b0097 \u2192 c0093 is the exact unit boundary, and `intersection`, `crc-managed`, `scrolling` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -9685,7 +9709,7 @@
         "c0078",
         "c0079"
       ],
-      "reason": "This mapping integrates fragments and plain functions into the existing key, occurrence, and ordering model; b0098, b0099, b0100, b0101, b0102, b0103, b0104 → c0070, c0071, c0072, c0073, c0074, c0075, c0076, c0077, c0078, c0079 is the exact unit boundary, and `author-visible`, `module-level`, `features` remain shared semantic anchors. Approved-design unit a0076 authorizes that bounded JSX-era change.",
+      "reason": "This mapping integrates fragments and plain functions into the existing key, occurrence, and ordering model; b0098, b0099, b0100, b0101, b0102, b0103, b0104 \u2192 c0070, c0071, c0072, c0073, c0074, c0075, c0076, c0077, c0078, c0079 is the exact unit boundary, and `author-visible`, `module-level`, `features` remain shared semantic anchors. Approved-design unit a0076 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0076",
         "kind": "prose",
@@ -9709,7 +9733,7 @@
         "b0114"
       ],
       "currentIds": ["c0080", "c0081", "c0082"],
-      "reason": "This mapping compacts measurement architecture around primitive measurement and unsupported plain-component measurement; b0105, b0106, b0107, b0108, b0109, b0110, b0111, b0112, b0113, b0114 → c0080, c0081, c0082 is the exact unit boundary, and `observational`, `tokenization`, `child-local` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change.",
+      "reason": "This mapping compacts measurement architecture around primitive measurement and unsupported plain-component measurement; b0105, b0106, b0107, b0108, b0109, b0110, b0111, b0112, b0113, b0114 \u2192 c0080, c0081, c0082 is the exact unit boundary, and `observational`, `tokenization`, `child-local` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0089",
         "kind": "prose",
@@ -9722,7 +9746,7 @@
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0115", "b0116", "b0117"],
       "currentIds": ["c0094", "c0095", "c0096"],
-      "reason": "This mapping moves custom component examples from wrappers to plain functions and `useLayoutBox()`; b0115, b0116, b0117 → c0094, c0095, c0096 is the exact unit boundary, and `comfortable`, `metriccard`, `immutable` remain shared semantic anchors. Approved-design unit a0057 authorizes that bounded JSX-era change.",
+      "reason": "This mapping moves custom component examples from wrappers to plain functions and `useLayoutBox()`; b0115, b0116, b0117 \u2192 c0094, c0095, c0096 is the exact unit boundary, and `comfortable`, `metriccard`, `immutable` remain shared semantic anchors. Approved-design unit a0057 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0057",
         "kind": "prose",
@@ -9745,7 +9769,7 @@
         "b0126"
       ],
       "currentIds": ["c0097", "c0098", "c0099", "c0100"],
-      "reason": "This mapping retains fail-closed rendering while updating component vocabulary; b0118, b0119, b0120, b0121, b0122, b0123, b0124, b0125, b0126 → c0097, c0098, c0099, c0100 is the exact unit boundary, and `underdetermined`, `no-rollback`, `invariant` remain shared semantic anchors. Approved-design unit a0133 authorizes that bounded JSX-era change.",
+      "reason": "This mapping retains fail-closed rendering while updating component vocabulary; b0118, b0119, b0120, b0121, b0122, b0123, b0124, b0125, b0126 \u2192 c0097, c0098, c0099, c0100 is the exact unit boundary, and `underdetermined`, `no-rollback`, `invariant` remain shared semantic anchors. Approved-design unit a0133 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0133",
         "kind": "prose",
@@ -9758,7 +9782,7 @@
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0127", "b0128", "b0129"],
       "currentIds": ["c0101", "c0102", "c0103"],
-      "reason": "This mapping updates internal module seams for the final element, style, measurement, and placement architecture; b0127, b0128, b0129 → c0101, c0102, c0103 is the exact unit boundary, and `resolve-length`, `place-child`, `conceptual` remain shared semantic anchors. Approved-design unit a0203 authorizes that bounded JSX-era change.",
+      "reason": "This mapping updates internal module seams for the final element, style, measurement, and placement architecture; b0127, b0128, b0129 \u2192 c0101, c0102, c0103 is the exact unit boundary, and `resolve-length`, `place-child`, `conceptual` remain shared semantic anchors. Approved-design unit a0203 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0203",
         "kind": "prose",
@@ -9780,7 +9804,7 @@
         "b0137"
       ],
       "currentIds": ["c0115", "c0116"],
-      "reason": "This mapping moves delivery-seam detail into the implemented JSX program while keeping the architecture boundary explicit; b0130, b0131, b0132, b0133, b0134, b0135, b0136, b0137 → c0115, c0116 is the exact unit boundary, and `documentation`, `holistic`, `architecture` remain shared semantic anchors. Approved-design unit a0203 authorizes that bounded JSX-era change.",
+      "reason": "This mapping moves delivery-seam detail into the implemented JSX program while keeping the architecture boundary explicit; b0130, b0131, b0132, b0133, b0134, b0135, b0136, b0137 \u2192 c0115, c0116 is the exact unit boundary, and `documentation`, `holistic`, `architecture` remain shared semantic anchors. Approved-design unit a0203 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0203",
         "kind": "prose",
@@ -9805,7 +9829,7 @@
         "b0148"
       ],
       "currentIds": ["c0104"],
-      "reason": "This mapping consolidates verification architecture into the current observable-contract gate; b0138, b0139, b0140, b0141, b0142, b0143, b0144, b0145, b0146, b0147, b0148 → c0104 is the exact unit boundary, and `render-integration`, `correctness`, `non-browser` remain shared semantic anchors. Approved-design unit a0178 authorizes that bounded JSX-era change.",
+      "reason": "This mapping consolidates verification architecture into the current observable-contract gate; b0138, b0139, b0140, b0141, b0142, b0143, b0144, b0145, b0146, b0147, b0148 \u2192 c0104 is the exact unit boundary, and `render-integration`, `correctness`, `non-browser` remain shared semantic anchors. Approved-design unit a0178 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0178",
         "kind": "prose",
@@ -9840,7 +9864,7 @@
         "c0113",
         "c0114"
       ],
-      "reason": "This mapping records Plan 003 decisions as final JSX-era architectural consequences; b0149, b0150, b0151, b0152, b0153, b0154, b0155, b0156, b0157, b0158 → c0105, c0106, c0107, c0108, c0109, c0110, c0111, c0112, c0113, c0114 is the exact unit boundary, and `layout-item`, `contexts`, `inferred` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping records Plan 003 decisions as final JSX-era architectural consequences; b0149, b0150, b0151, b0152, b0153, b0154, b0155, b0156, b0157, b0158 \u2192 c0105, c0106, c0107, c0108, c0109, c0110, c0111, c0112, c0113, c0114 is the exact unit boundary, and `layout-item`, `contexts`, `inferred` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -9853,7 +9877,7 @@
       "path": "docs/design/canvas-accessibility-guidance.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001", "c0002"],
-      "reason": "This mapping splits historical status from the unchanged Canvas accessibility limitation; b0001 → c0001, c0002 is the exact unit boundary, and `announcements`, `relationships`, `screen-reader` remain shared semantic anchors. Approved-design unit a0019 authorizes that bounded JSX-era change.",
+      "reason": "This mapping splits historical status from the unchanged Canvas accessibility limitation; b0001 \u2192 c0001, c0002 is the exact unit boundary, and `announcements`, `relationships`, `screen-reader` remain shared semantic anchors. Approved-design unit a0019 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0019",
         "kind": "list",
@@ -9866,7 +9890,7 @@
       "path": "docs/design/canvas-surface-contract.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001"],
-      "reason": "This mapping updates only the Canvas-surface contract status heading for the JSX-era documentation set; b0001 → c0001 is the exact unit boundary, and `status`, `implemented` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
+      "reason": "This mapping updates only the Canvas-surface contract status heading for the JSX-era documentation set; b0001 \u2192 c0001 is the exact unit boundary, and `status`, `implemented` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0177",
         "kind": "prose",
@@ -9879,7 +9903,7 @@
       "path": "docs/design/canvas-surface-contract.md",
       "baselineIds": ["b0003", "b0005"],
       "currentIds": ["c0003", "c0005"],
-      "reason": "This mapping widens the authored root from one factory element to `CRCNode` while keeping first-mount configuration semantics; b0003, b0005 → c0003, c0005 is the exact unit boundary, and `mount-time`, `accepts`, `belongs` remain shared semantic anchors. Approved-design unit a0054 authorizes that bounded JSX-era change.",
+      "reason": "This mapping widens the authored root from one factory element to `CRCNode` while keeping first-mount configuration semantics; b0003, b0005 \u2192 c0003, c0005 is the exact unit boundary, and `mount-time`, `accepts`, `belongs` remain shared semantic anchors. Approved-design unit a0054 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0054",
         "kind": "prose",
@@ -9892,7 +9916,7 @@
       "path": "docs/design/canvas-surface-contract.md",
       "baselineIds": ["b0031", "b0033"],
       "currentIds": ["c0031", "c0033"],
-      "reason": "This mapping renames composition built-ins while preserving root-logical interaction geometry; b0031, b0033 → c0031, c0033 is the exact unit boundary, and `layer-local`, `letterboxed`, `composites` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping renames composition built-ins while preserving root-logical interaction geometry; b0031, b0033 \u2192 c0031, c0033 is the exact unit boundary, and `layer-local`, `letterboxed`, `composites` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -9905,7 +9929,7 @@
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0001", "b0002"],
       "currentIds": ["c0001", "c0002"],
-      "reason": "This mapping updates the drawing-contract title and exports to descriptive component names; b0001, b0002 → c0001, c0002 is the exact unit boundary, and `participation`, `exports`, `events` remain shared semantic anchors. Approved-design unit a0030 authorizes that bounded JSX-era change.",
+      "reason": "This mapping updates the drawing-contract title and exports to descriptive component names; b0001, b0002 \u2192 c0001, c0002 is the exact unit boundary, and `participation`, `exports`, `events` remain shared semantic anchors. Approved-design unit a0030 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0030",
         "kind": "prose",
@@ -9918,7 +9942,7 @@
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0003", "b0004", "b0005", "b0007", "b0009"],
       "currentIds": ["c0004", "c0005", "c0006", "c0008", "c0010"],
-      "reason": "This mapping renames drawing leaves without changing paint or interaction rules; b0003, b0004, b0005, b0007, b0009 → c0004, c0005, c0006, c0008, c0010 is the exact unit boundary, and `antialiasing`, `zero-length`, `multiplies` remain shared semantic anchors. Approved-design unit a0197 authorizes that bounded JSX-era change.",
+      "reason": "This mapping renames drawing leaves without changing paint or interaction rules; b0003, b0004, b0005, b0007, b0009 \u2192 c0004, c0005, c0006, c0008, c0010 is the exact unit boundary, and `antialiasing`, `zero-length`, `multiplies` remain shared semantic anchors. Approved-design unit a0197 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0197",
         "kind": "list",
@@ -9962,7 +9986,7 @@
         "c0057",
         "c0058"
       ],
-      "reason": "This mapping rewrites the component matrix for final names, styles, and children while retaining each component's geometry; b0010, b0011, b0012, b0013, b0014, b0015, b0016, b0017, b0018, b0019, b0020, b0021, b0022 → c0012, c0013, c0019, c0020, c0021, c0022, c0023, c0024, c0025, c0026, c0045, c0041, c0042, c0043, c0064, c0065, c0066 is the exact unit boundary, and `interactions`, `translation`, `delegation` remain shared semantic anchors. Approved-design unit a0030 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0076, c0056, c0057. Current snapshot units c0046 c0044 c0058 are the mechanically remapped exact clauses.",
+      "reason": "This mapping rewrites the component matrix for final names, styles, and children while retaining each component's geometry; b0010, b0011, b0012, b0013, b0014, b0015, b0016, b0017, b0018, b0019, b0020, b0021, b0022 \u2192 c0012, c0013, c0019, c0020, c0021, c0022, c0023, c0024, c0025, c0026, c0045, c0041, c0042, c0043, c0064, c0065, c0066 is the exact unit boundary, and `interactions`, `translation`, `delegation` remain shared semantic anchors. Approved-design unit a0030 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0076, c0056, c0057. Current snapshot units c0046 c0044 c0058 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0030",
         "kind": "prose",
@@ -9975,7 +9999,7 @@
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0023", "b0025"],
       "currentIds": ["c0035", "c0037", "c0038", "c0040"],
-      "reason": "This mapping moves `Text` content from style to textual children while retaining layout and interaction behavior; b0023, b0025 → c0035, c0036, c0037, c0039 is the exact unit boundary, and `surrounding`, `comparison`, `controlled` remain shared semantic anchors. Approved-design unit a0136 authorizes that bounded JSX-era change. Current snapshot units c0038 c0040 are the mechanically remapped exact clauses.",
+      "reason": "This mapping moves `Text` content from style to textual children while retaining layout and interaction behavior; b0023, b0025 \u2192 c0035, c0036, c0037, c0039 is the exact unit boundary, and `surrounding`, `comparison`, `controlled` remain shared semantic anchors. Approved-design unit a0136 authorizes that bounded JSX-era change. Current snapshot units c0038 c0040 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0136",
         "kind": "prose",
@@ -9988,7 +10012,7 @@
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0026"],
       "currentIds": ["c0059"],
-      "reason": "This mapping renames the image primitive without changing its lifetime or natural-size geometry; b0026 → c0067 is the exact unit boundary, and `transparent-region`, `geometry-first`, `naturalheight` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0079. Current snapshot units c0059 are the mechanically remapped exact clauses.",
+      "reason": "This mapping renames the image primitive without changing its lifetime or natural-size geometry; b0026 \u2192 c0067 is the exact unit boundary, and `transparent-region`, `geometry-first`, `naturalheight` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0079. Current snapshot units c0059 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0032",
         "kind": "list",
@@ -10001,7 +10025,7 @@
       "path": "docs/design/event-resource-ownership.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001"],
-      "reason": "This mapping updates only the event-ownership contract status heading; b0001 → c0001 is the exact unit boundary, and `status`, `implemented` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
+      "reason": "This mapping updates only the event-ownership contract status heading; b0001 \u2192 c0001 is the exact unit boundary, and `status`, `implemented` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0177",
         "kind": "prose",
@@ -10014,7 +10038,7 @@
       "path": "docs/design/event-resource-ownership.md",
       "baselineIds": ["b0003", "b0012"],
       "currentIds": ["c0003", "c0012"],
-      "reason": "This mapping uses final controller and component names while retaining public listener and cleanup lifetime; b0003, b0012 → c0003, c0012 is the exact unit boundary, and `crccontroller`, `retaining`, `additive` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping uses final controller and component names while retaining public listener and cleanup lifetime; b0003, b0012 \u2192 c0003, c0012 is the exact unit boundary, and `crccontroller`, `retaining`, `additive` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -10027,7 +10051,7 @@
       "path": "docs/design/focus-and-keyboard-navigation-contract.md",
       "baselineIds": ["b0001", "b0003"],
       "currentIds": ["c0001", "c0003", "c0004", "c0005"],
-      "reason": "This mapping replaces enhancer vocabulary with transparent JSX focus-policy components; b0001, b0003 → c0001, c0003, c0004, c0005 is the exact unit boundary, and `applications`, `parentage`, `opt` remain shared semantic anchors. Approved-design unit a0140 authorizes that bounded JSX-era change.",
+      "reason": "This mapping replaces enhancer vocabulary with transparent JSX focus-policy components; b0001, b0003 \u2192 c0001, c0003, c0004, c0005 is the exact unit boundary, and `applications`, `parentage`, `opt` remain shared semantic anchors. Approved-design unit a0140 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0140",
         "kind": "prose",
@@ -10040,7 +10064,7 @@
       "path": "docs/design/focus-and-keyboard-navigation-contract.md",
       "baselineIds": ["b0027"],
       "currentIds": ["c0030"],
-      "reason": "This mapping renames the directional policy boundary without changing arrow-ranking geometry; b0027 → c0030 is the exact unit boundary, and `arrow-navigation`, `component-local`, `axis-aligned` remain shared semantic anchors. Approved-design unit a0199 authorizes that bounded JSX-era change.",
+      "reason": "This mapping renames the directional policy boundary without changing arrow-ranking geometry; b0027 \u2192 c0030 is the exact unit boundary, and `arrow-navigation`, `component-local`, `axis-aligned` remain shared semantic anchors. Approved-design unit a0199 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0199",
         "kind": "list",
@@ -10053,7 +10077,7 @@
       "path": "docs/design/focus-and-keyboard-navigation-contract.md",
       "baselineIds": ["b0038", "b0039"],
       "currentIds": ["c0043", "c0044"],
-      "reason": "This mapping renames focus policies while retaining optionality, lifecycle, focus-visible, and failure behavior; b0038, b0039 → c0043, c0043 is the exact unit boundary, and `package-consumer`, `focus-visible`, `focusability` remain shared semantic anchors. Approved-design unit a0199 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0044.",
+      "reason": "This mapping renames focus policies while retaining optionality, lifecycle, focus-visible, and failure behavior; b0038, b0039 \u2192 c0043, c0043 is the exact unit boundary, and `package-consumer`, `focus-visible`, `focusability` remain shared semantic anchors. Approved-design unit a0199 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0044.",
       "approval": {
         "id": "a0199",
         "kind": "list",
@@ -10079,7 +10103,7 @@
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0004", "b0005", "b0010"],
       "currentIds": ["c0005", "c0006", "c0012"],
-      "reason": "This mapping uses JSX direct-child vocabulary while retaining box placement, overflow, and scheduling; b0004, b0005, b0010 → c0005, c0006, c0012 is the exact unit boundary, and `occurrence-order`, `parent-relative`, `schedules` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping uses JSX direct-child vocabulary while retaining box placement, overflow, scheduling, and the bounded positioned-object style rule: b0004, b0005, b0010 \u2192 c0005, c0006, c0012. Current c0012 preserves public fields and signal identity, permits only a readonly shallow provenance copy, and keeps the allocation separate. occurrence-order, parent-relative, and schedules remain shared semantic anchors. Approved-design unit a0132 remains the bounded JSX-vocabulary source for this translation. The deliberate identity relaxation is recorded in Task 1, Unified placement through public rendering, of docs/superpowers/plans/2026-09-28-component-manipulation-implementation.md; it does not claim the original JSX approval preserved object identity.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -10092,7 +10116,7 @@
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0013", "b0017"],
       "currentIds": ["c0017", "c0021"],
-      "reason": "This mapping renames `absolute` to `Absolute` while retaining independent anchored placement; b0013, b0017 → c0015, c0019 is the exact unit boundary, and `anchors`, `overlap`, `independently` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change. Current snapshot units c0017 c0021 are the mechanically remapped exact clauses.",
+      "reason": "This mapping renames `absolute` to `Absolute` while retaining independent anchored placement; b0013, b0017 \u2192 c0015, c0019 is the exact unit boundary, and `anchors`, `overlap`, `independently` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change. Current snapshot units c0017 c0021 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0034",
         "kind": "list",
@@ -10105,7 +10129,7 @@
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0019"],
       "currentIds": ["c0023"],
-      "reason": "This mapping renames `overlay` to `Overlay` without changing alignment defaults or overrides; b0019 → c0021 is the exact unit boundary, and `justifyitems`, `justifyself`, `alignitems` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change. Current snapshot units c0023 are the mechanically remapped exact clauses.",
+      "reason": "This mapping renames `overlay` to `Overlay` without changing alignment defaults or overrides; b0019 \u2192 c0021 is the exact unit boundary, and `justifyitems`, `justifyself`, `alignitems` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change. Current snapshot units c0023 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0034",
         "kind": "list",
@@ -10118,7 +10142,7 @@
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0026"],
       "currentIds": ["c0030"],
-      "reason": "This mapping renames `flow` to `Flow` without changing sequential inline/block placement; b0026 → c0028 is the exact unit boundary, and `sequential`, `inline`, `rather` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change. Current snapshot units c0030 are the mechanically remapped exact clauses.",
+      "reason": "This mapping renames `flow` to `Flow` without changing sequential inline/block placement; b0026 \u2192 c0028 is the exact unit boundary, and `sequential`, `inline`, `rather` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change. Current snapshot units c0030 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0034",
         "kind": "list",
@@ -10131,7 +10155,7 @@
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0034"],
       "currentIds": ["c0038"],
-      "reason": "This mapping renames `flex` to `Flex` without changing its bounded CSS-compatible subset; b0034 → c0036 is the exact unit boundary, and `bounded`, `css-compatible`, `deliberately` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change. Current snapshot units c0038 are the mechanically remapped exact clauses.",
+      "reason": "This mapping renames `flex` to `Flex` without changing its bounded CSS-compatible subset; b0034 \u2192 c0036 is the exact unit boundary, and `bounded`, `css-compatible`, `deliberately` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change. Current snapshot units c0038 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0034",
         "kind": "list",
@@ -10144,7 +10168,7 @@
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0045"],
       "currentIds": ["c0049"],
-      "reason": "This mapping renames `grid` to `Grid` without changing explicit track validation; b0045 → c0047 is the exact unit boundary, and `gridtemplatecolumns`, `gridtemplaterows`, `nonempty` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change. Current snapshot units c0049 are the mechanically remapped exact clauses.",
+      "reason": "This mapping renames `grid` to `Grid` without changing explicit track validation; b0045 \u2192 c0047 is the exact unit boundary, and `gridtemplatecolumns`, `gridtemplaterows`, `nonempty` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change. Current snapshot units c0049 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0034",
         "kind": "list",
@@ -10157,7 +10181,7 @@
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0054", "b0058", "b0060"],
       "currentIds": ["c0058", "c0062", "c0063", "c0066"],
-      "reason": "This mapping moves measurement capability from wrapped components to primitives while retaining isolation; b0054, b0058, b0060 → c0056, c0060, c0061, c0064 is the exact unit boundary, and `calculation`, `automatic`, `question` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change. Current snapshot units c0058 c0062 c0063 c0066 are the mechanically remapped exact clauses.",
+      "reason": "This mapping moves measurement capability from wrapped components to primitives while retaining isolation; b0054, b0058, b0060 \u2192 c0056, c0060, c0061, c0064 is the exact unit boundary, and `calculation`, `automatic`, `question` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change. Current snapshot units c0058 c0062 c0063 c0066 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0089",
         "kind": "prose",
@@ -10170,7 +10194,7 @@
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0061", "b0062", "b0063"],
       "currentIds": ["c0067", "c0068"],
-      "reason": "This mapping adds fragment-aware child preparation while retaining duplicate-key and ownership behavior; b0061, b0062, b0063 → c0065, c0066, c0067 is the exact unit boundary, and `duplicate-key`, `renormalizing`, `identically` remain shared semantic anchors. Approved-design unit a0190 authorizes that bounded JSX-era change. Current snapshot units c0068 c0069 are the mechanically remapped exact clauses.",
+      "reason": "This mapping adds fragment-aware child preparation while retaining duplicate-key and ownership behavior; b0061, b0062, b0063 \u2192 c0065, c0066, c0067 is the exact unit boundary, and `duplicate-key`, `renormalizing`, `identically` remain shared semantic anchors. Approved-design unit a0190 authorizes that bounded JSX-era change. Current snapshot units c0068 c0069 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0190",
         "kind": "list",
@@ -10183,7 +10207,7 @@
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0065"],
       "currentIds": ["c0071"],
-      "reason": "This mapping replaces the old extension boundary with the final primitive and plain-component boundary; b0065 → c0069 is the exact unit boundary, and `style-system-contract`, `runtime-resource-ownership` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change. Current snapshot units c0071 are the mechanically remapped exact clauses.",
+      "reason": "This mapping replaces the old extension boundary with the final primitive and plain-component boundary; b0065 \u2192 c0069 is the exact unit boundary, and `style-system-contract`, `runtime-resource-ownership` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change. Current snapshot units c0071 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -10196,7 +10220,7 @@
       "path": "docs/design/mouse-interaction-contract.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001"],
-      "reason": "This mapping updates the mouse-contract title to final component names without changing interaction semantics; b0001 → c0001 is the exact unit boundary, and `user-events-contract`, `layout-placement`, `no-cancellation` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping updates the mouse-contract title to final component names without changing interaction semantics; b0001 \u2192 c0001 is the exact unit boundary, and `user-events-contract`, `layout-placement`, `no-cancellation` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -10213,7 +10237,7 @@
       "path": "docs/design/mouse-interaction-contract.md",
       "baselineIds": ["b0030"],
       "currentIds": ["c0032"],
-      "reason": "This mapping renames composition components while retaining transform and clip targeting precision; b0030 → c0032 is the exact unit boundary, and `contributes`, `identical`, `precision` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping renames composition components while retaining transform and clip targeting precision; b0030 \u2192 c0032 is the exact unit boundary, and `contributes`, `identical`, `precision` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -10226,7 +10250,7 @@
       "path": "docs/design/mouse-interaction-contract.md",
       "baselineIds": ["b0083"],
       "currentIds": ["c0085"],
-      "reason": "This mapping updates mouse follow-up prose to final names while preserving the established browser evidence boundary; b0083 → c0085 is the exact unit boundary, and `repeatability`, `stroke-width`, `established` remain shared semantic anchors. Approved-design unit a0201 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0085.",
+      "reason": "This mapping updates mouse follow-up prose to final names while preserving the established browser evidence boundary; b0083 \u2192 c0085 is the exact unit boundary, and `repeatability`, `stroke-width`, `established` remain shared semantic anchors. Approved-design unit a0201 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0085.",
       "approval": {
         "id": "a0201",
         "kind": "list",
@@ -10239,7 +10263,7 @@
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0001", "b0002"],
       "currentIds": ["c0001", "c0002"],
-      "reason": "This mapping updates the runtime-and-hook contract title and surface for plain function components; b0001, b0002 → c0001, c0002 is the exact unit boundary, and `defines`, `runtime-resource-ownership`, `surface` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
+      "reason": "This mapping updates the runtime-and-hook contract title and surface for plain function components; b0001, b0002 \u2192 c0001, c0002 is the exact unit boundary, and `defines`, `runtime-resource-ownership`, `surface` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0177",
         "kind": "prose",
@@ -10290,7 +10314,7 @@
         "c0030",
         "c0031"
       ],
-      "reason": "This mapping extends existing component identity rules to plain functions, fragments, and recursively prepared children; b0003, b0004, b0005, b0006, b0007, b0008, b0009, b0010 → c0003, c0004, c0005, c0006, c0007, c0008, c0009, c0010, c0011, c0012, c0013, c0014, c0015, c0016, c0017, c0018, c0019, c0021, c0022, c0023, c0024, c0025, c0026, c0027, c0028, c0029, c0030, c0031 is the exact unit boundary, and `capabilities`, `identity`, `consequence` remain shared semantic anchors. Approved-design unit a0076 authorizes that bounded JSX-era change.",
+      "reason": "This mapping extends existing component identity rules to plain functions, fragments, and recursively prepared children; b0003, b0004, b0005, b0006, b0007, b0008, b0009, b0010 \u2192 c0003, c0004, c0005, c0006, c0007, c0008, c0009, c0010, c0011, c0012, c0013, c0014, c0015, c0016, c0017, c0018, c0019, c0021, c0022, c0023, c0024, c0025, c0026, c0027, c0028, c0029, c0030, c0031 is the exact unit boundary, and `capabilities`, `identity`, `consequence` remain shared semantic anchors. Approved-design unit a0076 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0076",
         "kind": "prose",
@@ -10303,7 +10327,7 @@
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0012", "b0014"],
       "currentIds": ["c0034", "c0036"],
-      "reason": "This mapping clarifies fewer-hook cleanup while retaining synchronous hook sequence enforcement; b0012, b0014 → c0034, c0036 is the exact unit boundary, and `synchronously`, `abandoned`, `reporting` remain shared semantic anchors. Approved-design unit a0194 authorizes that bounded JSX-era change.",
+      "reason": "This mapping clarifies fewer-hook cleanup while retaining synchronous hook sequence enforcement; b0012, b0014 \u2192 c0034, c0036 is the exact unit boundary, and `synchronously`, `abandoned`, `reporting` remain shared semantic anchors. Approved-design unit a0194 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0194",
         "kind": "list",
@@ -10339,7 +10363,7 @@
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0029"],
       "currentIds": ["c0056"],
-      "reason": "This mapping updates the public package boundary for the final JSX entry points and declarations; b0029 → c0056 is the exact unit boundary, and `consumers`, `entries`, `nodenext` remain shared semantic anchors. Approved-design unit a0105 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0057. Current snapshot units c0056 are the mechanically remapped exact clauses.",
+      "reason": "This mapping updates the public package boundary for the final JSX entry points and declarations; b0029 \u2192 c0056 is the exact unit boundary, and `consumers`, `entries`, `nodenext` remain shared semantic anchors. Approved-design unit a0105 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0057. Current snapshot units c0056 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0105",
         "kind": "prose",
@@ -10390,7 +10414,7 @@
       "path": "docs/design/runtime-resource-ownership.md",
       "baselineIds": ["b0011", "b0012"],
       "currentIds": ["c0012", "c0013"],
-      "reason": "This mapping renames the image owner in the ownership table without changing teardown ownership; b0011, b0012 → c0011, c0012 is the exact unit boundary, and `source-tagged`, `currently`, `released` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change. Current snapshot units c0013 are the mechanically remapped exact clauses.",
+      "reason": "This mapping renames the image owner in the ownership table without changing teardown ownership; b0011, b0012 \u2192 c0011, c0012 is the exact unit boundary, and `source-tagged`, `currently`, `released` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change. Current snapshot units c0013 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0032",
         "kind": "list",
@@ -10445,7 +10469,7 @@
         "c0017",
         "c0018"
       ],
-      "reason": "This mapping replaces wrapper metadata terminology with primitive style stages and plain-component props; b0005, b0006, b0007, b0008, b0009, b0010, b0011, b0012 → c0009, c0010, c0011, c0012, c0013, c0014, c0015 is the exact unit boundary, and `application-owned`, `allocation-aware`, `interpret` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change. Current snapshot units c0016 c0017 c0018 are the mechanically remapped exact clauses.",
+      "reason": "This mapping replaces wrapper metadata terminology with primitive style stages and plain-component props; b0005, b0006, b0007, b0008, b0009, b0010, b0011, b0012 \u2192 c0009, c0010, c0011, c0012, c0013, c0014, c0015 is the exact unit boundary, and `application-owned`, `allocation-aware`, `interpret` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change. Current snapshot units c0016 c0017 c0018 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0079",
         "kind": "prose",
@@ -10474,7 +10498,7 @@
         "c0042",
         "c0043"
       ],
-      "reason": "This mapping retains length and box resolution while expressing it through final style terminology; b0013, b0014, b0016, b0017, b0018, b0019, b0020 → c0033, c0034, c0036, c0037, c0038, c0039, c0040 is the exact unit boundary, and `responsive`, `scientific`, `whitespace` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change. Current snapshot units c0041 c0042 c0043 are the mechanically remapped exact clauses.",
+      "reason": "This mapping retains length and box resolution while expressing it through final style terminology; b0013, b0014, b0016, b0017, b0018, b0019, b0020 \u2192 c0033, c0034, c0036, c0037, c0038, c0039, c0040 is the exact unit boundary, and `responsive`, `scientific`, `whitespace` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change. Current snapshot units c0041 c0042 c0043 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0079",
         "kind": "prose",
@@ -10521,7 +10545,7 @@
         "c0059",
         "c0060"
       ],
-      "reason": "This mapping moves every old field/form pair to the migration matrix and leaves an exact final field/default table; b0021, b0022, b0023, b0024, b0025, b0026, b0027, b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 → c0041, c0042, c0043, c0044, c0045, c0046, c0047, c0048, c0049, c0050, c0051, c0052, c0053, c0054, c0063, c0064 is the exact unit boundary, and `lineinteractionwidth`, `aligntopixelgrid`, `rotationorigin` remain shared semantic anchors. Approved-design unit a0005 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0071, c0072. Current snapshot units c0055 c0056 c0057 c0059 c0060 are the mechanically remapped exact clauses.",
+      "reason": "This mapping moves every old field/form pair to the migration matrix and leaves an exact final field/default table; b0021, b0022, b0023, b0024, b0025, b0026, b0027, b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 \u2192 c0041, c0042, c0043, c0044, c0045, c0046, c0047, c0048, c0049, c0050, c0051, c0052, c0053, c0054, c0063, c0064 is the exact unit boundary, and `lineinteractionwidth`, `aligntopixelgrid`, `rotationorigin` remain shared semantic anchors. Approved-design unit a0005 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0071, c0072. Current snapshot units c0055 c0056 c0057 c0059 c0060 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0005",
         "kind": "prose",
@@ -10538,7 +10562,7 @@
       "path": "docs/design/style-system-contract.md",
       "baselineIds": ["b0037", "b0038"],
       "currentIds": ["c0061", "c0064"],
-      "reason": "This mapping updates exclusion references for JSX-era component names without adding cascade or inheritance; b0037, b0038 → c0065, c0068 is the exact unit boundary, and `drawing-components-contract`, `layout-system-contract`, `inheritance` remain shared semantic anchors. Approved-design unit a0023 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0073, c0061. Current snapshot units c0064 are the mechanically remapped exact clauses.",
+      "reason": "This mapping updates exclusion references for JSX-era component names without adding cascade or inheritance; b0037, b0038 \u2192 c0065, c0068 is the exact unit boundary, and `drawing-components-contract`, `layout-system-contract`, `inheritance` remain shared semantic anchors. Approved-design unit a0023 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0073, c0061. Current snapshot units c0064 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0023",
         "kind": "list",
@@ -10555,7 +10579,7 @@
       "path": "docs/design/user-events-contract.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001"],
-      "reason": "This mapping updates only the user-event contract status heading for the JSX-era documentation set; b0001 → c0001 is the exact unit boundary, and `governed`, `focus-and-keyboard-navigation-contract`, `keyboard-navigation` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
+      "reason": "This mapping updates only the user-event contract status heading for the JSX-era documentation set; b0001 \u2192 c0001 is the exact unit boundary, and `governed`, `focus-and-keyboard-navigation-contract`, `keyboard-navigation` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0177",
         "kind": "prose",
@@ -10572,7 +10596,7 @@
       "path": "docs/design/user-events-contract.md",
       "baselineIds": ["b0004", "b0007"],
       "currentIds": ["c0004", "c0008"],
-      "reason": "This mapping replaces factory registration examples with JSX event props on final components; b0004, b0007 → c0004, c0008 is the exact unit boundary, and `custom-component`, `abstraction`, `onxcapture` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
+      "reason": "This mapping replaces factory registration examples with JSX event props on final components; b0004, b0007 \u2192 c0004, c0008 is the exact unit boundary, and `custom-component`, `abstraction`, `onxcapture` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0132",
         "kind": "prose",
@@ -10585,7 +10609,7 @@
       "path": "docs/design/user-events-contract.md",
       "baselineIds": ["b0032", "b0033"],
       "currentIds": ["c0037", "c0038"],
-      "reason": "This mapping replaces enhancer and hook names with focus-policy components while retaining targetless plain-Canvas input; b0032, b0033 → c0036, c0037 is the exact unit boundary, and `keyboardfocusable` plus `event-injection` remain shared semantic anchors. Approved-design unit a0140 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0037, c0038.",
+      "reason": "This mapping replaces enhancer and hook names with focus-policy components while retaining targetless plain-Canvas input; b0032, b0033 \u2192 c0036, c0037 is the exact unit boundary, and `keyboardfocusable` plus `event-injection` remain shared semantic anchors. Approved-design unit a0140 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0037, c0038.",
       "approval": {
         "id": "a0140",
         "kind": "prose",
@@ -10608,7 +10632,7 @@
         "b0036"
       ],
       "currentIds": ["c0061", "c0064"],
-      "reason": "This mapping updates visual-evidence prose for converted public scenarios without weakening semantic-first evidence; b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 → c0069, c0072 is the exact unit boundary, and `accessibility`, `decoded-svg`, `baselines` remain shared semantic anchors. Approved-design unit a0202 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0081, c0084. Current snapshot units c0061 c0064 are the mechanically remapped exact clauses.",
+      "reason": "This mapping updates visual-evidence prose for converted public scenarios without weakening semantic-first evidence; b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 \u2192 c0069, c0072 is the exact unit boundary, and `accessibility`, `decoded-svg`, `baselines` remain shared semantic anchors. Approved-design unit a0202 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0081, c0084. Current snapshot units c0061 c0064 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0202",
         "kind": "prose",
@@ -10700,7 +10724,7 @@
       "path": "docs/design/canvas-surface-contract.md",
       "baselineIds": ["b0034", "b0035"],
       "currentIds": ["c0039", "c0040"],
-      "reason": "This mapping preserves the root surface scheduling and teardown guarantees while aligning them to the realm scheduler; b0034, b0035 → c0039, c0039 is the exact unit boundary, and `root`, `scheduler`, and `density` remain shared semantic anchors. first-class-signals-and-scheduler units g0058 g0136 g0138 g0140 authorize the bounded scheduling change. Reviewed Task 5 remapping retains current units c0040.",
+      "reason": "This mapping preserves the root surface scheduling and teardown guarantees while aligning them to the realm scheduler; b0034, b0035 \u2192 c0039, c0039 is the exact unit boundary, and `root`, `scheduler`, and `density` remain shared semantic anchors. first-class-signals-and-scheduler units g0058 g0136 g0138 g0140 authorize the bounded scheduling change. Reviewed Task 5 remapping retains current units c0040.",
       "approval": {
         "recordId": "first-class-signals-and-scheduler",
         "unitIds": ["g0058", "g0136", "g0138", "g0140"]
@@ -10712,7 +10736,7 @@
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0011"],
       "currentIds": ["c0032"],
-      "reason": "This mapping preserves pending root and state precedence while aligning realm scheduling; b0011 → c0032 is the exact unit boundary, and `root` and `state` remain shared semantic anchors. first-class-signals-and-scheduler units g0058 g0136 g0138 g0140 authorize the bounded signal/scheduler change.",
+      "reason": "This mapping preserves pending root and state precedence while aligning realm scheduling; b0011 \u2192 c0032 is the exact unit boundary, and `root` and `state` remain shared semantic anchors. first-class-signals-and-scheduler units g0058 g0136 g0138 g0140 authorize the bounded signal/scheduler change.",
       "approval": {
         "recordId": "first-class-signals-and-scheduler",
         "unitIds": ["g0058", "g0136", "g0138", "g0140"]
@@ -10724,7 +10748,7 @@
       "path": "docs/design/runtime-resource-ownership.md",
       "baselineIds": ["b0010"],
       "currentIds": ["c0011"],
-      "reason": "This mapping preserves exact frame callback completion and stale-callback safety while moving host-frame ownership to the realm scheduler; b0010 → c0010 is the exact unit boundary, and `frame` and `callback` remain shared semantic anchors. first-class-signals-and-scheduler units g0058 g0216 authorize the bounded ownership change. Current snapshot units c0011 are the mechanically remapped exact clauses.",
+      "reason": "This mapping preserves exact frame callback completion and stale-callback safety while moving host-frame ownership to the realm scheduler; b0010 \u2192 c0010 is the exact unit boundary, and `frame` and `callback` remain shared semantic anchors. first-class-signals-and-scheduler units g0058 g0216 authorize the bounded ownership change. Current snapshot units c0011 are the mechanically remapped exact clauses.",
       "approval": {
         "recordId": "first-class-signals-and-scheduler",
         "unitIds": ["g0058", "g0216"]
@@ -10736,7 +10760,7 @@
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0027", "b0028"],
       "currentIds": ["c0053", "c0054"],
-      "reason": "This mapping moves the pure-measurement boundary from wrapper metadata to primitive metadata; b0027, b0028 → c0053, c0054 is the exact unit boundary, and `recursively`, `contextual`, `attempted` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0054, c0053. Current snapshot units c0054 are the mechanically remapped exact clauses.",
+      "reason": "This mapping moves the pure-measurement boundary from wrapper metadata to primitive metadata; b0027, b0028 \u2192 c0053, c0054 is the exact unit boundary, and `recursively`, `contextual`, `attempted` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change. Reviewed Task 5 remapping retains current units c0054, c0053. Current snapshot units c0054 are the mechanically remapped exact clauses.",
       "approval": {
         "id": "a0089",
         "kind": "prose",
@@ -11534,7 +11558,7 @@
       "id": "design-runtime-hooks-contract-signal-hook-addition",
       "path": "docs/design/runtime-hooks-contract.md",
       "currentIds": ["c0068"],
-      "reason": "first-class-signals-and-scheduler units g0050 g0055 g0056 g0063 g0120 g0121 g0122 g0126 g0128 g0138 g0213 authorize c0068 as the mounted useSignal, usePlayback, and useAnimatedValue component-hook contract with successful adoption, shared Commit, live callbacks, and exact teardown. Reviewed Task 5 remapping retains current units c0070. Current snapshot units c0068 are the mechanically remapped exact clauses.",
+      "reason": "first-class-signals-and-scheduler units g0050 g0055 g0056 g0063 g0120 g0121 g0122 g0126 g0128 g0138 g0213 authorize c0068 as the mounted useSignal, usePlayback, and useTransition component-hook contract with successful adoption, shared Commit, live callbacks, and exact teardown. Reviewed Task 5 remapping retains current units c0070. Current snapshot units c0068 are the mechanically remapped exact clauses.",
       "approval": {
         "recordId": "first-class-signals-and-scheduler",
         "unitIds": [
@@ -12052,10 +12076,99 @@
       "sharedAnchors": ["PathGeometry"]
     },
     {
+      "id": "mutable-path-geometry-runtime-hooks",
+      "path": "docs/design/runtime-hooks-contract.md",
+      "currentIds": ["c0071"],
+      "reason": "mutable-path-geometry units q0045 q0046 q0037 q0049 authorize runtime hook contract unit c0071 for PathGeometry and Path2D registration snapshots.",
+      "approval": {
+        "recordId": "mutable-path-geometry",
+        "unitIds": ["q0045", "q0046", "q0037", "q0049"]
+      },
+      "sharedAnchors": ["PathGeometry", "Path2D"]
+    },
+    {
+      "id": "mutable-path-geometry-runtime-ownership",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0064"],
+      "reason": "mutable-path-geometry units q0005 q0006 q0008 q0047 q0048 q0049 authorize runtime ownership unit c0064 for PathGeometry snapshot cache ownership and replacement.",
+      "approval": {
+        "recordId": "mutable-path-geometry",
+        "unitIds": ["q0005", "q0006", "q0008", "q0047", "q0048", "q0049"]
+      },
+      "sharedAnchors": ["PathGeometry", "snapshot"]
+    },
+    {
+      "id": "component-manipulation-drawing-contract",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0087"],
+      "reason": "Approved component-manipulation records n0004, n0006, n0007, n0008, n0009, n0039 and child-defined-drag-handles records h0001, h0002, h0004 authorize current clause c0087 for explicit frame and child-defined handle drawing behavior.",
+      "approval": {
+        "recordId": "component-manipulation",
+        "unitIds": ["n0004", "n0006", "n0007", "n0008", "n0009", "n0039"]
+      },
+      "sharedAnchors": ["frame", "handle"],
+      "supplementalApprovals": [
+        {
+          "recordId": "child-defined-drag-handles",
+          "unitIds": ["h0001", "h0002", "h0004"]
+        }
+      ]
+    },
+    {
+      "id": "component-manipulation-resource-ownership",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0065"],
+      "reason": "Approved component-manipulation record n0025 authorizes current clause c0065 for the generation-checked teardown and restoration ownership contract.",
+      "approval": {
+        "recordId": "component-manipulation",
+        "unitIds": ["n0025"]
+      },
+      "sharedAnchors": ["teardown", "generation"]
+    },
+    {
+      "id": "component-manipulation-user-events",
+      "path": "docs/design/user-events-contract.md",
+      "currentIds": ["c0057"],
+      "reason": "Approved component-manipulation records n0018, n0019, n0026, n0027, n0028 and child-defined-drag-handles records h0002, h0003 authorize current clause c0057 for the captured pointer gesture and focused Escape event contract.",
+      "approval": {
+        "recordId": "component-manipulation",
+        "unitIds": ["n0018", "n0019", "n0026", "n0027", "n0028"]
+      },
+      "sharedAnchors": ["pointer", "gesture"],
+      "supplementalApprovals": [
+        {
+          "recordId": "child-defined-drag-handles",
+          "unitIds": ["h0002", "h0003"]
+        }
+      ]
+    },
+    {
+      "id": "component-manipulation-layout-contract",
+      "path": "docs/design/layout-system-contract.md",
+      "currentIds": ["c0075"],
+      "reason": "Approved component-manipulation records n0012, n0042, n0046 authorize current clause c0075 for the frame allocation and layout-owned placement contract.",
+      "approval": {
+        "recordId": "component-manipulation",
+        "unitIds": ["n0012", "n0042", "n0046"]
+      },
+      "sharedAnchors": ["layout", "placement"]
+    },
+    {
+      "id": "component-manipulation-style-contract",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0074"],
+      "reason": "Approved component-manipulation records n0029, n0030, n0031, n0041, n0045 authorize current clause c0074 for the left/top local style positioning contract.",
+      "approval": {
+        "recordId": "component-manipulation",
+        "unitIds": ["n0029", "n0030", "n0031", "n0041", "n0045"]
+      },
+      "sharedAnchors": ["left", "style"]
+    },
+    {
       "id": "four-corner-path-warp-drawing-components",
       "path": "docs/design/drawing-components-contract.md",
       "currentIds": ["c0080", "c0081", "c0082"],
-      "reason": "four-corner-path-warp units z0003 z0005 z0007 z0010 z0011 z0012 z0018 z0022 z0023 z0024 z0025 z0026 z0027 z0029 z0030 z0031 z0032 z0034 z0046 z0047 z0048 z0049 z0050 z0066 z0067 z0068 z0069 z0070 z0071 z0072 z0073 z0074 z0075 z0076 z0077 authorize drawing contract units c0080 c0081 c0082 for the source/destination mapping, destination-space tolerance, PathGeometry ownership, and evidence.",
+      "reason": "four-corner-path-warp units z0003 z0005 z0007 z0012 z0012 z0012 z0018 z0027 z0027 z0027 z0027 z0027 z0027 z0032 z0032 z0032 z0032 z0034 z0050 z0050 z0050 z0050 z0050 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 authorize drawing contract units c0080 c0081 c0082 for the source/destination mapping, destination-space tolerance, PathGeometry ownership, and evidence. Approved design units: z0003, z0005, z0007, z0010, z0011, z0012, z0018, z0022, z0023, z0024, z0025, z0026, z0027, z0029, z0030, z0031, z0032, z0034, z0046, z0047, z0048, z0049, z0050, z0066, z0067, z0068, z0069, z0070, z0071, z0072, z0073, z0074, z0075, z0076, z0077.",
       "approval": {
         "recordId": "four-corner-path-warp",
         "unitIds": [
@@ -12099,32 +12212,10 @@
       "sharedAnchors": ["source", "tolerance", "geometry"]
     },
     {
-      "id": "mutable-path-geometry-runtime-hooks",
-      "path": "docs/design/runtime-hooks-contract.md",
-      "currentIds": ["c0071"],
-      "reason": "mutable-path-geometry units q0045 q0046 q0037 q0049 authorize runtime hook contract unit c0071 for PathGeometry and Path2D registration snapshots.",
-      "approval": {
-        "recordId": "mutable-path-geometry",
-        "unitIds": ["q0045", "q0046", "q0037", "q0049"]
-      },
-      "sharedAnchors": ["PathGeometry", "Path2D"]
-    },
-    {
-      "id": "mutable-path-geometry-runtime-ownership",
-      "path": "docs/design/runtime-resource-ownership.md",
-      "currentIds": ["c0064"],
-      "reason": "mutable-path-geometry units q0005 q0006 q0008 q0047 q0048 q0049 authorize runtime ownership unit c0064 for PathGeometry snapshot cache ownership and replacement.",
-      "approval": {
-        "recordId": "mutable-path-geometry",
-        "unitIds": ["q0005", "q0006", "q0008", "q0047", "q0048", "q0049"]
-      },
-      "sharedAnchors": ["PathGeometry", "snapshot"]
-    },
-    {
       "id": "path-bending-drawing-components",
       "path": "docs/design/drawing-components-contract.md",
       "currentIds": ["c0083", "c0084", "c0085", "c0086"],
-      "reason": "path-bending units j0005 j0006 j0007 j0010 j0011 j0012 j0019 j0020 j0021 j0022 j0025 j0031 j0032 j0033 j0034 j0036 j0037 j0038 j0039 j0040 j0041 j0042 j0043 j0045 j0046 j0047 j0048 j0049 j0050 j0052 j0053 j0055 j0057 j0058 j0059 j0060 j0069 authorize c0083 c0084 c0085 c0086 for guide geometry, alignment, tolerance, validation, ownership, and public evidence.",
+      "reason": "path-bending units j0007 j0007 j0007 j0012 j0012 j0012 j0022 j0022 j0022 j0022 j0025 j0034 j0034 j0034 j0034 j0043 j0043 j0043 j0043 j0043 j0043 j0043 j0043 j0050 j0050 j0050 j0050 j0050 j0050 j0053 j0053 j0055 j0060 j0060 j0060 j0060 j0069 authorize c0083 c0084 c0085 c0086 for guide geometry, alignment, tolerance, validation, ownership, and public evidence. Approved design units: j0005, j0006, j0007, j0010, j0011, j0012, j0019, j0020, j0021, j0022, j0025, j0031, j0032, j0033, j0034, j0036, j0037, j0038, j0039, j0040, j0041, j0042, j0043, j0045, j0046, j0047, j0048, j0049, j0050, j0052, j0053, j0055, j0057, j0058, j0059, j0060, j0069.",
       "approval": {
         "recordId": "path-bending",
         "unitIds": [
@@ -12230,11 +12321,11 @@
       "contract": "docs/architecture/style-and-layout-architecture.md",
       "claim": {
         "kind": "list",
-        "text": "- no primitive metadata → invoke the plain function with its props;"
+        "text": "- no primitive metadata \u2192 invoke the plain function with its props;"
       },
       "source": {
         "path": "packages/core/src/lib/render.ts",
-        "marker": "renderProgram(() =>\n              componentRefs.element.type(componentRefs.element.props)"
+        "marker": "return componentRefs.element.type(props);"
       },
       "test": {
         "path": "packages/core/src/lib/component-dispatch.test.tsx",
@@ -13476,171 +13567,120 @@
     },
     {
       "path": "docs/design/textures-contract.md",
-      "unitPrefix": "x",
-      "currentUnitCount": 26,
-      "currentUnitsSha256": "c8ca6fbf8aee22352d5235d435978fd2625d7928dafc89f663f0f0b227673d3a",
-      "approvalRecordId": "tree-shakeable-filters-and-texture-effects",
+      "unitPrefix": "u",
+      "currentUnitCount": 12,
+      "currentUnitsSha256": "a0abec83e03ee1e41dcebb05d7d3cb1d784ec234eb29cbe5ce7de8d384a727c4",
+      "approvalRecordId": "procedural-textures",
       "mappings": [
         {
           "id": "textures-2",
-          "currentIds": ["x0001"],
-          "reason": "x0001 records the implemented status authorized by tree-shakeable-filters-and-texture-effects n0002 for this approved texture-effects contract.",
+          "currentIds": ["u0001", "u0002"],
+          "reason": "u0001 and u0002 records the implemented procedural textures contract behavior authorized by d0013 and d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0002, d0003.",
           "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0002"]
+            "recordId": "procedural-textures",
+            "unitIds": ["d0002", "d0003"]
           },
-          "sharedAnchors": ["Status", "2026-10-01"]
+          "sharedAnchors": ["textures", "defineRenderLayer"]
         },
         {
           "id": "textures-3",
-          "currentIds": ["x0002", "x0003", "x0004"],
-          "reason": "x0002 x0003 and x0004 record the public texture authoring and producer callback surface authorized by tree-shakeable-filters-and-texture-effects n0006 n0050 and n0054.",
+          "currentIds": ["u0003"],
+          "reason": "u0003 records the implemented persistence and timing behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0004.",
           "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0006", "n0050", "n0054"]
+            "recordId": "procedural-textures",
+            "unitIds": ["d0004"]
           },
-          "sharedAnchors": ["texture", "useTexture"]
+          "sharedAnchors": ["simulation", "raster"]
         },
         {
           "id": "textures-4",
-          "currentIds": ["x0005", "x0006", "x0007"],
-          "reason": "x0005 x0006 and x0007 record handles, paint placement, ownership, and private consumption authorized by tree-shakeable-filters-and-texture-effects n0050 n0051 n0053 and n0054.",
+          "currentIds": ["u0004"],
+          "reason": "u0004 records the implemented persistence and timing behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0005.",
           "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0050", "n0051", "n0053", "n0054"]
+            "recordId": "procedural-textures",
+            "unitIds": ["d0005"]
           },
-          "sharedAnchors": ["texture", "placement", "owner"]
+          "sharedAnchors": ["steps", "periodic"]
         },
         {
           "id": "textures-5",
-          "currentIds": ["x0008", "x0009", "x0010"],
-          "reason": "x0008 x0009 and x0010 record committed publication, retry, and logical scheduling authorized by tree-shakeable-filters-and-texture-effects n0077 n0078 and n0080.",
+          "currentIds": ["u0005"],
+          "reason": "u0005 records the implemented persistence and timing behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0006.",
           "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0077", "n0078", "n0080"]
+            "recordId": "procedural-textures",
+            "unitIds": ["d0006"]
           },
-          "sharedAnchors": ["Commit", "candidate", "frame"]
+          "sharedAnchors": ["signals", "callback"]
         },
         {
           "id": "textures-6",
-          "currentIds": ["x0011"],
-          "reason": "x0011 records synchronous raster borrowing and consumer ownership authorized by tree-shakeable-filters-and-texture-effects n0051 n0052 and n0053.",
+          "currentIds": ["u0006"],
+          "reason": "u0006 records the implemented input and update semantics behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0007.",
           "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0051", "n0052", "n0053"]
+            "recordId": "procedural-textures",
+            "unitIds": ["d0007"]
           },
-          "sharedAnchors": ["borrow", "raster", "texture"]
+          "sharedAnchors": ["pointer", "stamps"]
         },
         {
           "id": "textures-7",
-          "currentIds": ["x0012", "x0013"],
-          "reason": "x0012 and x0013 record displacement semantics and the optional GPU capability boundary authorized by tree-shakeable-filters-and-texture-effects n0057 n0058 n0059 n0063 n0064 and n0066.",
+          "currentIds": ["u0007"],
+          "reason": "u0007 records the implemented input and update semantics behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0008.",
           "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0057", "n0058", "n0059", "n0063", "n0064", "n0066"]
+            "recordId": "procedural-textures",
+            "unitIds": ["d0008"]
           },
-          "sharedAnchors": ["displacement", "WebGL2", "texture"]
+          "sharedAnchors": ["palette", "capture"]
         },
         {
           "id": "textures-8",
-          "currentIds": ["x0014"],
-          "reason": "x0014 records periodic water-wave generation, messages, timing, and independent packaging authorized by tree-shakeable-filters-and-texture-effects n0008 n0070 n0071 n0072 n0073 and n0076.",
+          "currentIds": ["u0008"],
+          "reason": "u0008 records the implemented input and update semantics behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0009.",
           "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0008", "n0070", "n0071", "n0072", "n0073", "n0076"]
+            "recordId": "procedural-textures",
+            "unitIds": ["d0009"]
           },
-          "sharedAnchors": ["water", "speed", "texture"]
+          "sharedAnchors": ["periodic", "grain"]
         },
         {
           "id": "textures-9",
-          "currentIds": ["x0020"],
-          "reason": "x0020 preserves the existing component ownership behavior required by tree-shakeable-filters-and-texture-effects n0007 and n0022, with procedural-textures d0002 d0003 d0004 d0005 and d0006 retaining its concrete legacy guarantees.",
+          "currentIds": ["u0009"],
+          "reason": "u0009 records the implemented composition and borrowing behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0010.",
           "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0007", "n0022"]
+            "recordId": "procedural-textures",
+            "unitIds": ["d0010"]
           },
-          "sharedAnchors": ["component", "texture", "render"],
-          "supplementalApprovals": [
-            {
-              "recordId": "procedural-textures",
-              "unitIds": ["d0002", "d0003", "d0004", "d0005", "d0006"]
-            }
-          ]
+          "sharedAnchors": ["mask", "synchronous"]
         },
         {
           "id": "textures-10",
-          "currentIds": ["x0021"],
-          "reason": "x0021 preserves existing component update and timing behavior required by tree-shakeable-filters-and-texture-effects n0007 and n0022, with procedural-textures d0007 d0008 and d0009 retaining the legacy field guarantees.",
+          "currentIds": ["u0010"],
+          "reason": "u0010 records the implemented composition and borrowing behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0011.",
           "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0007", "n0022"]
+            "recordId": "procedural-textures",
+            "unitIds": ["d0011"]
           },
-          "sharedAnchors": ["field", "texture", "palette"],
-          "supplementalApprovals": [
-            {
-              "recordId": "procedural-textures",
-              "unitIds": ["d0007", "d0008", "d0009"]
-            }
-          ]
+          "sharedAnchors": ["sources", "painting"]
         },
         {
           "id": "textures-11",
-          "currentIds": ["x0022"],
-          "reason": "x0022 preserves existing component presentation, borrowing, release, and error behavior required by tree-shakeable-filters-and-texture-effects n0007 and n0022, with procedural-textures d0010 d0011 and d0012 retaining the concrete legacy guarantees.",
+          "currentIds": ["u0011"],
+          "reason": "u0011 records the implemented resource release and errors behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0012.",
           "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0007", "n0022"]
+            "recordId": "procedural-textures",
+            "unitIds": ["d0012"]
           },
-          "sharedAnchors": ["component", "texture", "raster"],
-          "supplementalApprovals": [
-            {
-              "recordId": "procedural-textures",
-              "unitIds": ["d0010", "d0011", "d0012"]
-            }
-          ]
+          "sharedAnchors": ["disposal", "errors"]
         },
         {
           "id": "textures-12",
-          "currentIds": ["x0023", "x0024"],
-          "reason": "x0023 and x0024 record release, disposal, and non-rollback failures authorized by tree-shakeable-filters-and-texture-effects n0084 n0089 n0090 n0093 and n0094.",
+          "currentIds": ["u0012"],
+          "reason": "u0012 records the implemented evidence behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
           "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0084", "n0089", "n0090", "n0093", "n0094"]
+            "recordId": "procedural-textures",
+            "unitIds": ["d0013"]
           },
-          "sharedAnchors": ["hook", "texture", "dispose"]
-        },
-        {
-          "id": "textures-13",
-          "currentIds": ["x0025", "x0026"],
-          "reason": "x0025 and x0026 record appearance-only boundaries and focused behavior and packed-consumer evidence authorized by tree-shakeable-filters-and-texture-effects n0009 n0026 n0082 n0083 n0095 n0113 n0114 n0115 n0117 n0121 n0122 and n0123.",
-          "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": [
-              "n0009",
-              "n0026",
-              "n0082",
-              "n0083",
-              "n0095",
-              "n0113",
-              "n0114",
-              "n0115",
-              "n0117",
-              "n0121",
-              "n0122",
-              "n0123"
-            ]
-          },
-          "sharedAnchors": ["texture", "filter", "displacement"]
-        },
-        {
-          "id": "textures-wasm-integration",
-          "currentIds": ["x0015", "x0016", "x0017", "x0018", "x0019"],
-          "reason": "x0015 x0016 x0017 x0018 and x0019 record the private per-recipe WASM implementation, resource-owned memory, typed parameter/message integration and retention verification authorized by tree-shakeable-filters-and-texture-effects n0153 n0155 and n0156. The recorded backend details preserve that resource and scheduling boundary.",
-          "approval": {
-            "recordId": "tree-shakeable-filters-and-texture-effects",
-            "unitIds": ["n0153", "n0155", "n0156"]
-          },
-          "sharedAnchors": ["WASM", "resource", "memory"]
+          "sharedAnchors": ["Studio", "evidence"]
         }
       ]
     },
@@ -14028,10 +14068,199 @@
       ]
     },
     {
+      "path": "docs/design/component-manipulation-contract.md",
+      "unitPrefix": "n",
+      "currentUnitCount": 16,
+      "currentUnitsSha256": "584a73cdeb6c19310bd645b7c7c3cd7d047342292e8d89a572fc0fb7cac5bc88",
+      "approvalRecordId": "component-manipulation",
+      "mappings": [
+        {
+          "id": "public-surface",
+          "currentIds": ["n0001"],
+          "reason": "Approved component-manipulation records n0002, n0015 authorize current contract clause n0001 as implemented public manipulation documentation.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": ["n0002", "n0015"]
+          },
+          "sharedAnchors": ["implement"]
+        },
+        {
+          "id": "controller-and-frame-ownership",
+          "currentIds": ["n0002", "n0003"],
+          "reason": "Approved component-manipulation record n0004, n0005, n0006, n0008, n0009, n0013, n0017, n0035, n0042, n0045 authorizes current contract clauses n0002, n0003 for the shared frame behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0004",
+              "n0005",
+              "n0006",
+              "n0008",
+              "n0009",
+              "n0013",
+              "n0017",
+              "n0035",
+              "n0042",
+              "n0045"
+            ]
+          },
+          "sharedAnchors": ["frame"]
+        },
+        {
+          "id": "positioning-and-layout",
+          "currentIds": ["n0004"],
+          "reason": "Approved component-manipulation record n0010, n0011, n0012, n0029, n0030, n0031, n0032, n0042, n0046 authorizes current contract clauses n0004 for the shared left behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0010",
+              "n0011",
+              "n0012",
+              "n0029",
+              "n0030",
+              "n0031",
+              "n0032",
+              "n0042",
+              "n0046"
+            ]
+          },
+          "sharedAnchors": ["left"]
+        },
+        {
+          "id": "gesture-arming-and-progress",
+          "currentIds": ["n0005", "n0006"],
+          "reason": "Approved component-manipulation record n0018, n0019, n0020, n0021, n0022, n0067, n0068 authorizes current contract clauses n0005, n0006 for the shared pointer behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0018",
+              "n0019",
+              "n0020",
+              "n0021",
+              "n0022",
+              "n0067",
+              "n0068"
+            ]
+          },
+          "sharedAnchors": ["pointer"]
+        },
+        {
+          "id": "cancellation-external-writes-and-activation",
+          "currentIds": ["n0007"],
+          "reason": "Approved component-manipulation record n0023, n0024, n0025, n0027, n0028 authorizes current contract clauses n0007 for the shared gesture behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": ["n0023", "n0024", "n0025", "n0027", "n0028"]
+          },
+          "sharedAnchors": ["gesture"]
+        },
+        {
+          "id": "pathless-drag-handle",
+          "currentIds": ["n0008", "n0011"],
+          "reason": "Approved component-manipulation records n0017, n0026, n0028 and child-defined-drag-handles records h0001, h0002, h0003, h0004 authorize current contract clauses n0008, n0011 for structural child-defined hit targets and handle precedence.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": ["n0017", "n0026", "n0028"]
+          },
+          "sharedAnchors": ["handle"],
+          "supplementalApprovals": [
+            {
+              "recordId": "child-defined-drag-handles",
+              "unitIds": ["h0001", "h0002", "h0003", "h0004"]
+            }
+          ]
+        },
+        {
+          "id": "control-presentation-and-css-space",
+          "currentIds": ["n0009", "n0010"],
+          "reason": "Approved component-manipulation record n0007, n0036, n0037, n0038, n0039, n0086, n0087 authorizes current contract clauses n0009, n0010 for the shared handle behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0007",
+              "n0036",
+              "n0037",
+              "n0038",
+              "n0039",
+              "n0086",
+              "n0087"
+            ]
+          },
+          "sharedAnchors": ["handle"]
+        },
+        {
+          "id": "snapping-options-and-lattices",
+          "currentIds": ["n0012", "n0013"],
+          "reason": "Approved component-manipulation record n0013, n0049, n0050, n0051, n0052, n0053, n0054, n0055, n0056, n0060 authorizes current contract clauses n0012, n0013 for the shared snap behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0013",
+              "n0049",
+              "n0050",
+              "n0051",
+              "n0052",
+              "n0053",
+              "n0054",
+              "n0055",
+              "n0056",
+              "n0060"
+            ]
+          },
+          "sharedAnchors": ["snap"]
+        },
+        {
+          "id": "resize-constraints",
+          "currentIds": ["n0014"],
+          "reason": "Approved component-manipulation records n0034, n0035, n0057, n0058, n0059 authorize current contract clause n0014 for the shared aspect-ratio constraint behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": ["n0034", "n0035", "n0057", "n0058", "n0059"]
+          },
+          "sharedAnchors": ["aspect"]
+        },
+        {
+          "id": "teardown-cleanup-ownership",
+          "currentIds": ["n0015"],
+          "reason": "Approved component-manipulation record n0025 authorizes current contract clauses n0015 for the shared teardown behavior.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": ["n0025"]
+          },
+          "sharedAnchors": ["teardown"]
+        },
+        {
+          "id": "readout-presentation",
+          "currentIds": ["n0016"],
+          "reason": "Approved component-manipulation records n0093, n0094, n0096, n0097, n0098, n0099, n0100, n0102, n0106 and child-defined-drag-handles records h0003, h0005 authorize current contract clause n0016 for drag readout presentation and child participation.",
+          "approval": {
+            "recordId": "component-manipulation",
+            "unitIds": [
+              "n0093",
+              "n0094",
+              "n0096",
+              "n0097",
+              "n0098",
+              "n0099",
+              "n0100",
+              "n0102",
+              "n0106"
+            ]
+          },
+          "sharedAnchors": ["readout"],
+          "supplementalApprovals": [
+            {
+              "recordId": "child-defined-drag-handles",
+              "unitIds": ["h0003", "h0005"]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "path": "docs/design/signals-and-scheduling-contract.md",
       "unitPrefix": "s",
-      "currentUnitCount": 48,
-      "currentUnitsSha256": "9a8b91991883b36011e6b785cb314df7656255a36e7e0623b4ac823d08805260",
+      "currentUnitCount": 47,
+      "currentUnitsSha256": "6dfb8bbb78a19cdeaa3a79d45536ee666ffd7e6a20ee2309636c80fb584af10f",
       "approvalRecordId": "first-class-signals-and-scheduler",
       "mappings": [
         {
@@ -14353,22 +14582,6 @@
               ]
             }
           ]
-        },
-        {
-          "id": "html-box-native-publication",
-          "currentIds": ["s0048"],
-          "reason": "first-class-signals-and-scheduler unit g0138 and html-box units u0050 u0051 u0052 u0053 authorize s0048 for Complete render transaction callbacks and HTML publication cleanup.",
-          "approval": {
-            "recordId": "first-class-signals-and-scheduler",
-            "unitIds": ["g0138"]
-          },
-          "sharedAnchors": ["Complete", "callbacks", "render"],
-          "supplementalApprovals": [
-            {
-              "recordId": "html-box",
-              "unitIds": ["u0050", "u0051", "u0052", "u0053"]
-            }
-          ]
         }
       ]
     },
@@ -14376,7 +14589,7 @@
       "path": "docs/design/physics-2d-contract.md",
       "unitPrefix": "q",
       "currentUnitCount": 20,
-      "currentUnitsSha256": "03f863faff4efb998d294f26c7bee9e8a5fe5db66ecc2a287e50bfe34d955ed9",
+      "currentUnitsSha256": "266a283aff379df1aeba9aeb6906cc8cf6dd5ca82234b13fc465d1a806d0d16c",
       "approvalRecordId": "physics-2d-quality",
       "mappings": [
         {
@@ -14585,7 +14798,7 @@
       "path": "docs/design/render-layer-and-three-contract.md",
       "unitPrefix": "t",
       "currentUnitCount": 31,
-      "currentUnitsSha256": "11fc9259606a9a5f63ec1ebe7959091599114d6f2ff73de60d9f013d69ccc37b",
+      "currentUnitsSha256": "7da4e9c2576f5c830e142acf839cdc6d31945e7a75c3350b0f787c11adff1a0f",
       "approvalRecordId": "three-full-pivot",
       "mappings": [
         {
@@ -14661,6 +14874,105 @@
             "unitIds": ["p0034", "p0038", "p0039"]
           },
           "sharedAnchors": ["three"]
+        }
+      ]
+    },
+    {
+      "path": "docs/design/text-geometry-contract.md",
+      "unitPrefix": "x",
+      "currentUnitCount": 13,
+      "currentUnitsSha256": "68ac483ef09eb0a8f7e4cca9665deb9d947cf8aabd066f525b29002705608907",
+      "approvalRecordId": "text-path-geometry",
+      "mappings": [
+        {
+          "id": "package",
+          "currentIds": ["x0001"],
+          "reason": "The text-path-geometry approved design units y0004, y0008, y0009, y0011 authorize package in current units x0001.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0004", "y0008", "y0009", "y0011"]
+          },
+          "sharedAnchors": ["harfbuzz"]
+        },
+        {
+          "id": "loading",
+          "currentIds": ["x0002"],
+          "reason": "The text-path-geometry approved design units y0045, y0051 authorize asynchronous font-byte ownership and lazy loading in current unit x0002.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0045", "y0051"]
+          },
+          "sharedAnchors": ["wasm"]
+        },
+        {
+          "id": "ownership",
+          "currentIds": ["x0003", "x0004"],
+          "reason": "The text-path-geometry approved design units y0031, y0034, y0041, y0044, y0052 authorize ownership in current units x0003, x0004.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0031", "y0034", "y0041", "y0044", "y0052"]
+          },
+          "sharedAnchors": ["dispose"]
+        },
+        {
+          "id": "shaping",
+          "currentIds": ["x0005"],
+          "reason": "The text-path-geometry approved design units y0010, y0035, y0037, y0048 authorize shaping in current units x0005.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0010", "y0035", "y0037", "y0048"]
+          },
+          "sharedAnchors": ["cluster"]
+        },
+        {
+          "id": "outline-conversion",
+          "currentIds": ["x0006"],
+          "reason": "The text-path-geometry approved design units y0027, y0032, y0034, y0036, y0037 authorize outline-conversion in current units x0006.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0027", "y0032", "y0034", "y0036", "y0037"]
+          },
+          "sharedAnchors": ["callbacks"]
+        },
+        {
+          "id": "mutable-results",
+          "currentIds": ["x0007"],
+          "reason": "The text-path-geometry approved design units y0026, y0047, y0049, y0052 authorize mutable-results in current units x0007.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0026", "y0047", "y0049", "y0052"]
+          },
+          "sharedAnchors": ["metadata"]
+        },
+        {
+          "id": "input-limits",
+          "currentIds": ["x0008", "x0009"],
+          "reason": "The text-path-geometry approved design units y0046, y0053, y0054 authorize input-limits in current units x0008, x0009.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0046", "y0053", "y0054"]
+          },
+          "sharedAnchors": ["glyph"]
+        },
+        {
+          "id": "distribution-and-tooling",
+          "currentIds": ["x0010", "x0011"],
+          "reason": "The text-path-geometry approved design units y0011, y0020, y0021, y0022, y0023, y0051 authorize distribution-and-tooling in current units x0010, x0011.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0011", "y0020", "y0021", "y0022", "y0023", "y0051"]
+          },
+          "sharedAnchors": ["wasm"]
+        },
+        {
+          "id": "evidence-and-deferrals",
+          "currentIds": ["x0012", "x0013"],
+          "reason": "The text-path-geometry approved design units y0070, y0071, y0072, y0055 authorize evidence-and-deferrals in current units x0012, x0013.",
+          "approval": {
+            "recordId": "text-path-geometry",
+            "unitIds": ["y0070", "y0071", "y0072", "y0055"]
+          },
+          "sharedAnchors": ["geometry"]
         }
       ]
     }

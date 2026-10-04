@@ -59,7 +59,7 @@ describe('primitive attachment presentation', () => {
         physics={attachment}
         style={{ scaleX: 2, scaleY: 2, filter: [] }}
       >
-        <Rectangle style={{ x: 1, y: 1, width: 5, height: 5, fill: '#ef4444' }} />
+        <Rectangle style={{ left: 1, top: 1, width: 5, height: 5, fill: '#ef4444' }} />
         <Probe />
       </PhysicsGroup>
     ));

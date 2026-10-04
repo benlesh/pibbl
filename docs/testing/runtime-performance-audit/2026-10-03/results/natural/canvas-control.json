@@ -1,0 +1,329 @@
+{
+  "node": "v24.15.0",
+  "browser": "151.0.7922.34",
+  "meaning": "Platform-only control, no CRC/WASM. Alternating512x512 publication surfaces updated from ImageData, CanvasPattern fill versus drawImage. Natural GC during60s each. Allocation/rendering hypotheses only.",
+  "samples": [
+    {
+      "method": "pattern",
+      "seconds": 15,
+      "observation": {
+        "frames": 1801,
+        "heap": {
+          "used": 1957877,
+          "total": 3407933
+        }
+      },
+      "rss": {
+        "totalKiB": 2177936,
+        "processes": [
+          [
+            65846,
+            65835,
+            80832
+          ],
+          [
+            65847,
+            65846,
+            59536
+          ],
+          [
+            65848,
+            65846,
+            38320
+          ],
+          [
+            65850,
+            65846,
+            1999248
+          ]
+        ]
+      },
+      "metrics": {
+        "JSHeapUsedSize": 942616,
+        "JSHeapTotalSize": 2621440
+      }
+    },
+    {
+      "method": "pattern",
+      "seconds": 30,
+      "observation": {
+        "frames": 3605,
+        "heap": {
+          "used": 2070145,
+          "total": 3670077
+        }
+      },
+      "rss": {
+        "totalKiB": 4088432,
+        "processes": [
+          [
+            65846,
+            65835,
+            80848
+          ],
+          [
+            65847,
+            65846,
+            59536
+          ],
+          [
+            65848,
+            65846,
+            38336
+          ],
+          [
+            65850,
+            65846,
+            3909712
+          ]
+        ]
+      },
+      "metrics": {
+        "JSHeapUsedSize": 1028200,
+        "JSHeapTotalSize": 2621440
+      }
+    },
+    {
+      "method": "pattern",
+      "seconds": 45,
+      "observation": {
+        "frames": 5401,
+        "heap": {
+          "used": 1790957,
+          "total": 2162749
+        }
+      },
+      "rss": {
+        "totalKiB": 817568,
+        "processes": [
+          [
+            65846,
+            65835,
+            80848
+          ],
+          [
+            65847,
+            65846,
+            59552
+          ],
+          [
+            65848,
+            65846,
+            38336
+          ],
+          [
+            65850,
+            65846,
+            638832
+          ]
+        ]
+      },
+      "metrics": {
+        "JSHeapUsedSize": 749240,
+        "JSHeapTotalSize": 1835008
+      }
+    },
+    {
+      "method": "pattern",
+      "seconds": 60,
+      "observation": {
+        "frames": 7205,
+        "heap": {
+          "used": 1877853,
+          "total": 2162749
+        }
+      },
+      "rss": {
+        "totalKiB": 2724816,
+        "processes": [
+          [
+            65846,
+            65835,
+            80960
+          ],
+          [
+            65847,
+            65846,
+            59648
+          ],
+          [
+            65848,
+            65846,
+            38496
+          ],
+          [
+            65850,
+            65846,
+            2545712
+          ]
+        ]
+      },
+      "metrics": {
+        "JSHeapUsedSize": 835532,
+        "JSHeapTotalSize": 1835008
+      }
+    },
+    {
+      "method": "drawImage",
+      "seconds": 15,
+      "observation": {
+        "frames": 1800,
+        "heap": {
+          "used": 1876177,
+          "total": 3407933
+        }
+      },
+      "rss": {
+        "totalKiB": 277200,
+        "processes": [
+          [
+            65846,
+            65835,
+            82768
+          ],
+          [
+            65847,
+            65846,
+            60032
+          ],
+          [
+            65848,
+            65846,
+            40496
+          ],
+          [
+            66027,
+            65846,
+            93904
+          ]
+        ]
+      },
+      "metrics": {
+        "JSHeapUsedSize": 860832,
+        "JSHeapTotalSize": 2359296
+      }
+    },
+    {
+      "method": "drawImage",
+      "seconds": 30,
+      "observation": {
+        "frames": 3604,
+        "heap": {
+          "used": 1927801,
+          "total": 3407933
+        }
+      },
+      "rss": {
+        "totalKiB": 278528,
+        "processes": [
+          [
+            65846,
+            65835,
+            82784
+          ],
+          [
+            65847,
+            65846,
+            60032
+          ],
+          [
+            65848,
+            65846,
+            40496
+          ],
+          [
+            66027,
+            65846,
+            95216
+          ]
+        ]
+      },
+      "metrics": {
+        "JSHeapUsedSize": 885784,
+        "JSHeapTotalSize": 2359296
+      }
+    },
+    {
+      "method": "drawImage",
+      "seconds": 45,
+      "observation": {
+        "frames": 5408,
+        "heap": {
+          "used": 1956677,
+          "total": 3407933
+        }
+      },
+      "rss": {
+        "totalKiB": 279616,
+        "processes": [
+          [
+            65846,
+            65835,
+            82800
+          ],
+          [
+            65847,
+            65846,
+            60032
+          ],
+          [
+            65848,
+            65846,
+            40496
+          ],
+          [
+            66027,
+            65846,
+            96288
+          ]
+        ]
+      },
+      "metrics": {
+        "JSHeapUsedSize": 914360,
+        "JSHeapTotalSize": 2359296
+      }
+    },
+    {
+      "method": "drawImage",
+      "seconds": 60,
+      "observation": {
+        "frames": 7211,
+        "heap": {
+          "used": 1981389,
+          "total": 3670077
+        }
+      },
+      "rss": {
+        "totalKiB": 282032,
+        "processes": [
+          [
+            65846,
+            65835,
+            83008
+          ],
+          [
+            65847,
+            65846,
+            61040
+          ],
+          [
+            65848,
+            65846,
+            40496
+          ],
+          [
+            66027,
+            65846,
+            97488
+          ]
+        ]
+      },
+      "metrics": {
+        "JSHeapUsedSize": 938972,
+        "JSHeapTotalSize": 2621440
+      }
+    }
+  ],
+  "errors": [],
+  "complete": true
+}

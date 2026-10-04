@@ -267,8 +267,8 @@ describe('shared event lifecycle laboratory', () => {
     const createTarget = (label: 'first' | 'middle' | 'last') => createElement(Rectangle, {
       key: label,
       style: {
-        x: label === 'first' ? 0 : label === 'middle' ? 80 : 160,
-        y: 0,
+        left: label === 'first' ? 0 : label === 'middle' ? 80 : 160,
+        top: 0,
         width: 60,
         height: 60,
         fill: '#2563eb',
@@ -471,7 +471,7 @@ describe('shared event lifecycle laboratory', () => {
     const CaptureLayerScene = ({ show }: { show: boolean }) =>
       show ? createElement(Layer, {
         children: createElement(Rectangle, {
-          style: { x: 0, y: 0, width: 50, height: 50, fill: '#2563eb' },
+          style: { left: 0, top: 0, width: 50, height: 50, fill: '#2563eb' },
           onPointerDown: event => {
             event.currentTarget.setPointerCapture(event.pointerId);
           },

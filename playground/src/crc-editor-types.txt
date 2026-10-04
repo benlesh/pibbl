@@ -78,6 +78,9 @@ export function envelopeTransform(options: EnvelopeTransformOptions): PathTransf
   }
   export function toPath2D(geometry: PathGeometry): Path2D;
   export function toSvgPathData(geometry: PathGeometry): string;
+  export interface FlattenPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+  export interface SimplifyPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+  export interface SubdividePathOptions { readonly divisions: number; readonly maxSegments?: number }
   export interface PathBendFrame { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
   export interface PathBendArc { readonly cx: number; readonly cy: number; readonly radius: number; readonly startAngle: number; readonly sweep: number }
   export type PathBendAlign = 'start' | 'center' | 'end';
@@ -97,6 +100,8 @@ export function envelopeTransform(options: EnvelopeTransformOptions): PathTransf
   export interface FlattenPathOptions { readonly tolerance: number; readonly maxSegments?: number }
   export interface SimplifyPathOptions { readonly tolerance: number; readonly maxSegments?: number }
   export interface SubdividePathOptions { readonly divisions: number; readonly maxSegments?: number }
+  export function flattenPathWang(path: PathGeometry, options: Readonly<FlattenPathOptions>): PathGeometry;
+  export function simplifyPathRadial(path: PathGeometry, options: Readonly<SimplifyPathOptions>): PathGeometry;
   export function flattenPath(path: PathGeometry, options: Readonly<FlattenPathOptions>): PathGeometry;
   export function simplifyPath(path: PathGeometry, options: Readonly<SimplifyPathOptions>): PathGeometry;
   export function subdividePath(path: PathGeometry, options: Readonly<SubdividePathOptions>): PathGeometry;
@@ -356,7 +361,7 @@ export function envelopeTransform(options: EnvelopeTransformOptions): PathTransf
   export interface PaintStyle extends SystemStyle { fill?: FillStyle; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number }
   export interface CursorStyle extends SystemStyle { cursor?: string }
   export interface PathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: Path2D | PathGeometry; lineInteractionWidth?: number }
-  export interface RectStyle extends RoundedCornerStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; width: Length; height: Length; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
+  export interface RectStyle extends RoundedCornerStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { width: Length; height: Length; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export interface CircleStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; lineInteractionWidth?: number }
   export interface EllipseStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radiusX: Exclude<Length, 'auto'>; radiusY: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; rotation?: number; lineInteractionWidth?: number }
   export interface ArcStyle extends Omit<PaintStyle, 'fill'>, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; startAngle: number; endAngle: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; counterclockwise?: boolean; lineInteractionWidth?: number }
@@ -371,11 +376,42 @@ export function envelopeTransform(options: EnvelopeTransformOptions): PathTransf
   export interface HorizontalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { y: Exclude<Length, 'auto'>; x1?: Exclude<Length, 'auto'>; x2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export interface VerticalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { x: Exclude<Length, 'auto'>; y1?: Exclude<Length, 'auto'>; y2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export type TextFit = 'visible' | 'squish' | 'ellipsis' | 'clip';
-  export interface TextStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; lineHeight?: number; wrap?: boolean; fit?: TextFit; font?: string; textBaseline?: CanvasTextBaseline; textAlign?: CanvasTextAlign }
-  export interface ImgStyle extends CursorStyle, BoxStyle, LayoutItemStyle { src: string; x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment }
+  export interface TextStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { lineHeight?: number; wrap?: boolean; fit?: TextFit; font?: string; textBaseline?: CanvasTextBaseline; textAlign?: CanvasTextAlign }
+  export interface ImgStyle extends CursorStyle, BoxStyle, LayoutItemStyle { src: string; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment }
   export interface GStyle extends BoxStyle, LayoutItemStyle { scaleX?: number; scaleY?: number; rotationDegrees?: number; rotationOrigin?: [number, number]; translateX?: number; translateY?: number; skewX?: number; skewY?: number }
   export interface ClipStyle extends BoxStyle, LayoutItemStyle { d: Path2D | PathGeometry; fillRule?: CanvasFillRule }
   export interface LayerStyle extends BoxStyle, LayoutItemStyle {}
+
+  export interface CRCManipulationBox { readonly left: number; readonly top: number; readonly width: number; readonly height: number }
+  export interface CRCManipulationPoint { readonly x: number; readonly y: number }
+  export type CRCManipulationWhen = 'always' | 'shift' | 'alt' | 'ctrl' | 'meta';
+  export type CRCResizePosition = 'top-left' | 'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left';
+  export interface CRCManipulationMoveInput { readonly enabled?: SignalValue<boolean>; readonly axis?: 'both' | 'x' | 'y'; readonly bounds?: CRCManipulationBox; readonly snap?: Readonly<{ enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number | Readonly<{ x: number; y: number }>; origin?: Readonly<{ x?: number; y?: number }> }> }
+  export type CRCManipulationResizeInput = Readonly<{ readonly enabled?: SignalValue<boolean>; readonly minWidth?: number; readonly minHeight?: number; readonly maxWidth?: number; readonly maxHeight?: number; readonly bounds?: CRCManipulationBox; readonly aspectRatio?: Readonly<{ value: 'initial' | number; when?: CRCManipulationWhen }>; readonly snap?: Readonly<{ target?: 'size'; enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number | Readonly<{ width: number; height: number }> }> }> | Readonly<{ readonly enabled?: SignalValue<boolean>; readonly minWidth?: number; readonly minHeight?: number; readonly maxWidth?: number; readonly maxHeight?: number; readonly bounds?: CRCManipulationBox; readonly aspectRatio?: Readonly<{ value: 'initial' | number; when?: CRCManipulationWhen }>; readonly snap?: Readonly<{ target: 'grid'; enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number | Readonly<{ x: number; y: number }>; origin?: Readonly<{ x?: number; y?: number }> }> }>;
+  export interface CRCManipulationRotateInput { readonly enabled?: SignalValue<boolean>; readonly snap?: Readonly<{ enabled?: SignalValue<boolean>; when?: CRCManipulationWhen; step: number; origin?: number }> }
+  export interface CRCRotationHandleProps { readonly controller: CRCManipulationController; readonly hitSize?: number; readonly readoutUnit?: "degrees" | "radians"; readonly formatReadout?: (value: { readonly rotation: number }) => string; readonly children?: CRCNode }
+  export interface CRCManipulableProps extends Pick<CRCManipulationOptions, 'rotation' | 'onStart' | 'onChange' | 'onCommit' | 'onCancel'> { readonly style: WritableSignal<CRCManipulationBox>; readonly draggable?: boolean | CRCManipulationMoveInput; readonly dragHandle?: Omit<CRCDragHandleProps, "controller" | "children"> & { readonly style?: CRCDragHandleStyle }; readonly resizable?: boolean | CRCManipulationResizeInput; readonly rotatable?: boolean | CRCManipulationRotateInput; readonly resizeHandles?: CRCResizeHandlesProps['positions'] | Omit<CRCResizeHandlesProps, 'controller'>; readonly rotationHandle?: Omit<CRCRotationHandleProps, 'controller' | 'children'> & { readonly style?: CRCRotationHandleStyle }; readonly children?: CRCNode }
+  export interface CRCManipulationGeometry { readonly box: CRCManipulationBox; readonly rotation: number }
+  export type CRCManipulationOperation = 'move' | 'resize' | 'rotate';
+  export type CRCManipulationCancelReason = 'explicit' | 'escape' | 'pointer-cancel' | 'capture-lost' | 'disabled' | 'external-change' | 'coordinate-space-changed' | 'constraints-unsatisfiable';
+  export interface CRCManipulationActive { readonly operation: CRCManipulationOperation; readonly handle: CRCResizePosition | null; readonly pointerId: number }
+  export interface CRCManipulationSnapshot { readonly operation: CRCManipulationOperation; readonly handle: CRCResizePosition | null; readonly initial: CRCManipulationGeometry; readonly proposed: CRCManipulationGeometry; readonly applied: CRCManipulationGeometry; readonly snapActive: boolean; readonly snapSatisfied: boolean }
+  export interface CRCManipulationEvent extends CRCManipulationSnapshot { readonly before: CRCManipulationGeometry; readonly after: CRCManipulationGeometry }
+  export interface CRCManipulationCommitEvent extends CRCManipulationEvent { readonly changed: boolean }
+  export interface CRCManipulationCancelEvent extends CRCManipulationEvent { readonly reason: CRCManipulationCancelReason }
+  export interface CRCManipulationOptions { readonly box: WritableSignal<CRCManipulationBox>; readonly rotation?: WritableSignal<number>; readonly move?: CRCManipulationMoveInput; readonly resize?: CRCManipulationResizeInput; readonly rotate?: CRCManipulationRotateInput; readonly onStart?: (event: CRCManipulationEvent) => void; readonly onChange?: (event: CRCManipulationEvent) => void; readonly onCommit?: (event: CRCManipulationCommitEvent) => void; readonly onCancel?: (event: CRCManipulationCancelEvent) => void }
+  export interface CRCManipulationFrameProps { readonly controller: CRCManipulationController; readonly style: WritableSignal<CRCManipulationBox>; readonly children?: CRCNode }
+  export interface CRCManipulationController { readonly active: Signal<CRCManipulationActive | null>; readonly snapshot: Signal<CRCManipulationSnapshot | null>; readonly frameProps: CRCManipulationFrameProps; cancel(): void }
+  export interface CRCDragHandleProps { readonly formatReadout?: (value: {readonly left: number; readonly top: number}) => string; readonly controller: CRCManipulationController; readonly children?: CRCNode }
+  export interface CRCDragHandleStyle extends GStyle { readonly readout?: false | true | CRCManipulationReadoutStyle; }
+  export interface CRCManipulationReadoutStateStyle { readonly gap?: number; readonly font?: string; readonly fill?: string; readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number; readonly visible?: boolean; }
+  export interface CRCManipulationReadoutStyle extends CRCManipulationReadoutStateStyle { readonly inactive?: CRCManipulationReadoutStateStyle; readonly focused?: CRCManipulationReadoutStateStyle; readonly active?: CRCManipulationReadoutStateStyle; }
+  export interface CRCResizeHandleStyle extends SystemStyle { readonly readout?: false | true | CRCManipulationReadoutStyle; }
+  export interface CRCRotationConnectorStyle { readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number; }
+  export interface CRCRotationArcStyle { readonly color?: string; readonly sweep?: number; readonly strokeWidth?: number; readonly opacity?: number; }
+  export interface CRCRotationHandleStyle extends SystemStyle { readonly connector?: false | true | CRCRotationConnectorStyle; readonly arc?: false | true | CRCRotationArcStyle; readonly readout?: false | true | CRCManipulationReadoutStyle; }
+  export interface CRCResizeHandleProps { readonly controller: CRCManipulationController; readonly position: CRCResizePosition; readonly hitSize?: number; readonly formatReadout?: (value: { readonly width: number; readonly height: number }) => string; readonly children?: CRCNode }
+  export interface CRCResizeHandlesProps { readonly controller: CRCManipulationController; readonly positions?: 'corners' | 'edges-and-corners' | readonly CRCResizePosition[]; readonly hitSize?: number; readonly style?: CRCResizeHandleStyle; readonly formatReadout?: CRCResizeHandleProps['formatReadout'] }
 
   export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
   export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
@@ -578,6 +614,13 @@ export function envelopeTransform(options: EnvelopeTransformOptions): PathTransf
   export const Flow: CRCPrimitiveComponent<FlowProps, PrimitiveInput<FlowProps, FlowStyle>>;
   export const Flex: CRCPrimitiveComponent<FlexProps, PrimitiveInput<FlexProps, FlexStyle>>;
   export const Grid: CRCPrimitiveComponent<GridProps, PrimitiveInput<GridProps, GridStyle>>;
+  export const ManipulationFrame: CRCPrimitiveComponent<Pick<CRCManipulationFrameProps, 'controller'>, PrimitiveInput<Pick<CRCManipulationFrameProps, 'controller'>, SystemStyle & CRCManipulationBox>>;
+  export const DragHandle: CRCPrimitiveComponent<CRCDragHandleProps, PrimitiveInput<CRCDragHandleProps, CRCDragHandleStyle>>;
+  export const ResizeHandle: CRCPrimitiveComponent<CRCResizeHandleProps, PrimitiveInput<CRCResizeHandleProps, CRCResizeHandleStyle>>;
+  export function ResizeHandles(props: CRCResizeHandlesProps): CRCNode;
+  export const RotationHandle: CRCPrimitiveComponent<CRCRotationHandleProps, PrimitiveInput<CRCRotationHandleProps, CRCRotationHandleStyle>>;
+  export function Manipulable(props: CRCManipulableProps): CRCNode;
+  export function degrees(value: number): number;
   export function createArcPath(options: Readonly<ArcPathOptions>): Path2D;
   export function createCirclePath(options: Readonly<CirclePathOptions>): Path2D;
   export function createEllipsePath(options: Readonly<EllipsePathOptions>): Path2D;
@@ -596,6 +639,7 @@ export function envelopeTransform(options: EnvelopeTransformOptions): PathTransf
   export function resolveBox(style: Readonly<BoxStyle>, constraints: Readonly<Constraints>, context?: Readonly<LayoutDiagnosticContext>): ResolvedBoxStyle;
   export function layoutDiagnostic(input: LayoutDiagnosticInput): LayoutDiagnostic;
   export function useLayoutBox(): Readonly<LayoutBox>;
+  export function useManipulation(options: CRCManipulationOptions): CRCManipulationController;
   export function useCanvasContext(): RenderingContext2D;
   export function useConst<T>(create: () => T): T;
   export function useComputed<T>(compute: () => T, dependencies?: readonly unknown[], options?: SignalOptions<T>): Signal<T>;
@@ -833,6 +877,8 @@ export function envelopeTransform(options: EnvelopeTransformOptions): PathTransf
   export function queryAabb2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, bounds: CRCPhysicsAabb2D, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
   export function queryPoint2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, point: CRCPhysicsVector2, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
 
+  export function physicsObstacles2D(world: CRCPhysicsWorldHandle2D): Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array; ellipses: Float64Array; polygons: Float64Array }> }>;
+
 /* @crc-studio-module @crc/core/physics/3d/geometry */
   export type CRCPhysicsVector3 = readonly [x: number, y: number, z: number];
   export type CRCPhysicsQuaternion = readonly [x: number, y: number, z: number, w: number];
@@ -877,6 +923,7 @@ export function envelopeTransform(options: EnvelopeTransformOptions): PathTransf
     LayoutBox,
     LayoutItemStyle,
     Signal,
+    SignalValue,
     SystemStyle,
   } from '@crc/core';
 
@@ -1000,7 +1047,7 @@ export function envelopeTransform(options: EnvelopeTransformOptions): PathTransf
   }
 
   export type CRCParticleSystemStatus = 'idle' | 'scheduled' | 'running' | 'paused' | 'draining' | 'finished' | 'disposed';
-  export type CRCParticleExecution = 'unbound' | 'stateless-canvas';
+  export type CRCParticleExecution = 'unbound' | 'stateless-canvas' | 'flow-canvas';
   export interface CRCParticleStartEvent { readonly type: 'start' }
   export interface CRCParticleBurstAcceptedEvent { readonly type: 'burst-accepted'; readonly emitter: string; readonly requested: number; readonly accepted: number }
   export interface CRCParticleBurstRejectedEvent { readonly type: 'burst-rejected'; readonly emitter: string; readonly requested: number; readonly accepted: number; readonly reason: 'capacity' | 'paused' | 'stopped' | 'disposed' }
@@ -1013,6 +1060,7 @@ export function envelopeTransform(options: EnvelopeTransformOptions): PathTransf
     | Readonly<{ type: 'asset-invalid' | 'binding-conflict' | 'backend-mismatch'; message: string; effect?: string; emitter?: string }>
     | Readonly<{ type: 'capacity-rejected' | 'execution-failed' | 'disposed'; message: string; effect?: string; emitter?: string }>;
   export interface CRCParticleSystemOptions {
+    readonly flow?: CRCFlowField2D;
     readonly autoplay?: boolean;
     readonly seed?: number;
     readonly debugName?: string;
@@ -1083,6 +1131,30 @@ export function envelopeTransform(options: EnvelopeTransformOptions): PathTransf
     Parameters extends CRCParticleParameterValues,
   >(props: Particles2DProps<EmitterName, Parameters>): CRCNode;
 
+  export interface CRCFlowObstacleBatch2D { readonly revision: number; readonly boxes: Float64Array; readonly ellipses?: Float64Array; readonly polygons?: Float64Array; }
+  export interface CRCFlowObstacleSource2D { read(): CRCFlowObstacleBatch2D; }
+  export interface CRCFlowFieldOptions2D {
+    readonly bounds: Readonly<{ width: number; height: number }>;
+    readonly resolution: readonly [number, number];
+    readonly obstacles?: CRCFlowObstacleSource2D;
+    readonly buoyancy?: number;
+  }
+  declare const flowBrand: unique symbol;
+  export interface CRCFlowField2D {
+    readonly [flowBrand]: true;
+    readonly revision: Signal<number>;
+    sampleBatch(positions: Float32Array, velocities: Float32Array, count: number): void;
+  }
+  export interface CRCFlowSourceOptions2D {
+    readonly position: SignalValue<readonly [number, number]>;
+    readonly radius: SignalValue<number>;
+    readonly acceleration?: SignalValue<readonly [number, number]>;
+    readonly heat?: SignalValue<number>;
+    readonly enabled?: SignalValue<boolean>;
+  }
+  export declare function useFlowField2D(options: CRCFlowFieldOptions2D): CRCFlowField2D;
+  export declare function useFlowSource2D(field: CRCFlowField2D, options: CRCFlowSourceOptions2D): void;
+
 /* @crc-studio-module @crc/three */
   import type * as THREE from 'three';
   import type {
@@ -1137,6 +1209,7 @@ type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : Sig
 export type ScaleId = string | symbol;
 export type LinearDomain = readonly [number, number];
 export type ScaleRange = 'width' | 'height' | readonly [number, number];
+export type BandScaleRange = ScaleRange | { readonly bandwidthOf: ScaleId };
 export type ScaleLayoutStyle = Pick<BoxStyle, 'width' | 'height'> & LayoutItemStyle;
 export interface LinearScaleProps {
   readonly id: ScaleId;
@@ -1147,7 +1220,26 @@ export interface LinearScaleProps {
   readonly style?: SignalValue<SignalStyle<ScaleLayoutStyle>>;
   readonly children?: CRCNode;
 }
-export type ScaleProps = LinearScaleProps;
+export type BandCategory = string | number;
+export type BandDomain = readonly BandCategory[];
+export interface BandScaleProps extends Omit<LinearScaleProps, "type" | "domain" | "range"> {
+  readonly type: "band";
+  readonly domain: SignalValue<BandDomain>;
+  readonly range: SignalValue<BandScaleRange>;
+  readonly paddingInner?: SignalValue<number>;
+  readonly paddingOuter?: SignalValue<number>;
+}
+export type ScaleProps = LinearScaleProps | BandScaleProps;
+export interface ResolvedBandScale {
+  readonly type: "band";
+  readonly domain: BandDomain;
+  readonly range: readonly [number, number];
+  readonly frame: Readonly<LayoutBox>;
+  readonly bandwidth: number;
+  readonly step: number;
+  map(value: BandCategory): number | undefined;
+}
+
 export interface ResolvedLinearScale {
   readonly type: 'linear';
   readonly domain: LinearDomain;
@@ -1157,17 +1249,21 @@ export interface ResolvedLinearScale {
   invert(pixel: number): number;
   ticks(count?: number): readonly number[];
 }
-export type ResolvedScale = ResolvedLinearScale;
+export type ResolvedScale = ResolvedLinearScale | ResolvedBandScale;
 
 import type { CRCEventHandlers, CRCEventParticipationOptions, FillStyle, StrokeStyle } from '@crc/core';
 export interface AxisStyle { readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly fill?: FillStyle; readonly font?: string; readonly opacity?: number }
-export interface AxisProps {
+interface AxisBaseProps {
   readonly scale: ScaleId;
-  readonly position: 'bottom' | 'left';
-  readonly tickCount?: SignalValue<number>;
-  readonly tickFormat?: (value: number, index: number) => string;
+  readonly position: "bottom" | "left" | "top" | "right";
+  readonly tickFormat?: (value: number | string, index: number) => string;
   readonly style?: SignalValue<SignalStyle<AxisStyle>>;
 }
+export type AxisProps = AxisBaseProps & (
+  | { readonly tickValues: SignalValue<readonly (number | string)[]>; readonly tickCount?: never }
+  | { readonly tickValues?: never; readonly tickCount?: SignalValue<number> }
+);
+
 export type LineCoordinate = number | null | undefined;
 export type LineAccessor<D> = { [K in keyof D]-?: D[K] extends LineCoordinate ? K : never }[keyof D] | ((datum: D, index: number, data: readonly D[]) => LineCoordinate);
 export type LineCurve = 'linear';
@@ -1186,7 +1282,8 @@ export type ScaleAdjustProps = ScaleAdjustX & ScaleAdjustY & { readonly children
 
 import type { Signal } from "@crc/core";
 export declare function Scale(props: ScaleProps): CRCNode;
-export declare function useScale(id: ScaleId): Signal<ResolvedScale>;
+export declare function useScale(id: ScaleId, type?: "linear"): Signal<ResolvedLinearScale>;
+export declare function useScale(id: ScaleId, type: "band"): Signal<ResolvedBandScale>;
 export declare function Axis(props: AxisProps): CRCNode;
 export declare function LineSeries<D>(props: LineSeriesProps<D>): CRCNode;
 export declare function ScaleAdjust(props: ScaleAdjustProps): CRCNode;
@@ -1368,21 +1465,156 @@ export interface AnchoredLayoutProps<T extends AnchoredItem> {
 
 export declare function AnchoredLayout<T extends AnchoredItem>(props: AnchoredLayoutProps<T>): CRCNode;
 
+export type BarCategoryAccessor<D> =
+  | { [K in keyof D]-?: D[K] extends BandCategory | null | undefined ? K : never }[keyof D]
+  | ((datum: D, index: number, data: readonly D[]) => BandCategory | null | undefined);
+export interface BarThresholdFill { readonly type: "threshold"; readonly thresholds: readonly number[]; readonly colors: readonly string[]; }
+export interface BarSeriesStyle {
+  readonly bandwidth?: number | "auto";
+  readonly fill?: FillStyle | BarThresholdFill;
+  readonly stroke?: StrokeStyle;
+  readonly strokeWidth?: number;
+  readonly opacity?: number;
+  readonly cursor?: string;
+}
+export type BarStyleResolver<D> = (datum: D, index: number, data: readonly D[]) => BarSeriesStyle;
+interface BarSeriesBaseProps<D> extends CRCEventHandlers, CRCEventParticipationOptions {
+  readonly data: SignalValue<readonly D[]>;
+  readonly orientation?: "vertical" | "horizontal";
+  readonly category: BarCategoryAccessor<D>;
+  readonly categoryScale: ScaleId;
+  readonly valueScale: ScaleId;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  readonly style?: SignalValue<SignalStyle<BarSeriesStyle> | BarStyleResolver<D>>;
+}
+export type BarSeriesProps<D> = BarSeriesBaseProps<D> & (
+    | { readonly value: LineAccessor<D>; readonly baseline?: SignalValue<number>; readonly valueStart?: never; readonly valueEnd?: never }
+    | { readonly value?: never; readonly baseline?: never; readonly valueStart: LineAccessor<D>; readonly valueEnd: LineAccessor<D> }
+  ) & ({ readonly group: BarCategoryAccessor<D>; readonly groupScale: ScaleId } | { readonly group?: never; readonly groupScale?: never });
+export declare function BarSeries<D>(props: BarSeriesProps<D>): CRCNode;
+
+export interface PieOptions<D> {
+  readonly value: LineAccessor<D>;
+  readonly keyBy?: PlotKeyAccessor<D>;
+}
+export interface PieSliceGeometry<D> {
+  readonly datum: D;
+  readonly index: number;
+  readonly key: string;
+  readonly value: number;
+  readonly fraction: number;
+  readonly startAngle: number;
+  readonly endAngle: number;
+}
+export declare function pieSlices<D>(data: readonly D[], options: PieOptions<D>): readonly PieSliceGeometry<D>[];
+
+import type { WedgeProps, WedgeStyle } from "@crc/core";
+export type PieLabelPlacement = "inside" | "outside" | "auto";
+export type PieLabelLayout = Readonly<{
+  status: "hidden";
+  reason: "empty" | "inside-fit" | "space";
+  text: string;
+}> | Readonly<{
+  status: "placed";
+  placement: "inside" | "outside";
+  text: string;
+  font: string;
+  x: number; y: number; width: number; height: number;
+  textX: number; textY: number;
+  leader?: readonly (readonly [number, number])[];
+}>;
+export interface PieLayoutSlice<D> extends PieSliceGeometry<D> {
+  readonly cx: number;
+  readonly cy: number;
+  readonly radius: number;
+  readonly innerRadius: number;
+  readonly label?: PieLabelLayout;
+}
+export interface PieLayoutStyle {
+  readonly innerRadius?: number;
+  readonly cx?: number;
+  readonly cy?: number;
+  readonly radius?: number;
+  readonly labelFont?: string;
+  readonly labelGap?: number;
+}
+export interface PieLayoutProps<D> extends PieOptions<D> {
+  readonly revision?: SignalValue<number>;
+  readonly data: SignalValue<readonly D[]>;
+  readonly label?: (slice: PieSliceGeometry<D>) => string;
+  readonly placement?: SignalValue<PieLabelPlacement>;
+  readonly bounds?: SignalValue<HoverBounds>;
+  readonly style?: SignalValue<SignalStyle<PieLayoutStyle>>;
+  readonly children: (slice: PieLayoutSlice<D>) => CRCNode;
+}
+export type PieSliceStyle = Omit<WedgeStyle, "cx" | "cy" | "radius" | "startAngle" | "endAngle" | "counterclockwise">;
+export interface PieSliceProps<D> extends WedgeProps {
+  readonly slice: PieLayoutSlice<D>;
+  readonly style?: SignalValue<SignalStyle<PieSliceStyle>>;
+  readonly children?: CRCNode;
+}
+export interface PieLabelStyle {
+  readonly fill?: FillStyle;
+  readonly leaderStroke?: StrokeStyle;
+  readonly leaderWidth?: number;
+}
+export interface PieLabelProps<D> extends CRCEventHandlers, CRCEventParticipationOptions {
+  readonly slice: PieLayoutSlice<D>;
+  readonly style?: SignalValue<SignalStyle<PieLabelStyle>>;
+}
+
+export declare function PieLayout<D>(props: PieLayoutProps<D>): CRCNode;
+export declare function PieSlice<D>(props: PieSliceProps<D>): CRCNode;
+export declare function PieLabel<D>(props: PieLabelProps<D>): CRCNode;
+
+/* @crc-studio-module @crc/text */
+import { PathGeometry } from '@crc/core';
+
+export interface InkBounds {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+}
+export interface OutlineFont extends Disposable {
+    dispose(): void;
+}
+export interface OutlineFontOptions {
+    signal?: AbortSignal;
+    monochromeFallback?: boolean;
+}
+export interface TextGeometryOptions {
+    fontSize: number;
+    maxSegments?: number;
+    missingGlyphs?: 'error' | 'notdef';
+    direction?: 'ltr' | 'rtl';
+    script?: string;
+    language?: string;
+    features?: Readonly<Record<string, boolean>>;
+}
+export interface TextGlyph {
+    readonly glyphId: number;
+    readonly cluster: number;
+    readonly segmentStart: number;
+    readonly segmentCount: number;
+    readonly x: number;
+    readonly y: number;
+    readonly xAdvance: number;
+    readonly yAdvance: number;
+}
+export interface TextGeometryResult {
+    readonly geometry: PathGeometry;
+    readonly inkBounds: Readonly<InkBounds> | null;
+    readonly advance: Readonly<{
+        x: number;
+        y: number;
+    }>;
+    readonly glyphs: readonly TextGlyph[];
+}
+export declare function loadOutlineFont(source: string | URL | ArrayBuffer | Uint8Array, options?: OutlineFontOptions): Promise<OutlineFont>;
+export declare function createTextGeometry(font: OutlineFont, text: string, options: TextGeometryOptions): TextGeometryResult;
+
 /* @crc-studio-module @crc/core/textures */
-  export {useTexture} from '@crc/core';
-  export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
-  export interface RainDropsOptions { readonly condensation?: number; readonly trailPersistence?: number; readonly trailStrength?: number; readonly irregularity?: number; readonly seed?: number; readonly rainRate?: number; readonly gravity?: number; readonly initialDrops?: number; readonly paused?: boolean; }
-  export type RainDropsMessage = { readonly type: 'finger'; readonly x: number; readonly y: number; readonly radius?: number } | { readonly type: 'release' } | { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'nudge'; readonly x: number; readonly y: number; readonly dx: number; readonly dy: number; readonly radius?: number };
-  export function rainDrops(options?: RainDropsOptions): import('@crc/core').TextureRecipe<RainDropsMessage>;
-  export interface WaterWavesOptions { readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; }
-  export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
-  export function waterWaves(options?: WaterWavesOptions): import('@crc/core').TextureRecipe<WaterWavesMessage>;
-  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
-  export type InkMessage = {readonly type: 'stir'; readonly u: number; readonly v: number; readonly du: number; readonly dv: number; readonly radius?: number} | {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
-  export function marble(options?: MaterialOptions): import('@crc/core').TextureRecipe;
-  export function paper(options?: MaterialOptions): import('@crc/core').TextureRecipe;
-  export function cellular(options?: MaterialOptions): import('@crc/core').TextureRecipe;
-  export function reactionDiffusion(options?: ReactionDiffusionOptions): import('@crc/core').TextureRecipe<InkMessage>;
   export interface ElectricPoint { readonly x: number; readonly y: number; }
   export interface ElectricOptions { readonly seed?: number; readonly branching?: number; readonly glow?: number; }
   export type ElectricControl = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset'; readonly seed?: number };
@@ -1394,6 +1626,14 @@ export declare function AnchoredLayout<T extends AnchoredItem>(props: AnchoredLa
   export type LightningMessage = ElectricControl | { readonly type: 'connect'; readonly id: string; readonly positive: ElectricPoint; readonly negative: ElectricPoint } | { readonly type: 'disconnect'; readonly id: string } | { readonly type: 'configure'; readonly positive?: ElectricPoint; readonly negative?: ElectricPoint; readonly edge?: LightningOptions['edge']; readonly active?: boolean; readonly branching?: number; readonly glow?: number; readonly frequency?: number };
   export function tendrils(options?: TendrilsOptions): import('@crc/core').TextureRecipe<TendrilsMessage>;
   export function lightning(options?: LightningOptions): import('@crc/core').TextureRecipe<LightningMessage>;
+  export {useTexture} from '@crc/core';
+  export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
+  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
+  export type InkMessage = {readonly type: 'stir'; readonly u: number; readonly v: number; readonly du: number; readonly dv: number; readonly radius?: number} | {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
+  export function marble(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function paper(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function cellular(options?: MaterialOptions): import('@crc/core').TextureRecipe;
+  export function reactionDiffusion(options?: ReactionDiffusionOptions): import('@crc/core').TextureRecipe<InkMessage>;
 import type { CRCComponent, CRCRenderLayerComponentProps } from '@crc/core';
 export type TexturePalette = readonly string[];
 export interface TextureResolution { readonly width: number; readonly height: number; }
@@ -1431,7 +1671,16 @@ export interface ProceduralTextureProps {
   readonly render?: TextureRenderer;
 }
 export const ProceduralTexture: CRCComponent<ProceduralTextureProps & CRCRenderLayerComponentProps>;
-
+  export interface RainDropsOptions { readonly condensation?: number; readonly trailPersistence?: number; readonly trailStrength?: number; readonly irregularity?: number; readonly seed?: number; readonly rainRate?: number; readonly gravity?: number; readonly initialDrops?: number; readonly paused?: boolean; }
+  export type RainDropsMessage = { readonly type: 'finger'; readonly x: number; readonly y: number; readonly radius?: number } | { readonly type: 'release' } | { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'nudge'; readonly x: number; readonly y: number; readonly dx: number; readonly dy: number; readonly radius?: number };
+  export function rainDrops(options?: RainDropsOptions): import('@crc/core').TextureRecipe<RainDropsMessage>;
+export interface WaterWavesOptions { readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; }
+export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
+export function waterWaves(options?: WaterWavesOptions): import('@crc/core').TextureRecipe<WaterWavesMessage>;
+export interface WaterSurfaceObstacle { readonly x: number; readonly y: number; readonly width: number; readonly height: number; }
+export interface WaterSurfaceOptions { readonly viscosity?: number; readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; readonly obstacles?: readonly WaterSurfaceObstacle[]; }
+export type WaterSurfaceMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
+export function waterSurface(options?: WaterSurfaceOptions): import('@crc/core').TextureRecipe<WaterSurfaceMessage>;
 /* @crc-studio-module @crc/core/filters */
 import type { CRCFilter, SignalValue } from '@crc/core';
 export type { CRCFilter } from '@crc/core';
@@ -1455,47 +1704,9 @@ export function invert(options: Readonly<CRCInvertFilterOptions>): CRCFilter;
 export function opacity(options: Readonly<CRCOpacityFilterOptions>): CRCFilter;
 export function saturate(options: Readonly<CRCSaturateFilterOptions>): CRCFilter;
 export function sepia(options: Readonly<CRCSepiaFilterOptions>): CRCFilter;
+
 export interface CRCDisplacementFilterOptions { readonly blurRadius?: SignalValue<number>; readonly map: SignalValue<import('@crc/core').TexturePaint>; readonly strength: SignalValue<number>; readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; }
 export function displacement(options: Readonly<CRCDisplacementFilterOptions>): CRCFilter;
-
-/* @crc-studio-module @crc/text */
-import { PathGeometry } from "@crc/core";
-export interface InkBounds { readonly x: number; readonly y: number; readonly width: number; readonly height: number; }
-
-export interface OutlineFont extends Disposable {
-    dispose(): void;
-}
-export interface OutlineFontOptions {
-    signal?: AbortSignal;
-    monochromeFallback?: boolean;
-}
-export interface TextGeometryOptions {
-    fontSize: number;
-    maxSegments?: number;
-    missingGlyphs?: "error" | "notdef";
-    direction?: "ltr" | "rtl";
-    script?: string;
-    language?: string;
-    features?: Readonly<Record<string, boolean>>;
-}
-export interface TextGlyph {
-    readonly glyphId: number;
-    readonly cluster: number;
-    readonly segmentStart: number;
-    readonly segmentCount: number;
-    readonly x: number;
-    readonly y: number;
-    readonly xAdvance: number;
-    readonly yAdvance: number;
-}
-export interface TextGeometryResult {
-    readonly geometry: PathGeometry;
-    readonly inkBounds: Readonly<InkBounds> | null;
-    readonly advance: Readonly<{
-        x: number;
-        y: number;
-    }>;
-    readonly glyphs: readonly TextGlyph[];
-}
-export declare function loadOutlineFont(source: string | URL | ArrayBuffer | Uint8Array, options?: OutlineFontOptions): Promise<OutlineFont>;
-export declare function createTextGeometry(font: OutlineFont, text: string, options: TextGeometryOptions): TextGeometryResult;
+export type CRCReflectedLightSource = string | import('@crc/core').TexturePaint | HTMLImageElement | ImageBitmap;
+export interface CRCReflectedLightFilterOptions { readonly map: SignalValue<import('@crc/core').TexturePaint>; readonly region: Readonly<{x:number;y:number;width:number;height:number}>; readonly source?: SignalValue<CRCReflectedLightSource>; readonly opacity?: SignalValue<number>; readonly threshold?: SignalValue<number>; readonly softness?: SignalValue<number>; readonly direction?: readonly [number,number]; }
+export function reflectedLight(options: CRCReflectedLightFilterOptions): CRCFilter;

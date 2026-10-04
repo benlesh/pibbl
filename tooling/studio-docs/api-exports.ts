@@ -67,6 +67,7 @@ export const crcPublicEntryPaths = {
   root: fileURLToPath(
     new URL("../../packages/core/src/index.ts", import.meta.url),
   ),
+  text: fileURLToPath(new URL("../../packages/text/src/index.ts", import.meta.url)),
   viz: fileURLToPath(
     new URL("../../packages/core/src/features/viz/index.ts", import.meta.url),
   ),

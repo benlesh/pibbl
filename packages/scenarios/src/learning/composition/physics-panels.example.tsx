@@ -54,17 +54,17 @@ function SimulationPanel({ color }: { color: string }) {
       />
       <Rectangle
         physics={staticBody2D()}
-        style={{ x: 10, y: 185, width: 250, height: 15, fill: "#334155" }}
+        style={{ left: 10, top: 185, width: 250, height: 15, fill: "#334155" }}
       />
       <Rectangle
         physics={staticBody2D()}
         pointerEvents="none"
-        style={{ x: 0, y: 0, width: 10, height: 200, fill: "#334155" }}
+        style={{ left: 0, top: 0, width: 10, height: 200, fill: "#334155" }}
       />
       <Rectangle
         physics={staticBody2D()}
         pointerEvents="none"
-        style={{ x: 260, y: 0, width: 10, height: 200, fill: "#334155" }}
+        style={{ left: 260, top: 0, width: 10, height: 200, fill: "#334155" }}
       />
       {[65, 120, 175].map((x) => (
         <Ball key={x} x={x} color={color} />
@@ -82,8 +82,8 @@ function PhysicsPanels() {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 38,
+          left: 360,
+          top: 38,
           textAlign: "center",
           font: "900 24px Arial",
           fill: "#17211d",
@@ -94,8 +94,8 @@ function PhysicsPanels() {
       <Text
         pointerEvents="none"
         style={{
-          x: 360,
-          y: 63,
+          left: 360,
+          top: 63,
           textAlign: "center",
           font: "14px Arial",
           fill: "#475569",
@@ -118,8 +118,8 @@ function PhysicsPanels() {
       </Group>
       <Rectangle
         style={{
-          x: 115,
-          y: 344,
+          left: 115,
+          top: 344,
           width: 220,
           height: 44,
           fill: "#17211d",
@@ -130,8 +130,8 @@ function PhysicsPanels() {
       <Text
         pointerEvents="none"
         style={{
-          x: 225,
-          y: 371,
+          left: 225,
+          top: 371,
           textAlign: "center",
           font: "700 15px Arial",
           fill: "#ffffff",
@@ -141,8 +141,8 @@ function PhysicsPanels() {
       </Text>
       <Rectangle
         style={{
-          x: 385,
-          y: 344,
+          left: 385,
+          top: 344,
           width: 220,
           height: 44,
           fill: "#17211d",
@@ -153,8 +153,8 @@ function PhysicsPanels() {
       <Text
         pointerEvents="none"
         style={{
-          x: 495,
-          y: 371,
+          left: 495,
+          top: 371,
           textAlign: "center",
           font: "700 15px Arial",
           fill: "#ffffff",

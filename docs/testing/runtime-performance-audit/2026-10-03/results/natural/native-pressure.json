@@ -1,0 +1,1551 @@
+{
+  "baseline": "690bb10a99246b6f5f57df9b0341774209905827",
+  "node": "v24.15.0",
+  "browser": "151.0.7922.34",
+  "meaning": "Separate controlled 512x512 RD active/pause/forced-major-GC/resume test; scalar allocation counters, no object retention by tracker. RSS is browser process-tree sum, not native/GPU allocation proof.",
+  "samples": [
+    {
+      "stage": "active-natural",
+      "seconds": 15,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 1801,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 11007083,
+          "total": 14492115
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 7013452,
+        "JSHeapTotalSize": 10452992
+      },
+      "rss": {
+        "totalKiB": 809680,
+        "processes": [
+          [
+            63231,
+            63230,
+            87472
+          ],
+          [
+            63233,
+            63231,
+            60144
+          ],
+          [
+            63234,
+            63231,
+            54096
+          ],
+          [
+            63240,
+            63231,
+            607968
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "active-natural",
+      "seconds": 30,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 3605,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 10962751,
+          "total": 14510547
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 6923528,
+        "JSHeapTotalSize": 10452992
+      },
+      "rss": {
+        "totalKiB": 436272,
+        "processes": [
+          [
+            63231,
+            63230,
+            87488
+          ],
+          [
+            63233,
+            63231,
+            60160
+          ],
+          [
+            63234,
+            63231,
+            54112
+          ],
+          [
+            63240,
+            63231,
+            234512
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "active-natural",
+      "seconds": 45,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 5408,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 10805279,
+          "total": 14480851
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 6796128,
+        "JSHeapTotalSize": 10452992
+      },
+      "rss": {
+        "totalKiB": 823936,
+        "processes": [
+          [
+            63231,
+            63230,
+            87488
+          ],
+          [
+            63233,
+            63231,
+            60160
+          ],
+          [
+            63234,
+            63231,
+            54112
+          ],
+          [
+            63240,
+            63231,
+            622176
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "active-natural",
+      "seconds": 60,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 7212,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 12802815,
+          "total": 15930835
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 8661348,
+        "JSHeapTotalSize": 11763712
+      },
+      "rss": {
+        "totalKiB": 551328,
+        "processes": [
+          [
+            63231,
+            63230,
+            87632
+          ],
+          [
+            63233,
+            63231,
+            60240
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            349216
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "active-natural",
+      "seconds": 75,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 9016,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 12571675,
+          "total": 17730003
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 8458644,
+        "JSHeapTotalSize": 13598720
+      },
+      "rss": {
+        "totalKiB": 972064,
+        "processes": [
+          [
+            63231,
+            63230,
+            87632
+          ],
+          [
+            63233,
+            63231,
+            60256
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            769936
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "active-natural",
+      "seconds": 90,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 10814,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 9850623,
+          "total": 17579475
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 5888136,
+        "JSHeapTotalSize": 13598720
+      },
+      "rss": {
+        "totalKiB": 594016,
+        "processes": [
+          [
+            63231,
+            63230,
+            87632
+          ],
+          [
+            63233,
+            63231,
+            60256
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            391888
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "active-natural",
+      "seconds": 105,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 12617,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 12530439,
+          "total": 17730003
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 8417408,
+        "JSHeapTotalSize": 13598720
+      },
+      "rss": {
+        "totalKiB": 981696,
+        "processes": [
+          [
+            63231,
+            63230,
+            87632
+          ],
+          [
+            63233,
+            63231,
+            60256
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            779568
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "active-natural",
+      "seconds": 120,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 14417,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 9933287,
+          "total": 17583571
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 5961808,
+        "JSHeapTotalSize": 13598720
+      },
+      "rss": {
+        "totalKiB": 610208,
+        "processes": [
+          [
+            63231,
+            63230,
+            87872
+          ],
+          [
+            63233,
+            63231,
+            61296
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            406800
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "active-natural",
+      "seconds": 135,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 16218,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 12469411,
+          "total": 17731027
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 8363812,
+        "JSHeapTotalSize": 13598720
+      },
+      "rss": {
+        "totalKiB": 996816,
+        "processes": [
+          [
+            63231,
+            63230,
+            87888
+          ],
+          [
+            63233,
+            63231,
+            61312
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            793376
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "active-natural",
+      "seconds": 150,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 18022,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 11013623,
+          "total": 17908179
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 6984780,
+        "JSHeapTotalSize": 13860864
+      },
+      "rss": {
+        "totalKiB": 691392,
+        "processes": [
+          [
+            63231,
+            63230,
+            87888
+          ],
+          [
+            63233,
+            63231,
+            61312
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            487952
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "active-natural",
+      "seconds": 165,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 19825,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 13536039,
+          "total": 18065875
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 9349336,
+        "JSHeapTotalSize": 13860864
+      },
+      "rss": {
+        "totalKiB": 1104320,
+        "processes": [
+          [
+            63231,
+            63230,
+            87888
+          ],
+          [
+            63233,
+            63231,
+            61312
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            900880
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "active-natural",
+      "seconds": 180,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 21629,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 12307171,
+          "total": 21378515
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 8215400,
+        "JSHeapTotalSize": 17268736
+      },
+      "rss": {
+        "totalKiB": 1015984,
+        "processes": [
+          [
+            63231,
+            63230,
+            87888
+          ],
+          [
+            63233,
+            63231,
+            61312
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            812544
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "paused-natural",
+      "seconds": 15,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 21633,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 0,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 0,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 9490280,
+          "total": 10120656
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 5531632,
+        "JSHeapTotalSize": 6520832
+      },
+      "rss": {
+        "totalKiB": 348864,
+        "processes": [
+          [
+            63231,
+            63230,
+            87888
+          ],
+          [
+            63233,
+            63231,
+            61296
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            145440
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "paused-natural",
+      "seconds": 30,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 21633,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 0,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 0,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 9509932,
+          "total": 10120656
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 5551112,
+        "JSHeapTotalSize": 6520832
+      },
+      "rss": {
+        "totalKiB": 348880,
+        "processes": [
+          [
+            63231,
+            63230,
+            87888
+          ],
+          [
+            63233,
+            63231,
+            61296
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            145456
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "paused-natural",
+      "seconds": 45,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 21633,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 0,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 0,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 9529412,
+          "total": 10120656
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 5571800,
+        "JSHeapTotalSize": 6520832
+      },
+      "rss": {
+        "totalKiB": 348912,
+        "processes": [
+          [
+            63231,
+            63230,
+            87888
+          ],
+          [
+            63233,
+            63231,
+            61296
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            145488
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "paused-forced-GC",
+      "seconds": 0,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 21633,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 0,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 0,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 9477944,
+          "total": 10055120
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 5519296,
+        "JSHeapTotalSize": 6258688
+      },
+      "rss": {
+        "totalKiB": 349008,
+        "processes": [
+          [
+            63231,
+            63230,
+            87888
+          ],
+          [
+            63233,
+            63231,
+            61296
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            145584
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "paused-forced-GC",
+      "seconds": 1,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 21633,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 0,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 0,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 9497596,
+          "total": 10055120
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 5538776,
+        "JSHeapTotalSize": 6258688
+      },
+      "rss": {
+        "totalKiB": 349024,
+        "processes": [
+          [
+            63231,
+            63230,
+            87888
+          ],
+          [
+            63233,
+            63231,
+            61296
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            145600
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "resumed",
+      "seconds": 15,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 23431,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 9951039,
+          "total": 12781011
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 5986900,
+        "JSHeapTotalSize": 8880128
+      },
+      "rss": {
+        "totalKiB": 763552,
+        "processes": [
+          [
+            63231,
+            63230,
+            87888
+          ],
+          [
+            63233,
+            63231,
+            61312
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            560112
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "resumed",
+      "seconds": 30,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 25234,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 10263079,
+          "total": 14385619
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 6268548,
+        "JSHeapTotalSize": 10452992
+      },
+      "rss": {
+        "totalKiB": 516048,
+        "processes": [
+          [
+            63231,
+            63230,
+            87888
+          ],
+          [
+            63233,
+            63231,
+            61312
+          ],
+          [
+            63234,
+            63231,
+            54240
+          ],
+          [
+            63240,
+            63231,
+            312608
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "resumed",
+      "seconds": 45,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 27038,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 11176814,
+          "total": 14428618
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 7137276,
+        "JSHeapTotalSize": 10452992
+      },
+      "rss": {
+        "totalKiB": 904848,
+        "processes": [
+          [
+            63231,
+            63230,
+            87984
+          ],
+          [
+            63233,
+            63231,
+            61312
+          ],
+          [
+            63234,
+            63231,
+            54272
+          ],
+          [
+            63240,
+            63231,
+            701280
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "resumed",
+      "seconds": 60,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 28842,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 10508858,
+          "total": 14401994
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 6495944,
+        "JSHeapTotalSize": 10452992
+      },
+      "rss": {
+        "totalKiB": 535248,
+        "processes": [
+          [
+            63231,
+            63230,
+            87968
+          ],
+          [
+            63233,
+            63231,
+            61312
+          ],
+          [
+            63234,
+            63231,
+            54256
+          ],
+          [
+            63240,
+            63231,
+            331712
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "disposed-natural",
+      "seconds": 1,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 28846,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 0,
+          "advanceParticipants": 0,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 1,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 0,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 10616614,
+          "total": 14406090
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 6599432,
+        "JSHeapTotalSize": 10452992
+      },
+      "rss": {
+        "totalKiB": 536304,
+        "processes": [
+          [
+            63231,
+            63230,
+            87968
+          ],
+          [
+            63233,
+            63231,
+            61296
+          ],
+          [
+            63234,
+            63231,
+            54256
+          ],
+          [
+            63240,
+            63231,
+            332784
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "disposed-forced-GC",
+      "seconds": 0,
+      "observation": {
+        "counts": {
+          "canvases": 3,
+          "wasmMemories": 1,
+          "wasmBytesAllocated": 6684672,
+          "patterns": 28846,
+          "images": 1
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 0,
+          "advanceParticipants": 0,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 1,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 0,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "heap": {
+          "used": 9296075,
+          "total": 10005959
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Nodes": 8,
+        "JSHeapUsedSize": 5337436,
+        "JSHeapTotalSize": 6258688
+      },
+      "rss": {
+        "totalKiB": 338736,
+        "processes": [
+          [
+            63231,
+            63230,
+            87968
+          ],
+          [
+            63233,
+            63231,
+            61296
+          ],
+          [
+            63234,
+            63231,
+            54256
+          ],
+          [
+            63240,
+            63231,
+            135216
+          ]
+        ]
+      }
+    }
+  ],
+  "errors": [],
+  "complete": true
+}

@@ -1,6 +1,6 @@
 # Optional procedural textures decision record
 
-> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+> **Historical status: Approved decision record; it does not define current shipped behavior.**
 
 Recorded 2026-09-30. This records the proposal approved in this conversation and
 the subsequent request for seamless repeated materials. Numerical tuning and

@@ -177,7 +177,7 @@ it("does not paint through a later CRC target", async () => {
       />
       <Rectangle
         onPointerDown={() => clicks++}
-        style={{ x: 0, y: 0, width: 64, height: 80, fill: "#ff0000" }}
+        style={{ left: 0, top: 0, width: 64, height: 80, fill: "#ff0000" }}
       />
     </>,
   );

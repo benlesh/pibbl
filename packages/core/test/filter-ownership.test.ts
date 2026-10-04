@@ -135,7 +135,7 @@ describe("filter surface ownership", () => {
       canvas,
       threeNestedFilters(
         createElement(Rectangle, {
-          style: { x: 4, y: 4, width: 8, height: 8, fill: "blue" },
+          style: { left: 4, top: 4, width: 8, height: 8, fill: "blue" },
         }),
       ),
       { pixelRatio: 1 },
@@ -172,8 +172,8 @@ function oneHundredFilteredSiblings(firstSibling: CRCNode): CRCNode {
         : createElement(Rectangle, {
             key: `filtered-sibling-${index}`,
             style: {
-              x: index % 10,
-              y: Math.floor(index / 10),
+              left: index % 10,
+              top: Math.floor(index / 10),
               width: 1,
               height: 1,
               fill: "red",

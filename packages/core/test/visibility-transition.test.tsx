@@ -13,7 +13,7 @@ it('fades a combined subtree and resolves hide only after its final frame', asyn
   let handle!: CRCVisibilityTransition;
   function Scene() {
     handle = useVisibilityTransition({ initial: true, enter: fade(), exit: fade(), duration: 100 });
-    return <Group style={{ transition: handle.binding }}><Rectangle style={{ width: 100, height: 100, fill: 'red' }} /><Rectangle style={{ x: 25, y: 25, width: 75, height: 75, fill: 'red' }} /></Group>;
+    return <Group style={{ transition: handle.binding }}><Rectangle style={{ width: 100, height: 100, fill: 'red' }} /><Rectangle style={{ left: 25, top: 25, width: 75, height: 75, fill: 'red' }} /></Group>;
   }
   roots.push(crc(canvas, <Scene />)); driver.flush(0);
   const completion = handle.hide(); driver.flush(10); driver.flush(60);
@@ -64,7 +64,7 @@ it('burns arbitrary captured content within a declared region, chars the front, 
   let handle!: CRCVisibilityTransition;
   function Scene() {
     handle = useVisibilityTransition({ enter: embers({ region: { x: 20, y: 20, width: 120, height: 120 }, charDepth: 30, seed: 4, linger: 0 }), duration: 100 });
-    return <Group style={{ transition: handle.binding }}><Rectangle style={{ x: 20, y: 20, width: 120, height: 120, fill: 'white' }} /></Group>;
+    return <Group style={{ transition: handle.binding }}><Rectangle style={{ left: 20, top: 20, width: 120, height: 120, fill: 'white' }} /></Group>;
   }
   roots.push(crc(canvas, <Scene />)); driver.flush(0);
   const context = canvas.getContext('2d')!;
@@ -89,7 +89,7 @@ it('evolves the burn contour at different local rates instead of translating one
   let handle!: CRCVisibilityTransition;
   function Scene() {
     handle = useVisibilityTransition({ enter: embers({ region: { x: 20, y: 20, width: 200, height: 200 }, charDepth: 0, burnWidth: 0, seed: 4, linger: 0 }), duration: 100 });
-    return <Rectangle style={{ x: 20, y: 20, width: 200, height: 200, fill: 'white', transition: handle.binding }} />;
+    return <Rectangle style={{ left: 20, top: 20, width: 200, height: 200, fill: 'white', transition: handle.binding }} />;
   }
   roots.push(crc(canvas, <Scene />)); driver.flush(0);
   void handle.hide(); driver.flush(10);
@@ -118,7 +118,7 @@ it('keeps drifting ash visible after material disappears and completes only afte
   let handle!: CRCVisibilityTransition;
   function Scene() {
     handle = useVisibilityTransition({ enter: embers({ region: { x: 30, y: 80, width: 150, height: 120 }, seed: 4, wind: 30, linger: 300 }), duration: 100 });
-    return <Rectangle style={{ x: 30, y: 80, width: 150, height: 120, fill: 'white', transition: handle.binding }} />;
+    return <Rectangle style={{ left: 30, top: 80, width: 150, height: 120, fill: 'white', transition: handle.binding }} />;
   }
   roots.push(crc(canvas, <Scene />)); driver.flush(0);
   const completion = handle.hide(); let settled = false; void completion.then(() => { settled = true; });
@@ -143,7 +143,7 @@ it('can reverse a lingering exit, force completion, and dispose a pending tail',
   let handle!: CRCVisibilityTransition;
   function Scene() {
     handle = useVisibilityTransition({ enter: embers({ region: { x: 20, y: 20, width: 120, height: 120 }, linger: 300 }), duration: 100 });
-    return <Rectangle style={{ x: 20, y: 20, width: 120, height: 120, fill: 'white', transition: handle.binding }} />;
+    return <Rectangle style={{ left: 20, top: 20, width: 120, height: 120, fill: 'white', transition: handle.binding }} />;
   }
   const root = crc(canvas, <Scene />); roots.push(root); driver.flush(0);
   const exiting = handle.hide(); driver.flush(10); driver.flush(110); driver.flush(120);
@@ -168,7 +168,7 @@ it('reconstructs captured content with a hologram and restores the original mate
   let handle!: CRCVisibilityTransition;
   function Scene() {
     handle = useVisibilityTransition({ initial: false, enter: hologram({ region: { x: 20, y: 20, width: 120, height: 120 }, fog: 0, glitch: 0 }), duration: 100 });
-    return <Rectangle style={{ x: 20, y: 20, width: 120, height: 120, fill: 'red', transition: handle.binding }} />;
+    return <Rectangle style={{ left: 20, top: 20, width: 120, height: 120, fill: 'red', transition: handle.binding }} />;
   }
   roots.push(crc(canvas, <Scene />)); driver.flush(0);
   const context = canvas.getContext('2d')!;
@@ -192,8 +192,8 @@ it('stretches and overexposes arbitrary Bifrost content before restoring its mat
   canvas.style.width = '240px'; canvas.style.height = '240px'; document.body.append(canvas);
   let handle!: CRCVisibilityTransition;
   function Scene() {
-    handle = useVisibilityTransition({ initial: false, enter: bifrost({ region: { x: 90, y: 100, width: 60, height: 80 }, entry: { x: 120, y: -100 } }), duration: 100 });
-    return <Rectangle style={{ x: 90, y: 100, width: 60, height: 80, fill: '#203040', transition: handle.binding }} />;
+    handle = useVisibilityTransition({ initial: false, enter: bifrost({ region: { x: 0, y: 0, width: 60, height: 80 }, entry: { x: 30, y: -200 } }), duration: 100 });
+    return <Rectangle style={{ left: 90, top: 100, width: 60, height: 80, fill: '#203040', transition: handle.binding }} />;
   }
   roots.push(crc(canvas, <Scene />)); driver.flush(0);
   const shown = handle.show(); driver.flush(10); driver.flush(30);
@@ -277,8 +277,8 @@ it('paints one continuous hot burn front across a wide subject', async () => {
   canvas.style.width = '820px'; canvas.style.height = '160px'; document.body.append(canvas);
   let handle!: CRCVisibilityTransition;
   function Scene() {
-    handle = useVisibilityTransition({ enter: embers({ region: { x: 20, y: 20, width: 780, height: 120 }, seed: 4, linger: 0 }), duration: 100 });
-    return <Rectangle style={{ x: 20, y: 20, width: 780, height: 120, fill: 'white', transition: handle.binding }} />;
+    handle = useVisibilityTransition({ enter: embers({ region: { x: 0, y: 0, width: 780, height: 120 }, seed: 4, linger: 0 }), duration: 100 });
+    return <Rectangle style={{ left: 20, top: 20, width: 780, height: 120, fill: 'white', transition: handle.binding }} />;
   }
   roots.push(crc(canvas, <Scene />)); driver.flush(0);
   void handle.hide(); driver.flush(10); driver.flush(60);
@@ -303,7 +303,7 @@ it('moves Bifrost color patches with elapsed transit time independently of revea
   const effect = bifrost({ region: { x: 70, y: 180, width: 100, height: 80 }, entry: { x: 120, y: 0 }, seed: 8 });
   function Scene({ duration }: { duration: number }) {
     handle = useVisibilityTransition({ initial: false, enter: effect, duration });
-    return <Rectangle style={{ x: 70, y: 180, width: 100, height: 80, fill: 'red', transition: handle.binding }} />;
+    return <Rectangle style={{ left: 70, top: 180, width: 100, height: 80, fill: 'red', transition: handle.binding }} />;
   }
   const first = crc(canvas, <Scene duration={1000} />); roots.push(first); driver.flush(0);
   void handle.show(); driver.flush(10); driver.flush(410);
@@ -329,7 +329,7 @@ it('lazily uses a WASM instance for Bifrost calculations and reuses it across fr
   try {
     const effect = bifrost({ region: { x: 50, y: 100, width: 100, height: 80 }, seed: 43 });
     expect(instances).not.toHaveBeenCalled();
-    function Scene() { handle = useVisibilityTransition({ enter: effect, duration: 100 }); return <Rectangle style={{ x: 50, y: 100, width: 100, height: 80, fill: 'red', transition: handle.binding }} />; }
+    function Scene() { handle = useVisibilityTransition({ enter: effect, duration: 100 }); return <Rectangle style={{ left: 50, top: 100, width: 100, height: 80, fill: 'red', transition: handle.binding }} />; }
     roots.push(crc(canvas, <Scene />)); driver.flush(0);
     expect(instances).not.toHaveBeenCalled();
     void handle.hide(); driver.flush(10); driver.flush(35);

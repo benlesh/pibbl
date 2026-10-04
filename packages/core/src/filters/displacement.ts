@@ -44,6 +44,7 @@ const displacementExecutor: CRCFilterExecutor = {
     const region = Object.freeze({ x, y, width, height });
     return Object.freeze({
       executor: filterBoundaryExecutor,
+      textureWarp: blurRadius === 0 ? Object.freeze({ map, strength: strengthValue, region }) : undefined,
       reverseInfluence: (output, density) => expandDisplacementInput(output, strengthValue + blurRadius, density),
       process: identity ? undefined : (source, windows) => {
         try { return processDisplacement(source, windows, map, strengthValue, region, blurRadius); }

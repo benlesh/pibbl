@@ -36,7 +36,7 @@ it('shares one GPU across root and Layers and releases it after the last consume
     const filter = enabled.get() ? displacement({ map: texture, strength, region: { x: 0, y: 0, width: 40, height: 40 } }) : [];
     return createElement(Group, { children: [
       createElement(Rectangle, { style: { width: 10, height: 10, fill: 'red', filter } }),
-      createElement(Layer, { style: { width: 40, height: 40 }, children: createElement(Rectangle, { style: { x: 20, width: 10, height: 10, fill: 'blue', filter } }) }),
+      createElement(Layer, { style: { width: 40, height: 40 }, children: createElement(Rectangle, { style: { left: 20, width: 10, height: 10, fill: 'blue', filter } }) }),
     ] });
   }
   const controller = crc(canvas, createElement(Scene, {}));
@@ -62,8 +62,8 @@ it('restores one root GPU update across an active Layer without changing logical
     const texture = useTexture(neutral({}));
     const filter = displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } });
     return createElement(Group, { children: [
-      createElement(Rectangle, { style: { x: 2, y: 2, width: 10, height: 10, fill: 'red', filter }, onClick: () => { rootClicks += 1; } }),
-      createElement(Layer, { style: { width: 40, height: 40 }, children: createElement(Rectangle, { style: { x: 24, y: 2, width: 10, height: 10, fill: 'blue', filter }, onClick: () => { layerClicks += 1; } }) }),
+      createElement(Rectangle, { style: { left: 2, top: 2, width: 10, height: 10, fill: 'red', filter }, onClick: () => { rootClicks += 1; } }),
+      createElement(Layer, { style: { width: 40, height: 40 }, children: createElement(Rectangle, { style: { left: 24, top: 2, width: 10, height: 10, fill: 'blue', filter }, onClick: () => { layerClicks += 1; } }) }),
     ] });
   }
   const controller = crc(canvas, createElement(Scene, {}));

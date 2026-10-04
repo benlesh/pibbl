@@ -47,7 +47,7 @@ describe("HtmlBox managed native focus", () => {
         <Group>
           <Rectangle
             key="before"
-            style={{ x: 0, y: 0, width: 20, height: 20 }}
+            style={{ left: 0, top: 0, width: 20, height: 20 }}
             onClick={() => undefined}
           />
           <Layer style={{ width: 100, height: 40 }}>
@@ -60,7 +60,7 @@ describe("HtmlBox managed native focus", () => {
           </Layer>
           <Rectangle
             key="after"
-            style={{ x: 120, y: 0, width: 20, height: 20 }}
+            style={{ left: 120, top: 0, width: 20, height: 20 }}
             onClick={() => undefined}
           />
         </Group>
@@ -111,7 +111,7 @@ describe("HtmlBox managed native focus", () => {
       <FocusManagement>
         <Group>
           <Rectangle
-            style={{ x: 0, y: 0, width: 20, height: 20 }}
+            style={{ left: 0, top: 0, width: 20, height: 20 }}
             onClick={() => undefined}
           />
           {show && (
@@ -122,7 +122,7 @@ describe("HtmlBox managed native focus", () => {
             />
           )}
           <Rectangle
-            style={{ x: 120, y: 0, width: 20, height: 20 }}
+            style={{ left: 120, top: 0, width: 20, height: 20 }}
             onClick={() => undefined}
           />
         </Group>
@@ -378,7 +378,7 @@ describe("HtmlBox managed native focus", () => {
       <FocusManagement>
         <Group>
           <Rectangle
-            style={{ x: 0, y: 0, width: 10, height: 10 }}
+            style={{ left: 0, top: 0, width: 10, height: 10 }}
             onClick={() => undefined}
           />
           <HtmlBox
@@ -387,7 +387,7 @@ describe("HtmlBox managed native focus", () => {
             style={{ width: 100, height: 30 }}
           />
           <Rectangle
-            style={{ x: 120, y: 0, width: 10, height: 10 }}
+            style={{ left: 120, top: 0, width: 10, height: 10 }}
             onClick={() => undefined}
           />
         </Group>
@@ -500,7 +500,7 @@ describe("HtmlBox managed native focus", () => {
       <FocusManagement>
         <Group>
           <Rectangle
-            style={{ x: 0, y: 0, width: 10, height: 10 }}
+            style={{ left: 0, top: 0, width: 10, height: 10 }}
             onClick={() => undefined}
           />
           {show && (

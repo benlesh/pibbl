@@ -161,10 +161,52 @@ jobs:
       - name: Run structural performance contracts
         run: pnpm test:performance
 
+  text:
+    name: Text geometry and native build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node.js and pnpm
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.19.0
+          cache: true
+          install: false
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies
+      - name: Cache pinned native inputs
+        uses: actions/cache@v5
+        with:
+          path: |
+            packages/text/.cache/*.tar.gz
+            packages/text/.cache/emsdk-*
+            packages/text/.cache/harfbuzz-*
+            packages/text/.cache/sdk-archives
+            packages/text/.cache/native
+          key: text-native-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/text/native/**', 'packages/text/scripts/**') }}
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Build and test text geometry
+        run: pnpm text:test
+      - name: Check toolchain and packed consumers
+        run: |
+          pnpm text:doctor
+          pnpm test:text-package
+      - name: Verify reproducible native output
+        run: pnpm text:verify-reproducible
+      - name: Verify interactive text editing
+        run: pnpm text:test:browser
+      - name: Report text performance
+        run: |
+          pnpm text:bench
+          pnpm text:bench:browser
+
   trust-gate:
     name: Trust gate
     if: always()
-    needs: [static, package, browser, lifecycle]
+    needs: [static, package, browser, lifecycle, text]
     runs-on: ubuntu-latest
     steps:
       - name: Require every trust job
@@ -173,8 +215,10 @@ jobs:
           PACKAGE_RESULT: ${{ needs.package.result }}
           BROWSER_RESULT: ${{ needs.browser.result }}
           LIFECYCLE_RESULT: ${{ needs.lifecycle.result }}
+          TEXT_RESULT: ${{ needs.text.result }}
         run: |
           test "$STATIC_RESULT" = success
           test "$PACKAGE_RESULT" = success
           test "$BROWSER_RESULT" = success
           test "$LIFECYCLE_RESULT" = success
+          test "$TEXT_RESULT" = success

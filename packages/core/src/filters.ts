@@ -25,3 +25,6 @@ export type {
   CRCSepiaFilterOptions,
   CRCDisplacementFilterOptions,
 } from './lib/style/filter-types.js';
+
+export { reflectedLight } from './filters/reflected-light.js';
+export type { CRCReflectedLightFilterOptions, CRCReflectedLightSource } from './lib/style/filter-types.js';

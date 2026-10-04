@@ -49,7 +49,7 @@ function PhysicsPanel() {
     <PhysicsWorld2D space="local" gravity={[0, 600]}>
       <Rectangle
         physics={staticBody2D()}
-        style={{ x: 0, y: 180, width: 240, height: 16, fill: "#334155" }}
+        style={{ left: 0, top: 180, width: 240, height: 16, fill: "#334155" }}
       />
       <Ball />
     </PhysicsWorld2D>
@@ -165,7 +165,7 @@ function Contents() {
       />
       <Rectangle
         physics={staticBody2D()}
-        style={{ x: 0, y: 180, width: 240, height: 16 }}
+        style={{ left: 0, top: 180, width: 240, height: 16 }}
       />
     </>
   );

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { verifyPathTreeShaking } from "./verify-path-tree-shaking.mjs";
 import { execFileSync } from "node:child_process";
 import {
   cpSync,
@@ -168,13 +169,14 @@ try {
     "@crc/core": `file:${core.file}`,
   });
   assert.ok(!existsSync(join(particleDir, "node_modules/three")));
+  assert.ok(!existsSync(join(particleDir, "node_modules/@crc/core/physics")));
   const particleBundle = await bundle(
-    `import { defineParticleEffect2D, particleRange } from '@crc/core/particles'; console.log(defineParticleEffect2D({ emitters: [{ name: 'spark', capacity: 1, emission: [{ type: 'rate', particlesPerSecond: 1 }], shape: { type: 'point' }, initial: { lifetimeMilliseconds: particleRange(100, 200) }, renderer: { type: 'circle' } }] }).dimension);`,
+    `import { defineParticleEffect2D, particleRange, useFlowField2D, useFlowSource2D } from '@crc/core/particles'; console.log(useFlowField2D, useFlowSource2D, defineParticleEffect2D({ emitters: [{ name: 'spark', capacity: 1, emission: [{ type: 'rate', particlesPerSecond: 1 }], shape: { type: 'point' }, initial: { lifetimeMilliseconds: particleRange(100, 200) }, renderer: { type: 'circle' } }] }).dimension);`,
     particleDir,
   );
   assert.ok(
     particleBundle.inputs.every(
-      (input) => !input.includes("/node_modules/three/"),
+      (input) => !input.includes("/node_modules/three/") && !input.includes("/node_modules/@crc/core/physics/"),
     ),
   );
   assert.ok(!particleBundle.code.includes("gl_InstanceID"));
@@ -252,6 +254,8 @@ try {
       consumer,
     );
   run(process.execPath, ["runtime.mjs"], consumer);
+  process.stdout.write(run(process.execPath, [join(root, "tooling/verify-positioning-environments.mjs"), "--packed-entry", installedCore]));
+  await verifyPathTreeShaking(installedCore, "packed");
   const shared = await bundle(
     `
     import { crc, Rectangle, createElement } from '@crc/core';

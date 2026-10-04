@@ -30,7 +30,6 @@ geometry is unchanged, and the operation does not schedule rendering.
 import { bendPathAlongArc, PathGeometry } from "@crc/core";
 
 const outline = new PathGeometry();
-outline.rect(0, -20, 180, 40);
 const bent = bendPathAlongArc(outline, {
   source: { x: 0, y: -20, width: 180, height: 40 },
   arc: { cx: 250, cy: 250, radius: 160, startAngle: -Math.PI, sweep: Math.PI },

@@ -1,4 +1,4 @@
-import { Absolute, Group, Rectangle, useLayoutBox } from '@crc/core';
+import { Absolute, Group, Path, createRectanglePath, useLayoutBox } from '@crc/core';
 
 export const AGENT_LAYOUT_PLACEMENT_SOURCE_ID = 'agent-layout-placement-example';
 export type LayoutPlacementMode = 'clipped' | 'overflow-visible' | 'repaired' | 'overlap-allowed' | 'overlap-prohibited';
@@ -14,8 +14,8 @@ function PlacedItem({ localX, overlap, onAllocation, onActivate }: ItemProps) {
   // Public allocation is local to the placed child; it is not a paint bound.
   onAllocation(useLayoutBox());
   return <Group>
-    <Rectangle style={{ x: localX, y: 0, width: 20, height: 20, fill: '#2563eb' }} onClick={() => onActivate?.('primary')} />
-    {overlap ? <Rectangle style={{ x: 10, y: 0, width: 20, height: 20, fill: '#f97316' }} onClick={() => onActivate?.('peer')} /> : null}
+    <Path style={{ d: createRectanglePath({ x: localX, y: 0, width: 20, height: 20 }), fill: '#2563eb' }} onClick={() => onActivate?.('primary')} />
+    {overlap ? <Path style={{ d: createRectanglePath({ x: 10, y: 0, width: 20, height: 20 }), fill: '#f97316' }} onClick={() => onActivate?.('peer')} /> : null}
   </Group>;
 }
 

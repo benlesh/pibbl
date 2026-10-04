@@ -29,7 +29,7 @@ it("uses ordinary weighted sources for geometry and heavy manual contacts, then 
     return (
       <>
         <Rectangle style={{ width: 256, height: 256, fill: texture }} />
-        <Rectangle style={{ x: 256, width: 256, height: 256, fill: texture }} />
+        <Rectangle style={{ left: 256, width: 256, height: 256, fill: texture }} />
       </>
     );
   }
@@ -95,7 +95,7 @@ it("keeps seeded output order-independent, validates updates atomically, and bou
     return (
       <>
         <Rectangle style={{ width: 128, height: 128, fill: texture }} />
-        <Rectangle style={{ x: 128, width: 128, height: 128, fill: texture }} />
+        <Rectangle style={{ left: 128, width: 128, height: 128, fill: texture }} />
       </>
     );
   }

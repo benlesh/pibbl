@@ -3,10 +3,10 @@
 Status: implemented, 2026-10-01.
 
 CRC texture production is authored through `defineTexture()` and mounted through
-`useTexture()` from `@crc/core`. `@crc/core/textures` is an optional entry of
+`useTexture()` from `@crc/core`. `@crc/core/textures` is an optional package of
 recipes and existing texture components; it has no scheduler of its own and
 does not import the core friend entry. Creating a recipe or importing either
-entry is inert. A mounted `useTexture` hook owns the live resource.
+package is inert. A mounted `useTexture` hook owns the live resource.
 
 ```ts
 const recipe = defineTexture({
@@ -80,62 +80,41 @@ its own derived upload keyed to the resource/revision.
 `displacement()` from `@crc/core/filters` accepts a texture `map`, a finite
 nonnegative logical `strength`, and a finite positive logical `region`. Red and
 green encode signed horizontal and vertical offsets, alpha weights the offset,
-and blue is ignored unless optional `blurRadius` is positive. Blue times alpha
-then scales a local mip-filtered 5×5 binomial blur support radius, in logical units; it is
-not Gaussian sigma. The source influence includes displacement plus blur support. Map placement is evaluated in the documented logical
+and blue is ignored unless optional `blurRadius` is positive. Blue times alpha then scales a local mip-filtered 5×5 binomial blur support radius; it is not Gaussian sigma. Map placement is evaluated in the documented logical
 region, including repeat/stretch, offsets, and rotation. When strength and blur radius are both zero, the filter
 still validates map ownership, liveness, and placement, but does not borrow a
 raster or create GPU resources.
 
 The implemented processor uses an `OffscreenCanvas` WebGL2 context and has no
 CPU fallback. It rejects missing WebGL2, lost context, oversized targets, upload
-or shader failures. It does not currently promise context-loss recovery,
-per-revision upload caching, cross-context sharing, or a generic public texture
-consumer protocol.
+or shader failures. Root-owned processors cache uploads by resource/revision,
+release invalid GPU handles on context loss, and invalidate consumers on restore.
+Cross-context sharing and a generic public texture consumer protocol remain outside
+the public contract.
 
 `waterWaves()` in `@crc/core/textures` is an optional numeric RG displacement-map
 recipe. It produces periodic integer-wave fields, accepts finite nonnegative
 speed and integer scale 1 through 32, rejects palettes, and supports `pause`
-and `reset` messages. Pausing, reset, and speed changes discard elapsed-time
-debt; zero speed requests no continuing work. Importing or painting water does
-not import the displacement processor.
+and `reset` messages, plus normalized `ripple` impulses. `rippleStrength` changes
+existing ripples independently of ambient waves. Pausing, reset, and speed changes
+discard elapsed-time debt; zero speed still advances active ripples. Importing or
+painting water does not import the displacement processor.
 
-## WASM field implementation
+`waterSurface()` adds a bounded WASM height field with reflective outer edges
+and explicitly supplied normalized rectangular obstacles. Moving obstacles leave
+bounded wakes; they are visual boundaries and never become scene physics colliders.
+The simulation uses at most 128 cells on its short edge, 256 on its long edge,
+and six 1/120-second steps per frame. `viscosity` ranges from 0 to 1 and combines
+slower propagation with increased damping; it is an artistic control rather than
+physical density or a mass-conserving fluid model. Changes preserve the existing
+field and paused state. The dedicated WASM memory is fixed in size for that grid.
 
-The marble, paper, cellular, and reaction-diffusion kernels execute in WASM.
-Configuration, lifecycle callbacks, and scheduling remain ordinary CRC code.
-There is no runtime backend selector or JavaScript fallback for these kernels.
-The other optional recipes have their own implementation contracts.
-
-Each selected embedded module compiles lazily on first resource creation, never
-on import or inert recipe creation. Every live field owns fixed, bounded memory;
-parameter changes reuse it, while resolution/generator changes replace it. Ink
-keeps four fields for fixed stepping and scratch work. The RGBA ImageData and
-alpha views borrow that memory without a JavaScript full-buffer copy. Canvas
-upload and committed publication still incur browser work. Memory is never grown
-while those views are live. Disposal detaches field-owner associations and drops
-resource views; module caches remain reusable. No GC timing guarantee is made.
-
-`reactionDiffusion` accepts ordered `paint`, `stir`, `pause`, and `reset` messages.
-Stir uses a normalized center and displacement vector (each displacement in
-[-1, 1]), with a finite radius greater than zero through 128 texture cells
-(default 16). It backtraces a smooth local displacement into the existing A/B
-fields with bilinear sampling and clamped edges, using the existing scratch
-fields. It neither deposits ink nor implements incompressible-fluid pressure.
-Zero displacement is an exact field no-op. Finite out-of-domain centers are
-ignored; invalid numerical inputs reject without publishing a new raster.
-Explicit paint/stir work while reaction stepping is paused.
-
-Animation supplies parameters through existing signals. A `useReaction` can read
-committed physics positions and send small stir messages. Rapier and textures
-retain separate WASM memories. Neither raw pointers nor pixel/field buffers cross
-the public boundary, and the connection does not alter scheduler phases or
-promise same-frame bidirectional coupling. Animation itself is not ported to
-WASM by this change.
-
-Pinned AssemblyScript generates checked-in per-kernel byte modules. The trust gate
-checks reproducibility, JS-reference parity, lazy import behavior, public recipe
-ownership/messages, and selected-kernel tree shaking in source and packed builds.
+`reflectedLight()` accepts a color, decoded caller-owned image, or CRC texture
+paint. It blends light selectively from the displacement-map slope, preserves
+scene alpha, and never closes a caller-owned image. Its opacity is independent of
+wave strength. An immediately preceding `displacement()` fuses into one GPU pass
+and bitmap transfer. Solid color or texture surface overlays use ordinary CRC
+paint and opacity inside the filtered composition, with `pointerEvents="none"`.
 
 ## Existing texture components
 
@@ -148,6 +127,17 @@ disposal. `ReactionDiffusion` keeps its documented double-buffered periodic
 Gray--Scott field, bounded fixed-step timing, fresh-baseline pause/reset
 behavior, and CRC-routed primary-pointer brush queue. It advances only through
 the supplied frame invalidator, never by a second scheduler loop.
+
+CRC resolves one topmost target and supplies layer-local pointer coordinates.
+The default brush mapping scales the displayed rectangle into the simulation.
+A single primary pointer is captured through CRC; release/cancel ends the stroke.
+Stamps interpolate movement and clip to the field, without clamping out-of-bounds
+points to its edge. Brush settings are snapshotted into each queued stamp. Work is
+bounded to 4096 stamps per event and 8192 queued stamps; pathological overload can
+lose excess stamps. Queued painting applies before numerical steps. Painting plants separated nuclei
+within the brush area and skips occupied neighborhoods, avoiding the broad
+uniform doses that extinguish spots. Large brushes plant clusters; small or weak
+marks are not guaranteed to survive. Initialization retains its seeded patches.
 
 Its preset, seed, reset revision, and simulation-resolution changes reset the
 reaction field and clear queued strokes, capture, and elapsed time. Equal
@@ -183,8 +173,8 @@ atomicity guarantee.
 
 ## Boundaries and evidence
 
-There is no worker execution contract or public shared-WASM-memory ABI, raw-source
-accessor, global producer registry, cross-root texture sharing, or automatic
+There is no public worker/WASM execution API, raw-source accessor, global producer
+registry, cross-root texture sharing, or automatic
 semantic/input remapping. Texture pixels affect appearance only; a displacement
 filter does not alter layout, measurement, events, focus, physics, animation
 semantics, or hit areas.
@@ -194,7 +184,64 @@ pixel/revision observation, Commit failure and retry, initial and later render
 failure behavior, bounded publication-surface reuse, root validation, water
 timing/messages/seams, and texture/displacement ownership. Packed consumer
 checks cover public exports and source/packed feature selection. They do not
-constitute a context-loss or GPU-cache recovery guarantee.
+constitute a guarantee of physical fluid accuracy or two-way scene physics.
+
+## WASM field implementation
+
+The marble, paper, cellular, reaction-diffusion, tendrils, lightning, waterWaves,
+and waterSurface kernels execute in WASM.
+Configuration, lifecycle callbacks, and scheduling remain ordinary CRC code.
+There is no runtime backend selector or JavaScript fallback for these kernels.
+Water solver stepping, wave generation, obstacle masks and wakes, and RGBA
+rasterization all execute in WASM. Canvas presentation and filter GPU passes
+retain their existing roles.
+
+Each selected embedded module compiles lazily on first resource creation, never
+on import or inert recipe creation. Every live field owns fixed, bounded memory;
+parameter changes reuse it, while resolution/generator changes replace it. Ink
+keeps four fields for fixed stepping and scratch work. The RGBA ImageData and
+alpha and legacy mask views borrow that memory without a JavaScript full-buffer copy. Canvas
+upload and committed publication still incur browser work. Memory is never grown
+while those views are live. Disposal detaches field-owner associations and drops
+resource views; module caches remain reusable. No GC timing guarantee is made.
+
+`reactionDiffusion` accepts ordered `paint`, `stir`, `pause`, and `reset` messages.
+Stir uses a normalized center and displacement vector (each displacement in
+[-1, 1]), with a finite radius greater than zero through 128 texture cells
+(default 16). It backtraces a smooth local displacement into the existing A/B
+fields with bilinear sampling and clamped edges, using the existing scratch
+fields. It neither deposits ink nor implements incompressible-fluid pressure.
+Zero displacement is an exact field no-op. Finite out-of-domain centers are
+ignored; invalid numerical inputs reject without publishing a new raster.
+Explicit paint/stir work while reaction stepping is paused.
+
+Animation supplies parameters through existing signals. A `useReaction` can read
+committed physics positions and send small stir messages. Rapier and textures
+retain separate WASM memories. Neither raw pointers nor pixel/field buffers cross
+the public boundary, and the connection does not alter scheduler phases or
+promise same-frame bidirectional coupling. Animation itself is not ported to
+WASM by this change.
+
+Pinned AssemblyScript generates checked-in per-kernel byte modules. The trust gate
+checks reproducibility, JS-reference parity, lazy import behavior, public recipe
+ownership/messages, and selected-kernel tree shaking in source and packed builds.
+
+Electric resources use separate tendrils/lightning modules and fixed 192 KiB
+heaps. WASM owns weighted source selection, boundary convection, numerical
+advancement, and generated filament coordinates. Control identifiers and
+validated messages remain in JavaScript; numeric state views and path output
+borrow the heap directly. Canvas consumes that output for glow strokes and
+cores. Reference parity covers moving/released sources, boundary drift, rebirth,
+pause, edge changes, and reused connection slots. No JS generator fallback is
+retained in production.
+
+Water resources keep one borrowed RGBA ImageData per fixed-resolution WASM heap.
+Wave mode and ripple calculations stay in WASM, with at most sixteen wave
+impulses. Surface stepping is batched across the existing six-step admission
+bound; control updates upload obstacle rectangles, not pixel arrays. Resizing
+replaces the heap, while ordinary option updates reuse it. Public-API parity
+tests compare the prior water implementation across ripple, pause/reset, seed,
+scale, viscosity, and moving-obstacle updates.
 
 ## Rain on glass
 

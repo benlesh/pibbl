@@ -1,3 +1,4 @@
+import { getFlowController2D, type CRCFlowField2D } from "../flow/hook.js";
 import { signal } from "@crc/core";
 import {
   crcInternalAssertCommandAllowed,
@@ -151,6 +152,7 @@ export interface ParticleSystemControllerSnapshot {
 }
 
 export interface ParticleSystemController {
+  readonly flow: CRCFlowField2D | undefined;
   readonly handle: CRCParticleSystem;
   readonly compiled: CompiledParticleEffect;
   readonly bindingCandidate: ParticleBindingCandidate | undefined;
@@ -209,6 +211,7 @@ function normalizeSeed(value: number | undefined): number {
 }
 
 function validateOptions(options: CRCParticleSystemOptions): void {
+  if (options.flow !== undefined) getFlowController2D(options.flow);
   if (options.autoplay !== undefined && typeof options.autoplay !== "boolean") {
     throw new TypeError("CRC particle system autoplay must be boolean.");
   }
@@ -972,10 +975,12 @@ export function createParticleSystemController(
   function synchronizeAdvanceRegistration(): void {
     if (shouldAdvance()) {
       if (unregisterAdvance === undefined) {
+        const releaseFlow = options.flow === undefined ? undefined : getFlowController2D(options.flow).retain();
         const unregister = crcInternalRegisterAdvance(owner, advance);
         const releaseOwnership = recordParticleSchedulerRegistration();
         unregisterAdvance = () => {
           unregister();
+          releaseFlow?.();
           releaseOwnership();
         };
       }
@@ -1610,6 +1615,7 @@ export function createParticleSystemController(
 
   const controller: ParticleSystemController = Object.freeze({
     handle,
+    get flow() { return initialOptions.flow; },
     get compiled() {
       return compiled;
     },
@@ -1630,6 +1636,7 @@ export function createParticleSystemController(
       nextOptions: CRCParticleSystemOptions = {},
     ): ParticleEffectCandidate {
       validateOptions(nextOptions);
+      if (nextOptions.flow !== initialOptions.flow) throw new Error("Particle flow binding is mount-only; use a keyed remount to change it.");
       const compiledCandidate = compileEffect(effect);
       const candidate = Object.freeze({
         ...compiledCandidate,
@@ -1749,7 +1756,7 @@ export function createParticleSystemController(
           "CRC particle binding backend does not match effect dimension.",
         );
       }
-      if (candidate.execution !== "stateless-canvas") {
+      if (candidate.execution !== "stateless-canvas" && candidate.execution !== "flow-canvas") {
         throw new TypeError(
           "CRC particle binding execution does not match its backend.",
         );

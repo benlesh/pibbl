@@ -18,6 +18,15 @@ import type {
 import { layoutDiagnostic } from './diagnostics.js';
 import { resolveFilterList } from './filter.js';
 import type { CRCFilter } from './filter-types.js';
+import { isPlacementConsumed } from '../element/metadata.js';
+import {
+  consumePlacementHandoff,
+  getPlacementSignalHandoff,
+  getPlacementHandoffSource,
+  resolveStandalonePosition,
+  type PositioningStyle,
+} from './positioning.js';
+import { CANVAS_2D_BACKEND } from '../backend/canvas-2d-backend.js';
 
 const opaqueStyleProperties = new WeakMap<Function, ReadonlySet<string>>();
 export interface PreparedStyleInput {
@@ -113,26 +122,51 @@ export function resolveElementStyle<
   const specified = ((hasResolvedSpecifiedStyle ?
     resolvedSpecifiedStyle : getSpecifiedStyle(element)) ?? EMPTY_STYLE) as
     SpecifiedStyle<S>;
-  const presentationStyle = preNormalized?.style ?? specified;
-  const ordinaryFilter = extractSystemFilter(presentationStyle);
-  const transitionFilters = presentationStyle.transition === undefined ? undefined : resolveTransitionBinding(presentationStyle.transition);
-  const combined = transitionFilters?.length ? [
-    ...(ordinaryFilter === undefined ? [] : Array.isArray(ordinaryFilter) ? ordinaryFilter : [ordinaryFilter]),
-    ...transitionFilters,
-  ] : ordinaryFilter;
+  const resolvedInput = preNormalized?.style ?? specified;
+  const forwardedStyle = getPlacementHandoffSource(
+    getSpecifiedStyle(element),
+  ) ?? getPlacementSignalHandoff(element);
+  const handoffStyle = consumePlacementHandoff(resolvedInput);
+  const ordinaryFilter = extractSystemFilter(handoffStyle);
+  const transitionFilters = handoffStyle.transition === undefined ? undefined : resolveTransitionBinding(handoffStyle.transition);
+  const combined = transitionFilters?.length ? [...(ordinaryFilter === undefined ? [] : Array.isArray(ordinaryFilter) ? ordinaryFilter : [ordinaryFilter]), ...transitionFilters] : ordinaryFilter;
   const systemFilter = resolveFilterList(
     combined,
     context,
   );
   const normalized = preNormalized ?
-      withoutSystemFilter(preNormalized.style) as Readonly<N> :
+      withoutSystemFilter(handoffStyle) as Readonly<N> :
     definition.normalizeStyle ?
-        definition.normalizeStyle(withoutSystemFilter(specified) as SpecifiedStyle<S>) :
-        withoutSystemFilter(specified) as unknown as Readonly<N>;
+        definition.normalizeStyle(
+          withoutSystemFilter(handoffStyle) as SpecifiedStyle<S>,
+        ) :
+        withoutSystemFilter(handoffStyle) as unknown as Readonly<N>;
   const resolved = definition.resolveStyle ?
       definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;
-  const final = systemFilter ? { ...resolved, filter: systemFilter.values } : resolved;
+  const positioning = normalized as Readonly<PositioningStyle>;
+  const hasLeft = positioning.left !== undefined;
+  const hasTop = positioning.top !== undefined;
+  let positioned = resolved;
+  if (definition.backend === CANVAS_2D_BACKEND.token && (hasLeft || hasTop)) {
+    const standalone = resolveStandalonePosition(normalized, context);
+    const forwarded = forwardedStyle as Readonly<PositioningStyle> | undefined;
+    const consumesOuterPosition = isPlacementConsumed(element);
+    const position = {
+      left: consumesOuterPosition ||
+        (forwarded !== undefined && Object.is(positioning.left, forwarded.left)) ?
+        0 : standalone.left,
+      top: consumesOuterPosition ||
+        (forwarded !== undefined && Object.is(positioning.top, forwarded.top)) ?
+        0 : standalone.top,
+    };
+    positioned = {
+      ...resolved,
+      ...(hasLeft ? { left: position.left } : {}),
+      ...(hasTop ? { top: position.top } : {}),
+    };
+  }
+  const final = systemFilter ? { ...positioned, filter: systemFilter.values } : positioned;
   assertResolvedValue(
     final,
     '',

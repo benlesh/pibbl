@@ -13,17 +13,39 @@ try {
     "paper",
     "cellular",
     "ink",
+    "tendrils",
+    "lightning",
+    "water-waves",
   ].entries()) {
     let source = await readFile(
-      new URL(`assembly/textures/${name === "ink" ? "ink" : "materials"}.asc`, root),
+      new URL(
+        `assembly/textures/${name === "water-waves" ? "water-waves" : index >= 4 ? "electric" : name === "ink" ? "ink" : "materials"}.asc`,
+        root,
+      ),
       "utf8",
     );
-    if (name !== "ink") {
+    if (name === "water-waves")
+      source =
+        (await readFile(new URL("assembly/textures/water-modes.asc", root), "utf8")) +
+        "\n" +
+        source;
+    if (index < 3) {
       source = source
         .replace("function sample(", "@inline\nfunction sample(")
         .replace("export function generate(", "@inline\nfunction generate(");
       source += `\nexport function run(out: usize, w: i32, h: i32, seed: i32, scale: f64, detail: f64): void { generate(out,w,h,${index},seed,scale,detail); }\n`;
     }
+    if (name === "tendrils")
+      source += `
+export function choose(seed:i32,ticket:f64):i32{return selectSource(seed,ticket);}
+export function advance(count:i32,seed:i32,dt:f64,rise:f64):void{advanceTendrils(count,seed,dt,rise);}
+export function generate(count:i32,seed:i32,time:f64,cx:f64,cy:f64,rise:f64,crackle:f64,frequency:f64,branching:f64):void{generateTendrils(count,seed,time,cx,cy,rise,crackle,frequency,branching);}
+`;
+    if (name === "lightning")
+      source += `
+export function advance(dt:f64):void{advanceLightning(dt);}
+export function generate(seed:i32,time:f64,frequency:f64,branching:f64,active:i32,edge:i32,ax:f64,ay:f64,bx:f64,by:f64,core:i32):void{generateLightning(seed,time,frequency,branching,active,edge,ax,ay,bx,by,core);}
+`;
     const input = join(temp, `${name}.ts`),
       output = join(temp, `${name}.wasm`);
     await writeFile(input, source);

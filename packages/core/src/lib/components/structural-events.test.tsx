@@ -35,7 +35,7 @@ const structuralCases: readonly StructuralCase[] = [
   {
     name: 'Group',
     create: (handlers, children) => createElement(Group, { ...handlers, children }),
-    childStyle: { x: 10, y: 10, width: 20, height: 20, fill: '#2563eb' },
+    childStyle: { left: 10, top: 10, width: 20, height: 20, fill: '#2563eb' },
   },
   {
     name: 'Clip',
@@ -44,7 +44,7 @@ const structuralCases: readonly StructuralCase[] = [
       style: { d: clipPath },
       children,
     }),
-    childStyle: { x: 10, y: 10, width: 20, height: 20, fill: '#2563eb' },
+    childStyle: { left: 10, top: 10, width: 20, height: 20, fill: '#2563eb' },
   },
   {
     name: 'Layer',
@@ -53,7 +53,7 @@ const structuralCases: readonly StructuralCase[] = [
       style: { width: 80, height: 60 },
       children,
     }),
-    childStyle: { x: 10, y: 10, width: 20, height: 20, fill: '#2563eb' },
+    childStyle: { left: 10, top: 10, width: 20, height: 20, fill: '#2563eb' },
   },
   {
     name: 'Absolute',

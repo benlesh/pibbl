@@ -692,6 +692,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
         );
       }
     } finally {
+      this.canvas.width = this.canvas.height = 0;
       this.candidate?.bitmap.close();
       this.committed?.close();
       for (const target of this.committedTargets.values())

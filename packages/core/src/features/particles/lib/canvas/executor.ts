@@ -1,3 +1,5 @@
+import { getFlowController2D, type CRCFlowField2D } from "../flow/hook.js";
+import { FlowParticlePopulation2D } from "../flow/population.js";
 import type { RenderingContext2D } from "@crc/core";
 import type { CRCInternalRenderOwner } from "@crc/core/internal";
 import type { CompiledEffect2D, CompiledEmitter2D } from "../compiler.js";
@@ -28,6 +30,7 @@ const DEGREES_TO_RADIANS = Math.PI / 180;
 const COMPLEX_RASTER_REUSE_THRESHOLD = 3;
 
 export interface CanvasParticleExecutorOptions {
+  readonly flow?: CRCFlowField2D;
   readonly owner: CRCInternalRenderOwner;
   readonly compiled: CompiledEffect2D;
   readonly parameters: Readonly<Float64Array>;
@@ -208,6 +211,19 @@ export function createCanvasParticleExecutor(
   options: CanvasParticleExecutorOptions,
 ): CanvasParticleExecutor {
   const { compiled } = options;
+  const flow = options.flow === undefined ? undefined : getFlowController2D(options.flow);
+  if (flow) {
+    for (const emitter of compiled.emitters) {
+      if (emitter.motion.some((module) => module.type !== "angularVelocity") ||
+        !Array.isArray(emitter.initial.velocity) ||
+        emitter.initial.velocity.some((value) => value.kind !== "constant" || value.value !== 0)) {
+        throw new TypeError("Flow-bound particles use field velocity; put translational forces on useFlowSource2D instead of particle motion or initial velocity.");
+      }
+    }
+  }
+  let committedFlow = flow ? compiled.emitters.map((emitter) => new FlowParticlePopulation2D(emitter.capacity)) : [];
+  let candidateFlow = flow ? compiled.emitters.map((emitter) => new FlowParticlePopulation2D(emitter.capacity)) : [];
+  let flowTransactionOpen = false;
   const parameterLength = compiled.parameterLayout.defaults.length;
   if (options.parameters.length !== parameterLength) {
     throw new RangeError(
@@ -299,6 +315,39 @@ export function createCanvasParticleExecutor(
     return resolvedParameters;
   }
 
+  function beginFlowTransaction(): void {
+    if (!flow || flowTransactionOpen) return;
+    for (let i = 0; i < committedFlow.length; i++) candidateFlow[i]!.copyFrom(committedFlow[i]!);
+    flowTransactionOpen = true;
+  }
+
+  function advanceFlow(): void {
+    if (!flow) return;
+    beginFlowTransaction();
+    const generation = ledger.candidate;
+    for (let i = 0; i < compiled.emitters.length; i++) {
+      const emitter = compiled.emitters[i]!;
+      const births = generation.emitters[i]!;
+      const population = candidateFlow[i]!;
+      let slot = births.oldestSlot, visited = 0;
+      while (slot !== CANVAS_LEDGER_NO_SLOT && visited++ < births.liveCount) {
+        const identity = births.ordinals[slot]!;
+        const time = births.birthTimes[slot]!;
+        if (!population.hasBirth(slot, identity, time)) {
+          birth.seed = mix32((candidateRunSeed >>> 0) ^ (births.seedSalts[slot]! >>> 0));
+          birth.ordinal = identity;
+          birth.birthTimeMilliseconds = time;
+          sampleParticle2D(emitter, birth, time, resolveParameters(selectedParameters(), births.spawnEpochs[slot]!), registers);
+          population.birth(slot, identity, time,
+            registers[Particle2DRegister.X]! + births.origins[slot * 2]!,
+            registers[Particle2DRegister.Y]! + births.origins[slot * 2 + 1]!);
+        }
+        slot = births.ageOrder[slot]!;
+      }
+      population.advance(flow.requireActive(), births.oldestSlot, births.ageOrder, births.liveCount, candidateEffectTime);
+    }
+  }
+
   function fillColor(context: RenderingContext2D): number {
     const red = registers[Particle2DRegister.Red]!;
     const green = registers[Particle2DRegister.Green]!;
@@ -346,36 +395,6 @@ export function createCanvasParticleExecutor(
     );
   }
 
-  function drawSpriteRaster(
-    context: RenderingContext2D,
-    source: CanvasImageSource,
-    width: number,
-    height: number,
-    anchorX: number,
-    anchorY: number,
-  ): void {
-    const rasterWidth = quantizedDimension(width);
-    const rasterHeight = quantizedDimension(height);
-    const key = (rasterWidth - 1) * 16_384 + rasterHeight - 1;
-    let raster = rasterCache.find<ImageBitmap>(source as object, key);
-    if (raster === undefined) {
-      raster = rasterCache.insert(
-        source as object,
-        key,
-        createOwnedRaster(rasterWidth, rasterHeight, (rasterContext) => {
-          rasterContext.drawImage(source, 0, 0, rasterWidth, rasterHeight);
-        }),
-      );
-    }
-    context.drawImage(
-      raster,
-      -anchorX * Math.abs(width),
-      -anchorY * Math.abs(height),
-      Math.abs(width),
-      Math.abs(height),
-    );
-  }
-
   function drawEmitter(
     context: RenderingContext2D,
     emitter: CompiledEmitter2D,
@@ -386,6 +405,7 @@ export function createCanvasParticleExecutor(
     componentOpacity: number,
     baseAlpha: number,
     baseTransform: DOMMatrix,
+    population: FlowParticlePopulation2D | undefined,
   ): void {
     const renderer = emitter.renderer;
     const spriteSourceWidth =
@@ -395,6 +415,7 @@ export function createCanvasParticleExecutor(
     context.globalCompositeOperation =
       renderer.blend === "additive" ? "lighter" : "source-over";
 
+    const { a, b, c, d, e, f } = baseTransform;
     let slot = emitterLedger.oldestSlot;
     let visited = 0;
     while (
@@ -403,7 +424,7 @@ export function createCanvasParticleExecutor(
     ) {
       const next = emitterLedger.ageOrder[slot]!;
       visited += 1;
-      if (emitterLedger.occupied[slot] === 1) {
+      if (emitterLedger.occupied[slot] === 1 && !population?.isRetired(slot)) {
         birth.seed = mix32(
           (runSeed >>> 0) ^ (emitterLedger.seedSalts[slot]! >>> 0),
         );
@@ -420,19 +441,22 @@ export function createCanvasParticleExecutor(
           if (alpha > 0) {
             const width = registers[Particle2DRegister.SizeX]!;
             const height = registers[Particle2DRegister.SizeY]!;
-            const x =
-              registers[Particle2DRegister.X]! +
-              emitterLedger.origins[slot * 2]!;
-            const y =
-              registers[Particle2DRegister.Y]! +
-              emitterLedger.origins[slot * 2 + 1]!;
-            context.setTransform(baseTransform);
-            context.translate(x, y);
-            context.rotate(
-              registers[Particle2DRegister.Rotation]! * DEGREES_TO_RADIANS,
+            const x = population ? population.positions[slot * 2]! :
+              registers[Particle2DRegister.X]! + emitterLedger.origins[slot * 2]!;
+            const y = population ? population.positions[slot * 2 + 1]! :
+              registers[Particle2DRegister.Y]! + emitterLedger.origins[slot * 2 + 1]!;
+            const angle = registers[Particle2DRegister.Rotation]! * DEGREES_TO_RADIANS;
+            // Compose B × translate(x, y) × rotate(angle) in one Canvas call.
+            // Zero rotation is common for smoke and avoids trigonometry entirely.
+            const cosine = angle === 0 ? 1 : Math.cos(angle);
+            const sine = angle === 0 ? 0 : Math.sin(angle);
+            context.setTransform(
+              a * cosine + c * sine, b * cosine + d * sine,
+              c * cosine - a * sine, d * cosine - b * sine,
+              a * x + c * y + e, b * x + d * y + f,
             );
             context.globalAlpha = baseAlpha * alpha;
-            const colorKey = fillColor(context);
+            const colorKey = renderer.type === "sprite" ? 0 : fillColor(context);
 
             switch (renderer.type) {
               case "circle":
@@ -471,24 +495,13 @@ export function createCanvasParticleExecutor(
                 if (spriteSourceWidth <= 0 || spriteSourceHeight <= 0) break;
                 const anchorX = renderer.anchor?.[0] ?? 0.5;
                 const anchorY = renderer.anchor?.[1] ?? 0.5;
-                if (emitterLedger.liveCount >= COMPLEX_RASTER_REUSE_THRESHOLD) {
-                  drawSpriteRaster(
-                    context,
-                    renderer.source,
-                    width,
-                    height,
-                    anchorX,
-                    anchorY,
-                  );
-                } else {
-                  context.drawImage(
-                    renderer.source,
-                    -anchorX * Math.abs(width),
-                    -anchorY * Math.abs(height),
-                    Math.abs(width),
-                    Math.abs(height),
-                  );
-                }
+                context.drawImage(
+                  renderer.source,
+                  -anchorX * Math.abs(width),
+                  -anchorY * Math.abs(height),
+                  Math.abs(width),
+                  Math.abs(height),
+                );
                 break;
               }
             }
@@ -502,7 +515,7 @@ export function createCanvasParticleExecutor(
   const executor: CanvasParticleExecutor = {
     owner: options.owner,
     backend: "canvas",
-    execution: "stateless-canvas",
+    execution: flow ? "flow-canvas" : "stateless-canvas",
     compiled,
 
     get parameters(): Readonly<Float64Array> {
@@ -530,9 +543,9 @@ export function createCanvasParticleExecutor(
       candidateEffectTime = frame.effectTimeMilliseconds;
       candidateRunSeed = frame.seed;
       const epoch = options.currentSpawnEpoch?.() ?? 0;
-      return summaryToFrameState(
-        ledger.adoptFrame(frame, epoch, options.spawnParameters(epoch)),
-      );
+      const summary = ledger.adoptFrame(frame, epoch, options.spawnParameters(epoch));
+      advanceFlow();
+      return summaryToFrameState(summary);
     },
 
     requestedBurstCount(emitterIndex, count, seed): number {
@@ -563,6 +576,7 @@ export function createCanvasParticleExecutor(
         spawnEpoch: request.spawnEpoch,
         parameters: options.spawnParameters(request.spawnEpoch),
       });
+      advanceFlow();
       const frameState = ledger.candidateSummary();
       return {
         ...summaryToFrameState(frameState),
@@ -576,11 +590,17 @@ export function createCanvasParticleExecutor(
       requireActive();
       ledgerTransactionOpen = true;
       ledger.clear();
+      beginFlowTransaction();
+      for (const population of candidateFlow) population.clear();
       return summaryToFrameState(ledger.candidateSummary());
     },
 
     finishTransaction(success: boolean): void {
       requireActive();
+      if (flowTransactionOpen) {
+        if (success) { const previous = committedFlow; committedFlow = candidateFlow; candidateFlow = previous; }
+        flowTransactionOpen = false;
+      }
       if (ledgerTransactionOpen) {
         ledger.finishTransaction(success);
         if (success) {
@@ -623,7 +643,7 @@ export function createCanvasParticleExecutor(
           const emitter = compiled.emitters[emitterIndex]!;
           const emitterLedger = generation.emitters[emitterIndex]!;
           if (
-            missesContentBox(
+            !flow && missesContentBox(
               emitter,
               emitterLedger,
               contentBox.width,
@@ -641,6 +661,7 @@ export function createCanvasParticleExecutor(
             opacity,
             baseAlpha,
             baseTransform,
+            (flowTransactionOpen ? candidateFlow : committedFlow)[emitterIndex],
           );
         }
       } finally {
@@ -657,6 +678,8 @@ export function createCanvasParticleExecutor(
       ledgerTransactionOpen = false;
       parameterTransactionOpen = false;
       disposed = true;
+      committedFlow = [];
+      candidateFlow = [];
       let firstError: unknown;
       try {
         ledger.dispose();

@@ -4,8 +4,8 @@ function DoubleClickStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#1f4bd8",
@@ -13,8 +13,8 @@ function DoubleClickStudy() {
     />,
     <Rectangle
       style={{
-        x: 190,
-        y: 76,
+        left: 190,
+        top: 76,
         width: 340,
         height: 268,
         fill: "#f7c948",
@@ -26,8 +26,8 @@ function DoubleClickStudy() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 166,
+        left: 360,
+        top: 166,
         fill: "#17211d",
         font: "900 42px sans-serif",
         textAlign: "center",
@@ -37,8 +37,8 @@ function DoubleClickStudy() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 236,
+        left: 360,
+        top: 236,
         fill: "#17211d",
         font: "700 14px monospace",
         textAlign: "center",

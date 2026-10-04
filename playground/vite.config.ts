@@ -1,5 +1,6 @@
-import { textAssets } from "../tooling/text-assets.ts";
+
 import { targetingIdentityPlugin } from '../tooling/agent-verification/identity-plugin.mjs';
+import { textAssets } from "../tooling/text-assets.ts";
 import { defineConfig } from "vite";
 import { resolve } from "node:path";
 import { assertBuiltCore } from "../tooling/assert-built-core.ts";
@@ -32,8 +33,8 @@ export default defineConfig(({ mode }) => {
   }));
   return {
     plugins: [
-      textAssets(),
       targetingIdentityPlugin(resolve(import.meta.dirname, "..")),
+      textAssets(),
       ...(mode === "built" ? [assertBuiltCore()] : []),
       crcRuntimeSource(mode),
       crcStudioDocs({ repositoryRoot: resolve(import.meta.dirname, "..") }),

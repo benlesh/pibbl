@@ -1,8 +1,8 @@
 # Path bending implementation plan
 
-> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+> **Historical status: Authorized implementation-plan record; it does not define current shipped behavior.**
 
-Status: feature complete, integrated, and pushed to main, 2026-09-30. The user approved the
+Status: in progress, 2026-09-30. The user approved the
 [design](../specs/2026-09-30-path-bending-design.md) and requested implementation.
 Both Along Arc and Along Path remain the completion target.
 
@@ -40,8 +40,8 @@ Do not refactor another thread's geometry engine to get the first slice working.
 - [x] Drive the same example headlessly; check focused tests and TypeScript;
       inspect the live Studio route and one meaningful interaction in Chromium.
 - [x] Provide the actual Studio URL as **slice ready for feedback**.
-- [x] Incorporate feedback: separate Along Path discovery and add draggable
-      center/radius/sweep controls to Along Arc. Aggregate verification remains separate.
+- [ ] Incorporate feedback before broad hardening. The first slice is not
+      feature complete.
 
 ## Slice 2: Along Path
 
@@ -58,31 +58,30 @@ Do not refactor another thread's geometry engine to get the first slice working.
 - [x] Reuse common placement/source/output infrastructure with specialized guide
       evaluation. Handle nonmonotonic source X across segment/extension/wrap
       boundaries without shortcuts that lose traversal.
-- [x] Add editable smooth cubic guide, expose the second public function/types,
-      and test the interaction. User feedback subsequently split this into the
-      standalone `drawing/along-path` example.
-- [x] Show the runnable second slice and incorporate experiential feedback.
+- [x] Add the Along Path mode and editable smooth cubic guide to the same example,
+      expose the second public function/types, and test the interaction.
+- [ ] Show the runnable second slice and incorporate experiential feedback.
 
 ## Hardening and delivery
 
-- [x] Cover design evidence matrix: every segment kind, contour/Close semantics,
+- [ ] Cover design evidence matrix: every segment kind, contour/Close semantics,
       fitting and signed offsets, source-frame origins/zero height, source outside
       frame, stationary guides, rejected discontinuities, wrapping/repeated laps,
       folds/collapse, precision extremes, overflow/work budgets, empty inputs,
       option errors, and input/output independence.
-- [x] Verify analytical bounds with independent geometric oracles. Dense sampling
+- [ ] Verify analytical bounds with independent geometric oracles. Dense sampling
       is supplemental; it does not establish a guaranteed tolerance alone.
-- [x] Exercise Path paint, Clip, targeting, SVG/native conversion, and existing
+- [ ] Exercise Path paint, Clip, targeting, SVG/native conversion, and existing
       scheduling through the supported public surfaces.
-- [x] Synchronize documentation, runtime/types, Studio declarations, export tests,
+- [ ] Synchronize documentation, runtime/types, Studio declarations, export tests,
       Bundler/NodeNext consumers, packed consumers, and source/built browser tests.
-- [x] Review changed math and interactions once; resolve material findings and
+- [ ] Review changed math and interactions once; resolve material findings and
       re-review only fixes. Measure representative work/output, not uncontrolled
       wall-clock performance as a correctness gate.
-- [x] Run proportional final verification and `corepack pnpm@11.21.0 trust`.
+- [ ] Run proportional final verification and `corepack pnpm@11.21.0 trust`.
       Record actual environment and fresh output. Shared-checkout failures must
       be identified and resolved or reported; never claim an unrun/failed gate.
-- [x] Audit every approved requirement before reporting **feature complete**.
+- [ ] Audit every approved requirement before reporting **feature complete**.
 
 ## Planned focused verification
 
@@ -309,81 +308,3 @@ public compatibility promises.
   repeated builder Close is a no-op (explicit segment editing can retain repeats),
   and rect() preserves a trailing Move after Close. The bending implementation
   preserves those source semantics instead of changing the builders.
-
-## Final feedback and focused handoff, 2026-09-30
-
-The user reported that guide edits left the bent preview unchanged, requested a
-standalone discoverable Along Path example, and requested draggable Arc controls.
-Those changes are implemented. Along Arc remains at
-`http://127.0.0.1:5175/#/examples/drawing/path-bending` with center, radius, and
-sweep handles. Along Path is independently listed at
-`http://127.0.0.1:5175/#/examples/drawing/along-path`; it starts with stretch fitting
-so the entire guide visibly affects the ribbon. Both examples explicitly use
-endpoint tangent extension to keep offset/radius exploration responsive. If a
-transformation fails, geometry and guide controls retain the same valid generation.
-
-The first on-canvas Arc radius test failed before implementation. The initial
-integer-coordinate Path drag passed, but live Studio verification reproduced the
-reported failure at fractional coordinates from a scaled canvas. A new public
-regression with fractional cubic controls failed before the correction.
-
-The cause was applying the original segment-join roundoff threshold to internal
-subdivision endpoints, where subtracting small control edges amplifies rounding.
-Original guide joins still use the strict smoothness validation. Internal halves
-of a polynomial/ellipse have matching limiting tangents or a reversal at a cusp;
-the subdivision check rejects reversed normals. The measured shared-knot normal
-difference is included in the guide error certificate (`D * joinError`) instead
-of being silently discarded. Existing genuine internal-cusp regressions continue
-to pass. Live before/after fill masks now change for both examples with no runtime
-errors, and the rendered source and dragged states were visually inspected.
-
-Fresh evidence, Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium:
-
-- Focused source suite: **32 passed**, three files; includes 21 geometry tests,
-  seven integration/interaction tests, and four public export tests.
-- Rebuilt public package focused suite: **32 passed**, three files.
-- TypeScript, changed-file ESLint, package build, and diff whitespace checks pass.
-- Packed verification passes isolated tarball boundaries, Bundler/NodeNext types,
-  runtime exports, package identity, and both bending runtime probes.
-- Catalog verification passes **69 lessons, 12 tutorial snapshots, 28 test labs**.
-- Live Studio editor reports no TypeScript issues. Radius and guide drags change
-  the actual green filled output; screenshots are `/tmp/crc-arc-ready.png`,
-  `/tmp/crc-arc-dragged.png`, `/tmp/crc-path-ready.png`, and
-  `/tmp/crc-path-dragged.png`. Integration tests cover center/sweep dragging,
-  continuous movement, release, cancellation, and Reset.
-- Representative deterministic structure: 40 calls from an original 27-segment
-  ribbon produce exactly 40 result writes. Twenty varying arcs produce 138 output
-  segments each; twenty fractional cubic guides produce 98–152 segments. There
-  is no uncontrolled wall-clock correctness threshold.
-- Drawing contract additions c0083–c0086 have explicit approved bending-design
-  provenance; preexisting units/mappings were preserved. Public type and semantic
-  inventory totals were refreshed to the actual 211 types and 828 units.
-
-The aggregate trust attempt stopped on the concurrently added textures provenance
-mapping. After that mapping was corrected, the drawing contract preservation gate
-was updated and passed. The latest `docs:check` now reaches a separate outstanding
-failure: `Acceptance matrix does not map docs/site/learn/guides/procedural-textures.md`.
-This is reported to the coordinating workflow rather than weakening preservation
-checks or claiming aggregate success. The coordinator owns final combined trust,
-commit, merge, and push. Bending changes are held for that verification; no separate
-commit or push was made. **Feature complete** remains contingent on the combined
-gate. The approved requirements audit found no remaining bending behavior gaps.
-
-## Verified combined delivery — 2026-09-30
-
-This record supersedes the earlier aggregate blockers. The isolated combined
-checkout completed `corepack pnpm@11.21.0 trust` with exit 0 on Node 24.15.0.
-The actual completed command and `/tmp/crc-final-trust.log` were inspected:
-3,429 browser tests passed (six skipped), all eight Studio visual baselines
-matched, and package, documentation, lifecycle, and performance gates passed.
-A final documentation-only completion update also passed `docs:check`.
-
-Remote main was verified at `c6f35d02011bb997007982482a03065dc02e1c96` after
-fast-forward and push. Inspection of that commit confirms both public bending
-operations, the fractional-coordinate tangent fix and regression, and separate
-Along Arc and Along Path catalog entries. The original checkout is preserved;
-this completion note records delivered evidence without creating another commit.
-
-Both approved operations, alignment/placement/overflow/accuracy contracts,
-public integration and packaged exports, and the requested interactive feedback
-are delivered. No bending implementation requirement remains outstanding.

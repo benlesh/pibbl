@@ -27,6 +27,7 @@ import type {
   SystemStyle,
 } from '../types.js';
 import {
+  childWithUsedSize,
   prepareDirectChildStyle,
   materializeLayoutChildren,
   placeDirectChildren,
@@ -35,6 +36,7 @@ import {
 } from './absolute.js';
 import { pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
+import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { measureElement } from './measure.js';
 import type { Constraints, LayoutBox } from './types.js';
 
@@ -425,6 +427,7 @@ function resolveFlexPlacements(
     const normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    assertSupportedChildPosition('Flex', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
     const grow = nonnegativeFactor(normalized.flexGrow ?? 0, 'flexGrow', child, container);
     const shrink = nonnegativeFactor(
@@ -639,15 +642,17 @@ function resolveFlexPlacements(
         width: row ? item.targetMain : Math.max(0, outerCross - item.paddingCross),
         height: row ? Math.max(0, outerCross - item.paddingCross) : item.targetMain,
       };
-      const renderedChild = cloneCRCElement(item.child);
-      setPreNormalizedStyle(
-        renderedChild,
-        Object.freeze(usedStyle),
-        item.child,
-        item.receiverToken,
-        item.query,
-      );
-      placements.push({ box, element: renderedChild });
+      placements.push({
+        box,
+        element: childWithUsedSize(
+          item.child,
+          usedStyle,
+          usedStyle.width,
+          usedStyle.height,
+          item.receiverToken,
+          item.query,
+        ),
+      });
       mainCursor += outerMain + mainGap + distribution.between;
     }
   }

@@ -7,7 +7,7 @@ it('pages one bounded scene generation and expires continuations on updates, rep
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 240; document.body.append(canvas);
   const color = signal('red'); let renders = 0;
-  function Scene() { renders++; return Array.from({ length: 100 }, (_, i) => <Rectangle style={{ x: i, y: 0, width: 1, height: 1, fill: color.get() }} onClick={() => undefined} />); }
+  function Scene() { renders++; return Array.from({ length: 100 }, (_, i) => <Rectangle style={{ left: i, top: 0, width: 1, height: 1, fill: color.get() }} onClick={() => undefined} />); }
   const controller = crc(canvas, <Scene />); driver.flush(1);
   const inspector = createTargetingInspector(canvas);
   try {
@@ -38,7 +38,7 @@ it('pages one bounded scene generation and expires continuations on updates, rep
 it('reports bounded expansion truncation rather than implying the last page is the whole scene', () => {
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement('canvas'); document.body.append(canvas);
-  function Scene() { return Array.from({ length: 300 }, (_, i) => <Rectangle style={{ x: i, y: 0, width: 1, height: 1, fill: 'red' }} onClick={() => undefined} />); }
+  function Scene() { return Array.from({ length: 300 }, (_, i) => <Rectangle style={{ left: i, top: 0, width: 1, height: 1, fill: 'red' }} onClick={() => undefined} />); }
   const controller = crc(canvas, <Scene />); driver.flush(1); const inspector = createTargetingInspector(canvas);
   try {
     let page = inspector.page(); let count = page.records.length;
@@ -52,9 +52,9 @@ it('expires a cursor when a nested Layer beyond the first page changes', () => {
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 240; document.body.append(canvas);
   const offset = signal(1);
-  function Child() { return <Rectangle style={{ x: offset.get(), y: 0, width: 10, height: 10, fill: 'red' }} onClick={() => undefined} />; }
+  function Child() { return <Rectangle style={{ left: offset.get(), top: 0, width: 10, height: 10, fill: 'red' }} onClick={() => undefined} />; }
   function Scene() { return <>
-    {Array.from({ length: 70 }, (_, i) => <Rectangle style={{ x: i, y: 0, width: 1, height: 1, fill: 'red' }} onClick={() => undefined} />)}
+    {Array.from({ length: 70 }, (_, i) => <Rectangle style={{ left: i, top: 0, width: 1, height: 1, fill: 'red' }} onClick={() => undefined} />)}
     <Layer style={{ width: 100, height: 100 }}><Child /></Layer>
   </>; }
   const controller = crc(canvas, <Scene />); driver.flush(1); const inspector = createTargetingInspector(canvas);
@@ -75,7 +75,7 @@ it('expires a cursor when a nested Layer beyond the first page changes', () => {
 it('rejects malformed and foreign cursors without destroying a valid expansion and prevents remount reuse', () => {
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement('canvas'); document.body.append(canvas);
-  function Scene() { return Array.from({ length: 70 }, (_, i) => <Rectangle style={{ x: i, y: 0, width: 1, height: 1, fill: 'red' }} onClick={() => undefined} />); }
+  function Scene() { return Array.from({ length: 70 }, (_, i) => <Rectangle style={{ left: i, top: 0, width: 1, height: 1, fill: 'red' }} onClick={() => undefined} />); }
   let controller = crc(canvas, <Scene />); driver.flush(1);
   const inspector = createTargetingInspector(canvas); const other = createTargetingInspector(canvas);
   try {

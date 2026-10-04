@@ -1,0 +1,51 @@
+import {resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
+import {writeFileSync,mkdirSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+const root=process.cwd(),output=resolve(process.env.CRC_AUDIT_OUTPUT??'/tmp/crc-audit-2026-10-03');mkdirSync(output,{recursive:true});
+const {chromium}=await import(pathToFileURL(resolve(root,'node_modules/playwright/index.mjs')));
+const browser=await chromium.launch({headless:true});
+const report={baseline:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),node:process.version,browser:browser.version(),sourceRoot:root,mode:'source',meaning:'Synthetic public-API scheduler CPU wall time; excludes compositor presentation. Timing cases uninstrumented except scalar duration samples. Structural copy counters measured separately. No forced GC.',cases:[],errors:[]};
+const save=()=>writeFileSync(resolve(output,'roots-active.json'),JSON.stringify(report,null,2));
+let timedOut=false;const watchdog=setTimeout(()=>{timedOut=true;report.errors.push('20-minute parent deadline');save();browser.close();},1200000);
+const cases=[1,32,128,512,1024].map(n=>({kind:'roots',n,frames:60}));
+try{for(const config of cases){
+ if(timedOut)break;
+ const page=await browser.newPage();page.on('pageerror',e=>report.errors.push({config,error:e.message}));
+ try{await page.route('**/audit-broad.html',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><title>CRC broad audit</title>'}));await page.goto((process.env.CRC_AUDIT_URL??'http://127.0.0.1:5203')+'/audit-broad.html');
+ const result=await page.evaluate(async({root,cfg})=>{
+ const base='/@fs'+root+'/';const core=await import(base+'packages/core/src/index.ts'),tex=await import(base+'packages/textures/src/index.ts'),s=await import(base+'packages/core/src/lib/scheduler/testing.ts'),physics=await import(base+'packages/physics/src/2d.ts'),particles=await import(base+'packages/particles/src/index.ts');
+ if(tex.useTexture!==core.useTexture)throw Error('Duplicate core runtime');
+ const h=core.createElement,driver=new s.ManualSchedulerDriver(),restore=s.installSchedulerDriverForTest(driver),mounts=[];const times=[];let time=0,idle=0,flushed=0,slices=0,bytes=0;const patches=[];
+ const stats=a=>{a.sort((a,b)=>a-b);return {samples:a.length,median:a[Math.floor(a.length*.5)],p95:a[Math.floor(a.length*.95)],worst:a.at(-1)}};
+ const canvas=()=>{const c=document.createElement('canvas');c.width=880;c.height=630;document.body.append(c);return c};
+ const flush=()=>{if(driver.pendingHostFrames){driver.flush(time+=1000/60);return true}return false};
+ const flushQuiet=()=>{for(let k=0;k<32&&driver.pendingHostFrames;k++)flush();if(driver.pendingHostFrames)throw Error('Failed to reach idle within32frames')};
+ let action=()=>{},extra={};
+ try{
+ if(cfg.kind==='physics-retention'){
+ const cm=await import(base+'packages/physics/src/lib/2d/runtime/controller.ts');const present=core.signal(false);let world;function Capture(){world=physics.crcPhysicsWorld2D();return undefined}function Body(){return present.get()?h(core.Circle,{physics:physics.staticBody2D(),style:{cx:20,cy:20,radius:5}}):undefined}
+ mounts.push(core.crc(canvas(),h(physics.PhysicsWorld2D,{children:[h(Capture,{}),h(Body,{})]})));flushQuiet();const controller=cm.requirePhysicsWorld2DController(world);const snapshot=()=>({bodies:controller.materializedBodyHandles.size,colliders:controller.materializedColliderHandles.size});extra.inspection='private cache counts supplement public query hit and stale enabled=false assertions';extra.before=snapshot();for(let n=0;n<cfg.n;n++){present.set(true);flushQuiet();const hit=physics.queryPoint2D(world,[20,20]);if(!hit)throw Error('Missing query hit '+n);present.set(false);flushQuiet();if(hit.body.enabled.get())throw Error('Removed handle still enabled '+n)}extra.afterChurn=snapshot();mounts[0].dispose();extra.afterDispose=snapshot();
+ }else if(cfg.kind==='roots'){
+ const values=[];for(let n=0;n<cfg.n;n++){const v=core.signal(0),c=canvas();c.width=c.height=16;values.push(v);function Scene(){const value=v.get();return h(core.Rectangle,{style:{x:value,width:2,height:2,fill:'red'}})}mounts.push(core.crc(c,h(Scene,{})))}flushQuiet();action=i=>{for(const v of values)v.set(i+1)};
+ }else if(cfg.kind==='same-value'){
+ const x=core.signal(0);mounts.push(core.crc(canvas(),h(core.Rectangle,{style:{x,width:2,height:2}})));flushQuiet();for(let i=0;i<cfg.n;i++)x.set(0);extra.pendingAfterSameValueWrites=driver.pendingHostFrames;if(driver.pendingHostFrames)throw Error('Same-value writes scheduled work');
+ }else{
+ let scene;
+ if(cfg.kind==='rectangles'||cfg.kind==='isolation'){const x=core.signal(0);const children=Array.from({length:cfg.n},(_,i)=>h(core.Rectangle,{key:i,style:{x:cfg.kind==='rectangles'?x:i%880,y:i%600,width:2,height:2,fill:'#369'}}));scene=cfg.kind==='rectangles'?h(core.Group,{children}):h(core.Group,{children:[h(cfg.layer?core.Layer:core.Group,{style:{width:880,height:630},children}),h(core.Rectangle,{style:{x,width:10,height:10,fill:'red'}})]});action=i=>x.set(i)}
+ if(cfg.kind==='diffusion'){function Ink(){const texture=tex.useTexture(tex.reactionDiffusion({seed:42}),{resolution:{width:cfg.size,height:cfg.size}});return h(core.Rectangle,{style:{width:400,height:250,fill:texture}})}scene=h(core.Group,{children:Array.from({length:cfg.n},(_,i)=>h(Ink,{key:i}))})}
+ if(cfg.kind==='particles'){const effect=particles.defineParticleEffect2D({emitters:[{name:'load',capacity:cfg.n,emission:[{type:'burst',atMilliseconds:0,count:cfg.n}],shape:{type:'line',from:[0,0],to:[850,600]},initial:{lifetimeMilliseconds:10000,size:2,color:'#ff0000',velocity:[2,0]},renderer:{type:'circle'},bounds:{min:[0,0],max:[880,630]}}]});scene=h(particles.Particles2D,{effect,autoplay:true,seed:42,style:{width:880,height:630}})}
+ if(cfg.kind==='physics')scene=h(physics.PhysicsWorld2D,{gravity:[0,0],sleeping:!!cfg.sleeping,children:Array.from({length:cfg.n},(_,i)=>h(core.Circle,{key:i,physics:physics.dynamicBody2D({linearVelocity:[cfg.sleeping?0:60,0]}),style:{cx:(i%50)*(cfg.dense?3:12),cy:Math.floor(i/50)*(cfg.dense?3:12),radius:2,fill:'red'}}))});
+ mounts.push(core.crc(canvas(),scene));
+ }
+ const warmup=20;
+ for(let i=0;i<cfg.frames+warmup&&cfg.frames;i++){
+ if(i===warmup&&cfg.counters)for(const C of [Uint8Array,Uint16Array,Uint32Array,Int8Array,Int16Array,Int32Array,Float32Array,Float64Array]){const original=C.prototype.slice;C.prototype.slice=function(...args){const r=original.apply(this,args);slices++;bytes+=r.byteLength;return r};patches.push(()=>C.prototype.slice=original)}
+ action(i);if(driver.pendingHostFrames){const t=performance.now();flush();if(i>=warmup){flushed++;times.push(performance.now()-t)}}else if(i>=warmup)idle++;
+ }
+ if(cfg.kind==='roots'&&times.length!==cfg.frames)throw Error('Active root probe did not flush all measured frames');return {config:cfg,warmup:cfg.frames?warmup:0,flushed,idle,...stats(times),extra,copied:cfg.counters?{slices,bytes}:undefined,live:s.snapshotRealmScheduler()};
+ }finally{for(const undo of patches)undo();for(const m of mounts)m.dispose();window.auditAfter=s.snapshotRealmScheduler();restore()}
+ },{root,cfg:config});
+ result.after=await page.evaluate(()=>window.auditAfter);report.cases.push(result);console.log(JSON.stringify(result));
+ }catch(e){report.cases.push({config,error:String(e)});console.log('FAILED '+JSON.stringify(config)+' '+e)}finally{save();await page.close()}
+}report.complete=!timedOut;}catch(error){report.errors.push(String(error));report.complete=false;}finally{clearTimeout(watchdog);save();await browser.close()}

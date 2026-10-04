@@ -22,7 +22,7 @@ it('reprocesses live water without repainting its clean child Layer', () => {
       <Group style={{ filter: displacement({ map: water, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) }}>
         <Layer style={{ width: 40, height: 40 }}><Content /></Layer>
       </Group>
-      <Rectangle style={{ x: 40, width: 8, height: 8, fill: water }} />
+      <Rectangle style={{ left: 40, width: 8, height: 8, fill: water }} />
     </Group>;
   }
   const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 40; document.body.append(canvas);

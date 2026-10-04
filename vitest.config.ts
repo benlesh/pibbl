@@ -5,6 +5,7 @@ import { configDefaults, defineConfig } from "vitest/config";
 import { assertBuiltCore } from "./tooling/assert-built-core.ts";
 import { crcRuntimeSource } from "./tooling/crc-runtime-source.ts";
 import { crcStudioDocs } from "./tooling/studio-docs/vite-plugin.ts";
+import { manipulationPointer } from "./tooling/manipulation-browser-command.ts";
 
 interface DevToolsSession {
   send(method: string, params?: Record<string, unknown>): Promise<any>;
@@ -177,6 +178,8 @@ export default defineConfig(({ mode }) => ({
   test: {
     exclude: [
       ...configDefaults.exclude,
+      "packages/text/.cache/**",
+      "packages/text/test/**",
       ".pnpm-store/**",
       ".superpowers/**",
       ".worktrees/**",
@@ -188,11 +191,13 @@ export default defineConfig(({ mode }) => ({
       "tooling/filter-authoring.test.mjs",
       "tooling/filter-validation.test.mjs",
       "tooling/optional-import-inertness.test.mjs",
+      "tooling/texture-import-inertness.test.mjs",
       "packages/core/src/features/physics/lib/2d/public-types.test.ts",
       "packages/core/src/features/physics/lib/3d/public-types.test.ts",
     ],
     browser: {
       commands: {
+        manipulationPointer,
         startDevToolsProfile,
         stopDevToolsProfile,
       },

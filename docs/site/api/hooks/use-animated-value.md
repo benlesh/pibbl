@@ -6,7 +6,8 @@ kind: api
 slug: use-animated-value
 apiCategory: hook
 symbols: [useAnimatedValue]
-relatedTypes: [Signal, CRCTweenAnimatedValueOptions, CRCSpringAnimatedValueOptions]
+relatedTypes:
+  [Signal, CRCTweenAnimatedValueOptions, CRCSpringAnimatedValueOptions]
 ---
 
 # useAnimatedValue

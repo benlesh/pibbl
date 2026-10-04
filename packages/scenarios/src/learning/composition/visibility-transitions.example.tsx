@@ -9,12 +9,12 @@ function Subject({ effect, register }: { effect: Effect; register: (handle: CRCV
   const transition = useVisibilityTransition({ initial: true, enter: definitions[effect], duration: 900 });
   register(transition);
   return <Group style={{ transition: transition.binding }}>
-    <Rectangle style={{ x: 100, y: 145, width: 600, height: 240, cornerRadius: 20, fill: '#254c64' }} />
+    <Rectangle style={{ left: 100, top: 145, width: 600, height: 240, cornerRadius: 20, fill: '#254c64' }} />
     <Circle style={{ cx: 232, cy: 267, radius: 75, fill: '#59e2cc' }} />
     <Circle style={{ cx: 282, cy: 267, radius: 75, fill: '#59e2cc' }} />
-    <Text style={{ x: 394, y: 238, font: '600 28px sans-serif', fill: '#f0faf7' }}>Ordinary CRC content</Text>
-    <Text style={{ x: 394, y: 281, font: '15px sans-serif', fill: '#b8d6df' }}>Text, shapes, and overlapping children.</Text>
-    <Text style={{ x: 394, y: 315, font: '15px sans-serif', fill: '#b8d6df' }}>{`One subject. ${effect.toUpperCase()} transition.`}</Text>
+    <Text style={{ left: 394, top: 238, font: '600 28px sans-serif', fill: '#f0faf7' }}>Ordinary CRC content</Text>
+    <Text style={{ left: 394, top: 281, font: '15px sans-serif', fill: '#b8d6df' }}>Text, shapes, and overlapping children.</Text>
+    <Text style={{ left: 394, top: 315, font: '15px sans-serif', fill: '#b8d6df' }}>{`One subject. ${effect.toUpperCase()} transition.`}</Text>
   </Group>;
 }
 
@@ -42,18 +42,18 @@ function Demo() {
   ];
   return <Group>
     <Rectangle style={{ width: 800, height: 560, fill: '#0a1723' }} />
-    <Text style={{ x: 40, y: 48, font: '12px monospace', fill: '#88aebc' }}>PUBLIC API / TRANSITION LIBRARY</Text>
-    <Text style={{ x: 40, y: 95, font: '600 30px sans-serif', fill: '#ecf8f4' }}>Visibility transitions</Text>
-    <Text style={{ x: 400, y: 275, textAlign: 'center', font: '14px sans-serif', fill: '#7e9fad' }}>The subject is hidden or unmounted.</Text>
-    <Rectangle style={{ x: 600, y: 84, width: 160, height: 38, cornerRadius: 6, fill: '#20394b', cursor: 'pointer' }} onClick={() => { effect.update(value => effects[(effects.indexOf(value) + 1) % effects.length]!); mounted.set(true); }} />
-    <Text pointerEvents="none" style={{ x: 680, y: 103, textAlign: 'center', textBaseline: 'middle', font: '600 12px sans-serif', fill: '#ecf8f4' }}>EFFECT: {effect.get().toUpperCase()}</Text>
+    <Text style={{ left: 40, top: 48, font: '12px monospace', fill: '#88aebc' }}>PUBLIC API / TRANSITION LIBRARY</Text>
+    <Text style={{ left: 40, top: 95, font: '600 30px sans-serif', fill: '#ecf8f4' }}>Visibility transitions</Text>
+    <Text style={{ left: 400, top: 275, textAlign: 'center', font: '14px sans-serif', fill: '#7e9fad' }}>The subject is hidden or unmounted.</Text>
+    <Rectangle style={{ left: 600, top: 84, width: 160, height: 38, cornerRadius: 6, fill: '#20394b', cursor: 'pointer' }} onClick={() => { effect.update(value => effects[(effects.indexOf(value) + 1) % effects.length]!); mounted.set(true); }} />
+    <Text pointerEvents="none" style={{ left: 680, top: 103, textAlign: 'center', textBaseline: 'middle', font: '600 12px sans-serif', fill: '#ecf8f4' }}>EFFECT: {effect.get().toUpperCase()}</Text>
     {mounted.get() && <Subject key={effect.get()} effect={effect.get()} register={register} />}
     {buttons.map((button, i) => <Group key={button.label}>
-      <Rectangle style={{ x: 40 + i * 184, y: 425, width: 168, height: 42, cornerRadius: 6, fill: '#20394b', cursor: 'pointer' }} onClick={button.action} />
-      <Text pointerEvents="none" style={{ x: 124 + i * 184, y: 446, textBaseline: 'middle', textAlign: 'center', font: '600 12px sans-serif', fill: '#ecf8f4' }}>{button.label}</Text>
+      <Rectangle style={{ left: 40 + i * 184, top: 425, width: 168, height: 42, cornerRadius: 6, fill: '#20394b', cursor: 'pointer' }} onClick={button.action} />
+      <Text pointerEvents="none" style={{ left: 124 + i * 184, top: 446, textBaseline: 'middle', textAlign: 'center', font: '600 12px sans-serif', fill: '#ecf8f4' }}>{button.label}</Text>
     </Group>)}
-    <Text style={{ x: 40, y: 504, font: '14px monospace', fill: '#76e4ce' }}>{message.get()}</Text>
-    <Text style={{ x: 40, y: 540, font: '12px sans-serif', fill: '#88aebc' }}>Click EFFECT to cycle nine presets. Show reverses a pending exit.</Text>
+    <Text style={{ left: 40, top: 504, font: '14px monospace', fill: '#76e4ce' }}>{message.get()}</Text>
+    <Text style={{ left: 40, top: 540, font: '12px sans-serif', fill: '#88aebc' }}>Click EFFECT to cycle nine presets. Show reverses a pending exit.</Text>
   </Group>;
 }
 export default function mount(canvas: HTMLCanvasElement): CRCController {

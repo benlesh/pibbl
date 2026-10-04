@@ -1214,11 +1214,39 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 74 unique, ordered, source-backed routes including responsive layout, Three, particles, physics, standard shapes, visualization, signals, and animation", async () => {
+  it("contains 87 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(74);
+    expect(learningExampleCatalog).toHaveLength(87);
+    expect(
+      learningExampleCatalog
+        .filter(
+          (entry) =>
+            entry.slug === "underwater" ||
+            entry.slug === "optional-filters" ||
+            entry.slug === "rainy-window",
+        )
+        .map(getLearningExampleRoute)
+        .sort(),
+    ).toEqual([
+      "#/examples/composition/optional-filters",
+      "#/examples/composition/rainy-window",
+      "#/examples/composition/underwater",
+    ]);
+
+    expect(
+      learningExampleCatalog
+        .filter(
+          (entry) =>
+            entry.slug === "viz-band-bars" || entry.slug === "viz-grouped-bars",
+        )
+        .map((entry) => getLearningExampleRoute(entry))
+        .sort(),
+    ).toEqual([
+      "#/examples/composition/viz-band-bars",
+      "#/examples/composition/viz-grouped-bars",
+    ]);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1276,14 +1304,16 @@ describe("learning example catalog", () => {
         "star",
         "svg-path",
         "text",
+        "text-geometry",
+        "text-envelope",
         "vertical-line",
         "wedge",
       ],
       composition: [
+        "embers-physics",
+        "energy-transitions",
+        "visibility-transitions",
         "stirred-ink",
-        "plasma-globe",
-        "underwater",
-        "optional-filters",
         "clip",
         "group",
         "growing-reveal",
@@ -1291,12 +1321,22 @@ describe("learning example catalog", () => {
         "layer",
         "living-ink",
         "material-lab",
+        "optional-filters",
         "particle-effects",
         "physics-2d",
         "physics-panels",
+        "plasma-globe",
+        "rainy-window",
+        "fire-and-flow",
         "signal-inputs",
         "signals-and-animation",
+        "underwater",
+        "viz-grouped-stacked-bars",
+        "viz-stacked-bars",
+        "viz-band-bars",
+        "viz-grouped-bars",
         "viz-hover-comparison",
+        "viz-pie-composition",
         "viz-points-and-inspection",
         "viz-responsive-line",
       ],
@@ -1322,6 +1362,7 @@ describe("learning example catalog", () => {
         "mouse-out",
         "mouse-over",
         "mouse-up",
+        "manipulation",
         "overlap-and-paint-order",
         "pointer-capture",
         "pointer-events",
@@ -1384,6 +1425,12 @@ describe("learning example catalog", () => {
       "physics-2d",
       "layer",
       "physics-panels",
+      "fire-and-flow",
+      "viz-grouped-stacked-bars",
+      "viz-stacked-bars",
+      "viz-grouped-bars",
+      "viz-band-bars",
+      "viz-pie-composition",
       "viz-hover-comparison",
       "viz-points-and-inspection",
       "viz-responsive-line",
@@ -1394,7 +1441,11 @@ describe("learning example catalog", () => {
       "underwater",
       "stirred-ink",
       "html-box",
+      "rainy-window",
+      "energy-transitions",
       "optional-filters",
+      "visibility-transitions",
+      "embers-physics",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1751,15 +1802,34 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "affineTransform",
+        "bifrost",
+        "composeTransforms",
+        "definePrimitive",
+        "embers",
+        "envelopeTransform",
+        "fade",
+        "hologram",
+        "raycast2D",
+        "transformPath",
+        "useVisibilityTransition",
+
+        "defineTexture",
+        "displacement",
+        "useTexture",
         "marble",
         "paper",
         "cellular",
         "reactionDiffusion",
+        "rainDrops",
         "ReactionDiffusion",
         "ProceduralTexture",
+        "loadOutlineFont",
+        "createTextGeometry",
         "Scale",
         "Axis",
         "LineSeries",
+        "BarSeries",
         "PointSeries",
         "PlotSeries",
         "ScaleAdjust",
@@ -1767,6 +1837,10 @@ describe("learning example catalog", () => {
         "HoverData",
         "HoverCard",
         "AnchoredLayout",
+        "PieLayout",
+        "PieSlice",
+        "PieLabel",
+        "pieSlices",
         "defineSeries",
         "closestPoint",
         "closestX",
@@ -1791,8 +1865,11 @@ describe("learning example catalog", () => {
         "bendPathAlongArc",
         "bendPathAlongPath",
         "warpPath",
-        "toPath2D",
-        "toSvgPathData",
+        "flattenPath",
+        "flattenPathWang",
+        "simplifyPathRadial",
+        "simplifyPath",
+        "subdividePath",
         "SvgPath",
         "Line",
         "HorizontalLine",
@@ -1816,6 +1893,8 @@ describe("learning example catalog", () => {
         "batch",
         "useComputed",
         "useParticleSystem",
+        "useFlowField2D",
+        "useFlowSource2D",
         "useSignal",
         "useAnimatedValue",
         "usePlayback",
@@ -1967,17 +2046,26 @@ describe("learning example catalog", () => {
     const target = { x: 360, y: 120 };
 
     // This test exercises sample retention, not host-speed-dependent event timing.
-    const nativeTimestamp = Object.getOwnPropertyDescriptor(Event.prototype, "timeStamp")!.get!;
+    const nativeTimestamp = Object.getOwnPropertyDescriptor(
+      Event.prototype,
+      "timeStamp",
+    )!.get!;
     const sampleTimes = new WeakMap<Event, number>();
     let timestamp = 1000;
-    const timestamps = vi.spyOn(Event.prototype, "timeStamp", "get").mockImplementation(function (this: Event) {
-      if (this instanceof PointerEvent && this.target === canvas) {
-        let time = sampleTimes.get(this);
-        if (time === undefined) { time = timestamp; timestamp += 8; sampleTimes.set(this, time); }
-        return time;
-      }
-      return nativeTimestamp.call(this);
-    });
+    const timestamps = vi
+      .spyOn(Event.prototype, "timeStamp", "get")
+      .mockImplementation(function (this: Event) {
+        if (this instanceof PointerEvent && this.target === canvas) {
+          let time = sampleTimes.get(this);
+          if (time === undefined) {
+            time = timestamp;
+            timestamp += 8;
+            sampleTimes.set(this, time);
+          }
+          return time;
+        }
+        return nativeTimestamp.call(this);
+      });
     try {
       await pointerDownLogicalPoint(canvas, {
         x: before.centerX,
@@ -1991,9 +2079,11 @@ describe("learning example catalog", () => {
       const released = solidBlueBounds(canvas);
       for (let frame = 0; frame < 4; frame += 1) await nextPaint();
       const rolling = solidBlueBounds(canvas);
-  
+
       expect(rolling.centerX).toBeGreaterThan(released.centerX + 30);
-    } finally { timestamps.mockRestore(); }
+    } finally {
+      timestamps.mockRestore();
+    }
   });
 
   it("preserves the off-center grab offset while dragging the physics lesson ball", async () => {
@@ -2131,11 +2221,13 @@ describe("learning example catalog", () => {
   );
 });
 
-
 it("path-warp drags a corner and resets the same public rocket example", async () => {
   const { canvas } = await renderLearningExample("path-warp");
   const snapshot = () => canvas.toDataURL();
-  const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  const frame = () =>
+    new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
   const before = snapshot();
   await pointerDownLogicalPoint(canvas, { x: 425, y: 156 });
   await pointerMoveLogicalPoint(canvas, { x: 340, y: 220 });
@@ -2150,7 +2242,10 @@ it("path-warp drags a corner and resets the same public rocket example", async (
 
 it("path-warp switches modes without resetting handles and recovers from invalid perspective", async () => {
   const { canvas, textPaints } = await renderLearningExample("path-warp");
-  const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  const frame = () =>
+    new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
   await pointerDownLogicalPoint(canvas, { x: 425, y: 156 });
   await pointerMoveLogicalPoint(canvas, { x: 400, y: 180 });
   await pointerUpLogicalPoint(canvas, { x: 400, y: 180 });
@@ -2158,21 +2253,116 @@ it("path-warp switches modes without resetting handles and recovers from invalid
   const bilinear = canvas.toDataURL();
   await clickLogicalPoint(canvas, { x: 208, y: 450 });
   await frame();
-  expect(textPaints.some(p => p.text === 'PERSPECTIVE / PROJECTED')).toBe(true);
+  expect(textPaints.some((p) => p.text === "PERSPECTIVE / PROJECTED")).toBe(
+    true,
+  );
   expect(canvas.toDataURL()).not.toBe(bilinear);
   expect(pixelAt(canvas, 400, 180)).toEqual([141, 240, 209, 255]);
   await pointerDownLogicalPoint(canvas, { x: 400, y: 180 });
   await pointerMoveLogicalPoint(canvas, { x: 790, y: 470 });
   await pointerUpLogicalPoint(canvas, { x: 790, y: 470 });
   await frame();
-  expect(textPaints.some(p => p.text === 'PREVIOUS VALID PREVIEW')).toBe(true);
+  expect(textPaints.some((p) => p.text === "PREVIOUS VALID PREVIEW")).toBe(
+    true,
+  );
   expect(pixelAt(canvas, 790, 470)).toEqual([141, 240, 209, 255]);
   const paintCount = textPaints.length;
   await clickLogicalPoint(canvas, { x: 84, y: 450 });
   await frame();
-  expect(textPaints.slice(paintCount).some(p => p.text === 'PREVIOUS VALID PREVIEW')).toBe(false);
+  expect(
+    textPaints
+      .slice(paintCount)
+      .some((p) => p.text === "PREVIOUS VALID PREVIEW"),
+  ).toBe(false);
   expect(pixelAt(canvas, 790, 470)).toEqual([141, 240, 209, 255]);
   await clickLogicalPoint(canvas, { x: 770, y: 534 });
   await frame();
   expect(pixelAt(canvas, 425, 156)).toEqual([141, 240, 209, 255]);
+});
+
+it("lets Fire and Flow shapes move, resize, rotate, and deselect through decorative effects", async () => {
+  const { canvas } = await renderLearningExample("fire-and-flow");
+  const bounds = (color: readonly [number, number, number]) => {
+    const pixels = canvas.getContext("2d")!.getImageData(0, 0, 720, 480).data;
+    let left = 720,
+      top = 480,
+      right = -1,
+      bottom = -1,
+      handles = 0;
+    for (let y = 0; y < 480; y++)
+      for (let x = 0; x < 720; x++) {
+        const i = (y * 720 + x) * 4;
+        if (
+          pixels[i] === color[0] &&
+          pixels[i + 1] === color[1] &&
+          pixels[i + 2] === color[2]
+        ) {
+          left = Math.min(left, x);
+          top = Math.min(top, y);
+          right = Math.max(right, x);
+          bottom = Math.max(bottom, y);
+        }
+        if (
+          pixels[i]! < 80 &&
+          pixels[i + 1]! > 70 &&
+          pixels[i + 1]! < 180 &&
+          pixels[i + 2]! > 200
+        )
+          handles++;
+      }
+    return {
+      left,
+      top,
+      width: right - left + 1,
+      height: bottom - top + 1,
+      handles,
+    };
+  };
+  const drag = async (
+    from: readonly [number, number],
+    to: readonly [number, number],
+  ) => {
+    await pointerDownLogicalPoint(canvas, { x: from[0], y: from[1] });
+    await pointerMoveLogicalPoint(canvas, { x: to[0], y: to[1] });
+    await pointerUpLogicalPoint(canvas, { x: to[0], y: to[1] });
+    await nextPaint();
+  };
+  const rectangle = [57, 123, 131] as const;
+  expect(bounds(rectangle).left).toBeGreaterThanOrEqual(285);
+  await clickLogicalPoint(canvas, { x: 335, y: 272 });
+  await nextPaint();
+  expect(bounds(rectangle).handles).toBeGreaterThan(5);
+  await drag([335, 272], [425, 300]);
+  expect(Math.abs(bounds(rectangle).left - 376)).toBeLessThan(2);
+  await drag([475, 328], [515, 348]);
+  expect(bounds(rectangle).width).toBeGreaterThan(135);
+  await drag([445, 253], [503, 253]);
+  expect(bounds(rectangle).height).toBeGreaterThan(100);
+  await clickLogicalPoint(canvas, { x: 650, y: 400 });
+  await nextPaint();
+  expect(bounds(rectangle).handles).toBe(0);
+  for (const [color, from, to] of [
+    [
+      [101, 126, 155],
+      [447, 177],
+      [477, 207],
+    ],
+    [
+      [153, 114, 84],
+      [235, 175],
+      [205, 195],
+    ],
+  ] as const) {
+    const before = bounds(color);
+    await drag(from, to);
+    expect(
+      Math.abs(bounds(color).left - before.left - (to[0] - from[0])),
+    ).toBeLessThan(3);
+    expect(
+      Math.abs(bounds(color).top - before.top - (to[1] - from[1])),
+    ).toBeLessThan(3);
+  }
+  await clickLogicalPoint(canvas, { x: 550, y: 460 });
+  await nextPaint();
+  expect(bounds(rectangle).handles).toBe(0);
 });

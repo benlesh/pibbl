@@ -247,7 +247,7 @@ describe('g', () => {
           filter: dropShadow({ offsetX: 20, offsetY: 0, color: 'black' }),
         },
         children: createElement(Rectangle, {
-          style: { x: 10, y: 10, width: 20, height: 20, fill: 'red' },
+          style: { left: 10, top: 10, width: 20, height: 20, fill: 'red' },
         }),
       }), { width: 140, height: 100 });
 
@@ -384,8 +384,8 @@ describe('g', () => {
           }
         }), createElement(Text, {
           style: {
-            x: 10,
-            y: 30,
+            left: 10,
+            top: 30,
             fill: 'white'
           }
         }, 'Transformed!')]

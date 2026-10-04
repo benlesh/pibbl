@@ -34,7 +34,7 @@ function Badge({ label, active }: BadgeProps): CRCNode {
       <Rectangle
         style={{ width: 180, height: 64, fill: active ? "gold" : "navy" }}
       />
-      <Text style={{ x: 16, y: 18, fill: active ? "black" : "white" }}>
+      <Text style={{ left: 16, top: 18, fill: active ? "black" : "white" }}>
         {label}
       </Text>
     </Group>
@@ -45,6 +45,21 @@ function Badge({ label, active }: BadgeProps): CRCNode {
 The function is the component identity. Call it through JSX or
 `createElement`; a direct JavaScript call does not create a CRC element or
 establish render context.
+
+### Placed style props
+
+When a layout parent places a custom component, its `style` prop retains the
+author's public fields and, for a whole-style signal, the original signal
+identity. CRC may use a readonly shallow copy for an object style to carry
+private placement provenance; it never mutates the caller object, but object
+identity is not guaranteed for this positioned path. Use field values rather
+than reference equality when a component receives placement style.
+
+If the component forwards that style with `{ ...style }`, matching resolved
+`left` and `top` remain parent placement and are consumed once. Different
+values become local offsets. A new style object that does not spread the prop
+is independent local geometry even when its offsets happen to match the
+parent's.
 
 To let the receiving custom component own a reactive input, declare
 `SignalValue<T>` and resolve it at that boundary:

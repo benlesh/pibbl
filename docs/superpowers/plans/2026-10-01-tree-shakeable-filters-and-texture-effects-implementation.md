@@ -186,7 +186,7 @@ one reviewer unless genuinely independent recipe work saves time.
 - [x] Migration/docs/contracts/packed/declaration/Studio parity complete
 - [x] Optional feature audit and byte evidence recorded
 - [x] Independent final review corrected and aggregate trust gate passes
-- [x] Integrated result preserves concurrent WASM/electric/agent work
+- [ ] Integrated result preserves concurrent WASM/electric/agent work
 
 ## Review findings and corrections
 
@@ -325,70 +325,3 @@ for follow-up rather than being represented as explicit user acceptance.
 
 Shared-checkout integration and proportional combined-state verification are the
 only remaining delivery steps. The latest WASM spike remains untouched.
-
-## Shared-checkout integration and concurrent-work recheck
-
-The reviewed implementation is now integrated into the primary working tree,
-without staging or replacing unrelated changes. Electric recipe exports, Studio
-declarations, plasma examples, and agent-verification changes are preserved.
-The combined catalog contains 72 lessons; optional-filters uses order 215 to avoid
-the concurrent plasma entry. Catalog expectations include plasma and defineTexture.
-
-The plasma thread identified and fixed a shared publication regression: reusable
-candidate canvases must be cleared before copying a transparent producer frame.
-Its 100-frame public regression is retained. Independent review confirmed that
-candidate clearing preserves commit, abort, rollback, and disposal semantics.
-Fresh combined Chromium checks passed 23 tests across seven files covering
-plasma/electric consumers, transparent publication, ordinary texture paint,
-displacement map replacement, and Layer caching. The combined learning catalog
-passed 220 tests; editor and water checks passed in the preceding run.
-
-The latest WASM thread has advanced beyond the earlier tooling-only checkpoint:
-it is actively migrating marble, paper, cellular, and ink behind existing texture
-APIs. It keeps the CRC scheduler and publishes through the existing Canvas surface;
-no filter dependency on WASM memory or generator implementation is introduced.
-Water generation remains JavaScript and is not claimed to be WASM-backed.
-
-A source esbuild public-mount probe found that water retains neither WASM kernels
-nor electric implementations. Marble excludes electric implementations but currently
-retains all four WASM byte modules. Per-recipe WASM elimination remains a migration
-requirement; a shared runtime registry must not defeat it. At this checkpoint the
-four in-progress WASM tests fail with a palette-buffer RangeError inside FieldMemory,
-not at the filter publication boundary. These are concurrent migration findings,
-not a claim that the combined moving checkout has passed the aggregate gate.
-
-The marble retention finding was corrected with four narrowly scoped purity
-annotations on inert recipe construction in the concurrent definitions module.
-No generation, WASM buffer, or scheduler behavior changed. A fresh minified source
-public-mount check now retains only marble's WASM kernel for marble, and no WASM
-kernel for water. This reduced that marble fixture from 166,065 to 140,828 bytes;
-these are complete mount bundles, not kernel-only sizes. The active WASM migration
-still owns its palette/runtime tests and final packed-output verification.
-
-### Final cross-thread verification checkpoint
-
-The source-and-packed esbuild/Vite matrix now passes with explicit checks for
-all four embedded WASM kernels, in both minified and unminified output. Packed
-verification additionally exposed unused legacy ProceduralTexture and
-ReactionDiffusion factory calls retaining their generators; two inert-factory
-purity annotations resolve that retention. Import-only inertness also passes.
-The rebuilt core and textures packages passed their builds. No producer behavior
-or shared WASM buffer logic changed for these bundle corrections.
-
-The latest combined browser run passed 70 tests, including all four direct-memory
-WASM upload tests and the texture/filter/electric checks. Its sole failure was the
-new, concurrently developed wasm-integration animation/physics demo assertion.
-That in-progress scenario belongs to the WASM migration and does not supersede
-the passing filter-focused integration evidence. Combined typechecking passed.
-
-The isolated final feature tree is `568ed43d8f49071df075c46dbf9fce0eb34cec9b`.
-Its gate passed static/package checks and 3,317 browser tests (five skipped), then
-encountered a missing generated viz declaration during a recursive build. After
-rebuilding, the remaining Studio visuals, built smoke, identity/watchdog,
-lifecycle, and performance gates passed. This is an initial run plus resumed
-remaining gates, not a claim of a second uninterrupted aggregate exit-zero run.
-The earlier uninterrupted `fe9b4b18` result remains recorded above.
-
-The requested filter implementation, review, and integration are complete.
-The shared checkout remains active with independent WASM and agent-verification
-work; no combined whole-checkout release gate, commit, merge, or push is claimed.

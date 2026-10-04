@@ -1,0 +1,70 @@
+{
+  "schema": "crc-weak-retention/2",
+  "baseUrl": "http://127.0.0.1:5204",
+  "methodology": "Each dereference happens in a new browser evaluation after CDP forced GC. The probe weakly observes the actual root CRCElement and HTMLCanvasElement; the retain case keeps only the public Texture handle. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.",
+  "cases": [
+    {
+      "retain": false,
+      "hasConfiguredStaleHandle": true,
+      "renders": 1,
+      "pendingBeforeInitialFlush": 1,
+      "rootReachableBeforeDispose": true,
+      "canvasReachableBeforeDispose": true,
+      "rootReachableWithConfiguredHandleState": false,
+      "canvasReachableWithConfiguredHandleState": false,
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 1,
+        "releasedRootRegistrations": 1,
+        "createdBeginCommands": 0,
+        "releasedBeginCommands": 0,
+        "createdCompletionCallbacks": 0,
+        "releasedCompletionCallbacks": 0,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "rootReachableAfterDroppingStaleAndSecondGC": false,
+      "canvasReachableAfterDroppingStaleAndSecondGC": false
+    },
+    {
+      "retain": true,
+      "hasConfiguredStaleHandle": true,
+      "renders": 1,
+      "pendingBeforeInitialFlush": 1,
+      "rootReachableBeforeDispose": true,
+      "canvasReachableBeforeDispose": true,
+      "rootReachableWithConfiguredHandleState": true,
+      "canvasReachableWithConfiguredHandleState": true,
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 1,
+        "releasedRootRegistrations": 1,
+        "createdBeginCommands": 0,
+        "releasedBeginCommands": 0,
+        "createdCompletionCallbacks": 0,
+        "releasedCompletionCallbacks": 0,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "rootReachableAfterDroppingStaleAndSecondGC": false,
+      "canvasReachableAfterDroppingStaleAndSecondGC": false
+    }
+  ],
+  "errors": []
+}

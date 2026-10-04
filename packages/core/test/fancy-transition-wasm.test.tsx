@@ -12,7 +12,7 @@ for (const [name, factory] of [['embers', embers], ['hologram', hologram]] as co
     let handle!: CRCVisibilityTransition;
     try {
       const effect = factory({region:{x:40,y:50,width:120,height:120}, seed: 9});
-      function Scene() { handle = useVisibilityTransition({enter:effect,duration:100}); return <Rectangle style={{x:40,y:50,width:120,height:120,fill:'red',transition:handle.binding}} />; }
+      function Scene() { handle = useVisibilityTransition({enter:effect,duration:100}); return <Rectangle style={{left:40,top:50,width:120,height:120,fill:'red',transition:handle.binding}} />; }
       const root=crc(canvas,<Scene />);roots.push(root);driver.flush(0);
       expect(instances).not.toHaveBeenCalled();
       void handle.hide();driver.flush(10);driver.flush(35);

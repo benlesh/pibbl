@@ -1,16 +1,11 @@
 # Text conversion to PathGeometry
 
-> **Historical status: Design or implementation record; current behavior is defined by runtime contracts.**
+> **Historical status: APPROVED DESIGN.** This dated record captures the approved direction; current contracts and tests define implemented behavior.
 
 Status: Approved by the user, including pnpm tooling and Symbol.dispose support.
 Not an implemented contract.
 
 Date: 2026-09-30
-
-Implementation plan: [Text PathGeometry implementation plan](../plans/2026-09-30-text-path-geometry-implementation.md).
-
-These documents use the repository's existing design/plan directories; they do
-not require the Superpowers plugin or its workflow.
 
 ## Recommendation
 

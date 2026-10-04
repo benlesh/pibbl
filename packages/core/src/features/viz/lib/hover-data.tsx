@@ -19,7 +19,12 @@ export function HoverData<T>({ query, children }: HoverDataProps<T>): CRCNode {
       if (!snapshot) {
         const value = readScale(id, "HoverData");
         if (!value) throw new TypeError("HoverData requires a scale ID.");
-        snapshot = value.get();
+        const resolved = value.get();
+        if (resolved.type !== "linear")
+          throw new TypeError(
+            "HoverData numeric queries require linear scales.",
+          );
+        snapshot = resolved;
         snapshots.set(id, snapshot);
       }
       return snapshot;

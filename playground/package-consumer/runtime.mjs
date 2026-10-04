@@ -2,6 +2,7 @@ import * as core from "@crc/core";
 import * as internal from "@crc/core/internal";
 import * as particles from "@crc/core/particles";
 import * as threeAdapter from "@crc/three";
+import * as physics2d from "@crc/core/physics/2d";
 import * as physics3dGeometry from "@crc/core/physics/3d/geometry";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -19,6 +20,14 @@ import {
 } from "@crc/core/jsx-dev-runtime";
 
 const expected = [
+  "affineTransform",
+  "composeTransforms",
+  "envelopeTransform",
+  "quadTransform",
+  "transformPath",
+
+  "DragHandle", "ResizeHandle", "ResizeHandles", "RotationHandle",
+  "ManipulationFrame", "Manipulable", "useManipulation", "degrees",
   "Absolute",
   "Arc",
   "Circle",
@@ -79,6 +88,8 @@ const expected = [
   "dissolve",
   "easing",
   "flattenPath",
+  "flattenPathWang",
+  "simplifyPathRadial",
   "simplifyPath",
   "subdividePath",
   "toPath2D",
@@ -220,9 +231,9 @@ for (const exportName of expected) {
     );
   }
 }
-if (actual.length !== 103) {
+if (actual.length !== expected.length) {
   throw new Error(
-    `Expected 103 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected ${expected.length} @crc/core runtime exports, received ${actual.length}.`,
   );
 }
 
@@ -276,6 +287,8 @@ const expectedParticles = [
   "particleInteger",
   "particleParameter",
   "particleRange",
+  "useFlowField2D",
+  "useFlowSource2D",
   "useParticleSystem",
 ];
 const actualParticles = Object.keys(particles).sort();
@@ -514,3 +527,12 @@ const htmlDescriptor = core.createElement(core.HtmlBox, {
   style: { width: 100, height: 40 },
 });
 if (htmlDescriptor.type !== core.HtmlBox) throw new Error('HtmlBox descriptor lost its public identity');
+const wangGeometry = core.flattenPathWang(editableGeometry, { tolerance: 0.25 });
+const radialGeometry = core.simplifyPathRadial(wangGeometry, { tolerance: 0.5 });
+if (!(wangGeometry instanceof core.PathGeometry) || !(radialGeometry instanceof core.PathGeometry)) {
+  throw new Error('Alternate path helpers did not return public geometry.');
+}
+
+if (typeof physics2d.physicsObstacles2D !== "function" || "physicsBoxObstacles2D" in physics2d) {
+  throw new Error("Expected the general committed-obstacle API without its superseded box-only name.");
+}

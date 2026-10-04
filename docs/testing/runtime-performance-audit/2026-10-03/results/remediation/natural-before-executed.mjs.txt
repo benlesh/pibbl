@@ -1,0 +1,30 @@
+import { chromium } from '/Users/benlesh/.codex/worktrees/perf-verification/crc/node_modules/playwright/index.mjs';
+import {writeFileSync,mkdirSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+const root='/Users/benlesh/.codex/worktrees/perf-verification/crc';
+const output='/tmp/crc-remediation-natural-before';mkdirSync(output,{recursive:true});
+const server=await chromium.launchServer({headless:true,args:['--enable-precise-memory-info']});
+const browser=await chromium.connect(server.wsEndpoint());
+const result={baseline:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),node:process.version,browser:browser.version(),platform:process.platform,arch:process.arch,mode:'source',gc:'No forced GC during workload; explicitly separate post-disposal GC sample',timing:'scheduler begin-to-idle CPU wall time, bounded 4096-frame reservoir per 30-second window; excludes presentation',samples:[],errors:[]};
+function save(){writeFileSync(output+'/natural-soak.json',JSON.stringify(result,null,2));}
+function rss(){const rows=execFileSync('ps',['-axo','pid=,ppid=,rss='],{encoding:'utf8'}).trim().split('\n').map(x=>x.trim().split(/\s+/).map(Number));const ids=new Set([server.process().pid]);let changed;do{changed=false;for(const [id,parent] of rows)if(ids.has(parent)&&!ids.has(id)){ids.add(id);changed=true}}while(changed);return {processes:rows.filter(x=>ids.has(x[0])).map(([pid,ppid,rssKiB])=>({pid,ppid,rssKiB})),totalKiB:rows.filter(x=>ids.has(x[0])).reduce((s,x)=>s+x[2],0)}}
+let stopped=false;const timeout=setTimeout(()=>{result.errors.push('Parent deadline exceeded');save();server.close();},22*60*1000);
+try{
+for(const [slug,seconds] of [['isolated-512',300]]){
+ const page=await browser.newPage({viewport:{width:1280,height:900}});page.on('pageerror',e=>{result.errors.push({slug,error:e.message});save()});
+ await page.route('**/audit.html',r=>r.fulfill({contentType:'text/html',body:'<title>CRC current main natural memory audit</title><body></body>'}));await page.goto('http://127.0.0.1:5203/audit.html');
+ const cdp=await page.context().newCDPSession(page);await cdp.send('Performance.enable');
+ await page.evaluate(async ({root,slug})=>{
+ const base='/@fs'+root+'/';const core=await import(base+'packages/core/src/index.ts');const tex=await import(base+'packages/textures/src/index.ts');const catalog=await import(base+'packages/scenarios/src/learning-catalog.ts');const sched=await import(base+'packages/core/src/lib/scheduler/realm-scheduler.ts');const gs=await import(base+'packages/core/src/lib/global-state.ts');
+ let count=0,start=0,total=0,worst=0,slow=0,frames=0;const durations=new Float64Array(4096);const phases={};let prior,priorTime;
+ const release=sched.installSchedulerTraceCollectorForTest(r=>{if(r.kind!=='scheduler-phase')return;const now=performance.now();if(r.phase==='begin'){start=now;frames++}if(prior&&prior!=='idle')phases[prior]=(phases[prior]??0)+(now-priorTime);prior=r.phase;priorTime=now;if(r.phase==='idle'){const d=now-start;durations[count++%4096]=d;total+=d;worst=Math.max(worst,d);if(d>16.667)slow++}});
+ const canvas=document.createElement('canvas');document.body.append(canvas);let mount;
+ if(slug==='isolated-512'){canvas.width=512;canvas.height=512;function Scene(){const ink=tex.useTexture(tex.reactionDiffusion({seed:42}),{resolution:{width:512,height:512}});return core.createElement(core.Rectangle,{style:{width:512,height:512,fill:ink}})}mount=core.crc(canvas,core.createElement(Scene,{}));}else{const entry=catalog.learningExampleCatalog.find(x=>x.slug===slug);canvas.width=entry.canvas.width;canvas.height=entry.canvas.height;mount=(await catalog.loadLearningExample(entry)).default(canvas)}
+ window.audit={snapshot(){const a=Array.from(durations.subarray(0,Math.min(count,4096))).sort((a,b)=>a-b);const s={frames,count,median:a[Math.floor(a.length*.5)],p95:a[Math.floor(a.length*.95)],worst,slow,total,phases:{...phases},scheduler:sched.snapshotRealmScheduler(),instances:[...gs.GLOBAL_STATE.crcInstances.values()].map(i=>({refs:i.refs.size,paintEntries:i.paintEntries.size})),heap:performance.memory?{used:performance.memory.usedJSHeapSize,total:performance.memory.totalJSHeapSize}:null};count=0;total=0;worst=0;slow=0;for(const k in phases)delete phases[k];return s},dispose(){mount.dispose();release();}};
+ },{root,slug});
+ console.log('START '+slug);save();
+ for(let elapsed=0;elapsed<seconds;elapsed+=30){await new Promise(r=>setTimeout(r,30000));const sample={slug,elapsed:elapsed+30,observations:await page.evaluate(()=>window.audit.snapshot()),memory:await cdp.send('Performance.getMetrics').then(x=>Object.fromEntries(x.metrics.filter(x=>/Heap|Documents|Nodes|Frames/.test(x.name)).map(x=>[x.name,x.value]))),dom:await cdp.send('Memory.getDOMCounters'),rss:rss()};result.samples.push(sample);save();console.log(JSON.stringify({slug,elapsed:sample.elapsed,median:sample.observations.median,p95:sample.observations.p95,heap:sample.observations.heap,rss:sample.rss.totalKiB}));}
+ await page.screenshot({path:output+'/'+slug+'.png'});await page.evaluate(()=>window.audit.dispose());await new Promise(r=>setTimeout(r,1000));result.samples.push({slug,stage:'disposed-natural',observations:await page.evaluate(()=>window.audit.snapshot()),rss:rss()});save();await cdp.send('HeapProfiler.collectGarbage');result.samples.push({slug,stage:'disposed-forced-GC-SEPARATE',observations:await page.evaluate(()=>window.audit.snapshot()),rss:rss()});save();await page.close();
+}
+result.complete=true;
+}catch(e){result.errors.push(String(e));process.exitCode=1}finally{clearTimeout(timeout);save();await browser.close();await server.close();}

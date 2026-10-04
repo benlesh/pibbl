@@ -1,0 +1,2 @@
+$ node tooling/verify-visual-safeguard.mjs
+Visual safeguard rejected the drill, preserved every baseline byte, and recovered green.

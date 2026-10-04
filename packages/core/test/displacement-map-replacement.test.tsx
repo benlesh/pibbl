@@ -18,7 +18,7 @@ it('replaces a public map input and detaches its old revision consumer and GPU u
     second = useTexture(solid('rgb(255 128 128)'), { resolution: { width: 8, height: 8 } });
     selected = useSignal<TexturePaint>(first);
     return <Group style={{ filter: displacement({ map: selected, strength: 4, region: { x: 0, y: 0, width: 40, height: 40 } }) }}>
-      <Rectangle style={{ x: 10, y: 10, width: 10, height: 10, fill: 'red' }} />
+      <Rectangle style={{ left: 10, top: 10, width: 10, height: 10, fill: 'red' }} />
     </Group>;
   }
   const canvas = document.createElement('canvas'); canvas.width = canvas.height = 40; document.body.append(canvas);

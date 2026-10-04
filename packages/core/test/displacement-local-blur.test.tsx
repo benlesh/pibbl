@@ -1,12 +1,12 @@
 import { afterEach, expect, it } from "vitest";
 import { crc, defineTexture, Group, Rectangle, useTexture } from "@crc/core";
-import { displacement } from "@crc/core/filters";
+import { displacement, reflectedLight } from "@crc/core/filters";
 import { clearSharedState } from "../src/lib/global-state.js";
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from "../src/lib/scheduler/testing.js";
 
 afterEach(() => { clearSharedState(); document.body.innerHTML = ""; });
 
-it("uses blue as local blur coverage even with zero displacement strength", () => {
+it.each([false, true])("uses blue as local blur coverage with zero displacement (following reflection: %s)", (reflection) => {
   const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
   const field = defineTexture({ create() { return null; }, rasterize(_, context) {
     const ctx = context.canvas.getContext("2d")!;
@@ -15,8 +15,10 @@ it("uses blue as local blur coverage even with zero displacement strength", () =
   } });
   function Scene() {
     const map = useTexture(field({}), { resolution: { width: 128, height: 64 } }).paint({ mode: "stretch" });
-    return <Group style={{ filter: displacement({ map, strength: 0, blurRadius: 3, region: { x: 0, y: 0, width: 128, height: 64 } }) }}>
-      {Array.from({ length: 64 }, (_, i) => <Rectangle key={i} style={{ x: i * 2, width: 2, height: 64, fill: i % 2 ? "#ffffff" : "#000000" }} />)}
+    const region = { x: 0, y: 0, width: 128, height: 64 };
+    const effect = displacement({ map, strength: 0, blurRadius: 3, region });
+    return <Group style={{ filter: reflection ? [effect, reflectedLight({ map, region, opacity: 0 })] : effect }}>
+      {Array.from({ length: 64 }, (_, i) => <Rectangle key={i} style={{ left: i * 2, width: 2, height: 64, fill: i % 2 ? "#ffffff" : "#000000" }} />)}
     </Group>;
   }
   const canvas = document.createElement("canvas"); canvas.width = 128; canvas.height = 64; document.body.append(canvas);

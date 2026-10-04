@@ -1,7 +1,8 @@
 # Texture WASM spike
 
-Experimental reaction-diffusion solver, batched painting, and palette rasterization, kept outside
-package exports. Production texture behavior is unchanged. The comparison page
+Benchmark tooling and frozen JavaScript controls are kept outside package exports.
+The original spike records below describe the stages preceding the production WASM
+conversion; current built-in texture generators now use WASM exclusively. The comparison page
 mounts both implementations through public `crc`, `createElement`, and
 `defineRenderLayer`. A private manual scheduler driver is used only to measure
 repeatable complete frames headlessly.
@@ -384,3 +385,58 @@ The full browser suite passed 3,389 tests but failed two new catalog expectation
 ("No pending old request") and `agent-targeting-verification` (missing scene
 continuation). Existing approval hashes, visual baselines, and unrelated work
 were not rewritten to suppress those failures.
+
+### Main-based integration and electric migration — 2026-10-02
+
+The user expanded the requirement to all built-in texture generation. The
+main-based delivery retains main's geometry, text, and particle additions rather
+than merging the unrelated shared-checkout integration. The scene uses main's
+`left`/`top` positioning API. Tendrils and lightning now use separate fixed-memory
+WASM kernels for their numerical state and geometry. Their old generators live
+only in `reference-electric/` as parity controls. JavaScript handles validation,
+control identifiers, scheduling, and Canvas presentation.
+
+Fresh Node 24.15.0 / pnpm 11.21.0 / Chromium checks: 69 texture tests passed;
+root typecheck, code lint, package build, packed Bundler/NodeNext consumers,
+56 source/built esbuild/Vite kernel-selection checks, import inertness, and the
+Studio pause/stir/reset/resume interaction check passed. Electric parity covers
+source movement, removal, boundary drift, pause, rebirth, edge changes, and
+connection-slot reuse over 320 scheduled frames. The initial electric WASM
+ownership test failed before conversion and passes afterward.
+
+The combined learning-example run had three failures in unchanged main examples
+(two path-warp interaction cases and Fire and Flow manipulation); catalog and
+texture tests passed. The water work is being integrated separately; its final
+WASM raster conversion and combined-main verification are recorded below when
+completed.
+
+## Combined water delivery — 2026-10-02
+
+Integrated water/filter main commit `e900b24b` without dropping viscosity, tint/lava,
+reflections, obstacles/wakes, or publication ownership. All eight built-in texture
+generators now execute numerical generation in WASM. Water-wave mode/ripple
+math and water-surface masks, wakes, batched stepping, and rasterization were
+ported; Canvas presentation and the appearance-only GPU filters remain unchanged.
+Both water recipes reuse an ImageData view directly into fixed WASM memory.
+
+Seventeen focused water tests pass, including exact frame-by-frame pixel parity
+against frozen pre-port controls through seed/scale changes, impulses, pause,
+reset, viscosity, and moving obstacles. Built-package public lesson and water
+checks pass (233 tests). All eight kernels pass source/built, minified/unminified
+esbuild/Vite selection checks (72 outputs), packed consumers, import/factory
+inertness, and reproducible compilation. These are correctness and allocation
+checks, not a new water wall-clock performance claim.
+
+The final legacy alpha-mask loop also executes in WASM and borrows the owning
+field heap. The unreachable JavaScript field-raster fallback was removed. All
+87 texture tests pass after this final change. The previous three learning
+interaction failures are resolved on merged main; the built lesson suite passes.
+The repository documentation gate still reports the pre-existing stale texture
+contract evidence inventory; no preservation fingerprints were rewritten.
+
+Final combined browser regression: 1,140 tests passed and five skipped across
+core and textures (123 files passed, one skipped), using Node 24.15.0,
+pnpm 11.21.0, and Playwright Chromium. Public Studio docs validation passes
+after preserving and alphabetizing reflection entries. The editor declarations
+now match the merged opaque-filter API and contain one definition for each
+texture recipe, including ink stirring and both water recipes.

@@ -25,7 +25,7 @@ describe('public displacement filters', () => {
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = 40; document.body.append(canvas);
     function Filtered() {
       const texture = useTexture(map({}));
-      return createElement(Group, { style: { filter: displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Rectangle, { style: { x: 10, y: 10, width: 10, height: 10, fill: 'red' } }) });
+      return createElement(Group, { style: { filter: displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Rectangle, { style: { left: 10, top: 10, width: 10, height: 10, fill: 'red' } }) });
     }
     const controller = crc(canvas, createElement(Filtered, {}));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -36,7 +36,7 @@ describe('public displacement filters', () => {
     expect(lose).not.toBeNull();
     lose!.loseContext();
     await new Promise<void>(resolve => setTimeout(resolve, 50));
-    crc(canvas, createElement(Rectangle, { style: { x: 10, y: 10, width: 10, height: 10, fill: 'red' } }));
+    crc(canvas, createElement(Rectangle, { style: { left: 10, top: 10, width: 10, height: 10, fill: 'red' } }));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     expect(peekDisplacementGpu(instance)).toBeUndefined();
     const revision = instance.requestedRenderRevision;
@@ -50,7 +50,7 @@ describe('public displacement filters', () => {
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = 40; document.body.append(canvas);
     function Scene() {
       const texture = useTexture(map({}));
-      return createElement(Group, { style: { filter: displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Rectangle, { style: { x: 10, y: 10, width: 10, height: 10, fill: 'red' } }) });
+      return createElement(Group, { style: { filter: displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Rectangle, { style: { left: 10, top: 10, width: 10, height: 10, fill: 'red' } }) });
     }
     const controller = crc(canvas, createElement(Scene, {}));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -76,7 +76,7 @@ describe('public displacement filters', () => {
     let clicks = 0;
     function Scene() {
       const texture = useTexture(map({}));
-      return createElement(Group, { style: { filter: [brightness({ amount: 1 }), displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }), opacity({ amount: 1 }), displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } })] }, children: createElement(Rectangle, { style: { x: 10, y: 10, width: 10, height: 10, fill: 'red' }, onClick: () => { clicks += 1; } }) });
+      return createElement(Group, { style: { filter: [brightness({ amount: 1 }), displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }), opacity({ amount: 1 }), displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } })] }, children: createElement(Rectangle, { style: { left: 10, top: 10, width: 10, height: 10, fill: 'red' }, onClick: () => { clicks += 1; } }) });
     }
     const controller = crc(canvas, createElement(Scene, {}));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -91,7 +91,7 @@ describe('public displacement filters', () => {
     let clicks = 0;
     function Scene() {
       const texture = useTexture(rightMap({}));
-      return createElement(Group, { style: { filter: [brightness({ amount: 0.5 }), displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }), opacity({ amount: 0.5 })] }, children: createElement(Rectangle, { style: { x: 10, y: 10, width: 10, height: 10, fill: 'red' }, onClick: () => { clicks += 1; } }) });
+      return createElement(Group, { style: { filter: [brightness({ amount: 0.5 }), displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }), opacity({ amount: 0.5 })] }, children: createElement(Rectangle, { style: { left: 10, top: 10, width: 10, height: 10, fill: 'red' }, onClick: () => { clicks += 1; } }) });
     }
     const controller = crc(canvas, createElement(Scene, {}));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -116,13 +116,13 @@ describe('public displacement filters', () => {
       const texture = useTexture(rightMap({}));
       return createElement(FocusManagement, { children: createElement(Group, { children: [
         createElement(Group, { style: { filter: displacement({ map: texture, strength: 4, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Rectangle, {
-          style: { ...displacedBounds, fill: 'red', cursor: 'pointer' },
+          style: { left: displacedBounds.x, top: displacedBounds.y, width: displacedBounds.width, height: displacedBounds.height, fill: 'red', cursor: 'pointer' },
           keyboardFocusable: true,
           keyboardNavigationBounds: displacedBounds,
           onClick: () => { activations += 1; },
         }) }),
         createElement(Rectangle, {
-          style: { ...followingBounds, fill: 'blue' },
+          style: { left: followingBounds.x, top: followingBounds.y, width: followingBounds.width, height: followingBounds.height, fill: 'blue' },
           keyboardFocusable: true,
           keyboardNavigationBounds: followingBounds,
           onClick: () => undefined,
@@ -172,7 +172,7 @@ it('preserves noncommuting blur and displacement order', async () => {
       const texture = useTexture(splitMap({}), { resolution: { width: 30, height: 30 } });
       const distortion = displacement({ map: texture.paint({ mode: 'stretch' }), strength: 4, region: { x: 0, y: 0, width: 30, height: 30 } });
       const soften = blur({ radius: 2 });
-      return createElement(Group, { style: { filter: blurFirst ? [soften, distortion] : [distortion, soften] }, children: createElement(Rectangle, { style: { x: 10, y: 0, width: 10, height: 30, fill: 'red' } }) });
+      return createElement(Group, { style: { filter: blurFirst ? [soften, distortion] : [distortion, soften] }, children: createElement(Rectangle, { style: { left: 10, top: 0, width: 10, height: 30, fill: 'red' } }) });
     }
     const controller = crc(canvas, createElement(Scene, {}));
     try {

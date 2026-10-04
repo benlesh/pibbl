@@ -19,6 +19,8 @@ export interface InternalElementMetadata {
   readonly primitiveReceiverToken?: object;
   readonly policyPreparationSource?: CRCElement<any>;
   identityHint?: unknown;
+  placementConsumed?: boolean;
+  placementSignalHandoff?: Readonly<SystemStyle>;
 }
 
 const elementMetadata = new WeakMap<CRCElement<any>, InternalElementMetadata>();
@@ -262,4 +264,32 @@ export function registerOpaquePrimitiveProps(type: Function, keys: readonly stri
 }
 export function getOpaquePrimitiveProps(type: Function): readonly string[] | undefined {
   return opaquePrimitiveProps.get(type);
+}
+
+/** @internal Marks authored left/top as consumed by a parent layout wrapper. */
+export function setPlacementConsumed(element: CRCElement<any>): void {
+  const current = elementMetadata.get(element) ?? {};
+  elementMetadata.set(element, { ...current, placementConsumed: true });
+}
+
+/** @internal */
+export function isPlacementConsumed(element: CRCElement<any>): boolean {
+  return elementMetadata.get(element)?.placementConsumed === true;
+}
+
+
+/** @internal Marks an element created with a forwarded placement style signal. */
+export function setPlacementSignalHandoff(
+  element: CRCElement<any>,
+  style: Readonly<SystemStyle>,
+): void {
+  const current = elementMetadata.get(element) ?? {};
+  elementMetadata.set(element, { ...current, placementSignalHandoff: style });
+}
+
+/** @internal */
+export function getPlacementSignalHandoffStyle(
+  element: CRCElement<any>,
+): Readonly<SystemStyle> | undefined {
+  return elementMetadata.get(element)?.placementSignalHandoff;
 }

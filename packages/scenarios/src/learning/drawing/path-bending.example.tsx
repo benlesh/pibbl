@@ -50,8 +50,8 @@ function guideGeometry(controls: Controls) {
 
 function Button({ x, y, width, label, action }: { x: number; y: number; width: number; label: string; action: () => void }) {
   return <>
-    <Rectangle style={{ x, y, width, height: 32, fill: '#e9edea', cursor: 'pointer' }} onClick={action} />
-    <Text style={{ x: x + width / 2, y: y + 9, textAlign: 'center', font: '13px sans-serif', fill: '#233c35' }} pointerEvents="none">{label}</Text>
+    <Rectangle style={{ left: x, top: y, width, height: 32, fill: '#e9edea', cursor: 'pointer' }} onClick={action} />
+    <Text style={{ left: x + width / 2, top: y + 9, textAlign: 'center', font: '13px sans-serif', fill: '#233c35' }} pointerEvents="none">{label}</Text>
   </>;
 }
 
@@ -104,25 +104,25 @@ function PathBendingStudy() {
 
   return <>
     <Rectangle style={{ width: 800, height: 620, fill: '#faf8f1' }} pointerEvents="none" />
-    <Text style={{ x: 28, y: 28, font: '700 25px sans-serif', fill: '#173c34' }} pointerEvents="none">{controls.mode === 'arc' ? 'ALONG ARC' : 'ALONG PATH'}</Text>
-    <Text style={{ x: 772, y: 36, textAlign: 'right', font: '700 12px sans-serif', fill: '#9b7418' }} pointerEvents="none">DRAG THE GOLD HANDLES</Text>
-    <Text style={{ x: 28, y: 64, font: '14px sans-serif', fill: '#586b65' }} pointerEvents="none">Bend the whole outline. Choose which source baseline follows the gold guide.</Text>
-    <Text style={{ x: 28, y: 108, font: '700 11px sans-serif', fill: '#687b73' }} pointerEvents="none">SOURCE OUTLINE</Text>
+    <Text style={{ left: 28, top: 28, font: '700 25px sans-serif', fill: '#173c34' }} pointerEvents="none">{controls.mode === 'arc' ? 'ALONG ARC' : 'ALONG PATH'}</Text>
+    <Text style={{ left: 772, top: 36, textAlign: 'right', font: '700 12px sans-serif', fill: '#9b7418' }} pointerEvents="none">DRAG THE GOLD HANDLES</Text>
+    <Text style={{ left: 28, top: 64, font: '14px sans-serif', fill: '#586b65' }} pointerEvents="none">Bend the whole outline. Choose which source baseline follows the gold guide.</Text>
+    <Text style={{ left: 28, top: 108, font: '700 11px sans-serif', fill: '#687b73' }} pointerEvents="none">SOURCE OUTLINE</Text>
     <Group style={{ translateX: 260, translateY: 150 }}>
       <Path style={{ d: source, fill: '#bdd5c8', stroke: '#467366', strokeWidth: 1 }} pointerEvents="none" />
-      <Rectangle style={{ x: frame.x, y: frame.y, width: frame.width, height: frame.height, stroke: '#9ca9a1', strokeWidth: 1 }} pointerEvents="none" />
+      <Rectangle style={{ left: frame.x, top: frame.y, width: frame.width, height: frame.height, stroke: '#9ca9a1', strokeWidth: 1 }} pointerEvents="none" />
       <Line style={{ coords: [[-20, baseline], [300, baseline]], stroke: '#bb8d22', strokeWidth: 2 }} pointerEvents="none" />
     </Group>
-    <Text style={{ x: 28, y: 213, font: '700 11px sans-serif', fill: '#687b73' }} pointerEvents="none">BENT GEOMETRY</Text>
+    <Text style={{ left: 28, top: 213, font: '700 11px sans-serif', fill: '#687b73' }} pointerEvents="none">BENT GEOMETRY</Text>
     <Path style={{ d: geometry, fill: '#247760', stroke: '#173c34', strokeWidth: 1.5 }} pointerEvents="none" />
     {controls.mode === 'arc' && <>
       <Line style={{ coords: [[arc.cx, arc.cy], [arc.cx, arc.cy - arc.radius]], stroke: '#d7cfb8', strokeWidth: 1 }} pointerEvents="none" />
       {handle('center', arc.cx, arc.cy)}
       {handle('radius', arc.cx, arc.cy - arc.radius)}
       {handle('sweep', endX, endY)}
-      <Text style={{ x: arc.cx + 15, y: arc.cy - 4, font: '11px sans-serif', fill: '#9b7418' }} pointerEvents="none">move center</Text>
-      <Text style={{ x: arc.cx + 15, y: arc.cy - arc.radius - 18, font: '11px sans-serif', fill: '#9b7418' }} pointerEvents="none">radius</Text>
-      <Text style={{ x: endX + 15, y: endY - 4, font: '11px sans-serif', fill: '#9b7418' }} pointerEvents="none">sweep</Text>
+      <Text style={{ left: arc.cx + 15, top: arc.cy - 4, font: '11px sans-serif', fill: '#9b7418' }} pointerEvents="none">move center</Text>
+      <Text style={{ left: arc.cx + 15, top: arc.cy - arc.radius - 18, font: '11px sans-serif', fill: '#9b7418' }} pointerEvents="none">radius</Text>
+      <Text style={{ left: endX + 15, top: endY - 4, font: '11px sans-serif', fill: '#9b7418' }} pointerEvents="none">sweep</Text>
     </>}
     {controls.mode === 'path' && <>
       <Line style={{ coords: [[180, 330], [controls.c1x, controls.c1y]], stroke: '#c3c8bf', strokeWidth: 1 }} pointerEvents="none" />
@@ -132,7 +132,7 @@ function PathBendingStudy() {
     </>}
     <Path style={{ d: guide, stroke: '#c29732', strokeWidth: 2 }} pointerEvents="none" />
     <Line style={{ coords: [[endX - tx * 10 - ty * 5, endY - ty * 10 + tx * 5], [endX, endY], [endX - tx * 10 + ty * 5, endY - ty * 10 - tx * 5]], stroke: '#c29732', strokeWidth: 2 }} pointerEvents="none" />
-    <Text style={{ x: 400, y: 445, textAlign: 'center', font: '12px sans-serif', fill: '#586b65' }} pointerEvents="none">
+    <Text style={{ left: 400, top: 445, textAlign: 'center', font: '12px sans-serif', fill: '#586b65' }} pointerEvents="none">
       {`${controls.mode === 'arc' ? `Radius ${Math.round(controls.radius)} · sweep ${Math.round(controls.sweep * 180 / Math.PI)}°` : 'Drag the gold handles'} · offset ${controls.offset} · normal offset ${controls.normalOffset} · ${geometry.segmentCount} segments`}
     </Text>
     <Button x={28} y={459} width={215} label={`Baseline: ${label}`} action={() => update({ baseline: presets[(presets.indexOf(controls.baseline) + 1) % presets.length] })} />
@@ -145,10 +145,10 @@ function PathBendingStudy() {
     <Button x={496} y={503} width={151} label="Normal +10" action={() => update({ normalOffset: controls.normalOffset + 10 })} />
     <Button x={659} y={503} width={113} label={controls.mode === 'arc' ? 'Radius +' : 'Curve'} action={() => update(controls.mode === 'arc' ? { radius: controls.radius + 20 } : { c1y: 230, c2y: 390 })} />
     <Button x={659} y={547} width={113} label="Reset" action={() => { drag.current = null; state.set(first); }} />
-    <Text style={{ x: 28, y: 555, font: '12px sans-serif', fill: error ? '#a23835' : '#586b65' }} pointerEvents="none">
+    <Text style={{ left: 28, top: 555, font: '12px sans-serif', fill: error ? '#a23835' : '#586b65' }} pointerEvents="none">
       {error ? 'Cannot bend — showing the last valid preview.' : controls.mode === 'arc' ? 'Positive normal offset points inward on this clockwise arc.' : 'Guide direction is left to right. Positive normal offset follows its right-hand side.'}
     </Text>
-    <Text style={{ x: 28, y: 582, font: '11px sans-serif', fill: '#586b65' }} pointerEvents="none">
+    <Text style={{ left: 28, top: 582, font: '11px sans-serif', fill: '#586b65' }} pointerEvents="none">
       {error || 'Change the baseline, fitting, and alignment. Both modes preserve the original outline.'}
     </Text>
   </>;

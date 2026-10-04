@@ -41,8 +41,8 @@ function Label({
     <Text
       pointerEvents="none"
       style={{
-        x,
-        y,
+        left: x,
+        top: y,
         fill: color,
         font: `${size}px Arial`,
         textBaseline: "alphabetic",
@@ -85,8 +85,8 @@ function Button({
       <Text
         pointerEvents="none"
         style={{
-          x: width / 2,
-          y: 22,
+          left: width / 2,
+          top: 22,
           textAlign: "center",
           textBaseline: "alphabetic",
           font: "12px Arial",
@@ -333,8 +333,8 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
           <Rectangle
             pointerEvents="none"
             style={{
-              x: 0,
-              y: 0,
+              left: 0,
+              top: 0,
               width: 520,
               height: 600,
               fill: threads.paint({
@@ -394,8 +394,8 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
         <Rectangle
           pointerEvents="none"
           style={{
-            x: 234,
-            y: 557,
+            left: 234,
+            top: 557,
             width: 80,
             height: 12,
             cornerRadius: 4,
@@ -405,8 +405,8 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
         <Rectangle
           pointerEvents="none"
           style={{
-            x: 203,
-            y: 569,
+            left: 203,
+            top: 569,
             width: 142,
             height: 17,
             cornerRadius: 5,
@@ -422,8 +422,8 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
         <Rectangle
           pointerEvents="none"
           style={{
-            x: 552,
-            y: 124,
+            left: 552,
+            top: 124,
             width: 300,
             height: 380,
             cornerRadius: 18,
@@ -441,8 +441,8 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
         <Rectangle
           pointerEvents="none"
           style={{
-            x: 574,
-            y: 198,
+            left: 574,
+            top: 198,
             width: 116,
             height: 116,
             cornerRadius: 12,
@@ -452,8 +452,8 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
         <Rectangle
           pointerEvents="none"
           style={{
-            x: 710,
-            y: 198,
+            left: 710,
+            top: 198,
             width: 116,
             height: 116,
             cornerRadius: 12,
@@ -469,8 +469,8 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
         <Rectangle
           pointerEvents="none"
           style={{
-            x: 574,
-            y: 354,
+            left: 574,
+            top: 354,
             width: 256,
             height: 95,
             cornerRadius: 12,
@@ -480,8 +480,8 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
         <Rectangle
           pointerEvents="none"
           style={{
-            x: 574,
-            y: 354,
+            left: 574,
+            top: 354,
             width: 256,
             height: 95,
             cornerRadius: 12,
@@ -496,8 +496,8 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
         <Rectangle
           pointerEvents="none"
           style={{
-            x: 574,
-            y: 354,
+            left: 574,
+            top: 354,
             width: 256,
             height: 95,
             cornerRadius: 12,

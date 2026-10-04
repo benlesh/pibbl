@@ -1,0 +1,21 @@
+{
+  "baseline": "690bb10a99246b6f5f57df9b0341774209905827",
+  "origin": "https://github.com/benlesh/crc.git",
+  "sourceMode": true,
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "sha256": {
+    "packages/core/src/lib/textures/texture.ts": "0e44c21ca380a8f8256d2a6b96e96055c5d325deb9b4564c8ec1c9205c03da5c",
+    "packages/textures/src/lib/definitions.ts": "46279568f6bb2ebcdb538a83749b5451be34724e4188b5cf143c78d79e0c1392",
+    "packages/textures/src/lib/reaction-diffusion.ts": "697319e7b125d053c1a6d2047671027e91f4e183a125054e77ad4b02d154e6c3",
+    "packages/textures/src/lib/simulation.ts": "5810e6447e55b3a2d30264598e61e1f26897b866fa24eb491c2121b04fc24022",
+    "packages/textures/src/lib/wasm/memory.ts": "ad23a8fe64f3bc1715dd5471509e20fc64f6f93bfc0b7bb0a9bfdbc5059429d2",
+    "packages/textures/src/lib/wasm/ink-bytes.ts": "6c322471356704be546aa2a48a3c178a4a23101d11605060c442c9df146ae412",
+    "packages/core/src/lib/animation/evaluate.ts": "b0572acbf32927474783a1e5ebab1f0ca3641fa13b2abfadfd2fca7b1935eec5",
+    "packages/core/src/lib/scheduler/realm-scheduler.ts": "6f71791345e9e854ee27d0d784f75a9a8fe981d7be77537efad3723b21ac0533",
+    "packages/physics/src/lib/2d/runtime/controller.ts": "182ceea5f25d42893dc747bcc22d04a5ad8a5efbdb5931f8f033bab9500e147b",
+    "packages/physics/src/lib/2d/world/world.ts": "2071d76383d194c6dad530d58952a78e32c4f5905146331d3ff119f6c6243913",
+    "packages/three/src/lib/picking-snapshot.ts": "557771ddebf013ee7b32fdcdc40819926b0cb9e10d1d572ac1246d388fa0c893",
+    "pnpm-lock.yaml": "fc923318751ce1d63cfb83f5ef62949a6957753c4a1f7f71ca966c6318caa406",
+    "package.json": "1880e2ced774ca7473fca9a70073fc696e0ced9de593b2712b5adcac45c0af8e"
+  }
+}

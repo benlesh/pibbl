@@ -97,7 +97,7 @@ describe("public physics simulation quality", () => {
         >
           <Rectangle
             physics={staticBody2D()}
-            style={{ x: 12, y: 216, width: 456, height: 20 }}
+            style={{ left: 12, top: 216, width: 456, height: 20 }}
           />
           <Ball />
         </PhysicsWorld2D>,
@@ -142,7 +142,7 @@ it("naturally settles a 100-box pile without keeping the world clock alive", () 
       >
         <Rectangle
           physics={collider2D({ friction: 0.6 })}
-          style={{ x: -20, y: -20, width: 40, height: 40 }}
+          style={{ left: -20, top: -20, width: 40, height: 40 }}
         />
       </Group>
     );
@@ -152,7 +152,7 @@ it("naturally settles a 100-box pile without keeping the world clock alive", () 
     <PhysicsWorld2D gravity={[0, 600]}>
       <Rectangle
         physics={staticBody2D({ collider: { friction: 0.6 } })}
-        style={{ x: 0, y: 950, width: 1000, height: 100 }}
+        style={{ left: 0, top: 950, width: 1000, height: 100 }}
       />
       {Array.from({ length: 100 }, (_, index) => (
         <Box key={index} index={index} />
@@ -194,7 +194,7 @@ it("carries a passenger equivalently at 30 and 60 Hz host cadence", () => {
           >
             <Rectangle
               physics={collider2D({ friction: 1 })}
-              style={{ x: -60, y: 0, width: 120, height: 10 }}
+              style={{ left: -60, top: 0, width: 120, height: 10 }}
             />
           </Group>
           <Group
@@ -203,7 +203,7 @@ it("carries a passenger equivalently at 30 and 60 Hz host cadence", () => {
           >
             <Rectangle
               physics={collider2D({ friction: 1 })}
-              style={{ x: -10, y: -10, width: 20, height: 20 }}
+              style={{ left: -10, top: -10, width: 20, height: 20 }}
             />
           </Group>
         </>
@@ -310,7 +310,7 @@ it("lets a world sleep when collision callbacks are authored inline", () => {
         />
         <Rectangle
           physics={staticBody2D()}
-          style={{ x: 0, y: 100, width: 200, height: 10 }}
+          style={{ left: 0, top: 100, width: 200, height: 10 }}
         />
       </>
     );

@@ -8,6 +8,11 @@ apiCategory: types
 typeDomain: particles
 symbols:
   [
+    CRCFlowField2D,
+    CRCFlowFieldOptions2D,
+    CRCFlowObstacleBatch2D,
+    CRCFlowObstacleSource2D,
+    CRCFlowSourceOptions2D,
     CRCParticleAppearance,
     CRCParticleBounds2D,
     CRCParticleBurstAcceptedEvent,
@@ -58,6 +63,40 @@ keywords: [particles, types, emitters, canvas, execution]
 # Particle types
 
 Import these public contracts with `type` from `@crc/core/particles`.
+
+## `CRCFlowField2D`
+
+A component-owned field handle with a readonly revision signal and batched
+velocity sampling into caller-owned numerical buffers.
+
+## `CRCFlowFieldOptions2D`
+
+Mount-only bounds and grid resolution, an optional obstacle source, and a
+buoyancy acceleration coefficient (default `-300`).
+
+## `CRCFlowObstacleBatch2D`
+
+A revision, a borrowed `Float64Array` of packed `boxes`, and optional borrowed
+`ellipses` and `polygons` arrays. Each box occupies ten
+entries: center x/y, half width/height, rotation in radians, linear velocity x/y,
+angular velocity in radians/second, and center of mass x/y. All quantities use
+field-local logical coordinates. Ellipses use the same layout, with radii instead
+of half extents. Each polygon record contains vertex count (at least three),
+linear velocity x/y, angular velocity, center of mass x/y, then vertex x/y pairs.
+Extents must be positive. Increment revision
+whenever geometry or motion changes; unchanged revisions reuse the solid grid.
+
+## `CRCFlowObstacleSource2D`
+
+A `read()` method returning the latest committed obstacle batch. A read must not
+advance its upstream simulation. The field copies relevant data into its own
+storage and does not retain the batch buffer or assume shared WASM memory.
+
+## `CRCFlowSourceOptions2D`
+
+Signal-valued position, positive radius, optional acceleration, nonnegative
+heat injection rate, and enabled state. Sources drive flow independently of
+particle emission.
 
 ## `CRCParticleAppearance`
 

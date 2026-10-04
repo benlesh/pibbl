@@ -1,0 +1,1015 @@
+{
+  "baseline": "690bb10a99246b6f5f57df9b0341774209905827",
+  "node": "v24.15.0",
+  "browser": "151.0.7922.34",
+  "platform": "darwin",
+  "arch": "arm64",
+  "mode": "source",
+  "gc": "No forced GC during workload; explicitly separate post-disposal GC sample",
+  "timing": "scheduler begin-to-idle CPU wall time, bounded 4096-frame reservoir per 30-second window; excludes presentation",
+  "samples": [
+    {
+      "slug": "isolated-512",
+      "elapsed": 30,
+      "observations": {
+        "frames": 3584,
+        "count": 3584,
+        "median": 4.599999904632568,
+        "p95": 5.700000047683716,
+        "worst": 9,
+        "slow": 0,
+        "total": 16341.00000333786,
+        "phases": {
+          "begin": 10.399998664855957,
+          "advance": 15375.099989652634,
+          "commit": 24.600000619888306,
+          "plan": 20.80000066757202,
+          "render": 894.3000106811523,
+          "complete": 15.800003051757812
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 2,
+            "paintEntries": 1
+          }
+        ],
+        "heap": {
+          "used": 11658059,
+          "total": 14966847
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Frames": 1,
+        "Nodes": 7,
+        "JSHeapUsedSize": 7379900,
+        "JSHeapTotalSize": 10633216
+      },
+      "dom": {
+        "documents": 1,
+        "nodes": 7,
+        "jsEventListeners": 2
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 87184
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 60992
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54192
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 199888
+          }
+        ],
+        "totalKiB": 402256
+      }
+    },
+    {
+      "slug": "isolated-512",
+      "elapsed": 60,
+      "observations": {
+        "frames": 7188,
+        "count": 3604,
+        "median": 4.6000001430511475,
+        "p95": 4.800000190734863,
+        "worst": 6.799999952316284,
+        "slow": 0,
+        "total": 16516.400003433228,
+        "phases": {
+          "begin": 12.600000381469727,
+          "advance": 15527.999997615814,
+          "commit": 26.000000476837158,
+          "plan": 24.200000762939453,
+          "render": 909.8000044822693,
+          "complete": 15.799999713897705
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 2,
+            "paintEntries": 1
+          }
+        ],
+        "heap": {
+          "used": 11814135,
+          "total": 16533567
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Frames": 1,
+        "Nodes": 7,
+        "JSHeapUsedSize": 7514240,
+        "JSHeapTotalSize": 12206080
+      },
+      "dom": {
+        "documents": 1,
+        "nodes": 7,
+        "jsEventListeners": 2
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 87312
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 61056
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54304
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 407072
+          }
+        ],
+        "totalKiB": 609744
+      }
+    },
+    {
+      "slug": "isolated-512",
+      "elapsed": 90,
+      "observations": {
+        "frames": 10790,
+        "count": 3602,
+        "median": 4.6000001430511475,
+        "p95": 4.799999952316284,
+        "worst": 7.799999952316284,
+        "slow": 0,
+        "total": 16500.20000052452,
+        "phases": {
+          "begin": 12.299998998641968,
+          "advance": 15529.199998140335,
+          "commit": 24.800002098083496,
+          "plan": 21.000001430511475,
+          "render": 897.4000022411346,
+          "complete": 15.499997615814209
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 2,
+            "paintEntries": 1
+          }
+        ],
+        "heap": {
+          "used": 12318231,
+          "total": 18137151
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Frames": 1,
+        "Nodes": 7,
+        "JSHeapUsedSize": 7986776,
+        "JSHeapTotalSize": 13778944
+      },
+      "dom": {
+        "documents": 1,
+        "nodes": 7,
+        "jsEventListeners": 2
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 87360
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 61088
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54320
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 450224
+          }
+        ],
+        "totalKiB": 652992
+      }
+    },
+    {
+      "slug": "isolated-512",
+      "elapsed": 120,
+      "observations": {
+        "frames": 14392,
+        "count": 3602,
+        "median": 4.599999904632568,
+        "p95": 4.799999952316284,
+        "worst": 7.6000001430511475,
+        "slow": 0,
+        "total": 16465.399995565414,
+        "phases": {
+          "begin": 10.499998569488525,
+          "advance": 15499.999998807907,
+          "commit": 24.40000319480896,
+          "plan": 20.799998998641968,
+          "render": 893.1999959945679,
+          "complete": 16.5
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 2,
+            "paintEntries": 1
+          }
+        ],
+        "heap": {
+          "used": 12366063,
+          "total": 18143295
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Frames": 1,
+        "Nodes": 7,
+        "JSHeapUsedSize": 8035868,
+        "JSHeapTotalSize": 13778944
+      },
+      "dom": {
+        "documents": 1,
+        "nodes": 7,
+        "jsEventListeners": 2
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 87584
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 62128
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54320
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 467584
+          }
+        ],
+        "totalKiB": 671616
+      }
+    },
+    {
+      "slug": "isolated-512",
+      "elapsed": 150,
+      "observations": {
+        "frames": 17984,
+        "count": 3592,
+        "median": 4.5,
+        "p95": 5.400000095367432,
+        "worst": 6.800000190734863,
+        "slow": 0,
+        "total": 16037.69999885559,
+        "phases": {
+          "begin": 12.20000171661377,
+          "advance": 15146.400003433228,
+          "commit": 21.29999804496765,
+          "plan": 15.80000114440918,
+          "render": 831.0999958515167,
+          "complete": 10.899998664855957
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 2,
+            "paintEntries": 1
+          }
+        ],
+        "heap": {
+          "used": 12365067,
+          "total": 18662463
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Frames": 1,
+        "Nodes": 7,
+        "JSHeapUsedSize": 8032588,
+        "JSHeapTotalSize": 14303232
+      },
+      "dom": {
+        "documents": 1,
+        "nodes": 7,
+        "jsEventListeners": 2
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 87600
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 62144
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54320
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 476896
+          }
+        ],
+        "totalKiB": 680960
+      }
+    },
+    {
+      "slug": "isolated-512",
+      "elapsed": 180,
+      "observations": {
+        "frames": 21559,
+        "count": 3575,
+        "median": 4.5,
+        "p95": 5.599999904632568,
+        "worst": 8.799999952316284,
+        "slow": 0,
+        "total": 16183.399991512299,
+        "phases": {
+          "begin": 13.300000190734863,
+          "advance": 15199.399982690811,
+          "commit": 28.300002098083496,
+          "plan": 21.999998569488525,
+          "render": 906.4000070095062,
+          "complete": 14.000000953674316
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 2,
+            "paintEntries": 1
+          }
+        ],
+        "heap": {
+          "used": 15104843,
+          "total": 23012415
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Frames": 1,
+        "Nodes": 7,
+        "JSHeapUsedSize": 10616732,
+        "JSHeapTotalSize": 18497536
+      },
+      "dom": {
+        "documents": 1,
+        "nodes": 7,
+        "jsEventListeners": 2
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 87600
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 62144
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54320
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 884592
+          }
+        ],
+        "totalKiB": 1088656
+      }
+    },
+    {
+      "slug": "isolated-512",
+      "elapsed": 210,
+      "observations": {
+        "frames": 25133,
+        "count": 3574,
+        "median": 4.5,
+        "p95": 5.6000001430511475,
+        "worst": 10,
+        "slow": 0,
+        "total": 16269.799995422363,
+        "phases": {
+          "begin": 14.099999189376831,
+          "advance": 15298.70000576973,
+          "commit": 26.199995040893555,
+          "plan": 20.99999976158142,
+          "render": 897.8999943733215,
+          "complete": 11.900001287460327
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 2,
+            "paintEntries": 1
+          }
+        ],
+        "heap": {
+          "used": 11589199,
+          "total": 23088191
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Frames": 1,
+        "Nodes": 7,
+        "JSHeapUsedSize": 7287648,
+        "JSHeapTotalSize": 18759680
+      },
+      "dom": {
+        "documents": 1,
+        "nodes": 7,
+        "jsEventListeners": 2
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 87600
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 62144
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54320
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 205776
+          }
+        ],
+        "totalKiB": 409840
+      }
+    },
+    {
+      "slug": "isolated-512",
+      "elapsed": 240,
+      "observations": {
+        "frames": 28708,
+        "count": 3575,
+        "median": 4.5,
+        "p95": 5.599999904632568,
+        "worst": 8.900000095367432,
+        "slow": 0,
+        "total": 16093.399993181229,
+        "phases": {
+          "begin": 11.59999942779541,
+          "advance": 15116.499991893768,
+          "commit": 25.900002002716064,
+          "plan": 25.000000953674316,
+          "render": 899.9999969005585,
+          "complete": 14.400002002716064
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 2,
+            "paintEntries": 1
+          }
+        ],
+        "heap": {
+          "used": 12722834,
+          "total": 23159862
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Frames": 1,
+        "Nodes": 7,
+        "JSHeapUsedSize": 8356780,
+        "JSHeapTotalSize": 18759680
+      },
+      "dom": {
+        "documents": 1,
+        "nodes": 7,
+        "jsEventListeners": 2
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 87600
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 62144
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54320
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 280848
+          }
+        ],
+        "totalKiB": 484912
+      }
+    },
+    {
+      "slug": "isolated-512",
+      "elapsed": 270,
+      "observations": {
+        "frames": 32264,
+        "count": 3556,
+        "median": 4.5,
+        "p95": 5.5,
+        "worst": 8.5,
+        "slow": 0,
+        "total": 16004.000007390976,
+        "phases": {
+          "begin": 11.600001573562622,
+          "advance": 15091.800001859665,
+          "commit": 20.69999861717224,
+          "plan": 19.999998569488525,
+          "render": 848.2000060081482,
+          "complete": 11.700000762939453
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 2,
+            "paintEntries": 1
+          }
+        ],
+        "heap": {
+          "used": 13550462,
+          "total": 23212086
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Frames": 1,
+        "Nodes": 7,
+        "JSHeapUsedSize": 9124728,
+        "JSHeapTotalSize": 18759680
+      },
+      "dom": {
+        "documents": 1,
+        "nodes": 7,
+        "jsEventListeners": 2
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 87600
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 62144
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54320
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 333648
+          }
+        ],
+        "totalKiB": 537712
+      }
+    },
+    {
+      "slug": "isolated-512",
+      "elapsed": 300,
+      "observations": {
+        "frames": 35806,
+        "count": 3542,
+        "median": 4.599999904632568,
+        "p95": 5.6000001430511475,
+        "worst": 7.5,
+        "slow": 0,
+        "total": 16298.099998950958,
+        "phases": {
+          "begin": 9.999999046325684,
+          "advance": 15531.299999952316,
+          "commit": 9.299998760223389,
+          "plan": 9.100000143051147,
+          "render": 732.5,
+          "complete": 5.900001049041748
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 2,
+            "paintEntries": 1
+          }
+        ],
+        "heap": {
+          "used": 14140030,
+          "total": 23249974
+        }
+      },
+      "memory": {
+        "Documents": 1,
+        "Frames": 1,
+        "Nodes": 7,
+        "JSHeapUsedSize": 9679024,
+        "JSHeapTotalSize": 18759680
+      },
+      "dom": {
+        "documents": 1,
+        "nodes": 7,
+        "jsEventListeners": 2
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 87664
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 62144
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54320
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 373792
+          }
+        ],
+        "totalKiB": 577920
+      }
+    },
+    {
+      "slug": "isolated-512",
+      "stage": "disposed-natural",
+      "observations": {
+        "frames": 35818,
+        "count": 12,
+        "median": 4.099999904632568,
+        "p95": 4.5,
+        "worst": 4.5,
+        "slow": 0,
+        "total": 48.80000019073486,
+        "phases": {
+          "begin": 0,
+          "advance": 46.200000047683716,
+          "commit": 0.10000014305114746,
+          "plan": 0,
+          "render": 2.5,
+          "complete": 0
+        },
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 0,
+          "advanceParticipants": 0,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 1,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 0,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [],
+        "heap": {
+          "used": 14583940,
+          "total": 23262324
+        }
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 92400
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 63120
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54320
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 382672
+          }
+        ],
+        "totalKiB": 592512
+      }
+    },
+    {
+      "slug": "isolated-512",
+      "stage": "disposed-forced-GC-SEPARATE",
+      "observations": {
+        "frames": 35818,
+        "count": 0,
+        "worst": 0,
+        "slow": 0,
+        "total": 0,
+        "phases": {},
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 0,
+          "advanceParticipants": 0,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 1,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 0,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [],
+        "heap": {
+          "used": 10056576,
+          "total": 10788924
+        }
+      },
+      "rss": {
+        "processes": [
+          {
+            "pid": 78621,
+            "ppid": 78620,
+            "rssKiB": 92400
+          },
+          {
+            "pid": 78622,
+            "ppid": 78621,
+            "rssKiB": 63120
+          },
+          {
+            "pid": 78623,
+            "ppid": 78621,
+            "rssKiB": 54320
+          },
+          {
+            "pid": 78627,
+            "ppid": 78621,
+            "rssKiB": 135184
+          }
+        ],
+        "totalKiB": 345024
+      }
+    }
+  ],
+  "errors": [],
+  "complete": true
+}

@@ -12,7 +12,6 @@
       "@crc/core/jsx-runtime": ["./packages/core/src/jsx-runtime.ts"],
       "@crc/core/types": ["./packages/core/src/types.ts"],
       "@crc/core": ["./packages/core/src/index.ts"],
-      "@crc/text": ["./packages/text/dist/index.d.ts"],
       "@crc/core/particles": [
         "./packages/core/src/features/particles/index.ts"
       ],
@@ -29,7 +28,8 @@
       ],
       "virtual:crc-studio-docs": ["./playground/src/studio-docs.d.ts"],
       "@crc/core/viz": ["./packages/core/src/features/viz/index.ts"],
-      "@crc/core/textures": ["./packages/core/src/features/textures/index.ts"]
+      "@crc/core/textures": ["./packages/core/src/features/textures/index.ts"],
+      "@crc/text": ["./packages/text/src/index.ts"]
     },
     "resolveJsonModule": true,
     "types": ["vite/client", "node", "vitest/config"],

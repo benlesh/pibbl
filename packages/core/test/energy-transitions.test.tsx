@@ -94,7 +94,7 @@ it('centers button labels on their button midpoint with an explicit middle basel
   const labels: { y: number; baseline: string }[] = [];
   const original = CanvasRenderingContext2D.prototype.fillText;
   const spy = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText').mockImplementation(function (this: CanvasRenderingContext2D, text, x, y) {
-    if (text === 'EXIT ↗') labels.push({ y, baseline: this.textBaseline });
+    if (text === 'EXIT ↗') labels.push({ y: this.getTransform().transformPoint({ x, y }).y, baseline: this.textBaseline });
     original.call(this, text, x, y);
   });
   const controller = mountStudy(canvas, { progress: 1, autoplay: false });

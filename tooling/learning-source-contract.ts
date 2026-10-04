@@ -65,10 +65,10 @@ const THREE_MODULE = "three";
 const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = ["@crc", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
+  "@crc/text",
   "@crc/core/filters",
   VIZ_MODULE,
   "@crc/core/textures",
-  "@crc/text",
   CORE_MODULE,
   PARTICLES_MODULE,
   THREE_ADAPTER_MODULE,
@@ -1115,6 +1115,30 @@ function inspectSource(source: string, label: string): SourceInspection {
       bindingShadows,
     );
 
+  const manipulationBindings = new Set<string>();
+  walk(file, (node) => {
+    if (node.type !== "VariableDeclarator") return;
+    const name = identifierName(node.id);
+    const initializer = unwrapTransparentExpression(node.init);
+    if (
+      name &&
+      initializer?.type === "CallExpression" &&
+      resolveCoreValue(initializer.callee) === "useManipulation"
+    ) {
+      manipulationBindings.add(name);
+    }
+  });
+  const isManipulationFrameSpread = (attribute: SyntaxNode): boolean => {
+    const argument = unwrapTransparentExpression(attribute.argument);
+    if (!argument || argument.type !== "MemberExpression") return false;
+    const owner = identifierName(argument.object);
+    return (
+      owner !== undefined &&
+      manipulationBindings.has(owner) &&
+      staticMemberName(argument) === "frameProps"
+    );
+  };
+
   const inspectCreateElementArguments = (argumentsValue: unknown): void => {
     const args = nodes(argumentsValue);
     const componentName = resolveCoreValue(args[0]);
@@ -1254,8 +1278,13 @@ function inspectSource(source: string, label: string): SourceInspection {
       const orbitHandlerSpreads = spreadAttributes.filter(
         isOrbitHandlersSpread,
       );
+      const manipulationFrameSpreads =
+        componentName === "ManipulationFrame"
+          ? spreadAttributes.filter(isManipulationFrameSpread)
+          : [];
       if (
-        spreadAttributes.length !== orbitHandlerSpreads.length ||
+        spreadAttributes.length !==
+          orbitHandlerSpreads.length + manipulationFrameSpreads.length ||
         (orbitHandlerSpreads.length > 0 && componentName !== "Group")
       ) {
         hasUninspectableProps = true;
@@ -1444,7 +1473,7 @@ export function validateScenarioSourceText(
   ) {
     throw invalid(
       label,
-      "must use supported static imports from @crc/core, @crc/core/viz, @crc/core/particles, @crc/core/physics/2d, @crc/three, three, and supported Three addons; relative imports must be type-only; and at least one public @crc/core value is required.",
+      "must use supported static imports from @crc/core, @crc/text, @crc/core/viz, @crc/core/particles, @crc/core/physics/2d, @crc/three, three, and supported Three addons; relative imports must be type-only; and at least one public @crc/core value is required.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1500,7 +1529,15 @@ export function validateLearningSourceText(
     (sourcePath === undefined &&
       (label === "three-instancing" ||
         label === 'Learning example "three-instancing"'));
+  const isFlowLesson =
+    sourcePath ===
+      "packages/scenarios/src/learning/composition/fire-and-flow.example.tsx" ||
+    (sourcePath === undefined &&
+      (label === "fire-and-flow" ||
+        label === 'Learning example "fire-and-flow"'));
   const isPhysicsLesson =
+    sourcePath === "packages/scenarios/src/learning/composition/embers-physics.example.tsx" ||
+    (sourcePath === undefined && (label === "embers-physics" || label === 'Learning example "embers-physics"')) ||
     sourcePath === PHYSICS_LEARNING_SOURCE_PATH ||
     sourcePath ===
       "packages/scenarios/src/learning/composition/physics-panels.example.tsx" ||
@@ -1509,44 +1546,61 @@ export function validateLearningSourceText(
         label === 'Learning example "physics-panels"' ||
         label === "physics-2d" ||
         label === 'Learning example "physics-2d"'));
-  const optionalFilterImports = inspection.packageImportModules.includes("@crc/core/filters") ? 1 : 0;
-  const isVizLesson = inspection.packageImportModules.includes("@crc/text") || inspection.packageImportModules.includes(VIZ_MODULE) || inspection.packageImportModules.includes("@crc/core/textures");
-  const isStirredInkLesson = sourcePath === "packages/scenarios/src/learning/composition/stirred-ink.example.tsx" ||
-    (sourcePath === undefined && (label === "stirred-ink" || label === 'Learning example "stirred-ink"'));
+  const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE);
+  const isTextLesson = inspection.packageImportModules.includes("@crc/text");
+  // Filter factories compose with every supported example package set.
+  // The approved-module and named-import checks below still apply to them.
+  const basePackageCount = inspection.packageImportModules.filter(
+    (module) => module !== "@crc/core/filters",
+  ).length;
+  const isStirredInkLesson =
+    sourcePath ===
+      "packages/scenarios/src/learning/composition/stirred-ink.example.tsx" ||
+    (sourcePath === undefined &&
+      (label === "stirred-ink" || label === 'Learning example "stirred-ink"'));
   const hasExactPackageImports = isStirredInkLesson
-    ? inspection.hasNamedValueCoreImport && inspection.hasPhysics2DValueImport &&
-      inspection.packageImportModules.includes("@crc/core/textures") && inspection.packageImportModules.length === 3
-    : isVizLesson
     ? inspection.hasNamedValueCoreImport &&
-      inspection.packageImportModules.length === 2 + optionalFilterImports
-    : isThreeLesson
+      inspection.hasPhysics2DValueImport &&
+      inspection.packageImportModules.includes("@crc/core/textures") &&
+      basePackageCount === 3
+    : isFlowLesson
       ? inspection.hasNamedValueCoreImport &&
-        inspection.hasThreeAdapterValueImport &&
-        inspection.hasThreeValueImport &&
-        inspection.hasOrbitControlsValueImport === isThreeControlsLesson &&
-        !inspection.hasNamedValueParticlesImport &&
+        inspection.hasNamedValueParticlesImport &&
+        inspection.hasPhysics2DValueImport &&
+        !inspection.hasPhysics3DValueImport &&
         !inspection.hasNamedValueWebGLImport &&
-        inspection.packageImportModules.length ===
-          (isThreeControlsLesson ? 4 : 3) + optionalFilterImports
-      : isParticlesLesson
-        ? inspection.hasNamedValueCoreImport &&
-          inspection.hasNamedValueParticlesImport &&
-          !inspection.hasNamedValuePhysicsImport &&
-          !inspection.hasNamedValueWebGLImport &&
-          inspection.packageImportModules.length === 2 + optionalFilterImports
-        : isPhysicsLesson
+        basePackageCount === 3
+      : isVizLesson ||
+          isTextLesson ||
+          inspection.packageImportModules.includes("@crc/core/textures")
+        ? inspection.hasNamedValueCoreImport && basePackageCount === 2
+        : isThreeLesson
           ? inspection.hasNamedValueCoreImport &&
-            inspection.hasNamedValuePhysicsImport &&
-            inspection.hasPhysics2DValueImport &&
-            !inspection.hasPhysics3DValueImport &&
+            inspection.hasThreeAdapterValueImport &&
+            inspection.hasThreeValueImport &&
+            inspection.hasOrbitControlsValueImport === isThreeControlsLesson &&
             !inspection.hasNamedValueParticlesImport &&
             !inspection.hasNamedValueWebGLImport &&
-            inspection.packageImportModules.length === 2 + optionalFilterImports
-          : inspection.hasNamedValueCoreImport &&
-            !inspection.hasNamedValueParticlesImport &&
-            !inspection.hasNamedValuePhysicsImport &&
-            !inspection.hasNamedValueWebGLImport &&
-            inspection.packageImportModules.length === 1 + optionalFilterImports;
+            basePackageCount === (isThreeControlsLesson ? 4 : 3)
+          : isParticlesLesson
+            ? inspection.hasNamedValueCoreImport &&
+              inspection.hasNamedValueParticlesImport &&
+              !inspection.hasNamedValuePhysicsImport &&
+              !inspection.hasNamedValueWebGLImport &&
+              basePackageCount === 2
+            : isPhysicsLesson
+              ? inspection.hasNamedValueCoreImport &&
+                inspection.hasNamedValuePhysicsImport &&
+                inspection.hasPhysics2DValueImport &&
+                !inspection.hasPhysics3DValueImport &&
+                !inspection.hasNamedValueParticlesImport &&
+                !inspection.hasNamedValueWebGLImport &&
+                basePackageCount === 2
+              : inspection.hasNamedValueCoreImport &&
+                !inspection.hasNamedValueParticlesImport &&
+                !inspection.hasNamedValuePhysicsImport &&
+                !inspection.hasNamedValueWebGLImport &&
+                basePackageCount === 1;
   if (!inspection.hasOnlyApprovedImports || !hasExactPackageImports) {
     throw invalid(
       label,

@@ -26,8 +26,8 @@ function HorizontalStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#17211d",
@@ -35,8 +35,8 @@ function HorizontalStudy() {
     />,
     <Text
       style={{
-        x: 82,
-        y: 54,
+        left: 82,
+        top: 54,
         fill: "#fffdf6",
         font: "800 24px sans-serif",
       }}
@@ -48,8 +48,8 @@ function HorizontalStudy() {
     rule(306, "#f7c948", "yellow"),
     <Text
       style={{
-        x: 638,
-        y: 344,
+        left: 638,
+        top: 344,
         fill: "#74d3ae",
         font: "700 14px monospace",
         textAlign: "right",

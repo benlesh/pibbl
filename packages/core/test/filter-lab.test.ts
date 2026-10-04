@@ -270,8 +270,8 @@ describe('first-class filter public scenarios', () => {
     const controller = crc(canvas, [
       createElement(Rectangle, {
         style: {
-          x: 10,
-          y: 20,
+          left: 10,
+          top: 20,
           width: 50,
           height: 60,
           cornerRadius: 12,

@@ -93,8 +93,8 @@ function AnimatedCard() {
     <Rectangle style={{ width: 720, height: 420, fill: "#eef2ff" }} />,
     <Text
       style={{
-        x: 360,
-        y: 58,
+        left: 360,
+        top: 58,
         fill: "#17211d",
         font: "900 24px sans-serif",
         textAlign: "center",
@@ -104,8 +104,8 @@ function AnimatedCard() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 84,
+        left: 360,
+        top: 84,
         fill: "#475569",
         font: "600 12px monospace",
         textAlign: "center",
@@ -139,8 +139,8 @@ function AnimatedCard() {
       />
       <Text
         style={{
-          x: 182,
-          y: 68,
+          left: 182,
+          top: 68,
           fill: "#ffffff",
           font: "900 22px sans-serif",
           textAlign: "center",
@@ -150,8 +150,8 @@ function AnimatedCard() {
       </Text>
       <Text
         style={{
-          x: 182,
-          y: 108,
+          left: 182,
+          top: 108,
           fill: "#f7c948",
           font: "700 12px monospace",
           textAlign: "center",
@@ -161,8 +161,8 @@ function AnimatedCard() {
       </Text>
       <Text
         style={{
-          x: 182,
-          y: 138,
+          left: 182,
+          top: 138,
           fill: "#dbeafe",
           font: "600 11px monospace",
           textAlign: "center",

@@ -1,0 +1,42 @@
+{
+  "task": "priority remediation of the fresh committed-main audit",
+  "status": "reviewed priority fixes merged and pushed by explicit user instruction; unresolved items remain",
+  "productionBaseline": "690bb10a99246b6f5f57df9b0341774209905827",
+  "remoteMainVerified": "dc53e01e9e74d89dbad232fc3160d9b99361e4c1",
+  "runtimeChanges": true,
+  "integration": "Normal merge and non-force push completed after user explicitly instructed integration despite the disclosed documentation gate failure. Main was unprotected; merged tree exactly matched reviewed candidate.",
+  "findings": {
+    "A01": "fixed/reviewed/verified; merged and pushed",
+    "A02": "fixed/reviewed/verified; merged and pushed",
+    "A03": "blocked on delivery-policy decision",
+    "A04": "reviewed worst-case allocation-pressure mitigation merged and pushed; scaled presentations retain pattern pressure",
+    "A05": "fixed/reviewed/verified; merged and pushed",
+    "A06": "fixed/reviewed/verified; merged and pushed",
+    "A07": "reviewed rendering and physics staging optimizations merged and pushed",
+    "A08": "deferred; safe generic pooling needs generation-release contract",
+    "A09": "source-supported follow-up",
+    "A10": "source-supported follow-up",
+    "A11": "fixed/reviewed/verified; merged and pushed"
+  },
+  "blockers": [
+    "A03 requires the requested public delivery-policy choice.",
+    "Aggregate trust on current main plus fixes: texture contract inventory has12 recorded versus33 current semantic units; missing approved-design provenance remains unresolved."
+  ],
+  "next": [
+    "Resolve A03 delivery policy without silent message loss/reordering.",
+    "Reconcile approved texture-contract provenance and restore the aggregate gate.",
+    "Consider deferred generation-safe Three optimization and lower-priority cache/LUT findings."
+  ],
+  "review": "Independent code and verification reviews reconciled in REMEDIATION.md; all blocking findings in delivered changes fixed.",
+  "candidate": "1ad66ddd022338d6e526dff423a5e4cadcfc6b2e",
+  "measuredRuntimeCommit": "31d8417f09f6bc2bb76a96395735065bcf697108",
+  "aggregateGateCandidate": "b66260dc1eb79d492b8253b8b141708a4aea2826",
+  "browserVerification": {
+    "candidate": "1ad66ddd022338d6e526dff423a5e4cadcfc6b2e",
+    "filesPassed": 350,
+    "testsPassed": 3614,
+    "testsSkipped": 7
+  },
+  "integrationMerge": "dc53e01e9e74d89dbad232fc3160d9b99361e4c1",
+  "integrationAuthorization": "User: Commit all of this, and merge it all into main ASAP. Then push up changes."
+}

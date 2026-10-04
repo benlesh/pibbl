@@ -67,14 +67,16 @@ try {
   const names = [
     "ProceduralTexture",
     "ReactionDiffusion",
-    "texturePalettes",
-    "useTexture",
+    "cellular",
     "marble",
     "paper",
-    "cellular",
     "reactionDiffusion",
     "waterWaves",
+    "waterSurface",
+    "rainDrops",
     "tendrils",
+    "texturePalettes",
+    "useTexture",
     "lightning",
   ].sort();
   assert.deepEqual(Object.keys(textures).sort(), names);

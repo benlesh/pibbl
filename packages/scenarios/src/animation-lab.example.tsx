@@ -228,8 +228,8 @@ function AnimationOwner({ model }: { readonly model: AnimationLabModel }) {
     <Group>
       <Rectangle
         style={{
-          x: 24 + x,
-          y: 30,
+          left: 24 + x,
+          top: 30,
           width: 52,
           height: 52,
           fill: '#38bdf8',
@@ -238,8 +238,8 @@ function AnimationOwner({ model }: { readonly model: AnimationLabModel }) {
       />
       <Rectangle
         style={{
-          x: 24,
-          y: 106,
+          left: 24,
+          top: 106,
           width: 48 * scale,
           height: 28,
           fill: '#f7c948',
@@ -247,8 +247,8 @@ function AnimationOwner({ model }: { readonly model: AnimationLabModel }) {
       />
       <Rectangle
         style={{
-          x: 24,
-          y: 158,
+          left: 24,
+          top: 158,
           width: 12 + stepper.value * 4,
           height: 22,
           fill: '#f97316',
@@ -285,8 +285,8 @@ export function AnimationLabRootA({ model }: { readonly model: AnimationLabModel
       <Rectangle style={{ width: 480, height: 240, fill: '#0f172a' }} />
       <Rectangle
         style={{
-          x: 330,
-          y: 30,
+          left: 330,
+          top: 30,
           width: 34 + shared * 18,
           height: 34,
           fill: '#22c55e',
@@ -310,8 +310,8 @@ export function AnimationLabRootB({ model }: { readonly model: AnimationLabModel
       <Rectangle style={{ width: 480, height: 96, fill: '#ecfeff' }} />
       <Rectangle
         style={{
-          x: 24,
-          y: 24,
+          left: 24,
+          top: 24,
           width: 42 + shared * 24,
           height: 42,
           fill: '#0891b2',

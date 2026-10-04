@@ -448,8 +448,8 @@ function Marker({ datum, controls }: { datum: Row; controls: Controls }) {
     <Group>
       <Rectangle
         style={{
-          x: -4,
-          y: -4,
+          left: -4,
+          top: -4,
           width: 8,
           height: 8,
           fill: selected ? datum.color : "#fff",
@@ -476,13 +476,13 @@ function PointLabel({ datum }: { datum: Row }) {
     <Group>
       <Text
         pointerEvents="none"
-        style={{ x: 0, y: 0, font: "bold 12px sans-serif", fill: ink }}
+        style={{ left: 0, top: 0, font: "bold 12px sans-serif", fill: ink }}
       >
         {datum.label}
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 0, y: 20, font: "12px sans-serif", fill: ink }}
+        style={{ left: 0, top: 20, font: "12px sans-serif", fill: ink }}
       >{`${datum.x} mm · ${datum.y} g`}</Text>
     </Group>
   );
@@ -582,8 +582,8 @@ function Plot({
       <Text
         pointerEvents="none"
         style={{
-          x: xs.frame.width / 2,
-          y: ys.frame.height + 23,
+          left: xs.frame.width / 2,
+          top: ys.frame.height + 23,
           textAlign: "center",
           font: "10px sans-serif",
           fill: muted,
@@ -669,10 +669,10 @@ function Panel({
           strokeWidth: 1,
         }}
       />
-      <Text style={{ x: 20, y: 18, fill: ink, font: "bold 16px sans-serif" }}>
+      <Text style={{ left: 20, top: 18, fill: ink, font: "bold 16px sans-serif" }}>
         {index === 0 ? "01   Batched dots" : "02   Your own elements"}
       </Text>
-      <Text style={{ x: 20, y: 42, fill: muted, font: "11px sans-serif" }}>
+      <Text style={{ left: 20, top: 42, fill: muted, font: "11px sans-serif" }}>
         Body mass (g)
       </Text>
       <Absolute>
@@ -723,8 +723,8 @@ function Button({
       <Text
         pointerEvents="none"
         style={{
-          x: width / 2,
-          y: 19,
+          left: width / 2,
+          top: 19,
           textAlign: "center",
           textBaseline: "middle",
           font: "12px sans-serif",
@@ -773,10 +773,10 @@ function Scene({ fixture }: { fixture: Fixture }) {
         pointerEvents="none"
         style={{ width: box.width, height: box.height, fill: "#f4f7fb" }}
       />
-      <Text style={{ x: 24, y: 20, font: "bold 25px sans-serif", fill: ink }}>
+      <Text style={{ left: 24, top: 20, font: "bold 25px sans-serif", fill: ink }}>
         Palmer penguins
       </Text>
-      <Text style={{ x: 24, y: 52, font: "11px sans-serif", fill: muted }}>
+      <Text style={{ left: 24, top: 52, font: "11px sans-serif", fill: muted }}>
         {box.width < 600
           ? "2007–2009 · 342 measured / 344 penguins"
           : "344 penguins across three Antarctic islands · 2007–2009 · Two missing measurements omitted"}
@@ -792,7 +792,7 @@ function Scene({ fixture }: { fixture: Fixture }) {
           />
           <Text
             pointerEvents="none"
-            style={{ x: 9, y: -6, font: "11px sans-serif", fill: ink }}
+            style={{ left: 9, top: -6, font: "11px sans-serif", fill: ink }}
           >
             {species}
           </Text>
@@ -838,7 +838,7 @@ function Scene({ fixture }: { fixture: Fixture }) {
           })
         }
       />
-      <Text style={{ x: 24, y: top - 30, font: "12px monospace", fill: ink }}>
+      <Text style={{ left: 24, top: top - 30, font: "12px monospace", fill: ink }}>
         {current
           ? box.width < 600
             ? `${current.label} · ${current.x} mm · ${current.y} g`
@@ -863,8 +863,8 @@ function Scene({ fixture }: { fixture: Fixture }) {
       </Absolute>
       <Text
         style={{
-          x: 24,
-          y: rightY + height + 18,
+          left: 24,
+          top: rightY + height + 18,
           font: "11px sans-serif",
           fill: muted,
         }}
@@ -876,8 +876,8 @@ function Scene({ fixture }: { fixture: Fixture }) {
       <Text
         pointerEvents="none"
         style={{
-          x: 24,
-          y: rightY + height + 33,
+          left: 24,
+          top: rightY + height + 33,
           font: "10px sans-serif",
           fill: muted,
         }}

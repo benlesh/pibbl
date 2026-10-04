@@ -11,7 +11,7 @@ it('opts into local forces and collision in Advance, keeps reversal history, and
     if(from[1]<140 && to[1]>=140){hits++;return {fraction:(140-from[1])/(to[1]-from[1]),normal:[0,-1]};}
     return undefined;
   }}});
-  function Scene(){handle=useVisibilityTransition({enter:effect,duration:200});return <Rectangle style={{x:30,y:30,width:180,height:80,fill:'white',transition:handle.binding}} />;}
+  function Scene(){handle=useVisibilityTransition({enter:effect,duration:200});return <Rectangle style={{left:30,top:30,width:180,height:80,fill:'white',transition:handle.binding}} />;}
   const root=crc(canvas,<Scene />);
   try {
     driver.flush(0);expect(queries).toBe(0);

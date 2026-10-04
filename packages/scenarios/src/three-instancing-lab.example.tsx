@@ -301,8 +301,8 @@ function tileField(onTile: () => void): CRCNode {
         key={`tile-${index}`}
         keyboardFocusable={false}
         style={{
-          x: 4 + column * 80,
-          y: 4 + row * 72,
+          left: 4 + column * 80,
+          top: 4 + row * 72,
           width: 72,
           height: 64,
           fill: TILE_COLORS[index % TILE_COLORS.length],
@@ -361,8 +361,8 @@ export function createThreeInstancingLabScene(
         <Rectangle
           keyboardFocusable={false}
           style={{
-            x: 230,
-            y: 48,
+            left: 230,
+            top: 48,
             width: 180,
             height: 52,
             fill: '#f8fafc',
@@ -376,8 +376,8 @@ export function createThreeInstancingLabScene(
         <Text
           pointerEvents="none"
           style={{
-            x: 320,
-            y: 69,
+            left: 320,
+            top: 69,
             fill: '#0f172a',
             font: '700 12px monospace',
             textAlign: 'center',
@@ -388,8 +388,8 @@ export function createThreeInstancingLabScene(
         <Text
           pointerEvents="none"
           style={{
-            x: 320,
-            y: 88,
+            left: 320,
+            top: 88,
             fill: '#334155',
             font: '10px monospace',
             textAlign: 'center',
@@ -400,8 +400,8 @@ export function createThreeInstancingLabScene(
         <Text
           pointerEvents="none"
           style={{
-            x: 16,
-            y: 348,
+            left: 16,
+            top: 348,
             fill: '#e2e8f0',
             font: '700 11px monospace',
           }}

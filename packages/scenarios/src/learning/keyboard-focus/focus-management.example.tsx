@@ -62,8 +62,8 @@ function FocusTarget({
   return [
     <Rectangle
       style={{
-        x,
-        y,
+        left: x,
+        top: y,
         width,
         height,
         fill: color,
@@ -74,8 +74,8 @@ function FocusTarget({
     snapshot.isFocusVisible ? (
       <Rectangle
         style={{
-          x: x - 6,
-          y: y - 6,
+          left: x - 6,
+          top: y - 6,
           width: width + 12,
           height: height + 12,
           stroke: "#facc15",
@@ -85,8 +85,8 @@ function FocusTarget({
     ) : undefined,
     <Text
       style={{
-        x: x + width / 2,
-        y: y + 38,
+        left: x + width / 2,
+        top: y + 38,
         textAlign: "center",
         fill: "#ffffff",
         font: "700 15px Arial",
@@ -96,8 +96,8 @@ function FocusTarget({
     </Text>,
     <Text
       style={{
-        x: x + width / 2,
-        y: y + 65,
+        left: x + width / 2,
+        top: y + 65,
         textAlign: "center",
         fill: "#ffffff",
         font: "11px monospace",
@@ -136,8 +136,8 @@ function FocusManagementLesson() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 32,
+        left: 360,
+        top: 32,
         textAlign: "center",
         fill: "#0f172a",
         font: "800 22px Arial",
@@ -147,8 +147,8 @@ function FocusManagementLesson() {
     </Text>,
     <Text
       style={{
-        x: 360,
-        y: 57,
+        left: 360,
+        top: 57,
         textAlign: "center",
         fill: "#334155",
         font: "12px Arial",
@@ -194,8 +194,8 @@ function FocusManagementLesson() {
     />,
     <Text
       style={{
-        x: 360,
-        y: 228,
+        left: 360,
+        top: 228,
         textAlign: "center",
         fill: "#0f172a",
         font: "700 13px Arial",
@@ -207,8 +207,8 @@ function FocusManagementLesson() {
     </Text>,
     <Rectangle
       style={{
-        x: 46,
-        y: 254,
+        left: 46,
+        top: 254,
         width: 628,
         height: 116,
         fill: "#111827",
@@ -218,8 +218,8 @@ function FocusManagementLesson() {
     />,
     <Text
       style={{
-        x: 64,
-        y: 278,
+        left: 64,
+        top: 278,
         fill: "#facc15",
         font: "700 12px monospace",
       }}
@@ -232,8 +232,8 @@ function FocusManagementLesson() {
     ).map((entry, index) => (
       <Text
         style={{
-          x: 64,
-          y: 305 + index * 18,
+          left: 64,
+          top: 305 + index * 18,
           fill: "#e2e8f0",
           font: "12px monospace",
         }}
@@ -243,8 +243,8 @@ function FocusManagementLesson() {
     )),
     <Text
       style={{
-        x: 360,
-        y: 399,
+        left: 360,
+        top: 399,
         textAlign: "center",
         fill: "#334155",
         font: "11px Arial",

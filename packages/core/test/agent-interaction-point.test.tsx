@@ -19,7 +19,7 @@ it('finds an uncovered clipped interaction point and delivers native input there
   const clip = new Path2D(); clip.rect(0, 0, 90, 90);
   controller = crc(canvas, <Group style={{ translateX: 20, translateY: 20 }}>
     <Clip style={{ d: clip }}><Rectangle style={{ width: 120, height: 120, fill: '#00f' }} onClick={() => selections++} /></Clip>
-    <Rectangle style={{ x: 40, width: 80, height: 120, fill: '#f00' }} onClick={() => undefined} />
+    <Rectangle style={{ left: 40, width: 80, height: 120, fill: '#f00' }} onClick={() => undefined} />
   </Group>, { pixelRatio: 1 }); driver.flush(1);
   const inspector = createTargetingInspector(canvas); const snapshot = inspector.snapshot();
   const target = inspector.probe(snapshot.generation!, 30, 30).targetId!;
@@ -38,7 +38,7 @@ it('finds an uncovered clipped interaction point and delivers native input there
 it('reports no verified point without proving absence for thin or fully covered targets', () => {
   const canvas = host(); const covered = signal(false);
   function Scene() { return <>
-    <Rectangle style={{ x: 1, y: 1, width: 1, height: 1, fill: '#00f' }} onClick={() => undefined} />
+    <Rectangle style={{ left: 1, top: 1, width: 1, height: 1, fill: '#00f' }} onClick={() => undefined} />
     {covered.get() ? <Rectangle style={{ width: 100, height: 100, fill: '#f00' }} onClick={() => undefined} /> : null}
   </>; }
   controller = crc(canvas, <Scene />, { pixelRatio: 1 }); driver.flush(1);

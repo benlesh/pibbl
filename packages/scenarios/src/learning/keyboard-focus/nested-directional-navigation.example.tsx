@@ -59,8 +59,8 @@ function NavigationTarget({
     <Rectangle
       pointerEvents={"none"}
       style={{
-        x,
-        y,
+        left: x,
+        top: y,
         width,
         height,
         fill: color,
@@ -72,8 +72,8 @@ function NavigationTarget({
       <Rectangle
         pointerEvents={"none"}
         style={{
-          x: x - 5,
-          y: y - 5,
+          left: x - 5,
+          top: y - 5,
           width: width + 10,
           height: height + 10,
           stroke: "#facc15",
@@ -84,8 +84,8 @@ function NavigationTarget({
     <Text
       pointerEvents={"none"}
       style={{
-        x: x + width / 2,
-        y: y + height / 2 + 5,
+        left: x + width / 2,
+        top: y + height / 2 + 5,
         textAlign: "center",
         fill: "#ffffff",
         font: boundary === "INNER" ? "800 17px Arial" : "800 18px Arial",
@@ -163,8 +163,8 @@ function OuterGrid({ onFocusTarget, onInput }: BoundaryProps) {
     <Rectangle
       pointerEvents={"none"}
       style={{
-        x: 207,
-        y: 82,
+        left: 207,
+        top: 82,
         width: 306,
         height: 316,
         fill: "#ede9fe",
@@ -186,8 +186,8 @@ function OuterGrid({ onFocusTarget, onInput }: BoundaryProps) {
     <Text
       pointerEvents={"none"}
       style={{
-        x: 360,
-        y: 175,
+        left: 360,
+        top: 175,
         textAlign: "center",
         fill: "#5b21b6",
         font: "800 10px monospace",
@@ -245,8 +245,8 @@ function NestedDirectionalNavigationLesson() {
     <Text
       pointerEvents={"none"}
       style={{
-        x: 360,
-        y: 30,
+        left: 360,
+        top: 30,
         textAlign: "center",
         fill: "#0f172a",
         font: "800 20px Arial",
@@ -257,8 +257,8 @@ function NestedDirectionalNavigationLesson() {
     <Text
       pointerEvents={"none"}
       style={{
-        x: 360,
-        y: 58,
+        left: 360,
+        top: 58,
         textAlign: "center",
         fill: "#334155",
         font: "13px Arial",
@@ -274,8 +274,8 @@ function NestedDirectionalNavigationLesson() {
     <Rectangle
       pointerEvents={"none"}
       style={{
-        x: 34,
-        y: 422,
+        left: 34,
+        top: 422,
         width: 652,
         height: 72,
         fill: "#0f172a",
@@ -286,8 +286,8 @@ function NestedDirectionalNavigationLesson() {
     <Text
       pointerEvents={"none"}
       style={{
-        x: 54,
-        y: 451,
+        left: 54,
+        top: 451,
         fill: "#f8fafc",
         font: "800 14px monospace",
       }}
@@ -295,8 +295,8 @@ function NestedDirectionalNavigationLesson() {
     <Text
       pointerEvents={"none"}
       style={{
-        x: 54,
-        y: 477,
+        left: 54,
+        top: 477,
         fill: status.get().boundary === "INNER" ? "#c4b5fd" : "#5eead4",
         font: "800 13px monospace",
       }}
@@ -304,8 +304,8 @@ function NestedDirectionalNavigationLesson() {
     <Text
       pointerEvents={"none"}
       style={{
-        x: 666,
-        y: 477,
+        left: 666,
+        top: 477,
         textAlign: "right",
         fill: "#facc15",
         font: "800 13px monospace",

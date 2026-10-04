@@ -1,0 +1,132 @@
+$ corepack pnpm@11.21.0 test:lifecycle && corepack pnpm@11.21.0 test:performance && corepack pnpm@11.21.0 --filter @crc/text run test
+$ vitest run packages/core/test/lifecycle-ownership.test.ts packages/core/test/runtime-cleanup-stress.test.ts packages/core/test/filter-ownership.test.ts packages/core/test/signal-scheduler-ownership.test.ts packages/core/test/animation-ownership.test.ts packages/core/test/particle-ownership.test.ts packages/particles/src/lib/canvas/component.test.tsx packages/particles/src/lib/canvas/raster-cache.test.ts --browser.headless --browser.ui=false
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ Test Files  8 passed (8)
+      Tests  33 passed (33)
+   Start at  16:12:25
+   Duration  11.82s (transform 0ms, setup 0ms, import 3.00s, tests 21.52s, environment 0ms)
+
+$ vitest run packages/core/test/event-performance.test.ts packages/core/test/filter-performance.test.ts packages/core/test/signal-scheduler-performance.test.ts packages/core/test/animation-performance.test.ts packages/core/test/particle-performance.test.ts packages/particles/src/lib/canvas/birth-ledger.test.ts --browser.headless --browser.ui=false
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:12:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:13:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:15:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ Test Files  6 passed (6)
+      Tests  48 passed | 4 skipped (52)
+   Start at  16:12:39
+   Duration  3.83s (transform 0ms, setup 0ms, import 2.73s, tests 2.62s, environment 0ms)
+
+$ node scripts/test.mjs
+✔ quadratic and cubic bounds use extrema rather than control hulls (1.0425ms)
+✔ moves add no ink; close segments and negative coordinates are included (0.150208ms)
+✔ analytic cubic bounds enclose independently sampled curves across deterministic inputs (6.956084ms)
+✔ CFF outlines preserve cubic curves and the two contours of O (14.225667ms)
+✔ Arabic run keeps descending UTF-16 clusters and positioned nonadvancing marks (4.627667ms)
+✔ empty text has empty geometry and metrics (1.0005ms)
+✔ language interning is bounded across font lifetimes and existing tags remain reusable (27.003333ms)
+✔ oversized HTTP font is rejected from its header without waiting for the body (20.662ms)
+✔ font loading respects offset views and owns an independent copy (7.216167ms)
+✔ chunked font downloads stop at the byte limit without acquiring a font (31.004292ms)
+✔ canceling a partial font response closes it without acquiring a font (2.709334ms)
+✔ Node Buffer input is copied before asynchronous engine initialization (0.700458ms)
+✔ loading owns its original abort signal even if the options object changes (0.494084ms)
+✔ fonts without outline tables are rejected rather than returning empty visible text (4.436875ms)
+✔ truncated and out-of-range font table directories fail without acquiring native owners (0.469583ms)
+✔ conversion failure leaves the same font usable (10.741209ms)
+✔ missing glyph substitution is explicit and still returns owned geometry (0.624291ms)
+✔ fonts declaring color presentation require explicit monochrome fallback (0.47775ms)
+✔ repeated success, limit errors, and missing glyphs return native owners to baseline (573.945292ms)
+✔ using scopes release on return and exceptions; returned geometry stays valid (0.273292ms)
+✔ invalid and canceled loading create no native owner (0.127083ms)
+✔ overflowing whitespace metrics fail without leaking a native result (0.152833ms)
+✔ draw allocation failures release scratch leases and preserve font usability (6.761875ms)
+✔ WASM growth cannot invalidate earlier geometry or leave borrowed result storage (96.200083ms)
+✔ HarfBuzz empty allocation singletons reject instead of returning blank geometry (0.361542ms)
+✔ shaping configurations cannot grow a live font cache without bound (18.559417ms)
+✔ private profiling preserves conversion and releases results after success and failure (17.042459ms)
+✔ native reference: Latin kerning (15.000541ms)
+✔ native reference: Latin without kerning (1.378542ms)
+✔ native reference: Latin ligature (4.402583ms)
+✔ native reference: Latin without ligature (2.034541ms)
+✔ native reference: Arabic marks and RTL (2.303875ms)
+✔ native reference: CFF and accents (2.041ms)
+✔ native reference: Combining accent (1.313875ms)
+✔ native reference: Supplementary UTF-16 cluster (1.145041ms)
+✔ native reference: Default ignorables (0.648541ms)
+✔ font outlines become independent, editable geometry with shared idempotent disposal (14.851042ms)
+✔ shaping feature switches preserve whole-run kerning and ligatures (5.117083ms)
+✔ ink bounds exclude trailing space and are independent of advance (0.782416ms)
+✔ tooling lock serializes writers and releases after exceptions (66.261417ms)
+✔ native cache validation detects altered and missing artifacts (3.526209ms)
+✔ verified downloads reject corrupt bytes and reuse valid offline archives (30.756708ms)
+ℹ tests 42
+ℹ suites 0
+ℹ pass 42
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 789.872917

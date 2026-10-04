@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import repeatMilestones from './repeat-milestones.fixture.json';
+import { describe, expect, it, vi } from 'vitest';
 import {
   defineAnimation,
   keyframes,
@@ -1016,4 +1017,62 @@ describe('seekable animation program evaluation', () => {
     expect(getProgramActivationRecord(activation).trackStarts).toHaveLength(1);
     expect(() => getProgramActivationRecord(committed)).toThrow(/activation/iu);
   });
+});
+
+describe('long-running emission timelines', () => {
+  it.each([2048, 2_000_000])('deduplicates crossed milestones at %i ms without scanning historical events', (time) => {
+    const activation = activateProgram(repeat(sequence(wait(1), marker('emit')), { iterations: Infinity }), {});
+    let comparisons = 0;
+    let constructedEvents = 0;
+    const freeze = Object.freeze;
+    const freezeSpy = vi.spyOn(Object, 'freeze').mockImplementation((value) => {
+      if (typeof value === 'object' && value !== null && 'programTime' in value && 'sourceOrder' in value) constructedEvents++;
+      return freeze(value);
+    });
+    const original = Array.prototype.findIndex;
+    const spy = vi.spyOn(Array.prototype, 'findIndex').mockImplementation(function (this: unknown[], predicate, thisArg) {
+      const timeline = typeof this[0] === 'object' && this[0] !== null && 'programTime' in this[0];
+      return original.call(this, (value, index, array) => {
+        if (timeline) comparisons++;
+        return predicate.call(thisArg, value, index, array);
+      });
+    });
+    try {
+      const result = evaluateAt(activation, time, time - 1);
+      expect(result.milestones.filter(event => event.kind === 'marker').map(event => event.programTime)).toEqual([time]);
+      expect(comparisons).toBeLessThan(16384);
+      expect(constructedEvents).toBeLessThan(10);
+    } finally {
+      spy.mockRestore();
+      freezeSpy.mockRestore();
+      releaseProgramActivation(activation);
+    }
+  });
+});
+
+it('preserves original nested fractional-repeat milestone identities and ordering', () => {
+  for (const direction of ['normal', 'reverse', 'alternate', 'alternate-reverse'] as const) {
+    const program = repeat(sequence(
+      marker('start,[0]'),
+      wait(0.25),
+      repeat(sequence(marker('inner'), wait(0.25), marker('end')), { iterations: 3, direction: 'alternate' }),
+      marker('end'),
+    ), { iterations: 64, direction });
+    const registration = {};
+    for (const traversal of ['forward', 'reverse'] as const) {
+      const activation = activateProgram(program, registration);
+      const from = traversal === 'forward' ? 31.75 : 32.25;
+      const to = traversal === 'forward' ? 32.25 : 31.75;
+      try {
+        const actual = evaluateAt(activation, to, from, traversal).milestones;
+        const key = `${direction}:${traversal}` as keyof typeof repeatMilestones;
+        // Captured from the original evaluator before interval pruning. This
+        // preserves incremental reverse behavior, including same-time ties.
+        expect(actual.map(event => [event.kind, event.kind === 'marker' ? event.marker : null,
+          event.programTime, event.programPath, event.iteration])).toEqual(repeatMilestones[key]);
+      } finally {
+        releaseProgramActivation(activation);
+      }
+    }
+  }
 });

@@ -12,8 +12,8 @@ function VerticalStudy() {
   return [
     <Rectangle
       style={{
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 720,
         height: 420,
         fill: "#f7f0df",
@@ -37,8 +37,8 @@ function VerticalStudy() {
     )),
     <Text
       style={{
-        x: 360,
-        y: 370,
+        left: 360,
+        top: 370,
         fill: "#17211d",
         font: "800 17px monospace",
         textAlign: "center",

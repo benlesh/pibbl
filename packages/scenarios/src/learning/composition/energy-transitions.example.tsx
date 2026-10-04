@@ -264,28 +264,28 @@ function Study({ initial }: { initial: StudyOptions }) {
   const labels = { bifrost: 'BIFROST', hologram: 'HOLOGRAM', embers: 'EMBERS / ASH' };
   const descriptions = { bifrost: 'Carried by light.', hologram: 'Reconstructed, line by line.', embers: 'Burn away. Gather from the ashes.' };
   const button = (label: string, x: number, y: number, size: number, click: () => void, active = false) => <Group key={label}>
-    <Rectangle style={{ x, y, width: size, height: 38, cornerRadius: 6, fill: active ? '#304968' : '#142137', stroke: active ? '#86b6df' : '#2b3c54', strokeWidth: 1, cursor: 'pointer' }} onClick={click} />
-    <Text pointerEvents="none" style={{ x: x + size / 2, y: y + 19, textBaseline: 'middle', textAlign: 'center', font: '600 11px sans-serif', fill: '#e2ebf7' }}>{label}</Text>
+    <Rectangle style={{ left: x, top: y, width: size, height: 38, cornerRadius: 6, fill: active ? '#304968' : '#142137', stroke: active ? '#86b6df' : '#2b3c54', strokeWidth: 1, cursor: 'pointer' }} onClick={click} />
+    <Text pointerEvents="none" style={{ left: x + size / 2, top: y + 19, textBaseline: 'middle', textAlign: 'center', font: '600 11px sans-serif', fill: '#e2ebf7' }}>{label}</Text>
   </Group>;
   const scrub = (event: CRCPointerEvent) => playback.seek(clamp((event.x - 40) / 880) * transitionDuration);
   return <Group>
     <Rectangle style={{ width: 960, height: 790, fill: '#0b1220' }} />
     <EnergyScene effect={effect.get()} progress={progress.get()} time={time.get()} brightness={brightness.get()} hue={hue.get()} entry={entry.get()} targetWidth={width.get()} />
-    <Text style={{ x: 40, y: 38, font: '11px monospace', fill: '#8093b0' }}>ENERGY STUDIES / ENTRANCE + EXIT</Text>
-    <Text style={{ x: 40, y: 79, font: '500 30px sans-serif', fill: '#edf4ff' }}>{labels[effect.get()]}</Text>
-    <Text style={{ x: 40, y: 106, font: '14px sans-serif', fill: '#9cafc8' }}>{descriptions[effect.get()]}</Text>
-    <Text style={{ x: 920, y: 38, textAlign: 'right', font: '11px monospace', fill: '#8093b0' }}>PROTOTYPE 04</Text>
+    <Text style={{ left: 40, top: 38, font: '11px monospace', fill: '#8093b0' }}>ENERGY STUDIES / ENTRANCE + EXIT</Text>
+    <Text style={{ left: 40, top: 79, font: '500 30px sans-serif', fill: '#edf4ff' }}>{labels[effect.get()]}</Text>
+    <Text style={{ left: 40, top: 106, font: '14px sans-serif', fill: '#9cafc8' }}>{descriptions[effect.get()]}</Text>
+    <Text style={{ left: 920, top: 38, textAlign: 'right', font: '11px monospace', fill: '#8093b0' }}>PROTOTYPE 04</Text>
     {(['bifrost', 'hologram', 'embers'] as const).map((kind, i) => button(labels[kind], 40 + i * 202, 585, 190, () => { effect.set(kind); entering.set(true); playback.play(); }, effect.get() === kind))}
     {button(entering.get() ? 'EXIT ↗' : 'ENTER ↙', 660, 585, 260, () => {
       if (entering.get()) { playback.cancel(); playback.reverse(); } else playback.play();
       entering.update(v => !v);
     })}
-    <Text style={{ x: 40, y: 653, font: '11px monospace', fill: '#9cafc8' }}>TRANSITION / DRAG TO EXPLORE</Text>
-    <Text style={{ x: 920, y: 653, textAlign: 'right', font: '11px monospace', fill: '#d1e5f6' }}>{`${Math.round(progress.get() * 100)}% MATERIALIZED`}</Text>
-    <Rectangle style={{ x: 40, y: 670, width: 880, height: 5, cornerRadius: 2, fill: '#26344a' }} />
-    <Rectangle style={{ x: 40, y: 670, width: Math.max(1, 880 * progress.get()), height: 5, cornerRadius: 2, fill: '#92cafa' }} />
-    <Rectangle style={{ x: 35 + 880 * progress.get(), y: 664, width: 10, height: 17, cornerRadius: 4, fill: '#e2f2ff' }} />
-    <Rectangle style={{ x: 30, y: 658, width: 900, height: 30, fill: 'transparent', cursor: 'ew-resize' }}
+    <Text style={{ left: 40, top: 653, font: '11px monospace', fill: '#9cafc8' }}>TRANSITION / DRAG TO EXPLORE</Text>
+    <Text style={{ left: 920, top: 653, textAlign: 'right', font: '11px monospace', fill: '#d1e5f6' }}>{`${Math.round(progress.get() * 100)}% MATERIALIZED`}</Text>
+    <Rectangle style={{ left: 40, top: 670, width: 880, height: 5, cornerRadius: 2, fill: '#26344a' }} />
+    <Rectangle style={{ left: 40, top: 670, width: Math.max(1, 880 * progress.get()), height: 5, cornerRadius: 2, fill: '#92cafa' }} />
+    <Rectangle style={{ left: 35 + 880 * progress.get(), top: 664, width: 10, height: 17, cornerRadius: 4, fill: '#e2f2ff' }} />
+    <Rectangle style={{ left: 30, top: 658, width: 900, height: 30, fill: 'transparent', cursor: 'ew-resize' }}
       onPointerDown={e => { e.preventDefault(); playback.pause(); dragging.current = e.pointerId; e.currentTarget.setPointerCapture(e.pointerId); scrub(e); }}
       onPointerMove={e => { if (dragging.current === e.pointerId) scrub(e); }}
       onPointerUp={e => { if (dragging.current === e.pointerId) { scrub(e); dragging.current = undefined; e.currentTarget.releasePointerCapture(e.pointerId); } }}
@@ -295,7 +295,7 @@ function Study({ initial }: { initial: StudyOptions }) {
     {button(`LIGHT: ${brightness.get()}×`, 394, 706, 160, () => brightness.update(v => v === 1 ? 1.8 : v === 1.8 ? 0.4 : 1))}
     {button(`HUE: +${hue.get()}°`, 566, 706, 170, () => hue.update(v => (v + 60) % 360))}
     {button(clock.status.get() === 'running' ? 'FREEZE FLOW' : 'RESUME FLOW', 748, 706, 172, () => { if (clock.status.get() === 'running') clock.pause(); else clock.resume(); })}
-    <Text style={{ x: 40, y: 773, font: '11px sans-serif', fill: '#8093b0' }}>Same artifact. Three arrivals. Scrub the transition; the energy keeps moving independently.</Text>
+    <Text style={{ left: 40, top: 773, font: '11px sans-serif', fill: '#8093b0' }}>Same artifact. Three arrivals. Scrub the transition; the energy keeps moving independently.</Text>
   </Group>;
 }
 

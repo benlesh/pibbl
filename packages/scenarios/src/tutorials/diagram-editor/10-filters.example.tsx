@@ -215,8 +215,8 @@ function NodeCard({
       <Rectangle
         pointerEvents="none"
         style={{
-          x: -5,
-          y: 37,
+          left: -5,
+          top: 37,
           width: 10,
           height: 10,
           fill: "#17211d",
@@ -226,8 +226,8 @@ function NodeCard({
       <Rectangle
         pointerEvents="none"
         style={{
-          x: 163,
-          y: 37,
+          left: 163,
+          top: 37,
           width: 10,
           height: 10,
           fill: "#17211d",
@@ -237,8 +237,8 @@ function NodeCard({
       <Text
         pointerEvents="none"
         style={{
-          x: 84,
-          y: 34,
+          left: 84,
+          top: 34,
           fill: "#17211d",
           font: "900 16px sans-serif",
           textAlign: "center",
@@ -249,8 +249,8 @@ function NodeCard({
       <Text
         pointerEvents="none"
         style={{
-          x: 84,
-          y: 59,
+          left: 84,
+          top: 59,
           fill: "#17211d",
           font: "600 13px sans-serif",
           textAlign: "center",
@@ -323,21 +323,21 @@ function Toolbar({
     />,
     <Text
       pointerEvents="none"
-      style={{ x: 24, y: 34, fill: "#17211d", font: "900 22px sans-serif" }}
+      style={{ left: 24, top: 34, fill: "#17211d", font: "900 22px sans-serif" }}
     >
       WORKFLOW MAP
     </Text>,
     <Text
       pointerEvents="none"
-      style={{ x: 250, y: 32, fill: "#667066", font: "600 13px sans-serif" }}
+      style={{ left: 250, top: 32, fill: "#667066", font: "600 13px sans-serif" }}
     >
       Drag to pan · Wheel to zoom
     </Text>,
     <Rectangle
       onClick={onReset}
       style={{
-        x: 820,
-        y: 12,
+        left: 820,
+        top: 12,
         width: 116,
         height: 32,
         fill: "#eef2e8",
@@ -350,8 +350,8 @@ function Toolbar({
     <Text
       pointerEvents="none"
       style={{
-        x: 878,
-        y: 28,
+        left: 878,
+        top: 28,
         fill: "#17211d",
         font: "800 12px sans-serif",
         textAlign: "center",
@@ -444,15 +444,15 @@ function StatusBar({
     />,
     <Text
       pointerEvents="none"
-      style={{ x: 20, y: 21, fill: "#fffdf6", font: "700 12px monospace" }}
+      style={{ left: 20, top: 21, fill: "#fffdf6", font: "700 12px monospace" }}
     >
       {message}
     </Text>,
     <Text
       pointerEvents="none"
       style={{
-        x: 940,
-        y: 21,
+        left: 940,
+        top: 21,
         fill: "#fffdf6",
         font: "700 12px monospace",
         textAlign: "right",

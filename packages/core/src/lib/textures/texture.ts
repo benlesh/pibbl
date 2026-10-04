@@ -121,6 +121,7 @@ class Resource {
   state: any;
   definition: Definition;
   disposed = false;
+  private hasState = false;
   dirty = true;
   private sequence = 0;
   private publicationCanvasesCreated = 0;
@@ -129,10 +130,11 @@ class Resource {
   private continuing = false;
   private lastTime?: number;
   private initializing = true;
+  private retryScheduled = false;
   private palette?: readonly string[];
   private optionsKey: string;
   constructor(
-    readonly owner: CRCInstance,
+    private owner: CRCInstance | undefined,
     recipe: Recipe,
     options: TextureOptions,
   ) {
@@ -189,13 +191,17 @@ class Resource {
       this.state = this.call(() =>
         this.definition.create(this.context, recipe.config),
       );
+      this.hasState = true;
+      this.publishInitial();
+      this.initializing = false;
     } catch (error) {
-      this.unregister?.();
-      this.canvas.width = this.canvas.height = 0;
+      try {
+        this.dispose();
+      } catch {
+        // The initialization failure remains the actionable error.
+      }
       throw error;
     }
-    this.publishInitial();
-    this.initializing = false;
   }
   private call<T>(fn: () => T): T {
     return withHooksForbidden(
@@ -215,14 +221,20 @@ class Resource {
       this.palette = options.palette && Object.freeze([...options.palette]);
       this.optionsKey = nextKey;
       if (width !== this.canvas.width || height !== this.canvas.height) {
-        this.call(() => this.definition.dispose?.(this.state, this.context));
-        this.canvas.width = width;
-        this.canvas.height = height;
-        this.messages.length = 0;
-        this.lastTime = undefined;
-        this.state = this.call(() =>
-          this.definition.create(this.context, recipe.config),
-        );
+        try {
+          this.disposeState();
+          this.canvas.width = width;
+          this.canvas.height = height;
+          this.messages.length = 0;
+          this.lastTime = undefined;
+          this.state = this.call(() =>
+            this.definition.create(this.context, recipe.config),
+          );
+          this.hasState = true;
+        } catch (error) {
+          try { this.dispose(); } catch { /* Preserve the recreate failure. */ }
+          throw error;
+        }
       }
       this.context.invalidate();
     }
@@ -237,6 +249,7 @@ class Resource {
   private schedule() {
     if (this.unregister || this.disposed) return;
     const participant = (frame: { logicalTime: number }, batch: any) => {
+      const retryAtEntry = this.retryScheduled;
       this.unschedule();
       const wasContinuing = this.continuing;
       this.continuing = false;
@@ -274,6 +287,7 @@ class Resource {
                 previous = this.committed;
                 this.committed = candidate;
                 this.spare = previous;
+                this.retryScheduled = false;
               }
             },
             rollback: () => {
@@ -297,6 +311,7 @@ class Resource {
       } catch (error) {
         this.unschedule();
         this.continuing = false;
+        if (this.retryScheduled && !retryAtEntry) this.schedule();
         throw error;
       }
     };
@@ -314,23 +329,37 @@ class Resource {
     } finally {
       ctx.restore();
     }
-    const candidate = this.spare?.width === this.canvas.width && this.spare.height === this.canvas.height ?
-      this.spare : this.createPublicationCanvas();
+    const spare = this.spare;
     this.spare = undefined;
-    const candidateContext = candidate.getContext("2d");
-    if (!candidateContext) throw new Error("Textures require OffscreenCanvas 2D.");
-    // Publication canvases are reused; transparent source pixels must erase old paint.
-    candidateContext.clearRect(0, 0, candidate.width, candidate.height);
-    candidateContext.drawImage(this.canvas, 0, 0);
-    return candidate;
+    const reusable = spare?.width === this.canvas.width && spare.height === this.canvas.height ?
+      spare : undefined;
+    if (spare && spare !== reusable) spare.width = spare.height = 0;
+    let candidate: OffscreenCanvas | undefined;
+    try {
+      candidate = reusable ?? this.createPublicationCanvas();
+      const candidateContext = candidate.getContext("2d");
+      if (!candidateContext) throw new Error("Textures require OffscreenCanvas 2D.");
+      // Publication canvases are reused; transparent source pixels must erase old paint.
+      candidateContext.clearRect(0, 0, candidate.width, candidate.height);
+      candidateContext.drawImage(this.canvas, 0, 0);
+      return candidate;
+    } catch (error) {
+      if (candidate) candidate.width = candidate.height = 0;
+      this.dirty = true;
+      if (!this.retryScheduled) {
+        this.retryScheduled = true;
+        this.schedule();
+      }
+      throw error;
+    }
   }
   private createPublicationCanvas(): OffscreenCanvas {
     this.publicationCanvasesCreated++;
     return new OffscreenCanvas(this.canvas.width, this.canvas.height);
   }
   /** @internal Structural ownership evidence for texture publication tests. */
-  publicationSnapshot(): Readonly<{ publicationCanvasesCreated: number }> {
-    return Object.freeze({ publicationCanvasesCreated: this.publicationCanvasesCreated });
+  publicationSnapshot(): Readonly<{ publicationCanvasesCreated: number; hasOwner: boolean }> {
+    return Object.freeze({ publicationCanvasesCreated: this.publicationCanvasesCreated, hasOwner: this.owner !== undefined });
   }
   private publishInitial(): void {
     const candidate = this.rasterizeCandidate();
@@ -353,7 +382,7 @@ class Resource {
     let root = GLOBAL_STATE.currentCRCInstance;
     while (root?.parent) root = GLOBAL_STATE.crcInstances.get(root.parent);
     let owner = this.owner;
-    while (owner.parent) owner = GLOBAL_STATE.crcInstances.get(owner.parent)!;
+    while (owner?.parent) owner = GLOBAL_STATE.crcInstances.get(owner.parent);
     if (root !== owner) throw new Error("Textures may only be shared within their owning CRC tree.");
   }
   private borrow(placement: Readonly<TexturePlacement>): BorrowedTextureRaster {
@@ -382,14 +411,26 @@ class Resource {
     this.unschedule();
     this.messages.length = 0;
     try {
-      this.call(() => this.definition.dispose?.(this.state, this.context));
+      this.disposeState();
     } finally {
       this.canvas.width = this.canvas.height = 0;
       this.committed && (this.committed.width = this.committed.height = 0);
       this.spare && (this.spare.width = this.spare.height = 0);
       this.provisional && (this.provisional.canvas.width = this.provisional.canvas.height = 0);
       this.state = undefined;
+      this.hasState = false;
+      this.committed = undefined;
+      this.spare = undefined;
+      this.provisional = undefined;
+      this.owner = undefined;
     }
+  }
+  private disposeState() {
+    if (!this.hasState) return;
+    this.hasState = false;
+    const state = this.state;
+    this.state = undefined;
+    this.call(() => this.definition.dispose?.(state, this.context));
   }
 }
 

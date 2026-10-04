@@ -108,11 +108,11 @@ export default function mount(canvas: HTMLCanvasElement): CRCController {
     generation.get();
     return <>
       <Rectangle style={{ width: 960, height: 700, fill: '#f6f3e9' }} pointerEvents="none" />
-      <Text style={{ x: 28, y: 24, font: '800 28px system-ui', fill: '#233b36' }} pointerEvents="none">Bend the rules.</Text>
-      <Text style={{ x: 932, y: 34, textAlign: 'right', font: '600 11px system-ui', fill: '#47796d' }} pointerEvents="none">TEXT / ENVELOPE / COMPOSITION</Text>
-      <Text style={{ x: 28, y: 62, font: '14px system-ui', fill: '#63746b' }} pointerEvents="none">Your words. Your curves. Drag the solid endpoints and hollow control handles anywhere.</Text>
+      <Text style={{ left: 28, top: 24, font: '800 28px system-ui', fill: '#233b36' }} pointerEvents="none">Bend the rules.</Text>
+      <Text style={{ left: 932, top: 34, textAlign: 'right', font: '600 11px system-ui', fill: '#47796d' }} pointerEvents="none">TEXT / ENVELOPE / COMPOSITION</Text>
+      <Text style={{ left: 28, top: 62, font: '14px system-ui', fill: '#63746b' }} pointerEvents="none">Your words. Your curves. Drag the solid endpoints and hollow control handles anywhere.</Text>
       <Group style={{ translateX: 28, translateY: 94 }}><HtmlBox mount={controls} data={null} style={{ width: 904, height: 108 }} /></Group>
-      <Rectangle style={{ x: 20, y: 220, width: 920, height: 420, fill: '#eeeee3' }} pointerEvents="none" />
+      <Rectangle style={{ left: 20, top: 220, width: 920, height: 420, fill: '#eeeee3' }} pointerEvents="none" />
       {showGuides && <Path style={{ d: grid, stroke: '#bdc9bb', strokeWidth: 0.8 }} pointerEvents="none" />}
       <Path style={{ d: output, fill: '#233b36', stroke: '#233b36', strokeWidth: 1.5, opacity: valid ? 1 : 0.3 }} pointerEvents="none" />
       {showGuides && curves.map((points, i) => {
@@ -131,8 +131,8 @@ export default function mount(canvas: HTMLCanvasElement): CRCController {
             }} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={() => { drag = undefined; }} />)}
         </>;
       })}
-      <Text style={{ x: 28, y: 656, font: '12px system-ui', fill: valid ? '#63746b' : '#a33b25' }} pointerEvents="none">{message}</Text>
-      <Text style={{ x: 932, y: 678, textAlign: 'right', font: '11px system-ui', fill: '#63746b' }} pointerEvents="none">Outline → envelope → rotate & skew · original text stays intact</Text>
+      <Text style={{ left: 28, top: 656, font: '12px system-ui', fill: valid ? '#63746b' : '#a33b25' }} pointerEvents="none">{message}</Text>
+      <Text style={{ left: 932, top: 678, textAlign: 'right', font: '11px system-ui', fill: '#63746b' }} pointerEvents="none">Outline → envelope → rotate & skew · original text stays intact</Text>
     </>;
   }
   const placeholder = document.createComment('text-envelope canvas'); canvas.before(placeholder);

@@ -26,11 +26,11 @@ function HtmlBoxLesson() {
   ];
   return <FocusManagement><Group>
     <Rectangle style={{ width: 720, height: 480, fill: '#fffdf6' }} />
-    <Text style={{ x: 32, y: 45, font: '700 28px system-ui', fill: '#163a40' }}>HTML, inside your canvas app</Text>
-    <Text style={{ x: 32, y: 75, font: '14px system-ui', fill: '#42655f' }}>Native editing. CRC placement, transforms, clipping, and focus.</Text>
+    <Text style={{ left: 32, top: 45, font: '700 28px system-ui', fill: '#163a40' }}>HTML, inside your canvas app</Text>
+    <Text style={{ left: 32, top: 75, font: '14px system-ui', fill: '#42655f' }}>Native editing. CRC placement, transforms, clipping, and focus.</Text>
     {controls.map((control, index) => <Group key={control.text}>
-      <Rectangle style={{ x: 32 + index * 135, y: 96, width: 120, height: 40, fill: '#164c45', cursor: 'pointer' }} onClick={control.action} />
-      <Text pointerEvents="none" style={{ x: 92 + index * 135, y: 122, textAlign: 'center', font: '700 12px system-ui', fill: 'white' }}>{control.text}</Text>
+      <Rectangle style={{ left: 32 + index * 135, top: 96, width: 120, height: 40, fill: '#164c45', cursor: 'pointer' }} onClick={control.action} />
+      <Text pointerEvents="none" style={{ left: 92 + index * 135, top: 122, textAlign: 'center', font: '700 12px system-ui', fill: 'white' }}>{control.text}</Text>
     </Group>)}
     <Group style={{ translateX: 145 + position.get(), translateY: 174 }}>
       <Group style={{ rotationDegrees: angle.get(), rotationOrigin: [170, 95], scaleX: scale.get(), scaleY: scale.get() }}>
@@ -39,9 +39,9 @@ function HtmlBoxLesson() {
         </Clip>
       </Group>
     </Group>
-    <Rectangle style={{ x: 32, y: 404, width: 190, height: 40, fill: '#164c45', cursor: 'pointer' }} onClick={() => after.update(n => n + 1)} />
-    <Text pointerEvents="none" style={{ x: 127, y: 430, textAlign: 'center', font: '700 12px system-ui', fill: 'white' }}>{`CANVAS CLICKS: ${after.get()}`}</Text>
-    <Text style={{ x: 242, y: 429, font: '13px system-ui', fill: '#42655f' }}>Tab between Canvas and HTML. Your text stays put.</Text>
+    <Rectangle style={{ left: 32, top: 404, width: 190, height: 40, fill: '#164c45', cursor: 'pointer' }} onClick={() => after.update(n => n + 1)} />
+    <Text pointerEvents="none" style={{ left: 127, top: 430, textAlign: 'center', font: '700 12px system-ui', fill: 'white' }}>{`CANVAS CLICKS: ${after.get()}`}</Text>
+    <Text style={{ left: 242, top: 429, font: '13px system-ui', fill: '#42655f' }}>Tab between Canvas and HTML. Your text stays put.</Text>
   </Group></FocusManagement>;
 }
 

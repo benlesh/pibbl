@@ -26,7 +26,7 @@ it("runs weighted texture commands and shared fills through the built public pac
     return (
       <>
         <Rectangle style={{ width: 128, height: 128, fill: texture }} />
-        <Rectangle style={{ x: 128, width: 128, height: 128, fill: texture }} />
+        <Rectangle style={{ left: 128, width: 128, height: 128, fill: texture }} />
       </>
     );
   }

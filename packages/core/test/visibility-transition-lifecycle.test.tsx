@@ -100,7 +100,7 @@ it('keeps mount-time configuration and stable controls across component rerender
 
 it('rejects a controller binding attached to two receivers', () => {
   const canvas = setup();
-  function Scene() { const handle = useVisibilityTransition({ enter: fade() }); return <Group><Rectangle style={{ width: 40, height: 40, transition: handle.binding }} /><Rectangle style={{ x: 50, width: 40, height: 40, transition: handle.binding }} /></Group>; }
+  function Scene() { const handle = useVisibilityTransition({ enter: fade() }); return <Group><Rectangle style={{ width: 40, height: 40, transition: handle.binding }} /><Rectangle style={{ left: 50, width: 40, height: 40, transition: handle.binding }} /></Group>; }
   expect(() => { roots.push(crc(canvas, <Scene />)); driver.flush(0); }).toThrow(/one.*receiver/i);
 });
 

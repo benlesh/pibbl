@@ -7,8 +7,8 @@ import { Image } from './img';
 import { createElement } from '../element/create-element';
 
 const defaultStyle = {
-  x: 50,
-  y: 50,
+  left: 50,
+  top: 50,
   src: bartImageSmall,
   width: 564 / 2,
   height: 424 / 2,
@@ -29,7 +29,7 @@ describe('img', () => {
   });
 
   describe('mouse events', () => {
-    const { x, y, width, height } = defaultStyle;
+    const { left: x, top: y, width, height } = defaultStyle;
 
     const centerX = x + width / 2;
     const centerY = y + height / 2;
@@ -130,8 +130,8 @@ describe('img', () => {
   describe('image specific features', () => {
     it('keeps opacity-zero image geometry interactive', async () => {
       const onClick = vi.fn();
-      const centerX = defaultStyle.x + defaultStyle.width / 2;
-      const centerY = defaultStyle.y + defaultStyle.height / 2;
+      const centerX = defaultStyle.left + defaultStyle.width / 2;
+      const centerY = defaultStyle.top + defaultStyle.height / 2;
       const canvas = await componentTest(createElement(Image, {
         style: {
           ...defaultStyle,
@@ -148,8 +148,8 @@ describe('img', () => {
     });
 
     it('ignores a legacy top-level cursor from untyped callers', async () => {
-      const centerX = defaultStyle.x + defaultStyle.width / 2;
-      const centerY = defaultStyle.y + defaultStyle.height / 2;
+      const centerX = defaultStyle.left + defaultStyle.width / 2;
+      const centerY = defaultStyle.top + defaultStyle.height / 2;
       const legacyInput = {
         style: defaultStyle,
         cursor: 'pointer',
