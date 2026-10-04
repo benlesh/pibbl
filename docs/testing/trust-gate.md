@@ -25,7 +25,10 @@ corepack pnpm@11.21.0 trust
 
 On a fresh Linux CI runner, install Chromium with `--with-deps`. Browser
 launches run serially inside the local aggregate to avoid port/process
-contention observed during earlier upgrade and visual work.
+contention observed during earlier upgrade and visual work. The full Vitest browser
+suite also uses one worker: four concurrent browser workers lost their test iframe
+on the hosted Linux runner before the suite could finish. Serial execution bounds
+resource demand without dropping tests or retrying failed assertions.
 
 ## Gate contents
 
@@ -125,7 +128,9 @@ a default correctness gate.
 The GitHub Actions matrix runs the same `trust:static`, `trust:package`,
 `trust:browser`, `trust:lifecycle`, and `trust:native` scripts as local `trust`.
 A regression check rejects a missing or extra CI stage. Each clean runner installs
-Corepack and Chromium; browser jobs build their assets before testing. A startup
+Corepack and Chromium. Each stage prepares its own required build output; the
+static stage builds before comparing declarations, and the browser stage builds
+before loading test assets. A startup
 failure remains the primary error even when no screenshot artifacts exist.
 The stable **Trust gate** result requires every matrix stage to succeed.
 
