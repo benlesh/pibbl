@@ -294,6 +294,9 @@ async function searchContract(page) {
 async function searchRetryContract(browser) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await context.newPage();
+  page.on("pageerror", (error) => {
+    process.stderr.write(`[Studio page error at ${page.url()}] ${error.stack ?? error.message}\n`);
+  });
   const route = "#/learn";
   try {
     await open(page, route, "?crcStudioSearchRetry=1");
