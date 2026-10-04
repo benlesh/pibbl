@@ -33,7 +33,6 @@ Sharding bounds process lifetime as well as concurrency. Vitest discovers and
 partitions the full suite; no test-file inventory is copied. Every shard must
 succeed, crashes propagate as failures, and nothing is retried automatically.
 
-
 ## Gate contents
 
 `trust:static` checks:
