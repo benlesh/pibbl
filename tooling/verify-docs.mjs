@@ -1892,7 +1892,6 @@ assertWorkflowCommandOrder(
     " test:ci",
     " test:studio-docs",
     " test:visual-safeguard",
-    " test:studio-visual",
     " test:smoke:built",
   ],
   "Browser, documentation, and visual checks",
@@ -1914,13 +1913,18 @@ assert.match(
 );
 assert.match(
   rootManifest.scripts["trust:browser"],
-  /\btest:studio-docs\b[\s\S]*\btest:studio-visual\b/u,
-  "The local browser trust command must retain Studio acceptance before visual baselines.",
+  /\btest:studio-docs\b[\s\S]*\btest:visual-safeguard\b/u,
+  "The local browser trust command must retain Studio acceptance and portable visual safeguards.",
+);
+assert.equal(
+  rootManifest.scripts["audit:studio-visual"],
+  "corepack pnpm@11.21.0 test:studio-visual",
+  "Platform-sensitive Studio snapshots must remain available as an explicit visual audit.",
 );
 assert.match(
   rootManifest.scripts["test:studio-visual"],
   /\bplayground:build\b/u,
-  "test:studio-visual must remain an explicit normal-production build gate.",
+  "test:studio-visual must audit an explicit normal-production build.",
 );
 const studioDocsRunner = await readFile(
   join(repositoryRoot, "tooling/test-studio-docs.mjs"),

@@ -47,7 +47,7 @@
     "bench": "vitest bench",
     "trust:static": "node --test tooling/trust-workflow.test.mjs tooling/run-browser-contracts.test.mjs && corepack pnpm@11.21.0 test:texture-kernels && corepack pnpm@11.21.0 test:filter-authoring && corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 scenarios:check && corepack pnpm@11.21.0 docs:check && corepack pnpm@11.21.0 studio-docs:check && corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 test:studio-docs:production-boundary && corepack pnpm@11.21.0 typecheck && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 playground:build && corepack pnpm@11.21.0 playground:build:built",
     "trust:package": "corepack pnpm@11.21.0 test:package-consumer:packed && corepack pnpm@11.21.0 test:package-entries && corepack pnpm@11.21.0 test:path-tree-shaking && corepack pnpm@11.21.0 test:text-package && corepack pnpm@11.21.0 test:texture-packaging",
-    "trust:browser": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 test:ci && corepack pnpm@11.21.0 test:studio-docs && corepack pnpm@11.21.0 test:visual-safeguard && corepack pnpm@11.21.0 test:studio-visual && corepack pnpm@11.21.0 test:smoke:built && corepack pnpm@11.21.0 test:agent-verification:identity && corepack pnpm@11.21.0 test:agent-verification:watchdog && corepack pnpm@11.21.0 text:test:browser && corepack pnpm@11.21.0 text:test:browser --production",
+    "trust:browser": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 test:ci && corepack pnpm@11.21.0 test:studio-docs && corepack pnpm@11.21.0 test:visual-safeguard && corepack pnpm@11.21.0 test:smoke:built && corepack pnpm@11.21.0 test:agent-verification:identity && corepack pnpm@11.21.0 test:agent-verification:watchdog && corepack pnpm@11.21.0 text:test:browser && corepack pnpm@11.21.0 text:test:browser --production",
     "trust:lifecycle": "corepack pnpm@11.21.0 test:lifecycle && corepack pnpm@11.21.0 test:performance",
     "trust": "corepack pnpm@11.21.0 trust:static && corepack pnpm@11.21.0 trust:package && corepack pnpm@11.21.0 trust:browser && corepack pnpm@11.21.0 trust:lifecycle && corepack pnpm@11.21.0 trust:native",
     "test:viz-package": "node tooling/verify-packed-viz.mjs",
@@ -77,7 +77,8 @@
     "test:bundle-sizes": "node tooling/verify-bundle-sizes.mjs",
     "trust:native": "corepack pnpm@11.21.0 text:test && corepack pnpm@11.21.0 text:doctor && corepack pnpm@11.21.0 text:verify-reproducible",
     "audit:agent-verification:claims": "node tooling/agent-verification/requirements.mjs",
-    "audit:docs:preservation": "node tooling/verify-docs-mutations.mjs --historical-preservation"
+    "audit:docs:preservation": "node tooling/verify-docs-mutations.mjs --historical-preservation",
+    "audit:studio-visual": "corepack pnpm@11.21.0 test:studio-visual"
   },
   "devDependencies": {
     "@babel/core": "catalog:",
