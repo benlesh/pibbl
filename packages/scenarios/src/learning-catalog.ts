@@ -129,6 +129,16 @@ const drafts = [
     load: () => import("./learning/composition/rainy-window.example"),
   },
   {
+    slug: "pipeline-health", title: "Pipeline Health", shortTitle: "Pipeline Health", section: "composition", order: 214,
+    summary: "Read six inference stages against their own budgets on one shared clock.",
+    api: ["Scale", "Axis", "LineSeries", "Layer"],
+    objectives: ["Compose a shared-axis trellis so onset order is readable across stages.", "Represent an unmeasured stage as a gap and a lower bound rather than a number."],
+    prompts: { gesture: "Hover the trellis to scrub every stage to the same moment, and click a stage to change the selected evidence.", code: "Swap the seeded series for your own samples and keep each row's budget rule." },
+    apiNotes: ["One @crc/viz Scale drives every row, so the rows share a clock and compare directly.", "A stage that stops reporting breaks its line and withholds the claims that depend on it."],
+    canvas: { width: 880, height: 620 }, related: ["rainy-window", "filters"],
+    load: () => import("./learning/composition/pipeline-health.example"),
+  },
+  {
     slug: "stirred-ink", title: "Stirred Ink", shortTitle: "Stirred Ink", section: "composition", order: 211,
     summary: "Animate material parameters and stir living ink with a moving physics body.",
     api: ["useTexture", "reactionDiffusion", "marble", "paper", "cellular", "useReaction", "usePlayback", "PhysicsWorld2D"],

@@ -308,6 +308,8 @@ const migrationMarkdownPaths = new Set([
 ]);
 const operationalMarkdownPaths = new Set([
   ...trackedRepositoryFiles(["docs/website-rebuild"]).filter((path) => path.endsWith(".md")),
+  // Agent operating instructions, not product documentation.
+  ...trackedRepositoryFiles([".claude/skills"]).filter((path) => path.endsWith(".md")),
   ".beads/README.md",
   "packages/text/test/fixtures/source-serif/LICENSE.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
