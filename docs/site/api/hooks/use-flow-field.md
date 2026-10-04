@@ -12,7 +12,7 @@ keywords: [particles, flow, smoke, buoyancy]
 # useFlowField2D and useFlowSource2D
 
 ```ts
-import { useFlowField2D, useFlowSource2D } from "@crc/particles";
+import { useFlowField2D, useFlowSource2D } from "@crc/core/particles";
 ```
 
 `useFlowField2D({ bounds, resolution, obstacles?, buoyancy? })` owns one

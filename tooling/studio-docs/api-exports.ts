@@ -1,6 +1,7 @@
+import { readFileSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -55,19 +56,41 @@ export interface ApiCoverage {
   readonly duplicateTypes: readonly string[];
 }
 
+const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
+const sourcePaths: Record<string, string[]> = JSON.parse(
+  readFileSync(resolve(repositoryRoot, "tsconfig.json"), "utf8"),
+).compilerOptions.paths;
+
 export const crcPublicCompilerOptions: CompilerOptions = {
   target: 99,
+  module: ModuleKind.ESNext,
+  moduleResolution: 100, // Bundler
+  paths: Object.fromEntries(
+    Object.entries(sourcePaths).map(([name, paths]) => [
+      name,
+      paths.map((path) => resolve(repositoryRoot, path)),
+    ]),
+  ),
   jsx: 4, // react-jsx; the native TypeScript API does not export JsxEmit.
   jsxImportSource: "@crc/core",
 };
 
 export const crcPublicEntryPaths = {
-  filters: fileURLToPath(new URL("../../packages/core/src/filters.ts", import.meta.url)),
-  textures: fileURLToPath(new URL("../../packages/core/src/features/textures/index.ts", import.meta.url)),
+  filters: fileURLToPath(
+    new URL("../../packages/core/src/filters.ts", import.meta.url),
+  ),
+  textures: fileURLToPath(
+    new URL(
+      "../../packages/core/src/features/textures/index.ts",
+      import.meta.url,
+    ),
+  ),
   root: fileURLToPath(
     new URL("../../packages/core/src/index.ts", import.meta.url),
   ),
-  text: fileURLToPath(new URL("../../packages/text/src/index.ts", import.meta.url)),
+  text: fileURLToPath(
+    new URL("../../packages/text/src/index.ts", import.meta.url),
+  ),
   viz: fileURLToPath(
     new URL("../../packages/core/src/features/viz/index.ts", import.meta.url),
   ),
@@ -75,7 +98,10 @@ export const crcPublicEntryPaths = {
     new URL("../../packages/three/src/index.ts", import.meta.url),
   ),
   particles: fileURLToPath(
-    new URL("../../packages/core/src/features/particles/index.ts", import.meta.url),
+    new URL(
+      "../../packages/core/src/features/particles/index.ts",
+      import.meta.url,
+    ),
   ),
   types: fileURLToPath(
     new URL("../../packages/core/src/types.ts", import.meta.url),
@@ -93,10 +119,16 @@ export const crcPhysicsEntryPaths = {
     new URL("../../packages/core/src/features/physics/2d.ts", import.meta.url),
   ),
   physics2dGeometry: fileURLToPath(
-    new URL("../../packages/core/src/features/physics/2d-geometry.ts", import.meta.url),
+    new URL(
+      "../../packages/core/src/features/physics/2d-geometry.ts",
+      import.meta.url,
+    ),
   ),
   physics3dGeometry: fileURLToPath(
-    new URL("../../packages/core/src/features/physics/3d-geometry.ts", import.meta.url),
+    new URL(
+      "../../packages/core/src/features/physics/3d-geometry.ts",
+      import.meta.url,
+    ),
   ),
 } as const;
 
@@ -105,7 +137,10 @@ export const crcStudioPublicEntryPaths = {
   ...crcPublicEntryPaths,
   physics2d: crcPhysicsEntryPaths.root,
   physics2dTesting: fileURLToPath(
-    new URL("../../packages/core/src/features/physics/2d-testing.ts", import.meta.url),
+    new URL(
+      "../../packages/core/src/features/physics/2d-testing.ts",
+      import.meta.url,
+    ),
   ),
   physics3dGeometry: crcPhysicsEntryPaths.physics3dGeometry,
 } as const;

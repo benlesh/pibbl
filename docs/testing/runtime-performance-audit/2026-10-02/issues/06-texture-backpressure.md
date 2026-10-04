@@ -1,5 +1,7 @@
 # Texture paint bursts block a frame or overflow the queue
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Issue: CRC-PERF-06  
 Priority: P2  
 Status: Open  

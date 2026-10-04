@@ -188,6 +188,7 @@ export default defineConfig(({ mode }) => ({
       // Kept in test:agent-verification:{requirements,identity,watchdog}.
       "tooling/agent-verification/**/*.test.mjs",
       // Node-only checks run in trust:static and trust:package.
+      "tooling/trust-workflow.test.mjs",
       "tooling/filter-authoring.test.mjs",
       "tooling/filter-validation.test.mjs",
       "tooling/optional-import-inertness.test.mjs",

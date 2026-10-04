@@ -1,5 +1,7 @@
 # Make long duration and overload regressions repeatable
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Issue: CRC-PERF-13  
 Priority: P2  
 Status: Open  

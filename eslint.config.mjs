@@ -52,6 +52,7 @@ export default defineConfig([
     '**/node_modules/**',
     'packages/text/.cache/**',
     '**/dist/**',
+    '**/.studio-docs-acceptance-dist/**',
     '**/.nx/**',
     '**/.vite/**',
     '**/*.d.ts',

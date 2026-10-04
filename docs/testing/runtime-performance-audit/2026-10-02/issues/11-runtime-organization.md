@@ -1,5 +1,7 @@
 # Separate runtime responsibilities around measured hot paths
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Issue: CRC-PERF-11  
 Priority: P3  
 Status: Open  

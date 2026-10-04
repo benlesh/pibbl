@@ -21,7 +21,8 @@ runtime are removed. Pure `@crc/core/physics/3d/geometry` remains.
 
 Current evidence covers source/built/packed package boundaries, Bundler and
 NodeNext declarations, both compiler entries, mixed CRC/React type boundaries,
-62 cataloged learning lessons, 27 cataloged deterministic laboratories,
+cataloged learning lessons and deterministic laboratories (see the generated
+[scenario index](./scenario-index.md)),
 semantic and geometry assertions, browser behavior, lifecycle ownership, Studio
 builds, and guarded visual baselines. Controlled wall-clock budgets remain
 opt-in; deterministic workload structure is always checked.
@@ -138,33 +139,28 @@ complete CSS.
 
 ### Packages, Studio, and verification
 
-| Area                | Current confidence                                                                                                                                                                                                                                                                                   | Boundary                                                               |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Public declarations | **Trusted.** Exact source/built/Studio export-name parity covers the surviving core, particles, physics 2D/geometry, visualization, and Three adapter entries, including 241 root type imports; strict TSX, Bundler, NodeNext, and mixed-runtime consumers pass.                                     | `@crc/core` remains a deliberately minimal compatibility package.      |
-| Package output      | **Trusted.** ESM runtime/declarations/maps, packed no-source consumers, blocked private imports, one external Three identity, and the version-coupled internal seam used only by matching official packages are covered.                                                                             | ESM-only; application code must not import `@crc/core/internal`.       |
-| Studio              | **Trusted.** TSX automatic runtime, source/built execution, exact surviving runtime/editor export parity, 62 lessons, 27 labs, editing diagnostics, and catalog/source identity are covered.                                                                                                         | Internal Studio, not a hosted documentation product.                   |
-| Documentation       | **Checked.** Required guides, link anchors, fail-closed API inventories, exhaustive current-contract preservation, explicit pivot approvals, direct source/test mappings, snippets, compiler transforms, historical banners, adversarial mutations, and active-vocabulary scans run in `docs:check`. | Prose cannot replace browser/runtime evidence.                         |
-| CI                  | **Configured.** Static/docs, packed package, browser/visual, lifecycle, and structural performance jobs feed one aggregate trust result.                                                                                                                                                             | Hosted status and branch protection require repository administration. |
+| Area                | Current confidence                                                                                                                                                                                                                                     | Boundary                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| Public declarations | **Trusted.** Exact source/built/Studio export-name parity covers the surviving core, particles, physics 2D/geometry, visualization, and Three adapter entries; strict TSX, Bundler, NodeNext, and mixed-runtime consumers pass.                        | `@crc/core` remains a deliberately minimal compatibility package.      |
+| Package output      | **Trusted.** ESM runtime/declarations/maps, packed no-source consumers, blocked private imports, one external Three identity, and the version-coupled internal seam used only by matching official packages are covered.                               | ESM-only; application code must not import `@crc/core/internal`.       |
+| Studio              | **Trusted.** TSX automatic runtime, source/built execution, exact surviving runtime/editor export parity, 62 lessons, 27 labs, editing diagnostics, and catalog/source identity are covered.                                                           | Internal Studio, not a hosted documentation product.                   |
+| Documentation       | **Checked.** Required guides, link anchors, fail-closed API inventories, current contract guarantees, source/test evidence, snippets, compiler transforms, historical banners, adversarial mutations, and active-vocabulary scans run in `docs:check`. | Prose cannot replace browser/runtime evidence.                         |
+| CI                  | **Configured.** Static/docs, packed package, browser/visual, lifecycle, and structural performance jobs feed one aggregate trust result.                                                                                                               | Hosted status and branch protection require repository administration. |
 
 ## Documentation acceptance matrix
 
-Every documentation obligation in the approved JSX authoring design maps to a
-current guide/contract and executable repository evidence. `docs:check`
-validates exact semantic mappings, link anchors, example extensions,
-fail-closed API inventory, extracted complete programs, compiler transforms,
-visible historical status, the fixed exhaustive normative preservation
-manifest and JSX-era translation/evidence allowlist, and
-configuration/vocabulary rules. The manifest covers every current normative
-contract, including explicit retirement/addition mappings for the Three.js
-pivot, and the evidence inventory maps those obligations to direct source and
-test evidence. It covers 667 preserved baseline units and 833 current semantic
-units across all 12 baseline-snapshotted normative contracts. Together with the
-post-baseline textures, signal, animation, render-layer/Three, component-manipulation,
-2D physics, and text geometry records, this covers 19 current normative contracts. Those seven
-records contain 199 exhaustively mapped post-baseline units. The evidence inventory contains 56 unique direct
-source/test mappings. It also inspects the cited examples/tests for the
-behaviors claimed in the Text, Layer, focus, and complete non-JSX rows;
-scenario/browser gates execute that code.
+The acceptance matrix maps authoring obligations to current guides, contracts,
+and executable repository evidence. `docs:check` validates link anchors, example
+extensions, API inventory, complete programs, compiler transforms, historical
+banners, and configuration/vocabulary rules. It inspects the cited examples/tests
+for the Text, Layer, focus, and non-JSX behaviors; browser gates execute them.
+The [package migration guide](./site/learn/guides/package-migration.md) is backed by
+packed subpath consumers and optional-feature bundle checks. The
+[data visualization guide](./site/learn/guides/data-visualization.md) is backed by
+visualization public browser and packed-consumer tests.
+Dated paragraph-preservation mappings and strategy closure fingerprints are
+separate [historical audits](./testing/trust-gate.md#historical-audits-versus-merge-checks),
+not claims that an old review proves the current implementation.
 
 | Approved documentation item                                                                      | Current guide or contract                                                                                                                                                                                        | Executable example/evidence                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

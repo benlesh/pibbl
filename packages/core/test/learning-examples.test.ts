@@ -1810,7 +1810,7 @@ describe("learning example catalog", () => {
         "envelopeTransform",
         "fade",
         "hologram",
-        "raycast2D",
+        "physicsObstacles2D",
         "transformPath",
         "useVisibilityTransition",
 

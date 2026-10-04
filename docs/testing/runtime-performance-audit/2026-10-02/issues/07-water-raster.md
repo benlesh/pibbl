@@ -1,5 +1,7 @@
 # Water wave rasterization allocates and recomputes avoidable work
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Issue: CRC-PERF-07  
 Priority: P2  
 Status: Open  

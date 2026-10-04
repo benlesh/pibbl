@@ -39,6 +39,24 @@ symbols:
 Create a reusable mapping, then apply it to independent geometry:
 
 ```ts
+import {
+  PathGeometry,
+  composeTransforms,
+  envelopeTransform,
+  affineTransform,
+  arcBendTransform,
+  transformPath,
+} from "@crc/core";
+
+const original = new PathGeometry();
+original.rect(0, 0, 200, 50);
+const textBounds = { x: 0, y: 0, width: 200, height: 50 };
+const top = new PathGeometry();
+top.moveTo(0, 0);
+top.lineTo(200, 20);
+const bottom = new PathGeometry();
+bottom.moveTo(0, 50);
+bottom.lineTo(200, 70);
 const mapping = composeTransforms(
   envelopeTransform({ source: textBounds, top, bottom }),
   affineTransform({ a: 1.2, d: 1.2, e: 100, f: 60 }),
@@ -92,6 +110,8 @@ must remain inside the source rectangle.
 
 ## Bends
 
+Continuing with the imports and original geometry above:
+
 ```ts
 const bend = arcBendTransform({
   source: { x: 0, y: 0, width: 200, height: 50 },
@@ -99,8 +119,8 @@ const bend = arcBendTransform({
   baseline: "bottom",
   fit: "stretch",
 });
-const result = transformPath(
-  outline,
+const bentResult = transformPath(
+  original,
   composeTransforms(bend, affineTransform({ e: 20 })),
   {
     tolerance: 0.25,

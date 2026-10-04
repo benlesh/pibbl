@@ -1,6 +1,7 @@
 export {};
 
 await import("./content-model.check");
+await import("./source-resolution.check");
 await import("./api-exports.check");
 await import("./build.check");
 await import("./search-index.check");

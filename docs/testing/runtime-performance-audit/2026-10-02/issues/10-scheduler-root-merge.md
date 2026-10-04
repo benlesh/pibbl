@@ -1,5 +1,7 @@
 # Scheduler job merging performs repeated root searches
 
+> **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
+
 Issue: CRC-PERF-10  
 Priority: P2  
 Status: Open  

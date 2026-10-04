@@ -161,34 +161,22 @@ let browser;
 try {
   await waitForServer(server);
   browser = await chromium.launch({ headless: true });
-  const mainPage = await browser.newPage({
-    viewport: { width: 1280, height: 900 },
-    colorScheme: "light",
-    reducedMotion: "reduce",
-    locale: "en-US",
-    timezoneId: "UTC",
-    deviceScaleFactor: 1,
-  });
   await mkdir(resolve(workspaceRoot, "test-screenshots/studio"), {
     recursive: true,
   });
 
   for (const route of routes) {
-    // Chromium renders this sandboxed Canvas text differently after earlier
-    // routes in the same page, even after iframe fonts and paint have settled.
-    // Capture it in a fresh page; navigation continuity is covered separately
-    // by the Studio documentation acceptance suite.
-    const isolated = route.name === "filters";
-    const page = isolated
-      ? await browser.newPage({
-          viewport: { width: 1280, height: 900 },
-          colorScheme: "light",
-          reducedMotion: "reduce",
-          locale: "en-US",
-          timezoneId: "UTC",
-          deviceScaleFactor: 1,
-        })
-      : mainPage;
+    // Canvas text rasterization can depend on earlier SPA navigation, even
+    // after fonts and paint settle. Visual cases must have independent browser
+    // state; navigation continuity is tested by Studio documentation acceptance.
+    const page = await browser.newPage({
+      viewport: { width: 1280, height: 900 },
+      colorScheme: "light",
+      reducedMotion: "reduce",
+      locale: "en-US",
+      timezoneId: "UTC",
+      deviceScaleFactor: 1,
+    });
     await page.goto(`${origin}/${route.hash}`);
     await page.locator(route.ready).waitFor({ timeout: 30_000 });
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
@@ -280,7 +268,7 @@ try {
     await writeFile(actualPath, actual);
     if (update) {
       await writeFile(baselinePath, actual);
-      if (isolated) await page.close();
+      await page.close();
       continue;
     }
     const expected = await readFile(baselinePath).catch(() => undefined);
@@ -294,7 +282,7 @@ try {
         `Studio visual "${route.name}" differs by ${comparison.differentPixels} pixels (${comparison.dimensions}). Inspect ${actualPath}.`,
       );
     }
-    if (isolated) await page.close();
+    await page.close();
   }
   process.stdout.write(
     `${update ? "Updated and inspected" : "Matched"} ${routes.length} CRC studio visual baselines.\n`,
