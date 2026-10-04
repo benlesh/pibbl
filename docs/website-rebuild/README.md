@@ -10,6 +10,10 @@ The starting problem is Ben's assessment: the current website feels disorganized
 
 Prioritize comprehensive agent guidance alongside concise human pages. Add separate shapes, filters, textures, and reaction-diffusion catalogs; advanced composition guides; directly retrievable Markdown companions; a versioned public content catalog; and discoverable installable skills. Start with the [updated documentation architecture](12-documentation-architecture.md), [agent documentation and skills plan](13-agent-documentation-and-skills.md), and [platform recommendation](14-documentation-platform-options.md). These refine the earlier navigation proposals. Platform selection and implementation remain pending.
 
+## Ordinary HTML integration
+
+The [Add CRC to your site section](15-add-crc-to-your-site.md) distinguishes CRC-centered applications from existing HTML apps enhanced with CRC. It defines native-control integration patterns, 40 recipe ideas, and an initial collection of buttons, forms, image reveals, and hero transitions.
+
 ## Start here
 
 | Document                                                                 | What it helps decide                                                      |

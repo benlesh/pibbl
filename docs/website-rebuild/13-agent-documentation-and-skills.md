@@ -89,3 +89,7 @@ A documentation MCP server may become useful for structured retrieval, but is op
 Test discovery from a single starting URL, not from a prepared prompt containing all the right API names. Give representative agents tasks such as rendering a specific shape, choosing a filter, using reaction-diffusion as a fill, connecting physics movement to a texture, or adapting a hero graphic. Require them to identify the compatible version, retrieve the relevant contract, use only public imports, run the result, and demonstrate cleanup.
 
 Evaluate task correctness, invented APIs, missing lifecycle steps, stale references, unnecessary retrieval, and dead links. Record which clients and versions were tested. Include a case with an unsupported request to see whether guidance produces an accurate limitation rather than fictional code. No documentation format can guarantee every agent behaves correctly; these evaluations provide concrete evidence for improvement.
+
+## Enhancing existing HTML applications
+
+The integration skill and topic index should distinguish CRC-centered applications from **Apps with CRC in them**. For ordinary HTML enhancement, preserve native controls and the host framework, identify the smallest visual region, and teach an explicit mount/update/dispose bridge. The [integration plan](15-add-crc-to-your-site.md) supplies 40 candidate recipes and the public behavior checks needed to prove an enhancement preserves the original application.

@@ -17,6 +17,10 @@ Use six content sections, with Home and Playground as separate destinations. The
 
 Learn remains the conceptual role of Start and Guides; its existing URLs can have aliases. API remains the role of Reference. Do not lose these old entry points during migration. Avoid one giant sidebar that mixes every API, lesson, recipe, showcase, and skill into one list.
 
+## Two adoption paths
+
+Offer **Build with CRC** and **Add CRC to your site** as clear entry points on Home and Start. The latter is a dedicated Guides section for enhancing ordinary HTML buttons, forms, images, hero regions, and data views. Keep one reference and one example catalog, with adoption-path tags and direct cross-links. See [HTML integration patterns and ideas](15-add-crc-to-your-site.md).
+
 ## Reference organization and coverage
 
 Within Reference, keep capability groups: authoring; drawing and text; composition and effects; layout and measurement; signals and state; animation; input and focus; HTML; particles; textures; physics; visualization; external renderers; Three.js. Preserve an alphabetical symbol index. Types should be reachable from their owning APIs and the index without duplicating their full definition everywhere.
