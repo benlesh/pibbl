@@ -85,6 +85,7 @@ export interface MountedEditor {
 }
 
 let monacoConfigured = false;
+let nextWorkbenchId = 0;
 let crcDeclarationLibraries: EditorDeclarationLibrary[] = [];
 let threeDeclarationSetup: Promise<void> | undefined;
 
@@ -309,7 +310,9 @@ export async function mountEditorWorkbench(
   const model = monaco.editor.createModel(
     options.initialSource,
     "typescript",
-    monaco.Uri.parse(`file:///lessons/${options.entry.slug}.tsx`),
+    // A route can revisit this lesson before an earlier async mount settles.
+    // Each mount owns its model until its own lifecycle disposes it.
+    monaco.Uri.parse(`file:///lessons/${options.entry.slug}/${++nextWorkbenchId}.tsx`),
   );
   const editor = monaco.editor.create(editorHost, {
     model,
