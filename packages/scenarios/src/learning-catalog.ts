@@ -756,14 +756,14 @@ const drafts = [
     section: "drawing",
     order: 36,
     summary: "Bend a rocket and its flight grid with four draggable corners. Compare bilinear and perspective warps.",
-    api: ["PathGeometry", "warpPath", "Path"],
+    api: ["PathGeometry", "quadTransform", "Path"],
     objectives: ["Deform continuous geometry with four corner handles.", "Keep original geometry independent of derived previews."],
     prompts: {
       gesture: "Drag the mint corners, switch Bilinear / Perspective, and compare the same shape.",
       code: "Change the rocket outline or the destination-space tolerance.",
     },
     apiNotes: [
-      "warpPath returns independent line geometry; the original outline is preserved.",
+      "quadTransform returns independent line geometry; the original outline is preserved.",
       "Bilinear can fold or bend geometry. Perspective preserves straight lines and needs convex corners.",
     ],
     canvas: { width: 900, height: 580 },
@@ -777,7 +777,7 @@ const drafts = [
     section: "drawing",
     order: 37,
     summary: "Drag the center, radius, and sweep to bend a ribbon around a circular arc.",
-    api: ["PathGeometry", "Path", "bendPathAlongArc"],
+    api: ["PathGeometry", "Path", "arcBendTransform"],
     objectives: ["Bend complete curves and closing edges along a circular arc.", "Control the baseline and placement of independent geometry."],
     prompts: {
       gesture: "Drag the gold radius, center, and sweep handles. Compare baseline, fitting, and alignment.",
@@ -798,7 +798,7 @@ const drafts = [
     section: "drawing",
     order: 38,
     summary: "Drag a custom guide curve and watch an entire ribbon bend along it.",
-    api: ["PathGeometry", "Path", "bendPathAlongPath"],
+    api: ["PathGeometry", "Path", "pathBendTransform"],
     objectives: ["Bend complete curves and closing edges along a supplied path.", "Control the baseline and placement of independent geometry."],
     prompts: {
       gesture: "Drag either gold control handle to reshape the guide and the green ribbon together.",

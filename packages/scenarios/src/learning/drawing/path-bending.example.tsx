@@ -1,8 +1,5 @@
-import {
-  bendPathAlongArc, bendPathAlongPath, crc, Circle, Group, Line, Path, PathGeometry, Rectangle, Text,
-  useConst, useRef, useSignal,
-  type CRCController, type CRCPointerEvent, type PathBendAlign, type PathBendBaseline, type PathBendFit,
-} from '@crc/core';
+import { crc, Circle, Group, Line, Path, PathGeometry, Rectangle, Text, useConst, useRef, useSignal, type CRCController, type CRCPointerEvent, type PathBendAlign, type PathBendBaseline, type PathBendFit, transformPath, arcBendTransform, pathBendTransform } from '@crc/core';
+
 
 interface Controls {
   baseline: PathBendBaseline; align: PathBendAlign; fit: PathBendFit;
@@ -32,8 +29,8 @@ function originalOutline() {
 
 function bend(source: ReturnType<typeof originalOutline>, controls: Controls) {
   return controls.mode === 'arc'
-    ? bendPathAlongArc(source, { source: frame, arc: guideArc(controls), ...controls, overflow: 'extend', tolerance: 0.15 })
-    : bendPathAlongPath(source, guideGeometry(controls), { source: frame, ...controls, overflow: 'extend', tolerance: 0.15 });
+    ? transformPath(source, arcBendTransform({ source: frame, arc: guideArc(controls), ...controls, overflow: 'extend' }), { ...controls, tolerance: 0.15 })
+    : transformPath(source, pathBendTransform({ ...{ source: frame, ...controls, overflow: 'extend' }, guide: guideGeometry(controls) }), { ...controls, tolerance: 0.15 });
 }
 
 function guideGeometry(controls: Controls) {

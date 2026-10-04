@@ -19,12 +19,6 @@ symbols:
     FlattenPathOptions,
     SimplifyPathOptions,
     SubdividePathOptions,
-    warpPath,
-    PathWarpPoint,
-    PathWarpRect,
-    PathWarpCorners,
-    PathWarpMode,
-    WarpPathOptions,
   ]
 ---
 
@@ -35,7 +29,7 @@ It supports the Canvas path-building vocabulary, segment editing, 2D affine
 transforms, and independent native/SVG conversion.
 
 ```ts
-import { PathGeometry, toPath2D, toSvgPathData, warpPath } from "@crc/core";
+import { PathGeometry, toPath2D, toSvgPathData } from "@crc/core";
 
 const geometry = new PathGeometry();
 geometry.moveTo(10, 10);
@@ -137,72 +131,8 @@ including Move/Close). Exceeding it throws without changing the input.
 Equal-distance resampling and curve fitting are separate future operations.
 Try the [editable path example](#/examples/drawing/path-geometry).
 
-## Four-corner warp
+## Spatial transformations
 
-`warpPath(path, { source, destination, tolerance, mode?, maxSegments? })` returns
-independent line geometry mapped from a local source rectangle to four named
-corners. `PathWarpRect` supplies x, y, width, height; `PathWarpCorners` supplies
-topLeft, topRight, bottomLeft, bottomRight as `PathWarpPoint` values.
-`WarpPathOptions` requires positive destination-space tolerance. `PathWarpMode`
-is `'bilinear'` (default) or `'perspective'`. Bilinear stretches between corners;
-perspective projects onto a strictly convex quadrilateral.
-
-```ts
-import { warpPath } from "@crc/core";
-
-const warped = warpPath(geometry, {
-  source: { x: 0, y: 0, width: 200, height: 100 },
-  destination: {
-    topLeft: { x: 20, y: 10 },
-    topRight: { x: 240, y: 30 },
-    bottomLeft: { x: 0, y: 140 },
-    bottomRight: { x: 180, y: 110 },
-  },
-  mode: "perspective",
-  tolerance: 0.25,
-});
-```
-
-Names express source-corner correspondence, even after rotation or reflection.
-The rectangle shares the path's local coordinates; it need not equal the bounds.
-Points outside it extrapolate without clipping or clamping. Bilinear mode permits
-folded/collapsed corners and can bend straight diagonal lines. Perspective keeps
-straight lines straight and requires a strictly convex destination; traced points
-at a projection pole are rejected, even outside the source rectangle.
-
-Output contains only Move, Line, and Close segments. Curves, arcs, and closing
-edges are approximated after warping to meet tolerance in destination units;
-transforming original control points is not equivalent. No stroke-outline or
-topology preservation is promised. Invalid values, invalid perspective
-destinations, overflow, unachievable precision, and exhausted limits throw
-without modifying the input or returning a partial result. Recompute from the
-original geometry while editing. Try the
-[four-corner rocket demo](#/examples/drawing/path-warp).
-
-## Alternate algorithms
-
-Import alternate helpers independently from `@crc/core`. The default helpers do
-not dispatch to them; unused algorithms are removed by compatible production
-bundlers. CRC verifies this for source, built, and packed consumers.
-
-```ts
-import { flattenPathWang, simplifyPathRadial } from "@crc/core";
-
-const uniformLines = flattenPathWang(geometry, { tolerance: 0.25 });
-const reducedDenseLines = simplifyPathRadial(uniformLines, { tolerance: 0.5 });
-```
-
-`flattenPathWang` accepts `FlattenPathOptions` and uses a second-derivative bound
-with uniform parameter steps for Béziers. Transformed arcs use a bound based on
-their maximum affine stretch. It can generate more segments than adaptive
-flattening where curvature varies; predictable counts and less subdivision work
-are its main tradeoffs. It preserves the same input-space distance-tolerance,
-contour, independent-output, and output-limit contracts as `flattenPath`.
-
-`simplifyPathRadial` accepts `SimplifyPathOptions`. It removes nearby samples
-before Douglas–Peucker and splits the tolerance equally between the two passes.
-Its error budget is relative to the original polyline, not just the prefiltered
-points. It is useful for dense input but can retain more points or be slower for
-sparse input. Like `simplifyPath`, it requires line-only geometry and does not
-promise topology preservation. Defaults remain adaptive flattening and ordinary
-Douglas–Peucker. `subdividePath` retains de Casteljau subdivision.
+Use [composable path transforms](path-transforms.md) to apply affine, quad,
+envelope, mesh, and bend mappings through `transformPath`. `PathGeometry.transform`
+remains the low-level in-place affine operation.

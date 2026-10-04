@@ -5,6 +5,8 @@ const assets = new Map([
   ['engine.mjs', ['packages/text/dist/engine.mjs', 'text/javascript']],
   ['engine.wasm', ['packages/text/dist/engine.wasm', 'application/wasm']],
   ['ABeeZee-Regular.ttf', ['packages/text/test/fixtures/ABeeZee-Regular.ttf', 'font/ttf']],
+  ['Lato-Regular.ttf', ['packages/text/test/fixtures/lato/Lato-Regular.ttf', 'font/ttf']],
+  ['Lato-OFL.txt', ['packages/text/test/fixtures/lato/OFL.txt', 'text/plain']],
   ['OFL.txt', ['packages/text/test/fixtures/OFL.txt', 'text/plain']],
 ]);
 export function textAssets(): Plugin {

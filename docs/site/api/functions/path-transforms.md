@@ -7,6 +7,15 @@ slug: path-transforms
 apiCategory: function
 symbols:
   [
+    PathQuadCorners,
+    PathQuadMode,
+    BendTransformOptions,
+    meshTransform,
+    arcBendTransform,
+    pathBendTransform,
+    MeshTransformOptions,
+    ArcBendTransformOptions,
+    PathBendTransformOptions,
     transformPath,
     composeTransforms,
     affineTransform,
@@ -66,3 +75,56 @@ Values are opaque; arbitrary objects or callbacks are not PathTransforms.
 Sequential `transformPath` calls remain supported when intermediate geometry
 is useful. Each call has an independent tolerance; later maps can amplify earlier
 approximation error. Prefer composition for a single final accuracy target.
+
+## Meshes
+
+`meshTransform({ source, columns, rows, horizontal, vertical })` creates a grid
+of Coons patches. Columns and rows are strictly increasing normalized coordinates
+from 0 to 1. Horizontal contains one row of edges per row boundary, each with
+`columns.length - 1` left-to-right guides. Vertical contains one column of edges
+per column boundary, each with `rows.length - 1` top-to-bottom guides.
+
+Edges share exact endpoint coordinates. Mismatches throw; no points are moved
+implicitly. Shared edges are supplied once. Each cell interpolates its four
+boundaries. Adjacent cells meet continuously, but matching slopes are not promised.
+Folds are permitted. The constructor accepts at most 4,096 cells. Source geometry
+must remain inside the source rectangle.
+
+## Bends
+
+```ts
+const bend = arcBendTransform({
+  source: { x: 0, y: 0, width: 200, height: 50 },
+  arc: { cx: 300, cy: 300, radius: 180, startAngle: -Math.PI, sweep: Math.PI },
+  baseline: "bottom",
+  fit: "stretch",
+});
+const result = transformPath(
+  outline,
+  composeTransforms(bend, affineTransform({ e: 20 })),
+  {
+    tolerance: 0.25,
+  },
+);
+```
+
+`pathBendTransform({ source, guide, ...placement })` takes an explicit
+`PathGeometry` guide. Both constructors accept `BendTransformOptions`; arc and
+path variants add `arc` and `guide`, respectively. See [path bending](path-bending.md)
+for alignment, baseline, fitting, offsets, and overflow rules. Bends retain their
+existing smooth-guide requirements; envelopes and meshes also support corners.
+
+## Migration
+
+`warpPath`, `bendPathAlongArc`, and `bendPathAlongPath` are replaced by
+`transformPath(path, quadTransform(mapping), quality)`,
+`transformPath(path, arcBendTransform(mapping), quality)`, and
+`transformPath(path, pathBendTransform({ ...mapping, guide }), quality)`.
+There are no root compatibility exports. Separate `tolerance` and `maxSegments`
+from mapping options. The root exports `PathPoint`, `PathRect`, `PathQuadCorners`,
+and `PathQuadMode` instead of the former warp-specific point/rectangle types.
+
+The in-place `PathGeometry.transform(matrix)` builder remains available. Use
+`affineTransform` with `transformPath` when independent results or composition
+are needed. Flattening, subdivision, and simplification remain separate geometry
+operations rather than spatial mappings.

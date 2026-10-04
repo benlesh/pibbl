@@ -1,11 +1,30 @@
-export { transformPath, composeTransforms, affineTransform, quadTransform, envelopeTransform, type PathTransform, type PathPoint, type PathRect, type TransformPathOptions, type QuadTransformOptions, type EnvelopeTransformOptions, type EnvelopeGuide, type PathGuide, type PathGuideOptions, type PathGuideStation } from './lib/geometry/path-transforms.js';
-export { warpPath, type PathWarpPoint, type PathWarpRect, type PathWarpCorners, type PathWarpMode, type WarpPathOptions } from './lib/geometry/path-warp.js';
 export {
-  bendPathAlongArc,
-  bendPathAlongPath,
-  type PathBendFrame, type PathBendArc, type PathBendAlign, type PathBendBaseline,
-  type PathBendFit, type PathBendOverflow, type PathBendOptions, type BendPathAlongArcOptions,
-} from './lib/geometry/path-bending.js';
+  meshTransform,
+  arcBendTransform,
+  pathBendTransform,
+  type MeshTransformOptions,
+  type ArcBendTransformOptions,
+  type PathBendTransformOptions,
+  transformPath,
+  composeTransforms,
+  affineTransform,
+  quadTransform,
+  envelopeTransform,
+  type PathTransform,
+  type PathPoint,
+  type PathRect,
+  type TransformPathOptions,
+  type QuadTransformOptions,
+  type PathQuadCorners,
+  type PathQuadMode,
+  type BendTransformOptions,
+  type EnvelopeTransformOptions,
+  type EnvelopeGuide,
+  type PathGuide,
+  type PathGuideOptions,
+  type PathGuideStation,
+} from './lib/geometry/path-transforms.js';
+export { type PathBendArc, type PathBendAlign, type PathBendBaseline, type PathBendFit, type PathBendOverflow } from './lib/geometry/path-bending.js';
 export { flattenPathWang } from './lib/geometry/path-wang.js';
 export { simplifyPathRadial } from './lib/geometry/path-radial.js';
 export { PathGeometry, type PathSegment } from './lib/geometry/path-geometry.js';

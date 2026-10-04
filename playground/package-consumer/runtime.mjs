@@ -20,12 +20,6 @@ import {
 } from "@crc/core/jsx-dev-runtime";
 
 const expected = [
-  "affineTransform",
-  "composeTransforms",
-  "envelopeTransform",
-  "quadTransform",
-  "transformPath",
-
   "DragHandle", "ResizeHandle", "ResizeHandles", "RotationHandle",
   "ManipulationFrame", "Manipulable", "useManipulation", "degrees",
   "Absolute",
@@ -49,6 +43,15 @@ const expected = [
   "Overlay",
   "Path",
   "PathGeometry",
+  "affineTransform",
+  "arcBendTransform",
+  "composeTransforms",
+  "envelopeTransform",
+  "meshTransform",
+  "pathBendTransform",
+  "quadTransform",
+  "transformPath",
+
   "Polygon",
   "Rectangle",
   "RegularPolygon",
@@ -130,9 +133,9 @@ const expected = [
   "useAnimatedValue",
   "useTexture",
   "wait",
-  "warpPath",
-  "bendPathAlongArc",
-  "bendPathAlongPath",
+
+
+
 ].sort();
 
 const actual = Object.keys(core).sort();
@@ -496,11 +499,7 @@ if (core.subdividePath(editableGeometry, { divisions: 2 }).segmentCount !== 3) {
 const warpProbe = new core.PathGeometry();
 warpProbe.moveTo(0, 0); warpProbe.lineTo(1, 1);
 for (const mode of ['bilinear', 'perspective']) {
-  const warped = core.warpPath(warpProbe, {
-    source: { x: 0, y: 0, width: 1, height: 1 },
-    destination: { topLeft: { x: 0, y: 0 }, topRight: { x: 10, y: 0 }, bottomLeft: { x: 0, y: 10 }, bottomRight: { x: 10, y: 5 } },
-    mode, tolerance: 0.01,
-  });
+  const warped = core.transformPath(warpProbe, core.quadTransform({ source: { x: 0, y: 0, width: 1, height: 1 }, destination: { topLeft: { x: 0, y: 0 }, topRight: { x: 10, y: 0 }, bottomLeft: { x: 0, y: 10 }, bottomRight: { x: 10, y: 5 } }, mode }), { tolerance: 0.01 });
   const end = warped.getSegment(warped.segmentCount - 1);
   if (end.type !== 'line' || end.x !== 10 || end.y !== 5 || warpProbe.segmentCount !== 2) {
     throw new Error(`Packed ${mode} warp failed endpoint/ownership evidence.`);
@@ -510,13 +509,11 @@ for (const mode of ['bilinear', 'perspective']) {
 const bendProbe = new core.PathGeometry(); bendProbe.moveTo(25, 7);
 const bendGuide = new core.PathGeometry(); bendGuide.moveTo(30, 40); bendGuide.bezierCurveTo(30, 40, 30, 40, 130, 40);
 const bendOptions = { source: { x: 0, y: 0, width: 100, height: 10 }, baseline: 0, tolerance: 0.01 };
-const bentPoint = core.bendPathAlongPath(bendProbe, bendGuide, bendOptions).getSegment(0);
+const bentPoint = core.transformPath(bendProbe, core.pathBendTransform({ ...bendOptions, guide: bendGuide }), bendOptions).getSegment(0);
 if (bentPoint.type !== 'move' || Math.hypot(bentPoint.x - 55, bentPoint.y - 47) > 0.01) {
   throw new Error('Packed Along Path must use arc length and preserve normal displacement.');
 }
-const arcPoint = core.bendPathAlongArc(bendProbe, {
-  ...bendOptions, arc: { cx: 10, cy: 20, radius: 50, startAngle: 0, sweep: Math.PI },
-}).getSegment(0);
+const arcPoint = core.transformPath(bendProbe, core.arcBendTransform({ ...bendOptions, arc: { cx: 10, cy: 20, radius: 50, startAngle: 0, sweep: Math.PI } }), { ...bendOptions }).getSegment(0);
 if (arcPoint.type !== 'move' || Math.hypot(arcPoint.x - (10 + 43 * Math.cos(0.5)), arcPoint.y - (20 + 43 * Math.sin(0.5))) > 0.01 || core.toSvgPathData(bendProbe) !== 'M 25 7') {
   throw new Error('Packed Along Arc failed analytic geometry or input ownership.');
 }
@@ -536,3 +533,16 @@ if (!(wangGeometry instanceof core.PathGeometry) || !(radialGeometry instanceof 
 if (typeof physics2d.physicsObstacles2D !== "function" || "physicsBoxObstacles2D" in physics2d) {
   throw new Error("Expected the general committed-obstacle API without its superseded box-only name.");
 }
+
+const upper = new core.PathGeometry(); upper.moveTo(0,0); upper.lineTo(10,0);
+const lower = new core.PathGeometry(); lower.moveTo(0,10); lower.lineTo(20,10);
+const envelope = core.envelopeTransform({source:{x:0,y:0,width:1,height:1},top:upper,bottom:lower});
+const composition = core.composeTransforms(envelope,core.affineTransform({a:2,d:2,e:3}));
+const middle = composition.mapPoint({x:0.5,y:0.5});
+if (middle.x !== 18 || middle.y !== 10) throw new Error('Packed envelope composition failed.');
+const affineCopy = core.transformPath(warpProbe,core.affineTransform({e:3}),{tolerance:0.1});
+if (affineCopy.getSegment(0).x !== 3) throw new Error('Packed affine transforms must work without DOMMatrix.');
+const verticalA = new core.PathGeometry(); verticalA.moveTo(0,0); verticalA.lineTo(0,10);
+const verticalB = new core.PathGeometry(); verticalB.moveTo(10,0); verticalB.lineTo(20,10);
+const mesh = core.meshTransform({source:{x:0,y:0,width:1,height:1},columns:[0,1],rows:[0,1],horizontal:[[upper],[lower]],vertical:[[verticalA],[verticalB]]});
+if (Math.abs(mesh.mapPoint({x:0.5,y:0.5}).x-7.5)>0.0001) throw new Error('Packed mesh mapping failed.');

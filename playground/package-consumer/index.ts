@@ -1787,34 +1787,29 @@ void subdividePath(editableOutline, { divisions: 2 });
 const editableTarget: CRCEventTargetOptions = { path: editableOutline, fill: true };
 void editableTarget;
 
-import { warpPath, type PathWarpPoint, type PathWarpRect, type PathWarpCorners, type PathWarpMode, type WarpPathOptions } from '@crc/core';
-const warpOrigin: PathWarpPoint = { x: 0, y: 0 };
-const warpSource: PathWarpRect = { ...warpOrigin, width: 20, height: 20 };
-const warpCorners: PathWarpCorners = { topLeft: warpOrigin, topRight: { x: 30, y: 0 }, bottomLeft: { x: 0, y: 20 }, bottomRight: { x: 20, y: 20 } };
-for (const mode of ['bilinear', 'perspective'] satisfies PathWarpMode[]) {
-  const options: WarpPathOptions = { source: warpSource, destination: warpCorners, mode, tolerance: 0.25 };
-  const warped: PathGeometry = warpPath(editableOutline, options);
+import { transformPath, quadTransform, arcBendTransform, pathBendTransform, type PathPoint, type PathRect, type PathQuadCorners, type PathQuadMode, type QuadTransformOptions, type TransformPathOptions, type BendTransformOptions, type ArcBendTransformOptions, type PathBendArc, type PathBendAlign, type PathBendBaseline, type PathBendFit, type PathBendOverflow } from '@crc/core';
+const warpOrigin: PathPoint = { x: 0, y: 0 };
+const warpSource: PathRect = { ...warpOrigin, width: 20, height: 20 };
+const warpCorners: PathQuadCorners = { topLeft: warpOrigin, topRight: { x: 30, y: 0 }, bottomLeft: { x: 0, y: 20 }, bottomRight: { x: 20, y: 20 } };
+for (const mode of ['bilinear', 'perspective'] satisfies PathQuadMode[]) {
+  const options: (QuadTransformOptions & TransformPathOptions) = { source: warpSource, destination: warpCorners, mode, tolerance: 0.25 };
+  const warped: PathGeometry = transformPath(editableOutline, quadTransform(options), options);
   void toSvgPathData(warped);
 }
 
-import {
-  bendPathAlongArc, bendPathAlongPath,
-  type PathBendFrame, type PathBendArc, type PathBendAlign, type PathBendBaseline,
-  type PathBendFit, type PathBendOverflow, type PathBendOptions, type BendPathAlongArcOptions,
-} from '@crc/core';
-const bendFrame: PathBendFrame = { x: 0, y: 0, width: 20, height: 20 };
+
+const bendFrame: PathRect = { x: 0, y: 0, width: 20, height: 20 };
 const bendArc: PathBendArc = { cx: 50, cy: 50, radius: 40, startAngle: 0, sweep: Math.PI };
 const bendAlign: PathBendAlign = 'center';
 const bendBaseline: PathBendBaseline = 'bottom';
 const bendFit: PathBendFit = 'stretch';
 const bendOverflow: PathBendOverflow = 'extend';
-const bendOptions: Readonly<PathBendOptions> = { source: bendFrame, align: bendAlign, baseline: bendBaseline, fit: bendFit, overflow: bendOverflow, tolerance: 0.1 };
-const bendArcOptions: Readonly<BendPathAlongArcOptions> = { ...bendOptions, arc: bendArc };
+const bendOptions: Readonly<(BendTransformOptions & TransformPathOptions)> = { source: bendFrame, align: bendAlign, baseline: bendBaseline, fit: bendFit, overflow: bendOverflow, tolerance: 0.1 };
+const bendArcOptions: Readonly<(ArcBendTransformOptions & TransformPathOptions)> = { ...bendOptions, arc: bendArc };
 const bendGuide = new PathGeometry(); bendGuide.moveTo(0, 0); bendGuide.quadraticCurveTo(50, 0, 100, 50);
-const bentArc: PathGeometry = bendPathAlongArc(editableOutline, bendArcOptions);
-const bentPath: PathGeometry = bendPathAlongPath(editableOutline, bendGuide, bendOptions);
+const bentArc: PathGeometry = transformPath(editableOutline, arcBendTransform(bendArcOptions), bendArcOptions);
+const bentPath: PathGeometry = transformPath(editableOutline, pathBendTransform({ ...bendOptions, guide: bendGuide }), bendOptions);
 void [toSvgPathData(bentArc), toSvgPathData(bentPath)];
-
 
 // HtmlBox preserves the application's generic payload across mount and update.
 const htmlMount: import('@crc/core').HtmlMountCallback<{ label: string }> = (element, initial, abort) => {
@@ -1856,3 +1851,13 @@ function PackedFlowScene() {
   return createElement(Particles2D, { system, pointerEvents: 'none' as const, style: { width: 240, height: 160 } });
 }
 createElement(PhysicsWorld2D, {}, createElement(PackedFlowScene, {}));
+
+import { envelopeTransform, meshTransform, affineTransform, composeTransforms, type PathTransform, type PathGuide, type EnvelopeTransformOptions, type MeshTransformOptions, type PathBendTransformOptions } from '@crc/core';
+const upperGuide = new PathGeometry(); upperGuide.moveTo(0,0); upperGuide.lineTo(10,0);
+const lowerGuide = new PathGeometry(); lowerGuide.moveTo(0,10); lowerGuide.lineTo(10,10);
+const pathGuide: PathGuide = {path:upperGuide,reverse:false,stations:[{at:0,distance:0},{at:1,distance:1}]};
+const envelopeOptions: EnvelopeTransformOptions = {source:{x:0,y:0,width:1,height:1},top:pathGuide,bottom:lowerGuide};
+const composedTransform: PathTransform = composeTransforms(envelopeTransform(envelopeOptions),affineTransform({e:10}));
+const meshOptions: MeshTransformOptions = {source:warpSource,columns:[0,1],rows:[0,1],horizontal:[[upperGuide],[lowerGuide]],vertical:[[bendGuide],[bendGuide]]};
+const pathBendOptions: PathBendTransformOptions = {...bendOptions,guide:bendGuide};
+void [composedTransform.mapPoint({x:0.5,y:0.5}),meshTransform,pathBendOptions,meshOptions];
