@@ -165,6 +165,10 @@ try {
     return element.toDataURL("image/png");
   });
   const actual = Buffer.from(imageDataUrl.slice(imageDataUrl.indexOf(",") + 1), "base64");
+  const artifactDirectory = resolve(workspaceRoot, "test-screenshots/studio");
+  await mkdir(artifactDirectory, { recursive: true });
+  const actualPath = resolve(artifactDirectory, "diagram-editor-teaser.actual.png");
+  await writeFile(actualPath, actual);
 
   if (update) {
     await mkdir(dirname(teaserPath), { recursive: true });
@@ -178,9 +182,16 @@ try {
       );
     }
     const comparison = await pixelDifference(page, expected, actual);
+    await writeFile(resolve(artifactDirectory, "diagram-editor-teaser.expected.png"), expected);
+    await writeFile(resolve(artifactDirectory, "diagram-editor-teaser.comparison.json"), JSON.stringify({
+      platform: process.platform,
+      arch: process.arch,
+      chromium: browser.version(),
+      ...comparison,
+    }, null, 2));
     if (comparison.differentPixels !== 0) {
       throw new Error(
-        `Diagram-editor teaser differs by ${comparison.differentPixels} pixels (${comparison.dimensions}).`,
+        `Diagram-editor teaser differs by ${comparison.differentPixels} pixels (${comparison.dimensions}). Inspect ${actualPath} and its adjacent expected image and comparison metadata.`,
       );
     }
     process.stdout.write(

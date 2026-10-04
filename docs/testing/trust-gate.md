@@ -78,8 +78,8 @@ compiler subpaths, the absence of unpacked source dependencies, and blocked
 private imports.
 
 `trust:browser` runs the complete headless Chromium suite, the deliberate
-visual-regression/recovery safeguard, representative full-page Studio visuals,
-the public Studio documentation/navigation/search acceptance suite, and a
+visual-regression/recovery safeguard, the public Studio
+documentation/navigation/search acceptance suite, and a
 built-package smoke scenario. Semantic state and geometry assertions are the
 first-line oracle; exact pixels are used only where they add information.
 
@@ -215,6 +215,22 @@ The [documentation information architecture and search field note](./field-notes
 records the verification of the current Learn/API/Examples Studio experience.
 
 ## Visual baseline policy
+
+Full-page Studio snapshots and the tutorial promotional PNG are review aids,
+run explicitly with `corepack pnpm@11.21.0 audit:studio-visual`. They are outside
+the portable merge gate: the same revision matched the teaser exactly on macOS
+but differed by 15,273 pixels on Linux. A zero-tolerance comparison of a shared
+platform-rendered picture cannot distinguish that difference from a product
+regression without reviewing the rendering environment. These snapshots also
+include incidental lesson numbering and displayed source text. Their value is
+in controlled-environment visual review, not certifying cross-platform runtime
+behavior. Keep the reviewed baselines; inspect actual artifacts before updates.
+The teaser audit now saves actual, expected, and comparison metadata on failure.
+
+Required browser verification retains semantic Studio navigation, workbench,
+responsive-layout and teardown acceptance, runtime visual comparisons, and the
+deliberate visual-defect/recovery safeguard. Those checks passed on Linux with
+the full browser suite; no runtime visual tests or safeguards were removed.
 
 The filter laboratory masks only the ten unfiltered system-monospace label
 bounds (10 pixels high). Linux CI differed from macOS by 1,537 label pixels;
