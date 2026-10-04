@@ -34,6 +34,8 @@ jobs:
         run: npm install --global corepack@0.35.0
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --strict-peer-dependencies
+      - name: Verify local and CI gate coverage
+        run: node --test tooling/trust-workflow.test.mjs
       - name: Cache pinned native inputs
         uses: actions/cache@v5
         with:
@@ -46,9 +48,6 @@ jobs:
           key: text-native-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/text/native/**', 'packages/text/scripts/**') }}
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
-      - name: Build browser test assets
-        if: matrix.stage == 'browser'
-        run: pnpm build
       - name: Run canonical trust stage
         run: pnpm run trust:${{ matrix.stage }}
       - name: Upload available failure evidence
