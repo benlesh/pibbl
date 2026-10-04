@@ -1,7 +1,7 @@
 ---
 id: api-overview
 title: API overview
-summary: The supported @crc/core, @crc/three, @crc/particles, @crc/physics, and @crc/viz APIs, arranged by authoring role.
+summary: The supported @crc/core, @crc/three, @crc/core/particles, @crc/core/physics, and @crc/core/viz APIs, arranged by authoring role.
 kind: api
 slug: overview
 apiCategory: overview
@@ -18,10 +18,10 @@ thin Three.js integration, Canvas particle effects, physics, and visualization:
 ```ts
 import { Rectangle, Text, crc, defineRenderLayer } from "@crc/core";
 import { defineThreeLayer } from "@crc/three";
-import { Particles2D } from "@crc/particles";
-import { PhysicsWorld2D } from "@crc/physics/2d";
-import { raycastShape3D } from "@crc/physics/3d/geometry";
-import { Axis, LineSeries, Scale } from "@crc/viz";
+import { Particles2D } from "@crc/core/particles";
+import { PhysicsWorld2D } from "@crc/core/physics/2d";
+import { raycastShape3D } from "@crc/core/physics/3d/geometry";
+import { Axis, LineSeries, Scale } from "@crc/core/viz";
 ```
 
 Package source paths and `lib/*` paths are not supported.
@@ -58,7 +58,7 @@ and teardown; it does not mirror Three as CRC JSX components.
 
 ## Particle effects
 
-`@crc/particles` adds
+`@crc/core/particles` adds
 [`Particles2D`](#/api/components/particles-2d),
 [`useParticleSystem`](#/api/hooks/use-particle-system),
 [`defineParticleEffect2D`](#/api/functions/define-particle-effect-2d), and the
@@ -68,20 +68,20 @@ See the grouped [particle types](#/api/types/particles) and
 
 ## Physics
 
-`@crc/physics/2d` provides the CRC-scheduled 2D runtime, components, body
+`@crc/core/physics/2d` provides the CRC-scheduled 2D runtime, components, body
 handles, commands, events, and queries. Pure geometry is available from
-`@crc/physics/2d/geometry`.
+`@crc/core/physics/2d/geometry`.
 
 Renderer-independent 3D shapes and pure bounds, mass, containment, distance,
 overlap, contact, ray-cast, shape-cast, and transform operations remain
-available from `@crc/physics/3d/geometry`. CRC does not currently publish a
+available from `@crc/core/physics/3d/geometry`. CRC does not currently publish a
 Three object binding or 3D runtime component surface.
 
-There is no root `@crc/physics` barrel and no independent physics clock.
+There is no root `@crc/core/physics` barrel and no independent physics clock.
 
 ## Visualization
 
-`@crc/viz` provides allocation-relative
+`@crc/core/viz` provides allocation-relative
 [`Scale`](#/api/components/scale), [`Axis`](#/api/components/axis),
 [`LineSeries`](#/api/components/line-series),
 [`PointSeries`](#/api/components/point-series),

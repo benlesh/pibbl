@@ -43,10 +43,10 @@ symbols:
     CRCRenderLayerTarget,
     CRCResponsiveViewportConfig,
     CRCSpringOptions,
-    CRCSpringTransitionOptions,
+    CRCSpringAnimatedValueOptions,
     CRCStepperOptions,
     CRCTweenOptions,
-    CRCTweenTransitionOptions,
+    CRCTweenAnimatedValueOptions,
     RenderingContext2D,
     Signal,
     SignalEquals,
@@ -238,9 +238,9 @@ captured viewport.
 
 `CRCSpringOptions` configures a number-only analytic spring and its rest bounds.
 
-## CRCSpringTransitionOptions
+## CRCSpringAnimatedValueOptions
 
-`CRCSpringTransitionOptions` configures a number transition with `type:
+`CRCSpringAnimatedValueOptions` configures a number transition with `type:
 "spring"`, equality, optional initial value, and spring parameters.
 
 ## CRCStepperOptions
@@ -254,9 +254,9 @@ name.
 `CRCTweenOptions<T>` supplies `to`, optional `from`, duration, easing,
 interpolator, and debug name.
 
-## CRCTweenTransitionOptions
+## CRCTweenAnimatedValueOptions
 
-`CRCTweenTransitionOptions<T>` configures a transition with `type: "tween"`,
+`CRCTweenAnimatedValueOptions<T>` configures a transition with `type: "tween"`,
 duration, equality, optional initial value, easing, and interpolation.
 
 ## RenderingContext2D

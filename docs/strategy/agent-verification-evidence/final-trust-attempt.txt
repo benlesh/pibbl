@@ -1,0 +1,58 @@
+$ corepack pnpm@11.21.0 trust:static && corepack pnpm@11.21.0 trust:package && corepack pnpm@11.21.0 trust:browser && corepack pnpm@11.21.0 trust:lifecycle
+$ corepack pnpm@11.21.0 test:filter-authoring && corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 scenarios:check && corepack pnpm@11.21.0 docs:check && corepack pnpm@11.21.0 studio-docs:check && corepack pnpm@11.21.0 test:studio-docs:production-boundary && corepack pnpm@11.21.0 typecheck && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 playground:build && corepack pnpm@11.21.0 playground:build:built
+$ node --import tsx --test tooling/filter-authoring.test.mjs tooling/filter-validation.test.mjs
+✔ Studio executes an explicitly imported filter factory through a public lesson (10.0405ms)
+✔ Studio still rejects internal filter implementation imports (0.494667ms)
+✔ factories preserve contextual and balanced color token validation (1.165375ms)
+✔ explicit null radius is invalid and nonfinite values have finite diagnostics (0.187041ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 214.654834
+$ node --test tooling/agent-verification/requirements.test.mjs tooling/agent-verification/discover.test.mjs && node tooling/agent-verification/requirements.mjs
+✔ finds a requirement-linked runnable scenario with independent acceptance evidence (4.05375ms)
+✔ distinguishes known unmapped requirements from invalid IDs without inventing coverage (1.132334ms)
+✔ maps analytical correctness to independent arithmetic rather than screenshot similarity (1.204833ms)
+✔ discovers the completed text and signal workflows with usable evidence and rerun recipes (2.067042ms)
+✔ finds layout and missingness workflows without inflating their provenance (3.282959ms)
+✔ requires every inventory ID exactly once (3.030958ms)
+✔ rejects unsupported completion claims and missing remaining work (0.432208ms)
+✔ distinguishes an audited gap from an unassessed requirement (0.503792ms)
+✔ accepts a fully specified reviewed closure but rejects incomplete claims (2.876416ms)
+✔ closure evidence expires after changes or deletion and cannot escape through symlinks (13.5345ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 113.54175
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: ENV-03: closure evidence changed: packages/core/package.json
++ actual - expected
+
++ '6ddeec7b40dcf7794a9988fee19dc8b52c6a87c92bc826d982b16f58a35c10dd'
+- '6f241b89799d1b350a26ca658a17089a3cc58f2157e031209c91f840ddeb0f1e'
+
+    at verifyClosureFiles (file:///Users/benlesh/GitHub/crc/tooling/agent-verification/requirements.mjs:78:14)
+    at async file:///Users/benlesh/GitHub/crc/tooling/agent-verification/requirements.mjs:91:20 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: '6ddeec7b40dcf7794a9988fee19dc8b52c6a87c92bc826d982b16f58a35c10dd',
+  expected: '6f241b89799d1b350a26ca658a17089a3cc58f2157e031209c91f840ddeb0f1e',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.15.0
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.

@@ -21,12 +21,12 @@ component-owned playback advances a program through the realm scheduler
 
 Definitions and programs are nominal, opaque, immutable values. They contain no
 component identity or independent clock. A program becomes stateful only when
-`usePlayback` or `useTransition` creates a run owned by a mounted hook slot.
+`usePlayback` or `useAnimatedValue` creates a run owned by a mounted hook slot.
 There is no free `play(program)` function.
 
 The root `@crc/core` entry exports the runtime values `easing`, `tween`,
 `keyframes`, `spring`, `defineAnimation`, `stepper`, `track`, `sequence`,
-`parallel`, `wait`, `marker`, `repeat`, `usePlayback`, and `useTransition`, plus
+`parallel`, `wait`, `marker`, `repeat`, `usePlayback`, and `useAnimatedValue`, plus
 their named public types. Private definition samplers, activation records,
 program records, playback controllers, scheduler drivers, and trace collectors
 are not public APIs.
@@ -231,7 +231,7 @@ shared-Commit rejection and are delivered exactly once.
 
 ## Update-driven transitions
 
-`useTransition(target, options)` returns one stable readonly signal. Spring
+`useAnimatedValue(target, options)` returns one stable readonly signal. Spring
 options are number-only; tween options are generic and use the same explicit
 interpolator rule. Both accept `initial`, `equals`, and `debugName`; equality
 defaults to `Object.is`.
@@ -290,7 +290,7 @@ directly at declared inputs:
 
 ```tsx
 function MovingCard() {
-  const x = useTransition(120, { type: "spring", initial: 0 });
+  const x = useAnimatedValue(120, { type: "spring", initial: 0 });
   return <Rectangle style={{ x, width: 48, height: 32 }} />;
 }
 ```
@@ -361,11 +361,64 @@ function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
   timeline builder, timeline label language, arbitrary program callback node,
   audio/network clock, root-owned playback, or persistent serialized playback
   session.
-- There is no automatic caching, worker/WASM execution, cross-thread signal,
+- There is no automatic caching, worker execution, cross-thread signal,
   synchronous GPU readback, public manual clock, or public retained trace.
-- Future worker or WASM number crunching may use packed buffers only if Begin
+- Worker or WASM number crunching may use packed buffers only if Begin
   through Complete, Commit atomicity, logical results, leases, stale-result
   rejection, lifecycle, and the main-thread fallback remain observationally
   identical. Custom callbacks and nonserializable values stay on the main thread.
 - Applications select reduced or alternate motion; CRC does not infer
   accessibility preferences or decide which motion is essential.
+
+## Explicit visual visibility transitions
+
+`useVisibilityTransition` owns mount-time enter/exit effect definitions, material
+progress, a forward run clock, and request-scoped completion. Its binding captures
+one receiving primitive and descendants through `style.transition`; it preserves
+layout and input geometry. It does not retain removed content. The public API and
+custom callback contract are documented in
+[useVisibilityTransition](../site/api/hooks/use-visibility-transition.md).
+
+- Reversals retain every earlier progress segment in the current run. History
+  anchors enter Begin with playback commands and include the hold from the last
+  committed sample until command admission. A fresh inactive run resets history.
+- Zero material duration still commits the requested endpoint. Each direction's
+  configured tail delays completion independently; `finish()` skips the tail.
+- A new request cancels the preceding pending request. Owner teardown settles
+  pending requests as disposed and cancels queued history and playback work.
+  Render failure uses the same normal owner teardown path.
+- A binding cannot cross CRC roots or attach to simultaneous receivers. A keyed
+  receiver replacement within the same render instance is allowed; independent
+  managed Layer generations never imply that another receiver was removed.
+- Transforms, clips, ordinary filters, nested transition captures, and managed
+  Layers preserve existing composition order and filter executor restrictions.
+
+Executable regression evidence lives in
+`packages/core/test/visibility-transition-lifecycle.test.tsx` and
+`packages/core/test/visibility-transition.test.tsx`.
+
+Bifrost, Embers, and Hologram use private embedded WASM kernels for their numerical descriptors. Embers performs batched birth/history exchange with the existing JavaScript controller; history semantics and particle tails are unchanged. Module
+compilation is lazy and shared; each used definition owns fixed memory (128 KiB for Embers, 64 KiB for Bifrost and Hologram)
+and output view, reused across frames. Canvas commands and the existing scheduler
+remain in JavaScript. Simple effects continue to use JavaScript. No network load,
+worker, public backend option, or additional clock is introduced. Kernel source
+and generated bytes are checked for consistency during the core build.
+
+### Opt-in local Ember simulation
+
+`embers({ physics })` creates controller-owned simulation state through a private
+transition runtime factory. The transition's existing forward clock advances it
+in Advance with 1/60-second fixed steps and a four-step catch-up cap. Rendering
+only reads simulation state; no additional scheduler or host frame loop is used.
+Reversals preserve motion, a fresh run resets it, and teardown releases the WASM
+instance and buffers. Collision failures cancel the controller, settle its pending
+request as disposed, and report the error.
+
+The optional synchronous collision callback receives a receiver-local swept point
+segment and returns its closest impact fraction and outward normal. It can query
+a local physics world without importing that world implicitly into core. Query
+results reflect the world's authoritative state when the callback runs. Collisions
+are one-way, with no rigid bodies for individual embers or forces on obstacles.
+Moving-world substep synchronization, particle shape collisions, and multiple
+contacts in one particle step are outside this first slice. Physics requires a
+positive lifetime and 256 KiB of fixed WASM memory per used controller.

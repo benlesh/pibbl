@@ -14,7 +14,7 @@ import {
   HoverCard,
   type PieSliceGeometry,
   type PieLabelPlacement,
-} from "@crc/viz";
+} from "@crc/core/viz";
 // Illustrative survey data, not real-world statistics. Both samples total 100.
 const balanced = [
   { id: "walk", label: "Walk", value: 35, color: "#2878b5" },

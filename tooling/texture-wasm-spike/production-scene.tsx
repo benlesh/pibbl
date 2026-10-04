@@ -22,14 +22,14 @@ import {
   cellular,
   reactionDiffusion,
   type InkMessage,
-} from "@crc/textures";
+} from "@crc/core/textures";
 import {
   PhysicsWorld2D,
   crcPhysicsBody2D,
   collider2D,
   dynamicBody2D,
   staticBody2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 export function mountProductionScene(canvas: HTMLCanvasElement) {
   const observations = {
     disturbances: 0,

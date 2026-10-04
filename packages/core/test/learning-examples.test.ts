@@ -251,7 +251,7 @@ describe("learning example catalog", () => {
   it("permits only the exact physics lesson to import the public 2D entry", () => {
     const source = `
       import { Circle, crc, type CRCController } from "@crc/core";
-      import { PhysicsWorld2D, dynamicBody2D } from "@crc/physics/2d";
+      import { PhysicsWorld2D, dynamicBody2D } from "@crc/core/physics/2d";
       function Scene() {
         return (
           <PhysicsWorld2D>
@@ -285,14 +285,14 @@ describe("learning example catalog", () => {
     ).toThrow(/only from @crc\/core/u);
     expect(() =>
       validateLearningSourceText(
-        source.replace("@crc/physics/2d", "@crc/physics/src/2d"),
+        source.replace("@crc/core/physics/2d", "@crc/core/physics/src/2d"),
         {
           authoring: "jsx",
           label: "fixture",
           sourcePath: physicsLessonSourcePath,
         },
       ),
-    ).toThrow(/both @crc\/core and @crc\/physics\/2d/u);
+    ).toThrow(/both @crc\/core and @crc\/core\/physics\/2d/u);
   });
 
   it.each([
@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 83 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
+  it("contains 87 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(83);
+    expect(learningExampleCatalog).toHaveLength(87);
     expect(
       learningExampleCatalog
         .filter(
@@ -1286,6 +1286,7 @@ describe("learning example catalog", () => {
     ]);
     const expectedBrowseGroups = {
       drawing: [
+        "along-path",
         "arc",
         "circle",
         "ellipse",
@@ -1294,7 +1295,6 @@ describe("learning example catalog", () => {
         "image",
         "line",
         "path",
-        "along-path",
         "path-bending",
         "path-geometry",
         "path-warp",
@@ -1310,10 +1310,14 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+        "embers-physics",
+        "energy-transitions",
+        "visibility-transitions",
         "stirred-ink",
         "clip",
         "group",
         "growing-reveal",
+        "html-box",
         "layer",
         "living-ink",
         "material-lab",
@@ -1436,8 +1440,12 @@ describe("learning example catalog", () => {
       "plasma-globe",
       "underwater",
       "stirred-ink",
-      "optional-filters",
+      "html-box",
       "rainy-window",
+      "energy-transitions",
+      "optional-filters",
+      "visibility-transitions",
+      "embers-physics",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1794,6 +1802,18 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "affineTransform",
+        "bifrost",
+        "composeTransforms",
+        "definePrimitive",
+        "embers",
+        "envelopeTransform",
+        "fade",
+        "hologram",
+        "raycast2D",
+        "transformPath",
+        "useVisibilityTransition",
+
         "defineTexture",
         "displacement",
         "useTexture",
@@ -1839,6 +1859,8 @@ describe("learning example catalog", () => {
         "createRegularPolygonPath",
         "Path",
         "PathGeometry",
+        "HtmlBox",
+        "FocusManagement",
         "defineRenderLayer",
         "arcBendTransform",
         "pathBendTransform",
@@ -1862,6 +1884,8 @@ describe("learning example catalog", () => {
         "Clip",
         "Layer",
         "CRCFilter",
+        "useTexture",
+        "defineTexture",
         "defineThreeLayer",
         "InstancedMesh",
         "Mesh",
@@ -1876,7 +1900,7 @@ describe("learning example catalog", () => {
         "useFlowField2D",
         "useFlowSource2D",
         "useSignal",
-        "useTransition",
+        "useAnimatedValue",
         "usePlayback",
         "useReaction",
         "parallel",

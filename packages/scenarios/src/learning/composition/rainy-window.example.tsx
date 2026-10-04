@@ -1,6 +1,6 @@
 import { crc, Circle, Clip, Group, Layer, Rectangle, Text, useConst, useRef, useSignal, useTexture, type CRCController, type CRCPointerEvent } from "@crc/core";
 import { blur, displacement, grayscale, opacity } from "@crc/core/filters";
-import { rainDrops } from "@crc/textures";
+import { rainDrops } from "@crc/core/textures";
 
 const pane = { x: 28, y: 104, width: 824, height: 420 };
 

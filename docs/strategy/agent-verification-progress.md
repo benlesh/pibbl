@@ -1,5 +1,11 @@
 # Agent verification continuation audit
 
+> **Delivery stopped at the user-requested cutoff (2026-10-01).** The four
+> priority reference workflows and saved-evidence queries passed. Aggregate trust
+> is not green: existing package-manifest changes invalidate ENV-03 closure
+> evidence. The 373-item inventory below remains a deferred backlog. Do not
+> automatically resume it. See “Final bounded delivery handoff” below.
+
 - **Status:** Active execution context; not a completion declaration.
 - **Audited:** 2026-09-29 against current checkout `e8a1cf29`.
 - **Objective:** Continue addressing the rest of the agent verification requirements.
@@ -9,7 +15,7 @@
 
 The working result is a source-development verification prototype, not a finished
 373-requirement implementation. The current ledger accounts for every ID:
-**348 partial, 25 known gaps, 0 unassessed, none certified complete**. These
+**346 partial, 19 known gaps, 0 unassessed, 8 reviewed complete**. These
 measure assessment coverage, not percentage complete. Later dated entries below
 supersede earlier historical counts and verification results.
 
@@ -3090,6 +3096,1026 @@ EVT-01 is partial. Only wrapped handlers are observed; IDs are trace-local and
 unwrapped listeners, stop reasons, async completion and causal action links are
 not inferred. Counts: 348 partial, 25 gaps, zero unassessed, none certified complete.
 No aggregate gate or completion of the full verification system is claimed.
+
+## Reviewed closure mechanism and first full-wording check — 2026-10-01
+
+The ledger previously rejected every completed status by construction. It now
+supports version-bound reviewed closure records with the full exact inventory
+bullet, substantive coverage review, acceptance criteria linked to passing checks,
+retained result artifacts, and source/artifact fingerprints. Missing references,
+remaining work, changed inventory, changed/deleted evidence and escaping symlinks
+reject closure. Recorded commands stay data; validation does not execute them.
+The ledger schema is now version 2. Structural/file integrity is separate from
+substantive review, and no existing partial row is automatically promoted.
+
+Eight Node accounting/discovery tests passed; all 373 IDs validated and focused
+ESLint passed on Node 24.15.0 / pnpm 11.21.0. The reviewed-closure test failed before
+implementation. Mutation/deletion and external-symlink checks validate stale
+proof rejection. This is accounting verification, not an application test run.
+
+Reviewed HAR-14 against its full watchdog wording and current implementation/tests.
+The owned Chromium hang test records evidence before blocking both page and replay,
+checks termination and retained output, but explicitly skips Windows. Ordinary
+focused test recipes are also not uniformly watchdog-owned. HAR-14 remains partial
+pending a justified supported recipe/platform coverage decision and evidence.
+No fresh watchdog run or requirement closure is claimed by this source review.
+Counts remain 348 partial, 25 gaps and zero complete. This removes a tracking
+obstacle without substituting paperwork for the outstanding implementation.
+
+## Explicit six-state check outcomes — 2026-10-01
+
+Added bounded, uniquely identified check records with pass/fail/blocked/
+inconclusive/skipped/not-applicable statuses, required flags and reasons for every
+non-pass. Executed failures fail a run; required blocked or missing evidence cannot
+be certified by a provisional pass. Optional omissions remain visible in their
+original state. Saved summaries expose bounded check reasons and omissions;
+comparison rejects malformed or contradictory evidence and detects changed checks.
+
+25 focused Node tests and ESLint passed after outcome, reader and comparison
+regressions failed before implementation. The first real replay correctly blocked
+before actions because the existing Studio served a stale identity. Restarted the
+task-owned development server, then the fresh watchdog replay passed all seven
+actions and the reader preserved explicit skipped/not-applicable reasons. Evidence:
+`packages/core/test/out/agent-watchdog/check-outcomes-2026-10-01-2/report.json`;
+the blocked attempt remains separately retained at `check-outcomes-2026-10-01-1`.
+Environment: Node 24.15.0 / pnpm 11.21.0 / Chromium.
+
+EVD-03 remains partial because most existing assertions/observation producers still
+need migration to identified check outcomes. Counts remain 348 partial, 25 gaps,
+zero complete. No aggregate trust pass or automatic requirement closure claimed.
+
+## Identified targeting assertion records — 2026-10-01
+
+Migrated seven independent assertions in each of seed/repair/intentional-block
+modes to required identified checks: pixels, input provenance, selected entity,
+selection count, delivery generation, delivery target and selection intent. Each
+links to an existing action. The recorder keeps pending async assertions non-pass,
+preserves bounded error operands and original thrown identity, and retains the
+first failed check even if later work fails. Duplicate/invalid IDs and capacity
+exhaustion reject before the assertion executes.
+
+The evidence reader now offers `--check CHECK_ID` bounded detail alongside action
+and manifest views. Summary output links checks to actions and the first failure.
+The recorder is included in the verifier fingerprint and normal harness tests.
+
+23 focused Node tests and ESLint passed. Recorder import and check-detail tests
+failed before implementation. Full native replay passed all seven actions with
+21 required passing assertion records plus two optional coverage records, no page
+errors and matching final verifier identity. CLI lookup of `repair.selected-entity`
+returned the exact action-linked record. Evidence:
+`packages/core/test/out/agent-watchdog/recorded-checks-2026-10-01-1/report.json`.
+Node 24.15.0 / pnpm 11.21.0 / Chromium. Other assertions/producers remain unmigrated;
+counts remain 348 partial, 25 gaps, zero complete. No aggregate gate claimed.
+
+## Identified visualization numeric and aggregation checks — 2026-10-01
+
+Migrated every numerical tolerance assertion and both weighted-aggregation pipeline
+comparisons in the native visualization replay to identified required checks.
+IDs distinguish actions, series, duplicate-policy x positions, nearest-query x/y
+samples and pixel-distance cutoffs. Existing independent oracles and tolerances
+are unchanged. Initial interpolation observations are now retained before the
+assertions, so failure cannot omit the data being checked. Verifier identity now
+includes the recorder for visualization runs as well as targeting.
+
+26 focused Node tests and ESLint passed. Full native watchdog replays at pixel
+densities 1 and 2 each passed all 11 actions with 74 required passing checks and
+matching final verifier identity. Direct CLI lookup of
+`weighted-data.aggregate-interpolation` returned its action-linked record.
+Evidence directories: `packages/core/test/out/agent-watchdog/viz-recorded-checks-d1-2026-10-01-1`
+and `packages/core/test/out/agent-watchdog/viz-recorded-checks-d2-2026-10-01-1`.
+Environment: Node 24.15.0 / pnpm 11.21.0 / Chromium. Structural/setup assertions
+and other producers remain to migrate; counts stay 348 partial, 25 gaps and zero
+complete. No aggregate trust gate claimed.
+
+## Independent required-check manifests — 2026-10-01
+
+Both native replays now declare immutable expected check/action identities before
+execution. Finalization rejects missing IDs, substituted actions, required checks
+relabeled optional and unexpected required records even if the recorded subset
+passed. Manifests are not reconstructed from completed checks. Existing action
+completion and observation-error checks remain independent gates. Reader summaries
+expose declared versus recorded counts; manifest detail includes the declaration,
+and comparisons reject contradictory pass claims or differing manifests.
+
+31 focused Node tests passed after failing completion, manifest, comparison and
+reader regressions. A missing-run-manifest edge case was also corrected with a
+failing regression before the fix. Focused ESLint passed. Native replays passed
+all seven targeting actions with 21/21 required checks and all eleven visualization
+actions with 74/74 required checks, with matching final verifier identities.
+Evidence: `packages/core/test/out/agent-watchdog/required-checks-targeting-2026-10-01-1`
+and `packages/core/test/out/agent-watchdog/required-checks-viz-2026-10-01-1`.
+Node 24.15.0 / pnpm 11.21.0 / Chromium. Manifests cover migrated assertions only;
+counts remain 348 partial, 25 gaps, zero complete. No aggregate trust gate claimed.
+
+## Aggregation conservation and original/displayed evidence — 2026-10-01
+
+Extended the existing weighted-mean application fixture with explicit intended
+aggregation policy, included/displayed counts, weight and weighted-value totals,
+value ranges and per-group reconstruction. The policy names preserved quantities,
+states that extrema are not preserved and scopes absent gaps to this fixed input.
+No new public transform or decimator was introduced.
+
+Independent expected arithmetic demonstrates an important negative case: broken
+unweighted means reconstruct 80/80 instead of 40/120, while both grand totals remain 160. Per-group checks expose the error that a grand-total-only check would miss.
+The repaired means reconstruct 40/120. The existing identified aggregation-pipeline
+check now verifies these facts along with the independent chart/hover oracle.
+
+Two assertions failed before implementation. Eight tests in the agent visualization
+and hover suites passed, plus typecheck and focused ESLint. Full native replays at
+pixel densities 1 and 2 passed all eleven actions and 74 required checks each;
+saved reconstruction evidence was inspected. Reports live under
+`packages/core/test/out/agent-watchdog/aggregation-invariants-d1-2026-10-01-1`
+and `packages/core/test/out/agent-watchdog/aggregation-invariants-d2-2026-10-01-1`.
+Node 24.15.0 / pnpm 11.21.0 / Chromium. Manual inspection:
+`http://127.0.0.1:5196/#/testing/viz-hover-lab`, weighted-data-bug then weighted-data,
+inspect `state.pipeline.aggregation`.
+
+DAT-11 is partial: other aggregation/decimation and gap/streaming policies remain
+application-specific obligations. Counts are 349 partial, 24 gaps and zero complete.
+No aggregate trust pass claimed.
+
+## Controlled asynchronous chart data — 2026-10-01
+
+The hover lab now exposes older/newer request controls backed by promises, with
+latest-request-wins policy, bounded pending transport slots, loading/error/retry
+state and completion disposition. Request identity is separate from chart data
+generation. Stale success/error cannot overwrite current request state or data;
+current failure retains the chart, retry clears error, and reset cancels pending
+work without reusing request IDs. No public CRC networking API was introduced.
+
+A failing missing-action regression preceded implementation. All eight focused
+browser tests and ESLint passed. The browser run used a temporary configuration
+importing the normal config and removing only the documentation plugin, because
+unrelated texture compiler errors blocked startup. Workspace typecheck subsequently
+failed on missing `tooling/texture-wasm-spike/runtime.mjs`. Scenario index regeneration
+was also blocked by an unrelated material-lab inline-props validation error.
+Requirement accounting passed all eight tests and validated all 373 IDs.
+No aggregate gate claim.
+APP-11 is partial pending disposal-race hardening and retained replay evidence;
+counts are 350 partial, 23 gaps, zero complete.
+
+Hands-on: `http://127.0.0.1:5196/#/testing/viz-hover-lab` (server responded HTTP 200).
+Select Interpolate, start older then newer requests, complete newer then older;
+inspect Async data request and hover the chart. Fail a newer request, then start
+newer/retry and complete it to inspect retained chart data and recovery.
+
+## APP-11 reviewed closure — 2026-10-01
+
+Closed the full APP-11 requirement against the supported asynchronous application
+workflow. Native replay now retains ten additional request transitions with forty
+independent required checks: loading, newer success, ignored stale success, ignored
+stale error, current failure with retained chart data, retry and successful recovery.
+The full replay passes 21 actions and 114 required checks. Cancellation tests cover
+queued responses overtaken by reset and replacement, both success/error at disposal,
+no publication after disposal, stable historical snapshots and remount isolation.
+A failing disposal-observation regression exposed stale pending/loading evidence;
+inspection now reports disposed with zero pending requests.
+
+Normal-config Chromium passed all ten browser tests; four Node checks, typecheck
+and focused lint also passed. Earlier texture startup/typecheck blockers cleared.
+Catalog regeneration remains blocked by unrelated material-lab inline-props rules.
+The first native attempt failed on missing numeric assertion metadata; its evidence
+remains at async-data-2026-10-01-1. Corrected replay -2 passed. Durable browser and
+replay results are under `docs/strategy/agent-verification-evidence/`; the ledger
+binds exact inventory wording, acceptance criteria, commands and source/artifact
+fingerprints. Closure is for this application-data contract, not generic network
+interception or every possible application policy. No aggregate trust pass claimed.
+
+Current accounting: 349 partial, 23 gaps, 1 reviewed complete. The full objective
+remains active. Future changes to fingerprinted evidence require closure review.
+
+## Snapshot-consistent saved evidence pagination — 2026-10-01
+
+Added action/check summary pages with content-bound continuation cursors, fixed
+page sizes, explicit remaining counts, field truncation and end-of-collection.
+Changed file bytes expire the cursor; malformed or mismatched cursors fail without
+silently restarting. Checkpoints identify incomplete prefix history. Final reports
+do not assert completeness of application history merely because enumeration ends.
+No retained server state, application execution or live-scene expansion is added.
+
+Two new tests failed before implementation; all 22 focused reader/comparison/tool
+identity tests and lint passed. The actual CLI enumerated the persisted APP-11
+replay's 114 checks across eight pages, with all IDs unique and no omissions.
+QRY-04 remains partial because live scene/nested observation expansion is not
+implemented. Current counts: 350 partial, 22 gaps, 1 reviewed complete.
+
+## Bounded committed-scene pagination — 2026-10-01
+
+The source targeting inspector now pages one immutable expansion, up to 256 records
+and 512 clip references at existing depth 16, returned in 32-record pages. Ordinary
+snapshots retain their 64-record budget. The inspector retains copied observations
+only. New expansion, disposal and generation changes revoke continuations. Pending
+updates, including a nested Layer beyond the initial snapshot window, expire the
+cursor before it can mix generations. Final pages preserve explicit truncation and
+unknown total when the scene exceeds capture budgets; retained-prefix exhaustion
+is not whole-scene completion or application-history coverage.
+
+Two failing tests preceded implementation. Nineteen browser tests passed across
+pagination and existing observation; an additional nested Layer regression then
+passed with all three pagination tests. Typecheck and focused lint passed. The new
+suite is included in test:agent-verification. QRY-04 remains partial pending broader
+cursor adversarial checks and retained/manual workflow integration. Counts remain
+350 partial, 22 gaps, one reviewed complete. No aggregate gate claim.
+
+## Shared manual/native scene pagination workflow — 2026-10-01
+
+The targeting lab now supplies 100 extra visible targets plus Start scene query
+and Next scene page actions. The same actions run headlessly, publishing bounded
+page evidence. Native replay independently expects 103 committed entries in four
+pages, stable generation/render count, no dormant computed evaluation, and an
+empty expired response after switching to Repair. It retains pages and expiration
+under the scene-pagination action.
+
+The new scenario regression failed before implementation; all sixteen browser
+tests across the shared lab and pagination passed. Typecheck and lint passed.
+Native scene-pagination-2026-10-01-1 passed eight actions with no page errors.
+Studio URL: http://127.0.0.1:5196/#/testing/agent-targeting-verification.
+Catalog regeneration is still blocked by unrelated material-lab inline-props
+validation. QRY-04 remains partial pending adversarial cursor checks and final
+review. Counts unchanged; no aggregate trust claim.
+
+## QRY-04 reviewed closure — 2026-10-01
+
+Reviewed complete wording against both scene and saved-record pagination. Added
+adversarial checks for malformed/aliased/unsafe offsets, cross-inspector cursor
+reuse, repeat reads, rejected-cursor noninterference and mount replacement. The
+new test caught acceptance of a leading-zero scene cursor; exact canonical tokens
+are now required. Existing update, nested Layer, replacement and disposal tests
+cover expiration. Truncated capture remains explicit and saved checkpoints report
+prefix history; ending a page sequence never implies complete application history.
+
+Normal-config browser evidence reports 34 passing tests; the saved reader reports
+13 passing Node tests. Typecheck and lint passed. Final native replay passed eight
+actions with four scene pages and an empty expired response after Repair. Durable
+artifacts under docs/strategy/agent-verification-evidence bind source fingerprints
+and exact acceptance criteria in the ledger. QRY-04 is reviewed complete; this does
+not promise unbounded traversal or historical scene retention. Counts are now
+349 partial, 22 gaps, two reviewed complete. The full objective remains active;
+no aggregate trust pass is claimed.
+
+## Explicit runtime and realm identity — 2026-10-01
+
+Added a source-only capture/comparison helper for cooperating participants. It
+compares live runtime, scheduler and realm references, separately reporting declared
+core version agreement. Same-realm duplicate runtimes are distinguished from
+legitimate independent iframe realms. Unknown/serialized/accessor bindings produce
+unavailable evidence; inconsistent references never become a coherent identity.
+The comparison invokes no runtime or scheduler functions and returns no live
+references. Captured bindings themselves retain their realm and must be discarded.
+
+Two Node tests failed before implementation and passed after it. They bundle CRC's
+actual runtime/scheduler graph, load two copies in one VM realm, then another copy
+in a separate realm. A real Chromium iframe test passed and confirmed no change to
+the inspecting scheduler. Initial helper typecheck and final focused lint passed.
+Final workspace typecheck was blocked by concurrent electric-paint tests using
+unknown termination/crackle configuration keys. ENV-03 is partial pending
+application/inspector handshake and official peer compatibility policy, with no
+claim of global runtime discovery. Counts: 350 partial, 21 gaps, two complete.
+
+## Runtime-checked targeting entry — 2026-10-01
+
+Added createRuntimeCheckedInspector as an opt-in source verification entry. It
+compares the application-supplied runtime binding before creating an inspector.
+Duplicate, foreign-realm, inconsistent, unknown or declared-version mismatches
+return a serializable refusal with a repair direction and no inspector. Matching
+identity allows ordinary targeting; mount readiness remains a separate snapshot
+state. The function retains no supplied application binding.
+
+A missing-module browser regression preceded implementation. Two browser tests
+passed, covering a public Canvas mount and a real iframe; two bundled-runtime
+Node tests verify same-realm duplicate refusal. Both accepted and refused paths
+leave the scheduler unchanged. Focused lint and workspace typecheck passed.
+ENV-03 stays partial pending existing-lab migration and official peer compatibility.
+Counts remain 350 partial, 21 gaps, two complete; no aggregate gate claim.
+
+## Official core peer requirement audit — 2026-10-01
+
+Added a runnable bounded manifest audit and integrated it into the identity gate.
+It checks each official peer's declared core requirement against the repository
+core version, preserving all six manifest hashes. Current exact pins all match
+0.0.1. Unsupported ranges remain unavailable; unrelated package-version differences
+are not mistaken for peer incompatibility. The CLI exits nonzero for mismatched or
+unavailable evidence, with structured per-package details.
+
+The initial import regression failed before implementation. All nine identity/peer
+tests passed, including a real CLI negative fixture; focused lint passed. The first
+sandboxed run could not bind existing native-test servers; the permitted rerun
+passed. ENV-03 remains partial for lab handshake migration, resolved installations
+and other peer dependencies. Counts unchanged; no aggregate trust claim.
+
+## Checked runtime identity in the shared lab — 2026-10-01
+
+Migrated the targeting lab factory to the checked runtime entry and bound the
+application's actual imported crc function. The serialized Runtime compatibility
+state includes acceptance/refusal and its diagnostic. Signal inspection starts
+only after the targeting binding is accepted; inspection re-enable runs the check
+again. Source fingerprints now include both runtime helper files and core manifest.
+Native replay retains and asserts the accepted matching-runtime/version diagnosis.
+
+The shared-lab assertion failed before implementation. All 36 browser tests across
+runtime identity, shared targeting, pagination and observation passed. Typecheck
+and focused lint passed. Native runtime-handshake-2026-10-01-1 passed eight actions.
+QRY-04's full browser/native evidence was re-reviewed after changing its lab/replay
+files; fresh durable artifacts and source hashes preserve that closure. ENV-03
+remains partial for resolved consumer installations and other peer dependencies.
+Counts unchanged; no aggregate trust claim.
+
+## Resolved consumer peer audit — 2026-10-01
+
+Added bounded Node require/default resolution from explicit consumer manifests and
+standard semver validation, retaining real paths and manifest hashes. All six peers
+of the five official consumers resolve compatibly, including Three.js 0.186.0;
+all share one physical core installation. Physical copies are distinguished from
+actual loaded runtime copies. Missing, optional-missing, unsupported and incompatible
+outcomes remain separate. Fixture modules throw if executed; audit only resolves
+and reads them. A failing edge test exposed broken optional exports being mistaken
+for absent peers; bounded lookup now refuses that false pass.
+
+Five new tests and all fourteen integrated identity tests passed; lint passed.
+The first integrated run exposed a stale controlled identity fixture missing the
+new handshake precondition. Updating that fixture restored its intended
+unsupported-build assertion; the full identity rerun passed.
+Actual receipt saved as env-03-installed-peers.json. semver 7.8.5 was added directly
+from the existing offline store with scripts disabled (three lockfile lines).
+ENV-03 remains partial pending combined evidence review. Browser/custom-loader
+resolution is outside the explicitly scoped Node receipt. Counts unchanged; no
+aggregate trust claim.
+
+## ENV-03 reviewed closure — 2026-10-01
+
+Reviewed the full environment-identity requirement against real bundled duplicate
+runtimes, a real iframe, checked public Canvas inspection, declared requirements,
+and resolved installed peers. Version compatibility, physical installations and
+loaded runtime identity remain distinct observations. Unknown or incoherent binding
+and dependency evidence never becomes a compatible/empty-scene pass. Explicit
+cooperating source runtimes and Node require/default consumer resolution are the
+supported surfaces; no global discovery or unobserved custom-loader/worker claims.
+
+Fresh retained evidence: sixteen Node tests, two browser tests, declared and
+installed peer receipts, and a passing eight-action native replay. Typecheck passed.
+The first live replay on 5196 correctly blocked stale served identity before actions.
+Ownership of that listener could not be confirmed, so it was left running. A new
+owned Studio server on http://127.0.0.1:5199/ (session 73966) supplied the matching
+source replay. Both passed and blocked artifacts are retained under the strategy
+evidence directory. ENV-03 is reviewed complete with exact requirement binding and
+fingerprinted evidence. Counts: 349 partial, 21 gaps, three complete. Full objective
+remains active; no aggregate trust pass claimed.
+
+## Redacted text calls — 2026-10-01
+
+Added bounded opt-in single-context native text recording. Private content stays
+redacted; exact allowlisted fixture strings can support assertions. No repeated
+materialization, measurement, pixel reads or scheduling are introduced. An
+observation-error regression failed before repair; failed observation now reports
+incompleteness without breaking drawing or retaining private error messages.
+
+Four focused Chromium tests passed on Node 24.15.0 / pnpm 11.21.0, including
+public CRC Text, history bounds, method restoration and native string conversion.
+Typecheck and focused lint passed before the final conversion-only test addition.
+TXT-08 advances to partial, not complete: shared manual/native workflow integration
+and retained replay evidence remain. No glyph visibility, font attribution or
+coverage of other Canvas contexts is claimed. Counts: 350 partial, 20 gaps, three
+reviewed complete. No aggregate trust pass.
+
+## Shared text assertion laboratory — 2026-10-01
+
+Added the source-only agent-text-verification catalog lab with seeded wrong text,
+repair, independent expected label and a redacted serialized evidence panel.
+Manual Studio actions and the headless browser test mount the same public CRC
+application. Production/built mode reports unavailable inspection. Each action
+owns a fresh bounded recorder and stops it after the expected drawing calls.
+
+The missing-scenario test failed before implementation. Five focused Chromium
+text tests passed; focused lint passed after correcting a constant-loop warning.
+Full typecheck is blocked by unrelated textures/type-tests/public.tsx errors
+(attract command and misplaced ts-expect-error). Catalog discovery passes but
+catalog validation stops on the pre-existing material-lab inline-style rule.
+No aggregate validation claim. The owned Studio process 73966 is live on 5199
+and observed the catalog reload. Feedback URL:
+http://127.0.0.1:5199/#/testing/agent-text-verification
+
+Choose Repair label: assertion should change fail to pass while private text
+remains redacted in machine evidence. Native replay retention and lifecycle
+hardening remain before TXT-08 closure. Counts stay 350 partial, 20 gaps, three
+reviewed complete.
+
+## TXT-08 reviewed closure — 2026-10-01
+
+Closed the explicit fixture-text assertion/redaction requirement after shared
+workflow and native evidence review. New failing tests exposed overlapping actions
+sharing a capture and disposal leaving historical evidence looking current. The
+lab now reserves each action, exposes pending state immediately, refuses overlap,
+waits for the admitted action, cancels timers on disposal and clears current
+observations. Public remount succeeds with restored method ownership.
+
+Maximum escaped fixture strings remain below the 512 KiB recorder payload bound.
+Native replay validates the complete fixture envelope before retaining state;
+private unexpected fields and stale source identity fail controlled negative tests
+without leaking into any report/checkpoint. No screenshots are taken by this
+text-specific replay. The source identity plugin now binds the text lab; its
+existing targeting/viz identity tests still pass.
+
+Retained evidence: nine Chromium tests, fifteen Node tests and a three-step native
+Studio replay with twelve declared passing checks. Full typecheck and focused
+lint passed; earlier concurrent texture type errors have cleared. Catalog's
+material-lab failure remains the last observed catalog result. No full trust pass
+is claimed. Exact requirement text, acceptance checks and file hashes are in the
+ledger. Counts: 349 partial, 20 gaps, four reviewed complete. The full 373-item
+objective remains active; text metrics/fonts/visibility remain separate work.
+
+## Signal mutation diagnostic slice — 2026-10-01
+
+Added the shared agent-signal-mutation laboratory. An intentional equal no-op
+passes; mutating the existing amount object from 10 to 42 and setting the same
+reference leaves signal revision and component evaluation count unchanged. The
+independent application expectation fails against the stale evaluated amount.
+Replacing the object publishes a revision and evaluates 42. The browser test also
+checks an independent bar pixel: transparent before repair and opaque blue after.
+Evaluation evidence is explicitly named, not mislabeled as completed pixel paint.
+
+No-redraw observations cover two host animation frames with a five-second timeout;
+this is a finite window, not a future-event guarantee. Source-only signal revision
+inspection returns unavailable in built mode. This is an explicit known mutation
+sequence under actual default Object.is, not a deep mutation detector.
+
+The missing-scenario test failed before implementation. The new public workflow
+and nine text regressions passed (ten Chromium tests total). Typecheck and focused
+lint passed. The shared catalog change was also verified through twelve native
+text checks, and TXT-08 closure artifacts/hashes were refreshed after review.
+SIG-14 stays partial pending native replay, lifecycle/repeat/reset hardening and
+closure review. Counts remain 349 partial, 20 gaps, four reviewed complete.
+
+Slice ready for feedback at:
+http://127.0.0.1:5199/#/testing/agent-signal-mutation
+Choose Equal no-op, Mutate in place, then Replace object; inspect the bar, source
+amount, evaluated amount, signal revision and diagnosis together.
+
+## SIG-14 reviewed closure — 2026-10-01
+
+Closed the default-equality mutation diagnostic after full wording review. A new
+failing repeat test exposed an incomplete diagnosis: subsequent equal writes now
+say that they retain a stale display, rather than describing another mutation.
+Reset, overlapping actions, active cancellation and remount are covered. A setup
+failure test exposed asynchronous failure after mounting without a 2D context;
+the fixture now preflights that capability before scheduling and owns cleanup.
+
+The first native replay failed an independent pixel check because the verifier
+omitted Studio's 30-pixel contain padding. Direct samples confirmed the blue bar
+at the correctly translated position. The fixture now declares its 480x180
+contain viewport explicitly; verifier math includes offsets and records logical,
+display and backing coordinates. A second aspect-ratio regression protects this.
+The initial failure remains in sig-14-initial-pixel-failure.json.
+
+Final evidence: fourteen Chromium tests (five signal cases plus nine text
+regressions), sixteen Node tests, and thirty required native signal checks across
+six actions. Typecheck and focused lint pass. Twelve native text checks also pass;
+TXT-08's shared plugin/manifest closure fingerprints were re-reviewed and refreshed.
+SIG-14 is reviewed complete with exact requirement binding and durable evidence.
+Counts: 348 partial, 20 gaps, five reviewed complete. No aggregate trust pass;
+the full 373-item objective remains active.
+
+## Shared saved-evidence retrieval — 2026-10-01
+
+The shared reader previously rejected the completed text and signal-mutation
+report schemas. It now reads all four replay v1 kinds and checkpoints, identifies
+the source schema and preserves redacted failure reasons/stages. Added bounded
+JSON-pointer field projection so an oversized action can still yield a selected
+amount, diagnosis or nested record without dumping its other data. Missing/null,
+negative zero, nonfinite parsed numbers, truncated strings and container summaries
+remain distinct. Selector failures carry machine codes; unsupported future schemas
+are rejected. Inputs remain capped at 4 MiB and projections at 64 KiB.
+
+New failing tests established schema rejection, ignored projections, missing error
+codes and lost redacted failure reasons before implementation. Thirty-one Node
+tests now pass (twenty reader, seven comparator, four discovery), including real
+CLI retrieval from the retained signal replay, pointer escaping, own-property
+lookup, invalid selectors and worst-case escaped output bounds. Focused lint passes.
+Actual bounded CLI output is saved as evidence-projection-cli.json. Discovery now
+maps TXT-08 and SIG-14 to their shared applications, independent expectations and
+runnable recipes. It still makes no claim that a discovered recipe has passed.
+
+QRY-04 reader changes were re-reviewed against the unchanged snapshot pagination
+and expiration tests; its closure fingerprints and retained Node evidence were
+refreshed. Live scene projection, broader adapters and schema migration remain
+open. Counts remain 348 partial, 20 gaps, five complete. No full trust pass.
+
+## Zero, missing and invalid visualization values — 2026-10-01
+
+Added Zero, missing and invalid values to the existing hover laboratory. Its ten
+fixed rows contain five finite values including zero, null and undefined as two
+missing observations, and NaN/+Infinity/-Infinity as three invalid observations.
+The declared policy retains zero and breaks both line segments and interpolation
+at missing or invalid rows. Serialized evidence uses explicit category tags rather
+than allowing JSON to collapse invalid values into null. Metadata is bound to the
+data generation and disappears when another dataset replaces it.
+
+Following the data-visualization testing skill, the slice first checks analytical
+semantics and native hover results, then two targeted raster regions: the segment
+through zero must exist; a bridge across invalid rows must not. Both 1000-pixel
+and 375-pixel plot widths pass. The wide test initially attempted native input
+outside the test runner's default 800-pixel viewport; it now explicitly provisions
+and restores a viewport containing every target. No application bug was inferred
+from that harness failure.
+
+Twenty-six focused Chromium tests passed, along with typecheck and focused lint.
+Existing native visualization (114 checks), text replay (12 checks) and signal mutation
+(30 checks) replays passed after the shared lab/catalog edits. Their existing
+closures were re-reviewed and refreshed with retained evidence. DAT-07 remains
+partial pending native new-mode replay, tooltip text evidence and final review.
+Counts remain 348 partial, 20 gaps, five complete; no aggregate trust pass.
+
+Slice ready for feedback: http://127.0.0.1:5199/#/testing/viz-hover-lab
+Choose Zero, missing and invalid values. Inspect the zero value at x=1, the break
+from x=2 to x=8, and the Missing-value policy evidence; interpolation at x=9 is 25.
+
+## Mixed-validity tooltip text evidence — 2026-10-01
+
+The existing wide/narrow visualization workflows now observe successful native
+Canvas text calls through the bounded, redacted text recorder. Zero emits the
+exact fixture label `0.00 ppm · recorded`; each of seven missing/invalid gap
+positions removes that label; post-gap interpolation emits
+`25.00 ppm · estimated`. A fresh recorder per hover prevents old text from
+satisfying later assertions. Gap observations must be nonempty, untruncated and
+free of observation failures, preventing absent instrumentation from passing.
+This is emitted-text evidence, not a claim of unobscured glyph visibility.
+
+Both focused Chromium tests passed under Node 24.15.0 and pnpm 11.21.0;
+retained output is `agent-verification-evidence/missingness-tooltip-browser.json`.
+No production behavior changed. DAT-07 remains partial pending native Studio
+new-mode replay and complete wording review. Counts remain 348 partial, 20 gaps
+and five reviewed complete; the full objective remains active.
+
+## DAT-07 reviewed closure — 2026-10-01
+
+The native Studio replay now includes the mixed-validity mode: 22 actions and
+127 required checks pass. Thirteen new independently declared checks cover input
+policy, counts/categories, generation, zero, seven gap positions and post-gap
+interpolation. Fourteen Node tests verify check accounting and false-pass rejection;
+focused lint passes. Existing asynchronous-data checks remain unchanged and pass,
+so APP-11 replay fingerprints were re-reviewed with this retained regression.
+
+An initial native failure exposed verifier precision: requested x=3 arrived as
+2.999999385036209. The retained failure explains the explicit 1e-5 data-x and
+1e-4 data-y tolerances. The wait now requires delivered pointer state so an
+application-seeded inspection cannot satisfy native-input evidence. Exact zero
+and tooltip emission remain independently checked in the two browser workflows.
+
+Reviewed the full DAT-07 wording against tagged data, query semantics, line pixels,
+tooltip draw calls and generation replacement. DAT-07 is complete for the declared
+supported workflow; arbitrary business-policy inference and unobscured glyph
+visibility are not claimed. Evidence is retained in dat-07-replay.json,
+dat-07-manifest-node.txt and dat-07-pointer-precision-failure.json alongside the
+prior tooltip browser report. Counts: 347 partial, 20 gaps, six reviewed complete.
+The full 373-item objective remains active; no aggregate trust pass is claimed.
+
+## Layout placement and clipping scenario — 2026-10-01
+
+Started the next public workflow for LAY-02 and LAY-06. One Absolute child has
+parent placement left=30/top=20 and a local 20x20 allocation. Nested translation
+(40,30) and scale 2 compose to the observed entry matrix [2,0,0,2,100,70]. A
+shape-local x=90 moves the shape outside the parent clip; root point (300,90)
+is geometrically inside the shape but clip-excluded and transparent. Explicit
+visible overflow makes the same point blue and targetable. Repairing local x to
+zero moves its center to (120,90), inside the clip, with unchanged allocation.
+
+The public scene was added after its missing-module test failed. The focused
+Chromium test now passes all three modes, checking actual allocation, observed
+transform, point conversion, clip result and independent pixel expectations.
+Focused lint passes. Retained evidence: layout-placement-slice-browser.json.
+The scene is not yet registered in Studio and has no machine-readable explanation;
+this is implementation progress, not a slice-ready or requirement-complete claim.
+Next: expose the same scene through a source-only diagnostic lab, report declared
+placement separately from observed geometry, and exercise native repair input.
+Counts remain 347 partial, 20 gaps and six reviewed complete.
+
+## Layout diagnostic slice ready for feedback — 2026-10-01
+
+Registered the shared layout scene in Studio with clipped, overflow-visible and
+repaired modes. Machine evidence separates controlled application inputs from
+observed allocation, entry transform, root center and active clip probe. The
+application expects a targetable center: clipped mode fails that expectation;
+explicit visible overflow and repaired local offset pass. Native click counts
+confirm delivery. Explanations do not equate allocation with painted bounds or
+geometry probes with pixel visibility. Built mode reports unavailable inspection.
+
+Sixteen focused Chromium tests passed, including shared workflow clicks, the
+independent three-mode pixel/geometry oracle and text/signal regressions.
+Typecheck and focused lint passed. Existing native text and signal replays pass;
+their catalog closure fingerprints were refreshed after review. A repeatable
+layout-smoke.mjs run passed three native Studio modes and click counts. Its
+provenance explicitly lacks build attestation; it is not the general replay
+protocol. The first Studio attempt failed because the live server's eager source
+glob did not contain the newly added file; restarting only the task-owned server
+resolved it. Both failure and successful reports are retained.
+
+Slice ready at http://127.0.0.1:5199/#/testing/agent-layout-placement . Choose
+Allow overflow, then Repair local offset; click the blue shape and compare the
+unchanged allocation with the changing root center and clip evidence.
+
+Feature completion still needs lifecycle/failure hardening and full wording review.
+Scenario-index generation remains blocked by the pre-existing material-lab inline
+props/spread validation error. No aggregate trust pass is claimed. Counts remain
+347 partial, 20 gaps and six complete. Task-owned Studio session is now 93511.
+
+## Layout workflow lifecycle hardening — 2026-10-01
+
+A focused failing test found stale allocation in pending layout evidence: an
+in-flight action combined new declared inputs with the prior allocation. Pending,
+failed and disposed states now clear allocation and observed geometry; disposal
+also reports a disposed diagnosis. Historical returned snapshots retain their
+original allocation. Tests reject competing actions and unknown actions, cancel
+an installed frame wait, check idempotent disposal and future-action refusal,
+and verify clean remount/reset. A controlled publication callback failure clears
+current evidence and permits successful recovery with a subsequent action.
+
+Four focused Chromium tests pass, including the independent pixel/geometry case
+and native workflow clicks. Typecheck and focused lint passed for the lifecycle
+fix. Results are retained in layout-lifecycle-complete-browser.json. No additional
+requirement is closed; counts remain 347 partial, 20 gaps and six complete.
+
+## Discoverable layout and mixed-value workflows — 2026-10-01
+
+Discovery now maps LAY-02/LAY-06 to the shared layout workflow and DAT-07 to the
+mixed-value chart workflow. Recipes carry prerequisites, explicit initial state,
+actions, independent expected values, browser/native commands and observation
+limits. The layout recipe explicitly names its unattested smoke schema and lack
+of shared-reader support, preventing agents from treating it as the general replay
+protocol. Mixed-value retrieval names supported scalar projection paths.
+
+The new discovery test failed on unmapped requirements before implementation;
+all five discovery tests now pass and focused lint passes. Actual LAY-02 CLI
+output is retained in layout-discovery.json. A real DAT-07 saved-report projection
+was exercised successfully. These changes improve workflow reachability and do
+not themselves certify any requirement. Counts remain 347 partial, 20 gaps and
+six reviewed complete.
+
+## LAY-02 reviewed closure — 2026-10-01
+
+Reviewed the complete parent-placement versus primitive-local-coordinate wording.
+The shared public scene, machine-readable explanation and independent tests cover
+left/top, local x/y, local allocation, nested scale/translation, converted root
+coordinates and resulting clipped/visible/repaired interaction. Browser evidence
+also checks pixels independently of geometry probes. Four focused browser tests
+cover normal behavior, cancellation/overlap/remount and publication failure.
+A fresh native Studio run after lifecycle fixes passes all three modes and click
+counts; output is retained in layout-lifecycle-native.json.
+
+LAY-02 is reviewed complete with exact requirement binding and fingerprinted
+source/evidence. This is not a closure of style provenance, all layout algorithms,
+broad overlap diagnosis, or served-build attestation. LAY-06 remains partial.
+Counts: 346 partial, 20 gaps and seven reviewed complete. No aggregate trust pass;
+the complete 373-item objective remains active.
+
+## Explicit box facts and application expectations — 2026-10-01
+
+Added source-tooling analyzeBoxRelations for at most three declared axis-aligned
+boxes in a caller-named common space. It reports overflow on each edge,
+containment, and positive overlap/touching/disjoint/degenerate relationships.
+Containment and separation pass/fail judgments require explicit application
+expectations; otherwise assertions are not-requested. Missing peer geometry makes
+a requested separation assertion unavailable. Invalid/nonfinite/unrepresentable
+geometry and unsupported policies are rejected. Results are detached and frozen.
+No transforms, clipping, painted visibility or application intent are inferred.
+
+Four Node tests pass after a missing-module failure established the new contract.
+A focused Chromium test relates live public useLayoutBox allocation and declared
+shape offsets in the existing clipped, intentionally overflowing and repaired
+modes. All three agree with observed targeting while allowed overflow remains
+unjudged. Typecheck and focused lint pass. Evidence: layout-relations-browser.json
+and layout-relations-node.txt. Studio presentation and a public overlap workflow
+remain before complete LAY-06 review. Counts remain 346 partial, 20 gaps and seven
+complete; no new completion claim.
+
+## Native overlap policy slice — 2026-10-01
+
+The existing Studio layout lab now exposes box relations and two overlap modes.
+Both draw the same blue rectangle and later orange peer, with local overlap area 200. Allow overlap reports no separation assertion; Require separation reports a
+failed explicit expectation. Their pixels and click routing stay identical:
+root (130,90) is orange and delivers to the peer; (110,90) is blue and delivers
+to the primary shape. The helper's declared common-space scope remains explicit.
+Pending/error/disposal clear relation evidence alongside geometry and allocation.
+
+The new workflow test first failed on its unsupported action. Twenty focused
+Chromium tests now pass, including placement/lifecycle and text/signal regression.
+Typecheck and focused lint pass. The extended native layout smoke passes all five
+modes; fresh native text and signal replays also pass after the catalog change.
+Affected completed-requirement fingerprints were re-reviewed and refreshed with
+retained evidence. LAY-06 remains partial pending lifecycle coverage of the new
+relation fields and full wording review. Counts remain 346 partial, 20 gaps and
+seven complete. No aggregate trust pass.
+
+Ready for feedback: http://127.0.0.1:5199/#/testing/agent-layout-placement . Compare
+Allow overlap with Require separation: geometry remains identical while the
+explicit application assertion changes.
+
+## LAY-06 reviewed closure — 2026-10-01
+
+Seven focused Chromium tests now pass, including new overlap lifecycle coverage.
+Switching from prohibited to allowed overlap immediately withdraws old relations;
+a controlled publication failure also clears serialized evidence. Recovery restores
+the correct policy, repair removes the peer relationship, and disposal removes
+current facts while previously returned snapshots preserve historical overlap.
+Focused lint passes. Results are retained in layout-overlap-lifecycle-browser.json.
+
+Reviewed the entire LAY-06 wording against allocation-relative overflow, declared
+box overlap, independent pixels and native topmost delivery. The same geometry
+is benign under an allowed-overlap policy and fails an explicit separation
+expectation. Boundary touching/degeneracy and invalid arithmetic are separately
+tested. LAY-06 is complete for this explicit axis-aligned common-space capability;
+general path bounds, arbitrary transforms and painted visibility inference remain
+outside its stated scope. Existing five-mode native evidence remains applicable
+because this turn added tests without changing production code.
+
+Counts: 345 partial, 20 gaps and eight reviewed complete. The full 373-item
+objective remains active, and no aggregate trust pass is claimed.
+
+## Catalog validation unblocked — 2026-10-01
+
+Reproduced the existing Material Lab JSX spread rejection, then replaced its
+MaterialSwatches spread with the same explicit kind, seed, scale, detail and
+palette props. No state or rendering behavior changed. The repository catalog
+now validates all 70 lessons, 12 tutorial snapshots and 31 test labs, and the
+scenario index was regenerated through the supported generator. Source discovery,
+typecheck and focused lint pass. Retained output: catalog-unblocked.txt.
+
+A fresh docs:check now reports four unclassified documents from parallel texture
+work: docs/design/weighted-electric-sources-contract.md,
+docs/site/api/types/electric-textures.md, docs/site/api/types/texture-resources.md
+and tooling/texture-wasm-spike/README.md. This is the currently observed static
+integration blocker; the older Material Lab blocker is resolved. No full trust
+pass is claimed. Requirement counts remain 345 partial, 20 gaps and eight complete.
+
+## Documentation classification and provenance checkpoint — 2026-10-01
+
+Classified the electric/texture-resource API pages as current public documentation,
+the weighted-electric implementation contract as current normative documentation,
+and the isolated WASM experiment README as operational documentation. The new
+contract did not exist at the dated preservation commit; it is now correctly
+listed as post-baseline rather than falsely read from that historical snapshot.
+
+The documentation gate progressed past classification and exposed two vocabulary
+collisions. Renamed the path-warp example's local label helper to labelText and
+clarified progress prose so neither resembles a removed lowercase drawing API.
+No rendering behavior or vocabulary validation rule changed. Typecheck, focused
+lint and the complete 70-lesson/12-tutorial/31-lab catalog check pass.
+
+The next real docs:check failure is the missing weighted-electric contract entry
+in the reviewed post-baseline preservation manifest. No approval, semantic mapping
+or historical provenance was fabricated to bypass it. Retained failure:
+docs-contract-inventory-blocker.txt. Completing that mapping requires review of
+the texture contract and its supporting implementation/evidence. The verification
+work remains active with 345 partial, 20 gaps and eight complete requirements;
+no full documentation or aggregate trust pass is claimed.
+
+## Shared retrieval for layout smoke evidence — 2026-10-01
+
+The bounded saved-evidence reader now accepts crc-layout-studio-smoke/1. It uses
+the schema's action field for action selection, summaries and content-bound
+pagination without modifying raw action details. All views explicitly report
+attestation not provided by the schema. Unrecorded action statuses remain null;
+manifest/check fields and checkpoint wrappers are rejected for this smoke format.
+Errors retain a bounded summary. Unknown schema versions still reject.
+
+The new test failed on unsupported schema before implementation. Thirty-three
+reader/comparator/discovery tests now pass, including existing snapshot cursor
+expiry. Actual CLI projection of the retained overlap report returns the failed
+separation assertion, area 200 and delivered peer while retaining the provenance
+limit; output is layout-reader-cli.json. Focused lint passes. QRY-04 affected
+reader fingerprints were re-reviewed/refreshed against retained Node evidence.
+Discovery and tooling guidance now expose the supported layout query. No broader
+attestation, replay comparison compatibility or new requirement closure is claimed.
+Counts remain 345 partial, 20 gaps and eight complete.
+
+## Controlled late-font arrival and responsive update — 2026-10-01
+
+Started TXT-06 with a public Text/useLayoutBox/signal scene. The test begins with
+a nonempty fallback-font render, then loads an unmodified local Space Grotesk
+font under a test family name. Actual measured width changes after readiness,
+but scheduler requests, evaluation count and existing pixels do not change during
+two host frames. An explicit application signal update schedules a repaint and
+changes the pixels. Resizing the responsive Canvas from 400 to 200 pixels then
+requests rendering and changes the declared text size from 24px to 16px.
+
+The local asset comes from the already installed @fontsource-variable/space-grotesk
+5.3.0 package; its SIL OFL license and source/hash record accompany the unmodified
+font. No system-font availability or external service is required. The first
+missing-scene test failed; the implemented workflow and nonempty-render guard pass
+in Chromium. Typecheck and focused lint pass. Fresh browser evidence is retained
+in late-font-verified-browser.json. Font readiness is not claimed to automatically
+invalidate CRC, and the no-redraw observation is explicitly finite.
+
+TXT-06 advances from gap to partial. Shared Studio controls/evidence and font-load
+failure/disposal hardening remain; this is not yet a feedback-ready lab. Counts:
+346 partial, 19 gaps and eight reviewed complete. The full objective remains active.
+
+## Shared late-font Studio slice — 2026-10-01
+
+Registered the public late-font scene and controller in the testing catalog.
+The missing-entry browser test failed before registration. Catalog generation
+then exposed a browser-only asset import; a URL-relative font asset reference
+works in both Node catalog validation and the browser. Catalog validation now
+covers 70 lessons, 12 tutorial snapshots and 32 labs.
+
+Native Studio testing caught premature ready evidence during responsive resize:
+a requested render was still pending after two host frames. Resize actions now
+wait for the expected allocation and completed root revision with a five-second
+bound. Font-arrival observations retain their explicit two-host-frame scope.
+All five native controls pass, with no page/console errors. The first stale-source
+glob failure and resize failure are retained alongside successful evidence.
+The task-owned server was restarted and is now session 36647 on port 5199.
+
+Focused font browser checks, typecheck and lint pass. Catalog-affected text and
+signal native replays pass; reviewed closure fingerprints were refreshed only
+for the catalog, with new regression artifacts retained. The state panel displays
+compact counters and machine evidence wraps within its own block.
+
+Slice ready: http://127.0.0.1:5199/#/testing/agent-late-font . Choose Load font,
+Repaint, then Narrow canvas to compare readiness with completed rendering.
+Failure/disposal/repeated readiness and reset settling remain for hardening.
+TXT-06 remains partial; counts remain 346 partial, 19 gaps, eight complete.
+No aggregate trust pass is claimed.
+
+## Late-font failure and disposal evidence — 2026-10-01
+
+Added failure-first lifecycle checks through the shared catalog workflow. A
+controlled FontFace.load rejection exposed missing provenance in the error
+envelope. Error evidence now retains its source-development/no-build-attestation
+label while clearing current samples. The recovery path loads the real local
+font, repeated loading adds no duplicate font registration or component
+evaluation, and narrow/reset restores the original width, fallback font and
+font-set ownership in the tested sequence.
+
+A second test holds font loading pending, rejects a competing repaint, disposes
+twice, then resolves the old load. No font is installed, current evidence remains
+disposed, DOM evidence is removed, old snapshots remain historical and future
+commands/settling reject. The test also checks the exact original font set rather
+than relying on garbage collection.
+
+Four focused Chromium tests pass in late-font-lifecycle-browser.json under Node
+24.15.0, pnpm 11.21.0 and Playwright Chromium. Typecheck and focused lint pass.
+The requirements/discovery unit tests pass, but closure integrity currently fails
+on changes outside this slice: ENV-03 packages/core/package.json and package.json,
+LAY-02 packages/core/src/lib/layout/absolute.test.ts, and SIG-14
+packages/core/src/lib/signals/graph.ts. Their fingerprints were not refreshed:
+these changes require separate proportional verification and review. Eight remains
+the recorded closure count, not eight currently integrity-verified closures.
+
+Timeout/delayed reset, failure-publication/remount and discovery coverage remain;
+TXT-06 is not closed by these narrower lifecycle tests. Counts remain 346 partial,
+19 gaps and eight complete. The full objective remains active.
+
+## Integrated requirement-to-evidence entry point — 2026-10-01
+
+Added workflow.mjs plan/run to connect existing discovery, fixed native replay
+runners, parent-owned browser watchdog and the bounded evidence reader. Plans
+include source paths and independent acceptance criteria; final handoffs include
+remaining scope, replay run/action/check IDs, artifact paths and an executable
+next-query argument vector. Only four known replay implementations are allowed;
+unmapped requirements and unsupported layout smoke return explicit errors.
+
+Three focused Node tests pass after a missing-module failure. Real native runs
+pass for HIT-12 targeting, DAT-07 visualization, SIG-14 signal mutation and TXT-08
+text. Each confirms browser-process cleanup. The initial text integration exposed
+a status-field mismatch between reader and wrapper; corrected code consumes
+claimedStatus and requires final-report kind. That incomplete integration report
+is retained alongside successful reruns. Focused lint passes. Evidence artifacts
+use the integrated-* prefix. Node 24.15.0, pnpm 11.21.0, Chromium, source Studio
+http://127.0.0.1:5199 were used.
+
+This integrates existing workflows rather than adding another isolated lab.
+A successful reference replay is explicitly not full requirement completion or
+an arbitrary-application repair. AGT-01/02/06 remain partial; counts do not change.
+Earlier unrelated closure-fingerprint drift has not been approved or erased.
+
+## Integrated failure and interrupted-run handoffs — 2026-10-01
+
+The integrated workflow now attempts the saved checkpoint when a final report
+is absent, retaining the original read failure and explicitly partial evidence.
+Malformed final reports are never hidden by fallback. Missing/unusable evidence
+produces no invented next query. Recorded first failed checks and failed actions
+produce targeted reader queries; otherwise bounded action pagination remains.
+Truncated check identifiers are not used as exact selectors.
+
+Two focused tests failed before implementation. All 26 workflow/reader tests now
+pass, and focused lint passes. A native run against the deliberately unusable
+Studio origin http://127.0.0.1:1 produces a failed navigation handoff with confirmed
+browser-process cleanup. The text replay preserves its redaction policy, so the
+handoff reports the recorded stage without inventing a network or application
+root cause. Evidence uses workflow-failure-routing-node.txt and
+workflow-navigation-failure-* artifacts. Node 24.15.0 and Chromium were used.
+
+This advances integrated agent continuation and interruption handling; it does not
+close broad AGT/HAR requirements. No aggregate trust or refreshed unrelated
+closure approvals are claimed. The complete inventory remains the objective.
+
+## Validated targeted handoff queries — 2026-10-01
+
+A saved-report regression exposed a dangling first-failed-check ID in the proposed
+handoff query. The same fixture places the failed action at index 39, beyond the
+summary's first 32 actions. Handoffs now validate each proposed check/action query
+through the bounded reader, select the actual failed action even beyond that
+summary page, and preserve missing/ambiguous selection errors. Duplicate failed
+action IDs fall back to pagination without claiming a unique match. Valid failed
+check IDs still receive the most direct query. This is evidence navigation, not
+a causal diagnosis or a closure claim.
+
+The new test failed before implementation. All 26 workflow/reader tests pass,
+with output in workflow-query-validation-node.txt; focused lint passes. Existing
+reader budgets remain unchanged. AGT-02/06 remain partial and the full inventory
+objective remains active.
+
+## Delivery cutoff — user reprioritization, 2026-10-01
+
+This section supersedes the earlier instruction to implement all 373 requirements
+before stopping. The user requested prioritizing the top items, finishing those,
+and stopping. The inventory remains a backlog, not this delivery's completion
+criterion. Do not automatically resume deferred work after the cutoff.
+
+Finish only the following three priorities, in order:
+
+1. **One usable agent entry point.** Verify the existing workflow plan/run path
+   exposes prerequisites, sources, expected behavior, saved evidence and a usable
+   next query. Keep failures/partial runs explicit. The implementation exists;
+   finish acceptance and concise usage guidance rather than adding a new facade,
+   protocol, runner or general inspector API.
+2. **Prove the four highest-value existing diagnosis/repair paths.** Targeting
+   interception, incorrect visualization data, stale signal-driven rendering and
+   layout/clipping. Review existing independent assertions; reuse existing native
+   workflows (layout may retain its separate smoke command). Preserve seeded
+   failure and repair evidence. Run each applicable workflow once on the final
+   state; fix defects discovered in these paths. Do not add new labs or expand
+   this milestone to every variant. Font/text work already delivered remains
+   available but receives no new feature expansion.
+3. **Final integration and honest handoff.** Run proportional tool checks and one
+   aggregate trust attempt on the final state. Fix attributable regressions in
+   this delivery. Record unrelated/concurrent failures as unresolved integration
+   limits, without inventing approvals or endlessly chasing other work. Deliver
+   exact commands, verified scope, known limitations and artifact paths. Verify
+   that the documented next-query command works against saved evidence.
+
+**Stop rule:** Stop implementation after these acceptance items have been
+attempted and verified to the available scope, with any unresolved blockers
+explicitly reported. Do not claim feature-complete or aggregate-green if the
+checks do not support it. End the active delivery instead of continuing through
+the inventory. New feature work requires a new user request.
+
+Deferred: general paint-call attribution, full signal/scheduler causal tracing,
+font/asset edge-case expansion, renderer-specific facets, accessibility/IME,
+temporal screenshots, generalized benchmarks, new lab/schema families, broad
+closure-count cleanup, and exhaustive completion of partial requirements.
+These remain legitimate backlog items, not mandatory prerequisites for this
+bounded delivery. Existing evidence-integrity drift remains visible and must not
+be relabeled approved merely to improve the completion count.
+
+## Final bounded delivery handoff — 2026-10-01
+
+The user's three-priority finishing pass is complete to the verified scope below.
+Implementation stops here. The exhaustive inventory is deferred, not completed.
+
+| Priority path                             | Fresh result                                                         | Retained evidence                        |
+| ----------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------- |
+| Targeting interception and repair         | Pass: 8 actions, 23 checks                                           | final-targeting-report.json              |
+| Visualization data correctness and repair | Pass: 22 actions, 127 checks                                         | final-viz-report.json                    |
+| Stale signal mutation and replacement     | Pass: 6 actions, 30 checks                                           | final-signals-report.json                |
+| Layout/clipping and overlap policy        | Pass: 5 native modes, independent placement and click assertions     | final-layout-native.json                 |
+| Exact handoff queries                     | All three generated commands execute and return saved-evidence pages | final-handoff-queries.json               |
+| Workflow, reader and discovery tests      | 31 pass                                                              | final-tools-node.txt                     |
+| Focused workflow lint                     | Pass                                                                 | Terminal verification in this final pass |
+| Aggregate trust                           | Failed at ENV-03 manifest fingerprint; later stages not reached      | final-trust-attempt.txt                  |
+
+All retained files above are under docs/strategy/agent-verification-evidence/.
+Native runs used Node 24.15.0, pnpm 11.21.0, Playwright Chromium and source Studio
+http://127.0.0.1:5199. The three integrated runs confirm browser-process cleanup.
+The existing layout smoke has weaker provenance and is not the integrated replay
+schema. No arbitrary application support, full inventory closure or complete
+build/browser/package matrix is implied by these passes.
+
+Reproduction from a provisioned checkout with the source Studio running:
+
+```sh
+node tooling/agent-verification/workflow.mjs plan HIT-12 http://127.0.0.1:5199 /tmp/crc-targeting-final-new
+node tooling/agent-verification/workflow.mjs run HIT-12 http://127.0.0.1:5199 /tmp/crc-targeting-final-new
+node tooling/agent-verification/workflow.mjs run DAT-07 http://127.0.0.1:5199 /tmp/crc-viz-final-new
+node tooling/agent-verification/workflow.mjs run SIG-14 http://127.0.0.1:5199 /tmp/crc-signals-final-new
+node tooling/agent-verification/layout-smoke.mjs 'http://127.0.0.1:5199/#/testing/agent-layout-placement' /tmp/crc-layout-final-new.json
+corepack pnpm@11.21.0 trust
+```
+
+Use new output names on repeat runs. Every integrated handoff includes a `next`
+executable and argument array; these were executed successfully, not just printed.
+For the retained targeting report, a direct equivalent query is:
+
+```sh
+node tooling/agent-verification/evidence-reader.mjs docs/strategy/agent-verification-evidence/final-targeting-report.json --page actions
+```
+
+The aggregate failure is real: packages/core/package.json now contains the
+separate filter subpath and new build command, which differ from the ENV-03
+reviewed fingerprint. Those changes were not made by this finishing pass, and
+its approval was not refreshed to hide the mismatch. Other previously identified
+closure drift likewise remains subject to its own review. This delivery does not
+claim the whole mixed working tree is release-ready. No commits or pushes were
+performed, and the user's other Studio servers were left alone.
 
 ## Follow-on slices, preserving the full objective
 

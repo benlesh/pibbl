@@ -20,7 +20,7 @@ import {
   setLinearVelocity2D,
   staticBody2D,
   teleportBody2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 
 const BALL_RADIUS = 28;
 const MAX_THROW_SPEED = 1000;
@@ -96,7 +96,6 @@ function DraggableBall() {
   const body = crcPhysicsBody2D();
   const dragSession = useRef<BallDragSession | null>(null);
   const dragging = useSignal(false);
-  const requestDragPresentationSignal = useSignal(0);
 
   const dragTo = (event: CRCPointerEvent): readonly [number, number] | null => {
     const session = dragSession.current;
@@ -116,7 +115,6 @@ function DraggableBall() {
       y: event.y,
       timeStamp: event.timeStamp,
     });
-    requestDragPresentationSignal.update((revision) => revision + 1);
     return pose;
   };
 
@@ -163,12 +161,6 @@ function DraggableBall() {
     }
   };
 
-  const draggedPosition = dragSession.current?.position;
-  const dragTranslateX =
-    dragging.get() && draggedPosition !== undefined ? draggedPosition[0] - 210 : 0;
-  const dragTranslateY =
-    dragging.get() && draggedPosition !== undefined ? draggedPosition[1] - 110 : 0;
-
   return (
     <Group
       physics={dynamicBody2D({
@@ -180,54 +172,56 @@ function DraggableBall() {
       })}
       style={{ translateX: 210, translateY: 110 }}
     >
-      <Group style={{ translateX: dragTranslateX, translateY: dragTranslateY }}>
-        <Circle
-          physics={collider2D({
-            tag: "ball",
-            restitution: 0.35,
-            friction: 0.65,
-          })}
-          style={{
-            cx: 0,
-            cy: 0,
-            radius: BALL_RADIUS,
-            fill: "#2563eb",
-            stroke: "#17211d",
-            strokeWidth: 5,
-            cursor: dragging.get() ? "grabbing" : "grab",
-          }}
-          onPointerDown={(event) => {
-            if (dragSession.current !== null) return;
-            const displayedBody = inspectPhysics2D(body);
-            const [x, y] =
-              displayedBody?.presentationPose.position ?? body.position.get();
-            const position = [x, y] as const;
-            dragSession.current = {
-              pointerId: event.pointerId,
-              offsetX: x - event.x,
-              offsetY: y - event.y,
-              rotationDegrees:
-                displayedBody?.presentationPose.rotationDegrees ??
-                body.rotationDegrees.get(),
-              position,
-              trail: [],
-            };
-            addTrailSample(dragSession.current.trail, {
-              x: event.x,
-              y: event.y,
-              timeStamp: event.timeStamp,
-            });
-            disableBody2D(body);
-            dragging.set(true);
-            event.currentTarget.setPointerCapture(event.pointerId);
-            event.preventDefault();
-          }}
-          onPointerMove={dragTo}
-          onPointerUp={finishDrag}
-          onPointerCancel={cancelDrag}
-          onLostPointerCapture={cancelDrag}
-        />
-      </Group>
+      <Circle
+        physics={collider2D({
+          tag: "ball",
+          restitution: 0.35,
+          friction: 0.65,
+        })}
+        style={{
+          cx: 0,
+          cy: 0,
+          radius: BALL_RADIUS,
+          fill: "#2563eb",
+          stroke: "#17211d",
+          strokeWidth: 5,
+          cursor: dragging.get() ? "grabbing" : "grab",
+        }}
+        onPointerDown={(event) => {
+          if (dragSession.current !== null) return;
+          const displayedBody = inspectPhysics2D(body);
+          const [x, y] =
+            displayedBody?.presentationPose.position ?? body.position.get();
+          const position = [x, y] as const;
+          dragSession.current = {
+            pointerId: event.pointerId,
+            offsetX: x - event.x,
+            offsetY: y - event.y,
+            rotationDegrees:
+              displayedBody?.presentationPose.rotationDegrees ??
+              body.rotationDegrees.get(),
+            position,
+            trail: [],
+          };
+          addTrailSample(dragSession.current.trail, {
+            x: event.x,
+            y: event.y,
+            timeStamp: event.timeStamp,
+          });
+          disableBody2D(body);
+          teleportBody2D(body, {
+            position,
+            rotationDegrees: dragSession.current.rotationDegrees,
+          });
+          dragging.set(true);
+          event.currentTarget.setPointerCapture(event.pointerId);
+          event.preventDefault();
+        }}
+        onPointerMove={dragTo}
+        onPointerUp={finishDrag}
+        onPointerCancel={cancelDrag}
+        onLostPointerCapture={cancelDrag}
+      />
     </Group>
   );
 }

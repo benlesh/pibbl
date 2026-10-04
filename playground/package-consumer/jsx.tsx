@@ -31,7 +31,7 @@ import {
   useComputed,
   usePlayback,
   useSignal,
-  useTransition,
+  useAnimatedValue,
   definePrimitive,
   isSignal,
   marker,
@@ -47,7 +47,7 @@ import {
   defineParticleEffect2D,
   particleCurve,
   particleRange,
-} from '@crc/particles';
+} from '@crc/core/particles';
 import {
   defineThreeLayer,
   type CRCThreeLayerResources,
@@ -161,7 +161,7 @@ function AnimatedLabel(): CRCNode {
     track(x, spring({ to: 0 })),
   );
   const player = usePlayback(program);
-  const transitioned = useTransition(x.get(), {
+  const transitioned = useAnimatedValue(x.get(), {
     type: 'tween',
     duration: 80,
   });
@@ -409,3 +409,14 @@ void [
   missingStarRadius,
   automaticCornerRadius,
 ];
+
+// Visibility controllers bind through SystemStyle and expose request-scoped completion.
+import { bifrost, hologram, slide, zoom, wipe, blurReveal, dissolve, defineTransition, embers, fade, useVisibilityTransition, type CRCVisibilityTransitionResult } from '@crc/core';
+export function VisibilityConsumer() {
+  const visibility = useVisibilityTransition({ initial: true, enter: fade(), exit: embers({ region: { x: 0, y: 0, width: 100, height: 100 }, wind: -80, seed: 2, linger: 700 }), duration: 150 });
+  const hide = async (): Promise<CRCVisibilityTransitionResult> => visibility.hide();
+  return <Group style={{ transition: visibility.binding }}><Rectangle style={{ width: 10, height: 10, fill: 'red' }} onClick={() => { void hide(); }} /></Group>;
+}
+
+const transitionRegion = { x: 0, y: 0, width: 100, height: 100 };
+void [bifrost({ region: transitionRegion }), hologram({ region: transitionRegion }), slide(), zoom({ origin: { x: 50, y: 50 } }), wipe({ region: transitionRegion }), blurReveal(), dissolve({ region: transitionRegion }), defineTransition({ render({ context, progress, drawSource }) { context.globalAlpha = progress; drawSource(); } })];

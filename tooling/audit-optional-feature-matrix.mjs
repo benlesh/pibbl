@@ -5,19 +5,19 @@ const root = resolve(import.meta.dirname, '..');
 const probes = {
   tween: ['@crc/core', 'tween'], spring: ['@crc/core', 'spring'], stepper: ['@crc/core', 'stepper'],
   Flow: ['@crc/core', 'Flow'], Grid: ['@crc/core', 'Grid'], defineRenderLayer: ['@crc/core', 'defineRenderLayer'],
-  defineThreeLayer: ['@crc/three', 'defineThreeLayer'], sphereShape3D: ['@crc/physics/3d/geometry', 'sphereShape3D'],
-  circleShape2D: ['@crc/physics/2d/geometry', 'circleShape2D'], PhysicsWorld2D: ['@crc/physics/2d', 'PhysicsWorld2D'],
-  Axis: ['@crc/viz', 'Axis'], LineSeries: ['@crc/viz', 'LineSeries'], particleRange: ['@crc/particles', 'particleRange'], Particles2D: ['@crc/particles', 'Particles2D'],
+  defineThreeLayer: ['@crc/three', 'defineThreeLayer'], sphereShape3D: ['@crc/core/physics/3d/geometry', 'sphereShape3D'],
+  circleShape2D: ['@crc/core/physics/2d/geometry', 'circleShape2D'], PhysicsWorld2D: ['@crc/core/physics/2d', 'PhysicsWorld2D'],
+  Axis: ['@crc/core/viz', 'Axis'], LineSeries: ['@crc/core/viz', 'LineSeries'], particleRange: ['@crc/core/particles', 'particleRange'], Particles2D: ['@crc/core/particles', 'Particles2D'],
 };
 const source = {
-  '@crc/core': 'packages/core/src/index.ts', '@crc/three': 'packages/three/src/index.ts', '@crc/physics/2d': 'packages/physics/src/2d.ts',
-  '@crc/physics/2d/geometry': 'packages/physics/src/2d-geometry.ts', '@crc/physics/3d/geometry': 'packages/physics/src/3d-geometry.ts',
-  '@crc/viz': 'packages/viz/src/index.ts', '@crc/particles': 'packages/particles/src/index.ts', '@crc/types': 'packages/types/src/index.ts',
+  '@crc/core': 'packages/core/src/index.ts', '@crc/three': 'packages/three/src/index.ts', '@crc/core/physics/2d': 'packages/core/src/features/physics/2d.ts',
+  '@crc/core/physics/2d/geometry': 'packages/core/src/features/physics/2d-geometry.ts', '@crc/core/physics/3d/geometry': 'packages/core/src/features/physics/3d-geometry.ts',
+  '@crc/core/viz': 'packages/core/src/features/viz/index.ts', '@crc/core/particles': 'packages/core/src/features/particles/index.ts',
 };
 const packed = {
-  '@crc/core': 'packages/core/dist/index.mjs', '@crc/three': 'packages/three/dist/index.mjs', '@crc/physics/2d': 'packages/physics/dist/2d.mjs',
-  '@crc/physics/2d/geometry': 'packages/physics/dist/2d-geometry.mjs', '@crc/physics/3d/geometry': 'packages/physics/dist/3d-geometry.mjs',
-  '@crc/viz': 'packages/viz/dist/index.mjs', '@crc/particles': 'packages/particles/dist/index.mjs', '@crc/types': 'packages/types/dist/index.mjs',
+  '@crc/core': 'packages/core/dist/index.mjs', '@crc/three': 'packages/three/dist/index.mjs', '@crc/core/physics/2d': 'packages/core/dist/features/physics/2d.mjs',
+  '@crc/core/physics/2d/geometry': 'packages/core/dist/features/physics/2d-geometry.mjs', '@crc/core/physics/3d/geometry': 'packages/core/dist/features/physics/3d-geometry.mjs',
+  '@crc/core/viz': 'packages/core/dist/features/viz/index.mjs', '@crc/core/particles': 'packages/core/dist/features/particles/index.mjs',
 };
 function aliases(table) { return { name: 'crc-public-entries', setup(api) { api.onResolve({ filter: /^@crc\// }, ({ path }) => table[path] ? ({ path: resolve(root, table[path]) }) : undefined); } }; }
 function inputs(meta) { return Object.values(meta.outputs).flatMap(output => Object.entries(output.inputs ?? {}).map(([path, value]) => [path.replaceAll('\\', '/'), value.bytesInOutput ?? 0])); }

@@ -9,7 +9,7 @@ import {
   useReaction,
   type CRCController,
 } from "@crc/core";
-import { ReactionDiffusion, type TextureRenderer } from "@crc/textures";
+import { ReactionDiffusion, type TextureRenderer } from "@crc/core/textures";
 
 // The artwork and raster alpha mask are composed locally. No new core mask API.
 const landscape: TextureRenderer = (ctx, texture) => {

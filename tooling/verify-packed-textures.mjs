@@ -28,7 +28,7 @@ const pnpm = (args, cwd = root) =>
   });
 try {
   const tarballs = {};
-  for (const name of ["types", "core", "textures"]) {
+  for (const name of ["core"]) {
     pnpm(
       ["pack", "--out", join(temp, `${name}.tgz`)],
       join(root, "packages", name),
@@ -43,7 +43,7 @@ try {
   );
   writeFileSync(
     join(consumer, "pnpm-workspace.yaml"),
-    `packages:\n  - .\noverrides:\n  '@crc/types': ${tarballs["@crc/types"]}\n`,
+    `packages:\n  - .\n`,
   );
   pnpm(
     [
@@ -57,7 +57,7 @@ try {
     consumer,
   );
   const installed = createRequire(join(consumer, "probe.mjs"));
-  const entry = installed.resolve("@crc/textures");
+  const entry = installed.resolve("@crc/core/textures");
   const fromTextures = createRequire(entry);
   assert.equal(
     realpathSync(fromTextures.resolve("@crc/core")),
@@ -71,46 +71,30 @@ try {
     "marble",
     "paper",
     "reactionDiffusion",
-    "texturePalettes",
-    "useTexture",
-    "rainDrops",
     "waterWaves",
     "waterSurface",
+    "rainDrops",
     "tendrils",
+    "texturePalettes",
+    "useTexture",
     "lightning",
   ].sort();
   assert.deepEqual(Object.keys(textures).sort(), names);
   if (process.argv.includes("--self-test-missing-export"))
     assert.equal(typeof textures.MissingTexture, "function");
   for (const path of [
-    "@crc/textures/internal",
-    "@crc/textures/src/index.ts",
-    "@crc/textures/lib/simulation",
+    "@crc/core/textures/internal",
+    "@crc/core/textures/src/index.ts",
+    "@crc/core/textures/lib/simulation",
   ])
     assert.throws(() => installed.resolve(path), {
       code: "ERR_PACKAGE_PATH_NOT_EXPORTED",
     });
-  const manifest = JSON.parse(
-    readFileSync(installed.resolve("@crc/textures/package.json"), "utf8"),
-  );
-  assert.equal(
-    manifest.peerDependencies["@crc/core"],
-    JSON.parse(
-      readFileSync(installed.resolve("@crc/core/package.json"), "utf8"),
-    ).version,
-  );
+  const manifest = JSON.parse(readFileSync(installed.resolve("@crc/core/package.json"), "utf8"));
   assert.equal(Object.keys(manifest.dependencies ?? {}).length, 0);
-  const map = JSON.parse(readFileSync(`${entry}.map`, "utf8"));
-  assert.ok(
-    map.sources.every(
-      (source) =>
-        !source.includes("/core/") && !source.includes("node_modules"),
-    ),
-    "textures must externalize core",
-  );
   writeFileSync(
     join(consumer, "public.tsx"),
-    readFileSync(join(root, "packages/textures/type-tests/public.tsx"), "utf8"),
+    readFileSync(join(root, "packages/core/type-tests/textures/public.tsx"), "utf8"),
   );
   const tsc = join(dirname(require.resolve("typescript")), "tsc.js");
   for (const mode of ["Bundler", "NodeNext"]) {

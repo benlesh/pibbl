@@ -268,5 +268,5 @@ JSX or `createElement` over branded `CRCElement` descriptors.
 Mouse and pointer events report root-logical Canvas coordinates and committed
 render-layer targets; they are not physics query results. A Three integration
 projects through its committed camera and raycasts its scene or invokes the
-application's picker. Pure `@crc/physics/3d/geometry` operations neither
+application's picker. Pure `@crc/core/physics/3d/geometry` operations neither
 synthesize DOM events nor start a simulation or render loop.

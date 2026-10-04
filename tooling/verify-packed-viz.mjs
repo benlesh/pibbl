@@ -28,7 +28,7 @@ const pnpm = (args, cwd = root) =>
   });
 try {
   const tarballs = {};
-  for (const name of ["types", "core", "viz"]) {
+  for (const name of ["core"]) {
     pnpm(
       ["pack", "--out", join(temp, `${name}.tgz`)],
       join(root, "packages", name),
@@ -43,7 +43,7 @@ try {
   );
   writeFileSync(
     join(consumer, "pnpm-workspace.yaml"),
-    `packages:\n  - .\noverrides:\n  '@crc/types': ${tarballs["@crc/types"]}\n`,
+    `packages:\n  - .\n`,
   );
   pnpm(
     [
@@ -57,7 +57,7 @@ try {
     consumer,
   );
   const installed = createRequire(join(consumer, "probe.mjs"));
-  const entry = installed.resolve("@crc/viz");
+  const entry = installed.resolve("@crc/core/viz");
   const fromViz = createRequire(entry);
   assert.equal(
     realpathSync(fromViz.resolve("@crc/core")),
@@ -92,34 +92,18 @@ try {
   if (process.argv.includes("--self-test-missing-export"))
     assert.equal(typeof viz.MissingScale, "function");
   for (const path of [
-    "@crc/viz/internal",
-    "@crc/viz/src/index.ts",
-    "@crc/viz/lib/scale",
+    "@crc/core/viz/internal",
+    "@crc/core/viz/src/index.ts",
+    "@crc/core/viz/lib/scale",
   ])
     assert.throws(() => installed.resolve(path), {
       code: "ERR_PACKAGE_PATH_NOT_EXPORTED",
     });
-  const manifest = JSON.parse(
-    readFileSync(installed.resolve("@crc/viz/package.json"), "utf8"),
-  );
-  assert.equal(
-    manifest.peerDependencies["@crc/core"],
-    JSON.parse(
-      readFileSync(installed.resolve("@crc/core/package.json"), "utf8"),
-    ).version,
-  );
+  const manifest = JSON.parse(readFileSync(installed.resolve("@crc/core/package.json"), "utf8"));
   assert.equal(Object.keys(manifest.dependencies ?? {}).length, 0);
-  const map = JSON.parse(readFileSync(`${entry}.map`, "utf8"));
-  assert.ok(
-    map.sources.every(
-      (source) =>
-        !source.includes("/core/") && !source.includes("node_modules"),
-    ),
-    "viz must externalize core",
-  );
   writeFileSync(
     join(consumer, "public.tsx"),
-    readFileSync(join(root, "packages/viz/type-tests/public.tsx"), "utf8"),
+    readFileSync(join(root, "packages/core/type-tests/viz/public.tsx"), "utf8"),
   );
   const tsc = join(dirname(require.resolve("typescript")), "tsc.js");
   for (const mode of ["Bundler", "NodeNext"]) {

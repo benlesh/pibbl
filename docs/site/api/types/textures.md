@@ -38,7 +38,7 @@ symbols:
 
 # Texture types and palettes
 
-Import these types and `texturePalettes` from `@crc/textures`.
+Import these types and `texturePalettes` from `@crc/core/textures`.
 
 ## `ReactionDiffusionProps`
 

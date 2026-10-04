@@ -3,7 +3,7 @@
 Status: implemented, 2026-10-01.
 
 CRC texture production is authored through `defineTexture()` and mounted through
-`useTexture()` from `@crc/core`. `@crc/textures` is an optional package of
+`useTexture()` from `@crc/core`. `@crc/core/textures` is an optional package of
 recipes and existing texture components; it has no scheduler of its own and
 does not import the core friend entry. Creating a recipe or importing either
 package is inert. A mounted `useTexture` hook owns the live resource.
@@ -92,7 +92,7 @@ release invalid GPU handles on context loss, and invalidate consumers on restore
 Cross-context sharing and a generic public texture consumer protocol remain outside
 the public contract.
 
-`waterWaves()` in `@crc/textures` is an optional numeric RG displacement-map
+`waterWaves()` in `@crc/core/textures` is an optional numeric RG displacement-map
 recipe. It produces periodic integer-wave fields, accepts finite nonnegative
 speed and integer scale 1 through 32, rejects palettes, and supports `pause`
 and `reset` messages, plus normalized `ripple` impulses. `rippleStrength` changes
@@ -119,7 +119,7 @@ paint and opacity inside the filtered composition, with `pointerEvents="none"`.
 ## Existing texture components
 
 `ReactionDiffusion`, `ProceduralTexture`, `TextureRenderer`, and
-`texturePalettes` remain public `@crc/textures` exports. Each mounted legacy
+`texturePalettes` remain public `@crc/core/textures` exports. Each mounted legacy
 component owns an independent render-layer resource and source raster; it does
 not become a shared live `Texture` resource. Importing it is inert, and its
 render-layer lifecycle continues to own creation, resize, rendering, and

@@ -31,7 +31,7 @@ import {
   type CRCPhysicsOverlapEvent2D,
   type CRCPhysicsVector2,
   type CRCPhysicsWorldHandle2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 
 // prettier-ignore
 export const PHYSICS_2D_LAB_SOURCE_ID = 'first-class-physics-2d-laboratory-example';

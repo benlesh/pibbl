@@ -9,6 +9,9 @@ export const identityMarker = 'const fixtureIdentity = null;';
 const fixedFiles = [fixturePath,
   'packages/scenarios/src/agent-targeting-verification.example.tsx',
   'tooling/agent-verification/targeting.ts',
+  'tooling/agent-verification/runtime-identity.ts',
+  'tooling/agent-verification/runtime-inspection.ts',
+  'packages/core/package.json',
   'tooling/agent-verification/signals.ts',
   'tooling/agent-verification/component-diff.ts',
   'tooling/agent-verification/scheduler.ts',
@@ -44,7 +47,6 @@ export async function sourceIdentity(root, scope = 'targeting') {
     }
   }
   await walk('packages/core/src');
-  if (scope === 'viz') await walk('packages/viz/src');
   const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
   return fingerprint(root, files, revision);
 }

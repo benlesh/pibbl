@@ -18,7 +18,7 @@ CRC's public external-renderer boundary is `defineRenderLayer()`. The official
 controls, loaders, and effects as one CRC composition/event/focus/scheduling
 boundary. CRC no longer ships its former custom WebGL scene graph,
 renderer-coupled 3D particles, or renderer-coupled 3D physics runtime.
-Renderer-independent `@crc/physics/3d/geometry` remains public.
+Renderer-independent `@crc/core/physics/3d/geometry` remains public.
 
 The local `_bmad-output/` directory remains discovery input, not normative
 behavior. Current code, tests, and contracts under `docs/design/` define shipped
@@ -55,14 +55,11 @@ either as the current result unless a fresh run reproduces it.
   baselines.
 - `packages/three`: official thin `@crc/three` adapter over ordinary Three.js
   resources, implemented through the public render-layer lifecycle.
-- `packages/particles`: optional Canvas particle component, system hook, and
-  immutable 2D descriptors.
-- `packages/physics`: optional CRC-owned 2D runtime and pure 2D/3D geometry.
-  It deliberately has no root runtime barrel or renderer-coupled 3D runtime.
+- `packages/core/src/features`: first-party particles, visualization, textures,
+  and physics, published as core subpaths. Physics includes private bundled
+  Rapier; pure geometry entries do not initialize it.
 - `packages/scenarios`: private learning examples and deterministic test-lab
   scenarios. Keep catalogs and presentation metadata separate.
-- `packages/viz`: official allocation-relative visualization primitives.
-- `packages/types`: deliberately minimal compatibility package.
 - `playground`: interactive examples Studio and automated-test laboratory.
   Public documentation is Learn, API, and Examples; only `docs/site/` is
   rendered or searched publicly.
@@ -107,7 +104,7 @@ either as the current result unless a fresh run reproduces it.
   `renderer.setAnimationLoop()`; WebXR is outside the current contract.
 - Runtime resources have one explicit owner and exact teardown semantics.
   Prefer deterministic ownership counters to heap or GC timing.
-- `@crc/core/internal` is reserved for matching official sibling packages and
+- `@crc/core/internal` is reserved for matching official integrations and
   is not an application compatibility promise.
 
 ## Public surface and deliberate boundaries
@@ -126,8 +123,8 @@ Three scenes, objects, materials, lights, cameras, controls, loaders, shadows,
 particles, and post-processing come directly from `three` and
 `three/addons/*`.
 
-Public `@crc/particles` is Canvas 2D only. Public physics is the
-`@crc/physics/2d` runtime plus `/2d/geometry` and pure
+Public `@crc/core/particles` is Canvas 2D only. Public physics is the
+`@crc/core/physics/2d` runtime plus `/2d/geometry` and pure
 `/3d/geometry`. There is no root physics barrel, renderer-coupled 3D world,
 or Three physics binding.
 
@@ -318,7 +315,7 @@ application-created resource disposal explicit.
 
 The former custom WebGL package and scene vocabulary, WebGL-specific
 particle entry, and renderer-coupled 3D physics runtime were removed without
-compatibility aliases. Pure `@crc/physics/3d/geometry` remains. Historical
+compatibility aliases. Pure `@crc/core/physics/3d/geometry` remains. Historical
 WebGL specs and plans are dated evidence only; current intent lives in:
 
 - `docs/design/render-layer-and-three-contract.md`
@@ -359,7 +356,7 @@ analytic springs, custom seekable definitions, and fixed-step stateful
 steppers. Immutable programs compose `track`, `sequence`, `parallel`, `wait`,
 `marker`, and `repeat`; whole-run writer leases reject ambiguous writers unless
 replacement is explicit. `usePlayback` owns stable controls/status/current time
-for one mounted hook slot, while `useTransition` provides explicit target-driven
+for one mounted hook slot, while `useAnimatedValue` provides explicit target-driven
 spring and tween values. Signals may flow directly into declared CRC style and
 component inputs; `.get()` remains the way to make the enclosing component the
 consumer.

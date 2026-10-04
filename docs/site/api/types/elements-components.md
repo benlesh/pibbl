@@ -141,7 +141,7 @@ iterables containing those inputs. Signal results are resolved one level only.
 ## CRCPhysics2DPropExtension
 
 `CRCPhysics2DPropExtension` is the empty declaration-merging base used by the
-optional official 2D physics package to type supported Canvas component props.
+optional official 2D physics module to type supported Canvas component props.
 
 ## CRCPrimitiveComponent
 

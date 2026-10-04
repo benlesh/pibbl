@@ -19,7 +19,7 @@ keywords: [particles, hook, pause, restart, emit, drain]
 # useParticleSystem
 
 ```ts
-import { useParticleSystem } from "@crc/particles";
+import { useParticleSystem } from "@crc/core/particles";
 ```
 
 Creates a stable component-owned system for an immutable 2D definition.

@@ -24,6 +24,7 @@ afterEach(async () => {
   for (const controller of activeControllers) await controller.dispose();
   activeControllers.clear();
   document.body.replaceChildren();
+  vi.restoreAllMocks();
 });
 
 async function nextPaint(count = 2): Promise<void> {
@@ -213,7 +214,7 @@ describe('first-class Canvas particle public scenarios', () => {
       loadScenarioSource(particleCelebrationLabScenarioEntry),
     ]);
     for (const source of [learningSource, labSource]) {
-      expect(source).toMatch(/from ['"]@crc\/particles['"]/u);
+      expect(source).toMatch(/from ['"]@crc\/core\/particles['"]/u);
       expect(source).toMatch(/from ['"]@crc\/core['"]/u);
       expect(source).not.toMatch(
         /@crc\/(?:particles|core)\/(?:internal|lib|src)\b/u,
@@ -229,6 +230,20 @@ describe('first-class Canvas particle public scenarios', () => {
   });
 
   it('shows selected launch points, launches there, and exposes human-readable state', async () => {
+    // Keep native frame delivery and input, but give each observed frame one
+    // fixed duration so loaded CI cannot advance seeded replays by unequal time.
+    const requestFrame = globalThis.requestAnimationFrame.bind(globalThis);
+    let previousHostTime = -1;
+    let logicalTime = 0;
+    vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation(callback =>
+      requestFrame(hostTime => {
+        if (hostTime !== previousHostTime) {
+          previousHostTime = hostTime;
+          logicalTime += 1000 / 60;
+        }
+        callback(logicalTime);
+      }),
+    );
     const { canvas, controller } = await mountCelebrationLab();
     expect(controller.getState()).toEqual({
       animation: 'ready',
@@ -301,9 +316,8 @@ describe('first-class Canvas particle public scenarios', () => {
     await controller.perform('replay');
     await controller.settled();
     const repeatedSeededBurst = pixels(canvas, replayRegion);
-    // Both captures follow the same two-paint replay sequence, but a loaded
-    // browser may sample them one animation frame apart. The seeded spatial
-    // pattern must still retain strong coarse-cell overlap.
+    // Both captures now follow the same fixed-duration replay sequence.
+    // Keep the existing spatial-overlap assertion unchanged.
     expect(
       overlapRatio(
         occupiedParticleCells(firstSeededBurst, replayRegion.width),

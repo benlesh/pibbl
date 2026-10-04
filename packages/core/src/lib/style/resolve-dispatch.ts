@@ -1,3 +1,4 @@
+import { resolveTransitionBinding } from '../transitions/binding.js';
 import { type PreparedQuery } from './responsive.js';
 import { getLayoutBox, getPercentageBasis } from '../layout/context.js';
 import { EMPTY_STYLE } from './empty-style.js';
@@ -76,10 +77,10 @@ export function withoutSystemFilter(
   style: Readonly<SystemStyle>,
 ): Readonly<SystemStyle> {
   if (!('when' in style)) {
-    const { filter: _filter, ...withoutFilter } = style;
+    const { filter: _filter, transition: _transition, ...withoutFilter } = style;
     return Object.freeze(withoutFilter);
   }
-  const { filter: _filter, when: _when, ...withoutFilter } = style as Readonly<SystemStyle> & { when?: unknown };
+  const { filter: _filter, transition: _transition, when: _when, ...withoutFilter } = style as Readonly<SystemStyle> & { when?: unknown };
   return Object.freeze(withoutFilter);
 }
 
@@ -126,8 +127,11 @@ export function resolveElementStyle<
     getSpecifiedStyle(element),
   ) ?? getPlacementSignalHandoff(element);
   const handoffStyle = consumePlacementHandoff(resolvedInput);
+  const ordinaryFilter = extractSystemFilter(handoffStyle);
+  const transitionFilters = handoffStyle.transition === undefined ? undefined : resolveTransitionBinding(handoffStyle.transition);
+  const combined = transitionFilters?.length ? [...(ordinaryFilter === undefined ? [] : Array.isArray(ordinaryFilter) ? ordinaryFilter : [ordinaryFilter]), ...transitionFilters] : ordinaryFilter;
   const systemFilter = resolveFilterList(
-    extractSystemFilter(handoffStyle),
+    combined,
     context,
   );
   const normalized = preNormalized ?

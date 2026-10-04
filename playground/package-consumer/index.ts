@@ -1,133 +1,221 @@
+import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
+import type {
+  CRCAnimationDefinition,
+  CRCAnimationOptions,
+  CRCAnimationProgram,
+  CRCAnimationRepeatDirection,
+  CRCAnimationRepeatOptions,
+  CRCAnimationSampleInput,
+  CRCConfig,
+  CRCClipboardEvent,
+  CRCCompositionEvent,
+  CRCController,
+  CRCRenderLayerComponentProps,
+  CRCRenderLayerContext,
+  CRCRenderLayerDefinition,
+  CRCRenderLayerFrame,
+  CRCRenderLayerHit,
+  CRCRenderLayerInput,
+  CRCRenderLayerInteraction,
+  CRCRenderLayerInteractionSnapshot,
+  CRCRenderLayerProps,
+  CRCRenderLayerSize,
+  CRCRenderLayerStyle,
+  CRCRenderLayerTarget,
+  CRCEasing,
+  CRCElement,
+  CRCDragEvent,
+  CRCEvent,
+  CRCEventCapturePropName,
+  CRCEventHandler,
+  CRCEventHandlers,
+  CRCEventMap,
+  CRCEventPhase,
+  CRCEventPropName,
+  CRCEventTarget,
+  CRCEventTargetOptions,
+  CRCEventTargetSnapshot,
+  CRCEventType,
+  CRCFilter,
+  CRCFit,
+  CRCFixedViewportConfig,
+  CRCFocusEvent,
+  CRCInputEvent,
+  CRCKeyboardEvent,
+  CRCKeyboardNavigationOptions,
+  CRCInterpolator,
+  CRCKeyframesOptions,
+  CRCLogicalMouseEvent,
+  CRCManipulableProps,
+  CRCManipulationBox,
+  CRCManipulationController,
+  CRCManipulationOptions,
+  CRCManipulationResizeInput,
+  CRCResizePosition,
+  CRCMouseEvent,
+  CRCNode,
+  CRCPixelRatio,
+  CRCPointerEvent,
+  CRCPlayback,
+  CRCPlaybackEvent,
+  CRCPlaybackOptions,
+  CRCPlaybackStatus,
+  CRCReactionOptions,
+  CRCRef,
+  CRCResponsiveViewportConfig,
+  CRCSpringOptions,
+  CRCSpringAnimatedValueOptions,
+  CRCStepperOptions,
+  CRCTouchEvent,
+  CRCTweenOptions,
+  CRCTweenAnimatedValueOptions,
+  CRCWheelEvent,
+  ArcProps,
+  ArcStyle,
+  ArcPathOptions,
+  AbsoluteStyle,
+  BoxStyle,
+  CirclePathOptions,
+  CircleProps,
+  CircleStyle,
+  ClipStyle,
+  GStyle,
+  GridItemStyle,
+  GridStyle,
+  HorizontalLineStyle,
+  ImgStyle,
+  EllipseProps,
+  EllipseStyle,
+  EllipsePathOptions,
+  LayerStyle,
+  LayoutBox,
+  LayoutItemStyle,
+  Length,
+  LineStyle,
+  LinePathOptions,
+  PathStyle,
+  PolygonProps,
+  PolygonStyle,
+  PolygonPathOptions,
+  RectangleProps,
+  RectanglePathOptions,
+  RegularPolygonNumericSize,
+  RegularPolygonPathOptions,
+  RegularPolygonPathPosition,
+  RegularPolygonProps,
+  RegularPolygonStyle,
+  RoundedCornerPathOptions,
+  RoundedCornerStyle,
+  RectStyle,
+  RenderingContext2D,
+  Signal,
+  SignalEquals,
+  SignalOptions,
+  SignalValue,
+  SvgPathStyle,
+  SvgPathOptions,
+  StarPathOptions,
+  StarProps,
+  StarStyle,
+  SystemStyle,
+  Percentage,
+  FlexItemStyle,
+  FlexStyle,
+  FlowStyle,
+  OverlayStyle,
+  TextStyle,
+  VerticalLineStyle,
+  WedgeProps,
+  WedgeStyle,
+  WedgePathOptions,
+  WritableSignal,
+} from '@crc/core';
+import type * as CoreTypes from '@crc/core/types';
+import * as ParticleRuntime from '@crc/core/particles';
+import type * as ParticleTypes from '@crc/core/particles';
+import * as ThreeRuntime from '@crc/three';
 import {
-  type CRCAnimationDefinition,
-  type CRCAnimationOptions,
-  type CRCAnimationProgram,
-  type CRCAnimationRepeatDirection,
-  type CRCAnimationRepeatOptions,
-  type CRCAnimationSampleInput,
-  type CRCConfig,
-  type CRCClipboardEvent,
-  type CRCCompositionEvent,
-  type CRCController,
-  type CRCRenderLayerComponentProps,
-  type CRCRenderLayerContext,
-  type CRCRenderLayerDefinition,
-  type CRCRenderLayerFrame,
-  type CRCRenderLayerHit,
-  type CRCRenderLayerInput,
-  type CRCRenderLayerInteraction,
-  type CRCRenderLayerInteractionSnapshot,
-  type CRCRenderLayerProps,
-  type CRCRenderLayerSize,
-  type CRCRenderLayerStyle,
-  type CRCRenderLayerTarget,
-  type CRCEasing,
-  type CRCElement,
-  type CRCDragEvent,
-  type CRCEvent,
-  type CRCEventCapturePropName,
-  type CRCEventHandler,
-  type CRCEventHandlers,
-  type CRCEventMap,
-  type CRCEventPhase,
-  type CRCEventPropName,
-  type CRCEventTarget,
-  type CRCEventTargetOptions,
-  type CRCEventTargetSnapshot,
-  type CRCEventType,
-  type CRCFilter,
-  type CRCFit,
-  type CRCFixedViewportConfig,
-  type CRCFocusEvent,
-  type CRCInputEvent,
-  type CRCKeyboardEvent,
-  type CRCKeyboardNavigationOptions,
-  type CRCInterpolator,
-  type CRCKeyframesOptions,
-  type CRCLogicalMouseEvent,
-  type CRCManipulableProps,
-  type CRCManipulationBox,
-  type CRCManipulationController,
-  type CRCManipulationOptions,
-  type CRCManipulationResizeInput,
-  type CRCResizePosition,
-  type CRCMouseEvent,
-  type CRCNode,
-  type CRCPixelRatio,
-  type CRCPointerEvent,
-  type CRCPlayback,
-  type CRCPlaybackEvent,
-  type CRCPlaybackOptions,
-  type CRCPlaybackStatus,
-  type CRCReactionOptions,
-  type CRCRef,
-  type CRCResponsiveViewportConfig,
-  type CRCSpringOptions,
-  type CRCSpringTransitionOptions,
-  type CRCStepperOptions,
-  type CRCTouchEvent,
-  type CRCTweenOptions,
-  type CRCTweenTransitionOptions,
-  type CRCWheelEvent,
-  type ArcProps,
-  type ArcStyle,
-  type ArcPathOptions,
-  type AbsoluteStyle,
-  type BoxStyle,
-  type CirclePathOptions,
-  type CircleProps,
-  type CircleStyle,
-  type ClipStyle,
-  type GStyle,
-  type GridItemStyle,
-  type GridStyle,
-  type HorizontalLineStyle,
-  type ImgStyle,
-  type EllipseProps,
-  type EllipseStyle,
-  type EllipsePathOptions,
-  type LayerStyle,
-  type LayoutBox,
-  type LayoutItemStyle,
-  type Length,
-  type LineStyle,
-  type LinePathOptions,
-  type PathStyle,
-  type PolygonProps,
-  type PolygonStyle,
-  type PolygonPathOptions,
-  type RectangleProps,
-  type RectanglePathOptions,
-  type RegularPolygonNumericSize,
-  type RegularPolygonPathOptions,
-  type RegularPolygonPathPosition,
-  type RegularPolygonProps,
-  type RegularPolygonStyle,
-  type RoundedCornerPathOptions,
-  type RoundedCornerStyle,
-  type RectStyle,
-  type RenderingContext2D,
-  type Signal,
-  type SignalEquals,
-  type SignalOptions,
-  type SignalValue,
-  type SvgPathStyle,
-  type SvgPathOptions,
-  type StarPathOptions,
-  type StarProps,
-  type StarStyle,
-  type SystemStyle,
-  type Percentage,
-  type FlexItemStyle,
-  type FlexStyle,
-  type FlowStyle,
-  type OverlayStyle,
-  type TextStyle,
-  type VerticalLineStyle,
-  type WedgeProps,
-  type WedgeStyle,
-  type WedgePathOptions,
-  type WritableSignal,
+  defineThreeLayer,
+  type CRCThreeLayerResources,
+} from '@crc/three';
+import { PerspectiveCamera, Scene } from 'three';
+import {
+  Particles2D,
+  useParticleSystem,
+  useFlowField2D,
+  useFlowSource2D,
+  type CRCFlowField2D,
+  type CRCFlowObstacleSource2D,
+  defineParticleEffect2D,
+  particleChoice,
+  particleCurve,
+  particleGradient,
+  particleInteger,
+  particleParameter,
+  particleRange,
+  type CRCParticleEffect2D,
+  type CRCParticleParameterValues,
+  type CRCParticleSystem,
+  type Particles2DProps,
+} from '@crc/core/particles';
+import { PhysicsWorld2D, crcPhysicsWorld2D, physicsObstacles2D } from '@crc/core/physics/2d';
+import * as Physics3DGeometry from '@crc/core/physics/3d/geometry';
+import type * as Physics3DGeometryTypes from '@crc/core/physics/3d/geometry';
+import {
+  createBackendToken,
+  defineBackendPrimitive,
+  executeBackendCRC,
+  getBackendEnvironment,
+  getCurrentFrameTimestamp,
+  getCurrentLogicalViewport,
+  haveSameLayerNodeTree,
+  isBackendEventTargetLive,
+  mountBackendCRC,
+  onCurrentRenderFinish,
+  registerNestedInteractionResolver,
+  requestCurrentInstanceFrame,
+  setCurrentComponentAfterRender,
+  snapshotLayerNodeTree,
+  useBackendEventTarget,
+  useInternalHookSlot,
+  type CRCBackendDriver,
+  type CRCBackendFrame,
+  type CRCBackendFrameInput,
+  type CRCBackendMount,
+  type CRCBackendPrimitiveDefinition,
+  type CRCBackendPrimitiveInput,
+  type CRCBackendToken,
+  type CRCNestedResolverInput,
+  crcInternalAssertCommandAllowed,
+  crcInternalCreateSignalConsumer,
+  crcInternalCurrentFrame,
+  crcInternalCurrentRenderOwner,
+  crcInternalOnRenderFinish,
+  crcInternalPaintTarget,
+  crcInternalQueueBegin,
+  crcInternalQueueComplete,
+  crcInternalQueueCurrentCommit,
+  crcInternalQueueCurrentComplete,
+  crcInternalRegisterAdvance,
+  crcInternalRequestRender,
+  crcInternalRequestRendererWork,
+  type CRCInternalCommandHandle,
+  crcInternalCurrentSimulationOwner,
+  crcInternalOnSimulationRenderTransactionFinish,
+  crcInternalQueueSimulationBegin,
+  crcInternalQueueSimulationCommitAcknowledgement,
+  crcInternalQueueSimulationComplete,
+  crcInternalRegisterSimulationAdvance,
+  crcInternalRequestSimulationRender,
+  type CRCInternalAdvanceLane,
+  type CRCInternalFrame,
+  type CRCInternalRendererWorkKind,
+  type CRCInternalRenderOwner,
+  type CRCInternalSignalBatch,
+  type CRCInternalSignalConsumer,
+  type CRCInternalSimulationOwner,
+} from '@crc/core/internal';
+import {
   crc,
   useComputed,
   useConst,
@@ -142,9 +230,10 @@ import {
   useRef,
   useSignal,
   useSvgPath,
-  useTransition,
+  useAnimatedValue,
   useReaction,
   createElement,
+  HtmlBox,
   defineAnimation,
   definePrimitive,
   defineRenderLayer,
@@ -210,135 +299,17 @@ import {
   tween,
   untracked,
   wait,
-  PathGeometry,
-  toPath2D,
-  toSvgPathData,
-  type PathSegment,
-  flattenPath,
-  simplifyPath,
-  subdividePath,
-  type PathPoint,
-  type PathRect,
-  type PathQuadCorners,
-  type PathQuadMode,
-  type QuadTransformOptions,
-  type TransformPathOptions,
-  transformPath,
-  quadTransform,
-  type PathBendArc,
-  type PathBendAlign,
-  type PathBendBaseline,
-  type PathBendFit,
-  type PathBendOverflow,
-  type BendTransformOptions,
-  type ArcBendTransformOptions,
-  arcBendTransform,
-  pathBendTransform,
-  flattenPathWang,
-  simplifyPathRadial,
 } from '@crc/core';
-import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
-
-import type * as CoreTypes from '@crc/core/types';
-import * as ParticleRuntime from '@crc/particles';
-import type * as ParticleTypes from '@crc/particles';
-import * as ThreeRuntime from '@crc/three';
-import {
-  defineThreeLayer,
-  type CRCThreeLayerResources,
-} from '@crc/three';
-import { PerspectiveCamera, Scene } from 'three';
-import {
-  Particles2D,
-  useParticleSystem,
-  useFlowField2D,
-  useFlowSource2D,
-  type CRCFlowField2D,
-  type CRCFlowObstacleSource2D,
-  defineParticleEffect2D,
-  particleChoice,
-  particleCurve,
-  particleGradient,
-  particleInteger,
-  particleParameter,
-  particleRange,
-  type CRCParticleEffect2D,
-  type CRCParticleParameterValues,
-  type CRCParticleSystem,
-  type Particles2DProps,
-} from '@crc/particles';
-import { PhysicsWorld2D, crcPhysicsWorld2D, physicsObstacles2D } from '@crc/physics/2d';
-import * as Physics3DGeometry from '@crc/physics/3d/geometry';
-import type * as Physics3DGeometryTypes from '@crc/physics/3d/geometry';
-import {
-  createBackendToken,
-  defineBackendPrimitive,
-  executeBackendCRC,
-  getBackendEnvironment,
-  getCurrentFrameTimestamp,
-  getCurrentLogicalViewport,
-  haveSameLayerNodeTree,
-  isBackendEventTargetLive,
-  mountBackendCRC,
-  onCurrentRenderFinish,
-  registerNestedInteractionResolver,
-  requestCurrentInstanceFrame,
-  setCurrentComponentAfterRender,
-  snapshotLayerNodeTree,
-  useBackendEventTarget,
-  useInternalHookSlot,
-  type CRCBackendDriver,
-  type CRCBackendFrame,
-  type CRCBackendFrameInput,
-  type CRCBackendMount,
-  type CRCBackendPrimitiveDefinition,
-  type CRCBackendPrimitiveInput,
-  type CRCBackendToken,
-  type CRCNestedResolverInput,
-  crcInternalAssertCommandAllowed,
-  crcInternalCreateSignalConsumer,
-  crcInternalCurrentFrame,
-  crcInternalCurrentRenderOwner,
-  crcInternalOnRenderFinish,
-  crcInternalPaintTarget,
-  crcInternalQueueBegin,
-  crcInternalQueueComplete,
-  crcInternalQueueCurrentCommit,
-  crcInternalQueueCurrentComplete,
-  crcInternalRegisterAdvance,
-  crcInternalRequestRender,
-  crcInternalRequestRendererWork,
-  type CRCInternalCommandHandle,
-  crcInternalCurrentSimulationOwner,
-  crcInternalOnSimulationRenderTransactionFinish,
-  crcInternalQueueSimulationBegin,
-  crcInternalQueueSimulationCommitAcknowledgement,
-  crcInternalQueueSimulationComplete,
-  crcInternalRegisterSimulationAdvance,
-  crcInternalRequestSimulationRender,
-  type CRCInternalAdvanceLane,
-  type CRCInternalFrame,
-  type CRCInternalRendererWorkKind,
-  type CRCInternalRenderOwner,
-  type CRCInternalSignalBatch,
-  type CRCInternalSignalConsumer,
-  type CRCInternalSimulationOwner,
-} from '@crc/core/internal';
-
 
 // Removed hooks intentionally have no built-package compatibility exports.
 // @ts-expect-error useState was replaced by useSignal
 import { useState as removedUseState } from '@crc/core';
-
 // @ts-expect-error StateUpdater was removed with useState
 import type { StateUpdater as RemovedStateUpdater } from '@crc/core';
-
 // @ts-expect-error useMemo was replaced by useConst and useComputed
 import { useMemo as removedUseMemo } from '@crc/core';
-
 // @ts-expect-error useWhenChanged was replaced by useReaction
 import { useWhenChanged as removedUseWhenChanged } from '@crc/core';
-
 
 type RemovedHookVocabulary = [
   typeof removedUseState,
@@ -1590,17 +1561,17 @@ const stepperOptions: CRCStepperOptions<{ value: number }, number> = {
 const playbackOptions: CRCPlaybackOptions = { autoplay: false };
 const playbackStatus: CRCPlaybackStatus = 'scheduled';
 const playbackEvent = null as CRCPlaybackEvent | null;
-const tweenTransitionOptions: CRCTweenTransitionOptions<{ x: number }> = {
+const tweenTransitionOptions: CRCTweenAnimatedValueOptions<{ x: number }> = {
   type: 'tween',
   duration: 100,
   interpolate: objectInterpolator,
 };
-const springTransitionOptions: CRCSpringTransitionOptions = { type: 'spring' };
+const springTransitionOptions: CRCSpringAnimatedValueOptions = { type: 'spring' };
 
 function AnimationProbe(): CRCNode {
   const player: CRCPlayback = usePlayback(animationProgram, playbackOptions);
-  const tweened = useTransition({ x: 10 }, tweenTransitionOptions);
-  const sprung = useTransition(10, springTransitionOptions);
+  const tweened = useAnimatedValue({ x: 10 }, tweenTransitionOptions);
+  const sprung = useAnimatedValue(10, springTransitionOptions);
   return createElement(
     Text,
     null,
@@ -1798,8 +1769,8 @@ export const physics3DGeometryConsumer = {
 void (undefined as unknown as Physics3DGeometryTypes.CRCPhysicsShape3D);
 
 // Editable path geometry is consumed exclusively through the public entry.
-
-
+import { PathGeometry, toPath2D, toSvgPathData } from '@crc/core';
+import type { PathSegment } from '@crc/core';
 const editableOutline = new PathGeometry();
 editableOutline.rect(0, 0, 20, 20);
 editableOutline.arc(20, 20, 10, 0, Math.PI);
@@ -1809,14 +1780,14 @@ editableOutline.setSegment(0, editableSegment);
 const editableNative: Path2D = toPath2D(editableOutline);
 const editableSvg: string = toSvgPathData(editableOutline);
 void [editableNative, editableSvg];
-
+import { flattenPath, simplifyPath, subdividePath } from '@crc/core';
 const flattenedOutline = flattenPath(editableOutline, { tolerance: 0.25 });
 void simplifyPath(flattenedOutline, { tolerance: 0.5 });
 void subdividePath(editableOutline, { divisions: 2 });
 const editableTarget: CRCEventTargetOptions = { path: editableOutline, fill: true };
 void editableTarget;
 
-
+import { transformPath, quadTransform, arcBendTransform, pathBendTransform, type PathPoint, type PathRect, type PathQuadCorners, type PathQuadMode, type QuadTransformOptions, type TransformPathOptions, type BendTransformOptions, type ArcBendTransformOptions, type PathBendArc, type PathBendAlign, type PathBendBaseline, type PathBendFit, type PathBendOverflow } from '@crc/core';
 const warpOrigin: PathPoint = { x: 0, y: 0 };
 const warpSource: PathRect = { ...warpOrigin, width: 20, height: 20 };
 const warpCorners: PathQuadCorners = { topLeft: warpOrigin, topRight: { x: 30, y: 0 }, bottomLeft: { x: 0, y: 20 }, bottomRight: { x: 20, y: 20 } };
@@ -1840,6 +1811,27 @@ const bentArc: PathGeometry = transformPath(editableOutline, arcBendTransform(be
 const bentPath: PathGeometry = transformPath(editableOutline, pathBendTransform({ ...bendOptions, guide: bendGuide }), bendOptions);
 void [toSvgPathData(bentArc), toSvgPathData(bentPath)];
 
+// HtmlBox preserves the application's generic payload across mount and update.
+const htmlMount: import('@crc/core').HtmlMountCallback<{ label: string }> = (element, initial, abort) => {
+  element.textContent = initial.label;
+  element.addEventListener('click', () => undefined, { signal: abort });
+  return next => { element.textContent = next.label; };
+};
+createElement(HtmlBox, { data: { label: 'native' }, mount: htmlMount, style: { width: 120, height: 40, rotationDegrees: 5 } });
+// @ts-expect-error payload and mount callback types must agree
+createElement(HtmlBox<{ label: string }>, { data: { label: 42 }, mount: htmlMount });
+const htmlConfig: CRCConfig = { viewport: 'responsive', htmlOverlay: undefined };
+void htmlConfig;
+
+// Ember physics stays opt-in and uses receiver-local swept point collisions.
+import { embers as physicsEmbers, type CRCEmbersPhysicsOptions, type CRCEmberCollision } from '@crc/core';
+const emberHit: CRCEmberCollision = {fraction:.5,normal:[0,-1]};
+const emberPhysicsOptions: CRCEmbersPhysicsOptions = {gravity:[0,500],wind:[20,0],drag:3,restitution:.5,collide:()=>emberHit};
+void physicsEmbers({region:{x:0,y:0,width:100,height:100},linger:1000,physics:emberPhysicsOptions});
+// @ts-expect-error collision callbacks must return a hit synchronously
+const asyncEmberPhysics: CRCEmbersPhysicsOptions = {collide:async()=>emberHit};
+void asyncEmberPhysics;
+import { flattenPathWang, simplifyPathRadial } from '@crc/core';
 const wangOutline: PathGeometry = flattenPathWang(editableOutline, { tolerance: 0.25 });
 const radialOutline: PathGeometry = simplifyPathRadial(wangOutline, { tolerance: 0.5 });
 void radialOutline;

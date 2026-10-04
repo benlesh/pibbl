@@ -10,7 +10,7 @@ symbols: [Axis, AxisProps, AxisStyle]
 
 # Axis
 
-Import `Axis` from `@crc/viz`. Supply `scale: ScaleId` and `position`:
+Import `Axis` from `@crc/core/viz`. Supply `scale: ScaleId` and `position`:
 `"bottom"`, `"left"`, `"top"`, or `"right"`. Linear and band scales are supported.
 The bottom/right baseline uses the frame height/width; top/left uses zero.
 Endpoints follow the scale range. Ticks extend outward by 6 pixels, with labels
@@ -44,7 +44,7 @@ values may format to the same text. The baseline remains visible with no ticks.
 Tick generation is not yet nice-domain or calendar-aware.
 
 ```tsx
-import { Axis } from "@crc/viz";
+import { Axis } from "@crc/core/viz";
 
 <>
   <Axis scale="categories" position="left" tickValues={["North", "South"]} />

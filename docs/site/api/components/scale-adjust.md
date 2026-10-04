@@ -10,7 +10,7 @@ symbols: [ScaleAdjust, ScaleAdjustProps]
 
 # ScaleAdjust
 
-Import `ScaleAdjust` from `@crc/viz`. Supply `x` with `xScale`, `y` with `yScale`,
+Import `ScaleAdjust` from `@crc/core/viz`. Supply `x` with `xScale`, `y` with `yScale`,
 or both pairs. Each coordinate is a number or a core signal of a number. Omitted
 axes translate by zero; a coordinate without its matching ID is invalid.
 

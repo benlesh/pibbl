@@ -1,0 +1,103 @@
+{
+  "status": "fail",
+  "provenance": "local-studio-no-build-attestation",
+  "steps": [
+    {
+      "action": "load-font",
+      "state": {
+        "status": "ready",
+        "action": "load-font",
+        "revision": 2,
+        "font": "loaded",
+        "sample": {
+          "evaluations": 1,
+          "fontLoadedAtEvaluation": false,
+          "width": 480,
+          "fontSize": 24,
+          "requested": 1,
+          "completed": 1,
+          "render": 1,
+          "measuredWidth": 83.03607177734375
+        },
+        "before": {
+          "evaluations": 1,
+          "fontLoadedAtEvaluation": false,
+          "width": 480,
+          "fontSize": 24,
+          "requested": 1,
+          "completed": 1,
+          "render": 1,
+          "measuredWidth": 57.609375
+        },
+        "diagnosis": "font-ready-without-render",
+        "observationWindow": "two-host-frames-not-future-guarantee"
+      }
+    },
+    {
+      "action": "repaint",
+      "state": {
+        "status": "ready",
+        "action": "repaint",
+        "revision": 3,
+        "font": "loaded",
+        "sample": {
+          "evaluations": 2,
+          "fontLoadedAtEvaluation": true,
+          "width": 480,
+          "fontSize": 24,
+          "requested": 2,
+          "completed": 2,
+          "render": 2,
+          "measuredWidth": 83.03607177734375
+        },
+        "before": {
+          "evaluations": 1,
+          "fontLoadedAtEvaluation": false,
+          "width": 480,
+          "fontSize": 24,
+          "requested": 1,
+          "completed": 1,
+          "render": 1,
+          "measuredWidth": 83.03607177734375
+        },
+        "diagnosis": "application-requested-render",
+        "observationWindow": "two-host-frames-not-future-guarantee"
+      }
+    },
+    {
+      "action": "narrow",
+      "state": {
+        "status": "ready",
+        "action": "narrow",
+        "revision": 4,
+        "font": "loaded",
+        "sample": {
+          "evaluations": 2,
+          "fontLoadedAtEvaluation": true,
+          "width": 480,
+          "fontSize": 24,
+          "requested": 3,
+          "completed": 2,
+          "render": 2,
+          "measuredWidth": 83.03607177734375
+        },
+        "before": {
+          "evaluations": 2,
+          "fontLoadedAtEvaluation": true,
+          "width": 480,
+          "fontSize": 24,
+          "requested": 2,
+          "completed": 2,
+          "render": 2,
+          "measuredWidth": 83.03607177734375
+        },
+        "diagnosis": "observed-state",
+        "observationWindow": "two-host-frames-not-future-guarantee"
+      }
+    }
+  ],
+  "errors": [],
+  "url": "http://127.0.0.1:5199/#/testing/agent-late-font",
+  "title": "CRC Interactive Examples Studio",
+  "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n24 !== 16\n"
+}

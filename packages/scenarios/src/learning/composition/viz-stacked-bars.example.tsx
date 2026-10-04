@@ -11,7 +11,7 @@ import {
   type CRCPointerEvent,
   type WritableSignal,
 } from "@crc/core";
-import { Axis, BarSeries, Scale, useScale } from "@crc/viz";
+import { Axis, BarSeries, Scale, useScale } from "@crc/core/viz";
 
 const periods = ["Q1", "Q2", "Q3", "Q4"];
 // Illustrative business cash flow, in thousands of dollars; not reported financial data.

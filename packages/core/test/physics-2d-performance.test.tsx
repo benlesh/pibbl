@@ -7,9 +7,9 @@ import {
   dynamicBody2D,
   kinematicBody2D,
   type CRCPhysicsBodyHandle2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 import { expect, it, vi } from "vitest";
-import { PhysicsWorld2DKernel } from "../../physics/src/lib/2d/world/world.js";
+import { PhysicsWorld2DKernel } from "../src/features/physics/lib/2d/world/world.js";
 import { getSignalNode } from "../src/lib/signals/graph.js";
 import {
   ManualSchedulerDriver,

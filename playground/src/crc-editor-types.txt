@@ -1,4 +1,5 @@
 /* @crc-studio-module @crc/core */
+
   export interface TexturePaint { readonly __crcTexturePaint: unique symbol; }
   export interface TexturePlacement { readonly mode?: 'repeat' | 'stretch'; readonly tileWidth?: number; readonly tileHeight?: number; readonly offsetX?: number; readonly offsetY?: number; readonly rotation?: number; }
   export interface Texture<Message = never> extends TexturePaint { send(message: Message): void; paint(placement: TexturePlacement): TexturePaint; }
@@ -114,12 +115,14 @@ export interface MeshTransformOptions {
   export type CRCFit = 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   export type CRCPixelRatio = 'device' | number;
   export interface CRCFixedViewportConfig {
+    htmlOverlay?: HTMLElement;
     signal?: AbortSignal;
     viewport?: Readonly<{ width: number; height: number }>;
     fit?: CRCFit;
     pixelRatio?: CRCPixelRatio;
   }
   export interface CRCResponsiveViewportConfig {
+    htmlOverlay?: HTMLElement;
     signal?: AbortSignal;
     viewport: 'responsive';
     pixelRatio?: CRCPixelRatio;
@@ -283,8 +286,8 @@ export interface MeshTransformOptions {
   }>;
 
   declare const crcFilterBrand: unique symbol;
-  export interface CRCFilter { readonly [crcFilterBrand]: true; }
-  export interface SystemStyle { custom?: unknown; filter?: CRCFilter | readonly CRCFilter[] }
+  export interface CRCFilter { readonly [crcFilterBrand]: true }
+  export interface SystemStyle { transition?: CRCTransitionBinding; custom?: unknown; filter?: CRCFilter | readonly CRCFilter[] }
   export interface CRCPhysics2DPropExtension {}
   type PrimitiveReservedKey = 'key' | 'style';
   type UnionKeys<T> = T extends unknown ? keyof T : never;
@@ -482,8 +485,8 @@ export interface MeshTransformOptions {
   export interface CRCTweenOptions<T> { readonly from?: T; readonly to: T; readonly duration: number; readonly easing?: CRCEasing; readonly interpolate?: CRCInterpolator<T>; readonly debugName?: string }
   export interface CRCKeyframesOptions<T> { readonly values: readonly [T, T, ...T[]]; readonly duration: number; readonly offsets?: readonly number[]; readonly easing?: CRCEasing | readonly CRCEasing[]; readonly interpolate?: CRCInterpolator<T>; readonly debugName?: string }
   export interface CRCSpringOptions { readonly from?: number; readonly to: number; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly debugName?: string }
-  export interface CRCTweenTransitionOptions<T> { readonly type: 'tween'; readonly duration: number; readonly easing?: CRCEasing; readonly interpolate?: CRCInterpolator<T>; readonly equals?: SignalEquals<T>; readonly initial?: T; readonly debugName?: string }
-  export interface CRCSpringTransitionOptions { readonly type: 'spring'; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly equals?: SignalEquals<number>; readonly initial?: number; readonly debugName?: string }
+  export interface CRCTweenAnimatedValueOptions<T> { readonly type: 'tween'; readonly duration: number; readonly easing?: CRCEasing; readonly interpolate?: CRCInterpolator<T>; readonly equals?: SignalEquals<T>; readonly initial?: T; readonly debugName?: string }
+  export interface CRCSpringAnimatedValueOptions { readonly type: 'spring'; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly equals?: SignalEquals<number>; readonly initial?: number; readonly debugName?: string }
   export interface CRCAnimationSampleInput<T> { readonly initialValue: T; readonly localTime: number; readonly progress: number }
   export interface CRCAnimationOptions<T> { readonly duration: number; readonly sample: (input: CRCAnimationSampleInput<T>) => T; readonly debugName?: string }
   export interface CRCStepperOptions<State, T> { readonly stepMilliseconds: number; readonly maxElapsedMilliseconds?: number; readonly initial: (currentValue: T) => State; readonly step: (state: State, deltaMilliseconds: number) => State; readonly read: (state: State) => T; readonly done?: (state: State) => boolean; readonly debugName?: string }
@@ -599,6 +602,12 @@ export interface MeshTransformOptions {
   export const VerticalLine: CRCPrimitiveComponent<VerticalLineProps, PrimitiveInput<VerticalLineProps, VerticalLineStyle>>;
   export const Text: CRCPrimitiveComponent<TextProps, PrimitiveInput<TextProps, TextStyle>>;
   export const Image: CRCPrimitiveComponent<ImageProps, PrimitiveInput<ImageProps, ImgStyle>>;
+  export type HtmlUpdateFunction<Props> = (props: Props) => void;
+  export type HtmlMountCallback<Props> = (element: HTMLDivElement, initialProps: Props, signal: AbortSignal) => HtmlUpdateFunction<Props>;
+  export interface HtmlBoxFocusState { readonly isFocusWithin: boolean; readonly isFocusVisible: boolean }
+  export interface HtmlBoxProps<Props> { data: Props; mount: HtmlMountCallback<Props>; pointerEvents?: 'auto' | 'none'; onFocusChange?: (state: Readonly<HtmlBoxFocusState>) => void }
+  export interface HtmlBoxStyle extends GStyle { opacity?: number }
+  export function HtmlBox<Props>(props: Omit<PrimitiveInput<HtmlBoxProps<Props>, HtmlBoxStyle>, 'data' | 'mount'> & Pick<HtmlBoxProps<Props>, 'data' | 'mount'>): CRCRenderResult;
   export const Group: CRCPrimitiveComponent<GroupProps, PrimitiveInput<GroupProps, GStyle>>;
   export const Clip: CRCPrimitiveComponent<ClipProps, PrimitiveInput<ClipProps, ClipStyle>>;
   export const Layer: CRCPrimitiveComponent<LayerProps, PrimitiveInput<LayerProps, LayerStyle>>;
@@ -639,8 +648,40 @@ export interface MeshTransformOptions {
   export function useRef<T>(initial?: T): CRCRef<T>;
   export function useSignal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
   export function usePlayback(program: CRCAnimationProgram, options?: CRCPlaybackOptions): CRCPlayback;
-  export function useTransition(target: number, options: CRCSpringTransitionOptions): Signal<number>;
-  export function useTransition<T>(target: T, options: CRCTweenTransitionOptions<T>): Signal<T>;
+
+  declare const transitionBindingBrand: unique symbol;
+  declare const transitionEffectBrand: unique symbol;
+  export interface CRCTransitionBinding { readonly [transitionBindingBrand]: true }
+  export interface CRCTransitionEffect { readonly [transitionEffectBrand]: true }
+  export type CRCVisibilityTransitionStatus = 'hidden' | 'entering' | 'visible' | 'exiting' | 'disposed';
+  export interface CRCVisibilityTransitionResult { readonly requestId: number; readonly phase: 'enter' | 'exit'; readonly status: 'finished' | 'cancelled' | 'disposed' }
+  export interface CRCVisibilityTransitionOptions { readonly initial?: boolean; readonly enter: CRCTransitionEffect; readonly exit?: CRCTransitionEffect; readonly duration?: number }
+  export interface CRCVisibilityTransition { readonly binding: CRCTransitionBinding; readonly visible: Signal<boolean>; readonly progress: Signal<number>; readonly status: Signal<CRCVisibilityTransitionStatus>; show(): Promise<CRCVisibilityTransitionResult>; hide(): Promise<CRCVisibilityTransitionResult>; finish(): void }
+  export interface CRCEmberCollision { readonly fraction: number; readonly normal: readonly [number, number] }
+  export interface CRCEmbersPhysicsOptions { readonly gravity?: readonly [number, number]; readonly wind?: readonly [number, number]; readonly drag?: number; readonly restitution?: number; readonly collide?: (from: readonly [number, number], to: readonly [number, number]) => CRCEmberCollision | undefined }
+  export interface CRCEmbersOptions { readonly physics?: CRCEmbersPhysicsOptions; readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly charDepth?: number; readonly burnWidth?: number; readonly wind?: number; readonly seed?: number; readonly linger?: number }
+  export function embers(options: CRCEmbersOptions): CRCTransitionEffect;
+  export interface CRCHologramOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly entry?: Readonly<{ x: number; y: number }>; readonly hue?: number; readonly brightness?: number; readonly fog?: number; readonly glitch?: number; readonly seed?: number }
+  export interface CRCBifrostOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly entry?: Readonly<{ x: number; y: number }>; readonly hue?: number; readonly brightness?: number; readonly stretch?: number; readonly glow?: number; readonly seed?: number }
+  export function hologram(options: CRCHologramOptions): CRCTransitionEffect;
+  export function bifrost(options: CRCBifrostOptions): CRCTransitionEffect;
+  export interface CRCSlideOptions { readonly x?: number; readonly y?: number }
+  export interface CRCZoomOptions { readonly origin: Readonly<{ x: number; y: number }>; readonly from?: number }
+  export interface CRCWipeOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly direction?: 'left' | 'right' | 'top' | 'bottom' }
+  export interface CRCBlurRevealOptions { readonly radius?: number }
+  export interface CRCDissolveOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly cellSize?: number; readonly seed?: number }
+  export function slide(options?: CRCSlideOptions): CRCTransitionEffect;
+  export function zoom(options: CRCZoomOptions): CRCTransitionEffect;
+  export function wipe(options: CRCWipeOptions): CRCTransitionEffect;
+  export function blurReveal(options?: CRCBlurRevealOptions): CRCTransitionEffect;
+  export function dissolve(options: CRCDissolveOptions): CRCTransitionEffect;
+  export interface CRCTransitionRenderFrame { readonly context: OffscreenCanvasRenderingContext2D; readonly source: OffscreenCanvas; readonly sourceBounds: Readonly<{ x: number; y: number; width: number; height: number }>; readonly progress: number; readonly phase: 'enter' | 'exit'; readonly elapsed: number; readonly progressAt: (elapsed: number) => number; readonly drawSource: () => void }
+  export interface CRCTransitionDefinition { readonly render: (frame: Readonly<CRCTransitionRenderFrame>) => void; readonly linger?: number }
+  export function defineTransition(definition: CRCTransitionDefinition): CRCTransitionEffect;
+  export function fade(): CRCTransitionEffect;
+  export function useVisibilityTransition(options: CRCVisibilityTransitionOptions): CRCVisibilityTransition;
+  export function useAnimatedValue(target: number, options: CRCSpringAnimatedValueOptions): Signal<number>;
+  export function useAnimatedValue<T>(target: T, options: CRCTweenAnimatedValueOptions<T>): Signal<T>;
   export function useReaction(setup: () => void | (() => void), dependencies?: readonly unknown[], options?: CRCReactionOptions): void;
   export function useCursor(options: { style?: string; path?: Path2D | PathGeometry; fill?: boolean; lineInteractionWidth?: number }): void;
   export function useEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D | PathGeometry, fill?: boolean, lineInteractionWidth?: number): void;
@@ -678,7 +719,7 @@ export interface MeshTransformOptions {
     export type LibraryManagedAttributes<C, P> = C extends CRCPrimitiveComponent<any, any> ? PrimitiveInputOf<C> : 'key' extends keyof P ? never : P;
   }
 
-/* @crc-studio-module @crc/physics/2d/geometry */
+/* @crc-studio-module @crc/core/physics/2d/geometry */
   export type CRCPhysicsVector2 = readonly [x: number, y: number];
   export interface CRCPhysicsPose2D { readonly position: CRCPhysicsVector2; readonly rotationDegrees: number }
   export type CRCPhysicsTransform2D = CRCPhysicsPose2D;
@@ -712,11 +753,11 @@ export interface MeshTransformOptions {
   export function overlapShapes2D(first: CRCPhysicsShape2D, firstPose: CRCPhysicsPose2D, second: CRCPhysicsShape2D, secondPose: CRCPhysicsPose2D): boolean;
   export function contactBetweenShapes2D(first: CRCPhysicsShape2D, firstPose: CRCPhysicsPose2D, second: CRCPhysicsShape2D, secondPose: CRCPhysicsPose2D): CRCPhysicsShapeContact2D | null;
 
-/* @crc-studio-module @crc/physics/2d */
+/* @crc-studio-module @crc/core/physics/2d */
   import type { BoxStyle, CRCEventHandlers, CRCEventParticipationOptions, CRCNode, CRCPrimitiveComponent, CursorStyle, LayoutBox, LayoutItemStyle, PaintStyle, PrimitiveInput, Signal, SystemStyle } from '@crc/core';
-  import type { CRCPhysicsAabb2D, CRCPhysicsContactPoint2D, CRCPhysicsPose2D, CRCPhysicsRay2D, CRCPhysicsShape2D, CRCPhysicsShapeHit2D, CRCPhysicsVector2 } from '@crc/physics/2d/geometry';
-  export { arcShape2D, boundsOfShape2D, boxShape2D, capsuleShape2D, chainShape2D, circleShape2D, contactBetweenShapes2D, containsPoint2D, distanceBetweenShapes2D, ellipseShape2D, massProperties2D, overlapShapes2D, polygonShape2D, raycastShape2D, roundedBoxShape2D, segmentShape2D, shapeCastAgainstShape2D, transformShape2D, wedgeShape2D } from '@crc/physics/2d/geometry';
-  export type { CRCPhysicsAabb2D, CRCPhysicsContactPoint2D, CRCPhysicsDistance2D, CRCPhysicsMassProperties2D, CRCPhysicsPose2D, CRCPhysicsRay2D, CRCPhysicsShape2D, CRCPhysicsShapeContact2D, CRCPhysicsShapeHit2D, CRCPhysicsTransform2D, CRCPhysicsVector2 } from '@crc/physics/2d/geometry';
+  import type { CRCPhysicsAabb2D, CRCPhysicsContactPoint2D, CRCPhysicsPose2D, CRCPhysicsRay2D, CRCPhysicsShape2D, CRCPhysicsShapeHit2D, CRCPhysicsVector2 } from '@crc/core/physics/2d/geometry';
+  export { arcShape2D, boundsOfShape2D, boxShape2D, capsuleShape2D, chainShape2D, circleShape2D, contactBetweenShapes2D, containsPoint2D, distanceBetweenShapes2D, ellipseShape2D, massProperties2D, overlapShapes2D, polygonShape2D, raycastShape2D, roundedBoxShape2D, segmentShape2D, shapeCastAgainstShape2D, transformShape2D, wedgeShape2D } from '@crc/core/physics/2d/geometry';
+  export type { CRCPhysicsAabb2D, CRCPhysicsContactPoint2D, CRCPhysicsDistance2D, CRCPhysicsMassProperties2D, CRCPhysicsPose2D, CRCPhysicsRay2D, CRCPhysicsShape2D, CRCPhysicsShapeContact2D, CRCPhysicsShapeHit2D, CRCPhysicsTransform2D, CRCPhysicsVector2 } from '@crc/core/physics/2d/geometry';
 
   export interface CRCPhysicsCollisionFilter { readonly category?: number; readonly mask?: number; readonly group?: number }
   export type CRCPhysicsCollisionHandler2D = (event: CRCPhysicsCollisionEvent2D) => void;
@@ -840,7 +881,7 @@ export interface MeshTransformOptions {
 
   export function physicsObstacles2D(world: CRCPhysicsWorldHandle2D): Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array; ellipses: Float64Array; polygons: Float64Array }> }>;
 
-/* @crc-studio-module @crc/physics/3d/geometry */
+/* @crc-studio-module @crc/core/physics/3d/geometry */
   export type CRCPhysicsVector3 = readonly [x: number, y: number, z: number];
   export type CRCPhysicsQuaternion = readonly [x: number, y: number, z: number, w: number];
   export type CRCPhysicsMatrix3 = readonly [number, number, number, number, number, number, number, number, number];
@@ -874,7 +915,7 @@ export interface MeshTransformOptions {
   export function raycastShape3D(shape: CRCPhysicsShape3D, pose: CRCPhysicsPose3D, ray: CRCPhysicsRay3D, options?: Readonly<{ includeInitialOverlap?: boolean }>): CRCPhysicsShapeHit3D | null;
   export function shapeCastAgainstShape3D(moving: CRCPhysicsShape3D, from: CRCPhysicsPose3D, translation: CRCPhysicsVector3, target: CRCPhysicsShape3D, targetPose: CRCPhysicsPose3D, options?: Readonly<{ includeInitialOverlap?: boolean }>): CRCPhysicsShapeHit3D | null;
 
-/* @crc-studio-module @crc/particles */
+/* @crc-studio-module @crc/core/particles */
   import type {
     BoxStyle,
     CRCEventHandlers,
@@ -1164,7 +1205,7 @@ export interface MeshTransformOptions {
   }
   export function defineThreeLayer<Props, Resources extends CRCThreeLayerResources>(definition: CRCThreeLayerDefinition<Props, Resources>): CRCComponent<CRCRenderLayerProps<Props>>;
 
-/* @crc-studio-module @crc/viz */
+/* @crc-studio-module @crc/core/viz */
 import type { BoxStyle, CRCNode, LayoutItemStyle, LayoutBox, SignalValue } from '@crc/core';
 type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : SignalValue<S[K]> }>;
 export type ScaleId = string | symbol;
@@ -1575,7 +1616,7 @@ export interface TextGeometryResult {
 export declare function loadOutlineFont(source: string | URL | ArrayBuffer | Uint8Array, options?: OutlineFontOptions): Promise<OutlineFont>;
 export declare function createTextGeometry(font: OutlineFont, text: string, options: TextGeometryOptions): TextGeometryResult;
 
-/* @crc-studio-module @crc/textures */
+/* @crc-studio-module @crc/core/textures */
   export interface ElectricPoint { readonly x: number; readonly y: number; }
   export interface ElectricOptions { readonly seed?: number; readonly branching?: number; readonly glow?: number; }
   export type ElectricControl = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset'; readonly seed?: number };

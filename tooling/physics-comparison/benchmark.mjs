@@ -1,12 +1,12 @@
 // Run: node --import tsx tooling/physics-comparison/benchmark.mjs /path/to/engine-install
 // Install planck@1.5.0 and @dimforge/rapier2d-compat@0.21.0 in that separate folder.
-import { RapierSimulation2D } from "../../packages/physics/src/lib/2d/world/rapier.ts";
+import { RapierSimulation2D } from "../../packages/core/src/features/physics/lib/2d/world/rapier.ts";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { cpus, platform, arch } from "node:os";
-import { PhysicsWorld2DKernel } from "../../packages/physics/src/lib/2d/world/world.ts";
-import { boxShape2D } from "../../packages/physics/src/2d-geometry.ts";
-import { requireShapeRecord2D } from "../../packages/physics/src/lib/2d/shape-records.ts";
+import { PhysicsWorld2DKernel } from "../../packages/core/src/features/physics/lib/2d/world/world.ts";
+import { boxShape2D } from "../../packages/core/src/features/physics/2d-geometry.ts";
+import { requireShapeRecord2D } from "../../packages/core/src/features/physics/lib/2d/shape-records.ts";
 const requireEngine = createRequire(
   resolve(process.argv[2] ?? ".", "package.json"),
 );

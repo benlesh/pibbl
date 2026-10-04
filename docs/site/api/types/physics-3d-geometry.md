@@ -25,7 +25,7 @@ symbols:
 
 # 3D physics geometry types
 
-Import these contracts with `type` from `@crc/physics/3d/geometry`.
+Import these contracts with `type` from `@crc/core/physics/3d/geometry`.
 
 ## `CRCPhysicsAabb3D`
 

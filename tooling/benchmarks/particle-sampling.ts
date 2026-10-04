@@ -1,10 +1,10 @@
-import { compileParticleEffect2D } from "../../packages/particles/src/lib/compiler.js";
-import { defineParticleEffect2D } from "../../packages/particles/src/lib/definition.js";
-import { particle } from "../../packages/particles/src/lib/particle.js";
+import { compileParticleEffect2D } from "../../packages/core/src/features/particles/lib/compiler.js";
+import { defineParticleEffect2D } from "../../packages/core/src/features/particles/lib/definition.js";
+import { particle } from "../../packages/core/src/features/particles/lib/particle.js";
 import {
   Particle2DRegister as R,
   sampleParticle2D,
-} from "../../packages/particles/src/lib/sample.js";
+} from "../../packages/core/src/features/particles/lib/sample.js";
 
 const stride = R.AtlasFrame + 1;
 const stats = (values: number[]) => {

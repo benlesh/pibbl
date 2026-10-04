@@ -2,8 +2,8 @@
 
 CRC is a small functional component runtime for the HTML Canvas 2D API, with a
 public external-render-layer lifecycle and an optional first-class `@crc/three`
-adapter for ordinary Three.js scenes. `@crc/particles` provides fixed-capacity
-Canvas effects, and the optional `@crc/viz` package provides [composable data
+adapter for ordinary Three.js scenes. `@crc/core/particles` provides fixed-capacity
+Canvas effects, and the `@crc/core/viz` subpath provides [composable data
 visualization](docs/site/learn/guides/data-visualization.md).
 JSX is the preferred authoring
 syntax, but CRC has its own renderer, hooks, element brand, and lifecycle: it
@@ -16,6 +16,10 @@ Install the runtime:
 ```sh
 pnpm add @crc/core
 ```
+
+Particles, visualization, textures, and physics are included in this installation
+as optional subpath imports. Unused physics contributes no Rapier code or WASM
+to a production bundle. See the [package migration guide](docs/site/learn/guides/package-migration.md).
 
 Configure TypeScript's automatic JSX runtime:
 
@@ -168,20 +172,20 @@ corepack pnpm@11.21.0 playground:built
   lifecycle, renderer, input, picking, and target types; scenes, cameras,
   objects, controls, loaders, materials, lights, shadows, and effects remain
   ordinary imports from `three` and `three/addons/*`
-- Optional particle effects from `@crc/particles`: `Particles2D`,
+- Optional particle effects from `@crc/core/particles`: `Particles2D`,
   `useParticleSystem`, immutable 2D definitions, and direct descriptor
   factories
-- Optional CRC-owned 2D physics from `@crc/physics/2d`, with
+- Optional CRC-owned 2D physics from `@crc/core/physics/2d`, with
   renderer-independent `/2d/geometry` and `/3d/geometry` subpaths; there is no
-  root `@crc/physics` barrel or renderer-coupled 3D runtime
+  root `@crc/core/physics` barrel or renderer-coupled 3D runtime
 - Compiler-only entries: `@crc/core/jsx-runtime` and
   `@crc/core/jsx-dev-runtime`
 
-The connected `@crc/core` and `@crc/physics/2d` runtime surfaces share the
+The connected `@crc/core` and `@crc/core/physics/2d` runtime surfaces share the
 `@crc/core` JSX runtime, element brand, scheduler, and event system.
 `@crc/three` uses the public render-layer lifecycle and peers on the
-application's Three installation. This does not describe `@crc/types` or the
-renderer-independent physics `/geometry` entries. The exported
+application's Three installation. Renderer-independent physics `/geometry`
+entries do not initialize the runtime or Rapier. The exported
 `@crc/core/internal` friend seam is reserved for matching official CRC packages
 and is not an application compatibility promise.
 

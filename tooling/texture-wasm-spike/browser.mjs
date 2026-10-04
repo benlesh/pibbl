@@ -1,6 +1,6 @@
 import { InkSimulation } from './reference-simulation.ts';
 import { TextureRaster } from './reference-presentation.ts';
-import { paletteLut, texturePalettes } from '../../packages/textures/src/lib/palette.ts';
+import { paletteLut, texturePalettes } from '../../packages/core/src/features/textures/lib/palette.ts';
 import { crc, createElement, defineRenderLayer } from '../../packages/core/src/index.ts';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../../packages/core/src/lib/scheduler/testing.ts';
 import { WasmSimulation } from './runtime.mjs';

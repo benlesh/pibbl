@@ -12,7 +12,7 @@ exampleSlug: living-ink
 
 # Procedural textures
 
-Install the optional `@crc/textures` package alongside `@crc/core`. It provides
+Import recipes from `@crc/core/textures`, included in your `@crc/core` installation. It provides
 `ReactionDiffusion` for living, paintable surfaces and `ProceduralTexture` for
 seeded marble, paper, and cellular materials. Both participate in CRC scheduling,
 layout, clipping, filters, and resource disposal.
@@ -25,7 +25,7 @@ ordinary TypeScript. There is no engine switch or separate animation loop.
 
 ```tsx
 import { Rectangle, useTexture } from "@crc/core";
-import { marble } from "@crc/textures";
+import { marble } from "@crc/core/textures";
 
 function Material({ detail }: { detail: number }) {
   const surface = useTexture(marble({ detail }), {
@@ -67,7 +67,7 @@ the three static materials above the ink.
 
 ```tsx
 import { Group, Text } from "@crc/core";
-import { ReactionDiffusion, texturePalettes } from "@crc/textures";
+import { ReactionDiffusion, texturePalettes } from "@crc/core/textures";
 
 function Card() {
   return (
@@ -91,9 +91,8 @@ function Card() {
 
 Put decorative textures before content in paint order and opt them out of pointer
 participation. Wrap the background in `Clip` when it needs a shaped boundary.
-The simulation resolution stays small even when the display grows. A second
-mounted texture has its own simulation; this API does not share a live source
-between independent elements.
+The simulation resolution stays small even when the display grows. A second mounted component has its own simulation. To share a live source across
+elements, use a `useTexture` resource as shown above.
 
 ## Painting and controls
 
@@ -114,7 +113,7 @@ Try [Living Ink](#/examples/composition/living-ink).
 ## Reproducible materials
 
 ```tsx
-import { ProceduralTexture } from "@crc/textures";
+import { ProceduralTexture } from "@crc/core/textures";
 
 const paper = (
   <ProceduralTexture
@@ -146,7 +145,7 @@ both display and texture dimensions. Reuse the same source within this callback
 without rerunning its generator.
 
 ```tsx
-import { ProceduralTexture } from "@crc/textures";
+import { ProceduralTexture } from "@crc/core/textures";
 
 const repeated = (
   <ProceduralTexture

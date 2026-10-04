@@ -10,7 +10,7 @@ symbols: [nearestPoint, NearestPoint, NearestPointOptions]
 
 # nearestPoint
 
-Import from `@crc/viz`. Call `nearestPoint(data, {x,y}, options)` with numeric
+Import from `@crc/core/viz`. Call `nearestPoint(data, {x,y}, options)` with numeric
 x/y accessors, resolved `xScale`/`yScale` snapshots, optional `defined`, and an
 optional inclusive nonnegative `maxDistance`. Returns `{datum,index,x,y,distance}`
 or undefined. Returned coordinates are mapped local positions; datum is the

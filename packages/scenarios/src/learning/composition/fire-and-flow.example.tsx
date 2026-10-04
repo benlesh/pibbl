@@ -4,7 +4,7 @@ import {
   physicsObstacles2D,
   kinematicBody2D,
   collider2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 import {
   Group,
   Rectangle,
@@ -39,7 +39,7 @@ import {
   useFlowField2D,
   useFlowSource2D,
   type CRCParticleEmitter2D,
-} from "@crc/particles";
+} from "@crc/core/particles";
 
 // Original procedural artwork; buffers live with this mounted example.
 function smokeSprite(variant: number): OffscreenCanvas {

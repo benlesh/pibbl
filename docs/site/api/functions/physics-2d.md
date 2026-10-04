@@ -78,13 +78,13 @@ import {
   crcPhysicsBody2D,
   crcPhysicsWorld2D,
   dynamicBody2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 ```
 
-`@crc/physics/2d` is a component-scoped, CRC-scheduled Rapier 2D world. It
+`@crc/core/physics/2d` is a component-scoped, CRC-scheduled Rapier 2D world. It
 does not start a second animation loop. For recipes and interaction examples,
 read the [2D physics guide](#/learn/guides/physics-2d). Pure construction and
-geometry operations are also exported by `@crc/physics/2d/geometry`.
+geometry operations are also exported by `@crc/core/physics/2d/geometry`.
 The central contracts are
 [`CRCPhysicsWorld2DProps`](#/api/types/physics-2d#crcphysicsworld2dprops),
 [`CRCPhysicsBodyHandle2D`](#/api/types/physics-2d#crcphysicsbodyhandle2d), and

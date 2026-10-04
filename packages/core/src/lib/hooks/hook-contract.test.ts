@@ -14,7 +14,7 @@ import { useEventListener } from './use-event-listener';
 import { useEventTarget } from './use-event-target';
 import { useLinePath } from './use-line-path';
 import { usePlayback } from './use-playback';
-import { useTransition } from './use-transition';
+import { useAnimatedValue } from './use-animated-value';
 import { useRectPath } from './use-rect-path';
 import { useRef } from './use-ref';
 import { useReaction } from './use-reaction';
@@ -163,7 +163,7 @@ describe('hook ordering and render errors', () => {
       () => useRef(0),
       () => useReaction(() => undefined),
       () => usePlayback(track(signal(0), tween({ to: 1, duration: 1 }))),
-      () => useTransition(1, { type: 'tween', duration: 1 }),
+      () => useAnimatedValue(1, { type: 'tween', duration: 1 }),
       () => useRectPath(0, 0, 1, 1),
       () => useLinePath([[0, 0], [1, 1]]),
       () => useSvgPath('M0 0'),

@@ -112,7 +112,7 @@ describe("public 2D physics laboratory", () => {
     ]);
     for (const source of [learningSource, labSource]) {
       expect(source).toMatch(/from ["']@crc\/core["']/u);
-      expect(source).toMatch(/from ["']@crc\/physics\/2d["']/u);
+      expect(source).toMatch(/from ["']@crc\/core\/physics\/2d["']/u);
       expect(source).not.toMatch(
         /@crc\/(?:core|physics)\/(?:internal|lib|src)\b/u,
       );

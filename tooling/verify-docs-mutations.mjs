@@ -8,3 +8,7 @@ assert.equal(
 );
 
 await verifier.verifyMutationProbes();
+
+// Missing or edited shipped contracts must remain fail-closed.
+assert.throws(() => verifier.assertShippedContractSnapshots(new Map()), /Missing shipped contract/);
+assert.throws(() => verifier.assertShippedContractSnapshots(new Map([["docs/design/weighted-electric-sources-contract.md", "changed contract"]])), /Shipped contract changed/);

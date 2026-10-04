@@ -10,7 +10,7 @@ symbols: [PlotSeries, PlotSeriesProps, PlotKeyAccessor]
 
 # PlotSeries
 
-Import from `@crc/viz`. Supply `data`, numeric `x`/`y` accessors, `xScale`,
+Import from `@crc/core/viz`. Supply `data`, numeric `x`/`y` accessors, `xScale`,
 `yScale`, and `render(datum,index,data)`. The callback returns CRC nodes around
 local `(0,0)` at the mapped point. Invalid coordinates and `defined=false` skip
 rows. Custom elements keep ordinary styles, targets, and event handlers.

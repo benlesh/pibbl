@@ -1,7 +1,7 @@
 ---
 id: api-types-physics-2d-testing
 title: 2D physics test harness types
-summary: Options and deterministic frame-control interface for @crc/physics/2d/testing.
+summary: Options and deterministic frame-control interface for @crc/core/physics/2d/testing.
 kind: api
 slug: physics-2d-testing
 apiCategory: types
@@ -11,7 +11,7 @@ keywords: [physics, testing, deterministic, agentic]
 
 # 2D physics test harness types
 
-Import these contracts with `type` from `@crc/physics/2d/testing`.
+Import these contracts with `type` from `@crc/core/physics/2d/testing`.
 
 ## `CRCPhysicsTestHarness2DOptions`
 

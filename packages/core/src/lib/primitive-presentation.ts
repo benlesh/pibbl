@@ -15,6 +15,7 @@ export interface PrimitivePresentation {
   readonly transform?: DOMMatrix;
   readonly clip?: {
     readonly path: Path2D;
+    readonly svgPath?: string;
     readonly fillRule: CanvasFillRule;
   };
 }
@@ -111,6 +112,7 @@ export function enterPrimitivePresentation(
         clip.path,
         clip.fillRule,
         !options.deferPaint,
+        clip.svgPath,
       );
     }
   } catch (error) {

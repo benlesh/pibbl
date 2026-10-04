@@ -1,0 +1,1344 @@
+[
+  {
+    "slug": "living-ink",
+    "samples": [
+      {
+        "frames": 1805,
+        "renders": 1804,
+        "median": 1.2999999523162842,
+        "p95": 1.6000001430511475,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 3610,
+        "renders": 3609,
+        "median": 1.2999999523162842,
+        "p95": 1.5999999046325684,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 5416,
+        "renders": 5415,
+        "median": 1.2999999523162842,
+        "p95": 1.5999999046325684,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 7218,
+        "renders": 7217,
+        "median": 1.2999999523162842,
+        "p95": 1.5999999046325684,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 9025,
+        "renders": 9024,
+        "median": 1.2999999523162842,
+        "p95": 1.5,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 10833,
+        "renders": 10832,
+        "median": 1.2999999523162842,
+        "p95": 1.5,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 12641,
+        "renders": 12640,
+        "median": 1.2999999523162842,
+        "p95": 1.5,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 14453,
+        "renders": 14452,
+        "median": 1.2999999523162842,
+        "p95": 1.5999999046325684,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 16269,
+        "renders": 16267,
+        "median": 1.2999999523162842,
+        "p95": 1.6000001430511475,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 18084,
+        "renders": 18082,
+        "median": 1.2999999523162842,
+        "p95": 1.6000001430511475,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 19901,
+        "renders": 19899,
+        "median": 1.2999999523162842,
+        "p95": 1.6999998092651367,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 21715,
+        "renders": 21713,
+        "median": 1.2999999523162842,
+        "p95": 1.7000000476837158,
+        "max": 16,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 1,
+          "releasedRootRegistrations": 0,
+          "createdBeginCommands": 0,
+          "releasedBeginCommands": 0,
+          "createdCompletionCallbacks": 0,
+          "releasedCompletionCallbacks": 0,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 42,
+            "paintEntries": 8
+          }
+        ],
+        "heap": 10600000
+      }
+    ],
+    "after": {
+      "frames": 21726,
+      "renders": 21724,
+      "median": 1.2999999523162842,
+      "p95": 1.7000000476837158,
+      "max": 16,
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 1,
+        "releasedRootRegistrations": 1,
+        "createdBeginCommands": 0,
+        "releasedBeginCommands": 0,
+        "createdCompletionCallbacks": 0,
+        "releasedCompletionCallbacks": 0,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "instances": [],
+      "heap": 10600000
+    },
+    "errors": []
+  },
+  {
+    "slug": "stirred-ink",
+    "samples": [
+      {
+        "frames": 1808,
+        "renders": 1808,
+        "median": 2.8000001907348633,
+        "p95": 3.200000047683716,
+        "max": 22.200000047683716,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 7,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 2,
+          "releasedRootRegistrations": 1,
+          "createdBeginCommands": 2,
+          "releasedBeginCommands": 2,
+          "createdCompletionCallbacks": 9041,
+          "releasedCompletionCallbacks": 9041,
+          "dirtyInstances": 1,
+          "dirtyRoots": 1,
+          "registeredAdvanceParticipants": 7,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 29,
+            "paintEntries": 13
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 3616,
+        "renders": 3616,
+        "median": 2.8000001907348633,
+        "p95": 3.200000047683716,
+        "max": 22.200000047683716,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 7,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 2,
+          "releasedRootRegistrations": 1,
+          "createdBeginCommands": 2,
+          "releasedBeginCommands": 2,
+          "createdCompletionCallbacks": 18086,
+          "releasedCompletionCallbacks": 18086,
+          "dirtyInstances": 1,
+          "dirtyRoots": 1,
+          "registeredAdvanceParticipants": 7,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 29,
+            "paintEntries": 13
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 5424,
+        "renders": 5424,
+        "median": 2.8999998569488525,
+        "p95": 3.200000047683716,
+        "max": 22.200000047683716,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 7,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 2,
+          "releasedRootRegistrations": 1,
+          "createdBeginCommands": 2,
+          "releasedBeginCommands": 2,
+          "createdCompletionCallbacks": 27131,
+          "releasedCompletionCallbacks": 27131,
+          "dirtyInstances": 1,
+          "dirtyRoots": 1,
+          "registeredAdvanceParticipants": 7,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 29,
+            "paintEntries": 13
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 7228,
+        "renders": 7228,
+        "median": 2.8999998569488525,
+        "p95": 3.200000047683716,
+        "max": 22.200000047683716,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 7,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 2,
+          "releasedRootRegistrations": 1,
+          "createdBeginCommands": 2,
+          "releasedBeginCommands": 2,
+          "createdCompletionCallbacks": 36156,
+          "releasedCompletionCallbacks": 36156,
+          "dirtyInstances": 1,
+          "dirtyRoots": 1,
+          "registeredAdvanceParticipants": 7,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 29,
+            "paintEntries": 13
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 9032,
+        "renders": 9032,
+        "median": 2.8999998569488525,
+        "p95": 3.200000047683716,
+        "max": 22.200000047683716,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 7,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 2,
+          "releasedRootRegistrations": 1,
+          "createdBeginCommands": 2,
+          "releasedBeginCommands": 2,
+          "createdCompletionCallbacks": 45181,
+          "releasedCompletionCallbacks": 45181,
+          "dirtyInstances": 1,
+          "dirtyRoots": 1,
+          "registeredAdvanceParticipants": 7,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 29,
+            "paintEntries": 13
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 10840,
+        "renders": 10840,
+        "median": 2.8999998569488525,
+        "p95": 3.200000047683716,
+        "max": 22.200000047683716,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 7,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 2,
+          "releasedRootRegistrations": 1,
+          "createdBeginCommands": 2,
+          "releasedBeginCommands": 2,
+          "createdCompletionCallbacks": 54226,
+          "releasedCompletionCallbacks": 54226,
+          "dirtyInstances": 1,
+          "dirtyRoots": 1,
+          "registeredAdvanceParticipants": 7,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 29,
+            "paintEntries": 13
+          }
+        ],
+        "heap": 10600000
+      }
+    ],
+    "after": {
+      "frames": 10847,
+      "renders": 10847,
+      "median": 2.8999998569488525,
+      "p95": 3.200000047683716,
+      "max": 22.200000047683716,
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 2,
+        "releasedRootRegistrations": 2,
+        "createdBeginCommands": 2,
+        "releasedBeginCommands": 2,
+        "createdCompletionCallbacks": 54261,
+        "releasedCompletionCallbacks": 54261,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "instances": [],
+      "heap": 10600000
+    },
+    "errors": []
+  },
+  {
+    "slug": "physics-2d",
+    "samples": [
+      {
+        "frames": 1819,
+        "renders": 1819,
+        "median": 1.1999998092651367,
+        "p95": 2.1000001430511475,
+        "max": 3.799999952316284,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 2,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 3,
+          "releasedRootRegistrations": 2,
+          "createdBeginCommands": 3,
+          "releasedBeginCommands": 3,
+          "createdCompletionCallbacks": 56079,
+          "releasedCompletionCallbacks": 56079,
+          "dirtyInstances": 1,
+          "dirtyRoots": 1,
+          "registeredAdvanceParticipants": 2,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 21,
+            "paintEntries": 3
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 2653,
+        "renders": 2653,
+        "median": 1.0999999046325684,
+        "p95": 2.0999999046325684,
+        "max": 3.799999952316284,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 3,
+          "releasedRootRegistrations": 2,
+          "createdBeginCommands": 3,
+          "releasedBeginCommands": 3,
+          "createdCompletionCallbacks": 56912,
+          "releasedCompletionCallbacks": 56912,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 21,
+            "paintEntries": 3
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 2653,
+        "renders": 2653,
+        "median": 1.0999999046325684,
+        "p95": 2.0999999046325684,
+        "max": 3.799999952316284,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 3,
+          "releasedRootRegistrations": 2,
+          "createdBeginCommands": 3,
+          "releasedBeginCommands": 3,
+          "createdCompletionCallbacks": 56912,
+          "releasedCompletionCallbacks": 56912,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 21,
+            "paintEntries": 3
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 2653,
+        "renders": 2653,
+        "median": 1.0999999046325684,
+        "p95": 2.0999999046325684,
+        "max": 3.799999952316284,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 3,
+          "releasedRootRegistrations": 2,
+          "createdBeginCommands": 3,
+          "releasedBeginCommands": 3,
+          "createdCompletionCallbacks": 56912,
+          "releasedCompletionCallbacks": 56912,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 21,
+            "paintEntries": 3
+          }
+        ],
+        "heap": 10600000
+      }
+    ],
+    "after": {
+      "frames": 2653,
+      "renders": 2653,
+      "median": 1.0999999046325684,
+      "p95": 2.0999999046325684,
+      "max": 3.799999952316284,
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 3,
+        "releasedRootRegistrations": 3,
+        "createdBeginCommands": 3,
+        "releasedBeginCommands": 3,
+        "createdCompletionCallbacks": 56912,
+        "releasedCompletionCallbacks": 56912,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "instances": [],
+      "heap": 10600000
+    },
+    "errors": []
+  },
+  {
+    "slug": "physics-panels",
+    "samples": [
+      {
+        "frames": 215,
+        "renders": 215,
+        "median": 1.5,
+        "p95": 2.799999952316284,
+        "max": 3.6999998092651367,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 2,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 4,
+          "releasedRootRegistrations": 3,
+          "createdBeginCommands": 5,
+          "releasedBeginCommands": 5,
+          "createdCompletionCallbacks": 57338,
+          "releasedCompletionCallbacks": 57338,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 2,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 41,
+            "paintEntries": 11
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 215,
+        "renders": 215,
+        "median": 1.5,
+        "p95": 2.799999952316284,
+        "max": 3.6999998092651367,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 2,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 4,
+          "releasedRootRegistrations": 3,
+          "createdBeginCommands": 5,
+          "releasedBeginCommands": 5,
+          "createdCompletionCallbacks": 57338,
+          "releasedCompletionCallbacks": 57338,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 2,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 41,
+            "paintEntries": 11
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 215,
+        "renders": 215,
+        "median": 1.5,
+        "p95": 2.799999952316284,
+        "max": 3.6999998092651367,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 2,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 4,
+          "releasedRootRegistrations": 3,
+          "createdBeginCommands": 5,
+          "releasedBeginCommands": 5,
+          "createdCompletionCallbacks": 57338,
+          "releasedCompletionCallbacks": 57338,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 2,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 41,
+            "paintEntries": 11
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 215,
+        "renders": 215,
+        "median": 1.5,
+        "p95": 2.799999952316284,
+        "max": 3.6999998092651367,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 0,
+          "registeredRoots": 1,
+          "advanceParticipants": 2,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 4,
+          "releasedRootRegistrations": 3,
+          "createdBeginCommands": 5,
+          "releasedBeginCommands": 5,
+          "createdCompletionCallbacks": 57338,
+          "releasedCompletionCallbacks": 57338,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 2,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 41,
+            "paintEntries": 11
+          }
+        ],
+        "heap": 10600000
+      }
+    ],
+    "after": {
+      "frames": 215,
+      "renders": 215,
+      "median": 1.5,
+      "p95": 2.799999952316284,
+      "max": 3.6999998092651367,
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 4,
+        "releasedRootRegistrations": 4,
+        "createdBeginCommands": 5,
+        "releasedBeginCommands": 5,
+        "createdCompletionCallbacks": 57338,
+        "releasedCompletionCallbacks": 57338,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "instances": [],
+      "heap": 10600000
+    },
+    "errors": []
+  },
+  {
+    "slug": "particle-effects",
+    "samples": [
+      {
+        "frames": 1824,
+        "renders": 1817,
+        "median": 1.0999999046325684,
+        "p95": 1.7999999523162842,
+        "max": 4.5,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 2,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 5,
+          "releasedRootRegistrations": 4,
+          "createdBeginCommands": 568,
+          "releasedBeginCommands": 567,
+          "createdCompletionCallbacks": 67379,
+          "releasedCompletionCallbacks": 67379,
+          "dirtyInstances": 1,
+          "dirtyRoots": 1,
+          "registeredAdvanceParticipants": 2,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 1
+        },
+        "instances": [
+          {
+            "refs": 12,
+            "paintEntries": 2
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 3640,
+        "renders": 3633,
+        "median": 1.5,
+        "p95": 2.299999952316284,
+        "max": 4.5,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 2,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 5,
+          "releasedRootRegistrations": 4,
+          "createdBeginCommands": 1131,
+          "releasedBeginCommands": 1131,
+          "createdCompletionCallbacks": 77398,
+          "releasedCompletionCallbacks": 77398,
+          "dirtyInstances": 1,
+          "dirtyRoots": 1,
+          "registeredAdvanceParticipants": 2,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 12,
+            "paintEntries": 2
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 5453,
+        "renders": 5446,
+        "median": 1.8999998569488525,
+        "p95": 2.8999998569488525,
+        "max": 5,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 2,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 5,
+          "releasedRootRegistrations": 4,
+          "createdBeginCommands": 1695,
+          "releasedBeginCommands": 1695,
+          "createdCompletionCallbacks": 87403,
+          "releasedCompletionCallbacks": 87403,
+          "dirtyInstances": 1,
+          "dirtyRoots": 1,
+          "registeredAdvanceParticipants": 2,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 12,
+            "paintEntries": 2
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 7257,
+        "renders": 7250,
+        "median": 2.299999952316284,
+        "p95": 3.9000000953674316,
+        "max": 5.5,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 2,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 5,
+          "releasedRootRegistrations": 4,
+          "createdBeginCommands": 2257,
+          "releasedBeginCommands": 2257,
+          "createdCompletionCallbacks": 97360,
+          "releasedCompletionCallbacks": 97360,
+          "dirtyInstances": 1,
+          "dirtyRoots": 1,
+          "registeredAdvanceParticipants": 2,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 12,
+            "paintEntries": 2
+          }
+        ],
+        "heap": 10600000
+      }
+    ],
+    "after": {
+      "frames": 7261,
+      "renders": 7254,
+      "median": 2.299999952316284,
+      "p95": 3.9000000953674316,
+      "max": 7.700000047683716,
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 5,
+        "releasedRootRegistrations": 5,
+        "createdBeginCommands": 2259,
+        "releasedBeginCommands": 2259,
+        "createdCompletionCallbacks": 97383,
+        "releasedCompletionCallbacks": 97383,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "instances": [],
+      "heap": 10600000
+    },
+    "errors": []
+  },
+  {
+    "slug": "underwater",
+    "samples": [
+      {
+        "frames": 1657,
+        "renders": 1656,
+        "median": 8.600000143051147,
+        "p95": 9.399999856948853,
+        "max": 90.79999995231628,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 6,
+          "releasedRootRegistrations": 5,
+          "createdBeginCommands": 2259,
+          "releasedBeginCommands": 2259,
+          "createdCompletionCallbacks": 97383,
+          "releasedCompletionCallbacks": 97383,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 29,
+            "paintEntries": 14
+          },
+          {
+            "refs": 29,
+            "paintEntries": 27
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 3313,
+        "renders": 3312,
+        "median": 8.699999809265137,
+        "p95": 9.200000047683716,
+        "max": 90.79999995231628,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 6,
+          "releasedRootRegistrations": 5,
+          "createdBeginCommands": 2259,
+          "releasedBeginCommands": 2259,
+          "createdCompletionCallbacks": 97383,
+          "releasedCompletionCallbacks": 97383,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 29,
+            "paintEntries": 14
+          },
+          {
+            "refs": 29,
+            "paintEntries": 27
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 4970,
+        "renders": 4969,
+        "median": 8.700000047683716,
+        "p95": 9.200000047683716,
+        "max": 90.79999995231628,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 6,
+          "releasedRootRegistrations": 5,
+          "createdBeginCommands": 2259,
+          "releasedBeginCommands": 2259,
+          "createdCompletionCallbacks": 97383,
+          "releasedCompletionCallbacks": 97383,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 29,
+            "paintEntries": 14
+          },
+          {
+            "refs": 29,
+            "paintEntries": 27
+          }
+        ],
+        "heap": 10600000
+      },
+      {
+        "frames": 6647,
+        "renders": 6646,
+        "median": 8.699999809265137,
+        "p95": 9.199999809265137,
+        "max": 90.79999995231628,
+        "scheduler": {
+          "phase": "idle",
+          "pendingHostFrames": 1,
+          "registeredRoots": 1,
+          "advanceParticipants": 1,
+          "completionCallbacks": 0,
+          "createdRootRegistrations": 6,
+          "releasedRootRegistrations": 5,
+          "createdBeginCommands": 2259,
+          "releasedBeginCommands": 2259,
+          "createdCompletionCallbacks": 97383,
+          "releasedCompletionCallbacks": 97383,
+          "dirtyInstances": 0,
+          "dirtyRoots": 0,
+          "registeredAdvanceParticipants": 1,
+          "queuedFrameCompletions": 0,
+          "queuedReactionCompletions": 0,
+          "queuedBeginCommands": 0
+        },
+        "instances": [
+          {
+            "refs": 29,
+            "paintEntries": 14
+          },
+          {
+            "refs": 29,
+            "paintEntries": 27
+          }
+        ],
+        "heap": 10600000
+      }
+    ],
+    "after": {
+      "frames": 6655,
+      "renders": 6654,
+      "median": 8.699999809265137,
+      "p95": 9.199999809265137,
+      "max": 90.79999995231628,
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 6,
+        "releasedRootRegistrations": 6,
+        "createdBeginCommands": 2259,
+        "releasedBeginCommands": 2259,
+        "createdCompletionCallbacks": 97383,
+        "releasedCompletionCallbacks": 97383,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "instances": [],
+      "heap": 10600000
+    },
+    "errors": []
+  }
+]

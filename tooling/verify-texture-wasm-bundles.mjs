@@ -18,7 +18,7 @@ const kernels = Object.fromEntries(
     "water-surface",
   ].map((name) => {
     const text = readFileSync(
-      join(root, `packages/textures/src/lib/wasm/${name}-bytes.ts`),
+      join(root, `packages/core/src/features/textures/lib/wasm/${name}-bytes.ts`),
       "utf8",
     );
     const match = text.match(/bytes = "([^"]+)"/);
@@ -29,15 +29,10 @@ const kernels = Object.fromEntries(
 try {
   let checks = 0;
   for (const mode of ["source", "built"]) {
-    const alias = Object.fromEntries(
-      ["core", "textures"].map((name) => [
-        `@crc/${name}`,
-        join(
-          root,
-          `packages/${name}/${mode === "source" ? "src/index.ts" : "dist/index.mjs"}`,
-        ),
-      ]),
-    );
+    const alias = {
+      "@crc/core/textures": join(root, `packages/core/${mode === "source" ? "src/features/textures/index.ts" : "dist/features/textures/index.mjs"}`),
+      "@crc/core": join(root, `packages/core/${mode === "source" ? "src/index.ts" : "dist/index.mjs"}`),
+    };
     for (const name of ["plain", ...Object.keys(kernels)]) {
       const factory =
         name === "ink"
@@ -50,7 +45,7 @@ try {
       const contents =
         name === "plain"
           ? "import {crc,createElement,Rectangle} from '@crc/core'; export function mount(c){return crc(c,createElement(Rectangle,{style:{width:40,height:40,fill:'red'}}));}"
-          : `import {crc,createElement,Rectangle,useTexture} from '@crc/core'; import {${factory}} from '@crc/textures'; function Scene(){const texture=useTexture(${factory}());return createElement(Rectangle,{style:{width:40,height:40,fill:texture}});} export function mount(c){return crc(c,createElement(Scene,{}));}`;
+          : `import {crc,createElement,Rectangle,useTexture} from '@crc/core'; import {${factory}} from '@crc/core/textures'; function Scene(){const texture=useTexture(${factory}());return createElement(Rectangle,{style:{width:40,height:40,fill:texture}});} export function mount(c){return crc(c,createElement(Scene,{}));}`;
       const input = join(temp, `${mode}-${name}.mjs`);
       writeFileSync(input, contents);
       for (const minify of [false, true]) {

@@ -22,7 +22,7 @@ import {
   lightning,
   type ElectricPoint,
   type ElectricSource,
-} from "@crc/textures";
+} from "@crc/core/textures";
 
 function Label({
   x,

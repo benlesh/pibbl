@@ -59,7 +59,7 @@ export interface CRCSpringOptions {
   readonly debugName?: string;
 }
 
-export interface CRCTweenTransitionOptions<T> {
+export interface CRCTweenAnimatedValueOptions<T> {
   readonly type: 'tween';
   readonly duration: number;
   readonly easing?: CRCEasing;
@@ -69,7 +69,7 @@ export interface CRCTweenTransitionOptions<T> {
   readonly debugName?: string;
 }
 
-export interface CRCSpringTransitionOptions {
+export interface CRCSpringAnimatedValueOptions {
   readonly type: 'spring';
   readonly mass?: number;
   readonly stiffness?: number;

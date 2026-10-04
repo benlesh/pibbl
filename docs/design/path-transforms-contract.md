@@ -60,10 +60,10 @@ integration assertions through the supported public constructors.
 
 The `text-envelope` Studio lesson uses `@crc/text` outlines, editable text,
 freely draggable guide points, presets, intermediate guides, and composed affine
-placement. It owns its font, controls, resize observer, and pointer captures and
+placement. It owns its font, controls, overlay host, and pointer captures and
 releases them on disposal. Native controls are demo UI, not a public semantic-DOM API.
 
-## Final verification (2026-10-04)
+## Verification before main integration (2026-10-04)
 
 Node 24.15.0, pnpm 11.21.0, and Playwright Chromium were used. The 56 focused
 transform/public-export tests and 232 catalog tests passed. The wider browser
@@ -84,3 +84,22 @@ pass. Those baselines were preserved. Only the API-page baseline changed: inspec
 of expected, actual, and diff images confirmed that its 21,772 changed pixels are
 confined to the sidebar where the new Composable path transforms link shifts the
 following entries. The updated API baseline and all other unaffected routes pass.
+
+## Verification after integrating main `c5bd04e9`
+
+The merge preserves main's package consolidation, visibility transitions, and
+HtmlBox-based envelope lesson. The finalized mapping implementation replaces the
+earlier envelope-only slice included in that main commit. All 292 focused geometry,
+public-export, and catalog tests pass; type checking, lint, package builds, Bundler
+and NodeNext consumers, runtime probes, Studio production build, and four built
+smoke tests pass. Source and production envelope interaction checks pass without
+browser errors. Packed core/Three/feature consumers, package entries, and path
+tree-shaking pass before the aggregate package check reaches an existing text
+packaging failure: unchanged `verify-packed-text.mjs` still packs removed
+`packages/types`.
+
+The textures-contract record still blocks `docs:check`. Public API documentation
+coverage passes (118 core values, 272 core types); the subsequent Studio documentation
+check stops on main's unchanged, nonalphabetical renamed spring/tween type headings
+in `canvas-runtime.md`. These unrelated aggregate blockers remain explicit; this
+change does not claim a green `trust` run.

@@ -14,7 +14,7 @@ import {
   crcPhysicsBody2D,
   dynamicBody2D,
   staticBody2D,
-} from "@crc/physics/2d";
+} from "@crc/core/physics/2d";
 
 function Ball({ x, color }: { x: number; color: string }) {
   const body = crcPhysicsBody2D();

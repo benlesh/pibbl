@@ -4,7 +4,7 @@ import {
   Rectangle,
   crc,
   usePlayback,
-  useTransition,
+  useAnimatedValue,
   parallel,
   signal,
   track,
@@ -138,7 +138,7 @@ describe('animation rendering integration', () => {
     const workKey = {};
 
     function TransitionChild({ initial, target }: { initial: number; target: number }) {
-      output = useTransition(target, {
+      output = useAnimatedValue(target, {
         type: 'tween',
         duration: 100,
         initial,

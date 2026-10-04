@@ -14,7 +14,7 @@ keywords: [particles, definition, canvas, emitter]
 # defineParticleEffect2D
 
 ```ts
-import { defineParticleEffect2D } from "@crc/particles";
+import { defineParticleEffect2D } from "@crc/core/particles";
 ```
 
 Creates an immutable validated effect from one or more named emitters. The

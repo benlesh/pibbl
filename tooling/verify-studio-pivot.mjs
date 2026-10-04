@@ -17,16 +17,16 @@ const require = createRequire(import.meta.url);
 const tsc = join(dirname(require.resolve("typescript")), "tsc.js");
 const expectedModules = new Map([
   ["@crc/core/filters", "node_modules/@crc/core/filters.d.ts"],
-  ["@crc/textures", "node_modules/@crc/textures/index.d.ts"],
+  ["@crc/core/textures", "node_modules/@crc/core/textures/index.d.ts"],
   ["@crc/core", "node_modules/@crc/core/index.d.ts"],
   ["@crc/core/jsx-runtime", "node_modules/@crc/core/jsx-runtime.d.ts"],
   ["@crc/core/jsx-dev-runtime", "node_modules/@crc/core/jsx-dev-runtime.d.ts"],
-  ["@crc/physics/2d/geometry", "node_modules/@crc/physics/2d/geometry.d.ts"],
-  ["@crc/physics/2d", "node_modules/@crc/physics/2d.d.ts"],
-  ["@crc/physics/3d/geometry", "node_modules/@crc/physics/3d/geometry.d.ts"],
-  ["@crc/particles", "node_modules/@crc/particles/index.d.ts"],
+  ["@crc/core/physics/2d/geometry", "node_modules/@crc/core/physics/2d/geometry.d.ts"],
+  ["@crc/core/physics/2d", "node_modules/@crc/core/physics/2d.d.ts"],
+  ["@crc/core/physics/3d/geometry", "node_modules/@crc/core/physics/3d/geometry.d.ts"],
+  ["@crc/core/particles", "node_modules/@crc/core/particles/index.d.ts"],
   ["@crc/three", "node_modules/@crc/three/index.d.ts"],
-  ["@crc/viz", "node_modules/@crc/viz/index.d.ts"],
+  ["@crc/core/viz", "node_modules/@crc/core/viz/index.d.ts"],
   ["@crc/text", "node_modules/@crc/text/index.d.ts"],
 ]);
 const bundle = await readFile(
@@ -40,22 +40,22 @@ assert.deepEqual(
 );
 const sourceEntries = {
   filters: join(repositoryRoot, "packages/core/src/filters.ts"),
-  textures: join(repositoryRoot, "packages/textures/src/index.ts"),
+  textures: join(repositoryRoot, "packages/core/src/features/textures/index.ts"),
   root: join(repositoryRoot, "packages/core/src/index.ts"),
   jsxRuntime: join(repositoryRoot, "packages/core/src/jsx-runtime.ts"),
   jsxDevRuntime: join(repositoryRoot, "packages/core/src/jsx-dev-runtime.ts"),
   physics2dGeometry: join(
     repositoryRoot,
-    "packages/physics/src/2d-geometry.ts",
+    "packages/core/src/features/physics/2d-geometry.ts",
   ),
-  physics2d: join(repositoryRoot, "packages/physics/src/2d.ts"),
+  physics2d: join(repositoryRoot, "packages/core/src/features/physics/2d.ts"),
   physics3dGeometry: join(
     repositoryRoot,
-    "packages/physics/src/3d-geometry.ts",
+    "packages/core/src/features/physics/3d-geometry.ts",
   ),
-  particles: join(repositoryRoot, "packages/particles/src/index.ts"),
+  particles: join(repositoryRoot, "packages/core/src/features/particles/index.ts"),
   three: join(repositoryRoot, "packages/three/src/index.ts"),
-  viz: join(repositoryRoot, "packages/viz/src/index.ts"),
+  viz: join(repositoryRoot, "packages/core/src/features/viz/index.ts"),
   text: join(repositoryRoot, "packages/text/src/index.ts"),
 };
 const builtEntries = Object.fromEntries(
@@ -74,16 +74,16 @@ const builtInventory = await collectPublicExports(
 );
 const inventoryKey = new Map([
   ["@crc/core/filters", "filters"],
-  ["@crc/textures", "textures"],
+  ["@crc/core/textures", "textures"],
   ["@crc/core", "root"],
   ["@crc/core/jsx-runtime", "jsxRuntime"],
   ["@crc/core/jsx-dev-runtime", "jsxDevRuntime"],
-  ["@crc/physics/2d/geometry", "physics2dGeometry"],
-  ["@crc/physics/2d", "physics2d"],
-  ["@crc/physics/3d/geometry", "physics3dGeometry"],
-  ["@crc/particles", "particles"],
+  ["@crc/core/physics/2d/geometry", "physics2dGeometry"],
+  ["@crc/core/physics/2d", "physics2d"],
+  ["@crc/core/physics/3d/geometry", "physics3dGeometry"],
+  ["@crc/core/particles", "particles"],
   ["@crc/three", "three"],
-  ["@crc/viz", "viz"],
+  ["@crc/core/viz", "viz"],
   ["@crc/text", "text"],
 ]);
 
@@ -146,13 +146,13 @@ try {
     import { defineThreeLayer, type CRCThreeTarget } from '@crc/three';
     import { loadOutlineFont, createTextGeometry } from '@crc/text';
     async function textOutline(bytes: Uint8Array) { using font = await loadOutlineFont(bytes); return createTextGeometry(font, 'Hello', {fontSize: 100, missingGlyphs: 'error'}); }
-    import { Particles2D } from '@crc/particles';
-    import { ReactionDiffusion, ProceduralTexture, texturePalettes, type TextureRenderer } from '@crc/textures';
+    import { Particles2D } from '@crc/core/particles';
+    import { ReactionDiffusion, ProceduralTexture, texturePalettes, type TextureRenderer } from '@crc/core/textures';
     const textureRenderer: TextureRenderer = (ctx, texture) => { ctx.drawImage(texture.source, 0, 0, texture.width, texture.height); };
     const textures = <><ReactionDiffusion paused palette={texturePalettes.ember} render={textureRenderer} /><ProceduralTexture kind="paper" /></>;
     void textures;
-    import { sphereShape3D, boundsOfShape3D } from '@crc/physics/3d/geometry';
-    import { PhysicsWorld2D } from '@crc/physics/2d';
+    import { sphereShape3D, boundsOfShape3D } from '@crc/core/physics/3d/geometry';
+    import { PhysicsWorld2D } from '@crc/core/physics/2d';
     import { Scene, PerspectiveCamera, Mesh, BoxGeometry, MeshBasicMaterial } from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     const Layer = defineThreeLayer<{ angle: number }, { scene: Scene; camera: PerspectiveCamera; mesh: Mesh<BoxGeometry, MeshBasicMaterial> }>({

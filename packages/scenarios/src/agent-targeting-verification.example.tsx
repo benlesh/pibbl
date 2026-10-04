@@ -14,7 +14,7 @@ import {
 
 export const AGENT_TARGETING_VERIFICATION_SOURCE_ID = 'agent-targeting-verification-example';
 
-export type AgentTargetingMode = 'seed' | 'repair' | 'intentional-block' | 'capture-drag' | 'keyboard-focus';
+export type AgentTargetingMode = 'pagination' | 'seed' | 'repair' | 'intentional-block' | 'capture-drag' | 'keyboard-focus';
 export type AgentTargetingDelivery = 'action' | 'decoration' | null;
 
 export interface AgentTargetingSceneProps {
@@ -73,6 +73,11 @@ export function AgentTargetingVerificationScene({
         pointerEvents="none"
         style={{ width: 480, height: 240, fill: '#f8fafc' }}
       />
+      {rendered.mode === 'pagination' ? Array.from({ length: 100 }, (_, index) => <Rectangle
+        key={index}
+        style={{ left: 300 + (index % 10) * 6, top: 174 + Math.floor(index / 10) * 6, width: 4, height: 4, fill: '#0f766e' }}
+        onClick={() => undefined}
+      />) : null}
       <Group style={{ translateX: 40, translateY: 32 }}>
       <Layer style={{ width: 240, height: 160 }}>
       {rendered.mode === 'keyboard-focus' ? <KeyboardAction onDelivery={onDelivery} onFocusEvidence={onFocusEvidence} wrapClick={wrapClick} /> : <Rectangle

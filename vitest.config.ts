@@ -94,11 +94,11 @@ export default defineConfig(({ mode }) => ({
         ? []
         : [
             { find: /^@crc\/core\/filters$/, replacement: fileURLToPath(new URL("./packages/core/src/filters.ts", import.meta.url)) },
-            { find: /^@crc\/textures$/, replacement: fileURLToPath(new URL("./packages/textures/src/index.ts", import.meta.url)) },
+            { find: /^@crc\/core\/textures$/, replacement: fileURLToPath(new URL("./packages/core/src/features/textures/index.ts", import.meta.url)) },
             {
-              find: /^@crc\/viz$/,
+              find: /^@crc\/core\/viz$/,
               replacement: fileURLToPath(
-                new URL("./packages/viz/src/index.ts", import.meta.url),
+                new URL("./packages/core/src/features/viz/index.ts", import.meta.url),
               ),
             },
             {
@@ -141,42 +141,36 @@ export default defineConfig(({ mode }) => ({
               ),
             },
             {
-              find: /^@crc\/physics\/2d\/geometry$/,
+              find: /^@crc\/core\/physics\/2d\/geometry$/,
               replacement: fileURLToPath(
                 new URL(
-                  "./packages/physics/src/2d-geometry.ts",
+                  "./packages/core/src/features/physics/2d-geometry.ts",
                   import.meta.url,
                 ),
               ),
             },
             {
-              find: /^@crc\/physics\/2d\/testing$/,
+              find: /^@crc\/core\/physics\/2d\/testing$/,
               replacement: fileURLToPath(
                 new URL(
-                  "./packages/physics/src/2d-testing.ts",
+                  "./packages/core/src/features/physics/2d-testing.ts",
                   import.meta.url,
                 ),
               ),
             },
             {
-              find: /^@crc\/physics\/2d$/,
+              find: /^@crc\/core\/physics\/2d$/,
               replacement: fileURLToPath(
-                new URL("./packages/physics/src/2d.ts", import.meta.url),
+                new URL("./packages/core/src/features/physics/2d.ts", import.meta.url),
               ),
             },
             {
-              find: /^@crc\/physics\/3d\/geometry$/,
+              find: /^@crc\/core\/physics\/3d\/geometry$/,
               replacement: fileURLToPath(
                 new URL(
-                  "./packages/physics/src/3d-geometry.ts",
+                  "./packages/core/src/features/physics/3d-geometry.ts",
                   import.meta.url,
                 ),
-              ),
-            },
-            {
-              find: "@crc/types",
-              replacement: fileURLToPath(
-                new URL("./packages/types/src/index.ts", import.meta.url),
               ),
             },
           ],
@@ -198,8 +192,8 @@ export default defineConfig(({ mode }) => ({
       "tooling/filter-validation.test.mjs",
       "tooling/optional-import-inertness.test.mjs",
       "tooling/texture-import-inertness.test.mjs",
-      "packages/physics/src/lib/2d/public-types.test.ts",
-      "packages/physics/src/lib/3d/public-types.test.ts",
+      "packages/core/src/features/physics/lib/2d/public-types.test.ts",
+      "packages/core/src/features/physics/lib/3d/public-types.test.ts",
     ],
     browser: {
       commands: {
