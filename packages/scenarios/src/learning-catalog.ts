@@ -121,8 +121,8 @@ const drafts = [
   {
     slug: "embers-physics", title: "Embers Physics", shortTitle: "Embers Physics", section: "composition", order: 221,
     summary: "Opt into local gravity, wind, and real collider bounces for ember transitions.",
-    api: ["embers", "useVisibilityTransition", "PhysicsWorld2D", "raycast2D"],
-    objectives: ["Connect a transition's particles to local physics queries.", "Preserve airborne motion through reversal and the effect tail."],
+    api: ["embers", "useVisibilityTransition", "PhysicsWorld2D", "physicsObstacles2D"],
+    objectives: ["Connect a transition's particles to batched WASM collision sweeps.", "Preserve airborne motion through reversal and the effect tail."],
     prompts: { gesture: "Burn or materialize, reverse mid-flight, and compare with physics off.", code: "Adjust local gravity, wind, drag, and restitution." },
     apiNotes: ["Particle collisions are one-way point sweeps; obstacles are not pushed.", "The world and transition receiver share local coordinates."],
     canvas: { width: 800, height: 600 }, related: ["visibility-transitions", "physics-panels"],

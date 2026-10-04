@@ -422,3 +422,16 @@ are one-way, with no rigid bodies for individual embers or forces on obstacles.
 Moving-world substep synchronization, particle shape collisions, and multiple
 contacts in one particle step are outside this first slice. Physics requires a
 positive lifetime and 256 KiB of fixed WASM memory per used controller.
+
+The optional `physics.obstacles` source accepts the committed packed solid ABI
+from `physicsObstacles2D`: ten numbers per box/ellipse and count plus five metadata
+numbers followed by vertex pairs per polygon. The source is read once per Advance
+that takes a step. Revision changes validate and upload at most 8,192 numbers to
+the controller's fixed memory; unchanged revisions do not copy. Swept point
+intersection, closest-impact selection, and bounce run in WASM in one batch per
+substep. Initial overlaps are ignored, as in the callback raycast path. Geometry
+must share receiver-local coordinates. Velocity metadata is not used: interaction
+remains one-way against committed poses. `obstacles` and the JavaScript `collide`
+callback are mutually exclusive. The callback remains available for custom logic;
+it is not a WASM acceleration promise. History lookup, scheduling, and Canvas
+submission remain JavaScript.

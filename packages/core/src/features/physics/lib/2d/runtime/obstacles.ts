@@ -1,3 +1,4 @@
+import type { ConvexLeaf2D } from "../shape-records.js";
 import type { PhysicsWorld2DKernel } from "../world/world.js";
 import { COLLIDER_SENSOR_2D } from "../world/contact-cache.js";
 export interface PhysicsObstacleBatch2D {
@@ -14,6 +15,75 @@ export class CommittedObstacles2D {
     ellipses: new Float64Array(0),
     polygons: new Float64Array(0),
   };
+  private readonly expandedShapes = new WeakMap<
+    readonly ConvexLeaf2D[],
+    readonly ConvexLeaf2D[]
+  >();
+  private readonly expandedLeaves = new WeakMap<
+    ConvexLeaf2D,
+    readonly ConvexLeaf2D[]
+  >();
+  private leaves(leaves: readonly ConvexLeaf2D[]): readonly ConvexLeaf2D[] {
+    // A rounded rectangle with equal corner radii is exactly the union of two
+    // central boxes and four disks. Cache the immutable geometry, not world poses.
+    const cached = this.expandedShapes.get(leaves);
+    if (cached) return cached;
+    const result: ConvexLeaf2D[] = [];
+    for (const leaf of leaves) {
+      if (leaf.kind !== "rounded-box") {
+        result.push(leaf);
+        continue;
+      }
+      let expanded = this.expandedLeaves.get(leaf);
+      if (!expanded) {
+        const radius = leaf.radii[0]!;
+        if (!leaf.radii.every((r) => r === radius)) {
+          result.push(leaf);
+          continue;
+        }
+        const {
+          halfWidth: hw,
+          halfHeight: hh,
+          center,
+          canonicalLeafIndex,
+        } = leaf;
+        const parts: ConvexLeaf2D[] = [];
+        if (hw > radius)
+          parts.push({
+            kind: "box",
+            center,
+            halfWidth: hw - radius,
+            halfHeight: hh,
+            canonicalLeafIndex,
+          });
+        if (hh > radius)
+          parts.push({
+            kind: "box",
+            center,
+            halfWidth: hw,
+            halfHeight: hh - radius,
+            canonicalLeafIndex,
+          });
+        if (radius > 0)
+          for (const y of [-1, 1])
+            for (const x of [-1, 1])
+              parts.push({
+                kind: "circle",
+                center: new Float64Array([
+                  center[0]! + x * (hw - radius),
+                  center[1]! + y * (hh - radius),
+                ]),
+                radius,
+                canonicalLeafIndex,
+              });
+        expanded = parts;
+        this.expandedLeaves.set(leaf, expanded);
+      }
+      result.push(...expanded);
+    }
+    this.expandedShapes.set(leaves, result);
+    return result;
+  }
   private error: Error | undefined;
   private changed = false;
   private write(output: Float64Array, index: number, value: number): void {
@@ -42,7 +112,9 @@ export class CommittedObstacles2D {
         world.colliders.flags[collider.index]! & COLLIDER_SENSOR_2D
       )
         continue;
-      for (const leaf of world.colliders.shapes[collider.index]!.leaves) {
+      for (const leaf of this.leaves(
+        world.colliders.shapes[collider.index]!.leaves,
+      )) {
         if (leaf.kind === "box") boxes += 10;
         else if (leaf.kind === "ellipse" || leaf.kind === "circle")
           ellipses += 10;
@@ -98,7 +170,7 @@ export class CommittedObstacles2D {
       const angle = rotation + local.rotationRadians,
         c = Math.cos(angle),
         s = Math.sin(angle);
-      for (const leaf of shape.leaves) {
+      for (const leaf of this.leaves(shape.leaves)) {
         if (leaf.kind === "polygon") {
           const output = this.batch.polygons;
           this.write(output, polygonAt++, leaf.vertices.length / 2);

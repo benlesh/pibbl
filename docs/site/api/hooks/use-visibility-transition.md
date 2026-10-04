@@ -131,11 +131,24 @@ to the receiving primitive; forces use units/second², wind uses units/second, a
 drag uses inverse seconds. `linger` must be positive. Gravity defaults to `[0,-60]`,
 wind to `[0,-45]`, drag to 4, and restitution to 0.5.
 
+For a local physics world, use `physics: { obstacles: physicsObstacles2D(world) }`
+with `physicsObstacles2D` imported from `@crc/core/physics/2d`. The receiver and
+world must share local coordinates. The source is read once per advancing frame;
+changed packed geometry is copied directly into fixed WASM memory. All 1,200
+particle sweeps and bounce calculations run in one WASM call per substep. Boxes,
+ellipses, polygons, and boxes with equal rounded corners are supported, with a maximum of 8,192 packed numbers;
+unsupported world shapes or capacity overflow report an error. Sensors are excluded.
+The source supplies committed geometry; particles do not push bodies or inherit
+obstacle velocity. A custom source must increment its `revision` when geometry
+changes. Its typed arrays are borrowed synchronously and never retained.
+
 The optional synchronous `collide(from, to)` callback receives a swept point segment
 and returns the closest `{ fraction, normal }` hit or `undefined`. It runs during
 Advance and must not write signals or retain borrowed data. Normal is a local
 outward vector, fraction is in `[0,1]`. Query a local physics world in this callback
-for obstacle interaction. This is one-way point collision: particles do not push
+for custom obstacle interaction, but that performs JavaScript work per particle;
+prefer `obstacles` for large populations. `collide` and `obstacles` are mutually
+exclusive. This is one-way point collision: particles do not push
 bodies. Keep the receiver and queried world in the same coordinate space or
 explicitly convert points and normals. No physics-world import occurs implicitly.
 

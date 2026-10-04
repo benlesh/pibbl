@@ -203,3 +203,37 @@ it("keeps a manipulated ellipse collider aligned after move, resize, and rotatio
   settle();
   expect(source.read().revision).toBe(stationaryRevision);
 });
+
+it("exports a rounded shelf as an exact union of boxes and circles", () => {
+  const driver = new ManualSchedulerDriver(),
+    restore = installSchedulerDriverForTest(driver);
+  let source!: ReturnType<typeof physicsObstacles2D>;
+  function Content() {
+    source = physicsObstacles2D(crcPhysicsWorld2D());
+    return (
+      <Rectangle
+        physics={staticBody2D()}
+        style={{ left: 140, top: 235, width: 160, height: 18, cornerRadius: 3 }}
+      />
+    );
+  }
+  const canvas = document.createElement("canvas");
+  document.body.append(canvas);
+  const root = crc(
+    canvas,
+    <PhysicsWorld2D>
+      <Content />
+    </PhysicsWorld2D>,
+  );
+  dispose = () => {
+    root.dispose();
+    restore();
+  };
+  for (let i = 0; i < 4 && driver.pendingHostFrames; i++)
+    driver.flush((i * 1000) / 60);
+  const batch = source.read();
+  expect(batch.boxes.length).toBe(20);
+  expect(batch.ellipses.length).toBe(40);
+  expect(Array.from(batch.boxes.slice(0, 4))).toEqual([220, 244, 77, 9]);
+  expect(Array.from(batch.ellipses.slice(0, 4))).toEqual([143, 238, 3, 3]);
+});
