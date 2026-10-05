@@ -1,6 +1,12 @@
 import { parse } from "@babel/parser";
 
 const SUPPORTED_MODULES = new Set([
+  "@pibbl/core/machines",
+  "@pibbl/core/machines/animation",
+  "@pibbl/core/sprites",
+  "@pibbl/core/sprites/formats/aseprite",
+  "@pibbl/core/sprites/formats/texture-packer",
+
   "@pibbl/text",
   "@pibbl/core",
   "@pibbl/core/filters",
@@ -48,7 +54,7 @@ interface SourceEdit {
 
 function invalidModuleShape(): Error {
   return new Error(
-    "Lessons may contain named imports only from @pibbl/core, @pibbl/core/filters, @pibbl/core/viz, @pibbl/core/textures, " +
+    "Lessons may contain named imports only from @pibbl/core/machines, @pibbl/core/machines/animation, @pibbl/core/sprites and its format adapters, @pibbl/core, @pibbl/core/filters, @pibbl/core/viz, @pibbl/core/textures, " +
       "@pibbl/core/jsx-runtime, @pibbl/core/jsx-dev-runtime, @pibbl/core/particles, " +
       "@pibbl/core/physics/2d, @pibbl/core/physics/2d/geometry, @pibbl/three, three, and " +
       "three/addons/controls/OrbitControls.js, plus exactly " +

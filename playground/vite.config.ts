@@ -16,6 +16,12 @@ const sandboxAssetHeaders = { "Access-Control-Allow-Origin": "*" };
 export default defineConfig(({ mode }) => {
   const isStudioDocsAcceptance = mode === "studio-docs-acceptance";
   const sourceAliases = [
+    ["@pibbl/core/machines", "../packages/core/src/features/machines/index.ts"],
+    ["@pibbl/core/machines/animation", "../packages/core/src/features/machines/animation.ts"],
+    ["@pibbl/core/sprites", "../packages/core/src/features/sprites/index.ts"],
+    ["@pibbl/core/sprites/formats/aseprite", "../packages/core/src/features/sprites/formats/aseprite.ts"],
+    ["@pibbl/core/sprites/formats/texture-packer", "../packages/core/src/features/sprites/formats/texture-packer.ts"],
+
     ["@pibbl/text", "../packages/text/src/index.ts"],
     ["@pibbl/core/filters", "../packages/core/src/filters.ts"],
     ["@pibbl/core/textures", "../packages/core/src/features/textures/index.ts"],

@@ -73,6 +73,14 @@
     "./sprites/formats/texture-packer": {
       "types": "./dist/sprites/formats/texture-packer.d.ts",
       "default": "./dist/sprites/formats/texture-packer.mjs"
+    },
+    "./machines": {
+      "types": "./dist/machines.d.ts",
+      "default": "./dist/machines.mjs"
+    },
+    "./machines/animation": {
+      "types": "./dist/machines/animation.d.ts",
+      "default": "./dist/machines/animation.mjs"
     }
   },
   "main": "./dist/index.mjs",
@@ -121,6 +129,12 @@
       ],
       "sprites/formats/texture-packer": [
         "./dist/sprites/formats/texture-packer.d.ts"
+      ],
+      "machines": [
+        "./dist/machines.d.ts"
+      ],
+      "machines/animation": [
+        "./dist/machines/animation.d.ts"
       ]
     }
   },

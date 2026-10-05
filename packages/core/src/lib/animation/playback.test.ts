@@ -14,6 +14,7 @@ import {
   stepper,
   drive,
   tween,
+  usePlayback,
   wait,
   type PibblAnimationProgram,
   type PibblNode,
@@ -78,6 +79,30 @@ function root(node: PibblNode) {
 }
 
 describe('scheduler-integrated animation playback', () => {
+  it('releases a render-disposal status command when its root is disposed', () => {
+    const mounted = signal(true);
+    let retained!: ReturnType<typeof usePlayback>;
+    const Child = () => {
+      retained = usePlayback(drive(signal(0), tween({ to: 1, duration: 100 })), {
+        autoplay: true,
+      });
+      return null;
+    };
+    const Root = () => mounted.get() ? createElement(Child, {}) : null;
+    const controller = root(createElement(Root, {}));
+
+    driver.flush(0);
+    mounted.set(false);
+    driver.flush(1);
+    expect(snapshotRealmScheduler().queuedBeginCommands).toBe(1);
+
+    controller.dispose();
+    roots.delete(controller);
+    expect(retained.status.get()).toBe('disposed');
+    expect(snapshotRealmScheduler().queuedBeginCommands).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
   it('publishes two playbacks atomically before two roots render in mount order', () => {
     const order: string[] = [];
     const firstValue = signal(0);

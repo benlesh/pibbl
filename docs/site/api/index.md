@@ -143,3 +143,10 @@ Start with the [Getting started guide](#/learn/guides/configure-jsx). Add an
 ordinary Three scene with [Use Three.js inside Pibbl](#/learn/guides/three-js),
 then explore the
 [Three.js instancing example](#/examples/three/three-instancing).
+
+## State machines and sprites
+
+- [Machine functions](#/api/functions/machines) and [useMachine](#/api/hooks/use-machine) coordinate general application state and owned work.
+- [playAnimation](#/api/functions/play-animation) integrates optional state-owned playback.
+- [Sprite](#/api/components/sprite) and [sprite sheets](#/api/functions/sprite-sheets) draw shared atlas frames.
+- [Machine types](#/api/types/machines) and [sprite types](#/api/types/sprites) describe their public contracts.

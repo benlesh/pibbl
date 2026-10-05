@@ -23,6 +23,8 @@ const exampleGroups = [
 ] as const satisfies readonly [LearningBrowseGroup, string][];
 
 const typeDomains = [
+  ["machines", "State machines"],
+  ["sprites", "Sprites"],
   ["canvas-runtime", "Canvas and runtime"],
   ["elements-components", "Elements and components"],
   ["events", "Events"],

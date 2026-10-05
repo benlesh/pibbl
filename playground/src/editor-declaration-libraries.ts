@@ -21,6 +21,11 @@ const declarationModulePaths = new Map([
     "file:///node_modules/@pibbl/core/jsx-dev-runtime.d.ts",
   ],
   ["@pibbl/core/particles", "file:///node_modules/@pibbl/core/particles/index.d.ts"],
+  ["@pibbl/core/machines", "file:///node_modules/@pibbl/core/machines/index.d.ts"],
+  ["@pibbl/core/machines/animation", "file:///node_modules/@pibbl/core/machines/animation.d.ts"],
+  ["@pibbl/core/sprites", "file:///node_modules/@pibbl/core/sprites/index.d.ts"],
+  ["@pibbl/core/sprites/formats/aseprite", "file:///node_modules/@pibbl/core/sprites/formats/aseprite.d.ts"],
+  ["@pibbl/core/sprites/formats/texture-packer", "file:///node_modules/@pibbl/core/sprites/formats/texture-packer.d.ts"],
   ["@pibbl/core/physics/2d", "file:///node_modules/@pibbl/core/physics/2d.d.ts"],
   [
     "@pibbl/core/physics/2d/geometry",

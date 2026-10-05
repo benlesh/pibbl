@@ -18,7 +18,7 @@
     "test:smoke": "vitest run packages/core/test/smoke-scenario.test.ts --browser.headless --browser.ui=false",
     "test:smoke:built": "corepack pnpm@11.21.0 build && vitest run packages/core/test/smoke-scenario.test.ts packages/core/test/html-box-smoke.test.ts packages/core/test/features/textures/public-smoke.test.tsx packages/core/test/features/particles/public-flow-smoke.test.tsx --mode built --browser.headless --browser.ui=false",
     "test:package-consumer": "corepack pnpm@11.21.0 build && tsc -p playground/package-consumer/tsconfig.bundler.json && tsc -p playground/package-consumer/tsconfig.nodenext.json && node playground/package-consumer/runtime.mjs",
-    "test:package-consumer:packed": "corepack pnpm@11.21.0 build && node tooling/verify-bundle-sizes.mjs && node tooling/verify-packed-pivot.mjs && node tooling/verify-packed-viz.mjs && node tooling/verify-packed-textures.mjs && node tooling/verify-optional-feature-bundles.mjs && node --test tooling/optional-import-inertness.test.mjs",
+    "test:package-consumer:packed": "corepack pnpm@11.21.0 build && node tooling/verify-bundle-sizes.mjs && node tooling/verify-packed-pivot.mjs && node tooling/verify-packed-viz.mjs && node tooling/verify-packed-textures.mjs && node tooling/verify-packed-machines.mjs && node tooling/verify-optional-feature-bundles.mjs && node --test tooling/optional-import-inertness.test.mjs",
     "test:package-entries": "vitest run --config tooling/package-entries.vitest.config.ts",
     "test:visual-safeguard": "node tooling/verify-visual-safeguard.mjs",
     "test:studio-visual": "corepack pnpm@11.21.0 playground:build && node tooling/verify-diagram-editor-teaser.mjs && node tooling/verify-studio-visuals.mjs",
@@ -79,7 +79,12 @@
     "trust:native": "corepack pnpm@11.21.0 text:test && corepack pnpm@11.21.0 text:doctor && corepack pnpm@11.21.0 text:verify-reproducible",
     "audit:agent-verification:claims": "node tooling/agent-verification/requirements.mjs",
     "audit:docs:preservation": "node tooling/verify-docs-mutations.mjs --historical-preservation",
-    "audit:studio-visual": "corepack pnpm@11.21.0 test:studio-visual"
+    "audit:studio-visual": "corepack pnpm@11.21.0 test:studio-visual",
+    "brick-climb": "vite --config games/brick-climb/vite.config.ts",
+    "brick-climb:build": "vite build --config games/brick-climb/vite.config.ts",
+    "brick-climb:check": "node --import tsx --test games/brick-climb/model.check.ts games/brick-climb/machines.check.ts games/brick-climb/boost.check.ts games/brick-climb/pause.check.ts",
+    "test:machines": "vitest run packages/core/src/features/machines/runtime.test.ts packages/core/test/features/machines/machine-hook-animation.test.tsx --browser.headless --browser.ui=false",
+    "test:machine-bundles": "node tooling/verify-machine-bundles.mjs"
   },
   "devDependencies": {
     "@babel/core": "catalog:",

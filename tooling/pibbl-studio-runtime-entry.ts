@@ -32,3 +32,13 @@ export * from "@pibbl/core/viz";
 export * from "@pibbl/core/textures";
 
 export { loadOutlineFont, createTextGeometry } from "@pibbl/text";
+
+export * from "@pibbl/core/machines";
+
+export * from "@pibbl/core/machines/animation";
+
+export * from "@pibbl/core/sprites";
+
+export * from "@pibbl/core/sprites/formats/aseprite";
+
+export * from "@pibbl/core/sprites/formats/texture-packer";

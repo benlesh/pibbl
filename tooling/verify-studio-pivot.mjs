@@ -24,6 +24,11 @@ const expectedModules = new Map([
   ["@pibbl/core/physics/2d/geometry", "node_modules/@pibbl/core/physics/2d/geometry.d.ts"],
   ["@pibbl/core/physics/2d", "node_modules/@pibbl/core/physics/2d.d.ts"],
   ["@pibbl/core/particles", "node_modules/@pibbl/core/particles/index.d.ts"],
+  ["@pibbl/core/machines", "node_modules/@pibbl/core/machines/index.d.ts"],
+  ["@pibbl/core/machines/animation", "node_modules/@pibbl/core/machines/animation.d.ts"],
+  ["@pibbl/core/sprites", "node_modules/@pibbl/core/sprites/index.d.ts"],
+  ["@pibbl/core/sprites/formats/aseprite", "node_modules/@pibbl/core/sprites/formats/aseprite.d.ts"],
+  ["@pibbl/core/sprites/formats/texture-packer", "node_modules/@pibbl/core/sprites/formats/texture-packer.d.ts"],
   ["@pibbl/three", "node_modules/@pibbl/three/index.d.ts"],
   ["@pibbl/core/viz", "node_modules/@pibbl/core/viz/index.d.ts"],
   ["@pibbl/text", "node_modules/@pibbl/text/index.d.ts"],
@@ -49,6 +54,11 @@ const sourceEntries = {
   ),
   physics2d: join(repositoryRoot, "packages/core/src/features/physics/2d.ts"),
   particles: join(repositoryRoot, "packages/core/src/features/particles/index.ts"),
+  machines: join(repositoryRoot, "packages/core/src/features/machines/index.ts"),
+  machineAnimation: join(repositoryRoot, "packages/core/src/features/machines/animation.ts"),
+  sprites: join(repositoryRoot, "packages/core/src/features/sprites/index.ts"),
+  spriteAseprite: join(repositoryRoot, "packages/core/src/features/sprites/formats/aseprite.ts"),
+  spriteTexturePacker: join(repositoryRoot, "packages/core/src/features/sprites/formats/texture-packer.ts"),
   three: join(repositoryRoot, "packages/three/src/index.ts"),
   viz: join(repositoryRoot, "packages/core/src/features/viz/index.ts"),
   text: join(repositoryRoot, "packages/text/src/index.ts"),
@@ -76,6 +86,11 @@ const inventoryKey = new Map([
   ["@pibbl/core/physics/2d/geometry", "physics2dGeometry"],
   ["@pibbl/core/physics/2d", "physics2d"],
   ["@pibbl/core/particles", "particles"],
+  ["@pibbl/core/machines", "machines"],
+  ["@pibbl/core/machines/animation", "machineAnimation"],
+  ["@pibbl/core/sprites", "sprites"],
+  ["@pibbl/core/sprites/formats/aseprite", "spriteAseprite"],
+  ["@pibbl/core/sprites/formats/texture-packer", "spriteTexturePacker"],
   ["@pibbl/three", "three"],
   ["@pibbl/core/viz", "viz"],
   ["@pibbl/text", "text"],
@@ -136,15 +151,34 @@ try {
   }
   const consumer = `
     /** @jsxImportSource @pibbl/core */
-    import { pibbl, Rectangle, DragHandle, ManipulationFrame, ResizeHandles, RotationHandle, useManipulation, useSignal, type PibblNode } from '@pibbl/core';
+    import { pibbl, Rectangle, DragHandle, ManipulationFrame, ResizeHandles, RotationHandle, drive, signal, useManipulation, useSignal, type PibblNode } from '@pibbl/core';
     import { defineThreeLayer, type PibblThreeTarget } from '@pibbl/three';
     import { loadOutlineFont, createTextGeometry } from '@pibbl/text';
     async function textOutline(bytes: Uint8Array) { using font = await loadOutlineFont(bytes); return createTextGeometry(font, 'Hello', {fontSize: 100, missingGlyphs: 'error'}); }
     import { Particles2D } from '@pibbl/core/particles';
+    import { assign, createMachine, defineMachine, fromCallback, type MachineEvent } from '@pibbl/core/machines';
+    import { playAnimation } from '@pibbl/core/machines/animation';
+    import { Sprite, defineSpriteAnimation, type SpriteFrame } from '@pibbl/core/sprites';
+    import { aseprite } from '@pibbl/core/sprites/formats/aseprite';
+    import { texturePacker } from '@pibbl/core/sprites/formats/texture-packer';
     import { ReactionDiffusion, ProceduralTexture, texturePalettes, type TextureRenderer } from '@pibbl/core/textures';
     const textureRenderer: TextureRenderer = (ctx, texture) => { ctx.drawImage(texture.source, 0, 0, texture.width, texture.height); };
     const textures = <><ReactionDiffusion paused palette={texturePalettes.ember} render={textureRenderer} /><ProceduralTexture kind="paper" /></>;
     void textures;
+    type MachineDemoEvent = MachineEvent & { readonly type: 'GO' };
+    const machine = defineMachine<{ readonly count: number }, MachineDemoEvent>({
+      initial: 'idle', context: { count: 0 }, states: {
+        idle: { on: { GO: { actions: assign(({ context }) => ({ count: context.count + 1 })) } }, invoke: { task: fromCallback(() => {}) } },
+      },
+    });
+    const actor = createMachine(machine, { input: undefined });
+    actor.start(); actor.send({ type: 'GO' }); actor.stop();
+    declare const spriteFrame: SpriteFrame;
+    const spriteFrameSignal = signal(spriteFrame);
+    const spriteAnimation = defineSpriteAnimation({ frames: [spriteFrame], fps: 12 });
+    const animationTask = playAnimation(() => drive(spriteFrameSignal, spriteAnimation));
+    const formats = [aseprite(), texturePacker(), animationTask];
+    void formats;
     import { PhysicsWorld2D } from '@pibbl/core/physics/2d';
     import { Scene, PerspectiveCamera, Mesh, BoxGeometry, MeshBasicMaterial } from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -163,6 +197,8 @@ try {
     function App(): PibblNode {
       void Particles2D; void PhysicsWorld2D; void OrbitControls;
       const box = useSignal({ left: 20, top: 30, width: 100, height: 60 });
+      const sprite = <Sprite frame={spriteFrameSignal} sampling="nearest" />;
+      void sprite;
       const manipulation = useManipulation({ box });
       return <><ManipulationFrame {...manipulation.frameProps}><DragHandle controller={manipulation} formatReadout={({ left, top }) => String(left + top)} style={{ readout: { gap: 5, active: { visible: true, fill: 'blue' } } }}><Rectangle keyboardFocusable style={{ width: 20, height: 20, cursor: 'grab' }} /></DragHandle><ResizeHandles controller={manipulation} /><RotationHandle controller={manipulation} /></ManipulationFrame><Layer angle={1} style={{ width: 20, height: 20 }} /></>;
     }

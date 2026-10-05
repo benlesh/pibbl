@@ -118,11 +118,19 @@ export interface AnimationPlaybackSnapshot {
   readonly outputStageAttempts: number;
 }
 
+/** Internal root lifetime used to revoke a deferred disposal publication. */
+interface DeferredStatusCommandOwner {
+  add(teardown: () => void): void;
+  remove(teardown: () => void): void;
+}
+
 export interface AnimationPlaybackController {
   readonly handle: PibblPlayback;
   adopt(program: PibblAnimationProgram, options?: PibblPlaybackOptions): void;
   committedSpringSnapshot(): SpringSample | undefined;
   retarget(program: PibblAnimationProgram, options?: PibblPlaybackOptions): void;
+  /** @internal Associates render-phase disposal work with the owning root. */
+  setDeferredStatusCommandOwner(owner: DeferredStatusCommandOwner): void;
   dispose(): void;
 }
 
@@ -263,6 +271,7 @@ export function createAnimationPlaybackController(
   let storedPlaybackRate = 1;
   let delivery: FrameDelivery | undefined;
   let pendingRetarget: PibblBeginCommandHandle | undefined;
+  let deferredStatusCommandOwner: DeferredStatusCommandOwner | undefined;
   const pendingCommands = new Set<PibblBeginCommandHandle>();
   const metadataWriter = Object.freeze({ name: 'Pibbl playback metadata' });
   const status = signal<PibblPlaybackStatus>('idle', {
@@ -962,6 +971,35 @@ export function createAnimationPlaybackController(
     return commandHandle;
   }
 
+  function stageDisposedAfterRender(): void {
+    let command!: PibblBeginCommandHandle;
+    let revokeFromOwner: (() => void) | undefined;
+    command = queueBeginCommand((snapshot, batch) => {
+      try {
+        batch.stage(status, 'disposed', metadataWriter);
+        recordSchedulerTrace({
+          kind: 'animation-write',
+          frameId: snapshot.frameId,
+          logicalTime: snapshot.logicalTime,
+          debugName: debugName(),
+          target: 'status',
+          outcome: 'staged',
+        });
+      } finally {
+        revokeFromOwner?.();
+      }
+    });
+    const owner = deferredStatusCommandOwner;
+    if (owner === undefined) return;
+    const revoke = () => {
+      command.cancel();
+      const phase = snapshotRealmScheduler().phase;
+      if (phase !== 'advance' && phase !== 'render') status.set('disposed');
+    };
+    revokeFromOwner = () => owner.remove(revoke);
+    owner.add(revoke);
+  }
+
   function acceptCommandWithoutTrace(
     command: PlaybackCommandName,
     generation: number,
@@ -1156,6 +1194,9 @@ export function createAnimationPlaybackController(
       const generation = ++queuedGeneration;
       pendingRetarget = enqueue('play', generation, 'replace');
     },
+    setDeferredStatusCommandOwner(owner: DeferredStatusCommandOwner): void {
+      deferredStatusCommandOwner = owner;
+    },
     dispose(): void {
       if (disposed) return;
       disposed = true;
@@ -1177,17 +1218,7 @@ export function createAnimationPlaybackController(
       if (schedulerPhase !== 'advance' && schedulerPhase !== 'render') {
         status.set('disposed');
       } else {
-        queueBeginCommand((snapshot, batch) => {
-          batch.stage(status, 'disposed', metadataWriter);
-          recordSchedulerTrace({
-            kind: 'animation-write',
-            frameId: snapshot.frameId,
-            logicalTime: snapshot.logicalTime,
-            debugName: debugName(),
-            target: 'status',
-            outcome: 'staged',
-          });
-        });
+        stageDisposedAfterRender();
       }
     },
   });

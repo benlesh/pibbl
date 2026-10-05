@@ -81,6 +81,7 @@ export function usePlayback(
       candidate.program,
       candidateOptions,
     );
+    controller.setDeferredStatusCommandOwner(pibblInstance.mainTeardowns);
     const onEvent = (event: PibblPlaybackEvent): void => {
       if (isCurrentSlot(value)) value.latestOptions.onEvent?.(event);
     };

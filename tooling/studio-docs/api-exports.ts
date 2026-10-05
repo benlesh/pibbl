@@ -76,6 +76,12 @@ export const pibblPublicCompilerOptions: CompilerOptions = {
 };
 
 export const pibblPublicEntryPaths = {
+  machines: fileURLToPath(new URL("../../packages/core/src/features/machines/index.ts", import.meta.url)),
+  machineAnimation: fileURLToPath(new URL("../../packages/core/src/features/machines/animation.ts", import.meta.url)),
+  sprites: fileURLToPath(new URL("../../packages/core/src/features/sprites/index.ts", import.meta.url)),
+  aseprite: fileURLToPath(new URL("../../packages/core/src/features/sprites/formats/aseprite.ts", import.meta.url)),
+  texturePacker: fileURLToPath(new URL("../../packages/core/src/features/sprites/formats/texture-packer.ts", import.meta.url)),
+
   filters: fileURLToPath(
     new URL("../../packages/core/src/filters.ts", import.meta.url),
   ),

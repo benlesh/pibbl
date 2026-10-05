@@ -94,6 +94,9 @@ export default defineConfig(({ mode }) => ({
         ? []
         : [
             { find: /^@pibbl\/core\/filters$/, replacement: fileURLToPath(new URL("./packages/core/src/filters.ts", import.meta.url)) },
+            { find: /^@pibbl\/core\/machines\/animation$/, replacement: fileURLToPath(new URL("./packages/core/src/features/machines/animation.ts", import.meta.url)) },
+            { find: /^@pibbl\/core\/machines$/, replacement: fileURLToPath(new URL("./packages/core/src/features/machines/index.ts", import.meta.url)) },
+            { find: /^@pibbl\/core\/sprites$/, replacement: fileURLToPath(new URL("./packages/core/src/features/sprites/index.ts", import.meta.url)) },
             { find: /^@pibbl\/core\/textures$/, replacement: fileURLToPath(new URL("./packages/core/src/features/textures/index.ts", import.meta.url)) },
             {
               find: /^@pibbl\/core\/viz$/,

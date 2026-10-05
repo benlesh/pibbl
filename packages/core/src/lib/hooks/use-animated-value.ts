@@ -206,6 +206,7 @@ export function useAnimatedValue<T>(
       conflict: 'replace',
       debugName: candidate.options.debugName,
     });
+    controller.setDeferredStatusCommandOwner(pibblInstance.mainTeardowns);
     const value: PibblTransitionHookSlot<T> = {
       componentRefs,
       controller,
