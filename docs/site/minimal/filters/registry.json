@@ -2,7 +2,7 @@
   {
     "id": "filter-blur-shadow",
     "title": "Blur and cast a shadow",
-    "description": "Filter one painted rectangle with a soft edge and combined silhouette shadow.",
+    "description": "Compare an original multicolor subject with separate blur and silhouette-shadow treatments.",
     "source": "blur-shadow.tsx",
     "environment": "browser",
     "symbols": [
@@ -22,7 +22,7 @@
   {
     "id": "filter-tone",
     "title": "Adjust brightness, contrast, and saturation",
-    "description": "Compose three native color controls on a single Canvas shape.",
+    "description": "Compare brightness, contrast, and saturation independently against the same original subject.",
     "source": "tone.tsx",
     "environment": "browser",
     "symbols": [
@@ -36,12 +36,14 @@
       { "name": "CRCContrastFilterOptions", "importPath": "@crc/core/filters" },
       { "name": "CRCSaturateFilterOptions", "importPath": "@crc/core/filters" }
     ],
-    "notes": ["The list applies filters in declaration order."]
+    "notes": [
+      "Each treatment changes one variable; the checkerboard remains outside the filtered group."
+    ]
   },
   {
     "id": "filter-color",
     "title": "Shift a color treatment",
-    "description": "Apply partial grayscale, hue rotation, and inversion to one shape.",
+    "description": "Compare grayscale, hue rotation, and inversion independently against a colorful original.",
     "source": "color.tsx",
     "environment": "browser",
     "symbols": [
@@ -65,7 +67,7 @@
   {
     "id": "filter-finish",
     "title": "Warm and fade a shape",
-    "description": "Combine sepia with raster opacity without changing layout opacity.",
+    "description": "Compare sepia and raster opacity against an original, with a checkerboard revealing transparency.",
     "source": "finish.tsx",
     "environment": "browser",
     "symbols": [
@@ -81,7 +83,7 @@
   {
     "id": "filter-water-light",
     "title": "Refract and light water",
-    "description": "Use one numeric texture map for displacement and reflected highlights.",
+    "description": "Compare an original tiled subject, displacement, reflected light, and their combined result.",
     "source": "water-light.tsx",
     "environment": "browser",
     "symbols": [

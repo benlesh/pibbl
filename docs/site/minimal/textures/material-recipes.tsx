@@ -1,4 +1,3 @@
-/** @jsxImportSource @crc/core */
 import { crc, Rectangle } from "@crc/core";
 import {
   cellular,
@@ -8,22 +7,65 @@ import {
   type MaterialOptions,
 } from "@crc/core/textures";
 
-const canvas = document.createElement("canvas");
-canvas.width = 330;
-canvas.height = 130;
-document.body.append(canvas);
-
-function Materials() {
-  const options: MaterialOptions = { seed: 42, scale: 6, detail: 0.65 };
-  const stone = useTexture(marble(options));
-  const sheet = useTexture(paper(options));
-  const cells = useTexture(cellular(options));
-  return [
-    <Rectangle key="stone" style={{ left: 0, top: 0, width: 110, height: 130, fill: stone }} />,
-    <Rectangle key="sheet" style={{ left: 110, top: 0, width: 110, height: 130, fill: sheet }} />,
-    <Rectangle key="cells" style={{ left: 220, top: 0, width: 110, height: 130, fill: cells }} />,
-  ];
+const materials = [
+  {
+    name: "Marble",
+    recipe: marble,
+    scale: 2,
+    palette: ["#eef3f1", "#83a9ae", "#224c5a"],
+  },
+  {
+    name: "Paper",
+    recipe: paper,
+    scale: 6,
+    palette: ["#fafaf7", "#d0d4cf", "#9aa39e"],
+  },
+  {
+    name: "Cellular",
+    recipe: cellular,
+    scale: 4,
+    palette: ["#101b29", "#24657d", "#6cd0d5"],
+  },
+];
+function Material({ index }: { index: number }) {
+  const material = materials[index]!;
+  const options: MaterialOptions = {
+    seed: 42,
+    scale: material.scale,
+    detail: 0.55,
+  };
+  const texture = useTexture(material.recipe(options), {
+    resolution: { width: 224, height: 156 },
+    palette: material.palette,
+  });
+  return (
+    <Rectangle
+      style={{
+        width: 224,
+        height: 156,
+        fill: texture.paint({ mode: "stretch" }),
+      }}
+    />
+  );
 }
-
-const controller = crc(canvas, <Materials />);
-window.addEventListener("pagehide", () => controller.dispose(), { once: true });
+const grid = document.createElement("div");
+grid.style.cssText =
+  "display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:480px";
+document.body.append(grid);
+const controllers = materials.map((material, index) => {
+  const figure = document.createElement("figure");
+  figure.style.margin = "0";
+  const caption = document.createElement("figcaption");
+  caption.textContent = material.name;
+  const canvas = document.createElement("canvas");
+  canvas.width = 224;
+  canvas.height = 156;
+  figure.append(caption, canvas);
+  grid.append(figure);
+  return crc(canvas, <Material index={index} />);
+});
+window.addEventListener(
+  "pagehide",
+  () => controllers.forEach((controller) => controller.dispose()),
+  { once: true },
+);

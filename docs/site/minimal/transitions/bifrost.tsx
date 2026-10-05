@@ -2,6 +2,7 @@ import {
   crc,
   Group,
   Rectangle,
+  Circle,
   Text,
   useVisibilityTransition,
   bifrost,
@@ -15,45 +16,78 @@ import {
 } from "@crc/core";
 
 const options: CRCBifrostOptions = {
-  region: { x: 30, y: 30, width: 260, height: 100 },
+  region: { x: 100, y: 100, width: 280, height: 100 },
+  entry: { x: 240, y: 10 },
+  glow: 0.8,
 };
 const effect: CRCTransitionEffect = bifrost(options);
 const visibility: CRCVisibilityTransitionOptions = {
-  initial: true,
+  initial: false,
   enter: effect,
-  duration: 1200,
+  duration: 1600,
 };
 const canvas = document.createElement("canvas");
-canvas.width = 360;
-canvas.height = 220;
+canvas.width = 480;
+canvas.height = 300;
 const output = document.createElement("output");
+output.style.display = "block";
 document.body.append(canvas, output);
 let handle: CRCVisibilityTransition | undefined;
+let mounted!: (value: CRCVisibilityTransition) => void;
+const ready = new Promise<CRCVisibilityTransition>((resolve) => {
+  mounted = resolve;
+});
 function Scene() {
   const transition = useVisibilityTransition(visibility);
   handle = transition;
+  mounted(transition);
   const binding: CRCTransitionBinding = transition.binding;
   const status: CRCVisibilityTransitionStatus = transition.status.get();
   return (
     <>
+      <Rectangle style={{ width: 480, height: 300, fill: "#11151c" }} />
       <Group style={{ transition: binding }}>
+        <Circle
+          style={{
+            cx: 146,
+            cy: 148,
+            radius: 32,
+            stroke: "#64e0b5",
+            strokeWidth: 8,
+          }}
+        />
         <Rectangle
           style={{
-            left: 30,
-            top: 30,
-            width: 260,
-            height: 100,
-            fill: "#087e8b",
+            left: 138,
+            top: 132,
+            width: 16,
+            height: 32,
+            fill: "#64e0b5",
           }}
         />
         <Text
-          style={{ left: 60, top: 90, font: "24px sans-serif", fill: "#fff" }}
+          style={{
+            left: 204,
+            top: 151,
+            font: "bold 30px sans-serif",
+            fill: "#ffffff",
+          }}
+        >
+          CRC
+        </Text>
+        <Text
+          style={{
+            left: 204,
+            top: 179,
+            font: "16px sans-serif",
+            fill: "#c8d3dc",
+          }}
         >
           bifrost
         </Text>
       </Group>
       <Text
-        style={{ left: 30, top: 195, fill: "#222", font: "14px sans-serif" }}
+        style={{ left: 20, top: 279, fill: "#c8d3dc", font: "14px sans-serif" }}
       >
         {status}
       </Text>
@@ -61,6 +95,8 @@ function Scene() {
   );
 }
 const controller = crc(canvas, <Scene />);
+// Wait for the scheduled first mount before starting its entrance.
+void ready.then((transition) => transition.show());
 for (const action of ["show", "hide"] as const) {
   const button = document.createElement("button");
   button.textContent = action;

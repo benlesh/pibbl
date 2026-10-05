@@ -37,7 +37,7 @@
   {
     "id": "texture-material-recipes",
     "title": "Compare three material recipes",
-    "description": "Mount marble, paper, and cellular textures as adjacent Canvas fills.",
+    "description": "Compare labeled marble, paper, and cellular swatches with palettes that reveal their surface detail.",
     "source": "material-recipes.tsx",
     "environment": "browser",
     "symbols": [
@@ -72,7 +72,7 @@
   {
     "id": "texture-water-waves",
     "title": "Ripple a wave map",
-    "description": "Refract a painted rectangle through a periodic numeric wave texture.",
+    "description": "Refract a tiled sign through a periodic wave texture, with an unfiltered comparison toggle.",
     "source": "water-waves.tsx",
     "environment": "browser",
     "symbols": [
@@ -80,7 +80,9 @@
       { "name": "WaterWavesOptions", "importPath": "@crc/core/textures" },
       { "name": "WaterWavesMessage", "importPath": "@crc/core/textures" }
     ],
-    "notes": ["Click the shape to add a normalized ripple to the map."]
+    "notes": [
+      "Press anywhere on the image to add a ripple at that position. Turn off Refraction to see the undistorted source."
+    ]
   },
   {
     "id": "texture-water-surface",
@@ -95,7 +97,7 @@
       { "name": "WaterSurfaceMessage", "importPath": "@crc/core/textures" }
     ],
     "notes": [
-      "The obstacle affects the visual height field, not Canvas hit testing."
+      "Press to ripple the tiled image. The outlined island marks the normalized obstacle, which affects the height field rather than Canvas hit testing."
     ]
   },
   {
@@ -110,7 +112,7 @@
       { "name": "RainDropsMessage", "importPath": "@crc/core/textures" }
     ],
     "notes": [
-      "A click sends a typed nudge while the texture continues to animate through CRC scheduling."
+      "Drag across the glass to wipe condensation with typed finger messages. Toggle Fogged glass to compare with the original; CRC owns animation and texture cleanup."
     ]
   },
   {

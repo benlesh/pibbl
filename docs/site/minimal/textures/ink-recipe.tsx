@@ -17,8 +17,21 @@ function Ink() {
   const texture = useTexture(reactionDiffusion(options), {
     resolution: { width: 128, height: 80 },
   });
-  const paint: InkMessage = { type: "paint", u: 0.5, v: 0.5, radius: 8, strength: 0.9 };
-  return <Rectangle style={{ width: 320, height: 200, fill: texture }} onClick={() => texture.send(paint)} />;
+  return (
+    <Rectangle
+      style={{ width: 320, height: 200, fill: texture }}
+      onClick={(event) => {
+        const paint: InkMessage = {
+          type: "paint",
+          u: event.x / 320,
+          v: event.y / 200,
+          radius: 8,
+          strength: 0.9,
+        };
+        texture.send(paint);
+      }}
+    />
+  );
 }
 
 const controller = crc(canvas, <Ink />);

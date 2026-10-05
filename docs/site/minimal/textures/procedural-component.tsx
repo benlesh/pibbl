@@ -17,9 +17,12 @@ canvas.height = 200;
 document.body.append(canvas);
 
 const kind: TextureKind = "marble";
-const resolution: TextureResolution = { width: 128, height: 80 };
+const resolution: TextureResolution = { width: 320, height: 200 };
 const palette: TexturePalette = texturePalettes.lagoon;
-const render: TextureRenderer = (context, frame: Readonly<TextureRenderFrame>) => {
+const render: TextureRenderer = (
+  context,
+  frame: Readonly<TextureRenderFrame>,
+) => {
   context.drawImage(frame.source, 0, 0, frame.width, frame.height);
   context.globalCompositeOperation = "destination-in";
   context.drawImage(frame.mask, 0, 0, frame.width, frame.height);
@@ -29,7 +32,12 @@ const props: ProceduralTextureProps = {
   resolution,
   palette,
   seed: 42,
+  scale: 2,
+  detail: 0.3,
   render,
 };
-const controller = crc(canvas, <ProceduralTexture {...props} style={{ width: 320, height: 200 }} />);
+const controller = crc(
+  canvas,
+  <ProceduralTexture {...props} style={{ width: 320, height: 200 }} />,
+);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

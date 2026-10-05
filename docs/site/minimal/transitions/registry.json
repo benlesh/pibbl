@@ -152,7 +152,7 @@
   {
     "id": "bifrost",
     "title": "bifrost enter and exit",
-    "description": "Show and hide a captured CRC subtree with the bifrost transition.",
+    "description": "Beam a transparent logo in and out with Bifrost, using a dark stage and space for its luminous trails. The first entrance runs automatically.",
     "source": "bifrost.tsx",
     "environment": "browser",
     "symbols": [
@@ -173,7 +173,7 @@
   {
     "id": "hologram",
     "title": "hologram enter and exit",
-    "description": "Show and hide a captured CRC subtree with the hologram transition.",
+    "description": "Project a transparent logo with Hologram on a dark stage. The first entrance runs automatically; Show and Hide replay either direction.",
     "source": "hologram.tsx",
     "environment": "browser",
     "symbols": [
@@ -194,7 +194,7 @@
   {
     "id": "embers",
     "title": "embers enter and exit",
-    "description": "Show and hide a captured CRC subtree with the embers transition.",
+    "description": "Break a transparent logo into glowing Embers, with a dark stage and space for falling particles. The first entrance runs automatically.",
     "source": "embers.tsx",
     "environment": "browser",
     "symbols": [
