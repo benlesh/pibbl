@@ -1,0 +1,74 @@
+[
+  {
+    "id": "target",
+    "title": "Typed event target",
+    "description": "A geometric Canvas target routes pointer, mouse, touch, wheel, keyboard, input, clipboard, and drag events.",
+    "source": "target.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "useCursor", "importPath": "@crc/core" },
+      { "name": "useEventListener", "importPath": "@crc/core" },
+      { "name": "useEventTarget", "importPath": "@crc/core" },
+      { "name": "CRCClipboardEvent", "importPath": "@crc/core" },
+      { "name": "CRCCompositionEvent", "importPath": "@crc/core" },
+      { "name": "CRCDragEvent", "importPath": "@crc/core" },
+      { "name": "CRCEvent", "importPath": "@crc/core" },
+      { "name": "CRCEventCapturePropName", "importPath": "@crc/core" },
+      { "name": "CRCEventHandler", "importPath": "@crc/core" },
+      { "name": "CRCEventHandlers", "importPath": "@crc/core" },
+      { "name": "CRCEventMap", "importPath": "@crc/core" },
+      { "name": "CRCEventParticipationOptions", "importPath": "@crc/core" },
+      { "name": "CRCEventPhase", "importPath": "@crc/core" },
+      { "name": "CRCEventPropName", "importPath": "@crc/core" },
+      { "name": "CRCEventTarget", "importPath": "@crc/core" },
+      { "name": "CRCEventTargetOptions", "importPath": "@crc/core" },
+      { "name": "CRCEventTargetSnapshot", "importPath": "@crc/core" },
+      { "name": "CRCEventType", "importPath": "@crc/core" },
+      { "name": "CRCFocusEvent", "importPath": "@crc/core" },
+      { "name": "CRCInputEvent", "importPath": "@crc/core" },
+      { "name": "CRCKeyboardEvent", "importPath": "@crc/core" },
+      { "name": "CRCLogicalMouseEvent", "importPath": "@crc/core" },
+      { "name": "CRCPointerEvent", "importPath": "@crc/core" },
+      { "name": "CRCPointerEvents", "importPath": "@crc/core" },
+      { "name": "CRCTouchEvent", "importPath": "@crc/core" },
+      { "name": "CRCWheelEvent", "importPath": "@crc/core" }
+    ],
+    "notes": [
+      "Canvas events remain logical CRC events; this example does not create native semantic DOM for the target.",
+      "Clipboard, input, composition, and drag fields are typed callbacks; their native browser events require an appropriate focused host or interaction."
+    ]
+  },
+  {
+    "id": "focus",
+    "title": "Focus and arrow navigation",
+    "description": "Two logical targets participate in Tab focus and directional keyboard navigation.",
+    "source": "focus.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "FocusManagement", "importPath": "@crc/core" },
+      { "name": "KeyboardNavigation", "importPath": "@crc/core" },
+      { "name": "CRCKeyboardNavigationOptions", "importPath": "@crc/core" },
+      { "name": "FocusManagementProps", "importPath": "@crc/core" },
+      { "name": "KeyboardNavigationProps", "importPath": "@crc/core" }
+    ],
+    "notes": [
+      "FocusManagement uses Canvas as a native focus host; it does not create an accessibility tree or semantic HTML controls."
+    ]
+  },
+  {
+    "id": "paths",
+    "title": "Memoized hit paths",
+    "description": "Rectangle, line, and SVG path hooks define three independent geometric click targets.",
+    "source": "paths.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "useRectPath", "importPath": "@crc/core" },
+      { "name": "useLinePath", "importPath": "@crc/core" },
+      { "name": "useSvgPath", "importPath": "@crc/core" },
+      { "name": "PixelGridAlignment", "importPath": "@crc/core" }
+    ],
+    "notes": [
+      "Path hooks are render-only and memoize native Path2D geometry; the painted paths opt out of pointer targeting so the hook targets receive clicks."
+    ]
+  }
+]

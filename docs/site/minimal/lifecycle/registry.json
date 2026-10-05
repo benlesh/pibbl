@@ -65,5 +65,227 @@
     "notes": [
       "Textual values belong inside Text; arbitrary strings are not general scene nodes. Components are synchronous and createElement is equivalent to automatic JSX."
     ]
+  },
+  {
+    "id": "mount",
+    "title": "Mount, update, and dispose",
+    "description": "Own one CRC root for a canvas and replace its content without creating another controller.",
+    "source": "mount.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "crc",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Canvas",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCController",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["One canvas has at most one live mount. dispose() is idempotent."]
+  },
+  {
+    "id": "primitive",
+    "title": "Define a Canvas primitive",
+    "description": "Supply synchronous drawing, style normalization, resolution, and opt-in measurement.",
+    "source": "primitive.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "definePrimitive",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "useCanvasContext",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "SystemStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RenderingContext2D",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PrimitiveRender",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PrimitiveCapabilities",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PrimitiveInput",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PrimitiveInputOf",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PrimitiveProgramProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCPrimitiveComponent",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "SpecifiedStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "NormalizedStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ResolvedStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "StyleResolutionContext",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "MeasureInput",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "MeasureResult",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CanvasMeasurementService",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "A custom primitive owns its drawing geometry. Use supported hooks for targeting and measurement; never write signals during render. useCanvasContext is for synchronous measurement, not retained context ownership."
+    ]
+  },
+  {
+    "id": "html",
+    "title": "Host a native button in CRC",
+    "description": "Mount and update native HTML inside an HtmlBox, preserving native clicks and focus.",
+    "source": "html.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "HtmlBox",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "HtmlBoxProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "HtmlBoxStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "HtmlMountCallback",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "HtmlUpdateFunction",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "HtmlBoxFocusState",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "HtmlBox hosts live DOM alongside Canvas; Canvas filters cannot capture it. The abort signal releases listeners on unmount; keep mount callback identity stable."
+    ]
+  },
+  {
+    "id": "texture",
+    "title": "Define and own a texture",
+    "description": "Rasterize a small animated tile and send it a message from native HTML.",
+    "source": "texture.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "defineTexture",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "useTexture",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "TextureDefinition",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "TextureContext",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "TextureFrame",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "TextureRecipe",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Texture",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "TextureOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "TexturePlacement",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "TexturePaint",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "The texture is owned by useTexture. requestFrame() opts into another shared CRC frame; stop calling it to stop animation. Release application-owned resources in definition.dispose if any are allocated."
+    ]
+  },
+  {
+    "id": "surface",
+    "title": "Configure viewport and pixel density",
+    "description": "Compare a fixed logical viewport with one that follows a resizable host.",
+    "source": "surface.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "CRCConfig",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCFit",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCPixelRatio",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCFixedViewportConfig",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCResponsiveViewportConfig",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Surface configuration is captured at mount. Dispose and remount to change it. CSS controls display size; CRC manages backing pixels."
+    ]
   }
 ]

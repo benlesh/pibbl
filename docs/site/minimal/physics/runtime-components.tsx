@@ -1,4 +1,4 @@
-import { Group, crc, definePrimitive, signal, type SystemStyle } from '@crc/core';
+import { Group, crc, definePrimitive, signal, type CRCPhysics2DPropExtension, type SystemStyle } from '@crc/core';
 import {
   Capsule2D,
   Chain2D,
@@ -71,11 +71,12 @@ const kinematicOptions: CRCPhysicsKinematicBody2DOptions = { target, collider: f
 const bodyAttachment: CRCPhysicsBodyAttachment2D = kinematicBody2D(kinematicOptions);
 const colliderAttachment: CRCPhysicsColliderAttachment2D = collider2D({ tag: 'moving-diamond' });
 const attachment: CRCPhysicsAttachment2D = colliderAttachment;
+const diamondPhysics: CRCPhysics2DPropExtension = { physics: attachment };
 
 function MovingDiamond() {
   const [x, y] = position.get();
   return <Group physics={bodyAttachment} style={{ translateX: x, translateY: y }}>
-    <Diamond physics={attachment} style={{ size: 28 }} />
+    <Diamond {...diamondPhysics} style={{ size: 28 }} />
   </Group>;
 }
 

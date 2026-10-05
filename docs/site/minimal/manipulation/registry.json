@@ -1,0 +1,190 @@
+[
+  {
+    "id": "basic",
+    "title": "Drag, resize, and rotate",
+    "description": "Use the convenience component with a writable geometry box.",
+    "source": "basic.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Manipulable",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulableProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationBox",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "degrees",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Angles are radians; degrees() converts author-friendly degrees. The mounted component owns input listeners and gesture cleanup."
+    ]
+  },
+  {
+    "id": "controller",
+    "title": "Own a manipulation controller",
+    "description": "Compose a drag surface and one resize handle, inspect gesture state, and cancel explicitly.",
+    "source": "controller.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "useManipulation",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ManipulationFrame",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "DragHandle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ResizeHandle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationController",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationFrameProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationMoveInput",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationResizeInput",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationRotateInput",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationWhen",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationPoint",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCResizePosition",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationGeometry",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationOperation",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationActive",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationSnapshot",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationEvent",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationCommitEvent",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationCancelEvent",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationCancelReason",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCDragHandleProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCResizeHandleProps",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Hold Shift while moving to snap to the 20-unit grid. Keep handles inside their controller's ManipulationFrame."
+    ]
+  },
+  {
+    "id": "handles",
+    "title": "Style resize and rotation handles",
+    "description": "Add corner handles, a rotation connector, an angle arc, and gesture readouts.",
+    "source": "handles.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "ResizeHandles",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RotationHandle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCDragHandleStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCResizeHandleStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCResizeHandlesProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCRotationHandleProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCRotationHandleStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationReadoutStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCManipulationReadoutStateStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCRotationConnectorStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCRotationArcStyle",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Handle hit sizes and readout spacing are CSS pixels; the manipulated box remains in CRC logical coordinates."
+    ]
+  }
+]

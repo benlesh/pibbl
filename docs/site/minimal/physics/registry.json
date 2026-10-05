@@ -266,6 +266,7 @@
         "name": "CRCPhysicsPrimitiveProps2D",
         "importPath": "@crc/core/physics/2d"
       },
+      { "name": "CRCPhysics2DPropExtension", "importPath": "@crc/core" },
       { "name": "PhysicsShape2DProps", "importPath": "@crc/core/physics/2d" },
       { "name": "PhysicsShape2DStyle", "importPath": "@crc/core/physics/2d" },
       { "name": "Capsule2DProps", "importPath": "@crc/core/physics/2d" },
