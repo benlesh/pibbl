@@ -1,0 +1,267 @@
+[
+  {
+    "id": "round-shapes",
+    "title": "Rounded and circular marks",
+    "description": "Draw a circle, ellipse, rounded rectangle, arc, and wedge with typed props and styles.",
+    "source": "round-shapes.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Arc",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ArcProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ArcStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Circle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CircleProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CircleStyle",
+        "importPath": "@crc/core"
+      },
+      { "name": "CursorStyle", "importPath": "@crc/core" },
+      { "name": "FillStyle", "importPath": "@crc/core" },
+      { "name": "PaintStyle", "importPath": "@crc/core" },
+      {
+        "name": "Ellipse",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "EllipseProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "EllipseStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Rectangle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RectangleProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RectStyle",
+        "importPath": "@crc/core"
+      },
+      { "name": "RoundedCornerStyle", "importPath": "@crc/core" },
+      { "name": "StrokeStyle", "importPath": "@crc/core" },
+      {
+        "name": "Wedge",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "WedgeProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "WedgeStyle",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "polygons",
+    "title": "Polygon marks",
+    "description": "Draw a rounded triangle, regular hexagon, and five-point star.",
+    "source": "polygons.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Polygon",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PolygonProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PolygonStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RegularPolygon",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RegularPolygonProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RegularPolygonStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Star",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "StarProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "StarStyle",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "strokes-paths",
+    "title": "Lines and authored paths",
+    "description": "Combine polyline, axis-aligned strokes, mutable geometry, and SVG path data.",
+    "source": "strokes-paths.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "HorizontalLine",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "HorizontalLineProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "HorizontalLineStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Line",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "LineProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "LineStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Path",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "SvgPath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "SvgPathProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "SvgPathStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "VerticalLine",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "VerticalLineProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "VerticalLineStyle",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "composition",
+    "title": "Drawing composition",
+    "description": "Group, cache, and clip a drawing, then add text and a tiny embedded image.",
+    "source": "composition.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Clip",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ClipProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ClipStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Group",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "GroupProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "GStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Image",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ImageProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ImgStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Layer",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "LayerProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "LayerStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Text",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "TextProps",
+        "importPath": "@crc/core"
+      },
+      { "name": "TextFit", "importPath": "@crc/core" },
+      {
+        "name": "TextStyle",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the CRC mount on pagehide.",
+      "The image uses an embedded PNG data URL; no external asset request is needed."
+    ]
+  }
+]

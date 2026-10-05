@@ -1,0 +1,238 @@
+[
+  {
+    "id": "absolute-overlay",
+    "title": "Absolute and overlay layout",
+    "description": "Position a block absolutely and center content within an overlay.",
+    "source": "absolute-overlay.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Absolute",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "AbsoluteProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "AbsoluteStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Overlay",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "OverlayProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "OverlayStyle",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "flow-flex",
+    "title": "Flow and flex layout",
+    "description": "Stack a banner with a flexible row of marks.",
+    "source": "flow-flex.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Flow",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "FlowProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "FlowStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Flex",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "FlexProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "FlexStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "FlexItemStyle",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "grid-responsive",
+    "title": "Grid and responsive style",
+    "description": "Place marks on explicit grid tracks and apply a local width rule.",
+    "source": "grid-responsive.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Grid",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "GridProps",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "GridStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "GridTrack",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "GridItemStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCResponsiveStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCSizeQuery",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCStyleRule",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "box-helpers",
+    "title": "Box resolution",
+    "description": "Resolve padding, percentages, and a constrained box with typed diagnostics.",
+    "source": "box-helpers.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "LayoutDiagnostic",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "layoutDiagnostic",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "normalizeEdges",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "resolveBox",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "resolveLength",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "BoxStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Constraints",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "EdgeValues",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Edges",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "LayoutBox",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "LayoutDiagnosticContext",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "LayoutDiagnosticInput",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Length",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Percentage",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ResolvedBoxStyle",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Size",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Displays resolved edges and box geometry in the document."]
+  },
+  {
+    "id": "measure",
+    "title": "Intrinsic measurement",
+    "description": "Measure a Text element with a Canvas service and display its computed dimensions.",
+    "source": "measure.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "measureElement",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CanvasMeasurementService",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "Constraints",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "MeasureInput",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "MeasureResult",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Displays the measured Text dimensions in the document."]
+  },
+  {
+    "id": "layout-box",
+    "title": "Allocated layout box",
+    "description": "Read the current canvas allocation and draw an inset panel.",
+    "source": "layout-box.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "useLayoutBox",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "LayoutItemStyle",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  }
+]

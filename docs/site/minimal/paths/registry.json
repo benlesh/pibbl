@@ -1,0 +1,344 @@
+[
+  {
+    "id": "geometry",
+    "title": "Editable path geometry",
+    "description": "Build a cubic path, convert it, and compare flattening and simplification utilities.",
+    "source": "geometry.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PathGeometry",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathSegment",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "flattenPath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "flattenPathWang",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "simplifyPath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "simplifyPathRadial",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "subdividePath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "toPath2D",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "toSvgPathData",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "FlattenPathOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "SimplifyPathOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "SubdividePathOptions",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Strokes the authored curve and four derived paths on a local Canvas."
+    ]
+  },
+  {
+    "id": "circular-factories",
+    "title": "Circular path factories",
+    "description": "Create circle, ellipse, arc, and wedge Path2D shapes.",
+    "source": "circular-factories.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "createArcPath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "createCirclePath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "createEllipsePath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "createWedgePath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ArcPathOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CirclePathOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "EllipsePathOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "WedgePathOptions",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Strokes every constructed Path2D on a local Canvas."]
+  },
+  {
+    "id": "polygon-factories",
+    "title": "Polygon path factories",
+    "description": "Create rounded rectangles and polygons alongside regular and star shapes.",
+    "source": "polygon-factories.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "createPolygonPath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "createRectanglePath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "createRegularPolygonPath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "createStarPath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PolygonPathOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RectanglePathOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RegularPolygonNumericSize",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RegularPolygonPathOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RegularPolygonPathPosition",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "RoundedCornerPathOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "StarPathOptions",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Strokes every constructed Path2D on a local Canvas."]
+  },
+  {
+    "id": "line-svg-factories",
+    "title": "Line and SVG paths",
+    "description": "Construct a polyline and an SVG path from authored coordinates.",
+    "source": "line-svg-factories.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "createLinePath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "createSvgPath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "LinePathOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "SvgPathOptions",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Strokes both paths on a local Canvas."]
+  },
+  {
+    "id": "affine",
+    "title": "Affine transforms",
+    "description": "Compose translation and scaling, then transform geometry and a sample point.",
+    "source": "affine.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "affineTransform",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "composeTransforms",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "transformPath",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathPoint",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathRect",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathTransform",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "TransformPathOptions",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Gray is the source; teal is the transformed path; orange marks the mapped center."
+    ]
+  },
+  {
+    "id": "quad-envelope",
+    "title": "Quad and envelope warps",
+    "description": "Warp a tile through a quadrilateral and between measured guide paths.",
+    "source": "quad-envelope.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "envelopeTransform",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "quadTransform",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "EnvelopeGuide",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "EnvelopeTransformOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathGuide",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathGuideOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathGuideStation",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathQuadCorners",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathQuadMode",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "QuadTransformOptions",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Gray is the source; teal and orange show the two warps."]
+  },
+  {
+    "id": "bends",
+    "title": "Arc and path bending",
+    "description": "Bend geometry around an arc and along a guide with explicit placement options.",
+    "source": "bends.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "arcBendTransform",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "pathBendTransform",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "ArcBendTransformOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "BendTransformOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathBendAlign",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathBendArc",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathBendBaseline",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathBendFit",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathBendOverflow",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "PathBendTransformOptions",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Gray is the source; teal and orange show the arc and guide bends."
+    ]
+  },
+  {
+    "id": "mesh",
+    "title": "Mesh warp",
+    "description": "Define a one-cell guide mesh and warp a circle through it.",
+    "source": "mesh.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "meshTransform",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "MeshTransformOptions",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": ["Gray is the source; teal is the mesh-warped result."]
+  }
+]
