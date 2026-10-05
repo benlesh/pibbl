@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createElement } from "../element/create-element";
 import { executeRender } from "../execute-render";
-import { clearSharedState, getCRCInstance } from "../global-state";
-import { mountCRC } from "../mount-crc";
-import type { CRCController, CRCElement } from "../types";
+import { clearSharedState, getPibblInstance } from "../global-state";
+import { mountPibbl } from "../mount-pibbl";
+import type { PibblController, PibblElement } from "../types";
 import type { HtmlFocusRegion } from "./html-focus-region";
-import { CRCFocusManager } from "./focus-manager";
+import { PibblFocusManager } from "./focus-manager";
 import { focusManaged } from "./policy-test-support";
 
-const controllers = new Set<CRCController>();
+const controllers = new Set<PibblController>();
 
 beforeEach(() => document.body.replaceChildren());
 afterEach(() => {
@@ -75,23 +75,23 @@ describe("HtmlBox focus regions", () => {
 });
 
 function mounted(): {
-  manager: CRCFocusManager;
-  owner: NonNullable<ReturnType<typeof getCRCInstance>>;
+  manager: PibblFocusManager;
+  owner: NonNullable<ReturnType<typeof getPibblInstance>>;
 } {
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
-  const controller = mountCRC(canvas, focusManaged(createElement(Empty, {})));
+  const controller = mountPibbl(canvas, focusManaged(createElement(Empty, {})));
   controllers.add(controller);
   executeRender(canvas, 1);
-  const owner = getCRCInstance(canvas);
-  const manager = owner.eventRoot.focusPolicy as CRCFocusManager;
+  const owner = getPibblInstance(canvas);
+  const manager = owner.eventRoot.focusPolicy as PibblFocusManager;
   return { manager, owner };
 }
 
-const Empty = (_props: {}): CRCElement<any> | undefined => undefined;
+const Empty = (_props: {}): PibblElement<any> | undefined => undefined;
 
 function htmlRegion(
-  owner: NonNullable<ReturnType<typeof getCRCInstance>>,
+  owner: NonNullable<ReturnType<typeof getPibblInstance>>,
   content: HTMLElement,
   snapshots: string[],
 ): HtmlFocusRegion {

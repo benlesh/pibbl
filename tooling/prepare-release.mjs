@@ -9,17 +9,18 @@ if (!version || valid(version) !== version || extra.length) {
 
 // Validate the complete release set before changing any manifest. Preparation
 // does not create commits or tags, push, or publish packages.
-const manifests = ['core', 'three', 'text'].map(name => {
+const manifests = ['core', 'three', 'text', 'pibbl'].map(name => {
   const path = resolve('packages', name, 'package.json');
   const manifest = JSON.parse(readFileSync(path, 'utf8'));
-  if (manifest.name !== `@crc/${name}` || manifest.private) {
+  if (manifest.name !== (name === 'pibbl' ? 'pibbl' : `@pibbl/${name}`) || manifest.private) {
     throw new Error(`Unexpected publishable package at ${path}`);
   }
-  if (name !== 'core' && !manifest.peerDependencies?.['@crc/core']) {
+  if (name !== 'core' && name !== 'pibbl' && !manifest.peerDependencies?.['@pibbl/core']) {
     throw new Error(`Missing exact core peer in ${manifest.name}`);
   }
   manifest.version = version;
-  if (name !== 'core') manifest.peerDependencies['@crc/core'] = version;
+  if (name === 'pibbl') manifest.dependencies['@pibbl/core'] = `workspace:${version}`;
+  else if (name !== 'core') manifest.peerDependencies['@pibbl/core'] = version;
   return { path, manifest };
 });
 for (const { path, manifest } of manifests) {

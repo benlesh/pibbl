@@ -1,4 +1,4 @@
-import { defineTexture, type TextureContext, type TextureRecipe } from "@crc/core";
+import { defineTexture, type TextureContext, type TextureRecipe } from "@pibbl/core";
 import { validateSeed } from "./palette.js";
 
 /**
@@ -388,7 +388,7 @@ const recipe = defineTexture<RainDropsOptions, State, RainDropsMessage>({
 });
 
 /**
- * A seeded rain-on-glass displacement map, advanced by CRC's scheduler.
+ * A seeded rain-on-glass displacement map, advanced by Pibbl's scheduler.
  *
  * @param options - Raindrop simulation and appearance settings. See {@link RainDropsOptions}.
  * @returns A raindrop texture recipe accepting raindrop messages. See {@link TextureRecipe} ,

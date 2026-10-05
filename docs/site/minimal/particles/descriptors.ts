@@ -5,36 +5,36 @@ import {
   particleInteger,
   particleParameter,
   particleRange,
-  type CRCParticleChoice,
-  type CRCParticleCurve,
-  type CRCParticleCurveOptions,
-  type CRCParticleCurveValue,
-  type CRCParticleGradient,
-  type CRCParticleIntegerRange,
-  type CRCParticleParameterReference,
-  type CRCParticleRange,
-  type CRCParticleScalar,
-  type CRCParticleVector2,
-} from "@crc/core/particles";
+  type PibblParticleChoice,
+  type PibblParticleCurve,
+  type PibblParticleCurveOptions,
+  type PibblParticleCurveValue,
+  type PibblParticleGradient,
+  type PibblParticleIntegerRange,
+  type PibblParticleParameterReference,
+  type PibblParticleRange,
+  type PibblParticleScalar,
+  type PibblParticleVector2,
+} from "@pibbl/core/particles";
 
-const speed: CRCParticleRange = particleRange(60, 120);
-const count: CRCParticleIntegerRange = particleInteger(8, 16);
-const colors: CRCParticleChoice<string> = particleChoice([
+const speed: PibblParticleRange = particleRange(60, 120);
+const count: PibblParticleIntegerRange = particleInteger(8, 16);
+const colors: PibblParticleChoice<string> = particleChoice([
   { value: "#f97316", weight: 3 },
   { value: "#facc15", weight: 1 },
 ]);
-const wind: CRCParticleParameterReference<"wind"> = particleParameter("wind");
-const velocity: CRCParticleVector2 = [wind, speed];
-const opacity: CRCParticleCurve<number> = particleCurve([
+const wind: PibblParticleParameterReference<"wind"> = particleParameter("wind");
+const velocity: PibblParticleVector2 = [wind, speed];
+const opacity: PibblParticleCurve<number> = particleCurve([
   [0, 1],
   [1, 0],
 ]);
-const color: CRCParticleGradient = particleGradient([
+const color: PibblParticleGradient = particleGradient([
   [0, "#facc15"],
   [1, "#ef4444"],
 ]);
-const sizeValue: CRCParticleCurveValue = [12, 18];
-const smooth: CRCParticleCurveOptions = { easing: (t) => t * t };
+const sizeValue: PibblParticleCurveValue = [12, 18];
+const smooth: PibblParticleCurveOptions = { easing: (t) => t * t };
 const size = particleCurve(
   [
     [0, sizeValue],
@@ -42,7 +42,7 @@ const size = particleCurve(
   ],
   smooth,
 );
-const lifetime: CRCParticleScalar = particleRange(500, 900);
+const lifetime: PibblParticleScalar = particleRange(500, 900);
 
 const output = document.createElement("pre");
 output.textContent = JSON.stringify(

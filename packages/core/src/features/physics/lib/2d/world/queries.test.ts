@@ -4,9 +4,9 @@ import {
   boxShape2D,
   chainShape2D,
   circleShape2D,
-  type CRCPhysicsShape2D,
+  type PibblPhysicsShape2D,
 } from "../../../2d-geometry.js";
-import type { CRCPhysicsBodyHandle2D, CRCPhysicsColliderHandle2D } from "../types.js";
+import type { PibblPhysicsBodyHandle2D, PibblPhysicsColliderHandle2D } from "../types.js";
 import { requireShapeRecord2D } from "../shape-records.js";
 import { createPhysicsOwnershipCounters2D } from "../runtime/ownership.js";
 import { DynamicAabbBroadPhase2D } from "./broad-phase.js";
@@ -19,12 +19,12 @@ interface FakeHandle {
   readonly generation: number;
 }
 
-function bodyHandle(index: number, generation: number): CRCPhysicsBodyHandle2D {
-  return { index, generation } as unknown as CRCPhysicsBodyHandle2D;
+function bodyHandle(index: number, generation: number): PibblPhysicsBodyHandle2D {
+  return { index, generation } as unknown as PibblPhysicsBodyHandle2D;
 }
 
-function colliderHandle(index: number, generation: number): CRCPhysicsColliderHandle2D {
-  return { index, generation } as unknown as CRCPhysicsColliderHandle2D;
+function colliderHandle(index: number, generation: number): PibblPhysicsColliderHandle2D {
+  return { index, generation } as unknown as PibblPhysicsColliderHandle2D;
 }
 
 function identityOf(handle: object): FakeHandle | null {
@@ -39,8 +39,8 @@ function createFixture() {
   const bodies = new BodyStore2D(counters, 16);
   const colliders = new ColliderStore2D(counters, 16);
   const broadPhase = new DynamicAabbBroadPhase2D(counters, 16, 32);
-  const materializedBodies = new Map<string, CRCPhysicsBodyHandle2D>();
-  const materializedColliders = new Map<string, CRCPhysicsColliderHandle2D>();
+  const materializedBodies = new Map<string, PibblPhysicsBodyHandle2D>();
+  const materializedColliders = new Map<string, PibblPhysicsColliderHandle2D>();
   let bodyMaterializations = 0;
   let colliderMaterializations = 0;
   const queries = new CommittedWorldQueries2D({
@@ -75,7 +75,7 @@ function createFixture() {
     options: Readonly<{
       x: number;
       y?: number;
-      shape?: CRCPhysicsShape2D;
+      shape?: PibblPhysicsShape2D;
       sensor?: boolean;
       tag?: unknown;
       filter?: Readonly<{ category?: number; mask?: number; group?: number }>;

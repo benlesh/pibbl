@@ -1,13 +1,13 @@
 import {
-  crc,
+  pibbl,
   useEventTarget,
   useSignal,
   FocusManagement,
   KeyboardNavigation,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function boxPath(x: number, y: number, width: number, height: number): Path2D {
   const path = new Path2D();
   path.rect(x, y, width, height);
@@ -218,8 +218,8 @@ function DirectionalNavigationLesson() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     <FocusManagement>
       <DirectionalNavigationLesson />

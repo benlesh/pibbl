@@ -1,7 +1,7 @@
 ---
 id: guide-signals-animation
 title: Use signals and animation
-summary: Drive signal-valued inputs, computed barriers, transitions, and component-owned animation through CRC's shared scheduler.
+summary: Drive signal-valued inputs, computed barriers, transitions, and component-owned animation through Pibbl's shared scheduler.
 kind: guide
 slug: signals-and-animation
 order: 62
@@ -10,14 +10,14 @@ keywords: [signals, computed, animation, transitions, playback, scheduler]
 
 # Signals and animation
 
-CRC animation writes ordinary signals. Definitions describe values, programs
+Pibbl animation writes ordinary signals. Definitions describe values, programs
 bind those definitions to writable signals, and `usePlayback` owns a running
 program for one mounted component. Everything advances through the same realm
 scheduler used by state, roots, and Layers.
 
 ## Pass signals to their receivers
 
-CRC drawing components accept signals directly at declared inputs:
+Pibbl drawing components accept signals directly at declared inputs:
 
 ```tsx
 function Card({ targetX }: { targetX: number }) {
@@ -32,7 +32,7 @@ function Card({ targetX }: { targetX: number }) {
 
 `Rectangle` performs the read and owns the dependency. Use `x.get()` when the
 enclosing component intentionally needs the value for arithmetic, branching,
-or aggregation. This receiver-owned form is declared and shallow; CRC does not
+or aggregation. This receiver-owned form is declared and shallow; Pibbl does not
 search application objects for nested signals.
 
 On mount, a transition with no `initial` presents its target immediately. A
@@ -152,7 +152,7 @@ time rather than accumulating display-frame deltas. A skipped display frame
 jumps to the right value. Stateful steppers alone consume clamped fixed-step
 elapsed input and replay those steps when seeking.
 
-CRC exposes playback `seek`, not a public realm clock or history recorder.
+Pibbl exposes playback `seek`, not a public realm clock or history recorder.
 Internal traces can explain phase, command, sample, invalidation, milestone,
 and error order without changing behavior. Logical values and ordering are
 deterministic within the documented bounds; browser Canvas pixels, fonts,
@@ -169,11 +169,11 @@ Add an explicit `Layer` only when measurement shows that a repeatedly drawn
 subtree is expensive and its child content is usually stable. A dirty Layer can
 repaint before ancestor composition while clean sibling bitmaps are reused; a
 parent-only placement, transform, alpha, or outer-filter animation may reuse
-the Layer's clean bitmap. CRC never automatically promotes components to
+the Layer's clean bitmap. Pibbl never automatically promotes components to
 offscreen surfaces. Diagnostics may recommend a boundary, but code retains the
 decision.
 
-External render layers, including `@crc/three`, use the same signals and
+External render layers, including `@pibbl/three`, use the same signals and
 scheduler in lockstep. Continuous values belong in signals; sparse renderer
 facts can become semantic events delivered in Complete. An embedded renderer
 does not create a second animation loop. Worker or WASM numeric execution
@@ -182,7 +182,7 @@ stale-result rejection, lifecycle, and main-thread fallback remain
 observationally identical.
 
 Particle `acceleration`, `gravity`, `drag`, and related modules from
-`@crc/core/particles` are closed population-domain descriptors. They tell a particle
+`@pibbl/core/particles` are closed population-domain descriptors. They tell a particle
 executor how each emitted member moves; they are not a new general animation
 system. Continue to drive component transforms, cameras, materials, lights,
 and ordinary application values with signals and the animation definitions

@@ -1,5 +1,5 @@
-import { Absolute, Group, signal } from "@crc/core";
-import * as Viz from "@crc/core/viz";
+import { Absolute, Group, signal } from "@pibbl/core";
+import * as Viz from "@pibbl/core/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;

@@ -10,21 +10,21 @@ import {
   Layer,
   Overlay,
   Rectangle,
-  type CRCElement,
-  type CRCEventHandlers,
-} from '@crc/core';
+  type PibblElement,
+  type PibblEventHandlers,
+} from '@pibbl/core';
 import { describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
-import { getCRCInstance } from '../global-state';
+import { pibbl } from '../pibbl';
+import { getPibblInstance } from '../global-state';
 import type { RectStyle } from '../style/types';
 import { componentTest } from '../test-utils/component-test';
 
 interface StructuralCase {
   readonly name: string;
   readonly create: (
-    handlers: CRCEventHandlers,
-    child: CRCElement<any>,
-  ) => CRCElement<any>;
+    handlers: PibblEventHandlers,
+    child: PibblElement<any>,
+  ) => PibblElement<any>;
   readonly childStyle: Readonly<RectStyle>;
 }
 
@@ -148,7 +148,7 @@ describe('structural event listeners', () => {
 
   it('keeps Group listener hook order stable while handlers are toggled', async () => {
     const trace: string[] = [];
-    const scene = (handlers: CRCEventHandlers): CRCElement<any> => createElement(Group, {
+    const scene = (handlers: PibblEventHandlers): PibblElement<any> => createElement(Group, {
       ...handlers,
       children: createElement(Rectangle, {
         style: { width: 20, height: 20, fill: '#2563eb' },
@@ -156,12 +156,12 @@ describe('structural event listeners', () => {
       }),
     });
     const canvas = await componentTest(scene({}), { width: 40, height: 40 });
-    const instance = getCRCInstance(canvas.element);
+    const instance = getPibblInstance(canvas.element);
     const release = vi.fn();
     instance.eventRoot.onNodeRelease = release;
 
     expect(instance.eventRoot.listenersByComponent.size).toBe(0);
-    crc(canvas.element, scene({ onClick: () => trace.push('ancestor') }));
+    pibbl(canvas.element, scene({ onClick: () => trace.push('ancestor') }));
     await nextFrame();
 
     expect(instance.eventRoot.listenersByComponent.size).toBe(1);
@@ -169,7 +169,7 @@ describe('structural event listeners', () => {
     expect(trace).toEqual(['child', 'ancestor']);
 
     trace.length = 0;
-    crc(canvas.element, scene({}));
+    pibbl(canvas.element, scene({}));
     await nextFrame();
 
     expect(instance.eventRoot.listenersByComponent.size).toBe(0);

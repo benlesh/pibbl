@@ -1,5 +1,5 @@
-import { grayscale, sepia, hueRotate, opacity } from '@crc/core/filters';
-import type { FilterLabState, ScenarioController } from '@crc/scenarios';
+import { grayscale, sepia, hueRotate, opacity } from '@pibbl/core/filters';
+import type { FilterLabState, ScenarioController } from '@pibbl/scenarios';
 import {
   FILTER_LAB_PROBES,
   filterLabScenarioEntry,
@@ -9,16 +9,16 @@ import {
   loadLearningExample,
   loadScenario,
   scenarioCatalog,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   Polygon,
   Rectangle,
   RegularPolygon,
   Star,
-  crc,
+  pibbl,
   createElement,
-} from '@crc/core';
+} from '@pibbl/core';
 import filterLabSource from '../../scenarios/src/filter-lab.example.tsx?raw';
 import learningFilterSource from '../../scenarios/src/learning/composition/filters.example.tsx?raw';
 import { clickMouse, cssPointForIntrinsic } from './support/mouse-input';
@@ -103,7 +103,7 @@ describe('first-class filter public scenarios', () => {
     expect(learningEntry).toMatchObject({
       slug: 'filters',
       section: 'composition',
-      api: ['Group', 'Rectangle', 'Circle', 'Text', 'CRCFilter'],
+      api: ['Group', 'Rectangle', 'Circle', 'Text', 'PibblFilter'],
       source: {
         path: 'packages/scenarios/src/learning/composition/filters.example.tsx',
       },
@@ -146,8 +146,8 @@ describe('first-class filter public scenarios', () => {
 
   it('keeps both filter scenarios source-backed by direct public imports', () => {
     for (const source of [learningFilterSource, filterLabSource]) {
-      expect(source).toMatch(/from ['"]@crc\/core['"]/u);
-      expect(source).not.toMatch(/@crc\/core\/(?:src|lib)\//u);
+      expect(source).toMatch(/from ['"]@pibbl\/core['"]/u);
+      expect(source).not.toMatch(/@pibbl\/core\/(?:src|lib)\//u);
     }
     expect(learningFilterSource).toContain('const FILTER_SAMPLES = [');
     expect(learningFilterSource).toContain('const ORDERED_FILTERS = [');
@@ -267,7 +267,7 @@ describe('first-class filter public scenarios', () => {
         return nativeDrawImage.apply(this, args);
       });
 
-    const controller = crc(canvas, [
+    const controller = pibbl(canvas, [
       createElement(Rectangle, {
         style: {
           left: 10,

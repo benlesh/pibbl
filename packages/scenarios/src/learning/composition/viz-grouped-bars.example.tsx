@@ -4,14 +4,14 @@ import {
   Line,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
+  type PibblController,
+  type PibblPointerEvent,
   type WritableSignal,
-} from "@crc/core";
-import { Axis, BarSeries, Scale, useScale } from "@crc/core/viz";
+} from "@pibbl/core";
+import { Axis, BarSeries, Scale, useScale } from "@pibbl/core/viz";
 
 // Census Bureau, Vintage 2023, Table 1. Historical snapshot, not current estimates.
 // https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html
@@ -90,7 +90,7 @@ function Plot({
   const states = useScale("states", "band").get();
   const groups = useScale("years", "band").get();
   const values = useScale("population").get();
-  function inspect(event: CRCPointerEvent) {
+  function inspect(event: PibblPointerEvent) {
     const x = event.x - origin.x,
       y = event.y - origin.y;
     const hit = rows.find((row) => {
@@ -285,6 +285,6 @@ function Scene() {
     </Group>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Scene />, { viewport: "responsive" });
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Scene />, { viewport: "responsive" });
 }

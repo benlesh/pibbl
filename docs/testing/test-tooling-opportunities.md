@@ -27,4 +27,4 @@ This ranking synthesizes repeated friction recorded across DEP-01–04 and TFC-0
 
 - A bundled deterministic test font is unnecessary while glyph appearance is masked and exact Canvas calls/metrics are the supported contract. Revisit only if glyph rasterization itself becomes a product promise.
 - Heap/GC assertions remain supplemental. Deterministic acquisition/release ledgers are a stronger required signal.
-- A general CRC testing framework is not justified. The current helpers should remain internal and narrow until another project phase proves stable call shapes.
+- A general Pibbl testing framework is not justified. The current helpers should remain internal and narrow until another project phase proves stable call shapes.

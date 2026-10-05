@@ -100,9 +100,9 @@ that one algorithm is fastest:
   is a promising segment-placement strategy, but
   [Kurbo's flatten contract](https://docs.rs/kurbo/latest/kurbo/fn.flatten.html)
   does not absolutely guarantee its requested tolerance. A certified variant
-  remains a separate research project; this change does not weaken CRC's bound.
+  remains a separate research project; this change does not weaken Pibbl's bound.
 - [Simplify.js](https://github.com/mourner/simplify-js/blob/master/simplify.js)
-  demonstrates the radial-prefilter pattern. CRC explicitly divides the error
+  demonstrates the radial-prefilter pattern. Pibbl explicitly divides the error
   budget rather than applying the full tolerance twice.
 - [Hershberger and Snoeyink](https://www.cs.ubc.ca/tr/1992/tr-92-07)
   give an asymptotically faster DP approach. A path-hull implementation and its
@@ -116,7 +116,7 @@ that one algorithm is fastest:
   requires contour-aware geometric bookkeeping. It remains a distinct future
   capability, not an implied property of this simplifier.
 - [Fast subdivision of Bézier curves](https://arxiv.org/abs/2509.15691)
-  improves asymptotic dependence on degree. CRC's degree-two/degree-three curves
+  improves asymptotic dependence on degree. Pibbl's degree-two/degree-three curves
   do not justify FFT machinery. The direct cubic prototype above tests a more
   relevant constant-factor alternative.
 

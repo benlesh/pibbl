@@ -12,7 +12,7 @@ relatedTypes: [BoxStyle, Constraints, ResolvedBoxStyle]
 # resolveBox
 
 ```ts
-import { resolveBox, type Constraints } from "@crc/core";
+import { resolveBox, type Constraints } from "@pibbl/core";
 ```
 
 `resolveBox(style, constraints, context?)` resolves public [`BoxStyle`](#/api/types/layout#boxstyle) into a

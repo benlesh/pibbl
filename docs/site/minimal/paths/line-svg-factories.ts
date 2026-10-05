@@ -3,7 +3,7 @@ import {
   createSvgPath,
   type LinePathOptions,
   type SvgPathOptions,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const lineOptions: LinePathOptions = {
   coords: [

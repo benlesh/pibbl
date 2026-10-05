@@ -6,8 +6,8 @@ symbols: [marble]
 ---
 
 ```js
-import { createElement, Rectangle } from "@crc/core";
-import { marble, useTexture } from "@crc/core/textures";
+import { createElement, Rectangle } from "@pibbl/core";
+import { marble, useTexture } from "@pibbl/core/textures";
 function Material() {
   const fill = useTexture(marble({ seed: 42, scale: 6, detail: 0.65 }), {
     resolution: { width: 128, height: 64 },
@@ -16,7 +16,7 @@ function Material() {
 }
 ```
 
-Mount `Material` with `crc(canvas, createElement(Material, {}))` on a 600 by 200 canvas. The definition is not itself a paint; `useTexture` supplies the owned texture handle.
+Mount `Material` with `pibbl(canvas, createElement(Material, {}))` on a 600 by 200 canvas. The definition is not itself a paint; `useTexture` supplies the owned texture handle.
 
 `MaterialOptions` defaults are seed 42, scale 6, and detail 0.65. Seed is an unsigned 32-bit integer, scale is 1 through 32, and detail is 0 through 1. The material is static until its configuration changes. Simulation/raster resolution is independent of display size.
 

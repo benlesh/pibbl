@@ -1,4 +1,4 @@
-import { Clip, Group, Rectangle, crc, signal, type CRCController } from '@crc/core';
+import { Clip, Group, Rectangle, pibbl, signal, type PibblController } from '@pibbl/core';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';
@@ -6,7 +6,7 @@ import { clickMouse } from './support/mouse-input';
 
 let driver: ManualSchedulerDriver;
 let restore: () => void;
-let controller: CRCController | undefined;
+let controller: PibblController | undefined;
 beforeEach(() => { driver = new ManualSchedulerDriver(); restore = installSchedulerDriverForTest(driver); });
 afterEach(() => { controller?.dispose(); controller = undefined; restore(); document.body.replaceChildren(); });
 function host() {
@@ -17,7 +17,7 @@ function host() {
 it('finds an uncovered clipped interaction point and delivers native input there', async () => {
   const canvas = host(); let selections = 0;
   const clip = new Path2D(); clip.rect(0, 0, 90, 90);
-  controller = crc(canvas, <Group style={{ translateX: 20, translateY: 20 }}>
+  controller = pibbl(canvas, <Group style={{ translateX: 20, translateY: 20 }}>
     <Clip style={{ d: clip }}><Rectangle style={{ width: 120, height: 120, fill: '#00f' }} onClick={() => selections++} /></Clip>
     <Rectangle style={{ left: 40, width: 80, height: 120, fill: '#f00' }} onClick={() => undefined} />
   </Group>, { pixelRatio: 1 }); driver.flush(1);
@@ -41,7 +41,7 @@ it('reports no verified point without proving absence for thin or fully covered 
     <Rectangle style={{ left: 1, top: 1, width: 1, height: 1, fill: '#00f' }} onClick={() => undefined} />
     {covered.get() ? <Rectangle style={{ width: 100, height: 100, fill: '#f00' }} onClick={() => undefined} /> : null}
   </>; }
-  controller = crc(canvas, <Scene />, { pixelRatio: 1 }); driver.flush(1);
+  controller = pibbl(canvas, <Scene />, { pixelRatio: 1 }); driver.flush(1);
   const inspector = createTargetingInspector(canvas); const initial = inspector.snapshot();
   const target = inspector.probe(initial.generation!, 1.5, 1.5).targetId!;
   const bounds = { x: 0, y: 0, width: 100, height: 100 };
@@ -53,7 +53,7 @@ it('reports no verified point without proving absence for thin or fully covered 
 });
 
 it('rejects invalid bounds and target handles without geometry work', () => {
-  const canvas = host(); controller = crc(canvas, <Rectangle style={{ width: 100, height: 100, fill: '#00f' }} onClick={() => undefined} />); driver.flush(1);
+  const canvas = host(); controller = pibbl(canvas, <Rectangle style={{ width: 100, height: 100, fill: '#00f' }} onClick={() => undefined} />); driver.flush(1);
   const inspector = createTargetingInspector(canvas); const snapshot = inspector.snapshot();
   const target = inspector.probe(snapshot.generation!, 5, 5).targetId!;
   for (const bounds of [{ x: NaN, y: 0, width: 1, height: 1 }, { x: 0, y: 0, width: 0, height: 1 }, { x: Number.MAX_VALUE, y: 0, width: Number.MAX_VALUE, height: 1 }]) {

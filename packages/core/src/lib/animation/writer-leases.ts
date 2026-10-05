@@ -11,7 +11,7 @@ import {
   type ProgramActivation,
 } from './evaluate.js';
 import { getProgramRecord } from './program.js';
-import type { CRCAnimationProgram } from './types.js';
+import type { PibblAnimationProgram } from './types.js';
 
 export interface AnimationWriterLeaseOwner {
   readonly token: object;
@@ -80,7 +80,7 @@ function playbackName(lease: WriterLease): string {
 
 function conflictError(node: SignalNode<unknown>, lease: WriterLease): Error {
   return new Error(
-    `CRC animation signal "${signalName(node)}" is already leased by playback ` +
+    `Pibbl animation signal "${signalName(node)}" is already leased by playback ` +
       `"${playbackName(lease)}". Cancel it or request conflict replacement.`,
   );
 }
@@ -91,7 +91,7 @@ function staleWriterError(
 ): Error {
   const owner = lease === undefined ? '<released playback>' : playbackName(lease);
   return new Error(
-    `CRC animation writer cannot commit signal "${signalName(node)}" because it ` +
+    `Pibbl animation writer cannot commit signal "${signalName(node)}" because it ` +
       `does not own the active lease for playback "${owner}".`,
   );
 }
@@ -127,22 +127,22 @@ installSignalWriterLeasePolicy(leasePolicy);
 
 function assertOwner(owner: AnimationWriterLeaseOwner): void {
   if (typeof owner !== 'object' || owner === null) {
-    throw new TypeError('CRC animation writer lease owner must be an object.');
+    throw new TypeError('Pibbl animation writer lease owner must be an object.');
   }
   if (typeof owner.token !== 'object' || owner.token === null) {
-    throw new TypeError('CRC animation writer token must be an object.');
+    throw new TypeError('Pibbl animation writer token must be an object.');
   }
   if (!Number.isSafeInteger(owner.registrationOrder) || owner.registrationOrder < 0) {
     throw new RangeError(
-      'CRC animation writer registration order must be a nonnegative safe integer.',
+      'Pibbl animation writer registration order must be a nonnegative safe integer.',
     );
   }
   if (owner.debugName !== undefined &&
     (typeof owner.debugName !== 'string' || owner.debugName.length === 0)) {
-    throw new TypeError('CRC animation playback debug name must be nonempty when provided.');
+    throw new TypeError('Pibbl animation playback debug name must be nonempty when provided.');
   }
   if (typeof owner.cancel !== 'function') {
-    throw new TypeError('CRC animation writer lease owner must provide cancel().');
+    throw new TypeError('Pibbl animation writer lease owner must provide cancel().');
   }
 }
 
@@ -221,7 +221,7 @@ function cancelReplacedOwners(conflicting: readonly WriterLease[]): void {
     }
   }
   if (failures.length > 0) {
-    throw new AggregateError(failures, 'CRC animation replacement cancellation failed.');
+    throw new AggregateError(failures, 'Pibbl animation replacement cancellation failed.');
   }
 }
 
@@ -232,7 +232,7 @@ function beginReplacedOwners(
     if (lease.owner.preflightReplacement === undefined ||
       lease.owner.beginReplacement === undefined) {
       throw new Error(
-        `CRC animation playback "${playbackName(lease)}" cannot be replaced ` +
+        `Pibbl animation playback "${playbackName(lease)}" cannot be replaced ` +
           'transactionally.',
       );
     }
@@ -315,7 +315,7 @@ export function writerLeaseSnapshot(): WriterLeaseSnapshot {
 
 /** @internal Validates activation and conflicts without disturbing one current owner. */
 export function preflightProgramWriterLeaseAcquisition(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   ignoredToken?: object,
 ): void {
   preflightProgramActivation(program);
@@ -330,18 +330,18 @@ export function preflightProgramWriterLeaseAcquisition(
 
 /** @internal Acquires every program output for one future playback run. */
 export function acquireProgramWriterLeases(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   registration: object,
   owner: AnimationWriterLeaseOwner,
   options: ProgramWriterLeaseOptions = {},
 ): ProgramWriterLease {
   assertOwner(owner);
   if (typeof registration !== 'object' || registration === null) {
-    throw new TypeError('CRC animation registration identity must be an object.');
+    throw new TypeError('Pibbl animation registration identity must be an object.');
   }
   const conflict = options.conflict ?? 'error';
   if (conflict !== 'error' && conflict !== 'replace') {
-    throw new TypeError('CRC animation writer conflict must be "error" or "replace".');
+    throw new TypeError('Pibbl animation writer conflict must be "error" or "replace".');
   }
 
   preflightProgramActivation(program);
@@ -368,18 +368,18 @@ export function acquireProgramWriterLeases(
 
 /** @internal Acquires provisional ownership that can restore displaced leases. */
 export function acquireTransactionalProgramWriterLeases(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   registration: object,
   owner: AnimationWriterLeaseOwner,
   options: ProgramWriterLeaseOptions & { readonly ignoredToken?: object } = {},
 ): TransactionalProgramWriterLease {
   assertOwner(owner);
   if (typeof registration !== 'object' || registration === null) {
-    throw new TypeError('CRC animation registration identity must be an object.');
+    throw new TypeError('Pibbl animation registration identity must be an object.');
   }
   const conflict = options.conflict ?? 'error';
   if (conflict !== 'error' && conflict !== 'replace') {
-    throw new TypeError('CRC animation writer conflict must be "error" or "replace".');
+    throw new TypeError('Pibbl animation writer conflict must be "error" or "replace".');
   }
 
   preflightProgramActivation(program);

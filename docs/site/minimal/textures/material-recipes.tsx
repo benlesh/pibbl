@@ -1,11 +1,11 @@
-import { crc, Rectangle } from "@crc/core";
+import { pibbl, Rectangle } from "@pibbl/core";
 import {
   cellular,
   marble,
   paper,
   useTexture,
   type MaterialOptions,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 
 const materials = [
   {
@@ -62,7 +62,7 @@ const controllers = materials.map((material, index) => {
   canvas.height = 156;
   figure.append(caption, canvas);
   grid.append(figure);
-  return crc(canvas, <Material index={index} />);
+  return pibbl(canvas, <Material index={index} />);
 });
 window.addEventListener(
   "pagehide",

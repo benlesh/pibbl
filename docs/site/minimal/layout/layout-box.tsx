@@ -1,10 +1,10 @@
 import {
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useLayoutBox,
   type LayoutItemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 function Scene() {
   const box = useLayoutBox();
@@ -31,5 +31,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(canvas, <Scene />);
+const app = pibbl(canvas, <Scene />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

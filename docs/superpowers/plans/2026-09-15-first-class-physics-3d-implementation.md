@@ -4,11 +4,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship a wholly CRC-owned `@crc/physics/3d` rigid-body system and renderer-independent `@crc/physics/3d/geometry` toolkit, integrated with the existing realm scheduler and settled WebGL scene model, with a public `physics-3d` Studio example and deterministic scenario evidence.
+**Goal:** Ship a wholly Pibbl-owned `@pibbl/physics/3d` rigid-body system and renderer-independent `@pibbl/physics/3d/geometry` toolkit, integrated with the existing realm scheduler and settled WebGL scene model, with a public `physics-3d` Studio example and deterministic scenario evidence.
 
-**Architecture:** Pure immutable 3D shape and collision modules remain independent of CRC, WebGL, DOM, Canvas, and scheduling. A mounted `PhysicsWorld3D` owns one physics-lane participant and a separate 3D world kernel; successful WebGL traversal proposes topology, Begin applies it, Advance runs bounded fixed ticks after animation, Commit adopts one candidate, and settled WebGL composition consumes an interpolated quaternion pose without GL work during component composition. A new lockstep `@crc/webgl/internal` friend seam exposes copied CPU geometry and exact authored transform lineage while keeping physics presentation out of that lineage, so compound colliders are built by forward local composition rather than repeated inverse-world reconstruction.
+**Architecture:** Pure immutable 3D shape and collision modules remain independent of Pibbl, WebGL, DOM, Canvas, and scheduling. A mounted `PhysicsWorld3D` owns one physics-lane participant and a separate 3D world kernel; successful WebGL traversal proposes topology, Begin applies it, Advance runs bounded fixed ticks after animation, Commit adopts one candidate, and settled WebGL composition consumes an interpolated quaternion pose without GL work during component composition. A new lockstep `@pibbl/webgl/internal` friend seam exposes copied CPU geometry and exact authored transform lineage while keeping physics presentation out of that lineage, so compound colliders are built by forward local composition rather than repeated inverse-world reconstruction.
 
-**Tech Stack:** TypeScript 7, CRC JSX/createElement runtime, CRC signals and realm scheduler, settled `@crc/webgl` WebGL2 islands, Vitest Node, Vitest Browser with Playwright Chromium, esbuild, pnpm 11.21.0, Node 24.15.0.
+**Tech Stack:** TypeScript 7, Pibbl JSX/createElement runtime, Pibbl signals and realm scheduler, settled `@pibbl/webgl` WebGL2 islands, Vitest Node, Vitest Browser with Playwright Chromium, esbuild, pnpm 11.21.0, Node 24.15.0.
 
 **Spec:** `docs/superpowers/specs/2026-09-14-first-class-physics-design.md`
 
@@ -17,19 +17,19 @@
 - Base every change on `codex/first-class-physics-2d` commit `962170d`; preserve unrelated work and never modify or reuse its worktree.
 - Add a failing test before every production behavior change, run it once to observe the expected failure, implement the smallest passing behavior, rerun the focused evidence, and commit the reviewed task independently.
 - Use Node 24.15.0 through `fnm exec --using=24.15.0` and pnpm 11.21.0 through `corepack pnpm@11.21.0`; use Playwright Chromium for browser evidence.
-- CRC owns every 3D physics algorithm and runtime byte. Add no external engine, native binary, WebAssembly module, runtime service, worker, timer, second `requestAnimationFrame`, or third-party solver dependency.
-- Publish only named, tree-shakable ESM exports through `@crc/physics/3d` and `@crc/physics/3d/geometry`. Do not add a root `@crc/physics` barrel, a namespace object, an import-time registry, or a second JSX runtime.
-- `@crc/physics/3d/geometry` must run in plain Node without loading `@crc/core`, `@crc/webgl`, DOM, Canvas, WebGL, browser globals, a world, or a scheduler. Its declarations must not reference runtime or renderer types.
-- `@crc/physics/3d` may import only public `@crc/core`, `@crc/webgl`, and their version-coupled `/internal` entries. Application code must never import `src`, `lib/*`, or an internal entry.
+- Pibbl owns every 3D physics algorithm and runtime byte. Add no external engine, native binary, WebAssembly module, runtime service, worker, timer, second `requestAnimationFrame`, or third-party solver dependency.
+- Publish only named, tree-shakable ESM exports through `@pibbl/physics/3d` and `@pibbl/physics/3d/geometry`. Do not add a root `@pibbl/physics` barrel, a namespace object, an import-time registry, or a second JSX runtime.
+- `@pibbl/physics/3d/geometry` must run in plain Node without loading `@pibbl/core`, `@pibbl/webgl`, DOM, Canvas, WebGL, browser globals, a world, or a scheduler. Its declarations must not reference runtime or renderer types.
+- `@pibbl/physics/3d` may import only public `@pibbl/core`, `@pibbl/webgl`, and their version-coupled `/internal` entries. Application code must never import `src`, `lib/*`, or an internal entry.
 - One mounted awake `PhysicsWorld3D` owns one physics Advance registration. Bodies, colliders, contacts, queries, handles, shape renderers, and WebGL submissions own zero scheduler registrations.
 - Preserve scheduler order: animation Advance first, physics Advance second, one shared Commit, one Plan, one Render. Use only realm logical time and the existing coalesced host frame.
 - Default fixed step is `1000 / 60` milliseconds, default `maxCatchUpSteps` is `4`, default interpolation is `"linear"`, default gravity is `[0, 0, 0]`, default velocity iterations are `8`, and default position iterations are `3`.
 - Rendering may occur at arbitrary cadence. Retain authoritative previous/current fixed-tick poses and derive presentation with position lerp plus shortest-path normalized quaternion slerp. Physics queries, handles, contacts, and events read authoritative state.
 - Dynamic bodies exclusively own translation and quaternion orientation while enabled. Kinematic targets are application/animation-owned moving colliders. Disabled bodies are absent from solving and return pose ownership to authored values. Diagnose competing writers.
 - Kinematic position and orientation bindings are independent partial targets: an omitted field retains the last accepted value and is never reset to an identity/default value by an update to the other field.
-- Rigid-body poses never contain scale. CRC-owned resolved scale is baked into collider geometry. A scale change enqueues deterministic collider reconstruction and automatic mass/inertia recomputation at the next Begin.
+- Rigid-body poses never contain scale. Pibbl-owned resolved scale is baked into collider geometry. A scale change enqueues deterministic collider reconstruction and automatic mass/inertia recomputation at the next Begin.
 - Keep bodies and colliders separate internally. A body attachment on geometry infers one self collider by default; `collider3D()` attaches compound or sensor geometry to the nearest ancestor body; `Group3D` is a body host with no inferred self collider.
-- Preserve exact CRC/WebGL-authored local transform lineage as copied translation/quaternion/scale nodes. Build compound collider-local geometry by forward-composing the lineage suffix below the body host. Do not repeatedly obtain local collider transforms by multiplying a world matrix by an inverse body matrix.
+- Preserve exact Pibbl/WebGL-authored local transform lineage as copied translation/quaternion/scale nodes. Build compound collider-local geometry by forward-composing the lineage suffix below the body host. Do not repeatedly obtain local collider transforms by multiplying a world matrix by an inverse body matrix.
 - Physics presentation may affect the settled mesh model matrix, pick geometry, and projected focus bounds, but it must not enter authored transform lineage, collider geometry, mass properties, or authoritative query state.
 - `PhysicsWorld3D` must live inside exactly one `WebGLLayer`; it cannot span islands. Scene composition remains CPU-only, performs no GL calls, and settles/render/pick/focus from the same presented model generation.
 - `Cube` infers a box; uniform `Sphere` scale infers a sphere; nonuniform `Sphere` scale infers an ellipsoid; static `Mesh` infers a triangle mesh; dynamic or kinematic `Mesh` infers a deterministic convex hull; `Group3D` infers no self collider.
@@ -51,7 +51,7 @@
 
 - Modify `packages/webgl/package.json` and `packages/webgl/tsconfig.build.json`: add a version-coupled `./internal` entry and build artifact without exposing it from the root.
 - Create `packages/webgl/src/internal.ts`: export only copied CPU geometry, exact transform-lineage, primitive-inference, and presentation-scope capabilities for the matching official physics package.
-- Modify `packages/webgl/src/lib/types.ts`: add empty public `CRCPhysics3DPropExtension`; extend supported geometric target props.
+- Modify `packages/webgl/src/lib/types.ts`: add empty public `PibblPhysics3DPropExtension`; extend supported geometric target props.
 - Modify `packages/webgl/src/lib/components/group-3d.ts`: extend the empty physics prop base and push exact authored TRS lineage with its current model scope.
 - Modify `packages/webgl/src/lib/components/mesh.ts`, `cube.ts`, and `sphere.ts`: resolve one canonical local TRS record through shared helpers and submit the same transformed geometry used by inference, rendering, picking, and focus.
 - Modify `packages/webgl/src/lib/scene/types.ts` and `composer.ts`: keep an authored-lineage stack separate from the model-matrix stack; allow a physics presentation scope to affect only the model stack.
@@ -75,7 +75,7 @@
 
 - Create `packages/scenarios/src/physics-3d.example.tsx` and `packages/scenarios/src/physics-3d.ts`; register the public example as `physics-3d` and keep deterministic controls/snapshots separate from presentation metadata.
 - Create focused Node, browser, lifecycle, performance, replay, long-run, and repeated-handoff tests under `packages/physics/src/lib/3d/` and `packages/core/test/`.
-- Modify workspace, package-consumer, packed-consumer, Studio declaration, catalog, documentation-export, and build configuration for exact `@crc/physics/3d`, `/3d/geometry`, and `@crc/webgl/internal` boundaries.
+- Modify workspace, package-consumer, packed-consumer, Studio declaration, catalog, documentation-export, and build configuration for exact `@pibbl/physics/3d`, `/3d/geometry`, and `@pibbl/webgl/internal` boundaries.
 - Update normative scheduler, animation, hooks, drawing, style, layout, events, ownership, and settled-WebGL contracts plus public Learn/API/package docs and dated field notes.
 
 ## Fixed Public Surface
@@ -122,8 +122,8 @@ export {
   staticBody3D,
   kinematicBody3D,
   collider3D,
-  crcPhysicsBody3D,
-  crcPhysicsWorld3D,
+  pibblPhysicsBody3D,
+  pibblPhysicsWorld3D,
   applyForce3D,
   applyImpulse3D,
   applyTorque3D,
@@ -142,19 +142,19 @@ export {
 };
 ```
 
-No root `@crc/physics` export, joints, debug surface, replay surface, manual step, or 2.5D bridge is added.
+No root `@pibbl/physics` export, joints, debug surface, replay surface, manual step, or 2.5D bridge is added.
 
 The geometry types and exact factory signatures are:
 
 ```ts
-export type CRCPhysicsVector3 = readonly [x: number, y: number, z: number];
-export type CRCPhysicsQuaternion = readonly [
+export type PibblPhysicsVector3 = readonly [x: number, y: number, z: number];
+export type PibblPhysicsQuaternion = readonly [
   x: number,
   y: number,
   z: number,
   w: number,
 ];
-export type CRCPhysicsMatrix3 = readonly [
+export type PibblPhysicsMatrix3 = readonly [
   m00: number,
   m01: number,
   m02: number,
@@ -166,111 +166,111 @@ export type CRCPhysicsMatrix3 = readonly [
   m22: number,
 ];
 
-export interface CRCPhysicsPose3D {
-  readonly position: CRCPhysicsVector3;
-  readonly orientation: CRCPhysicsQuaternion;
+export interface PibblPhysicsPose3D {
+  readonly position: PibblPhysicsVector3;
+  readonly orientation: PibblPhysicsQuaternion;
 }
-export type CRCPhysicsTransform3D = CRCPhysicsPose3D;
-export interface CRCPhysicsAabb3D {
-  readonly min: CRCPhysicsVector3;
-  readonly max: CRCPhysicsVector3;
+export type PibblPhysicsTransform3D = PibblPhysicsPose3D;
+export interface PibblPhysicsAabb3D {
+  readonly min: PibblPhysicsVector3;
+  readonly max: PibblPhysicsVector3;
 }
-export interface CRCPhysicsRay3D {
-  readonly origin: CRCPhysicsVector3;
-  readonly direction: CRCPhysicsVector3;
+export interface PibblPhysicsRay3D {
+  readonly origin: PibblPhysicsVector3;
+  readonly direction: PibblPhysicsVector3;
   readonly maxDistance: number;
 }
 declare const physicsShape3DBrand: unique symbol;
-export interface CRCPhysicsShape3D {
+export interface PibblPhysicsShape3D {
   readonly [physicsShape3DBrand]: true;
 }
-export interface CRCPhysicsMassProperties3D {
+export interface PibblPhysicsMassProperties3D {
   readonly volume: number;
-  readonly centerOfMass: CRCPhysicsVector3;
+  readonly centerOfMass: PibblPhysicsVector3;
   readonly mass: number;
-  readonly inertiaTensor: CRCPhysicsMatrix3;
+  readonly inertiaTensor: PibblPhysicsMatrix3;
 }
-export interface CRCPhysicsDistance3D {
+export interface PibblPhysicsDistance3D {
   readonly separation: number;
-  readonly pointOnFirst: CRCPhysicsVector3;
-  readonly pointOnSecond: CRCPhysicsVector3;
+  readonly pointOnFirst: PibblPhysicsVector3;
+  readonly pointOnSecond: PibblPhysicsVector3;
   /** Direction from the second shape toward the first. */
-  readonly normal: CRCPhysicsVector3;
+  readonly normal: PibblPhysicsVector3;
 }
-export interface CRCPhysicsContactPoint3D {
-  readonly pointOnFirst: CRCPhysicsVector3;
-  readonly pointOnSecond: CRCPhysicsVector3;
+export interface PibblPhysicsContactPoint3D {
+  readonly pointOnFirst: PibblPhysicsVector3;
+  readonly pointOnSecond: PibblPhysicsVector3;
   readonly separation: number;
 }
-export interface CRCPhysicsShapeContact3D {
-  readonly normal: CRCPhysicsVector3;
-  readonly points: readonly CRCPhysicsContactPoint3D[];
+export interface PibblPhysicsShapeContact3D {
+  readonly normal: PibblPhysicsVector3;
+  readonly points: readonly PibblPhysicsContactPoint3D[];
 }
-export interface CRCPhysicsShapeHit3D {
-  readonly point: CRCPhysicsVector3;
-  readonly normal: CRCPhysicsVector3;
+export interface PibblPhysicsShapeHit3D {
+  readonly point: PibblPhysicsVector3;
+  readonly normal: PibblPhysicsVector3;
   readonly distance: number;
   readonly timeOfImpact: number;
   readonly triangleIndex?: number;
-  readonly barycentric?: CRCPhysicsVector3;
+  readonly barycentric?: PibblPhysicsVector3;
 }
 
 export function sphereShape3D(
   input: Readonly<{
     radius: number;
-    center?: CRCPhysicsVector3;
+    center?: PibblPhysicsVector3;
   }>,
-): CRCPhysicsShape3D;
+): PibblPhysicsShape3D;
 export function boxShape3D(
   input: Readonly<{
     width: number;
     height: number;
     depth: number;
-    center?: CRCPhysicsVector3;
-    orientation?: CRCPhysicsQuaternion;
+    center?: PibblPhysicsVector3;
+    orientation?: PibblPhysicsQuaternion;
   }>,
-): CRCPhysicsShape3D;
+): PibblPhysicsShape3D;
 export function ellipsoidShape3D(
   input: Readonly<{
-    radii: CRCPhysicsVector3;
-    center?: CRCPhysicsVector3;
-    orientation?: CRCPhysicsQuaternion;
+    radii: PibblPhysicsVector3;
+    center?: PibblPhysicsVector3;
+    orientation?: PibblPhysicsQuaternion;
   }>,
-): CRCPhysicsShape3D;
+): PibblPhysicsShape3D;
 export function capsuleShape3D(
   input: Readonly<{
-    start: CRCPhysicsVector3;
-    end: CRCPhysicsVector3;
+    start: PibblPhysicsVector3;
+    end: PibblPhysicsVector3;
     radius: number;
   }>,
-): CRCPhysicsShape3D;
+): PibblPhysicsShape3D;
 export function cylinderShape3D(
   input: Readonly<{
     radius: number;
     halfHeight: number;
-    center?: CRCPhysicsVector3;
-    orientation?: CRCPhysicsQuaternion;
+    center?: PibblPhysicsVector3;
+    orientation?: PibblPhysicsQuaternion;
   }>,
-): CRCPhysicsShape3D;
+): PibblPhysicsShape3D;
 export function coneShape3D(
   input: Readonly<{
     radius: number;
     halfHeight: number;
-    center?: CRCPhysicsVector3;
-    orientation?: CRCPhysicsQuaternion;
+    center?: PibblPhysicsVector3;
+    orientation?: PibblPhysicsQuaternion;
   }>,
-): CRCPhysicsShape3D;
+): PibblPhysicsShape3D;
 export function convexHullShape3D(
   input: Readonly<{
-    points: readonly CRCPhysicsVector3[];
+    points: readonly PibblPhysicsVector3[];
   }>,
-): CRCPhysicsShape3D;
+): PibblPhysicsShape3D;
 export function triangleMeshShape3D(
   input: Readonly<{
     positions: ArrayLike<number>;
     indices?: ArrayLike<number>;
   }>,
-): CRCPhysicsShape3D;
+): PibblPhysicsShape3D;
 export function heightfieldShape3D(
   input: Readonly<{
     rows: number;
@@ -279,9 +279,9 @@ export function heightfieldShape3D(
     cellSizeX?: number;
     cellSizeZ?: number;
     heightScale?: number;
-    origin?: CRCPhysicsVector3;
+    origin?: PibblPhysicsVector3;
   }>,
-): CRCPhysicsShape3D;
+): PibblPhysicsShape3D;
 ```
 
 `cylinderShape3D` and `coneShape3D` use local positive Y as their axis. Heightfields contain exactly `rows * columns` finite samples with `rows >= 2`, `columns >= 2`, positive cell sizes, deterministic two-triangle cells, and row-major X-then-Z ordering. Triangle meshes and heightfields have zero mass unless a triangle mesh is a consistently wound closed manifold; world-facing dynamic automatic mass still rejects either shape because moving concave geometry is unsupported.
@@ -290,54 +290,54 @@ The pure operations have exact signatures:
 
 ```ts
 export function boundsOfShape3D(
-  shape: CRCPhysicsShape3D,
-  pose?: CRCPhysicsPose3D,
-): CRCPhysicsAabb3D;
+  shape: PibblPhysicsShape3D,
+  pose?: PibblPhysicsPose3D,
+): PibblPhysicsAabb3D;
 export function massProperties3D(
-  shape: CRCPhysicsShape3D,
+  shape: PibblPhysicsShape3D,
   options?: Readonly<{ density?: number }>,
-): CRCPhysicsMassProperties3D;
+): PibblPhysicsMassProperties3D;
 export function containsPoint3D(
-  shape: CRCPhysicsShape3D,
-  pose: CRCPhysicsPose3D,
-  point: CRCPhysicsVector3,
+  shape: PibblPhysicsShape3D,
+  pose: PibblPhysicsPose3D,
+  point: PibblPhysicsVector3,
 ): boolean;
 export function distanceBetweenShapes3D(
-  first: CRCPhysicsShape3D,
-  firstPose: CRCPhysicsPose3D,
-  second: CRCPhysicsShape3D,
-  secondPose: CRCPhysicsPose3D,
-): CRCPhysicsDistance3D;
+  first: PibblPhysicsShape3D,
+  firstPose: PibblPhysicsPose3D,
+  second: PibblPhysicsShape3D,
+  secondPose: PibblPhysicsPose3D,
+): PibblPhysicsDistance3D;
 export function overlapShapes3D(
-  first: CRCPhysicsShape3D,
-  firstPose: CRCPhysicsPose3D,
-  second: CRCPhysicsShape3D,
-  secondPose: CRCPhysicsPose3D,
+  first: PibblPhysicsShape3D,
+  firstPose: PibblPhysicsPose3D,
+  second: PibblPhysicsShape3D,
+  secondPose: PibblPhysicsPose3D,
 ): boolean;
 export function contactBetweenShapes3D(
-  first: CRCPhysicsShape3D,
-  firstPose: CRCPhysicsPose3D,
-  second: CRCPhysicsShape3D,
-  secondPose: CRCPhysicsPose3D,
-): CRCPhysicsShapeContact3D | null;
+  first: PibblPhysicsShape3D,
+  firstPose: PibblPhysicsPose3D,
+  second: PibblPhysicsShape3D,
+  secondPose: PibblPhysicsPose3D,
+): PibblPhysicsShapeContact3D | null;
 export function raycastShape3D(
-  shape: CRCPhysicsShape3D,
-  pose: CRCPhysicsPose3D,
-  ray: CRCPhysicsRay3D,
+  shape: PibblPhysicsShape3D,
+  pose: PibblPhysicsPose3D,
+  ray: PibblPhysicsRay3D,
   options?: Readonly<{ includeInitialOverlap?: boolean }>,
-): CRCPhysicsShapeHit3D | null;
+): PibblPhysicsShapeHit3D | null;
 export function shapeCastAgainstShape3D(
-  moving: CRCPhysicsShape3D,
-  from: CRCPhysicsPose3D,
-  translation: CRCPhysicsVector3,
-  target: CRCPhysicsShape3D,
-  targetPose: CRCPhysicsPose3D,
+  moving: PibblPhysicsShape3D,
+  from: PibblPhysicsPose3D,
+  translation: PibblPhysicsVector3,
+  target: PibblPhysicsShape3D,
+  targetPose: PibblPhysicsPose3D,
   options?: Readonly<{ includeInitialOverlap?: boolean }>,
-): CRCPhysicsShapeHit3D | null;
+): PibblPhysicsShapeHit3D | null;
 export function transformShape3D(
-  shape: CRCPhysicsShape3D,
-  transform: CRCPhysicsTransform3D,
-): CRCPhysicsShape3D;
+  shape: PibblPhysicsShape3D,
+  transform: PibblPhysicsTransform3D,
+): PibblPhysicsShape3D;
 ```
 
 Quaternion factories accept any finite nonzero quaternion and snapshot its normalized canonical form; `q` and `-q` normalize to the representation whose first nonzero component in `[w, x, y, z]` is positive. Outputs use `[x, y, z, w]` and identity `[0, 0, 0, 1]`.
@@ -345,269 +345,269 @@ Quaternion factories accept any finite nonzero quaternion and snapshot its norma
 The runtime body/collider boundary is:
 
 ```ts
-export interface CRCPhysicsAxisLocks3D {
+export interface PibblPhysicsAxisLocks3D {
   readonly x?: boolean;
   readonly y?: boolean;
   readonly z?: boolean;
 }
-export interface CRCPhysicsColliderConfiguration3D {
-  readonly shape?: "self" | CRCPhysicsShape3D;
-  readonly offset?: CRCPhysicsVector3;
-  readonly orientation?: CRCPhysicsQuaternion;
+export interface PibblPhysicsColliderConfiguration3D {
+  readonly shape?: "self" | PibblPhysicsShape3D;
+  readonly offset?: PibblPhysicsVector3;
+  readonly orientation?: PibblPhysicsQuaternion;
   readonly density?: number;
   readonly friction?: number;
   readonly restitution?: number;
   readonly sensor?: boolean;
   readonly contributesToMass?: boolean;
-  readonly collisionFilter?: CRCPhysicsCollisionFilter;
+  readonly collisionFilter?: PibblPhysicsCollisionFilter;
   readonly tag?: unknown;
-  readonly onCollisionStart?: CRCPhysicsCollisionHandler3D;
-  readonly onCollisionEnd?: CRCPhysicsCollisionHandler3D;
-  readonly onHit?: CRCPhysicsHitHandler3D;
-  readonly onOverlapStart?: CRCPhysicsOverlapHandler3D;
-  readonly onOverlapEnd?: CRCPhysicsOverlapHandler3D;
+  readonly onCollisionStart?: PibblPhysicsCollisionHandler3D;
+  readonly onCollisionEnd?: PibblPhysicsCollisionHandler3D;
+  readonly onHit?: PibblPhysicsHitHandler3D;
+  readonly onOverlapStart?: PibblPhysicsOverlapHandler3D;
+  readonly onOverlapEnd?: PibblPhysicsOverlapHandler3D;
 }
-export interface CRCPhysicsDynamicBody3DOptions {
+export interface PibblPhysicsDynamicBody3DOptions {
   readonly enabled?: boolean;
-  readonly handle?: CRCPhysicsBodyHandle3D;
-  readonly linearVelocity?: CRCPhysicsVector3;
-  readonly angularVelocityDegreesPerSecond?: CRCPhysicsVector3;
+  readonly handle?: PibblPhysicsBodyHandle3D;
+  readonly linearVelocity?: PibblPhysicsVector3;
+  readonly angularVelocityDegreesPerSecond?: PibblPhysicsVector3;
   readonly linearDamping?: number;
   readonly angularDamping?: number;
   readonly gravityScale?: number;
   readonly mass?: "auto" | number;
-  readonly lockTranslation?: CRCPhysicsAxisLocks3D;
-  readonly lockRotation?: CRCPhysicsAxisLocks3D;
+  readonly lockTranslation?: PibblPhysicsAxisLocks3D;
+  readonly lockRotation?: PibblPhysicsAxisLocks3D;
   readonly allowSleep?: boolean;
   readonly ccd?: boolean;
   readonly reenableVelocity?: "zero" | "preserve";
   readonly collider?:
-    false | CRCPhysicsColliderConfiguration3D | CRCPhysicsShape3D;
+    false | PibblPhysicsColliderConfiguration3D | PibblPhysicsShape3D;
 }
-export interface CRCPhysicsStaticBody3DOptions {
+export interface PibblPhysicsStaticBody3DOptions {
   readonly enabled?: boolean;
-  readonly handle?: CRCPhysicsBodyHandle3D;
+  readonly handle?: PibblPhysicsBodyHandle3D;
   readonly collider?:
-    false | CRCPhysicsColliderConfiguration3D | CRCPhysicsShape3D;
+    false | PibblPhysicsColliderConfiguration3D | PibblPhysicsShape3D;
 }
-export interface CRCPhysicsKinematicTarget3D {
-  readonly position?: Signal<CRCPhysicsVector3>;
-  readonly orientation?: Signal<CRCPhysicsQuaternion>;
+export interface PibblPhysicsKinematicTarget3D {
+  readonly position?: Signal<PibblPhysicsVector3>;
+  readonly orientation?: Signal<PibblPhysicsQuaternion>;
 }
-export interface CRCPhysicsKinematicBody3DOptions {
+export interface PibblPhysicsKinematicBody3DOptions {
   readonly enabled?: boolean;
-  readonly handle?: CRCPhysicsBodyHandle3D;
-  readonly target?: CRCPhysicsKinematicTarget3D;
+  readonly handle?: PibblPhysicsBodyHandle3D;
+  readonly target?: PibblPhysicsKinematicTarget3D;
   readonly allowSleep?: boolean;
   readonly collider?:
-    false | CRCPhysicsColliderConfiguration3D | CRCPhysicsShape3D;
+    false | PibblPhysicsColliderConfiguration3D | PibblPhysicsShape3D;
 }
 ```
 
 The exact world, handle, command, query, and event boundary is:
 
 ```ts
-export interface CRCPhysicsCollisionFilter {
+export interface PibblPhysicsCollisionFilter {
   readonly category?: number;
   readonly mask?: number;
   readonly group?: number;
 }
-export interface CRCPhysicsSolverOptions {
+export interface PibblPhysicsSolverOptions {
   readonly velocityIterations?: number;
   readonly positionIterations?: number;
 }
-export interface CRCPhysicsWorld3DProps {
-  readonly gravity?: CRCPhysicsVector3;
+export interface PibblPhysicsWorld3DProps {
+  readonly gravity?: PibblPhysicsVector3;
   readonly fixedStepMilliseconds?: number;
   readonly maxCatchUpSteps?: number;
   readonly interpolation?: "linear" | "none";
   readonly sleeping?: boolean;
-  readonly solver?: CRCPhysicsSolverOptions;
-  readonly onSleep?: CRCPhysicsBodyStateHandler3D;
-  readonly onWake?: CRCPhysicsBodyStateHandler3D;
+  readonly solver?: PibblPhysicsSolverOptions;
+  readonly onSleep?: PibblPhysicsBodyStateHandler3D;
+  readonly onWake?: PibblPhysicsBodyStateHandler3D;
   readonly onError?: (error: unknown) => void;
-  readonly children?: CRCNode;
+  readonly children?: PibblNode;
 }
 declare const physicsAttachment3DBrand: unique symbol;
-export interface CRCPhysicsBodyAttachment3D {
+export interface PibblPhysicsBodyAttachment3D {
   readonly [physicsAttachment3DBrand]: "body";
 }
-export interface CRCPhysicsColliderAttachment3D {
+export interface PibblPhysicsColliderAttachment3D {
   readonly [physicsAttachment3DBrand]: "collider";
 }
-export type CRCPhysicsAttachment3D =
-  CRCPhysicsBodyAttachment3D | CRCPhysicsColliderAttachment3D;
+export type PibblPhysicsAttachment3D =
+  PibblPhysicsBodyAttachment3D | PibblPhysicsColliderAttachment3D;
 export function dynamicBody3D(
-  options?: CRCPhysicsDynamicBody3DOptions,
-): CRCPhysicsBodyAttachment3D;
+  options?: PibblPhysicsDynamicBody3DOptions,
+): PibblPhysicsBodyAttachment3D;
 export function staticBody3D(
-  options?: CRCPhysicsStaticBody3DOptions,
-): CRCPhysicsBodyAttachment3D;
+  options?: PibblPhysicsStaticBody3DOptions,
+): PibblPhysicsBodyAttachment3D;
 export function kinematicBody3D(
-  options?: CRCPhysicsKinematicBody3DOptions,
-): CRCPhysicsBodyAttachment3D;
+  options?: PibblPhysicsKinematicBody3DOptions,
+): PibblPhysicsBodyAttachment3D;
 export function collider3D(
-  options?: CRCPhysicsColliderConfiguration3D,
-): CRCPhysicsColliderAttachment3D;
+  options?: PibblPhysicsColliderConfiguration3D,
+): PibblPhysicsColliderAttachment3D;
 
 declare const bodyHandle3DBrand: unique symbol;
-export interface CRCPhysicsBodyHandle3D {
+export interface PibblPhysicsBodyHandle3D {
   readonly [bodyHandle3DBrand]: true;
-  readonly position: Signal<CRCPhysicsVector3>;
-  readonly orientation: Signal<CRCPhysicsQuaternion>;
-  readonly linearVelocity: Signal<CRCPhysicsVector3>;
-  readonly angularVelocityDegreesPerSecond: Signal<CRCPhysicsVector3>;
+  readonly position: Signal<PibblPhysicsVector3>;
+  readonly orientation: Signal<PibblPhysicsQuaternion>;
+  readonly linearVelocity: Signal<PibblPhysicsVector3>;
+  readonly angularVelocityDegreesPerSecond: Signal<PibblPhysicsVector3>;
   readonly sleeping: Signal<boolean>;
   readonly enabled: Signal<boolean>;
   readonly generation: Signal<number>;
 }
 declare const colliderHandle3DBrand: unique symbol;
-export interface CRCPhysicsColliderHandle3D {
+export interface PibblPhysicsColliderHandle3D {
   readonly [colliderHandle3DBrand]: true;
 }
 declare const worldHandle3DBrand: unique symbol;
-export interface CRCPhysicsWorldHandle3D {
+export interface PibblPhysicsWorldHandle3D {
   readonly [worldHandle3DBrand]: true;
   readonly revision: Signal<number>;
 }
-export function crcPhysicsBody3D(): CRCPhysicsBodyHandle3D;
-export function crcPhysicsWorld3D(): CRCPhysicsWorldHandle3D;
+export function pibblPhysicsBody3D(): PibblPhysicsBodyHandle3D;
+export function pibblPhysicsWorld3D(): PibblPhysicsWorldHandle3D;
 export function applyForce3D(
-  body: CRCPhysicsBodyHandle3D,
-  force: CRCPhysicsVector3,
-  options?: Readonly<{ at?: CRCPhysicsVector3; wake?: boolean }>,
+  body: PibblPhysicsBodyHandle3D,
+  force: PibblPhysicsVector3,
+  options?: Readonly<{ at?: PibblPhysicsVector3; wake?: boolean }>,
 ): void;
 export function applyImpulse3D(
-  body: CRCPhysicsBodyHandle3D,
-  impulse: CRCPhysicsVector3,
-  options?: Readonly<{ at?: CRCPhysicsVector3; wake?: boolean }>,
+  body: PibblPhysicsBodyHandle3D,
+  impulse: PibblPhysicsVector3,
+  options?: Readonly<{ at?: PibblPhysicsVector3; wake?: boolean }>,
 ): void;
 export function applyTorque3D(
-  body: CRCPhysicsBodyHandle3D,
-  torque: CRCPhysicsVector3,
+  body: PibblPhysicsBodyHandle3D,
+  torque: PibblPhysicsVector3,
 ): void;
 export function setLinearVelocity3D(
-  body: CRCPhysicsBodyHandle3D,
-  velocity: CRCPhysicsVector3,
+  body: PibblPhysicsBodyHandle3D,
+  velocity: PibblPhysicsVector3,
 ): void;
 export function setAngularVelocity3D(
-  body: CRCPhysicsBodyHandle3D,
-  degreesPerSecond: CRCPhysicsVector3,
+  body: PibblPhysicsBodyHandle3D,
+  degreesPerSecond: PibblPhysicsVector3,
 ): void;
 export function teleportBody3D(
-  body: CRCPhysicsBodyHandle3D,
-  pose: CRCPhysicsPose3D,
+  body: PibblPhysicsBodyHandle3D,
+  pose: PibblPhysicsPose3D,
 ): void;
-export function wakeBody3D(body: CRCPhysicsBodyHandle3D): void;
-export function sleepBody3D(body: CRCPhysicsBodyHandle3D): void;
+export function wakeBody3D(body: PibblPhysicsBodyHandle3D): void;
+export function sleepBody3D(body: PibblPhysicsBodyHandle3D): void;
 export function enableBody3D(
-  body: CRCPhysicsBodyHandle3D,
+  body: PibblPhysicsBodyHandle3D,
   options?: Readonly<{ velocity?: "zero" | "preserve" }>,
 ): void;
-export function disableBody3D(body: CRCPhysicsBodyHandle3D): void;
+export function disableBody3D(body: PibblPhysicsBodyHandle3D): void;
 
-export type CRCPhysicsQueryMode = "closest" | "any" | "all";
-export interface CRCPhysicsQueryOptions3D<
-  Mode extends CRCPhysicsQueryMode = "closest",
+export type PibblPhysicsQueryMode = "closest" | "any" | "all";
+export interface PibblPhysicsQueryOptions3D<
+  Mode extends PibblPhysicsQueryMode = "closest",
 > {
   readonly mode?: Mode;
   readonly sensors?: "include" | "exclude" | "only";
-  readonly collisionFilter?: CRCPhysicsCollisionFilter;
-  readonly excludeBody?: CRCPhysicsBodyHandle3D;
-  readonly excludeCollider?: CRCPhysicsColliderHandle3D;
+  readonly collisionFilter?: PibblPhysicsCollisionFilter;
+  readonly excludeBody?: PibblPhysicsBodyHandle3D;
+  readonly excludeCollider?: PibblPhysicsColliderHandle3D;
 }
-export interface CRCPhysicsQueryHit3D extends CRCPhysicsShapeHit3D {
-  readonly body: CRCPhysicsBodyHandle3D;
-  readonly collider: CRCPhysicsColliderHandle3D;
+export interface PibblPhysicsQueryHit3D extends PibblPhysicsShapeHit3D {
+  readonly body: PibblPhysicsBodyHandle3D;
+  readonly collider: PibblPhysicsColliderHandle3D;
   readonly bodyGeneration: number;
   readonly colliderGeneration: number;
   readonly tag: unknown;
 }
-export interface CRCPhysicsQueryMatch3D {
-  readonly body: CRCPhysicsBodyHandle3D;
-  readonly collider: CRCPhysicsColliderHandle3D;
+export interface PibblPhysicsQueryMatch3D {
+  readonly body: PibblPhysicsBodyHandle3D;
+  readonly collider: PibblPhysicsColliderHandle3D;
   readonly bodyGeneration: number;
   readonly colliderGeneration: number;
   readonly tag: unknown;
 }
-export type CRCPhysicsQueryResult3D<
-  Mode extends CRCPhysicsQueryMode,
+export type PibblPhysicsQueryResult3D<
+  Mode extends PibblPhysicsQueryMode,
   Result,
 > = Mode extends "any"
   ? boolean
   : Mode extends "all"
     ? readonly Result[]
     : Result | null;
-export function raycast3D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle3D,
-  ray: CRCPhysicsRay3D,
-  options?: CRCPhysicsQueryOptions3D<Mode>,
-): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryHit3D>;
-export function shapeCast3D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle3D,
-  shape: CRCPhysicsShape3D,
-  from: CRCPhysicsPose3D,
-  translation: CRCPhysicsVector3,
-  options?: CRCPhysicsQueryOptions3D<Mode>,
-): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryHit3D>;
-export function overlapShape3D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle3D,
-  shape: CRCPhysicsShape3D,
-  pose: CRCPhysicsPose3D,
-  options?: CRCPhysicsQueryOptions3D<Mode>,
-): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D>;
-export function queryAabb3D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle3D,
-  bounds: CRCPhysicsAabb3D,
-  options?: CRCPhysicsQueryOptions3D<Mode>,
-): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D>;
-export function queryPoint3D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle3D,
-  point: CRCPhysicsVector3,
-  options?: CRCPhysicsQueryOptions3D<Mode>,
-): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D>;
+export function raycast3D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle3D,
+  ray: PibblPhysicsRay3D,
+  options?: PibblPhysicsQueryOptions3D<Mode>,
+): PibblPhysicsQueryResult3D<Mode, PibblPhysicsQueryHit3D>;
+export function shapeCast3D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle3D,
+  shape: PibblPhysicsShape3D,
+  from: PibblPhysicsPose3D,
+  translation: PibblPhysicsVector3,
+  options?: PibblPhysicsQueryOptions3D<Mode>,
+): PibblPhysicsQueryResult3D<Mode, PibblPhysicsQueryHit3D>;
+export function overlapShape3D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle3D,
+  shape: PibblPhysicsShape3D,
+  pose: PibblPhysicsPose3D,
+  options?: PibblPhysicsQueryOptions3D<Mode>,
+): PibblPhysicsQueryResult3D<Mode, PibblPhysicsQueryMatch3D>;
+export function queryAabb3D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle3D,
+  bounds: PibblPhysicsAabb3D,
+  options?: PibblPhysicsQueryOptions3D<Mode>,
+): PibblPhysicsQueryResult3D<Mode, PibblPhysicsQueryMatch3D>;
+export function queryPoint3D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle3D,
+  point: PibblPhysicsVector3,
+  options?: PibblPhysicsQueryOptions3D<Mode>,
+): PibblPhysicsQueryResult3D<Mode, PibblPhysicsQueryMatch3D>;
 
-export interface CRCPhysicsCollisionEvent3D {
-  readonly selfBody: CRCPhysicsBodyHandle3D;
-  readonly selfCollider: CRCPhysicsColliderHandle3D;
-  readonly otherBody: CRCPhysicsBodyHandle3D;
-  readonly otherCollider: CRCPhysicsColliderHandle3D;
-  readonly normal: CRCPhysicsVector3;
-  readonly points: readonly CRCPhysicsContactPoint3D[];
+export interface PibblPhysicsCollisionEvent3D {
+  readonly selfBody: PibblPhysicsBodyHandle3D;
+  readonly selfCollider: PibblPhysicsColliderHandle3D;
+  readonly otherBody: PibblPhysicsBodyHandle3D;
+  readonly otherCollider: PibblPhysicsColliderHandle3D;
+  readonly normal: PibblPhysicsVector3;
+  readonly points: readonly PibblPhysicsContactPoint3D[];
   readonly totalNormalImpulse: number;
   readonly tick: number;
   readonly selfTag: unknown;
   readonly otherTag: unknown;
 }
-export interface CRCPhysicsOverlapEvent3D {
-  readonly selfBody: CRCPhysicsBodyHandle3D;
-  readonly selfCollider: CRCPhysicsColliderHandle3D;
-  readonly otherBody: CRCPhysicsBodyHandle3D;
-  readonly otherCollider: CRCPhysicsColliderHandle3D;
+export interface PibblPhysicsOverlapEvent3D {
+  readonly selfBody: PibblPhysicsBodyHandle3D;
+  readonly selfCollider: PibblPhysicsColliderHandle3D;
+  readonly otherBody: PibblPhysicsBodyHandle3D;
+  readonly otherCollider: PibblPhysicsColliderHandle3D;
   readonly tick: number;
   readonly selfTag: unknown;
   readonly otherTag: unknown;
 }
-export interface CRCPhysicsBodyStateEvent3D {
-  readonly body: CRCPhysicsBodyHandle3D;
+export interface PibblPhysicsBodyStateEvent3D {
+  readonly body: PibblPhysicsBodyHandle3D;
   readonly sleeping: boolean;
   readonly tick: number;
 }
-export type CRCPhysicsCollisionHandler3D = (
-  event: CRCPhysicsCollisionEvent3D,
+export type PibblPhysicsCollisionHandler3D = (
+  event: PibblPhysicsCollisionEvent3D,
 ) => void;
-export type CRCPhysicsHitHandler3D = (
-  event: CRCPhysicsCollisionEvent3D,
+export type PibblPhysicsHitHandler3D = (
+  event: PibblPhysicsCollisionEvent3D,
 ) => void;
-export type CRCPhysicsOverlapHandler3D = (
-  event: CRCPhysicsOverlapEvent3D,
+export type PibblPhysicsOverlapHandler3D = (
+  event: PibblPhysicsOverlapEvent3D,
 ) => void;
-export type CRCPhysicsBodyStateHandler3D = (
-  event: CRCPhysicsBodyStateEvent3D,
+export type PibblPhysicsBodyStateHandler3D = (
+  event: PibblPhysicsBodyStateEvent3D,
 ) => void;
 ```
 
-All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point results sort by collider identity. The package declaration-merges `physics?: CRCPhysicsAttachment3D` into `@crc/webgl`'s empty `CRCPhysics3DPropExtension`; no Canvas prop is augmented by the 3D entry.
+All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point results sort by collider identity. The package declaration-merges `physics?: PibblPhysicsAttachment3D` into `@pibbl/webgl`'s empty `PibblPhysics3DPropExtension`; no Canvas prop is augmented by the 3D entry.
 
 ## Numeric and Determinism Policy
 
@@ -656,8 +656,8 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
 
 **Interfaces:**
 
-- Consumes: current CPU scene composer, immutable `CRCWebGLGeometry`, canonical Cube/Sphere geometry, transform order, settled pick/focus generation, and core official attachment lifecycle.
-- Produces: `@crc/webgl/internal` with copied geometry access, exact authored lineage, supported-primitive resolution, and a presentation-only model scope; public empty `CRCPhysics3DPropExtension` on `Group3D`, `Cube`, `Sphere`, and `Mesh` props.
+- Consumes: current CPU scene composer, immutable `PibblWebGLGeometry`, canonical Cube/Sphere geometry, transform order, settled pick/focus generation, and core official attachment lifecycle.
+- Produces: `@pibbl/webgl/internal` with copied geometry access, exact authored lineage, supported-primitive resolution, and a presentation-only model scope; public empty `PibblPhysics3DPropExtension` on `Group3D`, `Cube`, `Sphere`, and `Mesh` props.
 
 - [ ] **Step 1: Write failing friend-seam and lifecycle tests**
 
@@ -681,7 +681,7 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
 
 - [ ] **Step 5: Add the empty public extension and internal package entry**
 
-  Extend `CRCWebGLTargetProps` and `Group3DProps` with `CRCPhysics3DPropExtension`. Export the empty interface from `@crc/webgl` for declaration merging but no physics value. Build `src/internal.ts` as a separate externalized entry and assert applications cannot reach it from the root.
+  Extend `PibblWebGLTargetProps` and `Group3DProps` with `PibblPhysics3DPropExtension`. Export the empty interface from `@pibbl/webgl` for declaration merging but no physics value. Build `src/internal.ts` as a separate externalized entry and assert applications cannot reach it from the root.
 
 - [ ] **Step 6: Run WebGL, package, and type regressions**
 
@@ -726,7 +726,7 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
 
 - [ ] **Step 1: Write failing public-boundary and known-answer tests**
 
-  Import every fixed geometry name from `/3d/geometry`, geometry re-exports plus all available runtime-facing types from `/3d`, and assert no root barrel. Prove declarations for `/geometry` contain no CRC/WebGL references. Cover copied arrays, frozen results, quaternion canonicalization, transformed bounds, sphere mass, and a `2 × 4 × 6` box at density `3` with volume `48`, mass `144`, center `[0,0,0]`, and diagonal inertia `[624, 480, 240]`.
+  Import every fixed geometry name from `/3d/geometry`, geometry re-exports plus all available runtime-facing types from `/3d`, and assert no root barrel. Prove declarations for `/geometry` contain no Pibbl/WebGL references. Cover copied arrays, frozen results, quaternion canonicalization, transformed bounds, sphere mass, and a `2 × 4 × 6` box at density `3` with volume `48`, mass `144`, center `[0,0,0]`, and diagonal inertia `[624, 480, 240]`.
 
 - [ ] **Step 2: Run Node tests and typecheck to observe missing entries**
 
@@ -739,7 +739,7 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
 
 - [ ] **Step 3: Add side-effect-free entries and exact public types**
 
-  Add `./3d` and `./3d/geometry` exports, optional `@crc/webgl` peer metadata, workspace dev dependency, source aliases, and four-entry physics build. Externalize both CRC peers/internal entries. Define the fixed geometry signatures and runtime-facing public types; keep not-yet-implemented runtime values absent rather than shipping throwing stubs.
+  Add `./3d` and `./3d/geometry` exports, optional `@pibbl/webgl` peer metadata, workspace dev dependency, source aliases, and four-entry physics build. Externalize both Pibbl peers/internal entries. Define the fixed geometry signatures and runtime-facing public types; keep not-yet-implemented runtime values absent rather than shipping throwing stubs.
 
 - [ ] **Step 4: Implement quaternion/vector/matrix primitives and nominal records**
 
@@ -1293,9 +1293,9 @@ Task 3 correction, not a new public capability.
 
   Mount every physics renderer, compare generated vertices/bounds to its shape, assert deterministic tessellation counts, one CPU composition submission, no GL call before settlement, geometry cache reuse by shape identity, correct paint/pick/focus transforms, and exact disposal/context-restoration behavior.
 
-- [ ] **Step 4: Implement CRC-owned deterministic render geometry**
+- [ ] **Step 4: Implement Pibbl-owned deterministic render geometry**
 
-  Cache immutable `CRCWebGLGeometry` per physics shape identity. Use fixed longitude/latitude or radial segment counts declared in the test for curved visuals, exact hull/mesh triangles, and heightfield triangles. Ordinary components return public `Mesh` and forward `physics`, events, focus, color, opacity, cursor, and transforms; no raw GL/internal source import enters public application code.
+  Cache immutable `PibblWebGLGeometry` per physics shape identity. Use fixed longitude/latitude or radial segment counts declared in the test for curved visuals, exact hull/mesh triangles, and heightfield triangles. Ordinary components return public `Mesh` and forward `physics`, events, focus, color, opacity, cursor, and transforms; no raw GL/internal source import enters public application code.
 
 - [ ] **Step 5: Run Node and browser shape matrices**
 
@@ -1379,7 +1379,7 @@ Task 3 correction, not a new public capability.
 
 **Interfaces:**
 
-- Consumes: only public `@crc/core`, `@crc/webgl`, and `@crc/physics/3d` APIs.
+- Consumes: only public `@pibbl/core`, `@pibbl/webgl`, and `@pibbl/physics/3d` APIs.
 - Produces: the completed public Studio example, reusable deterministic control/snapshot module, ray-based interaction, and headless evidence for replay, long-run simulation, and repeated handoff/teardown cycles.
 
 - [ ] **Step 1: Write failing public scenario and replay tests**
@@ -1392,7 +1392,7 @@ Task 3 correction, not a new public capability.
 
 - [ ] **Step 3: Implement deterministic grab/throw ownership**
 
-  On grab, snapshot the selected dynamic body's presentation pose, disable it, bind authored target values to pointer/ray intersection, and render it without physics competition. On release, re-enable at the authored pose and apply a velocity/impulse derived from a bounded fixed sample history owned by the scenario—not a timer or second loop. Every state transition enters through public commands and CRC events.
+  On grab, snapshot the selected dynamic body's presentation pose, disable it, bind authored target values to pointer/ray intersection, and render it without physics competition. On release, re-enable at the authored pose and apply a velocity/impulse derived from a bounded fixed sample history owned by the scenario—not a timer or second loop. Every state transition enters through public commands and Pibbl events.
 
 - [ ] **Step 4: Add long-run and repeated lifecycle cycles**
 
@@ -1428,7 +1428,7 @@ Task 3 correction, not a new public capability.
 - Modify: `playground/package-consumer/tsconfig.bundler.json`
 - Modify: `playground/package-consumer/tsconfig.nodenext.json`
 - Modify: `tooling/verify-packed-consumer.mjs`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 - Modify: `tooling/verify-studio-types.mjs`
 - Modify: `tooling/studio-docs/api-exports.ts`
 - Modify: `tooling/studio-docs/api-exports.check.ts`
@@ -1454,7 +1454,7 @@ Task 3 correction, not a new public capability.
 
 - [ ] **Step 4: Update Studio declarations and export inventory**
 
-  Add exact subpath declarations, augmentation, shape/component/handle/query/event types, and editor examples. Keep `@crc/webgl/internal` absent from public editor declarations and API inventories while its packed official entry remains buildable.
+  Add exact subpath declarations, augmentation, shape/component/handle/query/event types, and editor examples. Keep `@pibbl/webgl/internal` absent from public editor declarations and API inventories while its packed official entry remains buildable.
 
 - [ ] **Step 5: Run package/type/Studio gates**
 
@@ -1472,7 +1472,7 @@ Task 3 correction, not a new public capability.
 - [ ] **Step 6: Commit package and consumer boundaries**
 
   ```bash
-  git add packages/physics/package.json packages/physics/tsconfig.build.json packages/physics/README.md packages/webgl/package.json playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json tooling/verify-packed-consumer.mjs playground/src/crc-editor-types.txt tooling/verify-studio-types.mjs tooling/studio-docs/api-exports.ts tooling/studio-docs/api-exports.check.ts package.json pnpm-lock.yaml
+  git add packages/physics/package.json packages/physics/tsconfig.build.json packages/physics/README.md packages/webgl/package.json playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json tooling/verify-packed-consumer.mjs playground/src/pibbl-editor-types.txt tooling/verify-studio-types.mjs tooling/studio-docs/api-exports.ts tooling/studio-docs/api-exports.check.ts package.json pnpm-lock.yaml
   git commit -m "test(physics): verify public 3d package consumers"
   ```
 
@@ -1490,8 +1490,8 @@ Task 3 correction, not a new public capability.
 - Create: `docs/site/api/components/physics-world-3d.md`
 - Create: `docs/site/api/components/physics-shape-3d.md`
 - Create: `docs/site/api/functions/physics-3d.md`
-- Create: `docs/site/api/hooks/crc-physics-body-3d.md`
-- Create: `docs/site/api/hooks/crc-physics-world-3d.md`
+- Create: `docs/site/api/hooks/pibbl-physics-body-3d.md`
+- Create: `docs/site/api/hooks/pibbl-physics-world-3d.md`
 - Create: `docs/site/api/types/physics-3d.md`
 - Create: `docs/site/learn/guides/physics-3d.md`
 - Create: `docs/testing/field-notes/2026-09-15-first-class-physics-3d.md`
@@ -1606,7 +1606,7 @@ Task 3 correction, not a new public capability.
 
 - [ ] **Step 5: Prove forbidden dependencies and loops are absent**
 
-  Search package manifests, lockfile changes, built metafiles, and source for external physics engines, WASM/native downloads, workers, timers, new `requestAnimationFrame`, manual step APIs, root `@crc/physics`, and bundled duplicate core/WebGL identities. Record exact zero-result commands and any benign existing matches in the field note.
+  Search package manifests, lockfile changes, built metafiles, and source for external physics engines, WASM/native downloads, workers, timers, new `requestAnimationFrame`, manual step APIs, root `@pibbl/physics`, and bundled duplicate core/WebGL identities. Record exact zero-result commands and any benign existing matches in the field note.
 
 - [ ] **Step 6: Dispatch the final whole-branch reviewer and resolve findings once**
 
@@ -1627,13 +1627,13 @@ Task 3 correction, not a new public capability.
 
 This plan is complete only when:
 
-- `@crc/physics/3d/geometry` executes in plain Node with no core, WebGL, DOM, Canvas, scheduler, or browser dependency and exposes every approved shape and pure operation.
-- `@crc/physics/3d` exposes only named tree-shakable world, body/collider, handle/command, query/event, shape-renderer, and geometry exports; no root barrel or namespace API exists.
-- Cube, Sphere, Mesh, and Group3D inference follows the exact approved matrix, every public physics shape renders through CRC-owned settled WebGL geometry, and moving concave geometry fails with an actionable diagnostic.
+- `@pibbl/physics/3d/geometry` executes in plain Node with no core, WebGL, DOM, Canvas, scheduler, or browser dependency and exposes every approved shape and pure operation.
+- `@pibbl/physics/3d` exposes only named tree-shakable world, body/collider, handle/command, query/event, shape-renderer, and geometry exports; no root barrel or namespace API exists.
+- Cube, Sphere, Mesh, and Group3D inference follows the exact approved matrix, every public physics shape renders through Pibbl-owned settled WebGL geometry, and moving concave geometry fails with an actionable diagnostic.
 - One realm frame always samples animation before bounded deterministic physics ticks, commits once, plans/renders once, and uses no second loop.
 - Authoritative fixed-tick state and interpolated presentation are separate; paint, picking, and focus share one presented generation while queries/events remain authoritative.
 - Dynamic, kinematic, static, and disabled pose authority is exclusive; partial kinematic bindings retain unbound fields; scale changes rebuild geometry/mass without entering pose.
-- Compound colliders use exact forward CRC-owned local transform lineage and unchanged renders cause zero collider topology, mass, or contact churn.
+- Compound colliders use exact forward Pibbl-owned local transform lineage and unchanged renders cause zero collider topology, mass, or contact churn.
 - Broad phase, narrow phase, tensor integration, impulses, friction, restitution, sleeping, sensors, filters, forces, commands, queries, ordered events, and optional CCD pass deterministic isolated tests.
 - Identical inputs replay identically within documented tolerances; long-running simulation stays finite/bounded; repeated enable/teleport/throw/disable/teardown cycles leave no stale work or owned resources.
 - The public `physics-3d` Studio example visibly demonstrates multiple dynamics, obstacles, bounce, roll, rotation, friction, restitution, compound geometry, and a ray/query result, with grabbing/throwing when the public picking seam supports it cleanly.

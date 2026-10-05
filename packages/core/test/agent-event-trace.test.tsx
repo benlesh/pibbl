@@ -1,4 +1,4 @@
-import { Rectangle, crc, useEventListener, type CRCController, type CRCEvent } from '@crc/core';
+import { Rectangle, pibbl, useEventListener, type PibblController, type PibblEvent } from '@pibbl/core';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { createEventTrace } from '../../../tooling/agent-verification/events';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';
@@ -6,7 +6,7 @@ import { clickMouse } from './support/mouse-input';
 
 let driver: ManualSchedulerDriver;
 let restore: () => void;
-let controller: CRCController | undefined;
+let controller: PibblController | undefined;
 beforeEach(() => { driver = new ManualSchedulerDriver(); restore = installSchedulerDriverForTest(driver); });
 afterEach(() => { controller?.dispose(); controller = undefined; restore(); document.body.replaceChildren(); });
 function host() {
@@ -22,7 +22,7 @@ it('records native capture, target and bubble invocations without changing appli
       onClickCapture={trace.wrap('target-capture', () => undefined)}
       onClick={trace.wrap('target-click', event => { event.preventDefault(); selections++; })} />;
   }
-  controller = crc(canvas, <Scene />, { pixelRatio: 1 }); driver.flush(1);
+  controller = pibbl(canvas, <Scene />, { pixelRatio: 1 }); driver.flush(1);
   await clickMouse(canvas, { x: 20, y: 20 });
   const snapshot = trace.snapshot();
   expect(selections).toBe(1);
@@ -51,7 +51,7 @@ it('keeps bounded history explicit and never invents handlers skipped by propaga
     useEventListener({ onClickCapture: trace.wrap('capture-stop', event => event.stopPropagation()), onClick: trace.wrap('unreached', () => undefined) });
     return <Rectangle style={{ width: 80, height: 80, fill: '#00f' }} onClick={trace.wrap('unreached-target', () => undefined)} />;
   }
-  controller = crc(canvas, <Scene />); driver.flush(1);
+  controller = pibbl(canvas, <Scene />); driver.flush(1);
   await clickMouse(canvas, { x: 20, y: 20 }); await clickMouse(canvas, { x: 20, y: 20 });
   const snapshot = trace.snapshot();
   expect(snapshot).toMatchObject({ dropped: 1, capacity: 3, completeness: 'truncated-history' });
@@ -63,8 +63,8 @@ it('keeps bounded history explicit and never invents handlers skipped by propaga
 });
 
 it('preserves handler return values and thrown identity without serializing event payloads or errors', async () => {
-  const trace = createEventTrace(); const canvas = host(); let delivered: CRCEvent | undefined;
-  controller = crc(canvas, <Rectangle style={{ width: 80, height: 80, fill: '#00f' }} onClick={event => { delivered = event; }} />); driver.flush(1);
+  const trace = createEventTrace(); const canvas = host(); let delivered: PibblEvent | undefined;
+  controller = pibbl(canvas, <Rectangle style={{ width: 80, height: 80, fill: '#00f' }} onClick={event => { delivered = event; }} />); driver.flush(1);
   await clickMouse(canvas, { x: 20, y: 20 });
   const secret = { get privateValue() { throw new Error('must not read'); } };
   expect(trace.wrap('return', () => secret)(delivered!)).toBe(secret);

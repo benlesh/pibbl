@@ -38,7 +38,7 @@ symbols:
 
 # Texture types and palettes
 
-Import these types and `texturePalettes` from `@crc/core/textures`.
+Import these types and `texturePalettes` from `@pibbl/core/textures`.
 
 ## `ReactionDiffusionProps`
 
@@ -134,7 +134,7 @@ and accepts 0–1: increasing it slows wave propagation and ambient motion and
 increases damping. It is an artistic thickness control, not physical density
 or a mass-conserving fluid solver. Changes preserve existing waves and pause state.
 For colored or textured liquid, paint a decorative Rectangle with a color or
-CRC texture and `style.opacity` inside the displaced group; keep
+Pibbl texture and `style.opacity` inside the displaced group; keep
 `pointerEvents="none"` so it does not intercept scene input.
 
 `waterSurface` is a WASM-backed,
@@ -172,14 +172,14 @@ Creates a living Gray–Scott recipe that accepts `InkMessage` values.
 ## waterWaves
 
 Creates a periodic numeric RG displacement map for the `displacement` filter.
-It advances through CRC's scheduler and remains static when paused. Speed zero
+It advances through Pibbl's scheduler and remains static when paused. Speed zero
 stops ambient motion while active ripples continue to spread.
 
 ## waterSurface
 
 Creates a numeric RG displacement map with bounded, reflecting outer and
 rectangle-obstacle boundaries. Solid obstacle pixels are transparent. It is
-appearance-only and does not couple to CRC physics.
+appearance-only and does not couple to Pibbl physics.
 
 ## rainDrops
 
@@ -217,7 +217,7 @@ normalized `x`/`y` in [0, 1], normalized width/height movement `dx`/`dy` in
 [-1, 1], and optional `radius` in (0, 2], measured against the shorter side
 (default 0.12). Nudges work while paused. Seed or initial-count changes reset
 simulation state; display resizing alone does not. Long frame gaps are capped
-at 50 ms. Refraction affects only filtered CRC content, not arbitrary HTML.
+at 50 ms. Refraction affects only filtered Pibbl content, not arbitrary HTML.
 
 `finger` begins or moves one contact with normalized `x`/`y` in [0, 1] and
 optional positive `radius` up to 2 (default 0.045, relative to the shorter side).

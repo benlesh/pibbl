@@ -1,4 +1,4 @@
-import { crc, Circle, Rectangle, Text } from "@crc/core";
+import { pibbl, Circle, Rectangle, Text } from "@pibbl/core";
 import {
   closestPoint,
   defineSeries,
@@ -10,7 +10,7 @@ import {
   type HoverCardStyle,
   type HoverDataProps,
   type HoverPlacement,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 
 const data = [{ x: 2, y: 3, label: "Peak" }];
 const query = closestPoint({
@@ -63,7 +63,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(
+const app = pibbl(
   canvas,
   <>
     <Rectangle style={{ width: 320, height: 220, fill: "#f8fafc" }} />

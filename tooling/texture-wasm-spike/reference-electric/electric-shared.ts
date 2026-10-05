@@ -1,4 +1,4 @@
-import type { TextureContext } from "@crc/core";
+import type { TextureContext } from "@pibbl/core";
 import { validateSeed } from "./palette.js";
 
 /** Coordinates are normalized to the complete texture, including its halo padding. */

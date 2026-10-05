@@ -1,4 +1,4 @@
-import type { ScenarioCatalogRecord } from '@crc/scenarios';
+import type { ScenarioCatalogRecord } from '@pibbl/scenarios';
 import {
   animationLabScenarioEntry,
   focusNavigationScenarioEntry,
@@ -9,7 +9,7 @@ import {
   scenarioCatalogIndex,
   signalsLabScenarioEntry,
   validateScenarioCatalog,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { validateScenarioSourceText } from '../../../tooling/learning-source-contract';
 import {
@@ -32,7 +32,7 @@ function scenarioSource(
   scene = '<Rectangle style={{ width: 10, height: 10 }} />',
 ): string {
   return `
-    import { Rectangle } from '@crc/core';
+    import { Rectangle } from '@pibbl/core';
     ${extraModuleSyntax}
     export const Scene = () => (${scene});
   `;
@@ -85,8 +85,8 @@ describe('scenario catalog trust gate', () => {
 
     it('accepts direct public core and Three integration imports', () => {
       const source = `
-        import { Rectangle } from '@crc/core';
-        import { defineThreeLayer } from '@crc/three';
+        import { Rectangle } from '@pibbl/core';
+        import { defineThreeLayer } from '@pibbl/three';
         import { PerspectiveCamera, Scene } from 'three';
         const Layer = defineThreeLayer({
           create() {
@@ -110,14 +110,14 @@ describe('scenario catalog trust gate', () => {
       [
         'a named legacy component import',
         scenarioSource(
-          `import { ${legacyFactory} } from '@crc/core'; void ${legacyFactory};`,
+          `import { ${legacyFactory} } from '@pibbl/core'; void ${legacyFactory};`,
         ),
         /legacy component authoring/i,
       ],
       [
         'an aliased legacy component import',
         scenarioSource(
-          `import { ${legacyFactory} as Draw } from '@crc/core'; void Draw;`,
+          `import { ${legacyFactory} as Draw } from '@pibbl/core'; void Draw;`,
         ),
         /legacy component authoring/i,
       ],
@@ -129,7 +129,7 @@ describe('scenario catalog trust gate', () => {
       [
         'an aliased descriptive component call',
         scenarioSource(
-          `import { Rectangle as Draw } from '@crc/core';`,
+          `import { Rectangle as Draw } from '@pibbl/core';`,
           `<>{Draw({ style: { width: 10, height: 10 } })}</>`,
         ),
         /not direct calls/i,
@@ -137,25 +137,25 @@ describe('scenario catalog trust gate', () => {
       [
         'a namespace descriptive component call',
         scenarioSource(
-          `import * as CRC from '@crc/core';`,
-          `<CRC.Group>{CRC.Rectangle({ style: { width: 10, height: 10 } })}</CRC.Group>`,
+          `import * as Pibbl from '@pibbl/core';`,
+          `<Pibbl.Group>{Pibbl.Rectangle({ style: { width: 10, height: 10 } })}</Pibbl.Group>`,
         ),
         /not direct calls/i,
       ],
       [
         'a namespace legacy component call',
         scenarioSource(
-          `import * as CRC from '@crc/core';`,
-          `<CRC.Group>{CRC.rect({ style: { width: 10, height: 10 } })}</CRC.Group>`,
+          `import * as Pibbl from '@pibbl/core';`,
+          `<Pibbl.Group>{Pibbl.rect({ style: { width: 10, height: 10 } })}</Pibbl.Group>`,
         ),
         /legacy component authoring/i,
       ],
       [
         'an imported namespace component call inside a namespace without a shadow',
         scenarioSource(`
-          import * as CRC from '@crc/core';
+          import * as Pibbl from '@pibbl/core';
           namespace Fixture {
-            export const invalid = CRC.Rectangle({});
+            export const invalid = Pibbl.Rectangle({});
           }
         `),
         /not direct calls/i,
@@ -163,10 +163,10 @@ describe('scenario catalog trust gate', () => {
       [
         'an imported namespace component call inside nested namespaces without a shadow',
         scenarioSource(`
-          import * as CRC from '@crc/core';
+          import * as Pibbl from '@pibbl/core';
           namespace Outer {
             namespace Inner {
-              export const invalid = CRC.Rectangle({});
+              export const invalid = Pibbl.Rectangle({});
             }
           }
         `),
@@ -175,9 +175,9 @@ describe('scenario catalog trust gate', () => {
       [
         'an imported namespace component call inside a dotted namespace without a shadow',
         scenarioSource(`
-          import * as CRC from '@crc/core';
+          import * as Pibbl from '@pibbl/core';
           namespace Outer.Inner {
-            export const invalid = CRC.Rectangle({});
+            export const invalid = Pibbl.Rectangle({});
           }
         `),
         /not direct calls/i,
@@ -185,58 +185,58 @@ describe('scenario catalog trust gate', () => {
       [
         'a string-literal module name that does not shadow an imported namespace',
         scenarioSource(`
-          import * as CRC from '@crc/core';
-          declare module 'CRC' { interface Marker {} }
-          void CRC.Rectangle({});
+          import * as Pibbl from '@pibbl/core';
+          declare module 'Pibbl' { interface Marker {} }
+          void Pibbl.Rectangle({});
         `),
         /not direct calls/i,
       ],
       [
         'a namespace-local shadow that does not escape its module block',
         scenarioSource(`
-          import * as CRC from '@crc/core';
+          import * as Pibbl from '@pibbl/core';
           namespace Fixture {
-            namespace CRC {
+            namespace Pibbl {
               export function Rectangle(): string { return 'local'; }
             }
           }
-          void CRC.Rectangle({});
+          void Pibbl.Rectangle({});
         `),
         /not direct calls/i,
       ],
       [
         'a dotted namespace final-segment value shadow that does not escape its body',
         scenarioSource(`
-          import * as CRC from '@crc/core';
-          namespace Fixture.CRC {
+          import * as Pibbl from '@pibbl/core';
+          namespace Fixture.Pibbl {
             export function Rectangle(): string { return 'local'; }
-            export const local = CRC.Rectangle();
+            export const local = Pibbl.Rectangle();
           }
-          void CRC.Rectangle({});
+          void Pibbl.Rectangle({});
         `),
         /not direct calls/i,
       ],
       [
         'an imported legacy type namespace referenced inside an unshadowed namespace',
         scenarioSource(`
-          import type * as CRC from '@crc/core';
-          namespace Fixture { export type Legacy = CRC.${LEGACY_COMPONENT_TYPE_NAMES[0]}; }
+          import type * as Pibbl from '@pibbl/core';
+          namespace Fixture { export type Legacy = Pibbl.${LEGACY_COMPONENT_TYPE_NAMES[0]}; }
         `),
         /obsolete component types/i,
       ],
       [
         'a dotted namespace final-segment type shadow that does not escape its body',
         scenarioSource(`
-          import type * as CRC from '@crc/core';
-          namespace Fixture.CRC { export interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true } }
-          type Legacy = CRC.${LEGACY_COMPONENT_TYPE_NAMES[0]};
+          import type * as Pibbl from '@pibbl/core';
+          namespace Fixture.Pibbl { export interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true } }
+          type Legacy = Pibbl.${LEGACY_COMPONENT_TYPE_NAMES[0]};
         `),
         /obsolete component types/i,
       ],
       [
         'createElement-only authoring',
         scenarioSource(
-          `import { createElement } from '@crc/core';`,
+          `import { createElement } from '@pibbl/core';`,
           `createElement(Rectangle, { style: { width: 10, height: 10 } })`,
         ),
         /must use descriptive JSX/i,
@@ -244,7 +244,7 @@ describe('scenario catalog trust gate', () => {
       [
         'an inline legacy Text style',
         scenarioSource(
-          `import { Text } from '@crc/core';`,
+          `import { Text } from '@pibbl/core';`,
           `<Text style={{ text: 'legacy', x: 10, y: 10 }}>current</Text>`,
         ),
         /legacy Text style\.text/i,
@@ -252,7 +252,7 @@ describe('scenario catalog trust gate', () => {
       [
         'an external Text style',
         scenarioSource(
-          `import { Text } from '@crc/core'; const style = { text: 'legacy' };`,
+          `import { Text } from '@pibbl/core'; const style = { text: 'legacy' };`,
           `<Text style={style}>current</Text>`,
         ),
         /inspectable Text style/i,
@@ -260,7 +260,7 @@ describe('scenario catalog trust gate', () => {
       [
         'an inline legacy Layer render prop',
         scenarioSource(
-          `import { Layer } from '@crc/core';`,
+          `import { Layer } from '@pibbl/core';`,
           `<Layer render={<Rectangle style={{ width: 10, height: 10 }} />} />`,
         ),
         /legacy Layer render prop/i,
@@ -268,7 +268,7 @@ describe('scenario catalog trust gate', () => {
       [
         'a Layer props spread',
         scenarioSource(
-          `import { Layer } from '@crc/core'; const props = { render: <Rectangle style={{ width: 10, height: 10 }} /> };`,
+          `import { Layer } from '@pibbl/core'; const props = { render: <Rectangle style={{ width: 10, height: 10 }} /> };`,
           `<Layer {...props}><Rectangle style={{ width: 10, height: 10 }} /></Layer>`,
         ),
         /inspectable Layer props/i,
@@ -285,23 +285,23 @@ describe('scenario catalog trust gate', () => {
     it.each([
       [
         'a dynamic legacy import',
-        `export async function loadLegacy() { const { rect } = await import('@crc/core'); return rect({}); }`,
+        `export async function loadLegacy() { const { rect } = await import('@pibbl/core'); return rect({}); }`,
         /dynamic import expressions/i,
       ],
       [
         'a dynamic type import',
-        `type Legacy = import('@crc/core').${LEGACY_COMPONENT_TYPE_NAMES[0]};`,
+        `type Legacy = import('@pibbl/core').${LEGACY_COMPONENT_TYPE_NAMES[0]};`,
         /TypeScript import types/i,
       ],
       ['import.meta', `void import.meta.url;`, /import\.meta/i],
       [
         'a bare require call',
-        `void require('@crc/core');`,
+        `void require('@pibbl/core');`,
         /must not use CommonJS module loading or exports/i,
       ],
       [
         'a bare require.resolve call',
-        `void require.resolve('@crc/core');`,
+        `void require.resolve('@pibbl/core');`,
         /must not use CommonJS module loading or exports/i,
       ],
       [
@@ -316,7 +316,7 @@ describe('scenario catalog trust gate', () => {
       ],
       [
         'a globalThis require call',
-        `void (globalThis as any).require('@crc/core');`,
+        `void (globalThis as any).require('@pibbl/core');`,
         /must not use CommonJS module loading or exports/i,
       ],
       [
@@ -326,12 +326,12 @@ describe('scenario catalog trust gate', () => {
       ],
       [
         'an optional nested global require path',
-        `void (globalThis as any)?.window?.self?.['require']?.('@crc/core');`,
+        `void (globalThis as any)?.window?.self?.['require']?.('@pibbl/core');`,
         /must not use CommonJS module loading or exports/i,
       ],
       [
         'a window require path',
-        `void (window as any)['require']('@crc/core');`,
+        `void (window as any)['require']('@pibbl/core');`,
         /must not use CommonJS module loading or exports/i,
       ],
       [
@@ -346,7 +346,7 @@ describe('scenario catalog trust gate', () => {
       ],
       [
         'a top-level import-equals declaration',
-        `import Legacy = require('@crc/core'); void Legacy;`,
+        `import Legacy = require('@pibbl/core'); void Legacy;`,
         /TypeScript import-equals/i,
       ],
       [
@@ -366,17 +366,17 @@ describe('scenario catalog trust gate', () => {
       ],
       [
         'a default core import',
-        `import Core from '@crc/core'; void Core;`,
+        `import Core from '@pibbl/core'; void Core;`,
         /supported static imports/i,
       ],
       [
         'a side-effect core import',
-        `import '@crc/core';`,
+        `import '@pibbl/core';`,
         /supported static imports/i,
       ],
       [
         'a core import with attributes',
-        `import { Rectangle as AttributedRectangle } from '@crc/core' with { type: 'json' }; void AttributedRectangle;`,
+        `import { Rectangle as AttributedRectangle } from '@pibbl/core' with { type: 'json' }; void AttributedRectangle;`,
         /import attributes or assertions/i,
       ],
       [
@@ -388,7 +388,7 @@ describe('scenario catalog trust gate', () => {
         'a multiline named legacy import assertion',
         `import {
           Rectangle as AssertedRectangle,
-        } from '@crc/core' assert { type: 'json' }; void AssertedRectangle;`,
+        } from '@pibbl/core' assert { type: 'json' }; void AssertedRectangle;`,
         /^invalid deterministic module must not use import attributes or assertions\.$/u,
       ],
       [
@@ -402,7 +402,7 @@ describe('scenario catalog trust gate', () => {
         'a commented multiline legacy import assertion',
         `import {
           Rectangle as AssertedRectangle, // multiline binding
-        } from '@crc/core' /* legacy clause */ assert { type: 'json' };
+        } from '@pibbl/core' /* legacy clause */ assert { type: 'json' };
         void AssertedRectangle;`,
         /^invalid deterministic module must not use import attributes or assertions\.$/u,
       ],
@@ -483,8 +483,8 @@ describe('scenario catalog trust gate', () => {
         /supported static imports/i,
       ],
       [
-        'an @crc/core legacy re-export',
-        `export { rect } from '@crc/core';`,
+        'an @pibbl/core legacy re-export',
+        `export { rect } from '@pibbl/core';`,
         /re-export/i,
       ],
       [
@@ -509,7 +509,7 @@ describe('scenario catalog trust gate', () => {
       ],
       [
         'an obsolete type re-export',
-        `export type { ${LEGACY_COMPONENT_TYPE_NAMES[0]} } from '@crc/core';`,
+        `export type { ${LEGACY_COMPONENT_TYPE_NAMES[0]} } from '@pibbl/core';`,
         /re-export/i,
       ],
     ] as const)(
@@ -530,7 +530,7 @@ describe('scenario catalog trust gate', () => {
         expect(() =>
           validateScenarioSourceText(
             scenarioSource(`
-              import type { ${typeName} as LegacyType } from '@crc/core';
+              import type { ${typeName} as LegacyType } from '@pibbl/core';
               type Local = LegacyType;
             `),
             'aliased legacy type module',
@@ -545,7 +545,7 @@ describe('scenario catalog trust gate', () => {
         expect(() =>
           validateScenarioSourceText(
             scenarioSource(`
-              import type * as CoreTypes from '@crc/core';
+              import type * as CoreTypes from '@pibbl/core';
               type Local = CoreTypes.${typeName};
             `),
             'namespace legacy type module',
@@ -627,8 +627,8 @@ describe('scenario catalog trust gate', () => {
       ],
       [
         'namespace core JSX',
-        `import * as CRC from '@crc/core';`,
-        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+        `import * as Pibbl from '@pibbl/core';`,
+        '<Pibbl.Rectangle style={{ width: 10, height: 10 }} />',
       ],
       [
         'local named and default exports',
@@ -643,9 +643,9 @@ describe('scenario catalog trust gate', () => {
       [
         'a lexically shadowed namespace component call',
         `
-          import * as CRC from '@crc/core';
-          function invoke(CRC: { Rectangle: () => string }): string {
-            return CRC.Rectangle();
+          import * as Pibbl from '@pibbl/core';
+          function invoke(Pibbl: { Rectangle: () => string }): string {
+            return Pibbl.Rectangle();
           }
           void invoke;
         `,
@@ -654,15 +654,15 @@ describe('scenario catalog trust gate', () => {
       [
         'a namespace-local namespace component shadow',
         `
-          import * as CRC from '@crc/core';
+          import * as Pibbl from '@pibbl/core';
           namespace Fixture {
-            namespace CRC {
+            namespace Pibbl {
               export function Rectangle(): string { return 'local'; }
             }
-            export const local = CRC.Rectangle();
+            export const local = Pibbl.Rectangle();
           }
         `,
-        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+        '<Pibbl.Rectangle style={{ width: 10, height: 10 }} />',
       ],
       [
         'a namespace-local named component shadow',
@@ -677,48 +677,48 @@ describe('scenario catalog trust gate', () => {
       [
         'a nested namespace-local component shadow',
         `
-          import * as CRC from '@crc/core';
+          import * as Pibbl from '@pibbl/core';
           namespace Outer {
             namespace Inner {
-              namespace CRC {
+              namespace Pibbl {
                 export function Rectangle(): string { return 'local'; }
               }
-              export const local = CRC.Rectangle();
+              export const local = Pibbl.Rectangle();
             }
           }
         `,
-        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+        '<Pibbl.Rectangle style={{ width: 10, height: 10 }} />',
       ],
       [
         'a dotted namespace-local component shadow',
         `
-          import * as CRC from '@crc/core';
+          import * as Pibbl from '@pibbl/core';
           namespace Outer.Inner {
-            namespace CRC {
+            namespace Pibbl {
               export function Rectangle(): string { return 'local'; }
             }
-            export const local = CRC.Rectangle();
+            export const local = Pibbl.Rectangle();
           }
         `,
-        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+        '<Pibbl.Rectangle style={{ width: 10, height: 10 }} />',
       ],
       [
         'a dotted namespace final-segment value and type self-binding',
         `
-          import * as CRC from '@crc/core';
-          namespace Fixture.CRC {
+          import * as Pibbl from '@pibbl/core';
+          namespace Fixture.Pibbl {
             export function Rectangle(): string { return 'local'; }
             export interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true }
-            export const local = CRC.Rectangle();
-            export type Local = CRC.${LEGACY_COMPONENT_TYPE_NAMES[0]};
+            export const local = Pibbl.Rectangle();
+            export type Local = Pibbl.${LEGACY_COMPONENT_TYPE_NAMES[0]};
           }
         `,
-        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+        '<Pibbl.Rectangle style={{ width: 10, height: 10 }} />',
       ],
       [
         'a deeply dotted namespace final-segment value and type self-binding',
         `
-          import * as C from '@crc/core';
+          import * as C from '@pibbl/core';
           namespace A.B.C {
             export function Rectangle(): string { return 'local'; }
             export interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true }
@@ -729,25 +729,25 @@ describe('scenario catalog trust gate', () => {
         '<C.Rectangle style={{ width: 10, height: 10 }} />',
       ],
       [
-        'a dotted local namespace binding that uses a legacy CRC member name',
+        'a dotted local namespace binding that uses a legacy Pibbl member name',
         `
-          import * as CRC from '@crc/core';
+          import * as Pibbl from '@pibbl/core';
           namespace Fixture {
-            namespace CRC.rect {
+            namespace Pibbl.rect {
               export function invoke(): string { return 'local'; }
             }
-            export const local = CRC.rect.invoke();
+            export const local = Pibbl.rect.invoke();
           }
         `,
-        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+        '<Pibbl.Rectangle style={{ width: 10, height: 10 }} />',
       ],
       [
         'a namespace-local legacy type-name shadow',
         `
-          import type * as CRC from '@crc/core';
+          import type * as Pibbl from '@pibbl/core';
           namespace Fixture {
-            namespace CRC { export interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true } }
-            export type Local = CRC.${LEGACY_COMPONENT_TYPE_NAMES[0]};
+            namespace Pibbl { export interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true } }
+            export type Local = Pibbl.${LEGACY_COMPONENT_TYPE_NAMES[0]};
           }
         `,
         undefined,
@@ -755,10 +755,10 @@ describe('scenario catalog trust gate', () => {
       [
         'a string-module-local legacy type-name shadow',
         `
-          import type * as CRC from '@crc/core';
+          import type * as Pibbl from '@pibbl/core';
           declare module 'fixture' {
-            namespace CRC { interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true } }
-            type Local = CRC.${LEGACY_COMPONENT_TYPE_NAMES[0]};
+            namespace Pibbl { interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true } }
+            type Local = Pibbl.${LEGACY_COMPONENT_TYPE_NAMES[0]};
           }
         `,
         undefined,

@@ -1,9 +1,9 @@
-import type { Canvas, Signal } from "@crc/core";
+import type { Canvas, Signal } from "@pibbl/core";
 import {
   getCurrentBackendHostCanvas,
   setCurrentComponentAfterRender,
   useInternalHookSlot,
-} from "@crc/core/internal";
+} from "@pibbl/core/internal";
 import type { ResolvedScale, ScaleId } from "./types.js";
 interface Scope {
   id: ScaleId;

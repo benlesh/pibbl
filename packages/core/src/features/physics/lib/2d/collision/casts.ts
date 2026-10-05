@@ -1,10 +1,10 @@
 import type {
-  CRCPhysicsDistance2D,
-  CRCPhysicsPose2D,
-  CRCPhysicsRay2D,
-  CRCPhysicsShape2D,
-  CRCPhysicsShapeHit2D,
-  CRCPhysicsVector2,
+  PibblPhysicsDistance2D,
+  PibblPhysicsPose2D,
+  PibblPhysicsRay2D,
+  PibblPhysicsShape2D,
+  PibblPhysicsShapeHit2D,
+  PibblPhysicsVector2,
 } from '../../../2d-geometry.js';
 import {
   copyFiniteVector2,
@@ -54,23 +54,23 @@ interface PreparedCastShape2D {
 /**
  * Casts a ray against one posed shape and returns its first hit or null.
  *
- * @param shape - Shape to intersect. See {@link CRCPhysicsShape2D}.
- * @param publicPose - Target shape pose. See {@link CRCPhysicsPose2D}.
- * @param ray - Ray origin, direction, and travel limit. See {@link CRCPhysicsRay2D}.
+ * @param shape - Shape to intersect. See {@link PibblPhysicsShape2D}.
+ * @param publicPose - Target shape pose. See {@link PibblPhysicsPose2D}.
+ * @param ray - Ray origin, direction, and travel limit. See {@link PibblPhysicsRay2D}.
  * @param options - Whether initial overlap counts as a hit.
- * @returns The first shape hit, or null when there is no hit. See {@link CRCPhysicsShapeHit2D}.
+ * @returns The first shape hit, or null when there is no hit. See {@link PibblPhysicsShapeHit2D}.
  *
- * @see {@link CRCPhysicsShape2D}
- * @see {@link CRCPhysicsPose2D}
- * @see {@link CRCPhysicsRay2D}
- * @see {@link CRCPhysicsShapeHit2D}
+ * @see {@link PibblPhysicsShape2D}
+ * @see {@link PibblPhysicsPose2D}
+ * @see {@link PibblPhysicsRay2D}
+ * @see {@link PibblPhysicsShapeHit2D}
  */
 export function raycastShape2D(
-  shape: CRCPhysicsShape2D,
-  publicPose: CRCPhysicsPose2D,
-  ray: CRCPhysicsRay2D,
+  shape: PibblPhysicsShape2D,
+  publicPose: PibblPhysicsPose2D,
+  ray: PibblPhysicsRay2D,
   options?: Readonly<{ includeInitialOverlap?: boolean }>,
-): CRCPhysicsShapeHit2D | null {
+): PibblPhysicsShapeHit2D | null {
   const prepared = prepareShape(shape, publicPose, 'pose');
   const origin = copyFiniteVector2(ray.origin, 'ray.origin');
   const sourceDirection = copyFiniteVector2(ray.direction, 'ray.direction');
@@ -134,27 +134,27 @@ export function raycastShape2D(
 /**
  * Sweeps a posed shape along a translation against another posed shape and returns a hit or null.
  *
- * @param moving - Shape to sweep. See {@link CRCPhysicsShape2D}.
- * @param publicFrom - Initial pose of the moving shape. See {@link CRCPhysicsPose2D}.
- * @param publicTranslation - Translation vector for the sweep. See {@link CRCPhysicsVector2}.
- * @param target - Stationary shape to test against. See {@link CRCPhysicsShape2D}.
- * @param publicTargetPose - Pose of the stationary shape. See {@link CRCPhysicsPose2D}.
+ * @param moving - Shape to sweep. See {@link PibblPhysicsShape2D}.
+ * @param publicFrom - Initial pose of the moving shape. See {@link PibblPhysicsPose2D}.
+ * @param publicTranslation - Translation vector for the sweep. See {@link PibblPhysicsVector2}.
+ * @param target - Stationary shape to test against. See {@link PibblPhysicsShape2D}.
+ * @param publicTargetPose - Pose of the stationary shape. See {@link PibblPhysicsPose2D}.
  * @param options - Whether initial overlap counts as a hit.
- * @returns The first sweep hit, or null when there is no hit. See {@link CRCPhysicsShapeHit2D}.
+ * @returns The first sweep hit, or null when there is no hit. See {@link PibblPhysicsShapeHit2D}.
  *
- * @see {@link CRCPhysicsShape2D}
- * @see {@link CRCPhysicsPose2D}
- * @see {@link CRCPhysicsVector2}
- * @see {@link CRCPhysicsShapeHit2D}
+ * @see {@link PibblPhysicsShape2D}
+ * @see {@link PibblPhysicsPose2D}
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link PibblPhysicsShapeHit2D}
  */
 export function shapeCastAgainstShape2D(
-  moving: CRCPhysicsShape2D,
-  publicFrom: CRCPhysicsPose2D,
-  publicTranslation: CRCPhysicsVector2,
-  target: CRCPhysicsShape2D,
-  publicTargetPose: CRCPhysicsPose2D,
+  moving: PibblPhysicsShape2D,
+  publicFrom: PibblPhysicsPose2D,
+  publicTranslation: PibblPhysicsVector2,
+  target: PibblPhysicsShape2D,
+  publicTargetPose: PibblPhysicsPose2D,
   options?: Readonly<{ includeInitialOverlap?: boolean }>,
-): CRCPhysicsShapeHit2D | null {
+): PibblPhysicsShapeHit2D | null {
   const preparedMoving = prepareShape(moving, publicFrom, 'from');
   const translation = copyFiniteVector2(publicTranslation, 'translation');
   const preparedTarget = prepareShape(target, publicTargetPose, 'targetPose');
@@ -203,7 +203,7 @@ export function shapeCastAgainstShape2D(
 
 function raycastLeaf(
   leaf: ConvexLeaf2D,
-  leafShape: CRCPhysicsShape2D,
+  leafShape: PibblPhysicsShape2D,
   pose: InternalPose2D,
   originX: number,
   originY: number,
@@ -519,12 +519,12 @@ function castCircleAgainstCircle(
 }
 
 function conservativelyCastLeafPair(
-  moving: CRCPhysicsShape2D,
+  moving: PibblPhysicsShape2D,
   from: InternalPose2D,
   translationX: number,
   translationY: number,
   translationLength: number,
-  target: CRCPhysicsShape2D,
+  target: PibblPhysicsShape2D,
   targetPose: InternalPose2D,
   leafKey: readonly [number, number],
   includeInitialOverlap: boolean,
@@ -583,12 +583,12 @@ function conservativelyCastLeafPair(
 }
 
 function refineBoundedTangent(
-  moving: CRCPhysicsShape2D,
+  moving: PibblPhysicsShape2D,
   from: InternalPose2D,
   translationX: number,
   translationY: number,
   translationLength: number,
-  target: CRCPhysicsShape2D,
+  target: PibblPhysicsShape2D,
   targetPose: InternalPose2D,
   leafKey: readonly [number, number],
 ): CastCandidate2D | null {
@@ -673,14 +673,14 @@ function refineBoundedTangent(
 }
 
 function sampleTranslatedDistance(
-  moving: CRCPhysicsShape2D,
+  moving: PibblPhysicsShape2D,
   from: InternalPose2D,
   translationX: number,
   translationY: number,
   time: number,
-  target: CRCPhysicsShape2D,
+  target: PibblPhysicsShape2D,
   targetPose: InternalPose2D,
-): CRCPhysicsDistance2D | null {
+): PibblPhysicsDistance2D | null {
   return samplePairDistance(
     moving,
     {
@@ -694,11 +694,11 @@ function sampleTranslatedDistance(
 }
 
 function samplePairDistance(
-  moving: CRCPhysicsShape2D,
+  moving: PibblPhysicsShape2D,
   movingPose: InternalPose2D,
-  target: CRCPhysicsShape2D,
+  target: PibblPhysicsShape2D,
   targetPose: InternalPose2D,
-): CRCPhysicsDistance2D | null {
+): PibblPhysicsDistance2D | null {
   try {
     const distance = distanceBetweenPreparedShapes2D(
       moving,
@@ -713,8 +713,8 @@ function samplePairDistance(
 }
 
 function prepareShape(
-  shape: CRCPhysicsShape2D,
-  publicPose: CRCPhysicsPose2D,
+  shape: PibblPhysicsShape2D,
+  publicPose: PibblPhysicsPose2D,
   posePath: string,
 ): PreparedCastShape2D {
   const record = requireShapeRecord2D(shape);
@@ -722,7 +722,7 @@ function prepareShape(
   return { record, pose };
 }
 
-function shapeForLeaf(leaf: ConvexLeaf2D): CRCPhysicsShape2D {
+function shapeForLeaf(leaf: ConvexLeaf2D): PibblPhysicsShape2D {
   return createShape2D({
     leaves: Object.freeze([leaf]),
     localPose: IDENTITY_POSE_2D,
@@ -734,7 +734,7 @@ function shapeForLeaf(leaf: ConvexLeaf2D): CRCPhysicsShape2D {
   });
 }
 
-function shapeForPoint(): CRCPhysicsShape2D {
+function shapeForPoint(): PibblPhysicsShape2D {
   return shapeForLeaf(Object.freeze({
     kind: 'segment',
     start: new Float64Array(2),
@@ -805,7 +805,7 @@ function segmentNormalAgainstMotion(
   return [normalX, normalY];
 }
 
-function internalPoseAsPublic(pose: InternalPose2D): CRCPhysicsPose2D {
+function internalPoseAsPublic(pose: InternalPose2D): PibblPhysicsPose2D {
   return {
     position: [pose.x, pose.y],
     rotationDegrees: pose.rotationRadians * 180 / Math.PI,
@@ -834,9 +834,9 @@ function isEarlierCandidate(
 
 function isFiniteDistance(distance: Readonly<{
   separation: number;
-  pointOnFirst: CRCPhysicsVector2;
-  pointOnSecond: CRCPhysicsVector2;
-  normal: CRCPhysicsVector2;
+  pointOnFirst: PibblPhysicsVector2;
+  pointOnSecond: PibblPhysicsVector2;
+  normal: PibblPhysicsVector2;
 }>): boolean {
   return Number.isFinite(distance.separation) &&
     Number.isFinite(distance.pointOnFirst[0]) &&
@@ -847,7 +847,7 @@ function isFiniteDistance(distance: Readonly<{
     Number.isFinite(distance.normal[1]);
 }
 
-function publicHit(candidate: CastCandidate2D): CRCPhysicsShapeHit2D {
+function publicHit(candidate: CastCandidate2D): PibblPhysicsShapeHit2D {
   return Object.freeze({
     point: freezeVector(candidate.pointX, candidate.pointY),
     normal: freezeVector(candidate.normalX, candidate.normalY),
@@ -856,7 +856,7 @@ function publicHit(candidate: CastCandidate2D): CRCPhysicsShapeHit2D {
   });
 }
 
-function freezeVector(x: number, y: number): CRCPhysicsVector2 {
+function freezeVector(x: number, y: number): PibblPhysicsVector2 {
   return Object.freeze([cleanZero(x), cleanZero(y)] as const);
 }
 

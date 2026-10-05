@@ -1,16 +1,16 @@
-import { signal, type WritableSignal } from "@crc/core";
+import { signal, type WritableSignal } from "@pibbl/core";
 import {
-  crcInternalCurrentSimulationOwner,
-  crcInternalQueueSimulationBegin,
+  pibblInternalCurrentSimulationOwner,
+  pibblInternalQueueSimulationBegin,
   useInternalHookSlot,
-  type CRCInternalSignalBatch,
-  type CRCInternalSimulationOwner,
-} from "@crc/core/internal";
+  type PibblInternalSignalBatch,
+  type PibblInternalSimulationOwner,
+} from "@pibbl/core/internal";
 import type {
-  CRCPhysicsPose2D,
-  CRCPhysicsVector2,
+  PibblPhysicsPose2D,
+  PibblPhysicsVector2,
 } from "../../../2d-geometry.js";
-import type { CRCPhysicsBodyHandle2D } from "../types.js";
+import type { PibblPhysicsBodyHandle2D } from "../types.js";
 import type { PhysicsBodyCommand2D } from "../world/world.js";
 import {
   copyFiniteVector2,
@@ -34,7 +34,7 @@ export interface PhysicsBodyHandleBinding2D {
 }
 
 interface PhysicsBodyHandleState2D {
-  readonly owner: CRCInternalSimulationOwner;
+  readonly owner: PibblInternalSimulationOwner;
   readonly signals: Partial<{
     [Field in PhysicsBodyHandleField2D]: WritableSignal<
       BodyFieldValue2D[Field]
@@ -46,9 +46,9 @@ interface PhysicsBodyHandleState2D {
 }
 
 interface BodyFieldValue2D {
-  readonly position: CRCPhysicsVector2;
+  readonly position: PibblPhysicsVector2;
   readonly rotationDegrees: number;
-  readonly linearVelocity: CRCPhysicsVector2;
+  readonly linearVelocity: PibblPhysicsVector2;
   readonly angularVelocityDegreesPerSecond: number;
   readonly sleeping: boolean;
   readonly enabled: boolean;
@@ -70,12 +70,12 @@ const externalBindings = new WeakMap<
  * Returns one stable, component-owned 2D body endpoint for this hook slot.
  *
  * @returns A stable body handle that can be attached to a physics body. See
- * {@link CRCPhysicsBodyHandle2D} .
+ * {@link PibblPhysicsBodyHandle2D} .
  *
- * @see {@link CRCPhysicsBodyHandle2D}
+ * @see {@link PibblPhysicsBodyHandle2D}
  */
-export function crcPhysicsBody2D(): CRCPhysicsBodyHandle2D {
-  const owner = crcInternalCurrentSimulationOwner();
+export function pibblPhysicsBody2D(): PibblPhysicsBodyHandle2D {
+  const owner = pibblInternalCurrentSimulationOwner();
   const slot = useInternalHookSlot("physicsBody2DHandle", (teardowns) => {
     const handle = createPhysicsBodyHandle2D(owner);
     teardowns.add(() => disposePhysicsBodyHandle2D(handle));
@@ -87,18 +87,18 @@ export function crcPhysicsBody2D(): CRCPhysicsBodyHandle2D {
 /**
  * Queues a force on a body, optionally at a world point and with wake-up control.
  *
- * @param body - Body receiving the force. See {@link CRCPhysicsBodyHandle2D}.
+ * @param body - Body receiving the force. See {@link PibblPhysicsBodyHandle2D}.
  * @param force - Force vector in the world's public coordinate system. See
- * {@link CRCPhysicsVector2} .
- * @param options - Optional application point and wake policy. See {@link CRCPhysicsVector2}.
+ * {@link PibblPhysicsVector2} .
+ * @param options - Optional application point and wake policy. See {@link PibblPhysicsVector2}.
  *
- * @see {@link CRCPhysicsBodyHandle2D}
- * @see {@link CRCPhysicsVector2}
+ * @see {@link PibblPhysicsBodyHandle2D}
+ * @see {@link PibblPhysicsVector2}
  */
 export function applyForce2D(
-  body: CRCPhysicsBodyHandle2D,
-  force: CRCPhysicsVector2,
-  options: Readonly<{ at?: CRCPhysicsVector2; wake?: boolean }> = {},
+  body: PibblPhysicsBodyHandle2D,
+  force: PibblPhysicsVector2,
+  options: Readonly<{ at?: PibblPhysicsVector2; wake?: boolean }> = {},
 ): void {
   const copied = copyFiniteVector2(force, "force");
   const point =
@@ -119,18 +119,18 @@ export function applyForce2D(
 /**
  * Queues an instantaneous momentum change, optionally at a world point and with wake-up control.
  *
- * @param body - Body receiving the impulse. See {@link CRCPhysicsBodyHandle2D}.
+ * @param body - Body receiving the impulse. See {@link PibblPhysicsBodyHandle2D}.
  * @param impulse - Impulse vector in the world's public coordinate system. See
- * {@link CRCPhysicsVector2} .
- * @param options - Optional application point and wake policy. See {@link CRCPhysicsVector2}.
+ * {@link PibblPhysicsVector2} .
+ * @param options - Optional application point and wake policy. See {@link PibblPhysicsVector2}.
  *
- * @see {@link CRCPhysicsBodyHandle2D}
- * @see {@link CRCPhysicsVector2}
+ * @see {@link PibblPhysicsBodyHandle2D}
+ * @see {@link PibblPhysicsVector2}
  */
 export function applyImpulse2D(
-  body: CRCPhysicsBodyHandle2D,
-  impulse: CRCPhysicsVector2,
-  options: Readonly<{ at?: CRCPhysicsVector2; wake?: boolean }> = {},
+  body: PibblPhysicsBodyHandle2D,
+  impulse: PibblPhysicsVector2,
+  options: Readonly<{ at?: PibblPhysicsVector2; wake?: boolean }> = {},
 ): void {
   const copied = copyFiniteVector2(impulse, "impulse");
   const point =
@@ -151,13 +151,13 @@ export function applyImpulse2D(
 /**
  * Queues torque on a dynamic body through the shared scheduler.
  *
- * @param body - Body receiving the torque. See {@link CRCPhysicsBodyHandle2D}.
+ * @param body - Body receiving the torque. See {@link PibblPhysicsBodyHandle2D}.
  * @param torque - Torque to apply in the world's public units.
  *
- * @see {@link CRCPhysicsBodyHandle2D}
+ * @see {@link PibblPhysicsBodyHandle2D}
  */
 export function applyTorque2D(
-  body: CRCPhysicsBodyHandle2D,
+  body: PibblPhysicsBodyHandle2D,
   torque: number,
 ): void {
   queueBodyCommand(body, {
@@ -170,16 +170,16 @@ export function applyTorque2D(
 /**
  * Queues a body's linear velocity in physics units per second.
  *
- * @param body - Body whose linear velocity changes. See {@link CRCPhysicsBodyHandle2D}.
+ * @param body - Body whose linear velocity changes. See {@link PibblPhysicsBodyHandle2D}.
  * @param velocity - Velocity vector in public distance units per second. See
- * {@link CRCPhysicsVector2} .
+ * {@link PibblPhysicsVector2} .
  *
- * @see {@link CRCPhysicsBodyHandle2D}
- * @see {@link CRCPhysicsVector2}
+ * @see {@link PibblPhysicsBodyHandle2D}
+ * @see {@link PibblPhysicsVector2}
  */
 export function setLinearVelocity2D(
-  body: CRCPhysicsBodyHandle2D,
-  velocity: CRCPhysicsVector2,
+  body: PibblPhysicsBodyHandle2D,
+  velocity: PibblPhysicsVector2,
 ): void {
   const copied = copyFiniteVector2(velocity, "velocity");
   queueBodyCommand(body, {
@@ -193,13 +193,13 @@ export function setLinearVelocity2D(
 /**
  * Queues a body's angular velocity in degrees per second.
  *
- * @param body - Body whose angular velocity changes. See {@link CRCPhysicsBodyHandle2D}.
+ * @param body - Body whose angular velocity changes. See {@link PibblPhysicsBodyHandle2D}.
  * @param degreesPerSecond - Angular speed in degrees per second.
  *
- * @see {@link CRCPhysicsBodyHandle2D}
+ * @see {@link PibblPhysicsBodyHandle2D}
  */
 export function setAngularVelocity2D(
-  body: CRCPhysicsBodyHandle2D,
+  body: PibblPhysicsBodyHandle2D,
   degreesPerSecond: number,
 ): void {
   queueBodyCommand(body, {
@@ -215,16 +215,16 @@ export function setAngularVelocity2D(
 /**
  * Queues an immediate pose change for a body at the next admitted simulation command phase.
  *
- * @param body - Body to reposition. See {@link CRCPhysicsBodyHandle2D}.
+ * @param body - Body to reposition. See {@link PibblPhysicsBodyHandle2D}.
  * @param pose - Destination position and rotation in public coordinates. See
- * {@link CRCPhysicsPose2D} .
+ * {@link PibblPhysicsPose2D} .
  *
- * @see {@link CRCPhysicsBodyHandle2D}
- * @see {@link CRCPhysicsPose2D}
+ * @see {@link PibblPhysicsBodyHandle2D}
+ * @see {@link PibblPhysicsPose2D}
  */
 export function teleportBody2D(
-  body: CRCPhysicsBodyHandle2D,
-  pose: CRCPhysicsPose2D,
+  body: PibblPhysicsBodyHandle2D,
+  pose: PibblPhysicsPose2D,
 ): void {
   queueBodyCommand(body, {
     kind: "set-pose",
@@ -242,35 +242,35 @@ export function teleportBody2D(
 /**
  * Queues a request to wake a sleeping body.
  *
- * @param body - Body to wake. See {@link CRCPhysicsBodyHandle2D}.
+ * @param body - Body to wake. See {@link PibblPhysicsBodyHandle2D}.
  *
- * @see {@link CRCPhysicsBodyHandle2D}
+ * @see {@link PibblPhysicsBodyHandle2D}
  */
-export function wakeBody2D(body: CRCPhysicsBodyHandle2D): void {
+export function wakeBody2D(body: PibblPhysicsBodyHandle2D): void {
   queueBodyCommand(body, { kind: "wake", bodyId: 0 });
 }
 
 /**
  * Queues a request to put a body to sleep.
  *
- * @param body - Body to put to sleep. See {@link CRCPhysicsBodyHandle2D}.
+ * @param body - Body to put to sleep. See {@link PibblPhysicsBodyHandle2D}.
  *
- * @see {@link CRCPhysicsBodyHandle2D}
+ * @see {@link PibblPhysicsBodyHandle2D}
  */
-export function sleepBody2D(body: CRCPhysicsBodyHandle2D): void {
+export function sleepBody2D(body: PibblPhysicsBodyHandle2D): void {
   queueBodyCommand(body, { kind: "sleep", bodyId: 0 });
 }
 
 /**
  * Queues re-enabling a body with the requested velocity-preservation policy.
  *
- * @param body - Body to re-enable. See {@link CRCPhysicsBodyHandle2D}.
+ * @param body - Body to re-enable. See {@link PibblPhysicsBodyHandle2D}.
  * @param options - Whether to zero or preserve velocity when enabling.
  *
- * @see {@link CRCPhysicsBodyHandle2D}
+ * @see {@link PibblPhysicsBodyHandle2D}
  */
 export function enableBody2D(
-  body: CRCPhysicsBodyHandle2D,
+  body: PibblPhysicsBodyHandle2D,
   options: Readonly<{ velocity?: "zero" | "preserve" }> = {},
 ): void {
   const velocity = options.velocity ?? "zero";
@@ -283,17 +283,17 @@ export function enableBody2D(
 /**
  * Queues removal of a body's active participation in the simulation.
  *
- * @param body - Body to disable. See {@link CRCPhysicsBodyHandle2D}.
+ * @param body - Body to disable. See {@link PibblPhysicsBodyHandle2D}.
  *
- * @see {@link CRCPhysicsBodyHandle2D}
+ * @see {@link PibblPhysicsBodyHandle2D}
  */
-export function disableBody2D(body: CRCPhysicsBodyHandle2D): void {
+export function disableBody2D(body: PibblPhysicsBodyHandle2D): void {
   queueBodyCommand(body, { kind: "disable", bodyId: 0 });
 }
 
 export function createPhysicsBodyHandle2D(
-  owner: CRCInternalSimulationOwner,
-): CRCPhysicsBodyHandle2D {
+  owner: PibblInternalSimulationOwner,
+): PibblPhysicsBodyHandle2D {
   const target = {} as Record<PropertyKey, unknown>;
   const state: PhysicsBodyHandleState2D = {
     owner,
@@ -308,20 +308,20 @@ export function createPhysicsBodyHandle2D(
       get: () => materializeSignal(state, field).asReadonly(),
     });
   }
-  const handle = Object.freeze(target) as unknown as CRCPhysicsBodyHandle2D;
+  const handle = Object.freeze(target) as unknown as PibblPhysicsBodyHandle2D;
   states.set(handle, state);
   return handle;
 }
 
 export function bindPhysicsBodyHandle2D(
-  handle: CRCPhysicsBodyHandle2D,
+  handle: PibblPhysicsBodyHandle2D,
   controller: PhysicsWorld2DController,
   bodyId: number,
 ): number {
   const state = states.get(handle as object);
   if (state === undefined) {
     if (typeof handle !== "object" || handle === null) {
-      throw new TypeError("Expected a live CRC physics 2D body handle.");
+      throw new TypeError("Expected a live Pibbl physics 2D body handle.");
     }
     let external = externalBindings.get(handle as object);
     if (external?.binding !== undefined) {
@@ -332,7 +332,7 @@ export function bindPhysicsBodyHandle2D(
         return external.binding.bindingGeneration;
       }
       throw new Error(
-        "A CRC physics 2D body handle may bind to at most one live body.",
+        "A Pibbl physics 2D body handle may bind to at most one live body.",
       );
     }
     external ??= { binding: undefined, nextBindingGeneration: 0 };
@@ -347,7 +347,7 @@ export function bindPhysicsBodyHandle2D(
       return current.bindingGeneration;
     }
     throw new Error(
-      "A CRC physics 2D body handle may bind to at most one live body.",
+      "A Pibbl physics 2D body handle may bind to at most one live body.",
     );
   }
   const bindingGeneration = ++state.nextBindingGeneration;
@@ -356,7 +356,7 @@ export function bindPhysicsBodyHandle2D(
 }
 
 export function unbindPhysicsBodyHandle2D(
-  handle: CRCPhysicsBodyHandle2D,
+  handle: PibblPhysicsBodyHandle2D,
   controller: PhysicsWorld2DController,
   bodyId: number,
   bindingGeneration: number,
@@ -385,7 +385,7 @@ export function unbindPhysicsBodyHandle2D(
 }
 
 export function physicsBodyHandleBinding2D(
-  handle: CRCPhysicsBodyHandle2D,
+  handle: PibblPhysicsBodyHandle2D,
 ): PhysicsBodyHandleBinding2D | undefined {
   return (
     states.get(handle as object)?.binding ??
@@ -395,7 +395,7 @@ export function physicsBodyHandleBinding2D(
 
 export function isPhysicsBodyHandle2D(
   value: unknown,
-): value is CRCPhysicsBodyHandle2D {
+): value is PibblPhysicsBodyHandle2D {
   return (
     typeof value === "object" &&
     value !== null &&
@@ -404,14 +404,14 @@ export function isPhysicsBodyHandle2D(
 }
 
 export function physicsBodyHandleOwner2D(
-  handle: CRCPhysicsBodyHandle2D,
-): CRCInternalSimulationOwner {
+  handle: PibblPhysicsBodyHandle2D,
+): PibblInternalSimulationOwner {
   return requireState(handle).owner;
 }
 
 export function stagePhysicsBodyHandle2D(
-  batch: CRCInternalSignalBatch,
-  handle: CRCPhysicsBodyHandle2D,
+  batch: PibblInternalSignalBatch,
+  handle: PibblPhysicsBodyHandle2D,
   values: PhysicsBodyHandleValues2D,
   writer: object,
 ): void {
@@ -428,7 +428,7 @@ export function stagePhysicsBodyHandle2D(
 }
 
 export function snapshotPhysicsBodyHandle2DForTest(
-  handle: CRCPhysicsBodyHandle2D,
+  handle: PibblPhysicsBodyHandle2D,
 ): Readonly<{
   readonly bound: boolean;
   readonly bindingGeneration: number;
@@ -444,7 +444,7 @@ export function snapshotPhysicsBodyHandle2DForTest(
   });
 }
 
-function disposePhysicsBodyHandle2D(handle: CRCPhysicsBodyHandle2D): void {
+function disposePhysicsBodyHandle2D(handle: PibblPhysicsBodyHandle2D): void {
   const state = states.get(handle as object);
   if (state === undefined || !state.active) return;
   state.active = false;
@@ -452,12 +452,12 @@ function disposePhysicsBodyHandle2D(handle: CRCPhysicsBodyHandle2D): void {
 }
 
 function queueBodyCommand(
-  handle: CRCPhysicsBodyHandle2D,
+  handle: PibblPhysicsBodyHandle2D,
   command: PhysicsBodyCommand2D,
 ): void {
   const state = requireState(handle);
   const captured = state.binding;
-  crcInternalQueueSimulationBegin(state.owner, () => {
+  pibblInternalQueueSimulationBegin(state.owner, () => {
     const current = state.binding;
     if (
       captured === undefined ||
@@ -495,7 +495,7 @@ function traceStaleCommand(
   };
   if (runtime.process?.env?.NODE_ENV === "production") return;
   console.warn(
-    `[CRC physics] Ignored stale ${kind} command for body handle generation ${String(generation)}.`,
+    `[Pibbl physics] Ignored stale ${kind} command for body handle generation ${String(generation)}.`,
   );
 }
 
@@ -506,14 +506,14 @@ function requireBoolean(value: boolean, path: string): boolean {
 }
 
 function requireState(
-  handle: CRCPhysicsBodyHandle2D,
+  handle: PibblPhysicsBodyHandle2D,
 ): PhysicsBodyHandleState2D {
   const state =
     typeof handle === "object" && handle !== null
       ? states.get(handle as object)
       : undefined;
   if (state === undefined || !state.active) {
-    throw new TypeError("Expected a live CRC physics 2D body handle.");
+    throw new TypeError("Expected a live Pibbl physics 2D body handle.");
   }
   return state;
 }
@@ -539,8 +539,8 @@ function materializeSignal<Field extends PhysicsBodyHandleField2D>(
 }
 
 function stageLegacyHandle(
-  batch: CRCInternalSignalBatch,
-  handle: CRCPhysicsBodyHandle2D,
+  batch: PibblInternalSignalBatch,
+  handle: PibblPhysicsBodyHandle2D,
   values: PhysicsBodyHandleValues2D,
   writer: object,
 ): void {

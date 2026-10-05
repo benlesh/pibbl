@@ -1,13 +1,13 @@
 import {
   Clip,
-  crc,
+  pibbl,
   useConst,
   useSignal,
   createRegularPolygonPath,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function ClipStudy() {
   const inside = useSignal(false);
   const hexagon = useConst(
@@ -72,6 +72,6 @@ function ClipStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <ClipStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <ClipStudy />);
 }

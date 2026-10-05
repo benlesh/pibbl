@@ -50,9 +50,9 @@ Idea E023. Lesson: a few 2D bodies respond to direct user manipulation. The visi
 
 Idea E072. Lesson: pointer movement sends displacement to a living texture. The visitor pauses reaction and stirs to isolate movement, then changes brush radius. Keep the coordinate conversion adjacent to the message. Capture a clear swirl at a deterministic scripted state. Explain that this is pattern transport, not a fluid simulation. Use the current Stirred Ink example as extraction input, not as the required final structure.
 
-### Three scene with CRC controls
+### Three scene with Pibbl controls
 
-Idea E081. Lesson: one persistent Three scene participates in a CRC composition. The visitor changes a simple object's presentation with a CRC control, then changes one ordinary Three material property. Use primitives so loaders and asset licensing do not bury the adapter. Show create/update/dispose ownership in the source. Screenshot the object and surrounding Canvas controls. This may exceed focused-example budgets; label the necessary integration setup honestly.
+Idea E081. Lesson: one persistent Three scene participates in a Pibbl composition. The visitor changes a simple object's presentation with a Pibbl control, then changes one ordinary Three material property. Use primitives so loaders and asset licensing do not bury the adapter. Show create/update/dispose ownership in the source. Screenshot the object and surrounding Canvas controls. This may exceed focused-example budgets; label the necessary integration setup honestly.
 
 ## Signature showcase
 

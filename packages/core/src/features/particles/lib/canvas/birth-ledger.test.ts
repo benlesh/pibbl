@@ -4,7 +4,7 @@ import { defineParticleEffect2D } from "../definition.js";
 import { isPotentialBirthAccepted } from "../emission.js";
 import { particle } from "../particle.js";
 import { particleSystemOwnershipSnapshot } from "../system/ownership.js";
-import type { CRCParticleEmission } from "../types.js";
+import type { PibblParticleEmission } from "../types.js";
 import {
   CANVAS_LEDGER_NO_SLOT,
   createCanvasBirthLedger,
@@ -14,7 +14,7 @@ import {
 function compiledEmitter(options: {
   readonly capacity?: number;
   readonly overflow?: "reject-newest" | "recycle-oldest";
-  readonly emission?: readonly CRCParticleEmission[];
+  readonly emission?: readonly PibblParticleEmission[];
   readonly lifetimeMilliseconds?: number;
 }) {
   const effect = defineParticleEffect2D({

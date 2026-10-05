@@ -1,7 +1,7 @@
 import { toPath2D } from './path-conversion.js';
 import { PathGeometry } from './path-geometry.js';
 
-export type CRCPathInput = Path2D | PathGeometry;
+export type PibblPathInput = Path2D | PathGeometry;
 
 interface PathSnapshot {
   readonly revision: number;
@@ -10,8 +10,8 @@ interface PathSnapshot {
 
 const snapshots = new WeakMap<PathGeometry, PathSnapshot>();
 
-/** @internal Resolves one immutable native snapshot for CRC-owned consumers. */
-export function resolvePath(input: CRCPathInput): Path2D {
+/** @internal Resolves one immutable native snapshot for Pibbl-owned consumers. */
+export function resolvePath(input: PibblPathInput): Path2D {
   if (!(input instanceof PathGeometry)) return input;
 
   const revision = input.revision;

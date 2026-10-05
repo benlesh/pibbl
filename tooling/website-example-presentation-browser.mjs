@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { chromium } from "playwright";
 
 const browser = await chromium.launch();
-const base = process.env.CRC_WEBSITE_URL ?? "http://localhost:4321";
+const base = process.env.PIBBL_WEBSITE_URL ?? "http://localhost:4321";
 try {
   const page = await browser.newPage({ viewport: { width: 680, height: 540 } });
   const errors = [];

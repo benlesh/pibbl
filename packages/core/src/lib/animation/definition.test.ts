@@ -6,7 +6,7 @@ import {
   signal,
   stepper,
   tween,
-  type CRCInterpolator,
+  type PibblInterpolator,
 } from '../../index';
 import {
   sampleSeekableDefinition,
@@ -42,7 +42,7 @@ describe('seekable animation definitions', () => {
 
   it('uses numeric interpolation by default and explicit interpolation for objects', () => {
     const numberTween = tween({ from: 2, to: 10, duration: 100 });
-    const interpolatePoint: CRCInterpolator<{ x: number }> = (from, to, progress) => ({
+    const interpolatePoint: PibblInterpolator<{ x: number }> = (from, to, progress) => ({
       x: from.x + (to.x - from.x) * progress,
     });
     const objectTween = tween({
@@ -218,7 +218,7 @@ describe('seekable animation definitions', () => {
     new Uint8Array(arrayBuffer)[0] = 9;
 
     expect([
-      observeSamples(/crc/gu, value => value.lastIndex, value => {
+      observeSamples(/pibbl/gu, value => value.lastIndex, value => {
         value.lastIndex = 4;
       }),
       observeSamples(new Uint8Array([7]), value => value[0], value => {
@@ -340,7 +340,7 @@ describe('seekable animation definitions', () => {
     new Uint8Array(arrayBuffer)[0] = 9;
 
     expect([
-      observeTerminalSamples(/crc/gu, value => value.lastIndex, value => {
+      observeTerminalSamples(/pibbl/gu, value => value.lastIndex, value => {
         value.lastIndex = 4;
       }),
       observeTerminalSamples(new Uint8Array([7]), value => value[0], value => {
@@ -428,7 +428,7 @@ describe('seekable animation definitions', () => {
     const weakMap = new WeakMap([[weakKey, 'weak map']]);
     const weakSet = new WeakSet([weakKey]);
     const promise = Promise.resolve('promise');
-    const expression = /crc/gu;
+    const expression = /pibbl/gu;
     const bytes = new Uint8Array([7]);
     const counter = new PrivateCounter(3);
     const functionValue: (() => string) & { label: string } = Object.assign(
@@ -461,7 +461,7 @@ describe('seekable animation definitions', () => {
     })).resolves.toBe('promise');
     expect(sampleSeekableDefinition(expressionDefinition, {
       initialValue: /initial/u, localTime: 1,
-    }).test('crc')).toBe(true);
+    }).test('pibbl')).toBe(true);
     expect(sampleSeekableDefinition(bytesDefinition, {
       initialValue: new Uint8Array(), localTime: 1,
     })[0]).toBe(7);

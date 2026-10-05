@@ -3,7 +3,7 @@ import type {
   PublicDocFrontmatter,
   TypeDomain,
 } from "../../../tooling/studio-docs/model";
-import type { LearningBrowseGroup } from "@crc/scenarios";
+import type { LearningBrowseGroup } from "@pibbl/scenarios";
 
 import type { ParsedStudioRoute } from "./routes";
 import { websiteUrlForStudioDocument } from "../../../tooling/studio-docs/website-routes";
@@ -72,7 +72,7 @@ export interface NavigationExample {
 }
 
 /** Versioned browser storage key for only the user's expandable navigation choices. */
-export const navigationStorageKey = "crc-studio-navigation:v1";
+export const navigationStorageKey = "pibbl-studio-navigation:v1";
 
 export interface NavigationStateOptions {
   /** Injectable so the model remains usable outside a browser and in tests. */

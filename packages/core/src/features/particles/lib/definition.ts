@@ -21,15 +21,15 @@ import {
 import { getParticleDescriptorRecord } from './particle.js';
 import { compileParticleEffect2D } from './compiler.js';
 import type {
-  CRCParticleAppearance,
-  CRCParticleBounds2D,
-  CRCParticleEffect2D,
-  CRCParticleEffect2DInput,
-  CRCParticleInitial2D,
-  CRCParticleMotion2D,
-  CRCParticleParameterDefinitions,
-  CRCParticleShape2D,
-  CRCParticleValuesOf,
+  PibblParticleAppearance,
+  PibblParticleBounds2D,
+  PibblParticleEffect2D,
+  PibblParticleEffect2DInput,
+  PibblParticleInitial2D,
+  PibblParticleMotion2D,
+  PibblParticleParameterDefinitions,
+  PibblParticleShape2D,
+  PibblParticleValuesOf,
 } from './types.js';
 
 interface MutableBounds {
@@ -50,9 +50,9 @@ function maximumMagnitude(range: ParticleScalarRange): number {
 }
 
 function normalizeShape(
-  shape: CRCParticleShape2D,
+  shape: PibblParticleShape2D,
   context: ParticleValidationContext,
-): { readonly shape: CRCParticleShape2D; readonly bounds: MutableBounds } {
+): { readonly shape: PibblParticleShape2D; readonly bounds: MutableBounds } {
   if (shape === null || typeof shape !== 'object') {
     particleDefinitionError({ ...context, property: 'shape' }, 'must be a record', shape);
   }
@@ -144,7 +144,7 @@ function normalizeShape(
 
 function requireRange(
   value: Parameters<typeof particleScalarRange>[0],
-  parameters: CRCParticleParameterDefinitions,
+  parameters: PibblParticleParameterDefinitions,
   context: ParticleValidationContext,
   minimum?: number,
   maximum?: number,
@@ -160,8 +160,8 @@ function requireRange(
 }
 
 function validateColor(
-  value: CRCParticleInitial2D['color'],
-  parameters: CRCParticleParameterDefinitions,
+  value: PibblParticleInitial2D['color'],
+  parameters: PibblParticleParameterDefinitions,
   context: ParticleValidationContext,
 ): void {
   if (value === undefined) return;
@@ -201,11 +201,11 @@ function validateColor(
 }
 
 function normalizeInitial(
-  initial: CRCParticleInitial2D,
-  parameters: CRCParticleParameterDefinitions,
+  initial: PibblParticleInitial2D,
+  parameters: PibblParticleParameterDefinitions,
   context: ParticleValidationContext,
 ): {
-  readonly initial: CRCParticleInitial2D;
+  readonly initial: PibblParticleInitial2D;
   readonly lifetime: ParticleScalarRange;
   readonly velocity: readonly ParticleScalarRange[];
   readonly maximumSize: number;
@@ -297,7 +297,7 @@ function normalizeInitial(
 }
 
 function maximumAppearanceSize(
-  appearance: CRCParticleAppearance | undefined,
+  appearance: PibblParticleAppearance | undefined,
   current: number,
 ): number {
   const curve = appearance?.size;
@@ -311,10 +311,10 @@ function maximumAppearanceSize(
 }
 
 function normalizeMotion(
-  motion: readonly CRCParticleMotion2D[] | undefined,
-  parameters: CRCParticleParameterDefinitions,
+  motion: readonly PibblParticleMotion2D[] | undefined,
+  parameters: PibblParticleParameterDefinitions,
   context: ParticleValidationContext,
-): { readonly motion: readonly CRCParticleMotion2D[]; readonly ranges: readonly unknown[]; readonly dynamic: boolean } {
+): { readonly motion: readonly PibblParticleMotion2D[]; readonly ranges: readonly unknown[]; readonly dynamic: boolean } {
   if (motion === undefined) {
     return Object.freeze({ motion: Object.freeze([]), ranges: Object.freeze([]), dynamic: false });
   }
@@ -444,7 +444,7 @@ function deriveBounds(
   velocity: readonly ParticleScalarRange[],
   motionRanges: readonly unknown[],
   size: number,
-): CRCParticleBounds2D {
+): PibblParticleBounds2D {
   const seconds = lifetimeMilliseconds / 1_000;
   const bounds: MutableBounds = { min: [...shape.min], max: [...shape.max] };
   for (let axis = 0; axis < 2; axis += 1) {
@@ -508,8 +508,8 @@ function deriveBounds(
 }
 
 function normalizeEmitter(
-  input: import('./types.js').CRCParticleEmitter2D,
-  parameters: CRCParticleParameterDefinitions,
+  input: import('./types.js').PibblParticleEmitter2D,
+  parameters: PibblParticleParameterDefinitions,
   debugName: string | undefined,
 ): ParticleEmitter2DRecord {
   if (input === null || typeof input !== 'object') {
@@ -552,7 +552,7 @@ function normalizeEmitter(
   const renderer = normalizeRenderer2D(input.renderer, context);
   const cannotDerive = normalizedInitial.dynamic || normalizedMotion.dynamic ||
     renderer.type === 'path' || renderer.type === 'sprite';
-  let bounds: CRCParticleBounds2D;
+  let bounds: PibblParticleBounds2D;
   let boundsSource: 'explicit' | 'derived';
   if (input.bounds !== undefined) {
     bounds = normalizeBounds2D(input.bounds, context);
@@ -598,23 +598,23 @@ function normalizeEmitter(
  *
  * @param input - Emitter definitions, parameter declarations, and effect configuration.
  * @returns A validated particle effect preserving emitter names and parameter types. See
- * {@link CRCParticleEffect2D} , {@link CRCParticleValuesOf} ,
- * {@link CRCParticleParameterDefinitions} .
+ * {@link PibblParticleEffect2D} , {@link PibblParticleValuesOf} ,
+ * {@link PibblParticleParameterDefinitions} .
  *
- * @see {@link CRCParticleEffect2D}
- * @see {@link CRCParticleValuesOf}
- * @see {@link CRCParticleParameterDefinitions}
- * @see {@link CRCParticleEffect2DInput}
+ * @see {@link PibblParticleEffect2D}
+ * @see {@link PibblParticleValuesOf}
+ * @see {@link PibblParticleParameterDefinitions}
+ * @see {@link PibblParticleEffect2DInput}
  */
 export function defineParticleEffect2D<
-  const Input extends CRCParticleEffect2DInput,
+  const Input extends PibblParticleEffect2DInput,
 >(
   input: Input,
-): CRCParticleEffect2D<
+): PibblParticleEffect2D<
   Input['emitters'][number]['name'],
-  CRCParticleValuesOf<
+  PibblParticleValuesOf<
     Input extends { readonly parameters: infer Definitions }
-      ? Extract<Definitions, CRCParticleParameterDefinitions>
+      ? Extract<Definitions, PibblParticleParameterDefinitions>
       : undefined
   >
 > {
@@ -659,11 +659,11 @@ export function defineParticleEffect2D<
       requiresStateful: Object.freeze([]),
     }),
   });
-  const effect = createParticleEffect2D(record) as CRCParticleEffect2D<
+  const effect = createParticleEffect2D(record) as PibblParticleEffect2D<
     Input['emitters'][number]['name'],
-    CRCParticleValuesOf<
+    PibblParticleValuesOf<
       Input extends { readonly parameters: infer Definitions }
-        ? Extract<Definitions, CRCParticleParameterDefinitions>
+        ? Extract<Definitions, PibblParticleParameterDefinitions>
         : undefined
     >
   >;

@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { crc, defineTexture, Group, Rectangle, useTexture } from "@crc/core";
-import { displacement, reflectedLight } from "@crc/core/filters";
+import { pibbl, defineTexture, Group, Rectangle, useTexture } from "@pibbl/core";
+import { displacement, reflectedLight } from "@pibbl/core/filters";
 import { clearSharedState } from "../src/lib/global-state.js";
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from "../src/lib/scheduler/testing.js";
 
@@ -22,7 +22,7 @@ it.each([false, true])("uses blue as local blur coverage with zero displacement 
     </Group>;
   }
   const canvas = document.createElement("canvas"); canvas.width = 128; canvas.height = 64; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     const pixels = canvas.getContext("2d")!.getImageData(0, 32, 128, 1).data;

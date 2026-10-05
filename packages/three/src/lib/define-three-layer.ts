@@ -1,9 +1,9 @@
 import { Raycaster, WebGLRenderer, type Object3D } from "three";
 import {
   defineRenderLayer,
-  type CRCRenderLayerContext,
-  type CRCRenderLayerTarget,
-} from "@crc/core";
+  type PibblRenderLayerContext,
+  type PibblRenderLayerTarget,
+} from "@pibbl/core";
 import { createDefaultPicker } from "./default-picker.js";
 import { projectObjectBounds } from "./project-bounds.js";
 import {
@@ -11,41 +11,41 @@ import {
   type ThreeInputBridgeController,
 } from "./three-input-bridge.js";
 import type {
-  CRCThreeLayerContext,
-  CRCThreeLayerDefinition,
-  CRCThreeLayerResources,
-  CRCThreeTarget,
+  PibblThreeLayerContext,
+  PibblThreeLayerDefinition,
+  PibblThreeLayerResources,
+  PibblThreeTarget,
 } from "./types.js";
 
 interface ThreeAdapterResources<
   Props,
-  Resources extends CRCThreeLayerResources,
+  Resources extends PibblThreeLayerResources,
 > {
   readonly renderer: WebGLRenderer;
   readonly input: ThreeInputBridgeController;
-  readonly threeContext: CRCThreeLayerContext;
+  readonly threeContext: PibblThreeLayerContext;
   readonly resources: Resources;
   readonly raycaster: Raycaster;
   props: Readonly<Props>;
 }
 
 /**
- * Defines a CRC external layer using ordinary Three.js scenes and resources. Each mount owns one
+ * Defines a Pibbl external layer using ordinary Three.js scenes and resources. Each mount owns one
  * transparent renderer; dispose must release application-created resources, and animation uses
- * CRC's supplied frame and invalidation.
+ * Pibbl's supplied frame and invalidation.
  *
  * @param definition - Resource lifecycle, rendering overrides, targets, and picking configuration.
- * See {@link CRCThreeLayerDefinition} .
- * @returns A CRC component mounting a persistent Three.js scene boundary with an adapter-owned
+ * See {@link PibblThreeLayerDefinition} .
+ * @returns A Pibbl component mounting a persistent Three.js scene boundary with an adapter-owned
  * renderer.
  *
- * @see {@link CRCThreeLayerDefinition}
- * @see {@link CRCThreeLayerResources}
+ * @see {@link PibblThreeLayerDefinition}
+ * @see {@link PibblThreeLayerResources}
  */
 export function defineThreeLayer<
   Props,
-  Resources extends CRCThreeLayerResources,
->(definition: CRCThreeLayerDefinition<Props, Resources>) {
+  Resources extends PibblThreeLayerResources,
+>(definition: PibblThreeLayerDefinition<Props, Resources>) {
   const immutableDefinition = snapshotDefinition(definition);
   return defineRenderLayer<
     Props,
@@ -148,9 +148,9 @@ export function defineThreeLayer<
           immutableDefinition.targets?.(adapter.resources, props) ?? [];
         assertSynchronous(declaredTargets, "targets");
         const declarations = Array.from(declaredTargets);
-        const targetMap = new Map<Object3D, CRCThreeTarget>();
+        const targetMap = new Map<Object3D, PibblThreeTarget>();
         const disabledRoots = new Set<Object3D>();
-        const targets: CRCRenderLayerTarget<Object3D>[] = [];
+        const targets: PibblRenderLayerTarget<Object3D>[] = [];
         for (const declaration of declarations) {
           targetMap.set(declaration.object, declaration);
           if (declaration.pointerEvents === "none") {
@@ -216,10 +216,10 @@ function assertSynchronous(value: unknown, callback: string): void {
 }
 
 function createThreeContext(
-  context: Readonly<CRCRenderLayerContext>,
+  context: Readonly<PibblRenderLayerContext>,
   renderer: WebGLRenderer,
   input: ThreeInputBridgeController,
-): CRCThreeLayerContext {
+): PibblThreeLayerContext {
   return Object.freeze({
     canvas: context.canvas,
     get size() {
@@ -232,8 +232,8 @@ function createThreeContext(
 }
 
 function assertThreeResources(
-  resources: CRCThreeLayerResources,
-): asserts resources is CRCThreeLayerResources {
+  resources: PibblThreeLayerResources,
+): asserts resources is PibblThreeLayerResources {
   if (!resources?.scene?.isScene || !resources?.camera?.isCamera) {
     throw new TypeError(
       "defineThreeLayer create() must return Three scene and camera resources.",
@@ -241,9 +241,9 @@ function assertThreeResources(
   }
 }
 
-function snapshotDefinition<Props, Resources extends CRCThreeLayerResources>(
-  definition: CRCThreeLayerDefinition<Props, Resources>,
-): CRCThreeLayerDefinition<Props, Resources> {
+function snapshotDefinition<Props, Resources extends PibblThreeLayerResources>(
+  definition: PibblThreeLayerDefinition<Props, Resources>,
+): PibblThreeLayerDefinition<Props, Resources> {
   return Object.freeze({
     renderer: definition.renderer
       ? Object.freeze({ ...definition.renderer })

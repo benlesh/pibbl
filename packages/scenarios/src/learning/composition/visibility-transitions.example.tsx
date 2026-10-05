@@ -1,18 +1,18 @@
-import { crc, Group, Rectangle, Circle, Text, fade, embers, hologram, bifrost, slide, zoom, wipe, blurReveal, dissolve, useVisibilityTransition, useSignal, type CRCController, type CRCVisibilityTransition } from '@crc/core';
+import { pibbl, Group, Rectangle, Circle, Text, fade, embers, hologram, bifrost, slide, zoom, wipe, blurReveal, dissolve, useVisibilityTransition, useSignal, type PibblController, type PibblVisibilityTransition } from '@pibbl/core';
 
 const effects = ['bifrost', 'hologram', 'embers', 'fade', 'slide', 'zoom', 'wipe', 'blur', 'dissolve'] as const;
 type Effect = typeof effects[number];
 const region = { x: 100, y: 145, width: 600, height: 240 };
 const definitions = { bifrost: bifrost({ region, entry: { x: 400, y: -240 } }), hologram: hologram({ region }), embers: embers({ region, charDepth: 65, burnWidth: 12, wind: 100, seed: 4, linger: 700 }), fade: fade(), slide: slide({ x: -100, y: 0 }), zoom: zoom({ origin: { x: 400, y: 265 }, from: .15 }), wipe: wipe({ region }), blur: blurReveal(), dissolve: dissolve({ region, cellSize: 6, seed: 4 }) };
 
-function Subject({ effect, register }: { effect: Effect; register: (handle: CRCVisibilityTransition) => void }) {
+function Subject({ effect, register }: { effect: Effect; register: (handle: PibblVisibilityTransition) => void }) {
   const transition = useVisibilityTransition({ initial: true, enter: definitions[effect], duration: 900 });
   register(transition);
   return <Group style={{ transition: transition.binding }}>
     <Rectangle style={{ left: 100, top: 145, width: 600, height: 240, cornerRadius: 20, fill: '#254c64' }} />
     <Circle style={{ cx: 232, cy: 267, radius: 75, fill: '#59e2cc' }} />
     <Circle style={{ cx: 282, cy: 267, radius: 75, fill: '#59e2cc' }} />
-    <Text style={{ left: 394, top: 238, font: '600 28px sans-serif', fill: '#f0faf7' }}>Ordinary CRC content</Text>
+    <Text style={{ left: 394, top: 238, font: '600 28px sans-serif', fill: '#f0faf7' }}>Ordinary Pibbl content</Text>
     <Text style={{ left: 394, top: 281, font: '15px sans-serif', fill: '#b8d6df' }}>Text, shapes, and overlapping children.</Text>
     <Text style={{ left: 394, top: 315, font: '15px sans-serif', fill: '#b8d6df' }}>{`One subject. ${effect.toUpperCase()} transition.`}</Text>
   </Group>;
@@ -22,8 +22,8 @@ function Demo() {
   const effect = useSignal<Effect>('bifrost');
   const mounted = useSignal(true), message = useSignal('Ready. Hide, reverse, or exit and unmount.');
   // A plain callback hands the mounted handle to event closures without scheduling a render.
-  let handle: CRCVisibilityTransition | undefined;
-  const register = (value: CRCVisibilityTransition) => { handle = value; };
+  let handle: PibblVisibilityTransition | undefined;
+  const register = (value: PibblVisibilityTransition) => { handle = value; };
   const run = async (action: 'show' | 'hide' | 'remove') => {
     const current = handle;
     if (!current) { message.set('The subject is unmounted. Choose Remount.'); return; }
@@ -56,6 +56,6 @@ function Demo() {
     <Text style={{ left: 40, top: 540, font: '12px sans-serif', fill: '#88aebc' }}>Click EFFECT to cycle nine presets. Show reverses a pending exit.</Text>
   </Group>;
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Demo />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Demo />);
 }

@@ -20,7 +20,7 @@ Crop panned and zoomed diagram content to the workspace while giving its static 
 
 [`Clip`](#/api/components/clip) receives a `Path2D` that describes the workspace rectangle. The same path constrains paint and coordinate targeting, so a card that visually leaves the workspace cannot win a click above the toolbar. The workspace background stays inside that clip but outside the transformed group, giving empty space stable pan geometry.
 
-[`Layer`](#/api/components/layer) owns only the dot [`Path`](#/api/components/path). Its children render into an upright local `OffscreenCanvas` surface, then CRC applies the outer group presentation when it composites the bitmap. Because the grid subtree and layer dimensions stay unchanged while you pan, CRC can reuse that retained bitmap; cards and connections remain on the ordinary immediate rendering path.
+[`Layer`](#/api/components/layer) owns only the dot [`Path`](#/api/components/path). Its children render into an upright local `OffscreenCanvas` surface, then Pibbl applies the outer group presentation when it composites the bitmap. Because the grid subtree and layer dimensions stay unchanged while you pan, Pibbl can reuse that retained bitmap; cards and connections remain on the ordinary immediate rendering path.
 
 ## Build the change
 

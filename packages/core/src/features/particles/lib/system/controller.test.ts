@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { crc, createElement, signal, type CRCNode } from "@crc/core";
+import { pibbl, createElement, signal, type PibblNode } from "@pibbl/core";
 import {
-  crcInternalRequestRender,
-  type CRCInternalRenderOwner,
-} from "@crc/core/internal";
+  pibblInternalRequestRender,
+  type PibblInternalRenderOwner,
+} from "@pibbl/core/internal";
 import { clearSharedState } from "../../../../lib/global-state.js";
 import {
   installSchedulerDriverForTest,
@@ -19,12 +19,12 @@ import { defineParticleEffect2D } from "../definition.js";
 import { sampleBurstCount } from "../emission.js";
 import { particle } from "../particle.js";
 import type {
-  CRCParticleEffect2D,
-  CRCParticleExecution,
-  CRCParticleSystem,
-  CRCParticleSystemEvent,
-  CRCParticleSystemOptions,
-  CRCParticleSystemStatus,
+  PibblParticleEffect2D,
+  PibblParticleExecution,
+  PibblParticleSystem,
+  PibblParticleSystemEvent,
+  PibblParticleSystemOptions,
+  PibblParticleSystemStatus,
 } from "../types.js";
 import {
   type ParticleBindingCandidate,
@@ -40,7 +40,7 @@ import { particleSystemOwnershipSnapshot } from "./ownership.js";
 
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
-const roots = new Set<ReturnType<typeof crc>>();
+const roots = new Set<ReturnType<typeof pibbl>>();
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -68,8 +68,8 @@ interface TestCandidate extends ParticleBindingCandidate {
 }
 
 function createCandidate(
-  owner: CRCInternalRenderOwner,
-  effect: CRCParticleEffect2D,
+  owner: PibblInternalRenderOwner,
+  effect: PibblParticleEffect2D,
   requestRealRender = true,
 ): TestCandidate {
   const frames: ParticleSystemFrame[] = [];
@@ -93,7 +93,7 @@ function createCandidate(
         this.failRequest = false;
         throw new Error("candidate request failed");
       }
-      if (requestRealRender) crcInternalRequestRender(owner);
+      if (requestRealRender) pibblInternalRequestRender(owner);
     },
     adoptFrame(frame) {
       if (this.failAdopt) {
@@ -117,13 +117,13 @@ function createCandidate(
 }
 
 function mountSystem(
-  effect: CRCParticleEffect2D,
-  options: CRCParticleSystemOptions = {},
-  componentObserver?: (event: CRCParticleSystemEvent) => void,
+  effect: PibblParticleEffect2D,
+  options: PibblParticleSystemOptions = {},
+  componentObserver?: (event: PibblParticleSystemEvent) => void,
 ) {
-  let system!: CRCParticleSystem;
+  let system!: PibblParticleSystem;
   let candidate: TestCandidate | undefined;
-  const Root = (): CRCNode => {
+  const Root = (): PibblNode => {
     system = useParticleSystem(effect, options);
     useParticleSystemBinding({
       system,
@@ -137,7 +137,7 @@ function mountSystem(
   };
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  const root = crc(canvas, createElement(Root, {}));
+  const root = pibbl(canvas, createElement(Root, {}));
   roots.add(root);
   driver.flush(0);
   if (driver.pendingHostFrames > 0) driver.flush(1);
@@ -154,12 +154,12 @@ interface LedgerCandidate extends ParticleBindingCandidate {
 }
 
 function mountLedgerSystem(
-  effect: CRCParticleEffect2D,
-  options: CRCParticleSystemOptions = {},
+  effect: PibblParticleEffect2D,
+  options: PibblParticleSystemOptions = {},
 ) {
-  let system!: CRCParticleSystem;
+  let system!: PibblParticleSystem;
   let candidate!: LedgerCandidate;
-  const Root = (): CRCNode => {
+  const Root = (): PibblNode => {
     system = useParticleSystem(effect, options);
     const controller = getParticleSystemController(system);
     useParticleSystemBinding({
@@ -183,7 +183,7 @@ function mountLedgerSystem(
           ledger,
           disposeCount: 0,
           requestRender() {
-            crcInternalRequestRender(owner);
+            pibblInternalRequestRender(owner);
           },
           adoptFrame(nextFrame) {
             return ledger.adoptFrame(
@@ -226,10 +226,10 @@ function mountLedgerSystem(
   return { candidate, root, system };
 }
 
-function mount(node: CRCNode) {
+function mount(node: PibblNode) {
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  const root = crc(canvas, node);
+  const root = pibbl(canvas, node);
   roots.add(root);
   return root;
 }
@@ -286,9 +286,9 @@ describe("scheduled particle system controller", () => {
   it("catches a later pause overwriting running metadata before its start delivery", () => {
     const observations: Array<
       readonly [
-        type: CRCParticleSystemEvent["type"],
-        status: CRCParticleSystemStatus,
-        execution: CRCParticleExecution,
+        type: PibblParticleSystemEvent["type"],
+        status: PibblParticleSystemStatus,
+        execution: PibblParticleExecution,
       ]
     > = [];
     const { system } = mountSystem(manualEffect(), {
@@ -373,7 +373,7 @@ describe("scheduled particle system controller", () => {
   });
 
   it("catches restart seed drift, paused births, capacity over-acceptance, and wrong drain/clear order", () => {
-    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const events: Array<PibblParticleSystemEvent & Record<string, unknown>> = [];
     const errors: unknown[] = [];
     const { candidate, system } = mountSystem(manualEffect(), {
       seed: -1,
@@ -472,19 +472,19 @@ describe("scheduled particle system controller", () => {
   });
 
   it("catches success delivery and accepted capacity surviving a real renderer transaction failure", () => {
-    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const events: Array<PibblParticleSystemEvent & Record<string, unknown>> = [];
     const definition = manualEffect(100, 3);
-    let system!: CRCParticleSystem;
+    let system!: PibblParticleSystem;
     let failRender = false;
     let failedCandidate!: TestCandidate;
     let replacementCandidate!: TestCandidate;
-    const SystemOwner = (): CRCNode => {
+    const SystemOwner = (): PibblNode => {
       system = useParticleSystem(definition, {
         onEvent: (event) => events.push(event as (typeof events)[number]),
       });
       return null;
     };
-    const FailedBinding = (): CRCNode => {
+    const FailedBinding = (): PibblNode => {
       useParticleSystemBinding({
         system,
         backend: "canvas",
@@ -495,7 +495,7 @@ describe("scheduled particle system controller", () => {
       if (failRender) throw new Error("injected particle renderer failure");
       return null;
     };
-    const ReplacementBinding = (): CRCNode => {
+    const ReplacementBinding = (): PibblNode => {
       useParticleSystemBinding({
         system,
         backend: "canvas",
@@ -548,18 +548,18 @@ describe("scheduled particle system controller", () => {
   });
 
   it("catches failed empty presentation publishing finished status", () => {
-    const events: CRCParticleSystemEvent[] = [];
+    const events: PibblParticleSystemEvent[] = [];
     const definition = manualEffect(100, 1);
-    let system!: CRCParticleSystem;
+    let system!: PibblParticleSystem;
     let bound!: TestCandidate;
     let failRender = false;
-    const SystemOwner = (): CRCNode => {
+    const SystemOwner = (): PibblNode => {
       system = useParticleSystem(definition, {
         onEvent: (event) => events.push(event),
       });
       return null;
     };
-    const Binding = (): CRCNode => {
+    const Binding = (): PibblNode => {
       useParticleSystemBinding({
         system,
         backend: "canvas",
@@ -598,10 +598,10 @@ describe("scheduled particle system controller", () => {
   it("catches clear finishing before the empty renderer transaction succeeds", () => {
     const order: string[] = [];
     const definition = manualEffect();
-    let system!: CRCParticleSystem;
+    let system!: PibblParticleSystem;
     let candidate!: TestCandidate;
     let renderCount = 0;
-    const Root = (): CRCNode => {
+    const Root = (): PibblNode => {
       renderCount += 1;
       system = useParticleSystem(definition, {
         onEvent(event) {
@@ -646,7 +646,7 @@ describe("scheduled particle system controller", () => {
   });
 
   it("catches manual births expiring from stale pre-gap effect time", () => {
-    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const events: Array<PibblParticleSystemEvent & Record<string, unknown>> = [];
     const { system } = mountSystem(manualEffect(100, 1), {
       autoplay: true,
       onEvent: (event) => events.push(event as (typeof events)[number]),
@@ -669,7 +669,7 @@ describe("scheduled particle system controller", () => {
 
   it("catches candidate clear failure corrupting accepted work or escaping its error channel", () => {
     const errors: unknown[] = [];
-    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const events: Array<PibblParticleSystemEvent & Record<string, unknown>> = [];
     const { candidate, system } = mountSystem(manualEffect(100, 1), {
       onEvent: (event) => events.push(event as (typeof events)[number]),
       onError: (error) => errors.push(error),
@@ -704,7 +704,7 @@ describe("scheduled particle system controller", () => {
   });
 
   it("catches adoptFrame failure stranding or falsely succeeding its delivery", () => {
-    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const events: Array<PibblParticleSystemEvent & Record<string, unknown>> = [];
     const errors: unknown[] = [];
     const { candidate, system } = mountSystem(manualEffect(100, 1), {
       onEvent: (event) => events.push(event as (typeof events)[number]),
@@ -738,7 +738,7 @@ describe("scheduled particle system controller", () => {
   });
 
   it("catches requestRender failure stranding or falsely succeeding its delivery", () => {
-    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const events: Array<PibblParticleSystemEvent & Record<string, unknown>> = [];
     const errors: unknown[] = [];
     const { candidate, system } = mountSystem(manualEffect(100, 1), {
       onEvent: (event) => events.push(event as (typeof events)[number]),
@@ -772,7 +772,7 @@ describe("scheduled particle system controller", () => {
   });
 
   it("catches a throwing clear render request escaping after population release", () => {
-    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const events: Array<PibblParticleSystemEvent & Record<string, unknown>> = [];
     const errors: unknown[] = [];
     const { candidate, system } = mountSystem(manualEffect(100, 1), {
       onEvent: (event) => events.push(event as (typeof events)[number]),
@@ -848,7 +848,7 @@ describe("scheduled particle system controller", () => {
   });
 
   it("uses the Canvas ledger's exact recycle acceptance and committed live generation", () => {
-    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const events: Array<PibblParticleSystemEvent & Record<string, unknown>> = [];
     const errors: unknown[] = [];
     const effect = defineParticleEffect2D({
       debugName: "recycled impact",
@@ -911,10 +911,10 @@ describe("scheduled particle system controller", () => {
       ],
     });
     const compiled = compileParticleEffect2D(effect);
-    let system!: CRCParticleSystem;
+    let system!: PibblParticleSystem;
     let candidate!: LedgerCandidate;
     let renderedParameters = compiled.parameterLayout.defaults;
-    const Root = (): CRCNode => {
+    const Root = (): PibblNode => {
       system = useParticleSystem(effect, { autoplay: true });
       const controller = getParticleSystemController(system);
       renderedParameters = new Float64Array([launch.get()]);
@@ -938,7 +938,7 @@ describe("scheduled particle system controller", () => {
             ledger,
             disposeCount: 0,
             requestRender() {
-              crcInternalRequestRender(owner);
+              pibblInternalRequestRender(owner);
             },
             adoptFrame(nextFrame) {
               return ledger.adoptFrame(
@@ -1002,7 +1002,7 @@ describe("scheduled particle system controller", () => {
   });
 
   it("publishes the ledger's restarted default manual count instead of the prior run's ordinal", () => {
-    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const events: Array<PibblParticleSystemEvent & Record<string, unknown>> = [];
     const effect = defineParticleEffect2D({
       emitters: [
         {

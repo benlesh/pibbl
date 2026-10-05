@@ -1,5 +1,5 @@
 import { cdp } from 'vitest/browser';
-import { getCRCInstance } from '../../src/lib/global-state';
+import { getPibblInstance } from '../../src/lib/global-state';
 
 export interface MousePoint {
   x: number;
@@ -12,9 +12,9 @@ export function cssPointForIntrinsic(
   canvas: HTMLCanvasElement,
   point: MousePoint,
 ): MousePoint {
-  const surface = getCRCInstance(canvas).surface.snapshot;
+  const surface = getPibblInstance(canvas).surface.snapshot;
   if (!surface) {
-    throw new Error('The CRC surface is not visible.');
+    throw new Error('The Pibbl surface is not visible.');
   }
   const backing = surface.renderTransform.transformPoint(
     new DOMPoint(point.x, point.y),
@@ -29,9 +29,9 @@ export function backingPointForLogical(
   canvas: HTMLCanvasElement,
   point: MousePoint,
 ): MousePoint {
-  const surface = getCRCInstance(canvas).surface.snapshot;
+  const surface = getPibblInstance(canvas).surface.snapshot;
   if (!surface) {
-    throw new Error('The CRC surface is not visible.');
+    throw new Error('The Pibbl surface is not visible.');
   }
   return surface.renderTransform.transformPoint(new DOMPoint(point.x, point.y));
 }

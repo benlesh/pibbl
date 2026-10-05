@@ -26,7 +26,7 @@ Source weight also controls brightness and terminal discharge size.
 
 ## Motion and removal
 
-CRC Advance updates persistent endpoints; rasterization only paints them.
+Pibbl Advance updates persistent endpoints; rasterization only paints them.
 Sites choose birth locations, not waypoints. Endpoints rise continuously from
 those locations, without periodic reselection of neighboring sites. Source weight
 resists convection continuously: upward speed is scaled by 1 / (1 + weight²),
@@ -53,7 +53,7 @@ filament to a stored circular idle endpoint.
   time, optionally choose a new seed, and preserve pause/visual settings.
 
 The resource keeps at most 32 filaments and 512 sites. Weighted selection runs at births and explicit source changes, not for every
-rendered path vertex. Each CRC frame
+rendered path vertex. Each Pibbl frame
 admits at most 50 ms and performs no catch-up loop. There is no additional RAF,
 worker, WASM requirement, core dependency beyond the public API, or pixel readback.
 The resource owns its arrays/maps; core owns and releases its single source canvas.

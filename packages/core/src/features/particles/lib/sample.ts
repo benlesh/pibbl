@@ -6,7 +6,7 @@ import type {
 } from "./compiler.js";
 import { sampleParticleCurve, sampleParticleGradient } from "./curve.js";
 import { sampleBetween, sampleInteger, sampleUnit } from "./random.js";
-import type { CRCParticleShape2D } from "./types.js";
+import type { PibblParticleShape2D } from "./types.js";
 
 const TAU = Math.PI * 2;
 let particleSamples = 0;
@@ -148,7 +148,7 @@ export function sampleCircleRadius(unit: number, radius: number): number {
 }
 
 export function sampleShape2D(
-  shape: CRCParticleShape2D,
+  shape: PibblParticleShape2D,
   unit0: number,
   unit1: number,
   _unit2: number,

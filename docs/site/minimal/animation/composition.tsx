@@ -1,5 +1,5 @@
 import {
-  crc,
+  pibbl,
   Circle,
   useSignal,
   usePlayback,
@@ -11,12 +11,12 @@ import {
   wait,
   marker,
   repeat,
-  type CRCAnimationProgram,
-  type CRCAnimationRepeatDirection,
-  type CRCAnimationRepeatOptions,
-  type CRCKeyframesOptions,
-  type CRCSpringOptions,
-} from "@crc/core";
+  type PibblAnimationProgram,
+  type PibblAnimationRepeatDirection,
+  type PibblAnimationRepeatOptions,
+  type PibblKeyframesOptions,
+  type PibblSpringOptions,
+} from "@pibbl/core";
 
 const canvas = document.createElement("canvas");
 canvas.width = 420;
@@ -27,19 +27,19 @@ document.body.append(output);
 function Scene() {
   const x = useSignal(40);
   const y = useSignal(60);
-  const keys: CRCKeyframesOptions<number> = {
+  const keys: PibblKeyframesOptions<number> = {
     values: [40, 200, 360],
     duration: 1400,
   };
-  const bounce: CRCSpringOptions = {
+  const bounce: PibblSpringOptions = {
     from: 60,
     to: 130,
     stiffness: 160,
     damping: 12,
   };
-  const direction: CRCAnimationRepeatDirection = "normal";
-  const cycles: CRCAnimationRepeatOptions = { iterations: 3, direction };
-  const program: CRCAnimationProgram = repeat(
+  const direction: PibblAnimationRepeatDirection = "normal";
+  const cycles: PibblAnimationRepeatOptions = { iterations: 3, direction };
+  const program: PibblAnimationProgram = repeat(
     sequence(
       parallel(drive(x, keyframes(keys)), drive(y, spring(bounce))),
       marker("arrived"),
@@ -55,5 +55,5 @@ function Scene() {
   });
   return <Circle style={{ radius: 22, left: x, top: y, fill: "#b83970" }} />;
 }
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

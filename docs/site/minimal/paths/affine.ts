@@ -8,7 +8,7 @@ import {
   type PathRect,
   type PathTransform,
   type TransformPathOptions,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const source: PathRect = { x: 0, y: 0, width: 100, height: 80 };
 const shape = new PathGeometry();

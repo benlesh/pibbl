@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
 
-declare const __CRC_STUDIO_DOCS_ACCEPTANCE__: boolean;
+declare const __PIBBL_STUDIO_DOCS_ACCEPTANCE__: boolean;
 
-declare module "virtual:crc-runtime-source" {
+declare module "virtual:pibbl-runtime-source" {
   const source: string;
   export default source;
 }

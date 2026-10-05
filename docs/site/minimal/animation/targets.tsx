@@ -1,11 +1,11 @@
 import {
-  crc,
+  pibbl,
   Circle,
   signal,
   useAnimatedValue,
-  type CRCTweenAnimatedValueOptions,
-  type CRCSpringAnimatedValueOptions,
-} from "@crc/core";
+  type PibblTweenAnimatedValueOptions,
+  type PibblSpringAnimatedValueOptions,
+} from "@pibbl/core";
 
 const target = signal(50);
 const button = document.createElement("button");
@@ -15,11 +15,11 @@ const canvas = document.createElement("canvas");
 canvas.width = 420;
 canvas.height = 180;
 document.body.append(button, canvas);
-const smooth: CRCTweenAnimatedValueOptions<number> = {
+const smooth: PibblTweenAnimatedValueOptions<number> = {
   type: "tween",
   duration: 600,
 };
-const bouncy: CRCSpringAnimatedValueOptions = {
+const bouncy: PibblSpringAnimatedValueOptions = {
   type: "spring",
   stiffness: 180,
   damping: 12,
@@ -34,5 +34,5 @@ function Scene() {
     </>
   );
 }
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

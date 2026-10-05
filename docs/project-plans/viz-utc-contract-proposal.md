@@ -153,7 +153,7 @@ These are the only implicit domain-padding rules.
 Both helpers are pure snapshots: they resolve no `SignalValue`, create no
 subscription themselves, copy no rows, and retain no cache. A caller may invoke
 `extent` during a tracked component evaluation; signal reads in its accessor are
-therefore owned by that caller context and participate in normal CRC dependency
+therefore owned by that caller context and participate in normal Pibbl dependency
 tracking. Calling either helper outside evaluation has no hidden reactivity.
 Replacing data/domain/range/reverse or any resolved UTC cadence input invalidates
 ordinary mapping consumers; no automatic domain extension, mutation observation,

@@ -2,7 +2,7 @@
 
 > **Historical status: REOPENED REVISION FOR REVIEW.** This dated design record
 > was approved in conversation on 2026-09-23, then reopened the same day to add
-> CRC-wide signal-valued component inputs. That revision supersedes the earlier
+> Pibbl-wide signal-valued component inputs. That revision supersedes the earlier
 > explicit-`.get()`-only input contract. The implementation-plan draft based on
 > the superseded contract was discarded. Production work remains blocked until
 > this revised written specification and a later implementation plan are each
@@ -12,10 +12,10 @@ Date: 2026-09-23
 
 ## Summary
 
-CRC will adopt one public reactive-state model centered on synchronous signals.
+Pibbl will adopt one public reactive-state model centered on synchronous signals.
 `useSignal` becomes the only writable component-state hook. Public `useState`,
 `StateUpdater`, `useMemo`, and `useWhenChanged` are removed without compatibility
-aliases. CRC adds `batch`, `useComputed`, `useConst`, and `useReaction`:
+aliases. Pibbl adds `batch`, `useComputed`, `useConst`, and `useReaction`:
 
 - `batch` groups synchronous signal writes into one deduplicated notification
   wave;
@@ -28,9 +28,9 @@ aliases. CRC adds `batch`, `useComputed`, `useConst`, and `useReaction`:
 they own resources, event registrations, scheduler participants, render
 transactions, or backend state rather than merely storing values.
 
-Signals also become first-class component inputs across CRC. The public
+Signals also become first-class component inputs across Pibbl. The public
 `SignalValue<T> = T | Signal<T>` type and `resolveSignalValue` helper let an
-input accept either a plain value or a signal. CRC built-ins resolve declared
+input accept either a plain value or a signal. Pibbl built-ins resolve declared
 signal-valued props, style fields, layout values, text, structural children,
 event handlers, animation hook inputs, and applicable official-package inputs
 while evaluating the receiving component. The dependency therefore belongs to
@@ -50,7 +50,7 @@ const data = useSignal(initialData);
 Passing `x.get()` remains supported and deliberately attributes the read to the
 enclosing component instead. JSX and `createElement` store raw inputs; they do
 not recursively inspect or unwrap application objects. Each receiving component
-or CRC-owned input schema declares the exact positions that resolve signals.
+or Pibbl-owned input schema declares the exact positions that resolve signals.
 
 The implementation will optimize the graph before migrating the public surface.
 Stable reactive edges will use reusable intrusive ownership records rather than
@@ -65,7 +65,7 @@ repaintable. Ordinary invalidated Canvas instances still clear and traverse
 their complete immediate-mode tree. Persistent pixel isolation remains explicit
 through `Layer`, WebGL, and official renderer boundaries.
 
-CRC will not automatically cache components as images, create an
+Pibbl will not automatically cache components as images, create an
 `OffscreenCanvas` per component, infer implicit Layers, retain arbitrary Canvas
 drawing commands, or introduce a DOM-like scene graph. The author has already
 tested per-component OffscreenCanvas caching and found its construction and
@@ -152,14 +152,14 @@ The current root package exports:
 
 Official sibling packages add `useAnimationFrame`, `useOrbitCamera`,
 `useGLTF`, and `useParticleSystem`. Physics exposes component-owned world and
-body endpoints under its deliberate `crcPhysicsWorld*` and
-`crcPhysicsBody*` vocabulary. Those endpoints already expose field state as
+body endpoints under its deliberate `pibblPhysicsWorld*` and
+`pibblPhysicsBody*` vocabulary. Those endpoints already expose field state as
 readonly signals.
 
 ### Current `useState`
 
 `useState` owns a value and stable setter in one hook slot. Each accepted call
-mutates the stored value and requests the complete owning CRC instance through
+mutates the stored value and requests the complete owning Pibbl instance through
 the scheduler. It has no equality suppression. Setting the current value still
 requests a frame. Function values are ambiguous because a function passed to the
 setter is always treated as an updater. A stale setter becomes inert after its
@@ -225,7 +225,7 @@ source changes.
 ### Current renderer granularity
 
 Signal reads are owned by exact component consumers, but an invalidated
-component requests its complete owning CRC instance. An ordinary Canvas root
+component requests its complete owning Pibbl instance. An ordinary Canvas root
 then clears and traverses the full tree. A managed `Layer` is a distinct private
 instance backed by one persistent OffscreenCanvas, so a child-only signal can
 dirty that Layer while clean sibling Layer surfaces retain their pixels.
@@ -256,7 +256,7 @@ file deletion. The input revision additionally reaches primitive input type
 mapping, every core specified-style family, style normalization and measurement,
 text/container child materialization, event prop types, animation hooks,
 official backend definitions, physics/particle configuration, future or active
-`@crc/viz` component seams, JSX declarations, and performance diagnostics.
+`@pibbl/viz` component seams, JSX declarations, and performance diagnostics.
 
 ### Audit verification
 
@@ -310,7 +310,7 @@ retain them.
 ### Added exports
 
 ```ts
-export interface CRCReactionOptions {
+export interface PibblReactionOptions {
   readonly debugName?: string;
 }
 
@@ -318,14 +318,16 @@ export type SignalValue<T> = T | Signal<T>;
 
 export function resolveSignalValue<T>(value: SignalValue<T>): T;
 
-export type CRCNodeInput =
-  SignalValue<CRCNode> | readonly CRCNodeInput[] | Iterable<CRCNodeInput>;
+export type PibblNodeInput =
+  SignalValue<PibblNode> | readonly PibblNodeInput[] | Iterable<PibblNodeInput>;
 
-export type CRCTextInput =
-  SignalValue<CRCTextChild> | readonly CRCTextInput[] | Iterable<CRCTextInput>;
+export type PibblTextInput =
+  | SignalValue<PibblTextChild>
+  | readonly PibblTextInput[]
+  | Iterable<PibblTextInput>;
 
-export type CRCContainerChild = CRCNodeInput;
-export type CRCRenderResult = CRCNodeInput | void;
+export type PibblContainerChild = PibblNodeInput;
+export type PibblRenderResult = PibblNodeInput | void;
 
 export function batch<T>(callback: () => T): T;
 
@@ -340,7 +342,7 @@ export function useComputed<T>(
 export function useReaction(
   setup: () => void | (() => void),
   dependencies?: readonly unknown[],
-  options?: CRCReactionOptions,
+  options?: PibblReactionOptions,
 ): void;
 ```
 
@@ -351,13 +353,13 @@ during a component evaluation, the read belongs to that component's active
 collector. Called outside a tracked context, it is an ordinary untracked
 snapshot read, exactly like calling `.get()` there.
 
-`CRCNode` and `CRCTextChild` remain the resolved, signal-free structural
-grammars. `CRCNodeInput` and `CRCTextInput` are the authoring grammars accepted
+`PibblNode` and `PibblTextChild` remain the resolved, signal-free structural
+grammars. `PibblNodeInput` and `PibblTextInput` are the authoring grammars accepted
 by component results and declared children props. A signal at one input position
 may yield one complete resolved node/text structure, but that contained
 structure cannot itself contain signals. Arrays and iterables of input positions
-may contain additional signals explicitly. `crc()` continues to require a
-resolved root `CRCNode`; a bare signal is not a root owner.
+may contain additional signals explicitly. `pibbl()` continues to require a
+resolved root `PibblNode`; a bare signal is not a root owner.
 
 ### Retained core exports
 
@@ -435,14 +437,14 @@ the helper cannot infer that the caller intended to preserve the outer object;
 an API that wants a signal object must declare `Signal<T>` or
 `WritableSignal<T>` directly and must not call the helper for that position.
 
-Ordinary function components receive raw props. CRC does not transform every
+Ordinary function components receive raw props. Pibbl does not transform every
 prop type through a global mapped type and does not pre-resolve their props.
 This keeps custom APIs explicit and prevents an object-valued prop from gaining
 dependencies merely because one nested property happens to be a signal.
 
-### CRC primitives and declared input schemas
+### Pibbl primitives and declared input schemas
 
-CRC primitives are not invoked as ordinary functions; the renderer dispatches
+Pibbl primitives are not invoked as ordinary functions; the renderer dispatches
 their registered programs. Their definition metadata therefore declares a
 bounded input-resolution schema. The schema covers:
 
@@ -451,7 +453,7 @@ bounded input-resolution schema. The schema covers:
 - direct program props that accept reactive replacement;
 - direct program props that intentionally retain a signal object;
 - textual or structural child grammar where the component supports it; and
-- CRC-owned nested descriptor fields that explicitly opt in.
+- Pibbl-owned nested descriptor fields that explicitly opt in.
 
 The corresponding public input type exposes `SignalValue<T>` only at those
 positions. The primitive program, normalizer, style resolver, measure callback,
@@ -484,7 +486,7 @@ directly.
 
 ### Whole-object styles
 
-Every CRC primitive with a style input accepts a signal for the entire specified
+Every Pibbl primitive with a style input accepts a signal for the entire specified
 style object:
 
 ```tsx
@@ -505,7 +507,7 @@ may use a signal whose value type includes `undefined`; required style inputs
 may not.
 
 A whole-style signal may yield an object whose direct declared fields are also
-signals. CRC resolves the whole object and then those direct declared fields.
+signals. Pibbl resolves the whole object and then those direct declared fields.
 This is two explicit schema levels, not recursive unwrapping. The source style
 object is never mutated.
 
@@ -533,7 +535,7 @@ fields such as a complete material or transform value. `style.custom` remains
 opaque. A signal stored in `custom`, a tag, or another application payload is
 not read automatically.
 
-Composite field values are atomic unless their CRC-owned public type explicitly
+Composite field values are atomic unless their Pibbl-owned public type explicitly
 marks deeper positions as signal-valued. For example:
 
 - `padding: paddingSignal` is reactive;
@@ -544,20 +546,20 @@ marks deeper positions as signal-valued. For example:
 - individual entries inside an ordinary radii array are not inspected.
 
 The initial contract intentionally prefers replacing a small immutable
-descriptor over recursively walking it. A later CRC-owned descriptor may opt in
+descriptor over recursively walking it. A later Pibbl-owned descriptor may opt in
 specific nested fields only by changing its public type, resolver, tests, and
 performance evidence together.
 
 ### Ordinary props, data, and official packages
 
-CRC-provided components accept direct signal-valued props when the prop is a
+Pibbl-provided components accept direct signal-valued props when the prop is a
 render-time value. Representative examples include a WebGL mesh's geometry, a
 background color, a camera descriptor, a particle effect input, and direct
 physics-world configuration such as gravity or enabled state.
 
 Official sibling packages import `SignalValue` and `resolveSignalValue` from
-`@crc/core`; they do not publish package-local `MaybeSignal` conventions or deep
-resolvers. This contract includes `@crc/viz`:
+`@pibbl/core`; they do not publish package-local `MaybeSignal` conventions or deep
+resolvers. This contract includes `@pibbl/viz`:
 
 ```tsx
 const data = useSignal(initialData);
@@ -581,7 +583,7 @@ not discovered automatically.
 
 ### Text and structural children
 
-`Text` accepts `CRCTextInput`, which allows signals at explicitly recursive text
+`Text` accepts `PibblTextInput`, which allows signals at explicitly recursive text
 input positions:
 
 ```tsx
@@ -593,28 +595,28 @@ const value = useSignal(12);
 
 The input grammar traverses arrays and synchronous iterables because those are
 already declared structural text containers. At any input position, one
-`Signal<CRCTextChild>` may provide a complete resolved, signal-free text
+`Signal<PibblTextChild>` may provide a complete resolved, signal-free text
 structure. It does not inspect arbitrary objects. A signal that resolves to
 another signal, a structure containing signals, or a cyclic structure is
 rejected with a receiver-specific diagnostic rather than repeatedly unwrapped.
 
 Container components such as `Group`, `Clip`, `Layer`, layout components,
-WebGL groups/layers, and physics worlds accept `CRCNodeInput` for their declared
+WebGL groups/layers, and physics worlds accept `PibblNodeInput` for their declared
 structural child grammar. Arrays, synchronous iterables, Fragments, empty values,
 and elements remain structural. A signal at a declared child position may
-resolve to one complete resolved `CRCNode` structure. That resolved structure
-may not contain another signal. Traversal continues only through the CRC child
+resolve to one complete resolved `PibblNode` structure. That resolved structure
+may not contain another signal. Traversal continues only through the Pibbl child
 grammar, never through element props or application objects.
 
 An unkeyed Fragment is transparent, so its child-signal reads belong to the
 nearest receiving component whose result is being materialized. A keyed
 Fragment owns its structural child reads as its identity boundary. A bare signal
-cannot be the root passed directly to `crc()` because there is no receiving
+cannot be the root passed directly to `pibbl()` because there is no receiving
 component to own that dependency; place it under a component or read it
 explicitly at root construction.
 
 Component-result materialization moves before that component's signal-read
-generation commits. CRC resolves declared signal child positions while the
+generation commits. Pibbl resolves declared signal child positions while the
 component collector is still active, commits the complete generation, then
 traverses child components untracked as today. Child component reads therefore
 still do not leak into the parent.
@@ -625,18 +627,18 @@ A direct event-handler or callback prop may be signal-valued when its receiving
 API declares reactive replacement:
 
 ```tsx
-const clickHandler = useSignal<CRCEventHandler<"click">>(handlePrimaryClick);
+const clickHandler = useSignal<PibblEventHandler<"click">>(handlePrimaryClick);
 <Rectangle onClick={clickHandler} style={style} />;
 ```
 
 The receiver resolves the callback identity during render and registers the
-result. CRC does not invoke it during resolution and does not inspect its return
+result. Pibbl does not invoke it during resolution and does not inspect its return
 value. Changing the handler signal invalidates the receiver so the registration
 updates transactionally. Event dispatch still batches writes made by the
 eventual callback.
 
 An accessor is likewise an opaque function value unless its API explicitly
-declares that CRC invokes it. Resolving `SignalValue<() => T>` chooses the
+declares that Pibbl invokes it. Resolving `SignalValue<() => T>` chooses the
 accessor function; it does not call the accessor. If an API declares an accessor
 whose return type is `SignalValue<T>`, that API must document the evaluation
 phase and call `resolveSignalValue` on the return at that phase. A render-time
@@ -653,12 +655,12 @@ The general rule is shallow, declared resolution:
   and every datum as opaque data;
 - a direct signal-valued style field may replace the entire array or descriptor;
 - an array containing signals is not traversed unless the array belongs to a
-  declared CRC structural grammar such as children or a specifically typed
-  CRC-owned descriptor;
+  declared Pibbl structural grammar such as children or a specifically typed
+  Pibbl-owned descriptor;
 - nested application objects are never inspected; and
 - one signal never causes “unwrap until not a signal” behavior.
 
-CRC-owned option descriptors may opt in one shallow level when individual
+Pibbl-owned option descriptors may opt in one shallow level when individual
 replacement is useful. The Signals-centric animation surface does so for
 component-owned playback and transition inputs: `usePlayback` may receive a
 signal-valued program and playback-options object, while `useTransition` may
@@ -699,7 +701,7 @@ shallow resolved copy is created only after an actual signal field is found.
 
 No signal means no component consumer, receiver provision, edge, resolved-input
 copy, dependency array, or persistent cache entry. Structural child arrays are
-already traversed by CRC and add only a nominal signal check at each declared
+already traversed by Pibbl and add only a nominal signal check at each declared
 child position. Performance acceptance criteria below protect this path.
 
 ## Consequences for existing runtime assumptions
@@ -865,7 +867,7 @@ clean and recreate the subscription without traversing Canvas.
 
 ### Batched writes
 
-CRC logical event dispatch batches automatically:
+Pibbl logical event dispatch batches automatically:
 
 ```tsx
 <Rectangle
@@ -877,7 +879,7 @@ CRC logical event dispatch batches automatically:
 />
 ```
 
-For application callbacks outside CRC dispatch:
+For application callbacks outside Pibbl dispatch:
 
 ```ts
 batch(() => {
@@ -952,7 +954,7 @@ strict-inequality behavior of `useMemo` and `useWhenChanged`.
 Omitting `dependencies` means the formula may safely close only over signals,
 module constants, `useConst` values, stable hook handles, and other mount-stable
 identities. A changing ordinary prop omitted from the array is an authoring
-error; CRC cannot inspect a JavaScript closure to discover it.
+error; Pibbl cannot inspect a JavaScript closure to discover it.
 
 ### Formula refresh
 
@@ -977,7 +979,7 @@ Failed transaction completion restores the last committed formula, cached
 result, version, and source edges in either case.
 
 This is required because publishing a failed render's captured prop closure to
-a retained computed would violate CRC's fail-closed ownership model.
+a retained computed would violate Pibbl's fail-closed ownership model.
 
 ### Equality and publication
 
@@ -1005,7 +1007,7 @@ Plan validation remains authoritative.
 
 ### Purity and errors
 
-Computed callbacks are pure synchronous derivations. Signal writes and CRC
+Computed callbacks are pure synchronous derivations. Signal writes and Pibbl
 hooks are forbidden. Promise continuations do not inherit tracking.
 
 Standalone computed error caching, dependency replacement, cycle diagnostics,
@@ -1021,7 +1023,7 @@ returns the same direct value on later renders.
 - It creates no signal, observer, or computed node.
 - Its factory runs untracked, so signal reads cannot accidentally make the
   component a consumer of a mount-only snapshot.
-- Its factory cannot call CRC hooks.
+- Its factory cannot call Pibbl hooks.
 - It does not schedule work.
 - It performs no automatic cleanup.
 - A factory failure enters normal render failure recovery.
@@ -1054,7 +1056,7 @@ owned, and signal reads inside its callback currently become component render
 dependencies because the callback executes during component evaluation.
 
 `useReaction` names the new behavior: a component-owned imperative reaction to
-tracked signal changes and explicit non-signal dependencies. CRC deliberately
+tracked signal changes and explicit non-signal dependencies. Pibbl deliberately
 does not call it `useEffect`, because React effect timing and lifecycle are not
 its contract.
 
@@ -1144,15 +1146,15 @@ writes. Computeds that were explicitly read inside the batch may have validated
 intermediate values, but their downstream notifications remain batched and only
 the final committed result determines downstream invalidation.
 
-If the callback throws, writes already performed remain committed. CRC flushes
+If the callback throws, writes already performed remain committed. Pibbl flushes
 the resulting notification wave in `finally`, then rethrows the callback error.
-If notification also fails, CRC reports an `AggregateError` containing the
+If notification also fails, Pibbl reports an `AggregateError` containing the
 callback error first followed by notification failures. `batch` is notification
 atomic, not a rollback transaction.
 
-### Automatic CRC batching
+### Automatic Pibbl batching
 
-One complete logical CRC event dispatch—capture, target, and bubble—is wrapped
+One complete logical Pibbl event dispatch—capture, target, and bubble—is wrapped
 in one batch. Writes from an earlier propagation listener are visible to later
 listeners through explicit reads, but no renderer or reaction invalidation runs
 until propagation finishes.
@@ -1243,7 +1245,7 @@ descriptor before the child callback or primitive program runs. Charging those
 reads to the layout parent would violate the receiving-component contract and
 would produce incorrect Layer/renderer diagnostics.
 
-CRC extends the existing primitive receiver token used to connect measurement,
+Pibbl extends the existing primitive receiver token used to connect measurement,
 placement clones, and paint. When layout or mounted measurement encounters the
 first signal for a child receiver, it creates a transaction-local input-read
 provision keyed by that token. The provision records source nodes using the same
@@ -1309,7 +1311,7 @@ Tests assert ownership counts, not garbage-collection timing.
 
 ### 1. Logical input dispatch
 
-CRC resolves the topmost committed target and performs capture, target, and
+Pibbl resolves the topmost committed target and performs capture, target, and
 bubble propagation. One automatic batch surrounds the complete logical
 dispatch.
 
@@ -1321,7 +1323,7 @@ visible synchronously to later reads; equal values do nothing.
 
 ### 3. Batch flush and graph invalidation
 
-At outer batch exit CRC publishes one deduplicated notification wave:
+At outer batch exit Pibbl publishes one deduplicated notification wave:
 
 - direct component consumers become dirty once;
 - computeds become pending without dirtying downstream renderers;
@@ -1463,12 +1465,12 @@ additional `drawImage` operations. A transient surface pool cannot help because
 cached pixels must survive until the next invalidation. Creating and discarding
 surfaces instead produces the exact churn already observed experimentally.
 
-CRC therefore keeps explicit barriers. Authors add a Layer only when the cost
+Pibbl therefore keeps explicit barriers. Authors add a Layer only when the cost
 and memory tradeoff make sense for that subtree.
 
 ## Fine-grained rendering without a retained scene graph
 
-CRC can become more fine grained in four genuine ways without retaining a
+Pibbl can become more fine grained in four genuine ways without retaining a
 DOM-like graph:
 
 1. **Write granularity:** equality and batching avoid redundant graph work.
@@ -1478,7 +1480,7 @@ DOM-like graph:
 4. **Surface granularity:** explicit Layers and renderer islands retain and
    update independently.
 
-CRC cannot safely skip arbitrary primitive painting within one cleared Canvas
+Pibbl cannot safely skip arbitrary primitive painting within one cleared Canvas
 surface without retaining enough paint commands, pixel surfaces, or overlap
 metadata to replay the omitted output. Caching only component-returned element
 descriptors could skip some user function calls, but primitives, event geometry,
@@ -1568,7 +1570,7 @@ fixtures and current examples; it does not weaken the invariant.
 | Reaction cleanup                 | Successful setup                 | Exact reaction generation                 | Cleared then run before replacement, removal, failure cleanup, abort, or disposal               |
 | Batch notification queue         | Outermost `batch` entry          | Synchronous batch scope                   | Flushed and released on outermost return or throw                                               |
 | Layer pixel cache                | `Layer` mount                    | Exact Layer hook/component slot           | Resize replaces bitmap; removal/disposal releases instance and surface                          |
-| Filter scratch surface           | First active depth lease         | CRC instance transient pool               | Returned after boundary; pool released with instance                                            |
+| Filter scratch surface           | First active depth lease         | Pibbl instance transient pool             | Returned after boundary; pool released with instance                                            |
 
 ## Migration design
 
@@ -1587,7 +1589,7 @@ const value = useSignal(initial);
 ```
 
 Branching, arithmetic, and ordinary JavaScript reads become `value.get()`.
-Declared CRC component inputs may receive `value` directly so the receiver owns
+Declared Pibbl component inputs may receive `value` directly so the receiver owns
 the dependency. Direct writes become `value.set(next)`. Functional updates
 become `value.update(update)`. Captured `StateUpdater<T>` types become
 `WritableSignal<T>` when the value cell itself is passed, or an explicit
@@ -1654,12 +1656,12 @@ resolver types remain ordinary resolved values so backend code does not spread
 Every built-in and official package classifies each public input as one of:
 
 1. shallow signal-valued replacement;
-2. CRC structural child grammar;
-3. an explicitly signal-enabled CRC-owned descriptor field; or
+2. Pibbl structural child grammar;
+3. an explicitly signal-enabled Pibbl-owned descriptor field; or
 4. opaque/exact data, including deliberate `Signal`/`WritableSignal` objects.
 
 The classification is covered by public type tests and runtime tests. New
-official packages, including `@crc/viz`, import the core type/helper and follow
+official packages, including `@pibbl/viz`, import the core type/helper and follow
 the same classification. They may not introduce a second resolver whose deep
 behavior differs from core.
 
@@ -1695,7 +1697,7 @@ worth its retained surface.
 
 Current contracts under `docs/design/` are updated together. Package READMEs
 and public API pages for the removed hooks are rewritten or removed; pages for
-`SignalValue`, `resolveSignalValue`, `CRCNodeInput`, `CRCTextInput`, `batch`,
+`SignalValue`, `resolveSignalValue`, `PibblNodeInput`, `PibblTextInput`, `batch`,
 `useConst`, `useComputed`, and `useReaction` are added. The state/lifecycle,
 component-input, style/layout, author-without-JSX, signals/animation, WebGL,
 physics, and visualization guides are rewritten around the single model.
@@ -1758,7 +1760,7 @@ context, not a substitute for these fresh baselines.
   invalidation.
 - Several changed signals observed by one component invalidate that component
   once per outer batch.
-- One logical CRC event dispatch requests at most one host frame.
+- One logical Pibbl event dispatch requests at most one host frame.
 - An unchanged observed computed validates in Plan and performs zero renderer
   work.
 - A reaction-only signal change performs zero root and Layer traversals.
@@ -1875,7 +1877,7 @@ Public type and runtime tests cover:
 - exact `Signal` and `WritableSignal` props remaining signal objects;
 - signal-valued `usePlayback` and `useTransition` candidates preserving their
   existing transaction/ownership behavior;
-- shared fan-out across siblings, roots, Layers, WebGL, and an `@crc/viz`
+- shared fan-out across siblings, roots, Layers, WebGL, and an `@pibbl/viz`
   consumer contract fixture;
 - pure `measureElement` snapshot reads establishing no subscription; and
 - failed render, failure after layout provision, removal, abort, and disposal
@@ -1944,7 +1946,7 @@ slices. The intended order is:
    state/derivation slice for feedback;
 6. add `useReaction` and migrate one resource-owning slice, proving zero-render
    reaction work;
-7. migrate core, `@crc/viz`, other official packages, tests, examples, Studio,
+7. migrate core, `@pibbl/viz`, other official packages, tests, examples, Studio,
    docs, and package consumers, then remove the old exports in the same public
    pivot;
 8. run focused input, ownership, and performance hardening, profile remaining
@@ -1985,7 +1987,7 @@ shared core type/helper plus explicit schemas is the smaller contract.
 
 A public helper alone would help custom components but still force authors to
 write `.get()` for every core style, Text child, WebGL value, and chart input.
-That preserves enclosing-component ownership and fails the CRC-wide ergonomic
+That preserves enclosing-component ownership and fails the Pibbl-wide ergonomic
 requirement.
 
 ### Rejected: public API swap over the current graph
@@ -2019,7 +2021,7 @@ no benefit.
 
 Wrapping every ordinary prop in a generated signal would allocate and reconcile
 reactive cells for immutable inputs, complicate identity, and imply subtree
-skipping CRC cannot provide. The selected design accepts an existing signal at a
+skipping Pibbl cannot provide. The selected design accepts an existing signal at a
 declared slot and leaves every plain value plain.
 
 ### Rejected: synchronous render-time reactions
@@ -2046,7 +2048,7 @@ non-rendering consumer.
   child evaluation, adopting them transactionally into the receiver consumer.
 - Use `Object.is` consistently for signal results and hook dependency slots.
 - Optimize graph ownership around lazy consumers and reusable intrusive edges.
-- Batch complete CRC logical event dispatch automatically.
+- Batch complete Pibbl logical event dispatch automatically.
 - Run reactions in Complete after successful ownership commits and never dirty a
   renderer solely because a reaction reads a signal.
 - Preserve full immediate-mode traversal for dirty ordinary Canvas instances.

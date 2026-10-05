@@ -2,22 +2,22 @@ import {
   createElement,
   useLayoutBox,
   layoutDiagnostic,
-  type CRCNode,
-} from "@crc/core";
+  type PibblNode,
+} from "@pibbl/core";
 import {
-  crcInternalCurrentRenderOwner,
-  crcInternalOnRenderFinish,
-  crcInternalRequestRender,
+  pibblInternalCurrentRenderOwner,
+  pibblInternalOnRenderFinish,
+  pibblInternalRequestRender,
   useInternalHookSlot,
-  type CRCInternalRenderOwner,
-} from "@crc/core/internal";
+  type PibblInternalRenderOwner,
+} from "@pibbl/core/internal";
 import { parseParticleColor } from "../color.js";
 import type { CompiledEffect2D, CompiledParameterEntry } from "../compiler.js";
 import type {
-  CRCParticleEffect2D,
-  CRCParticleCommonProps,
-  CRCParticleParameterValue,
-  CRCParticleParameterValues,
+  PibblParticleEffect2D,
+  PibblParticleCommonProps,
+  PibblParticleParameterValue,
+  PibblParticleParameterValues,
   Particles2DProps,
 } from "../types.js";
 import { useParticleSystemBinding } from "../system/binding.js";
@@ -35,7 +35,7 @@ import {
 import { ParticleCanvasPrimitive } from "./primitive.js";
 
 interface ImplicitSystemSlot {
-  readonly owner: CRCInternalRenderOwner;
+  readonly owner: PibblInternalRenderOwner;
   controller: ParticleSystemController | undefined;
   mountSettled: boolean;
   revision: number;
@@ -43,7 +43,7 @@ interface ImplicitSystemSlot {
 }
 
 interface CanvasExecutorSlot {
-  readonly owner: CRCInternalRenderOwner;
+  readonly owner: PibblInternalRenderOwner;
   controller: ParticleSystemController | undefined;
   pendingController: ParticleSystemController | undefined;
   committed: CanvasParticleExecutor | undefined;
@@ -81,7 +81,7 @@ function validateAllocation(
 function writeParameter(
   output: Float64Array,
   entry: CompiledParameterEntry,
-  value: CRCParticleParameterValue,
+  value: PibblParticleParameterValue,
 ): void {
   const numeric: readonly number[] | undefined =
     entry.type === "color"
@@ -101,7 +101,7 @@ function writeParameter(
     numeric.some((component) => !Number.isFinite(component))
   ) {
     throw new TypeError(
-      `CRC Particles2D parameter "${entry.name}" does not match ${entry.type}.`,
+      `Pibbl Particles2D parameter "${entry.name}" does not match ${entry.type}.`,
     );
   }
   output.set(numeric, entry.offset);
@@ -109,7 +109,7 @@ function writeParameter(
 
 function resolveParameters(
   compiled: CompiledEffect2D,
-  supplied: Readonly<Partial<CRCParticleParameterValues>> | undefined,
+  supplied: Readonly<Partial<PibblParticleParameterValues>> | undefined,
 ): Float64Array {
   const result = new Float64Array(compiled.parameterLayout.defaults);
   if (supplied === undefined) return result;
@@ -117,7 +117,7 @@ function resolveParameters(
     const entry = compiled.parameterLayout.byName.get(name);
     if (entry === undefined) {
       throw new TypeError(
-        `CRC Particles2D received unknown parameter "${name}".`,
+        `Pibbl Particles2D received unknown parameter "${name}".`,
       );
     }
     if (value === undefined) continue;
@@ -128,8 +128,8 @@ function resolveParameters(
 
 function prepareImplicitSystem(
   slot: ImplicitSystemSlot,
-  owner: CRCInternalRenderOwner,
-  effect: CRCParticleEffect2D,
+  owner: PibblInternalRenderOwner,
+  effect: PibblParticleEffect2D,
   autoplay: boolean | undefined,
   seed: number | undefined,
 ): Readonly<{
@@ -146,7 +146,7 @@ function prepareImplicitSystem(
   const controller = slot.controller;
   const effectCandidate = controller.prepareEffect(effect, { autoplay, seed });
   const revision = ++slot.revision;
-  crcInternalOnRenderFinish(owner, (success) => {
+  pibblInternalOnRenderFinish(owner, (success) => {
     if (!success || slot.disposed || revision !== slot.revision) {
       controller.cancelEffect(effectCandidate);
       return;
@@ -165,23 +165,23 @@ function prepareImplicitSystem(
  *
  * @param props - Particle system, drawing configuration, and event handlers. See
  * {@link Particles2DProps} .
- * @returns CRC nodes that paint the system's Canvas particles. See {@link CRCNode}.
+ * @returns Pibbl nodes that paint the system's Canvas particles. See {@link PibblNode}.
  *
  * @see {@link Particles2DProps}
- * @see {@link CRCNode}
- * @see {@link CRCParticleParameterValues}
+ * @see {@link PibblNode}
+ * @see {@link PibblParticleParameterValues}
  */
 export function Particles2D<
   EmitterName extends string,
-  Parameters extends CRCParticleParameterValues,
->(props: Particles2DProps<EmitterName, Parameters>): CRCNode {
+  Parameters extends PibblParticleParameterValues,
+>(props: Particles2DProps<EmitterName, Parameters>): PibblNode {
   const looseProps = resolveDeclaredParticleProps(
     props,
     PRESERVED_PARTICLE_PROPS,
     "style",
-  ) as unknown as CRCParticleCommonProps<Parameters> & {
-    readonly effect?: CRCParticleEffect2D<EmitterName, Parameters>;
-    readonly system?: import("../types.js").CRCParticleSystem<
+  ) as unknown as PibblParticleCommonProps<Parameters> & {
+    readonly effect?: PibblParticleEffect2D<EmitterName, Parameters>;
+    readonly system?: import("../types.js").PibblParticleSystem<
       EmitterName,
       Parameters
     >;
@@ -189,7 +189,7 @@ export function Particles2D<
     readonly seed?: number;
     readonly style?: import("../types.js").Particles2DStyle;
   };
-  const owner = crcInternalCurrentRenderOwner();
+  const owner = pibblInternalCurrentRenderOwner();
   const allocation = useLayoutBox();
   validateAllocation(allocation);
 
@@ -197,7 +197,7 @@ export function Particles2D<
   const hasSystem = looseProps.system !== undefined;
   if (hasEffect === hasSystem) {
     throw new TypeError(
-      "CRC Particles2D requires exactly one of effect or system.",
+      "Pibbl Particles2D requires exactly one of effect or system.",
     );
   }
   if (
@@ -205,7 +205,7 @@ export function Particles2D<
     (looseProps.autoplay !== undefined || looseProps.seed !== undefined)
   ) {
     throw new TypeError(
-      "CRC Particles2D autoplay and seed belong to implicit effect mode.",
+      "Pibbl Particles2D autoplay and seed belong to implicit effect mode.",
     );
   }
 
@@ -228,7 +228,7 @@ export function Particles2D<
     },
   ).value;
   if (implicitSlot.owner !== owner) {
-    throw new Error("CRC Particles2D changed render ownership.");
+    throw new Error("Pibbl Particles2D changed render ownership.");
   }
 
   let controller: ParticleSystemController;
@@ -246,7 +246,7 @@ export function Particles2D<
   } else {
     controller = getParticleSystemController(looseProps.system!);
     if (controller.compiled.dimension !== 2) {
-      throw new TypeError("CRC Particles2D requires a two-dimensional system.");
+      throw new TypeError("Pibbl Particles2D requires a two-dimensional system.");
     }
     compiled = controller.compiled;
     implicitSlot.revision += 1;
@@ -255,7 +255,7 @@ export function Particles2D<
   const parameters = resolveParameters(
     compiled,
     looseProps.parameters as
-      Readonly<Partial<CRCParticleParameterValues>> | undefined,
+      Readonly<Partial<PibblParticleParameterValues>> | undefined,
   );
   const executorSlot = useInternalHookSlot<CanvasExecutorSlot>(
     "particles2d-canvas-executor",
@@ -282,7 +282,7 @@ export function Particles2D<
     },
   ).value;
   if (executorSlot.owner !== owner) {
-    throw new Error("CRC Particles2D executor changed render ownership.");
+    throw new Error("Pibbl Particles2D executor changed render ownership.");
   }
 
   let candidate: CanvasParticleExecutor;
@@ -296,7 +296,7 @@ export function Particles2D<
     // drawing its existing candidate; the original finish callback remains the
     // sole owner of reservation adoption and transaction finalization.
     useInternalHookSlot("particle-system-binding", () => {
-      throw new Error("CRC Particles2D binding state was not initialized.");
+      throw new Error("Pibbl Particles2D binding state was not initialized.");
     });
     candidate = executorSlot.pending;
     candidate.prepareParameters(parameters);
@@ -323,7 +323,7 @@ export function Particles2D<
           flow: controller.flow,
           compiled,
           parameters,
-          requestRender: () => crcInternalRequestRender(bindingOwner),
+          requestRender: () => pibblInternalRequestRender(bindingOwner),
           currentSpawnEpoch: () => controller.currentSpawnEpoch,
           spawnParameters: (epoch) => controller.spawnParameters(epoch),
           retainSpawnEpoch: (epoch) => controller.retainSpawnEpoch(epoch),
@@ -337,7 +337,7 @@ export function Particles2D<
   }
 
   const executorRevision = ++executorSlot.revision;
-  crcInternalOnRenderFinish(owner, (success) => {
+  pibblInternalOnRenderFinish(owner, (success) => {
     if (executorSlot.disposed || executorRevision !== executorSlot.revision) {
       return;
     }

@@ -1,4 +1,4 @@
-import type { CRCComponent } from '../element/types.js';
+import type { PibblComponent } from '../element/types.js';
 import { untracked } from '../signals/graph.js';
 import { useHookSlot, withHooksForbidden } from './hook-slot.js';
 
@@ -8,13 +8,13 @@ import { useHookSlot, withHooksForbidden } from './hook-slot.js';
  * @param create - Initializer called once for this mounted hook slot.
  * @returns The value retained by this hook slot.
  *
- * @see {@link CRCComponent}
+ * @see {@link PibblComponent}
  */
 export function useConst<T>(create: () => T): T {
   return useHookSlot(
     'const',
     () => untracked(() => withHooksForbidden(
-      'CRC hooks cannot be called inside a useConst factory.',
+      'Pibbl hooks cannot be called inside a useConst factory.',
       create,
     )),
   ).value;

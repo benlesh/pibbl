@@ -12,10 +12,10 @@ const packedEntry =
     : process.argv[packedEntryArgument + 1];
 if (packedEntryArgument !== -1 && !packedEntry)
   throw new Error("--packed-entry requires an installed public entry path.");
-const directory = await mkdtemp(join(tmpdir(), "crc-positioning-env-"));
+const directory = await mkdtemp(join(tmpdir(), "pibbl-positioning-env-"));
 
 const browserProbe = String.raw`
-import { Flex, Flow, Grid, Rectangle, createElement, crc } from '@crc/core';
+import { Flex, Flow, Grid, Rectangle, createElement, pibbl } from '@pibbl/core';
 
 const layouts = ['Flex', 'Flow', 'Grid'];
 
@@ -108,7 +108,7 @@ async function render(layout, includeOffsets) {
   let controller;
   let clicks = 0;
   try {
-    controller = crc(canvas, createTree(layout, includeOffsets, () => { clicks++; }), {
+    controller = pibbl(canvas, createTree(layout, includeOffsets, () => { clicks++; }), {
       pixelRatio: 1,
     });
     await nextFrame();
@@ -126,7 +126,7 @@ async function render(layout, includeOffsets) {
   }
 }
 
-globalThis.__crcPositioningProbe = async () => {
+globalThis.__pibblPositioningProbe = async () => {
   const result = {};
   for (const layout of layouts) {
     const omitted = await render(layout, false);
@@ -177,7 +177,7 @@ async function bundleProbe(kind, development) {
       {
         name: "public-core-entry",
         setup(buildContext) {
-          buildContext.onResolve({ filter: /^@crc\/core$/ }, () => ({
+          buildContext.onResolve({ filter: /^@pibbl\/core$/ }, () => ({
             path: publicCoreEntry(kind),
           }));
         },
@@ -197,11 +197,11 @@ function assertDevelopmentResult(label, results) {
     }
     if (
       !supplied.errors.some((error) =>
-        error.includes("CRC_LAYOUT_IGNORED_POSITION"),
+        error.includes("PIBBL_LAYOUT_IGNORED_POSITION"),
       )
     ) {
       throw new Error(
-        `${label} ${layout} did not capture CRC_LAYOUT_IGNORED_POSITION from the render: ${supplied.errors.join("\n") || "(no error)"}`,
+        `${label} ${layout} did not capture PIBBL_LAYOUT_IGNORED_POSITION from the render: ${supplied.errors.join("\n") || "(no error)"}`,
       );
     }
   }
@@ -254,7 +254,7 @@ try {
     });
     await page.addScriptTag({ path: bundle.path });
     const results = await page.evaluate(() =>
-      globalThis.__crcPositioningProbe(),
+      globalThis.__pibblPositioningProbe(),
     );
     const label = `${bundle.kind} DEV=${bundle.development}`;
     if (bundle.development) assertDevelopmentResult(label, results);

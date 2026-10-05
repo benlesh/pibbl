@@ -1,15 +1,15 @@
 import {
-  crcInternalCurrentRenderOwner,
-  crcInternalOnRenderFinish,
+  pibblInternalCurrentRenderOwner,
+  pibblInternalOnRenderFinish,
   useInternalHookSlot,
-  type CRCInternalRenderOwner,
-} from "@crc/core/internal";
+  type PibblInternalRenderOwner,
+} from "@pibbl/core/internal";
 import type { CompiledEffect2D } from "../compiler.js";
 import type {
-  CRCParticleExecution,
-  CRCParticleSystem,
-  CRCParticleSystemEvent,
-  CRCParticleSystemStatus,
+  PibblParticleExecution,
+  PibblParticleSystem,
+  PibblParticleSystemEvent,
+  PibblParticleSystemStatus,
 } from "../types.js";
 import {
   getParticleSystemController,
@@ -44,9 +44,9 @@ export interface ParticleBindingBurstResult extends ParticleBindingFrameState {
 }
 
 export interface ParticleBindingCandidate {
-  readonly owner: CRCInternalRenderOwner;
+  readonly owner: PibblInternalRenderOwner;
   readonly backend: "canvas";
-  readonly execution: CRCParticleExecution;
+  readonly execution: PibblParticleExecution;
   readonly compiled: CompiledParticleEffect;
   readonly parameters: Readonly<Float64Array>;
   requestRender(): void;
@@ -69,25 +69,25 @@ export interface ParticleSystemFrame {
   readonly effectTimeMilliseconds: number;
   readonly previousEffectTimeMilliseconds: number;
   readonly seed: number;
-  readonly status: CRCParticleSystemStatus;
+  readonly status: PibblParticleSystemStatus;
 }
 
 export interface ParticleSystemBindingInput {
-  readonly system: CRCParticleSystem;
+  readonly system: PibblParticleSystem;
   readonly backend: "canvas";
-  readonly create: (owner: CRCInternalRenderOwner) => ParticleBindingCandidate;
-  readonly onEvent?: (event: CRCParticleSystemEvent) => void;
+  readonly create: (owner: PibblInternalRenderOwner) => ParticleBindingCandidate;
+  readonly onEvent?: (event: PibblParticleSystemEvent) => void;
   readonly onError?: (error: unknown) => void;
 }
 
 interface ParticleBindingHookSlot {
   controller: ParticleSystemController;
   committedController: ParticleSystemController | undefined;
-  owner: CRCInternalRenderOwner;
+  owner: PibblInternalRenderOwner;
   committed: ParticleBindingCandidate | undefined;
   pending: ParticleBindingCandidate | undefined;
   reservation: ParticleBindingReservation | undefined;
-  latestOnEvent: ((event: CRCParticleSystemEvent) => void) | undefined;
+  latestOnEvent: ((event: PibblParticleSystemEvent) => void) | undefined;
   latestOnError: ((error: unknown) => void) | undefined;
   revision: number;
   disposed: boolean;
@@ -101,14 +101,14 @@ interface ParticleBindingHookSlot {
 export function useParticleSystemBinding(
   input: ParticleSystemBindingInput,
 ): ParticleBindingCandidate {
-  const owner = crcInternalCurrentRenderOwner();
+  const owner = pibblInternalCurrentRenderOwner();
   const controller = getParticleSystemController(input.system);
   const slot = useInternalHookSlot<ParticleBindingHookSlot>(
     "particle-system-binding",
     (teardowns) => {
       let value!: ParticleBindingHookSlot;
       const observers: ParticleBindingObservers = Object.freeze({
-        onEvent(event: CRCParticleSystemEvent) {
+        onEvent(event: PibblParticleSystemEvent) {
           value.latestOnEvent?.(event);
         },
         onError(error: unknown) {
@@ -149,7 +149,7 @@ export function useParticleSystemBinding(
   ).value;
 
   if (slot.owner !== owner) {
-    throw new Error("A CRC particle binding hook changed render ownership.");
+    throw new Error("A Pibbl particle binding hook changed render ownership.");
   }
   if (slot.controller !== controller) {
     slot.controller.cancelBindingReservation(slot.reservation);
@@ -175,7 +175,7 @@ export function useParticleSystemBinding(
 
   const revision = ++slot.revision;
   slot.pending = candidate;
-  crcInternalOnRenderFinish(owner, (success) => {
+  pibblInternalOnRenderFinish(owner, (success) => {
     if (slot.disposed) return;
     if (revision !== slot.revision) {
       controller.cancelBindingReservation(reservation);

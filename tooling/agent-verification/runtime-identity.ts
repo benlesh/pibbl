@@ -1,4 +1,4 @@
-import { crc } from '../../packages/core/src/lib/crc';
+import { pibbl } from '../../packages/core/src/lib/pibbl';
 import { snapshotRealmScheduler } from '../../packages/core/src/lib/scheduler/realm-scheduler';
 import { version } from '../../packages/core/package.json';
 
@@ -8,9 +8,9 @@ import { version } from '../../packages/core/package.json';
  */
 export function captureRuntimeBinding() {
   return Object.freeze({
-    schema: 'crc-runtime-binding/1' as const,
+    schema: 'pibbl-runtime-binding/1' as const,
     realm: globalThis,
-    runtime: crc,
+    runtime: pibbl,
     scheduler: snapshotRealmScheduler,
     version,
   });
@@ -26,7 +26,7 @@ function binding(value: unknown): Binding | null {
       if (!descriptor || !('value' in descriptor)) return null;
       result[key] = descriptor.value;
     }
-    if (result.schema !== 'crc-runtime-binding/1' || !result.realm || typeof result.realm !== 'object' ||
+    if (result.schema !== 'pibbl-runtime-binding/1' || !result.realm || typeof result.realm !== 'object' ||
       typeof result.runtime !== 'function' || typeof result.scheduler !== 'function' ||
       typeof result.version !== 'string' || result.version.length === 0 || result.version.length > 64) return null;
     return result as unknown as Binding;
@@ -37,7 +37,7 @@ function binding(value: unknown): Binding | null {
 export function compareRuntimeBindings(left: unknown, right: unknown) {
   const a = binding(left), b = binding(right);
   if (!a || !b) return Object.freeze({
-    schema: 'crc-runtime-comparison/1', scope: 'explicit-in-process-bindings',
+    schema: 'pibbl-runtime-comparison/1', scope: 'explicit-in-process-bindings',
     relation: 'unavailable', schedulers: 'unknown', versions: 'unknown',
     compatibility: 'unestablished', reason: 'Both participants must supply live explicit runtime bindings; serialized or arbitrary values are not identity evidence.',
   });
@@ -47,13 +47,13 @@ export function compareRuntimeBindings(left: unknown, right: unknown) {
   const relation = sameRuntime !== sameScheduler || (!sameRealm && (sameRuntime || sameScheduler)) ? 'inconsistent-binding'
     : !sameRealm ? 'separate-realms' : sameRuntime ? 'same-runtime' : 'duplicate-runtime';
   return Object.freeze({
-    schema: 'crc-runtime-comparison/1', scope: 'explicit-in-process-bindings', relation,
+    schema: 'pibbl-runtime-comparison/1', scope: 'explicit-in-process-bindings', relation,
     schedulers: sameScheduler ? 'shared' : 'independent',
     versions: a.version === b.version ? 'matching' : 'mismatched',
     leftVersion: a.version, rightVersion: b.version,
     compatibility: a.version === b.version ? 'same-declared-version-not-api-proof' : 'version-mismatch',
-    reason: relation === 'separate-realms' ? 'Separate JavaScript realms legitimately own independent CRC schedulers.'
-      : relation === 'duplicate-runtime' ? 'Distinct CRC runtime and scheduler identities were supplied from the same realm.'
+    reason: relation === 'separate-realms' ? 'Separate JavaScript realms legitimately own independent Pibbl schedulers.'
+      : relation === 'duplicate-runtime' ? 'Distinct Pibbl runtime and scheduler identities were supplied from the same realm.'
       : relation === 'inconsistent-binding' ? 'Runtime, realm and scheduler references disagree; do not infer a coherent runtime identity.'
       : 'Both participants supplied the same runtime and scheduler identities.',
   });

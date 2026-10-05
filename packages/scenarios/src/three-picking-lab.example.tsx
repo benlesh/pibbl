@@ -1,6 +1,6 @@
-/** @jsxImportSource @crc/core */
-import { crc, Rectangle } from '@crc/core';
-import { defineThreeLayer } from '@crc/three';
+/** @jsxImportSource @pibbl/core */
+import { pibbl, Rectangle } from '@pibbl/core';
+import { defineThreeLayer } from '@pibbl/three';
 import { BoxGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene } from 'three';
 import type { ScenarioDefinition } from './types';
 
@@ -24,7 +24,7 @@ export const threePickingScenario: ScenarioDefinition<ThreePickingState> = {
     if (evidence) { evidence.type = 'application/json'; evidence.dataset.testid = 'three-picking-evidence'; referenceHost!.append(evidence); }
     const publish = () => {
       if (disposed) return;
-      if (evidence) evidence.textContent = JSON.stringify({ schema: 'crc-three-picking-fixture/1', state });
+      if (evidence) evidence.textContent = JSON.stringify({ schema: 'pibbl-three-picking-fixture/1', state });
       onStateChange?.({ ...state });
     };
     const assertActive = () => { if (disposed) throw new Error('Three picking lab is disposed.'); };
@@ -65,7 +65,7 @@ export const threePickingScenario: ScenarioDefinition<ThreePickingState> = {
       targets() { return [{ object: mesh, handlers: { onClick() { state = { ...state, threeClicks: state.threeClicks + 1 }; publish(); } } }]; },
       dispose() { mesh.geometry.dispose(); mesh.material.dispose(); },
     });
-    const runtime = crc(canvas, <>
+    const runtime = pibbl(canvas, <>
       <Rectangle style={{ width: 400, height: 300, fill: '#2563eb' }} onClick={() => { state = { ...state, canvasClicks: state.canvasClicks + 1 }; publish(); }} />
       <Layer style={{ width: 400, height: 300 }} />
     </>, { pixelRatio: 1 });

@@ -1,22 +1,22 @@
 import {
-  crc,
+  pibbl,
   Rectangle,
   Text,
-  type CRCConfig,
-  type CRCFit,
-  type CRCPixelRatio,
-  type CRCFixedViewportConfig,
-  type CRCResponsiveViewportConfig,
-} from "@crc/core";
+  type PibblConfig,
+  type PibblFit,
+  type PibblPixelRatio,
+  type PibblFixedViewportConfig,
+  type PibblResponsiveViewportConfig,
+} from "@pibbl/core";
 
-const fit: CRCFit = "contain";
-const pixelRatio: CRCPixelRatio = "device";
-const fixed: CRCFixedViewportConfig = {
+const fit: PibblFit = "contain";
+const pixelRatio: PibblPixelRatio = "device";
+const fixed: PibblFixedViewportConfig = {
   viewport: { width: 320, height: 160 },
   fit,
   pixelRatio,
 };
-const responsive: CRCResponsiveViewportConfig = {
+const responsive: PibblResponsiveViewportConfig = {
   viewport: "responsive",
   pixelRatio,
 };
@@ -33,18 +33,18 @@ const scene = (
     <Text
       style={{ left: 20, top: 70, font: "24px sans-serif", fill: "#087e8b" }}
     >
-      A sized CRC surface
+      A sized Pibbl surface
     </Text>
   </>
 );
-let config: CRCConfig = fixed;
-let controller = crc(canvas, scene, config);
+let config: PibblConfig = fixed;
+let controller = pibbl(canvas, scene, config);
 const button = document.createElement("button");
 button.textContent = "Use responsive viewport";
 button.onclick = () => {
   controller.dispose();
   config = config === fixed ? responsive : fixed;
-  controller = crc(canvas, scene, config);
+  controller = pibbl(canvas, scene, config);
   button.textContent =
     config === fixed ? "Use responsive viewport" : "Use fixed viewport";
 };

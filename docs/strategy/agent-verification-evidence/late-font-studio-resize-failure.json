@@ -98,6 +98,6 @@
   ],
   "errors": [],
   "url": "http://127.0.0.1:5199/#/testing/agent-late-font",
-  "title": "CRC Interactive Examples Studio",
+  "title": "Pibbl Interactive Examples Studio",
   "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n24 !== 16\n"
 }

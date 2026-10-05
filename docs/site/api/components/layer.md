@@ -1,22 +1,22 @@
 ---
 id: api-component-layer
 title: Layer
-summary: Caches recursive children in a persistent offscreen CRC instance.
+summary: Caches recursive children in a persistent offscreen Pibbl instance.
 kind: api
 slug: layer
 apiCategory: component
 symbols: [Layer]
-relatedTypes: [CRCNode, LayerProps, LayerStyle]
+relatedTypes: [PibblNode, LayerProps, LayerStyle]
 ---
 
 # Layer
 
 ```ts
-import { Group, Layer, Rectangle } from "@crc/core";
+import { Group, Layer, Rectangle } from "@pibbl/core";
 ```
 
-`Layer` uses [`LayerProps`](#/api/types/elements-components#layerprops) and [`LayerStyle`](#/api/types/styles#layerstyle) to render recursive [`CRCNode`](#/api/types/elements-components#crcnode)
-children through a persistent offscreen CRC instance. It shares root
+`Layer` uses [`LayerProps`](#/api/types/elements-components#layerprops) and [`LayerStyle`](#/api/types/styles#layerstyle) to render recursive [`PibblNode`](#/api/types/elements-components#pibblnode)
+children through a persistent offscreen Pibbl instance. It shares root
 interaction and global paint order, and requires browser `OffscreenCanvas`.
 It is a composition boundary, not a retained scene graph.
 

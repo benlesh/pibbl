@@ -3,7 +3,7 @@ import {
   loadScenario,
   type CanvasSurfaceState,
   type ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
 import canvasSurfaceSource from '../../scenarios/src/canvas-surface.example.tsx?raw';
 

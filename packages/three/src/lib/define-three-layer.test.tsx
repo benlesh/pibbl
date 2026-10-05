@@ -19,10 +19,10 @@ import {
   type Object3D,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { FocusManagement, Rectangle, crc } from "@crc/core";
+import { FocusManagement, Rectangle, pibbl } from "@pibbl/core";
 import {
   clearSharedState,
-  getCRCInstance,
+  getPibblInstance,
 } from "../../../core/src/lib/global-state.js";
 import { resolveTargetRootBounds } from "../../../core/src/lib/focus/geometry.js";
 import {
@@ -31,10 +31,10 @@ import {
 } from "../../../core/src/lib/scheduler/testing.js";
 import {
   defineThreeLayer,
-  type CRCThreeInputBridge,
-  type CRCThreeLayerDefinition,
-  type CRCThreeLayerResources,
-  type CRCThreeRendererOptions,
+  type PibblThreeInputBridge,
+  type PibblThreeLayerDefinition,
+  type PibblThreeLayerResources,
+  type PibblThreeRendererOptions,
 } from "../index.js";
 
 afterEach(() => {
@@ -49,11 +49,11 @@ describe("defineThreeLayer lifecycle", () => {
     const renderers: WebGLRenderer[] = [];
     let animationLoopCalls = 0;
     const frameRequest = vi.spyOn(window, "requestAnimationFrame");
-    const Layer = defineThreeLayer<{ value: number }, CRCThreeLayerResources>({
+    const Layer = defineThreeLayer<{ value: number }, PibblThreeLayerResources>({
       renderer: {
         alpha: false,
         antialias: true,
-      } as unknown as CRCThreeRendererOptions,
+      } as unknown as PibblThreeRendererOptions,
       create(context, props) {
         trace.push(`create:${props.value}`);
         renderers.push(context.renderer);
@@ -101,7 +101,7 @@ describe("defineThreeLayer lifecycle", () => {
     );
     try {
       expect(trace).toEqual(["create:1", "resize:40x20@80x40:1", "render:1"]);
-      crc(
+      pibbl(
         mounted.canvas,
         <Layer value={2} style={{ width: 40, height: 20 }} />,
       );
@@ -121,7 +121,7 @@ describe("defineThreeLayer lifecycle", () => {
 
   it("uses default rendering unless the application supplies a custom pass", () => {
     let defaultRenderCalls = 0;
-    const DefaultLayer = defineThreeLayer<{}, CRCThreeLayerResources>({
+    const DefaultLayer = defineThreeLayer<{}, PibblThreeLayerResources>({
       create(context) {
         const render = context.renderer.render.bind(context.renderer);
         context.renderer.render = ((...args) => {
@@ -142,7 +142,7 @@ describe("defineThreeLayer lifecycle", () => {
 
     defaultRenderCalls = 0;
     const customRender = vi.fn();
-    const CustomLayer = defineThreeLayer<{}, CRCThreeLayerResources>({
+    const CustomLayer = defineThreeLayer<{}, PibblThreeLayerResources>({
       create(context) {
         const render = context.renderer.render.bind(context.renderer);
         context.renderer.render = ((...args) => {
@@ -170,7 +170,7 @@ describe("defineThreeLayer synchronous application boundaries", () => {
 
   it("rejects a thenable returned by create and releases adapter resources", () => {
     let rendererDisposes = 0;
-    const Layer = defineThreeLayer<{}, CRCThreeLayerResources>({
+    const Layer = defineThreeLayer<{}, PibblThreeLayerResources>({
       create(context) {
         const dispose = context.renderer.dispose.bind(context.renderer);
         context.renderer.dispose = () => {
@@ -202,9 +202,9 @@ describe("defineThreeLayer synchronous application boundaries", () => {
     "rejects a thenable returned by %s() and releases adapter resources",
     (callback, expectedError) => {
       let rendererDisposes = 0;
-      const definition: CRCThreeLayerDefinition<
+      const definition: PibblThreeLayerDefinition<
         { revision: number },
-        CRCThreeLayerResources
+        PibblThreeLayerResources
       > = {
         create(context) {
           const dispose = context.renderer.dispose.bind(context.renderer);
@@ -224,7 +224,7 @@ describe("defineThreeLayer synchronous application boundaries", () => {
       try {
         if (callback === "update") {
           pending.driver.flush(10);
-          crc(
+          pibbl(
             pending.canvas,
             <Layer revision={2} style={{ width: 40, height: 20 }} />,
           );
@@ -242,7 +242,7 @@ describe("defineThreeLayer synchronous application boundaries", () => {
   );
 
   it("rejects a thenable returned by the candidate picker", () => {
-    const Layer = defineThreeLayer<{}, CRCThreeLayerResources>({
+    const Layer = defineThreeLayer<{}, PibblThreeLayerResources>({
       create: () => createResources(),
       pick() {
         return () => thenable as never;
@@ -260,7 +260,7 @@ describe("defineThreeLayer synchronous application boundaries", () => {
 
   it("rejects a thenable returned by dispose and still releases the renderer", () => {
     let rendererDisposes = 0;
-    const Layer = defineThreeLayer<{}, CRCThreeLayerResources>({
+    const Layer = defineThreeLayer<{}, PibblThreeLayerResources>({
       create(context) {
         const dispose = context.renderer.dispose.bind(context.renderer);
         context.renderer.dispose = () => {
@@ -287,9 +287,9 @@ describe("defineThreeLayer synchronous application boundaries", () => {
 });
 
 describe("defineThreeLayer picking", () => {
-  it("passes a transparent gap through to lower CRC paint", () => {
+  it("passes a transparent gap through to lower Pibbl paint", () => {
     const trace: string[] = [];
-    const Layer = defineThreeLayer<{}, CRCThreeLayerResources>({
+    const Layer = defineThreeLayer<{}, PibblThreeLayerResources>({
       create: () => createResources(),
     });
     const mounted = mount(
@@ -309,9 +309,9 @@ describe("defineThreeLayer picking", () => {
     }
   });
 
-  it("blocks lower CRC paint at the nearest unregistered geometry", () => {
+  it("blocks lower Pibbl paint at the nearest unregistered geometry", () => {
     const trace: string[] = [];
-    const Layer = defineThreeLayer<{}, CRCThreeLayerResources & { mesh: Mesh }>(
+    const Layer = defineThreeLayer<{}, PibblThreeLayerResources & { mesh: Mesh }>(
       {
         create() {
           const resources = createResourcesWithBox();
@@ -340,7 +340,7 @@ describe("defineThreeLayer picking", () => {
     const trace: string[] = [];
     const Layer = defineThreeLayer<
       {},
-      CRCThreeLayerResources & { visibleTarget: Mesh }
+      PibblThreeLayerResources & { visibleTarget: Mesh }
     >({
       create() {
         const { scene, camera } = createResources();
@@ -378,7 +378,7 @@ describe("defineThreeLayer picking", () => {
       const trace: string[] = [];
       const Layer = defineThreeLayer<
         {},
-        CRCThreeLayerResources & {
+        PibblThreeLayerResources & {
           mesh: Mesh;
           registration: Object3D;
         }
@@ -417,7 +417,7 @@ describe("defineThreeLayer picking", () => {
     const trace: string[] = [];
     const Layer = defineThreeLayer<
       {},
-      CRCThreeLayerResources & {
+      PibblThreeLayerResources & {
         disabled: ThreeGroup;
         behind: Mesh;
       }
@@ -453,7 +453,7 @@ describe("defineThreeLayer picking", () => {
 
   it("skips an invisible intersected material group on a multi-material mesh", () => {
     const trace: string[] = [];
-    const Layer = defineThreeLayer<{}, CRCThreeLayerResources & { mesh: Mesh }>(
+    const Layer = defineThreeLayer<{}, PibblThreeLayerResources & { mesh: Mesh }>(
       {
         create() {
           const { scene, camera } = createResources();
@@ -503,7 +503,7 @@ describe("defineThreeLayer picking", () => {
     const render = vi.fn();
     const Layer = defineThreeLayer<
       { revision: number },
-      CRCThreeLayerResources
+      PibblThreeLayerResources
     >({
       create: () => createResources(),
       update(_resources, props) {
@@ -529,7 +529,7 @@ describe("defineThreeLayer picking", () => {
       expect(render).toHaveBeenCalledOnce();
       expect(pick).toHaveBeenCalledOnce();
 
-      crc(
+      pibbl(
         mounted.canvas,
         <Layer revision={2} style={{ width: 100, height: 100 }} />,
       );
@@ -544,7 +544,7 @@ describe("defineThreeLayer picking", () => {
 
   it("projects committed world bounds for an implicitly bounded focus target", () => {
     const mesh = createBox();
-    const Layer = defineThreeLayer<{}, CRCThreeLayerResources>({
+    const Layer = defineThreeLayer<{}, PibblThreeLayerResources>({
       create() {
         const { scene, camera } = createResources();
         scene.add(mesh);
@@ -561,7 +561,7 @@ describe("defineThreeLayer picking", () => {
     );
     try {
       const target = Array.from(
-        getCRCInstance(mounted.canvas).eventRoot.targets,
+        getPibblInstance(mounted.canvas).eventRoot.targets,
       ).find((candidate) => candidate.keyboardFocusable);
       const bounds = target && resolveTargetRootBounds(target);
       expect(bounds?.x).toBeCloseTo(37.5, 5);
@@ -576,7 +576,7 @@ describe("defineThreeLayer picking", () => {
   it("does not focus an implicitly bounded target behind the camera", () => {
     const mesh = createBox();
     mesh.position.z = 10;
-    const Layer = defineThreeLayer<{}, CRCThreeLayerResources>({
+    const Layer = defineThreeLayer<{}, PibblThreeLayerResources>({
       create() {
         const { scene, camera } = createResources();
         scene.add(mesh);
@@ -593,7 +593,7 @@ describe("defineThreeLayer picking", () => {
     );
     try {
       const targets = Array.from(
-        getCRCInstance(mounted.canvas).eventRoot.targets,
+        getPibblInstance(mounted.canvas).eventRoot.targets,
       );
       expect(targets.some((candidate) => candidate.keyboardFocusable)).toBe(
         false,
@@ -605,12 +605,12 @@ describe("defineThreeLayer picking", () => {
 });
 
 describe("defineThreeLayer OrbitControls input", () => {
-  it("preserves a registered CRC click after controls receive the winning press", () => {
-    const crcTrace: string[] = [];
+  it("preserves a registered Pibbl click after controls receive the winning press", () => {
+    const pibblTrace: string[] = [];
     const inputTrace: string[] = [];
     const Layer = defineThreeLayer<
       {},
-      CRCThreeLayerResources & { controls: OrbitControls; mesh: Mesh }
+      PibblThreeLayerResources & { controls: OrbitControls; mesh: Mesh }
     >({
       create(context) {
         const { scene, camera, mesh } = createResourcesWithBox();
@@ -627,7 +627,7 @@ describe("defineThreeLayer OrbitControls input", () => {
         return [
           {
             object: resources.mesh,
-            handlers: { onClick: () => crcTrace.push("target") },
+            handlers: { onClick: () => pibblTrace.push("target") },
           },
         ];
       },
@@ -639,7 +639,7 @@ describe("defineThreeLayer OrbitControls input", () => {
     try {
       pointerAndMouseClick(mounted.canvas, 50, 50);
       expect(inputTrace).toEqual(["pointerdown", "click"]);
-      expect(crcTrace).toEqual(["target"]);
+      expect(pibblTrace).toEqual(["target"]);
       expect(mounted.driver.pendingHostFrames).toBe(1);
     } finally {
       mounted.dispose();
@@ -647,7 +647,7 @@ describe("defineThreeLayer OrbitControls input", () => {
   });
 
   it("connects only during create, routes winner input, invalidates, and cleans up", () => {
-    let bridge: CRCThreeInputBridge | undefined;
+    let bridge: PibblThreeInputBridge | undefined;
     let controls: OrbitControls | undefined;
     let compatibilityElement: HTMLElement | undefined;
     const leakedClick = vi.fn();
@@ -656,7 +656,7 @@ describe("defineThreeLayer OrbitControls input", () => {
     camera.position.set(0, 0, 5);
     const Layer = defineThreeLayer<
       {},
-      CRCThreeLayerResources & { controls: OrbitControls }
+      PibblThreeLayerResources & { controls: OrbitControls }
     >({
       create(context) {
         bridge = context.input;
@@ -683,7 +683,7 @@ describe("defineThreeLayer OrbitControls input", () => {
     const initialPosition = camera.position.clone();
     try {
       expect(() => bridge!.connect(() => ({ invalid: true }))).toThrowError(
-        "CRC Three input controls may only connect during create().",
+        "Pibbl Three input controls may only connect during create().",
       );
 
       pointer(mounted.canvas, "pointerdown", 50, 50);
@@ -835,7 +835,7 @@ it.each(["instance-matrix", "batch-matrix", "bone", "morph"] as const)(
   "keeps %s picking aligned with each committed frame", (mutation) => {
     const trace: string[] = [];
     let invalidate!: () => void;
-    let resources!: CRCThreeLayerResources & { mesh: Mesh; bone?: Bone };
+    let resources!: PibblThreeLayerResources & { mesh: Mesh; bone?: Bone };
     const Layer = defineThreeLayer<{}, typeof resources>({
       create(context) {
         invalidate = context.invalidate;
@@ -923,7 +923,7 @@ it("commits projected focus bounds with picking and preserves them across a fail
     <FocusManagement><Layer style={{ width: 100, height: 100 }} /></FocusManagement>
   </>);
   try {
-    const registration = () => Array.from(getCRCInstance(mounted.canvas).eventRoot.targets).find(target => target.keyboardFocusable)!;
+    const registration = () => Array.from(getPibblInstance(mounted.canvas).eventRoot.targets).find(target => target.keyboardFocusable)!;
     const original = registration();
     const bounds = resolveTargetRootBounds(original)!;
     expect(bounds.x).toBeCloseTo(37.5, 8); expect(bounds.width).toBeCloseTo(25, 8);
@@ -983,7 +983,7 @@ it.each(["LOD", "BatchedMesh"] as const)("preserves registered leaf identity ins
   } finally { mounted.dispose(); }
 });
 
-function createResources(): CRCThreeLayerResources {
+function createResources(): PibblThreeLayerResources {
   const scene = new Scene();
   const camera = new PerspectiveCamera(90, 1, 0.1, 100);
   camera.position.set(0, 0, 5);
@@ -991,7 +991,7 @@ function createResources(): CRCThreeLayerResources {
   return { scene, camera };
 }
 
-function createResourcesWithBox(): CRCThreeLayerResources & { mesh: Mesh } {
+function createResourcesWithBox(): PibblThreeLayerResources & { mesh: Mesh } {
   const { scene, camera } = createResources();
   const mesh = createBox();
   scene.add(mesh);
@@ -1006,7 +1006,7 @@ function createBox(): Mesh {
 }
 
 function mount(
-  root: Parameters<typeof crc>[1],
+  root: Parameters<typeof pibbl>[1],
   pixelRatio = 1,
 ): {
   readonly canvas: HTMLCanvasElement;
@@ -1024,7 +1024,7 @@ function mount(
 }
 
 function mountPending(
-  root: Parameters<typeof crc>[1],
+  root: Parameters<typeof pibbl>[1],
   pixelRatio = 1,
 ): {
   readonly canvas: HTMLCanvasElement;
@@ -1034,7 +1034,7 @@ function mountPending(
   const driver = new ManualSchedulerDriver();
   const restore = installSchedulerDriverForTest(driver);
   const canvas = createCanvas(100, 100);
-  const controller = crc(canvas, root, { pixelRatio });
+  const controller = pibbl(canvas, root, { pixelRatio });
   return {
     canvas,
     driver,
@@ -1064,7 +1064,7 @@ function renderLayerController(canvas: HTMLCanvasElement): {
   };
   dispose(): void;
 } {
-  const refs = Array.from(getCRCInstance(canvas).refs.values())[0];
+  const refs = Array.from(getPibblInstance(canvas).refs.values())[0];
   return refs?.refs[0] as unknown as {
     readonly committedInteraction?: {
       hitTest(point: Readonly<{ x: number; y: number }>): unknown;

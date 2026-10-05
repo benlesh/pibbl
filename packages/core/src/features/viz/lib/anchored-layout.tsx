@@ -2,14 +2,14 @@ import {
   Group,
   resolveSignalValue,
   useLayoutBox,
-  type CRCNode,
+  type PibblNode,
   type SignalValue,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
   pushLayoutBox,
   setCurrentComponentAfterRender,
   withHooksForbidden,
-} from "@crc/core/internal";
+} from "@pibbl/core/internal";
 
 /**
  * Declared outer box and protected anchor, all in the parent's local coordinates.
@@ -78,7 +78,7 @@ export interface AnchoredPlacement {
  * @see {@link AnchoredItem}
  * @see {@link SignalValue}
  * @see {@link AnchoredPlacement}
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  * @see {@link AnchoredLayout}
  */
 export interface AnchoredLayoutProps<T extends AnchoredItem> {
@@ -95,12 +95,12 @@ export interface AnchoredLayoutProps<T extends AnchoredItem> {
   readonly bounds?: SignalValue<AnchoredPlacement>;
   /**
    * Descendant content or the callback that supplies it. See {@link AnchoredPlacement},
-   * {@link CRCNode}.
+   * {@link PibblNode}.
    * @param item - Item being placed.
    * @param placement - Computed anchor and placement geometry. See {@link AnchoredPlacement}.
-   * @returns CRC content for that item. See {@link CRCNode}.
+   * @returns Pibbl content for that item. See {@link PibblNode}.
    */
-  readonly children: (item: T, placement: AnchoredPlacement) => CRCNode;
+  readonly children: (item: T, placement: AnchoredPlacement) => PibblNode;
 }
 function finite(value: number, name: string, nonnegative = false) {
   if (!Number.isFinite(value) || (nonnegative && value < 0))
@@ -220,7 +220,7 @@ function Item<T extends AnchoredItem>({
   item: T;
   placement: AnchoredPlacement;
   render: AnchoredLayoutProps<T>["children"];
-}): CRCNode {
+}): PibblNode {
   const box = { x: 0, y: 0, width: placement.width, height: placement.height };
   // Both the received allocation and percentage basis belong to the declared box.
   const outer = pushLayoutBox(box);
@@ -237,24 +237,24 @@ function Item<T extends AnchoredItem>({
     throw error;
   }
   return withHooksForbidden(
-    "CRC hooks cannot be called in AnchoredLayout children; return a component instead.",
+    "Pibbl hooks cannot be called in AnchoredLayout children; return a component instead.",
     () => render(item, placement),
   );
 }
 /**
- * Arranges keyed CRC content together, clear of every supplied anchor.
+ * Arranges keyed Pibbl content together, clear of every supplied anchor.
  *
  * @param props - Anchored items, placement constraints, and child renderer. See
  * {@link AnchoredLayoutProps} .
- * @returns CRC content positioned using the computed placements. See {@link CRCNode}.
+ * @returns Pibbl content positioned using the computed placements. See {@link PibblNode}.
  *
  * @see {@link AnchoredLayoutProps}
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  * @see {@link AnchoredItem}
  */
 export function AnchoredLayout<T extends AnchoredItem>(
   props: AnchoredLayoutProps<T>,
-): CRCNode {
+): PibblNode {
   const allocation = useLayoutBox();
   const items = resolveSignalValue(props.items);
   if (!Array.isArray(items))

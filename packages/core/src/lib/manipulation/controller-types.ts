@@ -1,46 +1,46 @@
 import type { useManipulation } from './controller.js';
-import type { CRCDragHandleProps } from './handles.js';
-import type { CRCManipulableProps } from './manipulable.js';
+import type { PibblDragHandleProps } from './handles.js';
+import type { PibblManipulableProps } from './manipulable.js';
 import type { ManipulationFrame } from './frame.js';
-import type { CRCNode } from "../element/types.js";
+import type { PibblNode } from "../element/types.js";
 import type { Signal, SignalValue, WritableSignal } from "../signals/types.js";
 import type {
-  CRCManipulationBox,
-  CRCManipulationMoveOptions,
-  CRCManipulationResizeOptions,
-  CRCManipulationRotateOptions,
-  CRCResizePosition,
+  PibblManipulationBox,
+  PibblManipulationMoveOptions,
+  PibblManipulationResizeOptions,
+  PibblManipulationRotateOptions,
+  PibblResizePosition,
 } from "./types.js";
 
 /**
  * The box and rotation that a manipulation controller reads and updates.
  *
- * @see {@link CRCManipulationBox}
- * @see {@link CRCManipulationSnapshot}
- * @see {@link CRCManipulationEvent}
+ * @see {@link PibblManipulationBox}
+ * @see {@link PibblManipulationSnapshot}
+ * @see {@link PibblManipulationEvent}
  */
-export interface CRCManipulationGeometry {
+export interface PibblManipulationGeometry {
   /**
    * Logical rectangle read and updated by the manipulation controller. See
-   * {@link CRCManipulationBox}.
+   * {@link PibblManipulationBox}.
    */
-  readonly box: CRCManipulationBox;
-  /** Rotation applied to the containing geometry. See {@link CRCManipulationGeometry}. */
+  readonly box: PibblManipulationBox;
+  /** Rotation applied to the containing geometry. See {@link PibblManipulationGeometry}. */
   readonly rotation: number;
 }
 /**
  * The move, resize, or rotate operation performed by a manipulation session.
  *
- * @see {@link CRCManipulationSnapshot}
- * @see {@link CRCManipulationActive}
+ * @see {@link PibblManipulationSnapshot}
+ * @see {@link PibblManipulationActive}
  */
-export type CRCManipulationOperation = "move" | "resize" | "rotate";
+export type PibblManipulationOperation = "move" | "resize" | "rotate";
 /**
  * Why an active manipulation session was cancelled.
  *
- * @see {@link CRCManipulationCancelEvent}
+ * @see {@link PibblManipulationCancelEvent}
  */
-export type CRCManipulationCancelReason =
+export type PibblManipulationCancelReason =
   | "explicit"
   | "escape"
   | "pointer-cancel"
@@ -52,108 +52,108 @@ export type CRCManipulationCancelReason =
 /**
  * Details identifying an operation currently in progress.
  *
- * @see {@link CRCManipulationOperation}
- * @see {@link CRCResizePosition}
- * @see {@link CRCManipulationController}
+ * @see {@link PibblManipulationOperation}
+ * @see {@link PibblResizePosition}
+ * @see {@link PibblManipulationController}
  */
-export interface CRCManipulationActive {
-  /** Kind of manipulation currently being performed. See {@link CRCManipulationOperation}. */
-  readonly operation: CRCManipulationOperation;
-  /** Handle identity associated with the operation or body. See {@link CRCResizePosition}. */
-  readonly handle: CRCResizePosition | null;
-  /** Browser identifier of the active pointer. See {@link CRCManipulationActive}. */
+export interface PibblManipulationActive {
+  /** Kind of manipulation currently being performed. See {@link PibblManipulationOperation}. */
+  readonly operation: PibblManipulationOperation;
+  /** Handle identity associated with the operation or body. See {@link PibblResizePosition}. */
+  readonly handle: PibblResizePosition | null;
+  /** Browser identifier of the active pointer. See {@link PibblManipulationActive}. */
   readonly pointerId: number;
 }
 /**
  * The controller's current geometry and active-operation state.
  *
- * @see {@link CRCManipulationOperation}
- * @see {@link CRCResizePosition}
- * @see {@link CRCManipulationGeometry}
- * @see {@link CRCManipulationController}
- * @see {@link CRCManipulationEvent}
+ * @see {@link PibblManipulationOperation}
+ * @see {@link PibblResizePosition}
+ * @see {@link PibblManipulationGeometry}
+ * @see {@link PibblManipulationController}
+ * @see {@link PibblManipulationEvent}
  */
-export interface CRCManipulationSnapshot {
-  /** Kind of manipulation currently being performed. See {@link CRCManipulationOperation}. */
-  readonly operation: CRCManipulationOperation;
-  /** Handle identity associated with the operation or body. See {@link CRCResizePosition}. */
-  readonly handle: CRCResizePosition | null;
-  /** Geometry captured when this manipulation began. See {@link CRCManipulationGeometry}. */
-  readonly initial: CRCManipulationGeometry;
+export interface PibblManipulationSnapshot {
+  /** Kind of manipulation currently being performed. See {@link PibblManipulationOperation}. */
+  readonly operation: PibblManipulationOperation;
+  /** Handle identity associated with the operation or body. See {@link PibblResizePosition}. */
+  readonly handle: PibblResizePosition | null;
+  /** Geometry captured when this manipulation began. See {@link PibblManipulationGeometry}. */
+  readonly initial: PibblManipulationGeometry;
   /**
    * Geometry proposed before constraints and snapping are applied. See
-   * {@link CRCManipulationGeometry}.
+   * {@link PibblManipulationGeometry}.
    */
-  readonly proposed: CRCManipulationGeometry;
-  /** Geometry after constraints and snapping are applied. See {@link CRCManipulationGeometry}. */
-  readonly applied: CRCManipulationGeometry;
+  readonly proposed: PibblManipulationGeometry;
+  /** Geometry after constraints and snapping are applied. See {@link PibblManipulationGeometry}. */
+  readonly applied: PibblManipulationGeometry;
   /**
-   * Whether snapping is currently enabled for this operation. See {@link CRCManipulationSnapshot}
+   * Whether snapping is currently enabled for this operation. See {@link PibblManipulationSnapshot}
    * .
    */
   readonly snapActive: boolean;
   /**
    * Whether the applied geometry satisfies the active snap constraint. See
-   * {@link CRCManipulationSnapshot}.
+   * {@link PibblManipulationSnapshot}.
    */
   readonly snapSatisfied: boolean;
 }
 /**
  * Geometry and operation information emitted while manipulating a target.
  *
- * @see {@link CRCManipulationSnapshot}
- * @see {@link CRCManipulationGeometry}
- * @see {@link CRCManipulationOptions}
- * @see {@link CRCManipulationCommitEvent}
+ * @see {@link PibblManipulationSnapshot}
+ * @see {@link PibblManipulationGeometry}
+ * @see {@link PibblManipulationOptions}
+ * @see {@link PibblManipulationCommitEvent}
  */
-export interface CRCManipulationEvent extends CRCManipulationSnapshot {
-  /** Geometry before this manipulation update. See {@link CRCManipulationGeometry}. */
-  readonly before: CRCManipulationGeometry;
-  /** Geometry after this manipulation update. See {@link CRCManipulationGeometry}. */
-  readonly after: CRCManipulationGeometry;
+export interface PibblManipulationEvent extends PibblManipulationSnapshot {
+  /** Geometry before this manipulation update. See {@link PibblManipulationGeometry}. */
+  readonly before: PibblManipulationGeometry;
+  /** Geometry after this manipulation update. See {@link PibblManipulationGeometry}. */
+  readonly after: PibblManipulationGeometry;
 }
 /**
  * The final geometry of a successfully committed manipulation.
  *
- * @see {@link CRCManipulationEvent}
- * @see {@link CRCManipulationOptions}
+ * @see {@link PibblManipulationEvent}
+ * @see {@link PibblManipulationOptions}
  */
-export interface CRCManipulationCommitEvent extends CRCManipulationEvent {
+export interface PibblManipulationCommitEvent extends PibblManipulationEvent {
   /**
    * Whether the committed geometry differs from the starting geometry. See
-   * {@link CRCManipulationCommitEvent}.
+   * {@link PibblManipulationCommitEvent}.
    */
   readonly changed: boolean;
 }
 /**
  * Cancellation reason and geometry information for an abandoned manipulation.
  *
- * @see {@link CRCManipulationEvent}
- * @see {@link CRCManipulationCancelReason}
- * @see {@link CRCManipulationOptions}
+ * @see {@link PibblManipulationEvent}
+ * @see {@link PibblManipulationCancelReason}
+ * @see {@link PibblManipulationOptions}
  */
-export interface CRCManipulationCancelEvent extends CRCManipulationEvent {
+export interface PibblManipulationCancelEvent extends PibblManipulationEvent {
   /**
    * Reason the operation could not produce its ordinary result. See
-   * {@link CRCManipulationCancelReason}.
+   * {@link PibblManipulationCancelReason}.
    */
-  readonly reason: CRCManipulationCancelReason;
+  readonly reason: PibblManipulationCancelReason;
 }
 /**
  * Translation constraints and signal-capable enablement and snapping configuration.
  *
  * @see {@link SignalValue}
- * @see {@link CRCManipulationOptions}
- * @see {@link CRCManipulableProps}
+ * @see {@link PibblManipulationOptions}
+ * @see {@link PibblManipulableProps}
  */
-export type CRCManipulationMoveInput = Omit<CRCManipulationMoveOptions, "snap"> & {
+export type PibblManipulationMoveInput = Omit<PibblManipulationMoveOptions, "snap"> & {
   /** Whether this operation or resource participates in updates. See {@link SignalValue}. */
   readonly enabled?: SignalValue<boolean>;
   /**
-   * Snapping configuration for the manipulation operation. See {@link CRCManipulationMoveOptions}
+   * Snapping configuration for the manipulation operation. See {@link PibblManipulationMoveOptions}
    * , {@link SignalValue}.
    */
-  readonly snap?: Omit<NonNullable<CRCManipulationMoveOptions["snap"]>, "enabled"> & {
+  readonly snap?: Omit<NonNullable<PibblManipulationMoveOptions["snap"]>, "enabled"> & {
     /** Whether this operation or resource participates in updates. See {@link SignalValue}. */
     readonly enabled?: SignalValue<boolean>;
   };
@@ -165,149 +165,149 @@ type SignalEnabled<T> = T extends unknown
  * Resize constraints and signal-capable enablement and snapping configuration.
  *
  * @see {@link SignalValue}
- * @see {@link CRCManipulationOptions}
- * @see {@link CRCManipulableProps}
+ * @see {@link PibblManipulationOptions}
+ * @see {@link PibblManipulableProps}
  */
-export type CRCManipulationResizeInput = Omit<CRCManipulationResizeOptions, "snap"> & {
+export type PibblManipulationResizeInput = Omit<PibblManipulationResizeOptions, "snap"> & {
   /** Whether this operation or resource participates in updates. See {@link SignalValue}. */
   readonly enabled?: SignalValue<boolean>;
   /**
    * Snapping configuration for the manipulation operation. See {@link SignalEnabled},
-   * {@link CRCManipulationResizeOptions}.
+   * {@link PibblManipulationResizeOptions}.
    */
-  readonly snap?: SignalEnabled<NonNullable<CRCManipulationResizeOptions["snap"]>>;
+  readonly snap?: SignalEnabled<NonNullable<PibblManipulationResizeOptions["snap"]>>;
 };
 /**
  * Rotation constraints and signal-capable enablement and snapping configuration.
  *
  * @see {@link SignalValue}
- * @see {@link CRCManipulationOptions}
- * @see {@link CRCManipulableProps}
+ * @see {@link PibblManipulationOptions}
+ * @see {@link PibblManipulableProps}
  */
-export type CRCManipulationRotateInput = Omit<CRCManipulationRotateOptions, "snap"> & {
+export type PibblManipulationRotateInput = Omit<PibblManipulationRotateOptions, "snap"> & {
   /** Whether this operation or resource participates in updates. See {@link SignalValue}. */
   readonly enabled?: SignalValue<boolean>;
   /**
    * Snapping configuration for the manipulation operation. See {@link SignalEnabled},
-   * {@link CRCManipulationRotateOptions}.
+   * {@link PibblManipulationRotateOptions}.
    */
-  readonly snap?: SignalEnabled<NonNullable<CRCManipulationRotateOptions["snap"]>>;
+  readonly snap?: SignalEnabled<NonNullable<PibblManipulationRotateOptions["snap"]>>;
 };
 /**
  * Geometry, constraints, and lifecycle callbacks for a manipulation controller.
  *
  * @see {@link WritableSignal}
- * @see {@link CRCManipulationBox}
- * @see {@link CRCManipulationMoveInput}
- * @see {@link CRCManipulationResizeInput}
- * @see {@link CRCManipulationRotateInput}
- * @see {@link CRCManipulationEvent}
- * @see {@link CRCManipulationCommitEvent}
- * @see {@link CRCManipulationCancelEvent}
+ * @see {@link PibblManipulationBox}
+ * @see {@link PibblManipulationMoveInput}
+ * @see {@link PibblManipulationResizeInput}
+ * @see {@link PibblManipulationRotateInput}
+ * @see {@link PibblManipulationEvent}
+ * @see {@link PibblManipulationCommitEvent}
+ * @see {@link PibblManipulationCancelEvent}
  * @see {@link useManipulation}
- * @see {@link CRCManipulableProps}
+ * @see {@link PibblManipulableProps}
  */
-export interface CRCManipulationOptions {
+export interface PibblManipulationOptions {
   /**
    * Logical rectangle read and updated by the manipulation controller. See {@link WritableSignal}
-   * , {@link CRCManipulationBox}.
+   * , {@link PibblManipulationBox}.
    */
-  readonly box: WritableSignal<CRCManipulationBox>;
+  readonly box: WritableSignal<PibblManipulationBox>;
   /** Rotation applied to the containing geometry. See {@link WritableSignal}. */
   readonly rotation?: WritableSignal<number>;
   /**
-   * Configuration for translation of the manipulation target. See {@link CRCManipulationMoveInput}
+   * Configuration for translation of the manipulation target. See {@link PibblManipulationMoveInput}
    * .
    */
-  readonly move?: CRCManipulationMoveInput;
+  readonly move?: PibblManipulationMoveInput;
   /**
    * Configuration or operation for changing the target dimensions. See
-   * {@link CRCManipulationResizeInput}.
+   * {@link PibblManipulationResizeInput}.
    */
-  readonly resize?: CRCManipulationResizeInput;
+  readonly resize?: PibblManipulationResizeInput;
   /**
-   * Configuration for rotation of the manipulation target. See {@link CRCManipulationRotateInput}
+   * Configuration for rotation of the manipulation target. See {@link PibblManipulationRotateInput}
    * .
    */
-  readonly rotate?: CRCManipulationRotateInput;
+  readonly rotate?: PibblManipulationRotateInput;
   /**
-   * Receives the initial state when a manipulation begins. See {@link CRCManipulationEvent}.
+   * Receives the initial state when a manipulation begins. See {@link PibblManipulationEvent}.
    * @param event - Current manipulation session and proposed geometry. See
-   * {@link CRCManipulationEvent} .
+   * {@link PibblManipulationEvent} .
    */
-  readonly onStart?: (event: CRCManipulationEvent) => void;
+  readonly onStart?: (event: PibblManipulationEvent) => void;
   /**
-   * Receives geometry changes during an active manipulation. See {@link CRCManipulationEvent}.
+   * Receives geometry changes during an active manipulation. See {@link PibblManipulationEvent}.
    * @param event - Current manipulation session and proposed geometry. See
-   * {@link CRCManipulationEvent} .
+   * {@link PibblManipulationEvent} .
    */
-  readonly onChange?: (event: CRCManipulationEvent) => void;
+  readonly onChange?: (event: PibblManipulationEvent) => void;
   /**
-   * Receives the final state of a committed manipulation. See {@link CRCManipulationCommitEvent}.
+   * Receives the final state of a committed manipulation. See {@link PibblManipulationCommitEvent}.
    * @param event - Successfully committed manipulation state. See
-   * {@link CRCManipulationCommitEvent} .
+   * {@link PibblManipulationCommitEvent} .
    */
-  readonly onCommit?: (event: CRCManipulationCommitEvent) => void;
+  readonly onCommit?: (event: PibblManipulationCommitEvent) => void;
   /**
    * Receives the reason and state of a cancelled manipulation. See
-   * {@link CRCManipulationCancelEvent}.
+   * {@link PibblManipulationCancelEvent}.
    * @param event - Canceled manipulation state and cancellation reason. See
-   * {@link CRCManipulationCancelEvent} .
+   * {@link PibblManipulationCancelEvent} .
    */
-  readonly onCancel?: (event: CRCManipulationCancelEvent) => void;
+  readonly onCancel?: (event: PibblManipulationCancelEvent) => void;
 }
 /**
  * Authored inputs for ManipulationFrame, including the declared data and presentation options.
  *
- * @see {@link CRCManipulationController}
+ * @see {@link PibblManipulationController}
  * @see {@link WritableSignal}
- * @see {@link CRCManipulationBox}
- * @see {@link CRCNode}
+ * @see {@link PibblManipulationBox}
+ * @see {@link PibblNode}
  * @see {@link ManipulationFrame}
  */
-export interface CRCManipulationFrameProps {
+export interface PibblManipulationFrameProps {
   /**
    * Controller owning the current interaction or mounted scenario. See
-   * {@link CRCManipulationController}.
+   * {@link PibblManipulationController}.
    */
-  readonly controller: CRCManipulationController;
+  readonly controller: PibblManipulationController;
   /**
    * Declared presentation and layout properties. See {@link WritableSignal},
-   * {@link CRCManipulationBox}.
+   * {@link PibblManipulationBox}.
    */
-  readonly style: WritableSignal<CRCManipulationBox>;
-  /** Descendant content or the callback that supplies it. See {@link CRCNode}. */
-  readonly children?: CRCNode;
+  readonly style: WritableSignal<PibblManipulationBox>;
+  /** Descendant content or the callback that supplies it. See {@link PibblNode}. */
+  readonly children?: PibblNode;
 }
 /**
  * Stable controls and reactive geometry for one mounted manipulation session.
  *
  * @see {@link Signal}
- * @see {@link CRCManipulationActive}
- * @see {@link CRCManipulationSnapshot}
- * @see {@link CRCManipulationFrameProps}
+ * @see {@link PibblManipulationActive}
+ * @see {@link PibblManipulationSnapshot}
+ * @see {@link PibblManipulationFrameProps}
  * @see {@link useManipulation}
- * @see {@link CRCDragHandleProps}
+ * @see {@link PibblDragHandleProps}
  */
-export interface CRCManipulationController {
+export interface PibblManipulationController {
   /**
    * Current active operation or its presentation configuration. See {@link Signal},
-   * {@link CRCManipulationActive}.
+   * {@link PibblManipulationActive}.
    */
-  readonly active: Signal<CRCManipulationActive | null>;
+  readonly active: Signal<PibblManipulationActive | null>;
   /**
    * Current immutable observation of the manipulation session. See {@link Signal},
-   * {@link CRCManipulationSnapshot}.
+   * {@link PibblManipulationSnapshot}.
    */
-  readonly snapshot: Signal<CRCManipulationSnapshot | null>;
+  readonly snapshot: Signal<PibblManipulationSnapshot | null>;
   /**
    * Props for presenting the controller's current manipulation frame. See
-   * {@link CRCManipulationFrameProps}.
+   * {@link PibblManipulationFrameProps}.
    */
-  readonly frameProps: CRCManipulationFrameProps;
+  readonly frameProps: PibblManipulationFrameProps;
   /**
    * Cancels the active manipulation and applies its cancellation policy. See
-   * {@link CRCManipulationController}.
+   * {@link PibblManipulationController}.
    */
   cancel(): void;
 }

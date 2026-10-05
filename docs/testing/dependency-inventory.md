@@ -1,6 +1,6 @@
 # Dependency inventory and modernization batches
 
-Audited on 2026-08-11 for DEP-01. Registry versions are the stable `latest` tags observed during the audit. Workspace packages (`@crc/core`, `@crc/types`, and private `@crc/scenarios`) are not third-party dependencies.
+Audited on 2026-08-11 for DEP-01. Registry versions are the stable `latest` tags observed during the audit. Workspace packages (`@pibbl/core`, `@pibbl/types`, and private `@pibbl/scenarios`) are not third-party dependencies.
 
 ## Final modernization outcome
 
@@ -112,7 +112,7 @@ Workspace globs for `packages/*/playground`, `examples/*`, and `docs` currently 
 
 - `pnpm outdated -r --format json`: 32 outdated direct dependencies.
 - `pnpm audit --json`: 115 development-tool findings — 4 critical, 56 high, 49 moderate, and 6 low.
-- `pnpm audit --prod --json`: zero findings; CRC has no third-party production dependency.
+- `pnpm audit --prod --json`: zero findings; Pibbl has no third-party production dependency.
 - Critical chains include Vitest 2 execution/access-control advisories and vulnerable `tar` through old `bumpp`.
 - High tool chains include Playwright certificate verification, pnpm lock/path/command injection, Rollup arbitrary file write, and Vite server/file-access advisories.
 - Deprecated transitive nodes: `glob@7.2.3` and `inflight@1.0.6` through unused `rollup-plugin-copy`; `glob@8.1.0` and `inflight@1.0.6` through `unbuild@2.0.0`.

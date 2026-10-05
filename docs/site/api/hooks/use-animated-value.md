@@ -7,7 +7,7 @@ slug: use-animated-value
 apiCategory: hook
 symbols: [useAnimatedValue]
 relatedTypes:
-  [Signal, CRCTweenAnimatedValueOptions, CRCSpringAnimatedValueOptions]
+  [Signal, PibblTweenAnimatedValueOptions, PibblSpringAnimatedValueOptions]
 ---
 
 # useAnimatedValue
@@ -19,5 +19,5 @@ after a successful mounting render, and later unequal targets retarget from the
 last committed presented value.
 
 Related types: [`Signal`](#/api/types/canvas-runtime#signal),
-[`CRCTweenAnimatedValueOptions`](#/api/types/canvas-runtime#crctweenanimatedvalueoptions),
-and [`CRCSpringAnimatedValueOptions`](#/api/types/canvas-runtime#crcspringanimatedvalueoptions).
+[`PibblTweenAnimatedValueOptions`](#/api/types/canvas-runtime#pibbltweenanimatedvalueoptions),
+and [`PibblSpringAnimatedValueOptions`](#/api/types/canvas-runtime#pibblspringanimatedvalueoptions).

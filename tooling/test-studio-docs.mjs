@@ -104,7 +104,7 @@ try {
   await assertNormalOutputUnchanged(normalOutputBefore);
   await run(process.execPath, ["tooling/verify-studio-docs.mjs"], {
     ...process.env,
-    CRC_STUDIO_DOCS_PREVIEW_OUTPUT_DIRECTORY: acceptanceOutput,
+    PIBBL_STUDIO_DOCS_PREVIEW_OUTPUT_DIRECTORY: acceptanceOutput,
   });
   await assertNormalOutputUnchanged(normalOutputBefore);
 } finally {

@@ -1,7 +1,7 @@
 import { definePrimitive } from '../define-primitive.js';
 import { createSvgPath } from '../geometry/svg-path.js';
 import { RenderingContext2D } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import type { ResolvedSvgPathStyle, SvgPathStyle } from '../style/types.js';
@@ -12,10 +12,10 @@ import type { PathProps } from './path.js';
  * Authored inputs for SvgPath, including the declared data and presentation options.
  *
  * @see {@link PathProps}
- * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link PibblPhysics2DPropExtension}
  * @see {@link SvgPath}
  */
-export interface SvgPathProps extends PathProps, CRCPhysics2DPropExtension {}
+export interface SvgPathProps extends PathProps, PibblPhysics2DPropExtension {}
 
 function renderSvgPath(
   props: SvgPathProps,
@@ -39,7 +39,7 @@ function renderSvgPath(
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link SvgPathProps}
  * @see {@link SvgPathStyle}

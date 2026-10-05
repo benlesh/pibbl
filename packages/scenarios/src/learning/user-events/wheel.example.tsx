@@ -1,12 +1,12 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Rectangle,
   Text,
-  type CRCController,
-  type CRCWheelEvent,
-} from "@crc/core";
-function wheelSummary(event: CRCWheelEvent): string {
+  type PibblController,
+  type PibblWheelEvent,
+} from "@pibbl/core";
+function wheelSummary(event: PibblWheelEvent): string {
   return `Δ ${event.deltaX.toFixed(1)}, ${event.deltaY.toFixed(1)}, ${event.deltaZ.toFixed(1)} mode=${event.deltaMode} at ${Math.round(event.x)},${Math.round(event.y)} buttons=${event.buttons} ${event.ctrlKey ? "ctrl" : ""}${event.shiftKey ? "shift" : ""}`;
 }
 function WheelStudy() {
@@ -102,6 +102,6 @@ function WheelStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <WheelStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <WheelStudy />);
 }

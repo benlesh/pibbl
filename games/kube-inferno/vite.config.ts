@@ -5,21 +5,21 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: "@crc/core/jsx-runtime",
+        find: "@pibbl/core/jsx-runtime",
         replacement: resolve(
           import.meta.dirname,
           "../../packages/core/src/jsx-runtime.ts",
         ),
       },
       {
-        find: "@crc/core/jsx-dev-runtime",
+        find: "@pibbl/core/jsx-dev-runtime",
         replacement: resolve(
           import.meta.dirname,
           "../../packages/core/src/jsx-dev-runtime.ts",
         ),
       },
       {
-        find: "@crc/core",
+        find: "@pibbl/core",
         replacement: resolve(
           import.meta.dirname,
           "../../packages/core/src/index.ts",

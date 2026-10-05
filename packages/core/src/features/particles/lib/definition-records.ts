@@ -1,14 +1,14 @@
-import { PathGeometry, toPath2D } from '@crc/core';
+import { PathGeometry, toPath2D } from '@pibbl/core';
 import type {
-  CRCParticleAppearance,
-  CRCParticleBounds2D,
-  CRCParticleEffect2D,
-  CRCParticleEmission,
-  CRCParticleEmitter2D,
-  CRCParticleParameterDefinition,
-  CRCParticleParameterDefinitions,
-  CRCParticleRenderer2D,
-  CRCParticleScalar,
+  PibblParticleAppearance,
+  PibblParticleBounds2D,
+  PibblParticleEffect2D,
+  PibblParticleEmission,
+  PibblParticleEmitter2D,
+  PibblParticleParameterDefinition,
+  PibblParticleParameterDefinitions,
+  PibblParticleRenderer2D,
+  PibblParticleScalar,
 } from './types.js';
 import { getParticleDescriptorRecord } from './particle.js';
 
@@ -17,19 +17,19 @@ export interface ParticleDefinitionCapabilities {
   readonly requiresStateful: readonly string[];
 }
 
-type NativeParticleRenderer2D = Exclude<CRCParticleRenderer2D, { type: 'path' }> | Readonly<{ type: 'path'; path: Path2D; blend?: 'source-over' | 'additive' }>;
+type NativeParticleRenderer2D = Exclude<PibblParticleRenderer2D, { type: 'path' }> | Readonly<{ type: 'path'; path: Path2D; blend?: 'source-over' | 'additive' }>;
 
 export interface ParticleEmitter2DRecord
-  extends Omit<CRCParticleEmitter2D, 'bounds' | 'renderer'> {
+  extends Omit<PibblParticleEmitter2D, 'bounds' | 'renderer'> {
   readonly renderer: NativeParticleRenderer2D;
   readonly nameHash: number;
-  readonly bounds: CRCParticleBounds2D;
+  readonly bounds: PibblParticleBounds2D;
   readonly boundsSource: 'explicit' | 'derived';
 }
 
 interface BaseParticleEffectRecord {
   readonly debugName: string | undefined;
-  readonly parameters: CRCParticleParameterDefinitions;
+  readonly parameters: PibblParticleParameterDefinitions;
   readonly emitterNames: readonly string[];
   readonly capabilities: ParticleDefinitionCapabilities;
 }
@@ -52,11 +52,11 @@ export interface ParticleScalarRange {
   readonly dynamic: boolean;
 }
 
-const effect2DRecords = new WeakMap<CRCParticleEffect2D, ParticleEffect2DRecord>();
+const effect2DRecords = new WeakMap<PibblParticleEffect2D, ParticleEffect2DRecord>();
 
 function effectLabel(debugName: string | undefined): string {
-  return debugName === undefined ? 'CRC particle effect' :
-    `CRC particle effect "${debugName}"`;
+  return debugName === undefined ? 'Pibbl particle effect' :
+    `Pibbl particle effect "${debugName}"`;
 }
 
 function valueLabel(value: unknown): string {
@@ -176,14 +176,14 @@ export function hashParticleEmitterName(name: string): number {
 }
 
 export function normalizeParameters(
-  parameters: CRCParticleParameterDefinitions | undefined,
+  parameters: PibblParticleParameterDefinitions | undefined,
   debugName: string | undefined,
-): CRCParticleParameterDefinitions {
+): PibblParticleParameterDefinitions {
   if (parameters === undefined) return Object.freeze({});
   if (parameters === null || typeof parameters !== 'object' || Array.isArray(parameters)) {
     particleDefinitionError({ debugName, property: 'parameters' }, 'must be a record', parameters);
   }
-  const normalized: Record<string, CRCParticleParameterDefinition> = {};
+  const normalized: Record<string, PibblParticleParameterDefinition> = {};
   for (const [name, definition] of Object.entries(parameters)) {
     if (name.trim().length === 0) {
       particleDefinitionError(
@@ -240,7 +240,7 @@ export function normalizeParameters(
 
 function descriptorScalarRange(
   value: object,
-  parameters: CRCParticleParameterDefinitions,
+  parameters: PibblParticleParameterDefinitions,
   context: ParticleValidationContext,
 ): ParticleScalarRange {
   const descriptor = getParticleDescriptorRecord(value);
@@ -296,8 +296,8 @@ function descriptorScalarRange(
 }
 
 export function particleScalarRange(
-  value: CRCParticleScalar,
-  parameters: CRCParticleParameterDefinitions,
+  value: PibblParticleScalar,
+  parameters: PibblParticleParameterDefinitions,
   context: ParticleValidationContext,
 ): ParticleScalarRange {
   if (typeof value === 'number') {
@@ -313,7 +313,7 @@ export function particleScalarRange(
 export function validateScalarVector(
   value: unknown,
   dimension: 2,
-  parameters: CRCParticleParameterDefinitions,
+  parameters: PibblParticleParameterDefinitions,
   context: ParticleValidationContext,
 ): readonly ParticleScalarRange[] {
   if (!Array.isArray(value)) {
@@ -341,7 +341,7 @@ export function validateScalarVector(
     particleDefinitionError(context, `must be a ${dimension}-dimensional particle vector`, value);
   }
   return Object.freeze(value.map((entry, index) => particleScalarRange(
-    entry as CRCParticleScalar,
+    entry as PibblParticleScalar,
     parameters,
     { ...context, property: `${context.property ?? 'value'}[${index}]` },
   )));
@@ -377,7 +377,7 @@ function validateProbability(value: number | undefined, context: ParticleValidat
 }
 
 function validateCount(
-  value: number | CRCParticleScalar,
+  value: number | PibblParticleScalar,
   context: ParticleValidationContext,
 ): void {
   if (typeof value === 'number') {
@@ -398,9 +398,9 @@ function validateCount(
 }
 
 export function normalizeEmission(
-  emission: readonly CRCParticleEmission[],
+  emission: readonly PibblParticleEmission[],
   context: ParticleValidationContext,
-): readonly CRCParticleEmission[] {
+): readonly PibblParticleEmission[] {
   if (!Array.isArray(emission) || emission.length === 0) {
     particleDefinitionError(
       { ...context, property: 'emission' },
@@ -465,9 +465,9 @@ export function normalizeEmission(
 }
 
 export function validateAppearance(
-  appearance: CRCParticleAppearance | undefined,
+  appearance: PibblParticleAppearance | undefined,
   context: ParticleValidationContext,
-): CRCParticleAppearance | undefined {
+): PibblParticleAppearance | undefined {
   if (appearance === undefined) return undefined;
   if (appearance === null || typeof appearance !== 'object' || Array.isArray(appearance)) {
     particleDefinitionError(
@@ -490,9 +490,9 @@ export function validateAppearance(
 }
 
 export function normalizeBounds2D(
-  bounds: CRCParticleBounds2D,
+  bounds: PibblParticleBounds2D,
   context: ParticleValidationContext,
-): CRCParticleBounds2D {
+): PibblParticleBounds2D {
   if (bounds === null || typeof bounds !== 'object') {
     particleDefinitionError({ ...context, property: 'bounds' }, 'must be a record', bounds);
   }
@@ -512,7 +512,7 @@ export function normalizeBounds2D(
 }
 
 export function normalizeRenderer2D(
-  renderer: CRCParticleRenderer2D,
+  renderer: PibblParticleRenderer2D,
   context: ParticleValidationContext,
 ): NativeParticleRenderer2D {
   if (renderer === null || typeof renderer !== 'object') {
@@ -578,14 +578,14 @@ export function normalizeRenderer2D(
 
 export function createParticleEffect2D(
   record: ParticleEffect2DRecord,
-): CRCParticleEffect2D {
-  const effect = Object.freeze({ dimension: 2 as const }) as CRCParticleEffect2D;
+): PibblParticleEffect2D {
+  const effect = Object.freeze({ dimension: 2 as const }) as PibblParticleEffect2D;
   effect2DRecords.set(effect, freezeParticleRecord(record));
   return effect;
 }
 
 /** @internal Returns the immutable normalized record for a package-created 2D effect. */
-export function getParticleEffect2DRecord(effect: CRCParticleEffect2D): ParticleEffect2DRecord {
+export function getParticleEffect2DRecord(effect: PibblParticleEffect2D): ParticleEffect2DRecord {
   const record = effect2DRecords.get(effect);
   if (record === undefined) {
     throw new TypeError('Expected a 2D particle effect created by defineParticleEffect2D().');

@@ -5,7 +5,7 @@ import type { LayoutBox } from '../layout/types.js';
 
 const snapshots = new WeakMap<PathGeometry, { revision: number; data: string }>();
 export function portablePath(path: PathGeometry | Path2D): string | undefined {
-  if (!GLOBAL_STATE.currentCRCInstance?.eventRoot.htmlOverlay || !(path instanceof PathGeometry)) return undefined;
+  if (!GLOBAL_STATE.currentPibblInstance?.eventRoot.htmlOverlay || !(path instanceof PathGeometry)) return undefined;
   const prior = snapshots.get(path);
   if (prior?.revision === path.revision) return prior.data;
   const data = toSvgPathData(path);

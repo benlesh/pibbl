@@ -8,7 +8,7 @@ sources:
 
 ## Reading path
 
-Read [data visualization](/guides/data-visualization/), [Scale](/reference/components/scale/), and the specific series reference. `@crc/core/viz` supplies scale and drawing primitives; core supplies allocation, state, events, clipping, and scheduling. There is no required chart container or separate frame loop.
+Read [data visualization](/guides/data-visualization/), [Scale](/reference/components/scale/), and the specific series reference. `@pibbl/core/viz` supplies scale and drawing primitives; core supplies allocation, state, events, clipping, and scheduling. There is no required chart container or separate frame loop.
 
 The complete Band Bars source below uses public imports and embeds its data. [Open the editable comparison](@PLAYGROUND@#/examples/composition/viz-band-bars). Preserve data attribution and definitions when adapting a chart; a more dramatic effect must not change what a mark represents.
 
@@ -22,7 +22,7 @@ Use `useScale(id).get().map(value)` for custom marks and `invert(pixel)` for ins
 
 ## Choose mark and inspection semantics
 
-Use `PointSeries` for many circular marks with bounded component/event overhead. It has one union target; nearest-data inspection is distinct from topmost painted hit testing. Use `PlotSeries` for ordinary CRC subtrees per datum. Supply `keyBy` for mutable rows so reordering preserves per-row state. Hooks belong in returned components, not the row callback.
+Use `PointSeries` for many circular marks with bounded component/event overhead. It has one union target; nearest-data inspection is distinct from topmost painted hit testing. Use `PlotSeries` for ordinary Pibbl subtrees per datum. Supply `keyBy` for mutable rows so reordering preserves per-row state. Hooks belong in returned components, not the row callback.
 
 `HoverData` invokes a synchronous query during rendering and passes its result to a function child. Queries cannot write signals, invoke hooks, return promises, or retain the scale context. Return components for hook ownership. Explicitly handle undefined results. `HoverCard` and similar presentation are not permission to assume automatic pointer selection.
 
@@ -30,7 +30,7 @@ Missing values matter: null values in a line represent gaps. Do not silently int
 
 ## Complete source and adaptation
 
-Compile the source using the CRC JSX runtime and call its default mount with an attached canvas. Retain/dispose the returned controller. Its native data/control model is illustrative; a host application should supply a semantic table or textual summary for meaningful Canvas information. Existing desktop-oriented examples are not claims of complete phone accessibility.
+Compile the source using the Pibbl JSX runtime and call its default mount with an attached canvas. Retain/dispose the returned controller. Its native data/control model is illustrative; a host application should supply a semantic table or textual summary for meaningful Canvas information. Existing desktop-oriented examples are not claims of complete phone accessibility.
 
 When changing data, update domains intentionally and decide how empty, singleton, duplicate, and missing values behave. When adding effects, apply them to a decorative boundary rather than obscuring the marks needed for comparison.
 

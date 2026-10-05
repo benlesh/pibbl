@@ -4,14 +4,14 @@ import {
   Line,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
+  type PibblController,
+  type PibblPointerEvent,
   type WritableSignal,
-} from "@crc/core";
-import { Axis, BarSeries, Scale, useScale } from "@crc/core/viz";
+} from "@pibbl/core";
+import { Axis, BarSeries, Scale, useScale } from "@pibbl/core/viz";
 
 const periods = ["Q1", "Q2", "Q3", "Q4"];
 const regions = ["North", "South"];
@@ -133,7 +133,7 @@ function Plot({
   const group = useScale("regions", "band").get();
   const value = useScale("cash").get();
   const hit = selected.get();
-  function inspect(event: CRCPointerEvent) {
+  function inspect(event: PibblPointerEvent) {
     const x = event.x - origin.x;
     const y = event.y - origin.y;
     selected.set(
@@ -355,6 +355,6 @@ function Scene() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Scene />, { viewport: "responsive" });
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Scene />, { viewport: "responsive" });
 }

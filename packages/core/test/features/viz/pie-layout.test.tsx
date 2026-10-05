@@ -1,8 +1,8 @@
-import { Rectangle, signal, useSignal } from "@crc/core";
-import * as viz from "@crc/core/viz";
+import { Rectangle, signal, useSignal } from "@pibbl/core";
+import * as viz from "@pibbl/core/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { boxOutsideInnerCircle } from "../../../src/features/viz/lib/layout-pie.js";
-import { getCRCInstance } from "../../../src/lib/global-state.js";
+import { getPibblInstance } from "../../../src/lib/global-state.js";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
@@ -249,7 +249,7 @@ it("preserves solid wedge focus geometry and gives annular slices their painted 
     </>,
   );
   runtime.flush();
-  const targets = [...getCRCInstance(canvas).eventRoot.targets];
+  const targets = [...getPibblInstance(canvas).eventRoot.targets];
   expect(targets[1]?.keyboardNavigationBounds).toMatchObject({
     x: 100,
     y: 100,
@@ -293,7 +293,7 @@ it("bounds a large finite structural annular sweep as one full clockwise turn", 
     />,
   );
   expect(() => runtime.flush()).not.toThrow();
-  expect([...getCRCInstance(canvas).eventRoot.targets][0]
+  expect([...getPibblInstance(canvas).eventRoot.targets][0]
     ?.keyboardNavigationBounds).toEqual({ x: 20, y: 20, width: 160, height: 160 });
 });
 it("bounds an extreme finite structural annular sweep", () => {
@@ -318,7 +318,7 @@ it("bounds an extreme finite structural annular sweep", () => {
     />,
   );
   expect(() => runtime.flush()).not.toThrow();
-  expect([...getCRCInstance(canvas).eventRoot.targets][0]
+  expect([...getPibblInstance(canvas).eventRoot.targets][0]
     ?.keyboardNavigationBounds).toEqual({ x: 20, y: 20, width: 160, height: 160 });
 });
 it.each([
@@ -370,7 +370,7 @@ it("keeps keyed donut state on reorder and releases removed interaction targets"
   runtime.flush();
   const firstA = states.get("a");
   const firstB = states.get("b");
-  const instance = getCRCInstance(canvas);
+  const instance = getPibblInstance(canvas);
   expect(instance.eventRoot.targets.size).toBe(2);
   rows.set([...rows.get()].reverse());
   runtime.flush();

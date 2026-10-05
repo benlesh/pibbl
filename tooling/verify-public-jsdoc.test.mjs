@@ -6,11 +6,11 @@ import test from 'node:test';
 import { auditPublicJsdoc } from './verify-public-jsdoc.mjs';
 
 function fixture(t, files, exports = { '.': './src/index.ts' }) {
-  const root = mkdtempSync(join(tmpdir(), 'crc-public-jsdoc-'));
+  const root = mkdtempSync(join(tmpdir(), 'pibbl-public-jsdoc-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const directory = join(root, 'packages', 'example');
   files = {
-    'package.json': JSON.stringify({ name: '@crc/example', private: true, exports }),
+    'package.json': JSON.stringify({ name: '@pibbl/example', private: true, exports }),
     ...files,
   };
   for (const [name, contents] of Object.entries(files)) {

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
-const dir = await mkdtemp(join(tmpdir(), "crc-transition-wasm-"));
+const dir = await mkdtemp(join(tmpdir(), "pibbl-transition-wasm-"));
 const require = createRequire(resolve("packages/core/package.json"));
 await copyFile(
   "tooling/transition-wasm-spike/kernel.asc",

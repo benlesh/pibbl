@@ -21,7 +21,7 @@ two small ports.
 ## How it works
 
 Each [`Rectangle`](#/api/components/rectangle) and
-[`Text`](#/api/components/text) has an explicit local `style` object. CRC
+[`Text`](#/api/components/text) has an explicit local `style` object. Pibbl
 styles do not cascade or inherit through the component tree, so the coral card
 body, dark type, border, and font choices live on the primitives that paint
 them. This makes the source a useful place to see the exact geometry and paint

@@ -1,4 +1,4 @@
-import { crc, type CRCNode, type CRCController } from "@crc/core";
+import { pibbl, type PibblNode, type PibblController } from "@pibbl/core";
 import { vi } from "vitest";
 
 export function testRuntime() {
@@ -13,7 +13,7 @@ export function testRuntime() {
   vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((key) =>
     callbacks.delete(key),
   );
-  const controllers: CRCController[] = [];
+  const controllers: PibblController[] = [];
   return {
     get pending() {
       return callbacks.size;
@@ -23,12 +23,12 @@ export function testRuntime() {
       callbacks.clear();
       for (const [, callback] of entries) callback(performance.now());
     },
-    mount(node: CRCNode) {
+    mount(node: PibblNode) {
       const canvas = document.createElement("canvas");
       canvas.width = 600;
       canvas.height = 400;
       document.body.append(canvas);
-      controllers.push(crc(canvas, node, { pixelRatio: 1 }));
+      controllers.push(pibbl(canvas, node, { pixelRatio: 1 }));
       return canvas;
     },
     dispose() {

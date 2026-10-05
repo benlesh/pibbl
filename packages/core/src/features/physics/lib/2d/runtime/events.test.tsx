@@ -1,20 +1,20 @@
-import { Fragment, Group, crc, type CRCController } from "@crc/core";
-/** @jsxImportSource @crc/core */
+import { Fragment, Group, pibbl, type PibblController } from "@pibbl/core";
+/** @jsxImportSource @pibbl/core */
 import {
   PhysicsShape2D,
   PhysicsWorld2D,
   collider2D,
-  crcPhysicsBody2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsBody2D,
+  pibblPhysicsWorld2D,
   dynamicBody2D,
   sleepBody2D,
   staticBody2D,
   teleportBody2D,
   wakeBody2D,
-  type CRCPhysicsBodyHandle2D,
-  type CRCPhysicsColliderConfiguration2D,
-  type CRCPhysicsCollisionEvent2D,
-  type CRCPhysicsOverlapEvent2D,
+  type PibblPhysicsBodyHandle2D,
+  type PibblPhysicsColliderConfiguration2D,
+  type PibblPhysicsCollisionEvent2D,
+  type PibblPhysicsOverlapEvent2D,
 } from "../../../2d.js";
 import { circleShape2D } from "../../../2d-geometry.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -25,7 +25,7 @@ import {
 
 const shape = circleShape2D({ radius: 1 });
 let frames: ManualFrames;
-const mounts: CRCController[] = [];
+const mounts: PibblController[] = [];
 
 beforeEach(() => {
   document.body.innerHTML = "";
@@ -47,13 +47,13 @@ describe("ordered 2D physics events", () => {
       Readonly<{
         kind: "start" | "hit";
         receiver: "first" | "second";
-        event: CRCPhysicsCollisionEvent2D;
+        event: PibblPhysicsCollisionEvent2D;
       }>
     > = [];
     const firstHandlers = collisionHandlers("first", delivered);
     const secondHandlers = collisionHandlers("second", delivered);
 
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}>
         <Body type="static" x={0} tag={firstTag} handlers={firstHandlers} />
         <Body
@@ -100,15 +100,15 @@ describe("ordered 2D physics events", () => {
   it("emits only overlap start/end for a sensor crossing during catch-up", () => {
     const order: string[] = [];
     const overlap = (receiver: string) => ({
-      onOverlapStart: (event: CRCPhysicsOverlapEvent2D) =>
+      onOverlapStart: (event: PibblPhysicsOverlapEvent2D) =>
         order.push(`${String(event.tick)}-${receiver}-start`),
-      onOverlapEnd: (event: CRCPhysicsOverlapEvent2D) =>
+      onOverlapEnd: (event: PibblPhysicsOverlapEvent2D) =>
         order.push(`${String(event.tick)}-${receiver}-end`),
       onCollisionStart: () => order.push(`${receiver}-collision`),
       onHit: () => order.push(`${receiver}-hit`),
     });
 
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D
         gravity={[0, 0]}
         fixedStepMilliseconds={100}
@@ -145,7 +145,7 @@ describe("ordered 2D physics events", () => {
   it("isolates callback failures and defers callback commands to the next Begin", () => {
     const failure = new Error("first collision callback failed");
     const calls: string[] = [];
-    let moving!: CRCPhysicsBodyHandle2D;
+    let moving!: PibblPhysicsBodyHandle2D;
     const firstHandlers = {
       onCollisionStart: () => {
         calls.push("first");
@@ -162,7 +162,7 @@ describe("ordered 2D physics events", () => {
       },
     };
 
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}>
         <Body type="static" x={0} handlers={firstHandlers} />
         <Body
@@ -190,7 +190,7 @@ describe("ordered 2D physics events", () => {
   it("suppresses a candidate delivery when its subscribed colliders are removed before Complete", () => {
     const onCollisionStart = vi.fn();
     const Scene = () => {
-      const revision = crcPhysicsWorld2D().revision.get();
+      const revision = pibblPhysicsWorld2D().revision.get();
       if (revision >= 2) return undefined;
       return (
         <Fragment>
@@ -204,7 +204,7 @@ describe("ordered 2D physics events", () => {
         </Fragment>
       );
     };
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}>
         <Scene />
       </PhysicsWorld2D>,
@@ -218,10 +218,10 @@ describe("ordered 2D physics events", () => {
 
   it("suppresses candidate deliveries when the world owner is removed before Complete", () => {
     const onCollisionStart = vi.fn();
-    let world: ReturnType<typeof crcPhysicsWorld2D> | undefined;
+    let world: ReturnType<typeof pibblPhysicsWorld2D> | undefined;
     let removed = false;
     const CaptureWorld = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       return undefined;
     };
     const Root = () => {
@@ -242,7 +242,7 @@ describe("ordered 2D physics events", () => {
         </PhysicsWorld2D>
       );
     };
-    mountCRC(<Root />);
+    mountPibbl(<Root />);
     frames.flush(0);
     frames.flush(0);
 
@@ -254,7 +254,7 @@ describe("ordered 2D physics events", () => {
   it("suppresses a candidate delivery when its handler is removed before Complete", () => {
     const onCollisionStart = vi.fn();
     const Scene = () => {
-      const revision = crcPhysicsWorld2D().revision.get();
+      const revision = pibblPhysicsWorld2D().revision.get();
       const handlers = revision >= 2 ? {} : { onCollisionStart };
       return (
         <Fragment>
@@ -263,7 +263,7 @@ describe("ordered 2D physics events", () => {
         </Fragment>
       );
     };
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}>
         <Scene />
       </PhysicsWorld2D>,
@@ -277,8 +277,8 @@ describe("ordered 2D physics events", () => {
 
   it("delivers solid collision end after a commanded separation", () => {
     const order: string[] = [];
-    let moving!: CRCPhysicsBodyHandle2D;
-    mountCRC(
+    let moving!: PibblPhysicsBodyHandle2D;
+    mountPibbl(
       <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}>
         <Body
           type="static"
@@ -323,8 +323,8 @@ describe("ordered 2D physics events", () => {
 
   it("delivers immutable sleep/wake events and defers a callback wake command", () => {
     const order: string[] = [];
-    let body!: CRCPhysicsBodyHandle2D;
-    mountCRC(
+    let body!: PibblPhysicsBodyHandle2D;
+    mountPibbl(
       <PhysicsWorld2D
         gravity={[0, 0]}
         onSleep={(event) => {
@@ -357,7 +357,7 @@ describe("ordered 2D physics events", () => {
   });
 
   it("does not materialize public records for unobserved contacts", () => {
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}>
         <Body type="static" x={0} />
         <Body type="dynamic" x={1.5} velocity={[-1, 0]} />
@@ -376,9 +376,9 @@ function collisionHandlers(
   delivered: Array<{
     kind: "start" | "hit";
     receiver: "first" | "second";
-    event: CRCPhysicsCollisionEvent2D;
+    event: PibblPhysicsCollisionEvent2D;
   }>,
-): CRCPhysicsColliderConfiguration2D {
+): PibblPhysicsColliderConfiguration2D {
   return {
     onCollisionStart: (event) =>
       delivered.push({ kind: "start", receiver, event }),
@@ -400,10 +400,10 @@ function Body({
   velocity?: readonly [number, number];
   sensor?: boolean;
   tag?: unknown;
-  handlers?: CRCPhysicsColliderConfiguration2D;
-  capture?: (body: CRCPhysicsBodyHandle2D) => void;
+  handlers?: PibblPhysicsColliderConfiguration2D;
+  capture?: (body: PibblPhysicsBodyHandle2D) => void;
 }>) {
-  const body = crcPhysicsBody2D();
+  const body = pibblPhysicsBody2D();
   capture?.(body);
   const physics =
     type === "static"
@@ -429,13 +429,13 @@ function Body({
   );
 }
 
-function mountCRC(root: Parameters<typeof crc>[1]): CRCController {
+function mountPibbl(root: Parameters<typeof pibbl>[1]): PibblController {
   const canvas = document.createElement("canvas");
   canvas.width = 100;
   canvas.height = 100;
   canvas.style.cssText = "display:block;width:100px;height:100px";
   document.body.appendChild(canvas);
-  const mount = crc(canvas, root);
+  const mount = pibbl(canvas, root);
   mounts.push(mount);
   return mount;
 }
@@ -460,7 +460,7 @@ class ManualFrames {
   flush(time: number): void {
     const entry = this.callbacks.entries().next().value as
       readonly [number, FrameRequestCallback] | undefined;
-    if (!entry) throw new Error("No CRC host frame is pending.");
+    if (!entry) throw new Error("No Pibbl host frame is pending.");
     this.callbacks.delete(entry[0]);
     entry[1](time);
   }

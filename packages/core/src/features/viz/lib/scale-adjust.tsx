@@ -1,4 +1,4 @@
-import { Group, resolveSignalValue } from "@crc/core";
+import { Group, resolveSignalValue } from "@pibbl/core";
 import type { ScaleAdjustProps } from "./types.js";
 import { lookupScale } from "./scale-context.js";
 /**

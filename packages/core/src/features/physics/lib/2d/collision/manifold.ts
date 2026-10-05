@@ -1,4 +1,4 @@
-import type { CRCPhysicsShapeContact2D } from "../../../2d-geometry.js";
+import type { PibblPhysicsShapeContact2D } from "../../../2d-geometry.js";
 import { transformPointInto, type InternalPose2D } from "../math.js";
 import { GEOMETRY_EPSILON } from "../numeric-policy.js";
 import type { ConvexLeaf2D } from "../shape-records.js";
@@ -81,7 +81,7 @@ export function createPrivateManifold2D(
 
 export function publicContactFromManifold2D(
   manifold: PrivateManifold2D,
-): CRCPhysicsShapeContact2D {
+): PibblPhysicsShapeContact2D {
   const normal = freezeVector(manifold.normalX, manifold.normalY);
   const points = manifold.points.map((point) =>
     Object.freeze({

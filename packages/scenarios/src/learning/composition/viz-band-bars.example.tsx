@@ -5,14 +5,14 @@ import {
   Path,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
+  type PibblController,
+  type PibblPointerEvent,
   type WritableSignal,
-} from "@crc/core";
-import { Axis, BarSeries, Scale, useScale } from "@crc/core/viz";
+} from "@pibbl/core";
+import { Axis, BarSeries, Scale, useScale } from "@pibbl/core/viz";
 
 interface Reading {
   category: string;
@@ -117,7 +117,7 @@ function Bars({
     }
   const active = selected.get();
   const horizontal = orientation === "horizontal";
-  function inspect(event: CRCPointerEvent) {
+  function inspect(event: PibblPointerEvent) {
     const x = event.x - origin.x,
       y = event.y - origin.y;
     const hit = [...rows].reverse().find((row) => {
@@ -386,6 +386,6 @@ function Scene() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Scene />, { viewport: "responsive" });
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Scene />, { viewport: "responsive" });
 }

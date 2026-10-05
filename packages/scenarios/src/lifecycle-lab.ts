@@ -5,7 +5,7 @@ import type {
   LifecycleLabTarget,
 } from './lifecycle-lab.example';
 import type { ScenarioController, ScenarioDefinition, ScenarioMountContext } from './types';
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import { createLifecycleLabScene, LIFECYCLE_LAB_SOURCE_ID } from './lifecycle-lab.example';
 
 export type {
@@ -18,7 +18,7 @@ export type {
 
 interface InnerRuntime {
   abortController: AbortController;
-  controller: ReturnType<typeof crc>;
+  controller: ReturnType<typeof pibbl>;
   status: LifecycleLabRuntime;
 }
 
@@ -104,7 +104,7 @@ async function mountLifecycleLab(
     if (!currentRuntime || currentRuntime.status !== 'mounted') {
       throw new Error('The lifecycle laboratory runtime must be remounted before rendering.');
     }
-    crc(
+    pibbl(
       context.canvas,
       createLifecycleLabScene({
         state,
@@ -125,7 +125,7 @@ async function mountLifecycleLab(
       mountGeneration: state.mountGeneration + 1,
       lastAction,
     };
-    const controller = crc(
+    const controller = pibbl(
       context.canvas,
       createLifecycleLabScene({
         state,

@@ -1,7 +1,7 @@
 import type {
   MouseContractScenarioState,
   ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import {
   formatContractTrace,
   formatOrderingPolicy,
@@ -10,7 +10,7 @@ import {
   mouseContractScenarioEntry,
   MOUSE_CONTRACT_CASES,
   validateMouseContractCases,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
 import mouseContractSource from '../../scenarios/src/mouse-contract.example.tsx?raw';
 
@@ -59,7 +59,7 @@ describe('mouse interaction contract oracle', () => {
     for (const [id, expected] of Object.entries(expectedTraces)) {
       const contractCase = MOUSE_CONTRACT_CASES.find(candidate => candidate.id === id);
       expect(contractCase, id).toBeDefined();
-      expect(formatContractTrace(contractCase!.crcTrace), id).toBe(expected);
+      expect(formatContractTrace(contractCase!.pibblTrace), id).toBe(expected);
     }
     expect(MOUSE_CONTRACT_CASES.find(candidate => candidate.id === 'context-menu')?.ordering)
       .toEqual({ kind: 'browser-dependent', referenceEnvironment: 'Chromium on macOS' });
@@ -112,7 +112,7 @@ describe('mouse interaction contract oracle', () => {
         { label: 'Case', value: contractCase.title },
         { label: 'Gesture', value: contractCase.gesture },
         { label: 'Native reference', value: formatContractTrace(contractCase.nativeTrace) },
-        { label: 'Approved CRC (logical route)', value: formatContractTrace(contractCase.crcTrace) },
+        { label: 'Approved Pibbl (logical route)', value: formatContractTrace(contractCase.pibblTrace) },
         { label: 'Ordering', value: formatOrderingPolicy(contractCase.ordering) },
         {
           label: 'Target policy',

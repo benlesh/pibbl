@@ -6,18 +6,18 @@ kind: api
 slug: absolute
 apiCategory: component
 symbols: [Absolute]
-relatedTypes: [AbsoluteProps, AbsoluteStyle, CRCNode]
+relatedTypes: [AbsoluteProps, AbsoluteStyle, PibblNode]
 ---
 
 # Absolute
 
 ```ts
-import { Absolute, Rectangle } from "@crc/core";
+import { Absolute, Rectangle } from "@pibbl/core";
 ```
 
 `Absolute` places each direct child from its local `left`, `top`, and declared
 box style. Its props are [`AbsoluteProps`](#/api/types/elements-components#absoluteprops); its local style is [`AbsoluteStyle`](#/api/types/layout#absolutestyle).
-Children are recursive [`CRCNode`](#/api/types/elements-components#crcnode) values. Allocation is finite and does not
+Children are recursive [`PibblNode`](#/api/types/elements-components#pibblnode) values. Allocation is finite and does not
 measure or retain drawing commands.
 
 ```tsx

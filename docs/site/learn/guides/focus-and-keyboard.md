@@ -10,8 +10,8 @@ keywords: [focus, keyboard, navigation, accessibility, events]
 
 # Add focus and keyboard navigation
 
-CRC can add logical keyboard interaction to explicit Canvas targets. The HTML
-Canvas remains the one native DOM focus host. CRC does not create semantic DOM
+Pibbl can add logical keyboard interaction to explicit Canvas targets. The HTML
+Canvas remains the one native DOM focus host. Pibbl does not create semantic DOM
 descendants, ARIA controls, or a screen-reader accessibility tree.
 
 ## Opt in with policy components
@@ -22,14 +22,14 @@ import {
   KeyboardNavigation,
   Rectangle,
   useEventTarget,
-  type CRCNode,
-} from "@crc/core";
+  type PibblNode,
+} from "@pibbl/core";
 
 interface ButtonProps {
   onActivate: () => void;
 }
 
-function Button({ onActivate }: ButtonProps): CRCNode {
+function Button({ onActivate }: ButtonProps): PibblNode {
   const path = new Path2D();
   path.rect(20, 20, 140, 48);
   const focus = useEventTarget(
@@ -70,7 +70,7 @@ const scene = (
 );
 ```
 
-Each policy accepts exactly one CRC element after empty values are removed.
+Each policy accepts exactly one Pibbl element after empty values are removed.
 They are transparent preparation boundaries: they do not paint, lay out, own
 hooks, or change the enhanced child's component identity. Directional
 navigation requires focus management on the same root.
@@ -102,16 +102,16 @@ state may invalidate a retained `Layer` containing the changed target.
 A root `OffscreenCanvas` cannot host DOM focus and rejects focus management.
 Offscreen layers under an HTML Canvas share the root manager.
 
-Registered `@crc/three` targets derive directional-navigation bounds by
+Registered `@pibbl/three` targets derive directional-navigation bounds by
 projecting their Three object bounds into the logical render layer. An explicit
 `keyboardNavigationBounds` on a target is interpreted as a layer-local 2D
 override. Source-order Tab behavior and the one native Canvas focus host stay
 unchanged across the Three-to-Canvas bridge. See [Use Three.js inside
-CRC](#/learn/guides/three-js#share-events-without-wrapping-the-scene-graph).
+Pibbl](#/learn/guides/three-js#share-events-without-wrapping-the-scene-graph).
 
 ## Accessibility responsibility
 
-Canvas pixels and CRC's logical targets expose no names, roles, values,
+Canvas pixels and Pibbl's logical targets expose no names, roles, values,
 relationships, reading order, text selection, or platform accessibility nodes.
 Keyboard reachability is not equivalent to screen-reader accessibility.
 
@@ -124,7 +124,7 @@ from the same application model. Do not hide the only operable controls in an
 `aria-hidden` mirror or imply that logical focus alone makes the Canvas
 accessible.
 
-CRC intentionally has no hidden editable DOM adapter, semantic overlay, ARIA
+Pibbl intentionally has no hidden editable DOM adapter, semantic overlay, ARIA
 mapping, live-region API, or generated accessibility tree. The Canvas owner is
 also responsible for its accessible name and fallback/adjacent explanation.
 

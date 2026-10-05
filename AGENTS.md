@@ -1,4 +1,4 @@
-# CRC working context for coding agents
+# Pibbl working context for coding agents
 
 This file is the compact operating model for work in this repository. It
 summarizes the current code and approved contracts; follow the linked sources
@@ -6,7 +6,7 @@ when a task needs exact behavior or historical evidence.
 
 ## Product and current state
 
-CRC is a small functional component runtime over the HTML Canvas 2D API. It
+Pibbl is a small functional component runtime over the HTML Canvas 2D API. It
 provides automatic JSX and equivalent `createElement` authoring, scheduled
 rendering, first-class synchronous signals, hook state, DOM-aligned user events,
 focus/keyboard management, transforms, clipping, offscreen layers, typed
@@ -14,11 +14,11 @@ filters, animation, layout, Canvas particles, 2D physics, and visualization
 without React. Canvas drawing does not generate DOM; opt-in `HtmlBox` regions
 host application-owned HTML.
 
-CRC's public external-renderer boundary is `defineRenderLayer()`. The official
-`@crc/three` adapter mounts ordinary Three.js scenes, cameras, objects,
-controls, loaders, and effects as one CRC composition/event/focus/scheduling
-boundary. CRC no longer ships its former custom WebGL scene graph,
-renderer-coupled 3D particles, or any CRC-owned 3D physics API.
+Pibbl's public external-renderer boundary is `defineRenderLayer()`. The official
+`@pibbl/three` adapter mounts ordinary Three.js scenes, cameras, objects,
+controls, loaders, and effects as one Pibbl composition/event/focus/scheduling
+boundary. Pibbl no longer ships its former custom WebGL scene graph,
+renderer-coupled 3D particles, or any Pibbl-owned 3D physics API.
 
 The local `_bmad-output/` directory remains discovery input, not normative
 behavior. Current code, tests, and contracts under `docs/design/` define shipped
@@ -50,12 +50,12 @@ either as the current result unless a fresh run reproduces it.
 
 ## Repository map
 
-- `packages/core`: public `@crc/core` runtime, components, hooks,
+- `packages/core`: public `@pibbl/core` runtime, components, hooks,
   `defineRenderLayer`, contracts, unit tests, browser tests, and visual
   baselines.
-- `packages/three`: official thin `@crc/three` adapter over ordinary Three.js
+- `packages/three`: official thin `@pibbl/three` adapter over ordinary Three.js
   resources, implemented through the public render-layer lifecycle.
-- `packages/text`: optional public `@crc/text` text-to-path shaping package with
+- `packages/text`: optional public `@pibbl/text` text-to-path shaping package with
   precompiled HarfBuzz WASM and explicit font ownership.
 - `packages/core/src/features`: first-party particles, visualization, textures,
   and physics, published as core subpaths. Physics includes private bundled
@@ -72,13 +72,13 @@ either as the current result unless a fresh run reproduces it.
 
 ## Current runtime model
 
-- `crc(canvas, root, config?)` owns at most one live mount per Canvas and
+- `pibbl(canvas, root, config?)` owns at most one live mount per Canvas and
   returns a stable controller with idempotent `dispose()`.
 - One realm scheduler coalesces roots, managed Layers, animation, 2D physics,
   and external render layers into Begin, Advance, Commit, Plan, Render, and
   Complete phases.
 - Components are ordinary synchronous functions. JSX and `createElement`
-  create branded recursive `CRCElement` values. Supported applications import
+  create branded recursive `PibblElement` values. Supported applications import
   only public package entries.
 - Signals are explicit and synchronous. Declared receiver-owned inputs resolve
   signals; writes are forbidden during component, primitive-render, and
@@ -93,44 +93,44 @@ either as the current result unless a fresh run reproduces it.
 - Layout is immediate-mode: parents inspect declared child style, compute finite
   allocations, and place one child descriptor without retaining draw commands.
 - `defineRenderLayer` creates one flattened external-renderer bitmap and
-  matching interaction generation in Canvas paint order. CRC owns scheduling,
+  matching interaction generation in Canvas paint order. Pibbl owns scheduling,
   layout, outer composition, events, focus, and commit/teardown; the application
   owns resources returned from `create()`.
 - `defineThreeLayer` uses that lifecycle. One mounted identity creates one
   transparent `THREE.WebGLRenderer`; ordinary Three scene resources persist
-  across CRC renders. Default raycasting returns target/block/miss, controls
-  receive CRC-routed input, and application cleanup disposes Three resources.
-- External renderer animation advances from the supplied CRC frame and calls
+  across Pibbl renders. Default raycasting returns target/block/miss, controls
+  receive Pibbl-routed input, and application cleanup disposes Three resources.
+- External renderer animation advances from the supplied Pibbl frame and calls
   `invalidate()` only when another frame is needed. Ordinary applications do
   not start another `requestAnimationFrame` loop or call
   `renderer.setAnimationLoop()`; WebXR is outside the current contract.
 - Runtime resources have one explicit owner and exact teardown semantics.
   Prefer deterministic ownership counters to heap or GC timing.
-- `@crc/core/internal` is reserved for matching official integrations and
+- `@pibbl/core/internal` is reserved for matching official integrations and
   is not an application compatibility promise.
 
 ## Public surface and deliberate boundaries
 
-Public core includes `crc`, JSX/`createElement` authoring, signals,
+Public core includes `pibbl`, JSX/`createElement` authoring, signals,
 animation definitions/programs, hooks, Canvas drawing components, `Group`,
 `Clip`, `Layer`, layout components, focus policies, measurement,
 `definePrimitive`, and `defineRenderLayer` with its lifecycle, frame,
 interaction, target, size, and style types.
 
-Public `@crc/three` includes `defineThreeLayer` plus
-`CRCThreeInputBridge`, `CRCThreeLayerContext`,
-`CRCThreeLayerDefinition`, `CRCThreeLayerResources`, `CRCThreePicker`,
-`CRCThreePickResult`, `CRCThreeRendererOptions`, and `CRCThreeTarget`.
+Public `@pibbl/three` includes `defineThreeLayer` plus
+`PibblThreeInputBridge`, `PibblThreeLayerContext`,
+`PibblThreeLayerDefinition`, `PibblThreeLayerResources`, `PibblThreePicker`,
+`PibblThreePickResult`, `PibblThreeRendererOptions`, and `PibblThreeTarget`.
 Three scenes, objects, materials, lights, cameras, controls, loaders, shadows,
 particles, and post-processing come directly from `three` and
 `three/addons/*`.
 
-Public `@crc/core/particles` is Canvas 2D only. Public physics is the
-`@crc/core/physics/2d` runtime plus `/2d/geometry`. There is no root physics
-barrel, CRC-owned 3D physics API, renderer-coupled 3D world, or Three physics
+Public `@pibbl/core/particles` is Canvas 2D only. Public physics is the
+`@pibbl/core/physics/2d` runtime plus `/2d/geometry`. There is no root physics
+barrel, Pibbl-owned 3D physics API, renderer-coupled 3D world, or Three physics
 binding.
 
-CRC does not promise a Three JSX reconciler, retained Three scene graph,
+Pibbl does not promise a Three JSX reconciler, retained Three scene graph,
 Canvas/Three subprimitive interleaving, WebXR, automatic semantic DOM,
 accessibility tree, rich text editing, scrolling, complete CSS compatibility, worker
 rendering, cross-context GPU sharing, or a second scheduler. External layers
@@ -265,7 +265,7 @@ Exact implemented contracts and records live in:
 
 The implemented 2026-09-01 design replaced the factory-first surface with
 automatic JSX and equivalent `createElement` construction. It added the
-branded `CRCElement`/recursive `CRCNode` protocol, transparent and keyed
+branded `PibblElement`/recursive `PibblNode` protocol, transparent and keyed
 fragments, arbitrary finite synchronous child structures, textual `Text`
 children, descriptive built-ins, transparent focus policy components,
 `useCanvasContext`, and `definePrimitive`. It also added compiler subpaths,
@@ -287,7 +287,7 @@ logical geometry. A receiving primitive and all descendants form one combined
 silhouette; list order is forward, nesting is inside out, and Group/Clip/Layer
 composition preserves the documented presentation and caching order.
 
-Each CRC instance owns a constant-time depth-indexed pool with two transient
+Each Pibbl instance owns a constant-time depth-indexed pool with two transient
 surfaces per active nesting level. Validation, allocation, execution, and
 compositing restore leases and render globals in `finally`; structural evidence
 locks one component traversal, two bitmap draws per boundary, sibling reuse,
@@ -302,21 +302,21 @@ historical intent live in:
 
 ## Shipped external render layers and Three.js integration
 
-The 2026-09-28 pivot makes CRC a Canvas 2D runtime with a framework-neutral
+The 2026-09-28 pivot makes Pibbl a Canvas 2D runtime with a framework-neutral
 external render-layer boundary. `defineRenderLayer()` owns one persistent
 surface/resource lifetime, scheduled frame callback, transactional
 bitmap/interaction generation, target/block/miss arbitration, focus metadata,
 outer Canvas composition, and exact teardown.
 
-`@crc/three` is the official thin adapter. Applications use ordinary
+`@pibbl/three` is the official thin adapter. Applications use ordinary
 `THREE.Scene`, cameras, objects, materials, lighting, shadows, GLTF loaders,
 controls, instancing, particles, and post-processing. `defineThreeLayer()`
-creates one transparent adapter-owned renderer, supplies CRC-routed controls
+creates one transparent adapter-owned renderer, supplies Pibbl-routed controls
 input, defaults to normal Three rendering and raycasting, and leaves
 application-created resource disposal explicit.
 
 The former custom WebGL package and scene vocabulary, WebGL-specific
-particle entry, and all CRC-owned 3D physics APIs were removed without
+particle entry, and all Pibbl-owned 3D physics APIs were removed without
 compatibility aliases. Historical
 WebGL specs and plans are dated evidence only; current intent lives in:
 
@@ -345,7 +345,7 @@ composition path, render dirty nested instances deepest-first, and preserve
 clean sibling caches. Errors are collected after Complete rather than stopping
 unrelated roots or completions.
 
-`@crc/core/internal` is an explicit version-coupled friend entry for official
+`@pibbl/core/internal` is an explicit version-coupled friend entry for official
 renderer packages released in lockstep. It is not re-exported from the root,
 is not available to ordinary Studio examples, and is not a stable third-party
 API. Exact current behavior lives in
@@ -359,7 +359,7 @@ steppers. Immutable programs compose `drive`, `sequence`, `parallel`, `wait`,
 `marker`, and `repeat`; whole-run writer leases reject ambiguous writers unless
 replacement is explicit. `usePlayback` owns stable controls/status/current time
 for one mounted hook slot, while `useAnimatedValue` provides explicit target-driven
-spring and tween values. Signals may flow directly into declared CRC style and
+spring and tween values. Signals may flow directly into declared Pibbl style and
 component inputs; `.get()` remains the way to make the enclosing component the
 consumer.
 
@@ -368,7 +368,7 @@ user/status/time writes publish atomically in Commit, computed and renderer work
 is planned afterward, and milestones/errors deliver in Complete. Time-based
 definitions use logical time; only steppers integrate clamped fixed steps.
 Ordinary Canvas content still repaints its immediate-mode root. Explicit Layers
-and external render layers are the only retained bitmap boundaries, and CRC
+and external render layers are the only retained bitmap boundaries, and Pibbl
 never promotes content automatically. Render layers participate through the
 public shared-frame lifecycle; workers/WASM remain future internal optimizations
 with no permission to change observable behavior. Exact behavior lives in

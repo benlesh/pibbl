@@ -1,8 +1,8 @@
-import * as CRC from '@crc/core';
+import * as Pibbl from '@pibbl/core';
 import { afterEach, expect, it } from 'vitest';
-import type { CRCController, CRCNode } from '@crc/core';
+import type { PibblController, PibblNode } from '@pibbl/core';
 
-let controller: CRCController | undefined;
+let controller: PibblController | undefined;
 
 const settle = () => new Promise<void>(resolve =>
   requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -63,17 +63,17 @@ function maxArcAlpha(
 }
 
 it('paints a 24 CSS-pixel connector perpendicular to a nonuniformly transformed top edge', async () => {
-  const box = CRC.signal({ left: 80, top: 100, width: 120, height: 80 });
-  const rotation = CRC.signal(0);
+  const box = Pibbl.signal({ left: 80, top: 100, width: 120, height: 80 });
+  const rotation = Pibbl.signal(0);
   const canvas = document.createElement('canvas');
   canvas.width = 600;
   canvas.height = 450;
   document.body.append(canvas);
 
-  function Scene(): CRCNode {
-    const manipulation = CRC.useManipulation({ box, rotation, rotate: {} });
+  function Scene(): PibblNode {
+    const manipulation = Pibbl.useManipulation({ box, rotation, rotate: {} });
     return (
-      <CRC.Group
+      <Pibbl.Group
         style={{
           translateX: 40,
           translateY: 30,
@@ -82,17 +82,17 @@ it('paints a 24 CSS-pixel connector perpendicular to a nonuniformly transformed 
           scaleY: 0.75,
         }}
       >
-        <CRC.ManipulationFrame {...manipulation.frameProps}>
-          <CRC.RotationHandle
+        <Pibbl.ManipulationFrame {...manipulation.frameProps}>
+          <Pibbl.RotationHandle
             controller={manipulation}
             style={{ connector: { stroke: '#ff0000', strokeWidth: 4 }, arc: false }}
           />
-        </CRC.ManipulationFrame>
-      </CRC.Group>
+        </Pibbl.ManipulationFrame>
+      </Pibbl.Group>
     );
   }
 
-  controller = CRC.crc(canvas, <Scene />, { pixelRatio: 1 });
+  controller = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
 
   const transform = new DOMMatrix()
@@ -138,19 +138,19 @@ it('paints a 24 CSS-pixel connector perpendicular to a nonuniformly transformed 
 });
 
 it('omits both optional rotation decorations when explicitly disabled', async () => {
-  const box = CRC.signal({ left: 100, top: 100, width: 120, height: 80 });
-  const rotation = CRC.signal(0);
+  const box = Pibbl.signal({ left: 100, top: 100, width: 120, height: 80 });
+  const rotation = Pibbl.signal(0);
   const canvas = document.createElement('canvas');
   canvas.width = 320;
   canvas.height = 240;
   document.body.append(canvas);
-  function Scene(): CRCNode {
-    const manipulation = CRC.useManipulation({ box, rotation, rotate: {} });
-    return <CRC.ManipulationFrame {...manipulation.frameProps}>
-      <CRC.RotationHandle controller={manipulation} style={{ connector: false, arc: false }} />
-    </CRC.ManipulationFrame>;
+  function Scene(): PibblNode {
+    const manipulation = Pibbl.useManipulation({ box, rotation, rotate: {} });
+    return <Pibbl.ManipulationFrame {...manipulation.frameProps}>
+      <Pibbl.RotationHandle controller={manipulation} style={{ connector: false, arc: false }} />
+    </Pibbl.ManipulationFrame>;
   }
-  controller = CRC.crc(canvas, <Scene />, { pixelRatio: 1 });
+  controller = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
 
   expect(pixels(canvas, (r, g, b, a) => r > 220 && g < 50 && b < 50 && a > 180)).toHaveLength(0);
@@ -159,25 +159,25 @@ it('omits both optional rotation decorations when explicitly disabled', async ()
 });
 
 it('renders an opt-in blue guide arc with symmetric fading around the rotation handle', async () => {
-  const box = CRC.signal({ left: 100, top: 100, width: 120, height: 80 });
-  const rotation = CRC.signal(0);
+  const box = Pibbl.signal({ left: 100, top: 100, width: 120, height: 80 });
+  const rotation = Pibbl.signal(0);
   const canvas = document.createElement('canvas');
   canvas.width = 320;
   canvas.height = 240;
   document.body.append(canvas);
-  function Scene(): CRCNode {
-    const manipulation = CRC.useManipulation({ box, rotation, rotate: {} });
-    return <CRC.ManipulationFrame {...manipulation.frameProps}>
-      <CRC.RotationHandle
+  function Scene(): PibblNode {
+    const manipulation = Pibbl.useManipulation({ box, rotation, rotate: {} });
+    return <Pibbl.ManipulationFrame {...manipulation.frameProps}>
+      <Pibbl.RotationHandle
         controller={manipulation}
         style={{
           connector: false,
           arc: { color: '#0000ff', sweep: Math.PI / 2, strokeWidth: 3 },
         }}
       />
-    </CRC.ManipulationFrame>;
+    </Pibbl.ManipulationFrame>;
   }
-  controller = CRC.crc(canvas, <Scene />, { pixelRatio: 1 });
+  controller = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
 
   const pivot = new DOMPoint(160, 140);

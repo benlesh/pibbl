@@ -1,4 +1,4 @@
-import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
+import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
 function MouseDownStudy() {
   const presses = useSignal(0);
   const button = useSignal("none");
@@ -51,6 +51,6 @@ function MouseDownStudy() {
     >{`DOWN / ${presses.get()} / ${button.get()}`}</Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <MouseDownStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <MouseDownStudy />);
 }

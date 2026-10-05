@@ -1,12 +1,12 @@
 import {
   Layer,
   computed,
-  crc,
+  pibbl,
   createElement,
   signal,
-  type CRCController,
-  type CRCNode,
-} from '@crc/core';
+  type PibblController,
+  type PibblNode,
+} from '@pibbl/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { clearSharedState } from '../src/lib/global-state';
 import * as signalGraph from '../src/lib/signals/graph';
@@ -37,7 +37,7 @@ interface SchedulerOwnershipSnapshot {
   readonly releasedRootRegistrations: number;
 }
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
 
@@ -67,7 +67,7 @@ describe('signal graph and realm scheduler ownership', () => {
       Array.from({ length: 1_000 }, (_, index) =>
         createElement(Leaf, { key: `leaf-${index}`, read: read && index === 0 })
       );
-    const controller = drive(crc(canvas, createElement(Tree, { read: false })));
+    const controller = drive(pibbl(canvas, createElement(Tree, { read: false })));
 
     driver.flush(1);
     expect(snapshotSignalGraph()).toMatchObject({
@@ -76,7 +76,7 @@ describe('signal graph and realm scheduler ownership', () => {
       lazyRendererConsumers: baseline.lazyRendererConsumers,
     });
 
-    crc(canvas, createElement(Tree, { read: true }));
+    pibbl(canvas, createElement(Tree, { read: true }));
     driver.flush(2);
     expect(snapshotSignalGraph()).toMatchObject({
       rendererConsumers: baseline.rendererConsumers + 1,
@@ -84,7 +84,7 @@ describe('signal graph and realm scheduler ownership', () => {
       lazyRendererConsumers: baseline.lazyRendererConsumers + 1,
     });
 
-    crc(canvas, createElement(Tree, { read: false }));
+    pibbl(canvas, createElement(Tree, { read: false }));
     driver.flush(3);
     expect(snapshotSignalGraph()).toMatchObject({
       rendererConsumers: baseline.rendererConsumers,
@@ -97,7 +97,7 @@ describe('signal graph and realm scheduler ownership', () => {
       value.get();
       throw failure;
     };
-    crc(canvas, createElement(Broken, {}));
+    pibbl(canvas, createElement(Broken, {}));
     expect(() => driver.flush(4)).toThrow(failure);
     expect(snapshotSignalGraph()).toMatchObject({
       rendererConsumers: baseline.rendererConsumers,
@@ -145,11 +145,11 @@ describe('signal graph and realm scheduler ownership', () => {
         undefined,
     ];
     const scene = createElement(Scene, {});
-    const firstController = drive(crc(canvas, scene));
+    const firstController = drive(pibbl(canvas, scene));
 
-    // Repeating crc() while the Canvas is live updates one mount rather than
+    // Repeating pibbl() while the Canvas is live updates one mount rather than
     // acquiring another root registration.
-    expect(crc(canvas, scene)).toBe(firstController);
+    expect(pibbl(canvas, scene)).toBe(firstController);
     expect(driver.requestCount).toBe(1);
     driver.flush(1);
     expect(snapshotSignalGraph()).toMatchObject({
@@ -190,7 +190,7 @@ describe('signal graph and realm scheduler ownership', () => {
 
     // Root replacement releases the complete prior tree before settling on
     // one new reader.
-    crc(canvas, createElement(SharedReader, {}));
+    pibbl(canvas, createElement(SharedReader, {}));
     driver.flush(5);
     expect(snapshotSignalGraph()).toMatchObject({
       rendererConsumers: 1,
@@ -200,11 +200,11 @@ describe('signal graph and realm scheduler ownership', () => {
     // A failed renderer transaction must discard provisional reads and release
     // both the prior generation and the failing generation.
     const renderFailure = new Error('signal ownership render failure');
-    const Broken = (_props: {}): CRCNode => {
+    const Broken = (_props: {}): PibblNode => {
       shared.get();
       throw renderFailure;
     };
-    crc(canvas, createElement(Broken, {}));
+    pibbl(canvas, createElement(Broken, {}));
     expect(() => driver.flush(6)).toThrow(renderFailure);
     expect(snapshotSignalGraph()).toMatchObject({
       rendererConsumers: 0,
@@ -218,7 +218,7 @@ describe('signal graph and realm scheduler ownership', () => {
 
     // Explicit work recovers a fail-closed mount without resurrecting its old
     // consumer generation.
-    crc(canvas, createElement(SharedReader, {}));
+    pibbl(canvas, createElement(SharedReader, {}));
     driver.flush(7);
     expect(snapshotSignalGraph()).toMatchObject({
       rendererConsumers: 1,
@@ -233,7 +233,7 @@ describe('signal graph and realm scheduler ownership', () => {
       retainedComputed.get();
     };
     const abortController = new AbortController();
-    const abortControllerHandle = drive(crc(
+    const abortControllerHandle = drive(pibbl(
       createCanvas(),
       createElement(ComputedReader, {}),
       { signal: abortController.signal },
@@ -258,14 +258,14 @@ describe('signal graph and realm scheduler ownership', () => {
 
     // A fresh mount on the same Canvas owns a distinct registration and
     // consumer generation.
-    const freshController = drive(crc(canvas, createElement(SharedReader, {})));
+    const freshController = drive(pibbl(canvas, createElement(SharedReader, {})));
     driver.flush(9);
     freshController.dispose();
 
     // Repeated fresh mounts make acquisition/release totals deterministic
     // without relying on heap timing or garbage collection.
     for (let cycle = 0; cycle < 25; cycle += 1) {
-      const controller = drive(crc(canvas, createElement(SharedReader, {})));
+      const controller = drive(pibbl(canvas, createElement(SharedReader, {})));
       driver.flush(10 + cycle);
       controller.dispose();
     }
@@ -296,14 +296,14 @@ describe('signal graph and realm scheduler ownership', () => {
     const outer = computed(() => inner.get() + 1);
     const canvas = createCanvas();
     const failure = new Error('computed reader failed');
-    const Broken = (_props: {}): CRCNode => {
+    const Broken = (_props: {}): PibblNode => {
       outer.get();
       throw failure;
     };
     const Healthy = (_props: {}) => {
       outer.get();
     };
-    const controller = drive(crc(canvas, createElement(Broken, {})));
+    const controller = drive(pibbl(canvas, createElement(Broken, {})));
 
     expect(() => driver.flush(1)).toThrow(failure);
     expect(snapshotSignalGraph()).toMatchObject({
@@ -314,7 +314,7 @@ describe('signal graph and realm scheduler ownership', () => {
     expect(getSignalNodeForTest(source).observerCount).toBe(0);
     expect(getSignalNodeForTest(inner).observerCount).toBe(0);
 
-    crc(canvas, createElement(Healthy, {}));
+    pibbl(canvas, createElement(Healthy, {}));
     driver.flush(2);
     expect(snapshotSignalGraph().computedSourceEdges).toBe(
       baseline.computedSourceEdges + 2,
@@ -373,10 +373,10 @@ function expectReleasedState(): void {
   });
 }
 
-function getSignalNodeForTest<T>(value: import('@crc/core').Signal<T>) {
+function getSignalNodeForTest<T>(value: import('@pibbl/core').Signal<T>) {
   const getNode = (
     signalGraph as typeof signalGraph & {
-      getSignalNode?: (signal: import('@crc/core').Signal<T>) => {
+      getSignalNode?: (signal: import('@pibbl/core').Signal<T>) => {
         observers: Set<unknown>;
       };
     }
@@ -385,7 +385,7 @@ function getSignalNodeForTest<T>(value: import('@crc/core').Signal<T>) {
   return getNode!(value);
 }
 
-function drive(controller: CRCController): CRCController {
+function drive(controller: PibblController): PibblController {
   activeControllers.add(controller);
   return controller;
 }

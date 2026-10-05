@@ -7,12 +7,12 @@ import type { PointAccessor } from './point-types.js';
 import type { ScaleAdjust } from './scale-adjust.js';
 import type {
   BoxStyle,
-  CRCNode,
+  PibblNode,
   LayoutItemStyle,
   LayoutBox,
   SignalValue,
-} from "@crc/core";
-import type { SignalStyle } from "@crc/core/internal";
+} from "@pibbl/core";
+import type { SignalStyle } from "@pibbl/core/internal";
 /**
  * A string or symbol identifying a scale within visualization context.
  *
@@ -66,7 +66,7 @@ export type ScaleLayoutStyle = Pick<BoxStyle, "width" | "height"> &
  * @see {@link ScaleRange}
  * @see {@link SignalStyle}
  * @see {@link ScaleLayoutStyle}
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  * @see {@link BandScaleProps}
  */
 export interface LinearScaleProps {
@@ -91,8 +91,8 @@ export interface LinearScaleProps {
    * {@link ScaleLayoutStyle}.
    */
   readonly style?: SignalValue<SignalStyle<ScaleLayoutStyle>>;
-  /** Descendant content or the callback that supplies it. See {@link CRCNode}. */
-  readonly children?: CRCNode;
+  /** Descendant content or the callback that supplies it. See {@link PibblNode}. */
+  readonly children?: PibblNode;
 }
 /**
  * A string or number used as a discrete band-scale category.
@@ -224,11 +224,11 @@ export interface ResolvedLinearScale {
 export type ResolvedScale = ResolvedLinearScale | ResolvedBandScale;
 
 import type {
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
   FillStyle,
   StrokeStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 /**
  * Supported geometry and presentation properties for Axis.
  *
@@ -345,8 +345,8 @@ export interface LineSeriesStyle {
 /**
  * Authored inputs for LineSeries, including the declared data and presentation options.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
  * @see {@link SignalValue}
  * @see {@link LineAccessor}
  * @see {@link ScaleId}
@@ -355,7 +355,7 @@ export interface LineSeriesStyle {
  * @see {@link LineSeriesStyle}
  */
 export interface LineSeriesProps<D>
-  extends CRCEventHandlers, CRCEventParticipationOptions {
+  extends PibblEventHandlers, PibblEventParticipationOptions {
   /**
    * Application data supplied to the component or reported by the event. See {@link SignalValue}.
    */
@@ -432,11 +432,11 @@ type ScaleAdjustY =
 /**
  * Authored inputs for ScaleAdjust, including the declared data and presentation options.
  *
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  * @see {@link ScaleAdjust}
  */
 export type ScaleAdjustProps = ScaleAdjustX &
   ScaleAdjustY & {
-    /** Descendant content or the callback that supplies it. See {@link CRCNode}. */
-    readonly children?: CRCNode;
+    /** Descendant content or the callback that supplies it. See {@link PibblNode}. */
+    readonly children?: PibblNode;
   };

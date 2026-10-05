@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
 import type { Length } from '../style/types';
-import type { CRCElement, SystemStyle } from '../types';
+import type { PibblElement, SystemStyle } from '../types';
 import { Flex, layoutFlex } from './flex';
 import { measureElement, type CanvasMeasurementService } from './measure';
 import { createElement } from '../element/create-element';
@@ -12,7 +12,7 @@ const service: CanvasMeasurementService = {
 };
 const measurement = {
   service,
-  measureElement: (element: CRCElement<any>, constraints: {
+  measureElement: (element: PibblElement<any>, constraints: {
     minWidth: number;
     maxWidth: number;
     minHeight: number;

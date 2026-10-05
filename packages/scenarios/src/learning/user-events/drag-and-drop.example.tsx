@@ -1,19 +1,19 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Rectangle,
   Text,
-  type CRCController,
-  type CRCDragEvent,
-} from "@crc/core";
-function dragLine(type: string, event: CRCDragEvent): string {
+  type PibblController,
+  type PibblDragEvent,
+} from "@pibbl/core";
+function dragLine(type: string, event: PibblDragEvent): string {
   const payload = event.dataTransfer?.getData("text/plain") || "empty";
   return `${type}  @ ${Math.round(event.x)},${Math.round(event.y)}  data=${payload}`;
 }
 function DragAndDropStudy() {
   const trace = useSignal<readonly string[]>([]);
   const dropped = useSignal("nothing dropped");
-  const record = (type: string, event: CRCDragEvent) => {
+  const record = (type: string, event: PibblDragEvent) => {
     trace.update((current) => [...current.slice(-4), dragLine(type, event)]);
   };
   return [
@@ -49,7 +49,7 @@ function DragAndDropStudy() {
         cursor: "grab",
       }}
       onDragStart={(event) => {
-        event.dataTransfer?.setData("text/plain", "crc-cargo");
+        event.dataTransfer?.setData("text/plain", "pibbl-cargo");
         record("dragstart", event);
       }}
       onDrag={(event) => record("drag", event)}
@@ -66,7 +66,7 @@ function DragAndDropStudy() {
         textBaseline: "middle",
       }}
     >
-      {"DRAG THIS\nCRC CARGO"}
+      {"DRAG THIS\nPibbl CARGO"}
     </Text>,
     <Rectangle
       style={{
@@ -148,12 +148,12 @@ function DragAndDropStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
+export default function mount(canvas: HTMLCanvasElement): PibblController {
   const previousDraggable = canvas.draggable;
   canvas.draggable = true;
   let disposed = false;
   try {
-    const controller = crc(canvas, <DragAndDropStudy />);
+    const controller = pibbl(canvas, <DragAndDropStudy />);
     return {
       dispose() {
         if (disposed) return;

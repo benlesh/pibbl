@@ -1,90 +1,90 @@
-import type { CRCEasing } from "@crc/core";
+import type { PibblEasing } from "@pibbl/core";
 import type { particleChoice, particleCurve, particleGradient, particleInteger, particleRange } from './particle.js';
 import type { defineParticleEffect2D } from './definition.js';
 import type { useParticleSystem } from './system/hook.js';
 import type { Particles2D } from './canvas/component.js';
-import type { CRCFlowField2D } from "./flow/hook.js";
+import type { PibblFlowField2D } from "./flow/hook.js";
 import type {
   BoxStyle,
   PathGeometry,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
   CursorStyle,
   LayoutBox,
   LayoutItemStyle,
   Signal,
   SignalValue,
   SystemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 /**
  * Whether a parameter is sampled at spawn, simulation, or rendering time.
  *
- * @see {@link CRCParticleParameterDefinition}
+ * @see {@link PibblParticleParameterDefinition}
  */
-export type CRCParticleParameterTiming = "spawn" | "simulation" | "render";
+export type PibblParticleParameterTiming = "spawn" | "simulation" | "render";
 
 /**
  * A typed default value and sampling phase for a named particle parameter.
  *
- * @see {@link CRCParticleParameterTiming}
- * @see {@link CRCParticleParameterDefinitions}
- * @see {@link CRCParticleValueFor}
+ * @see {@link PibblParticleParameterTiming}
+ * @see {@link PibblParticleParameterDefinitions}
+ * @see {@link PibblParticleValueFor}
  */
-export type CRCParticleParameterDefinition =
+export type PibblParticleParameterDefinition =
   | Readonly<{
-      /** The literal "number" identifying this variant. See {@link CRCParticleParameterDefinition}. */
+      /** The literal "number" identifying this variant. See {@link PibblParticleParameterDefinition}. */
       type: "number";
       /**
        * Value used when no parameter override is supplied. See
-       * {@link CRCParticleParameterDefinition}.
+       * {@link PibblParticleParameterDefinition}.
        */
       default: number;
-      /** Phase at which the parameter value is sampled. See {@link CRCParticleParameterTiming}. */
-      timing: CRCParticleParameterTiming;
+      /** Phase at which the parameter value is sampled. See {@link PibblParticleParameterTiming}. */
+      timing: PibblParticleParameterTiming;
     }>
   | Readonly<{
-      /** The literal "vector2" identifying this variant. See {@link CRCParticleParameterDefinition}. */
+      /** The literal "vector2" identifying this variant. See {@link PibblParticleParameterDefinition}. */
       type: "vector2";
       /**
        * Value used when no parameter override is supplied. See
-       * {@link CRCParticleParameterDefinition}.
+       * {@link PibblParticleParameterDefinition}.
        */
       default: readonly [number, number];
-      /** Phase at which the parameter value is sampled. See {@link CRCParticleParameterTiming}. */
-      timing: CRCParticleParameterTiming;
+      /** Phase at which the parameter value is sampled. See {@link PibblParticleParameterTiming}. */
+      timing: PibblParticleParameterTiming;
     }>
   | Readonly<{
-      /** The literal "color" identifying this variant. See {@link CRCParticleParameterDefinition}. */
+      /** The literal "color" identifying this variant. See {@link PibblParticleParameterDefinition}. */
       type: "color";
       /**
        * Value used when no parameter override is supplied. See
-       * {@link CRCParticleParameterDefinition}.
+       * {@link PibblParticleParameterDefinition}.
        */
       default: string;
-      /** Phase at which the parameter value is sampled. See {@link CRCParticleParameterTiming}. */
-      timing: CRCParticleParameterTiming;
+      /** Phase at which the parameter value is sampled. See {@link PibblParticleParameterTiming}. */
+      timing: PibblParticleParameterTiming;
     }>;
 
 /**
  * Named parameter declarations belonging to a particle effect.
  *
- * @see {@link CRCParticleParameterDefinition}
- * @see {@link CRCParticleEffect2DInput}
- * @see {@link CRCParticleValuesOf}
+ * @see {@link PibblParticleParameterDefinition}
+ * @see {@link PibblParticleEffect2DInput}
+ * @see {@link PibblParticleValuesOf}
  */
-export type CRCParticleParameterDefinitions = Readonly<
-  Record<string, CRCParticleParameterDefinition>
+export type PibblParticleParameterDefinitions = Readonly<
+  Record<string, PibblParticleParameterDefinition>
 >;
 
 /**
  * Derives a parameter's value type from its declared particle parameter kind.
  *
- * @see {@link CRCParticleParameterDefinition}
- * @see {@link CRCParticleValuesOf}
+ * @see {@link PibblParticleParameterDefinition}
+ * @see {@link PibblParticleValuesOf}
  */
-export type CRCParticleValueFor<
-  Definition extends CRCParticleParameterDefinition,
+export type PibblParticleValueFor<
+  Definition extends PibblParticleParameterDefinition,
 > = Definition["type"] extends "number"
   ? number
   : Definition["type"] extends "vector2"
@@ -96,24 +96,24 @@ export type CRCParticleValueFor<
 /**
  * Derives the named value record from an effect's parameter definitions.
  *
- * @see {@link CRCParticleParameterDefinitions}
- * @see {@link CRCParticleValueFor}
+ * @see {@link PibblParticleParameterDefinitions}
+ * @see {@link PibblParticleValueFor}
  * @see {@link defineParticleEffect2D}
  */
-export type CRCParticleValuesOf<
-  Definitions extends CRCParticleParameterDefinitions | undefined,
-> = Definitions extends CRCParticleParameterDefinitions
+export type PibblParticleValuesOf<
+  Definitions extends PibblParticleParameterDefinitions | undefined,
+> = Definitions extends PibblParticleParameterDefinitions
   ? Readonly<{
-      [Name in keyof Definitions]: CRCParticleValueFor<Definitions[Name]>;
+      [Name in keyof Definitions]: PibblParticleValueFor<Definitions[Name]>;
     }>
   : Readonly<Record<never, never>>;
 
 /**
  * A numeric, color, or two-component particle parameter value.
  *
- * @see {@link CRCParticleParameterValues}
+ * @see {@link PibblParticleParameterValues}
  */
-export type CRCParticleParameterValue =
+export type PibblParticleParameterValue =
   | number
   | string
   | readonly [number, number];
@@ -121,60 +121,60 @@ export type CRCParticleParameterValue =
 /**
  * Values keyed by a particle effect's parameter names.
  *
- * @see {@link CRCParticleParameterValue}
- * @see {@link CRCParticleCommonProps}
- * @see {@link CRCParticleEffect2D}
+ * @see {@link PibblParticleParameterValue}
+ * @see {@link PibblParticleCommonProps}
+ * @see {@link PibblParticleEffect2D}
  */
-export type CRCParticleParameterValues = Readonly<
-  Record<string, CRCParticleParameterValue>
+export type PibblParticleParameterValues = Readonly<
+  Record<string, PibblParticleParameterValue>
 >;
 
 /**
  * A continuous numeric interval for particle sampling.
  *
- * @see {@link CRCParticleScalar}
+ * @see {@link PibblParticleScalar}
  * @see {@link particleRange}
  */
-export interface CRCParticleRange {
-  /** The literal "between" identifying this variant. See {@link CRCParticleRange}. */
+export interface PibblParticleRange {
+  /** The literal "between" identifying this variant. See {@link PibblParticleRange}. */
   readonly type: "between";
-  /** Lower bound of the coordinate or sampling interval. See {@link CRCParticleRange}. */
+  /** Lower bound of the coordinate or sampling interval. See {@link PibblParticleRange}. */
   readonly min: number;
-  /** Upper bound of the coordinate or sampling interval. See {@link CRCParticleRange}. */
+  /** Upper bound of the coordinate or sampling interval. See {@link PibblParticleRange}. */
   readonly max: number;
 }
 
 /**
  * An integer-valued random sampling interval.
  *
- * @see {@link CRCParticleEmission}
- * @see {@link CRCParticleScalar}
+ * @see {@link PibblParticleEmission}
+ * @see {@link PibblParticleScalar}
  * @see {@link particleInteger}
  */
-export interface CRCParticleIntegerRange {
-  /** The literal "integer" identifying this variant. See {@link CRCParticleIntegerRange}. */
+export interface PibblParticleIntegerRange {
+  /** The literal "integer" identifying this variant. See {@link PibblParticleIntegerRange}. */
   readonly type: "integer";
-  /** Lower bound of the coordinate or sampling interval. See {@link CRCParticleIntegerRange}. */
+  /** Lower bound of the coordinate or sampling interval. See {@link PibblParticleIntegerRange}. */
   readonly min: number;
-  /** Upper bound of the coordinate or sampling interval. See {@link CRCParticleIntegerRange}. */
+  /** Upper bound of the coordinate or sampling interval. See {@link PibblParticleIntegerRange}. */
   readonly max: number;
 }
 
 /**
  * A weighted collection of candidate values for particle sampling.
  *
- * @see {@link CRCParticleInitial2D}
- * @see {@link CRCParticleScalar}
+ * @see {@link PibblParticleInitial2D}
+ * @see {@link PibblParticleScalar}
  * @see {@link particleChoice}
  */
-export interface CRCParticleChoice<T> {
-  /** The literal "choice" identifying this variant. See {@link CRCParticleChoice}. */
+export interface PibblParticleChoice<T> {
+  /** The literal "choice" identifying this variant. See {@link PibblParticleChoice}. */
   readonly type: "choice";
-  /** Weighted candidate values sampled by the effect. See {@link CRCParticleChoice}. */
+  /** Weighted candidate values sampled by the effect. See {@link PibblParticleChoice}. */
   readonly choices: readonly Readonly<{
-    /** Value associated with this sample, input, or result. See {@link CRCParticleChoice}. */
+    /** Value associated with this sample, input, or result. See {@link PibblParticleChoice}. */
     value: T;
-    /** Relative sampling weight or source intensity. See {@link CRCParticleChoice}. */
+    /** Relative sampling weight or source intensity. See {@link PibblParticleChoice}. */
     weight: number;
   }>[];
 }
@@ -182,18 +182,18 @@ export interface CRCParticleChoice<T> {
 /**
  * A symbolic reference resolved against the owning effect's parameter definitions.
  *
- * @see {@link CRCParticleInitial2D}
- * @see {@link CRCParticleScalar}
- * @see {@link CRCParticleVector2}
+ * @see {@link PibblParticleInitial2D}
+ * @see {@link PibblParticleScalar}
+ * @see {@link PibblParticleVector2}
  */
-export interface CRCParticleParameterReference<Name extends string> {
+export interface PibblParticleParameterReference<Name extends string> {
   /**
-   * The literal "parameter" identifying this variant. See {@link CRCParticleParameterReference}.
+   * The literal "parameter" identifying this variant. See {@link PibblParticleParameterReference}.
    */
   readonly type: "parameter";
   /**
    * Name identifying this backend, emitter, or parameter. See
-   * {@link CRCParticleParameterReference}.
+   * {@link PibblParticleParameterReference}.
    */
   readonly name: Name;
 }
@@ -201,455 +201,455 @@ export interface CRCParticleParameterReference<Name extends string> {
 /**
  * A literal, random distribution, weighted choice, or parameter reference yielding a number.
  *
- * @see {@link CRCParticleRange}
- * @see {@link CRCParticleIntegerRange}
- * @see {@link CRCParticleChoice}
- * @see {@link CRCParticleParameterReference}
- * @see {@link CRCParticleInitial2D}
+ * @see {@link PibblParticleRange}
+ * @see {@link PibblParticleIntegerRange}
+ * @see {@link PibblParticleChoice}
+ * @see {@link PibblParticleParameterReference}
+ * @see {@link PibblParticleInitial2D}
  */
-export type CRCParticleScalar =
+export type PibblParticleScalar =
   | number
-  | CRCParticleRange
-  | CRCParticleIntegerRange
-  | CRCParticleChoice<number>
-  | CRCParticleParameterReference<string>;
+  | PibblParticleRange
+  | PibblParticleIntegerRange
+  | PibblParticleChoice<number>
+  | PibblParticleParameterReference<string>;
 
 /**
  * Two independently sampled scalar values or a reference to a vector parameter.
  *
- * @see {@link CRCParticleScalar}
- * @see {@link CRCParticleParameterReference}
- * @see {@link CRCParticleInitial2D}
- * @see {@link CRCParticleMotion2D}
+ * @see {@link PibblParticleScalar}
+ * @see {@link PibblParticleParameterReference}
+ * @see {@link PibblParticleInitial2D}
+ * @see {@link PibblParticleMotion2D}
  */
-export type CRCParticleVector2 =
-  | readonly [CRCParticleScalar, CRCParticleScalar]
-  | CRCParticleParameterReference<string>;
+export type PibblParticleVector2 =
+  | readonly [PibblParticleScalar, PibblParticleScalar]
+  | PibblParticleParameterReference<string>;
 
 /**
  * A scalar or two-component value supported by particle curves.
  *
- * @see {@link CRCParticleCurve}
+ * @see {@link PibblParticleCurve}
  * @see {@link particleCurve}
  */
-export type CRCParticleCurveValue = number | readonly [number, number];
+export type PibblParticleCurveValue = number | readonly [number, number];
 
 /**
  * Easing used to interpolate between particle keyframes.
  *
- * @see {@link CRCParticleCurve}
- * @see {@link CRCParticleGradient}
+ * @see {@link PibblParticleCurve}
+ * @see {@link PibblParticleGradient}
  * @see {@link particleCurve}
- * @see {@link CRCEasing}
+ * @see {@link PibblEasing}
  */
-export interface CRCParticleCurveOptions {
-  /** Maps normalized progress before interpolation. See {@link CRCParticleCurveOptions}. */
-  readonly easing?: import("@crc/core").CRCEasing;
+export interface PibblParticleCurveOptions {
+  /** Maps normalized progress before interpolation. See {@link PibblParticleCurveOptions}. */
+  readonly easing?: import("@pibbl/core").PibblEasing;
 }
 
 /**
  * Keyframes describing a numeric or two-component value over particle lifetime.
  *
- * @see {@link CRCParticleCurveValue}
- * @see {@link CRCParticleCurveOptions}
- * @see {@link CRCParticleAppearance}
+ * @see {@link PibblParticleCurveValue}
+ * @see {@link PibblParticleCurveOptions}
+ * @see {@link PibblParticleAppearance}
  * @see {@link particleCurve}
  */
-export interface CRCParticleCurve<T extends CRCParticleCurveValue> {
-  /** The literal "curve" identifying this variant. See {@link CRCParticleCurve}. */
+export interface PibblParticleCurve<T extends PibblParticleCurveValue> {
+  /** The literal "curve" identifying this variant. See {@link PibblParticleCurve}. */
   readonly type: "curve";
-  /** Ordered keyframes at normalized lifetime positions. See {@link CRCParticleCurve}. */
+  /** Ordered keyframes at normalized lifetime positions. See {@link PibblParticleCurve}. */
   readonly keys: readonly (readonly [time: number, value: T])[];
-  /** Interpolation options applied between keyframes. See {@link CRCParticleCurveOptions}. */
-  readonly options?: CRCParticleCurveOptions;
+  /** Interpolation options applied between keyframes. See {@link PibblParticleCurveOptions}. */
+  readonly options?: PibblParticleCurveOptions;
 }
 
 /**
  * Color keyframes interpolated across normalized particle lifetime.
  *
- * @see {@link CRCParticleCurveOptions}
- * @see {@link CRCParticleAppearance}
+ * @see {@link PibblParticleCurveOptions}
+ * @see {@link PibblParticleAppearance}
  * @see {@link particleGradient}
  */
-export interface CRCParticleGradient {
-  /** The literal "gradient" identifying this variant. See {@link CRCParticleGradient}. */
+export interface PibblParticleGradient {
+  /** The literal "gradient" identifying this variant. See {@link PibblParticleGradient}. */
   readonly type: "gradient";
-  /** Ordered keyframes at normalized lifetime positions. See {@link CRCParticleGradient}. */
+  /** Ordered keyframes at normalized lifetime positions. See {@link PibblParticleGradient}. */
   readonly keys: readonly (readonly [time: number, color: string])[];
-  /** Interpolation options applied between keyframes. See {@link CRCParticleCurveOptions}. */
-  readonly options?: CRCParticleCurveOptions;
+  /** Interpolation options applied between keyframes. See {@link PibblParticleCurveOptions}. */
+  readonly options?: PibblParticleCurveOptions;
 }
 
 /**
  * A timed rate, scheduled burst, or manually triggered particle emission rule.
  *
- * @see {@link CRCParticleIntegerRange}
- * @see {@link CRCParticleEmitter2D}
+ * @see {@link PibblParticleIntegerRange}
+ * @see {@link PibblParticleEmitter2D}
  */
-export type CRCParticleEmission =
+export type PibblParticleEmission =
   | Readonly<{
-      /** The literal "rate" identifying this variant. See {@link CRCParticleEmission}. */
+      /** The literal "rate" identifying this variant. See {@link PibblParticleEmission}. */
       type: "rate";
-      /** Continuous emission rate in particles per second. See {@link CRCParticleEmission}. */
+      /** Continuous emission rate in particles per second. See {@link PibblParticleEmission}. */
       particlesPerSecond: number;
-      /** Delay before the emission rule becomes active. See {@link CRCParticleEmission}. */
+      /** Delay before the emission rule becomes active. See {@link PibblParticleEmission}. */
       startMilliseconds?: number;
-      /** Duration for which the emission rule remains active. See {@link CRCParticleEmission}. */
+      /** Duration for which the emission rule remains active. See {@link PibblParticleEmission}. */
       durationMilliseconds?: number;
       /**
        * Probability that an eligible emission is accepted by this rule. See
-       * {@link CRCParticleEmission}.
+       * {@link PibblParticleEmission}.
        */
       probability?: number;
-      /** Whether the browser reported an auto-repeated key press. See {@link CRCParticleEmission}. */
+      /** Whether the browser reported an auto-repeated key press. See {@link PibblParticleEmission}. */
       repeat?: Readonly<{
-        /** Interval between repeated emissions. See {@link CRCParticleEmission}. */
+        /** Interval between repeated emissions. See {@link PibblParticleEmission}. */
         everyMilliseconds: number;
         /**
          * Number of particles or sources requested by this configuration. See
-         * {@link CRCParticleEmission}.
+         * {@link PibblParticleEmission}.
          */
         count: number;
       }>;
     }>
   | Readonly<{
-      /** The literal "burst" identifying this variant. See {@link CRCParticleEmission}. */
+      /** The literal "burst" identifying this variant. See {@link PibblParticleEmission}. */
       type: "burst";
-      /** Logical time at which a scheduled burst occurs. See {@link CRCParticleEmission}. */
+      /** Logical time at which a scheduled burst occurs. See {@link PibblParticleEmission}. */
       atMilliseconds: number;
       /**
        * Number of particles or sources requested by this configuration. See
-       * {@link CRCParticleIntegerRange}.
+       * {@link PibblParticleIntegerRange}.
        */
-      count: number | CRCParticleIntegerRange;
+      count: number | PibblParticleIntegerRange;
       /**
        * Probability that an eligible emission is accepted by this rule. See
-       * {@link CRCParticleEmission}.
+       * {@link PibblParticleEmission}.
        */
       probability?: number;
-      /** Whether the browser reported an auto-repeated key press. See {@link CRCParticleEmission}. */
+      /** Whether the browser reported an auto-repeated key press. See {@link PibblParticleEmission}. */
       repeat?: Readonly<{
-        /** Interval between repeated emissions. See {@link CRCParticleEmission}. */
+        /** Interval between repeated emissions. See {@link PibblParticleEmission}. */
         everyMilliseconds: number;
         /**
          * Number of particles or sources requested by this configuration. See
-         * {@link CRCParticleEmission}.
+         * {@link PibblParticleEmission}.
          */
         count: number;
       }>;
     }>
   | Readonly<{
-      /** The literal "manual" identifying this variant. See {@link CRCParticleEmission}. */
+      /** The literal "manual" identifying this variant. See {@link PibblParticleEmission}. */
       type: "manual";
       /**
        * Number of particles or sources requested by this configuration. See
-       * {@link CRCParticleIntegerRange}.
+       * {@link PibblParticleIntegerRange}.
        */
-      count?: number | CRCParticleIntegerRange;
+      count?: number | PibblParticleIntegerRange;
     }>;
 
 /**
  * The point, line, rectangle, circle, or ring used to sample particle birth positions.
  *
- * @see {@link CRCParticleEmitter2D}
+ * @see {@link PibblParticleEmitter2D}
  */
-export type CRCParticleShape2D =
+export type PibblParticleShape2D =
   | Readonly<{
-      /** The literal "point" identifying this variant. See {@link CRCParticleShape2D}. */
+      /** The literal "point" identifying this variant. See {@link PibblParticleShape2D}. */
       type: "point";
       /**
        * Position of the geometry, source, or selected resize handle. See
-       * {@link CRCParticleShape2D}.
+       * {@link PibblParticleShape2D}.
        */
       position?: readonly [number, number];
     }>
   | Readonly<{
-      /** The literal "line" identifying this variant. See {@link CRCParticleShape2D}. */
+      /** The literal "line" identifying this variant. See {@link PibblParticleShape2D}. */
       type: "line";
-      /** Starting endpoint or value. See {@link CRCParticleShape2D}. */
+      /** Starting endpoint or value. See {@link PibblParticleShape2D}. */
       from: readonly [number, number];
-      /** Destination endpoint or value. See {@link CRCParticleShape2D}. */
+      /** Destination endpoint or value. See {@link PibblParticleShape2D}. */
       to: readonly [number, number];
     }>
   | Readonly<{
-      /** The literal "rectangle" identifying this variant. See {@link CRCParticleShape2D}. */
+      /** The literal "rectangle" identifying this variant. See {@link PibblParticleShape2D}. */
       type: "rectangle";
       /**
        * Horizontal extent in the units of the containing geometry or surface. See
-       * {@link CRCParticleShape2D}.
+       * {@link PibblParticleShape2D}.
        */
       width: number;
       /**
        * Vertical extent in the units of the containing geometry or surface. See
-       * {@link CRCParticleShape2D}.
+       * {@link PibblParticleShape2D}.
        */
       height: number;
-      /** Selects `"interior"`, `"edge"` for sample. See {@link CRCParticleShape2D}. */
+      /** Selects `"interior"`, `"edge"` for sample. See {@link PibblParticleShape2D}. */
       sample: "interior" | "edge";
     }>
   | Readonly<{
-      /** The literal "circle" identifying this variant. See {@link CRCParticleShape2D}. */
+      /** The literal "circle" identifying this variant. See {@link PibblParticleShape2D}. */
       type: "circle";
-      /** Radius in the coordinate system of this geometry or effect. See {@link CRCParticleShape2D}. */
+      /** Radius in the coordinate system of this geometry or effect. See {@link PibblParticleShape2D}. */
       radius: number;
-      /** Selects `"interior"`, `"circumference"` for sample. See {@link CRCParticleShape2D}. */
+      /** Selects `"interior"`, `"circumference"` for sample. See {@link PibblParticleShape2D}. */
       sample: "interior" | "circumference";
     }>
   | Readonly<{
-      /** The literal "ring" identifying this variant. See {@link CRCParticleShape2D}. */
+      /** The literal "ring" identifying this variant. See {@link PibblParticleShape2D}. */
       type: "ring";
-      /** Radius of the inner boundary. See {@link CRCParticleShape2D}. */
+      /** Radius of the inner boundary. See {@link PibblParticleShape2D}. */
       innerRadius: number;
-      /** Radius of the outer boundary. See {@link CRCParticleShape2D}. */
+      /** Radius of the outer boundary. See {@link PibblParticleShape2D}. */
       outerRadius: number;
     }>;
 
 /**
  * Particle birth values for lifetime, velocity, size, rotation, color, and opacity.
  *
- * @see {@link CRCParticleScalar}
- * @see {@link CRCParticleVector2}
- * @see {@link CRCParticleChoice}
- * @see {@link CRCParticleParameterReference}
- * @see {@link CRCParticleEmitter2D}
+ * @see {@link PibblParticleScalar}
+ * @see {@link PibblParticleVector2}
+ * @see {@link PibblParticleChoice}
+ * @see {@link PibblParticleParameterReference}
+ * @see {@link PibblParticleEmitter2D}
  */
-export interface CRCParticleInitial2D {
-  /** Particle lifetime sampled at birth, in milliseconds. See {@link CRCParticleScalar}. */
-  readonly lifetimeMilliseconds: CRCParticleScalar;
-  /** Linear velocity used by the particle motion rule. See {@link CRCParticleVector2}. */
-  readonly velocity?: CRCParticleVector2;
+export interface PibblParticleInitial2D {
+  /** Particle lifetime sampled at birth, in milliseconds. See {@link PibblParticleScalar}. */
+  readonly lifetimeMilliseconds: PibblParticleScalar;
+  /** Linear velocity used by the particle motion rule. See {@link PibblParticleVector2}. */
+  readonly velocity?: PibblParticleVector2;
   /**
-   * Scalar or two-component size sampled at particle birth. See {@link CRCParticleScalar},
-   * {@link CRCParticleVector2}.
+   * Scalar or two-component size sampled at particle birth. See {@link PibblParticleScalar},
+   * {@link PibblParticleVector2}.
    */
-  readonly size?: CRCParticleScalar | CRCParticleVector2;
-  /** Rotation in degrees sampled at particle birth. See {@link CRCParticleScalar}. */
-  readonly rotationDegrees?: CRCParticleScalar;
-  /** Angular velocity in degrees per second. See {@link CRCParticleScalar}. */
-  readonly angularVelocityDegreesPerSecond?: CRCParticleScalar;
+  readonly size?: PibblParticleScalar | PibblParticleVector2;
+  /** Rotation in degrees sampled at particle birth. See {@link PibblParticleScalar}. */
+  readonly rotationDegrees?: PibblParticleScalar;
+  /** Angular velocity in degrees per second. See {@link PibblParticleScalar}. */
+  readonly angularVelocityDegreesPerSecond?: PibblParticleScalar;
   /**
-   * Color sampled at particle birth. See {@link CRCParticleChoice},
-   * {@link CRCParticleParameterReference}.
+   * Color sampled at particle birth. See {@link PibblParticleChoice},
+   * {@link PibblParticleParameterReference}.
    */
   readonly color?:
-    string | CRCParticleChoice<string> | CRCParticleParameterReference<string>;
-  /** Opacity sampled at particle birth. See {@link CRCParticleScalar}. */
-  readonly opacity?: CRCParticleScalar;
+    string | PibblParticleChoice<string> | PibblParticleParameterReference<string>;
+  /** Opacity sampled at particle birth. See {@link PibblParticleScalar}. */
+  readonly opacity?: PibblParticleScalar;
 }
 
 /**
  * An analytic 2D motion rule such as gravity, drag, drift, orbit, or sway.
  *
- * @see {@link CRCParticleVector2}
- * @see {@link CRCParticleScalar}
- * @see {@link CRCParticleEmitter2D}
+ * @see {@link PibblParticleVector2}
+ * @see {@link PibblParticleScalar}
+ * @see {@link PibblParticleEmitter2D}
  */
-export type CRCParticleMotion2D =
+export type PibblParticleMotion2D =
   | Readonly<{
-      /** Selects `"acceleration"`, `"gravity"` for type. See {@link CRCParticleMotion2D}. */
+      /** Selects `"acceleration"`, `"gravity"` for type. See {@link PibblParticleMotion2D}. */
       type: "acceleration" | "gravity";
-      /** Value associated with this sample, input, or result. See {@link CRCParticleVector2}. */
-      value: CRCParticleVector2;
+      /** Value associated with this sample, input, or result. See {@link PibblParticleVector2}. */
+      value: PibblParticleVector2;
     }>
   | Readonly<{
-      /** The literal "drag" identifying this variant. See {@link CRCParticleMotion2D}. */
+      /** The literal "drag" identifying this variant. See {@link PibblParticleMotion2D}. */
       type: "drag";
-      /** Magnitude of the filter or motion adjustment. See {@link CRCParticleScalar}. */
-      amount: CRCParticleScalar;
+      /** Magnitude of the filter or motion adjustment. See {@link PibblParticleScalar}. */
+      amount: PibblParticleScalar;
     }>
   | Readonly<{
-      /** The literal "drift" identifying this variant. See {@link CRCParticleMotion2D}. */
+      /** The literal "drift" identifying this variant. See {@link PibblParticleMotion2D}. */
       type: "drift";
-      /** Linear velocity used by the particle motion rule. See {@link CRCParticleVector2}. */
-      velocity: CRCParticleVector2;
+      /** Linear velocity used by the particle motion rule. See {@link PibblParticleVector2}. */
+      velocity: PibblParticleVector2;
     }>
   | Readonly<{
-      /** The literal "radialAcceleration" identifying this variant. See {@link CRCParticleMotion2D}. */
+      /** The literal "radialAcceleration" identifying this variant. See {@link PibblParticleMotion2D}. */
       type: "radialAcceleration";
-      /** Center of radial acceleration or orbital motion. See {@link CRCParticleMotion2D}. */
+      /** Center of radial acceleration or orbital motion. See {@link PibblParticleMotion2D}. */
       center: readonly [number, number];
-      /** Magnitude of the filter or motion adjustment. See {@link CRCParticleScalar}. */
-      amount: CRCParticleScalar;
+      /** Magnitude of the filter or motion adjustment. See {@link PibblParticleScalar}. */
+      amount: PibblParticleScalar;
     }>
   | Readonly<{
-      /** The literal "orbit" identifying this variant. See {@link CRCParticleMotion2D}. */
+      /** The literal "orbit" identifying this variant. See {@link PibblParticleMotion2D}. */
       type: "orbit";
-      /** Center of radial acceleration or orbital motion. See {@link CRCParticleMotion2D}. */
+      /** Center of radial acceleration or orbital motion. See {@link PibblParticleMotion2D}. */
       center: readonly [number, number];
-      /** Angular motion rate in degrees per second. See {@link CRCParticleScalar}. */
-      degreesPerSecond: CRCParticleScalar;
+      /** Angular motion rate in degrees per second. See {@link PibblParticleScalar}. */
+      degreesPerSecond: PibblParticleScalar;
     }>
   | Readonly<{
-      /** The literal "sway" identifying this variant. See {@link CRCParticleMotion2D}. */
+      /** The literal "sway" identifying this variant. See {@link PibblParticleMotion2D}. */
       type: "sway";
-      /** Maximum excursion of the oscillating motion. See {@link CRCParticleScalar}. */
-      amplitude: CRCParticleScalar;
-      /** Rate at which the pattern or motion repeats. See {@link CRCParticleScalar}. */
-      frequency: CRCParticleScalar | readonly [number, number];
+      /** Maximum excursion of the oscillating motion. See {@link PibblParticleScalar}. */
+      amplitude: PibblParticleScalar;
+      /** Rate at which the pattern or motion repeats. See {@link PibblParticleScalar}. */
+      frequency: PibblParticleScalar | readonly [number, number];
     }>
   | Readonly<{
-      /** The literal "angularVelocity" identifying this variant. See {@link CRCParticleMotion2D}. */
+      /** The literal "angularVelocity" identifying this variant. See {@link PibblParticleMotion2D}. */
       type: "angularVelocity";
-      /** Angular motion rate in degrees per second. See {@link CRCParticleScalar}. */
-      degreesPerSecond: CRCParticleScalar;
+      /** Angular motion rate in degrees per second. See {@link PibblParticleScalar}. */
+      degreesPerSecond: PibblParticleScalar;
     }>;
 
 /**
  * Size, rotation, color, and opacity changes over a particle's lifetime.
  *
- * @see {@link CRCParticleCurve}
- * @see {@link CRCParticleGradient}
- * @see {@link CRCParticleEmitter2D}
+ * @see {@link PibblParticleCurve}
+ * @see {@link PibblParticleGradient}
+ * @see {@link PibblParticleEmitter2D}
  */
-export interface CRCParticleAppearance {
+export interface PibblParticleAppearance {
   /**
    * Scalar or two-component size curve evaluated over normalized particle lifetime. See
-   * {@link CRCParticleCurve}.
+   * {@link PibblParticleCurve}.
    */
-  readonly size?: CRCParticleCurve<number | readonly [number, number]>;
+  readonly size?: PibblParticleCurve<number | readonly [number, number]>;
   /**
    * Rotation curve in degrees evaluated over normalized particle lifetime. See
-   * {@link CRCParticleCurve}.
+   * {@link PibblParticleCurve}.
    */
-  readonly rotationDegrees?: CRCParticleCurve<number>;
+  readonly rotationDegrees?: PibblParticleCurve<number>;
   /**
-   * Color gradient evaluated over normalized particle lifetime. See {@link CRCParticleGradient}.
+   * Color gradient evaluated over normalized particle lifetime. See {@link PibblParticleGradient}.
    */
-  readonly color?: CRCParticleGradient;
-  /** Opacity curve evaluated over normalized particle lifetime. See {@link CRCParticleCurve}. */
-  readonly opacity?: CRCParticleCurve<number>;
+  readonly color?: PibblParticleGradient;
+  /** Opacity curve evaluated over normalized particle lifetime. See {@link PibblParticleCurve}. */
+  readonly opacity?: PibblParticleCurve<number>;
 }
 
 /**
  * Canvas rendering configuration for circles, rectangles, paths, or sprites.
  *
  * @see {@link PathGeometry}
- * @see {@link CRCParticleEmitter2D}
+ * @see {@link PibblParticleEmitter2D}
  */
-export type CRCParticleRenderer2D =
+export type PibblParticleRenderer2D =
   | Readonly<{
-      /** The literal "circle" identifying this variant. See {@link CRCParticleRenderer2D}. */
+      /** The literal "circle" identifying this variant. See {@link PibblParticleRenderer2D}. */
       type: "circle";
-      /** Selects `"source-over"`, `"additive"` for blend. See {@link CRCParticleRenderer2D}. */
+      /** Selects `"source-over"`, `"additive"` for blend. See {@link PibblParticleRenderer2D}. */
       blend?: "source-over" | "additive";
     }>
   | Readonly<{
-      /** The literal "rectangle" identifying this variant. See {@link CRCParticleRenderer2D}. */
+      /** The literal "rectangle" identifying this variant. See {@link PibblParticleRenderer2D}. */
       type: "rectangle";
-      /** Width-to-height ratio of the particle rectangle. See {@link CRCParticleRenderer2D}. */
+      /** Width-to-height ratio of the particle rectangle. See {@link PibblParticleRenderer2D}. */
       aspectRatio?: number;
-      /** Selects `"source-over"`, `"additive"` for blend. See {@link CRCParticleRenderer2D}. */
+      /** Selects `"source-over"`, `"additive"` for blend. See {@link PibblParticleRenderer2D}. */
       blend?: "source-over" | "additive";
     }>
   | Readonly<{
-      /** The literal "path" identifying this variant. See {@link CRCParticleRenderer2D}. */
+      /** The literal "path" identifying this variant. See {@link PibblParticleRenderer2D}. */
       type: "path";
       /** Path geometry used by this operation. See {@link PathGeometry}. */
       path: Path2D | PathGeometry;
-      /** Selects `"source-over"`, `"additive"` for blend. See {@link CRCParticleRenderer2D}. */
+      /** Selects `"source-over"`, `"additive"` for blend. See {@link PibblParticleRenderer2D}. */
       blend?: "source-over" | "additive";
     }>
   | Readonly<{
-      /** The literal "sprite" identifying this variant. See {@link CRCParticleRenderer2D}. */
+      /** The literal "sprite" identifying this variant. See {@link PibblParticleRenderer2D}. */
       type: "sprite";
-      /** Image used to paint each sprite particle. See {@link CRCParticleRenderer2D}. */
+      /** Image used to paint each sprite particle. See {@link PibblParticleRenderer2D}. */
       source: CanvasImageSource;
       /**
        * Logical point to which the content or result is anchored. See
-       * {@link CRCParticleRenderer2D}.
+       * {@link PibblParticleRenderer2D}.
        */
       anchor?: readonly [number, number];
-      /** Selects `"source-over"`, `"additive"` for blend. See {@link CRCParticleRenderer2D}. */
+      /** Selects `"source-over"`, `"additive"` for blend. See {@link PibblParticleRenderer2D}. */
       blend?: "source-over" | "additive";
     }>;
 
 /**
  * Conservative minimum and maximum particle extents used for emitter culling.
  *
- * @see {@link CRCParticleEmitter2D}
+ * @see {@link PibblParticleEmitter2D}
  */
-export interface CRCParticleBounds2D {
-  /** Lower bound of the coordinate or sampling interval. See {@link CRCParticleBounds2D}. */
+export interface PibblParticleBounds2D {
+  /** Lower bound of the coordinate or sampling interval. See {@link PibblParticleBounds2D}. */
   readonly min: readonly [number, number];
-  /** Upper bound of the coordinate or sampling interval. See {@link CRCParticleBounds2D}. */
+  /** Upper bound of the coordinate or sampling interval. See {@link PibblParticleBounds2D}. */
   readonly max: readonly [number, number];
 }
 
 /**
  * Whether a full emitter rejects new particles or recycles its oldest particles.
  *
- * @see {@link CRCParticleEmitter2D}
+ * @see {@link PibblParticleEmitter2D}
  */
-export type CRCParticleOverflow = "reject-newest" | "recycle-oldest";
+export type PibblParticleOverflow = "reject-newest" | "recycle-oldest";
 
 /**
  * Capacity, emission, spawn geometry, motion, appearance, and rendering of one named emitter.
  *
- * @see {@link CRCParticleOverflow}
- * @see {@link CRCParticleEmission}
- * @see {@link CRCParticleShape2D}
- * @see {@link CRCParticleInitial2D}
- * @see {@link CRCParticleMotion2D}
- * @see {@link CRCParticleAppearance}
- * @see {@link CRCParticleRenderer2D}
- * @see {@link CRCParticleBounds2D}
- * @see {@link CRCParticleEffect2DInput}
+ * @see {@link PibblParticleOverflow}
+ * @see {@link PibblParticleEmission}
+ * @see {@link PibblParticleShape2D}
+ * @see {@link PibblParticleInitial2D}
+ * @see {@link PibblParticleMotion2D}
+ * @see {@link PibblParticleAppearance}
+ * @see {@link PibblParticleRenderer2D}
+ * @see {@link PibblParticleBounds2D}
+ * @see {@link PibblParticleEffect2DInput}
  */
-export interface CRCParticleEmitter2D {
-  /** Name identifying this backend, emitter, or parameter. See {@link CRCParticleEmitter2D}. */
+export interface PibblParticleEmitter2D {
+  /** Name identifying this backend, emitter, or parameter. See {@link PibblParticleEmitter2D}. */
   readonly name: string;
-  /** Maximum number of particles retained by this emitter. See {@link CRCParticleEmitter2D}. */
+  /** Maximum number of particles retained by this emitter. See {@link PibblParticleEmitter2D}. */
   readonly capacity: number;
   /**
    * Rejects newly emitted particles or recycles the oldest particles when capacity is exhausted.
-   * See {@link CRCParticleOverflow}.
+   * See {@link PibblParticleOverflow}.
    */
-  readonly overflow?: CRCParticleOverflow;
-  /** The literal "local" identifying this variant. See {@link CRCParticleEmitter2D}. */
+  readonly overflow?: PibblParticleOverflow;
+  /** The literal "local" identifying this variant. See {@link PibblParticleEmitter2D}. */
   readonly space?: "local";
-  /** Timed and manual emission rules for the emitter. See {@link CRCParticleEmission}. */
-  readonly emission: readonly CRCParticleEmission[];
-  /** Immutable collision geometry or particle spawn shape. See {@link CRCParticleShape2D}. */
-  readonly shape: CRCParticleShape2D;
+  /** Timed and manual emission rules for the emitter. See {@link PibblParticleEmission}. */
+  readonly emission: readonly PibblParticleEmission[];
+  /** Immutable collision geometry or particle spawn shape. See {@link PibblParticleShape2D}. */
+  readonly shape: PibblParticleShape2D;
   /**
-   * Distributions and parameters sampled when a particle is born. See {@link CRCParticleInitial2D}
+   * Distributions and parameters sampled when a particle is born. See {@link PibblParticleInitial2D}
    * .
    */
-  readonly initial: CRCParticleInitial2D;
-  /** Motion rules applied over particle lifetime. See {@link CRCParticleMotion2D}. */
-  readonly motion?: readonly CRCParticleMotion2D[];
-  /** Lifetime-dependent visual properties of the particles. See {@link CRCParticleAppearance}. */
-  readonly appearance?: CRCParticleAppearance;
+  readonly initial: PibblParticleInitial2D;
+  /** Motion rules applied over particle lifetime. See {@link PibblParticleMotion2D}. */
+  readonly motion?: readonly PibblParticleMotion2D[];
+  /** Lifetime-dependent visual properties of the particles. See {@link PibblParticleAppearance}. */
+  readonly appearance?: PibblParticleAppearance;
   /**
    * Canvas mark or sprite configuration used to paint this emitter's particles. See
-   * {@link CRCParticleRenderer2D}.
+   * {@link PibblParticleRenderer2D}.
    */
-  readonly renderer: CRCParticleRenderer2D;
+  readonly renderer: PibblParticleRenderer2D;
   /**
    * Conservative emitter bounds used for culling; required when they cannot be derived. See
-   * {@link CRCParticleBounds2D}.
+   * {@link PibblParticleBounds2D}.
    */
-  readonly bounds?: CRCParticleBounds2D;
+  readonly bounds?: PibblParticleBounds2D;
 }
 
 /**
  * Authored parameters and nonempty emitter definitions used to create a 2D effect.
  *
- * @see {@link CRCParticleParameterDefinitions}
- * @see {@link CRCParticleEmitter2D}
- * @see {@link CRCParticleDiagnostic}
+ * @see {@link PibblParticleParameterDefinitions}
+ * @see {@link PibblParticleEmitter2D}
+ * @see {@link PibblParticleDiagnostic}
  * @see {@link defineParticleEffect2D}
  */
-export interface CRCParticleEffect2DInput {
-  /** Optional label used in diagnostics. See {@link CRCParticleEffect2DInput}. */
+export interface PibblParticleEffect2DInput {
+  /** Optional label used in diagnostics. See {@link PibblParticleEffect2DInput}. */
   readonly debugName?: string;
   /**
    * Named parameter definitions or values for this effect instance. See
-   * {@link CRCParticleParameterDefinitions}.
+   * {@link PibblParticleParameterDefinitions}.
    */
-  readonly parameters?: CRCParticleParameterDefinitions;
-  /** Named emitters forming the reusable effect. See {@link CRCParticleEmitter2D}. */
-  readonly emitters: readonly [CRCParticleEmitter2D, ...CRCParticleEmitter2D[]];
+  readonly parameters?: PibblParticleParameterDefinitions;
+  /** Named emitters forming the reusable effect. See {@link PibblParticleEmitter2D}. */
+  readonly emitters: readonly [PibblParticleEmitter2D, ...PibblParticleEmitter2D[]];
 }
 
 declare const particleEffectBrand: unique symbol;
@@ -657,16 +657,16 @@ declare const particleEffectBrand: unique symbol;
 /**
  * A validated, branded 2D effect carrying its emitter-name and parameter types.
  *
- * @see {@link CRCParticleParameterValues}
+ * @see {@link PibblParticleParameterValues}
  * @see {@link Particles2DProps}
  * @see {@link defineParticleEffect2D}
  * @see {@link useParticleSystem}
  */
-export interface CRCParticleEffect2D<
+export interface PibblParticleEffect2D<
   EmitterName extends string = string,
-  Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
+  Parameters extends PibblParticleParameterValues = PibblParticleParameterValues,
 > {
-  /** The literal 2 identifying this variant. See {@link CRCParticleEffect2D}. */
+  /** The literal 2 identifying this variant. See {@link PibblParticleEffect2D}. */
   readonly dimension: 2;
   readonly [particleEffectBrand]: {
     readonly emitterName: EmitterName;
@@ -677,9 +677,9 @@ export interface CRCParticleEffect2D<
 /**
  * The lifecycle state of a mounted particle system, including draining and disposal.
  *
- * @see {@link CRCParticleSystem}
+ * @see {@link PibblParticleSystem}
  */
-export type CRCParticleSystemStatus =
+export type PibblParticleSystemStatus =
   | "idle"
   | "scheduled"
   | "running"
@@ -691,9 +691,9 @@ export type CRCParticleSystemStatus =
 /**
  * The selected particle execution path, or unbound before a renderer is attached.
  *
- * @see {@link CRCParticleSystem}
+ * @see {@link PibblParticleSystem}
  */
-export type CRCParticleExecution =
+export type PibblParticleExecution =
   | "unbound"
   | "stateless-canvas"
   | "flow-canvas";
@@ -701,58 +701,58 @@ export type CRCParticleExecution =
 /**
  * Notifies that a particle system has started a run.
  *
- * @see {@link CRCParticleSystemEvent}
+ * @see {@link PibblParticleSystemEvent}
  */
-export interface CRCParticleStartEvent {
-  /** The literal "start" identifying this variant. See {@link CRCParticleStartEvent}. */
+export interface PibblParticleStartEvent {
+  /** The literal "start" identifying this variant. See {@link PibblParticleStartEvent}. */
   readonly type: "start";
 }
 
 /**
  * Reports the requested and accepted particle counts for an emitter burst.
  *
- * @see {@link CRCParticleSystemEvent}
+ * @see {@link PibblParticleSystemEvent}
  */
-export interface CRCParticleBurstAcceptedEvent {
+export interface PibblParticleBurstAcceptedEvent {
   /**
    * The literal "burst-accepted" identifying this variant. See
-   * {@link CRCParticleBurstAcceptedEvent}.
+   * {@link PibblParticleBurstAcceptedEvent}.
    */
   readonly type: "burst-accepted";
   /**
    * Name of the emitter associated with this notification. See
-   * {@link CRCParticleBurstAcceptedEvent}.
+   * {@link PibblParticleBurstAcceptedEvent}.
    */
   readonly emitter: string;
-  /** Number of particles requested by the burst. See {@link CRCParticleBurstAcceptedEvent}. */
+  /** Number of particles requested by the burst. See {@link PibblParticleBurstAcceptedEvent}. */
   readonly requested: number;
-  /** Number of particles admitted by the burst. See {@link CRCParticleBurstAcceptedEvent}. */
+  /** Number of particles admitted by the burst. See {@link PibblParticleBurstAcceptedEvent}. */
   readonly accepted: number;
 }
 
 /**
  * Reports a burst rejection and whether capacity or system state prevented admission.
  *
- * @see {@link CRCParticleSystemEvent}
+ * @see {@link PibblParticleSystemEvent}
  */
-export interface CRCParticleBurstRejectedEvent {
+export interface PibblParticleBurstRejectedEvent {
   /**
    * The literal "burst-rejected" identifying this variant. See
-   * {@link CRCParticleBurstRejectedEvent}.
+   * {@link PibblParticleBurstRejectedEvent}.
    */
   readonly type: "burst-rejected";
   /**
    * Name of the emitter associated with this notification. See
-   * {@link CRCParticleBurstRejectedEvent}.
+   * {@link PibblParticleBurstRejectedEvent}.
    */
   readonly emitter: string;
-  /** Number of particles requested by the burst. See {@link CRCParticleBurstRejectedEvent}. */
+  /** Number of particles requested by the burst. See {@link PibblParticleBurstRejectedEvent}. */
   readonly requested: number;
-  /** Number of particles admitted by the burst. See {@link CRCParticleBurstRejectedEvent}. */
+  /** Number of particles admitted by the burst. See {@link PibblParticleBurstRejectedEvent}. */
   readonly accepted: number;
   /**
    * Reason the operation could not produce its ordinary result. See
-   * {@link CRCParticleBurstRejectedEvent}.
+   * {@link PibblParticleBurstRejectedEvent}.
    */
   readonly reason: "capacity" | "paused" | "stopped" | "disposed";
 }
@@ -760,147 +760,147 @@ export interface CRCParticleBurstRejectedEvent {
 /**
  * Notifies that emission has stopped while existing particles finish their lifetimes.
  *
- * @see {@link CRCParticleSystemEvent}
+ * @see {@link PibblParticleSystemEvent}
  */
-export interface CRCParticleDrainStartEvent {
-  /** The literal "drain-start" identifying this variant. See {@link CRCParticleDrainStartEvent}. */
+export interface PibblParticleDrainStartEvent {
+  /** The literal "drain-start" identifying this variant. See {@link PibblParticleDrainStartEvent}. */
   readonly type: "drain-start";
 }
 
 /**
  * Notifies that a particle system has finished its active run.
  *
- * @see {@link CRCParticleSystemEvent}
+ * @see {@link PibblParticleSystemEvent}
  */
-export interface CRCParticleFinishEvent {
-  /** The literal "finish" identifying this variant. See {@link CRCParticleFinishEvent}. */
+export interface PibblParticleFinishEvent {
+  /** The literal "finish" identifying this variant. See {@link PibblParticleFinishEvent}. */
   readonly type: "finish";
 }
 
 /**
  * The lifecycle and burst-admission notifications emitted by a particle system.
  *
- * @see {@link CRCParticleStartEvent}
- * @see {@link CRCParticleBurstAcceptedEvent}
- * @see {@link CRCParticleBurstRejectedEvent}
- * @see {@link CRCParticleDrainStartEvent}
- * @see {@link CRCParticleFinishEvent}
- * @see {@link CRCParticleCommonProps}
+ * @see {@link PibblParticleStartEvent}
+ * @see {@link PibblParticleBurstAcceptedEvent}
+ * @see {@link PibblParticleBurstRejectedEvent}
+ * @see {@link PibblParticleDrainStartEvent}
+ * @see {@link PibblParticleFinishEvent}
+ * @see {@link PibblParticleCommonProps}
  */
-export type CRCParticleSystemEvent =
-  | CRCParticleStartEvent
-  | CRCParticleBurstAcceptedEvent
-  | CRCParticleBurstRejectedEvent
-  | CRCParticleDrainStartEvent
-  | CRCParticleFinishEvent;
+export type PibblParticleSystemEvent =
+  | PibblParticleStartEvent
+  | PibblParticleBurstAcceptedEvent
+  | PibblParticleBurstRejectedEvent
+  | PibblParticleDrainStartEvent
+  | PibblParticleFinishEvent;
 
 /**
  * Structured validation, capability, asset, execution, or ownership failure from a particle system.
  *
- * @see {@link CRCParticleSystemOptions}
- * @see {@link CRCParticleEffect2DInput}
+ * @see {@link PibblParticleSystemOptions}
+ * @see {@link PibblParticleEffect2DInput}
  */
-export type CRCParticleDiagnostic =
+export type PibblParticleDiagnostic =
   | Readonly<{
       /**
        * The literal "definition-invalid" identifying this variant. See
-       * {@link CRCParticleDiagnostic}.
+       * {@link PibblParticleDiagnostic}.
        */
       type: "definition-invalid";
-      /** Human-readable diagnostic explanation. See {@link CRCParticleDiagnostic}. */
+      /** Human-readable diagnostic explanation. See {@link PibblParticleDiagnostic}. */
       message: string;
       /**
        * Particle effect associated with this input or diagnostic. See
-       * {@link CRCParticleDiagnostic}.
+       * {@link PibblParticleDiagnostic}.
        */
       effect?: string;
-      /** Name of the emitter associated with this notification. See {@link CRCParticleDiagnostic}. */
+      /** Name of the emitter associated with this notification. See {@link PibblParticleDiagnostic}. */
       emitter?: string;
-      /** Name of the affected input property. See {@link CRCParticleDiagnostic}. */
+      /** Name of the affected input property. See {@link PibblParticleDiagnostic}. */
       property?: string;
     }>
   | Readonly<{
       /**
        * The literal "capability-unsupported" identifying this variant. See
-       * {@link CRCParticleDiagnostic}.
+       * {@link PibblParticleDiagnostic}.
        */
       type: "capability-unsupported";
-      /** Human-readable diagnostic explanation. See {@link CRCParticleDiagnostic}. */
+      /** Human-readable diagnostic explanation. See {@link PibblParticleDiagnostic}. */
       message: string;
-      /** Name of the unsupported runtime capability. See {@link CRCParticleDiagnostic}. */
+      /** Name of the unsupported runtime capability. See {@link PibblParticleDiagnostic}. */
       capability: string;
       /**
        * Particle effect associated with this input or diagnostic. See
-       * {@link CRCParticleDiagnostic}.
+       * {@link PibblParticleDiagnostic}.
        */
       effect?: string;
-      /** Name of the emitter associated with this notification. See {@link CRCParticleDiagnostic}. */
+      /** Name of the emitter associated with this notification. See {@link PibblParticleDiagnostic}. */
       emitter?: string;
     }>
   | Readonly<{
       /**
        * Selects `"asset-invalid"` , `"binding-conflict"` , `"backend-mismatch"` for type. See
-       * {@link CRCParticleDiagnostic}.
+       * {@link PibblParticleDiagnostic}.
        */
       type: "asset-invalid" | "binding-conflict" | "backend-mismatch";
-      /** Human-readable diagnostic explanation. See {@link CRCParticleDiagnostic}. */
+      /** Human-readable diagnostic explanation. See {@link PibblParticleDiagnostic}. */
       message: string;
       /**
        * Particle effect associated with this input or diagnostic. See
-       * {@link CRCParticleDiagnostic}.
+       * {@link PibblParticleDiagnostic}.
        */
       effect?: string;
-      /** Name of the emitter associated with this notification. See {@link CRCParticleDiagnostic}. */
+      /** Name of the emitter associated with this notification. See {@link PibblParticleDiagnostic}. */
       emitter?: string;
     }>
   | Readonly<{
       /**
        * Selects `"capacity-rejected"` , `"execution-failed"` , `"disposed"` for type. See
-       * {@link CRCParticleDiagnostic}.
+       * {@link PibblParticleDiagnostic}.
        */
       type: "capacity-rejected" | "execution-failed" | "disposed";
-      /** Human-readable diagnostic explanation. See {@link CRCParticleDiagnostic}. */
+      /** Human-readable diagnostic explanation. See {@link PibblParticleDiagnostic}. */
       message: string;
       /**
        * Particle effect associated with this input or diagnostic. See
-       * {@link CRCParticleDiagnostic}.
+       * {@link PibblParticleDiagnostic}.
        */
       effect?: string;
-      /** Name of the emitter associated with this notification. See {@link CRCParticleDiagnostic}. */
+      /** Name of the emitter associated with this notification. See {@link PibblParticleDiagnostic}. */
       emitter?: string;
     }>;
 
 /**
  * Autoplay, deterministic seed, flow binding, and lifecycle callbacks for a mounted system.
  *
- * @see {@link CRCFlowField2D}
- * @see {@link CRCParticleSystemEvent}
- * @see {@link CRCParticleDiagnostic}
+ * @see {@link PibblFlowField2D}
+ * @see {@link PibblParticleSystemEvent}
+ * @see {@link PibblParticleDiagnostic}
  * @see {@link useParticleSystem}
  */
-export interface CRCParticleSystemOptions {
+export interface PibblParticleSystemOptions {
   /** Mount-owned field binding; advects emitter positions instead of analytic translation. */
-  readonly flow?: CRCFlowField2D;
+  readonly flow?: PibblFlowField2D;
   /**
    * Whether playback is requested automatically when the owner mounts. See
-   * {@link CRCParticleSystemOptions}.
+   * {@link PibblParticleSystemOptions}.
    */
   readonly autoplay?: boolean;
   /**
    * Seed used for deterministic sampling or simulation initialization. See
-   * {@link CRCParticleSystemOptions}.
+   * {@link PibblParticleSystemOptions}.
    */
   readonly seed?: number;
-  /** Optional label used in diagnostics. See {@link CRCParticleSystemOptions}. */
+  /** Optional label used in diagnostics. See {@link PibblParticleSystemOptions}. */
   readonly debugName?: string;
   /**
-   * Receives lifecycle and milestone notifications. See {@link CRCParticleSystemEvent}.
-   * @param event - Particle playback or emission event. See {@link CRCParticleSystemEvent}.
+   * Receives lifecycle and milestone notifications. See {@link PibblParticleSystemEvent}.
+   * @param event - Particle playback or emission event. See {@link PibblParticleSystemEvent}.
    */
-  readonly onEvent?: (event: CRCParticleSystemEvent) => void;
+  readonly onEvent?: (event: PibblParticleSystemEvent) => void;
   /**
    * Receives failures reported by the owning runtime resource. See
-   * {@link CRCParticleSystemOptions}.
+   * {@link PibblParticleSystemOptions}.
    * @param error - Failure reported by the particle system.
    */
   readonly onError?: (error: unknown) => void;
@@ -909,27 +909,27 @@ export interface CRCParticleSystemOptions {
 /**
  * Per-burst count, position, seed, and parameter overrides.
  *
- * @see {@link CRCParticleSystem}
+ * @see {@link PibblParticleSystem}
  */
-export interface CRCParticleBurstOverrides {
+export interface PibblParticleBurstOverrides {
   /**
    * Number of particles or sources requested by this configuration. See
-   * {@link CRCParticleBurstOverrides}.
+   * {@link PibblParticleBurstOverrides}.
    */
   readonly count?: number;
   /**
    * Position of the geometry, source, or selected resize handle. See
-   * {@link CRCParticleBurstOverrides}.
+   * {@link PibblParticleBurstOverrides}.
    */
   readonly position?: readonly [number, number];
   /**
    * Additional seed input distinguishing this burst from otherwise identical requests. See
-   * {@link CRCParticleBurstOverrides}.
+   * {@link PibblParticleBurstOverrides}.
    */
   readonly seedSalt?: number;
   /**
    * Named parameter definitions or values for this effect instance. See
-   * {@link CRCParticleBurstOverrides}.
+   * {@link PibblParticleBurstOverrides}.
    */
   readonly parameters?: Readonly<Record<string, number | readonly number[] | string>>;
 }
@@ -939,16 +939,16 @@ declare const particleSystemBrand: unique symbol;
 /**
  * Mount-owned playback and burst controls with reactive status and execution-path information.
  *
- * @see {@link CRCParticleParameterValues}
+ * @see {@link PibblParticleParameterValues}
  * @see {@link Signal}
- * @see {@link CRCParticleSystemStatus}
- * @see {@link CRCParticleExecution}
- * @see {@link CRCParticleBurstOverrides}
+ * @see {@link PibblParticleSystemStatus}
+ * @see {@link PibblParticleExecution}
+ * @see {@link PibblParticleBurstOverrides}
  * @see {@link Particles2DProps}
  */
-export interface CRCParticleSystem<
+export interface PibblParticleSystem<
   EmitterName extends string = string,
-  Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
+  Parameters extends PibblParticleParameterValues = PibblParticleParameterValues,
 > {
   readonly [particleSystemBrand]: {
     readonly parameters: Parameters;
@@ -956,22 +956,22 @@ export interface CRCParticleSystem<
   };
   /**
    * Reactive lifecycle state of this mounted particle system. See {@link Signal},
-   * {@link CRCParticleSystemStatus}.
+   * {@link PibblParticleSystemStatus}.
    */
-  readonly status: Signal<CRCParticleSystemStatus>;
+  readonly status: Signal<PibblParticleSystemStatus>;
   /**
    * Reactive execution path selected for the current renderer binding. See {@link Signal},
-   * {@link CRCParticleExecution}.
+   * {@link PibblParticleExecution}.
    */
-  readonly execution: Signal<CRCParticleExecution>;
-  /** Queues a new particle-system run. See {@link CRCParticleSystem}. */
+  readonly execution: Signal<PibblParticleExecution>;
+  /** Queues a new particle-system run. See {@link PibblParticleSystem}. */
   play(): void;
-  /** Queues suspension of particle-system advancement. See {@link CRCParticleSystem}. */
+  /** Queues suspension of particle-system advancement. See {@link PibblParticleSystem}. */
   pause(): void;
-  /** Queues resumption of a paused particle-system run. See {@link CRCParticleSystem}. */
+  /** Queues resumption of a paused particle-system run. See {@link PibblParticleSystem}. */
   resume(): void;
   /**
-   * Queues a fresh run, optionally replacing its deterministic seed. See {@link CRCParticleSystem}
+   * Queues a fresh run, optionally replacing its deterministic seed. See {@link PibblParticleSystem}
    * .
    * @param options - Optional seed override for the restarted simulation.
    */
@@ -979,26 +979,26 @@ export interface CRCParticleSystem<
     options?: Readonly<{
       /**
        * Seed used for deterministic sampling or simulation initialization. See
-       * {@link CRCParticleSystem}.
+       * {@link PibblParticleSystem}.
        */
       seed?: number;
     }>,
   ): void;
   /**
    * Queues a manual burst for the named emitter with optional birth overrides. See
-   * {@link CRCParticleSystem}.
+   * {@link PibblParticleSystem}.
    * @param emitter - Name of the effect emitter to burst.
-   * @param options - Optional per-burst emission overrides. See {@link CRCParticleBurstOverrides}.
+   * @param options - Optional per-burst emission overrides. See {@link PibblParticleBurstOverrides}.
    */
-  emit(emitter: EmitterName, options?: CRCParticleBurstOverrides): void;
+  emit(emitter: EmitterName, options?: PibblParticleBurstOverrides): void;
   /**
    * Queues stopping; drain retains live particles until they finish, while clear removes them. See
-   * {@link CRCParticleSystem}.
+   * {@link PibblParticleSystem}.
    * @param options - Whether to drain existing particles or clear them immediately.
    */
   stop(
     options?: Readonly<{
-      /** Selects the supported mapping, placement, or result policy. See {@link CRCParticleSystem}. */
+      /** Selects the supported mapping, placement, or result policy. See {@link PibblParticleSystem}. */
       mode?: "drain" | "clear";
     }>,
   ): void;
@@ -1007,30 +1007,30 @@ export interface CRCParticleSystem<
 /**
  * Shared parameter, interaction, focus, and lifecycle inputs for particle components.
  *
- * @see {@link CRCParticleParameterValues}
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
+ * @see {@link PibblParticleParameterValues}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
  * @see {@link LayoutBox}
- * @see {@link CRCParticleSystemEvent}
+ * @see {@link PibblParticleSystemEvent}
  */
-export interface CRCParticleCommonProps<Parameters extends CRCParticleParameterValues>
-  extends CRCEventHandlers, CRCEventParticipationOptions {
+export interface PibblParticleCommonProps<Parameters extends PibblParticleParameterValues>
+  extends PibblEventHandlers, PibblEventParticipationOptions {
   /**
    * Named parameter definitions or values for this effect instance. See
-   * {@link CRCParticleCommonProps}.
+   * {@link PibblParticleCommonProps}.
    */
   readonly parameters?: Readonly<Partial<Parameters>>;
-  /** Whether the target may receive keyboard focus. See {@link CRCParticleCommonProps}. */
+  /** Whether the target may receive keyboard focus. See {@link PibblParticleCommonProps}. */
   readonly keyboardFocusable?: boolean;
   /** Logical rectangle used for directional keyboard navigation. See {@link LayoutBox}. */
   readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
   /**
-   * Receives lifecycle and milestone notifications. See {@link CRCParticleSystemEvent}.
-   * @param event - Particle playback or emission event. See {@link CRCParticleSystemEvent}.
+   * Receives lifecycle and milestone notifications. See {@link PibblParticleSystemEvent}.
+   * @param event - Particle playback or emission event. See {@link PibblParticleSystemEvent}.
    */
-  readonly onEvent?: (event: CRCParticleSystemEvent) => void;
+  readonly onEvent?: (event: PibblParticleSystemEvent) => void;
   /**
-   * Receives failures reported by the owning runtime resource. See {@link CRCParticleCommonProps}
+   * Receives failures reported by the owning runtime resource. See {@link PibblParticleCommonProps}
    * .
    * @param error - Failure reported by the particle system.
    */
@@ -1040,16 +1040,16 @@ export interface CRCParticleCommonProps<Parameters extends CRCParticleParameterV
 /**
  * Signal-capable particle inputs while preserving ordinary callbacks and opaque style payloads.
  *
- * @see {@link CRCParticleCommonProps}
+ * @see {@link PibblParticleCommonProps}
  */
-export type CRCParticleCommonInputProps<
-  Parameters extends CRCParticleParameterValues,
+export type PibblParticleCommonInputProps<
+  Parameters extends PibblParticleParameterValues,
 > = {
-  readonly [K in keyof CRCParticleCommonProps<Parameters>]:
-    SignalValue<CRCParticleCommonProps<Parameters>[K]>;
+  readonly [K in keyof PibblParticleCommonProps<Parameters>]:
+    SignalValue<PibblParticleCommonProps<Parameters>[K]>;
 };
 
-type CRCParticleStyleInput<S extends object> = SignalValue<{
+type PibblParticleStyleInput<S extends object> = SignalValue<{
   readonly [K in keyof S]: SignalValue<S[K]>;
 }>;
 
@@ -1071,29 +1071,29 @@ export interface Particles2DStyle
 /**
  * Authored inputs for Particles2D, including the declared data and presentation options.
  *
- * @see {@link CRCParticleParameterValues}
+ * @see {@link PibblParticleParameterValues}
  * @see {@link Particles2DStyle}
  * @see {@link SignalValue}
- * @see {@link CRCParticleEffect2D}
- * @see {@link CRCParticleSystem}
+ * @see {@link PibblParticleEffect2D}
+ * @see {@link PibblParticleSystem}
  * @see {@link Particles2D}
  */
 export type Particles2DProps<
   EmitterName extends string = string,
-  Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
-> = CRCParticleCommonInputProps<Parameters> & {
+  Parameters extends PibblParticleParameterValues = PibblParticleParameterValues,
+> = PibblParticleCommonInputProps<Parameters> & {
   /**
-   * Declared presentation and layout properties. See {@link CRCParticleStyleInput},
+   * Declared presentation and layout properties. See {@link PibblParticleStyleInput},
    * {@link Particles2DStyle}.
    */
-  readonly style?: CRCParticleStyleInput<Particles2DStyle>;
+  readonly style?: PibblParticleStyleInput<Particles2DStyle>;
 } & (
     | {
         /**
          * Particle effect associated with this input or diagnostic. See {@link SignalValue},
-         * {@link CRCParticleEffect2D}.
+         * {@link PibblParticleEffect2D}.
          */
-        readonly effect: SignalValue<CRCParticleEffect2D<EmitterName, Parameters>>;
+        readonly effect: SignalValue<PibblParticleEffect2D<EmitterName, Parameters>>;
         /**
          * Not accepted in this variant; use the alternative fields instead. See
          * {@link Particles2DProps}.
@@ -1112,9 +1112,9 @@ export type Particles2DProps<
         readonly effect?: never;
         /**
          * Mounted particle controller supplying this component's simulation. See
-         * {@link CRCParticleSystem}.
+         * {@link PibblParticleSystem}.
          */
-        readonly system: CRCParticleSystem<EmitterName, Parameters>;
+        readonly system: PibblParticleSystem<EmitterName, Parameters>;
         /**
          * Not accepted in this variant; use the alternative fields instead. See
          * {@link Particles2DProps}.

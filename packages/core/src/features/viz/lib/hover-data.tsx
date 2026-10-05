@@ -1,5 +1,5 @@
-import type { CRCNode } from "@crc/core";
-import { withHooksForbidden } from "@crc/core/internal";
+import type { PibblNode } from "@pibbl/core";
+import { withHooksForbidden } from "@pibbl/core/internal";
 import type { HoverDataProps, HoverQueryContext } from "./hover-types.js";
 import type { ResolvedLinearScale, ScaleId } from "./types.js";
 import { readScale } from "./scale-context.js";
@@ -7,12 +7,12 @@ import { readScale } from "./scale-context.js";
  * Evaluates an ordinary synchronous query under the current scale scope.
  *
  * @param props - Hover query and child renderer receiving its result. See {@link HoverDataProps}.
- * @returns Content rendered from the current hover query result. See {@link CRCNode}.
+ * @returns Content rendered from the current hover query result. See {@link PibblNode}.
  *
  * @see {@link HoverDataProps}
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  */
-export function HoverData<T>({ query, children }: HoverDataProps<T>): CRCNode {
+export function HoverData<T>({ query, children }: HoverDataProps<T>): PibblNode {
   if (typeof query !== "function" || typeof children !== "function")
     throw new TypeError("HoverData requires query and children functions.");
   const snapshots = new Map<ScaleId, ResolvedLinearScale>();
@@ -41,7 +41,7 @@ export function HoverData<T>({ query, children }: HoverDataProps<T>): CRCNode {
   let result: T | undefined;
   try {
     result = withHooksForbidden(
-      "CRC hooks cannot be called inside a HoverData query.",
+      "Pibbl hooks cannot be called inside a HoverData query.",
       () => query(context),
     );
     if (
@@ -56,7 +56,7 @@ export function HoverData<T>({ query, children }: HoverDataProps<T>): CRCNode {
     active = false;
   }
   return withHooksForbidden(
-    "CRC hooks cannot be called inside a HoverData render callback; return a component instead.",
+    "Pibbl hooks cannot be called inside a HoverData render callback; return a component instead.",
     () => children(result),
   );
 }

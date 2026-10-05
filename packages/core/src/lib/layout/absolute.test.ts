@@ -1,12 +1,12 @@
 import { compileNativeFilters, type NativePreparedFilter } from '../../filters/native-operations';
-import { invert } from '@crc/core/filters';
+import { invert } from '@pibbl/core/filters';
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import { useSignal } from '../hooks/use-signal';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import { componentTest } from '../test-utils/component-test';
-import type { CRCNode, SystemStyle } from '../types';
+import type { PibblNode, SystemStyle } from '../types';
 import { Overlay, placeOverlayChild } from './overlay';
 import { Absolute, placeAbsoluteChild } from './absolute';
 import { Flow } from './flow';
@@ -58,8 +58,8 @@ describe('absolute layout', () => {
   });
 
   it.each([
-    ['absolute', (children: CRCNode[]) => createElement(Absolute, { children })],
-    ['overlay', (children: CRCNode[]) => createElement(Overlay, { children })],
+    ['absolute', (children: PibblNode[]) => createElement(Absolute, { children })],
+    ['overlay', (children: PibblNode[]) => createElement(Overlay, { children })],
   ])('does not count keyed children in unkeyed %s occurrence identity', async (
     _name,
     createContainer,
@@ -75,7 +75,7 @@ describe('absolute layout', () => {
       observations.set(label, identity.get());
     };
     const Host = ({ keyed }: { keyed: boolean }) => {
-      const children: CRCNode[] = [];
+      const children: PibblNode[] = [];
       if (keyed) {
         children.push(createElement(A, {
           key: 'keyed',
@@ -92,11 +92,11 @@ describe('absolute layout', () => {
     const canvas = await componentTest(createElement(Host, { keyed: false }));
     const originalIdentity = observations.get('unkeyed');
 
-    crc(canvas.element, createElement(Host, { keyed: true }));
+    pibbl(canvas.element, createElement(Host, { keyed: true }));
     await nextFrame();
     expect(observations.get('unkeyed')).toBe(originalIdentity);
 
-    crc(canvas.element, createElement(Host, { keyed: false }));
+    pibbl(canvas.element, createElement(Host, { keyed: false }));
     await nextFrame();
     expect(observations.get('unkeyed')).toBe(originalIdentity);
   });
@@ -142,11 +142,11 @@ describe('absolute layout', () => {
   });
 
   it.each([
-    ['absolute', (child: CRCNode) => createElement(Absolute, {
+    ['absolute', (child: PibblNode) => createElement(Absolute, {
       style: { width: 100, height: 50 },
       children: [child],
     })],
-    ['overlay', (child: CRCNode) => createElement(Overlay, {
+    ['overlay', (child: PibblNode) => createElement(Overlay, {
       style: {
         width: 100,
         height: 50,
@@ -155,7 +155,7 @@ describe('absolute layout', () => {
       },
       children: [child],
     })],
-    ['flow', (child: CRCNode) => createElement(Flow, {
+    ['flow', (child: PibblNode) => createElement(Flow, {
       style: { width: 100, height: 50 },
       children: [child],
     })],

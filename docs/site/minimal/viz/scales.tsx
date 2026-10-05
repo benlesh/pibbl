@@ -1,4 +1,4 @@
-import { crc, Overlay } from "@crc/core";
+import { pibbl, Overlay } from "@pibbl/core";
 import {
   Axis,
   Scale,
@@ -18,7 +18,7 @@ import {
   type ScaleLayoutStyle,
   type ScaleProps,
   type ScaleRange,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 
 const xId: ScaleId = "month";
 const yId: ScaleId = "sales";
@@ -69,7 +69,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(
+const app = pibbl(
   canvas,
   <Overlay style={{ left: 70, top: 15, width: 230, height: 170 }}>
     <Scale {...scaleProps}>

@@ -5,130 +5,130 @@ import type { definePrimitive } from '../define-primitive.js';
 import type { TextProps } from '../components/text.js';
 import type { SignalValue } from '../signals/types.js';
 
-declare const crcElementTypeBrand: unique symbol;
-declare const crcPrimitiveComponentBrand: unique symbol;
+declare const pibblElementTypeBrand: unique symbol;
+declare const pibblPrimitiveComponentBrand: unique symbol;
 
 /**
  * A stable sibling identity used when reconciling keyed elements.
  *
  * @see {@link createElement}
- * @see {@link CRCElement}
+ * @see {@link PibblElement}
  */
-export type CRCKey = string | number;
+export type PibblKey = string | number;
 /**
  * A child value that intentionally contributes no rendered output.
  *
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  */
-export type CRCEmptyNode = false | true | null | undefined | '' | 0;
+export type PibblEmptyNode = false | true | null | undefined | '' | 0;
 /**
  * A textual child accepted by the Text primitive.
  *
- * @see {@link CRCTextInput}
+ * @see {@link PibblTextInput}
  */
-export type CRCTextChild =
+export type PibblTextChild =
   | string
   | number
   | boolean
   | null
   | undefined
-  | readonly CRCTextChild[]
-  | Iterable<CRCTextChild>;
+  | readonly PibblTextChild[]
+  | Iterable<PibblTextChild>;
 
 /**
  * A branded element descriptor containing component identity, props, and an optional reconciliation
  * key.
  *
- * @see {@link CRCElementType}
- * @see {@link CRCNode}
+ * @see {@link PibblElementType}
+ * @see {@link PibblNode}
  * @see {@link measureElement}
  * @see {@link createElement}
  */
-export interface CRCElement<P = unknown> {
-  readonly [crcElementTypeBrand]: true;
-  /** Component identity evaluated when this element is rendered. See {@link CRCElementType}. */
-  readonly type: CRCElementType<P>;
-  /** Component props supplied to evaluation or measurement. See {@link CRCElement}. */
+export interface PibblElement<P = unknown> {
+  readonly [pibblElementTypeBrand]: true;
+  /** Component identity evaluated when this element is rendered. See {@link PibblElementType}. */
+  readonly type: PibblElementType<P>;
+  /** Component props supplied to evaluation or measurement. See {@link PibblElement}. */
   readonly props: Readonly<P>;
-  /** Stable identity used by the containing protocol. See {@link CRCElement}. */
+  /** Stable identity used by the containing protocol. See {@link PibblElement}. */
   readonly key?: string;
 }
 
 /**
  * Recursive synchronous render output, including elements and empty child values.
  *
- * @see {@link CRCElement}
- * @see {@link CRCEmptyNode}
- * @see {@link CRCNodeInput}
+ * @see {@link PibblElement}
+ * @see {@link PibblEmptyNode}
+ * @see {@link PibblNodeInput}
  */
-export type CRCNode =
-  | CRCElement<any>
-  | CRCEmptyNode
-  | readonly CRCNode[]
-  | Iterable<CRCNode>;
+export type PibblNode =
+  | PibblElement<any>
+  | PibblEmptyNode
+  | readonly PibblNode[]
+  | Iterable<PibblNode>;
 
 /**
  * An authored node input that may be supplied by a signal.
  *
  * @see {@link SignalValue}
- * @see {@link CRCNode}
- * @see {@link CRCContainerChild}
- * @see {@link CRCRenderResult}
+ * @see {@link PibblNode}
+ * @see {@link PibblContainerChild}
+ * @see {@link PibblRenderResult}
  */
-export type CRCNodeInput =
-  | SignalValue<CRCNode>
-  | readonly CRCNodeInput[]
-  | Iterable<CRCNodeInput>;
+export type PibblNodeInput =
+  | SignalValue<PibblNode>
+  | readonly PibblNodeInput[]
+  | Iterable<PibblNodeInput>;
 /**
  * Literal or signal-supplied text content for the Text primitive.
  *
  * @see {@link SignalValue}
- * @see {@link CRCTextChild}
+ * @see {@link PibblTextChild}
  * @see {@link TextProps}
  */
-export type CRCTextInput =
-  | SignalValue<CRCTextChild>
-  | readonly CRCTextInput[]
-  | Iterable<CRCTextInput>;
+export type PibblTextInput =
+  | SignalValue<PibblTextChild>
+  | readonly PibblTextInput[]
+  | Iterable<PibblTextInput>;
 /**
- * A recursive child value accepted by a CRC container.
+ * A recursive child value accepted by a Pibbl container.
  *
- * @see {@link CRCNodeInput}
+ * @see {@link PibblNodeInput}
  */
-export type CRCContainerChild = CRCNodeInput;
+export type PibblContainerChild = PibblNodeInput;
 /**
- * The supported synchronous return value of a CRC component.
+ * The supported synchronous return value of a Pibbl component.
  *
- * @see {@link CRCNodeInput}
- * @see {@link CRCComponent}
+ * @see {@link PibblNodeInput}
+ * @see {@link PibblComponent}
  */
-export type CRCRenderResult = CRCNodeInput | void;
+export type PibblRenderResult = PibblNodeInput | void;
 /**
- * A synchronous function that receives props and returns CRC nodes.
+ * A synchronous function that receives props and returns Pibbl nodes.
  *
- * @param props - Authored component properties supplied by CRC.
- * @returns Synchronous CRC render output. See {@link CRCRenderResult}.
+ * @param props - Authored component properties supplied by Pibbl.
+ * @returns Synchronous Pibbl render output. See {@link PibblRenderResult}.
  *
- * @see {@link CRCRenderResult}
- * @see {@link CRCElementType}
- * @see {@link CRCPrimitiveComponent}
+ * @see {@link PibblRenderResult}
+ * @see {@link PibblElementType}
+ * @see {@link PibblPrimitiveComponent}
  * @see {@link defineRenderLayer}
  */
-export type CRCComponent<P = Record<string, never>> = (
+export type PibblComponent<P = Record<string, never>> = (
   props: P,
-) => CRCRenderResult;
+) => PibblRenderResult;
 /**
  * A branded primitive component with separate authored-input and resolved-prop types.
  *
- * @see {@link CRCComponent}
+ * @see {@link PibblComponent}
  * @see {@link PrimitiveInputOf}
  * @see {@link definePrimitive}
  */
-export type CRCPrimitiveComponent<
+export type PibblPrimitiveComponent<
   P = Record<string, never>,
   I = P,
-> = CRCComponent<I> & {
-  readonly [crcPrimitiveComponentBrand]: {
+> = PibblComponent<I> & {
+  readonly [pibblPrimitiveComponentBrand]: {
     readonly input: I;
     readonly programProps: P;
   };
@@ -136,15 +136,15 @@ export type CRCPrimitiveComponent<
 /**
  * Extracts the authored-input type from a branded primitive component.
  *
- * @see {@link CRCPrimitiveComponent}
+ * @see {@link PibblPrimitiveComponent}
  */
 export type PrimitiveInputOf<C> =
-  C extends CRCPrimitiveComponent<any, infer I> ? I : never;
+  C extends PibblPrimitiveComponent<any, infer I> ? I : never;
 /**
- * A component or fragment identity that can be used to construct a CRC element.
+ * A component or fragment identity that can be used to construct a Pibbl element.
  *
- * @see {@link CRCComponent}
- * @see {@link CRCElement}
+ * @see {@link PibblComponent}
+ * @see {@link PibblElement}
  * @see {@link createElement}
  */
-export type CRCElementType<P = any> = CRCComponent<P>;
+export type PibblElementType<P = any> = PibblComponent<P>;

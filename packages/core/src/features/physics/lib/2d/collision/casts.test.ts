@@ -7,8 +7,8 @@ import {
   raycastShape2D,
   segmentShape2D,
   shapeCastAgainstShape2D,
-  type CRCPhysicsPose2D,
-  type CRCPhysicsShape2D,
+  type PibblPhysicsPose2D,
+  type PibblPhysicsShape2D,
 } from '../../../2d-geometry.js';
 
 const identity = { position: [0, 0], rotationDegrees: 0 } as const;
@@ -241,13 +241,13 @@ describe('standalone 2D casts', () => {
 
   it('validates shapes and finite cast inputs before bounded iteration', () => {
     const circle = circleShape2D({ radius: 1 });
-    const malformed = {} as CRCPhysicsShape2D;
-    const invalidPose = { position: [0, 0], rotationDegrees: Number.NaN } as CRCPhysicsPose2D;
+    const malformed = {} as PibblPhysicsShape2D;
+    const invalidPose = { position: [0, 0], rotationDegrees: Number.NaN } as PibblPhysicsPose2D;
 
     expect(() => raycastShape2D(
       malformed, identity,
       { origin: [0, 0], direction: [1, 0], maxDistance: 1 },
-    )).toThrow('shape must be a CRC physics 2D shape');
+    )).toThrow('shape must be a Pibbl physics 2D shape');
     expect(() => raycastShape2D(
       circle, identity,
       { origin: [0, 0], direction: [0, 0], maxDistance: 1 },

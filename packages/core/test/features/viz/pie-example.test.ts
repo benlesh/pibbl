@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vitest";
 import mount from "../../../../scenarios/src/learning/composition/viz-pie-composition.example.js";
-import { getLearningExampleBySlug } from "@crc/scenarios";
+import { getLearningExampleBySlug } from "@pibbl/scenarios";
 import { loadWorkbenchSource } from "../../../../../playground/src/learning-sources.js";
 import { validateLearningSourceText } from "../../../../../tooling/learning-source-contract.js";
 it("runs the editable pie example and retains pinned category identity when slices reorder", async () => {

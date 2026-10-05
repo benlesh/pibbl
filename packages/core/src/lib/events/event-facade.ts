@@ -1,25 +1,25 @@
 import {
-  getCRCEventDefinition,
-  type CRCEventDefinition,
+  getPibblEventDefinition,
+  type PibblEventDefinition,
 } from './event-definitions.js';
-import type { CRCEventNode } from './registrations.js';
+import type { PibblEventNode } from './registrations.js';
 import type {
-  CRCEvent,
-  CRCEventMap,
-  CRCEventPhase,
-  CRCEventTarget,
-  CRCEventType,
+  PibblEvent,
+  PibblEventMap,
+  PibblEventPhase,
+  PibblEventTarget,
+  PibblEventType,
 } from './types.js';
 
-export type CRCOriginalEvent<K extends CRCEventType> =
-  CRCEventMap[K] extends CRCEvent<infer TOriginal> ? TOriginal : Event;
+export type PibblOriginalEvent<K extends PibblEventType> =
+  PibblEventMap[K] extends PibblEvent<infer TOriginal> ? TOriginal : Event;
 
-export interface CreateCRCEventInput<K extends CRCEventType> {
+export interface CreatePibblEventInput<K extends PibblEventType> {
   readonly type: K;
-  readonly target: CRCEventNode;
-  readonly path: readonly CRCEventNode[];
-  readonly relatedTarget?: CRCEventNode | null;
-  readonly originalEvent: CRCOriginalEvent<K>;
+  readonly target: PibblEventNode;
+  readonly path: readonly PibblEventNode[];
+  readonly relatedTarget?: PibblEventNode | null;
+  readonly originalEvent: PibblOriginalEvent<K>;
   readonly sourceEvent?: Event;
   /** Root-logical coordinate supplied by the family adapter. */
   readonly x?: number;
@@ -27,26 +27,26 @@ export interface CreateCRCEventInput<K extends CRCEventType> {
   readonly y?: number;
 }
 
-interface CRCEventFacadeState {
-  currentTarget: CRCEventTarget;
-  eventPhase: CRCEventPhase;
+interface PibblEventFacadeState {
+  currentTarget: PibblEventTarget;
+  eventPhase: PibblEventPhase;
   defaultPrevented: boolean;
   propagationStopped: boolean;
   immediatePropagationStopped: boolean;
 }
 
-const states = new WeakMap<object, CRCEventFacadeState>();
+const states = new WeakMap<object, PibblEventFacadeState>();
 
-export function createCRCEvent<K extends CRCEventType>(
-  input: CreateCRCEventInput<K>,
-): CRCEventMap[K] {
+export function createPibblEvent<K extends PibblEventType>(
+  input: CreatePibblEventInput<K>,
+): PibblEventMap[K] {
   const definition = requiredDefinition(input.type);
   const originalEvent = input.originalEvent;
   const cancelable = definition.cancelable && originalEvent.cancelable;
   const publicPath = Object.freeze(
     input.path.map(node => node.publicTarget),
   );
-  const state: CRCEventFacadeState = {
+  const state: PibblEventFacadeState = {
     currentTarget: input.target.publicTarget,
     eventPhase: 2,
     defaultPrevented: cancelable && originalEvent.defaultPrevented,
@@ -88,46 +88,46 @@ export function createCRCEvent<K extends CRCEventType>(
       state.immediatePropagationStopped = true;
       originalEvent.stopImmediatePropagation();
     },
-  } as CRCEvent & Record<string, unknown>;
+  } as PibblEvent & Record<string, unknown>;
   states.set(facade, state);
   projectFamilyFields(facade, definition, input);
-  return facade as unknown as CRCEventMap[K];
+  return facade as unknown as PibblEventMap[K];
 }
 
-export function setCRCEventInvocation(
-  event: CRCEvent,
-  currentTarget: CRCEventTarget,
-  eventPhase: CRCEventPhase,
+export function setPibblEventInvocation(
+  event: PibblEvent,
+  currentTarget: PibblEventTarget,
+  eventPhase: PibblEventPhase,
 ): void {
   const state = requiredState(event);
   state.currentTarget = currentTarget;
   state.eventPhase = eventPhase;
 }
 
-export function isCRCPropagationStopped(event: CRCEvent): boolean {
+export function isPibblPropagationStopped(event: PibblEvent): boolean {
   return requiredState(event).propagationStopped;
 }
 
-export function isCRCImmediatePropagationStopped(event: CRCEvent): boolean {
+export function isPibblImmediatePropagationStopped(event: PibblEvent): boolean {
   return requiredState(event).immediatePropagationStopped;
 }
 
-function requiredState(event: CRCEvent): CRCEventFacadeState {
+function requiredState(event: PibblEvent): PibblEventFacadeState {
   const state = states.get(event);
-  if (!state) throw new Error('CRC event facade state is unavailable.');
+  if (!state) throw new Error('Pibbl event facade state is unavailable.');
   return state;
 }
 
-function requiredDefinition(type: CRCEventType): CRCEventDefinition {
-  const definition = getCRCEventDefinition(type);
-  if (!definition) throw new Error(`Unsupported CRC event type: ${type}`);
+function requiredDefinition(type: PibblEventType): PibblEventDefinition {
+  const definition = getPibblEventDefinition(type);
+  if (!definition) throw new Error(`Unsupported Pibbl event type: ${type}`);
   return definition;
 }
 
-function projectFamilyFields<K extends CRCEventType>(
-  facade: CRCEvent & Record<string, unknown>,
-  definition: CRCEventDefinition,
-  input: CreateCRCEventInput<K>,
+function projectFamilyFields<K extends PibblEventType>(
+  facade: PibblEvent & Record<string, unknown>,
+  definition: PibblEventDefinition,
+  input: CreatePibblEventInput<K>,
 ): void {
   const original: unknown = input.originalEvent;
   if (definition.coordinate) {
@@ -206,7 +206,7 @@ function projectFamilyFields<K extends CRCEventType>(
 }
 
 function projectMouseFields(
-  facade: CRCEvent & Record<string, unknown>,
+  facade: PibblEvent & Record<string, unknown>,
   original: MouseEvent,
 ): void {
   projectModifierFields(facade, original);
@@ -224,7 +224,7 @@ function projectMouseFields(
 }
 
 function projectModifierFields(
-  facade: CRCEvent & Record<string, unknown>,
+  facade: PibblEvent & Record<string, unknown>,
   original: MouseEvent | TouchEvent | KeyboardEvent,
 ): void {
   Object.assign(facade, pick(original, [

@@ -1,5 +1,5 @@
 import type { BarSeriesStyle } from './bar-series.js';
-import type { FillStyle } from "@crc/core";
+import type { FillStyle } from "@pibbl/core";
 
 /**
  * Domain thresholds divide the bar fill into sharp, ordered color intervals.

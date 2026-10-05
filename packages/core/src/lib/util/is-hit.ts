@@ -1,4 +1,4 @@
-import { CRCClippingStackEntry, RenderingContext2D } from '../types.js';
+import { PibblClippingStackEntry, RenderingContext2D } from '../types.js';
 import { get2dContext } from './get-2d-context.js';
 
 export function isHit({
@@ -18,7 +18,7 @@ export function isHit({
   y: number;
   fill: boolean;
   lineInteractionWidth: number;
-  currentClippingStack: readonly CRCClippingStackEntry[];
+  currentClippingStack: readonly PibblClippingStackEntry[];
 }) {
   const ctx = get2dContext(canvas);
   ctx.save();
@@ -43,7 +43,7 @@ export function isHit({
 }
 
 function isInEveryClippingPath(
-  currentClippingStack: readonly CRCClippingStackEntry[],
+  currentClippingStack: readonly PibblClippingStackEntry[],
   x: number,
   y: number,
   ctx: RenderingContext2D,

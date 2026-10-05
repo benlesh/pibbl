@@ -1,4 +1,4 @@
-import { crc, createElement, signal } from '@crc/core';
+import { pibbl, createElement, signal } from '@pibbl/core';
 import {
   CELEBRATION_SEED,
   PARTICLE_CELEBRATION_LAB_SOURCE_ID,
@@ -76,7 +76,7 @@ async function mountParticleCelebrationLab(
 ): Promise<ScenarioController<ParticleCelebrationLabState>> {
   let disposed = false;
   let model = createModel();
-  let root: ReturnType<typeof crc> | undefined;
+  let root: ReturnType<typeof pibbl> | undefined;
   let actionQueue = Promise.resolve();
 
   const assertActive = (): void => {
@@ -89,7 +89,7 @@ async function mountParticleCelebrationLab(
   const publish = (): void => context.onStateChange?.(snapshot(model));
   const render = (): void => {
     assertActive();
-    root = crc(
+    root = pibbl(
       context.canvas,
       createElement(ParticleCelebrationLabRoot, { model }),
       { pixelRatio: 1 },

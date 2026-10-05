@@ -1,4 +1,4 @@
-import {crc,createElement,defineRenderLayer} from '../../packages/core/src/index.ts';
+import {pibbl,createElement,defineRenderLayer} from '../../packages/core/src/index.ts';
 import {installSchedulerTraceCollectorForTest} from '../../packages/core/src/lib/scheduler/testing.ts';
 
 const summary = values => {
@@ -109,13 +109,13 @@ export function installInteractive(makeResources) {
         dispose(r) {r.pointer?.release();r.pointer=undefined;r.count=0;r.dispose();},
       });
       let controller;
-      try {controller=crc(canvas,createElement(Layer,{style:{width:832,height:400}}),{pixelRatio:1});}
+      try {controller=pibbl(canvas,createElement(Layer,{style:{width:832,height:400}}),{pixelRatio:1});}
       catch(error) {restoreTrace();throw error;}
       active={controller,restoreTrace,canvas,settings,get resource(){return resource;},reset(){m=metrics();lastFrame=undefined;},get metrics(){return m;},mode,width,height,steps};
       document.querySelector('#status').textContent=`${mode==='current-js'?'JavaScript':'WASM'} · ${width}×${height} · ${steps} steps/frame. Drag to paint; switch backend to compare. Only one runs at a time.`;
       if(!quiet)refresh=setInterval(()=>{
         const report=api.report(),lat=report.inputToFrame;
-        document.querySelector('#interactive-metrics').textContent=`${report.routed} pointer samples · ${report.applied} stamps · ${report.dropped} dropped\nRecent input → CRC frame complete: ${lat.count?`${lat.median.toFixed(2)} ms median / ${lat.p95.toFixed(2)} ms p95`:'drag to measure'}\nBrush queue write: ${report.marshal.median?.toFixed(3)??'—'} ms median · CRC frame: ${report.frames.median?.toFixed(2)??'—'} ms median`;
+        document.querySelector('#interactive-metrics').textContent=`${report.routed} pointer samples · ${report.applied} stamps · ${report.dropped} dropped\nRecent input → Pibbl frame complete: ${lat.count?`${lat.median.toFixed(2)} ms median / ${lat.p95.toFixed(2)} ms p95`:'drag to measure'}\nBrush queue write: ${report.marshal.median?.toFixed(3)??'—'} ms median · Pibbl frame: ${report.frames.median?.toFixed(2)??'—'} ms median`;
       },250);
     },
     stop() {

@@ -1,11 +1,11 @@
 import { isSignal } from '../lib/signals/graph.js';
 import { layoutDiagnostic } from '../lib/style/diagnostics.js';
 import {
-  CRC_FILTER_EXECUTOR,
-  type CRCDisplacementFilterOptions,
-  type CRCFilter,
-  type CRCFilterExecutor,
-  type PreparedCRCFilter,
+  PIBBL_FILTER_EXECUTOR,
+  type PibblDisplacementFilterOptions,
+  type PibblFilter,
+  type PibblFilterExecutor,
+  type PreparedPibblFilter,
 } from '../lib/style/filter-types.js';
 import type { StyleResolutionContext } from '../lib/types.js';
 import { borrowTextureRaster, validateTexturePaint } from '../lib/textures/texture-protocol.js';
@@ -13,11 +13,11 @@ import { processDisplacement } from './render-displacement-boundary.js';
 import { filterBoundaryExecutor, type CustomPreparedFilter } from './filter-executor.js';
 import { expandDisplacementInput } from './displacement-math.js';
 
-const definitions = new WeakMap<CRCFilter, Readonly<CRCDisplacementFilterOptions>>();
-const displacementExecutor: CRCFilterExecutor = {
-  prepare(value, property, context): PreparedCRCFilter {
+const definitions = new WeakMap<PibblFilter, Readonly<PibblDisplacementFilterOptions>>();
+const displacementExecutor: PibblFilterExecutor = {
+  prepare(value, property, context): PreparedPibblFilter {
     const options = definitions.get(value);
-    if (!options) throw new Error('A displacement filter value was created by an incompatible CRC runtime.');
+    if (!options) throw new Error('A displacement filter value was created by an incompatible Pibbl runtime.');
     const strengthValue = isSignal(options.strength) ? options.strength.get() : options.strength;
     if (typeof strengthValue !== 'number' || !Number.isFinite(strengthValue) || strengthValue < 0) {
       throw diagnostic(`${property}.strength`, strengthValue, 'must be a finite nonnegative number', context);
@@ -64,15 +64,15 @@ const displacementExecutor: CRCFilterExecutor = {
  * pixels without changing layout or hit geometry.
  *
  * @param options - Displacement texture, channel selection, and displacement scale. See
- * {@link CRCDisplacementFilterOptions} .
- * @returns A displacement filter descriptor for style.filter. See {@link CRCFilter}.
+ * {@link PibblDisplacementFilterOptions} .
+ * @returns A displacement filter descriptor for style.filter. See {@link PibblFilter}.
  *
- * @see {@link CRCDisplacementFilterOptions}
- * @see {@link CRCFilter}
+ * @see {@link PibblDisplacementFilterOptions}
+ * @see {@link PibblFilter}
  */
-export function displacement(options: CRCDisplacementFilterOptions): CRCFilter {
+export function displacement(options: PibblDisplacementFilterOptions): PibblFilter {
   const definition = Object.freeze({ map: options.map, strength: options.strength, blurRadius: options.blurRadius, region: Object.freeze({ ...options.region }) });
-  const value = Object.freeze({ [CRC_FILTER_EXECUTOR]: displacementExecutor });
+  const value = Object.freeze({ [PIBBL_FILTER_EXECUTOR]: displacementExecutor });
   definitions.set(value, definition);
   return value;
 }

@@ -8,9 +8,9 @@ Usefulness and wow factor are scored from 1 to 5. Usefulness means transferable 
 
 A means a first-wave candidate: useful, compelling, and relatively direct. B means a follow-on candidate or a deliberate larger investment. C means an ambitious experiment to validate before scheduling. Within each category, the list is ordered editorially; the tier is the cross-category priority. A does not mean every candidate belongs in the first release. Select a balanced collection using the [first collection briefs](08-first-collection-briefs.md).
 
-CRC supplies the primitives and boundaries; application logic supplies games, graph editors, semantic data models, and custom path behavior. HTML uses native controls or the current HtmlBox boundary. Three ideas use ordinary Three resources in one external layer. Asset-heavy, effect-heavy, or game ideas need a feasibility check before publication. No candidate authorizes a new runtime API.
+Pibbl supplies the primitives and boundaries; application logic supplies games, graph editors, semantic data models, and custom path behavior. HTML uses native controls or the current HtmlBox boundary. Three ideas use ordinary Three resources in one external layer. Asset-heavy, effect-heavy, or game ideas need a feasibility check before publication. No candidate authorizes a new runtime API.
 
-## Small interactions and standalone CRC
+## Small interactions and standalone Pibbl
 
 | ID   | Candidate           | Use | Wow | Effort | Visible result                           | Teaching point                                       | Tier |
 | ---- | ------------------- | --- | --- | ------ | ---------------------------------------- | ---------------------------------------------------- | ---- |
@@ -87,18 +87,18 @@ CRC supplies the primitives and boundaries; application logic supplies games, gr
 
 ## Fictional product pages and campaigns
 
-| ID   | Candidate                      | Use | Wow | Effort | Visible result                                     | Teaching point                                           | Tier |
-| ---- | ------------------------------ | --- | --- | ------ | -------------------------------------------------- | -------------------------------------------------------- | ---- |
-| E051 | Living ink stationery          | 4   | 5   | M      | A paper product page with a living print           | Native page content plus a clipped procedural surface    | A    |
-| E052 | Sneaker orbit configurator     | 4   | 5   | L      | A 3D shoe with Canvas annotations                  | Ordinary Three model plus CRC overlay and native choices | C    |
-| E053 | Perfume particle trail         | 3   | 5   | M      | A fictional bottle emits a restrained ribbon       | Use Canvas particles as decorative composition           | B    |
-| E054 | Ceramic color studio           | 5   | 5   | L      | Change a 3D vessel color with real controls        | Signals update normal Three material resources           | B    |
-| E055 | Tea label reveal               | 4   | 4   | M      | Reveal artwork through a brush-shaped mask         | Teach clipping independently of product copy             | B    |
-| E056 | Audio device launch            | 3   | 4   | M      | A product illustration pulses with synthetic sound | Coordinate illustrative motion and semantic HTML         | B    |
-| E057 | Outdoor equipment weather card | 4   | 4   | M      | Rain and wind animate around an illustrated pack   | Layer independent effects around static product content  | B    |
-| E058 | Interactive festival poster    | 4   | 5   | M      | Type and ink respond to a playful gesture          | Compose Canvas text with living textures                 | B    |
-| E059 | Jewelry constellation          | 3   | 5   | L      | A Three object sits amid Canvas star accents       | Respect the flattened external renderer boundary         | C    |
-| E060 | Furniture swatch page          | 5   | 4   | M      | Native swatches change a procedural material panel | Separate texture settings from the purchasing UI         | B    |
+| ID   | Candidate                      | Use | Wow | Effort | Visible result                                     | Teaching point                                             | Tier |
+| ---- | ------------------------------ | --- | --- | ------ | -------------------------------------------------- | ---------------------------------------------------------- | ---- |
+| E051 | Living ink stationery          | 4   | 5   | M      | A paper product page with a living print           | Native page content plus a clipped procedural surface      | A    |
+| E052 | Sneaker orbit configurator     | 4   | 5   | L      | A 3D shoe with Canvas annotations                  | Ordinary Three model plus Pibbl overlay and native choices | C    |
+| E053 | Perfume particle trail         | 3   | 5   | M      | A fictional bottle emits a restrained ribbon       | Use Canvas particles as decorative composition             | B    |
+| E054 | Ceramic color studio           | 5   | 5   | L      | Change a 3D vessel color with real controls        | Signals update normal Three material resources             | B    |
+| E055 | Tea label reveal               | 4   | 4   | M      | Reveal artwork through a brush-shaped mask         | Teach clipping independently of product copy               | B    |
+| E056 | Audio device launch            | 3   | 4   | M      | A product illustration pulses with synthetic sound | Coordinate illustrative motion and semantic HTML           | B    |
+| E057 | Outdoor equipment weather card | 4   | 4   | M      | Rain and wind animate around an illustrated pack   | Layer independent effects around static product content    | B    |
+| E058 | Interactive festival poster    | 4   | 5   | M      | Type and ink respond to a playful gesture          | Compose Canvas text with living textures                   | B    |
+| E059 | Jewelry constellation          | 3   | 5   | L      | A Three object sits amid Canvas star accents       | Respect the flattened external renderer boundary           | C    |
+| E060 | Furniture swatch page          | 5   | 4   | M      | Native swatches change a procedural material panel | Separate texture settings from the purchasing UI           | B    |
 
 ## Cute scenes and tiny worlds
 
@@ -134,15 +134,15 @@ CRC supplies the primitives and boundaries; application logic supplies games, gr
 
 | ID   | Candidate                       | Use | Wow | Effort | Visible result                                     | Teaching point                                           | Tier |
 | ---- | ------------------------------- | --- | --- | ------ | -------------------------------------------------- | -------------------------------------------------------- | ---- |
-| E081 | Three scene with CRC controls   | 5   | 5   | M      | A simple 3D object and a crisp 2D control          | One persistent Three layer within CRC composition        | A    |
+| E081 | Three scene with Pibbl controls | 5   | 5   | M      | A simple 3D object and a crisp 2D control          | One persistent Three layer within Pibbl composition      | A    |
 | E082 | Three loading splash            | 5   | 4   | M      | A Canvas progress scene covers a loading model     | Reflect real loader progress and own teardown            | B    |
 | E083 | Native Three inspector          | 5   | 4   | M      | Native inputs edit a lit cube                      | Keep normal Three resources and native editing semantics | A    |
 | E084 | Instanced garden                | 4   | 5   | L      | Many Three plants share an interactive view        | Use ordinary Three instancing within one layer           | B    |
 | E085 | 3D scene with Canvas minimap    | 4   | 5   | L      | A 2D map tracks a camera in a 3D scene             | Share application state across rendering boundaries      | C    |
-| E086 | Orbit lesson overlay            | 5   | 4   | M      | Annotations explain a camera move                  | Coordinate CRC-routed controls and Canvas guidance       | B    |
+| E086 | Orbit lesson overlay            | 5   | 4   | M      | Annotations explain a camera move                  | Coordinate Pibbl-routed controls and Canvas guidance     | B    |
 | E087 | Postprocessing comparison       | 4   | 5   | L      | A split view compares ordinary Three effects       | Application-owned effects remain inside external layers  | C    |
 | E088 | Gallery plinth                  | 4   | 5   | L      | A rotating object with native information controls | Maintain distinct 3D, Canvas, and HTML ownership         | B    |
-| E089 | Canvas HUD for a 3D game mockup | 5   | 5   | L      | A small arena with gauges and a pause panel        | CRC composes the HUD; application owns game logic        | C    |
+| E089 | Canvas HUD for a 3D game mockup | 5   | 5   | L      | A small arena with gauges and a pause panel        | Pibbl composes the HUD; application owns game logic      | C    |
 | E090 | Renderer boundary lesson        | 5   | 3   | M      | Click across a Three object and Canvas overlay     | Show target, block, and miss arbitration visibly         | B    |
 
 ## Ambitious combined showcases
@@ -158,15 +158,15 @@ CRC supplies the primitives and boundaries; application logic supplies games, gr
 | E097 | Tiny factory dashboard    | 5   | 5   | L      | Physics parcels feed readable production charts                     | Connect simulation events to HTML and Canvas reporting        | C    |
 | E098 | Product atelier           | 5   | 5   | L      | Customize a Three object with a Canvas presentation layer           | Prove a realistic mixed-rendering application                 | B    |
 | E099 | Ocean observatory         | 4   | 5   | L      | A fictional instrument room combines charts and an underwater scene | One shared application model powers different representations | C    |
-| E100 | Playable CRC postcard     | 4   | 5   | L      | A small personalized scene with editable native text                | A complete portable project worth sharing                     | C    |
+| E100 | Playable Pibbl postcard   | 4   | 5   | L      | A small personalized scene with editable native text                | A complete portable project worth sharing                     | C    |
 
 ## Producing more ideas without repeating the gallery
 
-Combine one useful task, one interaction, one visual treatment, and one explicit CRC concept. For example: select a data point + native filtering + restrained glow + shared signal selection; or customize a product + drag + living material + texture parameter updates.
+Combine one useful task, one interaction, one visual treatment, and one explicit Pibbl concept. For example: select a data point + native filtering + restrained glow + shared signal selection; or customize a product + drag + living material + texture parameter updates.
 
 Rotate useful tasks such as compare, select, edit, inspect, navigate, configure, explain, or play. Rotate interactions such as pointer capture, keyboard focus, native text input, a slider, seek, or reset. Rotate visual treatments such as paper, ink, glass-like highlights, stars, botanical illustration, architectural lines, or bold editorial color. Keep the API concept singular for focused examples.
 
-Do not publish palette swaps as separate lessons unless the behavior or learning goal changes. For every new candidate, answer: why CRC, what does the visitor do, what code do they learn, and what smaller lesson can a showcase reveal?
+Do not publish palette swaps as separate lessons unless the behavior or learning goal changes. For every new candidate, answer: why Pibbl, what does the visitor do, what code do they learn, and what smaller lesson can a showcase reveal?
 
 ## Selection rules
 

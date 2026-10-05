@@ -1,13 +1,13 @@
-import { blur } from '@crc/core/filters';
-import { Rectangle } from '@crc/core';
+import { blur } from '@pibbl/core/filters';
+import { Rectangle } from '@pibbl/core';
 import { peekNativeFilterPool } from './render-filter-boundary';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { executeRender } from '../execute-render';
-import { clearSharedState, getCRCInstance, GLOBAL_STATE } from '../global-state';
-import { mountCRC } from '../mount-crc';
+import { clearSharedState, getPibblInstance, GLOBAL_STATE } from '../global-state';
+import { mountPibbl } from '../mount-pibbl';
 import type { RenderTargetSnapshot } from '../render-target';
-import type { CRCComponentRefs } from '../types';
+import type { PibblComponentRefs } from '../types';
 import type { FilterPixelWindow, FilterWindows } from './filter-region';
 import { FilterSurfacePool } from './filter-surface-pool';
 
@@ -286,7 +286,7 @@ describe('filter surface pool', () => {
     function InvalidWindowProbe() {}
     GLOBAL_STATE.componentRefs = {
       element: { type: InvalidWindowProbe },
-    } as unknown as CRCComponentRefs<unknown>;
+    } as unknown as PibblComponentRefs<unknown>;
     const offscreenConstructor = vi.spyOn(globalThis, 'OffscreenCanvas');
     const pool = new FilterSurfacePool();
     const windows = createWindows(40, 30, 20, 10);
@@ -307,7 +307,7 @@ describe('filter surface pool', () => {
   });
 });
 
-describe('CRC instance filter-surface ownership', () => {
+describe('Pibbl instance filter-surface ownership', () => {
   it('allocates no surface for an unfiltered mount', () => {
     const offscreenConstructor = vi.spyOn(globalThis, 'OffscreenCanvas');
     const canvas = document.createElement('canvas');
@@ -315,12 +315,12 @@ describe('CRC instance filter-surface ownership', () => {
     canvas.height = 40;
     canvas.style.cssText = 'display:block;width:80px;height:40px';
     document.body.replaceChildren(canvas);
-    const controller = mountCRC(canvas, undefined);
+    const controller = mountPibbl(canvas, undefined);
 
     executeRender(canvas, 0);
 
     expect(offscreenConstructor).not.toHaveBeenCalled();
-    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+    expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
     controller.dispose();
   });
 
@@ -334,9 +334,9 @@ describe('CRC instance filter-surface ownership', () => {
       | ReturnType<FilterSurfacePool['snapshot']>
       | undefined;
     const Root = (_props: {}) => createElement(Rectangle, { style: { width: 20, height: 10, fill: 'red', filter: blur({ radius: 1 }) } });
-    const controller = mountCRC(canvas, createElement(Root, {}));
+    const controller = mountPibbl(canvas, createElement(Root, {}));
     executeRender(canvas, 0);
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const pool = peekNativeFilterPool(instance)!;
     const componentRefs = [...instance.refs.values()][0]!;
     componentRefs.teardowns.add(() => {

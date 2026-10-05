@@ -46,7 +46,7 @@ import {
   affineTransform,
   arcBendTransform,
   transformPath,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const original = new PathGeometry();
 original.rect(0, 0, 200, 50);

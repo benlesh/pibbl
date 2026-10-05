@@ -1,7 +1,7 @@
 ---
 id: guide-data-visualization
 title: Compose data visualizations
-summary: Build allocated, signal-driven line plots with the official @crc/core/viz primitives.
+summary: Build allocated, signal-driven line plots with the official @pibbl/core/viz primitives.
 kind: guide
 slug: data-visualization
 order: 67
@@ -11,13 +11,13 @@ exampleSlug: viz-responsive-line
 
 # Compose data visualizations
 
-`@crc/core/viz` provides scale and drawing primitives. Core owns layout, signals,
+`@pibbl/core/viz` provides scale and drawing primitives. Core owns layout, signals,
 events, clipping, and the JSX runtime. No chart container or second rendering
 loop is required.
 
 ```tsx
-import { Absolute, Group } from "@crc/core";
-import { Axis, LineSeries, Scale } from "@crc/core/viz";
+import { Absolute, Group } from "@pibbl/core";
+import { Axis, LineSeries, Scale } from "@pibbl/core/viz";
 
 const readings = [
   { time: 0, value: 10 },
@@ -51,7 +51,7 @@ signal as layout and props change, without render-time writes.
 
 Use `useScale(id).get().map(value)` for custom marks and `invert(pixel)` for
 inspection. Event coordinates are root-logical; convert them to the plot's local
-space before inversion. `ScaleAdjust` positions ordinary CRC children using that
+space before inversion. `ScaleAdjust` positions ordinary Pibbl children using that
 mapping. Scales neither clip nor invent event targets.
 
 ## Explore an actual record
@@ -65,7 +65,7 @@ included in its editable source.
 
 **Known gap:** the example currently has a desktop-oriented layout. Phone-sized
 presentation and a fully evaluated casual-touch experience remain deferred.
-Core supports responsive style queries on returned CRC elements; conditional
+Core supports responsive style queries on returned Pibbl elements; conditional
 styles for viz-owned marks remain a separate follow-up.
 
 Linear and band scales are available; line curves are linear. Time/UTC,
@@ -80,7 +80,7 @@ callback returns plain paint/radius values. Circles paint fill then stroke in
 source order, preserving transparent overlap. The series has one union target;
 nearest-data lookup is separate from topmost painted hit testing.
 
-Use `PlotSeries` for ordinary CRC elements at each data coordinate. Its required
+Use `PlotSeries` for ordinary Pibbl elements at each data coordinate. Its required
 `render(datum, index, data)` callback returns nodes; hooks belong in returned
 components. Supply `keyBy` for mutable data to preserve per-row state on reorder.
 Missing coordinates skip rows. A callback that returns null retains its row
@@ -177,12 +177,12 @@ overflowing or filtered child paint, and does not prevent multiple cards from
 colliding with each other. Preferred sides can help separate two readouts.
 
 Viz-owned shared styles support ordinary signals and layout-driven reflow.
-Returned CRC marks support core responsive style queries against their containing
+Returned Pibbl marks support core responsive style queries against their containing
 allocation. Direct conditional-style support for viz-owned styles remains deferred.
 
 For multiple readouts, use [AnchoredLayout](#/api/components/anchored-layout)
 instead of positioning each HoverCard independently. Give it keyed items with
-local anchors and declared outer sizes; its child callback renders ordinary CRC
+local anchors and declared outer sizes; its child callback renders ordinary Pibbl
 content at each placed origin. It arranges the boxes together and keeps them
 clear of every supplied anchor. The Hover comparisons lesson demonstrates this
 with connector lines and a shared column that flips at the plot edge.
@@ -219,7 +219,7 @@ changing the bar geometry. Missing-value behavior is covered in the tests.
 </Scale>
 ```
 
-Import `BarSeries` from `@crc/core/viz`. `useScale("channels", "band").get()` exposes
+Import `BarSeries` from `@pibbl/core/viz`. `useScale("channels", "band").get()` exposes
 band starts and bandwidth for composed labels and inspection. Categories are
 strings or finite numbers; order is explicit, duplicates reject, and unknowns
 map to undefined. Padding and domain can be signals. Value and range bars support both orientations. With `orientation="horizontal"`,

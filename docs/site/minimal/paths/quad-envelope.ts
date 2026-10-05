@@ -12,7 +12,7 @@ import {
   type PathQuadCorners,
   type PathQuadMode,
   type QuadTransformOptions,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const tile = new PathGeometry();
 tile.rect(0, 0, 100, 60);

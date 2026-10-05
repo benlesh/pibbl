@@ -1,33 +1,33 @@
-import type { CRCInternalFrame, crcInternalOnRenderFinish, crcInternalRequestRender } from './lib/scheduler/renderer-participant.js';
-import type { CRCConfig, CRCPixelRatio } from './lib/surface/types.js';
+import type { PibblInternalFrame, pibblInternalOnRenderFinish, pibblInternalRequestRender } from './lib/scheduler/renderer-participant.js';
+import type { PibblConfig, PibblPixelRatio } from './lib/surface/types.js';
 /**
  * @packageDocumentation
- * Reserved for official CRC packages that are released in lockstep with
- * `@crc/core`. This version-coupled module is not a stable third-party plugin
+ * Reserved for official Pibbl packages that are released in lockstep with
+ * `@pibbl/core`. This version-coupled module is not a stable third-party plugin
  * API and intentionally does not re-export the public root module.
  */
 
 export { createBackendToken } from "./lib/backend/types.js";
 export type {
-  CRCBackendDriver,
-  CRCBackendEventTargetOptions,
-  CRCBackendFrame,
-  CRCBackendFrameInput,
-  CRCBackendMount,
-  CRCBackendMountOptions,
-  CRCBackendPrimitiveDefinition,
-  CRCBackendPrimitiveInput,
-  CRCBackendPrimitiveProgram,
-  CRCBackendToken,
-  CRCNestedResolverInput,
+  PibblBackendDriver,
+  PibblBackendEventTargetOptions,
+  PibblBackendFrame,
+  PibblBackendFrameInput,
+  PibblBackendMount,
+  PibblBackendMountOptions,
+  PibblBackendPrimitiveDefinition,
+  PibblBackendPrimitiveInput,
+  PibblBackendPrimitiveProgram,
+  PibblBackendToken,
+  PibblNestedResolverInput,
 } from "./lib/backend/types.js";
 export type { SignalProgramProps, SignalStyle } from "./lib/types.js";
 export {
-  crcInternalRunPurePrimitiveResolver,
+  pibblInternalRunPurePrimitiveResolver,
   defineBackendPrimitive,
   derivePrimitive,
 } from "./lib/define-primitive.js";
-export { mountBackendCRC } from "./lib/mount-crc.js";
+export { mountBackendPibbl } from "./lib/mount-pibbl.js";
 export {
   useInternalHookSlot,
   withHooksForbidden,
@@ -39,44 +39,44 @@ export {
   snapshotLayerNodeTree,
 } from "./lib/components/layer-node-equality.js";
 export type { LayerNodeSnapshot } from "./lib/components/layer-node-equality.js";
-export type { CRCEventTargetRegistration } from "./lib/events/registrations.js";
-export type { CRCElementSource } from "./lib/element/metadata.js";
-export { crcInternalCreatePropAttachment } from "./lib/element-enhancers.js";
+export type { PibblEventTargetRegistration } from "./lib/events/registrations.js";
+export type { PibblElementSource } from "./lib/element/metadata.js";
+export { pibblInternalCreatePropAttachment } from "./lib/element-enhancers.js";
 export type {
-  CRCInternalMountedPropAttachment,
-  CRCInternalPrimitiveAttachmentInput,
+  PibblInternalMountedPropAttachment,
+  PibblInternalPrimitiveAttachmentInput,
 } from "./lib/element-enhancers.js";
-export type { CRCHitTestOutput } from "./lib/events/paint-entry.js";
-export { hasCRCEventHandler } from "./lib/events/event-definitions.js";
+export type { PibblHitTestOutput } from "./lib/events/paint-entry.js";
+export { hasPibblEventHandler } from "./lib/events/event-definitions.js";
 export {
-  crcInternalCurrentSimulationOwner,
-  crcInternalOnSimulationRenderTransactionFinish,
-  crcInternalQueueSimulationBegin,
-  crcInternalQueueSimulationCommitAcknowledgement,
-  crcInternalQueueSimulationComplete,
-  crcInternalRegisterSimulationAdvance,
-  crcInternalRequestSimulationRender,
+  pibblInternalCurrentSimulationOwner,
+  pibblInternalOnSimulationRenderTransactionFinish,
+  pibblInternalQueueSimulationBegin,
+  pibblInternalQueueSimulationCommitAcknowledgement,
+  pibblInternalQueueSimulationComplete,
+  pibblInternalRegisterSimulationAdvance,
+  pibblInternalRequestSimulationRender,
 } from "./lib/scheduler/simulation-participant.js";
 export type {
-  CRCInternalAdvanceLane,
-  CRCInternalSimulationOwner,
+  PibblInternalAdvanceLane,
+  PibblInternalSimulationOwner,
 } from "./lib/scheduler/simulation-participant.js";
 
 import type {
-  CRCBackendEventTargetOptions,
-  CRCBackendMount,
-  CRCBackendToken,
-  CRCNestedResolverInput,
+  PibblBackendEventTargetOptions,
+  PibblBackendMount,
+  PibblBackendToken,
+  PibblNestedResolverInput,
 } from "./lib/backend/types.js";
 import {
   createTarget,
   releaseTarget,
   updateTarget,
-  type CRCEventTargetRegistration,
+  type PibblEventTargetRegistration,
 } from "./lib/events/registrations.js";
-import { CRCPaintEntryKind } from "./lib/events/paint-entry.js";
-import type { CRCEventHandlers, CRCPointerEvents } from "./lib/events/types.js";
-import { getCurrentCRCInstance, GLOBAL_STATE } from "./lib/global-state.js";
+import { PibblPaintEntryKind } from "./lib/events/paint-entry.js";
+import type { PibblEventHandlers, PibblPointerEvents } from "./lib/events/types.js";
+import { getCurrentPibblInstance, GLOBAL_STATE } from "./lib/global-state.js";
 import {
   requireHookContext,
   useInternalHookSlot,
@@ -84,57 +84,57 @@ import {
 import { getCurrentWorldTransform } from "./lib/render-target.js";
 import {
   getElementSource,
-  type CRCElementSource,
+  type PibblElementSource,
 } from "./lib/element/metadata.js";
 import { getSurfaceSnapshot } from "./lib/surface/transform.js";
 import type {
   Canvas,
-  CRCComponentRefs,
-  CRCInstance,
+  PibblComponentRefs,
+  PibblInstance,
 } from "./lib/types.js";
-import type { CRCInteractionLayer } from "./lib/types.js";
+import type { PibblInteractionLayer } from "./lib/types.js";
 import { update } from "./lib/update.js";
 import { queueBeginCommand } from "./lib/scheduler/realm-scheduler.js";
-import type { CRCBeginCommandHandle } from "./lib/scheduler/types.js";
+import type { PibblBeginCommandHandle } from "./lib/scheduler/types.js";
 
 interface CurrentInstanceFrameRequestState {
-  readonly componentRefs: CRCComponentRefs<any>;
-  readonly instance: CRCInstance;
+  readonly componentRefs: PibblComponentRefs<any>;
+  readonly instance: PibblInstance;
   active: boolean;
-  handle: CRCBeginCommandHandle | undefined;
+  handle: PibblBeginCommandHandle | undefined;
   updateParents: boolean;
 }
 
 const frameRequestsByComponent = new WeakMap<
-  CRCComponentRefs<any>,
+  PibblComponentRefs<any>,
   CurrentInstanceFrameRequestState
 >();
 /**
  * Reads the selected official backend's current frame environment.
  *
- * @param token - Backend identity required by the caller. See {@link CRCBackendToken}.
+ * @param token - Backend identity required by the caller. See {@link PibblBackendToken}.
  * @returns The active environment for that backend.
  *
- * @see {@link CRCBackendToken}
+ * @see {@link PibblBackendToken}
  */
-export function getBackendEnvironment<E>(token: CRCBackendToken): E {
+export function getBackendEnvironment<E>(token: PibblBackendToken): E {
   const driver = GLOBAL_STATE.backendDriver;
   const frame = GLOBAL_STATE.backendFrame;
   if (!driver || !frame || driver.token !== token) {
-    throw new Error("The requested CRC backend environment is not active.");
+    throw new Error("The requested Pibbl backend environment is not active.");
   }
   return frame.environment as E;
 }
 
 /**
- * Returns the timestamp shared by the current CRC render transaction.
+ * Returns the timestamp shared by the current Pibbl render transaction.
  *
  * @returns The active frame timestamp in milliseconds.
  *
- * @see {@link CRCInternalFrame}
+ * @see {@link PibblInternalFrame}
  */
 export function getCurrentFrameTimestamp(): number {
-  return getCurrentCRCInstance().renderTimestamp;
+  return getCurrentPibblInstance().renderTimestamp;
 }
 
 /**
@@ -145,18 +145,18 @@ export function getCurrentFrameTimestamp(): number {
  * @see {@link Canvas}
  */
 export function getCurrentBackendHostCanvas(): Canvas {
-  return getCurrentCRCInstance().canvas;
+  return getCurrentPibblInstance().canvas;
 }
 
 /**
  * Returns development JSX source metadata for the current component.
  *
  * @returns Source metadata for the current element, or undefined when unavailable. See
- * {@link CRCElementSource} .
+ * {@link PibblElementSource} .
  *
- * @see {@link CRCElementSource}
+ * @see {@link PibblElementSource}
  */
-export function getCurrentElementSource(): CRCElementSource | undefined {
+export function getCurrentElementSource(): PibblElementSource | undefined {
   const { componentRefs } = requireHookContext();
   return getElementSource(componentRefs.element);
 }
@@ -166,10 +166,10 @@ export function getCurrentElementSource(): CRCElementSource | undefined {
  *
  * @returns Backing pixels per logical unit on each axis.
  *
- * @see {@link CRCPixelRatio}
+ * @see {@link PibblPixelRatio}
  */
 export function getCurrentSurfaceDensity(): Readonly<{ x: number; y: number }> {
-  const surface = getSurfaceSnapshot(getCurrentCRCInstance());
+  const surface = getSurfaceSnapshot(getCurrentPibblInstance());
   return Object.freeze({
     x: surface.backingPixelsPerLogicalUnitX,
     y: surface.backingPixelsPerLogicalUnitY,
@@ -181,13 +181,13 @@ export function getCurrentSurfaceDensity(): Readonly<{ x: number; y: number }> {
  *
  * @returns The current logical viewport width and height.
  *
- * @see {@link CRCConfig}
+ * @see {@link PibblConfig}
  */
 export function getCurrentLogicalViewport(): Readonly<{
   width: number;
   height: number;
 }> {
-  const surface = getSurfaceSnapshot(getCurrentCRCInstance());
+  const surface = getSurfaceSnapshot(getCurrentPibblInstance());
   return Object.freeze({
     width: surface.logicalWidth,
     height: surface.logicalHeight,
@@ -199,7 +199,7 @@ export function getCurrentLogicalViewport(): Readonly<{
  *
  * @param callback - Callback receiving whether the current render transaction succeeded.
  *
- * @see {@link crcInternalOnRenderFinish}
+ * @see {@link pibblInternalOnRenderFinish}
  */
 export function onCurrentRenderFinish(
   callback: (success: boolean) => void,
@@ -207,7 +207,7 @@ export function onCurrentRenderFinish(
   requireHookContext();
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) {
-    throw new Error("No CRC render transaction is active.");
+    throw new Error("No Pibbl render transaction is active.");
   }
   transaction.onFinish(callback);
 }
@@ -217,15 +217,15 @@ export function onCurrentRenderFinish(
  *
  * @param updateParents - Whether ancestor compositions should also receive a frame request.
  *
- * @see {@link crcInternalRequestRender}
+ * @see {@link pibblInternalRequestRender}
  */
 export function requestCurrentInstanceFrame(updateParents: boolean): void {
-  const { componentRefs, crcInstance } = requireHookContext();
+  const { componentRefs, pibblInstance } = requireHookContext();
   let state = frameRequestsByComponent.get(componentRefs);
   if (!state) {
     state = {
       componentRefs,
-      instance: crcInstance,
+      instance: pibblInstance,
       active: true,
       handle: undefined,
       updateParents: false,
@@ -253,27 +253,27 @@ export function requestCurrentInstanceFrame(updateParents: boolean): void {
 /**
  * Retains one geometry-independent target for an official backend picker.
  *
- * @param handlers - Handlers for the backend target. See {@link CRCEventHandlers}.
- * @param options - Backend geometry and focus metadata. See {@link CRCBackendEventTargetOptions}.
+ * @param handlers - Handlers for the backend target. See {@link PibblEventHandlers}.
+ * @param options - Backend geometry and focus metadata. See {@link PibblBackendEventTargetOptions}.
  * @param pointerEvents - Pointer participation policy; defaults to auto. See
- * {@link CRCPointerEvents} .
+ * {@link PibblPointerEvents} .
  * @returns The live registration, or undefined when registration is unnecessary. See
- * {@link CRCEventTargetRegistration} .
+ * {@link PibblEventTargetRegistration} .
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCBackendEventTargetOptions}
- * @see {@link CRCPointerEvents}
- * @see {@link CRCEventTargetRegistration}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblBackendEventTargetOptions}
+ * @see {@link PibblPointerEvents}
+ * @see {@link PibblEventTargetRegistration}
  */
 export function useBackendEventTarget(
-  handlers: CRCEventHandlers,
-  options: CRCBackendEventTargetOptions = {},
-  pointerEvents: CRCPointerEvents = "auto",
-): CRCEventTargetRegistration | undefined {
-  const { componentRefs, crcInstance } = requireHookContext();
+  handlers: PibblEventHandlers,
+  options: PibblBackendEventTargetOptions = {},
+  pointerEvents: PibblPointerEvents = "auto",
+): PibblEventTargetRegistration | undefined {
+  const { componentRefs, pibblInstance } = requireHookContext();
   const hookIndex = GLOBAL_STATE.componentHookIndex;
   const slot = useInternalHookSlot("backendEventTarget", (teardowns) => {
-    const target = createTarget(crcInstance, componentRefs, hookIndex);
+    const target = createTarget(pibblInstance, componentRefs, hookIndex);
     teardowns.add(() => releaseTarget(target));
     return { target, emptyPath: new Path2D() };
   });
@@ -300,13 +300,13 @@ export function useBackendEventTarget(
  * Tests whether an official backend target can still win coordinate picking.
  *
  * @param target - Registration whose ownership is being checked. See
- * {@link CRCEventTargetRegistration} .
+ * {@link PibblEventTargetRegistration} .
  * @returns Whether the target registration is still live.
  *
- * @see {@link CRCEventTargetRegistration}
+ * @see {@link PibblEventTargetRegistration}
  */
 export function isBackendEventTargetLive(
-  target: CRCEventTargetRegistration,
+  target: PibblEventTargetRegistration,
 ): boolean {
   const { owner } = target;
   return (
@@ -319,12 +319,12 @@ export function isBackendEventTargetLive(
 /**
  * Temporarily releases one backend target; its retained hook may enroll it again.
  *
- * @param target - Target registration to release. See {@link CRCEventTargetRegistration}.
+ * @param target - Target registration to release. See {@link PibblEventTargetRegistration}.
  *
- * @see {@link CRCEventTargetRegistration}
+ * @see {@link PibblEventTargetRegistration}
  */
 export function releaseBackendEventTarget(
-  target: CRCEventTargetRegistration,
+  target: PibblEventTargetRegistration,
 ): void {
   releaseTarget(target);
   target.keyboardNavigationBounds = undefined;
@@ -336,7 +336,7 @@ export function releaseBackendEventTarget(
  *
  * @param callback - Callback to execute after the current component renders.
  *
- * @see {@link crcInternalOnRenderFinish}
+ * @see {@link pibblInternalOnRenderFinish}
  */
 export function setCurrentComponentAfterRender(callback: () => void): void {
   const { componentRefs } = requireHookContext();
@@ -356,29 +356,29 @@ export function setCurrentComponentAfterRender(callback: () => void): void {
  * Installs one stable nested backend resolver in the current Canvas paint order.
  *
  * @param input - Nested coordinate resolver and its target metadata. See
- * {@link CRCNestedResolverInput} .
+ * {@link PibblNestedResolverInput} .
  *
- * @see {@link CRCNestedResolverInput}
+ * @see {@link PibblNestedResolverInput}
  */
 export function registerNestedInteractionResolver(
-  input: CRCNestedResolverInput,
+  input: PibblNestedResolverInput,
 ): void {
-  const { componentRefs, crcInstance } = requireHookContext();
+  const { componentRefs, pibblInstance } = requireHookContext();
   const childInstance = backendMountInstance(input.child);
   if (
-    childInstance.parent !== crcInstance.canvas ||
-    childInstance.eventRoot !== crcInstance.eventRoot
+    childInstance.parent !== pibblInstance.canvas ||
+    childInstance.eventRoot !== pibblInstance.eventRoot
   ) {
     throw new Error(
-      "A nested CRC backend mount must belong to the current instance and same event root.",
+      "A nested Pibbl backend mount must belong to the current instance and same event root.",
     );
   }
   const slot = useInternalHookSlot<{
-    entry: CRCInteractionLayer;
-    child: CRCBackendMount;
+    entry: PibblInteractionLayer;
+    child: PibblBackendMount;
   }>("nestedInteractionResolver", (teardowns) => {
-    const entry: CRCInteractionLayer = {
-      paintKind: CRCPaintEntryKind.Resolver,
+    const entry: PibblInteractionLayer = {
+      paintKind: PibblPaintEntryKind.Resolver,
       instance: childInstance,
       bounds: input.bounds,
       transform: new DOMMatrix(),
@@ -387,7 +387,7 @@ export function registerNestedInteractionResolver(
     };
     const value = { entry, child: input.child };
     teardowns.add(() => {
-      crcInstance.paintEntries.delete(entry);
+      pibblInstance.paintEntries.delete(entry);
       if (entry.instance.focusParentBridge === entry) {
         entry.instance.focusParentBridge = undefined;
       }
@@ -405,10 +405,10 @@ export function registerNestedInteractionResolver(
       childInstance.focusParentBridge !== entry)
   ) {
     throw new Error(
-      "A nested CRC backend mount already belongs to another nested resolver.",
+      "A nested Pibbl backend mount already belongs to another nested resolver.",
     );
   }
-  crcInstance.paintEntries.delete(entry);
+  pibblInstance.paintEntries.delete(entry);
   if (slot.value.child !== input.child) {
     if (entry.instance.focusParentBridge === entry) {
       entry.instance.focusParentBridge = undefined;
@@ -426,14 +426,14 @@ export function registerNestedInteractionResolver(
   entry.resolveLocal = input.resolveLocal;
   entry.instance.focusParentBridge = entry;
   if (input.pointerEvents === "auto") {
-    crcInstance.paintEntries.add(entry);
+    pibblInstance.paintEntries.add(entry);
   }
 }
 
-function backendMountInstance(mount: CRCBackendMount) {
-  const instance = GLOBAL_STATE.crcInstances.get(mount.canvas);
+function backendMountInstance(mount: PibblBackendMount) {
+  const instance = GLOBAL_STATE.pibblInstances.get(mount.canvas);
   if (!instance) {
-    throw new Error("Nested CRC backend mount is not active.");
+    throw new Error("Nested Pibbl backend mount is not active.");
   }
   return instance;
 }
@@ -463,43 +463,43 @@ function isCurrentInstanceFrameRequestActive(
     state.active &&
     !state.componentRefs.teardowns.closed &&
     !state.instance.mainTeardowns.closed &&
-    GLOBAL_STATE.crcInstances.get(state.instance.canvas) === state.instance &&
+    GLOBAL_STATE.pibblInstances.get(state.instance.canvas) === state.instance &&
     state.instance.refs.get(state.componentRefs.id) === state.componentRefs
   );
 }
 export {
-  crcInternalAssertCommandAllowed,
-  crcInternalCreateSignalConsumer,
-  crcInternalCurrentFrame,
-  crcInternalCurrentRenderOwner,
-  crcInternalOnRenderFinish,
-  crcInternalPaintTarget,
-  crcInternalQueueBegin,
-  crcInternalQueueComplete,
-  crcInternalQueueCurrentCommit,
-  crcInternalQueueCurrentComplete,
-  crcInternalRegisterAdvance,
-  crcInternalRequestRender,
-  crcInternalRequestRendererWork,
+  pibblInternalAssertCommandAllowed,
+  pibblInternalCreateSignalConsumer,
+  pibblInternalCurrentFrame,
+  pibblInternalCurrentRenderOwner,
+  pibblInternalOnRenderFinish,
+  pibblInternalPaintTarget,
+  pibblInternalQueueBegin,
+  pibblInternalQueueComplete,
+  pibblInternalQueueCurrentCommit,
+  pibblInternalQueueCurrentComplete,
+  pibblInternalRegisterAdvance,
+  pibblInternalRequestRender,
+  pibblInternalRequestRendererWork,
 } from "./lib/scheduler/renderer-participant.js";
 export type {
-  CRCInternalCommandHandle,
-  CRCInternalFrame,
-  CRCInternalRendererWorkKind,
-  CRCInternalRenderOwner,
-  CRCInternalSignalBatch,
-  CRCInternalSignalConsumer,
+  PibblInternalCommandHandle,
+  PibblInternalFrame,
+  PibblInternalRendererWorkKind,
+  PibblInternalRenderOwner,
+  PibblInternalSignalBatch,
+  PibblInternalSignalConsumer,
 } from "./lib/scheduler/renderer-participant.js";
 
 export { pushLayoutBox } from "./lib/layout/context.js";
 
 export {
-  ManualSchedulerDriver as CRCInternalManualSchedulerDriver,
-  installSchedulerDriverForTest as crcInternalInstallTestSchedulerDriver,
-  snapshotRealmScheduler as crcInternalSnapshotRealmScheduler,
+  ManualSchedulerDriver as PibblInternalManualSchedulerDriver,
+  installSchedulerDriverForTest as pibblInternalInstallTestSchedulerDriver,
+  snapshotRealmScheduler as pibblInternalSnapshotRealmScheduler,
 } from "./lib/scheduler/testing.js";
 
-export { getCurrentWorldTransform as crcInternalCurrentWorldTransform } from "./lib/render-target.js";
+export { getCurrentWorldTransform as pibblInternalCurrentWorldTransform } from "./lib/render-target.js";
 
 export { borrowTextureRaster, resolveTexturePaint, validateTexturePaint } from './lib/textures/texture-protocol.js';
 export type { BorrowedTextureRaster } from './lib/textures/texture-protocol.js';

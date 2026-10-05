@@ -9,7 +9,7 @@ import {
   verifyArtifacts,
 } from "../scripts/lib/files.mjs";
 test("tooling lock serializes writers and releases after exceptions", async () => {
-  const temp = await mkdtemp(join(tmpdir(), "crc-text-lock-"));
+  const temp = await mkdtemp(join(tmpdir(), "pibbl-text-lock-"));
   try {
     const order = [];
     let release, entered;
@@ -45,7 +45,7 @@ test("tooling lock serializes writers and releases after exceptions", async () =
   }
 });
 test("native cache validation detects altered and missing artifacts", async () => {
-  const temp = await mkdtemp(join(tmpdir(), "crc-text-hashes-"));
+  const temp = await mkdtemp(join(tmpdir(), "pibbl-text-hashes-"));
   try {
     await writeFile(join(temp, "engine.wasm"), "wasm fixture");
     const hashes = await artifactHashes(temp, ["engine.wasm"]);
@@ -64,7 +64,7 @@ test("verified downloads reject corrupt bytes and reuse valid offline archives",
   const { createServer } = await import("node:http");
   const { createHash } = await import("node:crypto");
   const bytes = Buffer.from("pinned input");
-  const temp = await mkdtemp(join(tmpdir(), "crc-text-download-"));
+  const temp = await mkdtemp(join(tmpdir(), "pibbl-text-download-"));
   let requests = 0;
   const server = createServer((_request, response) => {
     requests++;

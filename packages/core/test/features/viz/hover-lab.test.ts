@@ -1,4 +1,4 @@
-import { getScenarioBySlug, loadScenario } from "@crc/scenarios";
+import { getScenarioBySlug, loadScenario } from "@pibbl/scenarios";
 import { expect, it } from "vitest";
 it("compares one nearest point, two recorded values, and two values at a dragged x", async () => {
   const entry = getScenarioBySlug("viz-hover-lab");

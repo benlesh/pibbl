@@ -12,7 +12,7 @@ relatedTypes: [SvgPathProps, SvgPathStyle]
 # SvgPath
 
 ```ts
-import { SvgPath } from "@crc/core";
+import { SvgPath } from "@pibbl/core";
 ```
 
 `SvgPath` uses [`SvgPathProps`](#/api/types/elements-components#svgpathprops) and [`SvgPathStyle`](#/api/types/styles#svgpathstyle). Its SVG path-data input is

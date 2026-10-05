@@ -1,23 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { CRCEventHandlers } from "../events/types";
+import type { PibblEventHandlers } from "../events/types";
 import { executeRender } from "../execute-render";
-import { clearSharedState, getCRCInstance } from "../global-state";
+import { clearSharedState, getPibblInstance } from "../global-state";
 import { useEventTarget } from "../hooks/use-event-target";
-import { mountCRC } from "../mount-crc";
-import type { CRCElement, CRCController } from "../types";
-import type { CRCDirection } from "./directional-navigation";
-import type { CRCFocusManager } from "./focus-manager";
+import { mountPibbl } from "../mount-pibbl";
+import type { PibblElement, PibblController } from "../types";
+import type { PibblDirection } from "./directional-navigation";
+import type { PibblFocusManager } from "./focus-manager";
 import {
   isHtmlFocusCandidate,
-  type CRCDirectionalBoundary,
-  type CRCNavigationCandidate,
+  type PibblDirectionalBoundary,
+  type PibblNavigationCandidate,
 } from "./types";
 import { focusManaged } from "./policy-test-support";
 import { directionalPolicy } from "./policy-test-support";
 import { createElement } from "../element/create-element";
 import { definePrimitive } from "../define-primitive";
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 const noop = () => undefined;
 
 beforeEach(() => {
@@ -151,7 +151,7 @@ describe("nested directional navigation", () => {
           y: 0,
         }),
       );
-    const OuterHost = ({ children }: { children: CRCElement<any>[] }) =>
+    const OuterHost = ({ children }: { children: PibblElement<any>[] }) =>
       children;
     const Root = ({
       nested,
@@ -227,8 +227,8 @@ describe("nested directional navigation", () => {
   it("keeps last successful direct lists during a partial failure and clears them only with manager teardown", () => {
     let capturedDuringFailure:
       { readonly outer: string[]; readonly inner: string[] } | undefined;
-    let committedOuter: CRCDirectionalBoundary | undefined;
-    let committedInner: CRCDirectionalBoundary | undefined;
+    let committedOuter: PibblDirectionalBoundary | undefined;
+    let committedInner: PibblDirectionalBoundary | undefined;
     const Throwing = (_props: {}) => {
       capturedDuringFailure = {
         outer: labels(committedOuter?.candidates ?? []),
@@ -290,8 +290,8 @@ describe("nested directional navigation", () => {
     expect(committedInner.candidates).toEqual([]);
 
     executeRender(mounted.canvas, 3, element(false));
-    const replacement = getCRCInstance(mounted.canvas).eventRoot
-      .focusPolicy as CRCFocusManager;
+    const replacement = getPibblInstance(mounted.canvas).eventRoot
+      .focusPolicy as PibblFocusManager;
     expect(replacement).not.toBe(manager);
     expect(
       labels(replacement.candidates[0].directionalBoundary!.candidates),
@@ -306,7 +306,7 @@ interface TargetProps {
   readonly label: string;
   readonly x: number;
   readonly y: number;
-  readonly handlers?: CRCEventHandlers;
+  readonly handlers?: PibblEventHandlers;
 }
 
 const Target = definePrimitive<TargetProps>(
@@ -320,34 +320,34 @@ const Target = definePrimitive<TargetProps>(
   },
 );
 
-function mountAndRender(element: CRCElement<any>): {
+function mountAndRender(element: PibblElement<any>): {
   readonly canvas: HTMLCanvasElement;
-  readonly controller: CRCController;
-  readonly manager: CRCFocusManager;
+  readonly controller: PibblController;
+  readonly manager: PibblFocusManager;
 } {
   const canvas = document.createElement("canvas");
   canvas.width = 300;
   canvas.height = 200;
   document.body.appendChild(canvas);
-  const controller = mountCRC(canvas, element);
+  const controller = mountPibbl(canvas, element);
   activeControllers.add(controller);
   executeRender(canvas, 1);
-  const manager = getCRCInstance(canvas).eventRoot.focusPolicy as
-    CRCFocusManager | undefined;
+  const manager = getPibblInstance(canvas).eventRoot.focusPolicy as
+    PibblFocusManager | undefined;
   if (!manager) throw new Error("Expected a focus manager.");
   return { canvas, controller, manager };
 }
 
-function labels(candidates: readonly CRCNavigationCandidate[]): string[] {
+function labels(candidates: readonly PibblNavigationCandidate[]): string[] {
   return candidates.map(candidateLabel);
 }
 
-function candidateLabel(candidate: CRCNavigationCandidate): string {
+function candidateLabel(candidate: PibblNavigationCandidate): string {
   if (isHtmlFocusCandidate(candidate)) return "HtmlBox";
   return (candidate.target.component.element.props as { label: string }).label;
 }
 
-function focusedLabel(manager: CRCFocusManager): string | undefined {
+function focusedLabel(manager: PibblFocusManager): string | undefined {
   const target = manager.resolveKeyboardTarget();
   return target
     ? (target.component.element.props as { label: string }).label
@@ -356,7 +356,7 @@ function focusedLabel(manager: CRCFocusManager): string | undefined {
 
 function dispatchArrow(
   canvas: HTMLCanvasElement,
-  direction: CRCDirection,
+  direction: PibblDirection,
 ): KeyboardEvent {
   const key = `Arrow${direction[0].toUpperCase()}${direction.slice(1)}`;
   const event = new KeyboardEvent("keydown", {

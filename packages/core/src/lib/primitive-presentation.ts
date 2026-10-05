@@ -77,7 +77,7 @@ export function enterPrimitivePresentation(
   const { transform, clip } = presentation;
   if (transform) {
     // These calculations share one synchronous Canvas snapshot. No user code runs
-    // between the read and applying the CRC-owned presentation transform.
+    // between the read and applying the Pibbl-owned presentation transform.
     const currentPaint = getCurrentPaintTransform();
     const currentWorld = getCurrentWorldTransform(currentPaint);
     const untrackedCanvasTransformCount =

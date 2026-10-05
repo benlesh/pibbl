@@ -1,20 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  CRCHitDisposition,
-  CRCPaintEntryKind,
+  PibblHitDisposition,
+  PibblPaintEntryKind,
   hitTestScratchFactory,
-  type CRCNestedPaintEntry,
-  type CRCPathPaintEntry,
+  type PibblNestedPaintEntry,
+  type PibblPathPaintEntry,
 } from './paint-entry.js';
 import {
   resolveCoordinateHit,
   resolveCoordinateTarget,
 } from './hit-test.js';
 import type {
-  CRCEventRoot,
-  CRCInstance,
+  PibblEventRoot,
+  PibblInstance,
 } from '../types.js';
-import type { CRCEventTargetRegistration } from './registrations.js';
+import type { PibblEventTargetRegistration } from './registrations.js';
 
 describe('coordinate hit resolution', () => {
   it('stops at an upper block and mutates the supplied result', () => {
@@ -23,23 +23,23 @@ describe('coordinate hit resolution', () => {
     const { eventRoot } = rootWith([
       resolverEntry(lowerResolver),
       resolverEntry((_x, _y, output) => {
-        output.disposition = CRCHitDisposition.Target;
+        output.disposition = PibblHitDisposition.Target;
         output.target = target();
       }),
       resolverEntry((_x, _y, output) => {
-        output.disposition = CRCHitDisposition.Block;
+        output.disposition = PibblHitDisposition.Block;
         output.target = null;
       }),
     ]);
     const input = { rootX: 12, rootY: 18 };
     const output = {
-      disposition: CRCHitDisposition.Target,
+      disposition: PibblHitDisposition.Target,
       target: staleTarget,
     };
 
     expect(resolveCoordinateHit(eventRoot, input, output)).toBe(output);
     expect(output).toEqual({
-      disposition: CRCHitDisposition.Block,
+      disposition: PibblHitDisposition.Block,
       target: null,
     });
     expect(lowerResolver).not.toHaveBeenCalled();
@@ -49,11 +49,11 @@ describe('coordinate hit resolution', () => {
     const lowerTarget = target();
     const { eventRoot } = rootWith([
       resolverEntry((_x, _y, output) => {
-        output.disposition = CRCHitDisposition.Target;
+        output.disposition = PibblHitDisposition.Target;
         output.target = lowerTarget;
       }),
       resolverEntry((_x, _y, output) => {
-        output.disposition = CRCHitDisposition.Miss;
+        output.disposition = PibblHitDisposition.Miss;
         output.target = null;
       }),
     ]);
@@ -62,7 +62,7 @@ describe('coordinate hit resolution', () => {
     resolveCoordinateHit(eventRoot, { rootX: 12, rootY: 18 }, output);
 
     expect(output).toEqual({
-      disposition: CRCHitDisposition.Target,
+      disposition: PibblHitDisposition.Target,
       target: lowerTarget,
     });
   });
@@ -73,7 +73,7 @@ describe('coordinate hit resolution', () => {
     const { eventRoot } = rootWith([
       resolverEntry(lowerResolver),
       resolverEntry((_x, _y, output) => {
-        output.disposition = CRCHitDisposition.Target;
+        output.disposition = PibblHitDisposition.Target;
         output.target = upperTarget;
       }),
     ]);
@@ -82,7 +82,7 @@ describe('coordinate hit resolution', () => {
     resolveCoordinateHit(eventRoot, { rootX: 12, rootY: 18 }, output);
 
     expect(output).toEqual({
-      disposition: CRCHitDisposition.Target,
+      disposition: PibblHitDisposition.Target,
       target: upperTarget,
     });
     expect(lowerResolver).not.toHaveBeenCalled();
@@ -93,8 +93,8 @@ describe('coordinate hit resolution', () => {
     const child = instanceWith([
       pathEntry(childTarget, rectangle(0, 0, 20, 20)),
     ]);
-    const nested: CRCNestedPaintEntry = {
-      paintKind: CRCPaintEntryKind.NestedInstance,
+    const nested: PibblNestedPaintEntry = {
+      paintKind: PibblPaintEntryKind.NestedInstance,
       instance: child,
       bounds: rectangle(0, 0, 20, 20),
       transform: new DOMMatrix().translate(10, 10),
@@ -110,14 +110,14 @@ describe('coordinate hit resolution', () => {
     const hit = emptyOutput();
     resolveCoordinateHit(eventRoot, { rootX: 15, rootY: 15 }, hit);
     expect(hit).toEqual({
-      disposition: CRCHitDisposition.Target,
+      disposition: PibblHitDisposition.Target,
       target: childTarget,
     });
 
     const clipped = emptyOutput();
     resolveCoordinateHit(eventRoot, { rootX: 25, rootY: 15 }, clipped);
     expect(clipped).toEqual({
-      disposition: CRCHitDisposition.Miss,
+      disposition: PibblHitDisposition.Miss,
       target: null,
     });
   });
@@ -126,12 +126,12 @@ describe('coordinate hit resolution', () => {
     const received: Array<unknown> = [];
     const resolver = vi.fn((x: number, y: number, output: unknown) => {
       received.push(output);
-      (output as ReturnType<typeof emptyOutput>).disposition = CRCHitDisposition.Block;
+      (output as ReturnType<typeof emptyOutput>).disposition = PibblHitDisposition.Block;
       (output as ReturnType<typeof emptyOutput>).target = null;
       expect([x, y]).toEqual([2, 3]);
     });
     const { eventRoot } = rootWith([{
-      paintKind: CRCPaintEntryKind.Resolver,
+      paintKind: PibblPaintEntryKind.Resolver,
       instance: instanceWith([]),
       bounds: rectangle(0, 0, 20, 20),
       transform: new DOMMatrix().translate(10, 15),
@@ -154,7 +154,7 @@ describe('coordinate hit resolution', () => {
     const depth = 4;
     for (let level = 0; level < depth; level++) {
       child = instanceWith([{
-        paintKind: CRCPaintEntryKind.NestedInstance,
+        paintKind: PibblPaintEntryKind.NestedInstance,
         instance: child,
         bounds: rectangle(0, 0, 20, 20),
         transform: new DOMMatrix(),
@@ -176,7 +176,7 @@ describe('coordinate hit resolution', () => {
     resolveCoordinateHit(eventRoot, { rootX: 10, rootY: 10 }, output);
 
     expect(output).toEqual({
-      disposition: CRCHitDisposition.Target,
+      disposition: PibblHitDisposition.Target,
       target: childTarget,
     });
     expect(isPointInPath).toHaveBeenCalledTimes(depth * 2 + 1);
@@ -187,12 +187,12 @@ describe('coordinate hit resolution', () => {
     const received: unknown[] = [];
     const lowerResolver = vi.fn((_x: number, _y: number, output: unknown) => {
       received.push(output);
-      (output as ReturnType<typeof emptyOutput>).disposition = CRCHitDisposition.Target;
+      (output as ReturnType<typeof emptyOutput>).disposition = PibblHitDisposition.Target;
       (output as ReturnType<typeof emptyOutput>).target = lowerTarget;
     });
     const upperResolver = vi.fn((_x: number, _y: number, output: unknown) => {
       received.push(output);
-      (output as ReturnType<typeof emptyOutput>).disposition = CRCHitDisposition.Miss;
+      (output as ReturnType<typeof emptyOutput>).disposition = PibblHitDisposition.Miss;
       (output as ReturnType<typeof emptyOutput>).target = null;
     });
     const { eventRoot } = rootWith([
@@ -217,8 +217,8 @@ describe('coordinate hit resolution', () => {
     const frontCanvas = target();
     const picker = vi.fn((x: number, _y: number, output: ReturnType<typeof emptyOutput>) => {
       output.disposition = x < 50 ?
-        CRCHitDisposition.Target :
-        CRCHitDisposition.Miss;
+        PibblHitDisposition.Target :
+        PibblHitDisposition.Miss;
       output.target = x < 50 ? webGL : null;
     });
     const { eventRoot } = rootWith([
@@ -230,7 +230,7 @@ describe('coordinate hit resolution', () => {
     const front = emptyOutput();
     resolveCoordinateHit(eventRoot, { rootX: 10, rootY: 10 }, front);
     expect(front).toEqual({
-      disposition: CRCHitDisposition.Target,
+      disposition: PibblHitDisposition.Target,
       target: frontCanvas,
     });
     expect(picker).not.toHaveBeenCalled();
@@ -238,7 +238,7 @@ describe('coordinate hit resolution', () => {
     const island = emptyOutput();
     resolveCoordinateHit(eventRoot, { rootX: 40, rootY: 40 }, island);
     expect(island).toEqual({
-      disposition: CRCHitDisposition.Target,
+      disposition: PibblHitDisposition.Target,
       target: webGL,
     });
     expect(picker).toHaveBeenCalledOnce();
@@ -251,7 +251,7 @@ describe('coordinate hit resolution', () => {
       transparentBackground,
     );
     expect(transparentBackground).toEqual({
-      disposition: CRCHitDisposition.Target,
+      disposition: PibblHitDisposition.Target,
       target: rearCanvas,
     });
     expect(picker).toHaveBeenCalledTimes(2);
@@ -259,22 +259,22 @@ describe('coordinate hit resolution', () => {
   });
 });
 
-function rootWith(entries: readonly (CRCPathPaintEntry | CRCNestedPaintEntry)[]) {
+function rootWith(entries: readonly (PibblPathPaintEntry | PibblNestedPaintEntry)[]) {
   const instance = instanceWith(entries);
   const eventRoot = {
     rootInstance: instance,
     canvas: document.createElement('canvas'),
-    targets: new Set<CRCEventTargetRegistration>(),
-  } as CRCEventRoot;
+    targets: new Set<PibblEventTargetRegistration>(),
+  } as PibblEventRoot;
   attachTargets(instance, eventRoot);
   return { eventRoot, instance };
 }
 
-function attachTargets(instance: CRCInstance, eventRoot: CRCEventRoot): void {
-  (instance as { eventRoot: CRCEventRoot }).eventRoot = eventRoot;
+function attachTargets(instance: PibblInstance, eventRoot: PibblEventRoot): void {
+  (instance as { eventRoot: PibblEventRoot }).eventRoot = eventRoot;
   for (const entry of instance.paintEntries) {
-    if (entry.paintKind === CRCPaintEntryKind.Path) {
-      (entry.target as { owner: CRCInstance }).owner = instance;
+    if (entry.paintKind === PibblPaintEntryKind.Path) {
+      (entry.target as { owner: PibblInstance }).owner = instance;
       (entry.target as { live: boolean }).live = true;
       eventRoot.targets.add(entry.target);
     } else {
@@ -283,24 +283,24 @@ function attachTargets(instance: CRCInstance, eventRoot: CRCEventRoot): void {
   }
 }
 
-function instanceWith(entries: readonly (CRCPathPaintEntry | CRCNestedPaintEntry)[]) {
+function instanceWith(entries: readonly (PibblPathPaintEntry | PibblNestedPaintEntry)[]) {
   return {
     paintEntries: new Set(entries),
     mainTeardowns: { closed: false },
     surface: { snapshot: {} },
-  } as unknown as CRCInstance;
+  } as unknown as PibblInstance;
 }
 
-function target(): CRCEventTargetRegistration {
-  return { kind: 'target', live: true } as CRCEventTargetRegistration;
+function target(): PibblEventTargetRegistration {
+  return { kind: 'target', live: true } as PibblEventTargetRegistration;
 }
 
 function pathEntry(
-  eventTarget: CRCEventTargetRegistration,
+  eventTarget: PibblEventTargetRegistration,
   path: Path2D,
-): CRCPathPaintEntry {
+): PibblPathPaintEntry {
   return {
-    paintKind: CRCPaintEntryKind.Path,
+    paintKind: PibblPaintEntryKind.Path,
     target: eventTarget,
     path,
     fill: true,
@@ -311,10 +311,10 @@ function pathEntry(
 }
 
 function resolverEntry(
-  resolveLocal: NonNullable<CRCNestedPaintEntry['resolveLocal']>,
-): CRCNestedPaintEntry {
+  resolveLocal: NonNullable<PibblNestedPaintEntry['resolveLocal']>,
+): PibblNestedPaintEntry {
   return {
-    paintKind: CRCPaintEntryKind.Resolver,
+    paintKind: PibblPaintEntryKind.Resolver,
     instance: instanceWith([]),
     bounds: rectangle(0, 0, 100, 100),
     transform: new DOMMatrix(),
@@ -331,7 +331,7 @@ function rectangle(x: number, y: number, width: number, height: number): Path2D 
 
 function emptyOutput() {
   return {
-    disposition: CRCHitDisposition.Miss,
-    target: null as CRCEventTargetRegistration | null,
+    disposition: PibblHitDisposition.Miss,
+    target: null as PibblEventTargetRegistration | null,
   };
 }

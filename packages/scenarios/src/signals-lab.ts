@@ -1,4 +1,4 @@
-import { batch, crc, createElement, signal } from '@crc/core';
+import { batch, pibbl, createElement, signal } from '@pibbl/core';
 import {
   createSignalsLabModel,
   SIGNALS_LAB_SOURCE_ID,
@@ -103,8 +103,8 @@ async function mountSignalsLab(
   let model: SignalsLabModel;
   let metrics: SignalsLabMetrics;
   let lastAction: 'mount' | SignalsLabAction = 'mount';
-  let primaryController: ReturnType<typeof crc> | undefined;
-  let secondaryController: ReturnType<typeof crc> | undefined;
+  let primaryController: ReturnType<typeof pibbl> | undefined;
+  let secondaryController: ReturnType<typeof pibbl> | undefined;
   let secondaryCanvas: HTMLCanvasElement | undefined;
 
   const assertActive = (): void => {
@@ -114,7 +114,7 @@ async function mountSignalsLab(
     context.onStateChange?.(snapshot(model, metrics, lastAction));
   };
   const renderPrimary = (): void => {
-    primaryController = crc(
+    primaryController = pibbl(
       context.canvas,
       createElement(SignalsLabRootA, { model, metrics }),
     );
@@ -131,7 +131,7 @@ async function mountSignalsLab(
     (context.referenceHost ?? context.canvas.parentElement ?? document.body)
       .appendChild(secondaryCanvas);
     renderPrimary();
-    secondaryController = crc(
+    secondaryController = pibbl(
       secondaryCanvas,
       createElement(SignalsLabRootB, { model, metrics }),
     );

@@ -1,12 +1,12 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Group,
   Rectangle,
   SvgPath,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function SvgPathStudy() {
   const active = useSignal(false);
   return [
@@ -62,6 +62,6 @@ function SvgPathStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <SvgPathStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <SvgPathStudy />);
 }

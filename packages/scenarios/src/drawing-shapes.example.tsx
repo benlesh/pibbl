@@ -12,7 +12,7 @@ import {
   Star,
   SvgPath,
   Wedge,
-} from '@crc/core';
+} from '@pibbl/core';
 export const DRAWING_SHAPES_SOURCE_ID = 'drawing-shapes-example';
 /**
  * Actions supported by the drawing shapes scenario's public controller.

@@ -21,14 +21,14 @@ Choose the smallest extension mechanism that fits the job:
 ## Ordinary composites
 
 ```tsx
-import { Group, Rectangle, Text, type CRCNode } from "@crc/core";
+import { Group, Rectangle, Text, type PibblNode } from "@pibbl/core";
 
 interface BadgeProps {
   label: string;
   active: boolean;
 }
 
-function Badge({ label, active }: BadgeProps): CRCNode {
+function Badge({ label, active }: BadgeProps): PibblNode {
   return (
     <Group>
       <Rectangle
@@ -43,14 +43,14 @@ function Badge({ label, active }: BadgeProps): CRCNode {
 ```
 
 The function is the component identity. Call it through JSX or
-`createElement`; a direct JavaScript call does not create a CRC element or
+`createElement`; a direct JavaScript call does not create a Pibbl element or
 establish render context.
 
 ### Placed style props
 
 When a layout parent places a custom component, its `style` prop retains the
 author's public fields and, for a whole-style signal, the original signal
-identity. CRC may use a readonly shallow copy for an object style to carry
+identity. Pibbl may use a readonly shallow copy for an object style to carry
 private placement provenance; it never mutates the caller object, but object
 identity is not guaranteed for this positioned path. Use field values rather
 than reference equality when a component receives placement style.
@@ -65,13 +65,13 @@ To let the receiving custom component own a reactive input, declare
 `SignalValue<T>` and resolve it at that boundary:
 
 ```tsx
-import { resolveSignalValue, type SignalValue } from "@crc/core";
+import { resolveSignalValue, type SignalValue } from "@pibbl/core";
 
 interface SparklineDataProps {
   data: SignalValue<readonly number[]>;
 }
 
-function SparklineData({ data }: SparklineDataProps): CRCNode {
+function SparklineData({ data }: SparklineDataProps): PibblNode {
   const values = resolveSignalValue(data);
   return <Sparkline points={values} />;
 }
@@ -95,7 +95,7 @@ import {
   useLayoutBox,
   type BoxStyle,
   type StrokeStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 interface SparklineProps {
   points: readonly number[];
@@ -137,7 +137,11 @@ private capabilities on the returned component value, resolves style before
 render, and permits pure measurement without invoking the renderer.
 
 ```tsx docs:complete-snippet=custom-primitive
-import { definePrimitive, type Percentage, type SystemStyle } from "@crc/core";
+import {
+  definePrimitive,
+  type Percentage,
+  type SystemStyle,
+} from "@pibbl/core";
 
 type GaugeFill = string | CanvasGradient | CanvasPattern;
 
@@ -231,8 +235,8 @@ events, or acquire resources. Return `{ status: "unsupported", reason }` when
 intrinsic sizing cannot be answered safely.
 
 Because each declared style extends `SystemStyle`, `Gauge` also accepts one
-`CRCFilter` or a readonly filter list. The filter is owned by render dispatch:
-CRC removes it before calling custom `normalizeStyle` and `resolveStyle`, then
+`PibblFilter` or a readonly filter list. The filter is owned by render dispatch:
+Pibbl removes it before calling custom `normalizeStyle` and `resolveStyle`, then
 attaches its validated canonical readonly list to the final resolved style seen
 by the render callback. Custom capabilities cannot discard or reinterpret the
 filter. Pure `measure` ignores it and never checks browser filter support or
@@ -240,11 +244,11 @@ allocates a surface.
 
 With a nonempty filter, the render callback executes once against the real
 upright local `OffscreenCanvasRenderingContext2D`. The callback's
-`context.canvas` and `context.getTransform()` describe that local target; CRC
+`context.canvas` and `context.getTransform()` describe that local target; Pibbl
 applies parent placement or a receiving Group transform exactly once when the
 completed filtered result is composited. Imperative transforms, clips, alpha,
 or native Canvas filter/shadow calls made by the callback remain paint inside
-the custom primitive's captured source. CRC does not reinterpret them as
+the custom primitive's captured source. Pibbl does not reinterpret them as
 declarative presentation metadata.
 
 The mutable Canvas current path cannot be copied between contexts. Do not rely
@@ -261,9 +265,9 @@ executable contract is
 ## Custom 3D shapes
 
 Use ordinary Three geometry, materials, meshes, shaders, loaders, and addons
-inside a component returned by `defineThreeLayer()`. CRC deliberately does not
+inside a component returned by `defineThreeLayer()`. Pibbl deliberately does not
 wrap those APIs in a second primitive vocabulary. The application owns and
-disposes its Three resources; CRC owns the surrounding render-layer lifecycle,
+disposes its Three resources; Pibbl owns the surrounding render-layer lifecycle,
 composition, event arbitration, and focus.
 
-See [Use Three.js inside CRC](#/learn/guides/three-js).
+See [Use Three.js inside Pibbl](#/learn/guides/three-js).

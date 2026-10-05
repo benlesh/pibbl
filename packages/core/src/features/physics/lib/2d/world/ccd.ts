@@ -1,8 +1,8 @@
 import {
   boundsOfShape2D,
   shapeCastAgainstShape2D,
-  type CRCPhysicsPose2D,
-  type CRCPhysicsShape2D,
+  type PibblPhysicsPose2D,
+  type PibblPhysicsShape2D,
 } from "../../../2d-geometry.js";
 import { createShape2D, type ShapeRecord2D } from "../shape-records.js";
 import { MAX_CCD_IMPACTS_PER_TICK, RADIANS_TO_DEGREES } from "../numeric-policy.js";
@@ -34,7 +34,7 @@ export class BoundedCcd2D {
   impactColliderIndices: Int32Array;
 
   private candidateProxies: Int32Array;
-  private readonly shapeShells = new WeakMap<ShapeRecord2D, CRCPhysicsShape2D>();
+  private readonly shapeShells = new WeakMap<ShapeRecord2D, PibblPhysicsShape2D>();
 
   constructor(initialCapacity = 4) {
     const capacity = normalizedCapacity(initialCapacity);
@@ -245,7 +245,7 @@ export class BoundedCcd2D {
     );
   }
 
-  private shapeShell(record: ShapeRecord2D): CRCPhysicsShape2D {
+  private shapeShell(record: ShapeRecord2D): PibblPhysicsShape2D {
     let shell = this.shapeShells.get(record);
     if (shell === undefined) {
       shell = createShape2D(record);
@@ -282,7 +282,7 @@ function isSupportedSolid(record: ShapeRecord2D): boolean {
   return record.leaves.length === 1 && record.leaves[0]!.kind !== "segment";
 }
 
-function publicPose(x: number, y: number, rotationRadians: number): CRCPhysicsPose2D {
+function publicPose(x: number, y: number, rotationRadians: number): PibblPhysicsPose2D {
   return {
     position: [x, y],
     rotationDegrees: rotationRadians * RADIANS_TO_DEGREES,
@@ -295,7 +295,7 @@ function publicPoseFromCenter(
   centerX: number,
   centerY: number,
   rotationRadians: number,
-): CRCPhysicsPose2D {
+): PibblPhysicsPose2D {
   const cosine = Math.cos(rotationRadians);
   const sine = Math.sin(rotationRadians);
   const localCenterX = bodies.localCenterX[index]!;

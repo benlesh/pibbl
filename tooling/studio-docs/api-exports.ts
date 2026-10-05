@@ -61,7 +61,7 @@ const sourcePaths: Record<string, string[]> = JSON.parse(
   readFileSync(resolve(repositoryRoot, "tsconfig.json"), "utf8"),
 ).compilerOptions.paths;
 
-export const crcPublicCompilerOptions: CompilerOptions = {
+export const pibblPublicCompilerOptions: CompilerOptions = {
   target: 99,
   module: ModuleKind.ESNext,
   moduleResolution: 100, // Bundler
@@ -72,10 +72,10 @@ export const crcPublicCompilerOptions: CompilerOptions = {
     ]),
   ),
   jsx: 4, // react-jsx; the native TypeScript API does not export JsxEmit.
-  jsxImportSource: "@crc/core",
+  jsxImportSource: "@pibbl/core",
 };
 
-export const crcPublicEntryPaths = {
+export const pibblPublicEntryPaths = {
   filters: fileURLToPath(
     new URL("../../packages/core/src/filters.ts", import.meta.url),
   ),
@@ -114,7 +114,7 @@ export const crcPublicEntryPaths = {
   ),
 } as const;
 
-export const crcPhysicsEntryPaths = {
+export const pibblPhysicsEntryPaths = {
   root: fileURLToPath(
     new URL("../../packages/core/src/features/physics/2d.ts", import.meta.url),
   ),
@@ -127,9 +127,9 @@ export const crcPhysicsEntryPaths = {
 } as const;
 
 /** Exact public entries rendered by the Studio API reference. */
-export const crcStudioPublicEntryPaths = {
-  ...crcPublicEntryPaths,
-  physics2d: crcPhysicsEntryPaths.root,
+export const pibblStudioPublicEntryPaths = {
+  ...pibblPublicEntryPaths,
+  physics2d: pibblPhysicsEntryPaths.root,
   physics2dTesting: fileURLToPath(
     new URL(
       "../../packages/core/src/features/physics/2d-testing.ts",
@@ -365,7 +365,7 @@ async function createCompilerConfiguration(
   entryPaths: Readonly<Record<string, string>>,
   compilerOptions: CompilerOptions,
 ): Promise<{ readonly directory: string; readonly path: string }> {
-  const directory = await mkdtemp(join(tmpdir(), "crc-studio-docs-"));
+  const directory = await mkdtemp(join(tmpdir(), "pibbl-studio-docs-"));
   const path = join(directory, "tsconfig.json");
   await writeFile(
     path,

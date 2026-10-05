@@ -1,16 +1,16 @@
-# @crc/core/viz
+# @pibbl/core/viz
 
-Official composable Canvas visualization for CRC, with no visualization runtime
-dependency. Included in `@crc/core`, sharing its version and JSX runtime.
+Official composable Canvas visualization for Pibbl, with no visualization runtime
+dependency. Included in `@pibbl/core`, sharing its version and JSX runtime.
 
 - `Scale`: nested ID-based linear scales driven by core signals and local layout.
 - `useScale`: read the nearest scale as a readonly core signal.
 - `Axis`: bottom and left ticks/labels in the local frame.
 - `LineSeries`: one batched path with key/function accessors and missing-data gaps.
-- `ScaleAdjust`: translate ordinary CRC children by scale coordinates.
+- `ScaleAdjust`: translate ordinary Pibbl children by scale coordinates.
 
 There is no monolithic Chart component. Applications compose layout, gutters,
-clipping, markers, legends, and interaction using normal CRC components/events.
+clipping, markers, legends, and interaction using normal Pibbl components/events.
 
 See the [guide](../../../../../docs/site/learn/guides/data-visualization.md) and the
 [interactive example](http://localhost:5173/#/examples/composition/viz-responsive-line).
@@ -20,7 +20,7 @@ calendar scales, curve families, and the example's mobile presentation are defer
 ## Points and hover inspection
 
 `PointSeries` batches default circles with one union event target; `PlotSeries`
-places keyed ordinary CRC subtrees through a required render callback. Use
+places keyed ordinary Pibbl subtrees through a required render callback. Use
 `nearestPoint` / `nearestDomainValue` for pure resolved-scale scans, or `HoverData`
 for function-based queries whose signal reads belong to the mounted receiver.
 
@@ -31,9 +31,9 @@ its protected anchor. These exports use the existing core JSX runtime and scale
 scope; there is no additional renderer, interaction loop, or Chart registry.
 
 `AnchoredLayout` arranges multiple keyed, declared boxes together in a row or
-column, clear of every supplied anchor. It accepts arbitrary CRC content without
+column, clear of every supplied anchor. It accepts arbitrary Pibbl content without
 requiring chart scales or hover state. Use it when independent cards would overlap.
 
 See the public data-visualization guide and Studio's Penguin measurements and
-Hover comparisons examples for full wiring. Core responsive `style.when` rules work on returned CRC elements. Direct
+Hover comparisons examples for full wiring. Core responsive `style.when` rules work on returned Pibbl elements. Direct
 conditional-style support for viz-owned styles remains a separate follow-up.

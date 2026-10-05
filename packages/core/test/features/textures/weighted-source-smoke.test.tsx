@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { crc, Rectangle, type Texture } from "@crc/core";
-import { tendrils, useTexture, type TendrilsMessage } from "@crc/core/textures";
+import { pibbl, Rectangle, type Texture } from "@pibbl/core";
+import { tendrils, useTexture, type TendrilsMessage } from "@pibbl/core/textures";
 let dispose = () => {};
 afterEach(() => {
   dispose();
@@ -11,7 +11,7 @@ const frame = () =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
   );
 
-it("runs weighted texture commands and shared fills through the built public package and real CRC scheduler", async () => {
+it("runs weighted texture commands and shared fills through the built public package and real Pibbl scheduler", async () => {
   let texture!: Texture<TendrilsMessage>;
   function Scene() {
     texture = useTexture(
@@ -34,7 +34,7 @@ it("runs weighted texture commands and shared fills through the built public pac
   canvas.width = 256;
   canvas.height = 128;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   dispose = () => controller.dispose();
   await frame();
   texture.send({ type: "pause", paused: true });

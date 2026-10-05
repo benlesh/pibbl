@@ -1,12 +1,12 @@
 import type { PlotSeriesProps } from './plot-types.js';
 import type {
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
   FillStyle,
   SignalValue,
   StrokeStyle,
-} from "@crc/core";
-import type { SignalStyle } from "@crc/core/internal";
+} from "@pibbl/core";
+import type { SignalStyle } from "@pibbl/core/internal";
 import type { LineAccessor, ScaleId } from "./types.js";
 /**
  * A data property or callback extracting a point coordinate.
@@ -65,8 +65,8 @@ export type PointStyleResolver<D> = (
 /**
  * Authored inputs for PointSeries, including the declared data and presentation options.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
  * @see {@link SignalValue}
  * @see {@link PointAccessor}
  * @see {@link ScaleId}
@@ -75,7 +75,7 @@ export type PointStyleResolver<D> = (
  * @see {@link PointStyleResolver}
  */
 export interface PointSeriesProps<D>
-  extends CRCEventHandlers, CRCEventParticipationOptions {
+  extends PibblEventHandlers, PibblEventParticipationOptions {
   /**
    * Application data supplied to the component or reported by the event. See {@link SignalValue}.
    */

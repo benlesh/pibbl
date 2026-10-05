@@ -1,5 +1,5 @@
-import { signal } from "@crc/core";
-import * as Viz from "@crc/core/viz";
+import { signal } from "@pibbl/core";
+import * as Viz from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;

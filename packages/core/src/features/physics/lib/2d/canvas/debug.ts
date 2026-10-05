@@ -1,18 +1,18 @@
-import { definePrimitive } from "@crc/core";
-import { crcInternalCurrentWorldTransform } from "@crc/core/internal";
-import type { CRCPhysicsWorldHandle2D } from "../types.js";
+import { definePrimitive } from "@pibbl/core";
+import { pibblInternalCurrentWorldTransform } from "@pibbl/core/internal";
+import type { PibblPhysicsWorldHandle2D } from "../types.js";
 import { requirePhysicsWorld2DController } from "../runtime/controller.js";
 
 /**
  * Authored inputs for PhysicsDebug2D, including the declared data and presentation options.
  *
- * @see {@link CRCPhysicsWorldHandle2D}
+ * @see {@link PibblPhysicsWorldHandle2D}
  * @see {@link PhysicsDebug2D}
  */
-export interface CRCPhysicsDebug2DProps {
-  /** World identity whose state is queried or drawn. See {@link CRCPhysicsWorldHandle2D}. */
-  readonly world: CRCPhysicsWorldHandle2D;
-  /** Color used by the mark or effect. See {@link CRCPhysicsDebug2DProps}. */
+export interface PibblPhysicsDebug2DProps {
+  /** World identity whose state is queried or drawn. See {@link PibblPhysicsWorldHandle2D}. */
+  readonly world: PibblPhysicsWorldHandle2D;
+  /** Color used by the mark or effect. See {@link PibblPhysicsDebug2DProps}. */
   readonly color?: string;
 }
 
@@ -21,16 +21,16 @@ export interface CRCPhysicsDebug2DProps {
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
- * @see {@link CRCPhysicsDebug2DProps}
+ * @see {@link PibblPhysicsDebug2DProps}
  */
-export const PhysicsDebug2D = definePrimitive<CRCPhysicsDebug2DProps>(
+export const PhysicsDebug2D = definePrimitive<PibblPhysicsDebug2DProps>(
   (props, _style, context) => {
     props.world.revision.get();
     const controller = requirePhysicsWorld2DController(props.world);
     const snapshot = controller.inspect();
-    const transform = crcInternalCurrentWorldTransform()
+    const transform = pibblInternalCurrentWorldTransform()
       .inverse()
       .multiply(controller.rootTransform(new DOMMatrix()));
     context.save();

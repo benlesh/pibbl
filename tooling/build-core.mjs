@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../packages/core/', import.meta.url));
 const entries = ['index', 'internal', 'types', 'filters', 'jsx-runtime', 'jsx-dev-runtime'];
-const features = ['particles/index', 'viz/index', 'textures/index', 'physics/2d', 'physics/2d-geometry', 'physics/2d-testing'];
+const features = ['sprites/index', 'sprites/formats/aseprite', 'sprites/formats/texture-packer', 'particles/index', 'viz/index', 'textures/index', 'physics/2d', 'physics/2d-geometry', 'physics/2d-testing'];
 // Preserve module boundaries and one shared runtime; only the private upstream
 // engine is bundled. Root/geometry entry graphs never reach its initialization.
 const graph = await build({

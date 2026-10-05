@@ -1,5 +1,5 @@
-import { crc, createElement, defineTexture, Rectangle, useTexture } from '@crc/core';
-import { blur, displacement } from '@crc/core/filters';
+import { pibbl, createElement, defineTexture, Rectangle, useTexture } from '@pibbl/core';
+import { blur, displacement } from '@pibbl/core/filters';
 import { expect, it, vi } from 'vitest';
 import { DisplacementGpu } from '../src/filters/displacement-gpu';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';
@@ -20,7 +20,7 @@ it('prepares native and texture filters for the same boundary executor', async (
     executors = filters.values.map(value => value.executor);
     return createElement(Rectangle, { style: { width: 20, height: 20, fill: 'red' } });
   }
-  const controller = crc(canvas, createElement(Scene, {}));
+  const controller = pibbl(canvas, createElement(Scene, {}));
   try {
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     expect(executors).toHaveLength(2);
@@ -45,7 +45,7 @@ it('reports processing failure with the receiving filter context', () => {
     const map = useTexture(recipe({}), { resolution: { width: 8, height: 8 } });
     return createElement(Rectangle, { style: { width: 20, height: 20, fill: 'red', filter: displacement({ map, strength: 2, region: { x: 0, y: 0, width: 20, height: 20 } }) } });
   }
-  const controller = crc(canvas, createElement(Scene, {}));
+  const controller = pibbl(canvas, createElement(Scene, {}));
   try { expect(() => driver.flush(0)).toThrow(/Rectangle: property filter.*GPU upload failed/); }
   finally { controller.dispose(); apply.mockRestore(); restore(); canvas.remove(); }
 });

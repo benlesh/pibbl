@@ -1,16 +1,16 @@
 import { filterBoundaryExecutor, type CustomPreparedFilter } from '../../filters/filter-executor.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { getOptionalService } from '../optional-services.js';
-import { CRC_FILTER_EXECUTOR, type CRCFilter, type CRCFilterExecutor } from '../style/filter-types.js';
-import type { CRCInstance } from '../types.js';
+import { PIBBL_FILTER_EXECUTOR, type PibblFilter, type PibblFilterExecutor } from '../style/filter-types.js';
+import type { PibblInstance } from '../types.js';
 import type { FilterWindows } from '../filter/filter-region.js';
 
-const SCRATCH = Symbol('crc.transition.capture');
+const SCRATCH = Symbol('pibbl.transition.capture');
 class TransitionSurfaces {
   private surfaces: OffscreenCanvas[] = [];
   used = false;
   private committed = false;
-  constructor(private readonly instance: CRCInstance) {}
+  constructor(private readonly instance: PibblInstance) {}
   beginRender(): void { this.used = false; }
   endRender(success: boolean): void {
     if (success && this.used) { this.committed = true; return; }
@@ -37,13 +37,13 @@ export interface CaptureFrame {
   drawSource(): void;
   drawTint(color: string): void;
 }
-export function captureTransition(draw: (frame: CaptureFrame) => void): CRCFilter {
-  const executor: CRCFilterExecutor = {
+export function captureTransition(draw: (frame: CaptureFrame) => void): PibblFilter {
+  const executor: PibblFilterExecutor = {
     render: filterBoundaryExecutor.render,
     prepare(): CustomPreparedFilter {
       return { executor: filterBoundaryExecutor, reverseInfluence: output => ({ ...output }), process(source, windows) {
-        const instance = GLOBAL_STATE.currentCRCInstance;
-        if (!instance) throw new Error('Transition rendering requires an active CRC instance.');
+        const instance = GLOBAL_STATE.currentPibblInstance;
+        if (!instance) throw new Error('Transition rendering requires an active Pibbl instance.');
         const scratch = getOptionalService(instance, SCRATCH, () => new TransitionSurfaces(instance)); scratch.used = true;
         const context = scratch.context(0, source.width, source.height);
         context.setTransform(windows.source.renderTransform);
@@ -58,7 +58,7 @@ export function captureTransition(draw: (frame: CaptureFrame) => void): CRCFilte
       } };
     },
   };
-  return Object.freeze({ [CRC_FILTER_EXECUTOR]: executor });
+  return Object.freeze({ [PIBBL_FILTER_EXECUTOR]: executor });
 }
 export interface TransitionRegion { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
 export function regionSnapshot(value: TransitionRegion): Readonly<TransitionRegion> {

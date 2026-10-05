@@ -1,6 +1,6 @@
-# CRC trust gate
+# Pibbl trust gate
 
-The trust gate is the durable contributor and CI contract for CRC's shipped
+The trust gate is the durable contributor and CI contract for Pibbl's shipped
 public surface. It is broader than a unit-test command: current documentation,
 catalogs, source declarations, compiler entries, packed artifacts, source and
 built Studio modes, browser behavior, deterministic visuals, lifecycle
@@ -36,19 +36,24 @@ browser; it is infrastructure protection, not a performance benchmark. Discovery
 errors, empty inventories, test failures, and crashes all fail the gate without
 retries. CI logs failed browser request URLs and Chromium error codes.
 
-## Preparing a beta release
+## Preparing the alpha release
 
-Run `corepack pnpm@11.21.0 release 0.1.0-beta.0` to prepare the three published
-packages (`@crc/core`, `@crc/three`, and `@crc/text`). This updates their versions
-and exact core peer pins together. It does not commit, tag, push, or publish;
-the private workspace version remains unchanged. An exact stable version such
-as `0.1.0` is also accepted when that is the intended release.
+Run `corepack pnpm@11.21.0 release 0.0.1` to prepare the four published
+packages: `@pibbl/core`, `@pibbl/three`, `@pibbl/text`, and `pibbl`. This updates
+versions, exact core peer pins, and the mirror's exact core dependency together.
+Preparation does not commit, tag, push, or publish; the private workspace version
+remains unchanged.
 
 Run the complete trust gate against the prepared versions. After reviewing the
-result, publish a beta explicitly with
-`corepack pnpm@11.21.0 publish:ci --tag beta`. The tag is required to keep a beta
-off npm's default `latest` channel. Published text assets are precompiled;
-private text-testing entry points are excluded from its tarball.
+result, run `corepack pnpm@11.21.0 publish:ci`. It packs the explicit release set
+into `dist/npm`, publishes under `next`, then points `latest` at the same versions.
+Both tags identify an **ALPHA release, not for production use**. Every published
+README must retain that warning. To inspect tarballs without publishing, use
+`node tooling/publish-release.mjs --pack-only`.
+
+`pibbl` forwards every core subpath to `@pibbl/core`, preserving one runtime,
+element brand, and scheduler. Published text assets are precompiled; private
+text-testing entry points are excluded from its tarball.
 
 ## Gate contents
 
@@ -165,7 +170,7 @@ reviewed mappings, and their adversarial tests. `audit:agent-verification:claims
 retains strategy-ledger evidence fingerprints. These audits can report stale
 claims after legitimate changes; they do not establish current runtime defects.
 They are deliberately outside `trust`. Renewing a claim requires review, not an
-automatic digest refresh. `CRC_VERIFY_CONTRACT_PROVENANCE=1` requires full Git
+automatic digest refresh. `PIBBL_VERIFY_CONTRACT_PROVENANCE=1` requires full Git
 history when running the documentation audit.
 
 The required gate retains current API/documentation parity, valid links and
@@ -302,12 +307,12 @@ competing browser workload. Run the focused reference guard three consecutive
 times:
 
 ```sh
-VITE_CRC_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
-VITE_CRC_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
-VITE_CRC_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
+VITE_PIBBL_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
+VITE_PIBBL_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
+VITE_PIBBL_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
 ```
 
-`VITE_CRC_REPORT_PERF=1` records observations without enforcing budgets.
+`VITE_PIBBL_REPORT_PERF=1` records observations without enforcing budgets.
 Investigate only after three controlled breaches, excluding environment or
 constant-factor regressions first. The 10,000-region sparse/miss spatial-index
 trigger remains median above 6 ms or p95 above 12 ms. The last recorded
@@ -316,12 +321,12 @@ run did not justify a spatial index.
 
 ## Supported browser boundary
 
-Chromium is the required browser oracle. CRC's supported pointer, mouse, touch,
+Chromium is the required browser oracle. Pibbl's supported pointer, mouse, touch,
 wheel, keyboard/focus, editing/composition, clipboard, and drag/drop facades
 are exercised there, including focus policies and directional navigation.
 Native executable traces and current UI/Pointer Events informed ordering.
 
-CRC normalizes Canvas-only regions to one topmost logical target,
+Pibbl normalizes Canvas-only regions to one topmost logical target,
 transition-before-move, same-live-target activation, accumulated
 transform/clip/layer geometry, and pathless Canvas observers. Browser-dependent
 context-menu ordering remains native rather than universally normalized.
@@ -329,6 +334,6 @@ context-menu ordering remains native rather than universally normalized.
 The project does not claim cross-browser parity. Adding another required
 browser needs characterization and explicit compatibility decisions rather
 than assuming identical Canvas metrics or input ordering. Keyboard reachability
-also does not imply semantic accessibility: CRC creates no semantic DOM or
+also does not imply semantic accessibility: Pibbl creates no semantic DOM or
 assistive-technology tree, so applications must supply the equivalent
 accessible experience described in the accessibility contract.

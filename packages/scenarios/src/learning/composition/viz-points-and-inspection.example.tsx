@@ -6,14 +6,14 @@ import {
   Rectangle,
   Text,
   batch,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
+  type PibblController,
   type BoxStyle,
   type LayoutItemStyle,
   type WritableSignal,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
   Axis,
   HoverData,
@@ -23,7 +23,7 @@ import {
   Scale,
   nearestPoint,
   useScale,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 
 type Row = {
   id: string;
@@ -891,7 +891,7 @@ function Scene({ fixture }: { fixture: Fixture }) {
 export default function mount(
   canvas: HTMLCanvasElement,
   fixture: Fixture = {},
-): CRCController {
+): PibblController {
   const previousMinHeight = canvas.style.minHeight;
   const previousTouchAction = canvas.style.touchAction;
   canvas.style.minHeight = "720px";
@@ -902,7 +902,7 @@ export default function mount(
   const previousOverflow = host?.style.overflow;
   if (host) host.style.overflow = "auto";
   try {
-    const controller = crc(canvas, <Scene fixture={fixture} />, {
+    const controller = pibbl(canvas, <Scene fixture={fixture} />, {
       viewport: "responsive",
     });
     return {

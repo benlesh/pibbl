@@ -4,9 +4,9 @@
 
 ## Purpose
 
-Give CRC one explicit typed style language for every visual value and add
+Give Pibbl one explicit typed style language for every visual value and add
 dedicated Canvas layout components without introducing a retained display list or
-speculative render pass. The first release includes absolute, overlay, CRC-native
+speculative render pass. The first release includes absolute, overlay, Pibbl-native
 flow, a documented CSS-compatible Flexbox subset, and a documented
 CSS-compatible explicit Grid subset.
 
@@ -19,11 +19,11 @@ This plan is approved for implementation. Its detailed executable steps live in
   separately from programmatic props.
 - Style is the only public home for visual output, geometry, typography, path
   data, image source, transforms, cursor, and interaction geometry.
-- CRC has no selectors, cascade, specificity, or implicit inheritance. Reuse is
+- Pibbl has no selectors, cascade, specificity, or implicit inheritance. Reuse is
   ordinary TypeScript composition and object spread.
 - Only named layout components establish formatting contexts. Nested layout
   components participate directly as items; there is no public item wrapper.
-- CSS names are used only for accepted cases that match CSS. CRC-native behavior
+- CSS names are used only for accepted cases that match CSS. Pibbl-native behavior
   uses `flow`, `overlay`, `fit`, `rotationDegrees`, and other distinct names.
 - Layout uses declared boxes and pure opt-in measurement. It does not record all
   Canvas operations, render children to discover size, or add a retained scene
@@ -72,7 +72,7 @@ review before the next task begins.
 | P003-07 | Done        | Length, constraint, box, and item capabilities.                 |
 | P003-08 | Done        | Style resolution, layout context, placement, and observation.   |
 | P003-09 | Done        | Absolute and overlay layout.                                    |
-| P003-10 | Done        | Pure measurement and CRC-native flow.                           |
+| P003-10 | Done        | Pure measurement and Pibbl-native flow.                         |
 | P003-11 | Done        | CSS-compatible Flexbox subset.                                  |
 | P003-12 | Done        | CSS-compatible explicit Grid subset.                            |
 | P003-13 | Done        | Learning examples, nested scenario, and Studio/public types.    |
@@ -106,7 +106,7 @@ the commit is reviewed.
 
 ### P003-04 [DONE] — Text styles and pure text layout
 
-Done when text uses `width`/`height`/`wrap`/CRC-native `fit`, painting and pure
+Done when text uses `width`/`height`/`wrap`/Pibbl-native `fit`, painting and pure
 measurement share literal line layout, existing text/hit behavior is preserved,
 and the commit is reviewed.
 
@@ -118,7 +118,7 @@ reviewed.
 
 ### P003-06 [DONE] — Composition style closure
 
-Done when group transforms use CRC-native degree names, clip/layer are
+Done when group transforms use Pibbl-native degree names, clip/layer are
 style-driven, layer comparison includes type/key/props/style, all legacy visual
 mixins are removed, the style-migration milestone passes, and the commit is
 reviewed.
@@ -189,7 +189,7 @@ is clean, and this plan has no active marker.
 | 2026-08-17 | Use one explicit local style namespace with no inheritance or cascade.     | It makes visual ownership inspectable and enables layout to inspect descriptors without invoking components.          |
 | 2026-08-17 | Use dedicated layout components and direct nested participation.           | Formatting contexts stay visible without public item wrappers or hidden `display` behavior.                           |
 | 2026-08-17 | Preserve immediate-mode rendering with pure opt-in measurement.            | Declared boxes solve layout without a costly scene-wide display list or double paint pass.                            |
-| 2026-08-17 | Use CSS names only for verified compatible subsets.                        | Familiar but approximate behavior would create a more dangerous API than distinct CRC-native names.                   |
+| 2026-08-17 | Use CSS names only for verified compatible subsets.                        | Familiar but approximate behavior would create a more dangerous API than distinct Pibbl-native names.                 |
 | 2026-08-17 | Optimize the development loop for focused checks and final holistic proof. | The implementation is broad; per-commit aggregate verification would slow feedback without improving local diagnosis. |
 
 ## Session log
@@ -266,7 +266,7 @@ is clean, and this plan has no active marker.
   task commit is sent for status-only review before P003-04 begins.
 - **2026-08-17 — P003-04 implementation pending review.** Added the closed
   public text style and pure shared line-layout utility, migrated every authored
-  caller to `width`/`height`/`wrap`/CRC-native `fit`, and preserved paint,
+  caller to `width`/`height`/`wrap`/Pibbl-native `fit`, and preserved paint,
   clipping, cursor, and measured hit geometry without a legacy adapter. Focused
   RED captured the absent utility/style behavior. GREEN is 23/23 focused tests
   plus clean workspace typecheck; P003-04 remains in progress for adversarial
@@ -324,7 +324,7 @@ is clean, and this plan has no active marker.
 - **2026-08-18 — P003-07 through P003-10 layout foundation complete.** Added
   finite length/box resolution, allocation-aware resolved styles, stable local
   placement and observation, public absolute/overlay contexts, pure opt-in
-  measurement, and CRC-native flow without a retained display list or
+  measurement, and Pibbl-native flow without a retained display list or
   speculative render. Adversarial reviews for Tasks 7-9 are clean; Task 10's
   implementation and batched phase evidence form its review unit. The planned
   milestone passed 62 layout/scenario tests across 7 files, clean typecheck,
@@ -372,7 +372,7 @@ is clean, and this plan has no active marker.
 | No cascade or inheritance; explicit reuse                   | Local immutable style implementation, spread examples, style-system contract                                                                                     |
 | Finite number/percentage/automatic box resolution           | Length/box resolver suites, public type tests, contextual diagnostic hardening, style and layout contracts                                                       |
 | Immediate-mode placement without a retained display list    | Layout context/PlacedChild/dispatch implementation, identity and foundation suites, architecture and layout contract                                             |
-| Absolute, Overlay, and CRC-native Flow matrices             | Pure algorithm and public component suites, nested layout laboratory, four learner routes, layout contract                                                       |
+| Absolute, Overlay, and Pibbl-native Flow matrices           | Pure algorithm and public component suites, nested layout laboratory, four learner routes, layout contract                                                       |
 | CSS-compatible bounded Flex subset                          | Hand-derived literals, independent Chromium DOM oracle, public scenario and package declarations, exact support/rejection matrix                                 |
 | CSS-compatible explicit Grid subset                         | Hand-derived literals, independent Chromium DOM oracle, public scenario and package declarations, exact track/placement/rejection matrix                         |
 | Pure opt-in measurement and local observation               | Measurement isolation/cycle/recursive suites, text/custom/explicit-image cases, `useLayoutBox` identity tests, runtime/hooks and layout contracts                |

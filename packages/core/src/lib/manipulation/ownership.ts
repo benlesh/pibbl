@@ -13,10 +13,10 @@ import {
 } from "../signals/edge.js";
 import { queueBeginCommand } from "../scheduler/realm-scheduler.js";
 import type {
-  CRCManipulationActive,
-  CRCManipulationGeometry,
+  PibblManipulationActive,
+  PibblManipulationGeometry,
 } from "./controller-types.js";
-import type { CRCManipulationBox } from "./types.js";
+import type { PibblManipulationBox } from "./types.js";
 
 /** A bounded subscription owned only by one armed pointer gesture. */
 export function observeGestureInputs(
@@ -60,10 +60,10 @@ export function claimGeometryGeneration(box: object, rotation?: object): void {
   if (rotation) generations.set(rotation, (generations.get(rotation) ?? 0) + 1);
 }
 interface Rollback {
-  box: WritableSignal<CRCManipulationBox>;
+  box: WritableSignal<PibblManipulationBox>;
   rotation?: WritableSignal<number>;
-  before: CRCManipulationGeometry;
-  active: WritableSignal<CRCManipulationActive | null>;
+  before: PibblManipulationGeometry;
+  active: WritableSignal<PibblManipulationActive | null>;
 }
 /** This finite cleanup record contains signals and values, never a mounted tree. */
 export function restoreReleasedGesture(record: Rollback): void {

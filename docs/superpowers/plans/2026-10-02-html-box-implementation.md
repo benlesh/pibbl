@@ -9,9 +9,9 @@ Active execution: [Plan 004](../../project-plans/004-html-box.md).
 
 **Target:** [Finalized HtmlBox design](../specs/2026-10-02-html-host-design.md).
 
-**Outcome:** Public `HtmlBox` mounts a persistent native HTML subtree in a CRC
+**Outcome:** Public `HtmlBox` mounts a persistent native HTML subtree in a Pibbl
 allocation, follows affine transforms and portable clipping, and coordinates
-native focus with CRC source-order navigation. HTML remains above all Canvas paint.
+native focus with Pibbl source-order navigation. HTML remains above all Canvas paint.
 
 **Delivery:** One runnable public slice, hands-on feedback, then Layer integration
 and broader hardening. This is user-requested capability work, not implementation
@@ -24,7 +24,7 @@ focus, and Studio extension points listed below. This records the pre-implementa
 Preserve current unrelated texture/scenario/editor edits in the shared checkout;
 reinspect working-tree state before coding.
 
-- Component identity and teardown stay owned by CRC component refs.
+- Component identity and teardown stay owned by Pibbl component refs.
 - One optional HTML service belongs to the root event surface, not each Layer.
 - Nested Layer instances own local registration snapshots, not independent DOM
   containers or focus managers.
@@ -63,7 +63,7 @@ the public `definePrimitive` contract for this one component. Ordinary callers u
 `data={value.get()}` to subscribe their component.
 
 Mount receives `(element, initialProps, signal)` and returns only
-`HtmlUpdateFunction<Props>`. The signal is native `AbortSignal`, not a CRC signal.
+`HtmlUpdateFunction<Props>`. The signal is native `AbortSignal`, not a Pibbl signal.
 No mount context or custom programmatic focus API remains: native descendant
 `focus()` drives the existing focus bridge. Initial props go only to mount.
 
@@ -72,9 +72,9 @@ only when their component executes in a successful generation. Retained Layer
 reprojection does not invoke update. Key changes replace the entire host.
 
 Use existing `resolveBox`, percentage allocation, and Group presentation helpers.
-Do not derive CRC size from `scrollWidth`, `getBoundingClientRect`, or DOM content.
+Do not derive Pibbl size from `scrollWidth`, `getBoundingClientRect`, or DOM content.
 The stable shell represents the border box, and a fixed inner content frame
-positions the supplied DIV at the padding offset. Both remain CRC-owned geometry;
+positions the supplied DIV at the padding offset. Both remain Pibbl-owned geometry;
 applications own the content DIV's children.
 
 ## Code boundaries
@@ -96,7 +96,7 @@ Existing integration points:
 
 | Existing file(s)                                                                          | Required change                                                                                        |
 | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `surface/types.ts`, `mount-crc.ts`, `types.ts`                                            | Capture mount-only `htmlOverlay`, root ownership, optional erased bridge.                              |
+| `surface/types.ts`, `mount-pibbl.ts`, `types.ts`                                          | Capture mount-only `htmlOverlay`, root ownership, optional erased bridge.                              |
 | `optional-services.ts`, `global-state.ts`                                                 | Reuse lazy service lookup and root cleanup; add only hooks actually needed.                            |
 | `primitive-presentation.ts`, `components/clip.ts`, `util/push-clipping-path.ts`           | Carry portable snapshot alongside native clip and world transform.                                     |
 | `layout/place-child.ts`, layout clipping producers, `components/layer.ts`                 | Preserve portable allocation clips and replay HTML snapshots on clean composition.                     |
@@ -123,7 +123,7 @@ interface PortableClipSnapshot {
 
 interface HtmlRegistration {
   readonly identity: HtmlIdentity;
-  readonly owner: CRCInstance;
+  readonly owner: PibblInstance;
   readonly generation: number;
   readonly sourceOrder: readonly number[];
   readonly localMatrix: DOMMatrixReadOnly;
@@ -157,7 +157,7 @@ once even if root failure, component teardown, and controller disposal overlap.
 ### Root configuration
 
 Capture `htmlOverlay` at mount like existing surface configuration; later calls
-to `crc` on the same canvas update only the root element. Reject a foreign
+to `pibbl` on the same canvas update only the root element. Reject a foreign
 document, nonadjacent container, occupied overlay, or another live root's lease.
 Use `ownerDocument` for nodes/listeners and realm-safe element validation.
 
@@ -202,7 +202,7 @@ of `realm-scheduler.ts`. Both must honor the same ordering and error semantics.
 Ordinary `queueFrameCompletion` is insufficient: focus currently commits through
 transaction callbacks before ordinary Complete callbacks run.
 
-Add an internal `onPublish(callback)` stage to `CRCRenderTransaction`, ahead of
+Add an internal `onPublish(callback)` stage to `PibblRenderTransaction`, ahead of
 existing `onFinish(callback)`. Publish callbacks run only for a successful render.
 A publish error changes the completion result to failure, suppresses later
 publication, and still delivers failure to every finish callback. Collect errors
@@ -241,7 +241,7 @@ Applications register framework/observer cleanup as abort listeners; there is no
 returned unmount/dispose callback. Mount failure or an invalid return also aborts
 the signal to release partial setup. Native abort-listener errors use browser
 error reporting, so do not claim they propagate through `abort()` into scheduler
-error aggregation. Test continued CRC cleanup even when an abort listener throws.
+error aggregation. Test continued Pibbl cleanup even when an abort listener throws.
 Avoid aborting twice from component and service teardown.
 
 ### Cached Layer integration
@@ -267,13 +267,13 @@ candidate identity, source position, and directional bounds into shared fields.
 
 Canvas keyboard resolution returns a Canvas target only while the canvas owns
 browser focus. HTML regions expose entry/exit operations and focus-within state,
-not CRC key/click handlers. Refactor navigation to focus a candidate by kind and
+not Pibbl key/click handlers. Refactor navigation to focus a candidate by kind and
 run Canvas activation defaults only for Canvas candidates.
 
 Keep existing Canvas-to-Canvas focus event order. Canvas-to-HTML sends the Canvas
 target's logical blur sequence, then adopts native focus within the region.
 HTML-to-Canvas sends native blur by moving browser focus and the Canvas target's
-logical focus sequence. CRC `relatedTarget` remains a logical Canvas target or
+logical focus sequence. Pibbl `relatedTarget` remains a logical Canvas target or
 undefined when crossing into HTML; never stuff an HTMLElement into that type.
 Host notifications report region state independently.
 
@@ -281,13 +281,13 @@ Host notifications report region state independently.
 
 Install sentinels only when the root has active HTML and managed navigation.
 They surround the adjacent canvas/overlay pair, not individual content controls.
-They take over native entry while CRC owns the canvas tabindex mutation. Do not
+They take over native entry while Pibbl owns the canvas tabindex mutation. Do not
 overwrite an externally changed tabindex; relinquish ownership and report that
 the supported entry configuration has been changed.
 
 At each boundary Tab, calculate current tabbable descendants and determine
 whether native default stays inside this region. Preserve native internal
-traversal. At an internal CRC boundary prevent default and focus the next eligible
+traversal. At an internal Pibbl boundary prevent default and focus the next eligible
 candidate. At a surface boundary focus the outgoing sentinel under an exit token
 without preventing default, so the same key exits through native page order.
 Incoming sentinel focus redirects to the appropriate committed endpoint.
@@ -314,7 +314,7 @@ retain its last committed order position for the next Tab decision, and do not
 override focus already moved elsewhere by application cleanup.
 
 `onFocusChange` uses the latest successful callback prop, deduplicates unchanged
-snapshots, and runs after internal state settles. It may write CRC signals; mount,
+snapshots, and runs after internal state settles. It may write Pibbl signals; mount,
 update, and synchronous abort cleanup may not. Root cleanup cancels queued notifications.
 
 ## First vertical slice
@@ -343,10 +343,10 @@ not feature complete until the later Layer milestone passes.
 ### Runnable Studio surface
 
 Create `packages/scenarios/src/learning/composition/html-box.example.tsx` with
-`export default function mount(canvas: HTMLCanvasElement): CRCController`.
+`export default function mount(canvas: HTMLCanvasElement): PibblController`.
 The example itself explicitly creates the wrapper/overlay around its supplied
 canvas and restores that application-owned arrangement on disposal. Keep this
-setup visible and copyable in the lesson; the CRC runtime never reparents canvas.
+setup visible and copyable in the lesson; the Pibbl runtime never reparents canvas.
 Use a placeholder to preserve the original insertion position and restore only
 example-owned styles still unchanged by others.
 
@@ -356,7 +356,7 @@ especially its body grid and fullscreen preview. Change that harness only if the
 example's explicit sizing cannot satisfy the existing contract.
 
 Register the lesson in `packages/scenarios/src/learning-catalog.ts`, update
-`playground/src/crc-editor-types.txt`, and drive that exact exported mount in
+`playground/src/pibbl-editor-types.txt`, and drive that exact exported mount in
 `packages/core/test/learning-examples.test.ts` plus the focused integration test.
 Proposed route: `#/examples/composition/html-box`. Confirm actual catalog routing
 and give the full running localhost URL at delivery; this document does not claim
@@ -450,16 +450,16 @@ implementation:
    document/connection/adjacency validation, internal Layer configuration rejection,
    and resize integration with root surface snapshots. Local box comparisons
    preserve common-ancestor CSS transforms.
-5. **Ancestor effects (P1): accepted.** Track active CRC filter boundaries and
+5. **Ancestor effects (P1): accepted.** Track active Pibbl filter boundaries and
    retained Layer composition effects, check composite state, and reject at every
    current composition boundary. Raw unregistered custom clips remain expressly
    unsupported. Test ancestor filters, not only HtmlBox style.
 6. **Path revisions (P1): clarified.** Snapshots refresh only on traversal after
    an explicit render request or other legitimate invalidation. Add a test for
-   mutation followed by public crc rerender; do not introduce mutation observers.
+   mutation followed by public pibbl rerender; do not introduce mutation observers.
 7. **Native focus listeners (P1): accepted.** Dedicated root-owned overlay focus/
    key/pointer listeners coordinate with the existing manager without synthetic
-   CRC key/click delivery. Teardown and cross-boundary relatedTarget semantics
+   Pibbl key/click delivery. Teardown and cross-boundary relatedTarget semantics
    are required evidence.
 8. **Keyed source order (P2): accepted.** Test multiple HTML hosts interleaved
    with Canvas targets after keyed reorder; intercept each region boundary while
@@ -473,7 +473,7 @@ implementation:
 11. **Style shape (P3): accepted.** Reuse BoxStyle, LayoutItemStyle and Group
     transform fields, plus opacity; pointerEvents stays a prop. Default HtmlBox
     overflow is clip, as the approved design explicitly specifies.
-12. **Multiple focus managers: corrected during inspection.** Current CRC permits
+12. **Multiple focus managers: corrected during inspection.** Current Pibbl permits
     only one focus manager per root. Preserve that rule; do not implement the
     draft’s hypothetical multiple-manager support. Nested directional policies
     remain supported.

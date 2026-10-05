@@ -1,35 +1,35 @@
 import { resolveFilterList } from '../style/filter';
 import type { NativePreparedFilter } from '../../filters/native-operations';
 import { peekNativeFilterPool } from './render-filter-boundary';
-import { blur, dropShadow, grayscale, opacity } from '@crc/core/filters';
+import { blur, dropShadow, grayscale, opacity } from '@pibbl/core/filters';
 import {
   Absolute,
   Group,
   Rectangle,
-  crc,
+  pibbl,
   usePlayback,
   createElement,
   definePrimitive,
   signal,
   drive,
   tween,
-  type CRCController,
-  type CRCNode,
-  type CRCPlayback,
+  type PibblController,
+  type PibblNode,
+  type PibblPlayback,
   type RectStyle,
   type RenderingContext2D,
   type SystemStyle,
-} from '@crc/core';
+} from '@pibbl/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   clearSharedState,
-  getCRCInstance,
+  getPibblInstance,
   GLOBAL_STATE,
 } from '../global-state.js';
 import { useEventTarget } from '../hooks/use-event-target.js';
 import { focusManaged } from '../focus/policy-test-support.js';
 import { executeRender } from '../execute-render.js';
-import { mountCRC } from '../mount-crc.js';
+import { mountPibbl } from '../mount-pibbl.js';
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
@@ -38,7 +38,7 @@ import type { RenderTargetSnapshot } from '../render-target.js';
 import { FilterSurfacePool } from './filter-surface-pool.js';
 import { renderFilterBoundary } from './render-filter-boundary.js';
 
-const controllers = new Set<CRCController>();
+const controllers = new Set<PibblController>();
 let disposedNativePools: Array<{
   readonly pool: FilterSurfacePool;
   readonly snapshot: ReturnType<FilterSurfacePool['snapshot']>;
@@ -65,7 +65,7 @@ afterEach(() => {
 describe('filter integration', () => {
   it('composites three nested boundaries inside-out with one traversal', async () => {
     const executions: string[] = [];
-    const Counted = ({ label, children }: { label: string; children: CRCNode }) => {
+    const Counted = ({ label, children }: { label: string; children: PibblNode }) => {
       executions.push(label);
       return children;
     };
@@ -144,7 +144,7 @@ describe('filter integration', () => {
     ]);
     expect(offscreenDraws.mock.invocationCallOrder[4])
       .toBeLessThan(parentDraws.mock.invocationCallOrder[0]!);
-    expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(getPibblInstance(canvas))!.snapshot()).toMatchObject({
       surfaceSlots: 6,
       activePairs: 0,
       peakActivePairs: 3,
@@ -176,7 +176,7 @@ describe('filter integration', () => {
       .toEqual([
         'grayscale(1) drop-shadow(24px 0px 0px blue) blur(1px)',
       ]);
-    expect(peekNativeFilterPool(getCRCInstance(first))!.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(getPibblInstance(first))!.snapshot()).toMatchObject({
       surfaceSlots: 2,
       peakActivePairs: 1,
       pairCheckouts: 1,
@@ -478,8 +478,8 @@ describe('filter integration', () => {
     expect(parentDraw).not.toHaveBeenCalled();
     dispatchClick(canvas, 2, 2);
     expect(onClick).not.toHaveBeenCalled();
-    expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(1);
-    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+    expect(getPibblInstance(canvas).eventRoot.targets.size).toBe(1);
+    expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
   });
 
   it('rejects a zero-scale concrete native color before the discard callback', () => {
@@ -614,7 +614,7 @@ describe('filter integration', () => {
       expect(() => frames.runNext())
         .toThrow(/Group.*native Canvas filter state could not reset to none/i);
       expect(callback).not.toHaveBeenCalled();
-      expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+      expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
     } finally {
       Object.defineProperty(prototype, 'filter', descriptor);
     }
@@ -679,7 +679,7 @@ describe('filter integration', () => {
         compositeStates.push(canvasState(this));
         return nativeDrawImage.apply(this, args);
       });
-    const ParentState = definePrimitive<{ children: CRCNode }>(
+    const ParentState = definePrimitive<{ children: PibblNode }>(
       (props, _style, context) => {
         context.globalAlpha = 0.5;
         context.globalCompositeOperation = 'xor';
@@ -757,7 +757,7 @@ describe('filter integration', () => {
       context.fillStyle = 'green';
       context.fillRect(42, 2, 8, 6);
     });
-    const ParentClip = definePrimitive<{ children: CRCNode }>(
+    const ParentClip = definePrimitive<{ children: PibblNode }>(
       (props, _style, context) => {
         const clip = new Path2D();
         clip.rect(0, 0, 44, 16);
@@ -794,7 +794,7 @@ describe('filter integration', () => {
   });
 
   it('does not transfer an implicit path but preserves self-contained Path2D drawing', async () => {
-    const ParentPath = definePrimitive<{ children: CRCNode }>(
+    const ParentPath = definePrimitive<{ children: PibblNode }>(
       (props, _style, context) => {
         context.beginPath();
         context.rect(2, 2, 8, 8);
@@ -885,7 +885,7 @@ describe('filter integration', () => {
         }),
       ],
     })), 64, 32);
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const targets = Array.from(instance.eventRoot.targets);
     const policy = instance.eventRoot.focusPolicy as unknown as {
       readonly candidates: readonly { readonly target: unknown }[];
@@ -903,8 +903,8 @@ describe('filter integration', () => {
     const radius = signal(2);
     const bounds = Object.freeze({ x: 20, y: 10, width: 10, height: 10 });
     const onClick = vi.fn();
-    let playback!: CRCPlayback;
-    const AnimatedFilter = (_props: {}): CRCNode => {
+    let playback!: PibblPlayback;
+    const AnimatedFilter = (_props: {}): PibblNode => {
       playback = usePlayback(
         drive(radius, tween({ from: 2, to: 10, duration: 100 })),
       );
@@ -926,7 +926,7 @@ describe('filter integration', () => {
     canvas.height = 30;
     canvas.style.cssText = 'display:block;width:50px;height:30px';
     document.body.appendChild(canvas);
-    const controller = crc(canvas, createElement(AnimatedFilter, {}), {
+    const controller = pibbl(canvas, createElement(AnimatedFilter, {}), {
       pixelRatio: 1,
     });
     controllers.add(controller);
@@ -954,7 +954,7 @@ describe('filter integration', () => {
         .map(([value]) => value)
         .filter(value => value !== 'none'))
         .toEqual(['blur(6px)']);
-      const instance = getCRCInstance(canvas);
+      const instance = getPibblInstance(canvas);
       const targets = Array.from(instance.eventRoot.targets);
       const policy = instance.eventRoot.focusPolicy as unknown as {
         readonly candidates: readonly { readonly target: unknown }[];
@@ -989,7 +989,7 @@ describe('filter integration', () => {
   it('keeps filtered and direct targets in original source paint order', async () => {
     const filteredClick = vi.fn();
     const directClick = vi.fn();
-    const scene = (filteredOnTop: boolean): CRCNode => createElement(Group, {
+    const scene = (filteredOnTop: boolean): PibblNode => createElement(Group, {
       children: filteredOnTop ? [
         clickableRectangle(directClick),
         clickableRectangle(filteredClick, true),
@@ -1004,7 +1004,7 @@ describe('filter integration', () => {
     expect(directClick).toHaveBeenCalledOnce();
     expect(filteredClick).not.toHaveBeenCalled();
 
-    crc(canvas, scene(true));
+    pibbl(canvas, scene(true));
     await nextFrame();
     dispatchClick(canvas, 12, 12);
     expect(filteredClick).toHaveBeenCalledOnce();
@@ -1021,14 +1021,14 @@ describe('filter integration', () => {
       useEventTarget({ onClick: () => undefined }, { path, fill: true });
       context.fill(path);
     });
-    const controller = mountCRC(root, createElement(Probe, {
+    const controller = mountPibbl(root, createElement(Probe, {
       style: { filter: blur({ radius: 1 }) },
     }));
     controllers.add(controller);
 
     executeRender(root, 1);
 
-    const instance = getCRCInstance(root);
+    const instance = getPibblInstance(root);
     const target = Array.from(instance.eventRoot.targets)[0]!;
     expect(sourceTransforms).toHaveLength(1);
     expect(sourceTransforms[0]).toEqual(expect.objectContaining({
@@ -1077,9 +1077,9 @@ describe('filter integration', () => {
 describe('filter failure recovery', () => {
   it('restores the exact active target, world, presentation, and clip stack before caller cleanup', () => {
     const root = new OffscreenCanvas(32, 24);
-    const controller = mountCRC(root, undefined);
+    const controller = mountPibbl(root, undefined);
     controllers.add(controller);
-    const instance = getCRCInstance(root);
+    const instance = getPibblInstance(root);
     const context = root.getContext('2d')!;
     const target: RenderTargetSnapshot = {
       logicalBounds: Object.freeze({ x: 0, y: 0, width: 32, height: 24 }),
@@ -1109,7 +1109,7 @@ describe('filter failure recovery', () => {
     const state = canvasState(context);
     const transform = context.getTransform();
     const baseline = temporaryGlobalSnapshot();
-    GLOBAL_STATE.currentCRCInstance = instance;
+    GLOBAL_STATE.currentPibblInstance = instance;
     GLOBAL_STATE.renderContext = context;
     GLOBAL_STATE.renderTarget = target;
     GLOBAL_STATE.worldBaseTransform = world;
@@ -1163,7 +1163,7 @@ describe('filter failure recovery', () => {
       expect(offscreenPixel(root, 4, 4)).toEqual([0, 128, 0, 255]);
       expect(offscreenPixel(root, 20, 20)).toEqual([0, 0, 0, 0]);
     } finally {
-      GLOBAL_STATE.currentCRCInstance = baseline.currentCRCInstance;
+      GLOBAL_STATE.currentPibblInstance = baseline.currentPibblInstance;
       GLOBAL_STATE.renderContext = baseline.renderContext;
       GLOBAL_STATE.renderTarget = baseline.renderTarget;
       GLOBAL_STATE.worldBaseTransform = baseline.worldBaseTransform;
@@ -1206,7 +1206,7 @@ describe('filter failure recovery', () => {
     }
     vi.stubGlobal('OffscreenCanvas', ThrowingOffscreenCanvas);
     const canvas = mountScheduled(root);
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
 
     const error = captureThrownError(() => frames.runNext());
     expect(error.message)
@@ -1222,10 +1222,10 @@ describe('filter failure recovery', () => {
     });
 
     vi.unstubAllGlobals();
-    crc(canvas, root);
+    pibbl(canvas, root);
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
-    expect(getCRCInstance(canvas)).toBe(instance);
+    expect(getPibblInstance(canvas)).toBe(instance);
     expect(peekNativeFilterPool(instance)!.snapshot()).toMatchObject({
       surfaceSlots: 2,
       activePairs: 0,
@@ -1248,7 +1248,7 @@ describe('filter failure recovery', () => {
         throw cause;
       });
     const canvas = mountScheduled(root);
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
 
     const error = captureThrownError(() => frames.runNext());
     expect(error.message)
@@ -1264,10 +1264,10 @@ describe('filter failure recovery', () => {
     });
 
     getContext.mockRestore();
-    crc(canvas, root);
+    pibbl(canvas, root);
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
-    expect(getCRCInstance(canvas)).toBe(instance);
+    expect(getPibblInstance(canvas)).toBe(instance);
     expect(peekNativeFilterPool(instance)!.snapshot()).toMatchObject({
       surfaceSlots: 2,
       activePairs: 0,
@@ -1287,7 +1287,7 @@ describe('filter failure recovery', () => {
     }
     vi.stubGlobal('OffscreenCanvas', ThrowingOffscreenCanvas);
     const canvas = mountScheduled(root);
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
 
     const error = captureThrownError(() => frames.runNext());
     expect(error.message)
@@ -1303,10 +1303,10 @@ describe('filter failure recovery', () => {
     });
 
     vi.unstubAllGlobals();
-    crc(canvas, root);
+    pibbl(canvas, root);
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
-    expect(getCRCInstance(canvas)).toBe(instance);
+    expect(getPibblInstance(canvas)).toBe(instance);
     expect(peekNativeFilterPool(instance)).toBeUndefined();
   });
 
@@ -1321,7 +1321,7 @@ describe('filter failure recovery', () => {
         throw cause;
       });
     const canvas = mountScheduled(root);
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
 
     const error = captureThrownError(() => frames.runNext());
     expect(error.message)
@@ -1337,10 +1337,10 @@ describe('filter failure recovery', () => {
     });
 
     getContext.mockRestore();
-    crc(canvas, root);
+    pibbl(canvas, root);
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
-    expect(getCRCInstance(canvas)).toBe(instance);
+    expect(getPibblInstance(canvas)).toBe(instance);
     expect(peekNativeFilterPool(instance)).toBeUndefined();
   });
 
@@ -1361,7 +1361,7 @@ describe('filter failure recovery', () => {
     }));
     frames.runNext();
     expect(pixel(canvas, 2, 2)).toEqual([255, 0, 0, 255]);
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     for (const context of idlePoolContexts(peekNativeFilterPool(instance)!)) {
       Object.defineProperty(context, 'filter', {
         configurable: true,
@@ -1375,7 +1375,7 @@ describe('filter failure recovery', () => {
     const prototype = OffscreenCanvasRenderingContext2D.prototype;
     const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
     expect(Reflect.deleteProperty(prototype, 'filter')).toBe(true);
-    crc(canvas, createElement(PixelProbe, {
+    pibbl(canvas, createElement(PixelProbe, {
       style: { filter: blur({ radius: 1 }) },
     }));
 
@@ -1395,12 +1395,12 @@ describe('filter failure recovery', () => {
       Object.defineProperty(prototype, 'filter', descriptor);
     }
 
-    crc(canvas, createElement(PixelProbe, {
+    pibbl(canvas, createElement(PixelProbe, {
       style: { filter: grayscale({ amount: 1 }) },
     }));
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
-    expect(getCRCInstance(canvas)).toBe(instance);
+    expect(getPibblInstance(canvas)).toBe(instance);
     const recovered = pixel(canvas, 2, 2);
     expect(Math.max(recovered[0]!, recovered[1]!, recovered[2]!) -
       Math.min(recovered[0]!, recovered[1]!, recovered[2]!))
@@ -1425,7 +1425,7 @@ describe('filter failure recovery', () => {
       style: { filter: opacity({ amount: 1 }) },
     }));
     frames.runNext();
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const resultContext = idlePoolContexts(peekNativeFilterPool(instance)!)[1]!;
     const prototype = OffscreenCanvasRenderingContext2D.prototype;
     const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
@@ -1451,7 +1451,7 @@ describe('filter failure recovery', () => {
         // Silently retain the stale native state for every attempted write.
       },
     });
-    crc(canvas, createElement(PixelProbe, {
+    pibbl(canvas, createElement(PixelProbe, {
       style: { filter: grayscale({ amount: 1 }) },
     }));
 
@@ -1470,12 +1470,12 @@ describe('filter failure recovery', () => {
       Object.defineProperty(prototype, 'filter', descriptor);
     }
 
-    crc(canvas, createElement(PixelProbe, {
+    pibbl(canvas, createElement(PixelProbe, {
       style: { filter: grayscale({ amount: 1 }) },
     }));
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
-    expect(getCRCInstance(canvas)).toBe(instance);
+    expect(getPibblInstance(canvas)).toBe(instance);
     expect(idlePoolContexts(peekNativeFilterPool(instance)!)[1]).toBe(resultContext);
     const recovered = pixel(canvas, 2, 2);
     expect(Math.max(recovered[0]!, recovered[1]!, recovered[2]!) -
@@ -1507,7 +1507,7 @@ describe('filter failure recovery', () => {
       expect(() => frames.runNext())
         .toThrow(/Probe.*property filter.*native Canvas filter getter threw/i);
       expect(callback).not.toHaveBeenCalled();
-      expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+      expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
       expectDisposedNativePool({ pairCheckouts: 1, pairReturns: 1 });
     } finally {
       Object.defineProperty(prototype, 'filter', descriptor);
@@ -1536,7 +1536,7 @@ describe('filter failure recovery', () => {
       expect(() => frames.runNext())
         .toThrow(/Probe.*property filter.*native Canvas filter setter threw/i);
       expect(callback).not.toHaveBeenCalled();
-      expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+      expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
       expectDisposedNativePool({ pairCheckouts: 1, pairReturns: 1 });
     } finally {
       Object.defineProperty(prototype, 'filter', descriptor);
@@ -1641,7 +1641,7 @@ describe('filter failure recovery', () => {
     expect(() => frames.runNext())
       .toThrowError('pattern-bearing primitive failed');
     expect(callback).toHaveBeenCalledOnce();
-    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+    expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
     expectDisposedNativePool({ pairCheckouts: 1, pairReturns: 1 });
     const lease = checkout.mock.results[0]?.value;
     expect(lease).toBeDefined();
@@ -1672,7 +1672,7 @@ describe('filter failure recovery', () => {
 
     expect(() => frames.runNext()).toThrowError('original render failure');
     expect(scrubWrites).toBe(1);
-    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+    expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
     expectDisposedNativePool({ pairCheckouts: 1, pairReturns: 1 });
   });
 
@@ -1683,13 +1683,13 @@ describe('filter failure recovery', () => {
       throw new Error('filtered descendant failed');
     });
     const Descendant = definePrimitive<{}>(descendantCallback);
-    const Outer = definePrimitive<{ children: CRCNode }, SystemStyle>(
+    const Outer = definePrimitive<{ children: PibblNode }, SystemStyle>(
       props => {
         outerCallback();
         return props.children;
       },
     );
-    const Inner = definePrimitive<{ children: CRCNode }, SystemStyle>(
+    const Inner = definePrimitive<{ children: PibblNode }, SystemStyle>(
       props => {
         innerCallback();
         return props.children;
@@ -1776,7 +1776,7 @@ function canvasState(context: RenderingContext2D) {
 function clickableRectangle(
   onClick: () => void,
   filtered = false,
-): CRCNode {
+): PibblNode {
   return createElement(Rectangle, {
     style: {
       left: 4,
@@ -1801,7 +1801,7 @@ function filteredCallbackProbe(callback: () => void) {
   });
 }
 
-function singularFilteredProbe(callback: () => void): CRCNode {
+function singularFilteredProbe(callback: () => void): PibblNode {
   const Probe = filteredCallbackProbe(callback);
   return createElement(Group, {
     style: { scaleX: 0, filter: blur({ radius: 1 }) },
@@ -1836,13 +1836,13 @@ function controlFrames(): { runNext(timestamp?: number): void } {
   };
 }
 
-function mountScheduled(root: CRCNode): HTMLCanvasElement {
+function mountScheduled(root: PibblNode): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = 32;
   canvas.height = 24;
   canvas.style.cssText = 'display:block;width:32px;height:24px';
   document.body.appendChild(canvas);
-  controllers.add(crc(canvas, root, { pixelRatio: 1 }));
+  controllers.add(pibbl(canvas, root, { pixelRatio: 1 }));
   return canvas;
 }
 
@@ -1856,7 +1856,7 @@ function expectFreshFilteredRecovery(
   }));
   expect(() => frames.runNext()).not.toThrow();
   expect(callback).toHaveBeenCalledOnce();
-  expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
+  expect(peekNativeFilterPool(getPibblInstance(canvas))!.snapshot()).toMatchObject({
     activePairs: 0,
     pairCheckouts: 1,
     pairReturns: 1,
@@ -1865,7 +1865,7 @@ function expectFreshFilteredRecovery(
 
 function temporaryGlobalSnapshot() {
   return {
-    currentCRCInstance: GLOBAL_STATE.currentCRCInstance,
+    currentPibblInstance: GLOBAL_STATE.currentPibblInstance,
     componentRefs: GLOBAL_STATE.componentRefs,
     componentIsMounting: GLOBAL_STATE.componentIsMounting,
     componentHookIndex: GLOBAL_STATE.componentHookIndex,
@@ -1902,7 +1902,7 @@ function expectFailureBaseline(
   },
 ): void {
   expect(callback).toHaveBeenCalledTimes(expectedCalls);
-  const actualPool = peekNativeFilterPool(getCRCInstance(canvas));
+  const actualPool = peekNativeFilterPool(getPibblInstance(canvas));
   if (actualPool === undefined) {
     const disposed = disposedNativePools.at(-1);
     if (disposed) {
@@ -1914,7 +1914,7 @@ function expectFailureBaseline(
     expect(actualPool).toBeDefined();
     expect(actualPool!.snapshot()).toMatchObject({ activePairs: 0, ...pool });
   }
-  expect(getCRCInstance(canvas).refs.size).toBe(0);
+  expect(getPibblInstance(canvas).refs.size).toBe(0);
   expectTemporaryGlobals(baseline);
 }
 
@@ -1928,7 +1928,7 @@ function expectDisposedNativePool(
 
 function filteredRectangle(
   filter: RectStyle['filter'],
-): CRCNode {
+): PibblNode {
   return createElement(Rectangle, {
     style: {
       left: 8,
@@ -1942,7 +1942,7 @@ function filteredRectangle(
 }
 
 async function renderScene(
-  root: CRCNode,
+  root: PibblNode,
   width: number,
   height: number,
   pixelRatio = 1,
@@ -1952,13 +1952,13 @@ async function renderScene(
   canvas.height = height;
   canvas.style.cssText = `display:block;width:${width}px;height:${height}px`;
   document.body.appendChild(canvas);
-  controllers.add(crc(canvas, root, { pixelRatio }));
+  controllers.add(pibbl(canvas, root, { pixelRatio }));
   await nextFrame();
   return canvas;
 }
 
 async function renderFixedScene(
-  root: CRCNode,
+  root: PibblNode,
   options: {
     readonly logicalWidth: number;
     readonly logicalHeight: number;
@@ -1973,7 +1973,7 @@ async function renderFixedScene(
   canvas.style.cssText =
     `display:block;width:${options.displayWidth}px;height:${options.displayHeight}px`;
   document.body.appendChild(canvas);
-  controllers.add(crc(canvas, root, {
+  controllers.add(pibbl(canvas, root, {
     viewport: {
       width: options.logicalWidth,
       height: options.logicalHeight,

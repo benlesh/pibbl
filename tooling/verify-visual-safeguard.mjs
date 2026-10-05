@@ -60,7 +60,7 @@ const baselineBefore = baselineSnapshot();
 assertPassed(runSmoke(), 'Initial visual check');
 assert.equal(readComparison().status, 'match');
 
-const drill = runSmoke({ VITE_CRC_VISUAL_DRILL: '1' });
+const drill = runSmoke({ VITE_PIBBL_VISUAL_DRILL: '1' });
 if (drill.status === 0) {
   throw new Error('The deliberate visual regression unexpectedly passed.');
 }
@@ -84,7 +84,7 @@ if (JSON.stringify(baselineSnapshot()) !== JSON.stringify(baselineBefore)) {
   throw new Error('A deliberate visual drill changed a committed baseline.');
 }
 
-const maskDrill = runSmoke({ VITE_CRC_VISUAL_DRILL: 'mask-gap' });
+const maskDrill = runSmoke({ VITE_PIBBL_VISUAL_DRILL: 'mask-gap' });
 assert.notEqual(maskDrill.status, 0, 'A 12×6 defect between text lines must not be hidden by text masks.');
 const maskComparison = readComparison();
 assert.equal(maskComparison.status, 'mismatch');
@@ -104,14 +104,14 @@ for (const [drillName, slug, x, y] of [
   ['text-mask-gap', 'drawing-text', 40, 180],
   ['image-mask-background', 'drawing-images', 30, 50],
 ]) {
-  const result = runSmoke({ VITE_CRC_DRAWING_VISUAL_DRILL: drillName }, galleryTest);
+  const result = runSmoke({ VITE_PIBBL_DRAWING_VISUAL_DRILL: drillName }, galleryTest);
   assert.notEqual(result.status, 0, `Gallery mask hid ${drillName}.`);
   const report = JSON.parse(readFileSync(join(repositoryRoot, `test-screenshots/tfc-09/${slug}.diff.png.json`), 'utf8'));
   assert.equal(report.status, 'mismatch');
   assert.equal(report.comparison.differentPixels, 72);
   assert.deepEqual(report.comparison.changedBounds, { x, y, width: 12, height: 6 });
 }
-const inkDrill = runSmoke({ VITE_CRC_DRAWING_VISUAL_DRILL: 'omit-text-ink' }, galleryTest);
+const inkDrill = runSmoke({ VITE_PIBBL_DRAWING_VISUAL_DRILL: 'omit-text-ink' }, galleryTest);
 assert.notEqual(inkDrill.status, 0, 'Recorded text commands without visible glyphs must fail.');
 assert.ok(inkDrill.output.includes('visible glyph ink in region'), 'Glyph omission must fail on independent pixel evidence.');
 assertPassed(runSmoke({}, galleryTest), 'Gallery recovery check');

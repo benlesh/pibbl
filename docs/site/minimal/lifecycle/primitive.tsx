@@ -1,5 +1,5 @@
 import {
-  crc,
+  pibbl,
   definePrimitive,
   useCanvasContext,
   Text,
@@ -10,7 +10,7 @@ import {
   type PrimitiveInput,
   type PrimitiveInputOf,
   type PrimitiveProgramProps,
-  type CRCPrimitiveComponent,
+  type PibblPrimitiveComponent,
   type SpecifiedStyle,
   type NormalizedStyle,
   type ResolvedStyle,
@@ -18,7 +18,7 @@ import {
   type MeasureInput,
   type MeasureResult,
   type CanvasMeasurementService,
-} from "@crc/core";
+} from "@pibbl/core";
 
 type Props = { label: string };
 interface Style extends SystemStyle {
@@ -63,7 +63,7 @@ const capabilities: PrimitiveCapabilities<Props, Style> = {
     };
   },
 };
-const Badge: CRCPrimitiveComponent<
+const Badge: PibblPrimitiveComponent<
   PrimitiveProgramProps<Props>,
   PrimitiveInput<Props, Style>
 > = definePrimitive(render, capabilities);
@@ -73,14 +73,14 @@ const props: PrimitiveInputOf<typeof Badge> = {
 };
 function Scene() {
   const context = useCanvasContext();
-  const width = context.measureText("CRC").width;
+  const width = context.measureText("Pibbl").width;
   return (
     <>
       <Badge {...props} />
       <Text
         style={{ left: 20, top: 140, font: "14px sans-serif", fill: "#222" }}
       >
-        Measured CRC width: {width.toFixed(1)}
+        Measured Pibbl width: {width.toFixed(1)}
       </Text>
     </>
   );
@@ -89,5 +89,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 360;
 canvas.height = 180;
 document.body.append(canvas);
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

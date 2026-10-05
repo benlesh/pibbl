@@ -10,7 +10,7 @@ symbols: [physicsObstacles2D]
 
 # physicsObstacles2D
 
-Import from `@crc/core/physics/2d`. Call `physicsObstacles2D(world)` during
+Import from `@pibbl/core/physics/2d`. Call `physicsObstacles2D(world)` during
 component evaluation to obtain a stable source accepted by
 `useFlowField2D({ ..., obstacles: source })` or
 `embers({ ..., physics: { obstacles: source } })`. The world retains the source and

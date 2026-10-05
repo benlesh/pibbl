@@ -1,5 +1,5 @@
-/** @jsxImportSource @crc/core */
-import { crc } from "@crc/core";
+/** @jsxImportSource @pibbl/core */
+import { pibbl } from "@pibbl/core";
 import {
   ProceduralTexture,
   texturePalettes,
@@ -9,7 +9,7 @@ import {
   type TextureRenderFrame,
   type TextureRenderer,
   type TextureResolution,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 
 const canvas = document.createElement("canvas");
 canvas.width = 320;
@@ -36,7 +36,7 @@ const props: ProceduralTextureProps = {
   detail: 0.3,
   render,
 };
-const controller = crc(
+const controller = pibbl(
   canvas,
   <ProceduralTexture {...props} style={{ width: 320, height: 200 }} />,
 );

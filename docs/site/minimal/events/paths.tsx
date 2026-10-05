@@ -1,12 +1,12 @@
 import {
   Path,
-  crc,
+  pibbl,
   useEventTarget,
   useLinePath,
   useRectPath,
   useSvgPath,
   type PixelGridAlignment,
-} from '@crc/core';
+} from '@pibbl/core';
 
 const canvas = document.createElement('canvas');
 canvas.width = 340;
@@ -30,5 +30,5 @@ function Paths() {
   </>;
 }
 
-const controller = crc(canvas, <Paths />);
+const controller = pibbl(canvas, <Paths />);
 window.addEventListener('pagehide', () => controller.dispose(), { once: true });

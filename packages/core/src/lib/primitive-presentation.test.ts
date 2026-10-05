@@ -92,7 +92,7 @@ describe('primitive presentation', () => {
     });
   });
 
-  it('retains known CRC world precision while including a direct Canvas context delta', () => {
+  it('retains known Pibbl world precision while including a direct Canvas context delta', () => {
     const context = document.createElement('canvas').getContext('2d')!;
     const target = identityTarget(40, 30);
     const parentPaint = new DOMMatrix().translate(3, 5);

@@ -1,10 +1,10 @@
 /** Bounded source-mode correlation, without evaluating components or callbacks. */
 import { getElementSource } from '../../packages/core/src/lib/element/metadata';
-import type { CRCElement } from '../../packages/core/src/lib/element/types';
+import type { PibblElement } from '../../packages/core/src/lib/element/types';
 import { GLOBAL_STATE } from '../../packages/core/src/lib/global-state';
-import { CRCPaintEntryKind } from '../../packages/core/src/lib/events/paint-entry';
+import { PibblPaintEntryKind } from '../../packages/core/src/lib/events/paint-entry';
 import { signalRenderConsumerIdentity } from '../../packages/core/src/lib/signals/render-consumer';
-import type { CRCComponentRefs, CRCInstance } from '../../packages/core/src/lib/types';
+import type { PibblComponentRefs, PibblInstance } from '../../packages/core/src/lib/types';
 
 export interface SignalConsumerOwner {
   readonly componentId: number;
@@ -46,9 +46,9 @@ const limits = Object.freeze({ surfaces: 64, components: 256, paintEntries: 256 
 
 export function createSignalOwnershipObserver(canvas?: HTMLCanvasElement) {
   const host = canvas ? new WeakRef(canvas) : undefined;
-  const root = canvas ? GLOBAL_STATE.crcInstances.get(canvas) : undefined;
+  const root = canvas ? GLOBAL_STATE.pibblInstances.get(canvas) : undefined;
   const rootRef = root ? new WeakRef(root) : undefined;
-  let ids = new WeakMap<CRCInstance, number>();
+  let ids = new WeakMap<PibblInstance, number>();
   let nextId = 0;
   let componentIds = new WeakMap<object, number>();
   let nextComponentId = 0;
@@ -56,7 +56,7 @@ export function createSignalOwnershipObserver(canvas?: HTMLCanvasElement) {
   let labels = new WeakMap<object, string>();
   let labeledLifetimes = new WeakSet<object>();
   let labelCount = 0;
-  const handles = new Map<number, { refs: WeakRef<CRCComponentRefs<any>>; surface: WeakRef<CRCInstance> }>();
+  const handles = new Map<number, { refs: WeakRef<PibblComponentRefs<any>>; surface: WeakRef<PibblInstance> }>();
   let typeIds = new WeakMap<object, number>(); let nextTypeId = 0;
   function identifyType(value: unknown): number | null {
     if (disposed || typeof value !== 'function') return null;
@@ -71,12 +71,12 @@ export function createSignalOwnershipObserver(canvas?: HTMLCanvasElement) {
   let sources = new WeakMap<object, SourceObservation>();
   let sourceCaptures = 0;
   const sourceStatus = (status: Exclude<SourceObservation['status'], 'available'>): SourceObservation => Object.freeze({ status });
-  function observeSource(element: CRCElement<any>): SourceObservation {
+  function observeSource(element: PibblElement<any>): SourceObservation {
     const source = getElementSource(element);
     return source === undefined ? sourceStatus('missing') : sources.get(source) ?? sourceStatus('not-captured');
   }
   // Explicit acquisition may run source accessors. Passive snapshots never do.
-  function captureSource(element: CRCElement<any>): SourceObservation {
+  function captureSource(element: PibblElement<any>): SourceObservation {
     if (disposed) return sourceStatus('disposed');
     const source = getElementSource(element);
     if (source === undefined) return sourceStatus('missing');
@@ -103,7 +103,7 @@ export function createSignalOwnershipObserver(canvas?: HTMLCanvasElement) {
     const refs = handle?.refs.deref(); const surface = handle?.surface.deref();
     const instance = rootRef?.deref(); const canvas = host?.deref();
     return !disposed && refs && surface && instance && canvas && !instance.mainTeardowns.closed &&
-      GLOBAL_STATE.crcInstances.get(canvas) === instance && !surface.mainTeardowns.closed &&
+      GLOBAL_STATE.pibblInstances.get(canvas) === instance && !surface.mainTeardowns.closed &&
       !refs.teardowns.closed && surface.refs.get(refs.id) === refs && refs.renderGeneration === renderGeneration ? refs : undefined;
   }
   return {
@@ -144,7 +144,7 @@ export function createSignalOwnershipObserver(canvas?: HTMLCanvasElement) {
       const visited = { surfaces: 0, components: 0, paintEntries: 0 };
       const instance = rootRef?.deref(); const element = host?.deref();
       let completeness: 'complete' | 'truncated' | 'unavailable' = 'complete';
-      if (disposed || !instance || !element || instance.mainTeardowns.closed || GLOBAL_STATE.crcInstances.get(element) !== instance) {
+      if (disposed || !instance || !element || instance.mainTeardowns.closed || GLOBAL_STATE.pibblInstances.get(element) !== instance) {
         return { records, componentOwners, completeness: 'unavailable' as const, limits, visited: Object.freeze(visited), components: Object.freeze({ completeness: 'unavailable' as const, limit: componentRecordLimit, removals: removalSnapshot(), records: Object.freeze(componentRecords) }) };
       }
       // Only positive teardown evidence creates a tombstone. Missing, collected,
@@ -155,7 +155,7 @@ export function createSignalOwnershipObserver(canvas?: HTMLCanvasElement) {
         if (removalRecords.length === 64) { removalRecords.shift(); droppedRemovals++; }
         removalRecords.push(Object.freeze({ componentId, reason: 'component-disposed' }));
       }
-      const queue = [instance]; const seen = new Set<CRCInstance>();
+      const queue = [instance]; const seen = new Set<PibblInstance>();
       for (let index = 0; index < queue.length; index++) {
         const surface = queue[index];
         if (seen.has(surface)) continue;
@@ -198,7 +198,7 @@ export function createSignalOwnershipObserver(canvas?: HTMLCanvasElement) {
         for (const entry of surface.paintEntries) {
           if (visited.paintEntries >= limits.paintEntries) { completeness = 'truncated'; break; }
           visited.paintEntries++;
-          if (entry.paintKind === CRCPaintEntryKind.NestedInstance) queue.push(entry.instance);
+          if (entry.paintKind === PibblPaintEntryKind.NestedInstance) queue.push(entry.instance);
         }
       }
       const relation = (target: object | undefined): Readonly<ComponentRelation> => target === undefined ? none :

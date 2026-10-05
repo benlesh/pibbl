@@ -1,5 +1,5 @@
 {
-  "schema": "crc-current-performance-audit/1",
+  "schema": "pibbl-current-performance-audit/1",
   "baseline": "38b416e07e0223992f3992c88b1df10bb28f2916",
   "reactionDiffusionSha256": "697319e7b125d053c1a6d2047671027e91f4e183a125054e77ad4b02d154e6c3",
   "timestamp": "2026-10-03T19:21:16.284Z",
@@ -11899,7 +11899,7 @@
         "queuedReactionCompletions": 0,
         "queuedBeginCommands": 0
       },
-      "restoreError": "Cannot restore the CRC scheduler driver while a frame is active.",
+      "restoreError": "Cannot restore the Pibbl scheduler driver while a frame is active.",
       "note": "Fresh page closes immediately after this observation; no clearSharedState is used."
     },
     {
@@ -11947,7 +11947,7 @@
       "followupErrors": [],
       "pendingAfterFollowups": 1,
       "orphanScheduledWorkPersists": true,
-      "restoreError": "Cannot restore the CRC scheduler driver while a frame is active.",
+      "restoreError": "Cannot restore the Pibbl scheduler driver while a frame is active.",
       "note": "Fault is injected only around the actual public RD recipe upload; eight post-disposal scheduler opportunities distinguish a one-frame fault from orphaned work. The page closes immediately after observation."
     }
   ],

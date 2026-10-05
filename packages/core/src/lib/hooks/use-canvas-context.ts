@@ -1,8 +1,8 @@
 import { GLOBAL_STATE } from '../global-state.js';
 import type { RenderingContext2D } from '../types.js';
 
-const CRC_CANVAS_CONTEXT_ERROR =
-  'useCanvasContext() is available only during CRC rendering and cannot be ' +
+const PIBBL_CANVAS_CONTEXT_ERROR =
+  'useCanvasContext() is available only during Pibbl rendering and cannot be ' +
   'used during pure measurement.';
 
 /**
@@ -19,10 +19,10 @@ export function useCanvasContext(): RenderingContext2D {
     !context ||
     GLOBAL_STATE.backendDriver?.name !== 'canvas2d' ||
     !GLOBAL_STATE.componentRefs ||
-    !GLOBAL_STATE.currentCRCInstance ||
+    !GLOBAL_STATE.currentPibblInstance ||
     !GLOBAL_STATE.canvas
   ) {
-    throw new Error(CRC_CANVAS_CONTEXT_ERROR);
+    throw new Error(PIBBL_CANVAS_CONTEXT_ERROR);
   }
   return context;
 }

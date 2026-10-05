@@ -3,24 +3,24 @@ import {
   getElementMetadata,
   getPrimitiveDefinition,
   setElementMetadata,
-  type CRCElementSource,
+  type PibblElementSource,
 } from './metadata.js';
 import type {
-  CRCElement,
-  CRCElementType,
-  CRCKey,
+  PibblElement,
+  PibblElementType,
+  PibblKey,
 } from './types.js';
 import { isDevelopment } from '../development.js';
 import { capturePlacementHandoff } from '../style/positioning.js';
 
-const CRC_ELEMENT_TYPE = Symbol.for('@crc/core.element');
+const PIBBL_ELEMENT_TYPE = Symbol.for('@pibbl/core.element');
 
 type ElementProps = Record<PropertyKey, unknown>;
 type UnionKeys<T> = T extends unknown ? keyof T : never;
 type ElementInput<P> = 0 extends (1 & P) ?
-  P & { key?: CRCKey } :
+  P & { key?: PibblKey } :
   'key' extends UnionKeys<P> ? never :
-  P & { key?: CRCKey };
+  P & { key?: PibblKey };
 type ElementInputOrNull<P> = [ElementInput<P>] extends [never] ?
   never :
   ElementInput<P> | null;
@@ -45,35 +45,35 @@ type ChildrenArguments<P> = P extends unknown ?
 /**
  * Public constructor used by direct element authoring.
  *
- * @param type - CRC component or fragment to instantiate. See {@link CRCElementType}.
+ * @param type - Pibbl component or fragment to instantiate. See {@link PibblElementType}.
  * @param props - Authored props, or null when allowed by the component's input type. See
  * {@link ElementInputOrNull} .
  * @param children - Child nodes supplied in source order. See {@link ChildrenArguments}.
- * @returns A branded CRC element descriptor; rendering occurs when it is mounted. See
- * {@link CRCElement} .
+ * @returns A branded Pibbl element descriptor; rendering occurs when it is mounted. See
+ * {@link PibblElement} .
  *
- * @see {@link CRCElementType}
- * @see {@link CRCElement}
+ * @see {@link PibblElementType}
+ * @see {@link PibblElement}
  */
 export function createElement<P>(
-  type: CRCElementType<P>,
+  type: PibblElementType<P>,
   props: ElementInputOrNull<P>,
   ...children: ChildrenArguments<P>
-): CRCElement<P> {
+): PibblElement<P> {
   const withChildren = children.length === 0 ? props : {
     ...(props as object | null),
     children: children.length === 1 ? children[0] : children,
   };
-  return createCRCElement(type, withChildren as P | null, undefined, undefined);
+  return createPibblElement(type, withChildren as P | null, undefined, undefined);
 }
 
 /** @internal Shared construction path for direct and compiler element creation. */
-export function createCRCElement<P>(
-  type: CRCElementType<P>,
+export function createPibblElement<P>(
+  type: PibblElementType<P>,
   incomingProps: P | null,
-  compilerKey: CRCKey | null | undefined,
-  source: CRCElementSource | undefined,
-): CRCElement<P> {
+  compilerKey: PibblKey | null | undefined,
+  source: PibblElementSource | undefined,
+): PibblElement<P> {
   const rawProps = (incomingProps ?? {}) as ElementProps;
   const defensiveKey = Object.prototype.hasOwnProperty.call(rawProps, 'key') ?
     rawProps.key :
@@ -86,7 +86,7 @@ export function createCRCElement<P>(
   const normalizedKey = rawKey === undefined || rawKey === null ?
     undefined :
     String(rawKey);
-  return finalizeCRCElement(type, props as P, normalizedKey, {
+  return finalizePibblElement(type, props as P, normalizedKey, {
     source,
     primitiveProgramProps,
   });
@@ -100,22 +100,22 @@ function preparePrimitiveProgramProps(
   return programProps;
 }
 
-function finalizeCRCElement<P>(
-  type: CRCElementType<P>,
+function finalizePibblElement<P>(
+  type: PibblElementType<P>,
   props: P,
   key: string | undefined,
   metadata: Parameters<typeof setElementMetadata>[1],
-): CRCElement<P> {
+): PibblElement<P> {
   const element = (key === undefined ?
     { type, props } :
-    { type, props, key }) as CRCElement<P>;
+    { type, props, key }) as PibblElement<P>;
 
   setElementMetadata(element, metadata);
   Object.defineProperties(element, {
     $$typeof: {
       configurable: false,
       enumerable: false,
-      value: CRC_ELEMENT_TYPE,
+      value: PIBBL_ELEMENT_TYPE,
       writable: false,
     },
   });
@@ -132,16 +132,16 @@ function finalizeCRCElement<P>(
 }
 
 /** @internal */
-export function isCRCElement(value: unknown): value is CRCElement<any> {
+export function isPibblElement(value: unknown): value is PibblElement<any> {
   return !!value &&
     typeof value === 'object' &&
-    (value as { $$typeof?: unknown }).$$typeof === CRC_ELEMENT_TYPE;
+    (value as { $$typeof?: unknown }).$$typeof === PIBBL_ELEMENT_TYPE;
 }
 
 /** @internal Creates another immutable descriptor while retaining private annotations. */
-export function cloneCRCElement<P>(element: CRCElement<P>): CRCElement<P> {
+export function clonePibblElement<P>(element: PibblElement<P>): PibblElement<P> {
   const metadata = getElementMetadata(element);
-  const clone = finalizeCRCElement(
+  const clone = finalizePibblElement(
     element.type,
     element.props,
     element.key,

@@ -1,6 +1,6 @@
 import hoverSource from "../../packages/scenarios/src/learning/composition/viz-hover-comparison.example.tsx?raw";
 import pointsSource from '../../packages/scenarios/src/learning/composition/viz-points-and-inspection.example.tsx?raw';
-import type { ScenarioCatalogRecord } from '@crc/scenarios';
+import type { ScenarioCatalogRecord } from '@pibbl/scenarios';
 import vizSource from '../../packages/scenarios/src/learning/composition/viz-responsive-line.example.tsx?raw';
 
 const rawSourceModules = import.meta.glob(

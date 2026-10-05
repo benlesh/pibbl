@@ -1,4 +1,4 @@
-import { crc, createElement, signal } from '@crc/core';
+import { pibbl, createElement, signal } from '@pibbl/core';
 import { AgentSignalMutationScene, AGENT_SIGNAL_MUTATION_SOURCE_ID } from './agent-signal-mutation.example';
 import type { ScenarioDefinition } from './types';
 export interface AgentSignalMutationState {
@@ -35,7 +35,7 @@ export const agentSignalMutationScenario: ScenarioDefinition<AgentSignalMutation
     };
     const evidence = document.createElement('pre'); evidence.dataset.testid = 'agent-signal-mutation-evidence'; referenceHost?.append(evidence);
     let state: AgentSignalMutationState = { status: 'pending', revision: 0, action: 'mount', expectedAmount: 10, sourceAmount: 10, evaluatedAmount, componentEvaluations, signalVersion: version(), equality: null, assertion: 'unavailable', diagnosis: 'not-observed', observationWindow: { kind: 'two-host-animation-frames', completedFrames: 0, scope: 'finite-observation-not-future-guarantee' } };
-    const publish = () => { evidence.textContent = JSON.stringify({ schema: 'crc-signal-mutation-fixture/1', identity: fixtureIdentity, state }); onStateChange?.(structuredClone(state)); };
+    const publish = () => { evidence.textContent = JSON.stringify({ schema: 'pibbl-signal-mutation-fixture/1', identity: fixtureIdentity, state }); onStateChange?.(structuredClone(state)); };
     const waitWindow = () => new Promise<void>((resolve, reject) => {
       let frame = 0, count = 0;
       const finish = (error?: Error) => { cancelAnimationFrame(frame); clearTimeout(timeout); cancelWait = null; if (error) reject(error); else resolve(); };
@@ -44,7 +44,7 @@ export const agentSignalMutationScenario: ScenarioDefinition<AgentSignalMutation
       const tick = () => { if (disposed) return finish(new Error('Signal mutation fixture disposed.')); if (++count === 2) finish(); else frame = requestAnimationFrame(tick); };
       frame = requestAnimationFrame(tick);
     });
-    let controller: ReturnType<typeof crc> | null = null;
+    let controller: ReturnType<typeof pibbl> | null = null;
     function perform(action: string): Promise<void> {
       if (disposed) return Promise.reject(new Error('Signal mutation fixture disposed.'));
       if (inFlight) return Promise.reject(new Error('Signal mutation action already running.'));
@@ -74,12 +74,12 @@ export const agentSignalMutationScenario: ScenarioDefinition<AgentSignalMutation
           : 'application-observation';
         state = { ...state, status: 'ready', expectedAmount, sourceAmount: amount.get().amount, evaluatedAmount, componentEvaluations, signalVersion, equality, assertion, diagnosis, observationWindow: { ...state.observationWindow, completedFrames: 2 } };
         publish();
-      }).catch(error => { if (!disposed) { state = { ...state, status: 'error', assertion: 'unavailable', diagnosis: 'observation-failed' }; evidence.textContent = JSON.stringify({ schema: 'crc-signal-mutation-fixture/1', identity: fixtureIdentity, state }); } throw error; }).finally(() => { inFlight = null; });
+      }).catch(error => { if (!disposed) { state = { ...state, status: 'error', assertion: 'unavailable', diagnosis: 'observation-failed' }; evidence.textContent = JSON.stringify({ schema: 'pibbl-signal-mutation-fixture/1', identity: fixtureIdentity, state }); } throw error; }).finally(() => { inFlight = null; });
       inFlight = operation; return operation;
     }
     async function dispose() { if (disposed) return; disposed = true; cancelWait?.(); controller?.dispose(); inspector?.dispose(); evidence.remove(); state = { ...state, status: 'disposed', assertion: 'unavailable', diagnosis: 'disposed' }; }
     try {
-      controller = crc(canvas, createElement(AgentSignalMutationScene, { amount, onRender(value: number) { evaluatedAmount = value; componentEvaluations++; } }), { viewport: { width: 480, height: 180 }, fit: 'contain' });
+      controller = pibbl(canvas, createElement(AgentSignalMutationScene, { amount, onRender(value: number) { evaluatedAmount = value; componentEvaluations++; } }), { viewport: { width: 480, height: 180 }, fit: 'contain' });
       await perform('reset');
     } catch (error) { await dispose(); throw error; }
     return { getState: () => structuredClone(state), perform, reset: () => perform('reset'), settled: async () => { if (disposed) throw new Error('Signal mutation fixture disposed.'); await inFlight; }, dispose };

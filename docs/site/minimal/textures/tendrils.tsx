@@ -1,5 +1,5 @@
-/** @jsxImportSource @crc/core */
-import { crc, Rectangle } from "@crc/core";
+/** @jsxImportSource @pibbl/core */
+import { pibbl, Rectangle } from "@pibbl/core";
 import {
   tendrils,
   useTexture,
@@ -7,7 +7,7 @@ import {
   type ElectricSourceMessage,
   type TendrilsMessage,
   type TendrilsOptions,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 
 const canvas = document.createElement("canvas");
 canvas.width = 320;
@@ -44,5 +44,5 @@ function Filaments() {
   );
 }
 
-const controller = crc(canvas, <Filaments />);
+const controller = pibbl(canvas, <Filaments />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

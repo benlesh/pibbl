@@ -6,8 +6,8 @@ import { resolve } from "node:path";
 import { chromium } from "playwright";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const output = resolve(root, process.env.CRC_STUDIO_DOCS_PREVIEW_OUTPUT_DIRECTORY ?? "playground/dist");
-const port = process.env.CRC_STUDIO_DOCS_PREVIEW_PORT ?? "4175";
+const output = resolve(root, process.env.PIBBL_STUDIO_DOCS_PREVIEW_OUTPUT_DIRECTORY ?? "playground/dist");
+const port = process.env.PIBBL_STUDIO_DOCS_PREVIEW_PORT ?? "4175";
 if (!/^[1-9]\d{0,4}$/.test(port) || Number(port) > 65_535) {
   throw new Error(`Invalid Studio preview port: ${port}`);
 }
@@ -43,7 +43,7 @@ try {
   await context.route(`${website}/**`, (route) => route.fulfill({
     status: 200,
     contentType: "text/html",
-    body: "<!doctype html><title>CRC website</title><h1>CRC website</h1>",
+    body: "<!doctype html><title>Pibbl website</title><h1>Pibbl website</h1>",
   }));
   const page = await context.newPage();
   const errors = [];
@@ -57,8 +57,8 @@ try {
 
   await page.goto(`${origin}/#/learn/guides/configure-jsx`);
   await page.waitForURL(`${website}/guides/configure-jsx/`);
-  await page.goto(`${origin}/#/api/types/events#crcpointerevent`);
-  await page.waitForURL(`${website}/reference/types/events/#crcpointerevent`);
+  await page.goto(`${origin}/#/api/types/events#pibblpointerevent`);
+  await page.waitForURL(`${website}/reference/types/events/#pibblpointerevent`);
 
   await page.goto(`${origin}/#/workbench/diagram-editor-first-node`);
   await page.getByRole("heading", { name: "Draw the first node" }).waitFor();

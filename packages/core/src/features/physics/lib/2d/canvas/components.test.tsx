@@ -1,5 +1,5 @@
-import { crc, type CRCController } from '@crc/core';
-/** @jsxImportSource @crc/core */
+import { pibbl, type PibblController } from '@pibbl/core';
+/** @jsxImportSource @pibbl/core */
 import {
   Capsule2D,
   Chain2D,
@@ -19,7 +19,7 @@ import {
 import { afterEach, describe, expect, it } from 'vitest';
 import { inferCanvasColliderShape2D } from './inference.js';
 
-const mounts: CRCController[] = [];
+const mounts: PibblController[] = [];
 
 afterEach(() => {
   for (const mount of mounts.splice(0)) mount.dispose();
@@ -78,12 +78,12 @@ describe('matching Canvas physics shape components', () => {
   });
 });
 
-function mount(root: Parameters<typeof crc>[1]): HTMLCanvasElement {
+function mount(root: Parameters<typeof pibbl>[1]): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = 50;
   canvas.height = 40;
   document.body.appendChild(canvas);
-  mounts.push(crc(canvas, root));
+  mounts.push(pibbl(canvas, root));
   return canvas;
 }
 

@@ -1,74 +1,74 @@
-import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
+import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@pibbl/core/filters';
 import type {
-  CRCAnimationDefinition,
-  CRCAnimationOptions,
-  CRCAnimationProgram,
-  CRCAnimationRepeatDirection,
-  CRCAnimationRepeatOptions,
-  CRCAnimationSampleInput,
-  CRCConfig,
-  CRCClipboardEvent,
-  CRCCompositionEvent,
-  CRCController,
-  CRCRenderLayerComponentProps,
-  CRCRenderLayerContext,
-  CRCRenderLayerDefinition,
-  CRCRenderLayerFrame,
-  CRCRenderLayerHit,
-  CRCRenderLayerInput,
-  CRCRenderLayerInteraction,
-  CRCRenderLayerInteractionSnapshot,
-  CRCRenderLayerProps,
-  CRCRenderLayerSize,
-  CRCRenderLayerStyle,
-  CRCRenderLayerTarget,
-  CRCEasing,
-  CRCElement,
-  CRCDragEvent,
-  CRCEvent,
-  CRCEventCapturePropName,
-  CRCEventHandler,
-  CRCEventHandlers,
-  CRCEventMap,
-  CRCEventPhase,
-  CRCEventPropName,
-  CRCEventTarget,
-  CRCEventTargetOptions,
-  CRCEventTargetSnapshot,
-  CRCEventType,
-  CRCFilter,
-  CRCFit,
-  CRCFixedViewportConfig,
-  CRCFocusEvent,
-  CRCInputEvent,
-  CRCKeyboardEvent,
-  CRCKeyboardNavigationOptions,
-  CRCInterpolator,
-  CRCKeyframesOptions,
-  CRCLogicalMouseEvent,
-  CRCManipulableProps,
-  CRCManipulationBox,
-  CRCManipulationController,
-  CRCManipulationOptions,
-  CRCManipulationResizeInput,
-  CRCResizePosition,
-  CRCNode,
-  CRCPixelRatio,
-  CRCPointerEvent,
-  CRCPlayback,
-  CRCPlaybackEvent,
-  CRCPlaybackOptions,
-  CRCPlaybackStatus,
-  CRCReactionOptions,
-  CRCRef,
-  CRCResponsiveViewportConfig,
-  CRCSpringOptions,
-  CRCSpringAnimatedValueOptions,
-  CRCStepperOptions,
-  CRCTouchEvent,
-  CRCTweenOptions,
-  CRCTweenAnimatedValueOptions,
-  CRCWheelEvent,
+  PibblAnimationDefinition,
+  PibblAnimationOptions,
+  PibblAnimationProgram,
+  PibblAnimationRepeatDirection,
+  PibblAnimationRepeatOptions,
+  PibblAnimationSampleInput,
+  PibblConfig,
+  PibblClipboardEvent,
+  PibblCompositionEvent,
+  PibblController,
+  PibblRenderLayerComponentProps,
+  PibblRenderLayerContext,
+  PibblRenderLayerDefinition,
+  PibblRenderLayerFrame,
+  PibblRenderLayerHit,
+  PibblRenderLayerInput,
+  PibblRenderLayerInteraction,
+  PibblRenderLayerInteractionSnapshot,
+  PibblRenderLayerProps,
+  PibblRenderLayerSize,
+  PibblRenderLayerStyle,
+  PibblRenderLayerTarget,
+  PibblEasing,
+  PibblElement,
+  PibblDragEvent,
+  PibblEvent,
+  PibblEventCapturePropName,
+  PibblEventHandler,
+  PibblEventHandlers,
+  PibblEventMap,
+  PibblEventPhase,
+  PibblEventPropName,
+  PibblEventTarget,
+  PibblEventTargetOptions,
+  PibblEventTargetSnapshot,
+  PibblEventType,
+  PibblFilter,
+  PibblFit,
+  PibblFixedViewportConfig,
+  PibblFocusEvent,
+  PibblInputEvent,
+  PibblKeyboardEvent,
+  PibblKeyboardNavigationOptions,
+  PibblInterpolator,
+  PibblKeyframesOptions,
+  PibblLogicalMouseEvent,
+  PibblManipulableProps,
+  PibblManipulationBox,
+  PibblManipulationController,
+  PibblManipulationOptions,
+  PibblManipulationResizeInput,
+  PibblResizePosition,
+  PibblNode,
+  PibblPixelRatio,
+  PibblPointerEvent,
+  PibblPlayback,
+  PibblPlaybackEvent,
+  PibblPlaybackOptions,
+  PibblPlaybackStatus,
+  PibblReactionOptions,
+  PibblRef,
+  PibblResponsiveViewportConfig,
+  PibblSpringOptions,
+  PibblSpringAnimatedValueOptions,
+  PibblStepperOptions,
+  PibblTouchEvent,
+  PibblTweenOptions,
+  PibblTweenAnimatedValueOptions,
+  PibblWheelEvent,
   ArcProps,
   ArcStyle,
   ArcPathOptions,
@@ -128,23 +128,23 @@ import type {
   WedgeStyle,
   WedgePathOptions,
   WritableSignal,
-} from '@crc/core';
-import type * as CoreTypes from '@crc/core/types';
-import * as ParticleRuntime from '@crc/core/particles';
-import type * as ParticleTypes from '@crc/core/particles';
-import * as ThreeRuntime from '@crc/three';
+} from '@pibbl/core';
+import type * as CoreTypes from '@pibbl/core/types';
+import * as ParticleRuntime from '@pibbl/core/particles';
+import type * as ParticleTypes from '@pibbl/core/particles';
+import * as ThreeRuntime from '@pibbl/three';
 import {
   defineThreeLayer,
-  type CRCThreeLayerResources,
-} from '@crc/three';
+  type PibblThreeLayerResources,
+} from '@pibbl/three';
 import { PerspectiveCamera, Scene } from 'three';
 import {
   Particles2D,
   useParticleSystem,
   useFlowField2D,
   useFlowSource2D,
-  type CRCFlowField2D,
-  type CRCFlowObstacleSource2D,
+  type PibblFlowField2D,
+  type PibblFlowObstacleSource2D,
   defineParticleEffect2D,
   particleChoice,
   particleCurve,
@@ -152,12 +152,12 @@ import {
   particleInteger,
   particleParameter,
   particleRange,
-  type CRCParticleEffect2D,
-  type CRCParticleParameterValues,
-  type CRCParticleSystem,
+  type PibblParticleEffect2D,
+  type PibblParticleParameterValues,
+  type PibblParticleSystem,
   type Particles2DProps,
-} from '@crc/core/particles';
-import { PhysicsWorld2D, crcPhysicsWorld2D, physicsObstacles2D } from '@crc/core/physics/2d';
+} from '@pibbl/core/particles';
+import { PhysicsWorld2D, pibblPhysicsWorld2D, physicsObstacles2D } from '@pibbl/core/physics/2d';
 import {
   createBackendToken,
   defineBackendPrimitive,
@@ -166,7 +166,7 @@ import {
   getCurrentLogicalViewport,
   haveSameLayerNodeTree,
   isBackendEventTargetLive,
-  mountBackendCRC,
+  mountBackendPibbl,
   onCurrentRenderFinish,
   registerNestedInteractionResolver,
   requestCurrentInstanceFrame,
@@ -174,45 +174,45 @@ import {
   snapshotLayerNodeTree,
   useBackendEventTarget,
   useInternalHookSlot,
-  type CRCBackendDriver,
-  type CRCBackendFrame,
-  type CRCBackendFrameInput,
-  type CRCBackendMount,
-  type CRCBackendPrimitiveDefinition,
-  type CRCBackendPrimitiveInput,
-  type CRCBackendToken,
-  type CRCNestedResolverInput,
-  crcInternalAssertCommandAllowed,
-  crcInternalCreateSignalConsumer,
-  crcInternalCurrentFrame,
-  crcInternalCurrentRenderOwner,
-  crcInternalOnRenderFinish,
-  crcInternalPaintTarget,
-  crcInternalQueueBegin,
-  crcInternalQueueComplete,
-  crcInternalQueueCurrentCommit,
-  crcInternalQueueCurrentComplete,
-  crcInternalRegisterAdvance,
-  crcInternalRequestRender,
-  crcInternalRequestRendererWork,
-  type CRCInternalCommandHandle,
-  crcInternalCurrentSimulationOwner,
-  crcInternalOnSimulationRenderTransactionFinish,
-  crcInternalQueueSimulationBegin,
-  crcInternalQueueSimulationCommitAcknowledgement,
-  crcInternalQueueSimulationComplete,
-  crcInternalRegisterSimulationAdvance,
-  crcInternalRequestSimulationRender,
-  type CRCInternalAdvanceLane,
-  type CRCInternalFrame,
-  type CRCInternalRendererWorkKind,
-  type CRCInternalRenderOwner,
-  type CRCInternalSignalBatch,
-  type CRCInternalSignalConsumer,
-  type CRCInternalSimulationOwner,
-} from '@crc/core/internal';
+  type PibblBackendDriver,
+  type PibblBackendFrame,
+  type PibblBackendFrameInput,
+  type PibblBackendMount,
+  type PibblBackendPrimitiveDefinition,
+  type PibblBackendPrimitiveInput,
+  type PibblBackendToken,
+  type PibblNestedResolverInput,
+  pibblInternalAssertCommandAllowed,
+  pibblInternalCreateSignalConsumer,
+  pibblInternalCurrentFrame,
+  pibblInternalCurrentRenderOwner,
+  pibblInternalOnRenderFinish,
+  pibblInternalPaintTarget,
+  pibblInternalQueueBegin,
+  pibblInternalQueueComplete,
+  pibblInternalQueueCurrentCommit,
+  pibblInternalQueueCurrentComplete,
+  pibblInternalRegisterAdvance,
+  pibblInternalRequestRender,
+  pibblInternalRequestRendererWork,
+  type PibblInternalCommandHandle,
+  pibblInternalCurrentSimulationOwner,
+  pibblInternalOnSimulationRenderTransactionFinish,
+  pibblInternalQueueSimulationBegin,
+  pibblInternalQueueSimulationCommitAcknowledgement,
+  pibblInternalQueueSimulationComplete,
+  pibblInternalRegisterSimulationAdvance,
+  pibblInternalRequestSimulationRender,
+  type PibblInternalAdvanceLane,
+  type PibblInternalFrame,
+  type PibblInternalRendererWorkKind,
+  type PibblInternalRenderOwner,
+  type PibblInternalSignalBatch,
+  type PibblInternalSignalConsumer,
+  type PibblInternalSimulationOwner,
+} from '@pibbl/core/internal';
 import {
-  crc,
+  pibbl,
   useComputed,
   useConst,
   useCursor,
@@ -294,17 +294,17 @@ import {
   tween,
   untracked,
   wait,
-} from '@crc/core';
+} from '@pibbl/core';
 
 // Removed hooks intentionally have no built-package compatibility exports.
 // @ts-expect-error useState was replaced by useSignal
-import { useState as removedUseState } from '@crc/core';
+import { useState as removedUseState } from '@pibbl/core';
 // @ts-expect-error StateUpdater was removed with useState
-import type { StateUpdater as RemovedStateUpdater } from '@crc/core';
+import type { StateUpdater as RemovedStateUpdater } from '@pibbl/core';
 // @ts-expect-error useMemo was replaced by useConst and useComputed
-import { useMemo as removedUseMemo } from '@crc/core';
+import { useMemo as removedUseMemo } from '@pibbl/core';
 // @ts-expect-error useWhenChanged was replaced by useReaction
-import { useWhenChanged as removedUseWhenChanged } from '@crc/core';
+import { useWhenChanged as removedUseWhenChanged } from '@pibbl/core';
 
 type RemovedHookVocabulary = [
   typeof removedUseState,
@@ -369,26 +369,26 @@ function PackedParticleScene() {
 
 createElement(PackedParticleScene, {});
 void ParticleRuntime;
-void (undefined as unknown as ParticleTypes.CRCParticleEmitter2D);
-void (undefined as unknown as CRCParticleEffect2D<'spark'>);
-void (undefined as unknown as CRCParticleSystem<'spark', CRCParticleParameterValues>);
+void (undefined as unknown as ParticleTypes.PibblParticleEmitter2D);
+void (undefined as unknown as PibblParticleEffect2D<'spark'>);
+void (undefined as unknown as PibblParticleSystem<'spark', PibblParticleParameterValues>);
 void (undefined as unknown as Particles2DProps<'spark'>);
 
-const packageConsumerBackendToken: CRCBackendToken =
+const packageConsumerBackendToken: PibblBackendToken =
   createBackendToken('package-consumer');
 const packageConsumerEnvironment = Object.freeze({ kind: 'consumer' });
-const packageConsumerBackend: CRCBackendDriver<
+const packageConsumerBackend: PibblBackendDriver<
   typeof packageConsumerEnvironment
 > = {
   token: packageConsumerBackendToken,
   name: 'package-consumer',
-  beginFrame(_input: CRCBackendFrameInput) {
+  beginFrame(_input: PibblBackendFrameInput) {
     return { environment: packageConsumerEnvironment };
   },
-  enterComponent(_frame: CRCBackendFrame<typeof packageConsumerEnvironment>) {
+  enterComponent(_frame: PibblBackendFrame<typeof packageConsumerEnvironment>) {
     return () => undefined;
   },
-  runPrimitive(_frame, _input: CRCBackendPrimitiveInput, runProgram) {
+  runPrimitive(_frame, _input: PibblBackendPrimitiveInput, runProgram) {
     runProgram(() => undefined);
   },
   finishFrame() {},
@@ -399,9 +399,9 @@ const PackageConsumerPrimitive = defineBackendPrimitive(
   function renderPackageConsumerPrimitive() {},
 );
 const packageConsumerDefinition = undefined as unknown as
-  CRCBackendPrimitiveDefinition;
-const packageConsumerMount = undefined as unknown as CRCBackendMount;
-const packageConsumerResolver = undefined as unknown as CRCNestedResolverInput;
+  PibblBackendPrimitiveDefinition;
+const packageConsumerMount = undefined as unknown as PibblBackendMount;
+const packageConsumerResolver = undefined as unknown as PibblNestedResolverInput;
 void PackageConsumerPrimitive;
 void packageConsumerDefinition;
 void packageConsumerMount;
@@ -412,7 +412,7 @@ void [
   getCurrentFrameTimestamp,
   haveSameLayerNodeTree,
   isBackendEventTargetLive,
-  mountBackendCRC,
+  mountBackendPibbl,
   registerNestedInteractionResolver,
   requestCurrentInstanceFrame,
   setCurrentComponentAfterRender,
@@ -421,15 +421,15 @@ void [
   useInternalHookSlot,
 ];
 
-declare const internalOwner: CRCInternalRenderOwner;
-declare const internalFrame: CRCInternalFrame;
-declare const internalBatch: CRCInternalSignalBatch;
-declare const internalCommand: CRCInternalCommandHandle;
-declare const internalConsumer: CRCInternalSignalConsumer;
-declare const internalSignalBatch: CRCInternalSignalBatch;
-declare const internalSimulationOwner: CRCInternalSimulationOwner;
-const internalWorkKind = 'draw' satisfies CRCInternalRendererWorkKind;
-const internalAdvanceLane = 'physics' satisfies CRCInternalAdvanceLane;
+declare const internalOwner: PibblInternalRenderOwner;
+declare const internalFrame: PibblInternalFrame;
+declare const internalBatch: PibblInternalSignalBatch;
+declare const internalCommand: PibblInternalCommandHandle;
+declare const internalConsumer: PibblInternalSignalConsumer;
+declare const internalSignalBatch: PibblInternalSignalBatch;
+declare const internalSimulationOwner: PibblInternalSimulationOwner;
+const internalWorkKind = 'draw' satisfies PibblInternalRendererWorkKind;
+const internalAdvanceLane = 'physics' satisfies PibblInternalAdvanceLane;
 void internalOwner;
 void internalFrame;
 void internalBatch;
@@ -439,52 +439,52 @@ void internalSignalBatch;
 void internalSimulationOwner;
 void internalWorkKind;
 void internalAdvanceLane;
-void crcInternalAssertCommandAllowed;
-void crcInternalCreateSignalConsumer;
-void crcInternalCurrentFrame;
-void crcInternalCurrentRenderOwner;
-void crcInternalOnRenderFinish;
-void crcInternalPaintTarget;
-void crcInternalQueueBegin;
-void crcInternalQueueComplete;
-void crcInternalQueueCurrentCommit;
-void crcInternalQueueCurrentComplete;
-void crcInternalRegisterAdvance;
-void crcInternalRequestRender;
-void crcInternalRequestRendererWork;
+void pibblInternalAssertCommandAllowed;
+void pibblInternalCreateSignalConsumer;
+void pibblInternalCurrentFrame;
+void pibblInternalCurrentRenderOwner;
+void pibblInternalOnRenderFinish;
+void pibblInternalPaintTarget;
+void pibblInternalQueueBegin;
+void pibblInternalQueueComplete;
+void pibblInternalQueueCurrentCommit;
+void pibblInternalQueueCurrentComplete;
+void pibblInternalRegisterAdvance;
+void pibblInternalRequestRender;
+void pibblInternalRequestRendererWork;
 void getCurrentLogicalViewport;
 void onCurrentRenderFinish;
-void crcInternalCurrentSimulationOwner;
-void crcInternalOnSimulationRenderTransactionFinish;
-void crcInternalQueueSimulationBegin;
-void crcInternalQueueSimulationCommitAcknowledgement;
-void crcInternalQueueSimulationComplete;
-void crcInternalRegisterSimulationAdvance;
-void crcInternalRequestSimulationRender;
+void pibblInternalCurrentSimulationOwner;
+void pibblInternalOnSimulationRenderTransactionFinish;
+void pibblInternalQueueSimulationBegin;
+void pibblInternalQueueSimulationCommitAcknowledgement;
+void pibblInternalQueueSimulationComplete;
+void pibblInternalRegisterSimulationAdvance;
+void pibblInternalRequestSimulationRender;
 
 export type PublicEventTypes = {
-  base: CRCEvent;
-  clipboard: CRCClipboardEvent;
-  composition: CRCCompositionEvent;
-  drag: CRCDragEvent;
-  focus: CRCFocusEvent;
-  input: CRCInputEvent;
-  keyboard: CRCKeyboardEvent;
-  logicalMouse: CRCLogicalMouseEvent;
-  pointer: CRCPointerEvent;
-  touch: CRCTouchEvent;
-  wheel: CRCWheelEvent;
-  eventMap: CRCEventMap;
-  eventType: CRCEventType;
-  eventPhase: CRCEventPhase;
-  eventProp: CRCEventPropName;
-  eventCaptureProp: CRCEventCapturePropName;
-  eventTarget: CRCEventTarget;
-  eventTargetOptions: CRCEventTargetOptions;
-  eventTargetSnapshot: CRCEventTargetSnapshot;
+  base: PibblEvent;
+  clipboard: PibblClipboardEvent;
+  composition: PibblCompositionEvent;
+  drag: PibblDragEvent;
+  focus: PibblFocusEvent;
+  input: PibblInputEvent;
+  keyboard: PibblKeyboardEvent;
+  logicalMouse: PibblLogicalMouseEvent;
+  pointer: PibblPointerEvent;
+  touch: PibblTouchEvent;
+  wheel: PibblWheelEvent;
+  eventMap: PibblEventMap;
+  eventType: PibblEventType;
+  eventPhase: PibblEventPhase;
+  eventProp: PibblEventPropName;
+  eventCaptureProp: PibblEventCapturePropName;
+  eventTarget: PibblEventTarget;
+  eventTargetOptions: PibblEventTargetOptions;
+  eventTargetSnapshot: PibblEventTargetSnapshot;
 };
 
-const pointerHandler: CRCEventHandler<'pointerdown'> = event => {
+const pointerHandler: PibblEventHandler<'pointerdown'> = event => {
   const pressure: number = event.pressure;
   void pressure;
 };
@@ -530,16 +530,16 @@ const eventHandlers = {
     const dataTransfer: DataTransfer | null = event.dataTransfer;
     void dataTransfer;
   },
-} satisfies CRCEventHandlers;
+} satisfies PibblEventHandlers;
 
-function PublicEventProbe(): CRCNode {
+function PublicEventProbe(): PibblNode {
   const options = {
     path: new Path2D(),
     fill: true,
     keyboardFocusable: true,
     keyboardNavigationBounds: { x: 0, y: 0, width: 20, height: 20 },
-  } satisfies CRCEventTargetOptions;
-  const snapshot: CRCEventTargetSnapshot = useEventTarget(
+  } satisfies PibblEventTargetOptions;
+  const snapshot: PibblEventTargetSnapshot = useEventTarget(
     eventHandlers,
     options,
   );
@@ -559,31 +559,31 @@ const rectangleStyle = {
 } satisfies RectStyle;
 const rectangleProps = {} satisfies RectangleProps;
 
-const blurFilter: CRCFilter = blur({  radius: 2 });
-const brightnessFilter: CRCFilter = brightness({
+const blurFilter: PibblFilter = blur({  radius: 2 });
+const brightnessFilter: PibblFilter = brightness({
   
   amount: 1.25,
 });
-const contrastFilter: CRCFilter = contrast({  amount: 0.8 });
-const dropShadowFilter: CRCFilter = dropShadow({
+const contrastFilter: PibblFilter = contrast({  amount: 0.8 });
+const dropShadowFilter: PibblFilter = dropShadow({
   
   offsetX: 3,
   offsetY: 4,
   blurRadius: 2,
   color: 'rgb(0 0 0 / 40%)',
 });
-const grayscaleFilter: CRCFilter = grayscale({
+const grayscaleFilter: PibblFilter = grayscale({
   
   amount: 0.5,
 });
-const hueRotateFilter: CRCFilter = hueRotate({
+const hueRotateFilter: PibblFilter = hueRotate({
   
   degrees: 45,
 });
-const invertFilter: CRCFilter = invert({  amount: 0.25 });
-const opacityFilter: CRCFilter = opacity({  amount: 0.75 });
-const saturateFilter: CRCFilter = saturate({  amount: 1.5 });
-const sepiaFilter: CRCFilter = sepia({  amount: 0.4 });
+const invertFilter: PibblFilter = invert({  amount: 0.25 });
+const opacityFilter: PibblFilter = opacity({  amount: 0.75 });
+const saturateFilter: PibblFilter = saturate({  amount: 1.5 });
+const sepiaFilter: PibblFilter = sepia({  amount: 0.4 });
 const publicFilterList = [
   blurFilter,
   brightnessFilter,
@@ -595,7 +595,7 @@ const publicFilterList = [
   opacityFilter,
   saturateFilter,
   sepiaFilter,
-] as const satisfies readonly CRCFilter[];
+] as const satisfies readonly PibblFilter[];
 
 createElement(Rectangle, {
   style: { ...rectangleStyle, filter: blurFilter },
@@ -620,37 +620,37 @@ createElement(Absolute, {
   children: createElement(Rectangle, { style: rectangleStyle }),
 });
 
-// @ts-expect-error raw CSS strings are not CRC filters
+// @ts-expect-error raw CSS strings are not Pibbl filters
 const raw: SystemStyle = { filter: 'blur(4px)' };
-// @ts-expect-error boxShadow is not a CRC system style property
+// @ts-expect-error boxShadow is not a Pibbl system style property
 const box: SystemStyle = { boxShadow: { offsetX: 1 } };
 // @ts-expect-error url filters are excluded
-const url: CRCFilter = { type: 'url', value: '#filter' };
+const url: PibblFilter = { type: 'url', value: '#filter' };
 void raw;
 void box;
 void url;
 
 export type PublicCoreTypes = typeof CoreTypes;
 export type PublicCoreEventTypes = [
-  CoreTypes.CRCClipboardEvent,
-  CoreTypes.CRCCompositionEvent,
-  CoreTypes.CRCDragEvent,
-  CoreTypes.CRCEvent,
-  CoreTypes.CRCEventHandlers,
-  CoreTypes.CRCEventTarget,
-  CoreTypes.CRCEventTargetOptions,
-  CoreTypes.CRCEventTargetSnapshot,
-  CoreTypes.CRCFocusEvent,
-  CoreTypes.CRCInputEvent,
-  CoreTypes.CRCKeyboardEvent,
-  CoreTypes.CRCLogicalMouseEvent,
-  CoreTypes.CRCPointerEvent,
-  CoreTypes.CRCTouchEvent,
-  CoreTypes.CRCWheelEvent,
+  CoreTypes.PibblClipboardEvent,
+  CoreTypes.PibblCompositionEvent,
+  CoreTypes.PibblDragEvent,
+  CoreTypes.PibblEvent,
+  CoreTypes.PibblEventHandlers,
+  CoreTypes.PibblEventTarget,
+  CoreTypes.PibblEventTargetOptions,
+  CoreTypes.PibblEventTargetSnapshot,
+  CoreTypes.PibblFocusEvent,
+  CoreTypes.PibblInputEvent,
+  CoreTypes.PibblKeyboardEvent,
+  CoreTypes.PibblLogicalMouseEvent,
+  CoreTypes.PibblPointerEvent,
+  CoreTypes.PibblTouchEvent,
+  CoreTypes.PibblWheelEvent,
 ];
 const keyboardNavigationOptions = {
   mode: 'directional',
-} satisfies CRCKeyboardNavigationOptions;
+} satisfies PibblKeyboardNavigationOptions;
 export const scene = createElement(FocusManagement, {
   children: createElement(KeyboardNavigation, {
     ...keyboardNavigationOptions,
@@ -661,7 +661,7 @@ export const scene = createElement(FocusManagement, {
     }),
   }),
 });
-export const mount = crc;
+export const mount = pibbl;
 
 const pathStyle = {
   d: new Path2D(),
@@ -1019,7 +1019,7 @@ const subpathClipStyle: CoreTypes.ClipStyle = clipStyle;
 const subpathLayerStyle: CoreTypes.LayerStyle = layerStyle;
 const subpathGridStyle: CoreTypes.GridStyle = gridStyle;
 const subpathPercentage: CoreTypes.Percentage = percentage;
-const subpathKeyboardNavigationOptions: CoreTypes.CRCKeyboardNavigationOptions =
+const subpathKeyboardNavigationOptions: CoreTypes.PibblKeyboardNavigationOptions =
   keyboardNavigationOptions;
 void subpathGroupStyle;
 void subpathCircleStyle;
@@ -1078,7 +1078,7 @@ createElement(Image, { style: { src: 'legacy.png', strokeStyle: 'red', lineWidth
 // @ts-expect-error image does not accept visual values as program props
 createElement(Image, { style: { src: 'styled.png' }, alpha: 0.5 });
 
-const manipulationBox = signal<CRCManipulationBox>({
+const manipulationBox = signal<PibblManipulationBox>({
   left: 20,
   top: 30,
   width: 180,
@@ -1095,17 +1095,17 @@ const manipulationOptions = {
     snap: { target: 'size', step: { width: 8, height: 8 } },
   },
   rotate: { snap: { step: degrees(15), origin: 0 } },
-} satisfies CRCManipulationOptions;
-const manipulationController: CRCManipulationController =
+} satisfies PibblManipulationOptions;
+const manipulationController: PibblManipulationController =
   useManipulation(manipulationOptions);
-const manipulationHandle: CRCResizePosition = 'bottom-right';
+const manipulationHandle: PibblResizePosition = 'bottom-right';
 const manipulableProps = {
   style: manipulationBox,
   rotation: manipulationRotation,
   draggable: { axis: 'x', snap: { step: 8 } },
   resizable: { snap: { target: 'grid', step: { x: 8, y: 8 } } },
   rotatable: { snap: { step: degrees(15) } },
-} satisfies CRCManipulableProps;
+} satisfies PibblManipulableProps;
 createElement(Manipulable, manipulableProps);
 createElement(ManipulationFrame, {
   ...manipulationController.frameProps,
@@ -1131,14 +1131,14 @@ const retiredRectanglePosition: RectStyle = { x: 20, width: 40, height: 20 };
 const retiredTextPosition: TextStyle = { y: 20 };
 // @ts-expect-error Image positioning uses left/top; ImgStyle no longer has x.
 const retiredImagePosition: ImgStyle = { src: 'asset.png', x: 20 };
-const invalidGridResizeSnap: CRCManipulationResizeInput = {
+const invalidGridResizeSnap: PibblManipulationResizeInput = {
   snap: {
     target: 'grid',
     // @ts-expect-error Grid resize snapping uses parent-space x/y increments.
     step: { width: 8, height: 8 },
   },
 };
-const invalidSizeResizeSnap: CRCManipulationResizeInput = {
+const invalidSizeResizeSnap: PibblManipulationResizeInput = {
   snap: {
     target: 'size',
     step: 8,
@@ -1155,7 +1155,7 @@ void [
 ];
 // @ts-expect-error group translation is style-only
 createElement(Group, { x: 10 }, []);
-// @ts-expect-error CRC-native transform names replace the legacy aliases
+// @ts-expect-error Pibbl-native transform names replace the legacy aliases
 createElement(Group, { style: { rotate: 45, rotateOrigin: [0, 0] } }, []);
 // @ts-expect-error clipping geometry is style-only
 createElement(Clip, { path: new Path2D() }, []);
@@ -1165,14 +1165,14 @@ createElement(Clip, { style: {} }, []);
 createElement(Layer, { width: 100, height: 100 },
   createElement(Rectangle, { style: rectangleStyle }));
 
-export function disposeMount(controller: ReturnType<typeof crc>): void {
-  const publicController: CRCController = controller;
+export function disposeMount(controller: ReturnType<typeof pibbl>): void {
+  const publicController: PibblController = controller;
   publicController.dispose();
 }
 
 declare const canvas: HTMLCanvasElement;
 
-function RuntimeProbe({ count }: { count: number; label?: string }): CRCNode {
+function RuntimeProbe({ count }: { count: number; label?: string }): PibblNode {
   const publicContext: RenderingContext2D = useCanvasContext();
   const reactiveCount = useSignal(count);
   publicContext.fillRect(0, 0, reactiveCount.get(), reactiveCount.get());
@@ -1187,34 +1187,34 @@ function RuntimeProbe({ count }: { count: number; label?: string }): CRCNode {
 }
 
 const runtimeElement = createElement(RuntimeProbe, { count: 1, label: 'typed' });
-type PublicElementHasEnhancers = 'enhancers' extends keyof CRCElement ? true : false;
+type PublicElementHasEnhancers = 'enhancers' extends keyof PibblElement ? true : false;
 const publicElementHasEnhancers: PublicElementHasEnhancers = false;
-const unsupportedEnhancerElement: CRCElement = {
+const unsupportedEnhancerElement: PibblElement = {
   ...runtimeElement,
-  // @ts-expect-error arbitrary enhancer metadata is not part of public CRC elements
+  // @ts-expect-error arbitrary enhancer metadata is not part of public Pibbl elements
   enhancers: [],
 };
 void publicElementHasEnhancers;
 void unsupportedEnhancerElement;
-const runtimeController: CRCController = crc(canvas, runtimeElement, {
+const runtimeController: PibblController = pibbl(canvas, runtimeElement, {
   signal: new AbortController().signal,
 });
 runtimeController.dispose();
 
-const surfaceFit: CRCFit = 'scale-down';
-const surfacePixelRatio: CRCPixelRatio = 2;
-const fixedSurfaceConfig: CRCFixedViewportConfig = {
+const surfaceFit: PibblFit = 'scale-down';
+const surfacePixelRatio: PibblPixelRatio = 2;
+const fixedSurfaceConfig: PibblFixedViewportConfig = {
   viewport: { width: 720, height: 420 },
   fit: surfaceFit,
   pixelRatio: surfacePixelRatio,
 };
-const responsiveSurfaceConfig: CRCResponsiveViewportConfig = {
+const responsiveSurfaceConfig: PibblResponsiveViewportConfig = {
   viewport: 'responsive',
   pixelRatio: 'device',
 };
-const publicSurfaceConfig: CRCConfig = fixedSurfaceConfig;
-crc(canvas, runtimeElement, publicSurfaceConfig);
-crc(canvas, runtimeElement, responsiveSurfaceConfig);
+const publicSurfaceConfig: PibblConfig = fixedSurfaceConfig;
+pibbl(canvas, runtimeElement, publicSurfaceConfig);
+pibbl(canvas, runtimeElement, responsiveSurfaceConfig);
 
 interface RuntimeProbeStyle extends SystemStyle {
   width: number;
@@ -1229,9 +1229,9 @@ const StyledRuntimeProbe = definePrimitive<
 });
 
 type RenderLayerConsumerProps = { color: string };
-type RenderLayerConsumerResources = { context: CRCRenderLayerContext };
+type RenderLayerConsumerResources = { context: PibblRenderLayerContext };
 type RenderLayerConsumerTarget = { readonly id: string };
-const renderLayerSize: CRCRenderLayerSize = {
+const renderLayerSize: PibblRenderLayerSize = {
   width: 1,
   height: 1,
   backingWidth: 1,
@@ -1239,43 +1239,43 @@ const renderLayerSize: CRCRenderLayerSize = {
   pixelRatioX: 1,
   pixelRatioY: 1,
 };
-const renderLayerFrame: CRCRenderLayerFrame = {
+const renderLayerFrame: PibblRenderLayerFrame = {
   frameId: 0,
   time: 0,
   delta: 0,
   deltaSeconds: 0,
   invalidate() {},
 };
-const renderLayerStyle: CRCRenderLayerStyle = { width: 1, height: 1 };
-const renderLayerProps: CRCRenderLayerProps<RenderLayerConsumerProps> = {
+const renderLayerStyle: PibblRenderLayerStyle = { width: 1, height: 1 };
+const renderLayerProps: PibblRenderLayerProps<RenderLayerConsumerProps> = {
   color: 'red',
   style: renderLayerStyle,
 };
-const renderLayerComponentProps: CRCRenderLayerComponentProps = {};
+const renderLayerComponentProps: PibblRenderLayerComponentProps = {};
 const renderLayerTargetIdentity: RenderLayerConsumerTarget = { id: 'target' };
-const renderLayerHit: CRCRenderLayerHit<RenderLayerConsumerTarget> = {
+const renderLayerHit: PibblRenderLayerHit<RenderLayerConsumerTarget> = {
   kind: 'target',
   target: renderLayerTargetIdentity,
 };
-const renderLayerTarget: CRCRenderLayerTarget<RenderLayerConsumerTarget> = {
+const renderLayerTarget: PibblRenderLayerTarget<RenderLayerConsumerTarget> = {
   target: renderLayerTargetIdentity,
   keyboardFocusable: true,
 };
-const renderLayerSnapshot: CRCRenderLayerInteractionSnapshot<RenderLayerConsumerTarget> = {
+const renderLayerSnapshot: PibblRenderLayerInteractionSnapshot<RenderLayerConsumerTarget> = {
   targets: [renderLayerTarget],
   hitTest() { return renderLayerHit; },
-  onInput(input: Readonly<CRCRenderLayerInput<RenderLayerConsumerTarget>>) {
+  onInput(input: Readonly<PibblRenderLayerInput<RenderLayerConsumerTarget>>) {
     void input.hit;
   },
 };
-const renderLayerInteraction: CRCRenderLayerInteraction<
+const renderLayerInteraction: PibblRenderLayerInteraction<
   RenderLayerConsumerProps,
   RenderLayerConsumerResources,
   RenderLayerConsumerTarget
 > = {
   settle() { return renderLayerSnapshot; },
 };
-const renderLayerDefinition: CRCRenderLayerDefinition<
+const renderLayerDefinition: PibblRenderLayerDefinition<
   RenderLayerConsumerProps,
   RenderLayerConsumerResources,
   RenderLayerConsumerTarget
@@ -1291,7 +1291,7 @@ void renderLayerFrame;
 void renderLayerComponentProps;
 
 type ThreeLayerConsumerProps = { exposure: number };
-type ThreeLayerConsumerResources = CRCThreeLayerResources & {
+type ThreeLayerConsumerResources = PibblThreeLayerResources & {
   readonly initialExposure: number;
 };
 const ThreeLayerConsumer = defineThreeLayer<
@@ -1314,7 +1314,7 @@ createElement(ThreeLayerConsumer, {
 
 const ReservedThreeLayerConsumer = defineThreeLayer<
   { style: string },
-  CRCThreeLayerResources
+  PibblThreeLayerResources
 >({
   create() {
     return { scene: new Scene(), camera: new PerspectiveCamera() };
@@ -1400,18 +1400,18 @@ createElement((_props: object) => 0, {});
 createElement(RuntimeProbe, {});
 // @ts-expect-error excess component props are rejected
 createElement(RuntimeProbe, { count: 1, unknown: true });
-// @ts-expect-error crc requires an HTML Canvas
-crc(document.createElement('div'), runtimeElement);
-// @ts-expect-error crc requires a component element, not a component factory
-crc(canvas, RuntimeProbe);
-// @ts-expect-error crc signal must be an AbortSignal
-crc(canvas, runtimeElement, { signal: 'abort' });
+// @ts-expect-error pibbl requires an HTML Canvas
+pibbl(document.createElement('div'), runtimeElement);
+// @ts-expect-error pibbl requires a component element, not a component factory
+pibbl(canvas, RuntimeProbe);
+// @ts-expect-error pibbl signal must be an AbortSignal
+pibbl(canvas, runtimeElement, { signal: 'abort' });
 // @ts-expect-error responsive viewports do not accept a fit
-crc(canvas, runtimeElement, { viewport: 'responsive', fit: 'contain' });
+pibbl(canvas, runtimeElement, { viewport: 'responsive', fit: 'contain' });
 // @ts-expect-error fixed viewport dimensions must be numeric
-crc(canvas, runtimeElement, { viewport: { width: '720', height: 420 } });
+pibbl(canvas, runtimeElement, { viewport: { width: '720', height: 420 } });
 // @ts-expect-error pixelRatio accepts only device or a number
-crc(canvas, runtimeElement, { pixelRatio: 'retina' });
+pibbl(canvas, runtimeElement, { pixelRatio: 'retina' });
 
 const state = useSignal({ count: 0 });
 const stateCount: number = state.get().count;
@@ -1437,7 +1437,7 @@ const callbackValue: () => string = callbackSignal.get();
 callbackSignal.set(() => 'updated');
 const reactiveRectangleX = signal(10);
 const reactiveRectangleFill = signal('red');
-const reactiveRectangleHandler = signal<CRCEventHandler<'click'>>(() => {});
+const reactiveRectangleHandler = signal<PibblEventHandler<'click'>>(() => {});
 const reactiveRectangleStyle = signal<RectStyle>({
   left: 10,
   fill: 'red',
@@ -1456,7 +1456,7 @@ const signalValuedRectangle = createElement(Rectangle, {
 const wholeSignalValuedRectangle = createElement(Rectangle, {
   style: reactiveRectangleStyle,
 });
-function SignalValueConsumer(props: { value: SignalValue<number> }): CRCNode {
+function SignalValueConsumer(props: { value: SignalValue<number> }): PibblNode {
   return createElement(Text, null, resolveSignalValue(props.value));
 }
 const customSignalValueConsumer = createElement(SignalValueConsumer, {
@@ -1481,17 +1481,17 @@ void exactSignalConsumer;
 
 const animationOutput = signal(0);
 const objectAnimationOutput = signal({ x: 0 });
-const objectInterpolator: CRCInterpolator<{ x: number }> = (
+const objectInterpolator: PibblInterpolator<{ x: number }> = (
   from,
   to,
   progress,
 ) => ({ x: from.x + (to.x - from.x) * progress });
-const tweenDefinition: CRCAnimationDefinition<number> = tween({
+const tweenDefinition: PibblAnimationDefinition<number> = tween({
   to: 10,
   duration: 100,
   easing: easing.easeInOut,
 });
-const springDefinition: CRCAnimationDefinition<number> = spring({ to: 20 });
+const springDefinition: PibblAnimationDefinition<number> = spring({ to: 20 });
 const objectDefinition = tween({
   to: { x: 10 },
   duration: 100,
@@ -1508,7 +1508,7 @@ const fixedStepper = stepper<{ value: number }, number>({
   step: state => ({ value: state.value + 1 }),
   read: state => state.value,
 });
-const animationProgram: CRCAnimationProgram = sequence(
+const animationProgram: PibblAnimationProgram = sequence(
   parallel(
     drive(animationOutput, tweenDefinition),
     drive(objectAnimationOutput, objectDefinition),
@@ -1523,45 +1523,45 @@ const animationProgram: CRCAnimationProgram = sequence(
   drive(animationOutput, customDefinition),
   drive(animationOutput, fixedStepper),
 );
-const easingFunction: CRCEasing = easing.linear;
-const repeatDirection: CRCAnimationRepeatDirection = 'alternate-reverse';
-const repeatOptions: CRCAnimationRepeatOptions = {
+const easingFunction: PibblEasing = easing.linear;
+const repeatDirection: PibblAnimationRepeatDirection = 'alternate-reverse';
+const repeatOptions: PibblAnimationRepeatOptions = {
   iterations: 2,
   direction: repeatDirection,
 };
-const tweenOptions: CRCTweenOptions<number> = { to: 1, duration: 10 };
-const keyframesOptions: CRCKeyframesOptions<number> = {
+const tweenOptions: PibblTweenOptions<number> = { to: 1, duration: 10 };
+const keyframesOptions: PibblKeyframesOptions<number> = {
   values: [0, 1],
   duration: 10,
 };
-const springOptions: CRCSpringOptions = { to: 1 };
-const sampleInput: CRCAnimationSampleInput<number> = {
+const springOptions: PibblSpringOptions = { to: 1 };
+const sampleInput: PibblAnimationSampleInput<number> = {
   initialValue: 0,
   localTime: 5,
   progress: 0.5,
 };
-const animationOptions: CRCAnimationOptions<number> = {
+const animationOptions: PibblAnimationOptions<number> = {
   duration: 10,
   sample: input => input.progress,
 };
-const stepperOptions: CRCStepperOptions<{ value: number }, number> = {
+const stepperOptions: PibblStepperOptions<{ value: number }, number> = {
   stepMilliseconds: 10,
   initial: value => ({ value }),
   step: state => state,
   read: state => state.value,
 };
-const playbackOptions: CRCPlaybackOptions = { autoplay: false };
-const playbackStatus: CRCPlaybackStatus = 'scheduled';
-const playbackEvent = null as CRCPlaybackEvent | null;
-const tweenTransitionOptions: CRCTweenAnimatedValueOptions<{ x: number }> = {
+const playbackOptions: PibblPlaybackOptions = { autoplay: false };
+const playbackStatus: PibblPlaybackStatus = 'scheduled';
+const playbackEvent = null as PibblPlaybackEvent | null;
+const tweenTransitionOptions: PibblTweenAnimatedValueOptions<{ x: number }> = {
   type: 'tween',
   duration: 100,
   interpolate: objectInterpolator,
 };
-const springTransitionOptions: CRCSpringAnimatedValueOptions = { type: 'spring' };
+const springTransitionOptions: PibblSpringAnimatedValueOptions = { type: 'spring' };
 
-function AnimationProbe(): CRCNode {
-  const player: CRCPlayback = usePlayback(animationProgram, playbackOptions);
+function AnimationProbe(): PibblNode {
+  const player: PibblPlayback = usePlayback(animationProgram, playbackOptions);
   const tweened = useAnimatedValue({ x: 10 }, tweenTransitionOptions);
   const sprung = useAnimatedValue(10, springTransitionOptions);
   return createElement(
@@ -1577,13 +1577,13 @@ spring({ to: 'done' });
 const numberDefinition = tween({ to: 10, duration: 100 });
 // @ts-expect-error a numeric definition cannot write an object signal
 drive(objectAnimationOutput, numberDefinition);
-type CoreExports = typeof import('@crc/core');
+type CoreExports = typeof import('@pibbl/core');
 // @ts-expect-error no free playback function is exported
 type FreePlay = CoreExports['play'];
 
 // @ts-expect-error readonly signals do not expose writes
 readonlyCount.set(2);
-// @ts-expect-error CRC style accepts resolved numbers, not signal containers
+// @ts-expect-error Pibbl style accepts resolved numbers, not signal containers
 const badSignalStyle: RectStyle = { left: writableCount, width: 10, height: 10 };
 // @ts-expect-error computed values are readonly
 computed(() => writableCount.get() * 2).update(value => value + 1);
@@ -1614,7 +1614,7 @@ computedValue.get();
 // @ts-expect-error computed hook values are readonly
 computedValue.set(1);
 
-const reactionOptions: CRCReactionOptions = {
+const reactionOptions: PibblReactionOptions = {
   debugName: 'package consumer reaction',
 };
 useReaction(() => {
@@ -1624,8 +1624,8 @@ useReaction(() => {
 // @ts-expect-error reaction setup is synchronous
 useReaction(async () => undefined);
 
-const initializedRef: CRCRef<number> = useRef(1);
-const emptyRef: CRCRef<string> = useRef<string>();
+const initializedRef: PibblRef<number> = useRef(1);
+const emptyRef: PibblRef<string> = useRef<string>();
 initializedRef.current = 2;
 emptyRef.current = 'ready';
 // @ts-expect-error refs preserve their generic current-value type
@@ -1661,8 +1661,8 @@ useCursor({ path: 'line', style: 'pointer' });
 useCursor({ style: 'pointer', capture: true });
 
 // Editable path geometry is consumed exclusively through the public entry.
-import { PathGeometry, toPath2D, toSvgPathData } from '@crc/core';
-import type { PathSegment } from '@crc/core';
+import { PathGeometry, toPath2D, toSvgPathData } from '@pibbl/core';
+import type { PathSegment } from '@pibbl/core';
 const editableOutline = new PathGeometry();
 editableOutline.rect(0, 0, 20, 20);
 editableOutline.arc(20, 20, 10, 0, Math.PI);
@@ -1672,14 +1672,14 @@ editableOutline.setSegment(0, editableSegment);
 const editableNative: Path2D = toPath2D(editableOutline);
 const editableSvg: string = toSvgPathData(editableOutline);
 void [editableNative, editableSvg];
-import { flattenPath, simplifyPath, subdividePath } from '@crc/core';
+import { flattenPath, simplifyPath, subdividePath } from '@pibbl/core';
 const flattenedOutline = flattenPath(editableOutline, { tolerance: 0.25 });
 void simplifyPath(flattenedOutline, { tolerance: 0.5 });
 void subdividePath(editableOutline, { divisions: 2 });
-const editableTarget: CRCEventTargetOptions = { path: editableOutline, fill: true };
+const editableTarget: PibblEventTargetOptions = { path: editableOutline, fill: true };
 void editableTarget;
 
-import { transformPath, quadTransform, arcBendTransform, pathBendTransform, type PathPoint, type PathRect, type PathQuadCorners, type PathQuadMode, type QuadTransformOptions, type TransformPathOptions, type BendTransformOptions, type ArcBendTransformOptions, type PathBendArc, type PathBendAlign, type PathBendBaseline, type PathBendFit, type PathBendOverflow } from '@crc/core';
+import { transformPath, quadTransform, arcBendTransform, pathBendTransform, type PathPoint, type PathRect, type PathQuadCorners, type PathQuadMode, type QuadTransformOptions, type TransformPathOptions, type BendTransformOptions, type ArcBendTransformOptions, type PathBendArc, type PathBendAlign, type PathBendBaseline, type PathBendFit, type PathBendOverflow } from '@pibbl/core';
 const warpOrigin: PathPoint = { x: 0, y: 0 };
 const warpSource: PathRect = { ...warpOrigin, width: 20, height: 20 };
 const warpCorners: PathQuadCorners = { topLeft: warpOrigin, topRight: { x: 30, y: 0 }, bottomLeft: { x: 0, y: 20 }, bottomRight: { x: 20, y: 20 } };
@@ -1704,7 +1704,7 @@ const bentPath: PathGeometry = transformPath(editableOutline, pathBendTransform(
 void [toSvgPathData(bentArc), toSvgPathData(bentPath)];
 
 // HtmlBox preserves the application's generic payload across mount and update.
-const htmlMount: import('@crc/core').HtmlMountCallback<{ label: string }> = (element, initial, abort) => {
+const htmlMount: import('@pibbl/core').HtmlMountCallback<{ label: string }> = (element, initial, abort) => {
   element.textContent = initial.label;
   element.addEventListener('click', () => undefined, { signal: abort });
   return next => { element.textContent = next.label; };
@@ -1712,18 +1712,18 @@ const htmlMount: import('@crc/core').HtmlMountCallback<{ label: string }> = (ele
 createElement(HtmlBox, { data: { label: 'native' }, mount: htmlMount, style: { width: 120, height: 40, rotationDegrees: 5 } });
 // @ts-expect-error payload and mount callback types must agree
 createElement(HtmlBox<{ label: string }>, { data: { label: 42 }, mount: htmlMount });
-const htmlConfig: CRCConfig = { viewport: 'responsive', htmlOverlay: undefined };
+const htmlConfig: PibblConfig = { viewport: 'responsive', htmlOverlay: undefined };
 void htmlConfig;
 
 // Ember physics stays opt-in and uses receiver-local swept point collisions.
-import { embers as physicsEmbers, type CRCEmbersPhysicsOptions, type CRCEmberCollision } from '@crc/core';
-const emberHit: CRCEmberCollision = {fraction:.5,normal:[0,-1]};
-const emberPhysicsOptions: CRCEmbersPhysicsOptions = {gravity:[0,500],wind:[20,0],drag:3,restitution:.5,collide:()=>emberHit};
+import { embers as physicsEmbers, type PibblEmbersPhysicsOptions, type PibblEmberCollision } from '@pibbl/core';
+const emberHit: PibblEmberCollision = {fraction:.5,normal:[0,-1]};
+const emberPhysicsOptions: PibblEmbersPhysicsOptions = {gravity:[0,500],wind:[20,0],drag:3,restitution:.5,collide:()=>emberHit};
 void physicsEmbers({region:{x:0,y:0,width:100,height:100},linger:1000,physics:emberPhysicsOptions});
 // @ts-expect-error collision callbacks must return a hit synchronously
-const asyncEmberPhysics: CRCEmbersPhysicsOptions = {collide:async()=>emberHit};
+const asyncEmberPhysics: PibblEmbersPhysicsOptions = {collide:async()=>emberHit};
 void asyncEmberPhysics;
-import { flattenPathWang, simplifyPathRadial } from '@crc/core';
+import { flattenPathWang, simplifyPathRadial } from '@pibbl/core';
 const wangOutline: PathGeometry = flattenPathWang(editableOutline, { tolerance: 0.25 });
 const radialOutline: PathGeometry = simplifyPathRadial(wangOutline, { tolerance: 0.5 });
 void radialOutline;
@@ -1735,8 +1735,8 @@ const packedSmoke = defineParticleEffect2D({ emitters: [{
   renderer: { type: 'circle' },
 }] });
 function PackedFlowScene() {
-  const obstacles: CRCFlowObstacleSource2D = physicsObstacles2D(crcPhysicsWorld2D());
-  const field: CRCFlowField2D = useFlowField2D({ bounds: { width: 240, height: 160 }, resolution: [24, 16], obstacles });
+  const obstacles: PibblFlowObstacleSource2D = physicsObstacles2D(pibblPhysicsWorld2D());
+  const field: PibblFlowField2D = useFlowField2D({ bounds: { width: 240, height: 160 }, resolution: [24, 16], obstacles });
   useFlowSource2D(field, { position: useSignal<readonly [number, number]>([120, 120]), radius: 24, heat: 2 });
   const system = useParticleSystem(packedSmoke, { flow: field });
   field.sampleBatch(new Float32Array([120, 80]), new Float32Array(2), 1);
@@ -1744,7 +1744,7 @@ function PackedFlowScene() {
 }
 createElement(PhysicsWorld2D, {}, createElement(PackedFlowScene, {}));
 
-import { envelopeTransform, meshTransform, affineTransform, composeTransforms, type PathTransform, type PathGuide, type EnvelopeTransformOptions, type MeshTransformOptions, type PathBendTransformOptions } from '@crc/core';
+import { envelopeTransform, meshTransform, affineTransform, composeTransforms, type PathTransform, type PathGuide, type EnvelopeTransformOptions, type MeshTransformOptions, type PathBendTransformOptions } from '@pibbl/core';
 const upperGuide = new PathGeometry(); upperGuide.moveTo(0,0); upperGuide.lineTo(10,0);
 const lowerGuide = new PathGeometry(); lowerGuide.moveTo(0,10); lowerGuide.lineTo(10,10);
 const pathGuide: PathGuide = {path:upperGuide,reverse:false,stations:[{at:0,distance:0},{at:1,distance:1}]};

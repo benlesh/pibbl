@@ -2,12 +2,12 @@ import { afterEach, expect, it, vi } from "vitest";
 import {
   Group,
   Rectangle,
-  crc,
+  pibbl,
   defineTexture,
   signal,
   useTexture,
-} from "@crc/core";
-import { borrowTextureRaster } from "@crc/core/internal";
+} from "@pibbl/core";
+import { borrowTextureRaster } from "@pibbl/core/internal";
 import { clearSharedState } from "../src/lib/global-state.js";
 import {
   drawSimpleStretchedTexture,
@@ -60,7 +60,7 @@ it("uses no CanvasPattern allocations for eligible stretched Rectangle texture f
     CanvasRenderingContext2D.prototype,
     "createPattern",
   );
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     revision.set(1);
@@ -125,7 +125,7 @@ it("keeps CanvasPattern stretch semantics for transparent, fractional Rectangle 
     CanvasRenderingContext2D.prototype,
     "createPattern",
   );
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     const baseline = new OffscreenCanvas(40, 30),
@@ -199,7 +199,7 @@ it("matches CanvasPattern pixels at aligned bounds and falls back at DPR 2", () 
         CanvasRenderingContext2D.prototype,
         "createPattern",
       );
-      const controller = crc(canvas, <Scene />, { pixelRatio });
+      const controller = pibbl(canvas, <Scene />, { pixelRatio });
       try {
         driver.flush(pixelRatio * 32);
         const baseline = new OffscreenCanvas(canvas.width, canvas.height),
@@ -291,7 +291,7 @@ it("falls back to CanvasPattern for transformed, rounded, stroked, and non-stret
     CanvasRenderingContext2D.prototype,
     "createPattern",
   );
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     expect(createPattern).toHaveBeenCalledTimes(4);

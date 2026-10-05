@@ -12,7 +12,7 @@ relatedTypes: [WedgeProps, WedgeStyle]
 # Wedge
 
 ```ts
-import { Wedge } from "@crc/core";
+import { Wedge } from "@pibbl/core";
 ```
 
 `Wedge` uses [`WedgeProps`](#/api/types/elements-components#wedgeprops) and [`WedgeStyle`](#/api/types/styles#wedgestyle). It shares Arc's radius and radian

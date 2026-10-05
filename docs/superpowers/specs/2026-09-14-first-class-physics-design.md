@@ -1,4 +1,4 @@
-# First-class CRC-owned physics design
+# First-class Pibbl-owned physics design
 
 > **Historical status: APPROVED DESIGN RECORD.** This document records the
 > approved design; current shipped behavior remains governed by `docs/design/`
@@ -11,8 +11,8 @@ Date: 2026-09-14
 
 ## Summary
 
-CRC will add an optional official `@crc/physics` package with independent
-`@crc/physics/2d` and `@crc/physics/3d` entry points. CRC will own the physics
+Pibbl will add an optional official `@pibbl/physics` package with independent
+`@pibbl/physics/2d` and `@pibbl/physics/3d` entry points. Pibbl will own the physics
 implementation end to end. The package will not wrap, embed, download, or
 delegate runtime behavior to a third-party engine.
 
@@ -20,7 +20,7 @@ Physics is a stateful simulation system, not an animation definition and not a
 second renderer. Every mounted `PhysicsWorld2D` or `PhysicsWorld3D` joins the
 existing realm scheduler as one world-level participant. It creates no
 `requestAnimationFrame`, timer, worker loop, or per-body scheduler
-registration. One CRC frame orders animation sampling before physics, commits
+registration. One Pibbl frame orders animation sampling before physics, commits
 animation inputs and physics outputs together, and renders the resulting state
 once:
 
@@ -54,21 +54,21 @@ compound objects. A sensor is an ordinary collider with `sensor: true`: it
 reports overlaps but produces no collision response.
 
 Transform ownership is exclusive. A dynamic body's pose belongs to physics. A
-kinematic body's pose belongs to the application or CRC animation while the
+kinematic body's pose belongs to the application or Pibbl animation while the
 body remains a moving collider. Disabling physics removes the body from the
 solver and returns pose ownership to authored style or animation. No supported
 mode lets animation and physics both write the same pose.
 
 All current geometric Canvas and WebGL primitives accept a typed `physics`
-prop after the corresponding physics entry point is imported. CRC infers an
+prop after the corresponding physics entry point is imported. Pibbl infers an
 exact or documented deterministic collider where its source geometry is
 inspectable; opaque or platform-dependent geometry requires an explicit
-collider. Every physics shape also has CRC-owned drawing support, and custom
+collider. Every physics shape also has Pibbl-owned drawing support, and custom
 primitives can declare a pure collider-shape resolver without a global
 registry.
 
 The same immutable shapes are useful without a running world. Lightweight
-`@crc/physics/2d/geometry` and `@crc/physics/3d/geometry` entry points expose
+`@pibbl/physics/2d/geometry` and `@pibbl/physics/3d/geometry` entry points expose
 pure bounds, mass-property, point, distance, overlap, contact, ray-cast, and
 shape-cast operations. They have no scheduler, Canvas, WebGL, component, or
 world dependency. Public geometric results are semantic values rather than
@@ -107,11 +107,11 @@ engine dependency:
   shape queries, and the need to sort externally visible results rather than
   relying on internal traversal or callback order.
 
-These projects are research evidence only. CRC will use no runtime code,
+These projects are research evidence only. Pibbl will use no runtime code,
 binary, WebAssembly module, global registry, worker, or transitive engine
 dependency from them.
 
-CRC's shipped contracts constrain the design more strongly than generic game
+Pibbl's shipped contracts constrain the design more strongly than generic game
 engine practice:
 
 - one scheduler singleton already owns Begin, Advance, Commit, Plan, Render,
@@ -123,19 +123,19 @@ engine practice:
 - Canvas rendering is immediate-mode, while explicit `Layer` and `WebGLLayer`
   instances are the only retained rendering boundaries;
 - WebGL geometry, scene composition, picking, bitmap publication, and GPU
-  resources are owned by `@crc/webgl`; and
+  resources are owned by `@pibbl/webgl`; and
 - official packages integrate only through the version-coupled
-  `@crc/core/internal` friend entry.
+  `@pibbl/core/internal` friend entry.
 
 Physics must extend those contracts rather than install a conventional game
 loop beside them.
 
 ## Goals
 
-- Provide useful deterministic rigid-body physics for both Canvas 2D and CRC
+- Provide useful deterministic rigid-body physics for both Canvas 2D and Pibbl
   WebGL 3D scenes.
 - Keep the initial implementation and all runtime dependencies wholly owned by
-  CRC.
+  Pibbl.
 - Use the existing realm scheduler, logical time, staged signal batch, render
   planning, and completion delivery.
 - Schedule at most one host frame for every active root, animation, Layer,
@@ -149,12 +149,12 @@ loop beside them.
 - Make one body plus one inferred collider the default JSX experience while
   retaining compound colliders, sensors, and render/physics geometry
   separation.
-- Supply deterministic collider mappings for every current CRC geometric
+- Supply deterministic collider mappings for every current Pibbl geometric
   primitive where the source data permits it, and require explicit stable
   geometry where it does not.
-- Supply a CRC rendering component for every public physics shape.
+- Supply a Pibbl rendering component for every public physics shape.
 - Make immutable shapes and core collision operations independently usable and
-  testable without mounting a world or loading CRC rendering and scheduling.
+  testable without mounting a world or loading Pibbl rendering and scheduling.
 - Provide forces, impulses, contacts, overlap events, collision filtering,
   ray casts, shape casts, overlap queries, sleeping, and opt-in continuous
   collision detection.
@@ -164,7 +164,7 @@ loop beside them.
   order within the documented implementation and numeric tolerance.
 - Keep every public capability as tree-shakable as practical through named ESM
   exports, pure modules, immutable descriptors, and optional subpaths.
-- Permit later CRC-owned solver optimization, including CRC-owned WebAssembly,
+- Permit later Pibbl-owned solver optimization, including Pibbl-owned WebAssembly,
   without changing observable scheduling or authoring semantics.
 
 ## Non-goals
@@ -173,10 +173,10 @@ loop beside them.
   Ammo, Bullet, PhysX, Havok, or another external runtime.
 - A second animation vocabulary, clock, frame runner, timer, worker loop, or
   manual root-render loop.
-- Treating physics as `CRCAnimationDefinition` or allowing an animation and a
+- Treating physics as `PibblAnimationDefinition` or allowing an animation and a
   dynamic solver to write the same body pose.
 - A retained visual scene graph, entity-component system, game-object model,
-  or one CRC component per contact/manifold point.
+  or one Pibbl component per contact/manifold point.
 - Pixel collision, alpha-mask collision, GPU readback, shader-derived collision
   geometry, or browser-dependent text/image collision inference.
 - Soft bodies, cloth, rope simulation beyond rigid constraints, fluid
@@ -202,28 +202,28 @@ entry points. There is deliberately no runtime namespace object and no root
 barrel coupling both dimensions.
 
 ```text
-@crc/physics/2d
-  -> @crc/core
-  -> @crc/core/internal
+@pibbl/physics/2d
+  -> @pibbl/core
+  -> @pibbl/core/internal
 
-@crc/physics/2d/geometry
-  -> no CRC runtime or renderer dependency
+@pibbl/physics/2d/geometry
+  -> no Pibbl runtime or renderer dependency
 
-@crc/physics/3d
-  -> @crc/core
-  -> @crc/core/internal
-  -> @crc/webgl
+@pibbl/physics/3d
+  -> @pibbl/core
+  -> @pibbl/core/internal
+  -> @pibbl/webgl
   -> matching official WebGL friend capability
 
-@crc/physics/3d/geometry
-  -> no CRC runtime or renderer dependency
+@pibbl/physics/3d/geometry
+  -> no Pibbl runtime or renderer dependency
 ```
 
-The package declares matching `@crc/core` and `@crc/webgl` release ranges as
+The package declares matching `@pibbl/core` and `@pibbl/webgl` release ranges as
 optional peers at the package-manifest level so geometry-only consumers need
 not install them. The world-facing 2D entry point documents and requires the
 matching core peer; the world-facing 3D entry point documents and requires
-both peers. Bundled output must externalize them so a CRC application has one
+both peers. Bundled output must externalize them so a Pibbl application has one
 core realm scheduler, one element identity, and one WebGL backend identity.
 
 The primary entry points use top-level named ESM exports:
@@ -234,28 +234,28 @@ import {
   dynamicBody2D,
   circleShape2D,
   raycast2D,
-} from "@crc/physics/2d";
+} from "@pibbl/physics/2d";
 
 import {
   PhysicsWorld3D,
   dynamicBody3D,
   capsuleShape3D,
   raycast3D,
-} from "@crc/physics/3d";
+} from "@pibbl/physics/3d";
 ```
 
-CRC will not expose `physics.dynamic()`, `physics.shapes.circle()`, or another
+Pibbl will not expose `physics.dynamic()`, `physics.shapes.circle()`, or another
 runtime bag of functions. Methods are avoided for optional operations when a
 named function can accept an opaque handle.
 
 Separate side-effect-free subpaths keep independently useful capabilities out
 of unrelated module graphs:
 
-- `@crc/physics/2d/geometry` and `@crc/physics/3d/geometry` for pure,
+- `@pibbl/physics/2d/geometry` and `@pibbl/physics/3d/geometry` for pure,
   world-independent shape operations;
-- `@crc/physics/2d/joints` and `@crc/physics/3d/joints`;
-- `@crc/physics/2d/debug` and `@crc/physics/3d/debug`; and
-- later `@crc/physics/2d/replay` and `@crc/physics/3d/replay` entry points.
+- `@pibbl/physics/2d/joints` and `@pibbl/physics/3d/joints`;
+- `@pibbl/physics/2d/debug` and `@pibbl/physics/3d/debug`; and
+- later `@pibbl/physics/2d/replay` and `@pibbl/physics/3d/replay` entry points.
 
 The package and every entry point are marked side-effect-free. Importing a
 shape, geometry operation, query, joint, debug renderer, or replay utility
@@ -284,9 +284,9 @@ a private nominal symbol internally, but the author never writes it.
 
 Core and WebGL add deliberately empty public extension interfaces to the prop
 types of supported geometric and body-host components. Importing
-`@crc/physics/2d` declaration-merges
-`physics?: CRCPhysicsAttachment2D` into the Canvas interfaces. Importing
-`@crc/physics/3d` does the same for WebGL geometry and `Group3D`. Declaration
+`@pibbl/physics/2d` declaration-merges
+`physics?: PibblPhysicsAttachment2D` into the Canvas interfaces. Importing
+`@pibbl/physics/3d` does the same for WebGL geometry and `Group3D`. Declaration
 merging emits no JavaScript and imposes no runtime cost when physics is unused.
 
 At runtime, core and WebGL recognize one generic branded attachment protocol.
@@ -300,17 +300,17 @@ attachment values produce an actionable diagnostic naming the component and
 The `physics` prop accepts exactly one immutable attachment:
 
 ```ts
-type CRCPhysicsAttachment2D =
-  CRCPhysicsBodyAttachment2D | CRCPhysicsColliderAttachment2D;
+type PibblPhysicsAttachment2D =
+  PibblPhysicsBodyAttachment2D | PibblPhysicsColliderAttachment2D;
 
-type CRCPhysicsAttachment3D =
-  CRCPhysicsBodyAttachment3D | CRCPhysicsColliderAttachment3D;
+type PibblPhysicsAttachment3D =
+  PibblPhysicsBodyAttachment3D | PibblPhysicsColliderAttachment3D;
 ```
 
 Hand-authored lookalike objects are not accepted. This keeps validation,
 versioning, tree-shaking, and internal capabilities explicit.
 
-Public physics type names use CRC's existing `CRC` prefix. Runtime components,
+Public physics type names use Pibbl's existing `Pibbl` prefix. Runtime components,
 factories, commands, and hooks retain the concise names shown throughout this
 design.
 
@@ -347,7 +347,7 @@ A 2D world is logical rather than tied to a particular raster surface. A
 managed Canvas `Layer` remains a rendering optimization and does not create a
 new physics world or coordinate system. A world may span managed Layer
 boundaries when logical ancestry is preserved, and its colliders use the same
-root-logical transform facts as CRC events and focus geometry.
+root-logical transform facts as Pibbl events and focus geometry.
 
 A 3D world belongs to one WebGL island in the initial architecture. It cannot
 span two `WebGLLayer` instances or survive outside the owning island. WebGL
@@ -357,27 +357,27 @@ restoration renders the latest committed pose.
 Representative world configuration is:
 
 ```ts
-interface CRCPhysicsWorld2DProps {
-  readonly gravity?: CRCPhysicsVector2;
+interface PibblPhysicsWorld2DProps {
+  readonly gravity?: PibblPhysicsVector2;
   readonly fixedStepMilliseconds?: number;
   readonly maxCatchUpSteps?: number;
   readonly interpolation?: "linear" | "none";
   readonly sleeping?: boolean;
-  readonly solver?: CRCPhysicsSolverOptions;
-  readonly children?: CRCNode;
+  readonly solver?: PibblPhysicsSolverOptions;
+  readonly children?: PibblNode;
 }
 
-interface CRCPhysicsWorld3DProps {
-  readonly gravity?: CRCPhysicsVector3;
+interface PibblPhysicsWorld3DProps {
+  readonly gravity?: PibblPhysicsVector3;
   readonly fixedStepMilliseconds?: number;
   readonly maxCatchUpSteps?: number;
   readonly interpolation?: "linear" | "none";
   readonly sleeping?: boolean;
-  readonly solver?: CRCPhysicsSolverOptions;
-  readonly children?: CRCNode;
+  readonly solver?: PibblPhysicsSolverOptions;
+  readonly children?: PibblNode;
 }
 
-interface CRCPhysicsSolverOptions {
+interface PibblPhysicsSolverOptions {
   readonly velocityIterations?: number;
   readonly positionIterations?: number;
 }
@@ -397,7 +397,7 @@ remainder under a new duration.
 
 ## Coordinate and unit contracts
 
-Physics uses CRC logical world coordinates, not backing pixels or CSS pixels.
+Physics uses Pibbl logical world coordinates, not backing pixels or CSS pixels.
 Root fit and device density never change simulation distances.
 
 Two-dimensional worlds follow Canvas presentation:
@@ -409,7 +409,7 @@ Two-dimensional worlds follow Canvas presentation:
 - linear velocity uses logical units per second;
 - linear acceleration uses logical units per second squared; and
 - public angles and angular velocities are named in degrees and degrees per
-  second, matching CRC's `rotationDegrees` authoring vocabulary. The existing
+  second, matching Pibbl's `rotationDegrees` authoring vocabulary. The existing
   `Arc` and `Wedge` contour fields remain explicitly named in radians to match
   their shipped Canvas geometry contract; they are shape parameters rather
   than rigid-body pose.
@@ -426,7 +426,7 @@ Three-dimensional worlds follow the shipped WebGL coordinate system:
 - angular-velocity fields state their unit in the field name rather than
   accepting an ambiguous scalar or vector.
 
-CRC does not call a logical unit a meter. Authors choose gravity, speed,
+Pibbl does not call a logical unit a meter. Authors choose gravity, speed,
 density, and geometry that are numerically appropriate for their scene. Guides
 teach a consistent scene scale and warn against extremely small or large
 colliders.
@@ -435,7 +435,7 @@ colliders.
 
 A body owns motion and mass state. A collider owns contact geometry and
 surface behavior. A shape is immutable geometry that may be shared by
-colliders and CRC renderers.
+colliders and Pibbl renderers.
 
 This separation supports:
 
@@ -477,10 +477,10 @@ do not silently become physical because an ancestor has a body.
 Representative common body options are:
 
 ```ts
-interface CRCPhysicsDynamicBody2DOptions {
+interface PibblPhysicsDynamicBody2DOptions {
   readonly enabled?: boolean;
-  readonly handle?: CRCPhysicsBodyHandle2D;
-  readonly linearVelocity?: CRCPhysicsVector2;
+  readonly handle?: PibblPhysicsBodyHandle2D;
+  readonly linearVelocity?: PibblPhysicsVector2;
   readonly angularVelocityDegreesPerSecond?: number;
   readonly linearDamping?: number;
   readonly angularDamping?: number;
@@ -491,25 +491,25 @@ interface CRCPhysicsDynamicBody2DOptions {
   readonly ccd?: boolean;
   readonly reenableVelocity?: "zero" | "preserve";
   readonly collider?:
-    false | CRCPhysicsColliderConfiguration2D | CRCPhysicsShape2D;
+    false | PibblPhysicsColliderConfiguration2D | PibblPhysicsShape2D;
 }
 
-interface CRCPhysicsDynamicBody3DOptions {
+interface PibblPhysicsDynamicBody3DOptions {
   readonly enabled?: boolean;
-  readonly handle?: CRCPhysicsBodyHandle3D;
-  readonly linearVelocity?: CRCPhysicsVector3;
-  readonly angularVelocityDegreesPerSecond?: CRCPhysicsVector3;
+  readonly handle?: PibblPhysicsBodyHandle3D;
+  readonly linearVelocity?: PibblPhysicsVector3;
+  readonly angularVelocityDegreesPerSecond?: PibblPhysicsVector3;
   readonly linearDamping?: number;
   readonly angularDamping?: number;
   readonly gravityScale?: number;
   readonly mass?: "auto" | number;
-  readonly lockTranslation?: CRCPhysicsAxisLocks3D;
-  readonly lockRotation?: CRCPhysicsAxisLocks3D;
+  readonly lockTranslation?: PibblPhysicsAxisLocks3D;
+  readonly lockRotation?: PibblPhysicsAxisLocks3D;
   readonly allowSleep?: boolean;
   readonly ccd?: boolean;
   readonly reenableVelocity?: "zero" | "preserve";
   readonly collider?:
-    false | CRCPhysicsColliderConfiguration3D | CRCPhysicsShape3D;
+    false | PibblPhysicsColliderConfiguration3D | PibblPhysicsShape3D;
 }
 ```
 
@@ -534,16 +534,16 @@ attachment instead.
 Representative collider configuration is:
 
 ```ts
-interface CRCPhysicsColliderConfiguration2D {
-  readonly shape?: "self" | CRCPhysicsShape2D;
-  readonly offset?: CRCPhysicsVector2;
+interface PibblPhysicsColliderConfiguration2D {
+  readonly shape?: "self" | PibblPhysicsShape2D;
+  readonly offset?: PibblPhysicsVector2;
   readonly rotationDegrees?: number;
   readonly density?: number;
   readonly friction?: number;
   readonly restitution?: number;
   readonly sensor?: boolean;
   readonly contributesToMass?: boolean;
-  readonly collisionFilter?: CRCPhysicsCollisionFilter;
+  readonly collisionFilter?: PibblPhysicsCollisionFilter;
   readonly tag?: unknown;
   readonly onCollisionStart?: CollisionHandler2D;
   readonly onCollisionEnd?: CollisionHandler2D;
@@ -552,16 +552,16 @@ interface CRCPhysicsColliderConfiguration2D {
   readonly onOverlapEnd?: OverlapHandler2D;
 }
 
-interface CRCPhysicsColliderConfiguration3D {
-  readonly shape?: "self" | CRCPhysicsShape3D;
-  readonly offset?: CRCPhysicsVector3;
-  readonly orientation?: CRCPhysicsQuaternion;
+interface PibblPhysicsColliderConfiguration3D {
+  readonly shape?: "self" | PibblPhysicsShape3D;
+  readonly offset?: PibblPhysicsVector3;
+  readonly orientation?: PibblPhysicsQuaternion;
   readonly density?: number;
   readonly friction?: number;
   readonly restitution?: number;
   readonly sensor?: boolean;
   readonly contributesToMass?: boolean;
-  readonly collisionFilter?: CRCPhysicsCollisionFilter;
+  readonly collisionFilter?: PibblPhysicsCollisionFilter;
   readonly tag?: unknown;
   readonly onCollisionStart?: CollisionHandler3D;
   readonly onCollisionEnd?: CollisionHandler3D;
@@ -577,7 +577,7 @@ zero through one. Default contact mixing uses the geometric mean of collider
 friction and the maximum collider restitution. Sensors do not contribute to
 mass unless `contributesToMass` is explicitly true.
 
-`tag` is opaque application data. CRC retains its reference for events and
+`tag` is opaque application data. Pibbl retains its reference for events and
 queries but never reads it to determine simulation behavior, identity, or
 ordering. Freezing a descriptor does not deep-freeze a tag, callback, signal,
 or handle supplied by the application.
@@ -613,7 +613,7 @@ continuous sensor guarantee.
 Every public shape is an immutable nominal value containing copied geometry,
 validated bounds, mass-property capability, broad-phase bounds capability,
 and the narrow-phase support or acceleration data needed by its dimension.
-Applications cannot mutate vertices behind CRC's caches.
+Applications cannot mutate vertices behind Pibbl's caches.
 
 The 2D shape factories are designed to include:
 
@@ -629,7 +629,7 @@ The 2D shape factories are designed to include:
 - `polygonShape2D` for validated convex polygons.
 
 Concave or curved 2D geometry is represented as a deterministic compound of
-convex pieces. Baseline 2D includes CRC-owned curve flattening and
+convex pieces. Baseline 2D includes Pibbl-owned curve flattening and
 triangulation with fixed tolerances and stable output ordering because the
 current `Wedge`, `Star`, rounded `Polygon`, and eligible `SvgPath` components
 must not lose collider inference merely because their contours are concave or
@@ -640,7 +640,7 @@ Existing `Circle`, `Ellipse`, `Arc`, `Wedge`, `Polygon`, and `Rectangle`
 components render their matching shape families. Physics adds `Capsule2D`,
 `Segment2D`, `Chain2D`, and generic `PhysicsShape2D` for shapes without a
 current direct renderer. Every shape value can be passed to `PhysicsShape2D`,
-which uses ordinary CRC Canvas paint, transform, clip, filter, event, focus,
+which uses ordinary Pibbl Canvas paint, transform, clip, filter, event, focus,
 layout, and Layer behavior.
 
 The 3D shape factories are designed to include:
@@ -661,7 +661,7 @@ Matching WebGL components include `Box3D`, `Ellipsoid3D`, `Capsule3D`,
 forms. These components are settled WebGL scene contributors and make no GL
 calls during component composition.
 
-Every renderer comes from CRC-owned deterministic geometry generation. A
+Every renderer comes from Pibbl-owned deterministic geometry generation. A
 physics shape may choose a simpler visual tessellation without changing its
 analytic or support-mapped collision definition. Rendering resolution never
 changes collision results.
@@ -669,15 +669,15 @@ changes collision results.
 ## Standalone physics primitives and testability
 
 The immutable shape vocabulary is not coupled to JSX or a simulation world.
-The dedicated `@crc/physics/2d/geometry` and
-`@crc/physics/3d/geometry` subpaths expose named pure operations for
+The dedicated `@pibbl/physics/2d/geometry` and
+`@pibbl/physics/3d/geometry` subpaths expose named pure operations for
 applications that need collision geometry without scheduling a simulation.
 They also export their dimension's immutable shape factories and public
 geometry value/result types; the world-facing entry points re-export the
 baseline names for convenience.
 
 ```ts
-// @crc/physics/2d/geometry
+// @pibbl/physics/2d/geometry
 boundsOfShape2D(shape, pose?)
 massProperties2D(shape, options?)
 containsPoint2D(shape, pose, point)
@@ -688,7 +688,7 @@ raycastShape2D(shape, pose, ray, options?)
 shapeCastAgainstShape2D(moving, from, translation, target, targetPose, options?)
 transformShape2D(shape, transform)
 
-// @crc/physics/3d/geometry
+// @pibbl/physics/3d/geometry
 boundsOfShape3D(shape, pose?)
 massProperties3D(shape, options?)
 containsPoint3D(shape, pose, point)
@@ -704,7 +704,7 @@ These operations accept immutable shapes and explicit poses. They do not
 accept a world, body, collider, clock, component, or render context. They
 perform no registration or mutation, read no global tolerance or scratch
 state, and return immutable values or `null`. They can run in a plain Node
-process without DOM, Canvas, WebGL, `@crc/core`, or `@crc/webgl` globals.
+process without DOM, Canvas, WebGL, `@pibbl/core`, or `@pibbl/webgl` globals.
 Equivalent finite inputs under one package version produce results within the
 same documented numeric tolerance as world collision detection.
 
@@ -742,10 +742,10 @@ more complex ownership contract.
 
 This boundary supports editor snapping, placement validation, clearance and
 line-of-sight checks, collision prediction, and application-owned spatial
-indexes without creating another CRC loop. It deliberately does not expose a
+indexes without creating another Pibbl loop. It deliberately does not expose a
 standalone integrator, constraint solver, or `step` function in the initial
 surface. Publishing those would freeze substantially more solver behavior and
-make competing application loops look like the recommended CRC integration.
+make competing application loops look like the recommended Pibbl integration.
 
 Private modules still divide the implementation into independently testable
 units: shape support functions, hull/decomposition tools, analytic pair tests,
@@ -761,7 +761,7 @@ evidence.
 
 ### Canvas 2D
 
-| CRC component                            | Inferred collider                                                                                          |
+| Pibbl component                          | Inferred collider                                                                                          |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `Rectangle`                              | Box, or rounded box when corner radii are present                                                          |
 | `Circle`                                 | Analytic circle                                                                                            |
@@ -779,13 +779,13 @@ evidence.
 | Physics shape components                 | Their exact immutable physics shape                                                                        |
 | `Group`                                  | No self collider; may host a compound body                                                                 |
 
-Raw `Path2D` is intentionally opaque and browser-owned. CRC does not inspect
+Raw `Path2D` is intentionally opaque and browser-owned. Pibbl does not inspect
 its commands. Text measurement, glyph outlines, decoded alpha, and image pixels
 are also platform-owned and cannot determine replay-critical collision
 geometry. A targeted diagnostic explains which explicit shape or declared box
 is required.
 
-SVG inference uses CRC-owned parsing and curve flattening with fixed tolerance,
+SVG inference uses Pibbl-owned parsing and curve flattening with fixed tolerance,
 contour, winding, and decomposition rules. Unsupported self-intersection,
 degenerate contours, or ambiguous open/filled combinations require an explicit
 shape rather than silently changing collision meaning.
@@ -795,7 +795,7 @@ segments and may participate in automatic dynamic mass. A zero-width segment
 or chain has no area and is static or kinematic by default; using it as the
 only collider on an automatic-mass dynamic body is rejected.
 
-Rectangle body inference accounts for its top-left drawing coordinates. CRC
+Rectangle body inference accounts for its top-left drawing coordinates. Pibbl
 places the inferred collider at the rectangle center while retaining a local
 visual offset so the initial pixels do not move. A compound body's authored
 origin remains stable even when automatic center-of-mass calculation produces
@@ -803,7 +803,7 @@ a different local mass center.
 
 ### WebGL 3D
 
-| CRC component                | Inferred collider                                                   |
+| Pibbl component              | Inferred collider                                                   |
 | ---------------------------- | ------------------------------------------------------------------- |
 | `Cube`                       | Box using resolved size and scale                                   |
 | Uniformly scaled `Sphere`    | Analytic sphere                                                     |
@@ -816,7 +816,7 @@ a different local mass center.
 Moving concave triangle meshes are rejected in the first solver. An author may
 use a convex hull, several child convex colliders, or an explicit simplified
 physics shape. Static triangle meshes use immutable CPU geometry already owned
-behind `CRCWebGLGeometry`; the official lockstep WebGL seam makes those copied
+behind `PibblWebGLGeometry`; the official lockstep WebGL seam makes those copied
 positions and indices available to physics without exposing source paths or
 GPU readback.
 
@@ -832,12 +832,12 @@ rather than repeatedly converting through Euler angles.
 An ordinary custom component accepts and forwards the attachment:
 
 ```tsx
-import type { CRCPhysicsAttachment2D } from "@crc/physics/2d";
+import type { PibblPhysicsAttachment2D } from "@pibbl/physics/2d";
 
 interface CardProps {
   readonly x: number;
   readonly y: number;
-  readonly physics?: CRCPhysicsAttachment2D;
+  readonly physics?: PibblPhysicsAttachment2D;
 }
 
 function Card({ x, y, physics }: CardProps) {
@@ -885,8 +885,8 @@ shape path remains immutable `createWebGLGeometry` data rendered through
 `Mesh`. An ordinary 3D component forwards the attachment to that `Mesh`:
 
 ```tsx
-import { Mesh, createWebGLGeometry, type MeshStyle } from "@crc/webgl";
-import type { CRCPhysicsAttachment3D } from "@crc/physics/3d";
+import { Mesh, createWebGLGeometry, type MeshStyle } from "@pibbl/webgl";
+import type { PibblPhysicsAttachment3D } from "@pibbl/physics/3d";
 
 const diamondGeometry = createWebGLGeometry({
   positions: [0, 1, 0, -1, -1, 1, 1, -1, 1, 0, -1, -1],
@@ -895,7 +895,7 @@ const diamondGeometry = createWebGLGeometry({
 
 interface Diamond3DProps {
   readonly style?: MeshStyle;
-  readonly physics?: CRCPhysicsAttachment3D;
+  readonly physics?: PibblPhysicsAttachment3D;
 }
 
 function Diamond3D({ style, physics }: Diamond3DProps) {
@@ -911,11 +911,11 @@ context, shader callback, or analytic pick extension.
 
 ## Component identity, layout, and transform capture
 
-Physics resource identity follows CRC component identity rather than descriptor
+Physics resource identity follows Pibbl component identity rather than descriptor
 object identity. Re-evaluating `dynamicBody2D()` at the same successful host
 slot updates the existing attachment when its normalized options change; it
 does not recreate the body merely because the immutable descriptor is a new
-JavaScript object. Keyed sibling identity has the same limits as ordinary CRC
+JavaScript object. Keyed sibling identity has the same limits as ordinary Pibbl
 components, and reparenting remounts the physical resource.
 
 Resolved layout and transforms establish a body's initial world-relative pose
@@ -941,12 +941,12 @@ do not change 3D world geometry.
 
 Physics and animation share scheduling but not pose authority:
 
-| Mode             | Pose writer                     | In collision world | Moved by contacts |
-| ---------------- | ------------------------------- | ------------------ | ----------------- |
-| Physics disabled | Authored style or CRC animation | No                 | No                |
-| Static body      | Authored placement              | Yes                | No                |
-| Kinematic body   | Application or CRC animation    | Yes                | No                |
-| Dynamic body     | Physics solver                  | Yes                | Yes               |
+| Mode             | Pose writer                       | In collision world | Moved by contacts |
+| ---------------- | --------------------------------- | ------------------ | ----------------- |
+| Physics disabled | Authored style or Pibbl animation | No                 | No                |
+| Static body      | Authored placement                | Yes                | No                |
+| Kinematic body   | Application or Pibbl animation    | Yes                | No                |
+| Dynamic body     | Physics solver                    | Yes                | Yes               |
 
 ### Dynamic bodies
 
@@ -1008,9 +1008,9 @@ Declarative `enabled` changes discovered during rendering become next-Begin
 commands. Controlled code needing an exact handoff frame uses the named
 `disableBody2D`, `enableBody2D`, `disableBody3D`, or `enableBody3D` command
 with a body handle. An animation completion delivered in Complete may enqueue
-re-enablement for the next Begin, matching existing CRC completion admission.
+re-enablement for the next Begin, matching existing Pibbl completion admission.
 
-No frame permits an animation and physics to publish the same pose. CRC may
+No frame permits an animation and physics to publish the same pose. Pibbl may
 make this conflict reproducible internally, but reproducible conflict is still
 an error rather than supported mixing.
 
@@ -1054,7 +1054,7 @@ preserving the transaction.
 
 Important timing rules are:
 
-- `elapsed` comes from CRC logical time, never `Date.now()` or a private host
+- `elapsed` comes from Pibbl logical time, never `Date.now()` or a private host
   timestamp;
 - a new, resumed, or newly awakened world anchors at the current logical time
   and does not catch up time during which it was inactive;
@@ -1083,7 +1083,7 @@ so disabling physics does not visually jump. Interpolation changes may request
 Render work without publishing one ordinary signal per body.
 
 Canvas interaction geometry and the WebGL bitmap/pick ledger use that same
-presentation pose so visible pixels and ordinary CRC pointer targeting remain
+presentation pose so visible pixels and ordinary Pibbl pointer targeting remain
 aligned. Physics queries and contact records remain authoritative and may
 therefore differ from presentation by less than one fixed tick when
 interpolation is enabled.
@@ -1142,7 +1142,7 @@ component-owned endpoint:
 
 ```tsx
 function Ball() {
-  const ball = crcPhysicsBody2D();
+  const ball = pibblPhysicsBody2D();
 
   return (
     <Circle
@@ -1153,7 +1153,7 @@ function Ball() {
 }
 ```
 
-`crcPhysicsBody2D()` and `crcPhysicsBody3D()` use one ordered hook slot and
+`pibblPhysicsBody2D()` and `pibblPhysicsBody3D()` use one ordered hook slot and
 return an opaque handle that may bind to at most one live attachment. Duplicate
 binding is rejected. Removal unbinds the handle exactly once; commands against
 an unbound or stale generation are inert in production and diagnostically
@@ -1163,7 +1163,7 @@ An observed handle exposes readonly signals for authoritative position,
 orientation, linear velocity, angular velocity, sleeping, enabled status, and
 body generation. These signals are created or activated only when requested so
 unobserved bodies do not allocate a public signal bundle. Explicit `.get()`
-reads retain ordinary CRC dependency semantics.
+reads retain ordinary Pibbl dependency semantics.
 
 Operations are individually named exports:
 
@@ -1196,14 +1196,14 @@ Commands snapshot caller-owned arrays and enter Begin in invocation order.
 Commands do not mutate a world synchronously from an event, render, or
 completion callback.
 
-`crcPhysicsWorld2D()` and `crcPhysicsWorld3D()` return the nearest current world
+`pibblPhysicsWorld2D()` and `pibblPhysicsWorld3D()` return the nearest current world
 handle while a component is evaluating. A world handle exposes an optional
 readonly revision signal for reactive query consumers but no `step()`,
 `run()`, or clock mutation method.
 
 ## Collision response and solver architecture
 
-The first CRC-owned CPU implementation is organized as separate dimensioned
+The first Pibbl-owned CPU implementation is organized as separate dimensioned
 kernels sharing only lifecycle, scheduler, descriptor, handle, trace, and
 transaction scaffolding. It does not force 2D and 3D data through a generic
 dimension union in hot loops.
@@ -1223,7 +1223,7 @@ The recommended implementation direction is:
 - connected-body islands for solving and sleeping; and
 - conservative advancement or swept shape casting for opt-in CCD.
 
-These algorithms are internal choices, not public value identities. CRC may
+These algorithms are internal choices, not public value identities. Pibbl may
 replace an implementation while preserving documented ordering, tolerances,
 event semantics, and snapshot versioning. Solver changes that materially alter
 observable results require release notes and updated deterministic evidence.
@@ -1258,13 +1258,13 @@ enable a contact observation mode.
 Each receiver gets a self-oriented immutable record:
 
 ```ts
-interface CRCPhysicsCollisionEvent3D {
-  readonly selfBody: CRCPhysicsBodyHandle3D;
-  readonly selfCollider: CRCPhysicsColliderHandle3D;
-  readonly otherBody: CRCPhysicsBodyHandle3D;
-  readonly otherCollider: CRCPhysicsColliderHandle3D;
-  readonly normal: CRCPhysicsVector3;
-  readonly points: readonly CRCPhysicsContactPoint3D[];
+interface PibblPhysicsCollisionEvent3D {
+  readonly selfBody: PibblPhysicsBodyHandle3D;
+  readonly selfCollider: PibblPhysicsColliderHandle3D;
+  readonly otherBody: PibblPhysicsBodyHandle3D;
+  readonly otherCollider: PibblPhysicsColliderHandle3D;
+  readonly normal: PibblPhysicsVector3;
+  readonly points: readonly PibblPhysicsContactPoint3D[];
   readonly totalNormalImpulse: number;
   readonly tick: number;
   readonly selfTag: unknown;
@@ -1272,7 +1272,7 @@ interface CRCPhysicsCollisionEvent3D {
 }
 ```
 
-The 2D record uses `CRCPhysicsVector2` and otherwise matches. The normal points
+The 2D record uses `PibblPhysicsVector2` and otherwise matches. The normal points
 from the other collider toward the receiving self collider. Records contain no
 mutable solver references and expire only semantically, not through
 pooled-object mutation.
@@ -1332,7 +1332,7 @@ result and filter options.
 WebGL pointer picking remains distinct:
 
 - renderer picking asks which committed visible geometry is under a camera
-  ray and participates in CRC event paint order;
+  ray and participates in Pibbl event paint order;
 - physics ray casting asks which committed collider is intersected in world
   space; and
 - differing render and collider geometry may intentionally produce different
@@ -1369,7 +1369,7 @@ limits, optional stiffness/damping, optional motor target and maximum force or
 torque, collision-between-connected-bodies policy, and an optional break
 threshold. Motor targets may use explicit signal bindings so animation stages
 the input before physics in the same frame. A physics joint spring is a solver
-constraint and is not CRC's analytic animation `spring()` definition.
+constraint and is not Pibbl's analytic animation `spring()` definition.
 
 Joint creation, update, removal, and breakage enter Begin. Removing either body
 removes dependent joints exactly once. Handles from another world or dimension
@@ -1401,12 +1401,12 @@ scheduler and anchors elapsed time at wake rather than simulating sleep time.
 
 ## Determinism, tracing, and replay
 
-The initial guarantee matches CRC animation's level rather than promising
+The initial guarantee matches Pibbl animation's level rather than promising
 universal floating-point identity:
 
-> Given the same CRC version, normalized world/body/collider/joint definitions,
+> Given the same Pibbl version, normalized world/body/collider/joint definitions,
 > component identities, accepted command sequence, fixed-tick configuration,
-> logical frame times, clamp outcomes, and application callback purity, CRC
+> logical frame times, clamp outcomes, and application callback purity, Pibbl
 > reproduces the same semantic simulation results within documented numeric
 > tolerances.
 
@@ -1414,7 +1414,7 @@ Determinism requires:
 
 - no random numbers in the solver;
 - stable world, body, collider, joint, contact, and island identities;
-- stable creation/removal and command order derived from CRC ownership and
+- stable creation/removal and command order derived from Pibbl ownership and
   source identity;
 - deterministic pair and island ordering independent of hash iteration;
 - explicit sorting of public query and event output;
@@ -1433,10 +1433,10 @@ candidate/Commit outcome, event order, and optional deterministic state hashes.
 Production keeps no history by default.
 
 Different JavaScript engines may implement transcendental functions and
-floating-point optimizations differently. CRC therefore does not initially
+floating-point optimizations differently. Pibbl therefore does not initially
 promise cross-engine bit identity. Tests use exact discrete state and stable
 identity assertions plus narrow documented numeric tolerances for continuous
-values. If CRC later adopts deterministic approximations or a CRC-owned WASM
+values. If Pibbl later adopts deterministic approximations or a Pibbl-owned WASM
 kernel, the stronger guarantee is versioned and tested explicitly.
 
 Public snapshot, restore, rollback, and command-recording APIs are deferred to
@@ -1451,7 +1451,7 @@ The correctness architecture requires:
 
 - one Advance registration per awake world;
 - zero per-body scheduler registrations;
-- no per-body CRC elements, component executions, signals, callbacks, or
+- no per-body Pibbl elements, component executions, signals, callbacks, or
   closures unless the author explicitly requests them;
 - pooled or preallocated hot-loop records for bodies, colliders, broad-phase
   pairs, manifolds, constraints, islands, and temporary math;
@@ -1469,7 +1469,7 @@ Float32/Float64 choice, hidden-class shape, or solver algorithm as public API.
 Benchmarks guide those internal choices after semantic correctness is proven.
 
 No worker or WASM implementation ships in the first tranche. A future
-CRC-owned worker or WASM kernel may compute candidate state, but commands,
+Pibbl-owned worker or WASM kernel may compute candidate state, but commands,
 logical tick identity, shared Commit, stale-result rejection, callbacks, and
 rendering remain on the existing observable schedule.
 
@@ -1484,7 +1484,7 @@ Optional debug components live outside baseline entry points:
 
 They render committed collider outlines, body origins, centers of mass,
 sleep/awake state, contact points/normals, broad-phase bounds, and joints using
-ordinary CRC Canvas or settled WebGL drawing. They create no simulation work,
+ordinary Pibbl Canvas or settled WebGL drawing. They create no simulation work,
 readback, independent animation request, or alternate geometry source.
 
 Development diagnostics identify:
@@ -1623,7 +1623,7 @@ into independently reviewable projects while keeping one approved vocabulary:
      use cases.
 
 The foundation and baseline 2D work travel in one executable plan because the
-foundation alone cannot satisfy CRC's public-scenario evidence gate. Each later
+foundation alone cannot satisfy Pibbl's public-scenario evidence gate. Each later
 project gets its own executable plan. Every delivery starts with failing public
 tests and includes a representative learning example, deterministic laboratory
 scenarios, package-consumer evidence, lifecycle evidence, and proportional
@@ -1644,7 +1644,7 @@ Representative 2D scenarios cover:
 - gravity and per-body gravity scale;
 - compound body geometry with a ground-check sensor;
 - collision filters and deterministic begin/end/hit ordering;
-- a kinematic moving platform driven by CRC animation in the same Advance;
+- a kinematic moving platform driven by Pibbl animation in the same Advance;
 - a dynamic ball disabled, animated into a container, and re-enabled without a
   pose jump;
 - forces, impulses, torque, axis/rotation locks, sleep, wake, and CCD;
@@ -1674,7 +1674,7 @@ cadence, failure, and ordering fixtures stay in the test laboratory.
 
 Tests drive arbitrary host-frame cadences and assert:
 
-- zero, one, or several fixed ticks in one scheduled CRC frame as dictated by
+- zero, one, or several fixed ticks in one scheduled Pibbl frame as dictated by
   the accumulator;
 - identical authoritative results for equivalent fixed-tick commands and
   per-tick inputs independent of render cadence when no clamp occurs;
@@ -1689,9 +1689,9 @@ Tests drive arbitrary host-frame cadences and assert:
 
 ### Standalone geometry evidence
 
-Public black-box tests import only `@crc/physics/2d/geometry` or
-`@crc/physics/3d/geometry` and run in a Node process with no DOM, Canvas,
-WebGL, CRC root, realm scheduler, or mounted world. They cover:
+Public black-box tests import only `@pibbl/physics/2d/geometry` or
+`@pibbl/physics/3d/geometry` and run in a Node process with no DOM, Canvas,
+WebGL, Pibbl root, realm scheduler, or mounted world. They cover:
 
 - known bounds, mass properties, containment, distance, overlap, contact,
   ray-cast, and shape-cast results for every supported shape family;
@@ -1734,13 +1734,13 @@ Deterministic counters prove:
 Every shipped tranche verifies:
 
 - side-effect-free named runtime exports and declarations;
-- standalone geometry consumers that install no `@crc/core` or `@crc/webgl`
+- standalone geometry consumers that install no `@pibbl/core` or `@pibbl/webgl`
   runtime dependency;
 - type augmentation only after importing the matching dimension;
 - no 2D-to-3D or 3D-to-2D bundle pull-through;
 - Bundler and NodeNext consumers;
 - packed consumers with core only and with the optional WebGL peer;
-- one shared `@crc/core` and `@crc/webgl` identity;
+- one shared `@pibbl/core` and `@pibbl/webgl` identity;
 - source and built Studio modes plus editor declarations;
 - public Learn, API, and Examples catalogs without laboratory metadata;
 - semantic browser assertions before narrow visual evidence;
@@ -1792,7 +1792,7 @@ the solver.
 
 The approved product and architecture decisions are:
 
-- the initial physics implementation is fully CRC-owned;
+- the initial physics implementation is fully Pibbl-owned;
 - physics uses the existing scheduler and creates no additional frame loop;
 - animation samples before physics and both publish through one Commit;
 - physics advances through fixed ticks derived from arbitrary realm frame
@@ -1808,7 +1808,7 @@ The approved product and architecture decisions are:
   animation, and re-enabling transfers it back at a frame boundary;
 - all existing inspectable geometric primitives receive inferred colliders,
   opaque/platform-dependent primitives require explicit stable geometry, and
-  every public collider shape receives CRC rendering support;
+  every public collider shape receives Pibbl rendering support;
 - immutable shapes and stable semantic collision operations are public through
   scheduler- and renderer-free dimensioned `/geometry` subpaths;
 - raw solver algorithms, cached manifolds, acceleration structures, scratch

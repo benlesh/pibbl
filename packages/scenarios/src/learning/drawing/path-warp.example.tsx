@@ -1,4 +1,4 @@
-import { crc, Path, PathGeometry, Circle, Line, Rectangle, Text, useConst, useSignal, useRef, type CRCController, type CRCPointerEvent, type PathQuadCorners, type PathQuadMode, transformPath, quadTransform } from '@crc/core';
+import { pibbl, Path, PathGeometry, Circle, Line, Rectangle, Text, useConst, useSignal, useRef, type PibblController, type PibblPointerEvent, type PathQuadCorners, type PathQuadMode, transformPath, quadTransform } from '@pibbl/core';
 
 
 const source = { x: 0, y: 0, width: 240, height: 300 };
@@ -92,7 +92,7 @@ function WarpStudy() {
     return path;
   });
   const current = state.get();
-  const stop = (event: CRCPointerEvent) => {
+  const stop = (event: PibblPointerEvent) => {
     if (drag.current?.pointerId !== event.pointerId) return;
     drag.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId))
@@ -127,7 +127,7 @@ function WarpStudy() {
           pointerEvents="none"
         />
       ))}
-      {label("CRC / GEOMETRY LAB", 30, 24, "11px monospace", "#8df0d1")}
+      {label("Pibbl / GEOMETRY LAB", 30, 24, "11px monospace", "#8df0d1")}
       {label(
         "Bend the flight plan.",
         28,
@@ -358,6 +358,6 @@ function WarpStudy() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <WarpStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <WarpStudy />);
 }

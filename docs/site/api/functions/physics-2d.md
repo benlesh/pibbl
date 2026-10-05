@@ -1,7 +1,7 @@
 ---
 id: api-function-physics-2d
 title: 2D physics functions and components
-summary: CRC-scheduled 2D worlds, descriptors, commands, queries, inspection, Canvas primitives, and pure geometry.
+summary: Pibbl-scheduled 2D worlds, descriptors, commands, queries, inspection, Canvas primitives, and pure geometry.
 kind: api
 slug: physics-2d
 apiCategory: function
@@ -25,8 +25,8 @@ symbols:
     collider2D,
     contactBetweenShapes2D,
     containsPoint2D,
-    crcPhysicsBody2D,
-    crcPhysicsWorld2D,
+    pibblPhysicsBody2D,
+    pibblPhysicsWorld2D,
     disableBody2D,
     distanceBetweenShapes2D,
     dynamicBody2D,
@@ -59,7 +59,7 @@ symbols:
     withPhysicsShape2D,
   ]
 relatedTypes:
-  [CRCPhysicsWorld2DProps, CRCPhysicsBodyHandle2D, CRCPhysicsShape2D]
+  [PibblPhysicsWorld2DProps, PibblPhysicsBodyHandle2D, PibblPhysicsShape2D]
 keywords: [physics, 2d, rapier, collision, query, canvas]
 ---
 
@@ -75,20 +75,20 @@ import {
   Segment2D,
   circleShape2D,
   collider2D,
-  crcPhysicsBody2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsBody2D,
+  pibblPhysicsWorld2D,
   dynamicBody2D,
-} from "@crc/core/physics/2d";
+} from "@pibbl/core/physics/2d";
 ```
 
-`@crc/core/physics/2d` is a component-scoped, CRC-scheduled Rapier 2D world. It
+`@pibbl/core/physics/2d` is a component-scoped, Pibbl-scheduled Rapier 2D world. It
 does not start a second animation loop. For recipes and interaction examples,
 read the [2D physics guide](#/learn/guides/physics-2d). Pure construction and
-geometry operations are also exported by `@crc/core/physics/2d/geometry`.
+geometry operations are also exported by `@pibbl/core/physics/2d/geometry`.
 The central contracts are
-[`CRCPhysicsWorld2DProps`](#/api/types/physics-2d#crcphysicsworld2dprops),
-[`CRCPhysicsBodyHandle2D`](#/api/types/physics-2d#crcphysicsbodyhandle2d), and
-[`CRCPhysicsShape2D`](#/api/types/physics-2d#crcphysicsshape2d).
+[`PibblPhysicsWorld2DProps`](#/api/types/physics-2d#pibblphysicsworld2dprops),
+[`PibblPhysicsBodyHandle2D`](#/api/types/physics-2d#pibblphysicsbodyhandle2d), and
+[`PibblPhysicsShape2D`](#/api/types/physics-2d#pibblphysicsshape2d).
 
 ## World and Canvas primitives
 
@@ -104,12 +104,12 @@ Creates one world for descendants. It owns fixed-step simulation, collision
 delivery, presentation interpolation, and teardown. Default `space="root"`
 uses root-logical coordinates; creation-only `space="local"` follows the
 world's viewport transform. See
-[`CRCPhysicsWorld2DProps`](#/api/types/physics-2d#crcphysicsworld2dprops).
+[`PibblPhysicsWorld2DProps`](#/api/types/physics-2d#pibblphysicsworld2dprops).
 
-### `crcPhysicsWorld2D`
+### `pibblPhysicsWorld2D`
 
 ```text
-function crcPhysicsWorld2D(): CRCPhysicsWorldHandle2D;
+function pibblPhysicsWorld2D(): PibblPhysicsWorldHandle2D;
 ```
 
 Returns the nearest world while a descendant evaluates. Use it for world
@@ -146,7 +146,7 @@ Their props and styles are covered by the
 
 ```tsx
 const debug = (
-  <PhysicsDebug2D world={crcPhysicsWorld2D()} color="rgba(0, 160, 255, .8)" />
+  <PhysicsDebug2D world={pibblPhysicsWorld2D()} color="rgba(0, 160, 255, .8)" />
 );
 ```
 
@@ -159,11 +159,11 @@ scenes.
 
 ```text
 function withPhysicsShape2D<P, I, ResolvedStyle>(
-  component: CRCPrimitiveComponent<P, I>,
-  options: { resolveShape(style: Readonly<ResolvedStyle>): CRCPhysicsShape2D },
-): CRCPrimitiveComponent<
-  P & CRCPhysicsPrimitiveProps2D,
-  I & { physics?: CRCPhysicsAttachment2D }
+  component: PibblPrimitiveComponent<P, I>,
+  options: { resolveShape(style: Readonly<ResolvedStyle>): PibblPhysicsShape2D },
+): PibblPrimitiveComponent<
+  P & PibblPhysicsPrimitiveProps2D,
+  I & { physics?: PibblPhysicsAttachment2D }
 >;
 ```
 
@@ -175,60 +175,60 @@ a world or alter paint order.
 
 ```text
 function dynamicBody2D(
-  options?: CRCPhysicsDynamicBody2DOptions,
-): CRCPhysicsBodyAttachment2D;
+  options?: PibblPhysicsDynamicBody2DOptions,
+): PibblPhysicsBodyAttachment2D;
 function staticBody2D(
-  options?: CRCPhysicsStaticBody2DOptions,
-): CRCPhysicsBodyAttachment2D;
+  options?: PibblPhysicsStaticBody2DOptions,
+): PibblPhysicsBodyAttachment2D;
 function kinematicBody2D(
-  options?: CRCPhysicsKinematicBody2DOptions,
-): CRCPhysicsBodyAttachment2D;
+  options?: PibblPhysicsKinematicBody2DOptions,
+): PibblPhysicsBodyAttachment2D;
 function collider2D(
-  options?: CRCPhysicsColliderConfiguration2D,
-): CRCPhysicsColliderAttachment2D;
-function crcPhysicsBody2D(): CRCPhysicsBodyHandle2D;
+  options?: PibblPhysicsColliderConfiguration2D,
+): PibblPhysicsColliderAttachment2D;
+function pibblPhysicsBody2D(): PibblPhysicsBodyHandle2D;
 ```
 
 Attach a body descriptor to a primitive and child `collider2D()` descriptors to
 its geometry. Dynamic bodies receive forces and contacts; static bodies remain
 fixed; kinematic bodies follow declared signals and affect other bodies. The
-body primitive's authored transform supplies its initial pose. `crcPhysicsBody2D`
+body primitive's authored transform supplies its initial pose. `pibblPhysicsBody2D`
 is a stable hook handle that can bind to one live body at a time.
 
 ## Commands
 
-Commands enter CRC's Begin phase and take effect on the next admitted physics
+Commands enter Pibbl's Begin phase and take effect on the next admitted physics
 frame; none mutate a world during render.
 
 ```text
 function applyForce2D(
-  body: CRCPhysicsBodyHandle2D,
-  force: CRCPhysicsVector2,
-  options?: { at?: CRCPhysicsVector2; wake?: boolean },
+  body: PibblPhysicsBodyHandle2D,
+  force: PibblPhysicsVector2,
+  options?: { at?: PibblPhysicsVector2; wake?: boolean },
 ): void;
 function applyImpulse2D(
-  body: CRCPhysicsBodyHandle2D,
-  impulse: CRCPhysicsVector2,
-  options?: { at?: CRCPhysicsVector2; wake?: boolean },
+  body: PibblPhysicsBodyHandle2D,
+  impulse: PibblPhysicsVector2,
+  options?: { at?: PibblPhysicsVector2; wake?: boolean },
 ): void;
-function applyTorque2D(body: CRCPhysicsBodyHandle2D, torque: number): void;
+function applyTorque2D(body: PibblPhysicsBodyHandle2D, torque: number): void;
 function setLinearVelocity2D(
-  body: CRCPhysicsBodyHandle2D,
-  velocity: CRCPhysicsVector2,
+  body: PibblPhysicsBodyHandle2D,
+  velocity: PibblPhysicsVector2,
 ): void;
 function setAngularVelocity2D(
-  body: CRCPhysicsBodyHandle2D,
+  body: PibblPhysicsBodyHandle2D,
   degreesPerSecond: number,
 ): void;
 function teleportBody2D(
-  body: CRCPhysicsBodyHandle2D,
-  pose: CRCPhysicsPose2D,
+  body: PibblPhysicsBodyHandle2D,
+  pose: PibblPhysicsPose2D,
 ): void;
-function wakeBody2D(body: CRCPhysicsBodyHandle2D): void;
-function sleepBody2D(body: CRCPhysicsBodyHandle2D): void;
-function disableBody2D(body: CRCPhysicsBodyHandle2D): void;
+function wakeBody2D(body: PibblPhysicsBodyHandle2D): void;
+function sleepBody2D(body: PibblPhysicsBodyHandle2D): void;
+function disableBody2D(body: PibblPhysicsBodyHandle2D): void;
 function enableBody2D(
-  body: CRCPhysicsBodyHandle2D,
+  body: PibblPhysicsBodyHandle2D,
   options?: { velocity?: "zero" | "preserve" },
 ): void;
 ```
@@ -239,48 +239,48 @@ sweep. Re-enabling uses zero velocity unless `preserve` is selected.
 ## Mounted-world queries and observation
 
 ```text
-function raycast2D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle2D,
-  ray: CRCPhysicsRay2D,
-  options?: CRCPhysicsQueryOptions2D<Mode>,
-): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D>;
-function shapeCast2D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle2D,
-  shape: CRCPhysicsShape2D,
-  from: CRCPhysicsPose2D,
-  translation: CRCPhysicsVector2,
-  options?: CRCPhysicsQueryOptions2D<Mode>,
-): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D>;
-function overlapShape2D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle2D,
-  shape: CRCPhysicsShape2D,
-  pose: CRCPhysicsPose2D,
-  options?: CRCPhysicsQueryOptions2D<Mode>,
-): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
-function queryAabb2D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle2D,
-  bounds: CRCPhysicsAabb2D,
-  options?: CRCPhysicsQueryOptions2D<Mode>,
-): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
-function queryPoint2D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle2D,
-  point: CRCPhysicsVector2,
-  options?: CRCPhysicsQueryOptions2D<Mode>,
-): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
+function raycast2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle2D,
+  ray: PibblPhysicsRay2D,
+  options?: PibblPhysicsQueryOptions2D<Mode>,
+): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
+function shapeCast2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  from: PibblPhysicsPose2D,
+  translation: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D<Mode>,
+): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
+function overlapShape2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  pose: PibblPhysicsPose2D,
+  options?: PibblPhysicsQueryOptions2D<Mode>,
+): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
+function queryAabb2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle2D,
+  bounds: PibblPhysicsAabb2D,
+  options?: PibblPhysicsQueryOptions2D<Mode>,
+): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
+function queryPoint2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle2D,
+  point: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D<Mode>,
+): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
 function toPhysicsPoint2D(
-  world: CRCPhysicsWorldHandle2D,
-  point: CRCPhysicsVector2,
-): CRCPhysicsVector2;
+  world: PibblPhysicsWorldHandle2D,
+  point: PibblPhysicsVector2,
+): PibblPhysicsVector2;
 function fromPhysicsPoint2D(
-  world: CRCPhysicsWorldHandle2D,
-  point: CRCPhysicsVector2,
-): CRCPhysicsVector2;
+  world: PibblPhysicsWorldHandle2D,
+  point: PibblPhysicsVector2,
+): PibblPhysicsVector2;
 function inspectPhysics2D(
-  world: CRCPhysicsWorldHandle2D,
-): CRCPhysicsInspection2D;
+  world: PibblPhysicsWorldHandle2D,
+): PibblPhysicsInspection2D;
 function inspectPhysics2D(
-  body: CRCPhysicsBodyHandle2D,
-): CRCPhysicsBodyInspection2D | undefined;
+  body: PibblPhysicsBodyHandle2D,
+): PibblPhysicsBodyInspection2D | undefined;
 ```
 
 Queries read the committed world and accept filtering options. Modes produce a
@@ -295,58 +295,58 @@ an unbound or stale handle returns `undefined`.
 `circleShape2D`, `ellipseShape2D`, `boxShape2D`, `roundedBoxShape2D`,
 `capsuleShape2D`, `arcShape2D`, `wedgeShape2D`, `segmentShape2D`,
 `chainShape2D`, and `polygonShape2D` each create an immutable
-[`CRCPhysicsShape2D`](#/api/types/physics-2d#crcphysicsshape2d) from their
+[`PibblPhysicsShape2D`](#/api/types/physics-2d#pibblphysicsshape2d) from their
 corresponding option object.
 
 ```text
-function boundsOfShape2D(shape: CRCPhysicsShape2D): CRCPhysicsAabb2D;
+function boundsOfShape2D(shape: PibblPhysicsShape2D): PibblPhysicsAabb2D;
 function massProperties2D(
-  shape: CRCPhysicsShape2D,
+  shape: PibblPhysicsShape2D,
   density?: number,
-): CRCPhysicsMassProperties2D;
+): PibblPhysicsMassProperties2D;
 function transformShape2D(
-  shape: CRCPhysicsShape2D,
-  transform: CRCPhysicsTransform2D,
-): CRCPhysicsShape2D;
+  shape: PibblPhysicsShape2D,
+  transform: PibblPhysicsTransform2D,
+): PibblPhysicsShape2D;
 function containsPoint2D(
-  shape: CRCPhysicsShape2D,
-  pose: CRCPhysicsPose2D,
-  point: CRCPhysicsVector2,
+  shape: PibblPhysicsShape2D,
+  pose: PibblPhysicsPose2D,
+  point: PibblPhysicsVector2,
 ): boolean;
 function distanceBetweenShapes2D(
-  first: CRCPhysicsShape2D,
-  firstPose: CRCPhysicsPose2D,
-  second: CRCPhysicsShape2D,
-  secondPose: CRCPhysicsPose2D,
-): CRCPhysicsDistance2D;
+  first: PibblPhysicsShape2D,
+  firstPose: PibblPhysicsPose2D,
+  second: PibblPhysicsShape2D,
+  secondPose: PibblPhysicsPose2D,
+): PibblPhysicsDistance2D;
 function overlapShapes2D(
-  first: CRCPhysicsShape2D,
-  firstPose: CRCPhysicsPose2D,
-  second: CRCPhysicsShape2D,
-  secondPose: CRCPhysicsPose2D,
+  first: PibblPhysicsShape2D,
+  firstPose: PibblPhysicsPose2D,
+  second: PibblPhysicsShape2D,
+  secondPose: PibblPhysicsPose2D,
 ): boolean;
 function contactBetweenShapes2D(
-  first: CRCPhysicsShape2D,
-  firstPose: CRCPhysicsPose2D,
-  second: CRCPhysicsShape2D,
-  secondPose: CRCPhysicsPose2D,
-): CRCPhysicsShapeContact2D | null;
+  first: PibblPhysicsShape2D,
+  firstPose: PibblPhysicsPose2D,
+  second: PibblPhysicsShape2D,
+  secondPose: PibblPhysicsPose2D,
+): PibblPhysicsShapeContact2D | null;
 function raycastShape2D(
-  shape: CRCPhysicsShape2D,
-  pose: CRCPhysicsPose2D,
-  ray: CRCPhysicsRay2D,
+  shape: PibblPhysicsShape2D,
+  pose: PibblPhysicsPose2D,
+  ray: PibblPhysicsRay2D,
   options?: { includeInitialOverlap?: boolean },
-): CRCPhysicsShapeHit2D | null;
+): PibblPhysicsShapeHit2D | null;
 function shapeCastAgainstShape2D(
-  moving: CRCPhysicsShape2D,
-  from: CRCPhysicsPose2D,
-  translation: CRCPhysicsVector2,
-  target: CRCPhysicsShape2D,
-  targetPose: CRCPhysicsPose2D,
+  moving: PibblPhysicsShape2D,
+  from: PibblPhysicsPose2D,
+  translation: PibblPhysicsVector2,
+  target: PibblPhysicsShape2D,
+  targetPose: PibblPhysicsPose2D,
   options?: { includeInitialOverlap?: boolean },
-): CRCPhysicsShapeHit2D | null;
+): PibblPhysicsShapeHit2D | null;
 ```
 
-These deterministic functions need neither a mounted world nor CRC core.
+These deterministic functions need neither a mounted world nor Pibbl core.
 `transformShape2D` returns a new descriptor. Contact normals point from the
 second shape toward the first.

@@ -1,14 +1,14 @@
 import {
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
   Flex,
   Rectangle,
   Text,
   type BoxStyle,
-  type CRCController,
+  type PibblController,
   type FlexItemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 interface FlexCardProps {
   onSelect: () => void;
@@ -82,6 +82,6 @@ function FlexStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <FlexStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <FlexStudy />);
 }

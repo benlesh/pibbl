@@ -1,4 +1,4 @@
-import { crc, type CRCController } from '@crc/core';
+import { pibbl, type PibblController } from '@pibbl/core';
 import {
   createThreeInstancingLabScene,
   THREE_INSTANCING_LAB_SOURCE_ID,
@@ -75,7 +75,7 @@ async function mountThreeInstancingLab(
 ): Promise<ScenarioController<ThreeInstancingLabState>> {
   const abortController = new AbortController();
   let disposed = false;
-  let runtime: CRCController | undefined;
+  let runtime: PibblController | undefined;
   let state = initialState();
   let compact = false;
   let pending = Promise.resolve();
@@ -91,7 +91,7 @@ async function mountThreeInstancingLab(
   });
   const render = () => {
     assertActive();
-    runtime = crc(
+    runtime = pibbl(
       context.canvas,
       createThreeInstancingLabScene({
         state,
@@ -99,7 +99,7 @@ async function mountThreeInstancingLab(
         onTile: () => {
           state = {
             ...state,
-            lastResolution: 'CRC tile',
+            lastResolution: 'Pibbl tile',
             tileClicks: state.tileClicks + 1,
           };
           publish();
@@ -232,7 +232,7 @@ export const threeInstancingLabScenario: ScenarioDefinition<ThreeInstancingLabSt
   formatState: (state) => [
     { label: 'Miss behavior', value: state.missBehavior },
     { label: 'Last resolution', value: state.lastResolution },
-    { label: 'CRC tile clicks', value: String(state.tileClicks) },
+    { label: 'Pibbl tile clicks', value: String(state.tileClicks) },
     { label: 'Three target clicks', value: String(state.threeTargetClicks) },
     { label: 'Blocked Three inputs', value: String(state.blockedThreeInputs) },
     { label: 'Camera changes', value: String(state.cameraChanges) },

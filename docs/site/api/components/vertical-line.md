@@ -12,7 +12,7 @@ relatedTypes: [VerticalLineProps, VerticalLineStyle]
 # VerticalLine
 
 ```ts
-import { VerticalLine } from "@crc/core";
+import { VerticalLine } from "@pibbl/core";
 ```
 
 `VerticalLine` uses [`VerticalLineProps`](#/api/types/elements-components#verticallineprops) and [`VerticalLineStyle`](#/api/types/styles#verticallinestyle). It rejects

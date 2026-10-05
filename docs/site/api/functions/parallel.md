@@ -6,7 +6,7 @@ kind: api
 slug: parallel
 apiCategory: function
 symbols: [parallel]
-relatedTypes: [CRCAnimationProgram]
+relatedTypes: [PibblAnimationProgram]
 ---
 
 # parallel
@@ -15,4 +15,4 @@ relatedTypes: [CRCAnimationProgram]
 and completes when its finite children complete. Writer overlap is validated
 before a run is accepted.
 
-Related type: [`CRCAnimationProgram`](#/api/types/canvas-runtime#crcanimationprogram).
+Related type: [`PibblAnimationProgram`](#/api/types/canvas-runtime#pibblanimationprogram).

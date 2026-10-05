@@ -1,37 +1,37 @@
 import {
-  type CRCParticleBurstAcceptedEvent,
-  type CRCParticleBurstRejectedEvent,
-  type CRCParticleDiagnostic,
-  type CRCParticleDrainStartEvent,
-  type CRCParticleFinishEvent,
-  type CRCParticleStartEvent,
-  type CRCParticleSystemEvent,
-} from "@crc/core/particles";
+  type PibblParticleBurstAcceptedEvent,
+  type PibblParticleBurstRejectedEvent,
+  type PibblParticleDiagnostic,
+  type PibblParticleDrainStartEvent,
+  type PibblParticleFinishEvent,
+  type PibblParticleStartEvent,
+  type PibblParticleSystemEvent,
+} from "@pibbl/core/particles";
 
-const started: CRCParticleStartEvent = { type: "start" };
-const accepted: CRCParticleBurstAcceptedEvent = {
+const started: PibblParticleStartEvent = { type: "start" };
+const accepted: PibblParticleBurstAcceptedEvent = {
   type: "burst-accepted",
   emitter: "spark",
   requested: 12,
   accepted: 12,
 };
-const rejected: CRCParticleBurstRejectedEvent = {
+const rejected: PibblParticleBurstRejectedEvent = {
   type: "burst-rejected",
   emitter: "spark",
   requested: 12,
   accepted: 0,
   reason: "capacity",
 };
-const draining: CRCParticleDrainStartEvent = { type: "drain-start" };
-const finished: CRCParticleFinishEvent = { type: "finish" };
-const events: CRCParticleSystemEvent[] = [
+const draining: PibblParticleDrainStartEvent = { type: "drain-start" };
+const finished: PibblParticleFinishEvent = { type: "finish" };
+const events: PibblParticleSystemEvent[] = [
   started,
   accepted,
   rejected,
   draining,
   finished,
 ];
-const diagnostic: CRCParticleDiagnostic = {
+const diagnostic: PibblParticleDiagnostic = {
   type: "capacity-rejected",
   message: "The emitter has reached its capacity.",
   emitter: rejected.emitter,

@@ -1,11 +1,11 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Rectangle,
   Text,
   VerticalLine,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function VerticalStudy() {
   const stripe = useSignal(0);
   const colors = ["#1f4bd8", "#ff6b57", "#f7c948", "#74d3ae"];
@@ -48,6 +48,6 @@ function VerticalStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <VerticalStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <VerticalStudy />);
 }

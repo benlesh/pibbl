@@ -1,6 +1,6 @@
 import {
   batch,
-  crc,
+  pibbl,
   degrees,
   DragHandle,
   Flex,
@@ -13,14 +13,14 @@ import {
   useLayoutBox,
   useManipulation,
   useSignal,
-  type CRCController,
-  type CRCManipulationController,
-} from "@crc/core";
+  type PibblController,
+  type PibblManipulationController,
+} from "@pibbl/core";
 
 function CardContent({
   manipulation,
 }: {
-  manipulation: CRCManipulationController;
+  manipulation: PibblManipulationController;
 }) {
   const { width, height } = useLayoutBox();
   return (
@@ -280,8 +280,8 @@ function Scene() {
     </>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     <FocusManagement>
       <Scene />

@@ -1,8 +1,8 @@
 import { opacity } from '../../filters/native.js';
-import { defineTransitionEffect, type CRCTransitionEffect } from './fade.js';
+import { defineTransitionEffect, type PibblTransitionEffect } from './fade.js';
 import { captureTransition, clamp, finite, regionSnapshot, seededNoise, type TransitionRegion } from './capture.js';
 
-export interface CRCHologramOptions {
+export interface PibblHologramOptions {
   readonly region: TransitionRegion;
   readonly entry?: Readonly<{ x: number; y: number }>;
   readonly hue?: number;
@@ -12,7 +12,7 @@ export interface CRCHologramOptions {
   readonly seed?: number;
 }
 /** A diffuse scan reconstructs the captured subject while interference settles. */
-export function hologram(options: CRCHologramOptions): CRCTransitionEffect {
+export function hologram(options: PibblHologramOptions): PibblTransitionEffect {
   const r = regionSnapshot(options.region);
   const entry = { x: finite(options.entry?.x ?? r.x + r.width / 2, 'entry.x'), y: finite(options.entry?.y ?? r.y + r.height, 'entry.y') };
   const hue = finite(options.hue ?? 183, 'hue'), brightness = finite(options.brightness ?? 1, 'brightness', 0);

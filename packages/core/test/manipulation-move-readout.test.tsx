@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
-import * as CRC from "@crc/core";
-let mount: CRC.CRCController | undefined;
+import * as Pibbl from "@pibbl/core";
+let mount: Pibbl.PibblController | undefined;
 const settle = () =>
   new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -21,15 +21,15 @@ it.each([false, true])(
     canvas.height = 250;
     canvas.dataset.manipulationTest = "";
     document.body.append(canvas);
-    const box = CRC.signal({ left: 40, top: 50, width: 160, height: 100 });
+    const box = Pibbl.signal({ left: 40, top: 50, width: 160, height: 100 });
     const format = vi.fn(
       ({ left, top }: { left: number; top: number }) =>
         `${left / 10}, ${top / 10} mm`,
     );
-    function Scene(): CRC.CRCNode {
-      const control = CRC.useManipulation({ box, move: {} });
+    function Scene(): Pibbl.PibblNode {
+      const control = Pibbl.useManipulation({ box, move: {} });
       return wrapper ? (
-        <CRC.Manipulable
+        <Pibbl.Manipulable
           style={box}
           draggable
           dragHandle={{
@@ -37,21 +37,21 @@ it.each([false, true])(
             style: { readout: { active: { fill: "#ff0000" } } },
           }}
         >
-          <CRC.Rectangle style={{ width: 160, height: 100, fill: "white" }} />
-        </CRC.Manipulable>
+          <Pibbl.Rectangle style={{ width: 160, height: 100, fill: "white" }} />
+        </Pibbl.Manipulable>
       ) : (
-        <CRC.ManipulationFrame {...control.frameProps}>
-          <CRC.DragHandle controller={control} style={{ readout: true }}>
-            <CRC.Rectangle style={{ width: 160, height: 100, fill: "white" }} />
-          </CRC.DragHandle>
-        </CRC.ManipulationFrame>
+        <Pibbl.ManipulationFrame {...control.frameProps}>
+          <Pibbl.DragHandle controller={control} style={{ readout: true }}>
+            <Pibbl.Rectangle style={{ width: 160, height: 100, fill: "white" }} />
+          </Pibbl.DragHandle>
+        </Pibbl.ManipulationFrame>
       );
     }
-    mount = CRC.crc(
+    mount = Pibbl.pibbl(
       canvas,
-      <CRC.FocusManagement>
+      <Pibbl.FocusManagement>
         <Scene />
-      </CRC.FocusManagement>,
+      </Pibbl.FocusManagement>,
       { pixelRatio: 1 },
     );
     await settle();
@@ -91,8 +91,8 @@ it.each([
   canvas.width = 700;
   canvas.height = 500;
   document.body.append(canvas);
-  const box = CRC.signal({ left: 220, top: 180, width: 160, height: 100 });
-  const rotation = CRC.signal(angle);
+  const box = Pibbl.signal({ left: 220, top: 180, width: 160, height: 100 });
+  const rotation = Pibbl.signal(angle);
   const ctx = canvas.getContext('2d')!;
   const corners: { x: number; y: number }[] = [];
   const original = ctx.fillText.bind(ctx);
@@ -107,16 +107,16 @@ it.each([
     }
     original(text, x, y);
   });
-  function Scene(): CRC.CRCNode {
-    const control = CRC.useManipulation({ box, rotation, move: {}, rotate: {} });
-    return <CRC.ManipulationFrame {...control.frameProps}>
-      <CRC.DragHandle controller={control} formatReadout={() => 'position'} style={{ readout: { visible: true, gap } }}>
-        <CRC.Rectangle style={{ width: 160, height: 100, fill: 'white' }} />
-      </CRC.DragHandle>
-      <CRC.RotationHandle controller={control} style={{ arc: true }} />
-    </CRC.ManipulationFrame>;
+  function Scene(): Pibbl.PibblNode {
+    const control = Pibbl.useManipulation({ box, rotation, move: {}, rotate: {} });
+    return <Pibbl.ManipulationFrame {...control.frameProps}>
+      <Pibbl.DragHandle controller={control} formatReadout={() => 'position'} style={{ readout: { visible: true, gap } }}>
+        <Pibbl.Rectangle style={{ width: 160, height: 100, fill: 'white' }} />
+      </Pibbl.DragHandle>
+      <Pibbl.RotationHandle controller={control} style={{ arc: true }} />
+    </Pibbl.ManipulationFrame>;
   }
-  mount = CRC.crc(canvas, <Scene />, { pixelRatio: 1 });
+  mount = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
   expect(corners).toHaveLength(4);
   const normal = { x: Math.sin(angle), y: -Math.cos(angle) };

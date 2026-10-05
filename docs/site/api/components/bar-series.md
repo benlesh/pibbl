@@ -18,7 +18,7 @@ symbols:
 
 # BarSeries
 
-Import from `@crc/core/viz`. This component supports vertical and horizontal value
+Import from `@pibbl/core/viz`. This component supports vertical and horizontal value
 and range bars. For value bars use `data`, `category` (category key/accessor),
 `value` (numeric key/accessor), `categoryScale` (band), and `valueScale`
 (linear). `orientation` is `"vertical"` (default) or `"horizontal"`.
@@ -73,7 +73,7 @@ Supply `group` (a category key/accessor) and `groupScale` together. The inner
 band scale defines group order and spacing within each outer category:
 
 ```tsx
-import { BarSeries, Scale } from "@crc/core/viz";
+import { BarSeries, Scale } from "@pibbl/core/viz";
 const rows = [
   { month: "Jan", team: "East", sales: 72, category: "Jan", value: 320_000 },
   { month: "Jan", team: "West", sales: 55, category: "Feb", value: -40_000 },

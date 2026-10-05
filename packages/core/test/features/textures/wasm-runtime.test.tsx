@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { crc } from "@crc/core";
-import { ProceduralTexture, ReactionDiffusion } from "@crc/core/textures";
+import { pibbl } from "@pibbl/core";
+import { ProceduralTexture, ReactionDiffusion } from "@pibbl/core/textures";
 import { clearSharedState } from "../../../src/lib/global-state.js";
 import {
   ManualSchedulerDriver,
@@ -29,7 +29,7 @@ for (const kind of ["marble", "paper", "cellular", "ink"] as const) {
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = 32;
     document.body.append(canvas);
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       kind === "ink" ? (
         <ReactionDiffusion

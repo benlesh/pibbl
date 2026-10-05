@@ -1,14 +1,14 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
-import * as CRC from "@crc/core";
+import * as Pibbl from "@pibbl/core";
 import type {
-  CRCController,
-  CRCManipulationController,
-  CRCManipulationCancelEvent,
-  CRCManipulationOptions,
-} from "@crc/core";
+  PibblController,
+  PibblManipulationController,
+  PibblManipulationCancelEvent,
+  PibblManipulationOptions,
+} from "@pibbl/core";
 
-let mounted: CRCController | undefined;
+let mounted: PibblController | undefined;
 const settle = () =>
   new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -21,32 +21,32 @@ afterEach(async () => {
   vi.restoreAllMocks();
 });
 async function setup(
-  extra: Partial<CRCManipulationOptions> = {},
+  extra: Partial<PibblManipulationOptions> = {},
   expectedLeft = 60,
-  box = CRC.signal({ left: 40, top: 50, width: 160, height: 120 }),
+  box = Pibbl.signal({ left: 40, top: 50, width: 160, height: 120 }),
 ) {
-  const enabled = CRC.signal(true);
-  const visible = CRC.signal(true);
-  const frameVisible = CRC.signal(true);
-  const cancelled: CRCManipulationCancelEvent[] = [];
-  let controller!: CRCManipulationController;
+  const enabled = Pibbl.signal(true);
+  const visible = Pibbl.signal(true);
+  const frameVisible = Pibbl.signal(true);
+  const cancelled: PibblManipulationCancelEvent[] = [];
+  let controller!: PibblManipulationController;
   function Owner() {
-    controller = CRC.useManipulation({
+    controller = Pibbl.useManipulation({
       box,
       move: { enabled },
       onCancel: (event) => cancelled.push(event),
       ...extra,
     });
     return frameVisible.get() ? (
-      <CRC.ManipulationFrame {...controller.frameProps}>
-        <CRC.DragHandle controller={controller}>
-          <CRC.Rectangle
+      <Pibbl.ManipulationFrame {...controller.frameProps}>
+        <Pibbl.DragHandle controller={controller}>
+          <Pibbl.Rectangle
             pointerEvents="auto"
             keyboardFocusable
             style={{ width: 160, height: 120, fill: "transparent" }}
           />
-        </CRC.DragHandle>
-      </CRC.ManipulationFrame>
+        </Pibbl.DragHandle>
+      </Pibbl.ManipulationFrame>
     ) : null;
   }
   function Scene() {
@@ -59,11 +59,11 @@ async function setup(
   let captures = 0;
   canvas.addEventListener("gotpointercapture", () => captures++);
   document.body.append(canvas);
-  mounted = CRC.crc(
+  mounted = Pibbl.pibbl(
     canvas,
-    <CRC.FocusManagement>
+    <Pibbl.FocusManagement>
       <Scene />
-    </CRC.FocusManagement>,
+    </Pibbl.FocusManagement>,
   );
   await settle();
   await commands.manipulationPointer([
@@ -92,7 +92,7 @@ it("ends synchronously on an external write before another pointer event and pre
 });
 
 it("rejects a second controller that tries to own active shared geometry", async () => {
-  const box = CRC.signal({ left: 40, top: 50, width: 160, height: 120 });
+  const box = Pibbl.signal({ left: 40, top: 50, width: 160, height: 120 });
   const { controller } = await setup({}, 60, box);
   const errors: unknown[] = [];
   vi.spyOn(globalThis, "reportError").mockImplementation((error) => {
@@ -104,26 +104,26 @@ it("rejects a second controller that tries to own active shared geometry", async
   canvas.height = 300;
   document.body.append(canvas);
   const capture = vi.spyOn(canvas, "setPointerCapture");
-  let competing!: CRC.CRCManipulationController;
+  let competing!: Pibbl.PibblManipulationController;
   function Competing() {
-    competing = CRC.useManipulation({ box, move: {} });
+    competing = Pibbl.useManipulation({ box, move: {} });
     return (
-      <CRC.ManipulationFrame {...competing.frameProps}>
-        <CRC.DragHandle controller={competing}>
-          <CRC.Rectangle
+      <Pibbl.ManipulationFrame {...competing.frameProps}>
+        <Pibbl.DragHandle controller={competing}>
+          <Pibbl.Rectangle
             pointerEvents="auto"
             keyboardFocusable
             style={{ width: 160, height: 120, fill: "transparent" }}
           />
-        </CRC.DragHandle>
-      </CRC.ManipulationFrame>
+        </Pibbl.DragHandle>
+      </Pibbl.ManipulationFrame>
     );
   }
-  const competingMount = CRC.crc(
+  const competingMount = Pibbl.pibbl(
     canvas,
-    <CRC.FocusManagement>
+    <Pibbl.FocusManagement>
       <Competing />
-    </CRC.FocusManagement>,
+    </Pibbl.FocusManagement>,
   );
   try {
     await settle();
@@ -146,7 +146,7 @@ it("rejects a second controller that tries to own active shared geometry", async
     expect(errors.every(
       (error) =>
         error instanceof Error &&
-        error.message === "CRC manipulation geometry already has an active owner.",
+        error.message === "Pibbl manipulation geometry already has an active owner.",
     )).toBe(true);
     expect(capture).not.toHaveBeenCalled();
     expect(competing.active.get()).toBe(null);
@@ -161,7 +161,7 @@ it("rejects a second controller that tries to own active shared geometry", async
 });
 
 it("lets newer geometry written during onStart cancel the gesture and win", async () => {
-  const box = CRC.signal({ left: 40, top: 50, width: 160, height: 120 });
+  const box = Pibbl.signal({ left: 40, top: 50, width: 160, height: 120 });
   const replacement = { left: 280, top: 190, width: 140, height: 100 };
   const { controller, cancelled } = await setup(
     { onStart: () => box.set(replacement) },
@@ -176,7 +176,7 @@ it("lets newer geometry written during onStart cancel the gesture and win", asyn
 });
 
 it("lets newer geometry written during onChange cancel the gesture and win", async () => {
-  const box = CRC.signal({ left: 40, top: 50, width: 160, height: 120 });
+  const box = Pibbl.signal({ left: 40, top: 50, width: 160, height: 120 });
   const replacement = { left: 260, top: 170, width: 140, height: 100 };
   let changes = 0;
   const { controller, cancelled } = await setup(

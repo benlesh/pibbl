@@ -6,7 +6,7 @@ import {
 } from "../hooks/hook-slot.js";
 import { registerAdvanceParticipant } from "../scheduler/realm-scheduler.js";
 import { signal } from "../signals/graph.js";
-import type { CRCInstance, RenderingContext2D } from "../types.js";
+import type { PibblInstance, RenderingContext2D } from "../types.js";
 import {
   registerTexturePaint,
   type BorrowedTextureRaster,
@@ -71,9 +71,9 @@ export interface TextureContext {
   readonly canvas: OffscreenCanvas;
   /** Ordered colors used to present texture intensity. See {@link TextureContext}. */
   readonly palette: readonly string[] | undefined;
-  /** Marks the source pixels dirty and requests a CRC update. */
+  /** Marks the source pixels dirty and requests a Pibbl update. */
   invalidate(): void;
-  /** Requests another CRC frame; implementations stop by not requesting again. */
+  /** Requests another Pibbl frame; implementations stop by not requesting again. */
   requestFrame(): void;
 }
 /**
@@ -126,7 +126,7 @@ export interface TextureDefinition<Config, State, Message = never> {
    */
   receive?(state: State, message: Message, context: TextureContext): void;
   /**
-   * Advances simulation using the shared CRC frame timing. See {@link TextureDefinition}.
+   * Advances simulation using the shared Pibbl frame timing. See {@link TextureDefinition}.
    * @param state - State returned by create.
    * @param frame - Shared animation time and delta. See {@link TextureFrame}.
    * @param context - Texture-owned drawing surface and scheduling services. See
@@ -249,7 +249,7 @@ class Resource {
   private palette?: readonly string[];
   private optionsKey: string;
   constructor(
-    private owner: CRCInstance | undefined,
+    private owner: PibblInstance | undefined,
     recipe: Recipe,
     options: TextureOptions,
   ) {
@@ -286,8 +286,8 @@ class Resource {
     this.handle = Object.freeze({
       send: (message: unknown) => {
         if (this.disposed) return;
-        if (GLOBAL_STATE.currentCRCInstance)
-          throw new Error("Texture.send cannot run during CRC evaluation.");
+        if (GLOBAL_STATE.currentPibblInstance)
+          throw new Error("Texture.send cannot run during Pibbl evaluation.");
         if (!this.definition.receive)
           throw new Error("This texture does not accept messages.");
         if (this.messages.length >= 8192)
@@ -320,7 +320,7 @@ class Resource {
   }
   private call<T>(fn: () => T): T {
     return withHooksForbidden(
-      "Texture implementations cannot call CRC hooks.",
+      "Texture implementations cannot call Pibbl hooks.",
       fn,
     );
   }
@@ -494,11 +494,11 @@ class Resource {
   }
   private assertOwner(): void {
     if (this.disposed) throw new Error("Cannot paint with a disposed texture.");
-    let root = GLOBAL_STATE.currentCRCInstance;
-    while (root?.parent) root = GLOBAL_STATE.crcInstances.get(root.parent);
+    let root = GLOBAL_STATE.currentPibblInstance;
+    while (root?.parent) root = GLOBAL_STATE.pibblInstances.get(root.parent);
     let owner = this.owner;
-    while (owner?.parent) owner = GLOBAL_STATE.crcInstances.get(owner.parent);
-    if (root !== owner) throw new Error("Textures may only be shared within their owning CRC tree.");
+    while (owner?.parent) owner = GLOBAL_STATE.pibblInstances.get(owner.parent);
+    if (root !== owner) throw new Error("Textures may only be shared within their owning Pibbl tree.");
   }
   private borrow(placement: Readonly<TexturePlacement>): BorrowedTextureRaster {
     this.assertOwner();
@@ -569,11 +569,11 @@ export function useTexture<Message>(
   const recipe = recipes.get(input);
   if (!recipe)
     throw new TypeError("useTexture requires a defineTexture recipe.");
-  const { crcInstance } = requireHookContext();
+  const { pibblInstance } = requireHookContext();
   let created = false;
   const resource = useHookSlot("texture", (teardowns) => {
     created = true;
-    const value = new Resource(crcInstance, recipe, options);
+    const value = new Resource(pibblInstance, recipe, options);
     teardowns.add(() => value.dispose());
     return value;
   }).value;

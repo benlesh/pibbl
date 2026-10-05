@@ -1,15 +1,15 @@
 import { peekNativeFilterPool } from '../src/lib/filter/render-filter-boundary';
-import { grayscale, blur, brightness, contrast, dropShadow, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
+import { grayscale, blur, brightness, contrast, dropShadow, hueRotate, invert, opacity, saturate, sepia } from '@pibbl/core/filters';
 import {
   Group,
   Layer,
   createElement,
   definePrimitive,
-  type CRCController,
-  type CRCFilter,
-  type CRCNode,
+  type PibblController,
+  type PibblFilter,
+  type PibblNode,
   type SystemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { executeRender } from "../src/lib/execute-render";
 import * as filterRegion from "../src/lib/filter/filter-region";
@@ -18,8 +18,8 @@ import {
   FilterSurfacePool,
   type FilterSurface,
 } from "../src/lib/filter/filter-surface-pool";
-import { clearSharedState, getCRCInstance } from "../src/lib/global-state";
-import { mountCRC } from "../src/lib/mount-crc";
+import { clearSharedState, getPibblInstance } from "../src/lib/global-state";
+import { mountPibbl } from "../src/lib/mount-pibbl";
 import * as filterStyle from "../src/lib/style/filter";
 import * as nativeOperations from "../src/filters/native-operations";
 
@@ -27,7 +27,7 @@ vi.mock("../src/lib/filter/filter-region", { spy: true });
 vi.mock("../src/lib/style/filter", { spy: true });
 vi.mock("../src/filters/native-operations", { spy: true });
 
-const controllers = new Set<CRCController>();
+const controllers = new Set<PibblController>();
 
 afterEach(() => {
   for (const controller of controllers) controller.dispose();
@@ -54,7 +54,7 @@ describe("filter structural performance", () => {
       }),
     );
 
-    const pool = peekNativeFilterPool(getCRCInstance(canvas))!;
+    const pool = peekNativeFilterPool(getPibblInstance(canvas))!;
     const singleTenFunctionList = ledger.snapshot(pool, primitiveExecutions);
     expect(singleTenFunctionList).toMatchObject({
       primitiveExecutions: 1,
@@ -100,7 +100,7 @@ describe("filter structural performance", () => {
   it("bounds slots by nesting depth rather than sibling count", () => {
     const nestedCanvas = renderScene(threeNestedFilters(undefined));
     const threeNestedBoundaries =
-      peekNativeFilterPool(getCRCInstance(nestedCanvas))!.snapshot();
+      peekNativeFilterPool(getPibblInstance(nestedCanvas))!.snapshot();
     expect(threeNestedBoundaries).toMatchObject({
       surfaceSlots: 6,
       peakActivePairs: 3,
@@ -111,7 +111,7 @@ describe("filter structural performance", () => {
 
     const siblingCanvas = renderScene(oneHundredSiblingFilters());
     const oneHundredSiblingBoundaries =
-      peekNativeFilterPool(getCRCInstance(siblingCanvas))!.snapshot();
+      peekNativeFilterPool(getPibblInstance(siblingCanvas))!.snapshot();
     expect(oneHundredSiblingBoundaries).toMatchObject({
       surfaceSlots: 2,
       peakActivePairs: 1,
@@ -143,7 +143,7 @@ describe("filter structural performance", () => {
         ),
       }),
     );
-    const pool = peekNativeFilterPool(getCRCInstance(canvas))!;
+    const pool = peekNativeFilterPool(getPibblInstance(canvas))!;
 
     expect(pool.snapshot()).toMatchObject({
       surfaceSlots: 2,
@@ -209,7 +209,7 @@ describe("filter structural performance", () => {
     });
     const retainedChild = createElement(Child, {});
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, filteredLayer(1, retainedChild), {
+    const controller = mountPibbl(canvas, filteredLayer(1, retainedChild), {
       pixelRatio: 1,
     });
     controllers.add(controller);
@@ -219,7 +219,7 @@ describe("filter structural performance", () => {
     executeRender(canvas, 1, filteredLayer(0.5, retainedChild));
 
     expect(childExecutions).toBe(1);
-    expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
+    expect(peekNativeFilterPool(getPibblInstance(canvas))!.snapshot()).toMatchObject({
       surfaceSlots: 2,
       pairCheckouts: 2,
       pairReturns: 2,
@@ -230,7 +230,7 @@ describe("filter structural performance", () => {
 
 const COLOR_FILTER = grayscale({ amount: 1 });
 
-const TEN_FUNCTION_FILTER_LIST: readonly CRCFilter[] = [
+const TEN_FUNCTION_FILTER_LIST: readonly PibblFilter[] = [
   blur({ radius: 1 }),
   brightness({ amount: 1 }),
   contrast({ amount: 1 }),
@@ -421,9 +421,9 @@ function poolSurfaces(pool: FilterSurfacePool): FilterSurface[] {
   return slots.flatMap((slot) => (slot ? [slot] : []));
 }
 
-function renderScene(root: CRCNode): HTMLCanvasElement {
+function renderScene(root: PibblNode): HTMLCanvasElement {
   const canvas = createCanvas();
-  const controller = mountCRC(canvas, root, { pixelRatio: 1 });
+  const controller = mountPibbl(canvas, root, { pixelRatio: 1 });
   controllers.add(controller);
   executeRender(canvas, 0);
   return canvas;
@@ -438,7 +438,7 @@ function createCanvas(): HTMLCanvasElement {
   return canvas;
 }
 
-function threeNestedFilters(child: CRCNode): CRCNode {
+function threeNestedFilters(child: PibblNode): PibblNode {
   return createElement(Group, {
     style: { filter: COLOR_FILTER },
     children: createElement(Group, {
@@ -451,7 +451,7 @@ function threeNestedFilters(child: CRCNode): CRCNode {
   });
 }
 
-function oneHundredSiblingFilters(): CRCNode {
+function oneHundredSiblingFilters(): PibblNode {
   return createElement(Group, {
     children: Array.from({ length: 100 }, (_, index) =>
       createElement(Group, {
@@ -463,7 +463,7 @@ function oneHundredSiblingFilters(): CRCNode {
   });
 }
 
-function filteredLayer(amount: number, child: CRCNode): CRCNode {
+function filteredLayer(amount: number, child: PibblNode): PibblNode {
   return createElement(Layer, {
     style: {
       width: 32,

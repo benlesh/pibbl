@@ -1,7 +1,7 @@
 import type { Teardowns } from "../teardowns.js";
-import type { CRCEventRoot } from "../types.js";
-import type { CRCEventType } from "../events/types.js";
-import type { CRCFocusManager } from "./focus-manager.js";
+import type { PibblEventRoot } from "../types.js";
+import type { PibblEventType } from "../events/types.js";
+import type { PibblFocusManager } from "./focus-manager.js";
 import { moveTab } from "./keyboard-defaults.js";
 import type { HtmlFocusRegion } from "./html-focus-region.js";
 import { getManagedTabStops } from "./dom-tab-stops.js";
@@ -23,25 +23,25 @@ interface PendingTabEntry {
   readonly origin: Element | null;
 }
 
-export interface CRCMountedDOMFocusHost {
-  beforeNativeDispatch(type: CRCEventType, event: Event): boolean;
+export interface PibblMountedDOMFocusHost {
+  beforeNativeDispatch(type: PibblEventType, event: Event): boolean;
   focusFromPress(): void;
-  setManager(manager: CRCFocusManager | undefined): void;
+  setManager(manager: PibblFocusManager | undefined): void;
   syncCandidateAvailability(hasCandidates: boolean): void;
   syncHtmlRegions(regions: readonly HtmlFocusRegion[]): void;
 }
 
 export function mountDOMFocusHost(
   canvas: HTMLCanvasElement,
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   teardowns: Teardowns,
-): CRCMountedDOMFocusHost {
+): PibblMountedDOMFocusHost {
   let tabIndexOwnership: TabIndexOwnership | undefined;
   let candidateReason = false;
   let pressReason = false;
   let pendingTabEntry: PendingTabEntry | undefined;
   let pendingTabExpiry: ReturnType<typeof setTimeout> | undefined;
-  let manager: CRCFocusManager | undefined;
+  let manager: PibblFocusManager | undefined;
   let disposed = false;
   let domFocusActive = canvas.ownerDocument.activeElement === canvas;
   let htmlRegions: readonly HtmlFocusRegion[] = Object.freeze([]);
@@ -153,7 +153,7 @@ export function mountDOMFocusHost(
     syncTabIndex();
   };
 
-  const setManager = (nextManager: CRCFocusManager | undefined) => {
+  const setManager = (nextManager: PibblFocusManager | undefined) => {
     if (disposed) return;
     manager = nextManager;
     syncCandidateAvailability(Boolean(nextManager?.hasFocusCandidates));
@@ -256,7 +256,7 @@ export function mountDOMFocusHost(
     pendingTabExpiry = expiry;
   };
 
-  const beforeNativeDispatch = (type: CRCEventType, event: Event) => {
+  const beforeNativeDispatch = (type: PibblEventType, event: Event) => {
     const activeManager = manager;
     if (!activeManager) return true;
     if (type === "focus" || type === "focusin") {
@@ -453,7 +453,7 @@ function isFocusEventForCanvas(
 }
 
 function requireObservers(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   type:
     | "blur"
     | "focus"
@@ -469,7 +469,7 @@ function requireObservers(
 ): Set<(event: Event) => void> {
   const observers = eventRoot.observers.get(type);
   if (!observers) {
-    throw new Error(`CRC ${type} observer registry is unavailable.`);
+    throw new Error(`Pibbl ${type} observer registry is unavailable.`);
   }
   return observers;
 }

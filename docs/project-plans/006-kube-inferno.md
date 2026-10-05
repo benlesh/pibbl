@@ -6,13 +6,13 @@ does not replace the concurrent active HtmlBox plan.
 
 ## Product and success criteria
 
-Kube Inferno is a single-player infrastructure business game and a flagship CRC
+Kube Inferno is a single-player infrastructure business game and a flagship Pibbl
 example. Build a service, attract customers, earn money, and invest in capacity
 and efficiency while surviving failures and changes in demand. Overloaded
 machines burn; dead machines go dark and spit sparks. Traffic and money make the
 consequences of each decision visible.
 
-The reference-application question is whether CRC can deliver a compelling,
+The reference-application question is whether Pibbl can deliver a compelling,
 readable, graphics-led game through its existing public 2D surface. This plan
 now includes an approved Sprite capability as an enabling runtime addition.
 Existing Image behavior remains unchanged. Exact public types, playback semantics,
@@ -34,7 +34,7 @@ simulation specification.
 
 - Midnight navy grid, miniature isometric industrial machines, teal healthy
   traffic, amber pressure, orange fire, and red failures.
-- Fixed-angle 2D sprites provide depth. CRC draws the graph, UI, dynamic lights,
+- Fixed-angle 2D sprites provide depth. Pibbl draws the graph, UI, dynamic lights,
   construction progress, particles, fire, smoke, sparks, and selection states.
 - A large central map, compact top business HUD, bottom draggable build tray,
   and contextual right inspector. Event messages remain secondary to the map.
@@ -222,7 +222,7 @@ Separate these responsibilities:
   order and row layout have no implied animation meaning.
 - Sprite instances select and render frames with independent playback state.
   Frame changes preserve the declared logical box instead of stretching each
-  cropped frame to fill it. Existing CRC style transforms remain authoritative.
+  cropped frame to fill it. Existing Pibbl style transforms remain authoritative.
 - Grid helpers produce these same records using cell sizes, margins, and spacing.
   Explicit records remain the escape hatch for hand-made sheets.
 - Format-specific adapters translate supported Aseprite and TexturePacker JSON
@@ -249,13 +249,13 @@ Do not introduce a second scheduler or silently expand Image semantics.
 
 ## Application architecture and boundaries
 
-- Implement under `games/kube-inferno` using public `@crc/core` entries and JSX.
+- Implement under `games/kube-inferno` using public `@pibbl/core` entries and JSX.
   The user requires a completely standalone page with no Studio shell or other
   navigation. Use a dedicated Vite entry and production build.
-- Separate a pure, fixed-step simulation and serializable commands from CRC
+- Separate a pure, fixed-step simulation and serializable commands from Pibbl
   rendering and browser persistence. Use seeded event RNG, stable entity IDs,
   and simulation-time build clocks. Queue mutations at tick boundaries.
-- Advance from CRC's supported frame/animation lifecycle. No second animation
+- Advance from Pibbl's supported frame/animation lifecycle. No second animation
   loop, private scheduler imports, or React dependency. Inspect current animation,
   particle, drawing, event, and ownership contracts before implementation.
 - Signals publish committed view state. Component drawing does not mutate the
@@ -297,7 +297,7 @@ Each playable milestone gets hands-on feedback before broadening or hardening.
    dimensions when selecting frames before adding timed playback.
 3. Implement the minimum Sprite path and an explicit irregular sheet description.
    Then add a focused playback test and scheduled playback through the existing
-   CRC lifecycle, showing two instances of the same asset at independent phases.
+   Pibbl lifecycle, showing two instances of the same asset at independent phases.
 4. Expose a small standalone sprite lesson: animated machine, play/pause controls,
    frame inspection, and a load control that changes machine activity. Include
    deterministic headless driving of that exact scenario.
@@ -381,7 +381,7 @@ Done when accepted behavior is hardened, reviewed, documented, and verified:
 
 - 2026-10-03: User required a completely separate standalone page with no other
   navigation. Implemented `games/kube-inferno`, served at
-  `http://127.0.0.1:5190/`, with an independent build. The map uses CRC and generated
+  `http://127.0.0.1:5190/`, with an independent build. The map uses Pibbl and generated
   atlas art; native controls surround it. Purchase, wiring, construction, overload,
   revenue, investigation, retirement, scripted events, pause/speed, and local peak
   records are playable. Sprite is application-local; public animation/atlas APIs
@@ -399,7 +399,7 @@ Done when accepted behavior is hardened, reviewed, documented, and verified:
   peak-user and peak-bank records, drag/connect/remove interaction, differentiated
   purchases/build times, random crises, burning overload, and sparking failures.
 - 2026-10-02: Preserved the approved image in this plan's asset directory. Chose
-  2D isometric art plus CRC effects instead of requiring Three.js.
+  2D isometric art plus Pibbl effects instead of requiring Three.js.
 - 2026-10-02: Defined service graph versus node/replica semantics, explicit
   workload recipes, bounded traffic visualization, and feedback-first delivery.
   Economy details are implementation defaults subject to gameplay feedback.

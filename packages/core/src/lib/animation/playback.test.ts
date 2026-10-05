@@ -2,7 +2,7 @@ import { signalObserversForTest } from "../../../test/support/signal-observer";
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   computed,
-  crc,
+  pibbl,
   createElement,
   defineAnimation,
   marker,
@@ -15,8 +15,8 @@ import {
   drive,
   tween,
   wait,
-  type CRCAnimationProgram,
-  type CRCNode,
+  type PibblAnimationProgram,
+  type PibblNode,
 } from '../../index';
 import { clearSharedState } from '../global-state';
 import { getSignalNode } from '../signals/graph';
@@ -30,7 +30,7 @@ import {
   installSchedulerTraceCollectorForTest,
   ManualSchedulerDriver,
   snapshotRealmScheduler,
-  type CRCSchedulerTraceRecord,
+  type PibblSchedulerTraceRecord,
 } from '../scheduler/testing';
 import {
   animationPlaybackSnapshot,
@@ -42,7 +42,7 @@ import { writerLeaseSnapshot } from './writer-leases';
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
 const controllers = new Set<AnimationPlaybackController>();
-const roots = new Set<ReturnType<typeof crc>>();
+const roots = new Set<ReturnType<typeof pibbl>>();
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -61,7 +61,7 @@ afterEach(() => {
 });
 
 function playback(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   options: Parameters<typeof createAnimationPlaybackController>[1] = {},
 ): AnimationPlaybackController {
   const controller = createAnimationPlaybackController(program, options);
@@ -69,10 +69,10 @@ function playback(
   return controller;
 }
 
-function root(node: CRCNode) {
+function root(node: PibblNode) {
   const canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
-  const controller = crc(canvas, node);
+  const controller = pibbl(canvas, node);
   roots.add(controller);
   return controller;
 }
@@ -1165,7 +1165,7 @@ describe('scheduler-integrated animation playback', () => {
     expect(tweened.get()).toBe(100);
 
     const stepped = signal(0);
-    const traces: CRCSchedulerTraceRecord[] = [];
+    const traces: PibblSchedulerTraceRecord[] = [];
     const restoreTrace = installSchedulerTraceCollectorForTest(record => traces.push(record));
     const stepperController = playback(drive(stepped, stepper({
       stepMilliseconds: 10,
@@ -1405,7 +1405,7 @@ describe('scheduler-integrated animation playback', () => {
         return Object.is(previous, next);
       },
     });
-    const traces: CRCSchedulerTraceRecord[] = [];
+    const traces: PibblSchedulerTraceRecord[] = [];
     const restoreTrace = installSchedulerTraceCollectorForTest(record => traces.push(record));
     const before = {
       leases: writerLeaseSnapshot().active,
@@ -1447,7 +1447,7 @@ describe('scheduler-integrated animation playback', () => {
       },
     });
     const events: string[] = [];
-    const traces: CRCSchedulerTraceRecord[] = [];
+    const traces: PibblSchedulerTraceRecord[] = [];
     const restoreTrace = installSchedulerTraceCollectorForTest(record => traces.push(record));
     const controller = playback(repeat(drive(value, stepper({
       stepMilliseconds: 10,
@@ -1755,7 +1755,7 @@ describe('scheduler-integrated animation playback', () => {
 
   it('keeps command records immutable and accepts only the latest queued play generation', () => {
     const value = signal(0);
-    const records: CRCSchedulerTraceRecord[] = [];
+    const records: PibblSchedulerTraceRecord[] = [];
     const restoreTrace = installSchedulerTraceCollectorForTest(record => records.push(record));
     const controller = playback(drive(value, tween({ to: 10, duration: 100 })));
 
@@ -1777,7 +1777,7 @@ describe('scheduler-integrated animation playback', () => {
   it('traces only outputs actually staged by the sampled program path', () => {
     const active = signal(0, { debugName: 'active trace output' });
     const future = signal(0, { debugName: 'future trace output' });
-    const records: CRCSchedulerTraceRecord[] = [];
+    const records: PibblSchedulerTraceRecord[] = [];
     const restoreTrace = installSchedulerTraceCollectorForTest(record => records.push(record));
     const controller = playback(sequence(
       drive(active, tween({ to: 10, duration: 100 })),
@@ -1802,22 +1802,22 @@ describe('scheduler-integrated animation playback', () => {
   it.each([
     {
       point: 'Begin command',
-      throwsAt: (record: CRCSchedulerTraceRecord) =>
+      throwsAt: (record: PibblSchedulerTraceRecord) =>
         record.kind === 'animation-command',
     },
     {
       point: 'Begin start milestone',
-      throwsAt: (record: CRCSchedulerTraceRecord) =>
+      throwsAt: (record: PibblSchedulerTraceRecord) =>
         record.kind === 'animation-milestone' && record.event === 'start',
     },
     {
       point: 'Advance sample',
-      throwsAt: (record: CRCSchedulerTraceRecord) =>
+      throwsAt: (record: PibblSchedulerTraceRecord) =>
         record.kind === 'animation-sample',
     },
     {
       point: 'Complete write',
-      throwsAt: (record: CRCSchedulerTraceRecord) =>
+      throwsAt: (record: PibblSchedulerTraceRecord) =>
         record.kind === 'animation-write',
     },
   ])('isolates a trace collector exception at $point', ({ throwsAt }) => {

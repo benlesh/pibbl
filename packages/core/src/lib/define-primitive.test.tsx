@@ -6,13 +6,13 @@ import { LayoutDiagnostic } from './style/diagnostics.js';
 import type { Length } from './style/types.js';
 import type {
   CanvasMeasurementService,
-  CRCElement,
+  PibblElement,
   MeasureResult,
   SystemStyle,
 } from './types.js';
-import { crc } from './crc.js';
+import { pibbl } from './pibbl.js';
 import {
-  crcInternalRunPurePrimitiveResolver,
+  pibblInternalRunPurePrimitiveResolver,
   definePrimitive,
   derivePrimitive,
 } from './define-primitive.js';
@@ -48,15 +48,15 @@ describe('definePrimitive', () => {
     const observed: string[] = [];
     const Probe = definePrimitive(function renderPureResolverProbe() {
       const before = useSignal('before');
-      expect(() => crcInternalRunPurePrimitiveResolver(() => useSignal('no')))
+      expect(() => pibblInternalRunPurePrimitiveResolver(() => useSignal('no')))
         .toThrow(/hooks can only be called/i);
-      expect(() => crcInternalRunPurePrimitiveResolver(() => value.set(2)))
+      expect(() => pibblInternalRunPurePrimitiveResolver(() => value.set(2)))
         .toThrow(/pure primitive resolver/i);
-      expect(crcInternalRunPurePrimitiveResolver(() => 42)).toBe(42);
+      expect(pibblInternalRunPurePrimitiveResolver(() => 42)).toBe(42);
       const after = useSignal('after');
       observed.push(before.get(), after.get());
     });
-    const controller = crc(createCanvas(10, 10), <Probe />);
+    const controller = pibbl(createCanvas(10, 10), <Probe />);
     await nextFrame();
 
     expect(value.get()).toBe(1);
@@ -101,7 +101,7 @@ describe('definePrimitive', () => {
       status: 'measured', size: { width: 20, height: 4 },
     });
     const canvas = createCanvas(20, 4);
-    const controller = crc(canvas, <>
+    const controller = pibbl(canvas, <>
       <Derived style={{ width: '50%' }} />
       <Source style={{ width: '50%' }} />
     </>);
@@ -195,7 +195,7 @@ describe('definePrimitive', () => {
     }, { normalizeStyle, resolveStyle });
     const specified = { width: '50%' } as const;
     const canvas = createCanvas(300, 80);
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       <StyleProbe value={7} style={specified} />,
     );
@@ -229,7 +229,7 @@ describe('definePrimitive', () => {
         pending = callback;
         return 1;
       });
-    const controller = crc(canvas, createElement(Leaky, {
+    const controller = pibbl(canvas, createElement(Leaky, {
       style: { radius: '50%' },
     }));
 
@@ -243,8 +243,8 @@ describe('definePrimitive', () => {
     const DirectProbe = definePrimitive(function renderDirectProbe() {});
 
     expect(() => DirectProbe({})).toThrowError(
-      'DirectProbe is a CRC component and was invoked outside the CRC renderer.\n' +
-      'Use <DirectProbe ... /> in a CRC JSX file or ' +
+      'DirectProbe is a Pibbl component and was invoked outside the Pibbl renderer.\n' +
+      'Use <DirectProbe ... /> in a Pibbl JSX file or ' +
       'createElement(DirectProbe, props).',
     );
   });
@@ -357,15 +357,15 @@ describe('primitive pure measurement', () => {
   });
 
   it('diagnoses primitive measurement cycles and remains usable afterward', () => {
-    let directElement: CRCElement;
+    let directElement: PibblElement;
     const Direct = definePrimitive(function renderDirectCycle() {}, {
       measure: (input): MeasureResult =>
         input.measureElement(directElement, constraints),
     });
     directElement = <Direct />;
 
-    let aElement: CRCElement;
-    let bElement: CRCElement;
+    let aElement: PibblElement;
+    let bElement: PibblElement;
     const A = definePrimitive(function renderCycleA() {}, {
       measure: (input): MeasureResult =>
         input.measureElement(bElement, constraints),

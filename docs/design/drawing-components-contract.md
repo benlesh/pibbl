@@ -1,13 +1,13 @@
-# CRC drawing-component contract
+# Pibbl drawing-component contract
 
 Status: current implemented contract, updated for external render layers and the
 official Three.js adapter on 2026-09-28.
 
-CRC exports descriptive component values. Authors construct them with JSX or
+Pibbl exports descriptive component values. Authors construct them with JSX or
 `createElement`; none is a callable factory. Geometry, paint, cursor, transform,
 clip, image source, and layout participation use explicit local `style`. Events
 remain props. Drawing leaves reject children, `Text` accepts textual children,
-and composition values accept recursive `CRCNode` children.
+and composition values accept recursive `PibblNode` children.
 
 First-class filters are also explicit local style and use the composition
 boundary defined below.
@@ -26,7 +26,7 @@ boundary defined below.
   `pointerEvents="none"` removes that leaf from targeting without changing
   paint. Absent visible paint does not by itself remove declared geometry.
 - Property changes replace the prior frame's pixels and interaction geometry
-  after the scheduled CRC render settles.
+  after the scheduled Pibbl render settles.
 - Empty paths, zero-length lines, zero radii, zero ellipse axes, and zero-angle
   sweeps are safe. Signed primitive rectangle/image geometry follows Canvas;
   shape radii and layout allocation remain nonnegative.
@@ -132,14 +132,14 @@ box. Curved and arbitrary edges also do not support pixel-grid alignment.
 
 `Text` concatenates strings and numbers, including zero, from recursive arrays
 or finite synchronous iterables. Booleans and nullish values add nothing. It
-rejects CRC elements, Promises, async iterables, functions, symbols, foreign
+rejects Pibbl elements, Promises, async iterables, functions, symbols, foreign
 elements, and unsupported objects. Text content is not a style member.
 
-`CRCTextInput` additionally accepts signals at positions in that declared
+`PibblTextInput` additionally accepts signals at positions in that declared
 recursive grammar. Each directly encountered signal is read by the receiving
-`Text` component and may replace one complete `CRCTextChild` structure. CRC
+`Text` component and may replace one complete `PibblTextChild` structure. Pibbl
 does not perform another signal-unwrapping pass inside the structure returned
-by that signal. Structural `CRCNodeInput` follows the same rule for roots,
+by that signal. Structural `PibblNodeInput` follows the same rule for roots,
 containers, arrays, and finite iterables.
 
 ```tsx
@@ -167,11 +167,11 @@ interaction bounds remain exact.
 
 ## Composition values
 
-| Export  | Contract                                                                                                                                                                   |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Group` | Applies nested scale, rotation/origin, translation, and skew to all recursive children. Updates, zero/negative scale, and sibling isolation retain Canvas semantics.       |
-| `Clip`  | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested intersections, transforms, updates, empty clips, and paint/hit geometry agree. |
-| `Layer` | Renders multiple children into one persistent offscreen CRC instance, caches retained content, follows root density, and participates in global paint/target/focus order.  |
+| Export  | Contract                                                                                                                                                                    |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Group` | Applies nested scale, rotation/origin, translation, and skew to all recursive children. Updates, zero/negative scale, and sibling isolation retain Canvas semantics.        |
+| `Clip`  | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested intersections, transforms, updates, empty clips, and paint/hit geometry agree.  |
+| `Layer` | Renders multiple children into one persistent offscreen Pibbl instance, caches retained content, follows root density, and participates in global paint/target/focus order. |
 
 ## External render layers and Three.js
 
@@ -184,10 +184,10 @@ one bitmap plus matching interaction metadata at its Canvas source position.
 The layer is flattened: its internal objects cannot alternate around a Canvas
 sibling. Parent `Group` transforms, `Clip` geometry, layout, opacity, and
 filters apply to the completed bitmap. Three objects are ordinary Three values,
-not CRC elements; CRC does not mirror their geometry, material, lighting,
+not Pibbl elements; Pibbl does not mirror their geometry, material, lighting,
 camera, loader, shadow, control, particle, or post-processing APIs.
 
-Default Three raycasting distinguishes visible blocks, registered CRC targets,
+Default Three raycasting distinguishes visible blocks, registered Pibbl targets,
 and empty-pixel misses. The complete lifecycle, event/focus arbitration, input
 bridge, ownership, and deliberate boundaries are defined by the [external
 render-layer and Three.js contract](./render-layer-and-three-contract.md).
@@ -195,7 +195,7 @@ render-layer and Three.js contract](./render-layer-and-three-contract.md).
 ## Filter composition
 
 A nonempty `style.filter` turns the receiving primitive into one immediate-mode
-composition boundary. CRC renders that primitive and every descendant it
+composition boundary. Pibbl renders that primitive and every descendant it
 returns once into one upright local source surface, then applies the complete
 filter list in one native Canvas operation. Fill and stroke, multiline text,
 transparent image content and borders, custom primitive paint, layout output,
@@ -228,10 +228,10 @@ local subtree paint -> receiving filter -> receiving clip -> receiving transform
 ```
 
 `Layer` remains the persistent cache boundary; filter scratch surfaces are
-transient and do not create nested CRC mounts. A filter on a Layer consumes its
+transient and do not create nested Pibbl mounts. A filter on a Layer consumes its
 combined cached bitmap. Changing only an outer or Layer filter can recomposite
 that bitmap without rerunning retained child components. Filters inside a Layer
-belong to the child CRC instance and its scratch pool, while the existing bridge
+belong to the child Pibbl instance and its scratch pool, while the existing bridge
 keeps their interaction entries in global paint order.
 
 An external render layer is another persistent cache boundary. A receiving core
@@ -240,7 +240,7 @@ clip/transform/presentation. Filter pixels do not alter the layer's committed
 pick or focus geometry.
 
 Nonempty filters require browser `OffscreenCanvas`, an Offscreen Canvas 2D
-context, and its native `filter` state to accept the compiled chain. CRC has no
+context, and its native `filter` state to accept the compiled chain. Pibbl has no
 DOM-canvas fallback, JavaScript pixel loop, tiling, or silent resolution
 reduction. An empty list stays on the direct path and has no such requirement.
 
@@ -269,7 +269,7 @@ detach on settlement, source replacement, component removal, or disposal.
 Saved late callbacks cannot publish stale state. Successful natural sizing uses
 `naturalWidth` and `naturalHeight` independently for whichever dimension is
 omitted. Explicit dimensions establish geometry before load and after failure;
-this matches CRC's geometry-first transparent-region rule. Natural image size
+this matches Pibbl's geometry-first transparent-region rule. Natural image size
 is unavailable to pure measurement because it would acquire an asynchronous
 resource.
 
@@ -299,12 +299,12 @@ structural cost. Its image comparison masks only browser-sensitive filter
 regions where documented.
 
 The Studio's `#/examples/three/three-layer` lesson covers blocking geometry,
-registered CRC targets, empty-pixel pass-through, focus, and outer Canvas
+registered Pibbl targets, empty-pixel pass-through, focus, and outer Canvas
 filters. `#/examples/three/three-instancing` adapts Three's instancing/raycasting
 example and additionally covers direct Three imports, controls input, scheduled
 animation, camera updates, and deterministic resource ownership.
 
-CRC adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG
+Pibbl adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG
 validator, retained scene graph, generic `Shape` component or registry, or
 complete CSS formatting engine. The standard shapes add no line smoothing,
 spline selection, data-to-mark conversion, `Pie`, charts, scales, axes,
@@ -316,7 +316,7 @@ See the
 The filter surface does not accept raw CSS strings, `url()`/SVG graphs,
 backdrop sampling, or a box-shadow model.
 
-CRC adds no 3D scene graph, material, lighting, shadow, loader, controls,
+Pibbl adds no 3D scene graph, material, lighting, shadow, loader, controls,
 particle, or post-processing vocabulary. An external render layer remains one
 flattened Canvas entry; applications use Three objects and facilities directly
 inside `defineThreeLayer()` when they need them.
@@ -324,7 +324,7 @@ inside `defineThreeLayer()` when they need them.
 ## Rounded shapes and public path creators
 
 `Rectangle`, `Polygon`, `RegularPolygon`, and `Star` accept the shared
-`cornerRadius` and `cornerRadii` vocabulary. At actual corner index `i`, CRC
+`cornerRadius` and `cornerRadii` vocabulary. At actual corner index `i`, Pibbl
 uses the exact nullish fallback expression:
 
 ```ts
@@ -351,7 +351,7 @@ duplicate or exactly collinear vertices remain sharp. Rounding never expands a
 rectangle box or coordinate/vertex extrema.
 
 `RegularPolygon` requires an integer `sides >= 3` and exactly one size field.
-For `n = sides`, CRC normalizes `circumradius`, `inradius`, or `sideLength` to
+For `n = sides`, Pibbl normalizes `circumradius`, `inradius`, or `sideLength` to
 the circumradius `R` as `R = circumradius`,
 `R = inradius / Math.cos(Math.PI / n)`, or
 `R = sideLength / (2 * Math.sin(Math.PI / n))`. Its finite `rotation` defaults
@@ -404,7 +404,7 @@ return Path2D. Native browser context methods still require native paths.
 The class supports Canvas path builders, copying, affine transforms, canonical
 segment editing and a read-only mutation revision. Public `toPath2D` conversion
 always returns a fresh snapshot; `toSvgPathData` exports absolute SVG data.
-CRC privately resolves an unchanged instance/revision to one native snapshot and
+Pibbl privately resolves an unchanged instance/revision to one native snapshot and
 replaces that snapshot after edits. Paint and hit/clip geometry share the same
 consumed snapshot. Conversion does not occur during pointer dispatch. Old root
 or retained-Layer generations keep their previous native paths until updated.

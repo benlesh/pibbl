@@ -1,20 +1,20 @@
 import {
-  crcInternalCurrentRenderOwner,
-  crcInternalOnRenderFinish,
+  pibblInternalCurrentRenderOwner,
+  pibblInternalOnRenderFinish,
   useInternalHookSlot,
-  type CRCInternalRenderOwner,
-} from "@crc/core/internal";
+  type PibblInternalRenderOwner,
+} from "@pibbl/core/internal";
 import type {
-  CRCParticleEffect2D,
-  CRCParticleParameterValues,
-  CRCParticleSystem,
-  CRCParticleSystemOptions,
+  PibblParticleEffect2D,
+  PibblParticleParameterValues,
+  PibblParticleSystem,
+  PibblParticleSystemOptions,
 } from "../types.js";
 import {
   resolveSignalFields,
   type SignalFields,
 } from "../signal-inputs.js";
-import { resolveSignalValue, type SignalValue } from "@crc/core";
+import { resolveSignalValue, type SignalValue } from "@pibbl/core";
 import {
   createParticleSystemController,
   type ParticleSystemController,
@@ -22,46 +22,46 @@ import {
 
 interface ParticleSystemHookSlot {
   readonly controller: ParticleSystemController;
-  readonly owner: CRCInternalRenderOwner;
+  readonly owner: PibblInternalRenderOwner;
   mountSettled: boolean;
   revision: number;
 }
 
 /**
  * Creates a mount-owned system retaining the effect's emitter and parameter types. See
- * {@link CRCParticleEffect2D}, {@link CRCParticleSystemOptions}, and {@link CRCParticleSystem}.
+ * {@link PibblParticleEffect2D}, {@link PibblParticleSystemOptions}, and {@link PibblParticleSystem}.
  * @param effect - Effect definition, optionally supplied by a signal. See {@link SignalValue} ,
- * {@link CRCParticleEffect2D} .
+ * {@link PibblParticleEffect2D} .
  * @param options - Playback and simulation options, optionally supplied by a signal. See
- * {@link SignalValue} , {@link SignalFields} , {@link CRCParticleSystemOptions} .
- * @returns Stable mount-owned controls for the particle simulation. See {@link CRCParticleSystem}.
+ * {@link SignalValue} , {@link SignalFields} , {@link PibblParticleSystemOptions} .
+ * @returns Stable mount-owned controls for the particle simulation. See {@link PibblParticleSystem}.
  */
 export function useParticleSystem<
   EmitterName extends string,
-  Parameters extends CRCParticleParameterValues,
+  Parameters extends PibblParticleParameterValues,
 >(
-  effect: SignalValue<CRCParticleEffect2D<EmitterName, Parameters>>,
-  options?: SignalValue<SignalFields<CRCParticleSystemOptions>>,
-): CRCParticleSystem<EmitterName, Parameters>;
+  effect: SignalValue<PibblParticleEffect2D<EmitterName, Parameters>>,
+  options?: SignalValue<SignalFields<PibblParticleSystemOptions>>,
+): PibblParticleSystem<EmitterName, Parameters>;
 /**
  * Creates one stable particle-system handle owned by the current hook slot.
  *
  * @param effectInput - Effect definition, optionally supplied by a signal. See {@link SignalValue}
- * , {@link CRCParticleEffect2D} .
+ * , {@link PibblParticleEffect2D} .
  * @param optionsInput - Playback and simulation options, optionally supplied by a signal. See
- * {@link SignalValue} , {@link SignalFields} , {@link CRCParticleSystemOptions} .
- * @returns Stable mount-owned controls for the particle simulation. See {@link CRCParticleSystem}.
+ * {@link SignalValue} , {@link SignalFields} , {@link PibblParticleSystemOptions} .
+ * @returns Stable mount-owned controls for the particle simulation. See {@link PibblParticleSystem}.
  *
  * @see {@link SignalValue}
- * @see {@link CRCParticleEffect2D}
- * @see {@link CRCParticleSystemOptions}
- * @see {@link CRCParticleSystem}
+ * @see {@link PibblParticleEffect2D}
+ * @see {@link PibblParticleSystemOptions}
+ * @see {@link PibblParticleSystem}
  */
 export function useParticleSystem(
-  effectInput: SignalValue<CRCParticleEffect2D>,
-  optionsInput: SignalValue<SignalFields<CRCParticleSystemOptions>> = {},
-): CRCParticleSystem {
-  const owner = crcInternalCurrentRenderOwner();
+  effectInput: SignalValue<PibblParticleEffect2D>,
+  optionsInput: SignalValue<SignalFields<PibblParticleSystemOptions>> = {},
+): PibblParticleSystem {
+  const owner = pibblInternalCurrentRenderOwner();
   const effect = resolveSignalValue(effectInput);
   const options = resolveSignalFields(optionsInput);
   const slot = useInternalHookSlot<ParticleSystemHookSlot>(
@@ -79,11 +79,11 @@ export function useParticleSystem(
     },
   ).value;
   if (slot.owner !== owner) {
-    throw new Error("A CRC particle system hook changed render ownership.");
+    throw new Error("A Pibbl particle system hook changed render ownership.");
   }
   const candidate = slot.controller.prepareEffect(effect, options);
   const revision = ++slot.revision;
-  crcInternalOnRenderFinish(owner, (success) => {
+  pibblInternalOnRenderFinish(owner, (success) => {
     if (!success || revision !== slot.revision) {
       slot.controller.cancelEffect(candidate);
       return;

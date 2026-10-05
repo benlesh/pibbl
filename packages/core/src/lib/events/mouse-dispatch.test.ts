@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { pibbl } from '../pibbl';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventListener } from '../hooks/use-event-listener';
 import { useEventTarget } from '../hooks/use-event-target';
 import type {
-  CRCEventHandlers,
-  CRCEventTarget,
-  CRCLogicalMouseEvent,
+  PibblEventHandlers,
+  PibblEventTarget,
+  PibblLogicalMouseEvent,
 } from './types';
 import { createElement } from '../element/create-element';
 
@@ -26,7 +26,7 @@ describe('DOM-aligned mouse dispatch', () => {
     const trace: string[] = [];
     const scene = boundaryScene(trace, false);
     const canvas = createCanvas();
-    crc(canvas, scene);
+    pibbl(canvas, scene);
     await nextFrame();
 
     dispatchMouse(canvas, 'mousemove', 25, 25);
@@ -54,12 +54,12 @@ describe('DOM-aligned mouse dispatch', () => {
 
   it('leaves and enters only sibling-exclusive nodes without re-entering the shared prefix', async () => {
     const trace: string[] = [];
-    let aTarget: CRCEventTarget | undefined;
-    let bTarget: CRCEventTarget | undefined;
-    let outRelated: CRCEventTarget | null | undefined;
-    let leaveRelated: CRCEventTarget | null | undefined;
-    let overRelated: CRCEventTarget | null | undefined;
-    let enterRelated: CRCEventTarget | null | undefined;
+    let aTarget: PibblEventTarget | undefined;
+    let bTarget: PibblEventTarget | undefined;
+    let outRelated: PibblEventTarget | null | undefined;
+    let leaveRelated: PibblEventTarget | null | undefined;
+    let overRelated: PibblEventTarget | null | undefined;
+    let enterRelated: PibblEventTarget | null | undefined;
     const scene = boundaryScene(trace, true, {
       onATarget(event) {
         aTarget = event.target;
@@ -81,7 +81,7 @@ describe('DOM-aligned mouse dispatch', () => {
       },
     });
     const canvas = createCanvas();
-    crc(canvas, scene);
+    pibbl(canvas, scene);
     await nextFrame();
 
     dispatchMouse(canvas, 'mousemove', 25, 25);
@@ -139,7 +139,7 @@ describe('DOM-aligned mouse dispatch', () => {
       });
     };
     const canvas = createCanvas();
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
 
     const entry = dispatchMouse(canvas, 'mousemove', 25, 25);
@@ -163,7 +163,7 @@ describe('DOM-aligned mouse dispatch', () => {
 
   it('targets the deepest common live listener after down and up resolve to siblings', async () => {
     const trace: string[] = [];
-    let activationTarget: CRCEventTarget | undefined;
+    let activationTarget: PibblEventTarget | undefined;
     const Target = ({ label, x }: {
       label: string;
       x: number;
@@ -196,7 +196,7 @@ describe('DOM-aligned mouse dispatch', () => {
       return createElement(Parent, {});
     };
     const canvas = createCanvas();
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
 
     dispatchMouse(canvas, 'mousedown', 25, 25);
@@ -232,7 +232,7 @@ describe('DOM-aligned mouse dispatch', () => {
         createElement(Target, { label: 'b', x: 50 }),
       ];
       const canvas = createCanvas();
-      crc(canvas, createElement(Root, {}));
+      pibbl(canvas, createElement(Root, {}));
       await nextFrame();
 
       dispatchMouse(canvas, 'mousedown', 25, 25, button);
@@ -264,7 +264,7 @@ describe('DOM-aligned mouse dispatch', () => {
         return [createElement(Target, { x: 0 }), createElement(Target, { x: 50 })];
       };
       const canvas = createCanvas();
-      crc(canvas, createElement(Parent, {}));
+      pibbl(canvas, createElement(Parent, {}));
       await nextFrame();
 
       dispatchMouse(canvas, 'mousedown', 25, 25, button);
@@ -297,7 +297,7 @@ describe('DOM-aligned mouse dispatch', () => {
         createElement(Target, { targetLabel: 'b', x: 50 }),
       ];
       const canvas = createCanvas();
-      crc(canvas, createElement(Root, {}));
+      pibbl(canvas, createElement(Root, {}));
       await nextFrame();
 
       dispatchMouse(canvas, 'mousemove', 25, 25);
@@ -330,7 +330,7 @@ describe('DOM-aligned mouse dispatch', () => {
       createElement(Target, { label: 'b', x: 50 }),
     ];
     const canvas = createCanvas();
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
 
     dispatchMouse(canvas, 'mousedown', 25, 25, 0);
@@ -360,9 +360,9 @@ describe('DOM-aligned mouse dispatch', () => {
       return createElement(Target, {});
     };
     const canvas = createCanvas();
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
-    const observers = getCRCInstance(canvas).eventRoot.observers.get('mousemove')!;
+    const observers = getPibblInstance(canvas).eventRoot.observers.get('mousemove')!;
     observers.add(() => {
       trace.push('throws');
       throw new Error('expected observer failure');
@@ -383,9 +383,9 @@ describe('DOM-aligned mouse dispatch', () => {
       });
     };
     const canvas = createCanvas();
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
-    const hub = getCRCInstance(canvas).eventRoot.nativeListeners;
+    const hub = getPibblInstance(canvas).eventRoot.nativeListeners;
 
     expect(hub?.count('mousemove')).toBe(1);
     expect(hub?.count('mouseout')).toBe(1);
@@ -418,9 +418,9 @@ describe('DOM-aligned mouse dispatch', () => {
         });
       };
       const canvas = createCanvas();
-      crc(canvas, createElement(Target, {}));
+      pibbl(canvas, createElement(Target, {}));
       await nextFrame();
-      const hub = getCRCInstance(canvas).eventRoot.nativeListeners;
+      const hub = getPibblInstance(canvas).eventRoot.nativeListeners;
 
       const owned = [
         'mousedown',
@@ -435,12 +435,12 @@ describe('DOM-aligned mouse dispatch', () => {
 });
 
 interface BoundaryHooks {
-  readonly onATarget?: (event: CRCLogicalMouseEvent) => void;
-  readonly onBTarget?: (event: CRCLogicalMouseEvent) => void;
-  readonly onOut?: (event: CRCLogicalMouseEvent) => void;
-  readonly onLeave?: (event: CRCLogicalMouseEvent) => void;
-  readonly onOver?: (event: CRCLogicalMouseEvent) => void;
-  readonly onEnter?: (event: CRCLogicalMouseEvent) => void;
+  readonly onATarget?: (event: PibblLogicalMouseEvent) => void;
+  readonly onBTarget?: (event: PibblLogicalMouseEvent) => void;
+  readonly onOut?: (event: PibblLogicalMouseEvent) => void;
+  readonly onLeave?: (event: PibblLogicalMouseEvent) => void;
+  readonly onOver?: (event: PibblLogicalMouseEvent) => void;
+  readonly onEnter?: (event: PibblLogicalMouseEvent) => void;
 }
 
 function boundaryScene(
@@ -448,7 +448,7 @@ function boundaryScene(
   includeB: boolean,
   hooks: BoundaryHooks = {},
 ) {
-  const listenerHandlers = (label: string): CRCEventHandlers => ({
+  const listenerHandlers = (label: string): PibblEventHandlers => ({
     onMouseOver: event => trace.push(`${label}-over:${event.eventPhase}`),
     onMouseOut: event => trace.push(`${label}-out:${event.eventPhase}`),
     onMouseEnter: event => trace.push(`${label}-enter:${event.eventPhase}`),

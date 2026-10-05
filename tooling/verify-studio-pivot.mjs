@@ -6,33 +6,33 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { runInNewContext } from "node:vm";
 import { parse } from "@babel/parser";
-import { crcRuntimeSource } from "./crc-runtime-source.ts";
+import { pibblRuntimeSource } from "./pibbl-runtime-source.ts";
 import {
   collectPublicExports,
-  crcPublicCompilerOptions,
+  pibblPublicCompilerOptions,
 } from "./studio-docs/api-exports.ts";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const require = createRequire(import.meta.url);
 const tsc = join(dirname(require.resolve("typescript")), "tsc.js");
 const expectedModules = new Map([
-  ["@crc/core/filters", "node_modules/@crc/core/filters.d.ts"],
-  ["@crc/core/textures", "node_modules/@crc/core/textures/index.d.ts"],
-  ["@crc/core", "node_modules/@crc/core/index.d.ts"],
-  ["@crc/core/jsx-runtime", "node_modules/@crc/core/jsx-runtime.d.ts"],
-  ["@crc/core/jsx-dev-runtime", "node_modules/@crc/core/jsx-dev-runtime.d.ts"],
-  ["@crc/core/physics/2d/geometry", "node_modules/@crc/core/physics/2d/geometry.d.ts"],
-  ["@crc/core/physics/2d", "node_modules/@crc/core/physics/2d.d.ts"],
-  ["@crc/core/particles", "node_modules/@crc/core/particles/index.d.ts"],
-  ["@crc/three", "node_modules/@crc/three/index.d.ts"],
-  ["@crc/core/viz", "node_modules/@crc/core/viz/index.d.ts"],
-  ["@crc/text", "node_modules/@crc/text/index.d.ts"],
+  ["@pibbl/core/filters", "node_modules/@pibbl/core/filters.d.ts"],
+  ["@pibbl/core/textures", "node_modules/@pibbl/core/textures/index.d.ts"],
+  ["@pibbl/core", "node_modules/@pibbl/core/index.d.ts"],
+  ["@pibbl/core/jsx-runtime", "node_modules/@pibbl/core/jsx-runtime.d.ts"],
+  ["@pibbl/core/jsx-dev-runtime", "node_modules/@pibbl/core/jsx-dev-runtime.d.ts"],
+  ["@pibbl/core/physics/2d/geometry", "node_modules/@pibbl/core/physics/2d/geometry.d.ts"],
+  ["@pibbl/core/physics/2d", "node_modules/@pibbl/core/physics/2d.d.ts"],
+  ["@pibbl/core/particles", "node_modules/@pibbl/core/particles/index.d.ts"],
+  ["@pibbl/three", "node_modules/@pibbl/three/index.d.ts"],
+  ["@pibbl/core/viz", "node_modules/@pibbl/core/viz/index.d.ts"],
+  ["@pibbl/text", "node_modules/@pibbl/text/index.d.ts"],
 ]);
 const bundle = await readFile(
-  join(repositoryRoot, "playground/src/crc-editor-types.txt"),
+  join(repositoryRoot, "playground/src/pibbl-editor-types.txt"),
   "utf8",
 );
-const markers = [...bundle.matchAll(/^\/\* @crc-studio-module (.+) \*\/$/gmu)];
+const markers = [...bundle.matchAll(/^\/\* @pibbl-studio-module (.+) \*\/$/gmu)];
 assert.deepEqual(
   markers.map((match) => match[1]).sort(),
   [...expectedModules.keys()].sort(),
@@ -61,24 +61,24 @@ const builtEntries = Object.fromEntries(
 );
 const sourceInventory = await collectPublicExports(
   sourceEntries,
-  crcPublicCompilerOptions,
+  pibblPublicCompilerOptions,
 );
 const builtInventory = await collectPublicExports(
   builtEntries,
-  crcPublicCompilerOptions,
+  pibblPublicCompilerOptions,
 );
 const inventoryKey = new Map([
-  ["@crc/core/filters", "filters"],
-  ["@crc/core/textures", "textures"],
-  ["@crc/core", "root"],
-  ["@crc/core/jsx-runtime", "jsxRuntime"],
-  ["@crc/core/jsx-dev-runtime", "jsxDevRuntime"],
-  ["@crc/core/physics/2d/geometry", "physics2dGeometry"],
-  ["@crc/core/physics/2d", "physics2d"],
-  ["@crc/core/particles", "particles"],
-  ["@crc/three", "three"],
-  ["@crc/core/viz", "viz"],
-  ["@crc/text", "text"],
+  ["@pibbl/core/filters", "filters"],
+  ["@pibbl/core/textures", "textures"],
+  ["@pibbl/core", "root"],
+  ["@pibbl/core/jsx-runtime", "jsxRuntime"],
+  ["@pibbl/core/jsx-dev-runtime", "jsxDevRuntime"],
+  ["@pibbl/core/physics/2d/geometry", "physics2dGeometry"],
+  ["@pibbl/core/physics/2d", "physics2d"],
+  ["@pibbl/core/particles", "particles"],
+  ["@pibbl/three", "three"],
+  ["@pibbl/core/viz", "viz"],
+  ["@pibbl/text", "text"],
 ]);
 
 function explicitNames(content) {
@@ -107,7 +107,7 @@ function inventoryNames(entry) {
   ].sort();
 }
 
-const temp = await mkdtemp(join(tmpdir(), "crc-studio-pivot-"));
+const temp = await mkdtemp(join(tmpdir(), "pibbl-studio-pivot-"));
 try {
   for (const [index, marker] of markers.entries()) {
     const name = marker[1];
@@ -135,17 +135,17 @@ try {
     await writeFile(file, content);
   }
   const consumer = `
-    /** @jsxImportSource @crc/core */
-    import { crc, Rectangle, DragHandle, ManipulationFrame, ResizeHandles, RotationHandle, useManipulation, useSignal, type CRCNode } from '@crc/core';
-    import { defineThreeLayer, type CRCThreeTarget } from '@crc/three';
-    import { loadOutlineFont, createTextGeometry } from '@crc/text';
+    /** @jsxImportSource @pibbl/core */
+    import { pibbl, Rectangle, DragHandle, ManipulationFrame, ResizeHandles, RotationHandle, useManipulation, useSignal, type PibblNode } from '@pibbl/core';
+    import { defineThreeLayer, type PibblThreeTarget } from '@pibbl/three';
+    import { loadOutlineFont, createTextGeometry } from '@pibbl/text';
     async function textOutline(bytes: Uint8Array) { using font = await loadOutlineFont(bytes); return createTextGeometry(font, 'Hello', {fontSize: 100, missingGlyphs: 'error'}); }
-    import { Particles2D } from '@crc/core/particles';
-    import { ReactionDiffusion, ProceduralTexture, texturePalettes, type TextureRenderer } from '@crc/core/textures';
+    import { Particles2D } from '@pibbl/core/particles';
+    import { ReactionDiffusion, ProceduralTexture, texturePalettes, type TextureRenderer } from '@pibbl/core/textures';
     const textureRenderer: TextureRenderer = (ctx, texture) => { ctx.drawImage(texture.source, 0, 0, texture.width, texture.height); };
     const textures = <><ReactionDiffusion paused palette={texturePalettes.ember} render={textureRenderer} /><ProceduralTexture kind="paper" /></>;
     void textures;
-    import { PhysicsWorld2D } from '@crc/core/physics/2d';
+    import { PhysicsWorld2D } from '@pibbl/core/physics/2d';
     import { Scene, PerspectiveCamera, Mesh, BoxGeometry, MeshBasicMaterial } from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     const Layer = defineThreeLayer<{ angle: number }, { scene: Scene; camera: PerspectiveCamera; mesh: Mesh<BoxGeometry, MeshBasicMaterial> }>({
@@ -157,17 +157,17 @@ try {
         return { scene, camera, mesh };
       },
       update(resources, props) { resources.mesh.rotation.y = props.angle; },
-      targets(resources): readonly CRCThreeTarget[] { return [{ object: resources.mesh }]; },
+      targets(resources): readonly PibblThreeTarget[] { return [{ object: resources.mesh }]; },
       dispose(resources) { resources.mesh.geometry.dispose(); resources.mesh.material.dispose(); },
     });
-    function App(): CRCNode {
+    function App(): PibblNode {
       void Particles2D; void PhysicsWorld2D; void OrbitControls;
       const box = useSignal({ left: 20, top: 30, width: 100, height: 60 });
       const manipulation = useManipulation({ box });
       return <><ManipulationFrame {...manipulation.frameProps}><DragHandle controller={manipulation} formatReadout={({ left, top }) => String(left + top)} style={{ readout: { gap: 5, active: { visible: true, fill: 'blue' } } }}><Rectangle keyboardFocusable style={{ width: 20, height: 20, cursor: 'grab' }} /></DragHandle><ResizeHandles controller={manipulation} /><RotationHandle controller={manipulation} /></ManipulationFrame><Layer angle={1} style={{ width: 20, height: 20 }} /></>;
     }
     declare const canvas: HTMLCanvasElement;
-    crc(canvas, <App />);
+    pibbl(canvas, <App />);
   `;
   await writeFile(join(temp, "consumer.tsx"), consumer);
   await writeFile(
@@ -175,7 +175,7 @@ try {
     JSON.stringify({
       compilerOptions: {
         jsx: "react-jsx",
-        jsxImportSource: "@crc/core",
+        jsxImportSource: "@pibbl/core",
         lib: ["ESNext", "DOM"],
         module: "ESNext",
         moduleResolution: "Bundler",
@@ -210,8 +210,8 @@ try {
   }
 
   async function runtime(mode) {
-    const plugin = crcRuntimeSource(mode);
-    const resolved = plugin.resolveId("virtual:crc-runtime-source");
+    const plugin = pibblRuntimeSource(mode);
+    const resolved = plugin.resolveId("virtual:pibbl-runtime-source");
     const loaded = await plugin.load(resolved);
     const serialized = /^export default ([\s\S]+);$/u.exec(loaded)?.[1];
     assert.ok(serialized, `Studio ${mode} runtime did not expose a bundle`);
@@ -220,14 +220,14 @@ try {
       `(async () => {${JSON.parse(serialized)}\n})()`,
       context,
     );
-    assert.ok(context.CRC_CORE, `Studio ${mode} runtime did not initialize`);
-    return context.CRC_CORE;
+    assert.ok(context.PIBBL_CORE, `Studio ${mode} runtime did not initialize`);
+    return context.PIBBL_CORE;
   }
   const source = await runtime("source");
   const built = await runtime("built");
   assert.deepEqual(Object.keys(source).sort(), Object.keys(built).sort());
   for (const runtime of [source, built]) {
-    for (const name of ['ReactionDiffusion', 'ProceduralTexture', 'loadOutlineFont', 'createTextGeometry', 'crc', 'useManipulation', 'Manipulable', 'ManipulationFrame', 'DragHandle', 'ResizeHandle', 'ResizeHandles', 'RotationHandle', 'degrees', 'defineRenderLayer', 'defineThreeLayer', 'Particles2D', 'PhysicsWorld2D']) {
+    for (const name of ['ReactionDiffusion', 'ProceduralTexture', 'loadOutlineFont', 'createTextGeometry', 'pibbl', 'useManipulation', 'Manipulable', 'ManipulationFrame', 'DragHandle', 'ResizeHandle', 'ResizeHandles', 'RotationHandle', 'degrees', 'defineRenderLayer', 'defineThreeLayer', 'Particles2D', 'PhysicsWorld2D']) {
       assert.equal(typeof runtime[name], 'function', `${name} must be in the Studio runtime`);
     }
     for (const name of [
@@ -243,18 +243,18 @@ try {
         `${name} must not be in the Studio runtime`,
       );
     }
-    assert.deepEqual(Object.keys(runtime.__crcStudioModules).sort(), [
-      "@crc/three",
+    assert.deepEqual(Object.keys(runtime.__pibblStudioModules).sort(), [
+      "@pibbl/three",
       "three",
       "three/addons/controls/OrbitControls.js",
     ]);
     assert.equal(
-      runtime.__crcStudioModules["@crc/three"].defineThreeLayer,
+      runtime.__pibblStudioModules["@pibbl/three"].defineThreeLayer,
       runtime.defineThreeLayer,
     );
-    assert.equal(typeof runtime.__crcStudioModules.three.Scene, "function");
+    assert.equal(typeof runtime.__pibblStudioModules.three.Scene, "function");
     assert.equal(
-      typeof runtime.__crcStudioModules[
+      typeof runtime.__pibblStudioModules[
         "three/addons/controls/OrbitControls.js"
       ].OrbitControls,
       "function",

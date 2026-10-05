@@ -1,7 +1,7 @@
 import type {
-  CRCPhysicsAabb2D,
-  CRCPhysicsPose2D,
-  CRCPhysicsVector2,
+  PibblPhysicsAabb2D,
+  PibblPhysicsPose2D,
+  PibblPhysicsVector2,
 } from '../../2d-geometry.js';
 import { copyFiniteVector2, requireFiniteNumber } from '../shared/validation.js';
 import { DEGREES_TO_RADIANS, GEOMETRY_EPSILON } from './numeric-policy.js';
@@ -22,7 +22,7 @@ export const IDENTITY_POSE_2D: InternalPose2D = Object.freeze({
 });
 
 export function copyPose2D(
-  pose: CRCPhysicsPose2D | undefined,
+  pose: PibblPhysicsPose2D | undefined,
   path: string,
 ): InternalPose2D {
   if (pose === undefined) {
@@ -77,7 +77,7 @@ export function cross2D(
 }
 
 export function canonicalizeContour2D(
-  source: readonly CRCPhysicsVector2[],
+  source: readonly PibblPhysicsVector2[],
   options: Readonly<{ strictlyConvex: boolean; path: string }>,
 ): Float64Array {
   const copied: [number, number][] = source.map((point, index) => {
@@ -261,7 +261,7 @@ export function freezeBounds2D(
   minY: number,
   maxX: number,
   maxY: number,
-): CRCPhysicsAabb2D {
+): PibblPhysicsAabb2D {
   return Object.freeze({
     min: Object.freeze([cleanZero(minX), cleanZero(minY)] as const),
     max: Object.freeze([cleanZero(maxX), cleanZero(maxY)] as const),

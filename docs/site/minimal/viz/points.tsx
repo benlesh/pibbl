@@ -1,4 +1,4 @@
-import { crc, Circle } from "@crc/core";
+import { pibbl, Circle } from "@pibbl/core";
 import {
   PlotSeries,
   PointSeries,
@@ -11,7 +11,7 @@ import {
   type PointSeriesProps,
   type PointSeriesStyle,
   type PointStyleResolver,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 
 type Datum = { id: string; x: number; y: number; important: boolean };
 const data: readonly Datum[] = [
@@ -48,7 +48,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(
+const app = pibbl(
   canvas,
   <Scale
     id="x"

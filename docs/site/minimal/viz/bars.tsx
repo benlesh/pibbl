@@ -1,4 +1,4 @@
-import { crc, Overlay } from "@crc/core";
+import { pibbl, Overlay } from "@pibbl/core";
 import {
   Axis,
   BarSeries,
@@ -8,7 +8,7 @@ import {
   type BarSeriesStyle,
   type BarStyleResolver,
   type BarThresholdFill,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 
 type Sale = { month: string; amount: number };
 const sales: readonly Sale[] = [
@@ -39,7 +39,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(
+const app = pibbl(
   canvas,
   <Overlay style={{ left: 70, top: 15, width: 230, height: 170 }}>
     <Scale

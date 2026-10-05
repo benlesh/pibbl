@@ -1,11 +1,11 @@
-import { crc, Group, Rectangle, Circle, Text, signal } from "@crc/core";
-import { displacement, reflectedLight } from "@crc/core/filters";
+import { pibbl, Group, Rectangle, Circle, Text, signal } from "@pibbl/core";
+import { displacement, reflectedLight } from "@pibbl/core/filters";
 import {
   waterWaves,
   useTexture,
   type WaterWavesOptions,
   type WaterWavesMessage,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 
 const width = 360,
   height = 240;
@@ -87,7 +87,7 @@ function Waves() {
             fill: "#ffffff",
           }}
         >
-          CRC
+          Pibbl
         </Text>
       </Group>
 
@@ -104,5 +104,5 @@ function Waves() {
     </>
   );
 }
-const controller = crc(canvas, <Waves />);
+const controller = pibbl(canvas, <Waves />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

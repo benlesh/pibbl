@@ -6,7 +6,7 @@ import { join } from "node:path";
 const root = new URL("../packages/core/", import.meta.url);
 const require = createRequire(new URL("package.json", root));
 const compiler = require.resolve("assemblyscript/bin/asc.js");
-const temp = await mkdtemp(join(tmpdir(), "crc-transition-wasm-"));
+const temp = await mkdtemp(join(tmpdir(), "pibbl-transition-wasm-"));
 try {
   for (const name of ["bifrost", "embers", "hologram"]) {
     const source = await readFile(

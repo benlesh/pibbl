@@ -75,14 +75,14 @@ export async function auditInstalledPeers(consumerManifests) {
         const found = await installedManifest(entry, name);
         const version = found.value.version;
         const validVersion = typeof version === 'string' && version.length <= 64 && semver.valid(version);
-        if (name === '@crc/core') coreInstallations.add(dirname(found.path));
+        if (name === '@pibbl/core') coreInstallations.add(dirname(found.path));
         peers.push({ ...record, entry: await realpath(entry), manifest: found.path, sha256: found.sha256,
           version: typeof version === 'string' ? version.slice(0, 64) : null,
           status: !validVersion ? 'unavailable' : semver.satisfies(version, range) ? 'compatible' : 'incompatible' });
       } catch (error) { peers.push({ ...record, status: 'unavailable', reason: String(error.message).slice(0, 256) }); }
     }
   }
-  return { schema: 'crc-installed-peer-audit/1', resolution: 'node-require-default', runtimeIdentity: 'not-observed',
+  return { schema: 'pibbl-installed-peer-audit/1', resolution: 'node-require-default', runtimeIdentity: 'not-observed',
     status: peers.some(peer => peer.status === 'incompatible') ? 'incompatible' : peers.some(peer => !['compatible', 'optional-missing'].includes(peer.status)) ? 'unavailable' : 'compatible',
     consumers, peers, coreInstallations: [...coreInstallations].sort(), duplicateCoreInstallations: coreInstallations.size > 1,
   };
@@ -95,7 +95,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     process.stdout.write(JSON.stringify(result) + '\n');
     if (result.status !== 'compatible') process.exitCode = 1;
   } catch (error) {
-    process.stdout.write(JSON.stringify({ schema: 'crc-installed-peer-audit/1', status: 'unavailable', reason: String(error.message).slice(0, 512) }) + '\n');
+    process.stdout.write(JSON.stringify({ schema: 'pibbl-installed-peer-audit/1', status: 'unavailable', reason: String(error.message).slice(0, 512) }) + '\n');
     process.exitCode = 1;
   }
 }

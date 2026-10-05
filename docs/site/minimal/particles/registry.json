@@ -8,67 +8,67 @@
     "symbols": [
       {
         "name": "particleChoice",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
         "name": "particleCurve",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
         "name": "particleGradient",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
         "name": "particleInteger",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
         "name": "particleParameter",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
         "name": "particleRange",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleChoice",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleChoice",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleCurve",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleCurve",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleCurveOptions",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleCurveOptions",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleCurveValue",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleCurveValue",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleGradient",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleGradient",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleIntegerRange",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleIntegerRange",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleParameterReference",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleParameterReference",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleRange",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleRange",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleScalar",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleScalar",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleVector2",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleVector2",
+        "importPath": "@pibbl/core/particles"
       }
     ],
     "notes": ["Displays the resulting descriptor values in the document."]
@@ -82,51 +82,51 @@
     "symbols": [
       {
         "name": "defineParticleEffect2D",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleAppearance",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleAppearance",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleBounds2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleBounds2D",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleEffect2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleEffect2D",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleEffect2DInput",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleEffect2DInput",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleEmission",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleEmission",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleEmitter2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleEmitter2D",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleInitial2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleInitial2D",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleMotion2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleMotion2D",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleOverflow",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleOverflow",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleRenderer2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleRenderer2D",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleShape2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleShape2D",
+        "importPath": "@pibbl/core/particles"
       }
     ],
     "notes": [
@@ -141,32 +141,32 @@
     "environment": "browser",
     "symbols": [
       {
-        "name": "CRCParticleParameterDefinition",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleParameterDefinition",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleParameterDefinitions",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleParameterDefinitions",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleParameterTiming",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleParameterTiming",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleParameterValue",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleParameterValue",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleParameterValues",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleParameterValues",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleValueFor",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleValueFor",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleValuesOf",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleValuesOf",
+        "importPath": "@pibbl/core/particles"
       }
     ],
     "notes": ["Displays the typed parameter values in the document."]
@@ -180,43 +180,43 @@
     "symbols": [
       {
         "name": "Particles2D",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
         "name": "useParticleSystem",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleBurstOverrides",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleBurstOverrides",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleCommonProps",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleCommonProps",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleExecution",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleExecution",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleSystem",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleSystem",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleSystemOptions",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleSystemOptions",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleSystemStatus",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleSystemStatus",
+        "importPath": "@pibbl/core/particles"
       },
       {
         "name": "Particles2DProps",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
         "name": "Particles2DStyle",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       }
     ],
     "notes": [
@@ -232,31 +232,31 @@
     "symbols": [
       {
         "name": "useFlowField2D",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
         "name": "useFlowSource2D",
-        "importPath": "@crc/core/particles"
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCFlowField2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblFlowField2D",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCFlowFieldOptions2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblFlowFieldOptions2D",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCFlowObstacleBatch2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblFlowObstacleBatch2D",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCFlowObstacleSource2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblFlowObstacleSource2D",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCFlowSourceOptions2D",
-        "importPath": "@crc/core/particles"
+        "name": "PibblFlowSourceOptions2D",
+        "importPath": "@pibbl/core/particles"
       }
     ],
     "notes": [
@@ -271,32 +271,32 @@
     "environment": "browser",
     "symbols": [
       {
-        "name": "CRCParticleBurstAcceptedEvent",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleBurstAcceptedEvent",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleBurstRejectedEvent",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleBurstRejectedEvent",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleDiagnostic",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleDiagnostic",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleDrainStartEvent",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleDrainStartEvent",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleFinishEvent",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleFinishEvent",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleStartEvent",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleStartEvent",
+        "importPath": "@pibbl/core/particles"
       },
       {
-        "name": "CRCParticleSystemEvent",
-        "importPath": "@crc/core/particles"
+        "name": "PibblParticleSystemEvent",
+        "importPath": "@pibbl/core/particles"
       }
     ],
     "notes": ["Displays the event sequence and diagnostic in the document."]

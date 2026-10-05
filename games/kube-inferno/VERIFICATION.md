@@ -20,7 +20,7 @@ are 1672 × 940; narrow layout is checked at 390 × 844.
 ## Findings and fixes
 
 An initial reaction attempted to write a signal from its setup callback, which
-CRC correctly rejects. The map already observes the scheduler-owned clock, so
+Pibbl correctly rejects. The map already observes the scheduler-owned clock, so
 that redundant write was removed. Construction uses fixed simulation steps.
 
 Default contain fitting and manually assumed fill coordinates disagreed. The

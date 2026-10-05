@@ -1,6 +1,6 @@
-import type { CRCNodeInput } from "./element/types.js";
-import type { CRCTransitionBinding } from "./transitions/binding.js";
-import type { crc } from './crc.js';
+import type { PibblNodeInput } from "./element/types.js";
+import type { PibblTransitionBinding } from "./transitions/binding.js";
+import type { pibbl } from './pibbl.js';
 import type { measureElement } from './layout/measure.js';
 import type { ArcProps } from './components/arc.js';
 import type { CircleProps } from './components/circle.js';
@@ -14,43 +14,43 @@ import type { useCanvasContext } from './hooks/use-canvas-context.js';
 import type { HtmlBridge } from './html/types.js';
 import type { HtmlFocusRegion } from './focus/html-focus-region.js';
 import type { Teardowns } from "./teardowns.js";
-import type { CRCSurfaceState } from "./surface/types.js";
+import type { PibblSurfaceState } from "./surface/types.js";
 import type { Constraints, LayoutBox, Size } from "./layout/types.js";
 import type { NativeListenerHub } from "./events/native-listener-hub.js";
-import type { CRCEventType as DOMCRCEventType } from "./events/types.js";
-import type { CRCEventTargetSnapshot } from "./events/types.js";
-import type { CRCEvent } from "./events/types.js";
+import type { PibblEventType as DOMPibblEventType } from "./events/types.js";
+import type { PibblEventTargetSnapshot } from "./events/types.js";
+import type { PibblEvent } from "./events/types.js";
 import type {
-  CRCEventNode,
-  CRCEventListenerRegistration,
-  CRCEventTargetRegistration,
+  PibblEventNode,
+  PibblEventListenerRegistration,
+  PibblEventTargetRegistration,
 } from "./events/registrations.js";
 import type {
-  CRCHitTestInput,
-  CRCHitTestOutput,
-  CRCPaintEntry,
-  CRCNestedPaintEntry,
+  PibblHitTestInput,
+  PibblHitTestOutput,
+  PibblPaintEntry,
+  PibblNestedPaintEntry,
 } from "./events/paint-entry.js";
-import type { CRCElement, CRCElementType, CRCNode } from "./element/types.js";
+import type { PibblElement, PibblElementType, PibblNode } from "./element/types.js";
 import type { PendingRoot } from "./global-state.js";
-import type { CRCFilter } from "./style/filter-types.js";
-import type { CRCBackendDriver } from "./backend/types.js";
+import type { PibblFilter } from "./style/filter-types.js";
+import type { PibblBackendDriver } from "./backend/types.js";
 import type { OptionalService } from "./optional-services.js";
 import type { SignalRenderConsumer } from "./signals/render-consumer.js";
 import type { Signal, SignalValue } from "./signals/types.js";
 export type {
-  CRCComponent,
-  CRCContainerChild,
-  CRCElement,
-  CRCElementType,
-  CRCEmptyNode,
-  CRCKey,
-  CRCNode,
-  CRCNodeInput,
-  CRCPrimitiveComponent,
-  CRCTextChild,
-  CRCTextInput,
-  CRCRenderResult,
+  PibblComponent,
+  PibblContainerChild,
+  PibblElement,
+  PibblElementType,
+  PibblEmptyNode,
+  PibblKey,
+  PibblNode,
+  PibblNodeInput,
+  PibblPrimitiveComponent,
+  PibblTextChild,
+  PibblTextInput,
+  PibblRenderResult,
   PrimitiveInputOf,
 } from "./element/types.js";
 
@@ -58,22 +58,22 @@ export type {
  * Transition bindings, pixel filters, and application-defined style extensions understood by the
  * runtime.
  *
- * @see {@link CRCFilter}
- * @see {@link CRCStyleRule}
- * @see {@link CRCResponsiveStyle}
+ * @see {@link PibblFilter}
+ * @see {@link PibblStyleRule}
+ * @see {@link PibblResponsiveStyle}
  * @see {@link PrimitiveCapabilities}
- * @see {@link CRCTransitionBinding}
+ * @see {@link PibblTransitionBinding}
  */
 export interface SystemStyle {
   /** Visibility-transition binding applied to this primitive and its captured descendants. See {@link SystemStyle}. */
-  transition?: import("./transitions/binding.js").CRCTransitionBinding;
+  transition?: import("./transitions/binding.js").PibblTransitionBinding;
   /** Application-defined style payload passed through the runtime. See {@link SystemStyle}. */
   custom?: unknown;
   /**
    * Ordered pixel-only filters applied to the receiving primitive and its descendants. See
-   * {@link CRCFilter}.
+   * {@link PibblFilter}.
    */
-  filter?: CRCFilter | readonly CRCFilter[];
+  filter?: PibblFilter | readonly PibblFilter[];
 }
 
 type PrimitiveReservedKey = "key" | "style";
@@ -86,7 +86,7 @@ type PrimitiveReservedKey = "key" | "style";
  * @see {@link CircleProps}
  * @see {@link EllipseProps}
  */
-export interface CRCPhysics2DPropExtension {}
+export interface PibblPhysics2DPropExtension {}
 
 type UnionKeys<T> = T extends unknown ? keyof T : never;
 
@@ -158,33 +158,33 @@ export type SignalStyle<S> = Readonly<{
 /**
  * Conditions on the available containing size, in logical units. All bounds are inclusive.
  *
- * @see {@link CRCStyleRule}
+ * @see {@link PibblStyleRule}
  */
-export type CRCSizeQuery = Readonly<
+export type PibblSizeQuery = Readonly<
   {
-    /** Minimum permitted width. See {@link CRCSizeQuery}. */
+    /** Minimum permitted width. See {@link PibblSizeQuery}. */
     minWidth?: number;
-    /** Maximum permitted width. See {@link CRCSizeQuery}. */
+    /** Maximum permitted width. See {@link PibblSizeQuery}. */
     maxWidth?: number;
-    /** Minimum permitted height. See {@link CRCSizeQuery}. */
+    /** Minimum permitted height. See {@link PibblSizeQuery}. */
     minHeight?: number;
-    /** Maximum permitted height. See {@link CRCSizeQuery}. */
+    /** Maximum permitted height. See {@link PibblSizeQuery}. */
     maxHeight?: number;
   } & (
     | {
-        /** Minimum permitted width. See {@link CRCSizeQuery}. */
+        /** Minimum permitted width. See {@link PibblSizeQuery}. */
         minWidth: number;
       }
     | {
-        /** Maximum permitted width. See {@link CRCSizeQuery}. */
+        /** Maximum permitted width. See {@link PibblSizeQuery}. */
         maxWidth: number;
       }
     | {
-        /** Minimum permitted height. See {@link CRCSizeQuery}. */
+        /** Minimum permitted height. See {@link PibblSizeQuery}. */
         minHeight: number;
       }
     | {
-        /** Maximum permitted height. See {@link CRCSizeQuery}. */
+        /** Maximum permitted height. See {@link PibblSizeQuery}. */
         maxHeight: number;
       }
   )
@@ -194,16 +194,16 @@ export type CRCSizeQuery = Readonly<
  * A conditional style contribution selected by a responsive size query.
  *
  * @see {@link SystemStyle}
- * @see {@link CRCSizeQuery}
+ * @see {@link PibblSizeQuery}
  * @see {@link SignalStyle}
- * @see {@link CRCResponsiveStyle}
+ * @see {@link PibblResponsiveStyle}
  */
-export type CRCStyleRule<S extends SystemStyle> = Readonly<{
-  /** Query that selects a style rule or resolves a hover result. See {@link CRCSizeQuery}. */
-  query: CRCSizeQuery;
+export type PibblStyleRule<S extends SystemStyle> = Readonly<{
+  /** Query that selects a style rule or resolves a hover result. See {@link PibblSizeQuery}. */
+  query: PibblSizeQuery;
   /** Declared presentation and layout properties. See {@link SignalStyle}. */
   style: Partial<SignalStyle<S>> & {
-    /** Not accepted in this variant; use the alternative fields instead. See {@link CRCStyleRule}. */
+    /** Not accepted in this variant; use the alternative fields instead. See {@link PibblStyleRule}. */
     readonly when?: never;
   };
 }>;
@@ -213,17 +213,17 @@ export type CRCStyleRule<S extends SystemStyle> = Readonly<{
  *
  * @see {@link SystemStyle}
  * @see {@link SignalStyle}
- * @see {@link CRCStyleRule}
+ * @see {@link PibblStyleRule}
  * @see {@link PrimitiveInput}
  */
-export type CRCResponsiveStyle<S extends SystemStyle> = SignalStyle<S> & Readonly<{
+export type PibblResponsiveStyle<S extends SystemStyle> = SignalStyle<S> & Readonly<{
   /**
    * Ordered local patches against the available containing size, not this
    * receiver's final size. All matches merge in order; later fields win.
    * Hoist stable lists for Layer cache reuse. Intrinsic responsive measurement
    * is unsupported: use a definite allocation and adapt its inner content.
    */
-  when?: readonly CRCStyleRule<S>[];
+  when?: readonly PibblStyleRule<S>[];
 }>;
 
 export type PreservedSignalPropKey<P> = {
@@ -241,20 +241,20 @@ export type PreservedSignalPropKey<P> = {
  *
  * @see {@link SystemStyle}
  * @see {@link SignalProgramProps}
- * @see {@link CRCResponsiveStyle}
+ * @see {@link PibblResponsiveStyle}
  * @see {@link SpecifiedStyle}
- * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link PibblPhysics2DPropExtension}
  * @see {@link definePrimitive}
  */
 export type PrimitiveInput<
   P,
   S extends SystemStyle = SystemStyle,
-> = SignalProgramProps<P> & StyleField<CRCResponsiveStyle<SpecifiedStyle<S>>>;
+> = SignalProgramProps<P> & StyleField<PibblResponsiveStyle<SpecifiedStyle<S>>>;
 
 /**
  * A supported HTML or offscreen Canvas drawing surface.
  *
- * @see {@link crc}
+ * @see {@link pibbl}
  * @see {@link RenderingContext2D}
  */
 export type Canvas = HTMLCanvasElement | OffscreenCanvas;
@@ -365,7 +365,7 @@ export type MeasureResult =
  * @see {@link NormalizedStyle}
  * @see {@link Constraints}
  * @see {@link CanvasMeasurementService}
- * @see {@link CRCElement}
+ * @see {@link PibblElement}
  * @see {@link MeasureResult}
  * @see {@link PrimitiveCapabilities}
  */
@@ -383,12 +383,12 @@ export interface MeasureInput<P, S extends SystemStyle = SystemStyle> {
   service: CanvasMeasurementService;
   /**
    * Measures a nested element using the current measurement context. See {@link MeasureResult}.
-   * @param element - Child element to measure. See {@link CRCElement}.
+   * @param element - Child element to measure. See {@link PibblElement}.
    * @param constraints - Available dimensions in logical units. See {@link Constraints}.
    * @returns Measured dimensions or an unsupported measurement result. See {@link MeasureResult}.
    */
   measureElement(
-    element: CRCElement<any>,
+    element: PibblElement<any>,
     constraints: Readonly<Constraints>,
   ): MeasureResult;
 }
@@ -406,13 +406,13 @@ export interface MeasureInput<P, S extends SystemStyle = SystemStyle> {
  * @see {@link ResolvedStyle}
  * @see {@link RenderingContext2D}
  * @see {@link definePrimitive}
- * @see {@link CRCNodeInput}
+ * @see {@link PibblNodeInput}
  */
 export type PrimitiveRender<P, R extends SystemStyle = SystemStyle> = (
   props: Readonly<PrimitiveProgramProps<P>>,
   style: ResolvedStyle<R>,
   context: RenderingContext2D,
-) => import('./element/types.js').CRCNodeInput | void;
+) => import('./element/types.js').PibblNodeInput | void;
 
 /**
  * Declares the style and measurement features supported by a custom primitive.
@@ -473,36 +473,36 @@ export interface PrimitiveCapabilities<
 }
 
 export interface InternalIdentityHint {
-  type: CRCElementType<any>;
+  type: PibblElementType<any>;
   key: string | undefined;
   occurrence: number;
 }
 
-export interface CRCComponentRefs<P> {
+export interface PibblComponentRefs<P> {
   /** Last traversal entry context, not proof that this evaluation painted successfully. */
   layoutEntry?: Readonly<{
     allocation: Readonly<LayoutBox>;
     percentageBasis: Readonly<LayoutBox>;
   }>;
   id: string;
-  parent: CRCComponentRefs<any> | undefined;
-  element: CRCElement<P>;
+  parent: PibblComponentRefs<any> | undefined;
+  element: PibblElement<P>;
   renderGeneration: number;
   refs: any[];
-  hooks: CRCHookSlot[];
+  hooks: PibblHookSlot[];
   signalConsumer: SignalRenderConsumer | undefined;
   signalConsumerTeardownAttached: boolean;
   teardowns: Teardowns;
   onAfterRender: (() => void) | undefined;
 }
 
-export interface CRCHookSlot<T = any> {
+export interface PibblHookSlot<T = any> {
   kind: string;
   value: T;
   teardowns: Teardowns;
 }
 
-export interface CRCClippingStackEntry {
+export interface PibblClippingStackEntry {
   readonly svgPath?: string;
   path: Path2D;
   fillRule: CanvasFillRule;
@@ -510,93 +510,93 @@ export interface CRCClippingStackEntry {
 }
 
 /** @internal Legacy mouse-hook name retained until Task 8 cleanup. */
-export type CRCInteractionRegion = CRCEventTargetRegistration;
+export type PibblInteractionRegion = PibblEventTargetRegistration;
 
 /** @internal Canvas Layer bridge retained as one nested paint entry. */
-export type CRCInteractionLayer = CRCNestedPaintEntry;
+export type PibblInteractionLayer = PibblNestedPaintEntry;
 
-export type CRCInteractionPaintEntry = CRCPaintEntry;
+export type PibblInteractionPaintEntry = PibblPaintEntry;
 
-export interface CRCCursorDefault {
+export interface PibblCursorDefault {
   style: string;
 }
 
-export interface CRCInteractionActivation {
+export interface PibblInteractionActivation {
   readonly button: number;
-  readonly path: readonly CRCEventNode[];
+  readonly path: readonly PibblEventNode[];
 }
 
-export interface CRCInteractionState {
-  hoveredRegion: CRCInteractionRegion | undefined;
-  primaryDown: CRCInteractionActivation | undefined;
-  primaryUp: CRCInteractionActivation | undefined;
-  auxiliaryDown: Map<number, CRCInteractionActivation>;
-  auxiliaryUp: Map<number, CRCInteractionActivation>;
-  clickStreakTarget: CRCEventNode | undefined;
+export interface PibblInteractionState {
+  hoveredRegion: PibblInteractionRegion | undefined;
+  primaryDown: PibblInteractionActivation | undefined;
+  primaryUp: PibblInteractionActivation | undefined;
+  auxiliaryDown: Map<number, PibblInteractionActivation>;
+  auxiliaryUp: Map<number, PibblInteractionActivation>;
+  clickStreakTarget: PibblEventNode | undefined;
   clickStreak: number;
-  cursorRegion: CRCInteractionRegion | undefined;
-  cursorDefault: CRCCursorDefault | undefined;
+  cursorRegion: PibblInteractionRegion | undefined;
+  cursorDefault: PibblCursorDefault | undefined;
   pointerCanvas: HTMLCanvasElement | undefined;
   cursorCanvas: HTMLCanvasElement | undefined;
   cursorStyle: string | undefined;
 }
 
-export type CRCNativeObserver = (event: Event) => void;
+export type PibblNativeObserver = (event: Event) => void;
 
-export interface CRCEventRoot {
-  rootInstance: CRCInstance | undefined;
+export interface PibblEventRoot {
+  rootInstance: PibblInstance | undefined;
   readonly canvas: HTMLCanvasElement | undefined;
   readonly nativeListeners: NativeListenerHub | undefined;
-  readonly targets: Set<CRCEventTargetRegistration>;
+  readonly targets: Set<PibblEventTargetRegistration>;
   /** @internal Borrowed only for one synchronous coordinate lookup. */
-  coordinateHitInput?: CRCHitTestInput;
+  coordinateHitInput?: PibblHitTestInput;
   /** @internal Borrowed only for one synchronous coordinate lookup. */
-  coordinateHitOutput?: CRCHitTestOutput;
-  readonly listenersByComponent: Map<string, Set<CRCEventListenerRegistration>>;
-  readonly observers: Map<DOMCRCEventType, Set<CRCNativeObserver>>;
-  readonly pointerCaptures: Map<number, CRCEventNode>;
-  onNodeRelease: ((node: CRCEventNode) => void) | undefined;
-  onTargetUpdate: ((target: CRCEventTargetRegistration) => void) | undefined;
+  coordinateHitOutput?: PibblHitTestOutput;
+  readonly listenersByComponent: Map<string, Set<PibblEventListenerRegistration>>;
+  readonly observers: Map<DOMPibblEventType, Set<PibblNativeObserver>>;
+  readonly pointerCaptures: Map<number, PibblEventNode>;
+  onNodeRelease: ((node: PibblEventNode) => void) | undefined;
+  onTargetUpdate: ((target: PibblEventTargetRegistration) => void) | undefined;
   htmlOverlay?: HTMLElement;
   html?: HtmlBridge;
-  focusPolicy?: CRCFocusPolicyBridge;
+  focusPolicy?: PibblFocusPolicyBridge;
   /** @internal Shared by nested layer renders; consumers register only erased callbacks. */
-  renderTransaction?: CRCRenderTransaction;
+  renderTransaction?: PibblRenderTransaction;
 }
 
 /** @internal Root-wide render completion seam for optional policies. */
-export interface CRCRenderTransaction {
+export interface PibblRenderTransaction {
   onPublish?(callback: () => void): void;
   onFinish(callback: (success: boolean) => void): void;
 }
 
-export interface CRCFocusPolicyBridge {
+export interface PibblFocusPolicyBridge {
   observeHtmlRegion?(region: HtmlFocusRegion): void;
   suspendHtmlRegions?(): void;
   removeHtmlFocusRegion?(region: HtmlFocusRegion): void;
-  snapshot(target: CRCEventTargetRegistration): CRCEventTargetSnapshot;
-  observeTarget(target: CRCEventTargetRegistration): void;
+  snapshot(target: PibblEventTargetRegistration): PibblEventTargetSnapshot;
+  observeTarget(target: PibblEventTargetRegistration): void;
   /** @internal Records a target committed during the active render transaction. */
-  observeTransactionalTarget?(target: CRCEventTargetRegistration): void;
-  removeTarget(target: CRCEventTargetRegistration): void;
+  observeTransactionalTarget?(target: PibblEventTargetRegistration): void;
+  removeTarget(target: PibblEventTargetRegistration): void;
   beforeNativeDispatch?(
-    type: DOMCRCEventType,
+    type: DOMPibblEventType,
     event: Event,
-  ): CRCFocusPolicyBridge | undefined;
-  resolveKeyboardTarget(): CRCEventTargetRegistration | undefined;
-  afterDispatch(event: CRCEvent): void;
-  afterPressDispatch?(input: CRCFocusPressDefaultInput): void;
-  afterTouchDispatch?(input: CRCFocusTouchDefaultInput): void;
+  ): PibblFocusPolicyBridge | undefined;
+  resolveKeyboardTarget(): PibblEventTargetRegistration | undefined;
+  afterDispatch(event: PibblEvent): void;
+  afterPressDispatch?(input: PibblFocusPressDefaultInput): void;
+  afterTouchDispatch?(input: PibblFocusTouchDefaultInput): void;
   /** @internal Returns the last focus change affecting one cached layer subtree. */
-  layerFocusRenderRevision?(instance: CRCInstance): number | undefined;
+  layerFocusRenderRevision?(instance: PibblInstance): number | undefined;
   /** @internal Replays cached layer metadata without executing its components. */
-  replayRetainedSubtree(instance: CRCInstance): void;
+  replayRetainedSubtree(instance: PibblInstance): void;
 }
 
-export interface CRCFocusPressDefaultInput {
+export interface PibblFocusPressDefaultInput {
   readonly source: "mouse" | "pointer" | "touch";
-  readonly target: CRCEventTargetRegistration | undefined;
-  readonly event: CRCEvent | undefined;
+  readonly target: PibblEventTargetRegistration | undefined;
+  readonly event: PibblEvent | undefined;
   readonly originalEvent: MouseEvent | PointerEvent | TouchEvent;
   readonly x: number;
   readonly y: number;
@@ -605,16 +605,16 @@ export interface CRCFocusPressDefaultInput {
   readonly touchIdentifier?: number;
 }
 
-export interface CRCFocusTouchDefaultContact {
+export interface PibblFocusTouchDefaultContact {
   readonly identifier: number;
-  readonly target: CRCEventTargetRegistration | undefined;
+  readonly target: PibblEventTargetRegistration | undefined;
   readonly x: number;
   readonly y: number;
 }
 
-export interface CRCFocusTouchDefaultInput {
+export interface PibblFocusTouchDefaultInput {
   readonly type: "touchcancel" | "touchend" | "touchmove" | "touchstart";
-  readonly changedContacts: readonly CRCFocusTouchDefaultContact[];
+  readonly changedContacts: readonly PibblFocusTouchDefaultContact[];
   readonly activeIdentifiers: readonly number[];
   readonly originalEvent: TouchEvent;
 }
@@ -622,22 +622,22 @@ export interface CRCFocusTouchDefaultInput {
 /**
  * The stable controller of one canvas mount, including explicit idempotent disposal.
  *
- * @see {@link crc}
+ * @see {@link pibbl}
  */
-export interface CRCController {
-  /** Releases every resource owned by this CRC mount. Safe to call repeatedly. */
+export interface PibblController {
+  /** Releases every resource owned by this Pibbl mount. Safe to call repeatedly. */
   dispose(): void;
 }
 
 /**
- * A Canvas fill or CRC texture paint accepted by drawing primitives.
+ * A Canvas fill or Pibbl texture paint accepted by drawing primitives.
  *
  * @see {@link TexturePaint}
  * @see {@link PaintStyle}
  */
 export type FillStyle = CanvasRenderingContext2D["fillStyle"] | import('./textures/texture.js').TexturePaint;
 /**
- * A Canvas stroke or CRC texture paint accepted by drawing primitives.
+ * A Canvas stroke or Pibbl texture paint accepted by drawing primitives.
  *
  * @see {@link TexturePaint}
  * @see {@link PaintStyle}
@@ -645,13 +645,13 @@ export type FillStyle = CanvasRenderingContext2D["fillStyle"] | import('./textur
  */
 export type StrokeStyle = CanvasRenderingContext2D["strokeStyle"] | import('./textures/texture.js').TexturePaint;
 
-export interface CRCInstance {
+export interface PibblInstance {
   canvas: Canvas;
-  controller: CRCController;
-  root: CRCNode;
+  controller: PibblController;
+  root: PibblNode;
   pendingRoot: PendingRoot;
   pendingUpdateParents: boolean;
-  refs: Map<string, CRCComponentRefs<any>>;
+  refs: Map<string, PibblComponentRefs<any>>;
   renderGeneration: number;
   renderSeenIds: Set<string>;
   renderSeenKeys: Set<string>;
@@ -659,22 +659,22 @@ export interface CRCInstance {
   completedRenderRevision: number;
   renderTimestamp: number;
   mainTeardowns: Teardowns;
-  eventRoot: CRCEventRoot;
-  regions: Set<CRCInteractionRegion>;
-  paintEntries: Set<CRCInteractionPaintEntry>;
-  cursorDefaults: Set<CRCCursorDefault>;
-  interaction: CRCInteractionState;
-  interactionRoot: CRCInstance | undefined;
+  eventRoot: PibblEventRoot;
+  regions: Set<PibblInteractionRegion>;
+  paintEntries: Set<PibblInteractionPaintEntry>;
+  cursorDefaults: Set<PibblCursorDefault>;
+  interaction: PibblInteractionState;
+  interactionRoot: PibblInstance | undefined;
   parent: Canvas | undefined;
   /** Parent layer component used only for temporary cross-instance event paths. */
-  eventParent: CRCComponentRefs<any> | undefined;
+  eventParent: PibblComponentRefs<any> | undefined;
   /** Current child-to-parent mapping for focus geometry outside hit order. */
-  focusParentBridge: CRCNestedPaintEntry | undefined;
+  focusParentBridge: PibblNestedPaintEntry | undefined;
   rootLayoutBox: Readonly<LayoutBox>;
-  surface: CRCSurfaceState;
+  surface: PibblSurfaceState;
   /** Feature-owned resources, installed only by imported optional entries. */
   optionalServices: Map<symbol, OptionalService>;
-  backendDriver: CRCBackendDriver<unknown>;
+  backendDriver: PibblBackendDriver<unknown>;
 }
 
 /**

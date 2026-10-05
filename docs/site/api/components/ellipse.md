@@ -12,7 +12,7 @@ relatedTypes: [EllipseProps, EllipseStyle]
 # Ellipse
 
 ```ts
-import { Ellipse } from "@crc/core";
+import { Ellipse } from "@pibbl/core";
 ```
 
 `Ellipse` uses [`EllipseProps`](#/api/types/elements-components#ellipseprops) and [`EllipseStyle`](#/api/types/styles#ellipsestyle). It requires nonnegative

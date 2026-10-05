@@ -41,7 +41,7 @@ Use actual supported public APIs. Avoid repository aliases, private helpers, lab
 - Document browser requirements close to the APIs that need them.
 - Keep unsupported behavior separate from a promise of future support.
 
-For HTML, explain native semantics, explicit layout allocations, and overlay ordering. For Three, show normal Three resources and explicit disposal; do not invent CRC mesh components. For effects, distinguish changes to pixels from changes to hit geometry.
+For HTML, explain native semantics, explicit layout allocations, and overlay ordering. For Three, show normal Three resources and explicit disposal; do not invent Pibbl mesh components. For effects, distinguish changes to pixels from changes to hit geometry.
 
 ## Example outline for a signal page
 

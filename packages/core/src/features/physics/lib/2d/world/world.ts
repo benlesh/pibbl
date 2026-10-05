@@ -1,5 +1,5 @@
 import type { RapierSimulation2D, RapierCheckpoint2D } from "./rapier.js";
-import type { CRCPhysicsPose2D } from "../../../2d-geometry.js";
+import type { PibblPhysicsPose2D } from "../../../2d-geometry.js";
 import { manifoldBetweenShapeRecords2D } from "../collision/pairs.js";
 import type { InternalPose2D } from "../math.js";
 import {
@@ -40,7 +40,7 @@ import {
 
 const NO_INDEX = -1;
 
-export type PhysicsPose2D = CRCPhysicsPose2D;
+export type PhysicsPose2D = PibblPhysicsPose2D;
 
 export interface PhysicsWorld2DConfiguration {
   readonly gravity?: readonly [number, number];

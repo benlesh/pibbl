@@ -6,22 +6,22 @@ import {
   overlapShapes2D,
   raycastShape2D,
   shapeCastAgainstShape2D,
-  type CRCPhysicsContactPoint2D,
-  type CRCPhysicsDistance2D,
-  type CRCPhysicsRay2D,
-  type CRCPhysicsShapeContact2D,
-  type CRCPhysicsShapeHit2D,
-} from '@crc/core/physics/2d/geometry';
+  type PibblPhysicsContactPoint2D,
+  type PibblPhysicsDistance2D,
+  type PibblPhysicsRay2D,
+  type PibblPhysicsShapeContact2D,
+  type PibblPhysicsShapeHit2D,
+} from '@pibbl/core/physics/2d/geometry';
 
 const circle = circleShape2D({ radius: 10 });
 const first = { position: [20, 20], rotationDegrees: 0 } as const;
 const second = { position: [45, 20], rotationDegrees: 0 } as const;
-const distance: CRCPhysicsDistance2D = distanceBetweenShapes2D(circle, first, circle, second);
-const contact: CRCPhysicsShapeContact2D | null = contactBetweenShapes2D(circle, first, circle, second);
-const firstContactPoint: CRCPhysicsContactPoint2D | undefined = contact?.points[0];
-const ray: CRCPhysicsRay2D = { origin: [0, 20], direction: [1, 0], maxDistance: 100 };
-const rayHit: CRCPhysicsShapeHit2D | null = raycastShape2D(circle, first, ray);
-const castHit: CRCPhysicsShapeHit2D | null = shapeCastAgainstShape2D(
+const distance: PibblPhysicsDistance2D = distanceBetweenShapes2D(circle, first, circle, second);
+const contact: PibblPhysicsShapeContact2D | null = contactBetweenShapes2D(circle, first, circle, second);
+const firstContactPoint: PibblPhysicsContactPoint2D | undefined = contact?.points[0];
+const ray: PibblPhysicsRay2D = { origin: [0, 20], direction: [1, 0], maxDistance: 100 };
+const rayHit: PibblPhysicsShapeHit2D | null = raycastShape2D(circle, first, ray);
+const castHit: PibblPhysicsShapeHit2D | null = shapeCastAgainstShape2D(
   circle, first, [30, 0], circle, second,
 );
 

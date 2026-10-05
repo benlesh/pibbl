@@ -1,4 +1,4 @@
-import type { crcInternalQueueSimulationBegin } from './simulation-participant.js';
+import type { pibblInternalQueueSimulationBegin } from './simulation-participant.js';
 import {
   GLOBAL_STATE,
 } from '../global-state.js';
@@ -13,12 +13,12 @@ import {
 import type { WritableSignal } from '../signals/types.js';
 import { usePaintTarget } from '../hooks/use-paint-target.js';
 import type {
-  CRCEventHandlers,
-  CRCEventTargetOptions,
-  CRCEventTargetSnapshot,
-  CRCPointerEvents,
+  PibblEventHandlers,
+  PibblEventTargetOptions,
+  PibblEventTargetSnapshot,
+  PibblPointerEvents,
 } from '../events/types.js';
-import type { CRCComponentRefs, CRCInstance } from '../types.js';
+import type { PibblComponentRefs, PibblInstance } from '../types.js';
 import {
   getCurrentFrameSnapshot,
   queueBeginCommand,
@@ -37,25 +37,25 @@ declare const internalRenderOwnerBrand: unique symbol;
 /**
  * Opaque ownership identity for renderer scheduling and cleanup.
  *
- * @see {@link crcInternalCreateSignalConsumer}
- * @see {@link crcInternalCurrentRenderOwner}
- * @see {@link crcInternalOnRenderFinish}
+ * @see {@link pibblInternalCreateSignalConsumer}
+ * @see {@link pibblInternalCurrentRenderOwner}
+ * @see {@link pibblInternalOnRenderFinish}
  */
-export interface CRCInternalRenderOwner {
+export interface PibblInternalRenderOwner {
   readonly [internalRenderOwnerBrand]: true;
 }
 
 /**
  * Shared scheduler frame identity, logical timing, and admission context.
  *
- * @see {@link crcInternalCurrentFrame}
- * @see {@link crcInternalQueueBegin}
- * @see {@link crcInternalQueueComplete}
+ * @see {@link pibblInternalCurrentFrame}
+ * @see {@link pibblInternalQueueBegin}
+ * @see {@link pibblInternalQueueComplete}
  */
-export interface CRCInternalFrame {
-  /** Identifier of the shared scheduler frame. See {@link CRCInternalFrame}. */
+export interface PibblInternalFrame {
+  /** Identifier of the shared scheduler frame. See {@link PibblInternalFrame}. */
   readonly frameId: number;
-  /** Logical scheduler time in milliseconds. See {@link CRCInternalFrame}. */
+  /** Logical scheduler time in milliseconds. See {@link PibblInternalFrame}. */
   readonly logicalTime: number;
 }
 
@@ -63,28 +63,28 @@ export interface CRCInternalFrame {
  * Staged signal writes published together during scheduler Commit.
  *
  * @see {@link WritableSignal}
- * @see {@link crcInternalQueueBegin}
- * @see {@link crcInternalRegisterAdvance}
- * @see {@link crcInternalQueueSimulationBegin}
+ * @see {@link pibblInternalQueueBegin}
+ * @see {@link pibblInternalRegisterAdvance}
+ * @see {@link pibblInternalQueueSimulationBegin}
  */
-export interface CRCInternalSignalBatch {
+export interface PibblInternalSignalBatch {
   /**
    * Reads the current committed values required by this integration. See
-   * {@link CRCInternalSignalBatch}.
+   * {@link PibblInternalSignalBatch}.
    * @param signal - Signal whose staged or committed value should be read. See
    * {@link WritableSignal} .
    * @returns The current batch value, falling back to the committed signal value.
    */
   read<T>(signal: WritableSignal<T>): T;
   /**
-   * Stages a signal write for publication during Commit. See {@link CRCInternalSignalBatch}.
+   * Stages a signal write for publication during Commit. See {@link PibblInternalSignalBatch}.
    * @param signal - Signal that will receive the value during Commit. See {@link WritableSignal}.
    * @param value - Value to stage.
    * @param writer - Identity used to attribute and discard staged writes.
    */
   stage<T>(signal: WritableSignal<T>, value: T, writer: object): void;
   /**
-   * Discards writes belonging to the specified writer. See {@link CRCInternalSignalBatch}.
+   * Discards writes belonging to the specified writer. See {@link PibblInternalSignalBatch}.
    * @param writer - Writer identity whose pending writes should be discarded.
    */
   discardWriter(writer: object): void;
@@ -93,17 +93,17 @@ export interface CRCInternalSignalBatch {
 /**
  * Sequence identity and cancellation capability for a queued scheduler command.
  *
- * @see {@link crcInternalQueueBegin}
+ * @see {@link pibblInternalQueueBegin}
  */
-export interface CRCInternalCommandHandle {
+export interface PibblInternalCommandHandle {
   /**
    * Sequence number assigned when the scheduler command is queued. See
-   * {@link CRCInternalCommandHandle}.
+   * {@link PibblInternalCommandHandle}.
    */
   readonly sequence: number;
   /**
    * Cancels this queued command before it is admitted by the scheduler. See
-   * {@link CRCInternalCommandHandle}.
+   * {@link PibblInternalCommandHandle}.
    */
   cancel(): void;
 }
@@ -118,68 +118,68 @@ export interface CRCInternalCommandHandle {
  * retried owners are deferred until a successful frame. Other owners and roots
  * still complete normally.
  *
- * @see {@link crcInternalRequestRendererWork}
+ * @see {@link pibblInternalRequestRendererWork}
  */
-export type CRCInternalRendererWorkKind = 'resource' | 'draw' | 'compose';
+export type PibblInternalRendererWorkKind = 'resource' | 'draw' | 'compose';
 
 /**
  * Dependency tracking and disposal operations for an integration-owned signal consumer.
  *
- * @see {@link crcInternalCreateSignalConsumer}
+ * @see {@link pibblInternalCreateSignalConsumer}
  */
-export interface CRCInternalSignalConsumer {
+export interface PibblInternalSignalConsumer {
   /**
    * Evaluates a callback while collecting signal dependencies for this consumer. See
-   * {@link CRCInternalSignalConsumer}.
+   * {@link PibblInternalSignalConsumer}.
    * @param read - Synchronous computation whose signal dependencies are collected.
    * @returns The computation's return value.
    */
   collect<T>(read: () => T): T;
   /**
    * Acknowledges the consumer's current invalidation as processed. See
-   * {@link CRCInternalSignalConsumer}.
+   * {@link PibblInternalSignalConsumer}.
    */
   markClean(): void;
-  /** Releases resources owned by this mounted object. See {@link CRCInternalSignalConsumer}. */
+  /** Releases resources owned by this mounted object. See {@link PibblInternalSignalConsumer}. */
   dispose(): void;
 }
 
 interface RenderOwnerState {
-  readonly component: CRCComponentRefs<any>;
-  readonly instance: CRCInstance;
+  readonly component: PibblComponentRefs<any>;
+  readonly instance: PibblInstance;
   readonly schedulerOwner: RendererParticipantOwner;
-  readonly consumers: Set<CRCInternalSignalConsumer>;
-  readonly beginCommands: Set<CRCInternalCommandHandle>;
+  readonly consumers: Set<PibblInternalSignalConsumer>;
+  readonly beginCommands: Set<PibblInternalCommandHandle>;
   readonly advanceRegistrations: Set<() => void>;
   active: boolean;
 }
 
 const ownersByComponent = new WeakMap<
-  CRCComponentRefs<any>,
-  CRCInternalRenderOwner
+  PibblComponentRefs<any>,
+  PibblInternalRenderOwner
 >();
-const ownerStates = new WeakMap<CRCInternalRenderOwner, RenderOwnerState>();
+const ownerStates = new WeakMap<PibblInternalRenderOwner, RenderOwnerState>();
 
 /**
  * Returns the active render owner required by official integration scheduling operations.
  *
- * @returns The render owner for the current runtime context. See {@link CRCInternalRenderOwner}.
+ * @returns The render owner for the current runtime context. See {@link PibblInternalRenderOwner}.
  *
- * @see {@link CRCInternalRenderOwner}
+ * @see {@link PibblInternalRenderOwner}
  */
-export function crcInternalCurrentRenderOwner(): CRCInternalRenderOwner {
+export function pibblInternalCurrentRenderOwner(): PibblInternalRenderOwner {
   const component = GLOBAL_STATE.componentRefs;
-  const instance = GLOBAL_STATE.currentCRCInstance;
+  const instance = GLOBAL_STATE.currentPibblInstance;
   if (!component || !instance) {
     throw new Error(
-      'crcInternalCurrentRenderOwner() is only available during CRC component evaluation.',
+      'pibblInternalCurrentRenderOwner() is only available during Pibbl component evaluation.',
     );
   }
 
   const existing = ownersByComponent.get(component);
   if (existing) return existing;
 
-  const owner = {} as CRCInternalRenderOwner;
+  const owner = {} as PibblInternalRenderOwner;
   const state = {} as RenderOwnerState;
   const schedulerOwner: RendererParticipantOwner = {
     instance,
@@ -189,8 +189,8 @@ export function crcInternalCurrentRenderOwner(): CRCInternalRenderOwner {
     component,
     instance,
     schedulerOwner,
-    consumers: new Set<CRCInternalSignalConsumer>(),
-    beginCommands: new Set<CRCInternalCommandHandle>(),
+    consumers: new Set<PibblInternalSignalConsumer>(),
+    beginCommands: new Set<PibblInternalCommandHandle>(),
     advanceRegistrations: new Set<() => void>(),
     active: true,
   });
@@ -204,18 +204,18 @@ export function crcInternalCurrentRenderOwner(): CRCInternalRenderOwner {
  * Creates an owner-scoped dependency consumer for an official renderer integration.
  *
  * @param options - Render owner, optional diagnostic name, and invalidation callback. See
- * {@link CRCInternalRenderOwner} .
+ * {@link PibblInternalRenderOwner} .
  * @returns A consumer that tracks signal dependencies and owns their cleanup. See
- * {@link CRCInternalSignalConsumer} .
+ * {@link PibblInternalSignalConsumer} .
  *
- * @see {@link CRCInternalRenderOwner}
- * @see {@link CRCInternalSignalConsumer}
+ * @see {@link PibblInternalRenderOwner}
+ * @see {@link PibblInternalSignalConsumer}
  */
-export function crcInternalCreateSignalConsumer(options: {
-  owner: CRCInternalRenderOwner;
+export function pibblInternalCreateSignalConsumer(options: {
+  owner: PibblInternalRenderOwner;
   debugName?: string;
   invalidate(): void;
-}): CRCInternalSignalConsumer {
+}): PibblInternalSignalConsumer {
   const ownerState = requireActiveOwner(options.owner);
   let disposed = false;
   const signalConsumer = createSignalRenderConsumer({
@@ -227,10 +227,10 @@ export function crcInternalCreateSignalConsumer(options: {
       }
     },
   });
-  const consumer: CRCInternalSignalConsumer = {
+  const consumer: PibblInternalSignalConsumer = {
     collect<T>(read: () => T): T {
       if (disposed) {
-        throw new Error('Cannot collect signal reads with a disposed CRC renderer consumer.');
+        throw new Error('Cannot collect signal reads with a disposed Pibbl renderer consumer.');
       }
       requireActiveOwner(options.owner);
       return collectSignalReads(signalConsumer, () => read());
@@ -252,20 +252,20 @@ export function crcInternalCreateSignalConsumer(options: {
 /**
  * Requests keyed renderer work in the shared scheduler without creating a second frame loop.
  *
- * @param owner - Owner whose renderer work is being requested. See {@link CRCInternalRenderOwner}.
+ * @param owner - Owner whose renderer work is being requested. See {@link PibblInternalRenderOwner}.
  * @param request - Work identity, renderer category, and frame callback. See
- * {@link CRCInternalRendererWorkKind} , {@link CRCInternalFrame} .
+ * {@link PibblInternalRendererWorkKind} , {@link PibblInternalFrame} .
  *
- * @see {@link CRCInternalRenderOwner}
- * @see {@link CRCInternalRendererWorkKind}
- * @see {@link CRCInternalFrame}
+ * @see {@link PibblInternalRenderOwner}
+ * @see {@link PibblInternalRendererWorkKind}
+ * @see {@link PibblInternalFrame}
  */
-export function crcInternalRequestRendererWork(
-  owner: CRCInternalRenderOwner,
+export function pibblInternalRequestRendererWork(
+  owner: PibblInternalRenderOwner,
   request: {
     key: object;
-    kind: CRCInternalRendererWorkKind;
-    run(frame: CRCInternalFrame): void;
+    kind: PibblInternalRendererWorkKind;
+    run(frame: PibblInternalFrame): void;
   },
 ): void {
   const state = requireActiveOwner(owner);
@@ -275,35 +275,35 @@ export function crcInternalRequestRendererWork(
 /**
  * Rejects commands issued from runtime evaluation contexts that forbid mutation.
  *
- * @see {@link crcInternalQueueBegin}
+ * @see {@link pibblInternalQueueBegin}
  */
-export function crcInternalAssertCommandAllowed(): void {
+export function pibblInternalAssertCommandAllowed(): void {
   assertSignalCommandAllowed();
 }
 
 /**
  * Queues an owner-scoped Begin command and returns a cancellation handle.
  *
- * @param owner - Owner admitting the command. See {@link CRCInternalRenderOwner}.
+ * @param owner - Owner admitting the command. See {@link PibblInternalRenderOwner}.
  * @param callback - Begin-phase callback receiving frame, staged writes, and command sequence. See
- * {@link CRCInternalFrame} , {@link CRCInternalSignalBatch} .
- * @returns A handle that can cancel the queued command. See {@link CRCInternalCommandHandle}.
+ * {@link PibblInternalFrame} , {@link PibblInternalSignalBatch} .
+ * @returns A handle that can cancel the queued command. See {@link PibblInternalCommandHandle}.
  *
- * @see {@link CRCInternalRenderOwner}
- * @see {@link CRCInternalFrame}
- * @see {@link CRCInternalSignalBatch}
- * @see {@link CRCInternalCommandHandle}
+ * @see {@link PibblInternalRenderOwner}
+ * @see {@link PibblInternalFrame}
+ * @see {@link PibblInternalSignalBatch}
+ * @see {@link PibblInternalCommandHandle}
  */
-export function crcInternalQueueBegin(
-  owner: CRCInternalRenderOwner,
+export function pibblInternalQueueBegin(
+  owner: PibblInternalRenderOwner,
   callback: (
-    frame: CRCInternalFrame,
-    batch: CRCInternalSignalBatch,
+    frame: PibblInternalFrame,
+    batch: PibblInternalSignalBatch,
     sequence: number,
   ) => void,
-): CRCInternalCommandHandle {
+): PibblInternalCommandHandle {
   const state = requireActiveOwner(owner);
-  let handle: CRCInternalCommandHandle;
+  let handle: PibblInternalCommandHandle;
   const schedulerHandle = queueBeginCommand((frame, batch, sequence) => {
     state.beginCommands.delete(handle);
     if (!state.schedulerOwner.isActive()) return;
@@ -323,18 +323,18 @@ export function crcInternalQueueBegin(
 /**
  * Registers renderer work for shared-frame Advance and returns its unregister callback.
  *
- * @param owner - Owner of the advancing work. See {@link CRCInternalRenderOwner}.
+ * @param owner - Owner of the advancing work. See {@link PibblInternalRenderOwner}.
  * @param callback - Advance callback receiving the frame and staged signal writes. See
- * {@link CRCInternalFrame} , {@link CRCInternalSignalBatch} .
+ * {@link PibblInternalFrame} , {@link PibblInternalSignalBatch} .
  * @returns A function unregistering the Advance callback.
  *
- * @see {@link CRCInternalRenderOwner}
- * @see {@link CRCInternalFrame}
- * @see {@link CRCInternalSignalBatch}
+ * @see {@link PibblInternalRenderOwner}
+ * @see {@link PibblInternalFrame}
+ * @see {@link PibblInternalSignalBatch}
  */
-export function crcInternalRegisterAdvance(
-  owner: CRCInternalRenderOwner,
-  callback: (frame: CRCInternalFrame, batch: CRCInternalSignalBatch) => void,
+export function pibblInternalRegisterAdvance(
+  owner: PibblInternalRenderOwner,
+  callback: (frame: PibblInternalFrame, batch: PibblInternalSignalBatch) => void,
 ): () => void {
   const state = requireActiveOwner(owner);
   let released = false;
@@ -355,17 +355,17 @@ export function crcInternalRegisterAdvance(
 /**
  * Registers acknowledgement of the current frame's committed staged writes.
  *
- * @param owner - Owner of the pending commit. See {@link CRCInternalRenderOwner}.
+ * @param owner - Owner of the pending commit. See {@link PibblInternalRenderOwner}.
  * @param callback - Callback receiving the frame and whether the commit was applied. See
- * {@link CRCInternalFrame} .
+ * {@link PibblInternalFrame} .
  *
- * @see {@link CRCInternalRenderOwner}
- * @see {@link CRCInternalFrame}
+ * @see {@link PibblInternalRenderOwner}
+ * @see {@link PibblInternalFrame}
  */
-export function crcInternalQueueCurrentCommit(
-  owner: CRCInternalRenderOwner,
+export function pibblInternalQueueCurrentCommit(
+  owner: PibblInternalRenderOwner,
   callback: (
-    frame: CRCInternalFrame,
+    frame: PibblInternalFrame,
     outcome: Readonly<{ applied: boolean }>,
   ) => void,
 ): void {
@@ -379,16 +379,16 @@ export function crcInternalQueueCurrentCommit(
 /**
  * Queues an owner-scoped completion callback in the current scheduler transaction.
  *
- * @param owner - Owner of the completion work. See {@link CRCInternalRenderOwner}.
+ * @param owner - Owner of the completion work. See {@link PibblInternalRenderOwner}.
  * @param callback - Callback invoked during Complete with the shared frame. See
- * {@link CRCInternalFrame} .
+ * {@link PibblInternalFrame} .
  *
- * @see {@link CRCInternalRenderOwner}
- * @see {@link CRCInternalFrame}
+ * @see {@link PibblInternalRenderOwner}
+ * @see {@link PibblInternalFrame}
  */
-export function crcInternalQueueCurrentComplete(
-  owner: CRCInternalRenderOwner,
-  callback: (frame: CRCInternalFrame) => void,
+export function pibblInternalQueueCurrentComplete(
+  owner: PibblInternalRenderOwner,
+  callback: (frame: PibblInternalFrame) => void,
 ): void {
   const state = requireActiveOwner(owner);
   queueCurrentFrameCompletion(frame => {
@@ -400,11 +400,11 @@ export function crcInternalQueueCurrentComplete(
 /**
  * Marks the owning renderer dirty and requests shared scheduler work.
  *
- * @param owner - Owner whose renderer should become dirty. See {@link CRCInternalRenderOwner}.
+ * @param owner - Owner whose renderer should become dirty. See {@link PibblInternalRenderOwner}.
  *
- * @see {@link CRCInternalRenderOwner}
+ * @see {@link PibblInternalRenderOwner}
  */
-export function crcInternalRequestRender(owner: CRCInternalRenderOwner): void {
+export function pibblInternalRequestRender(owner: PibblInternalRenderOwner): void {
   const state = requireActiveOwner(owner);
   requestInstanceRender(state.instance);
 }
@@ -412,23 +412,23 @@ export function crcInternalRequestRender(owner: CRCInternalRenderOwner): void {
 /**
  * Registers a callback reporting the outcome of the owner's render transaction.
  *
- * @param owner - Owner of the rendering transaction. See {@link CRCInternalRenderOwner}.
+ * @param owner - Owner of the rendering transaction. See {@link PibblInternalRenderOwner}.
  * @param callback - Callback receiving whether the transaction succeeded.
  *
- * @see {@link CRCInternalRenderOwner}
+ * @see {@link PibblInternalRenderOwner}
  */
-export function crcInternalOnRenderFinish(
-  owner: CRCInternalRenderOwner,
+export function pibblInternalOnRenderFinish(
+  owner: PibblInternalRenderOwner,
   callback: (success: boolean) => void,
 ): void {
   const state = requireActiveOwner(owner);
   if (
     GLOBAL_STATE.componentRefs !== state.component ||
-    GLOBAL_STATE.currentCRCInstance !== state.instance ||
+    GLOBAL_STATE.currentPibblInstance !== state.instance ||
     !GLOBAL_STATE.renderTransaction
   ) {
     throw new Error(
-      'crcInternalOnRenderFinish() requires its owner to be the currently evaluating CRC component.',
+      'pibblInternalOnRenderFinish() requires its owner to be the currently evaluating Pibbl component.',
     );
   }
   GLOBAL_STATE.renderTransaction.onFinish(success => {
@@ -440,36 +440,36 @@ export function crcInternalOnRenderFinish(
 /**
  * Registers one painted logical target with its handlers, geometry, and participation policy.
  *
- * @param handlers - Handlers for the painted target. See {@link CRCEventHandlers}.
- * @param options - Hit geometry and focus metadata. See {@link CRCEventTargetOptions}.
+ * @param handlers - Handlers for the painted target. See {@link PibblEventHandlers}.
+ * @param options - Hit geometry and focus metadata. See {@link PibblEventTargetOptions}.
  * @param pointerEvents - Pointer participation policy; defaults to auto. See
- * {@link CRCPointerEvents} .
- * @returns The painted event target snapshot. See {@link CRCEventTargetSnapshot}.
+ * {@link PibblPointerEvents} .
+ * @returns The painted event target snapshot. See {@link PibblEventTargetSnapshot}.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventTargetOptions}
- * @see {@link CRCPointerEvents}
- * @see {@link CRCEventTargetSnapshot}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventTargetOptions}
+ * @see {@link PibblPointerEvents}
+ * @see {@link PibblEventTargetSnapshot}
  */
-export function crcInternalPaintTarget(
-  handlers: CRCEventHandlers,
-  options: CRCEventTargetOptions,
-  pointerEvents: CRCPointerEvents = 'auto',
-): CRCEventTargetSnapshot {
+export function pibblInternalPaintTarget(
+  handlers: PibblEventHandlers,
+  options: PibblEventTargetOptions,
+  pointerEvents: PibblPointerEvents = 'auto',
+): PibblEventTargetSnapshot {
   return usePaintTarget(handlers, options, pointerEvents);
 }
 
 /**
  * Returns timing and phase information for the current shared scheduler frame.
  *
- * @returns The shared scheduler frame for the active phase. See {@link CRCInternalFrame}.
+ * @returns The shared scheduler frame for the active phase. See {@link PibblInternalFrame}.
  *
- * @see {@link CRCInternalFrame}
+ * @see {@link PibblInternalFrame}
  */
-export function crcInternalCurrentFrame(): CRCInternalFrame {
+export function pibblInternalCurrentFrame(): PibblInternalFrame {
   const frame = getCurrentFrameSnapshot();
   if (!frame) {
-    throw new Error('crcInternalCurrentFrame() requires a current CRC frame.');
+    throw new Error('pibblInternalCurrentFrame() requires a current Pibbl frame.');
   }
   return frame;
 }
@@ -477,25 +477,25 @@ export function crcInternalCurrentFrame(): CRCInternalFrame {
 /**
  * Queues an owner-scoped callback for a scheduler Complete phase.
  *
- * @param owner - Owner of the completion work. See {@link CRCInternalRenderOwner}.
+ * @param owner - Owner of the completion work. See {@link PibblInternalRenderOwner}.
  * @param callback - Callback invoked during Complete with the shared frame. See
- * {@link CRCInternalFrame} .
+ * {@link PibblInternalFrame} .
  *
- * @see {@link CRCInternalRenderOwner}
- * @see {@link CRCInternalFrame}
+ * @see {@link PibblInternalRenderOwner}
+ * @see {@link PibblInternalFrame}
  */
-export function crcInternalQueueComplete(
-  owner: CRCInternalRenderOwner,
-  callback: (frame: CRCInternalFrame) => void,
+export function pibblInternalQueueComplete(
+  owner: PibblInternalRenderOwner,
+  callback: (frame: PibblInternalFrame) => void,
 ): void {
   const state = requireActiveOwner(owner);
   queueRendererParticipantComplete(state.schedulerOwner, callback);
 }
 
-function requireActiveOwner(owner: CRCInternalRenderOwner): RenderOwnerState {
+function requireActiveOwner(owner: PibblInternalRenderOwner): RenderOwnerState {
   const state = ownerStates.get(owner);
   if (!state || !state.active || !isCurrentOwner(state)) {
-    throw new TypeError('Expected an active CRC internal render owner.');
+    throw new TypeError('Expected an active Pibbl internal render owner.');
   }
   return state;
 }
@@ -503,11 +503,11 @@ function requireActiveOwner(owner: CRCInternalRenderOwner): RenderOwnerState {
 function isCurrentOwner(state: RenderOwnerState): boolean {
   return !state.component.teardowns.closed &&
     !state.instance.mainTeardowns.closed &&
-    GLOBAL_STATE.crcInstances.get(state.instance.canvas) === state.instance &&
+    GLOBAL_STATE.pibblInstances.get(state.instance.canvas) === state.instance &&
     state.instance.refs.get(state.component.id) === state.component;
 }
 
-function disposeRenderOwner(owner: CRCInternalRenderOwner): void {
+function disposeRenderOwner(owner: PibblInternalRenderOwner): void {
   const state = ownerStates.get(owner);
   if (!state || !state.active) return;
   state.active = false;

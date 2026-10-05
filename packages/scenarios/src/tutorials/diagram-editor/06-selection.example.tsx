@@ -1,6 +1,6 @@
 import {
   Absolute,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
   Fragment,
@@ -9,10 +9,10 @@ import {
   Rectangle,
   Text,
   type BoxStyle,
-  type CRCController,
-  type CRCNode,
+  type PibblController,
+  type PibblNode,
   type LayoutItemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 type NodeId = "idea" | "sketch" | "build" | "ship";
 
@@ -121,7 +121,7 @@ function arrowheadPath(point: Readonly<{ x: number; y: number }>): Path2D {
   return path;
 }
 
-function NodeCard({ node, selected, onSelect }: NodeCardProps): CRCNode {
+function NodeCard({ node, selected, onSelect }: NodeCardProps): PibblNode {
   return (
     <Group style={{ translateX: node.x, translateY: node.y }}>
       <Rectangle
@@ -186,7 +186,7 @@ function NodeCard({ node, selected, onSelect }: NodeCardProps): CRCNode {
   );
 }
 
-function Connection({ edge }: Readonly<{ edge: DiagramEdge }>): CRCNode {
+function Connection({ edge }: Readonly<{ edge: DiagramEdge }>): PibblNode {
   const from = INITIAL_NODES.find((node) => node.id === edge.from);
   const to = INITIAL_NODES.find((node) => node.id === edge.to);
   if (!from || !to) throw new Error(`Unknown node in edge "${edge.id}".`);
@@ -210,7 +210,7 @@ function Connection({ edge }: Readonly<{ edge: DiagramEdge }>): CRCNode {
   );
 }
 
-function Toolbar({ style: _specifiedStyle }: RegionProps): CRCNode {
+function Toolbar({ style: _specifiedStyle }: RegionProps): PibblNode {
   const box = useLayoutBox();
   return [
     <Rectangle
@@ -262,7 +262,7 @@ function Workspace({
   selectedNodeId,
   onSelect,
   onClearSelection,
-}: WorkspaceProps): CRCNode {
+}: WorkspaceProps): PibblNode {
   const box = useLayoutBox();
   return [
     <Rectangle
@@ -288,7 +288,7 @@ function Workspace({
 function StatusBar({
   style: _specifiedStyle,
   selectedNode,
-}: RegionProps & Readonly<{ selectedNode: DiagramNode | undefined }>): CRCNode {
+}: RegionProps & Readonly<{ selectedNode: DiagramNode | undefined }>): PibblNode {
   const box = useLayoutBox();
   const status = selectedNode
     ? `SELECTED · ${selectedNode.title}`
@@ -318,7 +318,7 @@ function StatusBar({
   ];
 }
 
-function DiagramEditor(): CRCNode {
+function DiagramEditor(): PibblNode {
   const selectedNodeId = useSignal<NodeId | null>("sketch");
   const selectedNode = INITIAL_NODES.find((node) => node.id === selectedNodeId.get());
   return (
@@ -343,6 +343,6 @@ function DiagramEditor(): CRCNode {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <DiagramEditor />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <DiagramEditor />);
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
 import { Text } from '../components/text';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import { useSignal } from '../hooks/use-signal';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import type { Length } from '../style/types';
@@ -29,7 +29,7 @@ const measurement = {
     measureElement(element, value, service),
 };
 
-describe('CRC-native flow geometry', () => {
+describe('Pibbl-native flow geometry', () => {
   it('places literal horizontal wrapped lines in source order', () => {
     const children = [
       createElement(Rectangle, { style: { width: 40, height: 20 } }),
@@ -297,7 +297,7 @@ describe('CRC-native flow geometry', () => {
     const context = canvas.element.getContext('2d')!;
     const fillText = vi.spyOn(context, 'fillText');
 
-    crc(canvas.element, createElement(Flow, {
+    pibbl(canvas.element, createElement(Flow, {
       style: { width: 30, height: 50 },
       children: [createElement(Text, {
         style: {
@@ -398,9 +398,9 @@ describe('CRC-native flow geometry', () => {
     const canvas = await componentTest(createElement(Host, { keyed: false }));
     const identity = observations.get('unkeyed');
 
-    crc(canvas.element, createElement(Host, { keyed: true }));
+    pibbl(canvas.element, createElement(Host, { keyed: true }));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-    crc(canvas.element, createElement(Host, { keyed: false }));
+    pibbl(canvas.element, createElement(Host, { keyed: false }));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     expect(observations.get('unkeyed')).toBe(identity);
   });
@@ -468,6 +468,6 @@ describe('CRC-native flow geometry', () => {
     )).toThrowError(new RegExp(property));
   });
 
-  // @ts-expect-error flow direction uses CRC-native values
+  // @ts-expect-error flow direction uses Pibbl-native values
   void createElement(Flow, { style: { direction: 'row' }, children: [] });
 });

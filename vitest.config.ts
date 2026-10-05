@@ -3,8 +3,8 @@ import { fileURLToPath } from "node:url";
 import { defineBrowserCommand, playwright } from "@vitest/browser-playwright";
 import { configDefaults, defineConfig } from "vitest/config";
 import { assertBuiltCore } from "./tooling/assert-built-core.ts";
-import { crcRuntimeSource } from "./tooling/crc-runtime-source.ts";
-import { crcStudioDocs } from "./tooling/studio-docs/vite-plugin.ts";
+import { pibblRuntimeSource } from "./tooling/pibbl-runtime-source.ts";
+import { pibblStudioDocs } from "./tooling/studio-docs/vite-plugin.ts";
 import { manipulationPointer } from "./tooling/manipulation-browser-command.ts";
 
 interface DevToolsSession {
@@ -78,12 +78,12 @@ export default defineConfig(({ mode }) => ({
   oxc: {
     jsx: {
       runtime: "automatic",
-      importSource: "@crc/core",
+      importSource: "@pibbl/core",
     },
   },
   plugins: [
-    crcRuntimeSource(mode),
-    crcStudioDocs({
+    pibblRuntimeSource(mode),
+    pibblStudioDocs({
       repositoryRoot: fileURLToPath(new URL(".", import.meta.url)),
     }),
     ...(mode === "built" ? [assertBuiltCore()] : []),
@@ -93,22 +93,22 @@ export default defineConfig(({ mode }) => ({
       mode === "built"
         ? []
         : [
-            { find: /^@crc\/core\/filters$/, replacement: fileURLToPath(new URL("./packages/core/src/filters.ts", import.meta.url)) },
-            { find: /^@crc\/core\/textures$/, replacement: fileURLToPath(new URL("./packages/core/src/features/textures/index.ts", import.meta.url)) },
+            { find: /^@pibbl\/core\/filters$/, replacement: fileURLToPath(new URL("./packages/core/src/filters.ts", import.meta.url)) },
+            { find: /^@pibbl\/core\/textures$/, replacement: fileURLToPath(new URL("./packages/core/src/features/textures/index.ts", import.meta.url)) },
             {
-              find: /^@crc\/core\/viz$/,
+              find: /^@pibbl\/core\/viz$/,
               replacement: fileURLToPath(
                 new URL("./packages/core/src/features/viz/index.ts", import.meta.url),
               ),
             },
             {
-              find: /^@crc\/core\/internal$/,
+              find: /^@pibbl\/core\/internal$/,
               replacement: fileURLToPath(
                 new URL("./packages/core/src/internal.ts", import.meta.url),
               ),
             },
             {
-              find: /^@crc\/core\/jsx-dev-runtime$/,
+              find: /^@pibbl\/core\/jsx-dev-runtime$/,
               replacement: fileURLToPath(
                 new URL(
                   "./packages/core/src/jsx-dev-runtime.ts",
@@ -117,31 +117,31 @@ export default defineConfig(({ mode }) => ({
               ),
             },
             {
-              find: /^@crc\/core\/jsx-runtime$/,
+              find: /^@pibbl\/core\/jsx-runtime$/,
               replacement: fileURLToPath(
                 new URL("./packages/core/src/jsx-runtime.ts", import.meta.url),
               ),
             },
             {
-              find: "@crc/core/types",
+              find: "@pibbl/core/types",
               replacement: fileURLToPath(
                 new URL("./packages/core/src/types.ts", import.meta.url),
               ),
             },
             {
-              find: /^@crc\/core$/,
+              find: /^@pibbl\/core$/,
               replacement: fileURLToPath(
                 new URL("./packages/core/src/index.ts", import.meta.url),
               ),
             },
             {
-              find: /^@crc\/three$/,
+              find: /^@pibbl\/three$/,
               replacement: fileURLToPath(
                 new URL("./packages/three/src/index.ts", import.meta.url),
               ),
             },
             {
-              find: /^@crc\/core\/physics\/2d\/geometry$/,
+              find: /^@pibbl\/core\/physics\/2d\/geometry$/,
               replacement: fileURLToPath(
                 new URL(
                   "./packages/core/src/features/physics/2d-geometry.ts",
@@ -150,7 +150,7 @@ export default defineConfig(({ mode }) => ({
               ),
             },
             {
-              find: /^@crc\/core\/physics\/2d\/testing$/,
+              find: /^@pibbl\/core\/physics\/2d\/testing$/,
               replacement: fileURLToPath(
                 new URL(
                   "./packages/core/src/features/physics/2d-testing.ts",
@@ -159,7 +159,7 @@ export default defineConfig(({ mode }) => ({
               ),
             },
             {
-              find: /^@crc\/core\/physics\/2d$/,
+              find: /^@pibbl\/core\/physics\/2d$/,
               replacement: fileURLToPath(
                 new URL("./packages/core/src/features/physics/2d.ts", import.meta.url),
               ),

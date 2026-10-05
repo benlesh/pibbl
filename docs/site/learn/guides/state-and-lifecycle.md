@@ -10,21 +10,21 @@ keywords: [signals, state, lifecycle, reaction, cleanup, identity, hooks]
 
 # Manage state and lifecycle
 
-CRC uses one Signals-centric state model. Component-owned writable state is a
+Pibbl uses one Signals-centric state model. Component-owned writable state is a
 `useSignal()` cell, derived state is a `computed()` or `useComputed()` signal,
-and imperative synchronization belongs in `useReaction()`. CRC remains an
+and imperative synchronization belongs in `useReaction()`. Pibbl remains an
 immediate Canvas runtime rather than a React renderer.
 
 ## The render cycle
 
-`crc(canvas, root, config?)` creates at most one live mount for a Canvas and
-returns a stable controller. A later `crc()` call on that Canvas queues a root
+`pibbl(canvas, root, config?)` creates at most one live mount for a Canvas and
+returns a stable controller. A later `pibbl()` call on that Canvas queues a root
 replacement and returns the same controller. All roots and managed Layers in
 one loaded runtime share one realm scheduler and at most one pending animation
 frame. Signal, root, resize, density, animation, and Layer requests coalesce.
 
 A frame runs Begin, Advance, Commit, Plan, Render, and Complete. Components are
-synchronous. CRC does not retain DOM-like drawing nodes or cache components as
+synchronous. Pibbl does not retain DOM-like drawing nodes or cache components as
 bitmaps; ordinary Canvas paint still traverses the affected root. Explicit
 `Layer` boundaries retain their existing offscreen bitmaps and repaint only
 dirty layer paths.
@@ -32,7 +32,7 @@ dirty layer paths.
 ## Component-owned state and direct inputs
 
 ```tsx
-import { Group, Rectangle, Text, batch, useSignal } from "@crc/core";
+import { Group, Rectangle, Text, batch, useSignal } from "@pibbl/core";
 
 function Counter() {
   const count = useSignal(0);
@@ -55,7 +55,7 @@ function Counter() {
 }
 ```
 
-CRC-provided components accept signals at declared reactive input positions.
+Pibbl-provided components accept signals at declared reactive input positions.
 The receiving component performs the read and owns the dependency. Passing
 `count.get()` is also valid, but intentionally makes `Counter` the consumer.
 There is no recursive search through arbitrary application data.
@@ -63,7 +63,7 @@ There is no recursive search through arbitrary application data.
 `Signal<T>` exposes `get()`. `WritableSignal<T>` also exposes `set(value)`,
 `update(updater)`, and `asReadonly()`. `set()` treats functions as data;
 `update()` is the explicit functional update. `batch()` groups synchronous
-writes into one notification wave. CRC event dispatch already supplies an
+writes into one notification wave. Pibbl event dispatch already supplies an
 outer batch, so an event with several writes schedules affected work once.
 
 Writes are rejected during component, primitive-render, and computed
@@ -99,7 +99,7 @@ Use `computed()` for an independently retained derivation and `useComputed()`
 when the formula captures component props or other non-signal render values:
 
 ```tsx
-import { Text, useComputed, useSignal } from "@crc/core";
+import { Text, useComputed, useSignal } from "@pibbl/core";
 
 function Summary({ suffix }: { suffix: string }) {
   const count = useSignal(0);
@@ -117,7 +117,7 @@ way to eliminate work downstream.
 ## Reactions and cleanup
 
 ```tsx
-import { useReaction, type Signal } from "@crc/core";
+import { useReaction, type Signal } from "@pibbl/core";
 
 function MirrorTitle({ title }: { title: Signal<string> }) {
   useReaction(() => {
@@ -132,7 +132,7 @@ function MirrorTitle({ title }: { title: Signal<string> }) {
 ```
 
 Setup runs in Complete only after a successful render. Before replacement or
-final release, CRC invokes the exact current cleanup once. Signal reads inside
+final release, Pibbl invokes the exact current cleanup once. Signal reads inside
 setup belong to the reaction and do not add a render dependency. Setup and
 cleanup may synchronize external resources but may not write signals.
 
@@ -157,7 +157,7 @@ preserve identity across parents.
 
 Signal edges, computed formulas, reaction generations, and hook candidates are
 transactional: a failed render keeps the last successful generation and leaves
-no provisional dependency behind. CRC releases runtime-owned resources and
+no provisional dependency behind. Pibbl releases runtime-owned resources and
 component refs on failure or removal. Pixels painted before a thrown render are
 not rolled back.
 
@@ -167,15 +167,15 @@ mount.
 
 ## React comparison
 
-| Concern       | CRC                                              | React                          |
+| Concern       | Pibbl                                            | React                          |
 | ------------- | ------------------------------------------------ | ------------------------------ |
-| Output        | Immediate Canvas paint and CRC node traversal    | Host-renderer reconciliation   |
+| Output        | Immediate Canvas paint and Pibbl node traversal  | Host-renderer reconciliation   |
 | State         | Signals, direct signal inputs, computed barriers | React-owned state model        |
 | Effects       | Complete-phase signal-driven reactions           | React effects                  |
 | Stable values | `useConst`, `useRef`, specialized owner hooks    | React hook vocabulary          |
 | Host nodes    | One author-owned Canvas plus explicit Layers     | Typically a retained host tree |
 
-Never import React hooks into a CRC scene or CRC hooks into a React component.
+Never import React hooks into a Pibbl scene or Pibbl hooks into a React component.
 See the [signal-valued input types](#/api/types/signal-inputs),
 [`useReaction`](#/api/hooks/use-reaction), and the
 [signals/scheduling contract](../../../design/signals-and-scheduling-contract.md)

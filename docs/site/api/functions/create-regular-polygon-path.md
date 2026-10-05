@@ -12,7 +12,7 @@ relatedTypes: [RegularPolygonPathOptions]
 # createRegularPolygonPath
 
 ```ts
-import { createRegularPolygonPath, Path } from "@crc/core";
+import { createRegularPolygonPath, Path } from "@pibbl/core";
 ```
 
 [`RegularPolygonPathOptions`](#/api/types/elements-components#regularpolygonpathoptions) is accepted by `createRegularPolygonPath(options): Path2D`, which requires

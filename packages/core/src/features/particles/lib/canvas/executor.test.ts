@@ -1,17 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
-import type { CRCInternalRenderOwner } from "@crc/core/internal";
+import type { PibblInternalRenderOwner } from "@pibbl/core/internal";
 import { compileParticleEffect2D } from "../compiler.js";
 import { defineParticleEffect2D } from "../definition.js";
-import type { CRCParticleEmitter2D, CRCParticleRenderer2D } from "../types.js";
+import type { PibblParticleEmitter2D, PibblParticleRenderer2D } from "../types.js";
 import { createCanvasParticleExecutor } from "./executor.js";
 
-const owner = {} as CRCInternalRenderOwner;
+const owner = {} as PibblInternalRenderOwner;
 
 function emitter(
   name: string,
-  renderer: CRCParticleRenderer2D,
-  options: Partial<CRCParticleEmitter2D> = {},
-): CRCParticleEmitter2D {
+  renderer: PibblParticleRenderer2D,
+  options: Partial<PibblParticleEmitter2D> = {},
+): PibblParticleEmitter2D {
   return {
     name,
     capacity: 8,
@@ -28,9 +28,9 @@ function emitter(
   };
 }
 
-function setup(...emitters: CRCParticleEmitter2D[]) {
+function setup(...emitters: PibblParticleEmitter2D[]) {
   const effect = defineParticleEffect2D({
-    emitters: emitters as [CRCParticleEmitter2D, ...CRCParticleEmitter2D[]],
+    emitters: emitters as [PibblParticleEmitter2D, ...PibblParticleEmitter2D[]],
   });
   const compiled = compileParticleEffect2D(effect);
   const executor = createCanvasParticleExecutor({

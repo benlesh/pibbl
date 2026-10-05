@@ -1,5 +1,5 @@
 import { FilterSurfacePool } from '../filter/filter-surface-pool';
-import { opacity } from '@crc/core/filters';
+import { opacity } from '@pibbl/core/filters';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Rectangle, definePrimitive } from '../../index.js';
 import { jsxDEV } from '../../jsx-dev-runtime.js';
@@ -11,26 +11,26 @@ import {
   getCurrentFrameTimestamp,
   getCurrentSurfaceDensity,
   isBackendEventTargetLive,
-  mountBackendCRC,
+  mountBackendPibbl,
   registerNestedInteractionResolver,
   requestCurrentInstanceFrame,
   setCurrentComponentAfterRender,
   useBackendEventTarget,
   useInternalHookSlot,
-  type CRCBackendDriver,
-  type CRCBackendFrame,
-  type CRCBackendMount,
+  type PibblBackendDriver,
+  type PibblBackendFrame,
+  type PibblBackendMount,
 } from '../../internal.js';
 import { executeRender } from '../execute-render.js';
 import {
   clearSharedState,
-  getCRCInstance,
+  getPibblInstance,
   GLOBAL_STATE,
 } from '../global-state.js';
 import { useReaction } from '../hooks/use-reaction.js';
-import { mountCRC } from '../mount-crc.js';
+import { mountPibbl } from '../mount-pibbl.js';
 import type { FilterWindows } from '../filter/filter-region.js';
-import type { CRCNode } from '../types.js';
+import type { PibblNode } from '../types.js';
 
 afterEach(() => {
   clearSharedState();
@@ -45,16 +45,16 @@ describe('backend-neutral component traversal', () => {
       let originalEventParent: unknown;
       let originalFocusBridge: unknown;
       const parentCanvas = createCanvas();
-      const parent = mountCRC(parentCanvas, undefined);
+      const parent = mountPibbl(parentCanvas, undefined);
       const childCanvas = new OffscreenCanvas(10, 10);
       const backend = createRecordingBackend(`sibling-${pointerEvents}`);
-      const child = mountBackendCRC(childCanvas, undefined, {
+      const child = mountBackendPibbl(childCanvas, undefined, {
         parent: parentCanvas,
         logicalWidth: 10,
         logicalHeight: 10,
         driver: backend.driver,
       });
-      const childInstance = getCRCInstance(childCanvas);
+      const childInstance = getPibblInstance(childCanvas);
       const Resolver = definePrimitive<{
         readonly contender?: boolean;
       }>(function renderSiblingResolver({ contender }) {
@@ -110,7 +110,7 @@ describe('backend-neutral component traversal', () => {
 
   it('rejects a nested focus bridge from a different event root', () => {
     const Bridge = definePrimitive<{
-      readonly child: CRCBackendMount;
+      readonly child: PibblBackendMount;
     }>(function renderCrossRootBridge(props) {
       const bounds = new Path2D();
       bounds.rect(0, 0, 10, 10);
@@ -122,18 +122,18 @@ describe('backend-neutral component traversal', () => {
       });
     });
     const firstCanvas = createCanvas();
-    const firstParent = mountCRC(firstCanvas, undefined);
+    const firstParent = mountPibbl(firstCanvas, undefined);
     const childCanvas = new OffscreenCanvas(10, 10);
     const backend = createRecordingBackend('cross-root-child');
-    const child = mountBackendCRC(childCanvas, undefined, {
+    const child = mountBackendPibbl(childCanvas, undefined, {
       parent: firstCanvas,
       logicalWidth: 10,
       logicalHeight: 10,
       driver: backend.driver,
     });
     const secondCanvas = createCanvas();
-    const secondParent = mountCRC(secondCanvas, <Bridge child={child} />);
-    const childInstance = getCRCInstance(childCanvas);
+    const secondParent = mountPibbl(secondCanvas, <Bridge child={child} />);
+    const childInstance = getPibblInstance(childCanvas);
 
     expect(() => executeRender(secondCanvas, 1)).toThrowError(
       /nested.*same event root/i,
@@ -153,7 +153,7 @@ describe('backend-neutral component traversal', () => {
       target = useBackendEventTarget({});
     }
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, <TargetProbe />);
+    const controller = mountPibbl(canvas, <TargetProbe />);
 
     executeRender(canvas, 1);
 
@@ -193,7 +193,7 @@ describe('backend-neutral component traversal', () => {
       });
     });
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, <Probe style={{
+    const controller = mountPibbl(canvas, <Probe style={{
       filter: opacity({ amount: 0.5 }),
     }} />, {
       viewport: { width: 80, height: 20 },
@@ -227,7 +227,7 @@ describe('backend-neutral component traversal', () => {
         environments.push(environment);
       },
     );
-    function Stateful({ value }: { value: number }): CRCNode {
+    function Stateful({ value }: { value: number }): PibblNode {
       const identity = useInternalHookSlot('backend-test-identity', teardowns => {
         teardowns.add(cleanup);
         return {};
@@ -240,9 +240,9 @@ describe('backend-neutral component traversal', () => {
     }
 
     const parentCanvas = createCanvas();
-    const parent = mountCRC(parentCanvas, undefined);
+    const parent = mountPibbl(parentCanvas, undefined);
     const canvas = new OffscreenCanvas(96, 48);
-    const mount = mountBackendCRC(canvas, <Stateful key="stable" value={1} />, {
+    const mount = mountBackendPibbl(canvas, <Stateful key="stable" value={1} />, {
       parent: parentCanvas,
       logicalWidth: 32,
       logicalHeight: 16,
@@ -297,10 +297,10 @@ describe('backend-neutral component traversal', () => {
       identities.push(identity.value);
     }
     const parentCanvas = createCanvas();
-    const parent = mountCRC(parentCanvas, undefined);
+    const parent = mountPibbl(parentCanvas, undefined);
     const canvas = new OffscreenCanvas(20, 10);
     const root = <Stateful key="stable" />;
-    const mount = mountBackendCRC(canvas, root, {
+    const mount = mountBackendPibbl(canvas, root, {
       parent: parentCanvas,
       logicalWidth: 20,
       logicalHeight: 10,
@@ -320,7 +320,7 @@ describe('backend-neutral component traversal', () => {
       'begin:20x10@20x10:1',
       'begin:30x20@60x40:2',
     ]);
-    expect(getCRCInstance(canvas).surface).toMatchObject({
+    expect(getPibblInstance(canvas).surface).toMatchObject({
       kind: 'layer',
       managed: true,
       snapshot: {
@@ -342,7 +342,7 @@ describe('backend-neutral component traversal', () => {
   it('isolates a no-attachment backend frame from Canvas anchors and restores its caller', () => {
     const backend = createRecordingBackend('webgl-no-attachment');
     const observedAnchors: Array<readonly [DOMMatrix | undefined, DOMMatrix | undefined]> = [];
-    const driver: CRCBackendDriver<TestEnvironment> = {
+    const driver: PibblBackendDriver<TestEnvironment> = {
       ...backend.driver,
       runPrimitive(frame, input, runProgram) {
         observedAnchors.push([
@@ -353,7 +353,7 @@ describe('backend-neutral component traversal', () => {
           props: typeof input.props,
           style: typeof input.style,
           environment: TestEnvironment,
-        ) => CRCNode | void;
+        ) => PibblNode | void;
         runProgram(() => program(input.props, input.style, frame.environment));
       },
     };
@@ -362,8 +362,8 @@ describe('backend-neutral component traversal', () => {
       function renderWebglStylePrimitive() {},
     );
     const parentCanvas = createCanvas();
-    const parent = mountCRC(parentCanvas, undefined);
-    const child = mountBackendCRC(
+    const parent = mountPibbl(parentCanvas, undefined);
+    const child = mountBackendPibbl(
       new OffscreenCanvas(10, 10),
       <Primitive />,
       {
@@ -398,7 +398,7 @@ describe('backend-neutral component traversal', () => {
         });
       },
     );
-    const driver: CRCBackendDriver<TestEnvironment> = {
+    const driver: PibblBackendDriver<TestEnvironment> = {
       ...backend.driver,
       runPrimitive(frame, input, runProgram) {
         backend.calls.push(`primitive:${input.componentName}`);
@@ -406,15 +406,15 @@ describe('backend-neutral component traversal', () => {
           props: typeof input.props,
           style: typeof input.style,
           environment: TestEnvironment,
-        ) => CRCNode | void;
+        ) => PibblNode | void;
         runProgram(() => program(input.props, input.style, frame.environment));
         backend.calls.push('primitive-finished');
       },
     };
     const parentCanvas = createCanvas();
-    const parent = mountCRC(parentCanvas, undefined);
+    const parent = mountPibbl(parentCanvas, undefined);
     const canvas = new OffscreenCanvas(10, 10);
-    const mount = mountBackendCRC(canvas, <Primitive />, {
+    const mount = mountBackendPibbl(canvas, <Primitive />, {
       parent: parentCanvas,
       logicalWidth: 10,
       logicalHeight: 10,
@@ -448,7 +448,7 @@ describe('backend-neutral component traversal', () => {
         throw new Error('backend primitive failed');
       },
     );
-    function FailingScene(): CRCNode {
+    function FailingScene(): PibblNode {
       useInternalHookSlot('backend-failure-cleanup', teardowns => {
         teardowns.add(cleanup);
       });
@@ -457,9 +457,9 @@ describe('backend-neutral component traversal', () => {
     }
 
     const parentCanvas = createCanvas();
-    const parent = mountCRC(parentCanvas, undefined);
+    const parent = mountPibbl(parentCanvas, undefined);
     const canvas = new OffscreenCanvas(20, 10);
-    const child = mountBackendCRC(canvas, <FailingScene />, {
+    const child = mountBackendPibbl(canvas, <FailingScene />, {
       parent: parentCanvas,
       logicalWidth: 20,
       logicalHeight: 10,
@@ -494,7 +494,7 @@ describe('backend-neutral component traversal', () => {
     ]);
     expect(afterRender).toHaveBeenCalledOnce();
     expect(cleanup).toHaveBeenCalledOnce();
-    expect(getCRCInstance(canvas).refs.size).toBe(0);
+    expect(getPibblInstance(canvas).refs.size).toBe(0);
 
     child.dispose();
     parent.dispose();
@@ -512,7 +512,7 @@ describe('backend-neutral component traversal', () => {
       lineNumber: 12,
       columnNumber: 7,
     };
-    const canvasRoot = mountCRC(
+    const canvasRoot = mountPibbl(
       canvas,
       jsxDEV(Cube, {}, undefined, false, webGLSource, undefined),
     );
@@ -525,9 +525,9 @@ describe('backend-neutral component traversal', () => {
     canvasRoot.dispose();
 
     const parentCanvas = createCanvas();
-    const parent = mountCRC(parentCanvas, undefined);
+    const parent = mountPibbl(parentCanvas, undefined);
     const childCanvas = new OffscreenCanvas(10, 10);
-    const child = mountBackendCRC(childCanvas, <Rectangle style={{
+    const child = mountBackendPibbl(childCanvas, <Rectangle style={{
       width: 10,
       height: 10,
     }} />, {
@@ -568,9 +568,9 @@ describe('backend-neutral component traversal', () => {
       requestCurrentInstanceFrame(true);
     }
     const parentCanvas = createCanvas();
-    const parent = mountCRC(parentCanvas, undefined);
+    const parent = mountPibbl(parentCanvas, undefined);
     const canvas = new OffscreenCanvas(10, 10);
-    const child = mountBackendCRC(canvas, <Animated />, {
+    const child = mountBackendPibbl(canvas, <Animated />, {
       parent: parentCanvas,
       logicalWidth: 10,
       logicalHeight: 10,
@@ -605,11 +605,11 @@ describe('backend-neutral component traversal', () => {
       }
     }
     const parentCanvas = createCanvas();
-    const parent = mountCRC(parentCanvas, <ThrowingParent />);
+    const parent = mountPibbl(parentCanvas, <ThrowingParent />);
     executeRender(parentCanvas, 1);
     const backend = createRecordingBackend('test');
     const canvas = new OffscreenCanvas(10, 10);
-    const child = mountBackendCRC(canvas, undefined, {
+    const child = mountBackendPibbl(canvas, undefined, {
       parent: parentCanvas,
       logicalWidth: 10,
       logicalHeight: 10,
@@ -628,26 +628,26 @@ describe('backend-neutral component traversal', () => {
 
   it('rejects a duplicate live private mount without replacing its owner', () => {
     const parentCanvas = createCanvas();
-    const parent = mountCRC(parentCanvas, undefined);
+    const parent = mountPibbl(parentCanvas, undefined);
     const canvas = new OffscreenCanvas(10, 10);
     const firstBackend = createRecordingBackend('first');
-    const first = mountBackendCRC(canvas, undefined, {
+    const first = mountBackendPibbl(canvas, undefined, {
       parent: parentCanvas,
       logicalWidth: 10,
       logicalHeight: 10,
       driver: firstBackend.driver,
     });
-    const firstInstance = getCRCInstance(canvas);
+    const firstInstance = getPibblInstance(canvas);
     const secondBackend = createRecordingBackend('second');
 
-    expect(() => mountBackendCRC(canvas, undefined, {
+    expect(() => mountBackendPibbl(canvas, undefined, {
       parent: parentCanvas,
       logicalWidth: 10,
       logicalHeight: 10,
       driver: secondBackend.driver,
-    })).toThrowError('CRC is already mounted on this element.');
+    })).toThrowError('Pibbl is already mounted on this element.');
 
-    expect(getCRCInstance(canvas)).toBe(firstInstance);
+    expect(getPibblInstance(canvas)).toBe(firstInstance);
     first.render(undefined, 1);
     expect(firstBackend.calls).toContain('begin:10x10@10x10:1');
     expect(secondBackend.calls).toEqual([]);
@@ -663,10 +663,10 @@ describe('backend-neutral component traversal', () => {
     });
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
     const parentCanvas = createCanvas();
-    const parent = mountCRC(parentCanvas, undefined);
+    const parent = mountPibbl(parentCanvas, undefined);
     const canvas = new OffscreenCanvas(10, 10);
     const firstBackend = createRecordingBackend('first');
-    const first = mountBackendCRC(canvas, undefined, {
+    const first = mountBackendPibbl(canvas, undefined, {
       parent: parentCanvas,
       logicalWidth: 10,
       logicalHeight: 10,
@@ -674,26 +674,26 @@ describe('backend-neutral component traversal', () => {
     });
     first.dispose();
     const secondBackend = createRecordingBackend('second');
-    const second = mountBackendCRC(canvas, undefined, {
+    const second = mountBackendPibbl(canvas, undefined, {
       parent: parentCanvas,
       logicalWidth: 10,
       logicalHeight: 10,
       driver: secondBackend.driver,
     });
-    const secondInstance = getCRCInstance(canvas);
+    const secondInstance = getPibblInstance(canvas);
 
     expect(() => first.render(undefined, 2)).toThrowError(
-      'CRC backend mount is no longer active.',
+      'Pibbl backend mount is no longer active.',
     );
     expect(() => first.requestFrame(false)).toThrowError(
-      'CRC backend mount is no longer active.',
+      'Pibbl backend mount is no longer active.',
     );
     expect(() => first.resize(10, 10)).toThrowError(
-      'CRC backend mount is no longer active.',
+      'Pibbl backend mount is no longer active.',
     );
     first.dispose();
 
-    expect(getCRCInstance(canvas)).toBe(secondInstance);
+    expect(getPibblInstance(canvas)).toBe(secondInstance);
     expect(callbacks).toEqual([]);
     second.render(undefined, 3);
     expect(secondBackend.calls).toContain('begin:10x10@10x10:3');
@@ -715,7 +715,7 @@ describe('backend-neutral component traversal', () => {
       .mockImplementation(() => undefined);
     const disposeError = new Error('backend dispose failed');
     const backend = createRecordingBackend('test');
-    const driver: CRCBackendDriver<TestEnvironment> = {
+    const driver: PibblBackendDriver<TestEnvironment> = {
       ...backend.driver,
       dispose() {
         backend.calls.push('dispose');
@@ -728,9 +728,9 @@ describe('backend-neutral component traversal', () => {
       useBackendEventTarget({ onClick() {} });
     }
     const parentCanvas = createCanvas();
-    const parent = mountCRC(parentCanvas, undefined);
+    const parent = mountPibbl(parentCanvas, undefined);
     const canvas = new OffscreenCanvas(10, 10);
-    const child = mountBackendCRC(canvas, <OwnedScene />, {
+    const child = mountBackendPibbl(canvas, <OwnedScene />, {
       parent: parentCanvas,
       logicalWidth: 10,
       logicalHeight: 10,
@@ -738,7 +738,7 @@ describe('backend-neutral component traversal', () => {
     });
     child.render(<OwnedScene />, 1);
     child.requestFrame(false);
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const pool = new FilterSurfacePool();
     instance.optionalServices.set(Symbol('test-owned-filter-pool'), { dispose: () => pool.dispose() });
     const pair = pool.checkoutPair(createTestFilterWindows());
@@ -753,7 +753,7 @@ describe('backend-neutral component traversal', () => {
     expect(reportError).toHaveBeenCalledWith(disposeError);
     expect(cleanup).toHaveBeenCalledOnce();
     expect(cancel).toHaveBeenCalledWith(1);
-    expect(GLOBAL_STATE.crcInstances.has(canvas)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(canvas)).toBe(false);
     expect(instance.eventRoot.targets.size).toBe(0);
     expect(instance.refs.size).toBe(0);
     expect(instance.regions.size).toBe(0);
@@ -778,14 +778,14 @@ interface TestEnvironment {
 }
 
 function createRecordingBackend(name: string): {
-  readonly driver: CRCBackendDriver<TestEnvironment>;
+  readonly driver: PibblBackendDriver<TestEnvironment>;
   readonly environment: TestEnvironment;
   readonly calls: string[];
 } {
   const calls: string[] = [];
   const environment = Object.freeze({ label: `${name}-environment` });
   const token = createBackendToken(name);
-  const driver: CRCBackendDriver<TestEnvironment> = {
+  const driver: PibblBackendDriver<TestEnvironment> = {
     token,
     name,
     beginFrame(input) {
@@ -806,7 +806,7 @@ function createRecordingBackend(name: string): {
         props: typeof input.props,
         style: typeof input.style,
         environment: TestEnvironment,
-      ) => CRCNode | void;
+      ) => PibblNode | void;
       runProgram(() => program(input.props, input.style, frame.environment));
     },
     finishFrame(_frame, success) {
@@ -821,9 +821,9 @@ function createRecordingBackend(name: string): {
 
 interface RenderGlobalsSnapshot {
   readonly backendDriver: unknown;
-  readonly backendFrame: CRCBackendFrame<unknown> | undefined;
+  readonly backendFrame: PibblBackendFrame<unknown> | undefined;
   readonly backendEnvironment: unknown;
-  readonly currentCRCInstance: unknown;
+  readonly currentPibblInstance: unknown;
   readonly canvas: unknown;
   readonly componentRefs: unknown;
   readonly componentHookIndex: number;
@@ -844,7 +844,7 @@ function snapshotRenderGlobals(): RenderGlobalsSnapshot {
     backendDriver: GLOBAL_STATE.backendDriver,
     backendFrame: GLOBAL_STATE.backendFrame,
     backendEnvironment: GLOBAL_STATE.backendEnvironment,
-    currentCRCInstance: GLOBAL_STATE.currentCRCInstance,
+    currentPibblInstance: GLOBAL_STATE.currentPibblInstance,
     canvas: GLOBAL_STATE.canvas,
     componentRefs: GLOBAL_STATE.componentRefs,
     componentHookIndex: GLOBAL_STATE.componentHookIndex,
@@ -881,7 +881,7 @@ function createCanvas(): HTMLCanvasElement {
 }
 
 function parentCanvasEntries(canvas: HTMLCanvasElement) {
-  return getCRCInstance(canvas).paintEntries;
+  return getPibblInstance(canvas).paintEntries;
 }
 
 function createTestFilterWindows(): FilterWindows {

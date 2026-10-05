@@ -1,14 +1,14 @@
 import { definePrimitive } from '../define-primitive.js';
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import {
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import { createPolygonPath } from '../geometry/polygon.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
@@ -28,12 +28,12 @@ import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 /**
  * Authored inputs for Polygon, including the declared data and presentation options.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
- * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
  * @see {@link Polygon}
  */
-export interface PolygonProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+export interface PolygonProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
 /**
  * Supported geometry and presentation properties for Polygon.
@@ -114,7 +114,7 @@ function renderPolygon(
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link PolygonProps}
  * @see {@link PolygonStyle}

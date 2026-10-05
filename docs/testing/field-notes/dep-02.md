@@ -31,7 +31,7 @@ The DEP-01 viewport, device scale, locale, timezone, color profile, reduced moti
 
 - Ten isolated smoke launches were stable.
 - Competing standalone Chromium launches can contend for macOS Mach ports; sequential browser gates passed and no retry was added.
-- Scenario actions await CRC's render-settling boundary; no timing sleeps were introduced.
+- Scenario actions await Pibbl's render-settling boundary; no timing sleeps were introduced.
 
 ## Failed or rejected approaches
 

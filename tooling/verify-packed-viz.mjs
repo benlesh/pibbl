@@ -19,7 +19,7 @@ const store = dirname(
   parse(readFileSync(join(root, "node_modules/.modules.yaml"), "utf8"))
     .storeDir,
 );
-const temp = mkdtempSync(join(tmpdir(), "crc-packed-viz-"));
+const temp = mkdtempSync(join(tmpdir(), "pibbl-packed-viz-"));
 const pnpm = (args, cwd = root) =>
   execFileSync("corepack", ["pnpm@11.21.0", ...args], {
     cwd,
@@ -33,7 +33,7 @@ try {
       ["pack", "--out", join(temp, `${name}.tgz`)],
       join(root, "packages", name),
     );
-    tarballs[`@crc/${name}`] = `file:${join(temp, `${name}.tgz`)}`;
+    tarballs[`@pibbl/${name}`] = `file:${join(temp, `${name}.tgz`)}`;
   }
   const consumer = join(temp, "consumer");
   mkdirSync(consumer);
@@ -57,11 +57,11 @@ try {
     consumer,
   );
   const installed = createRequire(join(consumer, "probe.mjs"));
-  const entry = installed.resolve("@crc/core/viz");
+  const entry = installed.resolve("@pibbl/core/viz");
   const fromViz = createRequire(entry);
   assert.equal(
-    realpathSync(fromViz.resolve("@crc/core")),
-    realpathSync(installed.resolve("@crc/core")),
+    realpathSync(fromViz.resolve("@pibbl/core")),
+    realpathSync(installed.resolve("@pibbl/core")),
   );
   const viz = await import(pathToFileURL(entry).href);
   const names = [
@@ -92,14 +92,14 @@ try {
   if (process.argv.includes("--self-test-missing-export"))
     assert.equal(typeof viz.MissingScale, "function");
   for (const path of [
-    "@crc/core/viz/internal",
-    "@crc/core/viz/src/index.ts",
-    "@crc/core/viz/lib/scale",
+    "@pibbl/core/viz/internal",
+    "@pibbl/core/viz/src/index.ts",
+    "@pibbl/core/viz/lib/scale",
   ])
     assert.throws(() => installed.resolve(path), {
       code: "ERR_PACKAGE_PATH_NOT_EXPORTED",
     });
-  const manifest = JSON.parse(readFileSync(installed.resolve("@crc/core/package.json"), "utf8"));
+  const manifest = JSON.parse(readFileSync(installed.resolve("@pibbl/core/package.json"), "utf8"));
   assert.equal(Object.keys(manifest.dependencies ?? {}).length, 0);
   writeFileSync(
     join(consumer, "public.tsx"),
@@ -118,7 +118,7 @@ try {
           skipLibCheck: false,
           types: [],
           jsx: "react-jsx",
-          jsxImportSource: "@crc/core",
+          jsxImportSource: "@pibbl/core",
           module: mode === "Bundler" ? "ESNext" : "NodeNext",
           moduleResolution: mode,
         },

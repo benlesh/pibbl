@@ -1,5 +1,5 @@
-import { Group, signal } from "@crc/core";
-import { BarSeries, Scale } from "@crc/core/viz";
+import { Group, signal } from "@pibbl/core";
+import { BarSeries, Scale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -136,7 +136,7 @@ it.each([
       categoryScale: "c",
       valueScale: "v",
       ...geometry,
-    } as unknown as import("@crc/core/viz").BarSeriesProps<{
+    } as unknown as import("@pibbl/core/viz").BarSeriesProps<{
       c: string;
       start: number;
       end: number;

@@ -29,7 +29,7 @@ test('distinguishes actual bundled runtime copies from independent JavaScript re
   assert.equal(crossRealm.relation, 'separate-realms');
   assert.equal(crossRealm.schedulers, 'independent');
   assert.equal(Object.isFrozen(crossRealm), true);
-  assert.equal(JSON.stringify(crossRealm).includes('crcInstances'), false);
+  assert.equal(JSON.stringify(crossRealm).includes('pibblInstances'), false);
 });
 
 test('reports incompatible versions and unavailable or accessor bindings without evaluating user properties', async () => {

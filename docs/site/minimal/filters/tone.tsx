@@ -1,18 +1,18 @@
-import { crc, Group, Circle, Rectangle, Text } from "@crc/core";
+import { pibbl, Group, Circle, Rectangle, Text } from "@pibbl/core";
 import {
   brightness,
   contrast,
   saturate,
-  type CRCFilter,
-  type CRCBrightnessFilterOptions,
-  type CRCContrastFilterOptions,
-  type CRCSaturateFilterOptions,
-} from "@crc/core/filters";
+  type PibblFilter,
+  type PibblBrightnessFilterOptions,
+  type PibblContrastFilterOptions,
+  type PibblSaturateFilterOptions,
+} from "@pibbl/core/filters";
 
-const light: CRCBrightnessFilterOptions = { amount: 1.6 };
-const depth: CRCContrastFilterOptions = { amount: 1.8 };
-const color: CRCSaturateFilterOptions = { amount: 0.2 };
-const comparisons: [string, CRCFilter | undefined][] = [
+const light: PibblBrightnessFilterOptions = { amount: 1.6 };
+const depth: PibblContrastFilterOptions = { amount: 1.8 };
+const color: PibblSaturateFilterOptions = { amount: 0.2 };
+const comparisons: [string, PibblFilter | undefined][] = [
   ["Original", undefined],
   ["Brightness 1.6", brightness(light)],
   ["Contrast 1.8", contrast(depth)],
@@ -40,7 +40,7 @@ function Subject() {
           fill: "#fff",
         }}
       >
-        CRC
+        Pibbl
       </Text>
     </>
   );
@@ -59,7 +59,7 @@ const controllers = comparisons.map(([label, filter]) => {
   canvas.height = 156;
   figure.append(caption, canvas);
   grid.append(figure);
-  return crc(
+  return pibbl(
     canvas,
     <>
       <Rectangle style={{ width: 224, height: 156, fill: "#f1f4f5" }} />

@@ -1,5 +1,5 @@
 import {
-  crc,
+  pibbl,
   Rectangle,
   useSignal,
   useManipulation,
@@ -7,34 +7,34 @@ import {
   DragHandle,
   ResizeHandles,
   RotationHandle,
-  type CRCDragHandleStyle,
-  type CRCResizeHandleStyle,
-  type CRCResizeHandlesProps,
-  type CRCRotationHandleProps,
-  type CRCRotationHandleStyle,
-  type CRCManipulationReadoutStyle,
-  type CRCManipulationReadoutStateStyle,
-  type CRCRotationConnectorStyle,
-  type CRCRotationArcStyle,
-} from "@crc/core";
+  type PibblDragHandleStyle,
+  type PibblResizeHandleStyle,
+  type PibblResizeHandlesProps,
+  type PibblRotationHandleProps,
+  type PibblRotationHandleStyle,
+  type PibblManipulationReadoutStyle,
+  type PibblManipulationReadoutStateStyle,
+  type PibblRotationConnectorStyle,
+  type PibblRotationArcStyle,
+} from "@pibbl/core";
 
-const focused: CRCManipulationReadoutStateStyle = {
+const focused: PibblManipulationReadoutStateStyle = {
   fill: "#b83970",
   visible: true,
 };
-const readout: CRCManipulationReadoutStyle = {
+const readout: PibblManipulationReadoutStyle = {
   font: "12px sans-serif",
   fill: "#222",
   focused,
 };
-const dragStyle: CRCDragHandleStyle = { readout };
-const resizeStyle: CRCResizeHandleStyle = { readout };
-const connector: CRCRotationConnectorStyle = {
+const dragStyle: PibblDragHandleStyle = { readout };
+const resizeStyle: PibblResizeHandleStyle = { readout };
+const connector: PibblRotationConnectorStyle = {
   stroke: "#087e8b",
   strokeWidth: 2,
 };
-const arc: CRCRotationArcStyle = { color: "#b83970", strokeWidth: 3 };
-const rotationStyle: CRCRotationHandleStyle = { connector, arc, readout };
+const arc: PibblRotationArcStyle = { color: "#b83970", strokeWidth: 3 };
+const rotationStyle: PibblRotationHandleStyle = { connector, arc, readout };
 function Scene() {
   const box = useSignal({ left: 100, top: 90, width: 180, height: 100 });
   const rotation = useSignal(0);
@@ -45,12 +45,12 @@ function Scene() {
     resize: {},
     rotate: {},
   });
-  const handles: CRCResizeHandlesProps = {
+  const handles: PibblResizeHandlesProps = {
     controller: manipulation,
     positions: "corners",
     style: resizeStyle,
   };
-  const turn: CRCRotationHandleProps = {
+  const turn: PibblRotationHandleProps = {
     controller: manipulation,
     readoutUnit: "degrees",
   };
@@ -68,5 +68,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 420;
 canvas.height = 300;
 document.body.append(canvas);
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

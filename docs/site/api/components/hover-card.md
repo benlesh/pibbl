@@ -11,7 +11,7 @@ symbols:
 
 # HoverCard
 
-Import from `@crc/core/viz`. Supply a local `anchor` and required style width/height.
+Import from `@pibbl/core/viz`. Supply a local `anchor` and required style width/height.
 Card dimensions use core content-box sizing: padding adds to width and height.
 Default padding is 10, cornerRadius 7, white fill at 92% opacity, and a subtle
 one-pixel border. Background and content are drawn at ordinary source position;

@@ -14,7 +14,7 @@ Start with [llms.txt](/llms.txt), then fetch the relevant page's Markdown link. 
 - For a specific API: look up its exact import in [coverage.json](/agents/coverage.json), follow `minimalPage`, and fetch `minimalExample` for complete plain TS/TSX. The [minimal-example index](/minimal-examples/) groups programs by capability. Read usage notes before copying: some examples require browser APIs, font assets, or optional packages.
 
 - For an existing HTML application: [integration direction](/guides/add-to-your-site/), [button recipe](/guides/native-button/), then [detailed companion](/agents/native-button/).
-- For a CRC application: [Start](/start/), [Foundations](/guides/foundations/), then an individual [reference](/reference/).
+- For a Pibbl application: [Start](/start/), [Foundations](/guides/foundations/), then an individual [reference](/reference/).
 - For advanced texture/physics composition: [Stirred Ink](/examples/stirred-ink/) and [its companion](/agents/stirred-ink/).
 
 ## Detailed agent topics
@@ -23,7 +23,7 @@ These companions are written for implementation, not just API discovery. Each ex
 
 | Task                                                | Read this topic                                          |
 | --------------------------------------------------- | -------------------------------------------------------- |
-| Mount CRC, choose signals/hooks, preserve identity  | [Authoring and lifecycle](/agents/topics/lifecycle/)     |
+| Mount Pibbl, choose signals/hooks, preserve identity  | [Authoring and lifecycle](/agents/topics/lifecycle/)     |
 | Draw, allocate space, transform, clip, filter       | [Drawing and layout](/agents/topics/layout/)             |
 | Shape font outlines, edit glyphs, bend text between paths | [Text and typography](/agents/topics/text/) |
 | Handle pointers, focus, forms, or native controls   | [Input and HTML](/agents/topics/input/)                  |
@@ -37,17 +37,17 @@ These companions are written for implementation, not just API discovery. Each ex
 ## Implementation workflow
 
 1. Inspect the consuming application's installed packages, version, renderer, build tool, and lifecycle. This local website documents a checkout, not a verified npm release.
-2. Choose the ownership direction: HTML application embedding CRC, or CRC application allocating native HTML. State the canvas owner and the action/state owner explicitly.
+2. Choose the ownership direction: HTML application embedding Pibbl, or Pibbl application allocating native HTML. State the canvas owner and the action/state owner explicitly.
 3. Fetch one topic's Markdown, then the exact API/type pages named there. The [alphabetical index](/reference/alphabetical/) finds symbols; the coverage JSON identifies their import paths.
 4. Start from a complete public example. Preserve its mount/dispose boundary and coordinate assumptions. Mark a snippet as partial when it omits setup; do not mistake it for a standalone program.
 5. Implement the smallest runnable behavior and verify native state, geometry, and resource ownership before screenshots. Use deterministic clocks/seeds where the claim depends on timing or randomness.
 6. Report the tested package/revision, commands/environment, observed behavior, and remaining gaps. A successful typecheck, a browser run, and an ownership assertion are different evidence.
 
-Do not import private `lib/` or repository scenario helpers into an application. `@crc/core/internal` is reserved for matching official integrations. Do not invent a CRC API from a design concept, add a second scheduler, claim Canvas filters affect arbitrary HTML, or assume Canvas targets create a semantic accessibility tree.
+Do not import private `lib/` or repository scenario helpers into an application. `@pibbl/core/internal` is reserved for matching official integrations. Do not invent a Pibbl API from a design concept, add a second scheduler, claim Canvas filters affect arbitrary HTML, or assume Canvas targets create a semantic accessibility tree.
 
 ## Discovery and version policy
 
-[catalog.json](/catalog.json) is a CRC-specific inventory with schema version 1, documentation compatibility, stable page IDs, root-relative HTML/Markdown URLs, kinds, documented symbols, import paths, related type names, companion URLs, and authored source provenance. Resolve paths against this site's origin. It is not a universal agent protocol.
+[catalog.json](/catalog.json) is a Pibbl-specific inventory with schema version 1, documentation compatibility, stable page IDs, root-relative HTML/Markdown URLs, kinds, documented symbols, import paths, related type names, companion URLs, and authored source provenance. Resolve paths against this site's origin. It is not a universal agent protocol.
 
 [agents/coverage.json](/agents/coverage.json) is generated from TypeScript's semantic export inventory. Each record identifies a symbol, public import path, value/type/compiler kind, documentation destination, and documented/missing status. Multiple exports of one symbol remain separate records. This measures destinations, not prose completeness or fresh execution of every snippet. Grouped type pages may own several related factories; do not assume each symbol has an individual dedicated article.
 
@@ -66,4 +66,4 @@ The new inventory includes authored website/agent topics under `docs/site/websit
 
 ## Skills
 
-No installable CRC agent skill is shipped by this milestone. Use the documentation and complete recipes directly. The [downloadable Claude Design kit](/claude-design-kit.tar.gz) is a design/integration handoff, not an installed agent skill. Future skills should retrieve exact references rather than embedding or inventing another API manual.
+No installable Pibbl agent skill is shipped by this milestone. Use the documentation and complete recipes directly. The [downloadable Claude Design kit](/claude-design-kit.tar.gz) is a design/integration handoff, not an installed agent skill. Future skills should retrieve exact references rather than embedding or inventing another API manual.

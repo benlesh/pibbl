@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import { componentTest } from '../test-utils/component-test';
 import type { SystemStyle } from '../types';
@@ -139,7 +139,7 @@ describe('overlay layout', () => {
       const canvas = document.createElement('canvas');
       document.body.appendChild(canvas);
       try {
-        const controller = crc(canvas, createElement(Overlay, {
+        const controller = pibbl(canvas, createElement(Overlay, {
           style: { width: value, height: 20 },
           children: [],
         } as any));
@@ -151,6 +151,6 @@ describe('overlay layout', () => {
     },
   );
 
-  // @ts-expect-error overlay container alignment uses CRC-native values
+  // @ts-expect-error overlay container alignment uses Pibbl-native values
   void createElement(Overlay, { style: { alignItems: 'flex-start' }, children: [] });
 });

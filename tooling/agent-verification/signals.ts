@@ -83,7 +83,7 @@ export function createSignalInspector(canvas?: HTMLCanvasElement) {
         let consumerId = consumerIds.get(consumer);
         if (consumerId === undefined) consumerIds.set(consumer, consumerId = ++nextConsumerId);
         // Legacy consumer flags can be getters into user functions. Inspect only
-        // own data descriptors on these CRC-owned records; never invoke accessors.
+        // own data descriptors on these Pibbl-owned records; never invoke accessors.
         const own = (key: string): unknown => Object.getOwnPropertyDescriptor(consumer, key)?.value;
         const kind = own('kind') === 'computed' ? 'computed' : own('kind') === 'reaction' ? 'reaction' : own('renderInvalidation') === true ? 'render' : 'other';
         const dirty = kind === 'render' ? own('dirty') : undefined;
@@ -109,7 +109,7 @@ export function createSignalInspector(canvas?: HTMLCanvasElement) {
         preview: cache === 'value' && validation !== 'evaluating' ? preview(node.value) : Object.freeze({ kind: 'unavailable' as const }),
       });
     });
-    const result = Object.freeze({ schema: 'crc-signal-observation/1', scheduler: observeScheduler(), session, status: disposed ? 'disposed' : 'ready',
+    const result = Object.freeze({ schema: 'pibbl-signal-observation/1', scheduler: observeScheduler(), session, status: disposed ? 'disposed' : 'ready',
       completeness: truncated || truncatedDependencies || truncatedObservers ? 'truncated' : unavailableDependencies || unavailableObservers ? 'partial' : 'complete', scope: 'explicitly-registered', ownership: Object.freeze({ scope: 'bound-canvas-components', completeness: ownership.completeness, limits: ownership.limits, visited: ownership.visited, components: ownership.components }), records: Object.freeze(records) });
     componentSnapshots.set(result, { ordinal: ++snapshotOrdinal, components: ownership.components });
     return result;

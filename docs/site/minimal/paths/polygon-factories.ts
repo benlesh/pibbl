@@ -10,7 +10,7 @@ import {
   type RegularPolygonPathPosition,
   type RoundedCornerPathOptions,
   type StarPathOptions,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const corners: RoundedCornerPathOptions = { cornerRadius: 6 };
 const rectangle: RectanglePathOptions = {

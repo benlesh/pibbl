@@ -1,4 +1,4 @@
-import { defineTexture } from "@crc/core";
+import { defineTexture } from "@pibbl/core";
 import { validateSeed } from "./palette.js";
 import {
   drawCore,

@@ -1,19 +1,19 @@
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import { Layer } from '../components/layer';
 import { Rectangle } from '../components/rect';
-import type { CRCFocusManager } from '../focus/focus-manager';
+import type { PibblFocusManager } from '../focus/focus-manager';
 import { focusManaged } from '../focus/policy-test-support';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventListener } from '../hooks/use-event-listener';
 import { useEventTarget } from '../hooks/use-event-target';
 import { getPointerCaptureStateCounts } from './pointer-capture';
 import type {
-  CRCEventHandlers,
-  CRCEventTarget,
-  CRCPointerEvent,
-  CRCWheelEvent,
+  PibblEventHandlers,
+  PibblEventTarget,
+  PibblPointerEvent,
+  PibblWheelEvent,
 } from './types';
 import { createElement } from '../element/create-element';
 
@@ -64,7 +64,7 @@ describe('DOM-aligned pointer dispatch', () => {
   ] as const)(
     'projects $pointerType pointer data and root-logical coordinates',
     async pointer => {
-      let received: CRCPointerEvent | undefined;
+      let received: PibblPointerEvent | undefined;
       const Target = (_props: {}) => {
         useEventTarget({ onPointerDown: event => received = event }, {
           path: rectanglePath(0, 0, 100, 100),
@@ -72,7 +72,7 @@ describe('DOM-aligned pointer dispatch', () => {
         });
       };
       const canvas = createCanvas();
-      crc(canvas, createElement(Target, {}));
+      pibbl(canvas, createElement(Target, {}));
       await nextFrame();
 
       dispatchPointer(canvas, 'pointerdown', 37, 43, {
@@ -104,7 +104,7 @@ describe('DOM-aligned pointer dispatch', () => {
     const trace: string[] = [];
     const scene = pointerBoundaryScene(trace);
     const canvas = createCanvas();
-    crc(canvas, scene);
+    pibbl(canvas, scene);
     await nextFrame();
 
     dispatchPointer(canvas, 'pointermove', 25, 25, { pointerId: 1 });
@@ -185,7 +185,7 @@ describe('DOM-aligned pointer dispatch', () => {
       });
     };
     const canvas = createCanvas();
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
 
     const entry = dispatchPointer(canvas, 'pointerover', 25, 25, {
@@ -207,7 +207,7 @@ describe('DOM-aligned pointer dispatch', () => {
 
   it('routes captured movement before geometry and resumes boundary planning after release', async () => {
     const trace: string[] = [];
-    let capturedTarget: CRCEventTarget | undefined;
+    let capturedTarget: PibblEventTarget | undefined;
     const Target = ({ label, x }: { label: string; x: number }) => {
         useEventTarget({
           onPointerOver: event => trace.push(`${label}-over:${event.pointerId}`),
@@ -232,7 +232,7 @@ describe('DOM-aligned pointer dispatch', () => {
     ];
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointermove', 25, 25, { pointerId: 3 });
@@ -261,7 +261,7 @@ describe('DOM-aligned pointer dispatch', () => {
 
   it('keeps capture ownership independent for two simultaneous pointer IDs', async () => {
     const moves: string[] = [];
-    const publicTargets = new Map<string, CRCEventTarget>();
+    const publicTargets = new Map<string, PibblEventTarget>();
     const Target = ({ label, x }: { label: string; x: number }) => {
         useEventTarget({
           onPointerDown: event => {
@@ -280,7 +280,7 @@ describe('DOM-aligned pointer dispatch', () => {
     ];
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 11 });
@@ -316,7 +316,7 @@ describe('DOM-aligned pointer dispatch', () => {
     };
     const canvas = createCanvas();
     installNativePointerCapture(canvas);
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 23 });
@@ -327,7 +327,7 @@ describe('DOM-aligned pointer dispatch', () => {
 
   it('allows a live propagation-listener currentTarget to own capture', async () => {
     const trace: string[] = [];
-    let listenerTarget: CRCEventTarget | undefined;
+    let listenerTarget: PibblEventTarget | undefined;
     const Target = (_props: {}) => {
       useEventTarget({ onPointerDown: () => trace.push('target-down') }, {
         path: rectanglePath(0, 0, 50, 50),
@@ -348,7 +348,7 @@ describe('DOM-aligned pointer dispatch', () => {
     };
     const canvas = createCanvas();
     installNativePointerCapture(canvas);
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 7 });
@@ -380,7 +380,7 @@ describe('DOM-aligned pointer dispatch', () => {
     vi.spyOn(canvas, 'setPointerCapture').mockImplementation(() => {
       throw new DOMException('No active pointer', 'NotFoundError');
     });
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 404 });
@@ -388,7 +388,7 @@ describe('DOM-aligned pointer dispatch', () => {
     expect(caught).toBeInstanceOf(DOMException);
     expect((caught as DOMException).name).toBe('NotFoundError');
     expect(hasCapture).toBe(false);
-    expect(getCRCInstance(canvas).eventRoot.pointerCaptures.size).toBe(0);
+    expect(getPibblInstance(canvas).eventRoot.pointerCaptures.size).toBe(0);
   });
 
   it('routes native capture notifications to the logical owner and clears before loss callbacks', async () => {
@@ -411,7 +411,7 @@ describe('DOM-aligned pointer dispatch', () => {
     };
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 8 });
@@ -420,7 +420,7 @@ describe('DOM-aligned pointer dispatch', () => {
     dispatchPointer(canvas, 'lostpointercapture', 150, 150, { pointerId: 8 });
 
     expect(trace).toEqual(['got:8:true', 'lost:8:false']);
-    expect(getCRCInstance(canvas).eventRoot.pointerCaptures.size).toBe(0);
+    expect(getPibblInstance(canvas).eventRoot.pointerCaptures.size).toBe(0);
   });
 
   it('routes native got notification delivered during the capture call', async () => {
@@ -438,7 +438,7 @@ describe('DOM-aligned pointer dispatch', () => {
     };
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
     vi.mocked(canvas.setPointerCapture).mockImplementation(pointerId => {
       native.active.add(pointerId);
@@ -448,12 +448,12 @@ describe('DOM-aligned pointer dispatch', () => {
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 12 });
 
     expect(trace).toEqual(['got:12']);
-    expect(getCRCInstance(canvas).eventRoot.pointerCaptures.has(12)).toBe(true);
+    expect(getPibblInstance(canvas).eventRoot.pointerCaptures.has(12)).toBe(true);
   });
 
   it('preserves a released logical owner long enough to route native loss', async () => {
     const trace: string[] = [];
-    let target: CRCEventTarget | undefined;
+    let target: PibblEventTarget | undefined;
     const Target = (_props: {}) => {
       useEventTarget({
         onPointerDown: event => {
@@ -468,7 +468,7 @@ describe('DOM-aligned pointer dispatch', () => {
     };
     const canvas = createCanvas();
     installNativePointerCapture(canvas);
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 9 });
@@ -482,7 +482,7 @@ describe('DOM-aligned pointer dispatch', () => {
 
   it('does not recreate pending loss when native release delivers loss synchronously', async () => {
     const trace: string[] = [];
-    let target: CRCEventTarget | undefined;
+    let target: PibblEventTarget | undefined;
     const Target = (_props: {}) => {
       useEventTarget({
         onPointerDown: event => {
@@ -497,7 +497,7 @@ describe('DOM-aligned pointer dispatch', () => {
     };
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 10 });
@@ -509,12 +509,12 @@ describe('DOM-aligned pointer dispatch', () => {
     dispatchPointer(canvas, 'lostpointercapture', 150, 150, { pointerId: 10 });
 
     expect(trace).toEqual(['lost:10']);
-    expect(getCRCInstance(canvas).eventRoot.pointerCaptures.size).toBe(0);
+    expect(getPibblInstance(canvas).eventRoot.pointerCaptures.size).toBe(0);
   });
 
   it('observes got delivered synchronously during native release', async () => {
     const trace: string[] = [];
-    let target: CRCEventTarget | undefined;
+    let target: PibblEventTarget | undefined;
     const Target = (_props: {}) => {
       useEventTarget({
         onPointerDown: event => {
@@ -530,7 +530,7 @@ describe('DOM-aligned pointer dispatch', () => {
     };
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 14 });
@@ -546,7 +546,7 @@ describe('DOM-aligned pointer dispatch', () => {
 
   it('rolls back activated ownership when native release throws', async () => {
     const trace: string[] = [];
-    let target: CRCEventTarget | undefined;
+    let target: PibblEventTarget | undefined;
     let caught: unknown;
     const Target = (_props: {}) => {
       useEventTarget({
@@ -562,9 +562,9 @@ describe('DOM-aligned pointer dispatch', () => {
     };
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 15 });
     dispatchPointer(canvas, 'gotpointercapture', 25, 25, { pointerId: 15 });
@@ -628,9 +628,9 @@ describe('DOM-aligned pointer dispatch', () => {
     canvas.addEventListener('pointerdown', event => {
       trustedPointerDown = event.isTrusted;
     }, { once: true });
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
     const hub = eventRoot.nativeListeners;
     const subscribedGotCount = hub?.count('gotpointercapture');
     const subscribedLossCount = hub?.count('lostpointercapture');
@@ -687,7 +687,7 @@ describe('DOM-aligned pointer dispatch', () => {
     ];
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 1 });
@@ -698,8 +698,8 @@ describe('DOM-aligned pointer dispatch', () => {
     dispatchPointer(canvas, 'pointermove', 25, 25, { pointerId: 2 });
 
     expect(trace).toEqual(['a-cancel:1', 'b-move:1', 'b-move:2']);
-    expect(getCRCInstance(canvas).eventRoot.pointerCaptures.has(1)).toBe(false);
-    expect(getCRCInstance(canvas).eventRoot.pointerCaptures.has(2)).toBe(true);
+    expect(getPibblInstance(canvas).eventRoot.pointerCaptures.has(1)).toBe(false);
+    expect(getPibblInstance(canvas).eventRoot.pointerCaptures.has(2)).toBe(true);
   });
 
   it('dispatches pointerrawupdate only when the browser supplies it', async () => {
@@ -714,7 +714,7 @@ describe('DOM-aligned pointer dispatch', () => {
       });
     };
     const canvas = createCanvas();
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointermove', 25, 25, { pointerId: 31 });
@@ -735,7 +735,7 @@ describe('DOM-aligned pointer dispatch', () => {
       });
     };
     const canvas = createCanvas();
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 1 });
@@ -752,9 +752,9 @@ describe('DOM-aligned pointer dispatch', () => {
       });
     };
     const canvas = createCanvas();
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
-    const hub = getCRCInstance(canvas).eventRoot.nativeListeners;
+    const hub = getPibblInstance(canvas).eventRoot.nativeListeners;
 
     expect(hub?.count('pointerover')).toBe(1);
     expect(hub?.count('pointermove')).toBe(1);
@@ -764,7 +764,7 @@ describe('DOM-aligned pointer dispatch', () => {
   });
 
   it('releases a built-in target’s hover, capture, focus, cursor, and native ownership when pointer events become none', async () => {
-    let publicTarget: CRCEventTarget | undefined;
+    let publicTarget: PibblEventTarget | undefined;
     let pointerEnters = 0;
     const Scene = ({ pointerEvents }: { pointerEvents: 'auto' | 'none' }) =>
       focusManaged(createElement(Rectangle, {
@@ -784,12 +784,12 @@ describe('DOM-aligned pointer dispatch', () => {
       }));
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Scene, { pointerEvents: 'auto' }));
+    pibbl(canvas, createElement(Scene, { pointerEvents: 'auto' }));
     await nextFrame();
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const eventRoot = instance.eventRoot;
     const hub = eventRoot.nativeListeners!;
-    const manager = eventRoot.focusPolicy as CRCFocusManager;
+    const manager = eventRoot.focusPolicy as PibblFocusManager;
 
     dispatchPointer(canvas, 'pointerover', 25, 25, { pointerId: 87 });
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 87 });
@@ -808,7 +808,7 @@ describe('DOM-aligned pointer dispatch', () => {
     expect(hub.count('mousemove')).toBe(1);
     expect(hub.count('mouseout')).toBe(1);
 
-    crc(canvas, createElement(Scene, { pointerEvents: 'none' }));
+    pibbl(canvas, createElement(Scene, { pointerEvents: 'none' }));
     await nextFrame();
 
     expect(eventRoot.targets).toHaveLength(0);
@@ -833,7 +833,7 @@ describe('DOM-aligned pointer dispatch', () => {
 describe('pointer capture ownership', () => {
   it('transfers one active pointer between logical owners before the next pointer event', async () => {
     const trace: string[] = [];
-    const targets = new Map<string, CRCEventTarget>();
+    const targets = new Map<string, PibblEventTarget>();
     const captureState = (pointerId: number) =>
       `a=${targets.get('a')?.hasPointerCapture(pointerId)},` +
       `b=${targets.get('b')?.hasPointerCapture(pointerId)}`;
@@ -865,9 +865,9 @@ describe('pointer capture ownership', () => {
     ];
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
     const hub = eventRoot.nativeListeners!;
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 51 });
@@ -931,7 +931,7 @@ describe('pointer capture ownership', () => {
 
   it('treats capture requested by the old owner during loss as a fresh regain', async () => {
     const trace: string[] = [];
-    const targets = new Map<string, CRCEventTarget>();
+    const targets = new Map<string, PibblEventTarget>();
     let regainDuringLoss = true;
     const captureState = (pointerId: number) =>
       `a=${targets.get('a')?.hasPointerCapture(pointerId)},` +
@@ -960,12 +960,12 @@ describe('pointer capture ownership', () => {
       };
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement((_props: {}) => [
+    pibbl(canvas, createElement((_props: {}) => [
       createElement(Target, { label: 'a', x: 0 }),
       createElement(Target, { label: 'b', x: 50 }),
     ], {}));
     await nextFrame();
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
     const hub = eventRoot.nativeListeners!;
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 53 });
@@ -1012,7 +1012,7 @@ describe('pointer capture ownership', () => {
 
   it('does not stage a second old-owner loss when pending capture is released during loss', async () => {
     const trace: string[] = [];
-    const targets = new Map<string, CRCEventTarget>();
+    const targets = new Map<string, PibblEventTarget>();
     let releaseDuringLoss = true;
     const captureState = (pointerId: number) =>
       `a=${targets.get('a')?.hasPointerCapture(pointerId)},` +
@@ -1041,12 +1041,12 @@ describe('pointer capture ownership', () => {
       };
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement((_props: {}) => [
+    pibbl(canvas, createElement((_props: {}) => [
       createElement(Target, { label: 'a', x: 0 }),
       createElement(Target, { label: 'b', x: 50 }),
     ], {}));
     await nextFrame();
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
     const hub = eventRoot.nativeListeners!;
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 54 });
@@ -1093,7 +1093,7 @@ describe('pointer capture ownership', () => {
 
   it('coalesces a transfer back before processing without capture notifications', async () => {
     const trace: string[] = [];
-    const targets = new Map<string, CRCEventTarget>();
+    const targets = new Map<string, PibblEventTarget>();
     const Target = ({ label, x }: { label: string; x: number }) => {
         useEventTarget({
           onPointerDown: event => targets.set(label, event.currentTarget),
@@ -1107,7 +1107,7 @@ describe('pointer capture ownership', () => {
       };
     const canvas = createCanvas();
     installNativePointerCapture(canvas);
-    crc(canvas, createElement((_props: {}) => [
+    pibbl(canvas, createElement((_props: {}) => [
       createElement(Target, { label: 'a', x: 0 }),
       createElement(Target, { label: 'b', x: 50 }),
     ], {}));
@@ -1138,7 +1138,7 @@ describe('pointer capture ownership', () => {
 
   it('ignores a reentrant native got during transfer and routes synchronous native loss to the active owner', async () => {
     const trace: string[] = [];
-    const targets = new Map<string, CRCEventTarget>();
+    const targets = new Map<string, PibblEventTarget>();
     const Target = ({ label, x }: { label: string; x: number }) => {
         useEventTarget({
           onPointerDown: event => targets.set(label, event.currentTarget),
@@ -1152,7 +1152,7 @@ describe('pointer capture ownership', () => {
       };
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement((_props: {}) => [
+    pibbl(canvas, createElement((_props: {}) => [
       createElement(Target, { label: 'a', x: 0 }),
       createElement(Target, { label: 'b', x: 50 }),
     ], {}));
@@ -1189,7 +1189,7 @@ describe('pointer capture ownership', () => {
 
   it('settles transfer ownership when either owner unmounts and during root disposal', async () => {
     const trace: string[] = [];
-    const targets = new Map<string, CRCEventTarget>();
+    const targets = new Map<string, PibblEventTarget>();
     const Target = ({ label, x }: { label: string; x: number }) => {
         useEventTarget({
           onPointerDown: event => targets.set(label, event.currentTarget),
@@ -1207,9 +1207,9 @@ describe('pointer capture ownership', () => {
       ];
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    const controller = crc(canvas, createElement(Scene, { showA: true, showB: true }));
+    const controller = pibbl(canvas, createElement(Scene, { showA: true, showB: true }));
     await nextFrame();
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 81 });
     dispatchPointer(canvas, 'pointerdown', 75, 25, { pointerId: 999 });
@@ -1220,20 +1220,20 @@ describe('pointer capture ownership', () => {
     trace.length = 0;
 
     b.setPointerCapture(81);
-    crc(canvas, createElement(Scene, { showA: false, showB: true }));
+    pibbl(canvas, createElement(Scene, { showA: false, showB: true }));
     await nextFrame();
     dispatchPointer(canvas, 'pointermove', 150, 150, { pointerId: 81 });
     expect(trace).toEqual(['b-got', 'b-move']);
     expect(oldA.hasPointerCapture(81)).toBe(false);
     expect(b.hasPointerCapture(81)).toBe(true);
 
-    crc(canvas, createElement(Scene, { showA: true, showB: true }));
+    pibbl(canvas, createElement(Scene, { showA: true, showB: true }));
     await nextFrame();
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 998 });
     const newA = targets.get('a')!;
     trace.length = 0;
     newA.setPointerCapture(81);
-    crc(canvas, createElement(Scene, { showA: false, showB: true }));
+    pibbl(canvas, createElement(Scene, { showA: false, showB: true }));
     await nextFrame();
     dispatchPointer(canvas, 'lostpointercapture', 75, 25, { pointerId: 81 });
     expect(trace).toEqual(['b-lost']);
@@ -1242,7 +1242,7 @@ describe('pointer capture ownership', () => {
 
     b.setPointerCapture(82);
     dispatchPointer(canvas, 'gotpointercapture', 75, 25, { pointerId: 82 });
-    crc(canvas, createElement(Scene, { showA: true, showB: true }));
+    pibbl(canvas, createElement(Scene, { showA: true, showB: true }));
     await nextFrame();
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 997 });
     targets.get('a')!.setPointerCapture(82);
@@ -1274,9 +1274,9 @@ describe('pointer capture ownership', () => {
     };
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
     const hub = eventRoot.nativeListeners;
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 39 });
@@ -1295,7 +1295,7 @@ describe('pointer capture ownership', () => {
 
   it('clears capture when a propagation-listener owner unmounts', async () => {
     const trace: string[] = [];
-    let listenerTarget: CRCEventTarget | undefined;
+    let listenerTarget: PibblEventTarget | undefined;
     const Target = (_props: {}) => {
       useEventTarget({ onPointerDown: () => undefined }, {
         path: rectanglePath(0, 0, 50, 50),
@@ -1316,15 +1316,15 @@ describe('pointer capture ownership', () => {
       show ? createElement(ListenerOwner, {}) : undefined;
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Scene, { show: true }));
+    pibbl(canvas, createElement(Scene, { show: true }));
     await nextFrame();
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 43 });
     expect(native.active).toEqual(new Set([43]));
     expect(eventRoot.pointerCaptures.size).toBe(1);
 
-    crc(canvas, createElement(Scene, { show: false }));
+    pibbl(canvas, createElement(Scene, { show: false }));
     await nextFrame();
     expect(native.active.size).toBe(0);
     expect(eventRoot.pointerCaptures.size).toBe(0);
@@ -1349,14 +1349,14 @@ describe('pointer capture ownership', () => {
     };
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Target, { enabled: true }));
+    pibbl(canvas, createElement(Target, { enabled: true }));
     await nextFrame();
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 40 });
     expect(native.active).toEqual(new Set([40]));
     expect(eventRoot.pointerCaptures.size).toBe(1);
-    crc(canvas, createElement(Target, { enabled: false }));
+    pibbl(canvas, createElement(Target, { enabled: false }));
     await nextFrame();
     dispatchPointer(canvas, 'lostpointercapture', 25, 25, { pointerId: 40 });
 
@@ -1384,16 +1384,16 @@ describe('pointer capture ownership', () => {
     }) : undefined;
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    crc(canvas, createElement(Scene, { show: true }));
+    pibbl(canvas, createElement(Scene, { show: true }));
     await nextFrame();
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 41 });
     dispatchPointer(canvas, 'pointermove', 150, 150, { pointerId: 41 });
     expect(trace).toEqual(['layer-move:41']);
     expect(native.active).toEqual(new Set([41]));
 
-    crc(canvas, createElement(Scene, { show: false }));
+    pibbl(canvas, createElement(Scene, { show: false }));
     await nextFrame();
     dispatchPointer(canvas, 'lostpointercapture', 25, 25, { pointerId: 41 });
 
@@ -1417,9 +1417,9 @@ describe('pointer capture ownership', () => {
     };
     const canvas = createCanvas();
     const native = installNativePointerCapture(canvas);
-    const controller = crc(canvas, createElement(Target, {}));
+    const controller = pibbl(canvas, createElement(Target, {}));
     await nextFrame();
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
 
     dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 42 });
     expect(native.active).toEqual(new Set([42]));
@@ -1440,9 +1440,9 @@ describe('pointer capture ownership', () => {
         fill: true,
       });
     };
-    crc(offscreen as unknown as HTMLCanvasElement, createElement(Target, {}));
+    pibbl(offscreen as unknown as HTMLCanvasElement, createElement(Target, {}));
     await nextFrame();
-    const instance = getCRCInstance(offscreen);
+    const instance = getPibblInstance(offscreen);
     const target = Array.from(instance.eventRoot.targets)[0];
 
     target.publicTarget.setPointerCapture(5);
@@ -1456,7 +1456,7 @@ describe('pointer capture ownership', () => {
 describe('DOM-aligned wheel dispatch', () => {
   it('projects root-logical coordinates and deltas, bubbles, and cancels natively', async () => {
     const trace: string[] = [];
-    let received: CRCWheelEvent | undefined;
+    let received: PibblWheelEvent | undefined;
     const Target = (_props: {}) => {
       useEventTarget({
         onWheel: event => {
@@ -1477,7 +1477,7 @@ describe('DOM-aligned wheel dispatch', () => {
       return createElement(Target, {});
     };
     const canvas = createCanvas(200);
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
     const native = dispatchWheel(canvas, 50, 70, {
       deltaX: 1.25,
@@ -1505,7 +1505,7 @@ describe('DOM-aligned wheel dispatch', () => {
 });
 
 function pointerBoundaryScene(trace: string[]) {
-  const handlers = (label: string): CRCEventHandlers => ({
+  const handlers = (label: string): PibblEventHandlers => ({
     onPointerOver: event => trace.push(
       `${label}-over:${event.pointerId}:${event.eventPhase}`,
     ),

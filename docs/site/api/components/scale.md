@@ -27,7 +27,7 @@ keywords: [visualization, scale, domain, range, signals]
 
 # Scale
 
-Import `Scale` and its types from `@crc/core/viz`. Use the core JSX runtime.
+Import `Scale` and its types from `@pibbl/core/viz`. Use the core JSX runtime.
 
 `ScaleProps` is `LinearScaleProps | BandScaleProps`. Linear scales require `id`, `type: "linear"`,
 `domain`, and `range`; optional `reverse`, `style`, and `children`. `ScaleId` is a

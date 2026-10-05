@@ -4,15 +4,15 @@
 
 > **Historical status: READY IMPLEMENTATION PLAN.** This plan implements Projects 1 and 2 of the approved physics design as one reviewable vertical delivery. Three-dimensional rigid bodies, extended 3D shapes and terrain, joints and motors, diagnostics/replay, and possible 2.5D conversion require separate approved plans.
 
-**Goal:** Ship a wholly CRC-owned `@crc/physics/2d` rigid-body system and renderer-independent `@crc/physics/2d/geometry` toolkit that share CRC's one realm scheduler, fixed-tick determinism, component ownership, signals, Canvas transforms, events, and teardown guarantees.
+**Goal:** Ship a wholly Pibbl-owned `@pibbl/physics/2d` rigid-body system and renderer-independent `@pibbl/physics/2d/geometry` toolkit that share Pibbl's one realm scheduler, fixed-tick determinism, component ownership, signals, Canvas transforms, events, and teardown guarantees.
 
-**Architecture:** Pure immutable shape modules and standalone collision operations have no CRC runtime dependency. The world-facing 2D entry uses one component-owned world controller, compact pooled body/collider state, a dynamic AABB broad phase, deterministic convex narrow phase, sequential impulses, sleeping, and bounded CCD. Core gains a closed official attachment protocol plus ordered animation/physics Advance lanes; successful traversal proposes topology, Begin applies it, Advance produces a candidate simulation generation, Commit atomically publishes and adopts it, and Render consumes one interpolated presentation transform per body.
+**Architecture:** Pure immutable shape modules and standalone collision operations have no Pibbl runtime dependency. The world-facing 2D entry uses one component-owned world controller, compact pooled body/collider state, a dynamic AABB broad phase, deterministic convex narrow phase, sequential impulses, sleeping, and bounded CCD. Core gains a closed official attachment protocol plus ordered animation/physics Advance lanes; successful traversal proposes topology, Begin applies it, Advance produces a candidate simulation generation, Commit atomically publishes and adopts it, and Render consumes one interpolated presentation transform per body.
 
-**Tech Stack:** TypeScript 7, CRC JSX/createElement runtime, CRC signals and realm scheduler, HTML Canvas 2D, Vitest Browser with Playwright Chromium, Vitest Node for renderer-free geometry, esbuild, pnpm 11.21.0, Node 24.15 or newer.
+**Tech Stack:** TypeScript 7, Pibbl JSX/createElement runtime, Pibbl signals and realm scheduler, HTML Canvas 2D, Vitest Browser with Playwright Chromium, Vitest Node for renderer-free geometry, esbuild, pnpm 11.21.0, Node 24.15 or newer.
 
 **Spec:** `docs/superpowers/specs/2026-09-14-first-class-physics-design.md`
 
-**Scope rationale:** Scheduler infrastructure and an unconnected package skeleton do not meet CRC's public-scenario evidence bar. Projects 1 and 2 therefore travel in one plan but retain separate review gates: Tasks 1–6 establish the foundation and pure geometry; Tasks 7–18 complete the baseline 2D vertical slice. No 3D implementation enters this plan.
+**Scope rationale:** Scheduler infrastructure and an unconnected package skeleton do not meet Pibbl's public-scenario evidence bar. Projects 1 and 2 therefore travel in one plan but retain separate review gates: Tasks 1–6 establish the foundation and pure geometry; Tasks 7–18 complete the baseline 2D vertical slice. No 3D implementation enters this plan.
 
 **Prerequisites:** The current signal/scheduler, animation, JSX authoring, style/layout, standard Canvas shape, filter, event/focus, Layer, and settled WebGL contracts must remain green. Read `AGENTS.md`, this plan, the spec, and every contract named under Global Constraints before beginning Task 1.
 
@@ -21,9 +21,9 @@
 - Preserve unrelated working-tree changes and untracked files. Stage only files named by the active task.
 - Add a failing test before each production behavior change, run it once to observe the expected failure, implement the smallest passing behavior, rerun the focused test, and commit that task independently.
 - Use Node 24.15 or newer, pnpm 11.21.0, and Playwright Chromium for final evidence.
-- CRC owns every physics algorithm and runtime byte. Add no engine, native binary, WebAssembly download, worker, timer, second `requestAnimationFrame`, or transitive runtime dependency.
-- `@crc/physics/2d/geometry` must execute without loading `@crc/core`, a DOM, Canvas, WebGL, or a scheduler. Its declarations must not reference CRC runtime types.
-- `@crc/physics/2d` may import only public `@crc/core` and the version-coupled `@crc/core/internal` friend entry. Applications must never import physics source or `lib/*` paths.
+- Pibbl owns every physics algorithm and runtime byte. Add no engine, native binary, WebAssembly download, worker, timer, second `requestAnimationFrame`, or transitive runtime dependency.
+- `@pibbl/physics/2d/geometry` must execute without loading `@pibbl/core`, a DOM, Canvas, WebGL, or a scheduler. Its declarations must not reference Pibbl runtime types.
+- `@pibbl/physics/2d` may import only public `@pibbl/core` and the version-coupled `@pibbl/core/internal` friend entry. Applications must never import physics source or `lib/*` paths.
 - Keep runtime APIs as named ESM exports. Do not add `physics.*`, a mutable singleton, an import-time registry, a second JSX runtime, or side effects on module import.
 - Keep shapes and public results nominal, copied, deeply immutable with respect to numeric data, and detached from caller-owned arrays. Tags, callbacks, signals, and handles retain application identity and are not deep-frozen.
 - Treat positive X as right, positive Y as down, rigid-body rotation as clockwise degrees, velocity as logical units per second, acceleration as logical units per second squared, and fixed-step duration as milliseconds.
@@ -34,7 +34,7 @@
 - Dynamic bodies own pose while enabled. Static authored pose and kinematic authored/signal target pose remain application-owned. Diagnose competing dynamic authored pose changes rather than treating them as teleports.
 - Component traversal never mutates committed simulation topology. Successful render transactions enqueue immutable next-Begin topology commands; failed traversal discards candidates and acquisitions.
 - A failed world Advance discards only that world's candidate and staged writes. It must not suppress another world, animation, root, or Complete callback.
-- Rendering and ordinary CRC pointer targeting use the same interpolated presentation pose. Handles, contacts, events, and physics queries use latest authoritative fixed-tick state.
+- Rendering and ordinary Pibbl pointer targeting use the same interpolated presentation pose. Handles, contacts, events, and physics queries use latest authoritative fixed-tick state.
 - Keep Canvas root-logical coordinates independent of CSS size, backing pixels, pixel ratio, filters, Layer raster density, and camera concepts.
 - Preserve component identity, source paint order, Group transform semantics, Clip/Layer/filter behavior, layout placement, event propagation, focus geometry, and exact teardown ownership.
 - A body and collider stay separate internally but one body attachment infers one self collider by default. `collider2D()` is only the explicit compound/sensor path.
@@ -42,7 +42,7 @@
 - Opaque `Path2D`, glyph outlines, decoded image alpha, and browser-specific raster facts never determine collision. `Path`, `Text`, and `Image` require the explicit shape or declared stable box described by the spec.
 - Sensors use `sensor: true`; they produce overlap events and queries but no contact constraint. Do not add a `sensor2D` factory.
 - The first solver supports dynamic circle, ellipse, box/rounded-box, capsule, convex polygon, and deterministic convex compounds; segment/chain and inferred static contours are supported as zero-area static/kinematic collision geometry.
-- Concave and curved inferred contours use CRC-owned fixed-tolerance flattening and stable triangulation. Never depend on Canvas pixel output or browser `Path2D` inspection.
+- Concave and curved inferred contours use Pibbl-owned fixed-tolerance flattening and stable triangulation. Never depend on Canvas pixel output or browser `Path2D` inspection.
 - Use deterministic numeric arrays/pools in hot loops. No per-contact, per-constraint-iteration, or per-body-frame object, array, closure, signal, component, or element allocation is permitted after capacity warm-up.
 - Sort externally visible query hits and events explicitly. Never expose Map/Set, tree traversal, hash, manifold-cache, or solver-island iteration order.
 - Public standalone operations return immutable semantic records. Raw GJK/EPA/SAT state, feature IDs, broad-phase nodes, cached impulses, scratch objects, integrators, and constraint rows remain private.
@@ -67,7 +67,7 @@
 - Modify `packages/core/src/lib/render.ts`: reconcile the registered `physics` attachment only on primitive hosts and invoke resolved preparation before backend primitive execution.
 - Modify `packages/core/src/lib/backend/types.ts` and `packages/core/src/lib/backend/canvas-2d-backend.ts`: carry and apply one attachment-provided logical presentation transform before the primitive's ordinary presentation.
 - Create `packages/core/src/lib/backend/physics-presentation.test.tsx`: prove pixels, pointer geometry, focus bounds, filters, Group, Clip, and Layer use the same additional transform.
-- Modify `packages/core/src/lib/types.ts` and every supported Canvas prop interface under `packages/core/src/lib/components/`: add the empty exported `CRCPhysics2DPropExtension` base without runtime imports.
+- Modify `packages/core/src/lib/types.ts` and every supported Canvas prop interface under `packages/core/src/lib/components/`: add the empty exported `PibblPhysics2DPropExtension` base without runtime imports.
 - Modify `packages/core/src/index.ts`: export the empty augmentation interface only; never export physics values.
 
 ### Physics package and pure geometry
@@ -109,8 +109,8 @@
 - Create `packages/physics/src/lib/2d/runtime/descriptors.ts`: body/collider immutable attachment factories, module augmentation, core attachment registration, and normalized option comparison.
 - Create `packages/physics/src/lib/2d/runtime/context.ts`: render-local nearest-world/body stacks with balanced enter/exit diagnostics.
 - Create `packages/physics/src/lib/2d/runtime/controller.ts`: world scheduler owner, topology candidate queue, Advance candidate, staged handle/world signals, Commit adoption, render invalidation, and Complete events.
-- Create `packages/physics/src/lib/2d/runtime/world-component.ts`: non-painting ordinary `PhysicsWorld2D` component and `crcPhysicsWorld2D()` hook.
-- Create `packages/physics/src/lib/2d/runtime/body-handle.ts`: `crcPhysicsBody2D()`, lazy readonly signals, generation binding, and named Begin commands.
+- Create `packages/physics/src/lib/2d/runtime/world-component.ts`: non-painting ordinary `PhysicsWorld2D` component and `pibblPhysicsWorld2D()` hook.
+- Create `packages/physics/src/lib/2d/runtime/body-handle.ts`: `pibblPhysicsBody2D()`, lazy readonly signals, generation binding, and named Begin commands.
 - Create `packages/physics/src/lib/2d/runtime/events.ts`: immutable self-oriented collision/overlap/sleep/wake records and stable delivery ordering.
 - Create `packages/physics/src/lib/2d/runtime/*.test.tsx`: descriptor identity, world scope, body/collider lifecycle, transaction failure, handle staleness, scheduler cadence, interpolation, event order, and ownership balance.
 
@@ -129,10 +129,10 @@
 - Create `packages/scenarios/src/learning/composition/physics-2d.example.tsx`: concise body/collider/sensor and animation-authority lesson.
 - Modify `packages/scenarios/src/catalog.ts`, `packages/scenarios/src/learning-catalog.ts`, `packages/scenarios/src/index.ts`, and `packages/scenarios/package.json`: register the scenario and physics dependency.
 - Create `packages/core/test/physics-2d-lab.test.ts`, `packages/core/test/physics-ownership.test.ts`, and `packages/core/test/physics-performance.test.ts`: headless public behavior, lifecycle, and structural cost.
-- Modify `vitest.config.ts`: source-mode aliases for `@crc/physics/2d` and `@crc/physics/2d/geometry` while leaving built mode package-resolved.
+- Modify `vitest.config.ts`: source-mode aliases for `@pibbl/physics/2d` and `@pibbl/physics/2d/geometry` while leaving built mode package-resolved.
 - Modify `package.json` and `pnpm-lock.yaml`: workspace scripts and lockfile entries; add physics ownership/performance tests to existing gates.
-- Modify `playground/package-consumer/index.ts`, `playground/package-consumer/jsx.tsx`, `playground/package-consumer/runtime.mjs`, `tooling/verify-packed-consumer.mjs`, `playground/src/crc-editor-types.txt`, and `tooling/verify-studio-types.mjs`: Bundler, NodeNext, runtime, tree-shaking, optional-peer, packed, and editor evidence.
-- Create `docs/site/api/components/physics-world-2d.md`, `docs/site/api/components/physics-shape-2d.md`, `docs/site/api/functions/physics-2d.md`, `docs/site/api/hooks/crc-physics-body-2d.md`, `docs/site/api/hooks/crc-physics-world-2d.md`, `docs/site/api/types/physics-2d.md`, and `docs/site/learn/guides/physics-2d.md`.
+- Modify `playground/package-consumer/index.ts`, `playground/package-consumer/jsx.tsx`, `playground/package-consumer/runtime.mjs`, `tooling/verify-packed-consumer.mjs`, `playground/src/pibbl-editor-types.txt`, and `tooling/verify-studio-types.mjs`: Bundler, NodeNext, runtime, tree-shaking, optional-peer, packed, and editor evidence.
+- Create `docs/site/api/components/physics-world-2d.md`, `docs/site/api/components/physics-shape-2d.md`, `docs/site/api/functions/physics-2d.md`, `docs/site/api/hooks/pibbl-physics-body-2d.md`, `docs/site/api/hooks/pibbl-physics-world-2d.md`, `docs/site/api/types/physics-2d.md`, and `docs/site/learn/guides/physics-2d.md`.
 - Modify the twelve normative contracts named in Global Constraints plus `README.md`, `packages/core/README.md`, `docs/library-status.md`, `AGENTS.md`, `docs/scenario-index.md`, `tooling/verify-docs.mjs`, `tooling/docs-contract-preservation-baseline.json`, `tooling/studio-docs/api-exports.ts`, and `tooling/studio-docs/api-exports.check.ts`.
 
 ## Fixed Public Surface for This Plan
@@ -177,8 +177,8 @@ export {
   kinematicBody2D,
   collider2D,
   withPhysicsShape2D,
-  crcPhysicsBody2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsBody2D,
+  pibblPhysicsWorld2D,
   applyForce2D,
   applyImpulse2D,
   applyTorque2D,
@@ -197,71 +197,71 @@ export {
 };
 ```
 
-No root `@crc/physics` export is added. No 3D, joints, debug, or replay export is added by this plan.
-`@crc/physics/2d` also exports every public `CRCPhysics*2D`, component-prop,
+No root `@pibbl/physics` export is added. No 3D, joints, debug, or replay export is added by this plan.
+`@pibbl/physics/2d` also exports every public `PibblPhysics*2D`, component-prop,
 component-style, option, event, handle, and query type fixed below.
-`@crc/physics/2d/geometry` exports only the renderer-independent vector, pose,
+`@pibbl/physics/2d/geometry` exports only the renderer-independent vector, pose,
 bounds, ray, shape, mass, distance, contact, hit, and shape-factory input types
 used by its functions.
 
 The public geometry values are:
 
 ```ts
-export type CRCPhysicsVector2 = readonly [x: number, y: number];
+export type PibblPhysicsVector2 = readonly [x: number, y: number];
 
-export interface CRCPhysicsPose2D {
-  readonly position: CRCPhysicsVector2;
+export interface PibblPhysicsPose2D {
+  readonly position: PibblPhysicsVector2;
   readonly rotationDegrees: number;
 }
 
-export type CRCPhysicsTransform2D = CRCPhysicsPose2D;
+export type PibblPhysicsTransform2D = PibblPhysicsPose2D;
 
-export interface CRCPhysicsAabb2D {
-  readonly min: CRCPhysicsVector2;
-  readonly max: CRCPhysicsVector2;
+export interface PibblPhysicsAabb2D {
+  readonly min: PibblPhysicsVector2;
+  readonly max: PibblPhysicsVector2;
 }
 
-export interface CRCPhysicsRay2D {
-  readonly origin: CRCPhysicsVector2;
-  readonly direction: CRCPhysicsVector2;
+export interface PibblPhysicsRay2D {
+  readonly origin: PibblPhysicsVector2;
+  readonly direction: PibblPhysicsVector2;
   readonly maxDistance: number;
 }
 
 declare const physicsShape2DBrand: unique symbol;
-export interface CRCPhysicsShape2D {
+export interface PibblPhysicsShape2D {
   readonly [physicsShape2DBrand]: true;
 }
 
-export interface CRCPhysicsMassProperties2D {
+export interface PibblPhysicsMassProperties2D {
   readonly area: number;
-  readonly centroid: CRCPhysicsVector2;
+  readonly centroid: PibblPhysicsVector2;
   readonly mass: number;
   readonly rotationalInertia: number;
 }
 
-export interface CRCPhysicsDistance2D {
+export interface PibblPhysicsDistance2D {
   readonly separation: number;
-  readonly pointOnFirst: CRCPhysicsVector2;
-  readonly pointOnSecond: CRCPhysicsVector2;
+  readonly pointOnFirst: PibblPhysicsVector2;
+  readonly pointOnSecond: PibblPhysicsVector2;
   /** Direction from the second shape toward the first. */
-  readonly normal: CRCPhysicsVector2;
+  readonly normal: PibblPhysicsVector2;
 }
 
-export interface CRCPhysicsContactPoint2D {
-  readonly pointOnFirst: CRCPhysicsVector2;
-  readonly pointOnSecond: CRCPhysicsVector2;
+export interface PibblPhysicsContactPoint2D {
+  readonly pointOnFirst: PibblPhysicsVector2;
+  readonly pointOnSecond: PibblPhysicsVector2;
   readonly separation: number;
 }
 
-export interface CRCPhysicsShapeContact2D {
+export interface PibblPhysicsShapeContact2D {
   /** Direction from the second shape toward the first. */
-  readonly normal: CRCPhysicsVector2;
-  readonly points: readonly CRCPhysicsContactPoint2D[];
+  readonly normal: PibblPhysicsVector2;
+  readonly points: readonly PibblPhysicsContactPoint2D[];
 }
 
-export interface CRCPhysicsShapeHit2D {
-  readonly point: CRCPhysicsVector2;
-  readonly normal: CRCPhysicsVector2;
+export interface PibblPhysicsShapeHit2D {
+  readonly point: PibblPhysicsVector2;
+  readonly normal: PibblPhysicsVector2;
   readonly distance: number;
   readonly timeOfImpact: number;
 }
@@ -273,26 +273,26 @@ Shape factory inputs use copied finite numbers:
 export function circleShape2D(
   input: Readonly<{
     radius: number;
-    center?: CRCPhysicsVector2;
+    center?: PibblPhysicsVector2;
   }>,
-): CRCPhysicsShape2D;
+): PibblPhysicsShape2D;
 
 export function ellipseShape2D(
   input: Readonly<{
     radiusX: number;
     radiusY: number;
-    center?: CRCPhysicsVector2;
+    center?: PibblPhysicsVector2;
     rotationDegrees?: number;
   }>,
-): CRCPhysicsShape2D;
+): PibblPhysicsShape2D;
 
 export function boxShape2D(
   input: Readonly<{
     width: number;
     height: number;
-    center?: CRCPhysicsVector2;
+    center?: PibblPhysicsVector2;
   }>,
-): CRCPhysicsShape2D;
+): PibblPhysicsShape2D;
 
 export function roundedBoxShape2D(
   input: Readonly<{
@@ -306,59 +306,59 @@ export function roundedBoxShape2D(
           bottomRight: number,
           bottomLeft: number,
         ];
-    center?: CRCPhysicsVector2;
+    center?: PibblPhysicsVector2;
   }>,
-): CRCPhysicsShape2D;
+): PibblPhysicsShape2D;
 
 export function capsuleShape2D(
   input: Readonly<{
-    start: CRCPhysicsVector2;
-    end: CRCPhysicsVector2;
+    start: PibblPhysicsVector2;
+    end: PibblPhysicsVector2;
     radius: number;
   }>,
-): CRCPhysicsShape2D;
+): PibblPhysicsShape2D;
 
 export function arcShape2D(
   input: Readonly<{
-    center?: CRCPhysicsVector2;
+    center?: PibblPhysicsVector2;
     radius: number;
     startAngleRadians: number;
     endAngleRadians: number;
     counterclockwise?: boolean;
     thickness: number;
   }>,
-): CRCPhysicsShape2D;
+): PibblPhysicsShape2D;
 
 export function wedgeShape2D(
   input: Readonly<{
-    center?: CRCPhysicsVector2;
+    center?: PibblPhysicsVector2;
     radius: number;
     startAngleRadians: number;
     endAngleRadians: number;
     counterclockwise?: boolean;
   }>,
-): CRCPhysicsShape2D;
+): PibblPhysicsShape2D;
 
 export function segmentShape2D(
   input: Readonly<{
-    start: CRCPhysicsVector2;
-    end: CRCPhysicsVector2;
+    start: PibblPhysicsVector2;
+    end: PibblPhysicsVector2;
   }>,
-): CRCPhysicsShape2D;
+): PibblPhysicsShape2D;
 
 export function chainShape2D(
   input: Readonly<{
-    points: readonly CRCPhysicsVector2[];
+    points: readonly PibblPhysicsVector2[];
     closed?: boolean;
     radius?: number;
   }>,
-): CRCPhysicsShape2D;
+): PibblPhysicsShape2D;
 
 export function polygonShape2D(
   input: Readonly<{
-    points: readonly CRCPhysicsVector2[];
+    points: readonly PibblPhysicsVector2[];
   }>,
-): CRCPhysicsShape2D;
+): PibblPhysicsShape2D;
 ```
 
 `polygonShape2D` accepts one strictly convex simple polygon in clockwise or counterclockwise input order, removes only an exactly repeated closing vertex, normalizes winding, rejects collinear/duplicate/self-intersecting input, and stores vertices in deterministic canonical order. Concave component inference uses private stable triangulation; this plan does not publish an automatic decomposition factory.
@@ -367,108 +367,108 @@ The standalone functions have exact signatures:
 
 ```ts
 export function boundsOfShape2D(
-  shape: CRCPhysicsShape2D,
-  pose?: CRCPhysicsPose2D,
-): CRCPhysicsAabb2D;
+  shape: PibblPhysicsShape2D,
+  pose?: PibblPhysicsPose2D,
+): PibblPhysicsAabb2D;
 
 export function massProperties2D(
-  shape: CRCPhysicsShape2D,
+  shape: PibblPhysicsShape2D,
   options?: Readonly<{ density?: number }>,
-): CRCPhysicsMassProperties2D;
+): PibblPhysicsMassProperties2D;
 
 export function containsPoint2D(
-  shape: CRCPhysicsShape2D,
-  pose: CRCPhysicsPose2D,
-  point: CRCPhysicsVector2,
+  shape: PibblPhysicsShape2D,
+  pose: PibblPhysicsPose2D,
+  point: PibblPhysicsVector2,
 ): boolean;
 
 export function distanceBetweenShapes2D(
-  first: CRCPhysicsShape2D,
-  firstPose: CRCPhysicsPose2D,
-  second: CRCPhysicsShape2D,
-  secondPose: CRCPhysicsPose2D,
-): CRCPhysicsDistance2D;
+  first: PibblPhysicsShape2D,
+  firstPose: PibblPhysicsPose2D,
+  second: PibblPhysicsShape2D,
+  secondPose: PibblPhysicsPose2D,
+): PibblPhysicsDistance2D;
 
 export function overlapShapes2D(
-  first: CRCPhysicsShape2D,
-  firstPose: CRCPhysicsPose2D,
-  second: CRCPhysicsShape2D,
-  secondPose: CRCPhysicsPose2D,
+  first: PibblPhysicsShape2D,
+  firstPose: PibblPhysicsPose2D,
+  second: PibblPhysicsShape2D,
+  secondPose: PibblPhysicsPose2D,
 ): boolean;
 
 export function contactBetweenShapes2D(
-  first: CRCPhysicsShape2D,
-  firstPose: CRCPhysicsPose2D,
-  second: CRCPhysicsShape2D,
-  secondPose: CRCPhysicsPose2D,
-): CRCPhysicsShapeContact2D | null;
+  first: PibblPhysicsShape2D,
+  firstPose: PibblPhysicsPose2D,
+  second: PibblPhysicsShape2D,
+  secondPose: PibblPhysicsPose2D,
+): PibblPhysicsShapeContact2D | null;
 
 export function raycastShape2D(
-  shape: CRCPhysicsShape2D,
-  pose: CRCPhysicsPose2D,
-  ray: CRCPhysicsRay2D,
+  shape: PibblPhysicsShape2D,
+  pose: PibblPhysicsPose2D,
+  ray: PibblPhysicsRay2D,
   options?: Readonly<{ includeInitialOverlap?: boolean }>,
-): CRCPhysicsShapeHit2D | null;
+): PibblPhysicsShapeHit2D | null;
 
 export function shapeCastAgainstShape2D(
-  moving: CRCPhysicsShape2D,
-  from: CRCPhysicsPose2D,
-  translation: CRCPhysicsVector2,
-  target: CRCPhysicsShape2D,
-  targetPose: CRCPhysicsPose2D,
+  moving: PibblPhysicsShape2D,
+  from: PibblPhysicsPose2D,
+  translation: PibblPhysicsVector2,
+  target: PibblPhysicsShape2D,
+  targetPose: PibblPhysicsPose2D,
   options?: Readonly<{ includeInitialOverlap?: boolean }>,
-): CRCPhysicsShapeHit2D | null;
+): PibblPhysicsShapeHit2D | null;
 
 export function transformShape2D(
-  shape: CRCPhysicsShape2D,
-  transform: CRCPhysicsTransform2D,
-): CRCPhysicsShape2D;
+  shape: PibblPhysicsShape2D,
+  transform: PibblPhysicsTransform2D,
+): PibblPhysicsShape2D;
 ```
 
 The public body, collider, filter, world, and handle boundary is:
 
 ```ts
-export interface CRCPhysicsCollisionFilter {
+export interface PibblPhysicsCollisionFilter {
   readonly category?: number;
   readonly mask?: number;
   readonly group?: number;
 }
 
-export type CRCPhysicsCollisionHandler2D = (
-  event: CRCPhysicsCollisionEvent2D,
+export type PibblPhysicsCollisionHandler2D = (
+  event: PibblPhysicsCollisionEvent2D,
 ) => void;
-export type CRCPhysicsHitHandler2D = (
-  event: CRCPhysicsCollisionEvent2D,
+export type PibblPhysicsHitHandler2D = (
+  event: PibblPhysicsCollisionEvent2D,
 ) => void;
-export type CRCPhysicsOverlapHandler2D = (
-  event: CRCPhysicsOverlapEvent2D,
+export type PibblPhysicsOverlapHandler2D = (
+  event: PibblPhysicsOverlapEvent2D,
 ) => void;
-export type CRCPhysicsBodyStateHandler2D = (
-  event: CRCPhysicsBodyStateEvent2D,
+export type PibblPhysicsBodyStateHandler2D = (
+  event: PibblPhysicsBodyStateEvent2D,
 ) => void;
 
-export interface CRCPhysicsColliderConfiguration2D {
-  readonly shape?: "self" | CRCPhysicsShape2D;
-  readonly offset?: CRCPhysicsVector2;
+export interface PibblPhysicsColliderConfiguration2D {
+  readonly shape?: "self" | PibblPhysicsShape2D;
+  readonly offset?: PibblPhysicsVector2;
   readonly rotationDegrees?: number;
   readonly density?: number;
   readonly friction?: number;
   readonly restitution?: number;
   readonly sensor?: boolean;
   readonly contributesToMass?: boolean;
-  readonly collisionFilter?: CRCPhysicsCollisionFilter;
+  readonly collisionFilter?: PibblPhysicsCollisionFilter;
   readonly tag?: unknown;
-  readonly onCollisionStart?: CRCPhysicsCollisionHandler2D;
-  readonly onCollisionEnd?: CRCPhysicsCollisionHandler2D;
-  readonly onHit?: CRCPhysicsHitHandler2D;
-  readonly onOverlapStart?: CRCPhysicsOverlapHandler2D;
-  readonly onOverlapEnd?: CRCPhysicsOverlapHandler2D;
+  readonly onCollisionStart?: PibblPhysicsCollisionHandler2D;
+  readonly onCollisionEnd?: PibblPhysicsCollisionHandler2D;
+  readonly onHit?: PibblPhysicsHitHandler2D;
+  readonly onOverlapStart?: PibblPhysicsOverlapHandler2D;
+  readonly onOverlapEnd?: PibblPhysicsOverlapHandler2D;
 }
 
-export interface CRCPhysicsDynamicBody2DOptions {
+export interface PibblPhysicsDynamicBody2DOptions {
   readonly enabled?: boolean;
-  readonly handle?: CRCPhysicsBodyHandle2D;
-  readonly linearVelocity?: CRCPhysicsVector2;
+  readonly handle?: PibblPhysicsBodyHandle2D;
+  readonly linearVelocity?: PibblPhysicsVector2;
   readonly angularVelocityDegreesPerSecond?: number;
   readonly linearDamping?: number;
   readonly angularDamping?: number;
@@ -479,56 +479,56 @@ export interface CRCPhysicsDynamicBody2DOptions {
   readonly ccd?: boolean;
   readonly reenableVelocity?: "zero" | "preserve";
   readonly collider?:
-    false | CRCPhysicsColliderConfiguration2D | CRCPhysicsShape2D;
+    false | PibblPhysicsColliderConfiguration2D | PibblPhysicsShape2D;
 }
 
-export interface CRCPhysicsStaticBody2DOptions {
+export interface PibblPhysicsStaticBody2DOptions {
   readonly enabled?: boolean;
-  readonly handle?: CRCPhysicsBodyHandle2D;
+  readonly handle?: PibblPhysicsBodyHandle2D;
   readonly collider?:
-    false | CRCPhysicsColliderConfiguration2D | CRCPhysicsShape2D;
+    false | PibblPhysicsColliderConfiguration2D | PibblPhysicsShape2D;
 }
 
-export interface CRCPhysicsKinematicTarget2D {
-  readonly position?: Signal<CRCPhysicsVector2>;
+export interface PibblPhysicsKinematicTarget2D {
+  readonly position?: Signal<PibblPhysicsVector2>;
   readonly rotationDegrees?: Signal<number>;
 }
 
-export interface CRCPhysicsKinematicBody2DOptions {
+export interface PibblPhysicsKinematicBody2DOptions {
   readonly enabled?: boolean;
-  readonly handle?: CRCPhysicsBodyHandle2D;
-  readonly target?: CRCPhysicsKinematicTarget2D;
+  readonly handle?: PibblPhysicsBodyHandle2D;
+  readonly target?: PibblPhysicsKinematicTarget2D;
   readonly allowSleep?: boolean;
   readonly collider?:
-    false | CRCPhysicsColliderConfiguration2D | CRCPhysicsShape2D;
+    false | PibblPhysicsColliderConfiguration2D | PibblPhysicsShape2D;
 }
 
 declare const physicsAttachment2DBrand: unique symbol;
-export interface CRCPhysicsBodyAttachment2D {
+export interface PibblPhysicsBodyAttachment2D {
   readonly [physicsAttachment2DBrand]: "body";
 }
-export interface CRCPhysicsColliderAttachment2D {
+export interface PibblPhysicsColliderAttachment2D {
   readonly [physicsAttachment2DBrand]: "collider";
 }
-export type CRCPhysicsAttachment2D =
-  CRCPhysicsBodyAttachment2D | CRCPhysicsColliderAttachment2D;
+export type PibblPhysicsAttachment2D =
+  PibblPhysicsBodyAttachment2D | PibblPhysicsColliderAttachment2D;
 
 export function dynamicBody2D(
-  options?: CRCPhysicsDynamicBody2DOptions,
-): CRCPhysicsBodyAttachment2D;
+  options?: PibblPhysicsDynamicBody2DOptions,
+): PibblPhysicsBodyAttachment2D;
 export function staticBody2D(
-  options?: CRCPhysicsStaticBody2DOptions,
-): CRCPhysicsBodyAttachment2D;
+  options?: PibblPhysicsStaticBody2DOptions,
+): PibblPhysicsBodyAttachment2D;
 export function kinematicBody2D(
-  options?: CRCPhysicsKinematicBody2DOptions,
-): CRCPhysicsBodyAttachment2D;
+  options?: PibblPhysicsKinematicBody2DOptions,
+): PibblPhysicsBodyAttachment2D;
 export function collider2D(
-  options?: CRCPhysicsColliderConfiguration2D,
-): CRCPhysicsColliderAttachment2D;
+  options?: PibblPhysicsColliderConfiguration2D,
+): PibblPhysicsColliderAttachment2D;
 
-declare module "@crc/core" {
-  interface CRCPhysics2DPropExtension {
-    readonly physics?: CRCPhysicsAttachment2D;
+declare module "@pibbl/core" {
+  interface PibblPhysics2DPropExtension {
+    readonly physics?: PibblPhysicsAttachment2D;
   }
 }
 ```
@@ -536,56 +536,56 @@ declare module "@crc/core" {
 The world defaults and component contract are:
 
 ```ts
-export interface CRCPhysicsSolverOptions {
+export interface PibblPhysicsSolverOptions {
   readonly velocityIterations?: number;
   readonly positionIterations?: number;
 }
 
-export interface CRCPhysicsWorld2DProps {
-  readonly gravity?: CRCPhysicsVector2;
+export interface PibblPhysicsWorld2DProps {
+  readonly gravity?: PibblPhysicsVector2;
   readonly fixedStepMilliseconds?: number;
   readonly maxCatchUpSteps?: number;
   readonly interpolation?: "linear" | "none";
   readonly sleeping?: boolean;
-  readonly solver?: CRCPhysicsSolverOptions;
-  readonly onSleep?: CRCPhysicsBodyStateHandler2D;
-  readonly onWake?: CRCPhysicsBodyStateHandler2D;
+  readonly solver?: PibblPhysicsSolverOptions;
+  readonly onSleep?: PibblPhysicsBodyStateHandler2D;
+  readonly onWake?: PibblPhysicsBodyStateHandler2D;
   readonly onError?: (error: unknown) => void;
-  readonly children?: CRCNode;
+  readonly children?: PibblNode;
 }
 ```
 
 Defaults are gravity `[0, 0]`, fixed step `1000 / 60`, maximum catch-up `4`, interpolation `"linear"`, sleeping enabled, velocity iterations `8`, and position iterations `3`. Iteration counts are safe integers from `1` through `32`; fixed step is finite and greater than zero; maximum catch-up is a safe integer from `1` through `16`.
 
-The four matching Canvas primitives use CRC's normal event, focus, local style,
+The four matching Canvas primitives use Pibbl's normal event, focus, local style,
 layout-item, paint, cursor, and `physics` contracts. Their additional public
 types are exact rather than inferred from an internal generic:
 
 ```ts
-export interface CRCPhysicsPrimitiveProps2D
-  extends CRCEventHandlers, CRCEventParticipationOptions {
+export interface PibblPhysicsPrimitiveProps2D
+  extends PibblEventHandlers, PibblEventParticipationOptions {
   readonly keyboardFocusable?: boolean;
   readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
-  readonly physics?: CRCPhysicsAttachment2D;
+  readonly physics?: PibblPhysicsAttachment2D;
 }
 
-export interface PhysicsShape2DProps extends CRCPhysicsPrimitiveProps2D {}
+export interface PhysicsShape2DProps extends PibblPhysicsPrimitiveProps2D {}
 export interface PhysicsShape2DStyle
   extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {
-  readonly shape: CRCPhysicsShape2D;
+  readonly shape: PibblPhysicsShape2D;
   readonly lineInteractionWidth?: number;
 }
 
-export interface Capsule2DProps extends CRCPhysicsPrimitiveProps2D {}
+export interface Capsule2DProps extends PibblPhysicsPrimitiveProps2D {}
 export interface Capsule2DStyle
   extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {
-  readonly start: CRCPhysicsVector2;
-  readonly end: CRCPhysicsVector2;
+  readonly start: PibblPhysicsVector2;
+  readonly end: PibblPhysicsVector2;
   readonly radius: number;
   readonly lineInteractionWidth?: number;
 }
 
-export interface Segment2DProps extends CRCPhysicsPrimitiveProps2D {}
+export interface Segment2DProps extends PibblPhysicsPrimitiveProps2D {}
 export interface Segment2DStyle
   extends
     SystemStyle,
@@ -593,22 +593,22 @@ export interface Segment2DStyle
     CursorStyle,
     BoxStyle,
     LayoutItemStyle {
-  readonly start: CRCPhysicsVector2;
-  readonly end: CRCPhysicsVector2;
+  readonly start: PibblPhysicsVector2;
+  readonly end: PibblPhysicsVector2;
   readonly lineInteractionWidth?: number;
 }
 
-export interface Chain2DProps extends CRCPhysicsPrimitiveProps2D {}
+export interface Chain2DProps extends PibblPhysicsPrimitiveProps2D {}
 export interface Chain2DStyle
   extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {
-  readonly points: readonly CRCPhysicsVector2[];
+  readonly points: readonly PibblPhysicsVector2[];
   readonly closed?: boolean;
   readonly radius?: number;
   readonly lineInteractionWidth?: number;
 }
 ```
 
-The constructors are standard `CRCPrimitiveComponent` values parameterized by
+The constructors are standard `PibblPrimitiveComponent` values parameterized by
 those prop/style pairs. `Capsule2D.radius` is required and positive;
 `Chain2D.radius` defaults to zero and is nonnegative. All point arrays are
 copied at style resolution before paint, event registration, or collider
@@ -618,11 +618,11 @@ Handles expose readonly signals through lazy accessors and no mutating methods:
 
 ```ts
 declare const bodyHandle2DBrand: unique symbol;
-export interface CRCPhysicsBodyHandle2D {
+export interface PibblPhysicsBodyHandle2D {
   readonly [bodyHandle2DBrand]: true;
-  readonly position: Signal<CRCPhysicsVector2>;
+  readonly position: Signal<PibblPhysicsVector2>;
   readonly rotationDegrees: Signal<number>;
-  readonly linearVelocity: Signal<CRCPhysicsVector2>;
+  readonly linearVelocity: Signal<PibblPhysicsVector2>;
   readonly angularVelocityDegreesPerSecond: Signal<number>;
   readonly sleeping: Signal<boolean>;
   readonly enabled: Signal<boolean>;
@@ -630,52 +630,52 @@ export interface CRCPhysicsBodyHandle2D {
 }
 
 declare const colliderHandle2DBrand: unique symbol;
-export interface CRCPhysicsColliderHandle2D {
+export interface PibblPhysicsColliderHandle2D {
   readonly [colliderHandle2DBrand]: true;
 }
 
 declare const worldHandle2DBrand: unique symbol;
-export interface CRCPhysicsWorldHandle2D {
+export interface PibblPhysicsWorldHandle2D {
   readonly [worldHandle2DBrand]: true;
   readonly revision: Signal<number>;
 }
 
-export function crcPhysicsBody2D(): CRCPhysicsBodyHandle2D;
-export function crcPhysicsWorld2D(): CRCPhysicsWorldHandle2D;
+export function pibblPhysicsBody2D(): PibblPhysicsBodyHandle2D;
+export function pibblPhysicsWorld2D(): PibblPhysicsWorldHandle2D;
 
 export function applyForce2D(
-  body: CRCPhysicsBodyHandle2D,
-  force: CRCPhysicsVector2,
-  options?: Readonly<{ at?: CRCPhysicsVector2; wake?: boolean }>,
+  body: PibblPhysicsBodyHandle2D,
+  force: PibblPhysicsVector2,
+  options?: Readonly<{ at?: PibblPhysicsVector2; wake?: boolean }>,
 ): void;
 export function applyImpulse2D(
-  body: CRCPhysicsBodyHandle2D,
-  impulse: CRCPhysicsVector2,
-  options?: Readonly<{ at?: CRCPhysicsVector2; wake?: boolean }>,
+  body: PibblPhysicsBodyHandle2D,
+  impulse: PibblPhysicsVector2,
+  options?: Readonly<{ at?: PibblPhysicsVector2; wake?: boolean }>,
 ): void;
 export function applyTorque2D(
-  body: CRCPhysicsBodyHandle2D,
+  body: PibblPhysicsBodyHandle2D,
   torque: number,
 ): void;
 export function setLinearVelocity2D(
-  body: CRCPhysicsBodyHandle2D,
-  velocity: CRCPhysicsVector2,
+  body: PibblPhysicsBodyHandle2D,
+  velocity: PibblPhysicsVector2,
 ): void;
 export function setAngularVelocity2D(
-  body: CRCPhysicsBodyHandle2D,
+  body: PibblPhysicsBodyHandle2D,
   degreesPerSecond: number,
 ): void;
 export function teleportBody2D(
-  body: CRCPhysicsBodyHandle2D,
-  pose: CRCPhysicsPose2D,
+  body: PibblPhysicsBodyHandle2D,
+  pose: PibblPhysicsPose2D,
 ): void;
-export function wakeBody2D(body: CRCPhysicsBodyHandle2D): void;
-export function sleepBody2D(body: CRCPhysicsBodyHandle2D): void;
+export function wakeBody2D(body: PibblPhysicsBodyHandle2D): void;
+export function sleepBody2D(body: PibblPhysicsBodyHandle2D): void;
 export function enableBody2D(
-  body: CRCPhysicsBodyHandle2D,
+  body: PibblPhysicsBodyHandle2D,
   options?: Readonly<{ velocity?: "zero" | "preserve" }>,
 ): void;
-export function disableBody2D(body: CRCPhysicsBodyHandle2D): void;
+export function disableBody2D(body: PibblPhysicsBodyHandle2D): void;
 ```
 
 Every command copies finite array data immediately, queues one Begin record in realm invocation order, and becomes inert for an unbound/stale generation. Development traces identify the stale command; production does not throw asynchronously for it.
@@ -684,36 +684,36 @@ World-query generics return boolean, closest result, or sorted immutable
 results while preserving inference from `mode`:
 
 ```ts
-export type CRCPhysicsQueryMode = "closest" | "any" | "all";
+export type PibblPhysicsQueryMode = "closest" | "any" | "all";
 
-export interface CRCPhysicsQueryOptions2D<
-  Mode extends CRCPhysicsQueryMode = "closest",
+export interface PibblPhysicsQueryOptions2D<
+  Mode extends PibblPhysicsQueryMode = "closest",
 > {
   readonly mode?: Mode;
   readonly sensors?: "include" | "exclude" | "only";
-  readonly collisionFilter?: CRCPhysicsCollisionFilter;
-  readonly excludeBody?: CRCPhysicsBodyHandle2D;
-  readonly excludeCollider?: CRCPhysicsColliderHandle2D;
+  readonly collisionFilter?: PibblPhysicsCollisionFilter;
+  readonly excludeBody?: PibblPhysicsBodyHandle2D;
+  readonly excludeCollider?: PibblPhysicsColliderHandle2D;
 }
 
-export interface CRCPhysicsQueryHit2D extends CRCPhysicsShapeHit2D {
-  readonly body: CRCPhysicsBodyHandle2D;
-  readonly collider: CRCPhysicsColliderHandle2D;
+export interface PibblPhysicsQueryHit2D extends PibblPhysicsShapeHit2D {
+  readonly body: PibblPhysicsBodyHandle2D;
+  readonly collider: PibblPhysicsColliderHandle2D;
   readonly bodyGeneration: number;
   readonly colliderGeneration: number;
   readonly tag: unknown;
 }
 
-export interface CRCPhysicsQueryMatch2D {
-  readonly body: CRCPhysicsBodyHandle2D;
-  readonly collider: CRCPhysicsColliderHandle2D;
+export interface PibblPhysicsQueryMatch2D {
+  readonly body: PibblPhysicsBodyHandle2D;
+  readonly collider: PibblPhysicsColliderHandle2D;
   readonly bodyGeneration: number;
   readonly colliderGeneration: number;
   readonly tag: unknown;
 }
 
-export type CRCPhysicsQueryResult2D<
-  Mode extends CRCPhysicsQueryMode,
+export type PibblPhysicsQueryResult2D<
+  Mode extends PibblPhysicsQueryMode,
   Result,
 > = Mode extends "any"
   ? boolean
@@ -721,72 +721,72 @@ export type CRCPhysicsQueryResult2D<
     ? readonly Result[]
     : Result | null;
 
-export function raycast2D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle2D,
-  ray: CRCPhysicsRay2D,
-  options?: CRCPhysicsQueryOptions2D<Mode>,
-): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D>;
+export function raycast2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle2D,
+  ray: PibblPhysicsRay2D,
+  options?: PibblPhysicsQueryOptions2D<Mode>,
+): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
 
-export function shapeCast2D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle2D,
-  shape: CRCPhysicsShape2D,
-  from: CRCPhysicsPose2D,
-  translation: CRCPhysicsVector2,
-  options?: CRCPhysicsQueryOptions2D<Mode>,
-): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D>;
+export function shapeCast2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  from: PibblPhysicsPose2D,
+  translation: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D<Mode>,
+): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
 
-export function overlapShape2D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle2D,
-  shape: CRCPhysicsShape2D,
-  pose: CRCPhysicsPose2D,
-  options?: CRCPhysicsQueryOptions2D<Mode>,
-): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
+export function overlapShape2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  pose: PibblPhysicsPose2D,
+  options?: PibblPhysicsQueryOptions2D<Mode>,
+): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
 
-export function queryAabb2D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle2D,
-  bounds: CRCPhysicsAabb2D,
-  options?: CRCPhysicsQueryOptions2D<Mode>,
-): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
+export function queryAabb2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle2D,
+  bounds: PibblPhysicsAabb2D,
+  options?: PibblPhysicsQueryOptions2D<Mode>,
+): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
 
-export function queryPoint2D<Mode extends CRCPhysicsQueryMode = "closest">(
-  world: CRCPhysicsWorldHandle2D,
-  point: CRCPhysicsVector2,
-  options?: CRCPhysicsQueryOptions2D<Mode>,
-): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
+export function queryPoint2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  world: PibblPhysicsWorldHandle2D,
+  point: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D<Mode>,
+): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
 ```
 
-Overlap/AABB/point operations return `CRCPhysicsQueryMatch2D` rather than
+Overlap/AABB/point operations return `PibblPhysicsQueryMatch2D` rather than
 manufacturing a geometric point, normal, or distance where none is unique.
 
 Collision events are immutable and self-oriented:
 
 ```ts
-export interface CRCPhysicsCollisionEvent2D {
-  readonly selfBody: CRCPhysicsBodyHandle2D;
-  readonly selfCollider: CRCPhysicsColliderHandle2D;
-  readonly otherBody: CRCPhysicsBodyHandle2D;
-  readonly otherCollider: CRCPhysicsColliderHandle2D;
+export interface PibblPhysicsCollisionEvent2D {
+  readonly selfBody: PibblPhysicsBodyHandle2D;
+  readonly selfCollider: PibblPhysicsColliderHandle2D;
+  readonly otherBody: PibblPhysicsBodyHandle2D;
+  readonly otherCollider: PibblPhysicsColliderHandle2D;
   /** Direction from other toward self. */
-  readonly normal: CRCPhysicsVector2;
-  readonly points: readonly CRCPhysicsContactPoint2D[];
+  readonly normal: PibblPhysicsVector2;
+  readonly points: readonly PibblPhysicsContactPoint2D[];
   readonly totalNormalImpulse: number;
   readonly tick: number;
   readonly selfTag: unknown;
   readonly otherTag: unknown;
 }
 
-export interface CRCPhysicsOverlapEvent2D {
-  readonly selfBody: CRCPhysicsBodyHandle2D;
-  readonly selfCollider: CRCPhysicsColliderHandle2D;
-  readonly otherBody: CRCPhysicsBodyHandle2D;
-  readonly otherCollider: CRCPhysicsColliderHandle2D;
+export interface PibblPhysicsOverlapEvent2D {
+  readonly selfBody: PibblPhysicsBodyHandle2D;
+  readonly selfCollider: PibblPhysicsColliderHandle2D;
+  readonly otherBody: PibblPhysicsBodyHandle2D;
+  readonly otherCollider: PibblPhysicsColliderHandle2D;
   readonly tick: number;
   readonly selfTag: unknown;
   readonly otherTag: unknown;
 }
 
-export interface CRCPhysicsBodyStateEvent2D {
-  readonly body: CRCPhysicsBodyHandle2D;
+export interface PibblPhysicsBodyStateEvent2D {
+  readonly body: PibblPhysicsBodyHandle2D;
   readonly sleeping: boolean;
   readonly tick: number;
 }
@@ -796,54 +796,54 @@ There is no continuous collision callback. Start/end/hit and overlap start/end a
 
 ## Core Friend Interfaces Fixed by This Plan
 
-The core scheduler remains private. `@crc/core/internal` adds only the following closed official-package capability:
+The core scheduler remains private. `@pibbl/core/internal` adds only the following closed official-package capability:
 
 ```ts
-export type CRCInternalAdvanceLane = "animation" | "physics";
+export type PibblInternalAdvanceLane = "animation" | "physics";
 
-// Reuse the CRCInternalFrame already exported for official renderers.
+// Reuse the PibblInternalFrame already exported for official renderers.
 
-export interface CRCInternalSignalBatch {
+export interface PibblInternalSignalBatch {
   read<T>(signal: WritableSignal<T>): T;
   stage<T>(signal: WritableSignal<T>, value: T, writer: object): void;
   discardWriter(writer: object): void;
 }
 
 declare const internalSimulationOwnerBrand: unique symbol;
-export interface CRCInternalSimulationOwner {
+export interface PibblInternalSimulationOwner {
   readonly [internalSimulationOwnerBrand]: true;
 }
 
-export function crcInternalCurrentSimulationOwner(): CRCInternalSimulationOwner;
-export function crcInternalQueueSimulationBegin(
-  owner: CRCInternalSimulationOwner,
+export function pibblInternalCurrentSimulationOwner(): PibblInternalSimulationOwner;
+export function pibblInternalQueueSimulationBegin(
+  owner: PibblInternalSimulationOwner,
   command: (
-    frame: CRCInternalFrame,
-    batch: CRCInternalSignalBatch,
+    frame: PibblInternalFrame,
+    batch: PibblInternalSignalBatch,
     sequence: number,
   ) => void,
 ): Readonly<{ readonly sequence: number; cancel(): void }>;
-export function crcInternalRegisterSimulationAdvance(
-  owner: CRCInternalSimulationOwner,
-  lane: CRCInternalAdvanceLane,
-  advance: (frame: CRCInternalFrame, batch: CRCInternalSignalBatch) => void,
+export function pibblInternalRegisterSimulationAdvance(
+  owner: PibblInternalSimulationOwner,
+  lane: PibblInternalAdvanceLane,
+  advance: (frame: PibblInternalFrame, batch: PibblInternalSignalBatch) => void,
 ): () => void;
-export function crcInternalQueueSimulationCommitAcknowledgement(
-  owner: CRCInternalSimulationOwner,
+export function pibblInternalQueueSimulationCommitAcknowledgement(
+  owner: PibblInternalSimulationOwner,
   callback: (
-    frame: CRCInternalFrame,
+    frame: PibblInternalFrame,
     outcome: Readonly<{ readonly applied: boolean }>,
   ) => void,
 ): void;
-export function crcInternalQueueSimulationComplete(
-  owner: CRCInternalSimulationOwner,
-  callback: (frame: CRCInternalFrame) => void,
+export function pibblInternalQueueSimulationComplete(
+  owner: PibblInternalSimulationOwner,
+  callback: (frame: PibblInternalFrame) => void,
 ): void;
-export function crcInternalRequestSimulationRender(
-  owner: CRCInternalSimulationOwner,
+export function pibblInternalRequestSimulationRender(
+  owner: PibblInternalSimulationOwner,
 ): void;
-export function crcInternalOnSimulationRenderTransactionFinish(
-  owner: CRCInternalSimulationOwner,
+export function pibblInternalOnSimulationRenderTransactionFinish(
+  owner: PibblInternalSimulationOwner,
   callback: (success: boolean) => void,
 ): void;
 ```
@@ -853,29 +853,29 @@ The implementation uses the existing internal owner liveness and component teard
 The closed attachment protocol is also friend-only:
 
 ```ts
-export interface CRCInternalPrimitiveAttachmentInput {
+export interface PibblInternalPrimitiveAttachmentInput {
   readonly componentType: Function;
   readonly componentName: string;
   readonly props: Readonly<Record<PropertyKey, unknown>>;
   readonly style: Readonly<Record<PropertyKey, unknown>>;
-  readonly source: CRCElementSource | undefined;
+  readonly source: PibblElementSource | undefined;
   readonly parentWorldTransform: DOMMatrix;
 }
 
-export interface CRCInternalMountedPropAttachment {
+export interface PibblInternalMountedPropAttachment {
   update(value: unknown): void;
   enter(): void;
   preparePrimitive(
-    input: CRCInternalPrimitiveAttachmentInput,
+    input: PibblInternalPrimitiveAttachmentInput,
   ): Readonly<{ readonly presentationTransform2D?: DOMMatrix }> | void;
   exit(success: boolean): void;
   dispose(): void;
 }
 
-export function crcInternalCreatePropAttachment<T extends object>(
+export function pibblInternalCreatePropAttachment<T extends object>(
   property: "physics",
   publicValue: T,
-  mount: () => CRCInternalMountedPropAttachment,
+  mount: () => PibblInternalMountedPropAttachment,
 ): T;
 ```
 
@@ -927,7 +927,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 **Interfaces:**
 
 - Consumes: existing Begin commands, `SignalCommitBatch`, Commit acknowledgements, Complete callbacks, component teardown ownership, and renderer invalidation.
-- Produces: the `CRCInternalSimulationOwner`, batch, lane, Begin, Advance, acknowledgement, Complete, and render-request interfaces fixed above.
+- Produces: the `PibblInternalSimulationOwner`, batch, lane, Begin, Advance, acknowledgement, Complete, and render-request interfaces fixed above.
 
 - [ ] **Step 1: Write failing lane-order and shared-batch tests**
 
@@ -956,7 +956,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 - [ ] **Step 4: Implement the component-owned simulation friend adapter**
 
-  Reuse hook/component teardown identity to create one owner per mounted slot. Wrap `SignalCommitBatch` so official packages cannot call `commit()` or `clear()`. Make every queued callback verify owner liveness and cancel all registrations/commands/completions during teardown. `crcInternalRequestSimulationRender` must use the existing coalesced instance request and never call a host scheduler directly. Update existing playback registration to choose the animation lane explicitly; do not route playback through the simulation-owner adapter.
+  Reuse hook/component teardown identity to create one owner per mounted slot. Wrap `SignalCommitBatch` so official packages cannot call `commit()` or `clear()`. Make every queued callback verify owner liveness and cancel all registrations/commands/completions during teardown. `pibblInternalRequestSimulationRender` must use the existing coalesced instance request and never call a host scheduler directly. Update existing playback registration to choose the animation lane explicitly; do not route playback through the simulation-owner adapter.
 
 - [ ] **Step 5: Run scheduler, signal, animation, and internal-consumer tests**
 
@@ -969,7 +969,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 - [ ] **Step 6: Lock the friend seam in source and packed consumers**
 
-  Import every new type/value only from `@crc/core/internal`, assert none exists on `@crc/core`, and assert the packed internal bundle contains one scheduler identity rather than embedding a second core runtime.
+  Import every new type/value only from `@pibbl/core/internal`, assert none exists on `@pibbl/core`, and assert the packed internal bundle contains one scheduler identity rather than embedding a second core runtime.
 
 - [ ] **Step 7: Commit the ordered scheduler seam**
 
@@ -1011,7 +1011,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 **Interfaces:**
 
 - Consumes: existing identity-transparent enhancer lifecycle, primitive definition/style resolution, world transform, backend primitive input, render transaction, and component prop interfaces.
-- Produces: the closed prop-attachment interfaces above plus public empty `CRCPhysics2DPropExtension`.
+- Produces: the closed prop-attachment interfaces above plus public empty `PibblPhysics2DPropExtension`.
 
 - [ ] **Step 1: Write failing registered-attachment lifecycle tests**
 
@@ -1027,7 +1027,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 - [ ] **Step 3: Register attachments without an import-time dispatch registry**
 
-  Keep registration in a core-owned `WeakMap<object, AttachmentFactoryRecord>` populated only when `crcInternalCreatePropAttachment` constructs a value. During primitive reconciliation, inspect only the `physics` property, accept only WeakMap-recognized objects, and merge that mounted lifecycle with existing enhancer metadata. Never scan arbitrary props or component trees.
+  Keep registration in a core-owned `WeakMap<object, AttachmentFactoryRecord>` populated only when `pibblInternalCreatePropAttachment` constructs a value. During primitive reconciliation, inspect only the `physics` property, accept only WeakMap-recognized objects, and merge that mounted lifecycle with existing enhancer metadata. Never scan arbitrary props or component trees.
 
 - [ ] **Step 4: Prepare resolved primitive geometry and apply presentation**
 
@@ -1035,7 +1035,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 - [ ] **Step 5: Add type-augmentation bases to all supported hosts**
 
-  Export an empty `CRCPhysics2DPropExtension` from core. Extend the prop interface for every file listed above, including structural `Group`; do not add a concrete `physics` property or runtime import to core. Add compile assertions that `physics` is absent before module augmentation and becomes typed after the physics module is imported in Task 3.
+  Export an empty `PibblPhysics2DPropExtension` from core. Extend the prop interface for every file listed above, including structural `Group`; do not add a concrete `physics` property or runtime import to core. Add compile assertions that `physics` is absent before module augmentation and becomes typed after the physics module is imported in Task 3.
 
 - [ ] **Step 6: Prove invalid and unsupported placement diagnostics**
 
@@ -1057,7 +1057,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
   git commit -m "feat(core): add official primitive attachment seam"
   ```
 
-### Task 3: Scaffold `@crc/physics` and lock the 2D public types
+### Task 3: Scaffold `@pibbl/physics` and lock the 2D public types
 
 **Files:**
 
@@ -1076,12 +1076,12 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 **Interfaces:**
 
-- Consumes: `@crc/core` public signal/node types only from the world-facing entry and Task 1/2 friend declarations only from runtime modules.
+- Consumes: `@pibbl/core` public signal/node types only from the world-facing entry and Task 1/2 friend declarations only from runtime modules.
 - Produces: package exports and every public type/signature fixed above; runtime functions initially throw only inside the focused red test and are implemented before this task is committed.
 
 - [ ] **Step 1: Write failing package/type tests**
 
-  Add compile fixtures importing all geometry names from `@crc/physics/2d/geometry`, all world names from `@crc/physics/2d`, and no root barrel. Prove the geometry declarations contain no `@crc/core` reference, body/collider attachments are nominal, query overloads narrow by `mode`, shape arrays are readonly, and importing `@crc/physics/2d` augments supported core props but not arbitrary custom component props.
+  Add compile fixtures importing all geometry names from `@pibbl/physics/2d/geometry`, all world names from `@pibbl/physics/2d`, and no root barrel. Prove the geometry declarations contain no `@pibbl/core` reference, body/collider attachments are nominal, query overloads narrow by `mode`, shape arrays are readonly, and importing `@pibbl/physics/2d` augments supported core props but not arbitrary custom component props.
 
 - [ ] **Step 2: Run typecheck and observe missing package failures**
 
@@ -1089,15 +1089,15 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
   corepack pnpm@11.21.0 run typecheck
   ```
 
-  Expected: FAIL on unresolved `@crc/physics/2d` and `/geometry` imports.
+  Expected: FAIL on unresolved `@pibbl/physics/2d` and `/geometry` imports.
 
 - [ ] **Step 3: Create the package manifest and entry graph**
 
-  Configure `./2d` and `./2d/geometry` exports, `sideEffects: false`, no dependencies, optional peer `@crc/core: 0.0.1`, and matching core as a workspace dev dependency. Build both entries with splitting; externalize `@crc/core` and `@crc/core/internal`; publish only `dist`.
+  Configure `./2d` and `./2d/geometry` exports, `sideEffects: false`, no dependencies, optional peer `@pibbl/core: 0.0.1`, and matching core as a workspace dev dependency. Build both entries with splitting; externalize `@pibbl/core` and `@pibbl/core/internal`; publish only `dist`.
 
 - [ ] **Step 4: Define public types, augmentation, and stable defaults**
 
-  Implement the interfaces fixed above, the named matching-component prop/style types, the `@crc/core` merge for `CRCPhysics2DPropExtension`, and the numeric constants in `numeric-policy.ts`. Use unique-symbol declarations for compile-time nominality and package-private WeakMaps for runtime recognition; never attach mutable records to public values.
+  Implement the interfaces fixed above, the named matching-component prop/style types, the `@pibbl/core` merge for `PibblPhysics2DPropExtension`, and the numeric constants in `numeric-policy.ts`. Use unique-symbol declarations for compile-time nominality and package-private WeakMaps for runtime recognition; never attach mutable records to public values.
 
 - [ ] **Step 5: Add source aliases and package scripts**
 
@@ -1272,7 +1272,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 - [ ] **Step 4: Add a geometry-only packed consumer**
 
-  Pack `@crc/physics`, install only that tarball in a fresh temporary consumer with strict peers, import `/2d/geometry`, run one circle/box distance and ray test, and bundle it with an esbuild metafile. Assert no input path contains `@crc/core`, `@crc/webgl`, `requestAnimationFrame`, Canvas, or physics world modules.
+  Pack `@pibbl/physics`, install only that tarball in a fresh temporary consumer with strict peers, import `/2d/geometry`, run one circle/box distance and ray test, and bundle it with an esbuild metafile. Assert no input path contains `@pibbl/core`, `@pibbl/webgl`, `requestAnimationFrame`, Canvas, or physics world modules.
 
 - [ ] **Step 5: Run all pure geometry and packed-boundary evidence**
 
@@ -1553,7 +1553,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 **Interfaces:**
 
 - Consumes: Task 1 simulation owner, Task 2 attachment lifecycle, Task 10 world kernel, core hook slots, and render-transaction finish.
-- Produces: `PhysicsWorld2D`, body/collider factories, nearest world/body scope, committed topology commands, and `crcPhysicsWorld2D`.
+- Produces: `PhysicsWorld2D`, body/collider factories, nearest world/body scope, committed topology commands, and `pibblPhysicsWorld2D`.
 
 - [ ] **Step 1: Write failing descriptor validation and identity tests**
 
@@ -1632,7 +1632,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 - [ ] **Step 3: Implement identity-based inference from resolved style**
 
-  Use direct imported component identity comparisons, never component-name dispatch or an import-time registry. Reuse CRC's existing numeric geometry helpers where their output is stable and public; copy the resolved numeric result into physics-owned shapes. Flatten rounded/curved contours and triangulate concavity with Task 4 policy. Preserve line source order and SVG contour order.
+  Use direct imported component identity comparisons, never component-name dispatch or an import-time registry. Reuse Pibbl's existing numeric geometry helpers where their output is stable and public; copy the resolved numeric result into physics-owned shapes. Flatten rounded/curved contours and triangulate concavity with Task 4 policy. Preserve line source order and SVG contour order.
 
 - [ ] **Step 4: Write failing pose-authority and presentation tests**
 
@@ -1739,7 +1739,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 **Interfaces:**
 
-- Consumes: the complete public `@crc/physics/2d` surface only.
+- Consumes: the complete public `@pibbl/physics/2d` surface only.
 - Produces: one presentation-neutral proving scenario shared by Studio/headless tests and one concise public learning example.
 
 - [ ] **Step 1: Write the failing headless scenario test**
@@ -1760,7 +1760,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 - [ ] **Step 4: Keep the animation/physics ownership transfer explicit**
 
-  The transfer action snapshots presentation pose, calls `disableBody2D`, starts a CRC tween on authored position after disable admission, and calls `enableBody2D({ velocity: "zero" })` from completion for next Begin. The platform uses `kinematicBody2D` target signals tracked by CRC animation so physics reads the staged value in its later Advance lane.
+  The transfer action snapshots presentation pose, calls `disableBody2D`, starts a Pibbl tween on authored position after disable admission, and calls `enableBody2D({ velocity: "zero" })` from completion for next Begin. The platform uses `kinematicBody2D` target signals tracked by Pibbl animation so physics reads the staged value in its later Advance lane.
 
 - [ ] **Step 5: Add semantic and visual evidence**
 
@@ -1855,7 +1855,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 - Modify: `playground/package-consumer/tsconfig.bundler.json`
 - Modify: `playground/package-consumer/tsconfig.nodenext.json`
 - Modify: `tooling/verify-packed-consumer.mjs`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 - Modify: `tooling/verify-studio-types.mjs`
 - Modify: `tooling/studio-docs/api-exports.ts`
 - Modify: `tooling/studio-docs/api-exports.check.ts`
@@ -1864,7 +1864,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 **Interfaces:**
 
-- Consumes: built `@crc/core` and `@crc/physics` packages plus the fixed public surface.
+- Consumes: built `@pibbl/core` and `@pibbl/physics` packages plus the fixed public surface.
 - Produces: Bundler, NodeNext, packed, runtime, editor, optional-peer, and tree-shaking evidence.
 
 - [ ] **Step 1: Add failing source-consumer assertions**
@@ -1907,7 +1907,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 - [ ] **Step 7: Commit consumer and package evidence**
 
   ```bash
-  git add playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json playground/src/crc-editor-types.txt tooling/verify-packed-consumer.mjs tooling/verify-studio-types.mjs tooling/studio-docs/api-exports.ts tooling/studio-docs/api-exports.check.ts package.json pnpm-lock.yaml
+  git add playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json playground/src/pibbl-editor-types.txt tooling/verify-packed-consumer.mjs tooling/verify-studio-types.mjs tooling/studio-docs/api-exports.ts tooling/studio-docs/api-exports.check.ts package.json pnpm-lock.yaml
   git commit -m "test(physics): verify public 2d package consumers"
   ```
 
@@ -1918,8 +1918,8 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 - Create: `docs/site/api/components/physics-world-2d.md`
 - Create: `docs/site/api/components/physics-shape-2d.md`
 - Create: `docs/site/api/functions/physics-2d.md`
-- Create: `docs/site/api/hooks/crc-physics-body-2d.md`
-- Create: `docs/site/api/hooks/crc-physics-world-2d.md`
+- Create: `docs/site/api/hooks/pibbl-physics-body-2d.md`
+- Create: `docs/site/api/hooks/pibbl-physics-world-2d.md`
 - Create: `docs/site/api/types/physics-2d.md`
 - Create: `docs/site/learn/guides/physics-2d.md`
 - Create: `docs/testing/field-notes/2026-09-14-first-class-physics-2d.md`
@@ -1949,7 +1949,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 - [ ] **Step 1: Add failing documentation/export checks**
 
-  Require one API location for every new runtime value/type, require links from package/root docs and the physics guide, reject root namespace examples, require geometry-only examples to import `/2d/geometry`, and require world examples to show one shared CRC scheduler with no `step()` or private loop.
+  Require one API location for every new runtime value/type, require links from package/root docs and the physics guide, reject root namespace examples, require geometry-only examples to import `/2d/geometry`, and require world examples to show one shared Pibbl scheduler with no `step()` or private loop.
 
 - [ ] **Step 2: Run documentation checks and observe missing pages**
 
@@ -1991,7 +1991,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 - [ ] **Step 8: Commit contracts and documentation**
 
   ```bash
-  git add docs/site/api/components/physics-world-2d.md docs/site/api/components/physics-shape-2d.md docs/site/api/functions/physics-2d.md docs/site/api/hooks/crc-physics-body-2d.md docs/site/api/hooks/crc-physics-world-2d.md docs/site/api/types/physics-2d.md docs/site/learn/guides/physics-2d.md docs/testing/field-notes/2026-09-14-first-class-physics-2d.md docs/design/signals-and-scheduling-contract.md docs/design/animation-contract.md docs/design/runtime-hooks-contract.md docs/design/drawing-components-contract.md docs/design/style-system-contract.md docs/design/layout-system-contract.md docs/design/canvas-surface-contract.md docs/design/user-events-contract.md docs/design/focus-and-keyboard-navigation-contract.md docs/design/mouse-interaction-contract.md docs/design/event-resource-ownership.md docs/design/runtime-resource-ownership.md README.md packages/core/README.md docs/library-status.md AGENTS.md tooling/verify-docs.mjs tooling/docs-contract-preservation-baseline.json
+  git add docs/site/api/components/physics-world-2d.md docs/site/api/components/physics-shape-2d.md docs/site/api/functions/physics-2d.md docs/site/api/hooks/pibbl-physics-body-2d.md docs/site/api/hooks/pibbl-physics-world-2d.md docs/site/api/types/physics-2d.md docs/site/learn/guides/physics-2d.md docs/testing/field-notes/2026-09-14-first-class-physics-2d.md docs/design/signals-and-scheduling-contract.md docs/design/animation-contract.md docs/design/runtime-hooks-contract.md docs/design/drawing-components-contract.md docs/design/style-system-contract.md docs/design/layout-system-contract.md docs/design/canvas-surface-contract.md docs/design/user-events-contract.md docs/design/focus-and-keyboard-navigation-contract.md docs/design/mouse-interaction-contract.md docs/design/event-resource-ownership.md docs/design/runtime-resource-ownership.md README.md packages/core/README.md docs/library-status.md AGENTS.md tooling/verify-docs.mjs tooling/docs-contract-preservation-baseline.json
   git commit -m "docs(physics): document first class 2d physics"
   ```
 
@@ -2052,7 +2052,7 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 - [ ] **Step 6: Review the final diff and public bundle boundaries**
 
-  Confirm no unrelated files are staged, no external physics dependency exists, no root `@crc/physics` or 3D export leaked in, geometry imports load no core, all public names have docs/tests, and generated/baseline changes have recorded reasons.
+  Confirm no unrelated files are staged, no external physics dependency exists, no root `@pibbl/physics` or 3D export leaked in, geometry imports load no core, all public names have docs/tests, and generated/baseline changes have recorded reasons.
 
 - [ ] **Step 7: Append exact final evidence and commit the record**
 
@@ -2065,9 +2065,9 @@ Core recognizes registered attachment objects only on primitive hosts. An ordina
 
 This plan is complete only when:
 
-- `@crc/physics/2d/geometry` installs and executes without core, DOM, Canvas, WebGL, or scheduler code and exposes the complete immutable shape/operation surface fixed here.
-- `@crc/physics/2d` provides world, body/collider, sensor, handle/command, query/event, inference, and matching-renderer behavior exclusively through named tree-shakable exports.
-- Every existing inspectable Canvas shape has deterministic collider inference, and every public physics shape has direct or generic CRC Canvas rendering.
+- `@pibbl/physics/2d/geometry` installs and executes without core, DOM, Canvas, WebGL, or scheduler code and exposes the complete immutable shape/operation surface fixed here.
+- `@pibbl/physics/2d` provides world, body/collider, sensor, handle/command, query/event, inference, and matching-renderer behavior exclusively through named tree-shakable exports.
+- Every existing inspectable Canvas shape has deterministic collider inference, and every public physics shape has direct or generic Pibbl Canvas rendering.
 - One realm frame always runs animation Advance before physics Advance, commits once, plans/renders once, and uses no second host loop.
 - Fixed ticks, catch-up clamp, interpolation, topology admission, rollback, public ordering, and numeric tolerances have deterministic executable evidence.
 - Dynamic, static, kinematic, disabled, and animation-handoff pose authority match the approved design with actionable diagnostics for conflicts.

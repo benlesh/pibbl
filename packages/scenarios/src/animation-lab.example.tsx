@@ -14,13 +14,13 @@ import {
   drive,
   tween,
   wait,
-  type CRCAnimationProgram,
-  type CRCPlayback,
-  type CRCPlaybackEvent,
-  type CRCPlaybackStatus,
+  type PibblAnimationProgram,
+  type PibblPlayback,
+  type PibblPlaybackEvent,
+  type PibblPlaybackStatus,
   type Signal,
   type WritableSignal,
-} from '@crc/core';
+} from '@pibbl/core';
 
 export const ANIMATION_LAB_SOURCE_ID = 'first-class-animation-laboratory-example';
 
@@ -49,13 +49,13 @@ export type AnimationLabAction =
 /**
  * Observable state exposed by the animation lab scenario for controls and assertions.
  *
- * @see {@link CRCPlaybackStatus}
+ * @see {@link PibblPlaybackStatus}
  * @see {@link AnimationLabAction}
  * @see {@link animationLabScenarioEntry}
  */
 export interface AnimationLabState {
-  /** Status recorded or configured by this scenario. See {@link CRCPlaybackStatus}. */
-  readonly status: CRCPlaybackStatus;
+  /** Status recorded or configured by this scenario. See {@link PibblPlaybackStatus}. */
+  readonly status: PibblPlaybackStatus;
   /** Current time recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly currentTime: number;
   /** X recorded or configured by this scenario. See {@link AnimationLabState}. */
@@ -108,8 +108,8 @@ export interface AnimationLabState {
   }>;
   /** Owner recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly owner: 'mounted' | 'removed';
-  /** Stale status recorded or configured by this scenario. See {@link CRCPlaybackStatus}. */
-  readonly staleStatus: CRCPlaybackStatus | 'none';
+  /** Stale status recorded or configured by this scenario. See {@link PibblPlaybackStatus}. */
+  readonly staleStatus: PibblPlaybackStatus | 'none';
   /** Stale action inert recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly staleActionInert: boolean;
   /** Last action recorded or configured by this scenario. See {@link AnimationLabAction}. */
@@ -145,9 +145,9 @@ export interface AnimationLabModel {
   readonly metrics: AnimationLabMetrics;
   ownerVisible: boolean;
   programMode: AnimationLabProgramMode;
-  playback: CRCPlayback | undefined;
+  playback: PibblPlayback | undefined;
   presentedScale: Signal<number> | undefined;
-  stalePlayback: CRCPlayback | undefined;
+  stalePlayback: PibblPlayback | undefined;
   staleActionInert: boolean;
   publish: (() => void) | undefined;
 }
@@ -183,7 +183,7 @@ export function createAnimationLabModel(): AnimationLabModel {
   };
 }
 
-function entranceProgram(model: AnimationLabModel): CRCAnimationProgram {
+function entranceProgram(model: AnimationLabModel): PibblAnimationProgram {
   return sequence(
     parallel(
       drive(model.x, tween({ from: 0, to: 180, duration: 200 })),
@@ -194,7 +194,7 @@ function entranceProgram(model: AnimationLabModel): CRCAnimationProgram {
   );
 }
 
-function repeatProgram(model: AnimationLabModel): CRCAnimationProgram {
+function repeatProgram(model: AnimationLabModel): PibblAnimationProgram {
   return repeat(
     sequence(
       drive(model.x, tween({ from: 0, to: 120, duration: 90 })),
@@ -205,7 +205,7 @@ function repeatProgram(model: AnimationLabModel): CRCAnimationProgram {
   );
 }
 
-function simulationProgram(model: AnimationLabModel): CRCAnimationProgram {
+function simulationProgram(model: AnimationLabModel): PibblAnimationProgram {
   return drive(model.stepper, stepper({
     stepMilliseconds: 10,
     maxElapsedMilliseconds: 30,
@@ -223,7 +223,7 @@ function simulationProgram(model: AnimationLabModel): CRCAnimationProgram {
   }));
 }
 
-function programFor(model: AnimationLabModel): CRCAnimationProgram {
+function programFor(model: AnimationLabModel): PibblAnimationProgram {
   switch (model.programMode) {
     case 'entrance':
       return entranceProgram(model);
@@ -234,7 +234,7 @@ function programFor(model: AnimationLabModel): CRCAnimationProgram {
   }
 }
 
-function normalizedEvent(model: AnimationLabModel, event: CRCPlaybackEvent): string {
+function normalizedEvent(model: AnimationLabModel, event: PibblPlaybackEvent): string {
   if (event.type === 'start') model.metrics.eventOrigin = event.logicalTime;
   const origin = model.metrics.eventOrigin ?? event.logicalTime;
   const relativeTime = Number((event.logicalTime - origin).toFixed(10));

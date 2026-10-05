@@ -1,24 +1,24 @@
 import { peekNativeFilterPool } from './render-filter-boundary';
-import { dropShadow, grayscale, hueRotate, opacity, brightness } from '@crc/core/filters';
+import { dropShadow, grayscale, hueRotate, opacity, brightness } from '@pibbl/core/filters';
 import {
   Group,
   Image,
   Path,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   createElement,
   definePrimitive,
-  type CRCController,
-  type CRCNode,
+  type PibblController,
+  type PibblNode,
   type RenderingContext2D,
   type SystemStyle,
-} from '@crc/core';
+} from '@pibbl/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { clearSharedState, getCRCInstance } from '../global-state.js';
+import { clearSharedState, getPibblInstance } from '../global-state.js';
 import { assertNativeCanvasFilter } from '../../filters/native-canvas-filter.js';
 
-const controllers = new Set<CRCController>();
+const controllers = new Set<PibblController>();
 
 afterEach(() => {
   for (const controller of controllers) controller.dispose();
@@ -160,7 +160,7 @@ describe('filter rendering', () => {
 
     expect(contexts).toHaveLength(1);
     expect(contexts[0]!.canvas).toBe(canvas);
-    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+    expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
     expect(pixel(canvas, 2, 2)).toEqual([0, 128, 0, 255]);
   });
 
@@ -219,7 +219,7 @@ describe('filter rendering', () => {
       executions.push(props.label);
       context.fillRect(1, 1, 2, 2);
     });
-    const ParentProbe = definePrimitive<{ children: CRCNode }>((props) => {
+    const ParentProbe = definePrimitive<{ children: PibblNode }>((props) => {
       executions.push('parent');
       return props.children;
     });
@@ -348,7 +348,7 @@ describe('filter rendering', () => {
       'drop-shadow(1px 1px 0px red)',
       'drop-shadow(2px 2px 0px not-a-color)',
     ]);
-    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+    expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
   });
 
   it('reports a singular invalid color after full-chain-first native parsing', () => {
@@ -377,7 +377,7 @@ describe('filter rendering', () => {
       'drop-shadow(2px 2px 0px not-a-color)',
       'drop-shadow(2px 2px 0px not-a-color)',
     ]);
-    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+    expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
   });
 
   it.each([
@@ -403,7 +403,7 @@ describe('filter rendering', () => {
     expect(runFrame).toThrow(/Probe.*property filter\.color .*balanced.*boundary/i);
     expect(callback).not.toHaveBeenCalled();
     expect(filterAssignments).not.toHaveBeenCalled();
-    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+    expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
   });
 
   it.each([
@@ -455,7 +455,7 @@ describe('filter rendering', () => {
         .toThrow(/Probe.*property filter\.color .*contextual/);
       expect(callback).not.toHaveBeenCalled();
       expect(filterAssignments).not.toHaveBeenCalled();
-      expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+      expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
     },
   );
 
@@ -483,7 +483,7 @@ describe('filter rendering', () => {
       .toThrow(/Probe.*property filter\[1\]\.color .*contextual/);
     expect(callback).not.toHaveBeenCalled();
     expect(filterAssignments).not.toHaveBeenCalled();
-    expect(peekNativeFilterPool(getCRCInstance(canvas))).toBeUndefined();
+    expect(peekNativeFilterPool(getPibblInstance(canvas))).toBeUndefined();
   });
 
   it.each([
@@ -567,27 +567,27 @@ describe('filter rendering', () => {
 });
 
 async function renderScene(
-  root: CRCNode,
+  root: PibblNode,
   width: number,
   height: number,
 ): Promise<HTMLCanvasElement> {
   const canvas = createCanvas(width, height);
-  controllers.add(crc(canvas, root, { pixelRatio: 1 }));
+  controllers.add(pibbl(canvas, root, { pixelRatio: 1 }));
   await nextFrame();
   return canvas;
 }
 
 function scheduleScene(
   canvas: HTMLCanvasElement,
-  root: CRCNode,
+  root: PibblNode,
 ): () => void {
   let scheduled: FrameRequestCallback | undefined;
   vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation(callback => {
     scheduled = callback;
     return 1;
   });
-  controllers.add(crc(canvas, root, { pixelRatio: 1 }));
-  if (!scheduled) throw new Error('CRC did not schedule a render frame.');
+  controllers.add(pibbl(canvas, root, { pixelRatio: 1 }));
+  if (!scheduled) throw new Error('Pibbl did not schedule a render frame.');
   return () => scheduled!(0);
 }
 

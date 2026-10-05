@@ -1,4 +1,4 @@
-import { dropShadow, blur, brightness, contrast, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
+import { dropShadow, blur, brightness, contrast, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@pibbl/core/filters';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clearTempState, GLOBAL_STATE } from '../global-state';
 import type { RenderTargetSnapshot } from '../render-target';

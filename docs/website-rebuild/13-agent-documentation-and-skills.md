@@ -1,6 +1,6 @@
 # Agent documentation and skills plan
 
-The objective is that an agent can discover the relevant CRC capability, understand its exact contract, implement a complete integration, and verify the result using public documentation. Comprehensive content should be split into retrievable topics so an agent does not need the entire manual for one task.
+The objective is that an agent can discover the relevant Pibbl capability, understand its exact contract, implement a complete integration, and verify the result using public documentation. Comprehensive content should be split into retrievable topics so an agent does not need the entire manual for one task.
 
 This is a proposed publication contract. Paths below illustrate future URLs; they do not exist merely because they appear in this document. No skills have been published by this planning change.
 
@@ -12,7 +12,7 @@ Recommend these public entry points, adjusted for the deployed site base path:
 
 | Proposed resource                    | Role                                                                             |
 | ------------------------------------ | -------------------------------------------------------------------------------- |
-| `/agents/`                           | Human-readable and machine-readable explanation of how to use CRC docs           |
+| `/agents/`                           | Human-readable and machine-readable explanation of how to use Pibbl docs         |
 | `/llms.txt`                          | Small map to the best topic indexes, current-version guidance, and skills        |
 | `/reference/shapes/circle.md`        | Clean equivalent of a human reference page                                       |
 | `/agents/reference/shapes/circle.md` | Detailed companion with edge cases, reasoning, and implementation guidance       |
@@ -21,7 +21,7 @@ Recommend these public entry points, adjusted for the deployed site base path:
 | `/agents/examples/physics-ink.md`    | Architecture and adaptation notes for an advanced example                        |
 | `/skills/`                           | Discoverable catalog with scope, compatibility, source, and install instructions |
 
-The JSON catalog is a CRC-defined format, not a universal agent standard. Give it a schema version, documentation build revision, runtime compatibility, stable IDs, typed relationships, and explicit absolute content URLs. Describe the schema on the agent start page. It lets tools inventory coverage without parsing navigation or executing a search UI.
+The JSON catalog is a Pibbl-defined format, not a universal agent standard. Give it a schema version, documentation build revision, runtime compatibility, stable IDs, typed relationships, and explicit absolute content URLs. Describe the schema on the agent start page. It lets tools inventory coverage without parsing navigation or executing a search UI.
 
 The [llms.txt proposal](https://llmstxt.org/) describes a small Markdown entry point and links to detailed Markdown, including alternate-link discovery. Adopt it as an additional path; it is not a guarantee that all agents fetch it. Point from each HTML page to its Markdown equivalent and agent companion using ordinary links, and add appropriate HTML link metadata. Optional HTTP headers can supplement this on hosts that support them.
 
@@ -49,7 +49,7 @@ Do not pad every companion with irrelevant sections. Exhaustive means covering t
 
 ## Versioning and freshness
 
-Every generated page and manifest should identify the documentation revision and compatible published CRC release. Separate current release, prerelease, and historical guidance. A local working-tree feature must not silently enter the stable public docs. Installed skills should describe how to select docs matching the consuming project's package version.
+Every generated page and manifest should identify the documentation revision and compatible published Pibbl release. Separate current release, prerelease, and historical guidance. A local working-tree feature must not silently enter the stable public docs. Installed skills should describe how to select docs matching the consuming project's package version.
 
 Validate that every manifest link resolves and every public export has an intentional reference destination. Confirm related snippets run, referenced imports exist in that release, and Markdown includes the same defaults and limitations as HTML. Remove stale names from current docs while retaining clearly labeled migrations.
 
@@ -61,24 +61,24 @@ Use the portable [Agent Skills specification](https://agentskills.io/specificati
 
 ## Proposed skill collection
 
-| Skill                               | Job                                                                                        | Initial priority |
-| ----------------------------------- | ------------------------------------------------------------------------------------------ | ---------------- |
-| CRC integration                     | Choose package entries, configure authoring, mount/update/dispose, fit an existing web app | First            |
-| CRC application building            | Layout, signals, native HTML controls, interaction, focus and resource lifetimes           | Next             |
-| CRC visualization                   | Scales, series, inspection, truthful effects, data changes and native controls             | First specialist |
-| CRC textures and reaction diffusion | Select/configure resources, use fills, paint/stir, share and dispose correctly             | First specialist |
-| CRC motion and physics              | Animation versus physics, supported commands, movement coupling, reset and cleanup         | Next             |
-| CRC filters and paths               | Geometry manipulation, clips, ordered filters and hit-geometry invariants                  | Next             |
-| CRC hero graphics                   | Page integration, tasteful effects, responsive behavior, reduced motion and fallbacks      | Next             |
-| CRC Three integration               | Normal Three resources, rendering boundary, input bridge and explicit disposal             | Next             |
+| Skill                                 | Job                                                                                        | Initial priority |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------- |
+| Pibbl integration                     | Choose package entries, configure authoring, mount/update/dispose, fit an existing web app | First            |
+| Pibbl application building            | Layout, signals, native HTML controls, interaction, focus and resource lifetimes           | Next             |
+| Pibbl visualization                   | Scales, series, inspection, truthful effects, data changes and native controls             | First specialist |
+| Pibbl textures and reaction diffusion | Select/configure resources, use fills, paint/stir, share and dispose correctly             | First specialist |
+| Pibbl motion and physics              | Animation versus physics, supported commands, movement coupling, reset and cleanup         | Next             |
+| Pibbl filters and paths               | Geometry manipulation, clips, ordered filters and hit-geometry invariants                  | Next             |
+| Pibbl hero graphics                   | Page integration, tasteful effects, responsive behavior, reduced motion and fallbacks      | Next             |
+| Pibbl Three integration               | Normal Three resources, rendering boundary, input bridge and explicit disposal             | Next             |
 
-These are proposed scopes and labels, not yet installable names. Creating a new texture or reaction-diffusion recipe should first check the supported extension boundary. If it needs changes to CRC itself, say so and route that work separately; do not fabricate a public extension API.
+These are proposed scopes and labels, not yet installable names. Creating a new texture or reaction-diffusion recipe should first check the supported extension boundary. If it needs changes to Pibbl itself, say so and route that work separately; do not fabricate a public extension API.
 
 Each skill needs activation criteria, prerequisites, version selection, reading order, a minimal end-to-end workflow, common failures, public verification steps, and example links. Its instructions should respect the user's project and task scope. Installing a skill must not silently opt an agent into unrelated setup, service accounts, or publishing.
 
 ## Distribution
 
-Make the repository the canonical source, tagged with versions and a changelog. Publish browsable skill pages and downloadable complete skill directories on the website. Install commands should name the actual published source and be tested from a clean environment before display; this plan intentionally supplies no pretend CRC install command.
+Make the repository the canonical source, tagged with versions and a changelog. Publish browsable skill pages and downloadable complete skill directories on the website. Install commands should name the actual published source and be tested from a clean environment before display; this plan intentionally supplies no pretend Pibbl install command.
 
 Evaluate [skills.sh](https://www.skills.sh/docs) as the first additional discovery channel: it documents a Git-backed skills installer and directory. Listing/discoverability and client installation should be verified at publication time, not promised now. Add client-specific plugin or marketplace packaging only where it improves the workflow and has a tested maintenance path. Keep the underlying guidance shared to prevent forks between Codex, Claude, and other clients.
 
@@ -92,4 +92,4 @@ Evaluate task correctness, invented APIs, missing lifecycle steps, stale referen
 
 ## Enhancing existing HTML applications
 
-The integration skill and topic index should distinguish CRC-centered applications from **Apps with CRC in them**. For ordinary HTML enhancement, preserve native controls and the host framework, identify the smallest visual region, and teach an explicit mount/update/dispose bridge. The [integration plan](15-add-crc-to-your-site.md) supplies 40 candidate recipes and the public behavior checks needed to prove an enhancement preserves the original application.
+The integration skill and topic index should distinguish Pibbl-centered applications from **Apps with Pibbl in them**. For ordinary HTML enhancement, preserve native controls and the host framework, identify the smallest visual region, and teach an explicit mount/update/dispose bridge. The [integration plan](15-add-pibbl-to-your-site.md) supplies 40 candidate recipes and the public behavior checks needed to prove an enhancement preserves the original application.

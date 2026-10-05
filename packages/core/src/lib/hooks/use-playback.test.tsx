@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  crcInternalCurrentFrame,
-  crcInternalCurrentRenderOwner,
-  crcInternalRequestRendererWork,
-  type CRCInternalRenderOwner,
-} from '@crc/core/internal';
+  pibblInternalCurrentFrame,
+  pibblInternalCurrentRenderOwner,
+  pibblInternalRequestRendererWork,
+  type PibblInternalRenderOwner,
+} from '@pibbl/core/internal';
 import {
-  crc,
+  pibbl,
   usePlayback,
   defineAnimation,
   marker,
@@ -17,12 +17,12 @@ import {
   drive,
   tween,
   wait,
-  type CRCAnimationProgram,
-  type CRCPlayback,
-  type CRCPlaybackEvent,
-  type CRCPlaybackOptions,
+  type PibblAnimationProgram,
+  type PibblPlayback,
+  type PibblPlaybackEvent,
+  type PibblPlaybackOptions,
 } from '../../index.js';
-import { clearSharedState, getCRCInstance } from '../global-state.js';
+import { clearSharedState, getPibblInstance } from '../global-state.js';
 import { animationPlaybackSnapshot } from '../animation/playback.js';
 import { writerLeaseSnapshot } from '../animation/writer-leases.js';
 import {
@@ -33,7 +33,7 @@ import {
 
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
-const roots = new Set<ReturnType<typeof crc>>();
+const roots = new Set<ReturnType<typeof pibbl>>();
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -49,10 +49,10 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-function mount(node: Parameters<typeof crc>[1]): ReturnType<typeof crc> {
+function mount(node: Parameters<typeof pibbl>[1]): ReturnType<typeof pibbl> {
   const canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
-  const controller = crc(canvas, node);
+  const controller = pibbl(canvas, node);
   roots.add(controller);
   return controller;
 }
@@ -61,14 +61,14 @@ describe('usePlayback', () => {
   it('resolves signal-valued programs, option objects, and direct option fields at the hook owner', () => {
     const output = signal(0);
     const events: string[] = [];
-    const program = signal<CRCAnimationProgram>(
+    const program = signal<PibblAnimationProgram>(
       drive(output, tween({ to: 10, duration: 100 })),
     );
-    const onEvent = signal<(event: CRCPlaybackEvent) => void>(
+    const onEvent = signal<(event: PibblPlaybackEvent) => void>(
       event => events.push(`first:${event.type}`),
     );
     const options = signal({ onEvent });
-    let handle!: CRCPlayback;
+    let handle!: PibblPlayback;
     function Probe() {
       handle = usePlayback(program, options);
     }
@@ -100,17 +100,17 @@ describe('usePlayback', () => {
 
   it('returns one frozen handle for a mounted hook slot across fresh programs', () => {
     const output = signal(0);
-    const handles: CRCPlayback[] = [];
+    const handles: PibblPlayback[] = [];
     function Probe({ to }: { to: number }) {
       handles.push(usePlayback(drive(output, tween({ to, duration: 100 }))));
     }
 
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    const controller = crc(canvas, <Probe to={10} />);
+    const controller = pibbl(canvas, <Probe to={10} />);
     roots.add(controller);
     driver.flush(0);
-    crc(canvas, <Probe to={20} />);
+    pibbl(canvas, <Probe to={20} />);
     driver.flush(1);
 
     expect(handles).toHaveLength(2);
@@ -122,14 +122,14 @@ describe('usePlayback', () => {
 
   it('keeps an active program snapshot and adopts the latest successful program for the next run', () => {
     const output = signal(0);
-    let handle!: CRCPlayback;
+    let handle!: PibblPlayback;
     function Probe({ to }: { to: number }) {
       handle = usePlayback(drive(output, tween({ to, duration: 100 })));
     }
 
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    roots.add(crc(canvas, <Probe to={10} />));
+    roots.add(pibbl(canvas, <Probe to={10} />));
     driver.flush(-10);
 
     handle.play();
@@ -137,7 +137,7 @@ describe('usePlayback', () => {
     driver.flush(50);
     expect(output.get()).toBe(5);
 
-    crc(canvas, <Probe to={20} />);
+    pibbl(canvas, <Probe to={20} />);
     driver.flush(60);
     driver.flush(100);
     expect(output.get()).toBe(10);
@@ -152,7 +152,7 @@ describe('usePlayback', () => {
   it('delivers active-run milestones through the latest successfully rendered callback', () => {
     const output = signal(0);
     const events: string[] = [];
-    let handle!: CRCPlayback;
+    let handle!: PibblPlayback;
     function Probe({ callback }: { callback: string }) {
       handle = usePlayback(
         drive(output, tween({ to: 10, duration: 100 })),
@@ -162,13 +162,13 @@ describe('usePlayback', () => {
 
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    roots.add(crc(canvas, <Probe callback="first" />));
+    roots.add(pibbl(canvas, <Probe callback="first" />));
     driver.flush(-10);
     handle.play();
     driver.flush(0);
     expect(events).toEqual(['first:start']);
 
-    crc(canvas, <Probe callback="latest" />);
+    pibbl(canvas, <Probe callback="latest" />);
     driver.flush(50);
     driver.flush(100);
     expect(events).toEqual(['first:start', 'latest:finish']);
@@ -178,10 +178,10 @@ describe('usePlayback', () => {
     const output = signal(0);
     const events: string[] = [];
     const options = {
-      onEvent: (event: Parameters<NonNullable<CRCPlaybackOptions['onEvent']>>[0]) =>
+      onEvent: (event: Parameters<NonNullable<PibblPlaybackOptions['onEvent']>>[0]) =>
         events.push(`rendered:${event.type}`),
     };
-    let handle!: CRCPlayback;
+    let handle!: PibblPlayback;
     function Probe() {
       handle = usePlayback(
         drive(output, tween({ to: 10, duration: 100 })),
@@ -201,8 +201,8 @@ describe('usePlayback', () => {
   it('does not adopt a program or callback from a failed root render transaction', () => {
     const output = signal(0);
     const events: string[] = [];
-    let handle!: CRCPlayback;
-    let owner!: CRCInternalRenderOwner;
+    let handle!: PibblPlayback;
+    let owner!: PibblInternalRenderOwner;
     let failComposition = false;
     const workKey = {};
     function Probe({ to, callback }: { to: number; callback: string }) {
@@ -210,14 +210,14 @@ describe('usePlayback', () => {
         drive(output, tween({ from: 0, to, duration: 100 })),
         { onEvent: event => events.push(`${callback}:${event.type}`) },
       );
-      owner ??= crcInternalCurrentRenderOwner();
+      owner ??= pibblInternalCurrentRenderOwner();
     }
 
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    roots.add(crc(canvas, <Probe to={10} callback="first" />));
+    roots.add(pibbl(canvas, <Probe to={10} callback="first" />));
     driver.flush(0);
-    crcInternalRequestRendererWork(owner, {
+    pibblInternalRequestRendererWork(owner, {
       key: workKey,
       kind: 'compose',
       run: () => {
@@ -226,7 +226,7 @@ describe('usePlayback', () => {
     });
 
     failComposition = true;
-    crc(canvas, <Probe to={20} callback="failed" />);
+    pibbl(canvas, <Probe to={20} callback="failed" />);
     expect(() => driver.flush(10)).toThrow(/expected composition failure/iu);
 
     handle.play();
@@ -249,15 +249,15 @@ describe('usePlayback', () => {
       const beforePlayback = animationPlaybackSnapshot();
       const beforeLeases = writerLeaseSnapshot();
       const events: string[] = [];
-      let handle!: CRCPlayback;
+      let handle!: PibblPlayback;
       function Probe({ invalid }: { invalid: boolean }) {
         const program = invalid && invalidCandidate === 'program' ?
-          {} as CRCAnimationProgram : validProgram;
+          {} as PibblAnimationProgram : validProgram;
         const options = invalid && invalidCandidate === 'onEvent' ? {
-          onEvent: 1 as unknown as CRCPlaybackOptions['onEvent'],
+          onEvent: 1 as unknown as PibblPlaybackOptions['onEvent'],
         } : {
           onEvent: (event: Parameters<
-            NonNullable<CRCPlaybackOptions['onEvent']>
+            NonNullable<PibblPlaybackOptions['onEvent']>
           >[0]) => events.push(event.type),
         };
         handle = usePlayback(program, options);
@@ -265,7 +265,7 @@ describe('usePlayback', () => {
 
       const canvas = document.createElement('canvas');
       document.body.appendChild(canvas);
-      roots.add(crc(canvas, <Probe invalid={false} />));
+      roots.add(pibbl(canvas, <Probe invalid={false} />));
       driver.flush(-1);
       handle.play();
       driver.flush(0);
@@ -274,14 +274,14 @@ describe('usePlayback', () => {
         .toBe(beforePlayback.activePlaybacks + 1);
       expect(writerLeaseSnapshot().active).toBe(beforeLeases.active + 1);
 
-      crc(canvas, <Probe invalid />);
+      pibbl(canvas, <Probe invalid />);
       expect(() => driver.flush(10)).toThrow(
         invalidCandidate === 'program' ?
-          /expected a CRC animation program/iu :
+          /expected a Pibbl animation program/iu :
           /onEvent must be a function/iu,
       );
 
-      expect(getCRCInstance(canvas).refs.size).toBe(0);
+      expect(getPibblInstance(canvas).refs.size).toBe(0);
       expect(animationPlaybackSnapshot()).toMatchObject({
         activePlaybacks: beforePlayback.activePlaybacks,
         createdPlaybacks: beforePlayback.createdPlaybacks + 1,
@@ -311,7 +311,7 @@ describe('usePlayback', () => {
   it('queues autoplay once after mount succeeds and never restarts for later program identities', () => {
     const output = signal(0);
     const events: string[] = [];
-    let handle!: CRCPlayback;
+    let handle!: PibblPlayback;
     function Probe({ to }: { to: number }) {
       handle = usePlayback(drive(output, tween({ to, duration: 100 })), {
         autoplay: true,
@@ -321,7 +321,7 @@ describe('usePlayback', () => {
 
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    roots.add(crc(canvas, <Probe to={10} />));
+    roots.add(pibbl(canvas, <Probe to={10} />));
     driver.flush(0);
 
     expect(handle.status.get()).toBe('idle');
@@ -330,7 +330,7 @@ describe('usePlayback', () => {
     expect(handle.status.get()).toBe('running');
     expect(events).toEqual(['start']);
 
-    crc(canvas, <Probe to={20} />);
+    pibbl(canvas, <Probe to={20} />);
     driver.flush(50);
     driver.flush(110);
     expect(handle.status.get()).toBe('finished');
@@ -340,8 +340,8 @@ describe('usePlayback', () => {
 
   it('waits for a failed mounting transaction to retry successfully before autoplay', () => {
     const output = signal(0);
-    let handle!: CRCPlayback;
-    let owner!: CRCInternalRenderOwner;
+    let handle!: PibblPlayback;
+    let owner!: PibblInternalRenderOwner;
     let failComposition = false;
     const workKey = {};
     function Child() {
@@ -350,15 +350,15 @@ describe('usePlayback', () => {
       });
     }
     function Root({ include }: { include: boolean }) {
-      owner ??= crcInternalCurrentRenderOwner();
+      owner ??= pibblInternalCurrentRenderOwner();
       return include ? <Child /> : undefined;
     }
 
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    roots.add(crc(canvas, <Root include={false} />));
+    roots.add(pibbl(canvas, <Root include={false} />));
     driver.flush(0);
-    crcInternalRequestRendererWork(owner, {
+    pibblInternalRequestRendererWork(owner, {
       key: workKey,
       kind: 'compose',
       run: () => {
@@ -367,7 +367,7 @@ describe('usePlayback', () => {
     });
 
     failComposition = true;
-    crc(canvas, <Root include />);
+    pibbl(canvas, <Root include />);
     expect(() => driver.flush(10)).toThrow(/mount transaction failed/iu);
     expect(handle.status.get()).toBe('idle');
 
@@ -381,7 +381,7 @@ describe('usePlayback', () => {
 
   it('does not treat a later autoplay option as a mount request', () => {
     const output = signal(0);
-    let handle!: CRCPlayback;
+    let handle!: PibblPlayback;
     function Probe({ autoplay }: { autoplay: boolean }) {
       handle = usePlayback(drive(output, tween({ to: 10, duration: 100 })), {
         autoplay,
@@ -390,11 +390,11 @@ describe('usePlayback', () => {
 
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    roots.add(crc(canvas, <Probe autoplay={false} />));
+    roots.add(pibbl(canvas, <Probe autoplay={false} />));
     driver.flush(0);
     expect(driver.pendingHostFrames).toBe(0);
 
-    crc(canvas, <Probe autoplay />);
+    pibbl(canvas, <Probe autoplay />);
     driver.flush(10);
     expect(handle.status.get()).toBe('idle');
     expect(driver.pendingHostFrames).toBe(0);
@@ -405,14 +405,14 @@ describe('usePlayback', () => {
       const output = signal(0);
       const beforePlayback = animationPlaybackSnapshot();
       const beforeLeases = writerLeaseSnapshot();
-      let handle!: CRCPlayback;
+      let handle!: PibblPlayback;
       function Probe() {
         handle = usePlayback(drive(output, tween({ to: 10, duration: 100 })));
       }
 
       const canvas = document.createElement('canvas');
       document.body.appendChild(canvas);
-      roots.add(crc(canvas, <Probe />));
+      roots.add(pibbl(canvas, <Probe />));
       driver.flush(0);
       handle.play();
       if (state !== 'scheduled') driver.flush(10);
@@ -421,7 +421,7 @@ describe('usePlayback', () => {
         driver.flush(20);
       }
 
-      crc(canvas, undefined);
+      pibbl(canvas, undefined);
       driver.flush(state === 'scheduled' ? 10 : 30);
 
       expect(animationPlaybackSnapshot()).toMatchObject({
@@ -451,7 +451,7 @@ describe('usePlayback', () => {
   it('discards milestones queued before the owning component is removed in Render', () => {
     const events: string[] = [];
     const before = animationPlaybackSnapshot();
-    let handle!: CRCPlayback;
+    let handle!: PibblPlayback;
     function Probe() {
       handle = usePlayback(sequence(wait(10), marker('removed')), {
         onEvent: event => events.push(event.marker ?? event.type),
@@ -460,14 +460,14 @@ describe('usePlayback', () => {
 
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    roots.add(crc(canvas, <Probe />));
+    roots.add(pibbl(canvas, <Probe />));
     driver.flush(0);
     handle.play();
     driver.flush(10);
     expect(events).toEqual(['start']);
     events.length = 0;
 
-    crc(canvas, undefined);
+    pibbl(canvas, undefined);
     driver.flush(20);
 
     expect(events).toEqual([]);
@@ -492,10 +492,10 @@ describe('usePlayback', () => {
       status: string;
     }> = [];
     const deliveries: Array<{
-      event: Parameters<NonNullable<CRCPlaybackOptions['onEvent']>>[0];
+      event: Parameters<NonNullable<PibblPlaybackOptions['onEvent']>>[0];
       rendered: (typeof renders)[number];
     }> = [];
-    let handle!: CRCPlayback;
+    let handle!: PibblPlayback;
     function Probe() {
       const playback = usePlayback(sequence(
         drive(output, tween({ from: 0, to: 10, duration: 100 })),
@@ -509,7 +509,7 @@ describe('usePlayback', () => {
         }),
       });
       handle = playback;
-      const frame = crcInternalCurrentFrame();
+      const frame = pibblInternalCurrentFrame();
       renders.push({
         frameId: frame.frameId,
         logicalTime: frame.logicalTime,
@@ -584,8 +584,8 @@ describe('usePlayback', () => {
 
   it('orders same-time source milestones within playback registration order', () => {
     const events: string[] = [];
-    let first!: CRCPlayback;
-    let second!: CRCPlayback;
+    let first!: PibblPlayback;
+    let second!: PibblPlayback;
     function Probe() {
       first = usePlayback(sequence(
         wait(10),
@@ -622,7 +622,7 @@ describe('usePlayback', () => {
     const handlerWrite = signal(0);
     const renders: Array<{ output: number; handlerWrite: number; status: string }> = [];
     const callbackSnapshots: typeof renders = [];
-    let handle!: CRCPlayback;
+    let handle!: PibblPlayback;
     function Probe() {
       const playback = usePlayback(
         drive(output, tween({ from: 0, to: 10, duration: 100 })),
@@ -670,8 +670,8 @@ describe('usePlayback', () => {
     const healthyOutput = signal(0);
     const errors: unknown[] = [];
     const healthyRenders: number[] = [];
-    let failed!: CRCPlayback;
-    let healthy!: CRCPlayback;
+    let failed!: PibblPlayback;
+    let healthy!: PibblPlayback;
     function FailingRoot() {
       failed = usePlayback(parallel(
         drive(firstFailedOutput, defineAnimation({
@@ -718,8 +718,8 @@ describe('usePlayback', () => {
 
   it('continues later milestones and playbacks before reporting an onEvent failure', () => {
     const events: string[] = [];
-    let failing!: CRCPlayback;
-    let healthy!: CRCPlayback;
+    let failing!: PibblPlayback;
+    let healthy!: PibblPlayback;
     function Probe() {
       failing = usePlayback(sequence(
         wait(10),
@@ -757,8 +757,8 @@ describe('usePlayback', () => {
   it('finishes cancellation and unrelated Complete work before reporting an onError failure', () => {
     const events: string[] = [];
     const failedOutput = signal(0);
-    let failing!: CRCPlayback;
-    let healthy!: CRCPlayback;
+    let failing!: PibblPlayback;
+    let healthy!: PibblPlayback;
     function Probe() {
       failing = usePlayback(drive(failedOutput, defineAnimation({
         duration: 100,

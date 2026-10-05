@@ -1,5 +1,5 @@
-import { Layer, signal, useSignal, Rectangle } from "@crc/core";
-import { HoverData, Scale, type HoverQueryContext } from "@crc/core/viz";
+import { Layer, signal, useSignal, Rectangle } from "@pibbl/core";
+import { HoverData, Scale, type HoverQueryContext } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;

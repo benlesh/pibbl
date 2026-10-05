@@ -7,8 +7,8 @@ import { pathToFileURL } from 'node:url';
 const INPUT_LIMIT = 4 * 1024 * 1024;
 const DETAIL_LIMIT = 64 * 1024;
 const SUMMARY_LIMIT = 12 * 1024;
-const LAYOUT_SMOKE = 'crc-layout-studio-smoke/1';
-const schemas = new Set([LAYOUT_SMOKE, 'crc-targeting-replay/1', 'crc-viz-replay/1', 'crc-text-replay/1', 'crc-signal-mutation-replay/1']);
+const LAYOUT_SMOKE = 'pibbl-layout-studio-smoke/1';
+const schemas = new Set([LAYOUT_SMOKE, 'pibbl-targeting-replay/1', 'pibbl-viz-replay/1', 'pibbl-text-replay/1', 'pibbl-signal-mutation-replay/1']);
 const evidenceError = (code, message) => Object.assign(new Error(message), { code });
 
 /** Reads data only: never imports, executes recipes, opens artifacts or reruns assertions. */
@@ -17,7 +17,7 @@ export async function readReplayDocument(path) {
   const file = await open(source, 'r');
   let text;
   try {
-    if (!(await file.stat()).isFile()) throw evidenceError('CRC_EVIDENCE_INVALID_DOCUMENT', 'Evidence must be a regular JSON file.');
+    if (!(await file.stat()).isFile()) throw evidenceError('PIBBL_EVIDENCE_INVALID_DOCUMENT', 'Evidence must be a regular JSON file.');
     const buffer = Buffer.alloc(INPUT_LIMIT + 1);
     let length = 0;
     while (length < buffer.length) {
@@ -25,29 +25,29 @@ export async function readReplayDocument(path) {
       if (!bytesRead) break;
       length += bytesRead;
     }
-    if (length > INPUT_LIMIT) throw evidenceError('CRC_EVIDENCE_BUDGET_EXCEEDED', 'Evidence exceeds 4 MiB input budget.');
+    if (length > INPUT_LIMIT) throw evidenceError('PIBBL_EVIDENCE_BUDGET_EXCEEDED', 'Evidence exceeds 4 MiB input budget.');
     text = buffer.toString('utf8', 0, length);
   } finally { await file.close(); }
   let saved;
-  try { saved = JSON.parse(text); } catch { throw evidenceError('CRC_EVIDENCE_INVALID_DOCUMENT', 'Evidence is not valid JSON.'); }
-  const checkpoint = saved?.schema === 'crc-replay-checkpoint/1';
+  try { saved = JSON.parse(text); } catch { throw evidenceError('PIBBL_EVIDENCE_INVALID_DOCUMENT', 'Evidence is not valid JSON.'); }
+  const checkpoint = saved?.schema === 'pibbl-replay-checkpoint/1';
   const report = checkpoint ? saved.report : saved;
-  if (!schemas.has(report?.schema)) throw evidenceError('CRC_EVIDENCE_UNSUPPORTED_SCHEMA', 'Unsupported replay evidence schema.');
+  if (!schemas.has(report?.schema)) throw evidenceError('PIBBL_EVIDENCE_UNSUPPORTED_SCHEMA', 'Unsupported replay evidence schema.');
   if (!Array.isArray(report.steps) || report.steps.some(step => !step || typeof step !== 'object' || Array.isArray(step))) {
-    throw evidenceError('CRC_EVIDENCE_INVALID_DOCUMENT', 'Malformed replay action records.');
+    throw evidenceError('PIBBL_EVIDENCE_INVALID_DOCUMENT', 'Malformed replay action records.');
   }
-  if (report.schema === LAYOUT_SMOKE && (checkpoint || report.run !== undefined || report.checks !== undefined || report.requiredChecks !== undefined || report.steps.some(step => typeof step.action !== 'string' || !step.action.length || step.action.length > 128))) throw evidenceError('CRC_EVIDENCE_INVALID_DOCUMENT', 'Layout smoke evidence has no run/check manifest or checkpoint contract and requires named actions.');
-  if (report.checks !== undefined && !validCheckOutcomes(report.checks)) throw evidenceError('CRC_EVIDENCE_INVALID_CHECKS', 'Malformed or unsupported check outcomes.');
+  if (report.schema === LAYOUT_SMOKE && (checkpoint || report.run !== undefined || report.checks !== undefined || report.requiredChecks !== undefined || report.steps.some(step => typeof step.action !== 'string' || !step.action.length || step.action.length > 128))) throw evidenceError('PIBBL_EVIDENCE_INVALID_DOCUMENT', 'Layout smoke evidence has no run/check manifest or checkpoint contract and requires named actions.');
+  if (report.checks !== undefined && !validCheckOutcomes(report.checks)) throw evidenceError('PIBBL_EVIDENCE_INVALID_CHECKS', 'Malformed or unsupported check outcomes.');
   return { source, saved, checkpoint, report, contentHash: createHash('sha256').update(text).digest('hex') };
 }
 
 export async function readReplayEvidence(path, { actionId, checkId, manifest = false, page, cursor, pageSize, fields } = {}) {
-  if ([actionId !== undefined, checkId !== undefined, manifest, page !== undefined].filter(Boolean).length > 1) throw evidenceError('CRC_EVIDENCE_INVALID_SELECTOR', 'Select either action detail, check detail, manifest or page.');
-  if (page === undefined && (cursor !== undefined || pageSize !== undefined)) throw evidenceError('CRC_EVIDENCE_INVALID_SELECTOR', 'Cursor and page size require a page selection.');
-  if (page !== undefined && page !== 'actions' && page !== 'checks') throw evidenceError('CRC_EVIDENCE_UNSUPPORTED_QUERY', 'Unsupported page selection.');
+  if ([actionId !== undefined, checkId !== undefined, manifest, page !== undefined].filter(Boolean).length > 1) throw evidenceError('PIBBL_EVIDENCE_INVALID_SELECTOR', 'Select either action detail, check detail, manifest or page.');
+  if (page === undefined && (cursor !== undefined || pageSize !== undefined)) throw evidenceError('PIBBL_EVIDENCE_INVALID_SELECTOR', 'Cursor and page size require a page selection.');
+  if (page !== undefined && page !== 'actions' && page !== 'checks') throw evidenceError('PIBBL_EVIDENCE_UNSUPPORTED_QUERY', 'Unsupported page selection.');
   if (fields !== undefined && (actionId === undefined && checkId === undefined || !Array.isArray(fields) || fields.length < 1 || fields.length > 16 || new Set(fields).size !== fields.length ||
     fields.some(field => typeof field !== 'string' || field.length > 512 || (field !== '' && !field.startsWith('/')) || /~(?![01])/.test(field) || field.split('/').length > 17))) {
-    throw evidenceError('CRC_EVIDENCE_INVALID_SELECTOR', 'Fields require an action or check and 1 through 16 unique JSON pointers, each at most 512 UTF-16 units and 16 segments.');
+    throw evidenceError('PIBBL_EVIDENCE_INVALID_SELECTOR', 'Fields require an action or check and 1 through 16 unique JSON pointers, each at most 512 UTF-16 units and 16 segments.');
   }
   const { source, saved, checkpoint, report, contentHash } = await readReplayDocument(path);
   const layoutSmoke = report.schema === LAYOUT_SMOKE;
@@ -59,7 +59,7 @@ export async function readReplayEvidence(path, { actionId, checkId, manifest = f
     return value.slice(0, limit);
   }
   const base = {
-    schema: 'crc-replay-evidence-view/1', sourceSchema: report.schema, source, verification: 'saved-evidence-only',
+    schema: 'pibbl-replay-evidence-view/1', sourceSchema: report.schema, source, verification: 'saved-evidence-only',
     ...(layoutSmoke ? { attestation: 'not-provided-by-schema' } : {}),
     kind: checkpoint ? 'checkpoint' : 'final-report',
     claimedStatus: checkpoint ? 'partial' : compact(report.status, 'status', 32),
@@ -74,21 +74,21 @@ export async function readReplayEvidence(path, { actionId, checkId, manifest = f
       try {
         if (typeof cursor !== 'string' || cursor.length > 512 || !/^[A-Za-z0-9_-]+$/.test(cursor)) throw new Error();
         decoded = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
-        if (decoded?.schema !== 'crc-evidence-cursor/1' || decoded.page !== page ||
+        if (decoded?.schema !== 'pibbl-evidence-cursor/1' || decoded.page !== page ||
           !/^[a-f0-9]{64}$/.test(decoded.hash) || !Number.isSafeInteger(decoded.offset) || decoded.offset < 1 ||
           !Number.isSafeInteger(decoded.size) || decoded.size < 1 || decoded.size > 32 ||
           (pageSize !== undefined && pageSize !== decoded.size)) throw new Error();
-      } catch { throw evidenceError('CRC_EVIDENCE_INVALID_CURSOR', 'Invalid or mismatched evidence cursor.'); }
+      } catch { throw evidenceError('PIBBL_EVIDENCE_INVALID_CURSOR', 'Invalid or mismatched evidence cursor.'); }
       offset = decoded.offset; size = decoded.size; previousHash = decoded.hash;
     }
-    if (!Number.isSafeInteger(size) || size < 1 || size > 32) throw evidenceError('CRC_EVIDENCE_INVALID_SELECTOR', 'Invalid page size: expected 1 through 32.');
+    if (!Number.isSafeInteger(size) || size < 1 || size > 32) throw evidenceError('PIBBL_EVIDENCE_INVALID_SELECTOR', 'Invalid page size: expected 1 through 32.');
     const records = page === 'actions' ? report.steps : report.checks ?? [];
     const common = { ...base, view: 'page', collection: page, snapshot: contentHash,
       history: checkpoint ? 'checkpoint-prefix' : 'not-established', scope: 'saved-record-summaries-only' };
     if (previousHash && previousHash !== contentHash) return {
       ...common, status: 'cursor-expired', reason: 'Evidence bytes changed; restart explicitly to inspect the new snapshot.', data: [], nextCursor: null,
     };
-    if (offset > records.length) throw evidenceError('CRC_EVIDENCE_INVALID_CURSOR', 'Evidence cursor is outside the saved collection.');
+    if (offset > records.length) throw evidenceError('PIBBL_EVIDENCE_INVALID_CURSOR', 'Evidence cursor is outside the saved collection.');
     const data = records.slice(offset, offset + size).map((record, index) => page === 'actions' ? {
       actionId: compact(actionIdentity(record), `actions[${offset + index}].actionId`),
       status: compact(record.status, `actions[${offset + index}].status`, 32),
@@ -98,25 +98,25 @@ export async function readReplayEvidence(path, { actionId, checkId, manifest = f
       status: record.status, required: record.required, reason: compact(record.reason, `checks[${offset + index}].reason`),
     });
     const end = offset + data.length;
-    const nextCursor = end < records.length ? Buffer.from(JSON.stringify({ schema: 'crc-evidence-cursor/1', hash: contentHash, page, offset: end, size })).toString('base64url') : null;
+    const nextCursor = end < records.length ? Buffer.from(JSON.stringify({ schema: 'pibbl-evidence-cursor/1', hash: contentHash, page, offset: end, size })).toString('base64url') : null;
     const result = { ...common, status: 'ok', total: records.length, offset, data, remaining: records.length - end, nextCursor, truncatedFields };
-    if (Buffer.byteLength(JSON.stringify(result)) > SUMMARY_LIMIT) throw evidenceError('CRC_EVIDENCE_BUDGET_EXCEEDED', 'Page exceeds 12 KiB output budget.');
+    if (Buffer.byteLength(JSON.stringify(result)) > SUMMARY_LIMIT) throw evidenceError('PIBBL_EVIDENCE_BUDGET_EXCEEDED', 'Page exceeds 12 KiB output budget.');
     return result;
   }
   if (actionId !== undefined || checkId !== undefined || manifest) {
     let data;
     if (manifest) {
-      if (!report.run || typeof report.run !== 'object') throw evidenceError('CRC_EVIDENCE_NO_MATCH', 'Run manifest not found.');
+      if (!report.run || typeof report.run !== 'object') throw evidenceError('PIBBL_EVIDENCE_NO_MATCH', 'Run manifest not found.');
       data = report.requiredChecks === undefined ? report.run : { ...report.run, requiredChecks: report.requiredChecks };
     } else if (checkId !== undefined) {
       const matches = (report.checks ?? []).filter(check => check.checkId === checkId);
-      if (!matches.length) throw evidenceError('CRC_EVIDENCE_NO_MATCH', 'Requested check not found.');
-      if (matches.length > 1) throw evidenceError('CRC_EVIDENCE_AMBIGUOUS_MATCH', 'Requested check identity is ambiguous.');
+      if (!matches.length) throw evidenceError('PIBBL_EVIDENCE_NO_MATCH', 'Requested check not found.');
+      if (matches.length > 1) throw evidenceError('PIBBL_EVIDENCE_AMBIGUOUS_MATCH', 'Requested check identity is ambiguous.');
       data = matches[0];
     } else {
       const matches = report.steps.filter(step => actionIdentity(step) === actionId);
-      if (!matches.length) throw evidenceError('CRC_EVIDENCE_NO_MATCH', 'Requested action not found.');
-      if (matches.length > 1) throw evidenceError('CRC_EVIDENCE_AMBIGUOUS_MATCH', 'Requested action identity is ambiguous.');
+      if (!matches.length) throw evidenceError('PIBBL_EVIDENCE_NO_MATCH', 'Requested action not found.');
+      if (matches.length > 1) throw evidenceError('PIBBL_EVIDENCE_AMBIGUOUS_MATCH', 'Requested action identity is ambiguous.');
       data = matches[0];
     }
     if (fields !== undefined) {
@@ -140,11 +140,11 @@ export async function readReplayEvidence(path, { actionId, checkId, manifest = f
       });
       const result = { ...base, view: 'projection', parent: checkId !== undefined ? 'check' : 'action',
         snapshot: contentHash, scope: 'selected-saved-fields-only', data: projected, truncatedFields };
-      if (Buffer.byteLength(JSON.stringify(result)) > DETAIL_LIMIT) throw evidenceError('CRC_EVIDENCE_BUDGET_EXCEEDED', 'Projection exceeds 64 KiB detail budget; request fewer or narrower fields.');
+      if (Buffer.byteLength(JSON.stringify(result)) > DETAIL_LIMIT) throw evidenceError('PIBBL_EVIDENCE_BUDGET_EXCEEDED', 'Projection exceeds 64 KiB detail budget; request fewer or narrower fields.');
       return result;
     }
     const result = { ...base, view: manifest ? 'manifest' : checkId !== undefined ? 'check' : 'action', data, truncatedFields };
-    if (Buffer.byteLength(JSON.stringify(result)) > DETAIL_LIMIT) throw evidenceError('CRC_EVIDENCE_BUDGET_EXCEEDED', 'Requested view exceeds 64 KiB detail budget; inspect the saved file explicitly.');
+    if (Buffer.byteLength(JSON.stringify(result)) > DETAIL_LIMIT) throw evidenceError('PIBBL_EVIDENCE_BUDGET_EXCEEDED', 'Requested view exceeds 64 KiB detail budget; inspect the saved file explicitly.');
     return result;
   }
   const recordedFailure = layoutSmoke && typeof report.error === 'string' ? { category: 'smoke-error', message: report.error } : report.failure;
@@ -202,7 +202,7 @@ export async function readReplayEvidence(path, { actionId, checkId, manifest = f
     } : null,
     truncatedFields,
   };
-  if (Buffer.byteLength(JSON.stringify(result)) > SUMMARY_LIMIT) throw evidenceError('CRC_EVIDENCE_BUDGET_EXCEEDED', 'Summary exceeds 12 KiB output budget.');
+  if (Buffer.byteLength(JSON.stringify(result)) > SUMMARY_LIMIT) throw evidenceError('PIBBL_EVIDENCE_BUDGET_EXCEEDED', 'Summary exceeds 12 KiB output budget.');
   return result;
 }
 
@@ -214,28 +214,28 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     for (let index = 0; index < arguments_.length; index++) {
       const flag = arguments_[index];
       if (flag === '--fields') {
-        if (options.fields !== undefined || arguments_[index + 1] === undefined) throw evidenceError('CRC_EVIDENCE_INVALID_SELECTOR', 'Provide --fields once with a JSON array of pointers.');
-        try { options.fields = JSON.parse(arguments_[++index]); } catch { throw evidenceError('CRC_EVIDENCE_INVALID_SELECTOR', 'Fields must be a JSON array.'); }
+        if (options.fields !== undefined || arguments_[index + 1] === undefined) throw evidenceError('PIBBL_EVIDENCE_INVALID_SELECTOR', 'Provide --fields once with a JSON array of pointers.');
+        try { options.fields = JSON.parse(arguments_[++index]); } catch { throw evidenceError('PIBBL_EVIDENCE_INVALID_SELECTOR', 'Fields must be a JSON array.'); }
         continue;
       }
-      if (seenSelection) throw evidenceError('CRC_EVIDENCE_INVALID_SELECTOR', 'Only one action, check, page or manifest selection is allowed.');
+      if (seenSelection) throw evidenceError('PIBBL_EVIDENCE_INVALID_SELECTOR', 'Only one action, check, page or manifest selection is allowed.');
       seenSelection = true;
       if (flag === '--manifest') options.manifest = true;
       else if (flag === '--action' || flag === '--check' || flag === '--page') {
         const value = arguments_[++index];
-        if (!value || value.startsWith('--')) throw evidenceError('CRC_EVIDENCE_INVALID_SELECTOR', 'Missing selector value.');
+        if (!value || value.startsWith('--')) throw evidenceError('PIBBL_EVIDENCE_INVALID_SELECTOR', 'Missing selector value.');
         if (flag === '--action') options.actionId = value;
         else if (flag === '--check') options.checkId = value;
         else {
           options.page = value;
           if (arguments_[index + 1] && !arguments_[index + 1].startsWith('--')) options.cursor = arguments_[++index];
         }
-      } else throw evidenceError('CRC_EVIDENCE_INVALID_SELECTOR', 'Unknown evidence reader option.');
+      } else throw evidenceError('PIBBL_EVIDENCE_INVALID_SELECTOR', 'Unknown evidence reader option.');
     }
-    if (!path) throw evidenceError('CRC_EVIDENCE_INVALID_SELECTOR', 'Provide REPORT.json and optionally --action ID, --check ID, --manifest, or --page actions|checks [CURSOR]. Action/check views accept --fields JSON_POINTER_ARRAY.');
+    if (!path) throw evidenceError('PIBBL_EVIDENCE_INVALID_SELECTOR', 'Provide REPORT.json and optionally --action ID, --check ID, --manifest, or --page actions|checks [CURSOR]. Action/check views accept --fields JSON_POINTER_ARRAY.');
     process.stdout.write(JSON.stringify(await readReplayEvidence(path, options)) + '\n');
   } catch (error) {
-    process.stdout.write(JSON.stringify({ schema: 'crc-replay-evidence-view/1', status: 'unavailable', code: error.code ?? 'CRC_EVIDENCE_UNAVAILABLE', message: error.message.slice(0, 1024) }) + '\n');
+    process.stdout.write(JSON.stringify({ schema: 'pibbl-replay-evidence-view/1', status: 'unavailable', code: error.code ?? 'PIBBL_EVIDENCE_UNAVAILABLE', message: error.message.slice(0, 1024) }) + '\n');
     process.exitCode = 1;
   }
 }

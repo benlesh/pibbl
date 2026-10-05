@@ -1091,7 +1091,7 @@ describe('computed', () => {
     expect(firstFailure).toBeInstanceOf(Error);
     expect(firstFailure).not.toBeInstanceOf(RangeError);
     expect((firstFailure as Error).message).toBe(
-      'CRC computed cycle: direct -> direct',
+      'Pibbl computed cycle: direct -> direct',
     );
     expect(secondFailure).toBe(firstFailure);
     expect(getSignalNode(direct).observerCount).toBe(0);
@@ -1109,7 +1109,7 @@ describe('computed', () => {
     expect(firstFailure).toBeInstanceOf(Error);
     expect(firstFailure).not.toBeInstanceOf(RangeError);
     expect((firstFailure as Error).message).toBe(
-      'CRC computed cycle: first -> second -> first',
+      'Pibbl computed cycle: first -> second -> first',
     );
     expect(secondFailure).toBe(firstFailure);
     expect(getSignalNode(first).observerCount).toBe(0);
@@ -1124,7 +1124,7 @@ describe('computed', () => {
       { debugName: 'guarded direct' },
     );
     expect(() => direct.get()).toThrow(
-      'CRC computed cycle: guarded direct -> guarded direct',
+      'Pibbl computed cycle: guarded direct -> guarded direct',
     );
 
     const indirectGuard = signal(true);
@@ -1136,7 +1136,7 @@ describe('computed', () => {
       { debugName: 'guarded second' },
     );
     expect(() => first.get()).toThrow(
-      'CRC computed cycle: guarded first -> guarded second -> guarded first',
+      'Pibbl computed cycle: guarded first -> guarded second -> guarded first',
     );
 
     directGuard.set(false);

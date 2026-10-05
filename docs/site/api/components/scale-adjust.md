@@ -1,7 +1,7 @@
 ---
 id: api-component-scale-adjust
 title: ScaleAdjust
-summary: Positions ordinary CRC children using named scale coordinates.
+summary: Positions ordinary Pibbl children using named scale coordinates.
 kind: api
 slug: scale-adjust
 apiCategory: component
@@ -10,7 +10,7 @@ symbols: [ScaleAdjust, ScaleAdjustProps]
 
 # ScaleAdjust
 
-Import `ScaleAdjust` from `@crc/core/viz`. Supply `x` with `xScale`, `y` with `yScale`,
+Import `ScaleAdjust` from `@pibbl/core/viz`. Supply `x` with `xScale`, `y` with `yScale`,
 or both pairs. Each coordinate is a number or a core signal of a number. Omitted
 axes translate by zero; a coordinate without its matching ID is invalid.
 

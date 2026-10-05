@@ -6,7 +6,7 @@
 
 Task 11 is implemented and ready to commit.
 
-- Workspace: `/private/tmp/crc-jsx-component-authoring`
+- Workspace: `/private/tmp/pibbl-jsx-component-authoring`
 - Branch: `codex/jsx-component-authoring`
 - Required start: `ec4c2305b89f5a31af3376fa30828ac1439e96f3`
 - Runtime: Node `v26.7.0`, pnpm `11.21.0`
@@ -33,7 +33,7 @@ adapters and exports remain for Task 12.
   `KeyboardNavigation` policy elements. `Text` receives content through normal
   children, and `Layer` receives normal children instead of a render prop.
 - Kept scenario orchestration in the existing `.ts` helpers. Those helpers
-  mount the TSX-authored scenes through `crc` and do not reintroduce a second
+  mount the TSX-authored scenes through `pibbl` and do not reintroduce a second
   authoring vocabulary.
 - Preserved all 16 source-marker declarations and exported state type names;
   a direct before/after script checked those identifiers against `ec4c230`.
@@ -61,9 +61,9 @@ the shared component harness and focus-policy test fixture.
 - Low-level drawing and layout probes use private `definePrimitive`, retaining
   exact Canvas/context/style capabilities without exercising obsolete public
   authoring syntax.
-- `CRCElement` and `CRCComponent` replace legacy descriptor/function aliases.
+- `PibblElement` and `PibblComponent` replace legacy descriptor/function aliases.
 - Focus tests construct policy descriptors through `createElement` and final
-  policy components. The final test helper returns `CRCElement`, not `CompEl`.
+  policy components. The final test helper returns `PibblElement`, not `CompEl`.
 - The four former `defineComp` contract cases were not discarded. They now
   assert the corresponding final element/primitive guarantees: fresh
   descriptors with stable type and copied props, specified/resolved style
@@ -80,7 +80,7 @@ Task 12 deletion was removed in this task.
 The scenario gate was strengthened before source migration. Both the tooling
 catalog command and executable browser test use the same Babel-AST inspection
 path. Deterministic sources must contain JSX, import executable public values
-from `@crc/core`, and reject legacy component bindings/direct component calls,
+from `@pibbl/core`, and reject legacy component bindings/direct component calls,
 `TextStyle.text`, and `Layer.render`. This intentionally avoids the false
 positives produced by a word/regex-only gate, such as native
 `CanvasRenderingContext2D.rect()` calls.
@@ -204,7 +204,7 @@ corepack pnpm@11.21.0 playground:build:built
 ```
 
 ```text
-CRC Studio declarations passed strict TSX, compiler-runtime, event-family,
+Pibbl Studio declarations passed strict TSX, compiler-runtime, event-family,
 generic, layout, and surface checks in both modes.
 Source mode: 1308 modules transformed; built in 896ms.
 Built mode: 1209 modules transformed; built in 898ms.
@@ -345,8 +345,8 @@ authoring surface.
 
 - A `TSModuleBlock` now receives the final segment of its own namespace or
   dotted module name as a local binding. This applies in both value and type
-  positions only within that exact body. Thus `Fixture.CRC` and `A.B.C` may
-  refer to their local `CRC`/`C` members, while the imported namespace remains
+  positions only within that exact body. Thus `Fixture.Pibbl` and `A.B.C` may
+  refer to their local `Pibbl`/`C` members, while the imported namespace remains
   visible and rejected outside the block.
 - Babel 8 no longer accepts its removed `importAssertions` plugin. Its precise
   legacy-assertion parser failure is recognized only when the error points at a
@@ -386,7 +386,7 @@ git diff --check: no output
 - Temporary codemod/recovery scripts were removed. The final diff has no
   generated migration helper and avoids the earlier printer-wide formatting
   churn.
-- Static checking is binding- and AST-aware. It rejects actual obsolete CRC
+- Static checking is binding- and AST-aware. It rejects actual obsolete Pibbl
   syntax while allowing native Canvas calls and local names.
 - The final type fixture, catalog, Studio source/built builds, source and packed
   consumers, browser behavior, built smoke, and visual safeguard agree on TSX
@@ -409,16 +409,16 @@ scenario actions, geometry, or Canvas output.
 ### Executable policy
 
 - Deterministic source inspection now resolves named and namespace
-  `@crc/core` value bindings through lexical scopes. It rejects direct calls
-  such as `CRC.Rectangle(...)`, computed namespace equivalents, and namespace
-  legacy calls such as `CRC.rect(...)`, while allowing a genuinely local
+  `@pibbl/core` value bindings through lexical scopes. It rejects direct calls
+  such as `Pibbl.Rectangle(...)`, computed namespace equivalents, and namespace
+  legacy calls such as `Pibbl.rect(...)`, while allowing a genuinely local
   parameter that shadows an imported component name.
 - Obsolete `CompEl`, `CompFn`, `ComponentInput`,
   `ComponentCapabilities`, and `FalsyNodes` type imports are rejected,
   including aliases and namespace-qualified uses. Dynamic imports, CommonJS,
   `import.meta`, import-equals syntax, default imports, side-effect imports,
   import attributes, and external runtime imports are also rejected.
-- Deterministic scenarios use static public imports from `@crc/core`. Their
+- Deterministic scenarios use static public imports from `@pibbl/core`. Their
   existing relative imports are permitted only when type-only, so shared
   scenario event-trace contracts remain single-sourced without creating a
   runtime dependency. The two inline `import('./event-trace')` type queries
@@ -541,7 +541,7 @@ separately named module-policy facts. This preserves the deliberate catalog
 boundary instead of applying the learning catalog's stricter canonical-export
 rule to test labs.
 
-- Deterministic sources may use named or namespace imports from `@crc/core`.
+- Deterministic sources may use named or namespace imports from `@pibbl/core`.
   Core default imports, side-effect imports, import attributes/assertions, and
   every external runtime import are rejected.
 - A relative import is accepted only when the entire declaration is type-only.
@@ -556,7 +556,7 @@ rule to test labs.
   import-equals declaration inside a TypeScript namespace can no longer bypass
   the policy.
 - Every source-backed named, star, namespace, value, or type re-export is
-  rejected regardless of whether its source is `@crc/core`, relative, or an
+  rejected regardless of whether its source is `@pibbl/core`, relative, or an
   external package. This also prevents obsolete component authoring values and
   legacy types from escaping through a re-export.
 - Local named declarations/exports and a local default export remain allowed.
@@ -592,7 +592,7 @@ failure screenshots were removed.
 
 Once the behavior was green, nine negative import cases were changed to demand
 an accurate diagnostic and went RED because the old message incorrectly said
-that imports were allowed only from `@crc/core`. The final message now names
+that imports were allowed only from `@pibbl/core`. The final message now names
 both supported categories—core named/namespace imports and relative type-only
 imports—and the same nine cases returned green.
 
@@ -674,15 +674,15 @@ the runtime, scenario sources, catalog/index, and visual baselines unchanged.
 - `TSModuleDeclaration` bindings are derived from identifier names and the root
   of dotted namespace names. String-literal ambient-module names deliberately
   do not create an outer lexical binding. Nested namespaces, dotted namespaces,
-  local namespace member names that overlap legacy CRC names, and
+  local namespace member names that overlap legacy Pibbl names, and
   string-module-local namespace shadows have positive coverage. Matching
-  negative cases prove that an unshadowed imported CRC namespace still resolves
+  negative cases prove that an unshadowed imported Pibbl namespace still resolves
   inside plain, nested, and dotted namespaces and that a local namespace shadow
   does not leak outside its module block.
 - Type-only namespace imports now use the same shadow map as value namespace
-  imports, preventing a local `CRC.CompEl` declaration from being mistaken for
+  imports, preventing a local `Pibbl.CompEl` declaration from being mistaken for
   the imported obsolete type while retaining rejection of genuinely imported
-  `CRC.CompEl` references.
+  `Pibbl.CompEl` references.
 - Bare `.` and `..` directory-index specifiers are classified as relative.
   Default, named, namespace, inline named-type, and inline default-type positive
   forms are represented across both directory-index spellings. Runtime default,
@@ -783,7 +783,7 @@ git diff --check: no output.
 - The scope change is narrowly additive: ordinary block/function shadowing is
   untouched, while TypeScript module blocks gain the same lexical treatment.
 - Dotted namespace declarations bind their root name; quoted ambient module
-  names do not. Tests cover both sides so an imported CRC reference is not
+  names do not. Tests cover both sides so an imported Pibbl reference is not
   accidentally hidden.
 - Construct-specific diagnostic priority precedes generic import rejection, but
   legacy authoring/type and JSX structure diagnostics keep their existing order

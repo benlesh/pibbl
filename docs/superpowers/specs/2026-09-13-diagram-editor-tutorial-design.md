@@ -19,14 +19,14 @@ published twelve-chapter syllabus without changing its order or promising a
 broader documentation-platform rewrite.
 
 Current public code, package manifests, executable tests, and the implemented
-contracts under `docs/design/` remain authoritative for CRC behavior. Tutorial
+contracts under `docs/design/` remain authoritative for Pibbl behavior. Tutorial
 prose and examples must explain those contracts accurately and use only public
 package entry points.
 
 ## Summary
 
 The tutorial is an outcome-first, Studio-first course for developers who can
-read TypeScript and JSX but may be new to CRC and immediate-mode Canvas
+read TypeScript and JSX but may be new to Pibbl and immediate-mode Canvas
 rendering. Across twelve cumulative chapters, the reader builds a polished
 miniature workflow-diagram editor with nodes, connections, selection, node
 dragging, workspace pan and zoom, clipping, a retained grid layer, typed filter
@@ -42,13 +42,13 @@ before the reader has context.
 Every chapter owns one complete, independently runnable TSX snapshot. A reader
 can deep-link, edit, reset, share, or recover any chapter without replaying
 earlier work. The tutorial teaches one visible change at a time, gives the
-reader a prediction or exercise, and connects observed behavior to CRC's public
+reader a prediction or exercise, and connects observed behavior to Pibbl's public
 contracts. Visual spectacle serves the explanation; it never substitutes for
 the explanation.
 
 ## Goals
 
-1. Give a new CRC reader a satisfying, real-world project that demonstrates how
+1. Give a new Pibbl reader a satisfying, real-world project that demonstrates how
    drawing, composition, layout, state, events, transforms, retained layers,
    filters, and focus fit together.
 2. Make each chapter educational in isolation while preserving a compelling
@@ -58,7 +58,7 @@ the explanation.
 4. Keep every canonical snapshot editable in the existing sandboxed TypeScript
    workbench with its current compile, reset, share, diagnostics, and disposal
    behavior.
-5. Teach important Canvas and CRC boundaries honestly: immediate-mode
+5. Teach important Canvas and Pibbl boundaries honestly: immediate-mode
    rerendering, root-logical event coordinates, explicit application state,
    decorative hit participation, pointer capture, retained-boundary ownership,
    and the difference between logical keyboard interaction and accessibility
@@ -68,7 +68,7 @@ the explanation.
 
 ## Non-goals
 
-The completed tutorial editor does not add or imply public CRC APIs for:
+The completed tutorial editor does not add or imply public Pibbl APIs for:
 
 - creating, deleting, renaming, or resizing nodes;
 - authoring or reconnecting edges;
@@ -89,16 +89,16 @@ excluded.
 
 The primary reader is a TypeScript or JavaScript developer who understands
 functions, objects, arrays, and basic event handling. React knowledge is not
-required and the tutorial must not teach CRC through React analogies.
+required and the tutorial must not teach Pibbl through React analogies.
 
 The default learning path runs entirely in the Studio. Each page provides a
-ready-to-run TSX snapshot, so Chapter 1 begins with the CRC mount and Canvas
+ready-to-run TSX snapshot, so Chapter 1 begins with the Pibbl mount and Canvas
 scene rather than package installation, Vite configuration, or `tsconfig`
 setup. The landing page links to [Configure
 JSX](#/learn/guides/configure-jsx) for readers moving the result into a local
 project and to [Author without
 JSX](#/learn/guides/author-without-jsx) as a separate supported authoring path.
-The tutorial itself uses one automatic CRC JSX runtime consistently.
+The tutorial itself uses one automatic Pibbl JSX runtime consistently.
 
 ## Learning and presentation principles
 
@@ -133,13 +133,13 @@ the reader can distinguish a successful modification from accidental output.
 
 Prose shows only the focused change from the previous chapter. The workbench
 contains the complete canonical file. No chapter imports application helpers
-from another tutorial file because the current sandbox accepts only direct CRC
+from another tutorial file because the current sandbox accepts only direct Pibbl
 package imports. Deliberate source duplication is the mechanism that makes
 deep-linking, reset, sharing, and recovery reliable.
 
 ### Honest boundaries
 
-The tutorial identifies browser requirements and CRC non-promises at the point
+The tutorial identifies browser requirements and Pibbl non-promises at the point
 where they matter. It does not call the final Canvas experience
 screen-reader-accessible, does not imply that `Layer` is an automatic
 optimization, and does not describe stateful component output as a retained
@@ -149,7 +149,7 @@ scene graph.
 
 ### Canvas and composition
 
-The canonical logical viewport is 960 by 600. It uses CRC's fixed logical
+The canonical logical viewport is 960 by 600. It uses Pibbl's fixed logical
 viewport behavior so the tutorial can discuss one stable coordinate space while
 the Studio scales the Canvas presentation to available CSS space.
 
@@ -188,7 +188,7 @@ intended to win coordinate targeting.
 - Zoom is clamped to a documented range of 60% through 180%.
 - Reset view restores the initial pan and zoom without resetting moved node
   positions or selection.
-- Tab and Shift+Tab use CRC's source-order focus behavior. Directional arrows
+- Tab and Shift+Tab use Pibbl's source-order focus behavior. Directional arrows
   move among finite node/control bounds inside the declared directional
   navigation boundary. Enter or Space activates the focused node or reset
   control through the focus manager's click activation.
@@ -201,7 +201,7 @@ and APIs.
 
 ### Application model and gesture data
 
-The snapshots use stable application IDs rather than CRC target objects as
+The snapshots use stable application IDs rather than Pibbl target objects as
 domain identity:
 
 ```ts
@@ -282,7 +282,7 @@ The rendered page order is:
 Each Markdown body uses the following authored sections:
 
 - **What you will make** — the visible outcome and gesture to try;
-- **How it works** — the primary CRC mental model;
+- **How it works** — the primary Pibbl mental model;
 - **Build the change** — focused excerpts and explanations, not the complete
   repeated source;
 - **Predict and try** — one prediction plus one bounded modification;
@@ -312,9 +312,9 @@ tutorial overview**. The page announces labels as `Previous: <title>` and
 workspace, and status strip placeholders.
 
 The chapter introduces an ordinary synchronous `DiagramEditor` component,
-mounting with `crc(canvas, <DiagramEditor />)`, the returned controller, the
+mounting with `pibbl(canvas, <DiagramEditor />)`, the returned controller, the
 initial fixed logical viewport, scheduled rendering, and idempotent disposal.
-It explains that component evaluation describes the next Canvas traversal; CRC
+It explains that component evaluation describes the next Canvas traversal; Pibbl
 does not generate DOM or retain drawing commands.
 
 The focused change is the initial background and region geometry. The exercise
@@ -374,7 +374,7 @@ then cards.
 **Outcome:** the toolbar, clipped-workspace allocation, and status strip become
 a coherent editor frame.
 
-The chapter uses CRC layout components for the outer regions while retaining
+The chapter uses Pibbl layout components for the outer regions while retaining
 explicit drawing geometry inside custom region components. It explains
 specified style versus the finite allocation available through
 `useLayoutBox()`, and it avoids blindly forwarding parent placement into inner
@@ -585,10 +585,10 @@ packages/scenarios/src/tutorials/diagram-editor/
 
 Every file:
 
-- imports only named public values and types from `@crc/core`;
+- imports only named public values and types from `@pibbl/core`;
 - uses descriptive JSX without `createElement` or private subpaths;
 - exports exactly one synchronous
-  `default function mount(canvas: HTMLCanvasElement): CRCController`;
+  `default function mount(canvas: HTMLCanvasElement): PibblController`;
 - returns the controller created for that Canvas;
 - is self-contained and contains no relative or dynamic imports;
 - passes the existing learning-source syntax and removed-vocabulary checks;
@@ -638,13 +638,13 @@ contradictory second ordering.
 - Invalid or unsupported shared source restores the canonical chapter source
   and reports the existing recovery message.
 - Navigating away disposes Monaco, its model, the sandbox preview, timers,
-  listeners, and the mounted CRC controller through the current page lifecycle.
+  listeners, and the mounted Pibbl controller through the current page lifecycle.
 - Pointer cancellation, capture loss, target removal, render failure, and root
   disposal clear tutorial gesture ownership. The tutorial never depends only
   on an ordinary pointer-up event for cleanup.
 - Nonempty-filter or `Layer` chapters state their browser capability
   requirements. An unsupported environment may show the normal runtime error;
-  the prose does not claim a fallback CRC does not provide.
+  the prose does not claim a fallback Pibbl does not provide.
 - If the public final-image asset is missing, its source snapshot cannot mount,
   or its capture dimensions differ, the teaser verification fails rather than
   silently publishing a stale or broken promise.
@@ -655,7 +655,7 @@ Tutorial prose, navigation, headings, actions, workbench tools, diagnostics,
 and pagination remain semantic DOM owned by the Studio. The embedded Canvas has
 an accessible name that identifies it as a live lesson preview.
 
-Chapter 11 demonstrates CRC logical focus and keyboard navigation without
+Chapter 11 demonstrates Pibbl logical focus and keyboard navigation without
 calling it semantic accessibility. Focus rings have adequate contrast and are
 visible only from the focus snapshot intended for rendering. Pointer-only drag
 and pan are presented as Canvas interactions, while the chapter explains that a

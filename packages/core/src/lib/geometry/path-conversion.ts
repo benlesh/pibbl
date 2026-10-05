@@ -4,7 +4,7 @@ import { PathGeometry, visitPathGeometry } from './path-geometry.js';
 /**
  * Creates a fresh caller-owned native snapshot; never returns a shared cache.
  *
- * @param geometry - CRC geometry to convert. See {@link PathGeometry}.
+ * @param geometry - Pibbl geometry to convert. See {@link PathGeometry}.
  * @returns A native Canvas path representing the geometry.
  *
  * @see {@link PathGeometry}
@@ -39,7 +39,7 @@ export function toPath2D(geometry: PathGeometry): Path2D {
 /**
  * Serializes independent absolute SVG path data without implicit rounding.
  *
- * @param geometry - CRC geometry to serialize. See {@link PathGeometry}.
+ * @param geometry - Pibbl geometry to serialize. See {@link PathGeometry}.
  * @returns SVG path data representing the geometry.
  *
  * @see {@link PathGeometry}

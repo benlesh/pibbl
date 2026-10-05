@@ -1,4 +1,4 @@
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import type {
   FilterLabMode,
   FilterLabOrder,
@@ -83,7 +83,7 @@ async function mountFilterLab(
   const publish = () => context.onStateChange?.({ ...state });
   const render = () => {
     assertActive();
-    crc(context.canvas, createFilterLabScene({
+    pibbl(context.canvas, createFilterLabScene({
       state,
       recordTarget: (target: FilterLabTarget) => {
         state = { ...state, lastTarget: target };

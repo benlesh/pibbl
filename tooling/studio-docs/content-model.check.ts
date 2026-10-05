@@ -31,7 +31,7 @@ assert.deepEqual(
   [
     {
       id: "first-step",
-      plainText: "Use crc and visit CRC.\nName\nValue\nCRC\nCanvas",
+      plainText: "Use pibbl and visit Pibbl.\nName\nValue\nPibbl\nCanvas",
     },
     {
       id: "first-step-2",
@@ -42,12 +42,12 @@ assert.deepEqual(
 );
 assert.match(loaded.html, /<table>/u);
 assert.doesNotMatch(loaded.html, /<script/u);
-assert.match(loaded.html, /href="https:\/\/crc\.dev" rel="noreferrer"/u);
+assert.match(loaded.html, /href="https:\/\/pibbl\.dev" rel="noreferrer"/u);
 assert.deepEqual(loaded.internalLinks, [
   {
-    href: "#/api/functions/crc",
+    href: "#/api/functions/pibbl",
     sourceHeading: "first-step",
-    text: "Use crc",
+    text: "Use pibbl",
   },
 ]);
 assert.equal(

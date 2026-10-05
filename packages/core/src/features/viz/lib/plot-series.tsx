@@ -1,5 +1,5 @@
-import { Group, resolveSignalValue } from "@crc/core";
-import type { CRCNode } from "@crc/core";
+import { Group, resolveSignalValue } from "@pibbl/core";
+import type { PibblNode } from "@pibbl/core";
 import type { PlotSeriesProps } from "./plot-types.js";
 import { pointAccessor, pointData, finiteCoordinate } from "./point-data.js";
 import { useScale } from "./use-scale.js";
@@ -13,18 +13,18 @@ function PlotRow<D>({
   index: number;
   data: readonly D[];
   render: PlotSeriesProps<D>["render"];
-}): CRCNode {
+}): PibblNode {
   return render(datum, index, data);
 }
 /**
- * Places keyed custom CRC subtrees at local data coordinates.
+ * Places keyed custom Pibbl subtrees at local data coordinates.
  *
  * @param props - Data, coordinate accessors, scales, keys, and per-datum renderer. See
  * {@link PlotSeriesProps} .
- * @returns CRC nodes placing each rendered datum at its mapped coordinates. See {@link CRCNode}.
+ * @returns Pibbl nodes placing each rendered datum at its mapped coordinates. See {@link PibblNode}.
  *
  * @see {@link PlotSeriesProps}
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  */
 export function PlotSeries<D>({
   data: input,
@@ -36,7 +36,7 @@ export function PlotSeries<D>({
   keyBy,
   render,
   ...events
-}: PlotSeriesProps<D>): CRCNode {
+}: PlotSeriesProps<D>): PibblNode {
   const xs = useScale(xId).get(),
     ys = useScale(yId).get();
   const data = pointData(resolveSignalValue(input), "PlotSeries");
@@ -45,7 +45,7 @@ export function PlotSeries<D>({
   const x = pointAccessor(xInput),
     y = pointAccessor(yInput);
   const keys = new Set<string>();
-  const nodes: CRCNode[] = [];
+  const nodes: PibblNode[] = [];
   for (let i = 0; i < data.length; i++) {
     const datum = data[i];
     if (defined && !defined(datum, i, data)) continue;

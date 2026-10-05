@@ -1,4 +1,4 @@
-import { Image, Rectangle } from '@crc/core';
+import { Image, Rectangle } from '@pibbl/core';
 export const DRAWING_IMAGES_SOURCE_ID = 'drawing-images-example';
 /**
  * Named image assets used by the drawing-images scenario.

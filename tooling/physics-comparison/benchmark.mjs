@@ -31,27 +31,27 @@ for (const scenario of [
   { name: "settling-pile", n: 1000 },
   { name: "active-static-field", n: 100 },
 ])
-  for (const engine of ["crc", "crc-rapier", "planck", "rapier"]) {
+  for (const engine of ["pibbl", "pibbl-rapier", "planck", "rapier"]) {
     const n = scenario.n;
     const active = scenario.name === "active-static-field";
     const bodies = [];
     const topology = [];
     let serial = 0;
-    const w = engine.startsWith("crc")
+    const w = engine.startsWith("pibbl")
       ? new PhysicsWorld2DKernel(
           {
             gravity: [0, 600],
-            ...(engine === "crc"
+            ...(engine === "pibbl"
               ? { solver: { velocityIterations: 8, positionIterations: 3 } }
               : {}),
           },
-          engine === "crc-rapier" ? new RapierSimulation2D() : undefined,
+          engine === "pibbl-rapier" ? new RapierSimulation2D() : undefined,
         )
       : engine === "planck"
         ? new P.World({ gravity: P.Vec2(0, 6) })
         : new R.World({ x: 0, y: 6 });
     const add = (x, y, hx, hy, dynamic) => {
-      if (engine.startsWith("crc")) {
+      if (engine.startsWith("pibbl")) {
         const id = ++serial;
         if (dynamic) bodies.push(id);
         topology.push({
@@ -139,7 +139,7 @@ for (const scenario of [
           0.2,
           false,
         );
-    if (engine.startsWith("crc")) {
+    if (engine.startsWith("pibbl")) {
       w.proposeTopology(topology);
       w.adopt(
         w.advance({
@@ -153,7 +153,7 @@ for (const scenario of [
     const targets = new Map();
     for (let i = 1; i <= result.ticks; i++) {
       const start = performance.now();
-      if (engine.startsWith("crc"))
+      if (engine.startsWith("pibbl"))
         w.adopt(
           w.advance({
             frameId: i,
@@ -165,11 +165,11 @@ for (const scenario of [
       else w.step();
       if (i > result.warmup) times.push(performance.now() - start);
     }
-    const states = engine.startsWith("crc")
+    const states = engine.startsWith("pibbl")
       ? w.snapshot().bodies.filter((b) => (b.flags & 1) !== 0)
       : bodies;
     const ys = states.map((b) =>
-      engine.startsWith("crc")
+      engine.startsWith("pibbl")
         ? b.positionY / 100
         : engine === "planck"
           ? b.getPosition().y
@@ -187,7 +187,7 @@ for (const scenario of [
       escaped: ys.filter((y) => y > 10).length,
       maximumCenterY: maximumY,
       sleeping: states.filter((b) =>
-        engine.startsWith("crc")
+        engine.startsWith("pibbl")
           ? (b.flags & 16) !== 0
           : engine === "planck"
             ? !b.isAwake()
@@ -197,6 +197,6 @@ for (const scenario of [
     result.results.push(row);
     process.stderr.write(JSON.stringify(row) + "\n");
     if (engine === "rapier") w.free();
-    if (engine.startsWith("crc")) w.dispose();
+    if (engine.startsWith("pibbl")) w.dispose();
   }
 process.stdout.write(JSON.stringify(result, null, 2) + "\n");

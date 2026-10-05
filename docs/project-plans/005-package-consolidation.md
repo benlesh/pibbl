@@ -8,8 +8,8 @@ its active plan record. No publishing or push is requested.
 
 ## Scope and decisions
 
-Consolidate particles, visualization, textures, and physics into `@crc/core`
-subpaths. Remove `@crc/types`. Keep `@crc/three` separate and scenarios private.
+Consolidate particles, visualization, textures, and physics into `@pibbl/core`
+subpaths. Remove `@pibbl/types`. Keep `@pibbl/three` separate and scenarios private.
 Keep root, filters, JSX, types, and internal entries. No forwarding packages.
 Rapier is a private bundled build dependency, never a consumer install dependency.
 Geometry and core imports must retain no Rapier code or embedded WASM.
@@ -72,7 +72,7 @@ in [the trust log](../testing/package-consolidation-evidence/trust.txt).
 
 - Core is the only first-party feature package; Three remains an external-renderer
   adapter. All 216 moved source/test/type/assembly files are present at their new
-  locations. Retired package manifests, including `@crc/types`, are gone.
+  locations. Retired package manifests, including `@pibbl/types`, are gone.
 - Public subpaths, strict packed Bundler/NodeNext consumers, shared core/Three
   identity, private boundaries, source/built Studio, and editor declarations pass.
   Rapier is only a build dependency, with its bindings, WASM, and license included

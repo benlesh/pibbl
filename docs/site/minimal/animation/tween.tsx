@@ -1,5 +1,5 @@
 import {
-  crc,
+  pibbl,
   Circle,
   Text,
   useSignal,
@@ -7,15 +7,15 @@ import {
   drive,
   tween,
   easing,
-  type CRCEasing,
-  type CRCInterpolator,
-  type CRCTweenOptions,
-  type CRCAnimationDefinition,
-  type CRCPlayback,
-  type CRCPlaybackOptions,
-  type CRCPlaybackEvent,
-  type CRCPlaybackStatus,
-} from "@crc/core";
+  type PibblEasing,
+  type PibblInterpolator,
+  type PibblTweenOptions,
+  type PibblAnimationDefinition,
+  type PibblPlayback,
+  type PibblPlaybackOptions,
+  type PibblPlaybackEvent,
+  type PibblPlaybackStatus,
+} from "@pibbl/core";
 
 const canvas = document.createElement("canvas");
 canvas.width = 420;
@@ -23,29 +23,29 @@ canvas.height = 160;
 document.body.append(canvas);
 const events = document.createElement("output");
 document.body.append(events);
-const curve: CRCEasing = easing.easeInOut;
-const interpolate: CRCInterpolator<number> = (from, to, progress) =>
+const curve: PibblEasing = easing.easeInOut;
+const interpolate: PibblInterpolator<number> = (from, to, progress) =>
   from + (to - from) * progress;
-const options: CRCTweenOptions<number> = {
+const options: PibblTweenOptions<number> = {
   from: 30,
   to: 360,
   duration: 2400,
   easing: curve,
   interpolate,
 };
-const definition: CRCAnimationDefinition<number> = tween(options);
-const playbackOptions: CRCPlaybackOptions = {
+const definition: PibblAnimationDefinition<number> = tween(options);
+const playbackOptions: PibblPlaybackOptions = {
   autoplay: true,
-  onEvent(event: CRCPlaybackEvent) {
+  onEvent(event: PibblPlaybackEvent) {
     events.textContent = event.type;
   },
 };
-let controls: CRCPlayback | undefined;
+let controls: PibblPlayback | undefined;
 function Scene() {
   const x = useSignal(30);
   const playback = usePlayback(drive(x, definition), playbackOptions);
   controls = playback;
-  const status: CRCPlaybackStatus = playback.status.get();
+  const status: PibblPlaybackStatus = playback.status.get();
   return (
     <>
       <Circle style={{ radius: 20, left: x, top: 60, fill: "#087e8b" }} />
@@ -57,7 +57,7 @@ function Scene() {
     </>
   );
 }
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 const commands: [string, () => void][] = [
   ["Replay", () => controls?.play()],
   ["Pause", () => controls?.pause()],

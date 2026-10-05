@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 
-const base = process.env.CRC_WEBSITE_URL ?? "http://localhost:4321";
+const base = process.env.PIBBL_WEBSITE_URL ?? "http://localhost:4321";
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage();
@@ -12,7 +12,7 @@ try {
   });
   await page.goto(`${base}/guides/native-button/`);
   assert.equal(await page.locator("h1").count(), 1);
-  const button = page.getByRole("button", { name: "Try CRC" });
+  const button = page.getByRole("button", { name: "Try Pibbl" });
   await button.click();
   await page.getByText("Activated 1 time").waitFor();
   await button.focus();
@@ -57,12 +57,12 @@ try {
     "reduced motion freezes the actual pixels",
   );
   await page.screenshot({
-    path: "/tmp/crc-website-desktop.png",
+    path: "/tmp/pibbl-website-desktop.png",
     fullPage: false,
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
-    path: "/tmp/crc-website-mobile.png",
+    path: "/tmp/pibbl-website-mobile.png",
     fullPage: false,
   });
   assert.equal(
@@ -94,8 +94,8 @@ try {
     });
   }
   await page.goto(`${base}/`);
-  await page.getByRole("heading", { name: "CRC", exact: true }).waitFor();
-  await page.screenshot({ path: "/tmp/crc-website-start.png" });
+  await page.getByRole("heading", { name: "Pibbl", exact: true }).waitFor();
+  await page.screenshot({ path: "/tmp/pibbl-website-start.png" });
   const editorLink = await page
     .locator('a[href="/playground/"]')
     .first()
@@ -106,14 +106,14 @@ try {
     .getAttribute("href");
   await page.goto(editorURL);
   await page
-    .frameLocator('iframe[title="Live CRC lesson preview"]')
+    .frameLocator('iframe[title="Live Pibbl lesson preview"]')
     .locator("canvas")
     .waitFor();
   await page.goto(
     editorURL.replace("drawing/circle", "composition/stirred-ink"),
   );
   await page
-    .frameLocator('iframe[title="Live CRC lesson preview"]')
+    .frameLocator('iframe[title="Live Pibbl lesson preview"]')
     .locator("canvas")
     .waitFor();
   assert.deepEqual(errors, []);

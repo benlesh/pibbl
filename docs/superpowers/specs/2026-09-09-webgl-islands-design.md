@@ -9,45 +9,45 @@ Date: 2026-09-09
 
 ## Summary
 
-CRC will add an official `@crc/webgl` package for composing declarative WebGL2
+Pibbl will add an official `@pibbl/webgl` package for composing declarative WebGL2
 scenes as transparent islands inside the existing Canvas 2D renderer. A
-`WebGLLayer` owns one persistent WebGL2 `OffscreenCanvas`, renders CRC elements
+`WebGLLayer` owns one persistent WebGL2 `OffscreenCanvas`, renders Pibbl elements
 with a WebGL backend, and composites the resulting bitmap at one ordinary
 Canvas 2D paint position. Canvas 2D content may appear before or after the
 island, and existing outer layout, transforms, clips, filters, focus, and event
 propagation remain authoritative.
 
-WebGL authoring uses the same branded `CRCElement` protocol, automatic JSX
+WebGL authoring uses the same branded `PibblElement` protocol, automatic JSX
 runtime, synchronous component functions, hooks, keys, and component identity
-as `@crc/core`. The initial WebGL vocabulary is `WebGLLayer`, `Group3D`,
+as `@pibbl/core`. The initial WebGL vocabulary is `WebGLLayer`, `Group3D`,
 `Mesh`, `Cube`, and `Sphere`, plus `defineWebGLPrimitive`,
-`crcWebGLContext`, and `useAnimationFrame`. `WebGLLayer` accepts one optional
+`pibblWebGLContext`, and `useAnimationFrame`. `WebGLLayer` accepts one optional
 camera descriptor and supplies a documented perspective camera when it is
 omitted.
 
 Canvas 2D and WebGL use one recursive interaction-resolution protocol. Every
 candidate writes the same fixed-shape result record: miss, block, or target.
-Canvas paths use the existing `Path2D` test; nested CRC layers recurse; WebGL
+Canvas paths use the existing `Path2D` test; nested Pibbl layers recurse; WebGL
 islands delegate to their committed scene picker. Drawing primitives become
 logical event targets and occlude by default even when they have no handlers.
 Structural containers contribute propagation ancestry but no hit geometry.
 `pointerEvents="none"` is the explicit opt-out.
 
-The packages are maintained and released together. `@crc/core` exposes a
-documented-as-internal `@crc/core/internal` friend entry for official sibling
+The packages are maintained and released together. `@pibbl/core` exposes a
+documented-as-internal `@pibbl/core/internal` friend entry for official sibling
 packages. The entry is not an application compatibility promise, and
-`@crc/webgl` must consume the application's one installed core instance rather
+`@pibbl/webgl` must consume the application's one installed core instance rather
 than bundle another copy.
 
 ## Goals
 
-- Render transparent WebGL2 islands among ordinary CRC Canvas 2D content.
+- Render transparent WebGL2 islands among ordinary Pibbl Canvas 2D content.
 - Author basic 3D scenes with the same JSX, `createElement`, component, hook,
-  key, and lifecycle model as CRC Canvas 2D scenes.
+  key, and lifecycle model as Pibbl Canvas 2D scenes.
 - Ship useful first primitives: `Cube` and `Sphere`, built on a lower-level
   `Mesh` and transform-only `Group3D`.
 - Keep one synchronous execution of each invalidated component subtree per
-  scheduled CRC frame; never preflight or repeat a component subtree merely to
+  scheduled Pibbl frame; never preflight or repeat a component subtree merely to
   discover camera, draw, or picking data.
 - Make the camera available before WebGL child traversal so drawing stays
   immediate rather than requiring a retained scene graph or preliminary pass.
@@ -81,46 +81,46 @@ than bundle another copy.
 - Pixel-accurate hit testing for texture alpha, fragment discard, procedural
   displacement, blending, or user-controlled stencil behavior.
 - WebGL1 fallback, WebGPU, workers, or cross-context GPU-resource sharing.
-- A stable third-party renderer-plugin API in `@crc/core`.
+- A stable third-party renderer-plugin API in `@pibbl/core`.
 - A retained cross-frame scene graph or retained cross-frame draw-command list.
 
 ## Package architecture
 
 ### Public packages
 
-`@crc/core` remains the Canvas 2D runtime and owns the shared component,
-scheduler, layout, composition, and event semantics. `@crc/webgl` is an
+`@pibbl/core` remains the Canvas 2D runtime and owns the shared component,
+scheduler, layout, composition, and event semantics. `@pibbl/webgl` is an
 optional official package and owns WebGL-specific authoring, camera math,
 rendering, picking, context handling, and GPU resources.
 
 ```text
 Application
    |
-   +-- @crc/core -------------- Canvas 2D public API
+   +-- @pibbl/core -------------- Canvas 2D public API
    |
-   +-- @crc/webgl ------------- WebGL public API
+   +-- @pibbl/webgl ------------- WebGL public API
              |
-             +-- @crc/core/internal
+             +-- @pibbl/core/internal
                    renderer, ownership, scheduling,
                    composition, and interaction friend API
 ```
 
-`@crc/webgl` declares the matching `@crc/core` release as a peer dependency
-and externalizes every `@crc/core` import in its published build. Packed and
+`@pibbl/webgl` declares the matching `@pibbl/core` release as a peer dependency
+and externalizes every `@pibbl/core` import in its published build. Packed and
 bundler-consumer verification must prove that an application has one core
 module instance and therefore one renderer-global state. Bundling a private
-copy of core into `@crc/webgl` is an error because it would split current
+copy of core into `@pibbl/webgl` is an error because it would split current
 instance, element metadata, event-root, and scheduler identity.
 
 ### Official friend entry
 
-`@crc/core` adds an explicit `./internal` package export. Its documentation
-states that it is reserved for official CRC packages, version-coupled to core,
+`@pibbl/core` adds an explicit `./internal` package export. Its documentation
+states that it is reserved for official Pibbl packages, version-coupled to core,
 and has no independent semantic-versioning guarantee. Applications can resolve
 the entry but do not receive compatibility support for it.
 
 The entry exposes focused capabilities rather than requiring sibling packages
-to import source files or `@crc/core/lib/*` paths. It includes the facilities
+to import source files or `@pibbl/core/lib/*` paths. It includes the facilities
 needed to:
 
 - register and read backend-specific primitive definitions;
@@ -130,7 +130,7 @@ needed to:
 - read the current allocation, render transaction, surface density, world
   transform, clipping stack, component refs, and frame timestamp;
 - register nested interaction resolvers and logical targets;
-- request a coalesced frame on the owning CRC instance;
+- request a coalesced frame on the owning Pibbl instance;
 - composite one owned bitmap at the current Canvas 2D paint position.
 
 The entry may expose internal types and symbols required to preserve one
@@ -141,15 +141,15 @@ convenience when a narrower operation can maintain invariants.
 
 ### One element protocol and JSX runtime
 
-WebGL components use the existing `@crc/core/jsx-runtime` and produce ordinary
-branded `CRCElement` values. A source file can freely compose imports from both
+WebGL components use the existing `@pibbl/core/jsx-runtime` and produce ordinary
+branded `PibblElement` values. A source file can freely compose imports from both
 packages without selecting another JSX runtime.
 
 ```tsx
-import { crc, Rectangle, Text } from "@crc/core";
-import { Cube, Group3D, Sphere, WebGLLayer } from "@crc/webgl";
+import { pibbl, Rectangle, Text } from "@pibbl/core";
+import { Cube, Group3D, Sphere, WebGLLayer } from "@pibbl/webgl";
 
-crc(
+pibbl(
   canvas,
   <>
     <Rectangle
@@ -175,7 +175,7 @@ crc(
 );
 ```
 
-Ordinary component functions are backend-neutral. They may use CRC hooks and
+Ordinary component functions are backend-neutral. They may use Pibbl hooks and
 return elements supported by the currently active backend. Their function
 identity, parent path, key, and unkeyed occurrence retain the current core
 rules. WebGL descendants live in a private backend child instance owned by
@@ -191,21 +191,21 @@ development source when available.
 
 ### Initial public surface
 
-The `@crc/webgl` root exports:
+The `@pibbl/webgl` root exports:
 
 - `WebGLLayer` and its prop, style, and camera types;
 - `Group3D` and its prop and style types;
 - `Mesh`, `createWebGLGeometry`, and their prop, style, and geometry types;
 - `Cube` and `Sphere` and their prop and style types;
 - `defineWebGLPrimitive` and its public capability types;
-- `crcWebGLContext` and its returned context type;
+- `pibblWebGLContext` and its returned context type;
 - `useAnimationFrame`;
 - the public vector, matrix, camera, geometry, and WebGL primitive
   types used by those values.
 
 The package does not provide a second `createElement`, fragment, JSX runtime,
 state hook, memo hook, ref hook, or event vocabulary. Those values come from
-`@crc/core`.
+`@pibbl/core`.
 
 ### `WebGLLayer`
 
@@ -218,9 +218,9 @@ the existing `Layer` rule.
 Its program props are:
 
 ```ts
-interface WebGLLayerProps extends CRCEventHandlers {
-  children: CRCNode;
-  camera?: CRCWebGLPerspectiveCamera;
+interface WebGLLayerProps extends PibblEventHandlers {
+  children: PibblNode;
+  camera?: PibblWebGLPerspectiveCamera;
   pointerEvents?: "auto" | "none";
 }
 ```
@@ -239,13 +239,13 @@ camera snapshot drives rendering and picking.
 The initial camera descriptor is perspective-only:
 
 ```ts
-type CRCWebGLVector3 = readonly [x: number, y: number, z: number];
+type PibblWebGLVector3 = readonly [x: number, y: number, z: number];
 
-interface CRCWebGLPerspectiveCamera {
+interface PibblWebGLPerspectiveCamera {
   type: "perspective";
-  position: CRCWebGLVector3;
-  lookAt: CRCWebGLVector3;
-  up: CRCWebGLVector3;
+  position: PibblWebGLVector3;
+  lookAt: PibblWebGLVector3;
+  up: PibblWebGLVector3;
   fieldOfViewDegrees: number;
   near: number;
   far: number;
@@ -258,7 +258,7 @@ and less than 180. `near` is positive and `far` is greater than `near`.
 with the view direction. Diagnostics name the invalid camera field and
 `WebGLLayer`.
 
-When `camera` is omitted, CRC uses this exact logical camera:
+When `camera` is omitted, Pibbl uses this exact logical camera:
 
 ```ts
 {
@@ -274,7 +274,7 @@ When `camera` is omitted, CRC uses this exact logical camera:
 
 The projection aspect ratio derives from the current logical layer width and
 height. Backing density does not change the logical camera. A unit cube at the
-origin is visible with the default camera. CRC does not inspect scene bounds or
+origin is visible with the default camera. Pibbl does not inspect scene bounds or
 automatically fit the camera.
 
 WebGL world coordinates use positive Y up. The default camera looks toward
@@ -293,7 +293,7 @@ child local transforms follow the parent transform.
 The shared transform style is:
 
 ```ts
-interface CRCWebGLTransformStyle {
+interface PibblWebGLTransformStyle {
   translateX?: number;
   translateY?: number;
   translateZ?: number;
@@ -316,7 +316,7 @@ conceptual group bounds does not target the group.
 ### `Mesh`, `Cube`, and `Sphere`
 
 `Mesh` is the fundamental built-in draw-and-pick primitive. It consumes one
-opaque `CRCWebGLGeometry`, applies its local 3D transform and paint style, draws
+opaque `PibblWebGLGeometry`, applies its local 3D transform and paint style, draws
 once in source order, and registers the same geometry and committed model
 transform for picking. GPU resources derived from geometry belong to the
 current `WebGLLayer` WebGL context.
@@ -331,18 +331,18 @@ cannot change rendering or picking.
 The initial mesh surface is intentionally small:
 
 ```ts
-interface MeshProps extends CRCEventHandlers {
-  geometry: CRCWebGLGeometry;
+interface MeshProps extends PibblEventHandlers {
+  geometry: PibblWebGLGeometry;
   pointerEvents?: "auto" | "none";
 }
 
-interface MeshStyle extends CRCWebGLTransformStyle {
+interface MeshStyle extends PibblWebGLTransformStyle {
   color?: string;
   opacity?: number;
 }
 ```
 
-`color` defaults to `"#ffffff"` and must be a concrete color accepted by CRC's
+`color` defaults to `"#ffffff"` and must be a concrete color accepted by Pibbl's
 browser-authoritative color normalization. `opacity` defaults to one and must
 be finite between zero and one. Opacity does not change hit geometry.
 
@@ -360,7 +360,7 @@ the mesh transform, color, and opacity fields. Their picking uses the
 corresponding local geometry transformed by the same committed model matrix as
 rendering.
 
-All three accept the shared CRC event-handler, cursor, keyboard-focus, and
+All three accept the shared Pibbl event-handler, cursor, keyboard-focus, and
 `pointerEvents` props appropriate to a logical target. `pointerEvents` defaults
 to `"auto"`.
 
@@ -380,10 +380,10 @@ expressible and by an actionable runtime definition diagnostic otherwise.
 
 Custom hit resolution may use analytic geometry, mesh raycasting, projected
 `Path2D` broad-phase geometry, or application-owned synchronous logic. It must
-not call hooks, render components, mutate CRC state, retain the shared hit
+not call hooks, render components, mutate Pibbl state, retain the shared hit
 request/result records, or perform asynchronous resolution.
 
-`crcWebGLContext()` returns the current WebGL render environment only while a
+`pibblWebGLContext()` returns the current WebGL render environment only while a
 WebGL primitive is rendering. It reports a targeted error from Canvas 2D
 rendering, ordinary code outside render, and pure measurement. The returned
 environment provides the `WebGL2RenderingContext`, current camera and model
@@ -393,7 +393,7 @@ primitive from the paired hit-capability rule.
 
 ### Animation
 
-`useAnimationFrame()` is an `@crc/webgl` hook that returns the current CRC frame
+`useAnimationFrame()` is an `@pibbl/webgl` hook that returns the current Pibbl frame
 timestamp and requests the next frame while its component remains mounted.
 Multiple callers share core's existing coalescing scheduler. Canvas 2D and
 WebGL components in one root therefore observe the same render timestamp.
@@ -412,9 +412,9 @@ Cache comparison does not consume opaque nested iterables more than once.
 
 ### Backend dispatch
 
-Core's renderer tracks a backend and backend environment in each CRC instance's
+Core's renderer tracks a backend and backend environment in each Pibbl instance's
 temporary render state. The public root backend is Canvas 2D. A mounted
-`WebGLLayer` owns a private child CRC instance whose root backend is WebGL. The
+`WebGLLayer` owns a private child Pibbl instance whose root backend is WebGL. The
 child shares the parent's event root and installs an explicit event-parent
 bridge, but owns its component refs, scheduler state, GPU resources, transient
 ledgers, and cache generation.
@@ -440,16 +440,16 @@ component source order affect whether the camera is available.
 Each mounted `WebGLLayer` owns one persistent `OffscreenCanvas`, one
 `WebGL2RenderingContext`, and at most one committed `ImageBitmap` snapshot. The
 context requests `{ alpha: true, depth: true, premultipliedAlpha: true,
-preserveDrawingBuffer: false }`; CRC validates the actual attributes required
+preserveDrawingBuffer: false }`; Pibbl validates the actual attributes required
 by the built-in pass. Its backing dimensions are the finite positive logical
 layer size multiplied independently by the current root or parent-Layer
 backing density using the same rounding policy as managed Canvas 2D layers.
 
-At the start of a required WebGL render, CRC resets framework-owned WebGL state,
+At the start of a required WebGL render, Pibbl resets framework-owned WebGL state,
 sets the backing viewport, clears color to transparent black, clears supported
 depth state, and begins fresh transient draw and pick ledgers. Successful child
 traversal transfers the current `OffscreenCanvas` bitmap to a new
-`ImageBitmap` and pairs it with the completed pick ledger. CRC first composites
+`ImageBitmap` and pairs it with the completed pick ledger. Pibbl first composites
 that candidate snapshot to the layer's declared logical destination in the
 parent Canvas 2D context. Only successful composition commits the new
 bitmap/ledger pair and closes the previously committed bitmap. Failure closes
@@ -470,7 +470,7 @@ The composition order is:
 WebGL child draw and depth
 -> committed ImageBitmap snapshot
 -> receiving WebGLLayer filter
--> receiving outer CRC clip and transform
+-> receiving outer Pibbl clip and transform
 -> ancestor Canvas 2D composition
 ```
 
@@ -508,14 +508,14 @@ framebuffer, viewport and scissor, program, vertex-array and buffer bindings,
 active texture and texture bindings, color/depth/stencil masks, blend, depth,
 cull, stencil, polygon offset, clear values, and pixel-store values.
 
-Before each primitive callback CRC installs the baseline or the complete state
+Before each primitive callback Pibbl installs the baseline or the complete state
 required by that primitive. In `finally` it reinstalls the baseline without
 performing broad `getParameter()` readback. Built-ins set every state value they
 depend on and cannot inherit ambient state from a sibling.
 
-A custom primitive using `crcWebGLContext()` must set every state value it
+A custom primitive using `pibblWebGLContext()` must set every state value it
 depends on and must not expect its bindings or enable flags to survive its
-callback. CRC restores the framework baseline after it returns or throws.
+callback. Pibbl restores the framework baseline after it returns or throws.
 Extension-specific state outside the initial backend's declared state set is
 application-owned and must be restored by the custom primitive in `finally`;
 later framework behavior never depends on that extension state.
@@ -570,20 +570,20 @@ All coordinate hit resolution uses one internal request shape, one reusable
 result shape, and numeric dispositions:
 
 ```ts
-const enum CRCHitDisposition {
+const enum PibblHitDisposition {
   Miss = 0,
   Block = 1,
   Target = 2,
 }
 
-interface CRCHitTestInput {
+interface PibblHitTestInput {
   rootX: number;
   rootY: number;
 }
 
-interface CRCHitTestOutput {
-  disposition: CRCHitDisposition;
-  target: CRCEventTargetRegistration | null;
+interface PibblHitTestOutput {
+  disposition: PibblHitDisposition;
+  target: PibblEventTargetRegistration | null;
 }
 ```
 
@@ -606,7 +606,7 @@ primitives. `Block` remains available for an official composition resolver
 that has definite occluding coverage but no finer logical component identity.
 An unpainted island background returns `Miss`.
 
-Core uses a centralized numeric-kind dispatch for Canvas paths, nested CRC
+Core uses a centralized numeric-kind dispatch for Canvas paths, nested Pibbl
 instances, and backend resolvers rather than requiring a distinct closure on
 every paint entry. This stable internal representation avoids per-candidate
 result allocation and permits engine optimization without making object-shape
@@ -623,7 +623,7 @@ their child entries.
 A `WebGLLayer` contributes one nested resolver at its exact Canvas 2D composite
 position. When reached, core:
 
-1. rejects the point if it fails an outer CRC clip or the layer bounds;
+1. rejects the point if it fails an outer Pibbl clip or the layer bounds;
 2. maps the root-logical point through the inverse outer world transform into
    layer-local coordinates;
 3. maps the local point into normalized device coordinates using the committed
@@ -672,8 +672,8 @@ island traversal creates a candidate `ImageBitmap`; successful parent
 composition commits bitmap and pick ledger together. The visible snapshot and
 committed pick state therefore describe the same completed frame.
 
-If the complete root render later fails, normal CRC fail-closed teardown clears
-logical targets and component refs. CRC retains its established rule that
+If the complete root render later fails, normal Pibbl fail-closed teardown clears
+logical targets and component refs. Pibbl retains its established rule that
 pixels painted earlier in a failing frame are not rolled back.
 
 A cache hit reuses both the committed `ImageBitmap` and its matching pick
@@ -690,7 +690,7 @@ development source where available.
 
 Shader compilation and program-link failures include the owning component,
 stage, sanitized platform log, and source label supplied by the application.
-CRC deletes failed intermediate handles and does not publish the generation.
+Pibbl deletes failed intermediate handles and does not publish the generation.
 WebGL API error polling is not added to every production draw call; focused
 development diagnostics and explicit framework-controlled operation checks
 cover owned setup and composition boundaries.
@@ -708,7 +708,7 @@ committed bitmap, prevents stale resources and pick state from participating,
 and marks the layer for rebuilding. It does not silently move resources to
 another context.
 
-On restoration, the layer schedules one ordinary CRC frame. Component state
+On restoration, the layer schedules one ordinary Pibbl frame. Component state
 and public descriptors recreate resources under the restored generation. The
 new bitmap and pick ledger become live only after a complete successful
 render. Removal or root disposal detaches listeners, suppresses stale restore
@@ -718,7 +718,7 @@ notifications, and releases every logical owner exactly once.
 
 ### Public scenarios
 
-`@crc/scenarios` adds separate learning examples and deterministic test-lab
+`@pibbl/scenarios` adds separate learning examples and deterministic test-lab
 fixtures without mixing their catalogs.
 
 The introductory example renders a default-camera cube and sphere over a
@@ -777,8 +777,8 @@ schedule.
 The feature is verified through root exports and declarations, NodeNext and
 bundler consumers, packed tarballs, source and built Studio modes, built smoke,
 Chromium WebGL2 browser tests, lifecycle cleanup, and the aggregate trust gate.
-The packed consumer checks one shared core identity between `@crc/core` and
-`@crc/webgl` and rejects accidental core bundling.
+The packed consumer checks one shared core identity between `@pibbl/core` and
+`@pibbl/webgl` and rejects accidental core bundling.
 
 Semantic state, target identity, geometry, and WebGL call evidence precede
 visual assertions. Stable pixels cover transparent composition, outer clips,

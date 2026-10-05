@@ -1,12 +1,12 @@
-import type { CRCHitTestOutput } from './paint-entry.js';
+import type { PibblHitTestOutput } from './paint-entry.js';
 import type { isBackendEventTargetLive, useBackendEventTarget } from '../../internal.js';
-import { CRC_EVENT_DEFINITIONS } from "./event-definitions.js";
+import { PIBBL_EVENT_DEFINITIONS } from "./event-definitions.js";
 import type {
-  CRCEventHandler,
-  CRCEventHandlers,
-  CRCEventTarget,
-  CRCEventTargetOptions,
-  CRCEventType,
+  PibblEventHandler,
+  PibblEventHandlers,
+  PibblEventTarget,
+  PibblEventTargetOptions,
+  PibblEventType,
 } from "./types.js";
 import { GLOBAL_STATE } from "../global-state.js";
 import { resolvePath } from '../geometry/resolve-path.js';
@@ -14,10 +14,10 @@ import type { PathGeometry } from '../geometry/path-geometry.js';
 import type { LayoutBox } from "../layout/types.js";
 import { getCurrentWorldTransform } from "../render-target.js";
 import type {
-  CRCComponentRefs,
-  CRCInstance,
+  PibblComponentRefs,
+  PibblInstance,
 } from "../types.js";
-import { CRCPaintEntryKind, type CRCPathPaintEntry } from "./paint-entry.js";
+import { PibblPaintEntryKind, type PibblPathPaintEntry } from "./paint-entry.js";
 import {
   clearPointerCapturesForTarget,
   hasLogicalPointerCapture,
@@ -25,70 +25,70 @@ import {
   setLogicalPointerCapture,
 } from "./pointer-capture.js";
 
-type CRCNormalizedCaptureKey = `${CRCEventType}Capture`;
+type PibblNormalizedCaptureKey = `${PibblEventType}Capture`;
 
-export type CRCNormalizedHandlers = Partial<
+export type PibblNormalizedHandlers = Partial<
   {
-    [K in CRCEventType]: CRCEventHandler<K>;
+    [K in PibblEventType]: PibblEventHandler<K>;
   } & {
-    [K in CRCEventType as `${K}Capture`]: CRCEventHandler<K>;
+    [K in PibblEventType as `${K}Capture`]: PibblEventHandler<K>;
   }
 >;
 
 /**
  * Mount-owned event target registration and cleanup state.
  *
- * @see {@link CRCEventTarget}
+ * @see {@link PibblEventTarget}
  * @see {@link LayoutBox}
- * @see {@link CRCHitTestOutput}
+ * @see {@link PibblHitTestOutput}
  * @see {@link useBackendEventTarget}
  * @see {@link isBackendEventTargetLive}
  */
-export interface CRCEventTargetRegistration {
-  /** Selects the kind of geometry, material, or result. See {@link CRCEventTargetRegistration}. */
+export interface PibblEventTargetRegistration {
+  /** Selects the kind of geometry, material, or result. See {@link PibblEventTargetRegistration}. */
   readonly kind: "target";
-  /** Mount or runtime resource owning this registration. See {@link CRCInstance}. */
-  readonly owner: CRCInstance;
+  /** Mount or runtime resource owning this registration. See {@link PibblInstance}. */
+  readonly owner: PibblInstance;
   /**
-   * Component identity or diagnostic name associated with this value. See {@link CRCComponentRefs}
+   * Component identity or diagnostic name associated with this value. See {@link PibblComponentRefs}
    * .
    */
-  readonly component: CRCComponentRefs<any>;
-  /** Mount-local hook or registration slot. See {@link CRCEventTargetRegistration}. */
+  readonly component: PibblComponentRefs<any>;
+  /** Mount-local hook or registration slot. See {@link PibblEventTargetRegistration}. */
   readonly slot: number;
-  /** Logical target exposed to application event handlers. See {@link CRCEventTarget}. */
-  readonly publicTarget: CRCEventTarget;
-  /** Paint-ledger entry associated with this registration. See {@link CRCPathPaintEntry}. */
-  paintEntry: CRCPathPaintEntry | undefined;
-  /** Event handlers dispatched for this logical target. See {@link CRCNormalizedHandlers}. */
-  handlers: CRCNormalizedHandlers;
+  /** Logical target exposed to application event handlers. See {@link PibblEventTarget}. */
+  readonly publicTarget: PibblEventTarget;
+  /** Paint-ledger entry associated with this registration. See {@link PibblPathPaintEntry}. */
+  paintEntry: PibblPathPaintEntry | undefined;
+  /** Event handlers dispatched for this logical target. See {@link PibblNormalizedHandlers}. */
+  handlers: PibblNormalizedHandlers;
   /** Logical event types currently present in `handlers`, split across two 32-bit words. */
   handlerTypesLow: number;
   /**
    * High event-mask bits identifying registered handler types. See
-   * {@link CRCEventTargetRegistration}.
+   * {@link PibblEventTargetRegistration}.
    */
   handlerTypesHigh: number;
   /** Native event dependency signature derived from the current handlers and cursor. */
   requiredNativeTypesLow: number;
   /**
    * High event-mask bits identifying required native listeners. See
-   * {@link CRCEventTargetRegistration}.
+   * {@link PibblEventTargetRegistration}.
    */
   requiredNativeTypesHigh: number;
   /** Last native signature reconciled with `nativeReleases`. */
   ownedNativeTypesLow: number;
   /**
    * High event-mask bits identifying native listeners owned by this registration. See
-   * {@link CRCEventTargetRegistration}.
+   * {@link PibblEventTargetRegistration}.
    */
   ownedNativeTypesHigh: number;
   /**
    * Cursor shown while this target owns pointer presentation. See
-   * {@link CRCEventTargetRegistration}.
+   * {@link PibblEventTargetRegistration}.
    */
   cursor: string | undefined;
-  /** Whether the target may receive keyboard focus. See {@link CRCEventTargetRegistration}. */
+  /** Whether the target may receive keyboard focus. See {@link PibblEventTargetRegistration}. */
   keyboardFocusable: boolean | undefined;
   /** Logical rectangle used for directional keyboard navigation. See {@link LayoutBox}. */
   keyboardNavigationBounds: Readonly<LayoutBox> | undefined;
@@ -97,30 +97,30 @@ export interface CRCEventTargetRegistration {
     | readonly Readonly<{
         /**
          * Horizontal coordinate or displacement in the containing coordinate system. See
-         * {@link CRCEventTargetRegistration}.
+         * {@link PibblEventTargetRegistration}.
          */
         x: number;
         /**
          * Vertical coordinate or displacement in the containing coordinate system. See
-         * {@link CRCEventTargetRegistration}.
+         * {@link PibblEventTargetRegistration}.
          */
         y: number;
       }>[]
     | undefined;
   /**
    * Whether this registration is currently attached to a live owner. See
-   * {@link CRCEventTargetRegistration}.
+   * {@link PibblEventTargetRegistration}.
    */
   live: boolean;
 }
 
-export interface CRCEventListenerRegistration {
+export interface PibblEventListenerRegistration {
   readonly kind: "listener";
-  readonly owner: CRCInstance;
-  readonly component: CRCComponentRefs<any>;
+  readonly owner: PibblInstance;
+  readonly component: PibblComponentRefs<any>;
   readonly slot: number;
-  readonly publicTarget: CRCEventTarget;
-  handlers: CRCNormalizedHandlers;
+  readonly publicTarget: PibblEventTarget;
+  handlers: PibblNormalizedHandlers;
   /** Logical event types currently present in `handlers`, split across two 32-bit words. */
   handlerTypesLow: number;
   handlerTypesHigh: number;
@@ -133,22 +133,22 @@ export interface CRCEventListenerRegistration {
   live: boolean;
 }
 
-export type CRCEventNode =
-  CRCEventTargetRegistration | CRCEventListenerRegistration;
+export type PibblEventNode =
+  PibblEventTargetRegistration | PibblEventListenerRegistration;
 
 // Masks make membership/diff checks cheap; this map retains the exact release
 // closure returned by the shared hub for each bit that was actually acquired.
 const nativeReleases = new WeakMap<
-  CRCEventTargetRegistration | CRCEventListenerRegistration,
-  Map<CRCEventType, () => void>
+  PibblEventTargetRegistration | PibblEventListenerRegistration,
+  Map<PibblEventType, () => void>
 >();
 
 export function createTarget(
-  owner: CRCInstance,
-  component: CRCComponentRefs<any>,
+  owner: PibblInstance,
+  component: PibblComponentRefs<any>,
   slot: number,
-): CRCEventTargetRegistration {
-  const target = {} as CRCEventTargetRegistration;
+): PibblEventTargetRegistration {
+  const target = {} as PibblEventTargetRegistration;
   const publicTarget = createPublicTarget(() => target);
   Object.assign(target, {
     kind: "target" as const,
@@ -174,9 +174,9 @@ export function createTarget(
 }
 
 export function updateTarget(
-  target: CRCEventTargetRegistration,
-  handlers: CRCEventHandlers,
-  options: CRCEventTargetOptions,
+  target: PibblEventTargetRegistration,
+  handlers: PibblEventHandlers,
+  options: PibblEventTargetOptions,
   participatesInPaint = false,
   preserveKeyboardNavigationGeometry = false,
 ): void {
@@ -191,7 +191,7 @@ export function updateTarget(
 }
 
 export function updateCursorTarget(
-  target: CRCEventTargetRegistration,
+  target: PibblEventTargetRegistration,
   {
     path,
     fill = false,
@@ -218,9 +218,9 @@ export function updateCursorTarget(
 }
 
 function updateTargetRegistration(
-  target: CRCEventTargetRegistration,
-  handlers: CRCEventHandlers,
-  options: Omit<CRCEventTargetOptions, 'path'> & { readonly path: Path2D },
+  target: PibblEventTargetRegistration,
+  handlers: PibblEventHandlers,
+  options: Omit<PibblEventTargetOptions, 'path'> & { readonly path: Path2D },
   participatesInPaint = false,
   preserveKeyboardNavigationGeometry = false,
 ): void {
@@ -235,8 +235,8 @@ function updateTargetRegistration(
   const paintEntry =
     target.paintEntry ??
     ({
-      paintKind: CRCPaintEntryKind.Path,
-    } as CRCPathPaintEntry);
+      paintKind: PibblPaintEntryKind.Path,
+    } as PibblPathPaintEntry);
   paintEntry.target = target;
   paintEntry.path = options.path;
   paintEntry.fill = options.fill ?? false;
@@ -283,7 +283,7 @@ function updateTargetRegistration(
   target.owner.eventRoot.onTargetUpdate?.(target);
 }
 
-export function releaseTarget(target: CRCEventTargetRegistration): void {
+export function releaseTarget(target: PibblEventTargetRegistration): void {
   if (target.live) {
     if (target.paintEntry) target.owner.paintEntries.delete(target.paintEntry);
     target.owner.eventRoot.targets.delete(target);
@@ -298,11 +298,11 @@ export function releaseTarget(target: CRCEventTargetRegistration): void {
 }
 
 export function createListener(
-  owner: CRCInstance,
-  component: CRCComponentRefs<any>,
+  owner: PibblInstance,
+  component: PibblComponentRefs<any>,
   slot: number,
-): CRCEventListenerRegistration {
-  const listener = {} as CRCEventListenerRegistration;
+): PibblEventListenerRegistration {
+  const listener = {} as PibblEventListenerRegistration;
   const publicTarget = createPublicTarget(() => listener);
   Object.assign(listener, {
     kind: "listener",
@@ -323,8 +323,8 @@ export function createListener(
 }
 
 export function updateListener(
-  listener: CRCEventListenerRegistration,
-  handlers: CRCEventHandlers,
+  listener: PibblEventListenerRegistration,
+  handlers: PibblEventHandlers,
 ): void {
   let registrations = listener.owner.eventRoot.listenersByComponent.get(
     listener.component.id,
@@ -361,7 +361,7 @@ export function updateListener(
   updateNativeOwnership(listener);
 }
 
-export function releaseListener(listener: CRCEventListenerRegistration): void {
+export function releaseListener(listener: PibblEventListenerRegistration): void {
   if (listener.live) {
     const registrations = listener.owner.eventRoot.listenersByComponent.get(
       listener.component.id,
@@ -380,23 +380,23 @@ export function releaseListener(listener: CRCEventListenerRegistration): void {
 }
 
 export function normalizeHandlers(
-  handlers: CRCEventHandlers,
-): CRCNormalizedHandlers {
+  handlers: PibblEventHandlers,
+): PibblNormalizedHandlers {
   const state = createHandlerState();
   refreshHandlers(state, handlers, false);
   return state.handlers;
 }
 
-interface CRCHandlerState {
-  handlers: CRCNormalizedHandlers;
+interface PibblHandlerState {
+  handlers: PibblNormalizedHandlers;
   handlerTypesLow: number;
   handlerTypesHigh: number;
   requiredNativeTypesLow: number;
   requiredNativeTypesHigh: number;
 }
 
-interface CRCEventPropMetadata {
-  readonly normalizedKey: CRCEventType | CRCNormalizedCaptureKey;
+interface PibblEventPropMetadata {
+  readonly normalizedKey: PibblEventType | PibblNormalizedCaptureKey;
   readonly handlerTypesLow: number;
   readonly handlerTypesHigh: number;
   readonly requiredNativeTypesLow: number;
@@ -412,23 +412,23 @@ interface CRCEventPropMetadata {
  */
 const eventPropMetadata = Object.create(null) as Record<
   string,
-  CRCEventPropMetadata | undefined
+  PibblEventPropMetadata | undefined
 >;
 const eventIndexByType = Object.create(null) as Record<
   string,
   number | undefined
 >;
 
-if (CRC_EVENT_DEFINITIONS.length > 64) {
-  throw new Error("CRC event masks support at most 64 logical event types.");
+if (PIBBL_EVENT_DEFINITIONS.length > 64) {
+  throw new Error("Pibbl event masks support at most 64 logical event types.");
 }
 
-for (let index = 0; index < CRC_EVENT_DEFINITIONS.length; index++) {
-  eventIndexByType[CRC_EVENT_DEFINITIONS[index]!.type] = index;
+for (let index = 0; index < PIBBL_EVENT_DEFINITIONS.length; index++) {
+  eventIndexByType[PIBBL_EVENT_DEFINITIONS[index]!.type] = index;
 }
 
-for (let index = 0; index < CRC_EVENT_DEFINITIONS.length; index++) {
-  const definition = CRC_EVENT_DEFINITIONS[index]!;
+for (let index = 0; index < PIBBL_EVENT_DEFINITIONS.length; index++) {
+  const definition = PIBBL_EVENT_DEFINITIONS[index]!;
   const handlerTypesLow = index < 32 ? 1 << index : 0;
   const handlerTypesHigh = index < 32 ? 0 : 1 << (index - 32);
   // Expand logical-to-native prerequisites once. The render path only ORs
@@ -447,16 +447,16 @@ for (let index = 0; index < CRC_EVENT_DEFINITIONS.length; index++) {
       requiredNativeTypesHigh |= 1 << (nativeIndex - 32);
     }
   }
-  const bubble: CRCEventPropMetadata = Object.freeze({
+  const bubble: PibblEventPropMetadata = Object.freeze({
     normalizedKey: definition.type,
     handlerTypesLow,
     handlerTypesHigh,
     requiredNativeTypesLow,
     requiredNativeTypesHigh,
   });
-  const capture: CRCEventPropMetadata = Object.freeze({
+  const capture: PibblEventPropMetadata = Object.freeze({
     ...bubble,
-    normalizedKey: `${definition.type}Capture` as CRCNormalizedCaptureKey,
+    normalizedKey: `${definition.type}Capture` as PibblNormalizedCaptureKey,
   });
   eventPropMetadata[definition.prop] = bubble;
   eventPropMetadata[definition.captureProp] = capture;
@@ -476,7 +476,7 @@ for (const type of cursorNativeTypes) {
   }
 }
 
-function createHandlerState(): CRCHandlerState {
+function createHandlerState(): PibblHandlerState {
   return {
     handlers: {},
     handlerTypesLow: 0,
@@ -487,11 +487,11 @@ function createHandlerState(): CRCHandlerState {
 }
 
 function refreshHandlers(
-  state: CRCHandlerState,
-  handlers: CRCEventHandlers,
+  state: PibblHandlerState,
+  handlers: PibblEventHandlers,
   hasCursor: boolean,
 ): void {
-  const normalized: CRCNormalizedHandlers = {};
+  const normalized: PibblNormalizedHandlers = {};
   let handlerTypesLow = 0;
   let handlerTypesHigh = 0;
   let requiredNativeTypesLow = hasCursor ? cursorNativeTypesLow : 0;
@@ -502,7 +502,7 @@ function refreshHandlers(
   for (const prop in handlers) {
     const metadata = eventPropMetadata[prop];
     if (!metadata) continue;
-    const handler = handlers[prop as keyof CRCEventHandlers];
+    const handler = handlers[prop as keyof PibblEventHandlers];
     if (handler) {
       (normalized as Record<string, unknown>)[metadata.normalizedKey] = handler;
       handlerTypesLow |= metadata.handlerTypesLow;
@@ -524,9 +524,9 @@ function refreshHandlers(
  * allocation-free metadata in the hot path.
  */
 function expandNativeTypesForMetadata(
-  types: ReadonlySet<CRCEventType>,
+  types: ReadonlySet<PibblEventType>,
   hasCursor: boolean,
-): ReadonlySet<CRCEventType> {
+): ReadonlySet<PibblEventType> {
   const nativeTypes = new Set(types);
   const hasPointerBoundary =
     types.has("pointerover") ||
@@ -581,7 +581,7 @@ function expandNativeTypesForMetadata(
 }
 
 function updateNativeOwnership(
-  registration: CRCEventTargetRegistration | CRCEventListenerRegistration,
+  registration: PibblEventTargetRegistration | PibblEventListenerRegistration,
 ): void {
   const previousLow = registration.ownedNativeTypesLow;
   const previousHigh = registration.ownedNativeTypesHigh;
@@ -625,7 +625,7 @@ function updateNativeOwnership(
 }
 
 function releaseNativeOwnership(
-  registration: CRCEventTargetRegistration | CRCEventListenerRegistration,
+  registration: PibblEventTargetRegistration | PibblEventListenerRegistration,
 ): void {
   // Zero first so a stable hook slot revived after release cannot mistake its
   // old signature for live ownership and skip reacquisition.
@@ -643,7 +643,7 @@ function releaseNativeOwnership(
 function forEachChangedType(
   low: number,
   high: number,
-  visit: (type: CRCEventType) => void,
+  visit: (type: PibblEventType) => void,
 ): void {
   // `word & -word` isolates the least-significant set bit. `word & (word - 1)`
   // clears it, so this loop is O(number of changed types), not O(52 events).
@@ -651,19 +651,19 @@ function forEachChangedType(
   // word starts at definition 32.
   while (low !== 0) {
     const bit = low & -low;
-    visit(CRC_EVENT_DEFINITIONS[31 - Math.clz32(bit)]!.type);
+    visit(PIBBL_EVENT_DEFINITIONS[31 - Math.clz32(bit)]!.type);
     low &= low - 1;
   }
   while (high !== 0) {
     const bit = high & -high;
-    visit(CRC_EVENT_DEFINITIONS[32 + 31 - Math.clz32(bit)]!.type);
+    visit(PIBBL_EVENT_DEFINITIONS[32 + 31 - Math.clz32(bit)]!.type);
     high &= high - 1;
   }
 }
 
 function createPublicTarget(
-  getRegistration: () => CRCEventNode,
-): CRCEventTarget {
+  getRegistration: () => PibblEventNode,
+): PibblEventTarget {
   return {
     setPointerCapture(pointerId) {
       setLogicalPointerCapture(getRegistration(), pointerId);

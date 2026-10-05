@@ -1,9 +1,9 @@
 import { signalObserversForTest } from "./support/signal-observer";
-import { jsxDEV } from '@crc/core/jsx-dev-runtime';
-import type { CRCAdvanceParticipant } from '../src/lib/scheduler/types';
+import { jsxDEV } from '@pibbl/core/jsx-dev-runtime';
+import type { PibblAdvanceParticipant } from '../src/lib/scheduler/types';
 import { queueBeginCommand, registerAdvanceParticipant, queueFrameCompletion } from '../src/lib/scheduler/realm-scheduler';
 import { createSchedulerHistory, observeScheduler } from '../../../tooling/agent-verification/scheduler';
-import { computed, createElement, crc, Absolute, Group, Layer, Rectangle, signal, useReaction, useConst, useLayoutBox, type BoxStyle } from '@crc/core';
+import { computed, createElement, pibbl, Absolute, Group, Layer, Rectangle, signal, useReaction, useConst, useLayoutBox, type BoxStyle } from '@pibbl/core';
 import { expect, it } from 'vitest';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
 import { createSignalInspector } from '../../../tooling/agent-verification/signals';
@@ -44,7 +44,7 @@ it('reports observed invalidation without validating or changing observer leases
   const value = computed(() => { evaluations++; return source.get() * 2; });
   const driver = new ManualSchedulerDriver();
   const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Rectangle style={{ width: value, height: 10, fill: '#fff' }} />);
+  const controller = pibbl(canvas, <Rectangle style={{ width: value, height: 10, fill: '#fff' }} />);
   driver.flush(1);
   const inspector = createSignalInspector(); inspector.register(value);
   try {
@@ -122,7 +122,7 @@ it('reports subscribed computed/render consumers and pending direct dirtiness wi
   const source = signal(1); let evaluations = 0;
   const derived = computed(() => { evaluations++; return source.get() * 2; });
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <><Rectangle style={{ left: source, width: 10, height: 10, fill: '#fff' }} /><Rectangle style={{ top: 20, width: derived, height: 10, fill: '#fff' }} /></>);
+  const controller = pibbl(canvas, <><Rectangle style={{ left: source, width: 10, height: 10, fill: '#fff' }} /><Rectangle style={{ top: 20, width: derived, height: 10, fill: '#fff' }} /></>);
   driver.flush(1);
   const inspector = createSignalInspector(); inspector.register(source); const derivedId = inspector.register(derived);
   try {
@@ -153,7 +153,7 @@ it('bounds direct observer traversal and never reads legacy callback flag getter
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
   const source = signal(1);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, Array.from({ length: 129 }, (_, index) => <Rectangle key={index} style={{ left: source, width: 1, height: 1, fill: '#fff' }} />));
+  const controller = pibbl(canvas, Array.from({ length: 129 }, (_, index) => <Rectangle key={index} style={{ left: source, width: 1, height: 1, fill: '#fff' }} />));
   driver.flush(1);
   const inspector = createSignalInspector(); inspector.register(source);
   try {
@@ -181,7 +181,7 @@ it('attributes receiver consumers to their root and Layer surfaces and rejects a
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
   const source = signal(10);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <><Rectangle style={{ width: source, height: 10, fill: '#fff' }} /><Layer style={{ width: 50, height: 50 }}><Rectangle style={{ width: source, height: 10, fill: '#f00' }} /></Layer></>);
+  const controller = pibbl(canvas, <><Rectangle style={{ width: source, height: 10, fill: '#fff' }} /><Layer style={{ width: 50, height: 50 }}><Rectangle style={{ width: source, height: 10, fill: '#f00' }} /></Layer></>);
   driver.flush(1);
   const inspector = createSignalInspector(canvas);
   inspector.register(source);
@@ -201,7 +201,7 @@ it('attributes receiver consumers to their root and Layer surfaces and rejects a
     expect(signalGraphSnapshot()).toEqual(graph);
     controller.dispose();
     expect(inspector.snapshot().ownership.completeness).toBe('unavailable');
-    const replacement = crc(canvas, <Rectangle style={{ width: source, height: 10 }} />);
+    const replacement = pibbl(canvas, <Rectangle style={{ width: source, height: 10 }} />);
     try {
       driver.flush(2);
       expect(inspector.snapshot().ownership.completeness).toBe('unavailable');
@@ -217,7 +217,7 @@ it('reports bounded ownership traversal without interpreting an unmatched subscr
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
   const source = signal(10);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, [...Array.from({ length: 260 }, (_, index) => <Rectangle key={index} style={{ width: 1, height: 1 }} />), <Rectangle key="late" style={{ width: source, height: 10 }} />]);
+  const controller = pibbl(canvas, [...Array.from({ length: 260 }, (_, index) => <Rectangle key={index} style={{ width: 1, height: 1 }} />), <Rectangle key="late" style={{ width: source, height: 10 }} />]);
   driver.flush(1);
   const inspector = createSignalInspector(canvas); inspector.register(source);
   try {
@@ -235,7 +235,7 @@ it('separates pending surface revisions from committed rendering and preserves o
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
   const source = signal(10);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Rectangle style={{ width: source, height: 10 }} />);
+  const controller = pibbl(canvas, <Rectangle style={{ width: source, height: 10 }} />);
   driver.flush(1);
   const inspector = createSignalInspector(canvas); inspector.register(source);
   const read = () => {
@@ -266,7 +266,7 @@ it('caps nested surface discovery and leaves excluded owners unknown', () => {
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
   const source = signal(1);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, Array.from({ length: 65 }, (_, index) => <Layer key={index} style={{ width: 2, height: 2 }}><Rectangle style={{ width: source, height: 1 }} /></Layer>));
+  const controller = pibbl(canvas, Array.from({ length: 65 }, (_, index) => <Layer key={index} style={{ width: 2, height: 2 }}><Rectangle style={{ width: source, height: 1 }} /></Layer>));
   driver.flush(1);
   const inspector = createSignalInspector(canvas); inspector.register(source);
   try {
@@ -290,7 +290,7 @@ it('does not attribute consumers from another canvas even when ownership travers
   canvases.forEach(canvas => { canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas); });
   const source = signal(1);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controllers = canvases.map(canvas => crc(canvas, <Rectangle style={{ width: source, height: 10 }} />));
+  const controllers = canvases.map(canvas => pibbl(canvas, <Rectangle style={{ width: source, height: 10 }} />));
   driver.flush(1);
   const inspector = createSignalInspector(canvases[0]); inspector.register(source);
   try {
@@ -312,7 +312,7 @@ it('distinguishes source publication, computed equality validation and actual Ca
   const color = computed(() => { computations++; return source.get() < 20 ? '#ff0000' : '#0000ff'; });
   function Scene() { componentEvaluations++; return <Rectangle style={{ width: 50, height: 50, fill: color }} />; }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Scene />, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+  const controller = pibbl(canvas, <Scene />, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
   driver.flush(1);
   const inspector = createSignalInspector(canvas); inspector.register(source); inspector.register(color);
   const read = () => {
@@ -366,7 +366,7 @@ it('records dynamic dependency replacement even when computed equality suppresse
   let computations = 0;
   const width = computed(() => { computations++; return branch.get() ? left.get() : right.get(); });
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Rectangle style={{ width, height: 10, fill: '#ff0000' }} />, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+  const controller = pibbl(canvas, <Rectangle style={{ width, height: 10, fill: '#ff0000' }} />, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
   driver.flush(1);
   const inspector = createSignalInspector(canvas);
   const branchId = inspector.register(branch); const leftId = inspector.register(left); const rightId = inspector.register(right); inspector.register(width);
@@ -411,7 +411,7 @@ it('observes pending, Plan and Render scheduler state without requesting or flus
   function Scene() { samples.push(observeScheduler()); return <Rectangle style={{ width: value, height: 10 }} />; }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
   const before = observeScheduler();
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     const pending = observeScheduler();
     expect(pending).toMatchObject({ scope: 'loaded-runtime-realm', phase: 'idle', frame: null, work: { pendingHostFrames: 1 } });
@@ -447,7 +447,7 @@ it('records bounded ordered phase history without requesting frames and stops cl
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
   const history = createSchedulerHistory(10);
   expect(driver.pendingHostFrames).toBe(0);
-  const controller = crc(canvas, <Rectangle style={{ width: source, height: 10 }} />);
+  const controller = pibbl(canvas, <Rectangle style={{ width: source, height: 10 }} />);
   try {
     driver.flush(100);
     const first = history.snapshot();
@@ -495,8 +495,8 @@ it('distinguishes an idle frame with collected errors from success while another
   function Failing() { if (fail.get()) throw failure; return <Rectangle style={{ width: 20, height: 20 }} />; }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
   const history = createSchedulerHistory();
-  const bad = crc(canvases[0], <Failing />);
-  const good = crc(canvases[1], <Rectangle style={{ width: 50, height: 50, fill: color }} />, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+  const bad = pibbl(canvases[0], <Failing />);
+  const good = pibbl(canvases[1], <Rectangle style={{ width: 50, height: 50, fill: color }} />, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
   try {
     driver.flush(100);
     const first = history.snapshot();
@@ -547,7 +547,7 @@ it.each(['start', 'stop'] as const)('labels recording that %ss during Render as 
     if (mode === 'start') history ??= createSchedulerHistory(); else history!.stop();
     return <Rectangle style={{ width: 10, height: 10 }} />;
   }
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(100);
     const result = history!.snapshot();
@@ -565,18 +565,18 @@ it.each(['begin', 'advance'] as const)('preserves transaction isolation when %s 
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
   const rejected = signal(10); const accepted = signal(10);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <><Rectangle style={{ width: rejected, height: 10, fill: '#ff0000' }} /><Rectangle style={{ top: 20, width: accepted, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+  const controller = pibbl(canvas, <><Rectangle style={{ width: rejected, height: 10, fill: '#ff0000' }} /><Rectangle style={{ top: 20, width: accepted, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
   driver.flush(100);
   const inspector = createSignalInspector(canvas); inspector.register(rejected); inspector.register(accepted);
   const history = createSchedulerHistory();
   const failure = new Error('private staged failure');
   let staged: ReturnType<typeof inspector.snapshot> | undefined;
   let releaseBad = () => {}; let releaseGood = () => {};
-  const bad: CRCAdvanceParticipant = (_frame, batch) => {
+  const bad: PibblAdvanceParticipant = (_frame, batch) => {
     releaseBad(); batch.stage(rejected, 30, bad); staged = inspector.snapshot(); throw failure;
   };
-  const good: CRCAdvanceParticipant = (_frame, batch) => { releaseGood(); batch.stage(accepted, 30, good); };
-  const admit = (work: CRCAdvanceParticipant) => phase === 'begin' ? queueBeginCommand(work).cancel : registerAdvanceParticipant(work);
+  const good: PibblAdvanceParticipant = (_frame, batch) => { releaseGood(); batch.stage(accepted, 30, good); };
+  const admit = (work: PibblAdvanceParticipant) => phase === 'begin' ? queueBeginCommand(work).cancel : registerAdvanceParticipant(work);
   try {
     const before = inspector.snapshot();
     releaseBad = admit(bad); releaseGood = admit(good);
@@ -606,12 +606,12 @@ it('distinguishes Commit validation failure from participant rollback without pu
   const failure = new Error('private equality failure'); let comparisons = 0;
   const first = signal(10); const second = signal(10, { equals(a, b) { comparisons++; if (b === 30) throw failure; return a === b; } });
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <><Rectangle style={{ width: first, height: 10, fill: '#ff0000' }} /><Rectangle style={{ top: 20, width: second, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+  const controller = pibbl(canvas, <><Rectangle style={{ width: first, height: 10, fill: '#ff0000' }} /><Rectangle style={{ top: 20, width: second, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
   driver.flush(100);
   const inspector = createSignalInspector(canvas); inspector.register(first); inspector.register(second);
   const history = createSchedulerHistory();
   let release = () => {};
-  const participant: CRCAdvanceParticipant = (_frame, batch) => { release(); batch.stage(first, 30, participant); batch.stage(second, 30, participant); };
+  const participant: PibblAdvanceParticipant = (_frame, batch) => { release(); batch.stage(first, 30, participant); batch.stage(second, 30, participant); };
   try {
     const before = inspector.snapshot(); const beforeComparisons = comparisons;
     for (let index = 0; index < 10; index++) inspector.snapshot();
@@ -634,14 +634,14 @@ it('records applied Commit despite observer failure and preserves unrelated publ
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
   const first = signal(10); const second = signal(10);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <><Rectangle style={{ width: first, height: 10, fill: '#ff0000' }} /><Rectangle style={{ top: 20, width: second, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+  const controller = pibbl(canvas, <><Rectangle style={{ width: first, height: 10, fill: '#ff0000' }} /><Rectangle style={{ top: 20, width: second, height: 10, fill: '#00ff00' }} /></>, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
   driver.flush(100);
   const inspector = createSignalInspector(canvas); inspector.register(first); inspector.register(second);
   const history = createSchedulerHistory(); const failure = new Error('private observer failure');
   const observer = () => { throw failure; };
   const node = getSignalNode(first); signalObserversForTest(node).add(observer);
   let release = () => {};
-  const participant: CRCAdvanceParticipant = (_frame, batch) => { release(); batch.stage(first, 30, participant); batch.stage(second, 30, participant); };
+  const participant: PibblAdvanceParticipant = (_frame, batch) => { release(); batch.stage(first, 30, participant); batch.stage(second, 30, participant); };
   try {
     release = registerAdvanceParticipant(participant);
     let thrown: unknown;
@@ -672,7 +672,7 @@ it('observes non-subscribing and empty components with lifetime identity across 
     return <><Empty />{stage === 0 ? [<Static key="a" />, <Static key="b" />] : stage === 1 ? [<Static key="b" />, <Static key="a" />] : stage === 2 ? [<Static key="b" />] : [<Static key="b" />, <Static key="a" />]}</>;
   }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Parent />); driver.flush(100);
+  const controller = pibbl(canvas, <Parent />); driver.flush(100);
   const inspector = createSignalInspector(canvas);
   const read = () => inspector.snapshot().ownership.components;
   try {
@@ -706,7 +706,7 @@ it('identifies component types without invoking proxy traps during inspection', 
   });
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'width:100px;height:100px'; document.body.append(canvas);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Component />); driver.flush(100);
+  const controller = pibbl(canvas, <Component />); driver.flush(100);
   const inspector = createSignalInspector(canvas);
   try {
     armed = true;
@@ -726,7 +726,7 @@ it('separates component parent links from the Layer surface host', () => {
   function Leaf() { return <Rectangle style={{ width: 10, height: 10 }} />; }
   function Parent() { return <Group><Layer style={{ width: 50, height: 50 }}><Leaf /></Layer></Group>; }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Parent />); driver.flush(100);
+  const controller = pibbl(canvas, <Parent />); driver.flush(100);
   const inspector = createSignalInspector(canvas);
   try {
     const result = inspector.snapshot().ownership.components;
@@ -759,7 +759,7 @@ it('captures compiler callsites explicitly while snapshots remain passive and bo
   function Chart() { return <Rectangle style={{ width: 10, height: 10 }} />; }
   const descriptor = jsxDEV(Chart, {}, undefined, false, source, undefined);
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, descriptor); driver.flush(100);
+  const controller = pibbl(canvas, descriptor); driver.flush(100);
   const inspector = createSignalInspector(canvas);
   const chart = () => inspector.snapshot().ownership.components.records.find(record => record.typeId === inspector.identifyType(Chart))!;
   try {
@@ -815,7 +815,7 @@ it('acquires source by session and component generation and rejects stale mounts
   function Child() { return null; }
   function Parent() { return jsxDEV(Child, {}, undefined, false, { fileName: 'chart.tsx', lineNumber: revision.get() + 1, columnNumber: 1 }, undefined); }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  let controller = crc(canvas, <Parent />); driver.flush(100);
+  let controller = pibbl(canvas, <Parent />); driver.flush(100);
   const inspector = createSignalInspector(canvas);
   const read = () => { const snapshot = inspector.snapshot(); const record = snapshot.ownership.components.records.find(value => value.typeId === inspector.identifyType(Child))!; return { session: snapshot.session, componentId: record.componentId, renderGeneration: record.renderGeneration }; };
   try {
@@ -827,7 +827,7 @@ it('acquires source by session and component generation and rejects stale mounts
     const second = read();
     expect(second.componentId).toBe(first.componentId);
     expect(inspector.captureComponentSource(second)).toMatchObject({ status: 'available', lineNumber: 2 });
-    controller.dispose(); controller = crc(canvas, <Parent />); driver.flush(132);
+    controller.dispose(); controller = pibbl(canvas, <Parent />); driver.flush(132);
     expect(inspector.captureComponentSource(second)).toEqual({ status: 'stale' });
     inspector.dispose(); expect(inspector.captureComponentSource(second)).toEqual({ status: 'disposed' });
   } finally { inspector.dispose(); controller.dispose(); canvas.remove(); restore(); }
@@ -839,7 +839,7 @@ it('records bounded confirmed component removals without calling snapshot omissi
   function Empty() { return null; }
   function Parent() { const value = phase.get(); return <>{value === 1 ? Array.from({ length: 65 }, (_, index) => <Empty key={index} />) : null}<Layer style={{ width: 50, height: 50 }}>{value < 2 ? <Empty /> : null}</Layer></>; }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Parent />); driver.flush(100);
+  const controller = pibbl(canvas, <Parent />); driver.flush(100);
   const inspector = createSignalInspector(canvas);
   try {
     const first = inspector.snapshot().ownership.components;
@@ -876,7 +876,7 @@ it('finds explicit component labels and reports duplicates without changing keye
   function Item() { useConst(() => ++mounts); return null; }
   function Parent() { return phase.get() === 0 ? [<Item key="a" />, <Item key="b" />] : phase.get() === 1 ? [<Item key="b" />, <Item key="a" />] : [<Item key="b" />]; }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Parent />); driver.flush(100);
+  const controller = pibbl(canvas, <Parent />); driver.flush(100);
   const inspector = createSignalInspector(canvas);
   const read = () => inspector.snapshot();
   try {
@@ -909,7 +909,7 @@ it('bounds label registration and does not claim uniqueness from a truncated sca
   function Item() { return null; }
   function Parent() { const value = phase.get(); return Array.from({ length: 65 }, (_, index) => <Item key={`${value}:${index}`} />); }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Parent />); driver.flush(100);
+  const controller = pibbl(canvas, <Parent />); driver.flush(100);
   const inspector = createSignalInspector(canvas);
   try {
     const first = inspector.snapshot();
@@ -938,7 +938,7 @@ it('compares semantic component facts without treating render generations as cha
   function Item() { return null; }
   function Parent() { return <Item key={phase.get() < 2 ? 'a' : 'b'} />; }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Parent />); driver.flush(100);
+  const controller = pibbl(canvas, <Parent />); driver.flush(100);
   const inspector = createSignalInspector(canvas);
   try {
     const first = inspector.snapshot();
@@ -971,7 +971,7 @@ it('marks truncated comparison omissions as uncertain and rejects unavailable ro
   function Item() { return null; }
   function Parent() { return <>{expanded.get() ? Array.from({ length: 65 }, (_, index) => <Item key={index} />) : null}<Layer style={{ width: 50, height: 50 }}><Item /></Layer></>; }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Parent />); driver.flush(100);
+  const controller = pibbl(canvas, <Parent />); driver.flush(100);
   const inspector = createSignalInspector(canvas);
   try {
     const first = inspector.snapshot();
@@ -1003,7 +1003,7 @@ it('observes receiver entry allocation separately from its percentage basis with
   function Panel(_props: { style: BoxStyle }) { evaluations++; actual = { ...useLayoutBox() }; return null; }
   function Scene() { refresh.get(); return <Absolute style={{ width: 400, height: 200 }}><Panel style={{ width: width.get(), height: 100 }} /></Absolute>; }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Scene />); driver.flush(1);
+  const controller = pibbl(canvas, <Scene />); driver.flush(1);
   const inspector = createSignalInspector(canvas);
   try {
     const first = inspector.snapshot();
@@ -1044,8 +1044,8 @@ it('clears failed layout entries, isolates another root and recovers with a new 
   function BadScene() { return <Absolute><Panel bad style={{ width: width.get(), height: 80 }} /></Absolute>; }
   function GoodScene() { return <Absolute><Panel style={{ width: '50%', height: 60 }} /></Absolute>; }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const bad = crc(canvases[0], <BadScene />, { viewport: { width: 400, height: 200 }, pixelRatio: 1 });
-  const good = crc(canvases[1], <GoodScene />, { viewport: { width: 180, height: 120 }, pixelRatio: 1 });
+  const bad = pibbl(canvases[0], <BadScene />, { viewport: { width: 400, height: 200 }, pixelRatio: 1 });
+  const good = pibbl(canvases[1], <GoodScene />, { viewport: { width: 180, height: 120 }, pixelRatio: 1 });
   const badInspector = createSignalInspector(canvases[0]), goodInspector = createSignalInspector(canvases[1]);
   try {
     driver.flush(1);
@@ -1062,7 +1062,7 @@ it('clears failed layout entries, isolates another root and recovers with a new 
     expect(unaffected.layout).toEqual({ status: 'entry-context', allocation: { x: 0, y: 0, width: 90, height: 60 }, percentageBasis: { x: 0, y: 0, width: 180, height: 120 } });
     expect([...canvases[1].getContext('2d')!.getImageData(20, 20, 1, 1).data]).toEqual([0, 0, 255, 255]);
     fail.set(false);
-    crc(canvases[0], <BadScene />); driver.flush(3);
+    pibbl(canvases[0], <BadScene />); driver.flush(3);
     const recovered = badInspector.snapshot().ownership.components.records.find(record => record.typeId === badInspector.identifyType(Panel))!;
     expect(recovered.componentId).not.toBe(before.componentId);
     expect(recovered.layout).toEqual({ status: 'entry-context', allocation: { x: 0, y: 0, width: 100, height: 80 }, percentageBasis: { x: 0, y: 0, width: 400, height: 200 } });
@@ -1090,21 +1090,21 @@ it.each([false, true])('restores sibling allocations after a failed child (neste
     </Absolute>;
   }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(1);
     expect(visited).toEqual([{ name: 'before', width: 60, height: 40 }, { name: 'middle', width: 100, height: 30 }, { name: 'after', width: 70, height: 80 }]);
     visited.length = 0;
     // Explicit root traversal exercises sibling unwinding even when the failing
     // signal's consumer lives on a separately scheduled Layer.
-    fail.set(true); crc(canvas, <Scene />);
+    fail.set(true); pibbl(canvas, <Scene />);
     let thrown: unknown;
     try { driver.flush(2); } catch (error) { thrown = error; }
     expect(thrown === failure || thrown instanceof AggregateError && thrown.errors.includes(failure)).toBe(true);
     expect(visited.some(record => record.name === 'middle')).toBe(true);
     if (!nestedLayer) expect(visited.map(record => record.name)).toEqual(['before', 'middle']);
     visited.length = 0;
-    fail.set(false); crc(canvas, <Scene />); driver.flush(3);
+    fail.set(false); pibbl(canvas, <Scene />); driver.flush(3);
     const before = { name: 'before', width: 60, height: 40 }, middle = { name: 'middle', width: 100, height: 30 }, after = { name: 'after', width: 70, height: 80 };
     // Dirty Layers advance deepest-first; source paint order is a separate fact.
     expect(visited).toEqual(nestedLayer ? [middle, before, after] : [before, middle, after]);
@@ -1135,7 +1135,7 @@ it.each(['root', 'layer'] as const)('observes %s reaction subscriptions without 
       return () => { cleanups++; };
     });
   }
-  const controller = crc(canvas, surfaceKind === 'root' ? <Scene /> : <Layer style={{ width: 100, height: 100 }}><Scene /></Layer>);
+  const controller = pibbl(canvas, surfaceKind === 'root' ? <Scene /> : <Layer style={{ width: 100, height: 100 }}><Scene /></Layer>);
   const inspector = createSignalInspector(canvas);
   inspector.register(branch); inspector.register(left); inspector.register(right);
   const subscribers = (index: number) => {
@@ -1152,7 +1152,7 @@ it.each(['root', 'layer'] as const)('observes %s reaction subscriptions without 
     expect(scene).toBeDefined();
     expect(initial[0].owner).toMatchObject({ componentId: scene!.componentId, surfaceKind });
     const unrelatedCanvas = document.createElement('canvas'); document.body.append(unrelatedCanvas);
-    const unrelatedController = crc(unrelatedCanvas, <Group>{null}</Group>);
+    const unrelatedController = pibbl(unrelatedCanvas, <Group>{null}</Group>);
     const unrelated = createSignalInspector(unrelatedCanvas); unrelated.register(left);
     try {
       const record = unrelated.snapshot().records[0];
@@ -1204,7 +1204,7 @@ it('keeps partial Canvas pixels visible after render failure without calling the
   }
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
   const history = createSchedulerHistory();
-  const controller = crc(canvas, <Scene />, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
+  const controller = pibbl(canvas, <Scene />, { viewport: { width: 100, height: 100 }, pixelRatio: 1 });
   const inspector = createTargetingInspector(canvas);
   const pixel = (x: number) => Array.from(canvas.getContext('2d')!.getImageData(x, 50, 1, 1).data);
   try {
@@ -1223,7 +1223,7 @@ it('keeps partial Canvas pixels visible after render failure without calling the
     expect(failed.surface.status).toBe('unavailable');
     expect(history.snapshot().frames.at(-1)).toMatchObject({ outcome: 'errors-collected', phaseErrors: { render: 1 } });
     expect(successful.status).toBe('ready');
-    fail.set(false); crc(canvas, <Scene />); driver.flush(3);
+    fail.set(false); pibbl(canvas, <Scene />); driver.flush(3);
     expect(inspector.snapshot().status).toBe('ready');
     expect(pixel(20)).toEqual([0, 0, 255, 255]);
     expect(pixel(80)).toEqual([0, 0, 255, 255]);

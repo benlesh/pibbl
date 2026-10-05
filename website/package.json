@@ -1,5 +1,5 @@
 {
-  "name": "@crc/website",
+  "name": "@pibbl/website",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,9 +12,9 @@
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.1",
     "@astrojs/starlight": "^0.42.5",
-    "@crc/core": "workspace:*",
-    "@crc/text": "workspace:*",
-    "@crc/three": "workspace:*",
+    "@pibbl/core": "workspace:*",
+    "@pibbl/text": "workspace:*",
+    "@pibbl/three": "workspace:*",
     "astro": "^7.3.5"
   }
 }

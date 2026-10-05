@@ -1,11 +1,11 @@
 import type { geometryMatrixScenarioEntry } from './catalog.js';
-import type { CRCKey, CRCLogicalMouseEvent } from '@crc/core';
+import type { PibblKey, PibblLogicalMouseEvent } from '@pibbl/core';
 import type {
   EventTraceEntry,
   EventTraceInput,
   TraceEventType,
 } from './event-trace';
-import { Clip, Group, Layer, Line, Rectangle } from '@crc/core';
+import { Clip, Group, Layer, Line, Rectangle } from '@pibbl/core';
 export const GEOMETRY_MATRIX_SOURCE_ID = 'geometry-composition-matrix-example';
 const BACKGROUND = [248, 250, 252, 255] as const;
 const BLUE = [37, 99, 235, 255] as const;
@@ -410,22 +410,22 @@ interface GeometryMatrixSceneProps {
   record: GeometryMatrixRecord;
 }
 type TraceHandlers = {
-  onClick: (event: CRCLogicalMouseEvent) => void;
-  onContextMenu: (event: CRCLogicalMouseEvent) => void;
-  onDblClick: (event: CRCLogicalMouseEvent) => void;
-  onMouseDown: (event: CRCLogicalMouseEvent) => void;
-  onMouseMove: (event: CRCLogicalMouseEvent) => void;
-  onMouseOut: (event: CRCLogicalMouseEvent) => void;
-  onMouseOver: (event: CRCLogicalMouseEvent) => void;
-  onMouseUp: (event: CRCLogicalMouseEvent) => void;
+  onClick: (event: PibblLogicalMouseEvent) => void;
+  onContextMenu: (event: PibblLogicalMouseEvent) => void;
+  onDblClick: (event: PibblLogicalMouseEvent) => void;
+  onMouseDown: (event: PibblLogicalMouseEvent) => void;
+  onMouseMove: (event: PibblLogicalMouseEvent) => void;
+  onMouseOut: (event: PibblLogicalMouseEvent) => void;
+  onMouseOver: (event: PibblLogicalMouseEvent) => void;
+  onMouseUp: (event: PibblLogicalMouseEvent) => void;
 };
 function traceHandlers(
   target: string,
   record: GeometryMatrixRecord,
 ): TraceHandlers {
-  const handler = (type: TraceEventType) => (event: CRCLogicalMouseEvent) => {
+  const handler = (type: TraceEventType) => (event: PibblLogicalMouseEvent) => {
     record({
-      source: 'crc',
+      source: 'pibbl',
       type,
       target,
       x: Math.round(event.x),
@@ -448,7 +448,7 @@ function traceHandlers(
 function interactiveRect(
   target: string,
   record: GeometryMatrixRecord,
-  options: Parameters<typeof Rectangle>[0] & { key?: CRCKey },
+  options: Parameters<typeof Rectangle>[0] & { key?: PibblKey },
 ) {
   return (
     <Rectangle

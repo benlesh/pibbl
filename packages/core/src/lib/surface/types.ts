@@ -1,10 +1,10 @@
-import type { crc } from '../crc.js';
+import type { pibbl } from '../pibbl.js';
 /**
  * How a fixed logical viewport fits inside its displayed canvas surface.
  *
- * @see {@link CRCFixedViewportConfig}
+ * @see {@link PibblFixedViewportConfig}
  */
-export type CRCFit =
+export type PibblFit =
   | 'contain'
   | 'cover'
   | 'fill'
@@ -14,96 +14,96 @@ export type CRCFit =
 /**
  * Requested backing-store density, either explicit or derived from the device.
  *
- * @see {@link CRCFixedViewportConfig}
- * @see {@link CRCResponsiveViewportConfig}
+ * @see {@link PibblFixedViewportConfig}
+ * @see {@link PibblResponsiveViewportConfig}
  */
-export type CRCPixelRatio = 'device' | number;
+export type PibblPixelRatio = 'device' | number;
 
 /**
  * Fixed logical viewport dimensions and fitting policy for a canvas mount.
  *
- * @see {@link CRCFit}
- * @see {@link CRCPixelRatio}
- * @see {@link CRCConfig}
+ * @see {@link PibblFit}
+ * @see {@link PibblPixelRatio}
+ * @see {@link PibblConfig}
  */
-export interface CRCFixedViewportConfig {
+export interface PibblFixedViewportConfig {
   /**
    * Opt-in host for application-owned HTML regions associated with this canvas. See
-   * {@link CRCFixedViewportConfig}.
+   * {@link PibblFixedViewportConfig}.
    */
   htmlOverlay?: HTMLElement;
   /**
    * Abort signal governing the lifetime of this operation or mount. See
-   * {@link CRCFixedViewportConfig}.
+   * {@link PibblFixedViewportConfig}.
    */
   signal?: AbortSignal;
-  /** Logical viewport dimensions and fitting configuration. See {@link CRCFixedViewportConfig}. */
+  /** Logical viewport dimensions and fitting configuration. See {@link PibblFixedViewportConfig}. */
   viewport?: Readonly<{
     /**
      * Horizontal extent in the units of the containing geometry or surface. See
-     * {@link CRCFixedViewportConfig}.
+     * {@link PibblFixedViewportConfig}.
      */
     width: number;
     /**
      * Vertical extent in the units of the containing geometry or surface. See
-     * {@link CRCFixedViewportConfig}.
+     * {@link PibblFixedViewportConfig}.
      */
     height: number;
   }>;
-  /** Policy for fitting content within its available box. See {@link CRCFit}. */
-  fit?: CRCFit;
-  /** Requested backing-store pixel density. See {@link CRCPixelRatio}. */
-  pixelRatio?: CRCPixelRatio;
+  /** Policy for fitting content within its available box. See {@link PibblFit}. */
+  fit?: PibblFit;
+  /** Requested backing-store pixel density. See {@link PibblPixelRatio}. */
+  pixelRatio?: PibblPixelRatio;
 }
 
 /**
  * A viewport that follows the displayed canvas dimensions.
  *
- * @see {@link CRCPixelRatio}
- * @see {@link CRCConfig}
+ * @see {@link PibblPixelRatio}
+ * @see {@link PibblConfig}
  */
-export interface CRCResponsiveViewportConfig {
+export interface PibblResponsiveViewportConfig {
   /**
    * Opt-in host for application-owned HTML regions associated with this canvas. See
-   * {@link CRCResponsiveViewportConfig}.
+   * {@link PibblResponsiveViewportConfig}.
    */
   htmlOverlay?: HTMLElement;
   /**
    * Abort signal governing the lifetime of this operation or mount. See
-   * {@link CRCResponsiveViewportConfig}.
+   * {@link PibblResponsiveViewportConfig}.
    */
   signal?: AbortSignal;
   /**
-   * Logical viewport dimensions and fitting configuration. See {@link CRCResponsiveViewportConfig}
+   * Logical viewport dimensions and fitting configuration. See {@link PibblResponsiveViewportConfig}
    * .
    */
   viewport: 'responsive';
-  /** Requested backing-store pixel density. See {@link CRCPixelRatio}. */
-  pixelRatio?: CRCPixelRatio;
+  /** Requested backing-store pixel density. See {@link PibblPixelRatio}. */
+  pixelRatio?: PibblPixelRatio;
 }
 
 /**
- * Canvas surface sizing, pixel density, and viewport configuration for a CRC mount.
+ * Canvas surface sizing, pixel density, and viewport configuration for a Pibbl mount.
  *
- * @see {@link CRCFixedViewportConfig}
- * @see {@link CRCResponsiveViewportConfig}
- * @see {@link crc}
+ * @see {@link PibblFixedViewportConfig}
+ * @see {@link PibblResponsiveViewportConfig}
+ * @see {@link pibbl}
  */
-export type CRCConfig =
-  | CRCFixedViewportConfig
-  | CRCResponsiveViewportConfig;
+export type PibblConfig =
+  | PibblFixedViewportConfig
+  | PibblResponsiveViewportConfig;
 
 export type ResolvedSurfaceConfig =
   | {
     mode: 'fixed';
     width: number;
     height: number;
-    fit: CRCFit;
-    pixelRatio: CRCPixelRatio;
+    fit: PibblFit;
+    pixelRatio: PibblPixelRatio;
   }
   | {
     mode: 'responsive';
-    pixelRatio: CRCPixelRatio;
+    pixelRatio: PibblPixelRatio;
   };
 
 export interface SurfaceDisplaySize {
@@ -111,9 +111,9 @@ export interface SurfaceDisplaySize {
   height: number;
 }
 
-export interface CRCSurfaceSnapshot {
+export interface PibblSurfaceSnapshot {
   mode: 'fixed' | 'responsive' | 'layer';
-  fit: CRCFit;
+  fit: PibblFit;
   logicalWidth: number;
   logicalHeight: number;
   displayWidth: number;
@@ -133,7 +133,7 @@ export interface RootSurfaceState {
   config: ResolvedSurfaceConfig;
   display: SurfaceDisplaySize;
   pixelRatio: number;
-  snapshot: CRCSurfaceSnapshot | undefined;
+  snapshot: PibblSurfaceSnapshot | undefined;
   ownedWidth: OwnedInlineSize | undefined;
   ownedHeight: OwnedInlineSize | undefined;
 }
@@ -141,10 +141,10 @@ export interface RootSurfaceState {
 export interface LayerSurfaceState {
   kind: 'layer';
   managed: boolean;
-  snapshot: CRCSurfaceSnapshot;
+  snapshot: PibblSurfaceSnapshot;
 }
 
-export type CRCSurfaceState = RootSurfaceState | LayerSurfaceState;
+export type PibblSurfaceState = RootSurfaceState | LayerSurfaceState;
 
 export interface OwnedInlineSize {
   previous: string;

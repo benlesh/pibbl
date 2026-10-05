@@ -34,18 +34,18 @@ describe("Studio routes", () => {
       kind: "document",
       route: "#/api/components/rectangle",
     });
-    expect(parseStudioRoute("#/api/functions/crc")).toEqual({
+    expect(parseStudioRoute("#/api/functions/pibbl")).toEqual({
       kind: "document",
-      route: "#/api/functions/crc",
+      route: "#/api/functions/pibbl",
     });
     expect(parseStudioRoute("#/api/hooks/use-state")).toEqual({
       kind: "document",
       route: "#/api/hooks/use-state",
     });
-    expect(parseStudioRoute("#/api/types/events#crcpointerevent")).toEqual({
+    expect(parseStudioRoute("#/api/types/events#pibblpointerevent")).toEqual({
       kind: "document",
       route: "#/api/types/events",
-      anchor: "crcpointerevent",
+      anchor: "pibblpointerevent",
     });
     expect(parseStudioRoute("#/examples/drawing/rectangle")).toEqual({
       kind: "example",
@@ -83,17 +83,17 @@ describe("Studio routes", () => {
 
   it("round-trips document anchors together with their query text", () => {
     const route = parseStudioRoute(
-      "#/api/types/events#crcpointerevent?mode=detail",
+      "#/api/types/events#pibblpointerevent?mode=detail",
     );
 
     expect(route).toEqual({
       kind: "document",
       route: "#/api/types/events",
-      anchor: "crcpointerevent",
+      anchor: "pibblpointerevent",
       query: "?mode=detail",
     });
     expect(routeHref(route)).toBe(
-      "#/api/types/events#crcpointerevent?mode=detail",
+      "#/api/types/events#pibblpointerevent?mode=detail",
     );
   });
 
@@ -101,8 +101,8 @@ describe("Studio routes", () => {
     const base = "http://localhost:4321/";
     expect(websiteUrlForStudioDocument("#/learn", base)).toBe("http://localhost:4321/guides/learning-path/");
     expect(websiteUrlForStudioDocument("#/learn/tutorials/diagram-editor/first-node#example?mode=detail", base)).toBe("http://localhost:4321/guides/tutorials/diagram-editor/first-node/?mode=detail#example");
-    expect(websiteUrlForStudioDocument("#/api/types/events#crcpointerevent", base)).toBe("http://localhost:4321/reference/types/events/#crcpointerevent");
-    expect(websiteUrlForStudioDocument("#/api/functions/crc", base)).toBe("http://localhost:4321/reference/functions/crc/");
+    expect(websiteUrlForStudioDocument("#/api/types/events#pibblpointerevent", base)).toBe("http://localhost:4321/reference/types/events/#pibblpointerevent");
+    expect(websiteUrlForStudioDocument("#/api/functions/pibbl", base)).toBe("http://localhost:4321/reference/functions/pibbl/");
   });
 
   it("reports paths outside public route families as unknown", () => {

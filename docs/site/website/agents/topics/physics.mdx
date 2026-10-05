@@ -6,7 +6,7 @@ kind: agent-guide
 
 ## Choose a supported entry
 
-Use `@crc/core/physics/2d` for scheduled bodies/worlds and `/physics/2d/geometry` for pure shape operations. There is no root physics barrel, CRC-owned 3D physics API, renderer-coupled 3D world, or official Three physics binding. Rapier is privately bundled by CRC; applications do not initialize or drive it directly.
+Use `@pibbl/core/physics/2d` for scheduled bodies/worlds and `/physics/2d/geometry` for pure shape operations. There is no root physics barrel, Pibbl-owned 3D physics API, renderer-coupled 3D world, or official Three physics binding. Rapier is privately bundled by Pibbl; applications do not initialize or drive it directly.
 
 Read [the 2D physics guide](/guides/physics-2d/) for a complete public-browser test fixture and supported manual test harness. Use [Stirred Ink](/examples/stirred-ink/) for complete application source, or [the existing drag-and-throw editor](@PLAYGROUND@#/examples/composition/physics-2d). These sources use public package entries. Do not depend on repository test helpers.
 
@@ -20,7 +20,7 @@ Dynamic bodies own their pose after mounting. Initial drawing transforms and vel
 
 ## Timing and limits
 
-Distances use logical Canvas units, velocities use units per second, angles use degrees, and fixed-step duration uses milliseconds. Gravity defaults to zero. The default world runs 60 fixed ticks per second with at most four catch-up ticks per frame. Sleeping/stationary worlds stop requesting frames; commands wake them through CRC scheduling.
+Distances use logical Canvas units, velocities use units per second, angles use degrees, and fixed-step duration uses milliseconds. Gravity defaults to zero. The default world runs 60 fixed ticks per second with at most four catch-up ticks per frame. Sleeping/stationary worlds stop requesting frames; commands wake them through Pibbl scheduling.
 
 The engine uses single-precision values and an internal 100-logical-units-per-meter scale. Use tolerances, not exact floating-point trajectories. CCD helps fast dynamic solids but is bounded: a required substep count above 64 rejects and rolls back. Sensors observe discrete overlaps; use casts for fast triggers. Do not promise arbitrary-speed exact collision detection.
 

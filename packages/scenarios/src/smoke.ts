@@ -4,7 +4,7 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import { createSmokeScene, SMOKE_SOURCE_ID } from './smoke.example';
 
 export { type SmokeScenarioAction, type SmokeScenarioState } from './smoke.example';
@@ -37,7 +37,7 @@ async function mountSmokeScenario(
 
   const render = () => {
     assertActive();
-    crc(
+    pibbl(
       context.canvas,
       createSmokeScene({
         state,

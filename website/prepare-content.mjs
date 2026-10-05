@@ -15,7 +15,7 @@ import { galleries, galleryExamples } from "./gallery.mjs";
 const root = resolve(import.meta.dirname, "..");
 const generated = resolve(import.meta.dirname, "src/content/docs");
 const publicDir = resolve(import.meta.dirname, "public/generated");
-const playground = process.env.CRC_PLAYGROUND_URL ?? "http://localhost:5173/";
+const playground = process.env.PIBBL_PLAYGROUND_URL ?? "http://localhost:5173/";
 const revision = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
   cwd: root,
   encoding: "utf8",
@@ -23,7 +23,7 @@ const revision = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
 const core = JSON.parse(
   await readFile(resolve(root, "packages/core/package.json"), "utf8"),
 );
-const compatibility = `Local checkout: @crc/core ${core.version}, base revision ${revision}, with working-tree changes. This preview does not assert compatibility with an npm release.`;
+const compatibility = `Local checkout: @pibbl/core ${core.version}, base revision ${revision}, with working-tree changes. This preview does not assert compatibility with an npm release.`;
 const kit = resolve(root, "docs/website-rebuild/claude-design-kit");
 // Preserve the content root so a running Astro watcher keeps its collection.
 await rm(publicDir, { recursive: true, force: true });
@@ -69,7 +69,7 @@ for (const example of registeredExamples) {
       symbols: example.symbols.map((symbol) => symbol.name),
       source: example.sourcePath,
     },
-    content: `${example.description}\n\n## APIs demonstrated\n\n${related.join("\n")}\n\n## Complete example\n\n[Plain source](${sourceURL}). ${example.environment === "browser" ? 'Run as a browser module after the document body exists. TSX uses `jsx: "react-jsx"` and `jsxImportSource: "@crc/core"`.' : "This example demonstrates a type-level or host-specific contract; it is checked with TypeScript rather than presented as an animated preview."}\n\n\`\`\`${example.source.endsWith(".tsx") ? "tsx" : "ts"}\n${example.code}\n\`\`\`\n\n## Usage notes\n\n${(example.notes ?? []).map((note) => `- ${note}`).join("\n")}\n`,
+    content: `${example.description}\n\n## APIs demonstrated\n\n${related.join("\n")}\n\n## Complete example\n\n[Plain source](${sourceURL}). ${example.environment === "browser" ? 'Run as a browser module after the document body exists. TSX uses `jsx: "react-jsx"` and `jsxImportSource: "@pibbl/core"`.' : "This example demonstrates a type-level or host-specific contract; it is checked with TypeScript rather than presented as an animated preview."}\n\n\`\`\`${example.source.endsWith(".tsx") ? "tsx" : "ts"}\n${example.code}\n\`\`\`\n\n## Usage notes\n\n${(example.notes ?? []).map((note) => `- ${note}`).join("\n")}\n`,
   });
 }
 records.push({
@@ -113,7 +113,7 @@ const browserExamples = registeredExamples.filter(
 );
 if (browserExamples.length) {
   // Preserve the text engine's sibling WASM URL instead of bundling its loader.
-  await mkdir(resolve(publicDir, "crc-text"), { recursive: true });
+  await mkdir(resolve(publicDir, "pibbl-text"), { recursive: true });
   for (const [name, source] of [
     ["engine.mjs", "packages/text/dist/engine.mjs"],
     ["engine.wasm", "packages/text/dist/engine.wasm"],
@@ -122,7 +122,7 @@ if (browserExamples.length) {
     ["Lato-Regular.ttf", "packages/text/test/fixtures/lato/Lato-Regular.ttf"],
     ["Lato-OFL.txt", "packages/text/test/fixtures/lato/OFL.txt"],
   ])
-    await cp(resolve(root, source), resolve(publicDir, "crc-text", name));
+    await cp(resolve(root, source), resolve(publicDir, "pibbl-text", name));
   await build({
     entryPoints: Object.fromEntries(
       browserExamples.map((example) => [example.id, example.path]),
@@ -140,13 +140,13 @@ if (browserExamples.length) {
         setup(build) {
           build.onResolve({ filter: /engine\.mjs$/ }, (args) => {
             if (args.importer.includes("/packages/text/"))
-              return { path: "/crc-text/engine.mjs", external: true };
+              return { path: "/pibbl-text/engine.mjs", external: true };
           });
         },
       },
     ],
     tsconfigRaw: {
-      compilerOptions: { jsx: "react-jsx", jsxImportSource: "@crc/core" },
+      compilerOptions: { jsx: "react-jsx", jsxImportSource: "@pibbl/core" },
     },
   });
   for (const example of browserExamples) {
@@ -165,12 +165,12 @@ for (const slug of galleries.find((gallery) => gallery.id === "shapes").slugs) {
   const snippet = record?.content.match(/```tsx\n([\s\S]*?)\n```/)?.[1];
   if (!symbol || !snippet)
     throw new Error(`Missing minimal shape source for ${slug}`);
-  const code = `/** @jsxImportSource @crc/core */\nimport { crc, ${symbol} } from '@crc/core';\n\nconst canvas = document.createElement('canvas');\ncanvas.width = 320;\ncanvas.height = 240;\ndocument.body.append(canvas);\n\nconst controller = crc(canvas, (\n${snippet}\n));\n\nwindow.addEventListener('pagehide', () => controller.dispose(), { once: true });\n`;
+  const code = `/** @jsxImportSource @pibbl/core */\nimport { pibbl, ${symbol} } from '@pibbl/core';\n\nconst canvas = document.createElement('canvas');\ncanvas.width = 320;\ncanvas.height = 240;\ndocument.body.append(canvas);\n\nconst controller = pibbl(canvas, (\n${snippet}\n));\n\nwindow.addEventListener('pagehide', () => controller.dispose(), { once: true });\n`;
   const url = `/minimal/${slug}.tsx`;
   await mkdir(resolve(publicDir, "minimal"), { recursive: true });
   await writeFile(resolve(publicDir, `minimal/${slug}.tsx`), code);
   if (!minimalExamples.has(symbol)) minimalExamples.set(symbol, url);
-  record.content += `\n## Complete minimal example\n\nCompile this TSX module with \`jsx: "react-jsx"\` and \`jsxImportSource: "@crc/core"\`, then load it from a browser entry point after the document body exists. It creates and mounts one canvas; dispose the controller before removing or replacing that canvas. The interactive study linked below adds controls beyond this minimal use case.\n\n[Download source](${url})\n\n\`\`\`tsx\n${code}\`\`\`\n`;
+  record.content += `\n## Complete minimal example\n\nCompile this TSX module with \`jsx: "react-jsx"\` and \`jsxImportSource: "@pibbl/core"\`, then load it from a browser entry point after the document body exists. It creates and mounts one canvas; dispose the controller before removing or replacing that canvas. The interactive study linked below adds controls beyond this minimal use case.\n\n[Download source](${url})\n\n\`\`\`tsx\n${code}\`\`\`\n`;
 }
 for (const gallery of galleries) {
   records.push({
@@ -214,7 +214,7 @@ for (const example of galleryExamples) {
         source: example.source.path,
         sources: [example.source.path],
       },
-      content: `${example.summary}\n\n## Try it\n\n${example.prompts.gesture}\n\n## What to learn\n\n${example.objectives.map((objective) => `- ${objective}`).join("\n")}\n\n## Integration boundaries\n\n${example.apiNotes.map((note) => `- ${note}`).join("\n")}\n\nThis is a CRC Canvas example. Its mount owns its runtime resources; call its controller's dispose method when removing it. The preview starts automatically unless reduced motion is enabled; Stop disposes the mount. Preserve the source's logical canvas size and aspect ratio. Native HTML is not captured by Canvas filters.\n`,
+      content: `${example.summary}\n\n## Try it\n\n${example.prompts.gesture}\n\n## What to learn\n\n${example.objectives.map((objective) => `- ${objective}`).join("\n")}\n\n## Integration boundaries\n\n${example.apiNotes.map((note) => `- ${note}`).join("\n")}\n\nThis is a Pibbl Canvas example. Its mount owns its runtime resources; call its controller's dispose method when removing it. The preview starts automatically unless reduced motion is enabled; Stop disposes the mount. Preserve the source's logical canvas size and aspect ratio. Native HTML is not captured by Canvas filters.\n`,
     };
     records.push(record);
   }
@@ -394,7 +394,7 @@ for (const { id, meta, content: body } of records) {
         (entry) => entry.source.path === file,
       );
       if (example)
-        content += `\nHost setup for this source: use a canvas with width ${example.canvas.width} and height ${example.canvas.height}, compile with \`jsx: "react-jsx"\` and \`jsxImportSource: "@crc/core"\`, import its default \`mount\`, and call \`const controller = mount(canvas)\` after attaching the canvas. Call \`controller.dispose()\` before removing it.\n`;
+        content += `\nHost setup for this source: use a canvas with width ${example.canvas.width} and height ${example.canvas.height}, compile with \`jsx: "react-jsx"\` and \`jsxImportSource: "@pibbl/core"\`, import its default \`mount\`, and call \`const controller = mount(canvas)\` after attaching the canvas. Call \`controller.dispose()\` before removing it.\n`;
       const name = file.split("/").at(-1);
       const language = name.split(".").at(-1);
       content += `\n### ${name}\n\n\`\`\`${language}\n${code}\n\`\`\`\n`;
@@ -457,7 +457,7 @@ await writeFile(
 );
 await writeFile(
   resolve(publicDir, "llms.txt"),
-  `# CRC documentation preview\n\n${compatibility}\n\nRead individual topics before adapting examples. No installable agent skill is shipped in this slice.\n\n${catalog
+  `# Pibbl documentation preview\n\n${compatibility}\n\nRead individual topics before adapting examples. No installable agent skill is shipped in this slice.\n\n${catalog
     .filter(
       (entry) =>
         entry.id.startsWith("agents/topics/") ||

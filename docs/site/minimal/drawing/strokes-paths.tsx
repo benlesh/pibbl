@@ -5,7 +5,7 @@ import {
   PathGeometry,
   SvgPath,
   VerticalLine,
-  crc,
+  pibbl,
   type HorizontalLineProps,
   type HorizontalLineStyle,
   type LineProps,
@@ -16,7 +16,7 @@ import {
   type SvgPathStyle,
   type VerticalLineProps,
   type VerticalLineStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const lineProps: LineProps = { pointerEvents: "auto" };
 const lineStyle: LineStyle = {
@@ -62,7 +62,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(
+const app = pibbl(
   canvas,
   <>
     <Line {...lineProps} style={lineStyle} />

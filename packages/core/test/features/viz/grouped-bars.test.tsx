@@ -1,5 +1,5 @@
-import { Absolute, crc, signal } from "@crc/core";
-import { BarSeries, Scale, useScale, type ResolvedBandScale } from "@crc/core/viz";
+import { Absolute, pibbl, signal } from "@pibbl/core";
+import { BarSeries, Scale, useScale, type ResolvedBandScale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -105,7 +105,7 @@ it("composes reactive inner bands and styled grouped bars in one allocated frame
   expect(inner.bandwidth).toBeCloseTo(32);
   expect(pixel(70, 30)).toEqual([0, 128, 0, 255]);
   expect(pixel(30, 70)).toEqual([0, 0, 255, 255]);
-  crc(canvas, <Scene />);
+  pibbl(canvas, <Scene />);
   runtime.flush();
   expect(inner.range).toEqual([0, 80]);
 });
@@ -224,10 +224,10 @@ it("keeps captured scale signals synchronous when numeric ranges or parent paddi
   runtime = testRuntime();
   const range = signal<readonly [number, number]>([0, 300]);
   const padding = signal(0);
-  let numeric!: import("@crc/core").Signal<
-    import("@crc/core/viz").ResolvedLinearScale
+  let numeric!: import("@pibbl/core").Signal<
+    import("@pibbl/core/viz").ResolvedLinearScale
   >;
-  let nested!: import("@crc/core").Signal<ResolvedBandScale>;
+  let nested!: import("@pibbl/core").Signal<ResolvedBandScale>;
   function Probe() {
     numeric = useScale("v");
     nested = useScale("g", "band");
@@ -266,11 +266,11 @@ it("switches bandwidth references and detaches old ancestor dependencies", () =>
   runtime = testRuntime();
   const first = signal<readonly [number, number]>([0, 100]);
   const second = signal<readonly [number, number]>([0, 200]);
-  const range = signal<import("@crc/core/viz").BandScaleRange>({
+  const range = signal<import("@pibbl/core/viz").BandScaleRange>({
     bandwidthOf: "first",
   });
   let inner!: ResolvedBandScale;
-  let captured!: import("@crc/core").Signal<ResolvedBandScale>;
+  let captured!: import("@pibbl/core").Signal<ResolvedBandScale>;
   let renders = 0;
   function Probe() {
     captured = useScale("g", "band");
@@ -329,7 +329,7 @@ it.each(["signal", "promise", "hook", "unknown"] as const)(
             categoryScale="c"
             valueScale="v"
             style={
-              invalid as unknown as import("@crc/core/viz").BarStyleResolver<{
+              invalid as unknown as import("@pibbl/core/viz").BarStyleResolver<{
                 c: string;
                 v: number;
               }>
@@ -344,7 +344,7 @@ it.each(["signal", "promise", "hook", "unknown"] as const)(
 
 it("restores captured nested scopes after a failed render transaction", () => {
   runtime = testRuntime();
-  let captured!: import("@crc/core").Signal<ResolvedBandScale>;
+  let captured!: import("@pibbl/core").Signal<ResolvedBandScale>;
   function Probe() {
     captured = useScale("inner", "band");
     captured.get();
@@ -370,10 +370,10 @@ it("restores captured nested scopes after a failed render transaction", () => {
   const canvas = runtime.mount(<Scene end={100} />);
   runtime.flush();
   const original = captured;
-  crc(canvas, <Scene end={300} fail />);
+  pibbl(canvas, <Scene end={300} fail />);
   expect(() => runtime.flush()).toThrow("candidate failed");
   expect(original.get().bandwidth).toBe(50);
-  crc(canvas, <Scene end={200} />);
+  pibbl(canvas, <Scene end={200} />);
   runtime.flush();
   // A failed root closes its refs; the next explicit render mounts fresh hooks.
   expect(captured).not.toBe(original);

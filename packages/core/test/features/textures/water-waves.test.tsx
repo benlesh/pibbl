@@ -1,7 +1,7 @@
 import { afterEach, expect, it } from "vitest";
-import { crc, Rectangle, useTexture } from "@crc/core";
-import { borrowTextureRaster } from "@crc/core/internal";
-import { waterWaves } from "@crc/core/textures";
+import { pibbl, Rectangle, useTexture } from "@pibbl/core";
+import { borrowTextureRaster } from "@pibbl/core/internal";
+import { waterWaves } from "@pibbl/core/textures";
 import { clearSharedState } from "../../../src/lib/global-state.js";
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from "../../../src/lib/scheduler/testing.js";
 
@@ -18,8 +18,8 @@ it("changes only active ripple displacement when rippleStrength is updated", () 
     return <Rectangle style={{ width: 16, height: 8, fill: texture }} />;
   }
   const canvas = document.createElement("canvas"); canvas.width = 32; canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
-  const capture = (time: number) => { crc(canvas, <Scene />); driver.flush(time); return frames.at(-1)!; };
+  const controller = pibbl(canvas, <Scene />);
+  const capture = (time: number) => { pibbl(canvas, <Scene />); driver.flush(time); return frames.at(-1)!; };
   try {
     driver.flush(0);
     const base = frames.at(-1)!;
@@ -27,9 +27,9 @@ it("changes only active ripple displacement when rippleStrength is updated", () 
     texture!.send({ type: "pause", paused: true }); driver.flush(32);
     const active = frames.at(-1)!;
     expect(active).not.toEqual(base);
-    rippleStrength = 0; crc(canvas, <Scene />); driver.flush(48);
+    rippleStrength = 0; pibbl(canvas, <Scene />); driver.flush(48);
     expect(capture(48)).toEqual(base);
-    rippleStrength = 1; crc(canvas, <Scene />); driver.flush(64);
+    rippleStrength = 1; pibbl(canvas, <Scene />); driver.flush(64);
     expect(capture(64)).toEqual(active);
   } finally { controller.dispose(); restore(); }
 });
@@ -44,8 +44,8 @@ it("adds bounded click ripples, freezes them while paused, and idles after their
     return <Rectangle style={{ width: 16, height: 8, fill: texture }} />;
   }
   const canvas = document.createElement("canvas"); canvas.width = 32; canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
-  const capture = (time: number) => { crc(canvas, <Scene />); driver.flush(time); return frames.at(-1)!; };
+  const controller = pibbl(canvas, <Scene />);
+  const capture = (time: number) => { pibbl(canvas, <Scene />); driver.flush(time); return frames.at(-1)!; };
   try {
     driver.flush(0);
     const baseline = frames.at(-1)!;
@@ -76,7 +76,7 @@ it("rejects non-finite normalized ripple coordinates", () => {
   let texture: ReturnType<typeof useTexture<any>>;
   function Scene() { texture = useTexture(waterWaves({ speed: 0 })); return <Rectangle style={{ width: 1, height: 1, fill: texture }} />; }
   const canvas = document.createElement("canvas"); document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     texture!.send({ type: "ripple", x: Infinity, y: 0 });
@@ -87,7 +87,7 @@ it("rejects non-finite normalized ripple coordinates", () => {
 it("rejects an invalid rippleStrength", () => {
   const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement("canvas"); document.body.append(canvas);
-  const controller = crc(canvas, <Probe />);
+  const controller = pibbl(canvas, <Probe />);
   try { expect(() => driver.flush(0)).toThrow("Water ripple strength must be finite and nonnegative"); }
   finally { controller.dispose(); restore(); }
   function Probe() { useTexture(waterWaves({ rippleStrength: -1 })); return null; }
@@ -103,7 +103,7 @@ it("is deterministic, advances only when active, and resets through messages", (
     return <Rectangle style={{ width: 8, height: 8, fill: texture }} />;
   }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0); driver.flush(1000);
     expect(frames[1]).not.toEqual(frames[0]);
@@ -117,7 +117,7 @@ it("is deterministic, advances only when active, and resets through messages", (
 it("rejects palettes for numeric displacement data", () => {
   const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, <Probe />);
+  const controller = pibbl(canvas, <Probe />);
   try { expect(() => driver.flush(0)).toThrow("does not accept a palette"); }
   finally { controller.dispose(); restore(); }
   function Probe() { useTexture(waterWaves(), { palette: ["#000000", "#ffffff"] }); return null; }
@@ -133,7 +133,7 @@ it("keeps a zero-speed map static and makes its tile edges exact", () => {
     return <Rectangle style={{ width: 8, height: 8, fill: texture }} />;
   }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     expect(driver.pendingHostFrames).toBe(0);
@@ -153,10 +153,10 @@ it("discards paused elapsed debt and preserves message pause across equal author
     return <Rectangle style={{ width: 8, height: 8, fill: texture }} />;
   }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, scene());
+  const controller = pibbl(canvas, scene());
   try {
     driver.flush(0); texture!.send({ type: "pause", paused: true }); driver.flush(16);
-    crc(canvas, scene()); driver.flush(10_000);
+    pibbl(canvas, scene()); driver.flush(10_000);
     expect(driver.pendingHostFrames).toBe(0);
     texture!.send({ type: "pause", paused: false }); driver.flush(10_016);
     expect(frames.at(-1)).toEqual(frames[0]);
@@ -174,13 +174,13 @@ it("preserves a message pause when authored speed changes", () => {
     return <Rectangle style={{ width: 8, height: 8, fill: texture }} />;
   }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     texture!.send({ type: "pause", paused: true }); driver.flush(16);
     expect(driver.pendingHostFrames).toBe(0);
     speed = 2;
-    crc(canvas, <Scene />); driver.flush(1000);
+    pibbl(canvas, <Scene />); driver.flush(1000);
     expect(driver.pendingHostFrames).toBe(0);
     texture!.send({ type: "pause", paused: false }); driver.flush(1016);
     expect(driver.pendingHostFrames).toBe(1);

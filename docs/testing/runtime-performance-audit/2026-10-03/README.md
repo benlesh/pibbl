@@ -4,7 +4,7 @@
 
 Current fix dispositions, measurements, reviews, and integration blockers are in [the remediation record](REMEDIATION.md). The findings below preserve the original baseline audit.
 
-This fresh audit finds reproducible reaction-diffusion initialization and stale-texture ownership bugs, retained physics handle caches, expensive overload handling, and substantial transient Canvas memory pressure. Normal diffusion teardown passed 1,000 cycles on each of two public paths. This does **not** establish that CRC is leak-free.
+This fresh audit finds reproducible reaction-diffusion initialization and stale-texture ownership bugs, retained physics handle caches, expensive overload handling, and substantial transient Canvas memory pressure. Normal diffusion teardown passed 1,000 cycles on each of two public paths. This does **not** establish that Pibbl is leak-free.
 
 This is an audit, not a completed remediation. No production code was changed; every open finding below still needs its own regression, implementation, review, and release verification. The user's request for a fresh audit superseded execution of the old remediation queue.
 
@@ -41,7 +41,7 @@ The invalid one-color palette also leaves one participant immediately after fail
 
 ### A11: stale public Texture retains the disposed owner
 
-The corrected WeakRef probe observes the actual root element and detached canvas, verifies both are reachable before disposal, and verifies that the component ran and retained the expected Texture. With the handle dropped, both collect after disposal/forced GC. With the public Texture retained, both remain reachable; clearing that handle and collecting again releases both. This isolates a public handle → Resource → owner CRCInstance ownership path. Scheduler counters are zero in both cases: idle scheduling does not imply release of the old object graph.
+The corrected WeakRef probe observes the actual root element and detached canvas, verifies both are reachable before disposal, and verifies that the component ran and retained the expected Texture. With the handle dropped, both collect after disposal/forced GC. With the public Texture retained, both remain reachable; clearing that handle and collecting again releases both. This isolates a public handle → Resource → owner PibblInstance ownership path. Scheduler counters are zero in both cases: idle scheduling does not imply release of the old object graph.
 
 Evidence: `results/weak-retention-2026-10-03T19-36-06.413Z.json`; final weak harness commit `82cb7b75`. Do not infer native/GPU bytes from WeakRef reachability. Preserve the documented behavior of stale capabilities while severing unnecessary owner/root/canvas references on disposal. Earlier negative weak results lacked sufficient render/handle/reachability controls and are rejected.
 
@@ -57,7 +57,7 @@ The burst probe uses the public 128×80 recipe and a fixed input queue. 1,024 ra
 
 The natural soak does not hold canvases for inspection and performs no forced GC while active. In a separate scalar-counter probe, active 512² diffusion holds construction counts fixed at **three OffscreenCanvases, one ImageData, one 6,684,672-byte WASM memory** while creating roughly 120 CanvasPatterns/second. RSS still swings sharply. This points toward rendering/allocation pressure rather than continuous simulation-field allocation; it does not identify one responsible browser allocation.
 
-A CRC-free Canvas control also shows a large sawtooth RSS trajectory on a pattern-rendering path (2,126.9 → 3,992.6 → 798.4 → 2,661.0 MiB at 15-second intervals). It is exploratory: pattern and drawImage ran sequentially in the same browser, without independent startup baselines or randomized order. Do not use their absolute RSS difference as a causal comparison. See the raw control and limitations below.
+A Pibbl-free Canvas control also shows a large sawtooth RSS trajectory on a pattern-rendering path (2,126.9 → 3,992.6 → 798.4 → 2,661.0 MiB at 15-second intervals). It is exploratory: pattern and drawImage ran sequentially in the same browser, without independent startup baselines or randomized order. Do not use their absolute RSS difference as a causal comparison. See the raw control and limitations below.
 
 A05 (`texture.ts:270-277,317-324`) and A06 (`render-layer/controller.ts`, owned canvas allocation and disposal) violate the intended deterministic release approach independently of this steady-state pressure. A single unchanged-resolution mount cannot be explained by a resize-only defect. Fix explicit ownership without pretending it proves all browser pressure resolved.
 
@@ -169,7 +169,7 @@ corepack pnpm@11.21.0 -C playground exec vite --host 127.0.0.1 --port 5203
 node tooling/performance-audit/run-browser.mjs --base-url http://127.0.0.1:5204 --cycles 1000 --frames 600
 node tooling/performance-audit/weak-retention.mjs http://127.0.0.1:5204
 node tooling/performance-audit/broad.mjs
-node --import tsx tooling/agent-verification/benchmark-three-picking.mjs /tmp/crc-three-audit
+node --import tsx tooling/agent-verification/benchmark-three-picking.mjs /tmp/pibbl-three-audit
 ```
 
 Authoritative ownership evidence: `results/2026-10-03T19-24-30.094Z.json`, supported by the shorter corrected run `19-24-05.678Z`. Natural and scalar-counter evidence: `results/natural/`. Uninstrumented diffusion/particle/physics matrix: `results/broad.json`. Its rectangle/isolation/root entries are superseded by `results/rendering-corrected.json`; old geometry was invalid. Same-value positive control: `results/same-value-controlled.json`. Three benchmark: `results/three/report.json`. `evidence-manifest.json` hashes archived evidence and exact probes.

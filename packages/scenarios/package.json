@@ -1,5 +1,5 @@
 {
-  "name": "@crc/scenarios",
+  "name": "@pibbl/scenarios",
   "type": "module",
   "version": "0.0.0",
   "private": true,
@@ -18,10 +18,10 @@
     "./three-instancing-lab": "./src/three-instancing-lab.ts"
   },
   "dependencies": {
-    "@crc/core": "workspace:*",
-    "@crc/three": "workspace:*",
+    "@pibbl/core": "workspace:*",
+    "@pibbl/three": "workspace:*",
     "three": "catalog:",
-    "@crc/text": "workspace:*"
+    "@pibbl/text": "workspace:*"
   },
   "devDependencies": {
     "@types/three": "catalog:"

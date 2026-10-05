@@ -1,4 +1,4 @@
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import { expect, it } from 'vitest';
 import { AgentLayoutPlacementScene } from '../../scenarios/src/agent-layout-placement.example';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
@@ -15,7 +15,7 @@ it('separates parent placement, shape-local offsets and intentional clipping thr
       ['clipped', 90, 300, 'miss'], ['overflow-visible', 90, 300, 'target'], ['repaired', 0, 120, 'target'],
     ] as const) {
       let allocation: unknown;
-      const mount = crc(canvas, <AgentLayoutPlacementScene mode={mode} onAllocation={box => { allocation = box; }} />, { pixelRatio: 1 });
+      const mount = pibbl(canvas, <AgentLayoutPlacementScene mode={mode} onAllocation={box => { allocation = box; }} />, { pixelRatio: 1 });
       let inspector: ReturnType<typeof createTargetingInspector> | undefined;
       try {
         driver.flush(1);

@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { crc } from "@crc/core";
-import { ReactionDiffusion } from "@crc/core/textures";
+import { pibbl } from "@pibbl/core";
+import { ReactionDiffusion } from "@pibbl/core/textures";
 import { clearSharedState } from "../../../src/lib/global-state.js";
 import {
   ManualSchedulerDriver,
@@ -30,7 +30,7 @@ it("uploads once per changed frame and performs no pixel readback", () => {
     "getImageData",
   );
   const transfer = vi.spyOn(OffscreenCanvas.prototype, "transferToImageBitmap");
-  const controller = crc(
+  const controller = pibbl(
     canvas,
     <ReactionDiffusion
       resolution={{ width: 256, height: 144 }}
@@ -48,7 +48,7 @@ it("uploads once per changed frame and performs no pixel readback", () => {
     restore();
   }
 });
-it("records solver, raster/upload, and complete CRC frame costs without a machine-specific pass threshold", () => {
+it("records solver, raster/upload, and complete Pibbl frame costs without a machine-specific pass threshold", () => {
   const d = new ManualSchedulerDriver(),
     restore = installSchedulerDriverForTest(d),
     canvas = document.createElement("canvas");
@@ -75,7 +75,7 @@ it("records solver, raster/upload, and complete CRC frame costs without a machin
     update.apply(this, args);
     rasterTime += performance.now() - t;
   });
-  const controller = crc(
+  const controller = pibbl(
     canvas,
     <ReactionDiffusion
       resolution={{ width: 256, height: 144 }}
@@ -96,7 +96,7 @@ it("records solver, raster/upload, and complete CRC frame costs without a machin
     totals.sort((a, b) => a - b);
     expect(totals).toHaveLength(60);
     expect(totals.every(Number.isFinite)).toBe(true);
-    if (import.meta.env.VITE_CRC_REPORT_PERF === "1")
+    if (import.meta.env.VITE_PIBBL_REPORT_PERF === "1")
       console.warn(
         JSON.stringify({
           texture: "256x144",

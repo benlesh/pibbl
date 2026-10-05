@@ -10,12 +10,12 @@ import { resolveSignalValue } from "../signals/resolve-signal-value.js";
 import { requireHookContext, useHookSlot } from "../hooks/hook-slot.js";
 import { queueBeginCommand } from "../scheduler/realm-scheduler.js";
 import type {
-  CRCEventHandlers,
-  CRCEventTarget,
-  CRCPointerEvent,
-  CRCKeyboardEvent,
+  PibblEventHandlers,
+  PibblEventTarget,
+  PibblPointerEvent,
+  PibblKeyboardEvent,
 } from "../events/types.js";
-import type { CRCComponentRefs, CRCInstance } from "../types.js";
+import type { PibblComponentRefs, PibblInstance } from "../types.js";
 import type { WritableSignal } from "../signals/types.js";
 import {
   observeGestureInputs,
@@ -28,20 +28,20 @@ import {
   currentRootCoordinateMapping,
   sameRootCoordinateMapping,
 } from "./coordinates.js";
-import type { CRCResizePosition } from "./types.js";
+import type { PibblResizePosition } from "./types.js";
 import type {
-  CRCManipulationActive,
-  CRCManipulationCancelReason,
-  CRCManipulationController,
-  CRCManipulationEvent,
-  CRCManipulationGeometry,
-  CRCManipulationOperation,
-  CRCManipulationOptions,
-  CRCManipulationSnapshot,
+  PibblManipulationActive,
+  PibblManipulationCancelReason,
+  PibblManipulationController,
+  PibblManipulationEvent,
+  PibblManipulationGeometry,
+  PibblManipulationOperation,
+  PibblManipulationOptions,
+  PibblManipulationSnapshot,
 } from "./controller-types.js";
 
 type PointerSample = Pick<
-  CRCPointerEvent,
+  PibblPointerEvent,
   | "pointerId"
   | "x"
   | "y"
@@ -53,12 +53,12 @@ type PointerSample = Pick<
   | "metaKey"
 >;
 interface Session {
-  operation: CRCManipulationOperation;
-  handle?: CRCResizePosition;
+  operation: PibblManipulationOperation;
+  handle?: PibblResizePosition;
   pointerId: number;
-  target: CRCEventTarget;
-  before: CRCManipulationGeometry;
-  last: CRCManipulationGeometry;
+  target: PibblEventTarget;
+  before: PibblManipulationGeometry;
+  last: PibblManipulationGeometry;
   point: DOMPoint;
   clientX: number;
   clientY: number;
@@ -66,38 +66,38 @@ interface Session {
   started: boolean;
   angle: number;
   rotationDelta: number;
-  snapshot: CRCManipulationSnapshot;
+  snapshot: PibblManipulationSnapshot;
   coordinateMapping: readonly number[];
   source?: object;
   releaseObservation?: () => void;
   sample?: PointerSample;
 }
 export interface ManipulationState {
-  controller: CRCManipulationController;
-  options: CRCManipulationOptions;
+  controller: PibblManipulationController;
+  options: PibblManipulationOptions;
   alive: boolean;
-  root: CRCInstance;
-  frame?: CRCComponentRefs<any>;
+  root: PibblInstance;
+  frame?: PibblComponentRefs<any>;
   parent: DOMMatrix;
   coordinateMapping?: readonly number[];
   session?: Session;
-  active: WritableSignal<CRCManipulationActive | null>;
-  snapshot: WritableSignal<CRCManipulationSnapshot | null>;
+  active: WritableSignal<PibblManipulationActive | null>;
+  snapshot: WritableSignal<PibblManipulationSnapshot | null>;
 }
-const states = new WeakMap<CRCManipulationController, ManipulationState>();
+const states = new WeakMap<PibblManipulationController, ManipulationState>();
 const owners = new WeakMap<object, ManipulationState>();
 const claimedPresses = new WeakSet<Event>();
 export function manipulationState(
-  controller: CRCManipulationController,
+  controller: PibblManipulationController,
 ): ManipulationState {
   const state = states.get(controller);
   if (!state || !state.alive)
     throw new Error(
-      "CRC manipulation requires a live useManipulation controller.",
+      "Pibbl manipulation requires a live useManipulation controller.",
     );
   return state;
 }
-function geometry(state: ManipulationState): CRCManipulationGeometry {
+function geometry(state: ManipulationState): PibblManipulationGeometry {
   return untracked(() =>
     Object.freeze({
       box: Object.freeze({ ...state.options.box.get() }),
@@ -105,7 +105,7 @@ function geometry(state: ManipulationState): CRCManipulationGeometry {
     }),
   );
 }
-function same(a: CRCManipulationGeometry, b: CRCManipulationGeometry): boolean {
+function same(a: PibblManipulationGeometry, b: PibblManipulationGeometry): boolean {
   return (
     a.rotation === b.rotation &&
     a.box.left === b.box.left &&
@@ -114,7 +114,7 @@ function same(a: CRCManipulationGeometry, b: CRCManipulationGeometry): boolean {
     a.box.height === b.box.height
   );
 }
-function event(session: Session): CRCManipulationEvent {
+function event(session: Session): PibblManipulationEvent {
   return Object.freeze({
     ...session.snapshot,
     before: session.before,
@@ -123,7 +123,7 @@ function event(session: Session): CRCManipulationEvent {
 }
 function publish(
   state: ManipulationState,
-  next: CRCManipulationGeometry,
+  next: PibblManipulationGeometry,
 ): void {
   assertDirectSignalWriteAllowed(state.options.box);
   if (state.options.rotation)
@@ -146,7 +146,7 @@ function release(state: ManipulationState, session: Session): void {
 }
 function cancel(
   state: ManipulationState,
-  reason: CRCManipulationCancelReason,
+  reason: PibblManipulationCancelReason,
 ): void {
   const session = state.session;
   if (!session) return;
@@ -184,27 +184,27 @@ function dispose(state: ManipulationState): void {
  * Creates a mount-owned controller for moving, resizing, and rotating declared geometry.
  *
  * @param options - Target state, enabled operations, constraints, and lifecycle callbacks. See
- * {@link CRCManipulationOptions} .
+ * {@link PibblManipulationOptions} .
  * @returns Stable controls and state for the mounted manipulation interaction. See
- * {@link CRCManipulationController} .
+ * {@link PibblManipulationController} .
  *
- * @see {@link CRCManipulationOptions}
- * @see {@link CRCManipulationController}
+ * @see {@link PibblManipulationOptions}
+ * @see {@link PibblManipulationController}
  */
 export function useManipulation(
-  options: CRCManipulationOptions,
-): CRCManipulationController {
-  const { crcInstance } = requireHookContext();
+  options: PibblManipulationOptions,
+): PibblManipulationController {
+  const { pibblInstance } = requireHookContext();
   const slot = useHookSlot<ManipulationState>("manipulation", (teardowns) => {
     const state = {
       options,
-      root: crcInstance.eventRoot.rootInstance ?? crcInstance,
+      root: pibblInstance.eventRoot.rootInstance ?? pibblInstance,
       alive: true,
       parent: new DOMMatrix(),
-      active: signal<CRCManipulationActive | null>(null),
-      snapshot: signal<CRCManipulationSnapshot | null>(null),
+      active: signal<PibblManipulationActive | null>(null),
+      snapshot: signal<PibblManipulationSnapshot | null>(null),
     } as ManipulationState;
-    const controller: CRCManipulationController = Object.freeze({
+    const controller: PibblManipulationController = Object.freeze({
       active: state.active.asReadonly(),
       snapshot: state.snapshot.asReadonly(),
       get frameProps() {
@@ -246,7 +246,7 @@ export function useManipulation(
 }
 function enabled(
   state: ManipulationState,
-  operation: CRCManipulationOperation,
+  operation: PibblManipulationOperation,
 ): boolean {
   const options =
     operation === "move"
@@ -443,7 +443,7 @@ function applySafely(state: ManipulationState, pointer: PointerSample): void {
 }
 function updateModifiers(
   state: ManipulationState,
-  key: CRCKeyboardEvent,
+  key: PibblKeyboardEvent,
 ): void {
   const sample = state.session?.sample;
   if (!sample || !["Shift", "Alt", "Control", "Meta"].includes(key.key)) return;
@@ -458,7 +458,7 @@ function updateModifiers(
 
 /** @internal Identifies one private handle source for readout presentation. */
 export function isManipulationSourceActive(
-  controller: CRCManipulationController,
+  controller: PibblManipulationController,
   source: object,
 ): boolean {
   const state = manipulationState(controller);
@@ -466,11 +466,11 @@ export function isManipulationSourceActive(
 }
 
 export function manipulationHandlers(
-  controller: CRCManipulationController,
-  operation: CRCManipulationOperation,
-  handle?: CRCResizePosition,
+  controller: PibblManipulationController,
+  operation: PibblManipulationOperation,
+  handle?: PibblResizePosition,
   source?: object,
-): CRCEventHandlers {
+): PibblEventHandlers {
   const state = manipulationState(controller);
   return {
     onPointerDown(pointer) {
@@ -488,7 +488,7 @@ export function manipulationHandlers(
         (state.options.rotation && owners.has(state.options.rotation))
       )
         throw new Error(
-          "CRC manipulation geometry already has an active owner.",
+          "Pibbl manipulation geometry already has an active owner.",
         );
       const before = geometry(state);
       const point = state.parent
@@ -496,7 +496,7 @@ export function manipulationHandlers(
         .transformPoint(new DOMPoint(pointer.x, pointer.y));
       if (!Number.isFinite(point.x) || !Number.isFinite(point.y))
         throw new Error(
-          "CRC manipulation cannot use a singular parent transform.",
+          "Pibbl manipulation cannot use a singular parent transform.",
         );
       assertDirectSignalWriteAllowed(state.options.box);
       if (state.options.rotation)

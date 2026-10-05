@@ -1,4 +1,4 @@
-import { getWorkbenchEntryBySlug } from "@crc/scenarios";
+import { getWorkbenchEntryBySlug } from "@pibbl/scenarios";
 import * as monaco from "monaco-editor/editor/editor.api";
 import { expect, it } from "vitest";
 import { mountEditorWorkbench } from "../src/editor-workbench";

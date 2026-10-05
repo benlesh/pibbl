@@ -13,8 +13,8 @@ native browser checks with a 60-second parent watchdog, and retrieve a compact
 machine-readable handoff:
 
 ```sh
-node tooling/agent-verification/workflow.mjs plan TXT-08 http://127.0.0.1:5199 /tmp/crc-text-run-1
-node tooling/agent-verification/workflow.mjs run TXT-08 http://127.0.0.1:5199 /tmp/crc-text-run-1
+node tooling/agent-verification/workflow.mjs plan TXT-08 http://127.0.0.1:5199 /tmp/pibbl-text-run-1
+node tooling/agent-verification/workflow.mjs run TXT-08 http://127.0.0.1:5199 /tmp/pibbl-text-run-1
 ```
 
 `plan` is read-only. `run` requires a running source Studio and a fresh output
@@ -90,7 +90,7 @@ extrema [0,40] become [10,30] after correct averaging, as the declared policy al
 Both the manual lab and native replay consume the same public application.
 
 This evidence is bounded to five controlled fixture rows. It does not introduce a
-CRC aggregation API, a decimator, an extrema-preserving algorithm or a generic
+Pibbl aggregation API, a decimator, an extrema-preserving algorithm or a generic
 lineage inspector. Other transformations must supply their own actual policy and
 independent invariants.
 
@@ -157,7 +157,7 @@ not permission to manufacture new APIs or silently drop present obligations.
 
 A complete row must have empty `remaining` and a `closure` object containing:
 
-- `schema: "crc-requirement-closure/1"`, the current `inventorySha256`, and
+- `schema: "pibbl-requirement-closure/1"`, the current `inventorySha256`, and
   `requirementText` copied from the full inventory bullet with whitespace normalized.
 - `reviewedAt` and a substantive `review` explaining coverage of every clause,
   conditional applicability, independent expectations and material limitations.
@@ -205,7 +205,7 @@ weighted aggregation only. Current ledger status remains separate from discovery
 
 `createEventTrace({ capacity: 128, pathLimit: 32 })` from `events.ts` supplies
 `wrap(label, handler)`, `snapshot()`, `stop()` and `dispose()`. Wrap the particular
-public CRC event handlers you want observed. The helper installs no listeners or
+public Pibbl event handlers you want observed. The helper installs no listeners or
 runtime hooks. Labels are explicit fixture text limited to 64 characters.
 Capacity is 1–256 records and pathLimit is 1–64 target IDs per record.
 
@@ -258,7 +258,7 @@ intercepting decoration and is not assumed to be the intended application action
 
 The targeting fixture's `state.delivery.input` is null until delivery (and after
 reset). It records original event type/trust and the optional source event
-separately. CRC keyboard activation creates an untrusted click whose source may
+separately. Pibbl keyboard activation creates an untrusted click whose source may
 be a trusted keyboard event. A browser-dispatched trusted event does not prove
 physical human input; a script-dispatched untrusted event can still change the
 application's selection.
@@ -342,7 +342,7 @@ or atomic loading of every module during concurrent hot updates. Relevant source
 changes invalidate modules and request a full reload; a test spanning identity
 changes must be rerun.
 
-Native replay reports now include `run` (`crc-replay-run/1`) with the same ID as
+Native replay reports now include `run` (`pibbl-replay-run/1`) with the same ID as
 their checkpoint writer, UTC start time, host runtime and the actual browser context
 options. `run.rerun` contains an executable, argument array, working directory and
 an allowlist of environment overrides. Pass arguments directly to process creation;
@@ -415,9 +415,9 @@ corepack pnpm@11.21.0 test:agent-verification
 
 ## Ownership and observation boundary
 
-CRC owns its existing paint ledger, geometry, scheduler and event dispatch.
+Pibbl owns its existing paint ledger, geometry, scheduler and event dispatch.
 `targeting.ts` is optional repository tooling that reads that ledger; it changes
-no runtime file or package export. Applications use only `@crc/core` for their
+no runtime file or package export. Applications use only `@pibbl/core` for their
 scene and own the semantic intent and outcome. The scenario harness binds the
 prototype to one mounted Canvas and records one last event, snapshot and probe.
 The browser harness owns native input, pixel readback, screenshots and deadlines.
@@ -444,7 +444,7 @@ signal writes, and tests compare it with the probe generation.
 `probe()` is explicitly **active native geometry**, not a passive snapshot. It
 uses at most 128 native path tests and restores Canvas state in `finally`.
 Candidates appear in reverse paint order; the first hit wins. It does not call
-CRC's general resolver, app callbacks or signal getters. Canvas Layers are traversed
+Pibbl's general resolver, app callbacks or signal getters. Canvas Layers are traversed
 in paint order with composed transforms, ancestor clips and surface bounds.
 Records include a frozen surfacePath of ancestor boundary record indices. The
 64-record budget includes boundaries and descendants; depth is capped at 16.
@@ -476,7 +476,7 @@ API, built/packed inspector support, MCP/transport and additional domain facets.
 
 The inventory's dated audit is superseded for availability: current core exports
 include receiver-owned signal inputs, batch, useConst, useComputed and
-useReaction. Current `@crc/core/viz` exports Scale, useScale, Axis, LineSeries and
+useReaction. Current `@pibbl/core/viz` exports Scale, useScale, Axis, LineSeries and
 ScaleAdjust. This slice needs neither new reactive machinery nor chart tooling.
 
 ## Focused evidence
@@ -626,7 +626,7 @@ test resizes from 1000 to 600 CSS pixels and independently verifies the narrower
 plot and native hover coordinates. This is a scoped lab predicate, not a generic
 readiness contract for arbitrary padded or transformed hosts.
 
-Run visualization replay with `CRC_VERIFY_DENSITY=2` to exercise the same native
+Run visualization replay with `PIBBL_VERIFY_DENSITY=2` to exercise the same native
 input and numeric oracles at double device density. Reports include that density
 and assert rendered viewport agreement. Density checks do not imply exact pixel
 antialiasing equivalence.
@@ -643,7 +643,7 @@ Snapshots separately report up to 32 `canvas-logical-owners`, with immutable
 pointer ID, inspector target ID and liveness records. Capture changes independently
 of render generation; capture records are historical observations, not geometry
 generation promises. Native activation details, transfer timing and external
-renderer capture are unavailable in this facet. It reads CRC-owned fields without
+renderer capture are unavailable in this facet. It reads Pibbl-owned fields without
 calling cleanup-capable lookup functions or native capture methods. Probes are
 explicitly labeled `routing: geometry-only`; they do not predict captured delivery.
 
@@ -753,7 +753,7 @@ by a clip and a point missing both.
 ## Browser interception
 
 **Add DOM overlay** puts a reversible HTML interceptor over the blue control.
-Inspect to compare the CRC geometric target with the browser hit result, then
+Inspect to compare the Pibbl geometric target with the browser hit result, then
 click it: only the overlay counter changes. **Remove DOM overlay** restores the
 normal selection path. Replay checks both native outcomes. Disposal and mode
 changes remove the overlay and restore any owned parent positioning style.
@@ -785,8 +785,8 @@ This avoids requiring an Inspect-button click that would itself move native focu
 Async observation failures are bounded and explicit; disposal cancels pending waits.
 
 The targeting snapshot has a separate focus facet: owner-document native focus,
-CRC logical target ID, focus-visible state, and up to 64 committed candidates with
-source order and root bounds. It reads only the known CRC focus manager's committed
+Pibbl logical target ID, focus-visible state, and up to 64 committed candidates with
+source order and root bounds. It reads only the known Pibbl focus manager's committed
 fields/getters; it invokes no focus, navigation, resolution or subscription method.
 Absent policy is `unconfigured`, unknown/pending policy is unavailable, and excess
 candidates are truncated. Focus may change without repainting and is historical
@@ -950,7 +950,7 @@ ties across series, and configurable domain-distance limits remain separate work
 
 ## Committed root surface geometry
 
-Targeting snapshots include `surface`, copied from CRC's committed root surface.
+Targeting snapshots include `surface`, copied from Pibbl's committed root surface.
 It reports logical viewport, cached CSS content size, backing size, fit/mode,
 effective backing pixels per CSS pixel and per logical unit, and forward/inverse
 logical-to-backing matrices. Matrices use `[a,b,c,d,e,f]`: x′=a·x+c·y+e and
@@ -1029,7 +1029,7 @@ explanation of its cause.
 A separate 128-edge budget bounds observer traversal across each snapshot.
 Active notification traversal or computed evaluation makes observer evidence
 unavailable. Legacy callback flag accessors are never invoked; classification
-reads only own data descriptors of CRC-owned consumer records. Registration and
+reads only own data descriptors of Pibbl-owned consumer records. Registration and
 inspection add no subscriptions or computed evaluations. Saved snapshots survive
 subsequent writes and disposal unchanged.
 
@@ -1043,7 +1043,7 @@ ownership, and unregistered graph discovery remain outside this facet.
 ## Signal consumer ownership
 
 `createSignalInspector(canvas)` optionally binds ownership observation to the
-exact live CRC mount present at creation. Its `ownership` facet reports scope
+exact live Pibbl mount present at creation. Its `ownership` facet reports scope
 `bound-canvas-components` and complete/truncated/unavailable traversal. Without a
 canvas, or after disposal/replacement, ownership is unavailable; ordinary registered
 signal observation remains separate.
@@ -1054,7 +1054,7 @@ root/Layer surface kind, and current render/requested/completed revisions. Numer
 IDs are separate from truncated display paths. Snapshots are immutable; IDs are
 not persistent across inspector sessions and are not source file locations.
 
-Correlation reads CRC-owned component records and uses an internal opaque consumer
+Correlation reads Pibbl-owned component records and uses an internal opaque consumer
 identity lookup. No production observer, retained diagnostic index, listener or
 render hook is installed. Host/mount and identity keys are weakly held. Each scan
 visits at most 64 surfaces, 256 component records and 256 paint entries, following
@@ -1108,7 +1108,7 @@ to one of several intervening writes. General causal/event history remains open.
 
 ## Passive scheduler observation
 
-`observeScheduler()` returns schema `crc-scheduler-observation/1`, scoped to the
+`observeScheduler()` returns schema `pibbl-scheduler-observation/1`, scoped to the
 loaded runtime realm. Signal snapshots include the same record under `scheduler`.
 It reports current phase, current frame ID/host/logical time (null outside a frame),
 pending host frames and computed validations, registered/dirty roots, dirty
@@ -1119,7 +1119,7 @@ listener, frame request, formula evaluation or scheduler advancement is installe
 Advance participants are registration counts, not proof that every registration is
 actively animating. Counts describe scheduler-owned work and are not all disjoint.
 Application readiness is explicitly unknown and external tasks are unobserved.
-Zero queued CRC work does not establish asset/fetch/browser-task completion or
+Zero queued Pibbl work does not establish asset/fetch/browser-task completion or
 whole-page readiness. Frame host time and logical time remain distinct.
 
 The payload has fixed size, but the existing runtime counter implementation scans
@@ -1239,7 +1239,7 @@ have already published; the latter still needs dedicated diagnostic evidence.
 
 These are controlled tests, not a general staged-value inspector or writer
 provenance trace. Stage admission uses internal test seams; rendering and final
-value assertions use public CRC behavior and independent pixels.
+value assertions use public Pibbl behavior and independent pixels.
 
 ### Commit application versus notification failure
 
@@ -1284,7 +1284,7 @@ correlation, broader identity transitions and historical tombstones remain open.
 
 ### Component parent and surface host relations
 
-Component records separately expose `componentParent` (CRC's recorded component
+Component records separately expose `componentParent` (Pibbl's recorded component
 parent) and `surfaceHost` (the Layer component hosting a nested Canvas instance).
 Each is a frozen `{status, componentId}` relation: observed endpoints refer to
 records in the same snapshot; absent links are `none`; endpoints outside the
@@ -1352,7 +1352,7 @@ records show captured callsites; the direct-authored root correctly remains
 `{componentId, reason: "component-disposed"}` records, with `limit`, `dropped`
 (evicted confirmed records) and `scope: "previous-snapshot-handles"`. Before
 replacing its latest weak handle set, the inspector checks the previous set for
-CRC's explicit closed teardown flag, while the original bound root remains live.
+Pibbl's explicit closed teardown flag, while the original bound root remains live.
 Only that positive evidence adds a removal record. Snapshot omission, truncation,
 unknown handles and unavailable weak references do not prove removal. Repeated
 snapshots do not duplicate a removal. No descriptor, props, source object,
@@ -1466,14 +1466,14 @@ custom toString or Symbol.toPrimitive. Known browser transport failure takes
 precedence over blocked setup/navigation. Primary failure action IDs remain
 separate from the last completed action. Cleanup and checkpoint summaries also
 use descriptor-only error encoding rather than arbitrary string conversion.
-Fixture identity failures carry `CRC_FIXTURE_IDENTITY_UNAVAILABLE` or
-`CRC_FIXTURE_IDENTITY_MISMATCH`. Similar wording in an ordinary application error
+Fixture identity failures carry `PIBBL_FIXTURE_IDENTITY_UNAVAILABLE` or
+`PIBBL_FIXTURE_IDENTITY_MISMATCH`. Similar wording in an ordinary application error
 does not classify it as blocked. These codes describe local harness failures,
 not authenticated claims from arbitrary applications.
 
 ## Passive reaction classification
 
-Direct subscribers identify CRC-owned reaction consumers using an own data
+Direct subscribers identify Pibbl-owned reaction consumers using an own data
 marker. Their session consumer identity persists when dynamic dependencies move
 between registered signals. Inspection never runs setup or cleanup, and reaction
 reads are not reported as render dependencies. `dirty` remains null: the render
@@ -1503,8 +1503,8 @@ policy or guarantee special-value preservation in unrelated evidence producers.
 
 ## Focus policy and directional scope
 
-A recognized committed CRC focus manager reports `policy.kind` as
-`crc-focus-management`, Tab behavior as `source-order-exit`, and keyboard
+A recognized committed Pibbl focus manager reports `policy.kind` as
+`pibbl-focus-management`, Tab behavior as `source-order-exit`, and keyboard
 activation as `enter-space`. These describe the available defaults; handlers can
 prevent them, so this is not a prediction that an individual key will act.
 Unconfigured or unavailable focus reports null policy with its distinct status.
@@ -1633,7 +1633,7 @@ query the inspector's snapshot for those states. Refusal returns `status: "block
 separate realms require creating the inspector inside the application realm.
 The function does not retain the supplied application binding or create a targeting
 inspector on refusal. The targeting lab now uses this wrapper and publishes Runtime compatibility in its
-state. Its binding includes the actual application crc function, so a different
+state. Its binding includes the actual application pibbl function, so a different
 application module resolution cannot silently compare inspector identity with itself.
 
 ### Audit official core peer requirements
@@ -1657,7 +1657,7 @@ accepts 1–32 uniquely named peer manifests.
 
 `node tooling/agent-verification/installed-peers.mjs [CONSUMER_PACKAGE_JSON ...]`
 audits up to 16 explicit consumer manifests and 128 declared peer dependencies.
-With no arguments it checks the five official CRC consumer packages. It resolves
+With no arguments it checks the five official Pibbl consumer packages. It resolves
 from each consumer using Node's require/default conditions, reads the resolved
 package manifest without importing its code, and checks the declared range with
 `semver`. Reports retain consumer and resolved-manifest hashes and real paths.
@@ -1799,7 +1799,7 @@ replay of this new mode remain before DAT-07 closure.
 `node tooling/agent-verification/discover.mjs LAY-02` (or `LAY-06`) returns the
 layout lab, independent expected root coordinates, browser check command and
 native smoke recipe. The smoke requires a new report file path and produces
-`crc-layout-studio-smoke/1`. The shared evidence reader supports its summaries,
+`pibbl-layout-studio-smoke/1`. The shared evidence reader supports its summaries,
 action details, content-bound pages and bounded field projections. Every view
 reports `attestation: not-provided-by-schema`; missing action statuses remain null.
 Its `steps[].before` and `steps[].after` are controlled local observations, not

@@ -1,5 +1,5 @@
 import type { TextGeometryResult } from '../index.js';
-import type { PathGeometry } from "@crc/core";
+import type { PathGeometry } from "@pibbl/core";
 /**
  * Axis-aligned bounds of visible glyph outlines in logical output coordinates.
  *

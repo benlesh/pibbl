@@ -1,4 +1,4 @@
-import type { WorkbenchSourceMetadata } from "@crc/scenarios";
+import type { WorkbenchSourceMetadata } from "@pibbl/scenarios";
 
 const learningModules = import.meta.glob(
   "../../packages/scenarios/src/learning/**/*.example.tsx",
@@ -46,7 +46,7 @@ export async function loadWorkbenchSource(
     );
   const source = await load();
   if (
-    !/^export default function mount\(\s*canvas:\s*HTMLCanvasElement(?:,\s*\w+:\s*\w+\s*=\s*\{\})?,?\s*\):\s*CRCController/mu.test(source)
+    !/^export default function mount\(\s*canvas:\s*HTMLCanvasElement(?:,\s*\w+:\s*\w+\s*=\s*\{\})?,?\s*\):\s*PibblController/mu.test(source)
   ) {
     throw new Error(
       `Workbench source "${entry.source.path}" does not expose the canonical mount contract.`,

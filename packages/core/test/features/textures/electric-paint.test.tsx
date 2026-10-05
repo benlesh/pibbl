@@ -1,12 +1,12 @@
 import { afterEach, expect, it } from "vitest";
-import { crc, Rectangle, type Texture } from "@crc/core";
+import { pibbl, Rectangle, type Texture } from "@pibbl/core";
 import {
   tendrils,
   lightning,
   useTexture,
   type TendrilsMessage,
   type LightningMessage,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
@@ -49,7 +49,7 @@ it("composes independent electric fills, shares pixels, and routes typed contact
   canvas.width = 320;
   canvas.height = 160;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   cleanup = () => {
     controller.dispose();
     restore();
@@ -114,7 +114,7 @@ it("moves an ordinary source with its existing id while paused without schedulin
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 256;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   cleanup = () => {
     controller.dispose();
     restore();
@@ -152,7 +152,7 @@ it("replaces the source collection and enables small terminal crackles through t
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 256;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   cleanup = () => {
     controller.dispose();
     restore();
@@ -207,7 +207,7 @@ it("continues upward from the released contact instead of returning to its old i
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 256;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   cleanup = () => {
     controller.dispose();
     restore();

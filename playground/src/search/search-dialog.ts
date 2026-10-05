@@ -34,7 +34,7 @@ export function mountSearchDialog(
   const engine = createSearchEngine(options.loadBundle);
   const dialog = document.createElement("dialog");
   dialog.className = "studio-search-dialog";
-  dialog.ariaLabel = "Search CRC documentation";
+  dialog.ariaLabel = "Search Pibbl documentation";
 
   const header = document.createElement("header");
   header.className = "studio-search-dialog__header";

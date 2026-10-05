@@ -64,9 +64,9 @@ test("built optional entries and their factories do not allocate browser resourc
     );
     assert.throws(() => document.createElement("canvas"), /must remain inert/);
 
-    const core = await importBuilt("@crc/core");
-    const filters = await importBuilt("@crc/core/filters");
-    const textures = await importBuilt("@crc/core/textures");
+    const core = await importBuilt("@pibbl/core");
+    const filters = await importBuilt("@pibbl/core/filters");
+    const textures = await importBuilt("@pibbl/core/textures");
 
     assert.doesNotThrow(() =>
       core.createElement(core.Rectangle, { style: { width: 1, height: 1 } }),

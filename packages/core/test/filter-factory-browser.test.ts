@@ -1,5 +1,5 @@
-import { Group, Rectangle, crc, createElement } from '@crc/core';
-import { blur } from '@crc/core/filters';
+import { Group, Rectangle, pibbl, createElement } from '@pibbl/core';
+import { blur } from '@pibbl/core/filters';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clickMouse } from './support/mouse-input';
 
@@ -19,7 +19,7 @@ describe('native filter factories', () => {
     document.body.append(canvas);
     let clicks = 0;
 
-    controllers.push(crc(canvas, createElement(Group, {
+    controllers.push(pibbl(canvas, createElement(Group, {
       style: { filter: blur({ radius: 3 }) },
       children: createElement(Rectangle, {
         style: { left: 20, top: 20, width: 20, height: 20, fill: 'red' },

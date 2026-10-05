@@ -6,15 +6,15 @@ import {
   Rectangle,
   Text,
   batch,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
+  type PibblController,
+  type PibblPointerEvent,
   type WritableSignal,
   type SignalValue,
   type Signal,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
   Axis,
   Scale,
@@ -30,7 +30,7 @@ import {
   type HoverQueryContext,
   type HoverHit,
   type HoverSample,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 type Row = { id?: string; x: number; y: number | null | undefined };
 type Mode = "closest-point" | "nearest-per-line" | "interpolated-x";
 type Reading = {
@@ -238,14 +238,14 @@ function Plot({
     });
     return results;
   }
-  function move(event: CRCPointerEvent) {
+  function move(event: PibblPointerEvent) {
     const x = Math.max(0, Math.min(xs.frame.width, event.x - origin.x));
     batch(() => {
       position.set({ x, y: event.y - origin.y });
       inspection.set(xs.range[0] === xs.range[1] ? null : xs.invert(x));
     });
   }
-  function finish(event: CRCPointerEvent) {
+  function finish(event: PibblPointerEvent) {
     if (drag.get() !== event.pointerId) return;
     drag.set(null);
     event.currentTarget.releasePointerCapture(event.pointerId);
@@ -542,7 +542,7 @@ function Scene({ fixture }: { fixture: Fixture }) {
 export default function mount(
   canvas: HTMLCanvasElement,
   fixture: Fixture = {},
-): CRCController {
+): PibblController {
   const minHeight = canvas.style.minHeight,
     touchAction = canvas.style.touchAction;
   canvas.style.minHeight = "620px";
@@ -556,7 +556,7 @@ export default function mount(
     if (host) host.style.overflow = overflow ?? "";
   }
   try {
-    const controller = crc(canvas, <Scene fixture={fixture} />, {
+    const controller = pibbl(canvas, <Scene fixture={fixture} />, {
       viewport: "responsive",
     });
     return {

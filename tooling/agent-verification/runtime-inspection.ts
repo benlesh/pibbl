@@ -15,7 +15,7 @@ export function createRuntimeCheckedInspector(canvas: HTMLCanvasElement, applica
         : diagnostic.relation === 'separate-realms'
           ? 'Create the inspector in the application realm; separate realms have independent schedulers and mount registries.'
           : diagnostic.relation === 'duplicate-runtime'
-            ? 'Use the application-owned CRC module graph; a duplicate runtime cannot inspect its mounts.'
+            ? 'Use the application-owned Pibbl module graph; a duplicate runtime cannot inspect its mounts.'
             : 'A coherent matching application runtime binding is required before querying.',
     });
   }

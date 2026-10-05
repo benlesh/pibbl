@@ -4,14 +4,14 @@ import {
   Line,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
+  type PibblController,
+  type PibblPointerEvent,
   type WritableSignal,
-} from "@crc/core";
-import { Axis, BarSeries, Scale, useScale } from "@crc/core/viz";
+} from "@pibbl/core";
+import { Axis, BarSeries, Scale, useScale } from "@pibbl/core/viz";
 
 const periods = ["Q1", "Q2", "Q3", "Q4"];
 // Illustrative business cash flow, in thousands of dollars; not reported financial data.
@@ -108,7 +108,7 @@ function Plot({
 }) {
   const periods = useScale("periods", "band").get();
   const cash = useScale("cash").get();
-  function inspect(event: CRCPointerEvent) {
+  function inspect(event: PibblPointerEvent) {
     const x = event.x - origin.x,
       y = event.y - origin.y;
     // Reverse search matches the renderer's source paint order at shared edges.
@@ -293,6 +293,6 @@ function Scene() {
     </Group>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Scene />, { viewport: "responsive" });
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Scene />, { viewport: "responsive" });
 }

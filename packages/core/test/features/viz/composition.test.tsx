@@ -5,8 +5,8 @@ import {
   Rectangle,
   signal,
   useCanvasContext,
-} from "@crc/core";
-import { Axis, LineSeries, Scale, ScaleAdjust } from "@crc/core/viz";
+} from "@pibbl/core";
+import { Axis, LineSeries, Scale, ScaleAdjust } from "@pibbl/core/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;

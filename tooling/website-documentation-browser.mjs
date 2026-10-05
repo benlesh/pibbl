@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { chromium } from "playwright";
 
 const output = new URL("../website/dist/", import.meta.url);
-const base = process.env.CRC_WEBSITE_URL ?? "http://localhost:4321";
+const base = process.env.PIBBL_WEBSITE_URL ?? "http://localhost:4321";
 const catalog = JSON.parse(
   await readFile(new URL("catalog.json", output), "utf8"),
 );
@@ -81,9 +81,9 @@ try {
   assert.match(await page.locator("main").innerText(), /controller.dispose/);
   await page.getByRole("link", { name: "Plain source", exact: true }).waitFor();
   await page.goto(`${base}/agents/`);
-  await page.screenshot({ path: "/tmp/crc-agents-desktop.png" });
+  await page.screenshot({ path: "/tmp/pibbl-agents-desktop.png" });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.screenshot({ path: "/tmp/crc-agents-mobile.png" });
+  await page.screenshot({ path: "/tmp/pibbl-agents-mobile.png" });
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -91,7 +91,7 @@ try {
     true,
   );
   await page.goto(`${base}/reference/`);
-  await page.screenshot({ path: "/tmp/crc-reference-mobile.png" });
+  await page.screenshot({ path: "/tmp/pibbl-reference-mobile.png" });
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

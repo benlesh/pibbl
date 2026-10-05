@@ -11,14 +11,14 @@ Date: 2026-09-23
 
 ## Summary
 
-CRC will replace its per-render copy-and-delete component reconciliation with
-an instance-owned generation check. Every `CRCInstance` will increment one
+Pibbl will replace its per-render copy-and-delete component reconciliation with
+an instance-owned generation check. Every `PibblInstance` will increment one
 monotonic reconciliation generation when a render begins. Every visited
-`CRCComponentRefs` will record that generation. After successful traversal,
-CRC will scan the instance's retained refs once and tear down only entries that
+`PibblComponentRefs` will record that generation. After successful traversal,
+Pibbl will scan the instance's retained refs once and tear down only entries that
 were not visited in the current generation.
 
-The change preserves CRC's public API, component identity, hook lifetime,
+The change preserves Pibbl's public API, component identity, hook lifetime,
 signal-consumer ownership, removal timing, failure cleanup, nested Layer
 isolation, backend behavior, and complete immediate-mode traversal. It removes
 one full-size `Set` allocation, one insertion per previously retained
@@ -39,7 +39,7 @@ substantial advantage worth explicit review.
 
 This slice succeeds when:
 
-- successful renders no longer clone the complete `CRCInstance.refs` keyset;
+- successful renders no longer clone the complete `PibblInstance.refs` keyset;
 - live components perform no stale-set deletion during traversal;
 - one instance-owned generation distinguishes live from removed refs;
 - duplicate-key and same-type sibling identity remain unchanged;
@@ -62,7 +62,7 @@ This slice succeeds when:
 component traversal:
 
 ```ts
-GLOBAL_STATE.unseenIds = new Set(GLOBAL_STATE.currentCRCInstance.refs.keys());
+GLOBAL_STATE.unseenIds = new Set(GLOBAL_STATE.currentPibblInstance.refs.keys());
 GLOBAL_STATE.seenIds = new Set();
 GLOBAL_STATE.seenKeys = new Set();
 ```
@@ -78,8 +78,8 @@ After traversal, the remaining copied IDs identify removals:
 
 ```ts
 for (const id of GLOBAL_STATE.unseenIds) {
-  GLOBAL_STATE.currentCRCInstance.refs.get(id)?.teardowns.execute();
-  GLOBAL_STATE.currentCRCInstance.refs.delete(id);
+  GLOBAL_STATE.currentPibblInstance.refs.get(id)?.teardowns.execute();
+  GLOBAL_STATE.currentPibblInstance.refs.delete(id);
 }
 ```
 
@@ -98,7 +98,7 @@ render.
 
 ## Constraints
 
-- Preserve the recursive `CRCNode` and branded `CRCElement` protocols.
+- Preserve the recursive `PibblNode` and branded `PibblElement` protocols.
 - Preserve parent-path, component-function, key, and occurrence identity.
 - Preserve the rule that removal teardown occurs only after a successful
   traversal; failed traversal tears down every ref owned by that instance.
@@ -117,7 +117,7 @@ render.
 
 ### Instance-owned state
 
-`CRCInstance` gains three internal fields:
+`PibblInstance` gains three internal fields:
 
 ```ts
 renderGeneration: number;
@@ -130,14 +130,14 @@ Each instance, including a managed Layer or official backend child, owns its
 own fields. A parent and child therefore cannot clear or advance each other's
 reconciliation state during nested synchronous rendering.
 
-`CRCComponentRefs` gains one internal field:
+`PibblComponentRefs` gains one internal field:
 
 ```ts
 renderGeneration: number;
 ```
 
 This number is the most recent generation in which that exact ref was visited.
-It has no public meaning and is not exposed from `@crc/core`.
+It has no public meaning and is not exposed from `@pibbl/core`.
 
 The generation uses ordinary monotonic JavaScript number addition. Reaching
 `Number.MAX_SAFE_INTEGER` would require millions of years of uninterrupted
@@ -151,9 +151,9 @@ increments the active instance's generation, clears its reusable identity
 sets, and installs those sets into the existing render-global identity slots:
 
 ```ts
-const renderGeneration = ++crcInstance.renderGeneration;
-const seenIds = crcInstance.renderSeenIds;
-const seenKeys = crcInstance.renderSeenKeys;
+const renderGeneration = ++pibblInstance.renderGeneration;
+const seenIds = pibblInstance.renderSeenIds;
+const seenKeys = pibblInstance.renderSeenKeys;
 
 seenIds.clear();
 seenKeys.clear();
@@ -177,8 +177,8 @@ ID. It looks up that ID once, creates a ref only on mount, then updates the
 shared live fields after the branch:
 
 ```ts
-const instance = GLOBAL_STATE.currentCRCInstance!;
-let componentRefs = instance.refs.get(id) as CRCComponentRefs<P> | undefined;
+const instance = GLOBAL_STATE.currentPibblInstance!;
+let componentRefs = instance.refs.get(id) as PibblComponentRefs<P> | undefined;
 
 GLOBAL_STATE.componentIsMounting = componentRefs === undefined;
 
@@ -216,10 +216,10 @@ After component traversal succeeds, `executeRender()` scans the retained map
 once:
 
 ```ts
-for (const [id, componentRefs] of crcInstance.refs) {
+for (const [id, componentRefs] of pibblInstance.refs) {
   if (componentRefs.renderGeneration === renderGeneration) continue;
   componentRefs.teardowns.execute();
-  crcInstance.refs.delete(id);
+  pibblInstance.refs.delete(id);
 }
 ```
 
@@ -238,10 +238,10 @@ attempt partial stale reconciliation.
 The existing catch path remains authoritative:
 
 ```ts
-for (const refs of crcInstance.refs.values()) {
+for (const refs of pibblInstance.refs.values()) {
   refs.teardowns.execute();
 }
-crcInstance.refs.clear();
+pibblInstance.refs.clear();
 ```
 
 Generation writes made before a failure require no rollback because every ref
@@ -314,13 +314,13 @@ It preserves the largest avoidable portion of the current work.
 An intrusive retained child tree could identify some removals without a final
 map scan. It would introduce a second tree structure, require transactional
 sibling and parent bookkeeping, complicate reparenting and failure cleanup,
-and retain more memory. CRC's current flat identity map needs only one numeric
+and retain more memory. Pibbl's current flat identity map needs only one numeric
 comparison per entry.
 
 ### Rejected: weak or finalization-based ownership
 
 Garbage collection cannot provide deterministic hook, listener, signal,
-backend, and Layer teardown timing. CRC's explicit ownership model remains the
+backend, and Layer teardown timing. Pibbl's explicit ownership model remains the
 correct contract.
 
 ### Deferred: replace `seenIds` with per-parent occurrence tables
@@ -399,7 +399,7 @@ review.
 
 - `vitest.config.ts`: exclude nested worktrees.
 - `packages/core/src/lib/types.ts`: add instance and ref reconciliation state.
-- `packages/core/src/lib/mount-crc.ts`: initialize instance-owned state.
+- `packages/core/src/lib/mount-pibbl.ts`: initialize instance-owned state.
 - `packages/core/src/lib/global-state.ts`: remove `unseenIds`.
 - `packages/core/src/lib/execute-render.ts`: install scratch state, increment the
   generation, and reconcile stale refs.

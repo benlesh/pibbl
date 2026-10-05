@@ -1,4 +1,4 @@
-import { createElement, signal, type CRCNode } from "@crc/core";
+import { createElement, signal, type PibblNode } from "@pibbl/core";
 import {
   Scale,
   Axis,
@@ -8,7 +8,7 @@ import {
   type ScaleProps,
   type ResolvedScale,
   type LineSeriesProps,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 const data = signal<
   readonly { time: number; value: number | null; name: string }[]
 >([{ time: 0, value: 1, name: "a" }]);
@@ -41,7 +41,7 @@ function Probe() {
     />
   );
 }
-const scene: CRCNode = (
+const scene: PibblNode = (
   <Scale {...props}>
     <LineSeries {...line} />
     <ScaleAdjust x={1} xScale="x">
@@ -72,7 +72,7 @@ import {
   nearestPoint,
   nearestDomainValue,
   type PointSeriesProps,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 const points: PointSeriesProps<{
   time: number;
   value: number | null;
@@ -144,7 +144,7 @@ void (
 void nearestPoint;
 void nearestDomainValue;
 
-import { HoverData, closestPoint, defineSeries } from "@crc/core/viz";
+import { HoverData, closestPoint, defineSeries } from "@pibbl/core/viz";
 const hoverQuery = closestPoint({
   series: {
     a: defineSeries({ data: [{ x: 1, y: 2, label: "a" }], x: "x", y: "y" }),
@@ -201,7 +201,7 @@ import {
   linearInterpolation,
   type HoverSample,
   type HoverCardProps,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 const timeSeries = defineSeries({ data, x: "time", y: "value" });
 const nearestTime = closestX({
   series: timeSeries,
@@ -263,7 +263,7 @@ import {
   type AnchoredItem,
   type AnchoredLayoutProps,
   type AnchoredPlacement,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 const anchoredItems = [
   { key: "a", anchor: { x: 10, y: 20 }, width: 100, height: 40, label: "A" },
 ];
@@ -303,7 +303,7 @@ const invalidAnchoredItem: AnchoredItem = {
 };
 void invalidAnchoredItem;
 
-import { BarSeries, type ResolvedBandScale } from "@crc/core/viz";
+import { BarSeries, type ResolvedBandScale } from "@pibbl/core/viz";
 void (
   <BarSeries
     data={[{ category: "A", value: -2 }]}
@@ -344,7 +344,7 @@ import type {
   BandScaleRange,
   BarStyleResolver,
   BarSeriesProps,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 const groupedRows = [{ category: "A", group: "East", value: 12 }];
 const nestedRange: BandScaleRange = { bandwidthOf: Symbol("category") };
 const groupStyle: BarStyleResolver<(typeof groupedRows)[number]> = (row) => ({
@@ -436,7 +436,7 @@ void missingRangeEnd;
 void mixedGeometry;
 void rangeBaseline;
 
-import { PieLayout, PieSlice, PieLabel, pieSlices, type PieSliceGeometry } from "@crc/core/viz";
+import { PieLayout, PieSlice, PieLabel, pieSlices, type PieSliceGeometry } from "@pibbl/core/viz";
 const pieData = [{ id: "a", amount: 2, name: "Alpha" }];
 const pieLabel = (slice: PieSliceGeometry<typeof pieData[number]>) => slice.datum.name;
 const pieGeometry = pieSlices(pieData, { value: "amount", keyBy: "id" });

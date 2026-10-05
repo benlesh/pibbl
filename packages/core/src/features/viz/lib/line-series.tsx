@@ -1,5 +1,5 @@
-import { Path, resolveSignalValue } from "@crc/core";
-import { useInternalValueMemoSlot } from "@crc/core/internal";
+import { Path, resolveSignalValue } from "@pibbl/core";
+import { useInternalValueMemoSlot } from "@pibbl/core/internal";
 import type { LineAccessor, LineCoordinate, LineSeriesProps } from "./types.js";
 import { useScale } from "./use-scale.js";
 import { width, opacity } from "./paint.js";
@@ -15,7 +15,7 @@ function accessor<D>(
  *
  * @param props - Data, coordinate accessors, scales, and line styling. See {@link LineSeriesProps}
  * .
- * @returns CRC nodes drawing the data as a line series.
+ * @returns Pibbl nodes drawing the data as a line series.
  *
  * @see {@link LineSeriesProps}
  */

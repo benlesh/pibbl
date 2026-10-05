@@ -1,6 +1,6 @@
-# `@crc/core/physics`
+# `@pibbl/core/physics`
 
-First-class physics for CRC is exposed through dimensioned subpaths. This
+First-class physics for Pibbl is exposed through dimensioned subpaths. This
 package deliberately has no root runtime barrel and does not provide another
 JSX runtime.
 
@@ -10,21 +10,24 @@ Use the renderer-independent entry for immutable shapes and standalone
 geometry operations:
 
 ```ts
-import { circleShape2D, overlapShapes2D } from "@crc/core/physics/2d/geometry";
+import {
+  circleShape2D,
+  overlapShapes2D,
+} from "@pibbl/core/physics/2d/geometry";
 ```
 
-The geometry entry has no dependency on `@crc/core`. Public numeric arrays are
+The geometry entry has no dependency on `@pibbl/core`. Public numeric arrays are
 copied into package-owned immutable values.
 
-## CRC 2D worlds and components
+## Pibbl 2D worlds and components
 
-Install the matching `@crc/core` version and import the world-facing entry:
+Install the matching `@pibbl/core` version and import the world-facing entry:
 
 ```tsx
-import { Circle, crc } from "@crc/core";
-import { PhysicsWorld2D, dynamicBody2D } from "@crc/core/physics/2d";
+import { Circle, pibbl } from "@pibbl/core";
+import { PhysicsWorld2D, dynamicBody2D } from "@pibbl/core/physics/2d";
 
-crc(
+pibbl(
   canvas,
   <PhysicsWorld2D>
     <Circle physics={dynamicBody2D()} style={{ radius: 12 }} />
@@ -32,19 +35,19 @@ crc(
 );
 ```
 
-CRC remains the JSX runtime. Positive X points right, positive Y points down,
+Pibbl remains the JSX runtime. Positive X points right, positive Y points down,
 rigid-body rotation is clockwise degrees, velocity is logical units per
 second, acceleration is logical units per second squared, and fixed-step
 duration is milliseconds. Arc and wedge contour angles are explicitly named
 in radians.
 
-One mounted world requests frames through CRC's realm scheduler only while it
+One mounted world requests frames through Pibbl's realm scheduler only while it
 needs to advance; an idle observer can receive same-frame animation targets
 without requesting frames. Bodies and colliders do not start independent loops.
 Animation advances before physics, and both publish through the existing frame
 transaction.
 
-The runtime uses bundled Rapier 2D compat 0.21.0 under Apache-2.0, while CRC
+The runtime uses bundled Rapier 2D compat 0.21.0 under Apache-2.0, while Pibbl
 owns component identity, commands, signals, timing and failed-frame rollback.
 Its ESM entry initializes embedded WASM before imports resolve; there is no
 external WASM fetch or engine-owned clock. Pure geometry entries do not load it.
@@ -53,7 +56,7 @@ Use `space="local"` for a world whose parent viewport moves or scales, and
 `toPhysicsPoint2D` to convert root-logical pointer coordinates. Public
 `inspectPhysics2D` observations and `PhysicsDebug2D` overlays make state and
 collision geometry inspectable. Isolated browser tests can use
-`createPhysicsTestHarness2D` from `@crc/core/physics/2d/testing` to drive the same
+`createPhysicsTestHarness2D` from `@pibbl/core/physics/2d/testing` to drive the same
 public components without a private scheduler import.
 
 The package does not include joints, public engine serialization, swept sensors,

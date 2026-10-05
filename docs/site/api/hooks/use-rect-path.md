@@ -12,7 +12,7 @@ relatedTypes: [PixelGridAlignment, RoundedCornerPathOptions]
 # useRectPath
 
 ```ts
-import { useEventTarget, useRectPath, Path } from "@crc/core";
+import { useEventTarget, useRectPath, Path } from "@pibbl/core";
 ```
 
 `useRectPath(x, y, width, height, config?)` is render-only. It memoizes a

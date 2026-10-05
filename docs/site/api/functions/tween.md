@@ -6,18 +6,18 @@ kind: api
 slug: tween
 apiCategory: function
 symbols: [tween]
-relatedTypes: [CRCAnimationDefinition, CRCTweenOptions, CRCInterpolator]
+relatedTypes: [PibblAnimationDefinition, PibblTweenOptions, PibblInterpolator]
 ---
 
 # tween
 
 `tween(options)` returns an immutable
-[`CRCAnimationDefinition`](#/api/types/canvas-runtime#crcanimationdefinition).
+[`PibblAnimationDefinition`](#/api/types/canvas-runtime#pibblanimationdefinition).
 Numbers interpolate linearly by default; other value types require an explicit
 interpolator. `from` may be omitted so playback captures the output's activation
 value.
 
 Use [`drive`](#/api/functions/drive) to bind the definition to a writable signal.
 
-Related types: [`CRCTweenOptions`](#/api/types/canvas-runtime#crctweenoptions)
-and [`CRCInterpolator`](#/api/types/canvas-runtime#crcinterpolator).
+Related types: [`PibblTweenOptions`](#/api/types/canvas-runtime#pibbltweenoptions)
+and [`PibblInterpolator`](#/api/types/canvas-runtime#pibblinterpolator).

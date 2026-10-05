@@ -1,6 +1,6 @@
-/** @jsxImportSource @crc/core */
+/** @jsxImportSource @pibbl/core */
 import {
-  crc,
+  pibbl,
   Rectangle,
   Text,
   useSignal,
@@ -8,9 +8,9 @@ import {
   useConst,
   useRef,
   useReaction,
-  type CRCRef,
-  type CRCReactionOptions,
-} from "@crc/core";
+  type PibblRef,
+  type PibblReactionOptions,
+} from "@pibbl/core";
 
 const canvas = document.createElement("canvas");
 canvas.width = 320;
@@ -21,9 +21,9 @@ function Counter() {
   const count = useSignal(0);
   const doubled = useComputed(() => count.get() * 2);
   const label = useConst(() => "Click the rectangle");
-  const renders: CRCRef<number> = useRef(0);
+  const renders: PibblRef<number> = useRef(0);
   renders.current = (renders.current ?? 0) + 1;
-  const options: CRCReactionOptions = { debugName: "counter-output" };
+  const options: PibblReactionOptions = { debugName: "counter-output" };
   useReaction(
     () => {
       output.textContent = `Committed count: ${count.get()}`;
@@ -47,5 +47,5 @@ function Counter() {
     </Text>,
   ];
 }
-const controller = crc(canvas, <Counter />);
+const controller = pibbl(canvas, <Counter />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

@@ -1,12 +1,12 @@
 # After feedback: prioritized integration roadmap
 
-All three entries below are **unimplemented concepts**. No new public CRC API is implied. Begin only after the site organization and native-button recipe receive feedback.
+All three entries below are **unimplemented concepts**. No new public Pibbl API is implied. Begin only after the site organization and native-button recipe receive feedback.
 
 ## 1. Plasma around a native HTML form
 
 Keep labels, fields, validation messages, submit handling, and focus entirely native. Add one decorative canvas around the form's perimeter, with `pointer-events: none`. Map explicit form states (idle, focused field, invalid submission, confirmed success) to the visual region.
 
-First proof: one form, one bounded perimeter effect, static CSS fallback, reduced-motion state, resize, and exact cleanup. Investigate the existing public `lightning` texture and working Plasma Globe source for reusable behavior; neither establishes a ready-made form-outline component. Verify parameter and masking contracts before selecting the implementation. CRC must not capture or filter the live form.
+First proof: one form, one bounded perimeter effect, static CSS fallback, reduced-motion state, resize, and exact cleanup. Investigate the existing public `lightning` texture and working Plasma Globe source for reusable behavior; neither establishes a ready-made form-outline component. Verify parameter and masking contracts before selecting the implementation. Pibbl must not capture or filter the live form.
 
 Assets: none expected for a procedural perimeter. Measure the actual form rectangle and account for error-message growth. Do not place activity behind body copy or validation text. Success animation must follow confirmed host success, never merely a submit click.
 
@@ -20,7 +20,7 @@ Assets: a supplied/licensed image at known dimensions plus meaningful alt text. 
 
 ## 3. Store hero image rotator with dramatic transitions
 
-Start with two local product images and one proven transition from the image-reveal recipe. Native HTML owns headline, product links, next/previous controls, pause, slide state, and accessible announcements. CRC owns only the image transition region.
+Start with two local product images and one proven transition from the image-reveal recipe. Native HTML owns headline, product links, next/previous controls, pause, slide state, and accessible announcements. Pibbl owns only the image transition region.
 
 First proof: deterministic next/previous, explicit pause, loading failure, rapid repeated navigation, resize, reduced motion, and cleanup. Specify whether new navigation finishes, interrupts, or replaces the current transition; test that decision before adding another effect. Keep the selected native product content authoritative when the effect is stopped.
 

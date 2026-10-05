@@ -1,69 +1,69 @@
 import { getInteractionRoot } from '../global-state.js';
 import { batch } from '../signals/graph.js';
 import type {
-  CRCCursorDefault,
-  CRCEventRoot,
-  CRCFocusPressDefaultInput,
-  CRCFocusTouchDefaultContact,
-  CRCFocusTouchDefaultInput,
-  CRCInstance,
-  CRCInteractionActivation,
-  CRCInteractionRegion,
+  PibblCursorDefault,
+  PibblEventRoot,
+  PibblFocusPressDefaultInput,
+  PibblFocusTouchDefaultContact,
+  PibblFocusTouchDefaultInput,
+  PibblInstance,
+  PibblInteractionActivation,
+  PibblInteractionRegion,
 } from '../types.js';
 import {
   adaptClipboardEvent,
   isNativeClipboardEventType,
-  type CRCAdaptedClipboardEvent,
+  type PibblAdaptedClipboardEvent,
 } from './adapters/clipboard.js';
 import {
   adaptDragEvent,
   isNativeDragEventType,
-  type CRCAdaptedDragEvent,
+  type PibblAdaptedDragEvent,
 } from './adapters/drag.js';
 import {
   adaptEditingEvent,
   isNativeEditingEventType,
-  type CRCAdaptedEditingEvent,
+  type PibblAdaptedEditingEvent,
 } from './adapters/editing.js';
 import {
   adaptKeyboardFocusEvent,
   isNativeKeyboardFocusEventType,
-  type CRCAdaptedKeyboardFocusEvent,
+  type PibblAdaptedKeyboardFocusEvent,
 } from './adapters/keyboard-focus.js';
 import {
   adaptMouseEvent,
   isNativeMouseEventType,
-  type CRCAdaptedMouseEvent,
+  type PibblAdaptedMouseEvent,
 } from './adapters/mouse.js';
 import {
   adaptPointerEvent,
   isNativePointerEventType,
-  type CRCAdaptedPointerEvent,
+  type PibblAdaptedPointerEvent,
 } from './adapters/pointer.js';
 import {
   adaptTouchEvent,
   isNativeTouchEventType,
-  type CRCAdaptedTouchContact,
-  type CRCAdaptedTouchEvent,
+  type PibblAdaptedTouchContact,
+  type PibblAdaptedTouchEvent,
 } from './adapters/touch.js';
 import {
   adaptWheelEvent,
   isNativeWheelEventType,
-  type CRCAdaptedWheelEvent,
+  type PibblAdaptedWheelEvent,
 } from './adapters/wheel.js';
 import { planBoundaryTransitions } from './boundary-transitions.js';
-import type { CRCOriginalEvent } from './event-facade.js';
+import type { PibblOriginalEvent } from './event-facade.js';
 import { buildEventPath } from './event-path.js';
 import {
   resolveCoordinateOutput,
   resolveCoordinateTarget,
 } from './hit-test.js';
-import { CRCHitDisposition } from "./paint-entry.js";
+import { PibblHitDisposition } from "./paint-entry.js";
 import {
   dispatchCapturedResolverInput,
   dispatchResolvedInput,
   getResolverPointerCapture,
-  type CRCResolverInputType,
+  type PibblResolverInputType,
 } from "./resolver-input.js";
 import { dispatchEventPath } from './propagation.js';
 import {
@@ -75,48 +75,48 @@ import {
 } from './pointer-capture.js';
 import {
   releaseTarget,
-  type CRCEventNode,
-  type CRCEventTargetRegistration,
+  type PibblEventNode,
+  type PibblEventTargetRegistration,
 } from './registrations.js';
-import type { CRCEvent, CRCEventMap, CRCEventType } from './types.js';
+import type { PibblEvent, PibblEventMap, PibblEventType } from './types.js';
 
 interface CursorDefaultOwnership {
-  readonly root: CRCInstance;
+  readonly root: PibblInstance;
   readonly releases: readonly (() => void)[];
 }
 
 const cursorDefaultOwnership = new WeakMap<
-  CRCCursorDefault,
+  PibblCursorDefault,
   CursorDefaultOwnership
 >();
 const pointerHoverTargets = new WeakMap<
-  CRCEventRoot,
-  Map<number, CRCEventNode>
+  PibblEventRoot,
+  Map<number, PibblEventNode>
 >();
 const touchTargets = new WeakMap<
-  CRCEventRoot,
-  Map<number, CRCEventNode>
+  PibblEventRoot,
+  Map<number, PibblEventNode>
 >();
-const dragHoverTargets = new WeakMap<CRCEventRoot, CRCEventNode>();
+const dragHoverTargets = new WeakMap<PibblEventRoot, PibblEventNode>();
 
 interface ManipulationPointerPress {
-  readonly path: readonly CRCEventNode[] | undefined;
+  readonly path: readonly PibblEventNode[] | undefined;
 }
 
 interface PendingManipulationActivation {
   readonly pointerPress: ManipulationPointerPress | undefined;
-  readonly mouseDown: CRCInteractionActivation | undefined;
+  readonly mouseDown: PibblInteractionActivation | undefined;
 }
 
 const manipulationPointerPresses = new WeakMap<
-  CRCInstance,
+  PibblInstance,
   Map<number, ManipulationPointerPress>
 >();
 const pendingManipulationActivations = new WeakMap<
-  CRCInstance,
+  PibblInstance,
   Map<number, PendingManipulationActivation>
 >();
-const manipulationActivationRoots = new WeakSet<CRCInstance>();
+const manipulationActivationRoots = new WeakSet<PibblInstance>();
 
 /**
  * Prevents a manipulation gesture from becoming a Canvas activation. This is
@@ -124,7 +124,7 @@ const manipulationActivationRoots = new WeakSet<CRCInstance>();
  * ordinary pointer and mouse events through the public event surface.
  */
 export function suppressManipulationActivation(
-  instance: CRCInstance,
+  instance: PibblInstance,
   pointerId: number,
 ): void {
   const root = getInteractionRoot(instance);
@@ -140,7 +140,7 @@ export function suppressManipulationActivation(
   }));
 }
 
-export type CRCNativeEventRoute =
+export type PibblNativeEventRoute =
   | 'clipboard'
   | 'drag'
   | 'editing'
@@ -151,8 +151,8 @@ export type CRCNativeEventRoute =
   | 'wheel';
 
 export function dispatchNativeEvent(
-  instance: CRCInstance,
-  type: CRCEventType,
+  instance: PibblInstance,
+  type: PibblEventType,
   nativeEvent: Event,
 ): void {
   const root = getInteractionRoot(instance);
@@ -162,13 +162,13 @@ export function dispatchNativeEvent(
   });
 }
 
-export function dispatchToLogicalTarget<K extends CRCEventType>(
+export function dispatchToLogicalTarget<K extends PibblEventType>(
   type: K,
-  target: CRCEventNode,
-  originalEvent: CRCOriginalEvent<K>,
-  relatedTarget: CRCEventNode | null = null,
+  target: PibblEventNode,
+  originalEvent: PibblOriginalEvent<K>,
+  relatedTarget: PibblEventNode | null = null,
   sourceEvent?: Event,
-): CRCEventMap[K] | undefined {
+): PibblEventMap[K] | undefined {
   if (!target.live) return undefined;
   return batch(() =>
     dispatchEventPath({
@@ -182,8 +182,8 @@ export function dispatchToLogicalTarget<K extends CRCEventType>(
 }
 
 export function classifyNativeEventType(
-  type: CRCEventType,
-): CRCNativeEventRoute {
+  type: PibblEventType,
+): PibblNativeEventRoute {
   switch (type) {
     case 'pointerover':
     case 'pointerenter':
@@ -249,8 +249,8 @@ export function classifyNativeEventType(
 }
 
 function dispatchClassifiedNativeEvent(
-  root: CRCInstance,
-  type: CRCEventType,
+  root: PibblInstance,
+  type: PibblEventType,
   nativeEvent: Event,
 ): void {
   const route = classifyNativeEventType(type);
@@ -323,14 +323,14 @@ function dispatchClassifiedNativeEvent(
   return assertNever(route);
 }
 
-type CRCAdaptedFocusedEvent =
-  | CRCAdaptedClipboardEvent
-  | CRCAdaptedEditingEvent
-  | CRCAdaptedKeyboardFocusEvent;
+type PibblAdaptedFocusedEvent =
+  | PibblAdaptedClipboardEvent
+  | PibblAdaptedEditingEvent
+  | PibblAdaptedKeyboardFocusEvent;
 
 function dispatchFocusedNativeEvent(
-  root: CRCInstance,
-  input: CRCAdaptedFocusedEvent,
+  root: PibblInstance,
+  input: PibblAdaptedFocusedEvent,
 ): void {
   const installedPolicy = root.eventRoot.focusPolicy;
   const policy = installedPolicy?.beforeNativeDispatch ?
@@ -342,7 +342,7 @@ function dispatchFocusedNativeEvent(
   const event = dispatchToLogicalTarget(
     input.type,
     target,
-    input.originalEvent as CRCOriginalEvent<typeof input.type>,
+    input.originalEvent as PibblOriginalEvent<typeof input.type>,
   );
   if (
     (input.type === 'keydown' || input.type === 'keyup') &&
@@ -356,16 +356,16 @@ function dispatchFocusedNativeEvent(
 }
 
 function nativeRouteMismatch(
-  type: CRCEventType,
-  route: CRCNativeEventRoute,
+  type: PibblEventType,
+  route: PibblNativeEventRoute,
 ): Error {
-  return new Error(`CRC event ${type} is not valid for the ${route} route.`);
+  return new Error(`Pibbl event ${type} is not valid for the ${route} route.`);
 }
 
 /** Clears dispatch-owned references before a logical node becomes dead. */
 export function releaseEventNodeState(
-  instance: CRCInstance,
-  node: CRCEventNode,
+  instance: PibblInstance,
+  node: PibblEventNode,
 ): void {
   const root = getInteractionRoot(instance);
   releasePointerHoverTarget(root.eventRoot, node);
@@ -392,15 +392,15 @@ export function releaseEventNodeState(
 }
 
 export function removeInteractionRegion(
-  _instance: CRCInstance,
-  region: CRCInteractionRegion,
+  _instance: PibblInstance,
+  region: PibblInteractionRegion,
 ): void {
   releaseTarget(region);
 }
 
 export function refreshInteractionCursor(
-  instance: CRCInstance,
-  region: CRCInteractionRegion,
+  instance: PibblInstance,
+  region: PibblInteractionRegion,
 ): void {
   const root = getInteractionRoot(instance);
   if (
@@ -412,8 +412,8 @@ export function refreshInteractionCursor(
 }
 
 export function updateCursorDefault(
-  instance: CRCInstance,
-  cursorDefault: CRCCursorDefault,
+  instance: PibblInstance,
+  cursorDefault: PibblCursorDefault,
 ): void {
   const root = getInteractionRoot(instance);
   const existing = cursorDefaultOwnership.get(cursorDefault);
@@ -428,8 +428,8 @@ export function updateCursorDefault(
 }
 
 export function removeCursorDefault(
-  instance: CRCInstance,
-  cursorDefault: CRCCursorDefault,
+  instance: PibblInstance,
+  cursorDefault: PibblCursorDefault,
 ): void {
   releaseCursorDefaultOwnership(cursorDefault);
   const root = getInteractionRoot(instance);
@@ -441,15 +441,15 @@ export function removeCursorDefault(
   }
 }
 
-export function refreshCursorDefault(instance: CRCInstance): void {
+export function refreshCursorDefault(instance: PibblInstance): void {
   const root = getInteractionRoot(instance);
   const canvas = root.interaction.pointerCanvas;
   if (canvas) applyCursor(root, root.interaction.hoveredRegion, canvas);
 }
 
 function dispatchPointerEvent(
-  root: CRCInstance,
-  input: CRCAdaptedPointerEvent,
+  root: PibblInstance,
+  input: PibblAdaptedPointerEvent,
 ): void {
   if (
     input.type !== 'gotpointercapture' &&
@@ -498,8 +498,8 @@ function dispatchPointerEvent(
 }
 
 function dispatchPointerBoundaryEntry(
-  root: CRCInstance,
-  input: CRCAdaptedPointerEvent,
+  root: PibblInstance,
+  input: PibblAdaptedPointerEvent,
 ): void {
   const pointerId = input.originalEvent.pointerId;
   const previous = livePointerHover(root, pointerId);
@@ -509,8 +509,8 @@ function dispatchPointerBoundaryEntry(
 }
 
 function dispatchPointerMove(
-  root: CRCInstance,
-  input: CRCAdaptedPointerEvent,
+  root: PibblInstance,
+  input: PibblAdaptedPointerEvent,
 ): void {
   const pointerId = input.originalEvent.pointerId;
   const previous = livePointerHover(root, pointerId);
@@ -523,8 +523,8 @@ function dispatchPointerMove(
 }
 
 function dispatchRootPointerOut(
-  root: CRCInstance,
-  input: CRCAdaptedPointerEvent,
+  root: PibblInstance,
+  input: PibblAdaptedPointerEvent,
 ): void {
   const pointerId = input.originalEvent.pointerId;
   const previous = livePointerHover(root, pointerId);
@@ -532,10 +532,10 @@ function dispatchRootPointerOut(
 }
 
 function dispatchPointerTransition(
-  root: CRCInstance,
-  previous: CRCEventNode | undefined,
-  next: CRCEventNode | undefined,
-  input: CRCAdaptedPointerEvent,
+  root: PibblInstance,
+  previous: PibblEventNode | undefined,
+  next: PibblEventNode | undefined,
+  input: PibblAdaptedPointerEvent,
   dispatchMove: boolean,
 ): void {
   const pointerId = input.originalEvent.pointerId;
@@ -573,8 +573,8 @@ function dispatchPointerTransition(
 }
 
 function dispatchPointerCoordinateEvent(
-  root: CRCInstance,
-  input: CRCAdaptedPointerEvent,
+  root: PibblInstance,
+  input: PibblAdaptedPointerEvent,
 ): void {
   const policy = root.eventRoot.focusPolicy;
   const logicalCapture = getLogicalPointerCapture(
@@ -608,8 +608,8 @@ function dispatchPointerCoordinateEvent(
 }
 
 function dispatchPointerCancel(
-  root: CRCInstance,
-  input: CRCAdaptedPointerEvent,
+  root: PibblInstance,
+  input: PibblAdaptedPointerEvent,
 ): void {
   dispatchPointerCoordinateEvent(root, input);
   cancelLogicalPointerCapture(
@@ -619,8 +619,8 @@ function dispatchPointerCancel(
 }
 
 function dispatchGotPointerCapture(
-  root: CRCInstance,
-  input: CRCAdaptedPointerEvent,
+  root: PibblInstance,
+  input: PibblAdaptedPointerEvent,
 ): void {
   const target = activateLogicalPointerCapture(
     root.eventRoot,
@@ -630,8 +630,8 @@ function dispatchGotPointerCapture(
 }
 
 function dispatchLostPointerCapture(
-  root: CRCInstance,
-  input: CRCAdaptedPointerEvent,
+  root: PibblInstance,
+  input: PibblAdaptedPointerEvent,
 ): void {
   const target = consumeLogicalPointerCaptureLoss(
     root.eventRoot,
@@ -641,10 +641,10 @@ function dispatchLostPointerCapture(
 }
 
 function resolvePointerTarget(
-  root: CRCInstance,
-  input: CRCAdaptedPointerEvent,
+  root: PibblInstance,
+  input: PibblAdaptedPointerEvent,
   deliverInput = false,
-): CRCEventNode | undefined {
+): PibblEventNode | undefined {
   const logicalCapture = getLogicalPointerCapture(
     root.eventRoot,
     input.originalEvent.pointerId,
@@ -671,9 +671,9 @@ function resolvePointerTarget(
 }
 
 function resolvePointerInputTarget(
-  root: CRCInstance,
-  input: CRCAdaptedPointerEvent,
-): CRCEventTargetRegistration | undefined {
+  root: PibblInstance,
+  input: PibblAdaptedPointerEvent,
+): PibblEventTargetRegistration | undefined {
   const type = input.type as "pointerdown" | "pointerup" | "pointercancel";
   const captured = getResolverPointerCapture(
     root.eventRoot,
@@ -687,11 +687,11 @@ function resolvePointerInputTarget(
 }
 
 function dispatchPointerNode(
-  type: CRCAdaptedPointerEvent['type'],
-  target: CRCEventNode,
-  input: CRCAdaptedPointerEvent,
-  relatedTarget: CRCEventNode | null = null,
-): CRCEvent | undefined {
+  type: PibblAdaptedPointerEvent['type'],
+  target: PibblEventNode,
+  input: PibblAdaptedPointerEvent,
+  relatedTarget: PibblEventNode | null = null,
+): PibblEvent | undefined {
   if (!target.live) return undefined;
   return dispatchEventPath({
     type,
@@ -704,9 +704,9 @@ function dispatchPointerNode(
 }
 
 function livePointerHover(
-  root: CRCInstance,
+  root: PibblInstance,
   pointerId: number,
-): CRCEventNode | undefined {
+): PibblEventNode | undefined {
   const targets = pointerHoverTargets.get(root.eventRoot);
   const target = targets?.get(pointerId);
   if (!target || isLiveNode(root, target)) return target;
@@ -716,9 +716,9 @@ function livePointerHover(
 }
 
 function setPointerHover(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   pointerId: number,
-  target: CRCEventNode,
+  target: PibblEventNode,
 ): void {
   let targets = pointerHoverTargets.get(eventRoot);
   if (!targets) {
@@ -729,7 +729,7 @@ function setPointerHover(
 }
 
 function deletePointerHover(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   pointerId: number,
 ): void {
   const targets = pointerHoverTargets.get(eventRoot);
@@ -738,8 +738,8 @@ function deletePointerHover(
 }
 
 function releasePointerHoverTarget(
-  eventRoot: CRCEventRoot,
-  target: CRCEventNode,
+  eventRoot: PibblEventRoot,
+  target: PibblEventNode,
 ): void {
   const targets = pointerHoverTargets.get(eventRoot);
   if (!targets) return;
@@ -750,15 +750,15 @@ function releasePointerHoverTarget(
 }
 
 function dispatchTouchEvent(
-  root: CRCInstance,
-  input: CRCAdaptedTouchEvent,
+  root: PibblInstance,
+  input: PibblAdaptedTouchEvent,
 ): void {
   const policy = root.eventRoot.focusPolicy;
-  const groups = new Map<CRCEventNode, CRCAdaptedTouchContact[]>();
-  const defaultContacts: CRCFocusTouchDefaultContact[] = [];
+  const groups = new Map<PibblEventNode, PibblAdaptedTouchContact[]>();
+  const defaultContacts: PibblFocusTouchDefaultContact[] = [];
   for (const contact of input.changedContacts) {
     const identifier = contact.touch.identifier;
-    let target: CRCEventNode | undefined;
+    let target: PibblEventNode | undefined;
     if (input.type === 'touchstart') {
       target = resolveCoordinateTarget(root.eventRoot, contact);
       if (target) setTouchTarget(root.eventRoot, identifier, target);
@@ -806,9 +806,9 @@ function dispatchTouchEvent(
 }
 
 function liveTouchTarget(
-  root: CRCInstance,
+  root: PibblInstance,
   identifier: number,
-): CRCEventNode | undefined {
+): PibblEventNode | undefined {
   const target = touchTargets.get(root.eventRoot)?.get(identifier);
   if (!target || isLiveNode(root, target)) return target;
   deleteTouchTarget(root.eventRoot, identifier);
@@ -816,9 +816,9 @@ function liveTouchTarget(
 }
 
 function setTouchTarget(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   identifier: number,
-  target: CRCEventNode,
+  target: PibblEventNode,
 ): void {
   let targets = touchTargets.get(eventRoot);
   if (!targets) {
@@ -829,7 +829,7 @@ function setTouchTarget(
 }
 
 function deleteTouchTarget(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   identifier: number,
 ): void {
   const targets = touchTargets.get(eventRoot);
@@ -838,8 +838,8 @@ function deleteTouchTarget(
 }
 
 function releaseTouchTarget(
-  eventRoot: CRCEventRoot,
-  target: CRCEventNode,
+  eventRoot: PibblEventRoot,
+  target: PibblEventNode,
 ): void {
   const targets = touchTargets.get(eventRoot);
   if (!targets) return;
@@ -850,8 +850,8 @@ function releaseTouchTarget(
 }
 
 function dispatchWheelEvent(
-  root: CRCInstance,
-  input: CRCAdaptedWheelEvent,
+  root: PibblInstance,
+  input: PibblAdaptedWheelEvent,
 ): void {
   const target = resolveCoordinateInputTarget(root, input, "wheel");
   if (!target) return;
@@ -865,8 +865,8 @@ function dispatchWheelEvent(
 }
 
 function dispatchDragEvent(
-  root: CRCInstance,
-  input: CRCAdaptedDragEvent,
+  root: PibblInstance,
+  input: PibblAdaptedDragEvent,
 ): void {
   switch (input.type) {
     case 'dragenter':
@@ -904,9 +904,9 @@ function dispatchDragEvent(
 }
 
 function reconcileDragTarget(
-  root: CRCInstance,
-  input: CRCAdaptedDragEvent,
-): CRCEventNode | undefined {
+  root: PibblInstance,
+  input: PibblAdaptedDragEvent,
+): PibblEventNode | undefined {
   const previous = liveDragHover(root);
   const next = resolveCoordinateTarget(root.eventRoot, input);
   if (previous === next) return next;
@@ -914,11 +914,11 @@ function reconcileDragTarget(
 }
 
 function dispatchDragTransition(
-  root: CRCInstance,
-  previous: CRCEventNode | undefined,
-  next: CRCEventNode | undefined,
-  input: CRCAdaptedDragEvent,
-): CRCEventNode | undefined {
+  root: PibblInstance,
+  previous: PibblEventNode | undefined,
+  next: PibblEventNode | undefined,
+  input: PibblAdaptedDragEvent,
+): PibblEventNode | undefined {
   const oldPath = previous ? buildEventPath(previous) : [];
   const newPath = next ? buildEventPath(next) : [];
   const plan = planBoundaryTransitions(oldPath, newPath);
@@ -948,18 +948,18 @@ function dispatchDragTransition(
 }
 
 function dispatchDragCoordinateEvent(
-  root: CRCInstance,
-  input: CRCAdaptedDragEvent,
+  root: PibblInstance,
+  input: PibblAdaptedDragEvent,
 ): void {
   const target = resolveCoordinateTarget(root.eventRoot, input);
   if (target) dispatchDragNode(input.type, target, input);
 }
 
 function dispatchDragNode(
-  type: CRCAdaptedDragEvent['type'],
-  target: CRCEventNode,
-  input: CRCAdaptedDragEvent,
-  relatedTarget: CRCEventNode | null = null,
+  type: PibblAdaptedDragEvent['type'],
+  target: PibblEventNode,
+  input: PibblAdaptedDragEvent,
+  relatedTarget: PibblEventNode | null = null,
 ): void {
   if (!target.live) return;
   dispatchEventPath({
@@ -972,7 +972,7 @@ function dispatchDragNode(
   });
 }
 
-function liveDragHover(root: CRCInstance): CRCEventNode | undefined {
+function liveDragHover(root: PibblInstance): PibblEventNode | undefined {
   const target = dragHoverTargets.get(root.eventRoot);
   if (!target || isLiveNode(root, target)) return target;
   dragHoverTargets.delete(root.eventRoot);
@@ -980,8 +980,8 @@ function liveDragHover(root: CRCInstance): CRCEventNode | undefined {
 }
 
 function releaseDragHoverTarget(
-  eventRoot: CRCEventRoot,
-  target: CRCEventNode,
+  eventRoot: PibblEventRoot,
+  target: PibblEventNode,
 ): void {
   if (dragHoverTargets.get(eventRoot) === target) {
     dragHoverTargets.delete(eventRoot);
@@ -989,8 +989,8 @@ function releaseDragHoverTarget(
 }
 
 function dispatchMouseEvent(
-  root: CRCInstance,
-  input: CRCAdaptedMouseEvent,
+  root: PibblInstance,
+  input: PibblAdaptedMouseEvent,
 ): void {
   switch (input.type) {
     case 'mousemove':
@@ -1022,8 +1022,8 @@ function dispatchMouseEvent(
 }
 
 function dispatchMouseMove(
-  root: CRCInstance,
-  input: CRCAdaptedMouseEvent,
+  root: PibblInstance,
+  input: PibblAdaptedMouseEvent,
 ): void {
   const canvas = root.eventRoot.canvas;
   if (!canvas) return;
@@ -1039,8 +1039,8 @@ function dispatchMouseMove(
 }
 
 function dispatchRootMouseOut(
-  root: CRCInstance,
-  input: CRCAdaptedMouseEvent,
+  root: PibblInstance,
+  input: PibblAdaptedMouseEvent,
 ): void {
   const previous = liveTarget(root, root.interaction.hoveredRegion);
   root.interaction.pointerCanvas = undefined;
@@ -1048,10 +1048,10 @@ function dispatchRootMouseOut(
 }
 
 function dispatchMouseTransition(
-  root: CRCInstance,
-  previous: CRCEventTargetRegistration | undefined,
-  next: CRCEventTargetRegistration | undefined,
-  input: CRCAdaptedMouseEvent,
+  root: PibblInstance,
+  previous: PibblEventTargetRegistration | undefined,
+  next: PibblEventTargetRegistration | undefined,
+  input: PibblAdaptedMouseEvent,
   pointerCanvas: HTMLCanvasElement | undefined,
 ): void {
   const oldPath = previous ? buildEventPath(previous) : [];
@@ -1089,8 +1089,8 @@ function dispatchMouseTransition(
 }
 
 function dispatchMouseButton(
-  root: CRCInstance,
-  input: CRCAdaptedMouseEvent,
+  root: PibblInstance,
+  input: PibblAdaptedMouseEvent,
 ): void {
   const policy = root.eventRoot.focusPolicy;
   const target = resolveCoordinateTarget(root.eventRoot, input);
@@ -1129,8 +1129,8 @@ function dispatchMouseButton(
 }
 
 function dispatchActivation(
-  root: CRCInstance,
-  input: CRCAdaptedMouseEvent,
+  root: PibblInstance,
+  input: PibblAdaptedMouseEvent,
   type: 'click' | 'auxclick',
 ): void {
   const interaction = root.interaction;
@@ -1190,8 +1190,8 @@ function dispatchActivation(
 }
 
 function dispatchDoubleClick(
-  root: CRCInstance,
-  input: CRCAdaptedMouseEvent,
+  root: PibblInstance,
+  input: PibblAdaptedMouseEvent,
 ): void {
   const target = root.interaction.clickStreakTarget;
   if (
@@ -1206,9 +1206,9 @@ function dispatchDoubleClick(
 }
 
 function coordinatePathIncludes(
-  root: CRCInstance,
-  input: CRCAdaptedMouseEvent,
-  node: CRCEventNode,
+  root: PibblInstance,
+  input: PibblAdaptedMouseEvent,
+  node: PibblEventNode,
 ): boolean {
   const coordinateTarget = resolveCoordinateTarget(root.eventRoot, input);
   return Boolean(
@@ -1217,8 +1217,8 @@ function coordinatePathIncludes(
 }
 
 function dispatchCoordinateEvent(
-  root: CRCInstance,
-  input: CRCAdaptedMouseEvent,
+  root: PibblInstance,
+  input: PibblAdaptedMouseEvent,
 ): void {
   const target = input.type === "contextmenu" ?
     resolveCoordinateInputTarget(root, input, "contextmenu") :
@@ -1227,25 +1227,25 @@ function dispatchCoordinateEvent(
 }
 
 function resolveCoordinateInputTarget(
-  root: CRCInstance,
+  root: PibblInstance,
   point: Readonly<{ x: number; y: number }> & {
     readonly originalEvent: PointerEvent | WheelEvent | MouseEvent;
   },
-  type: CRCResolverInputType,
-): CRCEventTargetRegistration | undefined {
+  type: PibblResolverInputType,
+): PibblEventTargetRegistration | undefined {
   const output = resolveCoordinateOutput(root.eventRoot, point);
   dispatchResolvedInput(output, type, point, point.originalEvent);
-  return output.disposition === CRCHitDisposition.Target ?
+  return output.disposition === PibblHitDisposition.Target ?
     output.target ?? undefined :
     undefined;
 }
 
 function dispatchMouseNode(
-  type: CRCAdaptedMouseEvent['type'],
-  target: CRCEventNode,
-  input: CRCAdaptedMouseEvent,
-  relatedTarget: CRCEventNode | null = null,
-): CRCEvent | undefined {
+  type: PibblAdaptedMouseEvent['type'],
+  target: PibblEventNode,
+  input: PibblAdaptedMouseEvent,
+  relatedTarget: PibblEventNode | null = null,
+): PibblEvent | undefined {
   if (!target.live) return undefined;
   return dispatchEventPath({
     type,
@@ -1258,9 +1258,9 @@ function dispatchMouseNode(
 }
 
 function dispatchPressDefault(
-  root: CRCInstance,
-  policy: CRCEventRoot['focusPolicy'],
-  input: CRCFocusPressDefaultInput,
+  root: PibblInstance,
+  policy: PibblEventRoot['focusPolicy'],
+  input: PibblFocusPressDefaultInput,
 ): void {
   if (
     policy &&
@@ -1272,9 +1272,9 @@ function dispatchPressDefault(
 }
 
 function dispatchTouchDefault(
-  root: CRCInstance,
-  policy: CRCEventRoot['focusPolicy'],
-  input: CRCFocusTouchDefaultInput,
+  root: PibblInstance,
+  policy: PibblEventRoot['focusPolicy'],
+  input: PibblFocusTouchDefaultInput,
 ): void {
   if (
     policy &&
@@ -1286,12 +1286,12 @@ function dispatchTouchDefault(
 }
 
 function activationTarget(
-  root: CRCInstance,
-  down: CRCInteractionActivation | undefined,
-  up: CRCInteractionActivation | undefined,
+  root: PibblInstance,
+  down: PibblInteractionActivation | undefined,
+  up: PibblInteractionActivation | undefined,
   button: number,
   type: 'click' | 'auxclick',
-): CRCEventNode | undefined {
+): PibblEventNode | undefined {
   if (
     !down ||
     !up ||
@@ -1309,7 +1309,7 @@ function activationTarget(
   return undefined;
 }
 
-function isLiveNode(root: CRCInstance, node: CRCEventNode): boolean {
+function isLiveNode(root: PibblInstance, node: PibblEventNode): boolean {
   if (!node.live || node.owner.eventRoot !== root.eventRoot) return false;
   if (node.kind === 'target') return root.eventRoot.targets.has(node);
   return root.eventRoot.listenersByComponent.get(node.component.id)?.has(node) ??
@@ -1317,16 +1317,16 @@ function isLiveNode(root: CRCInstance, node: CRCEventNode): boolean {
 }
 
 function liveTarget(
-  root: CRCInstance,
-  target: CRCEventTargetRegistration | undefined,
-): CRCEventTargetRegistration | undefined {
+  root: PibblInstance,
+  target: PibblEventTargetRegistration | undefined,
+): PibblEventTargetRegistration | undefined {
   return target && isLiveNode(root, target) ? target : undefined;
 }
 
 function removeActivationNode(
-  activation: CRCInteractionActivation | undefined,
-  node: CRCEventNode,
-): CRCInteractionActivation | undefined {
+  activation: PibblInteractionActivation | undefined,
+  node: PibblEventNode,
+): PibblInteractionActivation | undefined {
   if (!activation?.path.includes(node)) return activation;
   if (node.kind === 'target') return undefined;
   const path = activation.path.filter(candidate => candidate !== node);
@@ -1334,8 +1334,8 @@ function removeActivationNode(
 }
 
 function removeActivationNodeFromMap(
-  activations: Map<number, CRCInteractionActivation>,
-  node: CRCEventNode,
+  activations: Map<number, PibblInteractionActivation>,
+  node: PibblEventNode,
 ): void {
   for (const [button, activation] of activations) {
     updateActivationMap(
@@ -1347,23 +1347,23 @@ function removeActivationNodeFromMap(
 }
 
 function updateActivationMap(
-  activations: Map<number, CRCInteractionActivation>,
+  activations: Map<number, PibblInteractionActivation>,
   button: number,
-  activation: CRCInteractionActivation | undefined,
+  activation: PibblInteractionActivation | undefined,
 ): void {
   if (activation) activations.set(button, activation);
   else activations.delete(button);
 }
 
-function resetClickStreak(root: CRCInstance): void {
+function resetClickStreak(root: PibblInstance): void {
   root.interaction.clickStreakTarget = undefined;
   root.interaction.clickStreak = 0;
 }
 
 function recordManipulationPointerPress(
-  root: CRCInstance,
+  root: PibblInstance,
   pointerId: number,
-  target: CRCEventNode | undefined,
+  target: PibblEventNode | undefined,
 ): void {
   retainManipulationActivationState(root);
   pendingManipulationActivations.get(root)?.delete(pointerId);
@@ -1379,7 +1379,7 @@ function recordManipulationPointerPress(
 }
 
 function deleteManipulationPointerPress(
-  root: CRCInstance,
+  root: PibblInstance,
   pointerId: number,
 ): void {
   const presses = manipulationPointerPresses.get(root);
@@ -1388,7 +1388,7 @@ function deleteManipulationPointerPress(
   if (presses.size === 0) manipulationPointerPresses.delete(root);
 }
 
-function retainManipulationActivationState(root: CRCInstance): void {
+function retainManipulationActivationState(root: PibblInstance): void {
   if (manipulationActivationRoots.has(root)) return;
   manipulationActivationRoots.add(root);
   root.mainTeardowns.add(() => {
@@ -1399,10 +1399,10 @@ function retainManipulationActivationState(root: CRCInstance): void {
 }
 
 function consumeManipulationActivation(
-  root: CRCInstance,
-  down: CRCInteractionActivation | undefined,
-  up: CRCInteractionActivation | undefined,
-  coordinateTarget: CRCEventNode | undefined,
+  root: PibblInstance,
+  down: PibblInteractionActivation | undefined,
+  up: PibblInteractionActivation | undefined,
+  coordinateTarget: PibblEventNode | undefined,
   nativeEvent: MouseEvent,
 ): boolean {
   const pending = pendingManipulationActivations.get(root);
@@ -1436,7 +1436,7 @@ function clickPointerId(nativeEvent: MouseEvent): number | undefined {
 }
 
 function deletePendingManipulationActivation(
-  root: CRCInstance,
+  root: PibblInstance,
   pending: Map<number, PendingManipulationActivation>,
   pointerId: number,
 ): void {
@@ -1446,9 +1446,9 @@ function deletePendingManipulationActivation(
 
 function matchesManipulationActivation(
   activation: PendingManipulationActivation,
-  down: CRCInteractionActivation | undefined,
-  up: CRCInteractionActivation | undefined,
-  coordinateTarget: CRCEventNode | undefined,
+  down: PibblInteractionActivation | undefined,
+  up: PibblInteractionActivation | undefined,
+  coordinateTarget: PibblEventNode | undefined,
 ): boolean {
   if (activation.mouseDown && activation.mouseDown === down) return true;
   const pointerPath = activation.pointerPress?.path;
@@ -1479,7 +1479,7 @@ function dispatchObservers(
   }
 }
 
-function releaseCursorDefaultOwnership(cursorDefault: CRCCursorDefault): void {
+function releaseCursorDefaultOwnership(cursorDefault: PibblCursorDefault): void {
   const ownership = cursorDefaultOwnership.get(cursorDefault);
   if (!ownership) return;
   cursorDefaultOwnership.delete(cursorDefault);
@@ -1487,8 +1487,8 @@ function releaseCursorDefaultOwnership(cursorDefault: CRCCursorDefault): void {
 }
 
 function applyCursor(
-  instance: CRCInstance,
-  region: CRCInteractionRegion | undefined,
+  instance: PibblInstance,
+  region: PibblInteractionRegion | undefined,
   canvas: HTMLCanvasElement,
 ): void {
   const interaction = instance.interaction;
@@ -1516,11 +1516,11 @@ function applyCursor(
   }
 }
 
-function lastCursorDefault(instance: CRCInstance): CRCCursorDefault | undefined {
+function lastCursorDefault(instance: PibblInstance): PibblCursorDefault | undefined {
   return Array.from(instance.cursorDefaults).at(-1);
 }
 
-function releaseCursor(instance: CRCInstance): void {
+function releaseCursor(instance: PibblInstance): void {
   const interaction = instance.interaction;
   const { cursorCanvas, cursorStyle } = interaction;
   if (cursorCanvas && cursorStyle && cursorCanvas.style.cursor === cursorStyle) {
@@ -1533,5 +1533,5 @@ function releaseCursor(instance: CRCInstance): void {
 }
 
 function assertNever(value: never): never {
-  throw new Error(`Unhandled CRC event route: ${String(value)}`);
+  throw new Error(`Unhandled Pibbl event route: ${String(value)}`);
 }

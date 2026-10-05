@@ -136,7 +136,7 @@ function operands(segment: PathSegment): number[] {
 }
 
 /**
- * Mutable packed geometry. Mutations do not schedule CRC rendering.
+ * Mutable packed geometry. Mutations do not schedule Pibbl rendering.
  *
  * @see {@link PathSegment}
  */
@@ -160,7 +160,7 @@ export class PathGeometry implements Iterable<PathSegment> {
   }
 
   /**
-   * Monotonic mutation revision; changing geometry does not itself request a CRC frame. See
+   * Monotonic mutation revision; changing geometry does not itself request a Pibbl frame. See
    * {@link PathGeometry}.
    * @returns The mutation revision used to invalidate cached representations.
    */

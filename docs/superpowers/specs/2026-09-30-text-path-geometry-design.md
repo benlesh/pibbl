@@ -9,7 +9,7 @@ Date: 2026-09-30
 
 ## Recommendation
 
-Build a small CRC-owned text-to-geometry module over a pinned native HarfBuzz
+Build a small Pibbl-owned text-to-geometry module over a pinned native HarfBuzz
 build compiled to WASM. Own its loading, explicit lifetime, packed output, and
 PathGeometry integration. Reuse HarfBuzz's font parsing, shaping, and outline
 extraction. A separate FreeType renderer is unnecessary for ordinary unhinted
@@ -27,7 +27,7 @@ itself archived; ttf-parser is in maintenance mode and recommends Fontations
 for new projects. Do not select those older projects from familiarity alone.
 HarfRust documents remaining conformance differences from HarfBuzz. Prefer the
 native HarfBuzz reference engine until a measured Rust prototype offers a
-concrete advantage for CRC.
+concrete advantage for Pibbl.
 
 No custom WASM build has been benchmarked yet. The choice above is an
 architecture recommendation based on capabilities and ownership, not a claim
@@ -51,7 +51,7 @@ this first contract. Reject tabs and line breaks rather than guessing layout.
 
 ## Workspace package and command workflow
 
-Ship this as `packages/text`, published as `@crc/text`, with a matching-version
+Ship this as `packages/text`, published as `@pibbl/text`, with a matching-version
 core peer dependency and workspace development dependency, following the sibling
 package convention. Keep the native wrapper, toolchain/source lock manifest,
 build orchestration, tests, and WASM asset ownership in this package. Core has
@@ -110,8 +110,8 @@ That feature was still undergoing integration at research time; recheck its
 merged public surface before implementation.
 
 PathGeometry uses private typed arrays and a mutation revision. Path and Clip
-accept it directly and CRC caches native snapshots by identity/revision.
-Mutation itself does not schedule a frame. Applications notify CRC through
+accept it directly and Pibbl caches native snapshots by identity/revision.
+Mutation itself does not schedule a frame. Applications notify Pibbl through
 existing state/signals after editing.
 
 Convert native output using public moveTo, lineTo, quadraticCurveTo,
@@ -178,7 +178,7 @@ reshape static labels during every component render.
 
 ## Proposed JavaScript API
 
-An optional @crc/text package exposes a small facade:
+An optional @pibbl/text package exposes a small facade:
 
 ```ts
 const font = await loadOutlineFont("/fonts/Example.ttf");
@@ -283,7 +283,7 @@ partial native results after malformed input, limits, or conversion failures.
 
 ## Build-time generation
 
-A future @crc/text/build entry runs the same engine and conversion pipeline in
+A future @pibbl/text/build entry runs the same engine and conversion pipeline in
 Node, emitting deterministic ESM factories using public PathGeometry builders.
 Each invocation creates independent mutable geometry plus optional metadata.
 Consumers need neither font bytes nor a runtime font engine. No new binary path
@@ -312,7 +312,7 @@ must reject unsupported cases rather than silently producing plausible but
 incorrect text.
 
 Owning all of this is possible, but the maintenance/testing commitment becomes a
-font-engine project. It is not required to achieve CRC's geometry goal. The
+font-engine project. It is not required to achieve Pibbl's geometry goal. The
 recommended custom work is the small bulk-output/lifetime wrapper and geometry
 API; adopt a full custom parser/shaper only if creating a font engine is itself
 an explicit product goal. Differential tests against existing engines and

@@ -1,4 +1,4 @@
-import { Layer, Rectangle, crc, signal } from '@crc/core';
+import { Layer, Rectangle, pibbl, signal } from '@pibbl/core';
 import { expect, it } from 'vitest';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
 import { ManualSchedulerDriver, installSchedulerDriverForTest, snapshotRealmScheduler } from '../src/lib/scheduler/testing';
@@ -8,7 +8,7 @@ it('pages one bounded scene generation and expires continuations on updates, rep
   const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 240; document.body.append(canvas);
   const color = signal('red'); let renders = 0;
   function Scene() { renders++; return Array.from({ length: 100 }, (_, i) => <Rectangle style={{ left: i, top: 0, width: 1, height: 1, fill: color.get() }} onClick={() => undefined} />); }
-  const controller = crc(canvas, <Scene />); driver.flush(1);
+  const controller = pibbl(canvas, <Scene />); driver.flush(1);
   const inspector = createTargetingInspector(canvas);
   try {
     expect(inspector.snapshot().records).toHaveLength(64);
@@ -39,7 +39,7 @@ it('reports bounded expansion truncation rather than implying the last page is t
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement('canvas'); document.body.append(canvas);
   function Scene() { return Array.from({ length: 300 }, (_, i) => <Rectangle style={{ left: i, top: 0, width: 1, height: 1, fill: 'red' }} onClick={() => undefined} />); }
-  const controller = crc(canvas, <Scene />); driver.flush(1); const inspector = createTargetingInspector(canvas);
+  const controller = pibbl(canvas, <Scene />); driver.flush(1); const inspector = createTargetingInspector(canvas);
   try {
     let page = inspector.page(); let count = page.records.length;
     while (page.nextCursor) { page = inspector.page(page.nextCursor); count += page.records.length; }
@@ -57,7 +57,7 @@ it('expires a cursor when a nested Layer beyond the first page changes', () => {
     {Array.from({ length: 70 }, (_, i) => <Rectangle style={{ left: i, top: 0, width: 1, height: 1, fill: 'red' }} onClick={() => undefined} />)}
     <Layer style={{ width: 100, height: 100 }}><Child /></Layer>
   </>; }
-  const controller = crc(canvas, <Scene />); driver.flush(1); const inspector = createTargetingInspector(canvas);
+  const controller = pibbl(canvas, <Scene />); driver.flush(1); const inspector = createTargetingInspector(canvas);
   try {
     const first = inspector.page(); expect(first.totalRecords).toBeGreaterThan(70);
     offset.set(20);
@@ -76,7 +76,7 @@ it('rejects malformed and foreign cursors without destroying a valid expansion a
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement('canvas'); document.body.append(canvas);
   function Scene() { return Array.from({ length: 70 }, (_, i) => <Rectangle style={{ left: i, top: 0, width: 1, height: 1, fill: 'red' }} onClick={() => undefined} />); }
-  let controller = crc(canvas, <Scene />); driver.flush(1);
+  let controller = pibbl(canvas, <Scene />); driver.flush(1);
   const inspector = createTargetingInspector(canvas); const other = createTargetingInspector(canvas);
   try {
     const first = inspector.page(); const cursor = first.nextCursor!;
@@ -88,7 +88,7 @@ it('rejects malformed and foreign cursors without destroying a valid expansion a
     expect(resumed.status).toBe('ready'); expect(resumed.records[0].order).toBe(32);
     expect(inspector.page(cursor)).toEqual(resumed); // Re-reading does not consume a cursor.
     expect(inspector.page(cursor.replace(/\d+$/, '96')).status).toBe('invalid');
-    controller.dispose(); controller = crc(canvas, <Scene />); driver.flush(2);
+    controller.dispose(); controller = pibbl(canvas, <Scene />); driver.flush(2);
     expect(inspector.page(cursor)).toMatchObject({ status: 'cursor-expired', records: [] });
     expect(inspector.page().status).toBe('unavailable');
     const replacement = createTargetingInspector(canvas);

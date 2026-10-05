@@ -1,56 +1,56 @@
 import type { LayoutContext } from './layout/types.js';
-import type { CRCNode } from './element/types.js';
+import type { PibblNode } from './element/types.js';
 import type { RenderTargetSnapshot } from './render-target.js';
-import type { CRCFrameSnapshot } from './scheduler/types.js';
+import type { PibblFrameSnapshot } from './scheduler/types.js';
 import { unregisterRootInstance } from './scheduler/realm-scheduler.js';
 import type {
-  CRCBackendDriver,
-  CRCBackendFrame,
+  PibblBackendDriver,
+  PibblBackendFrame,
 } from './backend/types.js';
 import type {
   Canvas,
-  CRCComponentRefs,
-  CRCClippingStackEntry,
-  CRCInstance,
-  CRCRenderTransaction,
+  PibblComponentRefs,
+  PibblClippingStackEntry,
+  PibblInstance,
+  PibblRenderTransaction,
   RenderingContext2D,
 } from './types.js';
 import { runTeardown } from './teardowns.js';
 
-export const NO_PENDING_ROOT = Symbol('CRC_NO_PENDING_ROOT');
-export type PendingRoot = CRCNode | typeof NO_PENDING_ROOT;
+export const NO_PENDING_ROOT = Symbol('PIBBL_NO_PENDING_ROOT');
+export type PendingRoot = PibblNode | typeof NO_PENDING_ROOT;
 
-/** @internal Exact CRC-owned presentation transforms for the active traversal. */
-export interface CRCPresentationTransformLineage {
-  readonly parent: CRCPresentationTransformLineage | undefined;
+/** @internal Exact Pibbl-owned presentation transforms for the active traversal. */
+export interface PibblPresentationTransformLineage {
+  readonly parent: PibblPresentationTransformLineage | undefined;
   readonly localTransform: DOMMatrix;
-  /** Number of raw Canvas transform deltas absorbed before this CRC node. */
+  /** Number of raw Canvas transform deltas absorbed before this Pibbl node. */
   readonly untrackedCanvasTransformCount: number;
 }
 
 export interface GlobalState {
-  crcInstances: Map<Canvas, CRCInstance>;
-  currentCRCInstance: CRCInstance | undefined;
-  componentRefs: CRCComponentRefs<any> | undefined;
+  pibblInstances: Map<Canvas, PibblInstance>;
+  currentPibblInstance: PibblInstance | undefined;
+  componentRefs: PibblComponentRefs<any> | undefined;
   canvas: Canvas | undefined;
   componentIsMounting: boolean;
   componentHookIndex: number;
-  backendDriver: CRCBackendDriver<unknown> | undefined;
-  backendFrame: CRCBackendFrame<unknown> | undefined;
+  backendDriver: PibblBackendDriver<unknown> | undefined;
+  backendFrame: PibblBackendFrame<unknown> | undefined;
   backendEnvironment: unknown;
   renderContext: RenderingContext2D | undefined;
   renderTarget: RenderTargetSnapshot | undefined;
   worldBaseTransform: DOMMatrix | undefined;
   worldExactTransform: DOMMatrix | undefined;
   worldPaintAnchorTransform: DOMMatrix | undefined;
-  presentationTransformLineage: CRCPresentationTransformLineage | undefined;
+  presentationTransformLineage: PibblPresentationTransformLineage | undefined;
   presentationTransformLineageTrackingDepth: number;
-  renderTransaction: CRCRenderTransaction | undefined;
-  frameSnapshot: CRCFrameSnapshot | undefined;
+  renderTransaction: PibblRenderTransaction | undefined;
+  frameSnapshot: PibblFrameSnapshot | undefined;
   primitiveReceiverToken: object | undefined;
   seenIds: Set<string> | undefined;
   seenKeys: Set<string> | undefined;
-  clippingStack: CRCClippingStackEntry[];
+  clippingStack: PibblClippingStackEntry[];
   htmlFilterDepth: number;
   layoutStack: LayoutContext[] | undefined;
   anonElementNames: WeakMap<any, string>;
@@ -58,8 +58,8 @@ export interface GlobalState {
 }
 
 export const GLOBAL_STATE: GlobalState = {
-  crcInstances: new Map(),
-  currentCRCInstance: undefined,
+  pibblInstances: new Map(),
+  currentPibblInstance: undefined,
   componentRefs: undefined,
   canvas: undefined,
   componentIsMounting: false,
@@ -100,23 +100,23 @@ export function getCanvas() {
   return GLOBAL_STATE.canvas;
 }
 
-export function getCurrentCRCInstance() {
-  if (!GLOBAL_STATE.currentCRCInstance) {
-    throw new Error('No CRC instance available');
+export function getCurrentPibblInstance() {
+  if (!GLOBAL_STATE.currentPibblInstance) {
+    throw new Error('No Pibbl instance available');
   }
-  return GLOBAL_STATE.currentCRCInstance;
+  return GLOBAL_STATE.currentPibblInstance;
 }
 
-export function getInteractionRoot(crcInstance: CRCInstance): CRCInstance {
-  return crcInstance.interactionRoot ?? crcInstance;
+export function getInteractionRoot(pibblInstance: PibblInstance): PibblInstance {
+  return pibblInstance.interactionRoot ?? pibblInstance;
 }
 
-export function getCRCInstance(canvas: Canvas) {
-  const crcInstance = GLOBAL_STATE.crcInstances.get(canvas);
-  if (!crcInstance) {
-    throw new Error('CRC instance not found');
+export function getPibblInstance(canvas: Canvas) {
+  const pibblInstance = GLOBAL_STATE.pibblInstances.get(canvas);
+  if (!pibblInstance) {
+    throw new Error('Pibbl instance not found');
   }
-  return crcInstance;
+  return pibblInstance;
 }
 
 /**
@@ -136,58 +136,58 @@ export function getAnonElemName(fn: any) {
  * DO NOT USE IN PROD
  */
 export function clearSharedState() {
-  for (const crcInstance of Array.from(GLOBAL_STATE.crcInstances.values())) {
-    crcInstance.controller.dispose();
+  for (const pibblInstance of Array.from(GLOBAL_STATE.pibblInstances.values())) {
+    pibblInstance.controller.dispose();
   }
-  GLOBAL_STATE.crcInstances.clear();
+  GLOBAL_STATE.pibblInstances.clear();
   GLOBAL_STATE.clippingStack = [];
   GLOBAL_STATE.layoutStack = undefined;
   GLOBAL_STATE.anonElementNames = new WeakMap<any, string>();
   clearTempState();
 }
 
-export function cleanupCRCInstance(crcInstance: CRCInstance): void {
-  const { canvas } = crcInstance;
-  if (crcInstance.mainTeardowns.closed) {
+export function cleanupPibblInstance(pibblInstance: PibblInstance): void {
+  const { canvas } = pibblInstance;
+  if (pibblInstance.mainTeardowns.closed) {
     return;
   }
 
-  if (!crcInstance.parent) {
-    unregisterRootInstance(crcInstance);
+  if (!pibblInstance.parent) {
+    unregisterRootInstance(pibblInstance);
   }
 
-  if (GLOBAL_STATE.crcInstances.get(canvas) === crcInstance) {
-    GLOBAL_STATE.crcInstances.delete(canvas);
+  if (GLOBAL_STATE.pibblInstances.get(canvas) === pibblInstance) {
+    GLOBAL_STATE.pibblInstances.delete(canvas);
   }
-  crcInstance.eventParent = undefined;
-  crcInstance.focusParentBridge = undefined;
-  crcInstance.mainTeardowns.execute();
-  runTeardown(() => crcInstance.backendDriver.dispose());
+  pibblInstance.eventParent = undefined;
+  pibblInstance.focusParentBridge = undefined;
+  pibblInstance.mainTeardowns.execute();
+  runTeardown(() => pibblInstance.backendDriver.dispose());
   runTeardown(() => {
-    for (const service of crcInstance.optionalServices.values()) service.dispose();
-    crcInstance.optionalServices.clear();
+    for (const service of pibblInstance.optionalServices.values()) service.dispose();
+    pibblInstance.optionalServices.clear();
   });
-  if (!crcInstance.parent) {
-    for (const observers of crcInstance.eventRoot.observers.values()) {
+  if (!pibblInstance.parent) {
+    for (const observers of pibblInstance.eventRoot.observers.values()) {
       observers.clear();
     }
-    crcInstance.eventRoot.observers.clear();
-    crcInstance.eventRoot.targets.clear();
-    for (const listeners of crcInstance.eventRoot.listenersByComponent.values()) {
+    pibblInstance.eventRoot.observers.clear();
+    pibblInstance.eventRoot.targets.clear();
+    for (const listeners of pibblInstance.eventRoot.listenersByComponent.values()) {
       listeners.clear();
     }
-    crcInstance.eventRoot.listenersByComponent.clear();
-    crcInstance.eventRoot.pointerCaptures.clear();
-    crcInstance.eventRoot.onNodeRelease = undefined;
-    crcInstance.eventRoot.onTargetUpdate = undefined;
-    crcInstance.eventRoot.focusPolicy = undefined;
-    crcInstance.eventRoot.renderTransaction = undefined;
-    crcInstance.eventRoot.rootInstance = undefined;
+    pibblInstance.eventRoot.listenersByComponent.clear();
+    pibblInstance.eventRoot.pointerCaptures.clear();
+    pibblInstance.eventRoot.onNodeRelease = undefined;
+    pibblInstance.eventRoot.onTargetUpdate = undefined;
+    pibblInstance.eventRoot.focusPolicy = undefined;
+    pibblInstance.eventRoot.renderTransaction = undefined;
+    pibblInstance.eventRoot.rootInstance = undefined;
   }
-  crcInstance.regions?.clear();
-  crcInstance.paintEntries?.clear();
-  crcInstance.cursorDefaults?.clear();
-  const interaction = crcInstance.interaction;
+  pibblInstance.regions?.clear();
+  pibblInstance.paintEntries?.clear();
+  pibblInstance.cursorDefaults?.clear();
+  const interaction = pibblInstance.interaction;
   if (interaction) {
     if (
       interaction.cursorCanvas &&
@@ -209,9 +209,9 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     interaction.cursorCanvas = undefined;
     interaction.cursorStyle = undefined;
   }
-  crcInstance.refs.clear();
-  crcInstance.pendingRoot = NO_PENDING_ROOT;
-  crcInstance.pendingUpdateParents = false;
+  pibblInstance.refs.clear();
+  pibblInstance.pendingRoot = NO_PENDING_ROOT;
+  pibblInstance.pendingUpdateParents = false;
 }
 
 export function clearTempState() {

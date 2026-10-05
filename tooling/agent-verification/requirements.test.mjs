@@ -28,7 +28,7 @@ test('distinguishes an audited gap from an unassessed requirement', () => {
 test('accepts a fully specified reviewed closure but rejects incomplete claims', () => {
   const complete = { ...row('ID-01'), status: 'complete', remaining: '',
     evidence: [{ path: 'runtime.ts', supports: 'Implements the complete first requirement.' }],
-    closure: { schema: 'crc-requirement-closure/1', inventorySha256: 'a'.repeat(64),
+    closure: { schema: 'pibbl-requirement-closure/1', inventorySha256: 'a'.repeat(64),
       requirementText: '- **ID-01:** First requirement. More detail.',
       reviewedAt: '2026-10-01', review: 'Every clause reviewed against the current implementation and independent acceptance evidence.',
       acceptance: [{ criterion: 'First requirement including more detail.', evidencePaths: ['runtime.ts'], checkIds: ['acceptance'] }],
@@ -57,8 +57,8 @@ test('accepts a fully specified reviewed closure but rejects incomplete claims',
 
 
 test('closure evidence expires after changes or deletion and cannot escape through symlinks', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'crc-closure-'));
-  const external = await mkdtemp(join(tmpdir(), 'crc-closure-external-'));
+  const root = await mkdtemp(join(tmpdir(), 'pibbl-closure-'));
+  const external = await mkdtemp(join(tmpdir(), 'pibbl-closure-external-'));
   const sha256 = createHash('sha256').update('recorded evidence').digest('hex');
   const ledger = { requirements: [{ id: 'ID-01', status: 'complete', closure: { files: [{ path: 'evidence.json', sha256 }] } }] };
   try {

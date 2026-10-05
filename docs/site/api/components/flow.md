@@ -12,7 +12,7 @@ relatedTypes: [FlowProps, FlowStyle]
 # Flow
 
 ```ts
-import { Flow, Text } from "@crc/core";
+import { Flow, Text } from "@pibbl/core";
 ```
 
 `Flow` uses [`FlowProps`](#/api/types/layout#flowprops) and [`FlowStyle`](#/api/types/layout#flowstyle) to place recursive direct children in

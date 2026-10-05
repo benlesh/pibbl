@@ -4,18 +4,18 @@ import {
   Rectangle,
   resolveSignalValue,
   useCanvasContext,
-} from "@crc/core";
+} from "@pibbl/core";
 import type {
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
-  CRCNode,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
+  PibblNode,
   FillStyle,
   SignalValue,
   StrokeStyle,
-} from "@crc/core";
-import { withHooksForbidden } from "@crc/core/internal";
+} from "@pibbl/core";
+import { withHooksForbidden } from "@pibbl/core/internal";
 import { lookupScale } from "./scale-context.js";
-import type { SignalStyle } from "@crc/core/internal";
+import type { SignalStyle } from "@pibbl/core/internal";
 import type { BandCategory, LineAccessor, ScaleId } from "./types.js";
 import { useScale } from "./use-scale.js";
 import { pointAccessor, pointData, finiteCoordinate } from "./point-data.js";
@@ -89,7 +89,7 @@ export type BarStyleResolver<D> = (
  * @see {@link BarSeriesStyle}
  * @see {@link BarSeriesProps}
  */
-interface BarSeriesBaseProps<D> extends CRCEventHandlers, CRCEventParticipationOptions {
+interface BarSeriesBaseProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
   /**
    * Application data supplied to the component or reported by the event. See {@link SignalValue}.
    */
@@ -182,7 +182,7 @@ export type BarSeriesProps<D> = BarSeriesBaseProps<D> &
  *
  * @param props - Data, category and value accessors, scales, grouping, and styling. See
  * {@link BarSeriesProps} .
- * @returns CRC nodes drawing the bars.
+ * @returns Pibbl nodes drawing the bars.
  *
  * @see {@link BarSeriesProps}
  */
@@ -298,7 +298,7 @@ export function BarSeries<D>({
     typeof specified === "function"
       ? undefined
       : normalize(specified ?? {}, false);
-  const nodes: CRCNode[] = [];
+  const nodes: PibblNode[] = [];
   for (let i = 0; i < data.length; i++) {
     const datum = data[i];
     if (defined && !defined(datum, i, data)) continue;

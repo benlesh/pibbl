@@ -5,7 +5,7 @@ import {
   getSpecifiedStyle,
   type PrimitiveDefinition,
 } from './metadata.js';
-import type { CRCElement } from './types.js';
+import type { PibblElement } from './types.js';
 import {
   isSignal,
   recordPlainInputResolution,
@@ -19,7 +19,7 @@ export interface ResolvedPrimitiveInputs {
 }
 
 export function resolvePrimitiveInputs(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   definition: PrimitiveDefinition,
   prepared?: { style: Readonly<Record<PropertyKey, unknown>> },
   basis?: QueryBasis,
@@ -60,18 +60,18 @@ export function resolvePrimitiveInputs(
 
 export function resolvePrimitiveStyleInput(
   input: unknown,
-  element: CRCElement<any> | undefined,
+  element: PibblElement<any> | undefined,
   basis: QueryBasis | undefined,
   mode: 'value',
 ): Readonly<Record<PropertyKey, unknown>> | undefined;
 export function resolvePrimitiveStyleInput(
   input: unknown,
-  element?: CRCElement<any>,
+  element?: PibblElement<any>,
   basis?: QueryBasis,
 ): Readonly<Record<PropertyKey, unknown>> | ResponsiveStylePreparation | undefined;
 export function resolvePrimitiveStyleInput(
   input: unknown,
-  element?: CRCElement<any>,
+  element?: PibblElement<any>,
   basis?: QueryBasis,
   mode: 'value' | 'preparation' = 'preparation',
 ): Readonly<Record<PropertyKey, unknown>> | ResponsiveStylePreparation | undefined {

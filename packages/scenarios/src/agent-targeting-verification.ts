@@ -4,7 +4,7 @@ import type { createEventTrace } from '../../../tooling/agent-verification/event
 import type { createSchedulerHistory } from '../../../tooling/agent-verification/scheduler.js';
 import type { probeHostPoint } from '../../../tooling/agent-verification/browser.js';
 import type { createSignalInspector } from '../../../tooling/agent-verification/signals.js';
-import { crc, createElement, computed, signal, type CRCLogicalMouseEvent, type CRCPointerEvent } from '@crc/core';
+import { pibbl, createElement, computed, signal, type PibblLogicalMouseEvent, type PibblPointerEvent } from '@pibbl/core';
 import type {
   createTargetingInspector,
   TargetingProbe,
@@ -242,9 +242,9 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
     const applicationIdentity = runtimeTools ? await import('../../../tooling/agent-verification/runtime-identity.js') : undefined;
     let runtimeCompatibility: AgentTargetingState['runtimeCompatibility'] = null;
     const inspectorFactory = runtimeTools && applicationIdentity ? (canvas: HTMLCanvasElement) => {
-      // Bind to the crc function actually used below, so differing resolution
+      // Bind to the pibbl function actually used below, so differing resolution
       // cannot silently compare the inspector's identity only with itself.
-      const binding = { ...applicationIdentity.captureRuntimeBinding(), runtime: crc };
+      const binding = { ...applicationIdentity.captureRuntimeBinding(), runtime: pibbl };
       const checked = runtimeTools.createRuntimeCheckedInspector(canvas, binding);
       runtimeCompatibility = { status: checked.status, diagnostic: checked.diagnostic, reason: checked.reason };
       return checked.inspector ?? undefined;
@@ -316,7 +316,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
 
     const copyState = (): AgentTargetingState => structuredClone(latest);
     const publish = () => {
-      if (evidence) evidence.textContent = JSON.stringify({ schema: 'crc-targeting-fixture/1', identity: fixtureIdentity, state: latest });
+      if (evidence) evidence.textContent = JSON.stringify({ schema: 'pibbl-targeting-fixture/1', identity: fixtureIdentity, state: latest });
       context.onStateChange?.(copyState());
     };
     const pendingWaits = new Set<() => void>();
@@ -364,7 +364,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
     };
     const onDelivery = (
       target: Exclude<AgentTargetingDelivery, null>,
-      event: CRCLogicalMouseEvent,
+      event: PibblLogicalMouseEvent,
     ) => {
       // Capture synchronously. Window activation can come from earlier input and
       // does not certify this event's trust or grant a particular permission.
@@ -405,7 +405,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
         if (!disposed) updateLatest({ focusObservationError: String(error).slice(0, 500) });
       }).finally(() => { focusObservationPending = false; });
     };
-    let crcController: ReturnType<typeof crc> | undefined;
+    let pibblController: ReturnType<typeof pibbl> | undefined;
     const dispose = () => {
       if (disposed) return;
       disposed = true;
@@ -417,10 +417,10 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       signalInspector?.dispose(); signalInspector = undefined; previousSignalSnapshot = undefined;
       for (const cancel of pendingWaits) cancel();
       evidence?.remove();
-      crcController?.dispose();
+      pibblController?.dispose();
     };
     try {
-      crcController = crc(
+      pibblController = pibbl(
       context.canvas,
       createElement(AgentTargetingVerificationScene, {
         mode,
@@ -435,7 +435,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
           finally { if (!disposed) updateLatest({}); }
         },
         onFocusEvidence,
-        onCapturedMove: (event: CRCPointerEvent) => {
+        onCapturedMove: (event: PibblPointerEvent) => {
           if (!inspector) return;
           const inspection = inspector.snapshot();
           const probe = inspection.generation ? inspector.probe(inspection.generation, event.x, event.y) : unavailableState().probe;
@@ -450,7 +450,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       }),
       { pixelRatio: 1 },
     );
-    // Bind after CRC has installed this exact mount. The prototype owns no hooks
+    // Bind after Pibbl has installed this exact mount. The prototype owns no hooks
     // into rendering, signals, scheduling, or native event delivery.
     inspector = inspectorFactory?.(context.canvas);
     enableSignalInspection();

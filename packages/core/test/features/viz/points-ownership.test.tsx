@@ -5,15 +5,15 @@ import {
   signal,
   useReaction,
   useSignal,
-  type CRCNode,
-} from "@crc/core";
-import { PointSeries, PlotSeries, Scale } from "@crc/core/viz";
+  type PibblNode,
+} from "@pibbl/core";
+import { PointSeries, PlotSeries, Scale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
-import { getCRCInstance } from "../../../src/lib/global-state.js";
+import { getPibblInstance } from "../../../src/lib/global-state.js";
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
-function Scales({ children }: { children: CRCNode }) {
+function Scales({ children }: { children: PibblNode }) {
   return (
     <Scale id="x" type="linear" domain={[0, 10]} range={[0, 100]}>
       <Scale id="y" type="linear" domain={[0, 10]} range={[100, 0]}>
@@ -127,7 +127,7 @@ it("replaces callback signal branches and releases batched and custom ownership"
   expect(releases).toBe(1);
   b.set("orange");
   expect(runtime.pending).toBe(0);
-  const instance = getCRCInstance(canvas);
+  const instance = getPibblInstance(canvas);
   runtime.dispose();
   expect(instance.refs.size).toBe(0);
   expect(instance.eventRoot.targets.size).toBe(0);

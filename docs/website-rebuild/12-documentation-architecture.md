@@ -19,7 +19,7 @@ Learn remains the conceptual role of Start and Guides; its existing URLs can hav
 
 ## Two adoption paths
 
-Offer **Build with CRC** and **Add CRC to your site** as clear entry points on Home and Start. The latter is a dedicated Guides section for enhancing ordinary HTML buttons, forms, images, hero regions, and data views. Keep one reference and one example catalog, with adoption-path tags and direct cross-links. See [HTML integration patterns and ideas](15-add-crc-to-your-site.md).
+Offer **Build with Pibbl** and **Add Pibbl to your site** as clear entry points on Home and Start. The latter is a dedicated Guides section for enhancing ordinary HTML buttons, forms, images, hero regions, and data views. Keep one reference and one example catalog, with adoption-path tags and direct cross-links. See [HTML integration patterns and ideas](15-add-pibbl-to-your-site.md).
 
 ## Reference organization and coverage
 
@@ -55,7 +55,7 @@ Human question: “Which surface fits this scene?” Agent companion: resource c
 
 Give living patterns a distinct catalog even though they belong to the texture system technically. Organize by supported preset or clearly labeled application recipe, visual behavior, interaction, and cost. Include seed, simulation resolution, pause/reset behavior, brush/stir settings, and a purposeful thumbnail captured at a known state.
 
-Do not imply every palette is a new simulation algorithm, or that a custom recipe means CRC exposes arbitrary equation authoring. Distinguish configuring existing generators, composing application behavior, and genuinely new runtime extensions. Use “reaction-diffusion” in technical copy, with “reactive diffusion” as a search alias for the user's terminology.
+Do not imply every palette is a new simulation algorithm, or that a custom recipe means Pibbl exposes arbitrary equation authoring. Distinguish configuring existing generators, composing application behavior, and genuinely new runtime extensions. Use “reaction-diffusion” in technical copy, with “reactive diffusion” as a search alias for the user's terminology.
 
 ## Advanced guides
 
@@ -90,7 +90,7 @@ The visual result must never be the only source of the lesson. Captions, code, p
 
 Keep one authored contract and one canonical runnable source per example, with optional deeper explanatory modules. Produce human pages, Markdown exports, catalogs, and skill references from those shared records. This is not two independent documentation trees maintained by copying prose.
 
-Recommended record fields: stable ID, kind, title, summary, capability, symbols/import paths, compatible CRC version, status, prerequisites, human URL, Markdown URL, detailed companion URL, example/source IDs, related guides and skills, and verification evidence. Gallery entries add screenshot/capture metadata and controls. Recipe IDs must not masquerade as public API symbols.
+Recommended record fields: stable ID, kind, title, summary, capability, symbols/import paths, compatible Pibbl version, status, prerequisites, human URL, Markdown URL, detailed companion URL, example/source IDs, related guides and skills, and verification evidence. Gallery entries add screenshot/capture metadata and controls. Recipe IDs must not masquerade as public API symbols.
 
 Keep public content under the established `docs/site/` publication boundary when implementation begins, or explicitly revise that boundary and its tooling in the approved migration. This planning folder and private test labs remain excluded. The static public agent catalog includes only reviewed public content. Retain the existing local human-search boundary until a reviewed schema change adds new public content kinds; never broaden it to all repository Markdown.
 

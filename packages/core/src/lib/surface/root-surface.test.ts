@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc.js';
+import { pibbl } from '../pibbl.js';
 import { clearSharedState } from '../global-state.js';
 import { useLayoutBox } from '../hooks/use-layout-box.js';
 import { useRef } from '../hooks/use-ref.js';
@@ -28,7 +28,7 @@ describe('root Canvas surface', () => {
       });
     });
 
-    const controller = crc(canvas, createElement(Probe, {}), { pixelRatio: 2 });
+    const controller = pibbl(canvas, createElement(Probe, {}), { pixelRatio: 2 });
     await settleSurface();
 
     expect(canvas.width).toBe(600);
@@ -59,7 +59,7 @@ describe('root Canvas surface', () => {
       });
     };
 
-    const controller = crc(canvas, createElement(Probe, {}), {
+    const controller = pibbl(canvas, createElement(Probe, {}), {
       viewport: 'responsive',
       pixelRatio: 2,
     });
@@ -87,7 +87,7 @@ describe('root Canvas surface', () => {
     document.body.appendChild(canvas);
     const Probe = (_props: {}) => {};
 
-    const controller = crc(canvas, createElement(Probe, {}), { pixelRatio: 2 });
+    const controller = pibbl(canvas, createElement(Probe, {}), { pixelRatio: 2 });
     await settleSurface();
 
     expect(canvas.width).toBe(400);
@@ -109,7 +109,7 @@ describe('root Canvas surface', () => {
     const Probe = (_props: {}) => {
       renders++;
     };
-    const controller = crc(canvas, createElement(Probe, {}), {
+    const controller = pibbl(canvas, createElement(Probe, {}), {
       viewport: 'responsive',
       pixelRatio: 2,
     });
@@ -129,7 +129,7 @@ describe('root Canvas surface', () => {
   it('uses the current device ratio by default', async () => {
     const canvas = createCanvas(200, 100, 240, 120);
     const Probe = (_props: {}) => {};
-    const controller = crc(canvas, createElement(Probe, {}));
+    const controller = pibbl(canvas, createElement(Probe, {}));
     await settleSurface();
 
     expect(canvas.width).toBe(Math.round(240 * window.devicePixelRatio));
@@ -160,7 +160,7 @@ describe('root Canvas surface', () => {
     const frames = new Map<number, FrameRequestCallback>();
     let nextFrameId = 1;
     let resizeCallback: ResizeObserverCallback | undefined;
-    let controller: ReturnType<typeof crc> | undefined;
+    let controller: ReturnType<typeof pibbl> | undefined;
 
     class ControlledResizeObserver implements ResizeObserver {
       constructor(callback: ResizeObserverCallback) {
@@ -204,7 +204,7 @@ describe('root Canvas surface', () => {
       const Probe = (_props: {}) => {
         renders++;
       };
-      controller = crc(canvas, createElement(Probe, {}));
+      controller = pibbl(canvas, createElement(Probe, {}));
 
       expect(observe).toHaveBeenCalledOnce();
       expect(observe).toHaveBeenCalledWith(canvas);

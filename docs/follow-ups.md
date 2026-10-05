@@ -3,7 +3,7 @@
 The existing-feature confidence phase closes correctness and evidence gaps in the current API. The remaining backlog contains only measured triggers or explicitly out-of-scope product work.
 
 For broader, non-normative product hypotheses and possible experiments, see the
-[CRC product strategy and future opportunities](./strategy/README.md). This
+[Pibbl product strategy and future opportunities](./strategy/README.md). This
 file remains the concrete ledger for accepted triggers and current deferrals;
 the strategy document does not override it.
 
@@ -11,7 +11,7 @@ the strategy document does not override it.
 
 - Add a spatial index only after the controlled 10,000-region sparse/miss workload exceeds 6 ms median or 12 ms p95 in three reference runs after environment and constant-factor regressions are excluded.
 - Add a deterministic bundled font only if exact glyph rasterization becomes a supported visual contract.
-- Add another required browser only after executable native characterization identifies compatible behavior or an explicit CRC normalization decision.
+- Add another required browser only after executable native characterization identifies compatible behavior or an explicit Pibbl normalization decision.
 - Promote internal test helpers only after their stable call shape recurs in another project phase; see [test tooling opportunities](./testing/test-tooling-opportunities.md).
 
 ## Explicit product deferrals
@@ -22,13 +22,13 @@ the strategy document does not override it.
   neither is part of the current visualization scope.
 
 - Generated accessibility semantics, editable-input adapters, gestures, and
-  semantic-control abstractions. CRC's shipped pointer, touch, wheel,
+  semantic-control abstractions. Pibbl's shipped pointer, touch, wheel,
   drag/drop, pointer-capture, keyboard, and focus facades remain Canvas-local.
 - New drawing primitives, rich text, margin/scrolling, Grid auto placement and
   intrinsic tracks, reverse/reordered Flexbox, advanced CSS intrinsic sizing,
   or a retained scene graph.
 - A public scrolling or virtualization API. Applications currently own large
-  datasets and pass a bounded visible window of descriptors to CRC.
+  datasets and pass a bounded visible window of descriptors to Pibbl.
 - A worker renderer or spatial-index/event-architecture rewrite without the measured trigger.
 - A published documentation site, generated API-reference renderer, search,
   versioning, or release campaign; see the [renderer

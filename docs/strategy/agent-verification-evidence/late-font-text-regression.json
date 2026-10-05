@@ -1,5 +1,5 @@
 {
-  "schema": "crc-text-replay/1",
+  "schema": "pibbl-text-replay/1",
   "status": "pass",
   "url": "http://127.0.0.1:5199/#/testing/agent-text-verification",
   "requiredChecks": [
@@ -64,7 +64,7 @@
         "expected": "Revenue: 42",
         "assertion": "fail",
         "observation": {
-          "schema": "crc-text-call-evidence/1",
+          "schema": "pibbl-text-call-evidence/1",
           "status": "stopped",
           "scope": "one-context-successful-calls",
           "geometry": "draw-positions-not-glyph-bounds",
@@ -118,7 +118,7 @@
         "expected": "Revenue: 42",
         "assertion": "pass",
         "observation": {
-          "schema": "crc-text-call-evidence/1",
+          "schema": "pibbl-text-call-evidence/1",
           "status": "stopped",
           "scope": "one-context-successful-calls",
           "geometry": "draw-positions-not-glyph-bounds",
@@ -172,7 +172,7 @@
         "expected": "Revenue: 42",
         "assertion": "fail",
         "observation": {
-          "schema": "crc-text-call-evidence/1",
+          "schema": "pibbl-text-call-evidence/1",
           "status": "stopped",
           "scope": "one-context-successful-calls",
           "geometry": "draw-positions-not-glyph-bounds",
@@ -220,7 +220,7 @@
   "droppedErrors": 0,
   "scope": "Native Studio action buttons and successful single-context text calls; no glyph visibility or other-surface claim.",
   "run": {
-    "schema": "crc-replay-run/1",
+    "schema": "pibbl-replay-run/1",
     "runId": "f0474740-3bc5-4133-8ea7-0c4d2290eb9a",
     "kind": "text",
     "startedAt": "2026-10-02T03:39:52.353Z",
@@ -267,7 +267,7 @@
       "cwd": "/Users/benlesh/GitHub/crc",
       "environment": {},
       "unsetEnvironment": [
-        "CRC_VERIFY_BROWSER_ENDPOINT"
+        "PIBBL_VERIFY_BROWSER_ENDPOINT"
       ],
       "outputPolicy": "fresh-default-directory",
       "preconditions": [
@@ -276,14 +276,14 @@
       ]
     },
     "toolIdentity": {
-      "schema": "crc-replay-tool-identity/1",
+      "schema": "pibbl-replay-tool-identity/1",
       "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
       "sha256": "7f10763ea6ca50ee7435cac9750e5e526161281f08ec07d67352d52a93dd680e",
       "files": 11,
       "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
     },
     "toolIdentityAfter": {
-      "schema": "crc-replay-tool-identity/1",
+      "schema": "pibbl-replay-tool-identity/1",
       "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
       "sha256": "7f10763ea6ca50ee7435cac9750e5e526161281f08ec07d67352d52a93dd680e",
       "files": 11,
@@ -291,7 +291,7 @@
     }
   },
   "expectedIdentity": {
-    "schema": "crc-targeting-identity/1",
+    "schema": "pibbl-targeting-identity/1",
     "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
     "sha256": "19903eb811b0132286485a5534f2e3065f5f674a0b64c76bd6611e037823be25",
     "files": 196

@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
-import { crc } from '../crc';
-import type { CRCEventTargetRegistration } from '../events/registrations';
+import { pibbl } from '../pibbl';
+import type { PibblEventTargetRegistration } from '../events/registrations';
 import type {
-  CRCEventHandlers,
-  CRCEventTargetOptions,
+  PibblEventHandlers,
+  PibblEventTargetOptions,
 } from '../events/types';
 import {
   clearSharedState,
-  getCRCInstance,
+  getPibblInstance,
 } from '../global-state';
 import { useEventListener } from './use-event-listener';
 import { useEventTarget } from './use-event-target';
@@ -32,9 +32,9 @@ describe('useEventTarget', () => {
       useEventTarget({ onClick }, { path, fill: true });
     };
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Probe, {}));
+    const controller = pibbl(canvas, createElement(Probe, {}));
     await nextFrame();
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const target = onlyTarget(instance.eventRoot.targets);
 
     expect(target).toMatchObject({
@@ -55,7 +55,7 @@ describe('useEventTarget', () => {
   });
 
   it('requires an explicit path and reports the no-policy focus snapshot', async () => {
-    expectTypeOf<CRCEventTargetOptions>()
+    expectTypeOf<PibblEventTargetOptions>()
       .toMatchTypeOf<{ readonly path: Path2D }>();
 
     const snapshots: unknown[] = [];
@@ -64,7 +64,7 @@ describe('useEventTarget', () => {
       snapshots.push(useEventTarget({}, { path }));
     };
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Probe, {}));
+    const controller = pibbl(canvas, createElement(Probe, {}));
     await nextFrame();
 
     expect(snapshots).toEqual([{ isFocused: false, isFocusVisible: false }]);
@@ -76,7 +76,7 @@ describe('useEventTarget', () => {
     const secondClick = vi.fn();
     const path = rectanglePath(0, 0, 40, 40);
     const Probe = ({ onClick, cursor }: {
-      onClick: CRCEventHandlers['onClick'];
+      onClick: PibblEventHandlers['onClick'];
       cursor?: string;
     }) => {
       useEventTarget({
@@ -87,12 +87,12 @@ describe('useEventTarget', () => {
       }, { path, cursor });
     };
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Probe, {
+    const controller = pibbl(canvas, createElement(Probe, {
       onClick: firstClick,
       cursor: 'pointer',
     }));
     await nextFrame();
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const first = onlyTarget(instance.eventRoot.targets);
     const component = first.component;
 
@@ -108,7 +108,7 @@ describe('useEventTarget', () => {
     expect(instance.eventRoot.nativeListeners?.count('pointerdown')).toBe(1);
     const acquire = vi.spyOn(instance.eventRoot.nativeListeners!, 'acquire');
 
-    crc(canvas, createElement(Probe, { onClick: secondClick, cursor: 'crosshair' }));
+    pibbl(canvas, createElement(Probe, { onClick: secondClick, cursor: 'crosshair' }));
     await nextFrame();
     const second = onlyTarget(instance.eventRoot.targets);
 
@@ -131,19 +131,19 @@ describe('useEventTarget', () => {
       );
     };
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Probe, { enabled: true }));
+    const controller = pibbl(canvas, createElement(Probe, { enabled: true }));
     await nextFrame();
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const target = onlyTarget(instance.eventRoot.targets);
 
-    crc(canvas, createElement(Probe, { enabled: false }));
+    pibbl(canvas, createElement(Probe, { enabled: false }));
     await nextFrame();
     expect(instance.eventRoot.targets.size).toBe(0);
     expect(instance.paintEntries.size).toBe(0);
     expect(instance.eventRoot.nativeListeners?.count('click')).toBe(0);
     expect(target.live).toBe(false);
 
-    crc(canvas, createElement(Probe, { enabled: true }));
+    pibbl(canvas, createElement(Probe, { enabled: true }));
     await nextFrame();
     expect(onlyTarget(instance.eventRoot.targets)).toBe(target);
     expect(target.live).toBe(true);
@@ -155,13 +155,13 @@ describe('useEventListener', () => {
   it('groups capture and bubble handlers under one stable component listener', async () => {
     const first = vi.fn();
     const second = vi.fn();
-    const Probe = ({ onClick }: { onClick: CRCEventHandlers['onClick'] }) => {
+    const Probe = ({ onClick }: { onClick: PibblEventHandlers['onClick'] }) => {
         useEventListener({ onClick, onClickCapture: () => undefined });
       };
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Probe, { onClick: first }));
+    const controller = pibbl(canvas, createElement(Probe, { onClick: first }));
     await nextFrame();
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const listeners = Array.from(instance.eventRoot.listenersByComponent.values());
     const registration = Array.from(listeners[0])[0];
 
@@ -170,7 +170,7 @@ describe('useEventListener', () => {
     expect(instance.eventRoot.targets.size).toBe(0);
     expect(instance.eventRoot.nativeListeners?.count('click')).toBe(1);
 
-    crc(canvas, createElement(Probe, { onClick: second }));
+    pibbl(canvas, createElement(Probe, { onClick: second }));
     await nextFrame();
     const updated = Array.from(
       Array.from(instance.eventRoot.listenersByComponent.values())[0],
@@ -184,13 +184,13 @@ describe('useEventListener', () => {
   it('propagates a returned painted descendant to its listener ancestor', async () => {
     const calls: string[] = [];
     const Composite = ({ onClick }: {
-      onClick: CRCEventHandlers['onClick'];
+      onClick: PibblEventHandlers['onClick'];
     }) => {
       useEventListener({ onClick });
       return createElement(Rectangle, { style: { width: 40, height: 40, fill: '#000' } });
     };
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Composite, {
+    const controller = pibbl(canvas, createElement(Composite, {
       onClick: () => calls.push('listener'),
     }));
     await nextFrame();
@@ -200,14 +200,14 @@ describe('useEventListener', () => {
     dispatchMouse(canvas, 'click', 20, 20);
 
     expect(calls).toEqual(['listener']);
-    expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(1);
+    expect(getPibblInstance(canvas).eventRoot.targets.size).toBe(1);
     controller.dispose();
   });
 });
 
 function onlyTarget(
-  targets: ReadonlySet<CRCEventTargetRegistration>,
-): CRCEventTargetRegistration {
+  targets: ReadonlySet<PibblEventTargetRegistration>,
+): PibblEventTargetRegistration {
   expect(targets.size).toBe(1);
   const target = Array.from(targets)[0];
   if (target.kind !== 'target') {

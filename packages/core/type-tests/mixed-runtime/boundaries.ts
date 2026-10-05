@@ -1,15 +1,15 @@
-import type { CRCNode } from '@crc/core';
+import type { PibblNode } from '@pibbl/core';
 import type { ReactElement } from './react-stub/jsx-runtime';
-import { crcScene } from './crc-scene.crc';
+import { pibblScene } from './pibbl-scene.pibbl';
 import { reactScene } from './react-scene';
 
-declare function mountCRC(node: CRCNode): void;
+declare function mountPibbl(node: PibblNode): void;
 declare function mountReact(node: ReactElement): void;
 
-mountCRC(crcScene);
+mountPibbl(pibblScene);
 mountReact(reactScene);
 
-// @ts-expect-error React elements are not CRC nodes
-mountCRC(reactScene);
-// @ts-expect-error CRC elements are not React elements
-mountReact(crcScene);
+// @ts-expect-error React elements are not Pibbl nodes
+mountPibbl(reactScene);
+// @ts-expect-error Pibbl elements are not React elements
+mountReact(pibblScene);

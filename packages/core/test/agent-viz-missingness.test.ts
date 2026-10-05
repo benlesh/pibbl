@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { page } from 'vitest/browser';
-import { getScenarioBySlug, loadScenario } from '@crc/scenarios';
+import { getScenarioBySlug, loadScenario } from '@pibbl/scenarios';
 import { moveMouse } from './support/mouse-input';
 import { createTextRecorder } from '../../../tooling/agent-verification/text';
 

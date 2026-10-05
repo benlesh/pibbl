@@ -1,21 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { dispatchNativeEvent } from '../events/dispatch';
 import type {
-  CRCEventHandlers,
-  CRCEventType,
+  PibblEventHandlers,
+  PibblEventType,
 } from '../events/types';
 import { executeRender } from '../execute-render';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventTarget } from '../hooks/use-event-target';
-import { mountCRC } from '../mount-crc';
-import type { CRCElement, CRCController } from '../types';
-import type { CRCFocusManager } from './focus-manager';
+import { mountPibbl } from '../mount-pibbl';
+import type { PibblElement, PibblController } from '../types';
+import type { PibblFocusManager } from './focus-manager';
 import { focusManaged } from './policy-test-support';
 import { directionalPolicy } from './policy-test-support';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 const noop = () => undefined;
 
 beforeEach(() => {
@@ -172,7 +172,7 @@ describe('focus-policy native event routing', () => {
   it('routes keyboard, editing, composition, and clipboard families to the current target', () => {
     const trace: string[] = [];
     const record = (event: { type: string }) => trace.push(event.type);
-    const handlers: CRCEventHandlers = {
+    const handlers: PibblEventHandlers = {
       onKeyDown: record,
       onKeyUp: record,
       onBeforeInput: record,
@@ -191,9 +191,9 @@ describe('focus-policy native event routing', () => {
     const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     const target = mounted.manager.candidates[0].target;
     mounted.manager.setFocusState(target, true);
-    const instance = getCRCInstance(mounted.canvas);
+    const instance = getPibblInstance(mounted.canvas);
 
-    const inputs: readonly [CRCEventType, Event][] = [
+    const inputs: readonly [PibblEventType, Event][] = [
       ['keydown', new KeyboardEvent('keydown', { key: 'a', bubbles: true })],
       ['keyup', new KeyboardEvent('keyup', { key: 'a', bubbles: true })],
       ['beforeinput', new InputEvent('beforeinput', { data: 'a', bubbles: true })],
@@ -277,11 +277,11 @@ describe('focus-policy native event routing', () => {
   it.each([
     ['Canvas blur', (
       canvas: HTMLCanvasElement,
-      _manager: CRCFocusManager,
+      _manager: PibblFocusManager,
     ) => canvas.blur()],
     ['logical focus clear', (
       _canvas: HTMLCanvasElement,
-      manager: CRCFocusManager,
+      manager: PibblFocusManager,
     ) => manager.setFocusState(undefined, false)],
   ] as const)(
     'suppresses the Tab default after a handler performs %s',
@@ -320,7 +320,7 @@ describe('focus-policy native event routing', () => {
 
 interface TargetProps {
   readonly label: string;
-  readonly handlers: CRCEventHandlers;
+  readonly handlers: PibblEventHandlers;
 }
 
 const Target = ({ handlers }: TargetProps) => {
@@ -349,27 +349,27 @@ const Scene = ({ labels }: { labels: readonly string[] }) =>
     handlers: { onClick: noop },
   }));
 
-function managed(labels: readonly string[]): CRCElement<any> {
+function managed(labels: readonly string[]): PibblElement<any> {
   return focusManaged(createElement(Scene, { labels }));
 }
 
 function mountAndRender(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   canvas = createCanvas(),
 ): {
   readonly canvas: HTMLCanvasElement;
-  readonly controller: CRCController;
-  readonly manager: CRCFocusManager;
+  readonly controller: PibblController;
+  readonly manager: PibblFocusManager;
 } {
-  const controller = mountCRC(canvas, element);
+  const controller = mountPibbl(canvas, element);
   activeControllers.add(controller);
   executeRender(canvas, 1);
-  const policy = getCRCInstance(canvas).eventRoot.focusPolicy;
+  const policy = getPibblInstance(canvas).eventRoot.focusPolicy;
   if (!policy) throw new Error('Expected a focus manager.');
-  return { canvas, controller, manager: policy as CRCFocusManager };
+  return { canvas, controller, manager: policy as PibblFocusManager };
 }
 
-function focusedLabel(manager: CRCFocusManager): string | undefined {
+function focusedLabel(manager: PibblFocusManager): string | undefined {
   const target = manager.resolveKeyboardTarget();
   return target ?
     (target.component.element.props as { label: string }).label :

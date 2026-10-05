@@ -1,4 +1,4 @@
-import type { TextureContext } from "@crc/core";
+import type { TextureContext } from "@pibbl/core";
 import { drawCore, type ElectricPoint } from "../electric-shared.js";
 import type { SourceSite } from "../electric-sources.js";
 const S = 64,

@@ -1,6 +1,6 @@
-import { crc, Circle, Clip, Group, Layer, Rectangle, Text, useConst, useRef, useSignal, useTexture, type CRCController, type CRCPointerEvent } from "@crc/core";
-import { blur, displacement, grayscale, opacity } from "@crc/core/filters";
-import { rainDrops } from "@crc/core/textures";
+import { pibbl, Circle, Clip, Group, Layer, Rectangle, Text, useConst, useRef, useSignal, useTexture, type PibblController, type PibblPointerEvent } from "@pibbl/core";
+import { blur, displacement, grayscale, opacity } from "@pibbl/core/filters";
+import { rainDrops } from "@pibbl/core/textures";
 
 const pane = { x: 28, y: 104, width: 824, height: 420 };
 
@@ -35,18 +35,18 @@ function RainyWindow() {
     resolution: { width: 704, height: 352 },
   });
   const map = rain.paint({ mode: "stretch" });
-  const move = (event: CRCPointerEvent) => {
+  const move = (event: PibblPointerEvent) => {
     if (dragging.current !== event.pointerId) return;
     rain.send({ type: "finger", x: Math.max(0, Math.min(1, (event.x - pane.x) / pane.width)), y: Math.max(0, Math.min(1, (event.y - pane.y) / pane.height)), radius: 0.045 });
   };
-  const begin = (event: CRCPointerEvent) => {
+  const begin = (event: PibblPointerEvent) => {
     if (event.button !== 0 || dragging.current !== undefined) return;
     event.preventDefault();
     dragging.current = event.pointerId;
     event.currentTarget.setPointerCapture(event.pointerId);
     move(event);
   };
-  const end = (event: CRCPointerEvent) => {
+  const end = (event: PibblPointerEvent) => {
     if (dragging.current !== event.pointerId) return;
     if (event.type === "pointerup") move(event);
     dragging.current = undefined;
@@ -96,6 +96,6 @@ function RainyWindow() {
   </Group>;
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <RainyWindow />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <RainyWindow />);
 }

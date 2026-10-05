@@ -1,15 +1,15 @@
-import { crc, Group, Circle, Rectangle, Text } from "@crc/core";
+import { pibbl, Group, Circle, Rectangle, Text } from "@pibbl/core";
 import {
   opacity,
   sepia,
-  type CRCFilter,
-  type CRCOpacityFilterOptions,
-  type CRCSepiaFilterOptions,
-} from "@crc/core/filters";
+  type PibblFilter,
+  type PibblOpacityFilterOptions,
+  type PibblSepiaFilterOptions,
+} from "@pibbl/core/filters";
 
-const transparency: CRCOpacityFilterOptions = { amount: 0.4 };
-const warmth: CRCSepiaFilterOptions = { amount: 1 };
-const comparisons: [string, CRCFilter | undefined][] = [
+const transparency: PibblOpacityFilterOptions = { amount: 0.4 };
+const warmth: PibblSepiaFilterOptions = { amount: 1 };
+const comparisons: [string, PibblFilter | undefined][] = [
   ["Original", undefined],
   ["Opacity 0.4", opacity(transparency)],
   ["Sepia 1", sepia(warmth)],
@@ -36,7 +36,7 @@ function Subject() {
           fill: "#fff",
         }}
       >
-        CRC
+        Pibbl
       </Text>
     </>
   );
@@ -55,7 +55,7 @@ const controllers = comparisons.map(([label, filter]) => {
   canvas.height = 156;
   figure.append(caption, canvas);
   grid.append(figure);
-  return crc(
+  return pibbl(
     canvas,
     <>
       <Rectangle style={{ width: 224, height: 156, fill: "#f1f4f5" }} />

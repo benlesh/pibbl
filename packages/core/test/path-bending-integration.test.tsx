@@ -1,4 +1,4 @@
-import { Clip, Path, PathGeometry, Rectangle, toPath2D, toSvgPathData, transformPath, pathBendTransform, arcBendTransform } from '@crc/core';
+import { Clip, Path, PathGeometry, Rectangle, toPath2D, toSvgPathData, transformPath, pathBendTransform, arcBendTransform } from '@pibbl/core';
 import { expect, it, vi } from 'vitest';
 
 import mount from '../../scenarios/src/learning/drawing/path-bending.example';

@@ -1,11 +1,11 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Group,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function GroupStudy() {
   const selected = useSignal(false);
   const ticket = (
@@ -85,6 +85,6 @@ function GroupStudy() {
     ticket,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <GroupStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <GroupStudy />);
 }

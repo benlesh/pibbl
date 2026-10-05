@@ -1,18 +1,18 @@
 import { dispatchToLogicalTarget } from "../events/dispatch.js";
-import type { CRCEventTargetRegistration } from "../events/registrations.js";
-import type { CRCKeyboardEvent } from "../events/types.js";
-import type { CRCFocusManager } from "./focus-manager.js";
+import type { PibblEventTargetRegistration } from "../events/registrations.js";
+import type { PibblKeyboardEvent } from "../events/types.js";
+import type { PibblFocusManager } from "./focus-manager.js";
 import {
   findNearestDirectionalCandidate,
-  type CRCDirection,
+  type PibblDirection,
 } from "./directional-navigation.js";
 
-export type CRCTabMoveResult = "moved" | "exit";
+export type PibblTabMoveResult = "moved" | "exit";
 
 export function moveTab(
-  manager: CRCFocusManager,
+  manager: PibblFocusManager,
   backwards: boolean,
-): CRCTabMoveResult {
+): PibblTabMoveResult {
   const candidates = manager.navigationCandidates;
   if (candidates.length === 0) return "exit";
 
@@ -46,8 +46,8 @@ export function moveTab(
 }
 
 export function applyTabDefault(
-  manager: CRCFocusManager,
-  event: CRCKeyboardEvent,
+  manager: PibblFocusManager,
+  event: PibblKeyboardEvent,
 ): void {
   if (
     event.type !== "keydown" ||
@@ -60,8 +60,8 @@ export function applyTabDefault(
 }
 
 export function applyKeyboardActivationDefault(
-  manager: CRCFocusManager,
-  event: CRCKeyboardEvent,
+  manager: PibblFocusManager,
+  event: PibblKeyboardEvent,
 ): void {
   if (event.key === "Enter") {
     if (event.type === "keydown" && !event.repeat && !event.defaultPrevented) {
@@ -93,8 +93,8 @@ export function applyKeyboardActivationDefault(
 }
 
 export function applyDirectionalNavigationDefault(
-  manager: CRCFocusManager,
-  event: CRCKeyboardEvent,
+  manager: PibblFocusManager,
+  event: PibblKeyboardEvent,
 ): void {
   if (event.type !== "keydown" || event.defaultPrevented) return;
   const direction = directionForKey(event.key);
@@ -115,7 +115,7 @@ export function applyDirectionalNavigationDefault(
 }
 
 function activateClick(
-  target: CRCEventTargetRegistration | undefined,
+  target: PibblEventTargetRegistration | undefined,
   sourceEvent: KeyboardEvent,
 ): void {
   if (!target?.live || !target.handlers.click) return;
@@ -132,7 +132,7 @@ function activateClick(
   );
 }
 
-function directionForKey(key: string): CRCDirection | undefined {
+function directionForKey(key: string): PibblDirection | undefined {
   switch (key) {
     case "ArrowLeft":
       return "left";

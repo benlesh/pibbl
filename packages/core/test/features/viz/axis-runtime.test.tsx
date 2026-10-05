@@ -1,4 +1,4 @@
-import { Axis, Scale, type AxisProps } from "@crc/core/viz";
+import { Axis, Scale, type AxisProps } from "@pibbl/core/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 

@@ -6,16 +6,16 @@ import {
   resolveBox,
   resolveLength,
   type BoxStyle,
-  type CRCNode,
+  type PibblNode,
   type FillStyle,
   type StrokeStyle,
   type SignalValue,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
   pushLayoutBox,
   setCurrentComponentAfterRender,
   type SignalStyle,
-} from "@crc/core/internal";
+} from "@pibbl/core/internal";
 import type { HoverPoint } from "./hover-types.js";
 import {
   placeHoverCard,
@@ -69,7 +69,7 @@ export interface HoverCardStyle {
  * @see {@link HoverPlacement}
  * @see {@link SignalStyle}
  * @see {@link HoverCardStyle}
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  * @see {@link HoverCard}
  */
 export interface HoverCardProps {
@@ -97,8 +97,8 @@ export interface HoverCardProps {
    * {@link HoverCardStyle}.
    */
   readonly style: SignalValue<SignalStyle<HoverCardStyle>>;
-  /** Descendant content or the callback that supplies it. See {@link CRCNode}. */
-  readonly children?: CRCNode;
+  /** Descendant content or the callback that supplies it. See {@link PibblNode}. */
+  readonly children?: PibblNode;
 }
 type CardInputs = Omit<
   HoverCardProps,
@@ -126,7 +126,7 @@ function Content({
 }: {
   width: number;
   height: number;
-  children?: CRCNode;
+  children?: PibblNode;
 }) {
   // Establish both allocation and percentage basis for arbitrary composed nodes;
   // this is a content box, not a layout parent that requires child dimensions.
@@ -246,12 +246,12 @@ const fields = new Set([
  * Positions a declared card outside a protected anchor, allowing overflow if needed.
  *
  * @param props - Anchor, placement, style, and hover-card content. See {@link HoverCardProps}.
- * @returns CRC content placed as a hover card. See {@link CRCNode}.
+ * @returns Pibbl content placed as a hover card. See {@link PibblNode}.
  *
  * @see {@link HoverCardProps}
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  */
-export function HoverCard(props: HoverCardProps): CRCNode {
+export function HoverCard(props: HoverCardProps): PibblNode {
   const style = resolveSignalValue(props.style);
   if (!style || typeof style !== "object")
     throw new TypeError("HoverCard requires a style with width and height.");

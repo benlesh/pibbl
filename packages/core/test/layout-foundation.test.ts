@@ -1,4 +1,4 @@
-import { mountLayoutFoundation } from '@crc/scenarios';
+import { mountLayoutFoundation } from '@pibbl/scenarios';
 import { describeReplayError } from '../../../tooling/agent-verification/failure-evidence.mjs';
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';

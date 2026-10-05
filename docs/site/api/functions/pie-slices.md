@@ -10,7 +10,7 @@ symbols: [pieSlices, PieSliceGeometry, PieOptions]
 
 # pieSlices
 
-Import `pieSlices` from `@crc/core/viz`. Call `pieSlices(data, { value, keyBy? })`.
+Import `pieSlices` from `@pibbl/core/viz`. Call `pieSlices(data, { value, keyBy? })`.
 `value` is a numeric property key or `(datum, index, data)` accessor; `keyBy`
 uses the same property/function convention as `PlotSeries`.
 
@@ -26,12 +26,12 @@ equal share.
 
 Angles use Canvas radians, clockwise from −π/2 (12 o'clock), covering one full
 turn. Feed them directly to core `Wedge` style. Its exact filled-sector and
-optional stroke geometry supplies normal CRC events, transforms, and clipping.
+optional stroke geometry supplies normal Pibbl events, transforms, and clipping.
 Decorative labels should set `pointerEvents="none"`. Shared edges use ordinary
 source paint order; there is no nearest-slice or chart-wide target.
 
 Keys default to stringified source indices. Supply unique stable category IDs
-for mutable data and use `slice.key` as the CRC element key. String and finite
+for mutable data and use `slice.key` as the Pibbl element key. String and finite
 number keys are accepted; duplicates after string conversion throw. Reordering
 changes angles while preserving explicit keys; record objects are fresh on each
 call.

@@ -9,10 +9,10 @@ the final verification sections supersede their outstanding-work notes.
 ## Workspace and baseline
 
 - Main worktree is untouched by implementation.
-- Integration: `/Users/benlesh/.codex/worktrees/component-manipulation/crc`, branch `codex/component-manipulation`.
+- Integration: `/Users/benlesh/.codex/worktrees/component-manipulation/pibbl`, branch `codex/component-manipulation`.
 - Baseline HEAD before snapshot: `4717dc9`; snapshot commit `3373ca3` includes the user's current uncommitted responsive-style work and approved plan/spec. Treat that commit as inherited work, not this feature's implementation diff.
-- Positioning worker: `/Users/benlesh/.codex/worktrees/manipulation-positioning/crc`.
-- Math/migration worker: `/Users/benlesh/.codex/worktrees/manipulation-math/crc`.
+- Positioning worker: `/Users/benlesh/.codex/worktrees/manipulation-positioning/pibbl`.
+- Math/migration worker: `/Users/benlesh/.codex/worktrees/manipulation-math/pibbl`.
 - Environment: Node 24.15.0 via `/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin`; pnpm 11.21.0; Chromium.
 - Fresh isolated setup needed `pnpm install --offline --frozen-lockfile` and `pnpm build` before normal Vitest startup because Studio API coverage loads package declarations.
 - Baseline focused layouts/responsive layouts: 6 files, 100 tests passed.
@@ -25,7 +25,7 @@ the final verification sections supersede their outstanding-work notes.
 - Public native pointer test failed first for absent useManipulation; then passed after controller/frame/drag implementation. Resize test failed first for absent ResizeHandles; then passed after handle implementation.
 - Nested-Flex learning example test exposed missing explicit Flex minimum heights; corrected the authored example and verified native resize updates the readout from 320×224 to 352×248.
 - Fresh root typecheck passed after test import corrections.
-- Focused interaction/example/positioning/diagnostic/solver run: 5 files, 17 tests passed. Temporary `/tmp/crc-manipulation-vitest.config.ts` omits only Studio documentation collector during the API coverage migration. It preserves runtime aliases and Playwright. This is supplemental evidence; rerun normal config once minimum API docs exist.
+- Focused interaction/example/positioning/diagnostic/solver run: 5 files, 17 tests passed. Temporary `/tmp/pibbl-manipulation-vitest.config.ts` omits only Studio documentation collector during the API coverage migration. It preserves runtime aliases and Playwright. This is supplemental evidence; rerun normal config once minimum API docs exist.
 - Root core package build passed. No aggregate trust run claimed.
 
 ## Work allocation and next actions
@@ -94,8 +94,8 @@ This section supersedes the earlier next-action list; the feature remains incomp
 
 ## Independent final-gate progress
 
-- `corepack pnpm@11.21.0 trust:static` passed (exit 0) on Node 24.15.0 / pnpm 11.21.0. This includes scenario/docs/Studio checks, production documentation boundary, typecheck, lint, all package builds, and source/built Studio builds. Log: `/tmp/crc-manipulation-static-current.log`.
-- `corepack pnpm@11.21.0 trust:lifecycle` passed (exit 0): ownership 15 files / 64 tests; structural performance ten files / 65 passed / four skipped. Log: `/tmp/crc-manipulation-lifecycle-current.log`. These do not substitute for the still-failing full browser gate.
+- `corepack pnpm@11.21.0 trust:static` passed (exit 0) on Node 24.15.0 / pnpm 11.21.0. This includes scenario/docs/Studio checks, production documentation boundary, typecheck, lint, all package builds, and source/built Studio builds. Log: `/tmp/pibbl-manipulation-static-current.log`.
+- `corepack pnpm@11.21.0 trust:lifecycle` passed (exit 0): ownership 15 files / 64 tests; structural performance ten files / 65 passed / four skipped. Log: `/tmp/pibbl-manipulation-lifecycle-current.log`. These do not substitute for the still-failing full browser gate.
 - Task 8 audit identified absent direct public evidence for external writes inside lifecycle callbacks. A reused worker is adding `onStart`/`onChange` write-precedence cases, independent of the pending positioning decision.
 
 ## Completion audit by plan task
@@ -119,7 +119,7 @@ The unchecked procedural steps in the dated plan are not evidence of successful 
 
 - Integrated `onStart` and `onChange` external-write precedence tests plus a shared-box concurrency test. The first controller starts/releases through native input; a distinct public Canvas pointer event proves the second controller is rejected before acquiring capture and cannot disturb the first owner. No runtime change was necessary.
 - Fixed the physics learning example dropping distinct captured move/release positions with equal timestamps. The fallback considers only equal-timestamp distinct predecessors; the existing window and speed limit remain. A native CDP timestamp regression failed with the old algorithm (`centerY = 108`, expected above 130) and passed with the fix. Test timestamps are monotonic relative to the native initial press.
-- Fresh integrated normal-config command covering the complete learning catalog and manipulation ownership/terminal suites passed three files / 243 tests. Node 24.15.0, pnpm 11.21.0, Chromium. Focused ESLint and diff checks passed. Log: `/tmp/crc-ownership-learning-current.log`.
+- Fresh integrated normal-config command covering the complete learning catalog and manipulation ownership/terminal suites passed three files / 243 tests. Node 24.15.0, pnpm 11.21.0, Chromium. Focused ESLint and diff checks passed. Log: `/tmp/pibbl-ownership-learning-current.log`.
 - The unresolved custom-component placement decision remains the next runtime change. After it is resolved, rerun the affected positioning/viz/tutorial oracles and the aggregate gate. Do not infer a green full browser result from these focused follow-ups.
 
 ## 2026-09-29 child-defined drag handles and position readouts
@@ -132,11 +132,11 @@ session source distinguishes multiple grips sharing a controller.
 
 Fresh evidence on Node 24.15.0, pnpm 11.21.0, Playwright Chromium:
 
-- `corepack pnpm@11.21.0 exec vitest run packages/core/test/manipulation packages/core/test/manipulable-readout.test.tsx packages/core/src/lib/manipulation --browser.headless --browser.ui=false`: 18 files / 90 tests passed. Log `/tmp/crc-child-drag-all-final.log`.
-- Built-mode child hit/geometry, move readout and public example: four files / 14 tests passed. Log `/tmp/crc-child-drag-built-final.log`.
+- `corepack pnpm@11.21.0 exec vitest run packages/core/test/manipulation packages/core/test/manipulable-readout.test.tsx packages/core/src/lib/manipulation --browser.headless --browser.ui=false`: 18 files / 90 tests passed. Log `/tmp/pibbl-child-drag-all-final.log`.
+- Built-mode child hit/geometry, move readout and public example: four files / 14 tests passed. Log `/tmp/pibbl-child-drag-built-final.log`.
 - `tsc --noEmit`, core package build, focused ESLint and `git diff --check` passed.
-- Studio declaration verification passed source/built exact export parity and 329-type structural coverage. Log `/tmp/crc-child-drag-editor-final.log`.
-- `node tooling/verify-packed-consumer.mjs` passed installed Bundler/NodeNext consumers, runtime exports, deep-import boundaries, shared core identity and focus elimination. Log `/tmp/crc-child-drag-packed-final.log`.
+- Studio declaration verification passed source/built exact export parity and 329-type structural coverage. Log `/tmp/pibbl-child-drag-editor-final.log`.
+- `node tooling/verify-packed-consumer.mjs` passed installed Bundler/NodeNext consumers, runtime exports, deep-import boundaries, shared core identity and focus elimination. Log `/tmp/pibbl-child-drag-packed-final.log`.
 - Native tests establish circle bounding-corner misses, transformed child hits,
   clipped-out misses, gaps, empty handles, pointer opt-out, child cancellation,
   focus/Escape with and without clips, capture beyond the child, per-grip active
@@ -150,7 +150,7 @@ Documentation gate remains failing: the protected semantic inventory for the
 manipulation contract is stale (14 vs 16 units); the earlier approved-design
 checksum also needs updating. Automatic approval review rejected the baseline
 update, and explicit user approval has been requested. No integrity check was
-weakened or bypassed. Log `/tmp/crc-child-drag-docs-final.log`. The earlier full
+weakened or bypassed. Log `/tmp/pibbl-child-drag-docs-final.log`. The earlier full
 feature's positioning/pivot integration and aggregate-gate limitations above
 remain unresolved; these focused results are not a claim of whole-feature
 completion.
@@ -159,7 +159,7 @@ completion.
 
 The user approved completing integration, reconciling the documentation baseline,
 committing, merging to main, and pushing main. The integration checkout starts
-from `2288868b` (the current CRC main with the optional Three adapter). Removed
+from `2288868b` (the current Pibbl main with the optional Three adapter). Removed
 WebGL packages and verifiers were not restored. The current packed and Studio
 verifiers retain their Three boundary checks and now cover manipulation.
 
@@ -167,20 +167,20 @@ Fresh evidence from the integration checkout on Node 24.15.0 and pnpm 11.21.0:
 
 - `corepack pnpm@11.21.0 build` and `typecheck` passed.
 - Focused manipulation browser tests passed 18 files / 90 tests. Log:
-  `/tmp/crc-current-manipulation.log`.
+  `/tmp/pibbl-current-manipulation.log`.
 - `node tooling/verify-studio-pivot.mjs` passed exact source/built/editor export
   parity and the public child-defined DragHandle/readout TSX consumer.
 - `node tooling/verify-packed-pivot.mjs` passed packed boundaries, Bundler and
   NodeNext consumers, runtime exports and identity checks. Its normal gate now
   also executes all six positioning probes (source/built/packed, DEV true/false),
-  which passed. Log: `/tmp/crc-current-packed.log`.
+  which passed. Log: `/tmp/pibbl-current-packed.log`.
 - `studio-docs:check` and `test:studio-docs` passed, including browser navigation
   and search acceptance. The DragHandle API snippet was subsequently clarified
   to show its required ManipulationFrame wrapper.
 - Full source browser audit passed 266 files and failed three: 3069 passed,
   four failed, four skipped tests. The four failures reproduce the known
   independent-child placement issue in component positioning, two tutorial
-  interactions, and allocated axis labels. Log: `/tmp/crc-current-browser.log`.
+  interactions, and allocated axis labels. Log: `/tmp/pibbl-current-browser.log`.
 
 The placement correction, final documentation preservation verification, and
 aggregate trust run are still in progress. These results do not claim feature
@@ -257,13 +257,13 @@ changes; removed WebGL packages were not reintroduced.
 
 Fresh built-mode verification after the placement correction passed 19 files /
 79 tests, covering public positioning, diagnostics, manipulation and readouts
-(`/tmp/crc-built-final-delivery.log`). This is separate from the six explicit
+(`/tmp/pibbl-built-final-delivery.log`). This is separate from the six explicit
 DEV true/false probes; built mode alone is not production-environment evidence.
 
 A subsequent aggregate run stopped at the pre-existing particle replay spatial
 overlap assertion (0.7143 versus 0.75). The scenario change only migrates its
 text/rectangle positioning fields. Its unchanged focused suite then passed all
-four tests (`/tmp/crc-particle-replay-check.log`). The test itself notes possible
+four tests (`/tmp/pibbl-particle-replay-check.log`). The test itself notes possible
 one-frame sampling differences under load; no threshold or oracle was weakened.
 The aggregate gate must still pass before delivery.
 
@@ -271,7 +271,7 @@ The aggregate gate must still pass before delivery.
 
 `corepack pnpm@11.21.0 trust` completed with exit status 0 on Node 24.15.0,
 pnpm 11.21.0, and Playwright Chromium. Full log:
-`/tmp/crc-trust-delivery-retry.log`.
+`/tmp/pibbl-trust-delivery-retry.log`.
 
 - Static checks, documentation preservation (973 mutation probes), catalog,
   typecheck, lint/format, all package builds and source/built Studio builds passed.

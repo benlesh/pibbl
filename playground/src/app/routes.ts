@@ -3,7 +3,7 @@ import {
   getLearningExampleLegacyRoutes,
   getLearningExampleRoute,
   type LearningExampleCatalogEntry,
-} from "@crc/scenarios";
+} from "@pibbl/scenarios";
 
 const slug = "[a-z0-9]+(?:-[a-z0-9]+)*";
 const documentRoute = new RegExp(

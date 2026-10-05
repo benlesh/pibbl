@@ -34,7 +34,7 @@ The lifecycle test failed because `advanceParticipants` and
 This distinguishes the new assertions from coverage that could pass without
 observing scheduler ownership.
 
-The exact lifecycle scenario exercises repeated `crc()` on one live Canvas,
+The exact lifecycle scenario exercises repeated `pibbl()` on one live Canvas,
 shared reads in a root and a Layer, branch removal and re-addition, root
 replacement, render failure, fail-closed recovery, abort while a computed is
 pending validation, explicit disposal, fresh remount, and 25 additional
@@ -63,7 +63,7 @@ The structural cases proved these exact costs:
   and zero replacement offscreen surfaces are constructed.
 
 Optional elapsed-time reporting is available only behind
-`VITE_CRC_REPORT_PERF=1`. It has no threshold and is not correctness evidence.
+`VITE_PIBBL_REPORT_PERF=1`. It has no threshold and is not correctness evidence.
 
 The required six-file focused command passed 33 tests with 2 intentional
 wall-clock skips across all 6 files:

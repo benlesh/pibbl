@@ -1,10 +1,10 @@
 import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/jetbrains-mono";
-import { learningExampleCatalog } from "@crc/scenarios";
+import { learningExampleCatalog } from "@pibbl/scenarios";
 import {
   documentation,
   legacyRouteToRoute,
-} from "virtual:crc-studio-docs";
+} from "virtual:pibbl-studio-docs";
 
 import { buildNavigation } from "./app/navigation";
 import { createPageLifecycle } from "./app/page-lifecycle";
@@ -17,14 +17,14 @@ import { createSearchBundleLoader } from "./search/search-loader";
 import "./style.css";
 import { websiteUrlForStudioDocument } from "../../tooling/studio-docs/website-routes";
 
-const websiteBase = import.meta.env.VITE_CRC_WEBSITE_URL ?? "http://localhost:4321/";
+const websiteBase = import.meta.env.VITE_PIBBL_WEBSITE_URL ?? "http://localhost:4321/";
 
 const app = document.getElementById("app");
 if (!app) throw new Error("No app element found.");
 
 const lifecycle = createPageLifecycle();
 const searchLoaderOptions =
-  __CRC_STUDIO_DOCS_ACCEPTANCE__
+  __PIBBL_STUDIO_DOCS_ACCEPTANCE__
     ? createAcceptanceSearchLoaderOptions()
     : undefined;
 const shell = createStudioShell({
@@ -38,7 +38,7 @@ const shell = createStudioShell({
     }
   },
   loadSearchBundle: createSearchBundleLoader(
-    () => import("virtual:crc-studio-search"),
+    () => import("virtual:pibbl-studio-search"),
     searchLoaderOptions,
   ),
 });
@@ -133,7 +133,7 @@ void renderRoute();
  */
 function createAcceptanceSearchLoaderOptions() {
   let failNextSearchLoad = new URLSearchParams(window.location.search).has(
-    "crcStudioSearchRetry",
+    "pibblStudioSearchRetry",
   );
   return {
     beforeLoad: () => {

@@ -8,7 +8,7 @@ import {
   toSvgPathData,
   useEventTarget,
   useSignal,
-} from '@crc/core';
+} from '@pibbl/core';
 import mountPathGeometryExample from '../../scenarios/src/learning/drawing/path-geometry.example';
 import { componentTest, TestCanvas } from '../src/lib/test-utils/component-test';
 

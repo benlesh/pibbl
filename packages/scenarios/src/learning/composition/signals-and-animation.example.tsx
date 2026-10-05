@@ -1,5 +1,5 @@
 import {
-  crc,
+  pibbl,
   usePlayback,
   useSignal,
   useAnimatedValue,
@@ -13,8 +13,8 @@ import {
   Text,
   drive,
   tween,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 
 function AnimatedCard() {
   const x = useSignal(110, { debugName: "learning animation x" });
@@ -174,8 +174,8 @@ function AnimatedCard() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     <FocusManagement>
       <AnimatedCard />

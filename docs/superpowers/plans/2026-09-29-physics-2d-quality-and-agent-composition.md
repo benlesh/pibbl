@@ -4,11 +4,11 @@
 
 **Status:** scoped repairs implemented on `codex/physics-2d-quality`. Full browser suite passed 3,002 tests (four intentional skips); final targeted follow-up passed 225 tests. Aggregate signoff remains blocked by unrelated documentation-status banners; see the execution ledger and implementation evidence.
 
-**Goal:** make supported 2D scenes physically credible, easily composed as CRC components, and independently verifiable by coding agents.
+**Goal:** make supported 2D scenes physically credible, easily composed as Pibbl components, and independently verifiable by coding agents.
 
-**Architecture:** retain one CRC scheduler and explicit component ownership. First deliver an honest, stable public lab. Then compare keeping the repaired kernel with a thin Planck or Rapier 2D integration before committing to further numerical infrastructure. Do not introduce a public multi-engine framework.
+**Architecture:** retain one Pibbl scheduler and explicit component ownership. First deliver an honest, stable public lab. Then compare keeping the repaired kernel with a thin Planck or Rapier 2D integration before committing to further numerical infrastructure. Do not introduce a public multi-engine framework.
 
-**Tech stack:** TypeScript, CRC public JSX/signals, Vitest browser tests, Playwright Chromium, pinned Rapier 2D compat 0.21.0. The engine decision and current contract supersede candidate-selection language in the original investigation checklist below.
+**Tech stack:** TypeScript, Pibbl public JSX/signals, Vitest browser tests, Playwright Chromium, pinned Rapier 2D compat 0.21.0. The engine decision and current contract supersede candidate-selection language in the original investigation checklist below.
 
 **Evidence/spec input:** [audit and measurements](../../testing/field-notes/2026-09-29-physics-2d-audit.md), current public code/tests, and existing scheduling/style/layout/resource contracts. The older physics design contains removed 3D assumptions; it is not a wholesale current specification.
 
@@ -17,7 +17,7 @@
 ## Constraints and invariants
 
 - Preserve Group semantics, source paint order, root-logical input coordinates, hooks/keys, and exact disposal.
-- CRC alone owns the host frame; no engine Runner, extra animation loop, or per-body scheduler registrations.
+- Pibbl alone owns the host frame; no engine Runner, extra animation loop, or per-body scheduler registrations.
 - Commands enter Begin, simulation advances in Advance, public state publishes in Commit, callbacks run in Complete. Callback commands are deferred.
 - Preserve failed-step isolation and sibling-world progress. Determine how a candidate engine supports this before adopting it.
 - Keep engine-only comparison fixtures private; supported application examples use public package entries.
@@ -55,13 +55,13 @@ corepack pnpm@11.21.0 exec vitest run packages/core/test/physics-2d-lab.test.ts 
 
 **Interface:** use a versioned private scene description containing body IDs, initial poses, mass/material values, shapes, and tick-indexed commands; outputs contain poses, velocities, sleep states, contacts, and timing/allocation measurements. Each engine converts the same logical scene into its own units. Report exact pinned versions and conversion factors.
 
-- [ ] Run current CRC, Planck and Rapier 2D against a circle drop, ten-box stack, box pyramid, high-speed thin-wall impact, and a moving platform carrying a box. Use equivalent geometry and physical inputs, not identical solver knob values.
+- [ ] Run current Pibbl, Planck and Rapier 2D against a circle drop, ten-box stack, box pyramid, high-speed thin-wall impact, and a moving platform carrying a box. Use equivalent geometry and physical inputs, not identical solver knob values.
 - [ ] Initial proposed acceptance: no escapes/nonfinite state over 30 seconds; maximum settled penetration <=0.5 logical units at the documented viewport scale; <=0.25-unit positional jitter during the final second; supported resting stacks sleep within five seconds after their last disturbance. Validate these targets with visible behavior and record any revision rather than weakening them silently.
 - [ ] Compare friction/resting incline behavior, restitution against expected rebound, mass ratios 1:1 and 1:10, and invariance of accepted ticks under 30/60/120 Hz render grouping. Time-dependent inputs must be sampled at the same simulation times; do not compare different input streams.
 - [ ] Exercise CCD head-on moving bodies, moving platforms, rotational sweeps and cap exhaustion separately. State supported sensor behavior for each engine; absence of swept sensors is not automatically an engine defect.
 - [ ] Measure update cost and allocations with 100/1,000 active bodies and a substantial static field. Report median/p95 on a recorded machine, plus stable structural work counts; do not make developer-machine wall-clock numbers universal CI gates.
-- [ ] Prototype the leading engine under one real CRC world, preserving signals/events and exact cleanup. Test async initialization cancellation if using WASM and inject a failed frame to prove rollback/isolation. Include unit conversion for velocity, force, torque, inertia, queries and contact normals.
-- [ ] Write a decision record: keep CRC only if measured quality and maintenance cost justify it; otherwise select the candidate meeting integration and numerical requirements. Planck is the first low-friction JS/TS candidate; Rapier is the snapshot/determinism candidate. Box2D 3 is a numerical reference, with browser binding evaluation needed before treating it as a drop-in option.
+- [ ] Prototype the leading engine under one real Pibbl world, preserving signals/events and exact cleanup. Test async initialization cancellation if using WASM and inject a failed frame to prove rollback/isolation. Include unit conversion for velocity, force, torque, inertia, queries and contact normals.
+- [ ] Write a decision record: keep Pibbl only if measured quality and maintenance cost justify it; otherwise select the candidate meeting integration and numerical requirements. Planck is the first low-friction JS/TS candidate; Rapier is the snapshot/determinism candidate. Box2D 3 is a numerical reference, with browser binding evaluation needed before treating it as a drop-in option.
 
 **Decision gate:** present measured results and the concrete migration contract. Engine adoption is a proposed architectural change, not a conclusion already proven by this audit. Do not expand the custom solver or build adapters for every engine while this decision is open.
 
@@ -84,7 +84,7 @@ corepack pnpm@11.21.0 exec vitest run packages/core/test/physics-2d-lab.test.ts 
 
 **Proposed interface contract:** a supported testing harness mounts ordinary public scenes, advances the existing realm scheduler by specified accepted ticks, performs named public actions, and returns JSON-safe observations. A read-only inspection surface exposes stable body identity, authoritative and presentation pose, collider geometry, contacts, sleep state, pending/committed revision, and failures. Test control must be isolated from production playback and must not create a second clock.
 
-- [ ] Specify pause/step/reset semantics and fixture ownership before adding an exported test clock. Consumers must not need `@crc/core/internal` imports. Distinguish diagnostic snapshots from full engine serialization/restore.
+- [ ] Specify pause/step/reset semantics and fixture ownership before adding an exported test clock. Consumers must not need `@pibbl/core/internal` imports. Distinguish diagnostic snapshots from full engine serialization/restore.
 - [ ] Drive one drop/drag/platform scene manually and headlessly using the same action and observation surface. Save seed, exact tick-indexed inputs, configuration, engine version, and mismatch output on failure.
 - [ ] Add optional contact/shape/center-of-mass overlays with `pointerEvents="none"`; assert inspection never changes authoritative simulation results.
 - [ ] Stop stationary kinematic worlds from requesting endless frames; wake them on target or topology changes. Test one shared host frame while active and no physics frame requests once idle.
@@ -109,7 +109,7 @@ Pass means each task compiles through public entries, works visibly, has semanti
 ## Execution ledger — 2026-09-29
 
 - [x] Reproduced untouched-lab and isolated-circle failures before fixes. Repaired the reference solver's support ordering, low-speed restitution and capsule support contacts. The lab now uses 60 Hz, natural sleep, velocity-driven sensor crossing, and real Canvas-transform presentation observations. The early slice was offered for hands-on feedback.
-- [x] Compared CRC reference, Planck 1.5.0, bare Rapier 0.21.0 and integrated Rapier using reproducible settling piles and a static-heavy field. Recorded machine, exact versions, timings, natural sleep and escaped bodies. This was a targeted engine-selection comparison, not the complete proposed cross-engine slope/pyramid/mass-ratio matrix.
+- [x] Compared Pibbl reference, Planck 1.5.0, bare Rapier 0.21.0 and integrated Rapier using reproducible settling piles and a static-heavy field. Recorded machine, exact versions, timings, natural sleep and escaped bodies. This was a targeted engine-selection comparison, not the complete proposed cross-engine slope/pyramid/mass-ratio matrix.
 - [x] Selected Rapier with explicit 100-logical-units-per-meter conversion, engine snapshots, rollback/replay, material/filter adaptation, bounded CCD, geometry approximation and engine-range diagnostics. Public runtime uses one engine; the custom solver remains private comparison evidence. Async runtime loading is module-owned embedded WASM, with no component-owned initialization task to cancel. License and startup cost are recorded.
 - [x] Added local simulation space, root/local pointer conversion and a reusable two-world Studio lesson. Public evidence verifies moving/scaling the boundary preserves body identity and velocity. Existing transform, query, keyed ownership and drag tests remain; the proposed all-features-in-one-scene visual matrix was not used as a completion claim.
 - [x] Added immutable JSON-safe inspection, a read-only debug overlay, and a public isolated-realm test harness with deterministic frame advancement, action flushing, reset and exact cleanup. Public docs cover usage and limitations; applications need no private test-clock imports.

@@ -1,4 +1,4 @@
-import { Path, Text, resolveSignalValue } from "@crc/core";
+import { Path, Text, resolveSignalValue } from "@pibbl/core";
 import type { AxisProps, BandCategory, ResolvedScale } from "./types.js";
 import { lookupScale } from "./scale-context.js";
 import { width, opacity } from "./paint.js";
@@ -61,7 +61,7 @@ function position(scale: ResolvedScale, value: Tick): number {
  * Draws ticks and labels using a named scale and the configured orientation and style.
  *
  * @param props - Scale, orientation, tick, label, and styling options. See {@link AxisProps}.
- * @returns CRC nodes drawing the axis.
+ * @returns Pibbl nodes drawing the axis.
  *
  * @see {@link AxisProps}
  */

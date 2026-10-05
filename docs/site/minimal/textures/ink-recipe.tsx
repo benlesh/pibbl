@@ -1,11 +1,11 @@
-/** @jsxImportSource @crc/core */
-import { crc, Rectangle } from "@crc/core";
+/** @jsxImportSource @pibbl/core */
+import { pibbl, Rectangle } from "@pibbl/core";
 import {
   reactionDiffusion,
   useTexture,
   type InkMessage,
   type ReactionDiffusionOptions,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 
 const canvas = document.createElement("canvas");
 canvas.width = 320;
@@ -34,5 +34,5 @@ function Ink() {
   );
 }
 
-const controller = crc(canvas, <Ink />);
+const controller = pibbl(canvas, <Ink />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

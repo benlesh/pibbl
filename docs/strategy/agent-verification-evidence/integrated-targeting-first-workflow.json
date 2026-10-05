@@ -1,5 +1,5 @@
 {
-  "schema": "crc-agent-workflow-run/1",
+  "schema": "pibbl-agent-workflow-run/1",
   "status": "pass",
   "requirementId": "HIT-12",
   "requirementCompletion": "not-established",
@@ -16,8 +16,8 @@
     }
   },
   "evidence": {
-    "schema": "crc-replay-evidence-view/1",
-    "sourceSchema": "crc-targeting-replay/1",
+    "schema": "pibbl-replay-evidence-view/1",
+    "sourceSchema": "pibbl-targeting-replay/1",
     "source": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/targeting-first/replay/report.json",
     "verification": "saved-evidence-only",
     "kind": "final-report",

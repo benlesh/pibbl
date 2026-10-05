@@ -1,9 +1,9 @@
-# CRC animation contract
+# Pibbl animation contract
 
 Status: current implemented contract, updated for external render-layer frames
 on 2026-09-28.
 
-This document defines CRC's first-class animation definitions, programs,
+This document defines Pibbl's first-class animation definitions, programs,
 component-owned playback, transitions, and their integration with the shared
 realm scheduler. The [signals and scheduling
 contract](./signals-and-scheduling-contract.md) remains authoritative for the
@@ -24,7 +24,7 @@ component identity or independent clock. A program becomes stateful only when
 `usePlayback` or `useAnimatedValue` creates a run owned by a mounted hook slot.
 There is no free `play(program)` function.
 
-The root `@crc/core` entry exports the runtime values `easing`, `tween`,
+The root `@pibbl/core` entry exports the runtime values `easing`, `tween`,
 `keyframes`, `spring`, `defineAnimation`, `stepper`, `drive`, `sequence`,
 `parallel`, `wait`, `marker`, `repeat`, `usePlayback`, and `useAnimatedValue`, plus
 their named public types. Private definition samplers, activation records,
@@ -49,7 +49,7 @@ controls may overshoot. `steps` requires a positive integer and defaults to
 linear easing. When `from` is absent, each track captures its output's
 transaction-local value when that occurrence activates. Numbers have built-in
 linear interpolation. Every nonnumeric value requires an explicit
-`CRCInterpolator<T>`; this is checked when the concrete start and end values are
+`PibblInterpolator<T>`; this is checked when the concrete start and end values are
 known. A missing interpolator for an omitted nonnumeric start is reported while
 accepting play, before a competing run is cancelled and before any writer lease
 survives.
@@ -70,7 +70,7 @@ requested destination. It must not write signals or invoke hooks.
 Definition option containers, program child arrays, ordinary arrays, plain
 objects, and reconstructable built-in values are snapshotted and protected from
 later caller mutation. Functions, accessor/private-state instances, weak
-collections, promises, and opaque host objects retain identity because CRC
+collections, promises, and opaque host objects retain identity because Pibbl
 cannot clone them without changing semantics. Mutating state hidden behind such
 an identity is application-owned nondeterminism; portable opaque values require
 application discipline and an explicit interpolator.
@@ -85,7 +85,7 @@ activation. Mass, stiffness, and maximum duration must be finite and positive;
 damping and rest thresholds must be finite and nonnegative; endpoints and
 initial velocity must be finite.
 
-CRC uses stable analytic solutions for underdamped, critical, and overdamped
+Pibbl uses stable analytic solutions for underdamped, critical, and overdamped
 regimes and derives a deterministic settlement duration. Velocity is measured
 in logical units per second. At settlement or `maxDuration`, the sample is the
 exact target with zero velocity. Sampling depends on activation state and
@@ -99,7 +99,7 @@ and other stateful integrations. It requires synchronous `initial`, `step`, and
 callback. `maxElapsedMilliseconds` is finite and positive and defaults to
 `100`.
 
-Each run and track occurrence owns its stepper state. CRC applies only complete
+Each run and track occurrence owns its stepper state. Pibbl applies only complete
 fixed steps, retains a fractional remainder, and clamps one host gap before
 accumulation. Discarded elapsed time is visible only in the internal diagnostic
 trace. Seek and replay rebuild from the activation snapshot by replaying fixed
@@ -109,7 +109,7 @@ matters.
 
 A `done` callback can reveal a finite endpoint only after deterministic forward
 execution reaches it for that exact activation input. A stepper without `done`
-is statically infinite. CRC never probes an unbounded callback domain to invent
+is statically infinite. Pibbl never probes an unbounded callback domain to invent
 an endpoint: fresh reverse or finish rejects when the required terminal is not
 already known.
 
@@ -162,7 +162,7 @@ An accepted run atomically reserves every distinct writable signal reachable
 from its program before sampling. The run holds those leases through waits and
 sequential stages until finish, cancel, error, explicit replacement, or owner
 teardown. Direct public `set` or `update` on a leased output throws. Cancellation
-and failure retain the last committed user values; CRC does not restore a
+and failure retain the last committed user values; Pibbl does not restore a
 pre-animation snapshot.
 
 The default conflict policy is `"error"`. `play({ conflict: "replace" })` or a
@@ -175,7 +175,7 @@ restored atomically. A disposed displaced owner is never resurrected.
 
 ## Component-owned playback
 
-`usePlayback(program, options?)` returns one stable `CRCPlayback` for its mounted
+`usePlayback(program, options?)` returns one stable `PibblPlayback` for its mounted
 hook slot. Options are `autoplay`, `conflict`, `debugName`, `onEvent`, and
 `onError`; autoplay defaults false and conflict defaults to `"error"`.
 Candidate program/options validation occurs synchronously during Render. Only a
@@ -225,7 +225,7 @@ Definition callback failure discards only that playback's current staged writes,
 cancels that playback, and releases its resources; unrelated playback and roots
 continue. Definition/program construction and hook-candidate validation throw
 synchronously. `onError` receives accepted-command control/preflight and
-sampling failures during Complete. Without it, CRC uses ordinary host error
+sampling failures during Complete. Without it, Pibbl uses ordinary host error
 reporting after the frame. One-shot acceptance errors survive an unrelated
 shared-Commit rejection and are delivered exactly once.
 
@@ -249,7 +249,7 @@ Equality and option validation run under the Render write guard. Failed mount
 or update renders adopt neither target nor options. Concurrent render previews
 of the same transition signal settle transactionally: a failed older render
 cannot overwrite a newer surviving preview. When rollback changes an effective
-preview that another root may have rendered, CRC invalidates renderer consumers
+preview that another root may have rendered, Pibbl invalidates renderer consumers
 for a follow-up frame without issuing ordinary signal or effect notifications;
 successful provisions add no such invalidation. Teardown disposes the private
 playback; a retained readonly result cannot schedule the removed component.
@@ -279,13 +279,13 @@ applicable frame identity, logical time, run identity, or program path from its
 declared trace shape; write outcomes distinguish staged from
 equality-suppressed values. It retains no production history, has no semantic
 effect, and disables itself if its collector throws.
-CRC exposes no public scheduler clock, frame-step API,
+Pibbl exposes no public scheduler clock, frame-step API,
 trace history, or input-injection surface; `seek` controls one playback rather
 than the realm.
 
 ## Rendering, Layers, and external renderers
 
-Animation produces ordinary signal values. CRC-provided components accept them
+Animation produces ordinary signal values. Pibbl-provided components accept them
 directly at declared inputs:
 
 ```tsx
@@ -305,7 +305,7 @@ root render, and unchanged values/computed results schedule no renderer work.
 An explicit `Layer` is the retained optimization boundary. A signal read in its
 child content can repaint that Layer before ancestor composition while clean
 sibling bitmaps are reused. A parent-only placement, transform, alpha, or outer
-filter change may reuse the clean Layer bitmap. CRC never automatically promotes
+filter change may reuse the clean Layer bitmap. Pibbl never automatically promotes
 a stable component to an offscreen surface: allocation, bitmap memory, copying,
 and compositing can cost more than redrawing simple geometry.
 
@@ -314,9 +314,9 @@ usually remains stable; keep simple or frequently changing content in the root.
 Diagnostics may recommend a boundary, but adding and removing it stays explicit
 and readable in application code.
 
-External render layers and the official `@crc/three` adapter use this same
+External render layers and the official `@pibbl/three` adapter use this same
 scheduler and signal graph through the public `defineRenderLayer` lifecycle.
-They may request another CRC frame through `invalidate()`, but may not create a
+They may request another Pibbl frame through `invalidate()`, but may not create a
 second ordinary animation loop. Continuous shared state stays in signals;
 sparse renderer facts may queue semantic events for Complete. Animation updates
 props before the layer's `update` and `render` callbacks. Canvas and external
@@ -331,7 +331,7 @@ fixed-step inputs, subject to application callback purity and appropriate
 numeric tolerances. Program paths, command order, phase order, lease ownership,
 and milestone order are deterministic within their documented bounds.
 
-CRC does not promise cross-engine bit-identical custom simulation arithmetic or
+Pibbl does not promise cross-engine bit-identical custom simulation arithmetic or
 pixel identity. Canvas paths, text measurement/rasterization, decoded images,
 filters, color management, shaders, GPU drivers, and GPU floating point remain
 platform-owned. Debug names and traces explain execution but never determine
@@ -355,7 +355,7 @@ function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
 
 ## Deliberate boundaries
 
-- CRC does not implement CSS or Web Animations syntax, implicit transitions,
+- Pibbl does not implement CSS or Web Animations syntax, implicit transitions,
   deep signal unwrapping, or a retained scene graph.
 - Animation does not absorb physics/collision semantics, provide a mutable
   timeline builder, timeline label language, arbitrary program callback node,
@@ -367,7 +367,7 @@ function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
   through Complete, Commit atomicity, logical results, leases, stale-result
   rejection, lifecycle, and the main-thread fallback remain observationally
   identical. Custom callbacks and nonserializable values stay on the main thread.
-- Applications select reduced or alternate motion; CRC does not infer
+- Applications select reduced or alternate motion; Pibbl does not infer
   accessibility preferences or decide which motion is essential.
 
 ## Explicit visual visibility transitions
@@ -387,7 +387,7 @@ custom callback contract are documented in
 - A new request cancels the preceding pending request. Owner teardown settles
   pending requests as disposed and cancels queued history and playback work.
   Render failure uses the same normal owner teardown path.
-- A binding cannot cross CRC roots or attach to simultaneous receivers. A keyed
+- A binding cannot cross Pibbl roots or attach to simultaneous receivers. A keyed
   receiver replacement within the same render instance is allowed; independent
   managed Layer generations never imply that another receiver was removed.
 - Transforms, clips, ordinary filters, nested transition captures, and managed

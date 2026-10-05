@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PathGeometry, toPath2D, toSvgPathData } from '@crc/core';
+import { PathGeometry, toPath2D, toSvgPathData } from '@pibbl/core';
 
 function compare(actual: Path2D, expected: Path2D, label = '') {
   const ctx = document.createElement('canvas').getContext('2d')!;

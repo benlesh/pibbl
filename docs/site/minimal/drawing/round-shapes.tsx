@@ -4,7 +4,7 @@ import {
   Ellipse,
   Rectangle,
   Wedge,
-  crc,
+  pibbl,
   type ArcProps,
   type ArcStyle,
   type CircleProps,
@@ -20,7 +20,7 @@ import {
   type StrokeStyle,
   type WedgeProps,
   type WedgeStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const fill: FillStyle = "#0f766e";
 const stroke: StrokeStyle = "#134e4a";
@@ -75,7 +75,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(
+const app = pibbl(
   canvas,
   <>
     <Circle {...circleProps} style={circleStyle} />

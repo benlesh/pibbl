@@ -5,7 +5,7 @@ import { installSchedulerTraceCollectorForTest, snapshotRealmScheduler } from '.
 export function observeScheduler() {
   const state = snapshotRealmScheduler();
   return Object.freeze({
-    schema: 'crc-scheduler-observation/1' as const,
+    schema: 'pibbl-scheduler-observation/1' as const,
     scope: 'loaded-runtime-realm' as const,
     phase: state.phase,
     frame: state.currentFrame ? Object.freeze({
@@ -81,7 +81,7 @@ export function createSchedulerHistory(capacity = 128) {
           outcome: last.phase === 'idle' ? last.outcome : null,
           phaseErrors: Object.freeze(phaseErrors) });
       });
-      return Object.freeze({ schema: 'crc-scheduler-history/1', scope: 'loaded-runtime-realm', status,
+      return Object.freeze({ schema: 'pibbl-scheduler-history/1', scope: 'loaded-runtime-realm', status,
         capacity, dropped: sequence - count, records: Object.freeze(records), frames: Object.freeze(frames) });
     },
     stop,

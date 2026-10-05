@@ -34,7 +34,7 @@ acceptance and code review passed; the aggregate documentation failure remains.
 | A11 stale texture owner retention       | Fixed; reviewed; root and Canvas reachability release verified      | Same branch; disposal clears owner even when callbacks throw; controlled repeated-GC before/after probe releases both root and Canvas while the stale public handle stays retained (JavaScript reachability only)                                                                |
 | A02 physics handle retention            | Fixed; reviewed; 1,000-cycle public churn and rollback tests passed | `7ec1b751bf67516718a714b72a75ec3d0b2cee9d`, hardened as `8af54b75`; evict retired generations only after successful topology adoption and clear maps on disposal                                                                                                                 |
 | A05 publication surfaces                | Fixed; reviewed; failure/resize tests passed                        | Ownership branch; incompatible spare released before replacement allocation; failed candidates released                                                                                                                                                                          |
-| A06 render-layer surfaces               | Fixed; reviewed; normal/create/render/dispose failure cases passed  | `75185d85`; application cleanup observes original dimensions before CRC zeros its owned surface in finally                                                                                                                                                                       |
+| A06 render-layer surfaces               | Fixed; reviewed; normal/create/render/dispose failure cases passed  | `75185d85`; application cleanup observes original dimensions before Pibbl zeros its owned surface in finally                                                                                                                                                                     |
 | A04 diffusion allocation pressure       | Mitigated for confirmed worst-case; reviewed and measured           | `b28a4865232153ee2da10b4aa873ee14c0afc2d1`; eliminate patterns only for exact 1:1 pixel-aligned unshadowed Rectangle stretch fills; other cases preserve their existing pixel path                                                                                               |
 | A03 diffusion overload                  | Blocked on delivery-policy decision                                 | Existing contract delivers queued messages in the next eligible frame; spreading accepted FIFO work across frames changes that promise. User choice requested. Existing 8192-message cap is not a CPU-work bound                                                                 |
 | A07 rendering / physics costs           | Profile-directed fixes reviewed and measured                        | `22cf9b62` removes repeated Canvas transform reads/multiplications; `88c5233ccca88d01d3b79452912473daf890e8c0` avoids presentation snapshots; rollback checkpoints remain intact                                                                                                 |
@@ -158,9 +158,9 @@ the explicit JavaScript-only limitation.
 ## Resumable state
 
 Combined candidate branch: `codex/perf-verification-gate` in managed worktree
-`runtime-perf-audit/crc`. Combined runtime commit before remaining verification:
+`runtime-perf-audit/pibbl`. Combined runtime commit before remaining verification:
 `31d8417f09f6bc2bb76a96395735065bcf697108`.
-Clean main integration checkout: managed `perf-verification/crc`.
+Clean main integration checkout: managed `perf-verification/pibbl`.
 Verified origin is `https://github.com/benlesh/crc.git`. It advanced during final
 verification from `690bb10a` to `dc20f992a0a3902b431732c2fc039dc055eff962`
 (`feat(textures): add interactive rain on glass`). Clean local main was fast-forwarded

@@ -6,7 +6,7 @@ import {
   type GridTrack,
 } from '../src/lib/layout/grid';
 import { measureElement } from '../src/lib/layout/measure';
-import type { CRCElement } from '../src/lib/types';
+import type { PibblElement } from '../src/lib/types';
 import { createElement } from '../src/lib/element/create-element';
 
 const service = {
@@ -15,7 +15,7 @@ const service = {
 const measurement = {
   service,
   measureElement: (
-    element: CRCElement<any>,
+    element: PibblElement<any>,
     constraints: {
       minWidth: number;
       maxWidth: number;

@@ -1,11 +1,11 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Flow,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 const colors = ["#1f4bd8", "#ff6b57", "#74d3ae", "#f7c948"] as const;
 function FlowStudy() {
   const selected = useSignal(0);
@@ -53,6 +53,6 @@ function FlowStudy() {
     </Flow>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <FlowStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <FlowStudy />);
 }

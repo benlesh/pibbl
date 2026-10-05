@@ -1,5 +1,5 @@
-import { Circle, Group, Rectangle } from "@crc/core";
-import { PointSeries, Scale } from "@crc/core/viz";
+import { Circle, Group, Rectangle } from "@pibbl/core";
+import { PointSeries, Scale } from "@pibbl/core/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -178,8 +178,8 @@ it("stroke-only rings leave holes and different stroke widths retain their exact
   expect(events).toEqual(["background", "ring", "background", "ring"]);
 });
 
-import { signal } from "@crc/core";
-import { getCRCInstance } from "../../../src/lib/global-state.js";
+import { signal } from "@pibbl/core";
+import { getPibblInstance } from "../../../src/lib/global-state.js";
 it("keeps component and target counts constant as the dot batch grows and releases them on disposal", () => {
   runtime = testRuntime();
   const rows = signal(
@@ -193,7 +193,7 @@ it("keeps component and target counts constant as the dot batch grows and releas
     </Scale>,
   );
   runtime.flush();
-  const instance = getCRCInstance(canvas);
+  const instance = getPibblInstance(canvas);
   const count = [instance.refs.size, instance.eventRoot.targets.size];
   rows.set(
     Array.from({ length: 10000 }, (_, i) => ({ x: i % 100, y: i % 100 })),

@@ -7,11 +7,11 @@ import {
   Text,
   signal,
   useManipulation,
-  type CRCManipulationCancelReason,
-  type CRCManipulationController,
-  type CRCNode,
+  type PibblManipulationCancelReason,
+  type PibblManipulationController,
+  type PibblNode,
   type WritableSignal,
-} from "@crc/core";
+} from "@pibbl/core";
 
 export const MANIPULATION_LAB_SOURCE_ID = "component-manipulation-laboratory-example";
 
@@ -29,7 +29,7 @@ export type ManipulationLabAction =
 /**
  * Observable state exposed by the manipulation lab scenario for controls and assertions.
  *
- * @see {@link CRCManipulationCancelReason}
+ * @see {@link PibblManipulationCancelReason}
  * @see {@link ManipulationLabAction}
  * @see {@link manipulationLabScenarioEntry}
  */
@@ -54,10 +54,10 @@ export interface ManipulationLabState {
   /** Commits recorded or configured by this scenario. See {@link ManipulationLabState}. */
   readonly commits: number;
   /**
-   * Cancellation recorded or configured by this scenario. See {@link CRCManipulationCancelReason}
+   * Cancellation recorded or configured by this scenario. See {@link PibblManipulationCancelReason}
    * .
    */
-  readonly cancellation: CRCManipulationCancelReason | null;
+  readonly cancellation: PibblManipulationCancelReason | null;
   /** Last action recorded or configured by this scenario. See {@link ManipulationLabAction}. */
   readonly lastAction: "mount" | ManipulationLabAction;
 }
@@ -65,10 +65,10 @@ export interface ManipulationLabState {
 export interface ManipulationLabModel {
   readonly box: WritableSignal<{ left: number; top: number; width: number; height: number }>;
   readonly snapEnabled: WritableSignal<boolean>;
-  control: CRCManipulationController | undefined;
+  control: PibblManipulationController | undefined;
   changes: number;
   commits: number;
-  cancellation: CRCManipulationCancelReason | null;
+  cancellation: PibblManipulationCancelReason | null;
   publish: (() => void) | undefined;
 }
 
@@ -84,7 +84,7 @@ export function createManipulationLabModel(): ManipulationLabModel {
   };
 }
 
-export function ManipulationLabRoot({ model }: { readonly model: ManipulationLabModel }): CRCNode {
+export function ManipulationLabRoot({ model }: { readonly model: ManipulationLabModel }): PibblNode {
   const control = useManipulation({
     box: model.box,
     move: { snap: { enabled: model.snapEnabled, step: 20 } },

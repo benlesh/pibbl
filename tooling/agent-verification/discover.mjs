@@ -14,7 +14,7 @@ const workflows = [
     sources: ['packages/scenarios/src/agent-layout-placement.ts', 'packages/scenarios/src/agent-layout-placement.example.tsx', 'packages/core/test/agent-layout-workflow.test.ts', 'packages/core/test/agent-layout-placement.test.tsx', 'tooling/agent-verification/layout-smoke.mjs'],
     check: { executable: 'corepack', arguments: ['pnpm@11.21.0', 'exec', 'vitest', 'run', 'packages/core/test/agent-layout-workflow.test.ts', 'packages/core/test/agent-layout-placement.test.tsx', '--browser.headless', '--browser.ui=false'] },
     replay: { executable: 'node', arguments: ['tooling/agent-verification/layout-smoke.mjs'], requires: 'Supply the source Studio URL and a new report file path. Existing output files are refused.' },
-    queries: ['Live evidence: agent-layout-placement-evidence contains declared, allocation, observed, diagnosis and clicks.', 'Read crc-layout-studio-smoke/1 with evidence-reader.mjs REPORT.json --action overlap-prohibited --fields ["/before/assertion","/before/relations/overlap/area","/after/lastActivated"]. Every view reports no schema-provided attestation.'],
+    queries: ['Live evidence: agent-layout-placement-evidence contains declared, allocation, observed, diagnosis and clicks.', 'Read pibbl-layout-studio-smoke/1 with evidence-reader.mjs REPORT.json --action overlap-prohibited --fields ["/before/assertion","/before/relations/overlap/area","/after/lastActivated"]. Every view reports no schema-provided attestation.'],
     limits: ['Controlled layout fixture; no served-build attestation or general replay protocol yet.', 'Declared inputs are application provenance, not a general style resolver trace. Geometry probes do not prove pixel visibility.', 'LAY-06 still requires broader overlap/out-of-allocation coverage. Discovery does not close either requirement.'],
   },
   {
@@ -171,9 +171,9 @@ const workflows = [
 
 export function discoverRequirement(id, ledger) {
   const row = ledger.requirements.find(row => row.id === id);
-  if (!row) throw Object.assign(new Error('Unknown verification requirement ID.'), { code: 'CRC_UNKNOWN_REQUIREMENT' });
+  if (!row) throw Object.assign(new Error('Unknown verification requirement ID.'), { code: 'PIBBL_UNKNOWN_REQUIREMENT' });
   const matches = workflows.filter(workflow => workflow.requirements.includes(id));
-  return structuredClone({ schema: 'crc-verification-discovery/1', verification: 'discovery-only',
+  return structuredClone({ schema: 'pibbl-verification-discovery/1', verification: 'discovery-only',
     status: matches.length ? 'mapped' : 'unmapped', requirementId: id, requirement: row.requirement,
     assessedStatus: row.status, remaining: row.remaining, workflows: matches });
 }
@@ -181,11 +181,11 @@ export function discoverRequirement(id, ledger) {
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   try {
     const [id, ...extra] = process.argv.slice(2);
-    if (!id || extra.length) throw Object.assign(new Error('Usage: node tooling/agent-verification/discover.mjs REQUIREMENT-ID'), { code: 'CRC_DISCOVERY_USAGE' });
+    if (!id || extra.length) throw Object.assign(new Error('Usage: node tooling/agent-verification/discover.mjs REQUIREMENT-ID'), { code: 'PIBBL_DISCOVERY_USAGE' });
     const ledger = JSON.parse(await readFile(new URL('../../docs/strategy/agent-verification-ledger.json', import.meta.url), 'utf8'));
     process.stdout.write(JSON.stringify(discoverRequirement(id, ledger)) + '\n');
   } catch (error) {
-    process.stdout.write(JSON.stringify({ schema: 'crc-verification-discovery/1', status: 'invalid', code: error.code ?? 'CRC_DISCOVERY_UNAVAILABLE', message: error.message }) + '\n');
+    process.stdout.write(JSON.stringify({ schema: 'pibbl-verification-discovery/1', status: 'invalid', code: error.code ?? 'PIBBL_DISCOVERY_UNAVAILABLE', message: error.message }) + '\n');
     process.exitCode = 1;
   }
 }

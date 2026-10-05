@@ -2,7 +2,7 @@
 
 > **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
 
-Issue: CRC-PERF-10  
+Issue: Pibbl-PERF-10  
 Priority: P2  
 Status: Open  
 Evidence date: 2026-10-02  
@@ -24,7 +24,7 @@ See the [audit evidence](../evidence/tests.log) and [shared environment and limi
 
 ## Reproduction
 
-Mount increasing numbers of public CRC roots, dirty them together through signals, and measure job-lookup counts and scheduled work. Also test many idle roots with a small dirty subset.
+Mount increasing numbers of public Pibbl roots, dirty them together through signals, and measure job-lookup counts and scheduled work. Also test many idle roots with a small dirty subset.
 
 ## Implementation direction
 

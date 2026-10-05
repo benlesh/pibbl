@@ -1,4 +1,4 @@
-import { type Signal } from "@crc/core";
+import { type Signal } from "@pibbl/core";
 import type {
   ResolvedBandScale,
   ResolvedLinearScale,

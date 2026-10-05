@@ -19,7 +19,7 @@ const output = resolve(process.argv[3] ?? `${repository}/packages/core/test/out/
 await reserveEvidenceDirectory(output);
 const actions = ['initial', 'repair', 'seed'];
 const subjects = ['ready-revision', 'exact-fixture-label', 'private-text-redacted', 'bounded-call-evidence'];
-const report = { schema: 'crc-text-replay/1', status: 'incomplete', url,
+const report = { schema: 'pibbl-text-replay/1', status: 'incomplete', url,
   requiredChecks: actions.flatMap(actionId => subjects.map(subject => ({ actionId, checkId: `${actionId}.${subject}` }))),
   steps: [], errors: [], droppedErrors: 0,
   scope: 'Native Studio action buttons and successful single-context text calls; no glyph visibility or other-surface claim.' };
@@ -53,7 +53,7 @@ try {
     assert.ok(raw && Buffer.byteLength(raw) < 8192, 'Fixture evidence must fit its byte budget.');
     let envelope;
     try { envelope = JSON.parse(raw); } catch { throw new Error('Invalid text evidence JSON (content redacted).'); }
-    assert.ok(envelope.schema === 'crc-text-fixture/1', 'Unexpected text evidence schema.');
+    assert.ok(envelope.schema === 'pibbl-text-fixture/1', 'Unexpected text evidence schema.');
     assertIdentity(report.expectedIdentity, envelope.identity);
     const state = envelope.state;
     const step = { actionId, status: 'incomplete', transport: actionId === 'initial' ? 'page-navigation' : 'native-playwright-pointer' };
@@ -66,7 +66,7 @@ try {
     await check('private-text-redacted', isDeepStrictEqual(state.observation?.records?.[1]?.content, { status: 'redacted' }));
     const record = (sequence, content, y) => ({ sequence, operation: 'fillText', content, x: 24, y, maxWidth: null, alignment: 'left', baseline: 'top' });
     const expected = { mode, status: 'ready', revision, expected: 'Revenue: 42', assertion: mode === 'repair' ? 'pass' : 'fail',
-      observation: { schema: 'crc-text-call-evidence/1', status: 'stopped', scope: 'one-context-successful-calls', geometry: 'draw-positions-not-glyph-bounds', fontAttribution: 'unknown', fontRequest: 'not-recorded', clipping: 'not-observed', pixels: 'not-observed', observationFailures: 0, completeness: 'complete', total: 2, dropped: 0, capacity: 8,
+      observation: { schema: 'pibbl-text-call-evidence/1', status: 'stopped', scope: 'one-context-successful-calls', geometry: 'draw-positions-not-glyph-bounds', fontAttribution: 'unknown', fontRequest: 'not-recorded', clipping: 'not-observed', pixels: 'not-observed', observationFailures: 0, completeness: 'complete', total: 2, dropped: 0, capacity: 8,
         records: [record(1, { status: 'fixture', value: label }, 48), record(2, { status: 'redacted' }, 88)] } };
     await check('bounded-call-evidence', isDeepStrictEqual(state, expected));
     // Only the fully validated payload reaches retained evidence; no screenshots
@@ -77,8 +77,8 @@ try {
   assertIdentity(report.expectedIdentity, await sourceTextIdentity(repository));
   report.status = 'pass';
 } catch (error) {
-  report.status = error?.code?.startsWith('CRC_FIXTURE_IDENTITY') ? 'blocked' : 'fail';
-  report.failure = { stage, reason: 'Text verification did not complete; unvalidated payload and error details redacted.', code: error?.code?.startsWith('CRC_FIXTURE_IDENTITY') ? error.code : null };
+  report.status = error?.code?.startsWith('PIBBL_FIXTURE_IDENTITY') ? 'blocked' : 'fail';
+  report.failure = { stage, reason: 'Text verification did not complete; unvalidated payload and error details redacted.', code: error?.code?.startsWith('PIBBL_FIXTURE_IDENTITY') ? error.code : null };
   process.exitCode = 1;
 } finally {
   try { await browser?.close(); } catch { report.status = 'fail'; report.cleanupFailure = 'Browser cleanup failed (details redacted).'; }

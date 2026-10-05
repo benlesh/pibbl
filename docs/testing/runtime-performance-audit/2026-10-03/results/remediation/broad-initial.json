@@ -2,7 +2,7 @@
   "baseline": "31d8417f09f6bc2bb76a96395735065bcf697108",
   "node": "v24.15.0",
   "browser": "151.0.7922.34",
-  "sourceRoot": "/Users/benlesh/.codex/worktrees/runtime-perf-audit/crc",
+  "sourceRoot": "/Users/benlesh/.codex/worktrees/runtime-perf-audit/pibbl",
   "mode": "source",
   "meaning": "Synthetic public-API scheduler CPU wall time; excludes compositor presentation. Timing cases uninstrumented except scalar duration samples. Structural copy counters measured separately. No forced GC.",
   "cases": [
@@ -1352,7 +1352,7 @@
         "n": 1000,
         "frames": 0
       },
-      "error": "Error: page.evaluate: TypeError: Expected a live CRC physics 2D world handle.\n    at Module.requirePhysicsWorld2DController (http://127.0.0.1:5205/@fs/Users/benlesh/.codex/worktrees/runtime-perf-audit/crc/packages/physics/src/lib/2d/runtime/controller.ts:830:9)\n    at eval (eval at evaluate (:311:30), <anonymous>:13:131)\n    at async <anonymous>:337:30"
+      "error": "Error: page.evaluate: TypeError: Expected a live Pibbl physics 2D world handle.\n    at Module.requirePhysicsWorld2DController (http://127.0.0.1:5205/@fs/Users/benlesh/.codex/worktrees/runtime-perf-audit/pibbl/packages/physics/src/lib/2d/runtime/controller.ts:830:9)\n    at eval (eval at evaluate (:311:30), <anonymous>:13:131)\n    at async <anonymous>:337:30"
     },
     {
       "config": {

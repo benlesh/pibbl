@@ -10,7 +10,7 @@ function start() {
     effect = mountInkButton(button, canvas);
   } catch (error) {
     console.warn(
-      "CRC decoration unavailable; native button remains usable.",
+      "Pibbl decoration unavailable; native button remains usable.",
       error,
     );
   }

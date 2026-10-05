@@ -1,0 +1,299 @@
+{
+  "frames": {
+    "standing": {
+      "frame": {
+        "x": 73,
+        "y": 60,
+        "w": 182,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 240,
+        "h": 300
+      },
+      "spriteSourceSize": {
+        "x": 29,
+        "y": 37
+      },
+      "duration": 100
+    },
+    "run-0": {
+      "frame": {
+        "x": 381,
+        "y": 60,
+        "w": 195,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 240,
+        "h": 300
+      },
+      "spriteSourceSize": {
+        "x": 22,
+        "y": 37
+      },
+      "duration": 100
+    },
+    "run-1": {
+      "frame": {
+        "x": 684,
+        "y": 61,
+        "w": 181,
+        "h": 262
+      },
+      "sourceSize": {
+        "w": 240,
+        "h": 300
+      },
+      "spriteSourceSize": {
+        "x": 29,
+        "y": 38
+      },
+      "duration": 100
+    },
+    "run-2": {
+      "frame": {
+        "x": 989,
+        "y": 63,
+        "w": 185,
+        "h": 261
+      },
+      "sourceSize": {
+        "w": 240,
+        "h": 300
+      },
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 39
+      },
+      "duration": 100
+    },
+    "jump": {
+      "frame": {
+        "x": 70,
+        "y": 364,
+        "w": 203,
+        "h": 265
+      },
+      "sourceSize": {
+        "w": 240,
+        "h": 300
+      },
+      "spriteSourceSize": {
+        "x": 18,
+        "y": 35
+      },
+      "duration": 100
+    },
+    "fall": {
+      "frame": {
+        "x": 377,
+        "y": 369,
+        "w": 199,
+        "h": 276
+      },
+      "sourceSize": {
+        "w": 240,
+        "h": 300
+      },
+      "spriteSourceSize": {
+        "x": 20,
+        "y": 24
+      },
+      "duration": 100
+    },
+    "crouch": {
+      "frame": {
+        "x": 694,
+        "y": 463,
+        "w": 195,
+        "h": 196
+      },
+      "sourceSize": {
+        "w": 240,
+        "h": 300
+      },
+      "spriteSourceSize": {
+        "x": 22,
+        "y": 104
+      },
+      "duration": 100
+    },
+    "celebrate": {
+      "frame": {
+        "x": 995,
+        "y": 372,
+        "w": 192,
+        "h": 287
+      },
+      "sourceSize": {
+        "w": 240,
+        "h": 300
+      },
+      "spriteSourceSize": {
+        "x": 24,
+        "y": 13
+      },
+      "duration": 100
+    },
+    "coin-0": {
+      "frame": {
+        "x": 77,
+        "y": 735,
+        "w": 177,
+        "h": 177
+      },
+      "sourceSize": {
+        "w": 220,
+        "h": 220
+      },
+      "spriteSourceSize": {
+        "x": 21,
+        "y": 43
+      },
+      "duration": 100
+    },
+    "coin-1": {
+      "frame": {
+        "x": 410,
+        "y": 733,
+        "w": 131,
+        "h": 184
+      },
+      "sourceSize": {
+        "w": 220,
+        "h": 220
+      },
+      "spriteSourceSize": {
+        "x": 44,
+        "y": 36
+      },
+      "duration": 100
+    },
+    "coin-2": {
+      "frame": {
+        "x": 747,
+        "y": 729,
+        "w": 66,
+        "h": 188
+      },
+      "sourceSize": {
+        "w": 220,
+        "h": 220
+      },
+      "spriteSourceSize": {
+        "x": 77,
+        "y": 32
+      },
+      "duration": 100
+    },
+    "coin-3": {
+      "frame": {
+        "x": 1024,
+        "y": 734,
+        "w": 125,
+        "h": 183
+      },
+      "sourceSize": {
+        "w": 220,
+        "h": 220
+      },
+      "spriteSourceSize": {
+        "x": 47,
+        "y": 37
+      },
+      "duration": 100
+    },
+    "brick": {
+      "frame": {
+        "x": 24,
+        "y": 1006,
+        "w": 288,
+        "h": 161
+      },
+      "sourceSize": {
+        "w": 288,
+        "h": 161
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0
+      },
+      "duration": 100
+    },
+    "shard-0": {
+      "frame": {
+        "x": 419,
+        "y": 1042,
+        "w": 110,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 110,
+        "h": 90
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0
+      },
+      "duration": 100
+    },
+    "shard-1": {
+      "frame": {
+        "x": 726,
+        "y": 1032,
+        "w": 97,
+        "h": 118
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 118
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0
+      },
+      "duration": 100
+    },
+    "stone": {
+      "frame": {
+        "x": 942,
+        "y": 1006,
+        "w": 292,
+        "h": 161
+      },
+      "sourceSize": {
+        "w": 292,
+        "h": 161
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0
+      },
+      "duration": 100
+    }
+  },
+  "meta": {
+    "image": "sprites.png",
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 0,
+        "direction": "forward"
+      },
+      {
+        "name": "walk",
+        "from": 1,
+        "to": 3,
+        "direction": "forward"
+      },
+      {
+        "name": "spin",
+        "from": 8,
+        "to": 11,
+        "direction": "forward"
+      }
+    ]
+  }
+}

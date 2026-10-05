@@ -1,14 +1,14 @@
 import {
-  crc,
+  pibbl,
   useEventListener,
   useEventTarget,
   useSignal,
   FocusManagement,
   Rectangle,
   Text,
-  type CRCController,
-  type CRCEvent,
-} from "@crc/core";
+  type PibblController,
+  type PibblEvent,
+} from "@pibbl/core";
 function boxPath(x: number, y: number, width: number, height: number): Path2D {
   const path = new Path2D();
   path.rect(x, y, width, height);
@@ -115,7 +115,7 @@ function FocusManagementLesson() {
   const events = useSignal<readonly string[]>([]);
   const record = (message: string) =>
     events.update((current) => [...current.slice(-4), message]);
-  const recordBoundary = (name: string) => (event: CRCEvent) => {
+  const recordBoundary = (name: string) => (event: PibblEvent) => {
     record(
       `boundary ${name} phase ${event.eventPhase} → ${event.relatedTarget ? "related target" : "none"}`,
     );
@@ -256,8 +256,8 @@ function FocusManagementLesson() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     <FocusManagement>
       <FocusManagementLesson />

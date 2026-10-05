@@ -1,4 +1,4 @@
-import { defineRenderLayer, type CRCRenderLayerInput } from "@crc/core";
+import { defineRenderLayer, type PibblRenderLayerInput } from "@pibbl/core";
 import { TextureRaster, type TextureRenderer } from "./presentation.js";
 import { InkSimulation } from "./simulation.js";
 import {
@@ -153,7 +153,7 @@ function reset(r: Resources, config: Options) {
 }
 function input(
   r: Resources,
-  event: Readonly<CRCRenderLayerInput<object>>,
+  event: Readonly<PibblRenderLayerInput<object>>,
   width: number,
   height: number,
 ) {
@@ -210,11 +210,11 @@ function input(
 }
 
 /**
- * An independently sized, persistent Gray–Scott surface, advanced by CRC's scheduler.
+ * An independently sized, persistent Gray–Scott surface, advanced by Pibbl's scheduler.
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link ReactionDiffusionProps}
  */

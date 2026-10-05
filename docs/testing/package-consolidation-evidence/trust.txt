@@ -59,8 +59,8 @@ Validated public documentation metadata and safe Markdown rendering.
 Validated public API coverage: 92 core values, 216 core types, 1 Three adapter value, 8 Three adapter types, 9 particle values, 43 particle type exports, 50 physics 2D values, and 18 pure physics 3D geometry values.
 Validated the deterministic Studio documentation manifest.
 Validated deterministic public MiniSearch records and ranking.
-Validated CRC Studio documentation content, API coverage, routes, links, and search.
-$ VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE=1 corepack pnpm@11.21.0 playground:build && node tooling/verify-studio-production-output.mjs
+Validated Pibbl Studio documentation content, API coverage, routes, links, and search.
+$ VITE_PIBBL_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE=1 corepack pnpm@11.21.0 playground:build && node tooling/verify-studio-production-output.mjs
 $ node tooling/verify-studio-pivot.mjs && corepack pnpm@11.21.0 -C playground run playground:build
 Studio source, built, and editor declarations have exact public export-name parity; source/built runtime and Three addons passed.
 $ vite build
@@ -80,7 +80,8 @@ $ vite build
   - import "./model" without a file extension (../tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 vite v8.2.1 building client environment for production...
-[2Ktransforming...✓ 2185 modules transformed.
+[2K
+transforming...✓ 2185 modules transformed.
 rendering chunks...
 computing gzip size...
 dist/index.html                                                           6.60 kB │ gzip:     1.48 kB
@@ -391,11 +392,11 @@ dist/assets/policy-components-ByAvYj5k.js                                34.44 k
 dist/assets/definitions-BfUObK-a.js                                      36.47 kB │ gzip:    14.98 kB
 dist/assets/use-playback-BoLLPkLA.js                                     83.99 kB │ gzip:    22.54 kB
 dist/assets/component-Bix0LRBL.js                                        90.08 kB │ gzip:    26.26 kB
-dist/assets/crc-C84J6MUI.js                                             131.68 kB │ gzip:    39.23 kB
+dist/assets/pibbl-C84J6MUI.js                                             131.68 kB │ gzip:    39.23 kB
 dist/assets/define-three-layer-D-Onkqb1.js                              543.19 kB │ gzip:   136.43 kB
 dist/assets/tsMode-B1EBd1Sl.js                                        1,193.15 kB │ gzip:   303.02 kB
 dist/assets/index-g3HwG-QH.js                                         1,468.23 kB │ gzip:   373.67 kB
-dist/assets/_virtual_crc-studio-search-9JlwvTPO.js                    1,512.72 kB │ gzip:   277.68 kB
+dist/assets/_virtual_pibbl-studio-search-9JlwvTPO.js                    1,512.72 kB │ gzip:   277.68 kB
 dist/assets/three-editor-declaration-libraries-BcjU_VrE.js            1,590.68 kB │ gzip:   261.47 kB
 dist/assets/editor.api-DBLMBaiM.js                                    2,654.05 kB │ gzip:   682.01 kB
 dist/assets/world-component-42OqU4p5.js                               3,614.40 kB │ gzip: 1,355.61 kB
@@ -418,7 +419,7 @@ $ corepack pnpm@11.21.0 -r run build
 Scope: 4 of 5 workspace projects
 packages/core build$ rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs
 packages/core build: Done
-packages/three build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@crc/core --external:three
+packages/three build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@pibbl/core --external:three
 packages/three build:   dist/index.mjs      18.6kb
 packages/three build:   dist/index.mjs.map  37.7kb
 packages/three build: ⚡ Done in 1ms
@@ -442,7 +443,8 @@ $ vite build
   - import "./model" without a file extension (../tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 vite v8.2.1 building client environment for production...
-[2Ktransforming...✓ 2185 modules transformed.
+[2K
+transforming...✓ 2185 modules transformed.
 rendering chunks...
 computing gzip size...
 dist/index.html                                                           6.60 kB │ gzip:     1.48 kB
@@ -753,11 +755,11 @@ dist/assets/policy-components-ByAvYj5k.js                                34.44 k
 dist/assets/definitions-BfUObK-a.js                                      36.47 kB │ gzip:    14.98 kB
 dist/assets/use-playback-BoLLPkLA.js                                     83.99 kB │ gzip:    22.54 kB
 dist/assets/component-Bix0LRBL.js                                        90.08 kB │ gzip:    26.26 kB
-dist/assets/crc-C84J6MUI.js                                             131.68 kB │ gzip:    39.23 kB
+dist/assets/pibbl-C84J6MUI.js                                             131.68 kB │ gzip:    39.23 kB
 dist/assets/define-three-layer-D-Onkqb1.js                              543.19 kB │ gzip:   136.43 kB
 dist/assets/tsMode-B1EBd1Sl.js                                        1,193.15 kB │ gzip:   303.02 kB
 dist/assets/index-g3HwG-QH.js                                         1,468.23 kB │ gzip:   373.67 kB
-dist/assets/_virtual_crc-studio-search-9JlwvTPO.js                    1,512.72 kB │ gzip:   277.68 kB
+dist/assets/_virtual_pibbl-studio-search-9JlwvTPO.js                    1,512.72 kB │ gzip:   277.68 kB
 dist/assets/three-editor-declaration-libraries-BcjU_VrE.js            1,590.68 kB │ gzip:   261.47 kB
 dist/assets/editor.api-DBLMBaiM.js                                    2,654.05 kB │ gzip:   682.01 kB
 dist/assets/world-component-42OqU4p5.js                               3,614.40 kB │ gzip: 1,355.61 kB
@@ -774,7 +776,7 @@ $ corepack pnpm@11.21.0 -r run build
 Scope: 4 of 5 workspace projects
 packages/core build$ rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs
 packages/core build: Done
-packages/three build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@crc/core --external:three
+packages/three build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@pibbl/core --external:three
 packages/three build:   dist/index.mjs      18.6kb
 packages/three build:   dist/index.mjs.map  37.7kb
 packages/three build: ⚡ Done in 1ms
@@ -797,7 +799,8 @@ $ vite build --mode built
   - import "./model" without a file extension (../tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 vite v8.2.1 building client environment for built...
-[2Ktransforming...✓ 2188 modules transformed.
+[2K
+transforming...✓ 2188 modules transformed.
 rendering chunks...
 computing gzip size...
 dist/index.html                                                           6.59 kB │ gzip:     1.47 kB
@@ -1108,11 +1111,11 @@ dist/assets/policy-components-CnrzXPMr.js                                34.43 k
 dist/assets/definitions-C1hFbmw1.js                                      36.47 kB │ gzip:    14.98 kB
 dist/assets/use-playback-DdZpi7e_.js                                     83.99 kB │ gzip:    22.54 kB
 dist/assets/component-Dkw5OkeM.js                                        90.07 kB │ gzip:    26.26 kB
-dist/assets/crc-Br7-Qcun.js                                             131.66 kB │ gzip:    39.23 kB
+dist/assets/pibbl-Br7-Qcun.js                                             131.66 kB │ gzip:    39.23 kB
 dist/assets/dist-BZsEefq8.js                                            543.19 kB │ gzip:   136.43 kB
 dist/assets/tsMode-B1EBd1Sl.js                                        1,193.15 kB │ gzip:   303.02 kB
 dist/assets/index-DW7z5zOH.js                                         1,468.22 kB │ gzip:   373.67 kB
-dist/assets/_virtual_crc-studio-search-9JlwvTPO.js                    1,512.72 kB │ gzip:   277.68 kB
+dist/assets/_virtual_pibbl-studio-search-9JlwvTPO.js                    1,512.72 kB │ gzip:   277.68 kB
 dist/assets/three-editor-declaration-libraries-BcjU_VrE.js            1,590.68 kB │ gzip:   261.47 kB
 dist/assets/editor.api-DBLMBaiM.js                                    2,654.05 kB │ gzip:   682.01 kB
 dist/assets/world-component-BIJ8Cuwn.js                               3,614.47 kB │ gzip: 1,355.61 kB
@@ -1130,7 +1133,7 @@ $ corepack pnpm@11.21.0 -r run build
 Scope: 4 of 5 workspace projects
 packages/core build$ rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs
 packages/core build: Done
-packages/three build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@crc/core --external:three
+packages/three build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@pibbl/core --external:three
 packages/three build:   dist/index.mjs      18.6kb
 packages/three build:   dist/index.mjs.map  37.7kb
 packages/three build: ⚡ Done in 1ms
@@ -1222,7 +1225,8 @@ $ vite build --mode studio-docs-acceptance
   - import "./model" without a file extension (../tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 vite v8.2.1 building client environment for studio-docs-acceptance...
-[2Ktransforming...✓ 2185 modules transformed.
+[2K
+transforming...✓ 2185 modules transformed.
 rendering chunks...
 computing gzip size...
 .studio-docs-acceptance-dist/index.html                                                           6.60 kB │ gzip:     1.48 kB
@@ -1533,11 +1537,11 @@ computing gzip size...
 .studio-docs-acceptance-dist/assets/definitions-BfUObK-a.js                                      36.47 kB │ gzip:    14.98 kB
 .studio-docs-acceptance-dist/assets/use-playback-BoLLPkLA.js                                     83.99 kB │ gzip:    22.54 kB
 .studio-docs-acceptance-dist/assets/component-Bix0LRBL.js                                        90.08 kB │ gzip:    26.26 kB
-.studio-docs-acceptance-dist/assets/crc-C84J6MUI.js                                             131.68 kB │ gzip:    39.23 kB
+.studio-docs-acceptance-dist/assets/pibbl-C84J6MUI.js                                             131.68 kB │ gzip:    39.23 kB
 .studio-docs-acceptance-dist/assets/define-three-layer-D-Onkqb1.js                              543.19 kB │ gzip:   136.43 kB
 .studio-docs-acceptance-dist/assets/tsMode-B1EBd1Sl.js                                        1,193.15 kB │ gzip:   303.02 kB
 .studio-docs-acceptance-dist/assets/index-TjNzwqFw.js                                         1,468.42 kB │ gzip:   373.76 kB
-.studio-docs-acceptance-dist/assets/_virtual_crc-studio-search-9JlwvTPO.js                    1,512.72 kB │ gzip:   277.68 kB
+.studio-docs-acceptance-dist/assets/_virtual_pibbl-studio-search-9JlwvTPO.js                    1,512.72 kB │ gzip:   277.68 kB
 .studio-docs-acceptance-dist/assets/three-editor-declaration-libraries-BcjU_VrE.js            1,590.68 kB │ gzip:   261.47 kB
 .studio-docs-acceptance-dist/assets/editor.api-DBLMBaiM.js                                    2,654.05 kB │ gzip:   682.01 kB
 .studio-docs-acceptance-dist/assets/world-component-42OqU4p5.js                               3,614.40 kB │ gzip: 1,355.61 kB
@@ -1549,7 +1553,7 @@ computing gzip size...
 - Using dynamic import() to code-split the application
 - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-Validated CRC Studio public documentation navigation and search acceptance.
+Validated Pibbl Studio public documentation navigation and search acceptance.
 Validated isolated Studio documentation acceptance output; playground/dist SHA-256 remained eb4aafb3fe9158f6d130fb83d5ebce5ca7fbf24f0edf0d09c12d39ce027b4bf0, and playground/.studio-docs-acceptance-dist was removed.
 $ node tooling/verify-visual-safeguard.mjs
 Visual safeguard rejected the drill, preserved every baseline byte, and recovered green.
@@ -1573,7 +1577,8 @@ $ vite build
   - import "./model" without a file extension (../tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 vite v8.2.1 building client environment for production...
-[2Ktransforming...✓ 2185 modules transformed.
+[2K
+transforming...✓ 2185 modules transformed.
 rendering chunks...
 computing gzip size...
 dist/index.html                                                           6.60 kB │ gzip:     1.48 kB
@@ -1884,11 +1889,11 @@ dist/assets/policy-components-ByAvYj5k.js                                34.44 k
 dist/assets/definitions-BfUObK-a.js                                      36.47 kB │ gzip:    14.98 kB
 dist/assets/use-playback-BoLLPkLA.js                                     83.99 kB │ gzip:    22.54 kB
 dist/assets/component-Bix0LRBL.js                                        90.08 kB │ gzip:    26.26 kB
-dist/assets/crc-C84J6MUI.js                                             131.68 kB │ gzip:    39.23 kB
+dist/assets/pibbl-C84J6MUI.js                                             131.68 kB │ gzip:    39.23 kB
 dist/assets/define-three-layer-D-Onkqb1.js                              543.19 kB │ gzip:   136.43 kB
 dist/assets/tsMode-B1EBd1Sl.js                                        1,193.15 kB │ gzip:   303.02 kB
 dist/assets/index-g3HwG-QH.js                                         1,468.23 kB │ gzip:   373.67 kB
-dist/assets/_virtual_crc-studio-search-9JlwvTPO.js                    1,512.72 kB │ gzip:   277.68 kB
+dist/assets/_virtual_pibbl-studio-search-9JlwvTPO.js                    1,512.72 kB │ gzip:   277.68 kB
 dist/assets/three-editor-declaration-libraries-BcjU_VrE.js            1,590.68 kB │ gzip:   261.47 kB
 dist/assets/editor.api-DBLMBaiM.js                                    2,654.05 kB │ gzip:   682.01 kB
 dist/assets/world-component-42OqU4p5.js                               3,614.40 kB │ gzip: 1,355.61 kB
@@ -1901,13 +1906,13 @@ dist/assets/editor-workbench-DKLghMU-.js                              7,005.36 k
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
 ✓ built in 2.04s
 Matched diagram-editor teaser at 960×600 with zero differing pixels.
-Matched 8 CRC studio visual baselines.
+Matched 8 Pibbl studio visual baselines.
 $ corepack pnpm@11.21.0 build && vitest run packages/core/test/smoke-scenario.test.ts packages/core/test/html-box-smoke.test.ts packages/core/test/features/textures/public-smoke.test.tsx --mode built --browser.headless --browser.ui=false
 $ corepack pnpm@11.21.0 -r run build
 Scope: 4 of 5 workspace projects
 packages/core build$ rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs
 packages/core build: Done
-packages/three build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@crc/core --external:three
+packages/three build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@pibbl/core --external:three
 packages/three build:   dist/index.mjs      18.6kb
 packages/three build:   dist/index.mjs.map  37.7kb
 packages/three build: ⚡ Done in 2ms
@@ -1974,8 +1979,8 @@ $ node --test tooling/agent-verification/identity.test.mjs tooling/agent-verific
 ℹ skipped 0
 ℹ todo 0
 ℹ duration_ms 1188.030625
-{"schema":"crc-core-peer-audit/1","scope":"declared-core-peer-pins","status":"compatible","runtimeIdentity":"not-observed","otherPeers":"not-checked","packages":[{"name":"@crc/three","version":"0.0.1","requiredCore":"0.0.1","observedCore":"0.0.1","status":"compatible"}],"manifests":[{"path":"packages/core/package.json","sha256":"bafbfc955fd89813b39b8ee194f09da81d8155477d475ea0189f46c919418618"},{"path":"packages/three/package.json","sha256":"d303f09eb6b957cb0bacc1cf182d8cc80dc182ac703b030dd59dce3b97aa7e9c"}]}
-{"schema":"crc-installed-peer-audit/1","resolution":"node-require-default","runtimeIdentity":"not-observed","status":"compatible","consumers":[{"name":"@crc/three","path":"/Users/benlesh/GitHub/crc/packages/three/package.json","sha256":"d303f09eb6b957cb0bacc1cf182d8cc80dc182ac703b030dd59dce3b97aa7e9c"}],"peers":[{"consumer":"@crc/three","consumerManifest":"/Users/benlesh/GitHub/crc/packages/three/package.json","name":"@crc/core","range":"0.0.1","optional":false,"entry":"/Users/benlesh/GitHub/crc/packages/core/dist/index.mjs","manifest":"/Users/benlesh/GitHub/crc/packages/core/package.json","sha256":"bafbfc955fd89813b39b8ee194f09da81d8155477d475ea0189f46c919418618","version":"0.0.1","status":"compatible"},{"consumer":"@crc/three","consumerManifest":"/Users/benlesh/GitHub/crc/packages/three/package.json","name":"three","range":"^0.186.0","optional":false,"entry":"/Users/benlesh/GitHub/crc/node_modules/.pnpm/three@0.186.0/node_modules/three/build/three.cjs","manifest":"/Users/benlesh/GitHub/crc/node_modules/.pnpm/three@0.186.0/node_modules/three/package.json","sha256":"ab4ff6950aab522dfe6980f19914a5eb2cadb689a36c6c44f4d3869c5e46dc89","version":"0.186.0","status":"compatible"}],"coreInstallations":["/Users/benlesh/GitHub/crc/packages/core"],"duplicateCoreInstallations":false}
+{"schema":"pibbl-core-peer-audit/1","scope":"declared-core-peer-pins","status":"compatible","runtimeIdentity":"not-observed","otherPeers":"not-checked","packages":[{"name":"@pibbl/three","version":"0.0.1","requiredCore":"0.0.1","observedCore":"0.0.1","status":"compatible"}],"manifests":[{"path":"packages/core/package.json","sha256":"bafbfc955fd89813b39b8ee194f09da81d8155477d475ea0189f46c919418618"},{"path":"packages/three/package.json","sha256":"d303f09eb6b957cb0bacc1cf182d8cc80dc182ac703b030dd59dce3b97aa7e9c"}]}
+{"schema":"pibbl-installed-peer-audit/1","resolution":"node-require-default","runtimeIdentity":"not-observed","status":"compatible","consumers":[{"name":"@pibbl/three","path":"/Users/benlesh/GitHub/crc/packages/three/package.json","sha256":"d303f09eb6b957cb0bacc1cf182d8cc80dc182ac703b030dd59dce3b97aa7e9c"}],"peers":[{"consumer":"@pibbl/three","consumerManifest":"/Users/benlesh/GitHub/crc/packages/three/package.json","name":"@pibbl/core","range":"0.0.1","optional":false,"entry":"/Users/benlesh/GitHub/crc/packages/core/dist/index.mjs","manifest":"/Users/benlesh/GitHub/crc/packages/core/package.json","sha256":"bafbfc955fd89813b39b8ee194f09da81d8155477d475ea0189f46c919418618","version":"0.0.1","status":"compatible"},{"consumer":"@pibbl/three","consumerManifest":"/Users/benlesh/GitHub/crc/packages/three/package.json","name":"three","range":"^0.186.0","optional":false,"entry":"/Users/benlesh/GitHub/crc/node_modules/.pnpm/three@0.186.0/node_modules/three/build/three.cjs","manifest":"/Users/benlesh/GitHub/crc/node_modules/.pnpm/three@0.186.0/node_modules/three/package.json","sha256":"ab4ff6950aab522dfe6980f19914a5eb2cadb689a36c6c44f4d3869c5e46dc89","version":"0.186.0","status":"compatible"}],"coreInstallations":["/Users/benlesh/GitHub/crc/packages/core"],"duplicateCoreInstallations":false}
 $ node --test tooling/agent-verification/runtime-identity.test.mjs tooling/agent-verification/required-checks.test.mjs tooling/agent-verification/recorded-check.test.mjs tooling/agent-verification/input-provenance.test.mjs tooling/agent-verification/evidence-directory.test.mjs tooling/agent-verification/watchdog.test.mjs tooling/agent-verification/watchdog-browser.test.mjs tooling/agent-verification/browser-failure.test.mjs tooling/agent-verification/checkpoint.test.mjs tooling/agent-verification/replay-outcome.test.mjs tooling/agent-verification/run-manifest.test.mjs tooling/agent-verification/tool-identity.test.mjs tooling/agent-verification/failure-evidence.test.mjs tooling/agent-verification/numeric-assertion.test.mjs tooling/agent-verification/evidence-reader.test.mjs tooling/agent-verification/compare-evidence.test.mjs
 ✔ a real late page error survives cleanup and invalidates provisional success (148.237666ms)
 ✔ a real renderer crash is distinct from ordinary cleanup and historical snapshots stay fixed (306.994917ms)

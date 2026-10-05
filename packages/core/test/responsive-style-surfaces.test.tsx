@@ -1,7 +1,7 @@
-import { invert, blur } from '@crc/core/filters';
-import { crc, Rectangle, Text, createElement, definePrimitive, measureElement, signal, type CRCController, type SystemStyle } from '@crc/core';
+import { invert, blur } from '@pibbl/core/filters';
+import { pibbl, Rectangle, Text, createElement, definePrimitive, measureElement, signal, type PibblController, type SystemStyle } from '@pibbl/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-const controllers: CRCController[] = [];
+const controllers: PibblController[] = [];
 afterEach(() => {
   for (const controller of controllers.splice(0)) controller.dispose();
   vi.restoreAllMocks();
@@ -23,7 +23,7 @@ describe('responsive style surfaces', () => {
       observed.set(props.id, style.color!);
     });
     const targets = [canvas(1000, 300), canvas(1000, 300)];
-    targets.forEach((target, index) => controllers.push(crc(target,
+    targets.forEach((target, index) => controllers.push(pibbl(target,
       <Probe id={String(index)} style={{ color: 'blue', when: [{ query: { minWidth: 600, maxHeight: 200 }, style: { color: 'red' } }] }} />,
       { viewport: { width: 700, height: 160 }, pixelRatio: index + 1, fit: index ? 'fill' : 'contain' },
     )));
@@ -39,7 +39,7 @@ describe('responsive style surfaces', () => {
     const observed: string[] = [];
     const Probe = definePrimitive<{}, SystemStyle & { color?: string }>((_props, style) => { observed.push(style.color!); });
     const target = canvas(700, 160);
-    controllers.push(crc(target, <Probe style={{ color: 'blue', when: [{ query: { minWidth: 600 }, style: { color } }] }} />, { viewport: 'responsive', pixelRatio: 1 }));
+    controllers.push(pibbl(target, <Probe style={{ color: 'blue', when: [{ query: { minWidth: 600 }, style: { color } }] }} />, { viewport: 'responsive', pixelRatio: 1 }));
     await settle();
     expect(observed.at(-1)).toBe('red');
     target.style.width = '0px'; target.style.height = '0px';
@@ -55,7 +55,7 @@ describe('responsive style surfaces', () => {
 
   it('selects filters through the existing pixel-only composition boundary', async () => {
     const target = canvas(700, 100);
-    controllers.push(crc(target, <Rectangle style={{ width: 40, height: 40, fill: 'red', when: [
+    controllers.push(pibbl(target, <Rectangle style={{ width: 40, height: 40, fill: 'red', when: [
       { query: { minWidth: 600 }, style: { filter: invert({ amount: 1 }) } },
     ] }} />, { viewport: 'responsive', pixelRatio: 1 }));
     await settle();

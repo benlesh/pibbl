@@ -22,15 +22,15 @@ import {
   type CompiledWeightedChoice,
 } from "./random.js";
 import type {
-  CRCParticleAppearance,
-  CRCParticleEffect2D,
-  CRCParticleInitial2D,
-  CRCParticleMotion2D,
-  CRCParticleParameterDefinition,
-  CRCParticleParameterReference,
-  CRCParticleScalar,
-  CRCParticleShape2D,
-  CRCParticleVector2,
+  PibblParticleAppearance,
+  PibblParticleEffect2D,
+  PibblParticleInitial2D,
+  PibblParticleMotion2D,
+  PibblParticleParameterDefinition,
+  PibblParticleParameterReference,
+  PibblParticleScalar,
+  PibblParticleShape2D,
+  PibblParticleVector2,
 } from "./types.js";
 
 export const ParameterTimingMask = Object.freeze({
@@ -44,8 +44,8 @@ export type ParameterTimingMaskValue =
 
 export interface CompiledParameterEntry {
   readonly name: string;
-  readonly type: CRCParticleParameterDefinition["type"];
-  readonly timing: CRCParticleParameterDefinition["timing"];
+  readonly type: PibblParticleParameterDefinition["type"];
+  readonly timing: PibblParticleParameterDefinition["timing"];
   readonly offset: number;
   readonly length: 1 | 2 | 4;
 }
@@ -140,7 +140,7 @@ export interface CompiledEmitter2D {
   readonly emitterHash: number;
   readonly capacity: number;
   readonly overflow: "reject-newest" | "recycle-oldest";
-  readonly shape: CRCParticleShape2D;
+  readonly shape: PibblParticleShape2D;
   readonly shapeChannels: readonly [number, number, number];
   readonly initial: CompiledInitial2D;
   readonly motion: readonly CompiledMotion2D[];
@@ -168,10 +168,10 @@ export interface CompiledEffect2D {
   readonly execution: CompiledExecutionCapabilities;
 }
 
-const compiled2D = new WeakMap<CRCParticleEffect2D, CompiledEffect2D>();
+const compiled2D = new WeakMap<PibblParticleEffect2D, CompiledEffect2D>();
 
 function parameterLength(
-  type: CRCParticleParameterDefinition["type"],
+  type: PibblParticleParameterDefinition["type"],
 ): 1 | 2 | 4 {
   switch (type) {
     case "number":
@@ -184,7 +184,7 @@ function parameterLength(
 }
 
 function timingMask(
-  timing: CRCParticleParameterDefinition["timing"],
+  timing: PibblParticleParameterDefinition["timing"],
 ): ParameterTimingMaskValue {
   switch (timing) {
     case "spawn":
@@ -197,7 +197,7 @@ function timingMask(
 }
 
 function writeParameterDefault(
-  definition: CRCParticleParameterDefinition,
+  definition: PibblParticleParameterDefinition,
   output: number[],
 ): void {
   if (definition.type === "number") output.push(definition.default);
@@ -251,7 +251,7 @@ function channelFor(path: string): number {
 }
 
 export function compileParameterReference<Length extends 1 | 2 | 4>(
-  reference: CRCParticleParameterReference<string>,
+  reference: PibblParticleParameterReference<string>,
   layout: CompiledParameterLayout,
   expectedDimension: Length,
   path: string,
@@ -281,7 +281,7 @@ export function compileParameterReference<Length extends 1 | 2 | 4>(
 }
 
 function compileScalar(
-  value: CRCParticleScalar,
+  value: PibblParticleScalar,
   layout: CompiledParameterLayout,
   path: string,
 ): CompiledScalar {
@@ -323,7 +323,7 @@ function compileScalar(
     }
     case "parameter":
       return compileParameterReference(
-        value as CRCParticleParameterReference<string>,
+        value as PibblParticleParameterReference<string>,
         layout,
         1,
         path,
@@ -334,13 +334,13 @@ function compileScalar(
 }
 
 function compileScalarVector2(
-  value: CRCParticleVector2,
+  value: PibblParticleVector2,
   layout: CompiledParameterLayout,
   path: string,
 ): CompiledVector2 {
   if (!Array.isArray(value)) {
     return compileParameterReference(
-      value as CRCParticleParameterReference<string>,
+      value as PibblParticleParameterReference<string>,
       layout,
       2,
       path,
@@ -354,12 +354,12 @@ function compileScalarVector2(
 
 function isScalarVector2(
   value: unknown,
-): value is readonly [CRCParticleScalar, CRCParticleScalar] {
+): value is readonly [PibblParticleScalar, PibblParticleScalar] {
   return Array.isArray(value);
 }
 
 function compileColor(
-  value: CRCParticleInitial2D["color"],
+  value: PibblParticleInitial2D["color"],
   layout: CompiledParameterLayout,
   path: string,
 ): CompiledColor {
@@ -381,7 +381,7 @@ function compileColor(
   const descriptor = getParticleDescriptorRecord(value);
   if (descriptor?.type === "parameter") {
     return compileParameterReference(
-      value as CRCParticleParameterReference<string>,
+      value as PibblParticleParameterReference<string>,
       layout,
       4,
       path,
@@ -410,12 +410,12 @@ function compileColor(
 }
 
 function compileSwayFrequency(
-  value: CRCParticleScalar | readonly [number, number],
+  value: PibblParticleScalar | readonly [number, number],
   layout: CompiledParameterLayout,
   path: string,
 ): CompiledScalar {
   if (!Array.isArray(value)) {
-    return compileScalar(value as CRCParticleScalar, layout, path);
+    return compileScalar(value as PibblParticleScalar, layout, path);
   }
   const min = value[0]!;
   const max = value[1]!;
@@ -452,7 +452,7 @@ function compileMaximumLifetime(
 }
 
 function compileSize(
-  value: CRCParticleInitial2D["size"],
+  value: PibblParticleInitial2D["size"],
   layout: CompiledParameterLayout,
 ): CompiledVector2 {
   if (value === undefined) {
@@ -468,7 +468,7 @@ function compileSize(
     const entry = layout.byName.get(descriptor.name);
     if (entry?.length === 2) {
       return compileParameterReference(
-        value as CRCParticleParameterReference<string>,
+        value as PibblParticleParameterReference<string>,
         layout,
         2,
         "initial.size",
@@ -476,7 +476,7 @@ function compileSize(
     }
   }
   const scalar = compileScalar(
-    value as CRCParticleScalar,
+    value as PibblParticleScalar,
     layout,
     "initial.size",
   );
@@ -484,7 +484,7 @@ function compileSize(
 }
 
 function compileInitial2D(
-  initial: CRCParticleInitial2D,
+  initial: PibblParticleInitial2D,
   layout: CompiledParameterLayout,
 ): CompiledInitial2D {
   return Object.freeze({
@@ -517,7 +517,7 @@ function compileInitial2D(
 }
 
 function compileAppearance(
-  appearance: CRCParticleAppearance | undefined,
+  appearance: PibblParticleAppearance | undefined,
 ): CompiledAppearance {
   return Object.freeze({
     size:
@@ -540,7 +540,7 @@ function compileAppearance(
 }
 
 function compileMotion2D(
-  motion: readonly CRCParticleMotion2D[],
+  motion: readonly PibblParticleMotion2D[],
   layout: CompiledParameterLayout,
 ): readonly CompiledMotion2D[] {
   return Object.freeze(
@@ -662,7 +662,7 @@ function compileEmitter2D(
 }
 
 export function compileParticleEffect2D(
-  effect: CRCParticleEffect2D,
+  effect: PibblParticleEffect2D,
 ): CompiledEffect2D {
   const cached = compiled2D.get(effect);
   if (cached !== undefined) return cached;

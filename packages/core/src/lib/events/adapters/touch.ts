@@ -1,44 +1,44 @@
-import type { CRCInstance } from '../../types.js';
+import type { PibblInstance } from '../../types.js';
 import { getMouseCoordinates } from '../../util/get-mouse-coordinates.js';
-import type { CRCEventType } from '../types.js';
+import type { PibblEventType } from '../types.js';
 
-export const CRC_NATIVE_TOUCH_EVENT_TYPES = Object.freeze([
+export const PIBBL_NATIVE_TOUCH_EVENT_TYPES = Object.freeze([
   'touchstart',
   'touchmove',
   'touchend',
   'touchcancel',
-] as const satisfies readonly CRCEventType[]);
+] as const satisfies readonly PibblEventType[]);
 
-export type CRCNativeTouchEventType =
-  (typeof CRC_NATIVE_TOUCH_EVENT_TYPES)[number];
+export type PibblNativeTouchEventType =
+  (typeof PIBBL_NATIVE_TOUCH_EVENT_TYPES)[number];
 
-const nativeTouchEventTypes = new Set<CRCEventType>(
-  CRC_NATIVE_TOUCH_EVENT_TYPES,
+const nativeTouchEventTypes = new Set<PibblEventType>(
+  PIBBL_NATIVE_TOUCH_EVENT_TYPES,
 );
 
-export interface CRCAdaptedTouchContact {
+export interface PibblAdaptedTouchContact {
   readonly touch: Touch;
   readonly x: number;
   readonly y: number;
 }
 
-export interface CRCAdaptedTouchEvent {
-  readonly type: CRCNativeTouchEventType;
+export interface PibblAdaptedTouchEvent {
+  readonly type: PibblNativeTouchEventType;
   readonly originalEvent: TouchEvent;
-  readonly changedContacts: readonly CRCAdaptedTouchContact[];
+  readonly changedContacts: readonly PibblAdaptedTouchContact[];
 }
 
 export function isNativeTouchEventType(
-  type: CRCEventType,
-): type is CRCNativeTouchEventType {
+  type: PibblEventType,
+): type is PibblNativeTouchEventType {
   return nativeTouchEventTypes.has(type);
 }
 
 export function adaptTouchEvent(
-  root: CRCInstance,
-  type: CRCNativeTouchEventType,
+  root: PibblInstance,
+  type: PibblNativeTouchEventType,
   event: Event,
-): CRCAdaptedTouchEvent | undefined {
+): PibblAdaptedTouchEvent | undefined {
   if (
     typeof TouchEvent === 'undefined' ||
     !(event instanceof TouchEvent) ||

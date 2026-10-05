@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { crc, Rectangle, useTexture, type Texture } from "@crc/core";
-import { rainDrops, type RainDropsMessage } from "@crc/core/textures";
+import { pibbl, Rectangle, useTexture, type Texture } from "@pibbl/core";
+import { rainDrops, type RainDropsMessage } from "@pibbl/core/textures";
 import { clearSharedState } from "../../../src/lib/global-state.js";
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from "../../../src/lib/scheduler/testing.js";
 
@@ -18,7 +18,7 @@ it("publishes seeded droplets, accepts mouse nudges while paused, resets, and re
   }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 128;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   const pixels = () => Array.from(canvas.getContext("2d")!.getImageData(0, 0, 128, 128).data);
   try {
     driver.flush(0);
@@ -49,7 +49,7 @@ it("clears condensation along a moved drop's path and restores the seeded film o
     return <Rectangle style={{ width: 128, height: 128, fill: rain.paint({ mode: "stretch" }) }} />;
   }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 128; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   const pixels = () => canvas.getContext("2d")!.getImageData(0, 0, 128, 128).data;
   const film = () => pixels().reduce((sum, value, index) => sum + (index % 4 === 2 ? value : 0), 0);
   try {
@@ -74,7 +74,7 @@ it("collects touched droplets into one held bead, follows the finger, and releas
     return <Rectangle style={{ width: 128, height: 128, fill: rain }} />;
   }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 128; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   const pixels = () => Array.from(canvas.getContext("2d")!.getImageData(0, 0, 128, 128).data);
   try {
     driver.flush(0);
@@ -104,7 +104,7 @@ it("wipes a continuous mist path between finger messages even without existing r
     return <Rectangle style={{ width: 128, height: 128, fill: rain }} />;
   }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 128; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   const pixel = (x: number, y: number) => canvas.getContext("2d")!.getImageData(x, y, 1, 1).data;
   try {
     driver.flush(0);

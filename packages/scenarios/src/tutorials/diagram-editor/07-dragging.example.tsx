@@ -1,6 +1,6 @@
 import {
   Absolute,
-  crc,
+  pibbl,
   useLayoutBox,
   useRef,
   useSignal,
@@ -10,11 +10,11 @@ import {
   Rectangle,
   Text,
   type BoxStyle,
-  type CRCController,
-  type CRCNode,
-  type CRCPointerEvent,
+  type PibblController,
+  type PibblNode,
+  type PibblPointerEvent,
   type LayoutItemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 type NodeId = "idea" | "sketch" | "build" | "ship";
 
@@ -52,11 +52,11 @@ interface NodeDragSession {
 }
 
 interface NodePointerHandlers {
-  readonly onPointerDown: (node: DiagramNode, event: CRCPointerEvent) => void;
-  readonly onPointerMove: (event: CRCPointerEvent) => void;
-  readonly onPointerUp: (event: CRCPointerEvent) => void;
-  readonly onPointerCancel: (event: CRCPointerEvent) => void;
-  readonly onLostPointerCapture: (event: CRCPointerEvent) => void;
+  readonly onPointerDown: (node: DiagramNode, event: PibblPointerEvent) => void;
+  readonly onPointerMove: (event: PibblPointerEvent) => void;
+  readonly onPointerUp: (event: PibblPointerEvent) => void;
+  readonly onPointerCancel: (event: PibblPointerEvent) => void;
+  readonly onLostPointerCapture: (event: PibblPointerEvent) => void;
 }
 
 interface NodeCardProps {
@@ -150,7 +150,7 @@ function arrowheadPath(point: Readonly<{ x: number; y: number }>): Path2D {
   return path;
 }
 
-function NodeCard({ node, selected, pointerHandlers }: NodeCardProps): CRCNode {
+function NodeCard({ node, selected, pointerHandlers }: NodeCardProps): PibblNode {
   return (
     <Group style={{ translateX: node.x, translateY: node.y }}>
       <Rectangle
@@ -222,7 +222,7 @@ function NodeCard({ node, selected, pointerHandlers }: NodeCardProps): CRCNode {
 function Connection({
   edge,
   nodes,
-}: Readonly<{ edge: DiagramEdge; nodes: readonly DiagramNode[] }>): CRCNode {
+}: Readonly<{ edge: DiagramEdge; nodes: readonly DiagramNode[] }>): PibblNode {
   const from = nodes.find((node) => node.id === edge.from);
   const to = nodes.find((node) => node.id === edge.to);
   if (!from || !to) throw new Error(`Unknown node in edge "${edge.id}".`);
@@ -246,7 +246,7 @@ function Connection({
   );
 }
 
-function Toolbar({ style: _specifiedStyle }: RegionProps): CRCNode {
+function Toolbar({ style: _specifiedStyle }: RegionProps): PibblNode {
   const box = useLayoutBox();
   return [
     <Rectangle
@@ -299,7 +299,7 @@ function Workspace({
   selectedNodeId,
   onClearSelection,
   pointerHandlers,
-}: WorkspaceProps): CRCNode {
+}: WorkspaceProps): PibblNode {
   const box = useLayoutBox();
   return [
     <Rectangle
@@ -325,7 +325,7 @@ function Workspace({
 function StatusBar({
   style: _specifiedStyle,
   selectedNode,
-}: RegionProps & Readonly<{ selectedNode: DiagramNode | undefined }>): CRCNode {
+}: RegionProps & Readonly<{ selectedNode: DiagramNode | undefined }>): PibblNode {
   const box = useLayoutBox();
   const status = selectedNode
     ? `SELECTED · ${selectedNode.title}`
@@ -355,11 +355,11 @@ function StatusBar({
   ];
 }
 
-function DiagramEditor(): CRCNode {
+function DiagramEditor(): PibblNode {
   const nodes = useSignal<readonly DiagramNode[]>(INITIAL_NODES);
   const selectedNodeId = useSignal<NodeId | null>("sketch");
   const dragSession = useRef<NodeDragSession | null>(null);
-  const clearSession = (event: CRCPointerEvent): void => {
+  const clearSession = (event: PibblPointerEvent): void => {
     if (dragSession.current?.pointerId === event.pointerId)
       dragSession.current = null;
   };
@@ -424,6 +424,6 @@ function DiagramEditor(): CRCNode {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <DiagramEditor />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <DiagramEditor />);
 }

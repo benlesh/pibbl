@@ -1,7 +1,7 @@
 import { userEvent } from "vitest/browser";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { crc } from "../crc";
-import { getCRCInstance } from "../global-state";
+import { pibbl } from "../pibbl";
+import { getPibblInstance } from "../global-state";
 import { useEventTarget } from "../hooks/use-event-target";
 import { useSignal } from "../hooks/use-signal";
 import { Layer } from "../components/layer";
@@ -9,13 +9,13 @@ import { Rectangle } from "../components/rect";
 import { Group } from "../components/g";
 import {
   releaseTarget,
-  type CRCEventTargetRegistration,
+  type PibblEventTargetRegistration,
 } from "../events/registrations";
-import type { CRCElement, CRCController } from "../types";
+import type { PibblElement, PibblController } from "../types";
 import { directionalPolicy, focusManaged } from "./policy-test-support";
 import { createElement } from '../element/create-element';
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -55,10 +55,10 @@ describe("focus snapshots in cached layers", () => {
       ],
     })));
     await nextFrame();
-    const manager = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
-      NonNullable<ReturnType<typeof getCRCInstance>["eventRoot"]["focusPolicy"]> & {
+    const manager = getPibblInstance(mounted.canvas).eventRoot.focusPolicy as
+      NonNullable<ReturnType<typeof getPibblInstance>["eventRoot"]["focusPolicy"]> & {
         readonly candidates: ReadonlyArray<{
-          readonly target: CRCEventTargetRegistration;
+          readonly target: PibblEventTargetRegistration;
         }>;
         beginCollection(): void;
         finishCollection(success: boolean): void;
@@ -72,12 +72,12 @@ describe("focus snapshots in cached layers", () => {
       label: "sibling-root",
     })));
     await nextFrame();
-    const siblingRootManager = getCRCInstance(siblingRoot.canvas).eventRoot
+    const siblingRootManager = getPibblInstance(siblingRoot.canvas).eventRoot
       .focusPolicy as NonNullable<ReturnType<
-        typeof getCRCInstance
+        typeof getPibblInstance
       >["eventRoot"]["focusPolicy"]> & {
         readonly candidates: ReadonlyArray<{
-          readonly target: CRCEventTargetRegistration;
+          readonly target: PibblEventTargetRegistration;
         }>;
       };
     const siblingRootTarget = siblingRootManager.candidates[0]!.target;
@@ -131,10 +131,10 @@ describe("focus snapshots in cached layers", () => {
       createElement(BackendTarget, {}),
     )));
     await nextFrame();
-    const manager = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
-      NonNullable<ReturnType<typeof getCRCInstance>["eventRoot"]["focusPolicy"]> & {
+    const manager = getPibblInstance(mounted.canvas).eventRoot.focusPolicy as
+      NonNullable<ReturnType<typeof getPibblInstance>["eventRoot"]["focusPolicy"]> & {
         readonly candidates: ReadonlyArray<{
-          readonly target: CRCEventTargetRegistration;
+          readonly target: PibblEventTargetRegistration;
           readonly directionalBoundary: unknown;
           readonly rootBounds: unknown;
         }>;
@@ -276,7 +276,7 @@ describe("focus snapshots in cached layers", () => {
     expect(layerRenders).toBe(1);
     expect(pixel(mounted.canvas)).toEqual([0, 0, 255, 255]);
     expect(
-      getCRCInstance(mounted.canvas).eventRoot.focusPolicy,
+      getPibblInstance(mounted.canvas).eventRoot.focusPolicy,
     ).toBeUndefined();
   });
 
@@ -379,7 +379,7 @@ describe("focus snapshots during manager removal", () => {
       isFocusVisible: false,
     });
     expect(pixel(mounted.canvas)).toEqual([0, 0, 255, 255]);
-    expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
+    expect(getPibblInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
   });
 
   it("invalidates a cached descendant layer when its ancestor manager is removed", async () => {
@@ -432,11 +432,11 @@ describe("focus snapshots during manager removal", () => {
       isFocusVisible: false,
     });
     expect(pixel(mounted.canvas)).toEqual([0, 0, 255, 255]);
-    expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
+    expect(getPibblInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
   });
 });
 
-function mount(element: CRCElement<any>) {
+function mount(element: PibblElement<any>) {
   const before = document.createElement("button");
   before.textContent = "before";
   const canvas = document.createElement("canvas");
@@ -446,7 +446,7 @@ function mount(element: CRCElement<any>) {
   const after = document.createElement("button");
   after.textContent = "after";
   document.body.append(before, canvas, after);
-  const controller = crc(canvas, element, { pixelRatio: 1 });
+  const controller = pibbl(canvas, element, { pixelRatio: 1 });
   activeControllers.add(controller);
   return { after, before, canvas };
 }

@@ -1,4 +1,4 @@
-import { flattenPathWang, PathGeometry, simplifyPathRadial } from '@crc/core';
+import { flattenPathWang, PathGeometry, simplifyPathRadial } from '@pibbl/core';
 import { describe, expect, it } from 'vitest';
 
 describe('alternate path algorithms', () => {

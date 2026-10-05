@@ -1,27 +1,27 @@
 import {
-  crc,
+  pibbl,
   Group,
   Rectangle,
   Circle,
   Text,
   useVisibilityTransition,
   bifrost,
-  type CRCBifrostOptions,
-  type CRCTransitionEffect,
-  type CRCVisibilityTransition,
-  type CRCVisibilityTransitionOptions,
-  type CRCVisibilityTransitionResult,
-  type CRCVisibilityTransitionStatus,
-  type CRCTransitionBinding,
-} from "@crc/core";
+  type PibblBifrostOptions,
+  type PibblTransitionEffect,
+  type PibblVisibilityTransition,
+  type PibblVisibilityTransitionOptions,
+  type PibblVisibilityTransitionResult,
+  type PibblVisibilityTransitionStatus,
+  type PibblTransitionBinding,
+} from "@pibbl/core";
 
-const options: CRCBifrostOptions = {
+const options: PibblBifrostOptions = {
   region: { x: 100, y: 100, width: 280, height: 100 },
   entry: { x: 240, y: 10 },
   glow: 0.8,
 };
-const effect: CRCTransitionEffect = bifrost(options);
-const visibility: CRCVisibilityTransitionOptions = {
+const effect: PibblTransitionEffect = bifrost(options);
+const visibility: PibblVisibilityTransitionOptions = {
   initial: false,
   enter: effect,
   duration: 1600,
@@ -32,17 +32,17 @@ canvas.height = 300;
 const output = document.createElement("output");
 output.style.display = "block";
 document.body.append(canvas, output);
-let handle: CRCVisibilityTransition | undefined;
-let mounted!: (value: CRCVisibilityTransition) => void;
-const ready = new Promise<CRCVisibilityTransition>((resolve) => {
+let handle: PibblVisibilityTransition | undefined;
+let mounted!: (value: PibblVisibilityTransition) => void;
+const ready = new Promise<PibblVisibilityTransition>((resolve) => {
   mounted = resolve;
 });
 function Scene() {
   const transition = useVisibilityTransition(visibility);
   handle = transition;
   mounted(transition);
-  const binding: CRCTransitionBinding = transition.binding;
-  const status: CRCVisibilityTransitionStatus = transition.status.get();
+  const binding: PibblTransitionBinding = transition.binding;
+  const status: PibblVisibilityTransitionStatus = transition.status.get();
   return (
     <>
       <Rectangle style={{ width: 480, height: 300, fill: "#11151c" }} />
@@ -73,7 +73,7 @@ function Scene() {
             fill: "#ffffff",
           }}
         >
-          CRC
+          Pibbl
         </Text>
         <Text
           style={{
@@ -94,14 +94,14 @@ function Scene() {
     </>
   );
 }
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 // Wait for the scheduled first mount before starting its entrance.
 void ready.then((transition) => transition.show());
 for (const action of ["show", "hide"] as const) {
   const button = document.createElement("button");
   button.textContent = action;
   button.onclick = async () => {
-    const result: CRCVisibilityTransitionResult | undefined =
+    const result: PibblVisibilityTransitionResult | undefined =
       await handle?.[action]();
     if (result) output.textContent = result.phase + ": " + result.status;
   };

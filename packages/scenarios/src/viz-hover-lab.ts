@@ -1,4 +1,4 @@
-import { batch, signal } from "@crc/core";
+import { batch, signal } from "@pibbl/core";
 import mount from "./learning/composition/viz-hover-comparison.example.js";
 import type { ScenarioDefinition } from "./types.js";
 type Fixture = NonNullable<Parameters<typeof mount>[1]>;
@@ -65,7 +65,7 @@ export const vizHoverScenario: ScenarioDefinition<VizHoverState> = {
     const publish = () => {
       state.request = structuredClone(request);
       const snapshot = structuredClone(state);
-      if (evidence) evidence.textContent = JSON.stringify({ schema: 'crc-viz-fixture/1', identity: fixtureIdentity, state: snapshot });
+      if (evidence) evidence.textContent = JSON.stringify({ schema: 'pibbl-viz-fixture/1', identity: fixtureIdentity, state: snapshot });
       onStateChange?.(snapshot);
     };
     let publishFrame = 0;
@@ -186,7 +186,7 @@ export const vizHoverScenario: ScenarioDefinition<VizHoverState> = {
           return settled();
         }
         if (action === "weighted-data" || action === "weighted-data-bug") {
-          // Application-owned fixture pipeline, not a CRC aggregation API.
+          // Application-owned fixture pipeline, not a Pibbl aggregation API.
           // The bug action deliberately violates the declared weighted-mean intent.
           const rows = [
             { x: 0, value: 0, weight: 3, included: true },

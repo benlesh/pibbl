@@ -1,11 +1,11 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Rectangle,
   Text,
-  type CRCController,
-  type CRCPointerEvent,
-} from "@crc/core";
+  type PibblController,
+  type PibblPointerEvent,
+} from "@pibbl/core";
 function PointerCaptureStudy() {
   const capturedId = useSignal<number | null>(null);
   const trace = useSignal<readonly string[]>([]);
@@ -15,7 +15,7 @@ function PointerCaptureStudy() {
   });
   const record = (value: string) =>
     trace.update((current) => [...current.slice(-3), value]);
-  const label = (event: CRCPointerEvent) =>
+  const label = (event: PibblPointerEvent) =>
     `${event.type} #${event.pointerId} captured=${event.currentTarget.hasPointerCapture(event.pointerId)}`;
   return [
     <Rectangle
@@ -173,6 +173,6 @@ function PointerCaptureStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <PointerCaptureStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <PointerCaptureStudy />);
 }

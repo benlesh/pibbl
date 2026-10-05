@@ -12,9 +12,9 @@ exampleSlug: living-ink
 
 # Procedural textures
 
-Import recipes from `@crc/core/textures`, included in your `@crc/core` installation. It provides
+Import recipes from `@pibbl/core/textures`, included in your `@pibbl/core` installation. It provides
 `ReactionDiffusion` for living, paintable surfaces and `ProceduralTexture` for
-seeded marble, paper, and cellular materials. Both participate in CRC scheduling,
+seeded marble, paper, and cellular materials. Both participate in Pibbl scheduling,
 layout, clipping, filters, and resource disposal.
 
 ## Shared fills and animated parameters
@@ -24,8 +24,8 @@ owning root. The four field generators use WASM internally; configuration stays
 ordinary TypeScript. There is no engine switch or separate animation loop.
 
 ```tsx
-import { Rectangle, useTexture } from "@crc/core";
-import { marble } from "@crc/core/textures";
+import { Rectangle, useTexture } from "@pibbl/core";
+import { marble } from "@pibbl/core/textures";
 
 function Material({ detail }: { detail: number }) {
   const surface = useTexture(marble({ detail }), {
@@ -66,8 +66,8 @@ the three static materials above the ink.
 ## A living background
 
 ```tsx
-import { Group, Text } from "@crc/core";
-import { ReactionDiffusion, texturePalettes } from "@crc/core/textures";
+import { Group, Text } from "@pibbl/core";
+import { ReactionDiffusion, texturePalettes } from "@pibbl/core/textures";
 
 function Card() {
   return (
@@ -103,7 +103,7 @@ remounting. Changing `seed`, `preset`, or `resolution` also resets. Display resi
 and palette changes preserve the pattern. Use `.get()` when passing signal-driven
 configuration from your component.
 
-No separate animation loop is needed. Fixed numerical steps follow CRC frames,
+No separate animation loop is needed. Fixed numerical steps follow Pibbl frames,
 with bounded catch-up after long gaps. Seeded repeatability depends on the same
 step count and ordered painting history, not just elapsed wall time. There is no
 free arbitrary-time seeking.
@@ -113,7 +113,7 @@ Try [Living Ink](#/examples/composition/living-ink).
 ## Reproducible materials
 
 ```tsx
-import { ProceduralTexture } from "@crc/core/textures";
+import { ProceduralTexture } from "@pibbl/core/textures";
 
 const paper = (
   <ProceduralTexture
@@ -145,7 +145,7 @@ both display and texture dimensions. Reuse the same source within this callback
 without rerunning its generator.
 
 ```tsx
-import { ProceduralTexture } from "@crc/core/textures";
+import { ProceduralTexture } from "@pibbl/core/textures";
 
 const repeated = (
   <ProceduralTexture
@@ -169,7 +169,7 @@ recede as well as grow. It does not accumulate reveal history.
 Sources are read-only borrows for the synchronous callback. Do not retain,
 resize, transfer, or dispose them. Copy into an application-owned Canvas if you
 need a still image. Callbacks cannot return promises, invoke hooks, or write signals.
-CRC restores Canvas state and composes the result normally. The hit region remains
+Pibbl restores Canvas state and composes the result normally. The hit region remains
 the allocated rectangle; remapping the image in a custom presenter does not remap
 pointer painting. Core `Image` still takes a URL and `Clip` still takes a path.
 

@@ -1,10 +1,10 @@
-import { resolveTexturePaint } from '@crc/core/internal';
-import type { FillStyle, StrokeStyle } from '@crc/core';
+import { resolveTexturePaint } from '@pibbl/core/internal';
+import type { FillStyle, StrokeStyle } from '@pibbl/core';
 import {
   useEventTarget,
   definePrimitive,
   type RenderingContext2D,
-} from '@crc/core';
+} from '@pibbl/core';
 import type {
   Capsule2DProps,
   Capsule2DStyle,
@@ -15,22 +15,22 @@ import type {
   Segment2DProps,
   Segment2DStyle,
 } from '../types.js';
-import type { CRCPhysicsShape2D, CRCPhysicsVector2 } from '../../../2d-geometry.js';
+import type { PibblPhysicsShape2D, PibblPhysicsVector2 } from '../../../2d-geometry.js';
 import { boundsOfShape2D, capsuleShape2D, chainShape2D, segmentShape2D } from '../shapes.js';
 import { requireShapeRecord2D, type ConvexLeaf2D } from '../shape-records.js';
 import { installCustomShapeResolver2D } from './inference.js';
 
 type ResolvedPhysicsShapeStyle2D = Readonly<PhysicsShape2DStyle>;
 type ResolvedCapsuleStyle2D = Omit<Readonly<Capsule2DStyle>, 'start' | 'end'> & {
-  readonly start: CRCPhysicsVector2;
-  readonly end: CRCPhysicsVector2;
+  readonly start: PibblPhysicsVector2;
+  readonly end: PibblPhysicsVector2;
 };
 type ResolvedSegmentStyle2D = Omit<Readonly<Segment2DStyle>, 'start' | 'end'> & {
-  readonly start: CRCPhysicsVector2;
-  readonly end: CRCPhysicsVector2;
+  readonly start: PibblPhysicsVector2;
+  readonly end: PibblPhysicsVector2;
 };
 type ResolvedChainStyle2D = Omit<Readonly<Chain2DStyle>, 'points'> & {
-  readonly points: readonly CRCPhysicsVector2[];
+  readonly points: readonly PibblPhysicsVector2[];
 };
 
 function renderPhysicsShape2D(
@@ -71,7 +71,7 @@ function renderChain2D(
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link PhysicsShape2DProps}
  * @see {@link PhysicsShape2DStyle}
@@ -88,7 +88,7 @@ export const PhysicsShape2D = definePrimitive<
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link Capsule2DProps}
  * @see {@link Capsule2DStyle}
@@ -110,7 +110,7 @@ export const Capsule2D = definePrimitive<
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link Segment2DProps}
  * @see {@link Segment2DStyle}
@@ -131,7 +131,7 @@ export const Segment2D = definePrimitive<
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link Chain2DProps}
  * @see {@link Chain2DStyle}
@@ -179,7 +179,7 @@ function renderShape(
     readonly cursor?: string;
     readonly lineInteractionWidth?: number;
   }>,
-  shape: CRCPhysicsShape2D,
+  shape: PibblPhysicsShape2D,
   context: RenderingContext2D,
 ): void {
   const record = requireShapeRecord2D(shape);
@@ -215,7 +215,7 @@ function renderShape(
   });
 }
 
-function pathForShape(shape: CRCPhysicsShape2D): Path2D {
+function pathForShape(shape: PibblPhysicsShape2D): Path2D {
   const record = requireShapeRecord2D(shape);
   const local = new Path2D();
   for (const leaf of record.leaves) appendLeaf(local, leaf);
@@ -292,12 +292,12 @@ function stripLayout<T extends Readonly<Record<PropertyKey, unknown>>>(style: T)
   return result as T;
 }
 
-function copyPoints(value: unknown, path: string): readonly CRCPhysicsVector2[] {
+function copyPoints(value: unknown, path: string): readonly PibblPhysicsVector2[] {
   if (!Array.isArray(value)) throw new TypeError(`${path} must be an array.`);
   return Object.freeze(value.map((point, index) => copyPoint(point, `${path}[${index}]`)));
 }
 
-function copyPoint(value: unknown, path: string): CRCPhysicsVector2 {
+function copyPoint(value: unknown, path: string): PibblPhysicsVector2 {
   if (!Array.isArray(value) || value.length !== 2 || value.some(entry => typeof entry !== 'number' || !Number.isFinite(entry))) {
     throw new TypeError(`${path} must be a finite two-dimensional point.`);
   }
@@ -314,11 +314,11 @@ function nonnegative(value: unknown, path: string): number {
   return value;
 }
 
-function requireShape(value: unknown, path: string): CRCPhysicsShape2D {
+function requireShape(value: unknown, path: string): PibblPhysicsShape2D {
   try {
-    requireShapeRecord2D(value as CRCPhysicsShape2D);
-    return value as CRCPhysicsShape2D;
+    requireShapeRecord2D(value as PibblPhysicsShape2D);
+    return value as PibblPhysicsShape2D;
   } catch {
-    throw new TypeError(`${path} must be a CRC physics 2D shape.`);
+    throw new TypeError(`${path} must be a Pibbl physics 2D shape.`);
   }
 }

@@ -4,20 +4,20 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add an official `@crc/webgl` package that renders declarative, interactive WebGL2 islands inside CRC Canvas 2D scenes with one JSX protocol, one global paint-order resolver, deterministic GPU ownership, and default cube, sphere, mesh, group, camera, and animation facilities.
+**Goal:** Add an official `@pibbl/webgl` package that renders declarative, interactive WebGL2 islands inside Pibbl Canvas 2D scenes with one JSX protocol, one global paint-order resolver, deterministic GPU ownership, and default cube, sphere, mesh, group, camera, and animation facilities.
 
-**Architecture:** `@crc/core` gains a narrow version-coupled `@crc/core/internal` friend entry, a backend-neutral component traversal seam, and a fixed-shape miss/block/target resolver. `WebGLLayer` owns a private WebGL-backed CRC child instance, persistent WebGL2 `OffscreenCanvas`, committed `ImageBitmap` plus matching pick ledger, and one nested interaction bridge; `@crc/webgl` owns camera math, GPU state, resources, primitives, ray picking, caching, animation, and context recovery.
+**Architecture:** `@pibbl/core` gains a narrow version-coupled `@pibbl/core/internal` friend entry, a backend-neutral component traversal seam, and a fixed-shape miss/block/target resolver. `WebGLLayer` owns a private WebGL-backed Pibbl child instance, persistent WebGL2 `OffscreenCanvas`, committed `ImageBitmap` plus matching pick ledger, and one nested interaction bridge; `@pibbl/webgl` owns camera math, GPU state, resources, primitives, ray picking, caching, animation, and context recovery.
 
-**Tech Stack:** TypeScript 7, CRC JSX/createElement runtime, HTML Canvas 2D, `OffscreenCanvas`, WebGL2, DOMMatrix/Path2D/ImageBitmap, Vitest Browser with Playwright Chromium, esbuild, pnpm 11.21.0, Node 24.15 or newer.
+**Tech Stack:** TypeScript 7, Pibbl JSX/createElement runtime, HTML Canvas 2D, `OffscreenCanvas`, WebGL2, DOMMatrix/Path2D/ImageBitmap, Vitest Browser with Playwright Chromium, esbuild, pnpm 11.21.0, Node 24.15 or newer.
 
 **Spec:** `docs/superpowers/specs/2026-09-09-webgl-islands-design.md`
 
 ## Global Constraints
 
 - Preserve unrelated working-tree changes and untracked files; stage only files named by the active task.
-- Keep `@crc/core` and `@crc/webgl` at the same package version and release them together; `@crc/webgl` declares that exact core version as a peer and never bundles core.
-- Applications use the existing `@crc/core` JSX runtime. Do not create an `@crc/webgl/jsx-runtime` entry, a second element brand, or a second hook implementation.
-- `@crc/core/internal` is resolvable only as an explicitly unsupported, version-coupled friend surface for official CRC packages. All other `@crc/core/lib/*` and source paths remain blocked.
+- Keep `@pibbl/core` and `@pibbl/webgl` at the same package version and release them together; `@pibbl/webgl` declares that exact core version as a peer and never bundles core.
+- Applications use the existing `@pibbl/core` JSX runtime. Do not create an `@pibbl/webgl/jsx-runtime` entry, a second element brand, or a second hook implementation.
+- `@pibbl/core/internal` is resolvable only as an explicitly unsupported, version-coupled friend surface for official Pibbl packages. All other `@pibbl/core/lib/*` and source paths remain blocked.
 - Preserve one synchronous component execution for each invalidated subtree in one scheduled frame. Do not add a camera prepass, retained draw-command list, or replay traversal.
 - One `WebGLLayer` owns exactly one perspective camera. The omitted camera is position `[0, 0, 5]`, look-at `[0, 0, 0]`, up `[0, 1, 0]`, field of view `50`, near `0.1`, far `1000`, and aspect from logical layer dimensions.
 - Do not inspect scene bounds or auto-fit the camera. Multiple cameras, viewports, portals, render-to-texture graphs, WebGL1, WebGPU, and workers remain outside this release.
@@ -41,7 +41,7 @@
 - `packages/core/src/internal.ts`: the complete friend export list; no wildcard export of core internals.
 - `packages/core/src/lib/backend/types.ts`: opaque backend tokens, frame drivers, backend primitive definitions, and backend mismatch diagnostics.
 - `packages/core/src/lib/backend/canvas-2d-backend.ts`: existing Canvas save/restore, filter, presentation, root clear, and primitive invocation behavior behind the backend driver.
-- `packages/core/src/lib/{define-primitive.ts,render.ts,execute-render.ts,mount-crc.ts,global-state.ts,types.ts}`: common identity/hooks traversal and backend-owned frame lifecycle.
+- `packages/core/src/lib/{define-primitive.ts,render.ts,execute-render.ts,mount-pibbl.ts,global-state.ts,types.ts}`: common identity/hooks traversal and backend-owned frame lifecycle.
 - `packages/core/src/lib/element/metadata.ts`: backend-tagged primitive metadata in the existing WeakMap protocol.
 - `packages/core/src/lib/components/layer-node-equality.ts`: retained child-tree snapshot helpers shared through the friend entry without becoming public API.
 
@@ -66,7 +66,7 @@
 - `packages/webgl/src/lib/gpu/{state.ts,program.ts,resources.ts}`: explicit GL baseline, shader program, and context-generation ownership.
 - `packages/webgl/src/lib/components/{webgl-layer.ts,group-3d.ts,mesh.ts,cube.ts,sphere.ts}`: public primitives and the Canvas/WebGL composition boundary.
 - `packages/webgl/src/lib/{pick-ledger.ts,scene-picker.ts}`: transient draw-matched pick records and nearest synchronous CPU resolution.
-- `packages/webgl/src/lib/hooks/{crc-webgl-context.ts,use-animation-frame.ts}`: raw render context and coalesced continuing-frame hook.
+- `packages/webgl/src/lib/hooks/{pibbl-webgl-context.ts,use-animation-frame.ts}`: raw render context and coalesced continuing-frame hook.
 
 ### Public evidence and documentation
 
@@ -105,36 +105,36 @@
 
 **Interfaces:**
 
-- Consumes: current `CRCEventTargetRegistration`, Canvas path geometry, `CRCInstance.paintEntries`, Layer transforms/clips/bounds, and `isHit`.
+- Consumes: current `PibblEventTargetRegistration`, Canvas path geometry, `PibblInstance.paintEntries`, Layer transforms/clips/bounds, and `isHit`.
 - Produces:
 
 ```ts
-export const enum CRCHitDisposition {
+export const enum PibblHitDisposition {
   Miss = 0,
   Block = 1,
   Target = 2,
 }
 
-export interface CRCHitTestInput {
+export interface PibblHitTestInput {
   rootX: number;
   rootY: number;
 }
 
-export interface CRCHitTestOutput {
-  disposition: CRCHitDisposition;
-  target: CRCEventTargetRegistration | null;
+export interface PibblHitTestOutput {
+  disposition: PibblHitDisposition;
+  target: PibblEventTargetRegistration | null;
 }
 
-export const enum CRCPaintEntryKind {
+export const enum PibblPaintEntryKind {
   Path = 0,
   NestedInstance = 1,
   Resolver = 2,
 }
 ```
 
-- `CRCPathPaintEntry` carries a target plus Path2D, fill/stroke, transform, and clipping data.
-- `CRCNestedPaintEntry` carries a child instance, bounds, transform, clips, and either recursive Canvas resolution or one local backend resolver.
-- `resolveCoordinateHit(eventRoot, input, output): CRCHitTestOutput` mutates and returns the supplied output; the existing `resolveCoordinateTarget` wrapper copies x/y into event-root-owned scratch and returns only a target for event dispatch.
+- `PibblPathPaintEntry` carries a target plus Path2D, fill/stroke, transform, and clipping data.
+- `PibblNestedPaintEntry` carries a child instance, bounds, transform, clips, and either recursive Canvas resolution or one local backend resolver.
+- `resolveCoordinateHit(eventRoot, input, output): PibblHitTestOutput` mutates and returns the supplied output; the existing `resolveCoordinateTarget` wrapper copies x/y into event-root-owned scratch and returns only a target for event dispatch.
 
 - [ ] **Step 1: Write failing resolver-order and allocation tests**
 
@@ -142,10 +142,10 @@ In `hit-test.test.ts`, build three entries in paint order and assert exact outpu
 
 ```ts
 const input = { rootX: 12, rootY: 18 };
-const output = { disposition: CRCHitDisposition.Target, target: staleTarget };
+const output = { disposition: PibblHitDisposition.Target, target: staleTarget };
 resolveCoordinateHit(eventRoot, input, output);
 expect(output).toEqual({
-  disposition: CRCHitDisposition.Block,
+  disposition: PibblHitDisposition.Block,
   target: null,
 });
 expect(lowerResolver).not.toHaveBeenCalled();
@@ -163,16 +163,16 @@ Expected: FAIL because `paint-entry.ts`, the numeric dispositions, and `resolveC
 
 - [ ] **Step 3: Separate logical targets from Canvas path paint entries**
 
-Keep `CRCEventTargetRegistration.kind === "target"` for propagation. Move path-only fields into `CRCPathPaintEntry`, and give each target at most one stable Canvas entry:
+Keep `PibblEventTargetRegistration.kind === "target"` for propagation. Move path-only fields into `PibblPathPaintEntry`, and give each target at most one stable Canvas entry:
 
 ```ts
-interface CRCEventTargetRegistration {
+interface PibblEventTargetRegistration {
   readonly kind: "target";
-  readonly owner: CRCInstance;
-  readonly component: CRCComponentRefs<any>;
-  readonly publicTarget: CRCEventTarget;
-  paintEntry: CRCPathPaintEntry | undefined;
-  handlers: CRCNormalizedHandlers;
+  readonly owner: PibblInstance;
+  readonly component: PibblComponentRefs<any>;
+  readonly publicTarget: PibblEventTarget;
+  paintEntry: PibblPathPaintEntry | undefined;
+  handlers: PibblNormalizedHandlers;
   cursor: string | undefined;
   keyboardFocusable: boolean | undefined;
   keyboardNavigationBounds: Readonly<LayoutBox> | undefined;
@@ -221,8 +221,8 @@ git commit -m "refactor(core): unify coordinate hit resolution"
 
 **Interfaces:**
 
-- Produces public `CRCPointerEvents = "auto" | "none"` and `CRCEventParticipationOptions { pointerEvents?: CRCPointerEvents }`.
-- Every Canvas drawing prop interface extends `CRCEventParticipationOptions`.
+- Produces public `PibblPointerEvents = "auto" | "none"` and `PibblEventParticipationOptions { pointerEvents?: PibblPointerEvents }`.
+- Every Canvas drawing prop interface extends `PibblEventParticipationOptions`.
 - `useEventTarget()` retains its explicit custom-hook behavior; `usePaintTarget()` is internal and keeps a geometry-bearing built-in live when `pointerEvents !== "none"`.
 
 - [ ] **Step 1: Write failing passive-occlusion tests**
@@ -250,10 +250,10 @@ Implement one stable hook slot:
 
 ```ts
 export function usePaintTarget(
-  handlers: CRCEventHandlers,
-  options: CRCEventTargetOptions,
-  pointerEvents: CRCPointerEvents = "auto",
-): CRCEventTargetSnapshot {
+  handlers: PibblEventHandlers,
+  options: PibblEventTargetOptions,
+  pointerEvents: PibblPointerEvents = "auto",
+): PibblEventTargetSnapshot {
   // create once; update with forcePaintParticipation when auto
 }
 ```
@@ -303,7 +303,7 @@ git commit -m "feat(core): make painted primitives occlude by default"
 
 **Interfaces:**
 
-- `CRCStructuralEventProps extends CRCEventHandlers` is shared by all child-bearing built-ins.
+- `PibblStructuralEventProps extends PibblEventHandlers` is shared by all child-bearing built-ins.
 - `wireStructuralEvents(handlers): void` always calls exactly one `useEventListener` hook, even when the current handler map is empty.
 
 - [ ] **Step 1: Write failing ancestor and empty-space tests**
@@ -353,7 +353,7 @@ git commit -m "feat(core): propagate events through structural components"
 - Create: `packages/core/src/lib/backend/types.ts`
 - Create: `packages/core/src/lib/backend/canvas-2d-backend.ts`
 - Create: `packages/core/src/lib/backend/backend-dispatch.test.tsx`
-- Modify: `packages/core/src/lib/{define-primitive,render,execute-render,mount-crc,global-state,types}.ts`
+- Modify: `packages/core/src/lib/{define-primitive,render,execute-render,mount-pibbl,global-state,types}.ts`
 - Modify: `packages/core/src/lib/element/metadata.ts`
 - Modify: `packages/core/src/lib/hooks/{hook-slot,use-canvas-context}.ts`
 - Modify: `packages/core/src/lib/components/layer-node-equality.ts`
@@ -366,11 +366,11 @@ git commit -m "feat(core): propagate events through structural components"
 
 **Interfaces:**
 
-- Extends the existing `@crc/core/internal` renderer-scheduler friend entry with an opaque `CRCBackendToken`, `CRCBackendDriver<E>`, `CRCBackendFrame<E>`, `CRCBackendPrimitiveDefinition`, `defineBackendPrimitive`, `mountBackendCRC`, `executeBackendCRC`, `getBackendEnvironment`, `getCurrentFrameTimestamp`, `requestCurrentInstanceFrame`, `useInternalHookSlot`, `useBackendEventTarget`, `setCurrentComponentAfterRender`, `registerNestedInteractionResolver`, `snapshotLayerNodeTree`, and `haveSameLayerNodeTree`.
+- Extends the existing `@pibbl/core/internal` renderer-scheduler friend entry with an opaque `PibblBackendToken`, `PibblBackendDriver<E>`, `PibblBackendFrame<E>`, `PibblBackendPrimitiveDefinition`, `defineBackendPrimitive`, `mountBackendPibbl`, `executeBackendPibbl`, `getBackendEnvironment`, `getCurrentFrameTimestamp`, `requestCurrentInstanceFrame`, `useInternalHookSlot`, `useBackendEventTarget`, `setCurrentComponentAfterRender`, `registerNestedInteractionResolver`, `snapshotLayerNodeTree`, and `haveSameLayerNodeTree`.
 - The core root uses `CANVAS_2D_BACKEND`; official sibling packages create private tokens through `createBackendToken("webgl2")`.
 
 ```ts
-export interface CRCBackendFrameInput {
+export interface PibblBackendFrameInput {
   readonly canvas: Canvas;
   readonly logicalWidth: number;
   readonly logicalHeight: number;
@@ -379,47 +379,51 @@ export interface CRCBackendFrameInput {
   readonly renderTimestamp: number;
 }
 
-export interface CRCBackendFrame<E> {
+export interface PibblBackendFrame<E> {
   readonly environment: E;
   readonly context2D?: RenderingContext2D;
   readonly renderTarget?: RenderTargetSnapshot;
   readonly worldBaseTransform?: DOMMatrix;
 }
 
-export interface CRCBackendPrimitiveInput {
+export interface PibblBackendPrimitiveInput {
   readonly componentName: string;
-  readonly source?: CRCElementSource;
-  readonly definition: CRCBackendPrimitiveDefinition;
+  readonly source?: PibblElementSource;
+  readonly definition: PibblBackendPrimitiveDefinition;
   readonly props: Readonly<Record<PropertyKey, unknown>>;
   readonly style: Readonly<Record<PropertyKey, unknown>>;
 }
 
-export interface CRCBackendMount {
+export interface PibblBackendMount {
   readonly canvas: Canvas;
-  render(root: CRCNode, timestamp: number): void;
+  render(root: PibblNode, timestamp: number): void;
   requestFrame(updateParents: boolean): void;
   dispose(): void;
 }
 
-export interface CRCBackendDriver<E> {
-  readonly token: CRCBackendToken;
+export interface PibblBackendDriver<E> {
+  readonly token: PibblBackendToken;
   readonly name: string;
-  beginFrame(input: CRCBackendFrameInput): CRCBackendFrame<E> | undefined;
-  enterComponent(frame: CRCBackendFrame<E>): () => void;
+  beginFrame(input: PibblBackendFrameInput): PibblBackendFrame<E> | undefined;
+  enterComponent(frame: PibblBackendFrame<E>): () => void;
   runPrimitive(
-    frame: CRCBackendFrame<E>,
-    input: CRCBackendPrimitiveInput,
-    runProgram: (invoke: () => CRCNode | void) => void,
+    frame: PibblBackendFrame<E>,
+    input: PibblBackendPrimitiveInput,
+    runProgram: (invoke: () => PibblNode | void) => void,
   ): void;
-  finishFrame(frame: CRCBackendFrame<E>, success: boolean): void;
+  finishFrame(frame: PibblBackendFrame<E>, success: boolean): void;
   dispose(): void;
 }
 
-export interface CRCNestedResolverInput {
-  readonly child: CRCBackendMount;
+export interface PibblNestedResolverInput {
+  readonly child: PibblBackendMount;
   readonly bounds: Path2D;
   readonly pointerEvents: "auto" | "none";
-  resolveLocal(localX: number, localY: number, output: CRCHitTestOutput): void;
+  resolveLocal(
+    localX: number,
+    localY: number,
+    output: PibblHitTestOutput,
+  ): void;
 }
 ```
 
@@ -449,15 +453,15 @@ Canvas primitives under WebGL name the Canvas primitive and explain that Canvas 
 
 - [ ] **Step 4: Add internal mount and scheduling hooks**
 
-`mountBackendCRC(canvas, root, { parent, logicalWidth, logicalHeight, driver })` registers the private instance in the same `GLOBAL_STATE.crcInstances`, shares the parent's event root, and sets `interactionRoot`. Its `requestCurrentInstanceFrame(true)` adapter delegates to `crcInternalRequestRendererWork` so stale callbacks, realm scheduler coalescing, disposal, and parent scheduling keep one implementation.
+`mountBackendPibbl(canvas, root, { parent, logicalWidth, logicalHeight, driver })` registers the private instance in the same `GLOBAL_STATE.pibblInstances`, shares the parent's event root, and sets `interactionRoot`. Its `requestCurrentInstanceFrame(true)` adapter delegates to `pibblInternalRequestRendererWork` so stale callbacks, realm scheduler coalescing, disposal, and parent scheduling keep one implementation.
 
 - [ ] **Step 5: Extend only the reviewed friend list**
 
-Extend the existing `@crc/core/internal` source and declaration entry with the
+Extend the existing `@pibbl/core/internal` source and declaration entry with the
 reviewed backend traversal APIs. Do not create another package entry, build
 input, or scheduler singleton.
 
-Update packed runtime evidence so `@crc/core/internal` resolves, while `@crc/core/lib/types`, `@crc/core/src/index`, and other undeclared subpaths still fail. Do not re-export `GLOBAL_STATE`, raw registries, `update`, or source-only implementation classes.
+Update packed runtime evidence so `@pibbl/core/internal` resolves, while `@pibbl/core/lib/types`, `@pibbl/core/src/index`, and other undeclared subpaths still fail. Do not re-export `GLOBAL_STATE`, raw registries, `update`, or source-only implementation classes.
 
 - [ ] **Step 6: Run core traversal, hooks, filters, Layer, and package-consumer gates**
 
@@ -472,7 +476,7 @@ Expected: all selected suites, typecheck, and source-package consumer PASS.
 - [ ] **Step 7: Commit the backend friend seam**
 
 ```bash
-git add packages/core/src/internal.ts packages/core/src/lib/backend/types.ts packages/core/src/lib/backend/canvas-2d-backend.ts packages/core/src/lib/backend/backend-dispatch.test.tsx packages/core/src/lib/define-primitive.ts packages/core/src/lib/render.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/global-state.ts packages/core/src/lib/types.ts packages/core/src/lib/element/metadata.ts packages/core/src/lib/hooks/hook-slot.ts packages/core/src/lib/hooks/use-canvas-context.ts packages/core/src/lib/components/layer-node-equality.ts packages/core/package.json packages/core/tsconfig.build.json tsconfig.json vitest.config.ts tooling/assert-built-core.ts playground/package-consumer/index.ts playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json
+git add packages/core/src/internal.ts packages/core/src/lib/backend/types.ts packages/core/src/lib/backend/canvas-2d-backend.ts packages/core/src/lib/backend/backend-dispatch.test.tsx packages/core/src/lib/define-primitive.ts packages/core/src/lib/render.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/mount-pibbl.ts packages/core/src/lib/global-state.ts packages/core/src/lib/types.ts packages/core/src/lib/element/metadata.ts packages/core/src/lib/hooks/hook-slot.ts packages/core/src/lib/hooks/use-canvas-context.ts packages/core/src/lib/components/layer-node-equality.ts packages/core/package.json packages/core/tsconfig.build.json tsconfig.json vitest.config.ts tooling/assert-built-core.ts playground/package-consumer/index.ts playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json
 git commit -m "feat(core): expose official renderer friend seam"
 ```
 
@@ -496,20 +500,20 @@ git commit -m "feat(core): expose official renderer friend seam"
 **Interfaces:**
 
 ```ts
-export type CRCWebGLVector3 = readonly [x: number, y: number, z: number];
+export type PibblWebGLVector3 = readonly [x: number, y: number, z: number];
 
-export interface CRCWebGLPerspectiveCamera {
+export interface PibblWebGLPerspectiveCamera {
   type: "perspective";
-  position: CRCWebGLVector3;
-  lookAt: CRCWebGLVector3;
-  up: CRCWebGLVector3;
+  position: PibblWebGLVector3;
+  lookAt: PibblWebGLVector3;
+  up: PibblWebGLVector3;
   fieldOfViewDegrees: number;
   near: number;
   far: number;
 }
 
-export interface CRCWebGLCameraSnapshot {
-  readonly descriptor: CRCWebGLPerspectiveCamera;
+export interface PibblWebGLCameraSnapshot {
+  readonly descriptor: PibblWebGLPerspectiveCamera;
   readonly aspect: number;
   readonly viewMatrix: Readonly<Float32Array>;
   readonly projectionMatrix: Readonly<Float32Array>;
@@ -517,22 +521,22 @@ export interface CRCWebGLCameraSnapshot {
   readonly inverseProjectionViewMatrix: Readonly<Float32Array>;
 }
 
-export interface CRCWebGLGeometryInput {
+export interface PibblWebGLGeometryInput {
   positions: ArrayLike<number>;
   indices?: ArrayLike<number>;
 }
 
-declare const crcWebGLGeometryBrand: unique symbol;
+declare const pibblWebGLGeometryBrand: unique symbol;
 
-export interface CRCWebGLGeometry {
-  readonly [crcWebGLGeometryBrand]: true;
+export interface PibblWebGLGeometry {
+  readonly [pibblWebGLGeometryBrand]: true;
   readonly vertexCount: number;
   readonly triangleCount: number;
 }
 
 export function createWebGLGeometry(
-  input: CRCWebGLGeometryInput,
-): CRCWebGLGeometry;
+  input: PibblWebGLGeometryInput,
+): PibblWebGLGeometry;
 ```
 
 - Internal geometry access returns copied `Float32Array` positions and `Uint32Array | undefined` indices without exposing them publicly.
@@ -555,7 +559,7 @@ Expected: FAIL because `packages/webgl` does not exist.
 
 - [ ] **Step 4: Add the version-locked package and build**
 
-Use package version `0.0.1`, peer dependency `"@crc/core": "0.0.1"`, sideEffects false, and one root export. Add `"@crc/webgl": "workspace:*"` to the root dev dependencies. Build declarations with `tsc`, then bundle `src/index.ts` with esbuild while marking both `@crc/core` and `@crc/core/internal` external. Do not declare React or `@crc/types` as a WebGL dependency.
+Use package version `0.0.1`, peer dependency `"@pibbl/core": "0.0.1"`, sideEffects false, and one root export. Add `"@pibbl/webgl": "workspace:*"` to the root dev dependencies. Build declarations with `tsc`, then bundle `src/index.ts` with esbuild while marking both `@pibbl/core` and `@pibbl/core/internal` external. Do not declare React or `@pibbl/types` as a WebGL dependency.
 
 - [ ] **Step 5: Implement finite column-major math and immutable triangles**
 
@@ -566,7 +570,7 @@ Use allocation-free destination parameters for hot matrix/vector operations. Cam
 ```bash
 corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/geometry/geometry.test.ts packages/webgl/src/lib/geometry/cube.test.ts packages/webgl/src/lib/geometry/sphere.test.ts packages/webgl/src/lib/math/matrix4.test.ts packages/webgl/src/lib/math/camera.test.ts packages/webgl/src/lib/math/ray.test.ts --browser.headless --browser.ui=false
 corepack pnpm@11.21.0 typecheck
-corepack pnpm@11.21.0 --filter @crc/webgl build
+corepack pnpm@11.21.0 --filter @pibbl/webgl build
 ```
 
 Expected: all selected tests, typecheck, and the WebGL package build PASS.
@@ -588,8 +592,8 @@ git commit -m "feat(webgl): add geometry and camera foundation"
 - Create: `packages/webgl/src/lib/backend.ts`
 - Create: `packages/webgl/src/lib/gpu/state.ts`
 - Create: `packages/webgl/src/lib/gpu/state.test.ts`
-- Create: `packages/webgl/src/lib/hooks/crc-webgl-context.ts`
-- Create: `packages/webgl/src/lib/hooks/crc-webgl-context.test.tsx`
+- Create: `packages/webgl/src/lib/hooks/pibbl-webgl-context.ts`
+- Create: `packages/webgl/src/lib/hooks/pibbl-webgl-context.test.tsx`
 - Create: `packages/webgl/src/lib/components/group-3d.ts`
 - Create: `packages/webgl/src/lib/components/group-3d.test.tsx`
 - Modify: `packages/webgl/src/lib/types.ts`
@@ -599,53 +603,56 @@ git commit -m "feat(webgl): add geometry and camera foundation"
 
 - `defineWebGLPrimitive(render, capabilities)` registers against one package-private WebGL backend token through `defineBackendPrimitive`.
 - Capabilities are a discriminated union whose `hit` is `{ kind: "geometry"; resolve(...) }`, `{ kind: "custom"; resolve(...) }`, or `{ kind: "none" }`; a paint-capable definition without one discriminator is a type and runtime error.
-- `crcWebGLContext(): CRCWebGLContext` returns `gl`, camera matrices, model matrix, logical/backing viewport, density, timestamp, and component-owned resource operations only during WebGL primitive rendering.
-- `CRCWebGLTransformStyle` implements finite translate/rotate/scale fields with `T * Rz * Ry * Rx * S` and nonzero scales.
+- `pibblWebGLContext(): PibblWebGLContext` returns `gl`, camera matrices, model matrix, logical/backing viewport, density, timestamp, and component-owned resource operations only during WebGL primitive rendering.
+- `PibblWebGLTransformStyle` implements finite translate/rotate/scale fields with `T * Rz * Ry * Rx * S` and nonzero scales.
 
 ```ts
-export type CRCWebGLPrimitiveRender<P, S> = (
+export type PibblWebGLPrimitiveRender<P, S> = (
   props: Readonly<P>,
   style: Readonly<S>,
-  context: CRCWebGLContext,
-) => CRCNode | void;
+  context: PibblWebGLContext,
+) => PibblNode | void;
 
-export type CRCWebGLHitCapability<P, S> =
+export type PibblWebGLHitCapability<P, S> =
   | {
       readonly kind: "geometry";
-      geometry(props: Readonly<P>, style: Readonly<S>): CRCWebGLGeometry;
+      geometry(props: Readonly<P>, style: Readonly<S>): PibblWebGLGeometry;
     }
   | {
       readonly kind: "custom";
-      resolve(input: CRCWebGLPrimitiveHitInput<P, S>): number | null;
+      resolve(input: PibblWebGLPrimitiveHitInput<P, S>): number | null;
     }
   | { readonly kind: "none" };
 
-export interface CRCWebGLPrimitiveCapabilities<P, S, N, R> {
+export interface PibblWebGLPrimitiveCapabilities<P, S, N, R> {
   readonly normalizeStyle?: (style: Readonly<S>) => Readonly<N>;
   readonly resolveStyle?: (
     style: Readonly<N>,
     context: Readonly<StyleResolutionContext>,
   ) => Readonly<R>;
-  readonly hit: CRCWebGLHitCapability<P, R>;
+  readonly hit: PibblWebGLHitCapability<P, R>;
 }
 
-export type CRCWebGLProgramProps<
+export type PibblWebGLProgramProps<
   P,
-  H extends CRCWebGLHitCapability<P, any>,
+  H extends PibblWebGLHitCapability<P, any>,
 > = H extends { readonly kind: "none" }
   ? P & { readonly pointerEvents?: "none" }
-  : P & CRCEventHandlers & CRCEventFocusOptions & CRCEventParticipationOptions;
+  : P &
+      PibblEventHandlers &
+      PibblEventFocusOptions &
+      PibblEventParticipationOptions;
 
-export type CRCWebGLPrimitiveInput<
+export type PibblWebGLPrimitiveInput<
   P,
   S extends SystemStyle,
-  H extends CRCWebGLHitCapability<P, any>,
-> = PrimitiveInput<CRCWebGLProgramProps<P, H>, S>;
+  H extends PibblWebGLHitCapability<P, any>,
+> = PrimitiveInput<PibblWebGLProgramProps<P, H>, S>;
 
-export interface CRCWebGLContext {
+export interface PibblWebGLContext {
   readonly gl: WebGL2RenderingContext;
   readonly contextGeneration: number;
-  readonly camera: CRCWebGLCameraSnapshot;
+  readonly camera: PibblWebGLCameraSnapshot;
   readonly modelMatrix: Readonly<Float32Array>;
   readonly logicalViewport: Readonly<{ width: number; height: number }>;
   readonly backingViewport: Readonly<{ width: number; height: number }>;
@@ -666,17 +673,17 @@ export interface CRCWebGLContext {
   };
 }
 
-export interface CRCWebGLPrimitiveHitInput<P, S> {
+export interface PibblWebGLPrimitiveHitInput<P, S> {
   readonly props: Readonly<P>;
   readonly style: Readonly<S>;
   readonly layerX: number;
   readonly layerY: number;
   readonly ndcX: number;
   readonly ndcY: number;
-  readonly rayOrigin: CRCWebGLVector3;
-  readonly rayDirection: CRCWebGLVector3;
+  readonly rayOrigin: PibblWebGLVector3;
+  readonly rayDirection: PibblWebGLVector3;
   readonly modelMatrix: Readonly<Float32Array>;
-  readonly camera: CRCWebGLCameraSnapshot;
+  readonly camera: PibblWebGLCameraSnapshot;
 }
 
 export function defineWebGLPrimitive<
@@ -684,17 +691,17 @@ export function defineWebGLPrimitive<
   S extends SystemStyle,
   N extends SystemStyle = S,
   R extends SystemStyle = N,
-  H extends CRCWebGLHitCapability<P, R> = CRCWebGLHitCapability<P, R>,
+  H extends PibblWebGLHitCapability<P, R> = PibblWebGLHitCapability<P, R>,
 >(
-  render: CRCWebGLPrimitiveRender<P, R>,
-  capabilities: CRCWebGLPrimitiveCapabilities<P, S, N, R> & { hit: H },
-): CRCPrimitiveComponent<
-  CRCWebGLProgramProps<P, H>,
-  CRCWebGLPrimitiveInput<P, S, H>
+  render: PibblWebGLPrimitiveRender<P, R>,
+  capabilities: PibblWebGLPrimitiveCapabilities<P, S, N, R> & { hit: H },
+): PibblPrimitiveComponent<
+  PibblWebGLProgramProps<P, H>,
+  PibblWebGLPrimitiveInput<P, S, H>
 >;
 ```
 
-`resources.use(...)` is an ordered CRC hook: it prepends `contextGeneration` to dependencies, releases the previous value before replacement, and registers final component teardown. Its release context reports whether the GL context was lost so custom cleanup can avoid assuming valid handles. A custom hit resolver returns a finite nonnegative ray distance or `null`; layer/NDC fields permit analytic or projected-Path2D broad phases. Resource and hit callbacks must not retain render-environment scratch.
+`resources.use(...)` is an ordered Pibbl hook: it prepends `contextGeneration` to dependencies, releases the previous value before replacement, and registers final component teardown. Its release context reports whether the GL context was lost so custom cleanup can avoid assuming valid handles. A custom hit resolver returns a finite nonnegative ray distance or `null`; layer/NDC fields permit analytic or projected-Path2D broad phases. Resource and hit callbacks must not retain render-environment scratch.
 
 - [ ] **Step 1: Write failing protocol and backend-mismatch tests**
 
@@ -702,12 +709,12 @@ Define geometry-backed, custom-hit, and decorative primitives. Assert missing hi
 
 - [ ] **Step 2: Write failing state-baseline and context-hook tests**
 
-Use a recording WebGL2 double. Mutate program, VAO, buffers, textures, framebuffer, viewport/scissor, masks, blend/depth/cull/stencil/polygon-offset, clear, and pixel-store state in one primitive; assert the next primitive sees the documented baseline. Throw in the first callback and assert baseline restoration still occurs. Assert `crcWebGLContext` errors outside WebGL render, under Canvas 2D, and during measurement. Exercise `resources.use` across equal deps, changed deps, context generation, component removal, and lost context; assert one acquire and one matching release for every generation.
+Use a recording WebGL2 double. Mutate program, VAO, buffers, textures, framebuffer, viewport/scissor, masks, blend/depth/cull/stencil/polygon-offset, clear, and pixel-store state in one primitive; assert the next primitive sees the documented baseline. Throw in the first callback and assert baseline restoration still occurs. Assert `pibblWebGLContext` errors outside WebGL render, under Canvas 2D, and during measurement. Exercise `resources.use` across equal deps, changed deps, context generation, component removal, and lost context; assert one acquire and one matching release for every generation.
 
 - [ ] **Step 3: Run focused tests and confirm missing APIs**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/define-webgl-primitive.test.tsx packages/webgl/src/lib/gpu/state.test.ts packages/webgl/src/lib/hooks/crc-webgl-context.test.tsx packages/webgl/src/lib/components/group-3d.test.tsx --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/define-webgl-primitive.test.tsx packages/webgl/src/lib/gpu/state.test.ts packages/webgl/src/lib/hooks/pibbl-webgl-context.test.tsx packages/webgl/src/lib/components/group-3d.test.tsx --browser.headless --browser.ui=false
 ```
 
 Expected: FAIL on missing WebGL primitive registration and environment modules.
@@ -723,7 +730,7 @@ Create one token at module initialization. `beginFrame` clears transparent color
 - [ ] **Step 6: Run protocol, state, context, Group3D, and core dispatch suites**
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/define-webgl-primitive.test.tsx packages/webgl/src/lib/gpu/state.test.ts packages/webgl/src/lib/hooks/crc-webgl-context.test.tsx packages/webgl/src/lib/components/group-3d.test.tsx packages/core/src/lib/backend/backend-dispatch.test.tsx --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/define-webgl-primitive.test.tsx packages/webgl/src/lib/gpu/state.test.ts packages/webgl/src/lib/hooks/pibbl-webgl-context.test.tsx packages/webgl/src/lib/components/group-3d.test.tsx packages/core/src/lib/backend/backend-dispatch.test.tsx --browser.headless --browser.ui=false
 ```
 
 Expected: all selected suites PASS.
@@ -731,7 +738,7 @@ Expected: all selected suites PASS.
 - [ ] **Step 7: Commit the WebGL primitive backend**
 
 ```bash
-git add packages/webgl/src/lib/define-webgl-primitive.ts packages/webgl/src/lib/define-webgl-primitive.test.tsx packages/webgl/src/lib/render-environment.ts packages/webgl/src/lib/backend.ts packages/webgl/src/lib/gpu/state.ts packages/webgl/src/lib/gpu/state.test.ts packages/webgl/src/lib/hooks/crc-webgl-context.ts packages/webgl/src/lib/hooks/crc-webgl-context.test.tsx packages/webgl/src/lib/components/group-3d.ts packages/webgl/src/lib/components/group-3d.test.tsx packages/webgl/src/lib/types.ts packages/webgl/src/index.ts
+git add packages/webgl/src/lib/define-webgl-primitive.ts packages/webgl/src/lib/define-webgl-primitive.test.tsx packages/webgl/src/lib/render-environment.ts packages/webgl/src/lib/backend.ts packages/webgl/src/lib/gpu/state.ts packages/webgl/src/lib/gpu/state.test.ts packages/webgl/src/lib/hooks/pibbl-webgl-context.ts packages/webgl/src/lib/hooks/pibbl-webgl-context.test.tsx packages/webgl/src/lib/components/group-3d.ts packages/webgl/src/lib/components/group-3d.test.tsx packages/webgl/src/lib/types.ts packages/webgl/src/index.ts
 git commit -m "feat(webgl): define the WebGL render backend"
 ```
 
@@ -751,16 +758,16 @@ git commit -m "feat(webgl): define the WebGL render backend"
 **Interfaces:**
 
 ```ts
-export interface WebGLLayerProps extends CRCEventHandlers {
-  children: CRCNode;
-  camera?: CRCWebGLPerspectiveCamera;
+export interface WebGLLayerProps extends PibblEventHandlers {
+  children: PibblNode;
+  camera?: PibblWebGLPerspectiveCamera;
   pointerEvents?: "auto" | "none";
 }
 
 export interface WebGLLayerStyle extends BoxStyle, LayoutItemStyle {}
 ```
 
-- `WebGLLayerController` owns the OffscreenCanvas, WebGL2 context, private CRC controller/instance, pending candidate, committed bitmap/ledger generation, context generation, and interaction bridge.
+- `WebGLLayerController` owns the OffscreenCanvas, WebGL2 context, private Pibbl controller/instance, pending candidate, committed bitmap/ledger generation, context generation, and interaction bridge.
 - `renderUpdatedChild(root, camera, surface, timestamp)` creates a candidate bitmap/ledger; `composite(ctx, destination)` draws and commits a candidate only after `drawImage` returns; `dispose()` is idempotent.
 
 - [ ] **Step 1: Write failing surface and capability tests**
@@ -793,7 +800,7 @@ Expected: FAIL because `WebGLLayer` and its controller do not exist.
 
 - [ ] **Step 4: Implement the private child and parent bridge**
 
-Materialize children once, wrap them in one keyed private Fragment root, mount with `mountBackendCRC`, assign the parent's current component as `eventParent`, and install one `CRCNestedPaintEntry` at the exact Canvas composite position. Capture current world transform, full clipping stack, and a Path2D of only the layer bounds. `pointerEvents="none"` omits the nested entry while painting continues.
+Materialize children once, wrap them in one keyed private Fragment root, mount with `mountBackendPibbl`, assign the parent's current component as `eventParent`, and install one `PibblNestedPaintEntry` at the exact Canvas composite position. Capture current world transform, full clipping stack, and a Path2D of only the layer bounds. `pointerEvents="none"` omits the nested entry while painting continues.
 
 - [ ] **Step 5: Implement candidate transfer and synchronous composition**
 
@@ -829,8 +836,8 @@ git commit -m "feat(webgl): composite WebGL islands into Canvas"
 
 **Interfaces:**
 
-- `MeshProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions { geometry: CRCWebGLGeometry }`.
-- `MeshStyle extends CRCWebGLTransformStyle { color?: string; opacity?: number; cursor?: string }`.
+- `MeshProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions { geometry: PibblWebGLGeometry }`.
+- `MeshStyle extends PibblWebGLTransformStyle { color?: string; opacity?: number; cursor?: string }`.
 - `CubeStyle` adds finite positive `size?: number` defaulting to `1`; `SphereStyle` adds finite positive `radius?: number` defaulting to `0.5`.
 - The built-in shader accepts model, view, projection, solid RGBA, and position attributes; no lights, normals, textures, or material graph.
 
@@ -892,16 +899,16 @@ git commit -m "feat(webgl): render mesh cube and sphere primitives"
 **Interfaces:**
 
 ```ts
-interface CRCWebGLPickRecord {
-  readonly target: CRCEventTargetRegistration;
-  readonly geometry: CRCWebGLGeometry;
+interface PibblWebGLPickRecord {
+  readonly target: PibblEventTargetRegistration;
+  readonly geometry: PibblWebGLGeometry;
   readonly model: Float32Array;
   readonly sourceOrder: number;
   readonly depthMode: "less-equal";
 }
 ```
 
-- `pickScene(ledger, camera, localX, localY, output)` writes core's shared `CRCHitTestOutput`.
+- `pickScene(ledger, camera, localX, localY, output)` writes core's shared `PibblHitTestOutput`.
 - Geometry-backed custom primitives provide geometry/model; custom resolvers return a finite nonnegative ray distance or `null`; decorative primitives create no record.
 
 - [ ] **Step 1: Write failing nearest-hit and transparent-background tests**
@@ -957,8 +964,8 @@ git commit -m "feat(webgl): resolve 3D targets in global paint order"
 
 **Interfaces:**
 
-- WebGL targets use the existing `CRCEventTargetRegistration` and therefore the existing event facade, propagation, related-target, pointer-capture, cursor, focus, activation, editing, clipboard, and drag/drop implementations.
-- Automatic navigation bounds are the root-logical axis-aligned projection of a mesh's eight local geometry AABB corners through committed model, camera, layer viewport, and outer CRC bridge transforms. Explicit `keyboardNavigationBounds` overrides the automatic local layer rectangle.
+- WebGL targets use the existing `PibblEventTargetRegistration` and therefore the existing event facade, propagation, related-target, pointer-capture, cursor, focus, activation, editing, clipboard, and drag/drop implementations.
+- Automatic navigation bounds are the root-logical axis-aligned projection of a mesh's eight local geometry AABB corners through committed model, camera, layer viewport, and outer Pibbl bridge transforms. Explicit `keyboardNavigationBounds` overrides the automatic local layer rectangle.
 
 - [ ] **Step 1: Write failing Group3D/WebGLLayer propagation tests**
 
@@ -1010,7 +1017,7 @@ git commit -m "feat(webgl): integrate propagation focus and input events"
 
 **Interfaces:**
 
-- `useAnimationFrame(): number` returns the active CRC frame timestamp and requests exactly one next frame for the owning private instance with parent recomposition.
+- `useAnimationFrame(): number` returns the active Pibbl frame timestamp and requests exactly one next frame for the owning private instance with parent recomposition.
 - WebGLLayer cache identity includes retained child root/props/styles/enhancers, camera scalars, logical dimensions, X/Y density, focus revision, context generation, and owned resource generation.
 - Layer controller tracks `renderedGeneration`, `candidateGeneration`, and `committedGeneration`; an already-rendered child candidate is composited by the parent without a second child traversal.
 
@@ -1068,7 +1075,7 @@ git commit -m "feat(webgl): animate and retain WebGL islands"
 
 - One layer owns one `webglcontextlost` and one `webglcontextrestored` listener.
 - Context loss increments the context generation, invalidates every GPU handle, closes/removes the committed bitmap, clears committed picking/focus state, and schedules no work until restoration.
-- Restoration schedules one ordinary CRC frame; public descriptors rebuild resources into the new generation.
+- Restoration schedules one ordinary Pibbl frame; public descriptors rebuild resources into the new generation.
 
 - [ ] **Step 1: Write failing context loss/restoration tests**
 
@@ -1092,7 +1099,7 @@ Attach listeners during layer mount and remove them in the same component teardo
 
 - [ ] **Step 5: Aggregate teardown errors without skipping later releases**
 
-Use CRC's `Teardowns`/`runTeardown` pattern so one failing application release is reported but cannot suppress bitmap close, target release, listener removal, cache invalidation, child-controller disposal, or framework-state restoration.
+Use Pibbl's `Teardowns`/`runTeardown` pattern so one failing application release is reported but cannot suppress bitmap close, target release, listener removal, cache invalidation, child-controller disposal, or framework-state restoration.
 
 - [ ] **Step 6: Run ownership, cleanup-stress, and failure regressions**
 
@@ -1123,8 +1130,8 @@ git commit -m "fix(webgl): make context ownership fail closed"
 - Modify: `packages/scenarios/package.json`
 - Modify: `packages/core/test/{scenario-catalog,learning-examples}.test.ts`
 - Modify: `tooling/learning-source-contract.ts`
-- Modify: `tooling/crc-runtime-source.ts`
-- Modify: `tooling/crc-studio-runtime-entry.ts`
+- Modify: `tooling/pibbl-runtime-source.ts`
+- Modify: `tooling/pibbl-studio-runtime-entry.ts`
 - Modify: `playground/src/{sandbox-module,editor-workbench}.ts`
 - Modify: `playground/package.json`
 
@@ -1136,7 +1143,7 @@ git commit -m "fix(webgl): make context ownership fail closed"
 
 - [ ] **Step 1: Add failing catalog/source tests before scenario implementation**
 
-Assert the exact routes, source paths, direct imports from both `@crc/core` and `@crc/webgl`, one `@jsxImportSource @crc/core` runtime, no core internal/deep imports, declared actions, and public state schema.
+Assert the exact routes, source paths, direct imports from both `@pibbl/core` and `@pibbl/webgl`, one `@jsxImportSource @pibbl/core` runtime, no core internal/deep imports, declared actions, and public state schema.
 
 - [ ] **Step 2: Run catalog checks and confirm missing entries**
 
@@ -1180,7 +1187,7 @@ Expected: all commands PASS in source and built modes.
 - [ ] **Step 7: Commit public scenario evidence**
 
 ```bash
-git add packages/scenarios/src/learning/composition/webgl-islands.example.tsx packages/scenarios/src/webgl-lab.example.tsx packages/scenarios/src/webgl-lab.ts packages/scenarios/src/catalog.ts packages/scenarios/src/learning-catalog.ts packages/scenarios/src/index.ts packages/scenarios/package.json packages/core/test/webgl-lab.test.ts packages/core/test/webgl-performance.test.ts packages/core/test/scenario-catalog.test.ts packages/core/test/learning-examples.test.ts packages/core/test/visual-baselines/webgl-islands.expected.png tooling/learning-source-contract.ts tooling/crc-runtime-source.ts tooling/crc-studio-runtime-entry.ts playground/src/sandbox-module.ts playground/src/editor-workbench.ts playground/package.json pnpm-lock.yaml
+git add packages/scenarios/src/learning/composition/webgl-islands.example.tsx packages/scenarios/src/webgl-lab.example.tsx packages/scenarios/src/webgl-lab.ts packages/scenarios/src/catalog.ts packages/scenarios/src/learning-catalog.ts packages/scenarios/src/index.ts packages/scenarios/package.json packages/core/test/webgl-lab.test.ts packages/core/test/webgl-performance.test.ts packages/core/test/scenario-catalog.test.ts packages/core/test/learning-examples.test.ts packages/core/test/visual-baselines/webgl-islands.expected.png tooling/learning-source-contract.ts tooling/pibbl-runtime-source.ts tooling/pibbl-studio-runtime-entry.ts playground/src/sandbox-module.ts playground/src/editor-workbench.ts playground/package.json pnpm-lock.yaml
 git commit -m "test(webgl): prove public WebGL island behavior"
 ```
 
@@ -1203,16 +1210,16 @@ git commit -m "test(webgl): prove public WebGL island behavior"
 - Modify: `tooling/verify-studio-types.mjs`
 - Modify: `tooling/verify-docs.mjs`
 - Modify: `tooling/assert-built-core.ts`
-- Modify: `tooling/crc-runtime-source.ts`
-- Modify: `tooling/crc-studio-runtime-entry.ts`
+- Modify: `tooling/pibbl-runtime-source.ts`
+- Modify: `tooling/pibbl-studio-runtime-entry.ts`
 - Modify: `package.json`
 - Modify: `pnpm-lock.yaml`
 
 **Interfaces:**
 
-- `@crc/webgl` exports exactly `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`, `createWebGLGeometry`, `defineWebGLPrimitive`, `crcWebGLContext`, `useAnimationFrame`, and the public types used by those values.
-- `@crc/core/internal` remains absent from the public API reference except for a warning in package-boundary documentation; applications receive no compatibility promise.
-- Bundler and NodeNext consumers import both packages while JSX still compiles against `@crc/core/jsx-runtime`.
+- `@pibbl/webgl` exports exactly `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`, `createWebGLGeometry`, `defineWebGLPrimitive`, `pibblWebGLContext`, `useAnimationFrame`, and the public types used by those values.
+- `@pibbl/core/internal` remains absent from the public API reference except for a warning in package-boundary documentation; applications receive no compatibility promise.
+- Bundler and NodeNext consumers import both packages while JSX still compiles against `@pibbl/core/jsx-runtime`.
 
 - [ ] **Step 1: Add failing packed/source consumer assertions**
 
@@ -1234,7 +1241,7 @@ Replace the old “purely visual paths do not occlude” rule with default drawi
 
 - [ ] **Step 4: Complete guides, API reference, status, and package README files**
 
-Show the same JSX runtime with imports from both packages, default camera example, explicit camera override, Mesh geometry construction, Cube/Sphere/Group3D, click propagation, transparent-background pass-through, pointerEvents opt-out, animation, raw-context obligations, context limitations, and non-JSX construction. State that `@crc/core/internal` is reserved for matching official packages.
+Show the same JSX runtime with imports from both packages, default camera example, explicit camera override, Mesh geometry construction, Cube/Sphere/Group3D, click propagation, transparent-background pass-through, pointerEvents opt-out, animation, raw-context obligations, context limitations, and non-JSX construction. State that `@pibbl/core/internal` is reserved for matching official packages.
 
 - [ ] **Step 5: Run the full static, package, browser, lifecycle, and performance gates**
 
@@ -1253,7 +1260,7 @@ Record the exact environment, commands, results, browser version, visual-baselin
 - [ ] **Step 7: Commit the shipping surface**
 
 ```bash
-git add README.md packages/core/README.md packages/webgl/README.md docs/api-reference.md docs/library-status.md docs/guides/webgl-islands.md docs/guides/configuring-jsx.md docs/guides/custom-components-and-primitives.md docs/guides/layout-groups-clips-and-layers.md docs/guides/focus-keyboard-and-accessibility.md docs/guides/without-jsx.md docs/migrations/default-pointer-participation.md docs/design/canvas-surface-contract.md docs/design/runtime-hooks-contract.md docs/design/drawing-components-contract.md docs/design/style-system-contract.md docs/design/layout-system-contract.md docs/design/user-events-contract.md docs/design/focus-and-keyboard-navigation-contract.md docs/design/mouse-interaction-contract.md docs/design/event-resource-ownership.md docs/design/runtime-resource-ownership.md docs/testing/field-notes/2026-09-09-webgl-islands.md playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json tooling/verify-packed-consumer.mjs tooling/verify-studio-types.mjs tooling/verify-docs.mjs tooling/assert-built-core.ts tooling/crc-runtime-source.ts tooling/crc-studio-runtime-entry.ts package.json pnpm-lock.yaml
+git add README.md packages/core/README.md packages/webgl/README.md docs/api-reference.md docs/library-status.md docs/guides/webgl-islands.md docs/guides/configuring-jsx.md docs/guides/custom-components-and-primitives.md docs/guides/layout-groups-clips-and-layers.md docs/guides/focus-keyboard-and-accessibility.md docs/guides/without-jsx.md docs/migrations/default-pointer-participation.md docs/design/canvas-surface-contract.md docs/design/runtime-hooks-contract.md docs/design/drawing-components-contract.md docs/design/style-system-contract.md docs/design/layout-system-contract.md docs/design/user-events-contract.md docs/design/focus-and-keyboard-navigation-contract.md docs/design/mouse-interaction-contract.md docs/design/event-resource-ownership.md docs/design/runtime-resource-ownership.md docs/testing/field-notes/2026-09-09-webgl-islands.md playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json tooling/verify-packed-consumer.mjs tooling/verify-studio-types.mjs tooling/verify-docs.mjs tooling/assert-built-core.ts tooling/pibbl-runtime-source.ts tooling/pibbl-studio-runtime-entry.ts package.json pnpm-lock.yaml
 git commit -m "docs(webgl): publish WebGL island contracts"
 ```
 

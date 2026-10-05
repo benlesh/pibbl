@@ -64,7 +64,7 @@ AssertionError [ERR_ASSERTION]: Every repository Markdown file must be classifie
 + ]
 - []
 
-    at file:///Users/benlesh/.codex/worktrees/perf-verification/crc/tooling/verify-docs.mjs:1442:8 {
+    at file:///Users/benlesh/.codex/worktrees/perf-verification/pibbl/tooling/verify-docs.mjs:1442:8 {
   generatedMessage: false,
   code: 'ERR_ASSERTION',
   actual: [

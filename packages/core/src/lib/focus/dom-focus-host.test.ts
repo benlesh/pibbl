@@ -1,17 +1,17 @@
 import { userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Layer } from '../components/layer';
-import type { CRCEventHandlers } from '../events/types';
+import type { PibblEventHandlers } from '../events/types';
 import { executeRender } from '../execute-render';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventTarget } from '../hooks/use-event-target';
-import { mountCRC } from '../mount-crc';
-import type { CRCElement, CRCController, CRCFocusPolicyBridge } from '../types';
-import type { CRCFocusManager } from './focus-manager';
+import { mountPibbl } from '../mount-pibbl';
+import type { PibblElement, PibblController, PibblFocusPolicyBridge } from '../types';
+import type { PibblFocusManager } from './focus-manager';
 import { focusManaged } from './policy-test-support';
 import { createElement } from '../element/create-element';
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 const noop = () => undefined;
 const DOM_FOCUS_HOST_EVENT_TYPES = [
   'focus',
@@ -366,7 +366,7 @@ describe('Canvas DOM focus host', () => {
     const canvasAdd = vi.spyOn(canvas, 'addEventListener');
     const canvasRemove = vi.spyOn(canvas, 'removeEventListener');
     const mounted = mountAndRender(canvas, managed(['only']));
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
     const firstAdds = documentKeydownCaptureCalls(add.mock.calls);
     expect(firstAdds).toHaveLength(1);
     for (const type of DOM_FOCUS_HOST_EVENT_TYPES) {
@@ -425,7 +425,7 @@ describe('Canvas DOM focus host', () => {
     const canvasRemove = vi.spyOn(canvas, 'removeEventListener');
     const mounted = mountAndRender(canvas, createElement(Root, { replacement: false }));
     const priorManager = mounted.manager;
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
     const originalNativeListeners = new Map(
       DOM_FOCUS_HOST_EVENT_TYPES.map(type => [
         type,
@@ -544,7 +544,7 @@ describe('Canvas DOM focus host', () => {
     const canvasRemove = vi.spyOn(canvas, 'removeEventListener');
     const mounted = mountAndRender(canvas, createElement(Root, { generation: 1 }));
     const manager = mounted.manager;
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
 
     executeRender(canvas, 2, createElement(Root, { generation: 2 }));
 
@@ -584,7 +584,7 @@ describe('Canvas DOM focus host', () => {
     const canvasAdd = vi.spyOn(canvas, 'addEventListener');
     const canvasRemove = vi.spyOn(canvas, 'removeEventListener');
     const mounted = mountAndRender(canvas, createElement(Root, { replacement: false }));
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
     const prior = mounted.manager;
     expect(canvas.getAttribute('tabindex')).toBe('0');
 
@@ -621,22 +621,22 @@ describe('Canvas DOM focus host', () => {
 
   it('rejects a root OffscreenCanvas before acquiring a DOM focus host', () => {
     const canvas = new OffscreenCanvas(40, 40);
-    const controller = mountCRC(canvas, managed(['only']));
+    const controller = mountPibbl(canvas, managed(['only']));
     activeControllers.add(controller);
 
     expect(() => executeRender(canvas, 1)).toThrowError(
       /FocusManagement.*HTMLCanvasElement.*root|OffscreenCanvas.*focus host/i,
     );
-    expect(getCRCInstance(canvas).eventRoot.focusPolicy).toBeUndefined();
+    expect(getPibblInstance(canvas).eventRoot.focusPolicy).toBeUndefined();
   });
 
   it('clears the optional structural policy as a final root cleanup guarantee', () => {
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, createElement(Scene, { labels: [] }));
+    const controller = mountPibbl(canvas, createElement(Scene, { labels: [] }));
     activeControllers.add(controller);
     executeRender(canvas, 1);
-    const eventRoot = getCRCInstance(canvas).eventRoot;
-    eventRoot.focusPolicy = {} as CRCFocusPolicyBridge;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
+    eventRoot.focusPolicy = {} as PibblFocusPolicyBridge;
 
     controller.dispose();
     activeControllers.delete(controller);
@@ -647,7 +647,7 @@ describe('Canvas DOM focus host', () => {
 
 interface TargetProps {
   readonly label: string;
-  readonly handlers: CRCEventHandlers;
+  readonly handlers: PibblEventHandlers;
 }
 
 const Target = ({ handlers }: TargetProps) => {
@@ -663,11 +663,11 @@ const Scene = ({ labels }: { labels: readonly string[] }) =>
     handlers: { onClick: noop },
   }));
 
-function managed(labels: readonly string[]): CRCElement<any> {
+function managed(labels: readonly string[]): PibblElement<any> {
   return focusManaged(createElement(Scene, { labels }));
 }
 
-function mountBetweenNativeControls(element: CRCElement<any>) {
+function mountBetweenNativeControls(element: PibblElement<any>) {
   const before = document.createElement('button');
   before.textContent = 'before';
   const canvas = createCanvas(false);
@@ -678,26 +678,26 @@ function mountBetweenNativeControls(element: CRCElement<any>) {
   return { ...mounted, before, after };
 }
 
-function mountAndRender(canvas: HTMLCanvasElement, element: CRCElement<any>) {
-  const controller = mountCRC(canvas, element);
+function mountAndRender(canvas: HTMLCanvasElement, element: PibblElement<any>) {
+  const controller = mountPibbl(canvas, element);
   activeControllers.add(controller);
   executeRender(canvas, 1);
   return { canvas, controller, manager: focusManager(canvas) };
 }
 
-function focusManager(canvas: HTMLCanvasElement): CRCFocusManager {
-  const manager = getCRCInstance(canvas).eventRoot.focusPolicy;
+function focusManager(canvas: HTMLCanvasElement): PibblFocusManager {
+  const manager = getPibblInstance(canvas).eventRoot.focusPolicy;
   if (!manager) throw new Error('Expected a focus manager.');
-  return manager as CRCFocusManager;
+  return manager as PibblFocusManager;
 }
 
-function candidateLabels(manager: CRCFocusManager): string[] {
+function candidateLabels(manager: PibblFocusManager): string[] {
   return manager.candidates.map(candidate =>
     (candidate.target.component.element.props as { label: string }).label
   );
 }
 
-function focusedLabel(manager: CRCFocusManager): string | undefined {
+function focusedLabel(manager: PibblFocusManager): string | undefined {
   const focused = manager.resolveKeyboardTarget();
   return focused ?
     (focused.component.element.props as { label: string }).label :

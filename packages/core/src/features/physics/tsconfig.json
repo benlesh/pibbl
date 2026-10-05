@@ -2,7 +2,7 @@
   "extends": "../../../../../tsconfig.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "@crc/core",
+    "jsxImportSource": "@pibbl/core",
     "noEmit": true
   },
   "include": ["**/*.ts", "**/*.tsx"],

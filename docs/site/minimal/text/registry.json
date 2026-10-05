@@ -6,17 +6,17 @@
     "source": "outline.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "loadOutlineFont", "importPath": "@crc/text" },
-      { "name": "createTextGeometry", "importPath": "@crc/text" },
-      { "name": "InkBounds", "importPath": "@crc/text" },
-      { "name": "OutlineFont", "importPath": "@crc/text" },
-      { "name": "OutlineFontOptions", "importPath": "@crc/text" },
-      { "name": "TextGeometryOptions", "importPath": "@crc/text" },
-      { "name": "TextGeometryResult", "importPath": "@crc/text" },
-      { "name": "TextGlyph", "importPath": "@crc/text" }
+      { "name": "loadOutlineFont", "importPath": "@pibbl/text" },
+      { "name": "createTextGeometry", "importPath": "@pibbl/text" },
+      { "name": "InkBounds", "importPath": "@pibbl/text" },
+      { "name": "OutlineFont", "importPath": "@pibbl/text" },
+      { "name": "OutlineFontOptions", "importPath": "@pibbl/text" },
+      { "name": "TextGeometryOptions", "importPath": "@pibbl/text" },
+      { "name": "TextGeometryResult", "importPath": "@pibbl/text" },
+      { "name": "TextGlyph", "importPath": "@pibbl/text" }
     ],
     "notes": [
-      "The browser example requires the existing Studio /crc-text/ABeeZee-Regular.ttf asset and the @crc/text WASM loader asset; retain and dispose the font explicitly."
+      "The browser example requires the existing Studio /pibbl-text/ABeeZee-Regular.ttf asset and the @pibbl/text WASM loader asset; retain and dispose the font explicitly."
     ]
   }
 ]

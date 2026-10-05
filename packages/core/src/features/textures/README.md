@@ -1,17 +1,17 @@
-# @crc/core/textures
+# @pibbl/core/textures
 
-Optional procedural textures for CRC. The marble, paper, cellular, and
+Optional procedural textures for Pibbl. The marble, paper, cellular, and
 reaction-diffusion generators compute in WASM, with ordinary JavaScript/TypeScript
-configuration and CRC-owned scheduling. There is no JavaScript fallback or backend
+configuration and Pibbl-owned scheduling. There is no JavaScript fallback or backend
 selector for those four generators. Water and electric recipes are documented
 separately in the public API reference.
 
 ## Shared texture fills
 
 ```tsx
-/** @jsxImportSource @crc/core */
-import { Rectangle, useTexture } from "@crc/core";
-import { marble } from "@crc/core/textures";
+/** @jsxImportSource @pibbl/core */
+import { Rectangle, useTexture } from "@pibbl/core";
+import { marble } from "@pibbl/core/textures";
 
 function Card() {
   const surface = useTexture(marble({ seed: 42, scale: 6, detail: 0.65 }), {
@@ -60,7 +60,7 @@ All numeric inputs must be finite. Finite centers outside [0, 1] are ignored;
 invalid radius, strength, or displacement rejects without publishing bad pixels.
 Commands retain their send order. Disposal makes sends inert.
 
-CRC advances ink at 480 fixed numerical steps per second, admitting at most 50 ms
+Pibbl advances ink at 480 fixed numerical steps per second, admitting at most 50 ms
 and 24 steps per frame. Pause, reset, and resume discard elapsed-time debt. The
 first continuing frame establishes a fresh baseline. Equal seed, preset,
 dimensions, step count, and ordered messages reproduce a run on the same
@@ -71,14 +71,14 @@ Animation can drive recipe parameters through signals. Read a physics body's
 committed position in `useReaction`, then send a small stir vector; the accepted
 Stirred Ink example demonstrates this. Physics and texture WASM modules have
 separate memories. This implementation neither reads Rapier's private memory nor
-moves CRC animation into WASM. Messages run on the next eligible texture frame;
+moves Pibbl animation into WASM. Messages run on the next eligible texture frame;
 there is no same-tick physics/texture coupling guarantee.
 
 ## Existing components and borrowed rasters
 
 `ReactionDiffusion` and `ProceduralTexture` remain available for independent
 render-layer surfaces. They use the same WASM kernels as the recipes.
-`ReactionDiffusion` also accepts `paused`, `resetRevision`, and a CRC-routed
+`ReactionDiffusion` also accepts `paused`, `resetRevision`, and a Pibbl-routed
 pointer `brush` (`false` or `{ radius, strength }`). Seed, preset, resolution, and
 reset revision changes clear its field, strokes, capture, and elapsed time.
 `ProceduralTexture` requires `kind: "marble" | "paper" | "cellular"`. Both accept
@@ -99,11 +99,11 @@ Canvas allocation, or scheduling. Each selected kernel compiles lazily on first
 mount. Modules are cached; each resource owns fixed memory that never grows while
 views are borrowed. Fields, scratch storage, RGBA, alpha, palette, and stamp
 storage reside in that memory. `ImageData` directly views RGBA bytes: there is no
-full-field or RGBA marshalling copy through JavaScript. Canvas upload and CRC's
+full-field or RGBA marshalling copy through JavaScript. Canvas upload and Pibbl's
 committed publication surfaces still have browser-managed copy costs.
 
 Unmount drops resource ownership and borrowed views. WASM compilation/allocation
-failures propagate through normal CRC error handling; there is no silent JS
+failures propagate through normal Pibbl error handling; there is no silent JS
 fallback. Existing last-good publication behavior remains intact, without a
 promise to roll back private simulation state.
 

@@ -1,9 +1,9 @@
 import type {
-  CRCPhysicsDistance2D,
-  CRCPhysicsPose2D,
-  CRCPhysicsShape2D,
-  CRCPhysicsShapeContact2D,
-  CRCPhysicsVector2,
+  PibblPhysicsDistance2D,
+  PibblPhysicsPose2D,
+  PibblPhysicsShape2D,
+  PibblPhysicsShapeContact2D,
+  PibblPhysicsVector2,
 } from '../../../2d-geometry.js';
 import { copyFiniteVector2 } from '../../shared/validation.js';
 import { composePose2D, copyPose2D, transformPointInto, type InternalPose2D } from '../math.js';
@@ -45,9 +45,9 @@ const shapeOrders = new WeakMap<object, number>();
 let nextShapeOrder = 0;
 
 export function containsPointInShape2D(
-  shape: CRCPhysicsShape2D,
-  pose: CRCPhysicsPose2D,
-  point: CRCPhysicsVector2,
+  shape: PibblPhysicsShape2D,
+  pose: PibblPhysicsPose2D,
+  point: PibblPhysicsVector2,
 ): boolean {
   const prepared = prepareShape(shape, pose, 'shape', 'pose');
   const copiedPoint = copyFiniteVector2(point, 'point');
@@ -57,11 +57,11 @@ export function containsPointInShape2D(
 }
 
 export function distanceBetweenPreparedShapes2D(
-  firstShape: CRCPhysicsShape2D,
-  firstPose: CRCPhysicsPose2D,
-  secondShape: CRCPhysicsShape2D,
-  secondPose: CRCPhysicsPose2D,
-): CRCPhysicsDistance2D {
+  firstShape: PibblPhysicsShape2D,
+  firstPose: PibblPhysicsPose2D,
+  secondShape: PibblPhysicsShape2D,
+  secondPose: PibblPhysicsPose2D,
+): PibblPhysicsDistance2D {
   const result = collidePreparedShapes(firstShape, firstPose, secondShape, secondPose);
   if (result.status === 'failed') {
     throw new Error('2D collision distance did not converge within its fixed iteration bounds.');
@@ -70,21 +70,21 @@ export function distanceBetweenPreparedShapes2D(
 }
 
 export function overlapPreparedShapes2D(
-  firstShape: CRCPhysicsShape2D,
-  firstPose: CRCPhysicsPose2D,
-  secondShape: CRCPhysicsShape2D,
-  secondPose: CRCPhysicsPose2D,
+  firstShape: PibblPhysicsShape2D,
+  firstPose: PibblPhysicsPose2D,
+  secondShape: PibblPhysicsShape2D,
+  secondPose: PibblPhysicsPose2D,
 ): boolean {
   const result = collidePreparedShapes(firstShape, firstPose, secondShape, secondPose);
   return result.status === 'success' && result.distance.separation <= 0;
 }
 
 export function contactBetweenPreparedShapes2D(
-  firstShape: CRCPhysicsShape2D,
-  firstPose: CRCPhysicsPose2D,
-  secondShape: CRCPhysicsShape2D,
-  secondPose: CRCPhysicsPose2D,
-): CRCPhysicsShapeContact2D | null {
+  firstShape: PibblPhysicsShape2D,
+  firstPose: PibblPhysicsPose2D,
+  secondShape: PibblPhysicsShape2D,
+  secondPose: PibblPhysicsPose2D,
+): PibblPhysicsShapeContact2D | null {
   const result = collidePreparedShapes(firstShape, firstPose, secondShape, secondPose);
   if (result.status === 'failed' || result.distance.separation > 0) {
     return null;
@@ -112,10 +112,10 @@ export function manifoldBetweenShapeRecords2D(
 }
 
 function collidePreparedShapes(
-  firstShape: CRCPhysicsShape2D,
-  firstPublicPose: CRCPhysicsPose2D,
-  secondShape: CRCPhysicsShape2D,
-  secondPublicPose: CRCPhysicsPose2D,
+  firstShape: PibblPhysicsShape2D,
+  firstPublicPose: PibblPhysicsPose2D,
+  secondShape: PibblPhysicsShape2D,
+  secondPublicPose: PibblPhysicsPose2D,
 ): PairResult2D {
   const first = prepareShape(firstShape, firstPublicPose, 'first', 'firstPose');
   const second = prepareShape(secondShape, secondPublicPose, 'second', 'secondPose');
@@ -214,8 +214,8 @@ function distanceBetweenLeaves(
 }
 
 function prepareShape(
-  shell: CRCPhysicsShape2D,
-  publicPose: CRCPhysicsPose2D,
+  shell: PibblPhysicsShape2D,
+  publicPose: PibblPhysicsPose2D,
   shapePath: string,
   posePath: string,
 ): PreparedShape2D {
@@ -232,7 +232,7 @@ function prepareShapeRecord(record: ShapeRecord2D, outerPose: InternalPose2D, or
   };
 }
 
-function shapeOrder(shape: CRCPhysicsShape2D, _path: string): number {
+function shapeOrder(shape: PibblPhysicsShape2D, _path: string): number {
   const object = shape as object;
   const existing = shapeOrders.get(object);
   if (existing !== undefined) return existing;
@@ -397,7 +397,7 @@ function canonicalLeafKey(
     : [distance.secondLeaf, distance.firstLeaf];
 }
 
-function publicDistance(distance: PrivatePairDistance2D): CRCPhysicsDistance2D {
+function publicDistance(distance: PrivatePairDistance2D): PibblPhysicsDistance2D {
   return Object.freeze({
     separation: cleanZero(distance.separation),
     pointOnFirst: freezeVector(distance.firstX, distance.firstY),

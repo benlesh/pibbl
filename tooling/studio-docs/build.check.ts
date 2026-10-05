@@ -6,24 +6,24 @@ import { join, resolve } from "node:path";
 import {
   learningExampleCatalog,
   tutorialSnapshotCatalog,
-} from "@crc/scenarios";
+} from "@pibbl/scenarios";
 import { buildNavigation } from "../../playground/src/app/navigation";
 import {
   collectPublicExports,
-  crcPublicCompilerOptions,
-  crcStudioPublicEntryPaths,
+  pibblPublicCompilerOptions,
+  pibblStudioPublicEntryPaths,
 } from "./api-exports";
 import {
   buildStudioDocumentation,
   toStudioDocumentationSearchInput,
 } from "./build";
-import { crcStudioDocs, studioDocumentationBuildOptions } from "./vite-plugin";
+import { pibblStudioDocs, studioDocumentationBuildOptions } from "./vite-plugin";
 
-const fixtureRoot = await mkdtemp(join(tmpdir(), "crc-studio-docs-build-"));
+const fixtureRoot = await mkdtemp(join(tmpdir(), "pibbl-studio-docs-build-"));
 const repositoryRoot = resolve(import.meta.dirname, "../..");
 const inventory = {
   root: {
-    values: ["crc"],
+    values: ["pibbl"],
     types: [],
     overview: [],
   },
@@ -40,20 +40,20 @@ order: 1
 
 # First scene
 
-Read the [crc API](#/api/functions/crc).
+Read the [pibbl API](#/api/functions/pibbl).
 `;
 
 const api = `---
-id: api-crc
-title: crc
-summary: Mount a CRC scene.
+id: api-pibbl
+title: pibbl
+summary: Mount a Pibbl scene.
 kind: api
-slug: crc
+slug: pibbl
 apiCategory: function
-symbols: [crc]
+symbols: [pibbl]
 ---
 
-# crc
+# pibbl
 `;
 
 async function writeFixture(path: string, source: string): Promise<void> {
@@ -64,7 +64,7 @@ async function writeFixture(path: string, source: string): Promise<void> {
 
 try {
   await writeFixture("docs/site/learn/guides/first-scene.md", guide);
-  await writeFixture("docs/site/api/functions/crc.md", api);
+  await writeFixture("docs/site/api/functions/pibbl.md", api);
   await writeFixture(
     "docs/design/internal.md",
     "# Internal design notes must not be public.\n",
@@ -81,7 +81,7 @@ try {
   assert.equal(JSON.stringify(first), JSON.stringify(second));
   assert.deepEqual(
     first.pages.map(({ route }) => route),
-    ["#/api/functions/crc", "#/learn/guides/first-scene"],
+    ["#/api/functions/pibbl", "#/learn/guides/first-scene"],
   );
   assert.ok(
     first.pages.every(({ sourcePath }) => sourcePath.startsWith("docs/site/")),
@@ -118,7 +118,7 @@ apiCategory: overview
 
   await writeFixture(
     "docs/site/learn/guides/first-scene.md",
-    guide.replace("#/api/functions/crc", "#/api/functions/missing"),
+    guide.replace("#/api/functions/pibbl", "#/api/functions/missing"),
   );
   await assert.rejects(
     () => buildStudioDocumentation(fixtureOptions),
@@ -127,7 +127,7 @@ apiCategory: overview
 
   await writeFixture(
     "docs/site/learn/guides/first-scene.md",
-    guide.replace("#/api/functions/crc", "#/api/functions/crc#missing"),
+    guide.replace("#/api/functions/pibbl", "#/api/functions/pibbl#missing"),
   );
   await assert.rejects(
     () => buildStudioDocumentation(fixtureOptions),
@@ -147,11 +147,11 @@ apiCategory: overview
   await writeFixture(
     "docs/site/api/functions/nonexistent-live-example.md",
     api
-      .replace("id: api-crc", "id: api-nonexistent-live-example")
-      .replace("slug: crc", "slug: nonexistent-live-example")
-      .replace("symbols: [crc]", "symbols: []")
+      .replace("id: api-pibbl", "id: api-nonexistent-live-example")
+      .replace("slug: pibbl", "slug: nonexistent-live-example")
+      .replace("symbols: [pibbl]", "symbols: []")
       .replace(
-        "# crc",
+        "# pibbl",
         "# Missing live example\n\n[Missing](#/examples/drawing/not-real)",
       ),
   );
@@ -206,7 +206,7 @@ apiCategory: overview
   await writeFixture("docs/site/learn/guides/first-scene.md", guide);
   await writeFixture(
     "docs/site/learn/guides/first-scene.md",
-    guide.replace("#/api/functions/crc", "#/examples/drawing/first-example"),
+    guide.replace("#/api/functions/pibbl", "#/examples/drawing/first-example"),
   );
   const exampleLinkOptions = {
     ...fixtureOptions,
@@ -230,7 +230,7 @@ apiCategory: overview
   );
   await writeFixture(
     "docs/site/learn/guides/first-scene.md",
-    guide.replace("#/api/functions/crc", "#/examples/drawing/missing-example"),
+    guide.replace("#/api/functions/pibbl", "#/examples/drawing/missing-example"),
   );
   await assert.rejects(
     () => buildStudioDocumentation(exampleLinkOptions),
@@ -238,21 +238,21 @@ apiCategory: overview
   );
   await writeFixture("docs/site/learn/guides/first-scene.md", guide);
   await writeFixture(
-    "docs/site/api/functions/duplicate-crc.md",
+    "docs/site/api/functions/duplicate-pibbl.md",
     api
-      .replace("api-crc", "api-duplicate-crc")
-      .replace("slug: crc", "slug: duplicate-crc"),
+      .replace("api-pibbl", "api-duplicate-pibbl")
+      .replace("slug: pibbl", "slug: duplicate-pibbl"),
   );
   await assert.rejects(
     () => buildStudioDocumentation(fixtureOptions),
-    /Duplicate documented symbols: crc is assigned to both api-crc and api-duplicate-crc/u,
+    /Duplicate documented symbols: pibbl is assigned to both api-duplicate-pibbl and api-pibbl/u,
   );
-  await rm(join(fixtureRoot, "docs/site/api/functions/duplicate-crc.md"));
+  await rm(join(fixtureRoot, "docs/site/api/functions/duplicate-pibbl.md"));
 
   const typeFixtureInventory = {
     root: {
-      values: ["crc"],
-      types: ["CRCNode"],
+      values: ["pibbl"],
+      types: ["PibblNode"],
       overview: [],
     },
   };
@@ -261,17 +261,17 @@ apiCategory: overview
     `---
 id: api-types-elements-components
 title: Elements and components types
-summary: The canonical CRC element type contract.
+summary: The canonical Pibbl element type contract.
 kind: api
 slug: elements-components
 apiCategory: types
 typeDomain: elements-components
-symbols: [CRCNode]
+symbols: [PibblNode]
 ---
 
 # Elements and components types
 
-## CRCNode
+## PibblNode
 `,
   );
   await writeFixture(
@@ -289,7 +289,7 @@ symbols: []
 
 # Event types
 
-## CRCNode
+## PibblNode
 `,
   );
   await writeFixture(
@@ -302,12 +302,12 @@ kind: api
 slug: uses-node
 apiCategory: function
 symbols: []
-relatedTypes: [CRCNode]
+relatedTypes: [PibblNode]
 ---
 
 # usesNode
 
-Links [CRCNode](#/api/types/events#crcnode) to the wrong valid type anchor.
+Links [PibblNode](#/api/types/events#pibblnode) to the wrong valid type anchor.
 `,
   );
   await assert.rejects(
@@ -316,7 +316,7 @@ Links [CRCNode](#/api/types/events#crcnode) to the wrong valid type anchor.
         ...fixtureOptions,
         apiInventory: typeFixtureInventory,
       }),
-    /CRCNode must link to #\/api\/types\/elements-components#crcnode/u,
+    /PibblNode must link to #\/api\/types\/elements-components#pibblnode/u,
   );
   await rm(join(fixtureRoot, "docs/site/api/functions/uses-node.md"));
   await rm(join(fixtureRoot, "docs/site/api/types"), {
@@ -483,8 +483,8 @@ order: ${String(order)}
 const real = await buildStudioDocumentation({
   repositoryRoot: resolve(import.meta.dirname, "../.."),
   apiInventory: await collectPublicExports(
-    crcStudioPublicEntryPaths,
-    crcPublicCompilerOptions,
+    pibblStudioPublicEntryPaths,
+    pibblPublicCompilerOptions,
   ),
   examples: learningExampleCatalog,
   workbenchSources: [...learningExampleCatalog, ...tutorialSnapshotCatalog],
@@ -600,8 +600,8 @@ assert.deepEqual(
     "Manage state and lifecycle",
     "Use signals and animation",
     "Compose and test 2D physics",
-    "Migrate to one CRC package",
-    "Use Three.js inside CRC",
+    "Migrate to one Pibbl package",
+    "Use Three.js inside Pibbl",
     "Create particle effects",
     "Compose data visualizations",
     "Procedural textures",
@@ -749,7 +749,7 @@ for (const category of ["components", "functions", "hooks"] as const) {
   );
 }
 
-const documentationPlugin = crcStudioDocs({ repositoryRoot });
+const documentationPlugin = pibblStudioDocs({ repositoryRoot });
 const buildStart = documentationPlugin.buildStart as unknown as (this: {
   addWatchFile(path: string): void;
 }) => Promise<void>;
@@ -758,8 +758,8 @@ const load = documentationPlugin.load as unknown as (
   this: object,
   id: string,
 ) => Promise<string | undefined>;
-const documentationModule = await load.call({}, "\0virtual:crc-studio-docs");
-const searchModule = await load.call({}, "\0virtual:crc-studio-search");
+const documentationModule = await load.call({}, "\0virtual:pibbl-studio-docs");
+const searchModule = await load.call({}, "\0virtual:pibbl-studio-search");
 assert.equal(typeof documentationModule, "string");
 assert.equal(typeof searchModule, "string");
 assert.doesNotMatch(

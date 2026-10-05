@@ -1,28 +1,28 @@
-import { crc } from "@crc/core";
+import { pibbl } from "@pibbl/core";
 import {
   defineParticleEffect2D,
   Particles2D,
   useFlowField2D,
   useFlowSource2D,
   useParticleSystem,
-  type CRCFlowField2D,
-  type CRCFlowFieldOptions2D,
-  type CRCFlowObstacleBatch2D,
-  type CRCFlowObstacleSource2D,
-  type CRCFlowSourceOptions2D,
-} from "@crc/core/particles";
+  type PibblFlowField2D,
+  type PibblFlowFieldOptions2D,
+  type PibblFlowObstacleBatch2D,
+  type PibblFlowObstacleSource2D,
+  type PibblFlowSourceOptions2D,
+} from "@pibbl/core/particles";
 
-const obstacles: CRCFlowObstacleSource2D = {
-  read(): CRCFlowObstacleBatch2D {
+const obstacles: PibblFlowObstacleSource2D = {
+  read(): PibblFlowObstacleBatch2D {
     return { revision: 1, boxes: new Float64Array(0) };
   },
 };
-const fieldOptions: CRCFlowFieldOptions2D = {
+const fieldOptions: PibblFlowFieldOptions2D = {
   bounds: { width: 320, height: 220 },
   resolution: [32, 22],
   obstacles,
 };
-const sourceOptions: CRCFlowSourceOptions2D = {
+const sourceOptions: PibblFlowSourceOptions2D = {
   position: [160, 180],
   radius: 55,
   acceleration: [0, -35],
@@ -52,11 +52,11 @@ canvas.height = 220;
 document.body.append(canvas);
 
 function App() {
-  const field: CRCFlowField2D = useFlowField2D(fieldOptions);
+  const field: PibblFlowField2D = useFlowField2D(fieldOptions);
   useFlowSource2D(field, sourceOptions);
   const mist = useParticleSystem(effect, { flow: field, autoplay: true });
   return <Particles2D system={mist} style={{ width: 320, height: 220 }} />;
 }
 
-const app = crc(canvas, <App />);
+const app = pibbl(canvas, <App />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

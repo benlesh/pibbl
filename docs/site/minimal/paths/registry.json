@@ -8,51 +8,51 @@
     "symbols": [
       {
         "name": "PathGeometry",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathSegment",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "flattenPath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "flattenPathWang",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "simplifyPath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "simplifyPathRadial",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "subdividePath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "toPath2D",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "toSvgPathData",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "FlattenPathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "SimplifyPathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "SubdividePathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
@@ -68,35 +68,35 @@
     "symbols": [
       {
         "name": "createArcPath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "createCirclePath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "createEllipsePath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "createWedgePath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ArcPathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "CirclePathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "EllipsePathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "WedgePathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": ["Strokes every constructed Path2D on a local Canvas."]
@@ -110,47 +110,47 @@
     "symbols": [
       {
         "name": "createPolygonPath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "createRectanglePath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "createRegularPolygonPath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "createStarPath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PolygonPathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RectanglePathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RegularPolygonNumericSize",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RegularPolygonPathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RegularPolygonPathPosition",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RoundedCornerPathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "StarPathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": ["Strokes every constructed Path2D on a local Canvas."]
@@ -164,19 +164,19 @@
     "symbols": [
       {
         "name": "createLinePath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "createSvgPath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "LinePathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "SvgPathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": ["Strokes both paths on a local Canvas."]
@@ -190,31 +190,31 @@
     "symbols": [
       {
         "name": "affineTransform",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "composeTransforms",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "transformPath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathPoint",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathRect",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathTransform",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "TransformPathOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
@@ -230,43 +230,43 @@
     "symbols": [
       {
         "name": "envelopeTransform",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "quadTransform",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "EnvelopeGuide",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "EnvelopeTransformOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathGuide",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathGuideOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathGuideStation",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathQuadCorners",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathQuadMode",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "QuadTransformOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": ["Gray is the source; teal and orange show the two warps."]
@@ -280,43 +280,43 @@
     "symbols": [
       {
         "name": "arcBendTransform",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "pathBendTransform",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ArcBendTransformOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "BendTransformOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathBendAlign",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathBendArc",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathBendBaseline",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathBendFit",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathBendOverflow",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathBendTransformOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
@@ -332,11 +332,11 @@
     "symbols": [
       {
         "name": "meshTransform",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "MeshTransformOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": ["Gray is the source; teal is the mesh-warped result."]

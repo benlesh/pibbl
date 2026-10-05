@@ -1,7 +1,7 @@
 import { setPlacementConsumed } from '../element/metadata';
 import { describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
-import { getCRCInstance } from '../global-state';
+import { pibbl } from '../pibbl';
+import { getPibblInstance } from '../global-state';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import { useRef } from '../hooks/use-ref';
 import { useSignal } from '../hooks/use-signal';
@@ -14,7 +14,7 @@ import { Image } from '../components/img';
 import { Layer } from '../components/layer';
 import { Text } from '../components/text';
 import { VerticalLine } from '../components/vertical-line';
-import type { CRCElement, SystemStyle } from '../types';
+import type { PibblElement, SystemStyle } from '../types';
 import {
   createPlacementIdentityHint,
   placeChild,
@@ -44,7 +44,7 @@ describe('layout placement', () => {
 
     const canvas = await componentTest(element);
     await canvas.click({ position: { x: 50, y: 35 } });
-    crc(canvas.element, element);
+    pibbl(canvas.element, element);
     await nextFrame();
 
     expect(boxes[0]).toEqual({ x: 0, y: 0, width: 80, height: 20 });
@@ -94,7 +94,7 @@ describe('layout placement', () => {
     const canvas = await componentTest(renderAt(20));
     await canvas.click({ position: { x: 30, y: 15 } });
 
-    crc(canvas.element, renderAt(60));
+    pibbl(canvas.element, renderAt(60));
     await nextFrame();
 
     expect(values.at(-1)).toBe(1);
@@ -135,11 +135,11 @@ describe('layout placement', () => {
     const canvas = await componentTest(createElement(Host, { includeB: false }));
     const initial = new Map(observations);
 
-    crc(canvas.element, createElement(Host, { includeB: true }));
+    pibbl(canvas.element, createElement(Host, { includeB: true }));
     await nextFrame();
     expect(observations).toEqual(initial);
 
-    crc(canvas.element, createElement(Host, { includeB: false }));
+    pibbl(canvas.element, createElement(Host, { includeB: false }));
     await nextFrame();
     expect(observations).toEqual(initial);
   });
@@ -164,20 +164,20 @@ describe('layout placement', () => {
       });
     };
     const canvas = await componentTest(createElement(Host, { show: true }));
-    expect(getCRCInstance(canvas.element).regions.size).toBe(1);
+    expect(getPibblInstance(canvas.element).regions.size).toBe(1);
 
-    crc(canvas.element, createElement(Host, { show: false }));
+    pibbl(canvas.element, createElement(Host, { show: false }));
     await nextFrame();
 
     expect(cleanup).toHaveBeenCalledOnce();
-    expect(getCRCInstance(canvas.element).regions.size).toBe(0);
+    expect(getPibblInstance(canvas.element).regions.size).toBe(0);
   });
 });
 
 describe('resolved built-in styles', () => {
   it('resolves percentages once against the containing allocation after placement', async () => {
     const observedBoxes: Readonly<{ x: number; y: number; width: number; height: number }>[] = [];
-    const Observe = ({ element }: { element: CRCElement<any> }) => {
+    const Observe = ({ element }: { element: PibblElement<any> }) => {
       observedBoxes.push(useLayoutBox());
       return element;
     };

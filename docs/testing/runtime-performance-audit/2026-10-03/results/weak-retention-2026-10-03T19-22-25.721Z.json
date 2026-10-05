@@ -1,5 +1,5 @@
 {
-  "schema": "crc-weak-retention/1",
+  "schema": "pibbl-weak-retention/1",
   "baseUrl": "http://127.0.0.1:5204",
   "methodology": "Each dereference happens in a new browser evaluation after CDP forced GC. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.",
   "cases": [

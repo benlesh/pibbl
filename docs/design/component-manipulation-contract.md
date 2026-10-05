@@ -1,7 +1,7 @@
-# CRC component-manipulation contract
+# Pibbl component-manipulation contract
 
 Status: current implemented contract. This document defines the public
-manipulation surface in `@crc/core`; pure solver details and internal event
+manipulation surface in `@pibbl/core`; pure solver details and internal event
 records are not public APIs.
 
 ## Geometry and ownership
@@ -14,7 +14,7 @@ of truth. The hook returns a stable controller with readonly `active` and
 cannot change for the life of the hook slot.
 
 `ManipulationFrame` receives `frameProps`, attaches one controller to one frame
-in one CRC event root, positions the frame through the box signal, and supplies
+in one Pibbl event root, positions the frame through the box signal, and supplies
 its finite local allocation to children. It converts the radians rotation to
 the existing `Group.rotationDegrees` presentation value around the frame center.
 The frame does not infer descendant bounds. A `DragHandle`, `ResizeHandle`,
@@ -115,7 +115,7 @@ The controller owns pointer capture, its bounded source observations, and its
 temporary session exactly until a terminal path, frame removal, component
 teardown, or root disposal. Release is idempotent. Removal releases input
 resources synchronously. If restoring a still-owned preview occurs under a
-signal write guard, CRC queues one generation-checked Begin cleanup record;
+signal write guard, Pibbl queues one generation-checked Begin cleanup record;
 it writes only when the sources and owner generation are unchanged. A newer
 external write or a later controller ownership generation invalidates that
 record. Disposed components do not receive lifecycle callbacks.

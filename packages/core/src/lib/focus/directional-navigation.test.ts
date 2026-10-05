@@ -1,25 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CRCEventTargetRegistration } from '../events/registrations';
-import type { CRCEventHandlers } from '../events/types';
+import type { PibblEventTargetRegistration } from '../events/registrations';
+import type { PibblEventHandlers } from '../events/types';
 import { executeRender } from '../execute-render';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventTarget } from '../hooks/use-event-target';
 import type { LayoutBox } from '../layout/types';
-import { mountCRC } from '../mount-crc';
-import type { CRCElement, CRCController } from '../types';
+import { mountPibbl } from '../mount-pibbl';
+import type { PibblElement, PibblController } from '../types';
 import {
   findDirectionalCandidate,
   scoreDirectionalCandidate,
-  type CRCDirection,
+  type PibblDirection,
 } from './directional-navigation';
-import type { CRCFocusManager } from './focus-manager';
-import type { CRCFocusCandidate } from './types';
+import type { PibblFocusManager } from './focus-manager';
+import type { PibblFocusCandidate } from './types';
 import { focusManaged } from './policy-test-support';
 import { directionalPolicy } from './policy-test-support';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 const noop = () => undefined;
 
 beforeEach(() => {
@@ -269,7 +269,7 @@ interface TargetDefinition {
   readonly x: number;
   readonly y: number;
   readonly bounds?: Readonly<LayoutBox> | null;
-  readonly handlers?: CRCEventHandlers;
+  readonly handlers?: PibblEventHandlers;
 }
 
 const Target = definePrimitive<TargetDefinition>(({
@@ -296,9 +296,9 @@ const Scene = ({ definitions }: {
 function candidate(
   sourceIndex: number,
   rootBounds: Readonly<LayoutBox> | undefined,
-): CRCFocusCandidate {
+): PibblFocusCandidate {
   return {
-    target: {} as CRCEventTargetRegistration,
+    target: {} as PibblEventTargetRegistration,
     sourceIndex,
     directionalBoundary: undefined,
     rootBounds,
@@ -308,8 +308,8 @@ function candidate(
 function focusTrace(
   label: string,
   trace: string[],
-  handlers: CRCEventHandlers = {},
-): CRCEventHandlers {
+  handlers: PibblEventHandlers = {},
+): PibblEventHandlers {
   return {
     onClick: noop,
     onFocusOut: () => trace.push(`focusout:${label}`),
@@ -321,32 +321,32 @@ function focusTrace(
 }
 
 function mountAndRender(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
 ): {
   readonly canvas: HTMLCanvasElement;
-  readonly manager: CRCFocusManager;
+  readonly manager: PibblFocusManager;
 } {
   const canvas = document.createElement('canvas');
   canvas.width = 300;
   canvas.height = 200;
   document.body.appendChild(canvas);
-  const controller = mountCRC(canvas, element);
+  const controller = mountPibbl(canvas, element);
   activeControllers.add(controller);
   executeRender(canvas, 1);
-  const manager = getCRCInstance(canvas).eventRoot.focusPolicy as
-    CRCFocusManager | undefined;
+  const manager = getPibblInstance(canvas).eventRoot.focusPolicy as
+    PibblFocusManager | undefined;
   if (!manager) throw new Error('Expected a focus manager.');
   return { canvas, manager };
 }
 
-function focusedLabel(manager: CRCFocusManager): string | undefined {
+function focusedLabel(manager: PibblFocusManager): string | undefined {
   const target = manager.resolveKeyboardTarget();
   return target ?
     (target.component.element.props as { label: string }).label :
     undefined;
 }
 
-function arrowEvent(key: `Arrow${Capitalize<CRCDirection>}`): KeyboardEvent {
+function arrowEvent(key: `Arrow${Capitalize<PibblDirection>}`): KeyboardEvent {
   return new KeyboardEvent('keydown', {
     key,
     code: key,

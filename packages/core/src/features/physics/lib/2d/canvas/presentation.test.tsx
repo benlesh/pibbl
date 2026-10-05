@@ -1,12 +1,12 @@
-import { displacement, opacity } from "@crc/core/filters";
-import { Circle, Group, Rectangle, crc, defineTexture, signal, useTexture, type CRCController } from "@crc/core";
-/** @jsxImportSource @crc/core */
+import { displacement, opacity } from "@pibbl/core/filters";
+import { Circle, Group, Rectangle, pibbl, defineTexture, signal, useTexture, type PibblController } from "@pibbl/core";
+/** @jsxImportSource @pibbl/core */
 import {
   PhysicsWorld2D,
   applyImpulse2D,
   collider2D,
-  crcPhysicsBody2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsBody2D,
+  pibblPhysicsWorld2D,
   disableBody2D,
   dynamicBody2D,
   enableBody2D,
@@ -15,7 +15,7 @@ import {
   setLinearVelocity2D,
   staticBody2D,
   teleportBody2D,
-  type CRCPhysicsWorldHandle2D,
+  type PibblPhysicsWorldHandle2D,
 } from "../../../2d.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -29,7 +29,7 @@ import {
 } from "./presentation.js";
 
 describe("Canvas 2D physics pose presentation", () => {
-  const mounts: CRCController[] = [];
+  const mounts: PibblController[] = [];
 
   afterEach(() => {
     for (const mount of mounts.splice(0)) mount.dispose();
@@ -58,10 +58,10 @@ describe("Canvas 2D physics pose presentation", () => {
   it("presents committed dynamic motion through filters and coordinate targeting", () => {
     const frames = new ManualFrames();
     frames.install();
-    let world!: CRCPhysicsWorldHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     const clicks: string[] = [];
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
     };
     const root = (translateX = 10) => (
       <PhysicsWorld2D>
@@ -89,7 +89,7 @@ describe("Canvas 2D physics pose presentation", () => {
     canvas.width = 70;
     canvas.height = 30;
     document.body.appendChild(canvas);
-    mounts.push(crc(canvas, root()));
+    mounts.push(pibbl(canvas, root()));
     frames.flush(0);
     expect(pixelAt(canvas, 17, 8)).toEqual([37, 99, 235, 255]);
 
@@ -111,14 +111,14 @@ describe("Canvas 2D physics pose presentation", () => {
     click(canvas, 17, 8);
     expect(clicks).toEqual(["hit"]);
 
-    crc(canvas, root(11));
+    pibbl(canvas, root(11));
     expect(() => frames.flush(3)).toThrow(/ancestor transform|authored pose/i);
   });
 
   it("keeps physics pose, velocity and targeting unchanged when visible displacement is enabled", () => {
     const frames = new ManualFrames(); frames.install();
     const strength = signal(0);
-    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    let body!: ReturnType<typeof pibblPhysicsBody2D>;
     let clicks = 0;
     const mapRecipe = defineTexture({
       create() {},
@@ -128,14 +128,14 @@ describe("Canvas 2D physics pose presentation", () => {
       },
     });
     function Effect() {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       const map = useTexture(mapRecipe({}), { resolution: { width: 8, height: 8 } });
       return <Group style={{ filter: displacement({ map, strength, region: { x: 0, y: 0, width: 70, height: 40 } }) }}>
         <Circle physics={dynamicBody2D({ handle: body, mass: 1 })} style={{ cx: 20, cy: 20, radius: 5, fill: "#2563eb" }} onClick={() => clicks++} />
       </Group>;
     }
     const canvas = document.createElement("canvas"); canvas.width = 70; canvas.height = 40; document.body.append(canvas);
-    mounts.push(crc(canvas, <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}><Effect /></PhysicsWorld2D>));
+    mounts.push(pibbl(canvas, <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}><Effect /></PhysicsWorld2D>));
     frames.flush(0); frames.flush(0);
     setLinearVelocity2D(body, [100, 0]); frames.flush(100);
     const pose = [...body.position.get()], velocity = [...body.linearVelocity.get()];
@@ -156,10 +156,10 @@ describe("Canvas 2D physics pose presentation", () => {
   it("moves a dynamic primitive when its Canvas click applies an impulse", () => {
     const frames = new ManualFrames();
     frames.install();
-    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    let body!: ReturnType<typeof pibblPhysicsBody2D>;
     let clickCount = 0;
     const Ball = () => {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       return (
         <Circle
           physics={dynamicBody2D({ handle: body, mass: 1 })}
@@ -176,7 +176,7 @@ describe("Canvas 2D physics pose presentation", () => {
     canvas.height = 40;
     document.body.appendChild(canvas);
     mounts.push(
-      crc(
+      pibbl(
         canvas,
         <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}>
           <Ball />
@@ -203,9 +203,9 @@ describe("Canvas 2D physics pose presentation", () => {
   it("advances a dynamic primitive under its world gravity", () => {
     const frames = new ManualFrames();
     frames.install();
-    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    let body!: ReturnType<typeof pibblPhysicsBody2D>;
     const Ball = () => {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       return (
         <Circle
           physics={dynamicBody2D({ handle: body, mass: 1 })}
@@ -218,7 +218,7 @@ describe("Canvas 2D physics pose presentation", () => {
     canvas.height = 40;
     document.body.appendChild(canvas);
     mounts.push(
-      crc(
+      pibbl(
         canvas,
         <PhysicsWorld2D gravity={[0, 10]} fixedStepMilliseconds={100}>
           <Ball />
@@ -240,9 +240,9 @@ describe("Canvas 2D physics pose presentation", () => {
   it("applies world gravity updates to an existing dynamic primitive", () => {
     const frames = new ManualFrames();
     frames.install();
-    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    let body!: ReturnType<typeof pibblPhysicsBody2D>;
     const Ball = () => {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       return (
         <Circle
           physics={dynamicBody2D({ handle: body, mass: 1 })}
@@ -259,12 +259,12 @@ describe("Canvas 2D physics pose presentation", () => {
     canvas.width = 40;
     canvas.height = 40;
     document.body.appendChild(canvas);
-    mounts.push(crc(canvas, root(0)));
+    mounts.push(pibbl(canvas, root(0)));
     frames.flush(0);
     frames.flush(0);
     frames.flush(100);
 
-    crc(canvas, root(20));
+    pibbl(canvas, root(20));
     frames.flush(200);
     frames.flush(300);
 
@@ -277,9 +277,9 @@ describe("Canvas 2D physics pose presentation", () => {
   it("settles an inferred Circle body on an inferred Rectangle body", () => {
     const frames = new ManualFrames();
     frames.install();
-    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    let body!: ReturnType<typeof pibblPhysicsBody2D>;
     const Ball = () => {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       return (
         <Circle
           physics={dynamicBody2D({ handle: body, mass: 1 })}
@@ -292,7 +292,7 @@ describe("Canvas 2D physics pose presentation", () => {
     canvas.height = 40;
     document.body.appendChild(canvas);
     mounts.push(
-      crc(
+      pibbl(
         canvas,
         <PhysicsWorld2D gravity={[0, 10]} fixedStepMilliseconds={100}>
           <Rectangle
@@ -317,9 +317,9 @@ describe("Canvas 2D physics pose presentation", () => {
   it("keeps the learning-example ball bounded before and after its impulse", () => {
     const frames = new ManualFrames();
     frames.install();
-    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    let body!: ReturnType<typeof pibblPhysicsBody2D>;
     const Ball = () => {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       return (
         <Circle
           physics={dynamicBody2D({
@@ -336,7 +336,7 @@ describe("Canvas 2D physics pose presentation", () => {
     canvas.height = 420;
     document.body.appendChild(canvas);
     mounts.push(
-      crc(
+      pibbl(
         canvas,
         <PhysicsWorld2D gravity={[0, 560]} fixedStepMilliseconds={1000 / 60}>
           <Rectangle
@@ -403,14 +403,14 @@ describe("Canvas 2D physics pose presentation", () => {
   it("keeps a released translated Group collider aligned with its painted ball through a wall", () => {
     const frames = new ManualFrames();
     frames.install();
-    let body!: ReturnType<typeof crcPhysicsBody2D>;
-    let world!: CRCPhysicsWorldHandle2D;
+    let body!: ReturnType<typeof pibblPhysicsBody2D>;
+    let world!: PibblPhysicsWorldHandle2D;
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       return undefined;
     };
     const Ball = () => {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       return (
         <Group
           physics={dynamicBody2D({
@@ -440,7 +440,7 @@ describe("Canvas 2D physics pose presentation", () => {
     canvas.height = 420;
     document.body.appendChild(canvas);
     mounts.push(
-      crc(
+      pibbl(
         canvas,
         <PhysicsWorld2D
           gravity={[0, 560]}
@@ -518,12 +518,12 @@ describe("Canvas 2D physics pose presentation", () => {
     canvas.width = 60;
     canvas.height = 25;
     document.body.appendChild(canvas);
-    mounts.push(crc(canvas, root()));
+    mounts.push(pibbl(canvas, root()));
     frames.flush(0);
     frames.flush(1);
 
     translateX = 30;
-    crc(canvas, root());
+    pibbl(canvas, root());
     frames.flush(2);
     expect(pixelAt(canvas, 37, 8)).toEqual([37, 99, 235, 255]);
     expect(pixelAt(canvas, 17, 8)).toEqual([0, 0, 0, 0]);
@@ -556,13 +556,13 @@ describe("Canvas 2D physics pose presentation", () => {
     canvas.width = 70;
     canvas.height = 25;
     document.body.appendChild(canvas);
-    mounts.push(crc(canvas, root()));
+    mounts.push(pibbl(canvas, root()));
     frames.flush(0);
     frames.flush(0);
 
     translateX = 30;
     enabled = true;
-    crc(canvas, root());
+    pibbl(canvas, root());
     frames.flush(0);
     expect(pixelAt(canvas, 37, 8)).toEqual([37, 99, 235, 255]);
     expect(pixelAt(canvas, 17, 8)).toEqual([0, 0, 0, 0]);
@@ -739,7 +739,7 @@ class ManualFrames {
   flush(time: number): void {
     const entry = this.callbacks.entries().next().value as
       readonly [number, FrameRequestCallback] | undefined;
-    if (!entry) throw new Error("No CRC host frame is pending.");
+    if (!entry) throw new Error("No Pibbl host frame is pending.");
     this.callbacks.delete(entry[0]);
     entry[1](time);
   }

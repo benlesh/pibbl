@@ -2,9 +2,9 @@ import {
   createListener,
   releaseListener,
   updateListener,
-  type CRCEventListenerRegistration,
+  type PibblEventListenerRegistration,
 } from '../events/registrations.js';
-import type { CRCEventHandlers } from '../events/types.js';
+import type { PibblEventHandlers } from '../events/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
 
@@ -12,17 +12,17 @@ import { requireHookContext, useHookSlot } from './hook-slot.js';
  * Registers the current component's event handlers with mount-owned cleanup.
  *
  * @param handlers - Handlers to register for the current component's event participation. See
- * {@link CRCEventHandlers} .
+ * {@link PibblEventHandlers} .
  *
- * @see {@link CRCEventHandlers}
+ * @see {@link PibblEventHandlers}
  */
-export function useEventListener(handlers: CRCEventHandlers): void {
-  const { componentRefs, crcInstance } = requireHookContext();
+export function useEventListener(handlers: PibblEventHandlers): void {
+  const { componentRefs, pibblInstance } = requireHookContext();
   const hookIndex = GLOBAL_STATE.componentHookIndex;
-  const slot = useHookSlot<CRCEventListenerRegistration>(
+  const slot = useHookSlot<PibblEventListenerRegistration>(
     'eventListener',
     teardowns => {
-      const listener = createListener(crcInstance, componentRefs, hookIndex);
+      const listener = createListener(pibblInstance, componentRefs, hookIndex);
       teardowns.add(() => releaseListener(listener));
       return listener;
     },

@@ -23,7 +23,7 @@ Captured on 2026-08-11 before any third-party dependency upgrade.
 | Committed browser baseline | Pass                     | 9 files; 70 passed and 4 skipped before adding the shared smoke test.                                                                      |
 | Typecheck                  | Pre-existing fail        | Two errors in `layer.test.ts`: unsupported `children` and `onRender` props on `rect`. New scenario/gallery/test files add no type errors.  |
 | Lint                       | Pre-existing fail        | 9 errors and 1 warning in pre-existing README/core files. Targeted scenario, gallery, smoke-test, config, and documentation lint is green. |
-| Package build              | Pass                     | `@crc/types` and `@crc/core` build successfully.                                                                                           |
+| Package build              | Pass                     | `@pibbl/types` and `@pibbl/core` build successfully.                                                                                       |
 | Direct playground build    | Pass                     | Gallery production build succeeds.                                                                                                         |
 | Root playground build      | Fixed, pass              | The stale `docs` target was corrected to the active `playground` package.                                                                  |
 | Dependency freshness       | Red by baseline          | 32 outdated direct development dependencies.                                                                                               |
@@ -41,4 +41,4 @@ The gallery opened at <http://localhost:5173/#/scenarios/baseline-smoke>. Naviga
 - Typecheck and lint are intentionally recorded red rather than attributed to DEP-01.
 - Four committed tests remain skipped: nested clip interaction, two layer rerender cases, and multiple-layer events.
 - Arial glyph rasterization is platform-dependent. DEP-01 compares non-text structure exactly, masks only known glyph rectangles, and asserts text/state semantically. A bundled font is a candidate if recurring visual work needs glyph-level portability.
-- CRC currently has no public disposal method. The scenario controller waits for its scheduled frame before aborting so DEP-01 does not trigger the known pending-frame lifecycle hazard; TFC-07 owns the underlying runtime rule.
+- Pibbl currently has no public disposal method. The scenario controller waits for its scheduled frame before aborting so DEP-01 does not trigger the known pending-frame lifecycle hazard; TFC-07 owns the underlying runtime rule.

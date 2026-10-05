@@ -1,14 +1,14 @@
-import { crc } from "@crc/core";
+import { pibbl } from "@pibbl/core";
 import {
   defineThreeLayer,
-  type CRCThreeLayerContext,
-  type CRCThreeLayerDefinition,
-  type CRCThreeLayerResources,
-  type CRCThreePicker,
-  type CRCThreePickResult,
-  type CRCThreeRendererOptions,
-  type CRCThreeTarget,
-} from "@crc/three";
+  type PibblThreeLayerContext,
+  type PibblThreeLayerDefinition,
+  type PibblThreeLayerResources,
+  type PibblThreePicker,
+  type PibblThreePickResult,
+  type PibblThreeRendererOptions,
+  type PibblThreeTarget,
+} from "@pibbl/three";
 import {
   AmbientLight,
   BoxGeometry,
@@ -24,7 +24,7 @@ import {
 interface BoxProps {
   readonly tint: string;
 }
-interface BoxResources extends CRCThreeLayerResources {
+interface BoxResources extends PibblThreeLayerResources {
   readonly scene: Scene;
   readonly camera: PerspectiveCamera;
   readonly mesh: Mesh<BoxGeometry, MeshStandardMaterial>;
@@ -39,10 +39,10 @@ const status = document.createElement("p");
 status.textContent = "Click the cube to rotate it.";
 document.body.append(canvas, status);
 
-const renderer: CRCThreeRendererOptions = { antialias: true };
-const definition: CRCThreeLayerDefinition<BoxProps, BoxResources> = {
+const renderer: PibblThreeRendererOptions = { antialias: true };
+const definition: PibblThreeLayerDefinition<BoxProps, BoxResources> = {
   renderer,
-  create(context: CRCThreeLayerContext, props) {
+  create(context: PibblThreeLayerContext, props) {
     const scene = new Scene();
     const camera = new PerspectiveCamera(60, 320 / 220, 0.1, 100);
     camera.position.set(2.5, 1.8, 4);
@@ -72,7 +72,7 @@ const definition: CRCThreeLayerDefinition<BoxProps, BoxResources> = {
   render(resources, _frame, context) {
     context.renderer.render(resources.scene, resources.camera);
   },
-  targets(resources): readonly CRCThreeTarget[] {
+  targets(resources): readonly PibblThreeTarget[] {
     return [
       {
         object: resources.mesh,
@@ -87,12 +87,12 @@ const definition: CRCThreeLayerDefinition<BoxProps, BoxResources> = {
       },
     ];
   },
-  pick(resources, context): CRCThreePicker {
+  pick(resources, context): PibblThreePicker {
     return (point) => {
       const x = (point.x / context.size.width) * 2 - 1;
       const y = 1 - (point.y / context.size.height) * 2;
       resources.raycaster.setFromCamera(new Vector2(x, y), resources.camera);
-      const result: CRCThreePickResult = resources.raycaster.intersectObject(
+      const result: PibblThreePickResult = resources.raycaster.intersectObject(
         resources.mesh,
       ).length
         ? { kind: "target", target: resources.mesh }
@@ -107,7 +107,7 @@ const definition: CRCThreeLayerDefinition<BoxProps, BoxResources> = {
 };
 
 const BoxLayer = defineThreeLayer(definition);
-const controller = crc(
+const controller = pibbl(
   canvas,
   <BoxLayer tint="#0f766e" style={{ width: 320, height: 220 }} />,
 );

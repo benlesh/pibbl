@@ -12,7 +12,7 @@ relatedTypes: [CirclePathOptions]
 # createCirclePath
 
 ```ts
-import { Circle, Clip, createCirclePath } from "@crc/core";
+import { Circle, Clip, createCirclePath } from "@pibbl/core";
 ```
 
 [`CirclePathOptions`](#/api/types/elements-components#circlepathoptions) is accepted by `createCirclePath(options): Path2D`, which creates a fresh circle

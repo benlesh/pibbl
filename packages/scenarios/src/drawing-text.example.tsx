@@ -1,5 +1,5 @@
 import type { drawingTextScenarioEntry } from './catalog.js';
-import { Rectangle, Text } from '@crc/core';
+import { Rectangle, Text } from '@pibbl/core';
 export const DRAWING_TEXT_SOURCE_ID = 'drawing-text-example';
 /**
  * Actions supported by the drawing text scenario's public controller.

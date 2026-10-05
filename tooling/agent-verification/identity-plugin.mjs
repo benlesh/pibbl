@@ -6,7 +6,7 @@ import { sourceIdentity, fixturePath, vizFixturePath, identityMarker } from './i
 /** Development-only marker embedded in the loaded fixture, not an HTTP identity claim. */
 export function targetingIdentityPlugin(root) {
   return {
-    name: 'crc-targeting-fixture-identity',
+    name: 'pibbl-targeting-fixture-identity',
     enforce: 'pre',
     apply: (_config, environment) => environment.command === 'serve' && environment.mode !== 'built',
     async transform(code, id) {

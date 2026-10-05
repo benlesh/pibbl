@@ -15,7 +15,7 @@ $ vitest run --browser.headless --maxWorkers=4
   - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
- RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/pibbl
 
 (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
   - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
@@ -32,7 +32,7 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
   - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
   - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
-4:20:20 PM [vite] (client) [console.warn] [CRC physics] Ignored stale disable command for body handle generation 0.
+4:20:20 PM [vite] (client) [console.warn] [Pibbl physics] Ignored stale disable command for body handle generation 0.
 
  Test Files  348 passed | 3 skipped (351)
       Tests  3607 passed | 7 skipped (3614)

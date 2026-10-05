@@ -41,7 +41,7 @@ const tscPath = join(
   'bin/tsc',
 );
 
-describe('@crc/core/physics public 2D type surface', () => {
+describe('@pibbl/core/physics public 2D type surface', () => {
   it('locks the documented 2D defaults and iteration policy', () => {
     expect(DEFAULT_GRAVITY).toEqual([0, 0]);
     expect(Object.isFrozen(DEFAULT_GRAVITY)).toBe(true);
@@ -89,8 +89,8 @@ describe('@crc/core/physics public 2D type surface', () => {
     expect(compileFixture(completeSurfaceFixture)).toBe('');
     expect(
       compileFixture(`
-        // @ts-expect-error @crc/core/physics deliberately has no root barrel.
-        import '@crc/core/physics';
+        // @ts-expect-error @pibbl/core/physics deliberately has no root barrel.
+        import '@pibbl/core/physics';
       `),
     ).toBe('');
   });
@@ -101,20 +101,20 @@ describe('@crc/core/physics public 2D type surface', () => {
 
   it('augments supported core primitives only after the world entry is imported', () => {
     const beforeDiagnostics = compileFixture(`
-      import type { RectangleProps } from '@crc/core';
+      import type { RectangleProps } from '@pibbl/core';
       type HasPhysics = 'physics' extends keyof RectangleProps ? true : false;
       const hasPhysics: HasPhysics = false;
       void hasPhysics;
     `);
     const afterDiagnostics = compileFixture(`
-      import type { CRCComponent, RectangleProps } from '@crc/core';
-      import { dynamicBody2D } from '@crc/core/physics/2d';
+      import type { PibblComponent, RectangleProps } from '@pibbl/core';
+      import { dynamicBody2D } from '@pibbl/core/physics/2d';
 
       const supported: RectangleProps = { physics: dynamicBody2D() };
       void supported;
 
       interface CustomProps { readonly physics?: string }
-      const Custom: CRCComponent<CustomProps> = () => undefined;
+      const Custom: PibblComponent<CustomProps> = () => undefined;
       Custom({ physics: 'application-owned' });
       // @ts-expect-error official attachment types do not leak into custom props.
       Custom({ physics: dynamicBody2D() });
@@ -128,7 +128,7 @@ describe('@crc/core/physics public 2D type surface', () => {
     const emitted = emitGeometryDeclarations();
 
     expect(emitted.diagnostics).toBe('');
-    expect(emitted.declarations).not.toContain('@crc/core');
+    expect(emitted.declarations).not.toContain('@pibbl/core');
   });
 });
 
@@ -140,44 +140,44 @@ const completeSurfaceFixture = `
     containsPoint2D, distanceBetweenShapes2D, overlapShapes2D,
     contactBetweenShapes2D, raycastShape2D, shapeCastAgainstShape2D,
     transformShape2D,
-    type CRCPhysicsVector2, type CRCPhysicsPose2D,
-    type CRCPhysicsTransform2D, type CRCPhysicsAabb2D,
-    type CRCPhysicsRay2D, type CRCPhysicsShape2D,
-    type CRCPhysicsMassProperties2D, type CRCPhysicsDistance2D,
-    type CRCPhysicsContactPoint2D, type CRCPhysicsShapeContact2D,
-    type CRCPhysicsShapeHit2D,
-  } from '@crc/core/physics/2d/geometry';
+    type PibblPhysicsVector2, type PibblPhysicsPose2D,
+    type PibblPhysicsTransform2D, type PibblPhysicsAabb2D,
+    type PibblPhysicsRay2D, type PibblPhysicsShape2D,
+    type PibblPhysicsMassProperties2D, type PibblPhysicsDistance2D,
+    type PibblPhysicsContactPoint2D, type PibblPhysicsShapeContact2D,
+    type PibblPhysicsShapeHit2D,
+  } from '@pibbl/core/physics/2d/geometry';
   import {
     PhysicsWorld2D, PhysicsShape2D, Capsule2D, Segment2D, Chain2D,
     dynamicBody2D, staticBody2D, kinematicBody2D, collider2D,
-    withPhysicsShape2D, crcPhysicsBody2D, crcPhysicsWorld2D,
+    withPhysicsShape2D, pibblPhysicsBody2D, pibblPhysicsWorld2D,
     applyForce2D, applyImpulse2D, applyTorque2D, setLinearVelocity2D,
     setAngularVelocity2D, teleportBody2D, wakeBody2D, sleepBody2D,
     enableBody2D, disableBody2D, raycast2D, shapeCast2D,
     overlapShape2D, queryAabb2D, queryPoint2D,
-    type CRCPhysicsCollisionFilter, type CRCPhysicsCollisionHandler2D,
-    type CRCPhysicsHitHandler2D, type CRCPhysicsOverlapHandler2D,
-    type CRCPhysicsBodyStateHandler2D,
-    type CRCPhysicsColliderConfiguration2D,
-    type CRCPhysicsDynamicBody2DOptions,
-    type CRCPhysicsStaticBody2DOptions,
-    type CRCPhysicsKinematicTarget2D,
-    type CRCPhysicsKinematicBody2DOptions,
-    type CRCPhysicsBodyAttachment2D,
-    type CRCPhysicsColliderAttachment2D,
-    type CRCPhysicsAttachment2D, type CRCPhysicsSolverOptions,
-    type CRCPhysicsWorld2DProps, type CRCPhysicsPrimitiveProps2D,
+    type PibblPhysicsCollisionFilter, type PibblPhysicsCollisionHandler2D,
+    type PibblPhysicsHitHandler2D, type PibblPhysicsOverlapHandler2D,
+    type PibblPhysicsBodyStateHandler2D,
+    type PibblPhysicsColliderConfiguration2D,
+    type PibblPhysicsDynamicBody2DOptions,
+    type PibblPhysicsStaticBody2DOptions,
+    type PibblPhysicsKinematicTarget2D,
+    type PibblPhysicsKinematicBody2DOptions,
+    type PibblPhysicsBodyAttachment2D,
+    type PibblPhysicsColliderAttachment2D,
+    type PibblPhysicsAttachment2D, type PibblPhysicsSolverOptions,
+    type PibblPhysicsWorld2DProps, type PibblPhysicsPrimitiveProps2D,
     type PhysicsShape2DProps, type PhysicsShape2DStyle,
     type Capsule2DProps, type Capsule2DStyle,
     type Segment2DProps, type Segment2DStyle,
     type Chain2DProps, type Chain2DStyle,
-    type CRCPhysicsBodyHandle2D, type CRCPhysicsColliderHandle2D,
-    type CRCPhysicsWorldHandle2D, type CRCPhysicsQueryMode,
-    type CRCPhysicsQueryOptions2D, type CRCPhysicsQueryHit2D,
-    type CRCPhysicsQueryMatch2D, type CRCPhysicsQueryResult2D,
-    type CRCPhysicsCollisionEvent2D, type CRCPhysicsOverlapEvent2D,
-    type CRCPhysicsBodyStateEvent2D,
-  } from '@crc/core/physics/2d';
+    type PibblPhysicsBodyHandle2D, type PibblPhysicsColliderHandle2D,
+    type PibblPhysicsWorldHandle2D, type PibblPhysicsQueryMode,
+    type PibblPhysicsQueryOptions2D, type PibblPhysicsQueryHit2D,
+    type PibblPhysicsQueryMatch2D, type PibblPhysicsQueryResult2D,
+    type PibblPhysicsCollisionEvent2D, type PibblPhysicsOverlapEvent2D,
+    type PibblPhysicsBodyStateEvent2D,
+  } from '@pibbl/core/physics/2d';
 
   void [circleShape2D, ellipseShape2D, boxShape2D, roundedBoxShape2D,
     capsuleShape2D, arcShape2D, wedgeShape2D, segmentShape2D,
@@ -186,45 +186,45 @@ const completeSurfaceFixture = `
     contactBetweenShapes2D, raycastShape2D, shapeCastAgainstShape2D,
     transformShape2D, PhysicsWorld2D, PhysicsShape2D, Capsule2D,
     Segment2D, Chain2D, dynamicBody2D, staticBody2D, kinematicBody2D,
-    collider2D, withPhysicsShape2D, crcPhysicsBody2D, crcPhysicsWorld2D,
+    collider2D, withPhysicsShape2D, pibblPhysicsBody2D, pibblPhysicsWorld2D,
     applyForce2D, applyImpulse2D, applyTorque2D, setLinearVelocity2D,
     setAngularVelocity2D, teleportBody2D, wakeBody2D, sleepBody2D,
     enableBody2D, disableBody2D, raycast2D, shapeCast2D, overlapShape2D,
     queryAabb2D, queryPoint2D];
 
-  type GeometryTypes = [CRCPhysicsVector2, CRCPhysicsPose2D,
-    CRCPhysicsTransform2D, CRCPhysicsAabb2D, CRCPhysicsRay2D,
-    CRCPhysicsShape2D, CRCPhysicsMassProperties2D, CRCPhysicsDistance2D,
-    CRCPhysicsContactPoint2D, CRCPhysicsShapeContact2D,
-    CRCPhysicsShapeHit2D];
-  type WorldTypes = [CRCPhysicsCollisionFilter,
-    CRCPhysicsCollisionHandler2D, CRCPhysicsHitHandler2D,
-    CRCPhysicsOverlapHandler2D, CRCPhysicsBodyStateHandler2D,
-    CRCPhysicsColliderConfiguration2D, CRCPhysicsDynamicBody2DOptions,
-    CRCPhysicsStaticBody2DOptions, CRCPhysicsKinematicTarget2D,
-    CRCPhysicsKinematicBody2DOptions, CRCPhysicsBodyAttachment2D,
-    CRCPhysicsColliderAttachment2D, CRCPhysicsAttachment2D,
-    CRCPhysicsSolverOptions, CRCPhysicsWorld2DProps,
-    CRCPhysicsPrimitiveProps2D, PhysicsShape2DProps, PhysicsShape2DStyle,
+  type GeometryTypes = [PibblPhysicsVector2, PibblPhysicsPose2D,
+    PibblPhysicsTransform2D, PibblPhysicsAabb2D, PibblPhysicsRay2D,
+    PibblPhysicsShape2D, PibblPhysicsMassProperties2D, PibblPhysicsDistance2D,
+    PibblPhysicsContactPoint2D, PibblPhysicsShapeContact2D,
+    PibblPhysicsShapeHit2D];
+  type WorldTypes = [PibblPhysicsCollisionFilter,
+    PibblPhysicsCollisionHandler2D, PibblPhysicsHitHandler2D,
+    PibblPhysicsOverlapHandler2D, PibblPhysicsBodyStateHandler2D,
+    PibblPhysicsColliderConfiguration2D, PibblPhysicsDynamicBody2DOptions,
+    PibblPhysicsStaticBody2DOptions, PibblPhysicsKinematicTarget2D,
+    PibblPhysicsKinematicBody2DOptions, PibblPhysicsBodyAttachment2D,
+    PibblPhysicsColliderAttachment2D, PibblPhysicsAttachment2D,
+    PibblPhysicsSolverOptions, PibblPhysicsWorld2DProps,
+    PibblPhysicsPrimitiveProps2D, PhysicsShape2DProps, PhysicsShape2DStyle,
     Capsule2DProps, Capsule2DStyle, Segment2DProps, Segment2DStyle,
-    Chain2DProps, Chain2DStyle, CRCPhysicsBodyHandle2D,
-    CRCPhysicsColliderHandle2D, CRCPhysicsWorldHandle2D,
-    CRCPhysicsQueryMode, CRCPhysicsQueryOptions2D,
-    CRCPhysicsQueryHit2D, CRCPhysicsQueryMatch2D,
-    CRCPhysicsQueryResult2D<'closest', CRCPhysicsQueryMatch2D>,
-    CRCPhysicsCollisionEvent2D, CRCPhysicsOverlapEvent2D,
-    CRCPhysicsBodyStateEvent2D];
+    Chain2DProps, Chain2DStyle, PibblPhysicsBodyHandle2D,
+    PibblPhysicsColliderHandle2D, PibblPhysicsWorldHandle2D,
+    PibblPhysicsQueryMode, PibblPhysicsQueryOptions2D,
+    PibblPhysicsQueryHit2D, PibblPhysicsQueryMatch2D,
+    PibblPhysicsQueryResult2D<'closest', PibblPhysicsQueryMatch2D>,
+    PibblPhysicsCollisionEvent2D, PibblPhysicsOverlapEvent2D,
+    PibblPhysicsBodyStateEvent2D];
   declare const geometryTypes: GeometryTypes;
   declare const worldTypes: WorldTypes;
   void geometryTypes;
   void worldTypes;
 
-  declare const world: CRCPhysicsWorldHandle2D;
-  declare const shape: CRCPhysicsShape2D;
-  declare const pose: CRCPhysicsPose2D;
-  declare const ray: CRCPhysicsRay2D;
-  declare const bounds: CRCPhysicsAabb2D;
-  declare const point: CRCPhysicsVector2;
+  declare const world: PibblPhysicsWorldHandle2D;
+  declare const shape: PibblPhysicsShape2D;
+  declare const pose: PibblPhysicsPose2D;
+  declare const ray: PibblPhysicsRay2D;
+  declare const bounds: PibblPhysicsAabb2D;
+  declare const point: PibblPhysicsVector2;
   const physicsShapeInput: Parameters<typeof PhysicsShape2D>[0] = {
     style: { shape },
   };
@@ -244,11 +244,11 @@ const completeSurfaceFixture = `
   void [physicsShapeInput, capsuleInput, segmentInput, chainInput,
     invalidCapsuleInput, invalidSegmentInput];
   const anyHit: boolean = raycast2D(world, ray, { mode: 'any' });
-  const allHits: readonly CRCPhysicsQueryHit2D[] =
+  const allHits: readonly PibblPhysicsQueryHit2D[] =
     shapeCast2D(world, shape, pose, [1, 0], { mode: 'all' });
-  const closestOverlap: CRCPhysicsQueryMatch2D | null =
+  const closestOverlap: PibblPhysicsQueryMatch2D | null =
     overlapShape2D(world, shape, pose);
-  const allBounds: readonly CRCPhysicsQueryMatch2D[] =
+  const allBounds: readonly PibblPhysicsQueryMatch2D[] =
     queryAabb2D(world, bounds, { mode: 'all' });
   const anyPoint: boolean = queryPoint2D(world, point, { mode: 'any' });
   void [anyHit, allHits, closestOverlap, allBounds, anyPoint];
@@ -256,27 +256,27 @@ const completeSurfaceFixture = `
 
 const nominalFixture = `
   import type {
-    CRCPhysicsAttachment2D, CRCPhysicsBodyAttachment2D,
-    CRCPhysicsColliderAttachment2D,
-  } from '@crc/core/physics/2d';
+    PibblPhysicsAttachment2D, PibblPhysicsBodyAttachment2D,
+    PibblPhysicsColliderAttachment2D,
+  } from '@pibbl/core/physics/2d';
   import type {
-    CRCPhysicsShape2D, CRCPhysicsVector2,
-  } from '@crc/core/physics/2d/geometry';
+    PibblPhysicsShape2D, PibblPhysicsVector2,
+  } from '@pibbl/core/physics/2d/geometry';
 
-  declare const body: CRCPhysicsBodyAttachment2D;
-  declare const collider: CRCPhysicsColliderAttachment2D;
-  declare const vector: CRCPhysicsVector2;
-  declare const points: readonly CRCPhysicsVector2[];
-  const attachment: CRCPhysicsAttachment2D = body;
+  declare const body: PibblPhysicsBodyAttachment2D;
+  declare const collider: PibblPhysicsColliderAttachment2D;
+  declare const vector: PibblPhysicsVector2;
+  declare const points: readonly PibblPhysicsVector2[];
+  const attachment: PibblPhysicsAttachment2D = body;
   void attachment;
   void collider;
 
   // @ts-expect-error public lookalikes are not shapes.
-  const invalidShape: CRCPhysicsShape2D = {};
+  const invalidShape: PibblPhysicsShape2D = {};
   // @ts-expect-error public lookalikes are not body attachments.
-  const invalidBody: CRCPhysicsBodyAttachment2D = {};
+  const invalidBody: PibblPhysicsBodyAttachment2D = {};
   // @ts-expect-error public lookalikes are not collider attachments.
-  const invalidCollider: CRCPhysicsColliderAttachment2D = {};
+  const invalidCollider: PibblPhysicsColliderAttachment2D = {};
   // @ts-expect-error vectors are readonly tuples.
   vector[0] = 1;
   // @ts-expect-error point collections are readonly.
@@ -298,14 +298,14 @@ function compileFixture(source: string): string {
           moduleResolution: 'Bundler',
           noEmit: true,
           paths: {
-            '@crc/core': [`${repositoryRoot}/packages/core/src/index.ts`],
-            '@crc/core/internal': [
+            '@pibbl/core': [`${repositoryRoot}/packages/core/src/index.ts`],
+            '@pibbl/core/internal': [
               `${repositoryRoot}/packages/core/src/internal.ts`,
             ],
-            '@crc/core/physics/2d': [
+            '@pibbl/core/physics/2d': [
               `${repositoryRoot}/packages/core/src/features/physics/2d.ts`,
             ],
-            '@crc/core/physics/2d/geometry': [
+            '@pibbl/core/physics/2d/geometry': [
               `${repositoryRoot}/packages/core/src/features/physics/2d-geometry.ts`,
             ],
           },
@@ -366,7 +366,7 @@ function runTypeScript(directory: string): string {
 }
 
 function withTemporaryDirectory<T>(run: (directory: string) => T): T {
-  const directory = mkdtempSync(join(tmpdir(), 'crc-physics-types-'));
+  const directory = mkdtempSync(join(tmpdir(), 'pibbl-physics-types-'));
   try {
     return run(directory);
   } finally {

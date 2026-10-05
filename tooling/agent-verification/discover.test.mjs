@@ -27,8 +27,8 @@ test('distinguishes known unmapped requirements from invalid IDs without inventi
   assert.equal(result.status, 'unmapped');
   assert.deepEqual(result.workflows, []);
   assert.ok(result.remaining);
-  assert.throws(() => discoverRequirement('HIT-999', ledger), { code: 'CRC_UNKNOWN_REQUIREMENT' });
-  assert.throws(() => discoverRequirement('HIT-12; echo unsafe', ledger), { code: 'CRC_UNKNOWN_REQUIREMENT' });
+  assert.throws(() => discoverRequirement('HIT-999', ledger), { code: 'PIBBL_UNKNOWN_REQUIREMENT' });
+  assert.throws(() => discoverRequirement('HIT-12; echo unsafe', ledger), { code: 'PIBBL_UNKNOWN_REQUIREMENT' });
 });
 
 test('maps analytical correctness to independent arithmetic rather than screenshot similarity', async () => {
@@ -62,7 +62,7 @@ test('finds layout and missingness workflows without inflating their provenance'
     for (const path of workflow.sources) await access(resolve(root, path));
     if (id.startsWith('LAY')) {
       assert.ok(workflow.limits.some(value => value.includes('no served-build attestation')));
-      assert.ok(workflow.queries.some(value => value.includes('crc-layout-studio-smoke/1')));
+      assert.ok(workflow.queries.some(value => value.includes('pibbl-layout-studio-smoke/1')));
       assert.ok(workflow.acceptance.some(value => value.includes('(300,90)')));
       assert.ok(workflow.acceptance.some(value => value.includes('(120,90)')));
     } else {

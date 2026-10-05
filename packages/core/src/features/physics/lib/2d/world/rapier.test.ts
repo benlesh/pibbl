@@ -72,7 +72,7 @@ function tick(world: PhysicsWorld2DKernel, index: number) {
 }
 
 describe("Rapier integration contracts", () => {
-  it("restores the engine and CRC state when an advanced candidate fails, then replays exactly", () => {
+  it("restores the engine and Pibbl state when an advanced candidate fails, then replays exactly", () => {
     const baseline = world(ball(1, 0, 100)),
       replayed = world(ball(1, 0, 100));
     try {

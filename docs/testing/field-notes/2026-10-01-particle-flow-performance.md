@@ -92,7 +92,7 @@ comparison nor the implementation promises volumetric lighting or depth-aware
 occlusion.
 
 A substantially higher sprite ceiling would need a separate external-renderer
-experiment through CRC's existing render-layer boundary. It does not justify
+experiment through Pibbl's existing render-layer boundary. It does not justify
 restoring the removed custom WebGL particle API. At measurement time, flow transaction/lifecycle evidence, parameter semantics,
 documentation, and full public-package verification were still pending. The
 verification addendum below records their subsequent completion.

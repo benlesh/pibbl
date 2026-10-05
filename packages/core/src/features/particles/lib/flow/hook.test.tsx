@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, expect, it } from "vitest";
-import { crc, createElement } from "@crc/core";
+import { pibbl, createElement } from "@pibbl/core";
 import {
   useFlowField2D,
   useFlowSource2D,
-  type CRCFlowField2D,
+  type PibblFlowField2D,
 } from "../../index.js";
 import { clearSharedState } from "../../../../lib/global-state.js";
 import {
@@ -12,7 +12,7 @@ import {
 } from "../../../../lib/scheduler/testing.js";
 let driver: ManualSchedulerDriver;
 let restore: () => void;
-let root: ReturnType<typeof crc> | undefined;
+let root: ReturnType<typeof pibbl> | undefined;
 beforeEach(() => {
   driver = new ManualSchedulerDriver();
   restore = installSchedulerDriverForTest(driver);
@@ -25,7 +25,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 it("owns one shared flow clock and releases it with its mount", () => {
-  let flow!: CRCFlowField2D;
+  let flow!: PibblFlowField2D;
   function Root() {
     flow = useFlowField2D({
       bounds: { width: 240, height: 240 },
@@ -41,7 +41,7 @@ it("owns one shared flow clock and releases it with its mount", () => {
   }
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  root = crc(canvas, createElement(Root, {}));
+  root = pibbl(canvas, createElement(Root, {}));
   driver.flush(0);
   for (let i = 1; i <= 120; i++) driver.flush((i * 1000) / 60);
   const output = new Float32Array(2);
@@ -93,7 +93,7 @@ it("advects rendered particles through the public flow binding", async () => {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 240;
   document.body.appendChild(canvas);
-  root = crc(canvas, createElement(Root, {}), { pixelRatio: 1 });
+  root = pibbl(canvas, createElement(Root, {}), { pixelRatio: 1 });
   driver.flush(0);
   for (let i = 1; i <= 90; i++) driver.flush((i * 1000) / 60);
   expect(execution).toBe("flow-canvas");
@@ -142,7 +142,7 @@ it("does not redraw smoke after a moving obstacle covers it", async () => {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 240;
   document.body.appendChild(canvas);
-  root = crc(canvas, createElement(Root, {}), { pixelRatio: 1 });
+  root = pibbl(canvas, createElement(Root, {}), { pixelRatio: 1 });
   const painted = () =>
     canvas
       .getContext("2d")!
@@ -161,7 +161,7 @@ it("does not redraw smoke after a moving obstacle covers it", async () => {
 });
 
 it("keeps the committed field intact when an obstacle read fails and recovers on the next frame", () => {
-  let flow!: CRCFlowField2D;
+  let flow!: PibblFlowField2D;
   let fail = false;
   const failure = new Error("obstacle snapshot failed");
   const obstacles = {
@@ -186,7 +186,7 @@ it("keeps the committed field intact when an obstacle read fails and recovers on
   }
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  root = crc(canvas, createElement(Root, {}));
+  root = pibbl(canvas, createElement(Root, {}));
   for (let i = 0; i < 10; i++) driver.flush((i * 1000) / 60);
   const points = new Float32Array([50, 50, 40, 60]),
     before = new Float32Array(4),
@@ -208,11 +208,11 @@ it("keeps the committed field intact when an obstacle read fails and recovers on
 });
 
 it("publishes obstacle-source replacement even when no simulation time passes", async () => {
-  const { signal } = await import("@crc/core");
+  const { signal } = await import("@pibbl/core");
   const selected = signal({
     read: () => ({ revision: 0, boxes: new Float64Array(0) }),
   });
-  let flow!: CRCFlowField2D;
+  let flow!: PibblFlowField2D;
   function Root() {
     flow = useFlowField2D({
       bounds: { width: 100, height: 100 },
@@ -224,7 +224,7 @@ it("publishes obstacle-source replacement even when no simulation time passes", 
   }
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  root = crc(canvas, createElement(Root, {}));
+  root = pibbl(canvas, createElement(Root, {}));
   driver.flush(0);
   driver.flush(0);
   const previous = flow.revision.get();
@@ -239,12 +239,12 @@ it("publishes obstacle-source replacement even when no simulation time passes", 
 });
 
 it("releases source clocks when disabled and transfers a source without leaving a stale registration", async () => {
-  const { signal } = await import("@crc/core");
+  const { signal } = await import("@pibbl/core");
   const { snapshotRealmScheduler } =
     await import("../../../../lib/scheduler/testing.js");
   const enabled = signal(true),
     useSecond = signal(false);
-  let first!: CRCFlowField2D, second!: CRCFlowField2D;
+  let first!: PibblFlowField2D, second!: PibblFlowField2D;
   const baseline = snapshotRealmScheduler().advanceParticipants;
   function Root() {
     first = useFlowField2D({
@@ -265,7 +265,7 @@ it("releases source clocks when disabled and transfers a source without leaving 
   }
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  root = crc(canvas, createElement(Root, {}));
+  root = pibbl(canvas, createElement(Root, {}));
   driver.flush(0);
   driver.flush(20);
   expect(snapshotRealmScheduler().advanceParticipants).toBe(baseline + 1);
@@ -293,21 +293,21 @@ it("releases source clocks when disabled and transfers a source without leaving 
 });
 
 it("reads the same committed physics motion regardless of sibling registration order", async () => {
-  const { Fragment, Rectangle, signal } = await import("@crc/core");
+  const { Fragment, Rectangle, signal } = await import("@pibbl/core");
   const {
     PhysicsWorld2D,
-    crcPhysicsWorld2D,
+    pibblPhysicsWorld2D,
     physicsObstacles2D,
     kinematicBody2D,
-  } = await import("@crc/core/physics/2d");
+  } = await import("@pibbl/core/physics/2d");
   const position = signal<readonly [number, number]>([40, 45]);
   const sources: ReturnType<typeof physicsObstacles2D>[] = [];
-  const fields: CRCFlowField2D[] = [];
+  const fields: PibblFlowField2D[] = [];
   const readers = [0, 1].map((index) => ({
     read: () => sources[index]!.read(),
   }));
   function Body({ index }: { index: number }) {
-    sources[index] = physicsObstacles2D(crcPhysicsWorld2D());
+    sources[index] = physicsObstacles2D(pibblPhysicsWorld2D());
     return createElement(Rectangle, {
       physics: kinematicBody2D({ target: { position } }),
       style: { width: 20, height: 20 },
@@ -348,7 +348,7 @@ it("reads the same committed physics motion regardless of sibling registration o
   }
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  root = crc(canvas, createElement(Root, {}));
+  root = pibbl(canvas, createElement(Root, {}));
   driver.flush(0);
   const points = new Float32Array([30, 50, 50, 30, 70, 60, 50, 75]);
   const first = new Float32Array(8),
@@ -368,7 +368,7 @@ it("does not retain a source clock or usable field after its initial render fail
   const { snapshotRealmScheduler } =
     await import("../../../../lib/scheduler/testing.js");
   const baseline = snapshotRealmScheduler().advanceParticipants;
-  let flow!: CRCFlowField2D;
+  let flow!: PibblFlowField2D;
   function Root() {
     flow = useFlowField2D({
       bounds: { width: 100, height: 100 },
@@ -379,7 +379,7 @@ it("does not retain a source clock or usable field after its initial render fail
   }
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  root = crc(canvas, createElement(Root, {}));
+  root = pibbl(canvas, createElement(Root, {}));
   expect(() => driver.flush(0)).toThrow("failed flow mount");
   expect(snapshotRealmScheduler().advanceParticipants).toBe(baseline);
   expect(driver.pendingHostFrames).toBe(0);

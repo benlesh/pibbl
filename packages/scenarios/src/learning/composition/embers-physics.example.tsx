@@ -1,5 +1,5 @@
 import {
-  crc,
+  pibbl,
   Group,
   Rectangle,
   Circle,
@@ -8,24 +8,24 @@ import {
   useVisibilityTransition,
   useSignal,
   useConst,
-  type CRCController,
-  type CRCVisibilityTransition,
-} from "@crc/core";
+  type PibblController,
+  type PibblVisibilityTransition,
+} from "@pibbl/core";
 import {
   PhysicsWorld2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsWorld2D,
   staticBody2D,
   physicsObstacles2D,
-} from "@crc/core/physics/2d";
+} from "@pibbl/core/physics/2d";
 
 function Chamber({
   enabled,
   register,
 }: {
   enabled: boolean;
-  register: (handle: CRCVisibilityTransition) => void;
+  register: (handle: PibblVisibilityTransition) => void;
 }) {
-  const world = crcPhysicsWorld2D();
+  const world = pibblPhysicsWorld2D();
   const effect = useConst(() =>
     embers({
       region: { x: 180, y: 35, width: 440, height: 110 },
@@ -139,7 +139,7 @@ function Chamber({
 function Demo() {
   const enabled = useSignal(true),
     status = useSignal("Burn it away, then watch the fragments bounce.");
-  let handle: CRCVisibilityTransition | undefined;
+  let handle: PibblVisibilityTransition | undefined;
   const run = async () => {
     if (!handle) return;
     const current = handle;
@@ -251,6 +251,6 @@ function Demo() {
     </Group>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Demo />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Demo />);
 }

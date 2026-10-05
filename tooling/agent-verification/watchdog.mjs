@@ -30,7 +30,7 @@ export async function runWithWatchdog({
   await mkdir(output);
   const started = performance.now();
   const report = {
-    schema: "crc-replay-watchdog/1",
+    schema: "pibbl-replay-watchdog/1",
     status: "running",
     timestamp: new Date().toISOString(),
     deadlineMs,
@@ -80,7 +80,7 @@ export async function runWithWatchdog({
     stdio: ["ignore", "pipe", "pipe"],
     env: {
       ...process.env,
-      CRC_VERIFY_BROWSER_ENDPOINT: browserServer?.wsEndpoint() ?? "",
+      PIBBL_VERIFY_BROWSER_ENDPOINT: browserServer?.wsEndpoint() ?? "",
     },
   });
   report.pid = child.pid ?? null;

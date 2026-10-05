@@ -1,7 +1,7 @@
-import { Rectangle, crc } from '@crc/core';
+import { Rectangle, pibbl } from '@pibbl/core';
 import {
   PhysicsWorld2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsWorld2D,
   fromPhysicsPoint2D,
   overlapShape2D,
   physicsObstacles2D,
@@ -12,15 +12,15 @@ import {
   staticBody2D,
   toPhysicsPoint2D,
   circleShape2D,
-  type CRCPhysicsAabb2D,
-  type CRCPhysicsColliderHandle2D,
-  type CRCPhysicsQueryHit2D,
-  type CRCPhysicsQueryMatch2D,
-  type CRCPhysicsQueryMode,
-  type CRCPhysicsQueryOptions2D,
-  type CRCPhysicsQueryResult2D,
-  type CRCPhysicsWorldHandle2D,
-} from '@crc/core/physics/2d';
+  type PibblPhysicsAabb2D,
+  type PibblPhysicsColliderHandle2D,
+  type PibblPhysicsQueryHit2D,
+  type PibblPhysicsQueryMatch2D,
+  type PibblPhysicsQueryMode,
+  type PibblPhysicsQueryOptions2D,
+  type PibblPhysicsQueryResult2D,
+  type PibblPhysicsWorldHandle2D,
+} from '@pibbl/core/physics/2d';
 
 const canvas = document.createElement('canvas');
 canvas.width = 320;
@@ -28,15 +28,15 @@ canvas.height = 180;
 const output = document.createElement('pre');
 document.body.append(canvas, output);
 
-let world: CRCPhysicsWorldHandle2D | undefined;
+let world: PibblPhysicsWorldHandle2D | undefined;
 function Scene() {
-  world = crcPhysicsWorld2D();
+  world = pibblPhysicsWorld2D();
   return <Rectangle
     physics={staticBody2D()}
     style={{ left: 125, top: 55, width: 70, height: 70, fill: '#0f766e' }}
   />;
 }
-const controller = crc(canvas,
+const controller = pibbl(canvas,
   <PhysicsWorld2D gravity={[0, 0]}>
     <Scene />
   </PhysicsWorld2D>,
@@ -44,13 +44,13 @@ const controller = crc(canvas,
 
 function inspect() {
   if (!world) return;
-  const mode: CRCPhysicsQueryMode = 'all';
-  const options: CRCPhysicsQueryOptions2D<'all'> = { mode, sensors: 'exclude' };
-  const bounds: CRCPhysicsAabb2D = { min: [100, 40], max: [210, 140] };
-  const region: CRCPhysicsQueryResult2D<'all', CRCPhysicsQueryMatch2D> = queryAabb2D(world, bounds, options);
-  const pointMatches: readonly CRCPhysicsQueryMatch2D[] = queryPoint2D(world, [150, 90], options);
-  const firstCollider: CRCPhysicsColliderHandle2D | undefined = pointMatches[0]?.collider;
-  const ray: CRCPhysicsQueryHit2D | null = raycast2D(world, {
+  const mode: PibblPhysicsQueryMode = 'all';
+  const options: PibblPhysicsQueryOptions2D<'all'> = { mode, sensors: 'exclude' };
+  const bounds: PibblPhysicsAabb2D = { min: [100, 40], max: [210, 140] };
+  const region: PibblPhysicsQueryResult2D<'all', PibblPhysicsQueryMatch2D> = queryAabb2D(world, bounds, options);
+  const pointMatches: readonly PibblPhysicsQueryMatch2D[] = queryPoint2D(world, [150, 90], options);
+  const firstCollider: PibblPhysicsColliderHandle2D | undefined = pointMatches[0]?.collider;
+  const ray: PibblPhysicsQueryHit2D | null = raycast2D(world, {
     origin: [0, 90], direction: [1, 0], maxDistance: 300,
   });
   const circle = circleShape2D({ radius: 8 });

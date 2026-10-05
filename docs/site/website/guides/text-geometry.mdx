@@ -1,17 +1,17 @@
 ---
 title: Text outlines and multi-path bending
-description: Shape text with @crc/text, edit its geometry, and bend it between multiple guide paths.
+description: Shape text with @pibbl/text, edit its geometry, and bend it between multiple guide paths.
 ---
 
 ## Choose the right text tool
 
-Use core [Text](/reference/components/text/) for ordinary Canvas labels. Use the optional `@crc/text` package when you need editable glyph outlines, path transformations, or custom-shaped typography. Neither creates semantic HTML: keep accessible labels and editable input in native HTML.
+Use core [Text](/reference/components/text/) for ordinary Canvas labels. Use the optional `@pibbl/text` package when you need editable glyph outlines, path transformations, or custom-shaped typography. Neither creates semantic HTML: keep accessible labels and editable input in native HTML.
 
 The [Text gallery](/catalogs/text/) includes ordinary text, [editable outlines](/examples/text-geometry/), and the [multi-path envelope playground](/examples/text-envelope/). Each has complete source, a full-page experience, and a playground link.
 
 ## From a font to an editable path
 
-1. Install compatible versions of `@crc/core` and `@crc/text`.
+1. Install compatible versions of `@pibbl/core` and `@pibbl/text`.
 2. Load explicit outline TTF or OTF bytes with `loadOutlineFont`. Loading is asynchronous and belongs outside component evaluation.
 3. Call `createTextGeometry(font, text, { fontSize })` to shape one horizontal run. It returns ordinary `PathGeometry`, glyph metadata, layout advance, and ink bounds.
 4. Draw the geometry with `Path`, edit its segments, or transform a copy. Signal/state updates schedule repaint after mutation.
@@ -28,7 +28,7 @@ In the [full-page envelope playground](/experience/text-envelope/), type a phras
 The essential mapping below is an excerpt, not a standalone program. `result` is a shaped text result and `top`, `middle`, and `bottom` are `PathGeometry` guide paths:
 
 ```ts
-import { envelopeTransform, transformPath } from "@crc/core";
+import { envelopeTransform, transformPath } from "@pibbl/core";
 
 if (result.inkBounds) {
   const mapping = envelopeTransform({
@@ -51,6 +51,6 @@ The [complete envelope source](/examples/text-envelope/) also demonstrates `comp
 
 ## Assets and boundaries
 
-Serve a licensed outline font and the matching `@crc/text` engine/WASM assets. The website demos use ABeeZee and Lato; their local asset URLs are demo hosting choices, not public CDN endpoints. Follow the [browser deployment instructions](/reference/functions/text-geometry/#browser-assets) for your bundler and production base path.
+Serve a licensed outline font and the matching `@pibbl/text` engine/WASM assets. The website demos use ABeeZee and Lato; their local asset URLs are demo hosting choices, not public CDN endpoints. Follow the [browser deployment instructions](/reference/functions/text-geometry/#browser-assets) for your bundler and production base path.
 
-WOFF/WOFF2, system-font lookup, automatic fallback, paragraph layout, and rich text are not supported by `@crc/text`. Whitespace can have advance but no ink, so check `inkBounds` before constructing an envelope. Transforming geometry does not update the original glyph metrics. See the [agent implementation companion](/agents/topics/text/) for adaptation and verification.
+WOFF/WOFF2, system-font lookup, automatic fallback, paragraph layout, and rich text are not supported by `@pibbl/text`. Whitespace can have advance but no ink, so check `inkBounds` before constructing an envelope. Transforming geometry does not update the original glyph metrics. See the [agent implementation companion](/agents/topics/text/) for adaptation and verification.

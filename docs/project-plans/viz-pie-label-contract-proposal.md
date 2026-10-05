@@ -8,7 +8,7 @@ this contract is not yet shipped behavior.
 ## Proposed composition
 
 Supply `labelBox={slice => ({ width: 132, height: 42 })}` to PieLayout and render
-ordinary CRC content as children of the existing PieLabel:
+ordinary Pibbl content as children of the existing PieLabel:
 
 ```tsx
 <PieLabel slice={slice}>
@@ -35,7 +35,7 @@ Do not add a second rendering component or automatic child-tree measurement.
 - Box-accessor dependencies follow the approved safe-default/revision policy.
   Track signals read by stable callbacks; callback/data replacement, changed
   revision, and relevant bounds/radii/placement inputs invalidate placement.
-- Mounted label content uses the existing CRC lifecycle, events, and scheduler.
+- Mounted label content uses the existing Pibbl lifecycle, events, and scheduler.
 
 ## Alternative and first slice
 

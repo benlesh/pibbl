@@ -6,7 +6,7 @@ kind: api
 slug: spring
 apiCategory: function
 symbols: [spring]
-relatedTypes: [CRCAnimationDefinition, CRCSpringOptions]
+relatedTypes: [PibblAnimationDefinition, PibblSpringOptions]
 ---
 
 # spring
@@ -16,5 +16,5 @@ Mass, stiffness, damping, velocity, rest thresholds, and a maximum duration are
 explicit options. Sampling derives from logical time rather than accumulating
 display-frame deltas.
 
-Related types: [`CRCAnimationDefinition`](#/api/types/canvas-runtime#crcanimationdefinition)
-and [`CRCSpringOptions`](#/api/types/canvas-runtime#crcspringoptions).
+Related types: [`PibblAnimationDefinition`](#/api/types/canvas-runtime#pibblanimationdefinition)
+and [`PibblSpringOptions`](#/api/types/canvas-runtime#pibblspringoptions).

@@ -11,7 +11,7 @@ for (const name of ["emsdk", "harfbuzz"]) {
   let hashes;
   try {
     hashes = JSON.parse(
-      await readFile(resolve(directory, ".crc-source-files.json"), "utf8"),
+      await readFile(resolve(directory, ".pibbl-source-files.json"), "utf8"),
     );
   } catch {
     throw new Error(`${name} source cache is missing. Run pnpm text:setup.`);

@@ -1,17 +1,17 @@
 import {
   defineParticleEffect2D,
   particleParameter,
-  type CRCParticleParameterDefinition,
-  type CRCParticleParameterDefinitions,
-  type CRCParticleParameterTiming,
-  type CRCParticleParameterValue,
-  type CRCParticleParameterValues,
-  type CRCParticleValueFor,
-  type CRCParticleValuesOf,
-} from "@crc/core/particles";
+  type PibblParticleParameterDefinition,
+  type PibblParticleParameterDefinitions,
+  type PibblParticleParameterTiming,
+  type PibblParticleParameterValue,
+  type PibblParticleParameterValues,
+  type PibblParticleValueFor,
+  type PibblParticleValuesOf,
+} from "@pibbl/core/particles";
 
-const timing: CRCParticleParameterTiming = "spawn";
-const windDefinition: CRCParticleParameterDefinition = {
+const timing: PibblParticleParameterTiming = "spawn";
+const windDefinition: PibblParticleParameterDefinition = {
   type: "number",
   default: 0,
   timing,
@@ -19,14 +19,14 @@ const windDefinition: CRCParticleParameterDefinition = {
 const parameters = {
   wind: windDefinition,
   tint: { type: "color", default: "#60a5fa", timing: "render" },
-} as const satisfies CRCParticleParameterDefinitions;
-const wind: CRCParticleValueFor<typeof windDefinition> = 20;
-const values: CRCParticleValuesOf<typeof parameters> = {
+} as const satisfies PibblParticleParameterDefinitions;
+const wind: PibblParticleValueFor<typeof windDefinition> = 20;
+const values: PibblParticleValuesOf<typeof parameters> = {
   wind,
   tint: "#facc15",
 };
-const oneValue: CRCParticleParameterValue = values.tint;
-const overrides: CRCParticleParameterValues = { ...values, current: oneValue };
+const oneValue: PibblParticleParameterValue = values.tint;
+const overrides: PibblParticleParameterValues = { ...values, current: oneValue };
 const effect = defineParticleEffect2D({
   parameters,
   emitters: [

@@ -6,23 +6,23 @@ Status: approved for implementation on 2026-09-09.
 
 ## Summary
 
-CRC will add a small general-purpose signal graph and build animation on top of
+Pibbl will add a small general-purpose signal graph and build animation on top of
 it. Signals are not animation-specific motion values. They are explicit,
-mount-independent reactive values that CRC components, cached layers, official
+mount-independent reactive values that Pibbl components, cached layers, official
 renderer integrations, and future framework facilities can observe.
 
 Animation is a producer of signal values. Immutable definitions describe how a
 value changes; immutable programs bind definitions to writable signals and
 compose work in time; stateful playback objects connect programs to one
 centralized scheduler. Every animation in the same JavaScript realm advances
-through the same ordered frame phases before any CRC root renders.
+through the same ordered frame phases before any Pibbl root renders.
 
-CRC remains an immediate-mode renderer. A signal change identifies the exact
+Pibbl remains an immediate-mode renderer. A signal change identifies the exact
 consumer and the explicit composition boundary containing it, but ordinary
 Canvas 2D content still receives a full root traversal and repaint. `Layer` and
-the anticipated `WebGLLayer` are the retained boundaries at which CRC can skip
+the anticipated `WebGLLayer` are the retained boundaries at which Pibbl can skip
 subtree work, repaint an offscreen surface, update a GPU resource, or merely
-re-composite an existing bitmap. CRC may diagnose expensive stable content and
+re-composite an existing bitmap. Pibbl may diagnose expensive stable content and
 recommend a boundary, but never inserts one automatically.
 
 The main-thread implementation is authoritative. Its value sampling is kept
@@ -33,7 +33,7 @@ the main-thread fallback.
 
 ## Goals
 
-- Provide one small signal primitive useful throughout CRC, independent of
+- Provide one small signal primitive useful throughout Pibbl, independent of
   animation and component mounts.
 - Make every reactive read visible as `.get()` for human and agent readers.
 - Support update-driven transitions, event-triggered playback, tweens,
@@ -44,7 +44,7 @@ the main-thread fallback.
 - Make seekable animations reproducible from logical time and stateful
   simulations replayable from recorded fixed-step inputs within documented
   numeric tolerances.
-- Preserve CRC's immediate-mode Canvas 2D model, source paint order, component
+- Preserve Pibbl's immediate-mode Canvas 2D model, source paint order, component
   identity, events, layout, focus behavior, and exact resource ownership.
 - Let renderer-specific consumers choose the narrowest valid invalidation,
   including future WebGL uniform, buffer, texture, draw, and composition work.
@@ -61,7 +61,7 @@ the main-thread fallback.
   directly as ordinary `style` values.
 - Automatically animating arbitrary prop or style changes without an explicit
   `useTransition` or playback.
-- Turning CRC into a retained scene graph or retaining arbitrary Canvas drawing
+- Turning Pibbl into a retained scene graph or retaining arbitrary Canvas drawing
   commands.
 - Automatically rendering stable components to offscreen canvases or silently
   promoting content to the GPU.
@@ -85,7 +85,7 @@ the main-thread fallback.
 The design follows these approved rules:
 
 1. **Signal first.** Animation writes ordinary signals; renderers observe them.
-2. **Explicit reads.** Application code reads `value.get()`. CRC style remains a
+2. **Explicit reads.** Application code reads `value.get()`. Pibbl style remains a
    language of resolved values, not live containers.
 3. **Central scheduling.** Playback never owns `requestAnimationFrame` and
    never advances itself.
@@ -96,7 +96,7 @@ The design follows these approved rules:
 6. **Immediate-mode by default.** Ordinary Canvas 2D invalidation repaints its
    root; explicit composition boundaries enable retained work.
 7. **Deterministic execution; intelligent advice; explicit performance
-   boundaries.** CRC may explain likely improvements but does not silently
+   boundaries.** Pibbl may explain likely improvements but does not silently
    change rendering strategy.
 8. **Definitions are portable; playback is owned.** Reusable descriptions have
    no component identity or clock. Running state always has a clock and owner.
@@ -107,23 +107,23 @@ The design follows these approved rules:
 
 ## Prior-art decisions
 
-CRC adopts ideas without adopting another framework's rendering or ownership
+Pibbl adopts ideas without adopting another framework's rendering or ownership
 model.
 
 - The [TC39 Signals proposal](https://github.com/tc39/proposal-signals) informs
   the explicit `.get()` read, state/computed separation, dynamic dependency
   tracking, lazy computed evaluation, cached computed errors, and the decision
   to keep watcher machinery framework-facing rather than make effects part of
-  the small application surface. The proposal remains in progress, so CRC
+  the small application surface. The proposal remains in progress, so Pibbl
   adopts semantics rather than depending on a native implementation.
 - [Angular Signals](https://angular.dev/guide/signals) informs writable versus
   readonly views, `set`, `update`, custom equality, lazy memoized computed
-  values, `untracked`, and component dependency tracking. CRC deliberately uses
+  values, `untracked`, and component dependency tracking. Pibbl deliberately uses
   `.get()` instead of Angular's callable getter because explicit method syntax
   is easier to identify in code.
 - [Web Animations](https://www.w3.org/TR/web-animations-1/) informs the
   separation between a stateless timing/value definition and stateful playback
-  connected to a timeline. CRC keeps seekable definitions as functions of
+  connected to a timeline. Pibbl keeps seekable definitions as functions of
   logical time and layers pause, seek, direction, rate, and finish state on top.
 - [Flutter's animation architecture](https://docs.flutter.dev/ui/animations/overview)
   informs the separation between typed values, immutable tweens/curves,
@@ -131,13 +131,13 @@ model.
   lifecycle ownership.
 - [GSAP timelines](https://gsap.com/docs/v3/GSAP/Timeline/) inform sequence,
   parallel composition, whole-program playback control, and nested programs.
-  CRC initially omits a mutable builder, labels, and arbitrary callback nodes.
+  Pibbl initially omits a mutable builder, labels, and arbitrary callback nodes.
 - [D3 transitions](https://d3js.org/d3-transition) inform explicit duration,
-  delay, easing, custom interpolation, and update-driven transitions. CRC does
+  delay, easing, custom interpolation, and update-driven transitions. Pibbl does
   not bind animation to a retained selection or DOM property.
 - [React Native Reanimated shared values](https://docs.swmansion.com/react-native-reanimated/docs/2.x/fundamentals/shared-values/)
   demonstrate the performance value of a reactive graph feeding a renderer and
-  the complexity introduced by cross-thread value ownership. CRC keeps signals
+  the complexity introduced by cross-thread value ownership. Pibbl keeps signals
   synchronous and main-realm in the initial design; a future worker receives
   explicit frame inputs and returns explicit output buffers.
 
@@ -168,17 +168,17 @@ realm scheduler and root render participants
 
 ### Signal ownership
 
-A signal is not owned by a CRC mount. It can be created in module or
+A signal is not owned by a Pibbl mount. It can be created in module or
 application code, passed through props, shared between components, observed by
 multiple canvases, and retained after a mount is disposed. A signal owns its
 current value and graph relationships only.
 
 `useSignal` is a component hook that creates one stable signal for a mounted
-hook slot. Component removal detaches every CRC consumer from that signal, but
+hook slot. Component removal detaches every Pibbl consumer from that signal, but
 the signal remains an ordinary usable value if application code retained it.
-Writing that detached value schedules no CRC work.
+Writing that detached value schedules no Pibbl work.
 
-Signal graph edges to CRC consumers have exact owners. A successful render
+Signal graph edges to Pibbl consumers have exact owners. A successful render
 replaces a consumer's previous dependency set with the reads from that render.
 An unsuccessful render tears down the failed component and its edges. Component,
 Layer, WebGL-resource, root, and mount teardown each detach their exact edges;
@@ -218,7 +218,7 @@ requires animations to survive component removal.
 
 ### Scheduler and root ownership
 
-One scheduler coordinates all top-level CRC roots in the same JavaScript realm
+One scheduler coordinates all top-level Pibbl roots in the same JavaScript realm
 and uses one `requestAnimationFrame` callback for ordinary browser-driven work.
 Top-level roots register as render participants in mount order. Nested Layer
 instances do not schedule independent frames; they participate in their
@@ -235,7 +235,7 @@ render.
 
 ## Public signal API
 
-The root `@crc/core` entry exports:
+The root `@pibbl/core` entry exports:
 
 ```ts
 export type SignalEquals<T> = (previous: T, next: T) => boolean;
@@ -278,14 +278,14 @@ export function useSignal<T>(
 ): WritableSignal<T>;
 ```
 
-`signal` and `computed` work outside CRC. `useSignal` follows CRC hook order and
+`signal` and `computed` work outside Pibbl. `useSignal` follows Pibbl hook order and
 must run synchronously during component rendering. Its initial value is a value,
 not a lazy initializer; a function-valued signal is therefore unambiguous.
 
 ### Signal semantics
 
 - `get()` returns synchronously and records the signal against the innermost
-  active computed or CRC renderer consumer.
+  active computed or Pibbl renderer consumer.
 - Reads outside a tracked context are valid and establish no dependency.
 - `untracked(callback)` suppresses dependency collection only for synchronous
   reads performed by that callback. It returns or throws exactly as the
@@ -309,11 +309,11 @@ not a lazy initializer; a function-valued signal is therefore unambiguous.
 - Direct or indirect computed cycles report a deterministic contextual error.
 - Signal tracking is synchronous. Reads after an asynchronous boundary are not
   attributed to an earlier context.
-- Writes from inside a computed callback or while a CRC component/primitive is
+- Writes from inside a computed callback or while a Pibbl component/primitive is
   rendering are rejected. Render is a read phase; events, playback commands,
   and other application callbacks are write phases.
 
-There is no public `subscribe`, watcher, effect, or `batch` initially. CRC's
+There is no public `subscribe`, watcher, effect, or `batch` initially. Pibbl's
 renderer consumers are internal watchers. Scheduler animation commits use an
 internal batch, and ordinary application writes already coalesce renderer work
 through the frame scheduler. `useWhenChanged` retains its existing explicit
@@ -342,12 +342,12 @@ function MovingRectangle() {
 ```
 
 `style={{ x }}` is a type error and receives no runtime animation meaning.
-The `.get()` call is the visible observation point. The active CRC render
+The `.get()` call is the visible observation point. The active Pibbl render
 context determines which component and render boundary depend on it.
 
-A read must occur while CRC is evaluating a component or renderer consumer to
+A read must occur while Pibbl is evaluating a component or renderer consumer to
 be reactive. Reading a signal while constructing a root element before
-`crc(...)` merely snapshots its current value and establishes no dependency.
+`pibbl(...)` merely snapshots its current value and establishes no dependency.
 Applications place live reads in a component function:
 
 ```tsx
@@ -361,7 +361,7 @@ function Scene() {
   );
 }
 
-crc(canvas, <Scene />);
+pibbl(canvas, <Scene />);
 ```
 
 An official specialized renderer API may accept a signal directly when the API
@@ -378,13 +378,13 @@ The root entry exports the following normative surface. Declaration overloads
 may improve generic inference without changing these contracts:
 
 ```ts
-export type CRCEasing = (progress: number) => number;
+export type PibblEasing = (progress: number) => number;
 
-export type CRCInterpolator<T> = (from: T, to: T, progress: number) => T;
+export type PibblInterpolator<T> = (from: T, to: T, progress: number) => T;
 
 declare const animationDefinitionBrand: unique symbol;
 
-export interface CRCAnimationDefinition<T> {
+export interface PibblAnimationDefinition<T> {
   readonly [animationDefinitionBrand]: T;
 }
 
@@ -392,19 +392,19 @@ export function tween<T>(options: {
   from?: T;
   to: T;
   duration: number;
-  easing?: CRCEasing;
-  interpolate?: CRCInterpolator<T>;
+  easing?: PibblEasing;
+  interpolate?: PibblInterpolator<T>;
   debugName?: string;
-}): CRCAnimationDefinition<T>;
+}): PibblAnimationDefinition<T>;
 
 export function keyframes<T>(options: {
   values: readonly [T, T, ...T[]];
   offsets?: readonly number[];
   duration: number;
-  easing?: CRCEasing | readonly CRCEasing[];
-  interpolate?: CRCInterpolator<T>;
+  easing?: PibblEasing | readonly PibblEasing[];
+  interpolate?: PibblInterpolator<T>;
   debugName?: string;
-}): CRCAnimationDefinition<T>;
+}): PibblAnimationDefinition<T>;
 
 export function spring(options: {
   from?: number;
@@ -417,13 +417,13 @@ export function spring(options: {
   restDelta?: number;
   maxDuration?: number;
   debugName?: string;
-}): CRCAnimationDefinition<number>;
+}): PibblAnimationDefinition<number>;
 
 export function defineAnimation<T>(definition: {
   duration: number;
   sample(input: { initialValue: T; localTime: number; progress: number }): T;
   debugName?: string;
-}): CRCAnimationDefinition<T>;
+}): PibblAnimationDefinition<T>;
 
 export function stepper<State, T>(definition: {
   stepMilliseconds: number;
@@ -433,20 +433,20 @@ export function stepper<State, T>(definition: {
   read(state: State): T;
   done?(state: State): boolean;
   debugName?: string;
-}): CRCAnimationDefinition<T>;
+}): PibblAnimationDefinition<T>;
 
 export const easing: {
-  readonly linear: CRCEasing;
-  readonly easeIn: CRCEasing;
-  readonly easeOut: CRCEasing;
-  readonly easeInOut: CRCEasing;
-  cubicBezier(x1: number, y1: number, x2: number, y2: number): CRCEasing;
-  steps(count: number, position?: "start" | "end"): CRCEasing;
+  readonly linear: PibblEasing;
+  readonly easeIn: PibblEasing;
+  readonly easeOut: PibblEasing;
+  readonly easeInOut: PibblEasing;
+  cubicBezier(x1: number, y1: number, x2: number, y2: number): PibblEasing;
+  steps(count: number, position?: "start" | "end"): PibblEasing;
 };
 ```
 
-The public `CRCAnimationDefinition<T>` exposes no callable sampler. Definitions
-are consumed by animation programs, which lets CRC validate and evolve the
+The public `PibblAnimationDefinition<T>` exposes no callable sampler. Definitions
+are consumed by animation programs, which lets Pibbl validate and evolve the
 execution protocol without turning an internal callback shape into a permanent
 extension interface. `defineAnimation` and `stepper` are the deliberate custom
 extension points.
@@ -468,9 +468,9 @@ that crosses several zero-duration or completed tracks in one Advance phase
 therefore composes in source order without exposing partial state.
 
 Numbers use built-in linear interpolation when `interpolate` is omitted. Every
-other value type requires an interpolator. CRC does not guess how to interpolate
+other value type requires an interpolator. Pibbl does not guess how to interpolate
 CSS color strings, gradients, patterns, paths, matrices, arbitrary objects, or
-user classes. Applications may supply reusable typed interpolators, and CRC may
+user classes. Applications may supply reusable typed interpolators, and Pibbl may
 add separately specified built-ins later.
 
 Easing receives normalized progress. Built-in easing functions are immutable
@@ -497,7 +497,7 @@ logical units per second. Omitted values are `mass: 1`, `stiffness: 170`,
 `damping: 26`, `initialVelocity: 0`, `restSpeed: 0.01`, `restDelta: 0.001`, and
 `maxDuration: 10_000` milliseconds.
 
-If `from` is omitted, the track captures its output when activated. CRC derives
+If `from` is omitted, the track captures its output when activated. Pibbl derives
 a stable settlement duration from the oscillator and thresholds independently
 of display refresh rate. At settlement or `maxDuration`, the spring commits the
 exact `to` value. This makes a spring seekable and allows it to participate in
@@ -512,7 +512,7 @@ frame.
 
 `defineAnimation` is for values that are a pure function of local time. The
 callback may return any `T`, but is synchronous, receives no renderer or
-scheduler object, and cannot write signals or invoke CRC hooks. Seeking samples
+scheduler object, and cannot write signals or invoke Pibbl hooks. Seeking samples
 it directly at the requested time.
 
 For a zero-duration custom definition, `localTime` is `0` and `progress` is
@@ -544,8 +544,8 @@ state and callbacks are application-owned code; cross-engine comparisons use
 documented tolerances rather than bitwise equality.
 
 Stepper callbacks must not mutate state retained outside the playback, write
-signals, use CRC hooks, or depend on wall-clock time, randomness, the Canvas,
-or WebGL if deterministic replay is expected. CRC cannot prove callback purity,
+signals, use Pibbl hooks, or depend on wall-clock time, randomness, the Canvas,
+or WebGL if deterministic replay is expected. Pibbl cannot prove callback purity,
 but diagnostics identify the failing definition when a callback throws.
 
 ## Animation programs
@@ -553,34 +553,34 @@ but diagnostics identify the failing definition when a callback throws.
 ```ts
 declare const animationProgramBrand: unique symbol;
 
-export interface CRCAnimationProgram {
+export interface PibblAnimationProgram {
   readonly [animationProgramBrand]: true;
 }
 
 export function track<T>(
   output: WritableSignal<T>,
-  definition: CRCAnimationDefinition<T>,
-): CRCAnimationProgram;
+  definition: PibblAnimationDefinition<T>,
+): PibblAnimationProgram;
 
 export function sequence(
-  ...children: CRCAnimationProgram[]
-): CRCAnimationProgram;
+  ...children: PibblAnimationProgram[]
+): PibblAnimationProgram;
 
 export function parallel(
-  ...children: CRCAnimationProgram[]
-): CRCAnimationProgram;
+  ...children: PibblAnimationProgram[]
+): PibblAnimationProgram;
 
-export function wait(duration: number): CRCAnimationProgram;
+export function wait(duration: number): PibblAnimationProgram;
 
-export function marker(name: string): CRCAnimationProgram;
+export function marker(name: string): PibblAnimationProgram;
 
 export function repeat(
-  child: CRCAnimationProgram,
+  child: PibblAnimationProgram,
   options: {
     iterations: number;
     direction?: "normal" | "reverse" | "alternate" | "alternate-reverse";
   },
-): CRCAnimationProgram;
+): PibblAnimationProgram;
 ```
 
 - `track` is the only ordinary node that writes a user signal.
@@ -666,7 +666,7 @@ style contract; animation does not add otherwise unsupported style properties.
 ## Playback API and lifecycle
 
 ```ts
-export type CRCPlaybackStatus =
+export type PibblPlaybackStatus =
   | "idle"
   | "scheduled"
   | "running"
@@ -675,7 +675,7 @@ export type CRCPlaybackStatus =
   | "cancelled"
   | "disposed";
 
-export interface CRCPlaybackEvent {
+export interface PibblPlaybackEvent {
   readonly type: "start" | "iteration" | "marker" | "finish" | "cancel";
   readonly logicalTime: number;
   readonly frameId: number;
@@ -684,8 +684,8 @@ export interface CRCPlaybackEvent {
   readonly marker?: string;
 }
 
-export interface CRCPlayback {
-  readonly status: Signal<CRCPlaybackStatus>;
+export interface PibblPlayback {
+  readonly status: Signal<PibblPlaybackStatus>;
   readonly currentTime: Signal<number>;
 
   play(options?: { conflict?: "error" | "replace" }): void;
@@ -698,24 +698,24 @@ export interface CRCPlayback {
   setPlaybackRate(rate: number): void;
 }
 
-export interface CRCPlaybackOptions {
+export interface PibblPlaybackOptions {
   autoplay?: boolean;
   conflict?: "error" | "replace";
   debugName?: string;
-  onEvent?(event: CRCPlaybackEvent): void;
+  onEvent?(event: PibblPlaybackEvent): void;
   onError?(error: unknown): void;
 }
 
 export function usePlayback(
-  program: CRCAnimationProgram,
-  options?: CRCPlaybackOptions,
-): CRCPlayback;
+  program: PibblAnimationProgram,
+  options?: PibblPlaybackOptions,
+): PibblPlayback;
 ```
 
 The handle is stable for its mounted hook slot. The latest successfully
 rendered program becomes the input for the next run. An active run retains its
 program snapshot, while milestone and error delivery use the latest callbacks
-from the still-mounted hook slot, matching CRC's live event-handler model.
+from the still-mounted hook slot, matching Pibbl's live event-handler model.
 Replacing a callback does not replay an earlier event. `autoplay` queues one
 play after the mounting render succeeds; it does not replay merely because a
 later program object has different identity. `autoplay` defaults to `false`,
@@ -741,7 +741,7 @@ while preserving the currently presented local time. `seek` clamps finite
 programs to their active interval. A stepper seek replays fixed steps from its
 activation snapshot and may therefore be expensive. `finish` samples the
 terminal state and rejects infinite or unresolved-stateful programs. `cancel`
-retains currently committed user signal values; CRC does not silently restore
+retains currently committed user signal values; Pibbl does not silently restore
 pre-animation values.
 
 Playback status and current time are signals, so observing them is explicit and
@@ -772,17 +772,17 @@ animate the presented value from where it is now.” It is implemented as a
 component-owned playback producer and uses the same scheduler phases.
 
 ```ts
-export interface CRCTweenTransitionOptions<T> {
+export interface PibblTweenTransitionOptions<T> {
   type: "tween";
   duration: number;
-  easing?: CRCEasing;
-  interpolate?: CRCInterpolator<T>;
+  easing?: PibblEasing;
+  interpolate?: PibblInterpolator<T>;
   equals?: SignalEquals<T>;
   initial?: T;
   debugName?: string;
 }
 
-export interface CRCSpringTransitionOptions {
+export interface PibblSpringTransitionOptions {
   type: "spring";
   mass?: number;
   stiffness?: number;
@@ -798,12 +798,12 @@ export interface CRCSpringTransitionOptions {
 
 export function useTransition(
   target: number,
-  options: CRCSpringTransitionOptions,
+  options: PibblSpringTransitionOptions,
 ): Signal<number>;
 
 export function useTransition<T>(
   target: T,
-  options: CRCTweenTransitionOptions<T>,
+  options: PibblTweenTransitionOptions<T>,
 ): Signal<T>;
 ```
 
@@ -841,7 +841,7 @@ signal/playback machinery.
 ## Central scheduler and frame phases
 
 The centralized realm scheduler is the only owner of
-`requestAnimationFrame`. Normal CRC state, root replacement, resize, density,
+`requestAnimationFrame`. Normal Pibbl state, root replacement, resize, density,
 focus, image, Layer, WebGL, and animation requests all enter the same pending
 work set.
 
@@ -895,7 +895,7 @@ elapsed sequence described above.
 
 ### Consumer scopes
 
-CRC installs a tracked consumer while synchronously evaluating a component,
+Pibbl installs a tracked consumer while synchronously evaluating a component,
 resolving its style, and running a primitive. A computed temporarily becomes
 the innermost consumer while it evaluates. Renderer integrations may install
 narrower friend-API consumers for named resources.
@@ -914,7 +914,7 @@ Conceptually, signal invalidation can result in:
 
 Exact component dependencies remain useful for diagnostics and future
 optimizations, but they do not authorize skipping immediate-mode Canvas draws.
-Outside an explicit retained boundary, CRC clears and traverses the full root
+Outside an explicit retained boundary, Pibbl clears and traverses the full root
 as it does today.
 
 ### Layer behavior
@@ -932,7 +932,7 @@ authoritative.
 
 ### No automatic caching
 
-CRC does not infer that an unchanged component should become an offscreen
+Pibbl does not infer that an unchanged component should become an offscreen
 surface. Allocating, resizing, copying, and compositing a bitmap can be more
 expensive than repainting simple geometry and consumes persistent memory.
 
@@ -948,8 +948,8 @@ semantics.
 
 ## WebGL integration
 
-The anticipated `@crc/webgl` package consumes this design through the official
-`@crc/core/internal` friend surface. This specification does not define the
+The anticipated `@pibbl/webgl` package consumes this design through the official
+`@pibbl/core/internal` friend surface. This specification does not define the
 public WebGL component API, picking model, or package release contract.
 
 The friend surface must allow an official renderer to:
@@ -982,7 +982,7 @@ values. An application may explicitly pause its player in a context event.
 
 ## Determinism, seeking, and replay
 
-CRC promises determinism in tiers.
+Pibbl promises determinism in tiers.
 
 ### Seekable definitions
 
@@ -997,10 +997,10 @@ presented, not the value associated with a particular logical time.
 
 ### Stateful steppers
 
-Steppers replay their fixed applied steps from the same activation state. CRC
+Steppers replay their fixed applied steps from the same activation state. Pibbl
 records applied elapsed time, discarded gap time, step size, accepted commands,
 and event ordering. Numeric comparisons use definition-appropriate tolerances;
-CRC does not promise bit-identical floating point across JavaScript engines or
+Pibbl does not promise bit-identical floating point across JavaScript engines or
 user callbacks.
 
 ### Renderer output
@@ -1041,10 +1041,10 @@ not retain a scene graph or make component identities public.
 - A custom easing, interpolator, sampler, or stepper exception cancels only the
   failing playback. Writes staged by that playback for the current frame are
   discarded; other playback continues.
-- `onError`, when supplied, receives the error during Complete. Otherwise CRC
+- `onError`, when supplied, receives the error during Complete. Otherwise Pibbl
   reports it through its ordinary host error-reporting path after other frame
   work has had a chance to complete.
-- One root render failure retains CRC's current fail-closed component/resource
+- One root render failure retains Pibbl's current fail-closed component/resource
   teardown and non-rollback pixel behavior. The scheduler isolates the root so
   other roots can still render from the committed signal graph.
 - Signal values committed before a render failure are not rolled back.
@@ -1104,14 +1104,14 @@ The runtime ownership ledger gains explicit rows for:
 
 | Resource                      | Created by                     | Owner                             | Released by                                                  |
 | ----------------------------- | ------------------------------ | --------------------------------- | ------------------------------------------------------------ |
-| CRC render-consumer edge      | Successful tracked read        | Exact component/resource consumer | Next successful dependency replacement or owner teardown     |
+| Pibbl render-consumer edge    | Successful tracked read        | Exact component/resource consumer | Next successful dependency replacement or owner teardown     |
 | Component signal hook slot    | `useSignal` mount              | Exact component refs              | Component teardown; retained signal merely becomes detached  |
 | Computed source edges         | Successful computed evaluation | Computed node while observed      | Dependency replacement or loss of final observer             |
 | Playback registration         | Accepted `play`/autoplay       | Exact playback hook slot          | Finish, cancel, error, or component teardown                 |
 | Output writer lease           | Accepted run before sampling   | Exact active playback run         | Finish, cancel, error, replacement, or teardown              |
 | Stepper state and accumulator | Stepper activation             | Exact active playback run         | Track end, cancel, error, or teardown                        |
 | Realm host frame              | First pending work             | Realm scheduler                   | Host callback start or cancellation when all work disappears |
-| Root render participation     | Root mount                     | Exact CRC controller              | Controller disposal, abort, or failed mount                  |
+| Root render participation     | Root mount                     | Exact Pibbl controller            | Controller disposal, abort, or failed mount                  |
 
 Release is driven by explicit lifecycle counters rather than garbage collection
 timing. Weak references may be an implementation optimization but are not the
@@ -1182,7 +1182,7 @@ Public-API tests prove:
 - render failure releases consumers and component-owned playback while another
   root continues.
 
-The later `@crc/webgl` implementation supplies equivalent public evidence for
+The later `@pibbl/webgl` implementation supplies equivalent public evidence for
 uniform, resource, draw, composition, context loss, delegated events, and
 cross-renderer signal commits. Core uses a private fake renderer participant to
 prove the friend scheduler protocol before WebGL ships.
@@ -1197,7 +1197,7 @@ controlled clock and assert semantic values and render counts before visual
 evidence.
 
 New exports must agree across source and built browser modes, root declarations,
-Bundler and NodeNext consumers, packed package consumers, `@crc/core` API docs,
+Bundler and NodeNext consumers, packed package consumers, `@pibbl/core` API docs,
 and Studio editor declarations. Lifecycle stress repeats mount, play, replace,
 cancel, remove, and dispose while asserting exact graph, playback, writer,
 frame, Layer, and instance counts.
@@ -1225,7 +1225,7 @@ The implementation may reuse graph machinery internally only if current public
 state identity, hook ordering, update order, error recovery, and teardown
 contracts remain unchanged.
 
-Current `CRCInstance.animationFrameId` ownership moves to the realm scheduler.
+Current `PibblInstance.animationFrameId` ownership moves to the realm scheduler.
 Layer child instances stop owning independent pending frames. Existing direct
 render entry points used by tests and nested composition must enter or inherit
 the current scheduler/render transaction rather than cancel unrelated realm
@@ -1246,5 +1246,5 @@ programs bind values to writable signals
 playback owns running state
 the scheduler advances everything together
 .get() declares who consumes the result
-explicit boundaries decide how narrowly CRC can render it
+explicit boundaries decide how narrowly Pibbl can render it
 ```

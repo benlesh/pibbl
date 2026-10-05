@@ -1,7 +1,7 @@
 import { afterEach, expect, it } from "vitest";
-import { crc, Rectangle, useTexture } from "@crc/core";
-import { borrowTextureRaster } from "@crc/core/internal";
-import { waterSurface } from "@crc/core/textures";
+import { pibbl, Rectangle, useTexture } from "@pibbl/core";
+import { borrowTextureRaster } from "@pibbl/core/internal";
+import { waterSurface } from "@pibbl/core/textures";
 import { clearSharedState } from "../../../src/lib/global-state.js";
 import {
   ManualSchedulerDriver,
@@ -53,7 +53,7 @@ it("reflects a bounded WASM ripple at a solid rectangle, leaves solids transpare
   canvas.width = 96;
   canvas.height = 48;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     expect(driver.pendingHostFrames).toBe(0);
@@ -112,7 +112,7 @@ it("honors pause/reset and discards paused elapsed time without reviving a settl
   canvas.width = 48;
   canvas.height = 32;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     const baseline = frames.at(-1)!;
@@ -140,7 +140,7 @@ it("rejects invalid normalized obstacles", () => {
     restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
-  const controller = crc(canvas, <Probe />);
+  const controller = pibbl(canvas, <Probe />);
   try {
     expect(() => driver.flush(0)).toThrow("Water surface obstacles");
   } finally {
@@ -181,12 +181,12 @@ it("starts a bounded wake when an obstacle moves from an idle surface", () => {
   canvas.width = 96;
   canvas.height = 48;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     const idle = frames.at(-1)!;
     left = 0.52;
-    crc(canvas, <Scene />);
+    pibbl(canvas, <Scene />);
     driver.flush(16);
     driver.flush(48);
     driver.flush(80);
@@ -224,7 +224,7 @@ it("applies rippleStrength live to an already simulated surface", () => {
   canvas.width = 48;
   canvas.height = 32;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     const baseline = frames.at(-1)!;
@@ -233,7 +233,7 @@ it("applies rippleStrength live to an already simulated surface", () => {
     driver.flush(48);
     expect(frames.at(-1)).toEqual(baseline);
     rippleStrength = 1;
-    crc(canvas, <Scene />);
+    pibbl(canvas, <Scene />);
     driver.flush(64);
     driver.flush(80);
     expect(frames.at(-1)).not.toEqual(baseline);
@@ -273,7 +273,7 @@ it("viscosity keeps disturbances local", () => {
   }
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     const baseline = snapshots.map((value) => [...value]);

@@ -6,7 +6,7 @@ Status: approved for implementation on 2026-09-08.
 
 ## Summary
 
-CRC will add a typed, local `style.filter` capability to every CRC primitive.
+Pibbl will add a typed, local `style.filter` capability to every Pibbl primitive.
 It covers the ten standardized CSS filter functions that can be represented by
 Canvas 2D: blur, brightness, contrast, drop shadow, grayscale, hue rotation,
 invert, opacity, saturation, and sepia. A filter applies to the combined
@@ -59,25 +59,25 @@ the same invariant, while filter surfaces are transient and reusable.
 
 ## Public API
 
-The root `@crc/core` entry exports the union and each named descriptor type:
+The root `@pibbl/core` entry exports the union and each named descriptor type:
 
 ```ts
-export interface CRCBlurFilter {
+export interface PibblBlurFilter {
   type: "blur";
   radius: number;
 }
 
-export interface CRCBrightnessFilter {
+export interface PibblBrightnessFilter {
   type: "brightness";
   amount: number;
 }
 
-export interface CRCContrastFilter {
+export interface PibblContrastFilter {
   type: "contrast";
   amount: number;
 }
 
-export interface CRCDropShadowFilter {
+export interface PibblDropShadowFilter {
   type: "dropShadow";
   offsetX: number;
   offsetY: number;
@@ -85,51 +85,51 @@ export interface CRCDropShadowFilter {
   color: string;
 }
 
-export interface CRCGrayscaleFilter {
+export interface PibblGrayscaleFilter {
   type: "grayscale";
   amount: number;
 }
 
-export interface CRCHueRotateFilter {
+export interface PibblHueRotateFilter {
   type: "hueRotate";
   degrees: number;
 }
 
-export interface CRCInvertFilter {
+export interface PibblInvertFilter {
   type: "invert";
   amount: number;
 }
 
-export interface CRCOpacityFilter {
+export interface PibblOpacityFilter {
   type: "opacity";
   amount: number;
 }
 
-export interface CRCSaturateFilter {
+export interface PibblSaturateFilter {
   type: "saturate";
   amount: number;
 }
 
-export interface CRCSepiaFilter {
+export interface PibblSepiaFilter {
   type: "sepia";
   amount: number;
 }
 
-export type CRCFilter =
-  | CRCBlurFilter
-  | CRCBrightnessFilter
-  | CRCContrastFilter
-  | CRCDropShadowFilter
-  | CRCGrayscaleFilter
-  | CRCHueRotateFilter
-  | CRCInvertFilter
-  | CRCOpacityFilter
-  | CRCSaturateFilter
-  | CRCSepiaFilter;
+export type PibblFilter =
+  | PibblBlurFilter
+  | PibblBrightnessFilter
+  | PibblContrastFilter
+  | PibblDropShadowFilter
+  | PibblGrayscaleFilter
+  | PibblHueRotateFilter
+  | PibblInvertFilter
+  | PibblOpacityFilter
+  | PibblSaturateFilter
+  | PibblSepiaFilter;
 
 export interface SystemStyle {
   custom?: unknown;
-  filter?: CRCFilter | readonly CRCFilter[];
+  filter?: PibblFilter | readonly PibblFilter[];
 }
 ```
 
@@ -163,7 +163,7 @@ Example:
   }}
 >
   <Rectangle style={{ x: 20, y: 20, width: 80, height: 60, fill: "coral" }} />
-  <Text style={{ x: 32, y: 56, fill: "white" }}>CRC</Text>
+  <Text style={{ x: 32, y: 56, fill: "white" }}>Pibbl</Text>
 </Group>
 ```
 
@@ -198,9 +198,9 @@ color syntaxes. Validation identifies `filter`, the list index when present,
 the descriptor field, the received value, and the receiving component in an
 actionable `LayoutDiagnostic`-family message.
 
-CRC compiles a valid list to one native Canvas filter string. It emits `px` for
+Pibbl compiles a valid list to one native Canvas filter string. It emits `px` for
 blur radii and offsets, `deg` for hue rotation, and unitless ratios for amounts.
-The generated string is assigned only to a local result context that CRC owns.
+The generated string is assigned only to a local result context that Pibbl owns.
 The runtime verifies the `filter` property exists and that the browser accepts
 the generated value. An unsupported or rejected value fails before the
 primitive callback and names the missing Canvas filter capability.
@@ -212,7 +212,7 @@ measurement into supported measurement and do not change a measured size.
 ## Filter-list and nested-boundary semantics
 
 The functions in one list consume the output of the preceding function in
-declaration order. CRC passes the complete list to one native Canvas filter
+declaration order. Pibbl passes the complete list to one native Canvas filter
 operation; it does not allocate an intermediate surface per function.
 
 These are deliberately order-sensitive:
@@ -258,7 +258,7 @@ space. The renderer separates two concepts that the current context transform
 previously represented together:
 
 - the paint transform maps local drawing into the current target surface;
-- the world transform maps the same local geometry into the owning CRC
+- the world transform maps the same local geometry into the owning Pibbl
   instance's root-logical interaction space.
 
 Internal event targets, focus bounds, clipping entries, and `Layer` bridges use
@@ -279,7 +279,7 @@ For one primitive with a non-empty filter list, the renderer:
 1. Resolves and validates the system filter before invoking the primitive.
 2. Computes the receiving primitive's local output window, reverse-influence
    source window, and shared raster density.
-3. Atomically checks out an empty source/result pair from the current CRC
+3. Atomically checks out an empty source/result pair from the current Pibbl
    instance's scratch pool.
 4. Copies inheritable drawing state needed by descendant paint into the source
    context and installs the local paint/world-transform split.
@@ -331,7 +331,7 @@ To support this without public API, `Group` and `Clip` publish private
 presentation metadata consumed by render dispatch. Their unfiltered fast path
 applies the same metadata directly and retains existing behavior. Arbitrary
 transform or clip calls made from a custom primitive callback remain drawing
-operations inside that custom primitive's source; CRC cannot reinterpret
+operations inside that custom primitive's source; Pibbl cannot reinterpret
 imperative Canvas calls as declarative presentation properties.
 
 ### Canvas state
@@ -349,7 +349,7 @@ the capture and retain component save/restore isolation.
 
 The mutable default Canvas current path is not copyable between contexts.
 Cross-component continuation of one implicit current path through a filter or
-other offscreen boundary is unsupported. CRC's built-ins and documented custom
+other offscreen boundary is unsupported. Pibbl's built-ins and documented custom
 primitive examples use self-contained operations or `Path2D` and are unaffected.
 
 The existing primitive `style.opacity` behavior is unchanged. The new
@@ -358,7 +358,7 @@ different overlap semantics because it operates on the combined result.
 
 ## Capture windows and raster density
 
-CRC remains immediate-mode and does not retain paint bounds. A filter boundary
+Pibbl remains immediate-mode and does not retain paint bounds. A filter boundary
 therefore derives a conservative finite local capture window from the current
 visible parent target:
 
@@ -409,16 +409,16 @@ target bitmap rather than following the draw context's current transform.
 Surface dimensions must be finite positive integers within the browser's
 accepted `OffscreenCanvas` range. Allocation or context acquisition failure is
 an actionable render error naming the component and requested logical/backing
-dimensions; CRC does not silently lower resolution or fall back to a DOM canvas.
+dimensions; Pibbl does not silently lower resolution or fall back to a DOM canvas.
 The windows are conservative axis-aligned bounds. Large rotations, blur radii,
 or distant shadows can therefore dominate memory even when visible ink is
-sparse. CRC preflights finite/safe-integer edge and area arithmetic, but does not
+sparse. Pibbl preflights finite/safe-integer edge and area arithmetic, but does not
 tile an ordered native filter chain, introduce seam-prone partial kernels, or
 silently reduce resolution.
 
 ## Layer integration
 
-`Layer` remains a persistent cached child CRC instance with explicit logical
+`Layer` remains a persistent cached child Pibbl instance with explicit logical
 width and height. It is not replaced by the transient filter pool. Its child
 surface remains upright, inherits root density, and receives the Layer's
 parent-facing transform only at composite time.
@@ -432,7 +432,7 @@ A filter outside a cached Layer consumes the Layer's cached bitmap as ordinary
 source content. Changing only the outer filter recomposites the cached image
 without rerunning the Layer child tree. A filter on the Layer primitive filters
 the combined cached Layer output. Filters inside the Layer are owned and pooled
-by the child CRC instance and preserve global interaction paint order through
+by the child Pibbl instance and preserve global interaction paint order through
 the existing Layer bridge.
 
 ## Interaction, layout, and visual overflow
@@ -451,11 +451,11 @@ event coordinates are unchanged.
 
 Filter output may paint outside the primitive's declared layout box. Existing
 ancestor clipping boundaries, including layout `overflow: 'clip'`, clip the
-completed result normally. CRC adds no new overflow measurement or scrolling.
+completed result normally. Pibbl adds no new overflow measurement or scrolling.
 
 ## Ownership, cleanup, and failure behavior
 
-Each `CRCInstance` owns one transient filter scratch pool. A simultaneously
+Each `PibblInstance` owns one transient filter scratch pool. A simultaneously
 active boundary atomically checks out two depth-indexed slots, source and
 result. Nested boundaries use the next pair; completed siblings reuse the same
 pair. Checkout and LIFO return are constant-time, and capacity therefore tracks
@@ -476,9 +476,9 @@ checkout, return, resize, and final release; test-local Canvas spies track clear
 and draw area without shipping a per-pixel-area telemetry path. Heap or
 garbage-collection timing is not a pass condition.
 
-Filter capture does not create a nested CRC mount, component identity, render
+Filter capture does not create a nested Pibbl mount, component identity, render
 frame, event root, or lifecycle. `Layer` remains the only built-in composition
-primitive here that owns a nested CRC instance.
+primitive here that owns a nested Pibbl instance.
 
 All changes to render context, paint/world transform state, clipping metadata,
 and scratch checkout live inside `try`/`finally`. If filter validation,
@@ -494,12 +494,12 @@ One active boundary adds two reusable backing stores, one native filtered
 `drawImage` from the source window to the result window, and one unfiltered
 `drawImage` from result to parent. Same-size slot reuse also clears each active
 bitmap once; creation or resize already produces transparent pixels and skips
-that redundant clear. A list of ten functions costs the same number of CRC
+that redundant clear. A list of ten functions costs the same number of Pibbl
 surfaces and draw steps as a list of one function; native browser implementation
 determines the internal filter cost. Nested boundaries necessarily add one pair
 and two bitmap composites per active level.
 
-CRC performs no automatic content caching for filters. An ordinary filtered
+Pibbl performs no automatic content caching for filters. An ordinary filtered
 subtree rerenders on each scheduled root render, exactly as an unfiltered
 subtree does. Existing `Layer` is the explicit retained-cache boundary when an
 author needs one. Structural tests assert one component execution, no pixel

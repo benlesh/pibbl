@@ -12,7 +12,7 @@ relatedTypes: [Edges, EdgeValues]
 # normalizeEdges
 
 ```ts
-import { normalizeEdges } from "@crc/core";
+import { normalizeEdges } from "@pibbl/core";
 ```
 
 `normalizeEdges(value, property, context?)` converts an [`EdgeValues`](#/api/types/layout#edgevalues) shorthand

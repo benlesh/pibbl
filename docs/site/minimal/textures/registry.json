@@ -6,14 +6,17 @@
     "source": "procedural-component.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "ProceduralTexture", "importPath": "@crc/core/textures" },
-      { "name": "ProceduralTextureProps", "importPath": "@crc/core/textures" },
-      { "name": "texturePalettes", "importPath": "@crc/core/textures" },
-      { "name": "TextureKind", "importPath": "@crc/core/textures" },
-      { "name": "TexturePalette", "importPath": "@crc/core/textures" },
-      { "name": "TextureResolution", "importPath": "@crc/core/textures" },
-      { "name": "TextureRenderer", "importPath": "@crc/core/textures" },
-      { "name": "TextureRenderFrame", "importPath": "@crc/core/textures" }
+      { "name": "ProceduralTexture", "importPath": "@pibbl/core/textures" },
+      {
+        "name": "ProceduralTextureProps",
+        "importPath": "@pibbl/core/textures"
+      },
+      { "name": "texturePalettes", "importPath": "@pibbl/core/textures" },
+      { "name": "TextureKind", "importPath": "@pibbl/core/textures" },
+      { "name": "TexturePalette", "importPath": "@pibbl/core/textures" },
+      { "name": "TextureResolution", "importPath": "@pibbl/core/textures" },
+      { "name": "TextureRenderer", "importPath": "@pibbl/core/textures" },
+      { "name": "TextureRenderFrame", "importPath": "@pibbl/core/textures" }
     ],
     "notes": [
       "The borrowed source and mask canvases are used only inside the render callback."
@@ -26,12 +29,15 @@
     "source": "reaction-component.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "ReactionDiffusion", "importPath": "@crc/core/textures" },
-      { "name": "ReactionDiffusionProps", "importPath": "@crc/core/textures" },
-      { "name": "TextureBrush", "importPath": "@crc/core/textures" }
+      { "name": "ReactionDiffusion", "importPath": "@pibbl/core/textures" },
+      {
+        "name": "ReactionDiffusionProps",
+        "importPath": "@pibbl/core/textures"
+      },
+      { "name": "TextureBrush", "importPath": "@pibbl/core/textures" }
     ],
     "notes": [
-      "The layer owns its simulation until the CRC controller is disposed."
+      "The layer owns its simulation until the Pibbl controller is disposed."
     ]
   },
   {
@@ -41,11 +47,11 @@
     "source": "material-recipes.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "marble", "importPath": "@crc/core/textures" },
-      { "name": "paper", "importPath": "@crc/core/textures" },
-      { "name": "cellular", "importPath": "@crc/core/textures" },
-      { "name": "useTexture", "importPath": "@crc/core/textures" },
-      { "name": "MaterialOptions", "importPath": "@crc/core/textures" }
+      { "name": "marble", "importPath": "@pibbl/core/textures" },
+      { "name": "paper", "importPath": "@pibbl/core/textures" },
+      { "name": "cellular", "importPath": "@pibbl/core/textures" },
+      { "name": "useTexture", "importPath": "@pibbl/core/textures" },
+      { "name": "MaterialOptions", "importPath": "@pibbl/core/textures" }
     ],
     "notes": [
       "Each hook slot owns one texture resource; the returned handle is directly usable as fill."
@@ -58,12 +64,12 @@
     "source": "ink-recipe.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "reactionDiffusion", "importPath": "@crc/core/textures" },
+      { "name": "reactionDiffusion", "importPath": "@pibbl/core/textures" },
       {
         "name": "ReactionDiffusionOptions",
-        "importPath": "@crc/core/textures"
+        "importPath": "@pibbl/core/textures"
       },
-      { "name": "InkMessage", "importPath": "@crc/core/textures" }
+      { "name": "InkMessage", "importPath": "@pibbl/core/textures" }
     ],
     "notes": [
       "Messages are sent from the event handler, outside component evaluation."
@@ -76,9 +82,9 @@
     "source": "water-waves.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "waterWaves", "importPath": "@crc/core/textures" },
-      { "name": "WaterWavesOptions", "importPath": "@crc/core/textures" },
-      { "name": "WaterWavesMessage", "importPath": "@crc/core/textures" }
+      { "name": "waterWaves", "importPath": "@pibbl/core/textures" },
+      { "name": "WaterWavesOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "WaterWavesMessage", "importPath": "@pibbl/core/textures" }
     ],
     "notes": [
       "Press anywhere on the image to add a ripple at that position. Turn off Refraction + reflections to see the undistorted source. Scale 10 produces finer periodic waves; speed 2.4 animates them more quickly. Both filters share the same numeric wave map and region."
@@ -91,10 +97,10 @@
     "source": "water-surface.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "waterSurface", "importPath": "@crc/core/textures" },
-      { "name": "WaterSurfaceObstacle", "importPath": "@crc/core/textures" },
-      { "name": "WaterSurfaceOptions", "importPath": "@crc/core/textures" },
-      { "name": "WaterSurfaceMessage", "importPath": "@crc/core/textures" }
+      { "name": "waterSurface", "importPath": "@pibbl/core/textures" },
+      { "name": "WaterSurfaceObstacle", "importPath": "@pibbl/core/textures" },
+      { "name": "WaterSurfaceOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "WaterSurfaceMessage", "importPath": "@pibbl/core/textures" }
     ],
     "notes": [
       "Press to ripple the tiled image. The outlined island marks the normalized obstacle, which affects the height field rather than Canvas hit testing."
@@ -107,12 +113,12 @@
     "source": "rain-drops.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "rainDrops", "importPath": "@crc/core/textures" },
-      { "name": "RainDropsOptions", "importPath": "@crc/core/textures" },
-      { "name": "RainDropsMessage", "importPath": "@crc/core/textures" }
+      { "name": "rainDrops", "importPath": "@pibbl/core/textures" },
+      { "name": "RainDropsOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "RainDropsMessage", "importPath": "@pibbl/core/textures" }
     ],
     "notes": [
-      "Drag across the glass to wipe condensation with typed finger messages. Toggle Fogged glass to compare with the original; CRC owns animation and texture cleanup."
+      "Drag across the glass to wipe condensation with typed finger messages. Toggle Fogged glass to compare with the original; Pibbl owns animation and texture cleanup."
     ]
   },
   {
@@ -122,11 +128,11 @@
     "source": "tendrils.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "tendrils", "importPath": "@crc/core/textures" },
-      { "name": "TendrilsOptions", "importPath": "@crc/core/textures" },
-      { "name": "TendrilsMessage", "importPath": "@crc/core/textures" },
-      { "name": "ElectricSource", "importPath": "@crc/core/textures" },
-      { "name": "ElectricSourceMessage", "importPath": "@crc/core/textures" }
+      { "name": "tendrils", "importPath": "@pibbl/core/textures" },
+      { "name": "TendrilsOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "TendrilsMessage", "importPath": "@pibbl/core/textures" },
+      { "name": "ElectricSource", "importPath": "@pibbl/core/textures" },
+      { "name": "ElectricSourceMessage", "importPath": "@pibbl/core/textures" }
     ],
     "notes": [
       "Source coordinates are normalized to the complete texture, including its padding."
@@ -139,15 +145,15 @@
     "source": "lightning.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "lightning", "importPath": "@crc/core/textures" },
-      { "name": "LightningOptions", "importPath": "@crc/core/textures" },
-      { "name": "LightningMessage", "importPath": "@crc/core/textures" },
-      { "name": "ElectricPoint", "importPath": "@crc/core/textures" },
-      { "name": "ElectricOptions", "importPath": "@crc/core/textures" },
-      { "name": "ElectricControl", "importPath": "@crc/core/textures" }
+      { "name": "lightning", "importPath": "@pibbl/core/textures" },
+      { "name": "LightningOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "LightningMessage", "importPath": "@pibbl/core/textures" },
+      { "name": "ElectricPoint", "importPath": "@pibbl/core/textures" },
+      { "name": "ElectricOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "ElectricControl", "importPath": "@pibbl/core/textures" }
     ],
     "notes": [
-      "The texture owns its animation through CRC; no application frame loop is needed."
+      "The texture owns its animation through Pibbl; no application frame loop is needed."
     ]
   }
 ]

@@ -1,16 +1,16 @@
-import { getFlowController2D, type CRCFlowField2D } from "../flow/hook.js";
-import { signal } from "@crc/core";
+import { getFlowController2D, type PibblFlowField2D } from "../flow/hook.js";
+import { signal } from "@pibbl/core";
 import {
-  crcInternalAssertCommandAllowed,
-  crcInternalQueueBegin,
-  crcInternalQueueCurrentCommit,
-  crcInternalQueueCurrentComplete,
-  crcInternalRegisterAdvance,
-  type CRCInternalCommandHandle,
-  type CRCInternalFrame,
-  type CRCInternalRenderOwner,
-  type CRCInternalSignalBatch,
-} from "@crc/core/internal";
+  pibblInternalAssertCommandAllowed,
+  pibblInternalQueueBegin,
+  pibblInternalQueueCurrentCommit,
+  pibblInternalQueueCurrentComplete,
+  pibblInternalRegisterAdvance,
+  type PibblInternalCommandHandle,
+  type PibblInternalFrame,
+  type PibblInternalRenderOwner,
+  type PibblInternalSignalBatch,
+} from "@pibbl/core/internal";
 import { parseParticleColor } from "../color.js";
 import {
   compileParticleEffect2D,
@@ -20,13 +20,13 @@ import {
 import { getParticleEffect2DRecord } from "../definition-records.js";
 import { sampleBurstCount } from "../emission.js";
 import type {
-  CRCParticleBurstOverrides,
-  CRCParticleEffect2D,
-  CRCParticleExecution,
-  CRCParticleSystem,
-  CRCParticleSystemEvent,
-  CRCParticleSystemOptions,
-  CRCParticleSystemStatus,
+  PibblParticleBurstOverrides,
+  PibblParticleEffect2D,
+  PibblParticleExecution,
+  PibblParticleSystem,
+  PibblParticleSystemEvent,
+  PibblParticleSystemOptions,
+  PibblParticleSystemStatus,
 } from "../types.js";
 import type {
   CompiledParticleEffect,
@@ -43,15 +43,15 @@ import {
   recordParticleSystemCreated,
 } from "./ownership.js";
 
-type ParticleEffect = CRCParticleEffect2D;
+type ParticleEffect = PibblParticleEffect2D;
 
 export interface ParticleBindingObservers {
-  readonly onEvent?: (event: CRCParticleSystemEvent) => void;
+  readonly onEvent?: (event: PibblParticleSystemEvent) => void;
   readonly onError?: (error: unknown) => void;
 }
 
 export interface ParticleBindingReservation {
-  readonly owner: CRCInternalRenderOwner;
+  readonly owner: PibblInternalRenderOwner;
   readonly backend: "canvas";
   readonly token: object;
 }
@@ -59,7 +59,7 @@ export interface ParticleBindingReservation {
 export interface ParticleEffectCandidate {
   readonly effect: ParticleEffect;
   readonly compiled: CompiledParticleEffect;
-  readonly options: CRCParticleSystemOptions;
+  readonly options: PibblParticleSystemOptions;
   readonly debugName: string | undefined;
 }
 
@@ -79,24 +79,24 @@ interface AcceptedLifetime {
 
 interface ActiveBinding {
   readonly candidate: ParticleBindingCandidate;
-  readonly owner: CRCInternalRenderOwner;
+  readonly owner: PibblInternalRenderOwner;
   readonly releaseOwnership: () => void;
   observers: ParticleBindingObservers;
 }
 
 interface PendingCommand {
-  readonly handle: CRCInternalCommandHandle;
+  readonly handle: PibblInternalCommandHandle;
   readonly releaseOwnership: () => void;
 }
 
 interface Delivery {
   readonly frameId: number;
-  readonly events: CRCParticleSystemEvent[];
+  readonly events: PibblParticleSystemEvent[];
   readonly errors: unknown[];
   commitApplied: boolean;
   commitCompleted: boolean;
   finalized: boolean;
-  presentationOwner: CRCInternalRenderOwner | undefined;
+  presentationOwner: PibblInternalRenderOwner | undefined;
   rendererSucceeded: boolean | undefined;
   stateBefore: ControllerStateSnapshot | undefined;
   resourcesBefore: ControllerResourceSnapshot | undefined;
@@ -106,8 +106,8 @@ interface Delivery {
 }
 
 interface ControllerMetadataSnapshot {
-  readonly status: CRCParticleSystemStatus;
-  readonly execution: CRCParticleExecution;
+  readonly status: PibblParticleSystemStatus;
+  readonly execution: PibblParticleExecution;
 }
 
 interface ControllerResourceSnapshot {
@@ -126,8 +126,8 @@ interface ControllerResourceSnapshot {
 }
 
 interface ControllerStateSnapshot {
-  readonly status: CRCParticleSystemStatus;
-  readonly execution: CRCParticleExecution;
+  readonly status: PibblParticleSystemStatus;
+  readonly execution: PibblParticleExecution;
   readonly generation: number;
   readonly seed: number;
   readonly effectTime: number;
@@ -152,8 +152,8 @@ export interface ParticleSystemControllerSnapshot {
 }
 
 export interface ParticleSystemController {
-  readonly flow: CRCFlowField2D | undefined;
-  readonly handle: CRCParticleSystem;
+  readonly flow: PibblFlowField2D | undefined;
+  readonly handle: PibblParticleSystem;
   readonly compiled: CompiledParticleEffect;
   readonly bindingCandidate: ParticleBindingCandidate | undefined;
   readonly currentSpawnEpoch: number;
@@ -161,12 +161,12 @@ export interface ParticleSystemController {
   readonly renderParameters: Readonly<Float64Array>;
   prepareEffect(
     effect: ParticleEffect,
-    options?: CRCParticleSystemOptions,
+    options?: PibblParticleSystemOptions,
   ): ParticleEffectCandidate;
   cancelEffect(candidate: ParticleEffectCandidate): void;
   adoptEffect(candidate: ParticleEffectCandidate): void;
   reserveBinding(
-    owner: CRCInternalRenderOwner,
+    owner: PibblInternalRenderOwner,
     backend: "canvas",
   ): ParticleBindingReservation;
   validateBindingCandidate(
@@ -186,11 +186,11 @@ export interface ParticleSystemController {
     observers?: ParticleBindingObservers,
   ): void;
   releaseBinding(
-    owner: CRCInternalRenderOwner,
+    owner: PibblInternalRenderOwner,
     candidate?: ParticleBindingCandidate,
   ): void;
   recordRendererTransaction(
-    owner: CRCInternalRenderOwner,
+    owner: PibblInternalRenderOwner,
     success: boolean,
   ): void;
   spawnParameters(epoch: number): Readonly<Float64Array>;
@@ -200,33 +200,33 @@ export interface ParticleSystemController {
   dispose(): void;
 }
 
-const controllers = new WeakMap<CRCParticleSystem, ParticleSystemController>();
+const controllers = new WeakMap<PibblParticleSystem, ParticleSystemController>();
 
 function normalizeSeed(value: number | undefined): number {
   if (value === undefined) return 0;
   if (!Number.isFinite(value)) {
-    throw new RangeError("CRC particle system seed must be finite.");
+    throw new RangeError("Pibbl particle system seed must be finite.");
   }
   return Math.trunc(value) >>> 0;
 }
 
-function validateOptions(options: CRCParticleSystemOptions): void {
+function validateOptions(options: PibblParticleSystemOptions): void {
   if (options.flow !== undefined) getFlowController2D(options.flow);
   if (options.autoplay !== undefined && typeof options.autoplay !== "boolean") {
-    throw new TypeError("CRC particle system autoplay must be boolean.");
+    throw new TypeError("Pibbl particle system autoplay must be boolean.");
   }
   normalizeSeed(options.seed);
   if (
     options.debugName !== undefined &&
     typeof options.debugName !== "string"
   ) {
-    throw new TypeError("CRC particle system debugName must be a string.");
+    throw new TypeError("Pibbl particle system debugName must be a string.");
   }
   if (options.onEvent !== undefined && typeof options.onEvent !== "function") {
-    throw new TypeError("CRC particle system onEvent must be a function.");
+    throw new TypeError("Pibbl particle system onEvent must be a function.");
   }
   if (options.onError !== undefined && typeof options.onError !== "function") {
-    throw new TypeError("CRC particle system onError must be a function.");
+    throw new TypeError("Pibbl particle system onError must be a function.");
   }
 }
 
@@ -267,42 +267,42 @@ function validateParameterArray(
 ): void {
   if (!(parameters instanceof Float64Array)) {
     throw new TypeError(
-      "CRC particle binding parameters must be a Float64Array.",
+      "Pibbl particle binding parameters must be a Float64Array.",
     );
   }
   if (parameters.length !== compiled.parameterLayout.defaults.length) {
     throw new RangeError(
-      `CRC particle binding parameter length must be ${compiled.parameterLayout.defaults.length}; received ${parameters.length}.`,
+      `Pibbl particle binding parameter length must be ${compiled.parameterLayout.defaults.length}; received ${parameters.length}.`,
     );
   }
   for (let index = 0; index < parameters.length; index += 1) {
     if (!Number.isFinite(parameters[index])) {
       throw new RangeError(
-        `CRC particle binding parameter at offset ${index} must be finite.`,
+        `Pibbl particle binding parameter at offset ${index} must be finite.`,
       );
     }
   }
 }
 
 function eventRecord(
-  type: CRCParticleSystemEvent["type"],
-  frame: CRCInternalFrame,
+  type: PibblParticleSystemEvent["type"],
+  frame: PibblInternalFrame,
   effect: string | undefined,
   fields: Readonly<Record<string, unknown>> = {},
-): CRCParticleSystemEvent {
+): PibblParticleSystemEvent {
   return Object.freeze({
     type,
     frameId: frame.frameId,
     logicalTime: frame.logicalTime,
     ...(effect === undefined ? {} : { effect }),
     ...fields,
-  }) as CRCParticleSystemEvent;
+  }) as PibblParticleSystemEvent;
 }
 
 function diagnosticRecord(
   type: string,
   message: string,
-  frame: CRCInternalFrame,
+  frame: PibblInternalFrame,
   effect: string | undefined,
   fields: Readonly<Record<string, unknown>> = {},
 ): unknown {
@@ -322,15 +322,15 @@ function aggregateObserverFailures(failures: readonly unknown[]): never {
   );
   throw new AggregateError(
     failures,
-    `CRC particle observer failed: ${messages.join("; ")}`,
+    `Pibbl particle observer failed: ${messages.join("; ")}`,
   );
 }
 
 /** Creates one hook-owned particle controller over the realm scheduler. */
 export function createParticleSystemController(
-  owner: CRCInternalRenderOwner,
+  owner: PibblInternalRenderOwner,
   initialEffect: ParticleEffect,
-  initialOptions: CRCParticleSystemOptions = {},
+  initialOptions: PibblParticleSystemOptions = {},
 ): ParticleSystemController {
   validateOptions(initialOptions);
   const initial = compileEffect(initialEffect);
@@ -340,8 +340,8 @@ export function createParticleSystemController(
   let originalSeed = normalizeSeed(initialOptions.seed);
   let seed = originalSeed;
   let disposed = false;
-  let statusState: CRCParticleSystemStatus = "idle";
-  let executionState: CRCParticleExecution = "unbound";
+  let statusState: PibblParticleSystemStatus = "idle";
+  let executionState: PibblParticleExecution = "unbound";
   let generation = 0;
   let effectTime = 0;
   let previousEffectTime = 0;
@@ -368,16 +368,16 @@ export function createParticleSystemController(
   const pendingCommands = new Set<PendingCommand>();
   const retiredCandidates = new Set<ParticleBindingCandidate>();
   const metadataWriter = Object.freeze({
-    name: "CRC particle system metadata",
+    name: "Pibbl particle system metadata",
   });
   const releaseSystemOwnership = recordParticleSystemCreated();
-  const statusSignal = signal<CRCParticleSystemStatus>("idle", {
+  const statusSignal = signal<PibblParticleSystemStatus>("idle", {
     debugName:
       initialOptions.debugName === undefined
         ? undefined
         : `${initialOptions.debugName} status`,
   });
-  const executionSignal = signal<CRCParticleExecution>("unbound", {
+  const executionSignal = signal<PibblParticleExecution>("unbound", {
     debugName:
       initialOptions.debugName === undefined
         ? undefined
@@ -439,12 +439,12 @@ export function createParticleSystemController(
     const epoch = epochs.get(epochId);
     if (epoch === undefined) {
       throw new RangeError(
-        `CRC particle system received unknown parameter epoch ${epochId}.`,
+        `Pibbl particle system received unknown parameter epoch ${epochId}.`,
       );
     }
     if (!Number.isSafeInteger(count) || count <= 0) {
       throw new RangeError(
-        "CRC particle epoch retain count must be a positive safe integer.",
+        "Pibbl particle epoch retain count must be a positive safe integer.",
       );
     }
     epoch.references += count;
@@ -454,7 +454,7 @@ export function createParticleSystemController(
     const epoch = epochs.get(epochId);
     if (epoch === undefined) {
       throw new RangeError(
-        `CRC particle system received unknown parameter epoch ${epochId}.`,
+        `Pibbl particle system received unknown parameter epoch ${epochId}.`,
       );
     }
     if (
@@ -463,14 +463,14 @@ export function createParticleSystemController(
       count > epoch.references
     ) {
       throw new RangeError(
-        "CRC particle epoch release exceeds its retained references.",
+        "Pibbl particle epoch release exceeds its retained references.",
       );
     }
     epoch.references -= count;
     pruneEpoch(epoch);
   }
 
-  function ensureDelivery(frame: CRCInternalFrame): Delivery {
+  function ensureDelivery(frame: PibblInternalFrame): Delivery {
     const latest = deliveries.at(-1);
     if (latest?.frameId === frame.frameId && !latest.finalized) return latest;
     const pendingPresentation = deliveries.findLast(
@@ -495,10 +495,10 @@ export function createParticleSystemController(
       publicationQueued: false,
     };
     deliveries.push(current);
-    crcInternalQueueCurrentCommit(owner, (_commitFrame, outcome) => {
+    pibblInternalQueueCurrentCommit(owner, (_commitFrame, outcome) => {
       current.commitApplied = outcome.applied;
     });
-    crcInternalQueueCurrentComplete(owner, () => {
+    pibblInternalQueueCurrentComplete(owner, () => {
       current.commitCompleted = true;
       finalizeDeliveryIfReady(current);
     });
@@ -512,7 +512,7 @@ export function createParticleSystemController(
   }
 
   function deliverRecords(
-    events: readonly CRCParticleSystemEvent[],
+    events: readonly PibblParticleSystemEvent[],
     errors: readonly unknown[],
   ): void {
     const failures: unknown[] = [];
@@ -588,10 +588,10 @@ export function createParticleSystemController(
       }
       stageMetadata(batch, metadata, current);
       let applied = false;
-      crcInternalQueueCurrentCommit(owner, (_commitFrame, outcome) => {
+      pibblInternalQueueCurrentCommit(owner, (_commitFrame, outcome) => {
         applied = outcome.applied;
       });
-      crcInternalQueueCurrentComplete(owner, () => {
+      pibblInternalQueueCurrentComplete(owner, () => {
         if (metadataPublication === current) metadataPublication = undefined;
         if (current.finalized) {
           queueNextMetadataPublication();
@@ -684,8 +684,8 @@ export function createParticleSystemController(
   }
 
   function requirePresentation(
-    frame: CRCInternalFrame,
-    bindingOwner: CRCInternalRenderOwner,
+    frame: PibblInternalFrame,
+    bindingOwner: PibblInternalRenderOwner,
   ): void {
     const current = ensureDelivery(frame);
     if (
@@ -693,14 +693,14 @@ export function createParticleSystemController(
       current.presentationOwner !== bindingOwner
     ) {
       throw new Error(
-        "A CRC particle frame cannot target multiple renderer owners.",
+        "A Pibbl particle frame cannot target multiple renderer owners.",
       );
     }
     current.presentationOwner = bindingOwner;
   }
 
   function failRendererTransactions(
-    bindingOwner: CRCInternalRenderOwner,
+    bindingOwner: PibblInternalRenderOwner,
   ): void {
     const failed = deliveries.filter(
       (current) =>
@@ -715,8 +715,8 @@ export function createParticleSystemController(
   }
 
   function queueEvent(
-    frame: CRCInternalFrame,
-    type: CRCParticleSystemEvent["type"],
+    frame: PibblInternalFrame,
+    type: PibblParticleSystemEvent["type"],
     fields?: Readonly<Record<string, unknown>>,
   ): void {
     ensureDelivery(frame).events.push(
@@ -724,24 +724,24 @@ export function createParticleSystemController(
     );
   }
 
-  function queueError(frame: CRCInternalFrame, error: unknown): void {
+  function queueError(frame: PibblInternalFrame, error: unknown): void {
     ensureDelivery(frame).errors.push(error);
   }
 
   function queueIsolatedError(error: unknown): void {
     enqueue((_frame, _batch) => {
       let applied = false;
-      crcInternalQueueCurrentCommit(owner, (_commitFrame, outcome) => {
+      pibblInternalQueueCurrentCommit(owner, (_commitFrame, outcome) => {
         applied = outcome.applied;
       });
-      crcInternalQueueCurrentComplete(owner, () => {
+      pibblInternalQueueCurrentComplete(owner, () => {
         if (applied && !disposed) deliverRecords([], [error]);
       });
     });
   }
 
   function failCurrentDelivery(
-    frame: CRCInternalFrame,
+    frame: PibblInternalFrame,
     error: unknown,
     operation: string,
   ): void {
@@ -754,7 +754,7 @@ export function createParticleSystemController(
       effectDebugName,
       { operation },
     );
-    crcInternalQueueCurrentComplete(owner, () => {
+    pibblInternalQueueCurrentComplete(owner, () => {
       if (!disposed) queueIsolatedError(diagnostic);
     });
   }
@@ -791,7 +791,7 @@ export function createParticleSystemController(
   }
 
   function stageMetadata(
-    batch: CRCInternalSignalBatch,
+    batch: PibblInternalSignalBatch,
     metadata: ControllerMetadataSnapshot = snapshotMetadata(),
     writer: object = metadataWriter,
   ): void {
@@ -882,8 +882,8 @@ export function createParticleSystemController(
   }
 
   function transaction(
-    frame: CRCInternalFrame,
-    batch: CRCInternalSignalBatch,
+    frame: PibblInternalFrame,
+    batch: PibblInternalSignalBatch,
     mutate: () => void,
   ): void {
     const current = ensureDelivery(frame);
@@ -976,7 +976,7 @@ export function createParticleSystemController(
     if (shouldAdvance()) {
       if (unregisterAdvance === undefined) {
         const releaseFlow = options.flow === undefined ? undefined : getFlowController2D(options.flow).retain();
-        const unregister = crcInternalRegisterAdvance(owner, advance);
+        const unregister = pibblInternalRegisterAdvance(owner, advance);
         const releaseOwnership = recordParticleSchedulerRegistration();
         unregisterAdvance = () => {
           unregister();
@@ -1022,7 +1022,7 @@ export function createParticleSystemController(
     liveByEmitter.clear();
   }
 
-  function startRun(frame: CRCInternalFrame, nextSeed: number): void {
+  function startRun(frame: PibblInternalFrame, nextSeed: number): void {
     generation += 1;
     seed = nextSeed;
     effectTime = 0;
@@ -1044,7 +1044,7 @@ export function createParticleSystemController(
     queueEvent(frame, "start");
   }
 
-  function resetRunStorage(frame: CRCInternalFrame): boolean {
+  function resetRunStorage(frame: PibblInternalFrame): boolean {
     try {
       const cleared = activeBinding?.candidate.clear();
       if (cleared !== undefined) bindingFrameState = cleared;
@@ -1071,7 +1071,7 @@ export function createParticleSystemController(
     return anchorEffectTime + Math.max(0, logicalTime - anchorLogicalTime);
   }
 
-  function finishRun(frame: CRCInternalFrame): void {
+  function finishRun(frame: PibblInternalFrame): void {
     if (statusState === "finished") return;
     statusState = "finished";
     automaticClosed = true;
@@ -1079,8 +1079,8 @@ export function createParticleSystemController(
   }
 
   function advance(
-    frame: CRCInternalFrame,
-    batch: CRCInternalSignalBatch,
+    frame: PibblInternalFrame,
+    batch: PibblInternalSignalBatch,
   ): void {
     if (disposed || activeBinding === undefined) return;
     transaction(frame, batch, () => {
@@ -1152,13 +1152,13 @@ export function createParticleSystemController(
   }
 
   function enqueue(
-    apply: (frame: CRCInternalFrame, batch: CRCInternalSignalBatch) => void,
+    apply: (frame: PibblInternalFrame, batch: PibblInternalSignalBatch) => void,
   ): void {
     if (disposed) return;
     const releaseOwnership = recordParticleCommandCreated();
     let pending!: PendingCommand;
     try {
-      const handle = crcInternalQueueBegin(owner, (frame, batch) => {
+      const handle = pibblInternalQueueBegin(owner, (frame, batch) => {
         pendingCommands.delete(pending);
         releaseOwnership();
         if (!disposed) apply(frame, batch);
@@ -1185,7 +1185,7 @@ export function createParticleSystemController(
   function validatePositiveCount(count: number | undefined): void {
     if (count !== undefined && (!Number.isSafeInteger(count) || count <= 0)) {
       throw new RangeError(
-        "CRC particle burst count must be a positive safe integer.",
+        "Pibbl particle burst count must be a positive safe integer.",
       );
     }
   }
@@ -1202,7 +1202,7 @@ export function createParticleSystemController(
       value.some((entry) => !Number.isFinite(entry))
     ) {
       throw new RangeError(
-        `CRC particle burst ${name} must be a finite ${dimension}-dimensional vector.`,
+        `Pibbl particle burst ${name} must be a finite ${dimension}-dimensional vector.`,
       );
     }
   }
@@ -1214,7 +1214,7 @@ export function createParticleSystemController(
   ): void {
     if (entry.timing !== "spawn") {
       throw new TypeError(
-        `CRC particle burst parameter "${entry.name}" must use spawn timing.`,
+        `Pibbl particle burst parameter "${entry.name}" must use spawn timing.`,
       );
     }
     const numeric =
@@ -1235,7 +1235,7 @@ export function createParticleSystemController(
       numeric.some((component) => !Number.isFinite(component))
     ) {
       throw new TypeError(
-        `CRC particle burst parameter "${entry.name}" does not match ${entry.type}.`,
+        `Pibbl particle burst parameter "${entry.name}" does not match ${entry.type}.`,
       );
     }
     output.set(numeric, entry.offset);
@@ -1243,17 +1243,17 @@ export function createParticleSystemController(
 
   function validateBurst(
     emitterName: string,
-    overrides: CRCParticleBurstOverrides,
+    overrides: PibblParticleBurstOverrides,
   ): Readonly<Float64Array> | undefined {
     const emitter = emitterByName(emitterName);
     if (emitter === undefined) {
       throw new TypeError(
-        `CRC particle system received unknown emitter "${emitterName}".`,
+        `Pibbl particle system received unknown emitter "${emitterName}".`,
       );
     }
     if (emitter.emission.manual.length === 0) {
       throw new TypeError(
-        `CRC particle emitter "${emitterName}" has no manual emission source.`,
+        `Pibbl particle emitter "${emitterName}" has no manual emission source.`,
       );
     }
     validatePositiveCount(overrides.count);
@@ -1262,7 +1262,7 @@ export function createParticleSystemController(
       overrides.seedSalt !== undefined &&
       !Number.isFinite(overrides.seedSalt)
     ) {
-      throw new RangeError("CRC particle burst seedSalt must be finite.");
+      throw new RangeError("Pibbl particle burst seedSalt must be finite.");
     }
     if (overrides.parameters !== undefined) {
       const values = copyParameters(
@@ -1272,7 +1272,7 @@ export function createParticleSystemController(
         const entry = compiled.parameterLayout.byName.get(name);
         if (entry === undefined) {
           throw new TypeError(
-            `CRC particle burst references unknown parameter "${name}".`,
+            `Pibbl particle burst references unknown parameter "${name}".`,
           );
         }
         writeParameterOverride(values, entry, value);
@@ -1302,9 +1302,9 @@ export function createParticleSystemController(
 
   function acceptBurst(
     emitterName: string,
-    overrides: CRCParticleBurstOverrides,
+    overrides: PibblParticleBurstOverrides,
     overrideParameters: Readonly<Float64Array> | undefined,
-    frame: CRCInternalFrame,
+    frame: PibblInternalFrame,
   ): void {
     const emitter = emitterByName(emitterName)!;
     const emitterIndex = emitterIndexByName(emitterName);
@@ -1382,7 +1382,7 @@ export function createParticleSystemController(
           frame,
           diagnosticRecord(
             "capacity-rejected",
-            `CRC particle emitter "${emitterName}" accepted ${result.accepted} of ${exactRequested} requested particles.`,
+            `Pibbl particle emitter "${emitterName}" accepted ${result.accepted} of ${exactRequested} requested particles.`,
             frame,
             effectDebugName,
             {
@@ -1444,7 +1444,7 @@ export function createParticleSystemController(
         frame,
         diagnosticRecord(
           "capacity-rejected",
-          `CRC particle emitter "${emitterName}" accepted ${accepted} of ${requested} requested particles.`,
+          `Pibbl particle emitter "${emitterName}" accepted ${accepted} of ${requested} requested particles.`,
           frame,
           effectDebugName,
           { emitter: emitterName, requested, accepted },
@@ -1458,7 +1458,7 @@ export function createParticleSystemController(
     status: statusSignal.asReadonly(),
     execution: executionSignal.asReadonly(),
     play(): void {
-      crcInternalAssertCommandAllowed();
+      pibblInternalAssertCommandAllowed();
       if (disposed) return;
       enqueue((frame, batch) => {
         transaction(frame, batch, () => {
@@ -1477,7 +1477,7 @@ export function createParticleSystemController(
       });
     },
     pause(): void {
-      crcInternalAssertCommandAllowed();
+      pibblInternalAssertCommandAllowed();
       if (disposed) return;
       enqueue((frame, batch) => {
         transaction(frame, batch, () => {
@@ -1492,7 +1492,7 @@ export function createParticleSystemController(
       });
     },
     resume(): void {
-      crcInternalAssertCommandAllowed();
+      pibblInternalAssertCommandAllowed();
       if (disposed) return;
       enqueue((frame, batch) => {
         transaction(frame, batch, () => {
@@ -1505,13 +1505,13 @@ export function createParticleSystemController(
       });
     },
     restart(restartOptions: Readonly<{ seed?: number }> = {}): void {
-      crcInternalAssertCommandAllowed();
+      pibblInternalAssertCommandAllowed();
       if (
         restartOptions === null ||
         typeof restartOptions !== "object" ||
         Array.isArray(restartOptions)
       ) {
-        throw new TypeError("CRC particle restart options must be a record.");
+        throw new TypeError("Pibbl particle restart options must be a record.");
       }
       const nextSeed =
         restartOptions.seed === undefined
@@ -1526,17 +1526,17 @@ export function createParticleSystemController(
         });
       });
     },
-    emit(emitter: string, overrides: CRCParticleBurstOverrides = {}): void {
-      crcInternalAssertCommandAllowed();
+    emit(emitter: string, overrides: PibblParticleBurstOverrides = {}): void {
+      pibblInternalAssertCommandAllowed();
       if (typeof emitter !== "string") {
-        throw new TypeError("CRC particle emitter name must be a string.");
+        throw new TypeError("Pibbl particle emitter name must be a string.");
       }
       if (
         overrides === null ||
         typeof overrides !== "object" ||
         Array.isArray(overrides)
       ) {
-        throw new TypeError("CRC particle burst overrides must be a record.");
+        throw new TypeError("Pibbl particle burst overrides must be a record.");
       }
       const overrideParameters = validateBurst(emitter, overrides);
       if (disposed) return;
@@ -1548,18 +1548,18 @@ export function createParticleSystemController(
       });
     },
     stop(stopOptions: Readonly<{ mode?: "drain" | "clear" }> = {}): void {
-      crcInternalAssertCommandAllowed();
+      pibblInternalAssertCommandAllowed();
       if (
         stopOptions === null ||
         typeof stopOptions !== "object" ||
         Array.isArray(stopOptions)
       ) {
-        throw new TypeError("CRC particle stop options must be a record.");
+        throw new TypeError("Pibbl particle stop options must be a record.");
       }
       const mode = stopOptions.mode ?? "drain";
       if (mode !== "drain" && mode !== "clear") {
         throw new TypeError(
-          'CRC particle stop mode must be "drain" or "clear".',
+          'Pibbl particle stop mode must be "drain" or "clear".',
         );
       }
       if (disposed) return;
@@ -1608,7 +1608,7 @@ export function createParticleSystemController(
         });
       });
     },
-  }) as CRCParticleSystem;
+  }) as PibblParticleSystem;
 
   let preparedCompiled = compiled;
   let preparedEffectCandidate: ParticleEffectCandidate | undefined;
@@ -1633,7 +1633,7 @@ export function createParticleSystemController(
     },
     prepareEffect(
       effect: ParticleEffect,
-      nextOptions: CRCParticleSystemOptions = {},
+      nextOptions: PibblParticleSystemOptions = {},
     ): ParticleEffectCandidate {
       validateOptions(nextOptions);
       if (nextOptions.flow !== initialOptions.flow) throw new Error("Particle flow binding is mount-only; use a keyed remount to change it.");
@@ -1708,15 +1708,15 @@ export function createParticleSystemController(
       preparedCompiled = compiled;
     },
     reserveBinding(
-      bindingOwner: CRCInternalRenderOwner,
+      bindingOwner: PibblInternalRenderOwner,
       backend: "canvas",
     ): ParticleBindingReservation {
       if (disposed) {
-        throw new TypeError("Cannot bind a disposed CRC particle system.");
+        throw new TypeError("Cannot bind a disposed Pibbl particle system.");
       }
       if (reservation !== undefined) {
         throw new TypeError(
-          "CRC particle system already has a pending binding reservation.",
+          "Pibbl particle system already has a pending binding reservation.",
         );
       }
       if (
@@ -1724,7 +1724,7 @@ export function createParticleSystemController(
         activeBinding.owner !== bindingOwner
       ) {
         throw new TypeError(
-          "CRC particle system is already bound to another component.",
+          "Pibbl particle system is already bound to another component.",
         );
       }
       const next = Object.freeze({ owner: bindingOwner, backend, token: {} });
@@ -1736,34 +1736,34 @@ export function createParticleSystemController(
       candidate: ParticleBindingCandidate,
     ): void {
       if (reservation !== bindingReservation) {
-        throw new TypeError("CRC particle binding reservation is stale.");
+        throw new TypeError("Pibbl particle binding reservation is stale.");
       }
       if (
         candidate.owner !== bindingReservation.owner ||
         candidate.backend !== bindingReservation.backend
       ) {
         throw new TypeError(
-          "CRC particle binding candidate owner/backend mismatch.",
+          "Pibbl particle binding candidate owner/backend mismatch.",
         );
       }
       if (candidate.compiled !== preparedCompiled) {
         throw new TypeError(
-          "CRC particle binding definition does not match its system definition.",
+          "Pibbl particle binding definition does not match its system definition.",
         );
       }
       if (candidate.compiled.dimension !== 2) {
         throw new TypeError(
-          "CRC particle binding backend does not match effect dimension.",
+          "Pibbl particle binding backend does not match effect dimension.",
         );
       }
       if (candidate.execution !== "stateless-canvas" && candidate.execution !== "flow-canvas") {
         throw new TypeError(
-          "CRC particle binding execution does not match its backend.",
+          "Pibbl particle binding execution does not match its backend.",
         );
       }
       if (!candidate.compiled.execution[candidate.execution].supported) {
         throw new TypeError(
-          `CRC particle execution "${candidate.execution}" is unavailable: ${candidate.compiled.execution[candidate.execution].reasons.join("; ")}.`,
+          `Pibbl particle execution "${candidate.execution}" is unavailable: ${candidate.compiled.execution[candidate.execution].reasons.join("; ")}.`,
         );
       }
       validateParameterArray(candidate.compiled, candidate.parameters);
@@ -1837,7 +1837,7 @@ export function createParticleSystemController(
       });
     },
     releaseBinding(
-      bindingOwner: CRCInternalRenderOwner,
+      bindingOwner: PibblInternalRenderOwner,
       candidate?: ParticleBindingCandidate,
     ): void {
       if (
@@ -1871,7 +1871,7 @@ export function createParticleSystemController(
       }
     },
     recordRendererTransaction(
-      bindingOwner: CRCInternalRenderOwner,
+      bindingOwner: PibblInternalRenderOwner,
       success: boolean,
     ): void {
       if (!success) {
@@ -1894,7 +1894,7 @@ export function createParticleSystemController(
       const found = epochs.get(epoch);
       if (found === undefined) {
         throw new RangeError(
-          `CRC particle system received unknown parameter epoch ${epoch}.`,
+          `Pibbl particle system received unknown parameter epoch ${epoch}.`,
         );
       }
       return found.parameters;
@@ -1954,19 +1954,19 @@ export function createParticleSystemController(
 }
 
 export function getParticleSystemController(
-  system: CRCParticleSystem,
+  system: PibblParticleSystem,
 ): ParticleSystemController {
   const controller = controllers.get(system);
   if (controller === undefined) {
     throw new TypeError(
-      "Expected a CRC particle system created by useParticleSystem().",
+      "Expected a Pibbl particle system created by useParticleSystem().",
     );
   }
   return controller;
 }
 
 export function particleSystemControllerSnapshot(
-  system: CRCParticleSystem,
+  system: PibblParticleSystem,
 ): ParticleSystemControllerSnapshot {
   return getParticleSystemController(system).snapshot();
 }

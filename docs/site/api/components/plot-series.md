@@ -1,7 +1,7 @@
 ---
 id: api-component-plot-series
 title: PlotSeries
-summary: Positions custom keyed CRC subtrees at mapped data points.
+summary: Positions custom keyed Pibbl subtrees at mapped data points.
 kind: api
 slug: plot-series
 apiCategory: component
@@ -10,14 +10,14 @@ symbols: [PlotSeries, PlotSeriesProps, PlotKeyAccessor]
 
 # PlotSeries
 
-Import from `@crc/core/viz`. Supply `data`, numeric `x`/`y` accessors, `xScale`,
-`yScale`, and `render(datum,index,data)`. The callback returns CRC nodes around
+Import from `@pibbl/core/viz`. Supply `data`, numeric `x`/`y` accessors, `xScale`,
+`yScale`, and `render(datum,index,data)`. The callback returns Pibbl nodes around
 local `(0,0)` at the mapped point. Invalid coordinates and `defined=false` skip
 rows. Custom elements keep ordinary styles, targets, and event handlers.
 
 Use `keyBy="id"` or a key accessor for identity across reorder. Without keyBy,
 original source indices are keys. Removing or invalidating a row unmounts it;
-returning null retains the row wrapper. Keys normalize as CRC string/number keys.
+returning null retains the row wrapper. Keys normalize as Pibbl string/number keys.
 
 The render callback constructs nodes; hooks belong in returned components.
 Its explicit signal reads belong to the row receiver. Series handler props are

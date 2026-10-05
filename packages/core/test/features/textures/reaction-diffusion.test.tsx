@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { crc, Group } from "@crc/core";
-import { ReactionDiffusion } from "@crc/core/textures";
+import { pibbl, Group } from "@pibbl/core";
+import { ReactionDiffusion } from "@pibbl/core/textures";
 import { clearSharedState } from "../../../src/lib/global-state.js";
 import {
   ManualSchedulerDriver,
@@ -39,7 +39,7 @@ it("paints through routed input while paused and preserves the field across reev
     </Group>
   );
   const sample = (x: number, y: number) => ctx.getImageData(x, y, 1, 1).data[0];
-  const controller = crc(canvas, scene(128));
+  const controller = pibbl(canvas, scene(128));
   try {
     driver.flush(0);
     const before = sample(52, 60);
@@ -50,10 +50,10 @@ it("paints through routed input while paused and preserves the field across reev
     expect(sample(52, 60)).toBeGreaterThan(before);
     expect(sample(84, 60)).toBeGreaterThan(220);
     expect(driver.pendingHostFrames).toBe(0);
-    crc(canvas, scene(160));
+    pibbl(canvas, scene(160));
     driver.flush(32);
     expect(sample(60, 60)).toBeGreaterThan(220);
-    crc(canvas, scene(128, 1));
+    pibbl(canvas, scene(128, 1));
     driver.flush(48);
     expect(sample(52, 60)).toBe(before);
   } finally {
@@ -91,7 +91,7 @@ it("keeps pointer-planted ink visible after two seconds of simulation", async ()
       }}
     />
   );
-  const controllers = canvases.map((canvas, i) => crc(canvas, scene(i, true)));
+  const controllers = canvases.map((canvas, i) => pibbl(canvas, scene(i, true)));
   const mass = (index: number, x: number, y: number) => {
     let total = 0;
     for (let py = y - 10; py <= y + 10; py++)
@@ -110,7 +110,7 @@ it("keeps pointer-planted ink visible after two seconds of simulation", async ()
     await pointerUpLogicalPoint(canvases[0], point!);
     driver.flush(16);
     expect(mass(0, point!.x, point!.y)).toBeGreaterThan(1000);
-    canvases.forEach((canvas, i) => crc(canvas, scene(i, false)));
+    canvases.forEach((canvas, i) => pibbl(canvas, scene(i, false)));
     driver.flush(32);
     for (let frame = 1; frame <= 120; frame++)
       driver.flush(32 + (frame * 1000) / 60);
@@ -154,7 +154,7 @@ it("lets a pointer reshape a mature spots colony and keep evolving", async () =>
     />
   );
   const controllers = canvases.map((canvas, index) =>
-    crc(canvas, scene(index, false)),
+    pibbl(canvas, scene(index, false)),
   );
   try {
     driver.flush(0);
@@ -167,13 +167,13 @@ it("lets a pointer reshape a mature spots colony and keep evolving", async () =>
         if (alpha > point.alpha) point = { x, y, alpha };
       }
     expect(point.alpha).toBeGreaterThan(100);
-    canvases.forEach((canvas, index) => crc(canvas, scene(index, true)));
+    canvases.forEach((canvas, index) => pibbl(canvas, scene(index, true)));
     driver.flush(2100);
     await pointerDownLogicalPoint(canvases[0], point);
     await pointerUpLogicalPoint(canvases[0], point);
     driver.flush(2116);
     expect(masks[0]).not.toEqual(masks[1]);
-    canvases.forEach((canvas, index) => crc(canvas, scene(index, false)));
+    canvases.forEach((canvas, index) => pibbl(canvas, scene(index, false)));
     for (let frame = 1; frame <= 120; frame++)
       driver.flush(2116 + (frame * 1000) / 60);
     expect(masks[0]).not.toEqual(masks[1]);
@@ -214,19 +214,19 @@ it("lets a pointer add ink to an established stripes surface", async () => {
     />
   );
   const controllers = canvases.map((canvas, index) =>
-    crc(canvas, scene(index, false)),
+    pibbl(canvas, scene(index, false)),
   );
   try {
     driver.flush(0);
     for (let frame = 1; frame <= 120; frame++)
       driver.flush((frame * 1000) / 60);
-    canvases.forEach((canvas, index) => crc(canvas, scene(index, true)));
+    canvases.forEach((canvas, index) => pibbl(canvas, scene(index, true)));
     driver.flush(2100);
     await pointerDownLogicalPoint(canvases[0], { x: 64, y: 40 });
     await pointerUpLogicalPoint(canvases[0], { x: 64, y: 40 });
     driver.flush(2116);
     expect(masks[0]).not.toEqual(masks[1]);
-    canvases.forEach((canvas, index) => crc(canvas, scene(index, false)));
+    canvases.forEach((canvas, index) => pibbl(canvas, scene(index, false)));
     for (let frame = 1; frame <= 120; frame++)
       driver.flush(2116 + (frame * 1000) / 60);
     expect(masks[0]).not.toEqual(masks[1]);

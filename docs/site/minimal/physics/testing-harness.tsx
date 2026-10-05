@@ -1,18 +1,18 @@
-import { Circle, Group, Rectangle } from "@crc/core";
+import { Circle, Group, Rectangle } from "@pibbl/core";
 import {
   PhysicsWorld2D,
   collider2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsWorld2D,
   dynamicBody2D,
   inspectPhysics2D,
   staticBody2D,
-  type CRCPhysicsWorldHandle2D,
-} from "@crc/core/physics/2d";
+  type PibblPhysicsWorldHandle2D,
+} from "@pibbl/core/physics/2d";
 import {
   createPhysicsTestHarness2D,
-  type CRCPhysicsTestHarness2D,
-  type CRCPhysicsTestHarness2DOptions,
-} from "@crc/core/physics/2d/testing";
+  type PibblPhysicsTestHarness2D,
+  type PibblPhysicsTestHarness2DOptions,
+} from "@pibbl/core/physics/2d/testing";
 
 interface Observation {
   readonly floorPresent: boolean;
@@ -24,9 +24,9 @@ const canvas = document.createElement("canvas");
 canvas.width = 240;
 canvas.height = 120;
 document.body.append(canvas);
-let world: CRCPhysicsWorldHandle2D | undefined;
+let world: PibblPhysicsWorldHandle2D | undefined;
 function Scene() {
-  world = crcPhysicsWorld2D();
+  world = pibblPhysicsWorld2D();
   return (
     <>
       <Rectangle
@@ -45,7 +45,7 @@ function Scene() {
     </>
   );
 }
-const options: CRCPhysicsTestHarness2DOptions<Observation> = {
+const options: PibblPhysicsTestHarness2DOptions<Observation> = {
   canvas,
   root: () => (
     <PhysicsWorld2D gravity={[0, 300]}>
@@ -67,7 +67,7 @@ const options: CRCPhysicsTestHarness2DOptions<Observation> = {
   },
 };
 
-const harness: CRCPhysicsTestHarness2D<Observation> =
+const harness: PibblPhysicsTestHarness2D<Observation> =
   createPhysicsTestHarness2D(options);
 try {
   harness.flush();

@@ -9,28 +9,28 @@ import {
   setSignalGraphPlanWorkNotifier,
   withDirectSignalWriteForbidden,
 } from "../signals/graph.js";
-import type { CRCInstance, CRCRenderTransaction } from "../types.js";
+import type { PibblInstance, PibblRenderTransaction } from "../types.js";
 import { runTeardown } from "../teardowns.js";
 import type {
-  CRCAdvanceLane,
-  CRCAdvanceParticipant,
-  CRCBeginCommand,
-  CRCBeginCommandHandle,
-  CRCFrameCommitAcknowledgement,
-  CRCFrameCompletion,
-  CRCFramePhase,
-  CRCFrameSnapshot,
+  PibblAdvanceLane,
+  PibblAdvanceParticipant,
+  PibblBeginCommand,
+  PibblBeginCommandHandle,
+  PibblFrameCommitAcknowledgement,
+  PibblFrameCompletion,
+  PibblFramePhase,
+  PibblFrameSnapshot,
   RealmSchedulerSnapshot,
-  CRCSchedulerTraceCollector,
-  CRCSchedulerTraceRecord,
+  PibblSchedulerTraceCollector,
+  PibblSchedulerTraceRecord,
   SchedulerDriver,
 } from "./types.js";
 
 interface InstanceRenderJob {
-  readonly instance: CRCInstance;
+  readonly instance: PibblInstance;
   readonly firstRevision: number;
   readonly revision: number;
-  readonly pendingRoot: CRCInstance["pendingRoot"];
+  readonly pendingRoot: PibblInstance["pendingRoot"];
   readonly pendingRootRevision: number;
   readonly pendingUpdateParents: boolean;
 }
@@ -39,28 +39,28 @@ interface PendingInstanceWork {
   /** Earliest accepted revision not yet completed in this eligibility bucket. */
   firstRevision: number;
   revision: number;
-  pendingRoot: CRCInstance["pendingRoot"];
+  pendingRoot: PibblInstance["pendingRoot"];
   pendingRootRevision: number;
   pendingUpdateParents: boolean;
 }
 
 interface InstanceRenderRequest {
-  readonly pendingRoot: CRCInstance["pendingRoot"];
+  readonly pendingRoot: PibblInstance["pendingRoot"];
   readonly pendingUpdateParents: boolean;
 }
 
 interface RootRenderJob {
-  readonly root: CRCInstance;
+  readonly root: PibblInstance;
   readonly instances: InstanceRenderJob[];
 }
 
-interface RootTransaction extends CRCRenderTransaction {
+interface RootTransaction extends PibblRenderTransaction {
   finish(success: boolean): void;
 }
 
 interface AdvanceRegistration {
-  readonly participant: CRCAdvanceParticipant;
-  readonly lane: CRCAdvanceLane;
+  readonly participant: PibblAdvanceParticipant;
+  readonly lane: PibblAdvanceLane;
   readonly registrationOrder: number;
   readonly requestsFrames: boolean;
   active: boolean;
@@ -69,7 +69,7 @@ interface AdvanceRegistration {
 interface BeginCommandRegistration {
   readonly accepted: {
     readonly sequence: number;
-    readonly command: CRCBeginCommand;
+    readonly command: PibblBeginCommand;
   };
   active: boolean;
   owned: boolean;
@@ -78,18 +78,18 @@ interface BeginCommandRegistration {
 interface OrderedPlaybackCompletion {
   readonly registrationOrder: number;
   readonly sequence: number;
-  readonly callback: CRCFrameCompletion;
+  readonly callback: PibblFrameCompletion;
 }
 
 export interface RendererParticipantOwner {
-  readonly instance: CRCInstance;
+  readonly instance: PibblInstance;
   isActive(): boolean;
 }
 
 interface RendererParticipantWorkRequest {
   readonly key: object;
   readonly kind: "resource" | "draw" | "compose";
-  readonly run: CRCFrameCompletion;
+  readonly run: PibblFrameCompletion;
 }
 
 interface RendererParticipantWorkRegistration {
@@ -100,20 +100,20 @@ interface RendererParticipantWorkRegistration {
 
 interface RendererParticipantCompletion {
   readonly owner: RendererParticipantOwner;
-  readonly callback: CRCFrameCompletion;
+  readonly callback: PibblFrameCompletion;
   readonly order: number;
 }
 
-const registeredRoots = new Set<CRCInstance>();
+const registeredRoots = new Set<PibblInstance>();
 // A running frame drains only current work. Late work is promoted after
 // Complete, so equal owner/key requests never coalesce across frame epochs.
-const currentInstanceWork = new Map<CRCInstance, PendingInstanceWork>();
-const nextInstanceWork = new Map<CRCInstance, PendingInstanceWork>();
+const currentInstanceWork = new Map<PibblInstance, PendingInstanceWork>();
+const nextInstanceWork = new Map<PibblInstance, PendingInstanceWork>();
 const advanceRegistrations = new Set<AdvanceRegistration>();
 const ADVANCE_LANE_ORDER = { animation: 0, physics: 1 } as const;
 const beginCommands: BeginCommandRegistration[] = [];
-const frameCompletions: CRCFrameCompletion[] = [];
-const reactionCompletions: CRCFrameCompletion[] = [];
+const frameCompletions: PibblFrameCompletion[] = [];
+const reactionCompletions: PibblFrameCompletion[] = [];
 const currentRendererWorkByOwner = new Map<
   RendererParticipantOwner,
   Map<object, RendererParticipantWorkRegistration>
@@ -126,9 +126,9 @@ const currentRendererParticipantCompletions: RendererParticipantCompletion[] =
   [];
 const nextRendererParticipantCompletions: RendererParticipantCompletion[] = [];
 
-let phase: CRCFramePhase = "idle";
+let phase: PibblFramePhase = "idle";
 let pendingHostFrame: number | undefined;
-let currentFrame: CRCFrameSnapshot | undefined;
+let currentFrame: PibblFrameSnapshot | undefined;
 let nextFrameId = 0;
 let nextAdvanceRegistrationOrder = 0;
 let nextWorkRevision = 0;
@@ -143,25 +143,25 @@ let createdCompletionCallbacks = 0;
 let releasedCompletionCallbacks = 0;
 let currentFramePlanAdmissionDepth = 0;
 let nextBeginCommandSequence = 0;
-let currentFramePlaybackCompletions: CRCFrameCompletion[] | undefined;
+let currentFramePlaybackCompletions: PibblFrameCompletion[] | undefined;
 let currentFrameCommitAcknowledgements:
-  CRCFrameCommitAcknowledgement[] | undefined;
+  PibblFrameCommitAcknowledgement[] | undefined;
 let currentFrameOrderedPlaybackCompletions:
   OrderedPlaybackCompletion[] | undefined;
 let nextOrderedPlaybackCompletionSequence = 0;
-let schedulerTraceCollector: CRCSchedulerTraceCollector | undefined;
+let schedulerTraceCollector: PibblSchedulerTraceCollector | undefined;
 let schedulerTraceExclusive = false;
 
 setSignalGraphPlanWorkNotifier(syncSignalGraphPlanWork);
 
-export function registerRootInstance(instance: CRCInstance): void {
+export function registerRootInstance(instance: PibblInstance): void {
   if (!instance.parent && !registeredRoots.has(instance)) {
     registeredRoots.add(instance);
     createdRootRegistrations++;
   }
 }
 
-export function unregisterRootInstance(instance: CRCInstance): void {
+export function unregisterRootInstance(instance: PibblInstance): void {
   if (registeredRoots.delete(instance)) {
     releasedRootRegistrations++;
   }
@@ -170,7 +170,7 @@ export function unregisterRootInstance(instance: CRCInstance): void {
 }
 
 export function requestInstanceRender(
-  instance: CRCInstance,
+  instance: PibblInstance,
   request: InstanceRenderRequest = {
     pendingRoot: NO_PENDING_ROOT,
     pendingUpdateParents: false,
@@ -186,7 +186,7 @@ export function requestInstanceRender(
   ) {
     supersedeDeferredRootPayloads(instance, revision);
   }
-  let current: CRCInstance | undefined = instance;
+  let current: PibblInstance | undefined = instance;
   while (current) {
     current.requestedRenderRevision = revision;
     mergePendingInstanceWork(target, current, {
@@ -202,7 +202,7 @@ export function requestInstanceRender(
     });
     synchronizeInstancePendingState(current);
     current = current.parent
-      ? GLOBAL_STATE.crcInstances.get(current.parent)
+      ? GLOBAL_STATE.pibblInstances.get(current.parent)
       : undefined;
   }
   requestHostFrameIfNeeded();
@@ -210,7 +210,7 @@ export function requestInstanceRender(
 }
 
 /** Whether an instance has work that has not yet completed a successful render. */
-export function hasPendingInstanceRender(instance: CRCInstance): boolean {
+export function hasPendingInstanceRender(instance: PibblInstance): boolean {
   return (
     instance.requestedRenderRevision > instance.completedRenderRevision &&
     !(phase === "render" && nextInstanceWork.has(instance))
@@ -218,8 +218,8 @@ export function hasPendingInstanceRender(instance: CRCInstance): boolean {
 }
 
 export function registerAdvanceParticipant(
-  participant: CRCAdvanceParticipant,
-  lane: CRCAdvanceLane = "animation",
+  participant: PibblAdvanceParticipant,
+  lane: PibblAdvanceLane = "animation",
   requestsFrames = true,
 ): () => void {
   const registration: AdvanceRegistration = {
@@ -241,8 +241,8 @@ export function registerAdvanceParticipant(
 
 /** Queues immutable, realm-ordered work for the next frozen Begin prefix. */
 export function queueBeginCommand(
-  command: CRCBeginCommand,
-): CRCBeginCommandHandle {
+  command: PibblBeginCommand,
+): PibblBeginCommandHandle {
   const sequence = ++nextBeginCommandSequence;
   const registration: BeginCommandRegistration = {
     accepted: Object.freeze({ sequence, command }),
@@ -269,7 +269,7 @@ export function queueBeginCommand(
 
 /** Queues scheduler-owned work for Complete in the currently advancing frame. */
 export function queueCurrentFrameCompletion(
-  callback: CRCFrameCompletion,
+  callback: PibblFrameCompletion,
 ): () => void {
   if (
     currentFramePlaybackCompletions === undefined ||
@@ -284,14 +284,14 @@ export function queueCurrentFrameCompletion(
 
 /** Registers playback state adoption against this frame's explicit Commit outcome. */
 export function queueCurrentFrameCommitAcknowledgement(
-  callback: CRCFrameCommitAcknowledgement,
+  callback: PibblFrameCommitAcknowledgement,
 ): () => void {
   if (
     currentFrameCommitAcknowledgements === undefined ||
     (phase !== "begin" && phase !== "advance")
   ) {
     throw new Error(
-      "CRC frame Commit acknowledgements may only be queued during Begin or Advance.",
+      "Pibbl frame Commit acknowledgements may only be queued during Begin or Advance.",
     );
   }
   currentFrameCommitAcknowledgements.push(callback);
@@ -312,7 +312,7 @@ export function queueCurrentFrameCommitAcknowledgement(
 /** Queues one playback delivery ordered by run identity, then source insertion. */
 export function queueCurrentFrameOrderedPlaybackCompletion(
   registrationOrder: number,
-  callback: CRCFrameCompletion,
+  callback: PibblFrameCompletion,
 ): void {
   if (currentFrameOrderedPlaybackCompletions === undefined) {
     queueFrameCompletion(callback);
@@ -326,7 +326,7 @@ export function queueCurrentFrameOrderedPlaybackCompletion(
   createdCompletionCallbacks++;
 }
 
-export function queueFrameCompletion(callback: CRCFrameCompletion): () => void {
+export function queueFrameCompletion(callback: PibblFrameCompletion): () => void {
   frameCompletions.push(callback);
   createdCompletionCallbacks++;
   requestHostFrameIfNeeded();
@@ -335,7 +335,7 @@ export function queueFrameCompletion(callback: CRCFrameCompletion): () => void {
 
 /** Queues signal-driven imperative work for an eligible Complete phase. */
 export function queueReactionCompletion(
-  callback: CRCFrameCompletion,
+  callback: PibblFrameCompletion,
 ): () => void {
   reactionCompletions.push(callback);
   createdCompletionCallbacks++;
@@ -344,7 +344,7 @@ export function queueReactionCompletion(
 }
 
 /** @internal Emits one immutable fact only while a source-only collector is installed. */
-export function recordSchedulerTrace(record: CRCSchedulerTraceRecord): void {
+export function recordSchedulerTrace(record: PibblSchedulerTraceRecord): void {
   const collector = schedulerTraceCollector;
   if (collector === undefined) return;
   try {
@@ -385,7 +385,7 @@ export function requestRendererParticipantWork(
 
 export function queueRendererParticipantComplete(
   owner: RendererParticipantOwner,
-  callback: CRCFrameCompletion,
+  callback: PibblFrameCompletion,
 ): void {
   if (!owner.isActive()) return;
   const completions = shouldDeferNewFrameWork()
@@ -419,7 +419,7 @@ export function removeRendererParticipantOwner(
   cancelIdleHostFrame();
 }
 
-export function getCurrentFrameSnapshot(): CRCFrameSnapshot | undefined {
+export function getCurrentFrameSnapshot(): PibblFrameSnapshot | undefined {
   return GLOBAL_STATE.frameSnapshot ?? currentFrame;
 }
 
@@ -465,7 +465,7 @@ export function installSchedulerDriverForTest(
 ): () => void {
   if (pendingHostFrame !== undefined || phase !== "idle") {
     throw new Error(
-      "Cannot replace the CRC scheduler driver while a frame is active.",
+      "Cannot replace the Pibbl scheduler driver while a frame is active.",
     );
   }
   const previous = schedulerDriver;
@@ -473,7 +473,7 @@ export function installSchedulerDriverForTest(
   return () => {
     if (pendingHostFrame !== undefined || phase !== "idle") {
       throw new Error(
-        "Cannot restore the CRC scheduler driver while a frame is active.",
+        "Cannot restore the Pibbl scheduler driver while a frame is active.",
       );
     }
     schedulerDriver = previous;
@@ -482,7 +482,7 @@ export function installSchedulerDriverForTest(
 
 /** @internal Test/diagnostic seam; production retains no trace history. */
 export function installSchedulerTraceCollectorForTest(
-  collector: CRCSchedulerTraceCollector,
+  collector: PibblSchedulerTraceCollector,
   exclusive = false,
 ): () => void {
   if (schedulerTraceExclusive || (exclusive && schedulerTraceCollector !== undefined)) {
@@ -517,7 +517,7 @@ function runFrame(hostTime: number): void {
   currentFrame = snapshot;
   const errors: unknown[] = [];
   const transactions: Array<{
-    root: CRCInstance;
+    root: PibblInstance;
     transaction: RootTransaction;
     success: boolean;
   }> = [];
@@ -562,7 +562,7 @@ function runFrame(hostTime: number): void {
     const { participant } = registration;
     try {
       withDirectSignalWriteForbidden(
-        "Cannot write to a signal directly during CRC scheduler Advance; stage it through the provided batch.",
+        "Cannot write to a signal directly during Pibbl scheduler Advance; stage it through the provided batch.",
         () => participant(snapshot, batch),
       );
     } catch (error) {
@@ -636,7 +636,7 @@ function runFrame(hostTime: number): void {
     };
     transactions.push(transactionRecord);
     rootJob.root.eventRoot.renderTransaction = transaction;
-    let failedInstance: CRCInstance | undefined;
+    let failedInstance: PibblInstance | undefined;
     let rendererFailed = false;
     try {
       for (let jobIndex = 0; jobIndex < rootJob.instances.length; jobIndex++) {
@@ -806,8 +806,8 @@ function releaseBeginCommand(registration: BeginCommandRegistration): void {
 }
 
 function createFrameCompletionCancellation(
-  callback: CRCFrameCompletion,
-  ownedCompletions?: CRCFrameCompletion[],
+  callback: PibblFrameCompletion,
+  ownedCompletions?: PibblFrameCompletion[],
 ): () => void {
   let active = true;
   return () => {
@@ -829,7 +829,7 @@ function createFrameCompletionCancellation(
 function captureRootJobs(): RootRenderJob[] {
   const requested = Array.from(currentInstanceWork);
   currentInstanceWork.clear();
-  const jobsByRoot = new Map<CRCInstance, InstanceRenderJob[]>();
+  const jobsByRoot = new Map<PibblInstance, InstanceRenderJob[]>();
   for (const [instance, work] of requested) {
     synchronizeInstancePendingState(instance);
     if (instance.mainTeardowns.closed) continue;
@@ -872,7 +872,7 @@ function mergeRootJobs(
     const initialJob = initial.find((job) => job.root === root);
     const plannedInstances = plannedByRoot.get(root);
     if (!initialJob && !plannedInstances) continue;
-    const byInstance = new Map<CRCInstance, InstanceRenderJob>();
+    const byInstance = new Map<PibblInstance, InstanceRenderJob>();
     for (const job of initialJob?.instances ?? []) {
       byInstance.set(job.instance, job);
     }
@@ -912,16 +912,16 @@ function mergeRootJobs(
   return merged;
 }
 
-function findRoot(instance: CRCInstance): CRCInstance | undefined {
-  let current: CRCInstance | undefined = instance;
+function findRoot(instance: PibblInstance): PibblInstance | undefined {
+  let current: PibblInstance | undefined = instance;
   while (current?.parent) {
-    current = GLOBAL_STATE.crcInstances.get(current.parent);
+    current = GLOBAL_STATE.pibblInstances.get(current.parent);
   }
   return current;
 }
 
 function supersedeDeferredRootPayloads(
-  ancestor: CRCInstance,
+  ancestor: PibblInstance,
   revision: number,
 ): void {
   for (const [instance, deferred] of nextInstanceWork) {
@@ -941,14 +941,14 @@ function supersedeDeferredRootPayloads(
 }
 
 function isInstanceWithin(
-  instance: CRCInstance,
-  ancestor: CRCInstance,
+  instance: PibblInstance,
+  ancestor: PibblInstance,
 ): boolean {
-  let current: CRCInstance | undefined = instance;
+  let current: PibblInstance | undefined = instance;
   while (current) {
     if (current === ancestor) return true;
     current = current.parent
-      ? GLOBAL_STATE.crcInstances.get(current.parent)
+      ? GLOBAL_STATE.pibblInstances.get(current.parent)
       : undefined;
   }
   return false;
@@ -962,7 +962,7 @@ function restoreRootJob(rootJob: RootRenderJob): void {
     const { instance } = job;
     if (
       instance.mainTeardowns.closed ||
-      GLOBAL_STATE.crcInstances.get(instance.canvas) !== instance
+      GLOBAL_STATE.pibblInstances.get(instance.canvas) !== instance
     ) {
       continue;
     }
@@ -971,17 +971,17 @@ function restoreRootJob(rootJob: RootRenderJob): void {
   }
 }
 
-function instanceDepth(instance: CRCInstance): number {
+function instanceDepth(instance: PibblInstance): number {
   let depth = 0;
-  let current: CRCInstance | undefined = instance;
+  let current: PibblInstance | undefined = instance;
   while (current?.parent) {
     depth++;
-    current = GLOBAL_STATE.crcInstances.get(current.parent);
+    current = GLOBAL_STATE.pibblInstances.get(current.parent);
   }
   return depth;
 }
 
-function removeRootWork(root: CRCInstance): void {
+function removeRootWork(root: PibblInstance): void {
   for (const workByInstance of [currentInstanceWork, nextInstanceWork]) {
     for (const instance of workByInstance.keys()) {
       if (findRoot(instance) === root) {
@@ -993,7 +993,7 @@ function removeRootWork(root: CRCInstance): void {
 }
 
 function countDirtyRoots(): number {
-  const roots = new Set<CRCInstance>();
+  const roots = new Set<PibblInstance>();
   for (const workByInstance of [currentInstanceWork, nextInstanceWork]) {
     for (const instance of workByInstance.keys()) {
       const root = findRoot(instance);
@@ -1031,11 +1031,11 @@ function hasFrameWork(): boolean {
 }
 
 function captureRendererParticipantWork(
-  executableInstances: ReadonlySet<CRCInstance>,
+  executableInstances: ReadonlySet<PibblInstance>,
   blockedOwners: Set<RendererParticipantOwner>,
-): Map<CRCInstance, RendererParticipantWorkRegistration[]> {
+): Map<PibblInstance, RendererParticipantWorkRegistration[]> {
   const byInstance = new Map<
-    CRCInstance,
+    PibblInstance,
     RendererParticipantWorkRegistration[]
   >();
   for (const [owner, workByKey] of currentRendererWorkByOwner) {
@@ -1085,7 +1085,7 @@ function captureRendererParticipantCompletions(
 function runRendererParticipantStage(
   work: RendererParticipantWorkRegistration[] | undefined,
   kind: RendererParticipantWorkRequest["kind"],
-  snapshot: CRCFrameSnapshot,
+  snapshot: PibblFrameSnapshot,
 ): unknown[] {
   const errors: unknown[] = [];
   if (!work) return errors;
@@ -1104,7 +1104,7 @@ function runRendererParticipantStage(
 
 function restoreRendererParticipantFailure(
   rootJob: RootRenderJob,
-  rendererWork: Map<CRCInstance, RendererParticipantWorkRegistration[]>,
+  rendererWork: Map<PibblInstance, RendererParticipantWorkRegistration[]>,
   failedJobIndex: number,
   retryOwners: Set<RendererParticipantOwner>,
 ): void {
@@ -1138,8 +1138,8 @@ function restoreRendererParticipantFailure(
 }
 
 function mergePendingInstanceWork(
-  target: Map<CRCInstance, PendingInstanceWork>,
-  instance: CRCInstance,
+  target: Map<PibblInstance, PendingInstanceWork>,
+  instance: PibblInstance,
   incoming: PendingInstanceWork,
 ): void {
   const existing = target.get(instance);
@@ -1159,7 +1159,7 @@ function mergePendingInstanceWork(
   existing.pendingUpdateParents ||= incoming.pendingUpdateParents;
 }
 
-function synchronizeInstancePendingState(instance: CRCInstance): void {
+function synchronizeInstancePendingState(instance: PibblInstance): void {
   const current = currentInstanceWork.get(instance);
   const next = nextInstanceWork.get(instance);
   const rootSource = !current
@@ -1176,7 +1176,7 @@ function synchronizeInstancePendingState(instance: CRCInstance): void {
 }
 
 export function completeInstanceRenderRevision(
-  instance: CRCInstance,
+  instance: PibblInstance,
   revision: number,
 ): void {
   const pendingFirstRevisions = [
@@ -1198,7 +1198,7 @@ export function completeInstanceRenderRevision(
 }
 
 function promoteNextFrameWork(): void {
-  const pendingInstances = new Set<CRCInstance>();
+  const pendingInstances = new Set<PibblInstance>();
   for (const [instance, work] of nextInstanceWork) {
     mergePendingInstanceWork(currentInstanceWork, instance, work);
     pendingInstances.add(instance);
@@ -1282,6 +1282,6 @@ function createRootTransaction(): RootTransaction {
 function throwCollectedErrors(errors: unknown[]): void {
   if (errors.length === 1) throw errors[0];
   if (errors.length > 1) {
-    throw new AggregateError(errors, "Multiple CRC frame operations failed.");
+    throw new AggregateError(errors, "Multiple Pibbl frame operations failed.");
   }
 }

@@ -12,7 +12,7 @@ relatedTypes: [LayoutBox]
 # useLayoutBox
 
 ```ts
-import { useLayoutBox, Rectangle } from "@crc/core";
+import { useLayoutBox, Rectangle } from "@pibbl/core";
 ```
 
 `useLayoutBox()` returns a readonly [`LayoutBox`](#/api/types/layout#layoutbox) and is render-only, returning the stable

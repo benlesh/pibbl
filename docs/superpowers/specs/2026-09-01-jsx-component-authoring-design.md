@@ -10,20 +10,20 @@ Date: 2026-09-01
 
 ## Purpose
 
-CRC will replace its factory-first component authoring model with one native
+Pibbl will replace its factory-first component authoring model with one native
 element protocol that supports modern automatic JSX and an equivalent
 non-JSX API. The goal is to make component definitions and composed scenes as
 readable as possible without importing React's renderer, lifecycle, DOM model,
 or accessibility implications.
 
-This is an intentionally breaking pivot. CRC is unreleased and unused enough
+This is an intentionally breaking pivot. Pibbl is unreleased and unused enough
 that preserving obsolete authoring syntax would make the resulting API worse.
 Shipped features remain in scope; compatibility aliases do not.
 
-The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and
+The design preserves Pibbl's scheduled immediate-mode Canvas renderer, hook and
 component identity, local style language, declared-box layout, events, focus,
-layers, measurement, and exact resource ownership. JSX changes how a CRC tree
-is described, not how CRC renders it.
+layers, measurement, and exact resource ownership. JSX changes how a Pibbl tree
+is described, not how Pibbl renders it.
 
 ## Goals
 
@@ -33,12 +33,12 @@ is described, not how CRC renders it.
   tags or DOM-adjacent abbreviations.
 - Keep visual and layout values under an explicit `style` object.
 - Make children, text content, fragments, lists, conditionals, and keys feel
-  familiar to React users while defining CRC's synchronous behavior exactly.
+  familiar to React users while defining Pibbl's synchronous behavior exactly.
 - Give JSX and non-JSX authors one element protocol and the same runtime
   semantics.
 - Make a React, Preact, or other foreign JSX runtime mistake fail early with a
   useful diagnostic.
-- Allow React and CRC to coexist cleanly in one codebase.
+- Allow React and Pibbl to coexist cleanly in one codebase.
 - Keep platform-level style resolution, measurement, and layout extension
   available without making ordinary components use a definition wrapper.
 - Document JSX, non-JSX, lifecycle differences, mixed projects, advanced
@@ -65,13 +65,20 @@ JSX is the preferred syntax. Built-ins use descriptive imported values, and
 user components are ordinary functions:
 
 ```tsx
-import { crc, useState, Group, Rectangle, Text, type CRCNode } from "@crc/core";
+import {
+  pibbl,
+  useState,
+  Group,
+  Rectangle,
+  Text,
+  type PibblNode,
+} from "@pibbl/core";
 
 interface PosterProps {
   initialMessage: string;
 }
 
-function Poster({ initialMessage }: PosterProps): CRCNode {
+function Poster({ initialMessage }: PosterProps): PibblNode {
   const [message, setMessage] = useState(initialMessage);
 
   return (
@@ -83,7 +90,7 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
           fill: "#1f4bd8",
           cursor: "pointer",
         }}
-        onClick={() => setMessage("CRC!")}
+        onClick={() => setMessage("Pibbl!")}
       />
 
       <Text
@@ -101,15 +108,15 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
   );
 }
 
-const controller = crc(canvas, <Poster initialMessage="Hello" />);
+const controller = pibbl(canvas, <Poster initialMessage="Hello" />);
 ```
 
 No wrapper, base class, registration call, or JSX-specific component type is
 required. The component function is its runtime identity. Components declare a
 `children` prop when they accept children.
 
-CRC retains the `useState`, `useMemo`, `useRef`, and other `crc*` lifecycle
-names. They distinguish CRC's lifecycle from React's and reduce accidental
+Pibbl retains the `useState`, `useMemo`, `useRef`, and other `pibbl*` lifecycle
+names. They distinguish Pibbl's lifecycle from React's and reduce accidental
 cross-runtime imports.
 
 ### Canonical built-ins
@@ -132,7 +139,7 @@ are removed rather than retained as aliases. `defineComp`,
 `createElement` is the complete non-JSX alternative:
 
 ```ts
-function Poster({ initialMessage }: PosterProps): CRCNode {
+function Poster({ initialMessage }: PosterProps): PibblNode {
   const [message, setMessage] = useState(initialMessage);
 
   return createElement(Group, null, [
@@ -169,29 +176,29 @@ provided in props. One variadic child becomes the `children` value; multiple
 variadic children become an array and override `props.children`. Dynamic lists
 should be passed as one array in the third argument. JSX and `createElement`
 delegate to the same internal element constructor and produce
-indistinguishable CRC elements.
+indistinguishable Pibbl elements.
 
 Direct component calls do not create elements. Authors use JSX or
 `createElement(Component, props)`. A platform component such as `Rectangle`
-called directly reports that it was invoked outside CRC and suggests both
+called directly reports that it was invoked outside Pibbl and suggests both
 supported construction forms.
 
 ## Element protocol
 
 ### Opaque branded elements
 
-`CRCElement` replaces `CompEl`. It is an immutable, opaque description with:
+`PibblElement` replaces `CompEl`. It is an immutable, opaque description with:
 
-- a CRC runtime brand;
+- a Pibbl runtime brand;
 - a component type;
 - shallow-immutable props, including `style` and `children`;
 - an optional key normalized to a string;
 - development-only source metadata supplied by `jsxDEV`.
 
 The runtime brand uses a stable global symbol such as
-`Symbol.for("@crc/core.element")`. Public types also carry a nominal brand so a
+`Symbol.for("@pibbl/core.element")`. Public types also carry a nominal brand so a
 foreign library's structurally similar element does not satisfy
-`CRCElement`.
+`PibblElement`.
 
 `createElement` copies author props, removes `key`, installs compiler or
 variadic children according to the rules above, and shallow-freezes the
@@ -203,19 +210,19 @@ The shared internal constructor also accepts the separate key argument used by
 `jsx`, `jsxs`, and `jsxDEV`; a compiler key takes precedence over any defensive
 key found in the incoming props object.
 
-`key` accepts strings and numbers and is not delivered in component props. CRC
+`key` accepts strings and numbers and is not delivered in component props. Pibbl
 does not add React-style element `ref`; `useRef` keeps its current hook
 semantics.
 
-`crc(canvas, root, config?)` accepts a complete `CRCNode`, so a fragment,
-collection, or empty root is valid in addition to one `CRCElement`.
+`pibbl(canvas, root, config?)` accepts a complete `PibblNode`, so a fragment,
+collection, or empty root is valid in addition to one `PibblElement`.
 
 ### Function components
 
 The conceptual public type is:
 
 ```ts
-type CRCComponent<P> = (props: P) => CRCNode;
+type PibblComponent<P> = (props: P) => PibblNode;
 ```
 
 Plain components receive their author props unchanged apart from special key
@@ -234,10 +241,10 @@ visual fields.
 Container traversal accepts a recursive synchronous node structure:
 
 ```ts
-type CRCEmptyNode = false | true | null | undefined | "" | 0;
+type PibblEmptyNode = false | true | null | undefined | "" | 0;
 
-type CRCNode =
-  CRCElement | CRCEmptyNode | readonly CRCNode[] | Iterable<CRCNode>;
+type PibblNode =
+  PibblElement | PibblEmptyNode | readonly PibblNode[] | Iterable<PibblNode>;
 ```
 
 This supports normal interpolation:
@@ -268,11 +275,11 @@ form.
 empty values, arrays, and finite synchronous iterables of those values. It
 concatenates content exactly as JSX supplies it. Numeric zero renders as
 `"0"` inside `Text`; booleans, `null`, and `undefined` contribute no content.
-A CRC element inside `Text` is a type error and a runtime error.
+A Pibbl element inside `Text` is a type error and a runtime error.
 `TextStyle.text` is removed.
 
 Leaf drawing components reject children. Containers declare the node child
-type explicitly. TypeScript uses the component's first parameter and CRC's
+type explicitly. TypeScript uses the component's first parameter and Pibbl's
 `JSX.ElementChildrenAttribute` to check these contracts.
 
 ### Fragments and identity
@@ -353,7 +360,7 @@ geometry.
 
 `useCanvasContext()` is a render-only accessor for the current isolated Canvas
 2D context. It does not allocate a hook slot and does not schedule work. It
-throws a targeted error outside live CRC rendering and remains unavailable
+throws a targeted error outside live Pibbl rendering and remains unavailable
 during pure measurement.
 
 ```tsx
@@ -386,7 +393,7 @@ const Paragraph = definePrimitive<
   ResolvedParagraphStyle
 >(
   function renderParagraph(props, style, context) {
-    // Direct Canvas work and/or returned CRC children.
+    // Direct Canvas work and/or returned Pibbl children.
   },
   {
     normalizeStyle,
@@ -409,18 +416,18 @@ current implemented contracts.
 
 Ordinary application code should contain no `definePrimitive` calls. Simple
 custom painters use `useCanvasContext`; ordinary composites use plain
-functions. CRC's built-in drawing and layout components use
+functions. Pibbl's built-in drawing and layout components use
 `definePrimitive` because they form the platform layer.
 
 ## JSX runtime and TypeScript contract
 
 ### Package entry points
 
-`@crc/core` adds explicit export-map entries for:
+`@pibbl/core` adds explicit export-map entries for:
 
 ```text
-@crc/core/jsx-runtime
-@crc/core/jsx-dev-runtime
+@pibbl/core/jsx-runtime
+@pibbl/core/jsx-dev-runtime
 ```
 
 The production entry exports `jsx`, `jsxs`, `Fragment`, and the local `JSX`
@@ -434,7 +441,7 @@ The supported TypeScript setup is:
 {
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "@crc/core"
+    "jsxImportSource": "@pibbl/core"
   }
 }
 ```
@@ -442,14 +449,14 @@ The supported TypeScript setup is:
 Per-file setup is:
 
 ```tsx
-/** @jsxImportSource @crc/core */
+/** @jsxImportSource @pibbl/core */
 ```
 
 The root package does not install a global `JSX` namespace. Both runtime entry
 points export a module-scoped namespace with:
 
-- `JSX.Element` as branded `CRCElement`;
-- `JSX.ElementType` restricted to synchronous CRC function components and CRC
+- `JSX.Element` as branded `PibblElement`;
+- `JSX.ElementType` restricted to synchronous Pibbl function components and Pibbl
   platform component values;
 - `JSX.ElementChildrenAttribute` naming `children`;
 - `JSX.IntrinsicAttributes` declaring optional string or numeric `key`;
@@ -458,32 +465,32 @@ points export a module-scoped namespace with:
   specified-style input.
 
 TypeScript, Bundler, and NodeNext declarations must agree. The root build emits
-and packages both runtime implementations and declarations. CRC does not depend
+and packages both runtime implementations and declarations. Pibbl does not depend
 on React.
 
-### Mixed React and CRC projects
+### Mixed React and Pibbl projects
 
-One `.tsx` file has one JSX runtime. React and CRC mix at file boundaries:
+One `.tsx` file has one JSX runtime. React and Pibbl mix at file boundaries:
 
 ```text
 src/
   App.tsx
   PosterCanvas.tsx
   scenes/
-    Poster.crc.tsx
-    Chart.crc.tsx
+    Poster.pibbl.tsx
+    Chart.pibbl.tsx
 ```
 
-`.crc.tsx` is the recommended convention, not a new language extension. A
-CRC-only package sets `jsxImportSource` once. A mixed package uses per-file CRC
+`.pibbl.tsx` is the recommended convention, not a new language extension. A
+Pibbl-only package sets `jsxImportSource` once. A mixed package uses per-file Pibbl
 pragmas or separate included tsconfigs.
 
-A React host owns the native Canvas and mounts a CRC element explicitly:
+A React host owns the native Canvas and mounts a Pibbl element explicitly:
 
 ```tsx
 import { useEffect, useRef } from "react";
-import { crc, createElement as createCRCElement } from "@crc/core";
-import { Poster } from "./scenes/Poster.crc";
+import { pibbl, createElement as createPibblElement } from "@pibbl/core";
+import { Poster } from "./scenes/Poster.pibbl";
 
 export function PosterCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -492,7 +499,7 @@ export function PosterCanvas() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const controller = crc(canvas, createCRCElement(Poster, null));
+    const controller = pibbl(canvas, createPibblElement(Poster, null));
     return () => controller.dispose();
   }, []);
 
@@ -501,19 +508,19 @@ export function PosterCanvas() {
 ```
 
 If both tree syntaxes are needed in one file, JSX belongs to the dominant
-runtime and the other tree uses its explicit element constructor. CRC will not
+runtime and the other tree uses its explicit element constructor. Pibbl will not
 add a custom transform for expression-level runtime switching.
 
 ### Wrong-runtime diagnostics
 
 Misconfiguration fails in layers:
 
-1. CRC platform components do not satisfy React's function-component return
-   type, and React components do not satisfy CRC's element type.
-2. A foreign JSX element is not assignable to `CRCNode` at `crc()`.
-3. `crc()` recognizes known React element brands and reports that the file used
+1. Pibbl platform components do not satisfy React's function-component return
+   type, and React components do not satisfy Pibbl's element type.
+2. A foreign JSX element is not assignable to `PibblNode` at `pibbl()`.
+3. `pibbl()` recognizes known React element brands and reports that the file used
    the React JSX runtime, including the required `jsxImportSource` fix.
-4. A platform component invoked outside CRC reports direct invocation or a
+4. A platform component invoked outside Pibbl reports direct invocation or a
    likely foreign JSX runtime.
 5. Child traversal rejects other unbranded element-like objects with the
    receiving component and source location.
@@ -524,18 +531,18 @@ diagnostics use it when available. Production elements omit source metadata.
 Representative diagnostics include:
 
 ```text
-CRC received a React element. This file is using the React JSX runtime.
-Set jsxImportSource to "@crc/core" or add /** @jsxImportSource @crc/core */.
+Pibbl received a React element. This file is using the React JSX runtime.
+Set jsxImportSource to "@pibbl/core" or add /** @jsxImportSource @pibbl/core */.
 ```
 
 ```text
-Rectangle is a CRC component and was invoked outside the CRC renderer.
-Use <Rectangle ... /> in a CRC JSX file or createElement(Rectangle, props).
+Rectangle is a Pibbl component and was invoked outside the Pibbl renderer.
+Use <Rectangle ... /> in a Pibbl JSX file or createElement(Rectangle, props).
 ```
 
 ## Runtime execution
 
-Element creation is side-effect free. On a scheduled frame CRC:
+Element creation is side-effect free. On a scheduled frame Pibbl:
 
 1. validates and prepares the current root node structure;
 2. resolves identity from parent, component function, key, and occurrence;
@@ -589,8 +596,8 @@ rendering.
 </Layer>
 ```
 
-`Layer` accepts a general CRC container-child structure. It installs a stable
-internal fragment root for its offscreen CRC instance. The layer retains the
+`Layer` accepts a general Pibbl container-child structure. It installs a stable
+internal fragment root for its offscreen Pibbl instance. The layer retains the
 current global interaction order, focus invalidation, caching comparison, and
 teardown semantics.
 
@@ -606,7 +613,7 @@ Function enhancers become descriptive JSX policy values:
 </FocusManagement>
 ```
 
-Both require exactly one CRC element child. They are transparent policy
+Both require exactly one Pibbl element child. They are transparent policy
 boundaries, not ordinary component boundaries: they do not paint, lay out, own
 hooks, or alter the enhanced child's component identity. Their internal
 descriptors attach to that child and retain current lifecycle and ownership
@@ -636,12 +643,12 @@ The principal migration is:
 | `layer({ render })`                      | `<Layer>{children}</Layer>`                                     |
 | `withFocusManagement(scene)`             | `<FocusManagement>{scene}</FocusManagement>`                    |
 | `withKeyboardNavigation(scene, options)` | `<KeyboardNavigation {...options}>{scene}</KeyboardNavigation>` |
-| `CompEl`                                 | `CRCElement`                                                    |
-| `CompFn`                                 | `CRCComponent` or a primitive render type                       |
+| `CompEl`                                 | `PibblElement`                                                  |
+| `CompFn`                                 | `PibblComponent` or a primitive render type                     |
 | Callable component factories             | JSX or `createElement`                                          |
 
-New or renamed public types include `CRCElement`, `CRCComponent`, `CRCNode`,
-container and text child types, `CRCKey`, and primitive capability types.
+New or renamed public types include `PibblElement`, `PibblComponent`, `PibblNode`,
+container and text child types, `PibblKey`, and primitive capability types.
 Obsolete factory and element types are removed from declarations and runtime
 exports.
 
@@ -659,11 +666,11 @@ models are documented end to end. Documentation will include:
 7. Layout composition and the distinction between specified style and local
    allocation.
 8. Groups, transforms, clips, and layers.
-9. CRC state and lifecycle, with a precise React comparison.
+9. Pibbl state and lifecycle, with a precise React comparison.
 10. Ordinary custom components and `useCanvasContext` drawing.
 11. Advanced `definePrimitive` style resolution and pure measurement.
 12. A complete non-JSX guide using `createElement`.
-13. React and CRC in one codebase, including the same-file limitation.
+13. React and Pibbl in one codebase, including the same-file limitation.
 14. Wrong-runtime and JSX troubleshooting by diagnostic.
 15. Focus, keyboard navigation, and accessibility limitations.
 16. A complete API reference and one-time migration guide.
@@ -672,7 +679,7 @@ All learning examples move to `.tsx` and preferred JSX. One dedicated learning
 path implements a representative scene without JSX. The scenario catalog and
 generated index reflect renamed APIs.
 
-The Studio editor and sandbox compile TSX with CRC's automatic runtime, expose
+The Studio editor and sandbox compile TSX with Pibbl's automatic runtime, expose
 the shipped JSX declarations, and work in source and built-package modes. The
 editor shows the exact configuration used by examples.
 
@@ -695,7 +702,7 @@ before completion.
   leaves.
 - Lowercase tags, async components, Promise children, invalid program-prop
   collisions, and foreign elements fail compilation.
-- CRC and React JSX fixtures coexist in one project and fail when their
+- Pibbl and React JSX fixtures coexist in one project and fail when their
   elements cross mount boundaries.
 - `jsx-runtime` and `jsx-dev-runtime` resolve from source, built, and packed
   packages under strict Bundler and NodeNext resolution.
@@ -780,7 +787,7 @@ The refactor is complete only when:
 - `Text` content, arbitrary synchronous list interpolation, fragments, and
   keys follow this design;
 - wrong React targeting fails with actionable diagnostics;
-- React and CRC coexist through documented file boundaries;
+- React and Pibbl coexist through documented file boundaries;
 - all shipped drawing, layout, event, focus, layer, surface, lifecycle,
   measurement, and ownership features have public JSX evidence;
 - source, built, packed, Bundler, NodeNext, browser, Studio, lifecycle,

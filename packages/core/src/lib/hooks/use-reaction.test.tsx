@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc.js';
+import { pibbl } from '../pibbl.js';
 import { clearSharedState } from '../global-state.js';
 import { signal, signalGraphSnapshot } from '../signals/graph.js';
 import { useSignal } from './use-signal.js';
@@ -25,7 +25,7 @@ describe('useReaction', () => {
       });
     }
 
-    const healthy = crc(createCanvas(), <Healthy />);
+    const healthy = pibbl(createCanvas(), <Healthy />);
     expect(events).toEqual([]);
     frames.flush();
     expect(events).toEqual(['render', 'setup']);
@@ -37,7 +37,7 @@ describe('useReaction', () => {
       useReaction(failedSetup);
       throw failure;
     }
-    const broken = crc(createCanvas(), <Broken />);
+    const broken = pibbl(createCanvas(), <Broken />);
     expect(() => frames.flush()).toThrow(failure);
     expect(failedSetup).not.toHaveBeenCalled();
     broken.dispose();
@@ -60,7 +60,7 @@ describe('useReaction', () => {
       });
     }
 
-    const controller = crc(createCanvas(), <Probe />);
+    const controller = pibbl(createCanvas(), <Probe />);
     frames.flush();
     left.set(2);
     left.set(3);
@@ -103,9 +103,9 @@ describe('useReaction', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Probe dependency={Number.NaN} label="first" />);
+    const controller = pibbl(canvas, <Probe dependency={Number.NaN} label="first" />);
     frames.flush();
-    crc(canvas, <Probe dependency={Number.NaN} label="latest" />);
+    pibbl(canvas, <Probe dependency={Number.NaN} label="latest" />);
     frames.flush();
     expect(events).toEqual(['setup:first']);
 
@@ -117,9 +117,9 @@ describe('useReaction', () => {
       'setup:latest',
     ]);
 
-    crc(canvas, <Probe dependency={0} label="zero" />);
+    pibbl(canvas, <Probe dependency={0} label="zero" />);
     frames.flush();
-    crc(canvas, <Probe dependency={-0} label="negative-zero" />);
+    pibbl(canvas, <Probe dependency={-0} label="negative-zero" />);
     frames.flush();
     expect(events.slice(-4)).toEqual([
       'cleanup:latest',
@@ -145,11 +145,11 @@ describe('useReaction', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Root label="first" />);
+    const controller = pibbl(canvas, <Root label="first" />);
     frames.flush();
-    crc(canvas, <Root label="second" />);
+    pibbl(canvas, <Root label="second" />);
     frames.flush();
-    crc(canvas, <Root />);
+    pibbl(canvas, <Root />);
     frames.flush();
     expect(events).toEqual([
       'setup:first',
@@ -158,7 +158,7 @@ describe('useReaction', () => {
       'cleanup:second',
     ]);
 
-    crc(canvas, <Root label="last" />);
+    pibbl(canvas, <Root label="last" />);
     frames.flush();
     controller.dispose();
     expect(events.slice(-2)).toEqual(['setup:last', 'cleanup:last']);
@@ -179,7 +179,7 @@ describe('useReaction', () => {
       });
     }
 
-    const controller = crc(createCanvas(), <Probe />);
+    const controller = pibbl(createCanvas(), <Probe />);
     expect(() => frames.flush()).toThrow(failure);
     fail = false;
     source.set(1);
@@ -205,9 +205,9 @@ describe('useReaction', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Probe generation={1} />);
+    const controller = pibbl(canvas, <Probe generation={1} />);
     frames.flush();
-    crc(canvas, <Probe generation={2} />);
+    pibbl(canvas, <Probe generation={2} />);
     expect(() => frames.flush()).toThrow(failure);
     expect(events).toEqual(['setup:1', 'cleanup:1', 'setup:2']);
     controller.dispose();
@@ -233,9 +233,9 @@ describe('useReaction', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Probe fail={false} />);
+    const controller = pibbl(canvas, <Probe fail={false} />);
     frames.flush();
-    crc(canvas, <Probe fail />);
+    pibbl(canvas, <Probe fail />);
     expect(() => frames.flush()).toThrow(failure);
     expect(events).toEqual(['setup', 'cleanup']);
     controller.dispose();
@@ -255,7 +255,7 @@ describe('useReaction', () => {
       });
     }
 
-    const controller = crc(createCanvas(), <Probe />, { signal: abort.signal });
+    const controller = pibbl(createCanvas(), <Probe />, { signal: abort.signal });
     frames.flush();
     source.set(1);
     expect(frames.pendingCount).toBe(1);
@@ -277,7 +277,7 @@ describe('useReaction', () => {
       });
     }
     const canvas = createCanvas();
-    const controller = crc(canvas, <SetupWrite />);
+    const controller = pibbl(canvas, <SetupWrite />);
     expect(() => frames.flush()).toThrowError(/useReaction setup/iu);
     expect(target.get()).toBe(0);
 
@@ -286,7 +286,7 @@ describe('useReaction', () => {
         useSignal(1);
       });
     }
-    crc(canvas, <SetupHook />);
+    pibbl(canvas, <SetupHook />);
     expect(() => frames.flush()).toThrowError(/hooks.*useReaction setup/iu);
 
     const replacement = vi.fn();
@@ -296,9 +296,9 @@ describe('useReaction', () => {
         return generation === 1 ? () => target.set(0) : undefined;
       }, [generation]);
     }
-    crc(canvas, <CleanupWrite generation={1} />);
+    pibbl(canvas, <CleanupWrite generation={1} />);
     frames.flush();
-    crc(canvas, <CleanupWrite generation={2} />);
+    pibbl(canvas, <CleanupWrite generation={2} />);
     expect(() => frames.flush()).toThrowError(/useReaction cleanup/iu);
     expect(replacement).toHaveBeenCalledTimes(2);
     expect(target.get()).toBe(0);
@@ -317,7 +317,7 @@ describe('useReaction', () => {
       });
     }
 
-    const controller = crc(createCanvas(), <Probe />);
+    const controller = pibbl(createCanvas(), <Probe />);
     frames.flush();
     expect(signalGraphSnapshot()).toMatchObject({
       reactionConsumers: baseline.reactionConsumers + 1,
@@ -356,7 +356,7 @@ class ManualFrames {
 
   flush(): void {
     const entry = Array.from(this.callbacks.entries()).at(-1);
-    if (!entry) throw new Error('No pending CRC frame');
+    if (!entry) throw new Error('No pending Pibbl frame');
     const [id, callback] = entry;
     this.callbacks.delete(id);
     callback(performance.now());

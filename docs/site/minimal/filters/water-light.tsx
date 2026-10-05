@@ -1,12 +1,12 @@
-import { crc, Group, Rectangle, Circle, useTexture } from "@crc/core";
+import { pibbl, Group, Rectangle, Circle, useTexture } from "@pibbl/core";
 import {
   displacement,
   reflectedLight,
-  type CRCDisplacementFilterOptions,
-  type CRCReflectedLightFilterOptions,
-  type CRCReflectedLightSource,
-} from "@crc/core/filters";
-import { waterWaves } from "@crc/core/textures";
+  type PibblDisplacementFilterOptions,
+  type PibblReflectedLightFilterOptions,
+  type PibblReflectedLightSource,
+} from "@pibbl/core/filters";
+import { waterWaves } from "@pibbl/core/textures";
 
 function Scene({
   mode,
@@ -16,13 +16,13 @@ function Scene({
   const waves = useTexture(waterWaves({ seed: 7, speed: 3 }));
   const map = waves.paint({ mode: "stretch" });
   const region = { x: 0, y: 0, width: 224, height: 156 };
-  const refraction: CRCDisplacementFilterOptions = {
+  const refraction: PibblDisplacementFilterOptions = {
     map,
     region,
     strength: 12,
   };
-  const lightColor: CRCReflectedLightSource = "#ffffff";
-  const highlights: CRCReflectedLightFilterOptions = {
+  const lightColor: PibblReflectedLightSource = "#ffffff";
+  const highlights: PibblReflectedLightFilterOptions = {
     map,
     region,
     source: lightColor,
@@ -85,7 +85,7 @@ const controllers = comparisons.map(([label, mode]) => {
   canvas.height = 156;
   figure.append(caption, canvas);
   grid.append(figure);
-  return crc(canvas, <Scene mode={mode} />);
+  return pibbl(canvas, <Scene mode={mode} />);
 });
 window.addEventListener(
   "pagehide",

@@ -6,7 +6,7 @@ Date: 2026-08-11
 
 ## Scenario and risk
 
-The event lifecycle laboratory uses the public `crc`, controller, component, layer, cursor, and mouse-event APIs to exercise 1,000 settled rerenders, handler replacement/removal, subtree and layer removal, abort, disposal, repeated cleanup, remount, stale cleanup, and thrown handlers. The risks were closures retained in registries, teardown growth hidden behind stable Set sizes, native listeners without a no-signal release path, queued frames rendering after disposal, stale controllers deleting remounts, and offscreen instances surviving their `Layer` owner.
+The event lifecycle laboratory uses the public `pibbl`, controller, component, layer, cursor, and mouse-event APIs to exercise 1,000 settled rerenders, handler replacement/removal, subtree and layer removal, abort, disposal, repeated cleanup, remount, stale cleanup, and thrown handlers. The risks were closures retained in registries, teardown growth hidden behind stable Set sizes, native listeners without a no-signal release path, queued frames rendering after disposal, stale controllers deleting remounts, and offscreen instances surviving their `Layer` owner.
 
 ## Manual and headless method
 
@@ -41,12 +41,12 @@ Under Node 24.19.0 and pnpm 11.21.0, lint, typecheck, package build, the strict 
 
 The first layer pixel probe landed on the white antialiased label rather than the orange fill. The failure screenshot made the mistake obvious; the probe moved to an interior point away from glyphs. No threshold or retry was widened.
 
-Test-only animation-frame accounting observes the browser realm, so only one diagnostics instance runs in a test realm and assertions use pending state/exact lifecycle deltas rather than pretending every frame belongs to CRC. Registry Sets are wrapped only after an owned instance is observed; each test snapshots its baseline before mutation so all relevant acquisitions/releases are ledgered.
+Test-only animation-frame accounting observes the browser realm, so only one diagnostics instance runs in a test realm and assertions use pending state/exact lifecycle deltas rather than pretending every frame belongs to Pibbl. Registry Sets are wrapped only after an owned instance is observed; each test snapshots its baseline before mutation so all relevant acquisitions/releases are ledgered.
 
 ## Failed or rejected approaches
 
 - Rejected keeping listener cleanup dependent on optional `AbortSignal`; public `dispose()` is required.
-- Rejected a global `disposeCRC(canvas)` helper; a mount-scoped controller can be identity-guarded and cannot accidentally target a remount.
+- Rejected a global `disposePibbl(canvas)` helper; a mount-scoped controller can be identity-guarded and cannot accidentally target a remount.
 - Rejected adding a production diagnostics API; private counters are unnecessary package surface.
 - Rejected one new component teardown closure per rerender; each hook slot now owns one persistent finalizer and one replaceable binding.
 - Rejected clearing every cursor blindly; a cursor slot clears only the Canvas style it successfully owned.
@@ -56,7 +56,7 @@ Test-only animation-frame accounting observes the browser realm, so only one dia
 ## Helper and tooling friction
 
 - Exact-once proof required wrapping newly discovered layer event Sets, not only summing live registry sizes.
-- Scenario controllers must outlive their inner CRC runtime so gallery actions can inspect abort/dispose and then remount the same Canvas.
+- Scenario controllers must outlive their inner Pibbl runtime so gallery actions can inspect abort/dispose and then remount the same Canvas.
 - The old frozen lifecycle test encoded known leaks as expected values; TFC-03 replaced those assertions while preserving the historical TFC-01 report.
 - A deliberate handler exception must be observed through `reportError` without becoming an uncaught browser-test failure.
 
@@ -70,7 +70,7 @@ Candidate tools:
 ## Decisions and follow-ups
 
 - The implemented ownership contract is [event resource ownership](../../design/event-resource-ownership.md).
-- `crc()` returns a stable additive `CRCController`; abort and disposal share one central idempotent path.
+- `pibbl()` returns a stable additive `PibblController`; abort and disposal share one central idempotent path.
 - Only the initial mount's `options.signal` controls that mount; later update signals are deliberately ignored and covered by a regression.
 - Event bindings, hover state, cursor style, root listeners, frames, layer instances, and bridges each have one documented owner.
 - TFC-04 must preserve these lifetime guarantees while replacing all-hit dispatch with the approved topmost target/order model.

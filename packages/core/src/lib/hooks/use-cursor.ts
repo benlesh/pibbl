@@ -6,15 +6,15 @@ import {
   updateCursorDefault,
 } from '../events/dispatch.js';
 import type {
-  CRCCursorDefault,
-  CRCInteractionRegion,
+  PibblCursorDefault,
+  PibblInteractionRegion,
 } from '../types.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
 import { createRegion, releaseRegion, updateRegion } from './use-region.js';
 
-interface CRCCursorDefaultSlot {
-  cursorDefault: CRCCursorDefault;
-  region: CRCInteractionRegion;
+interface PibblCursorDefaultSlot {
+  cursorDefault: PibblCursorDefault;
+  region: PibblInteractionRegion;
 }
 
 /**
@@ -37,14 +37,14 @@ export function useCursor({
   fill?: boolean;
   lineInteractionWidth?: number;
 }): void {
-  const { crcInstance } = requireHookContext();
-  const interactionRoot = getInteractionRoot(crcInstance);
-  const slot = useHookSlot<CRCCursorDefaultSlot>('cursor', teardowns => {
+  const { pibblInstance } = requireHookContext();
+  const interactionRoot = getInteractionRoot(pibblInstance);
+  const slot = useHookSlot<PibblCursorDefaultSlot>('cursor', teardowns => {
     const cursorDefault = { style: '' };
-    const region = createRegion(crcInstance);
+    const region = createRegion(pibblInstance);
     teardowns.add(() => {
       removeCursorDefault(interactionRoot, cursorDefault);
-      releaseRegion(crcInstance, region);
+      releaseRegion(pibblInstance, region);
     });
     return { cursorDefault, region };
   });
@@ -52,7 +52,7 @@ export function useCursor({
   const { cursorDefault, region } = slot.value;
   if (path) {
     removeCursorDefault(interactionRoot, cursorDefault);
-    updateRegion(crcInstance, region, {
+    updateRegion(pibblInstance, region, {
       path,
       cursor: style,
       fill,
@@ -61,7 +61,7 @@ export function useCursor({
     return;
   }
 
-  releaseRegion(crcInstance, region);
+  releaseRegion(pibblInstance, region);
   interactionRoot.cursorDefaults.delete(cursorDefault);
   if (!style) {
     removeCursorDefault(interactionRoot, cursorDefault);

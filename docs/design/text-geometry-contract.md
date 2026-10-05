@@ -1,6 +1,6 @@
 # Text geometry contract
 
-`@crc/text` is an optional sibling package. It uses HarfBuzz through a CRC-owned
+`@pibbl/text` is an optional sibling package. It uses HarfBuzz through a Pibbl-owned
 bulk WASM bridge to produce ordinary, independently owned `PathGeometry`.
 Core has no dependency on the font engine and Canvas `Text` is unchanged.
 
@@ -30,9 +30,9 @@ shrink the shared WASM memory capacity.
 
 Each call shapes a complete single horizontal run once. HarfBuzz handles font
 mapping, OpenType substitution/positioning, ligatures, kerning, and combining
-marks. CRC preserves glyph order and UTF-16 cluster indices; clusters are not
+marks. Pibbl preserves glyph order and UTF-16 cluster indices; clusters are not
 characters, graphemes, or caret positions. RTL indices may descend or repeat.
-CRC does not implement paragraph bidi, fallback fonts, wrapping, or rich text.
+Pibbl does not implement paragraph bidi, fallback fonts, wrapping, or rich text.
 
 Native outline callbacks accumulate packed move/line/quadratic/cubic/close
 commands inside WASM. One run is copied through public PathGeometry builders;
@@ -42,7 +42,7 @@ origin. Negative bearings and contour relationships are preserved.
 
 Results contain one mutable path, readonly conversion-time glyph records, layout
 advance, and curve-extrema ink bounds (null for no ink). Metadata never updates
-in response to later path edits. CRC's ordinary identity/revision path caching
+in response to later path edits. Pibbl's ordinary identity/revision path caching
 applies, and applications schedule repaint through state/signals after mutation.
 No text cache, per-glyph path copies, retained scene graph, or second scheduler
 is introduced.

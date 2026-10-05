@@ -126,7 +126,7 @@ A spatial index or scene-graph rewrite becomes eligible only when a real product
 
 ## Deliberate regression drill
 
-`VITE_CRC_PERF_COUNTER_DRILL=1` wraps `isPointInPath` with one redundant call. The focused suite failed exactly as intended on sparse 100: expected 100 path tests, received 200. Removing the drill restored the passing structural suite and budget guard. This deterministic failure is preferred to slowing the machine or adding arbitrary delays.
+`VITE_PIBBL_PERF_COUNTER_DRILL=1` wraps `isPointInPath` with one redundant call. The focused suite failed exactly as intended on sparse 100: expected 100 path tests, received 200. Removing the drill restored the passing structural suite and budget guard. This deterministic failure is preferred to slowing the machine or adding arbitrary delays.
 
 ## Surprises and flakes
 

@@ -1,5 +1,5 @@
 import { getParticleDescriptorRecord } from "./particle.js";
-import type { CRCParticleEmission } from "./types.js";
+import type { PibblParticleEmission } from "./types.js";
 import { hashEmitterName, sampleInteger, sampleUnit } from "./random.js";
 
 export type ParticleCompletion =
@@ -71,7 +71,7 @@ function countRange(
 }
 
 function rateCycleCount(
-  source: Extract<CRCParticleEmission, { type: "rate" }>,
+  source: Extract<PibblParticleEmission, { type: "rate" }>,
 ): number {
   return source.repeat?.count ?? 1;
 }
@@ -167,7 +167,7 @@ function finiteRateBirthTimes(
 }
 
 export function compileEmissionSchedule(
-  sources: readonly CRCParticleEmission[],
+  sources: readonly PibblParticleEmission[],
   maximumLifetimeInput: number | CompiledMaximumLifetime,
 ): CompiledEmissionSchedule {
   const maximumLifetime =

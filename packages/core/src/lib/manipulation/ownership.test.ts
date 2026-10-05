@@ -5,7 +5,7 @@ import {
   ManualSchedulerDriver,
 } from "../scheduler/testing";
 import { claimGeometryGeneration, restoreReleasedGesture } from "./ownership";
-import type { CRCManipulationActive } from "./controller-types";
+import type { PibblManipulationActive } from "./controller-types";
 
 let release: (() => void) | undefined;
 afterEach(() => release?.());
@@ -13,7 +13,7 @@ it("does not clear a newer gesture when an old guarded rollback reaches Begin", 
   const driver = new ManualSchedulerDriver();
   release = installSchedulerDriverForTest(driver);
   const box = signal({ left: 60, top: 50, width: 100, height: 80 });
-  const active = signal<CRCManipulationActive | null>({
+  const active = signal<PibblManipulationActive | null>({
     operation: "move",
     handle: null,
     pointerId: 1,

@@ -2,7 +2,7 @@ import {
   defineTexture,
   type TextureContext,
   type TextureRecipe,
-} from "@crc/core";
+} from "@pibbl/core";
 import { validateSeed } from "./palette.js";
 import { bytes } from "./wasm/water-surface-bytes.js";
 
@@ -192,7 +192,7 @@ class WaterSimulation {
     this.previousObstacles = obstacles;
     // A moving solid leaves one bounded impulse at its trailing edge. The
     // height-field remains an appearance-only texture; this is not a force or
-    // collider update in CRC physics.
+    // collider update in Pibbl physics.
     let wakeEnergy = 0;
     for (
       let index = 0;

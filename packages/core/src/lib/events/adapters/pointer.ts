@@ -1,8 +1,8 @@
-import type { CRCInstance } from '../../types.js';
+import type { PibblInstance } from '../../types.js';
 import { getMouseCoordinates } from '../../util/get-mouse-coordinates.js';
-import type { CRCEventType } from '../types.js';
+import type { PibblEventType } from '../types.js';
 
-export const CRC_NATIVE_POINTER_EVENT_TYPES = Object.freeze([
+export const PIBBL_NATIVE_POINTER_EVENT_TYPES = Object.freeze([
   'pointerover',
   'pointerenter',
   'pointerdown',
@@ -14,24 +14,24 @@ export const CRC_NATIVE_POINTER_EVENT_TYPES = Object.freeze([
   'pointerleave',
   'gotpointercapture',
   'lostpointercapture',
-] as const satisfies readonly CRCEventType[]);
+] as const satisfies readonly PibblEventType[]);
 
-export type CRCNativePointerEventType =
-  (typeof CRC_NATIVE_POINTER_EVENT_TYPES)[number];
+export type PibblNativePointerEventType =
+  (typeof PIBBL_NATIVE_POINTER_EVENT_TYPES)[number];
 
-const nativePointerEventTypes = new Set<CRCEventType>(
-  CRC_NATIVE_POINTER_EVENT_TYPES,
+const nativePointerEventTypes = new Set<PibblEventType>(
+  PIBBL_NATIVE_POINTER_EVENT_TYPES,
 );
 
-export interface CRCAdaptedPointerEvent {
-  readonly type: CRCNativePointerEventType;
+export interface PibblAdaptedPointerEvent {
+  readonly type: PibblNativePointerEventType;
   readonly originalEvent: PointerEvent;
   readonly x: number;
   readonly y: number;
-  readonly press: CRCAdaptedPointerPress | undefined;
+  readonly press: PibblAdaptedPointerPress | undefined;
 }
 
-export interface CRCAdaptedPointerPress {
+export interface PibblAdaptedPointerPress {
   readonly pointerId: number;
   readonly pointerType: 'mouse' | 'pen' | 'touch';
   readonly x: number;
@@ -39,16 +39,16 @@ export interface CRCAdaptedPointerPress {
 }
 
 export function isNativePointerEventType(
-  type: CRCEventType,
-): type is CRCNativePointerEventType {
+  type: PibblEventType,
+): type is PibblNativePointerEventType {
   return nativePointerEventTypes.has(type);
 }
 
 export function adaptPointerEvent(
-  root: CRCInstance,
-  type: CRCNativePointerEventType,
+  root: PibblInstance,
+  type: PibblNativePointerEventType,
   event: Event,
-): CRCAdaptedPointerEvent | undefined {
+): PibblAdaptedPointerEvent | undefined {
   if (
     typeof PointerEvent === 'undefined' ||
     !(event instanceof PointerEvent) ||
@@ -58,13 +58,13 @@ export function adaptPointerEvent(
   }
   const [x, y] = getMouseCoordinates(event, root);
   const pointerType = event.pointerType;
-  const press: CRCAdaptedPointerPress | undefined = type === 'pointerdown' &&
+  const press: PibblAdaptedPointerPress | undefined = type === 'pointerdown' &&
       event.isPrimary &&
       event.button === 0 &&
       (pointerType === 'mouse' || pointerType === 'pen' || pointerType === 'touch') ?
     {
       pointerId: event.pointerId,
-      pointerType: pointerType as CRCAdaptedPointerPress['pointerType'],
+      pointerType: pointerType as PibblAdaptedPointerPress['pointerType'],
       x,
       y,
     } : undefined;

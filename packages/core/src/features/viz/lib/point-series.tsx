@@ -1,11 +1,11 @@
-import { resolveTexturePaint } from '@crc/core/internal';
+import { resolveTexturePaint } from '@pibbl/core/internal';
 import {
   Path,
   isSignal,
   resolveSignalValue,
   useCanvasContext,
-} from "@crc/core";
-import type { FillStyle, StrokeStyle } from "@crc/core";
+} from "@pibbl/core";
+import type { FillStyle, StrokeStyle } from "@pibbl/core";
 import type {
   PointMarkStyle,
   PointSeriesProps,
@@ -59,11 +59,11 @@ function normalized(style: PointSeriesStyle) {
   };
 }
 /**
- * Batched circles in source paint order with one ordinary CRC target.
+ * Batched circles in source paint order with one ordinary Pibbl target.
  *
  * @param props - Data, coordinate accessors, scales, and point styling. See
  * {@link PointSeriesProps} .
- * @returns CRC nodes drawing the point marks.
+ * @returns Pibbl nodes drawing the point marks.
  *
  * @see {@link PointSeriesProps}
  */

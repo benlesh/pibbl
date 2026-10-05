@@ -8,10 +8,10 @@ import {
   Layer,
   Rectangle,
   Text,
-  type CRCLogicalMouseEvent,
-  type CRCPointerEvent,
+  type PibblLogicalMouseEvent,
+  type PibblPointerEvent,
   type Signal,
-} from '@crc/core';
+} from '@pibbl/core';
 
 export const AGENT_TARGETING_VERIFICATION_SOURCE_ID = 'agent-targeting-verification-example';
 
@@ -30,17 +30,17 @@ export type AgentTargetingMode = 'pagination' | 'seed' | 'repair' | 'intentional
 export type AgentTargetingDelivery = 'action' | 'decoration' | null;
 
 export interface AgentTargetingSceneProps {
-  readonly wrapClick: (label: string, handler: (event: CRCLogicalMouseEvent) => void) => (event: CRCLogicalMouseEvent) => void;
+  readonly wrapClick: (label: string, handler: (event: PibblLogicalMouseEvent) => void) => (event: PibblLogicalMouseEvent) => void;
   readonly mode: Signal<AgentTargetingMode>;
   readonly onFocusEvidence: () => void;
-  readonly onCapturedMove: (event: CRCPointerEvent) => void;
+  readonly onCapturedMove: (event: PibblPointerEvent) => void;
   readonly selectionLabel: Signal<string>;
   readonly selectedItem: Signal<'item-a' | null>;
   readonly selections: Signal<number>;
   readonly deliveredTo: Signal<AgentTargetingDelivery>;
   readonly onDelivery: (
     deliveredTo: Exclude<AgentTargetingDelivery, null>,
-    event: CRCLogicalMouseEvent,
+    event: PibblLogicalMouseEvent,
   ) => void;
   readonly onRender: (state: { mode: AgentTargetingMode; selectedItem: 'item-a' | null; selections: number; deliveredTo: AgentTargetingDelivery }) => void;
 }

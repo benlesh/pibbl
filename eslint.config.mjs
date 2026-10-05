@@ -52,7 +52,7 @@ export default defineConfig([
     '**/node_modules/**',
     'packages/text/.cache/**',
     '**/dist/**',
-    // Website build copies compiled CRC and upstream WASM loaders here.
+    // Website build copies compiled Pibbl and upstream WASM loaders here.
     'website/public/generated/**',
     '**/.studio-docs-acceptance-dist/**',
     '**/.nx/**',

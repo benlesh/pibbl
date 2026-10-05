@@ -1,37 +1,37 @@
 import {
-  crc,
+  pibbl,
   Group,
   Rectangle,
   Circle,
   Text,
   useVisibilityTransition,
   embers,
-  type CRCEmbersOptions,
-  type CRCEmbersPhysicsOptions,
-  type CRCEmberCollision,
-  type CRCTransitionEffect,
-  type CRCVisibilityTransition,
-  type CRCVisibilityTransitionOptions,
-  type CRCVisibilityTransitionResult,
-  type CRCVisibilityTransitionStatus,
-  type CRCTransitionBinding,
-} from "@crc/core";
+  type PibblEmbersOptions,
+  type PibblEmbersPhysicsOptions,
+  type PibblEmberCollision,
+  type PibblTransitionEffect,
+  type PibblVisibilityTransition,
+  type PibblVisibilityTransitionOptions,
+  type PibblVisibilityTransitionResult,
+  type PibblVisibilityTransitionStatus,
+  type PibblTransitionBinding,
+} from "@pibbl/core";
 
-const physics: CRCEmbersPhysicsOptions = {
+const physics: PibblEmbersPhysicsOptions = {
   gravity: [0, 120],
-  collide(from, to): CRCEmberCollision | undefined {
+  collide(from, to): PibblEmberCollision | undefined {
     if (from[1] < 260 && to[1] >= 260)
       return { fraction: (260 - from[1]) / (to[1] - from[1]), normal: [0, -1] };
     return undefined;
   },
 };
-const options: CRCEmbersOptions = {
+const options: PibblEmbersOptions = {
   region: { x: 100, y: 100, width: 280, height: 100 },
   linger: 700,
   physics,
 };
-const effect: CRCTransitionEffect = embers(options);
-const visibility: CRCVisibilityTransitionOptions = {
+const effect: PibblTransitionEffect = embers(options);
+const visibility: PibblVisibilityTransitionOptions = {
   initial: false,
   enter: effect,
   duration: 1600,
@@ -42,17 +42,17 @@ canvas.height = 300;
 const output = document.createElement("output");
 output.style.display = "block";
 document.body.append(canvas, output);
-let handle: CRCVisibilityTransition | undefined;
-let mounted!: (value: CRCVisibilityTransition) => void;
-const ready = new Promise<CRCVisibilityTransition>((resolve) => {
+let handle: PibblVisibilityTransition | undefined;
+let mounted!: (value: PibblVisibilityTransition) => void;
+const ready = new Promise<PibblVisibilityTransition>((resolve) => {
   mounted = resolve;
 });
 function Scene() {
   const transition = useVisibilityTransition(visibility);
   handle = transition;
   mounted(transition);
-  const binding: CRCTransitionBinding = transition.binding;
-  const status: CRCVisibilityTransitionStatus = transition.status.get();
+  const binding: PibblTransitionBinding = transition.binding;
+  const status: PibblVisibilityTransitionStatus = transition.status.get();
   return (
     <>
       <Rectangle style={{ width: 480, height: 300, fill: "#11151c" }} />
@@ -83,7 +83,7 @@ function Scene() {
             fill: "#ffffff",
           }}
         >
-          CRC
+          Pibbl
         </Text>
         <Text
           style={{
@@ -104,14 +104,14 @@ function Scene() {
     </>
   );
 }
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 // Wait for the scheduled first mount before starting its entrance.
 void ready.then((transition) => transition.show());
 for (const action of ["show", "hide"] as const) {
   const button = document.createElement("button");
   button.textContent = action;
   button.onclick = async () => {
-    const result: CRCVisibilityTransitionResult | undefined =
+    const result: PibblVisibilityTransitionResult | undefined =
       await handle?.[action]();
     if (result) output.textContent = result.phase + ": " + result.status;
   };

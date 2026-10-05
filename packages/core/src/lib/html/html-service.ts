@@ -1,32 +1,32 @@
 import { GLOBAL_STATE } from '../global-state.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
-import type { CRCClippingStackEntry, CRCEventRoot, CRCInstance, CRCInteractionLayer, CRCRenderTransaction } from '../types.js';
+import type { PibblClippingStackEntry, PibblEventRoot, PibblInstance, PibblInteractionLayer, PibblRenderTransaction } from '../types.js';
 import type { HtmlBoxRegistration, HtmlBoxSlot, HtmlBridge } from './types.js';
 import { validateHtmlOverlay } from './overlay-config.js';
 import { rectangleSvg } from './portable-clips.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 let nextId = 0;
-type Entry = HtmlBoxRegistration | { child: CRCInstance; matrix: DOMMatrix; clips: readonly CRCClippingStackEntry[]; opacity: number; bounds: {x:number;y:number;width:number;height:number} };
+type Entry = HtmlBoxRegistration | { child: PibblInstance; matrix: DOMMatrix; clips: readonly PibblClippingStackEntry[]; opacity: number; bounds: {x:number;y:number;width:number;height:number} };
 type Clip = { data: string; matrix: DOMMatrix; rule: CanvasFillRule };
 interface Projection { registration: HtmlBoxRegistration; world: DOMMatrix; clips: Clip[]; opacity: number; }
 
-export function requireHtmlService(owner: CRCInstance): HtmlService {
+export function requireHtmlService(owner: PibblInstance): HtmlService {
   const root = owner.eventRoot;
   if (!root.htmlOverlay || !root.canvas) throw new Error('HtmlBox requires an HTMLCanvasElement root configured with htmlOverlay.');
   return (root.html ??= new HtmlService(root)) as HtmlService;
 }
 
 export class HtmlService implements HtmlBridge {
-  private snapshots = new Map<CRCInstance, Entry[]>();
-  private pending: Map<CRCInstance, Entry[]> | undefined;
-  private transaction: CRCRenderTransaction | undefined;
+  private snapshots = new Map<PibblInstance, Entry[]>();
+  private pending: Map<PibblInstance, Entry[]> | undefined;
+  private transaction: PibblRenderTransaction | undefined;
   private live = new Set<HtmlBoxSlot>();
   private svg: SVGSVGElement | undefined;
   private viewport: HTMLDivElement | undefined;
   private disposed = false;
   private rendered = new Set<HtmlBoxSlot>();
-  constructor(private readonly root: CRCEventRoot) {}
+  constructor(private readonly root: PibblEventRoot) {}
 
   private enterTransaction(): void {
     const transaction = this.root.renderTransaction;
@@ -44,12 +44,12 @@ export class HtmlService implements HtmlBridge {
     });
   }
 
-  beginRender(instance: CRCInstance): void {
+  beginRender(instance: PibblInstance): void {
     this.enterTransaction();
     this.pending!.set(instance, []);
   }
 
-  suspend(instance: CRCInstance): void {
+  suspend(instance: PibblInstance): void {
     if (instance !== this.root.rootInstance) return;
     this.enterTransaction();
     this.root.renderTransaction!.onPublish!(() => {
@@ -71,7 +71,7 @@ export class HtmlService implements HtmlBridge {
     this.root.focusPolicy?.observeHtmlRegion?.(registration.slot.region);
   }
 
-  recordLayer(parent: CRCInstance, child: CRCInstance, bridge: CRCInteractionLayer, opacity: number, composite: GlobalCompositeOperation): void {
+  recordLayer(parent: PibblInstance, child: PibblInstance, bridge: PibblInteractionLayer, opacity: number, composite: GlobalCompositeOperation): void {
     this.enterTransaction();
     if (this.hasHosts(child)) {
       assertEffects(composite);
@@ -82,7 +82,7 @@ export class HtmlService implements HtmlBridge {
     }
   }
 
-  private hasHosts(instance: CRCInstance): boolean {
+  private hasHosts(instance: PibblInstance): boolean {
     return (this.pending?.get(instance) ?? this.snapshots.get(instance) ?? []).length > 0;
   }
 
@@ -126,8 +126,8 @@ export class HtmlService implements HtmlBridge {
     const surface = rootInstance.surface.snapshot!;
     const rootMatrix = new DOMMatrix().scale(1 / surface.backingPixelsPerCssPixelX, 1 / surface.backingPixelsPerCssPixelY).multiply(surface.renderTransform);
     const projections: Projection[] = [];
-    const visited = new Set<CRCInstance>();
-    const walk = (instance: CRCInstance, world: DOMMatrix, clips: Clip[], opacity: number) => {
+    const visited = new Set<PibblInstance>();
+    const walk = (instance: PibblInstance, world: DOMMatrix, clips: Clip[], opacity: number) => {
       visited.add(instance);
       for (const entry of this.pending!.get(instance) ?? []) {
         const inherited = clips.concat(entry.clips.map(clip => {
@@ -157,7 +157,7 @@ export class HtmlService implements HtmlBridge {
     if (this.viewport) return;
     const doc = this.root.canvas!.ownerDocument;
     this.viewport = doc.createElement('div');
-    this.viewport.dataset.crcHtmlViewport = '';
+    this.viewport.dataset.pibblHtmlViewport = '';
     this.viewport.style.cssText = 'position:absolute;inset:0;overflow:clip;pointer-events:none';
     this.svg = doc.createElementNS(SVG, 'svg');
     this.svg.setAttribute('width', '0'); this.svg.setAttribute('height', '0');
@@ -172,9 +172,9 @@ export class HtmlService implements HtmlBridge {
     const first = !slot.shell;
     const doc = this.root.canvas!.ownerDocument;
     if (first) {
-      slot.shell = doc.createElement('div'); slot.shell.dataset.crcHtmlBox = '';
+      slot.shell = doc.createElement('div'); slot.shell.dataset.pibblHtmlBox = '';
       slot.shell.style.cssText = 'position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;isolation:isolate';
-      slot.content = doc.createElement('div'); slot.content.dataset.crcHtmlContent = '';
+      slot.content = doc.createElement('div'); slot.content.dataset.pibblHtmlContent = '';
       slot.content.style.cssText = 'position:absolute;box-sizing:border-box';
       slot.shell.append(slot.content); this.viewport!.append(slot.shell);
       slot.clipping = []; slot.abort = new (doc.defaultView!.AbortController)();
@@ -217,7 +217,7 @@ export class HtmlService implements HtmlBridge {
     const doc = this.root.canvas!.ownerDocument;
     while (definitions.length < clips.length) {
       const definition = doc.createElementNS(SVG, 'clipPath');
-      definition.id = `crc-html-clip-${++nextId}`;
+      definition.id = `pibbl-html-clip-${++nextId}`;
       definition.setAttribute('clipPathUnits', 'userSpaceOnUse');
       definition.append(doc.createElementNS(SVG, 'path'));
       this.svg!.append(definition); definitions.push(definition);
@@ -246,7 +246,7 @@ function assertEffects(composite = GLOBAL_STATE.renderContext?.globalCompositeOp
   if (GLOBAL_STATE.htmlFilterDepth || composite !== 'source-over') throw new Error('HtmlBox cannot be enclosed by Canvas filters or non-default compositing. Use CSS effects inside its content instead.');
 }
 function copy(matrix: DOMMatrixReadOnly): DOMMatrix { return new DOMMatrix([matrix.a,matrix.b,matrix.c,matrix.d,matrix.e,matrix.f]); }
-export function snapshotClips(clips: readonly CRCClippingStackEntry[]): CRCClippingStackEntry[] {
+export function snapshotClips(clips: readonly PibblClippingStackEntry[]): PibblClippingStackEntry[] {
   return clips.map(clip => ({ ...clip, transform: copy(clip.transform) }));
 }
 function cssMatrix(m: DOMMatrixReadOnly): string { return `matrix(${m.a},${m.b},${m.c},${m.d},${m.e},${m.f})`; }

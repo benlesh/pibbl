@@ -1,9 +1,9 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
-import * as CRC from "@crc/core";
-import type { CRCController, CRCNode } from "@crc/core";
+import * as Pibbl from "@pibbl/core";
+import type { PibblController, PibblNode } from "@pibbl/core";
 
-let mount: CRCController | undefined;
+let mount: PibblController | undefined;
 const settle = () =>
   new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -16,22 +16,22 @@ afterEach(async () => {
 });
 
 it("starts only from a painted DragHandle child and respects its pointer cancellation", async () => {
-  const box = CRC.signal({ left: 40, top: 50, width: 160, height: 100 });
-  const cancelled = CRC.signal(false);
+  const box = Pibbl.signal({ left: 40, top: 50, width: 160, height: 100 });
+  const cancelled = Pibbl.signal(false);
   const canvas = document.createElement("canvas");
   canvas.width = 280;
   canvas.height = 200;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  function Scene(): CRCNode {
-    const control = CRC.useManipulation({ box, move: {} });
+  function Scene(): PibblNode {
+    const control = Pibbl.useManipulation({ box, move: {} });
     return (
-      <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle
+      <Pibbl.ManipulationFrame {...control.frameProps}>
+        <Pibbl.DragHandle
           controller={control}
           style={{ width: 160, height: 100 }}
         >
-          <CRC.Rectangle
+          <Pibbl.Rectangle
             style={{
               left: 60,
               top: 30,
@@ -43,15 +43,15 @@ it("starts only from a painted DragHandle child and respects its pointer cancell
               if (cancelled.get()) event.preventDefault();
             }}
           />
-        </CRC.DragHandle>
-      </CRC.ManipulationFrame>
+        </Pibbl.DragHandle>
+      </Pibbl.ManipulationFrame>
     );
   }
-  mount = CRC.crc(
+  mount = Pibbl.pibbl(
     canvas,
-    <CRC.FocusManagement>
+    <Pibbl.FocusManagement>
       <Scene />
-    </CRC.FocusManagement>,
+    </Pibbl.FocusManagement>,
     { pixelRatio: 1 },
   );
   await settle();
@@ -81,40 +81,40 @@ it("starts only from a painted DragHandle child and respects its pointer cancell
 });
 
 it("shows a move readout only for the active child-defined grip", async () => {
-  const box = CRC.signal({ left: 40, top: 50, width: 180, height: 100 });
+  const box = Pibbl.signal({ left: 40, top: 50, width: 180, height: 100 });
   const canvas = document.createElement("canvas");
   canvas.width = 300;
   canvas.height = 220;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  function Scene(): CRCNode {
-    const control = CRC.useManipulation({ box, move: {} });
+  function Scene(): PibblNode {
+    const control = Pibbl.useManipulation({ box, move: {} });
     return (
-      <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle
+      <Pibbl.ManipulationFrame {...control.frameProps}>
+        <Pibbl.DragHandle
           controller={control}
           formatReadout={() => "first"}
           style={{ readout: true }}
         >
-          <CRC.Circle style={{ cx: 40, cy: 50, radius: 16, fill: "#2563eb" }} />
-        </CRC.DragHandle>
-        <CRC.DragHandle
+          <Pibbl.Circle style={{ cx: 40, cy: 50, radius: 16, fill: "#2563eb" }} />
+        </Pibbl.DragHandle>
+        <Pibbl.DragHandle
           controller={control}
           formatReadout={() => "second"}
           style={{ readout: true }}
         >
-          <CRC.Circle
+          <Pibbl.Circle
             style={{ cx: 120, cy: 50, radius: 16, fill: "#16a34a" }}
           />
-        </CRC.DragHandle>
-      </CRC.ManipulationFrame>
+        </Pibbl.DragHandle>
+      </Pibbl.ManipulationFrame>
     );
   }
-  mount = CRC.crc(
+  mount = Pibbl.pibbl(
     canvas,
-    <CRC.FocusManagement>
+    <Pibbl.FocusManagement>
       <Scene />
-    </CRC.FocusManagement>,
+    </Pibbl.FocusManagement>,
     { pixelRatio: 1 },
   );
   await settle();

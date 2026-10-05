@@ -1,5 +1,5 @@
 import { releaseField } from "./wasm/memory.js";
-import { defineRenderLayer } from "@crc/core";
+import { defineRenderLayer } from "@pibbl/core";
 import {
   paletteLut,
   texturePalettes,
@@ -94,7 +94,7 @@ function generate(o: Options, previous?: Float32Array) {
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link ProceduralTextureProps}
  */

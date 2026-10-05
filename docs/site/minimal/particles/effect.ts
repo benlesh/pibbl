@@ -2,36 +2,36 @@ import {
   defineParticleEffect2D,
   particleCurve,
   particleGradient,
-  type CRCParticleAppearance,
-  type CRCParticleBounds2D,
-  type CRCParticleEffect2D,
-  type CRCParticleEffect2DInput,
-  type CRCParticleEmission,
-  type CRCParticleEmitter2D,
-  type CRCParticleInitial2D,
-  type CRCParticleMotion2D,
-  type CRCParticleOverflow,
-  type CRCParticleRenderer2D,
-  type CRCParticleShape2D,
-} from "@crc/core/particles";
+  type PibblParticleAppearance,
+  type PibblParticleBounds2D,
+  type PibblParticleEffect2D,
+  type PibblParticleEffect2DInput,
+  type PibblParticleEmission,
+  type PibblParticleEmitter2D,
+  type PibblParticleInitial2D,
+  type PibblParticleMotion2D,
+  type PibblParticleOverflow,
+  type PibblParticleRenderer2D,
+  type PibblParticleShape2D,
+} from "@pibbl/core/particles";
 
-const emission: CRCParticleEmission = { type: "rate", particlesPerSecond: 24 };
-const shape: CRCParticleShape2D = {
+const emission: PibblParticleEmission = { type: "rate", particlesPerSecond: 24 };
+const shape: PibblParticleShape2D = {
   type: "line",
   from: [-30, 0],
   to: [30, 0],
 };
-const initial: CRCParticleInitial2D = {
+const initial: PibblParticleInitial2D = {
   lifetimeMilliseconds: 800,
   velocity: [0, -90],
   size: 8,
   color: "#f97316",
 };
-const motion: CRCParticleMotion2D = {
+const motion: PibblParticleMotion2D = {
   type: "gravity",
   value: [0, 120],
 };
-const appearance: CRCParticleAppearance = {
+const appearance: PibblParticleAppearance = {
   opacity: particleCurve([
     [0, 1],
     [1, 0],
@@ -41,13 +41,13 @@ const appearance: CRCParticleAppearance = {
     [1, "#ef4444"],
   ]),
 };
-const renderer: CRCParticleRenderer2D = { type: "circle" };
-const bounds: CRCParticleBounds2D = {
+const renderer: PibblParticleRenderer2D = { type: "circle" };
+const bounds: PibblParticleBounds2D = {
   min: [-100, -150],
   max: [100, 150],
 };
-const overflow: CRCParticleOverflow = "recycle-oldest";
-const emitter: CRCParticleEmitter2D = {
+const overflow: PibblParticleOverflow = "recycle-oldest";
+const emitter: PibblParticleEmitter2D = {
   name: "embers",
   capacity: 300,
   overflow,
@@ -59,8 +59,8 @@ const emitter: CRCParticleEmitter2D = {
   renderer,
   bounds,
 };
-const input: CRCParticleEffect2DInput = { emitters: [emitter] };
-const effect: CRCParticleEffect2D = defineParticleEffect2D(input);
+const input: PibblParticleEffect2DInput = { emitters: [emitter] };
+const effect: PibblParticleEffect2D = defineParticleEffect2D(input);
 
 const output = document.createElement("pre");
 output.textContent = `Created ${effect.dimension}D effect with ${input.emitters.length} emitter.`;

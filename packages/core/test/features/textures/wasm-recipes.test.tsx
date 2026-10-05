@@ -1,12 +1,12 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { crc, Rectangle, useTexture, type Texture } from "@crc/core";
+import { pibbl, Rectangle, useTexture, type Texture } from "@pibbl/core";
 import {
   marble,
   paper,
   cellular,
   reactionDiffusion,
   type InkMessage,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
@@ -58,24 +58,24 @@ for (const [name, factory] of Object.entries({ marble, paper, cellular })) {
       });
       return <Rectangle style={{ width: 64, height: 64, fill: texture }} />;
     }
-    const controller = crc(surface, <Scene />);
+    const controller = pibbl(surface, <Scene />);
     try {
       driver.flush(0);
       const first = uploads.mock.calls.at(-1)![0],
         pixels = first.data.slice();
       expect(first.data.buffer).toBe(memory.mock.results[0].value.buffer);
-      crc(surface, <Scene seed={91} />);
+      pibbl(surface, <Scene seed={91} />);
       driver.flush(16);
       driver.flush(17);
       expect(uploads.mock.calls.at(-1)![0]).toBe(first);
       expect(first.data).not.toEqual(pixels);
       const changed = first.data.slice();
-      crc(surface, <Scene seed={91} palette={["#ff0000", "#0000ff"]} />);
+      pibbl(surface, <Scene seed={91} palette={["#ff0000", "#0000ff"]} />);
       driver.flush(32);
       driver.flush(33);
       expect(first.data).not.toEqual(changed);
       expect(memory).toHaveBeenCalledTimes(1);
-      crc(surface, <Scene size={48} />);
+      pibbl(surface, <Scene size={48} />);
       driver.flush(48);
       driver.flush(49);
       expect(memory).toHaveBeenCalledTimes(2);
@@ -107,7 +107,7 @@ it("ink orders pause, stir, paint, and reset without replacing live memory excep
     });
     return <Rectangle style={{ width: 64, height: 64, fill: ink }} />;
   }
-  const controller = crc(surface, <Scene />);
+  const controller = pibbl(surface, <Scene />);
   const pixels = () => uploads.mock.calls.at(-1)![0].data.slice();
   try {
     driver.flush(0);
@@ -158,7 +158,7 @@ for (const change of [
       });
       return <Rectangle style={{ width: 64, height: 64, fill: ink }} />;
     }
-    const controller = crc(surface, <Scene />);
+    const controller = pibbl(surface, <Scene />);
     const pixels = () =>
       surface.getContext("2d")!.getImageData(0, 0, 64, 64).data;
     try {
@@ -194,7 +194,7 @@ it("fails explicitly when WASM allocation is unavailable and leaves no scheduled
     const texture = useTexture(marble());
     return <Rectangle style={{ width: 64, height: 64, fill: texture }} />;
   }
-  const controller = crc(surface, <Scene />);
+  const controller = pibbl(surface, <Scene />);
   try {
     expect(() => driver.flush(0)).toThrow("WASM allocation unavailable");
   } finally {
@@ -206,7 +206,7 @@ it("fails explicitly when WASM allocation is unavailable and leaves no scheduled
 });
 
 it("legacy texture masks borrow their WASM heap without a JS pixel-generation fallback", async () => {
-  const { ProceduralTexture } = await import("@crc/core/textures");
+  const { ProceduralTexture } = await import("@pibbl/core/textures");
   const driver = new ManualSchedulerDriver(),
     restore = installSchedulerDriverForTest(driver);
   const memory = memorySpy();
@@ -215,7 +215,7 @@ it("legacy texture masks borrow their WASM heap without a JS pixel-generation fa
     "putImageData",
   );
   const surface = canvas();
-  const controller = crc(
+  const controller = pibbl(
     surface,
     <ProceduralTexture
       kind="marble"

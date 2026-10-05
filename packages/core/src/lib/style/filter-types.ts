@@ -14,32 +14,32 @@ import type { TexturePaint } from '../textures/texture-protocol.js';
  * @see {@link blur}
  * @see {@link brightness}
  */
-export interface CRCFilter {
-  readonly [CRC_FILTER_EXECUTOR]: CRCFilterExecutor;
+export interface PibblFilter {
+  readonly [PIBBL_FILTER_EXECUTOR]: PibblFilterExecutor;
 }
 
 /** @internal Stable protocol key shared by the base renderer and optional entries. */
-export const CRC_FILTER_EXECUTOR = Symbol('crc.filter.executor');
+export const PIBBL_FILTER_EXECUTOR = Symbol('pibbl.filter.executor');
 
 /** @internal A value prepared for one receiving primitive generation. */
-export interface PreparedCRCFilter {
-  readonly executor: CRCFilterBoundaryExecutor;
+export interface PreparedPibblFilter {
+  readonly executor: PibblFilterBoundaryExecutor;
 }
 
 /** @internal Optional filter implementations own validation and pixel processing. */
-export interface CRCFilterBoundaryExecutor {
-  render(input: Readonly<CRCFilterRenderInput>): void;
+export interface PibblFilterBoundaryExecutor {
+  render(input: Readonly<PibblFilterRenderInput>): void;
 }
 
-export interface CRCFilterExecutor extends CRCFilterBoundaryExecutor {
-  prepare(value: CRCFilter, property: string, context: Readonly<StyleResolutionContext>): PreparedCRCFilter;
-  render(input: Readonly<CRCFilterRenderInput>): void;
+export interface PibblFilterExecutor extends PibblFilterBoundaryExecutor {
+  prepare(value: PibblFilter, property: string, context: Readonly<StyleResolutionContext>): PreparedPibblFilter;
+  render(input: Readonly<PibblFilterRenderInput>): void;
 }
 
 /** @internal Generic call boundary that keeps capture implementation out of core. */
-export interface CRCFilterRenderInput {
+export interface PibblFilterRenderInput {
   readonly component: string;
-  readonly filters: readonly PreparedCRCFilter[];
+  readonly filters: readonly PreparedPibblFilter[];
   readonly presentation?: Readonly<PrimitivePresentation>;
   readonly renderSubtree: () => void;
 }
@@ -50,7 +50,7 @@ export interface CRCFilterRenderInput {
  * @see {@link SignalValue}
  * @see {@link blur}
  */
-export interface CRCBlurFilterOptions {
+export interface PibblBlurFilterOptions {
   /** Radius in the coordinate system of this geometry or effect. See {@link SignalValue}. */
   readonly radius: SignalValue<number>;
 }
@@ -60,7 +60,7 @@ export interface CRCBlurFilterOptions {
  * @see {@link SignalValue}
  * @see {@link brightness}
  */
-export interface CRCBrightnessFilterOptions {
+export interface PibblBrightnessFilterOptions {
   /** Magnitude of the filter or motion adjustment. See {@link SignalValue}. */
   readonly amount: SignalValue<number>;
 }
@@ -70,7 +70,7 @@ export interface CRCBrightnessFilterOptions {
  * @see {@link SignalValue}
  * @see {@link contrast}
  */
-export interface CRCContrastFilterOptions {
+export interface PibblContrastFilterOptions {
   /** Magnitude of the filter or motion adjustment. See {@link SignalValue}. */
   readonly amount: SignalValue<number>;
 }
@@ -80,7 +80,7 @@ export interface CRCContrastFilterOptions {
  * @see {@link SignalValue}
  * @see {@link dropShadow}
  */
-export interface CRCDropShadowFilterOptions {
+export interface PibblDropShadowFilterOptions {
   /** Horizontal offset applied to the texture or shadow. See {@link SignalValue}. */
   readonly offsetX: SignalValue<number>;
   /** Vertical offset applied to the texture or shadow. See {@link SignalValue}. */
@@ -96,7 +96,7 @@ export interface CRCDropShadowFilterOptions {
  * @see {@link SignalValue}
  * @see {@link grayscale}
  */
-export interface CRCGrayscaleFilterOptions {
+export interface PibblGrayscaleFilterOptions {
   /** Magnitude of the filter or motion adjustment. See {@link SignalValue}. */
   readonly amount: SignalValue<number>;
 }
@@ -106,7 +106,7 @@ export interface CRCGrayscaleFilterOptions {
  * @see {@link SignalValue}
  * @see {@link hueRotate}
  */
-export interface CRCHueRotateFilterOptions {
+export interface PibblHueRotateFilterOptions {
   /** Hue rotation in degrees. See {@link SignalValue}. */
   readonly degrees: SignalValue<number>;
 }
@@ -116,7 +116,7 @@ export interface CRCHueRotateFilterOptions {
  * @see {@link SignalValue}
  * @see {@link invert}
  */
-export interface CRCInvertFilterOptions {
+export interface PibblInvertFilterOptions {
   /** Magnitude of the filter or motion adjustment. See {@link SignalValue}. */
   readonly amount: SignalValue<number>;
 }
@@ -126,7 +126,7 @@ export interface CRCInvertFilterOptions {
  * @see {@link SignalValue}
  * @see {@link opacity}
  */
-export interface CRCOpacityFilterOptions {
+export interface PibblOpacityFilterOptions {
   /** Magnitude of the filter or motion adjustment. See {@link SignalValue}. */
   readonly amount: SignalValue<number>;
 }
@@ -136,7 +136,7 @@ export interface CRCOpacityFilterOptions {
  * @see {@link SignalValue}
  * @see {@link saturate}
  */
-export interface CRCSaturateFilterOptions {
+export interface PibblSaturateFilterOptions {
   /** Magnitude of the filter or motion adjustment. See {@link SignalValue}. */
   readonly amount: SignalValue<number>;
 }
@@ -146,7 +146,7 @@ export interface CRCSaturateFilterOptions {
  * @see {@link SignalValue}
  * @see {@link sepia}
  */
-export interface CRCSepiaFilterOptions {
+export interface PibblSepiaFilterOptions {
   /** Magnitude of the filter or motion adjustment. See {@link SignalValue}. */
   readonly amount: SignalValue<number>;
 }
@@ -157,7 +157,7 @@ export interface CRCSepiaFilterOptions {
  * @see {@link TexturePaint}
  * @see {@link displacement}
  */
-export interface CRCDisplacementFilterOptions {
+export interface PibblDisplacementFilterOptions {
   /**
    * Optional local blur support radius. Blue × alpha scales it; zero preserves displacement-only
    * behavior.
@@ -168,27 +168,27 @@ export interface CRCDisplacementFilterOptions {
   /** Magnitude of the displacement or brush effect. See {@link SignalValue}. */
   readonly strength: SignalValue<number>;
   /**
-   * Logical region over which the effect is evaluated. See {@link CRCDisplacementFilterOptions}.
+   * Logical region over which the effect is evaluated. See {@link PibblDisplacementFilterOptions}.
    */
   readonly region: Readonly<{
     /**
      * Horizontal coordinate or displacement in the containing coordinate system. See
-     * {@link CRCDisplacementFilterOptions}.
+     * {@link PibblDisplacementFilterOptions}.
      */
     x: number;
     /**
      * Vertical coordinate or displacement in the containing coordinate system. See
-     * {@link CRCDisplacementFilterOptions}.
+     * {@link PibblDisplacementFilterOptions}.
      */
     y: number;
     /**
      * Horizontal extent in the units of the containing geometry or surface. See
-     * {@link CRCDisplacementFilterOptions}.
+     * {@link PibblDisplacementFilterOptions}.
      */
     width: number;
     /**
      * Vertical extent in the units of the containing geometry or surface. See
-     * {@link CRCDisplacementFilterOptions}.
+     * {@link PibblDisplacementFilterOptions}.
      */
     height: number;
   }>;
@@ -198,54 +198,54 @@ export interface CRCDisplacementFilterOptions {
  * Surface-light source. Images are caller-owned and must already be decoded.
  *
  * @see {@link TexturePaint}
- * @see {@link CRCReflectedLightFilterOptions}
+ * @see {@link PibblReflectedLightFilterOptions}
  */
-export type CRCReflectedLightSource = string | TexturePaint | HTMLImageElement | ImageBitmap;
+export type PibblReflectedLightSource = string | TexturePaint | HTMLImageElement | ImageBitmap;
 /**
  * Parameters for the reflected light filter, including signal-capable inputs where declared.
  *
  * @see {@link SignalValue}
  * @see {@link TexturePaint}
- * @see {@link CRCReflectedLightSource}
+ * @see {@link PibblReflectedLightSource}
  * @see {@link reflectedLight}
  */
-export interface CRCReflectedLightFilterOptions {
+export interface PibblReflectedLightFilterOptions {
   /** Texture or image supplying the surface-height samples. See {@link SignalValue}, {@link TexturePaint}. */
   readonly map: SignalValue<TexturePaint>;
   /**
-   * Logical region over which the effect is evaluated. See {@link CRCReflectedLightFilterOptions}
+   * Logical region over which the effect is evaluated. See {@link PibblReflectedLightFilterOptions}
    * .
    */
   readonly region: Readonly<{
     /**
      * Horizontal coordinate or displacement in the containing coordinate system. See
-     * {@link CRCReflectedLightFilterOptions}.
+     * {@link PibblReflectedLightFilterOptions}.
      */
     x: number;
     /**
      * Vertical coordinate or displacement in the containing coordinate system. See
-     * {@link CRCReflectedLightFilterOptions}.
+     * {@link PibblReflectedLightFilterOptions}.
      */
     y: number;
     /**
      * Horizontal extent in the units of the containing geometry or surface. See
-     * {@link CRCReflectedLightFilterOptions}.
+     * {@link PibblReflectedLightFilterOptions}.
      */
     width: number;
     /**
      * Vertical extent in the units of the containing geometry or surface. See
-     * {@link CRCReflectedLightFilterOptions}.
+     * {@link PibblReflectedLightFilterOptions}.
      */
     height: number;
   }>;
-  /** Light-source position or direction used for the reflection. See {@link SignalValue}, {@link CRCReflectedLightSource}. */
-  readonly source?: SignalValue<CRCReflectedLightSource>;
+  /** Light-source position or direction used for the reflection. See {@link SignalValue}, {@link PibblReflectedLightSource}. */
+  readonly source?: SignalValue<PibblReflectedLightSource>;
   /** Opacity of the painted result. See {@link SignalValue}. */
   readonly opacity?: SignalValue<number>;
   /** Intensity threshold used to select reflected-light contributions. See {@link SignalValue}. */
   readonly threshold?: SignalValue<number>;
   /** Softness of the reflected-light threshold boundary. See {@link SignalValue}. */
   readonly softness?: SignalValue<number>;
-  /** Direction in which this operation proceeds. See {@link CRCReflectedLightFilterOptions}. */
+  /** Direction in which this operation proceeds. See {@link PibblReflectedLightFilterOptions}. */
   readonly direction?: readonly [number, number];
 }

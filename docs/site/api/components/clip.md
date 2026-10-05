@@ -6,17 +6,17 @@ kind: api
 slug: clip
 apiCategory: component
 symbols: [Clip]
-relatedTypes: [CRCNode, ClipProps, ClipStyle]
+relatedTypes: [PibblNode, ClipProps, ClipStyle]
 ---
 
 # Clip
 
 ```ts
-import { Circle, Clip } from "@crc/core";
+import { Circle, Clip } from "@pibbl/core";
 ```
 
 `Clip` uses [`ClipProps`](#/api/types/elements-components#clipprops) and [`ClipStyle`](#/api/types/styles#clipstyle) to apply a `Path2D` or [`PathGeometry`](#/api/functions/path-geometry) and fill rule to
-recursive [`CRCNode`](#/api/types/elements-components#crcnode) children. The clip geometry stays aligned with paint and
+recursive [`PibblNode`](#/api/types/elements-components#pibblnode) children. The clip geometry stays aligned with paint and
 hit testing. Filters on the receiving clip are composed before its own clip is
 presented.
 

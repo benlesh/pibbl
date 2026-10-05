@@ -1,17 +1,17 @@
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import { usePaintTarget } from '../hooks/use-paint-target.js';
 
 export function wireCommonEvents(
-  props: CRCEventHandlers & CRCEventFocusOptions & CRCEventParticipationOptions,
+  props: PibblEventHandlers & PibblEventFocusOptions & PibblEventParticipationOptions,
   path: Path2D | undefined,
   fill: boolean,
   lineInteractionWidth: number,
   cursor: string | undefined,
-  keyboardNavigationBounds?: CRCEventFocusOptions['keyboardNavigationBounds'],
+  keyboardNavigationBounds?: PibblEventFocusOptions['keyboardNavigationBounds'],
 ): void {
   usePaintTarget(props, {
     path: path ?? new Path2D(),

@@ -20,17 +20,17 @@ symbols:
 
 # Text geometry
 
-The optional `@crc/text` package converts one text run into editable
+The optional `@pibbl/text` package converts one text run into editable
 [`PathGeometry`](#/api/functions/path-geometry). HarfBuzz shapes the whole run,
-including kerning, ligatures, and mark positioning, before CRC copies its outlines
+including kerning, ligatures, and mark positioning, before Pibbl copies its outlines
 into independent geometry. Importing the package does not initialize WASM.
 
 ```ts
-import { loadOutlineFont, createTextGeometry } from "@crc/text";
+import { loadOutlineFont, createTextGeometry } from "@pibbl/text";
 
 async function label(bytes: Uint8Array) {
   using font = await loadOutlineFont(bytes);
-  return createTextGeometry(font, "Hello CRC", {
+  return createTextGeometry(font, "Hello Pibbl", {
     fontSize: 96,
     features: { kern: true, liga: true },
   });
@@ -55,11 +55,11 @@ returns no font owner.
 synchronous, idempotent cleanup. Use `using font = await loadOutlineFont(...)`
 for a local conversion or retain one font across edits and call `dispose()` on
 teardown. A retained font must outlive every conversion that uses it. Loading
-belongs outside CRC's synchronous component evaluation.
+belongs outside Pibbl's synchronous component evaluation.
 
 `using` requires runtime `Symbol.dispose` support and a compatible syntax target
 or compiler transform. TypeScript consumers include `ESNext.Disposable` (or
-`ESNext`) in their configured libraries. CRC does not install a global polyfill. Explicit
+`ESNext`) in their configured libraries. Pibbl does not install a global polyfill. Explicit
 `dispose()` works without `using` syntax. Generated paths and metrics hold no
 borrowed WASM views. Disposing a font releases its native resources; the shared
 WASM memory may retain its high-water capacity for later reuse.

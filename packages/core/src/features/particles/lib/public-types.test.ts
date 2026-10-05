@@ -1,58 +1,58 @@
 import type {
-  CRCParticleAppearance,
-  CRCParticleBounds2D,
-  CRCParticleBurstAcceptedEvent,
-  CRCParticleBurstOverrides,
-  CRCParticleBurstRejectedEvent,
-  CRCParticleChoice,
-  CRCParticleCommonProps,
-  CRCParticleCurve,
-  CRCParticleCurveOptions,
-  CRCParticleCurveValue,
-  CRCParticleDiagnostic,
-  CRCParticleDrainStartEvent,
-  CRCParticleEffect2D,
-  CRCParticleEffect2DInput,
-  CRCParticleEmission,
-  CRCParticleEmitter2D,
-  CRCParticleExecution,
-  CRCParticleFinishEvent,
-  CRCParticleGradient,
-  CRCParticleInitial2D,
-  CRCParticleIntegerRange,
-  CRCParticleMotion2D,
-  CRCParticleOverflow,
-  CRCParticleParameterDefinition,
-  CRCParticleParameterDefinitions,
-  CRCParticleParameterReference,
-  CRCParticleParameterTiming,
-  CRCParticleParameterValue,
-  CRCParticleParameterValues,
-  CRCParticleRange,
-  CRCParticleRenderer2D,
-  CRCParticleScalar,
-  CRCParticleShape2D,
-  CRCParticleStartEvent,
-  CRCParticleSystem,
-  CRCParticleSystemEvent,
-  CRCParticleSystemOptions,
-  CRCParticleSystemStatus,
-  CRCParticleValueFor,
-  CRCParticleValuesOf,
-  CRCParticleVector2,
+  PibblParticleAppearance,
+  PibblParticleBounds2D,
+  PibblParticleBurstAcceptedEvent,
+  PibblParticleBurstOverrides,
+  PibblParticleBurstRejectedEvent,
+  PibblParticleChoice,
+  PibblParticleCommonProps,
+  PibblParticleCurve,
+  PibblParticleCurveOptions,
+  PibblParticleCurveValue,
+  PibblParticleDiagnostic,
+  PibblParticleDrainStartEvent,
+  PibblParticleEffect2D,
+  PibblParticleEffect2DInput,
+  PibblParticleEmission,
+  PibblParticleEmitter2D,
+  PibblParticleExecution,
+  PibblParticleFinishEvent,
+  PibblParticleGradient,
+  PibblParticleInitial2D,
+  PibblParticleIntegerRange,
+  PibblParticleMotion2D,
+  PibblParticleOverflow,
+  PibblParticleParameterDefinition,
+  PibblParticleParameterDefinitions,
+  PibblParticleParameterReference,
+  PibblParticleParameterTiming,
+  PibblParticleParameterValue,
+  PibblParticleParameterValues,
+  PibblParticleRange,
+  PibblParticleRenderer2D,
+  PibblParticleScalar,
+  PibblParticleShape2D,
+  PibblParticleStartEvent,
+  PibblParticleSystem,
+  PibblParticleSystemEvent,
+  PibblParticleSystemOptions,
+  PibblParticleSystemStatus,
+  PibblParticleValueFor,
+  PibblParticleValuesOf,
+  PibblParticleVector2,
   Particles2DProps,
   Particles2DStyle,
-} from "@crc/core/particles";
-import { particleParameter } from "@crc/core/particles";
+} from "@pibbl/core/particles";
+import { particleParameter } from "@pibbl/core/particles";
 import { expectTypeOf, it } from "vitest";
 
 const parameterDefinitions = {
   wind: { type: "vector2", default: [0, 0], timing: "simulation" },
   tint: { type: "color", default: "#ffffff", timing: "render" },
-} as const satisfies CRCParticleParameterDefinitions;
+} as const satisfies PibblParticleParameterDefinitions;
 
-type Parameters = CRCParticleValuesOf<typeof parameterDefinitions>;
-type WindValue = CRCParticleValueFor<(typeof parameterDefinitions)["wind"]>;
+type Parameters = PibblParticleValuesOf<typeof parameterDefinitions>;
+type WindValue = PibblParticleValueFor<(typeof parameterDefinitions)["wind"]>;
 
 const parameters: Parameters = { wind: [0, 0], tint: "#ffffff" };
 const wind: WindValue = [1, 2];
@@ -68,29 +68,29 @@ const effectDefinition = {
   emitters: [{ name: "impact" }, { name: "smoke" }],
 } as const;
 
-type InferredEffect = CRCParticleEffect2D<
+type InferredEffect = PibblParticleEffect2D<
   (typeof effectDefinition)["emitters"][number]["name"],
-  CRCParticleValuesOf<(typeof effectDefinition)["parameters"]>
+  PibblParticleValuesOf<(typeof effectDefinition)["parameters"]>
 >;
 type InferredSystem =
-  InferredEffect extends CRCParticleEffect2D<
+  InferredEffect extends PibblParticleEffect2D<
     infer EmitterName,
     infer EffectParameters
   >
-    ? CRCParticleSystem<EmitterName, EffectParameters>
+    ? PibblParticleSystem<EmitterName, EffectParameters>
     : never;
 
 declare const effect2D: InferredEffect;
 declare const system2D: InferredSystem;
 
 function assertParticlePublicTypes(): void {
-  const vector2Reference: CRCParticleVector2 = particleParameter("wind");
-  const parameterizedInitial2D: CRCParticleInitial2D = {
+  const vector2Reference: PibblParticleVector2 = particleParameter("wind");
+  const parameterizedInitial2D: PibblParticleInitial2D = {
     lifetimeMilliseconds: 1_000,
     velocity: particleParameter("wind"),
     color: particleParameter("tint"),
   };
-  const parameterizedMotion2D: CRCParticleMotion2D = {
+  const parameterizedMotion2D: PibblParticleMotion2D = {
     type: "acceleration",
     value: particleParameter("wind"),
   };
@@ -123,50 +123,50 @@ void assertParticlePublicTypes;
 
 it("runs as an inert compile fixture", () => {
   expectTypeOf<InferredSystem>().toMatchTypeOf<
-    CRCParticleSystem<"impact" | "smoke", Parameters>
+    PibblParticleSystem<"impact" | "smoke", Parameters>
   >();
 });
 
 type RootPublicTypes =
-  | CRCParticleAppearance
-  | CRCParticleBounds2D
-  | CRCParticleBurstAcceptedEvent
-  | CRCParticleBurstOverrides
-  | CRCParticleBurstRejectedEvent
-  | CRCParticleChoice<unknown>
-  | CRCParticleCommonProps<CRCParticleParameterValues>
-  | CRCParticleCurve<CRCParticleCurveValue>
-  | CRCParticleCurveOptions
-  | CRCParticleCurveValue
-  | CRCParticleDiagnostic
-  | CRCParticleDrainStartEvent
-  | CRCParticleEffect2D
-  | CRCParticleEffect2DInput
-  | CRCParticleEmission
-  | CRCParticleEmitter2D
-  | CRCParticleExecution
-  | CRCParticleFinishEvent
-  | CRCParticleGradient
-  | CRCParticleInitial2D
-  | CRCParticleIntegerRange
-  | CRCParticleMotion2D
-  | CRCParticleOverflow
-  | CRCParticleParameterDefinition
-  | CRCParticleParameterDefinitions
-  | CRCParticleParameterReference<string>
-  | CRCParticleParameterTiming
-  | CRCParticleParameterValue
-  | CRCParticleParameterValues
-  | CRCParticleRange
-  | CRCParticleRenderer2D
-  | CRCParticleScalar
-  | CRCParticleShape2D
-  | CRCParticleStartEvent
-  | CRCParticleSystem
-  | CRCParticleSystemEvent
-  | CRCParticleSystemOptions
-  | CRCParticleSystemStatus
-  | CRCParticleVector2
+  | PibblParticleAppearance
+  | PibblParticleBounds2D
+  | PibblParticleBurstAcceptedEvent
+  | PibblParticleBurstOverrides
+  | PibblParticleBurstRejectedEvent
+  | PibblParticleChoice<unknown>
+  | PibblParticleCommonProps<PibblParticleParameterValues>
+  | PibblParticleCurve<PibblParticleCurveValue>
+  | PibblParticleCurveOptions
+  | PibblParticleCurveValue
+  | PibblParticleDiagnostic
+  | PibblParticleDrainStartEvent
+  | PibblParticleEffect2D
+  | PibblParticleEffect2DInput
+  | PibblParticleEmission
+  | PibblParticleEmitter2D
+  | PibblParticleExecution
+  | PibblParticleFinishEvent
+  | PibblParticleGradient
+  | PibblParticleInitial2D
+  | PibblParticleIntegerRange
+  | PibblParticleMotion2D
+  | PibblParticleOverflow
+  | PibblParticleParameterDefinition
+  | PibblParticleParameterDefinitions
+  | PibblParticleParameterReference<string>
+  | PibblParticleParameterTiming
+  | PibblParticleParameterValue
+  | PibblParticleParameterValues
+  | PibblParticleRange
+  | PibblParticleRenderer2D
+  | PibblParticleScalar
+  | PibblParticleShape2D
+  | PibblParticleStartEvent
+  | PibblParticleSystem
+  | PibblParticleSystemEvent
+  | PibblParticleSystemOptions
+  | PibblParticleSystemStatus
+  | PibblParticleVector2
   | Particles2DStyle;
 
 declare const rootPublicTypes: RootPublicTypes;

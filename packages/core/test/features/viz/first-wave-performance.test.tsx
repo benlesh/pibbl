@@ -1,13 +1,13 @@
-import { createElement, signal, type CRCNode } from "@crc/core";
-import { BarSeries, PieLayout, PieSlice, PieLabel, Scale, type PieLayoutSlice } from "@crc/core/viz";
+import { createElement, signal, type PibblNode } from "@pibbl/core";
+import { BarSeries, PieLayout, PieSlice, PieLabel, Scale, type PieLayoutSlice } from "@pibbl/core/viz";
 import { expect, it } from "vitest";
 import { commands } from "vitest/browser";
 import { testRuntime } from "./support/runtime.js";
 
 // Explicit opt-in timing probe. Both revisions use this exact fixture; only the
 // approved breaking BarSeries vocabulary and PieLayout revision opt-in differ.
-const enabled = import.meta.env.VITE_CRC_VIZ_PERF === "1";
-const legacy = import.meta.env.VITE_CRC_VIZ_LEGACY === "1";
+const enabled = import.meta.env.VITE_PIBBL_VIZ_PERF === "1";
+const legacy = import.meta.env.VITE_PIBBL_VIZ_LEGACY === "1";
 const median = (values: number[]) => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
 const paint = { fill: "#2878b5" };
 type Row = { category: number; value: number };
@@ -27,7 +27,7 @@ it.skipIf(!enabled)("reports fixed first-wave public workloads", async () => {
       const props = legacy
         ? { data: rows, x: "category", y: "value", xScale: "c", yScale: "v", style: paint, onPointerDown: event }
         : { data: rows, category: "category", value: "value", categoryScale: "c", valueScale: "v", style: paint, onPointerDown: event };
-      function App(): CRCNode {
+      function App(): PibblNode {
         pulse.get();
         if (kind === "pie") return createElement(PieLayout<Row>, {
           data: rows, value: "value", keyBy: "category", label: label as never,
@@ -62,5 +62,5 @@ it.skipIf(!enabled)("reports fixed first-wave public workloads", async () => {
       } finally { runtime.dispose(); }
     }
   }
-  await commands.writeFile(import.meta.env.VITE_CRC_VIZ_RESULT, JSON.stringify({ legacy, results }, null, 2));
+  await commands.writeFile(import.meta.env.VITE_PIBBL_VIZ_RESULT, JSON.stringify({ legacy, results }, null, 2));
 }, 180_000);

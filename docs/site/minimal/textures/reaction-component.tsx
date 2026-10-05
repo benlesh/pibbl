@@ -1,11 +1,11 @@
-/** @jsxImportSource @crc/core */
-import { crc } from "@crc/core";
+/** @jsxImportSource @pibbl/core */
+import { pibbl } from "@pibbl/core";
 import {
   ReactionDiffusion,
   texturePalettes,
   type ReactionDiffusionProps,
   type TextureBrush,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 
 const canvas = document.createElement("canvas");
 canvas.width = 320;
@@ -20,5 +20,5 @@ const props: ReactionDiffusionProps = {
   resolution: { width: 128, height: 80 },
   brush,
 };
-const controller = crc(canvas, <ReactionDiffusion {...props} style={{ width: 320, height: 200 }} />);
+const controller = pibbl(canvas, <ReactionDiffusion {...props} style={{ width: 320, height: 200 }} />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

@@ -15,7 +15,7 @@ assert.throws(() => verifier.assertShippedContractSnapshots(new Map([["docs/desi
 
 for (const name of ['viz', 'particles', 'physics', 'textures', 'types', 'webgl']) {
   assert.throws(
-    () => verifier.assertCurrentVocabulary('docs/site/api/example.md', `Import from \`@crc/${name}\`.`),
+    () => verifier.assertCurrentVocabulary('docs/site/api/example.md', `Import from \`@pibbl/${name}\`.`),
     /retired package/,
   );
 }

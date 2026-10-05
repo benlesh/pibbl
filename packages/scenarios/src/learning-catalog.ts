@@ -23,7 +23,7 @@ export const learningSections = [
   {
     id: "start",
     label: "Start",
-    description: "Mount your first CRC scene and learn the render contract.",
+    description: "Mount your first Pibbl scene and learn the render contract.",
     order: 1,
   },
   {
@@ -77,7 +77,7 @@ export const learningSections = [
     id: "three",
     label: "Three.js",
     description:
-      "Use ordinary Three.js scenes inside CRC composition and interaction.",
+      "Use ordinary Three.js scenes inside Pibbl composition and interaction.",
     order: 9,
   },
 ] as const satisfies readonly LearningSection[];
@@ -138,7 +138,7 @@ const drafts = [
     summary: "Explore reusable energy and everyday transitions on arbitrary grouped content.",
     api: ["useVisibilityTransition", "fade", "embers", "hologram", "bifrost", "Group"],
     objectives: ["Bind an explicit visibility controller to a painted subtree.", "Distinguish finished, cancelled, and disposed requests."],
-    prompts: { gesture: "Hide and quickly Show to reverse. Try Exit + Unmount, then Remount.", code: "Replace the subject with your own CRC text and shapes." },
+    prompts: { gesture: "Hide and quickly Show to reverse. Try Exit + Unmount, then Remount.", code: "Replace the subject with your own Pibbl text and shapes." },
     apiNotes: ["This first slice changes pixels, not layout or input targeting.", "The tuned energy effect reference is preserved in Energy Transitions."],
     canvas: { width: 800, height: 560 }, related: ["energy-transitions", "signals-and-animation"],
     load: () => import("./learning/composition/visibility-transitions.example"),
@@ -149,7 +149,7 @@ const drafts = [
     api: ["definePrimitive", "useSignal", "usePlayback"],
     objectives: ["Separate transition progress from continuously moving energy.", "Explore entry direction, target width, brightness, and hue."],
     prompts: { gesture: "Choose an effect to watch its entrance. Toggle Exit / Enter, or drag the progress bar.", code: "A visual prototype composed with public drawing and animation APIs." },
-    apiNotes: ["This is an exploratory example, not a new public filter or reaction-diffusion simulation.", "CRC owns both animation clocks and their teardown."],
+    apiNotes: ["This is an exploratory example, not a new public filter or reaction-diffusion simulation.", "Pibbl owns both animation clocks and their teardown."],
     canvas: { width: 960, height: 790 }, related: ["signals-and-animation", "particle-effects"],
     load: () => import("./learning/composition/energy-transitions.example"),
   },
@@ -159,17 +159,17 @@ const drafts = [
     api: ["useTexture", "rainDrops", "displacement", "Layer"],
     objectives: ["Use a live droplet texture as a displacement map.", "Wipe mist and collect droplets through captured pointer drags."],
     prompts: { gesture: "Click and drag to wipe the mist and gather beads under your finger. Release to let the collected drop fall.", code: "Wrap your own scene with displacement and reuse the rain texture." },
-    apiNotes: ["Droplets use CRC scheduling and bounded seeded simulation; no extra animation loop.", "Mist blurs locally; moving drops clear the film and leave persistent beaded trails."],
+    apiNotes: ["Droplets use Pibbl scheduling and bounded seeded simulation; no extra animation loop.", "Mist blurs locally; moving drops clear the film and leave persistent beaded trails."],
     canvas: { width: 880, height: 700 }, related: ["underwater", "living-ink"],
     load: () => import("./learning/composition/rainy-window.example"),
   },
   {
     slug: "html-box", title: "HTML Box", shortTitle: "HTML Box", section: "composition", order: 212,
-    summary: "Mount native HTML with CRC transforms, clipping, and coordinated focus.",
+    summary: "Mount native HTML with Pibbl transforms, clipping, and coordinated focus.",
     api: ["HtmlBox", "Group", "Clip", "FocusManagement"],
-    objectives: ["Keep native inputs alive while CRC moves their box.", "Share clipping geometry and source-order keyboard navigation."],
+    objectives: ["Keep native inputs alive while Pibbl moves their box.", "Share clipping geometry and source-order keyboard navigation."],
     prompts: { gesture: "Type a note, rotate/move/scale its box, then Tab between Canvas and HTML controls.", code: "Mount ordinary DOM in HtmlBox and release resources through its AbortSignal." },
-    apiNotes: ["HTML is always above Canvas paint. PathGeometry supplies portable ancestor clips.", "The application supplies the canvas wrapper and overlay; CRC owns each mounted box."],
+    apiNotes: ["HTML is always above Canvas paint. PathGeometry supplies portable ancestor clips.", "The application supplies the canvas wrapper and overlay; Pibbl owns each mounted box."],
     canvas: { width: 720, height: 480 }, related: ["group", "clip"],
     load: () => import("./learning/composition/html-box.example"),
   },
@@ -187,9 +187,9 @@ const drafts = [
     slug: "stirred-ink", title: "Stirred Ink", shortTitle: "Stirred Ink", section: "composition", order: 211,
     summary: "Animate material parameters and stir living ink with a moving physics body.",
     api: ["useTexture", "reactionDiffusion", "marble", "paper", "cellular", "useReaction", "usePlayback", "PhysicsWorld2D"],
-    objectives: ["Drive WASM texture parameters with CRC animation.", "Displace existing ink using committed physics positions."],
+    objectives: ["Drive WASM texture parameters with Pibbl animation.", "Displace existing ink using committed physics positions."],
     prompts: { gesture: "Pause the reaction to isolate the wake, stop stirring, or reset the ink.", code: "Send normalized stir vectors from another moving object." },
-    apiNotes: ["Physics and textures own separate WASM memories; only small movement messages cross between them.", "Texture messages are queued through CRC; there is no second animation loop."],
+    apiNotes: ["Physics and textures own separate WASM memories; only small movement messages cross between them.", "Texture messages are queued through Pibbl; there is no second animation loop."],
     canvas: { width: 600, height: 580 }, related: ["living-ink", "material-lab", "physics-panels"],
     load: () => import("./learning/composition/stirred-ink.example"),
   },
@@ -198,7 +198,7 @@ const drafts = [
     summary: "Explore seeded marble, paper, and cellular surfaces as backgrounds and repeating fills.", api: ["ProceduralTexture", "Group", "useSignal"],
     objectives: ["Reuse procedural texture output in Canvas composition.", "Keep texture generation independent of display size."],
     prompts: { gesture: "Switch materials, cycle the palette, and make a new variation.", code: "Change the seed to reproduce a material or customize the rendering callback." },
-    apiNotes: ["Uses the optional @crc/core/textures package and the public render-layer lifecycle.", "Texture renderer sources are borrowed for the synchronous callback; CRC owns presentation."],
+    apiNotes: ["Uses the optional @pibbl/core/textures package and the public render-layer lifecycle.", "Texture renderer sources are borrowed for the synchronous callback; Pibbl owns presentation."],
     canvas: { width: 880, height: 630 }, related: ["living-ink"],
     load: () => import("./learning/composition/material-lab.example"),
   },
@@ -207,7 +207,7 @@ const drafts = [
     summary: "Paint a living alpha mask that reveals illustrated landscapes and colorful typography.", api: ["ReactionDiffusion", "defineRenderLayer", "Group", "useSignal"],
     objectives: ["Reuse procedural texture output in Canvas composition.", "Keep texture generation independent of display size."],
     prompts: { gesture: "Paint the artwork, pause the mask, and switch between landscape and typography.", code: "Use texture.mask with destination-in to reveal your own Canvas artwork." },
-    apiNotes: ["Uses the optional @crc/core/textures package and the public render-layer lifecycle.", "Texture renderer sources are borrowed for the synchronous callback; CRC owns presentation."],
+    apiNotes: ["Uses the optional @pibbl/core/textures package and the public render-layer lifecycle.", "Texture renderer sources are borrowed for the synchronous callback; Pibbl owns presentation."],
     canvas: { width: 880, height: 630 }, related: ["living-ink"],
     load: () => import("./learning/composition/growing-reveal.example"),
   },
@@ -216,9 +216,9 @@ const drafts = [
     slug: "living-ink", title: "Living Ink", shortTitle: "Living Ink", section: "composition", order: 205,
     summary: "Paint an evolving reaction-diffusion background with seeded spots, stripes, and live palettes.",
     api: ["ReactionDiffusion", "Group", "useSignal"],
-    objectives: ["Paint into a persistent scheduled texture.", "Compose ordinary CRC content over a living background."],
+    objectives: ["Paint into a persistent scheduled texture.", "Compose ordinary Pibbl content over a living background."],
     prompts: { gesture: "Draw on the ink, pause it, and cycle the palette.", code: "Change resolution independently from the displayed size." },
-    apiNotes: ["ReactionDiffusion comes from the optional @crc/core/textures package.", "Reset repeats the seed; New seed creates another variation."],
+    apiNotes: ["ReactionDiffusion comes from the optional @pibbl/core/textures package.", "Reset repeats the seed; New seed creates another variation."],
     canvas: { width: 880, height: 630 }, related: ["layer", "three-layer"],
     load: () => import("./learning/composition/living-ink.example"),
   },
@@ -229,19 +229,19 @@ const drafts = [
     section: "start",
     order: 10,
     summary:
-      "Mount a tiny poster, then see how CRC turns component functions into one disposable Canvas scene.",
-    api: ["crc", "Rectangle", "Text"],
+      "Mount a tiny poster, then see how Pibbl turns component functions into one disposable Canvas scene.",
+    api: ["pibbl", "Rectangle", "Text"],
     objectives: [
-      "Write an ordinary named function that returns descriptive CRC JSX.",
-      "Add stateful click feedback, then mount the component with crc and retain its controller for cleanup.",
+      "Write an ordinary named function that returns descriptive Pibbl JSX.",
+      "Add stateful click feedback, then mount the component with pibbl and retain its controller for cleanup.",
     ],
     prompts: {
       gesture: "Click the cobalt card to change its message.",
       code: "Change the card color or replace “HELLO” with your own title.",
     },
     apiNotes: [
-      "A CRC component is a plain synchronous function; no wrapper or registration call is required.",
-      "`crc` owns one Canvas mount and returns an idempotent controller with `dispose()`.",
+      "A Pibbl component is a plain synchronous function; no wrapper or registration call is required.",
+      "`pibbl` owns one Canvas mount and returns an idempotent controller with `dispose()`.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["rectangle", "text", "click"],
@@ -252,7 +252,7 @@ const drafts = [
     section: "composition", order: 195,
     summary: "Compare annual population gains and losses in the six largest U.S. states using Census estimates.",
     api: ["Scale", "useScale", "BarSeries", "Axis"],
-    objectives: ["Map ordered categories into local bands.", "Inspect signed bars through ordinary CRC events."],
+    objectives: ["Map ordered categories into local bands.", "Inspect signed bars through ordinary Pibbl events."],
     prompts: { gesture: "Switch orientation, hover or tap for exact counts, reverse order, change spacing, and resize.", code: "Change the explicit category domain or supply a different baseline." },
     apiNotes: ["Source: U.S. Census Bureau, Vintage 2023 estimates. July 2022–July 2023 change in the six most populous states. Historical snapshot; later vintages may revise these estimates. https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html", "Unknown or missing categories and missing values skip bars. See grouped bars for nested scales. Semantic category/value props work in either orientation. Callers choose scale ranges and axis placement; valueStart/valueEnd support stacked bars."],
     canvas: { width: 940, height: 660 }, related: ["viz-responsive-line", "viz-points-and-inspection"],
@@ -274,7 +274,7 @@ const drafts = [
     section: "composition", order: 193,
     summary: "Compose signed stacks from range endpoints using one BarSeries.",
     api: ["Scale", "useScale", "BarSeries", "Axis"],
-    objectives: ["Derive stack endpoints with a pure data transform.", "Inspect individual segments with ordinary CRC events."],
+    objectives: ["Derive stack endpoints with a pure data transform.", "Inspect individual segments with ordinary Pibbl events."],
     prompts: { gesture: "Hover or tap segments, reverse the stack, hide costs, and resize.", code: "Change the data transform or supply your own start/end values." },
     apiNotes: ["Illustrative quarterly business data in thousands of dollars; not reported financial results.", "Positive and negative values accumulate separately from zero. Stacking is data preparation; BarSeries renders the supplied ranges."],
     canvas: { width: 940, height: 720 }, related: ["viz-grouped-bars", "viz-band-bars"],
@@ -296,7 +296,7 @@ const drafts = [
     section: "composition", order: 196,
     summary: "Compose pie and donut slices with coordinated labels, legends, and readouts.",
     api: ["PieLayout", "PieSlice", "PieLabel", "pieSlices", "HoverCard"],
-    objectives: ["Reuse pure slice geometry.", "Inspect category-keyed wedges through ordinary CRC events."],
+    objectives: ["Reuse pure slice geometry.", "Inspect category-keyed wedges through ordinary Pibbl events."],
     prompts: { gesture: "Toggle the donut, compare inside and automatic labels, click to pin, then reverse the slices.", code: "Change the values or compose your own labels from slice angles." },
     apiNotes: ["Illustrative data: 100 fictional transport survey responses.", "Angles follow Canvas conventions; stable category keys survive reorder."],
     canvas: { width: 1000, height: 570 }, related: ["viz-points-and-inspection", "signals"],
@@ -353,13 +353,13 @@ const drafts = [
       "HoverCard",
     ],
     objectives: [
-      "Compose batched dots and custom CRC subtrees.",
+      "Compose batched dots and custom Pibbl subtrees.",
       "Inspect mapped anchors and preserve custom mark state on reorder.",
     ],
     prompts: {
       gesture:
         "Hover or tap a point, click custom squares, then reorder and resize.",
-      code: "Replace the custom square with your own CRC elements.",
+      code: "Replace the custom square with your own Pibbl elements.",
     },
     apiNotes: [
       "Custom marks draw around the mapped local origin.",
@@ -405,7 +405,7 @@ const drafts = [
     order: 15,
     authoring: "createElement",
     summary:
-      "Build a complete interactive CRC tree with createElement, recursive children, focus policies, hooks, and no JSX syntax.",
+      "Build a complete interactive Pibbl tree with createElement, recursive children, focus policies, hooks, and no JSX syntax.",
     api: [
       "createElement",
       "non-jsx",
@@ -428,7 +428,7 @@ const drafts = [
       code: "Add another keyed choice or another dynamic Text child with createElement.",
     },
     apiNotes: [
-      "`createElement` is the complete non-JSX alternative and produces the same CRC element protocol as JSX.",
+      "`createElement` is the complete non-JSX alternative and produces the same Pibbl element protocol as JSX.",
       "Pass dynamic lists as one array child; multiple variadic children remain in source order.",
     ],
     canvas: { width: 720, height: 420 },
@@ -457,7 +457,7 @@ const drafts = [
     section: "start",
     order: 17,
     summary:
-      "Pass writable and computed values directly to CRC inputs so each receiving component owns its dependency.",
+      "Pass writable and computed values directly to Pibbl inputs so each receiving component owns its dependency.",
     api: ["signal", "computed", "useSignal"],
     objectives: [
       "Pass signals directly into style fields and textual children without manually unwrapping them.",
@@ -469,7 +469,7 @@ const drafts = [
       code: "Change the x update or derive another label from the shared writable signal.",
     },
     apiNotes: [
-      "A CRC-provided receiver resolves a signal at its declared input boundary and owns the resulting dependency.",
+      "A Pibbl-provided receiver resolves a signal at its declared input boundary and owns the resulting dependency.",
       "Calling .get() remains valid when the enclosing component intentionally wants to become the consumer.",
     ],
     canvas: { width: 720, height: 420 },
@@ -686,7 +686,7 @@ const drafts = [
     section: "drawing",
     order: 30,
     summary:
-      "Draw custom geometry with the browser’s Path2D vocabulary and let CRC paint it.",
+      "Draw custom geometry with the browser’s Path2D vocabulary and let Pibbl paint it.",
     api: ["Path"],
     objectives: [
       "Construct a reusable Path2D.",
@@ -697,7 +697,7 @@ const drafts = [
       code: "Add one more point to the star or swap its fill and stroke colors.",
     },
     apiNotes: [
-      "CRC accepts a native `Path2D`, so Canvas path commands remain familiar.",
+      "Pibbl accepts a native `Path2D`, so Canvas path commands remain familiar.",
       "Filled paths use their fill geometry for hit testing; strokes can opt into a wider interaction width.",
     ],
     canvas: { width: 720, height: 420 },
@@ -1041,7 +1041,7 @@ const drafts = [
     section: "composition",
     order: 215,
     summary: "Import a blur factory, animate its input, and keep the original click geometry.",
-    api: ["Group", "Rectangle", "Text", "CRCFilter", "useSignal"],
+    api: ["Group", "Rectangle", "Text", "PibblFilter", "useSignal"],
     objectives: ["Use an explicitly imported appearance-only filter.", "Observe unchanged target geometry while blur changes."],
     prompts: {
       gesture: "Toggle blur, change its radius, and click inside and just outside the orange outline.",
@@ -1060,7 +1060,7 @@ const drafts = [
     order: 115,
     summary:
       "Compare every filter, an ordered filter array, and nested filter boundaries in one static gallery.",
-    api: ["Group", "Rectangle", "Circle", "Text", "CRCFilter"],
+    api: ["Group", "Rectangle", "Circle", "Text", "PibblFilter"],
     objectives: [
       "Compare all ten filters against one shared multicolor gradient.",
       "Contrast an ordered filter array with nested boundaries that execute inside out.",
@@ -1084,11 +1084,11 @@ const drafts = [
     section: "three",
     order: 116,
     summary:
-      "Compose a procedural Three.js InstancedMesh between CRC tiles and controls while CRC owns scheduling, arbitration, focus, clipping, and filters.",
+      "Compose a procedural Three.js InstancedMesh between Pibbl tiles and controls while Pibbl owns scheduling, arbitration, focus, clipping, and filters.",
     api: ["defineThreeLayer", "InstancedMesh", "OrbitControls", "missBehavior"],
     objectives: [
-      "Adapt an official Three.js instancing idea into one transparent CRC render-layer paint entry without a second animation loop.",
-      "Compare registered targets, unregistered blocking geometry, transparent misses, OrbitControls input, and later CRC paint order.",
+      "Adapt an official Three.js instancing idea into one transparent Pibbl render-layer paint entry without a second animation loop.",
+      "Compare registered targets, unregistered blocking geometry, transparent misses, OrbitControls input, and later Pibbl paint order.",
     ],
     prompts: {
       gesture:
@@ -1096,10 +1096,10 @@ const drafts = [
       code: "Change the deterministic lattice colors or cycle the miss policy order while preserving the registered target.",
     },
     apiNotes: [
-      "defineThreeLayer owns the WebGLRenderer and commits one transparent bitmap through CRC's public render-layer lifecycle.",
-      "Unregistered visible Three geometry blocks lower CRC paint; registered objects participate in ordinary CRC propagation and logical focus.",
-      "OrbitControls receives only CRC-winning input and invalidates the shared scheduler instead of starting requestAnimationFrame or setAnimationLoop.",
-      "The surrounding CRC Clip and drop-shadow filter apply to the flattened Three bitmap, while the later CRC toolbar wins overlapping input.",
+      "defineThreeLayer owns the WebGLRenderer and commits one transparent bitmap through Pibbl's public render-layer lifecycle.",
+      "Unregistered visible Three geometry blocks lower Pibbl paint; registered objects participate in ordinary Pibbl propagation and logical focus.",
+      "OrbitControls receives only Pibbl-winning input and invalidates the shared scheduler instead of starting requestAnimationFrame or setAnimationLoop.",
+      "The surrounding Pibbl Clip and drop-shadow filter apply to the flattened Three bitmap, while the later Pibbl toolbar wins overlapping input.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["group", "clip", "filters"],
@@ -1107,16 +1107,16 @@ const drafts = [
   },
   {
     slug: "three-layer",
-    title: "Three.js inside CRC",
+    title: "Three.js inside Pibbl",
     shortTitle: "Three layer",
     section: "three",
     order: 117,
     summary:
-      "Mount ordinary Three.js objects between Canvas paint and share CRC targeting, focus, filters, and scheduling.",
+      "Mount ordinary Three.js objects between Canvas paint and share Pibbl targeting, focus, filters, and scheduling.",
     api: ["defineThreeLayer", "Scene", "Mesh", "missBehavior"],
     objectives: [
-      "Create one reusable Three layer whose scene and renderer survive CRC component updates.",
-      "Compare unregistered blocking geometry, a registered CRC target, and transparent pixels that pass through to Canvas.",
+      "Create one reusable Three layer whose scene and renderer survive Pibbl component updates.",
+      "Compare unregistered blocking geometry, a registered Pibbl target, and transparent pixels that pass through to Canvas.",
     ],
     prompts: {
       gesture:
@@ -1124,8 +1124,8 @@ const drafts = [
       code: "Change the Three materials or switch missBehavior from pass-through to block.",
     },
     apiNotes: [
-      "defineThreeLayer is declared once at module scope and owns one WebGLRenderer per mounted CRC identity.",
-      "Visible unregistered Three geometry blocks lower Canvas targets; registered objects join CRC event propagation and focus.",
+      "defineThreeLayer is declared once at module scope and owns one WebGLRenderer per mounted Pibbl identity.",
+      "Visible unregistered Three geometry blocks lower Canvas targets; registered objects join Pibbl event propagation and focus.",
       "The drop-shadow filter applies outside the completed transparent Three bitmap.",
     ],
     canvas: { width: 720, height: 420 },
@@ -1157,7 +1157,7 @@ const drafts = [
       code: "Pass another SignalValue input into LineSeries and resolve it at that component boundary.",
     },
     apiNotes: [
-      "Passing a signal object leaves the read and dependency with the receiving CRC component; passing signal.get() intentionally assigns it to the enclosing component.",
+      "Passing a signal object leaves the read and dependency with the receiving Pibbl component; passing signal.get() intentionally assigns it to the enclosing component.",
       "resolveSignalValue performs one declared read only. It never searches arbitrary application data for nested signals.",
       "The computed domain is an equality barrier, while the reaction reads a separate signal in Complete and mutates only an external resource.",
     ],
@@ -1184,7 +1184,7 @@ const drafts = [
     ],
     objectives: [
       "Bind tween and spring definitions to writable signals, then compose their tracks with parallel, sequence, and a named marker.",
-      "Keep playback ownership in one component while every animation advances and commits through CRC's central frame scheduler.",
+      "Keep playback ownership in one component while every animation advances and commits through Pibbl's central frame scheduler.",
     ],
     prompts: {
       gesture:
@@ -1193,8 +1193,8 @@ const drafts = [
     },
     apiNotes: [
       "Definitions and programs are immutable descriptions; usePlayback supplies the stateful component owner and snapshots an accepted run.",
-      "All playbacks advance in shared scheduler phases and publish one central Commit before affected CRC roots render.",
-      "Signals can flow directly into declared CRC inputs; the receiving component resolves them and owns the dependency.",
+      "All playbacks advance in shared scheduler phases and publish one central Commit before affected Pibbl roots render.",
+      "Signals can flow directly into declared Pibbl inputs; the receiving component resolves them and owns the dependency.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["signals", "group", "layer"],
@@ -1247,7 +1247,7 @@ const drafts = [
       code: "Change the flame cadence, smoke lifetime, or drag bounds while keeping the Particles2D component fixed to the stage.",
     },
     apiNotes: [
-      "A Particles2D component owns one fixed-capacity executor; particles are data inside it rather than individual CRC components.",
+      "A Particles2D component owns one fixed-capacity executor; particles are data inside it rather than individual Pibbl components.",
       "Manual births snapshot the square's root-space position, so moving the signal-driven Rectangle does not translate particles that are already alive.",
       "A repeating animation program supplies scheduler-owned emission markers without creating a second timer or animation loop.",
       "Pointer capture keeps the square attached to the drag even when the pointer moves outside its geometry.",
@@ -1270,7 +1270,7 @@ const drafts = [
       "dynamicBody2D",
       "staticBody2D",
       "collider2D",
-      "crcPhysicsBody2D",
+      "pibblPhysicsBody2D",
       "applyImpulse2D",
       "useSignal",
     ],
@@ -1304,7 +1304,7 @@ const drafts = [
       "dynamicBody2D",
       "staticBody2D",
       "collider2D",
-      "crcPhysicsBody2D",
+      "pibblPhysicsBody2D",
       "useRef",
       "useSignal",
       "setPointerCapture",
@@ -1314,13 +1314,13 @@ const drafts = [
       "setLinearVelocity2D",
     ],
     objectives: [
-      "Attach static and dynamic bodies to ordinary CRC drawing primitives, then add solid bumpers and a collider-only sensor.",
+      "Attach static and dynamic bodies to ordinary Pibbl drawing primitives, then add solid bumpers and a collider-only sensor.",
       "Capture one pointer, drag a disabled body with explicit teleports, then hand measured release velocity back to physics.",
     ],
     prompts: {
       gesture:
         "Drag the blue ball above a bumper, then throw it along the ground.",
-      code: "Change gravity, damping, bumper restitution, or the drag bounds while leaving the world on CRC's shared scheduler.",
+      code: "Change gravity, damping, bumper restitution, or the drag bounds while leaving the world on Pibbl's shared scheduler.",
     },
     apiNotes: [
       "An enabled dynamic root pose is physics-owned; named disable, teleport, enable, and velocity commands make the drag handoff explicit.",
@@ -1392,7 +1392,7 @@ const drafts = [
     api: ["Flow", "Text"],
     objectives: [
       "Choose horizontal flow, gaps, and wrapping.",
-      "Mix declared boxes with text measured by CRC.",
+      "Mix declared boxes with text measured by Pibbl.",
     ],
     prompts: {
       gesture: "Click a color chip to highlight it.",
@@ -1439,7 +1439,7 @@ const drafts = [
     section: "layout",
     order: 125,
     summary:
-      "Distribute positive and negative free space with CRC's CSS-compatible Flex subset.",
+      "Distribute positive and negative free space with Pibbl's CSS-compatible Flex subset.",
     api: ["Flex", "useLayoutBox"],
     objectives: [
       "Distribute main-axis space with flex basis, grow, and shrink.",
@@ -1493,7 +1493,7 @@ const drafts = [
     api: ["onClick"],
     objectives: [
       "Attach an `onClick` handler to painted geometry.",
-      "Use CRC state to redraw after activation.",
+      "Use Pibbl state to redraw after activation.",
     ],
     prompts: {
       gesture: "Click each record sleeve to count your picks.",
@@ -1568,7 +1568,7 @@ const drafts = [
     api: ["onMouseMove"],
     objectives: [
       "Handle movement over painted geometry.",
-      "Use CRC’s intrinsic `x` and `y` coordinates regardless of CSS scaling.",
+      "Use Pibbl’s intrinsic `x` and `y` coordinates regardless of CSS scaling.",
     ],
     prompts: {
       gesture: "Paint a trail through the cobalt field.",
@@ -1600,7 +1600,7 @@ const drafts = [
       code: "Reveal a different subtitle or color on entry.",
     },
     apiNotes: [
-      "CRC emits logical out/over transitions before movement.",
+      "Pibbl emits logical out/over transitions before movement.",
       "Hover content should remain nonessential because touch has no hover.",
     ],
     canvas: { width: 720, height: 420 },
@@ -1626,7 +1626,7 @@ const drafts = [
     },
     apiNotes: [
       "Out fires when another logical region wins or the root Canvas is exited.",
-      "`relatedTarget` is the opposite opaque CRC target; `originalEvent.relatedTarget` retains the browser's native value.",
+      "`relatedTarget` is the opposite opaque Pibbl target; `originalEvent.relatedTarget` retains the browser's native value.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-over", "mouse-move", "event-sequences"],
@@ -1774,7 +1774,7 @@ const drafts = [
       code: "Draw one marker per item in `changedTouches`.",
     },
     apiNotes: [
-      "CRC preserves the native `TouchList` objects while grouping changed contacts by retained logical owner.",
+      "Pibbl preserves the native `TouchList` objects while grouping changed contacts by retained logical owner.",
       "Pointer Events are preferred for unified device input; Touch Events remain valuable for native multi-touch lists.",
     ],
     canvas: { width: 720, height: 420 },
@@ -1841,7 +1841,7 @@ const drafts = [
     section: "user-events",
     order: 260,
     summary:
-      "Trace CRC capture, target, and bubble phases and choose where logical and native defaults stop.",
+      "Trace Pibbl capture, target, and bubble phases and choose where logical and native defaults stop.",
     api: [
       "useEventListener",
       "onClickCapture",
@@ -1861,7 +1861,7 @@ const drafts = [
     },
     apiNotes: [
       "`useEventListener` observes events on component ancestry without creating hit geometry or a focus candidate.",
-      "The logical path is snapshotted for one dispatch; event targets are opaque CRC values, not DOM nodes.",
+      "The logical path is snapshotted for one dispatch; event targets are opaque Pibbl values, not DOM nodes.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["custom-event-targets", "pointer-capture", "event-sequences"],
@@ -1876,7 +1876,7 @@ const drafts = [
     order: 270,
     summary:
       "Give one conceptual custom component an explicit Path2D target without hoisting child geometry.",
-    api: ["useEventTarget", "CRCEventTargetOptions", "Path2D"],
+    api: ["useEventTarget", "PibblEventTargetOptions", "Path2D"],
     objectives: [
       "Register grouped handlers and an explicit fill or stroke interaction path.",
       "Keep custom target ownership separate from the visual children it returns.",
@@ -1887,7 +1887,7 @@ const drafts = [
       code: "Change `lineInteractionWidth` without changing the painted stroke width.",
     },
     apiNotes: [
-      "CRC never infers or aggregates a custom component's target from returned descendants.",
+      "Pibbl never infers or aggregates a custom component's target from returned descendants.",
       "The target captures the current transforms, clips, cursor, hit options, and component identity.",
     ],
     canvas: { width: 720, height: 420 },
@@ -1922,7 +1922,7 @@ const drafts = [
     },
     apiNotes: [
       "`dragenter` and `dragleave` follow logical ancestry changes and expose the opposite logical target.",
-      "CRC deliberately resolves `drag` and `dragend` at the current coordinate instead of retaining a DOM-like source target.",
+      "Pibbl deliberately resolves `drag` and `dragend` at the current coordinate instead of retaining a DOM-like source target.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["pointer-capture", "propagation-and-cancellation"],
@@ -1979,7 +1979,7 @@ const drafts = [
     prompts: {
       gesture:
         "Focus a control, press Enter, press and release Space, then try the custom prevented key.",
-      code: "Handle another key and call `preventDefault()` before CRC's activation policy runs.",
+      code: "Handle another key and call `preventDefault()` before Pibbl's activation policy runs.",
     },
     apiNotes: [
       "Keyboard-generated clicks use `detail: 0` and expose the originating KeyboardEvent as `sourceEvent`.",
@@ -2067,7 +2067,7 @@ const drafts = [
     ],
     objectives: [
       "Inspect input, composition, selection, and clipboard family fields on a focused logical target.",
-      "Keep CRC transport separate from editable controls and accessible semantics.",
+      "Keep Pibbl transport separate from editable controls and accessible semantics.",
     ],
     prompts: {
       gesture:
@@ -2075,7 +2075,7 @@ const drafts = [
       code: "Record `inputType`, `data`, `isComposing`, or clipboard types in the visible trace.",
     },
     apiNotes: [
-      "A plain Canvas is not an editing host; the lesson emits native editing events only to demonstrate CRC transport.",
+      "A plain Canvas is not an editing host; the lesson emits native editing events only to demonstrate Pibbl transport.",
       "The Canvas stays the only native focus host; applications own editable DOM, selection, semantic roles, announcements, and synchronization with Canvas visuals.",
     ],
     canvas: { width: 720, height: 420 },
@@ -2090,7 +2090,7 @@ const drafts = [
     section: "advanced-interactions",
     order: 340,
     summary:
-      "Watch CRC’s logical target transitions and activation phases arrive in a stable order.",
+      "Watch Pibbl’s logical target transitions and activation phases arrive in a stable order.",
     api: [
       "onMouseOut",
       "onMouseOver",
@@ -2108,8 +2108,8 @@ const drafts = [
       code: "Filter the trace to show only transitions or activation events.",
     },
     apiNotes: [
-      "CRC resolves one topmost logical target for each event.",
-      "Direct handlers participate in CRC's temporary capture/target/bubble path through mounted component ancestry.",
+      "Pibbl resolves one topmost logical target for each event.",
+      "Direct handlers participate in Pibbl's temporary capture/target/bubble path through mounted component ancestry.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-over", "mouse-out", "overlap-and-paint-order"],
@@ -2161,7 +2161,7 @@ const drafts = [
       code: "Swap the two rectangles in the returned array and retest the overlap.",
     },
     apiNotes: [
-      "CRC scans visible paint entries in reverse order and stops at the first hit.",
+      "Pibbl scans visible paint entries in reverse order and stops at the first hit.",
       "Layers participate in the same global order as root marks.",
     ],
     canvas: { width: 720, height: 420 },

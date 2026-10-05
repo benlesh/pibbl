@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { planWorkflow, workflowOutcome } from './workflow.mjs';
 const ledger=JSON.parse(await readFile(new URL('../../docs/strategy/agent-verification-ledger.json',import.meta.url)));
 test('connects requirement discovery to a fixed native replay, fresh evidence and bounded retrieval',()=>{
- const plan=planWorkflow('SIG-14','http://127.0.0.1:5199','/tmp/crc-workflow-check',ledger);
+ const plan=planWorkflow('SIG-14','http://127.0.0.1:5199','/tmp/pibbl-workflow-check',ledger);
  assert.equal(plan.url,'http://127.0.0.1:5199/#/testing/agent-signal-mutation');
  assert.ok(plan.script.endsWith('/signal-mutation-replay.mjs'));
  assert.ok(plan.report.endsWith('/replay/report.json'));
@@ -12,9 +12,9 @@ test('connects requirement discovery to a fixed native replay, fresh evidence an
  assert.ok(plan.acceptance.length);
 });
 test('refuses unmapped and unsupported runners and malformed Studio origins',()=>{
- assert.throws(()=>planWorkflow('RULE-09','http://localhost:5199','/tmp/x',ledger),{code:'CRC_WORKFLOW_UNMAPPED'});
- assert.throws(()=>planWorkflow('LAY-02','http://localhost:5199','/tmp/x',ledger),{code:'CRC_WORKFLOW_UNSUPPORTED_RUNNER'});
- for(const url of ['file:///tmp/x','http://localhost:5199/#/wrong','http://user:password@localhost:5199','http://localhost:5199/other'])assert.throws(()=>planWorkflow('SIG-14',url,'/tmp/x',ledger),{code:'CRC_WORKFLOW_ORIGIN'});
+ assert.throws(()=>planWorkflow('RULE-09','http://localhost:5199','/tmp/x',ledger),{code:'PIBBL_WORKFLOW_UNMAPPED'});
+ assert.throws(()=>planWorkflow('LAY-02','http://localhost:5199','/tmp/x',ledger),{code:'PIBBL_WORKFLOW_UNSUPPORTED_RUNNER'});
+ for(const url of ['file:///tmp/x','http://localhost:5199/#/wrong','http://user:password@localhost:5199','http://localhost:5199/other'])assert.throws(()=>planWorkflow('SIG-14',url,'/tmp/x',ledger),{code:'PIBBL_WORKFLOW_ORIGIN'});
 });
 test('neither child exit nor saved pass overrides timeout, missing evidence or failed browser cleanup',()=>{
  const good={status:'exited',exitCode:0,browserCleanup:{status:'closed',processExited:true}};
@@ -31,10 +31,10 @@ test('recovers checkpoint evidence after interruption without hiding a corrupt f
  const { mkdtemp,writeFile,rm }=await import('node:fs/promises');
  const { tmpdir }=await import('node:os');const { join }=await import('node:path');
  const { collectWorkflowEvidence }=await import('./workflow.mjs');
- const directory=await mkdtemp(join(tmpdir(),'crc-workflow-recovery-'));
+ const directory=await mkdtemp(join(tmpdir(),'pibbl-workflow-recovery-'));
  try{
-  const report={schema:'crc-text-replay/1',status:'incomplete',steps:[{actionId:'repair',status:'incomplete'}]};
-  await writeFile(join(directory,'checkpoint.json'),JSON.stringify({schema:'crc-replay-checkpoint/1',status:'partial',sequence:2,stage:'repair',report}));
+  const report={schema:'pibbl-text-replay/1',status:'incomplete',steps:[{actionId:'repair',status:'incomplete'}]};
+  await writeFile(join(directory,'checkpoint.json'),JSON.stringify({schema:'pibbl-replay-checkpoint/1',status:'partial',sequence:2,stage:'repair',report}));
   const recovered=await collectWorkflowEvidence(join(directory,'report.json'));
   assert.equal(recovered.evidence.kind,'checkpoint');assert.equal(recovered.readFailure.code,'ENOENT');
   assert.equal(recovered.evidencePath,join(directory,'checkpoint.json'));
@@ -48,9 +48,9 @@ test('validates next queries against saved data and finds failed actions beyond 
  const { tmpdir }=await import('node:os');const { join }=await import('node:path');
  const { nextEvidenceQuery }=await import('./workflow.mjs');
  const { readReplayEvidence }=await import('./evidence-reader.mjs');
- const directory=await mkdtemp(join(tmpdir(),'crc-workflow-query-'));const path=join(directory,'report.json');
+ const directory=await mkdtemp(join(tmpdir(),'pibbl-workflow-query-'));const path=join(directory,'report.json');
  try{
-  const report={schema:'crc-text-replay/1',status:'fail',steps:Array.from({length:40},(_,i)=>({actionId:`action-${i}`,status:i===39?'fail':'pass'})),firstFailedCheck:{checkId:'missing-check'},failure:{actionId:'action-39'}};
+  const report={schema:'pibbl-text-replay/1',status:'fail',steps:Array.from({length:40},(_,i)=>({actionId:`action-${i}`,status:i===39?'fail':'pass'})),firstFailedCheck:{checkId:'missing-check'},failure:{actionId:'action-39'}};
   await writeFile(path,JSON.stringify(report));
   report.checks=[{checkId:'known-check',status:'fail',required:true,reason:'independent mismatch'}];
   report.firstFailedCheck.checkId='known-check';await writeFile(path,JSON.stringify(report));

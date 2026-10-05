@@ -151,7 +151,7 @@ export {
   type SvgPathOptions,
 } from './lib/geometry/svg-path.js';
 export type { RoundedCornerPathOptions } from './lib/geometry/rounded-corners.js';
-export { crc } from './lib/crc.js';
+export { pibbl } from './lib/pibbl.js';
 export {
   batch,
   computed,
@@ -184,31 +184,31 @@ export {
   wait,
 } from './lib/animation/program.js';
 export type {
-  CRCAnimationDefinition,
-  CRCAnimationOptions,
-  CRCAnimationProgram,
-  CRCAnimationRepeatDirection,
-  CRCAnimationRepeatOptions,
-  CRCAnimationSampleInput,
-  CRCSpringAnimatedValueOptions,
-  CRCPlayback,
-  CRCPlaybackEvent,
-  CRCPlaybackOptions,
-  CRCPlaybackStatus,
-  CRCEasing,
-  CRCInterpolator,
-  CRCKeyframesOptions,
-  CRCSpringOptions,
-  CRCStepperOptions,
-  CRCTweenOptions,
-  CRCTweenAnimatedValueOptions,
+  PibblAnimationDefinition,
+  PibblAnimationOptions,
+  PibblAnimationProgram,
+  PibblAnimationRepeatDirection,
+  PibblAnimationRepeatOptions,
+  PibblAnimationSampleInput,
+  PibblSpringAnimatedValueOptions,
+  PibblPlayback,
+  PibblPlaybackEvent,
+  PibblPlaybackOptions,
+  PibblPlaybackStatus,
+  PibblEasing,
+  PibblInterpolator,
+  PibblKeyframesOptions,
+  PibblSpringOptions,
+  PibblStepperOptions,
+  PibblTweenOptions,
+  PibblTweenAnimatedValueOptions,
 } from './lib/animation/types.js';
 export type {
-  CRCConfig,
-  CRCFit,
-  CRCFixedViewportConfig,
-  CRCPixelRatio,
-  CRCResponsiveViewportConfig,
+  PibblConfig,
+  PibblFit,
+  PibblFixedViewportConfig,
+  PibblPixelRatio,
+  PibblResponsiveViewportConfig,
 } from './lib/surface/types.js';
 export {
   Absolute,
@@ -244,23 +244,23 @@ export {
   type FocusManagementProps,
   type KeyboardNavigationProps,
 } from './lib/focus/policy-components.js';
-export type { CRCKeyboardNavigationOptions } from './lib/focus/types.js';
+export type { PibblKeyboardNavigationOptions } from './lib/focus/types.js';
 
 export { definePrimitive } from './lib/define-primitive.js';
 export { defineRenderLayer } from './lib/render-layer/define-render-layer.js';
 export type {
-  CRCRenderLayerComponentProps,
-  CRCRenderLayerDefinition,
-  CRCRenderLayerFrame,
-  CRCRenderLayerContext,
-  CRCRenderLayerHit,
-  CRCRenderLayerInput,
-  CRCRenderLayerInteraction,
-  CRCRenderLayerInteractionSnapshot,
-  CRCRenderLayerProps,
-  CRCRenderLayerSize,
-  CRCRenderLayerStyle,
-  CRCRenderLayerTarget,
+  PibblRenderLayerComponentProps,
+  PibblRenderLayerDefinition,
+  PibblRenderLayerFrame,
+  PibblRenderLayerContext,
+  PibblRenderLayerHit,
+  PibblRenderLayerInput,
+  PibblRenderLayerInteraction,
+  PibblRenderLayerInteractionSnapshot,
+  PibblRenderLayerProps,
+  PibblRenderLayerSize,
+  PibblRenderLayerStyle,
+  PibblRenderLayerTarget,
 } from './lib/render-layer/types.js';
 export { createElement } from './lib/element/create-element.js';
 export { Fragment } from './lib/element/fragment.js';
@@ -293,7 +293,7 @@ export { normalizeEdges } from './lib/style/normalize.js';
 export { resolveLength } from './lib/style/resolve-length.js';
 export { resolveBox } from './lib/layout/box.js';
 export type {
-  CRCFilter,
+  PibblFilter,
 } from './lib/style/filter-types.js';
 export type {
   Constraints,
@@ -311,11 +311,11 @@ export { useEventTarget } from './lib/hooks/use-event-target.js';
 export { useLinePath } from './lib/hooks/use-line-path.js';
 export { useLayoutBox } from './lib/hooks/use-layout-box.js';
 export { useRectPath } from './lib/hooks/use-rect-path.js';
-export { useRef, type CRCRef } from './lib/hooks/use-ref.js';
+export { useRef, type PibblRef } from './lib/hooks/use-ref.js';
 export { usePlayback } from './lib/hooks/use-playback.js';
 export {
   useReaction,
-  type CRCReactionOptions,
+  type PibblReactionOptions,
 } from './lib/hooks/use-reaction.js';
 export { useAnimatedValue } from './lib/hooks/use-animated-value.js';
 export { useSignal } from './lib/hooks/use-signal.js';
@@ -323,23 +323,23 @@ export { useSvgPath } from './lib/hooks/use-svg-path.js';
 export type {
   Canvas,
   CanvasMeasurementService,
-  CRCController,
-  CRCComponent,
-  CRCContainerChild,
-  CRCElement,
-  CRCElementType,
-  CRCEmptyNode,
-  CRCKey,
-  CRCNode,
-  CRCNodeInput,
-  CRCPhysics2DPropExtension,
-  CRCPrimitiveComponent,
-  CRCTextChild,
-  CRCTextInput,
-  CRCRenderResult,
-  CRCSizeQuery,
-  CRCStyleRule,
-  CRCResponsiveStyle,
+  PibblController,
+  PibblComponent,
+  PibblContainerChild,
+  PibblElement,
+  PibblElementType,
+  PibblEmptyNode,
+  PibblKey,
+  PibblNode,
+  PibblNodeInput,
+  PibblPhysics2DPropExtension,
+  PibblPrimitiveComponent,
+  PibblTextChild,
+  PibblTextInput,
+  PibblRenderResult,
+  PibblSizeQuery,
+  PibblStyleRule,
+  PibblResponsiveStyle,
   PrimitiveInputOf,
   PrimitiveCapabilities,
   PrimitiveInput,
@@ -358,43 +358,43 @@ export type {
   SystemStyle,
 } from './lib/types.js';
 export type {
-  CRCClipboardEvent,
-  CRCCompositionEvent,
-  CRCDragEvent,
-  CRCEvent,
-  CRCEventCapturePropName,
-  CRCEventHandler,
-  CRCEventHandlers,
-  CRCEventMap,
-  CRCEventParticipationOptions,
-  CRCEventPhase,
-  CRCEventPropName,
-  CRCEventTarget,
-  CRCEventTargetOptions,
-  CRCEventTargetSnapshot,
-  CRCEventType,
-  CRCFocusEvent,
-  CRCInputEvent,
-  CRCKeyboardEvent,
-  CRCLogicalMouseEvent,
-  CRCPointerEvent,
-  CRCPointerEvents,
-  CRCTouchEvent,
-  CRCWheelEvent,
+  PibblClipboardEvent,
+  PibblCompositionEvent,
+  PibblDragEvent,
+  PibblEvent,
+  PibblEventCapturePropName,
+  PibblEventHandler,
+  PibblEventHandlers,
+  PibblEventMap,
+  PibblEventParticipationOptions,
+  PibblEventPhase,
+  PibblEventPropName,
+  PibblEventTarget,
+  PibblEventTargetOptions,
+  PibblEventTargetSnapshot,
+  PibblEventType,
+  PibblFocusEvent,
+  PibblInputEvent,
+  PibblKeyboardEvent,
+  PibblLogicalMouseEvent,
+  PibblPointerEvent,
+  PibblPointerEvents,
+  PibblTouchEvent,
+  PibblWheelEvent,
 } from './lib/events/types.js';
 
 export { useManipulation } from './lib/manipulation/controller.js';
 export { ManipulationFrame } from './lib/manipulation/frame.js';
 export { DragHandle, ResizeHandle, ResizeHandles, RotationHandle } from './lib/manipulation/handles.js';
-export type { CRCManipulationController, CRCManipulationOptions, CRCManipulationSnapshot, CRCManipulationEvent, CRCManipulationCommitEvent, CRCManipulationCancelEvent, CRCManipulationCancelReason, CRCManipulationGeometry, CRCManipulationOperation, CRCManipulationActive, CRCManipulationFrameProps, CRCManipulationMoveInput, CRCManipulationResizeInput, CRCManipulationRotateInput } from './lib/manipulation/controller-types.js';
-export type { CRCManipulationBox, CRCManipulationPoint, CRCManipulationWhen, CRCResizePosition } from './lib/manipulation/types.js';
-export type { CRCDragHandleProps, CRCDragHandleStyle } from './lib/manipulation/handles.js';
+export type { PibblManipulationController, PibblManipulationOptions, PibblManipulationSnapshot, PibblManipulationEvent, PibblManipulationCommitEvent, PibblManipulationCancelEvent, PibblManipulationCancelReason, PibblManipulationGeometry, PibblManipulationOperation, PibblManipulationActive, PibblManipulationFrameProps, PibblManipulationMoveInput, PibblManipulationResizeInput, PibblManipulationRotateInput } from './lib/manipulation/controller-types.js';
+export type { PibblManipulationBox, PibblManipulationPoint, PibblManipulationWhen, PibblResizePosition } from './lib/manipulation/types.js';
+export type { PibblDragHandleProps, PibblDragHandleStyle } from './lib/manipulation/handles.js';
 
-export type { CRCResizeHandleProps, CRCResizeHandlesProps, CRCRotationHandleProps, CRCResizeHandleStyle, CRCRotationHandleStyle, CRCManipulationReadoutStyle, CRCManipulationReadoutStateStyle, CRCRotationConnectorStyle, CRCRotationArcStyle } from './lib/manipulation/handles.js';
+export type { PibblResizeHandleProps, PibblResizeHandlesProps, PibblRotationHandleProps, PibblResizeHandleStyle, PibblRotationHandleStyle, PibblManipulationReadoutStyle, PibblManipulationReadoutStateStyle, PibblRotationConnectorStyle, PibblRotationArcStyle } from './lib/manipulation/handles.js';
 
 export { degrees } from './lib/manipulation/degrees.js';
 export { Manipulable } from './lib/manipulation/manipulable.js';
-export type { CRCManipulableProps } from './lib/manipulation/manipulable.js';
+export type { PibblManipulableProps } from './lib/manipulation/manipulable.js';
 
 export { defineTexture, useTexture } from './lib/textures/texture.js';
 export type { Texture, TexturePaint, TextureRecipe, TextureDefinition, TextureOptions, TexturePlacement, TextureContext, TextureFrame } from './lib/textures/texture.js';
@@ -403,23 +403,23 @@ export { HtmlBox } from './lib/components/html-box.js';
 export type { HtmlBoxProps, HtmlBoxStyle, HtmlMountCallback, HtmlUpdateFunction, HtmlBoxFocusState } from './lib/html/types.js';
 
 export { fade } from './lib/transitions/fade.js';
-export type { CRCTransitionEffect } from './lib/transitions/fade.js';
-export type { CRCTransitionBinding } from './lib/transitions/binding.js';
+export type { PibblTransitionEffect } from './lib/transitions/fade.js';
+export type { PibblTransitionBinding } from './lib/transitions/binding.js';
 export { useVisibilityTransition } from './lib/hooks/use-visibility-transition.js';
-export type { CRCVisibilityTransition, CRCVisibilityTransitionOptions, CRCVisibilityTransitionResult, CRCVisibilityTransitionStatus } from './lib/hooks/use-visibility-transition.js';
+export type { PibblVisibilityTransition, PibblVisibilityTransitionOptions, PibblVisibilityTransitionResult, PibblVisibilityTransitionStatus } from './lib/hooks/use-visibility-transition.js';
 
 export { embers } from './lib/transitions/embers.js';
-export type { CRCEmbersOptions } from './lib/transitions/embers.js';
+export type { PibblEmbersOptions } from './lib/transitions/embers.js';
 
 export { hologram } from './lib/transitions/hologram.js';
-export type { CRCHologramOptions } from './lib/transitions/hologram.js';
+export type { PibblHologramOptions } from './lib/transitions/hologram.js';
 export { bifrost } from './lib/transitions/bifrost.js';
-export type { CRCBifrostOptions } from './lib/transitions/bifrost.js';
+export type { PibblBifrostOptions } from './lib/transitions/bifrost.js';
 
 export { slide, zoom, wipe, blurReveal, dissolve } from './lib/transitions/common.js';
-export type { CRCSlideOptions, CRCZoomOptions, CRCWipeOptions, CRCBlurRevealOptions, CRCDissolveOptions } from './lib/transitions/common.js';
+export type { PibblSlideOptions, PibblZoomOptions, PibblWipeOptions, PibblBlurRevealOptions, PibblDissolveOptions } from './lib/transitions/common.js';
 
 export { defineTransition } from './lib/transitions/define-transition.js';
-export type { CRCTransitionDefinition, CRCTransitionRenderFrame } from './lib/transitions/define-transition.js';
+export type { PibblTransitionDefinition, PibblTransitionRenderFrame } from './lib/transitions/define-transition.js';
 
-export type { CRCEmbersPhysicsOptions, CRCEmberCollision } from './lib/transitions/embers-physics.js';
+export type { PibblEmbersPhysicsOptions, PibblEmberCollision } from './lib/transitions/embers-physics.js';

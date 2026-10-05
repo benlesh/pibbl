@@ -16,7 +16,7 @@ a renderer effect, another transform tree, or a scheduling mechanism.
 
 The operation is commonly called a four-corner warp. The historical reference is
 System.Drawing.Drawing2D.GraphicsPath.Warp, which offers bilinear and perspective
-modes. CRC adopts those mathematical choices, not .NET API compatibility.
+modes. Pibbl adopts those mathematical choices, not .NET API compatibility.
 
 Provide `warpPath` alongside `flattenPath`, `subdividePath`, and `simplifyPath`.
 Keep the existing mutating, affine-only `PathGeometry.transform()` unchanged.
@@ -26,7 +26,7 @@ correct implementation of this operation.
 
 ## Proposed public API
 
-Export these values and types from `@crc/core`:
+Export these values and types from `@pibbl/core`:
 
 ```ts
 export interface PathWarpPoint {
@@ -273,7 +273,7 @@ requests, retained layers, or persistent resources owned by warpPath.
 For interactive editing, retain the original geometry and recompute from it
 when corners change. Repeatedly warping the previous approximation accumulates
 error and is not the intended editing model. Publish the new geometry through
-existing CRC state/signals; scheduling remains the application's responsibility.
+existing Pibbl state/signals; scheduling remains the application's responsibility.
 Do not add automatic memoization or an implicit render-time warp.
 
 ## Interactive demo contract
@@ -291,7 +291,7 @@ original shape and source rectangle visible as a subdued reference.
 
 - Display four large draggable handles labeled by their source-corner names,
   connected by the destination quadrilateral outline. Update the warped shape
-  continuously while dragging using CRC's supported pointer interactions.
+  continuously while dragging using Pibbl's supported pointer interactions.
 - Provide a clearly labeled Bilinear / Perspective selector. Switching modes
   preserves all four handle positions and immediately recomputes from the same
   original geometry, making the mathematical difference directly comparable.
@@ -370,7 +370,7 @@ No inverse hit-coordinate transform, source-to-output segment correspondence,
 editable control-handle preservation, curve fitting, automatic bounds inference,
 mesh/envelope warp, image warp, stroke outlining, topology repair, GPU warp,
 resampling, or morph correspondence is added. The returned geometry already
-works with CRC's existing path consumption surfaces.
+works with Pibbl's existing path consumption surfaces.
 
 ## References
 

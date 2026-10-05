@@ -1,5 +1,5 @@
 {
-  "schema": "crc-layout-studio-smoke/1",
+  "schema": "pibbl-layout-studio-smoke/1",
   "status": "pass",
   "provenance": "controlled-local-studio-no-served-build-attestation",
   "steps": [
@@ -12,7 +12,7 @@
         "clicks": 0,
         "lastActivated": null,
         "relations": {
-          "schema": "crc-layout-box-relations/1",
+          "schema": "pibbl-layout-box-relations/1",
           "scope": "declared-axis-aligned-boxes-not-painted-visibility",
           "status": "available",
           "coordinateSpace": "placed-child-local",
@@ -129,7 +129,7 @@
         "clicks": 0,
         "lastActivated": null,
         "relations": {
-          "schema": "crc-layout-box-relations/1",
+          "schema": "pibbl-layout-box-relations/1",
           "scope": "declared-axis-aligned-boxes-not-painted-visibility",
           "status": "available",
           "coordinateSpace": "placed-child-local",
@@ -249,7 +249,7 @@
         "clicks": 0,
         "lastActivated": null,
         "relations": {
-          "schema": "crc-layout-box-relations/1",
+          "schema": "pibbl-layout-box-relations/1",
           "scope": "declared-axis-aligned-boxes-not-painted-visibility",
           "status": "available",
           "coordinateSpace": "placed-child-local",
@@ -342,7 +342,7 @@
         "clicks": 1,
         "lastActivated": "primary",
         "relations": {
-          "schema": "crc-layout-box-relations/1",
+          "schema": "pibbl-layout-box-relations/1",
           "scope": "declared-axis-aligned-boxes-not-painted-visibility",
           "status": "available",
           "coordinateSpace": "placed-child-local",
@@ -438,7 +438,7 @@
         "clicks": 1,
         "lastActivated": "primary",
         "relations": {
-          "schema": "crc-layout-box-relations/1",
+          "schema": "pibbl-layout-box-relations/1",
           "scope": "declared-axis-aligned-boxes-not-painted-visibility",
           "status": "available",
           "coordinateSpace": "placed-child-local",
@@ -531,7 +531,7 @@
         "clicks": 2,
         "lastActivated": "primary",
         "relations": {
-          "schema": "crc-layout-box-relations/1",
+          "schema": "pibbl-layout-box-relations/1",
           "scope": "declared-axis-aligned-boxes-not-painted-visibility",
           "status": "available",
           "coordinateSpace": "placed-child-local",
@@ -627,7 +627,7 @@
         "clicks": 2,
         "lastActivated": "primary",
         "relations": {
-          "schema": "crc-layout-box-relations/1",
+          "schema": "pibbl-layout-box-relations/1",
           "scope": "declared-axis-aligned-boxes-not-painted-visibility",
           "status": "available",
           "coordinateSpace": "placed-child-local",
@@ -730,7 +730,7 @@
         "clicks": 3,
         "lastActivated": "peer",
         "relations": {
-          "schema": "crc-layout-box-relations/1",
+          "schema": "pibbl-layout-box-relations/1",
           "scope": "declared-axis-aligned-boxes-not-painted-visibility",
           "status": "available",
           "coordinateSpace": "placed-child-local",
@@ -836,7 +836,7 @@
         "clicks": 3,
         "lastActivated": "peer",
         "relations": {
-          "schema": "crc-layout-box-relations/1",
+          "schema": "pibbl-layout-box-relations/1",
           "scope": "declared-axis-aligned-boxes-not-painted-visibility",
           "status": "available",
           "coordinateSpace": "placed-child-local",
@@ -939,7 +939,7 @@
         "clicks": 4,
         "lastActivated": "peer",
         "relations": {
-          "schema": "crc-layout-box-relations/1",
+          "schema": "pibbl-layout-box-relations/1",
           "scope": "declared-axis-aligned-boxes-not-painted-visibility",
           "status": "available",
           "coordinateSpace": "placed-child-local",

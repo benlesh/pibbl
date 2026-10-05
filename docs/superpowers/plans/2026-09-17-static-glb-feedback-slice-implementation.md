@@ -4,11 +4,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Let an application load one self-contained static GLB through `@crc/webgl/gltf`, render its default scene through a public `Model`, orbit it, light it with one existing analytic light, and interact with the complete model as one CRC target.
+**Goal:** Let an application load one self-contained static GLB through `@pibbl/webgl/gltf`, render its default scene through a public `Model`, orbit it, light it with one existing analytic light, and interact with the complete model as one Pibbl target.
 
-**Architecture:** A pure GLB decoder compiles supported glTF data into one opaque immutable `CRCWebGLAsset`. `useGLTF()` owns asynchronous fetch/decode generations and publishes that asset through ordinary hook state. `Model` synchronously expands the selected scene into the existing settled-scene pipeline, sharing one logical target across its primitives. The renderer adds UV/tangent buffers, immutable image/sampler resources, a direct-light metallic-roughness program, and a shadow depth-array binding so textured PBR does not exceed WebGL2's guaranteed fragment-sampler budget.
+**Architecture:** A pure GLB decoder compiles supported glTF data into one opaque immutable `PibblWebGLAsset`. `useGLTF()` owns asynchronous fetch/decode generations and publishes that asset through ordinary hook state. `Model` synchronously expands the selected scene into the existing settled-scene pipeline, sharing one logical target across its primitives. The renderer adds UV/tangent buffers, immutable image/sampler resources, a direct-light metallic-roughness program, and a shadow depth-array binding so textured PBR does not exceed WebGL2's guaranteed fragment-sampler budget.
 
-**Tech Stack:** TypeScript 7, CRC JSX and hooks, WebGL2, `OffscreenCanvas`, `ImageBitmap`, Fetch, glTF 2.0/GLB, Vitest Browser with Playwright Chromium, esbuild, pnpm 11.21.0, Node 24.15 or newer.
+**Tech Stack:** TypeScript 7, Pibbl JSX and hooks, WebGL2, `OffscreenCanvas`, `ImageBitmap`, Fetch, glTF 2.0/GLB, Vitest Browser with Playwright Chromium, esbuild, pnpm 11.21.0, Node 24.15 or newer.
 
 **Spec:** `docs/superpowers/specs/2026-09-17-professional-webgl-assets-and-printable-models-design.md`, Milestone 1 only.
 
@@ -18,10 +18,10 @@
 - This plan ends at **slice ready for feedback**, not feature complete. Do not add HDR environments, tone mapping, normal/occlusion/emissive maps, generated tangents, UV1, vertex colors, alpha modes, double-sided materials, animations, skins, morph targets, compression, external `.gltf` resources, 3MF, or STL.
 - Accept only GLB version 2 with one JSON chunk and at most one BIN chunk. Images must be buffer-view-backed PNG or JPEG; reject data URLs and external URLs.
 - Select `json.scene`, or scene zero when `scene` is omitted. Reject a file with no renderable selected scene. Ignore imported cameras and lights in this slice.
-- Preserve node preorder, primitive order, glTF matrices/TRS, triangle coordinates, material assignment, and declared winding. Do not auto-center, fit, rescale, rotate, or replace the CRC camera.
+- Preserve node preorder, primitive order, glTF matrices/TRS, triangle coordinates, material assignment, and declared winding. Do not auto-center, fit, rescale, rotate, or replace the Pibbl camera.
 - Preserve the existing synchronous component contract. Fetching and image decoding start from a component-owned post-success render callback; component evaluation never awaits or throws a promise.
-- Keep `@crc/webgl/gltf` optional. The `@crc/webgl` root bundle must not include the parser or decoder implementation.
-- `CRCWebGLAsset` and texture values are opaque immutable descriptors. Do not expose glTF JSON, mutable scene nodes, source buffers, decoded images, WebGL handles, or a retained editable graph.
+- Keep `@pibbl/webgl/gltf` optional. The `@pibbl/webgl` root bundle must not include the parser or decoder implementation.
+- `PibblWebGLAsset` and texture values are opaque immutable descriptors. Do not expose glTF JSON, mutable scene nodes, source buffers, decoded images, WebGL handles, or a retained editable graph.
 - Existing `Mesh` behavior remains Lambert by default. PBR is opt-in through the imported material descriptor and must not change current cube, sphere, or manual mesh pixels.
 - Interpret base-color RGB in sRGB and convert it to linear in the fragment shader; alpha remains linear. Metallic and roughness factors are linear data.
 - One `Model` is one event/focus target. Its nearest intersected triangle resolves the hit, while its focus bounds are the union of every projected primitive in the model.
@@ -51,7 +51,7 @@
 
 ### GLB adapter
 
-- `packages/webgl/src/gltf.ts`: the complete public `@crc/webgl/gltf` entry; export only `useGLTF` and its public source/result types.
+- `packages/webgl/src/gltf.ts`: the complete public `@pibbl/webgl/gltf` entry; export only `useGLTF` and its public source/result types.
 - `packages/webgl/src/lib/gltf/{schema,glb,accessor,decode,use-gltf}.ts`: container validation, bounded accessor decoding, selected-scene compilation, browser image decoding, and component-owned async generation lifecycle.
 - `packages/webgl/src/lib/gltf/test-fixtures.ts`: deterministic programmatic GLB fixtures for malformed containers, accessors, scene graphs, materials, textures, and lifecycle races.
 - `packages/webgl/package.json` and `packages/webgl/tsconfig.build.json`: build and export the optional subpath without moving parser code into the root entry.
@@ -67,27 +67,27 @@
 
 - `packages/scenarios/src/learning/webgl/static-glb.example.tsx`: readable loading/error/ready example using the public root and glTF subpath.
 - `packages/scenarios/src/{learning-catalog,catalog,index}.ts`: public example registration and exact Studio route.
-- `playground/public/models/crc-static-glb-slice.glb`: small vendored self-contained model with recorded license/provenance.
+- `playground/public/models/pibbl-static-glb-slice.glb`: small vendored self-contained model with recorded license/provenance.
 - `packages/core/test/static-glb-slice.test.ts`: browser-visible load, orbit, light, hit, focus, replacement, and disposal evidence.
-- Package consumers, Studio declarations, and API fixtures: root plus `@crc/webgl/gltf` resolution from source, built output, and packed tarballs.
+- Package consumers, Studio declarations, and API fixtures: root plus `@pibbl/webgl/gltf` resolution from source, built output, and packed tarballs.
 
 ## Slice Contract
 
 The public surface delivered by this plan is:
 
 ```ts
-// @crc/webgl
-declare const crcWebGLAssetBrand: unique symbol;
+// @pibbl/webgl
+declare const pibblWebGLAssetBrand: unique symbol;
 
-export interface CRCWebGLAsset {
-  readonly [crcWebGLAssetBrand]: true;
+export interface PibblWebGLAsset {
+  readonly [pibblWebGLAssetBrand]: true;
   readonly bounds: Readonly<{
-    readonly min: CRCWebGLVector3;
-    readonly max: CRCWebGLVector3;
+    readonly min: PibblWebGLVector3;
+    readonly max: PibblWebGLVector3;
   }>;
 }
 
-export interface ModelStyle extends CRCWebGLTransformStyle {
+export interface ModelStyle extends PibblWebGLTransformStyle {
   readonly opacity?: number;
   readonly color?: string;
   readonly castShadow?: boolean;
@@ -95,37 +95,37 @@ export interface ModelStyle extends CRCWebGLTransformStyle {
   readonly cursor?: string;
 }
 
-export interface ModelProps extends CRCWebGLTargetProps {
-  readonly asset: CRCWebGLAsset;
+export interface ModelProps extends PibblWebGLTargetProps {
+  readonly asset: PibblWebGLAsset;
   readonly style?: ModelStyle;
 }
 
 export function Model(props: ModelProps): null;
 
-// @crc/webgl/gltf
-export type CRCGLTFSource = string | URL | ArrayBuffer;
+// @pibbl/webgl/gltf
+export type PibblGLTFSource = string | URL | ArrayBuffer;
 
-export type CRCWebGLAssetLoadResult =
+export type PibblWebGLAssetLoadResult =
   | { readonly status: "loading" }
-  | { readonly status: "ready"; readonly asset: CRCWebGLAsset }
+  | { readonly status: "ready"; readonly asset: PibblWebGLAsset }
   | { readonly status: "error"; readonly error: Error };
 
-export function useGLTF(source: CRCGLTFSource): CRCWebGLAssetLoadResult;
+export function useGLTF(source: PibblGLTFSource): PibblWebGLAssetLoadResult;
 ```
 
 The internal slice material stored by imported primitives is:
 
 ```ts
-interface CRCWebGLPBRMetallicRoughnessMaterial {
+interface PibblWebGLPBRMetallicRoughnessMaterial {
   readonly type: "pbr-metallic-roughness";
   readonly baseColorFactor: readonly [number, number, number, number];
-  readonly baseColorTexture?: CRCWebGLTextureBinding;
+  readonly baseColorTexture?: PibblWebGLTextureBinding;
   readonly metallicFactor: number;
   readonly roughnessFactor: number;
 }
 
-interface CRCWebGLTextureBinding {
-  readonly texture: CRCWebGLTexture;
+interface PibblWebGLTextureBinding {
+  readonly texture: PibblWebGLTexture;
   readonly textureCoordinate: 0;
 }
 ```
@@ -152,16 +152,16 @@ Only the fields above are accepted during this milestone. The complete public ma
 ```ts
 export const WEBGL_MAX_SHADOW_VIEWS = WEBGL_MAX_LIGHTS * 6;
 
-interface CRCWebGLShadowArrayResource {
+interface PibblWebGLShadowArrayResource {
   readonly texture: WebGLTexture;
   readonly framebuffer: WebGLFramebuffer;
   readonly resolution: number;
   readonly capacity: number;
 }
 
-interface CRCWebGLShadowViewAssignment {
+interface PibblWebGLShadowViewAssignment {
   readonly layer: number;
-  readonly matrix: CRCWebGLMatrix4;
+  readonly matrix: PibblWebGLMatrix4;
 }
 ```
 
@@ -232,7 +232,7 @@ git commit -m "refactor(webgl): store shadows in a depth array"
 **Interfaces:**
 
 ```ts
-export interface CRCWebGLGeometryInput {
+export interface PibblWebGLGeometryInput {
   readonly positions: ArrayLike<number>;
   readonly normals?: ArrayLike<number>;
   readonly tangents?: ArrayLike<number>;
@@ -298,7 +298,7 @@ git commit -m "feat(webgl): add uv and tangent geometry streams"
 **Interfaces:**
 
 ```ts
-interface CRCWebGLTextureSampler {
+interface PibblWebGLTextureSampler {
   readonly wrapS: "repeat" | "clamp-to-edge" | "mirrored-repeat";
   readonly wrapT: "repeat" | "clamp-to-edge" | "mirrored-repeat";
   readonly minFilter:
@@ -311,15 +311,15 @@ interface CRCWebGLTextureSampler {
   readonly magFilter: "nearest" | "linear";
 }
 
-interface CRCWebGLTextureBinding {
-  readonly texture: CRCWebGLTexture;
+interface PibblWebGLTextureBinding {
+  readonly texture: PibblWebGLTexture;
   readonly textureCoordinate: 0;
 }
 
-interface CRCWebGLPBRMetallicRoughnessMaterial {
+interface PibblWebGLPBRMetallicRoughnessMaterial {
   readonly type: "pbr-metallic-roughness";
   readonly baseColorFactor: readonly [number, number, number, number];
-  readonly baseColorTexture?: CRCWebGLTextureBinding;
+  readonly baseColorTexture?: PibblWebGLTextureBinding;
   readonly metallicFactor: number;
   readonly roughnessFactor: number;
 }
@@ -349,7 +349,7 @@ Add the `"pbr-metallic-roughness"` shading discriminant and fully defaulted fact
 
 - [ ] **Step 5: Add the direct-light metallic-roughness program**
 
-Use Schlick Fresnel, GGX/Trowbridge-Reitz normal distribution, Smith correlated visibility, and energy-conserving Lambert diffuse. Support CRC directional, point, and spot lights plus their shadow factor. Ambient/hemisphere may contribute diffuse fill to nonmetals but must not fabricate metallic reflections. No environment, intermediate HDR target, exposure, or tone mapping enters this task.
+Use Schlick Fresnel, GGX/Trowbridge-Reitz normal distribution, Smith correlated visibility, and energy-conserving Lambert diffuse. Support Pibbl directional, point, and spot lights plus their shadow factor. Ambient/hemisphere may contribute diffuse fill to nonmetals but must not fabricate metallic reflections. No environment, intermediate HDR target, exposure, or tone mapping enters this task.
 
 - [ ] **Step 6: Upload and bind texture/sampler resources transactionally**
 
@@ -389,22 +389,22 @@ git commit -m "feat(webgl): render textured metallic roughness materials"
 **Interfaces:**
 
 ```ts
-interface CRCWebGLAssetPrimitiveRecord {
-  readonly geometry: CRCWebGLGeometry;
-  readonly material: CRCWebGLPBRMetallicRoughnessMaterial;
-  readonly modelMatrix: CRCWebGLMatrix4;
+interface PibblWebGLAssetPrimitiveRecord {
+  readonly geometry: PibblWebGLGeometry;
+  readonly material: PibblWebGLPBRMetallicRoughnessMaterial;
+  readonly modelMatrix: PibblWebGLMatrix4;
   readonly sourceOrder: number;
 }
 
-interface CRCWebGLAssetData {
-  readonly primitives: readonly CRCWebGLAssetPrimitiveRecord[];
-  readonly bounds: CRCWebGLBounds3;
+interface PibblWebGLAssetData {
+  readonly primitives: readonly PibblWebGLAssetPrimitiveRecord[];
+  readonly bounds: PibblWebGLBounds3;
 }
 
 declare function createInternalWebGLAsset(
-  data: CRCWebGLAssetData,
-  dependencies: readonly CRCWebGLTexture[],
-): CRCWebGLAsset;
+  data: PibblWebGLAssetData,
+  dependencies: readonly PibblWebGLTexture[],
+): PibblWebGLAsset;
 ```
 
 - [ ] **Step 1: Add failing asset, model, pick, and focus tests**
@@ -463,12 +463,12 @@ git commit -m "feat(webgl): add immutable assets and model instances"
 **Interfaces:**
 
 ```ts
-interface CRCDecodedGLB {
-  readonly json: CRCGLTFDocument;
+interface PibblDecodedGLB {
+  readonly json: PibblGLTFDocument;
   readonly binaryChunk: Uint8Array | undefined;
 }
 
-interface CRCGLTFDecodePlatform {
+interface PibblGLTFDecodePlatform {
   decodeImage(
     bytes: Uint8Array,
     mimeType: "image/png" | "image/jpeg",
@@ -477,8 +477,8 @@ interface CRCGLTFDecodePlatform {
 
 async function decodeGLBAsset(
   bytes: ArrayBuffer,
-  platform: CRCGLTFDecodePlatform,
-): Promise<CRCWebGLAsset>;
+  platform: PibblGLTFDecodePlatform,
+): Promise<PibblWebGLAsset>;
 ```
 
 - [ ] **Step 1: Add failing container and accessor matrices**
@@ -534,8 +534,8 @@ git commit -m "feat(webgl): decode static self contained glb assets"
 - Modify: `packages/webgl/package.json`
 - Modify: `packages/webgl/tsconfig.build.json`
 - Modify: `tsconfig.json`
-- Modify: `tooling/crc-runtime-source.ts`
-- Modify: `tooling/crc-studio-runtime-entry.ts`
+- Modify: `tooling/pibbl-runtime-source.ts`
+- Modify: `tooling/pibbl-studio-runtime-entry.ts`
 - Modify: `tooling/verify-studio-types.mjs`
 - Modify: `tooling/verify-packed-consumer.mjs`
 - Modify: `playground/src/sandbox-module.ts`
@@ -546,9 +546,9 @@ git commit -m "feat(webgl): decode static self contained glb assets"
 **Interfaces:**
 
 ```ts
-export type CRCGLTFSource = string | URL | ArrayBuffer;
+export type PibblGLTFSource = string | URL | ArrayBuffer;
 
-export function useGLTF(source: CRCGLTFSource): CRCWebGLAssetLoadResult;
+export function useGLTF(source: PibblGLTFSource): PibblWebGLAssetLoadResult;
 ```
 
 - [ ] **Step 1: Add failing hook lifecycle tests**
@@ -557,20 +557,20 @@ Use controllable fetch and image-decode promises. Assert initial loading, effect
 
 - [ ] **Step 2: Add failing package-resolution tests**
 
-Require `@crc/webgl/gltf` from the source aliases, built package, Bundler consumer, NodeNext consumer, and packed tarball. Assert root `@crc/webgl` output does not contain or re-export `useGLTF`, GLB magic strings, or decoder modules.
+Require `@pibbl/webgl/gltf` from the source aliases, built package, Bundler consumer, NodeNext consumer, and packed tarball. Assert root `@pibbl/webgl` output does not contain or re-export `useGLTF`, GLB magic strings, or decoder modules.
 
 - [ ] **Step 3: Run hook tests and the WebGL build to observe missing subpath failures**
 
 ```bash
 corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/gltf/use-gltf.test.tsx --browser.headless --browser.ui=false
-corepack pnpm@11.21.0 --filter @crc/webgl build
+corepack pnpm@11.21.0 --filter @pibbl/webgl build
 ```
 
 Expected: FAIL because `src/gltf.ts`, the hook, and package export do not exist.
 
 - [ ] **Step 4: Implement the generation-owned hook**
 
-Use `useInternalHookSlot` for the active generation/teardown record, read a slot-owned revision signal so completion schedules ordinary CRC work, and register startup through `onCurrentRenderFinish`. Start fetch/decode only when that callback receives `success === true`; a failed component evaluation must never begin the candidate generation. For URLs, abort retired fetches; for every source, compare a monotonically increasing generation before publication. Decode with:
+Use `useInternalHookSlot` for the active generation/teardown record, read a slot-owned revision signal so completion schedules ordinary Pibbl work, and register startup through `onCurrentRenderFinish`. Start fetch/decode only when that callback receives `success === true`; a failed component evaluation must never begin the candidate generation. For URLs, abort retired fetches; for every source, compare a monotonically increasing generation before publication. Decode with:
 
 ```ts
 createImageBitmap(blob, {
@@ -590,7 +590,7 @@ Add `./gltf` to `exports` and `typesVersions`, add `src/gltf.ts` to declaration 
 
 ```bash
 corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/gltf/use-gltf.test.tsx packages/webgl/src/lib/gltf/decode.test.ts --browser.headless --browser.ui=false
-corepack pnpm@11.21.0 --filter @crc/webgl build
+corepack pnpm@11.21.0 --filter @pibbl/webgl build
 corepack pnpm@11.21.0 typecheck
 corepack pnpm@11.21.0 test:package-consumer
 corepack pnpm@11.21.0 test:package-consumer:packed
@@ -601,7 +601,7 @@ Expected: PASS; emitted root and glTF declarations resolve through supported pac
 - [ ] **Step 7: Commit the hook and package surface**
 
 ```bash
-git add packages/webgl/src/gltf.ts packages/webgl/src/lib/gltf/use-gltf.ts packages/webgl/src/lib/gltf/use-gltf.test.tsx packages/webgl/package.json packages/webgl/tsconfig.build.json tsconfig.json tooling/crc-runtime-source.ts tooling/crc-studio-runtime-entry.ts tooling/verify-studio-types.mjs tooling/verify-packed-consumer.mjs playground/src/sandbox-module.ts playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs
+git add packages/webgl/src/gltf.ts packages/webgl/src/lib/gltf/use-gltf.ts packages/webgl/src/lib/gltf/use-gltf.test.tsx packages/webgl/package.json packages/webgl/tsconfig.build.json tsconfig.json tooling/pibbl-runtime-source.ts tooling/pibbl-studio-runtime-entry.ts tooling/verify-studio-types.mjs tooling/verify-packed-consumer.mjs playground/src/sandbox-module.ts playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs
 git commit -m "feat(webgl): expose component owned glb loading"
 ```
 
@@ -613,17 +613,17 @@ git commit -m "feat(webgl): expose component owned glb loading"
 - Create: `packages/scenarios/src/static-glb-slice.ts`
 - Create: `packages/scenarios/src/static-glb-slice.test.ts`
 - Create: `packages/core/test/static-glb-slice.test.ts`
-- Create: `playground/public/models/crc-static-glb-slice.glb`
-- Create: `playground/public/models/crc-static-glb-slice.LICENSE.md`
+- Create: `playground/public/models/pibbl-static-glb-slice.glb`
+- Create: `playground/public/models/pibbl-static-glb-slice.LICENSE.md`
 - Modify: `packages/scenarios/src/learning-catalog.ts`
 - Modify: `packages/scenarios/src/catalog.ts`
 - Modify: `packages/scenarios/src/index.ts`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 
 **Public example contract:**
 
 ```tsx
-const loaded = useGLTF("/models/crc-static-glb-slice.glb");
+const loaded = useGLTF("/models/pibbl-static-glb-slice.glb");
 const orbit = useOrbitCamera({
   orbitPoint: [0, 0.5, 0],
   initialPosition: [4, 3, 6],
@@ -683,7 +683,7 @@ Use browse group `webgl` and slug `static-glb` so the feedback URL is:
 http://localhost:5173/#/examples/webgl/static-glb
 ```
 
-Update editor declarations so `Model`, `CRCWebGLAsset`, `CRCWebGLAssetLoadResult`, and `useGLTF` type-check in Studio snippets.
+Update editor declarations so `Model`, `PibblWebGLAsset`, `PibblWebGLAssetLoadResult`, and `useGLTF` type-check in Studio snippets.
 
 - [ ] **Step 6: Run focused browser, catalog, and Studio checks**
 
@@ -698,7 +698,7 @@ Expected: PASS. Manually inspect the exact URL and verify texture orientation, h
 - [ ] **Step 7: Commit the public feedback slice**
 
 ```bash
-git add packages/scenarios/src/learning/webgl/static-glb.example.tsx packages/scenarios/src/static-glb-slice.ts packages/scenarios/src/static-glb-slice.test.ts packages/core/test/static-glb-slice.test.ts playground/public/models/crc-static-glb-slice.glb playground/public/models/crc-static-glb-slice.LICENSE.md packages/scenarios/src/learning-catalog.ts packages/scenarios/src/catalog.ts packages/scenarios/src/index.ts playground/src/crc-editor-types.txt
+git add packages/scenarios/src/learning/webgl/static-glb.example.tsx packages/scenarios/src/static-glb-slice.ts packages/scenarios/src/static-glb-slice.test.ts packages/core/test/static-glb-slice.test.ts playground/public/models/pibbl-static-glb-slice.glb playground/public/models/pibbl-static-glb-slice.LICENSE.md packages/scenarios/src/learning-catalog.ts packages/scenarios/src/catalog.ts packages/scenarios/src/index.ts playground/src/pibbl-editor-types.txt
 git commit -m "feat(webgl): add static glb feedback example"
 ```
 
@@ -715,7 +715,7 @@ git commit -m "feat(webgl): add static glb feedback example"
 corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/gpu/shadow-resources.test.ts packages/webgl/src/lib/geometry/geometry.test.ts packages/webgl/src/lib/texture/texture.test.ts packages/webgl/src/lib/components/material.test.ts packages/webgl/src/lib/assets/asset.test.ts packages/webgl/src/lib/components/model.test.tsx packages/webgl/src/lib/gltf/glb.test.ts packages/webgl/src/lib/gltf/accessor.test.ts packages/webgl/src/lib/gltf/decode.test.ts packages/webgl/src/lib/gltf/use-gltf.test.tsx packages/webgl/src/lib/scene/settle.test.ts packages/webgl/src/lib/scene/renderer.test.ts packages/webgl/src/lib/context-lifecycle.test.tsx packages/scenarios/src/static-glb-slice.test.ts packages/core/test/static-glb-slice.test.ts packages/core/test/webgl-ownership.test.ts --browser.headless --browser.ui=false
 corepack pnpm@11.21.0 typecheck
 corepack pnpm@11.21.0 scenarios:check
-corepack pnpm@11.21.0 --filter @crc/webgl build
+corepack pnpm@11.21.0 --filter @pibbl/webgl build
 corepack pnpm@11.21.0 playground:build
 corepack pnpm@11.21.0 test:package-consumer
 corepack pnpm@11.21.0 test:package-consumer:packed
@@ -725,7 +725,7 @@ Expected: every command PASS on Node 24.15+ and pnpm 11.21.0. Record fresh comma
 
 - [ ] **Step 2: Inspect the built package boundary**
 
-Verify `@crc/webgl`, `@crc/webgl/gltf`, and `@crc/webgl/internal` export maps and declarations. Inspect the root bundle/chunks to confirm ordinary procedural consumers do not import parser or image-decoder code. Confirm no source-path or private-module import appears in scenario or consumer code.
+Verify `@pibbl/webgl`, `@pibbl/webgl/gltf`, and `@pibbl/webgl/internal` export maps and declarations. Inspect the root bundle/chunks to confirm ordinary procedural consumers do not import parser or image-decoder code. Confirm no source-path or private-module import appears in scenario or consumer code.
 
 - [ ] **Step 3: Perform the manual feedback pass**
 

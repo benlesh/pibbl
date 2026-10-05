@@ -8,78 +8,80 @@
     "symbols": [
       {
         "name": "Scale",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "useScale",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ScaleId",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "LinearDomain",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "BandCategory",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "BandDomain",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "BandScaleProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "BandScaleRange",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ResolvedBandScale",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ScaleRange",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ScaleLayoutStyle",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "LinearScaleProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ScaleProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ResolvedLinearScale",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ResolvedScale",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "Axis",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "AxisStyle",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "AxisProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
   },
   {
     "id": "lines",
@@ -90,35 +92,35 @@
     "symbols": [
       {
         "name": "LineSeries",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ScaleAdjust",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "LineCoordinate",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "LineAccessor",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "LineCurve",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "LineSeriesStyle",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "LineSeriesProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ScaleAdjustProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       }
     ],
     "notes": [
@@ -134,39 +136,39 @@
     "symbols": [
       {
         "name": "PointSeries",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PointAccessor",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PointMarkStyle",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PointSeriesStyle",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PointStyleResolver",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PointSeriesProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PlotSeries",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PlotSeriesProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PlotKeyAccessor",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       }
     ],
     "notes": [
@@ -182,30 +184,32 @@
     "symbols": [
       {
         "name": "BarSeries",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "BarThresholdFill",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "BarCategoryAccessor",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "BarSeriesStyle",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "BarStyleResolver",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "BarSeriesProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
   },
   {
     "id": "pie",
@@ -216,66 +220,68 @@
     "symbols": [
       {
         "name": "pieSlices",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieOptions",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieSliceGeometry",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieLayout",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieSlice",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieLabel",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieLayoutProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieLayoutStyle",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieLayoutSlice",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieLabelPlacement",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieLabelLayout",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieSliceProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieSliceStyle",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieLabelProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "PieLabelStyle",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
   },
   {
     "id": "nearest",
@@ -286,19 +292,19 @@
     "symbols": [
       {
         "name": "nearestDomainValue",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "nearestPoint",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "NearestPointOptions",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "NearestPoint",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       }
     ],
     "notes": [
@@ -314,75 +320,75 @@
     "symbols": [
       {
         "name": "defineSeries",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "closestPoint",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "closestX",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "interpolateX",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "linearInterpolation",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverQueryContext",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverQuery",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverSeries",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverPoint",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverHit",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverSeriesMap",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ClosestPointHit",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ClosestPointOptions",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ClosestXOptions",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "ClosestXHit",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverInterpolation",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "InterpolateXOptions",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverSample",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       }
     ],
     "notes": ["Displays three query results in the document."]
@@ -396,34 +402,36 @@
     "symbols": [
       {
         "name": "HoverData",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverDataProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverCard",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverCardProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverCardStyle",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverBounds",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "HoverPlacement",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
   },
   {
     "id": "anchored",
@@ -434,21 +442,23 @@
     "symbols": [
       {
         "name": "AnchoredLayout",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "AnchoredItem",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "AnchoredPlacement",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       },
       {
         "name": "AnchoredLayoutProps",
-        "importPath": "@crc/core/viz"
+        "importPath": "@pibbl/core/viz"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
   }
 ]

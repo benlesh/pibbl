@@ -11,12 +11,12 @@ import {
 import { loadStudioLearningCatalogs } from "./learning-catalog-adapter";
 import { buildSearchBundle, type SerializedSearchBundle } from "./search-index";
 
-const virtualDocumentationId = "virtual:crc-studio-docs";
+const virtualDocumentationId = "virtual:pibbl-studio-docs";
 const resolvedVirtualDocumentationId = `\0${virtualDocumentationId}`;
-const virtualSearchId = "virtual:crc-studio-search";
+const virtualSearchId = "virtual:pibbl-studio-search";
 const resolvedVirtualSearchId = `\0${virtualSearchId}`;
 
-export function crcStudioDocs(options: { repositoryRoot: string }): Plugin {
+export function pibblStudioDocs(options: { repositoryRoot: string }): Plugin {
   let latestBuild: StudioDocumentationBuild | undefined;
   let latestSearchBundle: SerializedSearchBundle | undefined;
 
@@ -43,7 +43,7 @@ export function crcStudioDocs(options: { repositoryRoot: string }): Plugin {
   }
 
   return {
-    name: "crc-studio-docs",
+    name: "pibbl-studio-docs",
     async buildStart() {
       await rebuild(this);
     },

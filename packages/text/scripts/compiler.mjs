@@ -20,7 +20,7 @@ export async function verifyCompiler(sdk) {
     const pin =
       lock.emsdk.compilerArchives[`${process.platform}-${process.arch}`];
     const receipt = JSON.parse(
-      await readFile(resolve(sdk, ".crc-compiler-files.json"), "utf8"),
+      await readFile(resolve(sdk, ".pibbl-compiler-files.json"), "utf8"),
     );
     if (
       receipt.sha256 !== pin.sha256 ||
@@ -55,7 +55,7 @@ export async function ensureCompiler(sdk) {
     await rm(destination, { recursive: true, force: true });
     await rename(staging, destination);
     await writeFile(
-      resolve(sdk, ".crc-compiler-files.json"),
+      resolve(sdk, ".pibbl-compiler-files.json"),
       JSON.stringify({ sha256: pin.sha256, files }),
     );
   }

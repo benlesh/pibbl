@@ -1,4 +1,4 @@
-import { crc } from "@crc/core";
+import { pibbl } from "@pibbl/core";
 import {
   Axis,
   LineSeries,
@@ -10,7 +10,7 @@ import {
   type LineSeriesProps,
   type LineSeriesStyle,
   type ScaleAdjustProps,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 
 type Reading = { day: number; value: number | null };
 const data: readonly Reading[] = [
@@ -41,7 +41,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(
+const app = pibbl(
   canvas,
   <Scale
     id="day"

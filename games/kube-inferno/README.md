@@ -1,7 +1,7 @@
 # Kube Inferno
 
-A standalone CRC Canvas 2D game. No Studio shell, sidebar, learning catalog, or
-other navigation is loaded. Native HTML controls surround the CRC-rendered map.
+A standalone Pibbl Canvas 2D game. No Studio shell, sidebar, learning catalog, or
+other navigation is loaded. Native HTML controls surround the Pibbl-rendered map.
 
 From the repository root:
 
@@ -52,11 +52,11 @@ read capacity; write mixes, cache warmup, reputation, manifest import, node/pod
 separation, graceful drains, construction cancellation, and security breaches
 remain future work. Prices and business constants need playtesting.
 
-`Sprite` is an application-local prototype built through the public CRC
+`Sprite` is an application-local prototype built through the public Pibbl
 `definePrimitive` API. Its frame records support arbitrary rectangles and trim
 placement, but the production sheet currently contains six machine appearances,
 not authored animation clips. Lights, fire, smoke, sparks, and request motion are
-animated by CRC's shared playback scheduler. Public `@crc/core` Sprite exports,
+animated by Pibbl's shared playback scheduler. Public `@pibbl/core` Sprite exports,
 named frame animation, atlas adapters, and GIF decoding have not shipped.
 
 ## Assets and ownership
@@ -66,7 +66,7 @@ named frame animation, atlas adapters, and GIF decoding have not shipped.
 isometric viewpoint. The atlas loads once per page and Sprite instances borrow it.
 No image readback or image-processing dependency is included in the game.
 Space Grotesk uses the repository's existing font dependency and bundled license.
-The game mounts one CRC root, uses its playback scheduler, and disposes the root
+The game mounts one Pibbl root, uses its playback scheduler, and disposes the root
 and document listeners on teardown. Personal-best storage is optional and local.
 
 See [Plan 006](../../docs/project-plans/006-kube-inferno.md).

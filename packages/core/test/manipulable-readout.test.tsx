@@ -1,9 +1,9 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
-import * as CRC from "@crc/core";
-import type { CRCController } from "@crc/core";
+import * as Pibbl from "@pibbl/core";
+import type { PibblController } from "@pibbl/core";
 
-let mount: CRCController | undefined;
+let mount: PibblController | undefined;
 const settle = () =>
   new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -17,17 +17,17 @@ afterEach(async () => {
 });
 
 it("forwards resize and rotation readout options through Manipulable", async () => {
-  const box = CRC.signal({ left: 40, top: 50, width: 160, height: 100 });
-  const rotation = CRC.signal(0);
+  const box = Pibbl.signal({ left: 40, top: 50, width: 160, height: 100 });
+  const rotation = Pibbl.signal(0);
   const canvas = document.createElement("canvas");
   canvas.width = 280;
   canvas.height = 200;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  mount = CRC.crc(
+  mount = Pibbl.pibbl(
     canvas,
-    <CRC.FocusManagement>
-      <CRC.Manipulable
+    <Pibbl.FocusManagement>
+      <Pibbl.Manipulable
         style={box}
         rotation={rotation}
         resizable
@@ -41,7 +41,7 @@ it("forwards resize and rotation readout options through Manipulable", async () 
           style: { readout: true },
         }}
       />
-    </CRC.FocusManagement>,
+    </Pibbl.FocusManagement>,
     { pixelRatio: 1 },
   );
   await settle();

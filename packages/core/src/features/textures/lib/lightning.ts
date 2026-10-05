@@ -2,7 +2,7 @@ import { ElectricMemory, type ElectricConnection } from "./wasm/electric.js";
 import { lazyKernel } from "./wasm/memory.js";
 import { bytes } from "./wasm/lightning-bytes.js";
 const wasmModule = /* @__PURE__ */ lazyKernel(bytes);
-import { defineTexture } from "@crc/core";
+import { defineTexture } from "@pibbl/core";
 import { validateSeed } from "./palette.js";
 import {
   electricOptions,

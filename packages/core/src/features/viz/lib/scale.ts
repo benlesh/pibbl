@@ -1,4 +1,4 @@
-import { resolveSignalValue, useComputed, useLayoutBox } from "@crc/core";
+import { resolveSignalValue, useComputed, useLayoutBox } from "@pibbl/core";
 import type { ScaleProps, ScaleRange } from "./types.js";
 import { equalScale, resolveLinearScale } from "./linear-scale.js";
 import { resolveBandScale } from "./band-scale.js";

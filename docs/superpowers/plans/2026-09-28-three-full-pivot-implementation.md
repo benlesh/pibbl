@@ -10,15 +10,15 @@
 
 - Add focused manifest/export tests that state the surviving particles and
   physics entries.
-- Remove `@crc/particles/webgl` source, tests, exports, peers, and build input.
-- Remove the renderer-coupled `@crc/physics/3d` entry, runtime, presentation,
+- Remove `@pibbl/particles/webgl` source, tests, exports, peers, and build input.
+- Remove the renderer-coupled `@pibbl/physics/3d` entry, runtime, presentation,
   browser tests, and peers while retaining `/3d/geometry` and its pure tests.
 - Delete `packages/webgl` and remove workspace aliases/configuration.
 - Regenerate the lockfile and prove surviving packages build and typecheck.
 
 ## Task 2: replace public examples and website content
 
-- Add a small `three-layer` example with a CRC background target, visible
+- Add a small `three-layer` example with a Pibbl background target, visible
   Three blocker, registered Three target, empty-pixel miss policy, and focus.
 - Keep and polish `three-instancing` as the advanced showcase.
 - Remove the WebGL lesson directory, WebGL labs, GLB gallery, 3D particles, and
@@ -32,7 +32,7 @@
 
 - Remove old runtime modules, declarations, aliases, source/built maps, and
   sandbox allowlist entries.
-- Make `@crc/three`, `three`, and supported addons authoritative in source and
+- Make `@pibbl/three`, `three`, and supported addons authoritative in source and
   built Studio modes.
 - Rewrite packed consumer verification around surviving packages, one Three
   identity, Bundler/NodeNext declarations, and rejection of removed entries.

@@ -8,14 +8,14 @@
 
 **Architecture:** Each shape is a focused `definePrimitive` component that creates immediate `Path2D` geometry and delegates paint and coordinate targeting to `renderPath`. Small private helpers resolve nonnegative lengths and finite scalar values; circle/ellipse, arc/wedge, and polygon keep their distinct path and keyboard-bound calculations isolated. No retained geometry, path cache, intrinsic measurement, or visualization abstraction is introduced.
 
-**Tech Stack:** TypeScript 7, Canvas 2D `Path2D`, CRC JSX/createElement runtime, Vitest Browser with Playwright Chromium, pnpm 11.21.0.
+**Tech Stack:** TypeScript 7, Canvas 2D `Path2D`, Pibbl JSX/createElement runtime, Vitest Browser with Playwright Chromium, pnpm 11.21.0.
 
 **Spec:** `docs/superpowers/specs/2026-09-06-standard-shape-primitives-design.md`
 
 ## Global Constraints
 
 - Preserve unrelated working-tree changes and untracked files.
-- Public authors import only from `@crc/core`; no public source or `lib/*` imports.
+- Public authors import only from `@pibbl/core`; no public source or `lib/*` imports.
 - Geometry and paint live under local `style`; events remain props.
 - `Circle`, `Ellipse`, `Arc`, `Wedge`, and `Polygon` are drawing leaves with no intrinsic measurement.
 - `Arc` is stroke-only; the other four shapes support fill and stroke.
@@ -395,11 +395,11 @@ git commit -m "feat(core): add polygon primitive"
 **Interfaces:**
 
 - Consumes: public values and types from Tasks 2-4.
-- Produces: supported `@crc/core` exports and compiler/package-consumer evidence.
+- Produces: supported `@pibbl/core` exports and compiler/package-consumer evidence.
 
 - [ ] **Step 1: Add failing public type and export assertions**
 
-Import every new value and style/props type from `@crc/core`; create valid JSX and `createElement` instances; add `@ts-expect-error` cases for children, Arc fill, `auto` radii, and missing required geometry. Extend the exact runtime export list in `public-api.test.ts`.
+Import every new value and style/props type from `@pibbl/core`; create valid JSX and `createElement` instances; add `@ts-expect-error` cases for children, Arc fill, `auto` radii, and missing required geometry. Extend the exact runtime export list in `public-api.test.ts`.
 Add a runtime recovery case that first renders a new primitive with a negative
 radius, confirms the contextual `LayoutDiagnostic` and resource cleanup, then
 mounts valid geometry on the same Canvas and confirms a successful frame.
@@ -441,7 +441,7 @@ Run:
 
 ```bash
 corepack pnpm@11.21.0 run typecheck
-corepack pnpm@11.21.0 --filter @crc/core build
+corepack pnpm@11.21.0 --filter @pibbl/core build
 corepack pnpm@11.21.0 run test:package-consumer
 ```
 
@@ -480,7 +480,7 @@ Require routes `#/examples/drawing/circle`, `ellipse`, `arc`, `wedge`, and
 `polygon`; require their API tags; mount each lesson; click an intentional
 target in each interactive lesson; and assert representative interior,
 exterior, stroke, and updated pixels. Extend `drawing-shapes` expectations to
-cover all five values through only `@crc/core` imports.
+cover all five values through only `@pibbl/core` imports.
 
 - [ ] **Step 2: Run focused scenario tests and confirm failures**
 
@@ -494,7 +494,7 @@ Expected: FAIL because catalog entries/examples and scenario behavior are missin
 
 - [ ] **Step 3: Create five focused learner examples**
 
-Each example must use automatic CRC JSX, one concise interactive state change,
+Each example must use automatic Pibbl JSX, one concise interactive state change,
 the primitive's distinctive geometry, and no private import. Keep the Canvas at
 the catalog-declared deterministic size and avoid platform-sensitive text in
 pixel assertion regions.

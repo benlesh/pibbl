@@ -11,25 +11,25 @@ keywords:
 
 # Compose and test 2D physics
 
-Use `PhysicsWorld2D` around normal CRC components with `physics` attachments.
-CRC supplies the clock and component lifecycle; the bundled Rapier engine solves
-solid contacts. Physics and geometry subpaths are included in `@crc/core`;
+Use `PhysicsWorld2D` around normal Pibbl components with `physics` attachments.
+Pibbl supplies the clock and component lifecycle; the bundled Rapier engine solves
+solid contacts. Physics and geometry subpaths are included in `@pibbl/core`;
 Rapier requires no separate installation. Core drawing and pure geometry
 imports do not load or initialize the engine. Do not start another animation loop or call the engine directly.
 
 ```tsx
-import { Circle, Group, Rectangle } from "@crc/core";
+import { Circle, Group, Rectangle } from "@pibbl/core";
 import {
   PhysicsWorld2D,
   applyImpulse2D,
   collider2D,
-  crcPhysicsBody2D,
+  pibblPhysicsBody2D,
   dynamicBody2D,
   staticBody2D,
-} from "@crc/core/physics/2d";
+} from "@pibbl/core/physics/2d";
 
 function Ball() {
-  const body = crcPhysicsBody2D();
+  const body = pibblPhysicsBody2D();
   return (
     <Group
       physics={dynamicBody2D({ handle: body, mass: 1, collider: false })}
@@ -86,7 +86,7 @@ dragging or animation handoff. Keep the handle stable and use its `enabled` and
 
 A compound body is a `Group` with `collider: false` and child `collider2D`
 attachments. Children may be solids or sensors; custom geometry comes from the
-pure `@crc/core/physics/2d/geometry` factories. `mass: "auto"` derives mass and center
+pure `@pibbl/core/physics/2d/geometry` factories. `mass: "auto"` derives mass and center
 of mass from contributing colliders; explicit `mass` gives a predictable impulse
 response. Public body position is the authored origin, not necessarily its COM.
 
@@ -97,14 +97,14 @@ degrees, and the world fixed step uses milliseconds. Gravity defaults to zero;
 `[0, 600]` is a practical screen-space starting point. The default is 60 fixed
 ticks/second with at most four catch-up ticks per frame. Sleeping bodies and
 stationary kinematic worlds stop requesting frames. Commands and target changes
-wake them through the same CRC scheduler.
+wake them through the same Pibbl scheduler.
 
 The engine internally uses 100 logical units per meter and single-precision
 numbers. Use tolerances in assertions. `velocityIterations` (default 4) selects
 Rapier solver iterations; `positionIterations` (default 1) selects internal PGS
 iterations. These retained option names describe budgets, not exact trajectories.
 
-Set `ccd: true` for fast dynamic solids. CRC adds bounded substeps for opposing
+Set `ccd: true` for fast dynamic solids. Pibbl adds bounded substeps for opposing
 fast bodies; a step needing more than 64 rejects and rolls back with an error.
 Reduce speed or fixed-step length, or enlarge the collision geometry. Sensors
 observe discrete overlaps, so fast triggers should use explicit ray/shape casts.
@@ -120,7 +120,7 @@ body generation. Complete-phase callbacks can queue commands for the next frame.
 
 ## Observe before judging pixels
 
-Capture a world handle with `crcPhysicsWorld2D()` inside the world, then call
+Capture a world handle with `pibblPhysicsWorld2D()` inside the world, then call
 `inspectPhysics2D(world)` outside render to get frozen JSON-safe observations.
 It includes body identity, pose, presentation pose, velocity, sleep state,
 collider bounds, contacts and failed-frame diagnostics. String collider tags
@@ -139,24 +139,24 @@ its Canvas and uses the same public components as a manual scene.
 
 ```tsx
 import { expect } from "vitest";
-import { Circle, Rectangle } from "@crc/core";
-import { createPhysicsTestHarness2D } from "@crc/core/physics/2d/testing";
+import { Circle, Rectangle } from "@pibbl/core";
+import { createPhysicsTestHarness2D } from "@pibbl/core/physics/2d/testing";
 import {
   PhysicsWorld2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsWorld2D,
   dynamicBody2D,
   staticBody2D,
   inspectPhysics2D,
-  type CRCPhysicsWorldHandle2D,
-} from "@crc/core/physics/2d";
+  type PibblPhysicsWorldHandle2D,
+} from "@pibbl/core/physics/2d";
 
 const canvas = document.createElement("canvas");
 canvas.width = 240;
 canvas.height = 220;
 document.body.append(canvas);
-let world!: CRCPhysicsWorldHandle2D;
+let world!: PibblPhysicsWorldHandle2D;
 function Contents() {
-  world = crcPhysicsWorld2D();
+  world = pibblPhysicsWorld2D();
   return (
     <>
       <Circle
@@ -204,7 +204,7 @@ try {
 stops when the realm becomes idle. `act(callback)` runs an action and flushes one
 frame at the current time; subsequent physics may require another frame.
 `reset()` remounts the root factory while keeping host time monotonic. It does
-not reset caller-owned signals. A harness rejects an already-mounted CRC realm
+not reset caller-owned signals. A harness rejects an already-mounted Pibbl realm
 so it cannot take over a production clock. Dispose it before mounting another.
 
 For an agent-written regression, save the scene/seed, engine version, world
@@ -222,5 +222,5 @@ real costs; dynamically import the runtime when physics is optional.
 
 One world is generally cheaper than many tiny worlds when objects must collide.
 Keep diagnostics opt-in, reuse immutable shape descriptions, and let sleeping
-stop work. CRC performs transaction checkpoints so failed frames can roll back;
+stop work. Pibbl performs transaction checkpoints so failed frames can roll back;
 raw engine benchmarks do not include that cost or Canvas repainting.

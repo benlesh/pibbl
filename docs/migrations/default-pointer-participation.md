@@ -3,7 +3,7 @@
 Status: migration guidance for default Canvas and committed external-renderer
 interaction, updated for the Three.js pivot on 2026-09-28.
 
-CRC drawing primitives now participate in coordinate hit testing by default,
+Pibbl drawing primitives now participate in coordinate hit testing by default,
 even when they have no event handler, cursor, or focus option. This aligns
 Canvas 2D drawing and external-renderer targets: visible front content owns its
 declared geometry unless the author explicitly makes it transparent to hit
@@ -22,7 +22,7 @@ opacity and filtered pixels do not change the declared hit geometry.
 
 External render layers publish their matching interaction generation at the
 same Canvas paint position. The Three.js adapter's default raycaster reports a
-registered object as a CRC target, visible unregistered geometry as a blocker,
+registered object as a Pibbl target, visible unregistered geometry as a blocker,
 and empty pixels as a miss. A declared Three target may opt out with
 `pointerEvents="none"`.
 
@@ -62,7 +62,7 @@ but no hit geometry. Clicking empty space in a group or layout allocation does
 not select that structural component.
 
 An external render layer is one flattened Canvas composition entry rather than
-a CRC container for its renderer-native objects. Its committed targets provide
+a Pibbl container for its renderer-native objects. Its committed targets provide
 logical leaves, while `missBehavior` explicitly chooses whether empty pixels
 pass through, block lower paint, or target the layer itself.
 
@@ -88,7 +88,7 @@ and optional target declarations.
 
 ## Event dispatch after selection
 
-Once a leaf wins, CRC preserves the existing capture, target, and bubble
+Once a leaf wins, Pibbl preserves the existing capture, target, and bubble
 phases, logical related targets, activation, pointer capture, cursor, focus,
 touch, wheel, and drag/drop behavior. This migration changes which painted
 leaf participates in selection; it does not turn overlapping siblings into one

@@ -1,13 +1,13 @@
-import { dropShadow } from '@crc/core/filters';
+import { dropShadow } from '@pibbl/core/filters';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { Fragment } from '../element/fragment';
-import type { CRCEventHandlers } from '../events/types';
-import { getCRCInstance } from '../global-state';
+import type { PibblEventHandlers } from '../events/types';
+import { getPibblInstance } from '../global-state';
 import { useEventListener } from '../hooks/use-event-listener';
 import { useEventTarget } from '../hooks/use-event-target';
 import { componentTest } from '../test-utils/component-test';
-import type { CRCElement } from '../types';
+import type { PibblElement } from '../types';
 import { HorizontalLine } from './horizontal-line';
 import { Image } from './img';
 import { Layer } from './layer';
@@ -31,7 +31,7 @@ afterEach(() => {
 describe('built-in DOM-aligned event integration', () => {
   const builtIns: readonly {
     name: string;
-    create: (handlers: CRCEventHandlers) => CRCElement<any>;
+    create: (handlers: PibblEventHandlers) => PibblElement<any>;
   }[] = [
     {
       name: 'path',
@@ -123,7 +123,7 @@ describe('built-in DOM-aligned event integration', () => {
   it.each(builtIns)(
     'registers one grouped pointer/touch/keyboard/focus/clipboard/drag target for $name',
     async ({ create }) => {
-      const handlers: CRCEventHandlers = {
+      const handlers: PibblEventHandlers = {
         onPointerDownCapture: () => undefined,
         onTouchStart: () => undefined,
         onKeyDownCapture: () => undefined,
@@ -133,7 +133,7 @@ describe('built-in DOM-aligned event integration', () => {
       };
       const canvas = await componentTest(create(handlers));
       const targets = Array.from(
-        getCRCInstance(canvas.element).eventRoot.targets,
+        getPibblInstance(canvas.element).eventRoot.targets,
       );
 
       expect(targets).toHaveLength(1);
@@ -235,7 +235,7 @@ describe('built-in DOM-aligned event integration', () => {
       },
     }));
     const targets = Array.from(
-      getCRCInstance(canvas.element).eventRoot.targets,
+      getPibblInstance(canvas.element).eventRoot.targets,
     );
 
     expect(targets).toHaveLength(1);
@@ -249,20 +249,20 @@ describe('built-in DOM-aligned event integration', () => {
   ] as const)(
     'gives a $mode custom component only its explicit event participation',
     async ({ mode, expectedTargets }) => {
-      const Silent = definePrimitive<CRCEventHandlers>((_props, _style, ctx) => {
+      const Silent = definePrimitive<PibblEventHandlers>((_props, _style, ctx) => {
         ctx.fillRect(0, 0, 20, 20);
       });
-      const Forwarding = (props: CRCEventHandlers) => createElement(Rectangle, {
+      const Forwarding = (props: PibblEventHandlers) => createElement(Rectangle, {
         ...props,
         style: { width: 20, height: 20, fill: 'red' },
       });
-      const ExplicitTarget = (props: CRCEventHandlers) => {
+      const ExplicitTarget = (props: PibblEventHandlers) => {
         useEventTarget(props, {
           path: rectanglePath(0, 0, 20, 20),
           fill: true,
         });
       };
-      const handlers: CRCEventHandlers = {
+      const handlers: PibblEventHandlers = {
         onPointerDown: () => undefined,
       };
       const element = mode === 'non-forwarding' ? createElement(Silent, handlers) :
@@ -270,7 +270,7 @@ describe('built-in DOM-aligned event integration', () => {
         createElement(ExplicitTarget, handlers);
       const canvas = await componentTest(element);
 
-      expect(getCRCInstance(canvas.element).eventRoot.targets.size)
+      expect(getPibblInstance(canvas.element).eventRoot.targets.size)
         .toBe(expectedTargets);
     },
   );
@@ -314,7 +314,7 @@ describe('filtered Group event integration', () => {
       children: createElement(Probe, {}),
     }), { width: 180, height: 100 });
     const target = Array.from(
-      getCRCInstance(canvas.element).eventRoot.targets,
+      getPibblInstance(canvas.element).eventRoot.targets,
     )[0]!;
 
     expect(observedContexts).toHaveLength(1);
@@ -373,7 +373,7 @@ describe('layer event ancestry', () => {
     const childCanvas = drawImage.mock.calls
       .map(call => call[0])
       .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;
-    const child = getCRCInstance(childCanvas);
+    const child = getPibblInstance(childCanvas);
     let eventParentDuringChildTeardown: unknown = 'not-run';
     child.mainTeardowns.add(() => {
       eventParentDuringChildTeardown = child.eventParent;

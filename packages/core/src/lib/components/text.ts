@@ -3,9 +3,9 @@ import { definePrimitive } from '../define-primitive.js';
 import { materializeTextChildren } from '../element/children.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import {
   resolveOptionalLength,
@@ -19,8 +19,8 @@ import {
   RenderingContext2D,
 } from '../types.js';
 import type { Constraints } from '../layout/types.js';
-import type { CRCRenderTransaction, CRCTextInput } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import type { PibblRenderTransaction, PibblTextInput } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import { resolveLength } from '../style/resolve-length.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
@@ -30,24 +30,24 @@ import { withReceiverInputProvision } from '../signals/input-provision.js';
 /**
  * Authored inputs for Text, including the declared data and presentation options.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
- * @see {@link CRCPhysics2DPropExtension}
- * @see {@link CRCTextInput}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
+ * @see {@link PibblTextInput}
  * @see {@link Text}
  */
 export interface TextProps
   extends
-    CRCEventHandlers,
-    CRCEventFocusOptions,
-    CRCEventParticipationOptions,
-    CRCPhysics2DPropExtension {
-  /** Descendant content or the callback that supplies it. See {@link CRCTextInput}. */
-  children?: CRCTextInput;
+    PibblEventHandlers,
+    PibblEventFocusOptions,
+    PibblEventParticipationOptions,
+    PibblPhysics2DPropExtension {
+  /** Descendant content or the callback that supplies it. See {@link PibblTextInput}. */
+  children?: PibblTextInput;
 }
 
 const materializedTextTransactions = new WeakMap<
-  CRCRenderTransaction,
+  PibblRenderTransaction,
   WeakMap<object, string>
 >();
 
@@ -142,7 +142,7 @@ function renderText(
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link TextProps}
  * @see {@link TextStyle}

@@ -1,7 +1,7 @@
 ---
 id: guide-author-without-jsx
 title: Author without JSX
-summary: Use createElement for the complete CRC authoring API without JSX syntax.
+summary: Use createElement for the complete Pibbl authoring API without JSX syntax.
 kind: guide
 slug: author-without-jsx
 order: 20
@@ -12,7 +12,7 @@ exampleSlug: create-element-authoring
 # Author without JSX
 
 `createElement(type, props, ...children)` is the complete non-JSX API for
-CRC component values. It uses
+Pibbl component values. It uses
 the same branded element protocol, component identity, child traversal, style,
 hooks, events, focus policies, scheduling, and disposal as JSX. You do not need
 any JSX compiler configuration to use this guide.
@@ -20,7 +20,7 @@ any JSX compiler configuration to use this guide.
 ## Install and mount
 
 ```sh
-pnpm add @crc/core
+pnpm add @pibbl/core
 ```
 
 ```ts docs:complete-snippet=without-jsx
@@ -31,18 +31,18 @@ import {
   KeyboardNavigation,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   createElement,
   useSignal,
-  type CRCController,
-  type CRCNode,
-} from "@crc/core";
+  type PibblController,
+  type PibblNode,
+} from "@pibbl/core";
 
 interface PosterProps {
   initialMessage: string;
 }
 
-function Poster({ initialMessage }: PosterProps): CRCNode {
+function Poster({ initialMessage }: PosterProps): PibblNode {
   const message = useSignal(initialMessage);
 
   const cards = ["A", "B"].map((label, index) =>
@@ -95,8 +95,8 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
   );
 }
 
-export function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, createElement(Poster, { initialMessage: "None" }));
+export function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, createElement(Poster, { initialMessage: "None" }));
 }
 
 export function attach(canvas: HTMLCanvasElement): () => void {
@@ -114,7 +114,7 @@ needs the scene. Disposal is safe to repeat.
 createElement(type, props, ...children);
 ```
 
-- `type` is a CRC component value or ordinary synchronous component function.
+- `type` is a Pibbl component value or ordinary synchronous component function.
 - `props` is the component's props object or `null`.
 - With no variadic children, an explicitly supplied `props.children` is
   preserved.
@@ -152,9 +152,9 @@ textual content.
 `Fragment` is available for an explicit keyed identity boundary:
 
 ```ts
-import { Fragment, createElement, type CRCNode } from "@crc/core";
+import { Fragment, createElement, type PibblNode } from "@pibbl/core";
 
-function keyedSection(section: { id: string; elements: CRCNode }) {
+function keyedSection(section: { id: string; elements: PibblNode }) {
   return createElement(
     Fragment,
     { key: section.id, children: null },
@@ -166,11 +166,11 @@ function keyedSection(section: { id: string; elements: CRCNode }) {
 ## Focus and lifecycle
 
 `FocusManagement` and `KeyboardNavigation` are component values here too.
-Each policy requires exactly one CRC element after empty values are removed;
+Each policy requires exactly one Pibbl element after empty values are removed;
 nest them as shown in the full example. They do not create paint, layout, or an
 extra identity boundary.
 
-Hooks run only when CRC later invokes the component during its synchronous
+Hooks run only when Pibbl later invokes the component during its synchronous
 scheduled traversal. Calling the component directly is not a substitute for
 constructing an element. All hook-order, identity, failure, and ownership rules
 in the [lifecycle guide](#/learn/guides/state-and-lifecycle) apply
@@ -181,9 +181,9 @@ The executable Studio lesson is
 
 ## Three.js without JSX
 
-`defineThreeLayer()` returns an ordinary CRC component value, so it can be
+`defineThreeLayer()` returns an ordinary Pibbl component value, so it can be
 passed to `createElement()` just like a built-in. The Three scene itself still
-uses normal Three constructors rather than CRC elements:
+uses normal Three constructors rather than Pibbl elements:
 
 ```ts
 const scene = createElement(ProductScene, {
@@ -193,5 +193,5 @@ const scene = createElement(ProductScene, {
 });
 ```
 
-See [Use Three.js inside CRC](#/learn/guides/three-js) for the layer definition,
+See [Use Three.js inside Pibbl](#/learn/guides/three-js) for the layer definition,
 picking, scheduling, and resource-ownership contracts.

@@ -1,11 +1,11 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   HorizontalLine,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function HorizontalStudy() {
   const band = useSignal("none");
   const rule = (y: number, color: string, name: string) => (
@@ -59,6 +59,6 @@ function HorizontalStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <HorizontalStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <HorizontalStudy />);
 }

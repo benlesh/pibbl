@@ -1,6 +1,6 @@
 import type { PlotSeries } from './plot-series.js';
 import type { PieOptions } from './pie-slices.js';
-import type { CRCEventHandlers, CRCNode, SignalValue } from "@crc/core";
+import type { PibblEventHandlers, PibblNode, SignalValue } from "@pibbl/core";
 import type { PointAccessor } from "./point-types.js";
 import type { ScaleId } from "./types.js";
 /**
@@ -20,15 +20,15 @@ export type PlotKeyAccessor<D> =
 /**
  * Authored inputs for PlotSeries, including the declared data and presentation options.
  *
- * @see {@link CRCEventHandlers}
+ * @see {@link PibblEventHandlers}
  * @see {@link SignalValue}
  * @see {@link PointAccessor}
  * @see {@link ScaleId}
  * @see {@link PlotKeyAccessor}
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  * @see {@link PlotSeries}
  */
-export interface PlotSeriesProps<D> extends CRCEventHandlers {
+export interface PlotSeriesProps<D> extends PibblEventHandlers {
   /**
    * Application data supplied to the component or reported by the event. See {@link SignalValue}.
    */
@@ -53,11 +53,11 @@ export interface PlotSeriesProps<D> extends CRCEventHandlers {
   /** Property or callback supplying stable identity for each datum. See {@link PlotKeyAccessor}. */
   readonly keyBy?: PlotKeyAccessor<D>;
   /**
-   * Renders the current data or resources using the supplied context. See {@link CRCNode}.
+   * Renders the current data or resources using the supplied context. See {@link PibblNode}.
    * @param datum - Datum to render.
    * @param index - Zero-based index in the source data.
    * @param data - Complete source data array.
-   * @returns CRC content to place at the datum's mapped coordinates. See {@link CRCNode}.
+   * @returns Pibbl content to place at the datum's mapped coordinates. See {@link PibblNode}.
    */
-  readonly render: (datum: D, index: number, data: readonly D[]) => CRCNode;
+  readonly render: (datum: D, index: number, data: readonly D[]) => PibblNode;
 }

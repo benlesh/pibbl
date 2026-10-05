@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { crc, Rectangle } from "@crc/core";
-import { ReactionDiffusion, type TextureRenderer } from "@crc/core/textures";
+import { pibbl, Rectangle } from "@pibbl/core";
+import { ReactionDiffusion, type TextureRenderer } from "@pibbl/core/textures";
 import { clearSharedState } from "../../../src/lib/global-state.js";
 import {
   ManualSchedulerDriver,
@@ -11,7 +11,7 @@ afterEach(() => {
   clearSharedState();
   document.body.innerHTML = "";
 });
-it("reuses the same generated source for a repeating fill and an alpha mask under ordinary CRC content", () => {
+it("reuses the same generated source for a repeating fill and an alpha mask under ordinary Pibbl content", () => {
   const driver = new ManualSchedulerDriver(),
     restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement("canvas");
@@ -26,7 +26,7 @@ it("reuses the same generated source for a repeating fill and an alpha mask unde
     ctx.globalCompositeOperation = "destination-in";
     ctx.drawImage(texture.mask, 0, 0, texture.width, texture.height);
   };
-  const controller = crc(
+  const controller = pibbl(
     canvas,
     <>
       <ReactionDiffusion
@@ -78,10 +78,10 @@ it("keeps the alpha mask unchanged when only the palette changes", () => {
       style={{ width: 128, height: 80 }}
     />
   );
-  const controller = crc(canvas, scene(["#000000", "#ffffff"]));
+  const controller = pibbl(canvas, scene(["#000000", "#ffffff"]));
   try {
     driver.flush(0);
-    crc(canvas, scene(["#661144", "#ffdd88"]));
+    pibbl(canvas, scene(["#661144", "#ffdd88"]));
     driver.flush(16);
     expect(masks).toHaveLength(2);
     expect(masks[1]).toEqual(masks[0]);

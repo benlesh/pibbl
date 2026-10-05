@@ -1,45 +1,45 @@
-import type { CRCBackendPrimitiveInput } from '../backend/types.js';
-import type { CRCInternalPrimitiveAttachmentInput } from '../element-enhancers.js';
+import type { PibblBackendPrimitiveInput } from '../backend/types.js';
+import type { PibblInternalPrimitiveAttachmentInput } from '../element-enhancers.js';
 import type { getCurrentElementSource } from '../../internal.js';
 import type {
-  CRCRenderTransaction,
+  PibblRenderTransaction,
   SystemStyle,
 } from '../types.js';
-import type { CRCElement } from './types.js';
+import type { PibblElement } from './types.js';
 import type { PrimitivePresentation } from '../primitive-presentation.js';
-import type { CRCBackendPrimitiveDefinition } from '../backend/types.js';
+import type { PibblBackendPrimitiveDefinition } from '../backend/types.js';
 
 /**
  * Authoring source location attached to an element for diagnostics.
  *
- * @see {@link CRCBackendPrimitiveInput}
- * @see {@link CRCInternalPrimitiveAttachmentInput}
+ * @see {@link PibblBackendPrimitiveInput}
+ * @see {@link PibblInternalPrimitiveAttachmentInput}
  * @see {@link getCurrentElementSource}
  */
-export interface CRCElementSource {
-  /** Source filename recorded for diagnostics. See {@link CRCElementSource}. */
+export interface PibblElementSource {
+  /** Source filename recorded for diagnostics. See {@link PibblElementSource}. */
   readonly fileName: string;
-  /** Source line recorded for diagnostics. See {@link CRCElementSource}. */
+  /** Source line recorded for diagnostics. See {@link PibblElementSource}. */
   readonly lineNumber: number;
-  /** Source column recorded for diagnostics. See {@link CRCElementSource}. */
+  /** Source column recorded for diagnostics. See {@link PibblElementSource}. */
   readonly columnNumber: number;
 }
 
 export interface InternalElementMetadata {
-  readonly source?: CRCElementSource;
+  readonly source?: PibblElementSource;
   readonly specifiedStyle?: Readonly<SystemStyle>;
   readonly primitiveProgramProps?: Readonly<Record<PropertyKey, unknown>>;
   readonly primitiveReceiverToken?: object;
-  readonly policyPreparationSource?: CRCElement<any>;
+  readonly policyPreparationSource?: PibblElement<any>;
   identityHint?: unknown;
   placementConsumed?: boolean;
   placementSignalHandoff?: Readonly<SystemStyle>;
 }
 
-const elementMetadata = new WeakMap<CRCElement<any>, InternalElementMetadata>();
+const elementMetadata = new WeakMap<PibblElement<any>, InternalElementMetadata>();
 const elementCloneMetadataHandlers = new Set<(
-  source: CRCElement<any>,
-  clone: CRCElement<any>,
+  source: PibblElement<any>,
+  clone: PibblElement<any>,
 ) => void>();
 const primitiveDefinitions = new WeakMap<Function, PrimitiveDefinition>();
 const primitiveDefinitionTypes = new WeakMap<PrimitiveDefinition, Function>();
@@ -49,7 +49,7 @@ const primitivePresentationResolvers = new WeakMap<
 >();
 const policyDefinitions = new WeakMap<Function, ElementPolicyDefinition>();
 const childPrimitiveReceiverTransactions = new WeakMap<
-  CRCRenderTransaction,
+  PibblRenderTransaction,
   WeakMap<object, Map<number, object>>
 >();
 
@@ -58,13 +58,13 @@ export interface PrimitiveDefinition<
   S extends SystemStyle = SystemStyle,
   N extends SystemStyle = S,
   R extends SystemStyle = N,
-> extends CRCBackendPrimitiveDefinition<P, S, N, R> {}
+> extends PibblBackendPrimitiveDefinition<P, S, N, R> {}
 
 export interface ElementPolicyDefinition {
   readonly prepare: (
-    policy: CRCElement<any>,
-    child: CRCElement<any>,
-  ) => CRCElement<any>;
+    policy: PibblElement<any>,
+    child: PibblElement<any>,
+  ) => PibblElement<any>;
 }
 
 /** @internal Registers the platform behavior for one component value. */
@@ -92,7 +92,7 @@ export function getPrimitiveDefinition(
 /** @internal Copies one primitive definition and presentation onto a new identity. */
 export function derivePrimitiveMetadata(source: Function, derived: Function): void {
   const definition = primitiveDefinitions.get(source);
-  if (!definition) throw new TypeError('Can only derive a CRC primitive component.');
+  if (!definition) throw new TypeError('Can only derive a Pibbl primitive component.');
   setPrimitiveDefinition(derived, { ...definition });
   const presentation = primitivePresentationResolvers.get(source);
   if (presentation) primitivePresentationResolvers.set(derived, presentation);
@@ -142,7 +142,7 @@ export function getElementPolicyDefinition(
 
 /** @internal */
 export function setElementMetadata(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   metadata: InternalElementMetadata,
 ): void {
   elementMetadata.set(element, metadata);
@@ -150,15 +150,15 @@ export function setElementMetadata(
 
 /** @internal */
 export function getElementMetadata(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
 ): InternalElementMetadata | undefined {
   return elementMetadata.get(element);
 }
 
 /** @internal Retains the original measurable identity behind policy clones. */
 export function setPolicyPreparationSource(
-  element: CRCElement<any>,
-  source: CRCElement<any>,
+  element: PibblElement<any>,
+  source: PibblElement<any>,
 ): void {
   elementMetadata.set(element, {
     ...elementMetadata.get(element),
@@ -168,42 +168,42 @@ export function setPolicyPreparationSource(
 
 /** @internal Reads the original measurable identity behind policy clones. */
 export function getPolicyPreparationSource(
-  element: CRCElement<any>,
-): CRCElement<any> | undefined {
+  element: PibblElement<any>,
+): PibblElement<any> | undefined {
   return elementMetadata.get(element)?.policyPreparationSource;
 }
 
 /** @internal Registers private WeakMap-backed annotations for immutable clones. */
 export function registerElementCloneMetadataHandler(
-  handler: (source: CRCElement<any>, clone: CRCElement<any>) => void,
+  handler: (source: PibblElement<any>, clone: PibblElement<any>) => void,
 ): void {
   elementCloneMetadataHandlers.add(handler);
 }
 
 /** @internal Copies every registered private annotation to a finalized clone. */
 export function copyElementCloneMetadata(
-  source: CRCElement<any>,
-  clone: CRCElement<any>,
+  source: PibblElement<any>,
+  clone: PibblElement<any>,
 ): void {
   for (const handler of elementCloneMetadataHandlers) handler(source, clone);
 }
 
 /** @internal */
 export function getElementSource(
-  element: CRCElement<any>,
-): CRCElementSource | undefined {
+  element: PibblElement<any>,
+): PibblElementSource | undefined {
   return elementMetadata.get(element)?.source;
 }
 
 /** @internal */
 export function getSpecifiedStyle<S extends SystemStyle>(
-  element: CRCElement<{ style?: S }>,
+  element: PibblElement<{ style?: S }>,
 ): Readonly<S> | undefined {
   return element.props.style;
 }
 
 /** @internal Returns program props with primitive-owned style removed. */
-export function getPrimitiveProgramProps<P>(element: CRCElement<any>): P {
+export function getPrimitiveProgramProps<P>(element: PibblElement<any>): P {
   const prepared = elementMetadata.get(element)?.primitiveProgramProps;
   if (prepared !== undefined) return prepared as P;
   const { style: _style, ...programProps } = element.props as {
@@ -215,7 +215,7 @@ export function getPrimitiveProgramProps<P>(element: CRCElement<any>): P {
 
 /** @internal Associates measurement and paint clones for one occurrence. */
 export function setPrimitiveReceiverToken(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   token: object,
 ): void {
   const current = elementMetadata.get(element) ?? {};
@@ -224,7 +224,7 @@ export function setPrimitiveReceiverToken(
 
 /** @internal Reads the occurrence token carried by an internal clone. */
 export function getPrimitiveReceiverToken(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
 ): object | undefined {
   return elementMetadata.get(element)?.primitiveReceiverToken;
 }
@@ -236,7 +236,7 @@ export function createPrimitiveReceiverToken(): object {
 
 /** @internal Reuses a direct-child occurrence across layout measurement and paint. */
 export function getChildPrimitiveReceiverToken(
-  transaction: CRCRenderTransaction | undefined,
+  transaction: PibblRenderTransaction | undefined,
   parent: object | undefined,
   occurrence: number,
 ): object {
@@ -260,12 +260,12 @@ export function getChildPrimitiveReceiverToken(
 }
 
 /** @internal Reads the private identity override for a placed element. */
-export function getPlacementIdentityHint<T>(element: CRCElement<any>): T | undefined {
+export function getPlacementIdentityHint<T>(element: PibblElement<any>): T | undefined {
   return elementMetadata.get(element)?.identityHint as T | undefined;
 }
 
 /** @internal Stores the private identity override for a placed element. */
-export function setPlacementIdentityHint<T>(element: CRCElement<any>, value: T): void {
+export function setPlacementIdentityHint<T>(element: PibblElement<any>, value: T): void {
   const current = elementMetadata.get(element) ?? {};
   elementMetadata.set(element, { ...current, identityHint: value });
 }
@@ -280,20 +280,20 @@ export function getOpaquePrimitiveProps(type: Function): readonly string[] | und
 }
 
 /** @internal Marks authored left/top as consumed by a parent layout wrapper. */
-export function setPlacementConsumed(element: CRCElement<any>): void {
+export function setPlacementConsumed(element: PibblElement<any>): void {
   const current = elementMetadata.get(element) ?? {};
   elementMetadata.set(element, { ...current, placementConsumed: true });
 }
 
 /** @internal */
-export function isPlacementConsumed(element: CRCElement<any>): boolean {
+export function isPlacementConsumed(element: PibblElement<any>): boolean {
   return elementMetadata.get(element)?.placementConsumed === true;
 }
 
 
 /** @internal Marks an element created with a forwarded placement style signal. */
 export function setPlacementSignalHandoff(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   style: Readonly<SystemStyle>,
 ): void {
   const current = elementMetadata.get(element) ?? {};
@@ -302,7 +302,7 @@ export function setPlacementSignalHandoff(
 
 /** @internal */
 export function getPlacementSignalHandoffStyle(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
 ): Readonly<SystemStyle> | undefined {
   return elementMetadata.get(element)?.placementSignalHandoff;
 }

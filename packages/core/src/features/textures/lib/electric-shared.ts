@@ -1,7 +1,7 @@
 import type { ElectricSource } from './electric-sources.js';
 import type { LightningMessage, LightningOptions } from './lightning.js';
 import type { TendrilsMessage, TendrilsOptions } from './tendrils.js';
-import type { TextureContext } from "@crc/core";
+import type { TextureContext } from "@pibbl/core";
 import { validateSeed } from "./palette.js";
 
 /**

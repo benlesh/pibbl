@@ -1,5 +1,5 @@
 import type { lifecycleLabScenarioEntry } from './catalog.js';
-import { Layer, Rectangle, Text } from '@crc/core';
+import { Layer, Rectangle, Text } from '@pibbl/core';
 export const LIFECYCLE_LAB_SOURCE_ID = 'event-lifecycle-lab-example';
 /**
  * Supported lifecycle lab runtime values: `"mounted"`, `"aborted"`, `"disposed"`.

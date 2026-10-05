@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
-import { getCRCInstance } from '../global-state';
+import { getPibblInstance } from '../global-state';
 import { useSignal } from '../hooks/use-signal';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
@@ -199,7 +199,7 @@ describe('Polygon', () => {
         }),
       ],
     }));
-    const targets = Array.from(getCRCInstance(canvas.element).eventRoot.targets);
+    const targets = Array.from(getPibblInstance(canvas.element).eventRoot.targets);
 
     expect(targets).toEqual(expect.arrayContaining([
       expect.objectContaining({

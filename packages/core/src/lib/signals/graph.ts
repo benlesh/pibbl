@@ -4,7 +4,7 @@ import type {
   SignalOptions,
   WritableSignal,
 } from './types.js';
-import type { CRCRenderTransaction } from '../types.js';
+import type { PibblRenderTransaction } from '../types.js';
 import {
   beginReactiveCollection,
   collectReactiveDependency,
@@ -69,7 +69,7 @@ export interface SignalNode<T> {
 type SignalRenderProvisionStatus = 'pending' | 'success' | 'failure';
 
 interface SignalRenderProvisionEntry {
-  readonly transaction: CRCRenderTransaction;
+  readonly transaction: PibblRenderTransaction;
   value: unknown;
   status: SignalRenderProvisionStatus;
 }
@@ -78,7 +78,7 @@ interface SignalRenderProvisionState {
   baseValue: unknown;
   readonly entries: SignalRenderProvisionEntry[];
   readonly entriesByTransaction: Map<
-    CRCRenderTransaction,
+    PibblRenderTransaction,
     SignalRenderProvisionEntry
   >;
 }
@@ -387,7 +387,7 @@ export function batch<T>(callback: () => T): T {
     if (notificationFailures.length === 0) throw callbackFailure;
     throw new AggregateError(
       [callbackFailure, ...notificationFailures],
-      'CRC signal batch callback and observer notifications failed.',
+      'Pibbl signal batch callback and observer notifications failed.',
     );
   }
   throwSignalObserverFailures(notificationFailures);
@@ -411,7 +411,7 @@ function flushPublicSignalBatch(state: PublicSignalBatchState): unknown[] {
   } catch (error) {
     if (
       error instanceof AggregateError &&
-      error.message === 'CRC signal observer notifications failed.'
+      error.message === 'Pibbl signal observer notifications failed.'
     ) {
       state.failures.push(...error.errors);
     } else {
@@ -503,7 +503,7 @@ function notifyRendererInvalidationObservers(node: SignalNode<unknown>): unknown
 
 function throwSignalObserverFailures(failures: readonly unknown[]): void {
   if (failures.length > 0) {
-    throw new AggregateError(failures, 'CRC signal observer notifications failed.');
+    throw new AggregateError(failures, 'Pibbl signal observer notifications failed.');
   }
 }
 
@@ -582,7 +582,7 @@ export function signal<T>(
 export function provisionSignalValueForRender<T>(
   value: WritableSignal<T>,
   nextValue: T,
-  transaction: CRCRenderTransaction,
+  transaction: PibblRenderTransaction,
 ): void {
   const node = getSignalNode(value) as SignalNode<unknown>;
   const publishComputedVersion = (next: unknown): void => {
@@ -800,7 +800,7 @@ export function computed<T>(
     const cycle = [...computedStack.slice(start), node as ComputedSignalNode<unknown>]
       .map(computedNode => computedNode.debugName ?? '<computed>')
       .join(' -> ');
-    return new Error(`CRC computed cycle: ${cycle}`);
+    return new Error(`Pibbl computed cycle: ${cycle}`);
   };
 
   const evaluate = (): void => {
@@ -1090,7 +1090,7 @@ export function flushPendingComputedValidations(): void {
         } catch (error) {
           if (
             error instanceof AggregateError &&
-            error.message === 'CRC signal observer notifications failed.'
+            error.message === 'Pibbl signal observer notifications failed.'
           ) {
             failures.push(...error.errors);
           } else {
@@ -1137,11 +1137,11 @@ export function untracked<T>(callback: () => T): T {
 }
 
 /**
- * Checks the nominal CRC signal identity rather than accepting objects that merely have a get
+ * Checks the nominal Pibbl signal identity rather than accepting objects that merely have a get
  * method.
  *
- * @param value - Value to check for CRC's nominal signal brand.
- * @returns True if the value is a CRC signal, narrowing its type accordingly. See {@link Signal}.
+ * @param value - Value to check for Pibbl's nominal signal brand.
+ * @returns True if the value is a Pibbl signal, narrowing its type accordingly. See {@link Signal}.
  *
  * @see {@link Signal}
  */
@@ -1380,7 +1380,7 @@ function requireSignalCommitBatchState(
   batch: SignalCommitBatch,
 ): SignalCommitBatchState {
   const state = signalCommitBatchStates.get(batch);
-  if (!state) throw new TypeError('Expected a CRC signal Commit batch.');
+  if (!state) throw new TypeError('Expected a Pibbl signal Commit batch.');
   return state;
 }
 
@@ -1476,7 +1476,7 @@ export function installSignalWriterLeasePolicy(
   policy: SignalWriterLeasePolicy,
 ): void {
   if (signalWriterLeasePolicy !== undefined && signalWriterLeasePolicy !== policy) {
-    throw new Error('CRC signal writer-lease policy is already installed.');
+    throw new Error('Pibbl signal writer-lease policy is already installed.');
   }
   signalWriterLeasePolicy = policy;
 }

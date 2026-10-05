@@ -22,8 +22,8 @@ test("the first website slice publishes useful HTML and clean Markdown", async (
     assert.doesNotMatch(markdown, /<Demo|import .*\.astro/);
   }
   const start = await readFile(new URL("start/index.html", output), "utf8");
-  assert.match(start, /Build with CRC/);
-  assert.match(start, /Add CRC to your site/);
+  assert.match(start, /Build with Pibbl/);
+  assert.match(start, /Add Pibbl to your site/);
   const recipe = await readFile(
     new URL("guides/native-button.md", output),
     "utf8",

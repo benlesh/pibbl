@@ -6,10 +6,10 @@ import { chromium } from "playwright";
 
 const workspaceRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const update = process.argv.includes("--update");
-const previewPort = process.env.CRC_DIAGRAM_TUTORIAL_PREVIEW_PORT ?? "4175";
+const previewPort = process.env.PIBBL_DIAGRAM_TUTORIAL_PREVIEW_PORT ?? "4175";
 if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
   throw new Error(
-    `CRC_DIAGRAM_TUTORIAL_PREVIEW_PORT must be an integer from 1 through 65535; received ${JSON.stringify(previewPort)}.`,
+    `PIBBL_DIAGRAM_TUTORIAL_PREVIEW_PORT must be an integer from 1 through 65535; received ${JSON.stringify(previewPort)}.`,
   );
 }
 

@@ -14,9 +14,9 @@ import {
   roundedBoxShape2D,
   segmentShape2D,
   wedgeShape2D,
-  type CRCPhysicsDistance2D,
-  type CRCPhysicsPose2D,
-  type CRCPhysicsShape2D,
+  type PibblPhysicsDistance2D,
+  type PibblPhysicsPose2D,
+  type PibblPhysicsShape2D,
 } from '../../../2d-geometry.js';
 import { requireShapeRecord2D } from '../shape-records.js';
 import { manifoldBetweenShapeRecords2D } from './pairs.js';
@@ -53,7 +53,7 @@ describe('standalone 2D collision pairs', () => {
   });
 
   it('preserves signed-distance symmetry for every Task 4 shape family', () => {
-    const shapes: readonly CRCPhysicsShape2D[] = [
+    const shapes: readonly PibblPhysicsShape2D[] = [
       circleShape2D({ radius: 1 }),
       ellipseShape2D({ radiusX: 1.5, radiusY: 0.75, rotationDegrees: 12 }),
       boxShape2D({ width: 2, height: 1 }),
@@ -98,7 +98,7 @@ describe('standalone 2D collision pairs', () => {
 
   it('preserves symmetry across every family pairing in penetrating and near-contact poses', () => {
     const seed = 0x5eed_2d;
-    const shapes: readonly CRCPhysicsShape2D[] = [
+    const shapes: readonly PibblPhysicsShape2D[] = [
       circleShape2D({ radius: 1 }),
       ellipseShape2D({ radiusX: 1.2, radiusY: 0.8, rotationDegrees: 7 }),
       boxShape2D({ width: 2, height: 1.5 }),
@@ -145,8 +145,8 @@ describe('standalone 2D collision pairs', () => {
     for (let firstIndex = 0; firstIndex < shapes.length; firstIndex += 1) {
       for (let secondIndex = 0; secondIndex < shapes.length; secondIndex += 1) {
         const message = `seed=${String(seed)} pair=${String(firstIndex)},${String(secondIndex)}`;
-        let forward: CRCPhysicsDistance2D;
-        let reverse: CRCPhysicsDistance2D;
+        let forward: PibblPhysicsDistance2D;
+        let reverse: PibblPhysicsDistance2D;
         try {
           forward = distanceBetweenShapes2D(shapes[firstIndex]!, firstPose, shapes[secondIndex]!, secondPose);
           reverse = distanceBetweenShapes2D(shapes[secondIndex]!, secondPose, shapes[firstIndex]!, firstPose);
@@ -299,16 +299,16 @@ describe('standalone 2D collision pairs', () => {
 
   it('validates nominal shapes and finite poses before collision work', () => {
     const circle = circleShape2D({ radius: 1 });
-    const malformed = {} as CRCPhysicsShape2D;
+    const malformed = {} as PibblPhysicsShape2D;
     const nonfinite = {
       position: [Number.NaN, 0],
       rotationDegrees: 0,
-    } as CRCPhysicsPose2D;
-    expect(() => containsPoint2D(malformed, identity, [0, 0])).toThrow('shape must be a CRC physics 2D shape');
+    } as PibblPhysicsPose2D;
+    expect(() => containsPoint2D(malformed, identity, [0, 0])).toThrow('shape must be a Pibbl physics 2D shape');
     expect(() => containsPoint2D(circle, identity, [Number.POSITIVE_INFINITY, 0])).toThrow();
     expect(() => distanceBetweenShapes2D(circle, nonfinite, circle, identity)).toThrow();
     expect(() => overlapShapes2D(circle, identity, malformed, identity)).toThrow(
-      'shape must be a CRC physics 2D shape',
+      'shape must be a Pibbl physics 2D shape',
     );
   });
 
@@ -356,7 +356,7 @@ describe('standalone 2D collision pairs', () => {
   });
 });
 
-function expectSymmetric(first: CRCPhysicsDistance2D, second: CRCPhysicsDistance2D, seed: string): void {
+function expectSymmetric(first: PibblPhysicsDistance2D, second: PibblPhysicsDistance2D, seed: string): void {
   expect(second.separation, seed).toBeCloseTo(first.separation, 8);
   expect(second.pointOnFirst[0], seed).toBeCloseTo(first.pointOnSecond[0], 8);
   expect(second.pointOnFirst[1], seed).toBeCloseTo(first.pointOnSecond[1], 8);
@@ -366,7 +366,7 @@ function expectSymmetric(first: CRCPhysicsDistance2D, second: CRCPhysicsDistance
   expect(second.normal[1], seed).toBeCloseTo(-first.normal[1], 8);
 }
 
-function rotateAndTranslate(point: readonly [number, number], pose: CRCPhysicsPose2D): readonly [number, number] {
+function rotateAndTranslate(point: readonly [number, number], pose: PibblPhysicsPose2D): readonly [number, number] {
   const angle = (pose.rotationDegrees * Math.PI) / 180;
   return [
     pose.position[0] + Math.cos(angle) * point[0] - Math.sin(angle) * point[1],

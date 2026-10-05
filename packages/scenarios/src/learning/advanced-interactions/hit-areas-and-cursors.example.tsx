@@ -1,11 +1,11 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Line,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function HitAreaStudy() {
   const hits = useSignal(0);
   const route: [number, number][] = [
@@ -64,6 +64,6 @@ function HitAreaStudy() {
     >{`CLICKS NEAR THE LINE / ${hits.get()}`}</Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <HitAreaStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <HitAreaStudy />);
 }

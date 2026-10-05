@@ -49,10 +49,10 @@ AssertionError [ERR_ASSERTION]: Post-baseline contract docs/design/textures-cont
 
 12 !== 31
 
-    at assertPostBaselineContractPreservation (file:///Users/benlesh/.codex/worktrees/runtime-perf-audit/crc/tooling/docs-contract-preservation.mjs:575:10)
-    at file:///Users/benlesh/.codex/worktrees/runtime-perf-audit/crc/tooling/verify-docs.mjs:2346:5
+    at assertPostBaselineContractPreservation (file:///Users/benlesh/.codex/worktrees/runtime-perf-audit/pibbl/tooling/docs-contract-preservation.mjs:575:10)
+    at file:///Users/benlesh/.codex/worktrees/runtime-perf-audit/pibbl/tooling/verify-docs.mjs:2346:5
     at Array.map (<anonymous>)
-    at file:///Users/benlesh/.codex/worktrees/runtime-perf-audit/crc/tooling/verify-docs.mjs:2345:54 {
+    at file:///Users/benlesh/.codex/worktrees/runtime-perf-audit/pibbl/tooling/verify-docs.mjs:2345:54 {
   generatedMessage: false,
   code: 'ERR_ASSERTION',
   actual: 12,

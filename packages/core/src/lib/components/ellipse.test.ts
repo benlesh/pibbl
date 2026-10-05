@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
-import { getCRCInstance } from '../global-state';
+import { getPibblInstance } from '../global-state';
 import { useSignal } from '../hooks/use-signal';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
@@ -132,7 +132,7 @@ describe('Ellipse', () => {
       (radiusX * Math.sin(rotation)) ** 2 + (radiusY * Math.cos(rotation)) ** 2,
     );
 
-    expect([...getCRCInstance(canvas.element).eventRoot.targets][0]
+    expect([...getPibblInstance(canvas.element).eventRoot.targets][0]
       .keyboardNavigationBounds).toEqual({
       x: cx - halfWidth,
       y: cy - halfHeight,

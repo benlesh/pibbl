@@ -11,7 +11,7 @@ import {
   type Signal,
   type SignalValue,
   type WritableSignal,
-} from '@crc/core';
+} from '@pibbl/core';
 
 export const SIGNALS_LAB_SOURCE_ID = 'first-class-signals-laboratory-example';
 

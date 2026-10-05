@@ -58,7 +58,7 @@ correspondence, shared edges, nonlinear final-space error, and invalid inputs.
 The migrated `path-warp` and `path-bending` suites retain their analytic and
 integration assertions through the supported public constructors.
 
-The `text-envelope` Studio lesson uses `@crc/text` outlines, editable text,
+The `text-envelope` Studio lesson uses `@pibbl/text` outlines, editable text,
 freely draggable guide points, presets, intermediate guides, and composed affine
 placement. It owns its font, controls, overlay host, and pointer captures and
 releases them on disposal. Native controls are demo UI, not a public semantic-DOM API.

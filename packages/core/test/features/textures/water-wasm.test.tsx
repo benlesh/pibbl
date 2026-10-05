@@ -1,10 +1,10 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { crc, Rectangle, useTexture, type Texture } from "@crc/core";
+import { pibbl, Rectangle, useTexture, type Texture } from "@pibbl/core";
 import {
   waterWaves,
   waterSurface,
   type WaterWavesMessage,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 import { waterWaves as referenceWaves } from "../../../../../tooling/texture-wasm-spike/reference-water/water-waves.js";
 import { waterSurface as referenceSurface } from "../../../../../tooling/texture-wasm-spike/reference-water/water-surface.js";
 import {
@@ -74,7 +74,7 @@ for (const [name, factory, reference] of [
     }
     const canvas = document.createElement("canvas");
     document.body.append(canvas);
-    const controller = crc(canvas, <Scene />);
+    const controller = pibbl(canvas, <Scene />);
     const compare = () => {
       const calls = uploads.mock.calls.slice(-2);
       expect(calls).toHaveLength(2);
@@ -91,9 +91,9 @@ for (const [name, factory, reference] of [
         if (frame === 3 || frame === 20)
           for (const handle of handles)
             handle.send({ type: "ripple", x: 0.4, y: 0.6 });
-        if (frame === 30) crc(canvas, <Scene moved viscosity={0.7} />);
+        if (frame === 30) pibbl(canvas, <Scene moved viscosity={0.7} />);
         if (frame === 50)
-          crc(canvas, <Scene moved viscosity={1} seed={456} scale={9} />);
+          pibbl(canvas, <Scene moved viscosity={1} seed={456} scale={9} />);
         if (frame === 60)
           for (const handle of handles)
             handle.send({ type: "pause", paused: true });

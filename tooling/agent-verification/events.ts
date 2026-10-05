@@ -1,4 +1,4 @@
-import type { CRCEvent, CRCEventTarget } from '@crc/core';
+import type { PibblEvent, PibblEventTarget } from '@pibbl/core';
 
 interface EventTraceRecord {
   readonly sequence: number;
@@ -23,17 +23,17 @@ export function createEventTrace({ capacity = 128, pathLimit = 32 }: { capacity?
   if (!Number.isInteger(pathLimit) || pathLimit < 1 || pathLimit > 64) throw new RangeError('Event path limit must be 1..64.');
   const traceId = ++nextTraceId;
   let status: 'recording' | 'stopped' | 'disposed' = 'recording';
-  let targets = new WeakMap<CRCEventTarget, number>();
-  let events = new WeakMap<CRCEvent, number>();
+  let targets = new WeakMap<PibblEventTarget, number>();
+  let events = new WeakMap<PibblEvent, number>();
   let nextTarget = 0; let nextEvent = 0; let invocation = 0;
   let sequence = 0; let count = 0; let cursor = 0;
   const ring: EventTraceRecord[] = [];
-  function identifyTarget(target: CRCEventTarget) {
+  function identifyTarget(target: PibblEventTarget) {
     let id = targets.get(target);
     if (id === undefined) { id = ++nextTarget; targets.set(target, id); }
     return id;
   }
-  function append(event: CRCEvent, label: string, invocationId: number, stage: EventTraceRecord['stage']) {
+  function append(event: PibblEvent, label: string, invocationId: number, stage: EventTraceRecord['stage']) {
     if (status !== 'recording') return;
     let eventId = events.get(event);
     if (eventId === undefined) { eventId = ++nextEvent; events.set(event, eventId); }
@@ -52,7 +52,7 @@ export function createEventTrace({ capacity = 128, pathLimit = 32 }: { capacity?
     ring[cursor] = record; cursor = (cursor + 1) % capacity; count = Math.min(capacity, count + 1);
   }
   return Object.freeze({
-    wrap<E extends CRCEvent, R>(label: string, handler: (event: E) => R): (event: E) => R {
+    wrap<E extends PibblEvent, R>(label: string, handler: (event: E) => R): (event: E) => R {
       if (typeof label !== 'string' || label.length === 0 || label.length > 64) throw new RangeError('Explicit handler label must contain 1..64 characters.');
       return event => {
         if (status !== 'recording') return handler(event);
@@ -70,7 +70,7 @@ export function createEventTrace({ capacity = 128, pathLimit = 32 }: { capacity?
     },
     snapshot() {
       const records = Array.from({ length: count }, (_, index) => ring[(cursor - count + capacity + index) % capacity]);
-      return Object.freeze({ schema: 'crc-event-trace/1', traceId, status, scope: 'wrapped-handlers-only',
+      return Object.freeze({ schema: 'pibbl-event-trace/1', traceId, status, scope: 'wrapped-handlers-only',
         identityScope: 'trace-local', asyncCompletion: 'not-observed', propagationStopReason: 'not-observed',
         capacity, pathLimit, dropped: sequence - count,
         completeness: sequence > count ? 'truncated-history' : 'retained-history',

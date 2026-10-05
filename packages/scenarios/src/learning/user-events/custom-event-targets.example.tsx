@@ -1,13 +1,13 @@
 import {
-  crc,
+  pibbl,
   useEventTarget,
   useConst,
   useSignal,
   Path,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function badgeGeometry(): Path2D {
   const geometry = new Path2D();
   geometry.moveTo(360, 82);
@@ -135,6 +135,6 @@ function CustomEventTargetsStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <CustomEventTargetsStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <CustomEventTargetsStudy />);
 }

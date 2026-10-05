@@ -1,4 +1,4 @@
-import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
+import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
 function MouseOutStudy() {
   const departures = useSignal(0);
   const inside = useSignal(false);
@@ -49,6 +49,6 @@ function MouseOutStudy() {
     >{`DEPARTURES / ${departures.get()}`}</Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <MouseOutStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <MouseOutStudy />);
 }

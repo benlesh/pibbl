@@ -1,15 +1,15 @@
 import { resolveTexturePaint } from '../textures/texture-protocol.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import { useRectPath } from '../hooks/use-rect-path.js';
 import { useReaction } from '../hooks/use-reaction.js';
 import { useSignal } from '../hooks/use-signal.js';
 import type {
-  CRCPhysics2DPropExtension,
+  PibblPhysics2DPropExtension,
   MeasureInput,
   MeasureResult,
   RenderingContext2D,
@@ -28,12 +28,12 @@ import { wireCommonEvents } from '../util/wire-common-events.js';
 /**
  * Authored inputs for Image, including the declared data and presentation options.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
- * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
  * @see {@link Image}
  */
-export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+export interface ImageProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
 interface LoadedImage {
   src: string;
@@ -139,7 +139,7 @@ function renderImage(
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link ImageProps}
  * @see {@link ImgStyle}

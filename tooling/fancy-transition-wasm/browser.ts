@@ -1,6 +1,6 @@
 // @ts-nocheck -- reference modules are supplied by the experiment builder.
 import {
-  crc,
+  pibbl,
   createElement,
   Rectangle,
   embers,
@@ -58,7 +58,7 @@ globalThis.run = () => {
             },
           });
         }
-        const root = crc(canvas, createElement(Scene, {}));
+        const root = pibbl(canvas, createElement(Scene, {}));
         driver.flush(0);
         try {
           for (let frame = 0; frame < 95; frame++) {

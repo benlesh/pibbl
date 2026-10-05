@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
-const origin = process.env.CRC_STUDIO_ORIGIN ?? "http://127.0.0.1:4382";
+const origin = process.env.PIBBL_STUDIO_ORIGIN ?? "http://127.0.0.1:4382";
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({
@@ -61,7 +61,7 @@ try {
   assert.ok((await interval()) > 5, "Reaction must resume independently");
   assert.deepEqual(errors, []);
   await canvas.screenshot({
-    path: "/private/tmp/crc-stirred-studio-canvas.png",
+    path: "/private/tmp/pibbl-stirred-studio-canvas.png",
   });
   console.warn(
     "Studio Stirred Ink: editor, pause, stir, reset, resume, and runtime checks passed.",

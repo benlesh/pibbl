@@ -1,11 +1,11 @@
 import type { defineRenderLayer } from './define-render-layer.js';
-import type { CRCComponent } from "../element/types.js";
+import type { PibblComponent } from "../element/types.js";
 import type { LayoutBox } from "../layout/types.js";
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
-  CRCPointerEvents,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
+  PibblPointerEvents,
 } from "../events/types.js";
 import type { BoxStyle, LayoutItemStyle } from "../style/types.js";
 import type { SystemStyle } from "../types.js";
@@ -14,33 +14,33 @@ import type { SystemStyle } from "../types.js";
  * Logical surface size, backing-store dimensions, and effective pixel ratios of an external render
  * layer.
  *
- * @see {@link CRCRenderLayerDefinition}
- * @see {@link CRCRenderLayerContext}
- * @see {@link CRCRenderLayerInteraction}
+ * @see {@link PibblRenderLayerDefinition}
+ * @see {@link PibblRenderLayerContext}
+ * @see {@link PibblRenderLayerInteraction}
  */
-export interface CRCRenderLayerSize {
+export interface PibblRenderLayerSize {
   /**
    * Horizontal extent in the units of the containing geometry or surface. See
-   * {@link CRCRenderLayerSize}.
+   * {@link PibblRenderLayerSize}.
    */
   readonly width: number;
   /**
    * Vertical extent in the units of the containing geometry or surface. See
-   * {@link CRCRenderLayerSize}.
+   * {@link PibblRenderLayerSize}.
    */
   readonly height: number;
-  /** Width of the backing raster in physical pixels. See {@link CRCRenderLayerSize}. */
+  /** Width of the backing raster in physical pixels. See {@link PibblRenderLayerSize}. */
   readonly backingWidth: number;
-  /** Height of the backing raster in physical pixels. See {@link CRCRenderLayerSize}. */
+  /** Height of the backing raster in physical pixels. See {@link PibblRenderLayerSize}. */
   readonly backingHeight: number;
   /**
    * Effective ratio of backing pixels to logical units on the x axis. See
-   * {@link CRCRenderLayerSize}.
+   * {@link PibblRenderLayerSize}.
    */
   readonly pixelRatioX: number;
   /**
    * Effective ratio of backing pixels to logical units on the y axis. See
-   * {@link CRCRenderLayerSize}.
+   * {@link PibblRenderLayerSize}.
    */
   readonly pixelRatioY: number;
 }
@@ -48,34 +48,34 @@ export interface CRCRenderLayerSize {
 /**
  * Shared scheduler timing and invalidation supplied to an external renderer for one frame.
  *
- * @see {@link CRCRenderLayerDefinition}
+ * @see {@link PibblRenderLayerDefinition}
  */
-export interface CRCRenderLayerFrame {
-  /** Identifier of the shared scheduler frame. See {@link CRCRenderLayerFrame}. */
+export interface PibblRenderLayerFrame {
+  /** Identifier of the shared scheduler frame. See {@link PibblRenderLayerFrame}. */
   readonly frameId: number;
-  /** Current shared logical time in milliseconds. See {@link CRCRenderLayerFrame}. */
+  /** Current shared logical time in milliseconds. See {@link PibblRenderLayerFrame}. */
   readonly time: number;
-  /** Elapsed frame time in milliseconds. See {@link CRCRenderLayerFrame}. */
+  /** Elapsed frame time in milliseconds. See {@link PibblRenderLayerFrame}. */
   readonly delta: number;
-  /** Elapsed frame time in seconds. See {@link CRCRenderLayerFrame}. */
+  /** Elapsed frame time in seconds. See {@link PibblRenderLayerFrame}. */
   readonly deltaSeconds: number;
-  /** Requests another CRC render through the shared scheduler. See {@link CRCRenderLayerFrame}. */
+  /** Requests another Pibbl render through the shared scheduler. See {@link PibblRenderLayerFrame}. */
   invalidate(): void;
 }
 
 /**
- * The CRC-owned offscreen canvas, current size, and frame-invalidation capability.
+ * The Pibbl-owned offscreen canvas, current size, and frame-invalidation capability.
  *
- * @see {@link CRCRenderLayerSize}
- * @see {@link CRCRenderLayerDefinition}
+ * @see {@link PibblRenderLayerSize}
+ * @see {@link PibblRenderLayerDefinition}
  */
-export interface CRCRenderLayerContext {
-  /** Canvas surface associated with this resource or mount. See {@link CRCRenderLayerContext}. */
+export interface PibblRenderLayerContext {
+  /** Canvas surface associated with this resource or mount. See {@link PibblRenderLayerContext}. */
   readonly canvas: OffscreenCanvas;
-  /** Current logical dimensions, backing-store dimensions, and effective pixel ratios. See {@link CRCRenderLayerSize}. */
-  readonly size: CRCRenderLayerSize;
+  /** Current logical dimensions, backing-store dimensions, and effective pixel ratios. See {@link PibblRenderLayerSize}. */
+  readonly size: PibblRenderLayerSize;
   /**
-   * Requests another CRC render through the shared scheduler. See {@link CRCRenderLayerContext}.
+   * Requests another Pibbl render through the shared scheduler. See {@link PibblRenderLayerContext}.
    */
   invalidate(): void;
 }
@@ -86,66 +86,66 @@ export interface CRCRenderLayerContext {
  * @see {@link SystemStyle}
  * @see {@link BoxStyle}
  * @see {@link LayoutItemStyle}
- * @see {@link CRCRenderLayerComponentProps}
+ * @see {@link PibblRenderLayerComponentProps}
  */
-export interface CRCRenderLayerStyle
+export interface PibblRenderLayerStyle
   extends SystemStyle, BoxStyle, LayoutItemStyle {}
 
 /**
  * A hit-test decision: pass through, block lower paint, or select one logical target.
  *
- * @see {@link CRCRenderLayerInput}
- * @see {@link CRCRenderLayerInteractionSnapshot}
+ * @see {@link PibblRenderLayerInput}
+ * @see {@link PibblRenderLayerInteractionSnapshot}
  */
-export type CRCRenderLayerHit<Target extends object> =
+export type PibblRenderLayerHit<Target extends object> =
   | {
-      /** Selects the kind of geometry, material, or result. See {@link CRCRenderLayerHit}. */
+      /** Selects the kind of geometry, material, or result. See {@link PibblRenderLayerHit}. */
       readonly kind: "miss";
     }
   | {
-      /** Selects the kind of geometry, material, or result. See {@link CRCRenderLayerHit}. */
+      /** Selects the kind of geometry, material, or result. See {@link PibblRenderLayerHit}. */
       readonly kind: "block";
     }
   | {
-      /** Selects the kind of geometry, material, or result. See {@link CRCRenderLayerHit}. */
+      /** Selects the kind of geometry, material, or result. See {@link PibblRenderLayerHit}. */
       readonly kind: "target";
-      /** The selected logical target or target configuration. See {@link CRCRenderLayerHit}. */
+      /** The selected logical target or target configuration. See {@link PibblRenderLayerHit}. */
       readonly target: Target;
     };
 
 /**
  * Stable target identity with event, cursor, and keyboard-focus metadata.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCPointerEvents}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblPointerEvents}
  * @see {@link LayoutBox}
- * @see {@link CRCRenderLayerInteractionSnapshot}
+ * @see {@link PibblRenderLayerInteractionSnapshot}
  */
-export interface CRCRenderLayerTarget<Target extends object> {
-  /** The selected logical target or target configuration. See {@link CRCRenderLayerTarget}. */
+export interface PibblRenderLayerTarget<Target extends object> {
+  /** The selected logical target or target configuration. See {@link PibblRenderLayerTarget}. */
   readonly target: Target;
-  /** Event handlers dispatched for this logical target. See {@link CRCEventHandlers}. */
-  readonly handlers?: CRCEventHandlers;
-  /** Whether this content participates in pointer targeting. See {@link CRCPointerEvents}. */
-  readonly pointerEvents?: CRCPointerEvents;
-  /** Cursor shown while this target owns pointer presentation. See {@link CRCRenderLayerTarget}. */
+  /** Event handlers dispatched for this logical target. See {@link PibblEventHandlers}. */
+  readonly handlers?: PibblEventHandlers;
+  /** Whether this content participates in pointer targeting. See {@link PibblPointerEvents}. */
+  readonly pointerEvents?: PibblPointerEvents;
+  /** Cursor shown while this target owns pointer presentation. See {@link PibblRenderLayerTarget}. */
   readonly cursor?: string;
-  /** Whether the target may receive keyboard focus. See {@link CRCRenderLayerTarget}. */
+  /** Whether the target may receive keyboard focus. See {@link PibblRenderLayerTarget}. */
   readonly keyboardFocusable?: boolean;
   /** Logical rectangle used for directional keyboard navigation. See {@link LayoutBox}. */
   readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
 }
 
 /**
- * CRC-routed pointer input in layer-local coordinates with pointer-capture operations.
+ * Pibbl-routed pointer input in layer-local coordinates with pointer-capture operations.
  *
- * @see {@link CRCRenderLayerHit}
- * @see {@link CRCRenderLayerInteractionSnapshot}
+ * @see {@link PibblRenderLayerHit}
+ * @see {@link PibblRenderLayerInteractionSnapshot}
  */
-export interface CRCRenderLayerInput<Target extends object> {
+export interface PibblRenderLayerInput<Target extends object> {
   /**
    * Selects `"pointerdown"` , `"pointermove"` , `"pointerup"` , `"pointercancel"` , `"wheel"` ,
-   * `"contextmenu"` , `"click"` for type. See {@link CRCRenderLayerInput}.
+   * `"contextmenu"` , `"click"` for type. See {@link PibblRenderLayerInput}.
    */
   readonly type:
     | "pointerdown"
@@ -157,32 +157,32 @@ export interface CRCRenderLayerInput<Target extends object> {
     | "click";
   /**
    * Pointer position in the external layer's logical local coordinates. See
-   * {@link CRCRenderLayerInput}.
+   * {@link PibblRenderLayerInput}.
    */
   readonly point: Readonly<{
     /**
      * Horizontal coordinate or displacement in the containing coordinate system. See
-     * {@link CRCRenderLayerInput}.
+     * {@link PibblRenderLayerInput}.
      */
     x: number;
     /**
      * Vertical coordinate or displacement in the containing coordinate system. See
-     * {@link CRCRenderLayerInput}.
+     * {@link PibblRenderLayerInput}.
      */
     y: number;
   }>;
-  /** Target, block, or miss decision associated with the input. See {@link CRCRenderLayerHit}. */
-  readonly hit: CRCRenderLayerHit<Target>;
-  /** The originating browser event. See {@link CRCRenderLayerInput}. */
+  /** Target, block, or miss decision associated with the input. See {@link PibblRenderLayerHit}. */
+  readonly hit: PibblRenderLayerHit<Target>;
+  /** The originating browser event. See {@link PibblRenderLayerInput}. */
   readonly originalEvent: PointerEvent | WheelEvent | MouseEvent;
   /**
    * Captures the pointer for this logical target until release or cancellation. See
-   * {@link CRCRenderLayerInput}.
+   * {@link PibblRenderLayerInput}.
    * @param pointerId - Pointer identifier from the routed pointer event.
    */
   setPointerCapture(pointerId: number): void;
   /**
-   * Releases this target's capture of the identified pointer. See {@link CRCRenderLayerInput}.
+   * Releases this target's capture of the identified pointer. See {@link PibblRenderLayerInput}.
    * @param pointerId - Pointer identifier from the routed pointer event.
    */
   releasePointerCapture(pointerId: number): void;
@@ -191,84 +191,84 @@ export interface CRCRenderLayerInput<Target extends object> {
 /**
  * Targets and hit testing committed atomically with one rendered bitmap generation.
  *
- * @see {@link CRCRenderLayerTarget}
- * @see {@link CRCRenderLayerHit}
- * @see {@link CRCRenderLayerInput}
- * @see {@link CRCRenderLayerInteraction}
+ * @see {@link PibblRenderLayerTarget}
+ * @see {@link PibblRenderLayerHit}
+ * @see {@link PibblRenderLayerInput}
+ * @see {@link PibblRenderLayerInteraction}
  */
-export interface CRCRenderLayerInteractionSnapshot<Target extends object> {
-  /** Logical targets exposed by this committed generation. See {@link CRCRenderLayerTarget}. */
-  readonly targets: Iterable<CRCRenderLayerTarget<Target>>;
+export interface PibblRenderLayerInteractionSnapshot<Target extends object> {
+  /** Logical targets exposed by this committed generation. See {@link PibblRenderLayerTarget}. */
+  readonly targets: Iterable<PibblRenderLayerTarget<Target>>;
   /**
    * Resolves a layer-local point to a target, block, or miss decision. See
-   * {@link CRCRenderLayerHit}.
+   * {@link PibblRenderLayerHit}.
    * @param point - Pointer position in layer-local logical coordinates.
    * @returns A target hit, a blocking hit, or a miss for this interaction generation. See
-   * {@link CRCRenderLayerHit} .
+   * {@link PibblRenderLayerHit} .
    */
   hitTest(
     point: Readonly<{
       /**
        * Horizontal coordinate or displacement in the containing coordinate system. See
-       * {@link CRCRenderLayerInteractionSnapshot}.
+       * {@link PibblRenderLayerInteractionSnapshot}.
        */
       x: number;
       /**
        * Vertical coordinate or displacement in the containing coordinate system. See
-       * {@link CRCRenderLayerInteractionSnapshot}.
+       * {@link PibblRenderLayerInteractionSnapshot}.
        */
       y: number;
     }>,
-  ): CRCRenderLayerHit<Target>;
+  ): PibblRenderLayerHit<Target>;
   /**
-   * Receives CRC-routed input for this committed interaction generation. See
-   * {@link CRCRenderLayerInteractionSnapshot}.
-   * @param input - CRC-routed input for the committed interaction generation. See
-   * {@link CRCRenderLayerInput} .
+   * Receives Pibbl-routed input for this committed interaction generation. See
+   * {@link PibblRenderLayerInteractionSnapshot}.
+   * @param input - Pibbl-routed input for the committed interaction generation. See
+   * {@link PibblRenderLayerInput} .
    */
-  onInput?(input: Readonly<CRCRenderLayerInput<Target>>): void;
+  onInput?(input: Readonly<PibblRenderLayerInput<Target>>): void;
 }
 
 /**
  * Settles renderer resources into the interaction snapshot for a committed generation.
  *
- * @see {@link CRCRenderLayerSize}
- * @see {@link CRCRenderLayerInteractionSnapshot}
- * @see {@link CRCRenderLayerDefinition}
+ * @see {@link PibblRenderLayerSize}
+ * @see {@link PibblRenderLayerInteractionSnapshot}
+ * @see {@link PibblRenderLayerDefinition}
  */
-export interface CRCRenderLayerInteraction<Props, Resources, Target extends object> {
+export interface PibblRenderLayerInteraction<Props, Resources, Target extends object> {
   /**
    * Captures interaction state corresponding to the generation being committed. See
-   * {@link CRCRenderLayerInteractionSnapshot}.
+   * {@link PibblRenderLayerInteractionSnapshot}.
    * @param resources - Resources representing the rendered scene.
    * @param props - Props used for the committed render.
    * @param size - Logical and backing dimensions for this generation. See
-   * {@link CRCRenderLayerSize} .
+   * {@link PibblRenderLayerSize} .
    * @returns The interaction snapshot to commit together with the rendered bitmap. See
-   * {@link CRCRenderLayerInteractionSnapshot} .
+   * {@link PibblRenderLayerInteractionSnapshot} .
    */
   settle(
     resources: Resources,
     props: Readonly<Props>,
-    size: Readonly<CRCRenderLayerSize>,
-  ): CRCRenderLayerInteractionSnapshot<Target>;
+    size: Readonly<PibblRenderLayerSize>,
+  ): PibblRenderLayerInteractionSnapshot<Target>;
 }
 
 /**
- * CRC-owned style, event, focus, and miss-handling props shared by external layers.
+ * Pibbl-owned style, event, focus, and miss-handling props shared by external layers.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
- * @see {@link CRCRenderLayerStyle}
- * @see {@link CRCRenderLayerProps}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblRenderLayerStyle}
+ * @see {@link PibblRenderLayerProps}
  */
-export interface CRCRenderLayerComponentProps
-  extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {
-  /** Declared presentation and layout properties. See {@link CRCRenderLayerStyle}. */
-  readonly style?: CRCRenderLayerStyle;
+export interface PibblRenderLayerComponentProps
+  extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions {
+  /** Declared presentation and layout properties. See {@link PibblRenderLayerStyle}. */
+  readonly style?: PibblRenderLayerStyle;
   /**
    * How a layer miss participates in arbitration with lower painted content. See
-   * {@link CRCRenderLayerComponentProps}.
+   * {@link PibblRenderLayerComponentProps}.
    */
   readonly missBehavior?: "pass-through" | "block" | "target-layer";
 }
@@ -277,104 +277,104 @@ export interface CRCRenderLayerComponentProps
  * Resource creation, update, resizing, rendering, disposal, and interaction lifecycle of an
  * external layer.
  *
- * @see {@link CRCRenderLayerContext}
- * @see {@link CRCRenderLayerSize}
- * @see {@link CRCRenderLayerFrame}
- * @see {@link CRCRenderLayerInteraction}
+ * @see {@link PibblRenderLayerContext}
+ * @see {@link PibblRenderLayerSize}
+ * @see {@link PibblRenderLayerFrame}
+ * @see {@link PibblRenderLayerInteraction}
  * @see {@link defineRenderLayer}
  */
-export interface CRCRenderLayerDefinition<
+export interface PibblRenderLayerDefinition<
   Props,
   Resources,
   Target extends object = object,
 > {
   /**
    * Allocates application resources once for this mounted layer identity. See
-   * {@link CRCRenderLayerDefinition}.
+   * {@link PibblRenderLayerDefinition}.
    * @param context - Mount-owned canvas, size, and invalidation services. See
-   * {@link CRCRenderLayerContext} .
+   * {@link PibblRenderLayerContext} .
    * @param initialProps - Props supplied for the first mounted render.
    * @returns Persistent application resources retained until dispose.
    */
   create(
-    context: Readonly<CRCRenderLayerContext>,
+    context: Readonly<PibblRenderLayerContext>,
     initialProps: Readonly<Props>,
   ): Resources;
   /**
    * Applies the latest props to existing resources before rendering. See
-   * {@link CRCRenderLayerDefinition}.
+   * {@link PibblRenderLayerDefinition}.
    * @param resources - Resources previously returned by create.
    * @param props - Latest component props.
    * @param context - Mount-owned canvas, size, and invalidation services. See
-   * {@link CRCRenderLayerContext} .
+   * {@link PibblRenderLayerContext} .
    */
   update?(
     resources: Resources,
     props: Readonly<Props>,
-    context: Readonly<CRCRenderLayerContext>,
+    context: Readonly<PibblRenderLayerContext>,
   ): void;
   /**
    * Adjusts resources to the newly resolved logical and backing-store dimensions. See
-   * {@link CRCRenderLayerDefinition}.
+   * {@link PibblRenderLayerDefinition}.
    * @param resources - Resources previously returned by create.
-   * @param size - New logical and backing dimensions. See {@link CRCRenderLayerSize}.
+   * @param size - New logical and backing dimensions. See {@link PibblRenderLayerSize}.
    * @param context - Mount-owned canvas, size, and invalidation services. See
-   * {@link CRCRenderLayerContext} .
+   * {@link PibblRenderLayerContext} .
    */
   resize?(
     resources: Resources,
-    size: Readonly<CRCRenderLayerSize>,
-    context: Readonly<CRCRenderLayerContext>,
+    size: Readonly<PibblRenderLayerSize>,
+    context: Readonly<PibblRenderLayerContext>,
   ): void;
   /**
-   * Draws this generation using CRC's frame; invalidate only when another frame is needed. See
-   * {@link CRCRenderLayerDefinition}.
+   * Draws this generation using Pibbl's frame; invalidate only when another frame is needed. See
+   * {@link PibblRenderLayerDefinition}.
    * @param resources - Resources previously returned by create.
-   * @param frame - Shared CRC frame timing and invalidation service. See
-   * {@link CRCRenderLayerFrame} .
+   * @param frame - Shared Pibbl frame timing and invalidation service. See
+   * {@link PibblRenderLayerFrame} .
    * @param context - Mount-owned canvas, size, and invalidation services. See
-   * {@link CRCRenderLayerContext} .
+   * {@link PibblRenderLayerContext} .
    */
   render(
     resources: Resources,
-    frame: Readonly<CRCRenderLayerFrame>,
-    context: Readonly<CRCRenderLayerContext>,
+    frame: Readonly<PibblRenderLayerFrame>,
+    context: Readonly<PibblRenderLayerContext>,
   ): void;
   /**
    * Releases application resources when the mounted layer is torn down. See
-   * {@link CRCRenderLayerDefinition}.
+   * {@link PibblRenderLayerDefinition}.
    * @param resources - Resources previously returned by create, whose application-owned resources
    * must be released.
    * @param context - Mount-owned context for this resource lifetime. See
-   * {@link CRCRenderLayerContext} .
+   * {@link PibblRenderLayerContext} .
    */
-  dispose?(resources: Resources, context: Readonly<CRCRenderLayerContext>): void;
+  dispose?(resources: Resources, context: Readonly<PibblRenderLayerContext>): void;
   /**
    * Builds the interaction snapshot committed with the rendered bitmap. See
-   * {@link CRCRenderLayerInteraction}.
+   * {@link PibblRenderLayerInteraction}.
    */
-  interaction?: CRCRenderLayerInteraction<Props, Resources, Target>;
+  interaction?: PibblRenderLayerInteraction<Props, Resources, Target>;
 }
 
-type CRCRenderLayerReservedProp =
+type PibblRenderLayerReservedProp =
   | "key"
   | "style"
   | "missBehavior"
-  | keyof CRCEventHandlers
-  | keyof CRCEventFocusOptions
-  | keyof CRCEventParticipationOptions;
+  | keyof PibblEventHandlers
+  | keyof PibblEventFocusOptions
+  | keyof PibblEventParticipationOptions;
 
 /**
- * Application props combined with layer props; reserved CRC prop collisions are rejected.
+ * Application props combined with layer props; reserved Pibbl prop collisions are rejected.
  *
- * @see {@link CRCRenderLayerComponentProps}
+ * @see {@link PibblRenderLayerComponentProps}
  * @see {@link defineRenderLayer}
  */
-export type CRCRenderLayerProps<Props> =
-  Extract<keyof Props, CRCRenderLayerReservedProp> extends never
-    ? Props & CRCRenderLayerComponentProps
+export type PibblRenderLayerProps<Props> =
+  Extract<keyof Props, PibblRenderLayerReservedProp> extends never
+    ? Props & PibblRenderLayerComponentProps
     : never;
 
-export type CRCRenderLayerComponent<Props> = CRCComponent<
-  CRCRenderLayerProps<Props>
+export type PibblRenderLayerComponent<Props> = PibblComponent<
+  PibblRenderLayerProps<Props>
 >;

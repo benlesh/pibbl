@@ -9,8 +9,8 @@
     "noEmitOnError": true,
     "outDir": "./dist",
     "paths": {
-      "@crc/core": ["./src/index.ts"],
-      "@crc/core/internal": ["./src/internal.ts"]
+      "@pibbl/core": ["./src/index.ts"],
+      "@pibbl/core/internal": ["./src/internal.ts"]
     },
     "rootDir": "./src",
     "types": []

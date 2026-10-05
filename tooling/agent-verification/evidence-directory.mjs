@@ -10,13 +10,13 @@ export async function reserveEvidenceDirectory(output) {
     throw new Error('Evidence directory is nonempty; choose a fresh output directory.');
   }
   const reservation = {
-    schema: 'crc-evidence-reservation/1',
+    schema: 'pibbl-evidence-reservation/1',
     id: randomUUID(),
     createdAt: new Date().toISOString(),
     meaning: 'persistent-reservation-not-liveness',
   };
   try {
-    await writeFile(resolve(output, '.crc-evidence-reservation.json'), JSON.stringify(reservation, null, 2), { flag: 'wx' });
+    await writeFile(resolve(output, '.pibbl-evidence-reservation.json'), JSON.stringify(reservation, null, 2), { flag: 'wx' });
   } catch (error) {
     if (error.code === 'EEXIST') throw new Error('Evidence directory is already reserved; choose a fresh output directory.', { cause: error });
     throw error;

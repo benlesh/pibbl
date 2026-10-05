@@ -1,6 +1,6 @@
 # Website brief and decisions
 
-The website should make CRC understandable quickly, demonstrate why someone would choose it, and make experimentation one click away. Content rewrite, product restructuring, and visual redesign are separate workstreams with explicit handoffs.
+The website should make Pibbl understandable quickly, demonstrate why someone would choose it, and make experimentation one click away. Content rewrite, product restructuring, and visual redesign are separate workstreams with explicit handoffs.
 
 ## Requirements from Ben
 
@@ -9,7 +9,7 @@ The website should make CRC understandable quickly, demonstrate why someone woul
 - Keep API reference focused on basic API information, useful snippets, and Try in playground actions.
 - Organize the API clearly; propose a navigable structure rather than only rearranging the current list.
 - Create a gallery of example screenshots and names. A card opens the example; both card and example page offer Open in playground.
-- Completely rethink the homepage pitch and presentation. It should tastefully demonstrate HTML, Canvas, physics, reaction-diffusion, and broader CRC capabilities.
+- Completely rethink the homepage pitch and presentation. It should tastefully demonstrate HTML, Canvas, physics, reaction-diffusion, and broader Pibbl capabilities.
 - Develop a large idea bank, prioritizing usefulness and visual impact across small lessons, games, HTML combinations, dashboards, visualization, product pages, scenes, and WebGL compositions.
 - Keep the planning pack together in the repository so Jessica can work there or receive a ZIP. Visual design may use her Claude Design workflow later.
 
@@ -26,7 +26,7 @@ Make agent discovery and comprehensive task guidance central. Document every pub
 | Public sections    | Home, Learn, API, Examples, Playground                             | Each has one recognizable job                                                          |
 | API navigation     | Group by capability; retain symbol index and symbol search         | Readers think “animation” before “function versus hook”                                |
 | Example types      | Focused examples and showcases                                     | A tiny teaching contract and a complete art-directed scene need different expectations |
-| Authoring default  | TypeScript and CRC JSX                                             | Matches current learning sources; preserve a clear non-JSX guide                       |
+| Authoring default  | TypeScript and Pibbl JSX                                           | Matches current learning sources; preserve a clear non-JSX guide                       |
 | Gallery order      | Curated useful and visually strong work first                      | Avoid an alphabetical wall of primitives                                               |
 | Example pages      | Preview first, short explanation, source access, playground action | Browsing should not require entering an IDE                                            |
 | Playground storage | Memory while editing; explicit URL or ZIP export                   | Honors no persistence; makes the loss boundary understandable                          |
@@ -39,7 +39,7 @@ These recommendations are not approved implementation choices. In particular, pr
 
 These do not block this planning pack.
 
-1. Who should feel addressed first: frontend developers adding expressive interactions, creative developers, or application/tool builders? The October 4 direction prioritizes agents implementing CRC correctly while retaining a clear human reading path; refine the human audience within that constraint.
+1. Who should feel addressed first: frontend developers adding expressive interactions, creative developers, or application/tool builders? The October 4 direction prioritizes agents implementing Pibbl correctly while retaining a clear human reading path; refine the human audience within that constraint.
 2. Should the main invitation be “Explore examples” or “Open playground”? Recommend examples for first-time visitors and a persistent playground link for returning developers.
 3. How much editor scope belongs in the first release? Recommend enough editable TSX, HTML, CSS, and local assets to run the chosen launch examples, without a terminal or arbitrary package installation.
 4. Should URL projects replay against a pinned runtime indefinitely? Recommend a clearly stated compatibility policy before promising durable snapshots.
@@ -48,6 +48,6 @@ These do not block this planning pack.
 
 ## Explicit scope boundaries
 
-This phase produces documentation and candidate directions. It does not replace the site, rewrite examples, ship a new playground, choose a visual system, or authorize new CRC APIs. No accounts, database, cloud saves, project feed, or collaboration backend are proposed for the initial playground.
+This phase produces documentation and candidate directions. It does not replace the site, rewrite examples, ship a new playground, choose a visual system, or authorize new Pibbl APIs. No accounts, database, cloud saves, project feed, or collaboration backend are proposed for the initial playground.
 
 ZIP import, arbitrary dependencies, additional editor themes, and advanced workspace features may be useful later. They should not delay the core path from example to editable preview to portable output.

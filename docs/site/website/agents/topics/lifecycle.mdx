@@ -1,6 +1,6 @@
 ---
 title: Agent guide - authoring, signals, and lifecycle
-description: Build a valid CRC tree, preserve identity, synchronize host state, and dispose exactly once.
+description: Build a valid Pibbl tree, preserve identity, synchronize host state, and dispose exactly once.
 kind: agent-guide
 sources:
   - packages/scenarios/src/learning/start/signals.example.tsx
@@ -8,13 +8,13 @@ sources:
 
 ## Task and reading order
 
-Use this topic when mounting CRC, integrating a host framework, debugging state resets, or managing imperative resources. First read [installation and authoring](/start/), [state and lifecycle](/guides/state-and-lifecycle/), and the exact [crc contract](/reference/functions/crc/). For an HTML-owned application, also read the [native-button integration](/guides/native-button/).
+Use this topic when mounting Pibbl, integrating a host framework, debugging state resets, or managing imperative resources. First read [installation and authoring](/start/), [state and lifecycle](/guides/state-and-lifecycle/), and the exact [pibbl contract](/reference/functions/pibbl/). For an HTML-owned application, also read the [native-button integration](/guides/native-button/).
 
-Do not infer compatibility from syntax resembling React. CRC components are synchronous functions returning CRC nodes. CRC and React have different elements, hooks, and JSX runtimes. Use one JSX runtime per file or explicit `createElement` at a mixed-runtime boundary. The [React host guide](/guides/react-integration/) shows the lifecycle split.
+Do not infer compatibility from syntax resembling React. Pibbl components are synchronous functions returning Pibbl nodes. Pibbl and React have different elements, hooks, and JSX runtimes. Use one JSX runtime per file or explicit `createElement` at a mixed-runtime boundary. The [React host guide](/guides/react-integration/) shows the lifecycle split.
 
 ## Ownership and identity
 
-The host owns the canvas DOM node, CSS, and the returned controller. CRC owns the live mount and its component/hook resources. Retain the controller and dispose it before the host is removed. Repeated `crc` calls on the same live canvas replace the root on the scheduler and return the same controller; they do not replace mount-time viewport, fit, density, or AbortSignal configuration.
+The host owns the canvas DOM node, CSS, and the returned controller. Pibbl owns the live mount and its component/hook resources. Retain the controller and dispose it before the host is removed. Repeated `pibbl` calls on the same live canvas replace the root on the scheduler and return the same controller; they do not replace mount-time viewport, fit, density, or AbortSignal configuration.
 
 Component identity depends on parent scope, function identity, key, and same-type occurrence. Define stable component functions outside the rendering function that uses them. Keys preserve same-parent reorder; they cannot preserve a component across reparenting. A changed function or key is a lifetime change, not a styling update. Call hooks in the same order and count every successful render.
 
@@ -39,7 +39,7 @@ Failed evaluation preserves the previous successful dependency generation and re
 
 ## Complete example and adaptation
 
-The source below is the existing Signals lesson. Compile it with `jsx: "react-jsx"` and `jsxImportSource: "@crc/core"`, attach a canvas with width 720 and height 420, then call its default `mount(canvas)`. Keep its returned controller. The lesson's module-level signals deliberately outlive one mount; move state into `useSignal` when each instance should start independently.
+The source below is the existing Signals lesson. Compile it with `jsx: "react-jsx"` and `jsxImportSource: "@pibbl/core"`, attach a canvas with width 720 and height 420, then call its default `mount(canvas)`. Keep its returned controller. The lesson's module-level signals deliberately outlive one mount; move state into `useSignal` when each instance should start independently.
 
 [Open the Signals lesson](@PLAYGROUND@#/examples/start/signals) through Studio's existing route. For the underlying API, use [signal](/reference/functions/signal/), [useSignal](/reference/hooks/use-signal/), [computed](/reference/functions/computed/), and [useReaction](/reference/hooks/use-reaction/).
 

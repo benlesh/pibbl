@@ -1,16 +1,16 @@
 import type {
-  CRCPhysicsContactPoint2D,
-  CRCPhysicsVector2,
+  PibblPhysicsContactPoint2D,
+  PibblPhysicsVector2,
 } from "../../../2d-geometry.js";
 import type {
-  CRCPhysicsBodyHandle2D,
-  CRCPhysicsBodyStateEvent2D,
-  CRCPhysicsBodyStateHandler2D,
-  CRCPhysicsColliderHandle2D,
-  CRCPhysicsCollisionEvent2D,
-  CRCPhysicsCollisionHandler2D,
-  CRCPhysicsOverlapEvent2D,
-  CRCPhysicsOverlapHandler2D,
+  PibblPhysicsBodyHandle2D,
+  PibblPhysicsBodyStateEvent2D,
+  PibblPhysicsBodyStateHandler2D,
+  PibblPhysicsColliderHandle2D,
+  PibblPhysicsCollisionEvent2D,
+  PibblPhysicsCollisionHandler2D,
+  PibblPhysicsOverlapEvent2D,
+  PibblPhysicsOverlapHandler2D,
 } from "../types.js";
 import type { PhysicsWorld2DController } from "./controller.js";
 
@@ -34,7 +34,7 @@ export interface PhysicsContactEventDelivery2D {
   readonly receiver: "first" | "second";
   readonly receiverColliderId: number;
   readonly receiverBodyId: number;
-  readonly handler: CRCPhysicsCollisionHandler2D | CRCPhysicsOverlapHandler2D;
+  readonly handler: PibblPhysicsCollisionHandler2D | PibblPhysicsOverlapHandler2D;
   readonly selfTag: unknown;
   readonly otherTag: unknown;
   readonly normalX: number;
@@ -55,7 +55,7 @@ export interface PhysicsBodyEventDelivery2D {
   readonly bodyIndex: number;
   readonly bodyGeneration: number;
   readonly bodyId: number;
-  readonly handler: CRCPhysicsBodyStateHandler2D;
+  readonly handler: PibblPhysicsBodyStateHandler2D;
 }
 
 export type PhysicsEventDelivery2D =
@@ -68,11 +68,11 @@ export function isPhysicsBodyEventDelivery2D(
 }
 
 export interface PhysicsEventHandles2D {
-  readonly body: (index: number, generation: number) => CRCPhysicsBodyHandle2D;
+  readonly body: (index: number, generation: number) => PibblPhysicsBodyHandle2D;
   readonly collider: (
     index: number,
     generation: number,
-  ) => CRCPhysicsColliderHandle2D;
+  ) => PibblPhysicsColliderHandle2D;
 }
 
 const colliderHandleIdentities = new WeakMap<
@@ -85,8 +85,8 @@ export function createPhysicsColliderHandle2D(
   controller: PhysicsWorld2DController,
   index: number,
   generation: number,
-): CRCPhysicsColliderHandle2D {
-  const handle = Object.freeze({}) as CRCPhysicsColliderHandle2D;
+): PibblPhysicsColliderHandle2D {
+  const handle = Object.freeze({}) as PibblPhysicsColliderHandle2D;
   colliderHandleIdentities.set(
     handle as object,
     Object.freeze({ controller, index, generation }),
@@ -95,7 +95,7 @@ export function createPhysicsColliderHandle2D(
 }
 
 export function physicsColliderHandleIdentity2D(
-  handle: CRCPhysicsColliderHandle2D,
+  handle: PibblPhysicsColliderHandle2D,
 ): PhysicsColliderHandleIdentity2D | undefined {
   return typeof handle === "object" && handle !== null
     ? colliderHandleIdentities.get(handle as object)
@@ -112,7 +112,7 @@ export function sortPhysicsEventDeliveries2D(
 export function materializePhysicsContactEvent2D(
   fact: PhysicsContactEventDelivery2D,
   handles: PhysicsEventHandles2D,
-): CRCPhysicsCollisionEvent2D | CRCPhysicsOverlapEvent2D {
+): PibblPhysicsCollisionEvent2D | PibblPhysicsOverlapEvent2D {
   publicEventRecordMaterializations += 1;
   const firstReceiver = fact.receiver === "first";
   const selfBody = handles.body(
@@ -147,7 +147,7 @@ export function materializePhysicsContactEvent2D(
     });
   }
   const points = Object.freeze(
-    fact.points.map((point): CRCPhysicsContactPoint2D =>
+    fact.points.map((point): PibblPhysicsContactPoint2D =>
       Object.freeze({
         pointOnFirst: freezeVector(
           firstReceiver ? point.firstX : point.secondX,
@@ -180,8 +180,8 @@ export function materializePhysicsContactEvent2D(
 
 export function materializePhysicsBodyEvent2D(
   fact: PhysicsBodyEventDelivery2D,
-  body: CRCPhysicsBodyHandle2D,
-): CRCPhysicsBodyStateEvent2D {
+  body: PibblPhysicsBodyHandle2D,
+): PibblPhysicsBodyStateEvent2D {
   publicEventRecordMaterializations += 1;
   return Object.freeze({
     body,
@@ -271,7 +271,7 @@ function receiverGeneration(delivery: PhysicsEventDelivery2D): number {
     : delivery.secondColliderGeneration;
 }
 
-function freezeVector(x: number, y: number): CRCPhysicsVector2 {
+function freezeVector(x: number, y: number): PibblPhysicsVector2 {
   return Object.freeze([
     Object.is(x, -0) ? 0 : x,
     Object.is(y, -0) ? 0 : y,

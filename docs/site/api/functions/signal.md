@@ -17,9 +17,9 @@ Read with `get()`, replace with `set(value)`, update from the current value with
 Equality defaults to `Object.is`; `set()` treats functions as data.
 
 Signal reads performed while a component evaluates become that component's
-dependencies. CRC-provided components also resolve signals at declared
+dependencies. Pibbl-provided components also resolve signals at declared
 signal-valued props, style fields, and child inputs; the receiving component
-then owns the dependency. CRC never deep-unwraps arbitrary application data.
+then owns the dependency. Pibbl never deep-unwraps arbitrary application data.
 
 See [Use signals and animation](#/learn/guides/signals-and-animation).
 

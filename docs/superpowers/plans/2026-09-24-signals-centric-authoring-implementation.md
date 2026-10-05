@@ -1,4 +1,4 @@
-# Signals-centric CRC Authoring Implementation Plan
+# Signals-centric Pibbl Authoring Implementation Plan
 
 > **Historical status: APPROVED DESIGN; IMPLEMENTATION IN PROGRESS.** This dated
 > execution record implements the approved Signals-centric authoring design and
@@ -9,11 +9,11 @@
 > superpowers:executing-plans to implement this plan task-by-task. Steps use
 > checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace CRC's dual hook state model with one optimized Signals-centric
-model and make declared CRC component inputs accept plain values or signals with
+**Goal:** Replace Pibbl's dual hook state model with one optimized Signals-centric
+model and make declared Pibbl component inputs accept plain values or signals with
 receiver-owned dependencies across core and official packages.
 
-**Architecture:** Preserve CRC's immediate-mode renderer and explicit `Layer`
+**Architecture:** Preserve Pibbl's immediate-mode renderer and explicit `Layer`
 pixel boundaries. First replace allocation-heavy graph collections with reusable
 intrusive edges and lazy consumers, then build batching, declared shallow input
 resolution, receiver-attributed layout provisions, component-owned computed and
@@ -128,7 +128,7 @@ Markdown Studio documentation, packed Bundler and NodeNext consumers.
 - [ ] **Step 4: Run and record the pre-change baseline**
 
   Run the focused command from Step 2 with
-  `VITE_CRC_REPORT_PERF=1` and record Node, Chromium, viewport, DPR, commit,
+  `VITE_PIBBL_REPORT_PERF=1` and record Node, Chromium, viewport, DPR, commit,
   medians, p95 values, allocation counters, and structural counts in the field
   note. The note must say direct signal-valued inputs are not yet supported and
   therefore have no fabricated pre-change timing.
@@ -235,7 +235,7 @@ Markdown Studio documentation, packed Bundler and NodeNext consumers.
 
 - Consumes: Task 2 `ReactiveEdge` collection.
 - Produces: a lightweight render collector that materializes
-  `CRCComponentRefs.signalConsumer` on the first actual tracked read and keeps
+  `PibblComponentRefs.signalConsumer` on the first actual tracked read and keeps
   zero-read components consumer-free.
 
 - [ ] **Step 1: Add failing lazy-consumer lifecycle tests**
@@ -299,7 +299,7 @@ Markdown Studio documentation, packed Bundler and NodeNext consumers.
 
 - Consumes: Task 2 source-edge notification and Task 3 renderer invalidation.
 - Produces: public `batch<T>(callback: () => T): T` and one automatic outer
-  batch around a complete logical CRC event dispatch.
+  batch around a complete logical Pibbl event dispatch.
 
 - [ ] **Step 1: Add failing batch semantics tests**
 
@@ -382,7 +382,7 @@ fill }}>` slice.
   ```tsx
   const x = signal(10);
   const fill = signal("red");
-  const handler = signal<CRCEventHandler<"click">>(() => {});
+  const handler = signal<PibblEventHandler<"click">>(() => {});
   <Rectangle style={{ x, fill, width: 20, height: 20 }} onClick={handler} />;
 
   function Gauge(props: { value: SignalValue<number> }) {
@@ -480,7 +480,7 @@ fill }}>` slice.
 **Interfaces:**
 
 - Consumes: Task 5 primitive schema resolution and existing receiver tokens.
-- Produces: `CRCNodeInput`, `CRCTextInput`, signal-aware declared structural
+- Produces: `PibblNodeInput`, `PibblTextInput`, signal-aware declared structural
   traversal, keyed-Fragment ownership, and transaction-local receiver provisions
   adopted into the eventual component generation.
 
@@ -489,7 +489,7 @@ fill }}>` slice.
   Cover `<Text>{label}</Text>`, arrays/iterables containing signals, a signal
   selecting one resolved node structure, keyed and unkeyed Fragments, nested
   signal rejection, cyclic structures, and the unsupported bare signal passed to
-  `crc()`.
+  `pibbl()`.
 
 - [ ] **Step 2: Add failing layout attribution tests**
 
@@ -510,14 +510,16 @@ fill }}>` slice.
   Define the public authoring grammar:
 
   ```ts
-  export type CRCNodeInput =
-    SignalValue<CRCNode> | readonly CRCNodeInput[] | Iterable<CRCNodeInput>;
-  export type CRCTextInput =
-    | SignalValue<CRCTextChild>
-    | readonly CRCTextInput[]
-    | Iterable<CRCTextInput>;
-  export type CRCContainerChild = CRCNodeInput;
-  export type CRCRenderResult = CRCNodeInput | void;
+  export type PibblNodeInput =
+    | SignalValue<PibblNode>
+    | readonly PibblNodeInput[]
+    | Iterable<PibblNodeInput>;
+  export type PibblTextInput =
+    | SignalValue<PibblTextChild>
+    | readonly PibblTextInput[]
+    | Iterable<PibblTextInput>;
+  export type PibblContainerChild = PibblNodeInput;
+  export type PibblRenderResult = PibblNodeInput | void;
   ```
 
   Resolve signals only at grammar positions and reject a resolved signal,
@@ -625,7 +627,7 @@ fill }}>` slice.
 **Interfaces:**
 
 - Consumes: Task 2 independent graph consumers and existing scheduler Complete.
-- Produces: `CRCReactionOptions` and public `useReaction(setup,
+- Produces: `PibblReactionOptions` and public `useReaction(setup,
 dependencies?, options?)`, with its own consumer and exact cleanup generation.
 
 - [ ] **Step 1: Add failing reaction lifecycle tests**
@@ -744,7 +746,7 @@ dependencies?, options?)`, with its own consumer and exact cleanup generation.
   ```
 
   Assert rows remain opaque and a computed domain equality barrier prevents the
-  Axis receiver from invalidating. This is the seam an eventual `@crc/viz`
+  Axis receiver from invalidating. This is the seam an eventual `@pibbl/viz`
   package consumes; do not create a package that is absent from this repository.
 
 - [ ] **Step 6: Verify and commit**
@@ -829,7 +831,7 @@ dependencies?, options?)`, with its own consumer and exact cleanup generation.
 - Modify: `packages/scenarios/src/catalog.ts`
 - Modify: `packages/scenarios/src/learning-catalog.ts`
 - Modify: `packages/core/README.md`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 - Modify: `playground/package-consumer/index.ts`
 - Modify: `playground/package-consumer/runtime.mjs`
 - Modify: `tooling/verify-studio-types.mjs`
@@ -885,7 +887,7 @@ dependencies?, options?)`, with its own consumer and exact cleanup generation.
 
 - [ ] **Step 6: Commit**
 
-  Commit: `feat!: adopt signals-centric CRC hooks`
+  Commit: `feat!: adopt signals-centric Pibbl hooks`
 
 ### Task 12: Rewrite Public Documentation and Add Observable Examples
 
@@ -972,7 +974,7 @@ dependencies?, options?)`, with its own consumer and exact cleanup generation.
 
   Expected: all pass with no current page teaching removed APIs.
 
-  Commit: `docs: teach signals-centric CRC authoring`
+  Commit: `docs: teach signals-centric Pibbl authoring`
 
 ### Task 13: Performance Characterization, Aggregate Verification, and Review
 
@@ -1045,7 +1047,7 @@ dependencies?, options?)`, with its own consumer and exact cleanup generation.
   totals, review findings, fixes, rulings, and deferred minors in the verification
   field note.
 
-  Commit: `test: verify signals-centric CRC authoring`
+  Commit: `test: verify signals-centric Pibbl authoring`
 
 ## Plan Self-review Record
 
@@ -1058,8 +1060,8 @@ dependencies?, options?)`, with its own consumer and exact cleanup generation.
 - **Placeholder scan:** The plan contains no unresolved implementation markers.
   Every task names exact files or an exact search-derived migration set, a RED
   command, implementation interfaces, a GREEN command, and a commit.
-- **Type consistency:** `SignalValue`, `SignalStyle`, `CRCNodeInput`,
-  `CRCTextInput`, `resolveSignalValue`, `batch`, `useConst`, `useComputed`, and
+- **Type consistency:** `SignalValue`, `SignalStyle`, `PibblNodeInput`,
+  `PibblTextInput`, `resolveSignalValue`, `batch`, `useConst`, `useComputed`, and
   `useReaction` are introduced once and consumed under the same names later.
 - **Review Focus coverage:** whole-style deduplication is Task 5; opaque/exact
   values are Tasks 5 and 9; layout provision rollback is Task 6; callbacks and

@@ -10,7 +10,7 @@ import {
   type SignalValue,
   type SignalEquals,
   type SignalOptions,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const equals: SignalEquals<number> = (a, b) => a === b;
 const options: SignalOptions<number> = { equals, debugName: "count" };

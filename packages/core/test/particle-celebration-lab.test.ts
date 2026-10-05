@@ -9,11 +9,11 @@ import {
   scenarioCatalog,
   type ParticleCelebrationLabState,
   type ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { loadWorkbenchSource } from '../../../playground/src/learning-sources';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
-import { mountScenarioSurface } from '@crc/scenarios/surface';
+import { mountScenarioSurface } from '@pibbl/scenarios/surface';
 import { clickLogicalPoint } from './support/user-input';
 
 const activeControllers = new Set<
@@ -214,10 +214,10 @@ describe('first-class Canvas particle public scenarios', () => {
       loadScenarioSource(particleCelebrationLabScenarioEntry),
     ]);
     for (const source of [learningSource, labSource]) {
-      expect(source).toMatch(/from ['"]@crc\/core\/particles['"]/u);
-      expect(source).toMatch(/from ['"]@crc\/core['"]/u);
+      expect(source).toMatch(/from ['"]@pibbl\/core\/particles['"]/u);
+      expect(source).toMatch(/from ['"]@pibbl\/core['"]/u);
       expect(source).not.toMatch(
-        /@crc\/(?:particles|core)\/(?:internal|lib|src)\b/u,
+        /@pibbl\/(?:particles|core)\/(?:internal|lib|src)\b/u,
       );
     }
 

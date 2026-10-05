@@ -1,5 +1,5 @@
-import { Absolute, Layer, crc, signal, type Signal } from "@crc/core";
-import { Scale, useScale, type ResolvedLinearScale } from "@crc/core/viz";
+import { Absolute, Layer, pibbl, signal, type Signal } from "@pibbl/core";
+import { Scale, useScale, type ResolvedLinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -72,7 +72,7 @@ it("maps local allocations and updates the same scale signal during reflow", () 
   runtime.flush();
   expect(values.at(-1)).toEqual([120, 90, 240]);
   expect(identities[0].get().ticks(3)).toEqual([0, 5, 10]);
-  crc(canvas, <Scene width={360} />);
+  pibbl(canvas, <Scene width={360} />);
   runtime.flush();
   expect(values.at(-1)).toEqual([180, 135, 360]);
   expect(identities.at(-1)).toBe(identities[0]);
@@ -110,7 +110,7 @@ it("restores shadowed scopes and rolls back a failed candidate", () => {
   expect(captured[1].get().map(0)).toBe(20);
   expect(captured[0].get().invert(50)).toBe(5);
   const original = captured[0];
-  crc(canvas, <Scene end={20} fail />);
+  pibbl(canvas, <Scene end={20} fail />);
   expect(() => runtime.flush()).toThrow("intentional child failure");
   expect(original.get().domain).toEqual([0, 10]);
   runtime.mount(<Probe />);
@@ -245,7 +245,7 @@ it("releases replaced signal dependencies after a successful provider update", (
   }
   const canvas = runtime.mount(<Scene domain={first} />);
   runtime.flush();
-  crc(canvas, <Scene domain={second} />);
+  pibbl(canvas, <Scene domain={second} />);
   runtime.flush();
   const before = renders;
   first.set([0, 30]);

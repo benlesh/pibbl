@@ -1,4 +1,4 @@
-import { learningExampleCatalog, getScenarioBySlug, loadScenario, type ScenarioController } from '@crc/scenarios';
+import { learningExampleCatalog, getScenarioBySlug, loadScenario, type ScenarioController } from '@pibbl/scenarios';
 import { afterEach, expect, it } from 'vitest';
 import { tab, pressKey, pointerDownLogicalPoint, pointerMoveLogicalPoint, pointerUpLogicalPoint } from './support/user-input';
 import { clickMouse } from './support/mouse-input';
@@ -114,7 +114,7 @@ it('publishes structured, historical evidence and releases the test harness on d
   expect(controller.getState().renderCount).toBeGreaterThan(initialRender);
   await controller.perform('inspect');
   const captured = JSON.parse(evidence!.textContent!);
-  expect(captured.schema).toBe('crc-targeting-fixture/1');
+  expect(captured.schema).toBe('pibbl-targeting-fixture/1');
   expect(captured.state.probe.status).toBe('target');
   expect(captured.state).toEqual(controller.getState());
   const firstSession = captured.state.inspection.generation.session;
@@ -134,7 +134,7 @@ it('keeps the agent fixture out of the public learning catalog', () => {
   expect(learningExampleCatalog.some(entry => entry.slug === 'agent-targeting-verification')).toBe(false);
 });
 
-it('cleans up evidence when the initial CRC mount fails', async () => {
+it('cleans up evidence when the initial Pibbl mount fails', async () => {
   const definition = await loadScenario(getScenarioBySlug('agent-targeting-verification')!);
   const canvas = document.createElement('canvas');
   canvas.width = 0;

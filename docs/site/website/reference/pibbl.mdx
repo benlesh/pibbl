@@ -1,0 +1,27 @@
+---
+title: pibbl
+description: Mount, update, and dispose a Canvas surface.
+kind: reference
+symbols: [pibbl]
+---
+
+```js
+import { pibbl, createElement, Circle } from "@pibbl/core";
+const controller = pibbl(
+  canvas,
+  createElement(Circle, {
+    style: { cx: 80, cy: 80, radius: 40, fill: "teal" },
+  }),
+  { viewport: "responsive", pixelRatio: 1 },
+);
+// On owner teardown:
+controller.dispose();
+```
+
+`pibbl(canvas, root, config?)` returns a stable `PibblController`. A subsequent call for the same canvas queues the latest root and returns that controller. The initial mount owns the configuration. Disposal is idempotent.
+
+Without configuration, the initial canvas width and height define the fixed logical viewport. `viewport: 'responsive'` uses the CSS content box instead; its resize updates the root allocation and schedules rendering. `useLayoutBox()` reads that allocation inside a component. A zero-sized responsive host suspends presentation until it has positive size.
+
+Keep CSS width and height explicit. Pixel density controls backing pixels, not logical layout. `pixelRatio` accepts `'device'` or a positive finite number. The button recipe caps it at two to bound decorative rendering cost; that cap is application policy.
+
+Related types: `PibblNode`, `PibblConfig`, and `PibblController`. Follow the [first scene](/start/) or the [mount/update/dispose recipe](/guides/native-button/).

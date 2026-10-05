@@ -8,7 +8,7 @@
 
 **Architecture:** Keep tutorial prose in the validated `docs/site/` tree and add a dedicated tutorial-snapshot catalog beside, but separate from, the ordinary learning-example and deterministic-scenario catalogs. Reuse the existing sandboxed TypeScript workbench through a small shared source-entry contract, derive chapter relationships during the documentation build, and prove the cumulative editor with semantic browser checks before capturing its landing-page teaser.
 
-**Tech Stack:** TypeScript 5.9, TSX with `@crc/core` automatic JSX, CRC Canvas 2D components/hooks, Vite, Markdown-It, Monaco, Vitest Browser with Playwright Chromium, and the repository's static documentation and visual-verification tooling.
+**Tech Stack:** TypeScript 5.9, TSX with `@pibbl/core` automatic JSX, Pibbl Canvas 2D components/hooks, Vite, Markdown-It, Monaco, Vitest Browser with Playwright Chromium, and the repository's static documentation and visual-verification tooling.
 
 **Spec:** `docs/superpowers/specs/2026-09-13-diagram-editor-tutorial-design.md`
 
@@ -17,9 +17,9 @@
 - Use Node 24.15 or newer on the Node 24 LTS line and pnpm 11.21.0 through `corepack pnpm@11.21.0`.
 - Preserve unrelated working-tree changes and untracked files. Stage and commit only the files named by the active task.
 - Define each observable behavior with a failing test before changing production code or publishing its chapter.
-- Tutorial sources use named public imports from `@crc/core`; they must not import source paths, `@crc/core/lib/*`, or `@crc/core/internal`.
-- Every snapshot uses descriptive JSX, contains no `createElement`, relative import, dynamic import, test control, or source marker, and exports exactly `default function mount(canvas: HTMLCanvasElement): CRCController`.
-- Every snapshot is self-contained. Do not extract shared tutorial application code into another module because the editable sandbox accepts direct CRC package imports only.
+- Tutorial sources use named public imports from `@pibbl/core`; they must not import source paths, `@pibbl/core/lib/*`, or `@pibbl/core/internal`.
+- Every snapshot uses descriptive JSX, contains no `createElement`, relative import, dynamic import, test control, or source marker, and exports exactly `default function mount(canvas: HTMLCanvasElement): PibblController`.
+- Every snapshot is self-contained. Do not extract shared tutorial application code into another module because the editable sandbox accepts direct Pibbl package imports only.
 - The canonical logical Canvas is exactly 960 by 600. The toolbar is 56 logical pixels high, the workspace occupies y=56 through y=568, and the status strip is 32 logical pixels high.
 - Use the stable node IDs `idea`, `sketch`, `build`, and `ship`; node cards are 168 by 84. Initial node positions are Idea `(92, 180)`, Sketch `(326, 92)`, Build `(392, 318)`, and Ship `(696, 210)` in workspace coordinates.
 - Use edges `Idea -> Sketch`, `Sketch -> Build`, `Sketch -> Ship`, and `Build -> Ship`. Derive endpoints from current node geometry; never infer state from pixels.
@@ -433,7 +433,7 @@ import {
   tutorialSnapshotCatalog,
   validateTutorialSnapshotCatalog,
   type TutorialSnapshotCatalogEntry,
-} from "@crc/scenarios";
+} from "@pibbl/scenarios";
 
 const module = async () => ({ default: () => ({ dispose() {} }) });
 const record = (
@@ -514,8 +514,8 @@ export interface LearningExampleMetadata extends WorkbenchSourceMetadata {
 
 In `tutorial-types.ts`, import `LearningExampleModule` and
 `WorkbenchSourceMetadata`, then define the exact types from the approved spec.
-Keep these types in private `@crc/scenarios`; do not add anything to the public
-`@crc/core` packages.
+Keep these types in private `@pibbl/scenarios`; do not add anything to the public
+`@pibbl/core` packages.
 
 - [ ] **Step 4: Implement an empty production catalog plus strict prefix validation**
 
@@ -740,7 +740,7 @@ Expected: FAIL because the real catalog and source files are empty/missing.
 
 - [ ] **Step 3: Author the Chapter 1 source**
 
-Use only `crc`, `Rectangle`, `Text`, and `CRCController`. Paint the three fixed
+Use only `pibbl`, `Rectangle`, `Text`, and `PibblController`. Paint the three fixed
 regions and explanatory copy with ordinary elements:
 
 ```tsx
@@ -780,8 +780,8 @@ function DiagramEditor() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <DiagramEditor />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <DiagramEditor />);
 }
 ```
 
@@ -871,15 +871,15 @@ corepack pnpm@11.21.0 scenarios:write-index
 - [ ] **Step 7: Author Chapter 1 Markdown**
 
 Use summary `Mount a fixed logical Canvas and paint the three regions that frame the editor.`
-and keywords `[diagram editor, tutorial, crc, canvas, disposal]`. The six
+and keywords `[diagram editor, tutorial, pibbl, canvas, disposal]`. The six
 sections must cover:
 
 - the visible three-region frame and changing `WORKFLOW MAP` as the exercise;
 - ordinary synchronous components and a full traversal on render;
-- `crc(canvas, <DiagramEditor />)` plus the stable controller;
+- `pibbl(canvas, <DiagramEditor />)` plus the stable controller;
 - the fixed 960 by 600 logical viewport versus scaled CSS presentation;
 - scheduled initial paint and idempotent `dispose()`;
-- links to `#/api/functions/crc`, `#/api/components/rectangle`,
+- links to `#/api/functions/pibbl`, `#/api/components/rectangle`,
   `#/api/components/text`, and `#/learn/guides/configure-jsx`.
 
 The check section says successful output shows all three regions and the status
@@ -1307,7 +1307,7 @@ Expected: FAIL because Chapter 7 and its pointer handlers do not exist.
 
 - [ ] **Step 4: Author the Chapter 7 source with synchronous gesture ownership**
 
-Add `useRef` and `CRCPointerEvent`. Define:
+Add `useRef` and `PibblPointerEvent`. Define:
 
 ```ts
 interface NodeDragSession {
@@ -1418,7 +1418,7 @@ Apply presentation only once:
 </Group>
 ```
 
-CRC composes Group scale before translation. Dividing the stored root-pixel pan
+Pibbl composes Group scale before translation. Dividing the stored root-pixel pan
 by zoom keeps the final presentation translation equal to `panX`/`panY`;
 alternatively, an equivalent explicit matrix composition would be acceptable.
 
@@ -1609,22 +1609,22 @@ Teach typed descriptor order, combined subtree capture, inside-out nesting,
 the filter using these complete bindings:
 
 ```ts
-const brightness: CRCBrightnessFilter = {
+const brightness: PibblBrightnessFilter = {
   type: "brightness",
   amount: 1.08,
 };
-const dropShadow: CRCDropShadowFilter = {
+const dropShadow: PibblDropShadowFilter = {
   type: "dropShadow",
   offsetX: 6,
   offsetY: 8,
   blurRadius: 10,
   color: "rgb(23 33 29 / 35%)",
 };
-const selectedFilters: readonly CRCFilter[] = [brightness, dropShadow];
+const selectedFilters: readonly PibblFilter[] = [brightness, dropShadow];
 ```
 
 The page tells the learner to add the three public filter types to the existing
-`@crc/core` import, use `selectedFilters` for the selected branch, then reverse
+`@pibbl/core` import, use `selectedFilters` for the selected branch, then reverse
 the array and predict the visible difference. Link `#/api/types/filters` and
 `#/learn/guides/style-and-draw`.
 
@@ -1736,7 +1736,7 @@ y=12, width=116, height=32 and the same click action as pointer input. Compose
 exactly one child under each policy:
 
 ```tsx
-return crc(
+return pibbl(
   canvas,
   <FocusManagement>
     <KeyboardNavigation mode="directional">
@@ -1946,7 +1946,7 @@ no teaser or working chapter links.
 Create `tooling/verify-diagram-editor-teaser.mjs` using the same strict port,
 server lifecycle, Chromium settings, and `finally` cleanup pattern as
 `verify-studio-visuals.mjs`. Default port is 4175 and environment override is
-`CRC_DIAGRAM_TUTORIAL_PREVIEW_PORT`.
+`PIBBL_DIAGRAM_TUTORIAL_PREVIEW_PORT`.
 
 The script must:
 
@@ -2280,7 +2280,7 @@ against current evidence:
 2. Compare the twelve frontmatter records, routes, catalog entries, source
    files, and generated relationship metadata one-for-one.
 3. Run the Chapter 12 full pointer/keyboard flow and confirm every final editor
-   behavior comes from public CRC APIs.
+   behavior comes from public Pibbl APIs.
 4. Search tutorial prose for inaccurate claims about retained scenes,
    root-logical/workspace coordinates, pointer participation, Layer/filter
    capability, or semantic accessibility.

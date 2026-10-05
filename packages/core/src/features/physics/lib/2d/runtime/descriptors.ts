@@ -1,26 +1,26 @@
-import { Group, isSignal } from "@crc/core";
+import { Group, isSignal } from "@pibbl/core";
 import {
-  crcInternalCreatePropAttachment,
-  type CRCInternalPrimitiveAttachmentInput,
-  type CRCInternalMountedPropAttachment,
-} from "@crc/core/internal";
+  pibblInternalCreatePropAttachment,
+  type PibblInternalPrimitiveAttachmentInput,
+  type PibblInternalMountedPropAttachment,
+} from "@pibbl/core/internal";
 import type {
-  CRCPhysicsShape2D,
-  CRCPhysicsVector2,
+  PibblPhysicsShape2D,
+  PibblPhysicsVector2,
 } from "../../../2d-geometry.js";
 import { transformShape2D } from "../../../2d-geometry.js";
 import { requireShapeRecord2D, type ShapeRecord2D } from "../shape-records.js";
 import type {
-  CRCPhysicsAttachment2D,
-  CRCPhysicsBodyAttachment2D,
-  CRCPhysicsBodyHandle2D,
-  CRCPhysicsColliderAttachment2D,
-  CRCPhysicsColliderConfiguration2D,
-  CRCPhysicsCollisionFilter,
-  CRCPhysicsDynamicBody2DOptions,
-  CRCPhysicsKinematicBody2DOptions,
-  CRCPhysicsKinematicTarget2D,
-  CRCPhysicsStaticBody2DOptions,
+  PibblPhysicsAttachment2D,
+  PibblPhysicsBodyAttachment2D,
+  PibblPhysicsBodyHandle2D,
+  PibblPhysicsColliderAttachment2D,
+  PibblPhysicsColliderConfiguration2D,
+  PibblPhysicsCollisionFilter,
+  PibblPhysicsDynamicBody2DOptions,
+  PibblPhysicsKinematicBody2DOptions,
+  PibblPhysicsKinematicTarget2D,
+  PibblPhysicsStaticBody2DOptions,
 } from "../types.js";
 import {
   copyFiniteVector2,
@@ -50,13 +50,13 @@ const bodyFramesByWorld2D = new WeakMap<object, Map<number, BodyFrame2D>>();
 
 interface BodyFrame2D {
   readonly poseMatrix: DOMMatrix;
-  readonly preBodyLineage: CRCInternalPrimitiveAttachmentInput["presentationTransformLineage"];
+  readonly preBodyLineage: PibblInternalPrimitiveAttachmentInput["presentationTransformLineage"];
   readonly untrackedCanvasTransformCount: number;
 }
 
-const attachmentRecord2DSymbol = Symbol("CRCPhysicsAttachment2D");
+const attachmentRecord2DSymbol = Symbol("PibblPhysicsAttachment2D");
 
-// Exact CRC presentation anchors preserve authored transforms as doubles. A
+// Exact Pibbl presentation anchors preserve authored transforms as doubles. A
 // relative collider frame still performs one inversion and one multiplication,
 // so accept only their bounded IEEE-754 double-operation noise. This is never
 // an authored-geometry epsilon: a post-mount 1e-7 translation or scale change
@@ -70,8 +70,8 @@ export interface NormalizedPhysicsCollisionFilter2D {
 }
 
 export interface NormalizedPhysicsColliderConfiguration2D {
-  readonly shape: "self" | CRCPhysicsShape2D;
-  readonly offset: CRCPhysicsVector2;
+  readonly shape: "self" | PibblPhysicsShape2D;
+  readonly offset: PibblPhysicsVector2;
   readonly rotationDegrees: number;
   readonly density: number;
   readonly friction: number;
@@ -81,18 +81,18 @@ export interface NormalizedPhysicsColliderConfiguration2D {
   readonly collisionFilter: NormalizedPhysicsCollisionFilter2D;
   readonly tag: unknown;
   readonly handlers: Readonly<{
-    readonly onCollisionStart?: CRCPhysicsColliderConfiguration2D["onCollisionStart"];
-    readonly onCollisionEnd?: CRCPhysicsColliderConfiguration2D["onCollisionEnd"];
-    readonly onHit?: CRCPhysicsColliderConfiguration2D["onHit"];
-    readonly onOverlapStart?: CRCPhysicsColliderConfiguration2D["onOverlapStart"];
-    readonly onOverlapEnd?: CRCPhysicsColliderConfiguration2D["onOverlapEnd"];
+    readonly onCollisionStart?: PibblPhysicsColliderConfiguration2D["onCollisionStart"];
+    readonly onCollisionEnd?: PibblPhysicsColliderConfiguration2D["onCollisionEnd"];
+    readonly onHit?: PibblPhysicsColliderConfiguration2D["onHit"];
+    readonly onOverlapStart?: PibblPhysicsColliderConfiguration2D["onOverlapStart"];
+    readonly onOverlapEnd?: PibblPhysicsColliderConfiguration2D["onOverlapEnd"];
   }>;
 }
 
 export interface NormalizedPhysicsDynamicBody2DOptions {
   readonly enabled: boolean;
-  readonly handle: CRCPhysicsBodyHandle2D | undefined;
-  readonly linearVelocity: CRCPhysicsVector2;
+  readonly handle: PibblPhysicsBodyHandle2D | undefined;
+  readonly linearVelocity: PibblPhysicsVector2;
   readonly angularVelocityDegreesPerSecond: number;
   readonly linearDamping: number;
   readonly angularDamping: number;
@@ -107,14 +107,14 @@ export interface NormalizedPhysicsDynamicBody2DOptions {
 
 export interface NormalizedPhysicsStaticBody2DOptions {
   readonly enabled: boolean;
-  readonly handle: CRCPhysicsBodyHandle2D | undefined;
+  readonly handle: PibblPhysicsBodyHandle2D | undefined;
   readonly collider: false | NormalizedPhysicsColliderConfiguration2D;
 }
 
 export interface NormalizedPhysicsKinematicBody2DOptions {
   readonly enabled: boolean;
-  readonly handle: CRCPhysicsBodyHandle2D | undefined;
-  readonly target: Readonly<CRCPhysicsKinematicTarget2D>;
+  readonly handle: PibblPhysicsBodyHandle2D | undefined;
+  readonly target: Readonly<PibblPhysicsKinematicTarget2D>;
   readonly allowSleep: boolean;
   readonly collider: false | NormalizedPhysicsColliderConfiguration2D;
 }
@@ -152,16 +152,16 @@ type RegisteredAttachment2D = Readonly<{
  * Creates a declarative body attachment whose motion is advanced by the physics solver.
  *
  * @param options - Dynamic body, collider, and initial motion configuration. See
- * {@link CRCPhysicsDynamicBody2DOptions} .
+ * {@link PibblPhysicsDynamicBody2DOptions} .
  * @returns A dynamic-body attachment for a supported primitive's physics prop. See
- * {@link CRCPhysicsBodyAttachment2D} .
+ * {@link PibblPhysicsBodyAttachment2D} .
  *
- * @see {@link CRCPhysicsDynamicBody2DOptions}
- * @see {@link CRCPhysicsBodyAttachment2D}
+ * @see {@link PibblPhysicsDynamicBody2DOptions}
+ * @see {@link PibblPhysicsBodyAttachment2D}
  */
 export function dynamicBody2D(
-  options: CRCPhysicsDynamicBody2DOptions = {},
-): CRCPhysicsBodyAttachment2D {
+  options: PibblPhysicsDynamicBody2DOptions = {},
+): PibblPhysicsBodyAttachment2D {
   const mass = options.mass ?? "auto";
   if (mass !== "auto") requirePositiveNumber(mass, "options.mass");
   const reenableVelocity = options.reenableVelocity ?? "zero";
@@ -210,16 +210,16 @@ export function dynamicBody2D(
  * Creates a declarative body attachment that remains fixed in the simulation.
  *
  * @param options - Static body and collider configuration. See
- * {@link CRCPhysicsStaticBody2DOptions} .
+ * {@link PibblPhysicsStaticBody2DOptions} .
  * @returns A static-body attachment for a supported primitive's physics prop. See
- * {@link CRCPhysicsBodyAttachment2D} .
+ * {@link PibblPhysicsBodyAttachment2D} .
  *
- * @see {@link CRCPhysicsStaticBody2DOptions}
- * @see {@link CRCPhysicsBodyAttachment2D}
+ * @see {@link PibblPhysicsStaticBody2DOptions}
+ * @see {@link PibblPhysicsBodyAttachment2D}
  */
 export function staticBody2D(
-  options: CRCPhysicsStaticBody2DOptions = {},
-): CRCPhysicsBodyAttachment2D {
+  options: PibblPhysicsStaticBody2DOptions = {},
+): PibblPhysicsBodyAttachment2D {
   return createAttachment({
     kind: "body",
     bodyType: "static",
@@ -235,25 +235,25 @@ export function staticBody2D(
  * Creates a declarative body attachment driven by application-supplied target signals.
  *
  * @param options - Kinematic body, collider, and motion configuration. See
- * {@link CRCPhysicsKinematicBody2DOptions} .
+ * {@link PibblPhysicsKinematicBody2DOptions} .
  * @returns A kinematic-body attachment for a supported primitive's physics prop. See
- * {@link CRCPhysicsBodyAttachment2D} .
+ * {@link PibblPhysicsBodyAttachment2D} .
  *
- * @see {@link CRCPhysicsKinematicBody2DOptions}
- * @see {@link CRCPhysicsBodyAttachment2D}
+ * @see {@link PibblPhysicsKinematicBody2DOptions}
+ * @see {@link PibblPhysicsBodyAttachment2D}
  */
 export function kinematicBody2D(
-  options: CRCPhysicsKinematicBody2DOptions = {},
-): CRCPhysicsBodyAttachment2D {
+  options: PibblPhysicsKinematicBody2DOptions = {},
+): PibblPhysicsBodyAttachment2D {
   const target = options.target ?? {};
   if (target.position !== undefined && !isSignal(target.position)) {
-    throw new TypeError("options.target.position must be a CRC signal.");
+    throw new TypeError("options.target.position must be a Pibbl signal.");
   }
   if (
     target.rotationDegrees !== undefined &&
     !isSignal(target.rotationDegrees)
   ) {
-    throw new TypeError("options.target.rotationDegrees must be a CRC signal.");
+    throw new TypeError("options.target.rotationDegrees must be a Pibbl signal.");
   }
   return createAttachment({
     kind: "body",
@@ -275,16 +275,16 @@ export function kinematicBody2D(
  * Creates a declarative collider attachment for a primitive within a physics body.
  *
  * @param options - Collider shape, material, filtering, and sensor configuration. See
- * {@link CRCPhysicsColliderConfiguration2D} .
+ * {@link PibblPhysicsColliderConfiguration2D} .
  * @returns A collider attachment for a supported primitive's physics prop. See
- * {@link CRCPhysicsColliderAttachment2D} .
+ * {@link PibblPhysicsColliderAttachment2D} .
  *
- * @see {@link CRCPhysicsColliderConfiguration2D}
- * @see {@link CRCPhysicsColliderAttachment2D}
+ * @see {@link PibblPhysicsColliderConfiguration2D}
+ * @see {@link PibblPhysicsColliderAttachment2D}
  */
 export function collider2D(
-  options: CRCPhysicsColliderConfiguration2D = {},
-): CRCPhysicsColliderAttachment2D {
+  options: PibblPhysicsColliderConfiguration2D = {},
+): PibblPhysicsColliderAttachment2D {
   return createAttachment({
     kind: "collider",
     options: normalizeCollider(options, "options"),
@@ -292,14 +292,14 @@ export function collider2D(
 }
 
 export function requirePhysicsAttachment2DDescriptor(
-  value: CRCPhysicsAttachment2D,
+  value: PibblPhysicsAttachment2D,
 ): PhysicsAttachment2DDescriptor {
   const descriptor =
     typeof value === "object" && value !== null
       ? (value as Partial<RegisteredAttachment2D>)[attachmentRecord2DSymbol]
       : undefined;
   if (descriptor === undefined) {
-    throw new TypeError("Expected a registered CRC physics 2D attachment.");
+    throw new TypeError("Expected a registered Pibbl physics 2D attachment.");
   }
   return descriptor;
 }
@@ -307,20 +307,20 @@ export function requirePhysicsAttachment2DDescriptor(
 function createAttachment<T extends PhysicsAttachment2DDescriptor>(
   descriptor: T,
 ): T["kind"] extends "body"
-  ? CRCPhysicsBodyAttachment2D
-  : CRCPhysicsColliderAttachment2D {
+  ? PibblPhysicsBodyAttachment2D
+  : PibblPhysicsColliderAttachment2D {
   const frozenDescriptor = Object.freeze(descriptor);
   const value = Object.freeze({
     [attachmentRecord2DSymbol]: frozenDescriptor,
-  }) as unknown as RegisteredAttachment2D & CRCPhysicsAttachment2D;
-  return crcInternalCreatePropAttachment(
+  }) as unknown as RegisteredAttachment2D & PibblPhysicsAttachment2D;
+  return pibblInternalCreatePropAttachment(
     "physics",
     value,
     () => new MountedPhysicsAttachment2D(value),
   ) as never;
 }
 
-export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachment {
+export class MountedPhysicsAttachment2D implements PibblInternalMountedPropAttachment {
   private descriptor: PhysicsAttachment2DDescriptor;
   private world: ReturnType<typeof requireCurrentPhysicsWorld2D> | undefined;
   private bodyId: number | undefined;
@@ -329,10 +329,10 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
     NormalizedPhysicsColliderConfiguration2D | undefined;
   private cachedShape: ShapeRecord2D | undefined;
   private cachedSelfShapeKey: string | undefined;
-  private cachedSelfShape: CRCPhysicsShape2D | undefined;
-  private cachedBakedSource: CRCPhysicsShape2D | undefined;
+  private cachedSelfShape: PibblPhysicsShape2D | undefined;
+  private cachedBakedSource: PibblPhysicsShape2D | undefined;
   private cachedBakedTransform: readonly number[] | undefined;
-  private cachedBakedShape: CRCPhysicsShape2D | undefined;
+  private cachedBakedShape: PibblPhysicsShape2D | undefined;
   private bodyPresentation: CanvasBodyPresentationCapture2D | undefined;
   // `exit` runs after every traversal, while `dispose` runs only when this
   // mounted attachment is actually removed. Keep the last ownership key so a
@@ -342,13 +342,13 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
   private bodyFrameId: number | undefined;
   private wasEnabled = false;
 
-  constructor(value: CRCPhysicsAttachment2D) {
+  constructor(value: PibblPhysicsAttachment2D) {
     this.descriptor = requirePhysicsAttachment2DDescriptor(value);
   }
 
   update(value: unknown): void {
     const next = requirePhysicsAttachment2DDescriptor(
-      value as CRCPhysicsAttachment2D,
+      value as PibblPhysicsAttachment2D,
     );
     if (this.descriptor.kind === "body" && next.kind !== "body") {
       this.releaseBodyFrame();
@@ -375,7 +375,7 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
   }
 
   preparePrimitive(
-    input: CRCInternalPrimitiveAttachmentInput,
+    input: PibblInternalPrimitiveAttachmentInput,
   ): Readonly<{ readonly presentationTransform2D?: DOMMatrix }> | void {
     const world = this.world;
     const bodyId = this.bodyId;
@@ -578,8 +578,8 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
   }
 
   private resolveSelfShape(
-    input: CRCInternalPrimitiveAttachmentInput,
-  ): CRCPhysicsShape2D {
+    input: PibblInternalPrimitiveAttachmentInput,
+  ): PibblPhysicsShape2D {
     const key = `${input.componentName}:${stableGeometryKey(input.style)}`;
     if (key === this.cachedSelfShapeKey) return this.cachedSelfShape!;
     const shape = inferCanvasColliderShape2D(input);
@@ -589,10 +589,10 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
   }
 
   private bakeShape(
-    shape: CRCPhysicsShape2D,
+    shape: PibblPhysicsShape2D,
     transform: DOMMatrixReadOnly,
     stabilizeFallback = true,
-  ): CRCPhysicsShape2D {
+  ): PibblPhysicsShape2D {
     const candidate = [
       transform.a,
       transform.b,
@@ -678,7 +678,7 @@ function relativeColliderTransform2D(
 
 function relativeColliderTransformFromLineage2D(
   bodyFrame: BodyFrame2D,
-  input: CRCInternalPrimitiveAttachmentInput,
+  input: PibblInternalPrimitiveAttachmentInput,
 ): DOMMatrix | undefined {
   const inputUntrackedCanvasTransformCount =
     (input.presentationTransformLineage?.untrackedCanvasTransformCount ?? 0) +
@@ -728,7 +728,7 @@ function requireBodyFrame(world: object, bodyId: number): BodyFrame2D {
 
 function withColliderShape(
   options: NormalizedPhysicsColliderConfiguration2D,
-  shape: CRCPhysicsShape2D,
+  shape: PibblPhysicsShape2D,
 ): NormalizedPhysicsColliderConfiguration2D {
   return Object.freeze({ ...options, shape });
 }
@@ -752,7 +752,7 @@ function stableGeometryKey(
 
 function normalizeOptionalCollider(
   value:
-    false | CRCPhysicsColliderConfiguration2D | CRCPhysicsShape2D | undefined,
+    false | PibblPhysicsColliderConfiguration2D | PibblPhysicsShape2D | undefined,
   path: string,
 ): false | NormalizedPhysicsColliderConfiguration2D {
   if (value === false) return false;
@@ -762,7 +762,7 @@ function normalizeOptionalCollider(
 }
 
 function normalizeCollider(
-  options: CRCPhysicsColliderConfiguration2D,
+  options: PibblPhysicsColliderConfiguration2D,
   path: string,
 ): NormalizedPhysicsColliderConfiguration2D {
   const shape = options.shape ?? "self";
@@ -797,7 +797,7 @@ function normalizeCollider(
 }
 
 function normalizeCollisionFilter(
-  filter: CRCPhysicsCollisionFilter | undefined,
+  filter: PibblPhysicsCollisionFilter | undefined,
   path: string,
 ): NormalizedPhysicsCollisionFilter2D {
   return Object.freeze({
@@ -823,7 +823,7 @@ function normalizeCollisionFilter(
 }
 
 function normalizeHandlers(
-  options: CRCPhysicsColliderConfiguration2D,
+  options: PibblPhysicsColliderConfiguration2D,
   path: string,
 ): NormalizedPhysicsColliderConfiguration2D["handlers"] {
   const handlers = {
@@ -841,9 +841,9 @@ function normalizeHandlers(
   return Object.freeze(handlers);
 }
 
-function isPhysicsShape2D(value: object): value is CRCPhysicsShape2D {
+function isPhysicsShape2D(value: object): value is PibblPhysicsShape2D {
   try {
-    requireShapeRecord2D(value as CRCPhysicsShape2D);
+    requireShapeRecord2D(value as PibblPhysicsShape2D);
     return true;
   } catch {
     return false;

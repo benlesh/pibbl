@@ -1,56 +1,56 @@
-import { getCRCEventDefinition } from './event-definitions.js';
+import { getPibblEventDefinition } from './event-definitions.js';
 import {
-  createCRCEvent,
-  isCRCImmediatePropagationStopped,
-  isCRCPropagationStopped,
-  setCRCEventInvocation,
-  type CreateCRCEventInput,
+  createPibblEvent,
+  isPibblImmediatePropagationStopped,
+  isPibblPropagationStopped,
+  setPibblEventInvocation,
+  type CreatePibblEventInput,
 } from './event-facade.js';
 import { buildEventPath } from './event-path.js';
 import type {
-  CRCEventNode,
-  CRCNormalizedHandlers,
+  PibblEventNode,
+  PibblNormalizedHandlers,
 } from './registrations.js';
 import type {
-  CRCEvent,
-  CRCEventMap,
-  CRCEventPhase,
-  CRCEventType,
+  PibblEvent,
+  PibblEventMap,
+  PibblEventPhase,
+  PibblEventType,
 } from './types.js';
 
-export interface DispatchEventPathInput<K extends CRCEventType>
-  extends Omit<CreateCRCEventInput<K>, 'path'> {
-  readonly target: CRCEventNode;
+export interface DispatchEventPathInput<K extends PibblEventType>
+  extends Omit<CreatePibblEventInput<K>, 'path'> {
+  readonly target: PibblEventNode;
 }
 
-type CRCNormalizedCaptureKey = `${CRCEventType}Capture`;
+type PibblNormalizedCaptureKey = `${PibblEventType}Capture`;
 
-export function dispatchEventPath<K extends CRCEventType>(
+export function dispatchEventPath<K extends PibblEventType>(
   input: DispatchEventPathInput<K>,
-): CRCEventMap[K] {
-  const definition = getCRCEventDefinition(input.type);
+): PibblEventMap[K] {
+  const definition = getPibblEventDefinition(input.type);
   if (!definition) {
-    throw new Error(`Unsupported CRC event type: ${input.type}`);
+    throw new Error(`Unsupported Pibbl event type: ${input.type}`);
   }
   const path = buildEventPath(input.target);
-  const event = createCRCEvent({ ...input, path });
+  const event = createPibblEvent({ ...input, path });
   const targetIndex = path.length - 1;
 
   for (let index = 0; index < targetIndex; index++) {
-    if (isCRCPropagationStopped(event)) break;
+    if (isPibblPropagationStopped(event)) break;
     invoke(path[index], input.type, true, 1, event);
   }
 
-  if (!isCRCPropagationStopped(event) && input.target.live) {
+  if (!isPibblPropagationStopped(event) && input.target.live) {
     invoke(input.target, input.type, true, 2, event);
-    if (!isCRCImmediatePropagationStopped(event)) {
+    if (!isPibblImmediatePropagationStopped(event)) {
       invoke(input.target, input.type, false, 2, event);
     }
   }
 
-  if (definition.bubbles && !isCRCPropagationStopped(event)) {
+  if (definition.bubbles && !isPibblPropagationStopped(event)) {
     for (let index = targetIndex - 1; index >= 0; index--) {
-      if (isCRCPropagationStopped(event)) break;
+      if (isPibblPropagationStopped(event)) break;
       invoke(path[index], input.type, false, 3, event);
     }
   }
@@ -59,19 +59,19 @@ export function dispatchEventPath<K extends CRCEventType>(
 }
 
 function invoke(
-  node: CRCEventNode,
-  type: CRCEventType,
+  node: PibblEventNode,
+  type: PibblEventType,
   capture: boolean,
-  phase: CRCEventPhase,
-  event: CRCEvent,
+  phase: PibblEventPhase,
+  event: PibblEvent,
 ): void {
   if (!node.live) return;
-  const key = capture ? `${type}Capture` as CRCNormalizedCaptureKey : type;
-  const handler = node.handlers[key as keyof CRCNormalizedHandlers];
+  const key = capture ? `${type}Capture` as PibblNormalizedCaptureKey : type;
+  const handler = node.handlers[key as keyof PibblNormalizedHandlers];
   if (!handler) return;
-  setCRCEventInvocation(event, node.publicTarget, phase);
+  setPibblEventInvocation(event, node.publicTarget, phase);
   try {
-    (handler as (event: CRCEvent) => void)(event);
+    (handler as (event: PibblEvent) => void)(event);
   } catch (error) {
     reportDispatchError(error);
   }

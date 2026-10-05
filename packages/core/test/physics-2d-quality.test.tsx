@@ -1,24 +1,24 @@
-/** @jsxImportSource @crc/core */
-import { Circle, Group, Rectangle, crc, signal } from "@crc/core";
+/** @jsxImportSource @pibbl/core */
+import { Circle, Group, Rectangle, pibbl, signal } from "@pibbl/core";
 import {
   PhysicsWorld2D,
   inspectPhysics2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsWorld2D,
   kinematicBody2D,
   collider2D,
-  crcPhysicsBody2D,
+  pibblPhysicsBody2D,
   dynamicBody2D,
   staticBody2D,
-  type CRCPhysicsWorldHandle2D,
-  type CRCPhysicsBodyHandle2D,
-} from "@crc/core/physics/2d";
+  type PibblPhysicsWorldHandle2D,
+  type PibblPhysicsBodyHandle2D,
+} from "@pibbl/core/physics/2d";
 import {
   loadScenario,
   physics2DLabScenarioEntry,
   type Physics2DLabState,
   type ScenarioController,
-} from "@crc/scenarios";
-import { createPhysicsTestHarness2D } from "@crc/core/physics/2d/testing";
+} from "@pibbl/scenarios";
+import { createPhysicsTestHarness2D } from "@pibbl/core/physics/2d/testing";
 import { describe, it, expect } from "vitest";
 import {
   ManualSchedulerDriver,
@@ -69,9 +69,9 @@ describe("public physics simulation quality", () => {
       canvas.width = 480;
       canvas.height = 240;
       document.body.append(canvas);
-      let body!: CRCPhysicsBodyHandle2D;
+      let body!: PibblPhysicsBodyHandle2D;
       function Ball() {
-        body = crcPhysicsBody2D();
+        body = pibblPhysicsBody2D();
         return (
           <Group
             style={{ translateX: 64, translateY: 202 }}
@@ -89,7 +89,7 @@ describe("public physics simulation quality", () => {
           </Group>
         );
       }
-      const mount = crc(
+      const mount = pibbl(
         canvas,
         <PhysicsWorld2D
           gravity={[0, 600]}
@@ -128,9 +128,9 @@ it("naturally settles a 100-box pile without keeping the world clock alive", () 
   canvas.width = 1000;
   canvas.height = 1000;
   document.body.append(canvas);
-  const handles: CRCPhysicsBodyHandle2D[] = [];
+  const handles: PibblPhysicsBodyHandle2D[] = [];
   function Box({ index }: { index: number }) {
-    const body = crcPhysicsBody2D();
+    const body = pibblPhysicsBody2D();
     handles[index] = body;
     return (
       <Group
@@ -147,7 +147,7 @@ it("naturally settles a 100-box pile without keeping the world clock alive", () 
       </Group>
     );
   }
-  const mount = crc(
+  const mount = pibbl(
     canvas,
     <PhysicsWorld2D gravity={[0, 600]}>
       <Rectangle
@@ -176,13 +176,13 @@ it("naturally settles a 100-box pile without keeping the world clock alive", () 
 it("carries a passenger equivalently at 30 and 60 Hz host cadence", () => {
   function run(hz: number) {
     const target = signal<readonly [number, number]>([100, 150]);
-    let world!: CRCPhysicsWorldHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     const canvas = document.createElement("canvas");
     canvas.width = 500;
     canvas.height = 300;
     document.body.append(canvas);
     function Scene() {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       return (
         <>
           <Group
@@ -296,9 +296,9 @@ it("delivers a fast CCD impact through public callbacks even after immediate sep
 it("lets a world sleep when collision callbacks are authored inline", () => {
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
-  let world!: CRCPhysicsWorldHandle2D;
+  let world!: PibblPhysicsWorldHandle2D;
   function Scene() {
-    world = crcPhysicsWorld2D();
+    world = pibblPhysicsWorld2D();
     return (
       <>
         <Circle

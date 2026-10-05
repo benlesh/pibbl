@@ -5,8 +5,8 @@ import {
   useSignal,
   useReaction,
   useLayoutBox,
-} from "@crc/core";
-import { PlotSeries, Scale } from "@crc/core/viz";
+} from "@pibbl/core";
+import { PlotSeries, Scale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;

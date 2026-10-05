@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path';
 import { auditInstalledPeers } from './installed-peers.mjs';
 
 async function fixture(run) {
-  const root = await mkdtemp(join(tmpdir(), 'crc-installed-peers-'));
+  const root = await mkdtemp(join(tmpdir(), 'pibbl-installed-peers-'));
   async function pkg(path, manifest) {
     await mkdir(path, { recursive: true });
     await writeFile(join(path, 'package.json'), JSON.stringify({ main: 'index.js', ...manifest }));
@@ -42,8 +42,8 @@ test('distinguishes duplicate physical core installations from proof of loaded d
   await fixture(async (root, pkg) => {
     const consumers = [];
     for (const name of ['a', 'b']) {
-      consumers.push(await pkg(join(root, name), { name, version: '1.0.0', peerDependencies: { '@crc/core': '0.0.1' } }));
-      await pkg(join(root, name, 'node_modules/@crc/core'), { name: '@crc/core', version: '0.0.1' });
+      consumers.push(await pkg(join(root, name), { name, version: '1.0.0', peerDependencies: { '@pibbl/core': '0.0.1' } }));
+      await pkg(join(root, name, 'node_modules/@pibbl/core'), { name: '@pibbl/core', version: '0.0.1' });
     }
     const result = await auditInstalledPeers(consumers);
     assert.equal(result.status, 'compatible');
@@ -72,6 +72,6 @@ test('does not call an installed but broken optional peer absent', async () => {
 test('default CLI audits both published core consumers', async () => {
   const { execFileSync } = await import('node:child_process');
   const result = JSON.parse(execFileSync(process.execPath, [resolve('tooling/agent-verification/installed-peers.mjs')], { encoding: 'utf8' }));
-  assert.deepEqual(result.consumers.map(consumer => consumer.name).sort(), ['@crc/text', '@crc/three']);
+  assert.deepEqual(result.consumers.map(consumer => consumer.name).sort(), ['@pibbl/text', '@pibbl/three']);
   assert.equal(result.peers.length, 3);
 });

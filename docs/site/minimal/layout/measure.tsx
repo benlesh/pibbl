@@ -6,7 +6,7 @@ import {
   type MeasureInput,
   type MeasureResult,
   type TextStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const canvas = document.createElement("canvas");
 const context = canvas.getContext("2d");

@@ -20,10 +20,10 @@ test("text outlines and multi-guide envelopes are discoverable with deployed fon
     );
   }
   assert.ok(
-    (await readFile(new URL("crc-text/Lato-Regular.ttf", base))).length > 100,
+    (await readFile(new URL("pibbl-text/Lato-Regular.ttf", base))).length > 100,
   );
   assert.match(
-    await readFile(new URL("crc-text/Lato-OFL.txt", base), "utf8"),
+    await readFile(new URL("pibbl-text/Lato-OFL.txt", base), "utf8"),
     /OPEN FONT LICENSE/,
   );
 });

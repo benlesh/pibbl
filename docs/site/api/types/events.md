@@ -8,231 +8,231 @@ apiCategory: types
 typeDomain: events
 symbols:
   [
-    CRCClipboardEvent,
-    CRCCompositionEvent,
-    CRCDragEvent,
-    CRCDragHandleProps,
-    CRCDragHandleStyle,
-    CRCEvent,
-    CRCEventCapturePropName,
-    CRCEventHandler,
-    CRCEventHandlers,
-    CRCEventMap,
-    CRCEventParticipationOptions,
-    CRCEventPhase,
-    CRCEventPropName,
-    CRCEventTarget,
-    CRCEventTargetOptions,
-    CRCEventTargetSnapshot,
-    CRCEventType,
-    CRCFocusEvent,
-    CRCInputEvent,
-    CRCKeyboardEvent,
-    CRCKeyboardNavigationOptions,
-    CRCLogicalMouseEvent,
-    CRCManipulableProps,
-    CRCManipulationActive,
-    CRCManipulationBox,
-    CRCManipulationCancelEvent,
-    CRCManipulationCancelReason,
-    CRCManipulationCommitEvent,
-    CRCManipulationController,
-    CRCManipulationEvent,
-    CRCManipulationFrameProps,
-    CRCManipulationGeometry,
-    CRCManipulationMoveInput,
-    CRCManipulationOperation,
-    CRCManipulationOptions,
-    CRCManipulationPoint,
-    CRCManipulationReadoutStateStyle,
-    CRCManipulationReadoutStyle,
-    CRCManipulationResizeInput,
-    CRCManipulationRotateInput,
-    CRCManipulationSnapshot,
-    CRCManipulationWhen,
-    CRCPointerEvent,
-    CRCPointerEvents,
-    CRCResizeHandleProps,
-    CRCResizeHandlesProps,
-    CRCResizeHandleStyle,
-    CRCResizePosition,
-    CRCRotationArcStyle,
-    CRCRotationConnectorStyle,
-    CRCRotationHandleProps,
-    CRCRotationHandleStyle,
-    CRCTouchEvent,
-    CRCWheelEvent,
+    PibblClipboardEvent,
+    PibblCompositionEvent,
+    PibblDragEvent,
+    PibblDragHandleProps,
+    PibblDragHandleStyle,
+    PibblEvent,
+    PibblEventCapturePropName,
+    PibblEventHandler,
+    PibblEventHandlers,
+    PibblEventMap,
+    PibblEventParticipationOptions,
+    PibblEventPhase,
+    PibblEventPropName,
+    PibblEventTarget,
+    PibblEventTargetOptions,
+    PibblEventTargetSnapshot,
+    PibblEventType,
+    PibblFocusEvent,
+    PibblInputEvent,
+    PibblKeyboardEvent,
+    PibblKeyboardNavigationOptions,
+    PibblLogicalMouseEvent,
+    PibblManipulableProps,
+    PibblManipulationActive,
+    PibblManipulationBox,
+    PibblManipulationCancelEvent,
+    PibblManipulationCancelReason,
+    PibblManipulationCommitEvent,
+    PibblManipulationController,
+    PibblManipulationEvent,
+    PibblManipulationFrameProps,
+    PibblManipulationGeometry,
+    PibblManipulationMoveInput,
+    PibblManipulationOperation,
+    PibblManipulationOptions,
+    PibblManipulationPoint,
+    PibblManipulationReadoutStateStyle,
+    PibblManipulationReadoutStyle,
+    PibblManipulationResizeInput,
+    PibblManipulationRotateInput,
+    PibblManipulationSnapshot,
+    PibblManipulationWhen,
+    PibblPointerEvent,
+    PibblPointerEvents,
+    PibblResizeHandleProps,
+    PibblResizeHandlesProps,
+    PibblResizeHandleStyle,
+    PibblResizePosition,
+    PibblRotationArcStyle,
+    PibblRotationConnectorStyle,
+    PibblRotationHandleProps,
+    PibblRotationHandleStyle,
+    PibblTouchEvent,
+    PibblWheelEvent,
   ]
 keywords: [events, pointer, focus, keyboard, propagation]
 ---
 
 # Event types
 
-## CRCClipboardEvent
+## PibblClipboardEvent
 
-`CRCClipboardEvent` is the logical facade for clipboard events and carries the
-same cancellation and propagation controls as the base CRC event.
+`PibblClipboardEvent` is the logical facade for clipboard events and carries the
+same cancellation and propagation controls as the base Pibbl event.
 
-## CRCCompositionEvent
+## PibblCompositionEvent
 
-`CRCCompositionEvent` is the logical facade for composition lifecycle events.
+`PibblCompositionEvent` is the logical facade for composition lifecycle events.
 
-## CRCDragEvent
+## PibblDragEvent
 
-`CRCDragEvent` is the logical facade for drag-and-drop events.
+`PibblDragEvent` is the logical facade for drag-and-drop events.
 
-## CRCDragHandleProps
+## PibblDragHandleProps
 
 Supplies a controller, optional children, and a position formatter receiving applied `left` and `top`. Descendant hit areas determine where dragging can begin.
 
-## CRCDragHandleStyle
+## PibblDragHandleStyle
 
 Ordinary Group-like presentation and layout participation, plus optional `readout` styling. Width and height do not manufacture an interaction rectangle.
 
-## CRCEvent
+## PibblEvent
 
-`CRCEvent` is the base logical event facade. It exposes propagation phase,
+`PibblEvent` is the base logical event facade. It exposes propagation phase,
 target/current target, cancellation, and logical related-target information.
 
-## CRCEventCapturePropName
+## PibblEventCapturePropName
 
-`CRCEventCapturePropName` is the typed union of supported `onXCapture` prop
+`PibblEventCapturePropName` is the typed union of supported `onXCapture` prop
 names for capture-phase listeners.
 
-## CRCEventHandler
+## PibblEventHandler
 
-`CRCEventHandler` is the generic callback contract for a selected event facade.
+`PibblEventHandler` is the generic callback contract for a selected event facade.
 
-## CRCEventHandlers
+## PibblEventHandlers
 
-`CRCEventHandlers` maps every supported `onX` and `onXCapture` property to its
+`PibblEventHandlers` maps every supported `onX` and `onXCapture` property to its
 specific logical event-handler type.
 
-## CRCEventMap
+## PibblEventMap
 
-`CRCEventMap` maps supported event-type strings to their corresponding facade
+`PibblEventMap` maps supported event-type strings to their corresponding facade
 types for generic event code.
 
-## CRCEventParticipationOptions
+## PibblEventParticipationOptions
 
-`CRCEventParticipationOptions` supplies the shared optional `pointerEvents`
+`PibblEventParticipationOptions` supplies the shared optional `pointerEvents`
 property used by drawing primitives and external render layers.
 
-## CRCEventPhase
+## PibblEventPhase
 
-`CRCEventPhase` represents the capture, target, and bubble phases of CRC's
+`PibblEventPhase` represents the capture, target, and bubble phases of Pibbl's
 logical propagation path.
 
-## CRCEventPropName
+## PibblEventPropName
 
-`CRCEventPropName` is the typed union of supported bubbling `onX` prop names.
+`PibblEventPropName` is the typed union of supported bubbling `onX` prop names.
 
-## CRCEventTarget
+## PibblEventTarget
 
-`CRCEventTarget` is CRC's opaque logical-target interface, distinct from a DOM
-`EventTarget` and derived from CRC's geometric paint ledger.
+`PibblEventTarget` is Pibbl's opaque logical-target interface, distinct from a DOM
+`EventTarget` and derived from Pibbl's geometric paint ledger.
 
-## CRCEventTargetOptions
+## PibblEventTargetOptions
 
-`CRCEventTargetOptions` configures path, fill/stroke hit geometry, cursor,
+`PibblEventTargetOptions` configures path, fill/stroke hit geometry, cursor,
 focus behavior, and optional navigation bounds for a logical target.
 
-## CRCEventTargetSnapshot
+## PibblEventTargetSnapshot
 
-`CRCEventTargetSnapshot` exposes the current logical focus state returned by
+`PibblEventTargetSnapshot` exposes the current logical focus state returned by
 `useEventTarget` during render.
 
-## CRCEventType
+## PibblEventType
 
-`CRCEventType` is the union of supported logical event-type strings.
+`PibblEventType` is the union of supported logical event-type strings.
 
-## CRCFocusEvent
+## PibblFocusEvent
 
-`CRCFocusEvent` is the logical facade for focus and blur transitions. It is
+`PibblFocusEvent` is the logical facade for focus and blur transitions. It is
 available only when a `FocusManagement` policy is active.
 
-## CRCInputEvent
+## PibblInputEvent
 
-`CRCInputEvent` is the logical facade for input events on an eligible target.
+`PibblInputEvent` is the logical facade for input events on an eligible target.
 
-## CRCKeyboardEvent
+## PibblKeyboardEvent
 
-`CRCKeyboardEvent` is the logical facade for keyboard events delivered through
+`PibblKeyboardEvent` is the logical facade for keyboard events delivered through
 the Canvas focus host and logical focus target.
 
-## CRCKeyboardNavigationOptions
+## PibblKeyboardNavigationOptions
 
-`CRCKeyboardNavigationOptions` configures the supported directional keyboard
+`PibblKeyboardNavigationOptions` configures the supported directional keyboard
 navigation policy. Its mode is exactly `"directional"` and it requires focus
 management.
 
-## CRCLogicalMouseEvent
+## PibblLogicalMouseEvent
 
-`CRCLogicalMouseEvent` is the geometry-targeted mouse facade with root-logical
+`PibblLogicalMouseEvent` is the geometry-targeted mouse facade with root-logical
 coordinates.
 
-## CRCManipulableProps
+## PibblManipulableProps
 
 Binds writable box and optional rotation signals, operation booleans or options, resize-handle selection, lifecycle callbacks, and children for the convenience component.
 
-## CRCManipulationActive
+## PibblManipulationActive
 
 Reports the active operation, resize handle, and pointer identifier; the controller publishes null while idle.
 
-## CRCManipulationBox
+## PibblManipulationBox
 
 Readonly left, top, width, and height geometry stored in the writable box signal.
 
-## CRCManipulationCancelEvent
+## PibblManipulationCancelEvent
 
 A terminal cancellation snapshot with before/after geometry and a cancellation reason.
 
-## CRCManipulationCancelReason
+## PibblManipulationCancelReason
 
 The closed vocabulary for explicit cancellation, input loss, disabled operations, external changes, coordinate changes, and unsatisfiable constraints.
 
-## CRCManipulationCommitEvent
+## PibblManipulationCommitEvent
 
 A terminal committed snapshot whose changed field indicates whether geometry differs from the start.
 
-## CRCManipulationController
+## PibblManipulationController
 
 Exposes readonly active and snapshot signals, stable frameProps, and cancel().
 
-## CRCManipulationEvent
+## PibblManipulationEvent
 
 An immutable operation snapshot with before and after geometry.
 
-## CRCManipulationFrameProps
+## PibblManipulationFrameProps
 
 Binds a controller and its original writable box signal to a frame, with optional children.
 
-## CRCManipulationGeometry
+## PibblManipulationGeometry
 
 Combines a box with rotation in radians.
 
-## CRCManipulationMoveInput
+## PibblManipulationMoveInput
 
 Configures movement axes, parent-space bounds, grid snapping, and optional signal-valued activation.
 
-## CRCManipulationOperation
+## PibblManipulationOperation
 
 Names move, resize, or rotate operations.
 
-## CRCManipulationOptions
+## PibblManipulationOptions
 
 Binds writable geometry, move/resize options, and start/change/commit/cancel callbacks.
 
-## CRCManipulationPoint
+## PibblManipulationPoint
 
 A geometric coordinate pair used by manipulation calculations.
 
-## CRCManipulationReadoutStateStyle
+## PibblManipulationReadoutStateStyle
 
 A flat readout state patch containing font, fill, stroke, strokeWidth, opacity,
 visible, and gap. It cannot contain nested state branches.
 
-## CRCManipulationReadoutStyle
+## PibblManipulationReadoutStyle
 
 Local readout presentation: font, fill, stroke, stroke width, opacity, visibility and
 outward CSS-pixel `gap` (default 5),
@@ -240,96 +240,96 @@ with flat inactive, focused and active overrides. Resolve base, inactive when no
 active, focused, then active. Labels stay upright and contained in the visible
 canvas; formatting never changes gesture geometry.
 
-## CRCManipulationResizeInput
+## PibblManipulationResizeInput
 
 Configures dimension limits, bounds, aspect ratio, size or grid snapping, and optional signal-valued activation.
 
-## CRCManipulationRotateInput
+## PibblManipulationRotateInput
 
 Configures optional signal-valued rotation activation and angular snapping in radians.
 
-## CRCManipulationSnapshot
+## PibblManipulationSnapshot
 
 Reports initial, proposed, and applied geometry together with requested and satisfied snapping state.
 
-## CRCManipulationWhen
+## PibblManipulationWhen
 
 Selects always, shift, alt, ctrl, or meta activation.
 
-## CRCPointerEvent
+## PibblPointerEvent
 
-`CRCPointerEvent` is the logical facade for pointer events, including capture
-and CRC root-logical coordinates.
+`PibblPointerEvent` is the logical facade for pointer events, including capture
+and Pibbl root-logical coordinates.
 
-## CRCPointerEvents
+## PibblPointerEvents
 
-`CRCPointerEvents` is exactly `"auto" | "none"`. `"auto"` keeps the receiving
+`PibblPointerEvents` is exactly `"auto" | "none"`. `"auto"` keeps the receiving
 paint or external-layer target in hit resolution; `"none"` opts it and its
 owned interaction bridge out without changing pixels.
 
-## CRCResizeHandleProps
+## PibblResizeHandleProps
 
 Binds one named edge or corner to a controller, with optional custom visuals and hit size.
 
-## CRCResizeHandlesProps
+## PibblResizeHandlesProps
 
 Selects corners, edges-and-corners, or an explicit list of resize positions for one controller.
 
-## CRCResizeHandleStyle
+## PibblResizeHandleStyle
 
 The resize control's local style includes an optional `readout` slot. Omitted
 readout configuration disables the label; true enables the default active-only
 label; false explicitly disables it. ResizeHandles shares this style and shows
 one combined size readout.
 
-## CRCResizePosition
+## PibblResizePosition
 
 Names top-left, top, top-right, right, bottom-right, bottom, bottom-left, or left.
 
-## CRCRotationArcStyle
+## PibblRotationArcStyle
 
 Rotation guide color, sweep in radians, strokeWidth and opacity.
 
-## CRCRotationConnectorStyle
+## PibblRotationConnectorStyle
 
 Rotation connector stroke, strokeWidth and opacity in CSS-pixel presentation.
 
-## CRCRotationHandleProps
+## PibblRotationHandleProps
 
 Binds a controller to an external rotation handle with optional custom visuals and CSS-pixel hit size.
 
-## CRCRotationHandleStyle
+## PibblRotationHandleStyle
 
 Local rotation presentation includes connector, arc and readout slots. Connector
 is enabled by default; arc and readout are opt-in. Each slot accepts true, false,
 or its typed configuration. Connector orientation follows the displayed edge;
 readout text stays upright and inside the canvas.
 
-## CRCTouchEvent
+## PibblTouchEvent
 
-`CRCTouchEvent` is the logical facade for touch events.
+`PibblTouchEvent` is the logical facade for touch events.
 
-## CRCWheelEvent
+## PibblWheelEvent
 
-`CRCWheelEvent` is the logical facade for wheel events.
+`PibblWheelEvent` is the logical facade for wheel events.
 
 **Manipulation contracts.**
 
-`CRCManipulationBox` is the writable `left`, `top`, `width`, and `height`
-geometry. `CRCManipulationController` exposes `active`, `snapshot`,
-`frameProps`, and `cancel()`. `CRCManipulationFrameProps` is the value supplied
+`PibblManipulationBox` is the writable `left`, `top`, `width`, and `height`
+geometry. `PibblManipulationController` exposes `active`, `snapshot`,
+`frameProps`, and `cancel()`. `PibblManipulationFrameProps` is the value supplied
 by `controller.frameProps` for `ManipulationFrame`.
 
-`CRCManipulationActive`, `CRCManipulationSnapshot`, and
-`CRCManipulationEvent` describe the live operation, starting geometry, proposed
-geometry, and applied geometry. `CRCManipulationCommitEvent` adds `changed`;
-`CRCManipulationCancelEvent` adds its cancellation reason.
+`PibblManipulationActive`, `PibblManipulationSnapshot`, and
+`PibblManipulationEvent` describe the live operation, starting geometry, proposed
+geometry, and applied geometry. `PibblManipulationCommitEvent` adds `changed`;
+`PibblManipulationCancelEvent` adds its cancellation reason.
 
-`CRCManipulationOptions` accepts the writable box and optional move/resize
-configuration. `CRCManipulationMoveInput` controls movement axis, bounds, and
-grid snapping. `CRCManipulationResizeInput` controls size limits, bounds,
+`PibblManipulationOptions` accepts the writable box and optional move/resize
+configuration. `PibblManipulationMoveInput` controls movement axis, bounds, and
+grid snapping. `PibblManipulationResizeInput` controls size limits, bounds,
 aspect ratio, and size or grid snapping. Their `enabled` values accept signals.
 
-`CRCResizePosition` names the supported frame edges and corners.
-`CRCDragHandleProps`, `CRCDragHandleStyle`, `CRCResizeHandleProps`, and
-`CRCResizeHandlesProps` configure the public handle components.
+`PibblResizePosition` names the supported frame edges and corners.
+`PibblDragHandleProps`, `PibblDragHandleStyle`, `PibblResizeHandleProps`, and
+`PibblResizeHandlesProps` configure the public handle components.

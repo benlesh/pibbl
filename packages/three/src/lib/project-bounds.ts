@@ -6,7 +6,7 @@ import {
   type Camera,
   type Object3D,
 } from "three";
-import type { CRCRenderLayerSize, LayoutBox } from "@crc/core";
+import type { PibblRenderLayerSize, LayoutBox } from "@pibbl/core";
 
 const bounds = new Box3();
 const frustum = new Frustum();
@@ -16,7 +16,7 @@ const projectionScreenMatrix = new Matrix4();
 export function projectObjectBounds(
   object: Object3D,
   camera: Camera,
-  size: Readonly<CRCRenderLayerSize>,
+  size: Readonly<PibblRenderLayerSize>,
 ): Readonly<LayoutBox> | undefined {
   bounds.setFromObject(object);
   if (bounds.isEmpty()) return undefined;

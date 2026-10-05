@@ -8,7 +8,7 @@ Objective source: `/Users/benlesh/.codex/attachments/31d3419b-d22d-4d2f-9276-a04
 
 ## Ownership and preservation
 
-Coordinator: this chat, branch `codex/viz-roadmap`, managed worktree `/Users/benlesh/.codex/worktrees/viz-roadmap/crc`.
+Coordinator: this chat, branch `codex/viz-roadmap`, managed worktree `/Users/benlesh/.codex/worktrees/viz-roadmap/pibbl`.
 Read-only audits: `audit_series` (series), `audit_interaction` (scales, interaction, accessibility, performance). Reuse agents for approved implementation and later independent reviews.
 No artifacts were attached initially. Other worktrees are owned by other chats; none is assumed free. The original `codex/physics-2d-quality` checkout has substantial tracked and untracked work and is untouched.
 Each concurrent implementation gets its own managed worktree and codex branch. The coordinator alone owns shared exports, shared scale types/contracts, Studio declarations, catalogs, documentation indexes, and integration. Agents request shared changes through the coordinator.
@@ -90,7 +90,7 @@ Smallest slice: existing editable pie example with a donut toggle and hit-throug
 
 - Scales: epoch numbers versus Date authoring; UTC versus browser-local calendar ticks and DST; negative/zero log domains; missing values versus malformed values; clamping defaults; explicit extent/nice helpers; scale extension protocol. Preserve current linear default behavior unless explicitly approved otherwise.
 - Lines/area: step-before/after/mid variants; bounded smooth interpolation choice, overshoot and non-monotonic x; segment style callback and boundary ownership; band-center mapping; curve-aware inspection and hit tolerance; stacked/range area scope.
-- Pie labels: custom CRC content with explicit finite measured box or caller-supplied dimensions; measurement cache invalidation; no unbounded iterative layout.
+- Pie labels: custom Pibbl content with explicit finite measured box or caller-supplied dimensions; measurement cache invalidation; no unbounded iterative layout.
 - Interaction: pure/state helpers versus hooks; caller-owned targets/signals; pointer identity/capture/cancel, wheel anchor and units, touch policy, domain clamping; keyboard parity and linked-view ownership. No new scheduler, event system or chart container.
 - Accessibility: keyboard exploration plus host-owned semantic summary/table sharing selection state; manual assistive-technology evaluation and tested phone portrait/landscape interactions. Do not claim Canvas logical focus exposes screen-reader semantics.
 - Statistics/families: quantile definition, whiskers/outliers, missing/invalid data, sorting/copying/mutation and empty/singleton summaries; histogram boundaries, under/overflow and density; heatmap sparse/missing cells and color domain. Specify these before helper APIs.
@@ -169,7 +169,7 @@ Stable array/callback identities are not proof of stable results. Separate corre
 - Default evaluation: whenever a consuming component evaluates, reevaluate relevant data/accessors/predicates/labels in its tracked evaluation context. Compare resolved semantic snapshots if reusing geometry or label measurements. This may require O(n) accessor work; do not advertise constant-time unchanged-data checks without an explicit contract.
 - Opt-in persistent preprocessing: propose `revision?: SignalValue<number>` on consumers that offer cached preprocessing, starting with PieLayout. Supplying a finite nonnegative safe integer opts into the caller's revision promise; change it whenever in-place data or nonreactive accessor/label dependency changes. Omission uses the default above. This is not a mandatory prop on every series.
 - Data replacement, accessor/value/key/defined/label callback replacement, revision changes, and signal reads that invalidate during tracked evaluation all invalidate their dependent preprocessing. Signal reads inside stable callbacks remain real dynamic dependencies; successful reevaluation replaces those edges. New data identity invalidates even if values appear equal. No deep freeze, deep hash, global cache, or reliance on callback identity alone.
-- The revision promise covers mutable datum fields, same-array additions/removals/reorder, ordinary captured variables, external mutable lookup tables, and mutable option contents. Replacing the accessor/options or changing revision is required for nonreactive changes. Setting a data signal to the same array may be equality-suppressed; an independently changed revision signal schedules work. Plain mutation alone never schedules CRC.
+- The revision promise covers mutable datum fields, same-array additions/removals/reorder, ordinary captured variables, external mutable lookup tables, and mutable option contents. Replacing the accessor/options or changing revision is required for nonreactive changes. Setting a data signal to the same array may be equality-suppressed; an independently changed revision signal schedules work. Plain mutation alone never schedules Pibbl.
 - Mapping-dependent geometry/index/sampling invalidates for resolved scale kind/domain/order/range/direction, band spacing/bandwidth, relevant allocation, and future log/time/clamp options. Equivalent resolved mappings may reuse work despite wrapper object replacement. Domain-only indexes can survive unrelated pixel changes; any query maps results using the current committed scale, and pixel-distance/approximation decisions must not use stale mapping.
 - Algorithm, accuracy, ordering, tolerance, gap policy and output-budget changes invalidate affected preprocessing. Pie layout additionally depends on center/radii/bounds/font/label sizing/placement/gap. Paint-only selection changes do not invalidate geometry unless an accessor actually depends on that selection. Font-resource changes affecting measured text require explicit revision until an owned font-resource signal exists.
 - Pure preprocessing helpers build an explicit snapshot on each call, with copied coordinates and source index/key references; no hidden cross-call cache. Retained datum references are provenance, not live coordinate promises. Exact helper APIs remain a later approval. Caller-owned snapshots are released by callers; mounted caches by the mount. All persistent storage is bounded to current generations, not a history of revision values.
@@ -188,13 +188,13 @@ const revision = signal(0);
 </PieLayout>;
 ```
 
-Alternative: require immutable rows and pure callbacks everywhere. Recommendation is safe default plus explicit revision-based reuse, retaining CRC signal tracking and supporting mutable/streaming callers without pretending mutations are observable automatically.
+Alternative: require immutable rows and pure callbacks everywhere. Recommendation is safe default plus explicit revision-based reuse, retaining Pibbl signal tracking and supporting mutable/streaming callers without pretending mutations are observable automatically.
 
 ## First-wave implementation ledger
 
 - Coordinator owns shared types/exports, Studio declarations, packed consumer, catalogs and integration in codex/viz-roadmap.
-- audit_series owns codex/viz-semantic-bars at /Users/benlesh/.codex/worktrees/viz-semantic-bars/crc: bar/axis implementation, focused tests, bar example sources.
-- audit_interaction owns codex/viz-donuts at /Users/benlesh/.codex/worktrees/viz-donuts/crc: pie geometry/layout/revision, focused tests, pie example source.
+- audit_series owns codex/viz-semantic-bars at /Users/benlesh/.codex/worktrees/viz-semantic-bars/pibbl: bar/axis implementation, focused tests, bar example sources.
+- audit_interaction owns codex/viz-donuts at /Users/benlesh/.codex/worktrees/viz-donuts/pibbl: pie geometry/layout/revision, focused tests, pie example source.
 - Coordinator baseline on Node v24.15.0, pnpm 11.21.0: locked install, workspace build, and tsc --noEmit passed.
 - Focused public Axis type evidence added first: tsc failed with TS2322 for right/top positions before type changes. Runtime implementation remains agent-owned.
 - No experiential feedback, independent implementation review, main integration or push yet.
@@ -253,7 +253,7 @@ was proposed asynchronously; awaiting explicit user approval before code.
   passed, five skipped. Packed consumers, Bundler/NodeNext, Studio source/built
   declaration parity, visual safeguard/Studio visuals, built smoke, lifecycle
   (43 passed), and structural performance (49 passed, four skipped) all passed.
-  No visual baselines changed. Fresh logs: /tmp/crc-viz-trust.log.
+  No visual baselines changed. Fresh logs: /tmp/pibbl-viz-trust.log.
 - Performance baseline/candidate/repeated/corrected raw records and investigation
   are in docs/testing/field-notes/2026-09-30-viz-first-wave-performance.{md,json}.
   No arbitrary percent tolerance was accepted; timing variation is reported.
@@ -266,7 +266,7 @@ was proposed asynchronously; awaiting explicit user approval before code.
 - Accepted bars/axes/donut work pushed to remote main at
   `6d02d20d577be2d9cd0d0dfec4b2c46151617362`; remote ref verified.
 - Final full trust passed on that exact committed tree (log
-  /tmp/crc-viz-trust-final.log): main browser suite 3,210 passed / six skipped,
+  /tmp/pibbl-viz-trust-final.log): main browser suite 3,210 passed / six skipped,
   including two opt-in diagnostic files; all other aggregate phases passed.
 - Identical baseline/candidate structural probes matched all target, paint,
   fill, label and pointer-hit counts at 100/1,000 solid slices, before/after

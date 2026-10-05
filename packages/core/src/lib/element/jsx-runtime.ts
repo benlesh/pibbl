@@ -1,71 +1,71 @@
-import { createCRCElement } from './create-element.js';
+import { createPibblElement } from './create-element.js';
 export { Fragment } from './fragment.js';
-import type { CRCElementSource } from './metadata.js';
+import type { PibblElementSource } from './metadata.js';
 import type {
-  CRCElement,
-  CRCElementType,
-  CRCKey,
+  PibblElement,
+  PibblElementType,
+  PibblKey,
 } from './types.js';
 
 /**
  * @internal Automatic JSX production constructor.
  *
- * @param type - CRC component or fragment emitted by the JSX compiler. See {@link CRCElementType}.
+ * @param type - Pibbl component or fragment emitted by the JSX compiler. See {@link PibblElementType}.
  * @param props - Compiler-generated props, including children.
- * @param key - Optional reconciliation key supplied separately by the compiler. See {@link CRCKey}
+ * @param key - Optional reconciliation key supplied separately by the compiler. See {@link PibblKey}
  * .
- * @returns A branded CRC element descriptor. See {@link CRCElement}.
+ * @returns A branded Pibbl element descriptor. See {@link PibblElement}.
  *
- * @see {@link CRCElementType}
- * @see {@link CRCKey}
- * @see {@link CRCElement}
+ * @see {@link PibblElementType}
+ * @see {@link PibblKey}
+ * @see {@link PibblElement}
  */
 export function jsx<P>(
-  type: CRCElementType<P>,
+  type: PibblElementType<P>,
   props: P,
-  key?: CRCKey,
-): CRCElement<P> {
-  return createCRCElement(type, props, key, undefined);
+  key?: PibblKey,
+): PibblElement<P> {
+  return createPibblElement(type, props, key, undefined);
 }
 
 /**
  * @internal Automatic JSX production constructor for static child lists.
  *
- * @param type - CRC component or fragment emitted by the JSX compiler. See {@link CRCElementType}.
+ * @param type - Pibbl component or fragment emitted by the JSX compiler. See {@link PibblElementType}.
  * @param props - Compiler-generated props, including the static child list.
- * @param key - Optional reconciliation key. See {@link CRCKey}.
- * @returns A branded CRC element descriptor. See {@link CRCElement}.
+ * @param key - Optional reconciliation key. See {@link PibblKey}.
+ * @returns A branded Pibbl element descriptor. See {@link PibblElement}.
  *
- * @see {@link CRCElementType}
- * @see {@link CRCKey}
- * @see {@link CRCElement}
+ * @see {@link PibblElementType}
+ * @see {@link PibblKey}
+ * @see {@link PibblElement}
  */
 export const jsxs = jsx;
 
 /**
  * @internal Automatic JSX development constructor.
  *
- * @param type - CRC component or fragment emitted by the JSX compiler. See {@link CRCElementType}.
+ * @param type - Pibbl component or fragment emitted by the JSX compiler. See {@link PibblElementType}.
  * @param props - Compiler-generated props, including children.
- * @param key - Reconciliation key, if present. See {@link CRCKey}.
- * @param _isStaticChildren - Compiler compatibility flag; not used by CRC.
- * @param source - Development source location for diagnostics. See {@link CRCElementSource}.
- * @param _self - Compiler compatibility receiver; not used by CRC.
- * @returns A branded CRC element descriptor with development source metadata. See
- * {@link CRCElement} .
+ * @param key - Reconciliation key, if present. See {@link PibblKey}.
+ * @param _isStaticChildren - Compiler compatibility flag; not used by Pibbl.
+ * @param source - Development source location for diagnostics. See {@link PibblElementSource}.
+ * @param _self - Compiler compatibility receiver; not used by Pibbl.
+ * @returns A branded Pibbl element descriptor with development source metadata. See
+ * {@link PibblElement} .
  *
- * @see {@link CRCElementType}
- * @see {@link CRCKey}
- * @see {@link CRCElementSource}
- * @see {@link CRCElement}
+ * @see {@link PibblElementType}
+ * @see {@link PibblKey}
+ * @see {@link PibblElementSource}
+ * @see {@link PibblElement}
  */
 export function jsxDEV<P>(
-  type: CRCElementType<P>,
+  type: PibblElementType<P>,
   props: P,
-  key: CRCKey | undefined,
+  key: PibblKey | undefined,
   _isStaticChildren: boolean,
-  source: CRCElementSource | undefined,
+  source: PibblElementSource | undefined,
   _self: unknown,
-): CRCElement<P> {
-  return createCRCElement(type, props, key, source);
+): PibblElement<P> {
+  return createPibblElement(type, props, key, source);
 }

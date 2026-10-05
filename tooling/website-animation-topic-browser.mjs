@@ -7,7 +7,7 @@ try {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(
-    `${process.env.CRC_WEBSITE_URL ?? "http://localhost:4321"}/agents/topics/animation/`,
+    `${process.env.PIBBL_WEBSITE_URL ?? "http://localhost:4321"}/agents/topics/animation/`,
   );
   assert.equal(
     await page.locator('[data-effect-demo="signals-and-animation"]').count(),

@@ -8,7 +8,7 @@ const bundle = await build({
   entryPoints: ['tooling/path-algorithm-browser-entry.ts'],
   bundle: true,
   format: 'iife',
-  globalName: 'CRCPathAlgorithmBenchmark',
+  globalName: 'PibblPathAlgorithmBenchmark',
   platform: 'browser',
   target: 'esnext',
   write: false,
@@ -18,7 +18,7 @@ try {
   const page = await browser.newPage();
   await page.setContent('<!doctype html><title>Path algorithm benchmark</title>');
   await page.addScriptTag({ content: bundle.outputFiles[0].text });
-  process.stdout.write(JSON.stringify(await page.evaluate(() => globalThis.CRCPathAlgorithmBenchmark.runPathAlgorithmBrowserBenchmark())) + '\n');
+  process.stdout.write(JSON.stringify(await page.evaluate(() => globalThis.PibblPathAlgorithmBenchmark.runPathAlgorithmBrowserBenchmark())) + '\n');
 } finally {
   await browser.close();
 }

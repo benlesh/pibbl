@@ -9,7 +9,7 @@ import { getCurrentWorldTransform } from '../render-target.js';
 import { registerOpaquePrimitiveProps } from '../element/metadata.js';
 import { requireHtmlService, snapshotClips } from '../html/html-service.js';
 import type { HtmlBoxProps, HtmlBoxSlot, HtmlBoxStyle } from '../html/types.js';
-import type { CRCRenderResult, PrimitiveInput, RenderingContext2D } from '../types.js';
+import type { PibblRenderResult, PrimitiveInput, RenderingContext2D } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 
 type Resolved = ResolvedDrawingStyle<HtmlBoxStyle> & {
@@ -18,7 +18,7 @@ type Resolved = ResolvedDrawingStyle<HtmlBoxStyle> & {
 
 function renderHtmlBox(props: HtmlBoxProps<unknown>, style: Readonly<Resolved>, ctx: RenderingContext2D): void {
   const refs = GLOBAL_STATE.componentRefs!;
-  const owner = GLOBAL_STATE.currentCRCInstance!;
+  const owner = GLOBAL_STATE.currentPibblInstance!;
   const service = requireHtmlService(owner);
   let slot = refs.refs[0] as HtmlBoxSlot | undefined;
   if (!slot || slot.disposed) {
@@ -51,10 +51,10 @@ setPrimitivePresentation<Resolved>(primitive, style => ({ transform: createGroup
 
 type HtmlBoxInput<Props> = Omit<PrimitiveInput<HtmlBoxProps<Props>, HtmlBoxStyle>, 'data' | 'mount'> & Pick<HtmlBoxProps<Props>, 'data' | 'mount'>;
 type HtmlBoxComponent = {
-  <Props>(props: HtmlBoxInput<Props>): CRCRenderResult;
+  <Props>(props: HtmlBoxInput<Props>): PibblRenderResult;
 };
 /**
- * A persistent native HTML box projected into CRC layout, transforms and clips.
+ * A persistent native HTML box projected into Pibbl layout, transforms and clips.
  *
  * @see {@link HtmlBoxProps}
  * @see {@link HtmlBoxStyle}

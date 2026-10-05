@@ -9,7 +9,7 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import { EventTraceRecorder } from './event-trace';
 import type { EventTraceInput, TraceEventType } from './event-trace';
 import {
@@ -186,7 +186,7 @@ async function mountInteractionLab(
 
   const render = () => {
     assertActive();
-    crc(context.canvas, createInteractionLabScene({ state, record }), {
+    pibbl(context.canvas, createInteractionLabScene({ state, record }), {
       signal: abortController.signal,
     });
     context.onStateChange?.({ ...state });

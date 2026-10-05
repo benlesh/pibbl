@@ -1,4 +1,4 @@
-import type { CRCManipulationFrameProps } from './controller-types.js';
+import type { PibblManipulationFrameProps } from './controller-types.js';
 import { createElement } from "../element/create-element.js";
 import { Group } from "../components/g.js";
 import { definePrimitive } from "../define-primitive.js";
@@ -7,11 +7,11 @@ import { useHookSlot, requireHookContext } from "../hooks/hook-slot.js";
 import { pushLayoutBox } from "../layout/context.js";
 import { getCurrentWorldTransform } from "../render-target.js";
 import { currentRootCoordinateMapping } from "./coordinates.js";
-import type { CRCNode } from "../element/types.js";
-import type { CRCComponentRefs } from "../types.js";
+import type { PibblNode } from "../element/types.js";
+import type { PibblComponentRefs } from "../types.js";
 import type { SystemStyle } from "../types.js";
-import type { CRCManipulationBox } from "./types.js";
-import type { CRCManipulationController } from "./controller-types.js";
+import type { PibblManipulationBox } from "./types.js";
+import type { PibblManipulationController } from "./controller-types.js";
 import {
   manipulationState,
   detachManipulationFrame,
@@ -20,27 +20,27 @@ import {
 
 const frames: ManipulationState[] = [];
 export function requireManipulationFrame(
-  controller: CRCManipulationController,
+  controller: PibblManipulationController,
 ): ManipulationState {
   const state = manipulationState(controller);
   if (frames.at(-1) !== state)
     throw new Error(
-      "CRC manipulation handles must be descendants of their controller frame.",
+      "Pibbl manipulation handles must be descendants of their controller frame.",
     );
   return state;
 }
 interface FrameProps {
-  readonly controller: CRCManipulationController;
-  readonly children?: CRCNode;
+  readonly controller: PibblManipulationController;
+  readonly children?: PibblNode;
 }
-interface FrameStyle extends SystemStyle, CRCManipulationBox {}
+interface FrameStyle extends SystemStyle, PibblManipulationBox {}
 interface FrameAttachment {
   state: ManipulationState;
 }
 
 function attachManipulationFrame(
   state: ManipulationState,
-  componentRefs: CRCComponentRefs<any>,
+  componentRefs: PibblComponentRefs<any>,
 ): void {
   if (state.frame && state.frame !== componentRefs) {
     if (GLOBAL_STATE.seenIds?.has(state.frame.id))
@@ -54,7 +54,7 @@ function attachManipulationFrame(
 
 function releaseManipulationFrame(
   state: ManipulationState,
-  componentRefs: CRCComponentRefs<any>,
+  componentRefs: PibblComponentRefs<any>,
 ): void {
   if (state.frame !== componentRefs) return;
   state.frame = undefined;
@@ -66,17 +66,17 @@ function releaseManipulationFrame(
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
- * @see {@link CRCManipulationFrameProps}
+ * @see {@link PibblManipulationFrameProps}
  */
 export const ManipulationFrame = definePrimitive<FrameProps, FrameStyle>(
   function ManipulationFrame(props, style) {
     const state = manipulationState(props.controller);
-    const { componentRefs, crcInstance } = requireHookContext();
-    if (state.root.eventRoot !== crcInstance.eventRoot)
+    const { componentRefs, pibblInstance } = requireHookContext();
+    if (state.root.eventRoot !== pibblInstance.eventRoot)
       throw new Error(
-        "A manipulation controller cannot attach across CRC roots.",
+        "A manipulation controller cannot attach across Pibbl roots.",
       );
     const slot = useHookSlot<FrameAttachment>("manipulationFrame", (teardowns) => {
       const attachment: FrameAttachment = { state };
@@ -102,7 +102,7 @@ export const ManipulationFrame = definePrimitive<FrameProps, FrameStyle>(
         "ManipulationFrame requires finite position and positive dimensions.",
       );
     const parent = getCurrentWorldTransform().translate(-box.left, -box.top);
-    const transaction = crcInstance.eventRoot.renderTransaction;
+    const transaction = pibblInstance.eventRoot.renderTransaction;
     if (!transaction)
       throw new Error(
         "ManipulationFrame requires an active render transaction.",

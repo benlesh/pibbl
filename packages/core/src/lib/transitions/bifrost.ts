@@ -1,6 +1,6 @@
 import { bifrostKernel } from './wasm/bifrost-kernel.js';
 import { opacity } from '../../filters/native.js';
-import { defineTransitionEffect, type CRCTransitionEffect } from './fade.js';
+import { defineTransitionEffect, type PibblTransitionEffect } from './fade.js';
 import { captureTransition, clamp, finite, regionSnapshot, type TransitionRegion } from './capture.js';
 
 /**
@@ -8,46 +8,46 @@ import { captureTransition, clamp, finite, regionSnapshot, type TransitionRegion
  *
  * @see {@link bifrost}
  */
-export interface CRCBifrostOptions {
+export interface PibblBifrostOptions {
   /** Logical region over which the effect is evaluated. See {@link TransitionRegion}. */
   readonly region: TransitionRegion;
-  /** Entry location or direction used by the transition. See {@link CRCBifrostOptions}. */
+  /** Entry location or direction used by the transition. See {@link PibblBifrostOptions}. */
   readonly entry?: Readonly<{
     /**
      * Horizontal coordinate or displacement in the containing coordinate system. See
-     * {@link CRCBifrostOptions}.
+     * {@link PibblBifrostOptions}.
      */
     x: number;
     /**
      * Vertical coordinate or displacement in the containing coordinate system. See
-     * {@link CRCBifrostOptions}.
+     * {@link PibblBifrostOptions}.
      */
     y: number;
   }>;
-  /** Brightness control for the transition effect. See {@link CRCBifrostOptions}. */
+  /** Brightness control for the transition effect. See {@link PibblBifrostOptions}. */
   readonly brightness?: number;
-  /** Hue control for the transition's emitted color. See {@link CRCBifrostOptions}. */
+  /** Hue control for the transition's emitted color. See {@link PibblBifrostOptions}. */
   readonly hue?: number;
-  /** Amount of stretching applied by the transition. See {@link CRCBifrostOptions}. */
+  /** Amount of stretching applied by the transition. See {@link PibblBifrostOptions}. */
   readonly stretch?: number;
-  /** Intensity of the electrical halo around the core. See {@link CRCBifrostOptions}. */
+  /** Intensity of the electrical halo around the core. See {@link PibblBifrostOptions}. */
   readonly glow?: number;
   /**
    * Seed used for deterministic sampling or simulation initialization. See
-   * {@link CRCBifrostOptions}.
+   * {@link PibblBifrostOptions}.
    */
   readonly seed?: number;
 }
 /**
  * A prismatic beam stretches a white-hot captured subject toward its entry point.
  *
- * @param options - Bifrost appearance and animation settings. See {@link CRCBifrostOptions}.
- * @returns A bifrost transition effect. See {@link CRCTransitionEffect}.
+ * @param options - Bifrost appearance and animation settings. See {@link PibblBifrostOptions}.
+ * @returns A bifrost transition effect. See {@link PibblTransitionEffect}.
  *
- * @see {@link CRCBifrostOptions}
- * @see {@link CRCTransitionEffect}
+ * @see {@link PibblBifrostOptions}
+ * @see {@link PibblTransitionEffect}
  */
-export function bifrost(options: CRCBifrostOptions): CRCTransitionEffect {
+export function bifrost(options: PibblBifrostOptions): PibblTransitionEffect {
   const r = regionSnapshot(options.region), ax = r.x + r.width / 2, ay = r.y + r.height;
   const ex = finite(options.entry?.x ?? ax, 'entry.x'), ey = finite(options.entry?.y ?? r.y - r.height * 2, 'entry.y');
   const brightness = finite(options.brightness ?? 1, 'brightness', 0), hue = finite(options.hue ?? 0, 'hue');

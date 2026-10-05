@@ -2,7 +2,7 @@
 
 > **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
 
-Issue: CRC-PERF-12  
+Issue: Pibbl-PERF-12  
 Priority: P2  
 Status: Open  
 Evidence date: 2026-10-02  

@@ -12,9 +12,9 @@ const assets = new Map([
 export function textAssets(): Plugin {
   const root = resolve(import.meta.dirname, '..');
   return {
-    name: 'crc-text-assets',
+    name: 'pibbl-text-assets',
     configureServer(server) {
-      server.middlewares.use('/crc-text', (request, response, next) => {
+      server.middlewares.use('/pibbl-text', (request, response, next) => {
         const asset = assets.get((request.url ?? '').split('?')[0].replace(/^\//u, ''));
         if (!asset) return next();
         void readFile(resolve(root, asset[0])).then(bytes => {
@@ -23,7 +23,7 @@ export function textAssets(): Plugin {
       });
     },
     async generateBundle() {
-      for (const [name, [path]] of assets) this.emitFile({ type: 'asset', fileName: `crc-text/${name}`, source: await readFile(resolve(root, path)) });
+      for (const [name, [path]] of assets) this.emitFile({ type: 'asset', fileName: `pibbl-text/${name}`, source: await readFile(resolve(root, path)) });
     },
   };
 }
