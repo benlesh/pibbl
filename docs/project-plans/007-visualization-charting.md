@@ -24,17 +24,17 @@ only as needed for each slice. No commit or push is requested.
 
 ## Status board
 
-| Step                                             | State              |
-| ------------------------------------------------ | ------------------ |
-| UTC scales, helpers, minimal demo and NOAA chart | Ready for feedback |
-| Numeric/categorical scales and axis presentation | Next               |
-| Chart furniture and shared visual defaults       | Queued             |
-| Everyday marks, curves, areas and bands          | Queued             |
-| Responsive exploration and shared selection      | Queued             |
-| Statistics, diagrams, hierarchies, geography     | Queued             |
-| Accepted-slice hardening and integration         | Per slice          |
+| Step                                             | State                            |
+| ------------------------------------------------ | -------------------------------- |
+| UTC scales, helpers, minimal demo and NOAA chart | Accepted; merged into local main |
+| Numeric/categorical scales and axis presentation | Next                             |
+| Chart furniture and shared visual defaults       | Queued                           |
+| Everyday marks, curves, areas and bands          | Queued                           |
+| Responsive exploration and shared selection      | Queued                           |
+| Statistics, diagrams, hierarchies, geography     | Queued                           |
+| Accepted-slice hardening and integration         | Per slice                        |
 
-## [IN PROGRESS] UTC scale vertical slice
+## [ACCEPTED] UTC scale vertical slice
 
 Implement the approved epoch-number UTC scale, continuous lookup, pure extent
 and UTC nice-domain helpers. Preserve linear/band compatibility. Add a focused
@@ -43,7 +43,7 @@ attributed checked-in snapshot. Verify the same example headlessly and visually.
 Done for feedback when focused checks pass and the exact Studio URL is supplied.
 Broader edge cases, competitor review and package evidence follow feedback.
 
-## [NEXT] Numeric/categorical scales and axis presentation
+## [IN PROGRESS] Numeric/categorical scales and axis presentation
 
 Resolve domain/tick policies, implement focused examples for numeric niceness,
 log/symlog, point/category coordinates and label-density presentation. Include
@@ -87,3 +87,48 @@ claim all roadmap features complete after one slice.
   record passing latest focused results and remaining hardening. Await visual
   feedback before broader hardening; the implementation step remains in progress
   until acceptance. No full-roadmap completion or competitive-quality claim.
+
+### 2026-10-05 continuation — reconciled baseline
+
+The user confirms the dedicated linear/bar/UTC APIs and responsive NOAA chart
+were accepted and merged into local main. Earlier “only linear/band” and
+“awaiting UTC feedback” statements above are dated history, superseded here.
+
+Delivery order for this continuation:
+
+1. Readable numeric ticks, explicit nicening, formatting, and collision-aware
+   axes in NOAA; present a runnable slice before broad hardening.
+2. Compact contextual UTC labels and explicit long-category wrap/truncate/skip
+   policies, keeping label visibility separate from tick/data geometry.
+3. Dedicated LogScale/useLogScale, SymlogScale/useSymlogScale, and
+   PointScale/usePointScale, each with fixed return types, minimal demos,
+   attributed data, domain/inversion/tick contracts, and family tree shaking.
+4. Composable grid/reference lines/bands, axis titles, legends, titles/captions/
+   source notes with explicit layout ownership.
+
+First numeric slice implements pure `linearTicks`, `niceLinearDomain`, and
+`formatNumber`, plus opt-in `Axis.labelOverlap` and `labelGap`. Existing linear
+`scale.ticks()` remains unchanged. NOAA derives numeric density from plot height,
+retains width/height `style.when` presentation, and hides colliding time labels
+without deleting tick geometry. New API docs and Studio declarations are included.
+Focused Chromium run: 16 tests passed on Node 24.15.0 / pnpm 11.21.0.
+Preview: http://127.0.0.1:5195/#/examples/composition/viz-utc-climate.
+Status: first numeric slice accepted by the user; broader feature verification remains pending.
+Packed consumers, additional scale families, tree shaking expansion, full
+interaction/cleanup evidence, and aggregate trust remain pending. No commit,
+merge, or push in this continuation.
+
+The minimal runnable numeric demo is also available at
+http://127.0.0.1:5195/#/examples/composition/viz-numeric-axis.
+Focused ESLint passed. A whole-repository typecheck encountered concurrent,
+unrelated sprite-demo errors in `docs/site/minimal/sprites/atlas.tsx`; this is
+not a passing aggregate check. Preserve concurrent website/minimal-demo edits.
+
+Studio visual inspection: NOAA and minimal numeric demo render at desktop and
+narrow/shallow allocations, with no page errors in the inspected source-mode
+sessions. The minimal demo's canonical `PibblController` mount annotation is
+required by the Studio source loader and has been verified in the live editor.
+
+2026-10-05: User accepted the numeric-axis slice and requested its commit, then
+continued work in priority order. This authorizes the slice commit only; no
+merge or push was requested.

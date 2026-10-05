@@ -280,6 +280,10 @@ interface AxisBaseProps {
    * @returns Text to draw for the tick label.
    */
   readonly tickFormat?: (value: number | string, index: number) => string;
+  /** Label collision policy; allow preserves all labels (default), skip measures and omits overlaps without removing ticks. */
+  readonly labelOverlap?: SignalValue<"allow" | "skip">;
+  /** Minimum distance between visible labels in logical pixels; defaults to 8. */
+  readonly labelGap?: SignalValue<number>;
   /**
    * Declared presentation and layout properties. See {@link SignalValue}, {@link SignalStyle},
    * {@link AxisStyle}.

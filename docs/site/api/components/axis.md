@@ -11,7 +11,7 @@ symbols: [Axis, AxisProps, AxisStyle]
 # Axis
 
 Import `Axis` from `@pibbl/core/viz`. Supply `scale: ScaleId` and `position`:
-`"bottom"`, `"left"`, `"top"`, or `"right"`. Linear and band scales are supported.
+`"bottom"`, `"left"`, `"top"`, or `"right"`. Linear, UTC, and band scales are supported.
 The bottom/right baseline uses the frame height/width; top/left uses zero.
 Endpoints follow the scale range. Ticks extend outward by 6 pixels, with labels
 another 4 pixels away. Reversing a scale changes mapping, not the frame edge.
@@ -41,7 +41,7 @@ allocation. Caller order is preserved; ticks are not sorted or deduplicated.
 the emitted value and its emitted-order index. Numeric default labels use six
 significant digits with trailing zeros removed; strings are unchanged. Two
 values may format to the same text. The baseline remains visible with no ticks.
-Tick generation is not yet nice-domain or calendar-aware.
+UTC ticks use calendar-aware generation and default to full ISO text. For readable numeric intervals, pass `linearTicks(domain)` as `tickValues`.
 
 ```tsx
 import { Axis } from "@pibbl/core/viz";
@@ -68,3 +68,20 @@ Axis output is decorative and uses `pointerEvents="none"`. Work is O(k) for
 k emitted ticks, bounded by 100 labels and one combined path. Generated band
 selection does not copy or scan the full domain; scale construction owns domain
 validation. There is no text-fit loop, retained cache or additional scheduler.
+
+## Label collisions
+
+`labelOverlap?: SignalValue<"allow" | "skip">` defaults to `"allow"` for
+compatibility. `"skip"` measures labels with the axis font and greedily keeps
+non-overlapping labels in physical range order, prioritizing the two outermost
+tick positions. If even those collide, the physically first one wins.
+`labelGap?: SignalValue<number>` defaults to 8 logical pixels and must be finite
+and nonnegative. Invalid policies throw `TypeError`; invalid gaps throw
+`RangeError`. Both signals are read by the Axis component.
+
+Skipping affects label paint only: tick positions, tick strokes, scale domain,
+data marks, and inspection coordinates remain unchanged. Formatting receives
+original tick indices, including hidden labels. Vertical axes measure text
+height; horizontal axes measure width. This does not reserve gutters or wrap
+long labels. Custom fonts must be ready before mounting, or the application must
+invalidate after loading them. See [numeric helpers](#/api/components/numeric-ticks).

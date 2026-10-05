@@ -2,7 +2,7 @@ import {
   Overlay, Circle, Group, Line, Rectangle, Text, pibbl, useLayoutBox, useSignal,
   type PibblController, type PibblPointerEvent, type PibblResponsiveStyle, type TextStyle,
 } from "@pibbl/core";
-import { Axis, LineSeries, extent, useUTCScale, useLinearScale, UTCScale, LinearScale } from "@pibbl/core/viz";
+import { Axis, LineSeries, extent, linearTicks, niceLinearDomain, formatNumber, useUTCScale, useLinearScale, UTCScale, LinearScale } from "@pibbl/core/viz";
 
 // NOAA Global Monitoring Laboratory: monthly Mauna Loa CO2, ppm.
 // Source: https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.csv
@@ -543,11 +543,8 @@ function Chart({ left, recent, adjusted, compact }: { left: number; recent: bool
   const current = adjusted ? row.adjusted : row.ppm;
   const px = x.map(row.time), py = y.map(current);
   const visible = recent ? rows.slice(384) : rows;
-  const candidates = x.ticks(width < 480 ? 3 : 6);
-  // Keep the endpoints; omit an interior label if it crowds either edge label.
-  const dateTicks = candidates.filter((time, i) => i === 0 || i === candidates.length - 1 ||
-    (Math.abs(x.map(time) - x.range[0]) >= 55 && Math.abs(x.map(time) - x.range[1]) >= 55));
-  const ticks = height < 160 ? (recent ? [390, 405, 420] : [330, 380, 430]) : recent ? [390, 400, 410, 420] : [330, 350, 370, 390, 410, 430];
+  const dateTicks = x.ticks(width < 480 ? 3 : 6);
+  const ticks = linearTicks(y.domain, { count: Math.max(2, Math.min(8, Math.floor(height / 48))) });
   const inspect = (event: PibblPointerEvent) => {
     const time = x.invert(Math.max(0, Math.min(width, event.x - left)));
     let nearest = recent ? 384 : 0;
@@ -557,8 +554,8 @@ function Chart({ left, recent, adjusted, compact }: { left: number; recent: bool
   };
   return <>
     {ticks.map(value => <Line key={value} pointerEvents="none" style={{ coords: [[0, y.map(value)], [width, y.map(value)]], stroke: "#dee7e9", strokeWidth: 1 }} />)}
-    <Axis scale="ppm" position="left" tickValues={ticks} style={{ stroke: "#c2d0d5", fill: muted, font: "12px sans-serif" }} />
-    <Axis scale="date" position="bottom" tickValues={dateTicks} tickFormat={yearLabel} style={{ stroke: "#c2d0d5", fill: muted, font: "12px sans-serif" }} />
+    <Axis scale="ppm" position="left" tickValues={ticks} labelOverlap="skip" tickFormat={value => formatNumber(Number(value))} style={{ stroke: "#c2d0d5", fill: muted, font: "12px sans-serif" }} />
+    <Axis scale="date" position="bottom" tickValues={dateTicks} tickFormat={yearLabel} labelOverlap="skip" labelGap={16} style={{ stroke: "#c2d0d5", fill: muted, font: "12px sans-serif" }} />
     <LineSeries data={visible} x="time" y={adjusted ? "adjusted" : "ppm"} xScale="date" yScale="ppm" pointerEvents="none" style={{ stroke: teal, strokeWidth: 2.5 }} />
     <Line pointerEvents="none" style={{ coords: [[px, 0], [px, height]], stroke: "#9aafb6", strokeWidth: 1 }} />
     <Circle pointerEvents="none" style={{ cx: px, cy: py, radius: 5, fill: teal, stroke: "#ffffff", strokeWidth: 2 }} />
@@ -610,7 +607,7 @@ function Scene() {
     <Group style={{ translateX: left, translateY: 304, when: [{ query: narrow, style: { translateY: 332 } }, { query: short, style: { translateY: 122 } }] }}>
       <Overlay style={{ width: plotWidth, height: Math.max(1, height - 392), when: [{ query: narrow, style: { height: Math.max(1, height - 420) } }, { query: short, style: { height: Math.max(1, height - 174) } }] }}>
         <UTCScale style={{ width: "100%", height: "100%" }} id="date" domain={recent.get() ? shortDomain : fullDomain} range="width">
-          <LinearScale id="ppm" domain={recent.get() ? [390, 420] : [330, 430]} range="height" reverse>
+          <LinearScale id="ppm" domain={niceLinearDomain(recent.get() ? [391, 419.09] : [336.14, 419.09])} range="height" reverse>
             <Chart left={left} compact={height <= short.maxHeight} recent={recent.get()} adjusted={adjusted.get()} />
           </LinearScale>
         </UTCScale>

@@ -103,3 +103,6 @@ export type { PieLayoutProps, PieLayoutStyle, PieLayoutSlice, PieLabelPlacement,
 
 export { extent, niceUTCDomain } from "./lib/utc-scale.js";
 export type { NumericDomain, UtcDomain, UTCScaleProps, ResolvedUtcScale, ResolvedContinuousScale } from "./lib/types.js";
+
+export { linearTicks, niceLinearDomain, formatNumber } from "./lib/numeric-ticks.js";
+export type { LinearTickOptions, NumberFormatOptions } from "./lib/numeric-ticks.js";

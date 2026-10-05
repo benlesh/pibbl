@@ -1222,6 +1222,11 @@ export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
 export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale;
 export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale;
 export declare function extent<D>(data: readonly D[], value: (datum: D, index: number, data: readonly D[]) => number | null | undefined): NumericDomain | undefined;
+export interface LinearTickOptions { readonly count?: number; }
+export interface NumberFormatOptions extends Intl.NumberFormatOptions { readonly locale?: string; readonly prefix?: string; readonly suffix?: string; }
+export declare function linearTicks(domain: NumericDomain, options?: LinearTickOptions): readonly number[];
+export declare function niceLinearDomain(domain: NumericDomain, options?: LinearTickOptions): NumericDomain;
+export declare function formatNumber(value: number, options?: NumberFormatOptions): string;
 export declare function niceUTCDomain(domain: NumericDomain, options?: { readonly count?: number }): NumericDomain;
 
 import type { PibblEventHandlers, PibblEventParticipationOptions, FillStyle, StrokeStyle } from '@pibbl/core';
@@ -1230,6 +1235,8 @@ interface AxisBaseProps {
   readonly scale: ScaleId;
   readonly position: "bottom" | "left" | "top" | "right";
   readonly tickFormat?: (value: number | string, index: number) => string;
+  readonly labelOverlap?: SignalValue<"allow" | "skip">;
+  readonly labelGap?: SignalValue<number>;
   readonly style?: SignalValue<SignalStyle<AxisStyle>>;
 }
 export type AxisProps = AxisBaseProps & (

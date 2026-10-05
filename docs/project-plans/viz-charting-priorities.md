@@ -12,8 +12,8 @@
 
 Date: 2026-10-05.
 Status: user-directed priorities; implementation is tracked in
-[Plan 007](007-visualization-charting.md). The first UTC slice is ready for feedback,
-not feature complete. Proposed component names are illustrative, not new public APIs.
+[Plan 007](007-visualization-charting.md). The responsive NOAA UTC slice was accepted and merged into local main.
+Reusable axis presentation and remaining foundations are in progress. Proposed component names are illustrative, not new public APIs.
 
 ## Direction and authority
 
@@ -40,13 +40,13 @@ Source inspection on 2026-10-05: the public entry is
 records predate package consolidation. This is source evidence, not a fresh
 runtime verification result.
 
-Available: linear/band scales, axes on all four edges with categorical labels
+Available: dedicated linear, bar, and UTC scales with family-specific hooks, axes on all four edges with categorical labels
 and explicit bounded ticks, straight lines with missing-data gaps, point/custom
 mark series, horizontal/vertical value and range bars, grouping and threshold
 fills, pie/donut geometry with coordinated string labels, nearest-data queries,
 hover cards, and anchored layout. Stacking is an explicit data transform.
 
-Not yet exported: UTC/time/log scales, general area/band series, automatic
+Not yet exported: log/symlog/point scales, local-calendar time scales, general area/band series, automatic
 legends or chart furniture, reusable brush/zoom/linked selection, graph/hierarchy
 layouts, or geographic components. The line explorer's brush and the diagram
 editor's connections are application examples, not reusable public APIs. Core
@@ -246,5 +246,7 @@ listed entries at the family level, not a source audit of every notebook.
 connected diagrams. Added P0-first delivery, concrete visual acceptance,
 competitive evidence requirements, and retained advanced breadth. No production
 code, shipped public contract, visual baseline, or implementation status changed.
-Next visualization slice: approved UTC scale with a polished compact time axis
-and a public editable example, followed by reusable axis/furniture improvements.
+This historical next-step note is superseded by the accepted UTC/NOAA slice.
+Current order: excellent numeric/time/category labels, dedicated log/symlog/point
+scales, then composable chart furniture. Track runnable versus hardened status
+in Plan 007.
