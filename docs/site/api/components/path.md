@@ -11,6 +11,10 @@ relatedTypes: [PathProps, PathStyle]
 
 # Path
 
+Looking for ways to edit, bend, or warp a path? See
+[PathGeometry: operations at a glance](#/api/functions/path-geometry#operations-at-a-glance)
+for the complete operation map, detailed references, and runnable examples.
+
 ```ts
 import { Path } from "@crc/core";
 ```

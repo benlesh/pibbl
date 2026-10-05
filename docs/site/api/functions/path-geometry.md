@@ -28,6 +28,84 @@ symbols:
 It supports the Canvas path-building vocabulary, segment editing, 2D affine
 transforms, and independent native/SVG conversion.
 
+## Operations at a glance
+
+This is the operation map for editable `PathGeometry`. All functions below are
+public exports of `@crc/core`; methods belong to a geometry instance.
+
+### Build and edit
+
+| Goal                                | API                                                                  | Result                                                |
+| ----------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------- |
+| Draw contours                       | `moveTo`, `lineTo`, `quadraticCurveTo`, `bezierCurveTo`, `closePath` | Mutates this geometry; returns void                   |
+| Add curved and rectangular shapes   | `arc`, `arcTo`, `ellipse`, `geometry.rect()`, `roundRect`                       | Mutates this geometry; returns void                   |
+| Copy without sharing edits          | `new PathGeometry(source)`, `clone()`                                | Independent `PathGeometry`                            |
+| Append another path                 | `addPath(other, matrix?)`                                            | Mutates this geometry; optionally transforms the copy |
+| Inspect segments                    | `segmentCount`, `getSegment(index)`, iteration                       | Count or independent segment values                   |
+| Replace, insert, or remove segments | `setSegment`, `spliceSegments`                                       | Mutates this geometry                                 |
+| Empty and reuse storage             | `clear()`                                                            | Mutates this geometry                                 |
+| Detect edits                        | `revision`                                                           | Mutation counter, not a reactive signal               |
+
+See [construction and editing](#construction-and-editing) and the
+[editable geometry example](#/examples/drawing/path-geometry).
+
+### Move, bend, and warp
+
+Mapping constructors return a reusable `PathTransform`, not geometry.
+`transformPath(geometry, mapping, { tolerance })` applies one and returns an
+independent `PathGeometry`. `composeTransforms(...)` combines mappings left to
+right before that final approximation. A mapping's `mapPoint(...)` also maps
+individual points, useful for handles and annotations.
+
+| Goal                                                         | API                                    | Working example                                                   |
+| ------------------------------------------------------------ | -------------------------------------- | ----------------------------------------------------------------- |
+| Translate, rotate, scale, skew, or reflect in place          | `geometry.transform(matrix)`           | [Editable geometry](#/examples/drawing/path-geometry)            |
+| Apply an affine mapping without changing the original        | `affineTransform` with `transformPath` | [Transform examples](path-transforms.md)              |
+| Fit into four corners, using bilinear or perspective mapping | `quadTransform`                        | [Interactive quad warp](#/examples/drawing/path-warp) |
+| Stretch between two or more guide paths                      | `envelopeTransform`                    | [Multi-guide envelope](#/examples/drawing/text-envelope) |
+| Warp through a grid of curved boundaries                     | `meshTransform`                        | [Mesh reference](path-transforms.md#meshes)                        |
+| Bend around a circular arc                                   | `arcBendTransform`                     | [Arc and path bending](#/examples/drawing/path-bending)            |
+| Bend along a smooth guide path                               | `pathBendTransform`                    | [Arc and path bending](#/examples/drawing/path-bending)            |
+| Combine mappings and apply them once                         | `composeTransforms`, `transformPath`   | [Transform examples](path-transforms.md)              |
+
+See [composable path transforms](path-transforms.md) for source rectangles,
+guide correspondence, mesh boundaries, tolerance, and domain limits. See
+[path bending](path-bending.md) for baseline, alignment, fitting, and overflow.
+Affine mappings preserve curves; nonlinear mappings produce line segments.
+
+### Change detail and export
+
+| Goal                                                    | API                  | Result                                                                     |
+| ------------------------------------------------------- | -------------------- | -------------------------------------------------------------------------- |
+| Adaptively approximate curves with lines                | `flattenPath`        | Independent line-only geometry                                             |
+| Flatten with uniform parameter steps using Wang's bound | `flattenPathWang`    | Independent line-only geometry; predictable segment allocation             |
+| Reduce polyline vertices                                | `simplifyPath`       | Independent simplified geometry; curves must be flattened first            |
+| Simplify with a radial-distance prepass                 | `simplifyPathRadial` | Independent simplified geometry; the two stages share the tolerance budget |
+| Split segments into more editable pieces                | `subdividePath`      | Independent geometry; preserves curves, not equal physical spacing         |
+| Draw with native Canvas APIs                            | `toPath2D`           | Fresh native `Path2D` snapshot                                             |
+| Export SVG path data                                    | `toSvgPathData`      | SVG path-data string                                                       |
+
+See [geometry utilities](#geometry-utilities) and the
+[utility comparison example](#/examples/drawing/path-geometry).
+
+### Boundaries and larger examples
+
+Geometry edits do not schedule rendering: notify a consumed signal after editing.
+Changing `Path` or `Group` presentation transforms does not rewrite the source
+geometry. Pixel filters likewise do not edit its segments.
+
+Native `Path2D` is opaque: CRC cannot turn it back into editable geometry. The
+`create*Path` factories return native paths, not `PathGeometry`. Start with the
+builder when later editing or warping is needed. Text outlines from `@crc/text`
+can also provide editable geometry; see [text geometry](text-geometry.md).
+Boolean union/intersection/subtraction, equal-distance resampling, and curve
+fitting are not provided by this surface.
+
+Explore the [multi-guide text envelope example](#/examples/drawing/text-envelope)
+for a larger composition using the same mapping APIs.
+
+## Smallest construction example
+
 ```ts
 import { PathGeometry, toPath2D, toSvgPathData } from "@crc/core";
 
