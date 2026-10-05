@@ -1,0 +1,58 @@
+---
+title: Brick Climb
+description: An endless desktop platformer combining sprite animation, physics, and state machines.
+sources:
+  - games/brick-climb/main.tsx
+  - games/brick-climb/scene.tsx
+  - games/brick-climb/model.ts
+  - games/brick-climb/machines.ts
+  - games/brick-climb/player-machine.ts
+---
+
+Break bricks, collect coins, and keep ahead of the rising screen. Brick Climb is
+a complete game showcase with its own HTML shell and artwork.
+
+## Run the game
+
+From a provisioned repository checkout:
+
+```sh
+corepack pnpm@11.21.0 brick-climb
+```
+
+Then open [Brick Climb locally](http://127.0.0.1:5191/). This address requires the
+local server; the game is not hosted inside the documentation site.
+The [sprite inspector](http://127.0.0.1:5191/?preview) shows the character,
+brick, and coin sheets for artwork review.
+
+Use A/D to move, W or Space to jump, S to fall faster, and Escape to pause.
+Release jump early for a shorter jump. The pause menu provides Resume and
+Restart. Desktop keyboard controls are required.
+
+## What to inspect
+
+- Animated conveyors reverse their middle and endcap clips with their direction.
+- Cloud platforms move sideways: jump through from below and ride them from above.
+- Trampolines launch the player through bricks; solid gray stone stops the boost.
+- Brick fragments fall with physics. Every 500 coins awards an extra life.
+- Death and Bifrost respawn animations coordinate with the game's state machine.
+- Terrain and its physics resources are removed as the world scrolls past them.
+
+## Start with the small examples
+
+[Sprites and sprite sheets](@PLAYGROUND@#/examples/composition/sprites) isolates
+four frames, one frame signal, and pause/resume playback. Read the
+[Sprite guide](/guides/sprites/) before adapting the full game.
+
+[State machines](@PLAYGROUND@#/examples/composition/state-machines) demonstrates
+general-purpose loading and cancellation without animation. The
+[machine animation guide](/guides/machine-animation/) explains state-owned playback.
+
+## Source map
+
+The canonical application is `games/brick-climb/`. `main.tsx` owns the HTML shell
+and sheet loading; `scene.tsx` composes sprites and physics; `model.ts` generates
+and prunes terrain; `machines.ts` and `player-machine.ts` coordinate game and
+character states. The directory also contains the artwork, styles, physics
+helpers, and regression tests needed to run the complete game. The main source
+files are expanded below for reference; run the directory as a whole.

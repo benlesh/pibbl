@@ -32,7 +32,10 @@ export async function mountSprite(canvas: HTMLCanvasElement) {
     grid: { frameWidth: 32, frameHeight: 32 },
   });
   try {
-    const app = pibbl(canvas, <Sprite frame={sheet.frames[0]} sampling="nearest" />);
+    const app = pibbl(
+      canvas,
+      <Sprite frame={sheet.frames[0]} sampling="nearest" />,
+    );
     return () => {
       app.dispose(); // Unmount consumers before releasing their images.
       sheet.dispose();
@@ -116,7 +119,9 @@ TexturePacker scale/multipack metadata fails explicitly.
 import { loadSpriteSheet } from "@pibbl/core/sprites";
 import { texturePacker } from "@pibbl/core/sprites/formats/texture-packer";
 
-const sheet = await loadSpriteSheet("/terrain.json", { format: texturePacker() });
+const sheet = await loadSpriteSheet("/terrain.json", {
+  format: texturePacker(),
+});
 // Use sheet.frames with the exact frame names from the exported JSON.
 ```
 
@@ -131,8 +136,9 @@ Use explicit physical colliders: atlas transparency is not collision geometry.
 Measure generated atlas rectangles rather than assuming cells are aligned. Check
 unique poses, baseline alignment, transparency, neighboring pixels, and the loop
 at its intended display size and speed. More frames help only when their poses
-form a coherent cycle. Brick Climb includes a separate sprite inspector for that
-review.
+form a coherent cycle. The [Brick Climb showcase](/examples/brick-climb/) combines
+sprites, physics, and state machines, and includes a separate sprite inspector
+for that review. Its showcase page explains how to run the game locally.
 
 See [animation](#/learn/guides/signals-and-animation) for playback composition and
 [machine animation](#/learn/guides/machine-animation) for event-driven coordination.

@@ -1,3 +1,4 @@
+import { verifyScaleTreeShaking } from "./verify-viz-scale-tree-shaking.mjs";
 import assert from "node:assert/strict";
 import { parse } from "yaml";
 import { execFileSync } from "node:child_process";
@@ -58,6 +59,7 @@ try {
   );
   const installed = createRequire(join(consumer, "probe.mjs"));
   const entry = installed.resolve("@pibbl/core/viz");
+  await verifyScaleTreeShaking(entry);
   const fromViz = createRequire(entry);
   assert.equal(
     realpathSync(fromViz.resolve("@pibbl/core")),
@@ -65,15 +67,17 @@ try {
   );
   const viz = await import(pathToFileURL(entry).href);
   const names = [
+    "extent",
+    "niceUTCDomain",
     "pieSlices",
     "PieLayout",
     "PieSlice",
     "PieLabel",
     "Axis",
     "LineSeries",
-    "Scale",
+    "LinearScale", "BarScale", "UTCScale",
     "ScaleAdjust",
-    "useScale",
+    "useLinearScale", "useBarScale", "useUTCScale",
     "PointSeries",
     "BarSeries",
     "PlotSeries",

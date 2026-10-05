@@ -155,6 +155,35 @@ Read exact contracts before changing these areas:
 - `docs/design/event-resource-ownership.md`
 - `docs/design/runtime-resource-ownership.md`
 
+## API design: explicit operations, not magic selectors
+
+- Do not introduce public functions, hooks, factories, or methods whose caller
+  selects a different return type, shape, cardinality, or capability set with a
+  magic string. This includes selectors nested in options such as `type`,
+  `kind`, `mode`, or `format`, not just positional arguments.
+- Give distinct operations descriptive names and stable return contracts. Use
+  `useLinearScale(id)` and `useBarScale(id)`, not `useScale(id, "linear")` and
+  `useScale(id, "bar")`. Likewise, separate a query returning a boolean, one
+  result, or many results into explicitly named operations. Share implementation
+  privately where useful.
+- Literal unions, overloads, conditional return types, enums, constants, and
+  boolean flags do not fix a selector-driven public design. Do not disguise
+  multiple return contracts with a broad union or a common wrapper either.
+- Prefer named functions or typed strategy/definition objects for distinct
+  algorithms. Do not add a required single-value selector in anticipation of
+  future variants; name the supported operation directly.
+- Ordinary data and policy values (IDs, event names, alignment, direction,
+  placement) and discriminated data/event/result unions are allowed when they
+  describe one coherent contract. Generic inference from caller-supplied data
+  or typed definitions is allowed. These are not permission to hide operation
+  selection in a configuration object.
+- Before adding or changing a public API, review every selector argument and
+  options discriminator, including methods on returned objects. If changing
+  only that selector changes what callers receive or which operations they can
+  perform on it, split the public operation. Show public type and runtime
+  evidence for each resulting contract. Existing violations are migration
+  work, not precedent for new APIs.
+
 ## Change and evidence rules
 
 - Preserve unrelated working-tree changes and untracked files.

@@ -1,17 +1,5 @@
 import { pibbl, Circle } from "@pibbl/core";
-import {
-  PlotSeries,
-  PointSeries,
-  Scale,
-  ScaleAdjust,
-  type PlotKeyAccessor,
-  type PlotSeriesProps,
-  type PointAccessor,
-  type PointMarkStyle,
-  type PointSeriesProps,
-  type PointSeriesStyle,
-  type PointStyleResolver,
-} from "@pibbl/core/viz";
+import { PlotSeries, PointSeries, ScaleAdjust, type PlotKeyAccessor, type PlotSeriesProps, type PointAccessor, type PointMarkStyle, type PointSeriesProps, type PointSeriesStyle, type PointStyleResolver, LinearScale } from "@pibbl/core/viz";
 
 type Datum = { id: string; x: number; y: number; important: boolean };
 const data: readonly Datum[] = [
@@ -50,17 +38,17 @@ canvas.height = 220;
 document.body.append(canvas);
 const app = pibbl(
   canvas,
-  <Scale
+  <LinearScale
     id="x"
-    type="linear"
+
     domain={[0, 3]}
     range="width"
     style={{ width: 320, height: 220 }}
   >
-    <Scale id="y" type="linear" domain={[0, 4]} range="height" reverse>
+    <LinearScale id="y"  domain={[0, 4]} range="height" reverse>
       <PointSeries {...points} />
       <PlotSeries {...plot} />
-    </Scale>
-  </Scale>,
+    </LinearScale>
+  </LinearScale>,
 );
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

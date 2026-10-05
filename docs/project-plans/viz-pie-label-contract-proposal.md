@@ -5,6 +5,14 @@
 Status: approved by the user on 2026-09-30. Implementation is authorized;
 this contract is not yet shipped behavior.
 
+## Current priority — 2026-10-05
+
+Approval below remains valid. The [current visualization priorities](viz-charting-priorities.md)
+place time axes, scales, and shared chart furniture ahead of custom pie content.
+Deliver custom labels within everyday-chart finishing work, using the shared
+visual-quality bar and existing bounded placement/ownership contract. This note
+changes sequencing only; it does not claim implementation or amend the API.
+
 ## Proposed composition
 
 Supply `labelBox={slice => ({ width: 132, height: 42 })}` to PieLayout and render

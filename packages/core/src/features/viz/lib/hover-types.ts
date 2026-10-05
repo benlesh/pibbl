@@ -2,21 +2,21 @@ import type { closestPoint, closestX, interpolateX, linearInterpolation } from '
 import type { HoverData } from './hover-data.js';
 import type { PibblNode, SignalValue } from "@pibbl/core";
 import type { PointAccessor } from "./point-types.js";
-import type { ResolvedLinearScale, ScaleId } from "./types.js";
+import type { ResolvedContinuousScale, ScaleId } from "./types.js";
 /**
  * Scale lookup context supplied when evaluating a hover query.
  *
  * @see {@link ScaleId}
- * @see {@link ResolvedLinearScale}
+ * @see {@link ResolvedContinuousScale}
  * @see {@link HoverQuery}
  */
 export interface HoverQueryContext {
   /**
-   * Looks up a resolved linear scale by its identifier. See {@link ResolvedLinearScale}.
+   * Looks up a resolved continuous scale by its identifier. See {@link ResolvedContinuousScale}.
    * @param id - Identity of the scale needed by the query. See {@link ScaleId}.
-   * @returns The resolved linear scale. See {@link ResolvedLinearScale}.
+   * @returns The resolved continuous scale. See {@link ResolvedContinuousScale}.
    */
-  scale(id: ScaleId): ResolvedLinearScale;
+  scale(id: ScaleId): ResolvedContinuousScale;
 }
 /**
  * A query that resolves reactive hover input into a hit or no result.

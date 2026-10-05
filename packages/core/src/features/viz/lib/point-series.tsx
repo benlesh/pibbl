@@ -11,7 +11,7 @@ import type {
   PointSeriesProps,
   PointSeriesStyle,
 } from "./point-types.js";
-import { useScale } from "./use-scale.js";
+import { useContinuousScale } from "./use-continuous-scale.js";
 import { finiteCoordinate, pointAccessor, pointData } from "./point-data.js";
 import { appendPointTarget, pointPath } from "./point-geometry.js";
 import { opacity, width } from "./paint.js";
@@ -77,8 +77,8 @@ export function PointSeries<D>({
   style: styleInput,
   ...events
 }: PointSeriesProps<D>) {
-  const xs = useScale(xId).get(),
-    ys = useScale(yId).get();
+  const xs = useContinuousScale(xId).get(),
+    ys = useContinuousScale(yId).get();
   const data = pointData(resolveSignalValue(input), "PointSeries");
   const x = pointAccessor(xInput),
     y = pointAccessor(yInput);

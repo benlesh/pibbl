@@ -8,16 +8,16 @@ function context() {
   runtime = testRuntime();
   const snapshots = new Map<string, Viz.ResolvedLinearScale>();
   function Read() {
-    snapshots.set("x", Viz.useScale("x").get());
-    snapshots.set("y", Viz.useScale("y").get());
+    snapshots.set("x", Viz.useLinearScale("x").get());
+    snapshots.set("y", Viz.useLinearScale("y").get());
     return null;
   }
   runtime.mount(
-    <Viz.Scale id="x" type="linear" domain={[0, 10]} range={[0, 100]}>
-      <Viz.Scale id="y" type="linear" domain={[0, 10]} range={[100, 0]}>
+    <Viz.LinearScale id="x"  domain={[0, 10]} range={[0, 100]}>
+      <Viz.LinearScale id="y"  domain={[0, 10]} range={[100, 0]}>
         <Read />
-      </Viz.Scale>
-    </Viz.Scale>,
+      </Viz.LinearScale>
+    </Viz.LinearScale>,
   );
   runtime.flush();
   return { scale: (id: Viz.ScaleId) => snapshots.get(String(id))! };

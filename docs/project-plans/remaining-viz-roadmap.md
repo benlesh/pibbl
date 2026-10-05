@@ -2,6 +2,8 @@
 
 > **Historical status: Approved roadmap record; it does not define current shipped behavior.**
 
+> **Current priorities (2026-10-05):** [Visualization priorities and visual-quality bar](viz-charting-priorities.md) supersedes the delivery order below. Basic charting, time axes, scales, and chart furniture come first, with explicit visual-quality acceptance. Historical approvals and evidence remain preserved here.
+
 Status: roadmap, semantic BarSeries replacement, and complete label-fit/tick/invalidation resolution packet approved. First bars/axes and donut slices accepted; hardening and integrated verification underway.
 Audit date: 2026-09-30. Audited and fetched main: `d9c28931da2dc659314baed6c0c79c13ab14e48a`.
 Objective source: `/Users/benlesh/.codex/attachments/31d3419b-d22d-4d2f-9276-a048e890465a/goal-objective.md`.

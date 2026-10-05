@@ -11,7 +11,7 @@ import {
   type PibblPointerEvent,
   type WritableSignal,
 } from "@pibbl/core";
-import { Axis, BarSeries, Scale, useScale } from "@pibbl/core/viz";
+import { Axis, BarSeries, useBarScale, useLinearScale, BarScale, LinearScale } from "@pibbl/core/viz";
 
 // Census Bureau, Vintage 2023, Table 1. Historical snapshot, not current estimates.
 // https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html
@@ -87,9 +87,9 @@ function Plot({
   origin: { x: number; y: number };
   selected: WritableSignal<string | null>;
 }) {
-  const states = useScale("states", "band").get();
-  const groups = useScale("years", "band").get();
-  const values = useScale("population").get();
+  const states = useBarScale("states").get();
+  const groups = useBarScale("years").get();
+  const values = useLinearScale("population").get();
   function inspect(event: PibblPointerEvent) {
     const x = event.x - origin.x,
       y = event.y - origin.y;
@@ -252,34 +252,34 @@ function Scene() {
       ))}
       <Group style={{ translateX: origin.x, translateY: origin.y }}>
         <Absolute style={{ width, height }}>
-          <Scale
+          <BarScale
             id="states"
-            type="band"
+
             domain={populations.map((row) => row.state)}
             range="width"
             paddingInner={0.25}
             paddingOuter={0.15}
             style={{ width, height }}
           >
-            <Scale
+            <BarScale
               id="years"
-              type="band"
+
               domain={groups}
               range={{ bandwidthOf: "states" }}
               paddingInner={0.12}
               paddingOuter={0.03}
             >
-              <Scale
+              <LinearScale
                 id="population"
-                type="linear"
+
                 domain={[0, 42000000]}
                 range="height"
                 reverse
               >
                 <Plot origin={origin} selected={selected} />
-              </Scale>
-            </Scale>
-          </Scale>
+              </LinearScale>
+            </BarScale>
+          </BarScale>
         </Absolute>
       </Group>
     </Group>

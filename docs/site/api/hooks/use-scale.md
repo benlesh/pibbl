@@ -1,28 +1,34 @@
 ---
 id: api-hook-use-scale
-title: useScale
-summary: Reads the nearest named scale as a core readonly signal.
+title: Scale hooks
+summary: Read a named linear, categorical, or UTC scale with an explicit typed hook.
 kind: api
 slug: use-scale
 apiCategory: hook
-symbols: [useScale]
+symbols: [useLinearScale, useBarScale, useUTCScale]
 ---
 
-# useScale
+# Scale hooks
 
-Import `useScale` from `@pibbl/core/viz`. Call `useScale(id)` in a component to obtain
-`Signal<ResolvedLinearScale>`, then call `.get()` where the dependency should be owned.
-The returned signal has stable identity for that provider mount. Its immutable
-value changes when the resolved domain, range, or local frame changes.
+Import from `@pibbl/core/viz`. Each hook accepts only an ancestor scale ID and
+returns a stable, shared readonly core signal:
 
-Use `useScale(id, "band")` for `Signal<ResolvedBandScale>`. The default family is
-linear; reading a mismatched family throws an actionable error. Band snapshots
-expose `bandwidth`, `step`, and category mapping instead of numeric inversion.
+```ts
+useLinearScale(id: ScaleId): Signal<ResolvedLinearScale>;
+useBarScale(id: ScaleId): Signal<ResolvedBandScale>;
+useUTCScale(id: ScaleId): Signal<ResolvedUtcScale>;
+```
 
-Lookup requires an enclosing matching [`Scale`](#/api/components/scale).
-Unknown IDs and use outside component evaluation throw. Hooks must keep their
-ordinary call order. IDs do not connect unrelated roots or cross Layer boundaries.
+Call `.get()` to read the immutable mapping and track its dependencies. Consumers
+of the same provider and hook share signal identity across domain, range, and
+allocation changes. Reading a different family throws when `.get()` is called.
 
-Scale formulas use core transactional `useComputed`: successful traversal commits
-updates, failed traversal rolls back candidate formulas, and removal releases
-consumer dependencies. There is no separate visualization subscription loop.
+Use the matching `LinearScale`, `BarScale`, or `UTCScale` provider. Nearest matching
+IDs shadow ancestors. Unknown IDs, use outside component evaluation, and crossing
+Layer boundaries throw. Keep hooks in ordinary stable call order.
+
+Provider formulas use transactional core `useComputed`: successful traversal
+commits updates; failed traversal rolls back candidate formulas. Core computed
+signals release subscriptions when unobserved. There is no separate visualization
+subscription loop. Each family has its own importable implementation; there is no
+public `useScale` overload or family-selector argument.

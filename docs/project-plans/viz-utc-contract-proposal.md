@@ -1,9 +1,31 @@
 # UTC scale contract (approved)
 
+> API correction approved 2026-10-05: **every scale family has a dedicated
+> provider and hook**, with a fixed return type and no family-selector argument.
+> Current families: `LinearScale` / `useLinearScale`, `BarScale` / `useBarScale`,
+> `UTCScale` / `useUTCScale`. UTC nicening is `niceUTCDomain(domain, { count? })`.
+> Generic `Scale`, `ScaleProps`, and `useScale` are removed, without aliases.
+> Future log, symlog, power, square-root, point, ordinal, local-time, sequential,
+> diverging, quantile, quantize, and threshold variations must follow this rule;
+> listing them here does not claim implementation. Family modules must tree shake
+> independently. This decision supersedes selector-based API examples below.
+
 > **Historical status: Approved proposal record; it does not define current shipped behavior.**
 
 Status: approved by the user on 2026-09-30. Implementation is authorized;
 this contract is not yet shipped behavior.
+
+## Current priority and presentation requirement — 2026-10-05
+
+The [current visualization priorities](viz-charting-priorities.md) select this
+as the first charting slice. Preserve the approved numeric/calendar contract
+below. Its full-ISO default formatter is deterministic, but does not by itself
+meet the new visual-quality bar: the first example needs compact calendar labels,
+clear UTC context, units, deliberate gutters, and readable narrow layouts.
+A reusable contextual formatter and label-density/collision policy are follow-up
+presentation work, not silently approved changes to tick generation or
+`formatTick`. Explicitly resolve endpoint crowding before claiming axis quality
+is complete. No implementation or visual acceptance is claimed by this note.
 
 ## Approval summary
 

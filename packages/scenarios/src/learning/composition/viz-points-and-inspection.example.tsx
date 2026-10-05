@@ -14,16 +14,7 @@ import {
   type LayoutItemStyle,
   type WritableSignal,
 } from "@pibbl/core";
-import {
-  Axis,
-  HoverData,
-  HoverCard,
-  PointSeries,
-  PlotSeries,
-  Scale,
-  nearestPoint,
-  useScale,
-} from "@pibbl/core/viz";
+import { Axis, HoverData, HoverCard, PointSeries, PlotSeries, nearestPoint, useLinearScale, LinearScale } from "@pibbl/core/viz";
 
 type Row = {
   id: string;
@@ -496,8 +487,8 @@ function Plot({
   index: number;
   origin: { x: number; y: number };
 }) {
-  const xs = useScale("x").get(),
-    ys = useScale("y").get();
+  const xs = useLinearScale("x").get(),
+    ys = useLinearScale("y").get();
   const data = controls.rows.get();
   const selected = controls.selected.get();
   const anchors = data
@@ -676,16 +667,16 @@ function Panel({
         Body mass (g)
       </Text>
       <Absolute>
-        <Scale
+        <LinearScale
           id="x"
-          type="linear"
+
           domain={controls.fixture.xDomain ?? [170, 240]}
           range="width"
           style={{ left: 44, top: 64, width, height }}
         >
-          <Scale
+          <LinearScale
             id="y"
-            type="linear"
+
             domain={controls.fixture.yDomain ?? [2500, 6500]}
             range="height"
             reverse
@@ -695,8 +686,8 @@ function Panel({
               index={index}
               origin={{ x: origin.x + 44, y: origin.y + 64 }}
             />
-          </Scale>
-        </Scale>
+          </LinearScale>
+        </LinearScale>
       </Absolute>
     </Group>
   );

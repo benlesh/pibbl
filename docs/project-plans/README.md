@@ -2,7 +2,19 @@
 
 ## Active plan
 
-[004 — HtmlBox](./004-html-box.md) is active.
+[007 — Visualization charting](./007-visualization-charting.md) is active.
+
+[004 — HtmlBox](./004-html-box.md) retains unfinished work and its existing
+evidence; this queue switch does not mark it complete.
+
+## Visualization planning
+
+- [Current visualization priorities and visual-quality bar](./viz-charting-priorities.md) — 2026-10-05 user-directed priorities: basic charting first; execution tracked in Plan 007.
+- [Historical visualization roadmap and approvals](./remaining-viz-roadmap.md)
+- [Approved UTC scale contract](./viz-utc-contract-proposal.md)
+- [Approved custom pie label contract](./viz-pie-label-contract-proposal.md)
+
+These documents do not replace the active numbered plan.
 
 ## Strategy input
 

@@ -1,17 +1,20 @@
-export { Scale } from "./lib/scale.js";
-export { useScale } from "./lib/use-scale.js";
+export { LinearScale } from "./lib/linear-scale-component.js";
+export { BarScale } from "./lib/bar-scale.js";
+export { UTCScale } from "./lib/utc-scale-component.js";
+export { useLinearScale } from "./lib/use-linear-scale.js";
+export { useBarScale } from "./lib/use-bar-scale.js";
+export { useUTCScale } from "./lib/use-utc-scale.js";
 export type {
   ScaleId,
   LinearDomain,
   BandCategory,
   BandDomain,
-  BandScaleProps,
+  BarScaleProps,
   BandScaleRange,
   ResolvedBandScale,
   ScaleRange,
   ScaleLayoutStyle,
   LinearScaleProps,
-  ScaleProps,
   ResolvedLinearScale,
   ResolvedScale,
 } from "./lib/types.js";
@@ -97,3 +100,6 @@ export type { PieOptions, PieSliceGeometry } from "./lib/pie-slices.js";
 
 export { PieLayout, PieSlice, PieLabel } from "./lib/pie-layout.js";
 export type { PieLayoutProps, PieLayoutStyle, PieLayoutSlice, PieLabelPlacement, PieLabelLayout, PieSliceProps, PieSliceStyle, PieLabelProps, PieLabelStyle } from "./lib/pie-types.js";
+
+export { extent, niceUTCDomain } from "./lib/utc-scale.js";
+export type { NumericDomain, UtcDomain, UTCScaleProps, ResolvedUtcScale, ResolvedContinuousScale } from "./lib/types.js";

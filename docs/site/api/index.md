@@ -20,7 +20,7 @@ import { Rectangle, Text, pibbl, defineRenderLayer } from "@pibbl/core";
 import { defineThreeLayer } from "@pibbl/three";
 import { Particles2D } from "@pibbl/core/particles";
 import { PhysicsWorld2D } from "@pibbl/core/physics/2d";
-import { Axis, LineSeries, Scale } from "@pibbl/core/viz";
+import { Axis, LineSeries, LinearScale } from "@pibbl/core/viz";
 ```
 
 Package source paths and `lib/*` paths are not supported.
@@ -76,12 +76,12 @@ There is no root `@pibbl/core/physics` barrel and no independent physics clock.
 ## Visualization
 
 `@pibbl/core/viz` provides allocation-relative
-[`Scale`](#/api/components/scale), [`Axis`](#/api/components/axis),
+[Scale providers](#/api/components/scale), [`Axis`](#/api/components/axis),
 [`LineSeries`](#/api/components/line-series),
 [`PointSeries`](#/api/components/point-series),
 [`PlotSeries`](#/api/components/plot-series),
 [`ScaleAdjust`](#/api/components/scale-adjust), and
-[`useScale`](#/api/hooks/use-scale).
+[`useLinearScale`](#/api/hooks/use-scale).
 
 Compose inspection with [`HoverData`](#/api/components/hover-data),
 [`HoverCard`](#/api/components/hover-card),

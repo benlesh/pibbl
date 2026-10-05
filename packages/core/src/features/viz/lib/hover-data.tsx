@@ -1,7 +1,7 @@
 import type { PibblNode } from "@pibbl/core";
 import { withHooksForbidden } from "@pibbl/core/internal";
 import type { HoverDataProps, HoverQueryContext } from "./hover-types.js";
-import type { ResolvedLinearScale, ScaleId } from "./types.js";
+import type { ResolvedContinuousScale, ScaleId } from "./types.js";
 import { readScale } from "./scale-context.js";
 /**
  * Evaluates an ordinary synchronous query under the current scale scope.
@@ -15,7 +15,7 @@ import { readScale } from "./scale-context.js";
 export function HoverData<T>({ query, children }: HoverDataProps<T>): PibblNode {
   if (typeof query !== "function" || typeof children !== "function")
     throw new TypeError("HoverData requires query and children functions.");
-  const snapshots = new Map<ScaleId, ResolvedLinearScale>();
+  const snapshots = new Map<ScaleId, ResolvedContinuousScale>();
   let active = true;
   const context: HoverQueryContext = {
     scale(id) {
@@ -28,9 +28,9 @@ export function HoverData<T>({ query, children }: HoverDataProps<T>): PibblNode 
         const value = readScale(id, "HoverData");
         if (!value) throw new TypeError("HoverData requires a scale ID.");
         const resolved = value.get();
-        if (resolved.type !== "linear")
+        if (resolved.type === "band")
           throw new TypeError(
-            "HoverData numeric queries require linear scales.",
+            "HoverData numeric queries require continuous scales.",
           );
         snapshot = resolved;
         snapshots.set(id, snapshot);

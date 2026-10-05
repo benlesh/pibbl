@@ -15,7 +15,7 @@ import {
   type PibblEventTarget,
   type WritableSignal,
 } from "@pibbl/core";
-import { Axis, LineSeries, Scale, ScaleAdjust, useScale } from "@pibbl/core/viz";
+import { Axis, LineSeries, ScaleAdjust, useLinearScale, LinearScale } from "@pibbl/core/viz";
 
 type Window = readonly [number, number];
 type PanelSnapshot = { width: number; height: number; domain: Window };
@@ -637,7 +637,7 @@ function Brush({
   window: WritableSignal<Window>;
   changeWindow: (range: Window) => void;
 }) {
-  const x = useScale("x").get();
+  const x = useLinearScale("x").get();
   const { width, height } = useLayoutBox();
   const [start, end] = window.get();
   type Drag = {
@@ -840,8 +840,8 @@ function Plot({
   changeWindow: (range: Window) => void;
   onSnapshot?: Fixture["onSnapshot"];
 }) {
-  const x = useScale("x").get(),
-    y = useScale("y").get();
+  const x = useLinearScale("x").get(),
+    y = useLinearScale("y").get();
   const [start, end] = window.get();
   const selection = selected.get();
   const frame = useLayoutBox();
@@ -1086,16 +1086,16 @@ function Scene({ fixture }: { fixture: Fixture }) {
       />
       <Group style={{ translateX: 64, translateY: 182 }}>
         <Absolute style={{ width: plotWidth, height: plotHeight }}>
-          <Scale
+          <LinearScale
             id="x"
-            type="linear"
+
             domain={window}
             range="width"
             style={{ width: "100%", height: "100%" }}
           >
-            <Scale
+            <LinearScale
               id="y"
-              type="linear"
+
               domain={[low, high]}
               range="height"
               reverse
@@ -1108,8 +1108,8 @@ function Scene({ fixture }: { fixture: Fixture }) {
                 changeWindow={changeWindow}
                 onSnapshot={fixture.onSnapshot}
               />
-            </Scale>
-          </Scale>
+            </LinearScale>
+          </LinearScale>
         </Absolute>
       </Group>
       <Label
@@ -1127,16 +1127,16 @@ function Scene({ fixture }: { fixture: Fixture }) {
       />
       <Group style={{ translateX: 24, translateY: box.height - 88 }}>
         <Absolute style={{ width: Math.max(1, box.width - 48), height: 40 }}>
-          <Scale
+          <LinearScale
             id="x"
-            type="linear"
+
             domain={[0, last]}
             range="width"
             style={{ width: "100%", height: "100%" }}
           >
-            <Scale
+            <LinearScale
               id="y"
-              type="linear"
+
               domain={[330, 430]}
               range="height"
               reverse
@@ -1149,8 +1149,8 @@ function Scene({ fixture }: { fixture: Fixture }) {
                 changeWindow={changeWindow}
                 onSnapshot={fixture.onSnapshot}
               />
-            </Scale>
-          </Scale>
+            </LinearScale>
+          </LinearScale>
         </Absolute>
       </Group>
       <Label

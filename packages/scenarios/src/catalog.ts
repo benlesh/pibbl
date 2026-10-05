@@ -2306,7 +2306,7 @@ export const vizFoundationScenarioEntry: ScenarioCatalogEntry<
     summary:
       "Observe the static NOAA record through linked detail and overview plots.",
     category: "Visualization",
-    apiTags: ["Scale", "LineSeries", "Axis"],
+    apiTags: ["LinearScale", "LineSeries", "Axis"],
     conceptTags: ["local allocation", "signals"],
     manualSteps: [
       {

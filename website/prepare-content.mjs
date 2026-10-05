@@ -190,7 +190,12 @@ for (const gallery of galleries) {
           );
           return `- [${example.title}](/examples/${slug}/): ${example.summary} [Full page](/experience/${slug}/) · [Playground](${playground}#/examples/${example.browseGroup}/${slug})`;
         })
-        .join("\n"),
+        .join("\n") +
+      (gallery.pages ?? []).map((id) => {
+        const page = records.find((record) => record.id === id);
+        if (!page) throw new Error(`Missing standalone showcase ${id}`);
+        return `\n- [${page.meta.title}](/${id}/): ${page.meta.description}`;
+      }).join(""),
   });
 }
 const catalogLanding = records.find((record) => record.id === "catalogs");

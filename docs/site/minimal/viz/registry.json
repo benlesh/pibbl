@@ -7,11 +7,19 @@
     "environment": "browser",
     "symbols": [
       {
-        "name": "Scale",
+        "name": "LinearScale",
         "importPath": "@pibbl/core/viz"
       },
       {
-        "name": "useScale",
+        "name": "BarScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useLinearScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useBarScale",
         "importPath": "@pibbl/core/viz"
       },
       {
@@ -31,7 +39,7 @@
         "importPath": "@pibbl/core/viz"
       },
       {
-        "name": "BandScaleProps",
+        "name": "BarScaleProps",
         "importPath": "@pibbl/core/viz"
       },
       {
@@ -52,10 +60,6 @@
       },
       {
         "name": "LinearScaleProps",
-        "importPath": "@pibbl/core/viz"
-      },
-      {
-        "name": "ScaleProps",
         "importPath": "@pibbl/core/viz"
       },
       {
@@ -459,6 +463,43 @@
     ],
     "notes": [
       "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  },
+  {
+    "id": "utc",
+    "title": "UTC scales and domain helpers",
+    "description": "Render real NOAA observations with UTC calendar ticks, numeric extents and outward domain rounding.",
+    "source": "utc.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "extent",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "niceUTCDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NumericDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "UtcDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "UTCScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedUtcScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedContinuousScale",
+        "importPath": "@pibbl/core/viz"
+      }
     ]
   }
 ]

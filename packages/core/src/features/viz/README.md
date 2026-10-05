@@ -3,9 +3,9 @@
 Official composable Canvas visualization for Pibbl, with no visualization runtime
 dependency. Included in `@pibbl/core`, sharing its version and JSX runtime.
 
-- `Scale`: nested ID-based linear scales driven by core signals and local layout.
-- `useScale`: read the nearest scale as a readonly core signal.
-- `Axis`: bottom and left ticks/labels in the local frame.
+- `LinearScale`, `BarScale`, or `UTCScale`: nested ID-based linear, band, and UTC scales driven by core signals and local layout.
+- `useLinearScale`: read the nearest scale as a readonly core signal.
+- `Axis`: four-sided numeric/calendar/categorical ticks/labels in the local frame.
 - `LineSeries`: one batched path with key/function accessors and missing-data gaps.
 - `ScaleAdjust`: translate ordinary Pibbl children by scale coordinates.
 
@@ -14,8 +14,10 @@ clipping, markers, legends, and interaction using normal Pibbl components/events
 
 See the [guide](../../../../../docs/site/learn/guides/data-visualization.md) and the
 [interactive example](http://localhost:5173/#/examples/composition/viz-responsive-line).
-Current scope is linear numeric scales and linear curves. Additional series,
-calendar scales, curve families, and the example's mobile presentation are deferred.
+UTC calendar scales and numeric domain helpers are available in the
+[UTC reference](../../../../../docs/site/api/functions/utc-domains.md).
+The UTC basics and climate examples show compact labels and phone layouts.
+Local-calendar scales and additional curve families remain deferred.
 
 ## Points and hover inspection
 

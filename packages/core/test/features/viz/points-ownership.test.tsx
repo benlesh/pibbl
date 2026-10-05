@@ -7,7 +7,7 @@ import {
   useSignal,
   type PibblNode,
 } from "@pibbl/core";
-import { PointSeries, PlotSeries, Scale } from "@pibbl/core/viz";
+import { PointSeries, PlotSeries, LinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 import { getPibblInstance } from "../../../src/lib/global-state.js";
@@ -15,11 +15,11 @@ let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
 function Scales({ children }: { children: PibblNode }) {
   return (
-    <Scale id="x" type="linear" domain={[0, 10]} range={[0, 100]}>
-      <Scale id="y" type="linear" domain={[0, 10]} range={[100, 0]}>
+    <LinearScale id="x"  domain={[0, 10]} range={[0, 100]}>
+      <LinearScale id="y"  domain={[0, 10]} range={[100, 0]}>
         {children}
-      </Scale>
-    </Scale>
+      </LinearScale>
+    </LinearScale>
   );
 }
 function press(canvas: HTMLCanvasElement, x: number, y: number) {

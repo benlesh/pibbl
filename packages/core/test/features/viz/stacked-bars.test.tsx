@@ -1,5 +1,5 @@
 import { Group, signal } from "@pibbl/core";
-import { BarSeries, Scale } from "@pibbl/core/viz";
+import { BarSeries, BarScale, LinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -16,15 +16,15 @@ it("renders reactive positive and negative stack segments using range endpoints 
   ]);
   let hits = 0;
   const canvas = runtime.mount(
-    <Scale
+    <BarScale
       id="c"
-      type="band"
+
       domain={["A"]}
       range={[0, 100]}
       paddingInner={0.2}
       paddingOuter={0.1}
     >
-      <Scale id="v" type="linear" domain={[-10, 10]} range={[200, 0]}>
+      <LinearScale id="v"  domain={[-10, 10]} range={[200, 0]}>
         <BarSeries
           data={data}
           category="c"
@@ -35,8 +35,8 @@ it("renders reactive positive and negative stack segments using range endpoints 
           style={(row) => ({ fill: row.color })}
           onPointerDown={() => hits++}
         />
-      </Scale>
-    </Scale>,
+      </LinearScale>
+    </BarScale>,
   );
   runtime.flush();
   const pixel = (x: number, y: number) => [
@@ -75,14 +75,14 @@ it("renders reactive positive and negative stack segments using range endpoints 
 it("composes grouped ranges and absolute threshold fills without extending segments to zero", () => {
   runtime = testRuntime();
   const canvas = runtime.mount(
-    <Scale id="c" type="band" domain={["A"]} range={[0, 200]}>
-      <Scale
+    <BarScale id="c"  domain={["A"]} range={[0, 200]}>
+      <BarScale
         id="g"
-        type="band"
+
         domain={["actual", "plan"]}
         range={{ bandwidthOf: "c" }}
       >
-        <Scale id="v" type="linear" domain={[0, 10]} range={[100, 0]}>
+        <LinearScale id="v"  domain={[0, 10]} range={[100, 0]}>
           <BarSeries
             data={[
               { c: "A", g: "actual", from: 2, to: 8 },
@@ -104,9 +104,9 @@ it("composes grouped ranges and absolute threshold fills without extending segme
               },
             }}
           />
-        </Scale>
-      </Scale>
-    </Scale>,
+        </LinearScale>
+      </BarScale>
+    </BarScale>,
   );
   runtime.flush();
   const pixel = (x: number, y: number) => [
@@ -142,11 +142,11 @@ it.each([
       end: number;
     }>;
     runtime.mount(
-      <Scale id="c" type="band" domain={["A"]} range={[0, 100]}>
-        <Scale id="v" type="linear" domain={[0, 10]} range={[100, 0]}>
+      <BarScale id="c"  domain={["A"]} range={[0, 100]}>
+        <LinearScale id="v"  domain={[0, 10]} range={[100, 0]}>
           <BarSeries {...props} />
-        </Scale>
-      </Scale>,
+        </LinearScale>
+      </BarScale>,
     );
     expect(() => runtime.flush()).toThrow(/either value.*both valueStart and valueEnd/);
   },
@@ -164,13 +164,13 @@ it("omits missing, nonfinite, zero-length and excluded ranges from paint and tar
     { c: "F", from: 1, to: 9, include: false },
   ];
   const canvas = runtime.mount(
-    <Scale
+    <BarScale
       id="c"
-      type="band"
+
       domain={rows.map((row) => row.c)}
       range={[0, 600]}
     >
-      <Scale id="v" type="linear" domain={[0, 10]} range={[100, 0]}>
+      <LinearScale id="v"  domain={[0, 10]} range={[100, 0]}>
         <BarSeries
           data={rows}
           category="c"
@@ -185,8 +185,8 @@ it("omits missing, nonfinite, zero-length and excluded ranges from paint and tar
           onPointerDown={() => hits++}
           style={{ fill: "red", stroke: "black", strokeWidth: 4 }}
         />
-      </Scale>
-    </Scale>,
+      </LinearScale>
+    </BarScale>,
   );
   runtime.flush();
   const bounds = canvas.getBoundingClientRect();
@@ -216,9 +216,9 @@ it("maps grouped horizontal ranges and threshold bands in normal and reversed va
     colors: ["#008000", "#ff0000"],
   };
   const bars = (prefix: string, range: readonly [number, number]) => (
-    <Scale id={`${prefix}-category`} type="band" domain={["A"]} range={[0, 100]}>
-      <Scale id={`${prefix}-group`} type="band" domain={["actual", "plan"]} range={{ bandwidthOf: `${prefix}-category` }}>
-        <Scale id={`${prefix}-value`} type="linear" domain={[0, 10]} range={range}>
+    <BarScale id={`${prefix}-category`}  domain={["A"]} range={[0, 100]}>
+      <BarScale id={`${prefix}-group`}  domain={["actual", "plan"]} range={{ bandwidthOf: `${prefix}-category` }}>
+        <LinearScale id={`${prefix}-value`}  domain={[0, 10]} range={range}>
           <BarSeries
             orientation="horizontal"
             data={rows}
@@ -232,9 +232,9 @@ it("maps grouped horizontal ranges and threshold bands in normal and reversed va
             onPointerDown={() => hits++}
             style={{ fill: threshold }}
           />
-        </Scale>
-      </Scale>
-    </Scale>
+        </LinearScale>
+      </BarScale>
+    </BarScale>
   );
   const canvas = runtime.mount(<>{bars("normal", [0, 200])}<Group style={{ translateY: 120 }}>{bars("reverse", [200, 0])}</Group></>);
   runtime.flush();

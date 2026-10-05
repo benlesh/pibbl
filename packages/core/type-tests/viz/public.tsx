@@ -1,20 +1,10 @@
 import { createElement, signal, type PibblNode } from "@pibbl/core";
-import {
-  Scale,
-  Axis,
-  LineSeries,
-  ScaleAdjust,
-  useScale,
-  type ScaleProps,
-  type ResolvedScale,
-  type LineSeriesProps,
-} from "@pibbl/core/viz";
+import { Axis, LineSeries, ScaleAdjust, type LinearScaleProps, type ResolvedScale, type LineSeriesProps, useLinearScale, BarScale, useBarScale, LinearScale, useUTCScale, UTCScale } from "@pibbl/core/viz";
 const data = signal<
   readonly { time: number; value: number | null; name: string }[]
 >([{ time: 0, value: 1, name: "a" }]);
-const props: ScaleProps = {
+const props: LinearScaleProps = {
   id: "x",
-  type: "linear",
   domain: signal<readonly [number, number]>([0, 1]),
   range: "width",
   style: signal({ width: 100 }),
@@ -32,7 +22,7 @@ const line: LineSeriesProps<{
   style: signal({ strokeWidth: signal(2) }),
 };
 function Probe() {
-  const scale: ResolvedScale = useScale("x").get();
+  const scale: ResolvedScale = useLinearScale("x").get();
   return (
     <Axis
       scale="x"
@@ -42,16 +32,16 @@ function Probe() {
   );
 }
 const scene: PibblNode = (
-  <Scale {...props}>
+  <LinearScale {...props}>
     <LineSeries {...line} />
     <ScaleAdjust x={1} xScale="x">
       <Probe />
     </ScaleAdjust>
-  </Scale>
+  </LinearScale>
 );
 void scene;
 void createElement(
-  Scale,
+  LinearScale,
   props,
   createElement(Axis, { scale: "x", position: "left" }),
 );
@@ -60,7 +50,7 @@ void (<LineSeries data={data} x="name" y="value" xScale="x" yScale="y" />);
 // @ts-expect-error no curve catalog in this slice
 void (<LineSeries {...line} curve="basis" />);
 // Band domains can also contain finite numeric categories.
-void (<Scale {...props} type="band" />);
+void (<BarScale {...props}  />);
 // @ts-expect-error paired coordinate and ID
 void (<ScaleAdjust x={1} />);
 // @ts-expect-error thunks are not reactive data
@@ -314,7 +304,7 @@ void (
   />
 );
 function BandConsumer() {
-  const band: ResolvedBandScale = useScale("categories", "band").get();
+  const band: ResolvedBandScale = useBarScale("categories").get();
   const start: number | undefined = band.map("A");
   void start;
   // @ts-expect-error bands have no numeric inversion
@@ -351,7 +341,7 @@ const groupStyle: BarStyleResolver<(typeof groupedRows)[number]> = (row) => ({
   fill: row.group === "East" ? "teal" : "orange",
 });
 void (
-  <Scale id="g" type="band" domain={["East"]} range={signal(nestedRange)} />
+  <BarScale id="g"  domain={["East"]} range={signal(nestedRange)} />
 );
 void (
   <BarSeries
@@ -378,7 +368,7 @@ void incompleteGroup;
 void (
   (
     // @ts-expect-error numeric scales cannot use bandwidthOf
-    <Scale id="v" type="linear" domain={[0, 1]} range={{ bandwidthOf: "c" }} />
+    <LinearScale id="v"  domain={[0, 1]} range={{ bandwidthOf: "c" }} />
   )
 );
 const signalGroupStyle: BarStyleResolver<
@@ -460,3 +450,23 @@ void (<BarSeries data={[{ category: "A", value: 2 }]} x="category" y="value" xSc
 void (<PieLayout data={pieData} value="amount" revision={signal(0)} style={{ radius: 100, innerRadius: signal(55) }}>{slice => { const hole: number = slice.innerRadius; void hole; return <PieSlice slice={slice} />; }}</PieLayout>);
 // @ts-expect-error cache revisions are numeric
 void (<PieLayout data={pieData} value="amount" revision="stale">{() => null}</PieLayout>);
+
+import { extent, niceUTCDomain, type UTCScaleProps, type ResolvedUtcScale, type ResolvedContinuousScale } from "@pibbl/core/viz";
+const utcDomain = niceUTCDomain(extent([0, 86400000], value => value)!);
+const utcProps: UTCScaleProps = { id: "utc", domain: utcDomain, range: "width" };
+function UtcProbe() {
+  const utc: ResolvedUtcScale = useUTCScale("utc").get();
+  const continuous: ResolvedContinuousScale = useUTCScale("utc").get();
+  return <Axis scale="utc" position="bottom" tickFormat={() => utc.formatTick(continuous.invert(0))} />;
+}
+void <UTCScale {...utcProps}><UtcProbe /></UTCScale>;
+
+// Scale families are explicit in both providers and hooks.
+// @ts-expect-error a family selector is not a supported hook argument
+void useLinearScale("x", "utc");
+// @ts-expect-error UTC formatting is not part of a linear scale
+void useLinearScale("x").get().formatTick(0);
+// @ts-expect-error bands have no numeric inverse
+void useBarScale("category").get().invert(0);
+// @ts-expect-error providers do not accept a type selector
+void <LinearScale {...props} type="utc" />;

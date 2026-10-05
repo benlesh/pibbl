@@ -8,24 +8,22 @@ import type { ResolvedScale, ScaleId } from "./types.js";
 interface Scope {
   id: ScaleId;
   value: Signal<ResolvedScale>;
-  linear: Signal<ResolvedScale>;
-  band: Signal<ResolvedScale>;
   canvas: Canvas;
   parent: Scope | undefined;
 }
 let current: Scope | undefined;
+const kinds = new WeakMap<Signal<ResolvedScale>, ResolvedScale["type"]>();
+export function scaleKind(value: Signal<ResolvedScale>) { return kinds.get(value); }
 export function provideScale(
   id: ScaleId,
   value: Signal<ResolvedScale>,
-  linear: Signal<ResolvedScale>,
-  band: Signal<ResolvedScale>,
+  kind: ResolvedScale["type"],
 ): void {
+  kinds.set(value, kind);
   const parent = current;
   const scope: Scope = {
     id,
     value,
-    linear,
-    band,
     canvas: getCurrentBackendHostCanvas(),
     parent,
   };
@@ -43,33 +41,30 @@ export function provideScale(
 export function lookupScale(
   id: ScaleId | undefined,
   receiver: string,
-  type?: "linear" | "band",
 ): Signal<ResolvedScale> | undefined {
   useInternalHookSlot("vizScaleLookup", () => undefined);
-  return readScale(id, receiver, type);
+  return readScale(id, receiver);
 }
 /** Invocation-scoped lookup for official viz receivers; does not allocate a hook. */
 export function readScale(
   id: ScaleId | undefined,
   receiver: string,
-  type?: "linear" | "band",
 ): Signal<ResolvedScale> | undefined {
-  return findScale(current, getCurrentBackendHostCanvas(), id, receiver, type);
+  return findScale(current, getCurrentBackendHostCanvas(), id, receiver);
 }
 /** Captures visible ancestors so reactive formulas can resolve IDs outside traversal. */
 export function captureScaleLookup(receiver: string) {
   useInternalHookSlot("vizScaleLookup", () => undefined);
   const parent = current;
   const canvas = getCurrentBackendHostCanvas();
-  return (id: ScaleId | undefined, type?: "linear" | "band") =>
-    findScale(parent, canvas, id, receiver, type);
+  return (id: ScaleId | undefined) =>
+    findScale(parent, canvas, id, receiver);
 }
 function findScale(
   parent: Scope | undefined,
   canvas: Canvas,
   id: ScaleId | undefined,
   receiver: string,
-  type?: "linear" | "band",
 ): Signal<ResolvedScale> | undefined {
   if (id === undefined) return undefined;
   for (let scope = parent; scope; scope = scope.parent) {
@@ -78,7 +73,7 @@ function findScale(
       throw new Error(
         `${receiver}: scale ${String(id)} crosses a Layer boundary; place Scale inside the Layer.`,
       );
-    return type ? scope[type] : scope.value;
+    return scope.value;
   }
   throw new Error(
     `${receiver}: unknown scale ${String(id)}; add an ancestor Scale with this ID.`,

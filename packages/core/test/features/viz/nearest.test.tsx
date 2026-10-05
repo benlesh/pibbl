@@ -1,10 +1,4 @@
-import {
-  Scale,
-  useScale,
-  nearestDomainValue,
-  nearestPoint,
-  type ResolvedLinearScale,
-} from "@pibbl/core/viz";
+import { nearestDomainValue, nearestPoint, type ResolvedLinearScale, useLinearScale, LinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -13,16 +7,16 @@ it("selects original data by local distance with stable ties and inclusive limit
   runtime = testRuntime();
   let x!: ResolvedLinearScale, y!: ResolvedLinearScale;
   function Read() {
-    x = useScale("x").get();
-    y = useScale("y").get();
+    x = useLinearScale("x").get();
+    y = useLinearScale("y").get();
     return null;
   }
   runtime.mount(
-    <Scale id="x" type="linear" domain={[0, 10]} range={[0, 200]}>
-      <Scale id="y" type="linear" domain={[0, 10]} range={[100, 0]}>
+    <LinearScale id="x"  domain={[0, 10]} range={[0, 200]}>
+      <LinearScale id="y"  domain={[0, 10]} range={[100, 0]}>
         <Read />
-      </Scale>
-    </Scale>,
+      </LinearScale>
+    </LinearScale>,
   );
   runtime.flush();
   const data = [
@@ -58,16 +52,16 @@ it("keeps source ties in collapsed ranges and rejects unrepresentable distances"
   runtime = testRuntime();
   let collapsed!: ResolvedLinearScale, reversed!: ResolvedLinearScale;
   function Read() {
-    collapsed = useScale("collapsed").get();
-    reversed = useScale("reversed").get();
+    collapsed = useLinearScale("collapsed").get();
+    reversed = useLinearScale("reversed").get();
     return null;
   }
   runtime.mount(
-    <Scale id="collapsed" type="linear" domain={[0, 10]} range={[50, 50]}>
-      <Scale id="reversed" type="linear" domain={[0, 10]} range={[100, 0]}>
+    <LinearScale id="collapsed"  domain={[0, 10]} range={[50, 50]}>
+      <LinearScale id="reversed"  domain={[0, 10]} range={[100, 0]}>
         <Read />
-      </Scale>
-    </Scale>,
+      </LinearScale>
+    </LinearScale>,
   );
   runtime.flush();
   expect(nearestDomainValue([8, 2], 50, collapsed)).toBe(8);

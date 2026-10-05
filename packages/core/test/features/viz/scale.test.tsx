@@ -1,5 +1,5 @@
 import { Absolute, Layer, pibbl, signal, type Signal } from "@pibbl/core";
-import { Scale, useScale, type ResolvedLinearScale } from "@pibbl/core/viz";
+import { type ResolvedLinearScale, useLinearScale, LinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -17,7 +17,7 @@ it.each([
   const pixelTolerance = Math.abs(range[1] - range[0]) * 1e-12;
   let checked = 0;
   function Probe() {
-    const scale = useScale("round-trip").get();
+    const scale = useLinearScale("round-trip").get();
     const start = reverse ? range[1] : range[0];
     const end = reverse ? range[0] : range[1];
     for (const fraction of fractions) {
@@ -32,9 +32,9 @@ it.each([
     }
   }
   runtime.mount(
-    <Scale id="round-trip" type="linear" domain={domain} range={range} reverse={reverse}>
+    <LinearScale id="round-trip"  domain={domain} range={range} reverse={reverse}>
       <Probe />
-    </Scale>,
+    </LinearScale>,
   );
   runtime.flush();
   expect(checked).toBe(fractions.length);
@@ -46,25 +46,25 @@ it("maps local allocations and updates the same scale signal during reflow", () 
   const identities: Signal<ResolvedLinearScale>[] = [];
   const values: number[][] = [];
   function Probe() {
-    const x = useScale("x");
-    const y = useScale("y");
+    const x = useLinearScale("x");
+    const y = useLinearScale("y");
     identities.push(x);
     values.push([x.get().map(5), y.get().map(25), x.get().frame.width]);
   }
   function Scene({ width }: { width: number }) {
     return (
       <Absolute>
-        <Scale
+        <LinearScale
           id="x"
-          type="linear"
+
           domain={domain}
           range="width"
           style={{ width, height: width / 2 }}
         >
-          <Scale id="y" type="linear" domain={[0, 100]} range="height" reverse>
+          <LinearScale id="y"  domain={[0, 100]} range="height" reverse>
             <Probe />
-          </Scale>
-        </Scale>
+          </LinearScale>
+        </LinearScale>
       </Absolute>
     );
   }
@@ -85,7 +85,7 @@ it("restores shadowed scopes and rolls back a failed candidate", () => {
   runtime = testRuntime();
   const captured: Signal<ResolvedLinearScale>[] = [];
   function Probe() {
-    const x = useScale("x");
+    const x = useLinearScale("x");
     captured.push(x);
     x.get();
   }
@@ -94,14 +94,14 @@ it("restores shadowed scopes and rolls back a failed candidate", () => {
   }
   function Scene({ end, fail = false }: { end: number; fail?: boolean }) {
     return (
-      <Scale id="x" type="linear" domain={[0, end]} range={[0, 100]}>
+      <LinearScale id="x"  domain={[0, end]} range={[0, 100]}>
         <Probe />
-        <Scale id="x" type="linear" domain={[0, 1]} range={[10, 20]} reverse>
+        <LinearScale id="x"  domain={[0, 1]} range={[10, 20]} reverse>
           <Probe />
-        </Scale>
+        </LinearScale>
         <Probe />
         <Fail fail={fail} />
-      </Scale>
+      </LinearScale>
     );
   }
   const canvas = runtime.mount(<Scene end={10} />);
@@ -122,13 +122,13 @@ it("suppresses equivalent domain results and detaches disposed consumers", () =>
   const domain = signal<readonly [number, number]>([0, 10]);
   let renders = 0;
   function Probe() {
-    useScale("x").get();
+    useLinearScale("x").get();
     renders++;
   }
   runtime.mount(
-    <Scale id="x" type="linear" domain={domain} range={[0, 100]}>
+    <LinearScale id="x"  domain={domain} range={[0, 100]}>
       <Probe />
-    </Scale>,
+    </LinearScale>,
   );
   runtime.flush();
   domain.set([0, 10]);
@@ -142,21 +142,21 @@ it("suppresses equivalent domain results and detaches disposed consumers", () =>
 it("diagnoses a malformed domain and collapsed inversion through the public API", () => {
   runtime = testRuntime();
   function Probe() {
-    expect(() => useScale("x").get().invert(0)).toThrow(/collapsed/);
+    expect(() => useLinearScale("x").get().invert(0)).toThrow(/collapsed/);
   }
   runtime.mount(
-    <Scale id="x" type="linear" domain={[0, 10]} range={[0, 0]}>
+    <LinearScale id="x"  domain={[0, 10]} range={[0, 0]}>
       <Probe />
-    </Scale>,
+    </LinearScale>,
   );
   runtime.flush();
   function InvalidProbe() {
-    useScale("bad").get();
+    useLinearScale("bad").get();
   }
   runtime.mount(
-    <Scale id="bad" type="linear" domain={[1, 1]} range="width">
+    <LinearScale id="bad"  domain={[1, 1]} range="width">
       <InvalidProbe />
-    </Scale>,
+    </LinearScale>,
   );
   expect(() => runtime.flush()).toThrow(/domain/);
 });
@@ -165,23 +165,23 @@ it("keeps complete scale scopes inside Layers and rejects cross-Layer lookup", (
   runtime = testRuntime();
   let mapped = 0;
   function Probe() {
-    mapped = useScale("x").get().map(5);
+    mapped = useLinearScale("x").get().map(5);
   }
   runtime.mount(
     <Layer style={{ width: 200, height: 100 }}>
-      <Scale id="x" type="linear" domain={[0, 10]} range="width">
+      <LinearScale id="x"  domain={[0, 10]} range="width">
         <Probe />
-      </Scale>
+      </LinearScale>
     </Layer>,
   );
   runtime.flush();
   expect(mapped).toBe(100);
   runtime.mount(
-    <Scale id="x" type="linear" domain={[0, 10]} range="width">
+    <LinearScale id="x"  domain={[0, 10]} range="width">
       <Layer style={{ width: 200, height: 100 }}>
         <Probe />
       </Layer>
-    </Scale>,
+    </LinearScale>,
   );
   expect(() => runtime.flush()).toThrow(/Layer|unknown scale/);
 });
@@ -193,20 +193,20 @@ it("resolves whole allocation styles and dynamic scale inputs through core signa
   const range = signal<"width" | readonly [number, number]>("width");
   let scale!: ResolvedLinearScale;
   function Probe() {
-    scale = useScale("x").get();
+    scale = useLinearScale("x").get();
   }
   runtime.mount(
     <Absolute>
-      <Scale
+      <LinearScale
         id="x"
-        type="linear"
+
         domain={[10, 0]}
         range={range}
         reverse={reverse}
         style={style}
       >
         <Probe />
-      </Scale>
+      </LinearScale>
     </Absolute>,
   );
   runtime.flush();
@@ -233,14 +233,14 @@ it("releases replaced signal dependencies after a successful provider update", (
     second = signal<readonly [number, number]>([0, 20]);
   let renders = 0;
   function Probe() {
-    useScale("x").get();
+    useLinearScale("x").get();
     renders++;
   }
   function Scene({ domain }: { domain: Signal<readonly [number, number]> }) {
     return (
-      <Scale id="x" type="linear" domain={domain} range={[0, 100]}>
+      <LinearScale id="x"  domain={domain} range={[0, 100]}>
         <Probe />
-      </Scale>
+      </LinearScale>
     );
   }
   const canvas = runtime.mount(<Scene domain={first} />);
@@ -254,5 +254,5 @@ it("releases replaced signal dependencies after a successful provider update", (
   second.set([0, 40]);
   runtime.flush();
   expect(renders).toBe(before + 1);
-  expect(() => useScale("x")).toThrow();
+  expect(() => useLinearScale("x")).toThrow();
 });

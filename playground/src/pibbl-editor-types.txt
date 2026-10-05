@@ -1172,7 +1172,6 @@ export type BandScaleRange = ScaleRange | { readonly bandwidthOf: ScaleId };
 export type ScaleLayoutStyle = Pick<BoxStyle, 'width' | 'height'> & LayoutItemStyle;
 export interface LinearScaleProps {
   readonly id: ScaleId;
-  readonly type: 'linear';
   readonly domain: SignalValue<LinearDomain>;
   readonly range: SignalValue<ScaleRange>;
   readonly reverse?: SignalValue<boolean>;
@@ -1181,14 +1180,15 @@ export interface LinearScaleProps {
 }
 export type BandCategory = string | number;
 export type BandDomain = readonly BandCategory[];
-export interface BandScaleProps extends Omit<LinearScaleProps, "type" | "domain" | "range"> {
-  readonly type: "band";
+export interface BarScaleProps extends Omit<LinearScaleProps, "domain" | "range"> {
   readonly domain: SignalValue<BandDomain>;
   readonly range: SignalValue<BandScaleRange>;
   readonly paddingInner?: SignalValue<number>;
   readonly paddingOuter?: SignalValue<number>;
 }
-export type ScaleProps = LinearScaleProps | BandScaleProps;
+export type NumericDomain = LinearDomain;
+export type UtcDomain = LinearDomain;
+export interface UTCScaleProps extends LinearScaleProps { }
 export interface ResolvedBandScale {
   readonly type: "band";
   readonly domain: BandDomain;
@@ -1208,7 +1208,14 @@ export interface ResolvedLinearScale {
   invert(pixel: number): number;
   ticks(count?: number): readonly number[];
 }
-export type ResolvedScale = ResolvedLinearScale | ResolvedBandScale;
+export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
+  readonly type: "utc";
+  formatTick(value: number): string;
+}
+export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale;
+export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale;
+export declare function extent<D>(data: readonly D[], value: (datum: D, index: number, data: readonly D[]) => number | null | undefined): NumericDomain | undefined;
+export declare function niceUTCDomain(domain: NumericDomain, options?: { readonly count?: number }): NumericDomain;
 
 import type { PibblEventHandlers, PibblEventParticipationOptions, FillStyle, StrokeStyle } from '@pibbl/core';
 export interface AxisStyle { readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly fill?: FillStyle; readonly font?: string; readonly opacity?: number }
@@ -1240,9 +1247,12 @@ type ScaleAdjustY = { readonly y: SignalValue<number>; readonly yScale: ScaleId 
 export type ScaleAdjustProps = ScaleAdjustX & ScaleAdjustY & { readonly children?: PibblNode };
 
 import type { Signal } from "@pibbl/core";
-export declare function Scale(props: ScaleProps): PibblNode;
-export declare function useScale(id: ScaleId, type?: "linear"): Signal<ResolvedLinearScale>;
-export declare function useScale(id: ScaleId, type: "band"): Signal<ResolvedBandScale>;
+export declare function useLinearScale(id: ScaleId): Signal<ResolvedLinearScale>;
+export declare function useBarScale(id: ScaleId): Signal<ResolvedBandScale>;
+export declare function useUTCScale(id: ScaleId): Signal<ResolvedUtcScale>;
+export declare function LinearScale(props: LinearScaleProps): PibblNode;
+export declare function BarScale(props: BarScaleProps): PibblNode;
+export declare function UTCScale(props: UTCScaleProps): PibblNode;
 export declare function Axis(props: AxisProps): PibblNode;
 export declare function LineSeries<D>(props: LineSeriesProps<D>): PibblNode;
 export declare function ScaleAdjust(props: ScaleAdjustProps): PibblNode;
@@ -1283,13 +1293,13 @@ export interface PlotSeriesProps<D> extends PibblEventHandlers {
 
 export declare function PointSeries<D>(props:PointSeriesProps<D>):PibblNode;
 export declare function PlotSeries<D>(props:PlotSeriesProps<D>):PibblNode;
-export interface NearestPointOptions<D> { readonly x:PointAccessor<D>; readonly y:PointAccessor<D>; readonly xScale:ResolvedLinearScale; readonly yScale:ResolvedLinearScale; readonly defined?:(datum:D,index:number,data:readonly D[])=>boolean; readonly maxDistance?:number; }
+export interface NearestPointOptions<D> { readonly x:PointAccessor<D>; readonly y:PointAccessor<D>; readonly xScale:ResolvedContinuousScale; readonly yScale:ResolvedContinuousScale; readonly defined?:(datum:D,index:number,data:readonly D[])=>boolean; readonly maxDistance?:number; }
 export interface NearestPoint<D> {readonly datum:D; readonly index:number; readonly x:number; readonly y:number; readonly distance:number;}
-export declare function nearestDomainValue(values:readonly number[],rangeValue:number,scale:ResolvedLinearScale):number|undefined;
+export declare function nearestDomainValue(values:readonly number[],rangeValue:number,scale:ResolvedContinuousScale):number|undefined;
 export declare function nearestPoint<D>(data:readonly D[],point:Readonly<{x:number;y:number}>,options:NearestPointOptions<D>):NearestPoint<D>|undefined;
 
 export interface HoverQueryContext {
-  scale(id: ScaleId): ResolvedLinearScale;
+  scale(id: ScaleId): ResolvedContinuousScale;
 }
 export type HoverQuery<T> = (context: HoverQueryContext) => T | undefined;
 export interface HoverDataProps<T> {

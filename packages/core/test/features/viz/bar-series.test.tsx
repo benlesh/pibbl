@@ -14,24 +14,24 @@ it("maps ordered reactive bands and targets signed bars, not padding or missing 
   const identities: unknown[] = [];
   let clicks = 0;
   function Probe() {
-    const scale = Viz.useScale("category", "band");
+    const scale = Viz.useBarScale("category");
     identities.push(scale);
     snapshots.push(scale.get());
   }
   const canvas = runtime.mount(
     <Absolute>
-      <Viz.Scale
+      <Viz.BarScale
         id="category"
-        type="band"
+
         domain={domain}
         range="width"
         paddingInner={0.2}
         paddingOuter={0.1}
         style={style}
       >
-        <Viz.Scale
+        <Viz.LinearScale
           id="value"
-          type="linear"
+
           domain={[-10, 10]}
           range="height"
           reverse
@@ -51,8 +51,8 @@ it("maps ordered reactive bands and targets signed bars, not padding or missing 
             style={{ fill: "#ff0000" }}
             onPointerDown={() => clicks++}
           />
-        </Viz.Scale>
-      </Viz.Scale>
+        </Viz.LinearScale>
+      </Viz.BarScale>
     </Absolute>,
   );
   runtime.flush();
@@ -104,14 +104,14 @@ it("maps semantic horizontal values across a categorical left axis", () => {
   );
   const canvas = runtime.mount(
     <Absolute>
-      <Viz.Scale
+      <Viz.BarScale
         id="category"
-        type="band"
+
         domain={["gain", "loss"]}
         range="height"
         style={{ width: 300, height: 200 }}
       >
-        <Viz.Scale id="value" type="linear" domain={[-10, 10]} range="width">
+        <Viz.LinearScale id="value"  domain={[-10, 10]} range="width">
           <Viz.Axis scale="category" position="left" />
           <Viz.Axis scale="value" position="top" tickCount={3} />
           <Viz.BarSeries
@@ -126,8 +126,8 @@ it("maps semantic horizontal values across a categorical left axis", () => {
             valueScale="value"
             style={{ fill: "#ff0000" }}
           />
-        </Viz.Scale>
-      </Viz.Scale>
+        </Viz.LinearScale>
+      </Viz.BarScale>
     </Absolute>,
   );
   runtime.flush();
@@ -148,8 +148,8 @@ it("lets decorative bars opt out of targeting", () => {
   runtime = testRuntime();
   let hits = 0;
   const canvas = runtime.mount(
-    <Viz.Scale id="category" type="band" domain={["A"]} range={[0, 100]}>
-      <Viz.Scale id="value" type="linear" domain={[0, 10]} range={[100, 0]}>
+    <Viz.BarScale id="category"  domain={["A"]} range={[0, 100]}>
+      <Viz.LinearScale id="value"  domain={[0, 10]} range={[100, 0]}>
         <Viz.BarSeries
           data={[{ c: "A", v: 10 }]}
           category="c"
@@ -159,8 +159,8 @@ it("lets decorative bars opt out of targeting", () => {
           pointerEvents="none"
           onPointerDown={() => hits++}
         />
-      </Viz.Scale>
-    </Viz.Scale>,
+      </Viz.LinearScale>
+    </Viz.BarScale>,
   );
   runtime.flush();
   const rect = canvas.getBoundingClientRect();
@@ -183,15 +183,15 @@ it("fills each bar by reactive domain thresholds without changing its border or 
   });
   let hits = 0;
   const canvas = runtime.mount(
-    <Viz.Scale
+    <Viz.BarScale
       id="category"
-      type="band"
+
       domain={["A", "B"]}
       range={[0, 200]}
       paddingInner={0.2}
       paddingOuter={0.1}
     >
-      <Viz.Scale id="value" type="linear" domain={[-20, 60]} range={[320, 0]}>
+      <Viz.LinearScale id="value"  domain={[-20, 60]} range={[320, 0]}>
         <Viz.BarSeries
           data={[
             { c: "A", v: 50 },
@@ -204,8 +204,8 @@ it("fills each bar by reactive domain thresholds without changing its border or 
           style={{ fill, stroke: "#000000", strokeWidth: 2 }}
           onPointerDown={() => hits++}
         />
-      </Viz.Scale>
-    </Viz.Scale>,
+      </Viz.LinearScale>
+    </Viz.BarScale>,
   );
   runtime.flush();
   const ctx = canvas.getContext("2d")!;
@@ -247,8 +247,8 @@ it("follows the horizontal value axis for threshold fills in either range direct
   };
   const canvas = runtime.mount(
     <>
-      <Viz.Scale id="normal-category" type="band" domain={["A"]} range={[0, 100]}>
-        <Viz.Scale id="normal-value" type="linear" domain={[-20, 60]} range={[0, 320]}>
+      <Viz.BarScale id="normal-category"  domain={["A"]} range={[0, 100]}>
+        <Viz.LinearScale id="normal-value"  domain={[-20, 60]} range={[0, 320]}>
           <Viz.BarSeries
             orientation="horizontal"
             data={rows}
@@ -258,11 +258,11 @@ it("follows the horizontal value axis for threshold fills in either range direct
             valueScale="normal-value"
             style={{ fill: threshold }}
           />
-        </Viz.Scale>
-      </Viz.Scale>
+        </Viz.LinearScale>
+      </Viz.BarScale>
       <Group style={{ translateY: 120 }}>
-        <Viz.Scale id="reversed-category" type="band" domain={["A"]} range={[0, 100]}>
-          <Viz.Scale id="reversed-value" type="linear" domain={[-20, 60]} range={[320, 0]}>
+        <Viz.BarScale id="reversed-category"  domain={["A"]} range={[0, 100]}>
+          <Viz.LinearScale id="reversed-value"  domain={[-20, 60]} range={[320, 0]}>
             <Viz.BarSeries
               orientation="horizontal"
               data={rows}
@@ -272,8 +272,8 @@ it("follows the horizontal value axis for threshold fills in either range direct
               valueScale="reversed-value"
               style={{ fill: threshold }}
             />
-          </Viz.Scale>
-        </Viz.Scale>
+          </Viz.LinearScale>
+        </Viz.BarScale>
       </Group>
     </>,
   );

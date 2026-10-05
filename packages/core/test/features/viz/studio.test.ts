@@ -26,12 +26,12 @@ it("accepts the standalone viz lesson but still rejects a required fixture argum
   ).toThrow(/mount/);
   expect(() =>
     toRunnableScript(
-      'import { Scale, Axis } from "@pibbl/core/viz"; export default function mount(canvas) { return {dispose(){}}; }',
+      'import { LinearScale, Axis } from "@pibbl/core/viz"; export default function mount(canvas) { return {dispose(){}}; }',
     ),
   ).not.toThrow();
   expect(() =>
     toRunnableScript(
-      'import { Scale } from "@pibbl/core/viz/internal"; export default function mount(canvas) { return {dispose(){}}; }',
+      'import { LinearScale } from "@pibbl/core/viz/internal"; export default function mount(canvas) { return {dispose(){}}; }',
     ),
   ).toThrow();
 });
@@ -44,7 +44,7 @@ it("loads the exact editable lesson source through the workbench adapter", async
 });
 it("runs a defaulted fixture mount without requiring a second caller argument", () => {
   const emitted =
-    'import { Scale } from "@pibbl/core/viz"; export default function mount(canvas, fixture = {}) { return {dispose(){}}; }';
+    'import { LinearScale } from "@pibbl/core/viz"; export default function mount(canvas, fixture = {}) { return {dispose(){}}; }';
   expect(() => toRunnableScript(emitted)).not.toThrow();
   expect(() =>
     toRunnableScript(emitted.replace("fixture = {}", "fixture")),

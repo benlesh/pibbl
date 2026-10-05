@@ -15,22 +15,7 @@ import {
   type SignalValue,
   type Signal,
 } from "@pibbl/core";
-import {
-  Axis,
-  Scale,
-  LineSeries,
-  HoverData,
-  AnchoredLayout,
-  closestPoint,
-  closestX,
-  defineSeries,
-  interpolateX,
-  linearInterpolation,
-  useScale,
-  type HoverQueryContext,
-  type HoverHit,
-  type HoverSample,
-} from "@pibbl/core/viz";
+import { Axis, LineSeries, HoverData, AnchoredLayout, closestPoint, closestX, defineSeries, interpolateX, linearInterpolation, type HoverQueryContext, type HoverHit, type HoverSample, useLinearScale, LinearScale } from "@pibbl/core/viz";
 type Row = { id?: string; x: number; y: number | null | undefined };
 type Mode = "closest-point" | "nearest-per-line" | "interpolated-x";
 type Reading = {
@@ -125,8 +110,8 @@ function Plot({
   origin: { x: number; y: number };
   viewport: { width: number; height: number };
 }) {
-  const xs = useScale("time").get(),
-    ys = useScale("co2").get();
+  const xs = useLinearScale("time").get(),
+    ys = useLinearScale("co2").get();
   const position = useSignal<{ x: number; y: number } | null>(null),
     drag = useSignal<number | null>(null);
   const first = defineSeries({
@@ -499,18 +484,18 @@ function Scene({ fixture }: { fixture: Fixture }) {
         Move to inspect · Press and drag the guide
       </Text>
       <Absolute>
-        <Scale
+        <LinearScale
           id="time"
-          type="linear"
+
           domain={
             fixture.xDomain ?? [monthly[0].x, monthly[monthly.length - 1].x]
           }
           range="width"
           style={{ left, top, width, height }}
         >
-          <Scale
+          <LinearScale
             id="co2"
-            type="linear"
+
             domain={fixture.yDomain ?? [410, 420]}
             range="height"
             reverse
@@ -522,8 +507,8 @@ function Scene({ fixture }: { fixture: Fixture }) {
               origin={{ x: left, y: top }}
               viewport={{ width: box.width, height: box.height }}
             />
-          </Scale>
-        </Scale>
+          </LinearScale>
+        </LinearScale>
       </Absolute>
       <Text
         style={{

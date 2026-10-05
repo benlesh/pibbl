@@ -1,5 +1,5 @@
 import { createElement, signal, type PibblNode } from "@pibbl/core";
-import { BarSeries, PieLayout, PieSlice, PieLabel, Scale, type PieLayoutSlice } from "@pibbl/core/viz";
+import { BarSeries, PieLayout, PieSlice, PieLabel, type PieLayoutSlice, BarScale, LinearScale } from "@pibbl/core/viz";
 import { expect, it } from "vitest";
 import { commands } from "vitest/browser";
 import { testRuntime } from "./support/runtime.js";
@@ -34,11 +34,11 @@ it.skipIf(!enabled)("reports fixed first-wave public workloads", async () => {
           ...(legacy ? {} : { revision: 0 }),
           style: { cx: 250, cy: 200, radius: 150 }, children: renderSlice,
         });
-        return <Scale id="c" type="band" domain={categories} range={[0, 500]}>
-          <Scale id="v" type="linear" domain={[0, 100]} range={[350, 0]}>
+        return <BarScale id="c"  domain={categories} range={[0, 500]}>
+          <LinearScale id="v"  domain={[0, 100]} range={[350, 0]}>
             {createElement(BarSeries<Row>, props as never)}
-          </Scale>
-        </Scale>;
+          </LinearScale>
+        </BarScale>;
       }
       try {
         let start = performance.now();

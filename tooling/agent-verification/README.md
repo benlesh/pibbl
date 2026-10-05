@@ -476,7 +476,7 @@ API, built/packed inspector support, MCP/transport and additional domain facets.
 
 The inventory's dated audit is superseded for availability: current core exports
 include receiver-owned signal inputs, batch, useConst, useComputed and
-useReaction. Current `@pibbl/core/viz` exports Scale, useScale, Axis, LineSeries and
+useReaction. Current `@pibbl/core/viz` exports LinearScale, BarScale, UTCScale, useLinearScale, useBarScale, useUTCScale, Axis, LineSeries and
 ScaleAdjust. This slice needs neither new reactive machinery nor chart tooling.
 
 ## Focused evidence

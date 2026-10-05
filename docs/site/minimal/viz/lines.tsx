@@ -1,16 +1,5 @@
 import { pibbl } from "@pibbl/core";
-import {
-  Axis,
-  LineSeries,
-  Scale,
-  ScaleAdjust,
-  type LineAccessor,
-  type LineCoordinate,
-  type LineCurve,
-  type LineSeriesProps,
-  type LineSeriesStyle,
-  type ScaleAdjustProps,
-} from "@pibbl/core/viz";
+import { Axis, LineSeries, ScaleAdjust, type LineAccessor, type LineCoordinate, type LineCurve, type LineSeriesProps, type LineSeriesStyle, type ScaleAdjustProps, LinearScale } from "@pibbl/core/viz";
 
 type Reading = { day: number; value: number | null };
 const data: readonly Reading[] = [
@@ -43,17 +32,17 @@ canvas.height = 220;
 document.body.append(canvas);
 const app = pibbl(
   canvas,
-  <Scale
+  <LinearScale
     id="day"
-    type="linear"
+
     domain={[1, 4]}
     range="width"
     style={{ width: 320, height: 220 }}
   >
-    <Scale id="value" type="linear" domain={[0, 40]} range="height" reverse>
+    <LinearScale id="value"  domain={[0, 40]} range="height" reverse>
       <LineSeries {...line} />
       <ScaleAdjust {...marker} />
-    </Scale>
-  </Scale>,
+    </LinearScale>
+  </LinearScale>,
 );
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

@@ -1,14 +1,5 @@
 import { pibbl, Overlay } from "@pibbl/core";
-import {
-  Axis,
-  BarSeries,
-  Scale,
-  type BarCategoryAccessor,
-  type BarSeriesProps,
-  type BarSeriesStyle,
-  type BarStyleResolver,
-  type BarThresholdFill,
-} from "@pibbl/core/viz";
+import { Axis, BarSeries, type BarCategoryAccessor, type BarSeriesProps, type BarSeriesStyle, type BarStyleResolver, type BarThresholdFill, BarScale, LinearScale } from "@pibbl/core/viz";
 
 type Sale = { month: string; amount: number };
 const sales: readonly Sale[] = [
@@ -42,15 +33,15 @@ document.body.append(canvas);
 const app = pibbl(
   canvas,
   <Overlay style={{ left: 70, top: 15, width: 230, height: 170 }}>
-    <Scale
+    <BarScale
       id="month"
-      type="band"
+
       domain={sales.map((sale) => sale.month)}
       range="width"
       paddingInner={0.2}
       style={{ width: 230, height: 170 }}
     >
-      <Scale id="amount" type="linear" domain={[0, 80]} range="height" reverse>
+      <LinearScale id="amount"  domain={[0, 80]} range="height" reverse>
         <BarSeries {...bars} />
         <Axis scale="amount" position="left" tickValues={[0, 20, 40, 60, 80]} />
         <Axis
@@ -58,8 +49,8 @@ const app = pibbl(
           position="bottom"
           tickValues={sales.map((sale) => sale.month)}
         />
-      </Scale>
-    </Scale>
+      </LinearScale>
+    </BarScale>
   </Overlay>,
 );
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

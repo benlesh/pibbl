@@ -35,9 +35,9 @@ it("evaluates custom queries reactively and preserves returned component identit
     );
   }
   runtime.mount(
-    <Viz.Scale id="x" type="linear" domain={[0, 10]} range={[0, 100]}>
+    <Viz.LinearScale id="x"  domain={[0, 10]} range={[0, 100]}>
       <View />
-    </Viz.Scale>,
+    </Viz.LinearScale>,
   );
   runtime.flush();
   expect(results.at(-1)).toEqual({ x: 20 });

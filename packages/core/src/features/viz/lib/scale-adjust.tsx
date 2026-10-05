@@ -18,8 +18,8 @@ export function ScaleAdjust(props: ScaleAdjustProps) {
     (props.y === undefined) !== (props.yScale === undefined)
   )
     throw new TypeError("ScaleAdjust coordinates require matching scale IDs.");
-  if ((x && x.get().type !== "linear") || (y && y.get().type !== "linear"))
-    throw new TypeError("ScaleAdjust requires linear scales.");
+  if ((x && x.get().type === "band") || (y && y.get().type === "band"))
+    throw new TypeError("ScaleAdjust requires continuous scales.");
   return (
     <Group
       style={{

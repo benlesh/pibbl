@@ -17,7 +17,8 @@ import { withHooksForbidden } from "@pibbl/core/internal";
 import { lookupScale } from "./scale-context.js";
 import type { SignalStyle } from "@pibbl/core/internal";
 import type { BandCategory, LineAccessor, ScaleId } from "./types.js";
-import { useScale } from "./use-scale.js";
+import { useContinuousScale } from "./use-continuous-scale.js";
+import { useBarScale } from "./use-bar-scale.js";
 import { pointAccessor, pointData, finiteCoordinate } from "./point-data.js";
 import { opacity, width } from "./paint.js";
 /**
@@ -203,9 +204,9 @@ export function BarSeries<D>({
   pointerEvents,
   ...events
 }: BarSeriesProps<D>) {
-  const categories = useScale(categoryScale, "band").get();
-  const values = useScale(valueScale).get();
-  const groups = lookupScale(groupScale, "BarSeries groupScale", "band")?.get();
+  const categories = useBarScale(categoryScale).get();
+  const values = useContinuousScale(valueScale).get();
+  const groups = lookupScale(groupScale, "BarSeries groupScale")?.get();
   if ((group === undefined) !== (groupScale === undefined))
     throw new TypeError("BarSeries requires group and groupScale together.");
   if (groups && groups.type !== "band")

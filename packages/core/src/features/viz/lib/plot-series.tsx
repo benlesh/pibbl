@@ -2,7 +2,7 @@ import { Group, resolveSignalValue } from "@pibbl/core";
 import type { PibblNode } from "@pibbl/core";
 import type { PlotSeriesProps } from "./plot-types.js";
 import { pointAccessor, pointData, finiteCoordinate } from "./point-data.js";
-import { useScale } from "./use-scale.js";
+import { useContinuousScale } from "./use-continuous-scale.js";
 function PlotRow<D>({
   datum,
   index,
@@ -37,8 +37,8 @@ export function PlotSeries<D>({
   render,
   ...events
 }: PlotSeriesProps<D>): PibblNode {
-  const xs = useScale(xId).get(),
-    ys = useScale(yId).get();
+  const xs = useContinuousScale(xId).get(),
+    ys = useContinuousScale(yId).get();
   const data = pointData(resolveSignalValue(input), "PlotSeries");
   if (typeof render !== "function")
     throw new TypeError("PlotSeries: render must be a synchronous function.");
