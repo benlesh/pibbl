@@ -1,45 +1,13 @@
-import { GLOBAL_STATE } from '../global-state.js';
 import type { PathGeometry } from '../geometry/path-geometry.js';
 import {
   createTarget,
-  updateLegacyTarget,
+  updateCursorTarget,
   type CRCEventTargetRegistration,
 } from '../events/registrations.js';
 import { removeInteractionRegion } from '../interaction-dispatch.js';
-import type {
-  CRCInstance,
-  CRCRegionHandlers,
-} from '../types.js';
-import { requireHookContext, useHookSlot } from './hook-slot.js';
-
-export function useRegion({
-  handlers,
-  path,
-  fill = false,
-  lineInteractionWidth = 0,
-  cursor,
-}: {
-  handlers: CRCRegionHandlers;
-  path?: Path2D | PathGeometry;
-  fill?: boolean;
-  lineInteractionWidth?: number;
-  cursor?: string;
-}): void {
-  const { componentRefs, crcInstance: instance } = requireHookContext();
-  const hookIndex = GLOBAL_STATE.componentHookIndex;
-  const slot = useHookSlot<CRCEventTargetRegistration>('region', teardowns => {
-    const target = createRegion(instance, componentRefs, hookIndex);
-    teardowns.add(() => releaseRegion(instance, target));
-    return target;
-  });
-  updateRegion(instance, slot.value, {
-    handlers,
-    path,
-    fill,
-    lineInteractionWidth,
-    cursor,
-  });
-}
+import type { CRCInstance } from '../types.js';
+import { GLOBAL_STATE } from '../global-state.js';
+import { requireHookContext } from './hook-slot.js';
 
 export function createRegion(
   instance: CRCInstance,
@@ -53,28 +21,24 @@ export function updateRegion(
   instance: CRCInstance,
   region: CRCEventTargetRegistration,
   {
-    handlers,
     path,
     fill = false,
     lineInteractionWidth = 0,
     cursor,
   }: {
-    handlers: CRCRegionHandlers;
     path?: Path2D | PathGeometry;
     fill?: boolean;
     lineInteractionWidth?: number;
     cursor?: string;
   },
 ): void {
-  const interactive = Boolean(cursor) || Object.values(handlers).some(Boolean);
-  if (!interactive) {
+  if (!cursor || !path) {
     removeInteractionRegion(instance, region);
     return;
   }
 
-  updateLegacyTarget(
+  updateCursorTarget(
     region,
-    handlers,
     { path, fill, lineInteractionWidth, cursor },
   );
 }

@@ -129,13 +129,6 @@ export interface MeshTransformOptions {
   }
   export type CRCConfig = CRCFixedViewportConfig | CRCResponsiveViewportConfig;
 
-  export interface CRCMouseEvent {
-    x: number;
-    y: number;
-    originalEvent: MouseEvent;
-  }
-
-  export type CRCMouseEventListener = (event: CRCMouseEvent) => void;
   export type Canvas = HTMLCanvasElement | OffscreenCanvas;
   export type RenderingContext2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
   declare const crcElementTypeBrand: unique symbol;
@@ -684,8 +677,6 @@ export interface MeshTransformOptions {
   export function useAnimatedValue<T>(target: T, options: CRCTweenAnimatedValueOptions<T>): Signal<T>;
   export function useReaction(setup: () => void | (() => void), dependencies?: readonly unknown[], options?: CRCReactionOptions): void;
   export function useCursor(options: { style?: string; path?: Path2D | PathGeometry; fill?: boolean; lineInteractionWidth?: number }): void;
-  export function useEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D | PathGeometry, fill?: boolean, lineInteractionWidth?: number): void;
-  export function useEvent<K extends 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>(eventName: K, listener?: CRCMouseEventListener, path?: Path2D | PathGeometry, fill?: boolean, lineInteractionWidth?: number): void;
   export function useEventListener(handlers: CRCEventHandlers): void;
   export function useEventTarget(handlers: CRCEventHandlers, options: CRCEventTargetOptions): CRCEventTargetSnapshot;
   export function useLinePath(coords: [number, number][], config?: { closePath?: boolean }): Path2D;
@@ -880,40 +871,6 @@ export interface MeshTransformOptions {
   export function queryPoint2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, point: CRCPhysicsVector2, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
 
   export function physicsObstacles2D(world: CRCPhysicsWorldHandle2D): Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array; ellipses: Float64Array; polygons: Float64Array }> }>;
-
-/* @crc-studio-module @crc/core/physics/3d/geometry */
-  export type CRCPhysicsVector3 = readonly [x: number, y: number, z: number];
-  export type CRCPhysicsQuaternion = readonly [x: number, y: number, z: number, w: number];
-  export type CRCPhysicsMatrix3 = readonly [number, number, number, number, number, number, number, number, number];
-  export interface CRCPhysicsPose3D { readonly position: CRCPhysicsVector3; readonly orientation: CRCPhysicsQuaternion }
-  export type CRCPhysicsTransform3D = CRCPhysicsPose3D;
-  export interface CRCPhysicsAabb3D { readonly min: CRCPhysicsVector3; readonly max: CRCPhysicsVector3 }
-  export interface CRCPhysicsRay3D { readonly origin: CRCPhysicsVector3; readonly direction: CRCPhysicsVector3; readonly maxDistance: number }
-  declare const physicsShape3DBrand: unique symbol;
-  export interface CRCPhysicsShape3D { readonly [physicsShape3DBrand]: true }
-  export interface CRCPhysicsMassProperties3D { readonly volume: number; readonly centerOfMass: CRCPhysicsVector3; readonly mass: number; readonly inertiaTensor: CRCPhysicsMatrix3 }
-  export interface CRCPhysicsDistance3D { readonly separation: number; readonly pointOnFirst: CRCPhysicsVector3; readonly pointOnSecond: CRCPhysicsVector3; readonly normal: CRCPhysicsVector3 }
-  export interface CRCPhysicsContactPoint3D { readonly pointOnFirst: CRCPhysicsVector3; readonly pointOnSecond: CRCPhysicsVector3; readonly separation: number }
-  export interface CRCPhysicsShapeContact3D { readonly normal: CRCPhysicsVector3; readonly points: readonly CRCPhysicsContactPoint3D[] }
-  export interface CRCPhysicsShapeHit3D { readonly point: CRCPhysicsVector3; readonly normal: CRCPhysicsVector3; readonly distance: number; readonly timeOfImpact: number; readonly triangleIndex?: number; readonly barycentric?: CRCPhysicsVector3 }
-  export function sphereShape3D(input: Readonly<{ radius: number; center?: CRCPhysicsVector3 }>): CRCPhysicsShape3D;
-  export function boxShape3D(input: Readonly<{ width: number; height: number; depth: number; center?: CRCPhysicsVector3; orientation?: CRCPhysicsQuaternion }>): CRCPhysicsShape3D;
-  export function ellipsoidShape3D(input: Readonly<{ radii: CRCPhysicsVector3; center?: CRCPhysicsVector3; orientation?: CRCPhysicsQuaternion }>): CRCPhysicsShape3D;
-  export function capsuleShape3D(input: Readonly<{ start: CRCPhysicsVector3; end: CRCPhysicsVector3; radius: number }>): CRCPhysicsShape3D;
-  export function cylinderShape3D(input: Readonly<{ radius: number; halfHeight: number; center?: CRCPhysicsVector3; orientation?: CRCPhysicsQuaternion }>): CRCPhysicsShape3D;
-  export function coneShape3D(input: Readonly<{ radius: number; halfHeight: number; center?: CRCPhysicsVector3; orientation?: CRCPhysicsQuaternion }>): CRCPhysicsShape3D;
-  export function convexHullShape3D(input: Readonly<{ points: readonly CRCPhysicsVector3[] }>): CRCPhysicsShape3D;
-  export function triangleMeshShape3D(input: Readonly<{ positions: ArrayLike<number>; indices?: ArrayLike<number> }>): CRCPhysicsShape3D;
-  export function heightfieldShape3D(input: Readonly<{ rows: number; columns: number; heights: ArrayLike<number>; cellSizeX?: number; cellSizeZ?: number; heightScale?: number; origin?: CRCPhysicsVector3 }>): CRCPhysicsShape3D;
-  export function boundsOfShape3D(shape: CRCPhysicsShape3D, pose?: CRCPhysicsPose3D): CRCPhysicsAabb3D;
-  export function massProperties3D(shape: CRCPhysicsShape3D, options?: Readonly<{ density?: number }>): CRCPhysicsMassProperties3D;
-  export function transformShape3D(shape: CRCPhysicsShape3D, transform: CRCPhysicsTransform3D): CRCPhysicsShape3D;
-  export function containsPoint3D(shape: CRCPhysicsShape3D, pose: CRCPhysicsPose3D, point: CRCPhysicsVector3): boolean;
-  export function distanceBetweenShapes3D(first: CRCPhysicsShape3D, firstPose: CRCPhysicsPose3D, second: CRCPhysicsShape3D, secondPose: CRCPhysicsPose3D): CRCPhysicsDistance3D;
-  export function overlapShapes3D(first: CRCPhysicsShape3D, firstPose: CRCPhysicsPose3D, second: CRCPhysicsShape3D, secondPose: CRCPhysicsPose3D): boolean;
-  export function contactBetweenShapes3D(first: CRCPhysicsShape3D, firstPose: CRCPhysicsPose3D, second: CRCPhysicsShape3D, secondPose: CRCPhysicsPose3D): CRCPhysicsShapeContact3D | null;
-  export function raycastShape3D(shape: CRCPhysicsShape3D, pose: CRCPhysicsPose3D, ray: CRCPhysicsRay3D, options?: Readonly<{ includeInitialOverlap?: boolean }>): CRCPhysicsShapeHit3D | null;
-  export function shapeCastAgainstShape3D(moving: CRCPhysicsShape3D, from: CRCPhysicsPose3D, translation: CRCPhysicsVector3, target: CRCPhysicsShape3D, targetPose: CRCPhysicsPose3D, options?: Readonly<{ includeInitialOverlap?: boolean }>): CRCPhysicsShapeHit3D | null;
 
 /* @crc-studio-module @crc/core/particles */
   import type {

@@ -20,7 +20,7 @@ normally imports Canvas/runtime values from `@crc/core`.
 Install `@crc/core`, configure the automatic runtime, then describe a scene in
 an ordinary `.tsx` component and mount it with `crc(canvas, root)`. CRC JSX
 creates branded Canvas elements; React and the DOM are not involved. The
-interactive workbench below this guide contains a complete first scene with
+interactive workbench linked after this guide contains a complete first scene with
 stateful click feedback and disposal.
 
 CRC does not install a global `JSX` namespace and has no React dependency. Its

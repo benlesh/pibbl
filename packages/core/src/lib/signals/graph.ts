@@ -8,11 +8,9 @@ import type { CRCRenderTransaction } from '../types.js';
 import {
   beginReactiveCollection,
   collectReactiveDependency,
-  createDetachedReactiveEdge,
   finishReactiveCollection,
   linkReactiveEdgeToSource,
   notifyReactiveEdges,
-  unlinkReactiveEdgeFromConsumer,
   unlinkReactiveEdgeFromSource,
   type ReactiveEdge,
   type ReactiveNotificationCursor,
@@ -64,22 +62,8 @@ export interface SignalNode<T> {
   observerTail: ReactiveEdge | undefined;
   observerCount: number;
   activeObserverCursor: ReactiveNotificationCursor | undefined;
-  /** @internal Legacy test-only observer access. */
-  readonly observers: SignalObserverCollection;
   observe?(): () => void;
   validate?(): void;
-}
-
-export interface SignalObserver {
-  (node: SignalNode<unknown>): void;
-  propagateInvalidation?: boolean;
-  renderInvalidation?: boolean;
-}
-
-export interface SignalObserverCollection {
-  readonly size: number;
-  add(observer: SignalObserver): this;
-  delete(observer: SignalObserver): boolean;
 }
 
 type SignalRenderProvisionStatus = 'pending' | 'success' | 'failure';
@@ -127,26 +111,12 @@ export interface SignalWriterLeasePolicy {
 let activeSignalDependencyCollector: SignalDependencyCollector | undefined;
 const writePolicyStack: SignalWritePolicy[] = [];
 const computedStack: ComputedSignalNode<unknown>[] = [];
-const legacyObserverCollections = new WeakMap<
-  SignalNode<unknown>,
-  SignalObserverCollection
->();
-const legacyObserverConsumers = new WeakMap<
-  SignalObserver,
-  SignalDependencyConsumer
->();
-const signalNodePrototype = {
-  get observers(): SignalObserverCollection {
-    return getLegacyObserverCollection(this as SignalNode<unknown>);
-  },
-};
-
 function createSignalNodeState<T>(
   value: T,
   equals: SignalEquals<T>,
   debugName: string | undefined,
 ): SignalNode<T> {
-  return Object.assign(Object.create(signalNodePrototype), {
+  return {
     value,
     equals,
     debugName,
@@ -155,76 +125,7 @@ function createSignalNodeState<T>(
     observerTail: undefined,
     observerCount: 0,
     activeObserverCursor: undefined,
-  }) as SignalNode<T>;
-}
-
-function getLegacyObserverCollection(
-  node: SignalNode<unknown>,
-): SignalObserverCollection {
-  let collection = legacyObserverCollections.get(node);
-  if (collection !== undefined) return collection;
-  collection = {
-    get size(): number {
-      return node.observerCount;
-    },
-    add(observer: SignalObserver): SignalObserverCollection {
-      const consumer = getLegacyObserverConsumer(observer);
-      for (
-        let edge = consumer.dependencyHead;
-        edge !== undefined;
-        edge = edge.consumerNext
-      ) {
-        if (edge.source === node) return collection!;
-      }
-      const edge = createDetachedReactiveEdge(consumer, node);
-      linkReactiveEdgeToSource(edge);
-      return collection!;
-    },
-    delete(observer: SignalObserver): boolean {
-      const consumer = legacyObserverConsumers.get(observer);
-      if (consumer === undefined) return false;
-      for (
-        let edge = consumer.dependencyHead;
-        edge !== undefined;
-        edge = edge.consumerNext
-      ) {
-        if (edge.source !== node) continue;
-        unlinkReactiveEdgeFromSource(edge);
-        unlinkReactiveEdgeFromConsumer(edge);
-        return true;
-      }
-      return false;
-    },
   };
-  legacyObserverCollections.set(node, collection);
-  return collection;
-}
-
-function getLegacyObserverConsumer(
-  observer: SignalObserver,
-): SignalDependencyConsumer {
-  let consumer = legacyObserverConsumers.get(observer);
-  if (consumer !== undefined) return consumer;
-  consumer = {
-    dependencyHead: undefined,
-    dependencyTail: undefined,
-    dependencyFreeHead: undefined,
-    dependencyFreeCount: 0,
-    dependencyCount: 0,
-    dependencyHighWater: 0,
-    collectionCursor: undefined,
-    collectionGeneration: 0,
-    addDependency: () => {},
-    notify: node => observer(node),
-    get propagateInvalidation(): boolean {
-      return observer.propagateInvalidation === true;
-    },
-    get renderInvalidation(): boolean {
-      return observer.renderInvalidation === true;
-    },
-  };
-  legacyObserverConsumers.set(observer, consumer);
-  return consumer;
 }
 
 const commandAssertionNode = createSignalNodeState<unknown>(

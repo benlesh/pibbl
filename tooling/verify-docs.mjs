@@ -207,7 +207,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/physics-2d-testing.md",
   "docs/site/api/functions/physics-2d.md",
   "docs/site/api/functions/physics-obstacles.md",
-  "docs/site/api/functions/physics-3d-geometry.md",
   "docs/site/api/functions/repeat.md",
   "docs/site/api/functions/resolve-signal-value.md",
   "docs/site/api/functions/resolve-box.md",
@@ -224,7 +223,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-computed.md",
   "docs/site/api/hooks/use-const.md",
   "docs/site/api/hooks/use-cursor.md",
-  "docs/site/api/hooks/use-event.md",
   "docs/site/api/hooks/use-event-listener.md",
   "docs/site/api/hooks/use-event-target.md",
   "docs/site/api/hooks/use-flow-field.md",
@@ -246,7 +244,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/particles.md",
   "docs/site/api/types/physics-2d.md",
   "docs/site/api/types/physics-2d-testing.md",
-  "docs/site/api/types/physics-3d-geometry.md",
   "docs/site/api/types/signal-inputs.md",
   "docs/site/api/types/styles.md",
   "docs/site/api/types/texture-resources.md",
@@ -268,6 +265,7 @@ const publicSiteMarkdownPaths = [
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
+  "website/README.md",
   "docs/design/path-transforms-contract.md",
   "docs/design/component-manipulation-contract.md",
   "docs/design/text-geometry-contract.md",
@@ -1642,10 +1640,6 @@ const particlesSource = await readFile(
   join(repositoryRoot, "packages/core/src/features/particles/index.ts"),
   "utf8",
 );
-const physics3dGeometrySource = await readFile(
-  join(repositoryRoot, "packages/core/src/features/physics/3d-geometry.ts"),
-  "utf8",
-);
 const rootExports = exportedSpecifiers(
   rootSource,
   "packages/core/src/index.ts",
@@ -1665,10 +1659,6 @@ const threeExports = exportedSpecifiers(
 const particleExports = exportedSpecifiers(
   particlesSource,
   "packages/core/src/features/particles/index.ts",
-);
-const physics3dGeometryExports = exportedSpecifiers(
-  physics3dGeometrySource,
-  "packages/core/src/features/physics/3d-geometry.ts",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => rootExports.values.has(name)),
@@ -1711,20 +1701,6 @@ assertSameNames(
   [...documentedApiSymbols].filter((name) => particleExports.types.has(name)),
   particleExports.types,
   "Documented @crc/core/particles types",
-);
-assertSameNames(
-  [...documentedApiSymbols].filter((name) =>
-    physics3dGeometryExports.values.has(name),
-  ),
-  physics3dGeometryExports.values,
-  "Documented @crc/core/physics/3d/geometry runtime values",
-);
-assertSameNames(
-  [...documentedApiSymbols].filter((name) =>
-    physics3dGeometryExports.types.has(name),
-  ),
-  physics3dGeometryExports.types,
-  "Documented @crc/core/physics/3d/geometry types",
 );
 const vizSource = await readFile(
   join(repositoryRoot, "packages/core/src/features/viz/index.ts"),
@@ -1843,7 +1819,6 @@ for (const entry of [
   "physics/2d",
   "physics/2d/geometry",
   "physics/2d/testing",
-  "physics/3d/geometry",
 ]) {
   assert.ok(
     coreManifest.exports[`./${entry}`],
@@ -1961,8 +1936,13 @@ assert.match(
 );
 assert.doesNotMatch(
   studioMain,
-  /import\.meta\.env|VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
-  "Studio retry composition must not read ambient VITE values.",
+  /import\.meta\.env\.(?!VITE_CRC_WEBSITE_URL\b)|VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
+  "Studio retry composition must not read ambient VITE values; the website destination is configurable.",
+);
+assert.match(
+  studioMain,
+  /import\.meta\.env\.VITE_CRC_WEBSITE_URL/u,
+  "Studio documentation redirects must have an explicit website URL setting.",
 );
 const studioViteConfig = await readFile(
   join(repositoryRoot, "playground/vite.config.ts"),
@@ -2861,14 +2841,6 @@ const matrixRequirements = [
       "site/api/types/particles.md",
     ],
     evidence: ["particle-effects.example.tsx"],
-  },
-  {
-    topic: /Renderer-independent 3D geometry/u,
-    guides: [
-      "site/api/functions/physics-3d-geometry.md",
-      "site/api/types/physics-3d-geometry.md",
-    ],
-    evidence: ["shapes.test.ts", "casts.test.ts"],
   },
   {
     topic: /Signal-owned component move, resize, rotation/u,

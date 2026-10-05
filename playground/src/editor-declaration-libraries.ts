@@ -26,10 +26,6 @@ const declarationModulePaths = new Map([
     "@crc/core/physics/2d/geometry",
     "file:///node_modules/@crc/core/physics/2d/geometry.d.ts",
   ],
-  [
-    "@crc/core/physics/3d/geometry",
-    "file:///node_modules/@crc/core/physics/3d/geometry.d.ts",
-  ],
   ["@crc/three", "file:///node_modules/@crc/three/index.d.ts"],
 ]);
 

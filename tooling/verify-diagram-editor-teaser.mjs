@@ -121,7 +121,7 @@ try {
     timezoneId: "UTC",
     deviceScaleFactor: 1,
   });
-  await page.goto(`${origin}/#/learn/tutorials/diagram-editor/finished-editor`);
+  await page.goto(`${origin}/#/workbench/diagram-editor-finished`);
   const frames = page.locator("iframe");
   await frames.first().waitFor({ timeout: 30_000 });
   const frameCount = await frames.count();

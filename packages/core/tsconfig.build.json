@@ -27,8 +27,7 @@
     "src/features/textures/index.ts",
     "src/features/physics/2d.ts",
     "src/features/physics/2d-geometry.ts",
-    "src/features/physics/2d-testing.ts",
-    "src/features/physics/3d-geometry.ts"
+    "src/features/physics/2d-testing.ts"
   ],
   "include": []
 }

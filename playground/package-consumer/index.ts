@@ -52,7 +52,6 @@ import type {
   CRCManipulationOptions,
   CRCManipulationResizeInput,
   CRCResizePosition,
-  CRCMouseEvent,
   CRCNode,
   CRCPixelRatio,
   CRCPointerEvent,
@@ -159,8 +158,6 @@ import {
   type Particles2DProps,
 } from '@crc/core/particles';
 import { PhysicsWorld2D, crcPhysicsWorld2D, physicsObstacles2D } from '@crc/core/physics/2d';
-import * as Physics3DGeometry from '@crc/core/physics/3d/geometry';
-import type * as Physics3DGeometryTypes from '@crc/core/physics/3d/geometry';
 import {
   createBackendToken,
   defineBackendPrimitive,
@@ -220,7 +217,6 @@ import {
   useComputed,
   useConst,
   useCursor,
-  useEvent,
   useEventListener,
   useEventTarget,
   useLayoutBox,
@@ -477,7 +473,6 @@ export type PublicEventTypes = {
   input: CRCInputEvent;
   keyboard: CRCKeyboardEvent;
   logicalMouse: CRCLogicalMouseEvent;
-  canvasObserverMouse: CRCMouseEvent;
   pointer: CRCPointerEvent;
   touch: CRCTouchEvent;
   wheel: CRCWheelEvent;
@@ -651,7 +646,6 @@ export type PublicCoreEventTypes = [
   CoreTypes.CRCInputEvent,
   CoreTypes.CRCKeyboardEvent,
   CoreTypes.CRCLogicalMouseEvent,
-  CoreTypes.CRCMouseEvent,
   CoreTypes.CRCPointerEvent,
   CoreTypes.CRCTouchEvent,
   CoreTypes.CRCWheelEvent,
@@ -1656,31 +1650,6 @@ useLinePath([['0', 0]]);
 // @ts-expect-error SVG path input is a string
 useSvgPath(123);
 
-useEvent('click', (event: CRCLogicalMouseEvent) => {
-  const x: number = event.x;
-  const original: MouseEvent = event.originalEvent;
-  void x;
-  void original;
-}, rectanglePath, true, 8);
-const observer = (event: CRCMouseEvent) => {
-  const x: number = event.x;
-  const original: MouseEvent = event.originalEvent;
-  void x;
-  void original;
-};
-useEvent('mousemove', observer);
-useEvent('mousemove', undefined);
-useEvent('mousemove', event => {
-  const x: number = event.x;
-  void x;
-  // @ts-expect-error pathless useEvent observers retain the legacy payload
-  event.preventDefault();
-});
-// @ts-expect-error event names are limited to the public CRC event registry
-useEvent('pointerdown', () => undefined);
-// @ts-expect-error CRC handlers receive a logical mouse facade, not PointerEvent
-useEvent('click', (_event: PointerEvent) => undefined);
-
 useCursor({ style: 'crosshair' });
 useCursor({
   path: linePath,
@@ -1692,81 +1661,6 @@ useCursor({
 useCursor({ path: 'line', style: 'pointer' });
 // @ts-expect-error cursor configuration has no unrelated fields
 useCursor({ style: 'pointer', capture: true });
-
-const consumerPhysicsSphere = Physics3DGeometry.sphereShape3D({ radius: 1 });
-const consumerPhysicsBox = Physics3DGeometry.boxShape3D({
-  width: 2,
-  height: 2,
-  depth: 2,
-});
-const consumerPhysicsPose = {
-  position: [0, 0, 0],
-  orientation: [0, 0, 0, 1],
-} as const satisfies Physics3DGeometryTypes.CRCPhysicsPose3D;
-
-export const physics3DGeometryConsumer = {
-  bounds: Physics3DGeometry.boundsOfShape3D(consumerPhysicsSphere),
-  mass: Physics3DGeometry.massProperties3D(consumerPhysicsBox, { density: 1 }),
-  contains: Physics3DGeometry.containsPoint3D(
-    consumerPhysicsSphere,
-    consumerPhysicsPose,
-    [0, 0, 0],
-  ),
-  distance: Physics3DGeometry.distanceBetweenShapes3D(
-    consumerPhysicsSphere,
-    consumerPhysicsPose,
-    consumerPhysicsBox,
-    consumerPhysicsPose,
-  ),
-  overlap: Physics3DGeometry.overlapShapes3D(
-    consumerPhysicsSphere,
-    consumerPhysicsPose,
-    consumerPhysicsBox,
-    consumerPhysicsPose,
-  ),
-  contact: Physics3DGeometry.contactBetweenShapes3D(
-    consumerPhysicsSphere,
-    consumerPhysicsPose,
-    consumerPhysicsBox,
-    consumerPhysicsPose,
-  ),
-  ray: Physics3DGeometry.raycastShape3D(
-    consumerPhysicsSphere,
-    consumerPhysicsPose,
-    { origin: [-2, 0, 0], direction: [1, 0, 0], maxDistance: 4 },
-  ),
-  cast: Physics3DGeometry.shapeCastAgainstShape3D(
-    consumerPhysicsSphere,
-    consumerPhysicsPose,
-    [2, 0, 0],
-    consumerPhysicsBox,
-    { position: [4, 0, 0], orientation: [0, 0, 0, 1] },
-  ),
-  transformed: Physics3DGeometry.transformShape3D(
-    consumerPhysicsSphere,
-    consumerPhysicsPose,
-  ),
-  shapes: [
-    Physics3DGeometry.ellipsoidShape3D({ radii: [1, 2, 3] }),
-    Physics3DGeometry.capsuleShape3D({ start: [0, -1, 0], end: [0, 1, 0], radius: 0.5 }),
-    Physics3DGeometry.cylinderShape3D({ radius: 1, halfHeight: 1 }),
-    Physics3DGeometry.coneShape3D({ radius: 1, halfHeight: 1 }),
-    Physics3DGeometry.convexHullShape3D({
-      points: [[-1, -1, -1], [1, -1, -1], [0, 1, -1], [0, 0, 1]],
-    }),
-    Physics3DGeometry.triangleMeshShape3D({
-      positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-      indices: [0, 1, 2],
-    }),
-    Physics3DGeometry.heightfieldShape3D({
-      rows: 2,
-      columns: 2,
-      heights: [0, 0, 0, 0],
-    }),
-  ],
-};
-
-void (undefined as unknown as Physics3DGeometryTypes.CRCPhysicsShape3D);
 
 // Editable path geometry is consumed exclusively through the public entry.
 import { PathGeometry, toPath2D, toSvgPathData } from '@crc/core';

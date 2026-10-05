@@ -20,7 +20,6 @@ Keep `@crc/three` and `three` when using the Three adapter.
 | `@crc/textures`            | `@crc/core/textures`            |
 | `@crc/physics/2d`          | `@crc/core/physics/2d`          |
 | `@crc/physics/2d/geometry` | `@crc/core/physics/2d/geometry` |
-| `@crc/physics/3d/geometry` | `@crc/core/physics/3d/geometry` |
 | `@crc/physics/2d/testing`  | `@crc/core/physics/2d/testing`  |
 
 Remove the previous feature packages and `@crc/types` from your dependencies.

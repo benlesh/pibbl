@@ -13,7 +13,7 @@ import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
 } from "../src/lib/scheduler/testing.js";
-import { loadLearningSource } from "../../../playground/src/learning-sources";
+import { loadWorkbenchSource } from "../../../playground/src/learning-sources";
 import { loadScenarioSource } from "../../../playground/src/scenario-sources";
 
 const EXPECTED_ACTION_IDS = [
@@ -107,7 +107,7 @@ describe("public 2D physics laboratory", () => {
 
     if (!learning) throw new Error("Missing physics-2d learning example.");
     const [learningSource, labSource] = await Promise.all([
-      loadLearningSource(learning),
+      loadWorkbenchSource(learning),
       loadScenarioSource(physics2DLabScenarioEntry),
     ]);
     for (const source of [learningSource, labSource]) {

@@ -17,8 +17,7 @@ CRC's public external-renderer boundary is `defineRenderLayer()`. The official
 `@crc/three` adapter mounts ordinary Three.js scenes, cameras, objects,
 controls, loaders, and effects as one CRC composition/event/focus/scheduling
 boundary. CRC no longer ships its former custom WebGL scene graph,
-renderer-coupled 3D particles, or renderer-coupled 3D physics runtime.
-Renderer-independent `@crc/core/physics/3d/geometry` remains public.
+renderer-coupled 3D particles, or any CRC-owned 3D physics API.
 
 The local `_bmad-output/` directory remains discovery input, not normative
 behavior. Current code, tests, and contracts under `docs/design/` define shipped
@@ -124,9 +123,9 @@ particles, and post-processing come directly from `three` and
 `three/addons/*`.
 
 Public `@crc/core/particles` is Canvas 2D only. Public physics is the
-`@crc/core/physics/2d` runtime plus `/2d/geometry` and pure
-`/3d/geometry`. There is no root physics barrel, renderer-coupled 3D world,
-or Three physics binding.
+`@crc/core/physics/2d` runtime plus `/2d/geometry`. There is no root physics
+barrel, CRC-owned 3D physics API, renderer-coupled 3D world, or Three physics
+binding.
 
 CRC does not promise a Three JSX reconciler, retained Three scene graph,
 Canvas/Three subprimitive interleaving, WebXR, automatic semantic DOM,
@@ -314,8 +313,8 @@ input, defaults to normal Three rendering and raycasting, and leaves
 application-created resource disposal explicit.
 
 The former custom WebGL package and scene vocabulary, WebGL-specific
-particle entry, and renderer-coupled 3D physics runtime were removed without
-compatibility aliases. Pure `@crc/core/physics/3d/geometry` remains. Historical
+particle entry, and all CRC-owned 3D physics APIs were removed without
+compatibility aliases. Historical
 WebGL specs and plans are dated evidence only; current intent lives in:
 
 - `docs/design/render-layer-and-three-contract.md`

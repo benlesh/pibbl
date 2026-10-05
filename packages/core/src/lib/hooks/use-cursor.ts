@@ -48,7 +48,6 @@ export function useCursor({
   if (path) {
     removeCursorDefault(interactionRoot, cursorDefault);
     updateRegion(crcInstance, region, {
-      handlers: {},
       path,
       cursor: style,
       fill,

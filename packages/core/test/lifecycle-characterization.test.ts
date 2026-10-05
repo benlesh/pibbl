@@ -1,6 +1,6 @@
 import type { CRCEventHandlers } from '../src/lib/events/types';
 import type { CRCController } from '../src/lib/types';
-import { crc, useCursor, useEvent, Layer, Rectangle } from '@crc/core';
+import { crc, useCursor, Layer, Rectangle } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   clearSharedState,
@@ -179,25 +179,7 @@ const CursorOwnershipScene = (_props: {}) => [
   }),
 ];
 
-const ObserverScene = ({ calls }: { calls: string[] }) => {
-  useEvent('click', () => {
-    calls.push('throws');
-    throw new Error('expected lifecycle handler error');
-  });
-  useEvent('click', () => calls.push('safe'));
-  return createElement(Rectangle, {
-    style: {
-      left: 0,
-      top: 0,
-      width: 160,
-      height: 120,
-      fill: '#f8fafc',
-    },
-  });
-};
-
 const LayerGlobalResources = ({ calls }: { calls: string[] }) => {
-  useEvent('mousemove', () => calls.push('observer'));
   useCursor({ style: 'wait' });
   return createElement(Rectangle, {
     style: {
@@ -483,7 +465,7 @@ describe('event lifecycle ownership', () => {
     expectFullyReleased(diagnostics);
   });
 
-  it('releases layered paint entries, root observers, and root cursor defaults', async () => {
+  it('releases layered paint entries and root cursor defaults', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: string[] = [];
     const controller = track(crc(canvas, createElement(LayerGlobalResourcesScene, { calls, show: true })));
@@ -492,24 +474,22 @@ describe('event lifecycle ownership', () => {
 
     expect(diagnostics.snapshot()).toMatchObject({ instances: 2, nativeListeners: 2 });
     expect(root.paintEntries.size).toBe(1);
-    expect(root.eventRoot.observers.get('mousemove')?.size).toBe(1);
     expect(root.cursorDefaults.size).toBe(1);
 
     canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 40, clientY: 40 }));
-    expect(calls).toEqual(['target', 'observer']);
+    expect(calls).toEqual(['target']);
     expect(canvas.style.cursor).toBe('wait');
 
     crc(canvas, createElement(LayerGlobalResourcesScene, { calls, show: false }));
     await nextFrame();
     expect(GLOBAL_STATE.crcInstances.size).toBe(1);
     expect(root.paintEntries.size).toBe(0);
-    expect(root.eventRoot.observers.get('mousemove')?.size).toBe(0);
     expect(root.cursorDefaults.size).toBe(0);
     expect(root.interaction.hoveredRegion).toBeUndefined();
     expect(canvas.style.cursor).toBe('');
 
     canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 40, clientY: 40 }));
-    expect(calls).toEqual(['target', 'observer']);
+    expect(calls).toEqual(['target']);
 
     controller.dispose();
     expectFullyReleased(diagnostics);
@@ -575,19 +555,4 @@ describe('event lifecycle ownership', () => {
     expectFullyReleased(diagnostics);
   });
 
-  it('reports a thrown observer and continues the same native dispatch and cleanup', async () => {
-    const { canvas, diagnostics } = createHarness();
-    const calls: string[] = [];
-    const expectedError = vi.spyOn(globalThis, 'reportError').mockImplementation(() => {});
-    const controller = track(crc(canvas, createElement(ObserverScene, { calls })));
-    await nextFrame();
-    diagnostics.snapshot();
-
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
-    expect(calls).toEqual(['throws', 'safe']);
-    expect(expectedError).toHaveBeenCalledOnce();
-
-    controller.dispose();
-    expectFullyReleased(diagnostics);
-  });
 });

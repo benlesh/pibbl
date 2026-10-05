@@ -11,7 +11,7 @@ import {
   type ScenarioController,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { loadLearningSource } from '../../../playground/src/learning-sources';
+import { loadWorkbenchSource } from '../../../playground/src/learning-sources';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
 import { mountScenarioSurface } from '@crc/scenarios/surface';
 import { clickLogicalPoint } from './support/user-input';
@@ -210,7 +210,7 @@ describe('first-class Canvas particle public scenarios', () => {
     if (!learning)
       throw new Error('Missing particle-effects learning example.');
     const [learningSource, labSource] = await Promise.all([
-      loadLearningSource(learning),
+      loadWorkbenchSource(learning),
       loadScenarioSource(particleCelebrationLabScenarioEntry),
     ]);
     for (const source of [learningSource, labSource]) {

@@ -35,11 +35,11 @@ it("accepts the standalone viz lesson but still rejects a required fixture argum
     ),
   ).toThrow();
 });
-import { loadLearningSource } from "../../../../../playground/src/learning-sources.js";
+import { loadWorkbenchSource } from "../../../../../playground/src/learning-sources.js";
 import { getLearningExampleBySlug } from "@crc/scenarios";
 it("loads the exact editable lesson source through the workbench adapter", async () => {
   await expect(
-    loadLearningSource(getLearningExampleBySlug("viz-responsive-line")!),
+    loadWorkbenchSource(getLearningExampleBySlug("viz-responsive-line")!),
   ).resolves.toBe(lesson);
 });
 it("runs a defaulted fixture mount without requiring a second caller argument", () => {
@@ -62,7 +62,7 @@ it("loads the custom points lesson as editable canonical source", async () => {
     }),
   ).not.toThrow();
   await expect(
-    loadLearningSource(getLearningExampleBySlug("viz-points-and-inspection")!),
+    loadWorkbenchSource(getLearningExampleBySlug("viz-points-and-inspection")!),
   ).resolves.toBe(pointsLesson);
   expect(() =>
     toRunnableScript(
@@ -82,7 +82,7 @@ it("loads the complete function-query comparison as canonical editable source", 
     }),
   ).not.toThrow();
   await expect(
-    loadLearningSource(getLearningExampleBySlug("viz-hover-comparison")!),
+    loadWorkbenchSource(getLearningExampleBySlug("viz-hover-comparison")!),
   ).resolves.toBe(hoverLesson);
   expect(() =>
     toRunnableScript(
@@ -102,7 +102,7 @@ it("loads grouped bars as the canonical editable public lesson", async () => {
     }),
   ).not.toThrow();
   await expect(
-    loadLearningSource(getLearningExampleBySlug("viz-grouped-bars")!),
+    loadWorkbenchSource(getLearningExampleBySlug("viz-grouped-bars")!),
   ).resolves.toBe(groupedLesson);
 });
 
@@ -117,6 +117,6 @@ it("loads stacked bars as the canonical editable public lesson", async () => {
     }),
   ).not.toThrow();
   await expect(
-    loadLearningSource(getLearningExampleBySlug("viz-stacked-bars")!),
+    loadWorkbenchSource(getLearningExampleBySlug("viz-stacked-bars")!),
   ).resolves.toBe(stackedLesson);
 });

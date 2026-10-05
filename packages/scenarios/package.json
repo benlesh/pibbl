@@ -13,12 +13,9 @@
     "./mouse-contract": "./src/mouse-contract.ts",
     "./mouse-contract-scenario": "./src/mouse-contract-scenario.ts",
     "./physics-2d-lab": "./src/physics-2d-lab.ts",
-    "./physics-3d": "./src/physics-3d.ts",
     "./smoke": "./src/smoke.ts",
     "./surface": "./src/surface.ts",
-    "./three-instancing-lab": "./src/three-instancing-lab.ts",
-    "./webgl-lab": "./src/webgl-lab.ts",
-    "./webgl-lighting-lab": "./src/webgl-lighting-lab.ts"
+    "./three-instancing-lab": "./src/three-instancing-lab.ts"
   },
   "dependencies": {
     "@crc/core": "workspace:*",

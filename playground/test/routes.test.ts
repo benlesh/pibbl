@@ -6,6 +6,7 @@ import {
   resolveLearningExampleRoute,
   routeHref,
 } from "../src/app/routes";
+import { websiteUrlForStudioDocument } from "../../tooling/studio-docs/website-routes";
 
 describe("Studio routes", () => {
   it("parses every canonical public route family", () => {
@@ -56,6 +57,11 @@ describe("Studio routes", () => {
       group: "three",
       slug: "three-layer",
     });
+    expect(parseStudioRoute("#/workbench/diagram-editor-first-node?code=v1.abc")).toEqual({
+      kind: "workbench",
+      slug: "diagram-editor-first-node",
+      query: "?code=v1.abc",
+    });
     expect(parseStudioRoute("#/testing")).toEqual({ kind: "testing" });
     expect(parseStudioRoute("#/testing/baseline-smoke")).toEqual({
       kind: "test",
@@ -89,6 +95,14 @@ describe("Studio routes", () => {
     expect(routeHref(route)).toBe(
       "#/api/types/events#crcpointerevent?mode=detail",
     );
+  });
+
+  it("maps legacy documentation routes to their canonical website pages", () => {
+    const base = "http://localhost:4321/";
+    expect(websiteUrlForStudioDocument("#/learn", base)).toBe("http://localhost:4321/guides/learning-path/");
+    expect(websiteUrlForStudioDocument("#/learn/tutorials/diagram-editor/first-node#example?mode=detail", base)).toBe("http://localhost:4321/guides/tutorials/diagram-editor/first-node/?mode=detail#example");
+    expect(websiteUrlForStudioDocument("#/api/types/events#crcpointerevent", base)).toBe("http://localhost:4321/reference/types/events/#crcpointerevent");
+    expect(websiteUrlForStudioDocument("#/api/functions/crc", base)).toBe("http://localhost:4321/reference/functions/crc/");
   });
 
   it("reports paths outside public route families as unknown", () => {

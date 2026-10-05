@@ -14,7 +14,6 @@ import { getCurrentWorldTransform } from "../render-target.js";
 import type {
   CRCComponentRefs,
   CRCInstance,
-  CRCRegionHandlers,
 } from "../types.js";
 import { CRCPaintEntryKind, type CRCPathPaintEntry } from "./paint-entry.js";
 import {
@@ -82,19 +81,11 @@ export interface CRCEventListenerRegistration {
 export type CRCEventNode =
   CRCEventTargetRegistration | CRCEventListenerRegistration;
 
-export interface CRCLegacyHitGeometry {
-  readonly path: Path2D | undefined;
-}
-
 // Masks make membership/diff checks cheap; this map retains the exact release
 // closure returned by the shared hub for each bit that was actually acquired.
 const nativeReleases = new WeakMap<
   CRCEventTargetRegistration | CRCEventListenerRegistration,
   Map<CRCEventType, () => void>
->();
-const legacyHitGeometry = new WeakMap<
-  CRCEventTargetRegistration,
-  CRCLegacyHitGeometry
 >();
 
 export function createTarget(
@@ -134,7 +125,6 @@ export function updateTarget(
   participatesInPaint = false,
   preserveKeyboardNavigationGeometry = false,
 ): void {
-  legacyHitGeometry.delete(target);
   updateTargetRegistration(
     target,
     handlers,
@@ -145,62 +135,39 @@ export function updateTarget(
   if (target.live) target.owner.regions.add(target);
 }
 
-/** @internal Temporary adapter for shipped mouse-region semantics. */
-export function updateLegacyTarget(
+export function updateCursorTarget(
   target: CRCEventTargetRegistration,
-  handlers: CRCRegionHandlers,
   {
     path,
     fill = false,
     lineInteractionWidth = 0,
     cursor,
   }: {
-    path?: Path2D | PathGeometry;
+    path: Path2D | PathGeometry;
     fill?: boolean;
     lineInteractionWidth?: number;
     cursor?: string;
   },
 ): void {
-  const resolvedPath = path === undefined ? undefined : resolvePath(path);
-  configureLegacyHitGeometry(target, resolvedPath);
   updateTargetRegistration(
     target,
-    handlers,
+    {},
     {
-      path: resolvedPath ?? target.paintEntry?.path ?? new Path2D(),
+      path: resolvePath(path),
       fill,
       lineInteractionWidth,
       cursor,
     },
-    false,
-    false,
-    true,
   );
   if (target.live) target.owner.regions.add(target);
 }
 
-/** @internal Retained only for pathless legacy hit geometry until Task 8. */
-function configureLegacyHitGeometry(
-  target: CRCEventTargetRegistration,
-  path: Path2D | undefined,
-): void {
-  legacyHitGeometry.set(target, { path });
-}
-
-/** @internal Retained only for pathless legacy hit geometry until Task 8. */
-export function getLegacyHitGeometry(
-  target: CRCEventTargetRegistration,
-): CRCLegacyHitGeometry | undefined {
-  return legacyHitGeometry.get(target);
-}
-
 function updateTargetRegistration(
   target: CRCEventTargetRegistration,
-  handlers: CRCEventHandlers | CRCRegionHandlers,
+  handlers: CRCEventHandlers,
   options: Omit<CRCEventTargetOptions, 'path'> & { readonly path: Path2D },
   participatesInPaint = false,
   preserveKeyboardNavigationGeometry = false,
-  legacyHandlers = false,
 ): void {
   if (target.live) {
     // Remove while the previous handler map is still current so ownership
@@ -209,19 +176,7 @@ function updateTargetRegistration(
     target.owner.eventRoot.targets.delete(target);
   }
 
-  if (legacyHandlers) {
-    refreshLegacyHandlers(
-      target,
-      handlers as CRCRegionHandlers,
-      Boolean(options.cursor),
-    );
-  } else {
-    refreshHandlers(
-      target,
-      handlers as CRCEventHandlers,
-      Boolean(options.cursor),
-    );
-  }
+  refreshHandlers(target, handlers, Boolean(options.cursor));
   const paintEntry =
     target.paintEntry ??
     ({
@@ -285,7 +240,6 @@ export function releaseTarget(target: CRCEventTargetRegistration): void {
   target.live = false;
   clearPointerCapturesForTarget(target);
   releaseNativeOwnership(target);
-  legacyHitGeometry.delete(target);
 }
 
 export function createListener(
@@ -405,10 +359,6 @@ const eventPropMetadata = Object.create(null) as Record<
   string,
   CRCEventPropMetadata | undefined
 >;
-const normalizedHandlerMetadata = Object.create(null) as Record<
-  string,
-  CRCEventPropMetadata | undefined
->;
 const eventIndexByType = Object.create(null) as Record<
   string,
   number | undefined
@@ -455,8 +405,6 @@ for (let index = 0; index < CRC_EVENT_DEFINITIONS.length; index++) {
   });
   eventPropMetadata[definition.prop] = bubble;
   eventPropMetadata[definition.captureProp] = capture;
-  normalizedHandlerMetadata[definition.type] = bubble;
-  normalizedHandlerMetadata[`${definition.type}Capture`] = capture;
 }
 
 // Cursor tracking has native movement/exit requirements even without a
@@ -500,35 +448,6 @@ function refreshHandlers(
     const metadata = eventPropMetadata[prop];
     if (!metadata) continue;
     const handler = handlers[prop as keyof CRCEventHandlers];
-    if (handler) {
-      (normalized as Record<string, unknown>)[metadata.normalizedKey] = handler;
-      handlerTypesLow |= metadata.handlerTypesLow;
-      handlerTypesHigh |= metadata.handlerTypesHigh;
-      requiredNativeTypesLow |= metadata.requiredNativeTypesLow;
-      requiredNativeTypesHigh |= metadata.requiredNativeTypesHigh;
-    }
-  }
-  state.handlers = normalized;
-  state.handlerTypesLow = handlerTypesLow;
-  state.handlerTypesHigh = handlerTypesHigh;
-  state.requiredNativeTypesLow = requiredNativeTypesLow;
-  state.requiredNativeTypesHigh = requiredNativeTypesHigh;
-}
-
-function refreshLegacyHandlers(
-  state: CRCHandlerState,
-  handlers: CRCRegionHandlers,
-  hasCursor: boolean,
-): void {
-  const normalized: CRCNormalizedHandlers = {};
-  let handlerTypesLow = 0;
-  let handlerTypesHigh = 0;
-  let requiredNativeTypesLow = hasCursor ? cursorNativeTypesLow : 0;
-  let requiredNativeTypesHigh = hasCursor ? cursorNativeTypesHigh : 0;
-  for (const type in handlers) {
-    const metadata = normalizedHandlerMetadata[type];
-    if (!metadata) continue;
-    const handler = handlers[type as keyof CRCRegionHandlers];
     if (handler) {
       (normalized as Record<string, unknown>)[metadata.normalizedKey] = handler;
       handlerTypesLow |= metadata.handlerTypesLow;

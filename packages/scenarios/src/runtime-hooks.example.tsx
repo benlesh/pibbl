@@ -1,7 +1,7 @@
 import type { CRCRef, WritableSignal } from '@crc/core';
 import {
   useCursor,
-  useEvent,
+  useEventListener,
   useLinePath,
   useComputed,
   useRectPath,
@@ -294,7 +294,7 @@ export function probeRuntimeHookMisuse(): readonly RuntimeHooksMisuseError[] {
         [1, 1],
       ]),
     () => useSvgPath('M 0 0 L 1 1'),
-    () => useEvent('click', () => undefined),
+    () => useEventListener({ onClick: () => undefined }),
     () =>
       useCursor({
         style: 'pointer',

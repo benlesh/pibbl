@@ -11,12 +11,14 @@ const documentRoute = new RegExp(
   "u",
 );
 const exampleRoute = new RegExp(`^#/examples/(${slug})/(${slug})$`, "u");
+const workbenchRoute = new RegExp(`^#/workbench/(${slug})$`, "u");
 const testRoute = new RegExp(`^#/testing/(${slug})$`, "u");
 const legacyTestRoute = new RegExp(`^#/scenarios/(${slug})$`, "u");
 
 export type ParsedStudioRoute =
   | DocumentStudioRoute
   | ExampleStudioRoute
+  | WorkbenchStudioRoute
   | ExamplesIndexStudioRoute
   | TestingStudioRoute
   | TestStudioRoute
@@ -32,6 +34,12 @@ export interface DocumentStudioRoute {
 export interface ExampleStudioRoute {
   readonly kind: "example";
   readonly group: string;
+  readonly slug: string;
+  readonly query?: string;
+}
+
+export interface WorkbenchStudioRoute {
+  readonly kind: "workbench";
   readonly slug: string;
   readonly query?: string;
 }
@@ -97,6 +105,11 @@ export function parseStudioRoute(hash: string): ParsedStudioRoute {
     };
   }
 
+  const workbench = workbenchRoute.exec(path);
+  if (workbench) {
+    return { kind: "workbench", slug: workbench[1], ...queryPart };
+  }
+
   const test = testRoute.exec(path) ?? legacyTestRoute.exec(path);
   if (test) return { kind: "test", slug: test[1], ...queryPart };
 
@@ -115,6 +128,8 @@ export function routeHref(route: ParsedStudioRoute): string {
       return `${route.route}${route.anchor === undefined ? "" : `#${route.anchor}`}${route.query ?? ""}`;
     case "example":
       return `#/examples/${route.group}/${route.slug}${route.query ?? ""}`;
+    case "workbench":
+      return `#/workbench/${route.slug}${route.query ?? ""}`;
     case "examples":
       return `#/examples${route.query ?? ""}`;
     case "testing":

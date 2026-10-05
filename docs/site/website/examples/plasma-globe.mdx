@@ -1,0 +1,30 @@
+---
+title: Plasma Globe and Lightning
+description: Interactive electric tendrils and lightning as reusable texture resources.
+sources:
+  - packages/scenarios/src/learning/composition/plasma-globe.example.tsx
+---
+
+Electric filaments move through a glowing globe and respond to hover or touch. The original controls include manual contacts and glow adjustments. The previews show that the tendrils and lightning are independent reusable textures, not one hard-coded globe effect.
+
+[Open in the editor](@PLAYGROUND@#/examples/composition/plasma-globe) · [Effects gallery](/catalogs/)
+
+## How it works
+
+The example mounts `tendrils` and `lightning` through `useTexture`. Shared resources feed the globe and its previews without creating additional simulation copies. Pointer input and the manual controls send typed commands to those resources. Shapes, clipping, and filters compose their output into the final globe.
+
+## Integration boundaries
+
+These are Canvas fills. They do not light native HTML or apply a filter to a DOM form. For an HTML-hosted effect, keep native controls above a decorative canvas and explicitly forward the states the effect needs, as in the [native button recipe](/guides/native-button/).
+
+The source uses an 880 by 720 canvas and requires no external image assets. CRC owns the frames and mount-owned texture cleanup. A seed alone does not guarantee an identical animation: replay also requires the same frame deltas and input history. Long frame gaps are capped. The example starts automatically unless reduced motion is enabled; Stop releases the mount.
+
+## APIs and agent guidance
+
+- [Electric texture types and commands](/reference/types/electric-textures/)
+- [Texture generators](/reference/types/textures/)
+- [Texture ownership and pointer mapping](/agents/topics/textures/)
+
+## Verification
+
+Move over the globe, try a manual contact, and compare the tendril and lightning previews. Adjust the original controls and check that shared views update together. Stop and restart to check resource teardown and recreation.

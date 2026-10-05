@@ -23,7 +23,6 @@ const expectedModules = new Map([
   ["@crc/core/jsx-dev-runtime", "node_modules/@crc/core/jsx-dev-runtime.d.ts"],
   ["@crc/core/physics/2d/geometry", "node_modules/@crc/core/physics/2d/geometry.d.ts"],
   ["@crc/core/physics/2d", "node_modules/@crc/core/physics/2d.d.ts"],
-  ["@crc/core/physics/3d/geometry", "node_modules/@crc/core/physics/3d/geometry.d.ts"],
   ["@crc/core/particles", "node_modules/@crc/core/particles/index.d.ts"],
   ["@crc/three", "node_modules/@crc/three/index.d.ts"],
   ["@crc/core/viz", "node_modules/@crc/core/viz/index.d.ts"],
@@ -49,10 +48,6 @@ const sourceEntries = {
     "packages/core/src/features/physics/2d-geometry.ts",
   ),
   physics2d: join(repositoryRoot, "packages/core/src/features/physics/2d.ts"),
-  physics3dGeometry: join(
-    repositoryRoot,
-    "packages/core/src/features/physics/3d-geometry.ts",
-  ),
   particles: join(repositoryRoot, "packages/core/src/features/particles/index.ts"),
   three: join(repositoryRoot, "packages/three/src/index.ts"),
   viz: join(repositoryRoot, "packages/core/src/features/viz/index.ts"),
@@ -80,7 +75,6 @@ const inventoryKey = new Map([
   ["@crc/core/jsx-dev-runtime", "jsxDevRuntime"],
   ["@crc/core/physics/2d/geometry", "physics2dGeometry"],
   ["@crc/core/physics/2d", "physics2d"],
-  ["@crc/core/physics/3d/geometry", "physics3dGeometry"],
   ["@crc/core/particles", "particles"],
   ["@crc/three", "three"],
   ["@crc/core/viz", "viz"],
@@ -151,7 +145,6 @@ try {
     const textureRenderer: TextureRenderer = (ctx, texture) => { ctx.drawImage(texture.source, 0, 0, texture.width, texture.height); };
     const textures = <><ReactionDiffusion paused palette={texturePalettes.ember} render={textureRenderer} /><ProceduralTexture kind="paper" /></>;
     void textures;
-    import { sphereShape3D, boundsOfShape3D } from '@crc/core/physics/3d/geometry';
     import { PhysicsWorld2D } from '@crc/core/physics/2d';
     import { Scene, PerspectiveCamera, Mesh, BoxGeometry, MeshBasicMaterial } from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -169,7 +162,6 @@ try {
     });
     function App(): CRCNode {
       void Particles2D; void PhysicsWorld2D; void OrbitControls;
-      void boundsOfShape3D(sphereShape3D({ radius: 1 }));
       const box = useSignal({ left: 20, top: 30, width: 100, height: 60 });
       const manipulation = useManipulation({ box });
       return <><ManipulationFrame {...manipulation.frameProps}><DragHandle controller={manipulation} formatReadout={({ left, top }) => String(left + top)} style={{ readout: { gap: 5, active: { visible: true, fill: 'blue' } } }}><Rectangle keyboardFocusable style={{ width: 20, height: 20, cursor: 'grab' }} /></DragHandle><ResizeHandles controller={manipulation} /><RotationHandle controller={manipulation} /></ManipulationFrame><Layer angle={1} style={{ width: 20, height: 20 }} /></>;
@@ -235,13 +227,14 @@ try {
   const built = await runtime("built");
   assert.deepEqual(Object.keys(source).sort(), Object.keys(built).sort());
   for (const runtime of [source, built]) {
-    for (const name of ['ReactionDiffusion', 'ProceduralTexture', 'loadOutlineFont', 'createTextGeometry', 'crc', 'useManipulation', 'Manipulable', 'ManipulationFrame', 'DragHandle', 'ResizeHandle', 'ResizeHandles', 'RotationHandle', 'degrees', 'defineRenderLayer', 'defineThreeLayer', 'Particles2D', 'PhysicsWorld2D', 'sphereShape3D']) {
+    for (const name of ['ReactionDiffusion', 'ProceduralTexture', 'loadOutlineFont', 'createTextGeometry', 'crc', 'useManipulation', 'Manipulable', 'ManipulationFrame', 'DragHandle', 'ResizeHandle', 'ResizeHandles', 'RotationHandle', 'degrees', 'defineRenderLayer', 'defineThreeLayer', 'Particles2D', 'PhysicsWorld2D']) {
       assert.equal(typeof runtime[name], 'function', `${name} must be in the Studio runtime`);
     }
     for (const name of [
       "WebGLLayer",
       "Particles3D",
       "PhysicsWorld3D",
+      "sphereShape3D",
       "useOrbitCamera",
     ]) {
       assert.equal(

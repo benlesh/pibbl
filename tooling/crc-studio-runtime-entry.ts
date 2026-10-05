@@ -5,7 +5,6 @@ export * from "@crc/core/filters";
 export * from "@crc/core/particles";
 export * from "@crc/three";
 export * from "@crc/core/physics/2d";
-export * from "@crc/core/physics/3d/geometry";
 export { computed, useSignal, isSignal, signal, untracked } from "@crc/core";
 export {
   usePlayback,

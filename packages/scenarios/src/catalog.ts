@@ -736,11 +736,10 @@ const interactionLabMetadata: ScenarioMetadata = {
   slug: "interaction-trace-lab",
   title: "User-event contract laboratory",
   summary:
-    "Drive propagation, capture, touch retention, cancellation, keyboard, composition, clipboard, drag/drop, and legacy mouse rules through shared public-API fixtures.",
+    "Drive propagation, capture, touch retention, cancellation, keyboard, composition, clipboard, drag/drop, and mouse targeting through shared public-API fixtures.",
   category: "Interaction contracts",
   apiTags: [
     "crc",
-    "useEvent",
     "useEventListener",
     "useEventTarget",
     "Path",
@@ -817,17 +816,17 @@ const interactionLabMetadata: ScenarioMetadata = {
     },
     {
       action:
-        "Open Observer, Observer replace/remove, and Observer throwing; move twice through each target, then run Remove target after transition from Left to Right and choose Reset.",
+        "Run Remove target after transition from Left to Right and choose Reset.",
       expected:
-        "Canvas observers follow target callbacks; queued replacement/removal appears on the next event; a thrown observer does not stop its safe peer; only Right disappears after the current route; Reset restores Regions.",
+        "Only Right disappears after the current route; Reset restores Regions.",
     },
   ],
   knownLimitations: [
     "A plain Canvas has no logical keyboard, editing, or clipboard target; no public input adapter exists, and CRC does not create hidden editable DOM.",
     "This ordering laboratory intentionally uses an untransformed root Canvas; the shared geometry matrix covers CSS scale, transforms, clips, and offscreen layers.",
     "A CRC rerender requested from a handler settles on the next animation frame; narrow dispatcher tests separately prove synchronous live-registry mutation semantics.",
-    "New logical event facades expose opaque related targets; the retained legacy mouse fixtures still present readable target labels rather than public target identities.",
-    "The Observer throwing fixture deliberately reports one browser error; context-menu ordering follows the active browser instead of being normalized.",
+    "New logical event facades expose opaque related targets; the mouse fixtures present readable target labels rather than public target identities.",
+    "Context-menu ordering follows the active browser instead of being normalized.",
   ],
   learningOrder: 80,
   visibility: "test-laboratory",
@@ -861,10 +860,6 @@ export const interactionLabScenarioEntry: ScenarioCatalogEntry<InteractionLabSta
       { id: "show-transparent", label: "Transparent fill" },
       { id: "show-interaction-width", label: "Interaction width" },
       { id: "show-no-hit", label: "No hit geometry" },
-      { id: "show-observer", label: "Canvas observer" },
-      { id: "show-observer-remove", label: "Observer queues removal" },
-      { id: "show-observer-replace", label: "Observer queues replacement" },
-      { id: "show-observer-throwing", label: "Throwing observer" },
       {
         id: "show-remove-target-after-transition",
         label: "Remove target after transition",
@@ -1486,7 +1481,7 @@ const runtimeHooksMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    "useEvent is exercised by the ordering and overlap laboratory; this scenario covers useCursor slot identity while the interaction laboratories own its geometry and lifecycle matrix.",
+    "The interaction laboratories cover useEventListener targeting and useCursor geometry while this scenario covers hook slot identity.",
     "A conditional hook-count mismatch is intentionally not exposed as a gallery action because it can corrupt the diagnostic scene; focused runtime tests own that explicit misuse contract.",
     "Displayed identity numbers are deterministic laboratory labels, not public runtime identifiers.",
   ],

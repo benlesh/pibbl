@@ -1,3 +1,4 @@
+import { signalObserversForTest } from "../../../test/support/signal-observer";
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   computed,
@@ -136,8 +137,8 @@ describe('scheduler-integrated animation playback', () => {
         order.push(`begin:${record.debugName}`);
       }
     });
-    getSignalNode(firstValue).observers.add(() => order.push('commit:1'));
-    getSignalNode(secondValue).observers.add(() => order.push('commit:2'));
+    signalObserversForTest(getSignalNode(firstValue)).add(() => order.push('commit:1'));
+    signalObserversForTest(getSignalNode(secondValue)).add(() => order.push('commit:2'));
 
     firstController.handle.play();
     secondController.handle.play();
@@ -1655,10 +1656,10 @@ describe('scheduler-integrated animation playback', () => {
     const observer = () => {
       throw new Error('committed observer failed');
     };
-    getSignalNode(value).observers.add(observer);
+    signalObserversForTest(getSignalNode(value)).add(observer);
 
     expect(() => driver.flush(10)).toThrow(/observer notifications failed/iu);
-    getSignalNode(value).observers.delete(observer);
+    signalObserversForTest(getSignalNode(value)).delete(observer);
     expect([value.get(), controller.handle.currentTime.get(), controller.handle.status.get()])
       .toEqual([10, 10, 'finished']);
     expect(events).toEqual(['start', 'finish']);

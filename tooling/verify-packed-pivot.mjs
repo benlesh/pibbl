@@ -127,7 +127,7 @@ try {
     "features/particles/index.d.ts", "features/particles/index.mjs",
     "features/physics/2d.d.ts", "features/physics/2d.mjs",
     "features/physics/2d-geometry.d.ts", "features/physics/2d-testing.mjs",
-    "features/physics/3d-geometry.mjs", "features/textures/index.mjs",
+    "features/textures/index.mjs",
     "features/viz/index.mjs", "features/physics/lib/2d/world/rapier-engine.js",
   ]);
   assert.ok(core.entries.includes("package/THIRD_PARTY_NOTICES.txt"));
@@ -136,18 +136,20 @@ try {
     "index.mjs",
     "index.mjs.map",
   ]);
+  assert.ok(
+    core.entries.every((entry) => !entry.includes("3d-geometry") && !entry.includes("/physics/lib/3d/")),
+    "Packed core must not contain retired 3D geometry artifacts.",
+  );
   const geometryDir = install("geometry", { "@crc/core": `file:${core.file}` });
   assert.ok(!existsSync(join(geometryDir, "node_modules/@dimforge/rapier2d-compat")));
   const geometryRequire = createRequire(join(geometryDir, "runtime.mjs"));
-  for (const specifier of ["@crc/core/physics", "@crc/core/physics/3d"])
+  for (const specifier of ["@crc/core/physics", "@crc/core/physics/3d", "@crc/core/physics/3d/geometry"])
     assertBlocked(geometryRequire, specifier);
   assert.ok(!existsSync(join(geometryDir, "node_modules/three")));
   const geometrySource = `
     import { circleShape2D, raycastShape2D } from '@crc/core/physics/2d/geometry';
-    import { sphereShape3D, raycastShape3D } from '@crc/core/physics/3d/geometry';
-    const a = raycastShape2D(circleShape2D({ radius: 1 }), { position: [0, 0], rotationDegrees: 0 }, { origin: [-2, 0], direction: [1, 0], maxDistance: 4 });
-    const b = raycastShape3D(sphereShape3D({ radius: 1 }), { position: [0, 0, 0], orientation: [0, 0, 0, 1] }, { origin: [-2, 0, 0], direction: [1, 0, 0], maxDistance: 4 });
-    if (a?.distance !== 1 || b?.distance !== 1) throw new Error('Pure geometry result changed');
+    const hit = raycastShape2D(circleShape2D({ radius: 1 }), { position: [0, 0], rotationDegrees: 0 }, { origin: [-2, 0], direction: [1, 0], maxDistance: 4 });
+    if (hit?.distance !== 1) throw new Error('Pure 2D geometry result changed');
   `;
   writeFileSync(join(geometryDir, "runtime.mjs"), geometrySource);
   run(process.execPath, ["runtime.mjs"], geometryDir);
@@ -156,7 +158,7 @@ try {
     geometryBundle.inputs.every(
       (input) =>
         !input.includes("/node_modules/three/") &&
-        !/\/lib\/(?:2d|3d)\/(?:runtime|world|webgl)\//u.test(input),
+        !/\/lib\/2d\/(?:runtime|world|webgl)\//u.test(input),
     ),
   );
   assert.ok(
@@ -215,6 +217,7 @@ try {
   );
   for (const specifier of [
     "@crc/core/physics/3d",
+    "@crc/core/physics/3d/geometry",
     "@crc/core/particles/webgl",
     "@crc/webgl",
     "@crc/webgl/gltf",

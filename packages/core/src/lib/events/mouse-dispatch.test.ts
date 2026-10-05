@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { useEvent } from '../hooks/use-event';
 import { useEventListener } from '../hooks/use-event-listener';
 import { useEventTarget } from '../hooks/use-event-target';
 import type {
@@ -358,16 +357,17 @@ describe('DOM-aligned mouse dispatch', () => {
       });
     };
     const Root = (_props: {}) => {
-      useEvent('mousemove', () => {
-        trace.push('throws');
-        throw new Error('expected observer failure');
-      });
-      useEvent('mousemove', () => trace.push('safe'));
       return createElement(Target, {});
     };
     const canvas = createCanvas();
     crc(canvas, createElement(Root, {}));
     await nextFrame();
+    const observers = getCRCInstance(canvas).eventRoot.observers.get('mousemove')!;
+    observers.add(() => {
+      trace.push('throws');
+      throw new Error('expected observer failure');
+    });
+    observers.add(() => trace.push('safe'));
 
     dispatchMouse(canvas, 'mousemove', 25, 25);
 

@@ -4,7 +4,7 @@ import { isAbsolute, resolve, sep } from "node:path";
 const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const CRC_ENTRY_POINT =
-  /^@crc\/(?:core(?:\/(?:filters|internal|jsx-runtime|jsx-dev-runtime|particles|textures|viz|physics\/(?:2d(?:\/geometry)?|3d\/geometry)))?|three|text)$/;
+  /^@crc\/(?:core(?:\/(?:filters|internal|jsx-runtime|jsx-dev-runtime|particles|textures|viz|physics\/2d(?:\/geometry)?))?|three|text)$/;
 const THREE_ENTRY_POINT = /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
 
 const threeEntryPoints = new Map([
@@ -92,13 +92,6 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
       resolve(
         import.meta.dirname,
         `../packages/core/${directory}/features/physics/2d-geometry.${extension}`,
-      ),
-    ],
-    [
-      "@crc/core/physics/3d/geometry",
-      resolve(
-        import.meta.dirname,
-        `../packages/core/${directory}/features/physics/3d-geometry.${extension}`,
       ),
     ],
   ]);

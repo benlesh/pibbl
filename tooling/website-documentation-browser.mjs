@@ -92,8 +92,33 @@ try {
     ),
     true,
   );
+  const interactive = await browser.newPage();
+  await interactive.goto(`${base}/experience/regular-polygon/`);
+  await interactive
+    .locator("[data-status]")
+    .filter({ hasText: /^Running$/ })
+    .waitFor();
+  await interactive.getByRole("button", { name: "Stop", exact: true }).click();
+  await interactive
+    .locator("[data-status]")
+    .filter({ hasText: /^Stopped$/ })
+    .waitFor();
+  await interactive
+    .getByRole("button", { name: "Run example", exact: true })
+    .click();
+  await interactive
+    .locator("[data-status]")
+    .filter({ hasText: /^Running$/ })
+    .waitFor();
+  await interactive.emulateMedia({ reducedMotion: "reduce" });
+  await interactive.goto(`${base}/experience/rainy-window/`);
+  await interactive.waitForTimeout(300);
+  assert.equal(
+    await interactive.locator("[data-status]").textContent(),
+    "Stopped",
+  );
   process.stdout.write(
-    `PASS: ${parsed.length} pages, heading links, static images, no-JS reference-to-agent navigation, Markdown retrieval, desktop/mobile layout.\n`,
+    `PASS: ${parsed.length} pages, heading links, static images, no-JS navigation, Markdown, desktop/mobile layout, autoplay, stop/restart, reduced motion.\n`,
   );
 } finally {
   await browser.close();

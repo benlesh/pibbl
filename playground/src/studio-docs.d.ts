@@ -1,11 +1,9 @@
 declare module "virtual:crc-studio-docs" {
-  import type { StudioDocumentationBrowserBuild } from "../../tooling/studio-docs/build";
+  import type { NavigationDocumentation } from "./app/navigation";
 
-  export const documentation: StudioDocumentationBrowserBuild;
-  export const pages: StudioDocumentationBrowserBuild["pages"];
-  export const pageByRoute: StudioDocumentationBrowserBuild["pageByRoute"];
-  export const legacyRouteToRoute: StudioDocumentationBrowserBuild["legacyRouteToRoute"];
-  export const apiCoverage: StudioDocumentationBrowserBuild["apiCoverage"];
+  export const documentation: NavigationDocumentation;
+  export const pages: NavigationDocumentation["pages"];
+  export const legacyRouteToRoute: Readonly<Record<string, string>>;
 }
 
 declare module "virtual:crc-studio-search" {

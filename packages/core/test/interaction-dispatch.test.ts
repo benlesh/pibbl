@@ -1,7 +1,7 @@
+import { signalObserversForTest } from "./support/signal-observer";
 import type {
   CRCInstance,
   CRCInteractionRegion,
-  CRCMouseEventListener,
 } from '../src/lib/types';
 import type {
   EventTraceEntry,
@@ -19,7 +19,7 @@ import { removeInteractionRegion } from '../src/lib/interaction-dispatch';
 import { mountCRC } from '../src/lib/mount-crc';
 import {
   createTarget,
-  updateLegacyTarget,
+  updateTarget,
 } from '../src/lib/events/registrations';
 import { dispatchToLogicalTarget } from '../src/lib/events/dispatch';
 import { Group, Overlay, Rectangle, signal } from '../src/index';
@@ -80,13 +80,18 @@ function region(
   path: Path2D,
   handlers: Partial<Record<
     'click' | 'mousemove' | 'mouseover' | 'mouseout',
-    CRCMouseEventListener
+    (event: import('../src/lib/events/types').CRCLogicalMouseEvent) => void
   >>,
 ): CRCInteractionRegion {
   const component = Array.from(owner.refs.values())[0];
   if (!component) throw new Error('Dispatch harness root component is missing.');
   const target = createTarget(owner, component, 0);
-  updateLegacyTarget(target, handlers, { path, fill: true });
+  updateTarget(target, {
+    onClick: handlers.click,
+    onMouseMove: handlers.mousemove,
+    onMouseOver: handlers.mouseover,
+    onMouseOut: handlers.mouseout,
+  }, { path, fill: true });
   return target;
 }
 
@@ -206,7 +211,7 @@ describe('interaction dispatcher mutation contract', () => {
     const value = signal(0);
     const observations: number[] = [];
     const phases: string[] = [];
-    getSignalNode(value).observers.add(() => observations.push(value.get()));
+    signalObserversForTest(getSignalNode(value)).add(() => observations.push(value.get()));
     const write = (phase: string, next: number) => () => {
       phases.push(phase);
       value.set(next);

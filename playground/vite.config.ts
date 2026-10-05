@@ -26,7 +26,6 @@ export default defineConfig(({ mode }) => {
     ["@crc/core", "../packages/core/src/index.ts"],
     ["@crc/core/physics/2d/geometry", "../packages/core/src/features/physics/2d-geometry.ts"],
     ["@crc/core/physics/2d", "../packages/core/src/features/physics/2d.ts"],
-    ["@crc/core/physics/3d/geometry", "../packages/core/src/features/physics/3d-geometry.ts"],
   ].map(([find, path]) => ({
     find: new RegExp(`^${find.replaceAll("/", "\\/")}$`, "u"),
     replacement: resolve(import.meta.dirname, path),

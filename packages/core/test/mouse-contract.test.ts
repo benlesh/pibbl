@@ -132,9 +132,7 @@ describe('mouse interaction contract oracle', () => {
       ];
       if (contractCase.phase === 'tfc-04' && !schematicOnly.includes(contractCase.id)) {
         moveCanvas(canvas, contractCase.visualProbe.x, contractCase.visualProbe.y);
-        const expectedProbe = contractCase.targeting.candidatePolicy === 'canvas-wide-observer' ?
-          'canvas-wide-observer' :
-          contractCase.visualProbe.expectedTarget;
+        const expectedProbe = contractCase.visualProbe.expectedTarget;
         expect(controller.getState().lastInteractionTarget, contractCase.id).toBe(expectedProbe);
       }
     }

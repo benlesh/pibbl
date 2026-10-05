@@ -166,17 +166,11 @@ for (const [entry, api] of Object.entries(studioInventory)) {
   assert.ok(api.values.length + api.types.length + api.overview.length > 0,
     `Public entry ${entry} must not have an empty API inventory`);
 }
-assert.deepEqual(
-  studioInventory.physics3dGeometry,
-  physicsInventory.physics3dGeometry,
-);
-
 process.stdout.write(
   `Validated public API coverage: ${crcInventory.root.values.length} core values, ` +
     `${crcInventory.root.types.length} core types, ${crcInventory.three.values.length} ` +
     `Three adapter value, ${crcInventory.three.types.length} Three adapter types, ` +
     `${crcInventory.particles.values.length} particle values, ` +
     `${crcInventory.particles.types.length} particle type exports, ` +
-    `${physicsInventory.root.values.length} physics 2D values, and ` +
-    `${physicsInventory.physics3dGeometry.values.length} pure physics 3D geometry values.\n`,
+    `${physicsInventory.root.values.length} physics 2D values.\n`,
 );

@@ -311,8 +311,8 @@ describe('signal graph and realm scheduler ownership', () => {
       rendererEdges: baseline.rendererEdges,
       computedSourceEdges: baseline.computedSourceEdges,
     });
-    expect(getSignalNodeForTest(source).observers.size).toBe(0);
-    expect(getSignalNodeForTest(inner).observers.size).toBe(0);
+    expect(getSignalNodeForTest(source).observerCount).toBe(0);
+    expect(getSignalNodeForTest(inner).observerCount).toBe(0);
 
     crc(canvas, createElement(Healthy, {}));
     driver.flush(2);
@@ -330,8 +330,8 @@ describe('signal graph and realm scheduler ownership', () => {
       releasedComputedSourceEdges:
         baseline.releasedComputedSourceEdges + 2,
     });
-    expect(getSignalNodeForTest(source).observers.size).toBe(0);
-    expect(getSignalNodeForTest(inner).observers.size).toBe(0);
+    expect(getSignalNodeForTest(source).observerCount).toBe(0);
+    expect(getSignalNodeForTest(inner).observerCount).toBe(0);
 
     source.set(2);
     expect(outer.get()).toBe(4);

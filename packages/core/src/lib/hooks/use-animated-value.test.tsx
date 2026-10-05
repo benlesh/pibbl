@@ -1,3 +1,4 @@
+import { signalObserversForTest } from "../../../test/support/signal-observer";
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it } from 'vitest';
 import {
   crcInternalCurrentRenderOwner,
@@ -433,7 +434,7 @@ describe('useAnimatedValue retargeting', () => {
       const doubled = useConst(() => computed(() => output.get() * 2));
       if (observedOutput === undefined) {
         observedOutput = output;
-        getSignalNode(output).observers.add(outputObserver);
+        signalObserversForTest(getSignalNode(output)).add(outputObserver);
       }
       outputs.push(output);
       values.push([output.get(), doubled.get()]);
@@ -480,7 +481,7 @@ describe('useAnimatedValue retargeting', () => {
     expect(signalGraphSnapshot().computedSourceEdges)
       .toBe(beforeGraph.computedSourceEdges + 1);
 
-    getSignalNode(observedOutput!).observers.delete(outputObserver);
+    signalObserversForTest(getSignalNode(observedOutput!)).delete(outputObserver);
     executeRender(canvas, 31, undefined);
     expect(signalGraphSnapshot().computedSourceEdges)
       .toBe(beforeGraph.computedSourceEdges);

@@ -1,6 +1,6 @@
 # CRC mouse interaction contract
 
-Status: current geometry, coordinates, cursor, and observer contract, updated
+Status: current geometry, coordinates, and cursor contract, updated
 for external render-layer and Three.js interaction on 2026-09-28.
 The DOM-aligned [user-event contract](./user-events-contract.md)
 superseded this document's mouse-only non-propagation, hidden related-target,
@@ -31,7 +31,7 @@ The platform evidence is consistent on the important shape: mouse events target 
 - **Logical target:** the one live paint/custom target selected for a native mouse event.
 - **Paint order:** the order in which CRC composites interactive paths, including layers. Later paint is visually above earlier paint.
 - **Live target:** a region still owned by the current rendered tree with the target generation selected for dispatch.
-- **Root coordinates:** coordinates in the mounted logical viewport exposed as `CRCMouseEvent.x/y`.
+- **Root coordinates:** coordinates in the mounted logical viewport exposed as `CRCLogicalMouseEvent.x/y`.
 - **Boundary transition:** logical over/out and enter/leave events derived from
   movement between CRC targets. Over/out bubble; enter/leave do not.
 
@@ -63,8 +63,6 @@ declared geometry rather than rendered opacity: a configured transparent fill
 is still a fill hit area, and zero opacity does not disable interaction. A
 Canvas path with neither a fill hit area nor a positive stroke interaction
 width remains a miss.
-
-The public `useEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation.
 
 Likewise, `useCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty.
 
@@ -127,9 +125,7 @@ Exit always precedes entry, and every boundary transition precedes movement. Mov
 
 `CRCLogicalMouseEvent.relatedTarget` is the opposite opaque logical CRC target,
 or `null` for Canvas background/outside-root relationships. The native
-`originalEvent.relatedTarget` remains the DOM Canvas relationship. The shipped
-narrow `CRCMouseEvent` used by pathless legacy observers intentionally retains
-only `{ x, y, originalEvent }`.
+`originalEvent.relatedTarget` remains the DOM Canvas relationship.
 
 ### Decision on the four disputed ordering expectations
 
@@ -233,7 +229,6 @@ The explorer visual target, native trace when analogous, CRC trace, gesture, and
 - A sibling down/up sequence reaches a common ancestor only when that ancestor
   explicitly registered a matching listener.
 - Boundary-removal timing is normalized to stable postconditions rather than browser layout-task timing.
-- No-path `useEvent` handlers are Canvas-wide observers and run after target-bound callbacks rather than introducing a synthetic propagation phase.
 
 ## Mouse-specific non-goals and follow-ups
 
@@ -262,11 +257,3 @@ JSX or `createElement` over branded `CRCElement` descriptors.
 - [W3C CSSOM View — topmost-first hit-test order](https://www.w3.org/TR/cssom-view/#dom-document-elementsfrompoint)
 - [W3C CSSOM View — MouseEvent coordinate extensions](https://www.w3.org/TR/cssom-view/#extensions-to-the-mouseevent-interface)
 - [WHATWG HTML — Canvas paths, clipping, hit testing, and drawing images](https://html.spec.whatwg.org/multipage/canvas.html)
-
-## External 3D geometry
-
-Mouse and pointer events report root-logical Canvas coordinates and committed
-render-layer targets; they are not physics query results. A Three integration
-projects through its committed camera and raycasts its scene or invokes the
-application's picker. Pure `@crc/core/physics/3d/geometry` operations neither
-synthesize DOM events nor start a simulation or render loop.

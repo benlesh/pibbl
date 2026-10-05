@@ -5,7 +5,6 @@ import type {
   CRCEvent,
   CRCKeyboardEvent,
   CRCLogicalMouseEvent,
-  CRCMouseEvent,
   CRCPointerEvent,
   CRCTouchEvent,
 } from '@crc/core';
@@ -15,7 +14,6 @@ import type {
   TraceEventType,
 } from './event-trace';
 import {
-  useEvent,
   useEventListener,
   useEventTarget,
   Group,
@@ -35,10 +33,6 @@ export type InteractionLabFixture =
   | 'keyboard-fields'
   | 'nested'
   | 'no-hit'
-  | 'observer'
-  | 'observer-remove'
-  | 'observer-replace'
-  | 'observer-throwing'
   | 'overlap'
   | 'pointer-capture'
   | 'propagation'
@@ -63,8 +57,6 @@ export interface InteractionLabState {
   lastAction: InteractionLabAction;
   lastHandlerGeneration: number | null;
   leftHandlerEnabled: boolean;
-  observerGeneration: number;
-  observerMutationComplete: boolean;
   rightVisible: boolean;
   topPaintedLast: boolean;
   topVisible: boolean;
@@ -77,7 +69,7 @@ interface InteractionLabSceneProps {
   state: Readonly<InteractionLabState>;
   record: InteractionLabRecord;
 }
-type TraceMouseCoordinates = Pick<CRCMouseEvent, 'x' | 'y' | 'originalEvent'>;
+type TraceMouseCoordinates = Pick<CRCLogicalMouseEvent, 'x' | 'y' | 'originalEvent'>;
 type TraceHandlers = {
   onClick: (event: CRCLogicalMouseEvent) => void;
   onContextMenu: (event: CRCLogicalMouseEvent) => void;
@@ -364,11 +356,9 @@ const NestedChild = ({ record }: NestedAncestorProps) =>
   );
 const NestedInteractiveAncestor = ({ record }: NestedAncestorProps) => {
   const parentPath = rectanglePath(70, 52, 300, 148);
-  useEvent(
-    'mousemove',
-    (event) => recordEvent(record, 'mousemove', 'ancestor', event),
-    parentPath,
-    true,
+  useEventTarget(
+    { onMouseMove: event => recordEvent(record, 'mousemove', 'ancestor', event) },
+    { path: parentPath, fill: true },
   );
   return [
     <Rectangle
@@ -912,69 +902,9 @@ function caseVisual(
           {...traceHandlers('a', record)}
         />,
       ];
-    case 'observer':
-    case 'observer-remove':
-    case 'observer-replace':
-    case 'observer-throwing':
-      return [
-        region(
-          'a',
-          record,
-          {
-            x: 90,
-            y: 66,
-            width: 220,
-            height: 124,
-          },
-          {
-            cursor: 'pointer',
-            fillStyle: '#2563eb',
-          },
-        ),
-      ];
   }
 }
 const InteractionLabScene = ({ state, record }: InteractionLabSceneProps) => {
-  useEvent(
-    'mousemove',
-    state.fixture === 'observer'
-      ? (event) => {
-          recordEvent(record, 'mousemove', 'canvas-observer', event);
-        }
-      : state.fixture === 'observer-remove' ||
-          state.fixture === 'observer-replace'
-        ? (event) => {
-            recordEvent(record, 'mousemove', 'observer-mutator', event);
-          }
-        : state.fixture === 'observer-throwing'
-          ? (event) => {
-              recordEvent(record, 'mousemove', 'observer-throws', event);
-              throw new Error('Deliberate ordering-lab observer failure');
-            }
-          : undefined,
-  );
-  useEvent(
-    'mousemove',
-    state.fixture === 'observer-replace'
-      ? (event) => {
-          recordEvent(
-            record,
-            'mousemove',
-            `observer-generation-${state.observerGeneration}`,
-            event,
-            state.observerGeneration,
-          );
-        }
-      : state.fixture === 'observer-remove' && !state.observerMutationComplete
-        ? (event) => {
-            recordEvent(record, 'mousemove', 'observer-removable', event);
-          }
-        : state.fixture === 'observer-throwing'
-          ? (event) => {
-              recordEvent(record, 'mousemove', 'observer-safe', event);
-            }
-          : undefined,
-  );
   return [
     <Rectangle
       key="background"

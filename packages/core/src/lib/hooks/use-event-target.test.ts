@@ -12,7 +12,6 @@ import {
 } from '../global-state';
 import { useEventListener } from './use-event-listener';
 import { useEventTarget } from './use-event-target';
-import { useRegion } from './use-region';
 import { createElement } from '../element/create-element';
 
 beforeEach(() => {
@@ -25,10 +24,12 @@ afterEach(() => {
 });
 
 describe('useEventTarget', () => {
-  it('adapts useRegion to the same grouped target record contract', async () => {
+  it('registers a grouped target record', async () => {
     const onClick = vi.fn();
+    const path = new Path2D();
+    path.rect(0, 0, 20, 20);
     const Probe = (_props: {}) => {
-      useRegion({ handlers: { click: onClick } });
+      useEventTarget({ onClick }, { path, fill: true });
     };
     const canvas = createCanvas();
     const controller = crc(canvas, createElement(Probe, {}));

@@ -124,12 +124,6 @@ export const crcPhysicsEntryPaths = {
       import.meta.url,
     ),
   ),
-  physics3dGeometry: fileURLToPath(
-    new URL(
-      "../../packages/core/src/features/physics/3d-geometry.ts",
-      import.meta.url,
-    ),
-  ),
 } as const;
 
 /** Exact public entries rendered by the Studio API reference. */
@@ -142,7 +136,6 @@ export const crcStudioPublicEntryPaths = {
       import.meta.url,
     ),
   ),
-  physics3dGeometry: crcPhysicsEntryPaths.physics3dGeometry,
 } as const;
 
 const compilerOverviewSymbols = new Set(["jsx", "jsxs", "jsxDEV", "JSX"]);

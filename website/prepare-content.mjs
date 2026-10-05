@@ -1,4 +1,4 @@
-import { readFile, mkdir, writeFile, rm, cp } from "node:fs/promises";
+import { readFile, readdir, mkdir, writeFile, rm, cp } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { execFileSync } from "node:child_process";
 import {
@@ -8,6 +8,7 @@ import {
   topicFor,
 } from "./documentation.mjs";
 import { learningExampleCatalog } from "../packages/scenarios/src/learning-catalog.ts";
+import { galleries, galleryExamples } from "./gallery.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const generated = resolve(import.meta.dirname, "src/content/docs");
@@ -22,13 +23,132 @@ const core = JSON.parse(
 );
 const compatibility = `Local checkout: @crc/core ${core.version}, base revision ${revision}, with working-tree changes. This preview does not assert compatibility with an npm release.`;
 const kit = resolve(root, "docs/website-rebuild/claude-design-kit");
-await rm(generated, { recursive: true, force: true });
+// Preserve the content root so a running Astro watcher keeps its collection.
 await rm(publicDir, { recursive: true, force: true });
 await mkdir(generated, { recursive: true });
 await mkdir(publicDir, { recursive: true });
 const catalog = [];
 const imported = await loadDocumentation(root, playground);
 const records = [...(await loadAuthored(root)), ...imported.records];
+const minimalExamples = new Map();
+for (const slug of galleries.find((gallery) => gallery.id === "shapes").slugs) {
+  const record = imported.records.find(
+    (record) => record.id === `reference/components/${slug}`,
+  );
+  const symbol = record?.meta.symbols?.[0];
+  const snippet = record?.content.match(/```tsx\n([\s\S]*?)\n```/)?.[1];
+  if (!symbol || !snippet)
+    throw new Error(`Missing minimal shape source for ${slug}`);
+  const code = `/** @jsxImportSource @crc/core */\nimport { crc, ${symbol} } from '@crc/core';\n\nconst canvas = document.createElement('canvas');\ncanvas.width = 320;\ncanvas.height = 240;\ndocument.body.append(canvas);\n\nconst controller = crc(canvas, (\n${snippet}\n));\n\nwindow.addEventListener('pagehide', () => controller.dispose(), { once: true });\n`;
+  const url = `/minimal/${slug}.tsx`;
+  await mkdir(resolve(publicDir, "minimal"), { recursive: true });
+  await writeFile(resolve(publicDir, `minimal/${slug}.tsx`), code);
+  minimalExamples.set(symbol, url);
+  record.content += `\n## Complete minimal example\n\nCompile this TSX module with \`jsx: "react-jsx"\` and \`jsxImportSource: "@crc/core"\`, then load it from a browser entry point after the document body exists. It creates and mounts one canvas; dispose the controller before removing or replacing that canvas. The interactive study linked below adds controls beyond this minimal use case.\n\n[Download source](${url})\n\n\`\`\`tsx\n${code}\`\`\`\n`;
+}
+for (const gallery of galleries) {
+  records.push({
+    id: `catalogs/${gallery.id}`,
+    meta: {
+      title: gallery.title,
+      description: `Explore ${gallery.title.toLowerCase()} with runnable examples.`,
+      kind: "gallery",
+      source: "website/gallery.mjs",
+    },
+    content:
+      "[All galleries](/catalogs/)\n\n" +
+      gallery.slugs
+        .map((slug) => {
+          const example = galleryExamples.find(
+            (example) => example.slug === slug,
+          );
+          return `- [${example.title}](/examples/${slug}/): ${example.summary} [Full page](/experience/${slug}/) · [Playground](${playground}#/examples/${example.browseGroup}/${slug})`;
+        })
+        .join("\n"),
+  });
+}
+const catalogLanding = records.find((record) => record.id === "catalogs");
+catalogLanding.content =
+  "## Browse visually\n\n" +
+  galleries
+    .map((gallery) => `- [${gallery.title}](/catalogs/${gallery.id}/)`)
+    .join("\n") +
+  "\n\n" +
+  catalogLanding.content;
+for (const example of galleryExamples) {
+  const id = `examples/${example.slug}`;
+  let record = records.find((record) => record.id === id);
+  if (!record) {
+    record = {
+      id,
+      meta: {
+        title: example.title,
+        description: example.summary,
+        kind: "example",
+        source: example.source.path,
+        sources: [example.source.path],
+      },
+      content: `${example.summary}\n\n## Try it\n\n${example.prompts.gesture}\n\n## What to learn\n\n${example.objectives.map((objective) => `- ${objective}`).join("\n")}\n\n## Integration boundaries\n\n${example.apiNotes.map((note) => `- ${note}`).join("\n")}\n\nThis is a CRC Canvas example. Its mount owns its runtime resources; call its controller's dispose method when removing it. The preview starts automatically unless reduced motion is enabled; Stop disposes the mount. Preserve the source's logical canvas size and aspect ratio. Native HTML is not captured by Canvas filters.\n`,
+    };
+    records.push(record);
+  }
+  record.content =
+    `[Full-page experience](/experience/${example.slug}/) · [Open playground](${playground}#/examples/${example.browseGroup}/${example.slug})\n\n` +
+    record.content;
+  const apiLinks = example.api.flatMap((symbol) => {
+    const entry = imported.entries.find(
+      (entry) => entry.symbol === symbol && entry.url,
+    );
+    return entry ? [`- [${symbol}](${entry.url})`] : [];
+  });
+  record.content += `\n## Related APIs\n\n${apiLinks.join("\n")}\n`;
+}
+for (const record of imported.records) {
+  const examples = galleryExamples.filter((example) =>
+    example.api.some((symbol) => record.meta.symbols?.includes(symbol)),
+  );
+  if (examples.length)
+    record.content +=
+      "\n## Interactive examples\n\n" +
+      examples
+        .map(
+          (example) =>
+            `- [${example.title}](/examples/${example.slug}/) · [Full page](/experience/${example.slug}/)`,
+        )
+        .join("\n");
+}
+for (const entry of imported.entries) {
+  entry.exampleCandidates = galleryExamples
+    .filter((example) => example.api.includes(entry.symbol))
+    .map((example) => `/examples/${example.slug}/`);
+  entry.minimalExample = minimalExamples.get(entry.symbol) ?? null;
+  entry.exampleReview = entry.minimalExample
+    ? "complete-minimal-source"
+    : "pending";
+}
+records.push({
+  id: "agents/documentation-status",
+  meta: {
+    title: "Documentation completeness",
+    description:
+      "Reference destinations are not proof of complete minimal examples.",
+    kind: "reference-index",
+    source: "website/prepare-content.mjs",
+  },
+  content:
+    `Every public API needs an explanation, its simplest complete code example, and appropriate verification. Visual APIs should also have live previews. Types need usage examples rather than meaningless standalone canvases.\n\nThe inventory currently contains ${new Set(imported.entries.map((entry) => entry.symbol)).size} distinct symbol names. ${minimalExamples.size} shape APIs have complete minimal programs checked by the minimal-example test. **The remaining per-symbol minimal-example work is incomplete.** Grouped documentation is not counted as proof of a complete minimal example.\n\n[Machine-readable inventory](/agents/coverage.json) includes example candidates from the learning catalog. These are discovery links, not certifications of minimality or verification. A null minimalExample means a complete minimal program has not yet been supplied.\n\n## Review queue\n\n` +
+    [
+      ...new Map(
+        imported.entries.map((entry) => [entry.symbol, entry]),
+      ).values(),
+    ]
+      .sort((a, b) => a.symbol.localeCompare(b.symbol))
+      .map(
+        (entry) =>
+          `- [${entry.symbol}](${entry.url}): ${entry.kind}; ${entry.minimalExample ? "[complete minimal source](" + entry.minimalExample + ")" : "minimal example pending"}${entry.exampleCandidates.length ? "; [existing example](" + entry.exampleCandidates[0] + ")" : ""}.`,
+      )
+      .join("\n"),
+});
 const reference = records.find((record) => record.id === "reference");
 for (const [topic, details] of Object.entries(topics)) {
   const id = `reference/capabilities/${topic}`;
@@ -99,7 +219,7 @@ await writeFile(
       schemaVersion: 1,
       compatibility,
       meaning:
-        "Export-to-document destinations, not a snippet execution or documentation-quality certification.",
+        "Export-to-reference destinations only. exampleCandidates are discovery links; minimalExample and exampleReview explicitly track the unverified per-symbol requirement.",
       entries: imported.entries,
       missing: imported.entries.filter((entry) => !entry.url),
     },
@@ -171,6 +291,11 @@ for (const { id, meta, content: body } of records) {
     ],
   });
 }
+for (const path of await readdir(generated, { recursive: true })) {
+  if (path.endsWith(".md") && !ids.has(path.slice(0, -3))) {
+    await rm(resolve(generated, path));
+  }
+}
 await cp(
   resolve(root, "playground/public/tutorials"),
   resolve(import.meta.dirname, "public/tutorials"),
@@ -212,5 +337,5 @@ execFileSync("tar", [
   "claude-design-kit",
 ]);
 process.stdout.write(
-  `Prepared ${catalog.length} public pages from docs/site only; ${imported.entries.filter((entry) => !entry.url).length} export documentation gaps.\n`,
+  `Prepared ${catalog.length} public pages; ${imported.entries.filter((entry) => !entry.url).length} missing export reference destinations. Minimal-example completeness is tracked separately.\n`,
 );

@@ -1,13 +1,27 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { test } from "node:test";
 const output = new URL("../website/dist/", import.meta.url);
 test("existing public reference and guides have static destinations and agent reading paths", async () => {
   const catalog = JSON.parse(
     await readFile(new URL("catalog.json", output), "utf8"),
   );
-  assert.ok(
-    catalog.entries.filter((entry) => entry.kind === "api").length >= 141,
+  const apiRoot = new URL("../docs/site/api/", import.meta.url);
+  const expectedSources = [];
+  for (const path of await readdir(apiRoot, { recursive: true })) {
+    if (
+      path.endsWith(".md") &&
+      /^kind: api$/m.test(await readFile(new URL(path, apiRoot), "utf8"))
+    ) {
+      expectedSources.push(`docs/site/api/${path}`);
+    }
+  }
+  assert.deepEqual(
+    catalog.entries
+      .filter((entry) => entry.kind === "api")
+      .map((entry) => entry.source)
+      .sort(),
+    expectedSources.sort(),
   );
   for (const route of [
     "guides/state-and-lifecycle",
@@ -43,6 +57,9 @@ test("existing public reference and guides have static destinations and agent re
     coverage.entries.some((entry) => entry.symbol === "Circle" && entry.url),
   );
   assert.deepEqual(coverage.missing, []);
+  assert.ok(
+    coverage.entries.every((entry) => !entry.importPath.includes("physics/3d")),
+  );
   assert.match(
     await readFile(new URL("reference.md", output), "utf8"),
     /Alphabetical/,

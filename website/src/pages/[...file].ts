@@ -4,7 +4,7 @@ const generated = resolve(process.cwd(), "public/generated");
 export async function getStaticPaths() {
   const paths = await readdir(generated, { recursive: true });
   return paths
-    .filter((path) => /\.(md|txt|json|gz)$/.test(path))
+    .filter((path) => /\.(md|txt|json|gz|tsx)$/.test(path))
     .map((file) => ({ params: { file }, props: { file } }));
 }
 export async function GET({ props }: { props: { file: string } }) {

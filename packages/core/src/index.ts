@@ -306,7 +306,6 @@ export { useCursor } from './lib/hooks/use-cursor.js';
 export { useCanvasContext } from './lib/hooks/use-canvas-context.js';
 export { useComputed } from './lib/hooks/use-computed.js';
 export { useConst } from './lib/hooks/use-const.js';
-export { useEvent } from './lib/hooks/use-event.js';
 export { useEventListener } from './lib/hooks/use-event-listener.js';
 export { useEventTarget } from './lib/hooks/use-event-target.js';
 export { useLinePath } from './lib/hooks/use-line-path.js';
@@ -331,8 +330,6 @@ export type {
   CRCElementType,
   CRCEmptyNode,
   CRCKey,
-  CRCMouseEvent,
-  CRCMouseEventListener,
   CRCNode,
   CRCNodeInput,
   CRCPhysics2DPropExtension,

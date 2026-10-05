@@ -10,7 +10,7 @@ import type { LearningBrowseGroup } from "@crc/scenarios";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   learningSourcePaths,
-  loadLearningSource,
+  loadWorkbenchSource,
 } from "../../../playground/src/learning-sources";
 import {
   learningSourceContainsJsx,
@@ -1463,7 +1463,7 @@ describe("learning example catalog", () => {
     expect(signals && getLearningExampleRoute(signals)).toBe(
       "#/examples/start/signals",
     );
-    const signalsSource = await loadLearningSource(signals!);
+    const signalsSource = await loadWorkbenchSource(signals!);
     expect(signalsSource).toMatch(/from ["']@crc\/core["']/u);
     expect(signalsSource).not.toMatch(/@crc\/core\/(?:internal|lib|src)\b/u);
     expect(signalsSource).toContain("x,");
@@ -1508,10 +1508,10 @@ describe("learning example catalog", () => {
       "Memoize a reusable hexagon Path2D with createRegularPolygonPath.",
       "Use an inradius-defined hexagon to clip children and their interaction geometry.",
     ]);
-    expect(await loadLearningSource(clip!)).toContain(
+    expect(await loadWorkbenchSource(clip!)).toContain(
       "createRegularPolygonPath",
     );
-    expect(await loadLearningSource(clip!)).toContain("useConst");
+    expect(await loadWorkbenchSource(clip!)).toContain("useConst");
 
     const regularPolygon = learningExampleCatalog.find(
       (entry) => entry.slug === "regular-polygon",
@@ -1548,7 +1548,7 @@ describe("learning example catalog", () => {
         .every((entry) => entry.authoring === "jsx"),
     ).toBe(true);
 
-    const source = await loadLearningSource(nonJsx!);
+    const source = await loadWorkbenchSource(nonJsx!);
     expect(() =>
       validateLearningSourceText(source, {
         authoring: "createElement",
@@ -1658,7 +1658,7 @@ describe("learning example catalog", () => {
         (candidate) => candidate.slug === slug,
       );
       expect(entry).toBeDefined();
-      const source = await loadLearningSource(entry!);
+      const source = await loadWorkbenchSource(entry!);
       expect(source.match(/from ["'][^"']+["']/g)).toEqual([
         expect.stringMatching(/from ["']@crc\/core["']/),
       ]);
@@ -1704,7 +1704,7 @@ describe("learning example catalog", () => {
   it("uses canonical component authoring throughout every learning source", async () => {
     for (const entry of learningExampleCatalog) {
       expect(entry.source.path, entry.slug).toMatch(/\.example\.tsx$/u);
-      const source = await loadLearningSource(entry);
+      const source = await loadWorkbenchSource(entry);
       expect(() =>
         validateLearningSourceText(source, {
           authoring: entry.authoring,
@@ -1735,7 +1735,7 @@ describe("learning example catalog", () => {
     ]);
     for (const entry of layouts) {
       expect(entry.objectives).toHaveLength(2);
-      const source = await loadLearningSource(entry);
+      const source = await loadWorkbenchSource(entry);
       expect(source.match(/from ["'][^"']+["']/g)).toEqual([
         expect.stringMatching(/from ["']@crc\/core["']/),
       ]);
@@ -2201,7 +2201,7 @@ describe("learning example catalog", () => {
   it.each(learningExampleCatalog)(
     "loads, mounts, paints, and disposes $slug from its canonical source",
     async (entry) => {
-      const source = await loadLearningSource(entry);
+      const source = await loadWorkbenchSource(entry);
       expect(() =>
         validateLearningSourceText(source, {
           authoring: entry.authoring,

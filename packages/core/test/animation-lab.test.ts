@@ -15,7 +15,7 @@ import {
   ManualSchedulerDriver,
 } from '../src/lib/scheduler/testing.js';
 import { writerLeaseSnapshot } from '../src/lib/animation/writer-leases.js';
-import { loadLearningSource } from '../../../playground/src/learning-sources';
+import { loadWorkbenchSource } from '../../../playground/src/learning-sources';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
 import {
   mountScenarioSurface,
@@ -142,7 +142,7 @@ describe('first-class animation public scenarios', () => {
 
     if (!learning) throw new Error('Missing signals-and-animation learning example.');
     const [learningSource, labSource] = await Promise.all([
-      loadLearningSource(learning),
+      loadWorkbenchSource(learning),
       loadScenarioSource(animationLabScenarioEntry),
     ]);
     for (const source of [learningSource, labSource]) {

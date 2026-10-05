@@ -62,7 +62,7 @@ A root mount also requires `ResizeObserver`.
 CRC distinguishes:
 
 1. **logical space**, used by components, styles, layout boxes, paths, and
-   `CRCMouseEvent.x/y`;
+   `CRCLogicalMouseEvent.x/y`;
 2. **display space**, measured from the Canvas CSS content box in CSS pixels;
 3. **backing space**, stored by `canvas.width` and `canvas.height` in physical
    pixels.

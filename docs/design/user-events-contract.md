@@ -6,15 +6,14 @@ Focus integration is governed by the implemented
 [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 
 This document defines the public event behavior shared by built-in drawing
-components, `useEventTarget`, `useEventListener`, and the legacy `useEvent`
-hook. The executable public integration oracle is the
+components, `useEventTarget`, and `useEventListener`. The executable public integration oracle is the
 `interaction-trace-lab` scenario; focused event suites retain exhaustive
 family, geometry, mutation, and ownership matrices.
 
 This contract supersedes the old mouse-only statements that CRC had no event
 path, propagation control, logical related targets, cancellation, pointer
 capture, or common-ancestor activation. The target geometry, root-logical
-coordinate, cursor, layer paint-order, and pathless-observer rules retained in
+coordinate, cursor, and layer paint-order rules retained in
 the [mouse interaction contract](./mouse-interaction-contract.md) still apply.
 
 ## Public registration model
@@ -282,15 +281,6 @@ therefore no native-listener hub. CRC does not pretend that such a root can
 receive browser UI input and exposes no public event-injection API in this
 delivery.
 
-The singular path-bound `useEvent` remains a stable legacy geometric target.
-A pathless `useEvent` remains a narrow mouse-only Canvas observer with the
-shipped `{ x, y, originalEvent }` payload. Observers run after logical target
-propagation, once per matching native event, in registration order. Removal is
-effective before a pending observer turn, additions wait until the next native
-event, and thrown observers are reported without suppressing safe peers.
-Pathless observers do not affect target selection, propagation, cursor, or
-activation.
-
 Root disposal synchronously clears native listeners, logical registrations,
 pointer captures and pending loss, pointer hover, touch contacts, drag hover,
 mouse activation/click streaks, cursor ownership, observers, and layer bridges.
@@ -329,16 +319,6 @@ scene graph, hidden editable DOM, pointer/touch gesture recognition, or
 cross-browser normalization beyond the stated logical contracts. Optional
 logical focus does not create screen-reader semantics or generated DOM
 descendants.
-
-## External 3D geometry boundary
-
-Three coordinate events target the nearest committed visible object through the
-adapter's camera-aware raycasting, or through an application-supplied picker.
-Pure operations from `@crc/core/physics/3d/geometry` do not create event targets or
-retain an authoritative world. Applications that combine those operations with
-a Three scene explicitly derive their world-space query input and register the
-corresponding Three object as a CRC target; normal event propagation and pointer
-capture remain unchanged.
 
 ## Component manipulation events
 

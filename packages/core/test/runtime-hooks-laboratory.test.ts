@@ -65,7 +65,7 @@ describe('shared runtime and hooks laboratory', () => {
       'packages/scenarios/src/runtime-hooks.example.tsx',
     );
     expect(runtimeHooksScenarioEntry.metadata.knownLimitations.join(' ')).toContain(
-      'useEvent',
+      'useEventListener',
     );
     expect(runtimeHooksScenarioEntry.metadata.knownLimitations.join(' ')).toContain(
       'useCursor',

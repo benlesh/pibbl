@@ -41,10 +41,6 @@ const FIXTURES: readonly InteractionLabFixture[] = [
   'transparent',
   'interaction-width',
   'no-hit',
-  'observer',
-  'observer-remove',
-  'observer-replace',
-  'observer-throwing',
   'remove-target-after-transition',
 ];
 
@@ -67,8 +63,6 @@ function initialState(lastAction: InteractionLabAction = 'mount'): InteractionLa
     lastAction,
     lastHandlerGeneration: null,
     leftHandlerEnabled: true,
-    observerGeneration: 1,
-    observerMutationComplete: false,
     rightVisible: true,
     topPaintedLast: true,
     topVisible: true,
@@ -206,20 +200,6 @@ async function mountInteractionLab(
       void render();
       return;
     }
-
-    if (
-      (state.fixture === 'observer-remove' || state.fixture === 'observer-replace') &&
-      !state.observerMutationComplete &&
-      input.type === 'mousemove' &&
-      input.target === 'observer-mutator'
-    ) {
-      state = {
-        ...state,
-        observerGeneration: state.fixture === 'observer-replace' ? 2 : state.observerGeneration,
-        observerMutationComplete: true,
-      };
-      void render();
-    }
   };
 
   const transition = async (
@@ -251,8 +231,6 @@ async function mountInteractionLab(
         await transition(actionId as InteractionLabAction, {
           fixture,
           leftHandlerEnabled: true,
-          observerGeneration: 1,
-          observerMutationComplete: false,
           rightVisible: true,
           topPaintedLast: true,
           topVisible: true,

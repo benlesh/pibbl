@@ -50,8 +50,6 @@ symbols:
     CRCManipulationRotateInput,
     CRCManipulationSnapshot,
     CRCManipulationWhen,
-    CRCMouseEvent,
-    CRCMouseEventListener,
     CRCPointerEvent,
     CRCPointerEvents,
     CRCResizeHandleProps,
@@ -257,14 +255,6 @@ Reports initial, proposed, and applied geometry together with requested and sati
 ## CRCManipulationWhen
 
 Selects always, shift, alt, ctrl, or meta activation.
-
-## CRCMouseEvent
-
-`CRCMouseEvent` preserves the narrow pathless Canvas-observer mouse payload.
-
-## CRCMouseEventListener
-
-`CRCMouseEventListener` is the callback contract for that narrow root observer.
 
 ## CRCPointerEvent
 

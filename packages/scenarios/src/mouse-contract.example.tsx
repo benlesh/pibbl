@@ -2,7 +2,6 @@ import type { CRCLogicalMouseEvent } from '@crc/core';
 import type { MouseContractCase } from './mouse-contract';
 import {
   Clip,
-  useEvent,
   Group,
   Layer,
   Line,
@@ -387,31 +386,6 @@ function caseVisual(
           {'24px interaction stroke'}
         </Text>,
       ];
-    case 'root-event-no-path':
-      return [
-        <Text
-          pointerEvents="none"
-          style={{
-            left: 120,
-            top: 126,
-            font: '700 20px Arial',
-            fill: '#334155',
-          }}
-        >
-          {'Canvas-wide observer'}
-        </Text>,
-        <Text
-          pointerEvents="none"
-          style={{
-            left: 94,
-            top: 154,
-            font: '14px Arial',
-            fill: '#64748b',
-          }}
-        >
-          {'not a logical target or cursor region'}
-        </Text>,
-      ];
     case 'remove-target-during-press':
     case 'remove-target-during-move-plan':
       return [
@@ -499,12 +473,6 @@ const MouseContractScene = ({
   recordTarget,
 }: MouseContractSceneProps) => {
   const record = recordTarget ?? (() => undefined);
-  useEvent(
-    'mousemove',
-    contractCase.targeting.candidatePolicy === 'canvas-wide-observer'
-      ? () => record('canvas-wide-observer')
-      : undefined,
-  );
   const probe = contractCase.visualProbe;
   return [
     <Rectangle

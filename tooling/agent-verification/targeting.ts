@@ -7,7 +7,6 @@ import type { CRCEventTarget } from '@crc/core';
 import { CRCFocusManager } from '../../packages/core/src/lib/focus/focus-manager.js';
 import { GLOBAL_STATE } from '../../packages/core/src/lib/global-state.js';
 import { CRCPaintEntryKind, type CRCPaintEntry, type CRCPathPaintEntry } from '../../packages/core/src/lib/events/paint-entry.js';
-import { getLegacyHitGeometry } from '../../packages/core/src/lib/events/registrations.js';
 import { snapshotRealmScheduler } from '../../packages/core/src/lib/scheduler/realm-scheduler.js';
 
 export interface TargetingGeneration {
@@ -419,8 +418,8 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
     for (const [order, item] of collectEntries(root).entries.entries()) {
       const { entry, transform, clips } = item;
       if (entry.paintKind === CRCPaintEntryKind.NestedInstance) continue;
-      if (entry.paintKind !== CRCPaintEntryKind.Path || getLegacyHitGeometry(entry.target)) {
-        return result('unsupported', null, 'Renderer resolvers and legacy geometry are outside this prototype.');
+      if (entry.paintKind !== CRCPaintEntryKind.Path) {
+        return result('unsupported', null, 'Renderer resolvers are outside this prototype.');
       }
       maximumCalls += clips.length + Number(entry.fill) + Number(entry.lineInteractionWidth > 0);
       if (maximumCalls > NATIVE_CALL_LIMIT) return result('truncated', null, 'Query exceeds the 128-native-call budget.');

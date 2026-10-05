@@ -6,7 +6,7 @@ kind: agent-guide
 
 ## Choose a supported entry
 
-Use `@crc/core/physics/2d` for scheduled bodies/worlds and `/physics/2d/geometry` for pure shape operations. `/physics/3d/geometry` is renderer-independent pure geometry. There is no root physics barrel, renderer-coupled 3D world, or official Three physics binding. Rapier is privately bundled by CRC; applications do not initialize or drive it directly.
+Use `@crc/core/physics/2d` for scheduled bodies/worlds and `/physics/2d/geometry` for pure shape operations. There is no root physics barrel, CRC-owned 3D physics API, renderer-coupled 3D world, or official Three physics binding. Rapier is privately bundled by CRC; applications do not initialize or drive it directly.
 
 Read [the 2D physics guide](/guides/physics-2d/) for a complete public-browser test fixture and supported manual test harness. Use [Stirred Ink](/examples/stirred-ink/) for complete application source, or [the existing drag-and-throw editor](@PLAYGROUND@#/examples/composition/physics-2d). These sources use public package entries. Do not depend on repository test helpers.
 

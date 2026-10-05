@@ -1,0 +1,25 @@
+---
+import EffectDemo from '../../components/EffectDemo.astro';
+import { galleryExamples } from '../../../gallery.mjs';
+export function getStaticPaths() {
+  return galleryExamples.map(example => ({ params: { slug: example.slug }, props: { example } }));
+}
+const { example } = Astro.props;
+const playground = import.meta.env.CRC_PLAYGROUND_URL ?? 'http://localhost:5174/';
+---
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>{example.title} | CRC</title></head>
+  <body>
+    <header><h1>{example.title}</h1><nav><a href={`/examples/${example.slug}/`}>Documentation and source</a> <a href={`${playground}#/examples/${example.browseGroup}/${example.slug}`}>Open playground</a></nav></header>
+    <main><EffectDemo slug={example.slug} /><p>{example.prompts.gesture}</p></main>
+  </body>
+</html>
+<style>
+  :global(body) { margin: 0; padding: 1rem; background: #101418; color: #ecf1f3; font: 16px/1.5 system-ui, sans-serif; }
+  :global(a) { color: #84d9d0; }
+  header { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
+  h1 { font-size: 1.25rem; }
+  nav { display: flex; flex-wrap: wrap; gap: 1rem; }
+  main { max-width: 1100px; margin: 1rem auto; }
+</style>

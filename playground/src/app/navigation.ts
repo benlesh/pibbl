@@ -6,6 +6,7 @@ import type {
 import type { LearningBrowseGroup } from "@crc/scenarios";
 
 import type { ParsedStudioRoute } from "./routes";
+import { websiteUrlForStudioDocument } from "../../../tooling/studio-docs/website-routes";
 
 const collator = new Intl.Collator("en", {
   sensitivity: "base",
@@ -118,8 +119,9 @@ export function createNavigationState(
 export function buildNavigation(
   documentation: NavigationDocumentation,
   examples: readonly NavigationExample[],
+  websiteBase?: string,
 ): readonly NavigationArea[] {
-  return [
+  const areas: readonly NavigationArea[] = [
     {
       id: "learn",
       label: "Learn",
@@ -176,6 +178,21 @@ export function buildNavigation(
       })),
     },
   ];
+  if (websiteBase === undefined) return areas;
+  return areas.map((area) => mapWebsiteLinks(area, websiteBase) as NavigationArea);
+}
+
+function mapWebsiteLinks(entry: NavigationEntry, websiteBase: string): NavigationEntry {
+  const href = entry.href;
+  return {
+    ...entry,
+    ...(href?.startsWith("#/learn") || href?.startsWith("#/api")
+      ? { href: websiteUrlForStudioDocument(href, websiteBase) }
+      : {}),
+    ...(entry.children === undefined
+      ? {}
+      : { children: entry.children.map((child) => mapWebsiteLinks(child, websiteBase)) }),
+  };
 }
 
 /** Returns every sidebar item that must be expanded to expose a route. */

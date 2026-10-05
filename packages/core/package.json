@@ -66,10 +66,6 @@
     "./physics/2d/testing": {
       "types": "./dist/features/physics/2d-testing.d.ts",
       "default": "./dist/features/physics/2d-testing.mjs"
-    },
-    "./physics/3d/geometry": {
-      "types": "./dist/features/physics/3d-geometry.d.ts",
-      "default": "./dist/features/physics/3d-geometry.mjs"
     }
   },
   "main": "./dist/index.mjs",
@@ -113,9 +109,6 @@
       ],
       "physics/2d/testing": [
         "./dist/features/physics/2d-testing.d.ts"
-      ],
-      "physics/3d/geometry": [
-        "./dist/features/physics/3d-geometry.d.ts"
       ]
     }
   },

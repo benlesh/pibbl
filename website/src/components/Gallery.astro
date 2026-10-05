@@ -1,0 +1,22 @@
+---
+import { galleryExamples } from '../../gallery.mjs';
+const { slugs } = Astro.props;
+const examples = slugs.map(slug => galleryExamples.find(example => example.slug === slug));
+---
+<div class="gallery-grid">
+  {examples.map(example => <article>
+    <a href={`/examples/${example.slug}/`}>
+      <img src={`/previews/${example.slug}.png`} alt={example.title} width={example.canvas.width} height={example.canvas.height} loading="lazy" />
+      <h2>{example.title}</h2>
+    </a>
+    <p>{example.summary}</p>
+    <a href={`/experience/${example.slug}/`}>Full page</a>
+  </article>)}
+</div>
+<style>
+  .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 1.5rem; }
+  article { margin: 0; min-width: 0; }
+  img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: contain; background: #14191e; }
+  h2 { font-size: 1.1rem; margin-top: 0.5rem; }
+  p { font-size: 0.9rem; }
+</style>

@@ -14,8 +14,8 @@ export type MouseContractOrderingPolicy =
   };
 
 export interface MouseContractTargeting {
-  candidatePolicy: 'any-mouse-handler-or-cursor' | 'canvas-wide-observer';
-  identityPolicy: 'stable-logical-region' | 'not-applicable';
+  candidatePolicy: 'any-mouse-handler-or-cursor';
+  identityPolicy: 'stable-logical-region';
   candidates: readonly string[];
 }
 
@@ -51,15 +51,10 @@ function event(
   return { type, target, logicalRelatedTarget };
 }
 
-function targeting(
-  candidates: readonly string[],
-  candidatePolicy: MouseContractTargeting['candidatePolicy'] = 'any-mouse-handler-or-cursor',
-): MouseContractTargeting {
+function targeting(candidates: readonly string[]): MouseContractTargeting {
   return {
-    candidatePolicy,
-    identityPolicy: candidatePolicy === 'canvas-wide-observer' ?
-      'not-applicable' :
-      'stable-logical-region',
+    candidatePolicy: 'any-mouse-handler-or-cursor',
+    identityPolicy: 'stable-logical-region',
     candidates,
   };
 }
@@ -278,18 +273,6 @@ const CONTRACT_CASES = [
     visualProbe: { x: 240, y: 164, expectedTarget: null },
   },
   {
-    id: 'root-event-no-path',
-    title: 'Canvas-wide observer without a path',
-    gesture: 'Move over Canvas background while a pathless useEvent observer is registered.',
-    nativeTrace: null,
-    crcTrace: [event('mousemove', 'canvas-wide-observer')],
-    ordering: FIXED_ORDERING,
-    targeting: targeting([], 'canvas-wide-observer'),
-    rule: 'Run after target-bound callbacks without participating in logical target or cursor selection.',
-    visualTarget: 'canvas-root',
-    visualProbe: { x: 430, y: 190, expectedTarget: null },
-  },
-  {
     id: 'primary-click-same-target',
     title: 'Primary click on one target',
     gesture: 'Press and release the primary button on A without leaving it.',
@@ -469,7 +452,6 @@ const REQUIRED_CASE_IDS = [
   'transparent-fill-hit',
   'line-interaction-width-hit',
   'line-interaction-width-miss',
-  'root-event-no-path',
   'replace-handler-during-dispatch',
   'remove-handler-during-dispatch',
   'remove-target-during-move-plan',
@@ -515,20 +497,8 @@ export function validateMouseContractCases<const Cases extends readonly MouseCon
       throw new Error(`Mouse contract case "${contractCase.id}" has an invalid phase.`);
     }
 
-    if (
-      !contractCase.targeting.candidates.length &&
-      contractCase.targeting.candidatePolicy !== 'canvas-wide-observer'
-    ) {
+    if (!contractCase.targeting.candidates.length) {
       throw new Error(`Mouse contract case "${contractCase.id}" needs at least one candidate target.`);
-    }
-    if (
-      contractCase.targeting.candidatePolicy === 'canvas-wide-observer' &&
-      (
-        contractCase.targeting.candidates.length ||
-        contractCase.targeting.identityPolicy !== 'not-applicable'
-      )
-    ) {
-      throw new Error(`Mouse contract case "${contractCase.id}" models an observer as a target.`);
     }
     if (new Set(contractCase.targeting.candidates).size !== contractCase.targeting.candidates.length) {
       throw new Error(`Mouse contract case "${contractCase.id}" has duplicate candidate targets.`);

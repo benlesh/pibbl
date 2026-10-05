@@ -394,12 +394,6 @@ CSS slash radii; smoothing/splines; compound/crossing stars; a generic shape
 registry; a retained geometry graph/cache; intrinsic geometry measurement; or
 per-shape memo hooks.
 
-## Renderer-independent 3D geometry
-
-`@crc/core/physics/3d/geometry` provides pure immutable shapes and collision
-queries. It does not add drawing components, Three bindings, a world runtime, or
-a scheduler participant.
-
 ## Editable path geometry (2026-09-29 extension)
 
 `PathGeometry` adds mutable, packed canonical geometry to the public core entry.

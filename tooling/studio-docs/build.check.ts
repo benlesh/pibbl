@@ -768,7 +768,7 @@ assert.doesNotMatch(
 );
 assert.doesNotMatch(
   documentationModule!,
-  /"(?:plainText|sections|internalLinks|sourcePath|aliases)":/u,
+  /"(?:html|headings|tutorialRelationship|plainText|sections|internalLinks|sourcePath|aliases)":/u,
 );
 assert.match(searchModule!, /serializedSearchIndex/u);
 assert.match(searchModule!, /#\/examples\/drawing\/filters/u);

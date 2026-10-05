@@ -213,24 +213,6 @@ export interface CRCHookSlot<T = any> {
   teardowns: Teardowns;
 }
 
-export type CRCMouseEventListener = (e: CRCMouseEvent) => void;
-
-export interface CRCEventRegistry {
-  click: Set<(e: MouseEvent) => void>;
-  dblclick: Set<(e: MouseEvent) => void>;
-  mousemove: Set<(e: MouseEvent) => void>;
-  mouseover: Set<(e: MouseEvent) => void>;
-  mouseout: Set<(e: MouseEvent) => void>;
-  mousedown: Set<(e: MouseEvent) => void>;
-  mouseup: Set<(e: MouseEvent) => void>;
-  contextmenu: Set<(e: MouseEvent) => void>;
-}
-
-export type CRCEventType = keyof CRCEventRegistry;
-export type CRCRegionHandlers = Partial<
-  Record<CRCEventType, CRCMouseEventListener>
->;
-
 export interface CRCClippingStackEntry {
   readonly svgPath?: string;
   path: Path2D;
@@ -389,10 +371,3 @@ export interface CRCInstance {
 }
 
 export type PixelGridAlignment = "none" | "round" | "ceil" | "floor";
-
-/** Shipped payload for the singular `useEvent` Canvas observer hook. */
-export interface CRCMouseEvent {
-  x: number;
-  y: number;
-  originalEvent: MouseEvent;
-}

@@ -14,7 +14,6 @@ const BUILT_ENTRY_SUFFIXES = new Map([
   ['@crc/core/particles', '/packages/core/dist/features/particles/index.mjs'],
   ['@crc/core/physics/2d', '/packages/core/dist/features/physics/2d.mjs'],
   ['@crc/core/physics/2d/geometry', '/packages/core/dist/features/physics/2d-geometry.mjs'],
-  ['@crc/core/physics/3d/geometry', '/packages/core/dist/features/physics/3d-geometry.mjs'],
 ]);
 
 export function assertBuiltCore(): Plugin {

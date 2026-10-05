@@ -8,7 +8,6 @@ import { clearSharedState, getCRCInstance } from './global-state.js';
 import { useCursor } from './hooks/use-cursor.js';
 import { useEventListener } from './hooks/use-event-listener.js';
 import { useEventTarget } from './hooks/use-event-target.js';
-import { useEvent } from './hooks/use-event.js';
 import { useLayoutBox } from './hooks/use-layout-box.js';
 import { useLinePath } from './hooks/use-line-path.js';
 import { useComputed } from './hooks/use-computed.js';
@@ -97,7 +96,6 @@ describe('plain function component dispatch', () => {
       const linePath = useLinePath([[0, 0], [10, 10]]);
       const svgPath = useSvgPath('M0 0h10v10z');
       paths.push([rectPath, linePath, svgPath]);
-      useEvent('mousemove', () => undefined);
       useEventTarget({ onClick: () => undefined }, {
         path: rectPath,
         fill: true,
@@ -138,7 +136,6 @@ describe('plain function component dispatch', () => {
       'rectPath',
       'linePath',
       'svgPath',
-      'event',
       'eventTarget',
       'eventListener',
       'cursor',

@@ -3,7 +3,6 @@ import * as internal from "@crc/core/internal";
 import * as particles from "@crc/core/particles";
 import * as threeAdapter from "@crc/three";
 import * as physics2d from "@crc/core/physics/2d";
-import * as physics3dGeometry from "@crc/core/physics/3d/geometry";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { readFileSync } from "node:fs";
@@ -119,7 +118,6 @@ const expected = [
   "useComputed",
   "useConst",
   "useCursor",
-  "useEvent",
   "useEventListener",
   "useEventTarget",
   "useLayoutBox",
@@ -321,41 +319,6 @@ if (typeof THREE.Scene !== "function" || typeof OrbitControls !== "function") {
   throw new Error(
     "Three.js and its public OrbitControls addon must be available.",
   );
-}
-const expectedPhysics3DGeometry = [
-  "boundsOfShape3D",
-  "boxShape3D",
-  "capsuleShape3D",
-  "coneShape3D",
-  "contactBetweenShapes3D",
-  "containsPoint3D",
-  "convexHullShape3D",
-  "cylinderShape3D",
-  "distanceBetweenShapes3D",
-  "ellipsoidShape3D",
-  "heightfieldShape3D",
-  "massProperties3D",
-  "overlapShapes3D",
-  "raycastShape3D",
-  "shapeCastAgainstShape3D",
-  "sphereShape3D",
-  "transformShape3D",
-  "triangleMeshShape3D",
-].sort();
-if (
-  JSON.stringify(Object.keys(physics3dGeometry).sort()) !==
-  JSON.stringify(expectedPhysics3DGeometry)
-) {
-  throw new Error("Unexpected pure @crc/core/physics/3d/geometry runtime exports.");
-}
-const packedPhysicsSphere = physics3dGeometry.sphereShape3D({ radius: 1 });
-const packedPhysicsHit = physics3dGeometry.raycastShape3D(
-  packedPhysicsSphere,
-  { position: [0, 0, 0], orientation: [0, 0, 0, 1] },
-  { origin: [-2, 0, 0], direction: [1, 0, 0], maxDistance: 4 },
-);
-if (packedPhysicsHit?.distance !== 1) {
-  throw new Error("Pure 3D geometry returned an unexpected ray hit.");
 }
 for (const threeExport of ["Scene", "Object3D", "WebGLRenderer"]) {
   if (threeExport in threeAdapter) {

@@ -1,3 +1,4 @@
+import { signalObserversForTest } from "../../../test/support/signal-observer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   usePlayback,
@@ -433,7 +434,7 @@ describe("realm scheduler", () => {
     const commitLatestParent = () => {
       crc(canvas, createElement(Parent, { color: "green" }));
     };
-    getSignalNode(commitTrigger).observers.add(commitLatestParent);
+    signalObserversForTest(getSignalNode(commitTrigger)).add(commitLatestParent);
     let releaseAdvance = () => {};
     const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
       releaseAdvance();
@@ -478,7 +479,7 @@ describe("realm scheduler", () => {
       dirtyRoots: 0,
       pendingHostFrames: 0,
     });
-    getSignalNode(commitTrigger).observers.delete(commitLatestParent);
+    signalObserversForTest(getSignalNode(commitTrigger)).delete(commitLatestParent);
     controller.dispose();
   });
 
@@ -630,7 +631,7 @@ describe("realm scheduler", () => {
     expect(() => driver.flush(20)).toThrow(failure);
 
     expect(nested.refs.size).toBe(0);
-    expect(getSignalNode(shouldFail).observers.size).toBe(0);
+    expect(getSignalNode(shouldFail).observerCount).toBe(0);
     expect(independentRenders).toBe(2);
     expect(GLOBAL_STATE.crcInstances.has(layerCanvas)).toBe(true);
 
@@ -767,7 +768,7 @@ describe("realm scheduler", () => {
     });
     collectSignalReads(consumer, () => selected.get());
     consumer.markClean();
-    getSignalNode(source).observers.add(() => {
+    signalObserversForTest(getSignalNode(source)).add(() => {
       phases.push(snapshotRealmScheduler().phase);
     });
     let releaseAdvance = () => {};
@@ -801,7 +802,7 @@ describe("realm scheduler", () => {
     const observer = () => {
       if (output.get() > 0) phases.push(snapshotRealmScheduler().phase);
     };
-    getSignalNode(output).observers.add(observer);
+    signalObserversForTest(getSignalNode(output)).add(observer);
     let playback!: CRCPlayback;
     const Root = (_props: {}) => {
       playback = usePlayback(
@@ -855,7 +856,7 @@ describe("realm scheduler", () => {
       queuedFrameCompletions: 0,
       queuedBeginCommands: 0,
     });
-    getSignalNode(output).observers.delete(observer);
+    signalObserversForTest(getSignalNode(output)).delete(observer);
     controller.dispose();
   });
 
@@ -958,7 +959,7 @@ describe("realm scheduler", () => {
     const commitLatestRoot = () => {
       crc(canvas, createElement(Latest, {}));
     };
-    getSignalNode(source).observers.add(commitLatestRoot);
+    signalObserversForTest(getSignalNode(source)).add(commitLatestRoot);
 
     let release = () => {};
     const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
@@ -975,7 +976,7 @@ describe("realm scheduler", () => {
     driver.flush(30);
     expect(renders).toEqual(["latest", "latest"]);
     expect(driver.pendingHostFrames).toBe(0);
-    getSignalNode(source).observers.delete(commitLatestRoot);
+    signalObserversForTest(getSignalNode(source)).delete(commitLatestRoot);
     controller.dispose();
   });
 

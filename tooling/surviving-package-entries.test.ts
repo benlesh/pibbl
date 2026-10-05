@@ -8,10 +8,11 @@ const manifest = (name: string) => JSON.parse(readFileSync(`${repositoryRoot}/pa
 describe("consolidated package entries", () => {
   it("publishes optional features as core subpaths without runtime dependencies", () => {
     const core = manifest("core");
-    for (const entry of ["particles", "viz", "textures", "physics/2d", "physics/2d/geometry", "physics/2d/testing", "physics/3d/geometry"])
+    for (const entry of ["particles", "viz", "textures", "physics/2d", "physics/2d/geometry", "physics/2d/testing"])
       expect(core.exports[`./${entry}`]).toBeDefined();
     expect(core.exports["./physics"]).toBeUndefined();
     expect(core.exports["./physics/3d"]).toBeUndefined();
+    expect(core.exports["./physics/3d/geometry"]).toBeUndefined();
     expect(core.dependencies ?? {}).toEqual({});
     expect(core.devDependencies["@dimforge/rapier2d-compat"]).toBe("0.21.0");
     expect(core.sideEffects).toBe(false);

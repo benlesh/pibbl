@@ -1,6 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { resolve, relative, dirname } from "node:path";
 import { parsePublicMarkdown } from "../tooling/studio-docs/markdown.ts";
+import { websiteDocumentId } from "../tooling/studio-docs/website-routes.ts";
 import {
   collectPublicExports,
   crcPublicCompilerOptions,
@@ -79,7 +80,6 @@ const entryImports = {
   physics2d: "@crc/core/physics/2d",
   physics2dGeometry: "@crc/core/physics/2d/geometry",
   physics2dTesting: "@crc/core/physics/2d/testing",
-  physics3dGeometry: "@crc/core/physics/3d/geometry",
 };
 
 export async function loadDocumentation(root, playground) {
@@ -91,16 +91,7 @@ export async function loadDocumentation(root, playground) {
     paths.map(async (path) => {
       const source = await readFile(resolve(publicRoot, path), "utf8");
       const doc = parsePublicMarkdown(`docs/site/${path}`, source);
-      const id =
-        doc.route === "#/api"
-          ? "reference/overview"
-          : doc.route === "#/learn"
-            ? "guides/learning-path"
-            : doc.route
-                .slice(2)
-                .replace(/^api\//, "reference/")
-                .replace(/^learn\/guides\//, "guides/")
-                .replace(/^learn\/tutorials\//, "guides/tutorials/");
+      const id = websiteDocumentId(doc.route);
       return { ...doc, id, path, source };
     }),
   );
@@ -141,6 +132,9 @@ export async function loadDocumentation(root, playground) {
       body = body.replaceAll(`](${href})`, `](${target})`);
     }
     const topic = topicFor(doc.id);
+    if (doc.frontmatter.exampleSlug) {
+      body += `\n[Open the interactive workbench](${playground}#/workbench/${doc.frontmatter.exampleSlug})\n`;
+    }
     body += `\n## Implementation guidance for agents\n\nRead the [${topics[topic].title} companion](/agents/topics/${topic}/) for ownership, adaptation, failure modes, and verification. [Agent start](/agents/) provides the version-selection workflow.\n`;
     return {
       id: doc.id,
@@ -172,7 +166,7 @@ export async function loadDocumentation(root, playground) {
         kind:
           kind === "values" ? "value" : kind === "types" ? "type" : "compiler",
         url: symbols.has(symbol) ? `/${symbols.get(symbol).id}/` : null,
-        documentation: symbols.has(symbol) ? "documented" : "missing",
+        documentation: symbols.has(symbol) ? "reference-listed" : "missing",
       })),
     ),
   );

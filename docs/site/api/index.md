@@ -20,7 +20,6 @@ import { Rectangle, Text, crc, defineRenderLayer } from "@crc/core";
 import { defineThreeLayer } from "@crc/three";
 import { Particles2D } from "@crc/core/particles";
 import { PhysicsWorld2D } from "@crc/core/physics/2d";
-import { raycastShape3D } from "@crc/core/physics/3d/geometry";
 import { Axis, LineSeries, Scale } from "@crc/core/viz";
 ```
 
@@ -71,11 +70,6 @@ See the grouped [particle types](#/api/types/particles) and
 `@crc/core/physics/2d` provides the CRC-scheduled 2D runtime, components, body
 handles, commands, events, and queries. Pure geometry is available from
 `@crc/core/physics/2d/geometry`.
-
-Renderer-independent 3D shapes and pure bounds, mass, containment, distance,
-overlap, contact, ray-cast, shape-cast, and transform operations remain
-available from `@crc/core/physics/3d/geometry`. CRC does not currently publish a
-Three object binding or 3D runtime component surface.
 
 There is no root `@crc/core/physics` barrel and no independent physics clock.
 

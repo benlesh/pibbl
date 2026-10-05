@@ -96,9 +96,7 @@ second copy.
 
 - Three objects are not CRC elements and do not use the CRC JSX runtime.
 - CRC does not reconcile or retain a Three object tree.
-- `@crc/core/particles` remains Canvas 2D only.
-- `@crc/core/physics/3d/geometry` remains pure renderer-independent geometry; there
-  is no renderer-coupled `@crc/core/physics/3d` runtime.
+- `@crc/core/particles` remains Canvas 2D only; CRC provides no 3D physics API.
 - Multiple cameras, scissor views, post-processing, asset loading, environment
   maps, shadows, instancing, and particles are ordinary Three application code
   inside one layer rather than CRC wrappers.

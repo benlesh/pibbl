@@ -1,7 +1,4 @@
-import type {
-  LearningExampleCatalogEntry,
-  WorkbenchSourceMetadata,
-} from "@crc/scenarios";
+import type { WorkbenchSourceMetadata } from "@crc/scenarios";
 
 const learningModules = import.meta.glob(
   "../../packages/scenarios/src/learning/**/*.example.tsx",
@@ -56,11 +53,4 @@ export async function loadWorkbenchSource(
     );
   }
   return source;
-}
-
-/** @deprecated Compatibility helper for learning-only test callers. */
-export function loadLearningSource(
-  entry: LearningExampleCatalogEntry,
-): Promise<string> {
-  return loadWorkbenchSource(entry);
 }

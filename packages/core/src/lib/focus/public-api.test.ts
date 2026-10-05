@@ -1,6 +1,8 @@
 import * as CRC_CORE_ROOT from '@crc/core';
 import * as CRC_JSX_DEV_RUNTIME from '@crc/core/jsx-dev-runtime';
 import * as CRC_JSX_RUNTIME from '@crc/core/jsx-runtime';
+// @ts-expect-error the singular legacy event hook is not public
+import { useEvent as RemovedEventHook } from '@crc/core';
 // @ts-expect-error the definition wrapper is not part of the final type surface
 import type { defineC\u006fmp as RemovedDefinitionWrapper } from '@crc/core';
 // @ts-expect-error the old element type is not part of the final type surface
@@ -288,7 +290,6 @@ describe('public CRC API', () => {
       'useComputed',
       'useConst',
       'useCursor',
-      'useEvent',
       'useEventListener',
       'useEventTarget',
       'useLayoutBox',
@@ -306,6 +307,10 @@ describe('public CRC API', () => {
       'wipe',
       'zoom',
     ]);
+
+    expect('useEvent' in CRC_CORE_ROOT).toBe(false);
+    expect(CRC_CORE_ROOT.useEventListener).toBeTypeOf('function');
+    expect(CRC_CORE_ROOT.useEventTarget).toBeTypeOf('function');
 
     for (const creator of [
       createArcPath,

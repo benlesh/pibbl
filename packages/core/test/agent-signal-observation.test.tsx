@@ -1,3 +1,4 @@
+import { signalObserversForTest } from "./support/signal-observer";
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import type { CRCAdvanceParticipant } from '../src/lib/scheduler/types';
 import { queueBeginCommand, registerAdvanceParticipant, queueFrameCompletion } from '../src/lib/scheduler/realm-scheduler';
@@ -168,11 +169,11 @@ it('bounds direct observer traversal and never reads legacy callback flag getter
     let reads = 0;
     const callback = Object.defineProperty(() => {}, 'renderInvalidation', { get() { reads++; throw new Error('Do not read callback flags'); } });
     const node = getSignalNode(source);
-    node.observers.add(callback);
+    signalObserversForTest(node).add(callback);
     try {
       expect(inspector.snapshot().records[0]).toMatchObject({ observerCount: 1, observers: { completeness: 'complete', records: [expect.objectContaining({ kind: 'other', dirty: null })] } });
       expect(reads).toBe(0);
-    } finally { node.observers.delete(callback); }
+    } finally { signalObserversForTest(node).delete(callback); }
   } finally { inspector.dispose(); controller.dispose(); canvas.remove(); restore(); }
 });
 
@@ -638,7 +639,7 @@ it('records applied Commit despite observer failure and preserves unrelated publ
   const inspector = createSignalInspector(canvas); inspector.register(first); inspector.register(second);
   const history = createSchedulerHistory(); const failure = new Error('private observer failure');
   const observer = () => { throw failure; };
-  const node = getSignalNode(first); node.observers.add(observer);
+  const node = getSignalNode(first); signalObserversForTest(node).add(observer);
   let release = () => {};
   const participant: CRCAdvanceParticipant = (_frame, batch) => { release(); batch.stage(first, 30, participant); batch.stage(second, 30, participant); };
   try {
@@ -657,7 +658,7 @@ it('records applied Commit despite observer failure and preserves unrelated publ
     expect(Array.from(context.getImageData(15, 5, 1, 1).data)).toEqual([255, 0, 0, 255]);
     expect(Array.from(context.getImageData(15, 25, 1, 1).data)).toEqual([0, 255, 0, 255]);
     expect(driver.pendingHostFrames).toBe(0);
-  } finally { release(); node.observers.delete(observer); history.dispose(); inspector.dispose(); controller.dispose(); canvas.remove(); restore(); }
+  } finally { release(); signalObserversForTest(node).delete(observer); history.dispose(); inspector.dispose(); controller.dispose(); canvas.remove(); restore(); }
 });
 
 

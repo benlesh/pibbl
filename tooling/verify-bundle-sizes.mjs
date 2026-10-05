@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '..');
 const fixtures = {
   core: `import { PhysicsWorld2D } from '@crc/core/physics/2d'; import { crc, createElement, Rectangle } from '@crc/core'; export const mount = canvas => crc(canvas, createElement(Rectangle, { style: { width: 20, height: 20, fill: 'red' } }));`,
-  geometry: `export { circleShape2D, raycastShape2D } from '@crc/core/physics/2d/geometry'; export { sphereShape3D, raycastShape3D } from '@crc/core/physics/3d/geometry';`,
+  geometry: `export { circleShape2D, raycastShape2D } from '@crc/core/physics/2d/geometry';`,
   physics: `import { crc, createElement } from '@crc/core'; import { PhysicsWorld2D } from '@crc/core/physics/2d'; export const mount = canvas => crc(canvas, createElement(PhysicsWorld2D, { children: [] }));`,
 };
 for (const [name, contents] of Object.entries(fixtures)) {

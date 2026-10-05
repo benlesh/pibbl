@@ -1,3 +1,4 @@
+import { signalObserversForTest } from "../../../test/support/signal-observer";
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   computed,
@@ -525,7 +526,7 @@ describe('@crc/core/internal renderer participants', () => {
     driver.flush(5);
     calls.length = 0;
 
-    getSignalNode(rendererValue).observers.add(() => calls.push('commit'));
+    signalObserversForTest(getSignalNode(rendererValue)).add(() => calls.push('commit'));
     let releaseAdvance = () => {};
     const advance: CRCAdvanceParticipant = (snapshot, batch) => {
       calls.push('advance');
@@ -740,7 +741,7 @@ describe('@crc/core/internal renderer participants', () => {
       });
       crcInternalQueueComplete(owner!, () => calls.push('commit complete'));
     };
-    getSignalNode(commitSource).observers.add(commitObserver);
+    signalObserversForTest(getSignalNode(commitSource)).add(commitObserver);
     expect(driver.pendingHostFrames).toBe(0);
 
     let release = () => {};
@@ -783,7 +784,7 @@ describe('@crc/core/internal renderer participants', () => {
     );
     expect(driver.pendingHostFrames).toBe(0);
 
-    getSignalNode(commitSource).observers.delete(commitObserver);
+    signalObserversForTest(getSignalNode(commitSource)).delete(commitObserver);
     controller.dispose();
   });
 
@@ -992,8 +993,8 @@ describe('@crc/core/internal renderer participants', () => {
     expect(signalGraphSnapshot().computedSourceEdges).toBe(
       baseline.computedSourceEdges + 2,
     );
-    expect(getSignalNode(source).observers.size).toBe(1);
-    expect(getSignalNode(inner).observers.size).toBe(1);
+    expect(getSignalNode(source).observerCount).toBe(1);
+    expect(getSignalNode(inner).observerCount).toBe(1);
 
     controller.dispose();
 
@@ -1002,8 +1003,8 @@ describe('@crc/core/internal renderer participants', () => {
       createdComputedSourceEdges: baseline.createdComputedSourceEdges + 2,
       releasedComputedSourceEdges: baseline.releasedComputedSourceEdges + 2,
     });
-    expect(getSignalNode(source).observers.size).toBe(0);
-    expect(getSignalNode(inner).observers.size).toBe(0);
+    expect(getSignalNode(source).observerCount).toBe(0);
+    expect(getSignalNode(inner).observerCount).toBe(0);
   });
 });
 

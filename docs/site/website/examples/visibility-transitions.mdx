@@ -1,0 +1,29 @@
+---
+title: Enter and Exit Transitions
+description: Compare reusable transitions, reverse them, and test exit-before-unmount.
+sources:
+  - packages/scenarios/src/learning/composition/visibility-transitions.example.tsx
+---
+
+Compare everyday transitions and energy effects on the same grouped subject. Use the effect controls, Hide and Show to test both directions, and reverse midway. Exit + Unmount and Remount demonstrate the difference between hiding pixels and removing a component.
+
+[Open in the editor](@PLAYGROUND@#/examples/composition/visibility-transitions) · [Energy prototype](/examples/energy-transitions/) · [Effects gallery](/catalogs/)
+
+## How it works
+
+`useVisibilityTransition` returns a mounted controller. Its `binding` attaches to the subject's `style.transition`; `show()` and `hide()` request transitions and return completion results. The reusable effects include `fade`, `slide`, `zoom`, `wipe`, `blurReveal`, `dissolve`, `hologram`, `bifrost`, and `embers`.
+
+## Integration boundaries
+
+This API is documented as experimental. Effects change pixels, not layout or input targeting. A hidden subject does not automatically become noninteractive; applications own that policy. One binding supports one receiver in its CRC root. Wrap multiple primitives in a `Group` to transition them together.
+
+The 800 by 560 source is self-contained. Bifrost, Hologram, and Embers lazily compile embedded WASM; a restrictive CSP must allow WebAssembly compilation. No remote asset fetch is required. CRC owns playback and disposal. The example starts automatically unless reduced motion is enabled. Applications should also choose their own reduced-motion policy, such as immediate state changes instead of energy effects.
+
+## APIs and agent guidance
+
+- [Transition definitions, presets, completion, and limitations](/reference/hooks/use-visibility-transition/)
+- [Animation ownership and scheduling](/agents/topics/animation/)
+
+## Verification
+
+Try each effect in both directions. Reverse a transition before it finishes. Exit and unmount the subject, then remount it. Check completion status rather than assuming a fixed timer means the effect finished; particle tails may continue after the material disappears.

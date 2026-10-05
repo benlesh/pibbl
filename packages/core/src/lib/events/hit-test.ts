@@ -8,10 +8,7 @@ import {
   type CRCHitTestOutput,
   type CRCPathPaintEntry,
 } from './paint-entry.js';
-import {
-  getLegacyHitGeometry,
-  type CRCEventTargetRegistration,
-} from './registrations.js';
+import type { CRCEventTargetRegistration } from './registrations.js';
 
 export interface CRCCoordinatePoint {
   readonly x: number;
@@ -142,15 +139,9 @@ function resolvePathHit(
 ): void {
   const target = entry.target;
   if (!isLiveTarget(eventRoot, target)) return;
-  const legacyGeometry = getLegacyHitGeometry(target);
-  if (legacyGeometry && !legacyGeometry.path) {
-    output.disposition = CRCHitDisposition.Target;
-    output.target = target;
-    return;
-  }
   if (isHit({
     canvas,
-    path: legacyGeometry?.path ?? entry.path,
+    path: entry.path,
     transform: multiplyTransforms(transform, entry.transform),
     x: rootX,
     y: rootY,

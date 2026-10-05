@@ -43,31 +43,31 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   menuButton.setAttribute("aria-expanded", "false");
   menuButton.innerHTML = '<span aria-hidden="true">☰</span> Browse';
   const mobileBrand = document.createElement("a");
-  mobileBrand.href = "#/learn";
+  mobileBrand.href = "#/examples";
   mobileBrand.className = "studio-mobile-brand";
-  mobileBrand.textContent = "CRC / DOCS";
+  mobileBrand.textContent = "CRC / STUDIO";
   const mobileSearchButton = createSearchTrigger("studio-search-trigger--mobile");
   mobileBar.append(menuButton, mobileBrand, mobileSearchButton);
 
   const drawerBackdrop = document.createElement("button");
   drawerBackdrop.type = "button";
   drawerBackdrop.className = "studio-drawer-backdrop";
-  drawerBackdrop.ariaLabel = "Close documentation navigation";
+  drawerBackdrop.ariaLabel = "Close navigation";
 
   const sidebar = document.createElement("aside");
   sidebar.id = "studio-navigation";
   sidebar.className = "studio-sidebar";
-  sidebar.ariaLabel = "Documentation navigation";
+  sidebar.ariaLabel = "Studio navigation";
   const drawerCloseButton = document.createElement("button");
   drawerCloseButton.type = "button";
   drawerCloseButton.className = "studio-drawer-close";
-  drawerCloseButton.ariaLabel = "Close documentation navigation";
+  drawerCloseButton.ariaLabel = "Close navigation";
   drawerCloseButton.textContent = "×";
   const brand = document.createElement("a");
-  brand.href = "#/learn";
+  brand.href = "#/examples";
   brand.className = "studio-brand";
   brand.innerHTML =
-    '<span class="studio-brand__mark" aria-hidden="true"><i></i><b></b><em></em></span><span>CRC<br><small>Canvas docs</small></span>';
+    '<span class="studio-brand__mark" aria-hidden="true"><i></i><b></b><em></em></span><span>CRC<br><small>Studio</small></span>';
   const desktopSearchButton = createSearchTrigger("studio-search-trigger--desktop");
   const navigationHost = document.createElement("nav");
   navigationHost.ariaLabel = "Documentation";

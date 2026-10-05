@@ -16,33 +16,6 @@ import { circleShape2D, overlapShapes2D } from "@crc/core/physics/2d/geometry";
 The geometry entry has no dependency on `@crc/core`. Public numeric arrays are
 copied into package-owned immutable values.
 
-## 3D geometry
-
-The matching renderer-independent 3D entry provides immutable sphere, box,
-ellipsoid, capsule, cylinder, cone, convex-hull, triangle-mesh, and heightfield
-shapes together with bounds, mass properties, containment, distance, overlap,
-contact, ray-cast, shape-cast, and rigid-transform operations:
-
-```ts
-import {
-  boxShape3D,
-  massProperties3D,
-  sphereShape3D,
-} from "@crc/core/physics/3d/geometry";
-
-const sphere = sphereShape3D({ radius: 1 });
-const boxMass = massProperties3D(
-  boxShape3D({ width: 2, height: 4, depth: 6 }),
-  { density: 3 },
-);
-```
-
-The 3D geometry entry does not load CRC, Three.js, WebGL, browser APIs, a world,
-or a scheduler. CRC no longer publishes a renderer-coupled 3D world entry. A
-future Three physics binding can be designed independently against ordinary
-`THREE.Object3D` values; the geometry package remains useful for application
-queries and custom integrations today.
-
 ## CRC 2D worlds and components
 
 Install the matching `@crc/core` version and import the world-facing entry:
@@ -89,5 +62,4 @@ exhaustion explicitly; it is not an unlimited no-tunneling guarantee.
 
 Read the [2D composition and testing guide](../../../../../docs/site/learn/guides/physics-2d.md),
 [2D API](../../../../../docs/site/api/functions/physics-2d.md),
-[test harness API](../../../../../docs/site/api/functions/physics-2d-testing.md), and pure
-[3D geometry API](../../../../../docs/site/api/functions/physics-3d-geometry.md).
+[test harness API](../../../../../docs/site/api/functions/physics-2d-testing.md).

@@ -1,0 +1,24 @@
+---
+title: Energy Transition Study
+description: The original Bifrost, hologram, and ember visual prototype.
+sources:
+  - packages/scenarios/src/learning/composition/energy-transitions.example.tsx
+---
+
+Explore white-hot beams, hazy holograms, and ember-and-ash reveals. Choose an effect, toggle Exit / Enter, or scrub progress. The original controls explore direction, width, brightness, and hue.
+
+[Open in the editor](@PLAYGROUND@#/examples/composition/energy-transitions) · [Reusable transition gallery](/examples/visibility-transitions/) · [Effects gallery](/catalogs/)
+
+## How it works
+
+This is the earlier visual study, authored with `definePrimitive`, `useSignal`, and `usePlayback`. It separates material reveal progress from continuously moving energy. It is preserved as a compelling composition example, not presented as another public effect API.
+
+## Integration boundaries
+
+For new reusable enter/exit integrations, start with [useVisibilityTransition](/reference/hooks/use-visibility-transition/) and its presets. Copying this larger prototype is appropriate only when you need to adapt its custom drawing. It is neither a reaction-diffusion simulation nor an HTML transition engine.
+
+The 960 by 790 scene is drawn in code with no external image assets. Both animation clocks belong to CRC and are released with the mount. Keep the canvas aspect ratio when scaling. The example starts automatically unless reduced motion is enabled and can be stopped at any time.
+
+## Verification
+
+Compare all three styles in both directions and scrub the progress control. Check that the energy continues to animate while the reveal position changes. Stop and restart before adapting the source to a new owner.

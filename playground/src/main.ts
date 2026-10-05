@@ -10,11 +10,14 @@ import { buildNavigation } from "./app/navigation";
 import { createPageLifecycle } from "./app/page-lifecycle";
 import { canonicalizeHash, parseStudioRoute } from "./app/routes";
 import { createStudioShell } from "./app/shell";
-import { createDocumentationPages } from "./docs/documentation-pages";
 import { createExamplePages } from "./examples/example-pages";
+import { renderWorkbenchPage } from "./examples/workbench-page";
 import { createTestingPages } from "./testing/testing-pages";
 import { createSearchBundleLoader } from "./search/search-loader";
 import "./style.css";
+import { websiteUrlForStudioDocument } from "../../tooling/studio-docs/website-routes";
+
+const websiteBase = import.meta.env.VITE_CRC_WEBSITE_URL ?? "http://localhost:4321/";
 
 const app = document.getElementById("app");
 if (!app) throw new Error("No app element found.");
@@ -26,19 +29,18 @@ const searchLoaderOptions =
     : undefined;
 const shell = createStudioShell({
   app,
-  navigation: buildNavigation(documentation, learningExampleCatalog),
+  navigation: buildNavigation(documentation, learningExampleCatalog, websiteBase),
   onSearchNavigate(url) {
-    window.location.hash = url;
+    if (url.startsWith("#/learn") || url.startsWith("#/api")) {
+      window.location.assign(websiteUrlForStudioDocument(url, websiteBase));
+    } else {
+      window.location.hash = url;
+    }
   },
   loadSearchBundle: createSearchBundleLoader(
     () => import("virtual:crc-studio-search"),
     searchLoaderOptions,
   ),
-});
-const documentationPages = createDocumentationPages({
-  container: shell.main,
-  lifecycle,
-  finishRoute: shell.finishRoute,
 });
 const examplePages = createExamplePages({
   container: shell.main,
@@ -75,8 +77,17 @@ async function renderRoute(): Promise<void> {
 
   switch (route.kind) {
     case "document":
-      if (!(await documentationPages.render(route, version))) {
-        documentationPages.renderMissing();
+      window.location.assign(websiteUrlForStudioDocument(
+        `${route.route}${route.anchor === undefined ? "" : `#${route.anchor}`}${route.query ?? ""}`,
+        websiteBase,
+      ));
+      return;
+    case "workbench":
+      if (!(await renderWorkbenchPage(
+        shell.main, lifecycle, shell.finishRoute, route.slug, version,
+      ))) {
+        window.history.replaceState(null, "", "#/examples");
+        await examplePages.renderLanding(version);
       }
       return;
     case "examples":

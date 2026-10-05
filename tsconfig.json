@@ -23,9 +23,6 @@
         "./packages/core/src/features/physics/2d-testing.ts"
       ],
       "@crc/core/physics/2d": ["./packages/core/src/features/physics/2d.ts"],
-      "@crc/core/physics/3d/geometry": [
-        "./packages/core/src/features/physics/3d-geometry.ts"
-      ],
       "virtual:crc-studio-docs": ["./playground/src/studio-docs.d.ts"],
       "@crc/core/viz": ["./packages/core/src/features/viz/index.ts"],
       "@crc/core/textures": ["./packages/core/src/features/textures/index.ts"],

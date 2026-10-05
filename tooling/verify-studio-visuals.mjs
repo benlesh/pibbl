@@ -17,12 +17,6 @@ if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
 }
 const origin = `http://127.0.0.1:${previewPort}`;
 const allRoutes = [
-  {
-    name: "learn-landing",
-    hash: "#/learn",
-    ready: ".documentation-body a[href='#/learn/tutorials/diagram-editor']",
-  },
-  { name: "api-crc", hash: "#/api/functions/crc", ready: ".documentation-page h1" },
   { name: "examples-landing", hash: "#/examples", ready: ".studio-hero-canvas canvas" },
   {
     name: "filters",
@@ -31,22 +25,11 @@ const allRoutes = [
     waitForWorkbench: true,
   },
   {
-    name: "diagram-editor-landing",
-    hash: "#/learn/tutorials/diagram-editor",
-    ready: "img[src$='/tutorials/diagram-editor/finished-editor.png']",
-  },
-  {
     name: "diagram-editor-finished",
-    hash: "#/learn/tutorials/diagram-editor/finished-editor",
+    hash: "#/workbench/diagram-editor-finished",
     ready: ".studio-preview__frame",
     waitForWorkbench: true,
     captureSelector: ".studio-preview__frame",
-  },
-  {
-    name: "search-open",
-    hash: "#/learn",
-    ready: ".documentation-body a[href='#/learn/tutorials/diagram-editor']",
-    openSearch: true,
   },
   {
     name: "test-lab",
@@ -184,12 +167,6 @@ try {
     await page.evaluate(() => {
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     });
-    if (route.openSearch) {
-      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
-      await page.waitForFunction(() => window.scrollY === 0);
-      await page.getByRole("button", { name: "Search documentation" }).first().click();
-      await page.locator(".studio-search-dialog[open]").waitFor({ timeout: 30_000 });
-    }
     if (route.waitForWorkbench) {
       if (route.captureSelector)
         await page.locator(route.ready).scrollIntoViewIfNeeded();
@@ -260,7 +237,6 @@ try {
           fullPage: true,
           animations: "disabled",
         });
-    if (route.openSearch) await page.keyboard.press("Escape");
     const baselinePath = resolve(
       workspaceRoot,
       `packages/core/test/visual-baselines/studio-${route.name}.expected.png`,

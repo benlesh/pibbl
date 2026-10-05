@@ -46,9 +46,8 @@ Particles, visualization, textures, and physics ship in this package under
 `@crc/core/physics/2d`. Import only the features you use; the root does not
 re-export them. Each feature shares the same runtime and scheduler.
 
-Pure geometry is available from `@crc/core/physics/2d/geometry` and
-`@crc/core/physics/3d/geometry`. Those entries and core drawing do not load or
-initialize Rapier. The physics entry includes private precompiled Rapier WASM
+Pure geometry is available from `@crc/core/physics/2d/geometry`. That entry and
+core drawing do not load or initialize Rapier. The physics entry includes private precompiled Rapier WASM
 and JS bindings; consumers do not install Rapier. There is no root physics
 barrel. `@crc/core/internal` remains private to official integrations.
 
@@ -72,5 +71,4 @@ contracts](../../docs/design/runtime-hooks-contract.md).
 
 For transparent 3D composition, use the [Three.js integration
 guide](../../docs/site/learn/guides/three-js.md) and install `@crc/three` plus
-`three`. Pure 3D collision geometry remains available from
-`@crc/core/physics/3d/geometry`.
+`three`.

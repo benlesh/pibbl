@@ -18,7 +18,6 @@ import { Fragment } from '../element/fragment';
 import { executeRender } from '../execute-render';
 import { getCRCInstance, GLOBAL_STATE } from '../global-state';
 import { useCursor } from '../hooks/use-cursor';
-import { useEvent } from '../hooks/use-event';
 import { useEventTarget } from '../hooks/use-event-target';
 import { useRef } from '../hooks/use-ref';
 import { useSignal } from '../hooks/use-signal';
@@ -1703,10 +1702,9 @@ describe('layer', () => {
       expect(onClick).toHaveBeenCalledOnce();
     });
 
-    it('shares transitions, cursor targeting, and observer order with the root', async () => {
+    it('shares transitions and cursor targeting with the root', async () => {
       const calls: string[] = [];
       const LayerTarget = (_props: {}) => {
-        useEvent('mousemove', () => calls.push('observer'));
         return createElement(Rectangle, {
           style: {
             left: 50,
@@ -1740,18 +1738,16 @@ describe('layer', () => {
       }));
 
       await canvas.mouseMove({ position: { x: 100, y: 100 } });
-      expect(calls).toEqual(['layer-over', 'layer-move', 'observer']);
+      expect(calls).toEqual(['layer-over', 'layer-move']);
       expect(canvas.element.style.cursor).toBe('pointer');
 
       await canvas.mouseMove({ position: { x: 20, y: 20 } });
       expect(calls).toEqual([
         'layer-over',
         'layer-move',
-        'observer',
         'layer-out',
         'root-over',
         'root-move',
-        'observer',
       ]);
       expect(canvas.element.style.cursor).toBe('crosshair');
     });

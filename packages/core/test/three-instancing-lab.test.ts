@@ -11,7 +11,7 @@ import {
   type ThreeInstancingLabState,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { loadLearningSource } from '../../../playground/src/learning-sources';
+import { loadWorkbenchSource } from '../../../playground/src/learning-sources';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
 import {
   IcosahedronGeometry,
@@ -160,7 +160,7 @@ describe('public Three instancing proving scenarios', () => {
 
     if (!learning) throw new Error('Missing three-instancing learning example.');
     const [learningSource, labSource] = await Promise.all([
-      loadLearningSource(learning),
+      loadWorkbenchSource(learning),
       loadScenarioSource(threeInstancingLabScenarioEntry),
     ]);
     for (const source of [learningSource, labSource]) {

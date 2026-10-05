@@ -1,3 +1,4 @@
+import { signalObserversForTest } from "../../../test/support/signal-observer";
 import repeatMilestones from './repeat-milestones.fixture.json';
 import { describe, expect, it, vi } from 'vitest';
 import {
@@ -72,7 +73,7 @@ describe('seekable animation program evaluation', () => {
     const registration = {};
     const activation = activateProgram(program, registration);
     let invalidations = 0;
-    getSignalNode(x).observers.add(() => invalidations++);
+    signalObserversForTest(getSignalNode(x)).add(() => invalidations++);
     const before = signalGraphSnapshot().signalCommitNotifications;
 
     const result = evaluateAt(activation, 150, 0);

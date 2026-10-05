@@ -164,15 +164,6 @@ export default defineConfig(({ mode }) => ({
                 new URL("./packages/core/src/features/physics/2d.ts", import.meta.url),
               ),
             },
-            {
-              find: /^@crc\/core\/physics\/3d\/geometry$/,
-              replacement: fileURLToPath(
-                new URL(
-                  "./packages/core/src/features/physics/3d-geometry.ts",
-                  import.meta.url,
-                ),
-              ),
-            },
           ],
   },
   test: {

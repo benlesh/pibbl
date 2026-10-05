@@ -187,12 +187,6 @@ postconditions.
 | Output writer leases                  | Accepted run before sampling, after complete preflight                                  | Exact active playback run and writer token                          | Finish, cancel, definition failure, committed replacement, or teardown                                         | Acquisition is all-or-nothing; provisional replacement publishes no cancellation before Commit, and rejected Commit restores the displaced owner/leases while releasing the contender without partial values.      |
 | Evaluator/stepper activation state    | Run creation; each Advance forks state before sampling                                  | Exact active playback run and its current-frame evaluation fork     | Track/run completion, cancel, error, replacement, teardown, or frame-fork adoption/discard                     | Applied Commit adopts the fork once; failed Commit discards it and retains the prior activation/stepper state for deterministic retry; stale state cannot schedule or write.                                       |
 
-## Renderer-independent 3D geometry ownership
-
-Values from `@crc/core/physics/3d/geometry` are immutable application values. The
-entry owns no scheduler participant, renderer resources, component bindings, or
-runtime world lifecycle.
-
 ## Editable geometry snapshots
 
 Application-owned PathGeometry holds private typed buffers and a numeric

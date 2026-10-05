@@ -5,18 +5,18 @@ const root = resolve(import.meta.dirname, '..');
 const probes = {
   tween: ['@crc/core', 'tween'], spring: ['@crc/core', 'spring'], stepper: ['@crc/core', 'stepper'],
   Flow: ['@crc/core', 'Flow'], Grid: ['@crc/core', 'Grid'], defineRenderLayer: ['@crc/core', 'defineRenderLayer'],
-  defineThreeLayer: ['@crc/three', 'defineThreeLayer'], sphereShape3D: ['@crc/core/physics/3d/geometry', 'sphereShape3D'],
+  defineThreeLayer: ['@crc/three', 'defineThreeLayer'],
   circleShape2D: ['@crc/core/physics/2d/geometry', 'circleShape2D'], PhysicsWorld2D: ['@crc/core/physics/2d', 'PhysicsWorld2D'],
   Axis: ['@crc/core/viz', 'Axis'], LineSeries: ['@crc/core/viz', 'LineSeries'], particleRange: ['@crc/core/particles', 'particleRange'], Particles2D: ['@crc/core/particles', 'Particles2D'],
 };
 const source = {
   '@crc/core': 'packages/core/src/index.ts', '@crc/three': 'packages/three/src/index.ts', '@crc/core/physics/2d': 'packages/core/src/features/physics/2d.ts',
-  '@crc/core/physics/2d/geometry': 'packages/core/src/features/physics/2d-geometry.ts', '@crc/core/physics/3d/geometry': 'packages/core/src/features/physics/3d-geometry.ts',
+  '@crc/core/physics/2d/geometry': 'packages/core/src/features/physics/2d-geometry.ts',
   '@crc/core/viz': 'packages/core/src/features/viz/index.ts', '@crc/core/particles': 'packages/core/src/features/particles/index.ts',
 };
 const packed = {
   '@crc/core': 'packages/core/dist/index.mjs', '@crc/three': 'packages/three/dist/index.mjs', '@crc/core/physics/2d': 'packages/core/dist/features/physics/2d.mjs',
-  '@crc/core/physics/2d/geometry': 'packages/core/dist/features/physics/2d-geometry.mjs', '@crc/core/physics/3d/geometry': 'packages/core/dist/features/physics/3d-geometry.mjs',
+  '@crc/core/physics/2d/geometry': 'packages/core/dist/features/physics/2d-geometry.mjs',
   '@crc/core/viz': 'packages/core/dist/features/viz/index.mjs', '@crc/core/particles': 'packages/core/dist/features/particles/index.mjs',
 };
 function aliases(table) { return { name: 'crc-public-entries', setup(api) { api.onResolve({ filter: /^@crc\// }, ({ path }) => table[path] ? ({ path: resolve(root, table[path]) }) : undefined); } }; }

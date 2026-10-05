@@ -5,7 +5,6 @@ import type { Plugin, ViteDevServer } from "vite";
 import {
   buildStudioDocumentation,
   discoverStudioDocumentationSourcePaths,
-  toStudioDocumentationBrowserBuild,
   toStudioDocumentationSearchInput,
   type StudioDocumentationBuild,
 } from "./build";
@@ -56,14 +55,14 @@ export function crcStudioDocs(options: { repositoryRoot: string }): Plugin {
     async load(id) {
       if (id === resolvedVirtualDocumentationId) {
         const documentation = latestBuild ?? (await rebuild());
-        const browserDocumentation =
-          toStudioDocumentationBrowserBuild(documentation);
+        const navigation = {
+          pages: documentation.pages.map(({ route, frontmatter }) => ({ route, frontmatter })),
+          legacyRouteToRoute: documentation.legacyRouteToRoute,
+        };
         return [
-          `export const documentation = ${JSON.stringify(browserDocumentation)};`,
+          `export const documentation = ${JSON.stringify(navigation)};`,
           "export const pages = documentation.pages;",
-          "export const pageByRoute = documentation.pageByRoute;",
           "export const legacyRouteToRoute = documentation.legacyRouteToRoute;",
-          "export const apiCoverage = documentation.apiCoverage;",
         ].join("\n");
       }
       if (id === resolvedVirtualSearchId) {
